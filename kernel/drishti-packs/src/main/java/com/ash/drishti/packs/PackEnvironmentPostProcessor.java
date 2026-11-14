@@ -61,7 +61,6 @@ public final class PackEnvironmentPostProcessor implements EnvironmentPostProces
         names.addAll(org.springframework.boot.context.properties.bind.Binder.get(env)
                 .bind("drishti.packs.added", org.springframework.boot.context.properties.bind.Bindable.listOf(String.class))
                 .orElse(List.of()));
-        PackPaths.installedModulePacks(env).forEach(m -> names.addAll(m.packs()));     // a site's installed content module brings its packs
         com.ash.drishti.packs.edition.Edition edition = com.ash.drishti.packs.edition.Editions.of(env);
         List<String> notInEdition = names.stream().filter(n -> !edition.packAllowed(n)).toList();
         if (!notInEdition.isEmpty()) {                                                   // allow-only: the edition's packs, nothing else
@@ -72,12 +71,15 @@ public final class PackEnvironmentPostProcessor implements EnvironmentPostProces
         String connDir = env.getProperty("drishti.sources.connectors-dir", System.getenv().getOrDefault("DRISHTI_CONNECTORS_DIR", "./config/connectors"));
         ConnectorFiles files = new ConnectorFiles(java.nio.file.Path.of(connDir), java.nio.file.Path.of(PackPaths.dataDir(env), "connectors"));
         PackLoader loader = new PackLoader(files);
-        List<java.nio.file.Path> dirs = PackLoader.dirs(dir, PackPaths.installedDir(env), PackPaths.extraDirs(env));
+        // where every pack is: the one resolution (KERNEL_AND_MODULES.md section 18), installed for every reader of this process
+        com.ash.drishti.api.resolution.ConfigResolution resolution = PackPaths.resolve(env);
+        resolution.problems().forEach(p -> System.getLogger(PackEnvironmentPostProcessor.class.getName()).log(System.Logger.Level.WARNING, p));
+        names.removeIf(n -> resolution.packs().off().containsKey(n.trim()));        // a pack of a module that is off: not loaded (Health says why)
         SamplePolicy samples = SamplePolicy.of(env);                                    // hidden: sample packs are not loaded
-        List<Pack> packs = loader.load(dirs, samples.select(dirs, List.copyOf(names), loader));
+        List<Pack> packs = loader.load(resolution, samples.select(resolution, List.copyOf(names), loader));
         java.util.Set<String> suppressed = new java.util.LinkedHashSet<>();
         if (samples.hidden()) {                                                          // ... and the connectors only they use do not start
-            suppressed.addAll(SamplePolicy.sampleOnlyConnectors(dirs, loader));
+            suppressed.addAll(SamplePolicy.sampleOnlyConnectors(resolution, loader));
         }
         // a pack of a module that is off is not loaded, and neither the connectors only such packs use nor the module's own start
         // (docs/architecture/ACCESS_MODEL.md: module off = gone everywhere)

@@ -603,6 +603,22 @@ public final class ConnectorManager {
         return text == null ? Optional.empty() : Optional.of(layered(name, text));
     }
 
+    /**
+     * The effective connector of a name (KERNEL_AND_MODULES.md section 18.5): the site file merged over its template, else the template
+     * alone (a pack's, or a module that is on); empty when neither is here or the file is not used.
+     */
+    public Optional<ConnectorFiles.Definition> effective(String name) {
+        try {
+            if (files.exists(name)) {
+                ConnectorLayers.Effective e = layered(name, files.text(name));
+                return Optional.of(e.definition());
+            }
+            return template(name).map(t -> files.parse(name, ConnectorLayers.templateText(files, name, t.definition(), "")));
+        } catch (RuntimeException e) {
+            return Optional.empty();
+        }
+    }
+
     private ConnectorLayers.Effective layered(String name, String text) {
         return ConnectorLayers.effective(files, name, text, template(name).map(Template::definition).orElse(null));
     }

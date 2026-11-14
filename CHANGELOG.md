@@ -18,6 +18,24 @@
 
 ## Unreleased
 
+- **Configuration resolution: one resolver, three layers, the server only reads.** Every pack is found in one waterfall: the site
+  (`config/packs/<pack>`, deployed packs first; a site pack of a shipped name replaces it only with `replaces: <pack>`, otherwise the
+  shipped one is read and the clash is listed), then each module that is on (its manifest's `packs:` list, in its folder under
+  `drishti.modules.home` or its installed `.dmod`), then the kernel (`config/packs/core`). The same name twice in one layer is an error
+  naming both places. One resolver in Java (`com.ash.drishti.api.resolution`: `PackResolver`, `ModuleTemplates`, `ConfigResolution`)
+  and its Python twin (`drishti-console/core/resolution.py`), held to the shared fixtures `pack-resolution/cases.yaml` and
+  `connector-layers/cases.yaml`; the server, the loader, the command line, the console and the tools ask it, and nothing finds a
+  module's packs by the position of a folder any more. **FORMS lists every pack of every module that is on** (the console kept a pack
+  only when its folder was under `config/packs`). Admin → Packs shows each pack's origin and folder, and the packs of a module that is
+  off. Connector templates of a module that is on are the files directly in its `connectors/` folder, named by their `name:`
+  (`trade-endur`, `trade-endur-live`); the store variants moved to `connectors/examples/`. An override may change the plugin
+  (delta → iceberg) and still inherits every other key; a key set to `null` removes the inherited one; an override that names its
+  template (`template:`) or a generated file of an earlier release whose template is not here is not used (DRS-1046) instead of running
+  as a site connector. The write path of an edit reads the effective connectors (a module's template counts, not only a site file), so a
+  blotter edit finds the source's Kafka write connector (DRS-9302 on blotter edits). New settings: `drishti.packs.site-dir` (the former
+  `drishti.packs.dir` is still read), `drishti.kernel.packs-dir`, `drishti.modules.home`, `drishti.modules.path`;
+  `drishti.modules.dir` keeps its meaning (the module switches). Design: docs/architecture/KERNEL_AND_MODULES.md section 18.
+
 - **Documentation consolidated: fewer, larger documents.** Each risk measure's tutorial is the last part of its guide (VaR, exposure, FRTB-SA, SIMM);
   one BI guide holds the pivot, virtual tables and models, reports, the Notebook and the groupings, each with its tutorial; one World and public data guide holds
   the funds, the external feeds and the public sector with their two tutorials; the Arrow Flight reference joins the Flight guide; the source-system tutorial

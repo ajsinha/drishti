@@ -12,28 +12,29 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Template: copy to config/connectors/trade-endur-live.yaml and bind the kind with live: trade-endur-live in config/bindings.yaml.
-# Endur's live trades from Kafka, and the write-back (the writes: form of config/connectors.examples/other/trade-blotter-kafka.yaml): an amended
+# The template of trade-murex-live (a module that is on brings it; KERNEL_AND_MODULES.md section 18.5): off until DRISHTI_STREAM_<SYSTEM>=true or a site override (config/connectors/trade-murex-live.yaml: enabled: true) switches it on.
+# Murex's live trades from Kafka, and the write-back (the writes: form of config/connectors.examples/other/trade-blotter-kafka.yaml): an amended
 # trade goes back to the same topic as the whole record at its next version, so the stream brings it back and the row ticks. Writes are off
 # until an administrator switches them on (Admin -> Edits).
+name: trade-murex-live                      # the connector this template defines (KERNEL_AND_MODULES.md section 18.5)
 plugin: kafka
-enabled: ${DRISHTI_STREAM_ENDUR:false}
+enabled: ${DRISHTI_STREAM_MUREX:false}
 kinds:
 - trade
-description: Endur's live trades, and the trade blotter's amendments written back to them
+description: Murex's live trades, and the trade blotter's amendments written back to them
 settings:
   bootstrap-servers: ${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}
   topics:
-  - ${DRISHTI_ENDUR_TOPIC:drishti.trading.endur.trades}
+  - ${DRISHTI_MUREX_TOPIC:drishti.trading.murex.trades}
   kind: trade
   id-field: TRADE_ID
   stale-after: ${DRISHTI_STREAM_STALE_AFTER:15m}
-  source-name: trade-endur-live
+  source-name: trade-murex-live
 writes:
-  amend-endur-trade:
+  amend-murex-trade:
     kind: trade
     kafka:
-      topic: ${DRISHTI_ENDUR_TOPIC:drishti.trading.endur.trades}
+      topic: ${DRISHTI_MUREX_TOPIC:drishti.trading.murex.trades}
       shape: document
       version-field: TRADE_VERSION
       changed-by: UPDATED_BY

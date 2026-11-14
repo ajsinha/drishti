@@ -82,71 +82,55 @@ public final class PackPaths {
     }
 
     /**
-     * Further pack folders, comma-separated, looked in after the packs folder: {@code drishti.packs.extra-dirs} (retired example packs),
-     * then the {@code packs/} folder of every installed module a site made (below), so its packs come with it.
+     * Further pack folders, comma-separated ({@code drishti.packs.extra-dirs}): a test's or a tool's own folder of packs. The packs of
+     * modules are never here: the resolution finds them ({@link #resolution}).
      */
     public static String extraDirs(Environment env) {
-        String set = env.getProperty("drishti.packs.extra-dirs", "");
-        java.util.List<String> all = new java.util.ArrayList<>();
-        if (!set.isBlank()) {
-            all.add(set);
-        }
-        for (InstalledPacks m : installedModulePacks(env)) {
-            all.add(m.folder().toString());
-        }
-        return String.join(",", all);
+        return env.getProperty("drishti.packs.extra-dirs", "");
     }
 
-    /** The pack folder of one installed content module and the packs its manifest lists ({@code packs: {folder, list}}). */
-    public record InstalledPacks(String module, Path folder, java.util.List<String> packs) {
+    /** The registries whose changes rebuild the resolution (one listener each). */
+    private static final java.util.Map<Object, Boolean> WATCHED = new java.util.WeakHashMap<>();
+
+    /**
+     * The settings of the resolution of a server (docs/architecture/KERNEL_AND_MODULES.md section 18.2): the site's packs
+     * ({@code drishti.packs.site-dir}, former name {@code drishti.packs.dir}), the deployed ones, the kernel's, the modules folder
+     * ({@code drishti.modules.home}) and the module store ({@code drishti.modules.path}).
+     */
+    public static com.ash.drishti.api.resolution.ResolutionSettings settings(Environment env) {
+        return com.ash.drishti.api.resolution.ResolutionSettings.of(k -> Modules.property(env, k));
     }
 
     /**
-     * The packs of the modules installed on this node ({@code <module deployment root>/installed/<id>/<version>/}: the root is
-     * {@code drishti.module-deploy.dir}, else {@code <drishti.data.dir>/modules}, as the module deployment keeps it; the version that
-     * {@code installed/active.yaml} names) that are not first-party: a site's own content module (`drishti.py pack new`) brings its
-     * packs, which load with it and need no {@code DRISHTI_PACKS} entry. The product's own modules keep their packs where the
-     * distribution names them.
+     * Resolves every pack, connector template and inbox rule again from the access registry's "what is on" (section 18.1) and makes it
+     * the process's current resolution: a change tells every listener once ({@code resolution.changed}).
      */
-    public static java.util.List<InstalledPacks> installedModulePacks(Environment env) {
-        java.util.List<InstalledPacks> out = new java.util.ArrayList<>();
-        // drishti.packs.modules-dir: where to READ the site's modules from when that is not where this process keeps its own (the command
-        // line keeps its data folder in a scratch folder but reads the packs of the site's installed modules where they are)
-        String deployDir = env.getProperty("drishti.packs.modules-dir", env.getProperty("drishti.module-deploy.dir", ""));
-        Path root = deployDir.isBlank() ? Path.of(dataDir(env), "modules") : Path.of(deployDir);
-        com.fasterxml.jackson.databind.ObjectMapper yaml = new com.fasterxml.jackson.databind.ObjectMapper(new com.fasterxml.jackson.dataformat.yaml.YAMLFactory());
-        for (Path installed : java.util.List.of(root.toAbsolutePath().normalize().resolve("installed"))) {
-            if (!Files.isRegularFile(installed.resolve("active.yaml"))) {
-                continue;
-            }
-            try {
-                Object mods = yaml.readValue(installed.resolve("active.yaml").toFile(), java.util.Map.class).get("modules");
-                if (!(mods instanceof java.util.Map<?, ?> active)) {
-                    continue;
-                }
-                for (java.util.Map.Entry<?, ?> e : active.entrySet()) {
-                    Path dir = installed.resolve(String.valueOf(e.getKey())).resolve(String.valueOf(e.getValue()));
-                    Path manifest = dir.resolve("module.yaml");
-                    if (!Files.isRegularFile(manifest)) {
-                        continue;
+    public static com.ash.drishti.api.resolution.ConfigResolution resolve(Environment env) {
+        com.ash.drishti.registry.EmbeddedAccessRegistry access = Modules.of(env);
+        com.ash.drishti.api.resolution.ConfigResolution r = com.ash.drishti.api.resolution.ConfigResolution.build(settings(env), access::moduleOn);
+        com.ash.drishti.api.resolution.ConfigResolution.install(r);
+        synchronized (WATCHED) {
+            if (WATCHED.put(access, Boolean.TRUE) == null) {
+                // a module switched on or off at run time: one rebuild, one resolution.changed for packs, connectors, bindings and inbox rules
+                java.lang.ref.WeakReference<Environment> ref = new java.lang.ref.WeakReference<>(env);
+                access.onChange(() -> {
+                    Environment e = ref.get();
+                    if (e != null) {
+                        resolve(e);
                     }
-                    java.util.Map<?, ?> m = yaml.readValue(manifest.toFile(), java.util.Map.class);
-                    if ("first-party".equals(String.valueOf(m.get("origin"))) || !(m.get("packs") instanceof java.util.Map<?, ?> packs)) {
-                        continue;
-                    }
-                    Path folder = dir.resolve(String.valueOf(packs.get("folder") == null ? "packs" : packs.get("folder"))).normalize();
-                    java.util.List<String> names = packs.get("list") instanceof java.util.List<?> l ? l.stream().map(String::valueOf).toList() : java.util.List.of();
-                    if (folder.startsWith(dir) && Files.isDirectory(folder)) {
-                        out.add(new InstalledPacks(String.valueOf(e.getKey()), folder, names));
-                    }
-                }
-            } catch (java.io.IOException | RuntimeException ex) {
-                System.getLogger(PackPaths.class.getName()).log(System.Logger.Level.WARNING, "installed modules under {0}: {1}", installed, ex.getMessage());
+                });
             }
         }
-        return out;
+        return r;
     }
 
+    /** The process's current resolution, resolved now when there is none yet. */
+    public static com.ash.drishti.api.resolution.ConfigResolution resolution(Environment env) {
+        com.ash.drishti.api.resolution.ConfigResolution r = com.ash.drishti.api.resolution.ConfigResolution.current();
+        return r != null ? r : resolve(env);
+    }
+
+    /** The packs an administrator deployed ({@code drishti.packs.installed-dir}): part of the site layer. */
     public static String installedDir(Environment env) {
         return env.getProperty("drishti.packs.installed-dir", dataDir(env) + "/packs/installed");
     }

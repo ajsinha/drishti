@@ -679,7 +679,12 @@ public final class SutraCli {
             return List.of();
         }
         List<Path> out = new ArrayList<>();
-        for (Path d : com.ash.drishti.api.PackFolders.roots(dir)) {           // the packs root and its domain folders
+        com.ash.drishti.api.resolution.ConfigResolution r = com.ash.drishti.api.resolution.ConfigResolution.currentOrOffline();
+        if (dir.toAbsolutePath().normalize().equals(r.settings().siteDir())) {   // the site's packs folder: every pack the resolution finds
+            r.packs().packs().values().stream().map(l -> l.dir().resolve("sutras")).filter(Files::isDirectory).forEach(out::add);
+            return out.stream().sorted().toList();
+        }
+        for (Path d : com.ash.drishti.api.PackFolders.roots(dir)) {           // a folder of packs named on the command line, and its domain folders
             try (Stream<Path> s = Files.list(d)) {
                 s.filter(p -> Files.isRegularFile(p.resolve("pack.yaml")) && Files.isDirectory(p.resolve("sutras")))
                         .map(p -> p.resolve("sutras")).forEach(out::add);

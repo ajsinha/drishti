@@ -73,7 +73,7 @@ public class EditConfiguration {
     public ConnectorWrites connectorWrites(ObjectProvider<ConnectorManager> connectors, SourceRegistry registry, ObjectProvider<SwitchLedger> switches) {
         return new ConnectorWrites(name -> {
             ConnectorManager m = connectors.getIfAvailable();
-            return m == null ? null : m.files().read(name);
+            return m == null ? null : m.effective(name).orElse(null);       // the effective connector: a module's template counts, not only a file
         }, registry::plugin, switches.getIfAvailable());
     }
 
@@ -121,20 +121,44 @@ public class EditConfiguration {
         };
     }
 
-    /** The connector whose {@code writes:} a source target of a kind uses when the form names none: the one connector of the kind that writes. */
+    /**
+     * The connector whose {@code writes:} a source target of a kind uses when the form names none (KERNEL_AND_MODULES.md section 18.6): the
+     * effective connectors (a site file, or the template of a pack or a module that is on) whose {@code writes:} name the kind; the only
+     * one, else none (a record names its system: {@link #writeConnectorOf}).
+     */
     static Optional<String> connectorOf(ConnectorManager m, String kind) {
-        if (m == null) {
-            return Optional.empty();
-        }
-        List<String> writing = m.names().stream().filter(name -> {
-            try {
-                ConnectorFiles.Definition d = m.files().read(name);
-                return d != null && !d.writes().isEmpty() && d.kinds().contains(kind);
-            } catch (RuntimeException e) {
-                return false;
-            }
-        }).toList();
+        List<String> writing = writersOf(m, kind);
         return writing.size() == 1 ? Optional.of(writing.get(0)) : Optional.empty();
+    }
+
+    /** The effective connectors whose {@code writes:} name {@code kind}, in name order. */
+    static List<String> writersOf(ConnectorManager m, String kind) {
+        if (m == null) {
+            return List.of();
+        }
+        return m.names().stream().sorted().filter(name -> m.effective(name).map(d -> d.writes().values().stream()
+                .anyMatch(w -> w instanceof java.util.Map<?, ?> wm && kind.equals(String.valueOf(wm.get("kind")))) || !d.writes().isEmpty() && d.kinds().contains(kind))
+                .orElse(false)).toList();
+    }
+
+    /**
+     * The write path of a record of {@code kind} from {@code system} (DRS-9308 none, DRS-9309 several): of the effective connectors that
+     * write the kind, the one of that system ({@code source-name} or name {@code <kind>-<system>-...}); without a system, the only one.
+     */
+    static String writeConnectorOf(ConnectorManager m, String kind, String system) {
+        List<String> writing = writersOf(m, kind);
+        List<String> mine = system == null || system.isBlank() ? writing : writing.stream()
+                .filter(n -> n.toLowerCase(java.util.Locale.ROOT).contains("-" + system.toLowerCase(java.util.Locale.ROOT))).toList();
+        if (mine.size() == 1) {
+            return mine.get(0);
+        }
+        if (mine.isEmpty()) {
+            throw new IllegalStateException("kind '" + kind + "'" + (system == null || system.isBlank() ? "" : " (source " + system + ")")
+                    + " has no write path: no connector that serves it offers writes" + (writing.isEmpty() ? "" : " for that system (writers: " + writing + ")")
+                    + "; switch on the source module's live connector or bind one in Admin -> Data bindings (write) (DRS-9308)");
+        }
+        throw new IllegalStateException("kind '" + kind + "' has " + mine.size() + " write paths, " + mine + ", and the record names no source system;"
+                + " name one in Admin -> Data bindings (write) (DRS-9309)");
     }
 
     @Bean

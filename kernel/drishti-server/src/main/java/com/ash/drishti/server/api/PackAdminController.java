@@ -228,27 +228,34 @@ public class PackAdminController {
         return Map.of("name", name, "enabled", access.isEnabled(name), "enabledPacks", access.enabled());
     }
 
-    /** Packs on disk: installed from a registry first (they win), then the shipped ones. */
+    /**
+     * Packs on disk, as the resolution finds them (KERNEL_AND_MODULES.md section 18.8): each with its origin (site, module, kernel) and
+     * folder; a pack of a module that is off with that module; every problem of the resolution (a clash, a name twice) as its own row.
+     */
     private List<Map<String, Object>> onDisk() {
+        com.ash.drishti.api.resolution.ConfigResolution r = com.ash.drishti.packs.PackPaths.resolve(env);
         List<Map<String, Object>> out = new ArrayList<>();
-        Set<String> seen = new java.util.HashSet<>();
-        for (Path d : com.ash.drishti.packs.PackLoader.dirs(dir.toString(), com.ash.drishti.packs.PackPaths.installedDir(env), com.ash.drishti.packs.PackPaths.extraDirs(env))) {
-            for (Map<String, Object> m : onDisk(d)) {
-                if (seen.add((String) m.get("name"))) {
-                    out.add(m);
-                }
-            }
-        }
+        r.packs().packs().forEach((name, at) -> onDisk(at.dir()).forEach(m -> {
+            m.put("origin", at.origin());
+            m.put("folder", at.dir().toString());
+            out.add(m);
+        }));
+        r.packs().off().forEach((name, module) -> {
+            Map<String, Object> m = row(name, name, "belongs to module " + module + ", which is off (DRS-1043)", "");
+            m.put("origin", "module:" + module);
+            m.put("state", "MODULE_OFF");
+            out.add(m);
+        });
         return out;
     }
 
-    private List<Map<String, Object>> onDisk(Path folder) {
+    private List<Map<String, Object>> onDisk(Path packDir) {
         List<Map<String, Object>> out = new ArrayList<>();
-        if (!Files.isDirectory(folder)) {
+        if (!Files.isRegularFile(packDir.resolve("pack.yaml"))) {
             return out;
         }
-        try (Stream<Path> s = Files.list(folder)) {
-            s.filter(d -> Files.isRegularFile(d.resolve("pack.yaml"))).sorted().forEach(d -> {
+        try (Stream<Path> s = Stream.of(packDir)) {
+            s.forEach(d -> {
                 try (InputStream in = Files.newInputStream(d.resolve("pack.yaml"))) {
                     Map<String, Object> y = map(new Yaml().load(in));
                     String name = String.valueOf(y.getOrDefault("pack", d.getFileName().toString()));
@@ -263,7 +270,7 @@ public class PackAdminController {
                     out.add(row(d.getFileName().toString(), d.getFileName().toString(), d.getFileName() + "/pack.yaml cannot be read: " + why, ""));
                 }
             });
-        } catch (IOException e) {
+        } catch (RuntimeException e) {
             return out;
         }
         return out;

@@ -184,17 +184,20 @@ public final class PackReloader implements AutoCloseable {
         watchers.clear();
     }
 
+    /** The folders watched: every folder a pack was found in, and the site's, the deployed and the kernel's packs folders. */
     private List<Path> roots() {
-        List<Path> out = new ArrayList<>();
-        out.addAll(com.ash.drishti.api.PackFolders.roots(Path.of(packsDir).toAbsolutePath().normalize()));   // and its domain folders
-        if (installedDir != null && !installedDir.isBlank()) {
-            out.add(Path.of(installedDir).toAbsolutePath().normalize());
-        }
-        return out;
+        com.ash.drishti.api.resolution.ConfigResolution r = dirs();
+        java.util.LinkedHashSet<Path> out = new java.util.LinkedHashSet<>();
+        out.add(r.settings().siteDir());
+        out.add(r.settings().installedDir());
+        out.add(r.settings().kernelDir());
+        r.packs().packs().values().forEach(l -> out.add(l.dir().getParent()));
+        return new ArrayList<>(out);
     }
 
-    private List<Path> dirs() {
-        return PackLoader.dirs(packsDir, installedDir, com.ash.drishti.packs.PackPaths.extraDirs(env));   // installed modules come and go
+    /** The resolution, read again: modules come and go, folders appear (KERNEL_AND_MODULES.md section 18.7). */
+    private com.ash.drishti.api.resolution.ConfigResolution dirs() {
+        return com.ash.drishti.packs.PackPaths.resolve(env);
     }
 
     /** One look at the folders: acts only when something differs from what was last seen, after the change has settled. */
@@ -327,7 +330,7 @@ public final class PackReloader implements AutoCloseable {
     }
 
     /** The packs that should be loaded: the site's list, the administrator's overlay and new folders, minus hidden samples. */
-    private List<String> desired(PackLoader loader, List<Path> dirs) {
+    private List<String> desired(PackLoader loader, com.ash.drishti.api.resolution.ConfigResolution dirs) {
         LinkedHashSet<String> names = new LinkedHashSet<>(java.util.Arrays.stream(com.ash.drishti.packs.PackPaths.enabled(env).split(","))
                 .map(String::trim).filter(s -> !s.isEmpty()).toList());
         names.addAll(overlay.added());
@@ -351,7 +354,7 @@ public final class PackReloader implements AutoCloseable {
     }
 
     private Result reconcile(String actor, String why, Set<String> changedFolders, boolean persistNew) {
-        List<Path> dirs = dirs();
+        com.ash.drishti.api.resolution.ConfigResolution dirs = dirs();
         ConnectorFiles files = connectors.files();
         PackLoader loader = new PackLoader(files);
         Map<String, Pack> current = new LinkedHashMap<>();
@@ -423,14 +426,14 @@ public final class PackReloader implements AutoCloseable {
     }
 
     /** Reads {@code name} and, first, the packs it extends. A pack that cannot be read keeps its last good version. */
-    private void collect(PackLoader loader, List<Path> dirs, String name, String neededBy, Map<String, Pack> read, Map<String, String> problems,
+    private void collect(PackLoader loader, com.ash.drishti.api.resolution.ConfigResolution dirs, String name, String neededBy, Map<String, Pack> read, Map<String, String> problems,
             Map<String, Pack> current, Set<String> deleted, java.util.Deque<String> path) {
         if (read.containsKey(name) || path.contains(name)) {
             return;
         }
         path.addLast(name);
         Pack p;
-        boolean onDisk = dirs.stream().anyMatch(d -> Files.isRegularFile(d.resolve(name).normalize().resolve("pack.yaml")));
+        boolean onDisk = dirs.packDir(name) != null;
         try {
             if (!onDisk) {
                 throw new IllegalStateException("the pack folder is gone");
@@ -598,7 +601,7 @@ public final class PackReloader implements AutoCloseable {
     }
 
     /** Makes the accepted set the running one, including every setting packs contribute (see {@link com.ash.drishti.common.LiveSettings}). Always returns an empty list: nothing needs a restart. */
-    private List<String> apply(PackLoader loader, List<Path> dirs, ConnectorFiles files, List<Pack> packs, Map<String, Pack> current,
+    private List<String> apply(PackLoader loader, com.ash.drishti.api.resolution.ConfigResolution dirs, ConnectorFiles files, List<Pack> packs, Map<String, Pack> current,
             List<String> loaded, List<String> unloaded) {
         Map<String, Object> oldProps = env.getPropertySources().get(PackEnvironmentPostProcessor.SOURCE) instanceof MapPropertySource m
                 ? new LinkedHashMap<>(m.getSource()) : Map.of();
@@ -704,8 +707,8 @@ public final class PackReloader implements AutoCloseable {
                 change = true;
             }
         }
-        List<Path> dirs = dirs();           // only a pack whose folder is gone is forgotten; one hidden as a sample comes back with the mode
-        change |= added.removeIf(n -> unloaded.contains(n) && dirs.stream().noneMatch(d -> Files.isRegularFile(d.resolve(n).normalize().resolve("pack.yaml"))));
+        com.ash.drishti.api.resolution.ConfigResolution dirs = dirs();   // only a pack no layer has is forgotten; a hidden sample comes back with the mode
+        change |= added.removeIf(n -> unloaded.contains(n) && dirs.packDir(n) == null);
         if (change) {
             overlay.write(added);
         }
@@ -816,11 +819,7 @@ public final class PackReloader implements AutoCloseable {
     /** For each pack folder (one holding pack.yaml): a digest of every file's path, size and modification time. */
     Map<String, String> fingerprints() {
         Map<String, String> out = new TreeMap<>();
-        for (Path root : dirs()) {
-            for (String n : PackLoader.folders(List.of(root))) {
-                out.computeIfAbsent(n, k -> fingerprint(root.resolve(k)));
-            }
-        }
+        dirs().packs().packs().forEach((n, l) -> out.put(n, fingerprint(l.dir())));
         return out;
     }
 

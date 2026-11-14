@@ -12,28 +12,29 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Template: copy to config/connectors/trade-murex-live.yaml and bind the kind with live: trade-murex-live in config/bindings.yaml.
-# Murex's live trades from Kafka, and the write-back (the writes: form of config/connectors.examples/other/trade-blotter-kafka.yaml): an amended
+# The template of trade-calypso-live (a module that is on brings it; KERNEL_AND_MODULES.md section 18.5): off until DRISHTI_STREAM_<SYSTEM>=true or a site override (config/connectors/trade-calypso-live.yaml: enabled: true) switches it on.
+# Calypso's live trades from Kafka, and the write-back (the writes: form of config/connectors.examples/other/trade-blotter-kafka.yaml): an amended
 # trade goes back to the same topic as the whole record at its next version, so the stream brings it back and the row ticks. Writes are off
 # until an administrator switches them on (Admin -> Edits).
+name: trade-calypso-live                      # the connector this template defines (KERNEL_AND_MODULES.md section 18.5)
 plugin: kafka
-enabled: ${DRISHTI_STREAM_MUREX:false}
+enabled: ${DRISHTI_STREAM_CALYPSO:false}
 kinds:
 - trade
-description: Murex's live trades, and the trade blotter's amendments written back to them
+description: Calypso's live trades, and the trade blotter's amendments written back to them
 settings:
   bootstrap-servers: ${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}
   topics:
-  - ${DRISHTI_MUREX_TOPIC:drishti.trading.murex.trades}
+  - ${DRISHTI_CALYPSO_TOPIC:drishti.trading.calypso.trades}
   kind: trade
   id-field: TRADE_ID
   stale-after: ${DRISHTI_STREAM_STALE_AFTER:15m}
-  source-name: trade-murex-live
+  source-name: trade-calypso-live
 writes:
-  amend-murex-trade:
+  amend-calypso-trade:
     kind: trade
     kafka:
-      topic: ${DRISHTI_MUREX_TOPIC:drishti.trading.murex.trades}
+      topic: ${DRISHTI_CALYPSO_TOPIC:drishti.trading.calypso.trades}
       shape: document
       version-field: TRADE_VERSION
       changed-by: UPDATED_BY

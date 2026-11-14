@@ -32,7 +32,6 @@ import com.ash.drishti.engine.source.ConnectionProbe;
 import com.ash.drishti.engine.source.SettingCatalogue;
 import com.ash.drishti.engine.source.SourceRegistry;
 import com.ash.drishti.engine.source.SourcesProperties;
-import com.ash.drishti.packs.ConnectorBootstrap;
 import com.ash.drishti.packs.ConnectorFiles;
 import com.ash.drishti.packs.PackRegistry;
 import java.nio.file.Files;
@@ -109,9 +108,10 @@ class ConnectorManagerTest {
         MockEnvironment env = new MockEnvironment().withProperty("drishti.packs.dir", dir.resolve("packs").toString())
                 .withProperty("drishti.packs.loaded", "risk").withProperty("THE_URL", "db://from-env");
         PackRegistry packs = new PackRegistry(env);
-        // as the environment post-processor would at start: templates become files, files become properties
-        ConnectorBootstrap.run(packs.packs(), files, null, true);
-        var defs = files.readAll(new java.util.HashMap<>());
+        // as the environment post-processor does at start: each connector's layers merged in memory, no file written
+        var templates = com.ash.drishti.packs.ConnectorLayers.templates(packs.packs(), t -> t);
+        var defs = new java.util.LinkedHashMap<>(com.ash.drishti.packs.ConnectorLayers.resolve(templates, files, new java.util.HashMap<>()));
+        templates.forEach((n, t) -> defs.computeIfAbsent(n, k -> files.parse(n, com.ash.drishti.packs.ConnectorLayers.templateText(files, n, t.definition(), ""))));
         var startup = new java.util.LinkedHashMap<String, SourcesProperties.ConnectorSettings>(app);
         defs.forEach((n, d) -> startup.put(n, new SourcesProperties.ConnectorSettings(d.plugin(), d.isEnabled(), d.kinds(), d.settings())));
         var props = new SourcesProperties(Map.of(), null, Map.of(), Duration.ofSeconds(1), null, startup, dir.resolve("connectors").toString(), "poll",
@@ -126,13 +126,12 @@ class ConnectorManagerTest {
             + "    settings:\n      url: db://pack-default\n";
 
     @Test
-    void aPackTemplateBecomesAFileAndTheFileIsWhatRuns(@TempDir Path dir) throws Exception {
+    void aPackTemplateRunsWithoutAnyFile(@TempDir Path dir) throws Exception {
         build(dir, PACK, null, null, Map.of());
-        assertThat(files.exists("risk-db")).isTrue();
+        assertThat(files.exists("risk-db")).isFalse();                                      // the server writes no connector file
         assertThat(registry.plugin("risk-db")).isPresent();
         assertThat(Fake.LOG).containsExactly("start:risk-db:db://pack-default");
         assertThat(manager.origin("risk-db")).isEqualTo("file");
-        assertThat(manager.generated()).isEmpty();                                            // (reported by the post-processor in a real start)
         Map<String, Object> d = manager.detail("risk-db");
         assertThat(d).containsEntry("plugin", "fake").containsEntry("state", "RUNNING").containsEntry("template", "risk");
         assertThat(d.get("packDefault").toString()).contains("db://pack-default");

@@ -123,39 +123,17 @@ public class DataLoadConfiguration {
      */
     static Supplier<java.util.List<Routes.ModuleRules>> moduleRules(Environment env, ObjectProvider<com.ash.drishti.registry.AccessRegistry> access) {
         return () -> {
+            // the resolution's modules that are on, wherever each is (its folder under drishti.modules.home, or its installed .dmod);
+            // a rules file that cannot be read is a problem of the resolution (Health, DRS-1048), never a silent empty list
             java.util.List<Routes.ModuleRules> out = new java.util.ArrayList<>();
-            java.nio.file.Path dir = java.nio.file.Path.of(env.getProperty("drishti.live-sets.modules-dir", "modules"));
-            com.ash.drishti.registry.AccessRegistry a = access.getIfAvailable();
-            if (!java.nio.file.Files.isDirectory(dir)) {
-                return out;
-            }
+            com.ash.drishti.api.resolution.ConfigResolution r = com.ash.drishti.packs.PackPaths.resolution(env);
             com.fasterxml.jackson.dataformat.yaml.YAMLMapper yaml = new com.fasterxml.jackson.dataformat.yaml.YAMLMapper();
-            {
-                // the module folders and the modules installed from a .dmod (installed/<id>/<version>/): both give their rules
-                for (java.nio.file.Path m : com.ash.drishti.lakeconfig.ModuleDirs.of(dir)) {
-                    java.nio.file.Path manifest = m.resolve("module.yaml");
-                    String id = com.ash.drishti.lakeconfig.ModuleDirs.idOf(m);
-                    if (a != null && !a.moduleOn(id)) {
-                        continue;
-                    }
-                    try {
-                        com.fasterxml.jackson.databind.JsonNode rules = yaml.readTree(java.nio.file.Files.readString(manifest)).path("dataload");
-                        if (rules.isTextual()) {
-                            java.nio.file.Path f = m.resolve(rules.asText());
-                            rules = java.nio.file.Files.isRegularFile(f) ? yaml.readTree(java.nio.file.Files.readString(f)) : null;
-                        } else if (rules.isObject()) {
-                            rules = yaml.createObjectNode().set("dataload", rules);
-                        } else {
-                            rules = null;
-                        }
-                        if (rules != null) {
-                            out.add(new Routes.ModuleRules(id, rules));
-                        }
-                    } catch (java.io.IOException | RuntimeException e) {
-                        // a module whose rules cannot be read adds none; Admin's module page says why
-                    }
-                }
+            java.util.Map<String, java.util.List<java.util.Map<String, Object>>> byModule = new java.util.LinkedHashMap<>();
+            for (com.ash.drishti.api.resolution.ModuleTemplates.Rule rule : r.rules()) {
+                byModule.computeIfAbsent(rule.module(), k -> new java.util.ArrayList<>()).add(rule.rule());
             }
+            byModule.forEach((id, rules) -> out.add(new Routes.ModuleRules(id,
+                    yaml.valueToTree(java.util.Map.of("dataload", java.util.Map.of("rules", rules))))));
             return out;
         };
     }

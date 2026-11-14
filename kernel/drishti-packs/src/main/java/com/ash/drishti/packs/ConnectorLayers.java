@@ -132,6 +132,12 @@ public final class ConnectorLayers {
     @SuppressWarnings("unchecked")
     public static Effective effective(ConnectorFiles files, String name, String text, Map<String, Object> template) {
         if (template == null) {
+            // a file that says it overrides a template, or that an earlier release generated from one, is never run on its own (DRS-1046)
+            java.util.Optional<String> owner = templateKey(text);
+            if (owner.isPresent() || generated(text)) {
+                throw new ConnectorFiles.InvalidFile(name + ".yaml overrides the template of " + owner.orElse(generatedFrom(text).map(x -> "pack " + x).orElse("an earlier release"))
+                        + ", which is not here (its module is off or removed): it is not used (DRS-1046)");
+            }
             ConnectorFiles.Definition d = files.parse(name, text);
             return new Effective(d, SITE, own(d, SITE), false);
         }
@@ -149,14 +155,26 @@ public final class ConnectorLayers {
         } catch (IOException | RuntimeException e) {
             throw new ConnectorFiles.InvalidFile(name + ".yaml is not valid YAML: " + e.getMessage().lines().findFirst().orElse(""));
         }
-        raw = raw == null ? Map.of() : raw;
+        raw = raw == null ? new LinkedHashMap<>() : new LinkedHashMap<>(raw);
+        raw.remove(TEMPLATE_KEY);                                         // the owner the override names: not a setting
+        // an override may change any key, the plugin included, and still inherits every other one (KERNEL_AND_MODULES.md section 18.5)
         Object plugin = raw.get("plugin");
-        if (plugin != null && !String.valueOf(plugin).isBlank() && !String.valueOf(plugin).trim().equals(t.plugin())) {
-            ConnectorFiles.Definition d = files.parse(name, text);       // another plugin: the file is the whole connector
-            return new Effective(d, SITE, own(d, SITE), false);
+        String effectivePlugin = plugin != null && !String.valueOf(plugin).isBlank() ? String.valueOf(plugin).trim() : t.plugin();
+        // a key set to null removes the inherited one
+        java.util.Set<String> removed = new java.util.LinkedHashSet<>();
+        if (raw.get("settings") instanceof Map<?, ?> rs) {
+            Map<String, Object> kept = new LinkedHashMap<>();
+            rs.forEach((k, v) -> {
+                if (v == null) {
+                    removed.add(String.valueOf(k));
+                } else {
+                    kept.put(String.valueOf(k), v);
+                }
+            });
+            raw.put("settings", kept);
         }
         Map<String, Object> withPlugin = new LinkedHashMap<>(raw);
-        withPlugin.put("plugin", t.plugin());
+        withPlugin.put("plugin", effectivePlugin);
         if (raw.get("kinds") == null && t.plugin().equals("reactive") && template.get("kinds") instanceof Map<?, ?> km) {
             withPlugin.put("kinds", km);                                  // a reactive connector's computation reads its kinds' parameters
         }
@@ -180,19 +198,26 @@ public final class ConnectorLayers {
             settings.keySet().removeIf(k -> k.equals("root") || k.startsWith("table.") || k.startsWith("layout."));
             origins.keySet().retainAll(settings.keySet());
         }
+        for (String gone : removed) {
+            settings.keySet().removeIf(k -> k.equals(gone) || k.startsWith(gone + "."));
+            origins.keySet().removeIf(k -> k.equals(gone) || k.startsWith(gone + "."));
+        }
         o.settings().forEach((k, v) -> {
             if (!k.equals(ConnectorFiles.COMPUTE_SETTING) || !o.compute().isEmpty()) {
                 settings.put(k, v);
                 origins.put(k, OVERRIDE);
             }
         });
+        if (!effectivePlugin.equals(t.plugin())) {
+            origins.put("plugin", OVERRIDE);
+        }
         Map<String, Object> compute = t.compute();
         if (!o.compute().isEmpty()) {
             Map<String, Object> c = new LinkedHashMap<>(t.compute());
             c.putAll(o.compute());
             compute = c;
         }
-        ConnectorFiles.Definition d = new ConnectorFiles.Definition(name, t.plugin(), raw.get("enabled") != null ? o.enabled() : t.enabled(),
+        ConnectorFiles.Definition d = new ConnectorFiles.Definition(name, effectivePlugin, raw.get("enabled") != null ? o.enabled() : t.enabled(),
                 raw.get("kinds") != null ? o.kinds() : t.kinds(), raw.get("description") != null ? o.description() : t.description(), settings,
                 text, ConnectorFiles.etag(text), o.modified(), raw.get("requires") != null ? o.requires() : t.requires(), compute,
                 raw.get("writes") != null ? o.writes() : t.writes());
@@ -200,6 +225,17 @@ public final class ConnectorLayers {
     }
 
     /** True when the site's file is a generated file nobody edited: it is ignored, the template is in force. */
+    /** The key of an override that names the template it changes ({@code template: module source-endur}); Admin and the tools write it. */
+    public static final String TEMPLATE_KEY = "template";
+
+    private static final Pattern TEMPLATE_LINE = Pattern.compile("(?m)^template:\\s*['\"]?([^'\"#\\n]+?)['\"]?\\s*(#.*)?$");
+
+    /** The owner an override names ({@code template:}), if it names one. */
+    public static Optional<String> templateKey(String text) {
+        Matcher m = text == null ? null : TEMPLATE_LINE.matcher(text);
+        return m != null && m.find() ? Optional.of(m.group(1).strip()) : Optional.empty();
+    }
+
     public static boolean supersededFile(ConnectorFiles files, String name) {
         String text = files.exists(name) ? files.text(name) : null;
         return text != null && generated(text) && unedited(files, name, text);

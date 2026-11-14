@@ -32,6 +32,15 @@ import org.junit.jupiter.api.Test;
 class AllShippedPacksTest {
 
     static final Path SHIPPED = Path.of("..", "..", "config", "packs").toAbsolutePath().normalize();
+
+    /** The repository's resolution with every module on, and the examples' folder as the site's deployed packs (or none). */
+    static com.ash.drishti.api.resolution.ConfigResolution repo(Path deployed) {
+        Path modules = Path.of("..", "..", "modules").toAbsolutePath().normalize();
+        return com.ash.drishti.api.resolution.ConfigResolution.build(new com.ash.drishti.api.resolution.ResolutionSettings(SHIPPED,
+                deployed == null ? SHIPPED.resolve("no-deployed-packs") : deployed, SHIPPED.resolve("core"), modules, modules.resolve("no-store")), id -> true);
+    }
+
+    static final com.ash.drishti.api.resolution.ConfigResolution REPO = repo(null);
     static final Path EXAMPLES = Path.of("..", "..", "examples", "packs").toAbsolutePath().normalize();
 
     /** Shipped but not on by default: switched on with DRISHTI_PACKS (their READMEs say how). */
@@ -41,11 +50,12 @@ class AllShippedPacksTest {
 
     @Test
     void theShippedPacksAreTheDefaultOnesPlusTheOptInOnesAndLoadTogether() {
-        List<String> shipped = PackLoader.folders(List.of(SHIPPED));
+        assertThat(REPO.problems()).as("the repository resolves cleanly").isEmpty();
+        List<String> shipped = REPO.packs().names();
         assertThat(shipped).contains(PackPaths.DEFAULT_ENABLED.split(","));
         assertThat(shipped.stream().filter(n -> !List.of(PackPaths.DEFAULT_ENABLED.split(",")).contains(n)).toList()).isSubsetOf(OPT_IN);
         PackLoader loader = new PackLoader();
-        Map<String, Object> p = loader.properties(loader.load(SHIPPED, List.of(PackPaths.DEFAULT_ENABLED.split(","))));
+        Map<String, Object> p = loader.properties(loader.load(REPO, List.of(PackPaths.DEFAULT_ENABLED.split(","))));
         assertThat(p).containsEntry("drishti.commands.mnemonics.TRD.kind", "trade").containsEntry("drishti.commands.mnemonics.CPTY.kind", "counterparty")
                 .containsEntry("drishti.commands.mnemonics.AGR.kind", "agreement").containsEntry("drishti.commands.mnemonics.ECON.kind", "economy")
                 .containsEntry("drishti.commands.mnemonics.JUR.kind", "jurisdiction").containsEntry("drishti.commands.mnemonics.CO.kind", "listed-company")
@@ -54,10 +64,10 @@ class AllShippedPacksTest {
 
     @Test
     void everyExamplePackLoadsOnTopOfTheShippedOnes() {
-        List<Path> dirs = PackLoader.dirs(SHIPPED.toString(), null, EXAMPLES.toString());
+        com.ash.drishti.api.resolution.ConfigResolution dirs = repo(EXAMPLES);
         List<String> examples = PackLoader.folders(List.of(EXAMPLES));
         assertThat(examples).contains("finance", "genomics", "logistics", "retail-banking", "climate-risk", "operational-risk", "liquidity-risk")
-                .doesNotContainAnyElementsOf(PackLoader.folders(List.of(SHIPPED)));
+                .doesNotContainAnyElementsOf(REPO.packs().names());
         for (String name : examples) {
             PackLoader loader = new PackLoader();
             assertThat(loader.properties(loader.load(dirs, List.of(name)))).as(name).containsKey("drishti.packs.loaded");
@@ -68,14 +78,14 @@ class AllShippedPacksTest {
     void noTwoShippedPacksDeclareTheSameRoleDifferently() {
         Path dir = SHIPPED;
         assertThat(Files.isDirectory(dir)).as("the shipped packs folder").isTrue();
-        List<String> all = PackLoader.folders(List.of(dir));
+        List<String> all = REPO.packs().names();
         assertThat(all).hasSizeGreaterThanOrEqualTo(PackPaths.DEFAULT_ENABLED.split(",").length);
         List<String> clashes = new ArrayList<>();
         for (int i = 0; i < all.size(); i++) {
             for (int j = i + 1; j < all.size(); j++) {
                 try {
                     PackLoader loader = new PackLoader();
-                    loader.properties(loader.load(dir, List.of(all.get(i), all.get(j))));
+                    loader.properties(loader.load(REPO, List.of(all.get(i), all.get(j))));
                 } catch (IllegalStateException e) {
                     String m = String.valueOf(e.getMessage());
                     if (m.startsWith("role ") || m.contains("mnemonic")) {

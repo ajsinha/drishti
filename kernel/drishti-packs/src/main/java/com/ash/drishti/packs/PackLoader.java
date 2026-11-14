@@ -70,11 +70,52 @@ public final class PackLoader {
      * {@code <name>/pack.yaml} wins (packs installed from a registry come before the shipped ones).
      */
     public List<Pack> load(List<Path> dirs, List<String> enabled) {
+        return load(byFolders(dirs), enabled);
+    }
+
+    /**
+     * The enabled packs and everything they require, dependencies first, each found by the resolution (docs/architecture/KERNEL_AND_MODULES.md
+     * section 18.4): the site, the modules that are on, the kernel. A pack no layer has stops the load with the places looked in.
+     */
+    public List<Pack> load(com.ash.drishti.api.resolution.ConfigResolution resolution, List<String> enabled) {
+        return load(locator(resolution), enabled);
+    }
+
+    /** Reads one pack the resolution finds; throws {@link IllegalStateException} when no layer has it. */
+    public Pack readOne(com.ash.drishti.api.resolution.ConfigResolution resolution, String name) {
+        return readAt(locator(resolution).apply(name), name, null);
+    }
+
+    /** The pack folder of a name in a resolution, or a {@link IllegalStateException} naming the layers looked in (DRS-1041 / DRS-1043). */
+    public static java.util.function.Function<String, Path> locator(com.ash.drishti.api.resolution.ConfigResolution r) {
+        return name -> {
+            Path d = r.packDir(name);
+            if (d != null) {
+                return d;
+            }
+            String off = r.packs().off().get(name);
+            throw new IllegalStateException(off != null
+                    ? "pack '" + name + "' belongs to module " + off + ", which is off: switch it on in Admin -> Modules (DRS-1043)"
+                    : "no pack '" + name + "': looked in the site's packs (" + r.settings().installedDir() + ", " + r.settings().siteDir()
+                            + "), the modules that are on and the kernel's packs (" + r.settings().kernelDir() + ") (DRS-1041)");
+        };
+    }
+
+    private static java.util.function.Function<String, Path> byFolders(List<Path> dirs) {
+        return name -> {
+            com.ash.drishti.api.PackFolders.requireOne(dirs, name);            // two domain folders of one root: refused, naming both
+            Path dir = dirs.stream().filter(d -> Files.isRegularFile(d.resolve(name).normalize().resolve("pack.yaml"))).findFirst()
+                    .orElse(dirs.get(dirs.size() - 1));
+            return dir.resolve(name).normalize();
+        };
+    }
+
+    private List<Pack> load(java.util.function.Function<String, Path> locate, List<String> enabled) {
         Map<String, Pack> done = new LinkedHashMap<>();
         for (String name : enabled) {
             String n = name.trim();
             if (!n.isEmpty()) {
-                visit(dirs, n, done, new java.util.ArrayDeque<>());
+                visit(locate, n, done, new java.util.ArrayDeque<>());
             }
         }
         return new ArrayList<>(done.values());
@@ -108,10 +149,7 @@ public final class PackLoader {
 
     /** Reads one pack from the first folder that has it; throws {@link IllegalStateException} when none does or the manifest is wrong. */
     public Pack readOne(List<Path> dirs, String name) {
-        com.ash.drishti.api.PackFolders.requireOne(dirs, name);            // two domain folders of one root: refused, naming both
-        Path dir = dirs.stream().filter(d -> Files.isRegularFile(d.resolve(name).normalize().resolve("pack.yaml"))).findFirst()
-                .orElse(dirs.get(dirs.size() - 1));
-        return read(dir, name, null);
+        return readAt(byFolders(dirs).apply(name), name, null);
     }
 
     /** The names of the pack folders (those holding a {@code pack.yaml}) in the folders, the first folder winning a name. */
@@ -130,7 +168,7 @@ public final class PackLoader {
         return List.copyOf(out);
     }
 
-    private void visit(List<Path> dirs, String name, Map<String, Pack> done, java.util.Deque<String> path) {
+    private void visit(java.util.function.Function<String, Path> locate, String name, Map<String, Pack> done, java.util.Deque<String> path) {
         if (done.containsKey(name)) {
             return;
         }
@@ -139,21 +177,17 @@ public final class PackLoader {
         }
         path.addLast(name);
         String requiredBy = path.size() > 1 ? path.toArray(new String[0])[path.size() - 2] : null;
-        com.ash.drishti.api.PackFolders.requireOne(dirs, name);            // two domain folders of one root: the server does not start
-        Path dir = dirs.stream().filter(d -> Files.isRegularFile(d.resolve(name).normalize().resolve("pack.yaml"))).findFirst()
-                .orElse(dirs.get(dirs.size() - 1));
-        Pack p = read(dir, name, requiredBy);
+        Pack p = readAt(locate.apply(name), name, requiredBy);
         for (String r : p.parents()) {
-            visit(dirs, r.trim(), done, path);
+            visit(locate, r.trim(), done, path);
         }
         path.removeLast();
         done.put(name, p);
     }
 
-    private Pack read(Path dir, String n, String requiredBy) {
-        Path packDir = dir.resolve(n).normalize();
+    private Pack readAt(Path packDir, String n, String requiredBy) {
         Path manifest = packDir.resolve("pack.yaml");
-        if (!packDir.startsWith(dir.normalize()) || !Files.isRegularFile(manifest)) {
+        if (!Files.isRegularFile(manifest)) {
             throw new IllegalStateException("pack '" + n + "' not found at " + manifest
                     + (requiredBy == null ? "" : " (required by '" + requiredBy + "')"));
         }
@@ -186,8 +220,13 @@ public final class PackLoader {
         if (m.get("connectors") != null && !(m.get("connectors") instanceof Map<?, ?>)) {
             return m;                                                    // a list of names: no templates of its own, none added
         }
-        Map<String, Map<String, Object>> mods = com.ash.drishti.lakeconfig.ModuleConnectors.of(
-                com.ash.drishti.lakeconfig.ModuleConnectors.modulesDir(manifest), pack);
+        List<String> kinds = new ArrayList<>();
+        if (m.get("kinds") instanceof List<?> l) {
+            l.forEach(k -> kinds.add(String.valueOf(k)));
+        } else if (m.get("kinds") instanceof Map<?, ?> km) {
+            km.keySet().forEach(k -> kinds.add(String.valueOf(k)));
+        }
+        Map<String, Map<String, Object>> mods = com.ash.drishti.lakeconfig.ModuleConnectors.forKinds(kinds);
         if (mods.isEmpty()) {
             return m;
         }

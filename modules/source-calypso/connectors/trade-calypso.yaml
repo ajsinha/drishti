@@ -12,19 +12,19 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Template: copy to config/connectors/trade-wss.yaml. WSS's trades from the demo Delta lake: the shared table trading.trades_shared, split by where:.
+# Template: copy to config/connectors/trade-calypso.yaml. Calypso's trades from the demo Delta lake: its own table trading.trade_calypso.
 # map:, where: and set: are the trade kind's source options (modules/trading/docs/guide.md, "Source systems").
+name: trade-calypso                      # the connector this template defines (KERNEL_AND_MODULES.md section 18.5)
 plugin: delta
 enabled: ${DRISHTI_LAKE_ENABLED:true}
 kinds:
 - trade
-description: 'WSS trades read from the shared table trading.trades_shared, split by where: in the Delta lake'
+description: Calypso trades read from its own table trading.trade_calypso in the Delta lake
 settings:
   lake: demo
-  lake-tables: trading.trades_shared
+  lake-tables: trading.trade_calypso
   union: true
-  source-name: trade-wss
-  where: SOURCE_SYSTEM = 'WSS'
+  source-name: trade-calypso
   set:
-    SOURCE_SYSTEM: WSS
-  map: mappings/wss-trade.yaml
+    SOURCE_SYSTEM: CALYPSO
+  map: mappings/calypso-trade.yaml

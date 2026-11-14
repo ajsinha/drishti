@@ -51,38 +51,6 @@ public final class PackFolders {
                 // an unreadable folder has no domain folders to offer
             }
         }
-        out.addAll(moduleRoots(root));
-        return out;
-    }
-
-    /**
-     * The packs folders of the modules beside a packs folder named {@code config/packs}: {@code <home>/modules/<m>/packs}, or
-     * {@code <home>/modules/<m>/dmod/packs} for a module whose manifest is in its {@code dmod} folder, in module-name order. Empty for any
-     * other root (a test's folder, an installed-packs folder): the modules are the product's, found from the product's home.
-     */
-    public static List<Path> moduleRoots(Path root) {
-        List<Path> out = new ArrayList<>();
-        Path abs = root.toAbsolutePath().normalize();
-        Path config = abs.getParent();
-        if (config == null || !"packs".equals(String.valueOf(abs.getFileName())) || !"config".equals(String.valueOf(config.getFileName()))
-                || config.getParent() == null) {
-            return out;
-        }
-        Path modules = config.getParent().resolve("modules");
-        if (!Files.isDirectory(modules)) {
-            return out;
-        }
-        try (Stream<Path> s = Files.list(modules)) {
-            s.filter(Files::isDirectory).sorted().forEach(m -> {
-                for (Path home : List.of(m, m.resolve("dmod"))) {
-                    if (Files.isRegularFile(home.resolve("module.yaml")) && Files.isDirectory(home.resolve("packs"))) {
-                        out.add(home.resolve("packs"));
-                    }
-                }
-            });
-        } catch (IOException e) {
-            // an unreadable folder has no modules to offer
-        }
         return out;
     }
 

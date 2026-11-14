@@ -49,23 +49,21 @@ public record PackEntry(String domain, String table, String key, String date, Li
     static JsonNode manifest(Path file) throws IOException {
         JsonNode m = new YAMLMapper().readTree(Files.readString(file));
         String pack = m.path("pack").asText("");
-        Path modules = modulesDir(file);
-        if (pack.isEmpty() || modules == null || !(m instanceof com.fasterxml.jackson.databind.node.ObjectNode root)) {
+        if (pack.isEmpty() || !(m instanceof com.fasterxml.jackson.databind.node.ObjectNode root) || m.path("connectors").isArray()) {
             return m;
         }
+        java.util.List<String> kinds = new java.util.ArrayList<>();
+        m.path("kinds").forEach(k -> kinds.add(k.isTextual() ? k.asText() : ""));
+        m.path("kinds").fieldNames().forEachRemaining(kinds::add);
         com.fasterxml.jackson.databind.node.ObjectNode defs = root.path("connectors").isObject()
                 ? (com.fasterxml.jackson.databind.node.ObjectNode) root.get("connectors") : root.putObject("connectors");
         com.fasterxml.jackson.databind.ObjectMapper json = new com.fasterxml.jackson.databind.ObjectMapper();
-        for (Map.Entry<String, Map<String, Object>> e : ModuleConnectors.of(modules, pack).entrySet()) {
+        for (Map.Entry<String, Map<String, Object>> e : ModuleConnectors.forKinds(kinds).entrySet()) {
             if (!defs.has(e.getKey())) {
                 defs.set(e.getKey(), json.valueToTree(e.getValue()));
             }
         }
         return root;
-    }
-
-    private static Path modulesDir(Path file) {
-        return ModuleConnectors.modulesDir(file);
     }
 
     /**
@@ -79,25 +77,31 @@ public record PackEntry(String domain, String table, String key, String date, Li
             return out;
         }
         Path file = Files.isDirectory(pack) ? pack.resolve("pack.yaml") : pack;
-        JsonNode site = null;
-        Path modules = modulesDir(file);
-        String dir = System.getenv("DRISHTI_CONNECTORS_DIR");
-        Path siteFile = dir != null && !dir.isBlank() ? Path.of(dir, connector + ".yaml")
-                : modules == null ? null : modules.getParent().resolve("config").resolve("connectors").resolve(connector + ".yaml");
-        if (siteFile != null && Files.isRegularFile(siteFile)) {
-            site = new YAMLMapper().readTree(Files.readString(siteFile));
+        // the layers (KERNEL_AND_MODULES.md section 18.5): the template's constants, then the site override's key by key (null removes one)
+        String dir = System.getProperty("drishti.sources.connectors-dir", System.getenv().getOrDefault("DRISHTI_CONNECTORS_DIR", "./config/connectors"));
+        Path siteFile = Path.of(dir, connector + ".yaml");
+        JsonNode site = Files.isRegularFile(siteFile) ? new YAMLMapper().readTree(Files.readString(siteFile)) : null;
+        JsonNode template = manifest(file).path("connectors").path(connector);
+        if (!template.isMissingNode() && !(site != null && site.path("settings").size() > 0 && !site.path("plugin").isMissingNode()
+                && template.path("plugin").isMissingNode())) {
+            addConstants(template.path("settings"), out);
         }
-        JsonNode c = site != null && site.path("settings").size() > 0 ? site : manifest(file).path("connectors").path(connector);
-        JsonNode st = c.path("settings");
+        if (site != null) {
+            addConstants(site.path("settings"), out);
+        }
+        out.values().removeIf(v -> v == null || v.equals("null"));
+        return out;
+    }
+
+    private static void addConstants(JsonNode st, Map<String, String> out) {
         if (st.path("set").isObject()) {
-            st.path("set").fields().forEachRemaining(e -> out.put(e.getKey(), e.getValue().asText()));
+            st.path("set").fields().forEachRemaining(e -> out.put(e.getKey(), e.getValue().isNull() ? null : e.getValue().asText()));
         }
         st.fields().forEachRemaining(e -> {
             if (e.getKey().startsWith("set.") && e.getKey().length() > 4) {
-                out.put(e.getKey().substring(4), e.getValue().asText());
+                out.put(e.getKey().substring(4), e.getValue().isNull() ? null : e.getValue().asText());
             }
         });
-        return out;
     }
 
     /** The pack's entry for {@code kind}. */

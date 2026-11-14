@@ -54,7 +54,10 @@ class SamplePolicyTest {
         pack("real", false, "shared");
         pack("demo", true, "shared");
         pack("toy", true, "toy-feed");
-        List<Path> dirs = List.of(dir.resolve("packs"));
+        com.ash.drishti.api.resolution.ConfigResolution dirs = com.ash.drishti.api.resolution.ConfigResolution.build(
+                com.ash.drishti.api.resolution.ResolutionSettings.of(k -> k.equals("drishti.packs.site-dir") ? dir.resolve("packs").toString()
+                        : k.equals("drishti.modules.home") ? dir.resolve("no-modules").toString() : k.equals("drishti.data.dir") ? dir.resolve("data").toString() : null),
+                id -> true);
         PackLoader loader = new PackLoader();
         SamplePolicy visible = new SamplePolicy("visible", null);
         SamplePolicy hidden = new SamplePolicy("hidden", null);

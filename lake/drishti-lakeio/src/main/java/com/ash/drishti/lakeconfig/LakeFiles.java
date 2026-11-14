@@ -304,7 +304,12 @@ public final class LakeFiles {
             if (!Files.isDirectory(root)) {
                 continue;
             }
-            com.ash.drishti.api.PackFolders.list(root).stream().map(d -> d.resolve("pack.yaml")).forEach(out::add);   // and its domain folders
+            com.ash.drishti.api.resolution.ConfigResolution r = com.ash.drishti.api.resolution.ConfigResolution.currentOrOffline();
+            if (root.toAbsolutePath().normalize().equals(r.settings().siteDir())) {   // the site's packs folder: every pack the resolution finds
+                r.packs().packs().values().forEach(l -> out.add(l.dir().resolve("pack.yaml")));
+                continue;
+            }
+            com.ash.drishti.api.PackFolders.list(root).stream().map(d -> d.resolve("pack.yaml")).forEach(out::add);   // a given folder and its domain folders
         }
         return out;
     }

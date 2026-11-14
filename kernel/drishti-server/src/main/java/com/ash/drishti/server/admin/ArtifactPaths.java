@@ -84,22 +84,12 @@ public final class ArtifactPaths {
         return bi;
     }
 
-    /** Every pack folder on disk, installed ones first (they win, as in the loader). */
+    /** Every pack the resolution finds (KERNEL_AND_MODULES.md section 18), its area its origin: installed, site, module:<id>, kernel. */
     public List<PackFolder> packFolders() {
         List<PackFolder> out = new ArrayList<>();
-        for (Path root : PackLoader.dirs(packs.toString(), installed.toString())) {
-            String area = root.startsWith(installed) ? "installed" : "packs";   // the roots include the domain folders (PackPaths.roots)
-            if (!Files.isDirectory(root)) {
-                continue;
-            }
-            try (var s = Files.list(root)) {
-                for (Path d : s.filter(x -> Files.isRegularFile(x.resolve("pack.yaml"))).sorted().toList()) {
-                    out.add(read(d, area));
-                }
-            } catch (IOException e) {
-                // an unreadable folder lists nothing
-            }
-        }
+        com.ash.drishti.api.resolution.ConfigResolution r = com.ash.drishti.api.resolution.ConfigResolution.currentOrOffline();
+        r.packs().packs().values().forEach(l -> out.add(read(l.dir(), l.dir().startsWith(installed) ? "installed"
+                : l.layer() == com.ash.drishti.api.resolution.PackResolver.Layer.SITE ? "packs" : l.origin())));
         return out;
     }
 

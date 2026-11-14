@@ -2379,7 +2379,7 @@ paper beside this section ([pack-resolution-inventory.md](pack-resolution-invent
 The access registry ([ACCESS_MODEL.md](ACCESS_MODEL.md)) decides each module's state from the distribution, the licence, the
 administrator's switch and the modules it requires. The resolver asks it and nothing else: no reader looks at a switch file, the
 distribution or `drishti.packs.enabled` to decide whether a module's content counts. For each module the registry gives its id,
-version, state, the reason when off, and **its folder**: `<drishti.modules.dir>/<id>/` (or `<id>/dmod/`, a module built with code),
+version, state, the reason when off, and **its folder**: `<drishti.modules.home>/<id>/` (or `<id>/dmod/`, a module built with code),
 else the active version in the store, `<drishti.modules.path>/installed/<id>/<version>/`. A module found in both with different
 versions is read from the folder and reported (DRS-1044). The command line and the tools, which have no server, compute the same
 from the distribution file and the switch files (licence not evaluated); the console takes the list from the server.
@@ -2390,9 +2390,9 @@ from the distribution file and the switch files (licence not evaluated); the con
 |---|---|---|
 | `drishti.packs.site-dir` (`DRISHTI_PACKS_DIR`) | `./config/packs` | the site's own packs: `<dir>/<pack>/pack.yaml`, or one folder down (`<dir>/<group>/<pack>/`) |
 | `drishti.packs.installed-dir` | `<data>/packs/installed` | packs an administrator deployed (Admin → Packs, a registry); part of the site |
-| `drishti.modules.dir` (`DRISHTI_MODULES_HOME`) | `./modules` | the modules shipped as folders |
+| `drishti.modules.home` (`DRISHTI_MODULES_HOME`) | `./modules` | the modules shipped as folders (tests and tools point it at the repository's `modules/`; no symbolic link beside a scratch `config/`) |
 | `drishti.modules.path` (`DRISHTI_MODULES_PATH`) | `<data>/modules` | the store of modules installed from a `.dmod` (section 4.1) |
-| `drishti.modules.switches-dir` | `./config/modules` | the administrator's module switches |
+| `drishti.modules.dir` (`DRISHTI_MODULES_DIR`) | `./config/modules` | the administrator's module switches (unchanged: an existing setting keeps its meaning) |
 | `drishti.kernel.packs-dir` | `./config/packs/core` | the kernel's own packs. It is inside the site's packs folder today and is **never read as site packs**; when the folder moves, only this default changes |
 | `drishti.sources.connectors-dir` (`DRISHTI_CONNECTORS_DIR`) | `./config/connectors` | the site's connector files |
 | `drishti.bindings.file` | `./config/bindings.yaml` | the site's bindings |
@@ -2580,7 +2580,7 @@ Each names the thing, both places, and what to do.
 | DRS-1044 | a module in two places | *Module market-data is in modules/market-data (1.0.0) and installed as data/modules/installed/market-data/1.1.0. The folder is read. Remove one.* |
 | DRS-1045 | two templates of one name | *Connector 'trade-endur' is declared by pack trading and by module source-endur. Neither is used. Remove one declaration.* |
 | DRS-1046 | a site connector file is not used | *config/connectors/trade-murex.yaml overrides the template of module source-murex, which is off (not in distribution drishti.risk). It is not used.* |
-| DRS-1047 | a setting names the wrong folder, or two names disagree (start refused) | *drishti.modules.dir is config/modules, which holds module switches and no modules. The switches folder is now drishti.modules.switches-dir; drishti.modules.dir is the modules folder (default ./modules).* |
+| DRS-1047 | a setting names the wrong folder, or two names disagree (start refused) | *drishti.packs.site-dir is config/packs and drishti.packs.dir is site/packs: they name the same thing; keep one.* |
 | DRS-1048 | rules or bindings cannot be read | *The inbox rules of module source-endur (modules/source-endur/dataload.yaml) cannot be read: line 12, … Its files will not be matched.* |
 | DRS-1049 | two answers differ | *This console resolves pack 'trading' 2.9.10 from /opt/console/modules/…; the server serves 2.9.11 from /opt/drishti/modules/…* |
 | DRS-9308 | no write path | *Kind 'trade' (source ENDUR) has no write path: no connector that serves it offers writes. Module source-endur has an example, connectors/examples/kafka.yaml; or bind one in Admin → Data bindings (write).* |
