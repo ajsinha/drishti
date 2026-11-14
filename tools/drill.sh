@@ -59,7 +59,7 @@
 #      cannot touch the jar the console runs; and the Java 25 lane, in a copy too: the whole tree compiled on Java 25 and the tests of
 #      what the JDK version can change (tools/drill-java25.txt), started once 20 GB are free;
 #    - the command sweep (tests/test_command_sweep_browser.py, tools/sweep/command_sweep.py) in the browser lane: every function of FUNC, bare, with its
-#      example and with real ids of the saved test data, as the walk's one user; any FAIL fails the drill; report: <data>/drill/sweep/sweep-*.md
+#      example and with real ids of the saved test data, as the administrator on a sign-in stack of its own; any FAIL fails the drill (a role user is report-only); report: <data>/drill/sweep/sweep-*.md
 #    - the containers lane: both images built and booted on the host network beside the browser lane (tools/drillkit/container_smoke.py:
 #      health, the VaR golden through the API, four console pages), and every Testcontainers test after the browser lane when the diff
 #      since the last release touches the Dockerfiles, the JDK, native code or a module with container tests.

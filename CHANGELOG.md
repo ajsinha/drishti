@@ -26,6 +26,12 @@
   key order instead of every document being read, so the blotter holds the lake's trades and the streamed ones merged by key and version.
   The trading pack ships the **`trade-editor`** role (`edit: true` on trades); `trader` alone reads (pack roles may now carry `edit:`).
   (docs/guides/LIVE_RESULTS_GUIDE.md sections 3 and 7)
+- **Command sweep fixes.** A live result set read a pick (`TRD 1002868`, `NEWS NEWS-Bitcoin`, `XRUN XR-...`) with the strict search reader, so the
+  console's appended `limit 100` made DRS-4004 "cannot read ... limit 100"; it now reads picks as the command line does. `ADMIN DATA-OUT` (and
+  any Admin page of an engine that runs nowhere) answers the engine's DRS-1020 refusal on the command line and is left out of the offered
+  pages, instead of redirecting to a 404. The sweep: a refusal to a role ("no access to any kind of pack", an engine not running) is "refused";
+  a connector's DRS-5034 on an Admin page is not that page failing; the Explain page is checked through its API; the drill sweeps as the
+  administrator on a sign-in stack of its own (a role user optional and report-only); "The command sweep" is in TEST_HARNESS.md.
 
 - **Documentation consolidated: fewer, larger documents.** Each risk measure's tutorial is the last part of its guide (VaR, exposure, FRTB-SA, SIMM);
   one BI guide holds the pivot, virtual tables and models, reports, the Notebook and the groupings, each with its tutorial; one World and public data guide holds
