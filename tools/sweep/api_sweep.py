@@ -215,7 +215,12 @@ def covered_by(e: dict, index: list[tuple[str, int, str]], text: dict) -> str:
         return ""
     tail = r"(?![\w-])"
     if e["path"].rstrip("/").endswith("}"):      # the path ends in a variable: the test names a value there ("/rules/Deep MTM", "/rules/" + id), not a deeper path
-        tail = r"""[^/"'`]*(?:["'`]|["'`]\s*\+\s*[\w.()\[\]]+\s*[,)]|\$\{)"""
+        trailing = 0
+        for seg in reversed(e["path"].rstrip("/").split("/")):
+            if not (seg.startswith("{") and seg.endswith("}")):
+                break
+            trailing += 1
+        tail = r"""(?:[^/"'`]*/){0,%d}[^/"'`]*(?:["'`]|["'`]\s*\+\s*[\w.()\[\]]+\s*[,)]|\$\{)""" % max(trailing - 1, 0)
     rx = re.compile(".*?".join(re.escape(p) for p in pieces) + tail)
     anchor = max(pieces, key=len)
     verb = e["method"].lower()

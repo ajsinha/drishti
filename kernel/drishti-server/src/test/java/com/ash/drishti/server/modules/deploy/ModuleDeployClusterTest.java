@@ -211,6 +211,26 @@ class ModuleDeployClusterTest {
                 .doesNotContain("java/greeter.jar");
         assertThat(call("a", "GET", "/public/modules/console/greeter/9.9.9", null, "reader").statusCode()).isEqualTo(404);
 
+        // a plan nobody applies is closed: only its proposer withdraws it, a second administrator rejects it; a closed plan is never applied
+        String toWithdraw = plan("disable", null, "to withdraw").path("id").asText();
+        String toReject = plan("disable", null, "to reject").path("id").asText();
+        String dep = "/api/v1/admin/modules/deployments/";
+        HttpResponse<String> notYours = call("a", "POST", dep + toWithdraw + "/withdraw", null, "admin-two");
+        assertThat(notYours.statusCode()).isEqualTo(403);
+        assertThat(notYours.body()).contains("DRS-2007");
+        HttpResponse<String> own = call("a", "POST", dep + toReject + "/reject", Map.of("comment", "no"), "admin-one");
+        assertThat(own.statusCode()).as("its proposer withdraws, never rejects").isEqualTo(403);
+        assertThat(ok(call("a", "GET", dep + toWithdraw, null, "admin-one")).path("state").asText()).as("a refusal changed nothing").isEqualTo("proposed");
+        assertThat(ok(call("a", "POST", dep + toWithdraw + "/withdraw", null, "admin-one")).path("state").asText()).isEqualTo("withdrawn");
+        JsonNode rejected = ok(call("a", "POST", dep + toReject + "/reject", Map.of("comment", "not this week"), "admin-two"));
+        assertThat(rejected.path("state").asText()).isEqualTo("rejected");
+        assertThat(ok(call("a", "GET", dep + toReject, null, "admin-one")).path("state").asText()).isEqualTo("rejected");
+        HttpResponse<String> twice = call("a", "POST", dep + toWithdraw + "/withdraw", null, "admin-one");
+        assertThat(twice.statusCode()).isEqualTo(409);
+        assertThat(twice.body()).contains("DRS-2006");
+        assertThat(call("a", "POST", dep + toReject + "/apply", Map.of(), "admin-two").statusCode()).as("a rejected plan is not applied").isGreaterThanOrEqualTo(400);
+        assertThat(call("a", "POST", dep + "no-such-plan/reject", null, "admin-two").statusCode()).isEqualTo(404);
+        assertThat(ok(call("a", "GET", "/api/v1/admin/audit", null, "admin-one")).toString()).contains("module-deploy-withdrawn", "module-deploy-rejected");
         // switch-off: 404 everywhere; a plan made before another was applied is stale
         JsonNode off1 = plan("disable", null, "pause it");
         JsonNode off2 = plan("disable", null, "pause it (second plan)");
