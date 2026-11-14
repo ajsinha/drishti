@@ -44,6 +44,7 @@ DISTINCT = 200                          # distinct values kept per field (counts
 SEEN = 20_000_000                       # uniqueness is checked over up to this many rows of a field
 THRESHOLD = 0.35                        # the lowest confidence proposed
 SURE = 0.75                             # at or above: sure; below: to check
+OPTIONAL_FLOOR = 0.45                   # an optional canonical field is mapped only at or above this; below, it stays unmapped (candidates under others)
 ISO_DATE = re.compile(r"^\d{4}-\d\d-\d\d$")
 ISO_TS = re.compile(r"^\d{4}-\d\d-\d\d[T ]\d\d:\d\d")
 NUMERIC = re.compile(r"^-?\d+(\.\d+)?([eE][-+]?\d+)?$")
@@ -395,9 +396,12 @@ def propose(prof: dict, kind: str, system: str) -> dict:
                 pairs.append(p)
     pairs.sort(key=lambda p: (-p["confidence"], p["to"], p["from"]))
     used_to, used_from, chosen = set(), set(), {}
+    required_names = {cf["name"] for cf in canon if cf.get("presence") == "required"}
     for p in pairs:
         if p["to"] in used_to or p["from"] in used_from:
             continue
+        if p["to"] not in required_names and p["confidence"] < OPTIONAL_FLOOR:
+            continue                                          # weak evidence for an optional field: left unmapped, offered under others
         used_to.add(p["to"])
         used_from.add(p["from"])
         chosen[p["to"]] = p
