@@ -18,6 +18,14 @@
 
 ## Unreleased
 
+- **Lists of records use the whole window.** Every list of records (a bare mnemonic, the search page, a FORM result, `/live/<id>` blotters, monitors)
+  spans the content width and is as tall as what is left of the window (the heading and toolbar stay; the rows scroll inside the grid; it follows
+  the window; a phone keeps the page's flow). One toolbar (title, the one live count "482 trades", grouping, Chart, Pause, Pivot ›, Formatting,
+  Export, View, Customize ›); the toggle "Pivot" and the ROWS / COLUMNS / FILTERS / VALUES ribbon wait behind Customize ›; a column that only
+  repeats the key is not drawn; the header, the pager and the grid's status bar no longer repeat the count. Signed out, `/live/<id>` goes to
+  sign-in and back, as `/t` does. New grid options `ribbon`, `pivotToggle`, `toolbarItems`, `quietStatus`; one mount (`records.mount`) serves
+  the blotter page too.
+
 - **Richer source field maps; the inbox date from the name.** A source module's map (`map:`) reads dotted paths into nested native JSON,
   `from: [a, b]` / `first-of` (the first non-empty), `scale`, `as` (`yyyymmdd`, `yyyymmddhhmmss`, `epoch-millis`, `epoch-seconds`, `iso`),
   `cast`, `values` and `value`, beside the older `fields:` form; the shipped SwapOne, WSS and ICI maps load as written and the end-to-end

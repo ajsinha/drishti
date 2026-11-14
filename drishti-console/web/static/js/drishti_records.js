@@ -44,6 +44,31 @@
       rows: x.rows.map(function (r) { return cols.map(function (c) { var v = r[c.field]; return Array.isArray(v) ? v.join(', ') : v; }); }) };
     tables.openChart(function (S) { return S.bi(res, { title: x.title || 'Results' }); }, document.activeElement);
   }
+  /** Fills the window: a list of records is as tall as what is left of the viewport under its start, less what follows it in the page (a pager, the footer),
+      so the heading and toolbar stay and the rows scroll inside the grid, never the page too. It follows the window's size. A phone keeps the page's flow. */
+  var fitted = [];
+  function after(host) {                                   // the height of what follows the host in the page: its later siblings and its parents' bottoms, up to the body
+    var below = 0, n = host, cs, sib;
+    while (n && n !== document.body) {
+      for (sib = n.nextElementSibling; sib; sib = sib.nextElementSibling) {
+        cs = getComputedStyle(sib);
+        if (cs.display === 'none' || cs.position === 'fixed' || cs.position === 'absolute' || sib.tagName === 'SCRIPT') { continue; }
+        below += sib.getBoundingClientRect().height + (parseFloat(cs.marginTop) || 0) + (parseFloat(cs.marginBottom) || 0);
+      }
+      n = n.parentElement;
+      if (n && n !== document.body) { cs = getComputedStyle(n); below += (parseFloat(cs.paddingBottom) || 0) + (parseFloat(cs.borderBottomWidth) || 0) + (parseFloat(cs.marginBottom) || 0); }
+    }
+    return below;
+  }
+  function fit(host) {
+    if (!host.isConnected || !host.offsetParent) { return; }
+    if (window.innerWidth <= 900) { host.style.height = ''; return; }
+    var r = host.getBoundingClientRect(), room = window.innerHeight - (r.top + window.pageYOffset) - after(host) - (parseFloat(getComputedStyle(host).marginBottom) || 0) - 4;
+    host.style.height = Math.max(320, Math.floor(room)) + 'px';
+  }
+  function fitAll() { fitted = fitted.filter(function (h) { return h.isConnected; }); fitted.forEach(fit); }
+  window.addEventListener('resize', fitAll);
+  function fill(host) { if (fitted.indexOf(host) < 0) { fitted.push(host); } host.setAttribute('data-records-fill', ''); fit(host); setTimeout(function () { fit(host); }, 60); }
   function json(text, fallback) { try { return text ? JSON.parse(text) : fallback; } catch (e) { return fallback; } }
 
   /** Draws one table of records into host. o: {set, live, spec, rows, columns, title, offset, limit, layout, keyField, rowActions, small}. Answers the LiveSetGrid (or null). */
@@ -65,6 +90,7 @@
     live.start().then(function () { host.setAttribute('data-records-ready', 'true'); },
       function (e) { host.textContent = (e && e.message) || 'The rows could not be read.'; });
     host.drishtiRecords = live;
+    if (o.fill || host.hasAttribute('data-records-fill')) { fill(host); }
     return live;
   }
 

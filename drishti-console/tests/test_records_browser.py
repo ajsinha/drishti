@@ -114,3 +114,33 @@ def test_the_layout_holds_on_a_desktop_and_a_phone_light_and_dark(browser, stack
     box = pg.locator(".rc-host").bounding_box()
     assert box and box["width"] <= inner and box["height"] > 100
     assert not pg.errors
+
+
+@pytest.mark.parametrize("width", [1366, 1920, 2560])
+@pytest.mark.parametrize("scheme", ["light", "dark"])
+def test_a_list_of_records_spans_the_content_and_fills_the_window_under_one_toolbar(browser, stack, width, scheme):
+    url, _ = stack
+    pg = opened(browser, url, "/s?q=TRD", width=width, height=900, scheme=scheme)
+    pg.wait_for_function("() => document.querySelector('.rc-host').style.height !== ''")
+    geo = pg.evaluate("""() => { const h = document.querySelector('.rc-host').getBoundingClientRect(), m = document.querySelector('main').getBoundingClientRect();
+      return { w: h.width, main: m.width, bottom: h.bottom, vh: window.innerHeight, sw: document.documentElement.scrollWidth, vw: document.documentElement.clientWidth }; }""")
+    assert geo["w"] >= 0.9 * geo["main"] - 2, geo                                        # not a narrow centred column
+    assert geo["bottom"] <= geo["vh"] + 1, geo                                           # down to the bottom of the window, not past it
+    assert geo["sw"] <= geo["vw"] + 1, geo
+    assert pg.locator(".rc-host .dg-toolbar").count() == 1 and pg.locator(".dg-live-bar").count() == 0      # one toolbar
+    assert pg.locator(".rc-host [data-act=toggle-pivot]").count() == 0 and pg.locator(".rc-host [data-act=pivot]").count() == 1   # one Pivot
+    assert pg.locator(".rc-host .dg-wells").first.is_hidden()                            # ROWS / COLUMNS / FILTERS / VALUES wait behind Customize
+    pg.click(".rc-host [data-act=customize]")
+    pg.wait_for_selector(".rc-host .dg-layout-panel .dg-side")
+    pg.set_viewport_size({"width": width, "height": 700})
+    pg.wait_for_function("h => document.querySelector('.rc-host').getBoundingClientRect().bottom <= h + 1", arg=700)   # it follows the window
+    assert not pg.errors
+
+
+def test_the_records_list_has_one_count(browser, stack):
+    url, _ = stack
+    pg = opened(browser, url, "/s?q=TRD", width=1440)
+    assert "rows ×" not in pg.locator(".rc-host .dg-status").inner_text()                # the grid's own count is not repeated in its status bar
+    assert "30 trades" in pg.locator(".rc-host .dg-live-chip").inner_text()
+    assert pg.locator(".cmp-sum span:has(b)").count() == 0 or "match" in pg.locator(".cmp-sum").inner_text()
+    assert not pg.errors
