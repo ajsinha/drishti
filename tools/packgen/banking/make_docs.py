@@ -152,7 +152,7 @@ def overview(name: str, docs: dict) -> str:
                   "ordinary kind (`var-result`); the explorer's basket tray asks the same engine for a pre-deal what-if. Each loaded date lives in a "
                   "memory-mapped hot file under the data folder (`drishti.var.tier`). From the command line: `drishti.py var show 'DESK:RATES'`.", "",
                   "The VaR guide (`docs/guides/VAR_GUIDE.md`) explains every number with worked examples, the data flow, the scope grammar, the "
-                  "memory tiers and sizing, entitlements, the CLI and the API; tutorial 2, Part A (`docs/guides/VAR_GUIDE.md`) walks through "
+                  "memory tiers and sizing, entitlements, the CLI and the API; the VaR tutorial, Part A (`docs/guides/VAR_GUIDE.md`) walks through "
                   "it on the test data; the data contract is its Part II.", ""]
     if name == "counterparty-risk":
         lines += ["### Exposure: the exposure engine", "",
@@ -169,7 +169,7 @@ def overview(name: str, docs: dict) -> str:
                   "proxy, both in the same engine). The API is `/api/v1/risk/exposure`; from the command line: "
                   "`drishti.py exposure show CPTY:CP-ALDERSHOT`.", "",
                   "The exposure guide (`docs/guides/EXPOSURE_GUIDE.md`) explains every number with worked examples, the explorer, scopes, "
-                  "collateral, captures, the what-if, entitlements, the CLI, the API and the settings; tutorial 3 "
+                  "collateral, captures, the what-if, entitlements, the CLI, the API and the settings; the exposure tutorial "
                   "(`docs/guides/EXPOSURE_GUIDE.md`) walks through it on the test data; the data contract is its Part II.", ""]
     if name == "market-data":
         lines += ["### Public data feeds", "", "Real market data from public sources, each its own connector and **off by default**. Switch one "

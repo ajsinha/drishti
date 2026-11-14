@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of tutorial 6, groupings and analytics computed (docs/guides/BI_GUIDE.md), written to
+"""Pictures of the groupings tutorial, groupings and analytics computed (docs/guides/BI_GUIDE.md), written to
 docs/tutorials/img/t27/. They need a server and console with the public-data packs on the demo lake
 (DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif) and sign-in off:
 

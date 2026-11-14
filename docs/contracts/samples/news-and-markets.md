@@ -165,7 +165,7 @@ Fields no record above has, found by reading all 20 rows, with how many rows fil
 ### See also
 
 - Data contract: [QUOTE in the news-and-markets pack's contracts](../packs/news-and-markets.md#quote-quote-and-price-history-quote) (`config/packs/economy/news-and-markets/contracts/quote.contract.yaml`, the source of every meaning on this page).
-- [External data feeds](../../guides/WORLD_DATA_GUIDE.md)
+- [World and public data: funds, external feeds, public sector](../../guides/WORLD_DATA_GUIDE.md)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="news"></a>
@@ -318,7 +318,7 @@ Fields no record above has, found by reading all 71 rows, with how many rows fil
 ### See also
 
 - Data contract: [NEWS in the news-and-markets pack's contracts](../packs/news-and-markets.md#news-headlines-news) (`config/packs/economy/news-and-markets/contracts/news.contract.yaml`, the source of every meaning on this page).
-- [External data feeds](../../guides/WORLD_DATA_GUIDE.md)
+- [World and public data: funds, external feeds, public sector](../../guides/WORLD_DATA_GUIDE.md)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="news-topic"></a>
@@ -402,7 +402,7 @@ None: all 15 rows were read, and every field any of them has is in the record ab
 ### See also
 
 - Data contract: [TOPIC in the news-and-markets pack's contracts](../packs/news-and-markets.md#topic-news-topic-news-topic) (`config/packs/economy/news-and-markets/contracts/news-topic.contract.yaml`, the source of every meaning on this page).
-- [External data feeds](../../guides/WORLD_DATA_GUIDE.md)
+- [World and public data: funds, external feeds, public sector](../../guides/WORLD_DATA_GUIDE.md)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="listed-company"></a>
@@ -493,5 +493,5 @@ None: all 20 rows were read, and every field any of them has is in the record ab
 ### See also
 
 - Data contract: [CO in the news-and-markets pack's contracts](../packs/news-and-markets.md#co-listed-company-listed-company) (`config/packs/economy/news-and-markets/contracts/listed-company.contract.yaml`, the source of every meaning on this page).
-- [External data feeds](../../guides/WORLD_DATA_GUIDE.md)
+- [World and public data: funds, external feeds, public sector](../../guides/WORLD_DATA_GUIDE.md)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).

@@ -4136,7 +4136,7 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 | `drishti.cube.mr.sparkline-dates` | integer | `20` |  | server (each node its own) | the open business dates a sparkline reads (a date not open here is not opened for one) | restart |  | admin |
 | `drishti.cube.mr.sparkline-max-cells` | integer | `600` |  | server (each node its own) | the most cells of a view that get a sparkline | restart |  | admin |
 | `drishti.cube.mr.what-if-rows` | integer | `40` |  | server (each node its own) | the most rows the what-if side by side computes (the total always added) | restart |  | admin |
-| `drishti.cube.mr.risk-classes` | map | `{}` |  | server (each node its own) | RISK\_CLASS: a class to its product groups, in column order; empty: IR, CR, FX, EQ, CM of the demo's groups (PIVOT\_GUIDE.md section 29.3) | restart |  | admin |
+| `drishti.cube.mr.risk-classes` | map | `{}` |  | server (each node its own) | RISK\_CLASS: a class to its product groups, in column order; empty: IR, CR, FX, EQ, CM of the demo's groups (BI\_GUIDE.md section 29.3) | restart |  | admin |
 | `drishti.cube.mr.grids` | map | `{}` |  | server (each node its own) | the ladders' bucket grids, each bucket label: from-to in years ({ BANK-IR-TENOR: { 0-2Y: "0-2", 10Y+: "10-" } }); empty: BANK-IR-TENOR and FRTB-GIRR | restart |  | admin |
 | `drishti.cube.mr.ladder-limits` | map | `{}` |  | server (each node its own) | two-sided DV01 limits per currency and bucket ({ "USD 2-5Y": 1500000 }); empty: no limit bars | restart |  | admin |
 
@@ -5433,7 +5433,7 @@ A connector's settings go under `settings:` in its file, `config/connectors/<nam
 | `writes` | map | `{}` |  | the connector | Named commands that write an approved change back to the source (APPROVALS\_GUIDE.md section 5.4): JDBC or Kafka; off until an administrator switches the connector's writes on | live (the connector restarts) |  | admin |
 | `writes.*` | map | none |  | the connector | One command: kind, params, confirm (reply, ack-topic, next-load), timeout, and the plugin's block (jdbc or kafka) | live (the connector restarts) |  | admin |
 | `writes.*.confirm` | string | `reply` |  | the connector | How the write is confirmed: reply, ack-topic or next-load | live (the connector restarts) |  | admin |
-| `writes.*.kafka` | map | none |  | the connector | The Kafka block (docs/guides/LIVE_RESULTS_GUIDE.md section 8): topic, shape, version-field, changed-by, changed-at, change-id-field | live (the connector restarts) |  | admin |
+| `writes.*.kafka` | map | none |  | the connector | The Kafka block (docs/guides/LIVE\_RESULTS\_GUIDE.md section 8): topic, shape, version-field, changed-by, changed-at, change-id-field | live (the connector restarts) |  | admin |
 | `writes.*.kafka.*` | string | none |  | the connector | One key of the Kafka block | live (the connector restarts) |  | expert |
 
 #### A lake file: `config/lakes/<lake>.yaml` (docs/guides/DATA_LAKE_GUIDE.md)

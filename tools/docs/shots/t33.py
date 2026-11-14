@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of tutorial 7, Part A, the pivot engine (docs/guides/BI_GUIDE.md), written to docs/tutorials/img/t33/, and of the pivot
+"""Pictures of the pivot tutorial, Part A, the pivot engine (docs/guides/BI_GUIDE.md), written to docs/tutorials/img/t33/, and of the pivot
 guide's worked examples over entity documents (docs/guides/BI_GUIDE.md, Documents), written to docs/guides/img/pivot/. Run it on its own
 (it builds its own lake from the demo test data, the trades of the three source systems and the VaR data, and starts its own scratch server
 and console):

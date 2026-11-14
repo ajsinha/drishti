@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of tutorial 8, Part F, Live BI and boards (docs/guides/BI_GUIDE.md), written to docs/tutorials/img/t12/.
+"""Pictures of the reports tutorial, Part F, Live BI and boards (docs/guides/BI_GUIDE.md), written to docs/tutorials/img/t12/.
 
 The demo source ticks: a curve that moves as a whole (CRV-USD-BASIS), a live dataset, a report that redraws as the trades change (with Pause and Resume),
 and the Desk wall board, on a screen and in kiosk mode."""
@@ -31,7 +31,7 @@ BOARD = "file:report:desk-wall"                                # 2.4.0: a board 
 @shot("01-curve-now.jpg", also=("02-curve-later.jpg",))
 def curve(c: Ctx):
     login(c, height=1000)
-    c.page.request.post(c.base + "/alerts/measure/MTM%20floor/delete")         # tutorial 8, Part D's alert would toast over the picture
+    c.page.request.post(c.base + "/alerts/measure/MTM%20floor/delete")         # the reports tutorial, Part D's alert would toast over the picture
     go(c, "/v/ir-curve/CRV-USD-BASIS", height=1000, wait="[data-panel]", settle=2500)
     c.save("01-curve-now.jpg", clip={"x": 0, "y": 56, "width": 1280, "height": 944})
     c.page.wait_for_timeout(8000)

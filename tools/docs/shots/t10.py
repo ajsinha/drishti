@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of tutorial 8, Part A, Your first BI report (docs/guides/BI_GUIDE.md), written to docs/tutorials/img/t10/.
+"""Pictures of the reports tutorial, Part A, Your first BI report (docs/guides/BI_GUIDE.md), written to docs/tutorials/img/t10/.
 
 A report is built on the World economics sample dataset in the designer (two cards, a map, a bar, a dropdown slicer), looked at (a click on a country, the
 drill to its regions and back), published, and then the slicers of the Trades overview sample and the cross-filter of Counterparty risk are shown."""
@@ -340,7 +340,7 @@ TABLET = RELATIVE.replace("report: relative-dates", "report: tablet-demo").repla
 
 @shot("33-tablet-tab.jpg", also=("34-tablet-view.jpg",))
 def tablet(c: Ctx):
-    """The designer's Tablet tab (order, Wide, rows) and the report on an 820 px screen: the bar across, the cards in two columns (tutorial 8, step 12's YAML)."""
+    """The designer's Tablet tab (order, Wide, rows) and the report on an 820 px screen: the bar across, the cards in two columns (the reports tutorial, step 12's YAML)."""
     login(c, height=900)
     clean_items(c, "Tablet demo")
     made = bi(c, "POST", "/workspaces/me/items", {"kind": "report", "title": "Tablet demo", "body": TABLET})

@@ -11,7 +11,7 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-"""Pictures of tutorial 23, add a source system (docs/guides/BUILD_GUIDE.md), written to docs/tutorials/img/swapone/, in the light
+"""Pictures of the source system tutorial, add a source system (docs/guides/BUILD_GUIDE.md), written to docs/tutorials/img/swapone/, in the light
 theme. The pictures follow the tutorial's steps, which this module runs itself, in order, on the scratch stack of tutorial 16's pictures
 (t45's server and console, started here: its own copy of config/, no demo lake, sign-in off, the data inbox on) with the shipped
 sample module source-swapone left out (DRISHTI_MODULES_SHIPPED=false), so the reader's own module is the only one. Nothing is written to the

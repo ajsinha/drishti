@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of tutorial 8, Part E, Reports (docs/guides/BI_GUIDE.md), written to docs/tutorials/img/t09/.
+"""Pictures of the reports tutorial, Part E, Reports (docs/guides/BI_GUIDE.md), written to docs/tutorials/img/t09/.
 
 A search becomes a scheduled report (CSV in the reports folder), a view becomes a subscription for Vera, and the Reports menu lists both in one place."""
 from __future__ import annotations

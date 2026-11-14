@@ -1657,8 +1657,7 @@ Fields no record above has, found by reading all 200 rows, with how many rows fi
 ### See also
 
 - Data contract: [FUND in the funds pack's contracts](../packs/funds.md#fund-fund-or-etf-fund) (`config/packs/capitalmarkets/funds/contracts/fund.contract.yaml`, the source of every meaning on this page).
-- [Funds and ETFs guide](../../guides/WORLD_DATA_GUIDE.md)
-- [The world data tutorial · World data: economies, companies, funds, entities and news](../../guides/WORLD_DATA_GUIDE.md)
+- [World and public data: funds, external feeds, public sector](../../guides/WORLD_DATA_GUIDE.md)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="fund-holder"></a>
@@ -1805,8 +1804,7 @@ None: all 586 rows were read, and every field any of them has is in the record a
 ### See also
 
 - Data contract: [HELD in the funds pack's contracts](../packs/funds.md#held-funds-holding-a-company-fund-holder) (`config/packs/capitalmarkets/funds/contracts/fund-holder.contract.yaml`, the source of every meaning on this page).
-- [Funds and ETFs guide](../../guides/WORLD_DATA_GUIDE.md)
-- [The world data tutorial · World data: economies, companies, funds, entities and news](../../guides/WORLD_DATA_GUIDE.md)
+- [World and public data: funds, external feeds, public sector](../../guides/WORLD_DATA_GUIDE.md)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="index-funds"></a>
@@ -1927,6 +1925,5 @@ None: all 3 rows were read, and every field any of them has is in the record abo
 ### See also
 
 - Data contract: [TRACK in the funds pack's contracts](../packs/funds.md#track-funds-tracking-an-index-index-funds) (`config/packs/capitalmarkets/funds/contracts/index-funds.contract.yaml`, the source of every meaning on this page).
-- [Funds and ETFs guide](../../guides/WORLD_DATA_GUIDE.md)
-- [The world data tutorial · World data: economies, companies, funds, entities and news](../../guides/WORLD_DATA_GUIDE.md)
+- [World and public data: funds, external feeds, public sector](../../guides/WORLD_DATA_GUIDE.md)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).

@@ -152,8 +152,7 @@ Fields no record above has, found by reading all 9 rows, with how many rows fill
 ### See also
 
 - Data contract: [PRESS in the official-news pack's contracts](../packs/official-news.md#press-official-press-releases-release-source) (`config/packs/economy/official-news/contracts/release-source.contract.yaml`, the source of every meaning on this page).
-- [Public sector: government data and free news](../../guides/WORLD_DATA_GUIDE.md)
-- [External data feeds](../../guides/WORLD_DATA_GUIDE.md)
+- [World and public data: funds, external feeds, public sector](../../guides/WORLD_DATA_GUIDE.md)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="press-release"></a>
@@ -248,6 +247,5 @@ None: all 18 rows were read, and every field any of them has is in the record ab
 ### See also
 
 - Data contract: [PREL in the official-news pack's contracts](../packs/official-news.md#prel-press-release-press-release) (`config/packs/economy/official-news/contracts/press-release.contract.yaml`, the source of every meaning on this page).
-- [Public sector: government data and free news](../../guides/WORLD_DATA_GUIDE.md)
-- [External data feeds](../../guides/WORLD_DATA_GUIDE.md)
+- [World and public data: funds, external feeds, public sector](../../guides/WORLD_DATA_GUIDE.md)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).

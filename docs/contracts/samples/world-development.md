@@ -157,8 +157,7 @@ None: all 12 rows were read, and every field any of them has is in the record ab
 ### See also
 
 - Data contract: [WDI in the world-development pack's contracts](../packs/world-development.md#wdi-development-profile-development-profile) (`config/packs/economy/world-development/contracts/development-profile.contract.yaml`, the source of every meaning on this page).
-- [Public sector: government data and free news](../../guides/WORLD_DATA_GUIDE.md)
-- [External data feeds](../../guides/WORLD_DATA_GUIDE.md)
+- [World and public data: funds, external feeds, public sector](../../guides/WORLD_DATA_GUIDE.md)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="development-series"></a>
@@ -271,6 +270,5 @@ None: all 16 rows were read, and every field any of them has is in the record ab
 ### See also
 
 - Data contract: [WDIS in the world-development pack's contracts](../packs/world-development.md#wdis-development-indicator-series-development-series) (`config/packs/economy/world-development/contracts/development-series.contract.yaml`, the source of every meaning on this page).
-- [Public sector: government data and free news](../../guides/WORLD_DATA_GUIDE.md)
-- [External data feeds](../../guides/WORLD_DATA_GUIDE.md)
+- [World and public data: funds, external feeds, public sector](../../guides/WORLD_DATA_GUIDE.md)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).

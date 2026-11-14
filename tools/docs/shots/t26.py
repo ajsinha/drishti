@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of tutorial 3, exposure from the bank to a trade (docs/guides/EXPOSURE_GUIDE.md), written to
+"""Pictures of the exposure tutorial, exposure from the bank to a trade (docs/guides/EXPOSURE_GUIDE.md), written to
 docs/tutorials/img/t26/, over the demo lake's exposure run (see _exp.py). Run it on its own (it builds its own lake and starts its own
 scratch server and console):
 

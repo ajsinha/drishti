@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of tutorial 9, Python and Analyse (docs/guides/BI_GUIDE.md), written to docs/tutorials/img/t14/.
+"""Pictures of the Notebook tutorial, Python and Analyse (docs/guides/BI_GUIDE.md), written to docs/tutorials/img/t14/.
 
 A Python measure and a Python visual in a report (the shipped ones, then one of your own); then Analyse on a model (2.2): an extract, a slice, a SQL cell in Drishti
 SQL on the server, a Python cell that draws a chart, a saved notebook, the promotion of a cell to a visual and of a slice to a report draft; the Python dataset

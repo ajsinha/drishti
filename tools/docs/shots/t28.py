@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of tutorial 13, Part C, funds and ETFs (docs/guides/WORLD_DATA_GUIDE.md), written to docs/tutorials/img/t28/, and the funds
+"""Pictures of the world data tutorial, Part C, funds and ETFs (docs/guides/WORLD_DATA_GUIDE.md), written to docs/tutorials/img/t28/, and the funds
 pack's guide picture (config/packs/capitalmarkets/funds/guides/images/funds-fund.jpg). They need a server and console with the public-data packs and
 the funds pack on the demo lake (`drishti.py lake demo` builds it; DRISHTI_SHOTS_DELTA_ROOT names another) and sign-in off:
 

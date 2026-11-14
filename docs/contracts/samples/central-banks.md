@@ -154,8 +154,7 @@ None: all 2 rows were read, and every field any of them has is in the record abo
 ### See also
 
 - Data contract: [CBANK in the central-banks pack's contracts](../packs/central-banks.md#cbank-central-bank-central-bank) (`config/packs/economy/central-banks/contracts/central-bank.contract.yaml`, the source of every meaning on this page).
-- [Public sector: government data and free news](../../guides/WORLD_DATA_GUIDE.md)
-- [External data feeds](../../guides/WORLD_DATA_GUIDE.md)
+- [World and public data: funds, external feeds, public sector](../../guides/WORLD_DATA_GUIDE.md)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="rate-series"></a>
@@ -276,6 +275,5 @@ None: all 13 rows were read, and every field any of them has is in the record ab
 ### See also
 
 - Data contract: [CBSER in the central-banks pack's contracts](../packs/central-banks.md#cbser-central-bank-series-rate-series) (`config/packs/economy/central-banks/contracts/rate-series.contract.yaml`, the source of every meaning on this page).
-- [Public sector: government data and free news](../../guides/WORLD_DATA_GUIDE.md)
-- [External data feeds](../../guides/WORLD_DATA_GUIDE.md)
+- [World and public data: funds, external feeds, public sector](../../guides/WORLD_DATA_GUIDE.md)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
