@@ -80,7 +80,7 @@ def risk_console():
 
     app = create_app(load_settings(CONSOLE / "config"))
     app.state.backend = TickingBackend()
-    app.state.editions.learn({"product": "Drishti Risk", "edition": {"name": "risk", "title": "Drishti Risk"}})
+    app.state.editions.learn({"product": "Drishti Risk", "edition": {"name": "drishti.risk", "title": "Drishti Risk"}, "lenses": ["risk"]})   # a distribution names itself drishti.<x>
     port = _free_port()
     server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=port, log_level="warning", timeout_graceful_shutdown=2))
     threading.Thread(target=server.run, daemon=True).start()

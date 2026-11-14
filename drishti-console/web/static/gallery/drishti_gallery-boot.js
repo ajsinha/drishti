@@ -39,11 +39,19 @@
     s.onerror = () => reject(new Error('Could not load ' + src));
     document.head.appendChild(s);
   });
-  const moduleVisuals = () => (location.protocol === 'file:' ? Promise.resolve([]) : fetch('/api/elements/visuals', { credentials: 'same-origin' })
-    .then((r) => (r.ok ? r.json() : { visuals: [] })).then((b) => b.visuals || []).catch(() => []))
-    .then((list) => list.reduce((at, v) => at.then(() => script(v.script)
-      .then(() => (NS.elements.visuals && NS.elements.visuals[v.module] ? NS.elements.visuals[v.module].ready : null))
-      .then(() => G.moduleVisual(v)).catch((e) => { problems.push(e.message); })), Promise.resolve()));
-  names.reduce((at, n) => at.then(() => core.load(n).catch((e) => { problems.push(e.message); })), Promise.resolve())
-    .then(moduleVisuals).then(() => start(problems));
+  /* the console's answer: the visuals of the modules hosted now and the modules this person's pages may load libraries of (a library of a
+     module that is off here is not asked for: the loader refuses it); nothing from the file system */
+  const answer = () => (location.protocol === 'file:' ? Promise.resolve({}) : fetch('/api/elements/visuals', { credentials: 'same-origin' })
+    .then((r) => (r.ok ? r.json() : {})).catch(() => ({})));
+  const moduleVisuals = (list) => list.reduce((at, v) => at.then(() => script(v.script)
+    .then(() => (NS.elements.visuals && NS.elements.visuals[v.module] ? NS.elements.visuals[v.module].ready : null))
+    .then(() => G.moduleVisual(v)).catch((e) => { problems.push(e.message); })), Promise.resolve());
+  answer().then((b) => {
+    if (Array.isArray(b.modules)) { core.configure({ modules: b.modules }); }
+    const mods = Array.isArray(b.modules) ? b.modules : null;
+    const libs = core.manifest().libraries;
+    const wanted = names.filter((n) => !mods || !libs[n].module || libs[n].module === 'core' || mods.indexOf(libs[n].module) >= 0);
+    return wanted.reduce((at, n) => at.then(() => core.load(n).catch((e) => { problems.push(e.message); })), Promise.resolve())
+      .then(() => moduleVisuals(b.visuals || []));
+  }).then(() => start(problems));
 }());

@@ -43,3 +43,12 @@ def test_alerts_page_rules_and_bell(client, backend):
     assert "data-bell" in view and "/static/js/drishti_alerts.js" in view and "/alerts?kind=trade&id=IRS-48213" in view
     with client.stream("GET", "/api/alerts/stream") as s:
         assert "event: notice" in "".join(s.iter_text())
+
+
+def test_monitor_grid_rows_carry_the_cells_tones_and_links():
+    from routes.monitor_routes import grid_rows
+    rows = [{"ref": {"kind": "netting-set", "id": "NS 1"}, "strip": [{"label": "Use", "text": "9", "tone": "neg"}, {"label": "Owner", "text": "CP", "link": {"kind": "counterparty", "id": "C/1"}}]}]
+    columns, table = grid_rows(rows)
+    use, owner = columns[-2], columns[-1]
+    assert use["toneField"] == "F1_TONE" and table[0]["F1_TONE"] == "neg" and "hrefField" not in use
+    assert owner["hrefField"] == "F2_LINK" and table[0]["F2_LINK"] == "/v/counterparty/C%2F1" and "toneField" not in owner

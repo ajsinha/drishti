@@ -19,6 +19,7 @@ import com.ash.drishti.api.DataNode;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
@@ -34,9 +35,15 @@ import java.util.function.UnaryOperator;
  *     masked, whatever the installation's own field masks are
  * @param redact their masks on a document (the identity when nothing is masked)
  * @param mayOpen the kinds they may open
+ * @param mayView the records they may see under their row rules (kind and record; every record when none applies)
  */
 public record ViewerContext(String user, Set<String> roles, Map<String, List<Object>> attributes, boolean raw, UnaryOperator<DataNode> redact,
-        Predicate<String> mayOpen) {
+        Predicate<String> mayOpen, BiPredicate<String, DataNode> mayView) {
+
+    public ViewerContext(String user, Set<String> roles, Map<String, List<Object>> attributes, boolean raw, UnaryOperator<DataNode> redact,
+            Predicate<String> mayOpen) {
+        this(user, roles, attributes, raw, redact, mayOpen, null);
+    }
 
     /** Everything, unmasked, for nobody in particular: the pipeline's own reads (warm-ups, tests, tools). */
     public static final ViewerContext SYSTEM = new ViewerContext(null, Set.of(), Map.of(), true, UnaryOperator.identity(), k -> true);
@@ -46,6 +53,7 @@ public record ViewerContext(String user, Set<String> roles, Map<String, List<Obj
         attributes = attributes == null ? Map.of() : Map.copyOf(attributes);
         redact = redact == null ? UnaryOperator.identity() : redact;
         mayOpen = mayOpen == null ? k -> true : mayOpen;
+        mayView = mayView == null ? (k, d) -> true : mayView;
     }
 
     /** A viewer known only by their masks and kinds (no person): what callers that name no person pass. */

@@ -118,6 +118,28 @@ public final class TableUpkeep {
         return out;
     }
 
+    /**
+     * The distinct values of a partition column in snapshot {@code s}, in order, read from the file list alone (no data file is opened):
+     * what a caller walks to handle one partition at a time instead of holding the whole table.
+     */
+    public static java.util.SortedSet<String> partitionValues(Engine engine, Snapshot s, String column) throws IOException {
+        java.util.SortedSet<String> out = new java.util.TreeSet<>();
+        Scan scan = s.getScanBuilder().build();
+        try (CloseableIterator<FilteredColumnarBatch> files = scan.getScanFiles(engine)) {
+            while (files.hasNext()) {
+                try (CloseableIterator<Row> fileRows = files.next().getRows()) {
+                    while (fileRows.hasNext()) {
+                        String v = InternalScanFileUtils.getPartitionValues(fileRows.next()).get(column);
+                        if (v != null) {
+                            out.add(v);
+                        }
+                    }
+                }
+            }
+        }
+        return out;
+    }
+
     private static boolean vector(DataType t) {
         return t instanceof io.delta.kernel.types.ArrayType a
                 && (a.getElementType() instanceof DoubleType || a.getElementType() instanceof io.delta.kernel.types.FloatType);

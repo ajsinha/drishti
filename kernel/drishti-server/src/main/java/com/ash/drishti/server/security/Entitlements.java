@@ -362,7 +362,7 @@ public final class Entitlements {
      */
     public com.ash.drishti.engine.ViewerContext viewer(Principal p) {
         return new com.ash.drishti.engine.ViewerContext(p.user(), java.util.Set.copyOf(p.roles()), attributes.apply(p), rawPower(p), redactor(p),
-                k -> mayOpen(p, k));
+                k -> mayOpen(p, k), (k, doc) -> mayView(p, k, doc));
     }
 
     public UnaryOperator<DataNode> redactor(Principal p) {

@@ -256,4 +256,38 @@ class DataInboxLoaderTest {
         }
         assertThat(LoaderProcess.launch(boot.toString())).containsExactly("-Dloader.main=com.ash.drishti.lakeload.LakeLoad", "-jar", boot.toString());
     }
+
+    @Test
+    void aKindThatIsAChildOfAnotherIsSplitOffItsParentOnAnInboxLoad() throws IOException {
+        Fixture f = new Fixture(tmp);
+        Path fixture = Path.of("src/test/resources/childkinds");
+        Files.copy(fixture.resolve("pack.yaml"), f.pack.resolve("pack.yaml"), StandardCopyOption.REPLACE_EXISTING);   // the pack deals: deal, and deal-leg child-of deal
+        Files.writeString(f.rules, """
+                dataload:
+                  rules:
+                    - match: "deal*"
+                      pack: deals
+                      kind: deal
+                      date-from: name
+                  unmatched: fail
+                """);
+        f.drop("deal.2026-11-03.jsonl", Files.readString(fixture.resolve("deal.2026-11-03.jsonl")), "");
+        Routes.Packs packs = new Routes.Packs() {
+            @Override
+            public Routes.PackInfo find(String name) {
+                return name.equals("deals") ? new Routes.PackInfo(f.pack, List.of("deal", "deal-leg")) : null;
+            }
+
+            @Override
+            public List<String> names() {
+                return List.of("deals");
+            }
+        };
+        DataInbox inbox = new DataInbox(f.settings, "node-a", f.clock, Fixture.ZONE, packs, new LoaderProcess(f.settings), f.signal(), null);
+        Cycle.Report r = inbox.cycle("test");
+        assertThat(r.files()).as(r.toString()).singleElement().satisfies(o -> assertThat(o.outcome()).isEqualTo("loaded"));
+        assertThat(Files.isDirectory(f.lake.resolve("deals/deal"))).isTrue();
+        assertThat(Files.isDirectory(f.lake.resolve("deals/deal_leg")) || Files.isDirectory(f.lake.resolve("deals/deal-leg")))
+                .as("the legs, split off the deals' LEGS arrays, have a table of their own").isTrue();
+    }
 }

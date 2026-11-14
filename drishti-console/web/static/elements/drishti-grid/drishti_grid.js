@@ -7004,6 +7004,18 @@
         if (c.type === 'status') { col.cellClass = (v) => 'dg-live-st dg-live-st-' + String(v || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
         if (type === 'number' && sums.has(c.field)) { col.aggFunc = 'sum'; }
         if (type === 'number') { col.enableValue = true; }
+        if (Array.isArray(c.cases)) {
+          col.valueGetter = (row) => { const hit = c.cases.find((k) => !k.when || Object.keys(k.when).every((f) => { const w = k.when[f]; const v = row && row[f]; if (Array.isArray(w)) { return w.indexOf(v) >= 0; } const t = String(v === undefined || v === null ? '' : v), x = String(w); return x.slice(-1) === '*' ? t.indexOf(x.slice(0, -1)) === 0 : t === x; })); return hit ? hit.text : (c.otherwise === undefined ? null : c.otherwise); };
+        }
+        if (c.lookup && c.lookup.key) { col.valueGetter = (row) => { const v = (c.lookup.values || {})[row && row[c.lookup.key]]; return v === undefined ? null : v; }; }
+        if (c.toneField) { const was = col.cellClass; col.cellClass = (v, row) => (was ? was(v, row) + ' ' : '') + (row && row[c.toneField] ? 't-' + String(row[c.toneField]).replace(/[^A-Za-z0-9_-]/g, '') : ''); }
+        if (c.href || c.hrefField) {
+          col.cellRenderer = (p) => {
+            const to = c.hrefField ? p.row && p.row[c.hrefField] : String(c.href).replace(/\{([A-Za-z0-9_]+)\}/g, (m, f) => encodeURIComponent(p.row && p.row[f] !== undefined && p.row[f] !== null ? p.row[f] : ''));
+            if (!to || !/^\/(?!\/)/.test(String(to))) { return null; }
+            const a = p.doc.createElement('a'); a.className = 'lnk'; a.setAttribute('href', String(to)); a.textContent = p.text; return a;
+          };
+        }
         return col;
       });
     }

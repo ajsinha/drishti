@@ -34,6 +34,7 @@ NAME = re.compile(r"^[a-z0-9][a-z0-9-]{0,63}$")
 STREAM = re.compile(r"^[A-Za-z0-9-]{8,64}$")
 ROW_QUERY = ("offset", "limit", "sort", "descending", "filter", "query")
 LIMIT = 256 * 1024
+LIVE_MODULE = "trading"                 # the module whose blotters the live sets are (modules/trading/blotters)
 
 
 def _problem(e: BackendError) -> JSONResponse:
@@ -69,6 +70,10 @@ async def page(request: Request, live_id: str):
         listed = {"sets": []}
     spec = next((s for s in (listed or {}).get("sets") or [] if s.get("id") == live_id), None)
     if spec is None:
+        from core import modules
+        if not modules.module_on(LIVE_MODULE):          # the module that declares the sets is not part of this distribution: say so, plainly
+            return render(request, "module_removed.html", route={"status": 200, "state": "absent", "module": LIVE_MODULE, "title": "Trading",
+                                                                   "what": f"The live set '{live_id}'"}, path=request.url.path, me=ident(request))
         return _missing(request)
     return render(request, "live/live.html", live_id=live_id, spec=spec, screen="live")
 

@@ -126,3 +126,17 @@ def test_the_pivot_takes_the_layout_a_live_grid_hands_over(client, backend):
     assert laid["rows"] == ["PORTFOLIO"] and laid["filters"] == {"PORTFOLIO": {"in": ["BOOK-A"]}} and "evil" not in laid
     plain = client.get("/pivot", params={"source": "trade", "lay": "not json"})
     assert plain.status_code == 200 and "data-preset" not in plain.text and "data-live-start" not in plain.text
+
+
+def test_a_set_of_a_module_this_distribution_lacks_answers_a_plain_page_not_a_404(client, backend, monkeypatch):
+    from core import modules
+    calls = []
+    serve(backend, monkeypatch, calls)
+    state = modules.state()
+    before = state.loaded
+    state.loaded = frozenset({"core", "genomics"})                   # the server's about: the trading module is not loaded
+    try:
+        page = client.get("/live/trade-gone")
+        assert page.status_code == 200 and "Not part of this distribution" in page.text
+    finally:
+        state.loaded = before

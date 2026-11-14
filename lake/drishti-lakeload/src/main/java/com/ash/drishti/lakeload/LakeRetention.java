@@ -134,34 +134,43 @@ public final class LakeRetention {
         } catch (TableNotFoundException e) {
             return out;
         }
-        List<TableUpkeep.Staged> rows = TableUpkeep.rows(engine, s, pv -> true, true);
-        if (rows == null || !r.active()) {
-            if (rows == null) {
-                throw new IOException(table + ": a column the retention cannot carry");
-            }
+        if (!r.active()) {
             return out;
         }
-        List<Instant> ages = new ArrayList<>(rows.size());
-        for (TableUpkeep.Staged st : rows) {
-            ages.add(r.ageOfLine(st.line(), RowRetention.dayStart(st.partitionValues().get("business_date"))));
-        }
-        RowRetention.Judge judge = r.judge(ages, now);
-        Map<String, List<TableUpkeep.Staged>> kept = new TreeMap<>();
-        Map<String, Long> total = new TreeMap<>();
-        Map<String, Long> dropped = new TreeMap<>();
-        for (int i = 0; i < rows.size(); i++) {
-            String date = rows.get(i).partitionValues().get("business_date");
-            total.merge(date, 1L, Long::sum);
-            if (judge.keeps(ages.get(i))) {
-                kept.computeIfAbsent(date, d -> new ArrayList<>()).add(rows.get(i));
-            } else {
-                dropped.merge(date, 1L, Long::sum);
+        // one business-date partition at a time (never the whole table in memory): a first pass reads each partition for the ages of its
+        // rows (only when max-rows needs the table-wide cut: the ages, not the rows, are kept), a second judges and rewrites the partitions
+        // that hold a dropped row
+        java.util.SortedSet<String> dates = TableUpkeep.partitionValues(engine, s, "business_date");
+        List<Instant> ages = new ArrayList<>();
+        if (r.maxRows() != null) {
+            for (String date : dates) {
+                List<TableUpkeep.Staged> part = TableUpkeep.rows(engine, s, pv -> date.equals(pv.get("business_date")), true);
+                if (part == null) {
+                    throw new IOException(table + ": a column the retention cannot carry");
+                }
+                for (TableUpkeep.Staged st : part) {
+                    ages.add(r.ageOfLine(st.line(), RowRetention.dayStart(date)));
+                }
             }
         }
-        for (String date : dropped.keySet()) {
-            line(out, date, total.get(date), dropped.get(date));
+        RowRetention.Judge judge = r.judge(ages, now);
+        for (String date : dates) {
+            List<TableUpkeep.Staged> part = TableUpkeep.rows(engine, s, pv -> date.equals(pv.get("business_date")), true);
+            if (part == null) {
+                throw new IOException(table + ": a column the retention cannot carry");
+            }
+            List<TableUpkeep.Staged> kept = new ArrayList<>(part.size());
+            for (TableUpkeep.Staged st : part) {
+                if (judge.keeps(r.ageOfLine(st.line(), RowRetention.dayStart(date)))) {
+                    kept.add(st);
+                }
+            }
+            if (kept.size() == part.size()) {
+                continue;
+            }
+            line(out, date, part.size(), part.size() - kept.size());
             if (!dryRun) {
-                LakeUndo.rewrite(engine, path, s, date, kept.getOrDefault(date, List.of()));
+                LakeUndo.rewrite(engine, path, s, date, kept);
                 s = Table.forPath(engine, path).getLatestSnapshot(engine);
             }
         }
@@ -178,13 +187,11 @@ public final class LakeRetention {
         if (!Files.isDirectory(base)) {
             return out;
         }
-        Map<String, List<String>> lines = new TreeMap<>();
         Map<String, Path> where = new TreeMap<>();
         try (Stream<Path> days = Files.list(base)) {
             for (Path d : days.filter(Files::isDirectory).sorted().toList()) {
                 Path f = d.resolve(kind + ".jsonl");
                 if (Files.isRegularFile(f)) {
-                    lines.put(d.getFileName().toString(), Files.readAllLines(f, StandardCharsets.UTF_8).stream().filter(l -> !l.isBlank()).toList());
                     where.put(d.getFileName().toString(), f);
                 }
             }
@@ -192,22 +199,26 @@ public final class LakeRetention {
         if (!r.active()) {
             return out;
         }
+        // one day file at a time: the ages of the rows are read as a stream (only when max-rows needs the table-wide cut), then each day
+        // file is judged and rewritten alone
         List<Instant> ages = new ArrayList<>();
-        Map<String, List<Instant>> byDate = new TreeMap<>();
-        lines.forEach((date, ls) -> {
-            Instant start = RowRetention.dayStart(date);
-            List<Instant> a = new ArrayList<>(ls.size());
-            ls.forEach(l -> a.add(r.ageOfLine(l, start)));
-            byDate.put(date, a);
-            ages.addAll(a);
-        });
+        if (r.maxRows() != null) {
+            for (Map.Entry<String, Path> e : where.entrySet()) {
+                Instant start = RowRetention.dayStart(e.getKey());
+                try (Stream<String> ls = Files.lines(e.getValue(), StandardCharsets.UTF_8)) {
+                    ls.filter(l -> !l.isBlank()).forEach(l -> ages.add(r.ageOfLine(l, start)));
+                }
+            }
+        }
         RowRetention.Judge judge = r.judge(ages, now);
-        for (Map.Entry<String, List<Instant>> e : byDate.entrySet()) {
-            List<String> ls = lines.get(e.getKey());
+        ages.clear();
+        for (Map.Entry<String, Path> e : where.entrySet()) {
+            Instant start = RowRetention.dayStart(e.getKey());
+            List<String> ls = Files.readAllLines(e.getValue(), StandardCharsets.UTF_8).stream().filter(l -> !l.isBlank()).toList();
             List<String> keep = new ArrayList<>();
-            for (int i = 0; i < ls.size(); i++) {
-                if (judge.keeps(e.getValue().get(i))) {
-                    keep.add(ls.get(i));
+            for (String l : ls) {
+                if (judge.keeps(r.ageOfLine(l, start))) {
+                    keep.add(l);
                 }
             }
             if (keep.size() == ls.size()) {

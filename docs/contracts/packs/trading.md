@@ -21,7 +21,7 @@ One section per command of the pack: the shape of its data, how it is stored and
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
-| [TRD](#trd-trade-trade) | `trade` | fundamental | active | 47 | 7 |
+| [TRD](#trd-trade-trade) | `trade` | fundamental | active | 48 | 7 |
 | [CTRD](#ctrd-counterparty-trades-derived-from-trades-counterparty-trades) | `counterparty-trades` | computed | active | 15 | 1 |
 | [PTRD](#ptrd-portfolio-trades-derived-from-trades-portfolio-trades) | `portfolio-trades` | computed | active | 15 | 1 |
 | [LTRD](#ltrd-legal-entity-trades-derived-from-trades-legal-entity-trades) | `legal-entity-trades` | computed | active | 15 | 1 |
@@ -54,6 +54,7 @@ A booked trade as its source system (ENDUR, CALYPSO or MUREX) extracts it in the
 |---|---|---|---|---|---|---|
 | `SOURCE_SYSTEM` | text | required |  | The booking system the trade comes from: ENDUR, CALYPSO or MUREX (upper case). | `CALYPSO`, `ENDUR`, `MUREX` |  |
 | `SOURCE_UPDATE_TIME` | timestamp | optional |  | When the booking system last changed the trade, ISO-8601 UTC; moves with every amendment (empty on an ENDUR trade never amended). | `2026-09-30T18:30:00Z` |  |
+| `UPDATED_BY` | text | optional |  | Who last changed the trade: a person or a system id. The blotter names it when an edit is refused because the trade changed again. | `TRADER-014` |  |
 | `TRADE_DATE` | date | required |  | The date the trade was agreed. | `2025-06-20` |  |
 | `INPUT_DATE` | date | optional |  | The day the trade was entered in the booking system (CALYPSO and MUREX: the trade date; empty on ENDUR). | `2024-04-19` |  |
 | `TRADE_ID` | id | required |  | The record's id (the business key) | `1000001` | `trade` |
