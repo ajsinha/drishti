@@ -91,7 +91,8 @@ class LiveQueryTest {
         }
 
         @Override
-        public Map<String, Object> search(String command, AsOf asOf, UnaryOperator<DataNode> mask, Consumer<EntityDocument> sink) {
+        public Map<String, Object> search(String command, AsOf asOf, com.ash.drishti.kernel.api.security.Principal who, UnaryOperator<DataNode> mask,
+                Consumer<EntityDocument> sink) {
             searches.incrementAndGet();
             List<Map<String, Object>> hits = new ArrayList<>();
             for (Map<String, Object> m : store) {
@@ -135,7 +136,7 @@ class LiveQueryTest {
         f.put("T2", "USD", 9, "ACME");
         f.put("T3", "EUR", 7, "ZETA");
         try (LiveSets sets = new LiveSets(f, Clock.systemUTC(), 20, 100)) {
-            LiveSet s = sets.query(Q, AsOf.LATEST, false, null, false);
+            LiveSet s = sets.query(Q, AsOf.LATEST, null, false, null, false);
             assertThat(s.live()).isTrue();
             assertThat(ids(s.page(0, 100, null, false, null, null))).containsExactly("T3", "T1");   // the search's order, not arrival's
             assertThat(s.origin()).containsEntry("matched", 2).containsEntry("mnemonic", "TRD");
@@ -157,7 +158,7 @@ class LiveQueryTest {
             assertThat(String.valueOf(events.get(0).get("removes"))).isEqualTo("[T3]");
             assertThat(s.current("T1").doc().get("NOTIONAL").unwrap()).isEqualTo(6L);
             // the same search again shares the live set: nobody reads the search twice while it ticks
-            assertThat(sets.query(Q, AsOf.LATEST, false, null, true)).isSameAs(s);
+            assertThat(sets.query(Q, AsOf.LATEST, null, false, null, true)).isSameAs(s);
             assertThat(f.searches.get()).isEqualTo(1);
             // its stream finds it by the id the page gave
             assertThat(sets.open(sets.spec(s.spec().id()).orElseThrow(), null)).isSameAs(s);
@@ -169,16 +170,16 @@ class LiveQueryTest {
         Fake f = new Fake();
         f.put("T1", "EUR", 5, "ACME");
         try (LiveSets sets = new LiveSets(f, Clock.systemUTC(), 20, 100)) {
-            LiveSet past = sets.query(Q, AsOf.of(LocalDate.of(2026, 9, 30)), false, null, false);
+            LiveSet past = sets.query(Q, AsOf.of(LocalDate.of(2026, 9, 30)), null, false, null, false);
             assertThat(past.live()).isFalse();
             assertThat(f.listeners).isEmpty();
             f.liveBinding = false;
-            LiveSet now = sets.query(Q, AsOf.LATEST, false, null, false);
+            LiveSet now = sets.query(Q, AsOf.LATEST, null, false, null, false);
             assertThat(now.live()).isFalse();
             assertThat(now.spec().id()).isNotEqualTo(past.spec().id());
             f.put("T2", "EUR", 9, "ACME");
-            assertThat(sets.query(Q, AsOf.LATEST, false, null, false).size()).isEqualTo(1);   // the same result while it is open
-            LiveSet again = sets.query(Q, AsOf.LATEST, false, null, true);                      // Search pressed again: read afresh
+            assertThat(sets.query(Q, AsOf.LATEST, null, false, null, false).size()).isEqualTo(1);   // the same result while it is open
+            LiveSet again = sets.query(Q, AsOf.LATEST, null, false, null, true);                      // Search pressed again: read afresh
             assertThat(again.size()).isEqualTo(2);
             assertThat(ids(again.page(0, 10, null, false, null, null))).containsExactly("T2", "T1");
             assertThat(sets.open(again.spec(), null)).isSameAs(again);
@@ -191,8 +192,8 @@ class LiveQueryTest {
         f.put("T1", "EUR", 5, "ACME");
         f.put("T3", "EUR", 7, "ZETA");
         try (LiveSets sets = new LiveSets(f, Clock.systemUTC(), 20, 100)) {
-            LiveSet plain = sets.query(Q, AsOf.LATEST, false, null, false);
-            LiveSet masked = sets.query(Q, AsOf.LATEST, true, MASK, false);
+            LiveSet plain = sets.query(Q, AsOf.LATEST, null, false, null, false);
+            LiveSet masked = sets.query(Q, AsOf.LATEST, null, true, MASK, false);
             assertThat(masked).isNotSameAs(plain);
             assertThat(LiveSets.maskedSet(masked.spec().id())).isTrue();
             assertThat(LiveSets.maskedSet(plain.spec().id())).isFalse();

@@ -86,10 +86,11 @@ public final class LiveSets implements AutoCloseable {
 
         /**
          * A search's matches as a set's snapshot (a FORM's result, the search page's): each match to the sink as its document masked by
-         * {@code mask}, in the search's order; answers what the search said (kind, mnemonic, columns, labels, matched, scanned, partial,
+         * {@code mask}, in the search's order, run as {@code who} (across Drishti*net's nodes as the search is); answers what the search said (kind, mnemonic, columns, labels, matched, scanned, partial,
          * failed, elapsedMs, noData, pivot), the shape {@code GET /api/v1/live/query} gives as {@code search}.
          */
-        default Map<String, Object> search(String command, AsOf asOf, UnaryOperator<DataNode> mask, java.util.function.Consumer<EntityDocument> sink) {
+        default Map<String, Object> search(String command, AsOf asOf, Principal who, UnaryOperator<DataNode> mask,
+                java.util.function.Consumer<EntityDocument> sink) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "this server runs no searches into live sets");
         }
     }
@@ -305,7 +306,7 @@ public final class LiveSets implements AutoCloseable {
      * afresh, while a live one is kept current by its live side. Masked people get their own set, filled and kept masked, so a masked
      * value never decides which rows are in it.
      */
-    public LiveSet query(String command, AsOf asOf, boolean masks, UnaryOperator<DataNode> mask, boolean again) {
+    public LiveSet query(String command, AsOf asOf, Principal who, boolean masks, UnaryOperator<DataNode> mask, boolean again) {
         AsOf at = asOf == null ? AsOf.LATEST : asOf;
         String c = command == null ? "" : command.strip();
         if (c.isEmpty()) {
@@ -334,7 +335,7 @@ public final class LiveSets implements AutoCloseable {
             Predicate<DataNode> holds = sources.condition(c);
             LiveSet made = new LiveSet(bare, c, holds, clock, true);
             made.start(l -> at.live() ? sources.subscribe(kind, d -> l.accept(masked(d, m))) : null, sink -> {
-                Map<String, Object> said = sources.search(c, at, m, sink);
+                Map<String, Object> said = sources.search(c, at, who, m, sink);
                 made.origin(said);
                 made.spec(withColumns(bare, said));
             });

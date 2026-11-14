@@ -99,7 +99,7 @@ public class LiveSetController {
         String kind = sets.kindOf(q);
         entitlements.requireOpen(principal, kind);
         edition.requireKind(kind);
-        LiveSet set = sets.query(q, asOf, entitlements.masks(principal), entitlements.redactor(principal), again);
+        LiveSet set = sets.query(q, asOf, principal, entitlements.masks(principal), entitlements.redactor(principal), again);
         Map<String, Object> out = page(set, set.spec(), offset, limit, sort, descending, filter, principal);
         out.put("search", set.origin());
         return out;

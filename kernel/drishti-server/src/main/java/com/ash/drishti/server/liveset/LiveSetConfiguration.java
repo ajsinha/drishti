@@ -45,8 +45,8 @@ import org.springframework.core.env.Environment;
 public class LiveSetConfiguration {
 
     @Bean(destroyMethod = "close")
-    public LiveSets liveSets(SourceRouter router, StructuredSearch search, com.ash.drishti.server.api.SearchAnswers answers, EditableFields fields,
-            ObjectProvider<EditRuntime> edits,
+    public LiveSets liveSets(SourceRouter router, StructuredSearch search, ObjectProvider<com.ash.drishti.server.api.SearchController> searches,
+            EditableFields fields, ObjectProvider<EditRuntime> edits,
             com.ash.drishti.server.security.Entitlements entitlements, ObjectProvider<com.ash.drishti.identity.AuditLog> auditLog, Environment env) {
         LiveSets.Sources sources = new LiveSets.Sources() {
             @Override
@@ -80,15 +80,22 @@ public class LiveSetConfiguration {
             }
 
             @Override
-            public java.util.Map<String, Object> search(String command, AsOf asOf, java.util.function.UnaryOperator<DataNode> mask,
-                    Consumer<EntityDocument> sink) {
-                SearchQuery q = SearchQuery.pick(command);
-                StructuredSearch.Result r = search.run(q, asOf, mask);
-                for (StructuredSearch.Row row : r.rows()) {
-                    sink.accept(new EntityDocument(row.ref(), document(row), new com.ash.drishti.api.Provenance("search", 0L, java.time.Instant.now(),
-                            false, null)));
+            @SuppressWarnings("unchecked")
+            public java.util.Map<String, Object> search(String command, AsOf asOf, com.ash.drishti.kernel.api.security.Principal who,
+                    java.util.function.UnaryOperator<DataNode> mask, Consumer<EntityDocument> sink) {
+                // the search as its API answers it (masks, kinds, the edition, Drishti*net's nodes merged): its rows fill the set
+                java.util.Map<String, Object> said = new java.util.LinkedHashMap<>(searches.getObject().search(command, asOf, who));
+                Object rows = said.remove("rows");
+                said.remove(com.ash.drishti.server.net.SearchScatter.MATCHED_IDS);
+                if (rows instanceof java.util.List<?> l) {
+                    for (Object o : l) {
+                        if (o instanceof StructuredSearch.Row row) {
+                            sink.accept(new EntityDocument(row.ref(), document(row), new com.ash.drishti.api.Provenance("search", 0L,
+                                    java.time.Instant.now(), false, null)));
+                        }
+                    }
                 }
-                return answers.summary(command, q, r, asOf);
+                return said;
             }
         };
         LiveSets sets = new LiveSets(sources, Clock.systemUTC(), env.getProperty("drishti.live-sets.flush-ms", Long.class, 50L),
