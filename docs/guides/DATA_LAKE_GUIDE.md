@@ -1440,6 +1440,15 @@ binding lists them with `union: true`. Separate tables: one connector per table 
 system's fields are its own). Several live connectors go in the binding's `live:` list; a message another system's connector would not serve
 is dropped by the `where` of each.
 
+**Stamping at load.** When the inbox, `drishti.py data ingest` or the Java loader writes a file through a connector (a rule's `connector:`),
+the connector's `set:` constants are stored into every row that lacks the field, in Delta, Iceberg and files alike, so a shared table splits by
+`where` afterwards. The site's own connector file (`config/connectors/<name>.yaml`) wins over the module's template. `map:` is applied at
+read only: the stored row stays as the system sent it (Raw JSON shows it).
+
+**Inbox rules of modules.** A source module's `dataload:` (a file of the same format as `config/dataload.yaml`) adds rules for the files of its
+system. The inbox reads the site's rules first, then those of the modules that are on, at every cycle: a module switched off takes its rules
+away. Admin → Data loads → Routing rules shows each rule's origin (`site` or the module).
+
 **Refusals.** A `where` that is not a predicate, a map file that is missing, unreadable, maps two fields to one, or names an unknown cast,
 refuses the connector at load with `DRS-5034`, shown on Admin → Connectors with the reason; the rest of the server runs. A connector's `where`
 may not name `$user`: person attributes belong in a role's row rule ([ACCESS_MODEL.md section 10](../architecture/ACCESS_MODEL.md#10-row-rules)).

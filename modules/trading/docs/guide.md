@@ -308,6 +308,12 @@ money markets), `source-swapone` (OTC swaps) and `source-ici` (a generic cross-a
 is mocked as one). The data of the last three is **mocked** (`tools/samplegen/src_*.py`; each in its own native field style; no
 positions and no scenario P&L, so the VaR does not move).
 
+A module's manifest names its parts with one set of keys: `connectors` (the folder of connector templates), `mappings` (kind to map file),
+`dataload` (the inbox rules file) and `sections` (what it adds to the kind's page). These templates are the one home of the system's
+connectors: the trading pack declares none of them. A file dropped in the inbox (`swapone-<date>.jsonl.gz` and its `.ready`) goes by the
+module's rule to `trading.trades_shared`, its connector's `set:` stamps `SOURCE_SYSTEM = SWAPONE` into each stored row, and `TRD` lists
+it; switch `source-swapone` off and it is gone, on and it is back.
+
 A module ships: `connectors/` (read from Delta, Iceberg and files; a Kafka live stream whose `writes:` is the write-back of
 section 8), `mappings/<system>-trade.yaml` (the native fields to the canonical ones), `dataload.yaml` (the inbox routing rules, in the
 format of `config/dataload.yaml`; the inbox reads the site's rules first) and a short guide. A connector's source options:

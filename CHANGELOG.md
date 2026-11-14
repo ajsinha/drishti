@@ -18,6 +18,11 @@
 
 ## Unreleased
 
+- **Source modules integrated**: one manifest key set (`connectors`, `mappings`, `dataload`, `sections`; conformance C9 reads `connectors`);
+  the loader, `data ingest` and the inbox stamp a connector's `set:` into the stored rows; a module's `dataload:` rules join the inbox's after
+  the site's (Admin shows each rule's origin); the trading pack no longer declares the Endur, Calypso and Murex connectors (their module
+  templates are the one home; `lake demo` writes them and the demo bindings by default, `--no-bindings` leaves the bindings out).
+
 - **Several source systems on one canonical kind** (docs/guides/DATA_LAKE_GUIDE.md section 6.2; ACCESS_MODEL.md section 10). Trading systems
   are source modules feeding one `trade` kind with `SOURCE_SYSTEM`. Every read connector (Delta, Iceberg, files; Kafka live) takes `where:`
   (a row predicate on the stored row, its top-level comparisons pushed down for pruning), `set:` (constants where the row lacks them) and
