@@ -594,6 +594,10 @@
       $("[data-pv-title]").textContent = c.title || source;
       var opened = openWith(view);
       if (opened) { view = opened; }
+      if (root.getAttribute("data-live-start")) {           // handed over from a live grid (Pivot ›): the view follows the source as it changes
+        root.removeAttribute("data-live-start");
+        $("[data-pv-live]").checked = true;
+      }
       mount(view);
       suggestions(c.source);
     });

@@ -31,7 +31,7 @@
 {% block head %}<link rel="stylesheet" href="/static/elements/drishti-grid/drishti_grid.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/elements/drishti-chart/drishti_chart.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_pivot-screen.css?v={{ ASSET_V }}">{% for href in screen_parts('pivot', 'css', lens=lens) %}<link rel="stylesheet" href="/static/{{ href }}?v={{ ASSET_V }}">{% endfor %}{% endblock %}
 {% block nav %}{% with command_text=command_text ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
-<div class="pv{% if lens %} {{ lens }}{% endif %}" data-pivot-screen{% if cube %} data-preset-name="{{ cube.name }}"{% endif %} data-source="{{ source }}" data-view-id="{{ view_id }}" data-date="{{ date }}"{% if lens %} data-lens="{{ lens }}"{% endif %}{% if preset %} data-preset="{{ preset }}"{% endif %}
+<div class="pv{% if lens %} {{ lens }}{% endif %}" data-pivot-screen{% if cube %} data-preset-name="{{ cube.name }}"{% endif %} data-source="{{ source }}" data-view-id="{{ view_id }}" data-date="{{ date }}"{% if lens %} data-lens="{{ lens }}"{% endif %}{% if preset %} data-preset="{{ preset }}"{% endif %}{% if live_on %} data-live-start="1"{% endif %}
   data-user="{{ me.user if me else '' }}" data-mode="{{ mode or '' }}" data-views="{{ views_json or '[]' }}" data-open-view="{{ open_view or '' }}">
   <div class="pv-head">
     {% if cube %}<h1 class="pv-title"><span class="pv-word mono" title="Type {{ cube.word }}, a scope, BY rows,columns, MEASURE …, then &lt;GO&gt;">{{ cube.word }}</span>
