@@ -11,14 +11,14 @@ Endur is the commodity and energy trading and risk system. Its trades arrive in 
 
 | Folder | What |
 |---|---|
-| `connector-templates/` | cassandra, delta, delta-s3, files, iceberg, kafka, s3tables: copy one to `config/connectors/` under the name its first line gives |
+| `connectors/` | cassandra, delta, delta-s3, files, iceberg, kafka, s3tables: copy one to `config/connectors/` under the name its first line gives |
 | `mappings/endur-trade.yaml` | the native fields to the canonical trade fields |
 | `dataload.yaml` | the inbox routing rules |
 
 ## Bind it
 
 ```yaml
-# config/connectors/trade-endur.yaml (from connector-templates/delta.yaml)
+# config/connectors/trade-endur.yaml (from connectors/delta.yaml)
 plugin: delta
 settings:
   lake: main

@@ -116,7 +116,7 @@
   });
   D.on('show', function (step) {
     if (step === 'design' && editor) { editor.refresh(); if (grid) { grid.refresh(); } }
-    if (step === 'finalize') { $('[data-finalize]').disabled = !S.analysis || !S.canAuthor; }
+    if (step === 'finalize') { $('[data-finalize]').disabled = !S.analysis || !S.canAuthor || (S.mode === 'source' && !S.mapping); }
     if (step === 'deploy') { $('[data-plan]').disabled = !S.result || !S.isAdmin; $('[data-install]').disabled = !S.result || !S.isAdmin; }
   });
 
@@ -144,8 +144,8 @@
     return n;
   }
   $('[data-finalize]').addEventListener('click', function () {
-    if (!names()) { return; }
-    var req = D.choices(), edits = {};
+    if (S.mode !== 'source' && !names()) { return; }
+    var req = S.mode === 'source' ? D.sourceChoices() : D.choices(), edits = {};
     Object.keys(S.edits).forEach(function (k) { edits[k] = S.edits[k]; });
     req.edits = edits;
     $('[data-finalize]').disabled = true;
@@ -210,6 +210,7 @@
     host.style.height = '140px';
   }
   function openLink() {
+    if (S.mode === 'source') { $('[data-open]').hidden = true; return; }      // a source module has no screen of its own: the kind's pages show its rows
     var first = S.analysis.sutras[0], key = S.analysis.kinds[first.kind].key, id = first.samples[0] || {};
     key.split('.').forEach(function (k) { id = id && id[k]; });
     var a = $('[data-open]');

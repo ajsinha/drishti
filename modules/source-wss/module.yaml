@@ -14,7 +14,7 @@
 
 # The WSS source module's manifest (modules/trading/docs/guide.md, "Source systems"; docs/architecture/KERNEL_AND_MODULES.md section 3.3): content
 # only, no code. One module a trading system, feeding the one canonical `trade` kind (SOURCE_SYSTEM = WSS). It ships the connector
-# templates (connector-templates/: read from Delta, Iceberg and files, a Kafka live stream with its write-back), the mapping of the native
+# templates (connectors/: read from Delta, Iceberg and files, a Kafka live stream with its write-back), the mapping of the native
 # fields to the canonical ones (mappings/wss-trade.yaml) and the inbox routing rules (dataload.yaml). Switch it on or off on its own
 # (config/modules/source-wss.yaml): off, the system's trades leave the trade kind and nothing else changes.
 format: 1
@@ -39,7 +39,8 @@ requires:
 data:
   needs: data/needs.yaml
 dataload: dataload.yaml
-connector-templates: connector-templates
+connectors:
+  folder: connectors
 mappings:
   trade: mappings/wss-trade.yaml
 docs:

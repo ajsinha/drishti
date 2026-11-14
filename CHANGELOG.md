@@ -86,6 +86,12 @@
   it), four-eyes state, version history, the declaration's links, and a **Raw JSON** tab of the whole stored record (collapsible, Copy, version,
   "changed since you opened it", masked fields kept masked). Console: `live:<id>` in the one live channel, `/api/live` (rows, one record, the
   stream's window, the edit POST), the page `/live/<id>` for any declaration and the trading module's *Trade blotter* menu entry.
+### Pack designer: a source for an existing kind (source modules)
+
+- `drishti.py pack new FILE --source-for trade --system SWAPONE [--shared-table trading.trades_shared | --own-table ...] [--map-edits F] [--live] [--write-back] [--load --lake DIR] [--deploy]`: a new booking system's JSON Lines as a source of the canonical kind, not a new pack. Every record is read; each native field is matched to a canonical field by name, type, values and enums, with a confidence; required fields left without one and native fields left over are listed (`tools/packgen/sourcemap.py`).
+- The source module `modules/source-<sys>/` (`tools/packgen/source_module.py`): `requires:` the kind's module, `connectors:` (read with `where:`/`set:`/`map:`; an optional Kafka listener with write-back, off until the site turns it on), `mappings/<sys>-<kind>.yaml`, the inbox rule (`dataload:`), the page section of the unmapped native fields (`sections:`, shown when `SOURCE_SYSTEM` is the system's), README with front matter, guide, tutorial. Passes the fifteen checks; C9 now allows a source module's connector templates whose hosts, users and secrets are `${...}` placeholders.
+- The Pack designer's second mode (Build -> New pack): after the analysis, "A source for an existing kind" (the kind suggested from the field overlap), then Map (mock-up A of `docs/lenses/mockups/pack-designer-source/`: the map on a grid, cells editable, evidence and unmapped fields beside it) and Layout; Finalize and Deploy as before.
+
 ### Every record list on the live result sets
 - **FORM results are a live result set** (`GET /api/v1/live/query`): the search's rows, columns and order, ticking where the kind has a live
   binding on today's business date, static otherwise; one set per search, date and masking, shared (a masked value never picks, orders or

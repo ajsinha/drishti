@@ -11,14 +11,14 @@ Calypso is the capital markets trading and risk system. Its trades arrive in the
 
 | Folder | What |
 |---|---|
-| `connector-templates/` | delta, files, iceberg, kafka: copy one to `config/connectors/` under the name its first line gives |
+| `connectors/` | delta, files, iceberg, kafka: copy one to `config/connectors/` under the name its first line gives |
 | `mappings/calypso-trade.yaml` | the native fields to the canonical trade fields |
 | `dataload.yaml` | the inbox routing rules |
 
 ## Bind it
 
 ```yaml
-# config/connectors/trade-calypso.yaml (from connector-templates/delta.yaml)
+# config/connectors/trade-calypso.yaml (from connectors/delta.yaml)
 plugin: delta
 settings:
   lake: main

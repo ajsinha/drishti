@@ -139,7 +139,7 @@ class Packs:
         import packlake                               # a lake-form template read with the pack's lake: entries
         raw = {name: yaml.safe_load((p / "pack.yaml").read_text(encoding="utf-8")) for name, p in pack_dirs(packs_dir).items()}
         self.specs = {name: packlake.view(m) for name, m in raw.items()}
-        # the connectors a source module brings (modules/source-<system>/connector-templates/delta.yaml): the server does not generate them
+        # the connectors a source module brings (modules/source-<system>/connectors/delta.yaml): the server does not generate them
         self.module_connectors = {n for name, m in raw.items() for n in (self.specs[name].get("connectors") or {})
                                   if n not in (m.get("connectors") or {})}
 

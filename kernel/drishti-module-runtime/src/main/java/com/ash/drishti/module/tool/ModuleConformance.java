@@ -415,22 +415,67 @@ public final class ModuleConformance {
         } catch (ModuleRefusedException e) {
             out.add(e.getMessage());
         }
+        // a source module's connector templates (module.yaml connectors: {folder}): connectors are allowed there, but every host, user and
+        // secret is the site's: a ${...} placeholder, never a value
+        String folder = str(map(m.section("connectors")).get("folder"));
+        String templates = folder == null ? null : folder.endsWith("/") ? folder : folder + "/";
         for (String f : files) {
             if (!isText(f) || f.startsWith("META-INF/")) {
                 continue;
             }
             String text = text(dir, f);
+            if (templates != null && f.startsWith(templates) && (f.endsWith(".yaml") || f.endsWith(".yml"))) {
+                Matcher t = SECRET.matcher(text);
+                if (t.find()) {
+                    out.add(f + " has \"" + t.group().trim() + "\": a connector template keeps no secret; the site's secret store does");
+                }
+                out.addAll(templateValues(dir, f));
+                continue;
+            }
             Matcher s = SECRET.matcher(text);
             // the connector keys are read in YAML only, and not in module.yaml (its console.plugin names the module's plugin file): as keys of
             // the parsed document, so a sentence that says "the prices connector: off as shipped" is not one
-            // a source module's connector templates and inbox rules (connector-templates/, dataload.yaml) name connectors by design: the site copies
+            // a source module's connector templates and inbox rules (connectors/, dataload.yaml) name connectors by design: the site copies
             // a template to its connector folder; secrets are still refused in them
-            boolean tpl = f.startsWith("connector-templates/") || f.equals("dataload.yaml");
+            boolean tpl = f.equals(str(m.section("dataload")));
             boolean yaml = !tpl && !DmodManifest.FILE.equals(f) && (f.endsWith(".yaml") || f.endsWith(".yml"));
             String found = s.find() ? s.group() : yaml ? connectorKey(dir, f, text) : null;
             if (found != null) {
                 out.add(f + " has \"" + found.trim() + "\": a module carries no connector, host, user name, password, key or token; the "
                         + "site binds the module's kinds to its own connectors and keeps secrets in the kernel's secret store");
+            }
+        }
+        return out;
+    }
+
+    /** Keys of a connector template whose values are the site's (hosts, users, secrets): each must be a {@code ${...}} placeholder. */
+    private static final Set<String> SITE_KEYS = Set.of("bootstrap-servers", "host", "hosts", "url", "uri", "endpoint", "user", "username",
+            "password", "secret", "token", "api-key");
+
+    private static List<String> templateValues(Path dir, String f) {
+        List<String> out = new ArrayList<>();
+        Object doc;
+        try {
+            doc = YAML.readValue(dir.resolve(f).toFile(), Object.class);
+        } catch (IOException e) {
+            out.add(f + ": the connector template does not read as YAML: " + e.getMessage());
+            return out;
+        }
+        java.util.ArrayDeque<Object> todo = new java.util.ArrayDeque<>();
+        todo.add(doc);
+        while (!todo.isEmpty()) {
+            Object o = todo.poll();
+            if (o instanceof Map<?, ?> mm) {
+                mm.forEach((k, v) -> {
+                    if (SITE_KEYS.contains(String.valueOf(k)) && !(v instanceof String s && s.contains("${"))) {
+                        out.add(f + ": `" + k + "` is the site's: write a ${...} placeholder (with a default if any), never a value");
+                    }
+                    if (v != null) {
+                        todo.add(v);
+                    }
+                });
+            } else if (o instanceof List<?> l) {
+                l.stream().filter(java.util.Objects::nonNull).forEach(todo::add);
             }
         }
         return out;

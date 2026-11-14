@@ -11,14 +11,14 @@ WSS is a treasury, FX and money-markets dealing system (mocked here: a synthetic
 
 | Folder | What |
 |---|---|
-| `connector-templates/` | delta, files, iceberg, kafka: copy one to `config/connectors/` under the name its first line gives |
+| `connectors/` | delta, files, iceberg, kafka: copy one to `config/connectors/` under the name its first line gives |
 | `mappings/wss-trade.yaml` | the native fields to the canonical trade fields |
 | `dataload.yaml` | the inbox routing rules |
 
 ## Bind it
 
 ```yaml
-# config/connectors/trade-wss.yaml (from connector-templates/delta.yaml)
+# config/connectors/trade-wss.yaml (from connectors/delta.yaml)
 plugin: delta
 settings:
   lake: main

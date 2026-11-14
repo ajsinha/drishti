@@ -308,7 +308,7 @@ money markets), `source-swapone` (OTC swaps) and `source-ici` (a generic cross-a
 is mocked as one). The data of the last three is **mocked** (`tools/samplegen/src_*.py`; each in its own native field style; no
 positions and no scenario P&L, so the VaR does not move).
 
-A module ships: `connector-templates/` (read from Delta, Iceberg and files; a Kafka live stream whose `writes:` is the write-back of
+A module ships: `connectors/` (read from Delta, Iceberg and files; a Kafka live stream whose `writes:` is the write-back of
 section 8), `mappings/<system>-trade.yaml` (the native fields to the canonical ones), `dataload.yaml` (the inbox routing rules, in the
 format of `config/dataload.yaml`; the inbox reads the site's rules first) and a short guide. A connector's source options:
 

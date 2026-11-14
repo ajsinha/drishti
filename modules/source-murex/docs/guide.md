@@ -11,14 +11,14 @@ Murex is the cross-asset trading and risk platform. Its trades arrive in the com
 
 | Folder | What |
 |---|---|
-| `connector-templates/` | delta, files, iceberg, kafka: copy one to `config/connectors/` under the name its first line gives |
+| `connectors/` | delta, files, iceberg, kafka: copy one to `config/connectors/` under the name its first line gives |
 | `mappings/murex-trade.yaml` | the native fields to the canonical trade fields |
 | `dataload.yaml` | the inbox routing rules |
 
 ## Bind it
 
 ```yaml
-# config/connectors/trade-murex.yaml (from connector-templates/delta.yaml)
+# config/connectors/trade-murex.yaml (from connectors/delta.yaml)
 plugin: delta
 settings:
   lake: main

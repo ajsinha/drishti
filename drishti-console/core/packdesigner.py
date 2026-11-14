@@ -199,6 +199,29 @@ class Workspaces:
             r["edits"] = {str(k): str(v) for k, v in body["edits"].items() if isinstance(v, str) and len(v) < 400_000}
         r["load"] = bool(body.get("load", True))
         r["allowSharedKinds"] = bool(body.get("allowSharedKinds", False))
+        if body.get("mode") == "source":                                           # a source of an existing kind (pack new --source-for)
+            r["mode"] = "source"
+            kind, system = str(body.get("sourceFor") or ""), str(body.get("system") or "").strip().upper()
+            if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", kind):
+                raise DesignerError(400, "choose the existing kind the files are a source of")
+            if not re.fullmatch(r"[A-Z][A-Z0-9_]{1,31}", system):
+                raise DesignerError(400, "the system is upper-case letters, digits and '_' (SWAPONE)")
+            r["sourceFor"], r["system"] = kind, system
+            for k in ("sharedTable", "ownTable"):
+                v = str(body.get(k) or "").strip()
+                if v and not re.fullmatch(r"[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*", v):
+                    raise DesignerError(400, "a table is <domain>.<table> in lower case (trading.trades_shared)")
+                if v:
+                    r[k] = v
+            r["live"], r["writeBack"] = bool(body.get("live")), bool(body.get("writeBack"))
+            edits = body.get("mapEdits")
+            if isinstance(edits, dict):
+                ok = {}
+                for to, e in edits.items():
+                    if not re.fullmatch(r"[A-Za-z0-9_.-]{1,80}", str(to)) or not (e is None or isinstance(e, dict)):
+                        raise DesignerError(400, "a map edit is {CANONICAL: null | {from} | {value} | {values}}")
+                    ok[str(to)] = None if e is None else {k: e[k] for k in ("from", "value", "values") if k in e}
+                r["mapEdits"] = ok
         return r
 
     def start(self, scope: str, d: Path, op: str, request: dict, env: dict | None = None) -> None:
@@ -212,7 +235,7 @@ class Workspaces:
         if not script.is_file():
             raise DesignerError(501, "the console needs the repository's tools/ folder (builder.tools_dir) to design a pack")
         (d / "request.json").write_text(json.dumps(request), encoding="utf-8")
-        for stale in ("status.json", "result.json", "analysis.json" if op == "analyse" else "result.json"):
+        for stale in ("status.json", "result.json", {"analyse": "analysis.json", "map": "mapping.json"}.get(op, "result.json")):
             (d / stale).unlink(missing_ok=True)
         log = open(d / "job.log", "w", encoding="utf-8")
         proc = subprocess.Popen([sys.executable, str(script), op, str(d)], stdout=log, stderr=subprocess.STDOUT, cwd=str(self.tools.parent),
@@ -267,6 +290,11 @@ class Workspaces:
 
     def analysis(self, d: Path) -> dict | None:
         f = d / "analysis.json"
+        return json.loads(f.read_text(encoding="utf-8")) if f.is_file() else None
+
+    def mapping(self, d: Path) -> dict | None:
+        """The proposed field map of a source of an existing kind (the job `map`), with the person's edits applied."""
+        f = d / "mapping.json"
         return json.loads(f.read_text(encoding="utf-8")) if f.is_file() else None
 
     def result(self, d: Path) -> dict | None:
