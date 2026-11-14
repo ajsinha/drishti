@@ -24,7 +24,7 @@
 {% block content %}
 <div class="adm bs pd" data-pack-designer data-can-author="{{ 'true' if can_author else 'false' }}" data-is-admin="{{ 'true' if is_admin else 'false' }}"
      data-max-mb="{{ limits.maxMb }}" data-accept="{{ limits.accept | join(',') }}">
-  <nav class="crumbs" aria-label="Breadcrumb"><a href="/build">My designs</a> · <a href="/help/build-guide#8-the-pack-designer-build--new-pack">Pack designer guide <span aria-hidden="true">?</span></a></nav>
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/build">My designs</a> · <a href="/help/build-guide#8-the-pack-designer-create--new-pack">Pack designer guide <span aria-hidden="true">?</span></a></nav>
   <h1>New pack</h1>
   {% if not can_author %}<p class="pd-warn" role="note">Your roles do not include the author power (the built-in author and admin roles hold it, and an administrator can give it to another role in Admin → Roles). You can look, but not start a pack.</p>{% endif %}
   <div class="pd-work">
@@ -42,6 +42,10 @@
     </nav>
     <div class="pd-main">
       <div class="bs-status" role="status" aria-live="polite" data-msg></div>
+        <div class="pd-form pd-mode" data-mode-box hidden>
+          <div class="pd-f"><span id="pdModeL">These files are</span><div data-sel-mode aria-labelledby="pdModeL"></div>
+            <small class="text-muted-d" data-mode-hint>a new kind: its own pack, Sutras and screens; or a new booking system's source of a kind that exists (a source module)</small></div>
+        </div>
 
       <section class="pd-pane" data-pane="data" aria-labelledby="pdh-data">
         <h2 id="pdh-data" class="bs-h">1. Data</h2>
@@ -53,10 +57,6 @@
         <div class="pd-prog" data-read-prog hidden><progress data-read-bar max="1" value="0" aria-label="Reading the records"></progress> <span data-read-said role="status" aria-live="polite"></span>
           <button type="button" class="btn-pill btn-ghost" data-cancel>Cancel</button></div>
         <p class="bs-actions"><button type="button" class="btn-pill btn-accent" data-analyse disabled>Read every record</button></p>
-        <div class="pd-form pd-mode" data-mode-box hidden>
-          <div class="pd-f"><span id="pdModeL">These files are</span><div data-sel-mode aria-labelledby="pdModeL"></div>
-            <small class="text-muted-d" data-mode-hint>a new kind: its own pack, Sutras and screens; or a new booking system's source of a kind that exists (a source module)</small></div>
-        </div>
       </section>
       <section class="pd-pane" data-pane="map" aria-labelledby="pdh-map" hidden>
         <h2 id="pdh-map" class="bs-h">2. Map</h2>

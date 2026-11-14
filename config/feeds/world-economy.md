@@ -30,7 +30,7 @@ python3 tools/drishti.py feed status world-economy             # its last runs
 python3 tools/drishti.py feed run world-economy --snapshot     # refresh the committed demo snapshot instead (with --internal-ok)
 ```
 
-Daily: `python3 tools/drishti.py feed schedule --cron` (or `--systemd`, `--windows`). The guide: [EXTERNAL_DATA.md](../../docs/guides/EXTERNAL_DATA.md).
+Daily: `python3 tools/drishti.py feed schedule --cron` (or `--systemd`, `--windows`). The guide: [WORLD_DATA_GUIDE.md](../../docs/guides/WORLD_DATA_GUIDE.md).
 
 ## Data contract
 

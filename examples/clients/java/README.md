@@ -16,7 +16,7 @@
 # Java client examples
 
 Two single-file programs, run with Java's source launcher (no project, no build): read only, like every client example
-([the index](../README.md)). The Java client page is [docs/guides/FLIGHT_REFERENCE.md](../../../docs/guides/FLIGHT_REFERENCE.md#72-java).
+([the index](../README.md)). The Java client page is [docs/guides/FLIGHT_GUIDE.md](../../../docs/guides/FLIGHT_GUIDE.md#72-java).
 
 | File | Shows |
 |---|---|
@@ -74,4 +74,4 @@ java --add-opens=java.base/java.nio=ALL-UNNAMED -cp "lib/*" JdbcFlightSql.java t
 The model goes in the connection's `model` property (sent as the header `model`); a statement may name its own on a first line
 `-- model: <model>` instead.
 
-A JDBC tool (DBeaver, DataGrip) takes the same driver jar and URL: [docs/guides/FLIGHT_REFERENCE.md](../../../docs/guides/FLIGHT_REFERENCE.md#73-jdbc-dbeaver-datagrip-any-jdbc-program).
+A JDBC tool (DBeaver, DataGrip) takes the same driver jar and URL: [docs/guides/FLIGHT_GUIDE.md](../../../docs/guides/FLIGHT_GUIDE.md#73-jdbc-dbeaver-datagrip-any-jdbc-program).

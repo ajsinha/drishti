@@ -109,7 +109,11 @@ final class SutraBuilder {
         List<Panel> panels = new ArrayList<>();
         Set<String> ids = new HashSet<>();
         Set<String> keys = new HashSet<>();
-        for (PNode p : listOf(m.get("panels"), "panels")) {
+        List<PNode> own = new ArrayList<>(listOf(m.get("panels"), "panels"));
+        if (match != null) {                                                    // the sections modules contribute to this kind (module.yaml sections:)
+            own.addAll(SutraBlocks.expand(SutraBlocks.contributedUses(match.kind()), file, problems));
+        }
+        for (PNode p : own) {
             Panel panel = panel(p, false);
             if (panel != null) {
                 if (!ids.add(panel.id())) {

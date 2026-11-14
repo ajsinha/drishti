@@ -139,6 +139,12 @@ schemas:
       - { key: "sections[].groups[].guides[].roles", type: list, default: "[]", meaning: "Who may see it: none, everyone; else only an administrator or a person holding one of these roles (others get 404 and do not find it)" }
       - { key: "sections[].groups[].guides[].engine", type: string, default: none, meaning: "The compute engine it is about: left out while it runs on no server (an administrator sees it greyed); open to anyone who can open Help otherwise" }
       - { key: "sections[].groups[].guides[].pair", type: string, default: none, meaning: "The tutorial drawn beside this guide on its row (a page of the same group)" }
+      - { key: "sections[].groups[].guides[].children", type: list, default: "[]", meaning: "Pages that sit under this one in the Help list: each a page of its own with a slug, doc, title, icon and summary (the Business intelligence section)" }
+      - { key: "sections[].groups[].guides[].children[].title", type: string, meaning: "Its title" }
+      - { key: "sections[].groups[].guides[].children[].slug", type: string, meaning: "The child page's address, /help/<slug>" }
+      - { key: "sections[].groups[].guides[].children[].doc", type: string, meaning: "A repository document under docs/ rendered as it is" }
+      - { key: "sections[].groups[].guides[].children[].icon", type: string, meaning: "Its icon" }
+      - { key: "sections[].groups[].guides[].children[].summary", type: string, meaning: "The row's summary, also searched" }
       - { key: "sections[].groups[].guides[].domain", type: string, default: core, meaning: "The domain module the page belongs to (core, banking, capitalmarkets, economy): while it is off for the person the page is not listed, searched or served" }
       - { key: "sections[].groups[].guides[].lenses", type: list, default: none, meaning: "The lenses that show the page (none: every lens; the full product shows every page)" }
       - { key: moved, type: map, default: shipped, meaning: "Retired addresses: old slug -> slug or slug#anchor, answered with a 301" }
@@ -281,7 +287,7 @@ schemas:
       - { key: writes, type: map, default: "{}", meaning: "Named commands that write an approved change back to the source (APPROVALS_GUIDE.md section 5.4): JDBC or Kafka; off until an administrator switches the connector's writes on" }
       - { key: "writes.*", type: map, meaning: "One command: kind, params, confirm (reply, ack-topic, next-load), timeout, and the plugin's block (jdbc or kafka)" }
       - { key: "writes.*.confirm", type: string, default: reply, meaning: "How the write is confirmed: reply, ack-topic or next-load" }
-      - { key: "writes.*.kafka", type: map, meaning: "The Kafka block (modules/trading/docs/guide.md section 8): topic, shape, version-field, changed-by, changed-at, change-id-field" }
+      - { key: "writes.*.kafka", type: map, meaning: "The Kafka block (docs/guides/LIVE_RESULTS_GUIDE.md section 8): topic, shape, version-field, changed-by, changed-at, change-id-field" }
       - { key: "writes.*.kafka.*", type: string, meaning: "One key of the Kafka block" }
   module-file:
     area: modules
@@ -575,8 +581,8 @@ env:
   - { name: DRISHTI_T35_PASSWORD, by: tools, default: ~, sets: "screenshot tools", meaning: "Tutorial 17's shots: that reader's password" }
   - { name: DRISHTI_T35_TOKEN_FILE, by: tools, default: ~, sets: "screenshot tools", meaning: "Tutorial 17's shots: a scratch file the new token is kept in for the later steps" }
   - { name: DRISHTI_T36_WORK, by: tools, default: ~, sets: "screenshot tools", meaning: "Tutorial 16, Part C's shots: the working folder of the data inbox run" }
-  - { name: DRISHTI_T37_USER, by: tools, default: ~, sets: "screenshot tools", meaning: "Tutorial 7, Part B's shots: the function's author who signs in" }
-  - { name: DRISHTI_T37_PASSWORD, by: tools, default: ~, sets: "screenshot tools", meaning: "Tutorial 7, Part B's shots: that author's password" }
-  - { name: DRISHTI_T37_FN, by: tools, default: "fn:you/wret@1", sets: "screenshot tools", meaning: "Tutorial 7, Part B's shots: the saved function shown" }
+  - { name: DRISHTI_T37_USER, by: tools, default: ~, sets: "screenshot tools", meaning: "The pivot tutorial, Part B's shots: the function's author who signs in" }
+  - { name: DRISHTI_T37_PASSWORD, by: tools, default: ~, sets: "screenshot tools", meaning: "The pivot tutorial, Part B's shots: that author's password" }
+  - { name: DRISHTI_T37_FN, by: tools, default: "fn:you/wret@1", sets: "screenshot tools", meaning: "The pivot tutorial, Part B's shots: the saved function shown" }
   - { name: DRISHTI_ARTIFACTS_SERVER_PORT, by: tools, default: ~, sets: "screenshot tools", meaning: "The server port of the artifacts screenshots" }
   - { name: DRISHTI_ARTIFACTS_CONSOLE_PORT, by: tools, default: ~, sets: "screenshot tools", meaning: "The console port of the artifacts screenshots" }

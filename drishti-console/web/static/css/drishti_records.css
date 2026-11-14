@@ -17,3 +17,7 @@
 .rc-host { height: min(68vh, 640px); min-height: 280px; border: 1px solid var(--d-border); border-radius: var(--d-radius, 10px); overflow: hidden; background: var(--d-surface); }
 .rc-host.rc-small { height: min(44vh, 360px); min-height: 200px; }
 @media (max-width: 900px) { .rc-host { height: auto; min-height: 0; overflow: visible; } }
+/* A list of records spans the content width (the page's column is for text, not for a table); its form and help stay a readable width. The host's height is set
+   by drishti_records.js to what is left of the window. */
+.adm:has(.rc-host[data-records-fill]) { max-width: none; }
+.adm:has(.rc-host[data-records-fill]) .srch-help { max-width: 120ch; }

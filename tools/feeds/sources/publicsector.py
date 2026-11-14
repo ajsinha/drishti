@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""What the public-sector module's six feeds share (docs/guides/PUBLIC_SECTOR_GUIDE.md section 5), on the drishti-feeds Feed base
+"""What the public-sector module's six feeds share (docs/guides/WORLD_DATA_GUIDE.md section 5), on the drishti-feeds Feed base
 class (tools/feeds/feedbase.py): each source's licence and terms (the feed file's `options.sources`, one entry a source, since a feed may
 read several sources under different terms), the PROVENANCE every document carries, the kept history of a time series in the feed's
 folder, the values as published, and the recorded fixtures the tests answer from (never the network). Imported, never run.

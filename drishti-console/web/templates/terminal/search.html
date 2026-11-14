@@ -62,7 +62,8 @@
     <p class="asof-banner" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> <span class="mono">{{ drs_message(error.code, error.detail) }}</span></p>
   {% elif data %}
     <div class="cmp-sum">
-      <span><b>{{ data.matched }}</b> of {{ data.scanned }} {% set k = data.kind | replace('-', ' ') %}{% if data.scanned == 1 %}{{ k }}{% elif k[-1:] == 'y' and k[-2:-1] not in 'aeiou' %}{{ k[:-1] }}ies{% else %}{{ k }}s{% endif %} match{% if data.matched > rows | length and not pages %}; the first {{ rows | length }} are shown{% endif %}</span>
+      {# what is shown is counted once, by the grid (live); the header says only what the grid cannot: how many of those scanned matched, or that the list is cut #}
+      {% if data.matched != data.scanned or (data.matched > rows | length and not pages) or vs or not grid_spec %}<span><b>{{ data.matched }}</b> of {{ data.scanned }} {% set k = data.kind | replace('-', ' ') %}{% if data.scanned == 1 %}{{ k }}{% elif k[-1:] == 'y' and k[-2:-1] not in 'aeiou' %}{{ k[:-1] }}ies{% else %}{{ k }}s{% endif %} match{% if data.matched > rows | length and not pages %}; the first {{ rows | length }} are shown{% endif %}</span>{% endif %}
       <span class="text-muted-d mono" data-elapsed>{{ data.elapsedMs }} ms</span>
       {% if data.live and data.live.live %}<span class="live-pill" data-live-badge title="The kind has a live binding: these rows change as its records do"><i class="bi bi-broadcast" aria-hidden="true"></i> Live</span>{% endif %}
       {% if rows %}<a class="lnk" href="/export/search.csv?q={{ q | urlencode }}" title="Download the results as CSV"><i class="bi bi-download" aria-hidden="true"></i> CSV</a>
@@ -81,10 +82,9 @@
     {% if rows %}
     {% set pv = data.pivot if (data.pivot and not vs) else none %}
     <section class="pnl" data-panel="results"><div class="pnl-b">{% if pv %}{{ pivot_link(pv.source, 'the ' ~ (data.mnemonic or data.kind) ~ ' rows') }}{% endif %}
-      {% if vs %}<div class="rc-host" data-records data-rows="{{ compared_rows | tojson | forceescape }}" data-spec="{{ {'title': (data.mnemonic or data.kind) ~ ' on two dates', 'columns': compared_columns} | tojson | forceescape }}" aria-label="Results on two dates"></div>
+      {% if vs %}<div class="rc-host" data-records data-records-fill data-rows="{{ compared_rows | tojson | forceescape }}" data-spec="{{ {'title': (data.mnemonic or data.kind) ~ ' on two dates', 'columns': compared_columns} | tojson | forceescape }}" aria-label="Results on two dates"></div>
       {% else %}{% with spec=grid_spec, offset=(data.paged.offset if data.paged else 0), limit=rows | length %}{% include "terminal/_records.html" %}{% endwith %}{% endif %}
-      {% if pages %}<nav class="srch-pager" aria-label="Pages of {{ data.mnemonic or data.kind }}" data-pager><span class="mono">{{ "{:,}".format(pages.from) }}–{{ "{:,}".format(pages.to) }} of {{ "{:,}".format(pages.total) }}</span>
-        {% if pages.prev %}<a class="lnk" href="{{ pages.prev }}" rel="prev"><i class="bi bi-chevron-left" aria-hidden="true"></i> Previous</a>{% endif %}
+      {% if pages %}<nav class="srch-pager" aria-label="Pages of {{ data.mnemonic or data.kind }}" data-pager>{% if pages.prev %}<a class="lnk" href="{{ pages.prev }}" rel="prev"><i class="bi bi-chevron-left" aria-hidden="true"></i> Previous</a>{% endif %}
         {% if pages.next %}<a class="lnk" href="{{ pages.next }}" rel="next">Next <i class="bi bi-chevron-right" aria-hidden="true"></i></a>{% endif %}</nav>{% endif %}
     </div></section>
     {% elif not data.noData %}

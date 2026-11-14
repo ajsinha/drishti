@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# National statistics · the economy module's public-sector national statistics pack (docs/guides/PUBLIC_SECTOR_GUIDE.md): Statistics Canada's
+# National statistics · the economy module's public-sector national statistics pack (docs/guides/WORLD_DATA_GUIDE.md): Statistics Canada's
 # headline series by vector, filled daily by the national-statistics feed (config/feeds/national-statistics.yaml) into worldlake.
 pack: national-statistics
 domain: economy   # the economy module's (its Public sector lens; docs/architecture/ACCESS_MODEL.md)

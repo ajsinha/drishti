@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# config/feeds/market-data.yaml: official public market data (docs/guides/EXTERNAL_DATA.md; every key in its section "The feed file").
+# config/feeds/market-data.yaml: official public market data (docs/guides/WORLD_DATA_GUIDE.md; every key in its section "The feed file").
 #   python3 tools/drishti.py feed run market-data                                   a year of history, loaded into capitalmarket
 #   python3 tools/drishti.py feed run market-data -- ecb-fx --years 5 --scope USDMXN,EURSEK   arguments after -- go to the source
 # Each document is loaded under its own business date (its AS_OF); a daily run loads only the dates after its state's last one

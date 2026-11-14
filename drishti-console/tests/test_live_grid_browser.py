@@ -269,8 +269,8 @@ def test_the_layout_holds_on_a_desktop_and_a_phone_light_and_dark(browser, stack
     pg.evaluate("t => document.documentElement.setAttribute('data-theme', t)", "terminal" if scheme == "dark" else "light")
     open_row(pg, "T-005")
     geo = pg.evaluate("""() => { const r = (s) => { const e = document.querySelector(s); return e ? e.getBoundingClientRect() : null; };
-      return { sw: document.documentElement.scrollWidth, vw: document.documentElement.clientWidth, grid: r('.dg-live-grid'), panel: r('.dg-live-panel'), bar: r('.dg-live-bar'),
-               bg: getComputedStyle(document.querySelector('.dg-liveset')).backgroundColor, ink: getComputedStyle(document.querySelector('.dg-live-title')).color }; }""")
+      return { sw: document.documentElement.scrollWidth, vw: document.documentElement.clientWidth, grid: r('.dg-live-grid'), panel: r('.dg-live-panel'), bar: r('.dg-toolbar'),
+               bg: getComputedStyle(document.querySelector('.dg-liveset')).backgroundColor, ink: getComputedStyle(document.querySelector('.dg-title')).color }; }""")
     assert geo["sw"] <= geo["vw"], geo                                              # no sideways page scroll
     assert geo["grid"]["width"] > 150 and geo["panel"]["width"] > 150 and geo["panel"]["right"] <= geo["vw"] + 1, geo
     if mobile:
@@ -279,5 +279,5 @@ def test_the_layout_holds_on_a_desktop_and_a_phone_light_and_dark(browser, stack
         assert geo["panel"]["left"] >= geo["grid"]["right"] - 2, "on a desktop the panel is beside the grid"
     ink = [int(x) for x in geo["ink"][geo["ink"].index("(") + 1:geo["ink"].index(")")].split(",")[:3]]
     assert (sum(ink) > 380) == (scheme == "dark"), geo                              # the theme's ink: light text on dark, dark on light
-    assert pg.locator(".dg-live-bar .dg-live-btn").first.is_visible()
+    assert pg.locator(".dg-toolbar .dg-live-btn").first.is_visible()
     assert not pg.errors, pg.errors

@@ -97,7 +97,7 @@ def test_a_bare_mnemonic_opens_the_kinds_own_set_a_page_at_a_time(cl, be):
     backend = be
     assert backend.kind_pages[-1][:2] == ("TRD", 0)
     assert 'data-live-set="kind-' in page and "data-pager" in page and 'data-drishti-offset' not in page.split("data-records")[1].split(">")[0]
-    total = int(re.search(r"of ([\d,]+)</span>", page).group(1).replace(",", ""))
+    total = int(re.search(r'data-live-total="(\d+)"', page).group(1))      # the one count is the grid's, from the set's total
     if total > backend.kind_pages[-1][2]:
         assert 'rel="next"' in page
 
@@ -109,3 +109,10 @@ def test_values_and_cells_are_shaped_in_one_place():
     assert data["rows"] == [{"ref": {"kind": "trade", "id": "T1"}, "title": "Swap", "values": {"$.a.b": "x", "$.legs": 3, "$.n": -1234.5}}]
     assert data["live"] == {"set": "qu-1", "live": True, "total": 1, "seq": 9}
     assert live_results.table_rows(data)[0]["cells"] == [("x", False), ("3", True), ("−1,234.5", True)]
+
+
+def test_a_column_that_only_repeats_the_key_is_not_drawn_twice_and_the_set_names_its_noun():
+    rows = [{"ref": {"kind": "trade", "id": f"MX-{i}"}, "title": f"MX-{i}", "values": {"TRADE_ID": f"MX-{i}", "NOTIONAL": 100 + i}} for i in range(3)]
+    spec = live_results.grid_spec({"kind": "trade", "mnemonic": "TRD", "columns": ["TRADE_ID", "NOTIONAL"], "labels": {}, "rows": rows})
+    assert [c["field"] for c in spec["columns"]] == ["__id", "NOTIONAL"] and spec["noun"] == "trades"
+    assert live_results.grid_spec({"kind": "counterparty", "columns": [], "rows": []})["noun"] == "counterparties"

@@ -175,6 +175,7 @@ public class ModuleDeployConfiguration {
                 () -> ctx.getBeanProvider(com.ash.drishti.server.caches.MemoryBudget.class).getIfAvailable())
                 .bindings(() -> ctx.getBeanProvider(com.ash.drishti.server.bindings.BindingService.class).getIfAvailable())
                 .packs(() -> ctx.getBeanProvider(com.ash.drishti.server.PackReloader.class).getIfAvailable())
+                .sutras(() -> ctx.getBeanProvider(com.ash.drishti.rachana.SutraRegistry.class).getIfAvailable())
                 .python(() -> ctx.getBeanProvider(com.ash.drishti.compute.ComputeService.class).getIfAvailable(),
                         m -> placement.computePartHere(m.id()));
         return new ModuleNode(root(env), KernelFacts.ofKernel(), placement, mounts, drain, folders, wiring)

@@ -34,7 +34,7 @@ most 200); TICKERS-FROM:us-equities the us-equities companies (the widened us-eq
 else the committed one; or TICKERS-FROM:<path to a us-company .jsonl or .jsonl.gz>); CAP:<n> keeps up to n entities a group (default 50).
 --years N / --since YEAR keep only the COUNTRY: and NAME: entities whose LEI record was updated in that period. A widened build goes
 to the data folder; --into-pack writes it over the committed pack instead (on purpose only; never with golden-lei). Guide:
-docs/guides/EXTERNAL_DATA.md.
+docs/guides/WORLD_DATA_GUIDE.md.
 """
 from __future__ import annotations
 
@@ -503,7 +503,7 @@ def main(argv: list[str] | None = None) -> int:
 
 
 
-# ---------------------------------------------------------------- the feed (config/feeds/gleif.yaml; docs/guides/EXTERNAL_DATA.md)
+# ---------------------------------------------------------------- the feed (config/feeds/gleif.yaml; docs/guides/WORLD_DATA_GUIDE.md)
 
 import packscript as PS  # noqa: E402
 

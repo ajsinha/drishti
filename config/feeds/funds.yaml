@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# config/feeds/funds.yaml: the US funds and ETFs feed (docs/guides/EXTERNAL_DATA.md; every key in its section "The feed file").
+# config/feeds/funds.yaml: the US funds and ETFs feed (docs/guides/WORLD_DATA_GUIDE.md; every key in its section "The feed file").
 #   python3 tools/drishti.py feed run funds                   pull, write data/datafeeds/funds/<date>/, load into capitalmarket
 #   python3 tools/drishti.py feed run funds --snapshot        refresh the committed pack and data/testdata/funds instead
 #   python3 tools/drishti.py feed run funds -- --scope FUNDS:300,HOLDINGS:1000      arguments after -- go to the source

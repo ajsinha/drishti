@@ -122,7 +122,7 @@ Screens (Sutras):
 
 Every kind's links to its data contract and its example and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/gdelt-events.md](guides/gdelt-events.md): *Data contracts* and *Data retrieval*.
 
-External data: GDELT 1.0 daily event files. Each source's URL, licence and data feed are on the External data help page, [docs/guides/EXTERNAL_DATA.md](../../../../docs/guides/EXTERNAL_DATA.md).
+External data: GDELT 1.0 daily event files. Each source's URL, licence and data feed are on the External data help page, [docs/guides/WORLD_DATA_GUIDE.md](../../../../docs/guides/WORLD_DATA_GUIDE.md).
 
 ## Enabling and dependencies
 
@@ -140,7 +140,7 @@ Settings (environment variables) its connectors read: `DRISHTI_LAKE_ENABLED`.
 
 The **gdelt-events** feed (`config/feeds/gdelt-events.yaml`: its sources and their licences in `options.sources`, its schedule, daily at 04:30 local time, and its selection in `options`) pulls what is new into `<data>/datafeeds/gdelt-events/<date>/` and loads it into the `newslake` lake: `python3 tools/drishti.py feed run gdelt-events` (the parallel loader), `--load inbox` (the server's data inbox loads it), `--dry-run` (what it would ask). The wrappers: `tools/feeds/feed.sh run gdelt-events`, `.\tools\windows\feed.ps1 run gdelt-events`; the schedule for cron, systemd or Task Scheduler: `python3 tools/drishti.py feed schedule`. It needs no key. The samples (a few documents for the tests) are written by `python3 tools/packgen/publicsector/make.py` from the feed's recorded fixtures, never from the network.
 
-The data feed `gdelt-events` (config/feeds/gdelt-events.yaml) pulls `event-country`: `python3 tools/drishti.py feed run gdelt-events` fetches them daily into `data/datafeeds/gdelt-events/<date>/` and loads them into the lake `newslake`; `--dry-run` says what it would fetch, changing nothing; `feed status` shows the last runs. The External data feeds guide (docs/guides/EXTERNAL_DATA.md) has the schedule entries for Linux and Windows.
+The data feed `gdelt-events` (config/feeds/gdelt-events.yaml) pulls `event-country`: `python3 tools/drishti.py feed run gdelt-events` fetches them daily into `data/datafeeds/gdelt-events/<date>/` and loads them into the lake `newslake`; `--dry-run` says what it would fetch, changing nothing; `feed status` shows the last runs. The External data feeds guide (docs/guides/WORLD_DATA_GUIDE.md) has the schedule entries for Linux and Windows.
 
 The pack's files are written by `tools/packgen/publicsector/make.py`; its `--check` fails when the committed files differ from what it would write.
 

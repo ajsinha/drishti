@@ -245,7 +245,7 @@ reads `GET /api/v1/entities/rate-fixing/FIX-SOFR-NYFED/raw?asOf=<date>` and load
 within its `lookback-days` of its newest row, Live included: keep the archive current, or route the kind to the feed
 (`drishti.sources.routes.rate-fixing: nyfed-sofr-feed`) so the feed answers inside its window and the lake before it. Public data loaded
 into the lakes on a schedule (World Bank, FRED history, central banks) comes from drishti-feeds instead:
-[External data feeds](../../../guides/EXTERNAL_DATA.md).
+[External data feeds](../../../guides/WORLD_DATA_GUIDE.md).
 
 ## Failure and recovery
 
@@ -344,7 +344,7 @@ the proxy 10.1.2.3:3128 (Connection refused): check proxy.url and that the proxy
 
 ## See also
 
-- [External data feeds](../../../guides/EXTERNAL_DATA.md) (drishti-feeds: scheduled pulls of public data into the lakes) and
+- [External data feeds](../../../guides/WORLD_DATA_GUIDE.md) (drishti-feeds: scheduled pulls of public data into the lakes) and
   [CONFIGURATION.md, the `feed` connector](../../../admin/CONFIGURATION.md#feed--public-data-feeds).
 - [Connector files](../../../guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors) and [TLS (and the outbound proxy)](../../../guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy).
 - [The connector developer's guide](../../../guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one) (the README standard).

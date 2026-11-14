@@ -15,6 +15,5 @@
  */
 /* /live/<id>: the live grid fills the page under the top bar; nothing else is styled here (the component's look is drishti-grid's). */
 .lv { padding: 8px 16px 16px; }
-.lv-host { height: calc(100vh - 150px); min-height: 420px; border: 1px solid var(--d-border); border-radius: var(--d-radius, 10px); overflow: hidden; background: var(--d-surface); }
 .lv-error { margin: 8px 0; color: var(--d-bad); }
-@media (max-width: 900px) { .lv { padding: 6px 16px 12px; } .lv-host { height: auto; min-height: 0; overflow: visible; } }
+@media (max-width: 900px) { .lv { padding: 6px 16px 12px; } }

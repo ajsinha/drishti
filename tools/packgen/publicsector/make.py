@@ -13,7 +13,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Writes the public-sector packs' samples and READMEs (docs/guides/PUBLIC_SECTOR_GUIDE.md): each feed is run on its recorded
+"""Writes the public-sector packs' samples and READMEs (docs/guides/WORLD_DATA_GUIDE.md): each feed is run on its recorded
 fixtures (tools/feeds/tests/fixtures/publicsector, never the network) with the tests' narrower selection, a few documents of each
 kind are kept as the pack's samples (samples/<kind>.jsonl and catalog.jsonl), and the README is rendered from the pack, the samples
 and its intro (tools/packgen/publicsector/readme/<pack>.intro.md).

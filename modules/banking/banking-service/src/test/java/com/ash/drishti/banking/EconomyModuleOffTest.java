@@ -38,7 +38,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 /**
  * The economy module off (a content module: the world-economy and news-and-markets packs and the public sector's six packs, their
- * functions, and the World and Public sector lenses; docs/guides/PUBLIC_SECTOR_GUIDE.md): every one of its packs and their connectors
+ * functions, and the World and Public sector lenses; docs/guides/WORLD_DATA_GUIDE.md): every one of its packs and their connectors
  * is gone, its functions are off and neither lens is offered, while the banking module (its beans, engines and API), capital markets
  * and the core reference data (GLEIF) are unaffected.
  */
