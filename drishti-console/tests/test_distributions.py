@@ -137,8 +137,11 @@ def test_risk_has_no_economy_commands_and_market_data_is_in_both(backend, monkey
     for c in ("CRV", "FX", "FXV", "EQ", "CDS", "BND"):
         assert e.command_shown(c) and finance.command_shown(c), c
     assert set(risk.state.editions.lenses) == {"risk", "trading", "market"}
-    assert risk.state.editions.for_request("trading").outer is e     # a lens inside the distribution never shows more
-    assert risk.state.editions.for_request(None) is e
+    trading = risk.state.editions.for_request("trading")
+    assert trading.lens and trading.outer is e and not trading.command_shown("ECON")   # a lens answers what exists as its distribution
+    assert trading.command_shown("VRES") and trading.word_on("FORM")                    # and hides nothing of it
+    start = risk.state.editions.for_request(None)
+    assert start.lens and start.name == "risk" and start.outer is e     # the distribution's default lens: everyone's starting workspace
     assert risk.state.settings.get("ui.default_theme") == "terminal-blue" and risk.state.settings.get("ui.default_density") == "compact"
 
 
@@ -157,9 +160,9 @@ def test_the_old_keys_still_work_and_health_names_them(backend, monkeypatch):
     app = _app(backend, monkeypatch, "--distribution=risk", "--ui.product=Acme Risk")
     assert app.state.settings.get("ui.product") == "Acme Risk"           # the site's old key wins, for one release
     assert any(n.startswith("ui.product") for n in dist.deprecated(app.state.settings))
-    legacy = _app(backend, monkeypatch)                                  # a server still on drishti.edition: risk
+    legacy = _app(backend, monkeypatch)                                  # a server still saying a lens's name as its edition
     legacy.state.editions.learn({"product": "Drishti Risk", "edition": {"name": "risk", "title": "Drishti Risk"}})
-    assert legacy.state.editions.instance.name == "risk" and not legacy.state.editions.instance.distribution
+    assert not legacy.state.editions.instance.active                     # is no filter: only a distribution says what exists
 
 
 def test_a_console_without_its_own_distribution_follows_the_servers(backend, monkeypatch):
