@@ -28,7 +28,7 @@ COLUMNS = [
     {"field": "TRADE_ID", "label": "Trade", "type": "id", "width": 120}, {"field": "TRADE_VERSION", "label": "V", "type": "number", "width": 48},
     {"field": "TRADE_STATUS", "label": "Status", "type": "status"}, {"field": "PORTFOLIO", "label": "Book"},
     {"field": "COUNTERPARTY", "label": "Counterparty"}, {"field": "QUANTITY", "label": "Quantity", "type": "amount", "format": "amount0"},
-    {"field": "PRICE", "label": "Price", "type": "number", "format": "number4"}, {"field": "TAGS", "label": "Tags", "type": "list"}]
+    {"field": "PRICE", "label": "Price", "type": "number", "format": "price4"}]
 FIELDS = [
     {"id": "trade_id", "label": "Trade", "type": "string", "bind": "TRADE_ID", "required": False, "min": None, "max": None, "options": []},
     {"id": "price", "label": "Price", "type": "number", "bind": "PRICE", "required": False, "min": 0, "max": None, "options": []},
@@ -41,7 +41,7 @@ BOOKS = ["BOOK-A", "BOOK-B", "BOOK-C"]
 def trade(i: int) -> dict:
     """One synthetic trade; the fields past the grid's columns are what the panel's Raw JSON shows and the grid does not."""
     return {"TRADE_ID": f"T-{i:03d}", "TRADE_VERSION": 1, "TRADE_STATUS": "NEW", "PORTFOLIO": BOOKS[i % 3], "COUNTERPARTY": f"CP-{i % 7}",
-            "QUANTITY": 1000 * (i + 1), "PRICE": round(1 + i / 100, 4), "TAGS": ["HEDGE"] if i % 2 else [], "UPDATED_BY": "feed",
+            "QUANTITY": 1000 * (i + 1), "PRICE": round(1 + i / 100, 4), "UPDATED_BY": "feed",
             "SOURCE_UPDATE_TIME": "2026-11-14T09:00:00Z", "BOOKING_SYSTEM": "MUREX", "LEGS": [{"LEG_ID": 1, "NOTIONAL": 1000 * (i + 1), "CCY": "USD"}],
             "TRADER_TAX_ID": MASK}
 

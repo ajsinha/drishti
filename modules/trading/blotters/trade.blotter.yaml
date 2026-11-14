@@ -19,7 +19,7 @@ kind: trade
 query: "trade where TRADE_STATUS != 'CANCELLED'"   # the rows it holds, in the search grammar; a FORM search is the same without edit:
 key: TRADE_ID
 version: TRADE_VERSION                  # the guard: an edit made on an older version is refused, naming the version and when it was made
-# who made a version: changed-by names a field of the kind's data contract; the trade contract has none (the demo stream's UPDATED_BY is not part of it)
+changed-by: UPDATED_BY                  # who made a version: a field of the kind's data contract
 changed-at: SOURCE_UPDATE_TIME
 columns:
 - { field: TRADE_ID, label: Trade, type: id, width: 120 }
