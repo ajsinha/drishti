@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Tests of `drishti.py pivot functions|explain|whatif` (docs/guides/PIVOT_GUIDE.md) against an in-process stand-in for the server: the
+"""Tests of `drishti.py pivot functions|explain|whatif` (docs/guides/BI_GUIDE.md) against an in-process stand-in for the server: the
 harness report printed, a save, an approval's path and body, an explanation whose steps are printed with the residual, and a what-if's
 overlay built from the flags."""
 import json

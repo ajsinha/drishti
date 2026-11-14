@@ -50,7 +50,7 @@ About 2 h 10 min in all; each part can be done on its own day.
   tokens; [CLI_REFERENCE.md](../guides/CLI_REFERENCE.md#3-connecting-to-a-server-url-tokens-and-permissions)), and `B=$DRISHTI_SERVER/api/v1` for `curl`.
   Nothing you do there changes the pack's screen: the designer keeps **your own design**, which only you see until you share it.
 
-**Where this data comes from.** The country pages of the map step are the `world-economy` pack's, published data from the World Bank (CC BY 4.0), UNDP (CC BY 3.0 IGO) and the CIA World Factbook (public domain), plus IMF forecasts that are **internal only**, fetched by `drishti.py feed run world-economy`. Each source, its licence and how to refresh it: [External data](../guides/EXTERNAL_DATA.md).
+**Where this data comes from.** The country pages of the map step are the `world-economy` pack's, published data from the World Bank (CC BY 4.0), UNDP (CC BY 3.0 IGO) and the CIA World Factbook (public domain), plus IMF forecasts that are **internal only**, fetched by `drishti.py feed run world-economy`. Each source, its licence and how to refresh it: [External data](../guides/WORLD_DATA_GUIDE.md).
 
 **Part C · Computed panels: a reactive connector.**
 
@@ -63,7 +63,7 @@ The compute-demo pack is **synthetic** (a seeded random walk): nothing in it is 
 
 **Part A · Build a pack from your data**
 
-- what **Build → New pack** does with schemas and a folder, in five steps;
+- what **Create → New pack** does with schemas and a folder, in five steps;
 - how the schema's descriptions, enums and formats become labels, help text and the look of the screen;
 - how to read the checks the server runs before it deploys, and what a deploy changes;
 - how to roll a pack back, and what is kept for it;
@@ -598,7 +598,7 @@ You should see the canvas with **two map panels** (the world with Australia in t
 
 ![The palette: metric, map, kv, status, provenance, markdown, table, ladder, pivot, tabs, line, area, each with an Add button](img/t06/15-map-palette.jpg)
 
-You should see `map` among the kinds with an **Add** button (or drag it onto the canvas); the **YAML** tab shows the lines above, and the **Inspector** takes `highlight`, `region`, `link` and `shade` as boxes. In the example's YAML the two panels are `highlight` and `region` on the same country field: the same field, two views of it. [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench) and [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#panels-the-twenty-two-kinds-and-developing-a-new-one) have the rest of the options, and the reports have a map visual of their own ([tutorial 8, Part A](08-reports-and-dashboards.md#part-a--your-first-bi-report)).
+You should see `map` among the kinds with an **Add** button (or drag it onto the canvas); the **YAML** tab shows the lines above, and the **Inspector** takes `highlight`, `region`, `link` and `shade` as boxes. In the example's YAML the two panels are `highlight` and `region` on the same country field: the same field, two views of it. [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench) and [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#panels-the-twenty-two-kinds-and-developing-a-new-one) have the rest of the options, and the reports have a map visual of their own ([the reports tutorial, Part A](../guides/BI_GUIDE.md#part-a--your-first-bi-report)).
 
 ## Step 15 · Save it, and how it goes live
 
@@ -606,7 +606,7 @@ The design is yours (see **My drafts** on the Build home). To make it live for e
 fragment (**Ship**) and put it in a pack. [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench) walks through proposing and approving as two people; from the command line,
 `drishti.py design create|save|check|propose|approve` do the same over REST ([CLI_REFERENCE.md](../guides/CLI_REFERENCE.md)).
 
-You should see, under **Build → Build home → My drafts**, `Desk book` with the status *draft* and your edits listed.
+You should see, under **Create → Build home → My drafts**, `Desk book` with the status *draft* and your edits listed.
 
 #### On a live page: the Sutra designer
 
@@ -779,7 +779,7 @@ Customize again to go on; **Share** makes a read-only link to your design; **Res
 
 **You should see** the page without the yellow bar, with *Your page* in its header and your changes in place.
 
-**Command line.** Your page is an ordinary design in **Build → Build home → My drafts** (first called *My page · portfolio-trades*), so the
+**Command line.** Your page is an ordinary design in **Create → Build home → My drafts** (first called *My page · portfolio-trades*), so the
 `design` commands work on it, and a flag says which design is your version of each kind's page:
 
 ```bash
@@ -795,7 +795,7 @@ Edit `my-desk.sutra.yaml` in your editor and `design save <id> my-desk.sutra.yam
 
 ## Step 21 · The same screen from one line: Describe
 
-**In the UI.** **Build → New screen** offers *describe the screen in one line* (Customize has **Describe a change**). Type:
+**In the UI.** **Create → New screen** offers *describe the screen in one line* (Customize has **Describe a change**). Type:
 
 ```
 TRD BOOK-RATES-2 · click a trade → cash flows + CPTY limits · refresh 30s · edit trades beside · new trade in a drawer
@@ -889,7 +889,7 @@ With Grid or Outline, Customize on a page then opens that mode with the page's d
 #### What you have, and what comes next
 
 A desk screen designed from your own documents (steps 8 to 15), your own version of the book's trades page (a linked record on a click, a refresh, a form)
-and a second screen from one line (steps 16 to 22), all in **Build → Build home → My drafts**, seen by nobody else. To make one live for everyone, open it in the workbench
+and a second screen from one line (steps 16 to 22), all in **Create → Build home → My drafts**, seen by nobody else. To make one live for everyone, open it in the workbench
 and **Submit for review** ([RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 22](../guides/RACHANA_REFERENCE.md#22-saving-and-proposing)),
 or `drishti.py design propose <id>`.
 
@@ -1093,7 +1093,7 @@ each kind's latency. The pools and workers behind the Python one are under Admin
 
 ## Next steps
 
-- [DATA_GUIDE.md](../guides/BUILD_GUIDE.md#8-the-pack-designer-build--new-pack) lists every rule (keys, links, formats, enums, splitting a kind); [CLI_REFERENCE.md](../guides/CLI_REFERENCE.md) the commands; [BUILD_GUIDE.md](../guides/BUILD_GUIDE.md)
+- [DATA_GUIDE.md](../guides/BUILD_GUIDE.md#8-the-pack-designer-create--new-pack) lists every rule (keys, links, formats, enums, splitting a kind); [CLI_REFERENCE.md](../guides/CLI_REFERENCE.md) the commands; [BUILD_GUIDE.md](../guides/BUILD_GUIDE.md)
   how a pack is laid out; [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#8-deploy-promote-and-roll-back-by-copying) how to promote a pack between servers.
 - [Tutorial 12 · Load data daily](12-a-day-of-bank-data.md) keeps the screens' data fresh.
 - [Tutorial 11 · Correct a trade and approve it](11-correct-and-approve.md): a form like the one of step 19 that writes back, with four eyes.

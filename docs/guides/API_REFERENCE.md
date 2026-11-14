@@ -452,7 +452,7 @@ a value is cut to 8,192 characters and a match that takes over 50 ms is `DRS-401
 ### 2.8a Live result sets and blotters (`/live`)
 
 One engine behind every blotter and every FORM result that ticks; the declarations, the merge by key and version, the edit gate and the
-write path are in [Live results and blotters](../../modules/trading/docs/guide.md#9-the-api).
+write path are in [Live results and blotters](LIVE_RESULTS_GUIDE.md#9-the-api).
 
 | Method | Path | What it does |
 |---|---|---|
@@ -467,7 +467,7 @@ write path are in [Live results and blotters](../../modules/trading/docs/guide.m
 
 ### 2.9 Pivot of a table, a page's table or a search's matches
 
-Pivot is the pivot engine ([Pivot engine](#23-pivot-engine-apiv1pivot), [PIVOT_GUIDE.md](PIVOT_GUIDE.md)): a table or ladder whose Sutra says
+Pivot is the pivot engine ([Pivot engine](#23-pivot-engine-apiv1pivot), [BI_GUIDE.md](BI_GUIDE.md)): a table or ladder whose Sutra says
 `pivot:` carries `data.pivot.source` (`panel/<kind>/<panel>/<id>`, the panel's own rows) and a search whose kind's pack says `pivot:`
 carries `"pivot": {"source": "<kind>", "fields": [...], "view": {...}}`. `POST /api/v1/pivot/query` with that source answers the pivot;
 `GET /api/v1/pivot/catalogue?source=` lists its fields and the view it opens with (`defaultView`: the Sutra's or the pack's arrangement).
@@ -481,7 +481,7 @@ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/
 
 ### 2.10 Table and model editors
 
-The API of **Build › Tables & models** ([TABLES_GUIDE.md section 11](TABLES_GUIDE.md#11-the-editors)): every answer worked out for the caller.
+The API of **Build › Tables & models** ([BI_GUIDE.md section 11](BI_GUIDE.md#11-the-editors)): every answer worked out for the caller.
 Reading needs the `bi` power (else `403 DRS-9002`); saving and proposing need `bi-author` or an administrator.
 
 | Method | Path | Notes |
@@ -1088,7 +1088,7 @@ Every change is audited (`pack-upload-checked`, `pack-deployed`, `pack-rolled-ba
 
 | Method | Path | Notes |
 |---|---|---|
-| `POST` | `/admin/packs/deploy` | The archive (`.tar.gz` from `pack bundle`, or `.zip`) **as the raw request body** (`Content-Type: application/octet-stream`). Optional headers: `X-Drishti-Filename`, `X-Drishti-Sha256` (the expected checksum), `X-Drishti-Signature` + `X-Drishti-Publisher` (Ed25519 over the archive bytes, base64, by a key in `drishti.packs.registry.trusted-keys`). Verifies and previews; **changes nothing**. `200` with `{ok, file, size, sha256, pack, version, checks[], preview, bi, uploadId, expiresAt}` (`bi`: the pack's `config/bi` content, `{items, kinds, counts, plan}` with a dry run of its import, [REPORTS_GUIDE.md](REPORTS_GUIDE.md)): `ok` is false when any check failed (and then there is no `uploadId`). `413 DRS-5005` above `drishti.packs.deploy.max-archive-mb`; `400` for an empty body |
+| `POST` | `/admin/packs/deploy` | The archive (`.tar.gz` from `pack bundle`, or `.zip`) **as the raw request body** (`Content-Type: application/octet-stream`). Optional headers: `X-Drishti-Filename`, `X-Drishti-Sha256` (the expected checksum), `X-Drishti-Signature` + `X-Drishti-Publisher` (Ed25519 over the archive bytes, base64, by a key in `drishti.packs.registry.trusted-keys`). Verifies and previews; **changes nothing**. `200` with `{ok, file, size, sha256, pack, version, checks[], preview, bi, uploadId, expiresAt}` (`bi`: the pack's `config/bi` content, `{items, kinds, counts, plan}` with a dry run of its import, [BI_GUIDE.md](BI_GUIDE.md)): `ok` is false when any check failed (and then there is no `uploadId`). `413 DRS-5005` above `drishti.packs.deploy.max-archive-mb`; `400` for an empty body |
 | `POST` | `/admin/packs/deploy/{uploadId}?acceptBreaking=false` | Deploys the verified upload: swaps the files into `drishti.packs.installed-dir` (keeping the replaced version), checks every loaded pack with it, then puts the new version to use at once, with no restart (`restarting` is `false`), putting the old files back if the pack cannot be used. The answer carries `bi: {items, loaded, importId, counts}` or `{loaded: false, problem}` when the pack held BI content (a refusal of that import does not undo the deploy; `acceptBreaking=true` also forces a dataset change that breaks others' reports, bi-admin). `409` when the preview has breaking changes and `acceptBreaking` is not `true`; `404` for an unknown or expired upload (it is used once) |
 | `DELETE` | `/admin/packs/deploy/{uploadId}` | Throws a verified upload away: `{discarded}` |
 | `GET` | `/admin/packs/samples` | Who sees sample packs: `{mode (visible, developers, hidden), configured, overridden, modes, samples[]}`. Admin. |
@@ -1268,7 +1268,7 @@ as an administrator's announcement.
 | `POST` | `/admin/dataload/ready/check` | The form with `item`: `{checks: [{status: pass\|warning\|refused, text, fix, field, value, tick}], blocked, tick, text, errors}`. `field` and `value`: a one-click fix |
 | `POST` | `/admin/dataload/ready/read` | body `{text}`: a `.ready` as the form's fields, or `{refused}` |
 | `POST` | `/admin/dataload/ready/push` | The form with `item` and `ackReplace`: the data file then the `.ready` into `inbox/`: `{file, marker, sha256, rows, text, hold, node, nextCycleText}`. `409 DRS-5008` a refusal, a missing tick, or that name already waiting. Audited as `dataload.push` |
-| `GET` | `/admin/feeds?runs=30` | The data feeds ([EXTERNAL_DATA.md](EXTERNAL_DATA.md) section 6; Admin → Data loads → Feeds): `{feeds: [{feed, title, lake, load, enabled, schedule, licence, licenceUrl, internalOnly, datasets, lastRun, lastStatus, lastExit, lastTrigger, seconds, lastSuccess, rows, businessDate, failuresSinceSuccess, failed, lastError, running}], runs: [the newest ledger lines], ledger, config, failing}`, from `config/feeds/*.yaml` and `<data>/datafeeds/ledger.jsonl` |
+| `GET` | `/admin/feeds?runs=30` | The data feeds ([WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md) section 6; Admin → Data loads → Feeds): `{feeds: [{feed, title, lake, load, enabled, schedule, licence, licenceUrl, internalOnly, datasets, lastRun, lastStatus, lastExit, lastTrigger, seconds, lastSuccess, rows, businessDate, failuresSinceSuccess, failed, lastError, running}], runs: [the newest ledger lines], ledger, config, failing}`, from `config/feeds/*.yaml` and `<data>/datafeeds/ledger.jsonl` |
 | `POST` | `/admin/feeds/{feed}/run` | Run now: `tools/drishti.py feed run <feed> --trigger admin` started in the background with the server's data folder: `{started: true, pid, log, by}`; while the feed's lock is held `{started: false, skipped}`. `404 DRS-1001` no such feed, `400 DRS-5001` the installation's tools are not there (`drishti.feeds.root`). Audited `feed.run` |
 
 ### 2.25 Administration: node readiness and the drain before a stop
@@ -1504,7 +1504,7 @@ without seeing it. Masked values read `•••` and `provenance.masked` counts
 
 ## 3. Business intelligence: `/api/v1/bi`
 
-Business intelligence items ([REPORTS_GUIDE.md](REPORTS_GUIDE.md)): workspaces, typed items with a YAML body
+Business intelligence items ([BI_GUIDE.md](BI_GUIDE.md)): workspaces, typed items with a YAML body
 (stored and versioned; a `dataset` body is validated and queried, see the next section), publish and review, endorsement and the catalogue. There is no admin path: the BI powers on the
 caller's roles and the workspace roles decide every call, from the identity on the request. A caller without the `bi` power gets `403 DRS-9002`
 on every call; with `drishti.bi.enabled` off, `403 DRS-9006`. Items and workspaces the caller may not see answer `404 DRS-9001`. Writes by a
@@ -1527,7 +1527,7 @@ Item ids are `bi-<10 hex>` (shipped files: `file:<kind>:<name>`); `me` stands fo
 | `GET` `PUT` `DELETE` | `/bi/items/{id}` | the item card with `body` (the draft for contributors and above, else the published version), `bodyIs`, `draftChanges` and `can{edit, propose, publish, approve, withdraw, promote, certify, delete, move}`; `PUT` takes any of the create fields; `DELETE` is `204` |
 | `POST` | `/bi/items/{id}/open` | as `GET`, and counts a view and a Recent entry (published items) |
 | `POST` | `/bi/items/{id}/propose` `/withdraw` | review: `{note}`; the decision is made in the one [Approvals](#13-approvals-apiv1approvals) queue (`/approvals/bi/{id}/approve` · `/reject`, `{comment, params: {force, applyRenames}}`): a bi-steward, or a workspace member with the `approve` power |
-| `POST` | `/bi/items/{id}/publish` | `{note?, force?, applyRenames?}`: the next version; not in a personal workspace, not when the workspace requires review. `applyRenames` (a dataset whose draft renames fields or measures the same way, [REPORTS_GUIDE.md](REPORTS_GUIDE.md)) rewrites the stored reports that use the old names, in the same step |
+| `POST` | `/bi/items/{id}/publish` | `{note?, force?, applyRenames?}`: the next version; not in a personal workspace, not when the workspace requires review. `applyRenames` (a dataset whose draft renames fields or measures the same way, [BI_GUIDE.md](BI_GUIDE.md)) rewrites the stored reports that use the old names, in the same step |
 | `POST` | `/bi/items/{id}/move` | `{workspace}`: move to another workspace (`me` for personal) |
 | `POST` | `/bi/items/{id}/endorse` | `{level: none\|promoted\|certified}` on a published item |
 | `PUT` | `/bi/items/{id}/favourite` | `{on: true\|false}` for the caller |
@@ -1564,18 +1564,18 @@ unknown name is `422 DRS-9003`; a `PUT` that does not name `bi` keeps the powers
 
 ## 4. Datasets and the query engine: `/api/v1/bi`
 
-See [REPORTS_GUIDE.md](REPORTS_GUIDE.md) and [tutorial 8, Part A](../tutorials/08-reports-and-dashboards.md#part-a--your-first-bi-report). A dataset is a BI item of kind `dataset` (id `bi-<hex>`, or `file:dataset:<name>` for a shipped file); who may read the item is
+See [BI_GUIDE.md](BI_GUIDE.md) and [the reports tutorial, Part A](BI_GUIDE.md#part-a--your-first-bi-report). A dataset is a BI item of kind `dataset` (id `bi-<hex>`, or `file:dataset:<name>` for a shipped file); who may read the item is
 decided as for any item (`404 DRS-9001` otherwise), what the answer shows is decided by the dataset's row rules and Drishti's masks for the caller. A personal token reaches the queries and the model reads (they change nothing); `POST .../refresh` needs `bi:write` (it is in the `bi:write` scope's allow-list; `GET .../refresh` only reads).
 
 | Method | Path | What it does |
 |---|---|---|
 | `GET` | `/bi/datasets` | `{datasets: [{id, title, description, endorsement, tags, sample, shipped, valid, errors, tables, measures, relationships}]}`: the published datasets the caller may see (samples are left out for those who may not see sample content) |
-| `GET` | `/bi/datasets/{id}` | the model for this caller: `{id, title, name, version, valid, problems[{level, code, path, message}], tables[{name, connector, kind, each, mode, access, columns[{name, path, type, key, calculated, expr, masked}]}], relationships[], measures[{name, expr, rollups}], hierarchies, security{rows[{role, where, appliesToYou}], masked, rowRulesEnforced}, rollups, layers}`; a composed or derived dataset ([REPORTS_GUIDE.md](REPORTS_GUIDE.md)) also has `composition: {kind, sources[{alias, dataset, by, fields, measures, filters}], joins[{left, right, on, type}], frame[{name, from, type, measure}] \| transform, params}` |
+| `GET` | `/bi/datasets/{id}` | the model for this caller: `{id, title, name, version, valid, problems[{level, code, path, message}], tables[{name, connector, kind, each, mode, access, columns[{name, path, type, key, calculated, expr, masked}]}], relationships[], measures[{name, expr, rollups}], hierarchies, security{rows[{role, where, appliesToYou}], masked, rowRulesEnforced}, rollups, layers}`; a composed or derived dataset ([BI_GUIDE.md](BI_GUIDE.md)) also has `composition: {kind, sources[{alias, dataset, by, fields, measures, filters}], joins[{left, right, on, type}], frame[{name, from, type, measure}] \| transform, params}` |
 | `POST` | `/bi/datasets/validate` | `{yaml}` (needs `bi-author`): `{valid, problems[], tables, measures, model}` without storing anything; `model` (when the structure parsed) is the shape the Model view draws: `{tables[{name, kind, columns[...]}], relationships[{from, to, cardinality, direction, active}], measures[], hierarchies}` |
 | `POST` | `/bi/datasets/{id}/query` | answers **`410`** with `code: DRS-9150` and `mq`, the equivalent model query (the fields, measures, filters, dates, sort and limit of the body, on the model the converter made of a `rachana: 1` dataset, `<name>@1`, or `dataset:<name>` for a `rachana: 2` one); send it to `POST /bi/mq` ([ARCHITECTURE.md section 28](../architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer)) |
 | `GET` | `/bi/datasets/{id}/layers` | what the BI store holds per table: dates, rows, how each was read; for a live table `partitions` is empty and `live` holds its counters (below) |
 | `POST` | `/bi/datasets/{id}/transform/run` | refused (`422`): derived datasets are not supported; a Python dataset (`source.python`) runs its Transform when it is asked |
-| `GET` | `/bi/datasets/{id}/refresh` | the refresh state (any reader of the dataset): `{enabled, scheduled, zone, calendar, dataset: {schedule, status, trigger, lastRun, nextRun, lastDurationMs, lastRows, lastDate, tables[], failures, retryAt, error, runs, history: [{at, trigger, status, rows, durationMs, date, error}]}, tables: [{table, ...the same}]}`; `history` is the last `drishti.bi.refresh.history` runs, newest first, kept in the BI store so it survives a restart; `status` is `never`, `waiting`, `running`, `ok`, `retrying`, `failed`, `invalid` or `interrupted` (the server stopped during the run); the dataset's `refresh:` schedule ([REPORTS_GUIDE.md](REPORTS_GUIDE.md)) |
+| `GET` | `/bi/datasets/{id}/refresh` | the refresh state (any reader of the dataset): `{enabled, scheduled, zone, calendar, dataset: {schedule, status, trigger, lastRun, nextRun, lastDurationMs, lastRows, lastDate, tables[], failures, retryAt, error, runs, history: [{at, trigger, status, rows, durationMs, date, error}]}, tables: [{table, ...the same}]}`; `history` is the last `drishti.bi.refresh.history` runs, newest first, kept in the BI store so it survives a restart; `status` is `never`, `waiting`, `running`, `ok`, `retrying`, `failed`, `invalid` or `interrupted` (the server stopped during the run); the dataset's `refresh:` schedule ([BI_GUIDE.md](BI_GUIDE.md)) |
 | `POST` | `/bi/datasets/{id}/refresh` | (needs `bi-author`; a token needs `bi:write`) clears the current business date's layers of this dataset and reads them again in the background; answers `{dataset, date, refreshing[], state}` at once (the state is the `GET`'s `dataset` object, `running`) and audits `bi-dataset-refresh` |
 | `GET` | `/bi/model/kinds` | every kind of every pack the caller may open as a table: `{tables: [{table, pack, kind, connector, data, source, columns[{name, path, type, promoted}]}]}` |
 | `POST` | `/bi/model/start` | `{kinds: [...], name?}` (needs `bi-author`): `{yaml, tables, relationships[], proposals[], warnings[]}`: a draft dataset, the links the packs declare (`crossPack` marks those across packs), and relationships proposed from the data |
@@ -1691,7 +1691,7 @@ parameters' values, the items applied and the local measures are part of the pla
 `rollup <name>`), `tiers` (nodes per tier), `timings` (`engineMillis`, `pythonMillis`, `layer`, `sourceOrJavaMillis`) and `explainText` (the indented text of
 [ARCHITECTURE.md section 28](../architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer)). A Python measure (`python: <item>`, `inputs`, `by`) may be asked in any grouped query: the
 SQL measures run first, then the rows of its inputs with the answer's fields are read as the reader and the Python runner gives one value per group (a
-masked input leaves the column `None`, said in `warnings`); it has no total. It runs on the server's compute pool `python` ([NOTEBOOK_GUIDE.md](NOTEBOOK_GUIDE.md)).
+masked input leaves the column `None`, said in `warnings`); it has no total. It runs on the server's compute pool `python` ([BI_GUIDE.md](BI_GUIDE.md)).
 
 **An answer** (captured from a scratch server with the trading pack and its small file lake; the model `desk-trading` has a desk-head rule on its one dataset,
 `pack.trading.trade`). As `rita` (risk) and then as `hana` (desk-head of DESK-FX), the same query:
@@ -1798,7 +1798,7 @@ consumers could use is removed or retyped, a relationship is removed or made ina
 
 **Lineage**: `GET /api/v1/bi/lineage/{ref}` (a report id, a model reference, or `dataset:<name>`): report to model to each dataset by alias,
 down its `extends` chain to its root (a pack kind and its connector, a connector query, a Python item, another model, a SQL view), as far as the caller may
-read; `problems` lists a root that cannot be traced (`DRS-9110`). Example in [REPORTS_GUIDE.md](REPORTS_GUIDE.md).
+read; `problems` lists a root that cannot be traced (`DRS-9110`). Example in [BI_GUIDE.md](BI_GUIDE.md).
 
 **Check and the security safeguard.** Security binds to each dataset: a rule on trades does not hide another dataset of the model. So that this is never a surprise,
 Check flags every dataset that no row rule restricts while a role is restricted elsewhere in the same model (`DRS-9130`, a warning in Check) and publishing the model is
@@ -1875,7 +1875,7 @@ history; an item that cannot be converted is never changed and is listed in `pro
 
 | Method | Path | What it does |
 |---|---|---|
-| `POST` | `/api/v1/bi/migrate/boards` | body `{dryRun?}`: the stored 2.3 boards to reports with board pages ([REPORTS_GUIDE.md](REPORTS_GUIDE.md)); the id is kept. Answer: `step` (`boards`), `dryRun`, `scanned`, `converted` (or `wouldConvert`), `problems` (a count), `items` (per board `id`, `title`, `kind`, `workspace`, `status`, `state`; after a run `before` and `publishedVersion`) |
+| `POST` | `/api/v1/bi/migrate/boards` | body `{dryRun?}`: the stored 2.3 boards to reports with board pages ([BI_GUIDE.md](BI_GUIDE.md)); the id is kept. Answer: `step` (`boards`), `dryRun`, `scanned`, `converted` (or `wouldConvert`), `problems` (a count), `items` (per board `id`, `title`, `kind`, `workspace`, `status`, `state`; after a run `before` and `publishedVersion`) |
 | `GET` | `/api/v1/bi/migrate/problems` | the stored items a migration left as they were: `count` and `problems` (`step`, `item`, `title`, `kind`, `where`, `problem`, `since`). The same list is `migrationProblems` in `GET /bi/settings` and, for one item, in `GET /bi/items/{id}` |
 
 The problems answer (captured):
@@ -1976,22 +1976,22 @@ After a restart, every queued or running run of the node is started again as its
 
 ## 10. Reports: `/api/v1/bi/reports`
 
-See ([REPORTS_GUIDE.md](REPORTS_GUIDE.md) sections 14 to 16, [REPORTS_GUIDE.md](REPORTS_GUIDE.md), [tutorial 8, Part A](../tutorials/08-reports-and-dashboards.md#part-a--your-first-bi-report)). A report is a BI item of kind `report` (id `bi-<hex>`, or `file:report:<name>` for a shipped file). Who may read the item is decided as for
+See ([BI_GUIDE.md](BI_GUIDE.md) sections 14 to 16, [BI_GUIDE.md](BI_GUIDE.md), [the reports tutorial, Part A](BI_GUIDE.md#part-a--your-first-bi-report)). A report is a BI item of kind `report` (id `bi-<hex>`, or `file:report:<name>` for a shipped file). Who may read the item is decided as for
 any item (`404 DRS-9001` otherwise); what a visual shows is the dataset engine's answer for the caller (their row rules and masks). A personal token reaches the reads and the queries (they change nothing).
 
 | Method | Path | What it does |
 |---|---|---|
-| `GET` | `/bi/reports/{id}` | the report for this caller: `{id, title, description, status, shipped, sample, valid, problems[{level, code, path, message}], report, dataset, mayEdit}`; `report` is the model (the YAML's structure with defaults filled in), `dataset` the model of the dataset it reads (tables with columns, measures, hierarchies, relationships; no row rules); when visuals name datasets of their own (`dataset:`), `datasets` maps each such name to that dataset's model, and `report.links` are the fields declared to mean the same across datasets ([REPORTS_GUIDE.md](REPORTS_GUIDE.md)) |
+| `GET` | `/bi/reports/{id}` | the report for this caller: `{id, title, description, status, shipped, sample, valid, problems[{level, code, path, message}], report, dataset, mayEdit}`; `report` is the model (the YAML's structure with defaults filled in), `dataset` the model of the dataset it reads (tables with columns, measures, hierarchies, relationships; no row rules); when visuals name datasets of their own (`dataset:`), `datasets` maps each such name to that dataset's model, and `report.links` are the fields declared to mean the same across datasets ([BI_GUIDE.md](BI_GUIDE.md)) |
 | `POST` | `/bi/reports/{id}/query` | one visual's data: body `{page, visual, state}`; the answer is the dataset query's JSON answer plus `highlight`, `visual`, `query` (what was asked) and `mq` (the model query it ran as), `limit` (the rows it asked for; a `state.limit` above the visual's own raises it to at most 5,000: "Show all"), `period` (a time series asked by `week`, `month`, `quarter` or `year` so its whole range fits; the axis column keeps its name) or `truncated: true` with `total` (the rows in all, at most 50,000, `totalMore` past it), and, over a dataset with a live table, `live` (below); `?explain=true` adds the SQL for BI authors; `?format=arrow` answers an Apache Arrow IPC stream (a Perspective visual's rows, masked for the caller) with `X-Bi-Rows`, `X-Bi-Masked` and `X-Bi-Live` headers; `Accept: application/vnd.apache.arrow.stream` (no `format`) answers **the JSON answer itself as Arrow**: its rows the record batch, everything else in the schema's metadata ([Answers as Arrow](DEVELOPER_GUIDE.md#117-answers-as-arrow-the-accept-header), below) |
 | `GET` | `/bi/reports/{id}/live` | **SSE**: the report's live tables as they change: `hello`, `tick`, `status` (below); `429 DRS-9051` when too many streams are open |
 | `POST` | `/bi/reports/query` | the same for a draft (needs `bi-author`): `{report \| yaml, page, visual, state}` |
 | `POST` | `/bi/reports/validate` | `{yaml, quality?}` (needs `bi-author`): `{valid, problems[], report}`; `quality: true` adds the accessibility, layout checks |
 | `POST` | `/bi/reports/format` | `{report: {...}}`: the model written as YAML the way a person writes it: `{yaml}` |
 | `GET` | `/bi/reports/catalogue` | `{visuals: {type: {group, wells: {name: {kind, required, max}}}}, reserved[], slicerModes[]}`; the visuals include `bubble`, `funnel`, `histogram`, `box` and `map`, and `reserved` is `entity-view`, `shape`; the `python` visual (group `python`); the `tile` visual (group `board`), the `split` well of bar, column, line and area, and `families` (each type's format family) |
-| `GET` | `/bi/reports/format-schemas` | the typed format of each visual family: `types` (type to family), `families` (per family its `types`, `order` of sections and `properties`, every `$ref` resolved, each with `type`, `enum`, `minimum`, `maximum`, `x-label`, `x-hint`, `x-group`, `x-hook`, `x-control`, `x-types`) and `schemas` (the files as written) ([REPORTS_GUIDE.md](REPORTS_GUIDE.md)) |
+| `GET` | `/bi/reports/format-schemas` | the typed format of each visual family: `types` (type to family), `families` (per family its `types`, `order` of sections and `properties`, every `$ref` resolved, each with `type`, `enum`, `minimum`, `maximum`, `x-label`, `x-hint`, `x-group`, `x-hook`, `x-control`, `x-types`) and `schemas` (the files as written) ([BI_GUIDE.md](BI_GUIDE.md)) |
 | `GET` | `/bi/themes` | the theme items you may use: `[{id, name, title, palette, background, shipped, status}]` (published ones and your own drafts) |
 | `GET` | `/bi/themes/{name}` | one theme (`rachana, theme, version, title, palette, background, foreground, font, good, bad, visuals`); `404 DRS-9001` when there is none |
-| `POST` | `/bi/themes/validate` | `{yaml}` (needs `bi-author`): `{valid, problems[], theme}`; a bad palette, colour, font or visual default is `DRS-9036` ([REPORTS_GUIDE.md](REPORTS_GUIDE.md)) |
+| `POST` | `/bi/themes/validate` | `{yaml}` (needs `bi-author`): `{valid, problems[], theme}`; a bad palette, colour, font or visual default is `DRS-9036` ([BI_GUIDE.md](BI_GUIDE.md)) |
 | `GET` | `/bi/reports/dataset?ref=` | (needs `bi-author`) the model of the dataset a report names (a catalogue id, a file name or the dataset's name): what the designer's Fields pane shows |
 | `POST` | `/bi/reports/{id}/python` | body `{page, visual}`: what the console's runner runs for one python visual: `{id, title, version, status, draft, manifest, measure, params, run, visual}`; `manifest` holds the Python item as the caller reads it (the published version, or the draft for those who edit it) with its `source`; `measure` is `{name, inputs, by}` for a Python measure or null. A read: on the token read allow-list. `422 DRS-9035` (no such python visual), `DRS-9070` (the item is not valid) |
 
@@ -2000,7 +2000,7 @@ any item (`404 DRS-9001` otherwise); what a visual shows is the dataset engine's
 other visuals (`highlight: true` asks a bar or column chart for the highlighted answer as well); `drill` is the values clicked down the visual's hierarchy; `carry` is what a drill-through or a bookmark carries; `rows` shows the rows behind the visual
 (`true`, or `{field, values}` for one mark). Anything wrong is `422 DRS-9035`. The state may carry `params` (`{"breakdown": "trade.PORTFOLIO", "shock": 0.5}`): the
 reader's parameter values of a report on a model. A field parameter named in a well (`param.breakdown`) is drawn as the field or measure chosen, and the answer has `wells` (the visual's
-wells as drawn); every parameter value rides on the model query as MQ v2 `params` (`422 DRS-9037` for a value a field parameter does not list; [REPORTS_GUIDE.md](REPORTS_GUIDE.md)).
+wells as drawn); every parameter value rides on the model query as MQ v2 `params` (`422 DRS-9037` for a value a field parameter does not list; [BI_GUIDE.md](BI_GUIDE.md)).
 
 Captured from a real server (the bar of *Trades overview*; `rita` holds the raw power):
 
@@ -2014,11 +2014,11 @@ POST /api/v1/bi/reports/file:report:trades-overview/query   {"page": "overview",
 ```
 
 **True totals and distributions.** The answer of a **matrix** with `format.subtotals` or a **table** with `format.totals` carries `totals`: `[{by: [fields], columns: [names], masked: [names], rows: [[...]]}]`, one entry per level, for the measures that do not add up
-(a ratio, an average, a distinct count, a percentile, a minimum, a maximum, a time-intelligence measure), worked out by the engine as the caller ([REPORTS_GUIDE.md](REPORTS_GUIDE.md) has a captured answer). A **histogram** answers with the columns `bin`, `count`, `from`, `to` and a **box plot** with the category, `min`, `q1`, `median`, `q3`, `max`, `count`, `outliers`: the server
+(a ratio, an average, a distinct count, a percentile, a minimum, a maximum, a time-intelligence measure), worked out by the engine as the caller ([BI_GUIDE.md](BI_GUIDE.md) has a captured answer). A **histogram** answers with the columns `bin`, `count`, `from`, `to` and a **box plot** with the category, `min`, `q1`, `median`, `q3`, `max`, `count`, `outliers`: the server
 asks the engine for the measure of every member of the axis (at most `drishti.bi.report.distribution-rows`) and bins or summarises it, so `meta.members` says how many it read; a masked measure has no rows and `meta.masked` names it. A **map**'s answer is an ordinary one: the location (or latitude and longitude) columns and the measure. Nothing here is a new endpoint
 and nothing a token cannot already do: these are the existing reads (`POST /bi/reports/{id}/query` is on the token read allow-list).
 
-**Live reports.** A report over a dataset with a `mode: live` table ([REPORTS_GUIDE.md](REPORTS_GUIDE.md), [REPORTS_GUIDE.md](REPORTS_GUIDE.md)) has a stream, `GET /bi/reports/{id}/live` (`Accept: text/event-stream`; with security on, the caller needs the right to read the report):
+**Live reports.** A report over a dataset with a `mode: live` table ([BI_GUIDE.md](BI_GUIDE.md), [BI_GUIDE.md](BI_GUIDE.md)) has a stream, `GET /bi/reports/{id}/live` (`Accept: text/event-stream`; with security on, the caller needs the right to read the report):
 
 | Event | Data |
 |---|---|
@@ -2057,13 +2057,13 @@ A live table in `GET /bi/datasets/file:dataset:live-trading/layers` (captured): 
 Refusals are the standard problem body with the code: `422 DRS-9030` to `9032` (the report), `501 DRS-9033` (not built), `422 DRS-9034` (the dataset), `422 DRS-9035` (the state), and every dataset query code (`9020` to `9027`, `403 DRS-9021` for a masked column,
 `422 DRS-9020` when a row rule makes a visual unanswerable). Every query is audited like a dataset query. From the console the calls are under `/bi/api/reports/...`; the console's page asks three queries at a time (the server allows three per person) and retries a `429`.
 
-**Python items ([NOTEBOOK_GUIDE.md](NOTEBOOK_GUIDE.md)).** A Python item is a BI item of kind `python` (the ordinary item calls above), so it is versioned, reviewed and published by them; publishing checks its manifest and refuses a bad one (`422 DRS-9070`).
+**Python items ([BI_GUIDE.md](BI_GUIDE.md)).** A Python item is a BI item of kind `python` (the ordinary item calls above), so it is versioned, reviewed and published by them; publishing checks its manifest and refuses a bad one (`422 DRS-9070`).
 The server never runs Python; these calls tell the console's runner what to run, and the console's routes run it:
 
 | Call | Needs | What it does | Token rule |
 |---|---|---|---|
 | `POST /api/v1/bi/python/validate` | `bi` | body `{yaml}`: `{valid, problems[{level, code, path, message}], manifest, packages}`: every problem in a manifest, nothing stored | non-GET, on `token-read-posts` (a read: a personal token may call it) |
-| `POST /api/v1/bi/python/input` | `bi` | body `{input, limit?, asOf?}`, `input` a Python dataset's input (a model query, or a pack kind read through a connector `{kind, pack?, connector?, each?, fields?, where?, limit?}`): that input's rows **as the caller** (the kind's entitlements, row rules and masks), cut to `limit` (1,000) and `drishti.bi.transform.max-input-rows`; `?format=arrow` answers Arrow IPC with `X-Bi-Rows`, `X-Bi-Masked`, `X-Bi-Model`, `X-Bi-As-Of`, else `{model, kind, columns, rows, rowCount, masked, asOf}`. `DRS-9108` a bad input (with its path), `DRS-9102` a kind no pack declares, `DRS-9026` a connector not running ([REPORTS_GUIDE.md](REPORTS_GUIDE.md)) | non-GET, on `token-read-posts` (a read) |
+| `POST /api/v1/bi/python/input` | `bi` | body `{input, limit?, asOf?}`, `input` a Python dataset's input (a model query, or a pack kind read through a connector `{kind, pack?, connector?, each?, fields?, where?, limit?}`): that input's rows **as the caller** (the kind's entitlements, row rules and masks), cut to `limit` (1,000) and `drishti.bi.transform.max-input-rows`; `?format=arrow` answers Arrow IPC with `X-Bi-Rows`, `X-Bi-Masked`, `X-Bi-Model`, `X-Bi-As-Of`, else `{model, kind, columns, rows, rowCount, masked, asOf}`. `DRS-9108` a bad input (with its path), `DRS-9102` a kind no pack declares, `DRS-9026` a connector not running ([BI_GUIDE.md](BI_GUIDE.md)) | non-GET, on `token-read-posts` (a read) |
 | `GET /api/v1/bi/python/{ref}` | `bi`, and the right to read the item | the item (catalogue id, shipped file name or title) as the caller reads it: `{id, title, version, status, draft, manifest` (the manifest carries `tests`)`; `404 DRS-9001` | GET: read |
 | `POST /api/v1/bi/reports/{id}/python` | `bi`, and the right to read the report | body `{page, visual}`: what to run for one python visual (see the reports table above) | non-GET, on `token-read-posts` (a read) |
 | `GET /api/v1/bi/python/runtime` | `bi` | the Python runtime: `{runs, why, where: server, pool, packages, pins, interpreter, isolation, calls, failures, mayRun}`; `why` says in words why code cannot run here (compute off, the pool missing or not strict, Windows, a pin that differs) | GET: read |
@@ -2082,9 +2082,9 @@ The server never runs Python; these calls tell the console's runner what to run,
 | `POST /bi/notebook/extract` (console) | signed in; the server decides what rows | body `{dataset, fields[, filters, dates]}` or `{report, page, visual, state}`: the reader's masked rows, cut to `bi.notebook.max_rows`: `{columns[{name, type, masked}], rows, rowCount, total, truncated, masked}`; `422 DRS-9070` | the console's own route: same-origin JSON and the session cookie, else `403 DRS-5002` / `DRS-5001`; no personal token. Reads through the server's model query (`token-read-posts`) |
 | `POST /bi/notebook/sql` (console) | signed in | body `{extract: {...as above}, sql}`: one Drishti SQL statement over the model the extract reads, run by the server as you (`POST /api/v1/bi/sql`): `{columns, rows, rowCount, truncated, ms, engine: server, plan, masked, model}`; `422 DRS-9070`, `413 DRS-9072` (text), the server's `DRS-9170` | as `/bi/notebook/extract` |
 | `POST /bi/notebook/check` (console) | signed in | body `{yaml}` or `{notebook}`: `{valid, problems, cells, notebook, yaml, notes}`: the page's way to read and write a `notebook` item's body; `notes` name the cells of a cut kind left out (a `slice`) | as `/bi/notebook/extract` |
-| `POST /bi/notebook/promote` (console) | signed in | body `{to: measure \| visual, name, source, columns}` (a Python item draft), `{to: transform, name, source, extracts}` (a Python Transform draft from a cell that joins extracts) or `{to: report, name, dataset, sql}` (a report visual, with `columns` and `qualified` to map the extract's names to the model's, and `target` and `page` to add it to an existing report draft you may edit): `{kind, title, yaml, notes, target, visual}`; nothing is stored, the page saves the draft with `POST /api/v1/bi/workspaces/me/items` (new) or `PUT /api/v1/bi/items/{id}` (existing) ([USER_GUIDE.md › The Notebook, section 6](NOTEBOOK_GUIDE.md#26-promote)) | as `/bi/notebook/extract` |
-| `POST /bi/notebook/profile` (console) | signed in | body `{extract: {...as above}}`: the extract's profile (no code of yours), `{kind: profile, rows, columns: [{name, type, looksLike?, nulls, nullPct, distinct, unique, min?, max?, mean?, top, histogram?}], inputRows, masked, ms}` ([USER_GUIDE.md › The Notebook, section 7](NOTEBOOK_GUIDE.md#27-profile)) | as `/bi/notebook/extract` |
-| `GET /bi/transform` (console) | signed in with the `bi` power | the Transform editor ([REPORTS_GUIDE.md](REPORTS_GUIDE.md)); `?item=<python item>&dataset=<dataset item>` opens saved drafts | GET: a page |
+| `POST /bi/notebook/promote` (console) | signed in | body `{to: measure \| visual, name, source, columns}` (a Python item draft), `{to: transform, name, source, extracts}` (a Python Transform draft from a cell that joins extracts) or `{to: report, name, dataset, sql}` (a report visual, with `columns` and `qualified` to map the extract's names to the model's, and `target` and `page` to add it to an existing report draft you may edit): `{kind, title, yaml, notes, target, visual}`; nothing is stored, the page saves the draft with `POST /api/v1/bi/workspaces/me/items` (new) or `PUT /api/v1/bi/items/{id}` (existing) ([USER_GUIDE.md › The Notebook, section 6](BI_GUIDE.md#26-promote)) | as `/bi/notebook/extract` |
+| `POST /bi/notebook/profile` (console) | signed in | body `{extract: {...as above}}`: the extract's profile (no code of yours), `{kind: profile, rows, columns: [{name, type, looksLike?, nulls, nullPct, distinct, unique, min?, max?, mean?, top, histogram?}], inputRows, masked, ms}` ([USER_GUIDE.md › The Notebook, section 7](BI_GUIDE.md#27-profile)) | as `/bi/notebook/extract` |
+| `GET /bi/transform` (console) | signed in with the `bi` power | the Transform editor ([BI_GUIDE.md](BI_GUIDE.md)); `?item=<python item>&dataset=<dataset item>` opens saved drafts | GET: a page |
 | `GET /bi/transform/snippets`, `POST /bi/transform/snippet` (console) | signed in | the snippets library; body `{id, params, inputs}`: the step a snippet makes, `{label, code, snippet}`, each value written as a literal (`DRS-9070` a bad value) | read |
 | `POST /bi/transform/compose`, `POST /bi/transform/parse` (console) | signed in | body `{spec}`: `{spec, source, python, dataset}` (the Python item's and the Python dataset's YAML); body `{python, dataset?}`: `{spec}` (YAML read back as steps) | read |
 | `POST /bi/transform/steps` (console) | signed in with `bi-author` | body `{spec, asOf?}`: passed to `POST /api/v1/bi/python/steps`: each input read as you (at most `bi.transform.preview_rows`), then the step-by-step run on the compute pool: `{inputs: [{name, rows, columns, head, profile, masked, asOf, cut}], keys, steps: [{index, label, first, last, rows, columns, head, profile, ms, variable}], planned, complete, failed?: {index, label, line, error, traceback}, askedMs, ms, source}` | as `/bi/notebook/extract` |
@@ -2099,7 +2099,7 @@ POST /bi/python/run   {"report": "file:report:python-desk-risk", "page": "risk",
 
 ## 11. Boards: `/api/v1/bi/boards`
 
-[REPORTS_GUIDE.md](REPORTS_GUIDE.md) is the reference. **A board is a report**: a page with `layout: board` holds tiles beside the report's own visuals, and it is read, saved, published and queried as a report (`/bi/items/...`, `/bi/reports/...`); the `board` kind is gone and stored boards became reports at the first start (`POST /bi/migrate/boards`, below). These endpoints remain for a 2.3 board file read until it is converted (`file:board:<name>`) and for converting one. A board holds no data: each tile names a report and a visual, and its data and its live stream are that
+[BI_GUIDE.md](BI_GUIDE.md) is the reference. **A board is a report**: a page with `layout: board` holds tiles beside the report's own visuals, and it is read, saved, published and queried as a report (`/bi/items/...`, `/bi/reports/...`); the `board` kind is gone and stored boards became reports at the first start (`POST /bi/migrate/boards`, below). These endpoints remain for a 2.3 board file read until it is converted (`file:board:<name>`) and for converting one. A board holds no data: each tile names a report and a visual, and its data and its live stream are that
 report's (`POST /bi/reports/{id}/query`, `GET /bi/reports/{id}/live`).
 
 | Method | Path | What it does |
@@ -2108,7 +2108,7 @@ report's (`POST /bi/reports/{id}/query`, `GET /bi/reports/{id}/live`).
 | `GET` | `/bi/boards/reports` | (needs `bi-author`) the reports a tile can name: the published ones you may open and your own drafts, `[{id, title, draft, status}]`. A board that names a draft report cannot be published or proposed (`DRS-9052`) |
 | `POST` | `/bi/boards/validate` | `{yaml}` (needs `bi-author`): `{valid, problems[], board, tiles}`: the structure and what each tile names inside its report (`tiles` maps `"<page>/<tile>"` to `{report, reportTitle, page, type}`) |
 | `POST` | `/bi/boards/convert` | `{yaml}` of a board file in the older format (needs `bi-author`): `{converted: true, yaml}`, the report with board pages it becomes (nothing is stored), or `{converted: false, problems}` |
-| `POST` | `/bi/boards/format` | `{board}` (the model, as `board` in the answers above): `{yaml}`, the board written the way a person writes it, one tile to a line; read back by `validate` to the same board. A tile's `alert` may carry `hysteresis` (a number of 0 or more): how far back inside a threshold the value must be before the tile drops a level ([REPORTS_GUIDE.md](REPORTS_GUIDE.md)) |
+| `POST` | `/bi/boards/format` | `{board}` (the model, as `board` in the answers above): `{yaml}`, the board written the way a person writes it, one tile to a line; read back by `validate` to the same board. A tile's `alert` may carry `hysteresis` (a number of 0 or more): how far back inside a threshold the value must be before the tile drops a level ([BI_GUIDE.md](BI_GUIDE.md)) |
 
 Captured from a real server, validating a board with a tile off the grid, a visual that does not exist and a report that does not exist:
 
@@ -2124,7 +2124,7 @@ Publishing a board (`POST /bi/items/{id}/publish`) checks its structure and refu
 
 ## 12. Export and subscriptions: `/api/v1`
 
-Distribution ([REPORTS_GUIDE.md](REPORTS_GUIDE.md) is the reference). The file or the mail is made for the **caller** (or, for a subscription, each recipient): row rules and masks apply as for the screen.
+Distribution ([BI_GUIDE.md](BI_GUIDE.md) is the reference). The file or the mail is made for the **caller** (or, for a subscription, each recipient): row rules and masks apply as for the screen.
 Errors are `DRS-9060` (an export) and `DRS-9061` (a subscription); an unreadable report is `403 DRS-9002` or `404 DRS-9001` as everywhere in BI.
 
 | Method | Path | What it does |
@@ -2135,7 +2135,7 @@ Errors are `DRS-9060` (an export) and `DRS-9061` (a subscription); an unreadable
 | `GET` | `/me/subscriptions/{name}` | one |
 | `PUT` | `/me/subscriptions/{name}` | save: `{target: {type, id, page?, visual?, state?, view?}, schedule, format: html\|pdf\|xlsx\|jsonl, recipients: [user \| role:NAME], date?: today\|previous\|load, enabled?, title?, narrative?: bool, webhooks?: [name], sms?: bool}`. `narrative: true` opens each email with a short written summary of **that recipient's own** figures (needs the AI layer on, else `422`; written only when the AI policy lets the model see values, otherwise left out and the delivery says why); `webhooks` are names an administrator defined (`GET /notify/options`; unknown: `422`); `sms: true` texts each recipient who gave a number (needs a gateway, else `422`). `422 DRS-9061` says what is wrong |
 | `DELETE` | `/me/subscriptions/{name}` | delete (`204`) |
-| `POST` | `/me/subscriptions/{name}/run` | run now: one render and one mail per recipient, as that recipient; answers the run. A statement page (format `pdf` or `xlsx`) is one statement per recipient: each delivery has `statement: true`, `pages` and `file` ([REPORTS_GUIDE.md](REPORTS_GUIDE.md)) |
+| `POST` | `/me/subscriptions/{name}/run` | run now: one render and one mail per recipient, as that recipient; answers the run. A statement page (format `pdf` or `xlsx`) is one statement per recipient: each delivery has `statement: true`, `pages` and `file` ([BI_GUIDE.md](BI_GUIDE.md)) |
 | `POST` | `/me/subscriptions/{name}/pause` · `/me/subscriptions/{name}/resume` | pause or resume (a resumed one is scheduled from now) |
 | `POST` | `/subscriptions/preview` | `{schedule}`: `{next: [3 instants]}` (empty for `after-load`) |
 | `GET` | `/notify/options` | what alerts and subscriptions may use besides mail: `{webhooks: [name], sms: {configured, maxChars, phone}}` (`phone` is the caller's own number with all but its last two digits hidden, or empty). The URLs and secrets of the webhooks are never shown |
@@ -2187,7 +2187,7 @@ POST /api/v1/approvals/change/chg-01M5V6GM7NCKSR506RQ86M7YVV/reject  {"comment":
 
 ## 14. Alerts: `/api/v1`
 
-The one alert engine ([USER_GUIDE.md › Alerts](USER_GUIDE.md#alerts); [REPORTS_GUIDE.md](REPORTS_GUIDE.md) for numbers
+The one alert engine ([USER_GUIDE.md › Alerts](USER_GUIDE.md#alerts); [BI_GUIDE.md](BI_GUIDE.md) for numbers
 of BI). An alert rule watches one number (or one entity's Rachana-EL rule) and is **evaluated as its owner**: their row rules and masks; a
 number masked for them is never judged or put in a message. Errors are `422 DRS-9062` (a rule's expression that does not parse:
 `422 DRS-2101`); an alert that does not exist is `404 DRS-1001`. These calls are **never open to a personal API token** (`/alerts/**` and
@@ -2240,7 +2240,7 @@ PUT /api/v1/alerts/rules/Bad  {"source":{"type":"visual","report":"file:report:t
 
 ## 15. Publishing and governance: `/api/v1/bi`
 
-See ([REPORTS_GUIDE.md](REPORTS_GUIDE.md) is the reference; [REPORTS_GUIDE.md](REPORTS_GUIDE.md) section 17 the pages). Every answer is as the caller: drafts and saved states are for people who may edit the item (and a bi-steward while it is proposed), the published text for everyone who may read it, and a report is named in a list only if the caller could open it. Writes by a personal token need `bi:write` (restore, impact of a text), `bi:approve` (approve, reject, endorse, bundle import) as in [tokens](#28-personal-api-tokens).
+See ([BI_GUIDE.md](BI_GUIDE.md) is the reference; [BI_GUIDE.md](BI_GUIDE.md) section 17 the pages). Every answer is as the caller: drafts and saved states are for people who may edit the item (and a bi-steward while it is proposed), the published text for everyone who may read it, and a report is named in a list only if the caller could open it. Writes by a personal token need `bi:write` (restore, impact of a text), `bi:approve` (approve, reject, endorse, bundle import) as in [tokens](#28-personal-api-tokens).
 
 | Method | Path | What it does |
 |---|---|---|
@@ -2250,10 +2250,10 @@ See ([REPORTS_GUIDE.md](REPORTS_GUIDE.md) is the reference; [REPORTS_GUIDE.md](R
 | `GET` | `/bi/items/{id}/diff?from=&to=` | side by side: `{from: {ref, label}, to, identical, added, removed, changed, rows: [{op: same\|added\|removed\|changed, left, right, leftNo, rightNo}]}`; a side is `draft`, `published`, `vN` or `rN` (default `published` against `draft`); `422 DRS-9003` for another |
 | `GET` | `/bi/items/{id}/review` | `{request, events, diff, check: {ok, problems}, impact, preview, mayDecide}`; `preview` is `{available, label, columns, rows, rowCount, meta}` or `{available: false, reason}`, answered with the caller's row rules and masks |
 | `GET` | `/bi/items/{id}/lineage` | dataset: `{upstream: [{table, kind, packs, connector, source: {connector, plugin, masked, declared: {root\|table\|topic\|path\|...}}, each, mode}], downstream: [{id, title, status, endorsement, uses}], hidden}`; report: `{dataset, uses, upstream}` |
-| `GET` | `/bi/items/{id}/impact[?remove=a,b]` | what breaks: `{change: {breaking, removed*, added*, renames: [{kind, from, to}], alters: [{kind, name, what, from, to}]}, breaksPublished, published: [{visible, id, title, uses}], drafts, altered: [...], renames, renamable, refused, canForce, wouldRevokeCertification, hypothetical}`: a removed name that a new one replaces with the same meaning is a rename (`uses` then say `[renamed to ...]`), and `altered` lists the published reports that use a name whose type or meaning changed ([REPORTS_GUIDE.md](REPORTS_GUIDE.md)) |
+| `GET` | `/bi/items/{id}/impact[?remove=a,b]` | what breaks: `{change: {breaking, removed*, added*, renames: [{kind, from, to}], alters: [{kind, name, what, from, to}]}, breaksPublished, published: [{visible, id, title, uses}], drafts, altered: [...], renames, renamable, refused, canForce, wouldRevokeCertification, hypothetical}`: a removed name that a new one replaces with the same meaning is a rename (`uses` then say `[renamed to ...]`), and `altered` lists the published reports that use a name whose type or meaning changed ([BI_GUIDE.md](BI_GUIDE.md)) |
 | `POST` | `/bi/items/{id}/impact` | the same for `{yaml}` not yet saved |
 | `GET` | `/bi/items/{id}/dependants` | what depends on an item, for a delete confirmation: `{id, kind, count, dependants: [{id, kind, title, status}]}`. A dataset has the reports that read it and the composed or derived datasets built on it; a report has the boards that show it; other kinds have none. Only items the caller may read are counted and named. Any token that may read the item (no write scope); `403 DRS-9002` / `404 DRS-9001` as everywhere in BI |
-| `POST` | `/bi/items/{id}/tests` | `{role?, yaml?}`: runs the expected values (`tests:`) of a report or dataset ([REPORTS_GUIDE.md](REPORTS_GUIDE.md)) as you, or as a role you hold (a `bi-steward` as any); `yaml` is a report draft not yet saved (needs `bi-author`). Answers `{item, kind, role, total, passed, failed, errors, ok, results: [{name, kind, target, expect, actual, status: pass\|fail\|error, message, role}]}`; queries only, stores nothing, audited `bi-tests-run`. Token: on `token-read-posts` (a read: a personal token may call it) |
+| `POST` | `/bi/items/{id}/tests` | `{role?, yaml?}`: runs the expected values (`tests:`) of a report or dataset ([BI_GUIDE.md](BI_GUIDE.md)) as you, or as a role you hold (a `bi-steward` as any); `yaml` is a report draft not yet saved (needs `bi-author`). Answers `{item, kind, role, total, passed, failed, errors, ok, results: [{name, kind, target, expect, actual, status: pass\|fail\|error, message, role}]}`; queries only, stores nothing, audited `bi-tests-run`. Token: on `token-read-posts` (a read: a personal token may call it) |
 | `POST` | `/bi/items/{id}/publish` (and `/approvals/bi/{id}/approve` with `params`) | `{note, force, applyRenames}`: `applyRenames` rewrites the reports that use renamed names; `force` publishes over broken reports or over failing tests and needs `bi-admin`; the item plus `warnings` (what broke, which certification was revoked); `409 DRS-9040` without it for a dataset that breaks published reports, `409 DRS-9043` without it when a report's or dataset's expected values fail or cannot run |
 | `GET` | `/bi/bundle?items=a,b&workspace=w&dependencies=true` | a bundle (`drishti-bi-bundle`, format 1): items with published versions, sample flags, owner, audience and checksums, plus `skipped`; needs `bi-author` and the contributor role |
 | `POST` | `/bi/bundle/import` | `{bundle, dryRun (default true), overwrite, force, workspace, workspaces: {from: to}, owners: {from: to}}`; needs `bi-steward`; `{dryRun, ok, applied, counts, items: [{id, action, workspace, owner, reasons, warnings, blocks}]}`; `422 DRS-9041`, `409 DRS-9042` |
@@ -2421,7 +2421,7 @@ are unchanged ([VAR_GUIDE.md section 18.15](VAR_GUIDE.md#1815-parametric-var-and
 For example `GET /api/v1/risk/var/scope?scope=DESK:DESK-RATES&asOf=2026-09-30` answers historical `var` 74,633,680 and `parametric.var`
 58,409,229 (`mu` −732,297, `sigma` 24,792,909, `gap` 16,224,451, `beyond` 12 of an expected 5.09) on the demo data; the computed kind
 `VRES` carries the same as `PARAMETRIC_*` and `FAT_TAIL_GAP*` fields (`"params": {"parametric": false}` leaves them out).
-[Tutorial 2, Part B](../tutorials/02-var-from-the-bank-to-a-trade.md#part-b--parametric-var-beside-historical-the-fat-tail-gap) walks through them.
+[The VaR tutorial, Part B](VAR_GUIDE.md#part-b--parametric-var-beside-historical-the-fat-tail-gap) walks through them.
 
 | Method and path | What it does |
 |---|---|
@@ -2614,7 +2614,7 @@ are never a token's. Answers, captures, what-ifs, exports, reloads and official 
 
 ## 23. Pivot engine: `/api/v1/pivot`
 
-The pivot engine ([PIVOT_GUIDE.md](PIVOT_GUIDE.md), design [ARCHITECTURE.md section 26](../architecture/ARCHITECTURE.md#26-the-pivot-engine)): any table of Export data,
+The pivot engine ([BI_GUIDE.md](BI_GUIDE.md), design [ARCHITECTURE.md section 26](../architecture/ARCHITECTURE.md#26-the-pivot-engine)): any table of Export data,
 or the VaR engine's trades (`source: var`), as a pivot. Every figure is computed by the engine (module `drishti-bicompute`); every total is
 made from its own members; masks apply before aggregation. Every view run and export is audited, never with its values.
 
@@ -2666,7 +2666,7 @@ token reads, queries, starts and streams live pivots with any scope; ending a li
 
 ### 23.1 Pivot: custom functions, explain and what-if
 
-Custom aggregation functions ([PIVOT_GUIDE.md section 19](PIVOT_GUIDE.md#19-custom-functions)), the difference between two cells in steps
+Custom aggregation functions ([BI_GUIDE.md section 19](BI_GUIDE.md#19-custom-functions)), the difference between two cells in steps
 that add up (section 20) and what-if overlays (section 21). A view uses a function as a value `fn:owner/name@version(FIELD, ...)`.
 
 | Call | Does |
@@ -2695,7 +2695,7 @@ Refusals: `DRS-5710` to `DRS-5716` ([the error code table](#error-code-table)).
 
 ### 23.2 The MR cube: `/api/v1/risk/mr`
 
-The market-risk cube ([PIVOT_GUIDE.md section 29](PIVOT_GUIDE.md#29-the-mr-cube-preset)) is the pivot engine on `source: var` with engine `mr-cube` running: the
+The market-risk cube ([BI_GUIDE.md section 29](BI_GUIDE.md#29-the-mr-cube-preset)) is the pivot engine on `source: var` with engine `mr-cube` running: the
 source then offers the hierarchy levels (`MGMT.DESK`), `RISK_CLASS`, `POSITION`, `TRADE`, the measures `comp_var()`, `comp_es()`,
 `incr_var()`, `limit()`, `limit_use()`, `svar()`, `dv01()`, `cs01()`, `sbm()`, and the view's `options` (`scope`, `horizon`, `method`,
 `confidence`, `esConfidence`, `set`, `ccy`). Its lens adds, as the caller (a `view` is the view or a saved view's id):
@@ -2809,7 +2809,7 @@ The console's own pages read the same JSON on the console's origin: `GET /v/{kin
 
 ## 25. Statements: `/api/v1/bi/reports/statement`
 
-A report's statement pages (`layout: statement`, [REPORTS_GUIDE.md](REPORTS_GUIDE.md)) made for the caller, with their masks and row rules. A subscription or an export
+A report's statement pages (`layout: statement`, [BI_GUIDE.md](BI_GUIDE.md)) made for the caller, with their masks and row rules. A subscription or an export
 (`POST /export/pdf` or `/export/xlsx` naming a statement page) makes the same for each recipient or the caller. Errors: `422 DRS-9038` (the statement), `DRS-9034` (a report
 with errors), `403 DRS-9002` for draft YAML without `bi-author`.
 
@@ -2831,7 +2831,7 @@ For `<drishti-report>` ([EMBED_GUIDE.md](EMBED_GUIDE.md), the developer guide [E
 | `POST /embed/v1/reports/{id}/query` | `POST /api/v1/bi/reports/{id}/query` | one visual's rows, as the console viewer asks: body `{page, visual, state: {slicers, selections, dates, carry, drill}}` (64 KB at most); a read: it changes nothing |
 | `GET /embed/v1/channel?s=bilive:{id}` and `POST /embed/v1/channel/{cid}` `{add: ["bilive:{id}"]}` | `GET /api/v1/bi/reports/{id}/live` | events `hello`, `tick`, `status` for the report's live tables; they carry state, never data |
 
-The authoring paths of the same server resource (`GET .../dataset`, `POST .../validate`, `.../format`, a draft's `POST .../query`) are never open to an embed token (`403 DRS-5002`); a report the host's `kinds` list does not name is `400 DRS-8005`. The model carries `layouts: {phone: {<page id>: {order, hide, span}}}` when the report declares phone layouts ([REPORTS_GUIDE.md](REPORTS_GUIDE.md)); the same key is in `GET /api/v1/bi/reports/{id}` and in the YAML the designer saves.
+The authoring paths of the same server resource (`GET .../dataset`, `POST .../validate`, `.../format`, a draft's `POST .../query`) are never open to an embed token (`403 DRS-5002`); a report the host's `kinds` list does not name is `400 DRS-8005`. The model carries `layouts: {phone: {<page id>: {order, hide, span}}}` when the report declares phone layouts ([BI_GUIDE.md](BI_GUIDE.md)); the same key is in `GET /api/v1/bi/reports/{id}` and in the YAML the designer saves.
 
 ## 27. The console's own JSON routes
 
@@ -3052,7 +3052,7 @@ thread; nothing is erased. Each is also in the audit log (`collab.comment.add`, 
 
 ## 34. BI with AI: `/api/v1/bi/ai`
 
-Report from words, ask the data, explain this number and the authoring helpers ([REPORTS_GUIDE.md](REPORTS_GUIDE.md)). Off with the AI layer (`404 DRS-4015`); every call goes through the AI policy under the feature names `bi-draft`,
+Report from words, ask the data, explain this number and the authoring helpers ([BI_GUIDE.md](BI_GUIDE.md)). Off with the AI layer (`404 DRS-4015`); every call goes through the AI policy under the feature names `bi-draft`,
 `bi-ask`, `bi-explain`, `bi-suggest`, `bi-explain-checks` and `bi-helper` (a subscription's narrative summary is `subscription-narrative`; masks, limits, roles, audit: `403 DRS-4018`, `429 DRS-4017`, `502`/`504 DRS-4016`); an answer that cannot be used is `422 DRS-4020`; a query the engine refuses keeps the engine's
 code (`DRS-9020`, `DRS-9021`, `DRS-9025`). Responses are `Cache-Control: no-store`.
 
@@ -3181,7 +3181,7 @@ and the fix for the codes that need more than the meaning.
 | DRS-4017 | 429 | AI rate limited | over a per-user rate or cost limit of the AI policy |
 | DRS-4018 | 403 | AI policy | the AI policy refuses the call for this user, role or feature |
 | DRS-4019 | 404 | AI not found | no such model, provider, MCP server or tool |
-| DRS-4020 | 422 | AI answer unusable | BI with AI: the model's draft did not pass the report check (after one repair), or its answer is not a query; nothing was changed ([REPORTS_GUIDE.md](REPORTS_GUIDE.md)) |
+| DRS-4020 | 422 | AI answer unusable | BI with AI: the model's draft did not pass the report check (after one repair), or its answer is not a query; nothing was changed ([BI_GUIDE.md](BI_GUIDE.md)) |
 | DRS-4021 | 400 | history range too large | more business days than `max-days` (the kind's `history.<kind>.max-days`, else `drishti.history.max-days`, 366) |
 | DRS-4022 | 400 | history bad range | history queries: the range cannot be read: `TO` before `FROM`, a `FROM` in the future, an unreadable date or range. Use `30`, `30D`, `2W`, `3M`, `1Y`, `YTD`, `MTD`, `QTD` or `FROM yyyy-mm-dd [TO yyyy-mm-dd]` |
 | DRS-4023 | 404 | edition command hidden | the server's edition (or the person's lens, header `X-Drishti-Lens`) hides the command: typed (`POST /api/v1/command`), its entity page (`/api/v1/views/{kind}/{id}`) or search; it is also left out of FUNC (`/api/v1/functions`) and the type-ahead. Its kind stays readable by the engines. `FUNC` lists what you can use. The console's `/api/view` and the embed API v2 add `fix`, naming the lens or edition plainly ("You are inside the Drishti World lens, which does not include trades: leave the lens (Views → Leave) or choose an entity it shows"), and `/api/view` the person's `lens` |
@@ -3220,7 +3220,7 @@ and the fix for the codes that need more than the meaning.
 | DRS-5445 | 503 | Exposure capacity | a date's netting-set matrices need more memory than `drishti.ccr.exposure.memory-budget-gb` |
 | DRS-5601 | 401 | Flight: no token | Arrow Flight ([FLIGHT_GUIDE.md](FLIGHT_GUIDE.md)): no token, a token unknown, expired or revoked, an account disabled, or a browser session (never accepted); send `authorization: Bearer <API token>` (or Basic with the token as the password) |
 | DRS-5602 | 403 | Flight: scope | the token lacks `data:read` (or `data:read:<domain>` for the domain asked), the person may not read the kind, model or measure, or a token that is not an application's names an on-behalf-of person |
-| DRS-5603 | 400 | Flight: bad request | the ticket or descriptor is not a request Drishti reads: not JSON, an unknown form, a kind, model, measure or lake table that is not there, a bad date or filter line ([FLIGHT_REFERENCE.md](FLIGHT_REFERENCE.md)) |
+| DRS-5603 | 400 | Flight: bad request | the ticket or descriptor is not a request Drishti reads: not JSON, an unknown form, a kind, model, measure or lake table that is not there, a bad date or filter line ([FLIGHT_GUIDE.md](FLIGHT_GUIDE.md)) |
 | DRS-5604 | 429 | Flight: rows limit | the read passed the rows limit of the person's role; whole batches before it were sent; narrow the request or read it in parts |
 | DRS-5605 | 429 | Flight: bytes limit | the read passed the bytes limit of the person's role |
 | DRS-5606 | 504 | Flight: time limit | the read ran past the time limit of the person's role, or the client did not take the next batch in time |
@@ -3254,12 +3254,12 @@ and the fix for the codes that need more than the meaning.
 | DRS-5220 | 422 | VaR: system basket not valid | a system basket ([VAR_GUIDE.md section 5.7](VAR_GUIDE.md#57-system-baskets)) that cannot be saved or imported as given: an id that is not `A-Z 0-9 . _ -` or exists already, a type that is not hierarchy, rule or basket, a node no hierarchy holds on the date, a rule that does not read, a position or trade the date does not hold, a date that is not `YYYY-MM-DD`; the message names the basket and the reason |
 | DRS-5221 | 404 | VaR: no system basket | `PORT:<id>` (or an edit) of a system basket there is none of on the date: `PORT <GO>` lists them |
 | DRS-5219 | 403 | memory only | the data is held in memory only by contract (a connector whose lake is at `mem://`, [IN_MEMORY_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#13-the-in-memory-lake)) and this place would keep it: a scheduled report, a share's picture or e-mail, a note copying its values, an Ask about the page; nothing was written; the message names the data and its contract; a download is allowed (audited) |
-| DRS-5701 | 400 | pivot: bad view | the pivot engine cannot answer the view: an unknown source field or function, a field twice, a grouping a field's type does not take, a sort or show-as it does not know ([PIVOT_GUIDE.md](PIVOT_GUIDE.md)) |
+| DRS-5701 | 400 | pivot: bad view | the pivot engine cannot answer the view: an unknown source field or function, a field twice, a grouping a field's type does not take, a sort or show-as it does not know ([BI_GUIDE.md](BI_GUIDE.md)) |
 | DRS-5702 | 422 | pivot: too many cells | the view has more visible cells (totals included) than `drishti.pivot.max-cells` (or `max-holistic-cells`), with the count; or a table has more rows than `stage-max-rows`; or an xlsx export more rows than `export.xlsx-max-rows`; never cut short |
 | DRS-5703 | 404 | pivot off | the pivot engine is switched off on this server (`drishti.pivot.enabled`) or the edition has no `PIVOT` |
 | DRS-5704 | 404 | pivot: not found | a saved pivot view, a provenance id, a cell reference's view or a source that is not there, or not shared with the caller |
 | DRS-5705 | 403 | pivot: masked | a field masked for the caller asked as a dimension, a measure's input or a filter (masks apply before aggregation) |
-| DRS-5710 | 400 | pivot: function invalid | a custom function refused as written: its definition, code, inputs, kind or name ([PIVOT_GUIDE.md section 19](PIVOT_GUIDE.md#19-custom-functions)) |
+| DRS-5710 | 400 | pivot: function invalid | a custom function refused as written: its definition, code, inputs, kind or name ([BI_GUIDE.md section 19](BI_GUIDE.md#19-custom-functions)) |
 | DRS-5711 | 422 | pivot: harness failed | a custom function whose harness did not pass (split-and-merge differs from one pass, not deterministic, too slow, too large): not saved, with the first failure |
 | DRS-5712 | 403 | pivot: approval | the author approving their own function, someone who is not an approver, a function not approved for the caller, a plug-in jar changed since its approval |
 | DRS-5713 | 404 | pivot: function language off | the function's language is switched off on this server (Python and Java plug-ins as shipped), or Python asked to read memory-only data |
@@ -3346,7 +3346,7 @@ and the fix for the codes that need more than the meaning.
 | DRS-9011 | 422 | Dataset expression | a measure, calculated column or row rule does not parse, names a table or column the dataset does not have, aggregates where it must not (or does not where it must), uses an unknown function, or refers to measures in a circle (HTTP 422) |
 | DRS-9012 | 422 | Dataset reference | a relationship, hierarchy, masked column, row rule or rollup points at a table or column that does not exist, or a rollup lists a measure it cannot hold (a distinct count, a percentile, a condition inside an aggregate) |
 | DRS-9013 | 501 | Dataset not built | a Python measure named in a query: **not built** for SQL (HTTP 501 as a query; a warning for a stored Python measure). Time intelligence (`ytd`, `mtd`, `qtd`, `prior_period`, `same_period_last_year`, `running`) and the window functions (`lag`, `lead`, `rank`, `dense_rank`, `percent_rank`, `moving_*`, `cumulative`) are built; one with the wrong arguments is `DRS-9011` (it names what it needs: an `n` from 1 to 1000, an aggregate, a column), a window along a date that is not a field of the visual is `DRS-9020` (*needs that column as a field of the visual*), a window cannot be filtered on (`DRS-9020`) or asked with the measures of another fact table |
-| DRS-9014 | 422 | Dataset composition | a composed dataset (`from:` / `join:`) names a source dataset, column, measure or join key that does not exist, joins keys of different types, or leaves a source unjoined (HTTP 422); the problem names the path ([REPORTS_GUIDE.md](REPORTS_GUIDE.md)) |
+| DRS-9014 | 422 | Dataset composition | a composed dataset (`from:` / `join:`) names a source dataset, column, measure or join key that does not exist, joins keys of different types, or leaves a source unjoined (HTTP 422); the problem names the path ([BI_GUIDE.md](BI_GUIDE.md)) |
 | DRS-9015 | 422 | Dataset fan-out | an error on a composed dataset (a warning when the join says `allow-repeat: true`): a join repeats rows (many-to-many, or the source with one row per key is on the wrong end), so the measures of the repeated side add up too high; declare the `key:` of each source, group a source by the key alone, or put the unique source on the right |
 | DRS-9016 | 422 | Dataset cycle | a dataset reads itself, directly or through the datasets it is composed of or derived from (HTTP 422): break the loop by taking the column from the underlying dataset |
 | DRS-9017 | 422 | Derived dataset | a derived dataset has no `transform:` or no `inputs:`, or declares a column that is not a usable name or type (HTTP 422); as a warning: its columns are not known yet (declare `columns:`, or press Run the Transform now on its page) |
@@ -3366,16 +3366,16 @@ and the fix for the codes that need more than the meaning.
 | DRS-9033 | 501 | Report not built | the report uses a visual type the grammar reserves and this server does not build (today only `shape`; the message lists the types that are built) (HTTP 501) |
 | DRS-9034 | 422 | Report dataset | a report's dataset cannot be found (a catalogue id, a file name such as `trades-basic`, or the dataset's name) or has errors, so the report cannot be drawn (HTTP 422). Open the dataset's page to see its problems |
 | DRS-9035 | 422 | Report state | a visual query names a page, visual or slicer the report lacks, or its state is not valid: a drill path past the last level of the hierarchy, a selection from a visual that is not on the page, dates that are not `yyyy-mm-dd` (HTTP 422) |
-| DRS-9036 | 422 | Theme | a theme item is not valid: its palette is not 3 to 12 `#rrggbb` colours, a colour is not `#rrggbb`, its font family is not one of `sans`, `serif`, `mono`, `system` (nothing is fetched), its size is not 10 to 18, or one of its `visuals:` defaults is a format key the visual family does not take or a value out of range (the format schemas, REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 5); on a report, a warning that the theme it names cannot be found: it draws with the default colours (HTTP 422) |
-| DRS-9037 | 422 | Report field parameter | a well names `param.<name>` that is not a field parameter of the report's model, or a field parameter whose choices do not fit the well (a field in a measure well, a measure in a field well), or the report is on a dataset, not a model (HTTP 422); asked with a value the parameter does not list, the visual answers it too. The message names the parameter, the well and what fits: put the parameter in a field or measure well, or choose one of its values ([REPORTS_GUIDE.md](REPORTS_GUIDE.md)) |
-| DRS-9038 | 422 | Statement | a statement is not valid (HTTP 422): a paper, orientation, margin, header or footer part, token, period or text size the report's `statement:` cannot have, a visual a statement page does not draw (a chart), a table sharing its row, a `groupBy` the band does not show; or it cannot be made: the margins leave too little paper, or it runs past `drishti.distribution.statements.max-pages` ([REPORTS_GUIDE.md](REPORTS_GUIDE.md)) |
+| DRS-9036 | 422 | Theme | a theme item is not valid: its palette is not 3 to 12 `#rrggbb` colours, a colour is not `#rrggbb`, its font family is not one of `sans`, `serif`, `mono`, `system` (nothing is fetched), its size is not 10 to 18, or one of its `visuals:` defaults is a format key the visual family does not take or a value out of range (the format schemas, BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 5); on a report, a warning that the theme it names cannot be found: it draws with the default colours (HTTP 422) |
+| DRS-9037 | 422 | Report field parameter | a well names `param.<name>` that is not a field parameter of the report's model, or a field parameter whose choices do not fit the well (a field in a measure well, a measure in a field well), or the report is on a dataset, not a model (HTTP 422); asked with a value the parameter does not list, the visual answers it too. The message names the parameter, the well and what fits: put the parameter in a field or measure well, or choose one of its values ([BI_GUIDE.md](BI_GUIDE.md)) |
+| DRS-9038 | 422 | Statement | a statement is not valid (HTTP 422): a paper, orientation, margin, header or footer part, token, period or text size the report's `statement:` cannot have, a visual a statement page does not draw (a chart), a table sharing its row, a `groupBy` the band does not show; or it cannot be made: the margins leave too little paper, or it runs past `drishti.distribution.statements.max-pages` ([BI_GUIDE.md](BI_GUIDE.md)) |
 | DRS-9040 | 409 | Breaks reports | Publishing a dataset would break published reports (a field, measure or hierarchy they use is removed or renamed); a `bi-admin` may force it |
 | DRS-9041 | 422 | Bundle invalid | a BI bundle cannot be used (HTTP 422): not a bundle of this format, a file fails its checksum, it is larger than `drishti.bi.governance.bundle-max-bytes`, or an item in it is not valid. The message says which |
 | DRS-9043 | 409 | Failing tests | A report or dataset declares expected values (`tests:`) and one fails or cannot run, so publishing is refused; a `bi-admin` may publish with `force` |
 | DRS-9042 | 409 | Import conflict | a bundle import is refused (HTTP 409): items that changed here since the bundle was made would be overwritten (conflicts), or a workspace or owner it names cannot be mapped. Run it as a dry run to see the list, then choose `overwrite` or map the names |
 | DRS-9050 | 422 | Live table | a live table cannot be kept (HTTP 422): it is over an array (`each`: a live table follows whole entities; use `mode: cached`) or its `live:` block is wrong (`rows` a positive number, `age` such as `90s`, `15m`, `2h`). When no running connector serves its kind the query answers `DRS-9026` instead |
 | DRS-9051 | 429 | Live streams | too many live streams are open (HTTP 429), for the server (`drishti.bi.live.max-streams`, 100) or for you (`max-streams-per-user`, 10). Each open live report holds one, a board one per distinct report on it: close a tab or a board. The page says **Disconnected** with the reason |
-| DRS-9052 | 422 | Board invalid | a board is not valid (HTTP 422): not YAML, a bad name or id, a tile off the 12-column grid, an alert threshold that is not `{ op: lt, value: 0 }`, or a tile that names a report you cannot open, a page or visual it does not have, or a slicer. The problem names the path ([REPORTS_GUIDE.md](REPORTS_GUIDE.md)) |
+| DRS-9052 | 422 | Board invalid | a board is not valid (HTTP 422): not YAML, a bad name or id, a tile off the 12-column grid, an alert threshold that is not `{ op: lt, value: 0 }`, or a tile that names a report you cannot open, a page or visual it does not have, or a slicer. The problem names the path ([BI_GUIDE.md](BI_GUIDE.md)) |
 | DRS-9053 | 501 | Board not built | a board uses a reserved setting (HTTP 501): `notify`, `notifications`, `subscriptions`. Notifications arrive with distribution (phase 7); a tile only changes colour |
 | DRS-9060 | 422 | Export failed | an export could not be made (HTTP 422): exports are off (`drishti.distribution.export.enabled`), the format is not `pdf`, `png`, `xlsx` or `csv`, the report or view cannot be read, the file is over `max-bytes` (export one page or visual, or narrow the filters), or it took longer than `timeout`. The message names the setting |
 | DRS-9061 | 422 | Subscription not valid | a subscription is not valid (HTTP 422): a schedule that is not one of `daily`, `weekdays`, `business-days`, `weekly mon HH:MM`, `monthly 1\|last HH:MM` (add `business`), `hourly`, `cron`, `after-load`; a format other than `html`, `pdf`, `xlsx`, `jsonl`; an email address (outside addresses are refused, whatever the settings); a role or another person when you are not a BI author; a target you cannot open yourself; or more than `per-user` subscriptions |
@@ -3386,8 +3386,8 @@ and the fix for the codes that need more than the meaning.
 | DRS-9073 | 403 | Python sandbox refusal | the Python sandbox refused something (HTTP 403): an import that is not on the item's list, the network, a file outside the scratch folder, a process |
 | DRS-9074 | 503 | Python does not run here now | Compute off, the pool `python` missing or not `isolation: strict`, the strict sandbox not available on this platform (Windows), the pool's interpreter not carrying the pinned versions of `config/compute/locks/python.lock`, the pool's queue full, or `drishti.bi.transform.enabled: false`; the detail says which (`GET /api/v1/bi/python/runtime`) |
 | DRS-9075 | 422 | Transform result | A Python Transform returned what a derived dataset cannot use: a column the dataset declares is missing from its frame, or the Transform's inputs do not match the dataset's (a different count, or a different dataset in the same place) |
-| DRS-9076 | 422 | Python tests failed | A Python item that ships `tests:` is published (or approved) through the console while one of them fails or cannot run; a bi-admin may send `force: true` ([REPORTS_GUIDE.md](REPORTS_GUIDE.md)). Raised by the console only |
-| DRS-9077 | 422 | Vega-Lite not drawn | Shown in the visual's frame by the page, not an HTTP answer: a Vega-Lite specification that names a `url` or a `loader`, or a feature drishti-chart does not translate, named with what to use instead ([REPORTS_GUIDE.md](REPORTS_GUIDE.md)) |
+| DRS-9076 | 422 | Python tests failed | A Python item that ships `tests:` is published (or approved) through the console while one of them fails or cannot run; a bi-admin may send `force: true` ([BI_GUIDE.md](BI_GUIDE.md)). Raised by the console only |
+| DRS-9077 | 422 | Vega-Lite not drawn | Shown in the visual's frame by the page, not an HTTP answer: a Vega-Lite specification that names a `url` or a `loader`, or a feature drishti-chart does not translate, named with what to use instead ([BI_GUIDE.md](BI_GUIDE.md)) |
 | DRS-9080 | 404 | Run not found | No such BI run, or not one you may see (a run shared with you needs its share) ([ARCHITECTURE.md section 28](../architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer)). |
 | DRS-9081 | 429 | Run queue full | You already have `queue.per-user` runs queued or running, or the node's queue is at `queue.max`; wait for one to finish or cancel one (`Retry-After`) |
 | DRS-9082 | 409 | Run needs confirming | the question is an ad-hoc heavy run above the confirm threshold (HTTP 409): the answer carries the estimate (a range and its basis) and a `confirmToken`; confirm it, narrow the dates, or add a rollup at the question's grain |
@@ -3408,7 +3408,7 @@ and the fix for the codes that need more than the meaning.
 | DRS-9107 | 409 | Generated dataset | a pack-generated dataset was saved (HTTP 409): `pack.<pack>.<kind>` datasets are read-only; save a dataset that `extends: pack.<pack>.<kind>@1` to narrow it or add columns |
 | DRS-9108 | 422 | Source query | The query of a dataset whose source is a model does not validate (Check: its own code follows), or its answer lacks a column the dataset declares |
 | DRS-9109 | 422 | Source cycle | A model that reaches itself through a dataset whose source is a model (Check, the bind of a query, or at run time): `model:a -> dataset:x -> model:a` |
-| DRS-9110 | — | — | a dataset whose root cannot be traced (Check): down its `extends` chain there is no source, or the root is a pack kind no enabled pack generates. Enable the pack, or extend a dataset that is published ([REPORTS_GUIDE.md](REPORTS_GUIDE.md)) |
+| DRS-9110 | — | — | a dataset whose root cannot be traced (Check): down its `extends` chain there is no source, or the root is a pack kind no enabled pack generates. Enable the pack, or extend a dataset that is published ([BI_GUIDE.md](BI_GUIDE.md)) |
 | DRS-9120 | 422 | Model invalid | Publishing a data model whose Check has an error (`DRS-9120` to `DRS-9129` in the problem list, [ARCHITECTURE.md section 28](../architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer)) |
 | DRS-9121 | — | — | a dataset of a model with no relationship to the others (a warning): it can be asked alone, never with their fields |
 | DRS-9122 | — | — | a relationship naming no column, columns of two types, an unknown cardinality or direction |
@@ -3442,9 +3442,9 @@ and the fix for the codes that need more than the meaning.
 | DRS-9165 | 422 | Calculation group | (`mq: 2`) A `calc` group or item the model does not have (with `fix`: its groups or items), or a Python measure under a calculation group |
 | DRS-9166 | 422 | Filter context | A filter-context or time function that cannot be planned: `via=` names no relationship, `parent_of` no hierarchy, `as_of` a date that is not fixed before the query (`date('…')`, `asof()`, `shift_date(asof(), n)`), contexts nested more than three deep through the measures they name, a context where none can be (a rollup, a live aggregate) |
 | DRS-9190 | 422 | Not converted | the expression converter (`drishti.py bi migrate --expressions`, `POST /api/v1/bi/expr/convert`) could not keep an old expression's meaning, so it left it as it was: rewrite it in DEL v2 by hand ([RACHANA_REFERENCE.md › Rachana-EL expressions](RACHANA_REFERENCE.md#rachana-el-expressions)) |
-| DRS-9195 | — | Not migrated | `drishti.py tables migrate` could not migrate an item or an expression and wrote nothing for it: the report names the item, the key and why (a construct that waits for the DEL translator, a name two items give, a pack-generated dataset, which is regenerated) ([TABLES_GUIDE.md section 9](TABLES_GUIDE.md#9-the-migration-tables-migrate)) |
+| DRS-9195 | — | Not migrated | `drishti.py tables migrate` could not migrate an item or an expression and wrote nothing for it: the report names the item, the key and why (a construct that waits for the DEL translator, a name two items give, a pack-generated dataset, which is regenerated) ([BI_GUIDE.md section 9](BI_GUIDE.md#9-the-migration-tables-migrate)) |
 | DRS-9196 | — | Migrate first | (planned with the switch) a server found a dataset or model file in BI's old form where the table layer reads and refused that file; run `drishti.py tables migrate --dry-run`, then without it |
-| DRS-9600 | — | Table definition unreadable | a `.table.yaml` or `.model.yaml` that is not YAML, has an unknown key, misses a required key, or a value of the wrong shape; also an expression that does not read ([TABLES_GUIDE.md section 10](TABLES_GUIDE.md#10-problem-codes)) |
+| DRS-9600 | — | Table definition unreadable | a `.table.yaml` or `.model.yaml` that is not YAML, has an unknown key, misses a required key, or a value of the wrong shape; also an expression that does not read ([BI_GUIDE.md section 10](BI_GUIDE.md#10-problem-codes)) |
 | DRS-9601 | — | Table name | a table's name is not `<domain>.<name>` (lower case, letters, digits, underscores), or its file is not in its domain's folder |
 | DRS-9602 | — | Built-in column | `id`, `business_date`, `index`, `update_seq` or `updated_at` declared: every table has them |
 | DRS-9603 | — | Table path | a grain or a column path that is not one: a grain not from `$` ending in a list, `@` or `^` with no element to name, a list (`[*]`) in a column |

@@ -21,7 +21,7 @@ import java.util.Map;
 
 /**
  * How a request wants scale handled (ARCHITECTURE.md sections 26.3, 26.6), beside the view (a view is what is shown; these are how it
- * is computed, so a saved view never carries them). The pivot screen shows each as a switch with its state (PIVOT_GUIDE.md, the screen's
+ * is computed, so a saved view never carries them). The pivot screen shows each as a switch with its state (BI_GUIDE.md, the screen's
  * switches): Exact / Auto / ≈, Progressive, Use rollups.
  *
  * @param exactness {@code AUTO}: distinct counts and percentiles exact on small data, ≈ (sketches) above

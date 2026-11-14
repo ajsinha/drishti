@@ -13,7 +13,7 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 #}
-{# The pivot screen, PIVOT [table | @owner/name] <GO> (PIVOT_GUIDE.md; mock-ups docs/lenses/mockups/pivot-fields): drawn by drishti-grid
+{# The pivot screen, PIVOT [table | @owner/name] <GO> (BI_GUIDE.md; mock-ups docs/lenses/mockups/pivot-fields): drawn by drishti-grid
    (Drishti Elements). It opens as the View picker in front of the compact line (mode views, the default: Rows · Columns · Filters ·
    Values on one line, a picker behind each), or the compact line alone (compact), or the Fields and Build panes (panes, behind
    Customize › and \); the header line holds the short title, the i of the scan estimate and the lens's headline figures; nested
@@ -21,7 +21,7 @@
    scan-estimate bar above; slicers and paths; a chart of the selection below (a non-additive measure is never stacked); the Export menu
    (Excel with outline and formulas only where a measure adds up, CSV, Arrow, the definition). drishti_pivot.js fills it from
    /api/pivot/...; every figure is the server's (clientAggregation: false). A preset's lens (a domain module's: MCUBE's "mr", the
-   banking module's MR cube, PIVOT_GUIDE.md#29-the-mr-cube-preset) adds its parts while its module is on: the module's plugin.yaml names them (screens.pivot:
+   banking module's MR cube, BI_GUIDE.md#29-the-mr-cube-preset) adds its parts while its module is on: the module's plugin.yaml names them (screens.pivot:
    its style sheets, scripts and the templates above and below the grid), drawn here by screen_parts(); the core names none of them. One
    pivot engine, one grid. #}
 {% extends "base.html" %}
@@ -40,7 +40,7 @@
     <span class="pv-titlectx" data-pv-titlectx></span>
     <button type="button" class="pv-info" data-pv-info aria-expanded="false" aria-controls="pvInfo" title="What this view reads and how it was computed (the scan estimate)">i</button>
     <span class="pv-headline" data-pv-headline aria-live="polite"></span>
-    {% if cube %}<a class="pv-help" href="/help/context/{{ cube.help }}" title="Help: the {{ cube.title }}" aria-label="Help: the {{ cube.title }}"><i class="bi bi-question-circle" aria-hidden="true"></i></a>{% else %}<a class="pv-help" href="/help/context/pivot" title="Help: the pivot screen (PIVOT_GUIDE.md)" aria-label="Help: the pivot screen"><i class="bi bi-question-circle" aria-hidden="true"></i></a>{% endif %}
+    {% if cube %}<a class="pv-help" href="/help/context/{{ cube.help }}" title="Help: the {{ cube.title }}" aria-label="Help: the {{ cube.title }}"><i class="bi bi-question-circle" aria-hidden="true"></i></a>{% else %}<a class="pv-help" href="/help/context/pivot" title="Help: the pivot screen (BI_GUIDE.md)" aria-label="Help: the pivot screen"><i class="bi bi-question-circle" aria-hidden="true"></i></a>{% endif %}
   </div>
   {% if cube_building %}<p class="pv-building" role="status" data-cube-building><span class="drishti_uc-chip" data-uc="{{ cube.under_construction }}" title="Depends on work not built yet (Help → Under construction)">Under construction</span>
     The {{ cube.title }} is a preset of this Pivot: its source, the CCR provider (each netting set's exposure paths, netted and collateralised first), is not built yet.

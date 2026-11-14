@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The data-as-of line of a report and its visuals (2.6.7 patch; docs/guides/REPORTS_GUIDE.md, "Which date a report reads"): each table reads its latest date on
+"""The data-as-of line of a report and its visuals (2.6.7 patch; docs/guides/BI_GUIDE.md, "Which date a report reads"): each table reads its latest date on
 or before the asked one, the answer's meta.dataAsOf says each table's date, and the line names them when they differ. The browser code runs in Node (skipped
 without it); the colours are the theme's own warning token in every theme."""
 import json

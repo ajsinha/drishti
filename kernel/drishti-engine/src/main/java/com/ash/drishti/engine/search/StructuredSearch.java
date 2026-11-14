@@ -148,7 +148,7 @@ public final class StructuredSearch {
 
     /**
      * The query's condition as a test of one document, resolved and compiled as {@link #run} does: a live result set keeps a changed row
-     * only while the condition holds for it (modules/trading/docs/guide.md). A condition that cannot be evaluated on a document is false.
+     * only while the condition holds for it (docs/guides/LIVE_RESULTS_GUIDE.md). A condition that cannot be evaluated on a document is false.
      */
     public java.util.function.Predicate<DataNode> condition(SearchQuery asked) {
         SearchQuery q = resolve(asked, knownFields(kindOf(asked)));

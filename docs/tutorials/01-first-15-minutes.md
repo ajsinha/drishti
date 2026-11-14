@@ -48,7 +48,7 @@ In these tutorials `<GO>` means "press Enter", commands are run from the reposit
 programs from [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#2-install-and-run-on-one-machine): the **server** reads the data (port 18480), the **console** is the web pages you open (port 17480).
 Every step says what to do **in the UI** (IntelliJ IDEA and PyCharm run configurations, or the console's pages) and **from the command line** where a command exists.
 
-**Where this data comes from.** The banking packs' data is synthetic test data (fictitious names, `tools/testdata/make_testdata.py`); the `world-economy` pack's figures are published data from the World Bank (CC BY 4.0), UNDP (CC BY 3.0 IGO) and the CIA World Factbook (public domain), plus IMF forecasts that are **internal only**, fetched by `drishti.py feed run world-economy`; the `news-and-markets` pack's quotes and headlines are a captured snapshot of Yahoo Finance and Google News, **internal only** (`drishti.py feed run news-and-markets`). Each source, its licence and how to refresh it: [External data](../guides/EXTERNAL_DATA.md).
+**Where this data comes from.** The banking packs' data is synthetic test data (fictitious names, `tools/testdata/make_testdata.py`); the `world-economy` pack's figures are published data from the World Bank (CC BY 4.0), UNDP (CC BY 3.0 IGO) and the CIA World Factbook (public domain), plus IMF forecasts that are **internal only**, fetched by `drishti.py feed run world-economy`; the `news-and-markets` pack's quotes and headlines are a captured snapshot of Yahoo Finance and Google News, **internal only** (`drishti.py feed run news-and-markets`). Each source, its licence and how to refresh it: [External data](../guides/WORLD_DATA_GUIDE.md).
 
 **Part B · Look up anything.**
 
@@ -391,8 +391,8 @@ Click the **BI** icon (or type `BI` and press Enter).
 
 ![The BI home: a menu on the left (Home, Catalogue, My workspace and more) and the sections Recent, Favourites, Certified for you and Shared with me](img/t01/09-bi-home.jpg)
 
-You should see the BI home: a menu on the left (Home, Catalogue, My workspace, Datasets, Insights and so on) and, in the middle, the sections *Recent*, *Favourites*, *Certified for you* and *Shared with me*, which fill as you use BI. Business intelligence is Drishti's second front: reports and boards built on models and datasets, with their own guide ([REPORTS_GUIDE.md](../guides/REPORTS_GUIDE.md)) and tutorial
-([tutorial 8, Part A](08-reports-and-dashboards.md#part-a--your-first-bi-report)). The shipped models read the same sixty days of the lakes.
+You should see the BI home: a menu on the left (Home, Catalogue, My workspace, Datasets, Insights and so on) and, in the middle, the sections *Recent*, *Favourites*, *Certified for you* and *Shared with me*, which fill as you use BI. Business intelligence is Drishti's second front: reports and boards built on models and datasets, with their own guide ([../guides/BI_GUIDE.md](../guides/BI_GUIDE.md)) and tutorial
+([the reports tutorial, Part A](../guides/BI_GUIDE.md#part-a--your-first-bi-report)). The shipped models read the same sixty days of the lakes.
 
 **From the command line** (with the token of Step 9), the catalogue as you may see it:
 
@@ -611,7 +611,7 @@ Key figures
 
 The **business date** box in the top bar says which day you are looking at. Empty means **live**: the latest business date (2026-10-16 here). The demo lakes are daily
 snapshots: they change only when a day is loaded, so nothing ticks on these pages. (With `DRISHTI_DEMO_ENABLED=true` the demo source ticks about twice a second and a live view
-moves as a whole: [tutorial 8, Part F](08-reports-and-dashboards.md#part-f--live-bi-and-boards).) Open `TRD MX-20000022` (a MUREX cross-currency swap that was amended on the last day), click the date box and type
+moves as a whole: [the reports tutorial, Part F](../guides/BI_GUIDE.md#part-f--live-bi-and-boards).) Open `TRD MX-20000022` (a MUREX cross-currency swap that was amended on the last day), click the date box and type
 `2026-10-15`, then press Enter.
 
 ![The trade on 15 October: an amber date box, a red Live button and a Compare link](img/t02/08-past-date.jpg)
@@ -728,7 +728,7 @@ $ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" 'http://localhost:18480/api/
 ## Step 16 · A different domain: real public data
 
 The packs of other industries use exactly the same commands. The `world-economy` pack holds published data about countries (World Bank, UNDP and the CIA World Factbook, public sources;
-[EXTERNAL_DATA.md (world-economy)](../guides/EXTERNAL_DATA.md#the-world-economy-data-in-detail) lists them and their licences). Type `JUR JUR-USA`.
+[../guides/WORLD_DATA_GUIDE.md (world-economy)](../guides/WORLD_DATA_GUIDE.md#the-world-economy-data-in-detail) lists them and their licences). Type `JUR JUR-USA`.
 
 ![The jurisdiction view of the United States: government, legislature and indicators](img/t02/12-public-data.jpg)
 
@@ -767,7 +767,7 @@ Society and governance (latest)  (table, indicators, F3)
 ### Part C · Query by form
 
 Find trades by filling in boxes, not by writing a search. You will combine a choice of counterparty, an amount, a date range and a choice of currencies, read the
-search the form wrote for you, turn it into a regular expression, and then keep the search: name it, watch it as a live monitor, or schedule it (tutorial 8, Part E).
+search the form wrote for you, turn it into a regular expression, and then keep the search: name it, watch it as a live monitor, or schedule it (the reports tutorial, Part E).
 
 ## Step 17 · Open the form
 
@@ -916,7 +916,7 @@ monitor `Meridian RE big trades` and press **Watch as a monitor**.
 
 You should see a monitor page: a list with one card for each of the first 50 results, each showing that trade's strip (source system, side, notional, status, portfolio). The
 monitor is kept under your account. **Add an entity** adds a row (type `TRD MX-20000001`), **×** removes one, **Delete monitor** removes the list. **Share link** copies the
-form's address, which opens the same form with the same criteria for anyone who may see the pack. **Schedule a report** is tutorial 8, Part E. (On the demo lakes the cards change when
+form's address, which opens the same form with the same criteria for anyone who may see the pack. **Schedule a report** is the reports tutorial, Part E. (On the demo lakes the cards change when
 a day is loaded; a live source would make them tick.)
 
 ### Part D · Share and collaborate
@@ -1269,8 +1269,8 @@ days*.
 
 ## Next steps
 
-- [Tutorial 2 · Look up anything](#part-b--look-up-anything): mnemonics, type-ahead, links, a past date, Compare.
-- [Tutorial 3 · Query by form](#part-c--query-by-form): the form in depth, and keeping a search.
+- [The VaR tutorial · Look up anything](#part-b--look-up-anything): mnemonics, type-ahead, links, a past date, Compare.
+- [The exposure tutorial · Query by form](#part-c--query-by-form): the form in depth, and keeping a search.
 - The [User guide](../guides/USER_GUIDE.md) describes every feature of the console; [CLI_REFERENCE.md](../guides/CLI_REFERENCE.md) every command; [data/testdata/README.md](../../data/testdata/README.md) the test data and its demo pages.
 
 ## If something goes wrong

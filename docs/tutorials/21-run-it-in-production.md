@@ -25,9 +25,9 @@ About 60 minutes (most of it waiting for a restart or a backup you then read).
 
 ## Before you start
 
-- A running server and console with sign-in on: the quick-start environment of [tutorial 8](08-reports-and-dashboards.md#before-you-start) (the demo lakes,
+- A running server and console with sign-in on: the quick-start environment of [the reports tutorial](../guides/BI_GUIDE.md#before-you-start-2) (the demo lakes,
   the run configurations **Drishti server (demo lakes)** and **Drishti console**, whose variables are the development values this tutorial replaces);
-  you have used Admin, Users and Roles in tutorials 1 and 8, and the personal API token of tutorial 1, Part A is in `DRISHTI_TOKEN`.
+  you have used Admin, Users and Roles in tutorial 1 and the reports tutorial, and the personal API token of tutorial 1, Part A is in `DRISHTI_TOKEN`.
 - Shell access to the machine that runs the server (you restart it a few times) and `tar`, `curl` and `python3`.
 - The pictures and outputs were made on ports 18943 and 17943; yours are 18480 and 17480. Paths and ports in the outputs are shortened to `~/drishti` and the defaults.
 
@@ -102,10 +102,10 @@ You should see the built-in roles (read-only, from configuration) and the ones y
 
 - **Give people the smallest role that does their job.** `viewer` reads; `trader` and the pack roles read their own packs' kinds; `author` designs screens; `approver` approves them; `admin` administers.
 - **`raw` is the power to see masked fields.** Keep `drishti.security.redact` listing every field that must read `•••` to people without `raw`: a mask hides only the field it names, so list every field that holds the value ([CONFIGURATION.md](../admin/CONFIGURATION.md#field-masks)). Embedded views always mask, whatever the user's roles.
-- **BI powers** are in **Admin → BI** ([tutorial 8, Part G](08-reports-and-dashboards.md#part-g--govern-bi)): `bi` opens BI, `bi-author` creates and publishes in workspaces, `bi-steward` certifies, `bi-admin` manages and can force. The BI settings page also says who may create shared workspaces.
+- **BI powers** are in **Admin → BI** ([the reports tutorial, Part G](../guides/BI_GUIDE.md#part-g--govern-bi)): `bi` opens BI, `bi-author` creates and publishes in workspaces, `bi-steward` certifies, `bi-admin` manages and can force. The BI settings page also says who may create shared workspaces.
 - **Packs** limit what a user's kinds can reach: a user sees only the packs ticked on their account.
 
-![Admin, BI: the roles with the four BI powers as columns (shown in tutorial 13)](img/t13/01-bi-settings.jpg)
+![Admin, BI: the roles with the four BI powers as columns (shown in the world data tutorial)](img/t13/01-bi-settings.jpg)
 
 Single sign-on is optional: `DRISHTI_OIDC_ENABLED=true`, the issuer and client id on both processes, the client secret and redirect address on the console, and a map from the identity provider's groups to Drishti roles on the server ([ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md)).
 
@@ -350,7 +350,7 @@ once a day; **Delete permanently** needs the name typed. Everything above is in 
 - [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md) for everything above in full, and [CONFIGURATION.md](../admin/CONFIGURATION.md) for every setting. [ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md) for users, roles, single sign-on and embedding.
 - [CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md#16-tuning) and [CLUSTER_GUIDE.md, method 9](../admin/BENCHMARK.md#213-many-users-soaks-and-memory) before you size a big installation; [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#21-troubleshooting) and the runbooks in [the runbooks](../guides/OPERATIONS_GUIDE.md#20-runbooks) for incidents.
 - Several servers, each with its own data, as one cluster: [tutorial 22](22-a-cluster-of-three.md) and [OPERATIONS_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet).
-- The tutorials again, now as users: [tutorial 1, Part D](01-first-15-minutes.md#part-d--share-and-collaborate) and [tutorial 8, Part E](08-reports-and-dashboards.md#part-e--scheduled-searches-and-subscriptions) are what your people will do first.
+- The tutorials again, now as users: [tutorial 1, Part D](01-first-15-minutes.md#part-d--share-and-collaborate) and [the reports tutorial, Part E](../guides/BI_GUIDE.md#part-e--scheduled-searches-and-subscriptions) are what your people will do first.
 
 ## If something goes wrong
 

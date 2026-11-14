@@ -492,7 +492,7 @@ public final class FrtbService {
 
     /**
      * One element of a scope's sensitivities in the reporting currency, with its factor resolved and its record's position and trades (the MR
-     * cube's ladders, heat map and per-cell sums read these, PIVOT_GUIDE.md section 29.6).
+     * cube's ladders, heat map and per-cell sums read these, BI_GUIDE.md section 29.6).
      */
     public record Element(String positionKey, String tradeId, List<String> tradeIds, String grain, FactorDictionary.Factor factor, String measure,
             double value) {}

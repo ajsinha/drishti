@@ -338,7 +338,7 @@ guides:
 
   # --------------------------------------------------------------------------------------------------------------------------- funds
   - id: funds
-    file: docs/guides/FUNDS_GUIDE.md
+    file: docs/guides/WORLD_DATA_GUIDE.md
     number: 18
     datasets:
       - kind: fund
@@ -368,7 +368,7 @@ guides:
 
   # ------------------------------------------------------------------------------------------------------------- groupings, analytics
   - id: groupings
-    file: docs/guides/GROUPINGS_ANALYTICS_GUIDE.md
+    file: docs/guides/BI_GUIDE.md
     number: 25
     note: |
       These are the inputs; every grouping and analytic is computed from them when asked ([section 22](#22-where-the-inputs-come-from)).
@@ -454,7 +454,7 @@ guides:
 
   # --------------------------------------------------------------------------------------------------------------------------- pivot
   - id: pivot
-    file: docs/guides/PIVOT_GUIDE.md
+    file: docs/guides/BI_GUIDE.md
     number: 27
     note: |
       The pivot reads any stored kind through its connector ([section 3](#3-sources-and-fields)); these are the sources the guide's examples

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of tutorial 7, Part B, custom functions, "why did it move" and what-if (docs/tutorials/07-pivot-cubes-and-explain.md), written
+"""Pictures of tutorial 7, Part B, custom functions, "why did it move" and what-if (docs/guides/BI_GUIDE.md), written
 to docs/tutorials/img/t37/, in the light theme. Run it on its own: it builds the VaR pictures' scratch lake with the trades of the three
 source systems (as tutorial 7, Part A's pictures do) and starts its own scratch server and console:
 

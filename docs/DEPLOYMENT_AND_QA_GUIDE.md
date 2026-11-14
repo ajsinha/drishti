@@ -492,7 +492,7 @@ guide; `VAR BANK <GO>` answers *DRS-4023 VAR is not in Drishti Finance*; `CRV <G
 kernel's menus (Views, BI, Admin, Help) and no finance anywhere; Admin → Health says the `genomics` module was asked for and is *not
 installed*. **Install the sample module:** build it (`./mvnw -q package -pl modules/genomics -am`) and copy
 `modules/genomics/target/dmod/genomics-0.1.0.dmod` into the data folder's `modules/`. **You should see** it install itself within seconds
-(auto-deploy on a single node): the Research lens with VARIANT, GENE and COHORT, and the lollipop visual in Build → Elements gallery.
+(auto-deploy on a single node): the Research lens with VARIANT, GENE and COHORT, and the lollipop visual in Create → Elements gallery.
 
 **Drishti Risk and Drishti Finance over one cluster (the owner's stack).** In the stack file, a `consoles:` list beside the nodes:
 
@@ -760,11 +760,11 @@ market-risk cube, the Pivot screen on the VaR source with VaR and ES by desk (a 
 ![The MR cube: VaR by desk in the Pivot](img/deploy/11-mr-cube.jpg)
 
 **From the command line:** `tools/drishti.py pivot run --source var --rows MGMT.DESK --values "var()"` prints the same cube.
-Details: [REPORTS_GUIDE.md](guides/REPORTS_GUIDE.md), [PIVOT_GUIDE.md](guides/PIVOT_GUIDE.md).
+Details: [guides/BI_GUIDE.md](guides/BI_GUIDE.md), [guides/BI_GUIDE.md](guides/BI_GUIDE.md).
 
 ### 8.9 The Elements gallery
 
-**In the UI.** **Build → Elements gallery** (`http://<host>:17480/elements`): every component of the Drishti Elements libraries, live
+**In the UI.** **Create → Elements gallery** (`http://<host>:17480/elements`): every component of the Drishti Elements libraries, live
 (grid, charts, inputs, maps, the risk widgets); each component's **Playground page** draws it over data you edit in a grid
 ([ELEMENTS.md section 8.4](architecture/ELEMENTS.md#84-as-built-the-gallery)). A component that does not draw here will not draw on a screen
 either.
@@ -892,7 +892,7 @@ Tick one column per operating system tested. *Expected* is what section 8 shows.
 | 11 | `VAR BANK`, `VAR DESK RATES`; Explain ›, Why it moved | the bank's VaR and ES, the scope tree; one desk; the change in steps that add up | ☐ | ☐ | ☐ |
 | 12 | `EXP BANK`, Pre-deal check | the exposure explorer; the check's form | ☐ | ☐ | ☐ |
 | 13 | BI Trades overview; `MCUBE` | the report with live slicers; VaR by desk | ☐ | ☐ | ☐ |
-| 14 | Build → Elements gallery, a Playground page | every component drawn; an edited cell redraws the visual | ☐ | ☐ | ☐ |
+| 14 | Create → Elements gallery, a Playground page | every component drawn; an edited cell redraws the visual | ☐ | ☐ | ☐ |
 | 15 | Admin → Data loads → Inbox and Feeds; `feed list`, `feed run gleif --dry-run` | the owner node; the feeds; `exit=0` | ☐ | ☐ | ☐ |
 | 16 | Banking off, restart | `off` lists banking; no risk pages; `DRS-1025` | ☐ | ☐ | ☐ |
 | 17 | Banking on, restart | VaR answers again | ☐ | ☐ | ☐ |

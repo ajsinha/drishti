@@ -93,7 +93,7 @@ public final class ConnectorFiles {
      * @param text the file's text
      * @param etag version of the text, for optimistic concurrency
      * @param modified when the file was last written (null before it exists)
-     * @param requires the {@code requires:} block as written (the compute libraries the connector needs, docs/guides/NOTEBOOK_GUIDE.md
+     * @param requires the {@code requires:} block as written (the compute libraries the connector needs, docs/guides/BI_GUIDE.md
      *        section 4), empty when none; nothing in it runs until an administrator approves it
      * @param compute a reactive connector's computation as written ({@code mode}, {@code kinds} with their {@code params}, {@code reads},
      *        {@code engine}, {@code triggers}, {@code coalesce}, {@code cache}, {@code limits}, {@code history}), empty for any other connector;

@@ -33,7 +33,7 @@ public record Dim(String field, String group) {
 
     /**
      * A list attribute shown as one joined label ({@code TAGS:join}: "fx, rates") instead of exploded (each value its own member, a row
-     * counted under each of its values: PIVOT_GUIDE.md, list fields).
+     * counted under each of its values: BI_GUIDE.md, list fields).
      */
     public static final String JOIN = "join";
 

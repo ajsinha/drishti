@@ -74,5 +74,5 @@ copy:
   - connectors
 - from: ../../config/lenses/economy/world.yaml
   to: lenses/world.yaml
-- from: ../../docs/tutorials/14-public-sector-data.md
-  to: tutorials/14-public-sector-data.md
+- from: ../../docs/guides/WORLD_DATA_GUIDE.md
+  to: guides/WORLD_DATA_GUIDE.md

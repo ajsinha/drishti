@@ -30,7 +30,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * Reads a report's YAML (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 8, docs/guides/REPORTS_GUIDE.md) into a {@link Report} and checks its structure; what the report names inside its
+ * Reads a report's YAML (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 8, docs/guides/BI_GUIDE.md) into a {@link Report} and checks its structure; what the report names inside its
  * dataset is checked by {@link ReportValidator}. Never throws for a bad document: the problems come back with their DRS code and the path of the
  * offending key, so an author sees every mistake at once. Missing page and visual ids are made up ({@code page1}, {@code v1}) so the result is
  * complete; nothing in a report is executed.

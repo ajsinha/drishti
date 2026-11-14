@@ -95,7 +95,7 @@ pivots and the BI visuals on the pivot engine. In practice:
    (A). Defaults: risk presets and panel pivots use C, the generic Views → Pivot uses B, and the BI designer uses A. A person's choice
    between closed and open panes is kept.
 3. **Ready-made views are configuration.** The preset (`drishti-console/config/pivot-presets.yaml`) gets a `views:` list, and the
-   existing saved and shared views ([PIVOT_GUIDE §11](../../../guides/PIVOT_GUIDE.md#11-saved-and-shared-views-compare)) feed *My
+   existing saved and shared views ([PIVOT_GUIDE §11](../../../guides/BI_GUIDE.md#11-saved-and-shared-views-compare)) feed *My
    views* and *Shared with me*. There is no new store.
 4. **The level stepper and drill arrows** belong to drishti-grid's pivot body (next to `1`–`9` and `Shift+→`), and the picker is
    drishti-inputs (combobox and tree). Grid formats (`10.60 m`, blanks, `(Blank)`) belong to drishti-core's number formats, so every
@@ -104,7 +104,7 @@ pivots and the BI visuals on the pivot engine. In practice:
    selected field, because there is no field list to select from. `M` opens the measures. `[` `]` drill, `Shift+V` opens views and
    `\` opens Customize.
 6. **Tests and docs:** the pivot browser tests (`test_pivot_screen_browser.py`, `test_pivot_expand_browser.py`) cover all three modes.
-   PIVOT_GUIDE §2 (the screen) and §29, tutorial 7, and its screenshots are redone with the build.
+   PIVOT_GUIDE §2 (the screen) and §29, the pivot tutorial, and its screenshots are redone with the build.
 
 ## Decision and build checklist
 

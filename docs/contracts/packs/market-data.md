@@ -593,7 +593,7 @@ A listed stock: price, dividends, sector and identifiers.
 **Notes**
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
-- BETA is not kept on the record: the computed kind equity-beta (EQB) works it out from the equity's and its index's price histories (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md, section 17).
+- BETA is not kept on the record: the computed kind equity-beta (EQB) works it out from the equity's and its index's price histories (docs/guides/BI_GUIDE.md, section 17).
 
 **To review (5)**
 
@@ -1399,7 +1399,7 @@ A correlation set: the factors whose pairwise correlations basket, quanto and sp
 **Notes**
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
-- AVERAGE, PAIRS, WINDOW and ESTIMATOR are not kept on the record: the correlations are computed (correlation-result, docs/guides/GROUPINGS_ANALYTICS_GUIDE.md, section 15).
+- AVERAGE, PAIRS, WINDOW and ESTIMATOR are not kept on the record: the correlations are computed (correlation-result, docs/guides/BI_GUIDE.md, section 15).
 
 **To review (4)**
 

@@ -382,7 +382,7 @@ right for its own source; only following the link shows that the sources describ
 | Which commands are computed, which stored? | `drishti.py contract list` | every command's class and status |
 | Where did this number come from? | the page's **?** (About this page), or `drishti.py var show BANK` | the inputs, batch, data version and rules behind it |
 | How did a record look last week? | `NSET NS-ALDERSHOT-LDN 5 <GO>` | the record on each of the last five business dates, what changed |
-| Where does this public data come from, and may I share it? | [External data](../guides/EXTERNAL_DATA.md) | each source, its licence, whether it is internal only, its refresh script |
+| Where does this public data come from, and may I share it? | [External data](../guides/WORLD_DATA_GUIDE.md) | each source, its licence, whether it is internal only, its refresh script |
 | Is today's data in? | `drishti.py data loads --pack trading --expectations` | the pack's loads for the date, what is due and what is late |
 
 ### Data and contracts: common confusions
@@ -463,10 +463,10 @@ internal use only. The External data page says which is which.
 
 ## 5. Where to go deeper
 
-- [Groupings and analytics guide](../guides/GROUPINGS_ANALYTICS_GUIDE.md): sections 2 and 3 (LEIG and LEIC), 6 and 8 (CORR, PXH and
+- [Groupings and analytics guide](../guides/BI_GUIDE.md): sections 2 and 3 (LEIG and LEIC), 6 and 8 (CORR, PXH and
   beta) with worked numbers, and the computed groupings.
-- [Tutorial 6: groupings and analytics](../tutorials/06-groupings-and-analytics.md).
-- [External data](../guides/EXTERNAL_DATA.md): every external source (ECB, US Treasury, NY Fed, Yahoo Finance, GLEIF ...), its
+- [The groupings tutorial: groupings and analytics](../guides/BI_GUIDE.md).
+- [External data](../guides/WORLD_DATA_GUIDE.md): every external source (ECB, US Treasury, NY Fed, Yahoo Finance, GLEIF ...), its
   licence and refresh script.
 - [Data contracts](../contracts/README.md): the rules every contract shares, and [every command's contract](../contracts/packs/README.md).
 - [The command catalog](../guides/COMMAND_CATALOG.md): every command with its class.

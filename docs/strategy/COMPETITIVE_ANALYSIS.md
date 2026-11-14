@@ -623,7 +623,7 @@ Every source read on **2026-11-01** unless noted. Claims are the publisher's own
 
 - [README](../../README.md); [IMPLEMENTATION_PLAN](../architecture/IMPLEMENTATION_PLAN.md) (release table and themed releases);
   [VAR_GUIDE](../guides/VAR_GUIDE.md); [EXPOSURE_GUIDE](../guides/EXPOSURE_GUIDE.md);
-  [REGULATORY_VAR_REPORTING](../guides/REGULATORY_VAR_REPORTING.md); [REPORTS_GUIDE](../guides/REPORTS_GUIDE.md);
+  [REGULATORY_VAR_REPORTING](../guides/REGULATORY_VAR_REPORTING.md); [REPORTS_GUIDE](../guides/BI_GUIDE.md);
   [ARCHITECTURE](../architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer) (gap check against Power BI); [EDITIONS](../guides/ADMIN_GUIDE.md#12-what-a-lens-is);
   [MOBILE_DISPLAY](../guides/BUILD_GUIDE.md#32-designing-for-phones); [RESOURCES_AND_SCALE](../guides/CLUSTER_GUIDE.md#15-sizing-memory-cpu-and-disk);
   [BENCHMARK](../admin/BENCHMARK.md); [AI](../guides/AI_GUIDE.md); [lenses](../architecture/LENSES.md); [connectors](../guides/DATA_GUIDE.md#8-connectors).

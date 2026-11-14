@@ -33,7 +33,7 @@ import java.util.TreeMap;
 import java.util.UUID;
 
 /**
- * Cell comments on a saved pivot view (ARCHITECTURE.md section 26.7, item 10; PIVOT_GUIDE.md, cell comments): a note on one cell (who, when,
+ * Cell comments on a saved pivot view (ARCHITECTURE.md section 26.7, item 10; BI_GUIDE.md, cell comments): a note on one cell (who, when,
  * the text, resolved or open), kept with the view's versions ({@code pivot/view-versions/<owner>/<name>/comments.json}, beside the numbered
  * versions) and stamped with the version it was written on, so a comment follows the view through its saves and says when it was made on an
  * older definition. A cell is named by its coordinates (dimension to member, as the answer's {@code coords}), never by its place on the

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Tutorial 8, Part B: a composed dataset. Each source is a question put to another dataset, as the person reading, grouped to one row per counterparty; the
+# The reports tutorial, Part B: a composed dataset. Each source is a question put to another dataset, as the person reading, grouped to one row per counterparty; the
 # answers are joined on the counterparty's id (not its name: the name is masked for some readers and a join on a masked column is refused).
 rachana: 1
 dataset: cp-pnl-exposure

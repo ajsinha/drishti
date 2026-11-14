@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The wells' menus (PIVOT_GUIDE.md sections 2 and 4), the same in the compact line, the panes and the terminal's lane. A value's ▾: the
+/* The wells' menus (BI_GUIDE.md sections 2 and 4), the same in the compact line, the panes and the terminal's lane. A value's ▾: the
    functions valid for its field in plain words (Sum, Count, Distinct count, Average, Weighted average…, Min, Max, Median, Percentile…,
    Std dev, Custom ƒ…), an invalid one off with its reason; a value computed per cell (VaR, ES) says so and offers the host's options
    instead; Show value as (only the forms the server computes); another value of the same field; moves and removal. A field's ▾ in Rows,
@@ -62,7 +62,7 @@ export function chipMenu(wv, chip) {
 }
 
 /**
- * A value's ▾ (PIVOT_GUIDE.md section 4): its function, show-as, another value of the field, moves and removal.
+ * A value's ▾ (BI_GUIDE.md section 4): its function, show-as, another value of the field, moves and removal.
  * @param {Object} wv the WellsView
  * @param {Element} anchor
  * @param {number} index the value's place

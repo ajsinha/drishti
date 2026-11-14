@@ -117,7 +117,7 @@ menus:
       - title: Learn
         items:
           - { id: tutorials, href: /help/tutorials, icon: mortarboard, label: Tutorials, desc: "{tutorials} hands-on tutorials, a picture of every step", requires: [feature:build] }
-          - { id: schema-to-pack, href: /help/build-guide#8-the-pack-designer-build--new-pack, icon: diagram-3, label: Pack designer guide, desc: "From JSON Lines files to a deployed module: the six steps", requires: [feature:build] }
+          - { id: schema-to-pack, href: /help/build-guide#8-the-pack-designer-create--new-pack, icon: diagram-3, label: Pack designer guide, desc: "From JSON Lines files to a deployed module: the six steps", requires: [feature:build] }
           - { id: screen-designer, href: /help/rachana-reference#screen-designer-and-the-build-workbench, icon: bounding-box, label: Screen designer guide, desc: "From JSON files to a screen: the canvas, step by step", requires: [feature:build] }
           - { id: sutra-guide, href: /help/build-guide#11-what-a-sutra-is-and-when-one-applies, icon: journal-code, label: Screen developer guide, desc: "Writing a screen (a Sutra) end to end, by example", requires: [feature:build] }
           - { id: panels, href: /help/rachana-reference#panels-the-twenty-two-kinds-and-developing-a-new-one, icon: grid-1x2, label: Panel kinds, desc: "The 22 panel kinds, one entry each", requires: [feature:build] }

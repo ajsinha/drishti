@@ -52,7 +52,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * The pivot engine's API, {@code /api/v1/pivot} (PIVOT_GUIDE.md, API_REFERENCE.md "Pivot"): sources and their catalogues, a view's answer, the
+ * The pivot engine's API, {@code /api/v1/pivot} (BI_GUIDE.md, API_REFERENCE.md "Pivot"): sources and their catalogues, a view's answer, the
  * scan estimate, a node opened lazily, two dates compared, a cell by reference, a cell's member rows, provenance, saved and shared views,
  * and exports (xlsx with outline and formulas only where a measure adds up, CSV, Arrow, the definition as YAML). Every figure comes from the
  * {@code drishti-bicompute} engine; entitlements and masks apply before aggregation (the providers read only what the person may see). Every
@@ -257,7 +257,7 @@ public class PivotController {
     private static final Pattern INLINE_FIELD = Pattern.compile("[A-Za-z_][A-Za-z0-9_]{0,63}");
 
     /**
-     * A pivot of rows the caller already holds and may see (a chart of a table's shown rows: PIVOT_GUIDE.md, Rows held in memory):
+     * A pivot of rows the caller already holds and may see (a chart of a table's shown rows: BI_GUIDE.md, Rows held in memory):
      * {@code {fields: [{name, type}], rows: [[...]], view}}, aggregated here by the engine's own functions so the browser never adds up a
      * figure. The rows come from the caller, so nothing is read and no mask is needed beyond the ones they already carry.
      */

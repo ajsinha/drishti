@@ -35,7 +35,7 @@ formulas:
 - {formula: "median(NOTIONAL) - median(PNL)", from: "ConsoleFiguresTest"}
 - {formula: "abs(sum(NOTIONAL)) / stddev_pop(PNL)", from: "ConsoleFiguresTest"}
 # the guides and tutorials
-- {formula: "sum(NOTIONAL, where=NOTIONAL > 100000000) / sum(NOTIONAL)", from: "tutorial 7, Part B"}
+- {formula: "sum(NOTIONAL, where=NOTIONAL > 100000000) / sum(NOTIONAL)", from: "the pivot tutorial, Part B"}
 - {formula: "sum(PNL, where=PNL < 0) / sum(abs(PNL))", from: "PIVOT_GUIDE"}
 - {formula: "percentile(PNL, 0.99) - percentile(PNL, 0.01)", from: "PIVOT_GUIDE, PIVOT_ENGINE"}
 - {formula: "wavg(PNL, NOTIONAL)", from: "PIVOT_ENGINE"}

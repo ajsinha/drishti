@@ -36,7 +36,7 @@ import org.junit.jupiter.api.Test;
  * enabled by default, whose table {@code drishti.py lake demo} builds from a dataset of {@code data/testdata/testdata.yaml} (its pack,
  * kind and connector) whose files are committed; or by a Delta connector of the pack, enabled by default, reading the lake an enabled
  * feed loads the kind into ({@code config/feeds/<feed>.yaml}: its {@code lake:} and a {@code datasets:} entry of the pack and kind; the
- * economy module's public-sector packs, whose lakes worldlake and newslake are filled daily and never committed: PUBLIC_SECTOR_GUIDE.md
+ * economy module's public-sector packs, whose lakes worldlake and newslake are filled daily and never committed: WORLD_DATA_GUIDE.md
  * section 5); or by the pack's derived connector (the trading pack's pages). The demo connector never counts. Exempt: {@code us-equities/price-history}, live prices that are internal only and ship no data, and the inputs no demo data carries (EXEMPT).
  */
 class PacksServedWithoutDemoTest {

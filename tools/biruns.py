@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""BI runs on the command line (docs/architecture/ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 14.4, docs/guides/REPORTS_GUIDE.md): what the Runs tab does, over REST as the
+"""BI runs on the command line (docs/architecture/ARCHITECTURE.md §28 › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 14.4, docs/guides/BI_GUIDE.md): what the Runs tab does, over REST as the
 token's user. Loaded by drishti.py; the server decides who may see and do what (a run's `can`).
 
   bi runs list [--state S] [--source report|mq|sql] [--since 7d] [--all-nodes]     your runs and the ones shared with you, newest first

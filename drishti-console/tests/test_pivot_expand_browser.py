@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The pivot's + in a real browser over the real server and the core pack's shipped issuers (PIVOT_GUIDE.md section 5): the owner's case,
+"""The pivot's + in a real browser over the real server and the core pack's shipped issuers (BI_GUIDE.md section 5): the owner's case,
 rows Issuer ID only, columns Equity, values Rows and the count of each bond's coupon (one row per bond):
 
 - a member on the last row level is a leaf: no +, and → does not ask the server to open it;

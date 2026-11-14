@@ -64,27 +64,27 @@ retired:
     measure: the system baskets of the basket store (VAR_GUIDE.md section 5.7), not data
     note: "PORT <id>, PORT:<id> and /v/portfolio/<id> open the same system basket, served as the kind system-basket from the basket store"
 
-# The groupings and analytics (2.9.2, docs/guides/GROUPINGS_ANALYTICS_GUIDE.md): the stored pages retired, the same commands and ids
+# The groupings and analytics (2.9.2, docs/guides/BI_GUIDE.md): the stored pages retired, the same commands and ids
 # computed from the fundamental data when asked.
 computed-in-place:
   lei-group:
     release: 2.9.2
-    contract: ../guides/GROUPINGS_ANALYTICS_GUIDE.md
+    contract: ../guides/BI_GUIDE.md
     measure: the derived connector gleif-groupings (from lei-entity)
     note: "LEIG <LEI> and /v/lei-group/<LEI> open the group computed from every entity whose LEI_GROUP it is, with no member cap; LEIG ALL the pack-wide page"
   lei-country:
     release: 2.9.2
-    contract: ../guides/GROUPINGS_ANALYTICS_GUIDE.md
+    contract: ../guides/BI_GUIDE.md
     measure: the derived connector gleif-groupings (from lei-entity)
     note: "LEIC <country> and /v/lei-country/<country> open the country computed from every entity with a legal address there (no 400-row cap); LEIC ALL the directory"
   sic-sector:
     release: 2.9.2
-    contract: ../guides/GROUPINGS_ANALYTICS_GUIDE.md
+    contract: ../guides/BI_GUIDE.md
     measure: the derived connector us-equities-groupings (from us-company)
     note: "SIC <code> and /v/sic-sector/<code> open the sector computed from its companies (totals of the USD reporters); SIC ALL the directory"
   country-group:
     release: 2.9.2
-    contract: ../guides/GROUPINGS_ANALYTICS_GUIDE.md
+    contract: ../guides/BI_GUIDE.md
     measure: the derived connector macro-groupings (from economy)
     note: "ECG ECG-<code> and /v/country-group/ECG-<code> open the group computed from its member economies (GDP and population summed, growth GDP-weighted, inflation the median)"
 
@@ -95,24 +95,24 @@ removed:
     figures: [UTILISATION]
   us-company:
     release: 2.9.2
-    contract: ../guides/GROUPINGS_ANALYTICS_GUIDE.md
+    contract: ../guides/BI_GUIDE.md
     figures: [NET_MARGIN, REVENUE_GROWTH, "FINANCIALS[].NET_MARGIN"]
   index-membership:
     release: 2.9.2
-    contract: ../guides/GROUPINGS_ANALYTICS_GUIDE.md
+    contract: ../guides/BI_GUIDE.md
     figures: ["ROWS[].NET_MARGIN", SECTORS, REVENUE, NET_INCOME, BY_SECTOR]
     top-level: true          # the totals left the record; each member's row keeps its own REVENUE and NET_INCOME (facts)
   financial-fact:
     release: 2.9.2
-    contract: ../guides/GROUPINGS_ANALYTICS_GUIDE.md
+    contract: ../guides/BI_GUIDE.md
     figures: [CHANGE_PCT, "HISTORY[].CHANGE_PCT"]
   equity:
     release: 2.9.2
-    contract: ../guides/GROUPINGS_ANALYTICS_GUIDE.md
+    contract: ../guides/BI_GUIDE.md
     figures: [BETA]
   correlation-matrix:
     release: 2.9.2
-    contract: ../guides/GROUPINGS_ANALYTICS_GUIDE.md
+    contract: ../guides/BI_GUIDE.md
     figures: [AVERAGE, PAIRS, WINDOW, ESTIMATOR]
   position:
     release: 2.8.0

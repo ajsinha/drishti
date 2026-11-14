@@ -79,7 +79,7 @@
 .pv-sl[aria-pressed="true"] { color: var(--d-ink); border-color: var(--d-accent); box-shadow: inset 0 -2px 0 var(--d-accent); }
 .pv-sl:focus-visible { outline: 2px solid var(--d-link); outline-offset: 1px; }
 
-/* custom functions, explain and what-if (drishti_pivot-functions.js; PIVOT_GUIDE.md) */
+/* custom functions, explain and what-if (drishti_pivot-functions.js; BI_GUIDE.md) */
 .pf-card { margin-top: var(--d-sp-10); }
 .pf-card h3 { font-size: var(--d-fs-12_5); margin: var(--d-sp-10) 0 var(--d-sp-6); }
 .pf-form { display: flex; flex-wrap: wrap; gap: var(--d-sp-8) var(--d-sp-12); align-items: flex-end; }
@@ -91,7 +91,7 @@
 .pf-no { font-weight: 600; text-decoration: underline; }
 .pf-result table, .pf-list table { border-collapse: collapse; font-size: var(--d-fs-12); width: 100%; }
 .pf-result td, .pf-result th, .pf-list td, .pf-list th { border-bottom: 1px solid var(--d-border); padding: var(--d-sp-2) var(--d-sp-6); text-align: left; }
-/* the screen's switches, live pivots and cell comments (PIVOT_GUIDE.md): native controls, keyboard-reachable, larger to tap on a phone */
+/* the screen's switches, live pivots and cell comments (BI_GUIDE.md): native controls, keyboard-reachable, larger to tap on a phone */
 .pv-switches { display: flex; flex-wrap: wrap; gap: var(--d-sp-8); align-items: center; }
 .pv-seg { display: inline-flex; border: 1px solid var(--d-border); border-radius: var(--d-radius-13); overflow: hidden; }
 .pv-seg label { display: inline-flex; align-items: center; gap: var(--d-sp-4); padding: var(--d-sp-4) var(--d-sp-10); font-size: var(--d-fs-12_5); min-height: 26px; cursor: pointer; }

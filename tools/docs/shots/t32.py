@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of tutorial 5, SIMM from the hand-built examples to a netting set (docs/tutorials/05-simm.md),
+"""Pictures of tutorial 5, SIMM from the hand-built examples to a netting set (docs/guides/SIMM_GUIDE.md),
 written to docs/tutorials/img/t32/, with the toy parameter file of the tests installed (round illustrative numbers, never ISDA's). Run it on
 its own (it builds its own lake and starts its own scratch server and console):
 

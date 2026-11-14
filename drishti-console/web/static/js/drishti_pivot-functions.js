@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* The pivot screen's Why, What-if and Functions cards (PIVOT_GUIDE.md; mock-up A, scene 2): "why did it move" asks the server for the
+/* The pivot screen's Why, What-if and Functions cards (BI_GUIDE.md; mock-up A, scene 2): "why did it move" asks the server for the
    difference between two cells (or a cell on two dates) in steps that add up and draws them as a waterfall; a what-if sends an overlay and
    lists the cells it changes; the playground checks a custom function (the harness, the states after each part and merge, the cost, a
    little pivot of the sample) and saves it as a version; the list shows the functions and lets an approver withdraw one (a submitted version is approved in the one Approvals queue).

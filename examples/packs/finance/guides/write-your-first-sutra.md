@@ -13,7 +13,7 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Tutorial 2 · Write your first Sutra
+# The VaR tutorial · Write your first Sutra
 
 A Sutra is one layout written in **Rachana**, Drishti's screen grammar. You will lay out interest rate
 swaps with a header strip, a cashflow table and a curve: about a dozen lines, and no code.

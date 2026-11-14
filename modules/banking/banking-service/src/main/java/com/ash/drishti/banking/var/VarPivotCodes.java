@@ -30,7 +30,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * The VaR provider's dimensions as codes per trade (PIVOT_GUIDE.md section 29.3): for one book and one dimension, each trade ordinal's value
+ * The VaR provider's dimensions as codes per trade (BI_GUIDE.md section 29.3): for one book and one dimension, each trade ordinal's value
  * as an index into the dimension's values ({@code -1}: no value, the blank member). The dimensions are the hierarchy levels
  * ({@code MGMT.DESK}, {@code LEGAL.LEGAL_ENTITY}, a configured {@code LL.LIMIT_LETTER}: a node's code, its trades), the positions' columns (a
  * whole position in one value, as a {@code WHERE:} rule selects it), the trades' own columns, {@code RISK_CLASS} (a position's primary class,

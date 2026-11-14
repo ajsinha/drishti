@@ -243,7 +243,7 @@ java -Djava.io.tmpdir=data/tmp/server -jar kernel/drishti-server/target/drishti-
 | `DRISHTI_SEED_ADMIN`, `_USERNAME`, `_PASSWORD` | at the first start with no users, create this administrator (the values above are also the defaults) |
 | `DRISHTI_LIB_PATH` | extra jars: connectors, JDBC drivers (the server's lib folder; default `<data folder>/lib`) |
 | `DRISHTI_EXTERNAL_LIB` | the console's extra Python modules (`external_lib/python`) |
-| `DRISHTI_DEMO_ENABLED=false` | the demo source (the packs' samples, ticking) off, so every page reads the lakes; on (the default) a sample answers before the lake for an id both hold, and [tutorial 8, Part F](../tutorials/README.md)'s live tiles need it |
+| `DRISHTI_DEMO_ENABLED=false` | the demo source (the packs' samples, ticking) off, so every page reads the lakes; on (the default) a sample answers before the lake for an id both hold, and [the reports tutorial, Part F](../tutorials/README.md)'s live tiles need it |
 
 On Java 25 you may add `-XX:+UseCompactObjectHeaders` (about 10% less heap); Java 21 refuses to start with it. Leave the terminal
 open: the server logs there. After a few seconds you should see `Started DrishtiApplication in … seconds` (after a `lake demo` with no
@@ -382,7 +382,7 @@ delete the root's `.idea/` (IDE settings only) and reopen. One IntelliJ IDEA Ult
    **Language level** *SDK default*. Java 25 needs IDEA 2025.2 or newer.
 3. **Settings → Build, Execution, Deployment → Build Tools → Maven → Runner → JRE**: *Use Project JDK* (Maven in the IDE ignores your
    shell's `JAVA_HOME`).
-4. **Build → Build Project** (Ctrl+F9). The runnable jar: Maven tool window, **drishti → Lifecycle → package** (with *Skip Tests*), or the
+4. **Create → Build Project** (Ctrl+F9). The runnable jar: Maven tool window, **drishti → Lifecycle → package** (with *Skip Tests*), or the
    run configuration **Drishti build server jar**. After pulling a change of the Java bytecode level, **Build → Rebuild Project** once.
 
 The run configurations are in the repository (`run-configs/` for IntelliJ, `drishti-console/run-configs/` for PyCharm), in the drop-down as
@@ -461,7 +461,7 @@ stopping both and deleting `data/qa/`.
    (`trade`, `TRADE_ID`), `--mode overwrite-dates` (a re-run replaces the date), `--partition-by PRODUCT_TYPE`, `--lake data/qa/delta`,
    `--pack data/qa/packs/<name>/pack/<name>` (the folder holding `pack.yaml`), and `--signal http://localhost:18580 --token-file
    $PROJECT_DIR$/data/qa/token.txt`. The last line says `lake-build ok exit=0 ... rows=N`. Keep it to 10,000 trades locally.
-8. In the console, **Build → New pack**: upload the same JSON, accept or edit the proposed Sutras, save.
+8. In the console, **Create → New pack**: upload the same JSON, accept or edit the proposed Sutras, save.
 9. **Admin → Packs → Deploy** the archive of step 6 (`data/qa/packs/<name>/bundle/<name>-<version>.tar.gz`) or the wizard's; it writes under
    `data/qa/data/packs/`, never `config/packs`.
 10. **Admin → Data loads**: the pack's loads show the table of step 7 (a refused lake folder is outside the QA console's
@@ -960,7 +960,7 @@ and secrets and embedded applications declared in configuration; Python and Java
   switched on or off per server in `config/engines/<engine>.yaml` and **Admin → Engines**: [ADMIN_GUIDE.md](ADMIN_GUIDE.md).
 - **Modules.** Drishti runs as a core plus modules: **banking** (VaR and ES, exposure and CCR, FRTB-SA, SIMM, sensitivities, the MR cube, the
   official results and the trading, market-data, market-risk and counterparty-risk packs), **capitalmarkets** (the us-equities and funds packs)
-  and **economy** (world-economy, news-and-markets and the public-sector packs: [PUBLIC_SECTOR_GUIDE.md](PUBLIC_SECTOR_GUIDE.md)). A module is
+  and **economy** (world-economy, news-and-markets and the public-sector packs: [WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md)). A module is
   on when its jar is in the server, it is licensed (`config/access/licence.yaml`; none: the development licence, every module) and enabled
   (`config/modules/<module>.yaml`, written by `POST /api/v1/admin/modules`; `drishti.modules.<module>.enabled` or `DRISHTI_MODULES_<MODULE>_ENABLED`
   wins), and every module it needs is on. **A change takes effect at the next start** (`GET /api/v1/admin/modules` says `restartNeeded: true` until then). A module that is
@@ -1132,7 +1132,7 @@ The `market-data` pack has five public feeds, each off until switched on and ref
 (`nyfed-sofr-feed`, rate fixings), `DRISHTI_FEED_ECB_ESTR=true` (`ecb-estr-feed`), `DRISHTI_FEED_ECB_FX=true` (`ecb-fx-feed`, FX spots),
 `DRISHTI_FEED_US_TREASURY=true` (`us-treasury-feed`, the curve) and `DRISHTI_FEED_FRED=true` (`fred-feed`; needs `FRED_API_KEY`, series from
 `DRISHTI_FRED_SERIES`, default `DGS10,DFF`). Each needs internet access (or a proxy). A feed that fails keeps its last good data and shows as down
-on Admin → Health; the rest keeps working. Daily public-data feeds of other packs (`drishti.py feed run`) are in [EXTERNAL_DATA.md](EXTERNAL_DATA.md).
+on Admin → Health; the rest keeps working. Daily public-data feeds of other packs (`drishti.py feed run`) are in [WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md).
 
 ### 7.5 The data inbox: its folders, disk and retention
 
@@ -1426,9 +1426,9 @@ The folder (`data/build/my-bank-1.0.0/`) holds the pack (`pack/my-bank/`: copy i
 lake root or point `DRISHTI_DELTA_ROOT` at it), the bundle (`bundle/`, already verified), a configuration overlay, `run-server.sh` and `.ps1`, a
 `MANIFEST.json`, and a `README.txt` with the deploy, verify, update and rollback steps filled in with your kind, ids and dates
 ([CLI_REFERENCE.md](CLI_REFERENCE.md#quickest-path-pack-make); `--date` names your business-date field). From **JSON Schema**, `pack make --schema` makes
-the same folder, and **Build → New pack** (`/build/pack/designer`) the same bundle in the browser (it profiles every file in the browser, proposes
+the same folder, and **Create → New pack** (`/build/pack/designer`) the same bundle in the browser (it profiles every file in the browser, proposes
 kinds, ids, business dates and one Sutra per type, and previews them), then hands it to Admin → Packs → Deploy an archive
-([BUILD_GUIDE.md](BUILD_GUIDE.md#8-the-pack-designer-build--new-pack)). Schemas alone give a pack that serves its samples.
+([BUILD_GUIDE.md](BUILD_GUIDE.md#8-the-pack-designer-create--new-pack)). Schemas alone give a pack that serves its samples.
 
 ### 8.13 Windows
 
@@ -2435,7 +2435,7 @@ before every call, a per-call size bound, and any failure or NaN from finite inp
 
 Compute workers run Python computations outside the server's JVM: a pool of worker processes per kind of work, the data handed to them as Arrow files
 already read and masked as the person who asked, in a locked environment of libraries an administrator approved
-([NOTEBOOK_GUIDE.md](NOTEBOOK_GUIDE.md); the module `drishti-compute`). Python people write in BI (python items and visuals,
+([BI_GUIDE.md](BI_GUIDE.md); the module `drishti-compute`). Python people write in BI (python items and visuals,
 Python-driven tables, Notebook cells) runs here too, on the pool `python`.
 
 ### 15.1 Switch it on
@@ -2839,7 +2839,7 @@ The shipped example configuration is `deploy/lake-maintenance.yaml`. **The sched
 | `drishti.py data landed` | 0 ok, 1 not verified or refused | none (the same pack, kind, date and batch twice is recorded once) | stdout or `--json` | yes |
 | `drishti.py server smoke` / `server health` | 0 ok, 1 a check failed | none | stdout or `--json` | yes |
 | `drishti.py pack check` | 0 passed, 1 failed, 2 usage | none | stdout, JUnit with `--junit` | yes |
-| `drishti.py feed run` | 0 ok, 1 failed, 2 refused, 3 locked, 4 partial | `<data>/datafeeds/<feed>/run.lock` | stdout and `<data>/datafeeds/ledger.jsonl` | yes: each date replaced ([EXTERNAL_DATA.md](EXTERNAL_DATA.md)) |
+| `drishti.py feed run` | 0 ok, 1 failed, 2 refused, 3 locked, 4 partial | `<data>/datafeeds/<feed>/run.lock` | stdout and `<data>/datafeeds/ledger.jsonl` | yes: each date replaced ([WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md)) |
 | `tools/load-*.sh` | 0 ok, non-zero failed | none: one loader per store at a time | stdout | yes (each day replaced in one step) |
 | `tools/drill.sh` | 0 all passed | none: one at a time | `data/drill/*.log` | yes |
 
@@ -3456,7 +3456,7 @@ saved state; an item it cannot convert is never changed.
 
 | Symptom | Check and fix |
 |---|---|
-| A file under `config/bi/datasets` or `config/bi/models` says `DRS-9196`; Admin → Artifacts refuses a `.dataset.yaml` | BI's old form: `drishti.py tables migrate --dry-run`, read the diff, then `drishti.py tables migrate` ([TABLES_GUIDE.md](TABLES_GUIDE.md)): it writes tables and models under `config/tables/` and rebinds the reports |
+| A file under `config/bi/datasets` or `config/bi/models` says `DRS-9196`; Admin → Artifacts refuses a `.dataset.yaml` | BI's old form: `drishti.py tables migrate --dry-run`, read the diff, then `drishti.py tables migrate` ([BI_GUIDE.md](BI_GUIDE.md)): it writes tables and models under `config/tables/` and rebinds the reports |
 | An expression says `DRS-9100` ("old expression syntax ... refused") | not Rachana (`and`, `or`, `None`, `x if c else y`, `&&`, `[Measure]`): files with `tables migrate` or `drishti.py bi migrate --expressions FILE --write`, stored items at the next start ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#rachana-el-expressions)) |
 | Admin → BI settings lists **migration problems** | fix the item's text by hand and restart, or rebuild it in **Build › Tables & models** |
 | New saved states by `system` with origin `migrate`; a pivot formula reads differently (`&&` for `and`) | nothing to do: the start-up move (audit `pivot-formula-migrate`); its figures do not change |
@@ -3482,10 +3482,10 @@ saved state; an item it cannot convert is never changed.
 | A board tile says "Not available"; never changes colour | the report or visual is gone or not yours (`GET /api/v1/bi/boards/{id}`: `problems` with `DRS-9052`); `on:` names a column the tile lacks, or the value is masked |
 | A python visual, Python dataset or Notebook cell says `DRS-9074` (Run greyed *Off: …*) | Python does not run here, and why: compute off, the pool `python` missing or not strict, no strict sandbox (Windows, no Landlock), the interpreter not carrying the pinned versions, the queue full ([15.1](#151-switch-it-on)); `GET /api/v1/bi/python/runtime` |
 | `DRS-9071`, `DRS-9072`, `DRS-9073`, `DRS-9075`; a python measure refused (`DRS-9013`) | the code raised or returned the wrong thing (traceback for `bi-author`); over `timeout`, `memory` or rows (`python-max-seconds`, `python-max-memory-mb`); an unlisted package, network, files or processes (pin it in `locks/python.in` and add it to `drishti.bi.report.python-packages`); a frame not matching the declared columns; show the measure in a python visual |
-| A Vega-Lite visual says Not drawn, is empty, or "may not load anything from a URL" | the specification uses what drishti-chart does not draw (the message lists each path and what to use, [REPORTS_GUIDE.md](REPORTS_GUIDE.md#96-vega-lite-visuals)); a field not in the rows (`DESK`, not `trade.DESK`); remove `data.url`/`loader` |
+| A Vega-Lite visual says Not drawn, is empty, or "may not load anything from a URL" | the specification uses what drishti-chart does not draw (the message lists each path and what to use, [BI_GUIDE.md](BI_GUIDE.md#96-vega-lite-visuals)); a field not in the rows (`DESK`, not `trade.DESK`); remove `data.url`/`loader` |
 | The Notebook's extract is short; a SQL cell is refused (`DRS-9170`, `DRS-9072`) | `bi.notebook.max_rows` (10,000) of your rows; SQL is one read-only `SELECT` over the model, at most `sql_max_chars` |
 | Calc: `No module named 'drishti_bi'`, `needs JavaScript Promise Integration`, `DRS-9002` | `import drishti_bi` in the cell; `await drishti_bi.query_async(...)`; you need the `bi` power |
-| A window function reads `null`; a rank differs by reader; `DRS-9020` *no many-to-one path* | no row before or after; row rules apply first; group by a field every fact reaches, or ask the measures apart ([REPORTS_GUIDE.md](REPORTS_GUIDE.md#53-relationships-and-how-a-question-joins)) |
+| A window function reads `null`; a rank differs by reader; `DRS-9020` *no many-to-one path* | no row before or after; row rules apply first; group by a field every fact reaches, or ask the measures apart ([BI_GUIDE.md](BI_GUIDE.md#53-relationships-and-how-a-question-joins)) |
 | A history query is empty or refused; a publish refused (`DRS-9040`) for a rename; *Roll back this import* `DRS-9004` | the live table has not been open long enough (Layers: `samples`); give the column a `path:` so the rename is recognised; an item changed since: export, then a bi-admin rolls back with force |
 | A deployed pack's BI items did not appear | the import was held (deploy answer `bi.loaded: false`, audit `pack-bi-held`) or files not named `<name>.<kind>.yaml` |
 | A theme or format refused (`DRS-9036`, `DRS-9032`); a Transform input refused (`DRS-9102`, `DRS-9108`) | the designer names the path; pick the kind and fields from the editor's lists |
@@ -3531,7 +3531,7 @@ codes whose cause or fix needs more than the meaning.
 | `DRS-4016` | the AI provider or MCP server failed or timed out: Admin → AI shows its health; check its URL, key variable and TLS |
 | `DRS-4017` | over the AI rate or cost limit for your user: wait, or an administrator raises the policy limit |
 | `DRS-4019` | the model, provider, MCP server or tool named is not configured: check `config/ai/` or `config/mcp/` |
-| `DRS-4020` | BI with AI: the model's answer could not be used (a draft that failed the report check after one repair, or not a query): say it more plainly, name the measure, or use a stronger model (`drishti.bi.ai.model`) ([REPORTS_GUIDE.md](REPORTS_GUIDE.md#16-ai-in-bi-report-from-words-ask-the-data-explain-this-number)) |
+| `DRS-4020` | BI with AI: the model's answer could not be used (a draft that failed the report check after one repair, or not a query): say it more plainly, name the measure, or use a stronger model (`drishti.bi.ai.model`) ([BI_GUIDE.md](BI_GUIDE.md#16-ai-in-bi-report-from-words-ask-the-data-explain-this-number)) |
 | `DRS-4021` | history queries: more business days than `max-days`: narrow it with `FROM … TO …` |
 | `DRS-5003` | raised by the console only: it cannot reach the server, a live stream was refused, or a browser is over its live-subscription limit ([21.3](#213-the-console-and-the-server)) |
 | `DRS-5201` | a row of the date's P&L vectors was rejected (wrong length, a null or NaN, not USD): the provenance lists the trade and the reason; fix it upstream and reload the date |
@@ -3568,7 +3568,7 @@ codes whose cause or fix needs more than the meaning.
 | `DRS-9029` | the planner estimated more rows than the query's budget (HTTP 413): a date filter, a rollup's fields, or `options.budget.rows` |
 | `DRS-9030` | a report's YAML is not valid (HTTP 422): the designer's YAML tab or `POST /api/v1/bi/reports/validate` names the path |
 | `DRS-9031` | a report names a field, measure, hierarchy, page, bookmark or slicer its dataset or report lacks (HTTP 422; usually a dataset that changed under it) |
-| `DRS-9040` | publishing would break published reports (HTTP 409; the message lists them): fix the reports, keep the old names beside the new, or a `bi-admin` publishes with `force` ([REPORTS_GUIDE.md](REPORTS_GUIDE.md#176-impact-what-breaks-if-i-change-this)) |
+| `DRS-9040` | publishing would break published reports (HTTP 409; the message lists them): fix the reports, keep the old names beside the new, or a `bi-admin` publishes with `force` ([BI_GUIDE.md](BI_GUIDE.md#176-impact-what-breaks-if-i-change-this)) |
 | `DRS-9043` | publishing is refused because its `tests:` fail or cannot run: run them with **Check** as the role named, fix the item or the expected value; a `bi-admin` may `force` (audited); `drishti.bi.governance.refuse-failing-tests: false` turns the gate off |
 | `DRS-9074` | Python does not run on this server now (HTTP 503), and the message says why: [21.11](#2111-bi-refresh-live-visuals-python-and-ai) |
 | `DRS-9076` | a Python item's own tests failed, so it is not published (HTTP 422, the console): Check shows each test; fix it, or a bi-admin publishes with `force` |

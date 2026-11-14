@@ -290,7 +290,7 @@ The groups use the consolidation relationships only; fund management, sub-fund, 
 
 Every kind's links to its data contract and its example and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/gleif.md](guides/gleif.md): *Data contracts* and *Data retrieval*.
 
-External data: GLEIF golden copy, level 2 (relationship records, reporting exceptions); GLEIF LEI API (lei-records, entity-legal-forms, countries, lei-issuers); GLEIF mapping files (BIC, ISIN, MIC, OpenCorporates to LEI); GLEIF golden copy, level 1 bulk file. Each source's URL, licence and data feed are on the External data help page, [docs/guides/EXTERNAL_DATA.md](../../../../docs/guides/EXTERNAL_DATA.md).
+External data: GLEIF golden copy, level 2 (relationship records, reporting exceptions); GLEIF LEI API (lei-records, entity-legal-forms, countries, lei-issuers); GLEIF mapping files (BIC, ISIN, MIC, OpenCorporates to LEI); GLEIF golden copy, level 1 bulk file. Each source's URL, licence and data feed are on the External data help page, [docs/guides/WORLD_DATA_GUIDE.md](../../../../docs/guides/WORLD_DATA_GUIDE.md).
 
 ## Enabling and dependencies
 
@@ -307,7 +307,7 @@ Settings (environment variables) its connectors read: `DRISHTI_LAKE_ENABLED`.
 
 ## Refreshing the data
 
-The data feed `gleif` (config/feeds/gleif.yaml) pulls `lei-entity`, `lei-relationship`, `lei-mapping`: `python3 tools/drishti.py feed run gleif` fetches them daily into `data/datafeeds/gleif/<date>/` and loads them into the lake `referencelake`; `--dry-run` says what it would fetch, changing nothing; `--snapshot` refreshes the committed snapshot in data/testdata instead; `feed status` shows the last runs. The External data feeds guide (docs/guides/EXTERNAL_DATA.md) has the schedule entries for Linux and Windows.
+The data feed `gleif` (config/feeds/gleif.yaml) pulls `lei-entity`, `lei-relationship`, `lei-mapping`: `python3 tools/drishti.py feed run gleif` fetches them daily into `data/datafeeds/gleif/<date>/` and loads them into the lake `referencelake`; `--dry-run` says what it would fetch, changing nothing; `--snapshot` refreshes the committed snapshot in data/testdata instead; `feed status` shows the last runs. The External data feeds guide (docs/guides/WORLD_DATA_GUIDE.md) has the schedule entries for Linux and Windows.
 
 The pack's files are written by `tools/packgen/gleif/make.py`; its `--check` fails when the committed files differ from what it would write.
 

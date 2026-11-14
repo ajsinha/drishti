@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# config/feeds/us-equities.yaml: the US equities feed (docs/guides/EXTERNAL_DATA.md; every key in its section "The feed file").
+# config/feeds/us-equities.yaml: the US equities feed (docs/guides/WORLD_DATA_GUIDE.md; every key in its section "The feed file").
 #   python3 tools/drishti.py feed run us-equities                pull, write data/datafeeds/us-equities/<date>/, load into capitalmarket
 #   python3 tools/drishti.py feed run us-equities --snapshot     refresh the committed pack and data/testdata/us-equities instead
 #   python3 tools/drishti.py feed run us-equities -- --scope TSLA,YEARS:15        arguments after -- go to the source

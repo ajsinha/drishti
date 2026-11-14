@@ -21,7 +21,7 @@ import com.ash.drishti.kernel.api.security.Principal;
 import java.util.List;
 
 /**
- * One form of Flight request answered by the part of the server that already answers it over REST (docs/guides/FLIGHT_REFERENCE.md):
+ * One form of Flight request answered by the part of the server that already answers it over REST (docs/guides/FLIGHT_GUIDE.md):
  * kinds by the Data view's reader, models by MQ, measures by their engines, the in-memory lake by its kinds. A form reads as the person
  * ({@link Principal}: the token's user, or the person acted for), so the entitlements, masks and audit of that part apply unchanged.
  */

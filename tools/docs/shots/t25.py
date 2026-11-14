@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of tutorial 2, Part A, VaR from the bank to a trade (docs/tutorials/02-var-from-the-bank-to-a-trade.md), written to docs/tutorials/img/t25/,
+"""Pictures of tutorial 2, Part A, VaR from the bank to a trade (docs/guides/VAR_GUIDE.md), written to docs/tutorials/img/t25/,
 over the committed VaR test data (see _var.py). Run it on its own (it builds its own lake and starts its own scratch server and console):
 
     drishti-console/.venv/bin/python tools/docs/screenshots.py --guide t25

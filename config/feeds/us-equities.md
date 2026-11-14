@@ -30,7 +30,7 @@ python3 tools/drishti.py feed status us-equities             # its last runs
 python3 tools/drishti.py feed run us-equities --snapshot     # refresh the committed demo snapshot instead
 ```
 
-Daily: `python3 tools/drishti.py feed schedule --cron` (or `--systemd`, `--windows`). The guide: [EXTERNAL_DATA.md](../../docs/guides/EXTERNAL_DATA.md).
+Daily: `python3 tools/drishti.py feed schedule --cron` (or `--systemd`, `--windows`). The guide: [WORLD_DATA_GUIDE.md](../../docs/guides/WORLD_DATA_GUIDE.md).
 
 ## Data contract
 

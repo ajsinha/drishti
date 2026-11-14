@@ -34,4 +34,4 @@ sections:
   - title: 'GDELT events: gdelt events'
     file: ../packs/gdelt-events/guides/gdelt-events.md
   - title: 'Tutorial: public sector data'
-    file: ../tutorials/14-public-sector-data.md
+    file: ../guides/WORLD_DATA_GUIDE.md

@@ -58,7 +58,7 @@ About 1 h 45 min in all; each part can be done on its own day.
 
 **Part E · The risk lake and the official results on Iceberg.**
 
-- [Tutorial 2, Part A](02-var-from-the-bank-to-a-trade.md#part-a--historical-var-from-the-bank-to-a-trade) step 1 done once: you know the VaR test data and `VAR BANK` (112,041,646 USD on
+- [The VaR tutorial, Part A](../guides/VAR_GUIDE.md#part-a--historical-var-from-the-bank-to-a-trade) step 1 done once: you know the VaR test data and `VAR BANK` (112,041,646 USD on
   2026-09-30).
 - `build_demo_lakes.py` writes Iceberg with the loader in the server's jar, so the server is built first (above).
 - The console's Python (`drishti-console/.venv/bin/python`; Windows `drishti-console\.venv\Scripts\python.exe`): it has `deltalake`.
@@ -1348,7 +1348,7 @@ committed test data.
 
 ## Step 30 · Build the VaR data into Iceberg
 
-**From the command line.** The same `--only` list as tutorial 2, Part A, with `--store risk=iceberg`:
+**From the command line.** The same `--only` list as the VaR tutorial, Part A, with `--store risk=iceberg`:
 
 ```bash
 drishti-console/.venv/bin/python tools/build_demo_lakes.py --as-of data --store risk=iceberg \
@@ -1391,7 +1391,7 @@ settings:
     …
 ```
 
-**In the UI.** Nothing to do yet; step 33 shows the tables, and [tutorial 2, step 26](02-var-from-the-bank-to-a-trade.md#step-26--the-same-var-on-iceberg) reads VaR from them, the same to the cent.
+**In the UI.** Nothing to do yet; step 33 shows the tables, and [the VaR tutorial, step 26](../guides/VAR_GUIDE.md#step-26--the-same-var-on-iceberg) reads VaR from them, the same to the cent.
 
 **You should see** `data/iceberg/risk/<kind>/metadata` and `data` folders for the seven VaR kinds, `data/delta/demo/risk` empty, and
 `plugin: iceberg` at the top of `data/connectors/risk-store.yaml`.
@@ -1554,7 +1554,7 @@ a table keeps its format). A full build without `--store risk=…` also puts the
 
 - [The data lake and data load guide](../guides/DATA_LAKE_GUIDE.md): sizing a real day (section 9), modes and repeats (section 5),
   a lake in S3 or Iceberg, reading an existing Databricks lakehouse (section 10).
-- [Tutorial 2, Part A](02-var-from-the-bank-to-a-trade.md#part-a--historical-var-from-the-bank-to-a-trade): VaR from the bank to a trade, now on your own scenario PVs.
+- [The VaR tutorial, Part A](../guides/VAR_GUIDE.md#part-a--historical-var-from-the-bank-to-a-trade): VaR from the bank to a trade, now on your own scenario PVs.
 - [DATA_LAKE_GUIDE.md](../guides/DATA_LAKE_GUIDE.md): every key, a Delta lake in S3, an Iceberg lake over REST, an in-memory store.
 - [the data lake guide, section 3.1](../guides/DATA_LAKE_GUIDE.md#31-the-data-inbox): every part of the Inbox screen and where each figure comes from.
 - [Data guide, section 1](../guides/DATA_GUIDE.md#1-telling-drishti-new-data-has-landed): the data-load signal each load sends, expectations and late data.
@@ -1563,7 +1563,7 @@ a table keeps its format). A full build without `--store risk=…` also puts the
 - The design: [IN_MEMORY_LAKE.md](../architecture/DATA_ARCHITECTURE.md#9-the-in-memory-lake-delta-tables-that-never-touch-a-disk).
 - Your own lake on Iceberg, Databricks or a REST catalog: [Using Drishti with Databricks Delta Lake or Apache Iceberg](../guides/DATA_GUIDE.md#3-using-drishti-with-databricks-delta-lake-or-apache-iceberg).
 - On AWS (S3, Glue, S3 Tables, the scripts in `deploy/aws/iceberg/`): [CLUSTER_GUIDE.md › Drishti on AWS: ECS, EFS and S3, section 22](../guides/CLUSTER_GUIDE.md#1212-iceberg-on-aws-and-official-results-in-s3).
-- Exposure on the same lake: [tutorial 3](03-exposure-from-the-bank-to-a-trade.md) after a full `--store risk=iceberg` build.
+- Exposure on the same lake: [the exposure tutorial](../guides/EXPOSURE_GUIDE.md) after a full `--store risk=iceberg` build.
 
 ## If something goes wrong
 

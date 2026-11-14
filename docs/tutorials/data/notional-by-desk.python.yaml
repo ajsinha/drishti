@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Tutorial 9: a Python VISUAL of your own. render(table, params) gets the rows its `columns` well names (as the person looking may see them) and
+# The Notebook tutorial: a Python VISUAL of your own. render(table, params) gets the rows its `columns` well names (as the person looking may see them) and
 # returns a chart as data: an ECharts option. Here: the desks with the largest notional, as bars, with the biggest first.
 rachana: 1
 python: notional-by-desk

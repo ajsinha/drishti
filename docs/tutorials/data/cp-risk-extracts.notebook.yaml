@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Tutorial 8, Part B: the trap and its cure in the Notebook, on the model cp-risk. Two extracts of rows, each built by the server for the person opening it (their
+# The reports tutorial, Part B: the trap and its cure in the Notebook, on the model cp-risk. Two extracts of rows, each built by the server for the person opening it (their
 # row rules, their masks): the trades and the netting sets. Cell 1 joins the rows of one to the rows of the other (wrong); cell 2 adds each side up per
 # counterparty first (right), as the model does for you, and draws it.
 rachana: 1

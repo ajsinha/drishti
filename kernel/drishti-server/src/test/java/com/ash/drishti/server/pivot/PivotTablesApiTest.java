@@ -42,7 +42,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 /**
- * Virtual tables as pivot sources (TABLES_GUIDE.md section 7a): two tables over the demo trades listed as {@code table:} sources; a pivot
+ * Virtual tables as pivot sources (BI_GUIDE.md section 7a): two tables over the demo trades listed as {@code table:} sources; a pivot
  * of a table gives the same counts as the pivot of its kind; a column masked at the source for the reader is no field; two tables over one
  * kind read in one request read the kind once (V7); a stored kind's name is refused as a table's (V12).
  */

@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* The pivot screen's switches, live pivots and cell comments (docs/guides/PIVOT_GUIDE.md: the screen's switches, live pivots, cell
+/* The pivot screen's switches, live pivots and cell comments (docs/guides/BI_GUIDE.md: the screen's switches, live pivots, cell
    comments). Exact / Auto / ≈, Progressive and Use rollups are request options the server answers; the line beside them says how the
    answer was computed ("exact", "≈ from a sketch", "from rollup desk-month"), from the answer's computedAs. Live keeps the view current:
    the server pushes only the cells that moved and this script puts them in place (it never computes a figure). A saved view's cells carry

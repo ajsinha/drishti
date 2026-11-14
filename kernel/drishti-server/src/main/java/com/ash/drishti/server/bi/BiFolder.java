@@ -61,7 +61,7 @@ public final class BiFolder implements AutoCloseable {
     private static final Map<String, String> KINDS = Map.of("reports", "report", "boards", "board", "notebooks", "notebook", "python", "python", "themes", "theme");
     /** BI's old folders of dataset and model files: a file there is refused with the migration's command (docs/architecture/ARCHITECTURE.md §28 Q18). */
     private static final List<String> OLD_FOLDERS = List.of("datasets", "models");
-    /** The code of an old dataset or model file the server refuses (TABLES_GUIDE.md, the migration). */
+    /** The code of an old dataset or model file the server refuses (BI_GUIDE.md, the migration). */
     public static final String MIGRATE_FIRST = "DRS-9196";
     /** The code of a file refused because another file (another domain folder's) holds the same id: neither is read. */
     public static final String DEFINED_TWICE = "DRS-9610";

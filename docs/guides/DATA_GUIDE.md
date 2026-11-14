@@ -56,7 +56,7 @@ Each section keeps its own numbering (section 1's "section 4" is *4. The API ref
     - [7. Archives: zip and tarballs](#7-archives-zip-and-tarballs)
     - [8. Feeds: the table and business date of a file](#8-feeds-the-table-and-business-date-of-a-file)
 3. [Using Drishti with Databricks Delta Lake or Apache Iceberg](#3-using-drishti-with-databricks-delta-lake-or-apache-iceberg): in [DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md)
-4. [External data: where it comes from and how to refresh it](#4-external-data-where-it-comes-from-and-how-to-refresh-it): its own guide, [EXTERNAL_DATA.md](EXTERNAL_DATA.md)
+4. [External data: where it comes from and how to refresh it](#4-external-data-where-it-comes-from-and-how-to-refresh-it): its own guide, [WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md)
 5. [Schema to pack: generate a pack from JSON Schema](#5-schema-to-pack-generate-a-pack-from-json-schema)
 6. [Export data: download a dataset](#6-export-data-download-a-dataset)
     - [1. What a dataset is](#1-what-a-dataset-is)
@@ -146,7 +146,7 @@ With the signal, the same four things happen every time, in order, and each leav
 | views and date lists to include the new data now | drops the caches of the connectors that serve the kind and of the derived connectors built from it (the same thing Admin → Caches does): for a Delta connector its memory and disk caches and id map files; grouped pages kept on disk are rebuilt from the new data at once, the old pages serving meanwhile. Without the signal a Delta table's new version is seen within `refresh-seconds` (10 s) and grouped pages rebuild within `version-check` (10 s); the caches are keyed by table version, so nothing stale is served either way |
 | to know the data is really readable | counts the kind's entities on that business date and records `verified` or `not-found` |
 | alerts on the new numbers | evaluates every alert rule on the kind for that date, as each rule's owner may see it |
-| alerts on numbers, and subscriptions, that follow loads | an alert on a BI measure or a Sutra field whose trigger is `after-load` (and every "no data" alert), a board tile that notifies after loads, and a subscription with the schedule `after-load`, look `load-delay` (5 s) after a load that finished ready, once the BI layers have rebuilt ([REPORTS_GUIDE.md](REPORTS_GUIDE.md#192-when-it-fires-and-when-it-looks)) |
+| alerts on numbers, and subscriptions, that follow loads | an alert on a BI measure or a Sutra field whose trigger is `after-load` (and every "no data" alert), a board tile that notifies after loads, and a subscription with the schedule `after-load`, look `load-delay` (5 s) after a load that finished ready, once the BI layers have rebuilt ([BI_GUIDE.md](BI_GUIDE.md#192-when-it-fires-and-when-it-looks)) |
 | the right people told | one inbox notice (and the bell) each, and an email through the outbox if the pack asks for it |
 | to know when a batch did **not** come | an expectation per kind (`trade by 19:00 America/New_York`); a scheduler flags it late on Health and tells the same people |
 
@@ -225,7 +225,7 @@ administrator's token. Run it again and the line under `load` ends `(already ann
 or `POST /api/v1/packs/{pack}/loads` ([section 4](#4-the-api-reference)); Drishti then records it, refreshes the caches, verifies that the rows are readable, checks alerts, runs a smoke test and tells people
 ([section 7](#7-what-happens-step-by-step)). Reading the history is `data loads` ([section 5](#5-the-command-line-reference)); the expectations that make late data visible are [section 8](#8-expectations-and-late-data).
 
-**No ETL yet? Load a file from the browser.** For a pack whose kind is read by a File connector (as Build -> New pack makes it from data
+**No ETL yet? Load a file from the browser.** For a pack whose kind is read by a File connector (as Create -> New pack makes it from data
 files), **Admin -> Packs -> the pack -> Load data** takes one JSON array or JSON Lines file of any size, streams it to the server
 (`POST /api/v1/admin/packs/{pack}/data?kind=K&date=YYYY-MM-DD`, token scope `packs:admin`, up to `drishti.loads.upload-max-mb`), writes it
 under its business date (or the day you choose, for a snapshot kind: `ingest: {snapshot: true}`), checks every row against the pack's Sutras
@@ -836,7 +836,7 @@ it reaches the browser too, for the answers it was measured to win on, and nowhe
 
 | Path | Arrow | Since |
 |---|---|---|
-| Java to the Python compute workers | Arrow IPC files, memory-mapped | built ([NOTEBOOK_GUIDE.md](NOTEBOOK_GUIDE.md)) |
+| Java to the Python compute workers | Arrow IPC files, memory-mapped | built ([BI_GUIDE.md](BI_GUIDE.md)) |
 | BI answers to the console's Python, Explore and Perspective-era clients | `?format=arrow` on `POST /bi/reports/{id}/query` and `POST /bi/mq`: the raw rows | 2.1 |
 | **Any JSON answer of the two endpoints below, to any client that asks** | `Accept: application/vnd.apache.arrow.stream`: the JSON answer itself, its table as the record batch, the rest in the schema's metadata | built |
 | **The VaR explorer's contribution tables by position and by trade, in the browser** | read with Arrow JS (vendored) into typed columns | built |
@@ -930,12 +930,12 @@ Lakes (one file per lake, `config/lakes/<lake>.yaml`), Delta and Iceberg, and re
 
 Every external source of every pack (World Bank, IMF, UNDP, CIA Factbook, Yahoo Finance, Google News, ECB, US Treasury, NY Fed, SEC
 EDGAR, Wikidata, Nasdaq Trader, GLEIF), where it comes from, its licence, which pack and kinds it feeds, and the data feed that pulls it
-(`.sh` and `.ps1`) with examples, is its own guide: **[EXTERNAL_DATA.md](EXTERNAL_DATA.md)** (Help → External data).
+(`.sh` and `.ps1`) with examples, is its own guide: **[WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md)** (Help → External data).
 
 ## 5. Schema to pack: generate a pack from JSON Schema
 
-A pack made from JSON Schema files, a folder of JSON Lines, or both (Build → New pack, or `drishti.py pack make`) has its own guide:
-[BUILD_GUIDE.md](BUILD_GUIDE.md#8-the-pack-designer-build--new-pack).
+A pack made from JSON Schema files, a folder of JSON Lines, or both (Create → New pack, or `drishti.py pack make`) has its own guide:
+[BUILD_GUIDE.md](BUILD_GUIDE.md#8-the-pack-designer-create--new-pack).
 
 ## 6. Export data: download a dataset
 
@@ -954,7 +954,7 @@ and PFE, the what-ifs) hold no rows and are not listed. For each the view shows:
 | format | the connector's plugin: Delta, Iceberg, JSON Lines (the file connector), Database (JDBC), DuckDB ... |
 | dates held | every business date the kind's sources hold (the Delta log, Iceberg snapshots, the file layout); *not dated* for a source of current rows only |
 | columns | the data contract's fields; a kind without a contract: the source's columns, else the fields of a few of its entities |
-| internal only | the kind is in `drishti.data-view.internal-only` (the IMF, Yahoo and news-headline kinds, [EXTERNAL_DATA.md](EXTERNAL_DATA.md)) |
+| internal only | the kind is in `drishti.data-view.internal-only` (the IMF, Yahoo and news-headline kinds, [WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md)) |
 
 ### 2. The selection
 

@@ -90,7 +90,7 @@ public class SearchAnswers {
     }
 
     /**
-     * What this kind's results offer to pivot (PIVOT_GUIDE.md section 1: Pivot opens the pivot screen on the kind, with its pack's
+     * What this kind's results offer to pivot (BI_GUIDE.md section 1: Pivot opens the pivot screen on the kind, with its pack's
      * arrangement as the view): {@code {source, fields, view}}; null when its pack does not opt in (or says what cannot be read).
      */
     private Map<String, Object> offered(String kind) {

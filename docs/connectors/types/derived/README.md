@@ -106,7 +106,7 @@ Per derived kind (`<kind>.` prefix; a key ending in `.from` declares one):
 | `<kind>.search-fields` | fields | none | Page fields a search matches besides the id; the first labels a hit (`LEIG Ford Motor`) |
 
 These turn the gleif, us-equities and world-economy packs' groupings (LEIG, LEIC, SIC, ECG) into computed pages
-([GROUPINGS_ANALYTICS_GUIDE.md](../../../guides/GROUPINGS_ANALYTICS_GUIDE.md) Part III); on a page the order is the aggregates, the rows,
+([BI_GUIDE.md](../../../guides/BI_GUIDE.md) Part III); on a page the order is the aggregates, the rows,
 the tree, the `then` fields, the sorts, then `unlisted`.
 
 Every connector also takes `kinds`, `enabled` and the common settings (docs/guides/DATA_GUIDE.md section 9).

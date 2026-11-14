@@ -80,7 +80,7 @@ lists the funds that hold it (`HELD`), an index the funds that track it (`TRACK`
 
 The documents are committed as standard test data, gzipped JSON Lines under `data/testdata/funds/<kind>/` (the fund kind in parts of
 about 1.2 MB); `tools/drishti.py lake demo` builds them into the demo lake and the pack's Delta connector `funds-store` serves them.
-`samples/` keeps a few reference documents. The guide is `docs/guides/FUNDS_GUIDE.md`.
+`samples/` keeps a few reference documents. The guide is `docs/guides/WORLD_DATA_GUIDE.md`.
 
 ## Data structures
 
@@ -298,7 +298,7 @@ folder, never in git; `drishti.py feed run funds` fetches them with the User-Age
 
 Every kind's links to its data contract and its example and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/funds.md](guides/funds.md): *Data contracts* and *Data retrieval*.
 
-External data: SEC Form N-PORT data sets; SEC Form N-CEN data sets; SEC mutual fund prospectus risk/return summary data sets; SEC ticker files (company_tickers_mf.json, company_tickers_exchange.json); Nasdaq Trader symbol directory; GLEIF golden copy, level 2 relationships. Each source's URL, licence and data feed are on the External data help page, [docs/guides/EXTERNAL_DATA.md](../../../../docs/guides/EXTERNAL_DATA.md).
+External data: SEC Form N-PORT data sets; SEC Form N-CEN data sets; SEC mutual fund prospectus risk/return summary data sets; SEC ticker files (company_tickers_mf.json, company_tickers_exchange.json); Nasdaq Trader symbol directory; GLEIF golden copy, level 2 relationships. Each source's URL, licence and data feed are on the External data help page, [docs/guides/WORLD_DATA_GUIDE.md](../../../../docs/guides/WORLD_DATA_GUIDE.md).
 
 ## Enabling and dependencies
 
@@ -314,7 +314,7 @@ Settings (environment variables) its connectors read: `DRISHTI_LAKE_ENABLED`.
 
 ## Refreshing the data
 
-The data feed `funds` (config/feeds/funds.yaml) pulls `fund`, `fund-holder`, `index-funds`: `python3 tools/drishti.py feed run funds` fetches them daily into `data/datafeeds/funds/<date>/` and loads them into the lake `capitalmarket`; `--dry-run` says what it would fetch, changing nothing; `--snapshot` refreshes the committed snapshot in data/testdata instead; `feed status` shows the last runs. The External data feeds guide (docs/guides/EXTERNAL_DATA.md) has the schedule entries for Linux and Windows.
+The data feed `funds` (config/feeds/funds.yaml) pulls `fund`, `fund-holder`, `index-funds`: `python3 tools/drishti.py feed run funds` fetches them daily into `data/datafeeds/funds/<date>/` and loads them into the lake `capitalmarket`; `--dry-run` says what it would fetch, changing nothing; `--snapshot` refreshes the committed snapshot in data/testdata instead; `feed status` shows the last runs. The External data feeds guide (docs/guides/WORLD_DATA_GUIDE.md) has the schedule entries for Linux and Windows.
 
 The pack's files are written by `tools/packgen/funds/make.py`; its `--check` fails when the committed files differ from what it would write.
 

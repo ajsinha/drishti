@@ -76,12 +76,12 @@ final class AnswerFlightForms {
         @Override
         public FlightBackend.Subscription subscribe(Principal p, FlightRequest r, int part, int batchRows) {
             throw new FlightRefusal(ErrorCode.FLIGHT_BAD_TICKET, "form " + form().name().toLowerCase(java.util.Locale.ROOT)
-                    + " is read as a snapshot; a standing query's updates come over Server-Sent Events (REPORTS_GUIDE.md)");
+                    + " is read as a snapshot; a standing query's updates come over Server-Sent Events (BI_GUIDE.md)");
         }
     }
 
     /**
-     * {@code form: model}: a BI model query (MQ, REPORTS_GUIDE.md), {@code {"model": "risk-summary", "query": {...}}} or the MQ JSON with
+     * {@code form: model}: a BI model query (MQ, BI_GUIDE.md), {@code {"model": "risk-summary", "query": {...}}} or the MQ JSON with
      * {@code model} in it; answered by MQ with the person's row rules, masks and the BI power checked.
      */
     static final class Model extends Computed {
@@ -179,7 +179,7 @@ final class AnswerFlightForms {
     }
 
     /**
-     * {@code form: pivot}: a pivot view, the same JSON as {@code POST /api/v1/pivot/query} (PIVOT_GUIDE.md), answered by the pivot
+     * {@code form: pivot}: a pivot view, the same JSON as {@code POST /api/v1/pivot/query} (BI_GUIDE.md), answered by the pivot
      * engine through its controller (the viewer, the edition, the audit line {@code pivot.query}); one record per cell and measure, as the
      * pivot's Arrow export writes it.
      */

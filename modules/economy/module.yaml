@@ -190,6 +190,6 @@ docs:
   - packs/official-news/guides/official-news.md
   - packs/gdelt-events/guides/gdelt-events.md
   tutorials:
-  - tutorials/14-public-sector-data.md
+  - guides/WORLD_DATA_GUIDE.md
 resources:
   memory-mb: 64

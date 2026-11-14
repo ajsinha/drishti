@@ -184,7 +184,7 @@ Configuration ships with these:
 | `admin` | everything | yes | yes | — | yes (and admins may approve) | yes | yes |
 
 `pivot-approver` approves custom pivot functions someone else wrote (four eyes: never one's own; administrators may too); it is the role
-`drishti.pivot.functions.approver-role` names as shipped ([PIVOT_GUIDE.md](PIVOT_GUIDE.md)). Its `approve` is not the Sutra review's: a
+`drishti.pivot.functions.approver-role` names as shipped ([BI_GUIDE.md](BI_GUIDE.md)). Its `approve` is not the Sutra review's: a
 pivot approver does not make Sutras live.
 
 Packs add their own. The shipped packs add `trader` (trading), `market-risk` (market-risk), `credit-risk` (counterparty-risk), `economist`
@@ -222,7 +222,7 @@ A lens ([section 12](#12-what-a-lens-is)) never widens or narrows this: it chang
 
 ### 3.4 BI powers (Rupaka)
 
-Business intelligence ([REPORTS_GUIDE.md](REPORTS_GUIDE.md)) has four powers of its own. They are a list, `bi`, on a role:
+Business intelligence ([BI_GUIDE.md](BI_GUIDE.md)) has four powers of its own. They are a list, `bi`, on a role:
 `drishti.security.roles.<role>.bi: [bi, bi-author]` in configuration or a pack, or, for a role you define, **Admin → BI settings** (a
 table of roles with four tick boxes each; built-in roles are read-only there) or the `bi` list of `PUT /api/v1/admin/role-definitions/{name}`.
 Saving a role in **Admin → Roles** keeps the BI powers it has.
@@ -982,7 +982,7 @@ edition:
 **Drishti World** (`world`, economy module) is the public-data packs in one product: economies and regions (world-economy), news and quotes
 (news-and-markets), official news (official-news: `PRESS`, `PREL`; gdelt-events: `GDELT`), legal entities (gleif), and, while the
 **capitalmarkets** module is on, US companies and filings (us-equities) and funds and ETFs (funds). The public-data lakes must be built
-(`lake demo` builds them; [EXTERNAL_DATA.md](EXTERNAL_DATA.md) says how each source is refreshed). The IMF figures and Yahoo prices in these
+(`lake demo` builds them; [WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md) says how each source is refreshed). The IMF figures and Yahoo prices in these
 packs are shown inside the bank only; showing Drishti World outside it needs the product owner's decision first. While capitalmarkets is
 off, its packs, its functions (`USEQ`, `IDX`, `SIC`, `EDGAR`, `FILING`, `FACT`, `PXH`, `FUND`, `HELD`, `TRACK`), its cards and chips, and
 the landings' company, filing and fund parts are gone; the rest of World stands.
@@ -1016,7 +1016,7 @@ edition:
 
 **Public sector** (`publicsector`, economy module) is development indicators, central banks, national statistics, the OECD, official news
 and world events: the packs world-development, central-banks, national-statistics, oecd, official-news and gdelt-events
-([PUBLIC_SECTOR_GUIDE.md](PUBLIC_SECTOR_GUIDE.md), section 2 to turn it on). It is defined by its registry entry alone
+([WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md), section 2 to turn it on). It is defined by its registry entry alone
 ([the core server's lenses](../../kernel/drishti-server/src/main/resources/META-INF/drishti/lenses.yaml)):
 
 | Part | As shipped |
@@ -1244,8 +1244,8 @@ How the engines are built is in [ARCHITECTURE.md section 27](../architecture/ARC
 | `sensitivities` | position sensitivities and the factor dictionary: load, checks, sums by bucket | `DRISHTI_SENSITIVITIES_ENABLED` | on | `SENS`, `RFAC`, the factor dictionary |
 | `frtb-sa` | FRTB-SA: SBM, DRC, RRAO and its playground | `DRISHTI_FRTB_ENABLED` | on | `FRSA`, `PLAY FRTB`; the capital page; the FRTB-SA guide's Help pages; `drishti.py frtb` |
 | `simm` | ISDA SIMM initial margin per netting set and regime, and its playground | `DRISHTI_SIMM_ENABLED` | on | `SIMM`, `PLAY SIMM`; the netting set page's IM panel |
-| `pivot` | the pivot engine ([PIVOT_GUIDE.md](PIVOT_GUIDE.md)) | `DRISHTI_PIVOT_ENGINE_ENABLED` | on | `PIVOT`, Views → Pivot, Pivot on an Export data table, `drishti.py pivot` |
-| `mr-cube` | the market-risk cube on the pivot engine ([PIVOT_GUIDE.md section 29](PIVOT_GUIDE.md#29-the-mr-cube-preset)) | `DRISHTI_MR_CUBE_ENABLED` | on | `MCUBE`, `/mcube` |
+| `pivot` | the pivot engine ([BI_GUIDE.md](BI_GUIDE.md)) | `DRISHTI_PIVOT_ENGINE_ENABLED` | on | `PIVOT`, Views → Pivot, Pivot on an Export data table, `drishti.py pivot` |
+| `mr-cube` | the market-risk cube on the pivot engine ([BI_GUIDE.md section 29](BI_GUIDE.md#29-the-mr-cube-preset)) | `DRISHTI_MR_CUBE_ENABLED` | on | `MCUBE`, `/mcube` |
 | `memory-lake` | Delta tables held in memory only, with their replenish jobs ([DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md)) | `DRISHTI_MEMORY_LAKE_ENABLED` | off (it needs stores configured) | Admin → Lakes' Memory tab, `drishti.py lake memory`, `mem://` stores |
 | `dataload` | the data inbox: files dropped in its inbox with a `.ready` marker are loaded into the lake ([DATA_GUIDE.md](DATA_GUIDE.md)) | `DRISHTI_DATALOAD_ENABLED` | off | the inbox and its loads |
 | `flight` | Arrow Flight, data out to any client ([FLIGHT_GUIDE.md](FLIGHT_GUIDE.md)) | `DRISHTI_FLIGHT_ENABLED` | off | the Flight port |
@@ -1509,9 +1509,9 @@ by hand is picked up within `drishti.bindings.refresh-seconds` (30), or at once 
 
 **Connector files name no kinds.** `config/bindings.yaml` is the one home of which connectors serve each kind; a connector file keeps its plugin, settings and `lake:`, and serves what its plugin and lake hold (a `kinds:` line left in a file by an earlier release is ignored and dropped at the file's next save). Health's `bindings` line gives the count of bound kinds and of required needs that nothing serves; Admin → Data bindings has the detail. The API: `GET /api/v1/admin/bindings`, `POST /api/v1/admin/bindings/proposals` and `…/proposals/{id}/approve|reject|withdraw`.
 
-### 23.0 The connector and binding designer (Build → Create → New connector)
+### 23.0 The connector and binding designer (Create → New connector)
 
-**Build → Create → New connector** (`/build/connector/designer`) is the one way to make a connector and bind it. It has the same left-rail workspace as the
+**Create → New connector** (`/build/connector/designer`) is the one way to make a connector and bind it. It has the same left-rail workspace as the
 Pack designer, six steps, and **nothing is saved until step 6**. It replaces hand-editing `config/connectors/<name>.yaml` and `config/bindings.yaml`;
 **Admin → Connectors → New connector** (and a pack's *Create* link, `?new=<name>`) opens it, pre-filled from the pack's suggestion. Editing a connector that
 exists stays on Admin → Connectors (its editor, test, history and restore). Administrators only.

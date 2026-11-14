@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The MR cube in a real browser (docs/guides/PIVOT_GUIDE.md section 29; docs/architecture/LENSES.md section 6.4), over the market-risk pack's committed VaR data
+"""The MR cube in a real browser (docs/guides/BI_GUIDE.md section 29; docs/architecture/LENSES.md section 6.4), over the market-risk pack's committed VaR data
 from the cached demo lake (built once per run), served by its Delta connector, the demo connector off:
 
 - ``MCUBE <GO>`` opens the Pivot's preset mr, the pivot screen on source var with the MR lens: the landing view (desks by risk class), the headline strip, the
@@ -114,7 +114,7 @@ def test_mcube_opens_the_pivot_screen_with_the_mr_lens_and_every_cell_is_the_eng
 
 
 def test_the_fields_the_view_picker_a_hierarchy_as_one_chip_var_per_cell_and_the_panes(stack, browser):
-    """PIVOT_GUIDE.md section 2 on the real cube: it opens as the View picker in front of the compact line; MGMT is one chip; the Rows picker
+    """BI_GUIDE.md section 2 on the real cube: it opens as the View picker in front of the compact line; MGMT is one chip; the Rows picker
     lists each hierarchy once with its level columns under More fields; VaR's ▾ says it is computed per cell and offers the VaR options,
     never a function; a ready-made view opens; \\ opens the panes."""
     pg = open_cube(browser, str(stack))

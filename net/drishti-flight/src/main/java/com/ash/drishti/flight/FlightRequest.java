@@ -27,7 +27,7 @@ import java.util.Objects;
 
 /**
  * One Flight request: a Rachana request (docs/architecture/ARCHITECTURE.md) and how it is read. It is the JSON of a Flight descriptor's
- * command and of a ticket (docs/guides/FLIGHT_REFERENCE.md):
+ * command and of a ticket (docs/guides/FLIGHT_GUIDE.md):
  *
  * <pre>
  * {"form": "kind",    "request": {"kind": "trade", "paths": ["TRADE_ID", "DESK", "MTM"], "filter": "DESK = 'RATES'"}}

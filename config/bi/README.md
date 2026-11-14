@@ -26,7 +26,7 @@ config/bi/
   datasets/   <id>.dataset.yaml   one table each (rachana: 2, <model>-<table>.dataset.yaml): the table over a connector (by logical name), its columns, row rules and masks
                                   (ARCHITECTURE.md §28 › The model layer: the specification, section 1); the 2.1 rachana: 1 files were converted by drishti.py bi migrate --models and removed in 2.2,
                                   except the two live ones, live-trading and live-exposure, that their live reports still read. desk-pnl-vs-exposure-py-result is a
-                                  Python dataset (source.python) over two model queries: REPORTS_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 11 says what the 2.1 composed and derived datasets became
+                                  Python dataset (source.python) over two model queries: BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 11 says what the 2.1 composed and derived datasets became
   models/     <id>.model.yaml     2.2 data models: datasets as aliases, relationships, measures, hierarchies, rollups (ARCHITECTURE.md §28 › The model layer: the specification, section 2); samples:
                                   trades-basic, trading-risk, trading-cashflows, counterparty-exposure, desk-pnl-vs-exposure-py, live-trading, live-exposure,
                                   region-economics, world-economics, market-risk-var (the published official VaR; counterparty-exposure and
@@ -36,13 +36,13 @@ config/bi/
                                   a page with layout: board is a wall of tiles (the boards desk-wall and python-wall are reports here)
                                   (commented samples: trades-overview, counterparty-risk, cashflow-ladder, live-trading-desk, live-exposure, python-desk-risk,
                                   region-economics, world-economics, market-risk-var (VaR from the published official results), the boards desk-wall
-                                  and python-wall, and pnl-vs-exposure over two datasets: REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 16)
+                                  and python-wall, and pnl-vs-exposure over two datasets: BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 16)
   boards/     <id>.board.yaml     2.3 boards (no samples ship): read as reports with board pages until converted (drishti.py bi migrate --boards config/bi/boards --write)
   themes/     <id>.theme.yaml     theme items: series colours, good and bad colours, a font, format defaults per kind of visual (samples: corporate, print)
   notebooks/  <id>.notebook.yaml  an analyst notebook: stored, versioned and published like any item, but not run (phase 9; one sample: pnl-vs-exposure-pandas, two extracts joined in pandas)
   python/     <id>.python.yaml    a Python Measure, Visual or Transform with its manifest (inputs, packages, target, limits, source); run on the server's compute pool python
                                   (target: server) (commented samples: desk-pnl-volatility, pnl-histogram, pnl-vega, and the
-                                  Transform pnl-vs-exposure behind the Python dataset desk-pnl-vs-exposure-py-result; docs/guides/REPORTS_GUIDE.md)
+                                  Transform pnl-vs-exposure behind the Python dataset desk-pnl-vs-exposure-py-result; docs/guides/BI_GUIDE.md)
 ```
 
 Every file is a **published, read-only item of the catalogue** (workspace "Shipped content", id `file:<kind>:<name>`). The keys `title`, `description`, `owner`, `tags`, `endorsement` (none, promoted,
@@ -56,12 +56,12 @@ Where to read more, in the order a newcomer wants it:
 
 | For | Read |
 |---|---|
-| a tour of the pages and a walk-through with the samples in this folder | [docs/guides/REPORTS_GUIDE.md](../../docs/guides/REPORTS_GUIDE.md) (start here), [docs/tutorials/10-first-bi-report.md](../../docs/tutorials/08-reports-and-dashboards.md#part-a--your-first-bi-report) |
-| the dataset and model formats (`datasets/`, `models/`) | [docs/guides/REPORTS_GUIDE.md](../../docs/guides/REPORTS_GUIDE.md#5-models-and-datasets-what-a-report-reads) |
-| the report format (`reports/`): a report names its model with `model: <name>@<major>` (a 2.1 live report still names a `dataset:`) | [docs/guides/REPORTS_GUIDE.md](../../docs/guides/REPORTS_GUIDE.md#9-the-report-file-pages-visuals-filters-and-slicers) |
-| boards, report pages of tiles (`layout: board`), and converting a 2.3 board file | [docs/guides/REPORTS_GUIDE.md](../../docs/guides/REPORTS_GUIDE.md#9-the-report-file-pages-visuals-filters-and-slicers) |
-| the theme format (`themes/`) | [docs/guides/REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 5.2](../../docs/guides/REPORTS_GUIDE.md#103-themes) |
-| publishing, review, certification and moving content between servers | [docs/guides/REPORTS_GUIDE.md](../../docs/guides/REPORTS_GUIDE.md#17-publishing-and-governance-versions-review-certification-lineage-impact-environments) |
+| a tour of the pages and a walk-through with the samples in this folder | [docs/guides/BI_GUIDE.md](../../docs/guides/BI_GUIDE.md) (start here), [docs/tutorials/10-first-bi-report.md](../../docs/guides/BI_GUIDE.md#part-a--your-first-bi-report) |
+| the dataset and model formats (`datasets/`, `models/`) | [docs/guides/BI_GUIDE.md](../../docs/guides/BI_GUIDE.md#5-models-and-datasets-what-a-report-reads) |
+| the report format (`reports/`): a report names its model with `model: <name>@<major>` (a 2.1 live report still names a `dataset:`) | [docs/guides/BI_GUIDE.md](../../docs/guides/BI_GUIDE.md#9-the-report-file-pages-visuals-filters-and-slicers) |
+| boards, report pages of tiles (`layout: board`), and converting a 2.3 board file | [docs/guides/BI_GUIDE.md](../../docs/guides/BI_GUIDE.md#9-the-report-file-pages-visuals-filters-and-slicers) |
+| the theme format (`themes/`) | [docs/guides/BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 5.2](../../docs/guides/BI_GUIDE.md#103-themes) |
+| publishing, review, certification and moving content between servers | [docs/guides/BI_GUIDE.md](../../docs/guides/BI_GUIDE.md#17-publishing-and-governance-versions-review-certification-lineage-impact-environments) |
 | the design and what each phase built | [docs/architecture/ARCHITECTURE.md §28](../../docs/architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer) (sections 6, 8 and 13, "Where BI files live", and section 20) |
 
 Edit a sample and the next open shows it. To keep your own version of a sample, copy it to a workspace item (*Save a copy* in the Model view for a dataset or in the designer for a report, or *New item* in My workspace) rather than editing the shipped file.

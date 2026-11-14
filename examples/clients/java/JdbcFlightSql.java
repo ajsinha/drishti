@@ -26,7 +26,7 @@ import java.sql.Statement;
 import java.util.Properties;
 
 /**
- * Read-only SQL over a BI model through the Arrow Flight SQL JDBC driver (docs/guides/FLIGHT_REFERENCE.md; FLIGHT_GUIDE.md section 12). Plain
+ * Read-only SQL over a BI model through the Arrow Flight SQL JDBC driver (docs/guides/FLIGHT_GUIDE.md; FLIGHT_GUIDE.md section 12). Plain
  * JDBC: only {@code java.sql} at compile time, the driver jar ({@code org.apache.arrow:flight-sql-jdbc-driver}, one jar, no installer)
  * at run time.
  *

@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The pivot's fields as a person meets them (PIVOT_GUIDE.md section 2): grouped like Power BI's field list, one catalogue for the compact
+/* The pivot's fields as a person meets them (BI_GUIDE.md section 2): grouped like Power BI's field list, one catalogue for the compact
    line's pickers (B, drishti-inputs' FieldPicker) and the Fields pane (A). Hierarchies first, each one item with its levels (MGMT ›
    Division › Desk › Book); then the fields by display folder; the measures by folder (Σ); then "More fields", collapsed: the columns a
    hierarchy's levels are built from and the long tail. What a pick does to the wells (a level on or off, a field in or out, another value)

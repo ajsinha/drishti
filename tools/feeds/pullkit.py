@@ -51,7 +51,7 @@ DEFAULT_UA = "Drishti ajsinha@gmail.com"     # the owner's contact, as the SEC a
 
 def user_agent() -> str:
     """The one User-Agent of every feed: DRISHTI_FEEDS_USER_AGENT, else DEFAULT_UA (Drishti and a contact, as the SEC asks). Set it to
-    your organisation's contact in production (docs/guides/EXTERNAL_DATA.md)."""
+    your organisation's contact in production (docs/guides/WORLD_DATA_GUIDE.md)."""
     return os.environ.get("DRISHTI_FEEDS_USER_AGENT") or DEFAULT_UA
 
 COMMITTABLE, INTERNAL = "committable", "internal only"
@@ -355,7 +355,7 @@ def examples(description: str, prog: str) -> str:
     if feed:
         lines += ["", f"    tools/feeds/feed.sh run {feed} <the same options>                 Linux and macOS",
                   f"    .\\tools\\windows\\feed.ps1 run {feed} <the same options>          Windows (PowerShell)"]
-    return ("examples:\n" + "\n".join(lines) + "\n\nguide: docs/guides/EXTERNAL_DATA.md (Help → Data → External data feeds)") if lines else ""
+    return ("examples:\n" + "\n".join(lines) + "\n\nguide: docs/guides/WORLD_DATA_GUIDE.md (Help → Data → External data feeds)") if lines else ""
 
 
 def parser(prog: str, description: str, sources: list[Source], extra=None) -> argparse.ArgumentParser:

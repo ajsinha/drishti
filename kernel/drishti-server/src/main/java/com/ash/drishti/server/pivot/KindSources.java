@@ -39,7 +39,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * The tables the pivot engine reads (PIVOT_GUIDE.md, sources): every stored kind of the loaded packs a person may open in the Data view
+ * The tables the pivot engine reads (BI_GUIDE.md, sources): every stored kind of the loaded packs a person may open in the Data view
  * ({@code DATA}), on any date it holds. A table is read once through its connector for a person's mask signature, date and data version
  * ({@link DataViewService#walk}: the Data view's own read, the person's masks applied to every row) and staged in the executor's DuckDB, in
  * memory; masked columns are never read, so they cannot be a dimension, a measure's input or a filter. A table over
@@ -147,7 +147,7 @@ public final class KindSources implements TabularSource.Resolver {
             return "date";
         }
         if (t.endsWith("list") && !t.startsWith("record")) {
-            return "list";                       // a list of simple values (text list, id list): each value a member (PIVOT_GUIDE.md)
+            return "list";                       // a list of simple values (text list, id list): each value a member (BI_GUIDE.md)
         }
         return "string";
     }

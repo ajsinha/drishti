@@ -28,7 +28,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * A Python lock file (docs/guides/NOTEBOOK_GUIDE.md section 4): every package, transitive ones included, pinned to one version with at
+ * A Python lock file (docs/guides/BI_GUIDE.md section 4): every package, transitive ones included, pinned to one version with at
  * least one sha256 hash, in pip's requirements syntax ({@code name==version --hash=sha256:<64 hex>}, continuation lines with a backslash,
  * {@code #} comments). Anything looser (a range, no hash, an URL, an option line) is refused: the lock is installed with
  * {@code pip --require-hashes --no-deps}, never resolved.

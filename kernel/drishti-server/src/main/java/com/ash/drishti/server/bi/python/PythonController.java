@@ -41,7 +41,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Python items and every Python run (docs/guides/REPORTS_GUIDE.md › Python in BI; docs/guides/NOTEBOOK_GUIDE.md section 19), on the server's compute
+ * Python items and every Python run (docs/guides/BI_GUIDE.md › Python in BI; docs/guides/BI_GUIDE.md section 19), on the server's compute
  * pool {@code python} ({@link PythonRuns}). The rows each run reads are read here, as the caller ({@link PythonFrames}); nothing is stored but the audit.
  *
  * <pre>

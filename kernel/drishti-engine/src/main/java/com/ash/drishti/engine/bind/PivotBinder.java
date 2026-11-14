@@ -67,7 +67,7 @@ public final class PivotBinder {
 
     /**
      * What the table's data carries: the fields offered, the arrangement the pivot opens with, and the pivot engine's source of the panel's
-     * rows ({@code panel/<kind>/<panel>/<id>}, PIVOT_GUIDE.md: Pivot opens the pivot screen on it); empty when not opted in.
+     * rows ({@code panel/<kind>/<panel>/<id>}, BI_GUIDE.md: Pivot opens the pivot screen on it); empty when not opted in.
      */
     Optional<Map<String, Object>> view(Panel p, com.ash.drishti.api.EntityRef ref) {
         if (!props.enabled()) {

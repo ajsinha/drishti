@@ -188,7 +188,7 @@ public final class RunPromotion implements ModelCatalog.Snapshots {
     }
 
     /**
-     * The draft table's YAML (section 9.4; TABLES_GUIDE.md): {@code from: { run }} with the version and the token that binds the snapshot to it, a
+     * The draft table's YAML (section 9.4; BI_GUIDE.md): {@code from: { run }} with the version and the token that binds the snapshot to it, a
      * column per answer column (staged under the column's name), the promoter's masks as {@code masked}, and its provenance.
      */
     static String yaml(String name, int version, String token, String title, List<Map<String, Object>> columns, Map<String, Object> provenance) {

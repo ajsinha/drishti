@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""One Python runtime answers (docs/guides/NOTEBOOK_GUIDE.md section 19): with the server's compute pool ``python`` on, the shipped Python
+"""One Python runtime answers (docs/guides/BI_GUIDE.md section 19): with the server's compute pool ``python`` on, the shipped Python
 model and the shipped Python board answer where they once recorded refusals. The real server of tests/bi_report_stack.py on ports 18973 and 17973
 (security on, the cross-pack Delta lake), compute on in the interpreter that runs this test (it carries the libraries pinned in
 config/compute/locks/python.lock):

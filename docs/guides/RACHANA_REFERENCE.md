@@ -1082,7 +1082,7 @@ trade ids as links, a `Net` row of `+99,704,064` (all 343, not the four shown), 
 > [Sutra developer guide](BUILD_GUIDE.md#21-expandable-row-groups-pivot-by-lists-and-tree-tables).
 
 A table or ladder may offer its rows as an Excel-style pivot: a **Pivot** button under the table opens the pivot screen
-([PIVOT_GUIDE.md](PIVOT_GUIDE.md), [USER_GUIDE.md](USER_GUIDE.md#pivot-slice-a-table-your-way)) on the source
+([BI_GUIDE.md](BI_GUIDE.md), [USER_GUIDE.md](USER_GUIDE.md#pivot-slice-a-table-your-way)) on the source
 `panel/<kind>/<panel>/<id>`: the panel's own rows, aggregated by the server's pivot engine, where a user drags fields into rows, columns,
 values and filters, opens nested rows, charts a selection, drills to a cell's rows and exports. It is **opt-in**: only a panel whose Sutra
 says `pivot:` offers it, and only the fields the Sutra offers can be used. Every other table stays a table.
@@ -1110,7 +1110,7 @@ pivot:                          # the fields on offer, and the arrangement the p
 | `filters` | none | Fields offered as filters: a name (every value kept), `{ field, values: [USD, EUR] }` (only those values) or `{ field, min, max }` (an inclusive range of numbers, or of ISO dates written as text). Not both `values` and a range. |
 | `heat` | `false` | Kept for the arrangement; the pivot screen's conditional formats replace it. |
 | `chart` | none | Kept for the arrangement; the pivot screen charts a selection (`G`). |
-| `mode` | `views` | How the pivot screen opens it ([PIVOT_GUIDE.md section 2](PIVOT_GUIDE.md#2-the-screen)): `views` (the View picker in front of the compact line), `compact` (the compact line alone) or `panes` (the Fields and Build panes). A promoted view keeps its mode. |
+| `mode` | `views` | How the pivot screen opens it ([BI_GUIDE.md section 2](BI_GUIDE.md#2-the-screen)): `views` (the View picker in front of the compact line), `compact` (the compact line alone) or `panes` (the Fields and Build panes). A promoted view keeps its mode. |
 | `totals` | `true` | Kept for the arrangement; the pivot screen always shows the totals, each made from its own rows. |
 
 With `pivot: true`, or a mapping without `fields`, the fields are the panel's columns: a column bound to a row path (`"@.MTM"`) is named
@@ -1379,7 +1379,7 @@ panel), so a copied address opens the same level, in the same tab. Every level's
 | `columns` | | As a table's (`label`, `bind`, `fmt`, `tone`, `total`, `link`); a `total: true` column adds up the rows of the level under each row. |
 
 Up to 6 levels; every expression is checked when the Sutra loads (`DRS-2101`), the shape of `levels` too (`DRS-2029`). The rows are bound
-on the server once, bounded like a tree by `drishti.panels.tree-rows`; the console only shows and hides them. Build → New pack writes this
+on the server once, bounded like a tree by `drishti.panels.tree-rows`; the console only shows and hides them. Create → New pack writes this
 for a document whose arrays hold arrays ([Schema to pack, A deep trading JSON](BUILD_GUIDE.md#9-a-deep-trading-json-from-one-file-to-a-deployed-pack)).
 
 #### line
@@ -2398,7 +2398,7 @@ This is the world-economy pack's `economy` Sutra. You should see, for `ECON ECON
 Australia highlighted; every country with an economy page (`ECON-ABW`, `ECON-AFG` …) opens it. The runnable version is the
 [map example](examples/map.md); its catalogue entry is [Panels: the twenty-two kinds, and developing a new one](#map). A BI report's map visual draws with the same shapes
 and drills from the world to a country and its regions:
-[REPORTS_GUIDE.md](REPORTS_GUIDE.md#94-the-map-funnel-histogram-box-plot-and-bubble).
+[BI_GUIDE.md](BI_GUIDE.md#94-the-map-funnel-histogram-box-plot-and-bubble).
 
 ### Events, sources and children (Sutra Next)
 
@@ -2408,7 +2408,7 @@ is the reference of the keys.
 
 | Key | On | Value |
 |---|---|---|
-| `source:` (a mapping) | any panel that reads data, a group of children | `{ kind, id \| where \| search, limit, as-of, pack, params }`: `id` an expression for one entity (`$src` the record); `where` a condition over each entity of the kind (`@` the entity as the viewer sees it; at most `limit`, default 20, of the first 500); `search` an expression for the text searched (`$src` the list found); `as-of` a business date; `pack` the pack serving the kind; `params` (only with `id`) a computed kind's parameters, `{ name: expression }`, read as `ID~name=value` by a reactive connector ([REACTIVE_CONNECTOR.md](../connectors/types/reactive/README.md#reading-a-computed-kind)); a `params` that is not a mapping, a bad name or a value that is not text, a number or true/false is `DRS-2012`, `params` with `where` or `search` is `DRS-2057`. Written as text (`"link(...)"`) it is the older form: the panel reads that linked entity as `$`. `{ table, where, limit, as-of }` reads a virtual table instead of a kind ([TABLES_GUIDE.md](TABLES_GUIDE.md)): its rows as the viewer may read them are `$src`, `where` keeps rows (`@` each row), a table takes no `kind`, `pack`, `id`, `search` or `params` (`DRS-2057`), a name that is not `<domain>.<name>` is `DRS-2012`. |
+| `source:` (a mapping) | any panel that reads data, a group of children | `{ kind, id \| where \| search, limit, as-of, pack, params }`: `id` an expression for one entity (`$src` the record); `where` a condition over each entity of the kind (`@` the entity as the viewer sees it; at most `limit`, default 20, of the first 500); `search` an expression for the text searched (`$src` the list found); `as-of` a business date; `pack` the pack serving the kind; `params` (only with `id`) a computed kind's parameters, `{ name: expression }`, read as `ID~name=value` by a reactive connector ([REACTIVE_CONNECTOR.md](../connectors/types/reactive/README.md#reading-a-computed-kind)); a `params` that is not a mapping, a bad name or a value that is not text, a number or true/false is `DRS-2012`, `params` with `where` or `search` is `DRS-2057`. Written as text (`"link(...)"`) it is the older form: the panel reads that linked entity as `$`. `{ table, where, limit, as-of }` reads a virtual table instead of a kind ([BI_GUIDE.md](BI_GUIDE.md)): its rows as the viewer may read them are `$src`, `where` keeps rows (`@` each row), a table takes no `kind`, `pack`, `id`, `search` or `params` (`DRS-2057`), a name that is not `<domain>.<name>` is `DRS-2012`. |
 | `emits:` | table, ladder (`on: row-click`), hbar (`on: bar-click`) | a list of `{ name, on, payload }`; `payload` maps a field to an expression over the clicked row (`"@.TRADE_ID"`) or to `{ bind, type }`, `type` one of `id`, `text`, `number`, `date`, `bool` |
 | `waits:` | any wired panel | what the panel says while an event it reads has not fired (default: "Pick a row in <panel> to fill this panel") |
 | `children:` (a list) | any screen or child panel | groups `{ place, show, source, waits, panels }`: `place` `expand-row` (a table or ladder), `detail-right`, `detail-below` (the default), `tabs`; `show` `on-select` (the default), `always`, `on-expand`; `panels` panels or fragment uses with ids unique on the screen; three levels at most. Written as text it is a tree table's `children: "@.KIDS"`. |
@@ -3057,7 +3057,7 @@ form compared with a date is that date. The signatures checked mode knows are th
 | Scope | Written in | Names | Aggregates |
 |---|---|---|---|
 | row | a table's column `expr`, its `filter`, `keep:` | the source (`$`, `@`, `^`), a table's columns, `param.x` | refused: "an aggregate belongs in a measure" |
-| rule | a table's `rules[].where`, a model's `security.rows` | the columns, `user.x` and `related_rows('alias')` (the rows sharing a key with the rows of another table of the model the reader sees; TABLES_GUIDE.md section 7) | refused; a rule is a condition, never removable by any function |
+| rule | a table's `rules[].where`, a model's `security.rows` | the columns, `user.x` and `related_rows('alias')` (the rows sharing a key with the rows of another table of the model the reader sees; BI_GUIDE.md section 7) | refused; a rule is a condition, never removable by any function |
 | aggregate | a model's measures, MQ `define` and `having`, a report's local measures | `alias.COLUMN` inside an aggregate, `measure('name')`, `param.x` | yes; a bare column is refused ("wrap it: sum(trades.MTM)") |
 | context | the first argument of `calc`, `share_of`, `parent_of`, `as_of` | as aggregate | yes, in an edited filter context |
 
@@ -3679,7 +3679,7 @@ You should see a ring with `484.0m` in the middle and two equal slices, `FIXED 2
 
 ### The workbench
 
-Sutras are written and previewed in the **Build workbench** (Build → New screen in the console). Its use is the
+Sutras are written and previewed in the **Build workbench** (Create → New screen in the console). Its use is the
 [Screen designer guide](#screen-designer-and-the-build-workbench) (the YAML tab is the editor, with completion from the
 [schema](#completion-and-checking-in-your-editor) and a check as you type; the Design, Summary, Problems, Tests and Versions tabs read
 the same Sutra back; saving and proposing are [section 22](#22-saving-and-proposing)). The `/studio` page
@@ -5505,19 +5505,19 @@ Each phase migrates screens only where the equivalence test proves the view unch
 New to the workbench? Follow [tutorial 19, Part B · Design a screen](../tutorials/19-build-a-pack-and-a-screen.md#part-b--design-a-screen-in-the-workbench-and-on-a-live-page) (and [tutorial 19, Part A](../tutorials/19-build-a-pack-and-a-screen.md#part-a--build-a-pack-from-your-data) to build a pack), with a picture of every step. This page is the reference for everything the workbench does, by mouse or keyboard.
 
 
-You have JSON documents (trades, shipments, patients, sensor readings) and you want a screen for them. The **workbench** (*Build → New screen*, then the design's page) is where you make it: bring your files, let Drishti draft a first screen, then **drag panels and fields onto the real screen**, size them on the grid, fill their options in a form, and watch every sample of your data against it while you work. The result is an ordinary Sutra (the layout file Drishti reads), and the YAML is one tab away when you want it.
+You have JSON documents (trades, shipments, patients, sensor readings) and you want a screen for them. The **workbench** (*Create → New screen*, then the design's page) is where you make it: bring your files, let Drishti draft a first screen, then **drag panels and fields onto the real screen**, size them on the grid, fill their options in a form, and watch every sample of your data against it while you work. The result is an ordinary Sutra (the layout file Drishti reads), and the YAML is one tab away when you want it.
 
 This guide goes step by step, with a picture of each step. The pictures are made by a script (`tools/docs/screenshots.py`), so they match the screen you have.
 
 
 ### 1. Start: bring data
 
-Open **Build → New screen**. The page asks two things: *what data do you have?* and *where should the design start?*
+Open **Create → New screen**. The page asks two things: *what data do you have?* and *where should the design start?*
 
 ![The New page: five ways to bring data, and the starting points](img/designer/01-new-flow.jpg)
 
-**Bring data** (any mix, in one go). A schema does more than make samples: with **Build → New pack** one or many schemas (and a folder of JSON Lines) become a whole pack of screens, with
-labels, links, About text and tests. The rules are in [Schema to pack](BUILD_GUIDE.md#8-the-pack-designer-build--new-pack); the samples below are the same synthetic ones that guide describes.
+**Bring data** (any mix, in one go). A schema does more than make samples: with **Create → New pack** one or many schemas (and a folder of JSON Lines) become a whole pack of screens, with
+labels, links, About text and tests. The rules are in [Schema to pack](BUILD_GUIDE.md#8-the-pack-designer-create--new-pack); the samples below are the same synthetic ones that guide describes.
 
 | You have | What happens |
 |---|---|
@@ -5818,7 +5818,7 @@ Everything the mouse does has a key. Changes are announced in a live region for 
 
 ### 16. Worked examples, one per panel family
 
-Each example in `docs/guides/examples/` opens as your own copy (*Build → Examples*, or the **Open in the workbench** link on *Help → Examples*). Each has a note on what to look for and which lines to copy. For each family below: open the copy, click the panel named, look at its inspector, then try the exercise.
+Each example in `docs/guides/examples/` opens as your own copy (*Create → Examples*, or the **Open in the workbench** link on *Help → Examples*). Each has a note on what to look for and which lines to copy. For each family below: open the copy, click the panel named, look at its inspector, then try the exercise.
 
 #### Key figures, key/value and status: [all-panels-showcase](examples/all-panels-showcase.md)
 
@@ -5917,7 +5917,7 @@ Sample contents are never logged.
 | `/studio?build=1` (with any of the above) | The same, on the **Design** tab instead of the YAML. |
 | `/studio/reviews`, `/studio/reviews/P-000042` | **Views → Approvals** (`/approvals`). The review pages moved there, unchanged. |
 
-![Build → Create, Govern, Learn: where Studio's entries went](img/designer/25-build-menu.jpg)
+![Create menu: where Studio's entries went](img/designer/25-build-menu.jpg)
 
 What Studio had, and where it is now:
 
@@ -5931,7 +5931,7 @@ What Studio had, and where it is now:
 | The entity kind and id boxes, *Load entity JSON*, *Preview against this JSON* | **Samples**: add the entity as a sample (*More ways*), or **Preview with a file…**. Samples are listed, and you move between them with ◀ ▶. |
 | *Test entities* and *Run all* | The **Tests** tab checks **every sample** against the design as you type. |
 | *Start from inference* | **Auto-design** (section 7) drafts a complete Sutra from the samples. |
-| The Sutra picker (*New Sutra…*) | **Build → New screen → an existing Sutra**, or `/studio?sutra=name@version` as above. |
+| The Sutra picker (*New Sutra…*) | **Create → New screen → an existing Sutra**, or `/studio?sutra=name@version` as above. |
 | Reviews, with the pending count | **Views → Approvals** and the *Reviews* button beside *Submit for review*. |
 
 ![File menu: Open a Sutra or sample documents, or an example as a new design](img/designer/21-file-menu.jpg)
@@ -5975,7 +5975,7 @@ The diff is the one the reviewers see: panels that only **moved** are named in w
 
 #### Changing a live Sutra when a colleague changed it first
 
-Open an existing Sutra from the registry (**Build → New screen**, *An existing Sutra*): the design is a **copy**, and the header says *edits rates-trade@1*, its **base**. If a colleague proposes and an
+Open an existing Sutra from the registry (**Create → New screen**, *An existing Sutra*): the design is a **copy**, and the header says *edits rates-trade@1*, its **base**. If a colleague proposes and an
 administrator approves a change to the same Sutra while you work, the live Sutra moves on and the header shows **base moved to rates-trade@2**; **Problems** says *The base rates-trade@1 has a newer live version, rates-trade@2.
 Ship, Rebase replays your steps on it.*
 
@@ -6008,7 +6008,7 @@ Typed YAML is sent first, so what is saved is what you see. A Sutra the server r
 
 This is the whole road in one go. It assumes you have the author right and Studio saving is on (`DRISHTI_STUDIO_SAVE=true`); a colleague with the approve right does the last step. Without those, steps 1 to 4 still work and the design waits in *My drafts* (the Build home).
 
-1. **Folder.** *Build → New screen → Choose a folder* (section 1). Drishti reads every `.json` and `.jsonl` in it as samples. Start from **Auto-design** and give the design a name, so it is kept for 90 days.
+1. **Folder.** *Create → New screen → Choose a folder* (section 1). Drishti reads every `.json` and `.jsonl` in it as samples. Start from **Auto-design** and give the design a name, so it is kept for 90 days.
 2. **Design.** The workbench opens on a first screen drawn from your data (sections 2 to 8). Drag a panel from the palette, drop a field onto it, size it on the grid, fill its options in the inspector. Everything is an undoable step.
 3. **Check.** The *Tests* tab and the status bar (`✓ 38/40`) run every sample against the design as you type (section 11). Fix the red cells: an *empty* panel is a field some sample does not have; an *error* names the reason. Switch samples with the arrows in the status bar to see why.
 4. **Propose.** Type what changed in the box beside the button and press **Submit for review** (Ctrl+S). The server runs the check again, then sends the proposal **with its evidence**: the panel-by-sample matrix, the names of the samples (not their contents), your notes and the design's identity. The status next to the title becomes *proposed P-000042*.
@@ -6023,7 +6023,7 @@ This is the whole road in one go. It assumes you have the author right and Studi
 
    ![My drafts: the design is live v1](img/designer/43-live-status.jpg)
 
-7. **Change it later.** Open the live Sutra in the workbench (*Build → New screen → An existing Sutra*): the new design remembers its **base**, the *Versions* tab (section 21) shows your changes against it, and the next proposal is a new version. If someone else changed the live Sutra meanwhile, the proposal says *stale* and must be made again from the live version.
+7. **Change it later.** Open the live Sutra in the workbench (*Create → New screen → An existing Sutra*): the new design remembers its **base**, the *Versions* tab (section 21) shows your changes against it, and the next proposal is a new version. If someone else changed the live Sutra meanwhile, the proposal says *stale* and must be made again from the live version.
 
 A design that is edited after it was proposed or approved goes back to *draft*: the status always describes the revision you are looking at.
 
@@ -6344,7 +6344,7 @@ nest does. The keyboard: **arrows** move, **Shift+arrows** pick a range, **Enter
 
 The live preview beside the sheet is drawn again in place after every change (no reload). On a phone Grid says *Grid needs a
 wider screen* and offers Outline. **Open first** (beside the modes) is the mode you open first: with Grid or Outline, Customize on a
-page opens that mode with the page's draft, and Build → Designer goes to it.
+page opens that mode with the page's draft, and Create → New screen goes to it.
 
 ![A screen laid out in named areas: a heading across, the trades beside a detail shown as tabs, a split you can drag](img/designer/layout-grid.jpg)
 
@@ -6964,7 +6964,7 @@ Suppose a new source sends this document for the kind `warehouse`, and nobody ha
 
 To try it without a data source:
 
-1. Open **Build → New screen** in the console.
+1. Open **Create → New screen** in the console.
 2. Save the document above as `WH-ROTTERDAM-2.json` and drop it on the page (it becomes a sample), and keep
    *auto-design* as the start ([SCREEN_DESIGNER §1](#1-start-bring-data)).
 
@@ -7565,8 +7565,8 @@ endpoint (C2), saved charts (C4, C5), the `chart` panel kind and Promote (C8), O
 Feature decided by the product owner, beside BI runs
 ([ARCHITECTURE.md §28](../architecture/ARCHITECTURE.md#287-bi-runs-every-bi-query-as-a-bounded-visible-job)) and the two Drishti\*net transport items ([CLUSTER_GUIDE.md](CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet)). Written
 2026-10-20 from the agreed feature, checked against the console and server code on `develop`. Builds on the pivot engine
-(drishti-bicompute on the server; `drishti_pivot-engine.js`, its browser client, and `drishti_pivot-grid.js`, its grid; [PIVOT_GUIDE.md](PIVOT_GUIDE.md)),
-the chart panels (`drishti_charts.js`, [Panels: the twenty-two kinds, and developing a new one](#panels-the-twenty-two-kinds-and-developing-a-new-one)), the BI visuals ([REPORTS_GUIDE.md](REPORTS_GUIDE.md#9-the-report-file-pages-visuals-filters-and-slicers) section 3) and
+(drishti-bicompute on the server; `drishti_pivot-engine.js`, its browser client, and `drishti_pivot-grid.js`, its grid; [BI_GUIDE.md](BI_GUIDE.md)),
+the chart panels (`drishti_charts.js`, [Panels: the twenty-two kinds, and developing a new one](#panels-the-twenty-two-kinds-and-developing-a-new-one)), the BI visuals ([BI_GUIDE.md](BI_GUIDE.md#9-the-report-file-pages-visuals-filters-and-slicers) section 3) and
 history queries ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time)).
 
 ### 1. The ask
@@ -7598,12 +7598,12 @@ The product owner, 2026-10-20: **every table can be charted.**
 | The table enhancer | `web/static/js/drishti_tables.js` | Every table that is not `data-plain` (table and ladder panels, search results, pick lists, admin lists) gets sort, column filters (`drishti_colfilter.js`), paging and keys. It builds the heading strip, so the Chart icon goes there **once** for all of them. Its keys are bound on the focused table and use only arrows, PgUp/PgDn, Home/End and Enter: **K is free**. |
 | Sutra table cells | `web/templates/_macros/panels.html` (`table`, `drill`, `pivot_table`) | Cells are **display text** (`cell_text(c)`, e.g. `1.5m`, `−30,205,543`); a column is only flagged `numeric`. Raw values are not in the page. A table cut at its `limit` says `d.more` in its footer. |
 | Panel records | `GET /api/pivot/records/{kind}/{id}/{panel}` → `ViewController.records` → `PivotBinder.records` | Every row of a panel up to `drishti.pivot.max-records` (50,000) as **raw values**, with the view's business date and masks (a masked field reads `•••`), `total` and `truncated`. **Today only for panels whose Sutra says `pivot:`**, and only the pivot's fields. |
-| The pivot engine | drishti-bicompute (Java, [PIVOT_GUIDE.md](PIVOT_GUIDE.md)); in the browser `web/static/js/drishti_pivot-engine.js` (`window.Drishti.pivotEngine`, also `module.exports` for node tests) | Every figure is computed on the server: `POST /api/pivot/query` over a source (a Export data kind, a panel's rows `panel/<kind>/<panel>/<id>`) and `POST /api/pivot/inline` over rows the page already holds (a chart of the shown rows). `drishti_pivot-engine.js` only asks and lays the answer out as a cube (`query`, `inline`, `fromAnswer`), and holds `keyText` and `format` by the Sutra's format names; it never adds up a figure. |
+| The pivot engine | drishti-bicompute (Java, [BI_GUIDE.md](BI_GUIDE.md)); in the browser `web/static/js/drishti_pivot-engine.js` (`window.Drishti.pivotEngine`, also `module.exports` for node tests) | Every figure is computed on the server: `POST /api/pivot/query` over a source (a Export data kind, a panel's rows `panel/<kind>/<panel>/<id>`) and `POST /api/pivot/inline` over rows the page already holds (a chart of the shown rows). `drishti_pivot-engine.js` only asks and lays the answer out as a cube (`query`, `inline`, `fromAnswer`), and holds `keyText` and `format` by the Sutra's format names; it never adds up a figure. |
 | The pivot grid | `web/static/js/drishti_pivot-grid.js` (`window.Drishti.PivotCore`) | The one renderer of pivot rows: the Pivot screen and a Sutra's nested `pivot` panel draw with it; + and − on groups, subtotals, the grand total, conditional formats. |
-| Saved pivot views | `/api/pivot/views` (`/api/v1/pivot/views`) | Per-user pivot views (PIVOT_GUIDE.md), shareable with roles; a cell is addressable as `pivot://owner/name@v/Measure[DIM=V]`. |
+| Saved pivot views | `/api/pivot/views` (`/api/v1/pivot/views`) | Per-user pivot views (BI_GUIDE.md), shareable with roles; a cell is addressable as `pivot://owner/name@v/Measure[DIM=V]`. |
 | Chart panels | `web/static/js/drishti_charts.js` (`window.Drishti.charts`) | `tokens(root)` reads `--d-*` from `<html>` or a shadow host, `palette(t)` (8 tokens), `compact()` numbers, `axis()`, `tooltip()`; a "Data" table under every chart for keyboards, screen readers and print; redraws on a theme change. |
 | Sutra chart kinds | [Panels: the twenty-two kinds, and developing a new one](#panels-the-twenty-two-kinds-and-developing-a-new-one): `line`, `area`, `hbar` (`shape: donut`), `scatter`, `histogram`, `waterfall` | One series per kind (or `area`'s list of bands); **no grouped or stacked bars, no combo, no second axis, no split, no Top N**. |
-| BI visuals | `drishti_bi-report.js`, `drishti_bi-grids.js`, REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 3 | Tables and matrices with raw answers (`columns` with `type` and `masked`, `rows`; BI_MODEL_SPEC 5.2), *first 1,000 of N* footers (`table-rows`), **Show as a table** / **Show as a chart** (`data-act="as-table"`) for chart visuals, **Show the rows behind this visual**. Visual types `bar` (horizontal), `column` (`stacked`, `percent`), `line`, `area`, `combo` (`values` as columns, `secondary` as lines on a second axis), `scatter`, `pie`, `donut`. |
+| BI visuals | `drishti_bi-report.js`, `drishti_bi-grids.js`, BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 3 | Tables and matrices with raw answers (`columns` with `type` and `masked`, `rows`; BI_MODEL_SPEC 5.2), *first 1,000 of N* footers (`table-rows`), **Show as a table** / **Show as a chart** (`data-act="as-table"`) for chart visuals, **Show the rows behind this visual**. Visual types `bar` (horizontal), `column` (`stacked`, `percent`), `line`, `area`, `combo` (`values` as columns, `secondary` as lines on a second axis), `scatter`, `pie`, `donut`. |
 | BI runs | [ARCHITECTURE.md §28](../architecture/ARCHITECTURE.md#287-bi-runs-every-bi-query-as-a-bounded-visible-job), `POST /api/v1/bi/runs` | Every BI question through one pipeline: inline within about 2 s, otherwise a visible run; `interaction`, `supersedes`; results reused by fingerprint, data version and security signature. |
 | History | `drishti_history-page.js`, `terminal/history.html`, `/export/history/{kind}/{id}.{csv,xlsx,json}` | One row per business day (at most `max-days`, 366); a `data-plain` table with its own document-level keys: **`k` is "previous day"** (vim style), `j` next, `C D E R P Y T 1 3 6 ?`. The market shape already draws one line (P cycles the field). |
 | Exports | `POST /export/grid.csv`, `POST /export/grid.xlsx` (`routes/export_routes.py`) | A grid the page computed (`{name, header, rows}`) as CSV (formula-safe) or Excel (bold frozen header, numbers as numbers). |
@@ -8005,7 +8005,7 @@ Offered to users with BI author powers when the table maps to a BI model:
 | Search results of a kind a BI dataset serves (the pack's dataset whose table carries the kind) | a new draft report on that dataset, one page, the visual, the search's `where` as page filters when each term maps to a field; otherwise not offered |
 | Sutra tables, history, `dom` tables | not offered: their rows are a document's nested fields or one entity over time, not a model's table |
 
-The mapping to BI visual types (REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 3):
+The mapping to BI visual types (BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 3):
 
 | Chart | BI visual | Wells and format |
 |---|---|---|
@@ -8211,7 +8211,7 @@ A user whose role masks `MTM` and a row-level rule on one desk:
 | Doc | What |
 |---|---|
 | [USER_GUIDE.md](USER_GUIDE.md) | a new section *Chart any table* (the icon and K, types, X, series, split, sort and Top N, chart all N, masks, save, export, keys, phone), linked from the table and Pivot sections and the history section |
-| [REPORTS_GUIDE.md](REPORTS_GUIDE.md) | charting a BI table, chart all N as a run, Open in BI and the combo axis rule, K beside kiosk |
+| [BI_GUIDE.md](BI_GUIDE.md) | charting a BI table, chart all N as a run, Open in BI and the combo axis rule, K beside kiosk |
 | [Panels: the twenty-two kinds, and developing a new one](#panels-the-twenty-two-kinds-and-developing-a-new-one) | the Chart icon on tables (*How a panel behaves*), `chart: false` on a table, and the new `chart` panel kind with its options, states and CSV |
 | this document, [BUILD_GUIDE.md](BUILD_GUIDE.md#11-what-a-sutra-is-and-when-one-applies) | the `chart` kind's options; promotion from the popup |
 | `config/help.yaml` | the context help card `table-chart: user-guide#chart-any-table`, and the popup's `?` links it |
@@ -9091,6 +9091,6 @@ A DAX author's first map of Rachana. There is no DAX engine: one grammar. `drish
 | `CROSSFILTER(a, b, ONEWAY)` | `via = 'name', filter = 'one_way'` (`'both'` for BOTH) |
 | `SUMX(VALUES(t[C]), m)` and `AVERAGEX`/`MINX`/`MAXX` | `sum_by(m, by = [t.C])`, `avg_by`, `min_by`, `max_by`: the row-to-filter context transition, with its grain written |
 | `SELECTEDMEASURE()` in a calculation item | `SELECTED` |
-| a calculated table | a virtual table with `from: { model: ..., query }`; see [Tables](TABLES_GUIDE.md) |
+| a calculated table | a virtual table with `from: { model: ..., query }`; see [Tables](BI_GUIDE.md) |
 
 Not converted, and named when met: `VAR`/`RETURN`, `RANKX`, `SWITCH`, `FILTER` over a whole table, `SUMX` over a table without `VALUES`. Write those by hand from the patterns above.

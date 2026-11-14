@@ -43,15 +43,28 @@ def slug(heading: str) -> str:
 def anchors(path: Path) -> set:
     text = re.sub(r"```.*?```", "", path.read_text(), flags=re.S)
     explicit = set(re.findall(r'<a\s+(?:id|name)="([^"]+)"', text))      # a page's own anchors (the sample pages' one per kind)
-    return {slug(h) for h in HEADING.findall(text)} | explicit
+    found, seen = set(), {}
+    for h in HEADING.findall(text):                          # repeats numbered as GitHub does: name, name-1, name-2
+        s = base = slug(h)
+        while s in seen:
+            seen[base] += 1
+            s = f"{base}-{seen[base]}"
+        seen[s] = 0
+        found.add(s)
+    return found | explicit
+
+
+# the documents that hold a tutorial as one of their parts, showing the pictures under docs/tutorials/img/
+SHOWING = [ROOT / "docs" / "guides" / f"{g}.md" for g in ("VAR_GUIDE", "EXPOSURE_GUIDE", "FRTB_SA_GUIDE", "SIMM_GUIDE", "BI_GUIDE", "WORLD_DATA_GUIDE", "BUILD_GUIDE")]
 
 
 TRACKS = ["Start", "Risk engines", "BI and analysis", "Data in and out", "Build", "Operate"]
 
 
 def test_the_written_tutorials_are_the_ones_kept_and_the_index_names_every_one_once_in_a_track():
-    # Twenty-two tutorials, one per major feature, numbered in track order (the docs rewrite, 2026-11-08).
-    numbers = list(range(1, 23))
+    # One per major feature, numbered in track order; the risk measures', BI's, the world data's and the source systems' tutorials are parts of
+    # their one document (VAR_GUIDE, EXPOSURE_GUIDE, FRTB_SA_GUIDE, SIMM_GUIDE, BI_GUIDE, WORLD_DATA_GUIDE, BUILD_GUIDE), so their numbers are gone.
+    numbers = [1, *range(10, 13), *range(15, 18), *range(19, 23)]
     assert [p.name[:2] for p in WRITTEN] == [f"{i:02d}" for i in numbers]
     index = (TUTORIALS / "README.md").read_text()
     rows = re.findall(r"^\|\s*(\d{1,2})\s*\|", index, re.M)
@@ -96,7 +109,7 @@ def test_every_picture_a_tutorial_shows_is_there_and_is_an_image(doc):
 
 
 def test_every_picture_file_under_the_tutorials_is_shown_by_a_tutorial():
-    shown = {(d.parent / rel).resolve() for d in WRITTEN for rel in IMAGE.findall(d.read_text())}
+    shown = {(d.parent / rel).resolve() for d in [*WRITTEN, *SHOWING] for rel in IMAGE.findall(d.read_text())}
     files = {p.resolve() for p in (TUTORIALS / "img").rglob("*.jpg")}
     own = TUTORIALS.resolve() / "img"
     assert not [p for p in shown if not p.is_file()], f"missing: {sorted(p.name for p in shown if not p.is_file())}"
@@ -134,8 +147,8 @@ def test_the_pictures_of_the_later_tutorials_are_made_by_the_script_and_shown_at
         for rel in IMAGE.findall(doc.read_text()):
             if rel.startswith("img/t1"):
                 assert Path(rel).name in listed, f"{doc.name}: {rel} is not made by tools/docs/screenshots.py"
-    for name in ("08-reports-and-dashboards.md", "20-embed-drishti.md"):
-        assert re.search(r"phone|390 px", (TUTORIALS / name).read_text()), name
+    for doc in (ROOT / "docs" / "guides" / "BI_GUIDE.md", TUTORIALS / "20-embed-drishti.md"):
+        assert re.search(r"phone|390 px", doc.read_text()), doc.name
 
 
 def test_the_sample_data_the_tutorials_use_is_in_the_repository():

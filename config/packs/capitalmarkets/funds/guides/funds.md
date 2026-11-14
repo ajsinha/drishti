@@ -21,7 +21,7 @@ report (holdings with CUSIP, ISIN and LEI, derivatives and their counterparties,
 census (ETF facts, adviser, custodian, auditor, authorised participants) and its prospectus risk/return summary (expense ratio,
 turnover, calendar-year returns). Everything is published data retrieved on 2026-10-26; the N-PORT reports are dated 2026-05-31 to 2026-07-31.
 No prices or NAV history. The full guide, with the data contract of every kind and where the data comes from, is
-`docs/guides/FUNDS_GUIDE.md`; tutorial 13, Part C walks through it.
+`docs/guides/WORLD_DATA_GUIDE.md`; the world data tutorial, Part C walks through it.
 
 The pack is **off by default**: add it to the packs a server loads, after `us-equities` (its holdings link to the companies there):
 `DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif,funds`.
@@ -97,7 +97,7 @@ Every kind of the pack has a data contract: a YAML file beside the pack (`config
 
 ## Data retrieval
 
-Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by its data feed (each source, its licence and worked examples on the [External data](../../../../../docs/guides/EXTERNAL_DATA.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
+Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by its data feed (each source, its licence and worked examples on the [External data](../../../../../docs/guides/WORLD_DATA_GUIDE.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
 
 | Command | Kind | Origin | How it reaches Drishti |
 |---|---|---|---|
@@ -125,7 +125,7 @@ python3 tools/drishti.py feed run funds --snapshot --offline                # th
 python3 tools/drishti.py feed run funds -- --scope FUNDS:300,HOLDINGS:1000  # a widened pull of more funds and holdings
 ```
 
-The same through the wrappers: `tools/feeds/feed.sh run funds` on Linux and macOS, `.\tools\windows\feed.ps1 run funds` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([EXTERNAL_DATA.md](../../../../../docs/guides/EXTERNAL_DATA.md)).
+The same through the wrappers: `tools/feeds/feed.sh run funds` on Linux and macOS, `.\tools\windows\feed.ps1 run funds` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](../../../../../docs/guides/WORLD_DATA_GUIDE.md)).
 
 ### Into the lake, checking, offline
 

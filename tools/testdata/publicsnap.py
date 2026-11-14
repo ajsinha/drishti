@@ -61,7 +61,7 @@ PACKS: dict[str, dict] = {
 }
 #: a pack with "part-bytes" has each kind's snapshot cut into parts of about that many compressed bytes, so no member is large; a kind
 #: in several parts is a tar of <kind>/<date>/snapshot.part-NN.jsonl.gz (<kind>.tar), one part the plain <kind>.<date>.jsonl.gz
-#: the kinds computed since 2.9.2 instead of stored (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md): never written to the test data again
+#: the kinds computed since 2.9.2 instead of stored (docs/guides/BI_GUIDE.md): never written to the test data again
 COMPUTED = {"us-equities": ["sic-sector"], "gleif": ["lei-group", "lei-country"]}
 #: the documents a pack's samples/ keep as reference (README data structures, docs); the rest of each kind: the first REFERENCE_EACH
 REFERENCE_IDS = {"us-equities": {"us-company": ["AAPL", "C", "F"], "index-membership": ["DJIA"], "filing-feed": ["8-K"]},

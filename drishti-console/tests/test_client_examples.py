@@ -143,12 +143,12 @@ def _model_queries():
     out = []
     sources = [(p.name, p.read_text(encoding="utf-8")) for p in [EXAMPLES / "excel" / "flight_to_excel.py",
                                                                     REPO / "clients" / "python" / "drishti_flight.py",
-                                                                    REPO / "docs" / "guides" / "FLIGHT_REFERENCE.md"]]   # the Python client section (§7) of the one Flight reference
+                                                                    REPO / "docs" / "guides" / "FLIGHT_GUIDE.md"]]   # the Python client section (§7) of the one Flight reference
     sources += [(nb.name, "\n".join("".join(c["source"]) for c in json.loads(nb.read_text(encoding="utf-8"))["cells"])) for nb in NOTEBOOKS]
     for where, text in sources:
         for m in re.finditer(r'\.model\("[\w@.-]+", (\{.*?\})\)', text, re.S):
             out.append((where, ast.literal_eval(m.group(1).replace("true", "True"))))
-    for doc in ("FLIGHT_REFERENCE.md", "FLIGHT_GUIDE.md"):
+    for doc in ("FLIGHT_GUIDE.md", "FLIGHT_GUIDE.md"):
         for line in (REPO / "docs" / "guides" / doc).read_text(encoding="utf-8").splitlines():
             if line.startswith('{"form": "model"'):
                 out.append((doc, json.loads(line)["request"]["query"]))
@@ -156,12 +156,12 @@ def _model_queries():
 
 
 def test_every_model_query_uses_the_servers_keys():
-    """A Flight model query is the MQ JSON (REPORTS_GUIDE.md): select {fields, measures}, where, sort, limit ...; the old report-visual body
+    """A Flight model query is the MQ JSON (BI_GUIDE.md): select {fields, measures}, where, sort, limit ...; the old report-visual body
     ({"fields", "measures", "orderBy"}) is refused with DRS-9150 "unknown key 'fields'"."""
     keys, queries = _mq_keys(), _model_queries()
     assert {"select", "where", "sort", "limit"} <= keys
     found = {w for w, _ in queries}
-    assert {"03_bi_model_query.ipynb", "flight_to_excel.py", "drishti_flight.py", "FLIGHT_REFERENCE.md"} <= found, found
+    assert {"03_bi_model_query.ipynb", "flight_to_excel.py", "drishti_flight.py", "FLIGHT_GUIDE.md"} <= found, found
     for where, q in queries:
         assert set(q) <= keys, f"{where}: unknown key(s) {sorted(set(q) - keys)} in {q}"
         assert set(q.get("select") or {}) <= {"fields", "measures"}, (where, q)

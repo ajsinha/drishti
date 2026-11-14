@@ -26,10 +26,10 @@ sections:
   - title: 'Counterparty risk: counterparty risk'
     file: ../packs/counterparty-risk/guides/counterparty-risk.md
   - title: 'Tutorial: var from the bank to a trade'
-    file: ../tutorials/02-var-from-the-bank-to-a-trade.md
+    file: ../guides/VAR_GUIDE.md
   - title: 'Tutorial: exposure from the bank to a trade'
-    file: ../tutorials/03-exposure-from-the-bank-to-a-trade.md
+    file: ../guides/EXPOSURE_GUIDE.md
   - title: 'Tutorial: frtb sa'
-    file: ../tutorials/04-frtb-sa.md
+    file: ../guides/FRTB_SA_GUIDE.md
   - title: 'Tutorial: simm'
-    file: ../tutorials/05-simm.md
+    file: ../guides/SIMM_GUIDE.md

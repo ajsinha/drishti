@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The pivot screen in the console (routes/pivot_routes.py; docs/guides/PIVOT_GUIDE.md): PIVOT, PIVOT <table> [date] and
+"""The pivot screen in the console (routes/pivot_routes.py; docs/guides/BI_GUIDE.md): PIVOT, PIVOT <table> [date] and
 PIVOT @owner/name, the page as a shell (mock-up A: the field list and four zones, the grid, the estimate bar, the provenance popover, the
 chart, the Export menu), every figure read from the server as the person through the same-origin proxy, the export passed through as a
 download, the server's refusals passed on in words. The figures themselves are the server's and the engine's tests (PivotCoreTest,
@@ -82,7 +82,7 @@ def test_the_page_and_the_api_are_read_as_the_person(backend, monkeypatch):
 
 
 def test_the_switches_live_pivots_and_cell_comments_are_passed_through_as_the_person(backend, monkeypatch):
-    """PIVOT_GUIDE.md: the screen's switches, live pivots, cell comments. The switches are request options the server answers; a live
+    """BI_GUIDE.md: the screen's switches, live pivots, cell comments. The switches are request options the server answers; a live
     pivot's stream and a progressive answer are relayed event by event, a refusal as one error event; comments go to the saved view."""
     sent: list = []
 

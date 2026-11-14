@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The pivot screen's Why, What-if and Functions cards (PIVOT_GUIDE.md) in a real browser against a stand-in engine: each button (and its
+"""The pivot screen's Why, What-if and Functions cards (BI_GUIDE.md) in a real browser against a stand-in engine: each button (and its
 key, W, I, U) opens its card, and the card fills with the engine's answer (Why asks the one Explain), the cells a what-if changes, the list of
 functions. The cards' script finds the screen by its root attribute; a script that misses it exits silently and the buttons do nothing, so
 every test here clicks and asserts the card's content, never only that the page loaded."""

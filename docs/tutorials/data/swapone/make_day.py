@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The mocked SwapOne day for tutorial 23 (docs/tutorials/23-add-a-source-system.md): a day of the committed mocked SwapOne data
+"""The mocked SwapOne day for the source system tutorial (docs/guides/BUILD_GUIDE.md): a day of the committed mocked SwapOne data
 (data/testdata/trades/swapone/, made by tools/samplegen/src_swapone.py: invented names and numbers, SwapOne's own snake_case fields) as
 the file a booking system would send, named for the inbox rule of the module the tutorial makes (swapone-<date>.jsonl.gz), without the
 SOURCE_SYSTEM column (the module's connector stamps it); --ready also writes the .ready file holding the SHA-256.

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# config/engines/pivot.yaml: the pivot engine (docs/guides/PIVOT_GUIDE.md). Read at start, imported by application.yaml after the jar's copy of this
+# config/engines/pivot.yaml: the pivot engine (docs/guides/BI_GUIDE.md). Read at start, imported by application.yaml after the jar's copy of this
 # file, so a key here wins over the shipped one and application.local.yaml and the environment win over both
 # (docs/guides/ADMIN_GUIDE.md section 3). Admin -> Engines writes the switch and changed: only; every other key is edited here.
 drishti:
@@ -20,7 +20,7 @@ drishti:
     pivot:
       enabled: ${DRISHTI_PIVOT_ENGINE_ENABLED:true}   # run the pivot engine on this node: /api/v1/pivot, PIVOT, Views -> Pivot, drishti.py pivot (live); its old name drishti.pivot.enabled still works
       changed: { by: "", at: "", reason: "" }   # the last change made from Admin -> Engines or drishti.py (written by the server)
-  pivot:                             # the pivot engine (docs/guides/PIVOT_GUIDE.md); the Pivot tab's keys stay in application.yaml
+  pivot:                             # the pivot engine (docs/guides/BI_GUIDE.md); the Pivot tab's keys stay in application.yaml
     max-cells: 20000                 # visible cells a view may have, totals included; over it: refused with the count (DRS-5702), never cut short
     max-holistic-cells: 5000         # the same for a view with a holistic measure (VaR, an exact median, an exact distinct count)
     busy-cells: 2000                 # a view of more cells asks busy protection before it opens deeper levels (DRS-9507)
@@ -39,7 +39,7 @@ drishti:
       confirm-above-rows: 500000000  # an estimate over this many rows asks the person first
     aggregate-only:
       min-members-per-cell: 1        # a cell with fewer members shows no figures (1: no limit; a site may set 5)
-    functions:                       # custom aggregation functions (docs/guides/PIVOT_GUIDE.md, custom functions)
+    functions:                       # custom aggregation functions (docs/guides/BI_GUIDE.md, custom functions)
       formula: true                  # DEL formulas of the built-ins as custom functions
       sql-macros: true               # DuckDB SQL macros as custom functions (a formula of built-ins is rewritten into states; any other is holistic)
       require-approval: true         # sharing a function needs an approver who is not its author (audited)
@@ -63,7 +63,7 @@ drishti:
     export:
       xlsx-max-rows: 1000000         # the most rows of an xlsx export (Excel holds 1,048,576 a sheet): over it, CSV or Arrow is offered
       rows-max: 1000000              # the most member rows an export of the underlying rows writes
-    sketches:                        # distinct counts, percentiles and top values with a stated error (PIVOT_GUIDE.md, scale)
+    sketches:                        # distinct counts, percentiles and top values with a stated error (BI_GUIDE.md, scale)
       hll-precision: 12              # HyperLogLog: 2^p registers (11 to 16); 12: 4,096 registers, ±1.6% (1.04/√m)
       kll-k: 200                     # KLL's k: ±1.65% of rank at 200 (with SQL's quantile points ±1.8%)
       top-capacity-factor: 10        # Space-Saving keeps this many counters per value shown by top(x, n)
@@ -78,7 +78,7 @@ drishti:
       advise-after-scans: 10         # a grain scanned this many times is proposed as a rollup (GET /api/v1/pivot/rollups, advice)
       dir: ""                        # where rollups are kept (blank: <data dir>/pivot/rollups)
       definitions: []                # rollups: {id, source, grain: [DESK, TRADE_DATE:month], functions: [sum(NOTIONAL_USD), count()], dates: latest|all}
-    live:                            # live pivots: a view kept current, only its moved cells pushed (PIVOT_GUIDE.md, live pivots)
+    live:                            # live pivots: a view kept current, only its moved cells pushed (BI_GUIDE.md, live pivots)
       enabled: true                  # false: no Live switch, POST /api/v1/pivot/live refused (DRS-5721)
       max-per-person: 5              # live views one person may hold
       max-total: 200                 # live views this node holds

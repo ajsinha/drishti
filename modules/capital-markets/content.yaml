@@ -31,5 +31,5 @@ copy:
   - connectors
 - from: ../../config/lenses/capitalmarkets/markets.yaml
   to: lenses/markets.yaml
-- from: ../../docs/tutorials/13-world-data.md
-  to: tutorials/13-world-data.md
+- from: ../../docs/guides/WORLD_DATA_GUIDE.md
+  to: guides/WORLD_DATA_GUIDE.md

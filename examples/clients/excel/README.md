@@ -78,4 +78,4 @@ xw.books.active.sheets.add("P&L").range("A1").options(index=False).value = df
 
 Excel's Data → Get Data → From ODBC reads BI models through Flight SQL with an Arrow Flight SQL ODBC driver (a schema per model, a table
 per alias). That driver is an **installer**, so it is not for machines where no program may be installed (the Windows QA machine among
-them); the Python route above needs none. The DSN and the model: [docs/guides/FLIGHT_REFERENCE.md](../../../docs/guides/FLIGHT_REFERENCE.md#74-odbc-excel-power-bi-tableau).
+them); the Python route above needs none. The DSN and the model: [docs/guides/FLIGHT_GUIDE.md](../../../docs/guides/FLIGHT_GUIDE.md#74-odbc-excel-power-bi-tableau).

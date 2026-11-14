@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Tutorial 8, Part B: a derived dataset. The same table as cp-pnl-exposure, made by the Python Transform mtm-vs-exposure from the same two questions.
+# The reports tutorial, Part B: a derived dataset. The same table as cp-pnl-exposure, made by the Python Transform mtm-vs-exposure from the same two questions.
 rachana: 1
 dataset: cp-pnl-exposure-py
 version: 1

@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The View picker in front of the pivot's compact line (PIVOT_GUIDE.md sections 2 and 11, mode C): the ready-made layouts of the source
+/* The View picker in front of the pivot's compact line (BI_GUIDE.md sections 2 and 11, mode C): the ready-made layouts of the source
    (a preset's views:), then My views and Shared with me (the saved and shared views), and Save view as… (Personal or Shared). The grid
    draws it; the host's views hook lists, opens and saves (GridOptions.views): no store of the grid's own. A layout changed since its view
    was opened shows a dot, with Revert. Keys: Shift+V opens it, 1–9 pick a ready-made view, Enter opens the active one, Ctrl+S saves. */

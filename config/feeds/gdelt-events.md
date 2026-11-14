@@ -9,7 +9,7 @@
 
 GDELT, events and tone by country.
 
-The economy module's public-sector gdelt-events pack (docs/guides/PUBLIC_SECTOR_GUIDE.md): What the world's news reported about each country yesterday, from the GDELT Project's daily event files: the number of events whose first actor is the country, how widely they were reported, their average tone and Goldstein scale, the share of conflict and of cooperation, the events by CAMEO category, thirty days of history and the most-mentioned stories, each a link to the original. The world map is shaded by tone. Free and open with a citation (GDELT terms). Filled daily by the gdelt-events feed into the newslake lake.
+The economy module's public-sector gdelt-events pack (docs/guides/WORLD_DATA_GUIDE.md): What the world's news reported about each country yesterday, from the GDELT Project's daily event files: the number of events whose first actor is the country, how widely they were reported, their average tone and Goldstein scale, the share of conflict and of cooperation, the events by CAMEO category, thirty days of history and the most-mentioned stories, each a link to the original. The world map is shaded by tone. Free and open with a citation (GDELT terms). Filled daily by the gdelt-events feed into the newslake lake.
 
 | | |
 |---|---|
@@ -28,7 +28,7 @@ python3 tools/drishti.py feed run gdelt-events                # pull today, writ
 python3 tools/drishti.py feed status gdelt-events             # its last runs
 ```
 
-Daily: `python3 tools/drishti.py feed schedule --cron` (or `--systemd`, `--windows`). The guide: [EXTERNAL_DATA.md](../../docs/guides/EXTERNAL_DATA.md).
+Daily: `python3 tools/drishti.py feed schedule --cron` (or `--systemd`, `--windows`). The guide: [WORLD_DATA_GUIDE.md](../../docs/guides/WORLD_DATA_GUIDE.md).
 
 ## Data contract
 

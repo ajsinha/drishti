@@ -33,7 +33,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
 /**
- * The virtual tables' beans ({@code drishti.tables.*}, TABLES_GUIDE.md section 7a): the catalogue under {@code drishti.tables.root} and the
+ * The virtual tables' beans ({@code drishti.tables.*}, BI_GUIDE.md section 7a): the catalogue under {@code drishti.tables.root} and the
  * reads for a viewer (the request's {@link com.ash.drishti.engine.ViewerContext}: who, their attributes, masks and kinds), and the view
  * pipeline's port for panels whose source is a virtual table (docs/architecture/ARCHITECTURE.md V13).
  */

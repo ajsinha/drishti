@@ -389,7 +389,7 @@ on sec.gov.
 
 Every kind's links to its data contract and its example and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/us-equities.md](guides/us-equities.md): *Data contracts* and *Data retrieval*.
 
-External data: SEC EDGAR (submissions, company facts XBRL); Wikidata; GLEIF LEI records; Nasdaq Trader symbol directory; Yahoo Finance (us-equities-prices connector, yfinance plugin) (**internal only**). Each source's URL, licence and data feed are on the External data help page, [docs/guides/EXTERNAL_DATA.md](../../../../docs/guides/EXTERNAL_DATA.md).
+External data: SEC EDGAR (submissions, company facts XBRL); Wikidata; GLEIF LEI records; Nasdaq Trader symbol directory; Yahoo Finance (us-equities-prices connector, yfinance plugin) (**internal only**). Each source's URL, licence and data feed are on the External data help page, [docs/guides/WORLD_DATA_GUIDE.md](../../../../docs/guides/WORLD_DATA_GUIDE.md).
 
 ## Enabling and dependencies
 
@@ -407,9 +407,9 @@ Settings (environment variables) its connectors read: `DRISHTI_LAKE_ENABLED`, `D
 
 ## Refreshing the data
 
-The data feed `us-equities` (config/feeds/us-equities.yaml) pulls `us-company`, `index-membership`, `filing-feed`, `filing`, `financial-fact`: `python3 tools/drishti.py feed run us-equities` fetches them daily into `data/datafeeds/us-equities/<date>/` and loads them into the lake `capitalmarket`; `--dry-run` says what it would fetch, changing nothing; `--snapshot` refreshes the committed snapshot in data/testdata instead; `feed status` shows the last runs. The External data feeds guide (docs/guides/EXTERNAL_DATA.md) has the schedule entries for Linux and Windows.
+The data feed `us-equities` (config/feeds/us-equities.yaml) pulls `us-company`, `index-membership`, `filing-feed`, `filing`, `financial-fact`: `python3 tools/drishti.py feed run us-equities` fetches them daily into `data/datafeeds/us-equities/<date>/` and loads them into the lake `capitalmarket`; `--dry-run` says what it would fetch, changing nothing; `--snapshot` refreshes the committed snapshot in data/testdata instead; `feed status` shows the last runs. The External data feeds guide (docs/guides/WORLD_DATA_GUIDE.md) has the schedule entries for Linux and Windows.
 
-The data feed `yahoo-prices` (config/feeds/yahoo-prices.yaml) pulls `price-history`: `python3 tools/drishti.py feed run yahoo-prices` fetches them daily into `data/datafeeds/yahoo-prices/<date>/` and loads them into the lake `capitalmarket` (internal use only); `--dry-run` says what it would fetch, changing nothing; `feed status` shows the last runs. The External data feeds guide (docs/guides/EXTERNAL_DATA.md) has the schedule entries for Linux and Windows.
+The data feed `yahoo-prices` (config/feeds/yahoo-prices.yaml) pulls `price-history`: `python3 tools/drishti.py feed run yahoo-prices` fetches them daily into `data/datafeeds/yahoo-prices/<date>/` and loads them into the lake `capitalmarket` (internal use only); `--dry-run` says what it would fetch, changing nothing; `feed status` shows the last runs. The External data feeds guide (docs/guides/WORLD_DATA_GUIDE.md) has the schedule entries for Linux and Windows.
 
 The pack's files are written by `tools/packgen/us_equities/make.py`; its `--check` fails when the committed files differ from what it would write.
 

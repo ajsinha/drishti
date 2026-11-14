@@ -20,7 +20,7 @@ import com.ash.drishti.bicompute.harness.FunctionCheck;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Custom pivot functions' settings, {@code drishti.pivot.functions} (PIVOT_GUIDE.md, custom functions; config/engines/pivot.yaml).
+ * Custom pivot functions' settings, {@code drishti.pivot.functions} (BI_GUIDE.md, custom functions; config/engines/pivot.yaml).
  *
  * @param formula DEL formulas as custom functions
  * @param sqlMacros SQL macros as custom functions

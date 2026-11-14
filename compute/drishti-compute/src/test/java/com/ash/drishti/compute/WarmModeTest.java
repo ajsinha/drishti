@@ -31,7 +31,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * Warm mode, the way workers run on Windows (no fork; docs/guides/NOTEBOOK_GUIDE.md section 7.2): it runs on every platform, so the
+ * Warm mode, the way workers run on Windows (no fork; docs/guides/BI_GUIDE.md section 7.2): it runs on every platform, so the
  * Windows QA machine runs these with the console's Python and no native binary. Registered state is cleared between requests, a crash or a
  * timeout replaces the worker, and a worker is recycled after {@code recycle-after} requests.
  */

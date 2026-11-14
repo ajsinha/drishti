@@ -76,9 +76,9 @@ that see it). Contract pages are those of §4.
 | # | Guide (feeds) | Lines | Tutorial (feeds) | Lines | Contracts linked | Help |
 |---|---|---|---|---|---|---|
 | F1 | `USER_GUIDE.md` (USER_GUIDE, console sharing guide, COLLABORATION user parts, lens intros) | 1,200 | `01-first-15-minutes` (01, 02, 03, 08, 21) | 600 | — | Start / core / all |
-| F2 | `PIVOT_GUIDE.md` (PIVOT_GUIDE, MR_CUBE_GUIDE, PIVOT_ENGINE use, FUNCTION_CATALOGUE how-to) | 1,200 | `pivot-cubes-and-explain` (33, 37, 38) | 550 | VAR, PNL | Analyse / core / all (cube preset: risk) |
-| F3 | `REPORTS_GUIDE.md` (BI_GUIDE rewritten, BI_DESIGN user parts) | 1,800 | `reports-and-dashboards` (09, 10, 11, 12, 13, 18, 20) | 800 | — | Analyse / core / all |
-| F4 | `NOTEBOOK_GUIDE.md` (BI_GUIDE Python parts, PYTHON_COMPUTE) | 700 | `notebook-and-python` (14) | 450 | — | Analyse / core / all |
+| F2 | `BI_GUIDE.md` (PIVOT_GUIDE, MR_CUBE_GUIDE, PIVOT_ENGINE use, FUNCTION_CATALOGUE how-to) | 1,200 | `pivot-cubes-and-explain` (33, 37, 38) | 550 | VAR, PNL | Analyse / core / all (cube preset: risk) |
+| F3 | `BI_GUIDE.md` (BI_GUIDE rewritten, BI_DESIGN user parts) | 1,800 | `reports-and-dashboards` (09, 10, 11, 12, 13, 18, 20) | 800 | — | Analyse / core / all |
+| F4 | `BI_GUIDE.md` (BI_GUIDE Python parts, PYTHON_COMPUTE) | 700 | `notebook-and-python` (14) | 450 | — | Analyse / core / all |
 | F5 | `AI_GUIDE.md` (admin/AI) | 700 | `ai-assistant` (15) | 400 | — | Analyse / core / all |
 | F6 | `APPROVALS_GUIDE.md` (WRITE_BACK, COLLABORATION approvals) | 600 | `correct-and-approve` (24) | 300 | trading, core | Analyse / core / all |
 | R1 | `VAR_GUIDE.md` (VAR_GUIDE, PARAMETRIC_VAR, VAR_PLAYGROUND, VAR_SHARDING use) | 2,500 | `var-from-the-bank-to-a-trade` (25, 43) | 900 | VAR, PNL, STR, market-risk | Risk / risk / risk, trading, CRO |
@@ -86,12 +86,12 @@ that see it). Contract pages are those of §4.
 | R2 | `EXPOSURE_GUIDE.md` | 1,400 | `exposure-from-the-bank-to-a-trade` (26) | 550 | EXP, NSET, LIM, counterparty-risk | Risk / risk / risk, CRO |
 | R3 | `FRTB_SA_GUIDE.md` (+ SENSITIVITIES_AND_FRTB_SA) | 600 | `frtb-sa` (30) | 300 | FRTB, TVAL | Risk / risk / risk |
 | R4 | `SIMM_GUIDE.md` | 600 | `simm` (32) | 300 | SIMM, NSET | Risk / risk / risk |
-| R5 | `GROUPINGS_ANALYTICS_GUIDE.md` | 800 | `groupings-and-analytics` (27) | 500 | TRADING_GROUPINGS, GRP | Risk / risk / risk, trading |
+| R5 | `BI_GUIDE.md` | 800 | `groupings-and-analytics` (27) | 500 | TRADING_GROUPINGS, GRP | Risk / risk / risk, trading |
 | R6 | `BANK_DATA_GUIDE.md` (pack guides core, banking-data-model, trading, trading-products, market-data, market-data-catalogue, market-risk, counterparty-risk; knowledge intros) | 1,200 | `a-day-of-bank-data` (07) | 400 | core, trading, market-data, market-risk, counterparty-risk | Data / risk / risk, trading, market |
 | W1 | `WORLD_DATA_GUIDE.md` (FUNDS_GUIDE, EXTERNAL_DATA, pack guides world-economy, us-equities, funds, gleif, news-and-markets) | 1,500 | `world-data` (28 widened) | 500 | world-economy, us-equities, funds, gleif, news-and-markets | Data / world / world |
 | B1 | `DATA_GUIDE.md` (DATA_GUIDE, CONNECTORS, CONNECTOR_FILES, TLS, DEMO_DATA, connector types) | 1,000 | `connect-your-data` (04) | 300 | the kind being loaded | Data / core / all |
 | B1b | `DATA_LAKE_GUIDE.md` (written 2.9.11.d: LAKE_GUIDE, DATA_LOAD_RULES and DATALOAD_INBOX folded in, DATA_GUIDE's lakehouse, archive, feed and inbox sections; later IN_MEMORY_LAKE_GUIDE, LAKE_CONFIG use) | 1,100 | `load-your-own-data-into-a-new-lake` (45; 34, 36, 31, 29's lake part) | 500 | VAR, the kinds being loaded | Data / core / all |
-| B2 | `TABLES_GUIDE.md` (+ VIRTUAL_TABLES, EDITORS 1–4) | 800 | `tables-and-models` (44) | 400 | — | Build / core / all |
+| B2 | `BI_GUIDE.md` (+ VIRTUAL_TABLES, EDITORS 1–4) | 800 | `tables-and-models` (44) | 400 | — | Build / core / all |
 | B3 | `BUILD_GUIDE.md` (PACK_DEVELOPER I–VII, SUTRA_DEVELOPER, SCHEMA_TO_PACK, WRITE_BACK form design, MOBILE_DISPLAY) | 2,000 | `build-a-pack-and-a-screen` (05, 06, 23) | 700 | — | Build / core / all |
 | B4 | `FLIGHT_GUIDE.md` (+ export) | 500 | `data-out` (35) | 300 | — | Data / core / all |
 | B5 | `EMBED_GUIDE.md` (CLIENT_RENDERER user parts) | 800 | `embed-drishti` (16) | 300 | — | Build / core / all |
@@ -104,7 +104,7 @@ Totals: guides about 27,600 lines (today about 110k across guides, admin, connec
 Tutorials are renamed `NN-<slug>.md` in track order (pictures are re-shot anyway; Help's `moved:` keeps old addresses).
 
 **References** (one home each, mostly generated; Help → Reference, core, all): `CONFIGURATION.md`, `API_REFERENCE.md`, `CLI_REFERENCE.md`,
-`FUNCTIONS.md`, `RACHANA_REFERENCE.md`, `VIEWMODEL.md`, `FLIGHT_REFERENCE.md`, `BENCHMARK.md`, `UNDER_CONSTRUCTION.md`, the data contracts, the
+`FUNCTIONS.md`, `RACHANA_REFERENCE.md`, `VIEWMODEL.md`, `FLIGHT_GUIDE.md`, `BENCHMARK.md`, `UNDER_CONSTRUCTION.md`, the data contracts, the
 Knowledge primers and the release notes. Help listed entries: 79 → about 60 (each guide and its tutorial on one row).
 
 ## 3. Every existing document

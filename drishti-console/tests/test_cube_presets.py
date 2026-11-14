@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The risk cubes are Pivot presets (config/pivot-presets.yaml; docs/guides/PIVOT_GUIDE.md › Presets: the risk cubes): one grid, several doors.
+"""The risk cubes are Pivot presets (config/pivot-presets.yaml; docs/guides/BI_GUIDE.md › Presets: the risk cubes): one grid, several doors.
 
 **Parity.** ``fixtures/cube_presets/mcube_before.json`` was recorded from the MR cube's own page (``/mcube``, before it became the preset) for
 eight typed MCUBE commands: the source, the lens, the view laid over the landing, the saved view and the date the pivot screen asked the server

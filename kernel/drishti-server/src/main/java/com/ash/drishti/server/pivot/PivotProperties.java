@@ -20,7 +20,7 @@ import com.ash.drishti.bicompute.sql.DuckDbExecutor;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * The pivot engine's settings (PIVOT_GUIDE.md, configuration), {@code drishti.pivot}: the same section as the Pivot tab's (whose keys this
+ * The pivot engine's settings (BI_GUIDE.md, configuration), {@code drishti.pivot}: the same section as the Pivot tab's (whose keys this
  * record leaves alone); {@code enabled} switches both.
  *
  * @param enabled the engine (and the Pivot tab): off, {@code /api/v1/pivot} answers {@code 404 DRS-5703} in words

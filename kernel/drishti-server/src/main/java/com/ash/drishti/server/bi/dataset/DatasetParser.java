@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 /**
- * A table of the table layer ({@code rachana: 3}, TABLES_GUIDE.md) as the {@link Dataset} BI's compiler plans over: the one-table dataset of the
+ * A table of the table layer ({@code rachana: 3}, BI_GUIDE.md) as the {@link Dataset} BI's compiler plans over: the one-table dataset of the
  * table's implicit model ({@link com.ash.drishti.server.bi.layer.Standalone}). BI's own dataset files ({@code rachana: 1} and {@code 2}) are not
  * read: {@code drishti.py tables migrate} writes them as tables and models ({@code DRS-9196}). Never throws for a bad document; the problems come
  * back with their DRS code and the path of the offending key.
@@ -70,7 +70,7 @@ public final class DatasetParser {
         }
         List<Problem> out = new ArrayList<>();
         out.add(new Problem("error", MIGRATE_FIRST, "", "not a table of the table layer (rachana: 3 with table:): a dataset in BI's old form is migrated by "
-                + "drishti.py tables migrate (TABLES_GUIDE.md, the migration)"));
+                + "drishti.py tables migrate (BI_GUIDE.md, the migration)"));
         return new Result(null, out);
     }
 

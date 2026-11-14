@@ -28,7 +28,7 @@
 
     python3 drishti_flight.py --url grpc+tls://host:18815 --token drk_… kind trade --paths TRADE_ID,DESK,MTM > trades.csv
 
-A request is the same Rachana request the REST API takes (the reference: docs/guides/FLIGHT_REFERENCE.md). ``read`` asks the service for the
+A request is the same Rachana request the REST API takes (the reference: docs/guides/FLIGHT_GUIDE.md). ``read`` asks the service for the
 plan (GetFlightInfo), then reads every part from the node that holds it, in parallel, trying the next node of a part when one is down.
 Every read is as the token's person (or the person an application acts for, ``on_behalf_of``), with their entitlements and masks, and is
 audited. A refusal raises ``FlightRefused`` with Drishti's code (``DRS-5604`` …).
@@ -235,7 +235,7 @@ class Flight:
         return self.read(self.request("kind", q))
 
     def model(self, model: str, query: dict | None = None):
-        """A BI model query (MQ, REPORTS_GUIDE.md): its keys ``select`` ({"fields": [...], "measures": [...]}), ``where``, ``sort``,
+        """A BI model query (MQ, BI_GUIDE.md): its keys ``select`` ({"fields": [...], "measures": [...]}), ``where``, ``sort``,
         ``limit``, ``time`` ...; ``mq: 1`` is added by the server."""
         return self.read(self.request("model", {"model": model, "query": query or {}}))
 

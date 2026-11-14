@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Tutorial 9, step 12: the Python dataset the Transform editor wrote: the kind trade read straight through the connector trade-endur, as the reader.
+# The Notebook tutorial, step 12: the Python dataset the Transform editor wrote: the kind trade read straight through the connector trade-endur, as the reader.
 rachana: 2
 dataset: endur-trades-cleaned
 title: ENDUR trades, cleaned

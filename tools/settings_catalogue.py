@@ -145,7 +145,7 @@ AREAS = [
          "`drishti.metrics.alerts.file` names the file, read again when it changes. A rule's name is the site's own."),
     Area("feeds", "Data feeds: `config/feeds/<feed>.yaml`",
          "One file per data feed: the source, its datasets and the lake they load, the schedule, the licence and the keys "
-         "(environment variables only) ([EXTERNAL_DATA.md section 7](../guides/EXTERNAL_DATA.md#7-the-feed-file-every-key)); read by "
+         "(environment variables only) ([WORLD_DATA_GUIDE.md section 7](../guides/WORLD_DATA_GUIDE.md#7-the-feed-file-every-key)); read by "
          "`drishti.py feed` at every run. The keys below are those of the annotated `gleif.yaml`; `keys:` names API keys as `${ENV}`."),
     Area("reports", "Report definitions: `config/reports/banking/`",
          "One YAML per regulatory report (`drishti.regulatory.reports-dir`), read when a run is made: its rows, columns, checks, outputs "

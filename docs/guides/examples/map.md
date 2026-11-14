@@ -18,7 +18,7 @@ A country on the map: the world with the country highlighted, and the same count
 
 **Panel kinds:** `map`, `kv`.
 
-**Open it:** in the workbench, **Build → New → Examples** and pick `map`: it opens as a copy (this Sutra, the JSON as samples, this note as notes). Or **File → Open** in the workbench with `map.sutra.yaml` and `map.json`.
+**Open it:** in the workbench, **Create → New → Examples** and pick `map`: it opens as a copy (this Sutra, the JSON as samples, this note as notes). Or **File → Open** in the workbench with `map.sutra.yaml` and `map.json`.
 
 **What to look for:** the left map draws the world with Australia in the accent colour (`highlight: $.ISO3` takes an ISO alpha-3 or alpha-2 code, or the English name); the right map draws Australia's states and territories (`region: $.ISO3`, ISO 3166-2 codes such as `AU-NSW`); small territories are dots so they can still be clicked. Both are drawn from shapes shipped with the console: nothing is fetched from the internet.
 

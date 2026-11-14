@@ -249,7 +249,7 @@ approvals tool (the badge beside the bell).
 |---|---|---|---|
 | Sutra | Screens | an approver (four eyes) | a workbench save, a designed screen, a terminal layout promoted ([USER_GUIDE.md › Reviews](USER_GUIDE.md#reviews-approving-a-sutra)) |
 | Correction | Data | an approver of changes (the policy may ask for several) | a form's Submit, `drishti.py change propose` ([section 4](#4-submitting-a-change)) |
-| BI item | Data | a bi-steward, or a member of the workspace with the approve power | *Propose for review* on a dataset, model, report or board ([REPORTS_GUIDE.md](REPORTS_GUIDE.md)) |
+| BI item | Data | a bi-steward, or a member of the workspace with the approve power | *Propose for review* on a dataset, model, report or board ([BI_GUIDE.md](BI_GUIDE.md)) |
 | Pivot function | Data | an approver (a Java plug-in: an administrator); with a sharing scope | `pivot functions submit` |
 | Stress window | Risk | someone who sees every node, never the proposer | *Freeze and propose* on `SWIN` |
 | Report sign-off | Risk | the next step of the chain (maker, checker, approver); one person signs one step | `VAR REPORT <report> <period>`, *Generate* |
@@ -423,7 +423,7 @@ A lane deeper than `lanes.max-lane-depth` (1,000) refuses new changes with *busy
 ## 10. Writing to a source: `writes:`
 
 A connector says **how** to change a record in its system; the Sutra's form (or a blotter's `edit:`) says **what** may change; the lane
-owner says **when** and in what order. The JDBC and Kafka plugins write (Kafka's `kafka:` commands: [Live results and blotters, section 8](../../modules/trading/docs/guide.md#8-writing-back-to-the-records-own-source)); the file, Delta and Iceberg plugins never do (a lake is not written per change), and
+owner says **when** and in what order. The JDBC and Kafka plugins write (Kafka's `kafka:` commands: [Live results and blotters, section 8](LIVE_RESULTS_GUIDE.md#8-writing-back-to-the-records-own-source)); the file, Delta and Iceberg plugins never do (a lake is not written per change), and
 any other plugin is refused with *plugin … cannot write*.
 
 A command needs a **concurrency guard** (it changes the row only if it is still the version the person saw) and an **idempotency clause**

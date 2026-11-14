@@ -38,7 +38,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * The screen's switches as the engine answers them (PIVOT_GUIDE.md, the screen's switches; ARCHITECTURE.md sections 26.3, 26.6): exact,
+ * The screen's switches as the engine answers them (BI_GUIDE.md, the screen's switches; ARCHITECTURE.md sections 26.3, 26.6): exact,
  * auto and ≈ each give the answer they name and say so in {@code computedAs}; "use rollups" off reads the table and says so, on answers
  * from the rollup with the same figures; a level's top N by a count is chosen by a Space-Saving summary only when ≈ is asked, its figures
  * exact and its members within the summary's stated bound; the Space-Saving summary keeps its bounds through a merge.

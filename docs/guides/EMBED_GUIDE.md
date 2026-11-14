@@ -524,7 +524,7 @@ table*, and, for a report over a live table, a live bar and redraws as the data 
 looking, so their row rules and masks apply to every update). Not in the element: drill down and through, *Alert me*, *Show the rows
 behind this visual*, Export and Subscribe, creating bookmarks, and cross-filtering **between** two elements. A `perspective-*` visual is
 drawn as in the viewer, Drishti's own grid of the server's answer (no element loads WebAssembly). How reports are made and published:
-[REPORTS_GUIDE.md](REPORTS_GUIDE.md).
+[BI_GUIDE.md](BI_GUIDE.md).
 
 ```html
 <drishti-report id="rep" report="file:report:live-trading-desk"
@@ -564,7 +564,7 @@ user's roles open. The application needs the scope `embed:report`, and only a **
 retries a `429` by itself.
 
 **On a phone.** The element measures **its own width**: at 640 px or narrower it draws the report's `layouts.phone` for the page when the
-report has one ([REPORTS_GUIDE.md](REPORTS_GUIDE.md)), else the automatic single column, and swaps back as it grows, with no reload. A
+report has one ([BI_GUIDE.md](BI_GUIDE.md)), else the automatic single column, and swaps back as it grows, with no reload. A
 hidden visual is not queried. `drishti:page-changed` carries `phone: true` when the arranged page is on screen.
 
 ![The report in a host's card at 390 px, with its phone layout](img/bi-elements/host-phone-390.png)
@@ -1262,7 +1262,7 @@ const grid = new Grid(el, {
 ```
 
 The Explain hook answers words, an element or an ExplainResult, and the grid shows it in its layout's place; the Pivot screen's own
-hook (`static/js/drishti_pivot.js`, `explain`) is the complete example. The view is the pivot engine's ([PIVOT_GUIDE.md](PIVOT_GUIDE.md));
+hook (`static/js/drishti_pivot.js`, `explain`) is the complete example. The view is the pivot engine's ([BI_GUIDE.md](BI_GUIDE.md));
 paged and live rows come from drishti-data (`serverSideSource(url)`, `restSource(url)`, `arrowSource(url)`, `live({url})`). **Where the
 page runs**: the console's `/api/` answers its own origin with the person's session, so an application calls it from behind the same
 origin (a path on the same host or a reverse proxy). From another origin, register the application as a host application
@@ -1298,7 +1298,7 @@ is `CHANGELOG.md` in the archive, the lines of the product's CHANGELOG whose lea
 ### 13.8 More
 
 - The API reference of every library, generated from the typed JSDoc: [ELEMENTS_API.md](ELEMENTS_API.md) (and the `.d.ts` files).
-- The gallery, every component live with its code: `/elements` on a Drishti console (Build → Learn → Elements;
+- The gallery, every component live with its code: `/elements` on a Drishti console (Create → Learn → Elements;
   [ELEMENTS.md section 8.4](../architecture/ELEMENTS.md#84-as-built-the-gallery)).
 - Moving an AG Grid Enterprise pivot application: [chapter 14](#14-moving-an-ag-grid-enterprise-pivot-app).
 - How the distribution is built: [ELEMENTS.md section 8.7](../architecture/ELEMENTS.md#87-as-built-the-distribution).
@@ -1542,5 +1542,5 @@ An option the adapter does not know at all is reported as `unknown`. A string ex
 - Compare a pivot's figures with the old grid's on the same data: sums, counts, averages, mins, maxes and custom aggregations are
   computed the same way from the same members; a non-additive measure now comes from the server at every total.
 - Your event handlers run with the same names; check the fields they read against [14.4](#144-what-differs).
-- The gallery (Build → Learn → Elements, `/elements`) shows any grid's options in AG Grid's shapes on its AG Grid adapter tab, and the
+- The gallery (Create → Learn → Elements, `/elements`) shows any grid's options in AG Grid's shapes on its AG Grid adapter tab, and the
   adapter's demo draws a pivot made from them.

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of tutorial 8, Part A, Your first BI report (docs/tutorials/08-reports-and-dashboards.md), written to docs/tutorials/img/t10/.
+"""Pictures of tutorial 8, Part A, Your first BI report (docs/guides/BI_GUIDE.md), written to docs/tutorials/img/t10/.
 
 A report is built on the World economics sample dataset in the designer (two cards, a map, a bar, a dropdown slicer), looked at (a click on a country, the
 drill to its regions and back), published, and then the slicers of the Trades overview sample and the cross-filter of Counterparty risk are shown."""

@@ -41,7 +41,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Custom pivot functions on this server (PIVOT_GUIDE.md, custom functions): the store in the content store, who may approve (an
+ * Custom pivot functions on this server (BI_GUIDE.md, custom functions): the store in the content store, who may approve (an
  * administrator, or a member of {@code approver-role}), the audit log, the SQL runner for holistic macros (the pivot executor), the
  * {@code pivot-fn} Python pool (only when Python functions are on) and the plug-in folder (only when Java plug-ins are on); then the engine's
  * core resolves {@code fn:owner/name@v(...)} through them, and the tabular provider feeds functions without an SQL form in batches.

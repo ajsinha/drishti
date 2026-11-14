@@ -24,7 +24,7 @@
 {% block content %}
 <div class="adm bs pd" data-pack-designer data-can-author="{{ 'true' if can_author else 'false' }}" data-is-admin="{{ 'true' if is_admin else 'false' }}"
      data-max-mb="{{ limits.maxMb }}" data-accept="{{ limits.accept | join(',') }}">
-  <nav class="crumbs" aria-label="Breadcrumb"><a href="/build">My designs</a> · <a href="/help/build-guide#8-the-pack-designer-build--new-pack">Pack designer guide <span aria-hidden="true">?</span></a></nav>
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/build">My designs</a> · <a href="/help/build-guide#8-the-pack-designer-create--new-pack">Pack designer guide <span aria-hidden="true">?</span></a></nav>
   <h1>New pack</h1>
   {% if not can_author %}<p class="pd-warn" role="note">Your roles do not include the author power (the built-in author and admin roles hold it, and an administrator can give it to another role in Admin → Roles). You can look, but not start a pack.</p>{% endif %}
   <div class="pd-work">

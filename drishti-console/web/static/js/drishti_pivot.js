@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* The pivot screen (terminal/pivot.html; PIVOT_GUIDE.md section 2): drawn by drishti-grid (Drishti Elements). It opens as the View picker
+/* The pivot screen (terminal/pivot.html; BI_GUIDE.md section 2): drawn by drishti-grid (Drishti Elements). It opens as the View picker
    in front of the compact line (mode views, C + B: Rows · Columns · Filters · Values on one line, a picker behind each), or the compact
    line alone (compact), or the Fields and Build panes (panes, A, behind Customize › and \); a preset, a Sutra's pivot: or the address
    names the mode. The catalogue of the source becomes the grid's fields with their metadata (group, display folder, hidden under More
@@ -602,7 +602,7 @@
     });
   }
 
-  /** An administrator's suggestions (PIVOT_GUIDE.md, documents): the paths people typed most, with Promote and Add to dataset. */
+  /** An administrator's suggestions (BI_GUIDE.md, documents): the paths people typed most, with Promote and Add to dataset. */
   function suggestions(source) {
     var box = $("[data-pv-paths]");
     box.innerHTML = "";
@@ -656,7 +656,7 @@
     }).catch(function (e) { notice(e.message); });
   }
 
-  // ---- the modes and the View picker (PIVOT_GUIDE.md sections 2 and 11) ----------------------------------------------------------------
+  // ---- the modes and the View picker (BI_GUIDE.md sections 2 and 11) ----------------------------------------------------------------
 
   /** How the screen opens: the address's mode, else the person's kept choice of the panes, else the view's (a preset's, a Sutra's
       pivot: block), else views (the View picker in front of the compact line). */

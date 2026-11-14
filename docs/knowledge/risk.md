@@ -159,7 +159,7 @@ trade wins, and the figures say *intraday*. The official end-of-day numbers stay
 ### Market risk: a worked example on the demo data
 
 From a scratch server over the demo lake built on the test data's own date (`drishti.py lake demo --as-of data`, as the
-[VaR guide](../guides/VAR_GUIDE.md) and [tutorial 2, Part A](../tutorials/02-var-from-the-bank-to-a-trade.md#part-a--historical-var-from-the-bank-to-a-trade) use it): business date
+[VaR guide](../guides/VAR_GUIDE.md) and [the VaR tutorial, Part A](../guides/VAR_GUIDE.md#part-a--historical-var-from-the-bank-to-a-trade) use it): business date
 **2026-09-30**, batch `B-2026-09-30-01`, scenario set `HS-509`. (The default `lake demo` moves the days to end today, and trades
 matured since drop out, so its figures differ.)
 
@@ -708,11 +708,11 @@ booked the trade. See [Entities and ownership](data.md#2-entities-and-ownership)
 - [VaR guide](../guides/VAR_GUIDE.md): every measure with worked numbers, the explorer, scopes, captures, backtesting, the data contract;
   [the scenario matrix](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat) (`SMAT`): a trade, position or node's scenarios across its
   last N business dates, the tail outlined each day.
-- [Tutorial 2, Part A: VaR from the bank to a trade](../tutorials/02-var-from-the-bank-to-a-trade.md#part-a--historical-var-from-the-bank-to-a-trade): fifteen hands-on steps, the last the scenario matrix.
+- [The VaR tutorial, Part A: VaR from the bank to a trade](../guides/VAR_GUIDE.md#part-a--historical-var-from-the-bank-to-a-trade): fifteen hands-on steps, the last the scenario matrix.
 - [Exposure guide](../guides/EXPOSURE_GUIDE.md): every exposure measure with worked numbers, the explorer, collateral, the pre-deal what-if, the data contract.
-- [Tutorial 3: exposure from the bank to a trade](../tutorials/03-exposure-from-the-bank-to-a-trade.md): eight hands-on steps.
+- [The exposure tutorial: exposure from the bank to a trade](../guides/EXPOSURE_GUIDE.md): eight hands-on steps.
 - [Tutorial 1, Part E: an entity over time](../tutorials/01-first-15-minutes.md#part-e--an-entity-over-time) (`TRD 1000015 30 <GO>`).
-- [Groupings and analytics guide](../guides/GROUPINGS_ANALYTICS_GUIDE.md).
+- [Groupings and analytics guide](../guides/BI_GUIDE.md).
 - The stored results' contracts: [NSET](../contracts/NSET.md), [CVA](../contracts/CVA.md), [SA-CCR](../contracts/SACCR.md),
   [SIMM](../contracts/SIMM.md), [collateral](../contracts/COLL.md), [margin calls](../contracts/MC.md), [limits](../contracts/LIM.md),
   [groups](../contracts/GRP.md), [wrong-way risk](../contracts/WWR.md); the [trading groupings contract](../contracts/TRADING_GROUPINGS.md)

@@ -24,29 +24,25 @@
 features:
   # Start and analyse (core)
   - { id: F1, name: Find anything, domain: core, lenses: all, guide: guides/USER_GUIDE.md, budget: 1200, tutorial: tutorials/01-first-15-minutes.md, tutorial-budget: 600 }
-  - { id: F2, name: "Pivot, cubes and Explain", domain: core, lenses: all, guide: guides/PIVOT_GUIDE.md, budget: 1200, tutorial: tutorials/07-pivot-cubes-and-explain.md, tutorial-budget: 550 }
-  - { id: F3, name: Reports and dashboards, domain: core, lenses: all, guide: guides/REPORTS_GUIDE.md, budget: 1800, tutorial: tutorials/08-reports-and-dashboards.md, tutorial-budget: 800 }
-  - { id: F4, name: Notebook and Python, domain: core, lenses: all, guide: guides/NOTEBOOK_GUIDE.md, budget: 700, tutorial: tutorials/09-notebook-and-python.md, tutorial-budget: 450 }
+  - { id: F2, name: "Business intelligence: pivot, tables, reports, Notebook, groupings", domain: core, lenses: all, guide: guides/BI_GUIDE.md, budget: 12000, tutorial: none }
   - { id: F5, name: AI assistant, domain: core, lenses: all, guide: guides/AI_GUIDE.md, budget: 700, tutorial: tutorials/10-ai-assistant.md, tutorial-budget: 400 }
   - { id: F6, name: Corrections and approvals, domain: core, lenses: all, guide: guides/APPROVALS_GUIDE.md, budget: 600, tutorial: tutorials/11-correct-and-approve.md, tutorial-budget: 300 }
   # Risk (the banking module)
-  - { id: R1, name: Value at risk, domain: banking, lenses: [risk, trading], guide: guides/VAR_GUIDE.md, budget: 2500, tutorial: tutorials/02-var-from-the-bank-to-a-trade.md, tutorial-budget: 900 }
+  - { id: R1, name: Value at risk, domain: banking, lenses: [risk, trading], guide: guides/VAR_GUIDE.md, budget: 6500, tutorial: none }
   - { id: R1R, name: Regulatory VaR reporting, domain: banking, lenses: [risk], guide: guides/REGULATORY_VAR_REPORTING.md, budget: 850, tutorial: none }
-  - { id: R2, name: Counterparty exposure, domain: banking, lenses: [risk], guide: guides/EXPOSURE_GUIDE.md, budget: 1400, tutorial: tutorials/03-exposure-from-the-bank-to-a-trade.md, tutorial-budget: 550 }
-  - { id: R3, name: FRTB-SA, domain: banking, lenses: [risk], guide: guides/FRTB_SA_GUIDE.md, budget: 600, tutorial: tutorials/04-frtb-sa.md, tutorial-budget: 300 }
-  - { id: R4, name: SIMM, domain: banking, lenses: [risk], guide: guides/SIMM_GUIDE.md, budget: 600, tutorial: tutorials/05-simm.md, tutorial-budget: 300 }
-  - { id: R5, name: Groupings and analytics, domain: core, lenses: all, guide: guides/GROUPINGS_ANALYTICS_GUIDE.md, budget: 800, tutorial: tutorials/06-groupings-and-analytics.md, tutorial-budget: 500 }
+  - { id: R2, name: Counterparty exposure, domain: banking, lenses: [risk], guide: guides/EXPOSURE_GUIDE.md, budget: 2300, tutorial: none }
+  - { id: R3, name: FRTB-SA, domain: banking, lenses: [risk], guide: guides/FRTB_SA_GUIDE.md, budget: 800, tutorial: none }
+  - { id: R4, name: SIMM, domain: banking, lenses: [risk], guide: guides/SIMM_GUIDE.md, budget: 800, tutorial: none }
   - { id: R6, name: "The bank's data", domain: banking, lenses: [risk, trading, market], guide: after 2.9.11.i, budget: 1200, tutorial: tutorials/12-a-day-of-bank-data.md, tutorial-budget: 400 }
   # World and public data
-  - { id: W1, name: World data, domain: capitalmarkets, lenses: [world], guide: guides/FUNDS_GUIDE.md, budget: 1500, pending: "WORLD_DATA_GUIDE (FUNDS_GUIDE, EXTERNAL_DATA and the world pack guides) after 2.9.11.h", tutorial: tutorials/13-world-data.md, tutorial-budget: 500 }
-  - { id: W2, name: Public sector, domain: economy, lenses: all, guide: guides/PUBLIC_SECTOR_GUIDE.md, budget: 900, tutorial: tutorials/14-public-sector-data.md, tutorial-budget: 400 }
+  - { id: W1, name: "World and public data", domain: capitalmarkets, lenses: [world], guide: guides/WORLD_DATA_GUIDE.md, budget: 3500, tutorial: none }
   # Data in and out, build (core)
   - { id: B1, name: Connect, domain: core, lenses: all, guide: guides/DATA_GUIDE.md, budget: 1000, tutorial: tutorials/15-connect-your-data.md, tutorial-budget: 300 }
   - { id: B1b, name: Data lake and data load, domain: core, lenses: all, guide: guides/DATA_LAKE_GUIDE.md, budget: 1100, tutorial: tutorials/16-load-your-own-data-into-a-new-lake.md, tutorial-budget: 500 }
-  - { id: B2, name: Tables and models, domain: core, lenses: all, guide: guides/TABLES_GUIDE.md, budget: 800, tutorial: tutorials/18-tables-and-models.md, tutorial-budget: 400 }
   - { id: B3, name: Packs and screens, domain: core, lenses: all, guide: guides/BUILD_GUIDE.md, budget: 2000, tutorial: tutorials/19-build-a-pack-and-a-screen.md, tutorial-budget: 700 }
-  - { id: B4, name: Data out, domain: core, lenses: all, guide: guides/FLIGHT_GUIDE.md, budget: 500, tutorial: tutorials/17-data-out-with-arrow-flight.md, tutorial-budget: 300 }
+  - { id: B4, name: Data out, domain: core, lenses: all, guide: guides/FLIGHT_GUIDE.md, budget: 900, tutorial: tutorials/17-data-out-with-arrow-flight.md, tutorial-budget: 300 }
   - { id: B5, name: Embed, domain: core, lenses: all, guide: guides/EMBED_GUIDE.md, budget: 800, tutorial: tutorials/20-embed-drishti.md, tutorial-budget: 300 }
+  - { id: B7, name: "Live results and blotters", domain: core, lenses: all, guide: guides/LIVE_RESULTS_GUIDE.md, budget: 400, tutorial: none }
   - { id: B6, name: Extend, domain: core, lenses: all, guide: guides/DEVELOPER_GUIDE.md, budget: 1200, tutorial: after 2.9.11.i }
   # Operate (core, administrators)
   - { id: O1, name: Install and operate, domain: core, lenses: all, guide: guides/OPERATIONS_GUIDE.md, budget: 2500, tutorial: tutorials/21-run-it-in-production.md, tutorial-budget: 400 }
@@ -62,8 +58,8 @@ references:
   - guides/COMMAND_CATALOG.md
   - guides/FUNCTIONS.md
   - guides/RACHANA_REFERENCE.md
-  - guides/FLIGHT_REFERENCE.md
+  - guides/FLIGHT_GUIDE.md
   - guides/ELEMENTS_API.md
-  - guides/EXTERNAL_DATA.md          # folds into the world data guide (W1) when it is written
+  - guides/WORLD_DATA_GUIDE.md          # folds into the world data guide (W1) when it is written
   - guides/API_REFERENCE.md
   - architecture/VIEWMODEL.md        # the embed developer's contract; listed in Help (the frozen renderers name its path)

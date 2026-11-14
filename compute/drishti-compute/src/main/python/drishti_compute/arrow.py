@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The Arrow IPC stream format in pure Python, for the column types the compute transport carries (docs/guides/NOTEBOOK_GUIDE.md
+"""The Arrow IPC stream format in pure Python, for the column types the compute transport carries (docs/guides/BI_GUIDE.md
 section 7.3): 64-bit integers (any integer width is read), doubles (float32 is read), booleans, text and fixed-size lists of doubles (a
 509-day P&L path per row). No pyarrow, no numpy, no compiled code: the SDK must run in a bare interpreter (the Windows QA machine takes
 no native binaries). Numbers are exposed as zero-copy ``memoryview`` objects over the file (memory-mapped where the platform lets a mapped

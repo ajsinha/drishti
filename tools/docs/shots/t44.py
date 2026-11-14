@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of tutorial 18, virtual tables and models (docs/tutorials/18-tables-and-models.md), written to docs/tutorials/img/t44/,
+"""Pictures of tutorial 18, virtual tables and models (docs/guides/BI_GUIDE.md), written to docs/tutorials/img/t44/,
 in the light theme. Runs on its own on the scratch stack (the demo source on, sign-in off):
 
     DRISHTI_SHOTS_SERVER_PORT=<port> DRISHTI_SHOTS_CONSOLE_PORT=<port> drishti-console/.venv/bin/python tools/docs/screenshots.py --guide t44

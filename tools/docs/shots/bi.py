@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The pictures of the BI guide (docs/guides/REPORTS_GUIDE.md), written to docs/guides/img/bi/, on a desktop and on a phone (390 px).
+"""The pictures of the BI guide (docs/guides/BI_GUIDE.md), written to docs/guides/img/bi/, on a desktop and on a phone (390 px).
 
 They are made on a scratch stack of their own (drishti-console/tests/bi_stack.py: the built server jar with sign-in on, the trading pack, five users
 with different BI powers, a shared workspace with published, certified and draft items, two shipped files). The ports are 18983 and 17983, so run:

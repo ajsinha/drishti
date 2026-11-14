@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * One pool of worker processes (docs/guides/NOTEBOOK_GUIDE.md section 7.1): its engines, its environment and how many workers it may
+ * One pool of worker processes (docs/guides/BI_GUIDE.md section 7.1): its engines, its environment and how many workers it may
  * run on <em>this node</em>. There is no upper bound in the code on {@code workersMax}: the node's CPU and memory are the limit, and a site
  * scales further by adding Drishti*net nodes that serve the same pool (each with its own count, {@code compute.nodes.<node>.pools}).
  *

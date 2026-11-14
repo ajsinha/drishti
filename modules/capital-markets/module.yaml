@@ -125,6 +125,6 @@ docs:
   - packs/us-equities/guides/us-equities.md
   - packs/funds/guides/funds.md
   tutorials:
-  - tutorials/13-world-data.md
+  - guides/WORLD_DATA_GUIDE.md
 resources:
   memory-mb: 64

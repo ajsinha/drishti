@@ -15,7 +15,7 @@
 # Finance pack guides, merged into the help centre. `category` places a guide in an existing category.
 guides:
   - { slug: getting-started, category: start, title: "Tutorial 1 · Your first view", kind: tutorial, icon: play-circle, file: guides/getting-started.md, summary: "Type TRD IRS-48213 <GO>, follow the links, watch it tick, read the raw JSON." }
-  - { slug: write-your-first-sutra, category: layouts, title: "Tutorial 2 · Write your first Sutra", kind: tutorial, icon: pencil-square, file: guides/write-your-first-sutra.md, summary: "Lay out a trade with a strip, a table and a curve, in a dozen lines of YAML." }
+  - { slug: write-your-first-sutra, category: layouts, title: "The VaR tutorial · Write your first Sutra", kind: tutorial, icon: pencil-square, file: guides/write-your-first-sutra.md, summary: "Lay out a trade with a strip, a table and a curve, in a dozen lines of YAML." }
 contextual:
   landing: getting-started
   terminal: getting-started

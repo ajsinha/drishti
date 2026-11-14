@@ -263,7 +263,7 @@ def column_type(stat) -> str | None:
 
 
 def bi_files(pack: str, version: str, kinds: dict, keys: dict, promoted: dict, children: dict, header: str = "") -> dict[str, str]:
-    """The tables and the model that relate each parent kind to its child kinds (``config/tables/<domain>/``; TABLES_GUIDE.md): one table
+    """The tables and the model that relate each parent kind to its child kinds (``config/tables/<domain>/``; BI_GUIDE.md): one table
     per kind over its id and promoted columns, and a model with a many-to-one relationship from each child's link to its parent's id, both
     ways (a filter on the child reaches the parent as a semi-join: "trades having any leg where ..."), counts and sums. ``kinds`` is kind ->
     packprofile.KindProfile, ``promoted`` kind -> its promoted columns, ``children`` parent -> [Child]. Empty when there is no child kind."""

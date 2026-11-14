@@ -12,17 +12,17 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The national-statistics feed (docs/guides/PUBLIC_SECTOR_GUIDE.md section 5): Statistics Canada's Web Data Service by vector into
+# The national-statistics feed (docs/guides/WORLD_DATA_GUIDE.md section 5): Statistics Canada's Web Data Service by vector into
 # worldlake, for the national-statistics pack. Class: tools/feeds/sources/national_statistics.py. Daily (StatCan releases at 08:30
 # Eastern); incremental (from a quarter before each vector's last period, merged into the kept history; no newer release, nothing
 # written). No key.
 # A vector's frequency is read from WDS; `frequency:` overrides it (daily, weekly, monthly, quarterly, annual ...).
 # A vector is one series of one table (find it on the table's page: "Add/Remove data" -> "Display vector identifier").
-# Run: python3 tools/drishti.py feed run national-statistics (EXTERNAL_DATA.md); options.sources holds each source's licence and terms; the rest of
+# Run: python3 tools/drishti.py feed run national-statistics (WORLD_DATA_GUIDE.md); options.sources holds each source's licence and terms; the rest of
 # options is the default selection.
 feed: national-statistics
 title: Statistics Canada (Web Data Service)
-description: 'The economy module''s public-sector national-statistics pack (docs/guides/PUBLIC_SECTOR_GUIDE.md): Statistics Canada''s headline statistics by vector
+description: 'The economy module''s public-sector national-statistics pack (docs/guides/WORLD_DATA_GUIDE.md): Statistics Canada''s headline statistics by vector
   from its Web Data Service (Statistics Canada Open Licence): the consumer price index, unemployment, monthly GDP, population, housing starts and the overnight
   money market rate. Each series shows its latest value, the change on the period and on the year, and its history. Filled daily by the national-statistics
   feed into the worldlake lake; more vectors are a line each in the feed''s YAML.'

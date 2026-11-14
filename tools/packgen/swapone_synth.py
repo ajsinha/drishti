@@ -14,7 +14,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """SwapOne-style trades, synthetic: a made-up swaps booking system's own JSON Lines (its own field names, camelCase, its own enums), for
-the Pack designer's source mode (tests, the tutorial docs/tutorials/23-add-a-source-system.md). Nothing in it is real: the counterparties,
+the Pack designer's source mode (tests, the tutorial docs/guides/BUILD_GUIDE.md). Nothing in it is real: the counterparties,
 books and traders are invented, the numbers are random with a fixed seed.
 
     python3 tools/packgen/swapone_synth.py --rows 2000 --date 2026-11-13 --out data/tmp/swapone/swapone_trades.2026-11-13.jsonl

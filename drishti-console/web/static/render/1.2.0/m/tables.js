@@ -119,7 +119,7 @@ export function pivotable(R, p) {
   if (!src) { return table(R, p.data); }
   const title = p.title || p.id;
   return [table(R, p.data), h('p', { class: 'pv-open' }, h('a', { class: 'btn btn-sm btn-outline-secondary', href: '/pivot?source=' + encodeURIComponent(src).replace(/%2F/g, '/'),
-    title: 'Pivot ' + title + ': rows, columns, values and filters, every total from its own rows (PIVOT_GUIDE.md)' }, 'Pivot'))];
+    title: 'Pivot ' + title + ': rows, columns, values and filters, every total from its own rows (BI_GUIDE.md)' }, 'Pivot'))];
 }
 
 // ---- the pivot kind ------------------------------------------------------------------------------------------------------------

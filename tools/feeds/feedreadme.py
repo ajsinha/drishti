@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Each data feed's README, generated beside its feed file (``config/feeds/<feed>.md``) from the feed file and the contracts of the
-kinds it loads (docs/guides/EXTERNAL_DATA.md): the source, the licence and its use, the lake and the schedule, how to run it, and per
+kinds it loads (docs/guides/WORLD_DATA_GUIDE.md): the source, the licence and its use, the lake and the schedule, how to run it, and per
 dataset its data contract (the table, the key, every field with its type and meaning) with a JSON example of one row built from the
 contract's examples. Nothing is written by hand: edit the feed file or the pack's contract and run this again.
 
@@ -98,7 +98,7 @@ def render(spec: FB.FeedSpec) -> str:
         out.append(f"python3 tools/drishti.py feed run {spec.name} --snapshot     # refresh the committed demo snapshot instead"
                    + (" (with --internal-ok)" if lic.internal_only else ""))
     out += ["```", "", "Daily: `python3 tools/drishti.py feed schedule --cron` (or `--systemd`, `--windows`). The guide: "
-            "[EXTERNAL_DATA.md](../../docs/guides/EXTERNAL_DATA.md).", "", "## Data contract", ""]
+            "[WORLD_DATA_GUIDE.md](../../docs/guides/WORLD_DATA_GUIDE.md).", "", "## Data contract", ""]
     for ds in spec.datasets.values():
         c = contract(ds.pack, ds.kind)
         out += [f"### {ds.name}", "",

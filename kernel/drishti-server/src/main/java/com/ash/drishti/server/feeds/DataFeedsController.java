@@ -30,7 +30,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * The data feeds for administrators (docs/guides/EXTERNAL_DATA.md section 6; Admin → Data loads → Feeds): {@code GET /api/v1/admin/feeds}
+ * The data feeds for administrators (docs/guides/WORLD_DATA_GUIDE.md section 6; Admin → Data loads → Feeds): {@code GET /api/v1/admin/feeds}
  * every feed with its last run, last success, rows, duration, failures and last error, and the latest runs of the ledger;
  * {@code POST /api/v1/admin/feeds/{feed}/run} Run now (audited).
  */

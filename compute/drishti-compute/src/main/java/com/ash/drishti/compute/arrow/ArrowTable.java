@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * A columnar table as the compute workers exchange it (docs/guides/NOTEBOOK_GUIDE.md section 7.3): typed columns held in primitive
+ * A columnar table as the compute workers exchange it (docs/guides/BI_GUIDE.md section 7.3): typed columns held in primitive
  * arrays, so a million rows cost what their values cost. Five column types cover what the engines need: 64-bit integers, doubles, booleans,
  * text, and a fixed-length vector of doubles per row (a 509-day P&amp;L path). Immutable once built; {@link #slice} and {@link #concat} are
  * how a request is split into chunks for several workers and how their answers are gathered.

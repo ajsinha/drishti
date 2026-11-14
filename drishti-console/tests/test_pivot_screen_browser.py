@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The pivot screen (PIVOT_GUIDE.md section 2; docs/lenses/mockups/pivot-fields) in a real browser against a stand-in engine, drawn by
+"""The pivot screen (BI_GUIDE.md section 2; docs/lenses/mockups/pivot-fields) in a real browser against a stand-in engine, drawn by
 drishti-grid: it opens in the default mode, the View picker in front of the compact line (C + B), on a source with a first arrangement;
 the grid shows the engine's figures as they are (every total the server's); R opens the Rows picker, a hierarchy is one item with its
 levels and Alt+↓ adds its next level; a value's ▾ offers the functions valid for its field and show-as; Shift+V lists the ready-made,

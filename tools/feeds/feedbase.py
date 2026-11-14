@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""drishti-feeds: the Feed base class, the feed file (config/feeds/<feed>.yaml) and one feed run (docs/guides/EXTERNAL_DATA.md).
+"""drishti-feeds: the Feed base class, the feed file (config/feeds/<feed>.yaml) and one feed run (docs/guides/WORLD_DATA_GUIDE.md).
 
 A feed PULLS one external source in Python and writes what it pulled as JSON Lines, one gzipped file per dataset and business date,
 under ``<data>/datafeeds/<feed>/<YYYY-MM-DD>/<table>.<YYYY-MM-DD>.jsonl.gz`` with a ``manifest.json`` (each file's rows and SHA-256). The
@@ -30,7 +30,7 @@ the data inbox). Writing a feed is one class:
                 run.emit("indicator", [row(x) for x in doc[1]])   # the run's business date; or business_date=...
             run.mark("indicator", end)                        # the state saved only when the whole run succeeds
 
-The API a feed uses (stable; EXTERNAL_DATA.md "Writing a feed"):
+The API a feed uses (stable; WORLD_DATA_GUIDE.md "Writing a feed"):
 
     run.business_date      the run's business date (--date, else today)          run.since    --since, else None
     run.window(dataset)    (first, last) dates to pull: --since; else the day after the dataset's last date in the state; else
@@ -72,7 +72,7 @@ CONFIG = ROOT / "config" / "feeds"
 SOURCES = HERE / "sources"
 SCHEMA_VERSION = 1
 
-# exit codes, for schedulers (docs/guides/EXTERNAL_DATA.md section "Exit codes")
+# exit codes, for schedulers (docs/guides/WORLD_DATA_GUIDE.md section "Exit codes")
 OK, FAILED, REFUSED, LOCKED, PARTIAL = 0, 1, 2, 3, 4
 EXIT_WORDS = {OK: "ok", FAILED: "failed", REFUSED: "refused", LOCKED: "locked", PARTIAL: "partial"}
 
@@ -133,7 +133,7 @@ class Licence:
 
 @dataclass
 class FeedSpec:
-    """config/feeds/<feed>.yaml, checked. Every key is in docs/guides/EXTERNAL_DATA.md section "The feed file"."""
+    """config/feeds/<feed>.yaml, checked. Every key is in docs/guides/WORLD_DATA_GUIDE.md section "The feed file"."""
     name: str
     title: str
     impl: str                     # <module>.<Class> under tools/feeds/sources/

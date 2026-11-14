@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# config/feeds/world-economy.yaml: the world economy feed (docs/guides/EXTERNAL_DATA.md; every key in its section "The feed file").
+# config/feeds/world-economy.yaml: the world economy feed (docs/guides/WORLD_DATA_GUIDE.md; every key in its section "The feed file").
 # It carries the IMF's World Economic Outlook forecasts, which are INTERNAL USE ONLY (the IMF's terms: no commercial reuse without
 # permission; the owner kept them for internal use, 2026-10-10 and 2026-10-29). `-- --no-imf` builds without them.
 #   python3 tools/drishti.py feed run world-economy                         pull, write data/datafeeds/world-economy/<date>/, load into worldlake

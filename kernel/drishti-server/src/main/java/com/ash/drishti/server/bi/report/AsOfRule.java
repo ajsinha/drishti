@@ -23,7 +23,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
- * A report's {@code as-of} setting (2.6.7 patch; docs/guides/REPORTS_GUIDE.md, "Which date a report reads"): which business date each table of a visual
+ * A report's {@code as-of} setting (2.6.7 patch; docs/guides/BI_GUIDE.md, "Which date a report reads"): which business date each table of a visual
  * reads when the reader asks for one date (a day in the time picker, or Now).
  *
  * <ul>

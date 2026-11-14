@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Official news · the economy module's public-sector free news pack (docs/guides/PUBLIC_SECTOR_GUIDE.md): press releases and notices of central
+# Official news · the economy module's public-sector free news pack (docs/guides/WORLD_DATA_GUIDE.md): press releases and notices of central
 # banks, regulators and governments from their own feeds, filled daily by the official-news feed (config/feeds/official-news.yaml) into
 # the newslake lake.
 pack: official-news

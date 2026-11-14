@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The live result sets' console side (docs/guides/ELEMENTS.md, the grid's live mode; modules/trading/docs/guide.md): one page for any
+"""The live result sets' console side (docs/guides/ELEMENTS.md, the grid's live mode; docs/guides/LIVE_RESULTS_GUIDE.md): one page for any
 declaration (``/live/<id>``: a blotter), and ``/api/live/...`` passing the server's ``/api/v1/live/...`` on as the signed-in person: the
 declarations, a page of rows, one record whole, a stream's window and a blotter's edit. The stream itself is the console's live channel
 (``live:<id>``, core/channel.py), so a browser holds one connection however many sets are open. The rules (rights, masks, versions, four

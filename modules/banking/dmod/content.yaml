@@ -40,11 +40,11 @@ copy:
   to: lenses/risk.yaml
 - from: ../../../config/lenses/banking/trading.yaml
   to: lenses/trading.yaml
-- from: ../../../docs/tutorials/02-var-from-the-bank-to-a-trade.md
-  to: tutorials/02-var-from-the-bank-to-a-trade.md
-- from: ../../../docs/tutorials/03-exposure-from-the-bank-to-a-trade.md
-  to: tutorials/03-exposure-from-the-bank-to-a-trade.md
-- from: ../../../docs/tutorials/04-frtb-sa.md
-  to: tutorials/04-frtb-sa.md
-- from: ../../../docs/tutorials/05-simm.md
-  to: tutorials/05-simm.md
+- from: ../../../docs/guides/VAR_GUIDE.md
+  to: guides/VAR_GUIDE.md
+- from: ../../../docs/guides/EXPOSURE_GUIDE.md
+  to: guides/EXPOSURE_GUIDE.md
+- from: ../../../docs/guides/FRTB_SA_GUIDE.md
+  to: guides/FRTB_SA_GUIDE.md
+- from: ../../../docs/guides/SIMM_GUIDE.md
+  to: guides/SIMM_GUIDE.md

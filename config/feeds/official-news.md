@@ -9,7 +9,7 @@
 
 Official press releases (central banks, regulators, governments).
 
-The economy module's public-sector official-news pack (docs/guides/PUBLIC_SECTOR_GUIDE.md): Press releases and notices from the publishers' own feeds: the Federal Reserve, the European Central Bank, the Bank of Canada, the Bank of England, the SEC, OSFI, the US Federal Register and the Canada Gazette. A publisher's page lists its latest releases newest first, each a link to the original, with its terms; a release's page gives its title, date, summary and link. Each publisher's terms are recorded: the Bank of England, OSFI and the Canada Gazette allow no commercial reuse, so their releases are internal only. Filled daily by the official-news feed into the newslake lake.
+The economy module's public-sector official-news pack (docs/guides/WORLD_DATA_GUIDE.md): Press releases and notices from the publishers' own feeds: the Federal Reserve, the European Central Bank, the Bank of Canada, the Bank of England, the SEC, OSFI, the US Federal Register and the Canada Gazette. A publisher's page lists its latest releases newest first, each a link to the original, with its terms; a release's page gives its title, date, summary and link. Each publisher's terms are recorded: the Bank of England, OSFI and the Canada Gazette allow no commercial reuse, so their releases are internal only. Filled daily by the official-news feed into the newslake lake.
 
 | | |
 |---|---|
@@ -29,7 +29,7 @@ python3 tools/drishti.py feed run official-news                # pull today, wri
 python3 tools/drishti.py feed status official-news             # its last runs
 ```
 
-Daily: `python3 tools/drishti.py feed schedule --cron` (or `--systemd`, `--windows`). The guide: [EXTERNAL_DATA.md](../../docs/guides/EXTERNAL_DATA.md).
+Daily: `python3 tools/drishti.py feed schedule --cron` (or `--systemd`, `--windows`). The guide: [WORLD_DATA_GUIDE.md](../../docs/guides/WORLD_DATA_GUIDE.md).
 
 ## Data contract
 

@@ -21,7 +21,7 @@ Panels that read other entities with `source: "link(id, kind)"`: the counterpart
 
 **Panel kinds:** `tabs`, `area`, `pivot`, each with `source`.
 
-**Open it:** in the workbench, **Build → New → Examples** and pick `linked-sources`: it opens as a copy (this Sutra, the JSON as samples, this note as notes). Or **File → Open** in the workbench with `linked-sources.sutra.yaml` and `linked-sources.json`.
+**Open it:** in the workbench, **Create → New → Examples** and pick `linked-sources`: it opens as a copy (this Sutra, the JSON as samples, this note as notes). Or **File → Open** in the workbench with `linked-sources.sutra.yaml` and `linked-sources.json`.
 
 **What to look for:** the panels' data does not come from the trade's own document; change `desk` in the JSON and the pivot follows.
 

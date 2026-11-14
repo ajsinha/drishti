@@ -161,7 +161,7 @@ def problems_connector(path: Path) -> list[str]:
 # -- pack READMEs ----------------------------------------------------------------------------------------------------------
 
 def pack_feeds(pack: str) -> list[dict]:
-    """The data feeds (config/feeds/*.yaml, docs/guides/EXTERNAL_DATA.md) that load a pack's kinds: [{feed, lake, internal, kinds,
+    """The data feeds (config/feeds/*.yaml, docs/guides/WORLD_DATA_GUIDE.md) that load a pack's kinds: [{feed, lake, internal, kinds,
     snapshot}]."""
     out = []
     for f in sorted((ROOT / "config" / "feeds").glob("*.yaml")):
@@ -583,7 +583,7 @@ def render_pack(pack_dir: Path, generator: str | None = None, files: dict | None
     if ext:
         out += ["External data: " + "; ".join(f"{s['name']}" + (" (**internal only**)" if s.get("internal-only") else "") for s in ext) +
                 ". Each source's URL, licence and data feed are on the External data help page, "
-                "[docs/guides/EXTERNAL_DATA.md](../../../../docs/guides/EXTERNAL_DATA.md).", ""]
+                "[docs/guides/WORLD_DATA_GUIDE.md](../../../../docs/guides/WORLD_DATA_GUIDE.md).", ""]
     # -- enabling
     out += ["## Enabling and dependencies", ""]
     if isec.get("Enabling and dependencies"):
@@ -613,7 +613,7 @@ def render_pack(pack_dir: Path, generator: str | None = None, files: dict | None
                 f"fetches them daily into `data/datafeeds/{fd['feed']}/<date>/` and loads them into the lake `{fd['lake']}`"
                 + (" (internal use only)" if fd["internal"] else "") + "; `--dry-run` says what it would fetch, changing nothing; "
                 + ("`--snapshot` refreshes the committed snapshot in data/testdata instead; " if fd["snapshot"] else "")
-                + "`feed status` shows the last runs. The External data feeds guide (docs/guides/EXTERNAL_DATA.md) has the schedule entries "
+                + "`feed status` shows the last runs. The External data feeds guide (docs/guides/WORLD_DATA_GUIDE.md) has the schedule entries "
                 "for Linux and Windows.", ""]
     out += [f"The pack's files are written by `{generator}`; its `--check` fails when the committed files differ from what it would write.", ""]
     # -- see also

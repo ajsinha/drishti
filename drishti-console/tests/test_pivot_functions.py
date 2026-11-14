@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The pivot screen's Why, What-if and Functions cards (drishti_pivot-functions.js; docs/guides/PIVOT_GUIDE.md sections 19 to 21): the cards and
+"""The pivot screen's Why, What-if and Functions cards (drishti_pivot-functions.js; docs/guides/BI_GUIDE.md sections 19 to 21): the cards and
 their script on the page, and every call passed to the server as the person through the same-origin proxy (explain, what-if, the
 functions' list, test, a version, approve and withdraw), the server's refusals passed on in words. The figures, the harness and the
 approval rules are the server's and the engine's tests (CustomFunctionsTest, ExplainAddsUpTest, PivotFunctionsApiTest)."""

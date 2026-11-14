@@ -43,7 +43,7 @@ numbers; 56,298,935 and 54,984,456 text fields); memory no higher than 2.9.11.d.
 - **The MR cube's stressed VaR and SBM land on the same cells every time**: a view gets them for its first 100 and 60 cells in the
   grid's order (row by row as shown, each row's columns left to right), whatever was asked before or at the same time; before, a view
   asked after others could show them on more cells. A row's diversification of either is shown only when all its cells have the figure
-  ([PIVOT_GUIDE.md section 29.2](docs/guides/PIVOT_GUIDE.md#292-the-measures)).
+  ([BI_GUIDE.md section 29.2](docs/guides/BI_GUIDE.md#292-the-measures)).
 - **The FRTB-SA screen shows each class's Total again**, the server's figure.
 
 ## What changes for readers
@@ -55,11 +55,11 @@ numbers; 56,298,935 and 54,984,456 text fields); memory no higher than 2.9.11.d.
   every step still shows the screen, the command line and the YAML.
 - **The combined guides**: [OPERATIONS_GUIDE](docs/guides/OPERATIONS_GUIDE.md) (install, run, deploy, troubleshoot, the runbooks),
   [CLUSTER_GUIDE](docs/guides/CLUSTER_GUIDE.md) (several servers, AWS, sizing, tuning), [ADMIN_GUIDE](docs/guides/ADMIN_GUIDE.md) (people,
-  roles, lenses, switches), [CLI_REFERENCE](docs/guides/CLI_REFERENCE.md), [REPORTS_GUIDE](docs/guides/REPORTS_GUIDE.md),
-  [NOTEBOOK_GUIDE](docs/guides/NOTEBOOK_GUIDE.md), [APPROVALS_GUIDE](docs/guides/APPROVALS_GUIDE.md), [BUILD_GUIDE](docs/guides/BUILD_GUIDE.md),
+  roles, lenses, switches), [CLI_REFERENCE](docs/guides/CLI_REFERENCE.md), [REPORTS_GUIDE](docs/guides/BI_GUIDE.md),
+  [NOTEBOOK_GUIDE](docs/guides/BI_GUIDE.md), [APPROVALS_GUIDE](docs/guides/APPROVALS_GUIDE.md), [BUILD_GUIDE](docs/guides/BUILD_GUIDE.md),
   [DEVELOPER_GUIDE](docs/guides/DEVELOPER_GUIDE.md), [API_REFERENCE](docs/guides/API_REFERENCE.md), [EMBED_GUIDE](docs/guides/EMBED_GUIDE.md)
   and [AI_GUIDE](docs/guides/AI_GUIDE.md); connectors, connector files, TLS and the demo data are sections of
-  [DATA_GUIDE](docs/guides/DATA_GUIDE.md); the MR cube is a section of the [Pivot guide](docs/guides/PIVOT_GUIDE.md#29-the-mr-cube-preset).
+  [DATA_GUIDE](docs/guides/DATA_GUIDE.md); the MR cube is a section of the [Pivot guide](docs/guides/BI_GUIDE.md#29-the-mr-cube-preset).
   The Knowledge pages are four: the glossary and the [risk](docs/knowledge/risk.md), [data](docs/knowledge/data.md) and
   [world](docs/knowledge/world.md) primers. Design notes moved out of the user guides into the architecture documents.
 - **Help by domain and lens**: each Help page belongs to a domain module; while a module is off for you, its pages are not listed,
@@ -89,12 +89,12 @@ numbers; 56,298,935 and 54,984,456 text fields); memory no higher than 2.9.11.d.
   Each person's modules, lenses and the functions they may not use are answered by `GET /api/v1/modules`.
 - **Lenses** ([LENSES.md](docs/guides/ADMIN_GUIDE.md#12-what-a-lens-is)): Risk, Trading, Market, CRO and the two cubes (banking), World and **Public sector**
   (economy), CIO and Oversight (core), each with its modules, functions, Home cards and chips.
-- **The public sector**, the first new domain, in the economy module with its own lens ([PUBLIC_SECTOR_GUIDE.md](docs/guides/PUBLIC_SECTOR_GUIDE.md),
-  [tutorial 46](docs/tutorials/14-public-sector-data.md)): six packs and ten functions: World Bank development indicators (`WDI`, `WDIS`,
+- **The public sector**, the first new domain, in the economy module with its own lens ([WORLD_DATA_GUIDE.md](docs/guides/WORLD_DATA_GUIDE.md),
+  [tutorial 46](docs/guides/WORLD_DATA_GUIDE.md)): six packs and ten functions: World Bank development indicators (`WDI`, `WDIS`,
   with the world map by GDP per head), central banks from FRED and the Bank of Canada (`CBANK`, `CBSER`), Statistics Canada (`NSTAT`),
   the OECD (`OECD`, `OECDS`), the press releases of the Fed, ECB, Bank of Canada, Bank of England, SEC, OSFI, the US Federal Register and the
   Canada Gazette (`PRESS`, `PREL`) and GDELT's world events by country and tone (`GDELT`). The free news is in the World lens too.
-- **drishti-feeds: external data into the lakes, every day** ([EXTERNAL_DATA.md](docs/guides/EXTERNAL_DATA.md)). One feed file per source
+- **drishti-feeds: external data into the lakes, every day** ([WORLD_DATA_GUIDE.md](docs/guides/WORLD_DATA_GUIDE.md)). One feed file per source
   (`config/feeds/<feed>.yaml`: the datasets, the pack and table each loads, the target lake, the daily schedule, the licence with its
   internal-only flag, API keys as environment names only); incremental pulls that resume; one polite User-Agent naming Drishti; JSON Lines
   per dataset and business date under `data/datafeeds/<feed>/` with a manifest of rows and SHA-256; a run ledger; three load routes (the
@@ -188,7 +188,7 @@ Follow these steps when upgrading an installation of 2.9.11.d. The runnable jar 
 9. **Vega-Lite visuals are translated, Vega is retired.** A report's `vega-lite` visual and a Python visual's `output: vega-lite` are drawn by
    drishti-chart. Marks, encodings, aggregate, bin, sort, stack, scales, layers, filter and calculate transforms translate; facets,
    `repeat` and `concat`, `params` and selections, projections, other transforms, `text` marks and `resolve` are refused in words naming
-   what to use instead. Check a report with such a visual after upgrading ([BI_GUIDE.md](docs/guides/REPORTS_GUIDE.md#96-vega-lite-visuals)).
+   what to use instead. Check a report with such a visual after upgrading ([BI_GUIDE.md](docs/guides/BI_GUIDE.md#96-vega-lite-visuals)).
 10. **The menus are one sitemap**: `drishti-console/config/menus.yaml` is now `drishti-console/config/sitemap.yaml`, which also draws the
     Admin tabs, the BI rail, Help's sections and the footer. A site that changed `menus.yaml`, or a Help section's name or icon in
     `help.yaml`, moves its change to `sitemap.yaml`.
@@ -550,7 +550,7 @@ screen's baskets in two searchable lists; a console that keeps every person's se
 
 ## New
 
-- **The pivot engine, phases 2 and 3** (PIVOT_GUIDE.md sections 19 to 26): live pivots that tick, the pivot screen's switches, top N by
+- **The pivot engine, phases 2 and 3** (BI_GUIDE.md sections 19 to 26): live pivots that tick, the pivot screen's switches, top N by
   Space-Saving when asked, cell comments on saved views, and pivots over large tables (BENCHMARK.md section 16).
 - **BI on the pivot engine**: BI's visuals are computed by the same engine as the pivot screen.
 - **One grammar, one engine** (ONE_GRAMMAR.md): Rachana's tier-1 functions (FUNCTION_CATALOGUE.md, RACHANA_REFERENCE.md › Functions);
@@ -599,7 +599,7 @@ inbox; the in-memory lake in its own module.**
 
 ## New
 
-- **The pivot engine** (PIVOT_GUIDE.md): one engine for every pivot in Drishti (the pivot screen, Chart any table, the Sutra pivot panel),
+- **The pivot engine** (BI_GUIDE.md): one engine for every pivot in Drishti (the pivot screen, Chart any table, the Sutra pivot panel),
   true totals, expand and collapse, provenance, time travel, Top N with Others, exports to Excel (with its outline and formulas where a
   figure adds up), CSV, **JSON Lines** and Arrow.
 - **Pivots over documents**: fields are Rachana paths (`$.LEGS[*].NOTIONAL`, `$.LEGS[?@.LEG_TYPE == 'FLOAT'][0].INDEX.NAME`); a list is
@@ -946,7 +946,7 @@ finally right.**
 - **Knowledge: Companies, funds and ETFs** ([docs/knowledge](docs/knowledge/world.md#1-companies-funds-and-etfs)): share classes, NAV,
   look-through, expense ratios, active share and overlap on the demo data; 23 new `WHAT` terms (162 in all); "What does this mean?"
   on USEQ, FUND, HELD and TRACK.
-- **Index membership from the tracking ETFs** ([External data](docs/guides/EXTERNAL_DATA.md)): the S&P 500, Nasdaq-100 and Dow members
+- **Index membership from the tracking ETFs** ([External data](docs/guides/WORLD_DATA_GUIDE.md)): the S&P 500, Nasdaq-100 and Dow members
   are now what SPY, QQQ and DIA report holding to the SEC, not Wikidata's out-of-date lists (which lacked Exxon Mobil, BlackRock,
   NVIDIA in the Nasdaq-100 and about 100 more). **The companies pack grows from 503 to 586.** The *vs index* tab weighs the Dow by
   price and caps the Nasdaq-100 as their methods do: DIA's active share 1.8% (was 57.6%), QQQ's 11.2% (was 26.75%).
@@ -963,7 +963,7 @@ finally right.**
 
 *2026-10-26.* **US funds and ETFs with their holdings; Knowledge pages and `WHAT` that explain the data; construct your own basket and see its VaR; a pre-deal what-if for VaR and exposure; risk one click from every trade.**
 
-- **Funds and ETFs** ([FUNDS_GUIDE.md](docs/guides/FUNDS_GUIDE.md), tutorial 28): the 200 largest US mutual funds and ETFs from SEC
+- **Funds and ETFs** ([WORLD_DATA_GUIDE.md](docs/guides/WORLD_DATA_GUIDE.md), tutorial 28): the 200 largest US mutual funds and ETFs from SEC
   N-PORT, N-CEN and the prospectus summaries, with GLEIF relationships; `FUND <ticker>` (a fact sheet, its look-through holdings and
   how it compares with its index), `HELD`, `TRACK`, `FUNDS`; USEQ's *Held by funds* and *Fund ownership*, IDX's funds tracking it;
   a refresh script for Linux and Windows; 5.6 MB of gzipped data, offline. Sectors are SIC divisions (GICS is proprietary) and
@@ -997,13 +997,13 @@ finally right.**
   what it does and an example; `FUNC <words>` filters it. A pack's name opens its search form; a command opens with its example.
   Administrators see the same page with the commands that are off and the Everyone switches, review, history and the cluster's
   versions; `/admin/commands` opens it. The server still decides who may switch.
-- **Groupings and analytics computed instead of stored** ([GROUPINGS_ANALYTICS_GUIDE.md](docs/guides/GROUPINGS_ANALYTICS_GUIDE.md),
+- **Groupings and analytics computed instead of stored** ([BI_GUIDE.md](docs/guides/BI_GUIDE.md),
   tutorial 27): LEIG (no member cap), LEIC, SIC, ECG (summed or weighted over member economies, as the World Bank does), CORR (a new
   correlation engine, window and estimator picked on the page), the USEQ ratios, the yearly change of a financial fact, IDX totals,
   equity beta (a new engine, `EQB`) and the price-history analytics (internal-only, off as shipped). Their stored versions are retired;
   old ids open the computed pages. **The numbers change** where the stored ones were set by hand (correlations ~0.4 stored, ~0.1
   computed; equity betas near zero on the demo's independent price series); the reconciliation is in the guide.
-- **External data** ([the page](docs/guides/EXTERNAL_DATA.md)): every external source with its URL, licence and use; IMF, Yahoo and
+- **External data** ([the page](docs/guides/WORLD_DATA_GUIDE.md)): every external source with its URL, licence and use; IMF, Yahoo and
   Google News data marked internal only; each refresh script with real `status` and dry-run examples on Linux and Windows.
 - **Every pack's guide** now ends with its **data contracts** (every kind, every column) and its **data retrieval** (per kind: external
   with its script, synthetic with its generator, or computed with its engine), generated from the contracts, so they cannot drift.
@@ -1103,7 +1103,7 @@ Everything since 2.6.7, including the patches pushed to main without a tag.
 - **New packs (opt-in, `DRISHTI_PACKS`), on the standard data pattern (gzipped snapshots in `data/testdata`, built into lakes, served by a Delta connector each):** **us-equities** (479 US companies from SEC EDGAR, Nasdaq, GLEIF and Wikidata: financials,
   filings, index memberships; `USEQ`, `IDX`, `SIC`, `EDGAR`; prices live and internal only) and **gleif** (9,512 legal entities in 540
   ownership groups; `LEI`, `LEIG`, `LEIC`), linked to each other by LEI.
-- **Public data, one script per pack** ([PUBLIC_DATA.md](docs/guides/EXTERNAL_DATA.md)): `tools/publicdata/<pack>.py` (world-economy,
+- **Public data, one script per pack** ([PUBLIC_DATA.md](docs/guides/WORLD_DATA_GUIDE.md)): `tools/publicdata/<pack>.py` (world-economy,
   news-and-markets, official market data, us-equities, gleif) with `.sh` and Windows wrappers; widen the scope into the data folder;
   internal-only sources refused in the repository.
 - **READMEs as a standard:** every pack and every connector has a `README.md` with a front matter and its data structures, shown on
@@ -1119,7 +1119,7 @@ Everything since 2.6.7, including the patches pushed to main without a tag.
 *2026-10-21.* **BI runs: every heavy question becomes a visible, shareable run; chart any table; Delta and Iceberg side by side.**
 2.6.7 also carries 2.6.6, the QA release that was never tagged on its own (see below).
 
-- **BI runs** ([BI_RUNS.md](docs/architecture/ARCHITECTURE.md#287-bi-runs-every-bi-query-as-a-bounded-visible-job), [BI_RUNS_GUIDE.md](docs/guides/REPORTS_GUIDE.md#15-background-runs-long-bi-questions)):
+- **BI runs** ([BI_RUNS.md](docs/architecture/ARCHITECTURE.md#287-bi-runs-every-bi-query-as-a-bounded-visible-job), [BI_RUNS_GUIDE.md](docs/guides/BI_GUIDE.md#15-background-runs-long-bi-questions)):
   - **Planned before it runs:** a planner sizes every question from metadata only (Delta's row counts, Iceberg's manifests, built
     layers; tested to read no data). A cheap question answers at once; a heavy one becomes a run; a very heavy one asks to confirm; an
     impossible one is refused before anything runs. Report visuals, MQ, SQL and statements all take `Prefer: respond-async`; without it
@@ -1188,7 +1188,7 @@ known bugs fixed.** ([BI_DESIGN.md](docs/architecture/ARCHITECTURE.md#28-busines
 - **Paginated reports and statements:** a report page with `layout: statement` is paper: page-exact PDF (written by the
   server) and Excel set to print, headers and footers with tokens, page breaks, repeated column titles, groups kept
   together, and bursting through subscriptions, one statement per recipient, masked as them. The statement designer
-  (Format → Layout → statement, the Paper tab) previews page by page ([STATEMENTS.md](docs/guides/REPORTS_GUIDE.md#9-the-report-file-pages-visuals-filters-and-slicers), tutorial 20).
+  (Format → Layout → statement, the Paper tab) previews page by page ([STATEMENTS.md](docs/guides/BI_GUIDE.md#9-the-report-file-pages-visuals-filters-and-slicers), tutorial 20).
 - **Field parameters in a report's wells:** a reader's slicer switches which field or measure a visual draws.
 - **Apache Cassandra connector** (`cassandra`): Cassandra 4 and 5, ScyllaDB, Astra; a day appears whole or not at all
   ([CASSANDRA_CONNECTOR.md](plugins/drishti-plugin-cassandra/README.md)).

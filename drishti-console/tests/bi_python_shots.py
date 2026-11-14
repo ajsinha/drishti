@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Makes the pictures of the Python in BI chapter (docs/tutorials/08-reports-and-dashboards.md chapter 24, REPORTS_GUIDE.md) from the real stack (not a test: run it by hand).
+"""Makes the pictures of the Python in BI chapter (docs/guides/BI_GUIDE.md chapter 24, BI_GUIDE.md) from the real stack (not a test: run it by hand).
 
     drishti-console/.venv/bin/python drishti-console/tests/bi_python_shots.py <pictures dir>
 

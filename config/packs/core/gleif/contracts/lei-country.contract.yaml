@@ -165,5 +165,5 @@ validation:
   kind: counterparty-group
 notes:
 - 'Computed when asked by the derived connector gleif-groupings from every lei-entity (which retired the stored page and its 400-row
-  cap): docs/guides/GROUPINGS_ANALYTICS_GUIDE.md (its Part II).'
+  cap): docs/guides/BI_GUIDE.md (its Part II).'
 review: []

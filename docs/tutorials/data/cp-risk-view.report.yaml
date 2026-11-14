@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Tutorial 8, Part B: a report on the model cp-risk. MTM (trades) and expected exposure (netting sets) in one visual, the ratio measure of the model, and a
+# The reports tutorial, Part B: a report on the model cp-risk. MTM (trades) and expected exposure (netting sets) in one visual, the ratio measure of the model, and a
 # table of counterparties. Every visual is one model query; the server aggregates each fact alone at the visual's grain, then joins the answers.
 rachana: 1
 report: cp-risk-view
