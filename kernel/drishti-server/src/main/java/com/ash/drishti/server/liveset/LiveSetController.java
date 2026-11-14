@@ -76,6 +76,35 @@ public class LiveSetController {
         return out;
     }
 
+    private com.ash.drishti.server.edition.EditionCommands edition = com.ash.drishti.server.edition.EditionCommands.NONE;
+
+    /** The edition's command allow-list (a kind it leaves out is refused as by the search). */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    public void setEdition(com.ash.drishti.server.edition.EditionCommands edition) {
+        this.edition = edition;
+    }
+
+    /**
+     * A search's matches as a live result set (a FORM's result, the search page's): {@code q} is the search ({@code TRD where CURRENCY =
+     * 'EUR' limit 100}), run on the request's business date as the caller may see it. Answers a page as {@code /{id}/rows} does, plus
+     * {@code search} (what the search said: columns, labels, matched, scanned, partial, failed, noData, pivot); {@code set.id} streams its
+     * changes ({@code /{id}/stream}) while {@code live} is true (the live business date and a kind with a {@code live:} binding).
+     * {@code again=true} (the search pressed again) reads a static set afresh.
+     */
+    @GetMapping("/query")
+    public Map<String, Object> query(@RequestParam String q, @RequestParam(defaultValue = "0") int offset, @RequestParam(defaultValue = "1000") int limit,
+            @RequestParam(required = false) String sort, @RequestParam(defaultValue = "false") boolean descending,
+            @RequestParam(required = false) String filter, @RequestParam(defaultValue = "false") boolean again, com.ash.drishti.api.AsOf asOf,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
+        String kind = sets.kindOf(q);
+        entitlements.requireOpen(principal, kind);
+        edition.requireKind(kind);
+        LiveSet set = sets.query(q, asOf, entitlements.masks(principal), entitlements.redactor(principal), again);
+        Map<String, Object> out = page(set, set.spec(), offset, limit, sort, descending, filter, principal);
+        out.put("search", set.origin());
+        return out;
+    }
+
     /** A page of a set's rows: {@code offset}, {@code limit} (at most 5,000), {@code sort}, {@code descending}, {@code filter}, {@code query}. */
     @GetMapping("/{id}/rows")
     public Map<String, Object> rows(@PathVariable String id, @RequestParam(defaultValue = "0") int offset, @RequestParam(defaultValue = "500") int limit,
@@ -84,6 +113,15 @@ public class LiveSetController {
             @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
         LiveSetSpec spec = spec(id, principal);
         LiveSet set = sets.open(spec, query);
+        Map<String, Object> out = page(set, spec, offset, limit, sort, descending, filter, principal);
+        if (!set.origin().isEmpty()) {
+            out.put("search", set.origin());
+        }
+        return out;
+    }
+
+    private Map<String, Object> page(LiveSet set, LiveSetSpec spec, int offset, int limit, String sort, boolean descending, String filter,
+            Principal principal) {
         LiveSet.Page page = set.page(offset, Math.min(MAX_PAGE, Math.max(1, limit)), sort, descending, filter, entitlements.redactor(principal));
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("set", described(spec, principal));
@@ -182,6 +220,10 @@ public class LiveSetController {
 
     private LiveSetSpec spec(String id, Principal principal) {
         LiveSetSpec spec = sets.spec(id).orElseThrow(() -> new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no live set " + id));
+        if (sets.implicit(id) && LiveSets.maskedSet(id) != entitlements.masks(principal)) {
+            // a search's set is filled as its people may see it: one with masks never reads the set of those without, nor the other way
+            throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no live set " + id);
+        }
         entitlements.requireOpen(principal, spec.kind());
         return spec;
     }

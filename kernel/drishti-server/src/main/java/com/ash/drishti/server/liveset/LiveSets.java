@@ -78,6 +78,20 @@ public final class LiveSets implements AutoCloseable {
 
         /** The query's condition as a test of one document. */
         Predicate<DataNode> condition(String query);
+
+        /** The kind a search command reads ({@code TRD where ...} is {@code trade}). */
+        default String kindOf(String command) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "this server runs no searches into live sets");
+        }
+
+        /**
+         * A search's matches as a set's snapshot (a FORM's result, the search page's): each match to the sink as its document masked by
+         * {@code mask}, in the search's order; answers what the search said (kind, mnemonic, columns, labels, matched, scanned, partial,
+         * failed, elapsedMs, noData, pivot), the shape {@code GET /api/v1/live/query} gives as {@code search}.
+         */
+        default Map<String, Object> search(String command, AsOf asOf, UnaryOperator<DataNode> mask, java.util.function.Consumer<EntityDocument> sink) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "this server runs no searches into live sets");
+        }
     }
 
     /**
@@ -98,6 +112,8 @@ public final class LiveSets implements AutoCloseable {
     }
 
     private final Map<String, LiveSetSpec> specs = new ConcurrentHashMap<>();
+    /** The declarations a search made (a FORM's result, the search page's), while their set is open: never listed, never editable. */
+    private final Map<String, LiveSetSpec> implicit = new ConcurrentHashMap<>();
     private final Map<String, String> problems = new ConcurrentHashMap<>();
     private final Map<String, LiveSet> open = new ConcurrentHashMap<>();
     private final Map<String, Instant> idleSince = new ConcurrentHashMap<>();
@@ -203,8 +219,22 @@ public final class LiveSets implements AutoCloseable {
     }
 
     public Optional<LiveSetSpec> spec(String id) {
-        return Optional.ofNullable(specs.get(id));
+        LiveSetSpec s = specs.get(id);
+        return Optional.ofNullable(s != null ? s : implicit.get(id));
     }
+
+    /** True for the declaration a search made ({@link #query}). */
+    public boolean implicit(String id) {
+        return implicit.containsKey(id) && !specs.containsKey(id);
+    }
+
+    /** True when a search's set was filled for people whose masked fields are masked (its id says so). */
+    public static boolean maskedSet(String id) {
+        return id != null && id.startsWith(MASKED);
+    }
+
+    private static final String MASKED = "qm-";
+    private static final String PLAIN = "qu-";
 
     public List<LiveSetSpec> specs() {
         return List.copyOf(specs.values());
@@ -240,6 +270,9 @@ public final class LiveSets implements AutoCloseable {
         if (s != null) {
             return s;
         }
+        if (implicit.containsKey(spec.id()) || spec.id().startsWith(MASKED) || spec.id().startsWith(PLAIN)) {
+            throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "the result " + spec.id() + " has closed: run the search again");
+        }
         opening.lock();                                   // one opening at a time: a second viewer waits for the first's snapshot
         try {
             s = open.get(key);
@@ -263,6 +296,99 @@ public final class LiveSets implements AutoCloseable {
         } finally {
             opening.unlock();
         }
+    }
+
+    /**
+     * The set of a search command (a FORM's result, the search page's): the search's matches, in its order, with the kind's live changes
+     * merged in by key while the business date is the live one (static otherwise, and when the kind has no {@code live:} binding). One set
+     * per command, business date and masking, shared by everyone who runs it; {@code again} (a search pressed again) reads a static set
+     * afresh, while a live one is kept current by its live side. Masked people get their own set, filled and kept masked, so a masked
+     * value never decides which rows are in it.
+     */
+    public LiveSet query(String command, AsOf asOf, boolean masks, UnaryOperator<DataNode> mask, boolean again) {
+        AsOf at = asOf == null ? AsOf.LATEST : asOf;
+        String c = command == null ? "" : command.strip();
+        if (c.isEmpty()) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "a live query names a search: q=TRD where ...");
+        }
+        String kind = sources.kindOf(c);
+        String id = queryId(c, at, masks);
+        String key = id + "\u001f" + c;
+        LiveSet s = open.get(key);
+        if (s != null && !(again && !s.live())) {
+            return s;
+        }
+        opening.lock();
+        try {
+            s = open.get(key);
+            if (s != null && !(again && !s.live())) {
+                return s;
+            }
+            if (s != null) {
+                open.remove(key, s);
+                s.close();
+            }
+            UnaryOperator<DataNode> m = mask == null ? UnaryOperator.identity() : mask;
+            LiveSetSpec bare = new LiveSetSpec(id, c, kind, c, null, null, null, null, List.of(), List.of(), List.of(), null, false, List.of(), null,
+                    null, false, null);
+            Predicate<DataNode> holds = sources.condition(c);
+            LiveSet made = new LiveSet(bare, c, holds, clock, true);
+            made.start(l -> at.live() ? sources.subscribe(kind, d -> l.accept(masked(d, m))) : null, sink -> {
+                Map<String, Object> said = sources.search(c, at, m, sink);
+                made.origin(said);
+                made.spec(withColumns(bare, said));
+            });
+            implicit.put(id, made.spec());
+            open.put(key, made);
+            idleSince.remove(key);
+            return made;
+        } catch (DrishtiException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new DrishtiException(ErrorCode.SOURCE_FAILED, "the search " + c + " could not be read: " + e.getMessage());
+        } finally {
+            opening.unlock();
+        }
+    }
+
+    /** The kind a search command reads. */
+    public String kindOf(String command) {
+        return sources.kindOf(command == null ? "" : command.strip());
+    }
+
+    /** A search's set's id: the command, the business date (or live) and the masking, as a short hash. */
+    static String queryId(String command, AsOf at, boolean masks) {
+        String basis = command + "\u001f" + (at.live() ? "live" : at.businessDate() + "@" + at.knownAt()) + "\u001f" + masks;
+        try {
+            byte[] h = java.security.MessageDigest.getInstance("SHA-256").digest(basis.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            return (masks ? MASKED : PLAIN) + java.util.HexFormat.of().formatHex(h, 0, 10);
+        } catch (java.security.NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    private static EntityDocument masked(EntityDocument d, UnaryOperator<DataNode> m) {
+        return d.deleted() ? d : new EntityDocument(d.ref(), m.apply(d.data()), d.provenance(), false);
+    }
+
+    /** The search's columns ({@code $.CURRENCY}) as the declaration's ({@code {field: CURRENCY, label: Currency}}). */
+    @SuppressWarnings("unchecked")
+    static LiveSetSpec withColumns(LiveSetSpec s, Map<String, Object> said) {
+        List<Map<String, Object>> cols = new ArrayList<>();
+        Map<String, Object> labels = said.get("labels") instanceof Map<?, ?> l ? (Map<String, Object>) l : Map.of();
+        if (said.get("columns") instanceof List<?> l) {
+            for (Object o : l) {
+                String path = String.valueOf(o);
+                Map<String, Object> c = new LinkedHashMap<>();
+                c.put("field", path.startsWith("$.") ? path.substring(2) : path);
+                c.put("path", path);
+                c.put("label", labels.getOrDefault(path, path));
+                cols.add(c);
+            }
+        }
+        String title = said.get("mnemonic") != null ? said.get("mnemonic") + " search" : s.title();
+        return new LiveSetSpec(s.id(), title, s.kind(), s.query(), s.key(), s.version(), s.changedBy(), s.changedAt(), cols, List.of(), List.of(), null,
+                false, List.of(), null, null, false, null);
     }
 
     /** Every open set (Health, Admin). */
@@ -301,6 +427,9 @@ public final class LiveSets implements AutoCloseable {
             } else if (idleSince.putIfAbsent(e.getKey(), now) != null && idleSince.get(e.getKey()).plusSeconds(600).isBefore(now)) {
                 open.remove(e.getKey(), s);
                 idleSince.remove(e.getKey());
+                if (implicit.containsKey(s.spec().id()) && !specs.containsKey(s.spec().id())) {
+                    implicit.remove(s.spec().id());
+                }
                 s.close();
             }
         }

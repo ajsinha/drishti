@@ -45,7 +45,8 @@ import org.springframework.core.env.Environment;
 public class LiveSetConfiguration {
 
     @Bean(destroyMethod = "close")
-    public LiveSets liveSets(SourceRouter router, StructuredSearch search, EditableFields fields, ObjectProvider<EditRuntime> edits,
+    public LiveSets liveSets(SourceRouter router, StructuredSearch search, com.ash.drishti.server.api.SearchAnswers answers, EditableFields fields,
+            ObjectProvider<EditRuntime> edits,
             com.ash.drishti.server.security.Entitlements entitlements, ObjectProvider<com.ash.drishti.identity.AuditLog> auditLog, Environment env) {
         LiveSets.Sources sources = new LiveSets.Sources() {
             @Override
@@ -71,6 +72,23 @@ public class LiveSetConfiguration {
             @Override
             public Predicate<DataNode> condition(String query) {
                 return search.condition(SearchQuery.parse(query));
+            }
+
+            @Override
+            public String kindOf(String command) {
+                return search.kindOf(SearchQuery.pick(command));
+            }
+
+            @Override
+            public java.util.Map<String, Object> search(String command, AsOf asOf, java.util.function.UnaryOperator<DataNode> mask,
+                    Consumer<EntityDocument> sink) {
+                SearchQuery q = SearchQuery.pick(command);
+                StructuredSearch.Result r = search.run(q, asOf, mask);
+                for (StructuredSearch.Row row : r.rows()) {
+                    sink.accept(new EntityDocument(row.ref(), document(row), new com.ash.drishti.api.Provenance("search", 0L, java.time.Instant.now(),
+                            false, null)));
+                }
+                return answers.summary(command, q, r, asOf);
             }
         };
         LiveSets sets = new LiveSets(sources, Clock.systemUTC(), env.getProperty("drishti.live-sets.flush-ms", Long.class, 50L),
@@ -116,4 +134,29 @@ public class LiveSetConfiguration {
         });
         return sets;
     }
+
+    /** A search's row as a document: its columns' values at their paths ({@code $.A.B} is {@code {A: {B: v}}}), and its title. */
+    @SuppressWarnings("unchecked")
+    static DataNode document(StructuredSearch.Row row) {
+        java.util.Map<String, Object> doc = new java.util.LinkedHashMap<>();
+        row.values().forEach((path, v) -> {
+            String[] parts = (path.startsWith("$.") ? path.substring(2) : path).split("\\.");
+            java.util.Map<String, Object> at = doc;
+            for (int i = 0; i < parts.length - 1; i++) {
+                Object next = at.computeIfAbsent(parts[i], k -> new java.util.LinkedHashMap<String, Object>());
+                if (!(next instanceof java.util.Map<?, ?>)) {
+                    return;                                   // a value and a deeper path under one name: the value stays
+                }
+                at = (java.util.Map<String, Object>) next;
+            }
+            at.putIfAbsent(parts[parts.length - 1], v);
+        });
+        if (row.title() != null && !doc.containsKey(TITLE)) {
+            doc.put(TITLE, row.title());
+        }
+        return DataNode.of(doc);
+    }
+
+    /** Where a search's row keeps its title in the set's document. */
+    public static final String TITLE = "_title";
 }
