@@ -110,8 +110,8 @@ def test_ask_the_data_and_explain_a_number_on_a_report(browser):
     expect(ask).to_be_visible()
     page.fill("[data-ai-q]", "notional by desk")
     page.click("[data-ai-ask] button[type=submit]")
-    expect(page.locator("[data-ai-answer] .bi-ai-table tbody tr")).to_have_count(3, timeout=20000)
-    got = {r.locator("td").nth(0).inner_text(): r.locator("td").nth(1).inner_text() for r in page.locator("[data-ai-answer] .bi-ai-table tbody tr").all()}
+    expect(page.locator("[data-ai-answer] .bi-ai-table .dg-row[data-key]")).to_have_count(3, timeout=20000)      # the records grid, static
+    got = {r.locator("[data-c='0']").inner_text(): r.locator("[data-c='1']").inner_text() for r in page.locator("[data-ai-answer] .bi-ai-table .dg-row[data-key]").all()}
     assert set(got) == set(desks())
     assert "Shown as bar" in page.locator(".bi-ai-shown").inner_text()
     page.locator(".bi-ai-query summary").click()

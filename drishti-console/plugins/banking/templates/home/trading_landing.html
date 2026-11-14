@@ -136,8 +136,7 @@
     </section>
     <section class="tl-card" aria-labelledby="tlBlotH"{{ part(PP, 'table') }}>
       <h2 id="tlBlotH">Today's blotter<small>my books, newest first</small></h2>
-      <table class="tl-table"><thead><tr><th scope="col">Time</th><th scope="col">Trade</th><th scope="col" class="tl-wide">Counterparty</th><th scope="col" class="n">Notional</th><th scope="col"></th></tr></thead>
-        <tbody data-tl-blotter><tr><td colspan="5" class="tl-muted">…</td></tr></tbody></table>
+      <div data-tl-blotter><p class="tl-muted">…</p></div>{# the records grid (js/drishti_records.js): the trades' live set, or the day's changes when the trades cannot say #}
     </section>
   </div>
   <div class="tl-cols">

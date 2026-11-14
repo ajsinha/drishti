@@ -101,13 +101,22 @@ class FakeBackend:
     async def _send(self, method, path, ident=None, **kw):
         """The collaboration calls (core/collab.py: the bell's unread count every page asks, the inbox, shares): an empty inbox, so a page
         under test never answers 500 to its own bell (each one logged a long traceback)."""
+        sets = self.__dict__.setdefault("live_sets", {})
+        bare, _, query = path.partition("?")
+        if method == "GET" and bare.startswith("/live/") and bare.endswith("/rows") and bare.split("/")[2] in sets:    # a set the stand-in made (live_query, live_kind)
+            from urllib.parse import parse_qs
+            page, q = sets[bare.split("/")[2]], {k: v[0] for k, v in parse_qs(query).items()}
+            off, lim = int(q.get("offset") or 0), int(q.get("limit") or 500)
+            return {**page, "rows": page["rows"][off:off + lim], "offset": off}
         return {"unread": 0} if path.endswith("/count") else {"items": []}
 
     async def live_query(self, q, ident=None, again=True, limit=1000):
         """The server's live set of a search (GET /api/v1/live/query), as the server makes it: the search's answer (this stand-in's own
         ``search``) as the set's page: its rows as documents at the columns' fields, the summary as ``search``; static (no live binding)
         unless the stand-in says ``live_kinds`` holds the kind."""
-        return live_page(await self.search(q, ident), getattr(self, "live_kinds", ()))
+        page = live_page(await self.search(q, ident), getattr(self, "live_kinds", ()))
+        self.__dict__.setdefault("live_sets", {})[page["set"]["id"]] = page
+        return page
 
     async def live_kind(self, word, ident=None, offset=0, limit=100, sort="", descending=False):
         """A kind's own set (a bare mnemonic): the stand-in's search of the word, paged."""
@@ -115,7 +124,9 @@ class FakeBackend:
         spec = {"id": f"kind-{page['search'].get('kind')}", "kind": page["search"].get("kind"), "title": page["search"].get("mnemonic"),
                 "columns": [{"field": c.removeprefix("$."), "label": (page["search"].get("labels") or {}).get(c, c.removeprefix("$."))} for c in page["search"].get("columns", [])]}
         self.__dict__.setdefault("kind_pages", []).append((word, offset, limit))
-        return {**page, "set": spec, "rows": page["rows"][offset:offset + limit], "offset": offset, "capped": False}
+        made = {**page, "set": spec, "rows": page["rows"][offset:offset + limit], "offset": offset, "capped": False}
+        self.__dict__.setdefault("live_sets", {})[spec["id"]] = {**page, "set": spec}
+        return made
 
     async def pivot(self, method, path, ident, body=None, raw=False, **params):
         """The pivot engine: POST /inline (the figures of rows the console holds, core/engine_figures.py) as engine_standin answers it;

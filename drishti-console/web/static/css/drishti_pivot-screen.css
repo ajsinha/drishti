@@ -61,8 +61,6 @@
 .pv-grid, .pv-gridcard { min-width: 0; max-width: 100%; }
 .pv-x { background: none; border: 0; color: var(--d-muted); cursor: pointer; font-size: var(--d-fs-14); line-height: 1; }
 .pv-pop { font-size: var(--d-fs-12); }
-.pv-rows-t { border-collapse: collapse; font-size: var(--d-fs-12); }
-.pv-rows-t th, .pv-rows-t td { padding: var(--d-sp-1) var(--d-sp-6); border-bottom: 1px solid var(--d-border); white-space: nowrap; text-align: left; }
 .pv-keys { margin: var(--d-sp-6) 0 0; color: var(--d-muted); font-size: var(--d-fs-11_5); }
 .pv-pop-h { display: flex; gap: var(--d-sp-8); align-items: center; flex-wrap: wrap; margin-bottom: var(--d-sp-6); }
 .pv-pop-b { display: flex; gap: var(--d-sp-6); flex-wrap: wrap; margin-top: var(--d-sp-8); }
@@ -70,7 +68,6 @@
 .pv-kv { display: grid; grid-template-columns: 90px 1fr; gap: var(--d-sp-3) var(--d-sp-8); margin: 0; font-size: var(--d-fs-12); }
 .pv-kv dt { color: var(--d-muted); }
 .pv-kv dd { margin: 0; overflow-wrap: anywhere; }
-.pv-rows { max-height: 220px; overflow: auto; margin-top: var(--d-sp-6); }
 .pv-input { width: 100%; box-sizing: border-box; background: var(--d-bg); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: var(--d-radius-3); padding: var(--d-sp-4) var(--d-sp-8); font-size: var(--d-fs-12_5); }
 .pv-x { background: none; border: 0; color: var(--d-muted); cursor: pointer; font-size: var(--d-fs-14); line-height: 1; }
 .pv-radio { border: 0; padding: 0; margin: 0 0 var(--d-sp-8); display: flex; flex-direction: column; gap: var(--d-sp-3); font-size: var(--d-fs-12_5); }

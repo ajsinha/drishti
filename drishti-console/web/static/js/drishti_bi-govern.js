@@ -13,6 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Rupaka phase 4 (docs/architecture/ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 20.4, docs/guides/REPORTS_GUIDE.md): on an item's page, the history of saved states with the side-by-side diff and
    restore, the review panel (request, diff, Check, impact, data preview, decisions), lineage, impact ("what breaks if I remove ..."), and the "publish anyway" a
    bi-admin gets after a refusal. drishti_bi.js announces the item it has drawn with the event bi:item and a refused action with bi:refused. Text only, never markup. */
@@ -145,10 +146,8 @@
   }
   function previewTable(p) {
     if (!p.available) { return h('p', { class: 'bi-empty', text: 'No data preview: ' + p.reason }); }
-    var head = h('tr', {}, p.columns.map(function (c) { return h('th', { scope: 'col', text: c.name }); }));
-    var body = p.rows.map(function (r) { return h('tr', {}, r.map(function (v, i) { return h('td', { class: p.columns[i].type === 'string' ? '' : 'num', text: v == null ? '–' : (typeof v === 'number' ? v.toLocaleString('en-US', { maximumFractionDigits: 2 }) : String(v)) }); })); });
     return h('div', {}, h('p', { class: 'bi-result-meta', text: p.label + ' · ' + p.rowCount + ' row' + (p.rowCount === 1 ? '' : 's') }),
-      h('div', { class: 'tbl-wrap', tabindex: '0', role: 'region', 'aria-label': 'Data preview' }, h('table', { class: 'tbl bi-grid', 'data-plain': true }, h('thead', {}, head), h('tbody', {}, body))));
+      window.Drishti.records.table(p.columns, p.rows, { title: 'Data preview' }));   // the records grid, static
   }
   function review() {
     var sec = q('[data-sec-review]');

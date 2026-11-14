@@ -111,7 +111,7 @@ def test_submitting_shows_the_command_and_the_results(cl, be):
     assert {c["path"] for c in body["criteria"]} == {"book", "counterparty.name", "mtm"}                  # empty and "any" boxes are not criteria
     assert "(mtm &gt;= 1m and mtm &lt;= 5m)" in page and "data-qf-command" in page and "data-qf-copy=" in page
     assert be.asked[-1].startswith("TRD where") and be.asked[-1].endswith("order by mtm desc limit 50")   # the ordinary search ran the command
-    assert 'href="/v/trade/IRS-48213"' in page and 'class="tbl"' in page and "<b>2</b> of 36 trades match" in page    # the key cell opens the view
+    assert "data-records" in page and 'class="tbl"' not in page and "<b>2</b> of 36 trades match" in page    # the key cell opens the view
     assert "Watch as a monitor" in page and "Schedule a report" in page and "Save as named search" in page and "Share link" in page
     assert 'value="mtm" selected' in page and 'value="50" selected' in page                    # the form keeps what was asked
     held = [g for grp in qf(page)["value"].values() for g in grp.values()]

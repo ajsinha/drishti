@@ -21,10 +21,17 @@
   if (!root) { return; }
   var name = root.dataset.name, msg = root.querySelector('[data-msg]');
   var liveText = document.querySelector('[data-live-text]'), liveBox = document.querySelector('[data-live-status]');
-  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
-  function entities() {
-    return [].map.call(root.querySelectorAll('[data-row]'), function (r) { return { kind: r.dataset.kind, id: r.dataset.id }; });
+  var host = root.querySelector('[data-monitor-grid]'), table = [], grid = null;
+  try { table = JSON.parse(host.getAttribute('data-rows')) || []; } catch (e) { table = []; }
+  function entities() { return table.map(function (r) { return { kind: r.KIND, id: r.ID }; }); }
+  function mount() {   // the records grid in its static mode (js/drishti_records.js); the monitor's stream feeds it
+    var spec = JSON.parse(host.getAttribute('data-spec'));
+    grid = window.Drishti.records.mount(host, { rows: table, spec: spec, keyField: 'KEY', title: name, rowActions: [{ label: 'Remove from the monitor', run: remove }] });
   }
+  function remove(row) {
+    save(entities().filter(function (x) { return x.kind + '/' + x.id !== row.KEY; })).then(function (res) { if (res.ok) { location.reload(); } else { msg.textContent = res.b.detail; } });
+  }
+  if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', mount); } else { mount(); }
   function save(list) {
     return fetch('/m/api/' + encodeURIComponent(name), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ entities: list }) })
       .then(function (r) { return r.json().then(function (b) { return { ok: r.ok, b: b }; }); });
@@ -34,16 +41,12 @@
   }
   function onRow(d) {
     {
-      var row = root.querySelector('[data-row="' + CSS.escape(d.kind + '/' + d.id) + '"]');
+      var row = table.filter(function (r) { return r.KEY === d.kind + '/' + d.id; })[0];
       if (liveText) { liveText.textContent = 'Live, p99 ' + Math.round(d.p99Ms) + ' ms'; liveBox.setAttribute('data-live-state', 'live'); liveBox.title = (liveBox.getAttribute('data-tip') || '') + ' · ' + liveText.textContent; }
-      if (!row) { return; }
-      d.patches.forEach(function (p) {
-        var dd = row.querySelector('[data-i="' + p.index + '"]');
-        if (!dd) { return; }
-        dd.innerHTML = p.cell.link ? '<a class="lnk" href="/v/' + encodeURIComponent(p.cell.link.kind) + '/' + encodeURIComponent(p.cell.link.id) + '">' + esc(p.cell.text) + '</a>' : esc(p.cell.text);
-        dd.className = dd.className.replace(/\bt-\w+/g, '').trim() + (p.cell.tone ? ' t-' + p.cell.tone : '');
-        dd.classList.remove('flash'); void dd.offsetWidth; dd.classList.add('flash');
-      });
+      if (!row || !grid) { return; }
+      var fields = {};
+      d.patches.forEach(function (p) { var f = row._cells[String(p.index)]; if (f) { fields[f] = p.cell.text == null || p.cell.text === '' ? '—' : p.cell.text; row[f] = fields[f]; } });
+      grid.patch([{ id: row.KEY, fields: fields }]);
     }
   }
   function onError() { if (liveBox) { liveBox.setAttribute('data-live-state', 'reconnecting'); liveText.textContent = 'Reconnecting…'; liveBox.title = (liveBox.getAttribute('data-tip') || '') + ' · Reconnecting…'; } }
@@ -57,12 +60,6 @@
         return save(entities().concat([res.b.ref]));
       })
       .then(function (res) { if (res && res.ok) { location.reload(); } else if (res) { msg.textContent = res.b.detail; } });
-  });
-  root.querySelectorAll('[data-remove]').forEach(function (b) {
-    b.addEventListener('click', function () {
-      var row = b.closest('[data-row]');
-      save(entities().filter(function (x) { return x.kind + '/' + x.id !== row.dataset.row; })).then(function (res) { if (res.ok) { location.reload(); } else { msg.textContent = res.b.detail; } });
-    });
   });
   root.querySelector('[data-delete]').addEventListener('click', function () {
     if (window.confirm('Delete monitor “' + name + '”?')) { fetch('/m/api/' + encodeURIComponent(name) + '/delete', { method: 'POST' }).then(function () { location.href = '/m'; }); }

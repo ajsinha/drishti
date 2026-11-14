@@ -13,6 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* BI with AI (docs/guides/REPORTS_GUIDE.md): "Describe a report" in the designer, "Ask the data" and "Explain" on a report page. Off unless the server's AI layer is on
    (GET /bi/api/ai/status); every call is the signed-in person's, through the server's AI policy. The model never sees rows and never runs anything: a draft is checked by
    the report checker before it is shown, a question is run by the engine as the reader, a number's breakdown is worked out by the engine. Same-origin JSON only. */
@@ -31,9 +32,11 @@
 
   // ---- the answer: a table, the visual that suits it, the query the model chose ----------------------------------------------------------------------------------
   function table(res) {
-    const head = h('tr', {}, res.columns.map((c) => h('th', { scope: 'col', text: B.label ? B.label(c.name) : c.name })));
-    const rows = res.rows.map((r) => h('tr', {}, r.map((v, i) => h('td', { class: typeof v === 'number' ? 'num' : '', text: B.fmt(v, res.columns[i].name, res.columns[i].masked) }))));
-    return h('div', { class: 'tbl-wrap' }, h('table', { class: 'tbl bi-ai-table', 'data-plain': '' }, h('thead', {}, head), h('tbody', {}, rows)));
+    const cols = res.columns.map((c) => ({ name: c.name, label: B.label ? B.label(c.name) : c.name, type: c.type }));
+    const rows = res.rows.map((r) => r.map((v, i) => B.fmt(v, res.columns[i].name, res.columns[i].masked)));   // as the answer is worded: formats and masks applied
+    const grid = window.Drishti.records.table(cols, rows, { title: 'The answer' });
+    grid.classList.add('bi-ai-table');
+    return grid;                                                     // the records grid, static
   }
 
   function picture(res, kind) {

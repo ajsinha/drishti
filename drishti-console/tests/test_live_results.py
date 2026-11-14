@@ -42,6 +42,13 @@ def cl(be):
         yield c
 
 
+def host_spec(page):
+    """The declaration the records grid's host carries (data-spec), as the grid reads it."""
+    import html as h
+    import json
+    return json.loads(h.unescape(re.search(r'data-records[^>]*data-spec="([^"]*)"', page).group(1)))
+
+
 def record(be, name):
     """Keeps the first argument of each call of the backend's ``name`` and lets the call through."""
     seen = []
@@ -59,7 +66,9 @@ def test_a_forms_result_comes_from_the_live_set_with_the_same_rows_and_columns(c
     page = cl.get("/form/trading", params=[("kind", "trade"), ("run", "1"), ("op.counterparty.name", "contains"), ("v.counterparty.name", "Meridian"),
                                            ("order", "mtm"), ("desc", "1"), ("limit", "50")]).text
     assert asked and asked[-1].startswith("TRD where") and asked[-1].endswith("limit 50")     # the compiled command, through the engine
-    assert 'href="/v/trade/IRS-48213"' in page and "<b>2</b> of 36 trades match" in page
+    assert "<b>2</b> of 36 trades match" in page and "<table" not in page.split('data-panel="results"')[1].split("</section>")[0]   # no table of its own: the grid draws the rows
+    spec = host_spec(page)
+    assert [c["field"] for c in spec["columns"]][:1] == ["__id"] and spec["kind"] == "trade" and spec["editable"] is False
     assert 'data-live-set="qu-stand-in"' in page and 'data-live="off"' in page and "data-live-badge" not in page   # static: no live binding
 
 
@@ -87,7 +96,7 @@ def test_a_bare_mnemonic_opens_the_kinds_own_set_a_page_at_a_time(cl, be):
     page = cl.get("/s", params={"q": "TRD"}).text
     backend = be
     assert backend.kind_pages[-1][:2] == ("TRD", 0)
-    assert 'data-live-set="kind-' in page and "data-pager" in page
+    assert 'data-live-set="kind-' in page and "data-pager" in page and 'data-drishti-offset' not in page.split("data-records")[1].split(">")[0]
     total = int(re.search(r"of ([\d,]+)</span>", page).group(1).replace(",", ""))
     if total > backend.kind_pages[-1][2]:
         assert 'rel="next"' in page

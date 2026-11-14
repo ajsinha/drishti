@@ -82,13 +82,7 @@
       Incomplete: {{ data.failed | length }} source{{ 's' if data.failed | length > 1 }} could not be read.
       <ul class="mono">{% for f in data.failed %}<li><b>{{ f.source }}</b>: {{ f.reason }}</li>{% endfor %}</ul></div>{% endif %}
     {% if rows %}
-    <section class="pnl" data-panel="results"{% include "terminal/_live_attrs.html" %}><div class="pnl-b"><div class="tbl-wrap"><table class="tbl" aria-label="Results">
-      <thead><tr><th>{{ data.mnemonic or data.kind }}</th>{% if titled %}<th>Title</th>{% endif %}
-        {% for c in data.columns %}<th class="{{ 'num' if rows and rows[0].cells[loop.index0][1] else '' }}" title="{{ c }}">{{ data.labels[c] }}</th>{% endfor %}</tr></thead>
-      <tbody>{% for r in rows %}
-        <tr><td><a class="lnk mono" href="/v/{{ r.ref.kind }}/{{ r.ref.id | urlencode }}">{{ r.ref.id }}</a></td>{% if titled %}<td>{{ r.title }}</td>{% endif %}
-          {% for text, number in r.cells %}<td class="{{ 'num ' if number else '' }}mono">{{ text }}</td>{% endfor %}</tr>
-      {% endfor %}</tbody></table></div></div></section>
+    <section class="pnl" data-panel="results"><div class="pnl-b">{% with spec=grid_spec, limit=rows | length %}{% include "terminal/_records.html" %}{% endwith %}</div></section>
     <div class="qf-keep">
       <form class="srch-watch" method="post" action="/s/watch">
         <input type="hidden" name="q" value="{{ command }}"><label for="qfWatch" class="visually-hidden">Monitor name</label>

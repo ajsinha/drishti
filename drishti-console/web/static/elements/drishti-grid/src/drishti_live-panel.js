@@ -92,14 +92,15 @@ export class RecordPanel {
     const d = this.doc;
     this.host.textContent = '';
     this.host.setAttribute('data-record', this.id);
-    const tabs = h(d, 'div', { cls: 'dg-live-tabs', attrs: { role: 'tablist' } }, [['record', 'Record'], ['history', 'History'], ['raw', 'Raw JSON']].map(([id, label]) =>
+    const tabs = h(d, 'div', { cls: 'dg-live-tabs', attrs: { role: 'tablist' } }, [['record', 'Record'], ['history', 'History'], ['raw', this.spec.static ? 'JSON' : 'Raw JSON']].filter((t) => !(this.spec.static && t[0] === 'history')).map(([id, label]) =>
       h(d, 'button', { cls: 'dg-live-tab' + (this.tab === id ? ' on' : ''), text: label, data: { tab: id }, attrs: { type: 'button', role: 'tab', 'aria-selected': this.tab === id ? 'true' : 'false' },
         on: { click: () => { this.tab = id; this.draw(); } } })));
     this.banner = h(d, 'div', { cls: 'dg-live-changed', attrs: { role: 'status', 'aria-live': 'polite', hidden: true } });
     this.body = h(d, 'div', { cls: 'dg-live-tabbody', attrs: { role: 'tabpanel' } });
     this.host.append(
       h(d, 'header', { cls: 'dg-live-phead' }, [
-        h(d, 'h3', { cls: 'dg-live-ptitle' }, [h(d, 'span', { text: this.id, cls: 'dg-live-pkey' }), ' ', h(d, 'span', { text: 'v' + this.row[ROW_VERSION], cls: 'dg-live-pver', data: { version: this.row[ROW_VERSION] } })]),
+        h(d, 'h3', { cls: 'dg-live-ptitle' }, this.spec.static ? [h(d, 'span', { text: 'Row ' + this.id, cls: 'dg-live-pkey' })]
+          : [h(d, 'span', { text: this.id, cls: 'dg-live-pkey' }), ' ', h(d, 'span', { text: 'v' + this.row[ROW_VERSION], cls: 'dg-live-pver', data: { version: this.row[ROW_VERSION] } })]),
         h(d, 'button', { cls: 'dg-live-close', text: '×', attrs: { type: 'button', 'aria-label': 'Close the panel' }, on: { click: () => this.o.onClose() } })]),
       this.links(), tabs, this.banner, this.body);
     ({ record: () => this.drawRecord(), history: () => this.drawHistory(), raw: () => this.drawRaw() })[this.tab]();
@@ -109,10 +110,12 @@ export class RecordPanel {
   /** @private the declaration's links for this row */
   links() {
     const d = this.doc;
-    return h(d, 'div', { cls: 'dg-live-links' }, (this.spec.links || []).map((l) => {
-      const x = linkFor(l, this.row);
-      return h(d, 'a', { cls: 'dg-live-link', text: x.label, attrs: { href: x.href }, data: { link: l.label } });
-    }));
+    const links = (this.spec.links || []).map((l) => linkFor(l, this.row));
+    if (this.spec.kind && !this.spec.static && !links.some((l) => l.label === 'Open')) {   // every record of a kind has its page
+      links.unshift({ label: 'Open', href: '/v/' + encodeURIComponent(this.spec.kind) + '/' + encodeURIComponent(this.id) });
+    }
+    return h(d, 'div', { cls: 'dg-live-links' }, links.map((x) => h(d, 'a', { cls: 'dg-live-link', text: x.label, attrs: { href: x.href }, data: { link: x.label } })).concat(
+      (this.o.actions || []).map((a) => h(d, 'button', { cls: 'dg-live-link', text: a.label, attrs: { type: 'button' }, data: { action: a.label }, on: { click: () => a.run(this.row) } }))));
   }
 
   // ---- Record -----------------------------------------------------------------------------------------------------------------------------
@@ -269,7 +272,7 @@ export class RecordPanel {
    */
   noteChange() {
     if (!this.banner) { return; }
-    const moved = this.row[ROW_VERSION] !== this.openedVersion || (this.rawVersion !== undefined && this.row[ROW_VERSION] !== this.rawVersion);
+    const moved = !this.spec.static && this.row[ROW_VERSION] !== this.openedVersion || (this.rawVersion !== undefined && this.row[ROW_VERSION] !== this.rawVersion);
     this.banner.hidden = !moved;
     this.banner.textContent = '';
     if (!moved) { return; }

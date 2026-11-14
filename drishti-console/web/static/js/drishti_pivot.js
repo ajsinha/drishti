@@ -399,12 +399,11 @@
 
   function rows(key, box) {
     rowsOf(key).then(function (r) {
-      var h = ['<p class="pv-sub">' + r.rows.length + " of " + r.total + " rows" + (r.note ? " · " + esc(r.note) : "") + '</p><div class="pv-rows"><table class="pv-rows-t"><thead><tr>'];
-      r.columns.forEach(function (c) { h.push("<th>" + esc(c) + "</th>"); });
-      h.push("</tr></thead><tbody>");
-      r.rows.forEach(function (row) { h.push("<tr>" + row.map(function (x) { return "<td>" + esc(x) + "</td>"; }).join("") + "</tr>"); });
-      h.push("</tbody></table></div>");
-      if (box) { box.innerHTML = h.join(""); }
+      if (!box) { return; }
+      box.innerHTML = '<p class="pv-sub">' + r.rows.length + " of " + r.total + " rows" + (r.note ? " · " + esc(r.note) : "") + '</p><div data-pv-rows></div>';
+      var names = r.columns.map(function (c, i) { return r.columns.indexOf(c) === i ? c : c + " (" + (i + 1) + ")"; });
+      var objs = r.rows.map(function (row) { var o = {}; names.forEach(function (c, i) { o[c] = row[i]; }); return o; });
+      window.Drishti.records.mount(box.querySelector("[data-pv-rows]"), { rows: objs, columns: names, title: "The rows behind the cell", small: true });   // the records grid, static
     }).catch(function (e) { notice(e.message); });
   }
 

@@ -170,17 +170,18 @@
       var body = $("[data-tl-blotter]");
       body.textContent = "";
       if (!b.rows.length) { said(body, "No trade of my books changed on " + b.businessDate, 5); return; }
-      b.rows.slice(0, 12).forEach(function (r) {
-        var tr = el("tr");
-        tr.setAttribute("data-tl-event", r.event);
-        cell(tr, r.time || "—");
-        cell(tr, link("TRD " + r.trade, r.trade));
-        cell(tr, r.counterparty || "", "tl-wide");
-        cell(tr, r.notional === null || r.notional === undefined ? "—" : money(r.notional), "n");
-        var p = el("td"); p.appendChild(el("span", "tl-pill " + r.event, r.event)); tr.appendChild(p);
-        tr.title = (r.product || "") + (r.version ? " · version " + r.version : "") + (r.status ? " · " + r.status : "");
-        body.appendChild(tr);
-      });
+      var R = window.Drishti && window.Drishti.records;
+      if (!R) { said(body, "The grid did not load: reload the page."); return; }
+      var host = el("div");
+      body.appendChild(host);
+      if (b.how === "trades" && b.live && b.live.set && b.spec) {      // the trades of my books touched today: the engine's live set (it ticks when the kind is live)
+        R.mount(host, { set: b.live.set, live: !!b.live.live, spec: b.spec, limit: 100, small: true });
+      } else {                                                          // the changes read from two days' valuations: no set, the same grid in its static mode
+        var rows = b.rows.map(function (r) { return { TRADE: r.trade, EVENT: r.event, TIME: r.time || "—", COUNTERPARTY: r.counterparty || "—", PRODUCT: r.product || "—",
+          NOTIONAL: r.notional === null || r.notional === undefined ? null : r.notional }; });
+        R.mount(host, { rows: rows, small: true, title: "Today's changes", columns: [{ field: "TRADE", label: "Trade", type: "id" }, { field: "EVENT", label: "Event" }, { field: "TIME", label: "Time" },
+          { field: "COUNTERPARTY", label: "Counterparty" }, { field: "PRODUCT", label: "Product" }, { field: "NOTIONAL", label: "Notional", type: "number" }] });
+      }
     }).catch(function (e) { tile("trades", "—", e.message); said($("[data-tl-blotter]"), e, 5); });
     $("[data-tl-check]").addEventListener("submit", function (ev) { ev.preventDefault(); runCheck(); });
   }

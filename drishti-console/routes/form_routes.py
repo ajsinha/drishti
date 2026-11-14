@@ -123,6 +123,7 @@ async def form_page(request: Request, pack: str, kind: str = ""):
             out["data"] = await live_results.run(backend, out["command"], me)
             out["rows"] = live_results.table_rows(out["data"])
             out["titled"] = live_results.titled(out["rows"])
+            out["grid_spec"] = live_results.grid_spec(out["data"], out["titled"])
         except BackendError as e:
             out["error"] = e
     folded = q.get("form") == "hidden" or (q.get("form") != "shown" and out["data"] is not None and not out["error"]

@@ -126,3 +126,15 @@ def test_on_a_phone_the_switches_wrap_inside_the_screen_and_are_large_enough_to_
     for sel in ('.pv-seg label:has(input[value="exact"])', ".pv-switches .pv-chip:has([data-pv-live])"):
         assert pg.locator(sel).bounding_box()["height"] >= 32, sel
     assert not pg.errors, pg.errors
+
+
+def test_the_rows_behind_a_cell_are_the_records_grid_in_its_static_mode(browser, stack):
+    url, backend = stack
+    pg = _open(browser, url + "/pivot?view=u/desk")
+    pg.locator('[data-pv-grid] .dg-cell[data-cell^="DESK=Rates"]').first.click()
+    pg.wait_for_selector("[data-pv-pop] [data-pop-rows]")
+    pg.click("[data-pv-pop] [data-pop-rows]")
+    pg.wait_for_selector("[data-pv-pop] .rc-host[data-records-ready] .dg-row[data-key]")
+    assert pg.locator("[data-pv-pop] .rc-host .dg-row[data-key]").count() >= 3 and pg.locator("[data-pv-pop] table").count() == 0
+    assert pg.locator("[data-pv-pop] .dg-live-chip").inner_text().startswith("STATIC")
+    assert not pg.errors, pg.errors

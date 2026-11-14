@@ -19,7 +19,7 @@ def test_monitor_starters_rows_and_stream(client, backend):
     index = client.get("/m").text
     assert "Credit watch" in index and "Fleet watch" in index
     r = client.get("/m/Watch", params={"template": "Credit watch"})
-    assert r.status_code == 200 and 'data-row="netting-set/NS-NORTH-01"' in r.text and "50,000,000" in r.text
+    assert r.status_code == 200 and "netting-set/NS-NORTH-01" in r.text and "50,000,000" in r.text and "<table" not in r.text and "data-monitor-grid" in r.text
     assert "Watch" in client.get("/m").text
     with client.stream("GET", "/api/monitor-stream/Watch") as s:
         body = "".join(s.iter_text())

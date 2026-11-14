@@ -40,6 +40,14 @@
   and `changed-by: UPDATED_BY`, which are not in the trade contract. The field description now says `readonly`, `pattern` and
   `maxLength`. The `drishti.live-sets.*` settings are in the server's `application.yaml` and CONFIGURATION.md, with the new
   `store-timeout-seconds`.
+- **Records everywhere: one grid for every table of records** (drishti-grid 0.5.0; docs/architecture/ELEMENTS.md section 5.6, USER_GUIDE *Results
+  everywhere behave the same*). `LiveSetGrid` gains a **static mode** (rows the page holds: no merge, no edit; the panel shows the row's JSON; `patch`
+  for a page that feeds its own changes), a Chart button, row actions, a page of a larger set (`offset`) and nested fields (`counterparty.name`). One
+  console file, `drishti_records.js`, mounts it. On the engine: FORM results, the search page and a bare mnemonic (`POS <GO>`) with the record panel,
+  Raw JSON, grouping, Pivot › and ticks, and the trading Home's *Today's blotter*. Static: a comparison of two dates, Monitors (`/m/*`, ticking in place),
+  the rows behind a Pivot cell, the BI dataset and transform previews and the AI answer. Deleted: those pages' own tables and cell scripts and the
+  search adapter of Chart any table (the grid's Chart button replaces it; Pivot › answers "chart all").
+
 - **The grid's live mode and the trade blotter page** (drishti-grid; docs/architecture/ELEMENTS.md section 5.5, modules/trading/docs/guide.md).
   One Elements component, `LiveSetGrid`, draws a live result set: a snapshot, then the server's changes merged by key and version and applied
   as one batched transaction so cells tick, the page window sent to the server, `resync` and reconnects reading the set again, grouping with live
