@@ -40,4 +40,5 @@ async def module_visuals(request: Request) -> JSONResponse:
     from core import modules as _modules
 
     parts = request.app.state.module_parts
-    return JSONResponse({"visuals": [v for v in parts.visuals() if _modules.module_on(v["module"])]}, headers={"Cache-Control": "no-store"})
+    return JSONResponse({"visuals": [v for v in parts.visuals() if _modules.module_on(v["module"])],
+                         "modules": _modules.modules_for_page(None)}, headers={"Cache-Control": "no-store"})

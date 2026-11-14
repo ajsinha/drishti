@@ -101,6 +101,11 @@ public final class EditionEnvironmentPostProcessor implements EnvironmentPostPro
                 }
             }
         });
+        // a module the distribution does not carry (nor requires) is not loaded: the about answer does not list it, so the console draws
+        // none of its menu entries, pages or assets (a site's own drishti.modules.<id>.enabled still wins)
+        com.ash.drishti.packs.distribution.Distributions.known(env).keySet().stream()
+                .filter(id -> !dist.modules().contains(id) && !"core".equals(id))
+                .forEach(id -> props.put("drishti.modules." + id + ".enabled", preset(env, "drishti.modules." + id + ".enabled", "false")));
         addLayer(env, new MapPropertySource(SOURCE, props));
         env.getPropertySources().addFirst(new MapPropertySource(SOURCE + "-name", Map.of(Editions.NAME, name)));   // the distribution's name
         System.getLogger(EditionEnvironmentPostProcessor.class.getName()).log(System.Logger.Level.INFO,
