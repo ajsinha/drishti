@@ -373,7 +373,6 @@ A connector reads one lake. Edit the two connector files the packs wrote at the 
 
 ```yaml
 plugin: delta
-kinds: [trade]
 settings:
   lake: risklake                  # was: demo
   lake-tables: trading.trade_endur
@@ -386,7 +385,6 @@ settings:
 ```yaml
 plugin: delta
 enabled: true
-kinds: [scenario-pv, var-limit]
 settings:
   lake: risklake
   lake-tables: risk.scenario-pv,risk.var-limit
@@ -695,7 +693,6 @@ append per business date, each recorded as `drishti-batch:intraday-0915:<date>` 
 ```bash
 mkdir -p $SCRATCH/connectors && cat > $SCRATCH/connectors/old-store.yaml <<EOF
 plugin: delta
-kinds: [pnl-vector]
 settings:
   root: $SCRATCH/lake
   domain: risk
@@ -729,8 +726,6 @@ tables:
 
 --- $SCRATCH/connectors/old-store.yaml (would be written)
 plugin: delta
-kinds:
-- pnl-vector
 settings:
   lake: lake
 
@@ -1163,7 +1158,6 @@ tables:
 ```yaml
 # config/connectors/news-store.yaml
 plugin: delta
-kinds: [news-topic, listed-company, news, quote]
 settings:
   lake: news
   lake-tables: news.news-topic,news.listed-company,news.news,news.quote
@@ -1526,7 +1520,6 @@ connector var-results   origin file   plugin iceberg   running   …
 
 ```yaml
 plugin: iceberg
-kinds: [var-official]
 settings:
   root: ${drishti.var.official.root:${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}}
   domain: risk-results

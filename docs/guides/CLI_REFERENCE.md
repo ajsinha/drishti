@@ -2016,7 +2016,6 @@ The connector reads the lake once its file says so (Admin → Connectors, or `dr
 ```yaml
 # config/connectors/trade-endur.yaml (written from the pack's template at the first start; yours to edit)
 plugin: delta
-kinds: [trade]
 settings:
   root: /srv/drishti/delta
   domain: trading

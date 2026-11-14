@@ -1460,7 +1460,6 @@ tables:
 ```yaml
 # config/connectors/trade-endur.yaml, Delta on Azure (ADLS Gen2)
 plugin: delta
-kinds: [trade]
 settings:
   root: abfs://lake@riskstorage.dfs.core.windows.net/delta
   engine: hadoop                             # abfs:// needs the hadoop engine
@@ -1642,7 +1641,6 @@ The connector reads it like any lake:
 ```yaml
 # config/connectors/news-store.yaml (config/connectors.examples/memory/news-store.yaml)
 plugin: delta
-kinds: [news-topic, listed-company, news, quote]
 settings:
   lake: news
   lake-tables: news.news-topic,news.listed-company,news.news,news.quote
