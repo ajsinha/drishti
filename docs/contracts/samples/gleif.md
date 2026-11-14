@@ -486,7 +486,7 @@ Fields no record above has, found by reading all 9,937 rows, with how many rows 
 - Data contract: [LEI in the gleif pack's contracts](../packs/gleif.md#lei-lei-legal-entity-lei-entity) (`config/packs/core/gleif/contracts/lei-entity.contract.yaml`, the source of every meaning on this page).
 - [World and public data: funds, external feeds, public sector](../../guides/WORLD_DATA_GUIDE.md)
 - [2. Entities and ownership](../../knowledge/data.md#2-entities-and-ownership)
-- [Business intelligence: pivot, tables and models, reports, the Notebook, groupings (the guide and its tutorials)](../../guides/bi/NOTEBOOK_AND_PYTHON.md)
+- [Business intelligence](../../guides/bi/README.md)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="lei-relationship"></a>
@@ -626,7 +626,7 @@ Fields no record above has, found by reading all 9,347 rows, with how many rows 
 - Data contract: [LEIR in the gleif pack's contracts](../packs/gleif.md#leir-lei-parent-relationship-lei-relationship) (`config/packs/core/gleif/contracts/lei-relationship.contract.yaml`, the source of every meaning on this page).
 - [World and public data: funds, external feeds, public sector](../../guides/WORLD_DATA_GUIDE.md)
 - [2. Entities and ownership](../../knowledge/data.md#2-entities-and-ownership)
-- [Business intelligence: pivot, tables and models, reports, the Notebook, groupings (the guide and its tutorials)](../../guides/bi/NOTEBOOK_AND_PYTHON.md)
+- [Business intelligence](../../guides/bi/README.md)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
 <a id="lei-mapping"></a>
@@ -753,5 +753,5 @@ None: all 3,381 rows were read, and every field any of them has is in the record
 - Data contract: [LEIM in the gleif pack's contracts](../packs/gleif.md#leim-isin-or-bic-to-lei-lei-mapping) (`config/packs/core/gleif/contracts/lei-mapping.contract.yaml`, the source of every meaning on this page).
 - [World and public data: funds, external feeds, public sector](../../guides/WORLD_DATA_GUIDE.md)
 - [2. Entities and ownership](../../knowledge/data.md#2-entities-and-ownership)
-- [Business intelligence: pivot, tables and models, reports, the Notebook, groupings (the guide and its tutorials)](../../guides/bi/NOTEBOOK_AND_PYTHON.md)
+- [Business intelligence](../../guides/bi/README.md)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
