@@ -95,9 +95,17 @@ public record SecurityProperties(Boolean enabled, String secret, Duration clockS
      * @param edit may submit changes through write-back (APPROVALS_GUIDE.md › The design and its reasons, section 12); false unless set
      * @param permissions module permissions ({@code var:system-baskets}: create, edit, retire and import the VaR engine's system baskets,
      *     VAR_GUIDE.md section 5.7); an administrator holds every one
+     * @param rows row rules by kind (ACCESS_MODEL.md section 10): {@code trade: "ASSET_CLASS = 'RATES' and DESK in $user.desks"}; the role sees
+     *     the records of the kind the rule passes (lists, blotters, search, FORM, Raw JSON); a kind without a rule: every record it may open
+     * @param editSystems the trading systems whose records the role may change through write-back ({@code [ENDUR]}); empty: every system
      */
     public record Role(List<String> kinds, Boolean raw, Boolean author, Boolean admin, Boolean approve, Boolean calc, Boolean layout, Boolean collaborate, Boolean compliance,
-            List<String> bi, Boolean edit, List<String> permissions) {
+            List<String> bi, Boolean edit, List<String> permissions, Map<String, String> rows, List<String> editSystems) {
+
+        public Role(List<String> kinds, Boolean raw, Boolean author, Boolean admin, Boolean approve, Boolean calc, Boolean layout, Boolean collaborate, Boolean compliance,
+                List<String> bi, Boolean edit, List<String> permissions) {
+            this(kinds, raw, author, admin, approve, calc, layout, collaborate, compliance, bi, edit, permissions, null, null);
+        }
 
         public Role(List<String> kinds, Boolean raw, Boolean author, Boolean admin, Boolean approve, Boolean calc, Boolean layout, Boolean collaborate, Boolean compliance) {
             this(kinds, raw, author, admin, approve, calc, layout, collaborate, compliance, null, null, null);
@@ -115,6 +123,8 @@ public record SecurityProperties(Boolean enabled, String secret, Duration clockS
 
         @org.springframework.boot.context.properties.bind.ConstructorBinding
         public Role {
+            rows = rows == null ? Map.of() : Map.copyOf(rows);
+            editSystems = editSystems == null ? List.of() : List.copyOf(editSystems);
             permissions = permissions == null ? List.of() : List.copyOf(permissions);
             bi = bi == null ? List.of() : List.copyOf(bi);
             kinds = kinds == null ? List.of() : List.copyOf(kinds);

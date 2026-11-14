@@ -44,18 +44,20 @@ import java.util.Set;
 public final class RowPredicate {
 
     /** Every row. */
-    public static final RowPredicate ALL = new RowPredicate("", null, Set.of(), List.of(), Map.of());
+    public static final RowPredicate ALL = new RowPredicate("", "", null, Set.of(), List.of(), Map.of());
 
     private static final ElCompiler EL = new ElCompiler(2_000);
 
     private final String text;
+    private final String el;
     private final Expr expr;
     private final Set<String> fields;
     private final List<ScanRequest.Filter> pushdown;
     private final Map<String, Object> equalities;
 
-    private RowPredicate(String text, Expr expr, Set<String> fields, List<ScanRequest.Filter> pushdown, Map<String, Object> equalities) {
+    private RowPredicate(String text, String el, Expr expr, Set<String> fields, List<ScanRequest.Filter> pushdown, Map<String, Object> equalities) {
         this.text = text;
+        this.el = el;
         this.expr = expr;
         this.fields = fields;
         this.pushdown = pushdown;
@@ -89,7 +91,7 @@ public final class RowPredicate {
         List<ScanRequest.Filter> push = new ArrayList<>();
         Map<String, Object> eq = new java.util.LinkedHashMap<>();
         conjuncts(e, push, eq);
-        return new RowPredicate(text.strip(), e, Set.copyOf(fields), List.copyOf(push), java.util.Collections.unmodifiableMap(eq));
+        return new RowPredicate(text.strip(), el, e, Set.copyOf(fields), List.copyOf(push), java.util.Collections.unmodifiableMap(eq));
     }
 
     /** True when every row passes. */
@@ -100,6 +102,11 @@ public final class RowPredicate {
     /** The text as written. */
     public String text() {
         return text;
+    }
+
+    /** The same predicate in Rachana's expression form ({@code SOURCE_SYSTEM == 'ENDUR'}), person attributes resolved: a search's condition. */
+    public String el() {
+        return el;
     }
 
     /** The fields it reads (top-level names and dotted paths). */
