@@ -101,7 +101,6 @@ def test_the_risk_domain_switches_its_connector_file_and_back(tmp_path, monkeypa
     assert not (folder / "risk-store.yaml").exists()                     # the pack's own Delta connector serves again
     assert not (folder / "exposure-store.yaml").exists()
     assert not (data / "connectors" / "history").exists()               # no history copies: the overrides are the tool's own
-    assert len(list((data / "connectors" / "history").glob("exposure-store.*.yaml"))) == 1
 
 
 def test_a_copy_into_iceberg_leaves_a_build_record(tmp_path):
