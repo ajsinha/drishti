@@ -373,10 +373,10 @@ public final class MemoryLake implements AutoCloseable {
         }
         List<LakeManifest.Column> columns = new ArrayList<>(List.of(new LakeManifest.Column("id", "string"), new LakeManifest.Column("doc", "string"),
                 new LakeManifest.Column("business_date", "date")));
-        spec.columns().forEach(c -> columns.add(new LakeManifest.Column(c, "string")));
+        spec.written().forEach(c -> columns.add(new LakeManifest.Column(c, "string")));
         List<String> stats = new ArrayList<>(List.of("id", "business_date"));
-        stats.addAll(spec.columns());
-        LakeManifest m = new LakeManifest(path, List.of("business_date"), columns, spec.columns(), mode, 5_000, stats, parts);
+        stats.addAll(spec.written());
+        LakeManifest m = new LakeManifest(path, List.of("business_date"), columns, spec.written(), mode, 5_000, stats, parts);
         LakeWriter.Result r = LakeWriter.forTable(path, settings).write(m, n -> { });
         MemoryUpkeep.expire(engine, store, path, spec.keepVersions());
         t.rows = spec.mode().equals("append") ? t.rows + r.rows() : byId.size();
@@ -426,6 +426,9 @@ public final class MemoryLake implements AutoCloseable {
             if (v != null && !v.isNull()) {
                 cols.put(c, text(v));
             }
+        }
+        if (spec.written().contains(RowRetention.ARRIVED) && !spec.columns().contains(RowRetention.ARRIVED)) {
+            cols.put(RowRetention.ARRIVED, java.time.Instant.now().toString());   // the age of a row aged by arrival
         }
         return new Row(id, date, sort.toString(), line.toString());
     }
@@ -652,6 +655,9 @@ public final class MemoryLake implements AutoCloseable {
         m.put("nextRefill", t.nextRefill == null ? null : t.nextRefill.toString());
         m.put("pinned", s.pin());
         m.put("evictions", t.evictions.get());
+        m.put("retention", s.retention() == null ? null : Map.of("ttl", String.valueOf(s.retention().ttl()), "on",
+                s.retention().byArrival() ? "arrival" : s.retention().on(), "maxRows", String.valueOf(s.retention().maxRows())));
+        m.put("expiredRows", t.expiredRows.get());
         m.put("refusals", t.refusals.get());
         m.put("compactions", t.compactions.get());
         m.put("savedTodayBytes", t.savedToday());

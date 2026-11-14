@@ -110,7 +110,7 @@ public final class ConnectorWrites {
             if (plugin.isEmpty()) {
                 p.add(name + ": the connector's plugin is not running, so its commands cannot be checked; it writes nothing until it is");
             } else if (plugin.get().writeKey().isEmpty()) {
-                p.add(name + ": plugin " + d.plugin() + " cannot write (only the JDBC plugin writes in 2.8.0; a lake is never written per edit:"
+                p.add(name + ": plugin " + d.plugin() + " cannot write (the JDBC and Kafka plugins write; a lake is never written per edit:"
                         + " approved overlays are folded into the next build)");
             } else {
                 String key = plugin.get().writeKey().get();

@@ -17,6 +17,26 @@
 
 ## Unreleased
 
+- **The trading module and the live result sets engine** (modules/trading/docs/guide.md). One engine (`com.ash.drishti.server.liveset`) behind every
+  blotter: a declaration (`blotters/<id>.blotter.yaml` in a module, or `config/blotters/`) names the kind, the query (the search grammar), the
+  key and version, the columns, grouping, links, the live side's `retention:` (`ttl`, `on`, `max-rows`) and, for edits, a Rachana form with
+  `save:`. The snapshot is read from the durable store through the bindings in one pass, the kind's `live:` binding is subscribed to first and
+  every change merges by key and version (no duplicates, never back in time, a row that leaves the query leaves the set); one set is shared by
+  its viewers and holds nothing per person; each viewer's window is masked for them, coalesced and flushed every 50 ms, sent only its page's
+  changes when paged, and told to resync when it falls 5,000 records behind (a burst of 10,000 updates is one event). Edits are allowed only
+  when the site's configuration and the person's rights both say so (checked on the server, refusals audited), a stale version is refused with
+  who changed it (`409 DRS-9303`), and the change goes through the one write-back (approvals, the outbox, audit) under the form's name
+  `live:<id>`. `GET /api/v1/live`, `/live/{id}/rows`, `/rows/{entity}`, `/stream`, `/stream/{s}/window`, `POST /live/{id}/edit`. The sources
+  gained `subscribeKind` (every change of a kind: Kafka, RabbitMQ, ActiveMQ) and Kafka `documents` (the topic state in one pass); the Kafka
+  plugin writes (`kafka:` commands: a command keyed by its change id, or the amended record with the next version; the version guard names
+  who changed the record; acks=all, an idempotent producer). The `trading` module (content only) ships `trade.blotter.yaml`. Three blotter
+  mock-ups (`docs/lenses/mockups/trading-blotter/`); option B chosen. DEVELOPER_GUIDE 12.6a (how to create a blotter), APPROVALS_GUIDE
+  section 10.
+- **A memory table's row retention** (`retention: {ttl, on, max-rows}` on `drishti.lake.memory.tables[]`): rows older than `ttl` by a
+  document field (or by arrival, kept in the promoted column `arrived_at`) and all but the newest `max-rows` are dropped by the compaction's
+  rewrite (the one upkeep); absent, nothing changes. Admin → Lakes shows each table's retention and the rows it dropped. DATA_LAKE_GUIDE
+  (the in-memory lake's settings).
+
 - **Connector and binding designer** (Build → Create → New connector, `/build/connector/designer`): the Pack designer's left-rail workspace in six steps: the connector type (the installed types), its settings (a form generated from the type; a secret only as a reference to the secret store), a connection test (connected, latency, what it sees per kind and date), a preview of real rows with the type detected per field (new `POST /api/v1/admin/connectors/{name}/preview`, a throwaway instance; `ConnectionProbe.sample`), binding to kinds (read, union, live, write; the resolution now and after; the functions that come on) and a review of the diff of the connector file and `bindings.yaml`, then the one bindings path: the connector is saved through Admin → Connectors' API and the bindings are proposed to the bindings service, a second administrator approves (four eyes, audited, no restart). Admin → Connectors' New connector button, its `n` key and a pack's `?new=<name>` link now open the designer (one way to create); its editor keeps editing existing connectors, and the connector settings form is shared (`drishti_conn-settings.js`). Browser test against a real server with two administrators; ADMIN_GUIDE section 23.0, DEVELOPER_GUIDE section 12.3.
 - **Child tables in every store.** An array of records declared a child kind in the pack's `ingest:` block (`child-of`) is now split off its
   parent's documents by every loader and written in the parent's store: Delta, **Iceberg** and the file store alike. `data ingest --store iceberg

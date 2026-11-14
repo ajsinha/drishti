@@ -146,6 +146,25 @@ public final class StructuredSearch {
         return q.documentPaths().stream().filter(p -> p.startsWith("$.") && names.canonical(p).isEmpty()).toList();
     }
 
+    /**
+     * The query's condition as a test of one document, resolved and compiled as {@link #run} does: a live result set keeps a changed row
+     * only while the condition holds for it (modules/trading/docs/guide.md). A condition that cannot be evaluated on a document is false.
+     */
+    public java.util.function.Predicate<DataNode> condition(SearchQuery asked) {
+        SearchQuery q = resolve(asked, knownFields(kindOf(asked)));
+        Expr c = compile(q.condition(), "condition");
+        if (c == null) {
+            return d -> true;
+        }
+        return d -> {
+            try {
+                return Values.truthy(c.eval(EvalContext.of(d, formats)));
+            } catch (RuntimeException e) {
+                return false;
+            }
+        };
+    }
+
     public Result run(SearchQuery asked, AsOf asOf, UnaryOperator<DataNode> redact) {
         long t0 = System.nanoTime();
         String kind = kindOf(asked);

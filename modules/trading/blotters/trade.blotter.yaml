@@ -1,0 +1,63 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The trade blotter (modules/trading/docs/guide.md section 6): one declaration, run by the kernel's live result sets engine.
+blotter: trade
+title: Trade blotter
+kind: trade
+query: "trade where TRADE_STATUS != 'CANCELLED'"   # the rows it holds, in the search grammar; a FORM search is the same without edit:
+key: TRADE_ID
+version: TRADE_VERSION                  # the guard: an edit made on an older version is refused, naming who changed it
+changed-by: UPDATED_BY
+changed-at: SOURCE_UPDATE_TIME
+columns:
+- { field: TRADE_ID, label: Trade, type: id, width: 120 }
+- { field: TRADE_VERSION, label: V, type: number, width: 48 }
+- { field: TRADE_STATUS, label: Status, type: status }
+- { field: PORTFOLIO, label: Book }
+- { field: TRADER_ID, label: Trader }
+- { field: COUNTERPARTY, label: Counterparty }
+- { field: PRODUCT_TYPE, label: Product }
+- { field: BUY_SELL_CODE, label: B/S, width: 48 }
+- { field: QUANTITY, label: Quantity, type: amount, format: amount0 }
+- { field: PRICE, label: Price, type: number, format: number4 }
+- { field: CURRENCY, label: Ccy, width: 56 }
+- { field: TRADE_DATE, label: Trade date, type: date }
+- { field: MATURITY_DATE, label: Maturity, type: date }
+- { field: TAGS, label: Tags, type: list }
+- { field: SOURCE_UPDATE_TIME, label: Updated, type: datetime }
+group-by: []                            # grouping (desk and book with live subtotals) is a choice on the grid
+subtotals: [QUANTITY]
+sort: { field: SOURCE_UPDATE_TIME, descending: true }
+links:
+- { label: Explain, href: "/explain/trade/{TRADE_ID}" }
+- { label: VaR, href: "/var?scope=book:{PORTFOLIO}" }
+- { label: Limits, href: "/limits?book={PORTFOLIO}" }
+retention: { ttl: 1d, on: SOURCE_UPDATE_TIME }   # the live side keeps a day; the durable store keeps its own
+tray: true                              # the tray of the person's changes waiting
+edit:                                   # a Rachana form (RACHANA_REFERENCE.md, forms): who may change what, with its checks
+  edit: cells
+  key: trade_id
+  roles: [trader, middle-office, admin]
+  fields:
+  - { id: trade_id, label: Trade, bind: TRADE_ID, readonly: true }
+  - { id: book, label: Book, bind: PORTFOLIO, required: true, pattern: "BOOK-[A-Z0-9-]+" }
+  - { id: price, label: Price, bind: PRICE, type: number, min: 0 }
+  - { id: quantity, label: Quantity, bind: QUANTITY, type: number, min: 0 }
+  - { id: status, label: Status, bind: TRADE_STATUS, type: enum, options: [NEW, VALIDATED, AMENDED, CANCELLED], editable-by: [middle-office, admin] }
+  save:
+    target: source                      # written back to the source system through the connector's writes: (Kafka or JDBC)
+    command: amend-trade                # the command of the trade's connector (config/connectors/<name>.yaml, writes:)
+    approval: none                      # the site's policy (config/edit/policy.yaml, source:) may ask for more: four eyes
+    reason: optional

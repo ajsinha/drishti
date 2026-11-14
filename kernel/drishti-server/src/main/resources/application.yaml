@@ -409,6 +409,7 @@ drishti:
       - /api/v1/command
       - /api/v1/forms/*/*/compile        # query by form: writes the criteria out as a search command, nothing else
       - /api/v1/changes/preview          # write-back's review sheet: what a change would do, written nowhere
+      - /api/v1/live/*/stream/*/window   # a live set stream's page (the rows it is sent changes of), kept in memory for the caller's own stream
       - /api/v1/bi/datasets/*/query     # Rupaka phase 2: a dataset query (fields, measures, filters in the body), masked and row-ruled, changes nothing
       - /api/v1/bi/datasets/validate    # checks a dataset's YAML without storing it
       - /api/v1/bi/mq                   # the model query language (docs/architecture/ARCHITECTURE.md §28 › The model layer: the specification, section 15): one query of a model as the caller, changes nothing
@@ -466,6 +467,7 @@ drishti:
         description: "Submit changes through write-back (APPROVALS_GUIDE.md: forms, the CLI's change propose), and approve, reject or withdraw them in the one Approvals queue (kind change). No token has it unless chosen; it never exceeds your roles: the edit power, the field's roles, masks and four eyes all apply, and editing must be on."
         allow:
           - POST /api/v1/changes
+          - POST /api/v1/live/*/edit
           - POST /api/v1/approvals/change/*/approve
           - POST /api/v1/approvals/change/*/reject
           - POST /api/v1/approvals/change/*/withdraw

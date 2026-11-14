@@ -1,0 +1,52 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The trading module's manifest (modules/trading/docs/guide.md; docs/architecture/KERNEL_AND_MODULES.md section 3.3): content only, no code.
+# It ships the trade blotter, a declaration the kernel's live result sets engine runs (blotters/trade.blotter.yaml): the trades from the
+# durable store, ticking from the `trade` kind's live: binding (config/bindings.yaml), editable where the site and the person's rights
+# allow it, written back through the binding's write path. Not an order or execution system: no venue orders, no FIX.
+format: 1
+id: trading
+version: 1.0.0
+title: Trading
+about: 'The live trade blotter: trades ticking in milliseconds from the bank''s messaging (Kafka, RabbitMQ, ActiveMQ), edits written back
+  through the bindings (a version per trade, an outbox, four eyes where the site asks, full audit)'
+domain: trading
+origin: first-party
+publisher:
+  id: drishti
+  name: Ashutosh Sinha
+licence:
+  feature: trading
+kernel: '>=0.2 <1.0'
+rachana: '>=1.0'
+contracts: '>=1.0'
+plugin-api: '>=2.0'
+elements: '>=1.4 <2'
+data:
+  needs: data/needs.yaml
+blotters:
+  folder: blotters
+  list:
+  - trade
+parts:
+  feeds: {class: feed, contains: [live-sets]}       # the listener: one runner per placement (KERNEL_AND_MODULES.md section 4.11.2)
+  console: {class: light, contains: [help]}
+docs:
+  readme: docs/README.md
+  help: docs/help.yaml
+  guides:
+  - docs/guide.md
+resources:
+  memory-mb: 64

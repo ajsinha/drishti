@@ -64,6 +64,7 @@ public final class EditableFields {
 
     private final SutraRegistry sutras;
     private volatile Map<String, List<Rule>> byField = Map.of();
+    private final List<java.util.function.Supplier<List<Rule>>> more = new java.util.concurrent.CopyOnWriteArrayList<>();
 
     public EditableFields(SutraRegistry sutras) {
         this.sutras = sutras;
@@ -87,7 +88,21 @@ public final class EditableFields {
                 }
             }
         }
+        for (java.util.function.Supplier<List<Rule>> m : more) {
+            for (Rule r : m.get()) {
+                out.computeIfAbsent(r.kind() + "|" + r.field().recordField(), k -> new ArrayList<>()).add(r);
+            }
+        }
         byField = Map.copyOf(out);
+    }
+
+    /**
+     * Another place forms with {@code save:} are declared besides Sutras (a live result set's {@code edit:}, modules/trading/docs/guide.md):
+     * its rules join the Sutras' at every rebuild; the rules name the declaration as their Sutra ({@code live:trade}). Rebuilds at once.
+     */
+    public void addSource(java.util.function.Supplier<List<Rule>> rules) {
+        more.add(rules);
+        rebuild();
     }
 
     private static List<Rule> rules(Sutra s, Panel p, Form f) {
