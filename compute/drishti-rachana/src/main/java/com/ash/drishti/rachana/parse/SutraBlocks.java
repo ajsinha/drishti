@@ -116,6 +116,51 @@ public final class SutraBlocks {
 
     private SutraBlocks() {}
 
+    /** A module's section of a kind's page (module.yaml {@code sections:}): the fragment it brings and the kind whose Sutras show it. */
+    public record Contribution(String module, String kind, Block block) {}
+
+    private static final java.util.Map<String, List<Contribution>> CONTRIBUTIONS = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /**
+     * A module's section: its fragment joins the library (named {@code <module>/<fragment>}) and is appended to every Sutra of the kind
+     * when the Sutras are read again (the fragment's panels carry their own {@code when:}). One implementation for every module.
+     */
+    public static void contribute(String module, String kind, String fragmentYaml, String file) {
+        Block b = read(fragmentYaml, file, file);
+        Block named = new Block(module + "/" + b.name(), b.version(), b.text(), b.params(), b.file(), b.path());
+        CONTRIBUTIONS.compute(module, (k, old) -> {
+            List<Contribution> l = new ArrayList<>(old == null ? List.of() : old);
+            l.add(new Contribution(module, kind, named));
+            return l;
+        });
+        LIBRARY.updateAndGet(m -> {
+            Map<String, TreeMap<Integer, Block>> n = new TreeMap<>(m);
+            n.computeIfAbsent(named.name(), x -> new TreeMap<>()).put(named.version(), named);
+            return Map.copyOf(n);
+        });
+    }
+
+    /** Takes a module's sections away (the module stopped); the Sutras are read again by the caller. */
+    public static void withdraw(String module) {
+        List<Contribution> gone = CONTRIBUTIONS.remove(module);
+        if (gone != null) {
+            LIBRARY.updateAndGet(m -> {
+                Map<String, TreeMap<Integer, Block>> n = new TreeMap<>(m);
+                gone.forEach(c -> n.remove(c.block().name()));
+                return Map.copyOf(n);
+            });
+        }
+    }
+
+    /** The {@code use:} nodes of the sections modules contribute to a kind's Sutras, in module order. */
+    public static List<PNode> contributedUses(String kind) {
+        List<PNode> out = new ArrayList<>();
+        CONTRIBUTIONS.values().stream().flatMap(List::stream).filter(c -> c.kind().equals(kind))
+                .sorted(java.util.Comparator.comparing(c -> c.block().name()))
+                .forEach(c -> out.add(new PNode(Map.of("use", new PNode(c.block().ref(), 1, 1)), 1, 1)));
+        return out;
+    }
+
     /** Whether a file is a block file ({@code .block.yaml}) or a fragment of the library ({@code .fragment.yaml}). */
     public static boolean isBlockFile(Path f) {
         String n = f.getFileName() == null ? "" : f.getFileName().toString();
@@ -232,6 +277,7 @@ public final class SutraBlocks {
                 problems.add(problem("cannot scan " + dir + ": " + e.getMessage(), dir.toString(), 1, 1));
             }
         }
+        CONTRIBUTIONS.values().forEach(l -> l.forEach(c -> next.computeIfAbsent(c.block().name(), k -> new TreeMap<>()).put(c.block().version(), c.block())));
         LIBRARY.set(Map.copyOf(next));
         java.util.Set<Block> seen = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
         for (TreeMap<Integer, Block> versions : next.values()) {

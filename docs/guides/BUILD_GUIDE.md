@@ -29,7 +29,7 @@ Who reads what:
 |---|---|
 | a user or administrator: which packs ship, turning them on and off, who sees which | [section 31](#31-the-packs-that-ship-turning-them-on-who-sees-which) |
 | writing a pack by hand | sections [1](#1-what-a-pack-is) to [7](#7-modelling-content-vocabulary-about-text-help-facts-roles-calc) |
-| turning JSON files or a schema into a pack without writing files | sections [8](#8-the-pack-designer-build--new-pack) to [10](#10-a-pack-from-json-lines-pack-new), [tutorial 19, Part A](../tutorials/19-build-a-pack-and-a-screen.md#part-a--build-a-pack-from-your-data) |
+| turning JSON files or a schema into a pack without writing files | sections [8](#8-the-pack-designer-build--new-pack) to [10](#10-a-pack-from-json-lines-pack-new), [a source system for an existing kind: tutorial 23](../tutorials/23-add-a-source-system.md), [tutorial 19, Part A](../tutorials/19-build-a-pack-and-a-screen.md#part-a--build-a-pack-from-your-data) |
 | writing the screens (Sutras) | sections [11](#11-what-a-sutra-is-and-when-one-applies) to [27](#27-common-mistakes-and-their-messages); every key, panel option, format and function is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md), the workbench's manual in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench) |
 | letting people edit records on a screen | [section 28](#28-forms-letting-people-edit-records); what happens to a change after that (submitting, approval, Admin → Edits) is in [APPROVALS_GUIDE.md](APPROVALS_GUIDE.md) |
 | connecting a pack to a database, a lake or a queue | [DATA_GUIDE.md section 9](DATA_GUIDE.md#9-connector-files-and-admin--connectors), [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) and the per-connector pages they list |
@@ -2365,6 +2365,32 @@ The designer's limits (`builder.pack_designer_*`) are in [CONFIGURATION.md](../a
 | a field shown as *TODO* everywhere | blank in every row read: it is hidden; a field blank in some rows is shown where it has a value |
 | Load data: *types with no Sutra* | rows whose type the pack was not built with; they are stored and open with the catch-all if there is one: make the pack again from a file that has them |
 | *DRS-1001 no source holds deals-counterparty/...* right after a load | the pages per value are rebuilt by the load; check the load result's steps say the pack's `-pages` connector was refreshed |
+
+### 8.9 A source for an existing kind
+
+The designer's second mode. A file from a booking system that is not yet in Drishti is, most of the time, not a new kind: it is another
+source of a kind that exists (`trade`). After the files are read (step 1), the page asks what they are: **A new kind** (steps 2 to 6 above) or
+**A source for an existing kind**, with the kinds whose fields overlap the file's fields suggested first. For a source the steps are
+Data, **Map**, **Layout**, Finalize and Deploy.
+
+- **Map.** Name the system in upper case (`SWAPONE`). The server reads every record again and proposes, for each field of the kind, the native
+  field that fits, with a confidence and the evidence (the names, the types, the values; a value map such as `N` to `NO` where the kind
+  has an enum). The grid shows the kind's fields in rows: change a native field in its cell, remove one, or give a constant (`= value`), then
+  **Propose again**. The native fields no canonical field takes are listed under the grid: the module shows them on the kind's page.
+- **Layout.** *Its own table* (a lake table for this system) or *a shared table + where* (one table for several systems, read with
+  `where: SOURCE_SYSTEM = '<SYS>'`: `trading.trades_shared`); optionally a Kafka listener, off until the site sets its servers.
+- **Finalize.** The module `source-<system>` is written and checked: `module.yaml`, the connector, the map (`mappings/`), the inbox rule
+  (`dataload.yaml`: `<system>-*.jsonl*`, the date from the name) and the module's **section** of the kind's page (`sections:`). **Deploy** is the
+  one module deploy of step 6.
+
+The module's `sections:` entry names a fragment (`sutras/trade-swapone.v1.fragment.yaml`) and the kind it joins. While the module runs, the
+fragment's panels are appended to every Sutra of that kind and shown when their own `when:` holds (here `$.SOURCE_SYSTEM == 'SWAPONE'`: the
+native fields with no canonical field); when the module is switched off or removed they leave the page. One implementation serves every module
+(`SutraBlocks.contribute`).
+
+The same on the command line: `drishti.py pack new --source-for trade --system SWAPONE --shared-table trading.trades_shared <file>` prints
+the map, `--map-edits` fixes it, `--deploy` installs the module. The whole path, from the file to the blotter and a row rule, is
+[tutorial 23](../tutorials/23-add-a-source-system.md).
 
 ## 9. A deep trading JSON, from one file to a deployed pack
 

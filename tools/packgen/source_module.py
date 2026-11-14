@@ -66,7 +66,7 @@ def add_args(p) -> None:
     g.add_argument("--map-out", type=pathlib.Path, help="--source-for: write the proposal (JSON) here as well")
     g.add_argument("--live", action="store_true", help="--source-for: add a Kafka listener (off until the site sets its servers and topic)")
     g.add_argument("--write-back", action="store_true", help="--source-for --live: add the blotter's write-back (amend-trade) to the listener")
-    g.add_argument("--inbox-match", help="--source-for: the inbox rule's file-name glob (default <sys>_*.jsonl*)")
+    g.add_argument("--inbox-match", help="--source-for: the inbox rule's file-name glob (default <sys>-*.jsonl*, as the shipped source modules)")
 
 
 def names(a) -> dict:
@@ -88,7 +88,7 @@ def names(a) -> dict:
         raise SystemExit("--name is lower-case letters, digits and '-'")
     return {"system": system, "low": low, "kind": kind, "pack": pack, "table": table, "shared": bool(a.shared_table), "name": name,
             "map": f"mappings/{low}-{kind}.yaml", "section": f"sutras/{kind}-{low}.v1.fragment.yaml", "title": a.title or f"{system.title()} (source)",
-            "match": a.inbox_match or f"{low.replace('-', '_')}_*.jsonl*", "contract": c}
+            "match": a.inbox_match or f"{low}-*.jsonl*", "contract": c}
 
 
 def say_map(m: dict, say=print) -> None:

@@ -96,7 +96,7 @@
   }
   function drawMap() {
     var m = S.mapping;
-    var natives = [''].concat(Object.keys(m.native || {}));
+    var natives = [{ value: '', label: '(none)' }].concat(Object.keys(m.native || {}));
     var rows = rowsOf(m);
     var host = $('[data-map-grid]');
     var cols = [{ field: 'to', header: 'Canonical field', width: 230, cellClass: 'mono', pinned: 'left' },

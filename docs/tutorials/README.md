@@ -92,6 +92,7 @@ Production settings, backups, health and upgrades; several servers as one.
 |---|---|---|---|---|
 | 21 | [Run it in production](21-run-it-in-production.md) | security on, your own administrator, roles and BI powers, tokens, backups, heap and pools, health, upgrades and roll back, taking something out safely | 60 min | written |
 | 22 | [A cluster of three (Drishti\*net)](22-a-cluster-of-three.md) | `config/net/` with the CLI and the UI, three servers from one seed, a trade only one holds, a console with several servers, who may reach which node, drain and stop a node | 45 min | written |
+| 23 | [Add a source system](23-add-a-source-system.md) | a mocked SwapOne file read whole, its map to the canonical trade, the generated `source-swapone` module, the inbox, `trading.trades_shared` stamped SWAPONE, `TRD` and the blotter, a row rule, switch the module off and on in Admin | 40 min | written |
 
 ### Trader: your first 10 minutes
 

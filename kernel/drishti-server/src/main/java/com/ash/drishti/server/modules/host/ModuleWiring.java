@@ -85,6 +85,14 @@ public final class ModuleWiring {
         return this;
     }
 
+    private volatile Supplier<com.ash.drishti.rachana.SutraRegistry> sutras = () -> null;
+
+    /** The Sutra registry the sections of a module's manifest ({@code sections:}) are added to the kind's pages through. */
+    public ModuleWiring sutras(Supplier<com.ash.drishti.rachana.SutraRegistry> registry) {
+        this.sutras = registry == null ? () -> null : registry;
+        return this;
+    }
+
     private volatile Supplier<com.ash.drishti.server.PackReloader> packs = () -> null;
 
     /** The pack loader a site's content module's packs load through when it starts (its manifest's {@code packs: {list}}). */
@@ -158,6 +166,7 @@ public final class ModuleWiring {
         entries.put(module.id(), started);
         needs(module);
         packs(module);
+        sections(module);
         ModulePython py = python;
         if (py != null) {
             try {
@@ -178,6 +187,8 @@ public final class ModuleWiring {
             gate.withdrawNeeds(module.id());
         }
         folders.remove(module.id());
+        com.ash.drishti.rachana.parse.SutraBlocks.withdraw(module.id());
+        reread();
         List<DrishtiModule> started = entries.remove(module.id());
         if (started != null) {
             started.forEach(ModuleWiring::stopQuietly);
@@ -202,6 +213,36 @@ public final class ModuleWiring {
             }
         } catch (RuntimeException e) {
             LOG.warn("module {}: its packs did not load: {}", module.id(), e.getMessage());
+        }
+    }
+
+    /** The module's sections (manifest {@code sections:}): each fragment is shown on the Sutras of its kind, while the module runs. */
+    private void sections(LoadedModule module) {
+        com.ash.drishti.module.runtime.ModuleCandidate c = module.candidate();
+        if (c == null || c.dir() == null || !(c.manifest().section("sections") instanceof List<?> list) || list.isEmpty()) {
+            return;
+        }
+        try {
+            for (Object o : list) {
+                if (o instanceof Map<?, ?> m && m.get("kind") != null && m.get("fragment") != null) {
+                    java.nio.file.Path f = c.dir().resolve(String.valueOf(m.get("fragment"))).normalize();
+                    if (f.startsWith(c.dir().normalize()) && java.nio.file.Files.isRegularFile(f)) {
+                        com.ash.drishti.rachana.parse.SutraBlocks.contribute(module.id(), String.valueOf(m.get("kind")),
+                                java.nio.file.Files.readString(f, java.nio.charset.StandardCharsets.UTF_8), f.getFileName().toString());
+                    }
+                }
+            }
+            reread();
+            LOG.info("module {}: {} section(s) joined the pages of their kinds", module.id(), list.size());
+        } catch (java.io.IOException | RuntimeException e) {
+            LOG.warn("module {}: its sections did not load: {}", module.id(), e.getMessage());
+        }
+    }
+
+    private void reread() {
+        com.ash.drishti.rachana.SutraRegistry r = sutras.get();
+        if (r != null) {
+            r.reload();
         }
     }
 
