@@ -31,12 +31,8 @@
   var msg = $('[data-msg]');
 
   // ---- small helpers ------------------------------------------------------------------------------------------------------
-  function api(method, url, body) {
-    return fetch(url, { method: method, headers: body === undefined ? {} : { 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) })
-      .then(function (r) { return (r.status === 204 ? Promise.resolve({}) : r.json().catch(function () { return {}; })).then(function (j) { return { ok: r.ok, status: r.status, body: j }; }); },
-        function () { return { ok: false, status: 0, body: { detail: 'The console could not be reached.' } }; });
-  }
-  function why(r) { return window.Drishti.drsMessage ? window.Drishti.drsMessage({ code: r.body.code || ('HTTP ' + r.status), detail: r.body.detail }, 'The request failed') : ((r.body.code ? r.body.code + ' ' : '') + (r.body.detail || 'The request failed')); }
+  function api(method, url, body) { return C.api.send(method, url, body); }          // drishti-core's client: {ok, status, body}, never rejects
+  function why(r) { return window.Drishti.drsMessage ? window.Drishti.drsMessage({ code: r.body.code || ('HTTP ' + r.status), detail: r.body.detail }, 'The request failed') : (r.body.detail || 'The request failed'); }
   function say(text, bad) { msg.textContent = text || ''; msg.classList.toggle('bad', !!bad); }
   function field(name) { return $('[data-f="' + name + '"]'); }
   function sumOf(step, text) { var n = $('[data-sum="' + step + '"]'); if (n) { n.textContent = text; } }
