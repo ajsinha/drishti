@@ -11,14 +11,14 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-"""Pictures of tutorial 23, add a source system (docs/tutorials/23-add-a-source-system.md), written to docs/tutorials/img/t46/, in the light
+"""Pictures of tutorial 23, add a source system (docs/tutorials/23-add-a-source-system.md), written to docs/tutorials/img/swapone/, in the light
 theme. The pictures follow the tutorial's steps, which this module runs itself, in order, on the scratch stack of tutorial 16's pictures
-(t45.start_servers: its own copy of config/, the demo lake of the trades and reference data, sign-in off, the data inbox on) with the shipped
+(t45's server and console, started here: its own copy of config/, no demo lake, sign-in off, the data inbox on) with the shipped
 sample module source-swapone left out (DRISHTI_MODULES_SHIPPED=false), so the reader's own module is the only one. Nothing is written to the
 repository's config/ or data/:
 
     DRISHTI_SHOTS_WORK=<an empty folder> DRISHTI_SHOTS_SERVER_PORT=<port> DRISHTI_SHOTS_CONSOLE_PORT=<port> \\
-        drishti-console/.venv/bin/python tools/docs/screenshots.py --guide t46
+        drishti-console/.venv/bin/python tools/docs/screenshots.py --guide swapone
 
 The data is the mocked SwapOne file of data/testdata/trades/swapone/ (tools/samplegen/src_swapone.py), made by docs/tutorials/data/swapone/make_day.py as swapone-2026-07-08.jsonl.gz.
 Run the pictures all together and once: each step moves files on."""
@@ -41,16 +41,31 @@ SERVER_ENV = {**t45.SERVER_ENV, "DRISHTI_MODULES_SHIPPED": "false"}
 
 
 def start_servers(w):
-    """t45's scratch stack, its server started without the shipped sample modules."""
+    """A scratch stack with no demo lake (the tutorial's own lake, swaplake, is the only one): a copy of config/, the shipped sample modules left
+    out, sign-in off, the data inbox on; t45's server and console."""
+    shutil.rmtree(w / "config", ignore_errors=True)
+    shutil.copytree(ROOT / "config", w / "config", ignore=shutil.ignore_patterns("connectors"))
+    (w / "config" / "dataload.yaml").write_text("dataload:\n  rules: []\n  unmatched: fail\n")
+    for d in [p for p in (w / "data").glob("*")] + [w / "sutras", w / "modules"]:
+        shutil.rmtree(d, ignore_errors=True) if d.is_dir() else d.unlink(missing_ok=True)
+    (w / "sutras").mkdir(exist_ok=True)
     keep = t45.SERVER_ENV
     t45.SERVER_ENV = SERVER_ENV
     try:
-        return t45.start_servers(w)
+        t45.PROCS.append(t45._server())
+        try:
+            t45._console(w)
+            t45._up()
+        except BaseException:
+            for proc in t45.PROCS:
+                t45._stop(proc)
+            raise
+        return t45.PROCS
     finally:
         t45.SERVER_ENV = keep
 
 
-shot = register("t46", OUT / "t46")
+shot = register("swapone", OUT / "swapone")
 DAY = "2026-07-08"
 LAKE = """lake: swaplake                   # the file's name; its folder is data/delta/swaplake
 format: delta
@@ -101,14 +116,19 @@ def analysed(c: Ctx):
     designer(c)
     save(c, "01-analysed.jpg")
     pick(c, "[data-sel-mode]", "A source for an existing kind")
-    c.page.locator("[data-map-grid]").get_by_text("COUNTERPARTY_ID", exact=True).first.wait_for(timeout=240_000)
+    c.page.locator("[data-map-grid]").get_by_text("TRADE_ID", exact=True).first.wait_for(timeout=240_000)
     c.page.wait_for_timeout(1500)
 
 
 @shot("02-map.jpg")
 def mapped(c: Ctx):
-    """Step 2: the proposed map, a row chosen (its evidence beside the grid)."""
-    c.page.locator("[data-map-grid] [role=row]:has-text('NOTIONAL')").first.click()
+    """Step 2: the proposed map, a wrong guess set to none (its evidence beside the grid)."""
+    import re
+    c.page.locator("[data-map-grid] .dg-row", has_text=re.compile(r"^COUNTERPARTY_UEN")).first.click()
+    c.page.wait_for_timeout(800)
+    c.page.locator("[data-map-grid] .dg-row", has_text=re.compile(r"^COUNTERPARTY_UEN")).locator(".dg-cell[data-c='2']").click()
+    c.page.keyboard.press("Enter")                                   # the guess (a name for an id) is wrong: none
+    c.page.locator(".di-option", has_text="(none)").first.click()
     c.page.wait_for_timeout(800)
     save(c, "02-map.jpg")
 
