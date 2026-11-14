@@ -18,6 +18,7 @@
 
 ## Unreleased
 
+- **Sweep integration.** The command sweep, its fixes and the API sweep are on one branch. Fixed at the root: `GET /api/v1/bi/model/kinds` no longer fails with DRS-9026 when a connector is disabled or not running (the kind is skipped and listed under `skipped` with the reason); `API_REFERENCE.md` documents the `/admin/loads/{pack}` aliases and the module APIs (genomics sample, archetype greeting; section 38); `ArtifactApiTest` binds its kind to its connector through the bindings (connector files no longer name kinds).
 - **Trade blotter: new trades on top, the lake's trades in the snapshot, a trade-editor role.** A blotter whose own order is newest
   first (`sort:` descending by its `changed-at` or version) puts new and changed rows on top: a paged viewer at the top of that order is
   sent them to insert (`top` in the `rows` event, `top: true` in its window) and the grid keeps the declaration's order, so a new trade

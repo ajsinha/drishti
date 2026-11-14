@@ -167,7 +167,8 @@ public class DatasetController {
     @GetMapping("/model/kinds")
     public Map<String, Object> kinds(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         bi.requirePower(p, BiAccess.BI);
-        return Map.of("tables", datasets.models(p).offer());
+        PackModels.Offer offer = datasets.models(p).offerAll();
+        return Map.of("tables", offer.tables(), "skipped", offer.skipped());       // a kind whose connector is off is skipped and said, never an error
     }
 
     /** Body {@code {kinds: [...], name}}: a draft dataset YAML, the relationships the packs declare (across packs), proposals from the data, and warnings. */

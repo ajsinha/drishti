@@ -64,6 +64,7 @@ numbers and times will differ. The OpenAPI document is at `/api/docs` and the Sw
 - [35. Scheduled reports](#35-scheduled-reports)
 - [36. The access log (administrators)](#36-the-access-log-administrators)
 - [37. A phrase as a search](#37-a-phrase-as-a-search)
+- [38. Module APIs: `/api/v1/<module>`](#38-module-apis-apiv1module)
 - [Error code table](#error-code-table)
 
 ## 1. Conventions
@@ -1235,9 +1236,9 @@ that did not come. Everything about it (every field, the idempotency rules, the 
 | Method | Path | Notes |
 |---|---|---|
 | `POST` | `/packs/{pack}/loads` | body `{kind, businessDate (or asOf), status: ready\|failed, rows?, rejected?, source?, batchId?, note?}`; an administrator, or a token with the `loads:write` scope whose user's roles open the kind. `201` with the load record (`steps`, `verified`, `alerts`, `notices`, `summary`), or `200` with `duplicate: true` for the same pack, kind, date and batch announced with the same outcome again. `404 DRS-5011` unknown pack, `422 DRS-5012` unknown kind, `400 DRS-4003` bad or future date, `400 DRS-5001` bad status, counts or batch id |
-| `GET` | `/packs/{pack}/loads?kind=&date=&status=&limit=` | the pack's history, newest first (administrators, or users whose roles open a kind of the pack: only those kinds) |
-| `GET` | `/packs/{pack}/loads/{id}` | one load |
-| `GET` | `/packs/{pack}/loads/expectations` | what the pack expects and its state: `pending`, `on-time`, `landed-late`, `late`, `missing`, `failed` |
+| `GET` | `/packs/{pack}/loads?kind=&date=&status=&limit=`, also `/admin/loads/{pack}` | the pack's history, newest first (administrators, or users whose roles open a kind of the pack: only those kinds) |
+| `GET` | `/packs/{pack}/loads/{id}`, also `/admin/loads/{pack}/{id}` | one load |
+| `GET` | `/packs/{pack}/loads/expectations`, also `/admin/loads/{pack}/expectations` | what the pack expects and its state: `pending`, `on-time`, `landed-late`, `late`, `missing`, `failed` |
 | `GET` | `/admin/packs/{pack}/data` | **Load data** (Admin → Packs → a pack): the kinds the browser can load and where each goes: `{pack, maxMb, kinds: [{kind, connector, folder, key, date, snapshot}]}` (a kind the File connector does not serve carries `problem`). Admin |
 | `POST` | `/admin/packs/{pack}/data?kind=&date=&file=` | body: the whole file, a JSON array or JSON Lines (`application/octet-stream`), streamed: one document in memory at a time, up to `drishti.loads.upload-max-mb` (2048). Writes each document as the File connector's row under `<root>/<domain>/<business date>/<kind>.jsonl` (the date field of `ingest.<kind>` in pack.yaml, or `date` / today for a `snapshot` kind; a day loaded again is replaced, atomically), checks every row against the pack's Sutras for the kind (types with no Sutra, fields no Sutra shows), then announces a load per day (refresh, verify, alerts). `{pack, kind, connector, rows, rejected, rejections, days: {date: rows}, files, checks: [{level, type, rows, message}], loads, bytes, millis}`. `400 DRS-5001` a kind the pack does not load here (no `ingest`, not a File connector), not JSON, `413 DRS-5005` over the limit, `409 DRS-5032` another load running. Admin; a token needs `packs:admin`; audited (`data-load-upload`) |
 | `GET` `PUT` `DELETE` | `/admin/loads/{pack}/config` | the expectation settings in force; save or remove the administrator's override (administrators; never a token) |
@@ -3103,6 +3104,18 @@ A schedule that does not parse, a query that does not parse, or a webhook outsid
 problem}`: the structured search the words make (it does not run it; send `query` to `/search`), how each part was
 read, the words not understood, and `problem` when the words name no kind. The vocabulary is the kinds the caller
 may open and each kind's fields, learned from a sample of its documents (kept five minutes).
+
+## 38. Module APIs: `/api/v1/<module>`
+
+A module that carries a controller marked `@ModuleApi("<id>")` has its routes mounted by the kernel under `/api/v1/<id>/`, signed in and
+limited to the people who may use the module, and answers only while the module is on. The routes are the module's own; the two shipped as examples are:
+
+- The genomics sample module (`genomics`): `GET /api/v1/genomics/variants` (optional `gene` and `cohort`; `{rows, count}`, by position),
+  `GET /api/v1/genomics/variants/{id}`, `GET /api/v1/genomics/genes` (`{rows, count}`), `GET /api/v1/genomics/genes/{id}` (the gene with its
+  variants), `GET /api/v1/genomics/cohorts` (`{rows, count}`) and `GET /api/v1/genomics/cohorts/{id}` (the cohort with the variants its members carry).
+  An id that is none answers `404` with the reason.
+- The module archetype (`mvn archetype:generate` of `drishti-module-archetype`): `GET /api/v1/<artifactId>/greeting/{name}` answers `{name, greeting}`,
+  the smallest module route a new module starts from.
 
 ## Error code table
 
