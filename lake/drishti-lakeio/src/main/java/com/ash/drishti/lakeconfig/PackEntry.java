@@ -47,6 +47,9 @@ public record PackEntry(String domain, String table, String key, String date, Li
      * not declare that name itself: a source system is a module of its own, and its connectors have that one home. The modules folder is
      * found above the pack, else {@code drishti.modules.dir}.
      */
+    private static final java.util.Set<String> GENERIC_TEMPLATES = java.util.Set.of("iceberg", "files", "file", "kafka", "cassandra", "s3tables",
+            "delta-s3");
+
     static JsonNode manifest(Path file) throws IOException {
         JsonNode m = new YAMLMapper().readTree(Files.readString(file));
         String pack = m.path("pack").asText("");
@@ -56,17 +59,25 @@ public record PackEntry(String domain, String table, String key, String date, Li
         }
         com.fasterxml.jackson.databind.node.ObjectNode defs = root.path("connectors").isObject()
                 ? (com.fasterxml.jackson.databind.node.ObjectNode) root.get("connectors") : root.putObject("connectors");
-        try (Stream<Path> s = Files.list(modules)) {
-            for (Path dir : s.filter(d -> d.getFileName().toString().startsWith("source-")).sorted().toList()) {
-                Path mod = dir.resolve("module.yaml");
-                Path tpl = dir.resolve("connectors").resolve("delta.yaml");
-                if (!Files.isRegularFile(mod) || !Files.isRegularFile(tpl) || !new YAMLMapper().readTree(Files.readString(mod)).path("requires").has(pack)) {
-                    continue;
-                }
+        for (Path dir : ModuleDirs.of(modules)) {            // the shipped folders and the modules installed as a .dmod
+            String id = ModuleDirs.idOf(dir);
+            Path folder = dir.resolve("connectors");
+            if (!id.startsWith("source-") || !Files.isDirectory(folder)
+                    || !new YAMLMapper().readTree(Files.readString(dir.resolve("module.yaml"))).path("requires").has(pack)) {
+                continue;
+            }
+            List<Path> files;
+            try (Stream<Path> s = Files.list(folder)) {
+                files = s.filter(f -> f.getFileName().toString().endsWith(".yaml")).sorted().toList();
+            }
+            for (Path tpl : files) {                          // every connector of the folder, whatever its name
+                String stem = tpl.getFileName().toString().replaceFirst("\\.yaml$", "");
                 JsonNode c = new YAMLMapper().readTree(Files.readString(tpl));
                 String kind = c.path("kinds").path(0).asText("");
-                String name = kind + "-" + dir.getFileName().toString().substring("source-".length());
-                if (!kind.isEmpty() && !defs.has(name)) {
+                // delta.yaml is the system's read template, connector <kind>-<system>; any other name is the connector's own
+                // (pack new --source-for writes connectors/<module>.yaml); the Iceberg, files and Kafka variants are not read here
+                String name = stem.equals("delta") ? kind + "-" + id.substring("source-".length()) : stem;
+                if (!kind.isEmpty() && !GENERIC_TEMPLATES.contains(stem) && !defs.has(name)) {
                     defs.set(name, c);
                 }
             }
