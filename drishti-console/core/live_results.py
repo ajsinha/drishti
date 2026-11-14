@@ -11,7 +11,7 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-"""Every "rows of records" result is a live result set (modules/trading/docs/guide.md section 7): a FORM's result and the search page's
+"""Every "rows of records" result is a live result set (docs/guides/LIVE_RESULTS_GUIDE.md section 7): a FORM's result and the search page's
 are the server's live set of the search (``GET /api/v1/live/query``), static when the kind has no live binding or the business date is
 not the live one, ticking otherwise. This module is the one place the console turns a set's page into what a result table draws: the
 search's summary (columns, labels, matched, scanned, failed, noData, pivot), the rows with their cells, and ``live`` (the set's id, whether

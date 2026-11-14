@@ -41,7 +41,7 @@ import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
 /**
- * A set paged from the store (modules/trading/docs/guide.md section 7, "Scale"): the snapshot stays in the store, only the live side is
+ * A set paged from the store (docs/guides/LIVE_RESULTS_GUIDE.md section 7, "Scale"): the snapshot stays in the store, only the live side is
  * kept; every page and total equals the merged order worked out the long way (store records shadowed, removed or added by the live side),
  * for the key order and a chosen sort, ascending and descending, with a filter; pages fetch only their own rows. At a million records (a
  * synthetic narrow kind; only with 15 GB of memory free) the first page comes within the budget.

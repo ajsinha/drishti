@@ -16,7 +16,7 @@
 
 # The kernel and its modules
 
-**Status: design, not built** (except P1's kernel API, section 2.3, the module runtime, section 10.4, deployment, sections 4.11.4, 4.11.8, 7.6 and 12 (the module store, plans per node following the placement, four-eyes apply, two-phase activation with rollback, rolling upgrade, remove with 410 and saved work marked *needs module X*, `drishti.py module deploy|plan|apply|list|…|run`, Admin → Modules and Deploy), placement, section 4.11 (`config/placement.yaml` per part by node or role, the singleton election behind one interface, the heavy-work guard and the node × part matrix in Admin → Cluster → Modules), and from wave 1 of 2.9.11.i2 + i3 the Module SDK of section 8 (the archetype, the parent pom and the Maven plugin with the conformance checks C1-C15), banking's sources under `modules/banking/` building on their own with the kernel internals they still reach listed in `modules/banking/kernel-internals.txt`, and the thin jar `drishti-kernel-app`, which boots with no modules; the kernel loading `.dmod` modules (the registration bridge of section 12.3 for the kernel API's provider types, multi-jar packages with `java.lib`, auto-deploy from `drishti.modules.path`, development mode for exploded folders, and the shared lib folder `drishti.lib.path`); first-party modules with the kernel-internals allowance and the exact kernel build (section 3.3: `origin:` verified against the shipped `first-party.yaml`, conformance check C1, the module class loader, `module inspect` and `module list`), and banking as `banking-1.0.0.dmod`, loaded as a module by the full distribution with market-data, capital-markets and economy installed by default and placed on every node; and the console part of section 4.7 hosted declaratively by today's console (section 14.2.1): `plugin.yaml` format 2's routes, menus, words, Home cards, Help and AI tools under `/m/<id>/`, a Jinja environment per module over `kernel/page.html` and `kernel/elements.html`, statics with the version in the path, Elements copies, code and private templates refused, every surface withdrawn on switch-off or removal with saved work marked *needs module X* (section 12), the economy module's World page among them; content modules read by the access registry from their own manifests; the module's Python compute of section 4.6 (installed into the kernel's worker pool on load, withdrawn on unload, placed with its `compute` part, 2.9.11.i4); the rest of P2 and P3 is being built in 2.9.11.i2 + i3). Written for 2.9.11.i, now split into **i1, i2, i3 and i4** (section 14.2), on the product owner's request of 2026-11-08: Drishti
+**Status: design, not built** (except P1's kernel API, section 2.3, the module runtime, section 10.4, deployment, sections 4.11.4, 4.11.8, 7.6 and 12 (the module store, plans per node following the placement, four-eyes apply, two-phase activation with rollback, rolling upgrade, remove with 410 and saved work marked *needs module X*, `drishti.py module deploy|plan|apply|list|…|run`, Admin → Modules and Deploy), placement, section 4.11 (`config/placement.yaml` per part by node or role, the singleton election behind one interface, the heavy-work guard and the node × part matrix in Admin → Cluster → Modules), and from wave 1 of 2.9.11.i2 + i3 the Module SDK of section 8 (the archetype, the parent pom and the Maven plugin with the conformance checks C1-C15), banking's sources under `modules/banking/` building on their own with the kernel internals they still reach listed in `modules/banking/kernel-internals.txt`, and the thin jar `drishti-kernel-app`, which boots with no modules; the kernel loading `.dmod` modules (the registration bridge of section 12.3 for the kernel API's provider types, multi-jar packages with `java.lib`, auto-deploy from `drishti.modules.path`, development mode for exploded folders, and the shared lib folder `drishti.lib.path`); first-party modules with the kernel-internals allowance and the exact kernel build (section 3.3: `origin:` verified against the shipped `first-party.yaml`, conformance check C1, the module class loader, `module inspect` and `module list`), and banking as `banking-1.0.0.dmod`, loaded as a module by the full distribution with market-data, capital-markets and economy installed by default and placed on every node; and the console part of section 4.7 hosted declaratively by today's console (section 14.2.1): `plugin.yaml` format 2's routes, menus, words, Home cards, Help and AI tools under `/m/<id>/`, a Jinja environment per module over `kernel/page.html` and `kernel/elements.html`, statics with the version in the path, Elements copies, code and private templates refused, every surface withdrawn on switch-off or removal with saved work marked *needs module X* (section 12), the economy module's World page among them; content modules read by the access registry from their own manifests; the module's Python compute of section 4.6 (installed into the kernel's worker pool on load, withdrawn on unload, placed with its `compute` part, 2.9.11.i5); the rest of P2 and P3 is being built in 2.9.11.i2 + i3). Written for 2.9.11.i, now split into **i1, i2, i3 and i5** (section 14.2), on the product owner's request of 2026-11-08: Drishti
 becomes a domain-free **kernel** for BI and aggregation; capabilities arrive as separately built, signed **modules** loaded from
 folders; connectors stay the kernel's; a **distribution file** white-labels the product. Banking is the first module and the worked example
 throughout. The same day the owner decided the three building blocks (section 1.1): the **Drishti Kernel**, the **Drishti Console**, now a
@@ -550,12 +550,12 @@ prefix. `ApiAlias` keeps working for one release.
 
 - **Where**: the console never reads the kernel's module folders: it receives the **console part** of each module (`console/`,
   `elements/`, `docs/` with the signed hash list) from the kernel once the kernel reports the module active. **In i2** today's Python
-  console reads the part the kernel has verified and hosts it **declaratively** (section 14.2.1); **from i4** the Drishti Console on Spring
+  console reads the part the kernel has verified and hosts it **declaratively** (section 14.2.1); **from i5** the Drishti Console on Spring
   Boot verifies it itself and loads it with the shared `drishti-module-runtime` (section 10.4).
 - **`plugin.yaml` format 2**: everything the console shows for a module is declared (routes, the API proxy list, words, menus, Home
   cards, slots, settings page); format 1's `routers:` (FastAPI routers included at import) and the shared template loader go. Section 9
   is the design; format 1 is read for one release with a deprecation line, then refused.
-- **Java context builders** (optional, small, **from i4**; none in i2): `console/java/<id>-console.jar`, in the console's class loader for the module, which sees only
+- **Java context builders** (optional, small, **from i5**; none in i2): `console/java/<id>-console.jar`, in the console's class loader for the module, which sees only
   `drishti-console-api`; a builder returns plain values and registers nothing (section 10.4). No Python runs in the console.
 - **Templates**: one sandboxed Jinjava instance per module, namespace `<id>:`, which sees only the kernel's public layouts and its own
   files; a kernel template never includes a module's (rule 1) and a module never overrides a kernel template (section 9.2, 9.3).
@@ -1122,7 +1122,7 @@ command at every step.
 | `drishti-module-maven-plugin` | the goals `validate`, `conformance`, `assemble`, `sign`, `publish` (8.2) |
 | `drishti-module-archetype` | the Maven archetype `module new` wraps (8.3) |
 | `@drishti/elements-*` `.d.ts` | the Elements core typings (from ELEMENTS.md's distribution channels), the plugin.yaml format 2 schema, the kernel templates' macro reference |
-| `drishti-console-api-<v>.jar` (from i4) | the Drishti Console's half: the context-builder interface (`PageContext.Builder`), the page context and the `ModuleApi` client types; scope `provided` (section 10.4) |
+| `drishti-console-api-<v>.jar` (from i5) | the Drishti Console's half: the context-builder interface (`PageContext.Builder`), the page context and the `ModuleApi` client types; scope `provided` (section 10.4) |
 | `drishti_kernel` Python | the compute SDK's types and a local sandbox runner for tests (Python runs only on the kernel's workers) |
 | schemas | `module.schema.json`, `needs.schema.json`, `contract.schema.json`, `plugin.schema.json` (format 2), `distribution.schema.json` (editors validate as you type) |
 | `drishti.py module …` | the command line of section 7.1 plus `new` and `run` (8.3, 8.4), for teams without Maven expertise |
@@ -1359,7 +1359,7 @@ A tier-3 component is offered to Sutras as a panel type and to composed pages as
 | `product`, `business_date`, `now` | the brand (distribution), the business date | — |
 | the builder's map | whatever the module's optional context builder returns (plain values: strings, numbers, lists, maps, records) | objects with behaviour, callables |
 
-From i4, a **context builder** (`handler: VariantExplorerContext` → `com.example.genomics.console.VariantExplorerContext`, a class in the module's
+From i5, a **context builder** (`handler: VariantExplorerContext` → `com.example.genomics.console.VariantExplorerContext`, a class in the module's
 `console/java/` jar implementing `PageContext.Builder` from `drishti-console-api`) is given a read-only page context (the person, the typed
 params, a `ModuleApi` client bound to the module's declared endpoints as that person) and returns a map of plain values. It cannot register
 routes, read the raw request, set cookies or keep state (no mutable fields: an architecture test): per-person data lives only in the call
@@ -1487,8 +1487,8 @@ server (the server-computes-risk rule). `/var` stays as the alias, so bookmarks 
 
 **Decided by the owner on 2026-11-08:** the console moves from Python (FastAPI and Jinja) to a **Spring Boot web application**, to gain
 Java's multi-threading, and it **stays separate from the kernel**: UX work must never make the BI kernel unstable, and one UI must be able
-to stand in front of several kernels. The move is **its own release, i4** (owner, 2026-11-08; section 14.2). Until then today's Python
-console serves modules' declarative console parts (section 14.2.1), so that no module changes when i4 re-hosts them in Java. This section is the design; sections 9 (module UI) and 12
+to stand in front of several kernels. The move is **its own release, i5** (owner, 2026-11-08; section 14.2). Until then today's Python
+console serves modules' declarative console parts (section 14.2.1), so that no module changes when i5 re-hosts them in Java. This section is the design; sections 9 (module UI) and 12
 (unload) are written for the Java console.
 
 ### 10.1 Why
@@ -1507,7 +1507,7 @@ console serves modules' declarative console parts (section 14.2.1), so that no m
   session-isolation rule). In the Java console, per-person state lives only in the request and the session. Singletons are stateless
   services checked by an architecture test, and the conformance suite runs two people at once (C9).
 - **One security stack.** Spring Security handles sign-in, enterprise SSO (section 10.11), CSRF, headers and per-kernel tokens in the
-  console, and the kernel already uses it. i4 brings SSO on it; trust and security (j) builds roles, licensing and hardening on the same
+  console, and the kernel already uses it. i5 brings SSO on it; trust and security (j) builds roles, licensing and hardening on the same
   stack, not on two.
 
 **Why separate from the kernel:**
@@ -1585,7 +1585,7 @@ The runtime is the glue drawn in section 1.1's picture.
   console receives **only the console part**: `console/`, `elements/` and `docs/`, with `DMOD.MF` and `DMOD.SIG`, streamed by the kernel
   (`GET /api/v1/modules/<id>/bundle/<version>`). The console verifies the bundle against the signed hash list itself (V2 on every host) and
   loads it only when the kernel reports the module active.
-- **Context builders are Java** (from i4). A composed page's optional handler is a small class implementing
+- **Context builders are Java** (from i5). A composed page's optional handler is a small class implementing
   `PageContext.Builder` from **`drishti-console-api`** (the console's half of the SDK, scope `provided`). It is given the person, the
   route's typed parameters and a `ModuleApi` client bound to the module's endpoints *as that person*, and it returns a map of plain
   values. It cannot register routes, read the raw request, set cookies or keep state (the architecture test fails a static or instance
@@ -1597,7 +1597,7 @@ The runtime is the glue drawn in section 1.1's picture.
   template cache are dropped, its static and Elements mounts are withdrawn, and its context-builder class loader is released. At the
   console's next rolling restart in P2 the loader goes; in P5 it goes at once, under the same leak check as the kernel's.
 
-### 10.5 The console as a placement role (i4)
+### 10.5 The console as a placement role (i5)
 
 - In the cluster design (section 4.11), **a console is a node with the role `console`**. It registers with the cluster as a light
   member: no data, no compute, no vote in leader elections, no lake. It receives the cluster configuration version, the registry's
@@ -1613,7 +1613,7 @@ The runtime is the glue drawn in section 1.1's picture.
 - The example: [examples/site/placement.yaml](kernel-and-modules/examples/site/placement.yaml) (two consoles, one of them for
   research only).
 
-### 10.6 One console, many kernels (i4)
+### 10.6 One console, many kernels (i5)
 
 ![One console in front of two kernels: the finance production cluster and the genomics cluster, each with its own modules, token and health; menus, pages and Help are the union, labelled per kernel; one kernel down greys only its pages](kernel-and-modules/diagrams/console-multi-kernel.svg)
 
@@ -1723,19 +1723,19 @@ lines, move with the groups that use them). The full table with the files of eac
 | **Performance not proved** | the latency-per-page benchmark (10.9) is a gate for every group, not only at the end. A group that is slower does not move until it is fixed. |
 | **Windows QA** | a plus: the UI becomes a jar on Java, with no Python environment to install for the console. Native-binary rules are unchanged. |
 | **Test-suite runtime** | the browser suite already runs on all 24 threads with per-worker fixtures. The Java console starts faster than the Python console with its plugins, and MockMvc unit tests run in seconds. The proxy hop during the migration is measured, and its cost is gone at the end. |
-| **Two consoles during the migration** | it is a strangler, not dual machinery: each path has exactly one owner at every moment (`legacy-routes.yaml`), the Python console is loopback-only behind the Java front, and it is deleted at the end of i4. |
+| **Two consoles during the migration** | it is a strangler, not dual machinery: each path has exactly one owner at every moment (`legacy-routes.yaml`), the Python console is loopback-only behind the Java front, and it is deleted at the end of i5. |
 | **The bulk of `core/` logic** (menus, search, facts, designer forms) | ported service by service with its existing unit tests turned into JUnit tests first. Logic that belongs on the kernel (anything that computes a number) moves to the kernel instead (the server-computes-risk rule). |
 
-### 10.11 Enterprise single sign-on (i4)
+### 10.11 Enterprise single sign-on (i5)
 
-**Decided by the owner on 2026-11-08: i4 includes how Drishti integrates with enterprise single sign-on.** Authentication and SSO move from
-j to i4, because the Spring Boot console's security chain is where they belong. j keeps roles, licensing, module signing, audit and
+**Decided by the owner on 2026-11-08: i5 includes how Drishti integrates with enterprise single sign-on.** Authentication and SSO move from
+j to i5, because the Spring Boot console's security chain is where they belong. j keeps roles, licensing, module signing, audit and
 hardening (section 14.2). Roles, row rules and the access chain are [ACCESS_MODEL.md](ACCESS_MODEL.md); this section does not repeat them.
 
 **What exists today, and stays true.** OpenID Connect sign-in is built: the Python console runs the browser redirect and the **server verifies
 every ID token itself**, maps the provider's groups to roles (`drishti.security.oidc.role-map`), creates the user on first sign-in, and
 re-checks the session every `auth.recheck_seconds`. A user disabled in Drishti stays out whatever the provider says, and one break-glass
-administrator keeps a password ([ADMIN_GUIDE.md section 5](../guides/ADMIN_GUIDE.md#5-single-sign-on-openid-connect)). i4 keeps every one of
+administrator keeps a password ([ADMIN_GUIDE.md section 5](../guides/ADMIN_GUIDE.md#5-single-sign-on-openid-connect)). i5 keeps every one of
 these rules and moves the browser side into Spring Security.
 
 ![Enterprise single sign-on: the browser goes to the console, the console runs authorization code with PKCE at the identity provider, the identity kernel maps the verified claims to roles, lenses and modules, the console keeps the session, and each call carries a token for that kernel only](kernel-and-modules/diagrams/sso-flow.svg)
@@ -1829,13 +1829,13 @@ refused by kernel B**. Real providers are checked at **site acceptance** with a 
 site's **secret store** or the environment (`${secret:…}` references, `DRISHTI_*` variables), **never** in configuration committed to git and
 **never in a module** (section 5.10).
 
-**Documentation (an i4 deliverable).** The **SSO integration guide** is a rewrite of [ADMIN_GUIDE.md section 5](../guides/ADMIN_GUIDE.md#5-single-sign-on-openid-connect),
+**Documentation (an i5 deliverable).** The **SSO integration guide** is a rewrite of [ADMIN_GUIDE.md section 5](../guides/ADMIN_GUIDE.md#5-single-sign-on-openid-connect),
 the existing home of sign-in for administrators (not a new document): step-by-step set-up for **Entra ID, Okta, Ping and ADFS, and
 Keycloak**, claim-mapping examples, logout, the CLI's device code, and troubleshooting (clock skew, wrong audience, the groups overage,
 the redirect URI). It is paired with one **SSO tutorial** (the two-docs rule) and with the per-provider site-acceptance checklists.
 DEPLOYMENT_AND_QA_GUIDE links to it from its configuration step.
 
-**If i4 were skipped**, SSO would fall back to j on the Python console: the same identity map, token per kernel and logout rules, built
+**If i5 were skipped**, SSO would fall back to j on the Python console: the same identity map, token per kernel and logout rules, built
 on the Python console's OIDC code instead of Spring Security.
 
 ## 11. Drishti Elements: the controlled UI statics
@@ -1848,7 +1848,7 @@ and may not ship, and how that is enforced.
 
 - **The platform owns Elements**: the libraries (drishti-core, -inputs, -grid, -chart with maps, -data, -insight, -renderer and the
   generic additions) and **every vendored third-party library** (`static/vendor` with `VENDOR.md`).
-- **Only the Drishti Console serves them** (today's console from i2, the Spring Boot console from i4), from its own **signed, versioned bundle**: one Elements release train per console
+- **Only the Drishti Console serves them** (today's console from i2, the Spring Boot console from i5), from its own **signed, versioned bundle**: one Elements release train per console
   (`elements.json`, [ELEMENTS.md section 8](ELEMENTS.md#8-packaging-versions-and-licensing)), served under
   `/static/elements/<library>/<version>/` with immutable caching, **SRI** on every tag and the console's **CSP** (`script-src 'self'`, no
   inline script, no remote origin). A console's About and Health show its Elements train version.
@@ -2142,14 +2142,14 @@ module id and version in the audit line.
 | **P1 · Kernel boundary to zero** (**i1**, with data standards and the drill under 60 minutes) | `drishti-kernel-api` jar (section 2.3: existing SPIs moved under `kernel.api`, new `DrishtiModule`, `ModuleContext`, `KindProvider`, `ModuleSettings`, `AiToolProvider`, `@ModuleApi`); banking compiled against it only; the 39-file allow list to **0**; `KindProvider` replaces banking's connector plugins; contracts' `storage:` → `binding-hint:`; `config/bindings.yaml` + `bindings migrate`; kernel API 1.0 frozen with `japicmp` baseline | kernel boots with **no modules** (economy and capital markets off too) and serves BI, Pivot, Build, Help, GLEIF; `domain_strings` empty; banking passes its suite; **VaR exactly equal** |
 | **P2 · Modules on one node, on today's console** (**i2**) | the `.dmod` format and packager (`module build`, unsigned dev key), `modules.path`, discovery and V1–V4, V6–V7 checks, **loading in the kernel through `drishti-module-runtime`** (section 10.4), class loader per module + child Spring context, REST mounting, Python per-module import path; **module pages served by the current (Python) console, declarative only** (section 14.2.1): plugin.yaml format 2, the live route table, per-module template namespaces, the API proxy (section 9), no console handlers in modules; **the unload sequence, tombstones and the absence suite** (section 12); **Elements control** (served only by the console, an Elements API range per module, the hash scan and conformance: section 11); Help merge, **the thin jar**, `module list | info | install | remove | verify`, **single-node deployment** (`module deploy` plan/apply and Admin → Modules → Deploy over the deployment API, four eyes: section 7.6), Admin → Modules (mock-up a), Admin → Data bindings (mock-up b), launchers/Docker/ECS/stack with the modules folder; the SDK (parent pom, archetype, `drishti-module-maven-plugin`, harness, `module new` / `run`); banking, economy and capital markets as `.dmod`s built as Maven projects; the developer guide + tutorial | **banking runs as a `.dmod`** and passes against the kernel alone (the harness: kernel thin jar + `banking.dmod`, nothing else); **install → remove → reinstall leaves nothing** (genomics and banking pass the absence suite); a `.dmod` carrying a copy of a vendored library is refused; the full drill on the thin jar + three modules; a drill with **no modules**; VaR exactly equal |
 | **P3 · Cluster and white label** (**i3**) | **placement** per node or role and per part, singletons, the heavy-work guards, `config/placement.yaml`; **cluster deployment** (plan and apply across the placed nodes, two-phase activation, late joiners, the node × module matrix, rolling upgrades pinned per session: section 4.11); the distribution file and `dist build`; branding literals to 0 (the 26-literal fix and its guard); `drishti.finance` (banking + capital markets + economy) as the default product; the **`genomics-sample`** module and `drishti.genomics`; white-label mock-up (c) built; Help/docs by distribution | **`drishti.genomics` boots from configuration only** (same kernel build, a different file and module set): no banking word on any page, in search, Help or assets (a crawler test); `drishti.finance` equals today's product (screenshots); **banking placed on main and b only, nothing on c**; failover stays inside the placement |
-| **PC · The Drishti Console on Spring Boot** (**i4**) | `drishti-console-web` (Spring Boot 3, WebMVC on virtual threads, Jinjava, Spring Session JDBC on the two schema files, Spring Security with today's sign-in); **the console host of `drishti-module-runtime`** (the same declarative module parts as i2, re-hosted without changing any module; optional Java context builders through `drishti-console-api`); **Elements served from the Java console**; the **strangler migration of every route group**, banking's pages first (G0–G10, section 10.8), with the browser tests unchanged and JUnit/MockMvc replacing the pytest route tests; **consoles as placement nodes** (role `console`, 10.5); **one console in front of many kernels** (the kernel switcher, routing, failure isolation and tokens per kernel, a distribution per console: 10.6); the transform parse onto kernel Python workers (Python only on kernel-managed workers, 10.7); **enterprise single sign-on** (OIDC first, SAML 2.0, optional LDAP and Kerberos; the identity map with four eyes; a token per kernel; device code and client credentials for non-browser use; single logout: 10.11) with **the SSO integration guide** (a rewrite of ADMIN_GUIDE section 5: Entra ID, Okta, Ping and ADFS, Keycloak, claim mapping, troubleshooting) and its tutorial; **the Python console deleted at the end** | **every browser test passes against the Java console** with no Python console process; **page latency measured against today** (no page slower, the fan-out pages at least 30% faster: 10.9); every i2 module's pages unchanged on the Java console (the same `.dmod` files); one console in front of a finance and a genomics kernel, one stopped: only its pages grey; **the Python console is gone**; SSO passes the in-process mock IdP suite (OIDC and SAML) and one real provider's site checklist |
-| **P4 · Trust** (**j**, the security release; authentication and SSO are in i4) | signing with publisher keys, trust store, revocation, V5 with the signed licence, taint, `ModuleMigration`, CSP with SRI for module assets, signed kernel and connector plugins | tampered `.dmod` refused; unlicensed module absent; a revoked publisher's modules absent; rollback restores VaR exactly |
+| **PC · The Drishti Console on Spring Boot** (**i5**) | `drishti-console-web` (Spring Boot 3, WebMVC on virtual threads, Jinjava, Spring Session JDBC on the two schema files, Spring Security with today's sign-in); **the console host of `drishti-module-runtime`** (the same declarative module parts as i2, re-hosted without changing any module; optional Java context builders through `drishti-console-api`); **Elements served from the Java console**; the **strangler migration of every route group**, banking's pages first (G0–G10, section 10.8), with the browser tests unchanged and JUnit/MockMvc replacing the pytest route tests; **consoles as placement nodes** (role `console`, 10.5); **one console in front of many kernels** (the kernel switcher, routing, failure isolation and tokens per kernel, a distribution per console: 10.6); the transform parse onto kernel Python workers (Python only on kernel-managed workers, 10.7); **enterprise single sign-on** (OIDC first, SAML 2.0, optional LDAP and Kerberos; the identity map with four eyes; a token per kernel; device code and client credentials for non-browser use; single logout: 10.11) with **the SSO integration guide** (a rewrite of ADMIN_GUIDE section 5: Entra ID, Okta, Ping and ADFS, Keycloak, claim mapping, troubleshooting) and its tutorial; **the Python console deleted at the end** | **every browser test passes against the Java console** with no Python console process; **page latency measured against today** (no page slower, the fan-out pages at least 30% faster: 10.9); every i2 module's pages unchanged on the Java console (the same `.dmod` files); one console in front of a finance and a genomics kernel, one stopped: only its pages grey; **the Python console is gone**; SSO passes the in-process mock IdP suite (OIDC and SAML) and one real provider's site checklist |
+| **P4 · Trust** (**j**, the security release; authentication and SSO are in i5) | signing with publisher keys, trust store, revocation, V5 with the signed licence, taint, `ModuleMigration`, CSP with SRI for module assets, signed kernel and connector plugins | tampered `.dmod` refused; unlicensed module absent; a revoked publisher's modules absent; rollback restores VaR exactly |
 | **P5 · Repository and hot load** (later) | an internal module repository (search, fetch, dependency download), hot code load/unload with the leak test, module marketplace only if the owner wants one | 50 load/unload cycles without a class-loader leak; hot upgrade under load with no failed request |
 
 **Four releases (decided by the owner, 2026-11-08; Q8 and Q24):** **2.9.11.i1 · Foundations** (data standards: Iceberg onto iceberg-core,
 Python Delta reads through Delta Kernel, a critical review of the other connectors and sources; P1, with the kernel API at 0.x; the shared
 module runtime is **not** here; the full drill under 60 minutes; memory and speed; **about 1.0 × g**), **2.9.11.i2 · Modules on one node**
-(P2, on today's Python console; **about 1.2 × g**), **2.9.11.i3 · Cluster and white label** (P3; **about 1.0 × g**) and **2.9.11.i4 · The
+(P2, on today's Python console; **about 1.2 × g**), **2.9.11.i3 · Cluster and white label** (P3; **about 1.0 × g**) and **2.9.11.i5 · The
 Drishti Console on Spring Boot** (PC; **about 1.3 × g**: the skeleton, the runtime host, Elements and banking's pages about 0.4 × g, the
 migration of groups G2–G10 about 0.7 × g, console nodes and several kernels per console about 0.2 × g). P4 is in **2.9.11.j** (trust and
 security); then k (risk engines II), l (collateral), m (CVA), n (hardening); new
@@ -2157,13 +2157,13 @@ domains after the line. P5 later. The rows are in [IMPLEMENTATION_PLAN.md](IMPLE
 
 #### 14.2.1 Why i2's console hosting is declarative
 
-In i2 the modules' pages are served by **today's Python console**, and in i4 by the Java console. To keep one way at every moment and
-**not change any module in i4**, i2's console hosting is **minimal and declarative**: a module's console part is Sutras, templates (Jinja
+In i2 the modules' pages are served by **today's Python console**, and in i5 by the Java console. To keep one way at every moment and
+**not change any module in i5**, i2's console hosting is **minimal and declarative**: a module's console part is Sutras, templates (Jinja
 syntax, which Jinjava reads too), static files, its domain Elements library, menus, words, Home cards, slots and Help, all declared in
 `plugin.yaml` format 2. **No console handlers in modules in i2**: a page that needs more context gets it from its module's API through the
 proxy (Elements data sources), and scope words are parsed by the module's REST API on the kernel. The kernel verifies every `.dmod` with
 `drishti-module-runtime`; the Python console only reads the verified, declarative console part, runs no module code and holds no second
-verifier. In i4 the Java console hosts **the same `.dmod` files** with the runtime itself, the Python reader is deleted with the Python
+verifier. In i5 the Java console hosts **the same `.dmod` files** with the runtime itself, the Python reader is deleted with the Python
 console, and Java context builders become available as an option for later module versions.
 
 ### 14.3 Banking step by step (P1–P2)
@@ -2189,11 +2189,11 @@ console, and Java context builders become available as an option for later modul
 | VaR drifts during the moves | the exact-equality VaR check on every banking branch's pre-merge gate, not only at the drill |
 | Spring child contexts break auto-configuration ordering or AOP across loaders | prototype in week 1 on `economy` (content-only) then on banking's smallest engine (SIMM); keep the shared library list small; a test per SPI crossing the boundary |
 | Class-loader leaks (threads, caches, ThreadLocals) | kernel-owned thread pools only; the leak test in the harness from P2 even though hot unload is P5 |
-| Size of i (2–3× g), larger with the console migration | **split into i1, i2, i3 and i4** (decided, Q8 and Q24): each with its own proof and drill; the console move is its own release (i4) |
+| Size of i (2–3× g), larger with the console migration | **split into i1, i2, i3 and i5** (decided, Q8 and Q24): each with its own proof and drill; the console move is its own release (i5) |
 | Packaging change across every launcher, Docker, ECS, stack and the drill (why the thin jar was deferred) | one branch for all launchers with a launch-matrix test; the drill's first run on the thin jar is a dry run without timing |
 | Two ways during migration (in-jar and `.dmod`) | none: the branch that introduces the module path removes the in-jar path in the same merge; tests and harness use the `.dmod` |
 | Python code paths across modules | per-run import path; a test that one module's run cannot import another's package |
-| The console moves from Python to Java in i4 (Jinjava gaps, session switch, performance, test runtime) | section 10.10: render-equality tests, sign in again once, the latency-per-page gate per group, the browser suite unchanged, the strangler with one owner per path |
+| The console moves from Python to Java in i5 (Jinjava gaps, session switch, performance, test runtime) | section 10.10: render-equality tests, sign in again once, the latency-per-page gate per group, the browser suite unchanged, the strangler with one owner per path |
 | Performance (an extra class-loader hop, per-module DispatcherServlet) | measured in the benchmark: VaR request latency and pivot throughput before/after, budget ≤ 2% |
 | Windows QA (no .exe) | the packager and loader are Java + Python only; `.dmod` is a zip; signature checks in Java; tests run on Windows |
 | Docs churn (guides move into modules) | guides keep their slugs; Help merges them; the docs gates read module docs |
@@ -2201,7 +2201,7 @@ console, and Java context builders become available as an option for later modul
 ## 15. Decisions
 
 The owner accepted every recommendation on 2026-11-08; each row below is a decision. Q21–Q24 are the owner's own decisions of the same day
-(the three blocks, the console on Spring Boot, Elements, the console migration as its own release i4); Q14 is superseded by Q22.
+(the three blocks, the console on Spring Boot, Elements, the console migration as its own release i5); Q14 is superseded by Q22.
 
 | # | Question | Decision (2026-11-08) |
 |---|---|---|
@@ -2212,13 +2212,13 @@ The owner accepted every recommendation on 2026-11-08; each row below is a decis
 | Q5 | Java isolation without a Security Manager: accept review + tests, or run untrusted modules out of process | **in process for Drishti-signed and partner modules**; out-of-process modules (a gRPC/Flight boundary) only if a third-party marketplace is wanted (P5+) |
 | Q6 | The market-data pack and feed: banking or capital markets | **capital markets owns market data** (pack and feed); banking `requires: capitalmarkets` (optional today, required once its engines read it); closes DOMAIN_MODULES D6's interim |
 | Q7 | Who signs: one Drishti key for everything, or publisher certificates under a Drishti root | **a root + publisher certificates** (Drishti, then partners), revocation list per release |
-| Q8 | Split i | **three releases**: i1 foundations (data standards, P1, drill under 60 minutes, memory and speed); i2 modules on one node (P2); i3 cluster and white label (P3); P4 in j. **Extended by Q24**: a fourth release, i4, for the console |
+| Q8 | Split i | **three releases**: i1 foundations (data standards, P1, drill under 60 minutes, memory and speed); i2 modules on one node (P2); i3 cluster and white label (P3); P4 in j. **Extended by Q24**: a fourth release, i5, for the console |
 | Q9 | Repository layout: banking's sources stay in this repository under `modules/banking/` or move to their own repository | **stay in this repository** (one drill, one history) but build separately into a `.dmod`; a separate repository when a partner module exists |
 | Q10 | Default distribution of the repo's build | **`drishti.finance`** (today's product); `drishti.genomics` as a sample only, never shipped to customers |
 | Q11 | The kernel API version's start | **1.0 at the end of P2** (P1's API is 0.x and may change freely) |
 | Q12 | HTTP status for a removed module's pages and APIs: 410 Gone or 404 | **410 for removed** (tombstones), **404 for off, refused or unlicensed** (it may come back; nothing permanent claimed), the plain 404 for never installed; all `no-store` (section 12.10) |
-| Q13 | Hot page install: P2 or P3 | **P2 for off, on and remove** (the guarantee needs it) **and for declarative console parts** (Sutras, templates, static, menus); console context builders (Java, from i4) and server code at the rolling restart until P5 (section 9.8) |
-| Q14 | Console Python handlers in partner modules, or templates and Sutras only | **Superseded by Q22 (owner, 2026-11-08).** Was: *allowed, but optional and small: Python context builders only*. Now: there is **no Python in a module's console part**; in i2 modules have **no console handlers at all** (declarative hosting, section 14.2.1); from i4 a module's optional handlers are **small Java context builders** (`drishti-console-api`, no routes, no request, no state; section 10.4); a module with no builders installs fully hot |
+| Q13 | Hot page install: P2 or P3 | **P2 for off, on and remove** (the guarantee needs it) **and for declarative console parts** (Sutras, templates, static, menus); console context builders (Java, from i5) and server code at the rolling restart until P5 (section 9.8) |
+| Q14 | Console Python handlers in partner modules, or templates and Sutras only | **Superseded by Q22 (owner, 2026-11-08).** Was: *allowed, but optional and small: Python context builders only*. Now: there is **no Python in a module's console part**; in i2 modules have **no console handlers at all** (declarative hosting, section 14.2.1); from i5 a module's optional handlers are **small Java context builders** (`drishti-console-api`, no routes, no request, no state; section 10.4); a module with no builders installs fully hot |
 | Q15 | Top-level path aliases (`/var`) for partners, or only Drishti-signed modules | **Drishti-signed only by default**; a site may grant one partner module aliases (`allow-aliases`, four eyes); command words for all, checked against the reserved names (section 9.9) |
 | Q16 | How long tombstones (and the *needs module X* marks) are kept | **365 days** (`drishti.modules.tombstone-days`), then the artefacts show *needs a module that is no longer known* and are still never deleted automatically |
 | Q17 | Where the SDK and modules are published | **an internal Maven repository** (the one the build already uses) for the SDK artefacts and `.dmod` files from P2; the P5 module repository adds search and dependency download on top of it |
@@ -2228,8 +2228,8 @@ The owner accepted every recommendation on 2026-11-08; each row below is a decis
 | Q21 | How is Drishti divided? | **Three building blocks** (owner, 2026-11-08): the **Drishti Kernel** (Data & BI Kernel: connectors, lakes, grammar, engines, registry, cluster, Python workers; hosts server parts), the **Drishti Console** (Data & BI Console: shell, Elements, BI and pivot screens, Admin; hosts console parts; in front of one or many kernels) and **Drishti modules**; glued by `drishti-module-runtime`, the distribution file, the SDK and placement (section 1.1) |
 | Q22 | The console: keep Python, fold it into the kernel, or a separate Java application | **A separate Spring Boot web application** (owner, 2026-11-08): WebMVC on virtual threads, Jinjava, Spring Session and Security; **separate from the kernel** for isolation, independent scaling and restart, a smaller kernel attack surface and **one console in front of many kernels**; one module runtime shared with the kernel; Python only on kernel-managed workers (section 10) |
 | Q23 | What UI statics may exist | **Drishti Elements is the one controlled set** (owner, 2026-11-08): owned by the platform, served only by the console from its signed, versioned train with SRI and CSP; modules ship no copy of Elements, no vendored library and nothing from a CDN; an Elements API range per module, refused with a reason on a mismatch; conformance and load-time hash scans; changes through the platform team with an API diff gate (section 11) |
-| Q24 | When does the console move | **The console migration is i4: owner 2026-11-08.** Its own release after i3: the Spring Boot console, the console host of the runtime, Elements served from Java, the strangler migration of every route group (banking's pages first), one console in front of many kernels, consoles as placement nodes, Python only on kernel workers, **the Python console deleted at the end of i4**. i2 keeps modules on one node on today's console with **declarative** console hosting, so no module changes in i4 (section 14.2.1) |
-| Q25 | Where enterprise single sign-on is built | **In i4** (owner, 2026-11-08), in the Spring Boot console's security chain: OIDC and SAML 2.0 with optional LDAP and Kerberos, the identity map with four eyes, a token per kernel, device code and client credentials, single logout, the SSO guide and tutorial (section 10.11). j keeps roles, licensing, module signing, audit and hardening; if i4 is skipped, SSO falls back to j on the Python console |
+| Q24 | When does the console move | **The console migration is i5: owner 2026-11-08.** Its own release after i3: the Spring Boot console, the console host of the runtime, Elements served from Java, the strangler migration of every route group (banking's pages first), one console in front of many kernels, consoles as placement nodes, Python only on kernel workers, **the Python console deleted at the end of i5**. i2 keeps modules on one node on today's console with **declarative** console hosting, so no module changes in i5 (section 14.2.1) |
+| Q25 | Where enterprise single sign-on is built | **In i5** (owner, 2026-11-08), in the Spring Boot console's security chain: OIDC and SAML 2.0 with optional LDAP and Kerberos, the identity map with four eyes, a token per kernel, device code and client credentials, single logout, the SSO guide and tutorial (section 10.11). j keeps roles, licensing, module signing, audit and hardening; if i5 is skipped, SSO falls back to j on the Python console |
 
 ### 15.1 Open questions (with recommendations)
 
@@ -2238,12 +2238,12 @@ The owner accepted every recommendation on 2026-11-08; each row below is a decis
 | O1 | Template engine: Jinjava or Pebble | **Jinjava** (Jinja-compatible: the 148 templates port mostly mechanically; Apache 2.0). Gate in the week-1 spike: a page render more than 20% slower than Jinja2, or a gap that cannot be rewritten, switches to **Pebble** before G2 starts (section 10.3.1) |
 | O2 | How many kernels per console | **Up to 4 supported, a hard cap of 8** (`kernels:` refuses more): menus, search and Home stay readable and the fan-out per page stays bounded; one is the default and keeps today's addresses |
 | O3 | Session store | **Spring Session JDBC**: SQLite for one console, the site's PostgreSQL for several; the tables in the two complete schema files, no migrations; **not Redis** (one more server to run, against the database rules) |
-| O4 | i4's start | **After i3's tag**, with the Jinjava spike (the 10 hardest templates, render equality and timing) front-loaded during i3 when a builder slot is free; the O1 engine choice is made before i4 starts |
-| O5 | Where the Python console runs during the migration | **On the same machine as the Java console, loopback only**, in front mode (identity only from the Java console's header); never reachable from the network; gone at the end of i4 |
+| O4 | i5's start | **After i3's tag**, with the Jinjava spike (the 10 hardest templates, render equality and timing) front-loaded during i3 when a builder slot is free; the O1 engine choice is made before i5 starts |
+| O5 | Where the Python console runs during the migration | **On the same machine as the Java console, loopback only**, in front mode (identity only from the Java console's header); never reachable from the network; gone at the end of i5 |
 | O6 | Should the same module run on two kernels behind one console (production and UAT) | **Refused by default; allowed with a `prefix:` on the second kernel** (`/k/uat/m/banking/…`), labelled everywhere; a UAT console of its own is the cleaner setup and is what the deployment guide recommends |
 | O7 | Which protocols first | **OIDC first** (every listed provider speaks it, and it is built today), **SAML 2.0 second** in the same release for sites that require it; LDAP bind and Kerberos as options, off by default |
 | O8 | Token to the kernels: OAuth token exchange (RFC 8693) or a console-signed JWT | **A console-signed JWT** (ES256, audience per kernel, 2 minutes, the console's JWKS): it works with every IdP, adds no IdP round trip per kernel and removes today's shared HS256 secret. **Token exchange as an option** for sites whose policy requires IdP-issued tokens at every hop |
-| O9 | SCIM provisioning | **Later** (after i4): JIT creation and the per-request session check cover joiners and leavers within seconds; SCIM is added when a site asks for pushed de-provisioning or group sync |
+| O9 | SCIM provisioning | **Later** (after i5): JIT creation and the per-request session check cover joiners and leavers within seconds; SCIM is added when a site asks for pushed de-provisioning or group sync |
 
 ## 16. What moves from DOMAIN_MODULES.md
 

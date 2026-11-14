@@ -36,7 +36,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
 /**
- * Wires the live result sets (modules/trading/docs/guide.md section 7): the snapshot from the kind's bound stores in one pass (else the
+ * Wires the live result sets (docs/guides/LIVE_RESULTS_GUIDE.md section 7): the snapshot from the kind's bound stores in one pass (else the
  * search's matches, read one by one), the live side from the kind's {@code live:} binding, the condition from the search grammar, the
  * declarations from the modules' {@code blotters/} folders and {@code drishti.live-sets.dir} ({@code config/blotters}), and the edits
  * into the write-back when it is on.
@@ -219,7 +219,7 @@ public class LiveSetConfiguration {
     }
 
     /**
-     * A declaration's problems beyond its shape (modules/trading/docs/guide.md section 6): every named format is in formats.yaml (the
+     * A declaration's problems beyond its shape (docs/guides/LIVE_RESULTS_GUIDE.md section 6): every named format is in formats.yaml (the
      * bundled one and the packs'), every field it names is in the kind's data contract (when the kind has one), and every editable field
      * has a write path (it binds a record field the write-back may set: not the key, nor the version, who or when, which it stamps).
      */

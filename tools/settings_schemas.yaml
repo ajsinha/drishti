@@ -281,7 +281,7 @@ schemas:
       - { key: writes, type: map, default: "{}", meaning: "Named commands that write an approved change back to the source (APPROVALS_GUIDE.md section 5.4): JDBC or Kafka; off until an administrator switches the connector's writes on" }
       - { key: "writes.*", type: map, meaning: "One command: kind, params, confirm (reply, ack-topic, next-load), timeout, and the plugin's block (jdbc or kafka)" }
       - { key: "writes.*.confirm", type: string, default: reply, meaning: "How the write is confirmed: reply, ack-topic or next-load" }
-      - { key: "writes.*.kafka", type: map, meaning: "The Kafka block (modules/trading/docs/guide.md section 8): topic, shape, version-field, changed-by, changed-at, change-id-field" }
+      - { key: "writes.*.kafka", type: map, meaning: "The Kafka block (docs/guides/LIVE_RESULTS_GUIDE.md section 8): topic, shape, version-field, changed-by, changed-at, change-id-field" }
       - { key: "writes.*.kafka.*", type: string, meaning: "One key of the Kafka block" }
   module-file:
     area: modules

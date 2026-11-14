@@ -18,6 +18,7 @@
 
 ## Unreleased
 
+- **One document: Live results and blotters** (docs/guides/LIVE_RESULTS_GUIDE.md, listed in Help). The engine, the page, editing and rights, row rules, retention, scale, the declaration format with a complete inventory example and a tutorial from a Kafka feed to an approved, written-back edit; the trading module's guide keeps only the trade-specific parts and links here. The plan is renumbered: i4 holds the trading module, Python compute in modules and the source modules; i5 is the cluster and the console; i6 is banking on the public kernel API.
 - **Row retention for Delta, Iceberg and files, as the in-memory lake has it** (docs/guides/DATA_LAKE_GUIDE.md section 2.7). A table's
   `retention: {ttl, on, max-rows}` now works on durable tables: rows past their age (the field `on`, else `arrived_at`, else the business date) and
   beyond the newest `max-rows` are dropped by `lake maintain`, the one upkeep schedule (a Delta commit per date, an Iceberg commit per day, the day files
