@@ -112,16 +112,15 @@ public final class ModuleDirs {
 
     /** Dotted versions by number, then as text. */
     static int compare(String a, String b) {
-        String[] x = a.split("[.-]");
-        String[] y = b.split("[.-]");
-        for (int i = 0; i < Math.max(x.length, y.length); i++) {
-            String p = i < x.length ? x[i] : "0";
-            String q = i < y.length ? y[i] : "0";
-            int c = p.matches("\\d+") && q.matches("\\d+") ? Long.compare(Long.parseLong(p), Long.parseLong(q)) : p.compareTo(q);
-            if (c != 0) {
-                return c;
-            }
+        return key(a).compareTo(key(b));
+    }
+
+    /** A version as comparable text: each dotted part zero-padded when it is a number. */
+    private static String key(String v) {
+        StringBuilder k = new StringBuilder();
+        for (String part : v.split("[.-]")) {
+            k.append(part.matches("\\d+") ? "0".repeat(Math.max(0, 12 - part.length())) + part : part).append('|');
         }
-        return 0;
+        return k.toString();
     }
 }
