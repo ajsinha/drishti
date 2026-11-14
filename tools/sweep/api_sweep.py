@@ -71,7 +71,7 @@ STREAM = re.compile(r"stream|/events|/channel|subscribe")
 JAVA_MAP = re.compile(r"@(?:[\w.]*\.)?(Get|Post|Put|Delete|Patch)Mapping(?:\(([^)]*)\))?")
 JAVA_BASE = re.compile(r'@RequestMapping\(\s*(?:value\s*=\s*|path\s*=\s*)?(?:\{\s*)?"([^"]*)"')
 ENTITY_PARENTS = ("entities", "views", "view", "raw", "v", "series", "stream", "history", "impact", "explain", "export", "compare", "about", "panels")
-CONST = re.compile(r"""\b([A-Z][A-Za-z0-9_]*)\s*=\s*["'](/[A-Za-z0-9_/{}.-]*)["']\s*;?""")
+CONST = re.compile(r"""\b([A-Za-z][A-Za-z0-9_]*)\s*=\s*["'](/api/[A-Za-z0-9_/{}.-]*|/[A-Z][A-Za-z0-9_/{}.-]*)["']\s*;?""")
 VARIABLE = re.compile(r"\{([^}:]*)(?::[^}]*)?\}")
 
 
@@ -203,7 +203,7 @@ def test_index() -> list[tuple[str, int, str]]:
                     if k in ln:
                         ln = re.sub(rf"(?<![\w\"'/.]){re.escape(k)}\s*\+\s*\"", lambda m, v=v: '"' + v, ln)
                         ln = re.sub(rf"(?<![\w\"'/.]){re.escape(k)}(?![\w\"'(])", lambda m, v=v: '"' + v + '"', ln)
-                lines.append((rel, n, ln))
+                lines.append((rel, n, re.sub(r'"\s*\+\s*"', "", ln)))
     return lines
 
 

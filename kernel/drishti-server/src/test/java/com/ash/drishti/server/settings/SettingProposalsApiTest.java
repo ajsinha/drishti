@@ -65,8 +65,8 @@ class SettingProposalsApiTest {
         return "Bearer " + tokens.mint(user, List.of(role), 300);
     }
 
-    private ResultActions send(String path, String who, String role, String body) throws Exception {
-        var req = post(path).header("Authorization", as(who, role));
+    private ResultActions send(String method, String path, String who, String role, String body) throws Exception {
+        var req = ("GET".equals(method) ? get(path) : post(path)).header("Authorization", as(who, role));
         if (body != null) {
             req = req.contentType(MediaType.APPLICATION_JSON).content(body);
         }
@@ -88,7 +88,7 @@ class SettingProposalsApiTest {
     }
 
     private String propose(String key, String reason) throws Exception {
-        return body(send(API, "ada", "admin", "{\"key\":\"" + key + "\",\"area\":\"console\",\"value\":\"42\",\"was\":\"40\",\"reason\":\"" + reason + "\"}")
+        return body(send("POST", API, "ada", "admin", "{\"key\":\"" + key + "\",\"area\":\"console\",\"value\":\"42\",\"was\":\"40\",\"reason\":\"" + reason + "\"}")
                 .andExpect(status().isOk()).andExpect(jsonPath("$.state").value("proposed"))).path("id").asText();
     }
 
@@ -97,22 +97,22 @@ class SettingProposalsApiTest {
         String id = propose("console.sample.limit", "the desk asked");
         assertThat(listed(id).path("proposedBy").asText()).isEqualTo("ada");
         // a person who is not an administrator decides nothing
-        send(API + "/" + id + "/approve", "tia", "trader", "{}").andExpect(status().isForbidden()).andExpect(jsonPath("$.code").value("DRS-5002"));
+        send("POST", API + "/" + id + "/approve", "tia", "trader", "{}").andExpect(status().isForbidden()).andExpect(jsonPath("$.code").value("DRS-5002"));
         assertThat(listed(id).path("state").asText()).as("a refusal changed nothing").isEqualTo("proposed");
         // four eyes: not the proposer
-        send(API + "/" + id + "/approve", "ada", "admin", "{}").andExpect(status().isForbidden()).andExpect(jsonPath("$.code").value("DRS-2007"));
+        send("POST", API + "/" + id + "/approve", "ada", "admin", "{}").andExpect(status().isForbidden()).andExpect(jsonPath("$.code").value("DRS-2007"));
         // not applied before it is approved
-        send(API + "/" + id + "/applied", "bob", "admin", null).andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("DRS-2006"));
-        send(API + "/" + id + "/approve", "bob", "admin", "{\"comment\":\"checked\"}").andExpect(status().isOk()).andExpect(jsonPath("$.state").value("approved"))
+        send("POST", API + "/" + id + "/applied", "bob", "admin", null).andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("DRS-2006"));
+        send("POST", API + "/" + id + "/approve", "bob", "admin", "{\"comment\":\"checked\"}").andExpect(status().isOk()).andExpect(jsonPath("$.state").value("approved"))
                 .andExpect(jsonPath("$.decidedBy").value("bob")).andExpect(jsonPath("$.comment").value("checked")).andExpect(jsonPath("$.applied").value(false));
         // a console key is written by the console, which then says so
-        send(API + "/" + id + "/applied", "bob", "admin", null).andExpect(status().isOk()).andExpect(jsonPath("$.applied").value(true));
+        send("POST", API + "/" + id + "/applied", "bob", "admin", null).andExpect(status().isOk()).andExpect(jsonPath("$.applied").value(true));
         JsonNode now = listed(id);
         assertThat(now.path("state").asText()).isEqualTo("approved");
         assertThat(now.path("applied").asBoolean()).isTrue();
         // decided already: a second decision is a conflict, and the proposer can no longer withdraw it
-        send(API + "/" + id + "/reject", "bob", "admin", "{}").andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("DRS-2006"));
-        send(API + "/" + id + "/withdraw", "ada", "admin", null).andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("DRS-2006"));
+        send("POST", API + "/" + id + "/reject", "bob", "admin", "{}").andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("DRS-2006"));
+        send("POST", API + "/" + id + "/withdraw", "ada", "admin", null).andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("DRS-2006"));
         String audit = mvc.perform(get("/api/v1/admin/audit").header("Authorization", as("ada", "admin"))).andReturn().getResponse().getContentAsString();
         assertThat(audit).contains("setting-proposed", "setting-approved", "setting-applied", "console.sample.limit");
     }
@@ -120,36 +120,36 @@ class SettingProposalsApiTest {
     @Test
     void aProposalIsRejectedWithItsCommentOrWithdrawnByItsProposerOnly() throws Exception {
         String rejected = propose("console.sample.other", "try it");
-        send(API + "/" + rejected + "/reject", "tia", "trader", "{}").andExpect(status().isForbidden());
-        send(API + "/" + rejected + "/reject", "ada", "admin", "{}").andExpect(status().isForbidden()).andExpect(jsonPath("$.code").value("DRS-2007"));
-        send(API + "/" + rejected + "/reject", "bob", "admin", "{\"comment\":\"not now\"}").andExpect(status().isOk()).andExpect(jsonPath("$.state").value("rejected"))
+        send("POST", API + "/" + rejected + "/reject", "tia", "trader", "{}").andExpect(status().isForbidden());
+        send("POST", API + "/" + rejected + "/reject", "ada", "admin", "{}").andExpect(status().isForbidden()).andExpect(jsonPath("$.code").value("DRS-2007"));
+        send("POST", API + "/" + rejected + "/reject", "bob", "admin", "{\"comment\":\"not now\"}").andExpect(status().isOk()).andExpect(jsonPath("$.state").value("rejected"))
                 .andExpect(jsonPath("$.comment").value("not now"));
         assertThat(listed(rejected).path("state").asText()).isEqualTo("rejected");
-        send(API + "/" + rejected + "/approve", "bob", "admin", "{}").andExpect(status().isConflict());
+        send("POST", API + "/" + rejected + "/approve", "bob", "admin", "{}").andExpect(status().isConflict());
 
         String withdrawn = propose("console.sample.third", "changed my mind");
-        send(API + "/" + withdrawn + "/withdraw", "tia", "trader", null).andExpect(status().isForbidden());
-        send(API + "/" + withdrawn + "/withdraw", "bob", "admin", null).andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("DRS-2006"));   // not its proposer
-        send(API + "/" + withdrawn + "/withdraw", "ada", "admin", null).andExpect(status().isOk()).andExpect(jsonPath("$.state").value("withdrawn"));
+        send("POST", API + "/" + withdrawn + "/withdraw", "tia", "trader", null).andExpect(status().isForbidden());
+        send("POST", API + "/" + withdrawn + "/withdraw", "bob", "admin", null).andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("DRS-2006"));   // not its proposer
+        send("POST", API + "/" + withdrawn + "/withdraw", "ada", "admin", null).andExpect(status().isOk()).andExpect(jsonPath("$.state").value("withdrawn"));
         assertThat(listed(withdrawn).path("state").asText()).isEqualTo("withdrawn");
-        send(API + "/" + withdrawn + "/withdraw", "ada", "admin", null).andExpect(status().isConflict());                                              // no second withdrawal
+        send("POST", API + "/" + withdrawn + "/withdraw", "ada", "admin", null).andExpect(status().isConflict());                                              // no second withdrawal
         // a withdrawn key can be proposed again
         propose("console.sample.third", "again");
-        send(API + "/no-such-proposal/approve", "bob", "admin", "{}").andExpect(status().isNotFound()).andExpect(jsonPath("$.code").value("DRS-2005"));
+        send("POST", API + "/no-such-proposal/approve", "bob", "admin", "{}").andExpect(status().isNotFound()).andExpect(jsonPath("$.code").value("DRS-2005"));
     }
 
     @Test
     void aBadProposalIsRefusedInWordsAndAnOpenKeyIsNotProposedTwice() throws Exception {
-        send(API, "tia", "trader", "{\"key\":\"console.x\",\"area\":\"console\",\"value\":\"1\",\"reason\":\"r\"}").andExpect(status().isForbidden());
-        send(API, "ada", "admin", "{\"key\":\"Not A Key\",\"area\":\"console\",\"value\":\"1\",\"reason\":\"r\"}").andExpect(status().isBadRequest())
+        send("POST", API, "tia", "trader", "{\"key\":\"console.x\",\"area\":\"console\",\"value\":\"1\",\"reason\":\"r\"}").andExpect(status().isForbidden());
+        send("POST", API, "ada", "admin", "{\"key\":\"Not A Key\",\"area\":\"console\",\"value\":\"1\",\"reason\":\"r\"}").andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value(startsWith("DRS-")));
-        send(API, "ada", "admin", "{\"key\":\"console.x\",\"area\":\"elsewhere\",\"value\":\"1\",\"reason\":\"r\"}").andExpect(status().isBadRequest());
-        send(API, "ada", "admin", "{\"key\":\"console.api-key\",\"area\":\"console\",\"value\":\"1\",\"reason\":\"r\"}").andExpect(status().isBadRequest())
+        send("POST", API, "ada", "admin", "{\"key\":\"console.x\",\"area\":\"elsewhere\",\"value\":\"1\",\"reason\":\"r\"}").andExpect(status().isBadRequest());
+        send("POST", API, "ada", "admin", "{\"key\":\"console.api-key\",\"area\":\"console\",\"value\":\"1\",\"reason\":\"r\"}").andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("secret")));
-        send(API, "ada", "admin", "{\"key\":\"console.x\",\"area\":\"console\",\"value\":\"1\",\"reason\":\" \"}").andExpect(status().isBadRequest());
-        send(API, "ada", "admin", "{\"key\":\"console.x\",\"area\":\"console\",\"value\":\"a\\nb\",\"reason\":\"r\"}").andExpect(status().isBadRequest());
+        send("POST", API, "ada", "admin", "{\"key\":\"console.x\",\"area\":\"console\",\"value\":\"1\",\"reason\":\" \"}").andExpect(status().isBadRequest());
+        send("POST", API, "ada", "admin", "{\"key\":\"console.x\",\"area\":\"console\",\"value\":\"a\\nb\",\"reason\":\"r\"}").andExpect(status().isBadRequest());
         propose("console.sample.once", "first");
-        send(API, "bob", "admin", "{\"key\":\"console.sample.once\",\"area\":\"console\",\"value\":\"7\",\"reason\":\"second\"}").andExpect(status().isConflict())
+        send("POST", API, "bob", "admin", "{\"key\":\"console.sample.once\",\"area\":\"console\",\"value\":\"7\",\"reason\":\"second\"}").andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("DRS-2006"));
         mvc.perform(get(API).header("Authorization", as("tia", "trader"))).andExpect(status().isForbidden());
     }
