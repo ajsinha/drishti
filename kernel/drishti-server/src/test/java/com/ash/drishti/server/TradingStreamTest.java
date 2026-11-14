@@ -64,7 +64,7 @@ class TradingStreamTest {
         p.put("value.serializer", StringSerializer.class.getName());
         PRODUCER = new KafkaProducer<>(p);
         try {
-            SAMPLE = com.ash.drishti.common.PackSamples.document(Path.of("../../config/packs/banking/trading/samples"), "trade", "MX-20000001").orElseThrow();
+            SAMPLE = com.ash.drishti.common.PackSamples.document(Path.of("../../modules/banking/dmod/packs/trading/samples"), "trade", "MX-20000001").orElseThrow();
             String streamed = SAMPLE.replaceFirst("\"QUANTITY\": ?-?[0-9.]+", "\"QUANTITY\":1234567");
             PRODUCER.send(new ProducerRecord<>("drishti.trading.trades", "MX-20000001", streamed)).get(10, TimeUnit.SECONDS);
         } catch (Exception e) {

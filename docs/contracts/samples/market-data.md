@@ -162,7 +162,7 @@ None: all 1,920 rows were read, and every field any of them has is in the record
 
 ### See also
 
-- Data contract: [BND in the market-data pack's contracts](../packs/market-data.md#bnd-bond-security-master-bond) (`config/packs/banking/market-data/contracts/bond.contract.yaml`, the source of every meaning on this page).
+- Data contract: [BND in the market-data pack's contracts](../packs/market-data.md#bnd-bond-security-master-bond) (`modules/market-data/packs/market-data/contracts/bond.contract.yaml`, the source of every meaning on this page).
 - [1. Market data](../../knowledge/data.md#1-market-data)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
@@ -251,7 +251,7 @@ None: all 7 rows were read, and every field any of them has is in the record abo
 
 ### See also
 
-- Data contract: [CPV in the market-data pack's contracts](../packs/market-data.md#cpv-capfloor-volatility-surface-cap-vol-surface) (`config/packs/banking/market-data/contracts/cap-vol-surface.contract.yaml`, the source of every meaning on this page).
+- Data contract: [CPV in the market-data pack's contracts](../packs/market-data.md#cpv-capfloor-volatility-surface-cap-vol-surface) (`modules/market-data/packs/market-data/contracts/cap-vol-surface.contract.yaml`, the source of every meaning on this page).
 - [1. Market data](../../knowledge/data.md#1-market-data)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
@@ -365,7 +365,7 @@ None: all 480 rows were read, and every field any of them has is in the record a
 
 ### See also
 
-- Data contract: [CMD in the market-data pack's contracts](../packs/market-data.md#cmd-commodity-commodity) (`config/packs/banking/market-data/contracts/commodity.contract.yaml`, the source of every meaning on this page).
+- Data contract: [CMD in the market-data pack's contracts](../packs/market-data.md#cmd-commodity-commodity) (`modules/market-data/packs/market-data/contracts/commodity.contract.yaml`, the source of every meaning on this page).
 - [1. Market data](../../knowledge/data.md#1-market-data)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
@@ -451,7 +451,7 @@ None: all 475 rows were read, and every field any of them has is in the record a
 
 ### See also
 
-- Data contract: [CMDC in the market-data pack's contracts](../packs/market-data.md#cmdc-commodity-forward-curve-commodity-curve) (`config/packs/banking/market-data/contracts/commodity-curve.contract.yaml`, the source of every meaning on this page).
+- Data contract: [CMDC in the market-data pack's contracts](../packs/market-data.md#cmdc-commodity-forward-curve-commodity-curve) (`modules/market-data/packs/market-data/contracts/commodity-curve.contract.yaml`, the source of every meaning on this page).
 - [1. Market data](../../knowledge/data.md#1-market-data)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
@@ -532,7 +532,7 @@ None: all 8 rows were read, and every field any of them has is in the record abo
 
 ### See also
 
-- Data contract: [CMDV in the market-data pack's contracts](../packs/market-data.md#cmdv-commodity-volatility-surface-commodity-vol-surface) (`config/packs/banking/market-data/contracts/commodity-vol-surface.contract.yaml`, the source of every meaning on this page).
+- Data contract: [CMDV in the market-data pack's contracts](../packs/market-data.md#cmdv-commodity-volatility-surface-commodity-vol-surface) (`modules/market-data/packs/market-data/contracts/commodity-vol-surface.contract.yaml`, the source of every meaning on this page).
 - [1. Market data](../../knowledge/data.md#1-market-data)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
@@ -610,7 +610,7 @@ Fields no record above has, found by reading all 3 rows, with how many rows fill
 
 ### See also
 
-- Data contract: [CORR in the market-data pack's contracts](../packs/market-data.md#corr-correlation-matrix-correlation-matrix) (`config/packs/banking/market-data/contracts/correlation-matrix.contract.yaml`, the source of every meaning on this page).
+- Data contract: [CORR in the market-data pack's contracts](../packs/market-data.md#corr-correlation-matrix-correlation-matrix) (`modules/market-data/packs/market-data/contracts/correlation-matrix.contract.yaml`, the source of every meaning on this page).
 - [1. Market data](../../knowledge/data.md#1-market-data)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
@@ -703,7 +703,7 @@ None: all 16 rows were read, and every field any of them has is in the record ab
 
 ### See also
 
-- Data contract: [CDS in the market-data pack's contracts](../packs/market-data.md#cds-credit-curve-credit-curve) (`config/packs/banking/market-data/contracts/credit-curve.contract.yaml`, the source of every meaning on this page).
+- Data contract: [CDS in the market-data pack's contracts](../packs/market-data.md#cds-credit-curve-credit-curve) (`modules/market-data/packs/market-data/contracts/credit-curve.contract.yaml`, the source of every meaning on this page).
 - [1. Market data](../../knowledge/data.md#1-market-data)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
@@ -784,7 +784,7 @@ Fields no record above has, found by reading all 15 rows, with how many rows fil
 
 ### See also
 
-- Data contract: [DIV in the market-data pack's contracts](../packs/market-data.md#div-dividend-curve-dividend-curve) (`config/packs/banking/market-data/contracts/dividend-curve.contract.yaml`, the source of every meaning on this page).
+- Data contract: [DIV in the market-data pack's contracts](../packs/market-data.md#div-dividend-curve-dividend-curve) (`modules/market-data/packs/market-data/contracts/dividend-curve.contract.yaml`, the source of every meaning on this page).
 - [1. Market data](../../knowledge/data.md#1-market-data)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
@@ -914,7 +914,7 @@ None: all 600 rows were read, and every field any of them has is in the record a
 
 ### See also
 
-- Data contract: [EQ in the market-data pack's contracts](../packs/market-data.md#eq-equity-equity) (`config/packs/banking/market-data/contracts/equity.contract.yaml`, the source of every meaning on this page).
+- Data contract: [EQ in the market-data pack's contracts](../packs/market-data.md#eq-equity-equity) (`modules/market-data/packs/market-data/contracts/equity.contract.yaml`, the source of every meaning on this page).
 - [1. Market data](../../knowledge/data.md#1-market-data)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
@@ -1009,7 +1009,7 @@ None: all 300 rows were read, and every field any of them has is in the record a
 
 ### See also
 
-- Data contract: [EQX in the market-data pack's contracts](../packs/market-data.md#eqx-equity-index-equity-index) (`config/packs/banking/market-data/contracts/equity-index.contract.yaml`, the source of every meaning on this page).
+- Data contract: [EQX in the market-data pack's contracts](../packs/market-data.md#eqx-equity-index-equity-index) (`modules/market-data/packs/market-data/contracts/equity-index.contract.yaml`, the source of every meaning on this page).
 - [1. Market data](../../knowledge/data.md#1-market-data)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
@@ -1102,7 +1102,7 @@ None: all 15 rows were read, and every field any of them has is in the record ab
 
 ### See also
 
-- Data contract: [EQV in the market-data pack's contracts](../packs/market-data.md#eqv-equity-volatility-surface-equity-vol-surface) (`config/packs/banking/market-data/contracts/equity-vol-surface.contract.yaml`, the source of every meaning on this page).
+- Data contract: [EQV in the market-data pack's contracts](../packs/market-data.md#eqv-equity-volatility-surface-equity-vol-surface) (`modules/market-data/packs/market-data/contracts/equity-vol-surface.contract.yaml`, the source of every meaning on this page).
 - [1. Market data](../../knowledge/data.md#1-market-data)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
@@ -1186,7 +1186,7 @@ None: all 719 rows were read, and every field any of them has is in the record a
 
 ### See also
 
-- Data contract: [FXF in the market-data pack's contracts](../packs/market-data.md#fxf-fx-forward-curve-fx-forward-curve) (`config/packs/banking/market-data/contracts/fx-forward-curve.contract.yaml`, the source of every meaning on this page).
+- Data contract: [FXF in the market-data pack's contracts](../packs/market-data.md#fxf-fx-forward-curve-fx-forward-curve) (`modules/market-data/packs/market-data/contracts/fx-forward-curve.contract.yaml`, the source of every meaning on this page).
 - [1. Market data](../../knowledge/data.md#1-market-data)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
@@ -1288,7 +1288,7 @@ None: all 720 rows were read, and every field any of them has is in the record a
 
 ### See also
 
-- Data contract: [FX in the market-data pack's contracts](../packs/market-data.md#fx-fx-spot-rate-fx-spot) (`config/packs/banking/market-data/contracts/fx-spot.contract.yaml`, the source of every meaning on this page).
+- Data contract: [FX in the market-data pack's contracts](../packs/market-data.md#fx-fx-spot-rate-fx-spot) (`modules/market-data/packs/market-data/contracts/fx-spot.contract.yaml`, the source of every meaning on this page).
 - [1. Market data](../../knowledge/data.md#1-market-data)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
@@ -1389,7 +1389,7 @@ None: all 12 rows were read, and every field any of them has is in the record ab
 
 ### See also
 
-- Data contract: [FXV in the market-data pack's contracts](../packs/market-data.md#fxv-fx-volatility-surface-fx-vol-surface) (`config/packs/banking/market-data/contracts/fx-vol-surface.contract.yaml`, the source of every meaning on this page).
+- Data contract: [FXV in the market-data pack's contracts](../packs/market-data.md#fxv-fx-volatility-surface-fx-vol-surface) (`modules/market-data/packs/market-data/contracts/fx-vol-surface.contract.yaml`, the source of every meaning on this page).
 - [1. Market data](../../knowledge/data.md#1-market-data)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
@@ -1482,7 +1482,7 @@ None: all 4 rows were read, and every field any of them has is in the record abo
 
 ### See also
 
-- Data contract: [INFC in the market-data pack's contracts](../packs/market-data.md#infc-inflation-curve-inflation-curve) (`config/packs/banking/market-data/contracts/inflation-curve.contract.yaml`, the source of every meaning on this page).
+- Data contract: [INFC in the market-data pack's contracts](../packs/market-data.md#infc-inflation-curve-inflation-curve) (`modules/market-data/packs/market-data/contracts/inflation-curve.contract.yaml`, the source of every meaning on this page).
 - [1. Market data](../../knowledge/data.md#1-market-data)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
@@ -1568,7 +1568,7 @@ None: all 4 rows were read, and every field any of them has is in the record abo
 
 ### See also
 
-- Data contract: [INF in the market-data pack's contracts](../packs/market-data.md#inf-inflation-index-inflation-index) (`config/packs/banking/market-data/contracts/inflation-index.contract.yaml`, the source of every meaning on this page).
+- Data contract: [INF in the market-data pack's contracts](../packs/market-data.md#inf-inflation-index-inflation-index) (`modules/market-data/packs/market-data/contracts/inflation-index.contract.yaml`, the source of every meaning on this page).
 - [1. Market data](../../knowledge/data.md#1-market-data)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
@@ -1844,7 +1844,7 @@ None: all 1,680 rows were read, and every field any of them has is in the record
 
 ### See also
 
-- Data contract: [CRV in the market-data pack's contracts](../packs/market-data.md#crv-interest-rate-curve-ir-curve) (`config/packs/banking/market-data/contracts/ir-curve.contract.yaml`, the source of every meaning on this page).
+- Data contract: [CRV in the market-data pack's contracts](../packs/market-data.md#crv-interest-rate-curve-ir-curve) (`modules/market-data/packs/market-data/contracts/ir-curve.contract.yaml`, the source of every meaning on this page).
 - [1. Market data](../../knowledge/data.md#1-market-data)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
@@ -1935,7 +1935,7 @@ None: all 7 rows were read, and every field any of them has is in the record abo
 
 ### See also
 
-- Data contract: [IRV in the market-data pack's contracts](../packs/market-data.md#irv-swaption-volatility-cube-ir-vol-cube) (`config/packs/banking/market-data/contracts/ir-vol-cube.contract.yaml`, the source of every meaning on this page).
+- Data contract: [IRV in the market-data pack's contracts](../packs/market-data.md#irv-swaption-volatility-cube-ir-vol-cube) (`modules/market-data/packs/market-data/contracts/ir-vol-cube.contract.yaml`, the source of every meaning on this page).
 - [1. Market data](../../knowledge/data.md#1-market-data)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
@@ -2022,7 +2022,7 @@ None: all 418 rows were read, and every field any of them has is in the record a
 
 ### See also
 
-- Data contract: [FIX in the market-data pack's contracts](../packs/market-data.md#fix-rate-index-fixings-rate-fixing) (`config/packs/banking/market-data/contracts/rate-fixing.contract.yaml`, the source of every meaning on this page).
+- Data contract: [FIX in the market-data pack's contracts](../packs/market-data.md#fix-rate-index-fixings-rate-fixing) (`modules/market-data/packs/market-data/contracts/rate-fixing.contract.yaml`, the source of every meaning on this page).
 - [1. Market data](../../knowledge/data.md#1-market-data)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
@@ -2101,6 +2101,6 @@ None: all 420 rows were read, and every field any of them has is in the record a
 
 ### See also
 
-- Data contract: [REPO in the market-data pack's contracts](../packs/market-data.md#repo-repo-curve-repo-curve) (`config/packs/banking/market-data/contracts/repo-curve.contract.yaml`, the source of every meaning on this page).
+- Data contract: [REPO in the market-data pack's contracts](../packs/market-data.md#repo-repo-curve-repo-curve) (`modules/market-data/packs/market-data/contracts/repo-curve.contract.yaml`, the source of every meaning on this page).
 - [1. Market data](../../knowledge/data.md#1-market-data)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).

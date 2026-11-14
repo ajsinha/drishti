@@ -40,11 +40,11 @@ drishti:
           warm-up: 2
         - name: news-topic
           store: news
-          source: { file: config/packs/economy/news-and-markets/samples/news-topic.jsonl }
+          source: { file: modules/economy/packs/news-and-markets/samples/news-topic.jsonl }
           key: [TOPIC_ID]
           warm-up: 3
         - name: listed-company
           store: news
-          source: { file: config/packs/economy/news-and-markets/samples/listed-company.jsonl }
+          source: { file: modules/economy/packs/news-and-markets/samples/listed-company.jsonl }
           key: [COMPANY_ID]
           warm-up: 4

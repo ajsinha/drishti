@@ -36,13 +36,13 @@ Every data type of `world-economy` as a real record of the committed test data, 
 
 ## Economy: economy (ECON)
 
-An economy: output, growth, prices, jobs, debt and external balance, and output by sector, from World Bank, IMF and CIA data. One row per economy, keyed by ECONOMY_ID. Read by the **world-economy** pack's connector `macro-store` (lake table `macro.economy`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/world-economy/samples/economy.jsonl`, 213 records). A bank or a public refresh delivers it in the same JSON Lines shape.
+An economy: output, growth, prices, jobs, debt and external balance, and output by sector, from World Bank, IMF and CIA data. One row per economy, keyed by ECONOMY_ID. Read by the **world-economy** pack's connector `macro-store` (lake table `macro.economy`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`modules/economy/packs/world-economy/samples/economy.jsonl`, 213 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
 ### File layout
 
 |  |  |
 |---|---|
-| Path | `config/packs/economy/world-economy/samples/economy.jsonl` |
+| Path | `modules/economy/packs/world-economy/samples/economy.jsonl` |
 | Format | JSON Lines: UTF-8, one JSON object a line |
 | Key field | `ECONOMY_ID` |
 | Date field | none in the record: the pack's samples are served on every business date (partition `business_date`) |
@@ -208,7 +208,7 @@ None: all 213 rows were read, and every field any of them has is in the record a
 
 ### See also
 
-- Data contract: [ECON in the world-economy pack's contracts](../packs/world-economy.md#econ-economy-economy) (`config/packs/economy/world-economy/contracts/economy.contract.yaml`, the source of every meaning on this page).
+- Data contract: [ECON in the world-economy pack's contracts](../packs/world-economy.md#econ-economy-economy) (`modules/economy/packs/world-economy/contracts/economy.contract.yaml`, the source of every meaning on this page).
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
 - [2. Economies](../../knowledge/world.md#2-economies)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
@@ -217,13 +217,13 @@ None: all 213 rows were read, and every field any of them has is in the record a
 
 ## Macro indicator: macro-indicator (MACRO)
 
-One headline statistic of one economy: the series, the latest value, the change and the rank among economies. One row per macro indicator, keyed by INDICATOR_ID. Read by the **world-economy** pack's connector `macro-store` (lake table `macro.macro-indicator`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/world-economy/samples/macro-indicator.jsonl`, 3119 records). A bank or a public refresh delivers it in the same JSON Lines shape.
+One headline statistic of one economy: the series, the latest value, the change and the rank among economies. One row per macro indicator, keyed by INDICATOR_ID. Read by the **world-economy** pack's connector `macro-store` (lake table `macro.macro-indicator`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`modules/economy/packs/world-economy/samples/macro-indicator.jsonl`, 3119 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
 ### File layout
 
 |  |  |
 |---|---|
-| Path | `config/packs/economy/world-economy/samples/macro-indicator.jsonl` |
+| Path | `modules/economy/packs/world-economy/samples/macro-indicator.jsonl` |
 | Format | JSON Lines: UTF-8, one JSON object a line |
 | Key field | `INDICATOR_ID` |
 | Date field | none in the record: the pack's samples are served on every business date (partition `business_date`) |
@@ -345,7 +345,7 @@ None: all 3,119 rows were read, and every field any of them has is in the record
 
 ### See also
 
-- Data contract: [MACRO in the world-economy pack's contracts](../packs/world-economy.md#macro-macro-indicator-macro-indicator) (`config/packs/economy/world-economy/contracts/macro-indicator.contract.yaml`, the source of every meaning on this page).
+- Data contract: [MACRO in the world-economy pack's contracts](../packs/world-economy.md#macro-macro-indicator-macro-indicator) (`modules/economy/packs/world-economy/contracts/macro-indicator.contract.yaml`, the source of every meaning on this page).
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
 - [2. Economies](../../knowledge/world.md#2-economies)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
@@ -354,13 +354,13 @@ None: all 3,119 rows were read, and every field any of them has is in the record
 
 ## Economic forecast: economic-forecast (FCST)
 
-The IMF World Economic Outlook: growth, inflation, unemployment, external balance and debt, outturn and projections to 2031. One row per economic forecast, keyed by FORECAST_ID. Read by the **world-economy** pack's connector `macro-store` (lake table `macro.economic-forecast`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/world-economy/samples/economic-forecast.jsonl`, 192 records). A bank or a public refresh delivers it in the same JSON Lines shape.
+The IMF World Economic Outlook: growth, inflation, unemployment, external balance and debt, outturn and projections to 2031. One row per economic forecast, keyed by FORECAST_ID. Read by the **world-economy** pack's connector `macro-store` (lake table `macro.economic-forecast`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`modules/economy/packs/world-economy/samples/economic-forecast.jsonl`, 192 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
 ### File layout
 
 |  |  |
 |---|---|
-| Path | `config/packs/economy/world-economy/samples/economic-forecast.jsonl` |
+| Path | `modules/economy/packs/world-economy/samples/economic-forecast.jsonl` |
 | Format | JSON Lines: UTF-8, one JSON object a line |
 | Key field | `FORECAST_ID` |
 | Date field | none in the record: the pack's samples are served on every business date (partition `business_date`) |
@@ -491,7 +491,7 @@ None: all 192 rows were read, and every field any of them has is in the record a
 
 ### See also
 
-- Data contract: [FCST in the world-economy pack's contracts](../packs/world-economy.md#fcst-economic-forecast-economic-forecast) (`config/packs/economy/world-economy/contracts/economic-forecast.contract.yaml`, the source of every meaning on this page).
+- Data contract: [FCST in the world-economy pack's contracts](../packs/world-economy.md#fcst-economic-forecast-economic-forecast) (`modules/economy/packs/world-economy/contracts/economic-forecast.contract.yaml`, the source of every meaning on this page).
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
 - [2. Economies](../../knowledge/world.md#2-economies)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
@@ -500,13 +500,13 @@ None: all 192 rows were read, and every field any of them has is in the record a
 
 ## Labour market: labour-market (LABR)
 
-Unemployment, participation, youth and female labour, and employment and output by sector. One row per labour market, keyed by LABOUR_ID. Read by the **world-economy** pack's connector `macro-store` (lake table `macro.labour-market`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/world-economy/samples/labour-market.jsonl`, 185 records). A bank or a public refresh delivers it in the same JSON Lines shape.
+Unemployment, participation, youth and female labour, and employment and output by sector. One row per labour market, keyed by LABOUR_ID. Read by the **world-economy** pack's connector `macro-store` (lake table `macro.labour-market`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`modules/economy/packs/world-economy/samples/labour-market.jsonl`, 185 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
 ### File layout
 
 |  |  |
 |---|---|
-| Path | `config/packs/economy/world-economy/samples/labour-market.jsonl` |
+| Path | `modules/economy/packs/world-economy/samples/labour-market.jsonl` |
 | Format | JSON Lines: UTF-8, one JSON object a line |
 | Key field | `LABOUR_ID` |
 | Date field | none in the record: the pack's samples are served on every business date (partition `business_date`) |
@@ -629,7 +629,7 @@ None: all 185 rows were read, and every field any of them has is in the record a
 
 ### See also
 
-- Data contract: [LABR in the world-economy pack's contracts](../packs/world-economy.md#labr-labour-market-labour-market) (`config/packs/economy/world-economy/contracts/labour-market.contract.yaml`, the source of every meaning on this page).
+- Data contract: [LABR in the world-economy pack's contracts](../packs/world-economy.md#labr-labour-market-labour-market) (`modules/economy/packs/world-economy/contracts/labour-market.contract.yaml`, the source of every meaning on this page).
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
 - [2. Economies](../../knowledge/world.md#2-economies)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
@@ -638,13 +638,13 @@ None: all 185 rows were read, and every field any of them has is in the record a
 
 ## Fiscal position: fiscal-position (FISC)
 
-Government debt and net lending (IMF) with revenue, expense and military spending (World Bank), as shares of GDP. One row per fiscal position, keyed by FISCAL_ID. Read by the **world-economy** pack's connector `macro-store` (lake table `macro.fiscal-position`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/world-economy/samples/fiscal-position.jsonl`, 192 records). A bank or a public refresh delivers it in the same JSON Lines shape.
+Government debt and net lending (IMF) with revenue, expense and military spending (World Bank), as shares of GDP. One row per fiscal position, keyed by FISCAL_ID. Read by the **world-economy** pack's connector `macro-store` (lake table `macro.fiscal-position`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`modules/economy/packs/world-economy/samples/fiscal-position.jsonl`, 192 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
 ### File layout
 
 |  |  |
 |---|---|
-| Path | `config/packs/economy/world-economy/samples/fiscal-position.jsonl` |
+| Path | `modules/economy/packs/world-economy/samples/fiscal-position.jsonl` |
 | Format | JSON Lines: UTF-8, one JSON object a line |
 | Key field | `FISCAL_ID` |
 | Date field | none in the record: the pack's samples are served on every business date (partition `business_date`) |
@@ -772,7 +772,7 @@ None: all 192 rows were read, and every field any of them has is in the record a
 
 ### See also
 
-- Data contract: [FISC in the world-economy pack's contracts](../packs/world-economy.md#fisc-fiscal-position-fiscal-position) (`config/packs/economy/world-economy/contracts/fiscal-position.contract.yaml`, the source of every meaning on this page).
+- Data contract: [FISC in the world-economy pack's contracts](../packs/world-economy.md#fisc-fiscal-position-fiscal-position) (`modules/economy/packs/world-economy/contracts/fiscal-position.contract.yaml`, the source of every meaning on this page).
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
 - [2. Economies](../../knowledge/world.md#2-economies)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
@@ -781,13 +781,13 @@ None: all 192 rows were read, and every field any of them has is in the record a
 
 ## Region economy: region-economy (REGE)
 
-A state or territory (ISO 3166-2): population, GDP and GDP per head. One row per region economy, keyed by REGION_ID. Read by the **world-economy** pack's connector `macro-store` (lake table `macro.region-economy`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/world-economy/samples/region-economy.jsonl`, 59 records). A bank or a public refresh delivers it in the same JSON Lines shape.
+A state or territory (ISO 3166-2): population, GDP and GDP per head. One row per region economy, keyed by REGION_ID. Read by the **world-economy** pack's connector `macro-store` (lake table `macro.region-economy`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`modules/economy/packs/world-economy/samples/region-economy.jsonl`, 59 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
 ### File layout
 
 |  |  |
 |---|---|
-| Path | `config/packs/economy/world-economy/samples/region-economy.jsonl` |
+| Path | `modules/economy/packs/world-economy/samples/region-economy.jsonl` |
 | Format | JSON Lines: UTF-8, one JSON object a line |
 | Key field | `REGION_ID` |
 | Date field | none in the record: the pack's samples are served on every business date (partition `business_date`) |
@@ -893,7 +893,7 @@ Fields no record above has, found by reading all 59 rows, with how many rows fil
 
 ### See also
 
-- Data contract: [REGE in the world-economy pack's contracts](../packs/world-economy.md#rege-region-economy-region-economy) (`config/packs/economy/world-economy/contracts/region-economy.contract.yaml`, the source of every meaning on this page).
+- Data contract: [REGE in the world-economy pack's contracts](../packs/world-economy.md#rege-region-economy-region-economy) (`modules/economy/packs/world-economy/contracts/region-economy.contract.yaml`, the source of every meaning on this page).
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
 - [2. Economies](../../knowledge/world.md#2-economies)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
@@ -902,13 +902,13 @@ Fields no record above has, found by reading all 59 rows, with how many rows fil
 
 ## Jurisdiction: jurisdiction (JUR)
 
-A country: government type, capital, legislature and seats by party, office holders, elections and governance indicators, from the CIA World Factbook, World Bank and UNDP. One row per jurisdiction, keyed by JURISDICTION_ID. Read by the **world-economy** pack's connector `civic-store` (lake table `civic.jurisdiction`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/world-economy/samples/jurisdiction.jsonl`, 216 records). A bank or a public refresh delivers it in the same JSON Lines shape.
+A country: government type, capital, legislature and seats by party, office holders, elections and governance indicators, from the CIA World Factbook, World Bank and UNDP. One row per jurisdiction, keyed by JURISDICTION_ID. Read by the **world-economy** pack's connector `civic-store` (lake table `civic.jurisdiction`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`modules/economy/packs/world-economy/samples/jurisdiction.jsonl`, 216 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
 ### File layout
 
 |  |  |
 |---|---|
-| Path | `config/packs/economy/world-economy/samples/jurisdiction.jsonl` |
+| Path | `modules/economy/packs/world-economy/samples/jurisdiction.jsonl` |
 | Format | JSON Lines: UTF-8, one JSON object a line |
 | Key field | `JURISDICTION_ID` |
 | Date field | none in the record: the pack's samples are served on every business date (partition `business_date`) |
@@ -1095,7 +1095,7 @@ None: all 216 rows were read, and every field any of them has is in the record a
 
 ### See also
 
-- Data contract: [JUR in the world-economy pack's contracts](../packs/world-economy.md#jur-jurisdiction-jurisdiction) (`config/packs/economy/world-economy/contracts/jurisdiction.contract.yaml`, the source of every meaning on this page).
+- Data contract: [JUR in the world-economy pack's contracts](../packs/world-economy.md#jur-jurisdiction-jurisdiction) (`modules/economy/packs/world-economy/contracts/jurisdiction.contract.yaml`, the source of every meaning on this page).
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
 - [2. Economies](../../knowledge/world.md#2-economies)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
@@ -1104,13 +1104,13 @@ None: all 216 rows were read, and every field any of them has is in the record a
 
 ## Party: party (PARTY)
 
-A political party that won seats in the lower chamber at the most recent election, with the chamber's full result. One row per party, keyed by PARTY_ID. Read by the **world-economy** pack's connector `civic-store` (lake table `civic.party`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/world-economy/samples/party.jsonl`, 282 records). A bank or a public refresh delivers it in the same JSON Lines shape.
+A political party that won seats in the lower chamber at the most recent election, with the chamber's full result. One row per party, keyed by PARTY_ID. Read by the **world-economy** pack's connector `civic-store` (lake table `civic.party`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`modules/economy/packs/world-economy/samples/party.jsonl`, 282 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
 ### File layout
 
 |  |  |
 |---|---|
-| Path | `config/packs/economy/world-economy/samples/party.jsonl` |
+| Path | `modules/economy/packs/world-economy/samples/party.jsonl` |
 | Format | JSON Lines: UTF-8, one JSON object a line |
 | Key field | `PARTY_ID` |
 | Date field | none in the record: the pack's samples are served on every business date (partition `business_date`) |
@@ -1217,7 +1217,7 @@ None: all 282 rows were read, and every field any of them has is in the record a
 
 ### See also
 
-- Data contract: [PARTY in the world-economy pack's contracts](../packs/world-economy.md#party-party-party) (`config/packs/economy/world-economy/contracts/party.contract.yaml`, the source of every meaning on this page).
+- Data contract: [PARTY in the world-economy pack's contracts](../packs/world-economy.md#party-party-party) (`modules/economy/packs/world-economy/contracts/party.contract.yaml`, the source of every meaning on this page).
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
 - [2. Economies](../../knowledge/world.md#2-economies)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
@@ -1226,13 +1226,13 @@ None: all 282 rows were read, and every field any of them has is in the record a
 
 ## Office holder: office-holder (OFFC)
 
-The chief of state or head of government of a country as the CIA World Factbook publishes them, with how the office is filled. One row per office holder, keyed by OFFICE_ID. Read by the **world-economy** pack's connector `civic-store` (lake table `civic.office-holder`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/world-economy/samples/office-holder.jsonl`, 430 records). A bank or a public refresh delivers it in the same JSON Lines shape.
+The chief of state or head of government of a country as the CIA World Factbook publishes them, with how the office is filled. One row per office holder, keyed by OFFICE_ID. Read by the **world-economy** pack's connector `civic-store` (lake table `civic.office-holder`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`modules/economy/packs/world-economy/samples/office-holder.jsonl`, 430 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
 ### File layout
 
 |  |  |
 |---|---|
-| Path | `config/packs/economy/world-economy/samples/office-holder.jsonl` |
+| Path | `modules/economy/packs/world-economy/samples/office-holder.jsonl` |
 | Format | JSON Lines: UTF-8, one JSON object a line |
 | Key field | `OFFICE_ID` |
 | Date field | none in the record: the pack's samples are served on every business date (partition `business_date`) |
@@ -1341,7 +1341,7 @@ None: all 430 rows were read, and every field any of them has is in the record a
 
 ### See also
 
-- Data contract: [OFFC in the world-economy pack's contracts](../packs/world-economy.md#offc-office-holder-office-holder) (`config/packs/economy/world-economy/contracts/office-holder.contract.yaml`, the source of every meaning on this page).
+- Data contract: [OFFC in the world-economy pack's contracts](../packs/world-economy.md#offc-office-holder-office-holder) (`modules/economy/packs/world-economy/contracts/office-holder.contract.yaml`, the source of every meaning on this page).
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
 - [2. Economies](../../knowledge/world.md#2-economies)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
@@ -1350,13 +1350,13 @@ None: all 430 rows were read, and every field any of them has is in the record a
 
 ## Election: election (ELEC)
 
-The most recent election to a chamber or to the executive, with the system, term, seats by party and the date of the next one. One row per election, keyed by ELECTION_ID. Read by the **world-economy** pack's connector `civic-store` (lake table `civic.election`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/world-economy/samples/election.jsonl`, 378 records). A bank or a public refresh delivers it in the same JSON Lines shape.
+The most recent election to a chamber or to the executive, with the system, term, seats by party and the date of the next one. One row per election, keyed by ELECTION_ID. Read by the **world-economy** pack's connector `civic-store` (lake table `civic.election`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`modules/economy/packs/world-economy/samples/election.jsonl`, 378 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
 ### File layout
 
 |  |  |
 |---|---|
-| Path | `config/packs/economy/world-economy/samples/election.jsonl` |
+| Path | `modules/economy/packs/world-economy/samples/election.jsonl` |
 | Format | JSON Lines: UTF-8, one JSON object a line |
 | Key field | `ELECTION_ID` |
 | Date field | none in the record: the pack's samples are served on every business date (partition `business_date`) |
@@ -1489,7 +1489,7 @@ Fields no record above has, found by reading all 378 rows, with how many rows fi
 
 ### See also
 
-- Data contract: [ELEC in the world-economy pack's contracts](../packs/world-economy.md#elec-election-election) (`config/packs/economy/world-economy/contracts/election.contract.yaml`, the source of every meaning on this page).
+- Data contract: [ELEC in the world-economy pack's contracts](../packs/world-economy.md#elec-election-election) (`modules/economy/packs/world-economy/contracts/election.contract.yaml`, the source of every meaning on this page).
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
 - [2. Economies](../../knowledge/world.md#2-economies)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
@@ -1498,13 +1498,13 @@ Fields no record above has, found by reading all 378 rows, with how many rows fi
 
 ## World region: region (REGN)
 
-A World Bank region: its countries, population, life expectancy, women in parliament, Internet use and the government types found in it. One row per world region, keyed by REGION_ID. Read by the **world-economy** pack's connector `civic-store` (lake table `civic.region`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/world-economy/samples/region.jsonl`, 7 records). A bank or a public refresh delivers it in the same JSON Lines shape.
+A World Bank region: its countries, population, life expectancy, women in parliament, Internet use and the government types found in it. One row per world region, keyed by REGION_ID. Read by the **world-economy** pack's connector `civic-store` (lake table `civic.region`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`modules/economy/packs/world-economy/samples/region.jsonl`, 7 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
 ### File layout
 
 |  |  |
 |---|---|
-| Path | `config/packs/economy/world-economy/samples/region.jsonl` |
+| Path | `modules/economy/packs/world-economy/samples/region.jsonl` |
 | Format | JSON Lines: UTF-8, one JSON object a line |
 | Key field | `REGION_ID` |
 | Date field | none in the record: the pack's samples are served on every business date (partition `business_date`) |
@@ -1640,7 +1640,7 @@ None: all 7 rows were read, and every field any of them has is in the record abo
 
 ### See also
 
-- Data contract: [REGN in the world-economy pack's contracts](../packs/world-economy.md#regn-world-region-region) (`config/packs/economy/world-economy/contracts/region.contract.yaml`, the source of every meaning on this page).
+- Data contract: [REGN in the world-economy pack's contracts](../packs/world-economy.md#regn-world-region-region) (`modules/economy/packs/world-economy/contracts/region.contract.yaml`, the source of every meaning on this page).
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
 - [2. Economies](../../knowledge/world.md#2-economies)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
@@ -1649,13 +1649,13 @@ None: all 7 rows were read, and every field any of them has is in the record abo
 
 ## Social indicator: social-indicator (SOCI)
 
-A social or governance statistic of one country over time, with the regional comparison: health, education, inequality, rights and rule of law. One row per social indicator, keyed by INDICATOR_ID. Read by the **world-economy** pack's connector `civic-store` (lake table `civic.social-indicator`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/world-economy/samples/social-indicator.jsonl`, 4297 records). A bank or a public refresh delivers it in the same JSON Lines shape.
+A social or governance statistic of one country over time, with the regional comparison: health, education, inequality, rights and rule of law. One row per social indicator, keyed by INDICATOR_ID. Read by the **world-economy** pack's connector `civic-store` (lake table `civic.social-indicator`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`modules/economy/packs/world-economy/samples/social-indicator.jsonl`, 4297 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
 ### File layout
 
 |  |  |
 |---|---|
-| Path | `config/packs/economy/world-economy/samples/social-indicator.jsonl` |
+| Path | `modules/economy/packs/world-economy/samples/social-indicator.jsonl` |
 | Format | JSON Lines: UTF-8, one JSON object a line |
 | Key field | `INDICATOR_ID` |
 | Date field | none in the record: the pack's samples are served on every business date (partition `business_date`) |
@@ -1788,7 +1788,7 @@ None: all 4,297 rows were read, and every field any of them has is in the record
 
 ### See also
 
-- Data contract: [SOCI in the world-economy pack's contracts](../packs/world-economy.md#soci-social-indicator-social-indicator) (`config/packs/economy/world-economy/contracts/social-indicator.contract.yaml`, the source of every meaning on this page).
+- Data contract: [SOCI in the world-economy pack's contracts](../packs/world-economy.md#soci-social-indicator-social-indicator) (`modules/economy/packs/world-economy/contracts/social-indicator.contract.yaml`, the source of every meaning on this page).
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
 - [2. Economies](../../knowledge/world.md#2-economies)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).

@@ -14,7 +14,7 @@
 
 """Guides and tutorials link a data input's two homes and never copy them.
 
-An input's fields have one home, its data contract (config/packs/<domain>/<pack>/contracts/<kind>.contract.yaml, published on
+An input's fields have one home, its data contract (modules/<module>/packs/<pack>/contracts/<kind>.contract.yaml, published on
 docs/contracts/packs/<pack>.md); its JSON example has one home, its data sample (docs/contracts/samples/<domain>.md#<kind>, written by
 tools/testdata/sample_docs.py from the committed synthetic test data). A guide or tutorial (docs/guides/*.md, docs/tutorials/*.md) only
 links them:
@@ -40,7 +40,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SAMPLES = ROOT / "docs" / "contracts" / "samples"
-PAGES = ("docs/guides/*.md", "docs/tutorials/*.md", "config/packs/*/*/guides/*.md")
+PAGES = ("docs/guides/*.md", "docs/tutorials/*.md", "config/packs/*/*/guides/*.md", "modules/*/packs/*/guides/*.md", "modules/banking/dmod/packs/*/guides/*.md")
 FENCE = re.compile(r"^```.*?^```[ \t]*$", re.S | re.M)
 JSON_BLOCK = re.compile(r"^```jsonc?[ \t]*\n(.*?)^```", re.S | re.M)
 KEY = re.compile(r'"([A-Za-z_][A-Za-z0-9_]*)"\s*:')

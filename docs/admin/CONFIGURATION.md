@@ -73,7 +73,7 @@ Lowest to highest; a later layer wins:
 pack.yaml contributions  <  application.yaml  <  application.local.yaml  <  environment variables  <  --arguments
 ```
 
-* **Packs** (`config/packs/<domain>/<name>/pack.yaml`) contribute mnemonics, roles, connectors, routes, link fields and so on.
+* **Packs** (`modules/<module>/packs/<name>/pack.yaml`) contribute mnemonics, roles, connectors, routes, link fields and so on.
   They are added as the lowest-precedence source, so anything the site writes in its own configuration
   overrides a pack.
 * **`application.yaml`** is the bundled default.
@@ -3686,7 +3686,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
-| `drishti.packs.dir` | string | `./config/packs` | `DRISHTI_PACKS_DIR` | server | Domain packs (config/packs/&lt;domain&gt;/&lt;name&gt;/pack.yaml): Sutras, mnemonics, links, badges, roles, vocabulary, samples. Site settings below always override what a pack contributes. | restart |  | admin |
+| `drishti.packs.dir` | string | `./config/packs` | `DRISHTI_PACKS_DIR` | server | Domain packs (modules/&lt;module&gt;/packs/&lt;name&gt;/pack.yaml): Sutras, mnemonics, links, badges, roles, vocabulary, samples. Site settings below always override what a pack contributes. | restart |  | admin |
 | `drishti.packs.extra-dirs` | string | empty | `DRISHTI_PACKS_EXTRA_DIRS` | server | Further pack folders, comma-separated, looked in after dir: examples/packs holds the retired example packs (finance, genomics, logistics, retail-banking, climate-risk, operational-risk, liquidity-risk); name one in enabled to load it. | restart |  | admin |
 | `drishti.packs.overlay` | string | `./data/packs/added.yaml` | `DRISHTI_PACKS_OVERLAY` | server | Packs loaded from Admin → Packs are listed here (drishti.packs.added) and read at every start; see spring.config.import. | restart |  | admin |
 | `drishti.packs.installed-dir` | string | `./data/packs/installed` | `DRISHTI_PACKS_INSTALLED` | server | Packs installed from a signed registry (Admin → Packs → From the registry); looked in before dir, so they win. | restart |  | admin |
@@ -4088,7 +4088,7 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
-| `drishti.frtb.parameters-dir` | string | `./config/packs/banking/market-risk/capital` | `DRISHTI_FRTB_PARAMETERS` | server (each node its own) | frtb-sa-sbm.yaml and frtb-sa-drc-rrao.yaml (else the market-risk pack's capital/) | restart |  | admin |
+| `drishti.frtb.parameters-dir` | string | `./modules/banking/dmod/packs/market-risk/capital` | `DRISHTI_FRTB_PARAMETERS` | server (each node its own) | frtb-sa-sbm.yaml and frtb-sa-drc-rrao.yaml (else the market-risk pack's capital/) | restart |  | admin |
 | `drishti.frtb.default-risk-kind` | string | `default-risk` |  | server (each node its own) | the DRC inputs; none served: "DRC not computed", never 0 | restart |  | admin |
 | `drishti.frtb.residual-risk-kind` | string | `residual-risk` |  | server (each node its own) | the RRAO inputs; none served: derived from the positions' product types and notionals | restart |  | admin |
 | `drishti.frtb.rrao-from-positions` | boolean | `true` |  | server (each node its own) | derive the RRAO from PRODUCT\_TYPE (the parameter file's mapping) and the VaR book's notionals | restart |  | admin |
@@ -4754,7 +4754,7 @@ The console's content files under `drishti-console/config/`: menus, the help cen
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
-| `templates` | map | `{}` |  | console | Core starter workspaces by name (packs add their own in config/packs/&lt;domain&gt;/&lt;pack&gt;/config/workspaces.yaml) | live |  | admin |
+| `templates` | map | `{}` |  | console | Core starter workspaces by name (packs add their own in modules/&lt;module&gt;/packs/&lt;pack&gt;/config/workspaces.yaml) | live |  | admin |
 | `templates.*` | map | none |  | console | One starter workspace: its layout and panes, as blank below | live |  | admin |
 | `blank` | map | `shipped` |  | console | What a new, blank workspace starts as | live |  | admin |
 | `blank.layout` | string | `2col` |  | console | Its layout: 2col, 3col, 2x2 or 1+2 | live |  | admin |
@@ -5457,7 +5457,7 @@ A connector's settings go under `settings:` in its file, `config/connectors/<nam
 
 ### Packs: `pack.yaml`
 
-`config/packs/<domain>/<pack>/pack.yaml`, read by the server's pack loader (`PackLoader`) and the console. A changed pack is reloaded while the server runs ([Live reload](../guides/BUILD_GUIDE.md#296-live-reload-the-packs-folder-is-watched)). Guide: [BUILD_GUIDE.md](../guides/BUILD_GUIDE.md#4-packyaml-key-by-key).
+`modules/<module>/packs/<pack>/pack.yaml`, read by the server's pack loader (`PackLoader`) and the console. A changed pack is reloaded while the server runs ([Live reload](../guides/BUILD_GUIDE.md#296-live-reload-the-packs-folder-is-watched)). Guide: [BUILD_GUIDE.md](../guides/BUILD_GUIDE.md#4-packyaml-key-by-key).
 
 #### `pack.yaml`
 
@@ -6323,7 +6323,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_FORCE_PW_CHANGE_ON_RESET` | `drishti.identity.force-password-change-on-reset` | `false` | server | after an administrator resets a password, the user must change it at the next sign-in |
 | `DRISHTI_FRED_SERIES` | fred-feed series | `DGS10,DFF` | packs | The FRED series read |
 | `DRISHTI_FRTB_ENABLED` | `drishti.engines.frtb-sa.enabled` (engine) | `true` | engine | run FRTB-SA on this node: /api/v1/frtb, FRSA, PLAY FRTB; needs var and sensitivities (live) |
-| `DRISHTI_FRTB_PARAMETERS` | `drishti.frtb.parameters-dir` (engine) | `./config/packs/banking/market-risk/capital` | engine | frtb-sa-sbm.yaml and frtb-sa-drc-rrao.yaml (else the market-risk pack's capital/) |
+| `DRISHTI_FRTB_PARAMETERS` | `drishti.frtb.parameters-dir` (engine) | `./modules/banking/dmod/packs/market-risk/capital` | engine | frtb-sa-sbm.yaml and frtb-sa-drc-rrao.yaml (else the market-risk pack's capital/) |
 | `DRISHTI_GOVERNANCE_DIR` | `drishti.governance.dir` | `./data/governance` | server | where proposals are kept with store: file; with content (the default) the folder is imported once and left in place |
 | `DRISHTI_HEARTBEAT_SECONDS` | build\_demo\_lakes.py | `30` | tools | How often a long lake build prints that it is alive |
 | `DRISHTI_HOME_FACTS` | `ui.facts.enabled` | `true` | console | Home's Did you know tile, the fact of the day for a signed-in user; false: no tile |
@@ -6411,7 +6411,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_OPENBLAS_ENABLED` | `drishti.engines.openblas.enabled` (engine) | `false` | engine | off as shipped (the Java kernels, the same figures); on: linear algebra on the bundled OpenBLAS on this node (live, no restart) for faster many-scope sums |
 | `DRISHTI_PACKS` | `drishti.packs.enabled`, `packs.enabled` | `default` | console, server | default: the distribution's packs (drishti.distribution), else config/packs/default-packs.yaml |
 | `DRISHTI_PACKS_DEPLOY_HISTORY` | `drishti.packs.deploy.history-file` | `./data/packs/deploy-history.jsonl` | server | the history of archive deployments and rollbacks |
-| `DRISHTI_PACKS_DIR` | `drishti.packs.dir`, `packs.dir` | `./config/packs` | console, server | Domain packs (config/packs/&lt;domain&gt;/&lt;name&gt;/pack.yaml): Sutras, mnemonics, links, badges, roles, vocabulary, samples. Site settings below always override what a pack contributes. |
+| `DRISHTI_PACKS_DIR` | `drishti.packs.dir`, `packs.dir` | `./config/packs` | console, server | Domain packs (modules/&lt;module&gt;/packs/&lt;name&gt;/pack.yaml): Sutras, mnemonics, links, badges, roles, vocabulary, samples. Site settings below always override what a pack contributes. |
 | `DRISHTI_PACKS_EXTRA_DIRS` | `drishti.packs.extra-dirs`, `packs.extra_dirs` | empty | console, server | Further pack folders, comma-separated, looked in after dir: examples/packs holds the retired example packs (finance, genomics, logistics, retail-banking, climate-risk, operational-risk, liquidity-risk); name one in enabled to load it. |
 | `DRISHTI_PACKS_INSTALLED` | `drishti.packs.installed-dir`, `packs.installed_dir` | `./data/packs/installed` | console, server | Packs installed from a signed registry (Admin → Packs → From the registry); looked in before dir, so they win. |
 | `DRISHTI_PACKS_OUT` | pack generators | none | tools | Where the pack generators write |

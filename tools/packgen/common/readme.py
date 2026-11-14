@@ -15,7 +15,7 @@
 """The README standard for packs and connectors (docs/guides/BUILD_GUIDE.md and
 docs/guides/DEVELOPER_GUIDE.md, "The README standard").
 
-Every pack (``config/packs/<domain>/<pack>/README.md``), every connector type (``plugins/drishti-plugin-<x>/README.md``, the built-ins in
+Every pack (``modules/<module>/packs/<pack>/README.md``), every connector type (``plugins/drishti-plugin-<x>/README.md``, the built-ins in
 ``docs/connectors/types/<type>/README.md``) and every folder of connector templates (``config/connectors.examples/<x>/README.md``)
 has a README: the licence comment, a YAML front matter (for AI and the console), then fixed ``## `` sections.
 
@@ -408,6 +408,17 @@ def module_of(pack: str) -> str | None:
     return None
 
 
+_REPO_LINK = re.compile(r"\]\(((?:\.\./)+)(docs/|HOW_IT_FITS|README|config/|plugins/|drishti-console/|tools/|examples/)")
+
+
+def deepen(text: str, pack_dir: Path) -> str:
+    """The repository links of a pack's page, one folder level deeper for a pack in a module whose manifest is in its ``dmod`` folder
+    (modules/banking/dmod/packs/<pack>): the generators write the depth of every other pack (four levels to the repository root)."""
+    if "/dmod/packs/" not in Path(pack_dir).resolve().as_posix():
+        return text
+    return _REPO_LINK.sub(lambda m: "](../" + m.group(1) + m.group(2), text)
+
+
 def render_pack(pack_dir: Path, generator: str | None = None, files: dict | None = None, intro: Path | None = None) -> str:
     """A pack's README.md. ``files``: {path: text} a generator is about to write (pack.yaml, samples), read before the disk."""
     pack_dir = Path(pack_dir)
@@ -417,7 +428,7 @@ def render_pack(pack_dir: Path, generator: str | None = None, files: dict | None
     intro = intro or find_intro(name)
     imeta, ibody = split(intro.read_text(encoding="utf-8")) if intro and intro.is_file() else ({}, "")
     imeta = imeta or {}
-    # an intro (tools/packgen/<gen>/readme/) is three folders below the repository, a pack's README four (config/packs/<domain>/<pack>)
+    # an intro (tools/packgen/<gen>/readme/) is three folders below the repository, a pack's README four (modules/<module>/packs/<pack>)
     ibody = ibody.replace("](../../../", "](../../../../")
     isec = sections(ibody)
     generator = generator or imeta.get("generator") or f"tools/packgen/readme.py {name}"
@@ -625,4 +636,4 @@ def render_pack(pack_dir: Path, generator: str | None = None, files: dict | None
         out.append(isec["See also"])
     out += ["- [Packs](../../../../docs/guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/BUILD_GUIDE.md) "
             "(the README standard).", ""]
-    return "\n".join(out).rstrip() + "\n"
+    return deepen("\n".join(out).rstrip() + "\n", pack_dir)

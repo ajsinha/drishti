@@ -128,7 +128,7 @@ None: all 30 rows were read, and every field any of them has is in the record ab
 
 ### See also
 
-- Data contract: [FRTB in the market-risk pack's contracts](../packs/market-risk.md#frtb-frtb-sensitivities-frtb-sensitivity) (`config/packs/banking/market-risk/contracts/frtb-sensitivity.contract.yaml`, the source of every meaning on this page).
+- Data contract: [FRTB in the market-risk pack's contracts](../packs/market-risk.md#frtb-frtb-sensitivities-frtb-sensitivity) (`modules/banking/dmod/packs/market-risk/contracts/frtb-sensitivity.contract.yaml`, the source of every meaning on this page).
 - [FRTB standardised approach: the data contract](../../contracts/FRTB.md)
 - [1. Market risk](../../knowledge/risk.md#1-market-risk)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
@@ -224,7 +224,7 @@ None: all 30 rows were read, and every field any of them has is in the record ab
 
 ### See also
 
-- Data contract: [PNL in the market-risk pack's contracts](../packs/market-risk.md#pnl-pl-explain-pnl-explain) (`config/packs/banking/market-risk/contracts/pnl-explain.contract.yaml`, the source of every meaning on this page).
+- Data contract: [PNL in the market-risk pack's contracts](../packs/market-risk.md#pnl-pl-explain-pnl-explain) (`modules/banking/dmod/packs/market-risk/contracts/pnl-explain.contract.yaml`, the source of every meaning on this page).
 - [PNL, P&L explain: the data contract](../../contracts/PNL.md)
 - [1. Market risk](../../knowledge/risk.md#1-market-risk)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
@@ -309,7 +309,7 @@ None: all 80 rows were read, and every field any of them has is in the record ab
 
 ### See also
 
-- Data contract: [STR in the market-risk pack's contracts](../packs/market-risk.md#str-stress-result-stress-result) (`config/packs/banking/market-risk/contracts/stress-result.contract.yaml`, the source of every meaning on this page).
+- Data contract: [STR in the market-risk pack's contracts](../packs/market-risk.md#str-stress-result-stress-result) (`modules/banking/dmod/packs/market-risk/contracts/stress-result.contract.yaml`, the source of every meaning on this page).
 - [STR, stress P&L: the data contract](../../contracts/STR.md)
 - [1. Market risk](../../knowledge/risk.md#1-market-risk)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
@@ -389,7 +389,7 @@ None: all 8 rows were read, and every field any of them has is in the record abo
 
 ### See also
 
-- Data contract: [SCN in the market-risk pack's contracts](../packs/market-risk.md#scn-stress-scenario-stress-scenario) (`config/packs/banking/market-risk/contracts/stress-scenario.contract.yaml`, the source of every meaning on this page).
+- Data contract: [SCN in the market-risk pack's contracts](../packs/market-risk.md#scn-stress-scenario-stress-scenario) (`modules/banking/dmod/packs/market-risk/contracts/stress-scenario.contract.yaml`, the source of every meaning on this page).
 - [1. Market risk](../../knowledge/risk.md#1-market-risk)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
 
@@ -486,7 +486,7 @@ None: all 806,304 rows were read, and every field any of them has is in the reco
 
 ### See also
 
-- Data contract: [TVAL in the market-risk pack's contracts](../packs/market-risk.md#tval-trade-valuation-trade-valuation) (`config/packs/banking/market-risk/contracts/trade-valuation.contract.yaml`, the source of every meaning on this page).
+- Data contract: [TVAL in the market-risk pack's contracts](../packs/market-risk.md#tval-trade-valuation-trade-valuation) (`modules/banking/dmod/packs/market-risk/contracts/trade-valuation.contract.yaml`, the source of every meaning on this page).
 - [TVAL, trade valuation totals: the data contract](../../contracts/TVAL.md)
 - [16. Reference and master data read](../../guides/EXPOSURE_GUIDE.md#16-reference-and-master-data-read)
 - [Tutorial 3 · Exposure from the bank to a trade](../../tutorials/03-exposure-from-the-bank-to-a-trade.md)
@@ -580,7 +580,7 @@ Fields no record above has, found by reading all 2 rows, with how many rows fill
 
 ### See also
 
-- Data contract: [SSET in the market-risk pack's contracts](../packs/market-risk.md#sset-scenario-set-scenario-set) (`config/packs/banking/market-risk/contracts/scenario-set.contract.yaml`, the source of every meaning on this page).
+- Data contract: [SSET in the market-risk pack's contracts](../packs/market-risk.md#sset-scenario-set-scenario-set) (`modules/banking/dmod/packs/market-risk/contracts/scenario-set.contract.yaml`, the source of every meaning on this page).
 - [15.3 `scenario-set`: the scenario days](../../guides/VAR_GUIDE.md#153-scenario-set-the-scenario-days)
 - [Tutorial 2 · VaR from the bank to a trade](../../tutorials/02-var-from-the-bank-to-a-trade.md)
 - [1. Market risk](../../knowledge/risk.md#1-market-risk)
@@ -590,7 +590,7 @@ Fields no record above has, found by reading all 2 rows, with how many rows fill
 
 ## Scenario PVs of a trade (509 scenarios, its currency): scenario-pv (SPV)
 
-A trade's present value under each historical scenario and its base PV of the same run, in the trade's own currency: the form of a trade's scenario P&L a bank may send instead of a P&L vector (VAR_GUIDE.md section 15.9). The VaR engine turns it into the trade's USD P&L when it loads the date: P&L(s) = PV(s) x FX(s) - PV(base) x FX(base). One row per trade, business date and scenario set (BUSINESS_DATE), keyed by SCENARIO_PV_ID; a trade is in this kind or in pnl-vector, never both on one date. Read by the **market-risk** pack's connector `risk-store` (lake table `risk.scenario-pv`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-28 to 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (15,986 records on 2026-09-30), never a change on the day before. Beside the morning run, intraday updates are appended during the day (only the changed trades, `RUN_KIND` `INTRADAY`); the forms the test data lacks come from the pack's samples (`config/packs/banking/market-risk/samples/scenario-pv.jsonl`, `config/packs/banking/market-risk/samples/intraday/scenario-pv.2026-09-30.jsonl`).
+A trade's present value under each historical scenario and its base PV of the same run, in the trade's own currency: the form of a trade's scenario P&L a bank may send instead of a P&L vector (VAR_GUIDE.md section 15.9). The VaR engine turns it into the trade's USD P&L when it loads the date: P&L(s) = PV(s) x FX(s) - PV(base) x FX(base). One row per trade, business date and scenario set (BUSINESS_DATE), keyed by SCENARIO_PV_ID; a trade is in this kind or in pnl-vector, never both on one date. Read by the **market-risk** pack's connector `risk-store` (lake table `risk.scenario-pv`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-28 to 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (15,986 records on 2026-09-30), never a change on the day before. Beside the morning run, intraday updates are appended during the day (only the changed trades, `RUN_KIND` `INTRADAY`); the forms the test data lacks come from the pack's samples (`modules/banking/dmod/packs/market-risk/samples/scenario-pv.jsonl`, `modules/banking/dmod/packs/market-risk/samples/intraday/scenario-pv.2026-09-30.jsonl`).
 
 ### File layout
 
@@ -612,9 +612,9 @@ The rows come in 4 sub-types, recognised by `VALUE_TYPE`, `GRAIN`, `RUN_KIND` an
 | Sub-type | Recognised by | Rows | Sample from | Section |
 |---|---|---|---|---|
 | **Scenario PVs by position, full run** | `VALUE_TYPE` `PV`, `GRAIN` `POSITION`, `RUN_KIND` `FULL` | 15,987 | test data | [Scenario PVs by position, full run](#scenario-pv-scenario-pvs-by-position-full-run) |
-| **Scenario PVs by trade, intraday update** | `VALUE_TYPE` `PV`, `GRAIN` `TRADE`, `RUN_KIND` `INTRADAY` | 4 | `config/packs/banking/market-risk/samples/intraday/scenario-pv.2026-09-30.jsonl` | [Scenario PVs by trade, intraday update](#scenario-pv-scenario-pvs-by-trade-intraday-update) |
-| **Scenario PVs by trade, full run** | `VALUE_TYPE` `PV`, `GRAIN` `TRADE`, `RUN_KIND` `FULL` | 1 | `config/packs/banking/market-risk/samples/scenario-pv.jsonl` | [Scenario PVs by trade, full run](#scenario-pv-scenario-pvs-by-trade-full-run) |
-| **Scenario PVs by trade, intraday update, cancel** | `VALUE_TYPE` `PV`, `GRAIN` `TRADE`, `RUN_KIND` `INTRADAY`, `TRADE_STATUS` `CANCELLED` | 1 | `config/packs/banking/market-risk/samples/intraday/scenario-pv.2026-09-30.jsonl` | [Scenario PVs by trade, intraday update, cancel](#scenario-pv-scenario-pvs-by-trade-intraday-update-cancel) |
+| **Scenario PVs by trade, intraday update** | `VALUE_TYPE` `PV`, `GRAIN` `TRADE`, `RUN_KIND` `INTRADAY` | 4 | `modules/banking/dmod/packs/market-risk/samples/intraday/scenario-pv.2026-09-30.jsonl` | [Scenario PVs by trade, intraday update](#scenario-pv-scenario-pvs-by-trade-intraday-update) |
+| **Scenario PVs by trade, full run** | `VALUE_TYPE` `PV`, `GRAIN` `TRADE`, `RUN_KIND` `FULL` | 1 | `modules/banking/dmod/packs/market-risk/samples/scenario-pv.jsonl` | [Scenario PVs by trade, full run](#scenario-pv-scenario-pvs-by-trade-full-run) |
+| **Scenario PVs by trade, intraday update, cancel** | `VALUE_TYPE` `PV`, `GRAIN` `TRADE`, `RUN_KIND` `INTRADAY`, `TRADE_STATUS` `CANCELLED` | 1 | `modules/banking/dmod/packs/market-risk/samples/intraday/scenario-pv.2026-09-30.jsonl` | [Scenario PVs by trade, intraday update, cancel](#scenario-pv-scenario-pvs-by-trade-intraday-update-cancel) |
 
 ### Fields every sub-type has
 
@@ -728,7 +728,7 @@ Its fields beyond the shared table:
 
 #### scenario-pv: Scenario PVs by trade, intraday update
 
-4 rows; recognised by `VALUE_TYPE` `PV`, `GRAIN` `TRADE`, `RUN_KIND` `INTRADAY`; the record is from `config/packs/banking/market-risk/samples/intraday/scenario-pv.2026-09-30.jsonl`.
+4 rows; recognised by `VALUE_TYPE` `PV`, `GRAIN` `TRADE`, `RUN_KIND` `INTRADAY`; the record is from `modules/banking/dmod/packs/market-risk/samples/intraday/scenario-pv.2026-09-30.jsonl`.
 
 ```json
 {
@@ -788,7 +788,7 @@ Its fields beyond the shared table:
 
 #### scenario-pv: Scenario PVs by trade, full run
 
-1 rows; recognised by `VALUE_TYPE` `PV`, `GRAIN` `TRADE`, `RUN_KIND` `FULL`; the record is from `config/packs/banking/market-risk/samples/scenario-pv.jsonl`.
+1 rows; recognised by `VALUE_TYPE` `PV`, `GRAIN` `TRADE`, `RUN_KIND` `FULL`; the record is from `modules/banking/dmod/packs/market-risk/samples/scenario-pv.jsonl`.
 
 ```json
 {
@@ -848,7 +848,7 @@ Its fields beyond the shared table:
 
 #### scenario-pv: Scenario PVs by trade, intraday update, cancel
 
-1 rows; recognised by `VALUE_TYPE` `PV`, `GRAIN` `TRADE`, `RUN_KIND` `INTRADAY`, `TRADE_STATUS` `CANCELLED`; the record is from `config/packs/banking/market-risk/samples/intraday/scenario-pv.2026-09-30.jsonl`.
+1 rows; recognised by `VALUE_TYPE` `PV`, `GRAIN` `TRADE`, `RUN_KIND` `INTRADAY`, `TRADE_STATUS` `CANCELLED`; the record is from `modules/banking/dmod/packs/market-risk/samples/intraday/scenario-pv.2026-09-30.jsonl`.
 
 ```json
 {
@@ -926,7 +926,7 @@ Fields no record above has, found by reading all 15,993 rows, with how many rows
 
 ### See also
 
-- Data contract: [SPV in the market-risk pack's contracts](../packs/market-risk.md#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv) (`config/packs/banking/market-risk/contracts/scenario-pv.contract.yaml`, the source of every meaning on this page).
+- Data contract: [SPV in the market-risk pack's contracts](../packs/market-risk.md#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv) (`modules/banking/dmod/packs/market-risk/contracts/scenario-pv.contract.yaml`, the source of every meaning on this page).
 - [15.9 `scenario-pv`: scenario PVs per trade, in the trade's currency](../../guides/VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)
 - [8.4 What-if pricing and intraday recomputes](../../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)
 - [15.13 Inputs: any form, any grain](../../guides/VAR_GUIDE.md#1513-inputs-any-form-any-grain)
@@ -1010,7 +1010,7 @@ None: all 12 rows were read, and every field any of them has is in the record ab
 
 ### See also
 
-- Data contract: [FXS in the market-risk pack's contracts](../packs/market-risk.md#fxs-scenario-fx-of-a-currency-509-scenarios-fx-scenario) (`config/packs/banking/market-risk/contracts/fx-scenario.contract.yaml`, the source of every meaning on this page).
+- Data contract: [FXS in the market-risk pack's contracts](../packs/market-risk.md#fxs-scenario-fx-of-a-currency-509-scenarios-fx-scenario) (`modules/banking/dmod/packs/market-risk/contracts/fx-scenario.contract.yaml`, the source of every meaning on this page).
 - [15.9 `scenario-pv`: scenario PVs per trade, in the trade's currency](../../guides/VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)
 - [Tutorial 2 · VaR from the bank to a trade](../../tutorials/02-var-from-the-bank-to-a-trade.md)
 - [1. Market risk](../../knowledge/risk.md#1-market-risk)
@@ -1090,7 +1090,7 @@ Fields no record above has, found by reading all 157 rows, with how many rows fi
 
 ### See also
 
-- Data contract: [VLIM in the market-risk pack's contracts](../packs/market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit) (`config/packs/banking/market-risk/contracts/var-limit.contract.yaml`, the source of every meaning on this page).
+- Data contract: [VLIM in the market-risk pack's contracts](../packs/market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit) (`modules/banking/dmod/packs/market-risk/contracts/var-limit.contract.yaml`, the source of every meaning on this page).
 - [15.15 `var-limit`: the nodes' VaR limits](../../guides/VAR_GUIDE.md#1515-var-limit-the-nodes-var-limits)
 - [Tutorial 2 · VaR from the bank to a trade](../../tutorials/02-var-from-the-bank-to-a-trade.md)
 - [1. Market risk](../../knowledge/risk.md#1-market-risk)
@@ -1167,7 +1167,7 @@ None: all 10 rows were read, and every field any of them has is in the record ab
 
 ### See also
 
-- Data contract: [DPNL in the market-risk pack's contracts](../packs/market-risk.md#dpnl-desk-pl-actual-and-hypothetical-daily-desk-pnl) (`config/packs/banking/market-risk/contracts/desk-pnl.contract.yaml`, the source of every meaning on this page).
+- Data contract: [DPNL in the market-risk pack's contracts](../packs/market-risk.md#dpnl-desk-pl-actual-and-hypothetical-daily-desk-pnl) (`modules/banking/dmod/packs/market-risk/contracts/desk-pnl.contract.yaml`, the source of every meaning on this page).
 - [15.16 `desk-pnl`: the bank's actual and hypothetical P&L](../../guides/VAR_GUIDE.md#1516-desk-pnl-the-banks-actual-and-hypothetical-pl)
 - [4.6 Backtesting](../../guides/REGULATORY_VAR_REPORTING.md#46-backtesting)
 - [Tutorial 2 · VaR from the bank to a trade](../../tutorials/02-var-from-the-bank-to-a-trade.md)
@@ -1272,7 +1272,7 @@ None: all 28 rows were read, and every field any of them has is in the record ab
 
 ### See also
 
-- Data contract: [PNLH in the market-risk pack's contracts](../packs/market-risk.md#pnlh-long-history-pl-of-a-hierarchy-node-stress-window-selection-pnl-history) (`config/packs/banking/market-risk/contracts/pnl-history.contract.yaml`, the source of every meaning on this page).
+- Data contract: [PNLH in the market-risk pack's contracts](../packs/market-risk.md#pnlh-long-history-pl-of-a-hierarchy-node-stress-window-selection-pnl-history) (`modules/banking/dmod/packs/market-risk/contracts/pnl-history.contract.yaml`, the source of every meaning on this page).
 - [18.9 Choosing the stress window](../../guides/VAR_GUIDE.md#189-choosing-the-stress-window)
 - [1. Market risk](../../knowledge/risk.md#1-market-risk)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
@@ -1420,7 +1420,7 @@ None: all 8,052 rows were read, and every field any of them has is in the record
 
 ### See also
 
-- Data contract: [SENS in the market-risk pack's contracts](../packs/market-risk.md#sens-position-sensitivities-position-sensitivity) (`config/packs/banking/market-risk/contracts/position-sensitivity.contract.yaml`, the source of every meaning on this page).
+- Data contract: [SENS in the market-risk pack's contracts](../packs/market-risk.md#sens-position-sensitivities-position-sensitivity) (`modules/banking/dmod/packs/market-risk/contracts/position-sensitivity.contract.yaml`, the source of every meaning on this page).
 - [20. position-sensitivity (SENS): every field](../../contracts/FRTB.md#20-position-sensitivity-sens-every-field)
 - [FRTB-SA guide: position sensitivities and the standardised approach to market-risk capital](../../guides/FRTB_SA_GUIDE.md)
 - [1. Market risk](../../knowledge/risk.md#1-market-risk)
@@ -1533,7 +1533,7 @@ Fields no record above has, found by reading all 867 rows, with how many rows fi
 
 ### See also
 
-- Data contract: [RFAC in the market-risk pack's contracts](../packs/market-risk.md#rfac-risk-factor-dictionary-risk-factor) (`config/packs/banking/market-risk/contracts/risk-factor.contract.yaml`, the source of every meaning on this page).
+- Data contract: [RFAC in the market-risk pack's contracts](../packs/market-risk.md#rfac-risk-factor-dictionary-risk-factor) (`modules/banking/dmod/packs/market-risk/contracts/risk-factor.contract.yaml`, the source of every meaning on this page).
 - [21. risk-factor (RFAC): every field](../../contracts/FRTB.md#21-risk-factor-rfac-every-field)
 - [FRTB-SA guide: position sensitivities and the standardised approach to market-risk capital](../../guides/FRTB_SA_GUIDE.md)
 - [1. Market risk](../../knowledge/risk.md#1-market-risk)
@@ -1543,13 +1543,13 @@ Fields no record above has, found by reading all 867 rows, with how many rows fi
 
 ## P&L vector (509 scenarios): pnl-vector (PNLV)
 
-One trade's (or one position's) P&L under every scenario of the date's scenario set, gain positive, in CURRENCY, with the terms the VaR engine places it by. One row per trade (GRAIN TRADE) or position (GRAIN POSITION), business date and scenario set, keyed by VECTOR_ID (PNL-<TRADE_ID or POSITION_ID>-<SCENARIO_SET_ID>). Read by the **market-risk** pack's connector `risk-store` (lake table `risk.pnl-vector`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/banking/market-risk/samples/pnl-vector.jsonl`, 2 records). A bank or a public refresh delivers it in the same JSON Lines shape.
+One trade's (or one position's) P&L under every scenario of the date's scenario set, gain positive, in CURRENCY, with the terms the VaR engine places it by. One row per trade (GRAIN TRADE) or position (GRAIN POSITION), business date and scenario set, keyed by VECTOR_ID (PNL-<TRADE_ID or POSITION_ID>-<SCENARIO_SET_ID>). Read by the **market-risk** pack's connector `risk-store` (lake table `risk.pnl-vector`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`modules/banking/dmod/packs/market-risk/samples/pnl-vector.jsonl`, 2 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
 ### File layout
 
 |  |  |
 |---|---|
-| Path | `config/packs/banking/market-risk/samples/pnl-vector.jsonl` |
+| Path | `modules/banking/dmod/packs/market-risk/samples/pnl-vector.jsonl` |
 | Format | JSON Lines: UTF-8, one JSON object a line |
 | Key field | `VECTOR_ID` |
 | Date field | `BUSINESS_DATE` (in every record: the business date it belongs to; the lake's partition `business_date`) |
@@ -1564,8 +1564,8 @@ The rows come in 2 sub-types, recognised by `VALUE_TYPE`, `GRAIN`, `RUN_KIND` an
 
 | Sub-type | Recognised by | Rows | Sample from | Section |
 |---|---|---|---|---|
-| **P&L vector by position, full run** | `VALUE_TYPE` `PNL`, `GRAIN` `POSITION`, `RUN_KIND` `FULL` | 1 | `config/packs/banking/market-risk/samples/pnl-vector.jsonl` | [P&L vector by position, full run](#pnl-vector-pl-vector-by-position-full-run) |
-| **P&L vector by trade, full run** | `VALUE_TYPE` `PNL`, `GRAIN` `TRADE`, `RUN_KIND` `FULL` | 1 | `config/packs/banking/market-risk/samples/pnl-vector.jsonl` | [P&L vector by trade, full run](#pnl-vector-pl-vector-by-trade-full-run) |
+| **P&L vector by position, full run** | `VALUE_TYPE` `PNL`, `GRAIN` `POSITION`, `RUN_KIND` `FULL` | 1 | `modules/banking/dmod/packs/market-risk/samples/pnl-vector.jsonl` | [P&L vector by position, full run](#pnl-vector-pl-vector-by-position-full-run) |
+| **P&L vector by trade, full run** | `VALUE_TYPE` `PNL`, `GRAIN` `TRADE`, `RUN_KIND` `FULL` | 1 | `modules/banking/dmod/packs/market-risk/samples/pnl-vector.jsonl` | [P&L vector by trade, full run](#pnl-vector-pl-vector-by-trade-full-run) |
 
 ### Fields every sub-type has
 
@@ -1613,7 +1613,7 @@ Each record is real, the most complete of its sub-type, pretty-printed with two-
 
 #### pnl-vector: P&L vector by position, full run
 
-1 rows; recognised by `VALUE_TYPE` `PNL`, `GRAIN` `POSITION`, `RUN_KIND` `FULL`; the record is from `config/packs/banking/market-risk/samples/pnl-vector.jsonl`.
+1 rows; recognised by `VALUE_TYPE` `PNL`, `GRAIN` `POSITION`, `RUN_KIND` `FULL`; the record is from `modules/banking/dmod/packs/market-risk/samples/pnl-vector.jsonl`.
 
 ```json
 {
@@ -1676,7 +1676,7 @@ Its fields beyond the shared table:
 
 #### pnl-vector: P&L vector by trade, full run
 
-1 rows; recognised by `VALUE_TYPE` `PNL`, `GRAIN` `TRADE`, `RUN_KIND` `FULL`; the record is from `config/packs/banking/market-risk/samples/pnl-vector.jsonl`.
+1 rows; recognised by `VALUE_TYPE` `PNL`, `GRAIN` `TRADE`, `RUN_KIND` `FULL`; the record is from `modules/banking/dmod/packs/market-risk/samples/pnl-vector.jsonl`.
 
 ```json
 {
@@ -1759,7 +1759,7 @@ Fields no record above has, found by reading all 2 rows, with how many rows fill
 
 ### See also
 
-- Data contract: [PNLV in the market-risk pack's contracts](../packs/market-risk.md#pnlv-pl-vector-509-scenarios-pnl-vector) (`config/packs/banking/market-risk/contracts/pnl-vector.contract.yaml`, the source of every meaning on this page).
+- Data contract: [PNLV in the market-risk pack's contracts](../packs/market-risk.md#pnlv-pl-vector-509-scenarios-pnl-vector) (`modules/banking/dmod/packs/market-risk/contracts/pnl-vector.contract.yaml`, the source of every meaning on this page).
 - [15.2 `pnl-vector`: one P&L vector per trade](../../guides/VAR_GUIDE.md#152-pnl-vector-one-pl-vector-per-trade)
 - [8.4 What-if pricing and intraday recomputes](../../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)
 - [15.13 Inputs: any form, any grain](../../guides/VAR_GUIDE.md#1513-inputs-any-form-any-grain)

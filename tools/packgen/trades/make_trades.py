@@ -130,7 +130,7 @@ def to_lake(system: str, files: list[Path], days: list[str], lake: Path, engine:
     import build as LB
     worst = 0
     for f, day in zip(files, days):
-        args = LB.build_parser().parse_args(["--from", str(f), "--pack", str(ROOT / "config" / "packs" / "banking" / "trading"), "--kind", "trade",
+        args = LB.build_parser().parse_args(["--from", str(f), "--pack", str(ROOT / "modules" / "banking" / "dmod" / "packs" / "trading"), "--kind", "trade",
                                              "--connector", CONNECTOR[system], "--key", "TRADE_ID", "--mode", "overwrite-dates", "--partition-by", "PRODUCT_TYPE",
                                              "--lake", str(lake), "--engine", engine, "-q"])
         code, summary = LB.run(args, say=lambda *a, **k: None)

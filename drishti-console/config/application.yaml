@@ -135,7 +135,7 @@ ui:
     - { slug: commodity-future, title: Commodity future, cmd: TRD CFT-77120, sutra: listed-future v1 }
     - { slug: netting-set, title: Netting set, cmd: NSET NS-NORTH-01, sutra: netting-set v1 }
   # Home, signed in: "Did you know", the fact of the day, beside the headline. Each pack declares its facts in
-  # config/packs/<domain>/<pack>/config/facts.yaml (docs/guides/BUILD_GUIDE.md, "Facts for Home"); they are computed from the server's
+  # modules/<module>/packs/<pack>/config/facts.yaml (docs/guides/BUILD_GUIDE.md, "Facts for Home"); they are computed from the server's
   # answers on the business date, as the user, and kept cache_seconds per user, date and set of packs. A fact taking longer than
   # timeout_seconds is left out. enabled false: no tile.
   facts:

@@ -198,8 +198,8 @@ class PackDeployApiTest {
     @Test
     void thePreviewListsConnectorsTheSiteLacksAndOffersToCreateThemFromTheTemplates() throws Exception {
         Map<String, String> f = files("1.0.3", true, SUTRA);
-        f.put("pack.yaml", packYaml("1.0.3", true, "  other: new-lake\nconnector-templates:\n  new-lake:\n    plugin: file\n    kinds: [other]\n    settings:\n      root: "
-                + root.resolve("files-b") + "\n") + "");
+        f.put("pack.yaml", packYaml("1.0.3", true, "  other: new-lake\n").replace("routes:", "  new-lake:\n    plugin: file\n    kinds: [other]\n    settings:\n      root: "
+                + root.resolve("files-b") + "\nroutes:"));
         JsonNode r = checked(TestArchives.bundle("lakepack", "1.0.3", f));
         assertThat(r.path("ok").asBoolean()).as(r.toString()).isTrue();
         JsonNode c = r.path("connectors");
@@ -399,7 +399,7 @@ class PackDeployApiTest {
         mvc.perform(get("/api/v1/admin/packs/not-loaded/datasource")).andExpect(status().isNotFound());
         // the old edit doors are gone: connectors are changed in Admin -> Connectors
         mvc.perform(put("/api/v1/admin/packs/lakepack/datasource").contentType(MediaType.APPLICATION_JSON).content("{}")).andExpect(status().is4xxClientError());
-        mvc.perform(get("/api/v1/admin/packs")).andExpect(jsonPath("$[?(@.name=='lakepack')].connectors[0]").value(hasItem("item-store")))   // from connector-templates and routes too
+        mvc.perform(get("/api/v1/admin/packs")).andExpect(jsonPath("$[?(@.name=='lakepack')].connectors[0]").value(hasItem("item-store")))   // from connectors and routes too
                 .andExpect(jsonPath("$[?(@.name=='lakepack')].sutraProblems[0]").isEmpty());                                 // the pack's Sutra problems, one line each
     }
 }

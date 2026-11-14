@@ -47,7 +47,7 @@ def start_servers(work) -> list:
     for name, p in pack_dirs().items():
         if name != "market-risk":
             (packs / name).symlink_to(p)
-    shutil.copytree(ROOT / "config" / "packs" / "banking" / "market-risk", packs / "market-risk")
+    shutil.copytree(ROOT / "modules" / "banking" / "dmod" / "packs" / "market-risk", packs / "market-risk")
     manifest = packs / "market-risk" / "pack.yaml"
     manifest.write_text("".join(line for line in manifest.read_text(encoding="utf-8").splitlines(keepends=True)
                                 if line.strip() != "- LIMIT_LETTER"), encoding="utf-8")

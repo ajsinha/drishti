@@ -42,7 +42,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.packs.enabled=finance", "drishti.sources.plugins.demo.enabled=false",
         "drishti.sources.connectors.finance-lake.enabled=false", "drishti.var.official.on-start=false", "drishti.var.official.publish=false",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
-        "drishti.security.roles.risk.kinds[0]=*", "drishti.frtb.parameters-dir=../../../config/packs/banking/market-risk/capital",
+        "drishti.security.roles.risk.kinds[0]=*", "drishti.frtb.parameters-dir=../../../modules/banking/dmod/packs/market-risk/capital",
         "drishti.simm.parameters-dir=../banking-compute/src/test/resources/simm", "drishti.simm.recipes-dir=target/simm-recipes-${random.uuid}",
         "drishti.identity.database-url=jdbc:sqlite:target/identity-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc

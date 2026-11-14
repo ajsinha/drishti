@@ -128,7 +128,7 @@ map is shaded by GDP per head; click Brazil to open `WDI-BRA`.
 curl -s "$DRISHTI_SERVER/api/v1/entities/development-profile/WDI-CAN/raw" -H "Authorization: Bearer $DRISHTI_TOKEN" | python3 -m json.tool | head -30
 ```
 
-**YAML.** The screen is the Sutra `config/packs/economy/world-development/sutras/development-profile.v1.sutra.yaml`, built from the UI kit:
+**YAML.** The screen is the Sutra `modules/economy/packs/world-development/sutras/development-profile.v1.sutra.yaml`, built from the UI kit:
 
 ```yaml
 panels:

@@ -354,14 +354,14 @@ The SIMM version's risk weights, correlations, concentration thresholds and the 
 The same records FRTB-SA reads: SIMM takes the elements with measures `DV01`, `IE01`, `CS01`, `DELTA`, `VEGA` and `BASE_CORR`;
 curvature revaluations and gammas are FRTB's and left out, counted.
 
-- **Data contract:** [`position-sensitivity`](../contracts/packs/market-risk.md#sens-position-sensitivities-position-sensitivity) (SENS), key `SENSITIVITY_ID`; 28 fields, 19 required; the file [`position-sensitivity.contract.yaml`](../../config/packs/banking/market-risk/contracts/position-sensitivity.contract.yaml).
+- **Data contract:** [`position-sensitivity`](../contracts/packs/market-risk.md#sens-position-sensitivities-position-sensitivity) (SENS), key `SENSITIVITY_ID`; 28 fields, 19 required; the file [`position-sensitivity.contract.yaml`](../../modules/banking/dmod/packs/market-risk/contracts/position-sensitivity.contract.yaml).
 - **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#position-sensitivity) (files `data/testdata/market-risk/position-sensitivity/position-sensitivity.*.jsonl.gz`).
 
 ### 13.4 `risk-factor`: the factor dictionary
 
 Each factor's `SIMM_RISK_CLASS`, `FACTOR_TYPE`, `SIMM_BUCKET`, `QUALIFIER`, `SIMM_LABEL1`, `SIMM_LABEL2` and `SENIORITY`.
 
-- **Data contract:** [`risk-factor`](../contracts/packs/market-risk.md#rfac-risk-factor-dictionary-risk-factor) (RFAC), key `RISK_FACTOR`; 27 fields, 12 required; the file [`risk-factor.contract.yaml`](../../config/packs/banking/market-risk/contracts/risk-factor.contract.yaml).
+- **Data contract:** [`risk-factor`](../contracts/packs/market-risk.md#rfac-risk-factor-dictionary-risk-factor) (RFAC), key `RISK_FACTOR`; 27 fields, 12 required; the file [`risk-factor.contract.yaml`](../../modules/banking/dmod/packs/market-risk/contracts/risk-factor.contract.yaml).
 - **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#risk-factor) (files `data/testdata/market-risk/risk-factor/risk-factor.*.jsonl.gz`).
 
 ### 13.5 `netting-set`: the netting sets and their trades
@@ -369,7 +369,7 @@ Each factor's `SIMM_RISK_CLASS`, `FACTOR_TYPE`, `SIMM_BUCKET`, `QUALIFIER`, `SIM
 A sensitivity record belongs to the netting set its trades lie in: `NETTING_SET_ID`, `TRADE_IDS` (else `TRADES[].TRADE_ID`),
 `COUNTERPARTY` and `CSA`.
 
-- **Data contract:** [`netting-set`](../contracts/packs/counterparty-risk.md#nset-netting-set-netting-set) (NSET), key `NETTING_SET_ID`; 19 fields, 18 required; the file [`netting-set.contract.yaml`](../../config/packs/banking/counterparty-risk/contracts/netting-set.contract.yaml).
+- **Data contract:** [`netting-set`](../contracts/packs/counterparty-risk.md#nset-netting-set-netting-set) (NSET), key `NETTING_SET_ID`; 19 fields, 18 required; the file [`netting-set.contract.yaml`](../../modules/banking/dmod/packs/counterparty-risk/contracts/netting-set.contract.yaml).
 - **Example:** [a real record of the test data, every field explained](../contracts/samples/counterparty-risk.md#netting-set) (files `data/testdata/counterparty-risk/netting-set/netting-set.*.jsonl.gz`).
 
 ### 13.6 `csa`: the SIMM terms
@@ -377,7 +377,7 @@ A sensitivity record belongs to the netting set its trades lie in: `NETTING_SET_
 The CSA's SIMM terms when present: `SIMM_VERSION`, `IM_COLLECT_REGIMES`, `IM_POST_REGIMES`, `IM_CALCULATION_CURRENCY` (else
 `CSA_CURRENCY`), `IM_MODEL`, the add-ons and the dispute tolerance.
 
-- **Data contract:** [`csa`](../contracts/packs/counterparty-risk.md#csa-credit-support-annex-csa) (CSA), key `CSA_ID`; 18 fields, 18 required; the file [`csa.contract.yaml`](../../config/packs/banking/counterparty-risk/contracts/csa.contract.yaml).
+- **Data contract:** [`csa`](../contracts/packs/counterparty-risk.md#csa-credit-support-annex-csa) (CSA), key `CSA_ID`; 18 fields, 18 required; the file [`csa.contract.yaml`](../../modules/banking/dmod/packs/counterparty-risk/contracts/csa.contract.yaml).
 - **Example:** [a real record of the test data, every field explained](../contracts/samples/counterparty-risk.md#csa) (files `data/testdata/counterparty-risk/csa/csa.*.jsonl.gz`).
 
 ### 13.7 `simm-addon`: the notional add-on lines
@@ -398,13 +398,13 @@ The CSA's SIMM terms when present: `SIMM_VERSION`, `IM_COLLECT_REGIMES`, `IM_POS
 
 A netting set's initial margin as a source stored it: shown labelled *stored, not computed* where the netting set has no sensitivities.
 
-- **Data contract:** [`simm`](../contracts/packs/counterparty-risk.md#simm-isda-simm-initial-margin-simm) (SIMM), key `CALC_ID`; 8 fields, 8 required; the file [`simm.contract.yaml`](../../config/packs/banking/counterparty-risk/contracts/simm.contract.yaml).
+- **Data contract:** [`simm`](../contracts/packs/counterparty-risk.md#simm-isda-simm-initial-margin-simm) (SIMM), key `CALC_ID`; 8 fields, 8 required; the file [`simm.contract.yaml`](../../modules/banking/dmod/packs/counterparty-risk/contracts/simm.contract.yaml).
 - **Example:** [a real record of the test data, every field explained](../contracts/samples/counterparty-risk.md#simm) (files `data/testdata/counterparty-risk/simm/simm.*.jsonl.gz`).
 
 ### 13.10 `fx-spot`: the date's FX
 
 Today's rates: sensitivities in other currencies and the parameter file's thresholds are converted to the calculation currency.
 
-- **Data contract:** [`fx-spot`](../contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot) (FX), key `PAIR`; 11 fields, 11 required; the file [`fx-spot.contract.yaml`](../../config/packs/banking/market-data/contracts/fx-spot.contract.yaml).
+- **Data contract:** [`fx-spot`](../contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot) (FX), key `PAIR`; 11 fields, 11 required; the file [`fx-spot.contract.yaml`](../../modules/market-data/packs/market-data/contracts/fx-spot.contract.yaml).
 - **Example:** [a real record of the test data, every field explained](../contracts/samples/market-data.md#fx-spot) (files `data/testdata/market-data/fx-spot/fx-spot.*.jsonl.gz`).
 <!-- guide-data:end -->

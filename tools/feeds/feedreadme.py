@@ -43,7 +43,7 @@ HEADER = """<!--
 
 
 def _where(pack: str) -> str:
-    """A pack's folder as the repository names it: config/packs/<domain>/<pack>."""
+    """A pack's folder as the repository names it: modules/<module>/packs/<pack>."""
     d = FB.K.pack_dir(pack)
     return d.relative_to(ROOT).as_posix() if d.is_relative_to(ROOT) else d.as_posix()
 

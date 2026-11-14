@@ -25,13 +25,13 @@ Every data type of `national-statistics` as a real record of the committed test 
 
 ## National statistic: statistics-series (NSTAT)
 
-One Statistics Canada series by vector: the latest value, the change on the period and the year, the history. One row per national statistic, keyed by SERIES_ID. Read by the **national-statistics** pack's connector `statistics-store` (lake table `statistics.statistics-series`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`config/packs/economy/national-statistics/samples/statistics-series.jsonl`, 7 records). A bank or a public refresh delivers it in the same JSON Lines shape.
+One Statistics Canada series by vector: the latest value, the change on the period and the year, the history. One row per national statistic, keyed by SERIES_ID. Read by the **national-statistics** pack's connector `statistics-store` (lake table `statistics.statistics-series`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`modules/economy/packs/national-statistics/samples/statistics-series.jsonl`, 7 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
 ### File layout
 
 |  |  |
 |---|---|
-| Path | `config/packs/economy/national-statistics/samples/statistics-series.jsonl` |
+| Path | `modules/economy/packs/national-statistics/samples/statistics-series.jsonl` |
 | Format | JSON Lines: UTF-8, one JSON object a line |
 | Key field | `SERIES_ID` |
 | Date field | none in the record: the pack's samples are served on every business date (partition `business_date`) |
@@ -145,7 +145,7 @@ Fields no record above has, found by reading all 7 rows, with how many rows fill
 
 ### See also
 
-- Data contract: [NSTAT in the national-statistics pack's contracts](../packs/national-statistics.md#nstat-national-statistic-statistics-series) (`config/packs/economy/national-statistics/contracts/statistics-series.contract.yaml`, the source of every meaning on this page).
+- Data contract: [NSTAT in the national-statistics pack's contracts](../packs/national-statistics.md#nstat-national-statistic-statistics-series) (`modules/economy/packs/national-statistics/contracts/statistics-series.contract.yaml`, the source of every meaning on this page).
 - [Public sector: government data and free news](../../guides/PUBLIC_SECTOR_GUIDE.md)
 - [External data feeds](../../guides/EXTERNAL_DATA.md)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).

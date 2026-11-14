@@ -105,7 +105,7 @@ def test_refusals(cache):
     with pytest.raises(B.Refusal):
         FU.refresh(ns(cache, scope="TICKERS:5"))
     with pytest.raises(B.Refusal):
-        FU.refresh(ns(cache, out=str(B.ROOT / "config" / "packs" / "capitalmarkets" / "funds"), scope="FUNDS:3"))
+        FU.refresh(ns(cache, out=str(B.ROOT / "modules" / "capital-markets" / "packs" / "funds"), scope="FUNDS:3"))
     with pytest.raises(B.Refusal):
         FU.refresh(ns(cache, out=str(B.ROOT / "docs")))                  # a build with --out goes to the data folder, never the repository
 

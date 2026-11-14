@@ -36,7 +36,7 @@ from core import engine_figures as engine
 from core.backend import BackendError
 from core.user_cache import LRU, user_key
 
-#: the market-data pack's kinds and their commands (config/packs/banking/market-data/pack.yaml)
+#: the market-data pack's kinds and their commands (modules/market-data/packs/market-data/pack.yaml)
 COMMANDS = {"ir-curve": "CRV", "repo-curve": "REPO", "fx-spot": "FX", "fx-forward-curve": "FXF", "fx-vol-surface": "FXV", "ir-vol-cube": "IRV",
             "cap-vol-surface": "CPV", "equity": "EQ", "equity-index": "EQX", "dividend-curve": "DIV", "equity-vol-surface": "EQV",
             "credit-curve": "CDS", "inflation-index": "INF", "inflation-curve": "INFC", "commodity": "CMD", "commodity-curve": "CMDC",

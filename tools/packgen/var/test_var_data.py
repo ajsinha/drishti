@@ -57,7 +57,7 @@ def seed() -> list[dict]:
     """The demo's system baskets from the market-risk pack's seed (VAR_GUIDE.md section 5.7), in the rows' old shape (TYPE, DEFINITION)."""
     import yaml
     out = []
-    for b in yaml.safe_load((ROOT / "config/packs/banking/market-risk/seeds/system-baskets.yaml").read_text(encoding="utf-8"))["system-baskets"]:
+    for b in yaml.safe_load((ROOT / "modules/banking/dmod/packs/market-risk/seeds/system-baskets.yaml").read_text(encoding="utf-8"))["system-baskets"]:
         t = b["type"].upper()
         d = ({"NODE": b["node"]} if t == "HIERARCHY" else {"RULE": b["rule"]} if t == "RULE"
              else {"MEMBERS": [{"POSITION_ID": m["position"]} if "position" in m else {"TRADE_ID": m["trade"]} for m in b["members"]]})
@@ -113,7 +113,7 @@ def keys(d, prefix="") -> set[str]:
 
 
 
-#: the pack's MGMT and LEGAL hierarchies (config/packs/banking/market-risk/pack.yaml hierarchies:): level column and level, top first
+#: the pack's MGMT and LEGAL hierarchies (modules/banking/dmod/packs/market-risk/pack.yaml hierarchies:): level column and level, top first
 HIERARCHIES = {"MGMT": [("DIVISION", "division"), ("DESK", "desk"), ("TT_BOOK", "book")],
                "LEGAL": [("LEGAL_ENTITY", "legal-entity"), ("DESK", "desk"), ("TT_BOOK", "book")]}
 
@@ -138,7 +138,7 @@ class VarDataTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.rules = P.Rules.of_pack(ROOT / "config" / "packs" / "banking" / "market-risk" / "pack.yaml")
+        cls.rules = P.Rules.of_pack(ROOT / "modules" / "banking" / "dmod" / "packs" / "market-risk" / "pack.yaml")
         cls.vector_rows = docs("pnl-vector")
         cls.pv_rows = docs("scenario-pv")
         cls.fx = {r["CURRENCY"]: r for r in docs("fx-scenario")}
@@ -310,7 +310,7 @@ class VarDataTest(unittest.TestCase):
                 "POSITION_RULE": VarDataTest.rules.derive(t0["TRADE_ID"], t0["TT_BOOK"], t0["PRODUCT_GROUP"], t0["PRODUCT_TYPE"], t0.get)["POSITION_RULE"]}
 
     def test_the_samples_are_the_servers_derived_positions(self):
-        sample = [json.loads(x) for x in (ROOT / "config" / "packs" / "banking" / "market-risk" / "samples" / "position.jsonl").read_text().splitlines() if x]
+        sample = [json.loads(x) for x in (ROOT / "modules" / "banking" / "dmod" / "packs" / "market-risk" / "samples" / "position.jsonl").read_text().splitlines() if x]
         self.assertEqual(len(sample), 2)
         for p in sample:
             ts = self.positions[p["POSITION_ID"]]

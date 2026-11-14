@@ -12,16 +12,17 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# What the packer brings in from the repository (paths from this folder), so each file keeps one home: the packs without
-# their connector templates (a module carries no connector), the lens and the tutorial. This list itself is not packed.
-copy:
-- from: ../../config/packs/banking/market-data
-  to: packs/market-data
+# What the packer brings in from the repository (paths from this folder) and what it trims from the module's own folder, so each file keeps
+# one home: `trim` strips a pack of what a module does not carry (its connector templates: a module carries no connector; tests, tools,
+# samples), `copy` brings in the lens and the tutorial. This list itself is not packed.
+trim:
+- path: packs/market-data
   leave-out:
   - tests
   - tools
   sections-out:
   - connectors
+copy:
 - from: ../../config/lenses/banking/market.yaml
   to: lenses/market.yaml
 - from: ../../docs/tutorials/06-groupings-and-analytics.md

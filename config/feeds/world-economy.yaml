@@ -60,4 +60,4 @@ datasets:
 options:
   args: []
 snapshot:
-  note: with --internal-ok, refreshes tools/realdata/dataset, config/packs/economy/world-economy and tools/packgen/world (carries IMF data)
+  note: with --internal-ok, refreshes tools/realdata/dataset, modules/economy/packs/world-economy and tools/packgen/world (carries IMF data)

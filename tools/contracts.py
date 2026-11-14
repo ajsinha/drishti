@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Data contracts of every command (mnemonic) kind: config/packs/<domain>/<pack>/contracts/<kind>.contract.yaml (docs/contracts/README.md,
+"""Data contracts of every command (mnemonic) kind: modules/<module>/packs/<pack>/contracts/<kind>.contract.yaml (docs/contracts/README.md,
 section 16; the format: tools/contracts.schema.json).
 
     python3 tools/contracts.py list                         every mnemonic, its contract, class and status
@@ -979,7 +979,7 @@ def check(packs_dir: Path = PACKS, testdata: Path = TESTDATA, data: bool = True)
     for f in _contract_files(packs_dir):
         if f.resolve() in known:
             continue
-        rel = f.relative_to(packs_dir)
+        rel = f.relative_to(packs_dir) if f.is_relative_to(packs_dir) else f.relative_to(ROOT)
         c = load(f)
         if c.get("status") != "planned":
             out.append(f"{rel}: no command of its pack has this kind")
@@ -1115,7 +1115,7 @@ def _contract_md(c: dict, f: Path, pack_dir_rel: str) -> list[str]:
 
 
 def _repo_rel(p: Path) -> str:
-    """A path as the repository names it (config/packs/<domain>/<pack>), else as given."""
+    """A path as the repository names it (modules/<module>/packs/<pack>), else as given."""
     p = Path(p).resolve()
     return p.relative_to(ROOT).as_posix() if p.is_relative_to(ROOT) else p.as_posix()
 
@@ -1157,7 +1157,7 @@ def render_index(all_items: list[tuple[dict, Path, dict | None]], plans: list[tu
     total = sum(len(c.get("review") or []) for _, _, c in all_items if c)
     out = _md_header() + ["# Data contracts of every command", "",
                           "Every command (mnemonic) of every pack has a data contract: a YAML file beside its pack "
-                          "(`config/packs/<domain>/<pack>/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) and a section of "
+                          "(`modules/<module>/packs/<pack>/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) and a section of "
                           "its pack's page here. The shared rules are in [the contracts README](../README.md); the computed measures that replace "
                           "the retiring kinds have their own contracts there.", "",
                           f"{sum(1 for _, _, c in all_items if c)} contracts, {total} points still to review. Check them with "
@@ -1281,7 +1281,7 @@ def build_parser(ap: argparse.ArgumentParser | None = None, parents=()) -> argpa
     p = sub.add_parser("bootstrap", help="draft a contract from the pack and its data (prints it; --write saves it)", parents=[common, *parents])
     p.add_argument("kind", nargs="?", help="a command or a kind")
     p.add_argument("--all", action="store_true", help="every command without a contract (with --force: every command)")
-    p.add_argument("--write", action="store_true", help="write config/packs/<domain>/<pack>/contracts/<kind>.contract.yaml")
+    p.add_argument("--write", action="store_true", help="write modules/<module>/packs/<pack>/contracts/<kind>.contract.yaml")
     p.add_argument("--force", action="store_true", help="replace an existing contract")
     p.set_defaults(run=cmd_bootstrap)
     return ap

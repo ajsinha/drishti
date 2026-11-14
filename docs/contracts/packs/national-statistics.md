@@ -17,7 +17,7 @@
 
 # Data contracts of the national-statistics pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/economy/national-statistics/guides/national-statistics.md](../../../config/packs/economy/national-statistics/guides/national-statistics.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
+One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [modules/economy/packs/national-statistics/guides/national-statistics.md](../../../modules/economy/packs/national-statistics/guides/national-statistics.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -29,7 +29,7 @@ One Statistics Canada series by vector: the latest value, the change on the peri
 
 |  |  |
 |---|---|
-| Contract | [statistics-series.contract.yaml](../../../config/packs/economy/national-statistics/contracts/statistics-series.contract.yaml) · version 1.0 |
+| Contract | [statistics-series.contract.yaml](../../../modules/economy/packs/national-statistics/contracts/statistics-series.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: Statistics Canada, pulled by the national-statistics feed (config/feeds/national-statistics.yaml, tools/feeds/sources/) |
@@ -39,7 +39,7 @@ One Statistics Canada series by vector: the latest value, the change on the peri
 | Dated by | `snapshot` |
 | Cadence | daily (due: the national-statistics feed's schedule (0 14 * * 1-5 UTC); a pull with nothing new writes nothing and the lake keeps its latest date) |
 | Binding hint | lake table `statistics.statistics-series`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
-| Test data | config/packs/economy/national-statistics/samples |
+| Test data | modules/economy/packs/national-statistics/samples |
 | Worked example | [national-statistics/statistics-series](../samples/national-statistics.md#statistics-series) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**

@@ -193,7 +193,7 @@ that offer Calc hold `calc`: `trader`, `market-risk` and `credit-risk`; the role
 role has `layout`, and so has every role you define in Admin → Roles unless you untick *Customise layouts*. A pack declares one like this:
 
 ```yaml
-# config/packs/economy/world-economy/pack.yaml
+# modules/economy/packs/world-economy/pack.yaml
 roles:
   economist:
     kinds: [economy, macro-indicator, economic-forecast, labour-market, fiscal-position, country-group, ...]
@@ -1279,7 +1279,7 @@ drishti:
       enabled: ${DRISHTI_FRTB_ENABLED:true}   # run FRTB-SA on this node (live: on and off without a restart)
       changed: { by: "", at: "", reason: "" } # the last change made from Admin -> Engines or drishti.py (written by the server)
   frtb:
-    parameters-dir: ${DRISHTI_FRTB_PARAMETERS:./config/packs/banking/market-risk/capital}
+    parameters-dir: ${DRISHTI_FRTB_PARAMETERS:./modules/banking/dmod/packs/market-risk/capital}
     max-factors: 2000
     # ... the engine's other settings
 ```

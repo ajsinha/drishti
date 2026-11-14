@@ -484,7 +484,7 @@ Details: [EXPOSURE_GUIDE.md section 7](EXPOSURE_GUIDE.md#7-pre-deal-what-if) and
 date, and how the kinds join. Nothing on it is drawn by hand; it is inferred each time from what is loaded:
 
 - **Domains and kinds** come from the packs switched on for you: each pack's kinds, titled by their data contracts
-  (`config/packs/<domain>/<pack>/contracts/<kind>.contract.yaml`). A kind whose contract says `class: computed` (VaR and ES, EE and PFE, the
+  (`modules/<module>/packs/<pack>/contracts/<kind>.contract.yaml`). A kind whose contract says `class: computed` (VaR and ES, EE and PFE, the
   what-ifs) is drawn as a **diamond** (a stored kind is a square): it is computed on demand and never stored, so it has no count.
 - **Joins** are what the contracts declare: their `links:`, their fields' `link:` and the fields a pack's `graph.fields` names (the
   trade's `COUNTERPARTY` → counterparty, `PORTFOLIO` → book, `TRADER_ID` → trader; the P&L vector's and the exposure paths' `TRADE_ID`
@@ -3214,7 +3214,7 @@ python:                         # Calc on this pack's kinds (Alt+C on a view)
   dir: python                   # optional: where snippet files are (default python/)
 ```
 
-Snippets can also be files, `config/packs/<domain>/<pack>/python/*.py`, read in name order after those in `pack.yaml`. A file starts
+Snippets can also be files, `modules/<module>/packs/<pack>/python/*.py`, read in name order after those in `pack.yaml`. A file starts
 with comment lines naming it; what comes after them is the code (the copyright header above them is not):
 
 ```python
@@ -3247,7 +3247,7 @@ computes.
 
 The shipped ones are written by `tools/packgen/banking/make_packs.py` (the generator kept its name from the banking packs it began with) from their sources,
 `tools/packgen/banking/snippets/<pack>/<name>.py` (read by `calc_snippets.py`; never edit the generated
-`config/packs/<domain>/<pack>/python/` files: change the source and run the generator, see
+`modules/<module>/packs/<pack>/python/` files: change the source and run the generator, see
 [BUILD_GUIDE.md](BUILD_GUIDE.md#301-how-the-shipped-packs-are-generated)). A source starts, after its copyright header, with
 
 ```python

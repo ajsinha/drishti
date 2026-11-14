@@ -129,9 +129,9 @@ ${DRISHTI_DELTA_ROOT}/risk/                     the common risk lake, connector 
 Delta or Iceberg tables, one per kind, as every risk input ([README.md section 2](README.md#2-the-common-risk-lake)); delivered as JSON
 Lines (UTF-8, gzip, one record per line) and loaded into the lake, or written directly by a Delta or Iceberg writer that follows the
 contract. The YAML contracts are the machine-readable truth for the two planned kinds:
-[`position-sensitivity.contract.yaml`](../../config/packs/banking/market-risk/contracts/position-sensitivity.contract.yaml),
-[`risk-factor.contract.yaml`](../../config/packs/banking/market-risk/contracts/risk-factor.contract.yaml) and
-[`capital-input.contract.yaml`](../../config/packs/banking/market-risk/contracts/capital-input.contract.yaml); their generated pages are in
+[`position-sensitivity.contract.yaml`](../../modules/banking/dmod/packs/market-risk/contracts/position-sensitivity.contract.yaml),
+[`risk-factor.contract.yaml`](../../modules/banking/dmod/packs/market-risk/contracts/risk-factor.contract.yaml) and
+[`capital-input.contract.yaml`](../../modules/banking/dmod/packs/market-risk/contracts/capital-input.contract.yaml); their generated pages are in
 [packs/market-risk.md](packs/market-risk.md#sens-position-sensitivities-position-sensitivity) and a real demo record explained field by
 field is in [samples/market-risk.md](samples/market-risk.md#position-sensitivities-position-sensitivity-sens) and
 [samples/market-risk.md](samples/market-risk.md#risk-factor-dictionary-risk-factor-rfac).
@@ -273,7 +273,7 @@ Every field: [section 23](#23-residual-risk-rrao-inputs-every-field).
 
 ### 3.5 capital-input (CAPI): the bank's own charges
 
-One row per filer, regime and date ([contract](../../config/packs/banking/market-risk/contracts/capital-input.contract.yaml)). FRTB-SA reads
+One row per filer, regime and date ([contract](../../modules/banking/dmod/packs/market-risk/contracts/capital-input.contract.yaml)). FRTB-SA reads
 only `DEFAULT_RISK_CHARGE`, the bank's own DRC figure, and only to show it **beside** Drishti's computed DRC during a parallel run: it never
 enters the total. The rest of the row (multiplier override, add-on, the US specific, incremental and comprehensive risk charges) belongs
 to the regulatory VaR capital ([REGULATORY_VAR_REPORTING.md](../guides/REGULATORY_VAR_REPORTING.md)).
@@ -311,7 +311,7 @@ any later batch.
 ### 4.1 The factor dictionary (RFAC)
 
 One row per risk factor, slowly changing (`VALID_FROM`, `VALID_TO`), keyed by `RISK_FACTOR`
-([contract](../../config/packs/banking/market-risk/contracts/risk-factor.contract.yaml); every field in
+([contract](../../modules/banking/dmod/packs/market-risk/contracts/risk-factor.contract.yaml); every field in
 [section 21](#21-risk-factor-rfac-every-field)). It holds the factor's parts (`FACTOR_TYPE`,
 `QUALIFIER`, `CURVE`, `UNDERLYING`, `TENOR`, `UNDERLYING_TENOR`), its FRTB mapping (`RISK_CLASS`, `FRTB_BUCKET`, and for the bucket tests
 `SECTOR`, `CREDIT_QUALITY`, `MARKET_CAP`, `ECONOMY`), its SIMM mapping (`SIMM_RISK_CLASS`, `SIMM_BUCKET`, `SIMM_LABEL1`, `SIMM_LABEL2`),
@@ -342,8 +342,8 @@ its liquidity horizon, and `SOURCE_NAMES`: the names each source system gives th
 
 | File | Holds | Source |
 |---|---|---|
-| [`frtb-sa-sbm.yaml`](../../config/packs/banking/market-risk/capital/frtb-sa-sbm.yaml) | SBM risk weights per class, bucket and vertex; ρ and γ; the scenario formulas; the curvature rules (factor, shock, correlation, FX divisor) | Basel MAR21 |
-| [`frtb-sa-drc-rrao.yaml`](../../config/packs/banking/market-risk/capital/frtb-sa-drc-rrao.yaml) | LGDs, maturity floor and cap, DRC buckets and risk weights, netting rule, HBR; RRAO weights, exotic and other lists, exclusions, the product-type mapping | Basel MAR22, MAR23 |
+| [`frtb-sa-sbm.yaml`](../../modules/banking/dmod/packs/market-risk/capital/frtb-sa-sbm.yaml) | SBM risk weights per class, bucket and vertex; ρ and γ; the scenario formulas; the curvature rules (factor, shock, correlation, FX divisor) | Basel MAR21 |
+| [`frtb-sa-drc-rrao.yaml`](../../modules/banking/dmod/packs/market-risk/capital/frtb-sa-drc-rrao.yaml) | LGDs, maturity floor and cap, DRC buckets and risk weights, netting rule, HBR; RRAO weights, exotic and other lists, exclusions, the product-type mapping | Basel MAR22, MAR23 |
 
 **Rules** ([FRTB_SA_GUIDE.md section 12](../guides/FRTB_SA_GUIDE.md#12-parameters-as-configuration); their keys: [section 24](#24-the-parameter-files-structure)): one file per regime (Basel,
 then a jurisdiction's variant); each names its regime, its effective date and the paragraph of every value. A filer is configured with
@@ -798,7 +798,7 @@ a name in no list is refused.
 A **grid** maps each factor to one bucket. The FRTB grids are those of MAR21; the SIMM grid is that of the SIMM version
 ([SIMM.md section 6](SIMM.md#6-the-computation)); a bank may add its own (for example a DV01 ladder 0–2Y, 2–5Y, 5–10Y, 10Y+ per currency
 for sensitivity limits). The values below are the Basel figures in the parameter file
-[`frtb-sa-sbm.yaml`](../../config/packs/banking/market-risk/capital/frtb-sa-sbm.yaml); the file, not this page, is what the engine reads.
+[`frtb-sa-sbm.yaml`](../../modules/banking/dmod/packs/market-risk/capital/frtb-sa-sbm.yaml); the file, not this page, is what the engine reads.
 
 ### 19.1 GIRR (MAR21.39 to MAR21.50)
 
@@ -881,7 +881,7 @@ FX 40 (100 %), equity buckets 1 to 8, 12 and 13: 20 (77.78 %), equity buckets 9 
 
 ## 20. position-sensitivity (SENS): every field
 
-Contract: [`position-sensitivity.contract.yaml`](../../config/packs/banking/market-risk/contracts/position-sensitivity.contract.yaml). The record:
+Contract: [`position-sensitivity.contract.yaml`](../../modules/banking/dmod/packs/market-risk/contracts/position-sensitivity.contract.yaml). The record:
 
 | Field | Type | Presence | Meaning | Example |
 |---|---|---|---|---|
@@ -929,7 +929,7 @@ Units of `VALUE` by measure: [section 3.2.2](#322-units-and-signs); what each cl
 
 ## 21. risk-factor (RFAC): every field
 
-Contract: [`risk-factor.contract.yaml`](../../config/packs/banking/market-risk/contracts/risk-factor.contract.yaml). One row per factor and
+Contract: [`risk-factor.contract.yaml`](../../modules/banking/dmod/packs/market-risk/contracts/risk-factor.contract.yaml). One row per factor and
 delivery date; a date without a delivery keeps the last; a row applies from `VALID_FROM` to `VALID_TO`.
 
 | Field | Type | Presence | Meaning | Example |
@@ -966,7 +966,7 @@ volatility; ten commodities at six forward points (`tools/packgen/sensitivity/fa
 
 ## 22. Default risk (DRC) inputs: every field
 
-Contract: [`default-risk.contract.yaml`](../../config/packs/banking/market-risk/contracts/default-risk.contract.yaml) (`status: planned`;
+Contract: [`default-risk.contract.yaml`](../../modules/banking/dmod/packs/market-risk/contracts/default-risk.contract.yaml) (`status: planned`;
 [section 3.3](#33-default-risk-the-drc-inputs-optional)). Path `<root>/risk/default-risk/`; one row per position (or trade), obligor and
 business date.
 
@@ -993,7 +993,7 @@ notional's sign. A row whose `CREDIT_QUALITY` is `DEFAULTED` takes the 100 % wei
 
 ## 23. Residual risk (RRAO) inputs: every field
 
-Contract: [`residual-risk.contract.yaml`](../../config/packs/banking/market-risk/contracts/residual-risk.contract.yaml) (`status: planned`;
+Contract: [`residual-risk.contract.yaml`](../../modules/banking/dmod/packs/market-risk/contracts/residual-risk.contract.yaml) (`status: planned`;
 [section 3.4](#34-residual-risk-the-rrao-inputs-optional)). By default the RRAO is derived from `PRODUCT_TYPE` and the trade master's
 notional; this optional table, `<root>/risk/residual-risk/`, carries overrides and the flags no master holds. One row per trade and
 business date.
@@ -1015,8 +1015,8 @@ business date.
 
 | File | Top-level keys | Per class |
 |---|---|---|
-| [`frtb-sa-sbm.yaml`](../../config/packs/banking/market-risk/capital/frtb-sa-sbm.yaml) | `regime`, `source`, `scenarios` (`medium`, `high`, `low` formulas) | `GIRR`, `CSR_NS`, `EQ`, `COMM`, `FX`, each with `delta` (`tenors`, `risk-weights`, `within-bucket`, `across-buckets`), `vega` (`risk-weight`, correlations) and `curvature` (`factor`, `shock`, `correlation`; FX `divisor`, `divisor-all-fx-instruments`) |
-| [`frtb-sa-drc-rrao.yaml`](../../config/packs/banking/market-risk/capital/frtb-sa-drc-rrao.yaml) | `regime`, `sources` | `drc` (`lgd`, `maturity`, `buckets`, `risk-weights`, `netting`, `hedge-benefit-ratio`, `bucket-charge`, `total`); `rrao` (`exotic-underlying-weight`, `other-residual-risk-weight`, `exotic-underlyings`, `other-residual-risks`, `exclusions`, `product-types`) |
+| [`frtb-sa-sbm.yaml`](../../modules/banking/dmod/packs/market-risk/capital/frtb-sa-sbm.yaml) | `regime`, `source`, `scenarios` (`medium`, `high`, `low` formulas) | `GIRR`, `CSR_NS`, `EQ`, `COMM`, `FX`, each with `delta` (`tenors`, `risk-weights`, `within-bucket`, `across-buckets`), `vega` (`risk-weight`, correlations) and `curvature` (`factor`, `shock`, `correlation`; FX `divisor`, `divisor-all-fx-instruments`) |
+| [`frtb-sa-drc-rrao.yaml`](../../modules/banking/dmod/packs/market-risk/capital/frtb-sa-drc-rrao.yaml) | `regime`, `sources` | `drc` (`lgd`, `maturity`, `buckets`, `risk-weights`, `netting`, `hedge-benefit-ratio`, `bucket-charge`, `total`); `rrao` (`exotic-underlying-weight`, `other-residual-risk-weight`, `exotic-underlyings`, `other-residual-risks`, `exclusions`, `product-types`) |
 | [`simm.yaml`](../architecture/capital-parameters/simm.yaml) | `version`, `effective-from`, `source`, `holding-period-days`, `product-classes`, `risk-classes`, `risk-class-correlation`, `curvature`, `add-ons` | `InterestRate`, `CreditQ`, `CreditNonQ`, `Equity`, `Commodity`, `FX`: risk weights, correlations, concentration thresholds, HVR; every number `null` as shipped |
 
 Every value names its paragraph in a comment. The bank's copy of each file is the one the engine reads; its SHA-256 identifies it in

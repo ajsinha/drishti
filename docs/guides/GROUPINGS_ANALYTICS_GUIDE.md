@@ -242,7 +242,7 @@ for the equity's beta against its index (`EQUITY_INDEX`: EQX-NDX), the regressio
 have: over the 29 returns to 2026-09-30, **−0.07** with a correlation of −0.03. The demo's prices are independent synthetic walks, so
 their measured betas are near zero; the stored ones were set by hand. An equity whose record names no index (EQ-CSCA, EQ-LUMN) gets a
 refusal in words instead of a number. `EQB EQ-NVTK~window=20` takes the last 20 returns. `EQB` has its own page
-(`config/packs/banking/market-data/sutras/market-data/equity-beta.v1.sutra.yaml`): the beta, correlation and R² in the strip to 2 decimals, and
+(`modules/market-data/packs/market-data/sutras/market-data/equity-beta.v1.sutra.yaml`): the beta, correlation and R² in the strip to 2 decimals, and
 the regression to 4 (beta −0.0725, alpha −0.0881% a day, correlation −0.0333, R² 0.0011, volatility 26.72% against the index's 12.27%),
 where the inferred layout had rounded them to whole numbers ("0").
 
@@ -269,7 +269,7 @@ where the inferred layout had rounded them to whole numbers ("0").
 ## 10. The contract at a glance
 
 Every computed kind is an ordinary kind: it opens by command, link, API, CLI and AI, with the reader's entitlements and masks applied to
-its inputs. The machine-readable contracts are `config/packs/<domain>/<pack>/contracts/<kind>.contract.yaml` (class `computed`; the pages
+its inputs. The machine-readable contracts are `modules/<module>/packs/<pack>/contracts/<kind>.contract.yaml` (class `computed`; the pages
 [docs/contracts/packs/](../contracts/packs/README.md)); this part says what each field means.
 
 | Kind | Command | Connector (plugin) | Key | Inputs | Dated by |
@@ -512,7 +512,7 @@ On the committed data (gleif 2026-10-25, us-equities 2026-10-24, world-economy's
 Six of its settings, all generic:
 
 ```yaml
-# config/packs/economy/world-economy/pack.yaml (written by tools/packgen/economics/make.py)
+# modules/economy/packs/world-economy/pack.yaml (written by tools/packgen/economics/make.py)
 macro-groupings:
   plugin: derived
   kinds: [country-group]
@@ -563,7 +563,7 @@ The code: `kernel/drishti-engine/.../source/derived/DerivedKind.java` (grouping,
 with a Java engine in the server's own process (the pattern of VaR's `var-result`, [VAR_GUIDE.md Part III](VAR_GUIDE.md#24-where-the-engine-lives)):
 
 ```yaml
-# config/packs/banking/market-data/pack.yaml (written by tools/packgen/banking/make_packs.py from corr_kinds.py)
+# modules/market-data/packs/market-data/pack.yaml (written by tools/packgen/banking/make_packs.py from corr_kinds.py)
 correlation-engine:
   plugin: reactive
   kinds:
@@ -670,63 +670,63 @@ the ownership groups (LEIG) and the country pages (LEIC).
 
 SEC EDGAR's companies: `SIC` makes the sectors (SIC); the financials (`REVENUE`, `NET_INCOME`, `FINANCIALS[]`) make the USEQ ratios.
 
-- **Data contract:** [`us-company`](../contracts/packs/us-equities.md#useq-us-company-us-company) (USEQ), key `TICKER`; 46 fields, 23 required; the file [`us-company.contract.yaml`](../../config/packs/capitalmarkets/us-equities/contracts/us-company.contract.yaml).
+- **Data contract:** [`us-company`](../contracts/packs/us-equities.md#useq-us-company-us-company) (USEQ), key `TICKER`; 46 fields, 23 required; the file [`us-company.contract.yaml`](../../modules/capital-markets/packs/us-equities/contracts/us-company.contract.yaml).
 - **Example:** [a real record of the test data, every field explained](../contracts/samples/us-equities.md#us-company) (files `data/testdata/us-equities/us-company/us-company.*.jsonl.gz`).
 
 ### 25.4 `economy`: the economies
 
 `REGION_GROUP`, `INCOME_GROUP`, `GDP_USD_BN`, `POPULATION_M`, `GROWTH`, `INFLATION`, `YEAR` and `GDP_PATH`: the country groups (ECG).
 
-- **Data contract:** [`economy`](../contracts/packs/world-economy.md#econ-economy-economy) (ECON), key `ECONOMY_ID`; 28 fields, 16 required; the file [`economy.contract.yaml`](../../config/packs/economy/world-economy/contracts/economy.contract.yaml).
+- **Data contract:** [`economy`](../contracts/packs/world-economy.md#econ-economy-economy) (ECON), key `ECONOMY_ID`; 28 fields, 16 required; the file [`economy.contract.yaml`](../../modules/economy/packs/world-economy/contracts/economy.contract.yaml).
 - **Example:** no sample in the demo data (`data/testdata`); the world-economy pack ships its public data with the pack
-(`config/packs/economy/world-economy/samples/`).
+(`modules/economy/packs/world-economy/samples/`).
 
 ### 25.5 `correlation-matrix`: the correlation sets
 
 A correlation set's factors; the correlations themselves are computed from the factors' price histories.
 
-- **Data contract:** [`correlation-matrix`](../contracts/packs/market-data.md#corr-correlation-matrix-correlation-matrix) (CORR), key `MATRIX_ID`; 5 fields, 5 required; the file [`correlation-matrix.contract.yaml`](../../config/packs/banking/market-data/contracts/correlation-matrix.contract.yaml).
+- **Data contract:** [`correlation-matrix`](../contracts/packs/market-data.md#corr-correlation-matrix-correlation-matrix) (CORR), key `MATRIX_ID`; 5 fields, 5 required; the file [`correlation-matrix.contract.yaml`](../../modules/market-data/packs/market-data/contracts/correlation-matrix.contract.yaml).
 - **Example:** [a real record of the test data, every field explained](../contracts/samples/market-data.md#correlation-matrix) (files `data/testdata/market-data/correlation-matrix/correlation-matrix.*.jsonl.gz`).
 
 ### 25.6 `equity`: the equities' price history
 
 An equity's quote and its history (`HISTORY[]`): the returns of CORR and the beta of EQB.
 
-- **Data contract:** [`equity`](../contracts/packs/market-data.md#eq-equity-equity) (EQ), key `TICKER`; 15 fields, 14 required; the file [`equity.contract.yaml`](../../config/packs/banking/market-data/contracts/equity.contract.yaml).
+- **Data contract:** [`equity`](../contracts/packs/market-data.md#eq-equity-equity) (EQ), key `TICKER`; 15 fields, 14 required; the file [`equity.contract.yaml`](../../modules/market-data/packs/market-data/contracts/equity.contract.yaml).
 - **Example:** [a real record of the test data, every field explained](../contracts/samples/market-data.md#equity) (files `data/testdata/market-data/equity/equity.*.jsonl.gz`).
 
 ### 25.7 `equity-index`: the indices' price history
 
 An index's level and history: the market leg of an equity's beta (EQB).
 
-- **Data contract:** [`equity-index`](../contracts/packs/market-data.md#eqx-equity-index-equity-index) (EQX), key `INDEX_ID`; 10 fields, 10 required; the file [`equity-index.contract.yaml`](../../config/packs/banking/market-data/contracts/equity-index.contract.yaml).
+- **Data contract:** [`equity-index`](../contracts/packs/market-data.md#eqx-equity-index-equity-index) (EQX), key `INDEX_ID`; 10 fields, 10 required; the file [`equity-index.contract.yaml`](../../modules/market-data/packs/market-data/contracts/equity-index.contract.yaml).
 - **Example:** [a real record of the test data, every field explained](../contracts/samples/market-data.md#equity-index) (files `data/testdata/market-data/equity-index/equity-index.*.jsonl.gz`).
 
 ### 25.8 `fx-spot`: FX history
 
 A currency pair's quote and history: FX factors in a correlation set.
 
-- **Data contract:** [`fx-spot`](../contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot) (FX), key `PAIR`; 11 fields, 11 required; the file [`fx-spot.contract.yaml`](../../config/packs/banking/market-data/contracts/fx-spot.contract.yaml).
+- **Data contract:** [`fx-spot`](../contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot) (FX), key `PAIR`; 11 fields, 11 required; the file [`fx-spot.contract.yaml`](../../modules/market-data/packs/market-data/contracts/fx-spot.contract.yaml).
 - **Example:** [a real record of the test data, every field explained](../contracts/samples/market-data.md#fx-spot) (files `data/testdata/market-data/fx-spot/fx-spot.*.jsonl.gz`).
 
 ### 25.9 `financial-fact`: the reported facts
 
 One reported figure of one company with its `HISTORY[]`: the FACT page's changes.
 
-- **Data contract:** [`financial-fact`](../contracts/packs/us-equities.md#fact-financial-fact-financial-fact) (FACT), key `FACT_ID`; 12 fields, 12 required; the file [`financial-fact.contract.yaml`](../../config/packs/capitalmarkets/us-equities/contracts/financial-fact.contract.yaml).
+- **Data contract:** [`financial-fact`](../contracts/packs/us-equities.md#fact-financial-fact-financial-fact) (FACT), key `FACT_ID`; 12 fields, 12 required; the file [`financial-fact.contract.yaml`](../../modules/capital-markets/packs/us-equities/contracts/financial-fact.contract.yaml).
 - **Example:** [a real record of the test data, every field explained](../contracts/samples/us-equities.md#financial-fact) (files `data/testdata/us-equities/financial-fact/financial-fact.*.jsonl.gz`).
 
 ### 25.10 `index-membership`: the index members
 
 An index's members (`ROWS[]`): the IDX page's totals.
 
-- **Data contract:** [`index-membership`](../contracts/packs/us-equities.md#idx-index-members-index-membership) (IDX), key `INDEX`; 5 fields, 5 required; the file [`index-membership.contract.yaml`](../../config/packs/capitalmarkets/us-equities/contracts/index-membership.contract.yaml).
+- **Data contract:** [`index-membership`](../contracts/packs/us-equities.md#idx-index-members-index-membership) (IDX), key `INDEX`; 5 fields, 5 required; the file [`index-membership.contract.yaml`](../../modules/capital-markets/packs/us-equities/contracts/index-membership.contract.yaml).
 - **Example:** [a real record of the test data, every field explained](../contracts/samples/us-equities.md#index-membership) (files `data/testdata/us-equities/index-membership/index-membership.*.jsonl.gz`).
 
 ### 25.11 `price-history`: live price history
 
 A ticker's daily prices, read live when PXH opens: the returns, volatility and beta of the PXH analytics.
 
-- **Data contract:** [`price-history`](../contracts/packs/us-equities.md#pxh-price-history-live-internal-use-only-price-history) (PXH), key none; 13 fields, 0 required; the file [`price-history.contract.yaml`](../../config/packs/capitalmarkets/us-equities/contracts/price-history.contract.yaml).
+- **Data contract:** [`price-history`](../contracts/packs/us-equities.md#pxh-price-history-live-internal-use-only-price-history) (PXH), key none; 13 fields, 0 required; the file [`price-history.contract.yaml`](../../modules/capital-markets/packs/us-equities/contracts/price-history.contract.yaml).
 - **Example:** none in the demo data; read live from Yahoo Finance's public chart endpoint (internal use only), off as shipped.
 <!-- guide-data:end -->

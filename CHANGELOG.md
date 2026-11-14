@@ -25,6 +25,12 @@
   `swapone-2026-11-03.jsonl.gz` from its name with no `.ready` file (the `.ready` date still wins); the six source modules use it. New
   tests: `lake build` and `data ingest` (files and Delta) stamp `set:`; a packed `source-swapone` `.dmod` is installed, seen and uninstalled.
 
+- **Packs live in their modules.** Each first-party pack moved (history kept) into the module that owns it (`modules/<id>/packs/<pack>`;
+  banking's in `modules/banking/dmod/packs`; module manifests list them); `config/packs` holds a site's own packs and the kernel's `core`
+  ones only (an architecture test guards it). `PackFolders` and `pack_paths.py` find a product pack through its module's folder (no dual
+  lookup), the packer trims a module's own packs by `trim:` in `content.yaml`, and the one manifest key for connector definitions is
+  `connectors` (`connector-templates` is gone from `Pack`, the lake readers and schemakit). `tools/packs_to_modules.py` is the idempotent
+  move and path rewrite.
 - **A second slogan line on the landing page**: *Your data is a treasury;* **Drishti is its sentinel.** under the headline (italic serif, the closing part in gold, a gentle fade-in, none under reduced motion). Its text is configuration, `ui.headline_second` and `ui.headline_second_accent` (also in a distribution's `brand:`); blank: no line.
 - **One document: Live results and blotters** (modules/trading/docs/guide.md, the module's Help page; the guide caps leave no room for a separate page). The engine, the page, editing and rights, row rules, retention, scale, the declaration format with a complete inventory example and a tutorial from a Kafka feed to an approved, written-back edit; the trading module's guide keeps only the trade-specific parts and links here. The plan is renumbered: i4 holds the trading module, Python compute in modules and the source modules; i5 is the cluster and the console; i6 is banking on the public kernel API.
 - **Source modules integrated**: one manifest key set (`connectors`, `mappings`, `dataload`, `sections`; conformance C9 reads `connectors`);
@@ -6084,7 +6090,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
 - The UI Board work is kept on branch ui-board-preview; not in this release.
 - **Grid: `@` suggests the opened cells**: the formula bar's suggestions list the cells a click opens (`@A2a.`, `@A2a1.`) with
   their events and fields, and inside an opened cell offer `@parent.` with what its parent emits (`@parent.open.ref`).
-- **The us-equities pack** ([its guide](config/packs/capitalmarkets/us-equities/guides/us-equities.md), [PACKS.md](docs/guides/BUILD_GUIDE.md#311-the-packs-that-ship)):
+- **The us-equities pack** ([its guide](modules/capital-markets/packs/us-equities/guides/us-equities.md), [PACKS.md](docs/guides/BUILD_GUIDE.md#311-the-packs-that-ship)):
   real public data on the companies of the Dow 30, the Nasdaq-100 and the S&P 500 as Wikidata records their membership (479 companies
   with SEC filings): `us-company` (CIK, ticker, exchange and listing market, SIC with its description and division, LEI from GLEIF,
   headquarters, founded, website, index memberships, ten years of annual 10-K XBRL financials, the latest 20 filings), `filing` (9,561,

@@ -18,7 +18,7 @@ the kind, see layout.py). Each file explains itself: what the product or
 kind is, the fields it reads, the market data it depends on and the risk it carries, so the Sutras double as
 the pack's data dictionary.
 
-    python3 tools/packgen/banking/make_sutras.py            write config/packs/<domain>/<pack>/sutras (replacing generated files)
+    python3 tools/packgen/banking/make_sutras.py            write modules/<module>/packs/<pack>/sutras (replacing generated files)
     python3 tools/packgen/banking/make_sutras.py --check    fail if the files on disk differ from what would be written
 """
 from __future__ import annotations

@@ -35,6 +35,8 @@ from typing import Any
 
 import yaml
 
+from core.pack_paths import pack_dirs
+
 LOG = logging.getLogger("drishti.console.distribution")
 DEFAULT = "all"
 KERNEL = "kernel.yaml"
@@ -193,10 +195,7 @@ def with_required(listed: list[str], known: dict[str, ModuleEntry]) -> list[str]
 
 def pack_commands(packs_dir: Path, packs: list[str]) -> list[str]:
     """Every command of the packs: each pack's code and mnemonics (its pack.yaml under the packs folder)."""
-    found: dict[str, Path] = {}
-    if packs_dir.is_dir():
-        for f in sorted(packs_dir.glob("*/*/pack.yaml")) + sorted(packs_dir.glob("*/pack.yaml")):
-            found.setdefault(f.parent.name, f)
+    found: dict[str, Path] = {n: d / "pack.yaml" for n, d in pack_dirs(packs_dir).items()} if packs_dir.is_dir() else {}
     out: list[str] = []
     for p in packs:
         f = found.get(p)
@@ -234,7 +233,7 @@ def known_commands(packs_dir: Path, modules_dir: Path | None = None, known: dict
     modules_dir = modules_dir or packs_dir.parent.parent / "modules"
     key = f"{packs_dir}|{modules_dir}|{sorted(known) if known is not None else ''}"
     if key not in _KNOWN:
-        names = [f.parent.name for f in sorted(packs_dir.glob("*/*/pack.yaml"))] if packs_dir.is_dir() else []
+        names = sorted(pack_dirs(packs_dir)) if packs_dir.is_dir() else []
         words = {w for m in (module_manifests(modules_dir) if known is None else known).values() for w in m.words}
         _KNOWN[key] = frozenset(pack_commands(packs_dir, names)) | frozenset(words)
     return _KNOWN[key]

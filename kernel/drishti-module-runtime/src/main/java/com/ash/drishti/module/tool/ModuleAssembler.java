@@ -38,7 +38,8 @@ import java.util.stream.Stream;
  * lens or a page that the running product still reads from its old place has one home and is never copied by hand. Each entry copies
  * {@code from} (a file or folder, relative to the module folder) to {@code to} inside the package, leaving out the folder or file names
  * of {@code leave-out}; {@code sections-out} drops those top-level sections of every {@code pack.yaml} it copies (the pack's connector
- * templates: a module carries no connector, the site binds its kinds). The file itself is not packed.
+ * templates: a module carries no connector, the site binds its kinds). {@code trim} entries ({@code path}, {@code leave-out},
+ * {@code sections-out}) do the same to a folder of the module itself (its packs, which live in it) after it is staged. The file itself is not packed.
  */
 public final class ModuleAssembler {
 
@@ -216,6 +217,21 @@ public final class ModuleAssembler {
         }
         Files.deleteIfExists(stage.resolve(CONTENT));
         com.fasterxml.jackson.databind.JsonNode root = YAML.readTree(list.toFile());
+        for (com.fasterxml.jackson.databind.JsonNode e : root.path("trim")) {          // the module's own packs, without what it does not carry
+            Path dir = stage.resolve(e.path("path").asText("")).normalize();
+            if (e.path("path").asText("").isBlank() || e.path("path").asText().contains("..") || !Files.isDirectory(dir)) {
+                throw new IllegalStateException(list + ": trim " + e + " needs a `path` of a folder inside the package");
+            }
+            for (com.fasterxml.jackson.databind.JsonNode x : e.path("leave-out")) {
+                delete(dir.resolve(x.asText()));
+            }
+            List<String> sectionsOut = new ArrayList<>();
+            e.path("sections-out").forEach(x -> sectionsOut.add(x.asText()));
+            Path manifest = dir.resolve("pack.yaml");
+            if (!sectionsOut.isEmpty() && Files.isRegularFile(manifest)) {
+                Files.writeString(manifest, withoutSections(Files.readString(manifest, StandardCharsets.UTF_8), sectionsOut), StandardCharsets.UTF_8);
+            }
+        }
         for (com.fasterxml.jackson.databind.JsonNode e : root.path("copy")) {
             Path from = source.resolve(e.path("from").asText("")).normalize();
             String to = e.path("to").asText("");

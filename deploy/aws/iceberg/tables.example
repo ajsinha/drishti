@@ -25,6 +25,6 @@
 #   partition  fields kept as columns too (an Iceberg table here is partitioned by business_date alone), or - for none
 #
 # table                  kind         pack                       connector    landing                     date            partition
-risk/pnl-vector          pnl-vector   config/packs/banking/market-risk   risk-store   {date}/risk/pnl-vector/     BUSINESS_DATE   -
-risk/scenario-pv         scenario-pv  config/packs/banking/market-risk   risk-store   {date}/risk/scenario-pv/    BUSINESS_DATE   -
-trading/trade_calypso    trade        config/packs/banking/trading       trade-calypso {date}/calypso/            -               PRODUCT_TYPE
+risk/pnl-vector          pnl-vector   modules/banking/dmod/packs/market-risk   risk-store   {date}/risk/pnl-vector/     BUSINESS_DATE   -
+risk/scenario-pv         scenario-pv  modules/banking/dmod/packs/market-risk   risk-store   {date}/risk/scenario-pv/    BUSINESS_DATE   -
+trading/trade_calypso    trade        modules/banking/dmod/packs/trading       trade-calypso {date}/calypso/            -               PRODUCT_TYPE

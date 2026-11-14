@@ -1192,7 +1192,7 @@ does the same from the browser, with checks on the server and automatic undo.
 | Artifact | Made by | Goes to | The server notices |
 |---|---|---|---|
 | **Pack bundle** `<name>-<version>.tar.gz` (+ `.sha256`): one pack, versioned, with a manifest of every file's checksum | `pack bundle` | unpacked by `pack deploy` into the packs folder: `drishti.packs.dir` (`DRISHTI_PACKS_DIR`, `./config/packs`) or `drishti.packs.installed-dir` (`./data/packs/installed`, searched first) | the watcher checks and loads the copied folder after it has been quiet for 750 ms, and records it in `data/packs/added.yaml`; one that does not check out is not loaded (Admin → Packs and Health say why) and is retried; a new version is swapped in, a bad one keeps the last good running. With `drishti.packs.watch: off` only Admin → Packs → **Load** acts |
-| **Pack folder** `config/packs/<domain>/<name>/` (what git holds) | you, `pack new` | the same places | the same |
+| **Pack folder** `modules/<module>/packs/<name>/` (what git holds) | you, `pack new` | the same places | the same |
 | **Sutra files** `*.sutra.yaml` | `sutra design`, `sutra gen`, the Screen Designer | `<pack>/sutras/`, or the site Sutra folder | hot reload (250 ms debounce): an invalid file is reported, the last good version stays live |
 | **`config/about.yaml`** (+ `about.<lang>.yaml`, `help.yaml`, `formats.yaml`) | you | `<pack>/config/` | with the pack's reload |
 | **Delta lake** `<root>/<domain>/<kind>/business_date=…/` | your ETL, `lake build`, `data ingest --lake` | `DRISHTI_DELTA_ROOT` or `s3a://…` | the connector re-reads the table version every `refresh-seconds` (10) and on a data-load signal |
@@ -1205,7 +1205,7 @@ touched by `pack deploy`: copy during the day, switch at the moment you choose.
 ### 8.2 Make a bundle
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py pack bundle config/packs/banking/trading --out dist
+drishti-console/.venv/bin/python tools/drishti.py pack bundle modules/banking/dmod/packs/trading --out dist
 ```
 
 ```text
@@ -1297,7 +1297,7 @@ rmdir ../stage
 What you tested is what you ship: build once, on CI, and copy the same file through the stages.
 
 ```text
-git (config/packs/banking/trading, tag v1.0.1)
+git (modules/banking/dmod/packs/trading, tag v1.0.1)
    │  CI: pack check, pack bundle
    ▼
 trading-1.0.1.tar.gz + .sha256        ← built ONCE, stored as a CI artifact
@@ -1318,7 +1318,7 @@ trading-1.0.1.tar.gz + .sha256        ← built ONCE, stored as a CI artifact
 Sutras made by `sutra design`, `sutra gen` or the Screen Designer are ordinary files: copy them into a pack's `sutras/<folder>/`, and a running
 server hot-reloads them ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#hot-reload-the-workbench-and-governance)). `drishti.py design export <id> -o
 design.zip` writes a zip of a design's Sutra and samples: put the `.sutra.yaml` in the pack in git, then the next bundle. `config/about.yaml` goes
-into `<pack>/config/`; check it first with `pack about-check config/packs/<domain>/<name>`. Prefer shipping a Sutra change as a **new bundle** (a
+into `<pack>/config/`; check it first with `pack about-check modules/<module>/packs/<name>`. Prefer shipping a Sutra change as a **new bundle** (a
 version, a checksum, a rollback); hot-copy is for emergencies, and `pack verify <deployed folder>` reports the drift until you redeploy:
 
 ```bash
@@ -1333,7 +1333,7 @@ Never write into the folder the server reads while it is half-finished: write el
 - **Files root** (`<root>/<domain>/<business-date>/<kind>.jsonl`; the connector lists folders every 30 s):
 
   ```bash
-  python3 tools/drishti.py data ingest --from new-day.jsonl --pack config/packs/banking/trading --store files --root /srv/stage/files
+  python3 tools/drishti.py data ingest --from new-day.jsonl --pack modules/banking/dmod/packs/trading --store files --root /srv/stage/files
   cp -r /srv/stage/files/trading/2026-10-05 /srv/drishti/files/trading/.2026-10-05.part     # a dot name the connector skips
   mv /srv/drishti/files/trading/.2026-10-05.part /srv/drishti/files/trading/2026-10-05      # the rename is atomic
   ```
@@ -1377,7 +1377,7 @@ travel on the table.
 
 ### 8.10 Git as the source of truth, and a CI example
 
-Keep `config/packs/<domain>/<name>/` in git with the version bump; a release is a tag, and `git checkout v1.0.1 && pack bundle` gives the same
+Keep `modules/<module>/packs/<name>/` in git with the version bump; a release is a tag, and `git checkout v1.0.1 && pack bundle` gives the same
 bytes. Never edit a deployed folder: change git, build, deploy. A GitHub Actions job (adapt it to any CI):
 
 ```yaml
@@ -1392,8 +1392,8 @@ jobs:
         with: { distribution: temurin, java-version: 21 }
       - uses: astral-sh/setup-uv@v5
       - run: ./mvnw -q -DskipTests package -pl :drishti-app -am        # the exec jar that lint and test use
-      - run: uv run --with pyyaml python tools/drishti.py pack check config/packs/banking/trading --strict --junit build/reports
-      - run: uv run --with pyyaml python tools/drishti.py pack bundle config/packs/banking/trading --out dist
+      - run: uv run --with pyyaml python tools/drishti.py pack check modules/banking/dmod/packs/trading --strict --junit build/reports
+      - run: uv run --with pyyaml python tools/drishti.py pack bundle modules/banking/dmod/packs/trading --out dist
       - run: uv run --with pyyaml python tools/drishti.py pack verify dist/trading-*.tar.gz
       - uses: actions/upload-artifact@v4
         with: { name: trading-bundle, path: "dist/trading-*" }
@@ -1525,7 +1525,7 @@ user the admin role) ([CLI_REFERENCE.md](CLI_REFERENCE.md#server-packs-deploy-hi
 | *the archive needs server >=X* | upgrade the server first, or rebuild with `--requires-server` if you know it is compatible |
 | *extends X, which is neither loaded nor on disk* | deploy or load the parent first |
 | HTTP 413 | over `max-archive-mb` (and the console's `packs.deploy_max_mb`): archives carry no data, so a big one usually has data in it |
-| `the pack fails pack check` | run `pack check config/packs/<domain>/<name>` and fix it |
+| `the pack fails pack check` | run `pack check modules/<module>/packs/<name>` and fix it |
 | `no drishti-server-*-exec.jar` | build it, set `DRISHTI_JAR`, or `--no-sutra` on a target without Java |
 | history says *reverted* | the server could not start with the new files: read the server log at that time; fix and redeploy |
 | deployed, but the old content is served | the watcher waits for the copy to be quiet (`drishti.packs.reload-debounce`, 750 ms), the watch is `off`, or the new version was refused: look at the pack's row; with `watch: off` use Load/Unload or restart |
@@ -2766,7 +2766,7 @@ the console as the administrator.
 
 ```cron
 # m  h  dom mon dow  command
-30 21 *   *   1-5  cd /opt/drishti && drishti-console/.venv/bin/python tools/drishti.py lake build --from /srv/drop/endur-$(date +\%F).json.gz --pack config/packs/banking/trading --kind trade --connector trade-endur --key TRADE_ID --lake /srv/drishti/delta --as-of $(date +\%F) --partition-by PRODUCT_TYPE --signal http://localhost:18480 --token-file /etc/drishti/loads.token -q >> /var/log/drishti/lake-build.log 2>&1
+30 21 *   *   1-5  cd /opt/drishti && drishti-console/.venv/bin/python tools/drishti.py lake build --from /srv/drop/endur-$(date +\%F).json.gz --pack modules/banking/dmod/packs/trading --kind trade --connector trade-endur --key TRADE_ID --lake /srv/drishti/delta --as-of $(date +\%F) --partition-by PRODUCT_TYPE --signal http://localhost:18480 --token-file /etc/drishti/loads.token -q >> /var/log/drishti/lake-build.log 2>&1
 ```
 
 Or as a systemd timer (a missed run is caught up after a reboot; `systemctl status` shows the exit code):
@@ -2781,7 +2781,7 @@ After=network-online.target
 Type=oneshot
 User=drishti
 WorkingDirectory=/opt/drishti
-ExecStart=/bin/sh -c 'drishti-console/.venv/bin/python tools/drishti.py lake build --from /srv/drop/endur-$(date +%%F).json.gz --pack config/packs/banking/trading --kind trade --connector trade-endur --key TRADE_ID --lake /srv/drishti/delta --as-of $(date +%%F) --partition-by PRODUCT_TYPE --signal http://localhost:18480 --token-file /etc/drishti/loads.token -q'
+ExecStart=/bin/sh -c 'drishti-console/.venv/bin/python tools/drishti.py lake build --from /srv/drop/endur-$(date +%%F).json.gz --pack modules/banking/dmod/packs/trading --kind trade --connector trade-endur --key TRADE_ID --lake /srv/drishti/delta --as-of $(date +%%F) --partition-by PRODUCT_TYPE --signal http://localhost:18480 --token-file /etc/drishti/loads.token -q'
 # 2 (written with rejects) is not a failure of the unit; alert on it from the summary instead
 SuccessExitStatus=2
 Environment=DRISHTI_LAKE_HEAP=2g
@@ -3427,7 +3427,7 @@ quote values with `{$.path}` so each reader sees their own.
 | A pack is *off* in Admin → Packs, or its users get `DRS-5002` | an administrator switched it off (*Changed* says when and who; audit `pack-disabled`): **Switch on** (live) |
 | A pack says *not loaded* | its folder is there but `DRISHTI_PACKS` did not name it: **Load** (live). *cannot load 'finance': kind trade is defined by both pack 'trading' and pack 'finance'*: it clashes with a loaded pack |
 | "Switch off" is greyed, or `'trading' is needed by [market-risk, counterparty-risk]; switch those off first` | switch off the dependants first |
-| The drill fails with "pack manifests out of date" | a generated file was edited by hand, or the generator changed and was not run: `python3 tools/packgen/banking/make_packs.py --check` lists them; move the change into the generator and run it, or `git checkout -- config/packs/<domain>/<name>/…` |
+| The drill fails with "pack manifests out of date" | a generated file was edited by hand, or the generator changed and was not run: `python3 tools/packgen/banking/make_packs.py --check` lists them; move the change into the generator and run it, or `git checkout -- modules/<module>/packs/<name>/…` |
 
 ### 21.9 Alerts on numbers
 

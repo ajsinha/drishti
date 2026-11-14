@@ -96,7 +96,7 @@ def stack(tmp_path_factory):
     # replaces the template with a file connector over the pack's sample economies, as one business date
     day = tmp / "macro" / "2026-10-07"
     day.mkdir(parents=True)
-    shutil.copy(ROOT / "config/packs/economy/world-economy/samples/economy.jsonl", day / "economy.jsonl")
+    shutil.copy(ROOT / "modules/economy/packs/world-economy/samples/economy.jsonl", day / "economy.jsonl")
     (work / "config" / "connectors").mkdir(parents=True)
     (work / "config" / "connectors" / "macro-store.yaml").write_text(MACRO_STORE.format(root=tmp / "macro"))
     env = dict(os.environ, DRISHTI_PACKS_DIR=str(ROOT / "config/packs"), DRISHTI_PACKS="world-economy", DRISHTI_BI_DIR=str(work / "config/bi"),

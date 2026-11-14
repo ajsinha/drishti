@@ -17,7 +17,7 @@
 
 # Data contracts of the gdelt-events pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/economy/gdelt-events/guides/gdelt-events.md](../../../config/packs/economy/gdelt-events/guides/gdelt-events.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
+One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [modules/economy/packs/gdelt-events/guides/gdelt-events.md](../../../modules/economy/packs/gdelt-events/guides/gdelt-events.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -29,7 +29,7 @@ What the world's news reported about one country yesterday (GDELT): events, tone
 
 |  |  |
 |---|---|
-| Contract | [event-country.contract.yaml](../../../config/packs/economy/gdelt-events/contracts/event-country.contract.yaml) · version 1.0 |
+| Contract | [event-country.contract.yaml](../../../modules/economy/packs/gdelt-events/contracts/event-country.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: The GDELT Project, pulled by the gdelt-events feed (config/feeds/gdelt-events.yaml, tools/feeds/sources/) |
@@ -39,7 +39,7 @@ What the world's news reported about one country yesterday (GDELT): events, tone
 | Dated by | `snapshot` |
 | Cadence | daily (due: the gdelt-events feed's schedule (30 8 * * * UTC); a pull with nothing new writes nothing and the lake keeps its latest date) |
 | Binding hint | lake table `gdelt.event-country`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
-| Test data | config/packs/economy/gdelt-events/samples |
+| Test data | modules/economy/packs/gdelt-events/samples |
 | Worked example | [gdelt-events/event-country](../samples/gdelt-events.md#event-country) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**

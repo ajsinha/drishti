@@ -75,8 +75,8 @@ CVA has **no input table of its own**. It reads:
 |---|---|---|
 | `exposure-path`, `simulation-run` | [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) section 15 | EE, ENE per netting set and primary date (through `exposure-result`); the run should be `RISK_NEUTRAL` (EXPOSURE_GUIDE.md open question 4) |
 | `saccr-trade` and its result | [SACCR.md](SACCR.md) | EAD and effective maturity per netting set for BA-CVA |
-| `credit-curve` (market-data pack) | [`credit-curve.contract.yaml`](../../config/packs/banking/market-data/contracts/credit-curve.contract.yaml) | `POINTS[]` (`TENOR`, `SPREAD` in bp, `HAZARD`, `SURVIVAL`), `RECOVERY`, `CURRENCY` |
-| `ir-curve` (market-data pack) | [`ir-curve.contract.yaml`](../../config/packs/banking/market-data/contracts/ir-curve.contract.yaml) | the USD OIS discount curve (`POINTS[]`) |
+| `credit-curve` (market-data pack) | [`credit-curve.contract.yaml`](../../modules/market-data/packs/market-data/contracts/credit-curve.contract.yaml) | `POINTS[]` (`TENOR`, `SPREAD` in bp, `HAZARD`, `SURVIVAL`), `RECOVERY`, `CURRENCY` |
+| `ir-curve` (market-data pack) | [`ir-curve.contract.yaml`](../../modules/market-data/packs/market-data/contracts/ir-curve.contract.yaml) | the USD OIS discount curve (`POINTS[]`) |
 | SIMM IM ([SIMM.md](SIMM.md)) | | IM profile for the MVA hook |
 
 Cadence: whenever its inputs change (the reactive triggers, §9.4). Due: after the exposure run and the end-of-day market data.

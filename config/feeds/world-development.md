@@ -67,7 +67,7 @@ One row (JSON Lines: one object a line; the values are the contract's examples):
 {"PROFILE_ID": "WDI-AUS", "NAME": "Australia", "ISO3": "AUS", "ISO2": "AU", "COUNTRY_NAME": "Australia", "REGION": "East Asia & Pacific", "INCOME_GROUP": "High income", "CAPITAL": "Canberra", "POPULATION": 27614411.0, "GDP_PER_CAPITA": 65129.7227990563, "GDP_GROWTH": 1.35039785076631, "INFLATION": 2.87403791660173, "UNEMPLOYMENT": 4.09, "LIFE_EXPECTANCY": 83.0512195121951, "POVERTY_HEADCOUNT": 0.9, "ELECTRICITY_ACCESS": 100.0, "INTERNET_USERS": 96.13140106, "CENTRAL_GOVERNMENT_DEBT": 57.8834285733848, "DATA_YEAR": "2025", "INDICATOR_COUNT": 10}
 ```
 
-The contract: `config/packs/economy/world-development/contracts/development-profile.contract.yaml` ([world-development](../../docs/contracts/packs/world-development.md)).
+The contract: `modules/economy/packs/world-development/contracts/development-profile.contract.yaml` ([world-development](../../docs/contracts/packs/world-development.md)).
 
 ### development-series
 
@@ -98,4 +98,4 @@ One row (JSON Lines: one object a line; the values are the contract's examples):
 {"SERIES_ID": "WDIS-CAN-EG_ELC_ACCS_ZS", "NAME": "Canada · Access to electricity (% of population)", "WDI_PROFILE": "WDI-CAN", "ISO3": "CAN", "COUNTRY_NAME": "Canada", "INDICATOR_CODE": "EG.ELC.ACCS.ZS", "INDICATOR": "Access to electricity (% of population)", "UNIT": "% of population", "DEFINITION": "Access to electricity is the percentage of population with …", "LATEST": 100.0, "LATEST_YEAR": "2024", "PREVIOUS": 100.0, "PREVIOUS_YEAR": "2023", "CHANGE": 0.0}
 ```
 
-The contract: `config/packs/economy/world-development/contracts/development-series.contract.yaml` ([world-development](../../docs/contracts/packs/world-development.md)).
+The contract: `modules/economy/packs/world-development/contracts/development-series.contract.yaml` ([world-development](../../docs/contracts/packs/world-development.md)).

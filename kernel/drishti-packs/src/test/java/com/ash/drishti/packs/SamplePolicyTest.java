@@ -31,7 +31,7 @@ class SamplePolicyTest {
     private void pack(String name, boolean sample, String connector) throws Exception {
         Path p = Files.createDirectories(dir.resolve("packs").resolve(name));
         Files.writeString(p.resolve("pack.yaml"), "pack: " + name + "\n" + (sample ? "sample: true\n" : "") + "kinds: [" + name + "-k]\n"
-                + "connector-templates:\n  " + connector + ":\n    plugin: file\n");
+                + "connectors:\n  " + connector + ":\n    plugin: file\n");
     }
 
     @Test

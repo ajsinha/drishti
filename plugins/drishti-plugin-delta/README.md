@@ -237,7 +237,7 @@ settings:
   refresh-seconds: 10
 ```
 
-The pack's template, with the layout on the connector (`config/packs/banking/trading/pack.yaml`; `trade-calypso` and `trade-murex` differ
+The pack's template, with the layout on the connector (`modules/banking/dmod/packs/trading/pack.yaml`; `trade-calypso` and `trade-murex` differ
 only in table and name; the server writes it to `config/connectors/trade-endur.yaml` at the first start):
 
 ```yaml

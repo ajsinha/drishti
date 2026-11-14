@@ -21524,59 +21524,59 @@ datasets:
   files:
   - risk-factor.2026-09-30.jsonl.gz
   bytes: 21745
-- samples: config/packs/economy/world-economy/samples
+- samples: modules/economy/packs/world-economy/samples
   pack: world-economy
   kind: economic-forecast
   connector: macro-store
-- samples: config/packs/economy/world-economy/samples
+- samples: modules/economy/packs/world-economy/samples
   pack: world-economy
   kind: economy
   connector: macro-store
-- samples: config/packs/economy/world-economy/samples
+- samples: modules/economy/packs/world-economy/samples
   pack: world-economy
   kind: election
   connector: civic-store
-- samples: config/packs/economy/world-economy/samples
+- samples: modules/economy/packs/world-economy/samples
   pack: world-economy
   kind: fiscal-position
   connector: macro-store
-- samples: config/packs/economy/world-economy/samples
+- samples: modules/economy/packs/world-economy/samples
   pack: world-economy
   kind: jurisdiction
   connector: civic-store
-- samples: config/packs/economy/world-economy/samples
+- samples: modules/economy/packs/world-economy/samples
   pack: world-economy
   kind: labour-market
   connector: macro-store
-- samples: config/packs/economy/world-economy/samples
+- samples: modules/economy/packs/world-economy/samples
   pack: world-economy
   kind: macro-indicator
   connector: macro-store
-- samples: config/packs/economy/world-economy/samples
+- samples: modules/economy/packs/world-economy/samples
   pack: world-economy
   kind: office-holder
   connector: civic-store
-- samples: config/packs/economy/world-economy/samples
+- samples: modules/economy/packs/world-economy/samples
   pack: world-economy
   kind: party
   connector: civic-store
-- samples: config/packs/economy/world-economy/samples
+- samples: modules/economy/packs/world-economy/samples
   pack: world-economy
   kind: region
   connector: civic-store
-- samples: config/packs/economy/world-economy/samples
+- samples: modules/economy/packs/world-economy/samples
   pack: world-economy
   kind: region-economy
   connector: macro-store
-- samples: config/packs/economy/world-economy/samples
+- samples: modules/economy/packs/world-economy/samples
   pack: world-economy
   kind: social-indicator
   connector: civic-store
-- samples: config/packs/economy/news-and-markets/samples
+- samples: modules/economy/packs/news-and-markets/samples
   pack: news-and-markets
   kind: listed-company
   connector: news-store
-- samples: config/packs/economy/news-and-markets/samples
+- samples: modules/economy/packs/news-and-markets/samples
   pack: news-and-markets
   kind: news-topic
   connector: news-store
