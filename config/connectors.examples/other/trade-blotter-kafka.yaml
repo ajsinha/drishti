@@ -1,0 +1,38 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+# Example: the demo trade blotter's live side and its write-back (modules/trading/docs/guide.md sections 3 and 8). Copy to
+# config/connectors/trade-kafka.yaml, start the demo broker and stream (deploy/docker/compose.data.yaml; tools/samplegen/stream.py, whose
+# trades carry a numeric TRADE_VERSION and UPDATED_BY), and bind the kind with live: in config/bindings.yaml:
+#   trade: { read: [trade-endur, trade-murex], union: true, live: trade-kafka }
+# An amended trade is written back to the same topic as the whole record at its next version, so the stream brings it back and the row
+# ticks. Writes are off until an administrator switches them on (Admin -> Edits); edit.enabled must be true (config/edit/edit.yaml).
+plugin: kafka
+kinds: [trade]
+description: The demo's live trades, and the trade blotter's amendments written back to them
+settings:
+  bootstrap-servers: ${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}
+  topics: [drishti.trading.trades]
+  kind: trade
+  id-field: TRADE_ID
+writes:
+  amend-trade:
+    kind: trade
+    kafka:
+      topic: drishti.trading.trades
+      shape: document
+      version-field: TRADE_VERSION
+      changed-by: UPDATED_BY
+      changed-at: SOURCE_UPDATE_TIME
+      change-id-field: DRISHTI_CHANGE_ID
+    confirm: reply

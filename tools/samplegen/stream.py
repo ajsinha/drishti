@@ -21,6 +21,10 @@ stream (the trading pack's `trading-stream` connector, switched on with DRISHTI_
 Each trade is published once, keyed by its TRADE_ID (the topic is the state: the latest message per trade wins), then `--rate` random
 trades per second get a new PRICE (a trade carries no MTM: that is the market-risk pack's trade valuation) and a new SOURCE_UPDATE_TIME.
 `--seconds 0` runs until interrupted.
+
+Every message carries a numeric TRADE_VERSION and UPDATED_BY (the demo trade blotter's version and who made it, modules/trading
+blotters/trade.blotter.yaml): a tick is a new version by STREAM, so the blotter merges by version and refuses an edit made on an older one,
+naming who moved it. The samples' own version (text, "1") is read as a number; a trade without one starts at 1.
 """
 from __future__ import annotations
 
@@ -50,6 +54,7 @@ def main():
     trades = {}
     for d in packsamples.read(pathlib.Path(a.samples)).get("trade", {}).values():
         d.pop("_meta", None)
+        versioned(d, d.get("TRADER_ID") or "BOOKING")
         trades[str(d["TRADE_ID"])] = d
         producer.send(a.topic, key=str(d["TRADE_ID"]), value=d)
     producer.flush()
@@ -61,11 +66,23 @@ def main():
             price = d.get("PRICE") if isinstance(d.get("PRICE"), (int, float)) else 100.0
             d["PRICE"] = round(price + rnd.gauss(0, max(0.0001, abs(price) * 0.002)), 6)
             d["SOURCE_UPDATE_TIME"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+            d["TRADE_VERSION"] = int(d["TRADE_VERSION"]) + 1
+            d["UPDATED_BY"] = "STREAM"
             producer.send(a.topic, key=str(d["TRADE_ID"]), value=d)
             time.sleep(1 / a.rate)
     except KeyboardInterrupt:
         pass
     producer.flush()
+
+
+def versioned(d: dict, by: str) -> dict:
+    """The trade with a numeric TRADE_VERSION (the samples' text "3" is 3; none is 1) and UPDATED_BY (kept when it has one)."""
+    try:
+        d["TRADE_VERSION"] = max(1, int(float(str(d.get("TRADE_VERSION") or "1").strip())))
+    except ValueError:
+        d["TRADE_VERSION"] = 1
+    d.setdefault("UPDATED_BY", by)
+    return d
 
 
 if __name__ == "__main__":

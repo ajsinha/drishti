@@ -17,6 +17,19 @@
 
 ## Unreleased
 
+### Every record list on the live result sets
+- **FORM results are a live result set** (`GET /api/v1/live/query`): the search's rows, columns and order, ticking where the kind has a live
+  binding on today's business date, static otherwise; one set per search, date and masking, shared (a masked value never picks, orders or
+  filters rows). The console's own result shaping for FORM and the search page is gone: one place draws result cells (`core/live_results.py`)
+  and marks the table with its set (`data-live-set`, `data-live`) for the grid's live mode.
+- **The search page** (`TRD where ...`) reads the same live set; a comparison of two dates (`vs=`) stays the search's own answer.
+- **A bare mnemonic opens the kind's set** (`POS <GO>`, `GET /api/v1/live/kinds/{word}/rows`), a page at a time: a module's declaration of
+  the kind, else a default made from its contract; `drishti.live-sets.default-max-rows` (250,000) caps what a default set reads.
+- The live set's filter and sort read what each viewer may see (a masked value no longer decides which rows show or their order).
+- The search's summary (columns, labels, matched, scanned, failed, no data, pivot) is shaped in one place (`SearchAnswers`).
+- The demo stream (`tools/samplegen/stream.py`) sends a numeric `TRADE_VERSION` and `UPDATED_BY` (a tick is a new version by `STREAM`), and
+  `config/connectors.examples/other/trade-blotter-kafka.yaml` binds the demo trade blotter's live side and its `amend-trade` write-back.
+
 - **The trading module and the live result sets engine** (modules/trading/docs/guide.md). One engine (`com.ash.drishti.server.liveset`) behind every
   blotter: a declaration (`blotters/<id>.blotter.yaml` in a module, or `config/blotters/`) names the kind, the query (the search grammar), the
   key and version, the columns, grouping, links, the live side's `retention:` (`ttl`, `on`, `max-rows`) and, for edits, a Rachana form with

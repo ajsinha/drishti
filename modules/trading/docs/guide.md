@@ -180,6 +180,15 @@ One engine behind every blotter and every FORM result (`com.ash.drishti.server.l
 5. **Retention**: `retention:` trims the live side every 30 s (older than `ttl` by its field, else by arrival; beyond `max-rows`, oldest
    first); the durable store keeps its own.
 6. A set nobody has viewed for ten minutes is closed.
+7. **A search is a set too**: a FORM's result and the search page's are the search's matches as a set (`GET /api/v1/live/query`): the
+   search's rows, columns and order, then the kind's live changes merged in by key while the business date is the live one (static
+   otherwise, and when the kind has no `live:` binding). One set per search, business date and masking: people whose fields are masked get
+   their own set, filled and kept masked, so a masked value never picks, orders or filters rows. Pressing Search again reads a static set
+   afresh; a live one is current already.
+8. **A bare mnemonic is the kind's set**: `POS <GO>` opens the kind's own set a page at a time (`GET /api/v1/live/kinds/POS/rows`). A
+   module's declaration of the kind is used when there is one; otherwise a default is made from the kind's contract (its key fields as
+   columns, else its promoted columns; the entity id as the key; read-only). No YAML per mnemonic is needed. A default set reads at most
+   `drishti.live-sets.default-max-rows` records and says when it stopped there.
 
 ## 8. Writing back: Kafka and JDBC
 
@@ -219,6 +228,8 @@ Iceberg and file connectors never write per change.
 | `GET` | `/api/v1/live` | the declarations the caller may open (each with `editable` and `readOnly` for them); for administrators those set aside and the open sets |
 | `GET` | `/api/v1/live/{id}/rows` | a page: `offset`, `limit` (≤ 5,000), `sort`, `descending`, `filter`, `query`; `{set, live, total, seq, rows[{id, version, seq, doc}]}` |
 | `GET` | `/api/v1/live/{id}/rows/{entity}` | one record whole (the panel's Raw JSON), masked for the caller |
+| `GET` | `/api/v1/live/query` | a search's matches as a set (FORM, the search page): `q`, `offset`, `limit`, `sort`, `descending`, `filter`, `again`; the page plus `search` (what the search said) |
+| `GET` | `/api/v1/live/kinds/{word}/rows` | a kind's own set by its mnemonic or name (`POS <GO>`); `capped` when it stopped at the default cap |
 | `GET` | `/api/v1/live/{id}/stream` | server-sent events: `hello` `{stream, total, live}`, then `rows` `{upserts, removes, total, seq, countOnly}` or `resync` |
 | `POST` | `/api/v1/live/{id}/stream/{stream}/window` | the page the stream shows: `{ids: [...]}`, or `{all: true}` |
 | `POST` | `/api/v1/live/{id}/edit` | an edit: `{entity, basedOn, reason, items[{field, from, to}]}`; `403 DRS-9302` read-only (why), `409 DRS-9303` stale |
@@ -232,3 +243,4 @@ Iceberg and file connectors never write per change.
 | `drishti.live-sets.dir` | `config/blotters` | the site's own declarations |
 | `drishti.live-sets.modules-dir` | `modules` | where the modules' `blotters/` folders are found (a module's only while it is on) |
 | `drishti.live-sets.edits-off` | (none) | the blotters whose edits the site switched off, by id (`trade,exposure`) |
+| `drishti.live-sets.default-max-rows` | `250000` | the most records a kind's default set (a bare mnemonic) reads |
