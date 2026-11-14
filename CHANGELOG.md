@@ -31,6 +31,16 @@
   write-back per system; a blotter edit goes to the write path of the system the record came from, never another's. Aggregates (VaR, BI totals)
   keep their own scope model. Tests: `SourceShapeTest` (shared table split by where, separate tables, set, map in both forms, two live
   connectors, a system off and on, refusals), `RowRulesTest`, `SourceRoutingTest`.
+- **One source module per trading system** (modules/trading/docs/guide.md section 11). `modules/source-endur`, `source-calypso`, `source-murex`,
+  `source-wss`, `source-swapone` and `source-ici`, each requiring `trading`, each switchable on its own (`config/modules/source-<system>.yaml`),
+  each feeding the one canonical `trade` kind (`SOURCE_SYSTEM`): connector templates (Delta, Iceberg, files, a Kafka live stream with its
+  write-back), a native-to-canonical mapping, the inbox routing rules (`dataload.yaml`) and a short guide. The Endur Cassandra, Delta on S3,
+  Iceberg and S3 Tables examples moved from `config/connectors.examples/*/trade-endur.yaml` into `source-endur`. The manifest knows
+  `dataload`, `connector-templates` and `mappings`; conformance C9 lets `connector-templates/` and `dataload.yaml` name connectors. Mocked
+  native data for WSS, SwapOne and ICI (`tools/samplegen/src_*.py`, committed under `data/testdata/trades/<system>/`, written by
+  `make_testdata.py`, no positions or scenario P&L: the VaR is unchanged) lands in one shared table, `trading.trades_shared`, split by
+  `SOURCE_SYSTEM`, while Endur, Calypso and Murex keep a table each; `lake demo` builds both and writes the three new connectors; the demo
+  bindings are `config/demo/bindings.yaml` (`lake demo --bindings`); Drishti Risk lists the source modules.
 - **Row retention for Delta, Iceberg and files, as the in-memory lake has it** (docs/guides/DATA_LAKE_GUIDE.md section 2.7). A table's
   `retention: {ttl, on, max-rows}` now works on durable tables: rows past their age (the field `on`, else `arrived_at`, else the business date) and
   beyond the newest `max-rows` are dropped by `lake maintain`, the one upkeep schedule (a Delta commit per date, an Iceberg commit per day, the day files

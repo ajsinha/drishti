@@ -1,0 +1,60 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+format: 1
+system: WSS
+kind: trade
+about: WSS native fields to the canonical trade fields. A path is a dotted path into the native document; first-of takes the first present; values
+  translates a code; scale multiplies; as reads a date or time written in another form.
+map:
+  TRADE_ID: dealRef
+  TRADE_VERSION: dealVer
+  TRADE_STATUS:
+    from: dealState
+    values:
+      Verified: NEW
+      Amended: AMENDED
+      Cancelled: CANCELLED
+  PRODUCT_TYPE: dealType
+  PRODUCT_GROUP:
+    from: family
+    values:
+      FX: FX
+      MONEY: Money markets
+      TREASURY: Treasury
+  BUY_SELL_CODE:
+    from: dir
+    values:
+      BUY: B
+      SELL: S
+  QUANTITY:
+    first-of:
+    - buyAmt
+    - principal
+  PRICE:
+    first-of:
+    - rate
+    - ratePct
+  CURRENCY:
+    first-of:
+    - buyCcy
+    - ccy
+  COUNTERPARTY: cpty.code
+  LEGAL_ENTITY: legalEntity
+  PORTFOLIO: bookRef
+  TRADER_ID: dealer
+  TRADE_DATE: tradedOn
+  START_DATE: valueDate
+  MATURITY_DATE: maturityDate
+  SOURCE_UPDATE_TIME: lastUpd

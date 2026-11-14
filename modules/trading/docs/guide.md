@@ -37,6 +37,7 @@ engine without edits.
 8. [Writing back: Kafka and JDBC](#8-writing-back-kafka-and-jdbc)
 9. [The API](#9-the-api)
 10. [Settings](#10-settings)
+11. [Source systems](#11-source-systems)
 
 ## 1. What you see
 
@@ -296,3 +297,62 @@ mode (ELEMENTS.md section 5.5).
 | `drishti.live-sets.store-timeout-seconds` | `120` | how long a set paged from the lake may take to read the columns it orders by, and a page's records |
 
 Every one is in [CONFIGURATION.md](../../../docs/admin/CONFIGURATION.md) (`drishti.live-sets`), generated from the server's `application.yaml`.
+
+## 11. Source systems
+
+The `trade` kind is one canonical kind (the trading pack's `trade` contract; every row carries `SOURCE_SYSTEM`). Each trading system that
+feeds it is a **source module of its own**, `modules/source-<system>/`, which requires this module and switches on and off alone
+(`config/modules/source-<system>.yaml`, `enabled: false`; off, the system's trades leave the kind and nothing else changes). Six ship:
+`source-endur`, `source-calypso`, `source-murex` (their data is already in the canonical schema) and `source-wss` (treasury, FX and
+money markets), `source-swapone` (OTC swaps) and `source-ici` (a generic cross-asset booking system; its asset class was not stated, so it
+is mocked as one). The data of the last three is **mocked** (`tools/samplegen/src_*.py`; each in its own native field style; no
+positions and no scenario P&L, so the VaR does not move).
+
+A module ships: `connector-templates/` (read from Delta, Iceberg and files; a Kafka live stream whose `writes:` is the write-back of
+section 8), `mappings/<system>-trade.yaml` (the native fields to the canonical ones), `dataload.yaml` (the inbox routing rules, in the
+format of `config/dataload.yaml`; the inbox reads the site's rules first) and a short guide. A connector's source options:
+
+| Option | Meaning |
+|---|---|
+| `lake-tables` | the table read: a table of the system's own, or one several systems share |
+| `where` | a predicate that selects this system's rows of a shared table |
+| `set` | constants stamped into the rows this connector reads and into the rows the inbox stores (`SOURCE_SYSTEM`) |
+| `map` | the native-to-canonical field map (the module's `mappings/` file) |
+
+**Layout A: a table each** (Endur, Calypso and Murex in the demo): the connector reads its own table, no `where` is needed.
+
+```yaml
+# config/connectors/trade-endur.yaml
+plugin: delta
+settings:
+  lake: main
+  lake-tables: trading.trade_endur
+  set: { SOURCE_SYSTEM: ENDUR }
+  map: mappings/endur-trade.yaml
+```
+
+**Layout B: one shared table, split by `where`** (WSS, SwapOne and ICI in the demo, `trading.trades_shared`, partitioned by `SOURCE_SYSTEM`):
+
+```yaml
+# config/connectors/trade-wss.yaml
+plugin: delta
+settings:
+  lake: main
+  lake-tables: trading.trades_shared
+  where: SOURCE_SYSTEM = 'WSS'
+  set: { SOURCE_SYSTEM: WSS }
+  map: mappings/wss-trade.yaml
+```
+
+The kind reads them all as a union (`config/demo/bindings.yaml`, written by `drishti.py lake demo --bindings`):
+
+```yaml
+bindings:
+  trade:
+    read: [trade-endur, trade-calypso, trade-murex, trade-wss, trade-swapone, trade-ici]
+    union: true
+    live: trade-kafka
+```
+
+The inbox: `wss-<date>.jsonl.gz` (SwapOne `swapone-`, ICI `ici-`, Endur, Calypso and Murex likewise) goes to that system's table by the module's
+rule; put the file's `.ready` marker in last (each module's guide has the example).

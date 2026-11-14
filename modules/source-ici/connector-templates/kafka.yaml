@@ -1,0 +1,46 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Template: copy to config/connectors/trade-ici-live.yaml and bind the kind with live: trade-ici-live in config/bindings.yaml.
+# ICI's live trades from Kafka, and the write-back (the writes: form of config/connectors.examples/other/trade-blotter-kafka.yaml): an amended
+# trade goes back to the same topic as the whole record at its next version, so the stream brings it back and the row ticks. Writes are off
+# until an administrator switches them on (Admin -> Edits).
+plugin: kafka
+enabled: ${DRISHTI_STREAM_ICI:false}
+kinds:
+- trade
+description: ICI's live trades, and the trade blotter's amendments written back to them
+settings:
+  bootstrap-servers: ${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}
+  topics:
+  - ${DRISHTI_ICI_TOPIC:drishti.trading.ici.trades}
+  kind: trade
+  id-field: TicketNo
+  stale-after: ${DRISHTI_STREAM_STALE_AFTER:15m}
+  source-name: trade-ici-live
+  where: SOURCE_SYSTEM = 'ICI'
+  set:
+    SOURCE_SYSTEM: ICI
+  map: mappings/ici-trade.yaml
+writes:
+  amend-ici-trade:
+    kind: trade
+    kafka:
+      topic: ${DRISHTI_ICI_TOPIC:drishti.trading.ici.trades}
+      shape: document
+      version-field: Header.Rev
+      changed-by: UPDATED_BY
+      changed-at: Header.LastChange
+      change-id-field: DRISHTI_CHANGE_ID
+    confirm: reply

@@ -423,7 +423,10 @@ public final class ModuleConformance {
             Matcher s = SECRET.matcher(text);
             // the connector keys are read in YAML only, and not in module.yaml (its console.plugin names the module's plugin file): as keys of
             // the parsed document, so a sentence that says "the prices connector: off as shipped" is not one
-            boolean yaml = !DmodManifest.FILE.equals(f) && (f.endsWith(".yaml") || f.endsWith(".yml"));
+            // a source module's connector templates and inbox rules (connector-templates/, dataload.yaml) name connectors by design: the site copies
+            // a template to its connector folder; secrets are still refused in them
+            boolean tpl = f.startsWith("connector-templates/") || f.equals("dataload.yaml");
+            boolean yaml = !tpl && !DmodManifest.FILE.equals(f) && (f.endsWith(".yaml") || f.endsWith(".yml"));
             String found = s.find() ? s.group() : yaml ? connectorKey(dir, f, text) : null;
             if (found != null) {
                 out.add(f + " has \"" + found.trim() + "\": a module carries no connector, host, user name, password, key or token; the "

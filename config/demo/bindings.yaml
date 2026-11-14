@@ -1,0 +1,25 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The demo's data bindings (docs/architecture/KERNEL_AND_MODULES.md section 5; modules/trading/docs/guide.md, "Source systems"): the one
+# `trade` kind read from the six source systems' modules, as a union. Endur, Calypso and Murex keep a table each; WSS, SwapOne and ICI
+# share trading.trades_shared and each connector selects its own rows with where: SOURCE_SYSTEM = ... (the connectors are written by
+# `drishti.py lake demo` from modules/source-<system>/connector-templates/delta.yaml). `lake demo` copies this file to config/bindings.yaml
+# when the site has none; a source module switched off (config/modules/source-<system>.yaml) drops out of the union.
+format: 1
+
+bindings:
+  trade:
+    read: [trade-endur, trade-calypso, trade-murex, trade-wss, trade-swapone, trade-ici]
+    union: true

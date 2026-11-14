@@ -20,6 +20,7 @@
     python3 tools/testdata/make_testdata.py --check          fail if data/testdata differs from what would be written
 
 One folder per dataset: trades/endur, trades/calypso, trades/murex (5,000 trades each, the common 47-attribute UPPER_SNAKE schema),
+trades/wss, trades/swapone, trades/ici (a few hundred each, mocked in each system's own native field style, one shared table: tools/samplegen/source_systems.py),
 then <pack>/<kind> for every kind of core, market-data, counterparty-risk and market-risk (universe.py). Each folder holds one file per
 business date named by the lake table it feeds, <table>.<YYYY-MM-DD>.jsonl.gz (docs/guides/DATA_LAKE_GUIDE.md section 5.2): the
 first day's the whole snapshot, each later day's what changed (history.py); the market-risk pack's VaR data (positions, P&L vectors, hierarchies, the
@@ -132,6 +133,9 @@ def main(argv=None) -> int:
         datasets.append({"folder": folder, "pack": "trading", "kind": "trade", "connector": f"trade-{system.lower()}", "key": "TRADE_ID",
                          "partition-by": ["PRODUCT_TYPE"], **hist})
         print(f"  {folder}: {len(book):,} trades")
+    # the mocked native trades of WSS, SwapOne and ICI, into one shared table (tools/samplegen/source_systems.py): no positions, no PVs
+    from samplegen import source_systems as SS  # noqa: E402
+    datasets += SS.datasets(out, days.dates)
     owners = delta_connectors(ROOT / "config" / "packs")
     market = MK.MarketDays(u.docs, days.dates)            # the market documents of each day, one coherent picture (QA2-201)
     for kind in sorted(u.docs):
