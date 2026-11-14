@@ -115,7 +115,9 @@ public class LiveSetConfiguration {
 
             @Override
             public java.util.Optional<LiveSetSpec> defaultFor(String kind) {
-                return defaultSpec(kind, searchProps.columnsOf(kind), router.columnar(kind), mnemonics.codeFor(kind));
+                java.util.Optional<LiveSetSpec> own = defaultSpec(kind, searchProps.columnsOf(kind), router.columnar(kind), mnemonics.codeFor(kind));
+                // a kind with no search columns and no promoted columns (a computed kind, such as a position, or a connector's): its contract
+                return own.isPresent() ? own : defaultSpec(kind, contractColumns(packs, kind), java.util.Set.of(), mnemonics.codeFor(kind));
             }
 
             @Override
@@ -299,6 +301,37 @@ public class LiveSetConfiguration {
             }
         }
         return java.util.Optional.empty();
+    }
+
+    /**
+     * A kind's columns from its data contract, for the default declaration when the kind has no search columns and no promoted columns:
+     * the contract's key fields, then its date field, then its other fields in the contract's order; empty when no loaded pack holds one.
+     */
+    static java.util.List<String> contractColumns(com.ash.drishti.packs.PackRegistry packs, String kind) {
+        for (com.ash.drishti.packs.Pack p : packs.packs()) {
+            if (!p.kinds().contains(kind) || p.dir() == null) {
+                continue;
+            }
+            Path f = p.dir().resolve("contracts").resolve(kind + ".contract.yaml");
+            if (!java.nio.file.Files.isRegularFile(f)) {
+                continue;
+            }
+            try {
+                com.fasterxml.jackson.databind.JsonNode n = new com.fasterxml.jackson.databind.ObjectMapper(
+                        new com.fasterxml.jackson.dataformat.yaml.YAMLFactory()).readTree(f.toFile());
+                java.util.Set<String> out = new java.util.LinkedHashSet<>();
+                n.path("key").forEach(x -> out.add(x.asText()));
+                if (n.hasNonNull("dated-by")) {
+                    out.add(n.path("dated-by").asText());
+                }
+                n.path("fields").forEach(x -> out.add(x.path("name").asText()));
+                out.removeIf(String::isBlank);
+                return new java.util.ArrayList<>(out);
+            } catch (java.io.IOException e) {
+                return java.util.List.of();
+            }
+        }
+        return java.util.List.of();
     }
 
     /** The top-level fields of one contract file ({@code fields} and {@code nested}); empty when it cannot be read or names none. */
