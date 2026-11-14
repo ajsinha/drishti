@@ -185,6 +185,13 @@ def test_every_button_of_the_one_explain(stack, browser):
     assert frm
     pg.locator(".dx-dates button[type=submit]").click()
     drawer_ready(pg, "why")
+    # Open as a page sits in the panel's header beside the title (seen without scrolling) and carries the scope, the compare date and the tab
+    btn = pg.locator(".dx-head [data-dx-page]")
+    assert btn.is_visible() and pg.locator(".dx-foot [data-dx-page]").count() == 0
+    box = btn.bounding_box()
+    assert box and 0 <= box["y"] < 160, box
+    href = btn.get_attribute("href")
+    assert "scope=BANK" in href and "tab=why" in href and ("from=" + frm) in href, href
     # the Workbook: its links, the .xlsx answers
     pg.locator('[data-dx-tab="workbook"]').click()
     drawer_ready(pg, "workbook")
@@ -218,6 +225,11 @@ def test_every_button_of_the_one_explain(stack, browser):
     assert pg.locator("[data-dx-part]").count() == 4
     assert pg.locator("[data-dx-print]").is_visible() and pg.locator("[data-dx-back]").get_attribute("href")
     shot(pg, "explain-page")
+    # Back returns to the screen exactly as it was (its address), not a fresh one
+    screen = "/var?scope=BANK"
+    pg.locator("[data-dx-back]").click()
+    pg.wait_for_url("**" + screen)
+    painted(pg, "BANK")
     pg.close()
 
 

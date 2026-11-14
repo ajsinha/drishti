@@ -61,3 +61,13 @@ def test_a_sutra_pages_engine_figures_carry_explain_of_their_scope(client):
     assert "&#34;scope&#34;: &#34;PORT:PF-USD-RATES&#34;" in html and "&#34;measure&#34;: &#34;es&#34;" in html
     vm["ref"] = {"kind": "counterparty", "id": "CP-1"}                          # a kind with no VaR scope word: no control
     assert "data-explain-link" not in t.render(vm=vm)
+
+
+def test_the_limits_screen_vlim_carries_explain_of_its_nodes_var(client):
+    """A VaR limit's page (VLIM): its figure explains the node's VaR (the id VL-<node>), a portfolio's limit its portfolio."""
+    t = client.app.state.templates.env.from_string('{% from "_macros/view.html" import strip %}{{ strip(vm) }}')
+    vm = {"ref": {"kind": "var-limit", "id": "VL-LL~LL-0003"}, "strip": [{"label": "Limit", "text": "8.5m", "path": "$.LIMIT_VAR"}]}
+    html = t.render(vm=vm)
+    assert html.count("data-explain-link") == 1 and "&#34;scope&#34;: &#34;NODE:LL~LL-0003&#34;" in html
+    vm["ref"]["id"] = "VL-PF-RATES"
+    assert "&#34;scope&#34;: &#34;PORT:PF-RATES&#34;" in t.render(vm=vm)

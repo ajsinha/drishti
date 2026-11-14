@@ -17,6 +17,8 @@
 
 ## Unreleased
 
+- **i4 carry-overs.** Why it moved: the scenario card is a date card (*Scenario of the VaR*, no unit; *moved from A to B* or *unchanged since A*) and the limit-use card carries no currency unit; the "1 week" compare date (and any picked date) rolls back to the nearest earlier date that has both P&L and a scenario set instead of failing with "no scenario set for <date>"; the Explain drawer's **Open as a page ›** is a button in its header carrying scope, dates, compare date and tab, and **Back to the screen** returns to the screen as it was; the VaR limit page (VLIM) carries Explain ›; the Iceberg refusal messages no longer name the removed `engine: library`; PLAY SIMM with no licensed parameter files answers `422` (`DRS-5333`) that the page explains, not 502; the landing page's tab title is the distribution's own tagline.
+
 - **Generated Sutras read like the hand-built deal screens** (`pack new`, `pack make`, Build's auto-design: one auto-designer): a list
   of records holding lists (legs with cash flows and resets) is tabs with terms, a notional profile or amounts-by-date chart, a tree
   table opening to the inner list and a fixings chart, plus every leg's cash flows in one schedule; a list of dated amounts (events)

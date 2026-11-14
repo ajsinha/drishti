@@ -1853,7 +1853,7 @@ exposure page's tiles, a cell of the MR cube. Numbers that can be explained are 
   - **Workbook**: the live-formula Excel (the explanation's workbook, the playground's export) where one exists.
   Under the tabs, the **checks** (inputs complete; a check not built yet is marked *Under construction*). **Esc** or **✕** closes it and
   the focus goes back to the number. On a phone the drawer is a sheet from the bottom.
-- **The page.** **Open as a page ›** shows all four parts at once, for an auditor or for printing (**Print**); its address names the
+- **The page.** **Open as a page ›** (a button in the drawer's header, beside the title; it carries the scope, dates, compare date and tab) shows all four parts at once, for an auditor or for printing (**Print**); its address names the
   number (`/explain?kind=var&measure=es&scope=DESK:RATES`), so it can be sent. `VAR EXPLAIN <scope> [from] [to]` opens it at Why it moved.
 
 Everything is computed and explained by the server for you, with your entitlements: an explanation never shows a row or an input you may

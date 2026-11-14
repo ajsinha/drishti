@@ -217,9 +217,14 @@ def figure_explain(vm, c) -> dict | None:
     ref, path = (vm or {}).get("ref") or {}, (c or {}).get("path") or ""
     for r in figure_explainers():
         word = (r.get("pages") or {}).get(ref.get("kind"))
-        for suffix, measure in (r.get("paths") or {}).items():
+        rid = str(ref.get("id"))
+        spec = (r.get("ids") or {}).get(ref.get("kind"))      # a page whose id is not the scope's: {strip: prefix to drop, words: {id prefix: scope word}}
+        if spec:
+            rid = rid.removeprefix(spec.get("strip", ""))
+            word = next((w for pre, w in (spec.get("words") or {}).items() if rid.startswith(pre)), word)
+        for suffix, measure in ((r.get("kind_paths") or {}).get(ref.get("kind")) or r.get("paths") or {}).items():
             if word and path.endswith(suffix):
-                return {"kind": r["kind"], "measure": measure, "scope": f"{word}:{ref.get('id')}"}
+                return {"kind": r["kind"], "measure": measure, "scope": f"{word}:{rid}"}
     return None
 
 

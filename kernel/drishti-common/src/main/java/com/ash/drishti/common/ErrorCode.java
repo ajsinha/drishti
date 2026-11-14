@@ -671,7 +671,9 @@ public enum ErrorCode {
     /** Virtual tables: a read refused (a date the source does not hold, known-at without history, too many rows, a condition on a masked column, a reader no rule names). */
     TABLE_READ("DRS-9615", 422),
     /** Virtual tables: a table named like a stored table (names are unique across virtual and stored tables). */
-    TABLE_NAME_CLASH("DRS-9616", 409);
+    TABLE_NAME_CLASH("DRS-9616", 409),
+    /** SIMM: the version asked for (or the default) has no installed ISDA parameter file, or its file is refused (SIMM_GUIDE.md section 4): a setup the person can fix, not a source failure. */
+    SIMM_NOT_INSTALLED("DRS-5333", 422);
 
     private final String code;
     private final int httpStatus;

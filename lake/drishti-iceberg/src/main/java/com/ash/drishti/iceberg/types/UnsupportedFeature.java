@@ -27,7 +27,7 @@ public final class UnsupportedFeature extends UnsupportedOperationException {
     private final String feature;
 
     public UnsupportedFeature(String feature) {
-        super("drishti-iceberg does not read " + feature + "; use the connector's engine: library for this table");
+        super("drishti-iceberg does not read " + feature + "; this table cannot be read: write it again as a format-version 2 Iceberg table with Parquet data files");
         this.feature = feature;
     }
 

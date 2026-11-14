@@ -57,7 +57,7 @@ class NativeRefusalTest {
         try (Catalog c = Catalogs.open(Map.of("root", root.toString(), "domain", "desk")); ExecutorService pool = Executors.newVirtualThreadPerTaskExecutor()) {
             var t = c.load("orcs").orElseThrow();
             assertThatThrownBy(() -> t.plan(t.currentSnapshot().orElseThrow(), Expr.TRUE, pool)).isInstanceOf(UnsupportedFeature.class)
-                    .hasMessageContaining("ORC data files").hasMessageContaining("part-0.orc").hasMessageContaining("engine: library");
+                    .hasMessageContaining("ORC data files").hasMessageContaining("part-0.orc").hasMessageContaining("write it again as a format-version 2").hasMessageNotContaining("engine: library");
             var s = c.load("secret").orElseThrow();
             assertThatThrownBy(() -> s.plan(s.currentSnapshot().orElseThrow(), Expr.TRUE, pool)).isInstanceOf(UnsupportedFeature.class)
                     .hasMessageContaining("encrypted data files").hasMessageContaining("part-0.parquet");

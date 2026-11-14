@@ -211,15 +211,16 @@ public final class SimmService {
         String v = asked == null || asked.isBlank() ? defaultVersion : asked.strip();
         String who = nettingSet == null ? "" : "; " + nettingSet + " is not computed";
         if (v.isBlank()) {
-            throw new DrishtiException(ErrorCode.SOURCE_FAILED, "DRS-5333 no SIMM version is installed (the licensed parameter files go in "
-                    + Path.of(props.parametersDir()).toAbsolutePath() + ", one a version: docs/guides/SIMM_GUIDE.md section 4)" + who);
+            throw new DrishtiException(ErrorCode.SIMM_NOT_INSTALLED, "DRS-5333 no SIMM version is installed: SIMM needs the ISDA parameter files "
+                    + "(licensed; see Help, SIMM guide, \"The licensed parameter file\"). They go in " + Path.of(props.parametersDir()).toAbsolutePath()
+                    + ", one a version" + who);
         }
         Version x = versions.get(v);
         if (x == null) {
-            throw new DrishtiException(ErrorCode.SOURCE_FAILED, "DRS-5333 SIMM " + v + " is not installed" + who);
+            throw new DrishtiException(ErrorCode.SIMM_NOT_INSTALLED, "DRS-5333 SIMM " + v + " is not installed" + who);
         }
         if (!x.ok()) {
-            throw new DrishtiException(ErrorCode.SOURCE_FAILED, x.problem() + who);
+            throw new DrishtiException(ErrorCode.SIMM_NOT_INSTALLED, x.problem() + who);
         }
         return x;
     }
