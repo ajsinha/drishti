@@ -25,7 +25,12 @@ import { ROW_KEY, ROW_VERSION, editItems, editSchema, linkFor, maskedPaths, chan
 
 const TERMINAL = ['applied', 'refused', 'conflicted', 'withdrawn', 'rejected', 'failed'];
 
-/** The words of a change's state, as a reader would say them. */
+/**
+ * The words of a change's state, as a reader would say them.
+ * @param {string} state awaiting, queued, applying, applied, refused ...
+ * @param {number} [needed] the approvals asked for
+ * @returns {string}
+ */
 export function stateWords(state, needed) {
   const s = String(state || '');
   if (s === 'awaiting') { return 'waiting for ' + (needed || 1) + ' approver' + ((needed || 1) === 1 ? '' : 's') + ' (four eyes)'; }
@@ -33,10 +38,18 @@ export function stateWords(state, needed) {
   return s || 'unknown';
 }
 
-/** Whether a change is still open (the tray lists these). */
+/**
+ * Whether a change is still open (the tray lists these).
+ * @param {{state: string}} change
+ * @returns {boolean}
+ */
 export function isPending(change) { return TERMINAL.indexOf(String(change.state || '')) < 0; }
 
-/** One change's items in a line: "PRICE 2.11 → 2.125". */
+/**
+ * One change's items in a line: "PRICE 2.11 → 2.125".
+ * @param {{items: Array<{path: string, from: *, to: *}>}} change
+ * @returns {string}
+ */
 export function itemsText(change) {
   return (change.items || []).map((i) => String(i.path || i.field) + ' ' + show(i.from) + ' → ' + show(i.to)).join(', ');
 }
@@ -70,7 +83,10 @@ export class RecordPanel {
   /** The record's key. */
   get key() { return this.id; }
 
-  /** Draws the panel's frame and the tab shown. */
+  /**
+   * Draws the panel's frame and the tab shown.
+   * @returns {void}
+   */
   draw() {
     if (this.form) { this.form.destroy(); this.form = null; }
     const d = this.doc;
@@ -90,6 +106,7 @@ export class RecordPanel {
     this.noteChange();
   }
 
+  /** @private the declaration's links for this row */
   links() {
     const d = this.doc;
     return h(d, 'div', { cls: 'dg-live-links' }, (this.spec.links || []).map((l) => {
@@ -99,6 +116,7 @@ export class RecordPanel {
   }
 
   // ---- Record -----------------------------------------------------------------------------------------------------------------------------
+  /** @private the Record tab: a form with a reason, or plain text when the person may not edit */
   drawRecord() {
     const d = this.doc, spec = this.spec;
     if (!spec.editable || !(spec.fields || []).length) {
@@ -115,12 +133,18 @@ export class RecordPanel {
       onSubmit: (values) => this.submit(values) });
   }
 
+  /** @private the words about where a saved change goes */
   approvalNote() {
     const a = this.spec.approval;
     return !a || a === 'none' ? 'Saved changes go to the source at once.' : 'The site asks for a second person: a change waits for an approver before it is sent.';
   }
 
-  /** Sends the edit; the server's answer (applied, queued, waiting for approval) or its refusal (a newer version, no rights) is said in words. */
+  /**
+   * Sends the edit on the version the panel opened; the server's answer (applied, queued, waiting for approval) or its refusal (a newer version,
+   * no rights) is said in words.
+   * @param {Object} values the form's values, by field id
+   * @returns {Promise<?Object>} the server's answer (null when nothing changed)
+   */
   submit(values) {
     const reason = String(values.reason || '').trim();
     const items = editItems(this.opened, values, this.spec.fields);
@@ -138,9 +162,11 @@ export class RecordPanel {
     });
   }
 
+  /** @private a line under the form */
   say(text, kind) { if (this.status) { this.status.textContent = text; this.status.setAttribute('data-kind', kind); } }
 
   // ---- History ----------------------------------------------------------------------------------------------------------------------------
+  /** @private the History tab */
   drawHistory() {
     const d = this.doc, list = h(d, 'div', { cls: 'dg-live-tl', data: { history: 'true' } });
     this.body.append(list);
@@ -157,6 +183,7 @@ export class RecordPanel {
   }
 
   // ---- Raw JSON ---------------------------------------------------------------------------------------------------------------------------
+  /** @private the Raw JSON tab */
   drawRaw() {
     const d = this.doc, tree = h(d, 'div', { cls: 'dg-live-json', data: { raw: 'true' }, attrs: { role: 'tree', 'aria-label': 'The stored record' } });
     const meta = h(d, 'span', { cls: 'dg-live-rawmeta', data: { rawVersion: '' } });
@@ -171,6 +198,7 @@ export class RecordPanel {
     this.loadRaw();
   }
 
+  /** @private reads the whole stored record */
   loadRaw() {
     return this.api.row(this.id).then((r) => {
       this.raw = r;
@@ -183,7 +211,15 @@ export class RecordPanel {
     }, (e) => { this.rawTree.textContent = ''; this.rawTree.append(h(this.doc, 'p', { cls: 'dg-live-note', text: e.message })); });
   }
 
-  /** One JSON value as a collapsible node (objects and arrays) or a typed leaf; a masked value is drawn as masked. */
+  /**
+   * One JSON value as a collapsible node (objects and arrays) or a typed leaf; a masked value is drawn as masked.
+   * @private
+   * @param {Document} d
+   * @param {*} v
+   * @param {string} name the key
+   * @param {number} depth
+   * @returns {HTMLElement}
+   */
   node(d, v, name, depth) {
     const label = name === '' ? null : h(d, 'span', { cls: 'dg-live-jk', text: name + ': ' });
     if (v && typeof v === 'object') {
@@ -198,9 +234,13 @@ export class RecordPanel {
       text: v === null ? 'null' : typeof v === 'string' ? '"' + v + '"' : String(v), attrs: { title: masked ? 'Masked for you: your role may not see this field' : null }, data: masked ? { masked: 'true' } : {} })]);
   }
 
+  /** @private opens or closes every node of the tree */
   fold(tree, open) { tree.querySelectorAll('details').forEach((x) => { x.open = open; }); }
 
-  /** Copies the record as JSON; a masked field stays the mask (the value was never sent). */
+  /**
+   * Copies the record as JSON; a masked field stays the mask (the value was never sent).
+   * @returns {Promise<void>}
+   */
   copyRaw() {
     if (!this.raw) { return Promise.resolve(); }
     const text = JSON.stringify(this.raw.doc, null, 2), masked = maskedPaths(this.raw.doc).length;
@@ -211,7 +251,11 @@ export class RecordPanel {
   }
 
   // ---- changes while it is open -----------------------------------------------------------------------------------------------------------
-  /** The grid's row for the record changed (a tick or an edit applied elsewhere). */
+  /**
+   * The grid's row for the record changed (a tick or an edit applied elsewhere).
+   * @param {Object} row
+   * @returns {void}
+   */
   update(row) {
     const before = this.row;
     this.row = row;
@@ -219,7 +263,10 @@ export class RecordPanel {
     this.noteChange();
   }
 
-  /** Says when the record moved since the panel opened it (its version is not the one the panel read), with Reload. */
+  /**
+   * Says when the record moved since the panel opened it (its version is not the one the panel read), with Reload.
+   * @returns {void}
+   */
   noteChange() {
     if (!this.banner) { return; }
     const moved = this.row[ROW_VERSION] !== this.openedVersion || (this.rawVersion !== undefined && this.row[ROW_VERSION] !== this.rawVersion);
@@ -231,7 +278,10 @@ export class RecordPanel {
       h(d, 'button', { cls: 'dg-live-btn', text: 'Reload', data: { act: 'reload' }, attrs: { type: 'button' }, on: { click: () => this.reload() } }));
   }
 
-  /** Opens the record again as it is now (an edit made on the older version would be refused). */
+  /**
+   * Opens the record again as it is now (an edit made on the older version would be refused).
+   * @returns {void}
+   */
   reload() {
     this.opened = Object.assign({}, this.row);
     this.openedVersion = this.row[ROW_VERSION];
@@ -239,5 +289,9 @@ export class RecordPanel {
     this.draw();
   }
 
+  /**
+   * Takes the panel away.
+   * @returns {void}
+   */
   destroy() { if (this.form) { this.form.destroy(); this.form = null; } this.host.textContent = ''; this.host.removeAttribute('data-record'); }
 }

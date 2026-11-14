@@ -7128,6 +7128,10 @@ Returns `LiveFeed & {push: function(LiveMessage): void}`.
 
 The grid row's key and version properties (the record's own fields keep their names).
 
+#### `ROW_VERSION`
+
+The grid row's version property.
+
 #### `WINDOW_ROWS`
 
 The most rows the page window names at once (the server's page is 5,000); a set larger than the grid holds is windowed.
@@ -7155,6 +7159,10 @@ Returns `Object[]`.
 #### class `LiveRows`
 
 The rows a set holds, by key and version.
+
+##### `new LiveRows()`
+
+An empty set of rows.
 
 ##### `LiveRows.load(rows, total, seq)`
 
@@ -7286,13 +7294,32 @@ Returns `{rows: Function, row: Function, edit: Function, window: Function, histo
 
 The words of a change's state, as a reader would say them.
 
+| Parameter | Type | Meaning |
+|---|---|---|
+| `state` | `string` | awaiting, queued, applying, applied, refused ... |
+| `[needed]` | `number` | the approvals asked for |
+
+Returns `string`.
+
 #### `isPending(change)`
 
 Whether a change is still open (the tray lists these).
 
+| Parameter | Type | Meaning |
+|---|---|---|
+| `change` | `{state: string}` |  |
+
+Returns `boolean`.
+
 #### `itemsText(change)`
 
 One change's items in a line: "PRICE 2.11 → 2.125".
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `change` | `{items: Array&lt;{path: string, from: *, to: *}&gt;}` |  |
+
+Returns `string`.
 
 #### class `RecordPanel`
 
@@ -7309,29 +7336,51 @@ The record panel.
 
 Draws the panel's frame and the tab shown.
 
+Returns `void`.
+
 ##### `RecordPanel.submit(values)`
 
-Sends the edit; the server's answer (applied, queued, waiting for approval) or its refusal (a newer version, no rights) is said in words.
+Sends the edit on the version the panel opened; the server's answer (applied, queued, waiting for approval) or its refusal (a newer version, no rights) is said in words.
 
-##### `RecordPanel.node(d, v, name, depth)`
+| Parameter | Type | Meaning |
+|---|---|---|
+| `values` | `Object` | the form's values, by field id |
 
-One JSON value as a collapsible node (objects and arrays) or a typed leaf; a masked value is drawn as masked.
+Returns `Promise&lt;?Object&gt;`: the server's answer (null when nothing changed).
 
 ##### `RecordPanel.copyRaw()`
 
 Copies the record as JSON; a masked field stays the mask (the value was never sent).
 
+Returns `Promise&lt;void&gt;`.
+
 ##### `RecordPanel.update(row)`
 
 The grid's row for the record changed (a tick or an edit applied elsewhere).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `row` | `Object` |  |
+
+Returns `void`.
 
 ##### `RecordPanel.noteChange()`
 
 Says when the record moved since the panel opened it (its version is not the one the panel read), with Reload.
 
+Returns `void`.
+
 ##### `RecordPanel.reload()`
 
 Opens the record again as it is now (an edit made on the older version would be refused).
+
+Returns `void`.
+
+##### `RecordPanel.destroy()`
+
+Takes the panel away.
+
+Returns `void`.
 
 ### drishti_live-set.js
 
@@ -7360,29 +7409,79 @@ Returns `Promise&lt;LiveSetGrid&gt;`.
 
 Starts again from a fresh snapshot (the server could not keep up, the connection came back, or a person resumed).
 
+Returns `Promise&lt;void&gt;`.
+
 ##### `LiveSetGrid.pause(on)`
 
 Pauses the grid (rows that arrive are not applied) or resumes it from a fresh snapshot.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `on` | `boolean` |  |
+
+Returns `void`.
 
 ##### `LiveSetGrid.sendWindow()`
 
 Tells the server the page this viewer shows: the ids in view and a margin, or all when the viewer holds the whole set.
 
+Returns `Promise&lt;void&gt;`.
+
+##### `LiveSetGrid.group(field)`
+
+Groups the rows by a field (none: ungrouped); the subtotal columns follow the ticks.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `field` | `string` |  |
+
+Returns `void`.
+
+##### `LiveSetGrid.open(row)`
+
+Opens a row's record panel.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `row` | `Object` | the grid's row |
+
+Returns `void`.
+
+##### `LiveSetGrid.close()`
+
+Closes the record panel.
+
+Returns `void`.
+
 ##### `LiveSetGrid.loadTray()`
 
 The person's changes still open (waiting for an approver, on their way to the source), in the tray.
+
+Returns `Promise&lt;Object[]&gt;`.
 
 ##### `LiveSetGrid.filterMembers()`
 
 The filters on the grid as members of the fields they filter (a set filter), for the Pivot.
 
+Returns `Object&lt;string, string[]&gt;`.
+
 ##### `LiveSetGrid.pivotAddress()`
 
-The Pivot for the same kind, filters, grouping and numbers; live when the kind is.
+The address of the Pivot for the same kind, filters, grouping and numbers; live when the kind is.
+
+Returns `string`.
+
+##### `LiveSetGrid.toPivot()`
+
+Hands over to the Pivot (the navigate option, else the page's address is set).
+
+Returns `void`.
 
 ##### `LiveSetGrid.destroy()`
 
 Stops following and takes the grid and the panel away.
+
+Returns `void`.
 
 ### drishti_plain-render.js
 

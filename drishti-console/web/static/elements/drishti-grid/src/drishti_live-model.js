@@ -23,6 +23,7 @@ import { MASK, hasFormat } from '../../drishti-core/src/drishti_index.js';
 
 /** The grid row's key and version properties (the record's own fields keep their names). */
 export const ROW_KEY = '__id';
+/** The grid row's version property. */
 export const ROW_VERSION = '__v';
 
 /** The most rows the page window names at once (the server's page is 5,000); a set larger than the grid holds is windowed. */
@@ -69,6 +70,7 @@ export function gridColumns(spec) {
  * The rows a set holds, by key and version.
  */
 export class LiveRows {
+  /** An empty set of rows. */
   constructor() { this.byId = new Map(); this.total = 0; this.seq = 0; }
 
   /** @returns {number} how many rows are held */

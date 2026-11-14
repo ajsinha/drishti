@@ -15,9 +15,9 @@
  */
 /* The page of one live result set (/live/<id>): hands the declaration, the /api/live calls and the console's one live channel (the
    subscription live:<id>) to drishti-grid's live mode (LiveSetGrid). Nothing else is drawn here. */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 (function () {
   'use strict';
-  window.Drishti = window.Drishti || {};
   var root = document.querySelector('[data-live-page]');
   if (!root) { return; }
   var grid = window.Drishti.elements && window.Drishti.elements.grid;

@@ -75,6 +75,7 @@ export class LiveSetGrid {
   }
 
   // ---- the frame ----------------------------------------------------------------------------------------------------------------------------
+  /** @private the frame: the bar, the grid and the panel, the tray */
   build() {
     const d = this.doc, spec = this.spec;
     this.host.classList.add('dg-liveset');
@@ -96,6 +97,7 @@ export class LiveSetGrid {
     this.host.append(this.bar, h(d, 'div', { cls: 'dg-live-split' }, [this.gridHost, this.panelHost]), this.trayHost);
   }
 
+  /** @private the status chip */
   setState(s, note) {
     this.state = s;
     this.status.setAttribute('data-state', s);
@@ -128,6 +130,7 @@ export class LiveSetGrid {
     });
   }
 
+  /** @private reads the set's rows */
   snapshot() {
     const s = this.spec.sort || {};
     return this.api.rows({ limit: this.o.snapshotRows || SNAPSHOT_ROWS, sort: s.field, descending: s.descending ? 'true' : '' }).then((r) => {
@@ -138,7 +141,10 @@ export class LiveSetGrid {
     });
   }
 
-  /** Starts again from a fresh snapshot (the server could not keep up, the connection came back, or a person resumed). */
+  /**
+   * Starts again from a fresh snapshot (the server could not keep up, the connection came back, or a person resumed).
+   * @returns {Promise<void>}
+   */
   resync() {
     this.stats.resyncs++;
     this.pending = [];
@@ -151,6 +157,7 @@ export class LiveSetGrid {
   }
 
   // ---- the stream -----------------------------------------------------------------------------------------------------------------------------
+  /** @private the stream's hello */
   onHello(m) {
     this.stream = m.stream;
     this.hellos++;
@@ -160,6 +167,7 @@ export class LiveSetGrid {
     this.sendWindow();
   }
 
+  /** @private a rows event: merged by key and version, applied as one batch */
   onRows(ev) {
     if (this.paused) { return; }
     const tx = this.rows.merge(ev, this.paged);
@@ -172,7 +180,11 @@ export class LiveSetGrid {
     this.setState('live');
   }
 
-  /** Pauses the grid (rows that arrive are not applied) or resumes it from a fresh snapshot. */
+  /**
+   * Pauses the grid (rows that arrive are not applied) or resumes it from a fresh snapshot.
+   * @param {boolean} on
+   * @returns {void}
+   */
   pause(on) {
     this.paused = !!on;
     this.pauseBtn.textContent = on ? 'Resume' : 'Pause';
@@ -181,13 +193,17 @@ export class LiveSetGrid {
   }
 
   // ---- the page window ------------------------------------------------------------------------------------------------------------------------
+  /** @private the window after the scroll settles */
   windowSoon() {
     if (!this.paged) { return; }
     clearTimeout(this.timer);
     this.timer = setTimeout(() => this.sendWindow(), WINDOW_DELAY_MS);
   }
 
-  /** Tells the server the page this viewer shows: the ids in view and a margin, or all when the viewer holds the whole set. */
+  /**
+   * Tells the server the page this viewer shows: the ids in view and a margin, or all when the viewer holds the whole set.
+   * @returns {Promise<void>}
+   */
   sendWindow() {
     if (!this.stream || !this.grid) { return Promise.resolve(); }
     const m = this.grid.model;
@@ -203,8 +219,18 @@ export class LiveSetGrid {
   }
 
   // ---- grouping, the panel, the tray, the Pivot -----------------------------------------------------------------------------------------------
+  /**
+   * Groups the rows by a field (none: ungrouped); the subtotal columns follow the ticks.
+   * @param {string} field
+   * @returns {void}
+   */
   group(field) { this.grid.model.setRowGroups(field ? [field] : []); this.grid.refresh(); }
 
+  /**
+   * Opens a row's record panel.
+   * @param {Object} row the grid's row
+   * @returns {void}
+   */
   open(row) {
     if (this.panel && this.panel.key === row[ROW_KEY]) { return; }
     if (this.panel) { this.panel.destroy(); }
@@ -214,19 +240,27 @@ export class LiveSetGrid {
       onSaved: () => this.loadTray(), onClose: () => this.close() });
   }
 
+  /**
+   * Closes the record panel.
+   * @returns {void}
+   */
   close() {
     if (this.panel) { this.panel.destroy(); this.panel = null; }
     this.panelHost.hidden = true;
     this.host.removeAttribute('data-panel');
   }
 
+  /** @private the open panel's row after a snapshot */
   refreshPanel() {
     if (!this.panel) { return; }
     const fresh = this.rows.byId.get(this.panel.key);
     if (fresh) { this.panel.update(fresh); }
   }
 
-  /** The person's changes still open (waiting for an approver, on their way to the source), in the tray. */
+  /**
+   * The person's changes still open (waiting for an approver, on their way to the source), in the tray.
+   * @returns {Promise<Object[]>}
+   */
   loadTray() {
     if (!this.spec.tray || !this.api.mine) { return Promise.resolve([]); }
     return this.api.mine(this.spec.kind).then((r) => {
@@ -236,6 +270,7 @@ export class LiveSetGrid {
     }, () => []);
   }
 
+  /** @private the tray's rows */
   drawTray() {
     const d = this.doc;
     this.trayBtn.textContent = 'My changes (' + this.pending.length + ')';
@@ -246,31 +281,45 @@ export class LiveSetGrid {
       ' · ', itemsText(c), h(d, 'span', { cls: 'dg-live-state', text: ' (' + stateWords(c.state, c.needed) + ')' })])));
   }
 
+  /** @private shows or hides the tray */
   toggleTray() {
     this.trayHost.hidden = !this.trayHost.hidden;
     this.trayBtn.setAttribute('aria-expanded', this.trayHost.hidden ? 'false' : 'true');
     if (!this.trayHost.hidden) { this.loadTray(); }
   }
 
-  /** The filters on the grid as members of the fields they filter (a set filter), for the Pivot. */
+  /**
+   * The filters on the grid as members of the fields they filter (a set filter), for the Pivot.
+   * @returns {Object<string, string[]>}
+   */
   filterMembers() {
     const out = {}, fm = this.grid.model.filterModel || {};
     Object.keys(fm).forEach((k) => { const f = fm[k]; if (f && f.type === 'set' && Array.isArray(f.values) && f.values.length) { out[k] = f.values.slice(); } });
     return out;
   }
 
-  /** The Pivot for the same kind, filters, grouping and numbers; live when the kind is. */
+  /**
+   * The address of the Pivot for the same kind, filters, grouping and numbers; live when the kind is.
+   * @returns {string}
+   */
   pivotAddress() {
     const groups = this.grid.model.rowModel.groupBy || [];
     return pivotHref(pivotLayout(this.spec, { groupBy: groups.slice(), filters: this.filterMembers() }), this.live);
   }
 
+  /**
+   * Hands over to the Pivot (the navigate option, else the page's address is set).
+   * @returns {void}
+   */
   toPivot() {
     const href = this.pivotAddress();
     if (this.o.navigate) { this.o.navigate(href); } else { this.doc.defaultView.location.assign(href); }
   }
 
-  /** Stops following and takes the grid and the panel away. */
+  /**
+   * Stops following and takes the grid and the panel away.
+   * @returns {void}
+   */
   destroy() {
     clearTimeout(this.timer);
     if (this.off) { this.off(); this.off = null; }
