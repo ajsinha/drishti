@@ -243,7 +243,6 @@ builder:                     # Build workbench, New (/build/new); docs/guides/RA
   pack_designer_ttl_hours: 72     # Build -> New pack: hours a workspace untouched is kept before it is removed
   pack_designer_jobs_per_user: 2  # Build -> New pack: jobs (reading the files, making the module) one person may have running
   pack_designer_workers: 0        # Build -> New pack: processes reading the files in a job (0: the tool's default, a third of the cores, at most 8)
-  pack_designer_site:             # Build -> New pack: the config folder the data bindings are written to (empty: each workspace's own site/ folder)
   pack_designer_modules_dir:       # Build -> New pack: the modules folder 'Install on this node' copies the .dmod to (empty: DRISHTI_MODULES_PATH, else <data folder>/modules)
   pack_load_max_mb: 2048     # Admin -> Packs -> a pack -> Load data: the largest file the console streams on to the server (which has drishti.loads.upload-max-mb)
   tools_dir: ../tools        # the repository's tools/ folder (the Pack designer runs tools/packgen/designer_job.py from it); relative to drishti-console/
