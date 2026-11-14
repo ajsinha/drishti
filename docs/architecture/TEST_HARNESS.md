@@ -510,7 +510,7 @@ role user, over HTTP only. It checks the status, the title, content present and 
   in the test sources: `covered by tests: <test> (<file>:<line>)`), and one with no test is marked `NO TEST`. The writes are never called on a
   shared stack; they are the tests' business.
 - **The drill step** is `drishti-console/tests/test_api_sweep_browser.py` in the browser lane, on the page walk's server and its cached lake,
-  HTTP only and quick; any FAIL fails the drill. `DRISHTI_PAGEWALK_BASE` with `DRISHTI_SWEEP_SERVER` sweeps a stack already running.
+  HTTP only and quick; any FAIL fails the drill. `DRISHTI_PAGEWALK_BASE` (the console) with the server URL in the test's own environment variable sweeps a stack already running.
 
 ```bash
 python3 tools/sweep/api_sweep.py --console http://host:27480 --server http://host:28480 --admin USER --admin-password PW
