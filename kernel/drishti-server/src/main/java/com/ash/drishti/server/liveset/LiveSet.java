@@ -565,6 +565,15 @@ public final class LiveSet implements AutoCloseable {
         }
     }
 
+    /**
+     * True when the declaration's own order is newest first: descending by its {@code changed-at} or its version, so a new or changed row
+     * takes the first place (the trade blotter's {@code sort: {field: SOURCE_UPDATE_TIME, descending: true}}).
+     */
+    boolean newestFirst() {
+        String by = spec.sortField();
+        return by != null && spec.descending() && (by.equals(spec.changedAt()) || by.equals(spec.version()));
+    }
+
     /** Opens a reader's window. */
     Window window(LiveReader reader, Consumer<Map<String, Object>> sink, int capacity) {
         Window w = new Window(reader == null ? LiveReader.everyone() : reader, sink, capacity);
@@ -599,6 +608,8 @@ public final class LiveSet implements AutoCloseable {
         private boolean overflow;
         private boolean totalChanged;
         private volatile Set<String> visible;             // null: the viewer holds every row
+        private boolean atTop;                            // the viewer's page starts at the first row of the declared order
+        private Set<String> inserts = new java.util.LinkedHashSet<>();
 
         Window(LiveReader reader, Consumer<Map<String, Object>> sink, int capacity) {
             this.reader = reader;
@@ -608,7 +619,22 @@ public final class LiveSet implements AutoCloseable {
 
         /** The rows the viewer shows (a page), or null when it holds them all. */
         public void paged(Set<String> ids) {
-            visible = ids == null ? null : Set.copyOf(ids);
+            paged(ids, false);
+        }
+
+        /**
+         * The rows the viewer shows; {@code top}: its page starts at the first row of the declaration's own order. In a newest-first order
+         * ({@link #newestFirst}) a new or changed row lands there, so it is sent to that viewer to insert on top (listed in the event's
+         * {@code top}) and its page holds it from then on; any other viewer is sent the new total only (the grid offers "N new").
+         */
+        public void paged(Set<String> ids, boolean top) {
+            wl.lock();
+            try {
+                visible = ids == null ? null : new java.util.HashSet<>(ids);
+                atTop = top;
+            } finally {
+                wl.unlock();
+            }
         }
 
         /** Asks the viewer to read its page again (the live side dropped rows the store holds). */
@@ -616,6 +642,7 @@ public final class LiveSet implements AutoCloseable {
             wl.lock();
             try {
                 pending = new LinkedHashMap<>();
+                inserts = new java.util.LinkedHashSet<>();
                 overflow = true;
             } finally {
                 wl.unlock();
@@ -627,14 +654,22 @@ public final class LiveSet implements AutoCloseable {
             wl.lock();
             try {
                 Set<String> v = visible;
+                boolean insert = false;
                 if (v != null && !v.contains(id)) {
-                    totalChanged = true;                      // not on the viewer's page: only the count moves
-                    return;
+                    if (!(atTop && mine != null && newestFirst())) {
+                        totalChanged = true;                  // not on the viewer's page: only the count moves
+                        return;
+                    }
+                    insert = true;                            // new or changed in a newest-first order: on top of the viewer's page
+                    v.add(id);
                 }
                 if (overflow) {
                     return;
                 }
                 pending.put(id, mine);
+                if (insert) {
+                    inserts.add(id);
+                }
                 if (pending.size() > capacity) {
                     pending = new LinkedHashMap<>();
                     overflow = true;
@@ -647,6 +682,7 @@ public final class LiveSet implements AutoCloseable {
         /** Sends what waits: one {@code rows} event (upserts, removes, total, seq), or one {@code resync}. True when it sent. */
         boolean flush() {
             Map<String, Row> take;
+            Set<String> top;
             boolean resync;
             boolean count;
             wl.lock();
@@ -656,6 +692,8 @@ public final class LiveSet implements AutoCloseable {
                 }
                 take = pending;
                 pending = new LinkedHashMap<>();
+                top = inserts;
+                inserts = new java.util.LinkedHashSet<>();
                 resync = overflow;
                 count = totalChanged;
                 overflow = false;
@@ -680,6 +718,9 @@ public final class LiveSet implements AutoCloseable {
                 ev.put("type", "rows");
                 ev.put("upserts", up);
                 ev.put("removes", rm);
+                if (!top.isEmpty()) {
+                    ev.put("top", List.copyOf(top));         // rows the viewer's page did not hold: inserted on top
+                }
                 ev.put("countOnly", up.isEmpty() && rm.isEmpty() && count);
             }
             ev.put("total", total(reader, false));           // the flush thread never reads the store

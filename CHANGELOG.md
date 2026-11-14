@@ -18,6 +18,15 @@
 
 ## Unreleased
 
+- **Trade blotter: new trades on top, the lake's trades in the snapshot, a trade-editor role.** A blotter whose own order is newest
+  first (`sort:` descending by its `changed-at` or version) puts new and changed rows on top: a paged viewer at the top of that order is
+  sent them to insert (`top` in the `rows` event, `top: true` in its window) and the grid keeps the declaration's order, so a new trade
+  shows first within the flush; a viewer scrolled away gets the count and an **N new** button. The snapshot reads the lake by its columns
+  even when the order is by a field the lake keeps only in its documents (the update time): the lake's records follow the live rows in
+  key order instead of every document being read, so the blotter holds the lake's trades and the streamed ones merged by key and version.
+  The trading pack ships the **`trade-editor`** role (`edit: true` on trades); `trader` alone reads (pack roles may now carry `edit:`).
+  (docs/guides/LIVE_RESULTS_GUIDE.md sections 3 and 7)
+
 - **Documentation consolidated: fewer, larger documents.** Each risk measure's tutorial is the last part of its guide (VaR, exposure, FRTB-SA, SIMM);
   one BI guide holds the pivot, virtual tables and models, reports, the Notebook and the groupings, each with its tutorial; one World and public data guide holds
   the funds, the external feeds and the public sector with their two tutorials; the Arrow Flight reference joins the Flight guide; the source-system tutorial

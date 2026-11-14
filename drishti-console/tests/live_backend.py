@@ -56,6 +56,8 @@ class LiveBackend(ChartBackend):
         self.editable = editable
         self.edits = []                                   # the edit bodies the server was sent
         self.windows = []                                 # the windows the viewer named
+        self.order = {"field": "TRADE_ID", "descending": False}   # the declaration's own order (the trade blotter's: newest first)
+        self.page = None                                  # the most rows a snapshot gives (None: all): fewer makes the viewer paged
         self.raw_reads = 0
         self.changes = []                                 # the write-back's change list (the tray, a record's history)
         self.queue = None
@@ -65,7 +67,7 @@ class LiveBackend(ChartBackend):
     # -- what a test does to the server ------------------------------------------------------------------------------------------------------
     def spec(self) -> dict:
         s = {"id": "trade", "title": "Trade blotter", "kind": "trade", "query": "trade", "key": "TRADE_ID", "version": "TRADE_VERSION", "changedBy": "UPDATED_BY",
-             "changedAt": "SOURCE_UPDATE_TIME", "columns": COLUMNS, "groupBy": [], "subtotals": ["QUANTITY"], "sort": {"field": "TRADE_ID", "descending": False},
+             "changedAt": "SOURCE_UPDATE_TIME", "columns": self.columns(), "groupBy": [], "subtotals": ["QUANTITY"], "sort": dict(self.order),
              "links": [{"label": "Explain", "href": "/explain/trade/{TRADE_ID}"}, {"label": "VaR", "href": "/var?scope=book:{PORTFOLIO}"},
                        {"label": "Limits", "href": "/limits?book={PORTFOLIO}"}], "retention": None, "tray": True, "module": "trading",
              "editable": self.editable, "readOnly": None if self.editable else "your role holds no edit power"}
@@ -76,15 +78,24 @@ class LiveBackend(ChartBackend):
             s.update({"fields": FIELDS, "approval": "none", "reason": "optional"})
         return s
 
+    def columns(self) -> list:
+        """The declaration's columns; ordered by a field it does not show (newest first: the update time), that column too, as the
+        trade blotter declares it."""
+        f = self.order["field"]
+        return COLUMNS if any(c["field"] == f for c in COLUMNS) else COLUMNS + [{"field": f, "label": "Updated", "type": "datetime"}]
+
     def shown(self, doc: dict) -> dict:
         return {"id": doc["TRADE_ID"], "version": doc["TRADE_VERSION"], "seq": self.seq, "doc": copy.deepcopy(doc)}
 
-    def push(self, upserts=(), removes=(), kind="rows") -> None:
-        """Sends one stream event from the test's thread: a rows event of these records (already changed in ``docs``), or a resync."""
+    def push(self, upserts=(), removes=(), kind="rows", top=(), count_only=False) -> None:
+        """Sends one stream event from the test's thread: a rows event of these records (already changed in ``docs``), or a resync; ``top``:
+        the rows a paged viewer at the top of a newest-first order inserts (LiveSet.Window); ``count_only``: only the total moved."""
         self.seq += 1
         ev = {"type": kind, "total": len(self.docs), "seq": self.seq}
         if kind == "rows":
-            ev.update({"upserts": [self.shown(self.docs[i]) for i in upserts], "removes": list(removes), "countOnly": False})
+            ev.update({"upserts": [self.shown(self.docs[i]) for i in upserts], "removes": list(removes), "countOnly": count_only})
+            if top:
+                ev["top"] = list(top)
         else:
             ev["reason"] = "more than 5000 records changed before they could be sent"
         if self.loop is None:
@@ -111,8 +122,9 @@ class LiveBackend(ChartBackend):
                 raise BackendError(404, "DRS-1001", "no such trade")
             return self.shown(d)
         if path.startswith("/live/trade/rows"):
-            rows = sorted(self.docs.values(), key=lambda t: t["TRADE_ID"])
-            return {"set": self.spec(), "live": True, "total": len(rows), "seq": self.seq, "offset": 0, "rows": [self.shown(t) for t in rows]}
+            f = self.order["field"]
+            rows = sorted(self.docs.values(), key=lambda t: (str(t.get(f)), t["TRADE_ID"]), reverse=self.order["descending"])
+            return {"set": self.spec(), "live": True, "total": len(rows), "seq": self.seq, "offset": 0, "rows": [self.shown(t) for t in rows[:self.page]]}
         if path.endswith("/window"):
             self.windows.append(kw.get("json"))
             return {"stream": "x", "paged": not (kw.get("json") or {}).get("all")}

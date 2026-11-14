@@ -263,4 +263,104 @@ class StorePagesTest {
         }
         return 0;
     }
+
+    /** A lake of trades that keeps TRADE_ID and TRADE_STATUS as columns, the update time only in each document (as the demo lake does). */
+    static final class Lake implements LiveSets.Sources {
+        final Map<String, DataNode> docs = new LinkedHashMap<>();
+        final List<Consumer<EntityDocument>> listeners = new CopyOnWriteArrayList<>();
+        final List<List<String>> asked = new CopyOnWriteArrayList<>();
+
+        Lake(int n) {
+            for (int i = 0; i < n; i++) {
+                String id = String.format("L%05d", i);
+                docs.put(id, doc(id, 1, "NEW", "2026-11-13T09:00:00Z"));
+            }
+        }
+
+        static DataNode doc(String id, long v, String status, String at) {
+            return DataNode.of(new LinkedHashMap<>(Map.of("TRADE_ID", id, "TRADE_VERSION", v, "TRADE_STATUS", status, "SOURCE_UPDATE_TIME", at)));
+        }
+
+        void stream(String id, long v, String at) {
+            EntityDocument d = new EntityDocument(EntityRef.of("trade", id), doc(id, v, "NEW", at), new Provenance("trade-kafka", v, Instant.now(), true));
+            listeners.forEach(l -> l.accept(d));
+        }
+
+        @Override
+        public boolean snapshot(String kind, String query, Consumer<EntityDocument> sink) {
+            throw new AssertionError("a lake-backed set never reads every document");
+        }
+
+        @Override
+        public Subscription subscribe(String kind, Consumer<EntityDocument> listener) {
+            listeners.add(listener);
+            return () -> listeners.remove(listener);
+        }
+
+        @Override
+        public Predicate<DataNode> condition(String query) {
+            return d -> !"CANCELLED".equals(d.get("TRADE_STATUS").asText());
+        }
+
+        @Override
+        public Optional<List<String>> fields(String query) {
+            return Optional.of(List.of("TRADE_STATUS"));
+        }
+
+        @Override
+        public Optional<StorePages.Store> store(String kind) {
+            return Optional.of(new StorePages.Store() {
+                @Override
+                public String version() {
+                    return "v1";
+                }
+
+                @Override
+                public boolean column(String field) {
+                    return field.equals("TRADE_ID") || field.equals("TRADE_STATUS");
+                }
+
+                @Override
+                public boolean project(List<String> fields, StorePages.Projection sink) {
+                    asked.add(fields);
+                    docs.forEach((id, d) -> sink.row(id, fields.stream().map(f -> d.get(f).unwrap()).toArray()));
+                    return true;
+                }
+
+                @Override
+                public Map<String, DataNode> fetch(Collection<String> want) {
+                    Map<String, DataNode> out = new LinkedHashMap<>();
+                    want.forEach(id -> {
+                        if (docs.containsKey(id)) {
+                            out.put(id, docs.get(id));
+                        }
+                    });
+                    return out;
+                }
+            });
+        }
+    }
+
+    @Test
+    void aBlotterHoldsTheLakesTradesAndTheStreamedOnesMergedByKeyAndVersionNewestFirst() throws Exception {
+        Lake lake = new Lake(1_000);
+        LiveSetSpec spec = LiveSetSpec.parse(new LinkedHashMap<>(Map.of("blotter", "trade", "kind", "trade", "query", "trade where TRADE_STATUS != 'CANCELLED'",
+                "key", "TRADE_ID", "version", "TRADE_VERSION", "changed-at", "SOURCE_UPDATE_TIME", "columns", List.of("TRADE_ID", "TRADE_STATUS"),
+                "sort", Map.of("field", "SOURCE_UPDATE_TIME", "descending", true))), "trade.blotter.yaml", "trading");
+        try (LiveSets sets = new LiveSets(lake, Clock.systemUTC(), 20, 100)) {
+            sets.add(spec);
+            LiveSet s = sets.open(spec, null);
+            assertThat(s.paged()).isTrue();
+            lake.stream("S00001", 1, "2026-11-14T10:00:01Z");          // streamed: not in the lake
+            lake.stream("S00002", 1, "2026-11-14T10:00:03Z");
+            lake.stream("L00500", 2, "2026-11-14T10:00:02Z");          // a lake trade amended on the stream: one row, its new version
+            lake.stream("L00500", 1, "2026-11-14T09:59:00Z");          // an older version arriving late never goes back
+            LiveSet.Page p = s.page(0, 6, null, false, null, null);
+            assertThat(ids(p)).containsExactly("S00002", "L00500", "S00001", "L00000", "L00001", "L00002");
+            assertThat(p.total()).isEqualTo(1_002);                    // the lake's thousand and the two new ones
+            assertThat(p.rows().get(1).get("version")).isEqualTo(2L);
+            assertThat(ids(s.page(0, 2_000, null, false, null, null))).doesNotHaveDuplicates().hasSize(1_002);
+            assertThat(lake.asked).allSatisfy(f -> assertThat(f).doesNotContain("SOURCE_UPDATE_TIME"));   // the lake read by its columns only
+        }
+    }
 }

@@ -480,6 +480,12 @@ roles:
     - clearing-account
     - desk-pnl
     calc: true
+  # the power to change trades through the trade blotter (modules/trading, docs/guides/LIVE_RESULTS_GUIDE.md "Editing"): given beside
+  # trader to the people who amend trades; trader alone reads and never writes. The blotter's fields say which a trade-editor may change.
+  trade-editor:
+    kinds:
+    - trade
+    edit: true
 lake:
   tables:
     trading.trade_endur:

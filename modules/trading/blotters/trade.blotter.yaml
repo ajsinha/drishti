@@ -48,7 +48,7 @@ tray: true                              # the tray of the person's changes waiti
 edit:                                   # a Rachana form (RACHANA_REFERENCE.md, forms): who may change what, with its checks
   edit: cells
   key: trade_id
-  roles: [trader, middle-office, admin]
+  roles: [trade-editor, trader, middle-office, admin]   # who may change a field; the edit power comes with trade-editor (the trading pack)
   fields:
   - { id: trade_id, label: Trade, bind: TRADE_ID, readonly: true }
   - { id: book, label: Book, bind: PORTFOLIO, required: true, pattern: "BOOK-[A-Z0-9-]+" }

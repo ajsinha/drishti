@@ -94,6 +94,9 @@ export class LiveSetGrid {
     this.host.classList.add('dg-liveset');
     this.host.setAttribute('data-live-set', spec.id);
     this.status = h(d, 'span', { cls: 'dg-live-chip', attrs: { role: 'status', 'aria-live': 'polite' }, data: { state: this.state } });
+    this.newRows = 0;
+    this.newBtn = this.static ? null : h(d, 'button', { cls: 'dg-live-btn dg-live-new', text: '0 new', data: { act: 'new' },
+      attrs: { type: 'button', hidden: true, title: 'Rows that arrived outside this page: go to the newest' }, on: { click: () => this.toNew() } });
     this.pauseBtn = this.static ? null : h(d, 'button', { cls: 'dg-live-btn', text: 'Pause', data: { act: 'pause' }, attrs: { type: 'button' }, on: { click: () => this.pause(!this.paused) } });
     this.pivotBtn = this.static ? null : h(d, 'button', { cls: 'dg-live-btn', text: 'Pivot ›', data: { act: 'pivot' }, attrs: { type: 'button', title: 'The same rows, filters and grouping in the Pivot' }, on: { click: () => this.toPivot() } });
     this.chartBtn = this.o.onChart ? h(d, 'button', { cls: 'dg-live-btn', text: 'Chart', data: { act: 'chart' }, attrs: { type: 'button', title: 'Chart these rows' },
@@ -104,7 +107,7 @@ export class LiveSetGrid {
       label: 'Group by', search: false }, { class: 'dg-live-group' });
     this.groupSel.component.on('change', (e) => this.group(e.value));
     this.bar = h(d, 'div', { cls: 'dg-live-bar', attrs: { role: 'toolbar', 'aria-label': (spec.title || spec.id) + ' controls' } }, [
-      h(d, 'strong', { cls: 'dg-live-title', text: spec.title || spec.id }), this.status, h(d, 'span', { cls: 'dg-sp' }),
+      h(d, 'strong', { cls: 'dg-live-title', text: spec.title || spec.id }), this.status, this.newBtn, h(d, 'span', { cls: 'dg-sp' }),
       h(d, 'label', { cls: 'dg-live-lbl' }, ['Group by ', this.groupSel]), this.chartBtn, this.pauseBtn, this.pivotBtn, this.trayBtn].filter(Boolean));
     this.gridHost = h(d, 'div', { cls: 'dg-live-grid' });
     this.panelHost = h(d, 'aside', { cls: 'dg-live-panel', attrs: { hidden: true, 'aria-label': 'Record' } });
@@ -137,6 +140,9 @@ export class LiveSetGrid {
         label: spec.title || spec.id, rowSelection: 'single', clientAggregation: true, live: { flashMs: 1200 },
         getRowData: (r) => ({ key: r[ROW_KEY] }) });
       if ((spec.groupBy || []).length) { this.grid.model.setRowGroups(spec.groupBy.slice(0, 1)); }
+      // the declaration's own order on the grid too: a row added by a tick takes its place (newest first: on top), not the end
+      if (spec.sort && spec.sort.field) { this.grid.model.setSortModel([{ colId: spec.sort.field, sort: spec.sort.descending ? 'desc' : 'asc' }]); }
+      this.grid.on('sortChanged', () => this.sendWindow());
       this.grid.on('cellClicked', (c) => { if (c && c.kind === 'leaf' && c.data) { this.open(c.data); } });
       this.gridHost.addEventListener('scroll', () => this.windowSoon(), true);
       this.off = this.o.channel.subscribe({ hello: (m) => this.onHello(m || {}), rows: (m) => this.onRows(m || {}), resync: () => this.resync('the server asked'),
@@ -188,7 +194,10 @@ export class LiveSetGrid {
   /** @private a rows event: merged by key and version, applied as one batch */
   onRows(ev) {
     if (this.paused) { return; }
+    const before = this.rows.total;
     const tx = this.rows.merge(ev, this.paged);
+    // rows that landed outside this page (scrolled down, or another order): the count moves and "N new" offers them
+    if (this.paged && ev.countOnly && this.rows.total > before) { this.showNew(this.newRows + (this.rows.total - before)); }
     this.stats.batches++;
     this.stats.upserts += tx.add.length + tx.update.length;
     this.stats.stale += tx.stale;
@@ -251,8 +260,37 @@ export class LiveSetGrid {
       const v = m.viewport.rows();
       ids = windowIds(shown, v.firstVisible, v.lastVisible, true);
     }
-    this.lastWindow = ids === null ? { all: true } : { ids: ids };
+    // top: the page starts at the first row of the declaration's own order, so the server inserts new and changed rows on it
+    this.lastWindow = ids === null ? { all: true } : { ids: ids, top: this.atTop() };
+    if (this.lastWindow.top) { this.showNew(0); }
     return this.api.window(this.stream, this.lastWindow).then(() => undefined, () => undefined);
+  }
+
+  /** @private true when the grid shows the first rows in the declaration's own order (its sort, unfiltered by the person) */
+  atTop() {
+    const m = this.grid.model, s = this.spec.sort || {}, sort = m.sortModel || [];
+    const own = !s.field ? sort.length === 0 : sort.length === 1 && sort[0].colId === s.field && sort[0].sort === (s.descending ? 'desc' : 'asc');
+    return own && !(this.o.offset > 0) && m.viewport.rows().firstVisible <= 0;
+  }
+
+  /**
+   * @private shows (n > 0) or hides the "N new" button: rows that arrived outside the page; pressing it goes to the top with a fresh page
+   * @param {number} n
+   */
+  showNew(n) {
+    this.newRows = n;
+    if (!this.newBtn) { return; }
+    this.newBtn.hidden = n <= 0;
+    this.newBtn.textContent = n.toLocaleString('en-US') + ' new';
+  }
+
+  /** @private the "N new" button: back to the top of the declaration's own order, from a fresh snapshot */
+  toNew() {
+    const s = this.spec.sort || {};
+    if (s.field) { this.grid.model.setSortModel([{ colId: s.field, sort: s.descending ? 'desc' : 'asc' }]); }
+    this.gridHost.querySelectorAll('*').forEach((el) => { if (el.scrollTop) { el.scrollTop = 0; } });
+    this.showNew(0);
+    return this.resync();
   }
 
   // ---- grouping, the panel, the tray, the Pivot -----------------------------------------------------------------------------------------------

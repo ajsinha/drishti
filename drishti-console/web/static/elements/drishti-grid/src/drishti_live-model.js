@@ -122,17 +122,19 @@ export class LiveRows {
 
   /**
    * Merges one rows event: an upsert replaces a row only when its version is newer (a row not held is added), a remove drops it.
-   * @param {{upserts: Object[], removes: string[], total: number, seq: number}} ev
-   * @param {boolean} [paged] the viewer holds only a window of the set: rows it does not hold are not added
+   * @param {{upserts: Object[], removes: string[], top: string[], total: number, seq: number}} ev
+   * @param {boolean} [paged] the viewer holds only a window of the set: rows it does not hold are not added, unless the server lists
+   *   them in {@code top} (new or changed in a newest-first order while the page starts at the first row: they go on top)
    * @returns {{add: Object[], update: Object[], remove: string[], stale: number}} the grid's transaction
    */
   merge(ev, paged) {
     const add = [], update = [], remove = [];
+    const top = new Set((ev.top || []).map(String));
     let stale = 0;
     (ev.upserts || []).forEach((r) => {
       const g = gridRow(r), held = this.byId.get(g[ROW_KEY]);
       if (held && g[ROW_VERSION] >= 0 && held[ROW_VERSION] >= g[ROW_VERSION]) { stale++; return; }
-      if (!held && paged) { return; }
+      if (!held && paged && !top.has(g[ROW_KEY])) { return; }
       this.byId.set(g[ROW_KEY], g);
       (held ? update : add).push(g);
     });
