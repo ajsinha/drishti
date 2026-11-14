@@ -189,7 +189,7 @@ def test_a_function_waiting_for_data_explains_itself(backend, monkeypatch):
     assert c.get("/var").status_code == 200
 
 
-def test_a_lens_that_does_not_use_a_module_does_not_get_its_assets(backend, monkeypatch):
+def test_a_lens_never_hides_a_modules_assets(backend, monkeypatch):
     app = _console(backend, monkeypatch, {**ALL_ON, "lenses": ["world"]},
                    _answer(lenses=[{"id": "world", "modules": ["economy"]}, {"id": "risk", "modules": ["banking"]}]))
 
@@ -198,7 +198,7 @@ def test_a_lens_that_does_not_use_a_module_does_not_get_its_assets(backend, monk
     monkeypatch.setattr(backend, "settings", settings, raising=False)
     wendy, alice = _client(app, "wendy"), _client(app)
     for asset in BANKING_ASSETS:
-        assert wendy.get(asset).status_code == 404, asset                                             # the World lens: no banking file
+        assert wendy.get(asset).status_code == 200, asset                                             # the World lens arranges, never hides
         assert alice.get(asset).status_code == 200, asset                                             # the full product: every module on
     assert wendy.get("/m/economy/static/1.0.0/js/drishti_world-landing.js").status_code == 200
     assert wendy.get(CORE_ASSET).status_code == 200

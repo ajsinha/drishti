@@ -12,67 +12,16 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Drishti Trading: for traders and desk heads: my books, my P&L, my VaR and limits, my counterparties, and "does this new trade fit?".
-# Chosen by drishti.edition: trading on every server (DRISHTI_EDITION=trading), or offered as a lens beside the others (drishti.lenses:
-# risk,world,market,trading). The site's configuration wins over any key (drishti.edition-spec.<key> on the server, edition.<key> in the
-# console). docs/guides/ADMIN_GUIDE.md (how to run it, then the design as built, section 14).
+# A lens is a workspace (docs/guides/ADMIN_GUIDE.md, the three layers of switches; LENSES.md): a person opens it for their own
+# session and it arranges what the distribution has for a role: the starting Home (landings, cards), the menus' order (the ones it
+# names first, nothing left out) and default screens. It never hides anything: what exists is the distribution's
+# (config/distributions/drishti.<name>.yaml), what runs where is the module and engine switches'.
 edition: trading
 title: Drishti Trading
 description: Your books, P&L, VaR and limits, today's trades and your counterparties, for traders and desk heads
 
-packs:
-  enabled:                               # by module: trading extends core and market-data; market-risk extends market-data and
-    core: [core]
-    market-data: [market-data]           # the market-data module (banking requires it)
-    banking: [trading, market-risk, counterparty-risk]   # the banking module: trades and the risk packs
-  allow-only: true                       # trading; counterparty-risk extends trading. Any other pack is refused (DRS-1017)
-
-commands:                                # what people may type and see (command line, FUNC, type-ahead, examples, pages)
-  allow:
-    # the blotter: trades, and the trades of a counterparty, a portfolio, a legal entity, an index
-    [TRD, CTRD, PTRD, LTRD, ITRD,
-    # books and positions: books, desks, traders, positions (PSUM, PSTRIP and PBOOK are the compute-demo sample pack's: not a trading pack)
-     BOOK, DESK, TRDR, POS,
-    # risk on my book: VaR limits, VaR results, trade valuations, P&L vectors, hierarchies, portfolios (VAR is the word: the explorer and its what-if),
-    # desk P&L, P&L explain and position sensitivities (product panel A19, 2026-11-06)
-     VLIM, VRES, TVAL, PNLV, PORT, DPNL, PNL, SENS,
-    # counterparties: counterparties, groups, netting sets and their MtM, counterparty MtM, credit limits, exposure (EXP is the word: the explorer; the pre-deal check is PREDEAL)
-     CPTY, GRP, NSET, NSMTM, CPMTM, LIM, EXP,
-    # market data a trader reads (the Markets menu): curves, repo, fixings, swaption and cap vols, FX spot, forwards and vols, equities and
-    # indexes, commodities and their curves, bonds, credit curves
-     CRV, REPO, FIX, IRV, CPV, FX, FXF, FXV, EQ, EQX, CMD, CMDC, BND, CDS]
-    # left out: regulatory (FRTB, SACCR, CVA, SIMM), stress (SCN, STR, SSPNL), collateral operations (COLL, MC), the exposure engine's
-    # runs, paths and official records (XRUN, XPATH, XOFC), VaR's scenario inputs (SPV, FXS, SSET, VOFF), macro economics
-  words: { BI: on, RUPAKA: off, FORM: off, FUNC: on, WHAT: on, DATAMAP: off, DATA: on, VAR: on, EXP: on, SMAT: on, PLAY: on }
-
-features:                                # presets of existing switches (config/lenses/features.yaml); not named: the product's default
-  bi: edition                            # BI with the datasets below only
-  var: on
-  exposure: on
-  calc: off
-  python: off
-  designer: off
-  build: off
-  forms: off                             # as Drishti Risk: the blotter and the command line, no query by form
-  datamap: off
-  data: on                               # Export data (EXPORT, /data): every dataset, a simple selection, a day as .jsonl.gz
-  internal-only-data: off                # Export data refuses datasets marked internal only (IMF, Yahoo, news headlines)
-  layouts: on
-  workspaces: on
-  monitors: on
-  alerts: on
-  reports: on
-  lakes: on
-  ai: off
-  embed: off
-
-bi:                                      # the trading and VaR datasets and models that exist (no exposure, stress or regulatory item)
-  datasets: [banking.trading_risk_*, banking.trading_cashflows_*, banking.trades_basic_trade, banking.live_trading_trade, banking.market_risk_var_latest,
-             banking.market_risk_var_official]
-  models: [trading-risk, trading-cashflows, trades-basic, live-trading, market-risk-var]
-
-menus:                                   # by id, per menu; a menu not named shows every item its switches allow
-  # the top menus by id, in order; one not named is not drawn. BI and Admin are reached by command (BI <GO>, ADMIN <GO>), not from the bar
+menus:                                   # by id, per menu: the order this lens puts first; nothing is left out
+  # the top menus it puts first, in order; the others follow. BI and Admin are reached by command (BI <GO>, ADMIN <GO>), not from the bar
   top: [views, markets, blotter, positions, risk, counterparties, help]
   markets: [crv, repo, fix, irv, cpv, fxv, fx-spot, fxf, cds, bnd, eq, eqx, cmd, cmdc]   # the one Markets menu: rates, vols, FX, credit, equities and commodities
   views: [terminal, search, functions, data, reports, workspaces, monitors, alerts]
@@ -106,14 +55,3 @@ trading:                                 # the Trading landings (LENSES.md › T
   pnl-var-days: 60                       # the Desk head's P&L against VaR: this many days of the desk's official history
   max-rows: 20000                        # the most trade valuations read per date for a scope (more: the figures say partial)
 
-help:
-  categories: [get-started, risk, analytics, data, operate, reference, knowledge, internal]   # the help sections kept (config/help.yaml): Build hidden
-  knowledge: [trading, market-risk, counterparty-risk, core, market-data]   # Knowledge pages of these packs (the rest hidden)
-  unlisted-slugs: refuse                 # a guide not in the help centre answers 404 (no reaching hidden guides by URL)
-
-admin:                                   # the Admin pages shown; the others answer 404 (and are off the menu and the tab strip)
-  pages: [users, roles, packs, commands, tokens, access, connectors, artifacts, loads, lakes, audit, net, engines, health, caches, capacity, bi, scopes, configuration]
-
-branding:                                # Drishti's name and eye mark kept; a licensee may override in site configuration
-  product: Drishti Trading
-  tagline: "Your books, your P&L and your limits, and whether the next trade fits"

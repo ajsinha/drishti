@@ -121,11 +121,11 @@ AREAS = [
          "while the server runs ([Live reload](../guides/BUILD_GUIDE.md#296-live-reload-the-packs-folder-is-watched)). Guide: "
          "[BUILD_GUIDE.md](../guides/BUILD_GUIDE.md#4-packyaml-key-by-key)."),
     Area("editions", "Lenses: `config/lenses/`",
-         "A lens file (`config/lenses/<module>/<lens>.yaml`, an edition when it is the instance's), the feature presets (`features.yaml`) and "
-         "the default packs (`config/packs/default-packs.yaml`, by module), read by the server (`Editions.java`) and the console "
-         "(`core/edition.py`). The site's own configuration "
-         "wins over any key: `drishti.edition-spec.<key>` on the server, `edition.<key>` in the console "
-         "([ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md#12-what-a-lens-is))."),
+         "A lens file (`config/lenses/<module>/<lens>.yaml`): a workspace a person opens, read by the console (`core/edition.py`); it "
+         "arranges Home and the menus and never hides anything. The feature presets a distribution may name (`features:` of "
+         "`config/distributions/kernel.yaml`, read by the server's `EditionEnvironmentPostProcessor` and the console) and the default packs "
+         "(`config/packs/default-packs.yaml`, by module). What exists is the distribution's; the site's own configuration wins over any "
+         "preset ([ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md#12-what-a-lens-is))."),
     Area("store", "The content store: `config/store/store.yaml`",
          "Where user content is kept so every node of a cluster reaches it ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches)); "
          "`drishti.store.file` names the file."),
@@ -347,8 +347,8 @@ def editions_files() -> list[Path]:
 
 
 def feature_rows() -> list[Row]:
-    """features.yaml: one row per feature, its meaning what it presets (and its comment, if any)."""
-    f = ROOT / "config" / "lenses" / "features.yaml"
+    """kernel.yaml's features: one row per feature, its meaning what it presets (and its comment, if any)."""
+    f = ROOT / "config" / "distributions" / "kernel.yaml"
     comments = {e.key: e.comment for e in S.read_commented_yaml(f)}
     rows = []
     for name, spec in (yaml.safe_load(f.read_text(encoding="utf-8")).get("features") or {}).items():
@@ -358,8 +358,9 @@ def feature_rows() -> list[Row]:
         if spec.get("console"):
             parts.append(("and " if parts else "presets ") + ", ".join(spec["console"]) + " in the console")
         note = comments.get(f"features.{name}", "")
-        meaning = f"The feature {name} an edition file names under features: off presets false, on or edition true; " + " ".join(parts) + (f". {note}" if note else "")
-        rows.append(Row("editions", "Feature presets: `features.yaml`", _rel(f), name, "on, off or edition", None, [],
+        meaning = (f"The feature {name} a distribution file names under features: off presets false, on true (an engine: off only, "
+                   "where it runs is its engine switch); " + " ".join(parts) + (f". {note}" if note else ""))
+        rows.append(Row("editions", "Feature presets: `kernel.yaml` `features:`", _rel(f), name, "on or off", None, [],
                         "server and console", _clean(meaning), "restart", "", False))
     return rows
 
@@ -435,7 +436,7 @@ def all_rows() -> tuple[list[Row], list[str]]:
     problems += p
     rows += yaml_rows("console", [ROOT / "drishti-console/config/application.yaml"], "console", "restart", collapse=COLLAPSE["console"])
     rows += connector_rows()
-    rows += yaml_rows("editions", editions_files(), "an edition (server and console)", "restart", "A lens file: `config/lenses/<module>/<lens>.yaml`",
+    rows += yaml_rows("editions", editions_files(), "a lens (the console)", "restart", "A lens file: `config/lenses/<module>/<lens>.yaml`",
                       collapse=COLLAPSE["editions"])
     rows += feature_rows()
     rows += yaml_rows("editions", [ROOT / "config/packs/default-packs.yaml"], "server and console", "restart",

@@ -21,6 +21,7 @@ engine runs in the cluster and the person's role opens it (the catalogue's ``ope
 the engine's command words (type-ahead and command line). Switches and status: Admin -> Engines only."""
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from urllib.parse import quote
 
@@ -30,19 +31,64 @@ from core import engines, modules, under_construction
 from core.edition import Edition
 from core.edition_gate import feature_on
 
-_cache: dict[str, tuple[int, dict]] = {}
+_cache: dict[str, tuple[tuple, dict]] = {}
+
+
+def modules_dir(console_dir: Path) -> Path:
+    """The modules' manifests folder (``DRISHTI_MODULE_MANIFESTS_DIR``, else ``../modules`` beside the console, as its settings say)."""
+    d = Path(os.environ.get("DRISHTI_MODULE_MANIFESTS_DIR") or "../modules")
+    return d if d.is_absolute() else (console_dir / d).resolve()
+
+
+def _merged(kernel: list, extra: list) -> list:
+    """The kernel's menus with the modules' (their manifests' ``console.menus``) after Views: a module's menu of a new id joins; one of
+    an id already there adds its columns to it (the one Markets menu: market-data's, with capital-markets' and economy's columns)."""
+    out = [dict(m) for m in kernel]
+    at = next((i + 1 for i, m in enumerate(out) if m.get("id") == "views"), 0)
+    for m in [m for m in extra if m.get("label")] + [m for m in extra if not m.get("label")]:   # each menu itself, then the columns others add
+        have = next((x for x in out if x.get("id") == m.get("id")), None)
+        if have is None:
+            out.insert(at, dict(m))
+            at += 1
+        else:
+            have["columns"] = list(have.get("columns") or []) + list(m.get("columns") or [])
+    return out
+
+
+def module_active(request, module_id: str | None, domain: str | None = None) -> bool:
+    """Whether a module's menu is drawn for this request: the module is in the running distribution, installed (the server lists it, once
+    it has answered), loaded and switched on at this site and for the person (core/modules.py ``module_on``, by its domain module). Read per
+    request, so a module that is unloaded, removed or switched off takes its menus with it at once, and one loaded or switched on brings them."""
+    if not module_id:
+        return True
+    eds = request.app.state.editions
+    d = eds.distribution
+    if not d.all and module_id not in d.modules:
+        return False
+    if eds.server_modules is not None and module_id not in eds.server_modules:
+        return False
+    return modules.module_on(domain or module_id)
+
+
+def _active(request, tagged: dict) -> bool:
+    return module_active(request, tagged.get("_module"), tagged.get("_domain"))
 
 
 def _spec(console_dir: Path) -> dict:
+    """The sitemap: the kernel's own pages (config/sitemap.yaml) and the modules' menus from their manifests; read again on a change."""
+    from core import distribution as _dist
     f = console_dir / "config" / "sitemap.yaml"
+    mods = modules_dir(console_dir)
+    manifests = sorted(mods.glob("*/module.yaml")) + sorted(mods.glob("*/dmod/module.yaml")) + sorted(mods.glob("*/src/dmod/module.yaml"))
     try:
-        stamp = f.stat().st_mtime_ns
+        stamp = (f.stat().st_mtime_ns, tuple((str(p), p.stat().st_mtime_ns) for p in manifests))
     except OSError:
         return {}
     hit = _cache.get(str(f))
     if hit and hit[0] == stamp:
         return hit[1]
     data = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
+    data["menus"] = _merged(data.get("menus") or [], _dist.module_menus(mods))
     _cache[str(f)] = (stamp, data)
     return data
 
@@ -121,14 +167,22 @@ def _href(it: dict) -> str:
 
 
 def _menu_order(edition: Edition, menus: list) -> list:
-    """The top menus in the order drawn: an edition's (or a lens's) ``menus.top`` names them by id, in order, and a menu it does not name is
-    not drawn; without one, every menu of the file in its order except the subject menus (``subject: true``), which only a ``top`` draws
-    (unless ``without-lens: true``: Risk, the home of the engines' pages, is in the full product's bar too)."""
-    top = edition.menu("top")
-    if top is None:
-        return [m for m in menus if (not m.get("subject") or m.get("without-lens")) and not m.get("personal")]
+    """The top menus in the order drawn. The distribution's ``menus.top`` names them by id, in order (a menu it does not name is not
+    drawn); without one, every menu of the file in its order except the subject menus (``subject: true``) and the personal ones (unless
+    ``without-lens: true``: Risk, the home of the engines' pages, is in the full product's bar too). A lens only arranges: the menus its
+    ``menus.top`` names come first, in its order (a subject menu it names is drawn too, where the distribution names no list), then the
+    rest as they were; it never takes a menu out."""
     by_id = {str(m.get("id") or ""): m for m in menus}
-    return [by_id[i] for i in top if i in by_id]
+    top = edition.filtering.menu("top")
+    if top is None:
+        base = [m for m in menus if (not m.get("subject") or m.get("without-lens")) and not m.get("personal")]
+    else:
+        base = [by_id[i] for i in top if i in by_id]
+    named = edition.menu("top") if edition.lens else None
+    if not named:
+        return base
+    first = [by_id[i] for i in named if i in by_id and (by_id[i] in base or (top is None and not by_id[i].get("personal")))]
+    return first + [m for m in base if m not in first]
 
 
 def _columns(menu: dict, menus: list) -> list:
@@ -152,14 +206,16 @@ def _edition(request) -> Edition:
 
 def lens_links(request) -> list[dict]:
     """The lens links for this person: "Open <title>" for each lens the server offers (drishti.lenses: risk,world gives two); inside one,
-    "Leave <title>" first, then "Switch to <title>" for each other lens (opening it switches); none with an edition."""
+    "Leave <title>" first (not for the distribution's starting lens: leaving another returns to it), then "Switch to <title>" for each
+    other lens (opening it switches)."""
     editions = request.app.state.editions
-    if editions.instance.active or getattr(request.state, "identity", None) is None:
+    if getattr(request.state, "identity", None) is None:
         return []
     _hook = request.app.state.settings.get("lens.roles") or {}   # who sees the link: role-based access later (read, not wired)
     del _hook
     current = _edition(request)
-    out = [{"href": "/lens/leave", "label": f"Leave {current.title}", "leave": True, "name": current.name}] if current.lens else []
+    out = [{"href": "/lens/leave", "label": f"Leave {current.title}", "leave": True, "name": current.name}] \
+        if current.lens and current.name != editions.default_lens else []
     verb = "Switch to" if current.lens else "Open"
     out += [{"href": f"/lens/{n}", "label": f"{verb} {e.title}", "leave": False, "name": n} for n, e in sorted(editions.lenses.items())
             if (n != current.name or not current.lens) and not engines.lens_hidden(n)   # a lens whose engine runs nowhere (MR cube)
@@ -236,8 +292,11 @@ def _domain_hidden(*tagged: dict) -> bool:
 
 
 def _items(request, edition: Edition, mid: str, col: dict, ctx: dict, fill: dict, menu: dict | None = None) -> list:
+    """A column's items this request shows; inside a lens, those its ``menus.<menu>`` names first, in its order (nothing left out)."""
+    by_id = {str(it.get("id") or ""): it for it in col.get("items") or []}
+    order = edition.arranged(mid, list(by_id)) if edition.lens else list(by_id)
     items = []
-    for it in col.get("items") or []:
+    for it in [by_id[i] for i in order]:
         if _domain_hidden(it, col, menu or {}):                    # a domain module that is off: its entries are not drawn
             continue
         if not all(_holds(request, edition, str(n), ctx) for n in it.get("requires") or []):
@@ -264,9 +323,11 @@ def top_bar(request, ctx: dict) -> list:
     for menu in _menu_order(edition, every):
         mid = str(menu.get("id") or "")
         columns = list(hosted.pop(mid, []))
-        if _domain_hidden(menu):                                # a menu of a domain module that is off
+        if _domain_hidden(menu) or not _active(request, menu):  # a module's menu: only while its module is active (absent otherwise)
             continue
         for col in _columns(menu, every):                       # an item of a gathered column is filtered as the gathering menu's
+            if not _active(request, col):                       # a column another module adds to this menu: only while it is active
+                continue
             items = _items(request, edition, mid, col, ctx, fill, menu)
             if mid == "views" and col is (menu.get("columns") or [None])[-1]:
                 for link in lens_links(request):                # the lenses: one link each, in Views (and on Home)

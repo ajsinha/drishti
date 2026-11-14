@@ -52,7 +52,7 @@ def _refused(request, needs: tuple[str, ...], words: tuple[str, ...] = ()) -> JS
     ed = edition_of(request)
     if getattr(request.state, "identity", None) is None:
         return JSONResponse({"detail": "sign in first"}, status_code=401)
-    if not ed.active or not ed.commands() or not all(ed.command_shown(c) for c in needs) \
+    if not ed.active or not all(ed.command_shown(c) for c in needs) \
             or not all(ed.word_on(w) for w in words):
         return JSONResponse({"code": "DRS-4023", "detail": f"trading is not part of {ed.title if ed.active else 'a landing'}"}, status_code=404)
     return None
@@ -145,7 +145,7 @@ async def market_figures(request: Request, part: str):
         return JSONResponse({"detail": "sign in first"}, status_code=401)
     if part not in ("desk", "moves", "quality"):
         return JSONResponse({"code": "DRS-4004", "detail": f"no market figures {part}: desk, moves or quality"}, status_code=404)
-    if not ed.active or not ed.commands() or not ed.command_shown("CRV"):
+    if not ed.active or not ed.command_shown("CRV"):
         return JSONResponse({"code": "DRS-4023", "detail": f"market data is not part of {ed.title if ed.active else 'a landing'}"},
                             status_code=404)
     me = ident(request)

@@ -58,7 +58,7 @@ menus:
   order: [Home, Risk, Markets, World, Analyse, Build, Data, Admin, Help]
   hide: [Calc]
 
-features:                                  # presets of existing switches (config/lenses/features.yaml)
+features:                                  # presets of existing switches (config/distributions/kernel.yaml `features:`)
   bi: on
   python: on
   designer: on

@@ -221,12 +221,10 @@ live:                        # live updates (docs/architecture/DATA_ARCHITECTURE
     window_seconds: 30  # a relay message is accepted this long after it was signed (allow for the hosts' clock difference); each only once
 under_construction:          # the under-construction registry (docs/admin/UNDER_CONSTRUCTION.md): menu items and help pages that depend on unbuilt work
   file: ${DRISHTI_UNDER_CONSTRUCTION_FILE:../config/under-construction.yaml}   # the same file the server reads; absent: nothing registered
-lens:                        # the lens (LENSES.md › The design): "Open Drishti Risk" for one person on a full instance (the server's drishti.lenses)
-  dir: ${DRISHTI_LENS_DIR:../config/lenses}   # the lens files the server reads: config/lenses/<module>/<lens>.yaml, features.yaml
+lens:                        # the lenses (LENSES.md): workspaces a person opens ("Open Drishti Risk"); each arranges, none hides anything
+  dir: ${DRISHTI_LENS_DIR:../config/lenses}   # the lens files: config/lenses/<module>/<lens>.yaml (only the console reads them)
   roles: {}                  # hook for role-based access later ({role: {link: true, start: risk}}): read, not wired
-# A site's overrides of the instance's edition, key by key, as in the edition file (they win over it), e.g.
-# edition: { commands: { also-allow: [FRTB] }, menus: { views: [terminal, search, functions, var, exposure] } }
-features:                    # the console's own switches (LENSES.md › The design); an edition presets them (config/lenses/features.yaml)
+features:                    # the console's own switches; a distribution presets them (config/distributions/kernel.yaml features:)
   build: true                # Build: new screens, new packs, designs, reviews and changes (/build, /review)
   forms: true                # query by form (FORM, /forms)
   datamap: true              # the data map (DATAMAP, /datamap)

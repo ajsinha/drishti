@@ -17,6 +17,22 @@
 
 ## Unreleased
 
+- **One way per job: switches in three layers, lenses as workspaces, module menus and commands from the manifests** (the well-built
+  house, product owner 2026-11-11): the **distribution** says what exists, the **module switch** whether a module is on at this site, the
+  **engine switch** whether a compute runs on this server. A distribution presets an engine off (its module is not in it), never on.
+  The feature switches a distribution's `features:` presets are `config/distributions/kernel.yaml`'s `features:` (server and console
+  read it); `config/lenses/features.yaml` is deleted. A **lens is a workspace**: it arranges the starting Home, the menus' order and the
+  placeholder and never hides anything (no packs, commands, words, features, Help, Admin pages, BI datasets or assets of its own; the
+  server ignores `X-Drishti-Lens`); a distribution's `lenses.default` is everyone's starting workspace; lens links show under a
+  distribution too. **Removed:** `drishti.edition` (`DRISHTI_EDITION`, a lens file as the instance's filter) and `drishti.lens-dir` on the
+  server (Health names a site's old `drishti.edition`); the lens files' `packs`, `commands`, `features`, `bi`, `help`, `admin` and
+  `branding` keys; the tests of those ways (the Market, Risk and World edition servers; the Risk-edition VaR and exposure runs now run
+  Drishti Risk, `drishti.distribution=risk`). A module's **commands** are its manifest's `functions:` (the kernel's packs keep
+  their pack.yaml commands), and its **menus** its manifest's `console.menus` (Blotter, Positions, Risk, Counterparties; Curves, Volatility, FX,
+  Credit, Markets; Economies; Companies; a menu of another module's id adds columns): `drishti-console/config/sitemap.yaml` keeps only
+  the kernel's pages. A module's menu is in the top bar only while the module is active (in the distribution, installed, loaded and on),
+  live at the next page (`test_module_menus.py`). Docs: ADMIN_GUIDE sections 12 to 19, DISTRIBUTIONS section 10, HOW_IT_FITS 8.4
+  (the configuration map), CONFIGURATION.
 - **Pack designer** (Build → New pack, `/build/pack/designer`; the old `/build/pack/new` redirects): a workspace with a rail of six steps and
   their summaries. Data (drop `.jsonl`, `.jsonl.gz`, `.ndjson` files or a folder: uploaded to the server, every record analysed there with
   progress, the code of `drishti.py pack new`), Kind and keys (discriminator columns in any combination with live Sutra counts and a rare mark, the

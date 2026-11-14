@@ -203,12 +203,19 @@ way and come to the same thing:
 | `brand` | `drishti.branding.*` (the About answer, messages) | `ui.product`, `ui.tagline`, `ui.copyright`, `ui.owner`, `ui.notice`, `ui.logo`, `ui.favicon` |
 | `theme` | | the default theme (`tokens`), mode and density; each person's own choice still wins |
 | `modules` | the packs to load (kernel's and its modules'), the engines of the modules it leaves out off | the visibility filter below |
-| `lenses` | `drishti.lenses` (the lenses a person may open) | the same; a lens never shows more than its distribution |
+| `lenses` | `drishti.lenses` (the lenses a person may open; a lens changes nothing the server answers) | the same; `lenses.default` is everyone's starting workspace; a lens arranges, never hides |
+| `features` | each feature's server keys, through `kernel.yaml`'s `features:` (an engine: off only) | each feature's console keys, the same way |
 | `menus`, `home` | | the top menus, the command line's placeholder, Home's cards |
 | `docs` | | Help's title ("Drishti Risk Help") |
 
-**The visibility filter.** A distribution other than All is a filter in the edition file's shape: the commands of its packs (each
-pack's mnemonics and code), the command words of the modules it leaves out switched off (Finance: VAR, EXP, SMAT, PLAY, FRSA, SIMM,
+**The three layers of switches.** The distribution says what exists; a module's switch whether it is on at this site
+(`config/modules/<module>.yaml`, Admin → Modules); an engine's switch whether its compute runs on this server (`config/engines/<id>.yaml`).
+A distribution's `features:` presets the settings `kernel.yaml`'s `features:` maps (the one list: the feature, its server keys, its
+console keys); it presets an engine off when its module is not in it, never on. A **lens** (`config/lenses/<module>/<lens>.yaml`) is a
+workspace: it arranges Home and the menus for a role and never hides anything.
+
+**The visibility filter.** A distribution other than All is a filter: the commands of the kernel's packs (each pack's mnemonics and
+code) and of its modules (each manifest's `functions:`, the one list), the command words of the modules it leaves out switched off (Finance: VAR, EXP, SMAT, PLAY, FRSA, SIMM,
 MCUBE ...), its menus, and Help kept to the kernel's guides plus its modules' (by the guide's domain or engine; a pack's guide by its
 pack). What it leaves out does not exist there: not on the command line, the type-ahead, FUNC, menus, Home, Help or the catalogue the AI
 reads. A command of another module typed anyway answers `DRS-4023 VRES is not in Drishti Finance`; its pages answer 404.
@@ -217,8 +224,13 @@ reads. A command of another module typed anyway answers `DRS-4023 VRES is not in
 Drishti Risk console on 17480 and a Drishti Finance console on 17481. A console started without one follows the server's (learned from
 its about answer).
 
-**The old keys, read for one release.** `drishti.edition` (`DRISHTI_EDITION`) still selects a lens file as the instance's filter when no
-distribution is named, and is ignored when one is; a site's `drishti.branding.*`, `DRISHTI_PRODUCT`, `ui.product`, `ui.tagline`,
+**Menus from the modules.** A module's top menus are in its manifest (`console.menus`, in the console sitemap's form; a menu of
+another module's id adds its columns, as economy and capital-markets do to market-data's Markets); `drishti-console/config/sitemap.yaml`
+keeps only the kernel's pages. A module's menu is in the top bar only while the module is active: in the running distribution, installed,
+loaded and on at this site; it goes and comes back at the next page when that changes.
+
+**The old keys, read for one release.** `drishti.edition` (`DRISHTI_EDITION`) is no longer read (a lens file is never an instance's
+filter); a site's `drishti.branding.*`, `DRISHTI_PRODUCT`, `ui.product`, `ui.tagline`,
 `ui.copyright`, `ui.owner`, `ui.notice` still win over the file. Health names each one as deprecated.
 
 **Health and Admin.** Admin → Health shows the console's and the server's distribution, which of its modules loaded ("loaded", "off",

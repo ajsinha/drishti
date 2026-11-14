@@ -936,7 +936,7 @@ differently branded consoles over the same kernels. Brand and theme are always t
 | `lenses` | which lenses are offered, the default lens, per-lens title overrides |
 | `home` | the default landing per lens, cards and chips order, the welcome text |
 | `menus` | top-level menu order; menu entries hidden for the whole product |
-| `features` | presets of switches (today's `config/lenses/features.yaml`) |
+| `features` | presets of switches (today's `config/distributions/kernel.yaml `features:``) |
 | `docs` | which Help sections and tutorials show, their order, the docs title ("Drishti Finance Help"), extra pages from the distribution's folder |
 | `bindings.defaults` | default bindings for this product (section 5.5) |
 | `demo` | whether the demo lake ships and is on |

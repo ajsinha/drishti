@@ -39,7 +39,9 @@ def shown(edition, guide, aliases: dict | None = None) -> bool:
     """Whether the edition (or the person's lens) keeps a guide (LENSES.md › The design): its section listed (help.categories,
     a section's id or an old name in help.yaml's aliases:), a Knowledge page or pack guide about one of its packs (help.knowledge for Knowledge
     pages, packs.enabled for pack guides), a page with ``lenses:`` (help.yaml) only in one of those lenses, and an unlisted document only
-    when the edition does not refuse them (help.unlisted-slugs: refuse). Without an edition: every guide."""
+    when the edition does not refuse them (help.unlisted-slugs: refuse). Without an edition: every guide. A lens hides nothing: its
+    distribution answers."""
+    edition = getattr(edition, "filtering", edition)
     if not edition.active:
         return True
     cats = edition.help_categories()

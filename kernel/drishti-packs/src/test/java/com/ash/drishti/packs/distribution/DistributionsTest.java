@@ -43,7 +43,6 @@ class DistributionsTest {
         s.put(Distributions.DIR, DIR.toString());
         s.put(Distributions.MODULES_DIR, MODULES.toString());
         s.put("drishti.packs.dir", "../../config/packs");
-        s.put("drishti.lens-dir", "../../config/lenses");
         for (int i = 0; i < site.length; i += 2) {
             s.put((String) site[i], site[i + 1]);
         }
@@ -93,14 +92,7 @@ class DistributionsTest {
         assertThat(PackPaths.enabled(env)).doesNotContain("market-risk").contains("market-data", "us-equities", "world-economy");
         assertThat(read("finance").featuresOff()).contains("var", "exposure", "frtb-sa", "simm", "sensitivities", "mr-cube");
         assertThat(env.getProperty("drishti.lenses")).isEqualTo("markets,world");          // the Markets lens: capital-markets' own
-        assertThat(Editions.lenses(env)).containsOnlyKeys("markets", "world");
-        Edition markets = Editions.lenses(env).get("markets");
-        for (String c : List.of("USEQ", "FUND", "CRV", "FXV")) {
-            assertThat(markets.commandShown(c)).as(c).isTrue();
-        }
-        for (String w : List.of("VAR", "EXP", "SMAT", "PLAY")) {
-            assertThat(markets.wordOn(w)).as(w).isFalse();
-        }
+        assertThat(Editions.lensNames(env)).containsExactly("markets", "world");
     }
 
     @Test
@@ -163,7 +155,7 @@ class DistributionsTest {
     void riskOffersItsLensesAndTheRequestFallsBackToTheDistribution() {
         StandardEnvironment env = boot("drishti.distribution", "risk");
         assertThat(env.getProperty("drishti.lenses")).isEqualTo("risk,trading,market");
-        assertThat(Editions.lenses(env)).containsOnlyKeys("risk", "trading", "market");
+        assertThat(Editions.lensNames(env)).containsExactly("risk", "trading", "market");
     }
 
     @Test
@@ -178,17 +170,30 @@ class DistributionsTest {
     }
 
     @Test
-    void theOldKeysStillWorkWithADeprecationNote() {
+    void theOldKeysWithADeprecationNote() {
         StandardEnvironment env = boot("drishti.edition", "risk", "drishti.branding.tagline", "Our own line");
-        Edition e = Editions.of(env);
-        assertThat(e.name()).isEqualTo("risk");                          // the old edition, read for one release
-        assertThat(e.commandShown("VRES")).isTrue();
+        assertThat(Editions.of(env)).isSameAs(Edition.NONE);              // the old edition is not read: only a distribution filters
         assertThat(env.getProperty("drishti.branding.tagline")).isEqualTo("Our own line");
         String notes = env.getProperty(EditionEnvironmentPostProcessor.INFO + ".deprecated");
-        assertThat(notes).contains("drishti.edition is read for one release").contains("drishti.branding.tagline");
+        assertThat(notes).contains("drishti.edition is no longer read").contains("drishti.branding.tagline");
         StandardEnvironment both = boot("drishti.edition", "risk", "drishti.distribution", "finance");
         assertThat(Editions.of(both).name()).isEqualTo("drishti.finance");
-        assertThat(both.getProperty(EditionEnvironmentPostProcessor.INFO + ".deprecated")).contains("is ignored");
+    }
+
+    @Test
+    void theFeatureSwitchesAreKernelYamlsAndAnEngineIsPresetOffOnly() throws Exception {
+        assertThat(java.nio.file.Files.exists(Path.of("../../config/lenses/features.yaml"))).as("one home: kernel.yaml's features:").isFalse();
+        Map<String, List<String>> server = EditionEnvironmentPostProcessor.featureMapping(DIR, "server");
+        assertThat(server).containsEntry("calc", List.of("drishti.calc.enabled")).containsEntry("var", List.of("drishti.engines.var.enabled"));
+        assertThat(EditionEnvironmentPostProcessor.featureMapping(DIR, "console")).containsEntry("build", List.of("features.build"));
+        Path dir = java.nio.file.Files.createTempDirectory(Path.of("target"), "dist");
+        java.nio.file.Files.copy(DIR.resolve(Distributions.KERNEL), dir.resolve(Distributions.KERNEL));
+        java.nio.file.Files.writeString(dir.resolve("drishti.mine.yaml"), String.join("\n", "format: 1", "distribution: drishti.mine",
+                "brand: { product: Mine }", "modules: [{ id: banking }]", "features: { calc: off, var: on, exposure: off }", ""));
+        StandardEnvironment env = boot(Distributions.DIR, dir.toString(), "drishti.distribution", "mine");
+        assertThat(env.getProperty("drishti.calc.enabled")).isEqualTo("false");
+        assertThat(env.getProperty("drishti.engines.exposure.enabled")).as("off: it does not exist here").isEqualTo("false");
+        assertThat(env.getProperty("drishti.engines.var.enabled")).as("on is the engine switch's to say, never the distribution's").isNull();
     }
 
     @Test
