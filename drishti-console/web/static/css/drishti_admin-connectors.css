@@ -74,13 +74,3 @@
 .conn-dialog .ds-actions .conn-problems:empty, .conn-dialog .ds-actions .conn-edit-msg:empty { display: none; }
 .conn-dialog [aria-invalid="true"] { outline: 2px solid var(--d-bad); outline-offset: 1px; }
 .conn-dialog [hidden] { display: none !important; }
-
-/* Template updates: one card per drifted connector, its text and the pack's template side by side (stacked on a phone). */
-.tu-card { border: 1px solid var(--d-border); border-radius: var(--d-radius-8); padding: var(--d-sp-12_8) var(--d-sp-16); margin: 0 0 var(--d-sp-16); }
-.tu-classes { list-style: none; padding: 0; margin: var(--d-sp-6_4) 0; display: grid; gap: var(--d-sp-4_8); }
-.tu-notices { margin: var(--d-sp-3_2) 0 var(--d-sp-16); padding-left: var(--d-sp-19_2); }
-.tu-diff { display: grid; grid-template-columns: 1fr 1fr; gap: var(--d-sp-12_8); }
-.tu-diff figure { margin: 0; min-width: 0; }
-.tu-diff figcaption { color: var(--d-muted); font-size: var(--d-fs-12_8); margin-bottom: var(--d-sp-3_2); }
-.tu-diff pre { margin: 0; padding: var(--d-sp-8); max-height: 22rem; overflow: auto; border: 1px solid var(--d-border); border-radius: var(--d-radius-6); color: var(--d-ink); font-size: var(--d-fs-12_48); white-space: pre; }
-@media (max-width: 720px) { .tu-diff { grid-template-columns: 1fr; } }
