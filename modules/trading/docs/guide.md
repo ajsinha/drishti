@@ -13,53 +13,75 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Trading: the live blotter
+# Live results and blotters
 
-The trading module shows the bank's trades **live**: new and amended trades appear in the blotter within milliseconds of reaching the
-bank's messaging (Kafka, RabbitMQ, ActiveMQ), and traders and middle office correct them in place, the change written back to the source
-system with a version per trade, an outbox, four eyes where the site asks and a full audit. Drishti is the risk and analytics layer next
-to the bank's trading systems: the blotter is **not** an order or execution system. It sends no orders to venues and opens no FIX
-sessions; orders stay with the bank's order-management system.
-
-The blotter is not trade-specific code. It is a **declaration** (`blotters/trade.blotter.yaml` in the module) that the kernel's one
-**live result sets** engine runs; a risk, exposure or inventory blotter is another declaration, and a FORM search's result is the same
-engine without edits.
+One engine shows any set of records **live**: a snapshot read from the durable store, then every change merged in by key and version as it
+arrives. Blotters, FORM search results, bare mnemonics (`POS`, `TRD`, `NEWS`), monitors, drill-through and previews all run on it; a SQL or
+BI table is the static case of the same grid. A blotter is a **declaration**, a YAML file; a new blotter (trades, positions, exposure,
+inventory) is a configuration job, not a project. Drishti is the analytics layer next to a bank's systems: a blotter sends no orders.
 
 ## Contents
 
-1. [What you see](#1-what-you-see)
-2. [Switch it on (tutorial)](#2-switch-it-on-tutorial)
-3. [Bind the trades](#3-bind-the-trades)
-4. [Edit a trade (tutorial)](#4-edit-a-trade-tutorial)
-5. [Who may edit](#5-who-may-edit)
+1. [One engine, and what uses it](#1-one-engine-and-what-uses-it)
+2. [The page](#2-the-page)
+3. [Editing: configuration and rights](#3-editing-configuration-and-rights)
+4. [Versions, conflicts, the outbox, four eyes and the audit](#4-versions-conflicts-the-outbox-four-eyes-and-the-audit)
+5. [Row rules and per-person isolation](#5-row-rules-and-per-person-isolation)
 6. [The declaration](#6-the-declaration)
-7. [The live result sets engine](#7-the-live-result-sets-engine)
-8. [Writing back: Kafka and JDBC](#8-writing-back-kafka-and-jdbc)
+7. [The engine: snapshot, deltas, scale, retention](#7-the-engine-snapshot-deltas-scale-retention)
+8. [Writing back to the record's own source](#8-writing-back-to-the-records-own-source)
 9. [The API](#9-the-api)
 10. [Settings](#10-settings)
+11. [Make a new blotter](#11-make-a-new-blotter)
+12. [Retention in every store](#12-retention-in-every-store)
+13. [Tutorial: feed, blotter, edit, approval, write-back, Pivot](#13-tutorial-a-kafka-feed-a-ticking-blotter-an-edit-with-four-eyes-written-back-pivot)
+14. [Screenshots to add](#14-screenshots-to-add)
+15. [The trading module: switch it on, bind the trades, edit a trade](#15-the-trading-module)
 
-## 1. What you see
+## 1. One engine, and what uses it
 
-The screen is the grid with the record's panel beside it: the chosen design, option B of the
-[mock-ups](../../../docs/lenses/mockups/trading-blotter/README.md), drawn by the Drishti Elements grid in its live mode from the API of section 9:
+A **live result set** is the snapshot of the records that hold a condition, from the kind's durable store (Delta, Iceberg or files, through
+the bindings), plus the live changes of the kind's `live:` binding (Kafka, RabbitMQ, ActiveMQ), merged **by key and version**, plus an optional
+edit path and an optional retention. What uses it:
+
+| User | What it is |
+|---|---|
+| A blotter | a declaration with columns, grouping, links and, optionally, edits |
+| A FORM or the search page | the search's matches as a set: a blotter without `edit:` |
+| A bare mnemonic (`POS <GO>`, `TRD`, `NEWS`) | the kind's own set; a default declaration is made from its contract |
+| A monitor, drill-through, a preview | the same set, opened from another page |
+| A SQL or BI table | the static grid: the same component without the live channel |
+
+The trading module's trade blotter is the first declaration (section 15).
+
+## 2. The page
+
+The screen is the grid with the record's panel beside it: the Drishti Elements grid in its live mode, drawn from the API of section 9.
 
 | Part | What it does |
 |---|---|
-| The grid | every trade of the declaration's query, sorted, filtered, grouped (desk and book with live subtotals as an option); new rows ride in green, amended in amber, changed cells flash |
-| The record's panel | the selected trade: its editable fields, the reason, the four-eyes state, the version history, the links to Explain, VaR and limits, and the **Raw JSON** of the whole record as stored |
-| The tray | the person's changes waiting: awaiting an approver, sent to the source, applied, refused (with why) |
+| The grid | every record of the declaration's query, sorted, filtered and grouped; new rows ride in green, amended in amber, changed cells flash |
+| The record's panel | the selected record: its fields, the reason, the four-eyes state, the version history, the links, and **Raw JSON** |
+| Grouping | one field; the declaration's `subtotals:` are summed per group and stay current as records tick |
+| The tray (**My changes**) | the person's changes waiting: awaiting an approver, sent to the source, applied, refused (with why) |
+| **Pivot ›** | opens the Pivot on the same kind with the grid's filters, the grouping as rows and the numbers as sums |
 | The live mark | the binding it ticks from, the messages per minute and the latency |
+
+**Raw JSON** is the full stored record, including the fields the grid has no column for, as the person may see it (a masked field shows as
+masked and is copied as the mask), with **Copy**, the version and sequence. A page of a kind fed by several source systems says when one is
+switched off: `excludes ENDUR (switched off)`.
 
 ### The page, step by step
 
-Open **Trading › Trade blotter** (`/live/trade`; any declaration has its page at `/live/<id>`).
+
+Open a blotter from its module's menu (the trading module's is **Trading › Trade blotter**, `/live/trade`); any declaration has its page at `/live/<id>`.
 
 1. **The bar.** The title, the live mark (`LIVE · 30 rows`; `PAUSED`, `RECONNECTING` and `ENDED` say what happened), **Group by** (one field; the
    declaration's `subtotals:` are summed per group and stay current as trades tick), **Pause** (rows that arrive are not applied; Resume reads
    the set again), **Pivot ›** and **My changes (n)**.
 2. **Ticking.** A change to a trade arrives over the browser's one live channel and the changed cells flash; a replayed or older version is
    ignored. A set larger than the grid holds (5,000 rows) shows `5,000 of 120,000` and the server sends changes of the rows in view only.
-3. **A trade's panel.** Click a row. *Record*: the fields. With the edit power they are a form with a **Reason** (required or optional as the
+3. **A record's panel.** Click a row. *Record*: the fields. With the edit power they are a form with a **Reason** (required or optional as the
    declaration says); without it they are plain text, with the words of why ("Read-only for you: ..."), and there is no edit control at all.
    Submit sends the change on the version you opened; the answer is in words (*waiting for 1 approver (four eyes)*, *on its way to the source*).
    If the trade moved meanwhile the panel says **Changed since you opened it**, and the server refuses an edit made on the old version, naming
@@ -69,73 +91,9 @@ Open **Trading › Trade blotter** (`/live/trade`; any declaration has its page 
 4. **My changes.** The tray lists your changes still open; click a trade to open it.
 5. **Pivot ›.** Opens the Pivot on the same kind with the grid's filters, the grouping as rows and the numbers as sums, live when the trades are.
 
-## 2. Switch it on (tutorial)
 
-```bash
-# 1. the module is on (Admin -> Modules, or the distribution lists it)
-drishti.py module list | grep trading
-# trading  1.0.0  first-party  content  on
 
-# 2. the trade kind is bound with a live source (section 3), then the blotter answers
-curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" $B/live | jq '.sets[].id'
-# "trade"
-curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" "$B/live/trade/rows?limit=3" | jq '{total, live, rows: [.rows[].id]}'
-# {"total": 4120, "live": true, "rows": ["MX-20004324", "MX-20004261", "MX-20004205"]}
-```
-
-## 3. Bind the trades
-
-The blotter reads the `trade` kind through `config/bindings.yaml`, like every module:
-
-```yaml
-bindings:
-  trade:
-    read: [trade-endur, trade-murex]   # the durable store: the snapshot
-    union: true
-    live: trade-kafka                  # the messaging connector: the changes, merged in by key and version
-```
-
-The Kafka connector reads its topic as the latest record per trade (`kind.<topic>: trade`, `id-field.<topic>: TRADE_ID`); RabbitMQ and
-ActiveMQ work the same way through their own connectors. Every change of the kind reaches the blotter as it is consumed.
-
-To land the day's live trades in the **in-memory lake** as well (for BI and the engines that read tables), a memory table reads the Kafka
-connector's state in one pass and keeps a day of it:
-
-```yaml
-# config/engines/memory-lake.yaml (excerpt; DATA_LAKE_GUIDE.md, the in-memory lake)
-drishti.lake.memory.tables:
-  - name: trades-live
-    store: livelake                       # config/lakes/livelake.yaml, root: mem://livelake
-    source: { connector: trade-kafka, kind: trade }
-    mode: merge
-    key: [TRADE_ID]
-    columns: [PORTFOLIO, TRADER_ID, TRADE_STATUS]
-    signal: true                          # refilled when the connector's last update moves
-    retention: { ttl: 1d, on: SOURCE_UPDATE_TIME }   # rows older than a day are dropped by the compaction
-```
-
-## 4. Edit a trade (tutorial)
-
-1. Select the trade; its panel opens with the fields you may change (Book, Price, Quantity; Status for middle office).
-2. Change the book, give a reason, **Submit**. The change goes to the write-back with the version you saw.
-3. Where the site asks for four eyes (`config/edit/policy.yaml`, `source: one`), it waits in **Approvals** for another person; otherwise it
-   goes to its lane at once.
-4. The outbox sends it to the source once; the source's new version comes back through the live binding and the row ticks.
-
-From the command line, the same request:
-
-```bash
-curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' $B/live/trade/edit -d '{
-  "entity": "MX-20004163", "basedOn": 7, "reason": "booked in the wrong book: ticket 4411",
-  "items": [{"field": "PORTFOLIO", "from": "BOOK-IRS-1", "to": "BOOK-IRS-2"}]}'
-# {"changes": [{"id": "chg-01M5V8...", "kind": "trade", "entity": "MX-20004163", "target": "source", "state": "awaiting", "needed": 1}]}
-```
-
-**A stale edit is refused.** When the trade moved since you saw it, the answer is `409 DRS-9303`:
-*trade MX-20004163 is at version 8, changed by R.DIAZ at 10:02:11; you edited version 7: open it again and edit from what is there*.
-The same guard runs again when the change is applied at the source (section 8), so a change that raced another one is refused there too.
-
-## 5. Who may edit
+## 3. Editing: configuration and rights
 
 Never everyone. A blotter is editable for a person only when **both** allow it, checked on the server for every write (the screen only
 reflects it):
@@ -148,6 +106,45 @@ reflects it):
 A person who may not edit sees no edit controls (`editable: false` and `readOnly: <why>` in the declaration the API gives them). A crafted
 request is refused with `403 DRS-9302` and the reason, and audited (`edit-refused`). Four eyes apply on top. Finer entitlements (per desk,
 per field) come with the security release.
+
+## 4. Versions, conflicts, the outbox, four eyes and the audit
+
+- **Versions.** The declaration's `version:` field is the guard. An edit carries `basedOn`, the version the person saw. If the record moved since,
+  the answer is `409 DRS-9303` naming the version, who changed it and when; **Reload** opens it again. The same guard runs again when the change is
+  applied at the source, so a change that raced another is refused there too.
+- **Outbox.** The change is recorded as pending in the same transaction that applies it, sent once per record in order, and resent after a failover with
+  the **same change id**; the source treats a repeat as already applied.
+- **Four eyes.** The site's policy (`config/edit/policy.yaml`, `source:`) asks for approvals for amendments sent to a source; nobody approves their own
+  change; a form's `approval:` may ask for more, never fewer ([APPROVALS_GUIDE.md](../../../docs/guides/APPROVALS_GUIDE.md)).
+- **Audit.** Every submit, approval, refusal (`edit-refused`), send and result is audited with who, when, why and the values.
+- **Write-back** goes to the record's own source system: section 8.
+
+## 5. Row rules and per-person isolation
+
+A role may restrict **which records of a kind** its holders see, by the record's fields and the person's attributes, in the configured roles:
+
+```yaml
+drishti:
+  security:
+    roles:
+      rates-trader:
+        kinds: [trade, position]
+        edit: true
+        rows:
+          trade: "ASSET_CLASS = 'RATES' and DESK in $user.desks"
+      endur-support:
+        kinds: [trade]
+        edit: true
+        rows:
+          trade: "SOURCE_SYSTEM = 'ENDUR'"
+        edit-systems: [ENDUR]           # write-back only to Endur's records
+```
+
+A person sees a record when any of their roles that opens the kind passes it; a role without a rule for the kind opens every record of it; an
+administrator sees all. `edit-systems` limits write-back to the listed source systems. Row rules restrict record views (live sets, search,
+FORM, Raw JSON); aggregates such as VaR keep their own scope model. The rule is part of the viewer's audience, so two people with different
+rules never share a filled set. Full text: [ACCESS_MODEL.md](../../../docs/architecture/ACCESS_MODEL.md) section 10. The rest of the isolation (masks, the
+node answering, the embedding app) is in section 7, "Who sees what".
 
 ## 6. The declaration
 
@@ -189,7 +186,7 @@ administrators (Admin), and asking for the set answers `422 DRS-9307` with the r
 The `edit:` form joins the Sutras' forms in the write-back under the name `live:<id>`, so its checks, roles and approval rules are the
 write-back's own.
 
-## 7. The live result sets engine
+## 7. The engine: snapshot, deltas, scale, retention
 
 One engine behind every blotter and every FORM result (`com.ash.drishti.server.liveset`):
 
@@ -234,9 +231,9 @@ One engine behind every blotter and every FORM result (`com.ash.drishti.server.l
    is paged from it (every record counted: a bank's 1.3 million positions are all there); a kind that cannot be paged is read into memory
    up to `drishti.live-sets.default-max-rows` records, and the set says when it stopped there (`capped`).
 
-## 8. Writing back: Kafka and JDBC
+## 8. Writing back to the record's own source
 
-Edits go through the one write-back (APPROVALS_GUIDE.md): the lane, the approvals, the **outbox** (the change recorded as pending in the
+Edits go through the one write-back (../../../docs/guides/APPROVALS_GUIDE.md): the lane, the approvals, the **outbox** (the change recorded as pending in the
 same transaction that applies it, sent once per record in order, resent after a failover with the **same change id**) and the audit. The
 connector says how; besides JDBC, **Kafka** writes:
 
@@ -281,7 +278,7 @@ Iceberg and file connectors never write per change.
 The console passes these on as the person: `GET /api/live`, `GET /api/live/{id}/rows[/{entity}]`, `POST /api/live/{id}/edit` and
 `POST /api/live/{id}/stream/{stream}/window`; the stream is the console's channel (`/api/channel?s=live:{id}`, events `hello`, `rows`,
 `resync`). The page is `/live/{id}`; the module's menu entry (`console/plugin.yaml`) links to `/live/trade`. The component is the grid's live
-mode (ELEMENTS.md section 5.5).
+mode ([ELEMENTS.md](../../../docs/architecture/ELEMENTS.md) section 5.5).
 
 ## 10. Settings
 
@@ -296,3 +293,178 @@ mode (ELEMENTS.md section 5.5).
 | `drishti.live-sets.store-timeout-seconds` | `120` | how long a set paged from the lake may take to read the columns it orders by, and a page's records |
 
 Every one is in [CONFIGURATION.md](../../../docs/admin/CONFIGURATION.md) (`drishti.live-sets`), generated from the server's `application.yaml`.
+
+## 11. Make a new blotter
+
+A new blotter is one file. An inventory blotter, complete:
+
+```yaml
+# modules/stores/blotters/stock.blotter.yaml: a warehouse's stock, one row per bin and item
+blotter: stock
+title: Stock on hand
+kind: stock                                   # a kind with a data contract (contracts/stock.contract.yaml)
+query: "stock where QTY_ON_HAND > 0"
+key: BIN_ITEM_ID
+version: ROW_VERSION
+changed-by: UPDATED_BY
+changed-at: UPDATED_AT
+columns:
+- { field: BIN_ITEM_ID, label: Bin/item, type: id, width: 140 }
+- { field: WAREHOUSE, label: Warehouse }
+- { field: SKU, label: SKU }
+- { field: QTY_ON_HAND, label: On hand, type: amount, format: amount0 }
+- { field: REORDER_LEVEL, label: Reorder at, type: number }
+- { field: STATUS, label: Status, type: status }
+- { field: UPDATED_AT, label: Updated, type: datetime }
+group-by: [WAREHOUSE]
+subtotals: [QTY_ON_HAND]
+sort: { field: UPDATED_AT, descending: true }
+links:
+- { label: Item, href: "/items/{SKU}" }
+retention: { ttl: 2d, on: UPDATED_AT, max-rows: 200000 }
+tray: true
+edit:
+  edit: cells
+  roles: [stock-controller, admin]
+  fields:
+  - { id: id, label: Bin/item, bind: BIN_ITEM_ID, readonly: true }
+  - { id: qty, label: On hand, bind: QTY_ON_HAND, type: number, min: 0, required: true }
+  - { id: level, label: Reorder at, bind: REORDER_LEVEL, type: number, min: 0 }
+  save: { target: source, command: adjust-stock, approval: none, reason: required }
+```
+
+Then the module lists it (`blotters: {folder: blotters, list: [stock]}` in `module.yaml`), the site binds the kind (`read:` the store, `live:` the
+messaging connector) and gives the connector the `adjust-stock` command under `writes:` (section 8). No code is written: the page is at
+`/live/stock`, the API at `/api/v1/live/stock/rows`, and the Pivot, the tray, the Raw JSON and the audit come with the engine.
+
+## 12. Retention in every store
+
+`retention:` bounds the **live side** (section 7). The durable stores keep their own: the in-memory lake's tables carry
+`retention: {ttl: 1d, on: SOURCE_UPDATE_TIME}` and drop older rows at compaction; Delta and Iceberg tables drop whole partitions older than the
+period the lake's retention names, one partition at a time; the file store prunes its dated folders. The three behave alike
+([DATA_LAKE_GUIDE.md](../../../docs/guides/DATA_LAKE_GUIDE.md)).
+
+## 13. Tutorial: a Kafka feed, a ticking blotter, an edit with four eyes, written back, Pivot
+
+The worked example is the trading module's trade blotter on the demo data. Each step says what you do in the UI, from a terminal (CLI)
+and in the file (YAML). `$B` is the server's `/api/v1`, `$DRISHTI_TOKEN` a token of a trader.
+
+**Step 1 · Bind the feed.** *YAML*, `config/bindings.yaml`: the kind reads its snapshot from the lake and its changes from Kafka.
+
+```yaml
+bindings:
+  trade:
+    read: [trade-endur, trade-murex]
+    union: true
+    live: trade-kafka
+```
+
+*UI*: Admin shows the kind with its live source. *CLI*: `drishti.py module list | grep trading` shows the module on.
+
+**Step 2 · Watch it tick.** *UI*: open **Trading › Trade blotter**; the live mark reads `LIVE`. Publish an amended trade to the topic and its row
+turns amber and its changed cells flash. *CLI*:
+
+```bash
+curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" "$B/live/trade/rows?limit=3" | jq '{total, live, rows: [.rows[].id]}'
+echo '{"TRADE_ID":"MX-20004163","TRADE_VERSION":8,"PRICE":101.25}' | kcat -P -b $BROKER -t trades.v1 -k MX-20004163
+```
+
+*YAML*: nothing more: the declaration's `columns:` and `sort:` decide what you see.
+
+**Step 3 · Edit with a reason.** *UI*: click the trade; in the panel change Price, type the reason "booked at the wrong level: ticket 4411" and
+**Submit**. The answer says *waiting for 1 approver (four eyes)* and the change appears in **My changes (1)**. *CLI*:
+
+```bash
+curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' $B/live/trade/edit -d '{
+  "entity": "MX-20004163", "basedOn": 8, "reason": "booked at the wrong level: ticket 4411",
+  "items": [{"field": "PRICE", "from": 101.25, "to": 101.5}]}'
+```
+
+*YAML*: `save: {target: source, command: amend-trade, reason: optional}` in the declaration and `source: one` in `config/edit/policy.yaml`.
+
+**Step 4 · Approve (another person).** *UI*: a second person opens **Approvals**, reads the old and new values and the reason, and approves; the
+requester cannot (`self-approval: false`). *CLI*: the approvals commands of [APPROVALS_GUIDE.md](../../../docs/guides/APPROVALS_GUIDE.md). *YAML*: `approver-roles:` in the policy.
+
+**Step 5 · Written back.** *UI*: the tray's line moves from *awaiting* to *sent to the source* to *applied*; the row ticks to version 9 when the
+source's record comes back through the feed, and **History** in the panel lists who, when, why. *CLI*: the same guide lists a change's state.
+*YAML*: the connector's `writes: amend-trade:` block (section 8).
+
+**Step 6 · Pivot ›.** *UI*: group the grid by **Book** (the subtotals tick), then press **Pivot ›**: the Pivot opens on the same kind with the
+filters, the grouping as rows and the quantities as sums, live while the trades are. *CLI*: none; the Pivot is a console page.
+
+Pictures for the steps are listed in [section 14](#14-screenshots-to-add).
+
+## 14. Screenshots to add
+
+Not yet captured (they need a server with the demo stream): `live-blotter-grid` (step 2), `live-record-panel` (step 3), `live-approvals`
+(step 4), `live-tray-applied` (step 5), `live-pivot-from-blotter` (step 6), `live-raw-json` (section 2).
+
+## 15. The trading module
+
+The module ships the trade blotter (`/live/trade`) and its binding; the steps below are specific to trades.
+
+### 15.1 Switch it on (tutorial)
+
+```bash
+# 1. the module is on (Admin -> Modules, or the distribution lists it)
+drishti.py module list | grep trading
+# trading  1.0.0  first-party  content  on
+
+# 2. the trade kind is bound with a live source (section 15.2), then the blotter answers
+curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" $B/live | jq '.sets[].id'
+# "trade"
+curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" "$B/live/trade/rows?limit=3" | jq '{total, live, rows: [.rows[].id]}'
+# {"total": 4120, "live": true, "rows": ["MX-20004324", "MX-20004261", "MX-20004205"]}
+```
+
+### 15.2 Bind the trades
+
+The blotter reads the `trade` kind through `config/bindings.yaml`, like every module:
+
+```yaml
+bindings:
+  trade:
+    read: [trade-endur, trade-murex]   # the durable store: the snapshot
+    union: true
+    live: trade-kafka                  # the messaging connector: the changes, merged in by key and version
+```
+
+The Kafka connector reads its topic as the latest record per trade (`kind.<topic>: trade`, `id-field.<topic>: TRADE_ID`); RabbitMQ and
+ActiveMQ work the same way through their own connectors. Every change of the kind reaches the blotter as it is consumed.
+
+To land the day's live trades in the **in-memory lake** as well (for BI and the engines that read tables), a memory table reads the Kafka
+connector's state in one pass and keeps a day of it:
+
+```yaml
+# config/engines/memory-lake.yaml (excerpt; DATA_LAKE_GUIDE.md, the in-memory lake)
+drishti.lake.memory.tables:
+  - name: trades-live
+    store: livelake                       # config/lakes/livelake.yaml, root: mem://livelake
+    source: { connector: trade-kafka, kind: trade }
+    mode: merge
+    key: [TRADE_ID]
+    columns: [PORTFOLIO, TRADER_ID, TRADE_STATUS]
+    signal: true                          # refilled when the connector's last update moves
+    retention: { ttl: 1d, on: SOURCE_UPDATE_TIME }   # rows older than a day are dropped by the compaction
+```
+
+### 15.3 Edit a trade (tutorial)
+
+1. Select the trade; its panel opens with the fields you may change (Book, Price, Quantity; Status for middle office).
+2. Change the book, give a reason, **Submit**. The change goes to the write-back with the version you saw.
+3. Where the site asks for four eyes (`config/edit/policy.yaml`, `source: one`), it waits in **Approvals** for another person; otherwise it
+   goes to its lane at once.
+4. The outbox sends it to the source once; the source's new version comes back through the live binding and the row ticks.
+
+From the command line, the same request:
+
+```bash
+curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' $B/live/trade/edit -d '{
+  "entity": "MX-20004163", "basedOn": 7, "reason": "booked in the wrong book: ticket 4411",
+  "items": [{"field": "PORTFOLIO", "from": "BOOK-IRS-1", "to": "BOOK-IRS-2"}]}'
+# {"changes": [{"id": "chg-01M5V8...", "kind": "trade", "entity": "MX-20004163", "target": "source", "state": "awaiting", "needed": 1}]}
+```
+
+**A stale edit is refused.** When the trade moved since you saw it, the answer is `409 DRS-9303`:
+*trade MX-20004163 is at version 8, changed by R.DIAZ at 10:02:11; you edited version 7: open it again and edit from what is there*.
+The same guard runs again when the change is applied at the source (section 8), so a change that raced another one is refused there too.
