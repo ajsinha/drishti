@@ -34,7 +34,7 @@
    stream would have opened with (the view's generation, the alerts hello, a deleted entity's last frame, the end). */
 (function (root) {
   'use strict';
-  var TYPES = ['view', 'frame', 'gone', 'alert', 'notice', 'row', 'hello', 'tick', 'status', 'answer', 'run', 'progress', 'state', 'done', 'failed', 'updated', 'switches', 'edit', 'patch', 'reshape', 'ended'];               // run: a BI run changed (ARCHITECTURE.md §28 3.5); patch, reshape, ended: a live pivot (pivotlive:<id>); progress..updated: a computed panel's request (compute:<id>); switches: Admin -> Functions; edit: write-back
+  var TYPES = ['view', 'frame', 'gone', 'alert', 'notice', 'row', 'hello', 'tick', 'status', 'answer', 'run', 'progress', 'state', 'done', 'failed', 'updated', 'switches', 'edit', 'patch', 'reshape', 'ended', 'rows', 'resync'];               // run: a BI run changed (ARCHITECTURE.md §28 3.5); patch, reshape, ended: a live pivot (pivotlive:<id>); rows, resync: a live result set (live:<id>, with hello); progress..updated: a computed panel's request (compute:<id>); switches: Admin -> Functions; edit: write-back
   var REPLAY = ['view', 'hello', 'deleted', 'gone'];
 
   function Hub(opts) {

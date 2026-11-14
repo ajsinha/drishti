@@ -6976,6 +6976,526 @@
     }
     return { "manualFeed": manualFeed };
   })();
+  /* ---- src/drishti_live-model.js ---- */
+  __m["src/drishti_live-model.js"] = (function () {
+    var MASK = __lib("drishti-core").MASK, hasFormat = __lib("drishti-core").hasFormat;
+    const ROW_KEY = '__id';
+    const ROW_VERSION = '__v';
+    const WINDOW_ROWS = 400;
+    const TYPES = { id: 'text', number: 'number', amount: 'number', status: 'text', date: 'date', datetime: 'text', list: 'text', text: 'text' };
+    function gridRow(r) {
+      const row = Object.assign({}, r.doc || {});
+      row[ROW_KEY] = String(r.id);
+      row[ROW_VERSION] = r.version === undefined || r.version === null ? -1 : r.version;
+      return row;
+    }
+    function gridColumns(spec) {
+      const sums = new Set(spec.subtotals || []);
+      return (spec.columns || []).map((c) => {
+        const type = TYPES[c.type] || 'text';
+        const col = { id: c.field, field: c.field, header: c.label || c.field, type: type, width: c.width || (type === 'number' ? 110 : 130) };
+        if (c.format) {                                   // a named format the server knows; number4, price6 ...: that many decimals
+          const n = /^[a-z]+(\d)$/.exec(String(c.format));
+          if (hasFormat(c.format)) { col.format = c.format; } else if (n) { col.format = { decimals: +n[1] }; }
+        }
+        if (c.type === 'id') { col.pinned = 'left'; }
+        if (c.type === 'list') { col.valueGetter = (row) => (Array.isArray(row[c.field]) ? row[c.field].join(', ') : row[c.field]); }
+        if (c.type === 'status') { col.cellClass = (v) => 'dg-live-st dg-live-st-' + String(v || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
+        if (type === 'number' && sums.has(c.field)) { col.aggFunc = 'sum'; }
+        if (type === 'number') { col.enableValue = true; }
+        return col;
+      });
+    }
+    class LiveRows {
+      constructor() { this.byId = new Map(); this.total = 0; this.seq = 0; }
+      get size() { return this.byId.size; }
+      load(rows, total, seq) {
+        this.byId.clear();
+        (rows || []).forEach((r) => { const g = gridRow(r); this.byId.set(g[ROW_KEY], g); });
+        this.total = total === undefined ? this.byId.size : total;
+        this.seq = seq || 0;
+        return Array.from(this.byId.values());
+      }
+      merge(ev, paged) {
+        const add = [], update = [], remove = [];
+        let stale = 0;
+        (ev.upserts || []).forEach((r) => {
+          const g = gridRow(r), held = this.byId.get(g[ROW_KEY]);
+          if (held && g[ROW_VERSION] >= 0 && held[ROW_VERSION] >= g[ROW_VERSION]) { stale++; return; }
+          if (!held && paged) { return; }
+          this.byId.set(g[ROW_KEY], g);
+          (held ? update : add).push(g);
+        });
+        (ev.removes || []).forEach((id) => { if (this.byId.delete(String(id))) { remove.push(String(id)); } });
+        if (ev.total !== undefined) { this.total = ev.total; }
+        if (ev.seq !== undefined) { this.seq = ev.seq; }
+        return { add: add, update: update, remove: remove, stale: stale };
+      }
+    }
+    function windowIds(shown, first, last, paged) {
+      if (!paged) { return null; }
+      const from = Math.max(0, first - WINDOW_ROWS / 2), to = Math.min(shown.length - 1, last + WINDOW_ROWS / 2);
+      return shown.slice(from, to + 1);
+    }
+    function editItems(record, values, fields) {
+      const out = [];
+      (fields || []).forEach((f) => {
+        if (!(f.id in values)) { return; }
+        const from = record[f.bind], to = values[f.id];
+        if (to === undefined || (to === '' && (from === null || from === undefined)) || String(from) === String(to)) { return; }
+        out.push({ field: f.bind, from: from === undefined ? null : from, to: to });
+      });
+      return out;
+    }
+    function editSchema(spec, record) {
+      const props = {}, value = {}, required = [];
+      (spec.fields || []).forEach((f) => {
+        const number = f.type === 'number' || f.type === 'integer';
+        const p = { title: f.label || f.id, type: number ? 'number' : 'string' };
+        if (f.options && f.options.length) { p.enum = f.options.map((o) => o.value); p.enumLabels = f.options.map((o) => o.label || o.value); p.widget = 'select'; p.allowEmpty = false; }
+        if (f.min !== null && f.min !== undefined) { p.minimum = f.min; }
+        if (f.max !== null && f.max !== undefined) { p.maximum = f.max; }
+        if (f.pattern) { p.pattern = f.pattern; }
+        if (f.readonly || f.bind === spec.key) { p.readOnly = true; }               // the key is never edited
+        p.hook = 'live-field-' + f.id;
+        props[f.id] = p;
+        if (f.required) { required.push(f.id); }
+        const v = record[f.bind];
+        if (v !== undefined && v !== null) { value[f.id] = v; }
+      });
+      props.reason = { type: 'string', title: 'Reason', widget: 'textarea', hook: 'live-reason', description: spec.reason === 'required' ? 'Required: it goes in the audit.' : 'Optional: it goes in the audit.' };
+      if (spec.reason === 'required') { required.push('reason'); }
+      return { schema: { type: 'object', properties: props, required: required, order: Object.keys(props) }, value: value };
+    }
+    function pivotLayout(spec, o) {
+      const opt = o || {}, filters = {};
+      Object.keys(opt.filters || {}).forEach((f) => { if ((opt.filters[f] || []).length) { filters[f] = { in: opt.filters[f].slice() }; } });
+      const numeric = (spec.columns || []).filter((c) => (c.type === 'number' || c.type === 'amount') && c.field !== spec.version).map((c) => c.field);
+      const values = (opt.values && opt.values.length ? opt.values : numeric).map((f) => ({ measure: 'sum(' + f + ')', as: f }));
+      const groups = (opt.groupBy ? opt.groupBy : spec.groupBy || []).slice();
+      return { source: spec.kind, view: { rows: groups, columns: [], values: values.length ? values : [{ measure: 'count()', as: 'Rows' }], filters: filters } };
+    }
+    function pivotHref(layout, live) {
+      return '/pivot?source=' + encodeURIComponent(layout.source) + '&lay=' + encodeURIComponent(JSON.stringify(layout.view)) + (live ? '&live=1' : '');
+    }
+    function linkFor(link, row) {
+      return { label: link.label, href: String(link.href).replace(/\{([A-Z0-9_]+)\}/g, (m, f) => encodeURIComponent(row && row[f] !== undefined && row[f] !== null ? row[f] : '')) };
+    }
+    function maskedPaths(doc, base) {
+      const out = [];
+      const walk = (v, p) => {
+        if (v === MASK) { out.push(p); } else if (Array.isArray(v)) { v.forEach((x, i) => walk(x, p + '[' + i + ']')); } else if (v && typeof v === 'object') { Object.keys(v).forEach((k) => walk(v[k], p ? p + '.' + k : k)); }
+      };
+      walk(doc, base || '');
+      return out;
+    }
+    function changedFields(then, now) {
+      const keys = new Set(Object.keys(then || {}).concat(Object.keys(now || {})));
+      return Array.from(keys).filter((k) => JSON.stringify((then || {})[k]) !== JSON.stringify((now || {})[k]));
+    }
+    function httpLiveApi(o) {
+      const base = (o.base || '/api/live').replace(/\/$/, ''), id = encodeURIComponent(o.id);
+      const f = o.fetch || ((typeof fetch === 'function') ? fetch.bind(globalThis) : null);
+      const call = (method, path, body) => f(path, { method: method, credentials: 'same-origin', headers: body ? { 'Content-Type': 'application/json', Accept: 'application/json' } : { Accept: 'application/json' },
+        body: body ? JSON.stringify(body) : undefined }).then((r) => r.json().catch(() => ({})).then((j) => {
+        if (!r.ok) { const e = new Error(j.detail || ('HTTP ' + r.status)); e.code = j.code; e.status = r.status; throw e; }
+        return j;
+      }));
+      const q = (p) => Object.keys(p).filter((k) => p[k] !== undefined && p[k] !== null && p[k] !== '').map((k) => k + '=' + encodeURIComponent(p[k])).join('&');
+      return {
+        rows: (p) => call('GET', base + '/' + id + '/rows?' + q(p || {})),
+        row: (entity) => call('GET', base + '/' + id + '/rows/' + encodeURIComponent(entity)),
+        edit: (body) => call('POST', base + '/' + id + '/edit', body),
+        window: (stream, body) => call('POST', base + '/' + id + '/stream/' + encodeURIComponent(stream) + '/window', body),
+        history: (kind, entity) => call('GET', '/api/changes?' + q({ kind: kind, entity: entity, limit: 50 })),
+        mine: (kind) => call('GET', '/api/changes?' + q({ mine: 'true', kind: kind, limit: 100 }))
+      };
+    }
+    return { "ROW_KEY": ROW_KEY, "ROW_VERSION": ROW_VERSION, "WINDOW_ROWS": WINDOW_ROWS, "gridRow": gridRow, "gridColumns": gridColumns, "LiveRows": LiveRows, "windowIds": windowIds, "editItems": editItems, "editSchema": editSchema, "pivotLayout": pivotLayout, "pivotHref": pivotHref, "linkFor": linkFor, "maskedPaths": maskedPaths, "changedFields": changedFields, "httpLiveApi": httpLiveApi };
+  })();
+  /* ---- src/drishti_live-panel.js ---- */
+  __m["src/drishti_live-panel.js"] = (function () {
+    var h = __lib("drishti-core").h, MASK = __lib("drishti-core").MASK;
+    var Form = __lib("drishti-inputs").Form;
+    var ROW_KEY = __m["src/drishti_live-model.js"].ROW_KEY, ROW_VERSION = __m["src/drishti_live-model.js"].ROW_VERSION, editItems = __m["src/drishti_live-model.js"].editItems, editSchema = __m["src/drishti_live-model.js"].editSchema, linkFor = __m["src/drishti_live-model.js"].linkFor, maskedPaths = __m["src/drishti_live-model.js"].maskedPaths, changedFields = __m["src/drishti_live-model.js"].changedFields;
+    const TERMINAL = ['applied', 'refused', 'conflicted', 'withdrawn', 'rejected', 'failed'];
+    function stateWords(state, needed) {
+      const s = String(state || '');
+      if (s === 'awaiting') { return 'waiting for ' + (needed || 1) + ' approver' + ((needed || 1) === 1 ? '' : 's') + ' (four eyes)'; }
+      if (s === 'queued' || s === 'applying') { return 'on its way to the source'; }
+      return s || 'unknown';
+    }
+    function isPending(change) { return TERMINAL.indexOf(String(change.state || '')) < 0; }
+    function itemsText(change) {
+      return (change.items || []).map((i) => String(i.path || i.field) + ' ' + show(i.from) + ' → ' + show(i.to)).join(', ');
+    }
+    function show(v) { return v === null || v === undefined || v === '' ? '—' : typeof v === 'object' ? JSON.stringify(v) : String(v); }
+    class RecordPanel {
+      constructor(host, o) {
+        this.host = host;
+        this.doc = host.ownerDocument;
+        this.o = o;
+        this.spec = o.spec;
+        this.api = o.api;
+        this.row = o.row;
+        this.id = o.row[ROW_KEY];
+        this.opened = Object.assign({}, o.row);              // the record as the person read it: an edit is made on this version
+        this.openedVersion = o.row[ROW_VERSION];
+        this.tab = 'record';
+        this.raw = null;
+        this.form = null;
+        this.draw();
+      }
+      get key() { return this.id; }
+      draw() {
+        if (this.form) { this.form.destroy(); this.form = null; }
+        const d = this.doc;
+        this.host.textContent = '';
+        this.host.setAttribute('data-record', this.id);
+        const tabs = h(d, 'div', { cls: 'dg-live-tabs', attrs: { role: 'tablist' } }, [['record', 'Record'], ['history', 'History'], ['raw', 'Raw JSON']].map(([id, label]) =>
+          h(d, 'button', { cls: 'dg-live-tab' + (this.tab === id ? ' on' : ''), text: label, data: { tab: id }, attrs: { type: 'button', role: 'tab', 'aria-selected': this.tab === id ? 'true' : 'false' },
+            on: { click: () => { this.tab = id; this.draw(); } } })));
+        this.banner = h(d, 'div', { cls: 'dg-live-changed', attrs: { role: 'status', 'aria-live': 'polite', hidden: true } });
+        this.body = h(d, 'div', { cls: 'dg-live-tabbody', attrs: { role: 'tabpanel' } });
+        this.host.append(
+          h(d, 'header', { cls: 'dg-live-phead' }, [
+            h(d, 'h3', { cls: 'dg-live-ptitle' }, [h(d, 'span', { text: this.id, cls: 'dg-live-pkey' }), ' ', h(d, 'span', { text: 'v' + this.row[ROW_VERSION], cls: 'dg-live-pver', data: { version: this.row[ROW_VERSION] } })]),
+            h(d, 'button', { cls: 'dg-live-close', text: '×', attrs: { type: 'button', 'aria-label': 'Close the panel' }, on: { click: () => this.o.onClose() } })]),
+          this.links(), tabs, this.banner, this.body);
+        ({ record: () => this.drawRecord(), history: () => this.drawHistory(), raw: () => this.drawRaw() })[this.tab]();
+        this.noteChange();
+      }
+      links() {
+        const d = this.doc;
+        return h(d, 'div', { cls: 'dg-live-links' }, (this.spec.links || []).map((l) => {
+          const x = linkFor(l, this.row);
+          return h(d, 'a', { cls: 'dg-live-link', text: x.label, attrs: { href: x.href }, data: { link: l.label } });
+        }));
+      }
+      drawRecord() {
+        const d = this.doc, spec = this.spec;
+        if (!spec.editable || !(spec.fields || []).length) {
+          const kv = h(d, 'dl', { cls: 'dg-live-kv', data: { readonly: 'true' } });
+          (spec.columns || []).forEach((c) => { kv.append(h(d, 'dt', { text: c.label || c.field }), h(d, 'dd', { text: show(Array.isArray(this.row[c.field]) ? this.row[c.field].join(', ') : this.row[c.field]) })); });
+          this.body.append(kv, h(d, 'p', { cls: 'dg-live-note', text: spec.readOnly ? 'Read-only for you: ' + spec.readOnly : 'Read-only.', data: { why: 'readonly' } }));
+          return;
+        }
+        const host = h(d, 'div', { cls: 'dg-live-form' });
+        this.status = h(d, 'p', { cls: 'dg-live-status', attrs: { role: 'status', 'aria-live': 'polite' } });
+        this.body.append(host, this.status, h(d, 'p', { cls: 'dg-live-note', text: this.approvalNote() }));
+        const s = editSchema(spec, this.opened);
+        this.form = new Form(host, { schema: s.schema, value: s.value, submitLabel: 'Submit changes', doneText: '', resetButton: false, label: 'Edit ' + this.id,
+          onSubmit: (values) => this.submit(values) });
+      }
+      approvalNote() {
+        const a = this.spec.approval;
+        return !a || a === 'none' ? 'Saved changes go to the source at once.' : 'The site asks for a second person: a change waits for an approver before it is sent.';
+      }
+      submit(values) {
+        const reason = String(values.reason || '').trim();
+        const items = editItems(this.opened, values, this.spec.fields);
+        if (!items.length) { this.say('Nothing changed.', 'info'); return Promise.resolve(null); }
+        const body = { entity: this.id, items: items, basedOn: this.openedVersion };
+        if (reason) { body.reason = reason; }
+        return this.api.edit(body).then((res) => {
+          const ch = (res.changes || [])[0] || {};
+          this.say('Submitted: ' + stateWords(ch.state, ch.needed), 'ok');
+          this.o.onSaved(res);
+          return res;
+        }, (e) => {
+          this.say(e.message, 'bad');
+          throw e;
+        });
+      }
+      say(text, kind) { if (this.status) { this.status.textContent = text; this.status.setAttribute('data-kind', kind); } }
+      drawHistory() {
+        const d = this.doc, list = h(d, 'div', { cls: 'dg-live-tl', data: { history: 'true' } });
+        this.body.append(list);
+        list.append(h(d, 'p', { cls: 'dg-live-note', text: 'Loading…' }));
+        this.api.history(this.spec.kind, this.id).then((r) => {
+          list.textContent = '';
+          const rows = r.changes || [];
+          if (!rows.length) { list.append(h(d, 'p', { cls: 'dg-live-note', text: 'No change made here yet. The record is at version ' + this.row[ROW_VERSION] + '.' })); return; }
+          rows.forEach((c) => list.append(h(d, 'p', { cls: 'dg-live-hrow', data: { state: c.state } }, [
+            h(d, 'b', { text: String(c.at || '').replace('T', ' ').slice(0, 19) }), ' ', String(c.by || ''), ' · ', itemsText(c),
+            c.reason ? h(d, 'span', { cls: 'dg-live-reason', text: ' · “' + c.reason + '”' }) : null,
+            h(d, 'span', { cls: 'dg-live-state', text: ' (' + stateWords(c.state, c.needed) + ')' })])));
+        }, (e) => { list.textContent = ''; list.append(h(d, 'p', { cls: 'dg-live-note', text: e.message })); });
+      }
+      drawRaw() {
+        const d = this.doc, tree = h(d, 'div', { cls: 'dg-live-json', data: { raw: 'true' }, attrs: { role: 'tree', 'aria-label': 'The stored record' } });
+        const meta = h(d, 'span', { cls: 'dg-live-rawmeta', data: { rawVersion: '' } });
+        const bar = h(d, 'div', { cls: 'dg-live-rawbar' }, [meta,
+          h(d, 'button', { cls: 'dg-live-btn', text: 'Copy', data: { act: 'copy' }, attrs: { type: 'button' }, on: { click: () => this.copyRaw() } }),
+          h(d, 'button', { cls: 'dg-live-btn', text: 'Expand all', attrs: { type: 'button' }, on: { click: () => this.fold(tree, true) } }),
+          h(d, 'button', { cls: 'dg-live-btn', text: 'Collapse all', attrs: { type: 'button' }, on: { click: () => this.fold(tree, false) } })]);
+        this.body.append(bar, tree);
+        this.rawTree = tree;
+        this.rawMeta = meta;
+        tree.append(h(d, 'p', { cls: 'dg-live-note', text: 'Loading the stored record…' }));
+        this.loadRaw();
+      }
+      loadRaw() {
+        return this.api.row(this.id).then((r) => {
+          this.raw = r;
+          this.rawVersion = r.version;
+          this.rawTree.textContent = '';
+          this.rawTree.append(this.node(this.doc, r.doc, '', 0));
+          this.rawMeta.textContent = 'version ' + r.version + ' · seq ' + r.seq + ' · ' + Object.keys(r.doc || {}).length + ' fields';
+          this.rawMeta.setAttribute('data-raw-version', r.version);
+          this.noteChange();
+        }, (e) => { this.rawTree.textContent = ''; this.rawTree.append(h(this.doc, 'p', { cls: 'dg-live-note', text: e.message })); });
+      }
+      node(d, v, name, depth) {
+        const label = name === '' ? null : h(d, 'span', { cls: 'dg-live-jk', text: name + ': ' });
+        if (v && typeof v === 'object') {
+          const arr = Array.isArray(v), keys = arr ? v.map((x, i) => i) : Object.keys(v);
+          const det = h(d, 'details', { cls: 'dg-live-jn', attrs: { open: depth < 2, role: 'treeitem' } }, [
+            h(d, 'summary', {}, [label, h(d, 'span', { cls: 'dg-live-jc', text: arr ? '[' + keys.length + ']' : '{' + keys.length + '}' })])]);
+          keys.forEach((k) => det.append(this.node(d, v[k], String(k), depth + 1)));
+          return det;
+        }
+        const masked = v === MASK;
+        return h(d, 'div', { cls: 'dg-live-jl', attrs: { role: 'treeitem' } }, [label, h(d, 'span', { cls: 'dg-live-jv dg-live-j' + (masked ? 'mask' : v === null ? 'null' : typeof v),
+          text: v === null ? 'null' : typeof v === 'string' ? '"' + v + '"' : String(v), attrs: { title: masked ? 'Masked for you: your role may not see this field' : null }, data: masked ? { masked: 'true' } : {} })]);
+      }
+      fold(tree, open) { tree.querySelectorAll('details').forEach((x) => { x.open = open; }); }
+      copyRaw() {
+        if (!this.raw) { return Promise.resolve(); }
+        const text = JSON.stringify(this.raw.doc, null, 2), masked = maskedPaths(this.raw.doc).length;
+        return Promise.resolve(this.o.copy ? this.o.copy(text) : null).then(() => {
+          const b = this.body.querySelector('[data-act="copy"]');
+          if (b) { b.textContent = masked ? 'Copied (' + masked + ' masked)' : 'Copied'; b.setAttribute('data-copied', 'true'); }
+        });
+      }
+      update(row) {
+        const before = this.row;
+        this.row = row;
+        this.changed = changedFields(before, row).filter((k) => k !== ROW_VERSION);
+        this.noteChange();
+      }
+      noteChange() {
+        if (!this.banner) { return; }
+        const moved = this.row[ROW_VERSION] !== this.openedVersion || (this.rawVersion !== undefined && this.row[ROW_VERSION] !== this.rawVersion);
+        this.banner.hidden = !moved;
+        this.banner.textContent = '';
+        if (!moved) { return; }
+        const d = this.doc;
+        this.banner.append('Changed since you opened it: now version ' + this.row[ROW_VERSION] + (this.row[ROW_VERSION] === this.openedVersion ? '' : ' (you opened ' + this.openedVersion + ')') + '. ',
+          h(d, 'button', { cls: 'dg-live-btn', text: 'Reload', data: { act: 'reload' }, attrs: { type: 'button' }, on: { click: () => this.reload() } }));
+      }
+      reload() {
+        this.opened = Object.assign({}, this.row);
+        this.openedVersion = this.row[ROW_VERSION];
+        this.rawVersion = undefined;
+        this.draw();
+      }
+      destroy() { if (this.form) { this.form.destroy(); this.form = null; } this.host.textContent = ''; this.host.removeAttribute('data-record'); }
+    }
+    return { "stateWords": stateWords, "isPending": isPending, "itemsText": itemsText, "RecordPanel": RecordPanel };
+  })();
+  /* ---- src/drishti_live-set.js ---- */
+  __m["src/drishti_live-set.js"] = (function () {
+    var h = __lib("drishti-core").h, announce = __lib("drishti-core").announce;
+    var selectElement = __lib("drishti-inputs").selectElement;
+    var Grid = __m["src/drishti_grid-view.js"].Grid;
+    var ROW_KEY = __m["src/drishti_live-model.js"].ROW_KEY, ROW_VERSION = __m["src/drishti_live-model.js"].ROW_VERSION, LiveRows = __m["src/drishti_live-model.js"].LiveRows, gridColumns = __m["src/drishti_live-model.js"].gridColumns, windowIds = __m["src/drishti_live-model.js"].windowIds, pivotLayout = __m["src/drishti_live-model.js"].pivotLayout, pivotHref = __m["src/drishti_live-model.js"].pivotHref;
+    var RecordPanel = __m["src/drishti_live-panel.js"].RecordPanel, isPending = __m["src/drishti_live-panel.js"].isPending, itemsText = __m["src/drishti_live-panel.js"].itemsText, stateWords = __m["src/drishti_live-panel.js"].stateWords;
+    const LIVE_STATES = Object.freeze(['connecting', 'live', 'reconnecting', 'paused', 'ended', 'failed']);
+    const SNAPSHOT_ROWS = 5000;
+    const WINDOW_DELAY_MS = 200;
+    class LiveSetGrid {
+      constructor(host, o) {
+        this.host = host;
+        this.doc = host.ownerDocument;
+        this.o = o;
+        this.spec = o.spec;
+        this.api = o.api;
+        this.rows = new LiveRows();
+        this.state = 'connecting';
+        this.live = false;
+        this.paged = false;
+        this.stream = null;
+        this.hellos = 0;
+        this.paused = false;
+        this.panel = null;
+        this.pending = [];
+        this.timer = 0;
+        this.stats = { batches: 0, upserts: 0, stale: 0, resyncs: 0 };
+        this.build();
+      }
+      build() {
+        const d = this.doc, spec = this.spec;
+        this.host.classList.add('dg-liveset');
+        this.host.setAttribute('data-live-set', spec.id);
+        this.status = h(d, 'span', { cls: 'dg-live-chip', attrs: { role: 'status', 'aria-live': 'polite' }, data: { state: this.state } });
+        this.pauseBtn = h(d, 'button', { cls: 'dg-live-btn', text: 'Pause', data: { act: 'pause' }, attrs: { type: 'button' }, on: { click: () => this.pause(!this.paused) } });
+        this.pivotBtn = h(d, 'button', { cls: 'dg-live-btn', text: 'Pivot ›', data: { act: 'pivot' }, attrs: { type: 'button', title: 'The same rows, filters and grouping in the Pivot' }, on: { click: () => this.toPivot() } });
+        this.trayBtn = spec.tray ? h(d, 'button', { cls: 'dg-live-btn', text: 'My changes (0)', data: { act: 'tray' }, attrs: { type: 'button', 'aria-expanded': 'false' }, on: { click: () => this.toggleTray() } }) : null;
+        const groupable = (spec.columns || []).filter((c) => c.type !== 'number' && c.type !== 'amount' && c.type !== 'list' && c.type !== 'datetime');
+        this.groupSel = selectElement(d, { options: [{ value: '', label: 'No grouping' }].concat(groupable.map((c) => ({ value: c.field, label: c.label || c.field }))), value: (spec.groupBy || [])[0] || '',
+          label: 'Group by', search: false }, { class: 'dg-live-group' });
+        this.groupSel.component.on('change', (e) => this.group(e.value));
+        this.bar = h(d, 'div', { cls: 'dg-live-bar', attrs: { role: 'toolbar', 'aria-label': (spec.title || spec.id) + ' controls' } }, [
+          h(d, 'strong', { cls: 'dg-live-title', text: spec.title || spec.id }), this.status, h(d, 'span', { cls: 'dg-sp' }),
+          h(d, 'label', { cls: 'dg-live-lbl' }, ['Group by ', this.groupSel]), this.pauseBtn, this.pivotBtn, this.trayBtn]);
+        this.gridHost = h(d, 'div', { cls: 'dg-live-grid' });
+        this.panelHost = h(d, 'aside', { cls: 'dg-live-panel', attrs: { hidden: true, 'aria-label': 'Record' } });
+        this.trayHost = h(d, 'section', { cls: 'dg-live-tray', attrs: { hidden: true, 'aria-label': 'My pending changes' }, data: { tray: 'true' } });
+        this.host.append(this.bar, h(d, 'div', { cls: 'dg-live-split' }, [this.gridHost, this.panelHost]), this.trayHost);
+      }
+      setState(s, note) {
+        this.state = s;
+        this.status.setAttribute('data-state', s);
+        const n = this.rows.size, total = this.rows.total;
+        const count = (this.paged ? n.toLocaleString('en-US') + ' of ' + total.toLocaleString('en-US') : total.toLocaleString('en-US')) + ' rows';
+        this.status.textContent = ({ connecting: 'CONNECTING', live: this.live ? 'LIVE' : 'STATIC', reconnecting: 'RECONNECTING', paused: 'PAUSED', ended: 'ENDED', failed: 'FAILED' })[s] + ' · ' + count
+          + (note ? ' · ' + note : '');
+        this.status.setAttribute('data-rows', total);
+      }
+      start() {
+        return this.snapshot().then((rows) => {
+          const spec = this.spec;
+          this.grid = new Grid(this.gridHost, { columns: gridColumns(spec), rows: rows, getRowId: (r) => r[ROW_KEY], layout: this.o.layout || 'wells', density: 'compact', title: '',
+            label: spec.title || spec.id, rowSelection: 'single', clientAggregation: true, live: { flashMs: 1200 },
+            getRowData: (r) => ({ key: r[ROW_KEY] }) });
+          if ((spec.groupBy || []).length) { this.grid.model.setRowGroups(spec.groupBy.slice(0, 1)); }
+          this.grid.on('cellClicked', (c) => { if (c && c.kind === 'leaf' && c.data) { this.open(c.data); } });
+          this.gridHost.addEventListener('scroll', () => this.windowSoon(), true);
+          this.off = this.o.channel.subscribe({ hello: (m) => this.onHello(m || {}), rows: (m) => this.onRows(m || {}), resync: () => this.resync('the server asked'),
+            gone: (m) => this.setState('ended', (m && m.detail) || 'the stream ended'), error: () => { if (this.state !== 'paused') { this.setState('reconnecting'); } } });
+          this.setState(this.state === 'connecting' ? 'connecting' : this.state);
+          this.loadTray();
+          return this;
+        });
+      }
+      snapshot() {
+        const s = this.spec.sort || {};
+        return this.api.rows({ limit: this.o.snapshotRows || SNAPSHOT_ROWS, sort: s.field, descending: s.descending ? 'true' : '' }).then((r) => {
+          this.live = !!r.live;
+          const rows = this.rows.load(r.rows || [], r.total, r.seq);
+          this.paged = this.rows.total > rows.length;
+          return rows;
+        });
+      }
+      resync() {
+        this.stats.resyncs++;
+        this.pending = [];
+        return this.snapshot().then((rows) => {
+          this.grid.setRows(rows);
+          this.refreshPanel();
+          this.setState(this.paused ? 'paused' : 'live');
+          this.sendWindow();
+        }, (e) => this.setState('failed', e.message));
+      }
+      onHello(m) {
+        this.stream = m.stream;
+        this.hellos++;
+        if (m.live !== undefined) { this.live = !!m.live; }
+        if (this.hellos > 1) { this.resync(); return; }       // a connection that came back: what was missed is not replayed
+        this.setState(this.paused ? 'paused' : 'live');
+        this.sendWindow();
+      }
+      onRows(ev) {
+        if (this.paused) { return; }
+        const tx = this.rows.merge(ev, this.paged);
+        this.stats.batches++;
+        this.stats.upserts += tx.add.length + tx.update.length;
+        this.stats.stale += tx.stale;
+        if (tx.add.length || tx.update.length || tx.remove.length) { this.grid.applyTransactionAsync(tx); }
+        tx.update.concat(tx.add).forEach((r) => { if (this.panel && this.panel.key === r[ROW_KEY]) { this.panel.update(r); } });
+        tx.remove.forEach((id) => { if (this.panel && this.panel.key === id) { this.panel.update(Object.assign({}, this.panel.row, { [ROW_VERSION]: -2 })); } });
+        this.setState('live');
+      }
+      pause(on) {
+        this.paused = !!on;
+        this.pauseBtn.textContent = on ? 'Resume' : 'Pause';
+        this.pauseBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        if (on) { this.setState('paused'); announce('Live updates paused'); } else { this.resync(); announce('Live updates resumed'); }
+      }
+      windowSoon() {
+        if (!this.paged) { return; }
+        clearTimeout(this.timer);
+        this.timer = setTimeout(() => this.sendWindow(), WINDOW_DELAY_MS);
+      }
+      sendWindow() {
+        if (!this.stream || !this.grid) { return Promise.resolve(); }
+        const m = this.grid.model;
+        let ids = null;
+        if (this.paged) {
+          const shown = [];
+          for (let i = 0; i < m.rowCount(); i++) { const id = m.idAt(i); if (id) { shown.push(id); } }
+          const v = m.viewport.rows();
+          ids = windowIds(shown, v.firstVisible, v.lastVisible, true);
+        }
+        this.lastWindow = ids === null ? { all: true } : { ids: ids };
+        return this.api.window(this.stream, this.lastWindow).then(() => undefined, () => undefined);
+      }
+      group(field) { this.grid.model.setRowGroups(field ? [field] : []); this.grid.refresh(); }
+      open(row) {
+        if (this.panel && this.panel.key === row[ROW_KEY]) { return; }
+        if (this.panel) { this.panel.destroy(); }
+        this.panelHost.hidden = false;
+        this.host.setAttribute('data-panel', 'open');
+        this.panel = new RecordPanel(this.panelHost, { spec: this.spec, api: this.api, row: row, copy: this.o.copy || ((t) => navigator.clipboard.writeText(t)),
+          onSaved: () => this.loadTray(), onClose: () => this.close() });
+      }
+      close() {
+        if (this.panel) { this.panel.destroy(); this.panel = null; }
+        this.panelHost.hidden = true;
+        this.host.removeAttribute('data-panel');
+      }
+      refreshPanel() {
+        if (!this.panel) { return; }
+        const fresh = this.rows.byId.get(this.panel.key);
+        if (fresh) { this.panel.update(fresh); }
+      }
+      loadTray() {
+        if (!this.spec.tray || !this.api.mine) { return Promise.resolve([]); }
+        return this.api.mine(this.spec.kind).then((r) => {
+          this.pending = (r.changes || []).filter(isPending);
+          this.drawTray();
+          return this.pending;
+        }, () => []);
+      }
+      drawTray() {
+        const d = this.doc;
+        this.trayBtn.textContent = 'My changes (' + this.pending.length + ')';
+        this.trayHost.textContent = '';
+        if (!this.pending.length) { this.trayHost.append(h(d, 'p', { cls: 'dg-live-note', text: 'Nothing of yours is waiting.' })); return; }
+        this.pending.forEach((c) => this.trayHost.append(h(d, 'p', { cls: 'dg-live-hrow', data: { change: c.id, state: c.state } }, [
+          h(d, 'button', { cls: 'dg-live-link', text: c.entity, attrs: { type: 'button' }, on: { click: () => { const r = this.rows.byId.get(String(c.entity)); if (r) { this.open(r); } } } }),
+          ' · ', itemsText(c), h(d, 'span', { cls: 'dg-live-state', text: ' (' + stateWords(c.state, c.needed) + ')' })])));
+      }
+      toggleTray() {
+        this.trayHost.hidden = !this.trayHost.hidden;
+        this.trayBtn.setAttribute('aria-expanded', this.trayHost.hidden ? 'false' : 'true');
+        if (!this.trayHost.hidden) { this.loadTray(); }
+      }
+      filterMembers() {
+        const out = {}, fm = this.grid.model.filterModel || {};
+        Object.keys(fm).forEach((k) => { const f = fm[k]; if (f && f.type === 'set' && Array.isArray(f.values) && f.values.length) { out[k] = f.values.slice(); } });
+        return out;
+      }
+      pivotAddress() {
+        const groups = this.grid.model.rowModel.groupBy || [];
+        return pivotHref(pivotLayout(this.spec, { groupBy: groups.slice(), filters: this.filterMembers() }), this.live);
+      }
+      toPivot() {
+        const href = this.pivotAddress();
+        if (this.o.navigate) { this.o.navigate(href); } else { this.doc.defaultView.location.assign(href); }
+      }
+      destroy() {
+        clearTimeout(this.timer);
+        if (this.off) { this.off(); this.off = null; }
+        if (this.panel) { this.panel.destroy(); }
+        if (this.grid) { this.grid.destroy(); }
+        this.host.textContent = '';
+        this.host.classList.remove('dg-liveset');
+      }
+    }
+    return { "LIVE_STATES": LIVE_STATES, "LiveSetGrid": LiveSetGrid };
+  })();
   /* ---- src/drishti_plain-render.js ---- */
   __m["src/drishti_plain-render.js"] = (function () {
     function renderWindow(grid) {
@@ -7008,7 +7528,7 @@
   __m["src/drishti_index.js"] = (function () {
     var defineGridElement = __m["src/drishti_grid-element.js"].defineGridElement;
     function install(root) { if (root && root.document && root.customElements) { defineGridElement(root.customElements, root); } }
-    return { "install": install, "ADDITIVE_FUNCS": __m["src/drishti_columns.js"].ADDITIVE_FUNCS, "normalizeColumn": __m["src/drishti_columns.js"].normalizeColumn, "getValue": __m["src/drishti_columns.js"].getValue, "formatValue": __m["src/drishti_columns.js"].formatValue, "ColumnModel": __m["src/drishti_columns.js"].ColumnModel, "AGG_FUNCS": __m["src/drishti_aggregate.js"].AGG_FUNCS, "aggFunc": __m["src/drishti_aggregate.js"].aggFunc, "registerAggFunc": __m["src/drishti_aggregate.js"].registerAggFunc, "unregisterAggFunc": __m["src/drishti_aggregate.js"].unregisterAggFunc, "parseMeasure": __m["src/drishti_aggregate.js"].parseMeasure, "isServerMeasure": __m["src/drishti_aggregate.js"].isServerMeasure, "aggregate": __m["src/drishti_aggregate.js"].aggregate, "SEP": __m["src/drishti_pivot.js"].SEP, "BLANK": __m["src/drishti_pivot.js"].BLANK, "memberText": __m["src/drishti_pivot.js"].memberText, "valueLabel": __m["src/drishti_pivot.js"].valueLabel, "normalizeView": __m["src/drishti_pivot.js"].normalizeView, "serverRequest": __m["src/drishti_pivot.js"].serverRequest, "memberFilters": __m["src/drishti_pivot.js"].memberFilters, "PivotState": __m["src/drishti_pivot.js"].PivotState, "pivotLocal": __m["src/drishti_pivot.js"].pivotLocal, "pivotApplyUpdates": __m["src/drishti_pivot-answer.js"].pivotApplyUpdates, "mergeAnswer": __m["src/drishti_pivot-answer.js"].mergeAnswer, "applyValueFilters": __m["src/drishti_pivot-answer.js"].applyValueFilters, "resultColumns": __m["src/drishti_pivot-answer.js"].resultColumns, "cellValue": __m["src/drishti_pivot-answer.js"].cellValue, "measureText": __m["src/drishti_pivot-answer.js"].measureText, "answerFormat": __m["src/drishti_pivot-answer.js"].answerFormat, "answerScales": __m["src/drishti_pivot-answer.js"].answerScales, "WELLS": __m["src/drishti_wells.js"].WELLS, "VALUE_FUNCS": __m["src/drishti_wells.js"].VALUE_FUNCS, "FUNC_LABELS": __m["src/drishti_wells.js"].FUNC_LABELS, "FUNC_ARGS": __m["src/drishti_wells.js"].FUNC_ARGS, "funcLabel": __m["src/drishti_wells.js"].funcLabel, "WellsModel": __m["src/drishti_wells.js"].WellsModel, "fieldIcon": __m["src/drishti_grid-fields.js"].fieldIcon, "fieldGroups": __m["src/drishti_grid-fields.js"].fieldGroups, "pickField": __m["src/drishti_grid-fields.js"].pickField, "openPicker": __m["src/drishti_grid-fields.js"].openPicker, "ViewPicker": __m["src/drishti_grid-views.js"].ViewPicker, "ClientRowModel": __m["src/drishti_client-rows.js"].ClientRowModel, "ServerRowModel": __m["src/drishti_server-rows.js"].ServerRowModel, "memoryDatasource": __m["src/drishti_server-rows.js"].memoryDatasource, "MAX_SCROLL_HEIGHT": __m["src/drishti_viewport.js"].MAX_SCROLL_HEIGHT, "columnAt": __m["src/drishti_viewport.js"].columnAt, "Viewport": __m["src/drishti_viewport.js"].Viewport, "SelectionModel": __m["src/drishti_selection.js"].SelectionModel, "rangeStats": __m["src/drishti_selection.js"].rangeStats, "toTsv": __m["src/drishti_selection.js"].toTsv, "rangeCells": __m["src/drishti_selection.js"].rangeCells, "crc32": __m["src/drishti_export.js"].crc32, "zipStore": __m["src/drishti_export.js"].zipStore, "excelFormat": __m["src/drishti_export.js"].excelFormat, "toXlsx": __m["src/drishti_export.js"].toXlsx, "XLSX_TYPE": __m["src/drishti_export.js"].XLSX_TYPE, "GridNavigator": __m["src/drishti_keyboard.js"].GridNavigator, "keyLabel": __m["src/drishti_keyboard.js"].keyLabel, "GridModel": __m["src/drishti_grid.js"].GridModel, "createGridModel": __m["src/drishti_grid.js"].createGridModel, "LAYOUTS": __m["src/drishti_grid-model-base.js"].LAYOUTS, "DENSITIES": __m["src/drishti_grid-model-base.js"].DENSITIES, "placeGrandRow": __m["src/drishti_grid-model-base.js"].placeGrandRow, "GridModelBase": __m["src/drishti_grid-model-base.js"].GridModelBase, "GRID_EVENTS": __m["src/drishti_grid-live.js"].GRID_EVENTS, "domEventName": __m["src/drishti_grid-live.js"].domEventName, "GridLive": __m["src/drishti_grid-live.js"].GridLive, "EDITORS": __m["src/drishti_grid-edit.js"].EDITORS, "editorOf": __m["src/drishti_grid-edit.js"].editorOf, "parseCellText": __m["src/drishti_grid-edit.js"].parseCellText, "validateCell": __m["src/drishti_grid-edit.js"].validateCell, "parseTsv": __m["src/drishti_grid-edit.js"].parseTsv, "GridEditing": __m["src/drishti_grid-edit.js"].GridEditing, "CellEditor": __m["src/drishti_grid-editors.js"].CellEditor, "manualFeed": __m["src/drishti_live.js"].manualFeed, "renderWindow": __m["src/drishti_plain-render.js"].renderWindow, "renderText": __m["src/drishti_plain-render.js"].renderText, "renderHtml": __m["src/drishti_plain-render.js"].renderHtml, "docTable": __m["src/drishti_doc-table.js"].docTable, "docPivotable": __m["src/drishti_doc-table.js"].docPivotable, "docDrill": __m["src/drishti_doc-table.js"].docDrill, "heatBucket": __m["src/drishti_doc-table.js"].heatBucket, "docPivot": __m["src/drishti_doc-table.js"].docPivot, "docPlainTable": __m["src/drishti_doc-table.js"].docPlainTable, "pageInfo": __m["src/drishti_doc-behave.js"].pageInfo, "enhanceDocTables": __m["src/drishti_doc-behave.js"].enhanceDocTables, "consoleTables": __m["src/drishti_doc-console.js"].consoleTables, "rowSelection": __m["src/drishti_doc-select.js"].rowSelection, "VIEW_EVENTS": __m["src/drishti_grid-ui.js"].VIEW_EVENTS, "PHONE_WIDTH": __m["src/drishti_grid-ui.js"].PHONE_WIDTH, "FUNCTION_KEYS": __m["src/drishti_grid-ui.js"].FUNCTION_KEYS, "CF_TYPES": __m["src/drishti_grid-ui.js"].CF_TYPES, "headerSpans": __m["src/drishti_grid-ui.js"].headerSpans, "pivotColumnLabels": __m["src/drishti_grid-ui.js"].pivotColumnLabels, "markGroups": __m["src/drishti_grid-ui.js"].markGroups, "isTotalCell": __m["src/drishti_grid-ui.js"].isTotalCell, "nonAdditiveNote": __m["src/drishti_grid-ui.js"].nonAdditiveNote, "colourScaleAlpha": __m["src/drishti_grid-ui.js"].colourScaleAlpha, "dataBarWidth": __m["src/drishti_grid-ui.js"].dataBarWidth, "cfBackground": __m["src/drishti_grid-ui.js"].cfBackground, "figureRange": __m["src/drishti_grid-ui.js"].figureRange, "ruleFor": __m["src/drishti_grid-ui.js"].ruleFor, "phoneColumns": __m["src/drishti_grid-ui.js"].phoneColumns, "pivotMeasures": __m["src/drishti_grid-ui.js"].pivotMeasures, "columnMenuItems": __m["src/drishti_grid-ui.js"].columnMenuItems, "cellMenuItems": __m["src/drishti_grid-ui.js"].cellMenuItems, "commandText": __m["src/drishti_grid-ui.js"].commandText, "parseCommand": __m["src/drishti_grid-ui.js"].parseCommand, "parseCondition": __m["src/drishti_grid-ui.js"].parseCondition, "conditionText": __m["src/drishti_grid-ui.js"].conditionText, "statusItems": __m["src/drishti_grid-ui.js"].statusItems, "cellLook": __m["src/drishti_grid-ui.js"].cellLook, "FlashTracker": __m["src/drishti_grid-ui.js"].FlashTracker, "Menu": __m["src/drishti_grid-dom.js"].Menu, "Notes": __m["src/drishti_grid-dom.js"].Notes, "sparkline": __m["src/drishti_grid-explain.js"].sparkline, "renderExplain": __m["src/drishti_grid-explain.js"].renderExplain, "localDrill": __m["src/drishti_grid-actions.js"].localDrill, "GridBase": __m["src/drishti_grid-base.js"].GridBase, "Grid": __m["src/drishti_grid-view.js"].Grid, "ELEMENT_NAME": __m["src/drishti_grid-element.js"].ELEMENT_NAME, "defineGridElement": __m["src/drishti_grid-element.js"].defineGridElement, "AG_MAPPING": __m["src/drishti_grid-ag-map.js"].AG_MAPPING, "AG_NOT_COVERED": __m["src/drishti_grid-ag-map.js"].AG_NOT_COVERED, "AG_GRID_OPTIONS": __m["src/drishti_grid-ag-map.js"].AG_GRID_OPTIONS, "AG_COLUMN_KEYS": __m["src/drishti_grid-ag-map.js"].AG_COLUMN_KEYS, "AG_UNSUPPORTED": __m["src/drishti_grid-ag-map.js"].AG_UNSUPPORTED, "AG_NO_OP": __m["src/drishti_grid-ag-map.js"].AG_NO_OP, "AG_EVENTS": __m["src/drishti_grid-ag-map.js"].AG_EVENTS, "agFilterToDrishti": __m["src/drishti_grid-ag-map.js"].agFilterToDrishti, "drishtiFilterToAg": __m["src/drishti_grid-ag-map.js"].drishtiFilterToAg, "translateFilterModel": __m["src/drishti_grid-ag-map.js"].translateFilterModel, "AG_GROUP_COLUMN": __m["src/drishti_grid-ag.js"].AG_GROUP_COLUMN, "AgReport": __m["src/drishti_grid-ag.js"].AgReport, "agAggFunc": __m["src/drishti_grid-ag.js"].agAggFunc, "translateAgOptions": __m["src/drishti_grid-ag.js"].translateAgOptions, "callGetRows": __m["src/drishti_grid-ag-server.js"].callGetRows, "agRequest": __m["src/drishti_grid-ag-server.js"].agRequest, "agDatasource": __m["src/drishti_grid-ag-server.js"].agDatasource, "parseResultField": __m["src/drishti_grid-ag-server.js"].parseResultField, "agServerPivot": __m["src/drishti_grid-ag-server.js"].agServerPivot, "AgEvents": __m["src/drishti_grid-ag-events.js"].AgEvents, "AgColumnsApi": __m["src/drishti_grid-ag-columns.js"].AgColumnsApi, "AgGridApi": __m["src/drishti_grid-ag-api.js"].AgGridApi, "createGridFromAgOptions": __m["src/drishti_grid-ag-api.js"].createGridFromAgOptions };
+    return { "install": install, "ADDITIVE_FUNCS": __m["src/drishti_columns.js"].ADDITIVE_FUNCS, "normalizeColumn": __m["src/drishti_columns.js"].normalizeColumn, "getValue": __m["src/drishti_columns.js"].getValue, "formatValue": __m["src/drishti_columns.js"].formatValue, "ColumnModel": __m["src/drishti_columns.js"].ColumnModel, "AGG_FUNCS": __m["src/drishti_aggregate.js"].AGG_FUNCS, "aggFunc": __m["src/drishti_aggregate.js"].aggFunc, "registerAggFunc": __m["src/drishti_aggregate.js"].registerAggFunc, "unregisterAggFunc": __m["src/drishti_aggregate.js"].unregisterAggFunc, "parseMeasure": __m["src/drishti_aggregate.js"].parseMeasure, "isServerMeasure": __m["src/drishti_aggregate.js"].isServerMeasure, "aggregate": __m["src/drishti_aggregate.js"].aggregate, "SEP": __m["src/drishti_pivot.js"].SEP, "BLANK": __m["src/drishti_pivot.js"].BLANK, "memberText": __m["src/drishti_pivot.js"].memberText, "valueLabel": __m["src/drishti_pivot.js"].valueLabel, "normalizeView": __m["src/drishti_pivot.js"].normalizeView, "serverRequest": __m["src/drishti_pivot.js"].serverRequest, "memberFilters": __m["src/drishti_pivot.js"].memberFilters, "PivotState": __m["src/drishti_pivot.js"].PivotState, "pivotLocal": __m["src/drishti_pivot.js"].pivotLocal, "pivotApplyUpdates": __m["src/drishti_pivot-answer.js"].pivotApplyUpdates, "mergeAnswer": __m["src/drishti_pivot-answer.js"].mergeAnswer, "applyValueFilters": __m["src/drishti_pivot-answer.js"].applyValueFilters, "resultColumns": __m["src/drishti_pivot-answer.js"].resultColumns, "cellValue": __m["src/drishti_pivot-answer.js"].cellValue, "measureText": __m["src/drishti_pivot-answer.js"].measureText, "answerFormat": __m["src/drishti_pivot-answer.js"].answerFormat, "answerScales": __m["src/drishti_pivot-answer.js"].answerScales, "WELLS": __m["src/drishti_wells.js"].WELLS, "VALUE_FUNCS": __m["src/drishti_wells.js"].VALUE_FUNCS, "FUNC_LABELS": __m["src/drishti_wells.js"].FUNC_LABELS, "FUNC_ARGS": __m["src/drishti_wells.js"].FUNC_ARGS, "funcLabel": __m["src/drishti_wells.js"].funcLabel, "WellsModel": __m["src/drishti_wells.js"].WellsModel, "fieldIcon": __m["src/drishti_grid-fields.js"].fieldIcon, "fieldGroups": __m["src/drishti_grid-fields.js"].fieldGroups, "pickField": __m["src/drishti_grid-fields.js"].pickField, "openPicker": __m["src/drishti_grid-fields.js"].openPicker, "ViewPicker": __m["src/drishti_grid-views.js"].ViewPicker, "ClientRowModel": __m["src/drishti_client-rows.js"].ClientRowModel, "ServerRowModel": __m["src/drishti_server-rows.js"].ServerRowModel, "memoryDatasource": __m["src/drishti_server-rows.js"].memoryDatasource, "MAX_SCROLL_HEIGHT": __m["src/drishti_viewport.js"].MAX_SCROLL_HEIGHT, "columnAt": __m["src/drishti_viewport.js"].columnAt, "Viewport": __m["src/drishti_viewport.js"].Viewport, "SelectionModel": __m["src/drishti_selection.js"].SelectionModel, "rangeStats": __m["src/drishti_selection.js"].rangeStats, "toTsv": __m["src/drishti_selection.js"].toTsv, "rangeCells": __m["src/drishti_selection.js"].rangeCells, "crc32": __m["src/drishti_export.js"].crc32, "zipStore": __m["src/drishti_export.js"].zipStore, "excelFormat": __m["src/drishti_export.js"].excelFormat, "toXlsx": __m["src/drishti_export.js"].toXlsx, "XLSX_TYPE": __m["src/drishti_export.js"].XLSX_TYPE, "GridNavigator": __m["src/drishti_keyboard.js"].GridNavigator, "keyLabel": __m["src/drishti_keyboard.js"].keyLabel, "GridModel": __m["src/drishti_grid.js"].GridModel, "createGridModel": __m["src/drishti_grid.js"].createGridModel, "LAYOUTS": __m["src/drishti_grid-model-base.js"].LAYOUTS, "DENSITIES": __m["src/drishti_grid-model-base.js"].DENSITIES, "placeGrandRow": __m["src/drishti_grid-model-base.js"].placeGrandRow, "GridModelBase": __m["src/drishti_grid-model-base.js"].GridModelBase, "GRID_EVENTS": __m["src/drishti_grid-live.js"].GRID_EVENTS, "domEventName": __m["src/drishti_grid-live.js"].domEventName, "GridLive": __m["src/drishti_grid-live.js"].GridLive, "EDITORS": __m["src/drishti_grid-edit.js"].EDITORS, "editorOf": __m["src/drishti_grid-edit.js"].editorOf, "parseCellText": __m["src/drishti_grid-edit.js"].parseCellText, "validateCell": __m["src/drishti_grid-edit.js"].validateCell, "parseTsv": __m["src/drishti_grid-edit.js"].parseTsv, "GridEditing": __m["src/drishti_grid-edit.js"].GridEditing, "CellEditor": __m["src/drishti_grid-editors.js"].CellEditor, "manualFeed": __m["src/drishti_live.js"].manualFeed, "ROW_KEY": __m["src/drishti_live-model.js"].ROW_KEY, "ROW_VERSION": __m["src/drishti_live-model.js"].ROW_VERSION, "WINDOW_ROWS": __m["src/drishti_live-model.js"].WINDOW_ROWS, "gridRow": __m["src/drishti_live-model.js"].gridRow, "gridColumns": __m["src/drishti_live-model.js"].gridColumns, "LiveRows": __m["src/drishti_live-model.js"].LiveRows, "windowIds": __m["src/drishti_live-model.js"].windowIds, "editItems": __m["src/drishti_live-model.js"].editItems, "editSchema": __m["src/drishti_live-model.js"].editSchema, "pivotLayout": __m["src/drishti_live-model.js"].pivotLayout, "pivotHref": __m["src/drishti_live-model.js"].pivotHref, "linkFor": __m["src/drishti_live-model.js"].linkFor, "maskedPaths": __m["src/drishti_live-model.js"].maskedPaths, "changedFields": __m["src/drishti_live-model.js"].changedFields, "httpLiveApi": __m["src/drishti_live-model.js"].httpLiveApi, "stateWords": __m["src/drishti_live-panel.js"].stateWords, "isPending": __m["src/drishti_live-panel.js"].isPending, "itemsText": __m["src/drishti_live-panel.js"].itemsText, "RecordPanel": __m["src/drishti_live-panel.js"].RecordPanel, "LIVE_STATES": __m["src/drishti_live-set.js"].LIVE_STATES, "LiveSetGrid": __m["src/drishti_live-set.js"].LiveSetGrid, "renderWindow": __m["src/drishti_plain-render.js"].renderWindow, "renderText": __m["src/drishti_plain-render.js"].renderText, "renderHtml": __m["src/drishti_plain-render.js"].renderHtml, "docTable": __m["src/drishti_doc-table.js"].docTable, "docPivotable": __m["src/drishti_doc-table.js"].docPivotable, "docDrill": __m["src/drishti_doc-table.js"].docDrill, "heatBucket": __m["src/drishti_doc-table.js"].heatBucket, "docPivot": __m["src/drishti_doc-table.js"].docPivot, "docPlainTable": __m["src/drishti_doc-table.js"].docPlainTable, "pageInfo": __m["src/drishti_doc-behave.js"].pageInfo, "enhanceDocTables": __m["src/drishti_doc-behave.js"].enhanceDocTables, "consoleTables": __m["src/drishti_doc-console.js"].consoleTables, "rowSelection": __m["src/drishti_doc-select.js"].rowSelection, "VIEW_EVENTS": __m["src/drishti_grid-ui.js"].VIEW_EVENTS, "PHONE_WIDTH": __m["src/drishti_grid-ui.js"].PHONE_WIDTH, "FUNCTION_KEYS": __m["src/drishti_grid-ui.js"].FUNCTION_KEYS, "CF_TYPES": __m["src/drishti_grid-ui.js"].CF_TYPES, "headerSpans": __m["src/drishti_grid-ui.js"].headerSpans, "pivotColumnLabels": __m["src/drishti_grid-ui.js"].pivotColumnLabels, "markGroups": __m["src/drishti_grid-ui.js"].markGroups, "isTotalCell": __m["src/drishti_grid-ui.js"].isTotalCell, "nonAdditiveNote": __m["src/drishti_grid-ui.js"].nonAdditiveNote, "colourScaleAlpha": __m["src/drishti_grid-ui.js"].colourScaleAlpha, "dataBarWidth": __m["src/drishti_grid-ui.js"].dataBarWidth, "cfBackground": __m["src/drishti_grid-ui.js"].cfBackground, "figureRange": __m["src/drishti_grid-ui.js"].figureRange, "ruleFor": __m["src/drishti_grid-ui.js"].ruleFor, "phoneColumns": __m["src/drishti_grid-ui.js"].phoneColumns, "pivotMeasures": __m["src/drishti_grid-ui.js"].pivotMeasures, "columnMenuItems": __m["src/drishti_grid-ui.js"].columnMenuItems, "cellMenuItems": __m["src/drishti_grid-ui.js"].cellMenuItems, "commandText": __m["src/drishti_grid-ui.js"].commandText, "parseCommand": __m["src/drishti_grid-ui.js"].parseCommand, "parseCondition": __m["src/drishti_grid-ui.js"].parseCondition, "conditionText": __m["src/drishti_grid-ui.js"].conditionText, "statusItems": __m["src/drishti_grid-ui.js"].statusItems, "cellLook": __m["src/drishti_grid-ui.js"].cellLook, "FlashTracker": __m["src/drishti_grid-ui.js"].FlashTracker, "Menu": __m["src/drishti_grid-dom.js"].Menu, "Notes": __m["src/drishti_grid-dom.js"].Notes, "sparkline": __m["src/drishti_grid-explain.js"].sparkline, "renderExplain": __m["src/drishti_grid-explain.js"].renderExplain, "localDrill": __m["src/drishti_grid-actions.js"].localDrill, "GridBase": __m["src/drishti_grid-base.js"].GridBase, "Grid": __m["src/drishti_grid-view.js"].Grid, "ELEMENT_NAME": __m["src/drishti_grid-element.js"].ELEMENT_NAME, "defineGridElement": __m["src/drishti_grid-element.js"].defineGridElement, "AG_MAPPING": __m["src/drishti_grid-ag-map.js"].AG_MAPPING, "AG_NOT_COVERED": __m["src/drishti_grid-ag-map.js"].AG_NOT_COVERED, "AG_GRID_OPTIONS": __m["src/drishti_grid-ag-map.js"].AG_GRID_OPTIONS, "AG_COLUMN_KEYS": __m["src/drishti_grid-ag-map.js"].AG_COLUMN_KEYS, "AG_UNSUPPORTED": __m["src/drishti_grid-ag-map.js"].AG_UNSUPPORTED, "AG_NO_OP": __m["src/drishti_grid-ag-map.js"].AG_NO_OP, "AG_EVENTS": __m["src/drishti_grid-ag-map.js"].AG_EVENTS, "agFilterToDrishti": __m["src/drishti_grid-ag-map.js"].agFilterToDrishti, "drishtiFilterToAg": __m["src/drishti_grid-ag-map.js"].drishtiFilterToAg, "translateFilterModel": __m["src/drishti_grid-ag-map.js"].translateFilterModel, "AG_GROUP_COLUMN": __m["src/drishti_grid-ag.js"].AG_GROUP_COLUMN, "AgReport": __m["src/drishti_grid-ag.js"].AgReport, "agAggFunc": __m["src/drishti_grid-ag.js"].agAggFunc, "translateAgOptions": __m["src/drishti_grid-ag.js"].translateAgOptions, "callGetRows": __m["src/drishti_grid-ag-server.js"].callGetRows, "agRequest": __m["src/drishti_grid-ag-server.js"].agRequest, "agDatasource": __m["src/drishti_grid-ag-server.js"].agDatasource, "parseResultField": __m["src/drishti_grid-ag-server.js"].parseResultField, "agServerPivot": __m["src/drishti_grid-ag-server.js"].agServerPivot, "AgEvents": __m["src/drishti_grid-ag-events.js"].AgEvents, "AgColumnsApi": __m["src/drishti_grid-ag-columns.js"].AgColumnsApi, "AgGridApi": __m["src/drishti_grid-ag-api.js"].AgGridApi, "createGridFromAgOptions": __m["src/drishti_grid-ag-api.js"].createGridFromAgOptions };
   })();
   return Object.freeze(Object.assign({ library: "drishti-grid", version: "0.4.0" }, __m["src/drishti_index.js"]));
 });

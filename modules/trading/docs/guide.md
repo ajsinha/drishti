@@ -50,6 +50,25 @@ The screen is the grid with the record's panel beside it: the chosen design, opt
 | The tray | the person's changes waiting: awaiting an approver, sent to the source, applied, refused (with why) |
 | The live mark | the binding it ticks from, the messages per minute and the latency |
 
+### The page, step by step
+
+Open **Trading › Trade blotter** (`/live/trade`; any declaration has its page at `/live/<id>`).
+
+1. **The bar.** The title, the live mark (`LIVE · 30 rows`; `PAUSED`, `RECONNECTING` and `ENDED` say what happened), **Group by** (one field; the
+   declaration's `subtotals:` are summed per group and stay current as trades tick), **Pause** (rows that arrive are not applied; Resume reads
+   the set again), **Pivot ›** and **My changes (n)**.
+2. **Ticking.** A change to a trade arrives over the browser's one live channel and the changed cells flash; a replayed or older version is
+   ignored. A set larger than the grid holds (5,000 rows) shows `5,000 of 120,000` and the server sends changes of the rows in view only.
+3. **A trade's panel.** Click a row. *Record*: the fields. With the edit power they are a form with a **Reason** (required or optional as the
+   declaration says); without it they are plain text, with the words of why ("Read-only for you: ..."), and there is no edit control at all.
+   Submit sends the change on the version you opened; the answer is in words (*waiting for 1 approver (four eyes)*, *on its way to the source*).
+   If the trade moved meanwhile the panel says **Changed since you opened it**, and the server refuses an edit made on the old version, naming
+   who changed it; **Reload** opens it again as it is now. *History*: every change with who, when, why and where it stands. *Raw JSON*: the whole
+   stored record, including the fields the grid has no column for, collapsible, with **Copy**, the version and sequence; a field masked for your
+   role shows as masked and is copied as the mask. The links (Explain, VaR, Limits) are the declaration's `links:`.
+4. **My changes.** The tray lists your changes still open; click a trade to open it.
+5. **Pivot ›.** Opens the Pivot on the same kind with the grid's filters, the grouping as rows and the numbers as sums, live when the trades are.
+
 ## 2. Switch it on (tutorial)
 
 ```bash
@@ -222,6 +241,11 @@ Iceberg and file connectors never write per change.
 | `GET` | `/api/v1/live/{id}/stream` | server-sent events: `hello` `{stream, total, live}`, then `rows` `{upserts, removes, total, seq, countOnly}` or `resync` |
 | `POST` | `/api/v1/live/{id}/stream/{stream}/window` | the page the stream shows: `{ids: [...]}`, or `{all: true}` |
 | `POST` | `/api/v1/live/{id}/edit` | an edit: `{entity, basedOn, reason, items[{field, from, to}]}`; `403 DRS-9302` read-only (why), `409 DRS-9303` stale |
+
+The console passes these on as the person: `GET /api/live`, `GET /api/live/{id}/rows[/{entity}]`, `POST /api/live/{id}/edit` and
+`POST /api/live/{id}/stream/{stream}/window`; the stream is the console's channel (`/api/channel?s=live:{id}`, events `hello`, `rows`,
+`resync`). The page is `/live/{id}`; the module's menu entry (`console/plugin.yaml`) links to `/live/trade`. The component is the grid's live
+mode (ELEMENTS.md section 5.5).
 
 ## 10. Settings
 

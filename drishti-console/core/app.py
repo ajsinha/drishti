@@ -351,7 +351,7 @@ def create_app(settings: Settings) -> FastAPI:
     from routes import data_out_routes
     from routes import elements_routes, render_routes
     from routes import explain_routes
-    from routes import admin_commands_routes, admin_engines_routes, artifact_routes, changes_routes, compute_admin_routes, data_routes, datamap_routes, drafts_routes, functions_routes, history_routes, phone_routes, lake_maint_routes, lake_routes, net_routes
+    from routes import admin_commands_routes, admin_engines_routes, artifact_routes, changes_routes, live_routes, compute_admin_routes, data_routes, datamap_routes, drafts_routes, functions_routes, history_routes, phone_routes, lake_maint_routes, lake_routes, net_routes
 
     def _warm_help(app) -> None:
         """Help's pages rendered once, in a worker thread, as the console starts: the first global search (Alt+K) then reads cached text
@@ -694,6 +694,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(terminal_routes.router)
     app.include_router(drafts_routes.router)            # form drafts (RACHANA_REFERENCE.md 10), before the general API routes
     app.include_router(drafts_routes.lookup_router)     # an entity field's live search (/api/forms/lookup)
+    app.include_router(live_routes.router)              # the live result sets: /live/<id> and /api/live (the grid's live mode)
     app.include_router(changes_routes.router)           # write-back: /api/changes, Review -> Changes, Admin -> Edits (before the admin and API routes)
     app.include_router(api_routes.router)
     app.include_router(render_routes.router)            # the client-side renderer's playground (EMBED_GUIDE.md section 13)

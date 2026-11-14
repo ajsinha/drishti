@@ -144,6 +144,8 @@ class ChannelSession:
             lid, _, node = sub[10:].partition("@")              # the node that holds it (pivotlive:<id>@<node>)
             stream = self.backend.sse(f"/pivot/live/{quote(lid, safe='')}/events", self.me, opened=responses, **({"node": node} if node else {}))
             return _renamed(stream, {"error": "failed"}), False       # an EventSource's own "error" is its connection's: the stream's is "failed"
+        if sub.startswith("live:") and len(sub) > 5:            # a live result set (the grid's live mode): hello (stream), rows, resync; the page is a window POST
+            return self.backend.sse(f"/live/{quote(sub[5:], safe='')}/stream", self.me, opened=responses), False
         if sub.startswith("compute:") and len(sub) > 8:        # a computed panel's request (DATA_ARCHITECTURE.md): progress, state, done,
             return self.backend.sse(f"/compute/requests/{quote(sub[8:], safe='')}/stream", self.me, opened=responses), False   # failed, updated
         return None, False

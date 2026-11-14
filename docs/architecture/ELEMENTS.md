@@ -334,6 +334,43 @@ pivot result column keys, cells with values, texts and tones, totals, approximat
 **Large data.** Windows of rows, lazily opened groups, column windows when the pivot is wide, a progressive answer (≈ first, exact
 when ready) from the engine, cancellation when the view changes; the browser holds only what is in view and a margin.
 
+### 5.5 The grid's live mode
+
+**Purpose.** One component, `LiveSetGrid` (drishti-grid; `drishti_live-set.js`, `drishti_live-panel.js`, `drishti_live-model.js`), draws a live
+result set of the server (a blotter, and later a FORM or SQL result) in the grid: the snapshot, then the changes the server streams, ticking
+cells, a record panel beside it and the person's tray. It decides nothing: rights, masks, versions and four eyes are the server's.
+
+```js
+const live = new Drishti.elements.grid.LiveSetGrid(host, {
+  spec,                                                  // the declaration as GET /api/live describes it
+  api: Drishti.elements.grid.httpLiveApi({ id: 'trade' }),   // rows, row, edit, window, history, mine (the console's /api/live and /api/changes)
+  channel: { subscribe: (h) => Drishti.Channel.subscribe('live:trade', h) }  // any {subscribe(handlers) -> off}: hello, rows, resync, gone, error
+});
+live.start();
+```
+
+* **Rows.** A snapshot (a page of up to 5,000 rows), then `rows` events merged by key and version: an upsert replaces a row only when its
+  version is newer, so a replayed or reordered event is harmless; a row outside the viewer's window is not added. Changes are applied as one
+  batched transaction (`applyTransactionAsync`), so the changed cells flash and the group figures follow by difference. A `resync` event, a
+  connection that came back (a second `hello`) and Resume after Pause start again from a fresh snapshot.
+* **The page window.** When the set fits, the viewer says `{all: true}`; when it is larger than the grid holds, it sends the ids in view
+  and a margin (400 rows), after every scroll settles, and the server sends changes of those rows only.
+* **The record panel** (option B of the [trading-blotter mock-ups](../lenses/mockups/trading-blotter/README.md)), in three tabs. *Record*:
+  the fields, editable (a drishti-inputs `Form` with a reason) only when the server's `editable` says the person may; otherwise plain text and
+  no edit control at all, with the server's reason; the key is never edited; an edit is made on the version the panel opened (`basedOn`), so a
+  record that moved is refused by the server (409) with who changed it, and the panel says "Changed since you opened it" with Reload. *History*:
+  the record's changes from the write-back (who, when, why, where each stands, four eyes in words). *Raw JSON*: the whole stored record
+  (`/rows/{entity}`, not only the grid's columns), collapsible (Expand all, Collapse all), a Copy button, the version and sequence, the same
+  "changed since you opened it" note, and masked fields drawn as masked and copied as the mask. The declaration's links (Explain, VaR,
+  limits) fill `{FIELD}` from the row.
+* **Grouping** by one field from the bar (or the wells), with the declaration's `subtotals:` columns summed per group and kept current as
+  rows tick. **My changes** is the tray of the person's open changes (waiting for an approver, on their way to the source).
+* **Pivot ›** opens the Pivot (`/pivot?source=<kind>&lay=<view>&live=1`) with the same kind, the grid's set filters as members, the grouping
+  as rows and the numeric columns (not the version) as sums; the pivot's live view follows the source as it changes (the server recomputes
+  at most once per `pivot.live` minimum interval, a second by default).
+* **The console's side.** One browser channel for every set (`live:<id>` in `/api/channel`), `/api/live/...` passing the server's calls on
+  as the person, and the kernel's page `/live/<id>` for any declaration; a module's menu entry links to it (the trading module's *Trade blotter*).
+
 ## 6. The AG Grid-style adapter
 
 **Purpose.** An application written for AG Grid Enterprise's pivoting moves to drishti-grid by keeping its configuration:

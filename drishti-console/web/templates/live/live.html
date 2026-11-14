@@ -1,0 +1,31 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# One live result set, /live/<id> (a blotter declaration: modules/<module>/blotters/<id>.blotter.yaml): the live mode of drishti-grid
+   (Drishti Elements) with its record panel and tray. The page only hands the declaration, the /api/live calls and the console's live channel
+   (live:<id>) to the component; every rule (rights, masks, versions, four eyes) is the server's. #}
+{% extends "base.html" %}
+{% block title %}{{ spec.title or live_id }} · Live · {{ PRODUCT }}{% endblock %}
+{% block screen %}live{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/elements/drishti-grid/drishti_grid.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/elements/drishti-inputs/drishti_inputs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_live-page.css?v={{ ASSET_V }}">{% endblock %}
+{% block nav %}{% with live=true %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
+{% block content %}
+<div class="lv" data-live-page data-id="{{ live_id }}" data-spec="{{ spec | tojson | forceescape }}">
+  <div class="lv-host" data-live-host></div>
+  <p class="lv-error" data-live-error role="alert" hidden></p>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/drishti_live-page.js?v={{ ASSET_V }}"></script>{% endblock %}

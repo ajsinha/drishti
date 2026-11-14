@@ -18,6 +18,15 @@
 
 ## Unreleased
 
+- **The grid's live mode and the trade blotter page** (drishti-grid; docs/architecture/ELEMENTS.md section 5.5, modules/trading/docs/guide.md).
+  One Elements component, `LiveSetGrid`, draws a live result set: a snapshot, then the server's changes merged by key and version and applied
+  as one batched transaction so cells tick, the page window sent to the server, `resync` and reconnects reading the set again, grouping with live
+  subtotals, the person's tray of open changes and **Pivot ›**, which opens the Pivot with the same kind, filters, grouping and numbers (new `lay`
+  and `live` parameters of `/pivot`) and live refresh when the kind is live. Beside the grid, the record panel: editable fields with a reason only
+  where the server says the person may edit (otherwise no edit control), edits made on the version opened (a moved record is refused with who changed
+  it), four-eyes state, version history, the declaration's links, and a **Raw JSON** tab of the whole stored record (collapsible, Copy, version,
+  "changed since you opened it", masked fields kept masked). Console: `live:<id>` in the one live channel, `/api/live` (rows, one record, the
+  stream's window, the edit POST), the page `/live/<id>` for any declaration and the trading module's *Trade blotter* menu entry.
 - **The trading module and the live result sets engine** (modules/trading/docs/guide.md). One engine (`com.ash.drishti.server.liveset`) behind every
   blotter: a declaration (`blotters/<id>.blotter.yaml` in a module, or `config/blotters/`) names the kind, the query (the search grammar), the
   key and version, the columns, grouping, links, the live side's `retention:` (`ttl`, `on`, `max-rows`) and, for edits, a Rachana form with
