@@ -50,18 +50,14 @@ def _server_jar():
     return thin[-1] if thin else None
 
 
-@pytest.fixture(scope="module")
-def designer(tmp_path_factory, monkeypatch_module):
-    monkeypatch_module.setattr(wb_live, "jar", _server_jar)
+@pytest.fixture(scope="session")
+def designer(tmp_path_factory):
     work = tmp_path_factory.mktemp("cdui-server")
-    yield from _stack(tmp_path_factory, {"DRISHTI_SECURITY_ENABLED": "true", "DRISHTI_TOKEN_SECRET": TOKEN_SECRET}, work=work, auth=True)
-
-
-@pytest.fixture(scope="module")
-def monkeypatch_module():
-    mp = pytest.MonkeyPatch()
-    yield mp
-    mp.undo()
+    wb_live.jar = _server_jar                                         # the thin kernel jar will do when the full one is not built
+    try:
+        yield from _stack(tmp_path_factory, {"DRISHTI_SECURITY_ENABLED": "true", "DRISHTI_TOKEN_SECRET": TOKEN_SECRET}, work=work, auth=True)
+    finally:
+        wb_live.jar = _FULL_JAR
 
 
 def sign_in(page, base, user="drishti-dev-admin", password="drishti-dev-admin123"):
