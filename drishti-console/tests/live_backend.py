@@ -69,6 +69,9 @@ class LiveBackend(ChartBackend):
              "links": [{"label": "Explain", "href": "/explain/trade/{TRADE_ID}"}, {"label": "VaR", "href": "/var?scope=book:{PORTFOLIO}"},
                        {"label": "Limits", "href": "/limits?book={PORTFOLIO}"}], "retention": None, "tray": True, "module": "trading",
              "editable": self.editable, "readOnly": None if self.editable else "your role holds no edit power"}
+        off = getattr(self, "excludes", None)
+        if off:                                                     # the source systems switched off that feed the kind (LiveSetController)
+            s.update({"excludes": list(off), "banner": "excludes " + ", ".join(off) + " (switched off)"})
         if self.editable:
             s.update({"fields": FIELDS, "approval": "none", "reason": "optional"})
         return s

@@ -190,7 +190,7 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
     /** A view with the control values of the request ({@code ctl.leg=L2}); see {@link ControlValues}. */
     public ViewModel view(EntityRef ref, AsOf asOf, ViewerContext who, ControlValues values) {
         long t0 = System.nanoTime();
-        EntityDocument doc = fetch(ref, asOf);
+        EntityDocument doc = seen(fetch(ref, asOf), who);
         return assemble(doc, t0, System.nanoTime(), matcher.match(doc.ref().kind(), doc.data()), true, asOf, who, values).view();
     }
 
@@ -201,7 +201,7 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
     public ViewModel view(EntityRef ref, AsOf asOf, ViewerContext who, ControlValues values,
             Optional<Sutra> chosen) {
         long t0 = System.nanoTime();
-        EntityDocument doc = fetch(ref, asOf);
+        EntityDocument doc = seen(fetch(ref, asOf), who);
         return assemble(doc, t0, System.nanoTime(), chosen.isPresent() ? chosen : matcher.match(doc.ref().kind(), doc.data()), true, asOf,
                 who, values).view();
     }
@@ -611,6 +611,14 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
 
     public List<ViewAugmenter> augmenters() {
         return augmenters.get();
+    }
+
+    /** The record, when the viewer's row rules let them see it; else as if there were none (404 DRS-1001: nothing says it exists). */
+    private static EntityDocument seen(EntityDocument doc, ViewerContext who) {
+        if (doc != null && who != null && !who.mayView().test(doc.ref().kind(), doc.data())) {
+            throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no " + doc.ref().kind() + " " + doc.ref().id());
+        }
+        return doc;
     }
 
     /** The document as views show it: the stored one, with what the augmenters of its kind add for the caller. */
