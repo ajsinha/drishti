@@ -50,7 +50,7 @@ BUDGET = 10.0
 READ_SECONDS = 45
 #: a clean refusal: the person is told, in words, that the function is not theirs (or is switched off)
 REFUSED = re.compile(r"not available to you|not part of|not active|is not in |not allowed|not permitted|not entitled|forbidden|"
-                     r"permission|not enabled|switched off|turned off|DRS-1016|DRS-1020|DRS-4023|"
+                     r"permission|may not open|may not |not enabled|switched off|turned off|DRS-1016|DRS-1020|DRS-4023|"
                      r"requires (the )?(role|admin)|administrator", re.I)
 FAULT = re.compile(r"DRS-\d+|not found|no such|has no columns|Traceback|Internal Server Error|Server error|Unhandled exception|cannot read command", re.I)
 RESERVED = ["BI", "RUPAKA", "FORM", "FUNC", "WHAT", "DATAMAP", "DATA", "EXPORT", "PIVOT"]
@@ -106,7 +106,13 @@ def title_of(body: str) -> str:
 
 def catalogue(c: Client) -> list[dict]:
     """Every function: {word, kind, example, on, source}. FUNC's rows, the top bar's module commands, the reserved words, VaR's sub-commands."""
-    page = c.get("/func")["body"]
+    for _ in range(4):                                  # FUNC is the sweep's source: asked again when a busy server did not answer it
+        page = c.get("/func")["body"]
+        if 'data-command="' in page:
+            break
+        time.sleep(5)
+    else:
+        raise SystemExit("sweep: the FUNC directory (/func) did not answer with its commands")
     out: dict[str, dict] = {}
     for m in re.finditer(r'<tr data-command="([^"]*)" data-kind="([^"]*)" data-on="([^"]*)".*?</tr>', page, re.S):
         ex = re.search(r'func-ex">(.*?)</td>', m.group(0), re.S)
