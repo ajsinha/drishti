@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# GDELT events · the economy module's public-sector world-events pack (docs/guides/PUBLIC_SECTOR_GUIDE.md): the GDELT Project's daily events
+# GDELT events · the economy module's public-sector world-events pack (docs/guides/WORLD_DATA_GUIDE.md): the GDELT Project's daily events
 # reduced to events and tone by country and CAMEO category, filled daily by the gdelt-events feed (config/feeds/gdelt-events.yaml) into
 # the newslake lake.
 pack: gdelt-events

@@ -21,6 +21,10 @@
 distribution is a distribution file plus the modules it picks. The owner demos and tests **Drishti Risk** and **Drishti Finance**;
 **Drishti Genomics** is the sample that proves the kernel carries no finance.
 
+A distribution loads only the modules it carries and requires: Drishti Genomics shows no trading menu, a page of a module the distribution lacks
+(`/live/<id>` of the trading module's blotter) answers a plain "Not part of this distribution" page, and the Elements gallery asks only for the libraries
+of modules that are on. The platform's own engines (FORM search, mnemonics, [live results](../guides/LIVE_RESULTS_GUIDE.md)) serve every distribution.
+
 ## 1. The three at a glance
 
 | | **Drishti Risk** | **Drishti Finance** | **Drishti Genomics** (sample) |

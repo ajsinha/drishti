@@ -69,10 +69,10 @@ def test_search_and_missing_guides(client):
 
 def test_f1_and_the_short_addresses_of_the_240_and_250_pages_open_their_sections(client):
     """BI Studio, the theme designer, the Notebook and Transforms have their own F1 target, and the new pages a short help address."""
-    for screen, page, anchor in (("bi-designer", "bi-guide", "8-bi-studio-and-the-report-designer"),
-                                 ("bi-theme-designer", "bi-guide", "103-themes"),
-                                 ("bi-transform", "notebook-guide", "5-data-prep-the-transform-editor"),
-                                 ("bi-notebook", "notebook-guide", "2-the-notebook")):
+    for screen, page, anchor in (("bi-designer", "bi-reports", "7-bi-studio-and-the-report-designer"),
+                                 ("bi-theme-designer", "bi-report-file", "23-themes"),
+                                 ("bi-transform", "bi-python-notebook", "5-data-prep-the-transform-editor"),
+                                 ("bi-notebook", "bi-python-notebook", "2-the-notebook")):
         target = client.get(f"/help/context/{screen}", follow_redirects=False).headers["location"]
         assert target == f"/help/{page}" + (f"#{anchor}" if anchor else ""), (screen, target)
         if anchor:
@@ -271,7 +271,7 @@ def test_the_help_centre_has_eight_sections_and_internal_and_about_sixty_pages()
     # 47: the 45 pages plus VaR's two (the VaR guide and tutorial 2, Part A), the product owner's request of 2026-10-26: VaR help is two pages.
     # 49: plus exposure's two (the exposure guide and tutorial 3), the same rule (each measure has exactly two documents and two entries).
     # 51: plus the groupings and analytics' two (the guide and tutorial 6, 2.9.2), the same rule.
-    # 52: plus External data (docs/guides/EXTERNAL_DATA.md, 2.9.1), the product owner's request of 2026-10-26: a separate help page for
+    # 52: plus External data (docs/guides/WORLD_DATA_GUIDE.md, 2.9.1), the product owner's request of 2026-10-26: a separate help page for
     # external data extraction, with examples.
     # 54: plus the funds pack's two (the funds and ETFs guide and tutorial 13, Part C, 2.9.2), the same rule (two documents, two entries).
     # 62: plus Knowledge (the product owner's request of 2026-10-26), a section of its own at the top: the home with the glossary and

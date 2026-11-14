@@ -15,7 +15,7 @@
 """The named lakes besides the demo lake (risklake, newslake, worldlake, regulators, capitalmarket, referencelake) ship as definitions:
 nothing shipped points at them (the product owner, 2026-11-07: "do not point anything to any of these lakes except the demo lake"), with two
 exceptions by design: the data feeds (config/feeds/*.yaml) name the lake they load (the owner placed them, GLEIF in referencelake), and the
-public-sector module's packs read worldlake and newslake, which their daily feeds fill (docs/guides/PUBLIC_SECTOR_GUIDE.md). So those two
+public-sector module's packs read worldlake and newslake, which their daily feeds fill (docs/guides/WORLD_DATA_GUIDE.md). So those two
 lake files hold exactly those packs' tables, only those packs' connectors (and the feeds) name them, and the other lakes ship empty."""
 import pathlib
 import re
