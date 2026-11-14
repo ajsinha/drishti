@@ -467,8 +467,8 @@ moved:
   docs-guides-pack-developer-guide: build-guide
   sutra-developer-guide: build-guide#11-what-a-sutra-is-and-when-one-applies   # SUTRA_DEVELOPER_GUIDE.md folded into BUILD_GUIDE.md
   docs-guides-sutra-developer-guide: build-guide#11-what-a-sutra-is-and-when-one-applies
-  schema-to-pack: build-guide#8-a-pack-from-a-json-schema-build--new-pack   # SCHEMA_TO_PACK_GUIDE.md folded into BUILD_GUIDE.md
-  docs-guides-schema-to-pack-guide: build-guide#8-a-pack-from-a-json-schema-build--new-pack
+  schema-to-pack: build-guide#8-the-pack-designer-build--new-pack   # SCHEMA_TO_PACK_GUIDE.md folded into BUILD_GUIDE.md
+  docs-guides-schema-to-pack-guide: build-guide#8-the-pack-designer-build--new-pack
   connector-developer-guide: developer-guide#10-connectors-choosing-combining-and-writing-one   # CONNECTOR_DEVELOPER_GUIDE.md folded into DEVELOPER_GUIDE.md
   docs-connectors-connector-developer-guide: developer-guide#10-connectors-choosing-combining-and-writing-one
   docs-guides-api-guide: api                                       # API_GUIDE.md: API_REFERENCE.md (endpoints) and DEVELOPER_GUIDE.md section 11 (how to)

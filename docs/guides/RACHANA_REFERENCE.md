@@ -5502,7 +5502,7 @@ Open **Build → New screen**. The page asks two things: *what data do you have?
 ![The New page: five ways to bring data, and the starting points](img/designer/01-new-flow.jpg)
 
 **Bring data** (any mix, in one go). A schema does more than make samples: with **Build → New pack** one or many schemas (and a folder of JSON Lines) become a whole pack of screens, with
-labels, links, About text and tests. The rules are in [Schema to pack](BUILD_GUIDE.md#8-a-pack-from-a-json-schema-build--new-pack); the samples below are the same synthetic ones that guide describes.
+labels, links, About text and tests. The rules are in [Schema to pack](BUILD_GUIDE.md#8-the-pack-designer-build--new-pack); the samples below are the same synthetic ones that guide describes.
 
 | You have | What happens |
 |---|---|

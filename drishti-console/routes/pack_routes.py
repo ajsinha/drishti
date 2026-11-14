@@ -12,327 +12,332 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Build -> New pack (``/build/pack/new``): schema files and sample documents in, a pack out (docs/guides/DATA_GUIDE.md).
+"""Build -> New pack: the Pack designer (``/build/pack/designer``; docs/guides/BUILD_GUIDE.md section 8).
 
-The page reads the user's files in the browser and sends only schemas, a sample of the documents and statistics. These routes plan the pack
-(``core/packwizard``, ``core/schemakit``), draft every Sutra with the server's auto-designer as a background job (progress, cancel), render
-any Sutra on its samples, open one in the workbench, build the bundle (the format of ``pack bundle``) and keep the wizard's state as a Design
-(a draft the user resumes). Deploying is Admin -> Packs -> Deploy archive: the bundle is handed to that page, which previews and confirms."""
+JSON Lines files go up to a workspace on the server; the server reads every record (the code of ``drishti.py pack new``, run as a job:
+core/packdesigner.py), the page shows the combinations, the Sutras and their live screens, and the finished module (.dmod) is deployed through
+the one module deploy (single node: install; cluster: plan, then apply). ``/build/pack/new``, the old page, redirects here."""
 from __future__ import annotations
 
-import asyncio
-import base64
-import dataclasses
-import gzip
 import json
 import logging
+from pathlib import Path
+from urllib.parse import quote
 
 from fastapi import APIRouter, Request
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, Response
 
-from core import channel_relay, packwizard as W
-from core.servers import scoped
-from core.auth import Identity
+from core import packdesigner as PD
 from core.backend import BackendError
 from core.csrf import BodyError, json_body
-from routes.common import ident, packs as user_packs, render
+from core.servers import scoped
+from routes.common import ident, render
 
 router = APIRouter(prefix="/build/pack", include_in_schema=False)
 LOG = logging.getLogger("drishti.console.build.pack")
-DRAFT_PREFIX = "New pack: "
-DRAFT_MARK = "drishti-pack-draft/1\n"
 
 
 def _problem(status: int, detail: str, code: str | None = None, **more) -> JSONResponse:
     return JSONResponse({"code": code or ("DRS-5005" if status == 413 else "DRS-5001"), "detail": detail, **more}, status_code=status)
 
 
-def _wiz(request: Request) -> tuple[W.WizardLimits, W.Jobs]:
+def _ws(request: Request) -> PD.Workspaces:
     st = request.app.state
-    if not hasattr(st, "pack_jobs"):
-        lim = W.WizardLimits.from_settings(st.settings)
-        tools = st.settings.get("builder.tools_dir", "../tools")
-        from pathlib import Path
-        d = Path(str(tools))
+    if not hasattr(st, "pack_designer"):
+        from core.app import _console_data_dir
+        tools = Path(str(st.settings.get("builder.tools_dir", "../tools")))
         console_dir = Path(__file__).resolve().parent.parent
-        st.pack_wizard_limits = lim
-        st.pack_jobs = W.Jobs(lim, d if d.is_absolute() else (console_dir / d).resolve())
-    return st.pack_wizard_limits, st.pack_jobs
-
-
-async def _body(request: Request) -> dict:
-    lim, _ = _wiz(request)
-    mb = lim.max_docs * 60 + lim.max_files * lim.max_schema_kb * 1024 + 65536          # the documents are small samples, not whole files
-    body = await json_body(request, limit=max(mb, 8 * 1048576))
-    if not isinstance(body, dict):
-        raise BodyError(400, "send a JSON object")
-    return body
+        st.pack_designer = PD.Workspaces(_console_data_dir(st.settings) / "pack-designer", tools if tools.is_absolute() else (console_dir / tools).resolve(),
+                                         PD.DesignerLimits.from_settings(st.settings),
+                                         str(st.settings.get("builder.pack_designer_site", "") or ""))
+    return st.pack_designer
 
 
 async def _may_author(request: Request) -> bool:
-    return await _may_author_of(request.app, ident(request))
-
-
-@router.get("/new")
-async def page(request: Request):
-    """The five steps: bring sources, kinds, pack, preview, output."""
-    lim, _ = _wiz(request)
-    me = ident(request)
-    return render(request, "build/pack_new.html", limits=lim.as_dict(), can_author=await _may_author(request), is_admin=bool(me.is_admin),
-                  screen="build", read_rows=lim.read_rows, read_mb=lim.read_mb)
-
-
-# ---- plan ----------------------------------------------------------------------------------------------------------------------
-
-@router.post("/api/plan")
-async def plan(request: Request):
-    """Body ``{schemas:[{name,text}], data:[{name,rows,bytes,docs}], kindOf, overrides, pack, samples, strip}`` -> the plan, per kind."""
-    lim, _ = _wiz(request)
-    body = await _body(request)
     try:
-        return await W.make_plan(body, lim, request.app.state.backend, ident(request), request.app.state.packs)
-    except W.WizardError as e:
-        return _problem(e.status, e.detail, e.code)
-
-
-# ---- jobs ----------------------------------------------------------------------------------------------------------------------
-
-@router.post("/api/jobs")
-async def start_job(request: Request):
-    """Starts drafting every Sutra of the plan in the background; answers ``{id}``. Poll ``GET /api/jobs/{id}``."""
-    lim, jobs = _wiz(request)
-    body = await _body(request)
-    me = ident(request)
-    try:
-        plan_obj, *_ = await W.plan_object(body, lim, request.app.state.backend, me, request.app.state.packs)
-        if not W.NAME_RE.fullmatch(plan_obj.pack["name"]):
-            return _problem(400, "the pack name is lower-case letters, digits and '-'")
-        if not W.VERSION_RE.fullmatch(str(plan_obj.pack.get("version") or "")):
-            return _problem(400, "the pack version must be X.Y.Z, such as 1.0.0 or 2.0.0-rc.1")
-        if not plan_obj.kinds:
-            return _problem(400, "no kind could be read from these files")
-        nokey = [k.kind for k in plan_obj.kinds if not k.key]
-        if nokey:
-            return _problem(400, "choose the key field of " + ", ".join(nokey) + " (step 2)")
-        if plan_obj.sutra_count > lim.max_sutras:
-            return _problem(413, f"{plan_obj.sutra_count} Sutras; at most {lim.max_sutras} per pack (builder.pack_max_sutras)")
-        job = jobs.start(scoped(me.user), plan_obj, request.app.state.backend, me, suffix=channel_relay.suffix(request.app))
-    except W.WizardError as e:
-        return _problem(e.status, e.detail, e.code)
-    LOG.info("new-pack job %s started: %d Sutra(s)", job.id, job.total)
-    return JSONResponse({"id": job.id, "total": job.total}, status_code=202)
-
-
-# A job lives in the worker process that started it. The console serves its port from several workers (server.workers), so a later
-# call on the job may reach another worker: the job's id ends with its worker's relay port (core/channel_relay.py), and a worker that
-# does not hold the job runs the call on the one that does and answers with its answer.
-
-RELAY_OP = "pack-job"
-RELAY_REPLY_LIMIT = 256 << 20              # a bundle (base64) comes back in the reply line
-RELAY_TIMEOUT = 120.0                      # building a bundle takes seconds
-
-
-async def _may_author_of(app, me) -> bool:
-    try:
-        s = await app.state.backend.studio_settings(me)
+        s = await request.app.state.backend.studio_settings(ident(request))
     except BackendError:
         return False
     return bool(s.get("author", s.get("save")))
 
 
-def _out(r: Response) -> dict:
-    return {"status": r.status_code, "media": r.media_type, "headers": {k: v for k, v in r.headers.items() if k.lower().startswith(("content-disposition", "x-drishti", "cache-control"))},
-            "body": base64.b64encode(r.body).decode("ascii")}
+async def _body(request: Request) -> dict:
+    body = await json_body(request, limit=8 * 1048576)
+    if not isinstance(body, dict):
+        raise BodyError(400, "send a JSON object")
+    return body
 
 
-def _back(got: dict) -> Response:
-    return Response(base64.b64decode(got.get("body") or ""), status_code=int(got.get("status") or 500), media_type=got.get("media"),
-                    headers=got.get("headers") or {})
+def _dir(request: Request, wid: str) -> Path:
+    return _ws(request).path(scoped(ident(request).user), wid)
 
 
-async def _job_call(request: Request, job_id: str, op: str, args: dict | None = None) -> Response:
-    """Runs ``op`` on the job here when this worker holds it (or the console has one worker), else on the worker that does."""
-    _, jobs = _wiz(request)
+@router.get("/new")
+async def old_page():
+    """The old Build -> New pack page is gone: the designer is its replacement."""
+    return RedirectResponse("/build/pack/designer", status_code=308)
+
+
+@router.get("/designer")
+async def page(request: Request):
+    """The workspace: six steps (Data, Kind and keys, Source, Design, Finalize, Deploy) with their summaries on the left."""
+    ws = _ws(request)
     me = ident(request)
-    if job_id not in jobs.jobs and channel_relay.owner_port(job_id) is not None:
-        got = await channel_relay.forward(request.app, job_id, RELAY_OP, {"op": op, "args": args or {}, "me": dataclasses.asdict(me)},
-                                          limit=RELAY_REPLY_LIMIT, timeout=RELAY_TIMEOUT)
-        if got and "status" in got:
-            return _back(got)
-    return await _job_op(request.app, op, job_id, me, args or {})
+    return render(request, "build/pack_designer.html", limits=ws.limits.as_dict(), can_author=await _may_author(request), is_admin=bool(me.is_admin),
+                  screen="build")
 
 
-async def _relayed_job(app, job_id: str, payload: dict) -> dict:
-    """A job call another worker of this console received (core/channel_relay.py); that worker signed the caller in, and the call runs in its
-    scope (its server: the preview and the design go to the caller's server, the job's owner is checked on (server, user))."""
-    me = Identity(**{**payload.get("me", {}), "roles": tuple(payload.get("me", {}).get("roles") or ())})
-    jobs = getattr(app.state, "pack_jobs", None)
-    if jobs is None or job_id not in jobs.jobs:
-        return {}
-    return _out(await _job_op(app, str(payload.get("op", "")), job_id, me, payload.get("args") or {}))
+# ---- the workspace and its files ----------------------------------------------------------------------------------------------
+
+@router.post("/api/ws")
+async def create(request: Request):
+    if not await _may_author(request):
+        return _problem(403, "starting a pack needs a role with the author power", "DRS-5002")
+    return JSONResponse({"id": _ws(request).create(scoped(ident(request).user))}, status_code=201)
 
 
-channel_relay.HANDLERS[RELAY_OP] = _relayed_job
-
-
-def _json(data, status: int = 200) -> Response:
-    return JSONResponse(data, status_code=status)
-
-
-async def _job_op(app, op: str, job_id: str, me, args: dict) -> Response:
-    jobs = app.state.pack_jobs
+@router.get("/api/ws/{wid}")
+async def state(request: Request, wid: str):
+    ws = _ws(request)
     try:
-        job = jobs.get(job_id, scoped(me.user))               # (server, user): one name on two servers is two people
-    except W.WizardError as e:
+        d = ws.path(scoped(ident(request).user), wid)
+        req = json.loads((d / "request.json").read_text(encoding="utf-8")) if (d / "request.json").is_file() else {}
+        return {"id": wid, "files": ws.files(d), "request": req, "status": ws.status(d), "analysed": (d / "analysis.json").is_file(),
+                "result": ws.result(d)}
+    except PD.DesignerError as e:
         return _problem(e.status, e.detail, e.code)
-    if op == "status":
-        return _json(job.view())
-    if op == "cancel":
-        jobs.cancel(job)
-        return _json(job.view())
-    if op in ("preview", "open"):
-        item = next((i for i in job.items if i.name == args.get("sutra")), None)
-        res = job.results.get(item.name) if item else None
-        if item is None or not res or not res.get("yaml"):
-            return _problem(404, "no such Sutra in this job", "DRS-5006")
-        backend = app.state.backend
-        if op == "preview":
-            s = next((x for x in item.samples if x.name == args.get("sample")), item.samples[0])
-            try:
-                vm = await backend.preview(res["yaml"], item.kp.kind, "SAMPLE", me, document=s.doc)
-            except BackendError as e:
-                return _problem(e.status, e.detail, e.code, problems=getattr(e, "problems", []))
-            html = app.state.templates.get_template("studio/_preview.html").render(vm=vm) if vm else ""
-            return _json({"previewHtml": html, "sample": s.name, "source": s.source})
+
+
+@router.delete("/api/ws/{wid}")
+async def remove(request: Request, wid: str):
+    try:
+        _ws(request).remove(scoped(ident(request).user), wid)
+    except PD.DesignerError as e:
+        return _problem(e.status, e.detail, e.code)
+    return Response(status_code=204)
+
+
+@router.post("/api/ws/{wid}/file")
+async def upload(request: Request, wid: str, path: str):
+    """One file's bytes as the body (streamed to the workspace's in/ folder, never held whole); ``path`` is its path below the dropped folder."""
+    ws = _ws(request)
+    try:
+        d = ws.path(scoped(ident(request).user), wid)
+        if ws.running(d):
+            return _problem(409, "a job is running in this workspace: wait for it")
+        f = ws.target(d, path)
+        cap = ws.limits.max_mb * 1048576
+        have = ws.used(d) - (f.stat().st_size if f.exists() else 0)
+        declared = request.headers.get("content-length")
+        if declared and declared.isdigit() and have + int(declared) > cap:
+            return _problem(413, f"over {ws.limits.max_mb} MB in one workspace (builder.pack_designer_max_mb)")
+        f.parent.mkdir(parents=True, exist_ok=True)
+        tmp = f.with_name(f.name + ".part")
+        size = 0
         try:
-            d = await backend.designs("POST", "", me, {"name": f"{job.name}: {item.name}"[:120], "kind": item.kp.kind, "sutra": res["yaml"],
-                                                       "notes": f"From Build -> New pack ({job.name}). Samples named sample-synthetic-N were generated from the schema."})
-            await backend.designs("POST", f"/{d['id']}/samples", me, {"samples": [{"name": s.name, "document": s.doc} for s in item.samples]})
-        except BackendError as e:
-            return _problem(e.status, e.detail, e.code)
-        return _json({"id": d["id"], "url": f"/build/d/{d['id']}"})
-    if op == "bundle" and not await _may_author_of(app, me):
-        return _problem(403, "downloading a pack needs a role with the author power", "DRS-5002")
-    try:
-        b = await asyncio.to_thread(jobs.build_bundle, job)
-    except W.WizardError as e:
+            with open(tmp, "wb") as w:
+                async for chunk in request.stream():
+                    size += len(chunk)
+                    if have + size > cap:
+                        raise PD.DesignerError(413, f"over {ws.limits.max_mb} MB in one workspace (builder.pack_designer_max_mb)", "DRS-5005")
+                    w.write(chunk)
+            tmp.replace(f)
+        finally:
+            tmp.unlink(missing_ok=True)
+        ws.touch(d)
+        (d / "analysis.json").unlink(missing_ok=True)                  # the files changed: the last analysis no longer holds
+        return {"path": PD.clean_path(path), "bytes": size}
+    except PD.DesignerError as e:
         return _problem(e.status, e.detail, e.code)
-    except Exception as e:           # noqa: BLE001 - a bundling failure is shown, with the reason
-        LOG.warning("new-pack bundle failed: %s", e)
-        return _problem(500, f"the bundle could not be built: {e}")
-    if op == "summary":
-        return _json({"file": b["name"], "bytes": len(b["tar"]), "sha256": b["sha256"], "files": b["files"], "pack": b["pack"], "version": b["version"],
-                      "synthetic": b["synthetic"], "todo": b["todo"], "canAuthor": await _may_author_of(app, me), "canDeploy": bool(me.is_admin)})
-    part = args.get("part", "tar")
-    if part == "sha256":
-        return Response(f"{b['sha256']}  {b['name']}\n", media_type="text/plain", headers={"Content-Disposition": f'attachment; filename="{b["name"]}.sha256"'})
-    if part == "manifest":
-        return Response(b["manifest"], media_type="application/json", headers={"Content-Disposition": f'attachment; filename="{b["pack"]}-{b["version"]}.manifest.json"'})
-    return Response(b["tar"], media_type="application/gzip", headers={"Content-Disposition": f'attachment; filename="{b["name"]}"',
-                                                                     "X-Drishti-Sha256": b["sha256"], "Cache-Control": "no-store"})
 
 
-@router.get("/api/jobs/{job_id}")
-async def job_status(request: Request, job_id: str):
-    return await _job_call(request, job_id, "status")
-
-
-@router.delete("/api/jobs/{job_id}")
-async def job_cancel(request: Request, job_id: str):
-    return await _job_call(request, job_id, "cancel")
-
-
-@router.get("/api/jobs/{job_id}/preview")
-async def job_preview(request: Request, job_id: str, sutra: str, sample: str = ""):
-    """One Sutra rendered on one of its samples (the first by default), as the workbench draws it."""
-    return await _job_call(request, job_id, "preview", {"sutra": sutra, "sample": sample})
-
-
-@router.post("/api/jobs/{job_id}/open")
-async def job_open(request: Request, job_id: str):
-    """Opens one Sutra of the job in the workbench: a Design with the Sutra and its samples; answers ``{id, url}``."""
-    body = await _body(request)
-    return await _job_call(request, job_id, "open", {"sutra": body.get("sutra")})
-
-
-@router.get("/api/jobs/{job_id}/bundle")
-async def job_bundle(request: Request, job_id: str, part: str = "tar"):
-    """The bundle of a finished job: ``part=tar`` (the .tar.gz, default), ``sha256`` or ``manifest``. Needs the author power."""
-    return await _job_call(request, job_id, "bundle", {"part": part})
-
-
-@router.get("/api/jobs/{job_id}/summary")
-async def job_summary(request: Request, job_id: str):
-    """What the output step shows: the bundle's name, size, checksum and what is synthetic; builds the bundle."""
-    return await _job_call(request, job_id, "summary")
-
-
-# ---- drafts: the wizard's state, kept as a Design ---------------------------------------------------------------------------------
-
-def encode_state(state: dict) -> str:
-    return DRAFT_MARK + base64.b64encode(gzip.compress(json.dumps(state, ensure_ascii=False, separators=(",", ":")).encode("utf-8"))).decode("ascii")
-
-
-def decode_state(notes: str) -> dict | None:
-    if not isinstance(notes, str) or not notes.startswith(DRAFT_MARK):
-        return None
+@router.delete("/api/ws/{wid}/file")
+async def remove_file(request: Request, wid: str, path: str):
+    ws = _ws(request)
     try:
-        return json.loads(gzip.decompress(base64.b64decode(notes[len(DRAFT_MARK):])).decode("utf-8"))
-    except (ValueError, OSError):
-        return None
-
-
-@router.get("/api/drafts")
-async def drafts(request: Request):
-    try:
-        data = await request.app.state.backend.designs("GET", "", ident(request))
-    except BackendError as e:
+        d = ws.path(scoped(ident(request).user), wid)
+        ws.remove_file(d, path)
+        (d / "analysis.json").unlink(missing_ok=True)
+    except PD.DesignerError as e:
         return _problem(e.status, e.detail, e.code)
-    rows = [{"id": d["id"], "name": d.get("name", "")[len(DRAFT_PREFIX):], "updated": d.get("updated", 0)} for d in data.get("designs") or []
-            if str(d.get("name") or "").startswith(DRAFT_PREFIX)]
-    return {"drafts": sorted(rows, key=lambda r: r["updated"], reverse=True), "maxNotesKb": (data.get("limits") or {}).get("maxNotesKb", 64)}
+    return Response(status_code=204)
 
 
-@router.post("/api/drafts")
-async def save_draft(request: Request):
-    """Body ``{id?, name, state}``: creates the draft (a Design named 'New pack: <name>') or updates it; the state is compressed into the notes."""
-    body = await _body(request)
+# ---- the jobs ----------------------------------------------------------------------------------------------------------------
+
+def _job_env(request: Request) -> dict:
+    """Extra environment for a job: none (the job runs with the console's own, so its data folder is the console's: DRISHTI_DATA_DIR)."""
+    return {}
+
+
+@router.post("/api/ws/{wid}/analyse")
+async def analyse(request: Request, wid: str):
+    """Reads every record of the workspace's files and drafts the Sutras: the choices in the body ({name, kind, kindPrefix, match, key, date, ...})."""
+    if not await _may_author(request):
+        return _problem(403, "designing a pack needs a role with the author power", "DRS-5002")
+    ws = _ws(request)
+    try:
+        body = await _body(request)
+        d = ws.path(scoped(ident(request).user), wid)
+        req = ws.request_for({**body, "edits": None})
+        ws.start(scoped(ident(request).user), d, "analyse", req, _job_env(request))
+    except (PD.DesignerError, BodyError) as e:
+        return _problem(e.status, e.detail, getattr(e, "code", None))
+    return JSONResponse({"id": wid}, status_code=202)
+
+
+@router.get("/api/ws/{wid}/status")
+async def status(request: Request, wid: str):
+    ws = _ws(request)
+    try:
+        return ws.status(ws.path(scoped(ident(request).user), wid))
+    except PD.DesignerError as e:
+        return _problem(e.status, e.detail, e.code)
+
+
+@router.post("/api/ws/{wid}/cancel")
+async def cancel(request: Request, wid: str):
+    ws = _ws(request)
+    try:
+        return {"cancelled": ws.cancel(ws.path(scoped(ident(request).user), wid))}
+    except PD.DesignerError as e:
+        return _problem(e.status, e.detail, e.code)
+
+
+@router.get("/api/ws/{wid}/analysis")
+async def analysis(request: Request, wid: str):
+    ws = _ws(request)
+    try:
+        a = ws.analysis(ws.path(scoped(ident(request).user), wid))
+    except PD.DesignerError as e:
+        return _problem(e.status, e.detail, e.code)
+    return a if a is not None else _problem(404, "no analysis yet: read the files first", "DRS-5006")
+
+
+@router.post("/api/ws/{wid}/finalize")
+async def finalize(request: Request, wid: str):
+    """Writes the module with the edited Sutras, binds it, packs the .dmod and runs the fifteen checks: ({..choices, edits: {sutra name: YAML}})."""
+    if not await _may_author(request):
+        return _problem(403, "making a module needs a role with the author power", "DRS-5002")
+    ws = _ws(request)
+    try:
+        body = await _body(request)
+        d = ws.path(scoped(ident(request).user), wid)
+        if ws.analysis(d) is None:
+            return _problem(409, "read the files first (step 1)")
+        ws.start(scoped(ident(request).user), d, "finalize", ws.request_for(body), _job_env(request))
+    except (PD.DesignerError, BodyError) as e:
+        return _problem(e.status, e.detail, getattr(e, "code", None))
+    return JSONResponse({"id": wid}, status_code=202)
+
+
+@router.get("/api/ws/{wid}/dmod")
+async def dmod(request: Request, wid: str):
+    ws = _ws(request)
+    try:
+        f = ws.dmod(ws.path(scoped(ident(request).user), wid))
+    except PD.DesignerError as e:
+        return _problem(e.status, e.detail, e.code)
+    if f is None:
+        return _problem(404, "the module is not made yet", "DRS-5006")
+    return FileResponse(f, media_type="application/octet-stream", filename=f.name, headers={"Cache-Control": "no-store"})
+
+
+# ---- the live screen -------------------------------------------------------------------------------------------------------------
+
+def _sutra_of(a: dict, name: str) -> dict | None:
+    return next((s for s in a.get("sutras", []) if s["name"] == name), None)
+
+
+@router.post("/api/ws/{wid}/preview")
+async def preview(request: Request, wid: str):
+    """{sutra, yaml, sample}: the Sutra's YAML (as edited) drawn by the server on one of the combination's real rows (sample is its index)."""
+    ws = _ws(request)
     me = ident(request)
+    try:
+        body = await _body(request)
+        a = ws.analysis(ws.path(scoped(me.user), wid))
+    except (PD.DesignerError, BodyError) as e:
+        return _problem(e.status, e.detail, getattr(e, "code", None))
+    s = _sutra_of(a or {}, str(body.get("sutra") or ""))
+    text = body.get("yaml")
+    if s is None or not isinstance(text, str) or not s["samples"]:
+        return _problem(404, "no such Sutra in this analysis", "DRS-5006")
+    n = int(body.get("sample") or 0)
+    doc = s["samples"][n if 0 <= n < len(s["samples"]) else 0]
     backend = request.app.state.backend
-    state, name = body.get("state"), str(body.get("name") or "").strip()[:100]
-    if not isinstance(state, dict) or not name:
-        return _problem(400, "send {name, state}")
-    notes = encode_state(state)
     try:
-        data = await backend.designs("GET", "", me)
-        cap = int((data.get("limits") or {}).get("maxNotesKb", 64)) * 1024
-        if len(notes.encode("ascii")) > cap:
-            return _problem(413, f"the draft is {len(notes) // 1024} KB, over the {cap // 1024} KB a design's notes may hold: remove a large schema, or download the bundle now")
-        if body.get("id"):
-            d = await backend.designs("PATCH", f"/{body['id']}", me, {"name": DRAFT_PREFIX + name, "notes": notes})
-        else:
-            d = await backend.designs("POST", "", me, {"name": DRAFT_PREFIX + name, "kind": request.app.state.settings.get("builder.studio_kind", "sample"), "notes": notes})
+        vm = await backend.preview(text, s["kind"], "SAMPLE", me, document=doc)
+    except BackendError as e:
+        return _problem(e.status, e.detail, e.code, problems=getattr(e, "problems", []))
+    html = request.app.state.templates.get_template("studio/_preview.html").render(vm=vm) if vm else ""
+    return {"previewHtml": html, "sample": n, "samples": len(s["samples"])}
+
+
+@router.post("/api/ws/{wid}/check")
+async def check(request: Request, wid: str):
+    """{sutra, yaml}: the server's one checker over the combination's real rows: {ok, empty, error} cells and the problems."""
+    ws = _ws(request)
+    me = ident(request)
+    try:
+        body = await _body(request)
+        a = ws.analysis(ws.path(scoped(me.user), wid))
+    except (PD.DesignerError, BodyError) as e:
+        return _problem(e.status, e.detail, getattr(e, "code", None))
+    s = _sutra_of(a or {}, str(body.get("sutra") or ""))
+    text = body.get("yaml")
+    if s is None or not isinstance(text, str):
+        return _problem(404, "no such Sutra in this analysis", "DRS-5006")
+    samples = [{"name": f"row-{i + 1}", "document": d} for i, d in enumerate(s["samples"])]
+    try:
+        res = await request.app.state.backend.check(text, s["kind"], samples, me)
+    except BackendError as e:
+        return {"ok": 0, "empty": 0, "error": 0, "problems": getattr(e, "problems", None) or [{"message": e.detail}], "refused": True}
+    return {"counts": res.get("counts") or {}, "panels": [{"id": p.get("id"), "cells": p.get("cells")} for p in res.get("panels") or []],
+            "problems": res.get("problems") or []}
+
+
+# ---- deploy: the one module deploy -------------------------------------------------------------------------------------------------
+
+@router.post("/api/ws/{wid}/deploy/{action}")
+async def deploy(request: Request, wid: str, action: str):
+    """``install``: one node, the .dmod is put in the modules folder (auto-deploy installs it); ``plan``: the .dmod goes to the module store (the server checks it once) and a plan to install it is made; ``apply`` {id, comment}: the
+    plan is applied (a single node installs at once; a cluster needs a second administrator by four eyes when the server says so)."""
+    me = ident(request)
+    if not me.is_admin:
+        return _problem(403, "deploying a module is for administrators", "DRS-5002")
+    ws = _ws(request)
+    b = request.app.state.backend
+    try:
+        d = ws.path(scoped(me.user), wid)
+        body = await _body(request)
+        if action == "install":                       # one node: the package goes to the modules folder, auto-deploy checks, installs and loads it
+            import os
+            import shutil
+            f = ws.dmod(d)
+            if f is None:
+                return _problem(409, "make the module first (step 5)")
+            target = Path(str(request.app.state.settings.get("builder.pack_designer_modules_dir", "") or os.environ.get("DRISHTI_MODULES_PATH")
+                              or Path(os.environ.get("DRISHTI_DATA_DIR") or Path(__file__).resolve().parents[2] / "data") / "modules"))
+            target.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(f, target / f.name)
+            return {"installed": str(target / f.name)}
+        if action == "plan":
+            f, r = ws.dmod(d), ws.result(d)
+            if f is None or r is None:
+                return _problem(409, "make the module first (step 5)")
+            stored = await b.admin_upload("/modules/store", me, f.read_bytes(), {}, timeout=600.0)
+            plan = await b.admin("POST", "/modules/deployments/plans", me, {"action": "install", "module": r["name"], "version": r["version"],
+                                                                         "reason": str(body.get("reason") or "Pack designer")[:500]})
+            return {"stored": stored, "plan": plan}
+        if action == "apply":
+            out = await b.admin("POST", f"/modules/deployments/{quote(str(body.get('id') or ''), safe='')}/apply", me,
+                                {"comment": str(body.get("comment") or "")[:500]}, timeout=600.0)
+            from core import modules as _modules
+            await request.app.state.module_parts.refresh(b, _modules.state().loaded, force=True)
+            return out
+    except (PD.DesignerError, BodyError) as e:
+        return _problem(e.status, e.detail, getattr(e, "code", None))
     except BackendError as e:
         return _problem(e.status, e.detail, e.code)
-    return {"id": d["id"], "name": name}
-
-
-@router.get("/api/drafts/{draft_id}")
-async def open_draft(request: Request, draft_id: str):
-    try:
-        d = await request.app.state.backend.designs("GET", f"/{draft_id}", ident(request))
-    except BackendError as e:
-        return _problem(e.status, e.detail, e.code)
-    state = decode_state(d.get("notes") or "")
-    if state is None:
-        return _problem(422, "this design is not a New pack draft")
-    return {"id": d["id"], "name": str(d.get("name", ""))[len(DRAFT_PREFIX):], "state": state}
-
-
-@router.delete("/api/drafts/{draft_id}")
-async def delete_draft(request: Request, draft_id: str):
-    try:
-        await request.app.state.backend.designs("DELETE", f"/{draft_id}", ident(request))
-    except BackendError as e:
-        return _problem(e.status, e.detail, e.code)
-    return {"deleted": draft_id}
+    return _problem(400, "unknown action")

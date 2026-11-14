@@ -935,7 +935,7 @@ EDGAR, Wikidata, Nasdaq Trader, GLEIF), where it comes from, its licence, which 
 ## 5. Schema to pack: generate a pack from JSON Schema
 
 A pack made from JSON Schema files, a folder of JSON Lines, or both (Build → New pack, or `drishti.py pack make`) has its own guide:
-[BUILD_GUIDE.md](BUILD_GUIDE.md#8-a-pack-from-a-json-schema-build--new-pack).
+[BUILD_GUIDE.md](BUILD_GUIDE.md#8-the-pack-designer-build--new-pack).
 
 ## 6. Export data: download a dataset
 

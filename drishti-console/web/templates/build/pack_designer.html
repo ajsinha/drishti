@@ -1,0 +1,134 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# Build -> New pack: the Pack designer (mock-up option B, docs/lenses/mockups/pack-designer/). Built from Drishti Elements only: FileDrop,
+   Select, MultiSelect, Grid, CodeEditor. The steps' summaries on the left rail are the designer's own state; the work is on the server. #}
+{% extends "base.html" %}
+{% block title %}New pack · {{ PRODUCT }}{% endblock %}
+{% block screen %}build{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_build.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_pack-designer.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/elements/drishti-grid/drishti_grid.css?v={{ ASSET_V }}">{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="adm bs pd" data-pack-designer data-can-author="{{ 'true' if can_author else 'false' }}" data-is-admin="{{ 'true' if is_admin else 'false' }}"
+     data-max-mb="{{ limits.maxMb }}" data-accept="{{ limits.accept | join(',') }}">
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/build">My designs</a> · <a href="/help/build-guide#8-the-pack-designer-build--new-pack">Pack designer guide <span aria-hidden="true">?</span></a></nav>
+  <h1>New pack</h1>
+  {% if not can_author %}<p class="pd-warn" role="note">Your roles do not include the author power (the built-in author and admin roles hold it, and an administrator can give it to another role in Admin → Roles). You can look, but not start a pack.</p>{% endif %}
+  <div class="pd-work">
+    <nav class="pd-rail" aria-label="Steps">
+      <ol>
+        <li><button type="button" class="pd-step" data-go="data" aria-current="step"><span class="pd-n">1</span> Data<small data-sum="data">no files yet</small></button></li>
+        <li><button type="button" class="pd-step" data-go="kind"><span class="pd-n">2</span> Kind and keys<small data-sum="kind">after the data</small></button></li>
+        <li><button type="button" class="pd-step" data-go="source"><span class="pd-n">3</span> Source<small data-sum="source">file connector</small></button></li>
+        <li><button type="button" class="pd-step" data-go="design"><span class="pd-n">4</span> Design<small data-sum="design">after the data</small></button></li>
+        <li><button type="button" class="pd-step" data-go="finalize"><span class="pd-n">5</span> Finalize<small data-sum="finalize">not yet</small></button></li>
+        <li><button type="button" class="pd-step" data-go="deploy"><span class="pd-n">6</span> Deploy<small data-sum="deploy">not yet</small></button></li>
+      </ol>
+    </nav>
+    <div class="pd-main">
+      <div class="bs-status" role="status" aria-live="polite" data-msg></div>
+
+      <section class="pd-pane" data-pane="data" aria-labelledby="pdh-data">
+        <h2 id="pdh-data" class="bs-h">1. Data</h2>
+        <p class="text-muted-d">Drop <code>.jsonl</code>, <code>.jsonl.gz</code> or <code>.ndjson</code> files, or a folder of them. They are uploaded to the server and
+          <b>every record is analysed there</b> (the same pass as <code>drishti.py pack new</code>).</p>
+        <div data-drop></div>
+        <p class="pd-total" data-total role="status" aria-live="polite"></p>
+        <div class="pd-grid pd-files" data-files-grid hidden></div>
+        <div class="pd-prog" data-read-prog hidden><progress data-read-bar max="1" value="0" aria-label="Reading the records"></progress> <span data-read-said role="status" aria-live="polite"></span>
+          <button type="button" class="btn-pill btn-ghost" data-cancel>Cancel</button></div>
+        <p class="bs-actions"><button type="button" class="btn-pill btn-accent" data-analyse disabled>Read every record</button></p>
+      </section>
+
+      <section class="pd-pane" data-pane="kind" aria-labelledby="pdh-kind" hidden>
+        <h2 id="pdh-kind" class="bs-h">2. Kind and keys</h2>
+        <p class="text-muted-d">Choose the columns whose values tell the records apart: every combination gets its own Sutra. The counts are the whole files'.</p>
+        <div class="pd-form">
+          <label class="pd-f"><span>Kind</span><input class="studio-in mono" type="text" data-f="kind" autocomplete="off" aria-describedby="pdKindHint"><small id="pdKindHint" class="text-muted-d">one name for the records of every file (blank: the file's name)</small></label>
+          <label class="pd-f"><span>Kind prefix</span><input class="studio-in mono" type="text" data-f="kindPrefix" autocomplete="off"><small class="text-muted-d">put before every kind so a kind another module provides is not taken (blank: none)</small></label>
+          <div class="pd-f"><span id="pdMatchL">Discriminators</span><div data-ms-match aria-labelledby="pdMatchL"></div></div>
+          <div class="pd-f"><span id="pdKeyL">ID</span><div data-sel-key aria-labelledby="pdKeyL"></div><small data-key-check role="status" aria-live="polite"></small></div>
+          <div class="pd-f"><span id="pdDateL">Business date</span><div data-sel-date aria-labelledby="pdDateL"></div><small data-date-check class="text-muted-d"></small></div>
+        </div>
+        <p class="bs-actions"><button type="button" class="btn-pill btn-accent" data-reanalyse>Apply and read again</button></p>
+        <div class="pd-grid pd-combos" data-combos-grid></div>
+      </section>
+
+      <section class="pd-pane" data-pane="source" aria-labelledby="pdh-source" hidden>
+        <h2 id="pdh-source" class="bs-h">3. Source</h2>
+        <p class="text-muted-d">Where the module reads its data: a file connector over a folder of dated files, written as a binding for each kind.
+          The records you uploaded are written there (<code>&lt;files root&gt;/&lt;domain&gt;/&lt;date&gt;/&lt;kind&gt;.jsonl</code>) when the module is made.</p>
+        <div class="pd-form">
+          <label class="pd-f"><span>Pack name</span><input class="studio-in mono" type="text" data-f="name" autocomplete="off" placeholder="my-bank"></label>
+          <label class="pd-f"><span>Title</span><input class="studio-in" type="text" data-f="title" autocomplete="off"></label>
+          <label class="pd-f"><span>Version</span><input class="studio-in mono" type="text" data-f="version" value="1.0.0" autocomplete="off"></label>
+          <label class="pd-f"><span>Files root</span><input class="studio-in mono" type="text" data-f="filesRoot" autocomplete="off"><small class="text-muted-d">blank: the server's files store</small></label>
+          <label class="pd-f"><span>Existing connector</span><input class="studio-in mono" type="text" data-f="connector" autocomplete="off"><small class="text-muted-d">blank: a new file connector, <code>&lt;name&gt;-files</code></small></label>
+          <div class="pd-f"><span id="pdLoadL">Write the uploaded records to the store</span><div data-sw-load aria-labelledby="pdLoadL"></div></div>
+        </div>
+      </section>
+
+      <section class="pd-pane" data-pane="design" aria-labelledby="pdh-design" hidden>
+        <h2 id="pdh-design" class="bs-h">4. Design</h2>
+        <div class="pd-design">
+          <div class="pd-list"><div class="pd-grid pd-sutras" data-sutras-grid></div></div>
+          <div class="pd-edit">
+            <div class="pd-bar"><b data-sutra-name class="mono"></b> <span class="pd-badge" data-sutra-check></span> <span class="text-muted-d" data-sutra-rows></span></div>
+            <label class="visually-hidden" for="pdYaml">The Sutra's YAML</label>
+            <textarea id="pdYaml" data-yaml data-di-code="yaml" spellcheck="false"></textarea>
+          </div>
+          <div class="pd-live">
+            <div class="pd-bar"><b>Live screen</b> <span class="text-muted-d">on a real row of this combination</span> <span data-sel-row class="pd-rowsel"></span></div>
+            <div class="bs-preview pd-screen" data-live-screen aria-live="polite"></div>
+            <p class="text-muted-d" data-live-note></p>
+          </div>
+        </div>
+      </section>
+
+      <section class="pd-pane" data-pane="finalize" aria-labelledby="pdh-finalize" hidden>
+        <h2 id="pdh-finalize" class="bs-h">5. Finalize</h2>
+        <p class="text-muted-d">The module is written with your edited Sutras, its pack linted and tested, the <code>.dmod</code> packed and the fifteen module checks run.</p>
+        <p class="bs-actions"><button type="button" class="btn-pill btn-accent" data-finalize disabled>Make the module</button>
+          <a class="btn-pill btn-ghost" data-download hidden download>Download the .dmod</a></p>
+        <div class="pd-prog" data-fin-prog hidden><progress aria-label="Making the module"></progress> <span data-fin-said role="status" aria-live="polite"></span></div>
+        <div class="pd-grid pd-checks" data-checks-grid hidden></div>
+        <pre class="bs-yaml pd-log" data-log tabindex="0" aria-label="The job's log" hidden></pre>
+      </section>
+
+      <section class="pd-pane" data-pane="deploy" aria-labelledby="pdh-deploy" hidden>
+        <h2 id="pdh-deploy" class="bs-h">6. Deploy</h2>
+        <p class="text-muted-d">The one module deploy: the package goes to the module store (checked once more by the server) and a plan installs it. A single node installs
+          when you apply; a cluster shows the plan per node, and a second administrator may have to apply it (four eyes).</p>
+        <p class="bs-actions"><button type="button" class="btn-pill btn-accent" data-install disabled>Install on this node</button>
+          <button type="button" class="btn-pill btn-ghost" data-plan disabled>Plan for the cluster</button>
+          <button type="button" class="btn-pill btn-accent" data-apply hidden>Apply the plan</button>
+          <a class="btn-pill btn-ghost" data-open hidden>Open the screen</a></p>
+        <div class="pd-grid pd-plan" data-plan-grid hidden></div>
+        <p class="bs-status" data-deploy-msg role="status" aria-live="polite"></p>
+      </section>
+
+      <div class="pd-nav bs-actions">
+        <button type="button" class="btn-pill btn-ghost" data-back>Back</button>
+        <button type="button" class="btn-pill btn-accent" data-next>Next</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="/static/js/drishti_pack-designer.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/drishti_pack-designer-steps.js?v={{ ASSET_V }}"></script>
+{% endblock %}

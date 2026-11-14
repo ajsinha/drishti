@@ -29,7 +29,7 @@ Who reads what:
 |---|---|
 | a user or administrator: which packs ship, turning them on and off, who sees which | [section 31](#31-the-packs-that-ship-turning-them-on-who-sees-which) |
 | writing a pack by hand | sections [1](#1-what-a-pack-is) to [7](#7-modelling-content-vocabulary-about-text-help-facts-roles-calc) |
-| turning JSON files or a schema into a pack without writing files | sections [8](#8-a-pack-from-a-json-schema-build--new-pack) to [10](#10-a-pack-from-json-lines-pack-new), [tutorial 19, Part A](../tutorials/19-build-a-pack-and-a-screen.md#part-a--build-a-pack-from-your-data) |
+| turning JSON files or a schema into a pack without writing files | sections [8](#8-the-pack-designer-build--new-pack) to [10](#10-a-pack-from-json-lines-pack-new), [tutorial 19, Part A](../tutorials/19-build-a-pack-and-a-screen.md#part-a--build-a-pack-from-your-data) |
 | writing the screens (Sutras) | sections [11](#11-what-a-sutra-is-and-when-one-applies) to [27](#27-common-mistakes-and-their-messages); every key, panel option, format and function is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md), the workbench's manual in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench) |
 | letting people edit records on a screen | [section 28](#28-forms-letting-people-edit-records); what happens to a change after that (submitting, approval, Admin → Edits) is in [APPROVALS_GUIDE.md](APPROVALS_GUIDE.md) |
 | connecting a pack to a database, a lake or a queue | [DATA_GUIDE.md section 9](DATA_GUIDE.md#9-connector-files-and-admin--connectors), [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) and the per-connector pages they list |
@@ -41,7 +41,7 @@ Contents:
   [3. Build it, step by step](#3-build-it-step-by-step) · [4. `pack.yaml`, key by key](#4-packyaml-key-by-key) ·
   [5. Modelling data](#5-modelling-data-large-kinds-several-systems-derived-kinds-samples) ·
   [6. Sutras over deep documents](#6-sutras-over-deep-documents) · [7. Modelling content](#7-modelling-content-vocabulary-about-text-help-facts-roles-calc)
-- **Packs from data**: [8. From a JSON Schema](#8-a-pack-from-a-json-schema-build--new-pack) · [9. A deep trading JSON](#9-a-deep-trading-json-from-one-file-to-a-deployed-pack) ·
+- **Packs from data**: [8. From a JSON Schema](#8-the-pack-designer-build--new-pack) · [9. A deep trading JSON](#9-a-deep-trading-json-from-one-file-to-a-deployed-pack) ·
   [10. From JSON Lines](#10-a-pack-from-json-lines-pack-new)
 - **Screens**: [11. What a Sutra is](#11-what-a-sutra-is-and-when-one-applies) · [12. Your first Sutra](#12-your-first-sutra-a-counterparty) ·
   [13. Rachana-EL](#13-rachana-el-step-by-step) · [14. A trade view](#14-a-trade-view-built-step-by-step) · [15. Matching](#15-matching-several-sutras) ·
@@ -166,7 +166,7 @@ good version running and shows on Admin → Packs. A pack folder copied into `co
 ## 3. Build it, step by step
 
 This is the pack **by hand**, to show every file. If your data is JSON Lines or has a JSON Schema you do not need to write these files:
-**Build → New pack** and `drishti.py pack make` ([section 8](#8-a-pack-from-a-json-schema-build--new-pack)) or `drishti.py pack new`
+**Build → New pack** and `drishti.py pack make` ([section 8](#8-the-pack-designer-build--new-pack)) or `drishti.py pack new`
 ([section 10](#10-a-pack-from-json-lines-pack-new)) turn a schema or a folder into a pack, and [tutorial 19, Part B](../tutorials/19-build-a-pack-and-a-screen.md#part-b--design-a-screen-in-the-workbench-and-on-a-live-page)
 designs its screen. Each step says what to type and what you should see; the outputs were produced by running the steps on the finished pack
 (your ticking numbers may differ a little: the ticket's age walks up and down).
@@ -1893,35 +1893,82 @@ data stays in the lake. When the engine is built, remove the item in the change 
         panels: [hedging]
 ```
 
-## 8. A pack from a JSON Schema: Build → New pack
+## 8. The Pack designer: Build → New pack
 
-You have **JSON Schema files** (one per kind of thing you hold: trades, counterparties, books …), and perhaps a **folder of JSON Lines** with real
-documents. Drishti turns them into a pack: a Sutra per kind (or per variant), with the right labels, formats, links and help text, tests, and a
-bundle you can deploy. Two ways, with the same rules:
-
-- **The page**: **Build → New pack** (`/build/pack/new`). Five steps, a preview of every Sutra, a download or a deploy.
-- **The command line**: `drishti.py sutra design --schema ...` and `drishti.py pack make --schema ...`
-  ([CLI_REFERENCE.md](CLI_REFERENCE.md#sutra-design---schema-and-pack-make---schema)).
+You have **JSON Lines files** (a trade book, a set of counterparties, one file per source system or one per day) and want a pack: its kinds, one
+screen (Sutra) per kind or per combination of discriminator columns, its data binding, tests and a module to deploy. **Build → New pack**
+(`/build/pack/designer`; the old `/build/pack/new` redirects to it) is a workspace for that, with the same engine as the command line
+(`drishti.py pack new`): the files go up to the server, **every record is read there**, and what it finds is shown at once.
 
 ```text
-schemas (JSON Schema, JSON or YAML)  +  JSON Lines (optional)
-        │  plan: kind, key, links, labels, match column, date, strip, mnemonic          (8.2, the rules)
+.jsonl / .jsonl.gz / .ndjson files or a folder ── upload ──▶ the server reads every record (tools/packgen/packprofile.py)
+        │                                                     kinds, fields, one Sutra per discriminator combination, ID check, dates
         ▼
-sample documents: real ones first, then the schema's examples, then synthetic ones
-        │  the server's auto-designer drafts a Sutra from each group of samples
+Design: a Sutra's YAML beside its live screen on real rows, drawn again as you edit
         ▼
-the draft is labelled from the schema (titles, descriptions, formats, links, strip)
+Finalize: the module written, its pack linted and tested, packed as a .dmod, the fifteen checks
         ▼
-pack folder: pack.yaml, sutras/, tests/, samples/, config/about.yaml, README.md   →  bundle (.tar.gz + .sha256)  →  deploy
+Deploy: the one module deploy (a single node installs; a cluster plans, then applies)
 ```
 
-> **Real data wins.** A schema says what a document *may* be; real documents say what it *is*. Where both are given the key must be unique in the
-> data, the business date is found in the data, a field the schema does not know is reported, and every Sutra is tested on real documents. The schema
-> then adds what data cannot: names, descriptions, units, links, enumerations and the shape of variants.
+### 8.1 The six steps
 
-### 8.1 Quick start
+The left rail lists the steps with a one-line summary of each (rows read, kind and discriminators, the connector, Sutras and their checks, checks
+passed, deployed or not); click one to go there. Starting a pack needs the **author** power, deploying a module an administrator. At phone width the
+rail becomes a row above the step.
 
-The example schemas are in `docs/guides/examples/schemas/`: `trade`, `counterparty`, `book` and `instrument`, with small JSON Lines files under `data/`.
+**1. Data.** Drop `.jsonl`, `.jsonl.gz` or `.ndjson` files, a folder of them, or choose them. Each file is uploaded to a workspace on the server
+(a folder under the console's data folder, removed after `builder.pack_designer_ttl_hours` untouched) and then **every record of every file is
+analysed there**, with progress (rows read, seconds); the work runs as a job of its own that you can cancel. Nothing is sampled: the counts below are
+the files' true counts. A workspace is resumed in the same browser tab.
+
+**2. Kind and keys.** *Kind* names the records of every file (files `trade_endur.jsonl`, `trade_murex.jsonl` are the kind `trade` when you say so;
+blank, each file's name is its kind). *Discriminators* are the columns whose values tell the records apart, **any combination**: every combination
+present becomes one Sutra, listed with its row count and share, a **rare** mark on a combination that is a tiny part of the data, and the Sutra name.
+*ID* is the key column; it is checked for duplicates **over the whole of every file** (one entity per ID per business date) and the result is said in
+words. *Business date* is the column holding the date, or none: then each file's name carries it (`trade.2026-07-08.jsonl.gz`). The columns are
+inferred from the data first (the same candidates `drishti.py data profile` shows); change any and press **Apply and read again**, which reads the files
+again with your choice and redraws the combinations.
+
+**3. Source.** Pack name (lower-case letters, digits, `-`), title, version, a *kind prefix* (put before every kind, so a kind another module provides
+is not taken: such a clash is refused when the module is made), the files root, and the connector. By default a **file connector** `<name>-files` is
+written, one **binding** for each kind in `bindings.yaml` and the connector in `connectors/`; with *Write the records to the files store* on, the
+uploaded records are written to `<files root>/<name>/<date>/<kind>.jsonl` so the connector can read them. An existing connector may be named instead.
+The binding goes to the site's config folder (`builder.pack_designer_site`; by default into the workspace, to copy or bind in Admin → Data bindings).
+
+**4. Design.** The list on the left holds every Sutra with its rows and a **check badge** (`8/8`: the server's checker, every panel against the real
+rows of the combination); in the middle the Sutra's YAML in the code editor; on the right its **live screen**, drawn by the server from the YAML on one
+of the combination's **real rows** (choose the row). Edit the YAML and the screen is drawn again after a short pause, with the badge updated and the
+Sutra marked *edited*; a YAML the server refuses shows its problems in place of the screen. Edits are kept for the module.
+
+**5. Finalize.** **Make the module** runs `pack new`'s write: the pack (kinds, contracts, your Sutras, samples, tests, About text), the module around it
+(`module.yaml`, needs, console page routes, docs), `sutra lint` and `sutra test`, then `module pack` and `module check`: the **fifteen conformance
+checks** are listed as they pass. The `.dmod` can be downloaded.
+
+**6. Deploy.** **Plan the install** uploads the `.dmod` to the module store (the server checks it once more) and shows the plan per node; **Apply the
+plan** installs it. A single node installs at once; on a cluster the server may require a second administrator to apply the plan (four eyes, as in
+Admin → Modules → Deploy). **Open the screen** opens a trade of the module, `/m/<module>/<module>/<kind>/<id>`.
+
+### 8.1.1 The same on the command line
+
+```bash
+python3 tools/drishti.py pack new data/jsonl --name my-bank --kind trade --key TRADE_ID --match PRODUCT_TYPE,SOURCE_SYSTEM \
+    --date BUSINESS_DATE --kind-prefix my- --deploy
+```
+
+`--dry-run` reads every record and prints the plan; `--sutra-edits FILE` (a JSON `{sutra name: YAML}`) replaces drafted Sutras, which is what the designer
+sends. Both routes run `tools/packgen/module_from_jsonl.py`; the page runs it as the job `tools/packgen/designer_job.py`.
+
+### 8.1.2 Settings
+
+`builder.pack_designer_max_mb` (uploaded bytes per workspace, 4096), `builder.pack_designer_max_files` (500), `builder.pack_designer_ttl_hours` (72),
+`builder.pack_designer_jobs_per_user` (2 running jobs), `builder.pack_designer_workers` (processes reading the files; 0: the tool's default),
+`builder.pack_designer_site` (where bindings are written) and `builder.tools_dir` (the repository's `tools/` folder the job runs from).
+
+### 8.1.3 From JSON Schema
+
+A pack from **JSON Schema** files is the command line's: `drishti.py pack make --schema` and `drishti.py sutra design --schema` (rules in 8.2 to 8.4 and
+8.6 to 8.8 below, with their quick start):
 
 ```bash
 # schemas alone: samples are synthetic, every Sutra is checked, one folder comes out
@@ -1931,7 +1978,8 @@ python3 tools/drishti.py pack make --schema docs/guides/examples/schemas --name 
 python3 tools/drishti.py pack make --schema docs/guides/examples/schemas docs/guides/examples/schemas/data --name desk-pack --store files --yes
 ```
 
-Or open **Build → New pack**, choose the four schema files and the `data` folder, and press Next five times.
+> **Real data wins.** A schema says what a document *may* be; real documents say what it *is*. Where both are given the key must be unique in the
+> data, the business date is found in the data, a field the schema does not know is reported, and every Sutra is tested on real documents.
 
 ### 8.2 The rules, one by one
 
@@ -1993,8 +2041,7 @@ references, years and versions are not figures. The first figure is emphasised.
 - Otherwise **one Sutra** per kind, `<kind>-default`.
 
 With real data, every row of every file is counted: N types make exactly N Sutras, each designed from its own type's rows, and a catch-all
-`<kind>-default` at priority 1 is added only when some rows have no value in the split column (the card says how many). More Sutras than
-`builder.pack_max_sutras` are refused.
+`<kind>-default` at priority 1 is added only when some rows have no value in the split column (the card says how many). 
 
 **The business date** partitions real data by day: `x-drishti-role: date`; else a date field named like a business date (`businessDate`, `asOf`,
 `reportingDate`, `date`, `valuationDate`, `tradeDate`); else the one required date field. Real documents with **no business-date field** (the book as
@@ -2077,64 +2124,9 @@ the schema's types, enums, ranges, patterns (`^[A-Z]{3}$` gives `ABC`) and forma
 catalogue's subtitle): they prove a Sutra renders, nothing about your data. Each Sutra's `tests/<sutra>/expect.yaml` is `noErrors: true`, plus
 `nonEmpty: [details]` for a specific Sutra.
 
-### 8.5 The New pack page, step by step
+### 8.5 Samples to a pack: the designer
 
-Open **Build → New pack**. Anyone can plan and preview; downloading needs the **author** power, deploying an administrator. You cannot leave a step
-that would fail (the message says why).
-
-**1. Sources.** Choose or drop files and folders: schemas (`.json`, `.yaml`, `.yml`) and data (`.jsonl`, `.ndjson`, or a `.json` array). A `.json` file
-with `$schema`, or `properties` with a `type`, or `$defs`, is a schema; any other is data. **The files are read in your browser**: a JSON Lines file is
-streamed a line at a time and a reservoir sample (200 documents, same file same sample) is kept; only the schemas, the sample and the counts are sent,
-never the whole folder. *Reading limits* sets rows per file, MB per file and the sample size; *Paste a schema instead* takes text; **Resume a draft**
-appears when you have one.
-
-![Step 1: schemas and a folder read in the browser, with rows and sizes](img/schemapack/01-sources.jpg)
-
-**2. Kinds.** A graph of the kinds and their links, the data files with the kind each was matched to (change it), and one card per kind:
-
-![Step 2: the graph of kinds and links, and one card per kind](img/schemapack/03-kinds.jpg)
-
-![One kind's card: key, split column, date, mnemonic, links, warnings, fields](img/schemapack/04-card.jpg)
-
-*Kind name*, *Key field* (with why, amber when ambiguous), *Split into Sutras by* (each with the number of Sutras it makes), *Business date field*,
-*Mnemonic*, *Links to other kinds* (change, remove, add), the Sutra names, the dropdown suggestions, the warnings and every field with its label, type,
-format and description. Every change redoes the plan. A kind the server already defines in another pack is flagged:
-
-![A kind another pack already defines](img/schemapack/02-conflict.jpg)
-
-**3. Pack.** Name (letters, digits, `-`), code, title, version, description; *Samples per Sutra* and *Figures in the strip*; a table of the kinds with
-their **mnemonic** (checked against the packs on the server), the **source** (samples only, the File connector, or a Delta lake) and the **logical
-connector name**. A pack name that exists says that deploying makes a new version.
-
-![Step 3: name, code, title, version, description, samples, strip, mnemonics and connectors](img/schemapack/05-pack.jpg)
-
-**4. Preview.** The server drafts every Sutra as a background job (a progress bar, **Cancel**; Sutras drafted so far are kept). Then a list of the
-Sutras with badges (*ok*, empty or failed cells, *synthetic*) and, for the one you choose, five tabs: **Preview** (the server's rendering on a sample you
-pick), **Sutra** (the YAML), **About text** (what the drawer will say, TODO entries marked), **Samples** and **Checks** (every panel against every
-sample). *Open in the workbench to refine* makes a design with the Sutra and its samples; the preview does not change when you edit there, so refine and
-copy the YAML into the pack, or edit the schema and generate again (`pack regenerate` merges later changes).
-
-![Step 4: every Sutra rendered on a sample](img/schemapack/06-preview.jpg)
-
-![The About text tab](img/schemapack/07-about.jpg)
-
-![The Sutra tab](img/schemapack/08-sutra.jpg)
-
-**5. Output.** The bundle (`<name>-<version>.tar.gz`, with `.sha256` and the manifest) in exactly the format of `drishti.py pack bundle` (verify it with
-`drishti.py pack verify`); anything synthetic or without a description is listed. **Deploy** hands the bundle to Admin → Packs → Deploy archive, which
-checks it (checksums, `pack.yaml`, server version, `sutra lint` and `sutra test`), shows what changes (breaking changes first, which you must
-acknowledge), deploys on your confirmation and keeps the version it replaces for a roll back ([section 29.7](#297-deploying-an-archive-history-and-roll-back)).
-
-![Step 5: the bundle, its checksum and the deploy hand-off](img/schemapack/09-output.jpg)
-
-![The hand-off: the server's checks and what the deploy would change](img/schemapack/10-deploy.jpg)
-
-**Drafts, keyboard, phone.** **Save draft** keeps the state (schemas, choices, file names and counts, not the data) as a design named
-`New pack: <name>` in *My drafts*; it is saved when you move between steps, each step is a history entry (the browser's Back moves between steps), and
-data files are chosen again after a resume. Every control is a native button, field or select; the Sutra list takes Up and Down, the tabs Left and
-Right. At phone width the columns stack and every control is 44 px:
-
-![The kinds step at 390 px](img/schemapack/11-phone.jpg)
+Real documents reach a pack through the Pack designer (8.1): it reads JSON Lines only, and the schema rules above apply to `pack make --schema`.
 
 ### 8.6 The command line
 
@@ -2281,9 +2273,7 @@ kinds:
         means: 'TODO: what this field means.'
 ```
 
-The page's limits (`builder.pack_sample_docs`, `builder.pack_read_max_rows`, `builder.pack_max_files`, `builder.pack_max_sutras`, the preview jobs per
-user, `builder.pack_profile_rows_per_type`, `builder.pack_design_samples_per_type`, `builder.pack_load_max_mb`) are in
-[CONFIGURATION.md](../admin/CONFIGURATION.md); a request over a limit is refused with `413 DRS-5005`.
+The designer's limits (`builder.pack_designer_*`) are in [CONFIGURATION.md](../admin/CONFIGURATION.md); a request over a limit is refused with `413 DRS-5005`.
 
 ### 8.8 Troubleshooting
 
@@ -2341,10 +2331,7 @@ One deal, shortened:
 
 ### 9.1 Read the file (Build → New pack, step 1)
 
-Choose `deals.json` with **Choose files**. The page streams it, one document in memory at a time whatever its size, and uploads nothing. **Every row is
-counted** for the columns that could tell record types apart; up to `builder.pack_profile_rows_per_type` rows of each type are profiled (how often each
-field has a value, digits written as text, the size of every array at every depth), and `builder.pack_design_samples_per_type` documents of each type are
-kept, chosen for variety. Measured: 66 MB / 5,000 deals in 0.5 s; 2 GB / 500,000 rows in about 20 s with about 110 MB in the page, flat.
+Drop `deals.json` on the **Data** step. It is uploaded to the server and **every row is read there**, the columns that could tell record types apart are counted over the whole file, and the fields' presence, the types and the size of every array at every depth are profiled; a few real documents of each combination are kept to draw its screen. Measured: 66 MB / 5,000 deals in under a second of reading; 2 GB / 500,000 rows in about 20 s.
 
 ![Step 1: one JSON array of 5,000 deals read in the browser, with its rows, size and the documents kept](img/deepjson/01-sources.jpg)
 

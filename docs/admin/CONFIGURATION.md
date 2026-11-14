@@ -2615,20 +2615,14 @@ read by both programs, so one set of variables configures both halves.
 | `builder.max_file_mb` | `5` | Largest single file; a larger one is left out and reported, the rest are shaped. |
 | `builder.max_total_mb` | `25` | All files together; over it the upload is refused. |
 | `builder.studio_kind` | `sample` | The kind a new Design and the workbench preview a brought document as (a pasted document has no kind of its own). |
-| `builder.pack_sample_docs` | `200` | **Build → New pack** (`/build/pack/new`, [Schema to pack](../guides/DATA_GUIDE.md#5-schema-to-pack-generate-a-pack-from-json-schema)): documents the browser keeps per data file and sends to the console. A sample, never the file. |
-| `builder.pack_read_max_rows` | `500000` | The most rows per file the page may be told to read (the page streams the file and keeps a sample; memory holds only the sample). |
-| `builder.pack_read_max_mb` | `1024` | The most MB per file the page may be told to read before it stops the file and says so. |
-| `builder.pack_max_files` | `200` | Schema and data files in one plan. Over it: `413 DRS-5005`. |
-| `builder.pack_max_docs` | `5000` | Sampled documents in one plan request. |
-| `builder.pack_profile_rows_per_type` | `10000` | **Build → New pack**: rows of each type (each value of the type column, such as `PRODUCT_TYPE`) the page profiles as it streams the file: how often each field has a value, its types, digits written as text, and the size of every nested array at every depth. Every row is still counted, so the list of types and their row counts is exact. A type with fewer rows is profiled entirely. |
+| `builder.pack_designer_max_mb` | `4096` | **Build → New pack** (the Pack designer, [BUILD_GUIDE](../guides/BUILD_GUIDE.md#8-the-pack-designer-build--new-pack)): the most megabytes uploaded to one workspace. Over it: `413 DRS-5005`. |
+| `builder.pack_designer_max_files` | `500` | The Pack designer: files in one workspace. Over it: `413 DRS-5005`. |
+| `builder.pack_designer_ttl_hours` | `72` | The Pack designer: hours a workspace (the uploaded files, the analysis, the module) is kept after its last use, then removed. |
+| `builder.pack_designer_jobs_per_user` | `2` | The Pack designer: jobs (reading every record, making the module) one person may have running at once. Over it: `429`. |
+| `builder.pack_designer_workers` | `0` | The Pack designer: processes reading the files of a job, a file each; 0 is the tool's default (a third of the cores, at most 8). Every record is read either way. |
+| `builder.pack_designer_site` | _(empty)_ | The Pack designer: the config folder the data bindings and the file connector are written to (the server's, on one node); empty, each workspace keeps its own `site/` folder. Environment: `DRISHTI_PACK_DESIGNER_SITE`. |
 | `builder.pack_load_max_mb` | `2048` | **Admin → Packs → a pack → Load data**: the largest data file the console streams on to the server (never held in memory); the server has its own `drishti.loads.upload-max-mb`. |
-| `builder.pack_design_samples_per_type` | `50` | Documents of each type the page keeps to design that type's Sutra: spread over the whole file and chosen for variety (optional arrays present and absent, different nested shapes); anonymised by default. |
-| `builder.pack_max_schema_kb` | `512` | The largest single schema file. |
-| `builder.pack_max_sutras` | `200` | Sutras one generated pack may have (a match column with many values makes many). |
-| `builder.pack_jobs_per_user` | `3` | Preview jobs one person may have running at once, and kept after they finish. Over it: `429 DRS-5005`. |
-| `builder.pack_job_ttl_min` | `60` | Minutes a finished preview (with its bundle) is kept in memory for the person who started it. |
-| `builder.pack_draft_concurrency` | `4` | Sutras drafted at once against the server (`POST /api/v1/builder/design`, one per Sutra). |
-| `builder.tools_dir` | `../tools` | The repository's `tools/` folder, relative to `drishti-console/`: the console imports `packbundle.py` from it to make the bundle in the format of `pack bundle`. The console image copies that one file; without it the page plans and previews but cannot build a bundle (`501`). |
+| `builder.tools_dir` | `../tools` | The repository's `tools/` folder, relative to `drishti-console/`: the Pack designer runs its jobs from it (`tools/packgen/designer_job.py`, which uses `pack new`'s code). Without it the designer answers `501`. |
 
 `config/workspaces.yaml` holds the console's own starter workspaces (`templates`, none by default; packs add theirs)
 and `blank`, what a new workspace starts as (*New workspace* on `/w`): a `layout` (`2col`, `3col`, `2x2`, `1+2`) and one
@@ -2710,16 +2704,16 @@ compose files in `deploy/` show these variables in use; see [OPERATIONS_GUIDE.md
 
 ## Every setting
 
-Every key of every kind: 2,226 settings in 20 areas, and 353 environment variables. Each row has the same shape: the key, its type, its default (*none*: no default, the setting is off or unset until given; *empty*: an empty value), the environment variable that sets it, what it applies to, its meaning, whether a change needs a restart or is picked up live, and the release that added it (blank: before 2.6). Generated by `tools/settings_catalogue.py` from the files themselves, each meaning the file's own comment; `--check` fails the drill when a key has no meaning or the page is out of date. The console shows this page searchable at Help → Configuration (`/help/configuration`), with the values in effect for an administrator.
+Every key of every kind: 2,220 settings in 20 areas, and 354 environment variables. Each row has the same shape: the key, its type, its default (*none*: no default, the setting is off or unset until given; *empty*: an empty value), the environment variable that sets it, what it applies to, its meaning, whether a change needs a restart or is picked up live, and the release that added it (blank: before 2.6). Generated by `tools/settings_catalogue.py` from the files themselves, each meaning the file's own comment; `--check` fails the drill when a key has no meaning or the page is out of date. The console shows this page searchable at Help → Configuration (`/help/configuration`), with the values in effect for an administrator.
 
-Every setting has a **tier** (the last column; Admin → Configuration shows them by tier): **everyday** 18, **admin** 1,795, **expert** 413. *Everyday* is what a business lead changes (the lenses, the VaR and exposure confidences, the scenario window, the feature switches); *admin* is what an operator sets; *expert* is performance and internals. The tiers are kept in `tools/settings_schemas.yaml` (`tiers`), one place.
+Every setting has a **tier** (the last column; Admin → Configuration shows them by tier): **everyday** 18, **admin** 1,789, **expert** 413. *Everyday* is what a business lead changes (the lenses, the VaR and exposure confidences, the scenario window, the feature switches); *admin* is what an operator sets; *expert* is performance and internals. The tiers are kept in `tools/settings_schemas.yaml` (`tiers`), one place.
 
 | Area | Settings |
 |---|---|
 | [The server: `application.yaml`](#the-server-applicationyaml) | 574 |
 | [Compute engines: `config/engines/*.yaml`](#compute-engines-configenginesyaml) | 328 |
 | [Modules: `config/modules/*.yaml`](#modules-configmodulesyaml) | 5 |
-| [The console: `application.yaml`](#the-console-applicationyaml) | 191 |
+| [The console: `application.yaml`](#the-console-applicationyaml) | 185 |
 | [The console's other files](#the-consoles-other-files) | 100 |
 | [Connectors: every plugin's settings](#connectors-every-plugins-settings) | 534 |
 | [Packs: `pack.yaml`](#packs-packyaml) | 140 |
@@ -2736,7 +2730,7 @@ Every setting has a **tier** (the last column; Admin → Configuration shows the
 | [The data inbox's routing rules: `config/dataload.yaml`](#the-data-inboxs-routing-rules-configdataloadyaml) | 2 |
 | [The UI kit: `config/ui-kit/brand.yaml`](#the-ui-kit-configui-kitbrandyaml) | 19 |
 | [AI providers and MCP servers: `config/ai/`, `config/mcp/`](#ai-providers-and-mcp-servers-configai-configmcp) | 37 |
-| [Environment variable index](#environment-variable-index) | 353 |
+| [Environment variable index](#environment-variable-index) | 354 |
 
 Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.governance.*` and `drishti.ui-kit.*`, the console's `views.refresh_min_seconds`) are rows of the server and console tables below; the Sutra grammar itself is [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md).
 
@@ -4524,20 +4518,14 @@ One file per module (banking, capitalmarkets, economy), `config/modules/<module>
 | `builder.max_samples` | integer | `50` |  | console | files in one upload, and samples (a .jsonl line is one) in all | restart |  | admin |
 | `builder.max_file_mb` | integer | `5` |  | console | largest single file | restart |  | expert |
 | `builder.max_total_mb` | integer | `25` |  | console | all files together | restart |  | expert |
-| `builder.pack_sample_docs` | integer | `200` |  | console | Build -&gt; New pack: documents the browser keeps per data file and sends (a sample, never the file) | restart |  | admin |
-| `builder.pack_read_max_rows` | integer | `500000` |  | console | the most rows per file the page may be told to read (it streams and samples; nothing is held but the sample) | restart |  | admin |
-| `builder.pack_read_max_mb` | integer | `1024` |  | console | the most MB per file the page may be told to read | restart |  | expert |
-| `builder.pack_max_files` | integer | `200` |  | console | schema and data files in one plan | restart |  | admin |
-| `builder.pack_max_docs` | integer | `5000` |  | console | sampled documents in one plan request | restart |  | admin |
-| `builder.pack_profile_rows_per_type` | integer | `10000` |  | console | Build -&gt; New pack: rows of each type (value of the split column) the page profiles (fields filled, array sizes); every row is counted | restart |  | admin |
+| `builder.pack_designer_max_mb` | integer | `4096` |  | console | Build -&gt; New pack (the Pack designer): the most uploaded MB in one workspace | restart |  | expert |
+| `builder.pack_designer_max_files` | integer | `500` |  | console | Build -&gt; New pack: files in one workspace | restart |  | admin |
+| `builder.pack_designer_ttl_hours` | integer | `72` |  | console | Build -&gt; New pack: hours a workspace untouched is kept before it is removed | restart |  | admin |
+| `builder.pack_designer_jobs_per_user` | integer | `2` |  | console | Build -&gt; New pack: jobs (reading the files, making the module) one person may have running | restart |  | admin |
+| `builder.pack_designer_workers` | integer | `0` |  | console | Build -&gt; New pack: processes reading the files in a job (0: the tool's default, a third of the cores, at most 8) | restart |  | expert |
+| `builder.pack_designer_site` | string | empty |  | console | Build -&gt; New pack: the config folder the data bindings are written to (empty: each workspace's own site/ folder) | restart |  | admin |
 | `builder.pack_load_max_mb` | integer | `2048` |  | console | Admin -&gt; Packs -&gt; a pack -&gt; Load data: the largest file the console streams on to the server (which has drishti.loads.upload-max-mb) | restart |  | expert |
-| `builder.pack_design_samples_per_type` | integer | `50` |  | console | documents of each type the page keeps (spread over the file, varied in shape, anonymised) to design that type's Sutra | restart |  | admin |
-| `builder.pack_max_schema_kb` | integer | `512` |  | console | largest single schema file | restart |  | admin |
-| `builder.pack_max_sutras` | integer | `200` |  | console | Sutras one generated pack may have | restart |  | admin |
-| `builder.pack_jobs_per_user` | integer | `3` |  | console | preview jobs one person may have running (or kept) at a time | restart |  | admin |
-| `builder.pack_job_ttl_min` | integer | `60` |  | console | minutes a finished preview (and its bundle) is kept | restart |  | admin |
-| `builder.pack_draft_concurrency` | integer | `4` |  | console | Sutras drafted at once against the server | restart |  | expert |
-| `builder.tools_dir` | string | `../tools` |  | console | the repository's tools/ folder (packbundle.py makes the bundle); relative to drishti-console/ | restart |  | admin |
+| `builder.tools_dir` | string | `../tools` |  | console | the repository's tools/ folder (the Pack designer runs tools/packgen/designer\_job.py from it); relative to drishti-console/ | restart |  | admin |
 | `builder.studio_kind` | string | `sample` |  | console | the kind a new Design and "Open in Studio" preview a brought document as (a pasted document has no kind of its own) | restart |  | admin |
 
 #### `lakes`
@@ -6431,6 +6419,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_PACKS_SAMPLES_FILE` | `drishti.packs.samples-file` | `./data/packs/samples-mode` | server | where the Admin -&gt; Packs choice for sample packs is saved (one word); delete it to let drishti.packs.samples decide again |
 | `DRISHTI_PACKS_SETTINGS` | `drishti.packs.settings-dir` | `./data/packs/settings` | server | The administrator's data-source overrides, one file per pack (Admin → Packs → Data source); redeploying a pack keeps them. |
 | `DRISHTI_PACKS_WATCH` | `drishti.packs.watch` | `auto` | server | The packs folder is watched: a new pack folder is loaded, an edited one re-checked and swapped in, a deleted one unloaded, with no restart. auto: file events with polling as the safety net; poll: look every `poll`; off: only Admin -&gt; Packs acts. |
+| `DRISHTI_PACK_DESIGNER_SITE` | builder.pack\_designer\_site | none | console | The config folder the Pack designer writes the data bindings and the file connector to (Build -&gt; New pack, step 3); empty: each workspace keeps its own site/ folder |
 | `DRISHTI_PACK_REGISTRY` | `drishti.packs.registry.url` | empty | server | a folder, file: or https: URL with index.json; empty: no registry |
 | `DRISHTI_PG_PASSWORD` | postgres profile | `drishti` | profile | Its password (secret) |
 | `DRISHTI_PG_URL` | postgres profile | `jdbc:postgresql://localhost:5432/drishti` | profile | The postgres profile's database (tables &lt;domain&gt;.entities) |
