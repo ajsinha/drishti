@@ -156,6 +156,17 @@ public final class ActiveMqSourcePlugin extends MessageStateSource {
         }
     }
 
+    /** True when the broker answered and refused the connection (a TLS failure anywhere in the chain), not when it is absent. */
+    static boolean refused(Throwable e) {
+        for (Throwable c = e; c != null; c = c.getCause()) {
+            if (c instanceof javax.net.ssl.SSLException || c instanceof java.security.cert.CertificateException
+                    || c instanceof java.security.GeneralSecurityException) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /** The chain of causes, as {@code ; caused by SSLHandshakeException: PKIX path building failed ...}: a TLS failure is in there. */
     static String causes(Throwable e) {
         StringBuilder sb = new StringBuilder();
@@ -184,6 +195,10 @@ public final class ActiveMqSourcePlugin extends MessageStateSource {
 
                 @Override
                 public void onException(java.io.IOException error) {
+                    if (refused(error)) {         // the broker is there and refuses us (TLS: an untrusted CA, a wrong host name, no client
+                        health.set("DOWN: " + error.getClass().getSimpleName() + ": " + error.getMessage() + causes(error) + " (reconnecting)");
+                        return;                   // certificate): a fault to fix, never the calm wait for an absent broker
+                    }
                     health.set(com.ash.drishti.api.BrokerWaiting.lost(where()));
                     watch.waiting(where());
                 }
