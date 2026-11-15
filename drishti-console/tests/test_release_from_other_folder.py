@@ -81,6 +81,10 @@ class _Scratch:
         base.mkdir(parents=True, exist_ok=True)
         self.root = Path(tempfile.mkdtemp(prefix="anywhere-", dir=base))
 
+    def getbasetemp(self) -> Path:
+        """As pytest's: the run's folder, where a once-per-run answer (the shared lake's folder, browser_harness.shared_once) is kept."""
+        return self.root
+
     def mktemp(self, name: str) -> Path:
         p = self.root / name
         p.mkdir(parents=True, exist_ok=True)
