@@ -46,7 +46,7 @@ class VarComputeFirstGuardTest {
     static final List<String> WRITING = List.of("LakeWriter", "LakeCli", "OfficialSink", "IcebergAppender", "LakeAppends");
 
     static Path sources() {
-        Path p = Path.of("").toAbsolutePath();
+        Path p = Path.of(System.getProperty("drishti.module.root"));
         for (Path at = p; at != null; at = at.getParent()) {
             // The VaR engine lives in the banking module since the domain split. Stop at the first checkout root, so a
             // worktree inside another checkout never reads the outer one's (older) sources.

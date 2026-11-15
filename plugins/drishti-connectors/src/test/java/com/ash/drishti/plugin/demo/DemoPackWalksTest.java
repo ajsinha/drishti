@@ -47,7 +47,7 @@ import org.junit.jupiter.api.Test;
 class DemoPackWalksTest {
 
     /** The shipped packs and the retired example packs (examples/packs), whose walks the demo plugin still serves. */
-    private static final List<Path> PACKS = List.of(Path.of("../../config/packs"), Path.of("../../examples/packs"));
+    private static final List<Path> PACKS = List.of(Path.of(System.getProperty("drishti.repo.root"), "config", "packs"), Path.of(System.getProperty("drishti.repo.root"), "examples", "packs"));
     private static final int TICKS = 40;
     /** Dependents that change only when something is crossed: a day's high or low when the price breaks it, a curve's shape when its first two months swap. */
     private static final Set<String> CONDITIONAL = Set.of("ohlc.-1.high", "ohlc.-1.low", "shape", "OHLC.-1.HIGH", "OHLC.-1.LOW", "SHAPE");
@@ -60,7 +60,7 @@ class DemoPackWalksTest {
     @BeforeAll
     static void load() throws IOException {
         for (Path root : PACKS) {
-          try (Stream<Path> packs = (root.endsWith(Path.of("config", "packs")) ? com.ash.drishti.api.resolution.ConfigResolution.repository(Path.of("..", "..")).packDirs()
+          try (Stream<Path> packs = (root.endsWith(Path.of(System.getProperty("drishti.module.root"), "config", "packs")) ? com.ash.drishti.api.resolution.ConfigResolution.repository(Path.of(System.getProperty("drishti.repo.root"))).packDirs()
                   : com.ash.drishti.api.PackFolders.list(root)).stream()) {     // the product's packs where the resolution finds them; a fixture folder as it is
             for (Path pack : packs.toList()) {
                 Path samples = pack.resolve("samples");

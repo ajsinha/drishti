@@ -40,7 +40,7 @@ class LakePathsGuardTest {
     private static final Pattern SPLITS = Pattern.compile("LakeTable::parent|\\bt\\.parent\\(\\)");
 
     private static Path repo() {
-        Path p = Path.of("").toAbsolutePath();
+        Path p = Path.of(System.getProperty("drishti.module.root"));
         while (!Files.isDirectory(p.resolve("lake/drishti-lakeio"))) {
             p = p.getParent();
         }

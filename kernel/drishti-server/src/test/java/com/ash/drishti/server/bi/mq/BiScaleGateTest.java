@@ -96,8 +96,8 @@ class BiScaleGateTest {
             out.add(String.format("cold (source read, columns layer built, answered): %.1f ms (budget %.0f)", cold, COLD_MS));
             out.add(String.format("warm (columns layer, no result cache): p50 %.2f ms, p95 %.2f ms (budget %.0f)", p50, p95, WARM_P95_MS));
             out.add(String.format("warm Java allocation on the asking thread: median %d bytes (budget %d)", allocated, WARM_ALLOCATED_BYTES));
-            Files.createDirectories(Path.of("target"));
-            Files.writeString(Path.of("target/bi-scale-gate.txt"), String.join("\n", out) + "\n");
+            Files.createDirectories(Path.of(System.getProperty("drishti.module.root"), "target"));
+            Files.writeString(Path.of(System.getProperty("drishti.module.root"), "target", "bi-scale-gate.txt"), String.join("\n", out) + "\n");
             out.forEach(System.out::println);
             assertThat(cold).as("cold query, ms").isLessThan(COLD_MS);
             assertThat(p95).as("warm query p95, ms").isLessThan(WARM_P95_MS);

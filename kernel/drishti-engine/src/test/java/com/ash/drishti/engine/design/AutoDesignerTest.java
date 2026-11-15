@@ -43,7 +43,7 @@ import org.junit.jupiter.api.Test;
 class AutoDesignerTest {
 
     private static final ObjectMapper JSON = new ObjectMapper();
-    private static final Path DIR = Path.of("..", "..", "docs", "guides", "examples");
+    private static final Path DIR = Path.of(System.getProperty("drishti.repo.root"), "docs", "guides", "examples");
     private static final Semantics SEMANTICS = Semantics.defaults();
 
     private static ShapeService shapes(BuilderProperties props) {

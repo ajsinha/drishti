@@ -99,7 +99,7 @@ class VarIntradayApiTest {
 
     @DynamicPropertySource
     static void lake(DynamicPropertyRegistry r) throws Exception {
-        lake = Files.createDirectories(Path.of("target", "var-intraday-lake-" + System.nanoTime())).toAbsolutePath();
+        lake = Files.createDirectories(Path.of(System.getProperty("drishti.module.root"), "target", "var-intraday-lake-"+ System.nanoTime())).toAbsolutePath();
         VarIntradayLake.morning(lake, DAY, FULL, MANY, MANY_AS_ONE_RUN);
         // FULL: the day's final state as one run
         List<Map<String, Object>> v = new ArrayList<>();

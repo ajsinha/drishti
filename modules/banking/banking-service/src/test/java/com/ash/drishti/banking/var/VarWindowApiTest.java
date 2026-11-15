@@ -150,7 +150,7 @@ class VarWindowApiTest {
 
     @DynamicPropertySource
     static void lake(DynamicPropertyRegistry r) throws Exception {
-        lake = Files.createDirectories(Path.of("target", "var-window-lake-" + System.nanoTime())).toAbsolutePath();
+        lake = Files.createDirectories(Path.of(System.getProperty("drishti.module.root"), "target", "var-window-lake-"+ System.nanoTime())).toAbsolutePath();
         write(LONG, M, "HS-40");
         write(SHORT, W, "HS-25");
         r.add("drishti.sources.connectors.risk-lake.settings.root", lake::toString);

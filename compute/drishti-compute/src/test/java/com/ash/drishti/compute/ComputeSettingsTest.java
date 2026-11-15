@@ -132,7 +132,7 @@ class ComputeSettingsTest {
 
     @Test
     void theSdkFileListMatchesTheSources() throws Exception {
-        Path src = Path.of("src", "main", "python");
+        Path src = Path.of(System.getProperty("drishti.module.root"), "src", "main", "python");
         List<String> files;
         try (Stream<Path> s = Files.walk(src.resolve("drishti_compute"))) {
             files = s.filter(p -> p.toString().endsWith(".py")).map(p -> src.relativize(p).toString().replace('\\', '/')).sorted().toList();
@@ -146,7 +146,7 @@ class ComputeSettingsTest {
     @Test
     void theShippedFileIsOffWithTheSamplePool() {
         UnaryOperator<String> defaults = v -> v.replaceAll("\\$\\{[A-Z_]+:([^}]*)}", "$1");
-        ComputeSettings s = ComputeSettings.load(Path.of("..", "..", "config", "compute", "compute.yaml"), dir, "", defaults);
+        ComputeSettings s = ComputeSettings.load(Path.of(System.getProperty("drishti.repo.root"), "config", "compute", "compute.yaml"), dir, "", defaults);
         assertThat(s.enabled()).isFalse();
         assertThat(s.pool("sample").workersMax()).isEqualTo(4);
         assertThat(s.pool("sample").engines()).containsExactly(TestCompute.VECTORS, "drishti_compute.samples.paths:PathSumEngine");

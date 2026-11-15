@@ -71,7 +71,7 @@ class MrCubeOffTest {
 
     @DynamicPropertySource
     static void lake(DynamicPropertyRegistry r) throws Exception {
-        Path lake = Files.createDirectories(Path.of("target", "mr-cube-off-lake-" + System.nanoTime())).toAbsolutePath();
+        Path lake = Files.createDirectories(Path.of(System.getProperty("drishti.module.root"), "target", "mr-cube-off-lake-"+ System.nanoTime())).toAbsolutePath();
         VarLakeFixture.write(lake);
         r.add("drishti.sources.connectors.risk-lake.settings.root", lake::toString);
         r.add("drishti.var.official.root", lake::toString);

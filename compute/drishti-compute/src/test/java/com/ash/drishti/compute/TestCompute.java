@@ -57,7 +57,7 @@ public final class TestCompute {
         if (e != null && !e.isBlank()) {
             candidates.add(e);
         }
-        Path console = Path.of("..", "..", "drishti-console", ".venv", WINDOWS ? "Scripts" : "bin", WINDOWS ? "python.exe" : "python");
+        Path console = Path.of(System.getProperty("drishti.repo.root"), "drishti-console", ".venv",  WINDOWS ? "Scripts" : "bin", WINDOWS ? "python.exe" : "python");
         if (Files.exists(console)) {
             candidates.add(console.toAbsolutePath().toString());
         }
@@ -81,7 +81,7 @@ public final class TestCompute {
 
     /** The folder of the test engines, put on the workers' path. */
     public static String testEngines() {
-        return Path.of("src", "test", "python").toAbsolutePath().toString();
+        return Path.of(System.getProperty("drishti.module.root"), "src", "test", "python").toAbsolutePath().toString();
     }
 
     /** Settings from the YAML of a {@code compute:} document, the interpreter set to {@link #python()}, data under {@code dir}. */

@@ -112,7 +112,7 @@ class SutraNextEquivalenceTest {
         JsonNode afterMasked = read(VIEW, "masked");
         assertThat(layout(afterFull)).contains("ir-curve v1");
         Path inline = SITE.resolve("ir-curve.v2.sutra.yaml");
-        Files.copy(Path.of("src/test/resources/sutra-next/ir-curve.v2.sutra.yaml"), inline);
+        Files.copy(Path.of(System.getProperty("drishti.module.root"), "src", "test", "resources", "sutra-next", "ir-curve.v2.sutra.yaml"), inline);
         try {
             sutras.reload();
             JsonNode beforeFull = read(VIEW, "full");

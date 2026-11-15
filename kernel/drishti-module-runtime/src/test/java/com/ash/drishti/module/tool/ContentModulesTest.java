@@ -37,7 +37,7 @@ import org.junit.jupiter.params.provider.ValueSource;
  */
 class ContentModulesTest {
 
-    static final Path MODULES = Path.of("../../modules");
+    static final Path MODULES = Path.of(System.getProperty("drishti.repo.root"), "modules");
 
     @TempDir
     Path tmp;

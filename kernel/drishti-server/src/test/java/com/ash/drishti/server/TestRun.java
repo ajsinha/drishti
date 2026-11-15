@@ -53,7 +53,7 @@ public final class TestRun {
 
     private static Path start() {
         String set = System.getProperty(PROPERTY);
-        Path root = (set == null || set.isBlank() ? Path.of("target", "test-run", "pid-" + ProcessHandle.current().pid()) : Path.of(set))
+        Path root = (set == null || set.isBlank() ? Path.of(System.getProperty("drishti.module.root"), "target", "test-run", "pid-"+ ProcessHandle.current().pid()) : Path.of(set))
                 .toAbsolutePath().normalize();
         delete(root);                                   // a fork number reused after a killed run starts empty
         try {

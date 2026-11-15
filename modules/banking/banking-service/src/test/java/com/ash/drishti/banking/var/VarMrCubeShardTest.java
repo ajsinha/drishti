@@ -67,7 +67,7 @@ import org.springframework.context.annotation.Import;
 @Import(PinnedBusinessDate.class)
 class VarMrCubeShardTest {
 
-    static final Path BASE = Path.of("target", "var-mr-cube-shard").toAbsolutePath();
+    static final Path BASE = Path.of(System.getProperty("drishti.module.root"), "target", "var-mr-cube-shard").toAbsolutePath();
     static final Path LAKE = BASE.resolve("lake");
     static final LocalDate DAY = VarHierarchyFixture.DAY;
     static final Principal ME = new Principal("rita", List.of("risk"));

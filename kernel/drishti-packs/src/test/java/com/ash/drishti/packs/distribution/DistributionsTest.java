@@ -34,8 +34,8 @@ import org.springframework.core.env.StandardEnvironment;
 /** The distribution files (docs/architecture/DISTRIBUTIONS.md): each boots from its file alone, and each shows only its modules. */
 class DistributionsTest {
 
-    static final Path DIR = Path.of("../../config/distributions");
-    static final Path MODULES = Path.of("../../modules");
+    static final Path DIR = Path.of(System.getProperty("drishti.repo.root"), "config", "distributions");
+    static final Path MODULES = Path.of(System.getProperty("drishti.repo.root"), "modules");
     static final String PRODUCT_DEFAULTS = "Config resource 'class path resource [application.yaml]' via location 'optional:classpath:/'";
 
     static StandardEnvironment boot(Object... site) {
@@ -57,7 +57,7 @@ class DistributionsTest {
     }
 
     static Distribution read(String name) {
-        return Distributions.read(Distributions.file(DIR, name), DIR.resolve(Distributions.KERNEL), MODULES, Path.of("../../config/packs"));
+        return Distributions.read(Distributions.file(DIR, name), DIR.resolve(Distributions.KERNEL), MODULES, Path.of(System.getProperty("drishti.repo.root"), "config", "packs"));
     }
 
     @Test
@@ -109,7 +109,7 @@ class DistributionsTest {
         assertThat(ModuleManifests.withRequired(List.of("banking"), known)).containsExactly("banking", "market-data");
         assertThat(read("risk").packs()).contains("market-data", "trading").doesNotContain("world-economy", "us-equities");
         assertThatThrownBy(() -> Distributions.read(Distributions.file(DIR, "risk"), DIR.resolve(Distributions.KERNEL), Path.of("no-such"),
-                Path.of("../../config/packs"))).hasMessageContaining("has no manifest");
+                Path.of(System.getProperty("drishti.repo.root"), "config", "packs"))).hasMessageContaining("has no manifest");
     }
 
     /** Risk carries the trade blotter (the trading module) and the six source modules, listed in its file; Finance has neither. */
@@ -194,11 +194,11 @@ class DistributionsTest {
 
     @Test
     void theFeatureSwitchesAreKernelYamlsAndAnEngineIsPresetOffOnly() throws Exception {
-        assertThat(java.nio.file.Files.exists(Path.of("../../config/lenses/features.yaml"))).as("one home: kernel.yaml's features:").isFalse();
+        assertThat(java.nio.file.Files.exists(Path.of(System.getProperty("drishti.repo.root"), "config", "lenses", "features.yaml"))).as("one home: kernel.yaml's features:").isFalse();
         Map<String, List<String>> server = EditionEnvironmentPostProcessor.featureMapping(DIR, "server");
         assertThat(server).containsEntry("calc", List.of("drishti.calc.enabled")).containsEntry("var", List.of("drishti.engines.var.enabled"));
         assertThat(EditionEnvironmentPostProcessor.featureMapping(DIR, "console")).containsEntry("build", List.of("features.build"));
-        Path dir = java.nio.file.Files.createTempDirectory(Path.of("target"), "dist");
+        Path dir = java.nio.file.Files.createTempDirectory(Path.of(System.getProperty("drishti.module.root"), "target"), "dist");
         java.nio.file.Files.copy(DIR.resolve(Distributions.KERNEL), dir.resolve(Distributions.KERNEL));
         java.nio.file.Files.writeString(dir.resolve("drishti.mine.yaml"), String.join("\n", "format: 1", "distribution: drishti.mine",
                 "brand: { product: Mine }", "modules: [{ id: banking }]", "features: { calc: off, var: on, exposure: off }", ""));

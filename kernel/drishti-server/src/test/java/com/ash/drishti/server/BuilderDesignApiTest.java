@@ -49,7 +49,7 @@ import org.springframework.test.web.servlet.MvcResult;
 class BuilderDesignApiTest {
 
     private static final ObjectMapper JSON = new ObjectMapper();
-    private static final Path DIR = Path.of("..", "..", "docs", "guides", "examples");
+    private static final Path DIR = Path.of(System.getProperty("drishti.repo.root"), "docs", "guides", "examples");
 
     @Autowired MockMvc mvc;
     @Autowired TokenVerifier tokens;

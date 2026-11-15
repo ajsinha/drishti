@@ -109,7 +109,7 @@ class DataFeedsTest {
 
     @Test
     void theShippedFeedFilesAllList() {
-        DataFeeds f = new DataFeeds(Path.of("../../config/feeds"), tmp, tmp, "", null);
+        DataFeeds f = new DataFeeds(Path.of(System.getProperty("drishti.repo.root"), "config", "feeds"), tmp, tmp, "", null);
         List<Map<String, Object>> all = f.feeds();
         assertThat(all).extracting(m -> m.get("feed")).contains("gleif", "us-equities", "funds", "world-economy");
         assertThat(all).allSatisfy(m -> assertThat(m).doesNotContainKey("problem"));

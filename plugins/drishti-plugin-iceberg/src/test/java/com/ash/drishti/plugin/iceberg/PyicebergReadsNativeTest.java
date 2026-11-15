@@ -131,7 +131,7 @@ class PyicebergReadsNativeTest {
             written.put("layout", desk.load("trade").orElseThrow().metadataLocation());
         }
         List<String> cmd = new ArrayList<>(List.of(uv, "run", "--no-project", "--with", "pyiceberg", "--with", "pyiceberg-core", "--with", "pyarrow",
-                "--with", "sqlalchemy", "python", Path.of("../../tools/iceberg/readback.py").toAbsolutePath().normalize().toString()));
+                "--with", "sqlalchemy", "python", Path.of(System.getProperty("drishti.repo.root"), "tools", "iceberg", "readback.py").toAbsolutePath().normalize().toString()));
         for (String m : written.values()) {
             cmd.add(m.replaceFirst("^file:(?!//)", "file://"));
         }

@@ -62,7 +62,7 @@ class DelTablesTranslatorTest {
      * The shipped datasets, models, reports and notebooks as they were before the switch (docs/architecture/ARCHITECTURE.md §28 step 5): the migration's
      * regression input while the tool lives (Q24).
      */
-    static final Path BEFORE = Path.of("src", "test", "resources", "bi", "before-tables");
+    static final Path BEFORE = Path.of(System.getProperty("drishti.module.root"), "src", "test", "resources", "bi", "before-tables");
 
     @Test
     void everyShippedItemConvertsAndASecondRunChangesNothing() throws Exception {

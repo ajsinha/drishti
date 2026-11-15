@@ -59,7 +59,7 @@ class SourceModuleEndToEndTest {
     Path tmp;
 
     private static Path repo() {
-        Path p = Path.of("").toAbsolutePath();
+        Path p = Path.of(System.getProperty("drishti.module.root"));
         while (p != null && !Files.isDirectory(p.resolve("modules/source-swapone"))) {
             p = p.getParent();
         }

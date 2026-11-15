@@ -48,7 +48,7 @@ import org.springframework.boot.test.context.SpringBootTest;
         "drishti.builder.designs.dir=${drishti.test.dir}/sutra-cli-files-${random.uuid}"})
 class SutraCliTest {
 
-    private static final Path ROOT = Path.of("../..");
+    private static final Path ROOT = Path.of(System.getProperty("drishti.repo.root"));
     private static final String SUTRA = """
             rachana: 1
             sutra: widget

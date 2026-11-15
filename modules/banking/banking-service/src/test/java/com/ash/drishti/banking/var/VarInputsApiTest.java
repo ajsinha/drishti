@@ -112,7 +112,7 @@ class VarInputsApiTest {
 
     @DynamicPropertySource
     static void lake(DynamicPropertyRegistry r) throws Exception {
-        lake = Files.createDirectories(Path.of("target", "var-inputs-lake-" + System.nanoTime())).toAbsolutePath();
+        lake = Files.createDirectories(Path.of(System.getProperty("drishti.module.root"), "target", "var-inputs-lake-"+ System.nanoTime())).toAbsolutePath();
         VarIntradayLake.morning(lake, TRADES, POSITIONS, MIXED_SYSTEMS, TWO_GRAINS, BAD_RECORDS);
         r.add("drishti.sources.connectors.risk-lake.settings.root", lake::toString);
         r.add("drishti.var.official.root", lake::toString);

@@ -38,7 +38,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 class ChildLoadsTest {
 
     private static final ObjectMapper JSON = new ObjectMapper();
-    private static final Path FIXTURE = Path.of("src/test/resources/childkinds");
+    private static final Path FIXTURE = Path.of(System.getProperty("drishti.module.root"), "src", "test", "resources", "childkinds");
 
     @TempDir
     Path tmp;

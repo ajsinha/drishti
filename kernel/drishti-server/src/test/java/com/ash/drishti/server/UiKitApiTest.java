@@ -113,7 +113,7 @@ class UiKitApiTest {
         assertThat(r.getContentType()).isEqualTo("image/png");
         assertThat(r.getHeader("ETag")).isEqualTo("\"" + logo.path("hash").asText() + "\"");
         assertThat(r.getHeader("Cache-Control")).contains("max-age=31536000").contains("immutable");
-        assertThat(r.getContentAsByteArray()).isEqualTo(Files.readAllBytes(Path.of("../../config/ui-kit/assets/logos/drishti-logo.png")));
+        assertThat(r.getContentAsByteArray()).isEqualTo(Files.readAllBytes(Path.of(System.getProperty("drishti.repo.root"), "config", "ui-kit", "assets", "logos", "drishti-logo.png")));
 
         MockHttpServletResponse plain = mvc.perform(get("/api/v1/ui-kit/assets/logos/drishti-logo.png").header("Authorization", bearer()))
                 .andExpect(status().isOk()).andReturn().getResponse();

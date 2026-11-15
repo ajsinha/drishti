@@ -37,7 +37,7 @@ import org.junit.jupiter.api.Test;
 /** Every operation on every panel kind, over the all-panels showcase and the ten other examples. */
 class OpApplierTest {
 
-    private static final Path EXAMPLES = Path.of("..", "..", "docs", "guides", "examples");
+    private static final Path EXAMPLES = Path.of(System.getProperty("drishti.repo.root"), "docs", "guides", "examples");
     private final OpApplier applier = new OpApplier();
     private final SutraParser parser = new SutraParser();
 

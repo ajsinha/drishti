@@ -260,6 +260,10 @@
             <!-- what a test makes at runtime (connector caches on disk, the derived pages' store) goes under target/, never a
                  data/ folder inside the repository -->
             <drishti.data.dir>${project.build.directory}/test-data</drishti.data.dir>
+            <!-- where a test finds the repository's shared files (config/, modules/, docs/, examples/) and its own module's: absolute, so a
+                 test never depends on the folder the JVM was started in (guarded by TestPathsGuardTest) -->
+            <drishti.repo.root>${maven.multiModuleProjectDirectory}</drishti.repo.root>
+            <drishti.module.root>${project.basedir}</drishti.module.root>
           </systemPropertyVariables>
         </configuration>
       </plugin>

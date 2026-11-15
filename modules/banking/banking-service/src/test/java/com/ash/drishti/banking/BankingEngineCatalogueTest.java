@@ -31,7 +31,7 @@ import org.junit.jupiter.api.Test;
  */
 class BankingEngineCatalogueTest {
 
-    static final Path REPO = Path.of("../../..").toAbsolutePath().normalize();
+    static final Path REPO = Path.of(System.getProperty("drishti.repo.root")).toAbsolutePath().normalize();
 
     @Test
     void theModulesEnginesComeFirstWithTheirNeedsAndPaths() {

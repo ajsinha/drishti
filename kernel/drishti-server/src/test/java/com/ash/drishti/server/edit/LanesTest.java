@@ -164,7 +164,7 @@ class LanesTest {
 
     @Test
     void theSettingsAreOffAsShipped() {
-        EditSettings s = EditSettings.load(Path.of("..", "..", "config", "edit", "edit.yaml"), v -> v.replace("${DRISHTI_EDIT_ENABLED:false}", "false"));
+        EditSettings s = EditSettings.load(Path.of(System.getProperty("drishti.repo.root"), "config", "edit", "edit.yaml"), v -> v.replace("${DRISHTI_EDIT_ENABLED:false}", "false"));
         assertThat(s.enabled()).isFalse();
         assertThat(s.lanes()).isEqualTo(64);
         assertThat(s.log()).isEqualTo("auto");

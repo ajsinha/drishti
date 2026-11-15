@@ -200,7 +200,7 @@ class PlatformAlertsTest {
 
     @Test
     void theShippedRulesAllRead() {
-        Path shipped = Path.of("../../config/alerts/platform-alerts.yaml");
+        Path shipped = Path.of(System.getProperty("drishti.repo.root"), "config", "alerts", "platform-alerts.yaml");
         PlatformRule.Loaded l = PlatformRule.load(shipped);
         assertThat(l.found()).isTrue();
         assertThat(l.problems()).isEmpty();

@@ -48,7 +48,7 @@ import org.junit.jupiter.api.io.TempDir;
  */
 class EquivalenceTest {
 
-    static final Path SAMPLES = Path.of("src", "test", "resources", "bi", "samples-2.1", "datasets");   // the 2.1 datasets
+    static final Path SAMPLES = Path.of(System.getProperty("drishti.module.root"), "src", "test", "resources", "bi", "samples-2.1", "datasets");   // the 2.1 datasets
 
     @TempDir Path store;
     QueryService service;

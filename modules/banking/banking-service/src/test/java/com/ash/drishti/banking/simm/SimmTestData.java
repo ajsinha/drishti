@@ -47,8 +47,8 @@ final class SimmTestData {
     private SimmTestData() {}
 
     static Path root() {
-        Path p = Path.of("../../..");
-        return Files.isDirectory(p.resolve("data/testdata")) ? p : Path.of(".");
+        Path p = Path.of(System.getProperty("drishti.repo.root"));
+        return Files.isDirectory(p.resolve("data/testdata")) ? p : Path.of(System.getProperty("drishti.module.root"), ".");
     }
 
     /** The toy parameter folder (modules/banking/banking-compute/src/test/resources/simm: simm-toy.yaml only). */

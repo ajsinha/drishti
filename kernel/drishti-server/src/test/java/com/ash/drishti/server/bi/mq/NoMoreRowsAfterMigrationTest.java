@@ -40,7 +40,7 @@ import org.junit.jupiter.api.io.TempDir;
  */
 class NoMoreRowsAfterMigrationTest {
 
-    static final Path BEFORE = Path.of("src", "test", "resources", "bi", "before-tables");
+    static final Path BEFORE = Path.of(System.getProperty("drishti.module.root"), "src", "test", "resources", "bi", "before-tables");
     /** The recorded persons the guard reads, by the demo user they are. */
     static final Map<String, String> WHO = Map.of("risk", "rita", "desk-head-two-desks", "hana", "analyst", "ann");
 

@@ -46,7 +46,7 @@ import org.junit.jupiter.params.provider.ValueSource;
  */
 class DeltaLz4Test {
 
-    private static final Path CODECS = Path.of("src/test/resources/lake-codecs");
+    private static final Path CODECS = Path.of(System.getProperty("drishti.module.root"), "src", "test", "resources", "lake-codecs");
     private static final LocalDate D29 = LocalDate.of(2026, 9, 29);
     private static final LocalDate D30 = LocalDate.of(2026, 9, 30);
     private static final List<String> COLS = List.of("mtm", "book", "nettingSet", "counterparty.id");

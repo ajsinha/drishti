@@ -54,7 +54,7 @@ class AboutPacksTest {
     /** The packs whose kinds all need text: the shipped risk and world-economy packs, and the trading pack their trades come from. */
     private static final List<String> PACKS = List.of("market-risk", "counterparty-risk", "world-economy", "trading");
 
-    private static final Path PACKS_DIR = Path.of("..", "..", "config", "packs");
+    private static final Path PACKS_DIR = Path.of(System.getProperty("drishti.repo.root"), "config", "packs");
     private final ObjectMapper yaml = new ObjectMapper(new YAMLFactory());
 
     @Autowired AboutCatalog catalog;
@@ -129,7 +129,7 @@ class AboutPacksTest {
     @Test
     void everyGuideTheTextPointsToExistsInTheHelpCentre() throws IOException {
         Set<String> slugs = new HashSet<>();
-        List<Path> helpFiles = new ArrayList<>(List.of(Path.of("..", "..", "drishti-console", "config", "help.yaml")));
+        List<Path> helpFiles = new ArrayList<>(List.of(Path.of(System.getProperty("drishti.repo.root"), "drishti-console", "config", "help.yaml")));
         try (Stream<Path> packs = com.ash.drishti.api.resolution.ConfigResolution.repository(PACKS_DIR.toAbsolutePath().normalize().getParent().getParent()).packDirs().stream()) {
             packs.map(p -> p.resolve("config").resolve("help.yaml")).filter(Files::isRegularFile).forEach(helpFiles::add);
         }

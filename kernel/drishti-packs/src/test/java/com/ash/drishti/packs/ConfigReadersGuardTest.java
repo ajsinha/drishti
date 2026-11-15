@@ -34,7 +34,7 @@ import org.junit.jupiter.api.Test;
  */
 class ConfigReadersGuardTest {
 
-    static final Path REPO = Path.of("..", "..").toAbsolutePath().normalize();
+    static final Path REPO = Path.of(System.getProperty("drishti.repo.root")).toAbsolutePath().normalize();
 
     /** What only the resolver may do, each with why. */
     static final List<Pattern> FORBIDDEN = List.of(

@@ -162,7 +162,7 @@ public class PackRegistryClientTest {
             Files.createDirectories(packDir.resolve(f.getKey()).getParent());
             Files.writeString(packDir.resolve(f.getKey()), f.getValue());
         }
-        Path tool = Path.of("..", "..", "tools", "packreg", "packreg.py").toAbsolutePath().normalize();
+        Path tool = Path.of(System.getProperty("drishti.repo.root"), "tools", "packreg", "packreg.py").toAbsolutePath().normalize();
         run("python3", tool.toString(), "keygen", "--out", tmp.resolve("keys/acme").toString());
         run("python3", tool.toString(), "publish", packDir.toString(), "--registry", registry.toString(), "--key", tmp.resolve("keys/acme.pem").toString(),
                 "--publisher", "acme");

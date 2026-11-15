@@ -58,7 +58,7 @@ class OfficialS3Test {
 
     @BeforeAll
     static void up() throws Exception {
-        s3 = S3MockServer.start(Path.of("target", "s3mock-official"), "lake");
+        s3 = S3MockServer.start(Path.of(System.getProperty("drishti.module.root"), "target", "s3mock-official"), "lake");
     }
 
     @AfterAll

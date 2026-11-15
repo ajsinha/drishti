@@ -54,12 +54,12 @@ class ExposureParityTest {
     static Path dir;
 
     static Path root() {
-        Path p = Path.of("").toAbsolutePath();
+        Path p = Path.of(System.getProperty("drishti.module.root"));
         while (p != null && !Files.isDirectory(p.resolve("data/testdata/counterparty-risk/exposure-path"))) {
             p = p.getParent();
         }
         if (p == null) {
-            throw new IllegalStateException("the committed test data (data/testdata/counterparty-risk) is not above " + Path.of("").toAbsolutePath());
+            throw new IllegalStateException("the committed test data (data/testdata/counterparty-risk) is not above " + Path.of(System.getProperty("drishti.module.root")));
         }
         return p;
     }

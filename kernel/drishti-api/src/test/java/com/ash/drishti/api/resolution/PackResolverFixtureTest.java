@@ -36,7 +36,7 @@ import org.junit.jupiter.api.io.TempDir;
  */
 class PackResolverFixtureTest {
 
-    static final Path CASES = Path.of("src", "test", "resources", "pack-resolution", "cases.yaml");
+    static final Path CASES = Path.of(System.getProperty("drishti.module.root"), "src", "test", "resources", "pack-resolution", "cases.yaml");
 
     @TempDir
     Path tmp;

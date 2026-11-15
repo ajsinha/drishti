@@ -40,7 +40,7 @@ class DeltaDeletionVectorTest {
 
     static Path lake(String fixture) throws Exception {
         Path root = Files.createTempDirectory("drishti-dv");
-        Path src = Path.of("src/test/resources/" + fixture);
+        Path src = Path.of(System.getProperty("drishti.module.root"), "src", "test", "resources"+ fixture);
         try (Stream<Path> files = Files.walk(src)) {
             for (Path f : files.toList()) {
                 Path to = root.resolve(src.relativize(f).toString());

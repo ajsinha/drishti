@@ -450,6 +450,6 @@ class ArtifactApiTest {
     @Test
     @Order(13)
     void aPersonalApiTokenNeverReachesIt() throws Exception {
-        assertThat(Files.readString(Path.of("src/main/resources/application.yaml"))).contains("/api/v1/admin/artifacts/**");
+        assertThat(Files.readString(Path.of(System.getProperty("drishti.module.root"), "src", "main", "resources", "application.yaml"))).contains("/api/v1/admin/artifacts/**");
     }
 }

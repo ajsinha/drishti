@@ -46,7 +46,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 class NetPeerDownTest {
 
     static NetNodes cluster;
-    static final Path SOURCE = Path.of("..", "..", "plugins", "drishti-plugin-delta", "src", "test", "resources", "lake").toAbsolutePath();
+    static final Path SOURCE = Path.of(System.getProperty("drishti.repo.root"), "plugins", "drishti-plugin-delta", "src", "test", "resources", "lake").toAbsolutePath();
     static final ObjectMapper JSON = new ObjectMapper();
     /** Every answer is computed afresh: a cached complete answer would hide what the read does now. */
     static final String NOCACHE = "--drishti.history.cache-mb=0";

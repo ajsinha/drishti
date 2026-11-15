@@ -36,7 +36,7 @@ import org.junit.jupiter.api.io.TempDir;
  */
 class CliLauncherScratchTest {
 
-    private static final Path REPO = Path.of("../..").toAbsolutePath().normalize();
+    private static final Path REPO = Path.of(System.getProperty("drishti.repo.root")).toAbsolutePath().normalize();
 
     @Test
     void theSettingsPutEveryWrittenFolderInScratchAndKeepTheSitesLakesForReading(@TempDir Path scratch) {

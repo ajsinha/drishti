@@ -57,7 +57,7 @@ import org.springframework.context.annotation.Import;
 @Import(PinnedBusinessDate.class)
 class VarShardNoPvTableTest {
 
-    static final Path BASE = Path.of("target", "var-shard-nopv").toAbsolutePath();
+    static final Path BASE = Path.of(System.getProperty("drishti.module.root"), "target", "var-shard-nopv").toAbsolutePath();
     static final Path LAKE = BASE.resolve("lake");
     static final LocalDate DAY = VarHierarchyFixture.DAY;
 

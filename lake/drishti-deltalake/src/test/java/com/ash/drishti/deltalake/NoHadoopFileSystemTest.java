@@ -72,8 +72,8 @@ class NoHadoopFileSystemTest {
 
     @Test
     void readsLoadNoHadoopFileSystemNorShell() throws Exception {
-        Path lake = NativeEngineTest.copy(Path.of("src/test/resources/lake-layout"));
-        Path checkpointed = NativeEngineTest.copy(Path.of("src/test/resources/lake-layout"));
+        Path lake = NativeEngineTest.copy(Path.of(System.getProperty("drishti.module.root"), "src", "test", "resources", "lake-layout"));
+        Path checkpointed = NativeEngineTest.copy(Path.of(System.getProperty("drishti.module.root"), "src", "test", "resources", "lake-layout"));
         String cp = checkpointed.resolve("desk/trade").toString();
         var hadoop = DefaultEngine.create(new Configuration());                    // writing the fixture only, outside
         Table.forPath(hadoop, cp).checkpoint(hadoop, 5);
@@ -101,7 +101,7 @@ class NoHadoopFileSystemTest {
 
     @Test
     void theGuardCatchesTheHadoopEngine() throws Exception {
-        Path lake = NativeEngineTest.copy(Path.of("src/test/resources/lake-layout"));
+        Path lake = NativeEngineTest.copy(Path.of(System.getProperty("drishti.module.root"), "src", "test", "resources", "lake-layout"));
         try (Isolated loader = isolated()) {
             Class<?> probe = loader.loadClass(HadoopFreeProbe.class.getName());
             assertThatThrownBy(() -> probe.getMethod("runWithHadoop", String.class).invoke(null, lake.resolve("desk/trade").toString()))

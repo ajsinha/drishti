@@ -86,7 +86,7 @@ class VarByAttributeApiTest {
 
     @DynamicPropertySource
     static void lake(DynamicPropertyRegistry r) throws Exception {
-        lake = Files.createDirectories(Path.of("target", "var-attr-lake-" + System.nanoTime())).toAbsolutePath();
+        lake = Files.createDirectories(Path.of(System.getProperty("drishti.module.root"), "target", "var-attr-lake-"+ System.nanoTime())).toAbsolutePath();
         VarLakeFixture.write(lake);
         Map<String, String> traders = Map.of("T1", "TRDR-A", "T2", "TRDR-A", "T3", "TRDR-B", "T4", "TRDR-B", "T9", "TRDR-B", "T5", "TRDR-C");
         List<Map<String, Object>> rows = new ArrayList<>();

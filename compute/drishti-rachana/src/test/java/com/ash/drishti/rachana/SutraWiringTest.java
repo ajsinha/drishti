@@ -248,7 +248,7 @@ class SutraWiringTest {
 
     @Test
     void aUseCarriesItsPanelsWiring() {
-        assertThat(SutraBlocks.load(List.of(Path.of("../../config/ui-kit/fragments")))).isEmpty();
+        assertThat(SutraBlocks.load(List.of(Path.of(System.getProperty("drishti.repo.root"), "config", "ui-kit", "fragments")))).isEmpty();
         Sutra s = parse("""
                   - use: field-list@1
                     with: { id: limit, title: Limit, rows: $src }

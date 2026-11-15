@@ -34,7 +34,7 @@ import org.junit.jupiter.api.io.TempDir;
  */
 class UiKitBlocksTest {
 
-    static final Path KIT = Path.of("../../config/ui-kit");
+    static final Path KIT = Path.of(System.getProperty("drishti.repo.root"), "config", "ui-kit");
 
     @TempDir Path dir;
 

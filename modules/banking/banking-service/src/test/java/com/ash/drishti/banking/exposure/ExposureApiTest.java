@@ -84,7 +84,7 @@ class ExposureApiTest {
 
     @DynamicPropertySource
     static void lake(DynamicPropertyRegistry r) throws Exception {
-        lake = Files.createDirectories(Path.of("target", "exposure-lake-" + System.nanoTime())).toAbsolutePath();
+        lake = Files.createDirectories(Path.of(System.getProperty("drishti.module.root"), "target", "exposure-lake-"+ System.nanoTime())).toAbsolutePath();
         ExposureLakeFixture.write(lake);
         r.add("drishti.sources.connectors.ccr-lake.settings.root", lake::toString);
         r.add("drishti.ccr.exposure.official.root", lake::toString);

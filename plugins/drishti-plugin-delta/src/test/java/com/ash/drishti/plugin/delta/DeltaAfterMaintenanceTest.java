@@ -38,7 +38,7 @@ class DeltaAfterMaintenanceTest {
     void theJavaReaderReadsALakeTheMaintenanceJobCompactedAndVacuumed() throws Exception {
         assumeTrue(new ProcessBuilder("uv", "--version").start().waitFor(30, TimeUnit.SECONDS), "uv is not installed");
         Path root = Files.createTempDirectory("drishti-maintained");
-        Path src = Path.of("src/test/resources/lake");
+        Path src = Path.of(System.getProperty("drishti.module.root"), "src", "test", "resources", "lake");
         try (var files = Files.walk(src)) {
             for (Path f : files.toList()) {
                 Path to = root.resolve(src.relativize(f).toString());
@@ -53,7 +53,7 @@ class DeltaAfterMaintenanceTest {
         Files.writeString(config, "lakes:\n  - root: " + root + "\n    compact: true\n    checkpoint: true\n    vacuum-hours: 0\n");
         // the test writes its own table (not through lake build), so the ownership rule needs --force-foreign to maintain it
         ProcessBuilder pb = new ProcessBuilder("uv", "run", "-q", "--with", "deltalake", "--with", "pyarrow", "--with", "pyyaml", "python",
-                "tools/lake/maintain.py", "--config", config.toString(), "--once", "--force-foreign").directory(Path.of("../..").toFile()).inheritIO();
+                "tools/lake/maintain.py", "--config", config.toString(), "--once", "--force-foreign").directory(Path.of(System.getProperty("drishti.repo.root")).toFile()).inheritIO();
         pb.environment().put("DRISHTI_DATA_DIR", root.resolve("data").toString());   // its history in the test's folder, not the site's
         Process p = pb.start();
         assertThat(p.waitFor(5, TimeUnit.MINUTES) && p.exitValue() == 0).as("maintenance ran").isTrue();

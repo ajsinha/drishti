@@ -26,7 +26,7 @@ import org.junit.jupiter.api.Test;
 class PackDatasetsUnionTest {
 
     static Pack trading() {
-        return new Pack("trading", "1.0.0", "Trading", "", Path.of("."), Map.of("connectors", Map.of(
+        return new Pack("trading", "1.0.0", "Trading", "", Path.of(System.getProperty("drishti.module.root"), "."), Map.of("connectors", Map.of(
                 "trade-endur", Map.of("plugin", "delta", "settings", Map.of("union", true, "domain", "trading")),
                 "trade-pages", Map.of("plugin", "derived", "settings", Map.of()))));
     }

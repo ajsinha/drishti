@@ -41,8 +41,8 @@ class FrtbHandBuiltCasesTest {
     static FrtbParams params;
 
     static Path capital() {
-        Path p = Path.of("../../..", "modules", "banking", "dmod", "packs", "market-risk", "capital");
-        return Files.isDirectory(p) ? p : Path.of("modules", "banking", "dmod", "packs", "market-risk", "capital");
+        Path p = Path.of(System.getProperty("drishti.repo.root"), "modules", "banking", "dmod", "packs", "market-risk", "capital");
+        return Files.isDirectory(p) ? p : Path.of(System.getProperty("drishti.module.root"), "modules", "banking", "dmod", "packs", "market-risk", "capital");
     }
 
     @BeforeAll

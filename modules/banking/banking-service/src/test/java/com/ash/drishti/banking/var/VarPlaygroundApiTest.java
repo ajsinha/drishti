@@ -94,7 +94,7 @@ class VarPlaygroundApiTest {
 
     @DynamicPropertySource
     static void lake(DynamicPropertyRegistry r) throws Exception {
-        lake = Files.createDirectories(Path.of("target", "var-playground-lake-" + System.nanoTime())).toAbsolutePath();
+        lake = Files.createDirectories(Path.of(System.getProperty("drishti.module.root"), "target", "var-playground-lake-"+ System.nanoTime())).toAbsolutePath();
         write(lake);
         r.add("drishti.sources.connectors.risk-lake.settings.root", lake::toString);
         r.add("drishti.var.official.root", lake::toString);
@@ -293,7 +293,7 @@ class VarPlaygroundApiTest {
         assertThat(XlsxFormulas.scan(xlsx)).isEmpty();
         JsonNode h = ask("/api/v1/risk/var/scope", status().isOk(), "scope", "DESK:DESK-MANY");
         Assumptions.assumeTrue(LibreOfficeRecalc.available(), "LibreOffice is not installed here");
-        Path work = Files.createDirectories(Path.of("target", "playground-api-" + System.nanoTime()));
+        Path work = Files.createDirectories(Path.of(System.getProperty("drishti.module.root"), "target", "playground-api-"+ System.nanoTime()));
         Path saved = LibreOfficeRecalc.recalc(LibreOfficeRecalc.write(work, "many.xlsx", xlsx), work);
         Map<String, Object> main = LibreOfficeRecalc.cells(saved, "Main");
         assertThat(main.get("B3")).isEqualTo(VarPlaygroundBook.ALL_PASS);

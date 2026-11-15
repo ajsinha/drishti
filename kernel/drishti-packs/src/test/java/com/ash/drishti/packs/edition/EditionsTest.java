@@ -51,7 +51,7 @@ class EditionsTest {
 
     @Test
     void theDefaultPackListIsTheOneFile() throws Exception {
-        String file = Files.readString(Path.of("../../config/packs/default-packs.yaml"));   // by module
+        String file = Files.readString(Path.of(System.getProperty("drishti.repo.root"), "config", "packs", "default-packs.yaml"));   // by module
         assertThat(Editions.defaultPacks()).isNotEmpty().allSatisfy(p -> assertThat(file).contains(p));
         assertThat(PackPaths.DEFAULT_ENABLED).isEqualTo(String.join(",", Editions.defaultPacks()));
     }

@@ -103,7 +103,7 @@ class VarMatrixApiTest {
 
     @DynamicPropertySource
     static void lake(DynamicPropertyRegistry r) throws Exception {
-        lake = Files.createDirectories(Path.of("target", "var-matrix-lake-" + System.nanoTime())).toAbsolutePath();
+        lake = Files.createDirectories(Path.of(System.getProperty("drishti.module.root"), "target", "var-matrix-lake-"+ System.nanoTime())).toAbsolutePath();
         VarLakeFixture.write(lake, DR, 1.0, true, false);
         for (LocalDate d : List.of(D0, D1, D2)) {
             VarLakeFixture.write(lake, d, FACTOR.get(d), false, false);

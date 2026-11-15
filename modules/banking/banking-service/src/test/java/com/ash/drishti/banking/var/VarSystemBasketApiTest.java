@@ -94,7 +94,7 @@ class VarSystemBasketApiTest {
 
     @DynamicPropertySource
     static void lake(DynamicPropertyRegistry r) throws Exception {
-        lake = Files.createDirectories(Path.of("target", "var-sb-lake-" + System.nanoTime())).toAbsolutePath();
+        lake = Files.createDirectories(Path.of(System.getProperty("drishti.module.root"), "target", "var-sb-lake-"+ System.nanoTime())).toAbsolutePath();
         VarLakeFixture.write(lake);
         Path store = Files.createDirectories(lake.resolve("store"));      // a basket store of its own: the system scope starts empty
         r.add("drishti.sources.connectors.risk-lake.settings.root", lake::toString);

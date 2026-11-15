@@ -102,7 +102,7 @@ class GlueLiveTest {
 
     @AfterAll
     static void report() throws Exception {
-        Path out = Path.of("target", "glue-live-report.txt");
+        Path out = Path.of(System.getProperty("drishti.module.root"), "target", "glue-live-report.txt");
         Files.createDirectories(out.getParent());
         Files.write(out, REPORT, StandardCharsets.UTF_8);
     }

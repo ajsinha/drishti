@@ -29,7 +29,7 @@ import org.junit.jupiter.api.Test;
 /** The JSON of each documented example infers the roles its panels need, and validates against its own shape. */
 class ShapeExamplesTest {
 
-    private static final Path DIR = Path.of("..", "..", "docs", "guides", "examples");
+    private static final Path DIR = Path.of(System.getProperty("drishti.repo.root"), "docs", "guides", "examples");
 
     private static Shape shape(String name) throws IOException {
         JsonNode doc = ShapeTestSupport.JSON.readTree(Files.readString(DIR.resolve(name + ".json")));

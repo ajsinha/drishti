@@ -34,7 +34,7 @@ import org.junit.jupiter.api.Test;
 class CatalogNamedMetadataTest {
 
     /** pyiceberg's own tables (the iceberg plugin's fixtures): fx/v1_basic has 00000, 00001 and 00002. */
-    static final Path FIXTURES = Path.of("../../plugins/drishti-plugin-iceberg/src/test/resources/iceberg-fixtures").toAbsolutePath().normalize();
+    static final Path FIXTURES = Path.of(System.getProperty("drishti.repo.root"), "plugins", "drishti-plugin-iceberg", "src", "test", "resources", "iceberg-fixtures").toAbsolutePath().normalize();
 
     @Test
     void aPyicebergTableIsReadAtItsNewestMetadataFile() throws Exception {

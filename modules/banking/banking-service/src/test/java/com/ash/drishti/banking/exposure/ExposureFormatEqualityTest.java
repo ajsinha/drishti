@@ -68,7 +68,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @Import(PinnedBusinessDate.class)
 class ExposureFormatEqualityTest {
 
-    static final Path BASE = Path.of("target", "exposure-format-equality").toAbsolutePath();
+    static final Path BASE = Path.of(System.getProperty("drishti.module.root"), "target", "exposure-format-equality").toAbsolutePath();
     static final Path DELTA = BASE.resolve("delta");
     static final Path ICEBERG = BASE.resolve("iceberg");
     static final LocalDate DAY = ExposureHierarchyFixture.DAY;

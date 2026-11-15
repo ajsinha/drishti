@@ -91,7 +91,7 @@ abstract class PackSutraNextEquivalence {
         r.add("drishti.sources.connectors." + c + ".settings.rescan-seconds", () -> "3600");
         for (int i = 0; i < kinds.length; i++) {
             String kind = kinds[i];
-            Files.copy(Path.of("src", "test", "resources", "sutra-next-data", pack, kind + ".jsonl"), day.resolve(kind + ".jsonl"),
+            Files.copy(Path.of(System.getProperty("drishti.module.root"), "src", "test", "resources", "sutra-next-data",  pack, kind + ".jsonl"), day.resolve(kind + ".jsonl"),
                     java.nio.file.StandardCopyOption.REPLACE_EXISTING);
             r.add("drishti.sources.connectors." + c + ".kinds[" + i + "]", () -> kind);
             r.add("drishti.sources.routes." + kind, () -> c);
@@ -104,7 +104,7 @@ abstract class PackSutraNextEquivalence {
         ObjectMapper json = new ObjectMapper();
         Map<String, String> out = new LinkedHashMap<>();
         for (String kind : kinds) {
-            String line = Files.readAllLines(Path.of("src", "test", "resources", "sutra-next-data", pack, kind + ".jsonl")).get(0);
+            String line = Files.readAllLines(Path.of(System.getProperty("drishti.module.root"), "src", "test", "resources", "sutra-next-data",  pack, kind + ".jsonl")).get(0);
             out.put(kind, kind + "/" + json.readTree(line).path("id").asText());
         }
         return out;
@@ -116,7 +116,7 @@ abstract class PackSutraNextEquivalence {
 
     /** The old layouts and what they need (an old block a deal layout uses), copied beside the pack's Sutras for the "before" view. */
     static Path resources(String pack) {
-        return Path.of("src", "test", "resources", "sutra-next", pack);
+        return Path.of(System.getProperty("drishti.module.root"), "src", "test", "resources", "sutra-next",  pack);
     }
 
     /** The Sutra names with an old layout ({@code <name>.v2.sutra.yaml}). */
@@ -135,7 +135,7 @@ abstract class PackSutraNextEquivalence {
     /** Each Sutra with an old layout and the record it draws ({@code kind/id}): by default the first committed sample of the kind it is named after. */
     Map<String, String> screens() throws Exception {
         Map<String, String> first = new LinkedHashMap<>();
-        for (JsonNode e : com.ash.drishti.common.PackSamples.catalogEntries(com.ash.drishti.api.resolution.ConfigResolution.repository(Path.of("..", "..", "config", "packs").toAbsolutePath().normalize().getParent().getParent()).packDir(pack()).resolve("samples"))) {
+        for (JsonNode e : com.ash.drishti.common.PackSamples.catalogEntries(com.ash.drishti.api.resolution.ConfigResolution.repository(Path.of(System.getProperty("drishti.repo.root"), "config", "packs").toAbsolutePath().normalize().getParent().getParent()).packDir(pack()).resolve("samples"))) {
             first.putIfAbsent(e.path("kind").asText(), e.path("id").asText());
         }
         Map<String, String> out = new LinkedHashMap<>();

@@ -43,7 +43,7 @@ class DeltaDocDiskCacheTest {
 
     private Path lake() throws Exception {
         Path root = tmp.resolve("lake");
-        Path src = Path.of("src/test/resources/lake-layout");
+        Path src = Path.of(System.getProperty("drishti.module.root"), "src", "test", "resources", "lake-layout");
         try (Stream<Path> files = Files.walk(src)) {
             for (Path f : files.toList()) {
                 Path to = root.resolve(src.relativize(f).toString());

@@ -111,7 +111,7 @@ class StudioTest {
         mvc.perform(get("/api/v1/studio/settings")).andExpect(jsonPath("$.save").value(false));
         mvc.perform(post("/api/v1/sutras").contentType("text/yaml").content("rachana: 1\nsutra: x\nversion: 1\nmatch: { kind: trade }\n"))
                 .andExpect(status().isForbidden());
-        assertThat(Files.exists(Path.of("../sutras/studio"))).isFalse();
+        assertThat(Files.exists(Path.of(System.getProperty("drishti.module.root"), "..", "sutras", "studio"))).isFalse();
     }
 
     @Test

@@ -47,7 +47,7 @@ import org.junit.jupiter.api.Test;
  */
 class SutraAggregateParityTest {
 
-    static final Path PACKS = Path.of("..", "..", "config", "packs");
+    static final Path PACKS = Path.of(System.getProperty("drishti.repo.root"), "config", "packs");
     static final ElCompiler EL = new ElCompiler();
     static final Formats F = Formats.load(null, List.of("../../examples/packs/finance/config/formats.yaml"));
     static final Pattern CALL = Pattern.compile("(?<![A-Za-z0-9_.$@])(sum|min|max|group)\\(");

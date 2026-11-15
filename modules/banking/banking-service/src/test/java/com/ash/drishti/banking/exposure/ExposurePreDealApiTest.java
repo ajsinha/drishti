@@ -94,7 +94,7 @@ class ExposurePreDealApiTest {
 
     @DynamicPropertySource
     static void lake(DynamicPropertyRegistry r) throws Exception {
-        Path lake = Files.createDirectories(Path.of("target", "predeal-lake-" + System.nanoTime())).toAbsolutePath();
+        Path lake = Files.createDirectories(Path.of(System.getProperty("drishti.module.root"), "target", "predeal-lake-"+ System.nanoTime())).toAbsolutePath();
         ExposureLakeFixture.write(lake, DAY, 1.0);
         ExposureLakeFixture.write(lake, BOOKED, 1.0, HALF);
         ExposureLakeFixture.write(lake, TIGHT, 1.0);

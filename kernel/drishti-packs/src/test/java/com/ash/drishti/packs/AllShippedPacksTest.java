@@ -31,17 +31,17 @@ import org.junit.jupiter.api.Test;
  */
 class AllShippedPacksTest {
 
-    static final Path SHIPPED = Path.of("..", "..", "config", "packs").toAbsolutePath().normalize();
+    static final Path SHIPPED = Path.of(System.getProperty("drishti.repo.root"), "config", "packs").toAbsolutePath().normalize();
 
     /** The repository's resolution with every module on, and the examples' folder as the site's deployed packs (or none). */
     static com.ash.drishti.api.resolution.ConfigResolution repo(Path deployed) {
-        Path modules = Path.of("..", "..", "modules").toAbsolutePath().normalize();
+        Path modules = Path.of(System.getProperty("drishti.repo.root"), "modules").toAbsolutePath().normalize();
         return com.ash.drishti.api.resolution.ConfigResolution.build(new com.ash.drishti.api.resolution.ResolutionSettings(SHIPPED,
                 deployed == null ? SHIPPED.resolve("no-deployed-packs") : deployed, SHIPPED.resolve("core"), modules, modules.resolve("no-store")), id -> true);
     }
 
     static final com.ash.drishti.api.resolution.ConfigResolution REPO = repo(null);
-    static final Path EXAMPLES = Path.of("..", "..", "examples", "packs").toAbsolutePath().normalize();
+    static final Path EXAMPLES = Path.of(System.getProperty("drishti.repo.root"), "examples", "packs").toAbsolutePath().normalize();
 
     /** Shipped but not on by default: switched on with DRISHTI_PACKS (their READMEs say how). */
     static final List<String> OPT_IN = List.of("us-equities", "gleif", "funds", "compute-demo",

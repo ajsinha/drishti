@@ -66,7 +66,7 @@ import org.springframework.context.annotation.Import;
 @Import(PinnedBusinessDate.class)
 class VarParallelReadTest {
 
-    static final Path BASE = Path.of("target", "var-parallel-read").toAbsolutePath();
+    static final Path BASE = Path.of(System.getProperty("drishti.module.root"), "target", "var-parallel-read").toAbsolutePath();
     static final Path LAKE = BASE.resolve("lake");
     static final LocalDate DAY = VarLakeFixture.DAY;
     /** The fixture's P&amp;L file and this many more, appended: a date of several vector files. */

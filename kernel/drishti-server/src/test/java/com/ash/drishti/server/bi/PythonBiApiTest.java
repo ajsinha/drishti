@@ -58,7 +58,7 @@ import org.springframework.test.web.servlet.ResultActions;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class PythonBiApiTest {
 
-    static final Path CONFIG = Path.of("..", "..", "config", "bi");
+    static final Path CONFIG = Path.of(System.getProperty("drishti.repo.root"), "config", "bi");
     static final Path FOLDER = com.ash.drishti.server.TestRun.root().resolve("bi-py-folder");
 
     static {

@@ -84,7 +84,7 @@ class NewsInMemorySentinelTest {
     private static final ObjectMapper JSON = new ObjectMapper();
     /** Every value the feed sends carries this, so a marker found anywhere on a disk proves a leak. */
     static final String MARK = "SENTINEL" + UUID.randomUUID().toString().replace("-", "").substring(0, 16).toUpperCase(java.util.Locale.ROOT);
-    private static final Path REPO = Path.of("../..").toAbsolutePath().normalize();
+    private static final Path REPO = Path.of(System.getProperty("drishti.repo.root")).toAbsolutePath().normalize();
     private static final HttpServer FEED = feed();
 
     @Autowired MockMvc mvc;

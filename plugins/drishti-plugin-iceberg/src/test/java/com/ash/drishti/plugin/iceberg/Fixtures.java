@@ -41,7 +41,7 @@ final class Fixtures {
 
     /** A copy of the fixture folder under the module's target (tests may change their copy). */
     static Path copy() {
-        Path src = Path.of("src/test/resources/iceberg-fixtures").toAbsolutePath();
+        Path src = Path.of(System.getProperty("drishti.module.root"), "src", "test", "resources", "iceberg-fixtures").toAbsolutePath();
         try {
             Path dst = Files.createTempDirectory("iceberg-fixtures");
             try (Stream<Path> all = Files.walk(src)) {

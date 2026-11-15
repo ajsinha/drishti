@@ -34,8 +34,8 @@ import org.junit.jupiter.api.Test;
  */
 class BoardsAsReportsTest {
 
-    static final Path OLD = Path.of("src/test/resources/bi/boards-2.3");
-    static final Path SHIPPED = Path.of("../../config/bi/reports/banking");
+    static final Path OLD = Path.of(System.getProperty("drishti.module.root"), "src", "test", "resources", "bi", "boards-2.3");
+    static final Path SHIPPED = Path.of(System.getProperty("drishti.repo.root"), "config", "bi", "reports", "banking");
 
     @Test
     void eachTwoThreeBoardConvertsToAReportThatReadsBackToTheSameBoard() throws IOException {

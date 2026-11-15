@@ -33,10 +33,10 @@ import org.junit.jupiter.params.provider.MethodSource;
  */
 class PackSutrasTest {
 
-    static final Path KIT = Path.of("..", "..", "config", "ui-kit");
+    static final Path KIT = Path.of(System.getProperty("drishti.repo.root"), "config", "ui-kit");
 
     static Stream<Path> packs() throws Exception {
-        try (Stream<Path> s = com.ash.drishti.api.resolution.ConfigResolution.repository(Path.of("..", "..", "config", "packs").toAbsolutePath().normalize().getParent().getParent()).packDirs().stream()) {
+        try (Stream<Path> s = com.ash.drishti.api.resolution.ConfigResolution.repository(Path.of(System.getProperty("drishti.repo.root"), "config", "packs").toAbsolutePath().normalize().getParent().getParent()).packDirs().stream()) {
             return s.filter(p -> Files.isDirectory(p.resolve("sutras"))).sorted().toList().stream();
         }
     }

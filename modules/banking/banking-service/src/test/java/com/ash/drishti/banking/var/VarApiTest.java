@@ -95,7 +95,7 @@ class VarApiTest {
 
     @DynamicPropertySource
     static void lake(DynamicPropertyRegistry r) throws Exception {
-        lake = Files.createDirectories(Path.of("target", "var-lake-" + System.nanoTime())).toAbsolutePath();
+        lake = Files.createDirectories(Path.of(System.getProperty("drishti.module.root"), "target", "var-lake-"+ System.nanoTime())).toAbsolutePath();
         VarLakeFixture.write(lake, PREV, 1.0, false, false);
         VarLakeFixture.write(lake);
         r.add("drishti.sources.connectors.risk-lake.settings.root", lake::toString);

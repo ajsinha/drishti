@@ -65,7 +65,7 @@ class DeltaOnS3Test extends DatedSourceContract {
             if (c.listBuckets().buckets().stream().noneMatch(b -> b.name().equals("lakes"))) {
                 c.createBucket(b -> b.bucket("lakes"));
             }
-            Path src = Path.of("src/test/resources/lake");
+            Path src = Path.of(System.getProperty("drishti.module.root"), "src", "test", "resources", "lake");
             try (var files = Files.walk(src)) {
                 for (Path f : files.filter(Files::isRegularFile).toList()) {
                     String key = "banking/" + src.relativize(f).toString().replace('\\', '/');

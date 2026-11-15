@@ -54,7 +54,7 @@ import java.util.stream.Stream;
 final class ExternalFixtures {
 
     static final String WRITTEN_AT = "file:///tmp/drishti-iceberg-fixtures";
-    static final Path SOURCE = Path.of("../drishti-plugin-iceberg/src/test/resources/iceberg-fixtures").toAbsolutePath().normalize();
+    static final Path SOURCE = Path.of(System.getProperty("drishti.module.root"), "..", "drishti-plugin-iceberg", "src", "test", "resources", "iceberg-fixtures").toAbsolutePath().normalize();
     static final ObjectMapper JSON = new ObjectMapper();
 
     private ExternalFixtures() {}

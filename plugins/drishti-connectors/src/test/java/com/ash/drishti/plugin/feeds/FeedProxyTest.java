@@ -38,7 +38,7 @@ class FeedProxyTest {
 
     @BeforeAll
     static void start() throws Exception {
-        byte[] csv = Files.readAllBytes(Path.of("src/test/resources/recorded/ecb-estr.csv"));
+        byte[] csv = Files.readAllBytes(Path.of(System.getProperty("drishti.module.root"), "src", "test", "resources", "recorded", "ecb-estr.csv"));
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         server.createContext("/", ex -> {
             ex.sendResponseHeaders(200, csv.length);

@@ -57,7 +57,7 @@ import org.springframework.test.web.servlet.ResultActions;
 class DesignApiTest {
 
     private static final ObjectMapper JSON = new ObjectMapper();
-    private static final Path EXAMPLES = Path.of("..", "..", "docs", "guides", "examples");
+    private static final Path EXAMPLES = Path.of(System.getProperty("drishti.repo.root"), "docs", "guides", "examples");
     private static final Path DIR = sutraDir();
     private static final String SOURCED = """
             rachana: 1

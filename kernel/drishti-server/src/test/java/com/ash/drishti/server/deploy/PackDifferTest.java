@@ -30,7 +30,7 @@ import org.junit.jupiter.api.Test;
  */
 class PackDifferTest {
 
-    private static final Path CASES = Path.of("..", "..", "tools", "testdata", "packdiff");
+    private static final Path CASES = Path.of(System.getProperty("drishti.repo.root"), "tools", "testdata", "packdiff");
 
     @Test
     void sayTheSameAsThePythonCliFindingForFinding() throws Exception {

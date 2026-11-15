@@ -106,7 +106,7 @@ class PluginSettingsCatalogueSyncTest {
     }
 
     private static Path root() {
-        Path p = Path.of("").toAbsolutePath();
+        Path p = Path.of(System.getProperty("drishti.module.root"));
         while (p != null && !Files.isDirectory(p.resolve("plugins"))) {
             p = p.getParent();
         }

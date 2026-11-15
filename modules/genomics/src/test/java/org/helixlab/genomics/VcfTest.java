@@ -52,7 +52,7 @@ class VcfTest {
     @Test
     void theShippedSamplesReadIntoVariantsGenesAndTwoCohorts() {
         GenomicsData d = new GenomicsData();
-        GenomicsData.Snapshot s = d.load(List.of(Path.of("src/dmod/data/samples")));
+        GenomicsData.Snapshot s = d.load(List.of(Path.of(System.getProperty("drishti.module.root"), "src", "dmod", "data", "samples")));
         assertThat(s.problems()).isEmpty();
         assertThat(s.variants()).hasSize(120).containsKey("HX-A001");
         assertThat(s.samples()).hasSize(24);

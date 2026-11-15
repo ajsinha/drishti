@@ -83,7 +83,7 @@ class ExposureOfficialBiTest {
             for (String f : files) {
                 Path dest = to.resolve(f.replace("../", ""));                  // the table layer's files under tables/, BI's report beside
                 Files.createDirectories(dest.getParent());
-                Files.copy(Path.of("../../../config/bi", f), dest, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                Files.copy(Path.of(System.getProperty("drishti.repo.root"), "config", "bi",  f), dest, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
             }
         } catch (java.io.IOException e) {
             throw new java.io.UncheckedIOException(e);

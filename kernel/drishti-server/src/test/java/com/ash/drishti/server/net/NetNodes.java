@@ -80,7 +80,7 @@ public final class NetNodes implements AutoCloseable {
 
     public NetNodes(Path root) throws IOException {
         this.root = root;
-        Path lockPath = Path.of("target", "net-it.lock").toAbsolutePath();
+        Path lockPath = Path.of(System.getProperty("drishti.module.root"), "target", "net-it.lock").toAbsolutePath();
         Files.createDirectories(lockPath.getParent());
         this.lockFile = java.nio.channels.FileChannel.open(lockPath, java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.WRITE);
         this.lock = lockFile.lock();

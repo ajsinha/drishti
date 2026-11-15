@@ -42,7 +42,7 @@ class NetPackVersionsTest {
     static void start() throws Exception {
         Path root = com.ash.drishti.server.TestRun.root().resolve(Path.of("net-it", "packs-" + System.nanoTime()));
         Path newer = root.resolve("packs-a");
-        Path from = Path.of("..", "..", "examples", "packs", "finance").toAbsolutePath().normalize();
+        Path from = Path.of(System.getProperty("drishti.repo.root"), "examples", "packs", "finance").toAbsolutePath().normalize();
         try (Stream<Path> files = Files.walk(from)) {
             for (Path f : files.toList()) {
                 Path to = newer.resolve("finance").resolve(from.relativize(f).toString());

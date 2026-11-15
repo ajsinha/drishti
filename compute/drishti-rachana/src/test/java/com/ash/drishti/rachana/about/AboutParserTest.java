@@ -135,7 +135,7 @@ class AboutParserTest {
     @Test
     void theHelpdeskExamplePackAboutFileParsesUnderTheStrictParser() throws IOException {
         // the file the PACK_DEVELOPER_GUIDE walks through: it must stay valid as the format hardens (strict keys, compiled templates, text caps)
-        Path file = Path.of("..", "..", "docs", "guides", "examples", "pack", "helpdesk", "config", "about.yaml");
+        Path file = Path.of(System.getProperty("drishti.repo.root"), "docs", "guides", "examples", "pack", "helpdesk", "config", "about.yaml");
         assertThat(file).exists();
         AboutParser.Parsed p = new AboutParser(new ElCompiler(), 600).parse(Files.readString(file), "helpdesk/about.yaml", Set.of("ticket"));
         assertThat(p.problems()).isEmpty();

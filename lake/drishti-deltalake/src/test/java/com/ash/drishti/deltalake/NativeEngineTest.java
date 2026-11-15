@@ -55,8 +55,8 @@ class NativeEngineTest {
 
     @BeforeAll
     static void setUp() throws Exception {
-        lake = copy(Path.of("src/test/resources/lake"));
-        layout = copy(Path.of("src/test/resources/lake-layout"));
+        lake = copy(Path.of(System.getProperty("drishti.module.root"), "src", "test", "resources", "lake"));
+        layout = copy(Path.of(System.getProperty("drishti.module.root"), "src", "test", "resources", "lake-layout"));
         engine = NativeEngine.create();
         hadoop = DefaultEngine.create(new Configuration());
     }
@@ -157,7 +157,7 @@ class NativeEngineTest {
 
     @Test
     void aCheckpointIsReadWithoutTheCommitsBeforeIt() throws Exception {
-        Path root = copy(Path.of("src/test/resources/lake-layout"));
+        Path root = copy(Path.of(System.getProperty("drishti.module.root"), "src", "test", "resources", "lake-layout"));
         String path = root.resolve("desk/trade").toString();
         Map<String, String> before = TableReader.rows(engine, path, null);
         Table.forPath(hadoop, path).checkpoint(hadoop, 5);                           // Kernel writes it (the test only)

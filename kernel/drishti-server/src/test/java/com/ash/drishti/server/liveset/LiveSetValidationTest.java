@@ -38,7 +38,7 @@ import org.junit.jupiter.api.io.TempDir;
  */
 class LiveSetValidationTest {
 
-    static final Path ROOT = Path.of("../..").toAbsolutePath().normalize();
+    static final Path ROOT = Path.of(System.getProperty("drishti.repo.root")).toAbsolutePath().normalize();
     static final Path TRADE = ROOT.resolve("modules/trading/blotters/trade.blotter.yaml");
     static final Path CONTRACT = ROOT.resolve("modules/banking/dmod/packs/trading/contracts/trade.contract.yaml");
     static final Formats FORMATS = Formats.load(null, List.of(ROOT.resolve("modules/banking/dmod/packs/trading/config/formats.yaml").toString()));

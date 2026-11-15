@@ -76,7 +76,7 @@ class LakeRelocateOnStartTest {
      */
     @Test
     void aStartAfterTheMoveLeavesTheShippedLakeFilesAsShipped() throws Exception {
-        Path repo = Path.of("../../..").toAbsolutePath().normalize();
+        Path repo = Path.of(System.getProperty("drishti.repo.root")).toAbsolutePath().normalize();
         Path lakes = Files.createDirectories(tmp.resolve("config/lakes"));
         java.util.Map<String, byte[]> shipped = new java.util.TreeMap<>();
         try (var s = Files.list(repo.resolve("config/lakes"))) {

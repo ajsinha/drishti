@@ -86,7 +86,7 @@ class ApiSurfaceTest {
             }
         }
         java.util.Collections.sort(now);
-        Path file = Path.of("src/test/resources/kernel-api-surface.txt");
+        Path file = Path.of(System.getProperty("drishti.module.root"), "src", "test", "resources", "kernel-api-surface.txt");
         if (Boolean.getBoolean("surface.write")) {
             Files.createDirectories(file.getParent());
             Files.write(file, now, StandardCharsets.UTF_8);

@@ -29,7 +29,7 @@ class ThemeParserTest {
 
     @Test
     void theShippedThemesAreClean() throws IOException {
-        try (var files = Files.list(Path.of("../../config/bi/themes"))) {
+        try (var files = Files.list(Path.of(System.getProperty("drishti.repo.root"), "config", "bi", "themes"))) {
             List<Path> all = files.filter(f -> f.toString().endsWith(".theme.yaml")).toList();
             assertThat(all).isNotEmpty();
             for (Path f : all) {

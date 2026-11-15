@@ -118,7 +118,7 @@ class VarPvStreamTest {
 
     @DynamicPropertySource
     static void setUp(DynamicPropertyRegistry r) throws Exception {
-        lake = Files.createDirectories(Path.of("target", "var-pv-stream-lake-" + System.nanoTime())).toAbsolutePath();
+        lake = Files.createDirectories(Path.of(System.getProperty("drishti.module.root"), "target", "var-pv-stream-lake-"+ System.nanoTime())).toAbsolutePath();
         VarIntradayLake.morning(lake, ONE_RUN, DAY);
         List<Map<String, Object>> v = new ArrayList<>();                   // ONE_RUN: the day's final state as one run
         for (Map<String, Object> row : VarIntradayLake.morningVectors(ONE_RUN)) {

@@ -35,7 +35,7 @@ final class RepositoryFiles {
     private RepositoryFiles() {}
 
     static Path root() {
-        Path p = Path.of("").toAbsolutePath();
+        Path p = Path.of(System.getProperty("drishti.module.root"));
         while (p != null && !Files.exists(p.resolve("LICENSE"))) {
             p = p.getParent();
         }

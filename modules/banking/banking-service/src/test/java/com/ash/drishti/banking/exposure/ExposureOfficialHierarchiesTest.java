@@ -69,7 +69,7 @@ class ExposureOfficialHierarchiesTest {
 
     @DynamicPropertySource
     static void lake(DynamicPropertyRegistry r) throws Exception {
-        lake = Files.createDirectories(Path.of("target", "exposure-hier-lake-" + System.nanoTime())).toAbsolutePath();
+        lake = Files.createDirectories(Path.of(System.getProperty("drishti.module.root"), "target", "exposure-hier-lake-"+ System.nanoTime())).toAbsolutePath();
         ExposureHierarchyFixture.write(lake);
         r.add("drishti.sources.connectors.ccr-lake.settings.root", lake::toString);
         r.add("drishti.ccr.exposure.official.root", lake::toString);

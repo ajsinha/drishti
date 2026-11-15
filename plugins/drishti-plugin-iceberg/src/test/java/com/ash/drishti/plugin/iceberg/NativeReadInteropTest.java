@@ -61,7 +61,7 @@ class NativeReadInteropTest {
 
     static List<String> tables() {
         List<String> out = new ArrayList<>();
-        Fixtures.expected(Path.of("src/test/resources/iceberg-fixtures")).fieldNames().forEachRemaining(out::add);
+        Fixtures.expected(Path.of(System.getProperty("drishti.module.root"), "src", "test", "resources", "iceberg-fixtures")).fieldNames().forEachRemaining(out::add);
         return out;
     }
 

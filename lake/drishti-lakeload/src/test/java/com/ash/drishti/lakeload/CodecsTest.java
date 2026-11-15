@@ -114,7 +114,7 @@ class CodecsTest {
     @Test
     void aPackGivesTheDomainTableLayoutKeyAndFlattenedFieldsAsLakeBuildReadsThem() throws IOException {
         com.ash.drishti.api.resolution.ConfigResolution packs = com.ash.drishti.api.resolution.ConfigResolution.repository(
-                java.nio.file.Path.of("").toAbsolutePath().getParent().getParent());   // where each shipped pack is (its module's folder)
+                java.nio.file.Path.of(System.getProperty("drishti.module.root")).getParent().getParent());   // where each shipped pack is (its module's folder)
         LoadConfig risk = LoadConfig.read(null, List.of("source.files=x.jsonl", "source.pack=" + packs.packDir("market-risk"), "source.date=BUSINESS_DATE",
                 "target.lake=/l", "target.kind=scenario-pv"));
         assertThat(risk.target().domain()).isEqualTo("risk");

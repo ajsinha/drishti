@@ -44,10 +44,10 @@ import org.junit.jupiter.api.Test;
  */
 class ShippedExamplesPacksTest {
 
-    private static final Path BI = Path.of("..", "..", "config", "bi");
-    private static final Path PACKS = Path.of("..", "..", "config", "packs");
+    private static final Path BI = Path.of(System.getProperty("drishti.repo.root"), "config", "bi");
+    private static final Path PACKS = Path.of(System.getProperty("drishti.repo.root"), "config", "packs");
     /** The table layer's shipped tables and models: BI's datasets and models since the switch. */
-    private static final Path TABLES = Path.of("..", "..", "config", "tables");
+    private static final Path TABLES = Path.of(System.getProperty("drishti.repo.root"), "config", "tables");
     private static final Pattern PACK_DATASET = Pattern.compile("\\bpack\\.([a-z0-9-]+)\\.([a-z0-9-]+)");
     private final ObjectMapper yaml = new ObjectMapper(new YAMLFactory());
 

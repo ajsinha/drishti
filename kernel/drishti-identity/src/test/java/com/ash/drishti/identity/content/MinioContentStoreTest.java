@@ -31,7 +31,7 @@ class MinioContentStoreTest extends S3ContentStoreCases {
 
     @BeforeAll
     static void up() throws Exception {
-        minio = MinioServer.startOrSkip(Path.of("target", "minio-content", "data"));
+        minio = MinioServer.startOrSkip(Path.of(System.getProperty("drishti.module.root"), "target", "minio-content", "data"));
         minio.endpoint().bucket("content");
         probe(minio.endpoint(), "content");
     }

@@ -86,7 +86,7 @@ class StatementLayoutTest {
         }
         assertThat(p.pages().get(n - 1).texts("text")).as("pageBreak: before starts a new page").containsExactly("End of statement");
         assertThat(p.pages().get(n - 1).texts("cell")).isEmpty();
-        Files.write(Path.of("target/statement-sample.pdf"), StatementPdf.write(p, "Monthly statement"));
+        Files.write(Path.of(System.getProperty("drishti.module.root"), "target", "statement-sample.pdf"), StatementPdf.write(p, "Monthly statement"));
     }
 
     @Test

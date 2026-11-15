@@ -36,7 +36,7 @@ import org.yaml.snakeyaml.Yaml;
  */
 class ShippedHistoryBlocksTest {
 
-    private static final Path PACKS = Path.of("..", "..", "config", "packs");
+    private static final Path PACKS = Path.of(System.getProperty("drishti.repo.root"), "config", "packs");
 
     @Test
     void everyShippedBlockIsCleanAndNamesRealFields() throws IOException {

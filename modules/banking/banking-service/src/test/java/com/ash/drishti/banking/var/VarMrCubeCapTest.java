@@ -83,7 +83,7 @@ class VarMrCubeCapTest {
 
     @DynamicPropertySource
     static void lake(DynamicPropertyRegistry r) throws Exception {
-        Path lake = Files.createDirectories(Path.of("target", "var-mr-cap-lake-" + System.nanoTime())).toAbsolutePath();
+        Path lake = Files.createDirectories(Path.of(System.getProperty("drishti.module.root"), "target", "var-mr-cap-lake-"+ System.nanoTime())).toAbsolutePath();
         VarStressApiTest.write(lake, VarStressApiTest.PLAIN, false);
         VarStressApiTest.write(lake, VarStressApiTest.DAY, true);
         r.add("drishti.sources.connectors.risk-lake.settings.root", lake::toString);

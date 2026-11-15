@@ -118,7 +118,7 @@ class VarStressWindowApiTest {
 
     @DynamicPropertySource
     static void lake(DynamicPropertyRegistry r) throws Exception {
-        lake = Files.createDirectories(Path.of("target", "var-stress-window-lake-" + System.nanoTime())).toAbsolutePath();
+        lake = Files.createDirectories(Path.of(System.getProperty("drishti.module.root"), "target", "var-stress-window-lake-"+ System.nanoTime())).toAbsolutePath();
         VarLakeFixture.write(lake, DAY, 1.0, false, false);
         history = days(LocalDate.of(2008, 1, 1), DAYS);
         java.util.SplittableRandom rnd = new java.util.SplittableRandom(11);

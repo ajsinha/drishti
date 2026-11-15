@@ -71,7 +71,7 @@ class ComputeWritesApiTest {
 
     static String interpreter() {
         for (String c : new String[] {System.getProperty("drishti.compute.test.python"), System.getenv("DRISHTI_PYTHON"),
-                Path.of("..", "..", "drishti-console", ".venv", "bin", "python").toAbsolutePath().toString()}) {
+                Path.of(System.getProperty("drishti.repo.root"), "drishti-console", ".venv", "bin", "python").toAbsolutePath().toString()}) {
             if (c == null || c.isBlank() || (c.contains("/") && !Files.exists(Path.of(c)))) {
                 continue;
             }
@@ -125,7 +125,7 @@ class ComputeWritesApiTest {
         byte[] w = wheel();
         Files.write(shipped.resolve("demo_pkg-1.0.0-py3-none-any.whl"), w);
         Files.writeString(work.resolve("risk.lock"), "demo-pkg==1.0.0 --hash=sha256:" + java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(w)) + "\n");
-        String testEngines = Path.of("..", "..", "compute", "drishti-compute", "src", "test", "python").toAbsolutePath().normalize().toString().replace("\\", "/");
+        String testEngines = Path.of(System.getProperty("drishti.repo.root"), "compute", "drishti-compute", "src", "test", "python").toAbsolutePath().normalize().toString().replace("\\", "/");
         Files.writeString(work.resolve("compute.yaml"), """
                 compute:
                   enabled: true

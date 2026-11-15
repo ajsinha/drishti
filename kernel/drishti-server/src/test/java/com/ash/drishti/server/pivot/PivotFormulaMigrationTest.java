@@ -41,7 +41,7 @@ import org.junit.jupiter.api.io.TempDir;
  */
 class PivotFormulaMigrationTest {
 
-    static final Path CORPUS = Path.of("..", "..", "compute", "drishti-bicompute", "src", "test", "resources", "formula-parity", "corpus.yaml");
+    static final Path CORPUS = Path.of(System.getProperty("drishti.repo.root"), "compute", "drishti-bicompute", "src", "test", "resources", "formula-parity", "corpus.yaml");
 
     @Test
     @SuppressWarnings("unchecked")
