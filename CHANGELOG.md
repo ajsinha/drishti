@@ -18,6 +18,17 @@
 
 ## Unreleased
 
+- **One shared test lake.** Every console and browser test reads one lake, read only: the full demo lake of the saved test data
+  (ending 2026-11-06, the committed exposure run), built once per hash of the test data, generators and loaders by the parallel Java
+  loader and kept in one cache folder (`DRISHTI_LAKE_CACHE`, one absolute folder for every checkout and drill). No test builds, copies
+  or subsets a lake; the tests that write to a lake are parked to i6 with a visible skip (TEST_HARNESS section 3.12 lists them), and a
+  quick file check fails on any other.
+- **Menus follow the packs that load.** With `drishti.packs.enabled` unset the console loads the same default packs as the server
+  (`config/packs/default-packs.yaml`); a menu entry of a pack's command (USEQ, EDGAR, LEIC, FUND) is drawn only while a pack that has
+  it loads, so no menu opens "cannot read command".
+- **A BI table over a documents-only connector reads its newest data, not an empty today.** A table of no named connector whose
+  connector cannot scan as columns reads the newest date its connectors hold (stated in the answer's `dataAsOf`), never 0 rows for a
+  business date nothing was loaded on.
 - **The drill starts from a clean data folder.** A server's state an earlier run left in the data folder (installed modules, identities,
   cluster membership, compute, file store, cache) is moved aside to `data/tmp/stale-<stamp>/` and listed before the drill starts, when
   no server runs from the checkout. Lake loader children get the launch roots of the process that starts them, and Iceberg's Health

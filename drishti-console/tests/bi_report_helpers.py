@@ -51,7 +51,8 @@ def sign_in(browser, user, next_path="/bi/catalogue", **ctx):
     page.fill("#lu", user)
     page.fill("#lp", PASSWORD)
     page.click("button[type=submit]")
-    page.wait_for_url("**" + next_path.split("?")[0])
+    want = next_path.split("?")[0]
+    page.wait_for_url(lambda url: url.split("?")[0].endswith(want))     # the catalogue adds its tab and sort to the address (?kind=reports&sort=use)
     page.errors = errors
     return page
 

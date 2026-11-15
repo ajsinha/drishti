@@ -92,7 +92,7 @@ class RunsContractTest {
     void theShippedFileAndNoFileGiveTheSameDefaults(@TempDir Path data) {
         Path shipped = Path.of(TestRoots.repo(), "config", "runs", "runs.yaml");
         assertThat(Files.isRegularFile(shipped)).isTrue();
-        RunsProperties a = RunsProperties.load(shipped, data, s -> s.replace("${drishti.data.dir:./data}", data.toString()));
+        RunsProperties a = RunsProperties.load(shipped, data, s -> s.replace("${drishti.data.dir}", data.toString()));
         RunsProperties b = RunsProperties.defaults(data);
         assertThat(a.enabled()).isTrue();
         assertThat(a.inline().inlineWait()).isEqualTo(Duration.ofSeconds(2)).isEqualTo(b.inline().inlineWait());

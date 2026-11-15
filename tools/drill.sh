@@ -480,7 +480,7 @@ java21_docker() {   # every Testcontainers test: the copy is built at once, its 
 # missing required root stops the start at once with its message. About 5 minutes (the lake: cached per hash of its sources).
 ANYWHERE_TEST=drishti-console/tests/test_release_from_other_folder.py
 release_anywhere() {
-  timeout --kill-after=60 1500 "$PY" -m pytest -q -rfE -p no:cacheprovider "$ANYWHERE_TEST"
+  timeout --kill-after=60 2400 "$PY" -m pytest -q -rfE -p no:cacheprovider "$ANYWHERE_TEST"   # three server starts of 100-140 s each beside the other lanes, the checks and a lake load
 }
 
 # The containers lane (TEST_HARNESS.md, "The container smoke test"): the images as shipped, built and booted on the host's network beside

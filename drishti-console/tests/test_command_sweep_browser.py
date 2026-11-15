@@ -31,7 +31,7 @@ from pathlib import Path
 import pytest
 
 from test_page_walk_browser import SNAPSHOT_DATE, WALK_PACKS, _packs_ready
-from var_stack import var_lake, var_server
+from var_stack import shared_lake, var_server
 
 SWEEP = Path(__file__).resolve().parents[2] / "tools" / "sweep" / "command_sweep.py"
 ADMIN, ADMIN_PASSWORD = "drishti-dev-admin", "drishti-dev-admin123"
@@ -49,7 +49,7 @@ def sweep_lake(tmp_path_factory):
     """The full demo lake the sweeps run on: every dataset of the saved test data (data/testdata) through the lake builder, ending on the
     walk's fixed date, the committed exposure run; built once per hash of the test data and the builder (tools/drillkit/lake_cache.py),
     reused while they are unchanged."""
-    return var_lake(tmp_path_factory, "", as_of=SNAPSHOT_DATE, extra=("--exposure", "committed"))
+    return shared_lake(tmp_path_factory)
 
 
 @pytest.fixture(scope="module")

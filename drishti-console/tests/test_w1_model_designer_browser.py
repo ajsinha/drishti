@@ -57,10 +57,15 @@ DESKS = [("DESK-FX", "Foreign exchange"), ("DESK-FI", "Fixed income"), ("DESK-EQ
 # The packs' own routes replaced by file connectors of the same names over this stack's synthetic data, in the 2.3.0 UPPER_SNAKE names: the trading
 # pack's trade-endur (kind trade) and the core pack's reference-store (kinds desk and book: a dataset's implicit model brings the kinds its references
 # name, DESK and PORTFOLIO, and a table whose connector does not serve its kind is DRS-9026). The test's trades also carry DESK and MTM (as the market-risk valuation
-# does) so one fact answers every question; DESK is a pack reference to the desk kind, which the model designer suggests.
+# does) so one fact answers every question; DESK is a pack reference to the desk kind, which the model designer suggests. Each file is an
+# override of the shipped template of its name: it says enabled (the template's follows DRISHTI_LAKE_ENABLED, off here) and trade-endur drops the
+# template's Endur field map (these rows are already in the trade contract's names), reference-store the template's effective-dated
+# modes (these desks and books carry no effective dates).
 TRADES = """plugin: file
+enabled: true
 kinds: [trade]
 settings:
+  map: null
   root: {root}
   rescan-seconds: 3600
   lookback-days: 36500   # a fixed-date fixture lake: its newest day must stay readable as "latest" however old it gets
@@ -69,8 +74,10 @@ settings:
       columns: [TRADE_ID, SOURCE_SYSTEM, DESK, PORTFOLIO, PRODUCT_TYPE, CURRENCY, TRADE_STATUS, NOTIONAL, MTM, PNL_1D, TRADE_DATE]
 """
 DESKS_CONNECTOR = """plugin: file
+enabled: true
 kinds: [desk, book]
 settings:
+  mode: null
   root: {root}
   rescan-seconds: 3600
   lookback-days: 36500   # a fixed-date fixture lake: its newest day must stay readable as "latest" however old it gets
@@ -82,6 +89,7 @@ settings:
 """
 # the market-risk valuations the shipped sample model trades-basic reads (risk-store), the same rows
 VALUATIONS = """plugin: file
+enabled: true
 kinds: [trade-valuation]
 settings:
   root: {root}
@@ -159,6 +167,9 @@ class Stack:
             (work / "config" / "connectors" / "trade-endur.yaml").write_text(TRADES.format(root=lake / "trade"))
             (work / "config" / "connectors" / "reference-store.yaml").write_text(DESKS_CONNECTOR.format(root=lake / "ref"))
             (work / "config" / "connectors" / "risk-store.yaml").write_text(VALUATIONS.format(root=lake / "risk"))
+            # which connector serves a kind is the site's bindings file (a connector file's kinds: is no longer read)
+            (work / "config" / "bindings.yaml").write_text("format: 1\nbindings:\n  trade: { read: [trade-endur] }\n  desk: { read: [reference-store] }\n"
+                                                           "  book: { read: [reference-store] }\n  trade-valuation: { read: [risk-store] }\n")
             env = dict(os.environ, DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_PACKS="trading,core,market-risk", DRISHTI_LAKE_ENABLED="false",   # the packs' lakes off (the empty Calypso and Murex lakes would make every trade column text)
                        DRISHTI_SECURITY_ENABLED="true",
                        DRISHTI_TOKEN_SECRET=SECRET, DRISHTI_BI_DIR=str(work / "config" / "bi"), DRISHTI_DATA_DIR=str(work / "data"))

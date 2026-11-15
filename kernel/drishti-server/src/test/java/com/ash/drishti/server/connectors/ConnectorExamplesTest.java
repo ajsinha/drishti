@@ -61,7 +61,8 @@ class ConnectorExamplesTest {
                     assertThat(ConnectorSecrets.reference(v)).as(p + " " + k).isTrue();
                 }
                 var spec = catalogue.of(d.plugin()).find(k);
-                if (catalogue.of(d.plugin()).declared()) {
+                // broker: and db: name a section of the settings files (NamedResources), which brings the plugin's own keys: not a plugin key
+                if (catalogue.of(d.plugin()).declared() && !com.ash.drishti.common.NamedResources.REFERENCES.containsKey(k)) {
                     assertThat(spec).as(p + " setting " + k + " is known to the " + d.plugin() + " plugin").isNotNull();
                 }
             });

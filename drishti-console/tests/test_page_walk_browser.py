@@ -34,7 +34,7 @@ import pytest
 from form_layout import _MEASURE
 from page_walk import BUDGET_S, dedupe, go, layout_faults, menu_links, new_page, open_page, report, sitemap_addresses
 from test_workbench_browser import browser  # noqa: F401 - the fixture
-from var_stack import VAR_TRADES, var_data, var_lake, var_server
+from var_stack import shared_lake, var_server, VAR_TRADES
 
 KEY_PAGES = ["/", "/var?scope=BANK", go("VAR BANK EXPLAIN"), "/pivot?preset=mr", "/pivot", "/bi/designer", "/forms", "/admin/engines",
              "/admin/connectors", "/admin/loads", "/admin/loads/upload", "/help"]
@@ -55,7 +55,7 @@ def stack(tmp_path_factory):
     if os.environ.get("DRISHTI_PAGEWALK_BASE"):
         yield os.environ["DRISHTI_PAGEWALK_BASE"].rstrip("/")
         return
-    lake = var_lake(tmp_path_factory, var_data(*WALK_DATA), as_of=SNAPSHOT_DATE, extra=("--exposure", "committed"))
+    lake = shared_lake(tmp_path_factory)
     # the data inbox on (Admin -> Data loads -> Inbox and Upload are its pages), over an empty folder of its own; the full product's packs and
     # the capital-markets module's (off by default: config/packs/default-packs.yaml), and the Markets lens beside the four default ones
     for st in var_server(tmp_path_factory, lake, DRISHTI_DATALOAD_ENABLED="true", DRISHTI_DATALOAD_DIR=str(tmp_path_factory.mktemp("walk-dataload")),

@@ -16,7 +16,8 @@
 another folder").
 
 The release as shipped is unpacked into a scratch install folder (``git archive`` of HEAD plus the gate's server jar, as
-docs/DEPLOYMENT_AND_QA_GUIDE.md builds the ZIP), a small lake is loaded with the Java loader by that install's own tools, and the server is
+docs/DEPLOYMENT_AND_QA_GUIDE.md builds the ZIP), its lake root is the ONE shared test lake (read only, an absolute path in the drill's lake
+cache, TEST_HARNESS.md section 3.12; the install builds no lake), its data folder its own scratch for the server's state, and the server is
 started with the install's ``bin/start-server.sh`` from a DIFFERENT working folder (the process folder and ``--workdir`` both), the demo off:
 VAR BANK has a headline, VAR EXPLAIN BANK answers, POS, TRD and FORMS answer, and after two restarts VAR BANK is the same figure. The
 ``resolved paths:`` block of the server's log has only absolute paths, each under the install or the data folder, never the working folder. A
@@ -44,13 +45,10 @@ from pathlib import Path
 
 import pytest
 
-ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "tools" / "drillkit"))
-import lake_cache  # noqa: E402  (the cached lakes of the drill)
+import var_stack  # noqa: E402 - the ONE shared read-only test lake
 
-#: the VaR kinds, the trades of two systems and the desks/books they stand on: positions come with the VaR inputs
-ONLY = ",".join([f"market-risk/{k}" for k in ("scenario-pv", "fx-scenario", "scenario-set", "var-limit")]
-                + ["core/desk", "core/book", "core/legal-entity", "trades/murex", "trades/endur"])
+ROOT = Path(__file__).resolve().parents[2]
+
 JAR_GLOB = "kernel/drishti-server/target/drishti-server-*-exec.jar"
 
 
@@ -65,14 +63,6 @@ def _free_port() -> int:
     with socket.socket() as s:
         s.bind(("127.0.0.1", 0))
         return s.getsockname()[1]
-
-
-def _last_weekday() -> str:
-    import datetime
-    d = datetime.date.today()
-    while d.weekday() >= 5:
-        d -= datetime.timedelta(days=1)
-    return d.isoformat()
 
 
 def _env(**more: str) -> dict[str, str]:
@@ -130,21 +120,10 @@ def install(tmp_path_factory) -> Path:
 
 
 @pytest.fixture(scope="module")
-def lake(install, other) -> Path:
-    """The small lake, loaded by the install's own tools with the Java loader, run from the other folder; cached per hash of the sources."""
-    as_of = _last_weekday()
-
-    def build(work: Path) -> None:
-        r = subprocess.run([sys.executable, str(install / "tools" / "drishti.py"), "lake", "demo", "--lake", str(work / "delta"),
-                            "--data-dir", str(work / "data"), "--connectors-dir", str(work / "connectors"), "--as-of", as_of, "--only", ONLY,
-                            "--no-signal", "-q", "--engine", "java"], capture_output=True, text=True, cwd=other, timeout=1500, env=_env())
-        if r.returncode != 0:
-            raise RuntimeError("lake demo (java) failed: " + (r.stderr or r.stdout)[-800:])
-
-    folder = lake_cache.cached("anywhere-java|" + ONLY + "|" + as_of, build, ROOT)
-    out = folder / "delta"
-    assert (out / "risk" / "scenario-pv").is_dir(), f"no scenario-pv in {out}"
-    return out
+def lake(tmp_path_factory) -> Path:
+    """The ONE shared test lake, read only (an absolute path in the lake cache, DRISHTI_LAKE_CACHE): the install reads it, never writes it;
+    the server's VaR hot folder and official roots are in its own data folder (Server.env)."""
+    return var_stack.shared_lake(tmp_path_factory)
 
 
 class Server:
@@ -153,7 +132,7 @@ class Server:
     def __init__(self, install: Path, other: Path, data: Path, lake: Path, port: int):
         self.install, self.other, self.data, self.lake, self.port = install, other, data, lake, port
         self.base = f"http://127.0.0.1:{port}"
-        self.as_of = _last_weekday()
+        self.as_of = var_stack.SHARED_AS_OF                 # the shared lake's last business date
 
     def script(self, name: str, *args: str, env: dict[str, str] | None = None, timeout: float = 600) -> subprocess.CompletedProcess:
         return subprocess.run([_bash(), str(self.install / "bin" / f"{name}.sh"), *args], cwd=self.other, capture_output=True, text=True,
@@ -292,10 +271,10 @@ def test_the_release_runs_from_another_folder_and_restarts(install, other, lake,
                 if p == "(none)":
                     continue
                 assert os.path.isabs(p), f"resolved root {name} is not absolute: {p}"
-                inside = [str(base) + os.sep for base in (install.resolve(), data.resolve())]
+                inside = [str(base) + os.sep for base in (install.resolve(), data.resolve(), lake.parent.resolve())]   # the shared lake's folder too
                 real = os.path.realpath(p) + os.sep
                 assert any(real.startswith(os.path.realpath(b)) or real.startswith(b) for b in inside), \
-                    f"resolved root {name} = {p} is neither under the install {install} nor the data folder {data}"
+                    f"resolved root {name} = {p} is under none of the install {install}, the data folder {data} and the shared lake {lake.parent}"
                 assert not real.startswith(os.path.realpath(other) + os.sep), f"resolved root {name} = {p} is under the working folder {other}"
             if run < 2:
                 s.stop()

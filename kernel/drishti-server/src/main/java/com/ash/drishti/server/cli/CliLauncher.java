@@ -171,8 +171,9 @@ public final class CliLauncher {
     static java.util.Map<String, String> packProperties(List<String> rest) {
         java.util.Set<String> names = new java.util.LinkedHashSet<>();
         java.nio.file.Path outside = null;
-        java.nio.file.Path packsDir = com.ash.drishti.api.Roots.anchored(System.getProperty("drishti.packs.dir",
-                java.util.Objects.requireNonNullElse(System.getenv("DRISHTI_PACKS_DIR"), com.ash.drishti.api.Roots.config("packs"))));
+        String named = System.getProperty("drishti.packs.dir", System.getenv("DRISHTI_PACKS_DIR"));
+        java.nio.file.Path packsDir = named != null && !named.isBlank() ? com.ash.drishti.api.Roots.anchored(named)
+                : java.nio.file.Path.of(com.ash.drishti.api.Roots.config("packs"));   // under the install folder only when no packs folder is named
         for (String arg : rest) {
             if (arg.startsWith("-")) {
                 continue;
