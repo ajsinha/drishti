@@ -270,6 +270,55 @@ schemas:
       - { key: "Equity.*", type: map, meaning: "buckets, delta-risk-weights (by bucket and Residual, per 1 %), correlation (by bucket), across-buckets (bucket × bucket), vega-risk-weight (one number or by bucket), historical-volatility-ratio, zero-curvature-buckets (volatility indices), concentration-thresholds" }
       - { key: "Commodity.*", type: map, meaning: "buckets, delta-risk-weights (by bucket, per 1 %), correlation (by bucket), across-buckets, vega-risk-weight, historical-volatility-ratio, concentration-thresholds" }
       - { key: "FX.*", type: map, meaning: "high-volatility-currencies, delta-risk-weights (regular-regular, regular-high, high-regular, high-high), correlation (by the calculation currency's group: regular-regular, regular-high, high-high), vega-correlation, vega-risk-weight, historical-volatility-ratio, threshold-groups, concentration-thresholds" }
+  cluster-settings:
+    area: net
+    title: "The cluster's sections of the settings file: `[net.cluster]` ... `[net.engines]` (docs/architecture/CLUSTER_I5_DESIGN.md section 4.4)"
+    file: "the settings file, sections [net.cluster] [net.node] [net.membership] [net.agreement] [net.tls] [net.engines]"
+    applies: each member (node.yaml's own cluster-port, agreement-port, seeds and role win)
+    change: restart (the membership joins again with the new settings)
+    keys:
+      - { key: net.cluster.name, type: string, default: drishti, meaning: "The cluster's name: a node of another name never joins" }
+      - { key: net.cluster.environment, type: string, default: "", meaning: "dev, uat, prod or any word: the environment, for module promotion between clusters" }
+      - { key: net.cluster.secret-file, type: path, default: "", meaning: "An absolute file holding the cluster key, readable only by the service user (instead of node.yaml's secret: ${DRISHTI_NET_SECRET})" }
+      - { key: net.cluster.seeds, type: list, default: "", meaning: "host:cluster-port of members to dial when joining, comma-separated; real addresses only. node.yaml's seeds win" }
+      - { key: net.cluster.discovery, type: string, default: seeds, meaning: "seeds (TCP to the seed list), file, jdbc or s3. Multicast is never used: udp, mping and ping are refused" }
+      - { key: net.cluster.discovery.dir, type: path, default: "", meaning: "discovery=file: an absolute folder every member can write" }
+      - { key: net.cluster.discovery.url, type: string, default: "", meaning: "discovery=jdbc: the database's JDBC URL" }
+      - { key: net.cluster.discovery.user, type: string, default: "", meaning: "discovery=jdbc: its user" }
+      - { key: net.cluster.discovery.password, type: secret, default: "", meaning: "discovery=jdbc: its password (secrets.ini)" }
+      - { key: net.cluster.discovery.bucket, type: string, default: "", meaning: "discovery=s3: the bucket (needs the jgroups-aws jar in lib/)" }
+      - { key: net.cluster.discovery.region, type: string, default: "", meaning: "discovery=s3: the bucket's region" }
+      - { key: net.cluster.discovery.prefix, type: string, default: "", meaning: "discovery=s3: a prefix under the bucket" }
+      - { key: net.node.id, type: string, default: "", meaning: "The node's id (node.yaml's node-id wins); empty: generated once" }
+      - { key: net.node.cluster-port, type: integer, default: "7946", meaning: "The membership's TCP port (a number: seeds dial it); the failure detector listens on it + 100. node.yaml's cluster-port wins" }
+      - { key: net.node.agreement-port, type: integer, default: "7947", meaning: "The agreement's TCP port, ratis mode only (mutual TLS)" }
+      - { key: net.node.role, type: string, default: server, meaning: "server, or witness (membership and agreement only)" }
+      - { key: net.membership.heartbeat, type: duration, default: 2s, meaning: "How often a member says it is alive" }
+      - { key: net.membership.suspect-after, type: duration, default: 10s, meaning: "A silent member is suspected after this (at least two heartbeats)" }
+      - { key: net.membership.verify, type: duration, default: 1500ms, meaning: "How long a suspicion is verified before the member leaves the view" }
+      - { key: net.membership.join-timeout, type: duration, default: 5s, meaning: "How long a join waits for the coordinator before the node forms a view alone" }
+      - { key: net.membership.merge-every, type: duration, default: 10s, meaning: "How often partitions look for each other and merge" }
+      - { key: net.membership.vitals-every, type: duration, default: 10s, meaning: "How often a member republishes its vitals when nothing changed" }
+      - { key: net.membership.forget-after, type: duration, default: 24h, meaning: "How long a member out of the view is remembered (Admin, members.json)" }
+      - { key: net.agreement.mode, type: string, default: auto, meaning: "auto, local, database, ratis or first-live (auto: database with a shared PostgreSQL, else ratis with three or five voters and TLS, else first-live)" }
+      - { key: net.agreement.voters, type: list, default: "", meaning: "The voters' node ids, three or five (a witness counts)" }
+      - { key: net.agreement.dir, type: path, default: "<data dir>/net/agreement", meaning: "The ratis log and snapshots folder, absolute" }
+      - { key: net.agreement.lease-ttl, type: duration, default: 15s, meaning: "How long a lease lasts without a renewal" }
+      - { key: net.agreement.lease-renew, type: duration, default: 5s, meaning: "How often a holder renews (at most half of lease-ttl)" }
+      - { key: net.agreement.election-timeout, type: duration, default: 2s, meaning: "The Raft election time-out (ratis)" }
+      - { key: net.agreement.snapshot-every, type: integer, default: "10000", meaning: "A snapshot every this many log entries (ratis)" }
+      - { key: net.tls.ca-file, type: path, default: "", meaning: "The cluster's certificate authority (PEM, absolute); with cert-file and key-file: TLS on the cluster and agreement ports" }
+      - { key: net.tls.cert-file, type: path, default: "", meaning: "This node's certificate (PEM, absolute)" }
+      - { key: net.tls.key-file, type: path, default: "", meaning: "Its private key (PEM, absolute)" }
+      - { key: net.tls.key-password, type: secret, default: "", meaning: "The key's password when it is encrypted (secrets.ini)" }
+      - { key: net.tls.client-auth, type: string, default: need, meaning: "need (mutual TLS) or want" }
+      - { key: net.tls.reload, type: boolean, default: "on", meaning: "A replaced file is picked up without a restart" }
+      - { key: net.engines.call-timeout, type: duration, default: 30s, meaning: "The default deadline of a remote engine call (an engine's own wins)" }
+      - { key: net.engines.connect-timeout, type: duration, default: 2s, meaning: "How long a connection to another node may take" }
+      - { key: net.engines.uses-timeout, type: duration, default: 5s, meaning: "How long a uses extra is waited for before it is left out" }
+      - { key: net.engines.failover, type: boolean, default: "on", meaning: "An idempotent call goes to the next placed node when one fails" }
+      - { key: net.engines.breaker.failures, type: integer, default: "5", meaning: "Failures in a row that open a node's circuit" }
+      - { key: net.engines.breaker.open-for, type: duration, default: 15s, meaning: "How long an open circuit skips the node" }
   connector-file:
     area: connectors
     title: "A connector file: `config/connectors/<name>.yaml`"

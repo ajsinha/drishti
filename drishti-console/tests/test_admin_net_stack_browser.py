@@ -111,7 +111,7 @@ def test_a_drain_moves_the_traffic_to_the_other_holder(browser, cluster):
     assert first in ("drishti-a", "drishti-c")
     drain = urllib.request.Request(url(first[-1]) + "/api/v1/net/drain", method="POST")
     urllib.request.urlopen(drain, timeout=5).read()
-    time.sleep(3)                                              # the drain spreads with gossip
+    time.sleep(3)                                              # the drain spreads in the vitals
     try:
         assert holder_of_shared() != first
     finally:

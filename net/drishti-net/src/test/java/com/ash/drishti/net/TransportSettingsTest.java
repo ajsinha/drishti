@@ -19,7 +19,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.net.config.NetFolder;
 import com.ash.drishti.net.config.NetSchema;
-import com.ash.drishti.net.config.NodeSettings;
 import com.ash.drishti.net.member.Member;
 import com.ash.drishti.net.member.MemberState;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -30,7 +29,10 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/** The transport settings of 2.6.7: node.yaml's gossip-port, routing.yaml's peer-protocol, and a member's gossip port on the wire. */
+/**
+ * The transport settings: node.yaml's cluster port (7946 by default, a number; the gossip-era gossip-port is refused naming it), seeds,
+ * routing.yaml's peer-protocol, and a member's vitals on the wire (CLUSTER_I5_DESIGN.md sections 4.1 and 8).
+ */
 class TransportSettingsTest {
 
     private static final String KEY = "a-cluster-key-of-at-least-thirty-two-bytes";
@@ -43,27 +45,37 @@ class TransportSettingsTest {
         return new NetFolder(tmp.resolve("config/net"), tmp.resolve("data/net"), new NetSchema(Map.of("DRISHTI_NET_SECRET", KEY)::get));
     }
 
-    private NetFolder.Loaded node(String gossipPort) {
+    private NetFolder.Loaded node(String extra) {
         NetFolder f = folder();
-        f.write("node.yaml", "enabled: true\nadvertise-url: http://192.0.2.10:18783\nsecret: ${DRISHTI_NET_SECRET}\n"
-                + (gossipPort == null ? "" : "gossip-port: " + gossipPort + "\n"), null);
+        f.write("node.yaml", "enabled: true\nadvertise-url: http://192.0.2.10:18783\nsecret: ${DRISHTI_NET_SECRET}\n" + (extra == null ? "" : extra + "\n"), null);
         return f.load(null);
     }
 
     @Test
-    void theGossipPortIsAutoByDefaultAndMayBeOffOrAPort() {
-        assertThat(node(null).config().node().gossipPort()).isEqualTo(NodeSettings.GOSSIP_AUTO);
-        assertThat(node("auto").config().node().gossipPort()).isEqualTo(NodeSettings.GOSSIP_AUTO);
-        assertThat(node("off").config().node().gossipPort()).as("YAML reads a bare off as false").isEqualTo(NodeSettings.GOSSIP_OFF);
-        assertThat(node("\"off\"").config().node().gossipPort()).isEqualTo(NodeSettings.GOSSIP_OFF);
-        assertThat(node("18790").config().node().gossipPort()).isEqualTo(18790);
-        NetFolder.Loaded bad = node("near");
+    void theClusterPortIs7946ByDefaultAndANumberWhenSet() {
+        assertThat(node(null).config().node().clusterPort()).isEqualTo(7946);
+        assertThat(node(null).config().node().agreementPort()).isEqualTo(7947);
+        assertThat(node("cluster-port: 18790").config().node().clusterPort()).isEqualTo(18790);
+        assertThat(node("cluster-port: auto").refused("node.yaml")).as("seeds are dialled: a number").isTrue();
+        assertThat(node("cluster-port: 70000").refused("node.yaml")).isTrue();
+        assertThat(node("cluster-port: 7946\nagreement-port: 7946").refused("node.yaml")).isTrue();
+    }
+
+    @Test
+    void theGossipPortIsRefusedNamingTheClusterPort() {
+        NetFolder.Loaded bad = node("gossip-port: auto");
         assertThat(bad.refused("node.yaml")).isTrue();
         assertThat(bad.problems().get("node.yaml")).anySatisfy(p -> {
             assertThat(p.field()).isEqualTo("gossip-port");
-            assertThat(p.message()).contains("is not auto, off or a port number");
+            assertThat(p.message()).contains("cluster-port");
         });
-        assertThat(node("70000").refused("node.yaml")).isTrue();
+    }
+
+    @Test
+    void seedsAreHostAndClusterPortOnRealAddresses() {
+        assertThat(node("seeds: [192.0.2.11:7946, 192.0.2.12:7946]").config().node().seeds()).containsExactly("192.0.2.11:7946", "192.0.2.12:7946");
+        assertThat(node("seeds: [127.0.0.1:7946]").refused("node.yaml")).isTrue();
+        assertThat(node("seeds: [192.0.2.11]").refused("node.yaml")).as("no port").isTrue();
     }
 
     @Test
@@ -79,18 +91,16 @@ class TransportSettingsTest {
     }
 
     @Test
-    void aMembersGossipPortTravelsAndAnOlderNodesEntryHasNone() throws Exception {
-        Member m = new Member("n-1", "http://192.0.2.10:18783", 1, 5, MemberState.ALIVE, "", "2.6.7", Member.PROTOCOL, List.of(), 0, false, 41234);
-        assertThat(m.gossipUrl()).isEqualTo("http://192.0.2.10:41234");
+    void aMembersVitalsTravelWholeAndAGossipEraEntryReadsAsProtocolOne() throws Exception {
+        Member m = new Member("n-1", "http://192.0.2.10:18783", MemberState.ALIVE, "h1", "2.9.11", Member.PROTOCOL, List.of("region:emea"), 0, false,
+                "192.0.2.10:7946", "s1", "server");
         Member back = JSON.readValue(JSON.writeValueAsBytes(m), Member.class);
         assertThat(back).isEqualTo(m);
-        assertThat(back.withHeartbeat(6).gossipPort()).isEqualTo(41234);
-        // an entry from a node of before 2.6.7: no gossipPort, gossip goes to its server port
+        assertThat(JSON.writeValueAsBytes(m).length).as("vitals fit the channel's 4 KB").isLessThan(1024);
         String old = "{\"nodeId\":\"n-2\",\"url\":\"https://192.0.2.11:8480\",\"incarnation\":1,\"heartbeat\":3,\"state\":\"alive\",\"digestHash\":\"\","
-                + "\"version\":\"2.6.6\",\"protocol\":1,\"tags\":[],\"since\":0,\"drained\":false}";
+                + "\"version\":\"2.6.6\",\"protocol\":1,\"tags\":[],\"since\":0,\"drained\":false,\"gossipPort\":41234}";
         Member older = JSON.readValue(old, Member.class);
-        assertThat(older.gossipPort()).isZero();
-        assertThat(older.gossipUrl()).isEqualTo("https://192.0.2.11:8480");
-        assertThat(Member.gossipUrl("https://[2001:db8::1]:8480", 9000)).isEqualTo("https://[2001:db8::1]:9000");
+        assertThat(older.protocol()).isEqualTo(1);
+        assertThat(older.routable()).as("a node of protocol 1 is listed, never routed to").isFalse();
     }
 }

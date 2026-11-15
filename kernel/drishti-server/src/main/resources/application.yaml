@@ -264,7 +264,7 @@ drishti:
     plugins: news,yfinance,feed      # the public-data feed plugin too (US Treasury, ECB, NY Fed, FRED: market-data pack)
   net:
     # Drishti*net (docs/guides/OPERATIONS_GUIDE.md): several servers as one. OFF unless <dir>/node.yaml says enabled: true; without the folder
-    # this server is a single server exactly as before. Everything else (this node, its seed peers, gossip timings, routing,
+    # this server is a single server exactly as before. Everything else (this node, its seeds and cluster port, routing,
     # nodes per role) is in the files of that folder, managed like connector files (Admin -> Cluster, drishti.py net), never here.
     dir: ${DRISHTI_NET_DIR:${drishti.config.dir}/net}     # created on first write; ready-made files in config/net.examples/
     watch: ${DRISHTI_NET_WATCH:auto}         # auto (file events, polling as a fallback) | poll | off
@@ -277,7 +277,7 @@ drishti:
       engines: true                  # DOWN while an enabled engine's (VaR, exposure) newest date is not open here; the check opens it
       shards: true                   # DOWN while a VaR shard this member owns of a date in use is not ready here
     drain:                           # the drain before a stop: POST /api/v1/admin/node/drain, Admin -> Cluster "Drain for a stop", the stop hooks
-      settle-seconds: 5              # after the drain, how long until no peer forwards work here (the flag reaches every peer by gossip)
+      settle-seconds: 5              # after the drain, how long until no peer forwards work here (the flag reaches every peer in the vitals)
   sources:
     # Longest a single source read may take before the view shows the entity as unavailable (DRS-1004), and a panel's own source
     # (another pack's data, for example) before the panel shows that it failed. 10 s: the first read of a business date on a large

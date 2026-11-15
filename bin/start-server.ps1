@@ -47,10 +47,11 @@ the native memory settings and the logs under the data folder, waits for /actuat
 
  A cluster node (docs\guides\CLUSTER_GUIDE.md):
   --node NAME         the node's id; its pid, log and temp folder are named after it, so several run on one machine
-  --node-dir DIR      the node's Drishti*net folder (node.yaml, gossip.yaml, peers\); default <data>\nodes\<node>\net, made when missing
+  --node-dir DIR      the node's Drishti*net folder (node.yaml, routing.yaml, access.yaml); default <data>\nodes\<node>\net, made when missing
   --node-data DIR     the node's own data folder (the server's DRISHTI_DATA_DIR); default <data>. Several nodes on one machine each
                       need their own: e.g. <data>\nodes\<node>\data
-  --seed HOST:PORT    a member to join through (repeatable, or comma-separated): written to <node-dir>\peers\ when not there yet
+  --seed HOST:PORT    a member to join through, host:cluster-port (repeatable, or comma-separated; port 7946 when left out): given to the
+                      node as [net.cluster] seeds (NET_CLUSTER_SEEDS); node.yaml's own seeds: win
   --advertise IP      the address the node advertises (default this machine's real LAN address; never 127.0.0.1, localhost, 0.0.0.0)
 
   -h, --help          this text
@@ -197,7 +198,7 @@ $header = (Get-Content -LiteralPath $PSCommandPath -TotalCount 13) -join "`r`n"
 $urlHost = Get-LanIp
 if ($node) {
     $nodeDir = Opt $o 'nodedir' (Join-Path $data "nodes\$node\net")
-    New-Item -ItemType Directory -Force -Path (Join-Path $nodeDir 'peers') | Out-Null
+    New-Item -ItemType Directory -Force -Path $nodeDir | Out-Null
     $nodeDir = (Resolve-Path $nodeDir).Path
     $nodeYaml = Join-Path $nodeDir 'node.yaml'
     if (-not (Test-Path $nodeYaml)) {
@@ -207,16 +208,16 @@ if ($node) {
             'secret: ${DRISHTI_NET_SECRET}')
         Write-Host "${node}: made $nodeYaml"
     }
+    $seeds = @()
     foreach ($seed in @($o['seed'] | Where-Object { $_ } | ForEach-Object { $_ -split ',' } | Where-Object { $_ })) {
         $s = ($seed -replace '^https?://', '').TrimEnd('/')
-        if ($s -notmatch ':') { $s = "${s}:$($script:DefaultServerPort)" }
+        if ($s -notmatch ':') { $s = "${s}:7946" }
         if (Test-LoopbackOrWildcard ($s -replace ':\d+$', '')) { Fail "--seed ${s}: a seed is named by its real address, never a loopback or wildcard one" 2 }
-        $known = @(Get-ChildItem -Path (Join-Path $nodeDir 'peers') -Filter '*.yaml' | Where-Object { (Get-Content $_.FullName -Raw) -match [regex]::Escape($s) })
-        if ($known.Count -eq 0) {
-            $file = Join-Path $nodeDir ("peers\seed-" + ($s -replace '[:.]', '-') + '.yaml')
-            Set-Content -LiteralPath $file -Encoding UTF8 -Value @($header, "# A seed of $node (bin\start-server.ps1 --seed).", "url: http://$s")
-            Write-Host "${node}: seed $s written to $file"
-        }
+        $seeds += $s
+    }
+    if ($seeds.Count -gt 0) {
+        $env:NET_CLUSTER_SEEDS = ($seeds -join ',')
+        Write-Host "${node}: seeds $($env:NET_CLUSTER_SEEDS) ([net.cluster] seeds)"
     }
     $urlHost = Get-AdvertiseHost (Opt $o 'advertise')
     $env:DRISHTI_ADVERTISE_HOST = $urlHost

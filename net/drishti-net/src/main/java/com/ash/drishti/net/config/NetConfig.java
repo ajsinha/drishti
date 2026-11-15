@@ -18,16 +18,21 @@ package com.ash.drishti.net.config;
 import java.util.List;
 
 /**
- * Everything {@code config/net/} says, as one immutable snapshot: swapped whole when a file changes, so a request or a gossip
- * round always reads one consistent set of settings.
+ * Everything {@code config/net/} and the settings file's cluster sections say, as one immutable snapshot: swapped whole when a file
+ * changes, so a request or a membership change always reads one consistent set of settings.
+ *
+ * @param node {@code node.yaml} (with the keys it leaves out taken from {@code [net.node]} and {@code [net.cluster]})
+ * @param routing {@code routing.yaml}
+ * @param access {@code access.yaml}
+ * @param cluster the settings file's {@code [net.*]} sections (timings, agreement, TLS, engine calls)
  */
-public record NetConfig(NodeSettings node, List<SeedPeer> peers, GossipSettings gossip, RoutingSettings routing, AccessSettings access) {
+public record NetConfig(NodeSettings node, RoutingSettings routing, AccessSettings access, ClusterSettings cluster) {
 
     /** No folder, or a folder that switches nothing on: a single server, exactly as without Drishti*net. */
-    public static final NetConfig OFF = new NetConfig(NodeSettings.OFF, List.of(), GossipSettings.DEFAULTS, RoutingSettings.DEFAULTS, AccessSettings.OPEN);
+    public static final NetConfig OFF = new NetConfig(NodeSettings.OFF, RoutingSettings.DEFAULTS, AccessSettings.OPEN, ClusterSettings.DEFAULTS);
 
     public NetConfig {
-        peers = peers == null ? List.of() : List.copyOf(peers);
+        cluster = cluster == null ? ClusterSettings.DEFAULTS : cluster;
     }
 
     public boolean enabled() {
@@ -35,27 +40,19 @@ public record NetConfig(NodeSettings node, List<SeedPeer> peers, GossipSettings 
     }
 
     public NetConfig withNode(NodeSettings n) {
-        return new NetConfig(n, peers, gossip, routing, access);
-    }
-
-    public NetConfig withPeers(List<SeedPeer> p) {
-        return new NetConfig(node, p, gossip, routing, access);
-    }
-
-    public NetConfig withGossip(GossipSettings g) {
-        return new NetConfig(node, peers, g, routing, access);
+        return new NetConfig(n, routing, access, cluster);
     }
 
     public NetConfig withRouting(RoutingSettings r) {
-        return new NetConfig(node, peers, gossip, r, access);
+        return new NetConfig(node, r, access, cluster);
     }
 
     public NetConfig withAccess(AccessSettings a) {
-        return new NetConfig(node, peers, gossip, routing, a);
+        return new NetConfig(node, routing, a, cluster);
     }
 
-    /** The seed urls, in file-name order. */
-    public List<String> seedUrls() {
-        return peers.stream().map(SeedPeer::url).filter(u -> !u.isBlank()).toList();
+    /** The seeds ({@code host:port} of cluster ports), as node.yaml or {@code [net.cluster] seeds} names them. */
+    public List<String> seeds() {
+        return node.seeds();
     }
 }

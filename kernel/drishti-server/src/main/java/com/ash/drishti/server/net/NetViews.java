@@ -18,7 +18,7 @@ package com.ash.drishti.server.net;
 import com.ash.drishti.net.config.NetSchema;
 import com.ash.drishti.net.member.Member;
 import com.ash.drishti.net.member.MemberState;
-import com.ash.drishti.net.member.MemberTable;
+import com.ash.drishti.net.member.MemberDirectory;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -127,9 +127,9 @@ public final class NetViews {
         out.put("node", node());
         List<Map<String, Object>> rows = new ArrayList<>();
         net.node().ifPresent(n -> {
-            Member self = n.table().self();
+            Member self = n.members().self();
             rows.add(row(self, null, true));
-            n.table().others().stream().sorted(java.util.Comparator.comparing(k -> k.member().nodeId())).forEach(k -> rows.add(row(k.member(), k, false)));
+            n.members().others().stream().sorted(java.util.Comparator.comparing(k -> k.member().nodeId())).forEach(k -> rows.add(row(k.member(), k, false)));
         });
         out.put("members", rows);
         Map<String, Long> counts = new LinkedHashMap<>();
@@ -137,8 +137,9 @@ public final class NetViews {
             counts.put(s.wire(), rows.stream().filter(r -> s.wire().equals(r.get("state"))).count());
         }
         out.put("counts", counts);
-        out.put("seeds", net.config().peers().stream().map(p -> Map.of("name", p.name(), "url", p.url(), "tags", p.tags())).toList());
-        out.put("peersFile", Map.of("path", net.peersFile().toString(), "savedAt", net.lastSaved() == 0 ? "" : Instant.ofEpochMilli(net.lastSaved()).toString()));
+        out.put("seeds", net.config().seeds());
+        out.put("view", net.node().map(n -> n.members().viewId()).orElse(0L));
+        out.put("membersFile", Map.of("path", net.membersFile().toString(), "savedAt", net.lastSaved() == 0 ? "" : Instant.ofEpochMilli(net.lastSaved()).toString()));
         out.put("problems", net.loaded().all().stream().map(NetViews::problem).toList());
         out.put("userState", userState.get());
         return out;
@@ -164,24 +165,26 @@ public final class NetViews {
         m.put("keySet", net.key().set());
         m.put("previousKeySet", net.key().previousSet());
         m.put("version", net.version());
-        m.put("drained", net.node().map(n -> n.table().self().drained()).orElse(false));
-        m.put("leaving", net.node().map(n -> n.table().self().state() == MemberState.LEFT).orElse(false));
+        m.put("drained", net.node().map(n -> n.members().self().drained()).orElse(false));
+        m.put("leaving", net.node().map(n -> n.members().self().state() == MemberState.LEFT).orElse(false));
         m.put("dir", net.folder().dir().toString());
         m.put("watch", net.watchState());
-        m.put("gossip", Map.of("interval", NetSchema.text(c.gossip().interval()), "fanout", c.gossip().fanout(),
-                "suspectAfter", NetSchema.text(c.gossip().suspectAfter()), "deadAfter", NetSchema.text(c.gossip().deadAfter()),
-                "rounds", net.node().map(n -> n.gossiper().rounds()).orElse(0L), "exchangesFailed", net.node().map(n -> n.gossiper().exchangesFailed()).orElse(0L)));
+        var t = c.cluster().membership();
+        m.put("membership", Map.of("cluster", c.cluster().cluster().name(), "clusterPort", c.node().clusterPort(), "role", c.node().role(),
+                "heartbeat", NetSchema.text(t.heartbeat()), "suspectAfter", NetSchema.text(t.suspectAfter()), "verify", NetSchema.text(t.verify()),
+                "view", net.node().map(n -> n.members().viewId()).orElse(0L), "viewChanges", net.viewChanges(),
+                "tls", c.cluster().tls().configured()));
         return m;
     }
 
-    private Map<String, Object> row(Member m, MemberTable.Known k, boolean self) {
+    private Map<String, Object> row(Member m, MemberDirectory.Known k, boolean self) {
         Map<String, Object> r = new LinkedHashMap<>();
         r.put("nodeId", m.nodeId());
         r.put("self", self);
         r.put("url", m.url());
         r.put("state", m.state().wire());
-        r.put("incarnation", m.incarnation());
-        r.put("heartbeat", m.heartbeat());
+        r.put("clusterAddress", m.clusterAddress());
+        r.put("role", m.role());
         r.put("version", m.version());
         r.put("protocol", m.protocol());
         r.put("tags", m.tags());
@@ -199,8 +202,8 @@ public final class NetViews {
         List<Map<String, Object>> out = new ArrayList<>();
         net.node().ifPresent(n -> {
             List<Member> list = new ArrayList<>();
-            list.add(n.table().self());
-            list.addAll(n.table().entries().subList(1, n.table().entries().size()));
+            list.add(n.members().self());
+            list.addAll(n.members().entries().subList(1, n.members().entries().size()));
             for (Member m : list) {
                 Map<String, Object> r = new LinkedHashMap<>();
                 r.put("nodeId", m.nodeId());

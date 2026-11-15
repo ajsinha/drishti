@@ -42,7 +42,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
  * replay, and a bad one is refused with 401 {@code DRS-5051} and listed on Admin → Net → Security. A good one is marked as
  * coming from that node; when it carries an on-behalf-of token (a forwarded request), the token is checked (signed with the
  * key, for this node, 30 s) and the request runs as that user, provided the user's roles may reach this node
- * ({@code access.yaml}) and this node is not drained. The cluster's own endpoints (gossip, ping, digest, fetch, the scattered
+ * ({@code access.yaml}) and this node is not drained. The cluster's own endpoints (ping, digest, fetch, the scattered
  * search) are only ever a node's: without a signature they are refused, and while the cluster is off they do not exist.
  *
  * <p>Runs before the token filter, which then takes the principal set here instead of asking for a bearer token.
@@ -54,7 +54,7 @@ public final class NetCallFilter extends OncePerRequestFilter {
     /** Request attribute: the verified on-behalf-of claims of a forwarded call. */
     public static final String CLAIMS = "drishti.net.claims";
     /** The endpoints only a node may call. */
-    static final Set<String> NODE_ONLY = Set.of("gossip", "ping", "digest", "fetch", "search", "suggest", "state", "subscribe", "reverse", "group", "history",
+    static final Set<String> NODE_ONLY = Set.of("ping", "digest", "fetch", "search", "suggest", "state", "subscribe", "reverse", "group", "history",
             "switches", "edits", "pivot", "placement", "modules");
     private static final int MAX_BODY = 16 * 1024 * 1024;
 
@@ -98,7 +98,7 @@ public final class NetCallFilter extends OncePerRequestFilter {
             chain.doFilter(req, res);
             return;
         }
-        if (!net.running() && !("gossip".equals(endpoint) && net.node().isPresent())) {
+        if (!net.running()) {
             problem(res, 404, "DRS-5050", Branding.netName() + " is off on this node");
             return;
         }
@@ -127,7 +127,7 @@ public final class NetCallFilter extends OncePerRequestFilter {
                 problem(res, 401, "DRS-5051", e.getMessage());
                 return;
             }
-            var self = net.node().map(n -> n.table().self()).orElse(null);
+            var self = net.node().map(n -> n.members().self()).orElse(null);
             if (self != null && !net.config().access().reaches(c.roles(), self.nodeId(), self.tags())) {
                 problem(res, 403, "DRS-5054", "the roles " + c.roles() + " may not reach node " + self.nodeId() + " (access.yaml)");
                 return;

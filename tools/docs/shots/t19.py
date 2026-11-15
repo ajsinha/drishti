@@ -20,7 +20,7 @@ Run it on its own, with the console's address:
 
     DRISHTI_SHOTS_WORK=~/drishti drishti-console/.venv/bin/python tools/docs/screenshots.py --guide t19 --base http://127.0.0.1:17784
 
-The pictures, in the tutorial's order: Members with the three alive (the table and the hash ring) and the console's servers, the Files tab with gossip.yaml open, a trade only
+The pictures, in the tutorial's order: Members with the three alive (the table and the hash ring) and the console's servers, the Files tab with routing.yaml open, a trade only
 c holds opened through a, Explain naming that route, the capability map, Access, Security, and the console's servers after a is stopped (the
 last picture stops a, so it runs last). The scratch folder's path is shown as ~/drishti, as the tutorial writes it."""
 from __future__ import annotations
@@ -78,14 +78,14 @@ def members(c: Ctx):
     elem_shot(c, "02-console-servers.jpg", "[data-console-servers]", pad=12)
 
 
-@shot("03-files-gossip.jpg")
+@shot("03-files-routing.jpg")
 def files(c: Ctx):
     net(c, "files", "[data-file-list]")
-    c.page.locator("[data-file='gossip.yaml']").click()
+    c.page.locator("[data-file='routing.yaml']").click()
     c.page.locator("[data-editor]").wait_for(state="visible")
     c.page.wait_for_timeout(600)
     tidy(c)
-    elem_shot(c, "03-files-gossip.jpg", "#netPaneFiles", pad=12)
+    elem_shot(c, "03-files-routing.jpg", "#netPaneFiles", pad=12)
 
 
 @shot("04-trade-on-c-through-a.jpg")

@@ -28,7 +28,7 @@ import java.util.Optional;
 
 /**
  * What a node offers (CLUSTER_GUIDE.md › Drishti*net: many servers, one Drishti, section 6), published at {@code GET /api/v1/net/digest} and pulled by peers when the
- * {@link #hash()} gossiped with the member entry changes. The hash leaves out the load and the build time, which move all the time,
+ * {@link #hash()} published in the member's vitals changes. The hash leaves out the load and the build time, which move all the time,
  * so a peer pulls the digest again only when what the node serves changed: a pack, a kind, a source, a data version, a setting.
  *
  * @param nodeId who
@@ -41,7 +41,7 @@ import java.util.Optional;
  * @param calendar the business calendar ({@code DRISHTI_CALENDAR}): an as-of date must mean the same day on both nodes
  * @param tags the node's tags
  * @param redact the field names this node masks ({@code drishti.security.redact}), for the warning that two nodes differ
- * @param access nodes per role as this node's access.yaml says, gossiped so Admin → Net can show where they differ
+ * @param access nodes per role as this node's access.yaml says, published so Admin → Net can show where they differ
  * @param reports the BI report ids this node serves (a report on a model held elsewhere is answered there)
  * @param builtAt when it was built (epoch milliseconds)
  * @param services the state of the cluster services the node runs, by name, each as compact text (2.9.6: {@code var-shards}, the VaR
@@ -132,7 +132,7 @@ public record Digest(String nodeId, String url, String version, int protocol, Li
         services = services == null ? Map.of() : Map.copyOf(services);
     }
 
-    /** The hash gossiped with the member entry: everything but the load and the build time. */
+    /** The hash published in the member's vitals: everything but the load and the build time. */
     @JsonIgnore
     public String hash() {
         try {

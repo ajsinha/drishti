@@ -37,7 +37,7 @@ import org.junit.jupiter.api.TestMethodOrder;
  * each hold a copy of the Delta test lake (trade T-1 on 2026-09-28 to 30; two tables, so neither is the other's replica); C has the finance
  * pack and an empty lake, so it reads every history from A or B.
  * <ol>
- * <li>B's port refuses connections while its gossip goes on (a node that just died, or one not serving yet): a history A answers itself
+ * <li>B's port refuses connections while its membership goes on (a node that just died, or one not serving yet): a history A answers itself
  * over a calendar window from 09-01 is complete, since B's data starts on 09-28; C's histories come from A, complete.</li>
  * <li>B is gone: the same calendar window on A is still complete ({@code partial: false}, no DRS-5052): B could hold only 09-28 to 30.</li>
  * <li>A's port refuses connections too: C answers 502 DRS-5052 naming the nodes, never DRS-1003.</li>
@@ -119,8 +119,8 @@ class NetPeerDownTest {
         complete("a", "T-1", "2026-09-01");                                     // all up: the reference answer
         cluster.closePort("b");
         String bid = cluster.node("b").net().nodeId();
-        // B still gossips (alive to its peers) but refuses connections: SOAK-02 and SOAK-03's window
-        assertThat(cluster.node("a").net().node().orElseThrow().table().known(bid).map(k -> k.member().routable()).orElse(false)).isTrue();
+        // B is still in the view (alive to its peers) but refuses connections: SOAK-02 and SOAK-03's window
+        assertThat(cluster.node("a").net().node().orElseThrow().members().known(bid).map(k -> k.member().routable()).orElse(false)).isTrue();
         for (int i = 0; i < 3; i++) {
             complete("a", "T-1", "2026-09-01");          // A asks B for 09-01 to 09-25: refused, but B holds only 09-28 to 30
             complete("c", "T-1", "2026-09-28");          // C asks B or A: a refusal passes to the next holder
@@ -133,7 +133,7 @@ class NetPeerDownTest {
     void aCompleteCalendarHistoryIsNotMarkedPartialWhileANodeIsDown() throws Exception {
         String bid = cluster.node("b").net().nodeId();
         cluster.stop("b");
-        assertThat(NetNodes.await(10_000, () -> cluster.node("a").net().node().orElseThrow().table().known(bid)
+        assertThat(NetNodes.await(10_000, () -> cluster.node("a").net().node().orElseThrow().members().known(bid)
                 .map(k -> !k.member().routable()).orElse(true))).isTrue();
         // SOAK-01: before, partial with "DRS-5052 … b (dead): 19 days of the window may be held there", all before B's first day
         complete("a", "T-1", "2026-09-01");

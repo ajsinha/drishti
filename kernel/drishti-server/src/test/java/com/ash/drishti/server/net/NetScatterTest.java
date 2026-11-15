@@ -140,7 +140,7 @@ class NetScatterTest {
     void withCStoppedTheAnswerIsPartialAndNamesC() throws Exception {
         String cid = cluster.node("c").net().nodeId();
         cluster.stop("c");
-        assertThat(NetNodes.await(3_000, () -> cluster.node("b").net().node().orElseThrow().table().known(cid)
+        assertThat(NetNodes.await(3_000, () -> cluster.node("b").net().node().orElseThrow().members().known(cid)
                 .map(k -> k.member().state().gone()).orElse(false))).isTrue();
         JsonNode answer = search("b", "TRD limit 100");
         assertThat(answer.path("partial").asBoolean()).isTrue();

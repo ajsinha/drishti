@@ -18,7 +18,7 @@ package com.ash.drishti.server.switches;
 import com.ash.drishti.identity.SwitchLedger;
 import com.ash.drishti.net.member.Member;
 import com.ash.drishti.net.member.MemberState;
-import com.ash.drishti.net.member.MemberTable;
+import com.ash.drishti.net.member.MemberDirectory;
 import com.ash.drishti.net.transport.PeerHttp;
 import com.ash.drishti.server.net.NetService;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -35,10 +35,10 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Spreads the switches ledger across Drishti*net (docs/guides/ADMIN_GUIDE.md, "Several servers"). The ledger's hash rides this node's member
- * entry in gossip; every {@link #LOOK_MS} this node compares it with each live peer's, and pulls the entries of a peer whose hash differs
+ * vitals; every {@link #LOOK_MS} this node compares it with each live peer's, and pulls the entries of a peer whose hash differs
  * ({@code GET /api/v1/net/switches}, signed) and merges them: the newer by (stamp, node) wins, written to this node's database before it
  * takes effect. Both sides of a difference pull, so a node that rejoins after missing changes, or one that changed something while it was
- * cut off, converges with the others within a gossip round or two (anti-entropy on join and rejoin). Without the cluster the ledger is
+ * cut off, converges with the others within a second or two (anti-entropy on join and rejoin). Without the cluster the ledger is
  * simply the node's own.
  */
 public final class SwitchSync implements AutoCloseable {
@@ -98,7 +98,7 @@ public final class SwitchSync implements AutoCloseable {
         net.switchesHash(ledger.hash());
         int applied = 0;
         long now = System.currentTimeMillis();
-        for (MemberTable.Known k : n.table().others()) {
+        for (MemberDirectory.Known k : n.members().others()) {
             Member m = k.member();
             if (m.state() != MemberState.ALIVE || m.protocol() != Member.PROTOCOL || m.switchesHash().isBlank()
                     || m.switchesHash().equals(ledger.hash()) || now - pulledAt.getOrDefault(m.nodeId(), 0L) < RETRY_MS) {
@@ -115,7 +115,7 @@ public final class SwitchSync implements AutoCloseable {
                 applied += got.size();
             }
         }
-        pulledAt.keySet().removeIf(id -> n.table().known(id).isEmpty());
+        pulledAt.keySet().removeIf(id -> n.members().known(id).isEmpty());
         return applied;
     }
 

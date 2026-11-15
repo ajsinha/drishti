@@ -58,7 +58,7 @@ Open `/v/trade/10000001` on the console: the trade is held by `drishti-b` only, 
 | File | Checked in | What it is |
 |---|---|---|
 | `stack.yaml` | yes | the nodes (port, heap, packs, lake, connectors switched off), the lakes, the shared settings and the console. `bin/start-cluster` reads it |
-| `nodes/<node>/net/` | yes | each node's Drishti*net folder: `node.yaml` (its id, its address as `http://${DRISHTI_STACK_HOST}:<port>` and `secret: ${DRISHTI_NET_SECRET}`, references, never the key or this machine's IP), `gossip.yaml`, `peers/` (the seed) |
+| `nodes/<node>/net/` | yes | each node's Drishti*net folder: `node.yaml` (its id, its address as `http://${DRISHTI_STACK_HOST}:<port>` and `secret: ${DRISHTI_NET_SECRET}`, references, never the key or this machine's IP; its `cluster-port`, and the seed's cluster address in `seeds`) |
 | `secrets.env.example` | yes | the names of the secrets, no values |
 | `secrets.env` | **no** (git-ignored) | the secrets themselves, mode 600 |
 | `../../data/run/`, `../../data/logs/` | **no** (`data/` is git-ignored) | the process ids (`server-<node>.pid`, `console.pid`) and the logs (`server-<node>.log`, `console.log`), where `bin/` keeps them |
@@ -97,7 +97,8 @@ bin/stop-cluster.sh drishti-b
 bin/start-cluster.sh drishti-b
 ```
 
-The others see it `suspect` after 3 s and `dead` after 10 s (`gossip.yaml`), and `alive` again a second after it is back. A request for its
+The others drop it from the view at once when it stops cleanly, and within about 4 s when it is killed (`membership:` in `stack.yaml`: a
+heartbeat every second, suspected after 3 s, verified in 1 s); it is `alive` again as soon as it rejoins. A request for its
 trades meanwhile answers "the node that holds it is down", never "not found". `console` is a name too: `bin/stop-cluster.sh console`, `bin/start-cluster.sh console`.
 
 ## Add a node

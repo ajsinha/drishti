@@ -28,7 +28,7 @@ import org.junit.jupiter.api.Test;
  * Engines per node in a cluster (ADMIN_GUIDE.md section 9, EngineClusterTest): FRTB-SA runs on a only; b's digest knows it, b's about
  * answer offers it (available in the cluster, not here) and b's FRTB-SA request is answered by a, the same figures, the node named; an
  * administrator on b turns a's FRTB-SA off (signed, written by a to its own file, audited on both); then b answers 404 DRS-1020 within a
- * gossip round or two.
+ * second or two.
  */
 class EngineClusterTest {
 

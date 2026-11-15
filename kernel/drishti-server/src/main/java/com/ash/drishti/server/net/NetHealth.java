@@ -27,7 +27,7 @@ import java.util.Map;
 /**
  * Drishti*net on Admin → Health and in the metrics (CLUSTER_GUIDE.md › Drishti*net: many servers, one Drishti, section 13): the members in each state, the requests forwarded to
  * peers and those that failed over the last ten minutes; the meters {@code drishti.net.members} (state) and
- * {@code drishti.net.gossip.rounds} beside the forwarding meters of {@link ForwardLog}; and the warnings: an enabled administrator kept
+ * {@code drishti.cluster.view.changes} (CLUSTER_I5_DESIGN.md section 11.3) beside the forwarding meters of {@link ForwardLog}; and the warnings: an enabled administrator kept
  * because peers' changes made at the same moment would have left none ({@link IdentitySync#warnings()}).
  */
 public final class NetHealth {
@@ -50,12 +50,8 @@ public final class NetHealth {
                 Gauge.builder("drishti.net.members", this, h -> h.count(s)).description(Branding.netName() + " members in a state, this node included")
                         .tag("state", s.wire()).register(meters);
             }
-            FunctionCounter.builder("drishti.net.gossip.rounds", net, n -> n.node().map(x -> x.gossiper().rounds()).orElse(0L))
-                    .description("Gossip rounds this node has run").register(meters);
-            io.micrometer.core.instrument.FunctionTimer.builder("drishti.net.gossip.exchange", net,
-                    n -> n.node().map(x -> x.gossiper().exchangesDone()).orElse(0L),
-                    n -> n.node().map(x -> x.gossiper().exchangeNanos()).orElse(0L).doubleValue(), java.util.concurrent.TimeUnit.NANOSECONDS)
-                    .description("Gossip exchanges this node made that answered, and their time (the control lane, 2.6.7)").register(meters);
+            FunctionCounter.builder("drishti.cluster.view.changes", net, NetService::viewChanges)
+                    .description("Agreed views this node has installed since it started").register(meters);
         }
     }
 
@@ -68,7 +64,7 @@ public final class NetHealth {
     }
 
     private double count(MemberState s) {
-        return net.node().map(n -> n.table().entries().stream().filter(m -> m.state() == s).count()).orElse(0L);
+        return net.node().map(n -> n.members().entries().stream().filter(m -> m.state() == s).count()).orElse(0L);
     }
 
     /** The section of Admin → Health. */
@@ -84,9 +80,10 @@ public final class NetHealth {
             states.put(s.wire(), (long) count(s));
         }
         out.put("members", states);
-        out.put("drained", net.node().map(n -> n.table().self()).map(Member::drained).orElse(false));
-        // 2.6.7: gossip on its own port (0: the server's port) and the protocol peer data goes over
-        out.put("gossipPort", net.node().map(n -> n.table().self().gossipPort()).orElse(0));
+        out.put("drained", net.node().map(n -> n.members().self()).map(Member::drained).orElse(false));
+        // the membership's port and view, and the protocol peer data goes over
+        out.put("clusterPort", net.config().node().clusterPort());
+        out.put("view", net.node().map(n -> n.members().viewId()).orElse(0L));
         out.put("peerProtocol", net.config().routing().peerProtocol());
         out.put("last10Minutes", log.totals(10));
         IdentitySync id = identity.get();

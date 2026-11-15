@@ -34,9 +34,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
 /**
- * Three real servers in one JVM gossiping over signed HTTP (phase N1, and N3's "a node without the key is refused"): they find
- * each other from one seed, a drain and a leave spread, peers.json is written, a call without the key or with another key is
- * refused and listed, and the files are edited through the API with their version check.
+ * Three real servers in one JVM, members of one cluster over the membership channel (JGroups, TCP only; CLUSTER_I5_DESIGN.md step C2) and
+ * calling each other over signed HTTP: they find each other from one seed, a drain and a leave spread in their vitals, members.json is
+ * written, a call without the key or with another key is refused and listed, and the files are edited through the API with their version
+ * check.
  */
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class NetMembershipTest {
@@ -65,7 +66,7 @@ class NetMembershipTest {
     }
 
     private static List<String> alive(String node) {
-        return cluster.node(node).net().node().map(n -> n.table().alive().stream().map(Member::nodeId).toList()).orElse(List.of());
+        return cluster.node(node).net().node().map(n -> n.members().alive().stream().map(Member::nodeId).toList()).orElse(List.of());
     }
 
     @Test
@@ -77,7 +78,11 @@ class NetMembershipTest {
         var r = cluster.call("GET", cluster.node("b").url() + "/api/v1/net/members", null);
         assertThat(r.statusCode()).isEqualTo(200);
         assertThat(r.body()).contains("\"running\":true").contains("region:apac").doesNotContain(NetNodes.KEY);
-        assertThat(NetNodes.await(5_000, () -> Files.exists(root.resolve("b/data/net/peers.json")))).isTrue();
+        assertThat(NetNodes.await(5_000, () -> Files.exists(root.resolve("b/data/net/members.json")))).isTrue();
+        assertThat(Files.exists(root.resolve("b/data/net/peers.json"))).as("the gossip-era file is never written").isFalse();
+        long view = cluster.node("a").net().node().orElseThrow().members().viewId();
+        assertThat(NetNodes.await(5_000, () -> cluster.node("b").net().node().orElseThrow().members().viewId() == view
+                && cluster.node("c").net().node().orElseThrow().members().viewId() == view)).as("one agreed view").isTrue();
         assertThat(Files.readString(root.resolve("b/data/net/node-id")).trim()).isEqualTo(cluster.node("b").net().nodeId());
     }
 
@@ -85,7 +90,7 @@ class NetMembershipTest {
     @Order(2)
     void aCallWithoutTheKeyOrWithAnotherKeyIsRefusedAndListed() throws Exception {
         String a = cluster.node("a").url();
-        var plain = cluster.call("POST", a + "/api/v1/net/gossip", "{\"members\":[]}");
+        var plain = cluster.call("GET", a + "/api/v1/net/digest", null);
         assertThat(plain.statusCode()).isEqualTo(401);
         assertThat(plain.body()).contains("DRS-5051");
         ClusterKey other = new ClusterKey("someone-elses-cluster-key-32-bytes-long", "", System::currentTimeMillis);
@@ -136,16 +141,16 @@ class NetMembershipTest {
         String b = cluster.node("b").url();
         assertThat(cluster.call("POST", b + "/api/v1/net/drain", null).statusCode()).isEqualTo(200);
         String bid = cluster.node("b").net().nodeId();
-        assertThat(NetNodes.await(5_000, () -> cluster.node("a").net().node().orElseThrow().table().known(bid)
+        assertThat(NetNodes.await(5_000, () -> cluster.node("a").net().node().orElseThrow().members().known(bid)
                 .map(k -> k.member().drained()).orElse(false))).isTrue();
         assertThat(cluster.call("POST", b + "/api/v1/net/undrain", null).statusCode()).isEqualTo(200);
-        var file = cluster.call("GET", b + "/api/v1/net/file?id=gossip.yaml", null);
+        var file = cluster.call("GET", b + "/api/v1/net/file?id=routing.yaml", null);
         assertThat(file.statusCode()).isEqualTo(200);
         String etag = file.body().replaceAll("(?s).*\"etag\":\"([0-9a-f]+)\".*", "$1");
-        var refused = cluster.call("PUT", b + "/api/v1/net/file?id=gossip.yaml", "{\"text\":\"fanout: lots\\n\"}", "If-Match", etag);
+        var refused = cluster.call("PUT", b + "/api/v1/net/file?id=routing.yaml", "{\"text\":\"max-hops: lots\\n\"}", "If-Match", etag);
         assertThat(refused.statusCode()).isEqualTo(409);
-        assertThat(refused.body()).contains("fanout");
-        var stale = cluster.call("PUT", b + "/api/v1/net/file?id=gossip.yaml", "{\"text\":\"interval: 300ms\\nsuspect-after: 2s\\ndead-after: 4s\\n\"}",
+        assertThat(refused.body()).contains("max-hops");
+        var stale = cluster.call("PUT", b + "/api/v1/net/file?id=routing.yaml", "{\"text\":\"forward-timeout: 4s\\n\"}",
                 "If-Match", "0000000000000000");
         assertThat(stale.statusCode()).isEqualTo(409);
         var clear = cluster.call("PUT", b + "/api/v1/net/file?id=node.yaml", "{\"text\":\"enabled: true\\nsecret: " + NetNodes.KEY + "\\n\"}");
@@ -158,9 +163,9 @@ class NetMembershipTest {
     void aServerStoppingLeavesCleanlyAndTheOthersDropItAtOnce() throws Exception {
         String cid = cluster.node("c").net().nodeId();
         cluster.stop("c");
-        assertThat(NetNodes.await(3_000, () -> cluster.node("a").net().node().orElseThrow().table().known(cid)
+        assertThat(NetNodes.await(3_000, () -> cluster.node("a").net().node().orElseThrow().members().known(cid)
                 .map(k -> k.member().state() == MemberState.LEFT).orElse(false))).isTrue();
         assertThat(alive("a")).hasSize(1);
-        assertThat(Files.readString(root.resolve("c/data/net/peers.json"))).contains("\"state\" : \"left\"");
+        assertThat(Files.readString(root.resolve("c/data/net/members.json"))).contains("\"state\" : \"left\"");
     }
 }

@@ -75,19 +75,19 @@ public final class RunCluster implements AutoCloseable {
         if (node.equals(self())) {
             return true;
         }
-        return net.node().flatMap(n -> n.table().known(node)).map(k -> k.member().state() == MemberState.ALIVE).orElse(false);
+        return net.node().flatMap(n -> n.members().known(node)).map(k -> k.member().state() == MemberState.ALIVE).orElse(false);
     }
 
     /** The other members that are alive, in a stable order. */
     public List<String> peers() {
-        return net.node().map(n -> n.table().alive().stream().map(Member::nodeId).toList()).orElse(List.of());
+        return net.node().map(n -> n.members().alive().stream().map(Member::nodeId).toList()).orElse(List.of());
     }
 
     /** The directory of model owners over the members known now (rendezvous hashing; a member not alive owns nothing). */
     public ShardDirectory directory() {
         List<String> all = new ArrayList<>();
         all.add(self());
-        net.node().ifPresent(n -> n.table().others().forEach(k -> all.add(k.member().nodeId())));
+        net.node().ifPresent(n -> n.members().others().forEach(k -> all.add(k.member().nodeId())));
         return new ShardDirectory(self(), all, this::alive);
     }
 
@@ -97,7 +97,7 @@ public final class RunCluster implements AutoCloseable {
     }
 
     private Optional<String> url(String node) {
-        return net.node().flatMap(n -> n.table().known(node)).map(k -> k.member().url());
+        return net.node().flatMap(n -> n.members().known(node)).map(k -> k.member().url());
     }
 
     private Map<String, String> headers(String node, Principal p, String accept) {

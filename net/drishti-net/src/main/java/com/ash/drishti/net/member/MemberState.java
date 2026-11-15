@@ -20,23 +20,13 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.Locale;
 
 /**
- * Where a member stands, as gossip spreads it. At equal incarnation the worse state wins a merge
- * ({@code left} &gt; {@code dead} &gt; {@code suspect} &gt; {@code alive}): news of a failure is never undone by an older
- * "alive", only by the member itself raising its incarnation.
+ * Where a member stands (CLUSTER_I5_DESIGN.md section 3.1): {@code alive} while it is in the agreed view; {@code suspect} while the
+ * failure detector suspects it and the suspicion is being verified (it is still in the view); {@code dead} once it left the view without
+ * saying so (a crash, a cut-off); {@code left} once it left cleanly (its last vitals said it was leaving, or it was drained out). Dead
+ * and left members are remembered for {@code forget-after} for display and discovery, never routed to.
  */
 public enum MemberState {
-    ALIVE(0), SUSPECT(1), DEAD(2), LEFT(3);
-
-    private final int rank;
-
-    MemberState(int rank) {
-        this.rank = rank;
-    }
-
-    /** True when this state is worse than {@code other} (wins a merge at equal incarnation). */
-    public boolean worseThan(MemberState other) {
-        return rank > other.rank;
-    }
+    ALIVE, SUSPECT, DEAD, LEFT;
 
     /** Gone: a member a request is never sent to and that is forgotten after {@code forget-after}. */
     public boolean gone() {

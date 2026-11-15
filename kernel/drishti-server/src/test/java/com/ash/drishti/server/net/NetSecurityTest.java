@@ -70,7 +70,7 @@ class NetSecurityTest {
     }
 
     static long alive(String node) {
-        return cluster.node(node).net().node().map(n -> n.table().alive().size()).orElse(0);
+        return cluster.node(node).net().node().map(n -> n.members().alive().size()).orElse(0);
     }
 
     static void keys(String node, String secretVar, String previousVar) throws Exception {
@@ -171,7 +171,7 @@ class NetSecurityTest {
         var put = cluster.call("PUT", cluster.node("c").url() + "/api/v1/net/access", "{\"tags\":[\"region:apac\",\"tier:risk\"],\"peerOnlyPacks\":[]}");
         assertThat(put.statusCode()).isEqualTo(200);
         String cid = cluster.node("c").net().nodeId();
-        assertThat(NetNodes.await(5_000, () -> cluster.node("a").net().node().orElseThrow().table().known(cid)
+        assertThat(NetNodes.await(5_000, () -> cluster.node("a").net().node().orElseThrow().members().known(cid)
                 .map(k -> k.member().tags().contains("tier:risk")).orElse(false))).isTrue();
         assertThat(Files.readString(root.resolve("c/net/node.yaml"))).contains("${DRISHTI_NET_NEW_SECRET}").doesNotContain(NEW_KEY);
         var bad = cluster.call("PUT", cluster.node("c").url() + "/api/v1/net/access", "{\"tags\":[\"not a tag!\"]}");
@@ -179,6 +179,6 @@ class NetSecurityTest {
         var sec = cluster.call("GET", cluster.node("a").url() + "/api/v1/net/security", null);
         assertThat(sec.statusCode()).isEqualTo(200);
         assertThat(sec.body()).contains("\"keySet\":true").doesNotContain(NEW_KEY).doesNotContain(NetNodes.KEY);
-        assertThat(cluster.node("a").net().node().orElseThrow().table().self().protocol()).isEqualTo(Member.PROTOCOL);
+        assertThat(cluster.node("a").net().node().orElseThrow().members().self().protocol()).isEqualTo(Member.PROTOCOL);
     }
 }

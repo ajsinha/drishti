@@ -76,7 +76,7 @@ public final class NetRouting {
     public CapabilityTable tableFor(Principal p) {
         AccessSettings a = net.config().access();
         List<String> roles = p == null ? List.of() : p.roles();
-        var live = net.node().map(n -> n.table()).orElse(null);
+        var live = net.node().map(n -> n.members()).orElse(null);
         return digests.table().routable().reachable(n -> a.reaches(roles, n.id(), n.member().tags())
                 && (live == null || live.known(n.id()).map(k -> k.member().routable()).orElse(false)));
     }
@@ -279,7 +279,7 @@ public final class NetRouting {
 
     /** The member as the member table says now (newer than the capability table's copy). */
     private com.ash.drishti.net.member.Member live(CapabilityTable.Node n) {
-        return net.node().flatMap(x -> x.table().known(n.id())).map(k -> k.member()).orElse(n.member());
+        return net.node().flatMap(x -> x.members().known(n.id())).map(k -> k.member()).orElse(n.member());
     }
 
     private boolean liveRoutable(CapabilityTable.Node n) {
@@ -287,7 +287,7 @@ public final class NetRouting {
     }
 
     /**
-     * The state a refusal names a node by. A node that gossip says is alive again while this node's table has not taken it back yet (its
+     * The state a refusal names a node by. A node the view says is alive again while this node's table has not taken it back yet (its
      * digest has not arrived) is {@code rejoining}, never {@code alive}: a refusal naming an alive node as unreachable reads as a fault
      * (SOAK2-05).
      */
@@ -295,7 +295,7 @@ public final class NetRouting {
         return label(live(n), n.routable());
     }
 
-    /** The state of {@code live} (gossip's view of the member) as a refusal names it, given whether this node's table routes to it. */
+    /** The state of {@code live} (the membership's view of the member) as a refusal names it, given whether this node's table routes to it. */
     public static String label(com.ash.drishti.net.member.Member live, boolean inTable) {
         if (live.drained()) {
             return "drained";

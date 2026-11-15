@@ -37,7 +37,7 @@ import org.junit.jupiter.api.TestMethodOrder;
 /**
  * The transport between nodes (CLUSTER_GUIDE.md › Drishti*net: many servers, one Drishti, section 5 and "HTTP/2 for peer data", 2.6.7), on three real servers in one JVM. A holds the
  * demo trades; B forwards to it over HTTP/2 (routing.yaml's default); C runs with {@code server.http2.enabled=false}, a server of before
- * 2.6.7 for HTTP, and with {@code peer-protocol: http1}. Each node has its gossip port.
+ * 2.6.7 for HTTP, and with {@code peer-protocol: http1}. Each node's membership is on its own cluster port (JGroups over TCP), never HTTP.
  */
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class NetHttp2Test {
@@ -111,29 +111,24 @@ class NetHttp2Test {
 
     @Test
     @Order(3)
-    void everyNodeGossipsOnItsOwnPortAndThatPortServesNothingElse() throws Exception {
+    void everyNodesMembershipIsOnItsClusterPortAndTheServerPortAnswersProbesOnThePriorityPath() throws Exception {
         for (String n : List.of("a", "b", "c")) {
-            Member self = cluster.node(n).net().node().orElseThrow().table().self();
-            assertThat(self.gossipPort()).as(n + " has a gossip port").isPositive().isNotEqualTo(cluster.node(n).port());
-            assertThat(self.gossipUrl()).startsWith("http://" + NetNodes.HOST + ":");
-            // every peer has heard of it
+            Member self = cluster.node(n).net().node().orElseThrow().members().self();
+            assertThat(self.clusterAddress()).as(n + "'s cluster address").isEqualTo(NetNodes.HOST + ":" + (cluster.node(n).port() + NetNodes.CLUSTER_OFFSET));
+            // every peer has its vitals: its address to call and its cluster address
             for (String o : List.of("a", "b", "c").stream().filter(o -> !o.equals(n)).toList()) {
-                assertThat(cluster.node(o).net().node().orElseThrow().table().known(self.nodeId()).map(k -> k.member().gossipPort()).orElse(0))
-                        .as(o + " knows " + n + "'s gossip port").isEqualTo(self.gossipPort());
+                assertThat(cluster.node(o).net().node().orElseThrow().members().known(self.nodeId()).map(k -> k.member().clusterAddress()).orElse(""))
+                        .as(o + " knows " + n + "'s cluster address").isEqualTo(self.clusterAddress());
             }
         }
-        Member a = cluster.node("a").net().node().orElseThrow().table().self();
-        // the gossip port answers a signed probe, and nothing else
-        PeerHttp.Answer ping = cluster.node("b").net().http().control(a.gossipUrl(), "GET", "/api/v1/net/ping", Map.of(), null, Duration.ofSeconds(2));
-        assertThat(ping.status()).as(ping.text()).isEqualTo(200);
-        var other = cluster.call("GET", a.gossipUrl() + "/api/v1/views/trade/IRS-48213", null, "Authorization", NetForwardTest.bearer("rita", "risk"));
-        assertThat(other.statusCode()).isEqualTo(404);
-        assertThat(other.body()).contains("gossip");
-        var unsigned = cluster.call("GET", a.gossipUrl() + "/api/v1/net/ping", null);
-        assertThat(unsigned.statusCode()).isEqualTo(401);
-        // the server's port still answers gossip (a node of before 2.6.7, a seed), on the same priority path
-        PeerHttp.Answer onServerPort = cluster.node("b").net().http().send(cluster.node("a").url(), "GET", "/api/v1/net/ping", Map.of(), null,
+        // the gossip endpoint is gone; a signed probe on the server port answers on the priority path, an unsigned one is refused
+        PeerHttp.Answer ping = cluster.node("b").net().http().control(cluster.node("a").url(), "GET", "/api/v1/net/ping", Map.of(), null,
                 Duration.ofSeconds(2));
-        assertThat(onServerPort.status()).isEqualTo(200);
+        assertThat(ping.status()).as(ping.text()).isEqualTo(200);
+        var unsigned = cluster.call("GET", cluster.node("a").url() + "/api/v1/net/ping", null);
+        assertThat(unsigned.statusCode()).isEqualTo(401);
+        PeerHttp.Answer gossip = cluster.node("b").net().http().send(cluster.node("a").url(), "POST", "/api/v1/net/gossip", Map.of(), new byte[0],
+                Duration.ofSeconds(2));
+        assertThat(gossip.status()).as("no gossip endpoint any more").isBetween(400, 499);
     }
 }

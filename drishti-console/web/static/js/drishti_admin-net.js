@@ -92,7 +92,7 @@
     tr.appendChild(packs);
     tr.appendChild(el('td', null, m.lastHeard ? when(m.lastHeard) : (m.self ? '-' : 'never')));
     tr.appendChild(el('td', null, m.latencyMs === null || m.latencyMs === undefined ? '-' : m.latencyMs + ' ms'));
-    tr.appendChild(el('td', { 'class': 'mono' }, m.incarnation));
+    tr.appendChild(el('td', { 'class': 'mono' }, (m.clusterAddress || '-') + (m.role === 'witness' ? ' (witness)' : '')));
     var act = el('td');
     if (m.state === 'dead' || m.state === 'left') {
       act.appendChild(el('button', { type: 'button', 'class': 'btn-pill', 'data-remove': m.nodeId, 'aria-label': 'Remove ' + m.nodeId }, 'Remove'));
@@ -112,8 +112,10 @@
       var chip = $('[data-count="' + s + '"]');
       if (chip) { chip.textContent = data.counts[s] + ' ' + s; }
     });
-    var rounds = $('[data-rounds]');
-    if (rounds && data.node && data.node.gossip) { rounds.textContent = data.node.gossip.rounds; }
+    var view = $('[data-view]');
+    var changes = $('[data-view-changes]');
+    if (view && data.node && data.node.membership) { view.textContent = data.node.membership.view; }
+    if (changes && data.node && data.node.membership) { changes.textContent = data.node.membership.viewChanges; }
     NET.members = data;
     if (NET.onMembers) { NET.onMembers.forEach(function (f) { f(data); }); }
   }

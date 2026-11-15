@@ -29,7 +29,7 @@ import org.junit.jupiter.api.Test;
 /**
  * SOAK-03: a node joins Drishti*net only once its web server answers. B starts late and slowly (a bean that takes 4 s, made after the net
  * service, holds its port closed as slow connectors do); A watches the whole start: B must never be routable on A while B's port refuses
- * connections. Before, B gossiped itself alive as soon as its net service was made, 12 to 19 s before its port opened in the soak.
+ * connections. Before, B told its peers it was alive as soon as its net service was made, 12 to 19 s before its port opened in the soak.
  */
 class NetJoinWhenReadyTest {
 
@@ -74,7 +74,7 @@ class NetJoinWhenReadyTest {
         int routable = 0;
         long end = System.currentTimeMillis() + 60_000;
         while (System.currentTimeMillis() < end && (routable < 10 || !b.isDone())) {
-            boolean seen = a.node().orElseThrow().table().others().stream().anyMatch(k -> k.member().url().endsWith(":" + p[1])
+            boolean seen = a.node().orElseThrow().members().others().stream().anyMatch(k -> k.member().url().endsWith(":" + p[1])
                     && k.member().routable());
             if (seen) {
                 routable++;

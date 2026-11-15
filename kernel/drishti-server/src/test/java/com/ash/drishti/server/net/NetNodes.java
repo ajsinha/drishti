@@ -39,12 +39,19 @@ import org.springframework.context.ConfigurableApplicationContext;
  * own data folder, identity database and {@code config/net/} folder, talking to the others over real HTTP. Ports are the scratch
  * ports 18783 to 18785, or the three named by the system property {@code drishti.net.it.ports} or the environment variable
  * {@code DRISHTI_NET_IT_PORTS} (comma-separated: the drill gives its Java 25 stage 19783 to 19785, beside the console stage; for a builder whose
- * scratch ports are others); one cluster at a time.
+ * scratch ports are others); one cluster at a time. Each node's membership listens on its server port + {@link #CLUSTER_OFFSET} (and that
+ * + 100, the failure detector), on this machine's real address, with short timings ({@link #MEMBERSHIP}).
  */
 public final class NetNodes implements AutoCloseable {
 
     public static final String KEY = "a-test-cluster-key-of-at-least-32-bytes";
     public static final int[] PORTS = ports(System.getProperty("drishti.net.it.ports", System.getenv().getOrDefault("DRISHTI_NET_IT_PORTS", "18783,18784,18785")));
+    /** A node's cluster port is its server port + this (18833 to 18835 by default; the drill's stage 19833 to 19835). */
+    public static final int CLUSTER_OFFSET = 50;
+    /** The membership's timings in these tests: a killed node leaves the view in about three seconds. */
+    static final List<String> MEMBERSHIP = List.of("--net.membership.heartbeat=500ms", "--net.membership.suspect-after=2s",
+            "--net.membership.verify=500ms", "--net.membership.join-timeout=2s", "--net.membership.merge-every=2s", "--net.membership.vitals-every=1s");
+
     /** This machine's real address: members never advertise a loopback one, so nodes on one machine call each other by it too. */
     public static final String HOST = com.ash.drishti.net.config.HostAddress.primary().orElse(null);
 
@@ -87,16 +94,17 @@ public final class NetNodes implements AutoCloseable {
         this.lock = lockFile.lock();
     }
 
-    /** Writes a node's config/net/ folder: node.yaml (enabled, its address, tags, the key) and one peer file per seed. */
+    /**
+     * Writes a node's config/net/node.yaml: enabled, its address, tags, the key, its cluster port (the server port + {@link #CLUSTER_OFFSET})
+     * and its seeds (the cluster ports of the nodes whose server ports are {@code seeds}).
+     */
     public static void folder(Path netDir, int port, List<String> tags, List<String> peerOnly, List<Integer> seeds) throws IOException {
         org.junit.jupiter.api.Assumptions.assumeTrue(HOST != null, "this machine has no address but loopback: a cluster member never advertises one");
-        Files.createDirectories(netDir.resolve("peers"));
+        Files.createDirectories(netDir);
+        List<String> seedList = seeds.stream().map(s -> HOST + ":" + (s + CLUSTER_OFFSET)).toList();
         Files.writeString(netDir.resolve("node.yaml"), "enabled: true\nadvertise-url: http://" + HOST + ":" + port + "\ntags: " + tags
-                + "\npeer-only-packs: " + peerOnly + "\nsecret: ${DRISHTI_NET_SECRET}\n");
-        Files.writeString(netDir.resolve("gossip.yaml"), "interval: 1s\nsuspect-after: 3s\ndead-after: 4s\npersist-every: 2s\n");
-        for (int s : seeds) {
-            Files.writeString(netDir.resolve("peers").resolve("node-" + s + ".yaml"), "url: http://" + HOST + ":" + s + "\n");
-        }
+                + "\npeer-only-packs: " + peerOnly + "\nsecret: ${DRISHTI_NET_SECRET}\ncluster-port: " + (port + CLUSTER_OFFSET)
+                + "\nseeds: " + seedList + "\n");
     }
 
     /** Starts a node on {@code port}; {@code extra} are more {@code --key=value} arguments (packs, security). */
@@ -116,6 +124,7 @@ public final class NetNodes implements AutoCloseable {
                 "--drishti.sources.connectors-dir=" + dir.resolve("connectors"), "--drishti.governance.dir=" + dir.resolve("governance"),
                 "--drishti.rachana.hot-reload=false", "--drishti.sources.plugins.demo.settings.ticking=false",
                 "--DRISHTI_NET_SECRET=" + KEY, "--spring.main.banner-mode=off"));
+        args.addAll(MEMBERSHIP);
         // an extra argument replaces a default one of the same key (two values of one key would be read as "a,b")
         for (String e : extra) {
             String key = e.contains("=") ? e.substring(0, e.indexOf('=') + 1) : e;
@@ -134,7 +143,7 @@ public final class NetNodes implements AutoCloseable {
         return nodes.get(name);
     }
 
-    /** Stops only the node's web server: its gossip goes on, so peers still take it for alive, but its port refuses connections. */
+    /** Stops only the node's web server: its membership goes on, so peers still take it for alive, but its port refuses connections. */
     public void closePort(String name) {
         ((org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext) nodes.get(name).ctx()).getWebServer().stop();
     }

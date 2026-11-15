@@ -45,7 +45,7 @@ import org.springframework.web.bind.annotation.RestController;
  * The switches of Functions, FUNC, for administrators (docs/guides/ADMIN_GUIDE.md): every command of the loaded packs, grouped by pack, with
  * what it does and whether it is on; a batch of changes with one reason (kept in the audit log); the history of changes; and what turning
  * one off stops. An administrator only (what every user reads is {@link FunctionsController}).
- * A change is written to this node's database and spread to every node of the cluster by gossip ({@link SwitchSync}); the answer says
+ * A change is written to this node's database and spread to every node of the cluster ({@link SwitchSync}: its hash in the vitals, the entries pulled); the answer says
  * which version of the switches each node holds.
  */
 @RestController
@@ -211,7 +211,7 @@ public class CommandAdminController {
         m.put("node", e.node());
     }
 
-    /** This node and, with the cluster on, each member with the switches hash it gossips: in step when it equals this node's. */
+    /** This node and, with the cluster on, each member with the switches hash its vitals carry: in step when it equals this node's. */
     private List<Map<String, Object>> nodes() {
         List<Map<String, Object>> out = new ArrayList<>();
         NetService n = net.getIfAvailable();
@@ -219,7 +219,7 @@ public class CommandAdminController {
             out.add(Map.of("node", ledger.node(), "self", true, "state", "alive", "hash", ledger.hash(), "inStep", true));
             return out;
         }
-        for (Member m : n.node().get().table().entries()) {
+        for (Member m : n.node().get().members().entries()) {
             boolean self = m.nodeId().equals(n.nodeId());
             String h = self ? ledger.hash() : m.switchesHash();
             Map<String, Object> r = new LinkedHashMap<>();

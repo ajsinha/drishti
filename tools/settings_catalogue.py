@@ -446,10 +446,9 @@ def all_rows() -> tuple[list[Row], list[str]]:
     for name in ("edit", "lanes", "policy", "retention"):
         rows += yaml_rows("edit", [ROOT / f"config/edit/{name}.yaml"], "server", "restart", f"`{name}.yaml`")
     rows += yaml_rows("compute", [ROOT / "config/compute/compute.yaml"], "server", "restart", None, named={"compute.pools": "<pool>"})
-    for name in ("node", "gossip", "routing", "access"):
+    for name in ("node", "routing", "access"):
         rows += yaml_rows("net", [ROOT / f"config/net.examples/{name}.yaml"], "each member", "live", f"`{name}.yaml`",
                           named={"roles": "<role>"} if name == "access" else None)
-    rows += yaml_rows("net", sorted((ROOT / "config/net.examples/peers").glob("*.yaml")), "each member", "live", "`peers/<name>.yaml`")
     rows += yaml_rows("alerts", [ROOT / "config/alerts/platform-alerts.yaml"], "server", "live", None, named={"rules": "<rule>"})
     rows += yaml_rows("dataload", [ROOT / "config/dataload.yaml"], "server (the inbox's owner)", "live", None)
     rows += yaml_rows("feeds", [ROOT / "config/feeds/gleif.yaml"], "drishti.py feed (each run)", "live", "A feed file: `config/feeds/<feed>.yaml`",

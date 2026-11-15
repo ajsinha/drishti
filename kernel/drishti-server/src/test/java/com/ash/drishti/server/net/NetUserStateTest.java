@@ -45,7 +45,7 @@ class NetUserStateTest {
         cluster = new NetNodes(root);
         cluster.start("a", p[0]);
         cluster.start("b", p[1]);
-        assertThat(NetNodes.await(10_000, () -> cluster.node("a").net().node().orElseThrow().table().alive().size() == 1)).isTrue();
+        assertThat(NetNodes.await(10_000, () -> cluster.node("a").net().node().orElseThrow().members().alive().size() == 1)).isTrue();
     }
 
     @AfterAll

@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.net.member;
 
+import com.ash.drishti.net.config.ClusterSettings;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -23,8 +24,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.locks.ReentrantLock;
@@ -32,28 +31,26 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * {@code <data dir>/net/peers.json}: this node's id and the members it knows with their last-known state, saved every
- * {@code persist-every}, on every join or leave and at shutdown, and read at start to rejoin with no seeds. Written atomically
- * (a temporary file in the same folder moved over the target, as the lake tools write {@code last-run.json}); a file that cannot
- * be read is ignored with a warning, never fatal. What gossip learns is state, so it lives here and never in {@code config/net/}.
+ * {@code <data dir>/net/members.json} (CLUSTER_I5_DESIGN.md section 4.1): this node's id, the last view and the members seen in the last
+ * {@code forget-after}, written atomically on every view change and at shutdown, and read at start so a node rejoins from the members it
+ * knew even with no seeds. A file that cannot be read is ignored with a warning, never fatal. It replaces the gossip-era
+ * {@code peers.json}, which is not read.
  */
-public final class PeersFile {
+public final class MembersFile {
 
-    private static final Logger LOG = LoggerFactory.getLogger(PeersFile.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MembersFile.class);
 
     /** The file's content. */
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public record Saved(String nodeId, long savedAt, Member self, List<Member> members) {
+    public record Saved(String nodeId, long savedAt, long viewId, Member self, List<Member> members) {
         public Saved {
             members = members == null ? List.of() : List.copyOf(members);
         }
 
-        /** The urls of the saved members to try when rejoining: alive ones first, then suspect, never left, never a loopback address. */
-        public List<String> rejoinUrls() {
-            List<Member> m = new ArrayList<>(members.stream().filter(x -> x.state() != MemberState.LEFT && !x.url().isBlank()
-                    && com.ash.drishti.net.config.HostAddress.callableUrl(x.url())).toList());
-            m.sort(Comparator.comparing(x -> x.state() == MemberState.ALIVE ? 0 : x.state() == MemberState.SUSPECT ? 1 : 2));
-            return m.stream().map(Member::url).distinct().toList();
+        /** The cluster addresses of the saved members to dial when joining: not left, real addresses only. */
+        public List<String> rejoinSeeds() {
+            return members.stream().filter(m -> m.state() != MemberState.LEFT && !m.clusterAddress().isBlank())
+                    .map(Member::clusterAddress).filter(a -> ClusterSettings.seedProblem(a).isEmpty()).distinct().toList();
         }
     }
 
@@ -61,7 +58,7 @@ public final class PeersFile {
     private final ObjectMapper json = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
     private final ReentrantLock lock = new ReentrantLock();
 
-    public PeersFile(Path file) {
+    public MembersFile(Path file) {
         this.file = file.toAbsolutePath().normalize();
     }
 
@@ -69,14 +66,14 @@ public final class PeersFile {
         return file;
     }
 
-    /** Saves the table now; a failure is logged and the previous file is left as it was. */
-    public boolean save(MemberTable table, long now) {
-        List<Member> entries = table.entries();
-        Saved s = new Saved(entries.get(0).nodeId(), now, entries.get(0), entries.subList(1, entries.size()));
+    /** Saves the directory now; a failure is logged and the previous file is left as it was. */
+    public boolean save(MemberDirectory members, long now) {
+        List<Member> entries = members.entries();
+        Saved s = new Saved(entries.get(0).nodeId(), now, members.viewId(), entries.get(0), entries.subList(1, entries.size()));
         lock.lock();
         try {
             Files.createDirectories(file.getParent());
-            Path tmp = com.ash.drishti.common.TempFiles.createFile(file.getParent(), "peers-", ".tmp");
+            Path tmp = com.ash.drishti.common.TempFiles.createFile(file.getParent(), "members-", ".tmp");
             try {
                 Files.writeString(tmp, json.writeValueAsString(s), StandardCharsets.UTF_8);
                 Files.move(tmp, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
@@ -92,7 +89,7 @@ public final class PeersFile {
         }
     }
 
-    /** The saved table, or empty when there is none; a corrupt file is ignored with a warning (the node then joins from its seeds). */
+    /** The saved members, or empty when there is none; a file that cannot be read is ignored with a warning. */
     public Optional<Saved> read() {
         if (!Files.isRegularFile(file)) {
             return Optional.empty();

@@ -233,7 +233,7 @@ class NetGroupedPagesTest {
     void withCStoppedThePageIsPartialAndNamesC() throws Exception {
         String cid = cluster.node("c").net().nodeId();
         cluster.stop("c");
-        assertThat(NetNodes.await(6_000, () -> cluster.node("b").net().node().orElseThrow().table().known(cid)
+        assertThat(NetNodes.await(6_000, () -> cluster.node("b").net().node().orElseThrow().members().known(cid)
                 .map(k -> !k.member().routable()).orElse(true))).isTrue();
         JsonNode page = raw("b", "BOOK-X", "rita", "risk");
         assertThat(page.path("partial").asBoolean()).as(page.toString()).isTrue();

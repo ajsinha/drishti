@@ -77,7 +77,7 @@ class ModuleDeployClusterTest {
     }
 
     static long alive(String node) {
-        return cluster.node(node).net().node().map(n -> n.table().alive().size()).orElse(0);
+        return cluster.node(node).net().node().map(n -> n.members().alive().size()).orElse(0);
     }
 
     static String id(String node) {

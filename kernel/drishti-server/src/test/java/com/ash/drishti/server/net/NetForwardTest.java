@@ -188,7 +188,7 @@ class NetForwardTest {
     void withAGoneBAndCSaySoClearly() throws Exception {
         String aid = cluster.node("a").net().nodeId();
         cluster.stop("a");
-        assertThat(NetNodes.await(3_000, () -> cluster.node("b").net().node().orElseThrow().table().known(aid)
+        assertThat(NetNodes.await(3_000, () -> cluster.node("b").net().node().orElseThrow().members().known(aid)
                 .map(k -> k.member().state() == com.ash.drishti.net.member.MemberState.LEFT).orElse(false))).isTrue();
         var onB = cluster.call("GET", cluster.node("b").url() + "/api/v1/views/trade/IRS-48213", null, "Authorization", bearer("rita", "risk"));
         assertThat(onB.statusCode()).isEqualTo(502);

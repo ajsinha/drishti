@@ -16,3 +16,5 @@ enabled: true
 node-id: drishti-c
 advertise-url: http://${DRISHTI_STACK_HOST}:18792     # this machine's real address (bin/start-cluster sets it)
 secret: ${DRISHTI_NET_SECRET}
+cluster-port: 18892     # the membership's port (TCP); the failure detector's is this + 100
+seeds: ["${DRISHTI_STACK_HOST}:18580"]     # the seed's cluster address (bin/start-cluster sets the host)

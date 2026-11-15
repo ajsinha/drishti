@@ -58,6 +58,12 @@ HOST = hostaddr.primary_ipv4()
 NO_HOST = "this machine has no address but loopback: a Drishti*net member never advertises one"
 
 
+
+def cluster_seed(url: str) -> str:
+    """A seed URL (http://host:port of a server) as the membership's seed: host:cluster-port (the server port + 100)."""
+    host, _, port = url.split("://", 1)[-1].rstrip("/").rpartition(":")
+    return f"{host}:{int(port) + 100}"
+
 def url(name: str) -> str:
     return f"http://{HOST}:{SERVER_PORTS[NAMES.index(name)]}"
 
@@ -92,19 +98,18 @@ class NetStack:
         return jars[0], java
 
     def prepare(self, name: str) -> Path:
-        """The node's scratch folder: data, feeds (its trades), config/net (node, gossip, its seed)."""
+        """The node's scratch folder: data, feeds (its trades), config/net (node.yaml: its cluster port, a's as its seed)."""
         work = self.tmp / name
-        (work / "net" / "peers").mkdir(parents=True, exist_ok=True)
+        (work / "net").mkdir(parents=True, exist_ok=True)
         (work / "feeds").mkdir(parents=True, exist_ok=True)
         (work / "data").mkdir(parents=True, exist_ok=True)
         with open(work / "feeds" / "trade.jsonl", "w", encoding="utf-8") as f:
             f.writelines(json.dumps(r) + "\n" for r in trades(name, self.n))
         tags = {"a": "[region:emea, tier:risk]", "b": "[region:emea]", "c": "[region:apac]"}[name]
+        port = SERVER_PORTS[NAMES.index(name)]
+        seeds = "" if name == "a" else f"seeds: [\"{cluster_seed(url('a'))}\"]\n"
         (work / "net" / "node.yaml").write_text(f"enabled: true\nnode-id: drishti-{name}\nadvertise-url: {url(name)}\ntags: {tags}\n"
-                                                "secret: ${DRISHTI_NET_SECRET}\n", encoding="utf-8")
-        (work / "net" / "gossip.yaml").write_text("interval: 1s\nsuspect-after: 3s\ndead-after: 10s\npersist-every: 30s\n", encoding="utf-8")
-        if name != "a":
-            (work / "net" / "peers" / "drishti-a.yaml").write_text(f"url: {url('a')}\n", encoding="utf-8")
+                                                f"secret: ${{DRISHTI_NET_SECRET}}\ncluster-port: {port + 100}\n" + seeds, encoding="utf-8")
         return work
 
     def start_server(self, name: str) -> None:
@@ -115,6 +120,7 @@ class NetStack:
                    DRISHTI_DATA_DIR=str(work / "data"), DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_PACKS="finance",
                    DRISHTI_PACKS_EXTRA_DIRS=str(ROOT / "examples" / "packs"), DRISHTI_NET_DIR=str(work / "net"))
         args = [self.heap, "-jar", jar, f"--server.port={port}", f"--drishti.net.dir={work / 'net'}", "--drishti.net.poll=1s",
+                "--net.membership.heartbeat=1s", "--net.membership.suspect-after=3s", "--net.membership.verify=1s",
                 f"--drishti.sources.plugins.file.settings.root={work / 'feeds'}", "--drishti.sources.plugins.file.settings.id-field=TRADE_ID",
                 f"--drishti.sources.connectors-dir={work / 'connectors'}", "--drishti.sources.connectors.finance-lake.enabled=false"]
         if name != "b":

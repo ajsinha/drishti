@@ -73,7 +73,7 @@ public final class FlightNodes {
             return out;
         }
         String me = net.nodeId();
-        for (Member m : net.node().get().table().alive()) {
+        for (Member m : net.node().get().members().alive()) {
             if (m.nodeId().equals(me) || m.drained()) {
                 continue;
             }

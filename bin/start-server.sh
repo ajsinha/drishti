@@ -50,10 +50,11 @@ and the logs under the data folder, waits for /actuator/health and prints the ad
 
  A cluster node (docs/guides/CLUSTER_GUIDE.md):
   --node NAME         the node's id; its pid, log and temp folder are named after it, so several run on one machine
-  --node-dir DIR      the node's Drishti*net folder (node.yaml, gossip.yaml, peers/); default <data>/nodes/<node>/net, made when missing
+  --node-dir DIR      the node's Drishti*net folder (node.yaml, routing.yaml, access.yaml); default <data>/nodes/<node>/net, made when missing
   --node-data DIR     the node's own data folder (the server's DRISHTI_DATA_DIR: its identity database, saved members, inbox);
                       default <data>. Several nodes on one machine each need their own: e.g. <data>/nodes/<node>/data
-  --seed HOST:PORT    a member to join through (repeatable, or comma-separated): written to <node-dir>/peers/ when not there yet
+  --seed HOST:PORT    a member to join through, host:cluster-port (repeatable, or comma-separated; port 7946 when left out): given to the
+                      node as [net.cluster] seeds (NET_CLUSTER_SEEDS); node.yaml's own seeds: win
   --advertise IP      the address the node advertises (default this machine's real LAN address; never 127.0.0.1, localhost, 0.0.0.0)
 
   -h, --help          this text
@@ -207,7 +208,7 @@ export DRISHTI_PORT="$PORT"
 URL_HOST="$(lan_ip)"
 if [ -n "$NODE" ]; then
   NODE_DIR="${NODE_DIR:-$DATA/nodes/$NODE/net}"
-  mkdir -p "$NODE_DIR/peers"
+  mkdir -p "$NODE_DIR"
   NODE_DIR="$(cd "$NODE_DIR" && pwd -P)"
   if [ ! -f "$NODE_DIR/node.yaml" ]; then
     {
@@ -220,16 +221,15 @@ if [ -n "$NODE" ]; then
     say "$NODE: made $NODE_DIR/node.yaml"
   fi
   if [ -n "$SEEDS" ]; then
+    joined=""
     for seed in $(printf '%s' "$SEEDS" | tr ',' ' '); do
       seed="${seed#http://}"; seed="${seed#https://}"; seed="${seed%/}"
-      case "$seed" in *:*) ;; *) seed="$seed:$DEFAULT_SERVER_PORT" ;; esac
+      case "$seed" in *:*) ;; *) seed="$seed:7946" ;; esac
       loopback_or_wildcard "${seed%:*}" && die "--seed $seed: a seed is named by its real address, never a loopback or wildcard one" 2
-      if ! grep -qs "$seed" "$NODE_DIR"/peers/*.yaml; then
-        f="$NODE_DIR/peers/seed-$(printf '%s' "$seed" | tr ':.' '--').yaml"
-        { sed -n '2,14p' "$0"; printf '# A seed of %s (bin/start-server.sh --seed).\nurl: http://%s\n' "$NODE" "$seed"; } > "$f"
-        say "$NODE: seed $seed written to $f"
-      fi
+      joined="${joined:+$joined,}$seed"
     done
+    export NET_CLUSTER_SEEDS="$joined"
+    say "$NODE: seeds $joined ([net.cluster] seeds)"
   fi
   URL_HOST="$(advertise_host "$ADVERTISE")"
   export DRISHTI_ADVERTISE_HOST="$URL_HOST" DRISHTI_NET_DIR="$NODE_DIR"

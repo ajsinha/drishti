@@ -26,7 +26,7 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Admin → Functions across Drishti*net (docs/guides/ADMIN_GUIDE.md, "Several servers"): two real servers in one JVM, each with its own SQLite
- * identity database. A command turned off on one is off on the other within a gossip round, written to that node's database, and refused
+ * identity database. A command turned off on one is off on the other within a second or two, written to that node's database, and refused
  * there with {@code 403 DRS-1016}; a node that was down while a change was made loads its old state from its database at start, then
  * catches up from its peer (anti-entropy on rejoin), and both end with the same switches hash.
  */
@@ -54,7 +54,7 @@ class NetSwitchesTest {
     }
 
     static long alive(String node) {
-        return cluster.node(node).net().node().map(n -> n.table().alive().size()).orElse(0);
+        return cluster.node(node).net().node().map(n -> n.members().alive().size()).orElse(0);
     }
 
     static SwitchLedger ledger(String node) {
@@ -66,7 +66,7 @@ class NetSwitchesTest {
         StringBuilder s = new StringBuilder();
         for (String n : List.of("a", "b")) {
             s.append(n).append(": own ").append(ledger(n).hash()).append(", hears ");
-            cluster.node(n).net().node().ifPresent(x -> x.table().entries().forEach(m -> s.append(m.nodeId()).append('=').append(m.switchesHash()).append(' ')));
+            cluster.node(n).net().node().ifPresent(x -> x.members().entries().forEach(m -> s.append(m.nodeId()).append('=').append(m.switchesHash()).append(' ')));
             s.append("; ");
         }
         return s.toString();

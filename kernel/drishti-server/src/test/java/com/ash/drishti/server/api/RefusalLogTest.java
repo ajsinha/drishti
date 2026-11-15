@@ -117,8 +117,8 @@ class RefusalLogTest {
     }
 
     @Test
-    void aNodeGossipSaysIsBackButNotYetRoutableIsRejoiningNotAlive() {
-        var alive = new com.ash.drishti.net.member.Member("drishti-c", "http://192.0.2.1:1", 2, 1,
+    void aNodeTheViewSaysIsBackButNotYetRoutableIsRejoiningNotAlive() {
+        var alive = new com.ash.drishti.net.member.Member("drishti-c", "http://192.0.2.1:1",
                 com.ash.drishti.net.member.MemberState.ALIVE, "", "", com.ash.drishti.net.member.Member.PROTOCOL, List.of(), 0, false);
         assertThat(com.ash.drishti.server.net.NetRouting.label(alive, false)).isEqualTo("rejoining");
         assertThat(com.ash.drishti.server.net.NetRouting.label(alive, true)).isEqualTo("alive");

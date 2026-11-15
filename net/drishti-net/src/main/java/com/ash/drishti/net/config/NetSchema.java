@@ -29,7 +29,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * The schema of every file of {@code config/net/}: each file's map is checked and turned into its settings, with every problem
+ * The schema of every file of {@code config/net/} ({@code node.yaml}, {@code routing.yaml}, {@code access.yaml}; the gossip-era
+ * {@code gossip.yaml} and {@code peers/} are refused by {@link NetFolder}): each file's map is checked and turned into its settings, with every problem
  * named by file, setting and line. An error refuses the file (the previous settings stay in force); a warning (an unknown
  * setting) does not. Values written as {@code ${ENV}} or {@code ${ENV:default}} are read from the environment; the cluster
  * keys must be such a reference and nothing else, so a key is never written in a file in clear.
@@ -67,12 +68,33 @@ public final class NetSchema {
         this.env = env;
     }
 
+    /** The view keys are read through (the environment, the server's properties, the settings files). */
+    public Function<String, String> view() {
+        return env;
+    }
+
+    /** The settings file's cluster sections ({@code [net.cluster]} ... {@code [net.engines]}) through this schema's view. */
+    public ClusterSettings.Read cluster() {
+        return ClusterSettings.read(env);
+    }
+
     // -- node.yaml ----------------------------------------------------------------------------------------------------
 
+    /** node.yaml's keys of the gossip membership, each refused with its replacement (no server reads both). */
+    private static final Map<String, String> GONE = Map.of(
+            "gossip-port", "the membership has its own port: cluster-port (a number; [net.node] cluster-port, 7946 by default)");
+
     public Parsed<NodeSettings> node(String file, Map<String, Object> m, String text) {
-        Ctx c = new Ctx(file, text, m, Set.of("enabled", "node-id", "advertise-url", "tags", "peer-only-packs", "secret", "previous-secret", "tls", "gossip-port", "memory-stores"));
+        Ctx c = new Ctx(file, text, m, Set.of("enabled", "node-id", "advertise-url", "tags", "peer-only-packs", "secret", "previous-secret", "tls",
+                "memory-stores", "cluster-port", "agreement-port", "seeds", "role", "gossip-port"));
+        GONE.forEach((k, v) -> {
+            if (m.containsKey(k)) {
+                c.error(k, "is gone with the gossip membership: " + v);
+            }
+        });
+        ClusterSettings cs = cluster().settings();
         boolean enabled = c.bool("enabled", false);
-        String nodeId = c.string("node-id", "");
+        String nodeId = c.string("node-id", cs.node().id());
         if (!nodeId.isEmpty() && !NodeIdentity.ID.matcher(nodeId).matches()) {
             c.error("node-id", "'" + nodeId + "' is not a node id: lower-case letters, digits and dashes, at most 64");
         }
@@ -88,23 +110,28 @@ public final class NetSchema {
         List<String> peerOnly = c.list("peer-only-packs");
         List<String> memoryStores = c.list("memory-stores");
         String secret = c.secret("secret");
+        if (secret.isEmpty() && !cs.cluster().secretFile().isEmpty()) {
+            secret = c.secretFile(cs.cluster().secretFile());
+        }
         String previous = c.secret("previous-secret");
         Map<String, String> tls = c.flat("tls");
-        int gossipPort = NodeSettings.GOSSIP_AUTO;
-        String gp = c.string("gossip-port", "auto").toLowerCase(Locale.ROOT);
-        if ("off".equals(gp) || "false".equals(gp)) {                // YAML reads a bare off as false
-            gossipPort = NodeSettings.GOSSIP_OFF;
-        } else if (!"auto".equals(gp) && !gp.isEmpty()) {
-            if (gp.matches("\\d{1,5}")) {
-                gossipPort = c.integer("gossip-port", NodeSettings.GOSSIP_AUTO, 1, 65535);
-            } else {
-                c.error("gossip-port", "'" + gp + "' is not auto, off or a port number");
-            }
+        int clusterPort = c.integer("cluster-port", cs.node().clusterPort(), 1, 65535);
+        int agreementPort = c.integer("agreement-port", cs.node().agreementPort(), 1, 65535);
+        if (clusterPort == agreementPort) {
+            c.error("agreement-port", "is the cluster port (" + clusterPort + "): the agreement needs a port of its own");
+        }
+        List<String> seeds = m.containsKey("seeds") ? c.list("seeds") : cs.cluster().seeds();
+        for (String seed : seeds) {
+            ClusterSettings.seedProblem(seed).ifPresent(p -> c.error("seeds", p));
+        }
+        String role = c.string("role", cs.node().role()).toLowerCase(Locale.ROOT);
+        if (!Set.of("server", "witness").contains(role)) {
+            c.error("role", "'" + role + "' is not server or witness");
         }
         if (enabled) {
             if (secret.isEmpty()) {
                 c.error("secret", "enabled: true needs the cluster key: secret: ${DRISHTI_NET_SECRET} with the variable set (at least "
-                        + MIN_SECRET_BYTES + " bytes), as the server refuses a missing token secret with security on");
+                        + MIN_SECRET_BYTES + " bytes), or [net.cluster] secret-file; the server refuses a missing token secret with security on");
             }
             if (url.isEmpty() && HostAddress.primary().isEmpty()) {
                 c.error("advertise-url", "enabled: true needs advertise-url (the address peers and consoles call this node at, https://host:port): "
@@ -117,39 +144,7 @@ public final class NetSchema {
         if (!previous.isEmpty() && previous.equals(secret)) {
             c.warning("previous-secret", "is the same as secret: remove it once every node has the new key");
         }
-        return c.done(new NodeSettings(enabled, nodeId, url, tags, peerOnly, secret, previous, tls, gossipPort, memoryStores));
-    }
-
-    // -- peers/<name>.yaml --------------------------------------------------------------------------------------------
-
-    public Parsed<SeedPeer> peer(String file, String name, Map<String, Object> m, String text) {
-        Ctx c = new Ctx(file, text, m, Set.of("url", "tags", "tls"));
-        String url = c.string("url", "");
-        if (url.isEmpty()) {
-            c.error("url", "a peer file needs url: the peer's address (https://host:port)");
-        } else {
-            if (HostAddress.loopbackUrl(url)) {
-                c.error("url", HostAddress.refusal("a peer's address", url));
-            }
-            c.url("url", url);
-        }
-        return c.done(new SeedPeer(name, url, c.tags("tags"), c.flat("tls")));
-    }
-
-    // -- gossip.yaml --------------------------------------------------------------------------------------------------
-
-    public Parsed<GossipSettings> gossip(String file, Map<String, Object> m, String text) {
-        GossipSettings d = GossipSettings.DEFAULTS;
-        Ctx c = new Ctx(file, text, m, Set.of("interval", "fanout", "suspect-after", "indirect-probes", "dead-after", "forget-after", "persist-every"));
-        GossipSettings g = new GossipSettings(c.duration("interval", d.interval(), Duration.ofMillis(50), Duration.ofMinutes(1)),
-                c.integer("fanout", d.fanout(), 1, 16), c.duration("suspect-after", d.suspectAfter(), Duration.ofMillis(100), Duration.ofHours(1)),
-                c.integer("indirect-probes", d.indirectProbes(), 0, 8), c.duration("dead-after", d.deadAfter(), Duration.ofMillis(100), Duration.ofDays(1)),
-                c.duration("forget-after", d.forgetAfter(), Duration.ofSeconds(1), Duration.ofDays(30)),
-                c.duration("persist-every", d.persistEvery(), Duration.ofSeconds(1), Duration.ofDays(1)));
-        if (g.suspectAfter().compareTo(g.interval()) < 0) {
-            c.error("suspect-after", "must be at least interval (" + text(g.interval()) + "): a member is suspected only after rounds that missed it");
-        }
-        return c.done(g);
+        return c.done(new NodeSettings(enabled, nodeId, url, tags, peerOnly, secret, previous, tls, memoryStores, clusterPort, agreementPort, seeds, role));
     }
 
     // -- routing.yaml -------------------------------------------------------------------------------------------------
@@ -327,6 +322,9 @@ public final class NetSchema {
 
         int integer(String key, int dflt, int min, int max) {
             String s = string(key, String.valueOf(dflt));
+            if (s.isEmpty()) {
+                return dflt;
+            }
             try {
                 int n = Integer.parseInt(s);
                 if (n < min || n > max) {
@@ -400,6 +398,16 @@ public final class NetSchema {
                 return "";
             }
             return resolve(raw);
+        }
+
+        /** The cluster key from {@code [net.cluster] secret-file} (an absolute file readable only by the service user); empty when unreadable. */
+        String secretFile(String path) {
+            try {
+                return java.nio.file.Files.readString(java.nio.file.Path.of(path), StandardCharsets.UTF_8).strip();
+            } catch (java.io.IOException | RuntimeException e) {
+                error("secret", "[net.cluster] secret-file " + path + " cannot be read: " + e.getMessage());
+                return "";
+            }
         }
 
         /** A nested mapping flattened to dotted keys ({@code tls: {keystore: {path: x}}} is {@code keystore.path}). */

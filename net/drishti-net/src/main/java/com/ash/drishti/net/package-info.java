@@ -14,8 +14,9 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /**
- * Drishti*net: several Drishti servers acting as one (docs/guides/CLUSTER_GUIDE.md). Membership by SWIM-style gossip
- * over HTTP ({@code member}), the cluster key and on-behalf-of tokens ({@code security}), what each node offers
+ * Drishti*net: several Drishti servers acting as one (docs/guides/CLUSTER_GUIDE.md, docs/architecture/CLUSTER_I5_DESIGN.md).
+ * Membership behind {@code Membership} on JGroups, TCP only ({@code member}, the library only in {@code member.jgroups}), agreement
+ * behind {@code Agreement} ({@code agreement}; the ratis provider is the module drishti-net-ratis), the cluster key and on-behalf-of tokens ({@code security}), what each node offers
  * ({@code digest}), where a request goes ({@code route}), the {@code config/net/} folder ({@code config}) and the signed
  * HTTP calls between nodes ({@code transport}). Nothing here knows Spring, the engine or the server: the server wires it in.
  */

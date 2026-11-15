@@ -66,7 +66,7 @@ public final class PeerCalls {
         if (!clustered()) {
             return List.of();
         }
-        return n.node().map(x -> x.table().others().stream().filter(k -> k.member().state() == MemberState.ALIVE)
+        return n.node().map(x -> x.members().others().stream().filter(k -> k.member().state() == MemberState.ALIVE)
                 .map(k -> k.member().nodeId()).toList()).orElse(List.of());
     }
 
@@ -104,7 +104,7 @@ public final class PeerCalls {
 
     private static Answer one(NetService n, String node, String method, String pathAndQuery, byte[] body, Principal p, Duration timeout) {
         try {
-            String url = n.node().flatMap(x -> x.table().known(node)).map(k -> k.member().url()).orElseThrow();
+            String url = n.node().flatMap(x -> x.members().known(node)).map(k -> k.member().url()).orElseThrow();
             String request = NetCaller.current().map(NetCaller.Caller::requestId).orElseGet(() -> UUID.randomUUID().toString().substring(0, 13));
             Map<String, String> h = new LinkedHashMap<>();
             h.put(NetHeaders.HOP, "1");

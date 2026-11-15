@@ -30,8 +30,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * With no config/net/ folder a server is a single server exactly as before (CLUSTER_GUIDE.md › Drishti*net: many servers, one Drishti, section 3): no gossip thread, no
- * peers.json, no forwarded request, and the cluster's endpoints answer that the cluster is off.
+ * With no config/net/ folder a server is a single server exactly as before (CLUSTER_GUIDE.md › Drishti*net: many servers, one Drishti, section 3): no membership
+ * thread, no cluster port, no members.json, no forwarded request, and the cluster's endpoints answer that the cluster is off.
  */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
         "drishti.net.dir=${drishti.test.dir}/net-off-${random.uuid}/config-net"})
@@ -45,12 +45,12 @@ class NetOffTest {
     void withoutTheFolderNothingOfTheClusterRuns() throws Exception {
         assertThat(net.running()).isFalse();
         assertThat(net.node()).isEmpty();
-        assertThat(Thread.getAllStackTraces().keySet()).noneMatch(t -> t.getName().equals("drishti-net-gossip"));
+        assertThat(Thread.getAllStackTraces().keySet()).noneMatch(t -> t.getName().equals("drishti-net-vitals") || t.getName().startsWith("jgroups"));
         assertThat(Files.exists(Path.of(net.folder().dir().toString()))).isFalse();
-        assertThat(Files.exists(net.peersFile())).isFalse();
-        mvc.perform(post("/api/v1/net/gossip").contentType("application/json").content("{\"members\":[]}")).andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.code").value("DRS-5050"));
+        assertThat(Files.exists(net.membersFile())).isFalse();
+        assertThat(net.viewChanges()).isZero();
         mvc.perform(get("/api/v1/net/ping")).andExpect(status().isNotFound());
+        mvc.perform(get("/api/v1/net/digest")).andExpect(status().isNotFound());
         mvc.perform(get("/api/v1/net/members")).andExpect(status().isOk()).andExpect(jsonPath("$.enabled").value(false))
                 .andExpect(jsonPath("$.members").isEmpty());
         mvc.perform(post("/api/v1/net/drain")).andExpect(status().isNotFound()).andExpect(jsonPath("$.code").value("DRS-5050"));

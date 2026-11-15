@@ -15,17 +15,13 @@
  */
 package com.ash.drishti.net.transport;
 
-import com.ash.drishti.net.member.GossipTransport;
-import com.ash.drishti.net.member.Member;
 import com.ash.drishti.net.security.ClusterKey;
 import com.ash.drishti.net.security.NetHeaders;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -41,24 +37,22 @@ import java.util.function.Supplier;
 /**
  * Signed HTTP between nodes. Every call carries this node's id, the time and the cluster key's signature over method, path and
  * query, time, node and body ({@link ClusterKey}); calls that act for a user also carry an on-behalf-of token and the hop
- * header, added by the caller. Implements {@link GossipTransport} for the membership.
+ * header, added by the caller. Membership is not here: it is the membership channel's (CLUSTER_I5_DESIGN.md section 4.1); request
+ * traffic stays on HTTP.
  *
- * <p>Two lanes (CLUSTER_GUIDE.md › Drishti*net: many servers, one Drishti, section 5, "gossip off the busy path", 2.6.7), each with one JDK client per scheme and TLS settings
- * (mutual TLS from {@code node.yaml}'s {@code tls.*} through the shared {@code TlsHttp}), reused and thread-safe:
+ * <p>Two lanes, each with one JDK client per scheme and TLS settings (mutual TLS from {@code node.yaml}'s {@code tls.*} through the shared
+ * {@code TlsHttp}), reused and thread-safe:
  * <ul>
- * <li><b>control</b> ({@link #control}): gossip exchanges, direct and indirect probes and digest pulls. HTTP/1.1, a short connect timeout,
- * its own executor of two platform threads, its own connections, to the member's gossip port when it advertises one (falling back to its
- * server port when that port refuses while the server port answers). Never shares a connection, a thread or a timeout with data.</li>
+ * <li><b>control</b> ({@link #control}): digest and switches pulls. HTTP/1.1, a short connect timeout, its own executor of two platform
+ * threads, its own connections to the member's server port. Never shares a connection, a thread or a timeout with data.</li>
  * <li><b>data</b> ({@link #send}, {@link #open}): forwarded views, peer fetches, scatter-gather, history, state sync, the live relay.
  * HTTP/2 by default (routing.yaml {@code peer-protocol}): many requests multiplexed over one connection per peer, {@code h2c} by the
  * upgrade on plain HTTP and ALPN on TLS; a peer that does not speak HTTP/2 is answered in HTTP/1.1 on the same call.</li>
  * </ul>
  */
-public final class PeerHttp implements GossipTransport {
+public final class PeerHttp {
 
     private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(PeerHttp.class);
-    /** How long a gossip port that refused while the member's server port answered is not tried again (a firewall, a NAT). */
-    static final Duration GOSSIP_PORT_RETRY = Duration.ofMinutes(5);
 
     /** A whole answer: status, headers (lower-case names), body and the HTTP version it came in. */
     public record Answer(int status, Map<String, List<String>> headers, byte[] body, HttpClient.Version version) {
@@ -77,34 +71,28 @@ public final class PeerHttp implements GossipTransport {
         }
     }
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    record Table(List<Member> members) {}
-
     private final Supplier<ClusterKey> key;
     private final Supplier<String> self;
-    private final Supplier<Duration> gossipTimeout;
+    private final Supplier<Duration> controlTimeout;
     private final Function<String, Map<String, String>> tlsFor;
     private final Map<String, HttpClient> clients = new ConcurrentHashMap<>();
     private final Map<String, HttpClient> controlClients = new ConcurrentHashMap<>();
     /** The control lane's own threads: never the common pool, the virtual-thread scheduler or the data clients' executor. */
     private final java.util.concurrent.ExecutorService controlIo = java.util.concurrent.Executors.newFixedThreadPool(2,
             Thread.ofPlatform().daemon().name("drishti-net-control-http-", 0).factory());
-    /** Gossip addresses that refused while the member's server port answered, until when they are not tried. */
-    private final Map<String, Long> gossipPortUnreachable = new ConcurrentHashMap<>();
     private volatile Supplier<Boolean> http2 = () -> true;
-    private volatile Function<String, String> gossipAddress = url -> url;
     private final ObjectMapper json = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     /**
      * @param key the cluster key in force (it changes with node.yaml)
      * @param self this node's id
-     * @param gossipTimeout how long a gossip exchange or probe may take
-     * @param tlsFor a peer url's {@code tls.*} settings (node.yaml's, with the peer file's overrides), keys with the {@code tls.} prefix
+     * @param controlTimeout how long a control call (a digest pull) may take
+     * @param tlsFor a peer url's {@code tls.*} settings (node.yaml's), keys with the {@code tls.} prefix
      */
-    public PeerHttp(Supplier<ClusterKey> key, Supplier<String> self, Supplier<Duration> gossipTimeout, Function<String, Map<String, String>> tlsFor) {
+    public PeerHttp(Supplier<ClusterKey> key, Supplier<String> self, Supplier<Duration> controlTimeout, Function<String, Map<String, String>> tlsFor) {
         this.key = key;
         this.self = self;
-        this.gossipTimeout = gossipTimeout;
+        this.controlTimeout = controlTimeout;
         this.tlsFor = tlsFor;
     }
 
@@ -118,17 +106,10 @@ public final class PeerHttp implements GossipTransport {
         return this;
     }
 
-    /** A member's gossip address from its server address ({@code url} itself for a member without a gossip port, or a seed). */
-    public PeerHttp gossipAddress(Function<String, String> f) {
-        this.gossipAddress = f == null ? url -> url : f;
-        return this;
-    }
-
     /** Forgets the clients (node.yaml's TLS changed): the next call builds them again. */
     public void reset() {
         clients.clear();
         controlClients.clear();
-        gossipPortUnreachable.clear();
         dataPeers.clear();
     }
 
@@ -149,11 +130,11 @@ public final class PeerHttp implements GossipTransport {
         return clients.computeIfAbsent(cacheKey, k -> build(baseUrl, tls, v, Duration.ofSeconds(2), null));
     }
 
-    /** The control lane's client: HTTP/1.1, its own connections and threads, a connect timeout of half the gossip timeout (at most 2 s). */
+    /** The control lane's client: HTTP/1.1, its own connections and threads, a connect timeout of half the control timeout (at most 2 s). */
     private HttpClient controlClient(String baseUrl) {
         Map<String, String> tls = tlsFor.apply(baseUrl);
         String cacheKey = scheme(baseUrl) + "|" + new java.util.TreeMap<>(tls);
-        long half = Math.max(250, Math.min(2_000, gossipTimeout.get().toMillis() / 2));
+        long half = Math.max(250, Math.min(2_000, controlTimeout.get().toMillis() / 2));
         return controlClients.computeIfAbsent(cacheKey, k -> build(baseUrl, tls, HttpClient.Version.HTTP_1_1, Duration.ofMillis(half), controlIo));
     }
 
@@ -252,30 +233,27 @@ public final class PeerHttp implements GossipTransport {
         return p == null ? null : p.version;
     }
 
-    /**
-     * A call on the control lane (gossip, probes, digests): to the member's gossip address when it has one, else (and when that address
-     * refuses the connection while the server port answers: a firewall) to {@code baseUrl}. Never on the data lane's connections.
-     */
+    /** A call on the control lane (digest and switches pulls) to {@code baseUrl}: never on the data lane's connections. */
     public Answer control(String baseUrl, String method, String pathAndQuery, Map<String, String> headers, byte[] body, Duration timeout)
             throws IOException, InterruptedException {
-        String g = gossipAddress.apply(baseUrl);
-        if (g != null && !g.isEmpty() && !g.equals(baseUrl)) {
-            Long until = gossipPortUnreachable.get(g);
-            if (until == null || until < System.currentTimeMillis()) {
-                try {
-                    return controlSend(g, method, pathAndQuery, headers, body, timeout);
-                } catch (java.net.ConnectException | java.net.http.HttpConnectTimeoutException e) {
-                    Answer a = controlSend(baseUrl, method, pathAndQuery, headers, body, timeout);   // throws when the node is down: no mark
-                    if (gossipPortUnreachable.put(g, System.currentTimeMillis() + GOSSIP_PORT_RETRY.toMillis()) == null) {
-                        LOG.warn("net: the gossip port {} cannot be reached ({}) but {} answers: gossip goes to the server port for {} min; open the "
-                                + "gossip port between the nodes, or set gossip-port in that node's node.yaml", g, e.getClass().getSimpleName(),
-                                baseUrl, GOSSIP_PORT_RETRY.toMinutes());
-                    }
-                    return a;
-                }
-            }
-        }
         return controlSend(baseUrl, method, pathAndQuery, headers, body, timeout);
+    }
+
+    /** A signed probe of another node's server port ({@code GET /api/v1/net/ping}) on the control lane: true when it answered 200. */
+    public boolean ping(String baseUrl) {
+        try {
+            return control(baseUrl, "GET", "/api/v1/net/ping", Map.of(), null, controlTimeout.get()).status() == 200;
+        } catch (IOException e) {
+            return false;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
+        }
+    }
+
+    /** How long a control call may take by default. */
+    public Duration controlTimeout() {
+        return controlTimeout.get();
     }
 
     private Answer controlSend(String url, String method, String pathAndQuery, Map<String, String> headers, byte[] body, Duration timeout)
@@ -297,44 +275,6 @@ public final class PeerHttp implements GossipTransport {
         Map<String, List<String>> out = new LinkedHashMap<>();
         in.forEach((k, v) -> out.put(k.toLowerCase(java.util.Locale.ROOT), v));
         return out;
-    }
-
-    // -- gossip -------------------------------------------------------------------------------------------------------
-
-    @Override
-    public List<Member> exchange(String url, List<Member> mine) throws Exception {
-        Answer a = control(url, "POST", "/api/v1/net/gossip", Map.of("Content-Type", "application/json"),
-                json.writeValueAsBytes(new Table(mine)), gossipTimeout.get());
-        if (a.status() != 200) {
-            throw new IOException("gossip refused by " + url + ": HTTP " + a.status() + " " + brief(a.text()));
-        }
-        return json.readValue(a.body(), Table.class).members();
-    }
-
-    @Override
-    public boolean ping(String url) {
-        try {
-            return control(url, "GET", "/api/v1/net/ping", Map.of(), null, gossipTimeout.get()).status() == 200;
-        } catch (IOException e) {
-            return false;
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            return false;
-        }
-    }
-
-    @Override
-    public boolean pingVia(String via, String target) {
-        try {
-            Answer a = control(via, "GET", "/api/v1/net/ping?target=" + URLEncoder.encode(target, StandardCharsets.UTF_8), Map.of(), null,
-                    gossipTimeout.get().multipliedBy(2));
-            return a.status() == 200 && json.readTree(a.body()).path("answered").asBoolean(false);
-        } catch (IOException e) {
-            return false;
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            return false;
-        }
     }
 
     /** The first 200 characters of an answer, for messages. */

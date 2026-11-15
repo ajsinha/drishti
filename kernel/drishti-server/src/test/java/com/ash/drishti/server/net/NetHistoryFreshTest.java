@@ -106,7 +106,7 @@ class NetHistoryFreshTest {
         assertThat(ok("T-1").path("cache").asText()).isEqualTo("hit");
         Path log = lake.resolve("desk/trade/_delta_log/00000000000000000001.json");
         Files.copy(SOURCE.resolve("desk/trade/_delta_log/00000000000000000001.json"), log);
-        // A's digest carries its new data version within a gossip interval or two; B's cached answer is no longer used
+        // A's digest carries its new data version within a digest round or two; B's cached answer is no longer used
         boolean fresh = NetNodes.await(15_000, () -> {
             try {
                 return lastMtm(ok("T-1")) == 125.0;
@@ -122,7 +122,7 @@ class NetHistoryFreshTest {
     void aPeerThatIsGoneIsNamedNotNoData() throws Exception {
         String aid = cluster.node("a").net().nodeId();
         cluster.stop("a");
-        assertThat(NetNodes.await(5_000, () -> cluster.node("b").net().node().orElseThrow().table().known(aid)
+        assertThat(NetNodes.await(5_000, () -> cluster.node("b").net().node().orElseThrow().members().known(aid)
                 .map(k -> !k.member().routable()).orElse(false))).isTrue();
         for (int i = 0; i < 2; i++) {                                              // and the second time too: nothing was cached
             HttpResponse<String> r = history("T-2");

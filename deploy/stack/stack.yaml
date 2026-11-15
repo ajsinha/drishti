@@ -18,14 +18,14 @@
 
 # host: 192.168.1.20              # the address every node advertises and the console is given; empty: this machine's primary IPv4
                                    # (the default route's interface, never a docker bridge). Members never advertise 127.0.0.1.
-seed: drishti-main                 # the node every other node knows first (its peers/<seed>.yaml); it learns the rest by gossip
+seed: drishti-main                 # the node every other node knows first (node.yaml seeds: its cluster address); the view brings the rest
 java: /usr/lib/jvm/java-21-openjdk-amd64/bin/java     # JAVA_HOME/bin/java wins when JAVA_HOME is set
 admin: drishti-dev-admin           # the administrator bin/status asks /api/v1/net/members as (a token signed with DRISHTI_TOKEN_SECRET)
 
-gossip:                            # nodes/<node>/net/gossip.yaml of a new node
-  interval: 1s
+membership:                        # [net.membership] of every node (fast failure detection for one machine); a node's cluster port
+  heartbeat: 1s                    # is its cluster-port here, else its port + 100 (the failure detector takes that + 100 too)
   suspect-after: 3s
-  dead-after: 10s
+  verify: 1s
 
 settings:                          # every server and the console (not secret)
   DRISHTI_SECURITY_ENABLED: "true"

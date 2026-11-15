@@ -246,23 +246,41 @@ def stack_host(stack: dict) -> str:
 
 
 # -- nodes -------------------------------------------------------------------------------------------------------------------------
+def cluster_port(node: dict) -> int:
+    """A node's cluster port (the membership, JGroups over TCP): its cluster-port in stack.yaml, else its server port + 100. The failure
+    detector listens on that + 100 too."""
+    return int(node.get("cluster-port") or int(node["port"]) + 100)
+
+
 def node_net(stack: dict, node: dict) -> Path:
-    """nodes/<node>/net: made from stack.yaml the first time (node.yaml, gossip.yaml, peers/<seed>.yaml); kept as it is after that."""
+    """nodes/<node>/net: node.yaml made from stack.yaml the first time (its cluster port, and the seed's cluster address for the others); kept
+    as it is after that. A folder this tool made in the gossip era (gossip.yaml, peers/<seed>.yaml) is moved to the membership once: node.yaml
+    gains cluster-port and seeds, and the two gossip files this tool wrote are removed (the server refuses them)."""
     net = at.home / "nodes" / node["name"] / "net"
-    (net / "peers").mkdir(parents=True, exist_ok=True)
+    net.mkdir(parents=True, exist_ok=True)
+    seed = next((n for n in stack["nodes"] if n["name"] == stack.get("seed")), None)
+    seeds = f"seeds: [\"${{DRISHTI_STACK_HOST}}:{cluster_port(seed)}\"]     # the seed's cluster address (bin/start-cluster sets the host)\n" \
+        if seed and seed["name"] != node["name"] else ""
+    membership = f"cluster-port: {cluster_port(node)}     # the membership's port (TCP); the failure detector's is this + 100\n" + seeds
     if not (net / "node.yaml").exists():
         (net / "node.yaml").write_text(HEADER + f"# {node['name']} of the cluster (its cluster file). The key comes from the environment only.\n"
                                        f"enabled: true\nnode-id: {node['name']}\n"
                                        f"advertise-url: http://${{DRISHTI_STACK_HOST}}:{node['port']}     # this machine's real address (bin/start-cluster sets it)\n"
-                                       "secret: ${DRISHTI_NET_SECRET}\n", encoding="utf-8")
-    if not (net / "gossip.yaml").exists():
-        g = stack.get("gossip") or {}
-        (net / "gossip.yaml").write_text(HEADER + "# Fast failure detection for one machine (the cluster file, gossip).\n"
-                                         + "".join(f"{k}: {v}\n" for k, v in g.items()), encoding="utf-8")
-    seed = next((n for n in stack["nodes"] if n["name"] == stack.get("seed")), None)
-    if seed and seed["name"] != node["name"] and not any((net / "peers").glob("*.yaml")):
-        (net / "peers" / f"{seed['name']}.yaml").write_text(HEADER + f"# The seed: where {node['name']} knocks when it joins.\n"
-                                                           f"url: http://${{DRISHTI_STACK_HOST}}:{seed['port']}     # the seed's real address (bin/start-cluster sets it)\n", encoding="utf-8")
+                                       "secret: ${DRISHTI_NET_SECRET}\n" + membership, encoding="utf-8")
+    else:
+        text = (net / "node.yaml").read_text(encoding="utf-8")
+        if "cluster-port:" not in text and "gossip-port:" not in text:
+            (net / "node.yaml").write_text(text.rstrip("\n") + "\n" + membership, encoding="utf-8")
+    gossip = net / "gossip.yaml"
+    if gossip.is_file() and "(the cluster file, gossip)" in gossip.read_text(encoding="utf-8"):
+        gossip.unlink()
+    peers = net / "peers"
+    if peers.is_dir():
+        for f in peers.glob("*.yaml"):
+            if "The seed: where" in f.read_text(encoding="utf-8"):
+                f.unlink()
+        if not any(peers.iterdir()):
+            peers.rmdir()
     return net
 
 
@@ -358,7 +376,8 @@ def start_node(stack: dict, node: dict, jar: Path) -> bool:
         args += ["--settings", settings]
     for flag in node.get("jvm", []):
         args += ["--java-opt", flag]
-    for arg in [f"--drishti.sources.connectors.{c}.enabled=false" for c in node.get("off", [])] + list(node.get("args", [])):
+    membership = [f"--net.membership.{k}={v}" for k, v in (stack.get("membership") or {}).items()]   # the stack's timings (one machine)
+    for arg in [f"--drishti.sources.connectors.{c}.enabled=false" for c in node.get("off", [])] + membership + list(node.get("args", [])):
         args += ["--server-arg", arg]
     return bin_run("start-server", args, env) == 0
 

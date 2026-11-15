@@ -12,8 +12,9 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Tests of `drishti.py net list|check|add-peer|set|members`: the config/net/ folder checked as the server checks it (the same rules and
-line numbers), writes that are atomic and keep a history, the key never in clear, and the member table of a (fake) running server."""
+"""Tests of `drishti.py net list|check|add-seed|set|members`: the config/net/ folder checked as the server checks it (the same rules and
+line numbers), a gossip-era folder refused with its new settings printed, writes that are atomic and keep a history, the key never in clear,
+and the members of a (fake) running server."""
 import json
 import os
 import pathlib
@@ -74,28 +75,49 @@ class NetFolder(ServerCase):
         self.assertGreaterEqual(len(history), 3)                                  # every earlier text kept
         self.assertFalse(any(p.name.startswith(".") for p in self.dir.rglob("*")))  # no hidden or temporary file left
 
-    def test_a_peer_is_a_seed_file_and_a_bad_file_is_named_with_its_line(self):
-        self.assertEqual(0, self.net("add-peer", "drishti-a", "192.0.2.11:18783", "--tags", "region:emea")[0])
-        self.assertIn("url: http://192.0.2.11:18783", (self.dir / "peers" / "drishti-a.yaml").read_text())
-        self.assertEqual(2, self.net("add-peer", "Drishti_A", "x:1")[0])
-        (self.dir / "gossip.yaml").write_text("interval: 1s\nfanout: lots\nsurprise: 1\n")
+    def test_a_seed_goes_into_node_yaml_and_a_bad_file_is_named_with_its_line(self):
+        self.assertEqual(0, self.net("add-seed", "192.0.2.11:7946")[0])
+        self.assertEqual(0, self.net("add-seed", "192.0.2.11:7946")[0])
+        text = (self.dir / "node.yaml").read_text()
+        self.assertIn("192.0.2.11:7946", text)
+        self.assertEqual(text.index("192.0.2.11:7946"), text.rindex("192.0.2.11:7946"))     # once
+        self.assertEqual(1, self.net("add-seed", "192.0.2.12")[0])                           # no port
+        (self.dir / "routing.yaml").write_text("forward-timeout: 4s\nmax-hops: lots\nsurprise: 1\n")
         code, out, _ = self.net("check")
         self.assertEqual(1, code)
-        self.assertIn("gossip.yaml:2", out)
-        self.assertIn("fanout", out)
+        self.assertIn("routing.yaml:2", out)
+        self.assertIn("max-hops", out)
         self.assertIn("warning", out)
-        code, out, _ = self.net("check", "peers/drishti-a.yaml", "--json")
+        code, out, _ = self.net("check", "node.yaml", "--json")
         self.assertEqual(0, code)
         self.assertTrue(json.loads(out)["ok"])
         self.assertEqual(0, self.net("set", "access.roles.risk.nodes", "n-a,region:emea")[0])
         self.assertIn("- region:emea", (self.dir / "access.yaml").read_text())
-        self.assertEqual(0, self.net("set", "peers.drishti-a.url", "http://192.0.2.11:18784")[0])
-        self.assertIn("18784", (self.dir / "peers" / "drishti-a.yaml").read_text())
+        self.assertEqual(0, self.net("set", "node.cluster-port", "7950")[0])
+        self.assertIn("cluster-port: 7950", (self.dir / "node.yaml").read_text())
+        self.assertEqual(1, self.net("set", "node.gossip-port", "auto")[0])
+        self.assertEqual(2, self.net("set", "gossip.interval", "2s")[0])
         self.assertEqual(2, self.net("set", "nowhere.x", "1")[0])
         (self.dir / "routing.yaml").write_text("this: [is not\n")
         code, out, _ = self.net("check", "routing.yaml")
         self.assertEqual(1, code)
         self.assertIn("is not YAML", out)
+
+    def test_a_gossip_era_folder_is_refused_and_the_new_settings_are_printed(self):
+        self.dir.mkdir(parents=True)
+        (self.dir / "gossip.yaml").write_text("interval: 1s\nsuspect-after: 5s\n")
+        (self.dir / "peers").mkdir()
+        (self.dir / "peers" / "drishti-a.yaml").write_text("url: http://192.0.2.11:18783\n")
+        code, out, _ = self.net("check")
+        self.assertEqual(1, code)
+        for text in ("gossip.yaml", "[net.membership]", "heartbeat=1s", "suspect-after=5s", "peers/", "seeds: [192.0.2.11:7946]"):
+            self.assertIn(text, out)
+        self.assertTrue((self.dir / "gossip.yaml").exists())                     # nothing is rewritten
+        code, _, err = self.net("check", "gossip.yaml")
+        self.assertEqual(2, code)
+        self.assertIn("[net.membership]", err)
+        code, out, _ = self.net("list")
+        self.assertIn("refused (the gossip era)", out)
 
     def test_a_loopback_or_wildcard_address_is_refused_naming_this_machines_address(self):
         import hostaddr
@@ -108,14 +130,13 @@ class NetFolder(ServerCase):
             self.assertIn("loopback or wildcard", err)
             if ip:
                 self.assertIn(f"http://{ip}:18783", err)
-            code, _, err = self.net("add-peer", "drishti-a", bad)
+            code, _, err = self.net("add-seed", bad.replace("http://", ""))
             self.assertEqual(1, code, bad)
-            self.assertIn("a peer's address", err)
+            self.assertIn("a seed", err)
         self.assertFalse((self.dir / "node.yaml").exists())
-        self.assertFalse((self.dir / "peers" / "drishti-a.yaml").exists())
-        (self.dir / "peers").mkdir(parents=True)
-        (self.dir / "peers" / "drishti-b.yaml").write_text("url: http://127.0.0.2:18784\n")
-        code, out, _ = self.net("check", "peers/drishti-b.yaml")
+        self.dir.mkdir(parents=True)
+        (self.dir / "node.yaml").write_text("seeds: [127.0.0.2:7946]\n")
+        code, out, _ = self.net("check", "node.yaml")
         self.assertEqual(1, code)
         self.assertIn("loopback or wildcard", out)
 
@@ -138,7 +159,7 @@ class NetFolder(ServerCase):
             code, _, err = self.net("set", "node.advertise-url", url)
             self.assertEqual(1, code, url)
             self.assertIn("loopback or wildcard", err)
-            code, _, err = self.net("add-peer", "drishti-a", url)
+            code, _, err = self.net("add-seed", url.replace("http://", ""))
             self.assertEqual(1, code, url)
         self.assertFalse((self.dir / "node.yaml").exists())
         for host in ("192.0.2.10", "10.0.0.5", "drishti-a.invalid", "2001:db8::1"):
@@ -159,7 +180,7 @@ class NetFolder(ServerCase):
         for c in cases:
             url, ok, reason = c[0], c[1] == "ok", (c[2] if len(c) > 2 else "")
             self.assertEqual(ok, hostaddr.callable_url(url), url)
-            for argv in (("set", "node.advertise-url", url), ("add-peer", "drishti-a", url)):
+            for argv in (("set", "node.advertise-url", url),):
                 code, out, err = self.net(*argv)
                 self.assertEqual(0 if ok else 1, code, f"{url}: {err}")
                 if not ok:
@@ -167,8 +188,8 @@ class NetFolder(ServerCase):
 
     def test_members_of_a_running_server(self):
         Fake.routes[("GET", "/api/v1/net/members")] = {"running": True, "self": "n-a", "members": [
-            {"nodeId": "n-a", "self": True, "url": "http://127.0.0.1:18783", "state": "alive", "version": "2.5.0", "tags": ["region:emea"], "latencyMs": None, "incarnation": 1},
-            {"nodeId": "n-b", "self": False, "url": "http://127.0.0.1:18784", "state": "suspect", "version": "2.5.0", "tags": [], "latencyMs": 2.5, "incarnation": 3, "drained": True}]}
+            {"nodeId": "n-a", "self": True, "url": "http://127.0.0.1:18783", "state": "alive", "version": "2.5.0", "tags": ["region:emea"], "latencyMs": None, "clusterAddress": "192.0.2.10:7946"},
+            {"nodeId": "n-b", "self": False, "url": "http://127.0.0.1:18784", "state": "suspect", "version": "2.5.0", "tags": [], "latencyMs": 2.5, "clusterAddress": "192.0.2.10:7947", "drained": True}]}
         code, out, _ = run("net", "members", "--server", self.url)
         self.assertEqual(0, code)
         for text in ("2 member(s); this node n-a", "n-a (this node)", "n-b drained", "suspect", "2.5 ms", "region:emea"):

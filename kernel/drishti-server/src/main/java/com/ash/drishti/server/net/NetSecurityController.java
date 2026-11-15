@@ -67,7 +67,7 @@ public class NetSecurityController {
     public Map<String, Object> access(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireAdmin(p);
         AccessSettings a = net.config().access();
-        List<Member> members = net.node().map(n -> n.table().entries()).orElse(List.of());
+        List<Member> members = net.node().map(n -> n.members().entries()).orElse(List.of());
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("roles", a.roles());
         TreeSet<String> names = new TreeSet<>(roles.get());

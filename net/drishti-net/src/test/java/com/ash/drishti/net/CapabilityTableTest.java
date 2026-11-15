@@ -40,7 +40,7 @@ class CapabilityTableTest {
     }
 
     static Member member(String id, MemberState s, boolean drained) {
-        return new Member(id, "http://" + id, 1, 1, s, "", "2.5.0", Member.PROTOCOL, List.of(), 0, drained);
+        return new Member(id, "http://" + id, s, "", "2.5.0", Member.PROTOCOL, List.of(), 0, drained);
     }
 
     @Test

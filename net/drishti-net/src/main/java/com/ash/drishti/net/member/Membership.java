@@ -59,6 +59,14 @@ public interface Membership extends AutoCloseable {
     /** Told every message of {@code topic}: the sender's id and the bytes (this node's own included). */
     void onMessage(String topic, BiConsumer<String, byte[]> listener);
 
+    /**
+     * Adds a seed ({@code host:port} of a cluster port) to a running node's discovery, so partitions merge through it without a restart (an
+     * administrator's Admin → Cluster → Add a seed). False when this provider or its discovery takes no seed at run time.
+     */
+    default boolean addSeed(String hostPort) {
+        return false;
+    }
+
     /** Leaves (when joined) and frees the port and threads. */
     @Override
     void close();

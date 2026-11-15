@@ -113,6 +113,12 @@ NODES = {  # name: (lake, packs, port offset); only packs whose tables the lakes
 REF_PACKS = "trading,counterparty-risk"
 
 
+
+def cluster_seed(url: str) -> str:
+    """A seed URL (http://host:port of a server) as the membership's seed: host:cluster-port (the server port + 100)."""
+    host, _, port = url.split("://", 1)[-1].rstrip("/").rpartition(":")
+    return f"{host}:{int(port) + 100}"
+
 def pack_closure(packs: str, packs_dir: Path) -> list[str]:
     """The packs named and every pack they extend, each once, the extended ones first."""
     import yaml
@@ -279,14 +285,12 @@ class Soak:
     # -- processes --------------------------------------------------------------------------------------------------------------
     def start_server(self, name: str, lake: str, packs: str, port: int, seed: str | None, net: bool = True) -> None:
         work = self.work / "nodes" / name
-        for d in ("data", "connectors", "net/peers"):
+        for d in ("data", "connectors", "net"):
             (work / d).mkdir(parents=True, exist_ok=True)
         if net:
             (work / "net" / "node.yaml").write_text(f"enabled: true\nnode-id: drishti-{name}\nadvertise-url: http://{HOST}:{port}\n"
-                                                    "secret: ${DRISHTI_NET_SECRET}\n", encoding="utf-8")
-            (work / "net" / "gossip.yaml").write_text("interval: 1s\nsuspect-after: 3s\ndead-after: 10s\npersist-every: 30s\n", encoding="utf-8")
-            if seed:
-                (work / "net" / "peers" / "drishti-a.yaml").write_text(f"url: {seed}\n", encoding="utf-8")
+                                                    f"secret: ${{DRISHTI_NET_SECRET}}\ncluster-port: {port + 100}\n"
+                                                    + (f"seeds: [\"{cluster_seed(seed)}\"]\n" if seed else ""), encoding="utf-8")
         for cname, text in connector_files(self.work / "lakes" / lake, packs).items():     # the lake holds none of its tables: off
             (work / "connectors" / f"{cname}.yaml").write_text(text, encoding="utf-8")
         assert port not in FORBIDDEN and not listening(port), f"port {port} is in use"
@@ -295,6 +299,7 @@ class Soak:
                    DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_CONNECTORS_DIR=str(work / "connectors"),
                    DRISHTI_NET_DIR=str(work / "net"), DRISHTI_ACCESS_LOG="false", **server_env(getattr(self.a, "server_env", None)))
         args = [*jvm_args(self.a.heap, getattr(self.a, "jvm_arg", None)), "-jar", self.jar, f"--server.port={port}", f"--drishti.net.dir={work / 'net'}", "--drishti.net.poll=1s",
+                "--net.membership.heartbeat=1s", "--net.membership.suspect-after=3s", "--net.membership.verify=1s",
                 "--drishti.sources.plugins.demo.enabled=false", "--drishti.security.registered-users-only=false",
                 "--drishti.security.redact=" + ",".join(REDACT)]
         log = open(self.work / f"server-{name}.log", "ab")

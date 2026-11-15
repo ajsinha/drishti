@@ -66,7 +66,7 @@ class NetLastAdminTest {
     }
 
     static long alive(String node) {
-        return cluster.node(node).net().node().map(n -> n.table().alive().size()).orElse(0);
+        return cluster.node(node).net().node().map(n -> n.members().alive().size()).orElse(0);
     }
 
     static UserService users(String node) {
@@ -104,7 +104,7 @@ class NetLastAdminTest {
         String cId = cluster.node("c").net().nodeId();
         sa.hold(true);
         int before = waiting(sa, cId);
-        cluster.node("a").net().node().orElseThrow().table().mark(cId, MemberState.SUSPECT);
+        cluster.node("a").net().node().orElseThrow().members().mark(cId, MemberState.SUSPECT);
         a.setEnabled("test", SEEDED, false);
         assertThat(waiting(sa, cId)).as("the change is queued for the suspected member").isGreaterThan(before);
         sa.hold(false);

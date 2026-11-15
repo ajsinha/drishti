@@ -141,7 +141,7 @@ public final class StateSync implements AutoCloseable {
             return;
         }
         Change c = new Change(user, SESSIONS, key, value, System.currentTimeMillis(), net.nodeId(), false);
-        net.node().ifPresent(n -> n.table().others().stream().map(k -> k.member()).filter(StateSync::member).forEach(m -> queue(m.nodeId(), c)));
+        net.node().ifPresent(n -> n.members().others().stream().map(k -> k.member()).filter(StateSync::member).forEach(m -> queue(m.nodeId(), c)));
     }
 
     /** A part's change made here: queued for every member ({@link #member}) (nothing while the cluster is off or user-state is off). */
@@ -149,7 +149,7 @@ public final class StateSync implements AutoCloseable {
         if (!active()) {
             return;
         }
-        net.node().ifPresent(n -> n.table().others().stream().map(k -> k.member()).filter(StateSync::member).forEach(m -> queue(m.nodeId(), c)));
+        net.node().ifPresent(n -> n.members().others().stream().map(k -> k.member()).filter(StateSync::member).forEach(m -> queue(m.nodeId(), c)));
     }
 
     /**
@@ -189,7 +189,7 @@ public final class StateSync implements AutoCloseable {
         long at = System.currentTimeMillis();
         last.put(key(user, namespace, key), at);
         Change c = new Change(user, namespace, key, value, at, net.nodeId(), false);
-        net.node().ifPresent(n -> n.table().others().stream().map(k -> k.member()).filter(StateSync::member).forEach(m -> queue(m.nodeId(), c)));
+        net.node().ifPresent(n -> n.members().others().stream().map(k -> k.member()).filter(StateSync::member).forEach(m -> queue(m.nodeId(), c)));
     }
 
     private void queue(String peer, Change c) {
@@ -355,7 +355,7 @@ public final class StateSync implements AutoCloseable {
             return;
         }
         for (String peer : new ArrayList<>(pending.keySet())) {
-            var known = node.table().known(peer).orElse(null);
+            var known = node.members().known(peer).orElse(null);
             if (known == null || known.member().state().gone()) {
                 pending.remove(peer);                      // gone: its catch-up when it comes back covers what it missed
                 continue;

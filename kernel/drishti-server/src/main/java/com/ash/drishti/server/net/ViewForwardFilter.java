@@ -298,7 +298,7 @@ public final class ViewForwardFilter extends OncePerRequestFilter {
             if (failures >= 2) {
                 break;                                     // tried once on the next after a failure, never more
             }
-            String url = routing.net().node().flatMap(n -> n.table().known(node)).map(k -> k.member().url()).orElse(null);
+            String url = routing.net().node().flatMap(n -> n.members().known(node)).map(k -> k.member().url()).orElse(null);
             if (url == null) {
                 continue;
             }

@@ -22,7 +22,7 @@ import com.ash.drishti.net.config.NetFolder;
 import com.ash.drishti.net.config.NetSchema;
 import com.ash.drishti.net.member.Member;
 import com.ash.drishti.net.member.MemberState;
-import com.ash.drishti.net.member.MemberTable;
+import com.ash.drishti.net.member.MemberDirectory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -36,8 +36,8 @@ import org.junit.jupiter.api.io.TempDir;
 
 /**
  * Advertised and seed addresses (QA1-202, QA1-206): the table {@code net/advertise-urls.tsv}, which {@code tools/test_cli_net.py} reads
- * too, so the server and {@code drishti.py net} take and refuse the same addresses; through the schema check (node.yaml and a peer file,
- * as {@code POST /net/file/check} and {@code PUT} run it) and the gossip intake.
+ * too, so the server and {@code drishti.py net} take and refuse the same addresses; through the schema check (node.yaml,
+ * as {@code POST /net/file/check} and {@code PUT} run it) and the vitals intake of the member directory.
  */
 class AdvertiseUrlCasesTest {
 
@@ -70,15 +70,11 @@ class AdvertiseUrlCasesTest {
         for (Case c : cases()) {
             String node = f.check("node.yaml", "enabled: true\nadvertise-url: \"" + c.url() + "\"\nsecret: ${DRISHTI_NET_SECRET}\n").stream()
                     .filter(p -> p.error()).map(p -> p.message()).collect(Collectors.joining(" | "));
-            String peer = f.check("peers/drishti-a.yaml", "url: \"" + c.url() + "\"\n").stream().filter(p -> p.error())
-                    .map(p -> p.message()).collect(Collectors.joining(" | "));
             assertThat(HostAddress.callableUrl(c.url())).as(c.url()).isEqualTo(c.ok());
             if (c.ok()) {
                 assertThat(node).as(c.url()).isEmpty();
-                assertThat(peer).as(c.url()).isEmpty();
             } else {
                 assertThat(node).as(c.url()).contains(c.reason());
-                assertThat(peer).as(c.url()).contains(c.reason());
             }
         }
     }
@@ -86,11 +82,11 @@ class AdvertiseUrlCasesTest {
     @Test
     void anAdvertisementWithNoPortToCallIsNeverStored() throws IOException {
         // QA1-202: a member advertising port 0 or 99999 was listed alive while every read through it failed
-        MemberTable table = new MemberTable(new Member("self", "http://192.0.2.1:18611", 1, 0, MemberState.ALIVE, "", "", Member.PROTOCOL,
+        MemberDirectory table = new MemberDirectory(new Member("self", "http://192.0.2.1:18611", MemberState.ALIVE, "", "", Member.PROTOCOL,
                 List.of(), 0, false), () -> 1000);
         int i = 0;
         for (Case c : cases()) {
-            table.merge(List.of(new Member("m-" + i++, c.url(), 1, 1, MemberState.ALIVE, "", "", Member.PROTOCOL, List.of(), 0, false)));
+            table.vitals(new Member("m-" + i++, c.url(), MemberState.ALIVE, "", "", Member.PROTOCOL, List.of(), 0, false));
             assertThat(table.known("m-" + (i - 1))).as(c.url()).matches(o -> o.isPresent() == c.ok());
         }
     }

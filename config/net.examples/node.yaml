@@ -24,12 +24,9 @@ peer-only-packs: []                  # packs served to peers only, hidden from t
 memory-stores: []                    # the in-memory lake's stores this node owns (fills, compacts and serves; docs/guides/DATA_LAKE_GUIDE.md): the
                                      # packs reading them are bound here and the other nodes forward their requests here. []: each store's owner setting
 secret: ${DRISHTI_NET_SECRET}        # the cluster key: an environment reference only, at least 32 bytes, the same on every node
-gossip-port: auto                    # gossip, probes and digests on a port of their own with their own platform threads, so a server busy
-                                     # with queries is never wrongly suspected: auto (a free port, advertised through gossip), a
-                                     # number (a firewall that must name it: open it between the nodes), or off (the server's port)
-# previous-secret: ${DRISHTI_NET_PREVIOUS_SECRET}   # also accepted during a key rollover (OPERATIONS_GUIDE.md, "Rotating the key")
-# tls:                               # mutual TLS between nodes, the shared tls settings (docs/guides/DATA_GUIDE.md section 10)
-#   keystore: /etc/drishti/net/node.p12
-#   keystore-password: ${DRISHTI_NET_KEYSTORE_PASSWORD}
-#   truststore: /etc/drishti/net/cluster-ca.p12
-#   truststore-password: ${DRISHTI_NET_TRUSTSTORE_PASSWORD}
+cluster-port: 7946                   # the membership's TCP port (JGroups, TCP only, never multicast): a number, open it between the nodes,
+                                     # and cluster-port + 100 (the failure detector's socket). Left out: [net.node] cluster-port, else 7946
+# agreement-port: 7947               # the agreement's port, ratis mode only (mutual TLS required). Left out: [net.node] agreement-port, 7947
+seeds: [drishti-a.internal:7946, drishti-c.internal:7946]   # host:cluster-port of members to dial when joining (real addresses, never
+                                     # loopback). Left out: [net.cluster] seeds; the members of <data dir>/net/members.json are dialled too
+# role: server                       # server, or witness (membership and agreement only). Left out: [net.node] role

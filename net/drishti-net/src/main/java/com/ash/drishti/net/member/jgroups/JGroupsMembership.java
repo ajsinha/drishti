@@ -43,6 +43,7 @@ import org.jgroups.MergeView;
 import org.jgroups.Message;
 import org.jgroups.PhysicalAddress;
 import org.jgroups.Receiver;
+import org.jgroups.protocols.TCPPING;
 import org.jgroups.stack.IpAddress;
 import org.jgroups.util.ExtendedUUID;
 import org.jgroups.util.NameCache;
@@ -185,6 +186,25 @@ public final class JGroupsMembership implements Membership {
     @Override
     public void close() {
         leave();
+    }
+
+    /** Adds a seed to TCPPING's list of the running channel; the next discovery and merge round dial it. */
+    @Override
+    public boolean addSeed(String hostPort) {
+        JChannel ch = channel;
+        int colon = hostPort == null ? -1 : hostPort.lastIndexOf(':');
+        if (ch == null || colon <= 0) {
+            return false;
+        }
+        TCPPING ping = ch.getProtocolStack().findProtocol(TCPPING.class);
+        if (ping == null) {
+            return false;
+        }
+        List<PhysicalAddress> hosts = new ArrayList<>(ping.getInitialHosts());
+        hosts.add(new IpAddress(new java.net.InetSocketAddress(hostPort.substring(0, colon), Integer.parseInt(hostPort.substring(colon + 1)))));
+        ping.setInitialHosts2(hosts);
+        LOG.info("net: {} dials the seed {} from now on", self.id(), hostPort);
+        return true;
     }
 
     /**

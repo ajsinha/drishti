@@ -18,7 +18,7 @@ package com.ash.drishti.server.shard;
 import com.ash.drishti.net.digest.Digest;
 import com.ash.drishti.net.member.Member;
 import com.ash.drishti.net.member.MemberState;
-import com.ash.drishti.net.member.MemberTable;
+import com.ash.drishti.net.member.MemberDirectory;
 import com.ash.drishti.net.security.NetHeaders;
 import com.ash.drishti.net.security.OnBehalfOf;
 import com.ash.drishti.net.transport.PeerHttp;
@@ -43,7 +43,7 @@ import java.util.function.Supplier;
  * members that are alive, with what each says of the measure's shards in its capability digest (a service of its own per measure, VaR's
  * {@code var-shards}: whether it owns shards, whether it is
  * draining, its zone, and per date the shard map it holds and the shards it is ready to serve). Readiness travels with the digest: a change
- * raises the digest's hash in gossip and the peers pull it within a round, so "ready for shard X" is announced through gossip without a
+ * raises the digest's hash in this node's vitals and the peers pull it within a second, so "ready for shard X" is announced through the vitals without a
  * protocol of its own. Calls to a member are the cluster's signed, one-hop calls; a call for a person carries their on-behalf-of token.
  * With Drishti*net off the only member is this server ({@code local}).
  */
@@ -197,7 +197,7 @@ public final class ShardPeers {
         }
     }
 
-    /** Rebuilds this member's digest now, so a shard just ready is announced in the next gossip round, not after the digest's own. */
+    /** Rebuilds this member's digest now, so a shard just ready is announced in this node's vitals at once, not after the digest's own round. */
     public void announce() {
         DigestService d = digests.get();
         if (d != null && clustered()) {
@@ -213,11 +213,11 @@ public final class ShardPeers {
             return out;
         }
         NetService n = net.get();
-        MemberTable table = n.node().orElseThrow().table();
+        MemberDirectory table = n.node().orElseThrow().members();
         Member me = table.self();
         out.add(new Peer(me.nodeId(), me.url(), zone(me.tags(), zoneTag), true, !me.drained(), mine));
         Map<String, Digest> theirs = digests.get() == null ? Map.of() : digests.get().peers();
-        for (MemberTable.Known k : table.others()) {
+        for (MemberDirectory.Known k : table.others()) {
             Member m = k.member();
             if (m.state() != MemberState.ALIVE) {
                 continue;
@@ -260,7 +260,7 @@ public final class ShardPeers {
 
     private String url(String node) throws IOException {
         NetService n = net.get();
-        return n.node().flatMap(x -> x.table().known(node)).map(k -> k.member().url())
+        return n.node().flatMap(x -> x.members().known(node)).map(k -> k.member().url())
                 .orElseThrow(() -> new IOException("node " + node + " is not a known member"));
     }
 

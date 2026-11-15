@@ -21,7 +21,7 @@ import com.ash.drishti.engine.source.SourceRegistry;
 import com.ash.drishti.net.digest.CapabilityTable;
 import com.ash.drishti.net.digest.Digest;
 import com.ash.drishti.net.member.Member;
-import com.ash.drishti.net.member.MemberTable;
+import com.ash.drishti.net.member.MemberDirectory;
 import com.ash.drishti.net.transport.PeerHttp;
 import com.ash.drishti.packs.Pack;
 import com.ash.drishti.packs.PackRegistry;
@@ -48,9 +48,9 @@ import org.slf4j.LoggerFactory;
 
 /**
  * This node's capability digest, the peers' digests and the capability table built from them (CLUSTER_GUIDE.md › Drishti*net: many servers, one Drishti, section 6). While the
- * node runs, a virtual thread rebuilds this node's digest every gossip interval (packs, kinds, sources, data versions, settings: all
- * cheap reads), and gives its hash to the member entry when it changed, so gossip carries it; it pulls a peer's digest
- * ({@code GET /api/v1/net/digest}) when the hash in gossip differs from the one it holds, or when the one it holds is a minute old (its
+ * node runs, a virtual thread rebuilds this node's digest every membership heartbeat (packs, kinds, sources, data versions, settings: all
+ * cheap reads), and gives its hash to this node's vitals when it changed, so the membership channel carries it; it pulls a peer's digest
+ * ({@code GET /api/v1/net/digest}) when the hash in the peer's vitals differs from the one it holds, or when the one it holds is a minute old (its
  * load), and drops the digests of members that are gone. The capability table is swapped whole after each change.
  */
 public final class DigestService implements AutoCloseable {
@@ -136,7 +136,7 @@ public final class DigestService implements AutoCloseable {
         }
     }
 
-    /** How often the peers' digest hashes are compared (cheap): a changed digest is pulled within this of gossip bringing its hash. */
+    /** How often the peers' digest hashes are compared (cheap): a changed digest is pulled within this of the vitals bringing its hash. */
     private static final long LOOK_MS = 250;
 
     private void run() {
@@ -144,7 +144,7 @@ public final class DigestService implements AutoCloseable {
         while (!Thread.currentThread().isInterrupted() && net.node().isPresent()) {
             try {
                 long now = System.currentTimeMillis();
-                boolean rebuild = now - built >= net.config().gossip().interval().toMillis();
+                boolean rebuild = now - built >= rebuildMillis();
                 tick(rebuild);
                 if (rebuild) {
                     built = now;
@@ -153,7 +153,7 @@ public final class DigestService implements AutoCloseable {
                 LOG.warn("net: digest round failed: {}", e.toString());
             }
             try {
-                Thread.sleep(Math.min(LOOK_MS, Math.max(50, net.config().gossip().interval().toMillis())));
+                Thread.sleep(Math.min(LOOK_MS, Math.max(50, rebuildMillis())));
             } catch (InterruptedException e) {
                 return;
             }
@@ -162,6 +162,11 @@ public final class DigestService implements AutoCloseable {
         pulledAt.clear();
         table = CapabilityTable.EMPTY;
         loop = null;
+    }
+
+    /** How often this node's digest is rebuilt: half a membership heartbeat, at least 250 ms (a second with the default heartbeat). */
+    private long rebuildMillis() {
+        return Math.max(250, net.config().cluster().membership().heartbeat().toMillis() / 2);
     }
 
     /** One full pass: rebuild this node's digest, pull the peers' that changed, rebuild the table. */
@@ -182,7 +187,7 @@ public final class DigestService implements AutoCloseable {
         }
         Map<String, Double> latency = new LinkedHashMap<>();
         long now = System.currentTimeMillis();
-        for (MemberTable.Known k : n.table().others()) {
+        for (MemberDirectory.Known k : n.members().others()) {
             Member m = k.member();
             latency.put(m.nodeId(), k.latencyMs());
             if (m.state().gone()) {
@@ -199,8 +204,8 @@ public final class DigestService implements AutoCloseable {
                 }
             }
         }
-        peers.keySet().removeIf(id -> n.table().known(id).isEmpty());
-        CapabilityTable next = CapabilityTable.of(n.id(), mine, n.table().byId().values(), Map.copyOf(peers), latency);
+        peers.keySet().removeIf(id -> n.members().known(id).isEmpty());
+        CapabilityTable next = CapabilityTable.of(n.id(), mine, n.members().byId().values(), Map.copyOf(peers), latency);
         boolean statesMoved = !sameStates(table, next);
         table = next;
         if (settledFor != n && firstDigestsIn(n)) {
@@ -278,12 +283,12 @@ public final class DigestService implements AutoCloseable {
     }
 
     /**
-     * The first exchange is done: some other member is known, and every other member that is alive and gossips a digest has had its
+     * The first exchange is done: some other member is known, and every other member that is alive and publishes a digest has had its
      * digest pulled (a peer that just started and has none yet is not waited for).
      */
     private boolean firstDigestsIn(NetService.Node n) {
         boolean any = false;
-        for (MemberTable.Known k : n.table().others()) {
+        for (MemberDirectory.Known k : n.members().others()) {
             Member m = k.member();
             if (m.state().gone()) {
                 continue;
@@ -328,7 +333,9 @@ public final class DigestService implements AutoCloseable {
 
     private Digest pull(Member m) {
         try {
+            long t0 = System.nanoTime();
             PeerHttp.Answer a = net.http().control(m.url(), "GET", "/api/v1/net/digest", Map.of(), null, Duration.ofSeconds(3));   // the control lane
+            net.node().ifPresent(n -> n.members().heard(m.nodeId(), (System.nanoTime() - t0) / 1e6));     // the latency routing weighs
             if (a.status() != 200) {
                 LOG.debug("net: digest of {} refused: HTTP {}", m.nodeId(), a.status());
                 return null;
@@ -345,7 +352,7 @@ public final class DigestService implements AutoCloseable {
 
     /** This node's digest now, built from the packs switched on, their kinds and the sources that serve them. */
     Digest build(NetService.Node n) {
-        Member me = n.table().self();
+        Member me = n.members().self();
         Set<String> peerOnly = Set.copyOf(net.config().node().peerOnlyPacks());
         List<String> enabled = packAccess.enabled();
         List<Pack> on = packs.packs().stream().filter(p -> enabled.contains(p.name())).sorted(Comparator.comparing(Pack::name)).toList();

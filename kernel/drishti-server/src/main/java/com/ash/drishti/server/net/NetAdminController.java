@@ -23,10 +23,8 @@ import com.ash.drishti.net.config.NetSchema;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.kernel.api.security.Principal;
 import com.fasterxml.jackson.databind.JsonNode;
-import java.net.URI;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -67,40 +65,32 @@ public class NetAdminController {
 
     // -- members ------------------------------------------------------------------------------------------------------
 
-    /** Body {@code {url, name?}}: saved as {@code peers/<name>.yaml} and tried at once. */
+    /**
+     * Body {@code {url}}: a seed, {@code host:cluster-port} (a scheme or path is dropped); added to node.yaml's {@code seeds} and dialled from
+     * now on by the running membership (no restart).
+     */
     @PostMapping("/seeds")
     public Map<String, Object> addSeed(@RequestBody JsonNode body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireAdmin(p);
-        String url = body.path("url").asText("").trim().replaceAll("/+$", "");
-        if (!url.contains("://")) {
-            url = "http://" + url;
+        String seed = body.path("url").asText("").trim().replaceAll("^[A-Za-z][A-Za-z0-9+.-]*://", "").replaceAll("/.*$", "");
+        com.ash.drishti.net.config.ClusterSettings.seedProblem(seed).ifPresent(problem -> {
+            throw new DrishtiException(ErrorCode.NET_BAD_REQUEST, problem);
+        });
+        List<String> seeds = new java.util.ArrayList<>(net.config().seeds());
+        if (!seeds.contains(seed)) {
+            seeds.add(seed);
         }
-        URI u;
-        try {
-            u = URI.create(url);
-        } catch (IllegalArgumentException e) {
-            throw new DrishtiException(ErrorCode.NET_BAD_REQUEST, "'" + url + "' is not host:port or an http(s) address");
-        }
-        if (u.getHost() == null || u.getPort() < 0 && !url.startsWith("https://")) {
-            throw new DrishtiException(ErrorCode.NET_BAD_REQUEST, "a seed is host:port or an http(s) address with a port: " + url);
-        }
-        String name = body.path("name").asText("").isBlank()
-                ? (u.getHost() + (u.getPort() < 0 ? "" : "-" + u.getPort())).toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9-]", "-").replaceAll("^-+", "")
-                : body.path("name").asText().trim();
-        String id = "peers/" + name + ".yaml";
-        if (!NetFolder.valid(id)) {
-            throw new DrishtiException(ErrorCode.NET_BAD_REQUEST, "'" + name + "' is not a peer name: lower-case letters, digits and dashes");
-        }
-        String text = net.folder().render(id, Map.of("url", url));
+        String id = "node.yaml";
+        String text = net.folder().withSetting(id, "seeds", String.join(",", seeds));
         List<NetSchema.Problem> problems = net.folder().check(id, text);
         if (problems.stream().anyMatch(NetSchema.Problem::error)) {
-            throw new DrishtiException(ErrorCode.NET_BAD_REQUEST, problems.get(0).toString());
+            throw new DrishtiException(ErrorCode.NET_BAD_REQUEST, problems.stream().filter(NetSchema.Problem::error).findFirst().orElseThrow().toString());
         }
         net.folder().write(id, text, null);
-        net.reload();
-        boolean answered = net.running() && net.contact(url);
-        record(p, "net-seed-added", name, url + (answered ? ", answered" : ", did not answer yet"));
-        return Map.of("file", id, "url", url, "answered", answered);
+        net.reload();                                     // a new seed is added to the running membership's discovery
+        boolean dialled = net.running() && net.config().seeds().contains(seed);
+        record(p, "net-seed-added", seed, "node.yaml seeds" + (dialled ? ", dialled from now on" : ", used when the node joins"));
+        return Map.of("file", id, "seed", seed, "dialled", dialled);
     }
 
     @DeleteMapping("/members/{id}")
@@ -131,7 +121,7 @@ public class NetAdminController {
     public Map<String, Object> leave(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireAdmin(p);
         net.leave();
-        record(p, "net-leave", net.nodeId(), "gossiped left; serves peers nothing until rejoin");
+        record(p, "net-leave", net.nodeId(), "left the cluster cleanly; serves peers nothing until rejoin");
         return Map.of("left", true);
     }
 
@@ -139,7 +129,7 @@ public class NetAdminController {
     public Map<String, Object> rejoin(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireAdmin(p);
         net.rejoin();
-        record(p, "net-rejoin", net.nodeId(), "alive again with a higher incarnation");
+        record(p, "net-rejoin", net.nodeId(), "joined the cluster again");
         return Map.of("left", false);
     }
 
@@ -259,7 +249,7 @@ public class NetAdminController {
 
     private static void requireFile(String id) {
         if (!NetFolder.valid(id)) {
-            throw new DrishtiException(ErrorCode.NET_BAD_REQUEST, "'" + id + "' is not a file of config/net/: node.yaml, gossip.yaml, routing.yaml, access.yaml or peers/<name>.yaml");
+            throw new DrishtiException(ErrorCode.NET_BAD_REQUEST, "'" + id + "' is not a file of config/net/: node.yaml, routing.yaml or access.yaml (the membership's timings and seeds are the settings file's [net.membership] and [net.cluster])");
         }
     }
 }

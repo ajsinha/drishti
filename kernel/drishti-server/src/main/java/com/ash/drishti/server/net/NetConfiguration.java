@@ -28,33 +28,26 @@ import org.springframework.core.env.Environment;
 
 /**
  * Drishti*net's beans (docs/guides/CLUSTER_GUIDE.md). They always exist, and do nothing while {@code config/net/node.yaml}
- * does not say {@code enabled: true}: no thread gossips, no peer is asked, no request is forwarded, and the cluster's endpoints
+ * does not say {@code enabled: true}: no membership is joined, no peer is asked, no request is forwarded, and the cluster's endpoints
  * answer that the cluster is off.
  */
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(NetProperties.class)
 public class NetConfiguration {
 
-    /** The gossip port (2.6.7): a connector of its own with platform threads, opened when the node joins. */
-    @Bean(destroyMethod = "close")
-    public GossipConnector gossipConnector(org.springframework.context.ApplicationContext context,
-            ObjectProvider<org.springframework.boot.autoconfigure.web.ServerProperties> server, ObjectProvider<org.springframework.boot.ssl.SslBundles> bundles) {
-        return new GossipConnector(context, server, bundles);
-    }
-
     /**
-     * The priority path (2.6.7): gossip, probes and digests answered by the very first filter, on either port, before request activity, the
-     * guards, the token filter and any admission gate.
+     * The priority path: probes, digests and switches answered by the very first filter, before request activity, the guards, the token
+     * filter and any admission gate. Membership is the membership channel's own port (cluster-port), not HTTP.
      */
     @Bean
-    public FilterRegistrationBean<GossipPath> gossipPath(NetService net, ObjectProvider<DigestService> digests, GossipConnector port,
+    public FilterRegistrationBean<ControlPath> controlPath(NetService net, ObjectProvider<DigestService> digests,
             ObjectProvider<com.ash.drishti.identity.SwitchLedger> switches) {
-        GossipPath path = new GossipPath(net, digests::getIfAvailable, port);
+        ControlPath path = new ControlPath(net, digests::getIfAvailable);
         path.switches(() -> {
             com.ash.drishti.identity.SwitchLedger l = switches.getIfAvailable();
             return l == null ? null : com.ash.drishti.server.switches.SwitchSync.toWire(net.nodeId(), l);
         });
-        FilterRegistrationBean<GossipPath> r = new FilterRegistrationBean<>(path);
+        FilterRegistrationBean<ControlPath> r = new FilterRegistrationBean<>(path);
         r.addUrlPatterns("/*");
         r.setOrder(org.springframework.core.Ordered.HIGHEST_PRECEDENCE);
         return r;
@@ -82,10 +75,10 @@ public class NetConfiguration {
     static final int PEER_STREAMS = 1000;
 
     @Bean(destroyMethod = "close")
-    public NetService netService(NetProperties props, Environment env, ObjectProvider<org.springframework.boot.info.BuildProperties> build,
-            GossipConnector gossipPort) {
+    public NetService netService(NetProperties props, Environment env, ObjectProvider<org.springframework.boot.info.BuildProperties> build) {
         Path state = Path.of(env.getProperty("drishti.data.dir", com.ash.drishti.api.Roots.data()), "net");
-        // ${ENV} references in the files are read from the environment, then from the server's own properties (a test, a run configuration)
+        // ${ENV} references in the files, and the settings file's [net.*] keys, are read from the environment, then from the server's own
+        // properties (the settings files, a -D, a test's or a run configuration's arguments)
         NetSchema schema = new NetSchema(name -> {
             String v = System.getenv(name);
             return v != null ? v : env.getProperty(name);
@@ -95,8 +88,7 @@ public class NetConfiguration {
         NetService net = new NetService(folder, state, props, version, NetClock.SYSTEM);
         net.advertiseDefault("true".equalsIgnoreCase(env.getProperty("server.ssl.enabled")) ? "https" : "http",
                 env.getProperty("server.port", Integer.class, 8080));
-        net.gossipPorts(gossipPort::open);        // 2.6.7: the gossip port opens as the node joins
-        net.joinWhenReady();                      // SOAK-03: gossip "alive" only once the port answers and the connectors have started
+        net.joinWhenReady();                      // SOAK-03: join only once the port answers and the connectors have started
         net.start();
         return net;
     }
@@ -252,7 +244,7 @@ public class NetConfiguration {
             ForwardLog log, ObjectProvider<com.ash.drishti.identity.AccessLog> access, ObjectProvider<com.ash.drishti.engine.command.Mnemonics> mnemonics,
             SearchScatter scatter, ObjectProvider<com.ash.drishti.server.bi.report.BiReportService> reports,
             ObjectProvider<com.ash.drishti.server.bi.BiFolder> biFolder, DigestService digests) {
-        // the BI reports this node ships, gossiped in its digest: a report's query goes to a node that has it and holds its data
+        // the BI reports this node ships, published in its digest: a report's query goes to a node that has it and holds its data
         digests.reports(() -> {
             var folder = biFolder.getIfAvailable();
             return folder == null ? java.util.List.of() : folder.items().stream().filter(i -> "report".equals(i.kind())).map(i -> i.id()).toList();

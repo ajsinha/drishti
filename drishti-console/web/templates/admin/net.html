@@ -25,10 +25,10 @@
   {% with tab='net' %}{% include "admin/_nav.html" %}{% endwith %}
   <h1 class="ws-h" id="netTitle">{{ PRODUCT }}*net <a class="emb-help" href="{{ BASE }}/help/net" aria-label="Help: {{ PRODUCT }}*net" title="Help: {{ PRODUCT }}*net">?</a></h1>
   <details class="adm-about"><summary>About this page</summary>
-  <p class="text-muted-d">Several {{ PRODUCT }} servers acting as one: each tells the others, by gossip, which packs and data it serves, and a request
+  <p class="text-muted-d">Several {{ PRODUCT }} servers acting as one: they agree who is a member (the membership, over TCP on the cluster port), each tells the others which packs and data it serves, and a request
     that one cannot answer is answered by another, so a person connected to any server sees the same pages. This page is the cluster as the server
     this console is on sees it. Its settings are the files of <span class="mono">{{ node.dir }}</span> (Files tab, or <span class="mono">drishti.py net</span>);
-    what gossip learns is kept in <span class="mono">peers.json</span> under the server's data folder. The cluster key is never shown here, only whether it is set.
+    the last view is kept in <span class="mono">members.json</span> under the server's data folder. The cluster key is never shown here, only whether it is set.
     See the <a href="{{ BASE }}/help/net">operator's guide</a>.</p>
   </details>
   <p class="adm-msg" data-msg role="status" aria-live="polite"></p>
@@ -73,9 +73,11 @@ secret: ${DRISHTI_NET_SECRET}
         <dt>Tags</dt><dd>{% for t in node.tags or [] %}<span class="net-tag">{{ t }}</span>{% else %}<span class="text-muted-d">none</span>{% endfor %}</dd>
         <dt>Peer-only packs</dt><dd>{% for t in node.peerOnlyPacks or [] %}<span class="net-tag">{{ t }}</span>{% else %}<span class="text-muted-d">none</span>{% endfor %}</dd>
         <dt>Version</dt><dd class="mono">{{ node.version }}</dd>
-        <dt>Gossip</dt><dd>every {{ node.gossip.interval }}, fanout {{ node.gossip.fanout }}, suspect after {{ node.gossip.suspectAfter }}, dead after {{ node.gossip.deadAfter }};
-          <span data-rounds>{{ node.gossip.rounds }}</span> rounds</dd>
-        <dt>peers.json</dt><dd class="mono">{{ members.peersFile.path }}{% if members.peersFile.savedAt %} <span class="text-muted-d">saved {{ when_local(members.peersFile.savedAt) }}</span>{% endif %}</dd>
+        {% set ms = node.membership or {} %}
+        <dt>Membership</dt><dd>cluster <span class="mono">{{ ms.cluster }}</span> on port <span class="mono">{{ ms.clusterPort }}</span>{% if ms.tls %} (TLS){% endif %};
+          heartbeat {{ ms.heartbeat }}, suspect after {{ ms.suspectAfter }}, verified in {{ ms.verify }}; view <span class="mono" data-view>{{ ms.view }}</span>,
+          <span data-view-changes>{{ ms.viewChanges }}</span> view changes</dd>
+        <dt>members.json</dt><dd class="mono">{{ (members.membersFile or {}).path }}{% if (members.membersFile or {}).savedAt %} <span class="text-muted-d">saved {{ when_local(members.membersFile.savedAt) }}</span>{% endif %}</dd>
       </dl>
       {% if members.running or node.leaving %}
       <div class="net-actions">
@@ -101,7 +103,7 @@ secret: ${DRISHTI_NET_SECRET}
     </div>
 
     <form class="net-seed" data-seed-form>
-      {{ admin_form('field', key='seed', title='Add a seed (host:port or an address): tried at once and saved as a peer file', mono=True, hook={'data-seed': ''}, placeholder='drishti-b.internal:8480') }}
+      {{ admin_form('field', key='seed', title='Add a seed (host:cluster-port): dialled from now on and saved in node.yaml\'s seeds', mono=True, hook={'data-seed': ''}, placeholder='drishti-b.internal:7946') }}
       <button type="submit" class="btn-pill btn-accent">Add seed</button>
     </form>
 
@@ -122,19 +124,19 @@ secret: ${DRISHTI_NET_SECRET}
     <div class="tbl-wrap"><table class="tbl adm-tbl net-members" data-members aria-describedby="netTitle">
       <caption class="visually-hidden">Every member of the cluster as this node knows it</caption>
       <thead><tr><th scope="col">Node</th><th scope="col">State</th><th scope="col">Address</th><th scope="col">Version</th><th scope="col">Tags</th>
-        <th scope="col">Packs</th><th scope="col">Last heard</th><th scope="col">Latency</th><th scope="col">Incarnation</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
+        <th scope="col">Packs</th><th scope="col">Last heard</th><th scope="col">Latency</th><th scope="col">Cluster address</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
       <tbody>
       {% for m in members.members or [] %}
         <tr data-member="{{ m.nodeId }}" data-state="{{ m.state }}">
           <th scope="row" class="mono">{{ m.nodeId }}{% if m.self %} <span class="net-tag">this node</span>{% endif %}{% if m.drained %} <span class="net-tag net-warn">drained</span>{% endif %}</th>
           <td><span class="st {{ {'alive': 'st-ok', 'suspect': 'st-warn', 'dead': 'st-bad', 'left': ''}.get(m.state, '') }}">{{ m.state }}</span></td>
           <td class="mono">{{ m.url }}</td>
-          <td class="mono">{{ m.version }}{% if m.protocol != 1 %} <span class="t-warn">protocol {{ m.protocol }}</span>{% endif %}</td>
+          <td class="mono">{{ m.version }}{% if m.protocol != 2 %} <span class="t-warn">protocol {{ m.protocol }}</span>{% endif %}</td>
           <td>{% for t in m.tags %}<span class="net-tag">{{ t }}</span>{% endfor %}</td>
           <td>{% for p in m.packs or [] %}<span class="net-tag{{ ' net-peer-only' if p.peerOnly }}" title="{{ p.name }} {{ p.version }}{{ ' (peer-only)' if p.peerOnly }}">{{ p.name }}</span>{% endfor %}</td>
           <td>{{ when_local(m.lastHeard) if m.lastHeard else ('-' if m.self else 'never') }}</td>
           <td>{{ m.latencyMs ~ ' ms' if m.latencyMs is not none else '-' }}</td>
-          <td class="mono">{{ m.incarnation }}</td>
+          <td class="mono">{{ m.clusterAddress or '-' }}{% if m.role == 'witness' %} <span class="net-tag">witness</span>{% endif %}</td>
           <td>{% if m.state in ('dead', 'left') %}<button type="button" class="btn-pill" data-remove="{{ m.nodeId }}" aria-label="Remove {{ m.nodeId }}">Remove</button>{% endif %}</td>
         </tr>
       {% else %}
@@ -150,7 +152,7 @@ secret: ${DRISHTI_NET_SECRET}
     {% endif %}
     {% if members.seeds %}
     <h2 class="net-h2">Seeds</h2>
-    <ul class="net-seeds">{% for s in members.seeds %}<li><span class="mono">{{ s.name }}</span> <span class="mono text-muted-d">{{ s.url }}</span></li>{% endfor %}</ul>
+    <ul class="net-seeds">{% for s in members.seeds %}<li><span class="mono">{{ s }}</span></li>{% endfor %}</ul>
     {% endif %}
     {% if console.enabled %}
     <h2 class="net-h2">This console's servers</h2>

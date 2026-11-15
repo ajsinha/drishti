@@ -26,7 +26,7 @@ import java.util.Map;
  * @param suggestBudget the same for type-ahead (150 ms)
  * @param linkBudget longest a view waits for a linked entity that only a peer holds (1 s); the linked entities this node's own
  *     sources hold wait {@code drishti.graph.link-budget} (40 ms) as on a single server
- * @param maxHops 1: a forwarded request is never forwarded again; 0 switches forwarding off (gossip and digests only)
+ * @param maxHops 1: a forwarded request is never forwarded again; 0 switches forwarding off (membership and digests only)
  * @param weights peer choice weights: {@code latency} (how much a peer's latency counts against the stable choice by entity id)
  * @param userState {@code replicate} (saved searches, layouts and pivots written on one node are copied to the others) or {@code off}
  *     (state stays on the node it was written on, as with one shared identity database)
@@ -36,7 +36,7 @@ import java.util.Map;
  *     down), it answers as a node alone does
  * @param peerProtocol {@code http2} (the default, 2.6.7: forwarded reads, scatter-gather, peer history and the live relay multiplexed over
  *     one HTTP/2 connection per peer, {@code h2c} by the upgrade on plain HTTP, ALPN on TLS; a peer that does not speak it is answered in
- *     HTTP/1.1) or {@code http1} (a connection per request in flight, as before 2.6.7). Gossip never uses it: it has its own HTTP/1.1 client
+ *     HTTP/1.1) or {@code http1} (a connection per request in flight, as before 2.6.7). Digest pulls never use it: they have their own HTTP/1.1 client
  */
 public record RoutingSettings(Duration forwardTimeout, Duration scatterBudget, Duration suggestBudget, int maxHops, Map<String, Double> weights,
         String userState, Duration linkBudget, Duration joinWait, Duration joinGrace, String peerProtocol) {

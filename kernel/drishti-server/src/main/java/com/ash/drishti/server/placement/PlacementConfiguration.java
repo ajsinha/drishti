@@ -80,7 +80,7 @@ public class PlacementConfiguration {
     static List<NodeView> nodes(NetService net) {
         if (net != null && net.running() && net.node().isPresent()) {
             String me = net.nodeId();
-            return net.node().get().table().entries().stream().filter(m -> m.state() != MemberState.LEFT)
+            return net.node().get().members().entries().stream().filter(m -> m.state() != MemberState.LEFT)
                     .map(m -> new NodeView(m.nodeId(), m.tags(), m.nodeId().equals(me) || m.routable())).toList();
         }
         return List.of(new NodeView(self(net), net == null ? List.of() : net.config().node().tags(), true));

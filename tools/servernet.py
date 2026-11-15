@@ -12,14 +12,16 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""`drishti.py net list|check|add-peer|set|members`: Drishti*net's config/net/ folder from the terminal (docs/guides/OPERATIONS_GUIDE.md).
+"""`drishti.py net list|check|add-seed|set|members`: Drishti*net's config/net/ folder from the terminal (docs/guides/OPERATIONS_GUIDE.md,
+docs/architecture/CLUSTER_I5_DESIGN.md section 4.4).
 
-    list                    the folder's files (in force, refused, absent) and what they say: on or off, node id, address, tags, seeds
-    check [FILE ...]        check every file (or those named) as the server does; exit 1 when one would be refused
-    add-peer NAME URL       write peers/NAME.yaml (a seed); --tags region:emea,tier:risk
-    set KEY VALUE           change one setting: node.enabled true, node.tags region:emea, gossip.interval 2s, routing.scatter-budget 5s,
-                            access.roles.risk.nodes n-a,region:emea, peers.drishti-a.url http://host:port; an empty VALUE removes it
-    members                 the member table of a running server (GET /api/v1/net/members; an administrator sees every member)
+    list                    the folder's files (in force, refused, absent) and what they say: on or off, node id, address, tags, cluster port, seeds
+    check [FILE ...]        check every file (or those named) as the server does; exit 1 when one would be refused. A folder of the gossip
+                            era (gossip.yaml, peers/, gossip-port) is refused, and the new settings are printed for it: nothing is rewritten
+    add-seed HOST:PORT      add a seed (host:cluster-port) to node.yaml's seeds
+    set KEY VALUE           change one setting: node.enabled true, node.tags region:emea, node.cluster-port 7946, node.seeds h1:7946,h2:7946,
+                            routing.scatter-budget 5s, access.roles.risk.nodes n-a,region:emea; an empty VALUE removes it
+    members                 the members of a running server (GET /api/v1/net/members; an administrator sees every member)
 
 The folder is --dir, else DRISHTI_NET_DIR, else ./config/net (the server's drishti.net.dir). A write is atomic and keeps the file's previous
 text under <data dir>/net/history (--data-dir, else DRISHTI_DATA_DIR, else ./data), as the server's own writes do; a running server picks
@@ -35,21 +37,24 @@ import re
 
 import hostaddr
 
-FIXED = ("node.yaml", "gossip.yaml", "routing.yaml", "access.yaml")
+FIXED = ("node.yaml", "routing.yaml", "access.yaml")
+# the gossip era's files and keys: refused in words that name their replacement (the server never reads both)
+GONE_FILES = {"gossip.yaml": "its timings are [net.membership] in the settings file (heartbeat, suspect-after, verify, forget-after)",
+              "peers/": "the seeds are node.yaml's seeds (host:cluster-port, ...) or [net.cluster] seeds in the settings file"}
+CLUSTER_PORT = 7946
 NAME = re.compile(r"[a-z0-9][a-z0-9-]{0,63}")
 ENV = re.compile(r"\$\{([A-Za-z_][A-Za-z0-9_.]*)(?::([^}]*))?}")
 SECRET_REF = re.compile(r"\$\{[A-Za-z_][A-Za-z0-9_.]*(:)?}")
 DURATION = re.compile(r"(\d+(?:\.\d+)?)\s*(ms|s|m|h|d)")
 TAG = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*(:[A-Za-z0-9._-]+)?")
 KNOWN = {
-    "node.yaml": {"enabled", "node-id", "advertise-url", "tags", "peer-only-packs", "secret", "previous-secret", "tls", "gossip-port"},
-    "gossip.yaml": {"interval", "fanout", "suspect-after", "indirect-probes", "dead-after", "forget-after", "persist-every"},
+    "node.yaml": {"enabled", "node-id", "advertise-url", "tags", "peer-only-packs", "secret", "previous-secret", "tls", "memory-stores",
+                  "cluster-port", "agreement-port", "seeds", "role", "gossip-port"},
     "routing.yaml": {"forward-timeout", "scatter-budget", "suggest-budget", "link-budget", "max-hops", "weights", "user-state",
                      "join-wait", "join-grace", "peer-protocol"},
     "access.yaml": {"roles"},
-    "peer": {"url", "tags", "tls"},
 }
-LISTS = ("tags", "peer-only-packs", "nodes")
+LISTS = ("tags", "peer-only-packs", "nodes", "seeds", "memory-stores")
 
 
 def _yaml(cli):
@@ -65,8 +70,56 @@ def data_dir(a) -> pathlib.Path:
 
 
 def file_ids(d: pathlib.Path) -> list[str]:
-    peers = sorted(f"peers/{p.name}" for p in (d / "peers").glob("*.yaml") if NAME.fullmatch(p.stem)) if (d / "peers").is_dir() else []
-    return list(FIXED) + peers
+    return list(FIXED)
+
+
+def seed_problem(seed: str) -> str | None:
+    """What makes host:port no seed (as the server's ClusterSettings.seedProblem): malformed, no port, a loopback or wildcard host."""
+    s = str(seed).strip()
+    host, _, port = s.rpartition(":")
+    if not host or not port:
+        return f"'{s}' is not host:port (10.20.1.31:{CLUSTER_PORT})"
+    problem = hostaddr.url_problem("http://" + s)
+    if problem:
+        return f"'{s}' is not host:port: {problem}"
+    if hostaddr.loopback_url("http://" + s):
+        return hostaddr.refusal("a seed", "http://" + s).replace("http://", "")
+    return None
+
+
+def old_form(cli, d: pathlib.Path) -> list[dict]:
+    """The gossip era's files of a folder, each refused with the new settings printed for it."""
+    out = []
+    g = d / "gossip.yaml"
+    if g.is_file():
+        try:
+            m = _yaml(cli).safe_load(g.read_text(encoding="utf-8")) or {}
+        except Exception:  # noqa: BLE001 - unreadable: the replacement is still named
+            m = {}
+        lines = ["[net.membership]"]
+        if "interval" in m:
+            lines.append(f"heartbeat={m['interval']}")
+        if "suspect-after" in m:
+            lines.append(f"suspect-after={m['suspect-after']}")
+        if "forget-after" in m:
+            lines.append(f"forget-after={m['forget-after']}")
+        out.append({"file": "gossip.yaml", "level": "error", "field": "", "line": 0,
+                    "message": "is gone with the gossip membership: " + GONE_FILES["gossip.yaml"] + "; remove it", "new": "\n".join(lines)})
+    peers = d / "peers"
+    if peers.is_dir():
+        seeds = []
+        for f in sorted(peers.glob("*.yaml")):
+            try:
+                url = str((_yaml(cli).safe_load(f.read_text(encoding="utf-8")) or {}).get("url", ""))
+            except Exception:  # noqa: BLE001
+                url = ""
+            host = re.sub(r"^[a-zA-Z][a-zA-Z0-9+.-]*://", "", url).split("/")[0].rsplit(":", 1)[0]
+            if host:
+                seeds.append(f"{host}:{CLUSTER_PORT}")
+        out.append({"file": "peers/", "level": "error", "field": "", "line": 0,
+                    "message": "is gone with the gossip membership: " + GONE_FILES["peers/"] + "; remove the folder",
+                    "new": "seeds: [" + ", ".join(seeds) + "]   # node.yaml (each node's cluster-port; 7946 by default)"})
+    return out
 
 
 def resolve(text: str) -> str:
@@ -105,7 +158,7 @@ def check_text(cli, fid: str, text: str) -> list[dict]:
     if not isinstance(m, dict):
         err("", "the file is a mapping of settings (key: value), not a list or a single value")
         return out
-    known = KNOWN["peer" if fid.startswith("peers/") else fid]
+    known = KNOWN[fid]
     for k in m:
         if k not in known:
             err(k, f"unknown setting; ignored (known: {', '.join(sorted(known))})", "warning")
@@ -164,21 +217,20 @@ def check_text(cli, fid: str, text: str) -> list[dict]:
                     "this machine has no address but loopback to advertise")
         if secret and len(secret.encode()) < 32:
             err("secret", "the cluster key must be at least 32 bytes")
-        if "gossip-port" in m:                                       # auto (default), off, or a port (2.6.7); YAML reads a bare off as false
-            gp = str(resolve(m["gossip-port"])).strip().lower()
-            if gp not in ("auto", "off", "false", ""):
-                if not gp.isdigit():
-                    err("gossip-port", f"'{gp}' is not auto, off or a port number")
-                elif not 1 <= int(gp) <= 65535:
-                    err("gossip-port", f"{gp} is outside 1 to 65535")
-    elif fid == "gossip.yaml":
-        dur("interval", 50, 60_000)
-        integer("fanout", 1, 16)
-        dur("suspect-after", 100, 3_600_000)
-        integer("indirect-probes", 0, 8)
-        dur("dead-after", 100, 86_400_000)
-        dur("forget-after", 1000, 30 * 86_400_000)
-        dur("persist-every", 1000, 86_400_000)
+        if "gossip-port" in m:                                       # the gossip era's key: refused, its replacement named
+            err("gossip-port", f"is gone with the gossip membership: the membership has its own port: cluster-port (a number; [net.node] "
+                f"cluster-port, {CLUSTER_PORT} by default)")
+        integer("cluster-port", 1, 65535)
+        integer("agreement-port", 1, 65535)
+        if "cluster-port" in m and "agreement-port" in m and str(resolve(m["cluster-port"])) == str(resolve(m["agreement-port"])):
+            err("agreement-port", "is the cluster port: the agreement needs a port of its own")
+        seeds = m.get("seeds") or []
+        for seed in seeds if isinstance(seeds, list) else str(resolve(seeds)).split(","):
+            problem = seed_problem(resolve(seed)) if str(seed).strip() else None
+            if problem:
+                err("seeds", problem)
+        if "role" in m and str(resolve(m["role"])).lower() not in ("server", "witness"):
+            err("role", f"'{m['role']}' is not server or witness")
     elif fid == "routing.yaml":
         dur("forward-timeout", 50, 300_000)
         dur("scatter-budget", 50, 300_000)
@@ -198,14 +250,6 @@ def check_text(cli, fid: str, text: str) -> list[dict]:
         for role, spec in (roles or {}).items():
             if spec is not None and not (isinstance(spec, dict) and isinstance(spec.get("nodes", []), list)):
                 err(f"roles.{role}", "a role is { nodes: [<node id or tag>, ...] }")
-    else:
-        if not m.get("url"):
-            err("url", "a peer file needs url: the peer's address (https://host:port)")
-        else:
-            if hostaddr.loopback_url(resolve(m["url"])):
-                err("url", hostaddr.refusal("a peer's address", resolve(m["url"])))
-            url("url", resolve(m["url"]))
-        tags("tags")
     return out
 
 
@@ -238,11 +282,15 @@ def _say_problems(problems: list[dict]) -> None:
     for p in problems:
         where = p["file"] + (f":{p['line']}" if p["line"] else "")
         print(f"  {p['level']:7} {where}  {p['field'] + ': ' if p['field'] else ''}{p['message']}")
+        if p.get("new"):
+            print("          the new settings for it:")
+            for ln in p["new"].splitlines():
+                print("            " + ln)
 
 
 def cmd_list(cli, a, extra) -> int:
     d = folder(a)
-    rows, summary, all_problems = [], {}, []
+    rows, summary, all_problems, seeds = [], {}, [], []
     for fid in file_ids(d):
         text = _read(d, fid)
         problems = check_text(cli, fid, text) if text is not None else []
@@ -253,22 +301,24 @@ def cmd_list(cli, a, extra) -> int:
             n = _yaml(cli).safe_load(text) or {}
             summary = {"enabled": bool(str(resolve(n.get("enabled", False))).lower() == "true"), "nodeId": n.get("node-id") or "(generated)",
                        "advertiseUrl": n.get("advertise-url") or "", "tags": n.get("tags") or [], "peerOnlyPacks": n.get("peer-only-packs") or [],
-                       "key": "set" if resolve(n.get("secret") or "") else "not set"}
-    seeds = []
-    for fid in file_ids(d):
-        if fid.startswith("peers/"):
-            p = _yaml(cli).safe_load(_read(d, fid) or "") or {}
-            seeds.append({"name": fid[6:-5], "url": p.get("url", "")})
+                       "key": "set" if resolve(n.get("secret") or "") else "not set",
+                       "clusterPort": n.get("cluster-port") or CLUSTER_PORT}
+            seeds = [str(resolve(x)) for x in (n.get("seeds") or [])]
+    old = old_form(cli, d)
+    all_problems += old
+    for o in old:
+        rows.append({"file": o["file"], "state": "refused (the gossip era)", "problems": [o]})
     if a.json:
         cli.say_json({"dir": str(d), "node": summary or {"enabled": False}, "seeds": seeds, "files": rows})
         return 0
     on = summary.get("enabled")
     print(f"config/net at {d}: Drishti*net is {'ON' if on else 'off'}" + ("" if on else " (a single server, as without the cluster)"))
     if summary:
-        print(f"  node {summary['nodeId']}  at {summary['advertiseUrl'] or '-'}  tags {','.join(summary['tags']) or '-'}  key {summary['key']}"
+        print(f"  node {summary['nodeId']}  at {summary['advertiseUrl'] or '-'}  cluster port {summary['clusterPort']}  tags "
+              f"{','.join(summary['tags']) or '-'}  key {summary['key']}"
               + (f"  peer-only packs {','.join(summary['peerOnlyPacks'])}" if summary["peerOnlyPacks"] else ""))
-    for s in seeds:
-        print(f"  seed {s['name']}  {s['url']}")
+    for seed in seeds:
+        print(f"  seed {seed}")
     width = max(len(r["file"]) for r in rows)
     for r in rows:
         print(f"  {r['file'].ljust(width)}  {r['state']}")
@@ -279,11 +329,12 @@ def cmd_list(cli, a, extra) -> int:
 def cmd_check(cli, a, extra) -> int:
     d = folder(a)
     ids = a.files or file_ids(d)
-    problems, checked = [], 0
+    problems, checked = ([], 0) if a.files else (old_form(cli, d), 0)
     for fid in ids:
         fid = fid if fid.endswith(".yaml") else fid + ".yaml"
-        if fid not in FIXED and not (fid.startswith("peers/") and NAME.fullmatch(fid[6:-5])):
-            raise cli.CliError(f"{fid} is not a file of config/net/: node.yaml, gossip.yaml, routing.yaml, access.yaml or peers/<name>.yaml", 2)
+        if fid not in FIXED:
+            gone = next((v for k, v in GONE_FILES.items() if fid == k or fid.startswith(k)), None)
+            raise cli.CliError(f"{fid} is not a file of config/net/: node.yaml, routing.yaml or access.yaml" + (f" ({gone})" if gone else ""), 2)
         text = _read(d, fid)
         if text is None:
             continue
@@ -313,24 +364,31 @@ def _apply(cli, a, fid: str, text: str) -> int:
     return 0
 
 
-def cmd_add_peer(cli, a, extra) -> int:
-    if not NAME.fullmatch(a.name):
-        raise cli.CliError(f"{a.name!r} is not a peer name: lower-case letters, digits and dashes", 2)
-    url = a.url if "://" in a.url else "http://" + a.url
-    settings = {"url": url.rstrip("/")}
-    if a.tags:
-        settings["tags"] = [t.strip() for t in a.tags.split(",") if t.strip()]
-    return _apply(cli, a, f"peers/{a.name}.yaml", _render(cli, f"peers/{a.name}.yaml", settings))
+def cmd_add_seed(cli, a, extra) -> int:
+    seed = re.sub(r"^[a-zA-Z][a-zA-Z0-9+.-]*://", "", a.seed.strip()).split("/")[0]
+    problem = seed_problem(seed)
+    if problem:
+        raise cli.CliError(problem, 1)
+    text = _read(folder(a), "node.yaml") or ""
+    try:
+        m = (_yaml(cli).safe_load(text) if text.strip() else {}) or {}
+    except Exception as e:  # noqa: BLE001
+        raise cli.CliError(f"node.yaml is not YAML: {e}", 1) from None
+    seeds = [str(x) for x in (m.get("seeds") or [])]
+    if seed not in seeds:
+        seeds.append(seed)
+    m["seeds"] = seeds
+    return _apply(cli, a, "node.yaml", _render(cli, "node.yaml", m))
 
 
 def cmd_set(cli, a, extra) -> int:
     parts = a.key.split(".")
-    if parts[0] == "peers" and len(parts) >= 3:
-        fid, path = f"peers/{parts[1]}.yaml", parts[2:]
-    elif parts[0] + ".yaml" in FIXED and len(parts) >= 2:
+    if parts[0] + ".yaml" in FIXED and len(parts) >= 2:
         fid, path = parts[0] + ".yaml", parts[1:]
+    elif parts[0] in ("gossip", "peers"):
+        raise cli.CliError(f"{a.key!r}: {GONE_FILES['gossip.yaml' if parts[0] == 'gossip' else 'peers/']}", 2)
     else:
-        raise cli.CliError(f"{a.key!r}: the key is <file>.<setting> (node.tags, gossip.interval, routing.max-hops, access.roles.risk.nodes, peers.<name>.url)", 2)
+        raise cli.CliError(f"{a.key!r}: the key is <file>.<setting> (node.tags, node.seeds, routing.max-hops, access.roles.risk.nodes)", 2)
     text = _read(folder(a), fid) or ""
     try:
         m = (_yaml(cli).safe_load(text) if text.strip() else {}) or {}
@@ -365,10 +423,10 @@ def cmd_members(cli, a, extra) -> int:
         return 0
     rows = res.get("members") or []
     print(f"{len(rows)} member(s); this node {res.get('self')}")
-    headers = ["node", "state", "address", "version", "tags", "latency", "incarnation"]
+    headers = ["node", "state", "address", "version", "tags", "latency", "cluster address"]
     cells = [[m["nodeId"] + (" (this node)" if m.get("self") else "") + (" drained" if m.get("drained") else ""), m["state"], m.get("url", ""),
               m.get("version", ""), ",".join(m.get("tags") or []), "-" if m.get("latencyMs") is None else f"{m['latencyMs']} ms",
-              str(m.get("incarnation", ""))] for m in rows]
+              str(m.get("clusterAddress", "")) + (" (witness)" if m.get("role") == "witness" else "")] for m in rows]
     w = [max([len(h)] + [len(r[i]) for r in cells]) for i, h in enumerate(headers)]
     print("  " + "  ".join(h.ljust(w[i]) for i, h in enumerate(headers)).rstrip())
     for r in cells:
@@ -390,18 +448,16 @@ def register(cli, sub, add, srv, js) -> None:
     where(add(sub, "list", wrap(cmd_list), "net list: the files of config/net/ and what they say (on or off, this node, its seeds)", [js],
               "example:\n  drishti.py net list --dir /etc/drishti/net"))
     p = where(add(sub, "check", wrap(cmd_check), "net check: check the files as the server does; exit 1 when one would be refused", [js],
-                  "examples:\n  drishti.py net check\n  drishti.py net check node.yaml peers/drishti-a.yaml --json"))
-    p.add_argument("files", nargs="*", metavar="FILE", help="node.yaml, gossip.yaml, routing.yaml, access.yaml or peers/<name>.yaml (default: all)")
-    p = where(add(sub, "add-peer", wrap(cmd_add_peer), "net add-peer: write peers/NAME.yaml, a seed this node joins through", [js],
-                  "example:\n  drishti.py net add-peer drishti-a https://drishti-a.internal:8480 --tags region:emea"), True)
-    p.add_argument("name")
-    p.add_argument("url", help="host:port or an http(s) address")
-    p.add_argument("--tags", help="the tags the peer is expected to carry, comma-separated")
+                  "examples:\n  drishti.py net check\n  drishti.py net check node.yaml routing.yaml --json"))
+    p.add_argument("files", nargs="*", metavar="FILE", help="node.yaml, routing.yaml or access.yaml (default: all, and the gossip era's files)")
+    p = where(add(sub, "add-seed", wrap(cmd_add_seed), "net add-seed: add host:cluster-port to node.yaml's seeds, a member this node joins through",
+                  [js], "example:\n  drishti.py net add-seed drishti-a.internal:7946"), True)
+    p.add_argument("seed", help="host:cluster-port (7946 by default)")
     p = where(add(sub, "set", wrap(cmd_set), "net set: change one setting of a file (an empty value removes it)", [js],
                   "examples:\n  drishti.py net set node.enabled true\n  drishti.py net set node.secret '${DRISHTI_NET_SECRET}'\n"
                   "  drishti.py net set node.tags region:emea,tier:risk\n  drishti.py net set access.roles.risk.nodes n-a,region:emea\n"
-                  "  drishti.py net set gossip.interval 2s"), True)
-    p.add_argument("key", help="<file>.<setting>: node.tags, gossip.interval, routing.max-hops, access.roles.<role>.nodes, peers.<name>.url")
+                  "  drishti.py net set node.cluster-port 7946"), True)
+    p.add_argument("key", help="<file>.<setting>: node.tags, node.seeds, node.cluster-port, routing.max-hops, access.roles.<role>.nodes")
     p.add_argument("value", nargs="?", default="", help="the value; a list setting takes a comma-separated value; empty removes the setting")
-    add(sub, "members", wrap(cmd_members), "net members: the member table of a running server (administrator)", [srv],
+    add(sub, "members", wrap(cmd_members), "net members: the members of a running server (administrator)", [srv],
         "example:\n  drishti.py net members --server http://127.0.0.1:18783")

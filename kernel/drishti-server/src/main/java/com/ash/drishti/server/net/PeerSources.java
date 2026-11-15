@@ -108,7 +108,7 @@ public final class PeerSources implements SourceRouter.Fallback {
     }
 
     private String url(String nodeId) {
-        return net.node().flatMap(n -> n.table().known(nodeId)).map(k -> k.member().url()).orElse("");
+        return net.node().flatMap(n -> n.members().known(nodeId)).map(k -> k.member().url()).orElse("");
     }
 
     @Override
@@ -141,7 +141,7 @@ public final class PeerSources implements SourceRouter.Fallback {
     }
 
     /**
-     * The peers this caller's read of {@code ref} would ask, each with its sources' data versions for the kind from its digest (gossiped
+     * The peers this caller's read of {@code ref} would ask, each with its sources' data versions for the kind from its digest (published
      * every interval, so a load on a peer changes this within a few seconds): {@code net:qa1-b{trade-endur=60@…}}. Empty when a peer's
      * digest gives no version for one of its sources.
      */

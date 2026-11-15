@@ -59,7 +59,7 @@ public record NodeProperties(Readiness readiness, Drain drain) {
      * The drain before a stop.
      *
      * @param settleSeconds after its drain, how long Drishti*net needs before no peer forwards work here any more (the drained flag reaches
-     *     every peer within a few gossip rounds; 5 s): only then is the forwarding part safe to stop
+     *     every peer within a second or two, in its vitals; 5 s): only then is the forwarding part safe to stop
      */
     public record Drain(Integer settleSeconds) {
         public Drain {

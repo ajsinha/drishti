@@ -69,7 +69,7 @@ class NetIdentityTest {
     }
 
     static long alive(String node) {
-        return cluster.node(node).net().node().map(n -> n.table().alive().size()).orElse(0);
+        return cluster.node(node).net().node().map(n -> n.members().alive().size()).orElse(0);
     }
 
     /** A token as the console mints it, signed with the token secret every node shares. */

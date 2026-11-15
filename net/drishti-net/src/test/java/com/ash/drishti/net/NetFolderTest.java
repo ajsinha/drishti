@@ -88,14 +88,12 @@ class NetFolderTest {
                 assertThat(p.field()).isEqualTo("advertise-url");
                 assertThat(p.message()).contains("loopback or wildcard").contains("http://" + ip + ":18783");
             });
-            assertThat(f.check("peers/drishti-a.yaml", "url: " + bad + "\n")).as(bad).anySatisfy(p -> {
-                assertThat(p.field()).isEqualTo("url");
-                assertThat(p.message()).contains("a peer's address");
-            });
         }
-        f.write("peers/drishti-a.yaml", "url: http://127.0.0.1:18783\n", null);
-        assertThat(f.load(null).refused("peers/drishti-a.yaml")).isTrue();
-        assertThat(f.load(null).config().seedUrls()).isEmpty();
+        assertThat(f.check("node.yaml", "enabled: true\nadvertise-url: http://192.0.2.10:18783\nsecret: ${DRISHTI_NET_SECRET}\nseeds: [127.0.0.1:7946]\n"))
+                .anySatisfy(p -> {
+                    assertThat(p.field()).isEqualTo("seeds");
+                    assertThat(p.message()).contains("a seed").contains("loopback or wildcard");
+                });
         assertThat(f.check("node.yaml", "enabled: true\nadvertise-url: http://192.0.2.10:18783\nsecret: ${DRISHTI_NET_SECRET}\n")).isEmpty();
     }
 
@@ -158,18 +156,17 @@ class NetFolderTest {
     @Test
     void everyFileIsCheckedWithItsLineAndABadFileKeepsThePreviousSettings() {
         NetFolder f = folder(Map.of());
-        f.write("gossip.yaml", "interval: 2s\nfanout: 4\n", null);
+        f.write("routing.yaml", "forward-timeout: 4s\n", null);
         NetConfig first = f.load(null).config();
-        assertThat(first.gossip().interval()).isEqualTo(Duration.ofSeconds(2));
-        assertThat(first.gossip().fanout()).isEqualTo(4);
-        f.write("gossip.yaml", "interval: 2s\nfanout: lots\nsurprise: 1\n", null);
+        assertThat(first.routing().forwardTimeout()).isEqualTo(Duration.ofSeconds(4));
+        f.write("routing.yaml", "forward-timeout: 4s\nmax-hops: lots\nsurprise: 1\n", null);
         NetFolder.Loaded l = f.load(first);
-        assertThat(l.refused("gossip.yaml")).isTrue();
-        assertThat(l.problems().get("gossip.yaml")).anySatisfy(p -> {
-            assertThat(p.field()).isEqualTo("fanout");
+        assertThat(l.refused("routing.yaml")).isTrue();
+        assertThat(l.problems().get("routing.yaml")).anySatisfy(p -> {
+            assertThat(p.field()).isEqualTo("max-hops");
             assertThat(p.line()).isEqualTo(2);
         }).anySatisfy(p -> assertThat(p.level()).isEqualTo("warning"));
-        assertThat(l.config().gossip()).isEqualTo(first.gossip());
+        assertThat(l.config().routing()).isEqualTo(first.routing());
         f.write("routing.yaml", "max-hops: 2\n", null);
         assertThat(f.load(first).refused("routing.yaml")).isTrue();
         // SOAK3-01: how long a joining node holds a miss for its peers' digests, and how long it counts as joining at most
@@ -187,23 +184,28 @@ class NetFolderTest {
     }
 
     @Test
-    void peerFilesAreSeedsAndHistoryKeepsEveryEarlierText() throws Exception {
+    void theGossipEraFilesAreRefusedNamingTheirReplacementAndHistoryKeepsEveryEarlierText() throws Exception {
         NetFolder f = folder(Map.of());
-        f.write("peers/drishti-a.yaml", "url: http://192.0.2.10:18783/\ntags: [region:emea]\n", null);
-        f.write("peers/drishti-b.yaml", "url: ftp://nowhere\n", null);
+        Files.createDirectories(tmp.resolve("config/net/peers"));
+        Files.writeString(tmp.resolve("config/net/peers/drishti-a.yaml"), "url: http://192.0.2.10:18783/\n");
+        Files.writeString(tmp.resolve("config/net/gossip.yaml"), "interval: 1s\n");
         NetFolder.Loaded l = f.load(null);
-        assertThat(l.config().seedUrls()).containsExactly("http://192.0.2.10:18783");
-        assertThat(l.refused("peers/drishti-b.yaml")).isTrue();
-        assertThat(f.files()).extracting(NetFolder.FileInfo::id).containsExactly("node.yaml", "gossip.yaml", "routing.yaml", "access.yaml",
-                "peers/drishti-a.yaml", "peers/drishti-b.yaml");
-        String etag = NetFolder.etag(f.text("peers/drishti-a.yaml").orElseThrow());
-        f.write("peers/drishti-a.yaml", "url: http://192.0.2.10:18784\n", etag);
-        assertThatThrownBy(() -> f.write("peers/drishti-a.yaml", "url: http://x:1\n", etag)).isInstanceOf(IllegalStateException.class);
-        assertThat(f.history("peers/drishti-a.yaml")).hasSize(1);
-        String rev = f.history("peers/drishti-a.yaml").get(0).id();
-        assertThat(f.revisionText("peers/drishti-a.yaml", rev).orElseThrow()).contains("18783");
-        assertThat(f.delete("peers/drishti-b.yaml", null)).isTrue();
-        assertThat(f.load(null).config().peers()).hasSize(1);
+        assertThat(l.refused("gossip.yaml")).isTrue();
+        assertThat(l.problems().get("gossip.yaml")).anySatisfy(p -> assertThat(p.message()).contains("[net.membership]"));
+        assertThat(l.refused("peers/")).isTrue();
+        assertThat(l.problems().get("peers/")).anySatisfy(p -> assertThat(p.message()).contains("[net.cluster] seeds"));
+        assertThat(l.config().seeds()).as("never read").isEmpty();
+        assertThat(f.files()).extracting(NetFolder.FileInfo::id).containsExactly("node.yaml", "routing.yaml", "access.yaml");
+        assertThatThrownBy(() -> f.write("peers/drishti-b.yaml", "url: http://192.0.2.11:18783\n", null))
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("seeds");
+        f.write("routing.yaml", "forward-timeout: 3s\n", null);
+        String etag = NetFolder.etag(f.text("routing.yaml").orElseThrow());
+        f.write("routing.yaml", "forward-timeout: 4s\n", etag);
+        assertThatThrownBy(() -> f.write("routing.yaml", "forward-timeout: 5s\n", etag)).isInstanceOf(IllegalStateException.class);
+        assertThat(f.history("routing.yaml")).hasSize(1);
+        String rev = f.history("routing.yaml").get(0).id();
+        assertThat(f.revisionText("routing.yaml", rev).orElseThrow()).contains("3s");
+        assertThat(f.delete("routing.yaml", null)).isTrue();
         assertThatThrownBy(() -> f.text("../../etc/passwd")).isInstanceOf(IllegalArgumentException.class);
         try (var s = Files.list(tmp.resolve("data/net/history"))) {
             assertThat(s.map(p -> p.getFileName().toString()).allMatch(n -> !n.startsWith("."))).isTrue();
@@ -217,8 +219,8 @@ class NetFolderTest {
         NetFolder.Loaded l = f.load(null);
         assertThat(l.all()).isEmpty();
         assertThat(l.config().enabled()).isTrue();
-        assertThat(l.config().seedUrls()).containsExactly("https://drishti-a.internal:8480");
-        assertThat(l.config().gossip()).isEqualTo(com.ash.drishti.net.config.GossipSettings.DEFAULTS);
+        assertThat(l.config().seeds()).containsExactly("drishti-a.internal:7946", "drishti-c.internal:7946");
+        assertThat(l.config().node().clusterPort()).isEqualTo(7946);
         assertThat(l.config().routing()).isEqualTo(com.ash.drishti.net.config.RoutingSettings.DEFAULTS);
         assertThat(l.config().access().roles()).containsKeys("trader", "risk");
     }

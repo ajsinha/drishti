@@ -23,7 +23,7 @@ import java.util.Map;
 /**
  * Nodes per role ({@code config/net/access.yaml}): {@code roles: { risk: { nodes: [n-a, region:emea] } }}. A role not listed,
  * or listed with no nodes, reaches every node. A caller reaches a node when any of its roles does; the {@code *} role of a
- * server with security off reaches every node. Applied to the next request and gossiped in the digest.
+ * server with security off reaches every node. Applied to the next request and published in the digest.
  *
  * @param roles role name to the node ids and tags ({@code key:value}) it may reach
  */

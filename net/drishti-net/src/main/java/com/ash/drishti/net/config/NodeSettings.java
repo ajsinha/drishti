@@ -19,8 +19,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * This node ({@code config/net/node.yaml}). The cluster key is only ever an environment reference in the file
- * ({@code secret: ${DRISHTI_NET_SECRET}}); what is held here is its resolved value, never written back and never shown.
+ * This node ({@code config/net/node.yaml}, the per-node home; a key it does not set comes from the settings file's {@code [net.node]} and
+ * {@code [net.cluster]}, CLUSTER_I5_DESIGN.md section 4.4). The cluster key is only ever a reference in the file
+ * ({@code secret: ${DRISHTI_NET_SECRET}}) or {@code [net.cluster] secret-file}; what is held here is its resolved value, never written back
+ * and never shown.
  *
  * @param enabled false (the default): the server is a single server exactly as without Drishti*net
  * @param nodeId the configured id, or empty to use the one generated once and kept in {@code <data dir>/net/node-id}
@@ -29,31 +31,19 @@ import java.util.Map;
  * @param peerOnlyPacks packs loaded and served to peers but hidden from this node's own users
  * @param secret the cluster key (resolved), or empty
  * @param previousSecret the previous cluster key, accepted (never used to sign) during a rollover, or empty
- * @param tls mutual TLS settings ({@code tls.keystore.path}, ...), flattened; empty for none
- * @param gossipPort the port of the node's own gossip connector (2.6.7): {@link #GOSSIP_AUTO} (0, the default: a free port chosen when the
- *     node joins, advertised through gossip), {@link #GOSSIP_OFF} (-1: gossip on the server's port, as before 2.6.7) or a port number
- * @param memoryStores the in-memory lake's stores this node owns (docs/architecture/DATA_ARCHITECTURE.md section 9): it fills them and binds
- *     their packs; the other nodes forward the packs' requests here. Empty: each store's own {@code owner} setting decides
+ * @param tls mutual TLS settings of the server port's peer calls ({@code tls.keystore.path}, ...), flattened; empty for none
+ * @param memoryStores the in-memory lake's stores this node owns (docs/architecture/DATA_ARCHITECTURE.md section 9)
+ * @param clusterPort the membership's TCP port ({@code cluster-port}, else {@code [net.node] cluster-port}, 7946)
+ * @param agreementPort the agreement's TCP port, ratis mode only ({@code agreement-port}, else {@code [net.node] agreement-port}, 7947)
+ * @param seeds {@code host:port} of cluster ports to dial when joining ({@code seeds}, else {@code [net.cluster] seeds})
+ * @param role {@code server} or {@code witness} ({@code role}, else {@code [net.node] role})
  */
 public record NodeSettings(boolean enabled, String nodeId, String advertiseUrl, List<String> tags, List<String> peerOnlyPacks, String secret,
-        String previousSecret, Map<String, String> tls, int gossipPort, List<String> memoryStores) {
+        String previousSecret, Map<String, String> tls, List<String> memoryStores, int clusterPort, int agreementPort, List<String> seeds,
+        String role) {
 
-    /** {@code gossip-port: auto}: a free port chosen when the node joins. */
-    public static final int GOSSIP_AUTO = 0;
-    /** {@code gossip-port: off}: gossip on the server's own port. */
-    public static final int GOSSIP_OFF = -1;
-
-    public static final NodeSettings OFF = new NodeSettings(false, "", "", List.of(), List.of(), "", "", Map.of());
-
-    public NodeSettings(boolean enabled, String nodeId, String advertiseUrl, List<String> tags, List<String> peerOnlyPacks, String secret,
-            String previousSecret, Map<String, String> tls) {
-        this(enabled, nodeId, advertiseUrl, tags, peerOnlyPacks, secret, previousSecret, tls, GOSSIP_AUTO);
-    }
-
-    public NodeSettings(boolean enabled, String nodeId, String advertiseUrl, List<String> tags, List<String> peerOnlyPacks, String secret,
-            String previousSecret, Map<String, String> tls, int gossipPort) {
-        this(enabled, nodeId, advertiseUrl, tags, peerOnlyPacks, secret, previousSecret, tls, gossipPort, List.of());
-    }
+    public static final NodeSettings OFF = new NodeSettings(false, "", "", List.of(), List.of(), "", "", Map.of(), List.of(),
+            ClusterSettings.CLUSTER_PORT, ClusterSettings.AGREEMENT_PORT, List.of(), "server");
 
     public NodeSettings {
         nodeId = nodeId == null ? "" : nodeId.trim();
@@ -63,8 +53,19 @@ public record NodeSettings(boolean enabled, String nodeId, String advertiseUrl, 
         secret = secret == null ? "" : secret;
         previousSecret = previousSecret == null ? "" : previousSecret;
         tls = tls == null ? Map.of() : Map.copyOf(tls);
-        gossipPort = gossipPort < GOSSIP_OFF || gossipPort > 65535 ? GOSSIP_AUTO : gossipPort;
         memoryStores = memoryStores == null ? List.of() : List.copyOf(memoryStores);
+        seeds = seeds == null ? List.of() : List.copyOf(seeds);
+        role = role == null || role.isBlank() ? "server" : role;
+    }
+
+    /** The advertised host (the cluster port binds to it), or empty when the url names none. */
+    public String advertisedHost() {
+        try {
+            String h = java.net.URI.create(advertiseUrl).getHost();
+            return h == null ? "" : h.replaceAll("^\\[|]$", "");
+        } catch (IllegalArgumentException e) {
+            return "";
+        }
     }
 
     /** Never prints the keys. */
@@ -72,6 +73,7 @@ public record NodeSettings(boolean enabled, String nodeId, String advertiseUrl, 
     public String toString() {
         return "NodeSettings[enabled=" + enabled + ", nodeId=" + nodeId + ", advertiseUrl=" + advertiseUrl + ", tags=" + tags
                 + ", peerOnlyPacks=" + peerOnlyPacks + ", secret=" + (secret.isEmpty() ? "unset" : "set")
-                + ", previousSecret=" + (previousSecret.isEmpty() ? "unset" : "set") + ", tls=" + tls.keySet() + ", gossipPort=" + gossipPort + ", memoryStores=" + memoryStores + "]";
+                + ", previousSecret=" + (previousSecret.isEmpty() ? "unset" : "set") + ", tls=" + tls.keySet() + ", memoryStores=" + memoryStores
+                + ", clusterPort=" + clusterPort + ", agreementPort=" + agreementPort + ", seeds=" + seeds + ", role=" + role + "]";
     }
 }

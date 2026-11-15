@@ -53,7 +53,7 @@ final class NetDrainPart implements Drainable {
 
     @Override
     public boolean draining() {
-        return net.running() && net.node().map(n -> n.table().self()).map(Member::drained).orElse(false);
+        return net.running() && net.node().map(n -> n.members().self()).map(Member::drained).orElse(false);
     }
 
     @Override

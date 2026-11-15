@@ -59,18 +59,18 @@ class NetBackend(FakeBackend):
         if path == "/files":
             return FILES
         if path == "/file" and method == "GET":
-            return {"id": params.get("id"), "exists": True, "text": "interval: 1s\nfanout: 3\n", "etag": self.etag, "problems": [],
+            return {"id": params.get("id"), "exists": True, "text": "forward-timeout: 4s\nmax-hops: 1\n", "etag": self.etag, "problems": [],
                     "history": [{"id": "20261019T100000000", "at": "2026-10-19T10:00:00Z", "bytes": 20}]}
         if path == "/file/revision":
-            return {"id": params.get("id"), "rev": params.get("rev"), "text": "interval: 1s\nfanout: 2\n"}
+            return {"id": params.get("id"), "rev": params.get("rev"), "text": "forward-timeout: 4s\nmax-hops: 0\n"}
         if path == "/file" and method == "PUT":
             if (headers or {}).get("If-Match") != self.etag:
-                err = BackendError(409, "DRS-5055", "gossip.yaml was changed since it was read")
-                err.extra = {"problems": [{"file": "gossip.yaml", "level": "error", "field": "", "line": 0, "message": "changed since it was read"}]}
+                err = BackendError(409, "DRS-5055", "routing.yaml was changed since it was read")
+                err.extra = {"problems": [{"file": "routing.yaml", "level": "error", "field": "", "line": 0, "message": "changed since it was read"}]}
                 raise err
             if "lots" in (body or {}).get("text", ""):
-                err = BackendError(409, "DRS-5055", "gossip.yaml was not written: gossip.yaml:2 fanout: 'lots' is not a whole number")
-                err.extra = {"problems": [{"file": "gossip.yaml", "level": "error", "field": "fanout", "line": 2, "message": "'lots' is not a whole number"}]}
+                err = BackendError(409, "DRS-5055", "routing.yaml was not written: routing.yaml:2 max-hops: 'lots' is not a whole number")
+                err.extra = {"problems": [{"file": "routing.yaml", "level": "error", "field": "max-hops", "line": 2, "message": "'lots' is not a whole number"}]}
                 raise err
             self.etag = "def"
             return {"id": params.get("id"), "etag": "def", "problems": []}
@@ -174,19 +174,19 @@ def test_a_file_is_saved_with_its_version_and_a_bad_one_shows_its_line(browser, 
     url, backend = net_console
     page = browser.new_page()
     page.goto(url + "/admin/net?tab=files")
-    page.locator("[data-file='gossip.yaml']").click()
+    page.locator("[data-file='routing.yaml']").click()
     page.locator("[data-editor]").wait_for(state="visible")
-    assert "fanout: 3" in page.locator("[data-yaml]").input_value()
+    assert "max-hops: 1" in page.locator("[data-yaml]").input_value()
     page.locator("[data-rev]").first.click()
     page.locator("[data-diff]").wait_for(state="visible")
-    assert "- fanout: 2" in page.locator("[data-diff]").inner_text() and "+ fanout: 3" in page.locator("[data-diff]").inner_text()
-    page.locator("[data-yaml]").evaluate("(e, t) => { e.value = t; e.dispatchEvent(new Event('input', { bubbles: true })); e.dispatchEvent(new Event('change', { bubbles: true })); }", "interval: 1s\nfanout: lots\n")   # the code area is drishti-inputs' code editor: typed through its text area
+    assert "- max-hops: 0" in page.locator("[data-diff]").inner_text() and "+ max-hops: 1" in page.locator("[data-diff]").inner_text()
+    page.locator("[data-yaml]").evaluate("(e, t) => { e.value = t; e.dispatchEvent(new Event('input', { bubbles: true })); e.dispatchEvent(new Event('change', { bubbles: true })); }", "forward-timeout: 4s\nmax-hops: lots\n")   # the code area is drishti-inputs' code editor: typed through its text area
     page.locator("[data-save]").click()
     page.locator("[data-problems] li").first.wait_for(timeout=10000)
-    assert "line 2: fanout: 'lots' is not a whole number" in page.locator("[data-problems]").inner_text()
-    page.locator("[data-yaml]").evaluate("(e, t) => { e.value = t; e.dispatchEvent(new Event('input', { bubbles: true })); e.dispatchEvent(new Event('change', { bubbles: true })); }", "interval: 2s\nfanout: 3\n")   # the code area is drishti-inputs' code editor: typed through its text area
+    assert "line 2: max-hops: 'lots' is not a whole number" in page.locator("[data-problems]").inner_text()
+    page.locator("[data-yaml]").evaluate("(e, t) => { e.value = t; e.dispatchEvent(new Event('input', { bubbles: true })); e.dispatchEvent(new Event('change', { bubbles: true })); }", "forward-timeout: 5s\nmax-hops: 1\n")   # the code area is drishti-inputs' code editor: typed through its text area
     page.locator("[data-save]").click()
-    page.wait_for_function("() => document.querySelector('[data-msg]').textContent.includes('Saved gossip.yaml')", timeout=10000)
+    page.wait_for_function("() => document.querySelector('[data-msg]').textContent.includes('Saved routing.yaml')", timeout=10000)
     put = [c for c in backend.net_calls if c[0] == "PUT"]
     assert put[-1][3] == {"If-Match": "abc"}
     page.close()

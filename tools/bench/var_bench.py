@@ -197,7 +197,7 @@ class Bench:
 
     def start(self, n: str, seed: str | None) -> None:
         home = self.work / "nodes" / n
-        for d in ("data", "connectors", "net/peers"):
+        for d in ("data", "connectors", "net"):
             (home / d).mkdir(parents=True, exist_ok=True)
         import net_soak
         for cname, text in net_soak.connector_files(Path(self.a.lake), PACKS).items():
@@ -216,12 +216,12 @@ class Bench:
                 "--drishti.security.registered-users-only=false", f"--drishti.logging.file={self.work / 'logs' / (n + '.log')}",
                 "--logging.threshold.console=OFF", "--drishti.var.currencies=USD", "--drishti.var.official.enabled=false"]
         if self.a.mode == "cluster":
+            seed_at = seed.split("://", 1)[-1].rstrip("/").rpartition(":") if seed else None
             (home / "net" / "node.yaml").write_text(f"enabled: true\nnode-id: bench-{n}\nadvertise-url: http://{self.host}:{self.port[n]}\n"
-                                                    "secret: ${DRISHTI_NET_SECRET}\n", encoding="utf-8")
-            (home / "net" / "gossip.yaml").write_text("interval: 1s\nsuspect-after: 3s\ndead-after: 10s\n", encoding="utf-8")
-            if seed:
-                (home / "net" / "peers" / "bench-a.yaml").write_text(f"url: {seed}\n", encoding="utf-8")
+                                                    f"secret: ${{DRISHTI_NET_SECRET}}\ncluster-port: {self.port[n] + 100}\n"
+                                                    + (f"seeds: [\"{seed_at[0]}:{int(seed_at[2]) + 100}\"]\n" if seed_at else ""), encoding="utf-8")
             args += [f"--drishti.net.dir={home / 'net'}", "--drishti.net.poll=1s", "--drishti.var.sharding.enabled=true",
+                     "--net.membership.heartbeat=1s", "--net.membership.suspect-after=3s", "--net.membership.verify=1s",
                      f"--drishti.var.sharding.target-shard-mb={self.a.shard_mb}", "--drishti.var.sharding.replicas=2",
                      "--drishti.var.sharding.stable-seconds=15", "--drishti.var.sharding.grace-seconds=3",
                      # the lake holds no scenario-pv table: the date is cut on its P&L vectors (the default kinds do the same; kept explicit

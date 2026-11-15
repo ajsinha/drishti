@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * {@code GET /api/v1/net/switches}: this node's switches ledger, for a peer whose gossip showed a different hash ({@link SwitchSync}).
+ * {@code GET /api/v1/net/switches}: this node's switches ledger, for a peer whose vitals showed a different hash ({@link SwitchSync}).
  * A cluster endpoint: only a node calls it (the cluster credential, NetCallFilter), and it does not exist while the cluster is off.
  */
 @RestController

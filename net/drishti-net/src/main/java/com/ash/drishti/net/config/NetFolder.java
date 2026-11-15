@@ -42,7 +42,9 @@ import java.util.stream.Stream;
 
 /**
  * The {@code config/net/} folder (CLUSTER_GUIDE.md › Drishti*net: many servers, one Drishti, section 14), managed the way connector files are: {@code node.yaml},
- * {@code peers/<name>.yaml}, {@code gossip.yaml}, {@code routing.yaml}, {@code access.yaml}. Every file is checked against
+ * {@code routing.yaml}, {@code access.yaml}; the membership's timings, the seeds' list and the agreement are the settings file's
+ * {@code [net.*]} sections (CLUSTER_I5_DESIGN.md section 4.4). The gossip-era {@code gossip.yaml} and {@code peers/} are refused in words
+ * that name their replacement, never read. Every file is checked against
  * its schema ({@link NetSchema}) before use; a refused file keeps the previous settings of that file in force and its
  * problems are reported. Writes are atomic (a temporary file moved over the target) and keep the previous text in
  * {@code <data dir>/net/history/}. The folder is created on the first write; without it every file has its defaults and
@@ -51,9 +53,9 @@ import java.util.stream.Stream;
 public final class NetFolder {
 
     /** The files of the folder that are not peers, in the order they are shown. */
-    public static final List<String> FIXED = List.of("node.yaml", "gossip.yaml", "routing.yaml", "access.yaml");
-    /** A peer's logical name, as connector names. */
-    public static final Pattern PEER_NAME = Pattern.compile("[a-z0-9][a-z0-9-]{0,63}");
+    public static final List<String> FIXED = List.of("node.yaml", "routing.yaml", "access.yaml");
+    /** Where the problems of the settings file's cluster sections are filed. */
+    public static final String SETTINGS = "[net.*]";
     private static final DateTimeFormatter STAMP = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmssSSS").withZone(ZoneOffset.UTC);
 
     /** One file of the folder as listed: its id ({@code node.yaml}, {@code peers/a.yaml}), whether it exists, its version. */
@@ -101,31 +103,31 @@ public final class NetFolder {
         return schema;
     }
 
-    /** True when the id names a file of this folder ({@code node.yaml}, {@code peers/<name>.yaml}, ...). */
+    /** True when the id names a file of this folder ({@code node.yaml}, {@code routing.yaml}, {@code access.yaml}). */
     public static boolean valid(String id) {
-        if (id == null) {
-            return false;
-        }
-        if (FIXED.contains(id)) {
-            return true;
-        }
-        return id.startsWith("peers/") && id.endsWith(".yaml") && PEER_NAME.matcher(id.substring(6, id.length() - 5)).matches();
+        return id != null && FIXED.contains(id);
     }
 
     private Path path(String id) {
         if (!valid(id)) {
-            throw new IllegalArgumentException("'" + id + "' is not a file of config/net/: node.yaml, gossip.yaml, routing.yaml, access.yaml or peers/<name>.yaml");
+            throw new IllegalArgumentException("'" + id + "' is not a file of config/net/: node.yaml, routing.yaml or access.yaml"
+                    + (id != null && (id.equals("gossip.yaml") || id.startsWith("peers/")) ? " (" + gone(id) + ")" : ""));
         }
         return dir.resolve(id).normalize();
     }
 
-    /** Every file: the fixed ones (present or not) and every peer file present, peers in name order. */
+    /** What replaced a gossip-era file. */
+    private static String gone(String id) {
+        return id.equals("gossip.yaml") ? "gossip.yaml is gone with the gossip membership: its timings are [net.membership] in the settings file"
+                : "peers/ is gone with the gossip membership: the seeds are [net.cluster] seeds (or node.yaml seeds: host:cluster-port, ...)";
+    }
+
+    /** Every file of the folder (present or not). */
     public List<FileInfo> files() {
         List<FileInfo> out = new ArrayList<>();
         for (String id : FIXED) {
             out.add(info(id));
         }
-        peerIds().forEach(id -> out.add(info(id)));
         return out;
     }
 
@@ -138,20 +140,6 @@ public final class NetFolder {
             return new FileInfo(id, true, etag(Files.readString(p, StandardCharsets.UTF_8)), Files.size(p));
         } catch (IOException e) {
             return new FileInfo(id, false, "", 0);
-        }
-    }
-
-    /** The peer files present, {@code peers/<name>.yaml}, in name order; files whose name is not a peer name are left out. */
-    public List<String> peerIds() {
-        Path peers = dir.resolve("peers");
-        if (!Files.isDirectory(peers)) {
-            return List.of();
-        }
-        try (Stream<Path> s = Files.list(peers)) {
-            return s.map(p -> p.getFileName().toString()).filter(n -> n.endsWith(".yaml"))
-                    .map(n -> "peers/" + n).filter(NetFolder::valid).sorted().toList();
-        } catch (IOException e) {
-            return List.of();
         }
     }
 
@@ -171,20 +159,21 @@ public final class NetFolder {
         Map<String, List<NetSchema.Problem>> problems = new LinkedHashMap<>();
         Map<String, String> etags = new LinkedHashMap<>();
         NetConfig c = prev;
+        ClusterSettings.Read cluster = schema.cluster();
+        if (!cluster.problems().isEmpty()) {
+            problems.put(SETTINGS, cluster.problems().stream().map(p -> new NetSchema.Problem(SETTINGS, "error", "", p, 0)).toList());
+        }
         NodeSettings node = read("node.yaml", problems, etags, NodeSettings.OFF, prev.node(), (m, t) -> schema.node("node.yaml", m, t));
-        GossipSettings gossip = read("gossip.yaml", problems, etags, GossipSettings.DEFAULTS, prev.gossip(), (m, t) -> schema.gossip("gossip.yaml", m, t));
         RoutingSettings routing = read("routing.yaml", problems, etags, RoutingSettings.DEFAULTS, prev.routing(), (m, t) -> schema.routing("routing.yaml", m, t));
         AccessSettings access = read("access.yaml", problems, etags, AccessSettings.OPEN, prev.access(), (m, t) -> schema.access("access.yaml", m, t));
-        List<SeedPeer> peers = new ArrayList<>();
-        for (String id : peerIds()) {
-            String name = id.substring(6, id.length() - 5);
-            SeedPeer before = prev.peers().stream().filter(p -> p.name().equals(name)).findFirst().orElse(null);
-            SeedPeer p = read(id, problems, etags, null, before, (m, t) -> schema.peer(id, name, m, t));
-            if (p != null) {
-                peers.add(p);
+        for (String old : List.of("gossip.yaml", "peers")) {
+            if (Files.exists(dir.resolve(old))) {                  // refused in words, never read: one membership, not two
+                String id = old.equals("peers") ? "peers/" : old;
+                problems.put(id, List.of(new NetSchema.Problem(id, "error", "", gone(old.equals("peers") ? "peers/" : old)
+                        + "; remove it (drishti.py net check prints the new settings for this folder)", 0)));
             }
         }
-        c = new NetConfig(node, peers, gossip, routing, access);
+        c = new NetConfig(node, routing, access, cluster.settings());
         return new Loaded(c, problems, etags);
     }
 
@@ -239,10 +228,8 @@ public final class NetFolder {
         path(id);
         return switch (id) {
             case "node.yaml" -> parsed(id, text, (m, t) -> schema.node(id, m, t)).problems();
-            case "gossip.yaml" -> parsed(id, text, (m, t) -> schema.gossip(id, m, t)).problems();
             case "routing.yaml" -> parsed(id, text, (m, t) -> schema.routing(id, m, t)).problems();
-            case "access.yaml" -> parsed(id, text, (m, t) -> schema.access(id, m, t)).problems();
-            default -> parsed(id, text, (m, t) -> schema.peer(id, id.substring(6, id.length() - 5), m, t)).problems();
+            default -> parsed(id, text, (m, t) -> schema.access(id, m, t)).problems();
         };
     }
 
@@ -398,7 +385,7 @@ public final class NetFolder {
         String leaf = parts[parts.length - 1];
         if (value == null || value.isBlank()) {
             at.remove(leaf);
-        } else if (List.of("tags", "peer-only-packs", "nodes").contains(leaf)) {
+        } else if (List.of("tags", "peer-only-packs", "nodes", "seeds", "memory-stores").contains(leaf)) {
             at.put(leaf, java.util.Arrays.stream(value.split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList());
         } else if (value.equals("true") || value.equals("false")) {
             at.put(leaf, Boolean.parseBoolean(value));

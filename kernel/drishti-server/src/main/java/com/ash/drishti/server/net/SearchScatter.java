@@ -94,7 +94,7 @@ public final class SearchScatter {
         String requestId = NetCaller.current().map(NetCaller.Caller::requestId).orElse("-");
         List<CompletableFuture<Share>> calls = new ArrayList<>();
         for (String node : nodes) {
-            String url = routing.net().node().flatMap(n -> n.table().known(node)).map(k -> k.member().url()).orElse(null);
+            String url = routing.net().node().flatMap(n -> n.members().known(node)).map(k -> k.member().url()).orElse(null);
             if (url == null) {
                 continue;
             }
