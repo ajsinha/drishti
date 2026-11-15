@@ -142,7 +142,12 @@ public class NetDataController {
         if (peer == null) {
             throw new DrishtiException(ErrorCode.NET_REFUSED, "only a node of the cluster sends user state");
         }
-        java.util.List<StateSync.Change> changes = java.util.Arrays.asList(json.treeToValue(body.path("changes"), StateSync.Change[].class));
+        java.util.List<StateSync.Change> changes;
+        try {
+            changes = java.util.Arrays.asList(json.treeToValue(body.path("changes"), StateSync.Change[].class));
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            throw new DrishtiException(ErrorCode.NET_BAD_REQUEST, "the changes are not a list of {user, namespace, key, value, at, origin, catchUp}: " + e.getOriginalMessage());
+        }
         return Map.of("applied", stateSync.getObject().receive(changes));
     }
 
