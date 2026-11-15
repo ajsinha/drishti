@@ -1033,9 +1033,9 @@ drishti:
     # (JPA). SQLite by default: a single file, nothing to install. For PostgreSQL:
     #   DRISHTI_IDENTITY_DB_URL=jdbc:postgresql://db:5432/drishti DRISHTI_IDENTITY_DB_USER=drishti DRISHTI_IDENTITY_DB_PASSWORD=...
     # The schema (drishti-identity: db/schema-sqlite.sql, db/schema-postgres.sql) is applied at start; no migrations.
-    database-url: ${DRISHTI_IDENTITY_DB_URL:jdbc:sqlite:${drishti.data.dir}/identity/drishti.db}
-    database-user: ${DRISHTI_IDENTITY_DB_USER:}  # the identity database's user (PostgreSQL)
-    database-password: ${DRISHTI_IDENTITY_DB_PASSWORD:}  # its password, from the environment
+    database-url: ${db.identity.url:${DRISHTI_IDENTITY_DB_URL:jdbc:sqlite:${drishti.data.dir}/identity/drishti.db}}
+    database-user: ${db.identity.user:${DRISHTI_IDENTITY_DB_USER:}}  # the identity database's user (PostgreSQL)
+    database-password: ${db.identity.password:${DRISHTI_IDENTITY_DB_PASSWORD:}}  # its password, from the environment
     # database-pool-size:           # unset: drishti.db.pool.size (20) on PostgreSQL; SQLite (embedded, one writer) keeps 8
     refresh-seconds: 15              # servers sharing one database see each other's role and pack changes this soon
     # The files of releases before 1.10, imported once into an empty database and renamed *.imported.

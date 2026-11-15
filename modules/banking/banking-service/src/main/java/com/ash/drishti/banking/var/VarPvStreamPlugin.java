@@ -58,7 +58,7 @@ import org.slf4j.LoggerFactory;
  *       enabled: ${DRISHTI_VAR_PV_STREAM:false}
  *       kinds: [pv-update]
  *       settings:
- *         bootstrap-servers: ${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}
+ *         broker: default                  # the broker by name: [broker.default] (docs/admin/CONFIGURATION.md)
  *         topic: ${DRISHTI_VAR_PV_TOPIC:drishti.risk.pv-updates}
  *         lake: demo                       # the lake the windows are written to (config/lakes/demo.yaml)
  * </pre>

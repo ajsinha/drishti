@@ -48,7 +48,10 @@ public final class Lakes {
     public static final String PROPERTY = "drishti.lakes.dir";
     /** The environment variable that names the lake folder. */
     public static final String ENV = "DRISHTI_LAKES_DIR";
-    /** The variable that names the demo lake's root (config/lakes/demo.yaml: {@code ${DRISHTI_DELTA_ROOT:<data>/delta/demo}}). */
+    /**
+     * The variable that names the demo lake's root (config/lakes/demo.yaml: {@code ${DRISHTI_DELTA_ROOT:<data>/delta/demo}}); kept for the
+     * launchers and tools that set it, under {@code lake.demo.root} ({@code [lake.demo] root=}), which wins over it.
+     */
     public static final String DEMO_ROOT_ENV = "DRISHTI_DELTA_ROOT";
     /** At most this many partition columns after {@code business_date}. */
     public static final int MAX_PARTITIONS = 4;
@@ -156,6 +159,7 @@ public final class Lakes {
                 out.put(n, v);
             }
         }
+        out.putAll(com.ash.drishti.common.NamedResources.all("lake"));   // the [lake.<name>] sections: root=, storage.<key>=
         return out;
     }
 
@@ -336,6 +340,17 @@ public final class Lakes {
         String rootPath = v.text(root, "root", "");
         Map<String, String> storage = v.map(root.path("storage"), "storage");
         secrets(where, "storage", root.path("storage"), storage);
+        // [lake.<name>] in the settings files (docs/admin/CONFIGURATION.md, "Named lakes, databases and brokers"): its root and its
+        // storage.<key> win over the file's, so a site moves one lake by name and no other; the file keeps its tables
+        String namedRoot = v.lookup("lake." + name + ".root");
+        if (namedRoot != null && !namedRoot.isBlank()) {
+            rootPath = v.resolve("lake." + name + ".root", namedRoot.strip());
+        }
+        com.ash.drishti.common.NamedResources.section("lake", name).forEach((k, val) -> {
+            if (k.startsWith("storage.") && k.length() > "storage.".length()) {
+                storage.put(k.substring("storage.".length()), val);
+            }
+        });
         Map<String, String> catalog = new LinkedHashMap<>();
         JsonNode cat = root.path("catalog");
         if (cat.isTextual()) {
@@ -543,7 +558,7 @@ public final class Lakes {
          * A variable: the environment; a dotted name ({@code drishti.data.dir}) also as a system property and as its environment form
          * ({@code DRISHTI_DATA_DIR}), as the server resolves it.
          */
-        private String lookup(String name) {
+        String lookup(String name) {
             String v = env.apply(name);
             if ((v == null || v.isEmpty()) && (name.contains(".") || name.contains("-"))) {
                 v = System.getProperty(name);

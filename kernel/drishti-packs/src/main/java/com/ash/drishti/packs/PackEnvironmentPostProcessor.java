@@ -46,6 +46,23 @@ public final class PackEnvironmentPostProcessor implements EnvironmentPostProces
                 return null;
             }
         });
+        // the named lakes, databases and brokers ([lake.<name>], [db.<name>], [broker.<name>], [connector.<name>], [pack.<name>]) read
+        // through the same settings: the settings files' entries, -D, the environment, a --setting or a test's property
+        com.ash.drishti.common.NamedResources.useView(k -> {
+            try {
+                return env.getProperty(k);
+            } catch (IllegalArgumentException e) {
+                return null;
+            }
+        }, () -> {
+            java.util.Set<String> keys = new java.util.LinkedHashSet<>();
+            for (org.springframework.core.env.PropertySource<?> ps : env.getPropertySources()) {
+                if (ps instanceof org.springframework.core.env.EnumerablePropertySource<?> e && !ps.getName().equals("configurationProperties")) {
+                    keys.addAll(Arrays.asList(e.getPropertyNames()));
+                }
+            }
+            return keys;
+        });
         if (System.getProperty(com.ash.drishti.api.DataDir.PROPERTY) == null) {           // plugins have no Spring environment: hand them the umbrella
             System.setProperty(com.ash.drishti.api.DataDir.PROPERTY, PackPaths.dataDir(env));
         }

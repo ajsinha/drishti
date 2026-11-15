@@ -158,7 +158,7 @@ Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `un
 <!-- settings:end -->
 
 The site-wide summary is in [CONFIGURATION.md](../../docs/admin/CONFIGURATION.md#kafka-tls-proxy); the pack environment variables
-(`DRISHTI_STREAM_TRADING`, `DRISHTI_KAFKA_BOOTSTRAP`, …) in
+(`DRISHTI_STREAM_TRADING`, the named broker `[broker.default]`, …) in
 [CONFIGURATION.md](../../docs/admin/CONFIGURATION.md#environment-variables-used-by-the-packs-and-profiles).
 
 - Setting keys with dots are literal: a topic such as `desk_orders` is simply `kind.desk_orders: order` (nested YAML flattens to
@@ -218,7 +218,7 @@ enabled: ${DRISHTI_STREAM_TRADING:false}
 kinds: [trade]
 description: Live trades from Kafka
 settings:
-  bootstrap-servers: ${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}
+  broker: default
   topics: [drishti.trading.trades]
   kind: trade
   id-field: TRADE_ID
@@ -241,7 +241,7 @@ connectors:
     enabled: ${DRISHTI_STREAM_TRADING:false}
     kinds: [trade]
     settings:
-      bootstrap-servers: ${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}
+      broker: default
       topics: ${DRISHTI_TRADING_TOPIC:drishti.trading.trades}
       kind: trade
       id-field: TRADE_ID
@@ -544,7 +544,7 @@ system's **PV topic** the same way (every partition from the beginning, no consu
   a replay) is ignored; another scenario set (`DRS-5203`), a failed scenario (`DRS-5206`) or a non-contract object (`DRS-5201`) is
   rejected, never filled with zero, and listed in `GET /api/v1/var/intraday/streams` and the VaR page's provenance.
 - **Sizing:** a record is 4–8 KB; 10,000 updates a day are 40–80 MB on the topic.
-- **Settings:** `bootstrap-servers` (`${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}`), `topic` (`${DRISHTI_VAR_PV_TOPIC:drishti.risk.pv-updates}`),
+- **Settings:** `broker` (`default`: the `[broker.default]` section of the settings file, a Kafka at localhost:9092 when none), `topic` (`${DRISHTI_VAR_PV_TOPIC:drishti.risk.pv-updates}`),
   `lake` (`${DRISHTI_DELTA_ROOT:./data/delta/demo}`, tables `<lake>/risk/scenario-pv` and `<lake>/risk/pnl-vector`), `poll-ms` (`200`).
 - **The publisher:** `tools/pvgen/publish-kafka.sh` (`tools\windows\pvgen-publish-kafka.ps1`) sends amended, new and cancelled trades of
   the demo's date (`--per-message`, `--rate`, `--seconds`, `--seed`, `--pv-systems`, `--pnl-systems`, `--all-vectors`, `--dry-run`);
@@ -552,7 +552,7 @@ system's **PV topic** the same way (every partition from the beginning, no consu
   ([VAR_GUIDE.md, Producing P&L vectors](../../docs/guides/VAR_GUIDE.md#1512-producing-pl-vectors-and-scenario-pvs)).
 
 ```bash
-DRISHTI_VAR_PV_STREAM=true DRISHTI_KAFKA_BOOTSTRAP=localhost:9092 ./drishti.sh start
+DRISHTI_VAR_PV_STREAM=true BROKER_DEFAULT_BOOTSTRAP_SERVERS=localhost:9092 ./drishti.sh start
 tools/pvgen/publish-kafka.sh --bootstrap localhost:9092 --rate 20 --seconds 60 --save pv-sent.jsonl
 ```
 

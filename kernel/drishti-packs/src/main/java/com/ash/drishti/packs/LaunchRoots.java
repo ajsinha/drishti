@@ -195,18 +195,11 @@ public final class LaunchRoots implements EnvironmentPostProcessor, Ordered {
     static final java.util.regex.Pattern PATH_KEY = java.util.regex.Pattern.compile(
             "^drishti\\..*[.-](?:dir|dirs|file|folder|root|path|home|url)$|^logging\\.file\\.(?:name|path)$|^server\\.ssl\\.(?:key|trust)-store$"
             + "|^spring\\.datasource\\.url$");
-    /** A JDBC URL of a database in a local file (SQLite, DuckDB, H2): its file part is a path. */
-    private static final java.util.regex.Pattern FILE_DB = java.util.regex.Pattern.compile("^(jdbc:(?:sqlite|duckdb|h2:file):)(.+)$");
     /** The settings the configuration imports name (application.yaml spring.config.import): each must be absolute when given. */
     static final List<String> IMPORTED = List.of("DRISHTI_ENGINES_DIR", "drishti.config.dir", "DRISHTI_CONFIG_DIR", "DRISHTI_PACKS_OVERLAY",
             "drishti.data.dir", "DRISHTI_DATA_DIR");
     /** An environment variable that names a folder or a file. */
     static final java.util.regex.Pattern PATH_ENV = java.util.regex.Pattern.compile("^DRISHTI_[A-Z0-9_]*_(?:DIR|DIRS|FILE|FOLDER|ROOT|PATH|HOME)$");
-    /** A value that is not a local relative path: a URL or a scheme ({@code s3:}, {@code mem:}, {@code classpath:}, {@code jdbc:}), a word. */
-    private static final java.util.regex.Pattern NOT_A_PATH = java.util.regex.Pattern.compile(
-            "^(?:[A-Za-z][A-Za-z0-9+.-]+:.*|none|auto|off|on|true|false|-?[0-9]+(?:\\.[0-9]+)?)$");
-    /** An absolute local path: POSIX, a Windows drive, or a UNC share. */
-    private static final java.util.regex.Pattern ABSOLUTE = java.util.regex.Pattern.compile("^(?:/|\\\\|[A-Za-z]:[\\\\/]).*");
 
     /** Every path key the configuration names (every source but the environment variables, which are read through the keys they fill). */
     private static List<String> names(ConfigurableEnvironment env) {
@@ -248,37 +241,9 @@ public final class LaunchRoots implements EnvironmentPostProcessor, Ordered {
             List<String> fixed = new ArrayList<>();
             boolean changed = false;
             for (String part : list ? v.split(",", -1) : new String[] {v}) {
-                String x = part.strip();
-                java.util.regex.Matcher db = FILE_DB.matcher(x);
-                if (db.matches()) {                                       // jdbc:sqlite:<file>: the file part, unless absolute or in memory
-                    String file = db.group(2);
-                    if (file.startsWith(":") || ABSOLUTE.matcher(file).matches() || file.contains("{")) {
-                        fixed.add(part);
-                    } else if (home == null) {
-                        problems.add(k + " is '" + x + "', a database file at a relative path, and " + HOME + " (DRISHTI_HOME) is not set");
-                        fixed.add(part);
-                    } else {
-                        fixed.add(db.group(1) + home.resolve(file).normalize());
-                        changed = true;
-                    }
-                    continue;
-                }
-                if ((k.endsWith("url") || k.endsWith("URL")) && !k.equals("drishti.packs.registry.url")) {   // any other URL is not a path (the registry's may be a folder)
-                    fixed.add(part);
-                    continue;
-                }
-                if (x.isEmpty() || ABSOLUTE.matcher(x).matches() || NOT_A_PATH.matcher(x).matches() || x.contains("{")
-                        || x.startsWith("$") || x.startsWith("@")) {             // a JSON path, a placeholder left as text
-                    fixed.add(part);
-                    continue;
-                }
-                if (home == null) {
-                    problems.add(k + " is '" + x + "', a relative path, and " + HOME + " (DRISHTI_HOME) is not set: give an absolute path, or set " + HOME);
-                    fixed.add(part);
-                    continue;
-                }
-                fixed.add(home.resolve(x).normalize().toString());
-                changed = true;
+                String r = com.ash.drishti.api.Roots.anchorValue(k, part, home, problems);    // the one rule (docs/admin/CONFIGURATION.md, "Launch roots")
+                fixed.add(r);
+                changed |= !r.equals(part);
             }
             if (changed) {
                 out.put(k, String.join(",", fixed));
@@ -382,7 +347,7 @@ public final class LaunchRoots implements EnvironmentPostProcessor, Ordered {
         }
         for (String k : IMPORTED) {   // read by spring.config.import before this runs: a relative value there would be the process's folder
             String v = property.apply(k);
-            if (!blank(v) && !ABSOLUTE.matcher(v.strip()).matches()) {
+            if (!blank(v) && !com.ash.drishti.api.Roots.isAbsolute(v)) {
                 problems.add(k + " is '" + v.strip() + "', a relative path: the configuration files it names (the engines' files, the packs overlay)"
                         + " are read before the roots are resolved, so give it as an absolute path");
             }

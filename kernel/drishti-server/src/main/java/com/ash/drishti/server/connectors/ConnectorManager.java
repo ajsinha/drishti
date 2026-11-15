@@ -497,7 +497,7 @@ public final class ConnectorManager {
             for (Pack p : packs.packs()) {
                 if (p.name().equals(pn) && p.connectorTemplates().containsKey(name)) {
                     return Optional.of(new Template(p.name(), com.ash.drishti.packs.PackEnvironmentPostProcessor.officialReaders(env)
-                            .apply(p.connectorTemplates().get(name))));                // the readers of official results follow their format
+                            .apply(com.ash.drishti.packs.ConnectorLayers.packBound(p.name(), p.connectorTemplates().get(name)))));                // the readers of official results follow their format
                 }
             }
         }
@@ -1018,7 +1018,7 @@ public final class ConnectorManager {
                     out.add(new Problem("error", where, "one of " + t.substring(5).replace("|", ", ")));
                 }
             }
-            if (spec != null && spec.declared() && s == null) {
+            if (spec != null && spec.declared() && s == null && !com.ash.drishti.common.NamedResources.REFERENCES.containsKey(key)) {   // broker:, db: name a section
                 out.add(new Problem("warning", where, "'" + key + "' is not a setting the " + d.plugin() + " plugin reads (a typo?)"));
             }
         }
@@ -1029,9 +1029,12 @@ public final class ConnectorManager {
                 out.add(new Problem("error", "settings.proxy", String.valueOf(bad)));
             }
         }
+        boolean named = com.ash.drishti.common.NamedResources.REFERENCES.keySet().stream().anyMatch(k -> d.settings().get(k) != null
+                && !d.settings().get(k).isBlank());                // a named broker's or database's section supplies the connection
         if (on && spec != null && spec.declared()) {
             for (SettingSpec s : spec.settings()) {
                 if (s.required() && !s.name().endsWith(".*") && s.defaultValue() == null
+                        && !(named && com.ash.drishti.common.NamedResources.KNOWN.contains(s.name()))
                         && (d.settings().get(s.name()) == null || d.settings().get(s.name()).isBlank())) {
                     out.add(new Problem("error", "settings." + s.name(), "required by the " + d.plugin() + " plugin"));
                 }
@@ -1472,8 +1475,8 @@ public final class ConnectorManager {
         }
         Map<String, String> read;
         try {
-            read = ConnectorSecrets.resolve(resolved);
-        } catch (IllegalStateException x) {
+            read = ConnectorSecrets.resolve(com.ash.drishti.common.NamedResources.connector(name, d.plugin(), resolved));   // as it runs
+        } catch (IllegalArgumentException | IllegalStateException x) {
             return failure(name, x.getMessage(), d.plugin());
         }
         List<String> secrets = new ArrayList<>();
@@ -1553,7 +1556,7 @@ public final class ConnectorManager {
                 for (Map.Entry<String, String> e : d.settings().entrySet()) {
                     resolved.put(e.getKey(), env.resolveRequiredPlaceholders(e.getValue()));
                 }
-                read.putAll(ConnectorSecrets.resolve(resolved));
+                read.putAll(ConnectorSecrets.resolve(com.ash.drishti.common.NamedResources.connector(name, d.plugin(), resolved)));
             } catch (IllegalArgumentException | IllegalStateException x) {
                 problem = x.getMessage();
             }
