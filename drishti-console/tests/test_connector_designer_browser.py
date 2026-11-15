@@ -17,6 +17,7 @@ sees), previews real rows (types detected), binds a kind, reviews the two diffs 
 second administrator approves through the bindings service, and the kind is served by the new connector, with no restart. Also the layout at desktop and phone
 width, the old New connector button's way here, and the secret rule (a typed value is refused). Skipped when Playwright, Chromium, the built jar or a JDK is
 missing (wb_live.py)."""
+import datetime
 import json
 import os
 import pathlib
@@ -35,6 +36,7 @@ pytestmark = pytest.mark.spread
 ROOT = CONSOLE.parent
 LONG = max(BROWSER_WAIT_MS, 120_000)
 KIND = "cdui-note"
+DAY = (datetime.date.today() - datetime.timedelta(days=5)).isoformat()   # five days back: inside the file connector's 10-day lookback, never a fixed date that ages out
 SECOND, SECOND_PASSWORD = "cd-second-admin", "cd-second-pass-2026"
 
 
@@ -70,12 +72,12 @@ def sign_in(page, base, user="drishti-dev-admin", password="drishti-dev-admin123
 
 
 def make_files(folder: pathlib.Path) -> pathlib.Path:
-    """A generated source: <root>/cdui/2026-07-08/cdui-note.jsonl, six synthetic notes (an id, a book, an amount, a date)."""
-    day = folder / "cdui" / "2026-07-08"
+    """A generated source: <root>/cdui/<DAY>/cdui-note.jsonl, six synthetic notes (an id, a book, an amount, a date)."""
+    day = folder / "cdui" / DAY
     day.mkdir(parents=True, exist_ok=True)
     with open(day / f"{KIND}.jsonl", "w", encoding="utf-8") as w:
         for i in range(1, 7):
-            w.write(json.dumps({"id": f"N{i:03d}", "BOOK": "RATES-NY" if i % 2 else "FX-TOR", "AMOUNT": 1000.5 * i, "COUNT": i, "VALUE_DATE": "2026-07-08", "LIVE": i > 3}) + "\n")
+            w.write(json.dumps({"id": f"N{i:03d}", "BOOK": "RATES-NY" if i % 2 else "FX-TOR", "AMOUNT": 1000.5 * i, "COUNT": i, "VALUE_DATE": DAY, "LIVE": i > 3}) + "\n")
     return folder
 
 
@@ -110,7 +112,7 @@ def test_a_connector_made_tested_previewed_bound_and_approved_by_a_second_admini
         # 3 Test connection: connected, and what it sees
         page.click("[data-test]")
         page.wait_for_function("() => document.querySelector('[data-test-said]').innerText.includes('Connected')", timeout=LONG)
-        page.locator("[data-sees-grid] [role=row]:has-text('2026-07-08')").first.wait_for(timeout=LONG)
+        page.locator("[data-sees-grid] [role=row]:has-text('%s')" % DAY).first.wait_for(timeout=LONG)
         assert "6" in page.locator("[data-sees-grid]").inner_text()
         page.click("[data-next]")
 

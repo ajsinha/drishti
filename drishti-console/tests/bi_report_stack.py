@@ -131,6 +131,7 @@ kinds: [trade-valuation]
 settings:
   root: {root}
   rescan-seconds: 3600
+  lookback-days: 36500   # a fixed-date fixture lake: its newest day must stay readable as "latest" however old it gets
   layout:
     trade-valuation:
       columns: [VALUATION_ID, TRADE_ID, SOURCE_SYSTEM, DESK, PORTFOLIO, PRODUCT_TYPE, CURRENCY, TRADE_STATUS, NOTIONAL, MTM, PNL_1D, TRADE_DATE]
@@ -142,6 +143,7 @@ kinds: [trade]
 settings:
   root: {root}
   rescan-seconds: 3600
+  lookback-days: 36500   # a fixed-date fixture lake: its newest day must stay readable as "latest" however old it gets
   layout:
     trade:
       columns: [tradeId, desk, book, productType, currency, status, notional, mtm, pnl1d, tradeDate]

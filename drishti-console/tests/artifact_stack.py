@@ -97,7 +97,7 @@ def build(work: Path) -> Path:
     (lake / "lab-item.jsonl").write_text("".join(f'{{"itemId": "L-{i}", "weight": {i * 3}}}\n' for i in range(1, 6)), encoding="utf-8")
     conns = work / "connectors"
     conns.mkdir()
-    (conns / "lab-files.yaml").write_text(f"plugin: file\nkinds: [lab-item]\ndescription: The lab's drop folder\nsettings:\n  root: {work / 'lake'}\n", encoding="utf-8")
+    (conns / "lab-files.yaml").write_text(f"plugin: file\nkinds: [lab-item]\ndescription: The lab's drop folder\nsettings:\n  root: {work / 'lake'}\n  lookback-days: 36500\n", encoding="utf-8")
     (conns / "scratch-conn.yaml").write_text(f"plugin: file\nkinds: [scratch-thing]\ndescription: A scratch connector nothing uses\nsettings:\n  root: {work / 'scratch'}\n", encoding="utf-8")
     bi = work / "bi"
     for rel, text in (("reports/lab-overview.report.yaml", REPORT), ("python/lab-spare.python.yaml", SPARE)):

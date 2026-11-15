@@ -49,6 +49,7 @@ kinds: [trade]
 settings:
   root: {root}
   rescan-seconds: 3600
+  lookback-days: 36500   # a fixed-date fixture lake: its newest day must stay readable as "latest" however old it gets
   layout:
     trade:
       columns: [TRADE_ID, TRADE_DATE, PORTFOLIO, CURRENCY, QUANTITY, PRICE, PRODUCT_TYPE, COUNTERPARTY]

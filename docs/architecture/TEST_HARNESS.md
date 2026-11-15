@@ -419,6 +419,14 @@ started together, in exchange for browser tests that run on an idle machine. A f
 the lanes they chose (a wave with none is skipped). `DRILL_WAVES=off` starts every lane at once, as a quiet 24-core machine can
 bear. `drill_lanes.py waves --mode on|off LANE...` prints the split; `test_drill_lanes.py` checks it.
 
+**Time bombs.** The file connector serves the newest day on or before the date asked, within `lookback-days` (default 10). A fixture
+that writes a folder named with a literal date and lets the console ask for "today" passes for ten days and then fails (DRS-1001). A
+console test that writes a dated folder derives the date from today, five days back (`datetime.date.today() -
+datetime.timedelta(days=5)`), or declares its fixture connector with `lookback-days` (a fixed-date lake that is always read as
+"latest"). Dates fixed by design stay literal: golden data, and loader or as-of tests that pass an explicit date.
+`tools/drillkit/test_no_time_bombs.py` fails a console test file that builds a day folder from a literal date without either, unless
+the file is listed there with the reason it cannot age out.
+
 ### 3.23 Shared read-only servers
 
 A VaR file that only reads asks `var_server(..., shared=True)`: its hot folder and official results are then inside the server's own
