@@ -45,7 +45,7 @@ afterwards.
 6. [`data`: profile, ingest and load](#6-data-profile-ingest-and-load)
 7. [`lake`: a large JSON export into a Delta lake](#7-lake-a-large-json-export-into-a-delta-lake)
 8. [`server`: health and packs](#8-server-health-and-packs)
-9. [`connector` and `net`](#9-connector-and-net)
+9. [`connector`, `net` and `live`](#9-connector-net-and-live)
 10. [`view`, `history` and `convert`](#10-view-history-and-convert)
 11. [`design`: the Screen Designer over REST](#11-design-the-screen-designer-over-rest)
 12. [`bi` and `tables`](#12-bi-and-tables)
@@ -2660,7 +2660,7 @@ connectors of desk-demo   [files in /srv/drishti/config/connectors; change them 
 [exit 1]
 ```
 
-## 9. `connector` and `net`
+## 9. `connector`, `net` and `live`
 
 ### `connector`: list, get, apply, delete, test, plugins, enable, disable, reset, history
 
@@ -2933,6 +2933,35 @@ enabled: true
 ```
 
 Exit: 0 done, 1 refused or a file has an error, 2 usage (a bad peer name, a key that names no file).
+
+### `live`: the live feeds of every kind
+
+`live` is Admin → Health's *Live feeds* grid and the Live column of Admin → Data bindings from a terminal
+([LIVE_CONNECTORS_DESIGN.md section 9.1](../architecture/LIVE_CONNECTORS_DESIGN.md#91-the-admin-view-three-options)); administrators only,
+over `/api/v1/admin/live` and `/api/v1/admin/bindings`.
+
+| Command | What it does |
+|---|---|
+| `live list` | every live connector (a `kafka`, `activemq` or `rabbitmq` connector): its state in the one list of words (`LIVE`, `CATCHING UP`, `WAITING`, `STALE`, `DEGRADED`, `PAUSED`, `OFF`, `NOT CONFIGURED`, `DOWN`; `*` marks amber or fault), messages a minute, rows held, rejects, kinds, and the last reconcile's line |
+| `live show KIND` | the kind's feeds and its contract's rules in words (applied, newer means, messages, at the next load, kept) |
+| `live on KIND [--connector C]... --reason R` | proposes the kind's binding with those feeds live (default: every feed of the kind); a second administrator approves it (`approvals list`, or Admin → Data bindings) |
+| `live off KIND [--connector C]... --reason R` | the same, with them off |
+| `live pause CONNECTOR`, `live resume CONNECTOR` | an administrator's pause, audited: a queue's messages wait at the broker; a topic's are skipped and read again at the next start |
+| `live apply-now KIND` | lands the kind's waiting windows at once (a kind its contract lands, or a binding asks for both) |
+| `live rejects KIND` | the newest rejects of the kind's feeds with their reason and code (DRS-1062 to DRS-1072); every reject is in `<data folder>/live/rejects/<connector>/<date>.jsonl` |
+
+```
+$ python3 tools/drishti.py live list
+CONNECTOR                 STATE              /MIN      ROWS  REJECTED  KINDS
+trade-endur-live          LIVE                412      1840         3  trade
+                          last reconcile: load of 2026-11-13 (trade): 1800 absorbed, 40 carried, 0 orphans
+trade-wss-live            OFF                   -         -         -  trade
+$ python3 tools/drishti.py live on trade --connector trade-wss-live --reason "WSS go-live"
+proposed P-7: trade live ['trade-endur-live', 'trade-wss-live']; a second administrator approves it (drishti.py approvals list, or Admin -> Data bindings)
+```
+
+Exit 2 when the kind has no live feed, a `--connector` is not one of its feeds, or `--reason` is missing; DRS-1073 when a connector is
+not a live feed or is not running.
 
 ## 10. `view`, `history` and `convert`
 
@@ -4019,7 +4048,7 @@ The group modules live beside it and are not run on their own: `tools/authoring.
 `tools/ingest_jsonl.py` and `tools/ingest_watch.py` (`data ingest`), `tools/packbundle.py` (`pack bundle|verify|deploy|rollback`),
 `tools/serverpacks.py`, `tools/serverconnectors.py`, `tools/servernet.py` (`net`), `tools/hostaddr.py` (this machine's real address for Drishti*net members), `tools/build_demo_lakes.py` (every demo lake start to finish: `lake demo` over all sixty days, then your own ENDUR files one per date, `--store calypso=iceberg` for a source system in Iceberg, `--dry-run` to look first; the Windows QA guide's step 3.0), `tools/smoke.py`, `tools/doctor.py`, `tools/viewcmd.py`, `tools/completion.py`,
 `tools/approvalscli.py` (`approvals`), `tools/bilang.py`, `tools/bimodel.py`, `tools/biitem.py`, `tools/bistatement.py` (`bi statement preview|file`), `tools/historycmd.py` (`history`), `tools/varcli.py` (`var`), `tools/datacli.py` (`data get`), `tools/expcli.py` (`exposure`), and `tools/lake/cli.py` with `tools/lake/build.py`, `tools/lake/scan.py`,
-`tools/lake/jsonstream.py`, `tools/lake/stage.py`, `tools/lake/writers.py`, `tools/lake/icebergwrite.py` (`lake build --format iceberg`, section 7.5), `tools/lake/childload.py` (child kinds in `lake build`: each array the pack declares is built as a table of its own after its parent), `tools/test_child_parity.py` (child tables give the same rows in Delta, Iceberg and files), `tools/lake/demo.py` (`lake demo`), `tools/lake/relocate.py` (`lake relocate`), `tools/lake/undo.py` (`lake undo`), `tools/lake/filedate.py` (a file name's table and business date, the Python half of drishti-common's `FileDates`), `tools/lake/feedroute.py` (a feed file paired with its `.ready` file and routed to a pack and kind), `tools/lake/feedfiles.py` (our own generators' dated feed files, by the load rules), `tools/lake/memory_cli.py` (`lake memory status|jobs|refill`), `tools/enginescli.py` (`server engines list|show|on|off|history`), `tools/dataloadcli.py` (`dataload status|run|retry`), `tools/lake/memory_caps.py` (the launchers' direct-memory limit from the stores' caps), `tools/lake/compare_lakes.py` (two Delta lakes compared table by table, partition by partition, by row counts from their logs: `compare_lakes.py LAKE_A LAKE_B [--out result.json]`, exit 1 on any difference), `tools/lake/stores.py` (a source system's trades copied into Iceberg, its connector file switched; `build_demo_lakes.py --store`) and `tools/lake/laketables.py` (the tables `lake status` lists). `tools/connector_upgrade_fixture.py` is not a `drishti.py` group: it writes the connector files an older release's server generated, the fixture of the connector upgrade drill (`ConnectorUpgradeTest`, [DATA_GUIDE.md section 9](../guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors) "Upgrades").
+`tools/lake/jsonstream.py`, `tools/lake/stage.py`, `tools/lake/writers.py`, `tools/lake/icebergwrite.py` (`lake build --format iceberg`, section 7.5), `tools/lake/childload.py` (child kinds in `lake build`: each array the pack declares is built as a table of its own after its parent), `tools/test_child_parity.py` (child tables give the same rows in Delta, Iceberg and files), `tools/lake/demo.py` (`lake demo`), `tools/lake/relocate.py` (`lake relocate`), `tools/lake/undo.py` (`lake undo`), `tools/lake/filedate.py` (a file name's table and business date, the Python half of drishti-common's `FileDates`), `tools/lake/feedroute.py` (a feed file paired with its `.ready` file and routed to a pack and kind), `tools/lake/feedfiles.py` (our own generators' dated feed files, by the load rules), `tools/lake/memory_cli.py` (`lake memory status|jobs|refill`), `tools/enginescli.py` (`server engines list|show|on|off|history`), `tools/livecli.py` (`live list|show|on|off|pause|resume|apply-now|rejects`), `tools/dataloadcli.py` (`dataload status|run|retry`), `tools/lake/memory_caps.py` (the launchers' direct-memory limit from the stores' caps), `tools/lake/compare_lakes.py` (two Delta lakes compared table by table, partition by partition, by row counts from their logs: `compare_lakes.py LAKE_A LAKE_B [--out result.json]`, exit 1 on any difference), `tools/lake/stores.py` (a source system's trades copied into Iceberg, its connector file switched; `build_demo_lakes.py --store`) and `tools/lake/laketables.py` (the tables `lake status` lists). `tools/connector_upgrade_fixture.py` is not a `drishti.py` group: it writes the connector files an older release's server generated, the fixture of the connector upgrade drill (`ConnectorUpgradeTest`, [DATA_GUIDE.md section 9](../guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors) "Upgrades").
 
 ### Running the tools from PyCharm (and the Java `sutra` from IntelliJ)
 

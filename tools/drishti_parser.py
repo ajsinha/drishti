@@ -389,6 +389,7 @@ def build_parser(h) -> argparse.ArgumentParser:
         load_module(mod, mod + ".py").register(groups, srv, play_ctx)
     adm = load_module("capacitycli", "capacitycli.py").register(groups, srv, {"Api": Api, "CliError": CliError, "say_json": say_json})   # admin capacity (2.9.11)
     load_module("enginescli", "enginescli.py").register(sv, adm, srv, {"Api": Api, "CliError": CliError, "ApiError": ApiError, "say_json": say_json})   # server engines, admin engines (2.9.11)
+    load_module("livecli", "livecli.py").register(groups, srv, {"Api": Api, "CliError": CliError, "say_json": say_json})   # live list|show|on|off|pause|resume|apply-now|rejects (i5)
     load_module("dataloadcli", "dataloadcli.py").register(groups, srv, {"Api": Api, "CliError": CliError, "ApiError": ApiError, "say_json": say_json})   # dataload status|run|retry
     load_module("feedcli", "feeds/cli.py").register(groups)                                                          # feed list|run|status|schedule (2.9.11.g)
     load_module("contracts", "contracts.py").register(groups)                                                       # contract list|show|check|docs|bootstrap
