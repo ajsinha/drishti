@@ -189,6 +189,10 @@ Values may name environment variables or server settings: `${NAME}`, `${NAME:def
 it. An unknown key, a format that is not delta or iceberg, a fifth partition column, a load mode that is not replace or append, a
 secret written as a value, or a `lake:` that differs from the file's name: each refuses the file with the key named.
 
+A site moves a lake by its name without editing its file: `[lake.<name>] root=` and `storage.<key>=` in the settings files win over the
+file's `root:` and `storage:`, and a pack's demo-lake connectors read another lake with `[pack.<pack>] lake=<name>`; each lake moves alone
+([CONFIGURATION.md, "Named lakes, databases and brokers"](../admin/CONFIGURATION.md#named-lakes-databases-and-brokers)).
+
 A table's entry:
 
 | Key | Means | Section |

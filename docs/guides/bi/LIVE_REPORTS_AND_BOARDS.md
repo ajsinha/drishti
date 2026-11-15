@@ -668,7 +668,7 @@ plugin: kafka
 enabled: ${DRISHTI_STREAM_TRADING:false}
 kinds: [trade]
 settings:
-  bootstrap-servers: ${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}
+  broker: default
   topics: ${DRISHTI_TRADING_TOPIC:drishti.trading.trades}
   kind: trade
   id-field: TRADE_ID                # which field says which trade a message updates

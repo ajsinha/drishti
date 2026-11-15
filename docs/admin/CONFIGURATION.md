@@ -155,24 +155,215 @@ A connector that failed to start appears in the `failedToStart` map, name to rea
 
 ## The settings file: `-Ddrishti.settings.file`
 
-An optional file of `key=value` lines whose **full absolute path** is given on the command line, never discovered: no environment search, no
-home folder, no working folder. A relative path is refused and a missing file is an error with a clear message.
+One or more files of `key=value` lines, each named by its **full absolute path** on the command line, never discovered: no environment
+search, no home folder, no working folder. A relative path is refused and a missing file is an error with a clear message. The settings
+files are the way forward for every site setting: roots, lakes, databases, brokers, packs, connectors and their secrets.
 
 ```
-# drishti.ini
-[paths]                                   # a [section] line is accepted for grouping and ignored; keys are always full names
+-Ddrishti.settings.file=/etc/drishti/prod.ini,/etc/drishti/secrets.ini
+```
+
+```
+# prod.ini
+[roots]                                   # no dot: a label only; its keys are full names
 drishti.data.dir=/srv/drishti/data
+
+[lake.risk]                               # a dot: a namespace; root= here is the key lake.risk.root
+root=s3://bank-risk-lake/drishti
+
+[broker.kafka-eu]                         # broker.kafka-eu.bootstrap-servers, broker.kafka-eu.security.protocol, ...
+type=kafka
+bootstrap-servers=kafka-eu-1:9093
+security.protocol=SSL
+tls.ca-file=/etc/drishti/tls/bank-ca.pem
 ```
 
-- Every entry becomes a system property **unless that property is already set**: an explicit `-D` beats the file, the file beats the defaults.
-- Blank lines and lines starting with `#` or `;` are comments. The first `=` splits key from value.
-- Java: `-Ddrishti.settings.file=/abs/drishti.ini` (the IDE's VM options, Maven's `-D`, surefire's `argLine`); the loader is
+- **Several files.** Separate the paths with commas; a later file beats an earlier one, so a `secrets.ini` given last holds only the
+  passwords, tokens and keys, under the same sections and keys as the base file. An explicit `-D` beats every file; the files beat the
+  defaults. Every entry becomes a system property, so the one placeholder resolver (below) and Spring both see it.
+- **Sections.** A section whose name has a dot (`[lake.risk]`, `[db.reporting]`, `[broker.kafka-eu]`, `[pack.market-risk]`,
+  `[connector.trade-murex-live]`) is a **namespace**: its keys are prefixed with it, so one lake, database, broker, pack or connector never
+  reads another's settings ([Named lakes, databases and brokers](#named-lakes-databases-and-brokers)). A section without a dot (`[roots]`,
+  `[server]`) is a label: its keys are full names (`drishti.data.dir`).
+- Blank lines and lines starting with `#` or `;` are comments. The first `=` splits key from value. A value may hold placeholders
+  (`uri=amqps://drishti:${broker.rabbit.password}@rabbit:5671/risk`).
+- **Masking.** A key whose last parts name a password, passphrase, secret, token, credential or key (`sasl.password`, `api-secret`,
+  `tls.keystore-password`, `storage.s3.secret-key`, `api-key`) is a secret: shown as `••••` in the start's log, in the resolved-paths block
+  and in Admin, never its value (`SettingsFile.isSecret`).
+- **Origin.** The server knows which file each key came from (`SettingsFile.sourceOf`): the start's `resolved paths:` block names the file as
+  the origin of each root and path setting it set, and Admin → Configuration → Resolved paths shows each with where it came from.
+- Java: `-Ddrishti.settings.file=/abs/a.ini[,/abs/b.ini]` (the IDE's VM options, Maven's `-D`, surefire's `argLine`); the loader is
   `com.ash.drishti.settingsfile.SettingsFile.applyFromSystemProperty()` (module `kernel/drishti-settingsfile`, reached through `drishti-common`).
-- The server applies it first thing in `main`, before anything reads a setting; the start's `resolved paths:` block names the file as the
-  origin of each root it set. `bin/start-server --settings /abs/drishti.ini` (and `bin/start-cluster --settings`, or a cluster file's
-  `settings-file:` or a node's `settings:`) passes it.
+- The server applies them first thing in `main`, before anything reads a setting. `bin/start-server --settings /abs/drishti.ini` (and
+  `bin/start-cluster --settings`, or a cluster file's `settings-file:` or a node's `settings:`) passes them.
+- Examples: `config/settings.examples/{dev,test,prod,secrets}.ini`. Nothing reads that folder automatically: copy a file out, edit it,
+  and name it with the property.
+- **`secrets.env`** (`deploy/stack/secrets.env.example`, sourced by `bin/start-*` and the stack's scripts) is an environment file: what it
+  sets are environment variables, so every placeholder still reads them, at step 3 of the resolver's order. It keeps working; the settings
+  files are the way forward (a `secrets.ini` given last holds the same secrets, masked and with their origin known).
 - Tests find the repository and their module through it too (`drishti.repo.root`, `drishti.module.root`); see
   [the test harness](../architecture/TEST_HARNESS.md#running-tests-from-an-ide).
+
+## Named lakes, databases and brokers
+
+A system has as many lakes, databases and brokers (Kafka, ActiveMQ, RabbitMQ) as it needs, each **named**, each its own section of the
+settings files, and everything that uses one refers to it by that name. There is no global lake, database or broker: changing one never
+moves another. The one helper is `com.ash.drishti.common.NamedResources`; every connector passes through it when it starts (the same place
+its secrets are read), whichever file or template it came from.
+
+| Section | Keys | Who names it | Default name |
+|---|---|---|---|
+| `[lake.<name>]` | `root=` (a folder, `s3://bucket/prefix`, `mem://store`), `storage.<key>=` (`storage.s3.region`, `storage.s3.endpoint`, `storage.s3.access-key`, `storage.s3.secret-key`, …) | a Delta or Iceberg connector's `lake:`, a data load's `target.lake`, the data inbox | `demo` (config/lakes/demo.yaml) |
+| `[db.<name>]` | `url=`, `user=`, `password=` (the jdbc plugin's own keys, and any other it reads) | a jdbc connector's `db:`; `drishti.identity.database-*` read `db.identity.*`; the content store's `postgres:` reads `db.store.*` | `identity` |
+| `[broker.<name>]` | `type=kafka\|activemq\|rabbitmq` and the plugin's own connection and security keys (below) | a kafka, activemq, rabbitmq or var-pv-stream connector's `broker:` | `default` (a Kafka at `localhost:9092` when no section says otherwise) |
+| `[pack.<pack>]` | `lake=` | the pack: its templates that read the shared `demo` lake read this lake instead | none: the `demo` lake |
+| `[connector.<name>]` | any setting of that connector (`broker=`, `lake=`, `db=`, `topics=`, …) | the connector: each key wins over its file and template | none |
+
+- **A lake** keeps its tables in its lake file (`config/lakes/<name>.yaml`); its section says where it is: `lake.<name>.root` and
+  `lake.<name>.storage.<key>` win over the file's `root:` and `storage:`. Without a section the file decides, as before. `DRISHTI_DELTA_ROOT`
+  (set by `bin/start-server --lake-root` and the tools) still names the demo lake's root when nothing sets `lake.demo.root`: it is the
+  default inside `config/lakes/demo.yaml`'s root, not a second mechanism.
+- **A database**: `drishti.identity.database-url` is `${db.identity.url:${DRISHTI_IDENTITY_DB_URL:jdbc:sqlite:<data>/identity/drishti.db}}`
+  (user and password alike), so `[db.identity] url=` moves the identity database; the variables still work under it.
+- **A broker**: a connector says only what is its own (topics, queues, kinds) and `broker: <name>`; the section's keys are merged under the
+  connector's own (a blank own value does not hide one). A section's `type` must be the connector's plugin for kafka, activemq and rabbitmq.
+  The shipped streaming templates (the trading pack's `trading-stream`, market-risk's `pv-updates`, every source module's `trade-*-live`)
+  say `broker: default`; point it at your brokers with `[broker.default] bootstrap-servers=` (or the variable
+  `BROKER_DEFAULT_BOOTSTRAP_SERVERS`).
+- **A pack**: `[pack.market-risk] lake=risk` moves that pack's demo-lake connectors only; a template naming another lake (the official
+  results' `var-official`) stays.
+- **A connector**: `[connector.trade-murex-live] broker=kafka-eu` rebinds one connector; any other key of it likewise.
+- **Names** are lower-case letters, digits, `-` and `_`. A connector that names a lake, database or broker nothing configures fails with the
+  section to write (`connector x names broker eu, which nothing configures: write a [broker.eu] section ...`).
+- **Where keys come from**: a section's keys are every key the server's sources name under `<kind>.<name>.` (the settings files, `-D`,
+  `--setting`, a test's property) and, for the documented keys, their environment form (`broker.kafka-eu.sasl.password` is
+  `BROKER_KAFKA_EU_SASL_PASSWORD`, `lake.risk.root` is `LAKE_RISK_ROOT`). Values are resolved by the one placeholder resolver.
+- **Paths**: every relative file or folder of a connector's merged settings (a key ending `root`, `dir`, `dirs`, `folder`, `file`, `keytab`,
+  `krb5-conf`, `truststore`, `keystore`; a `jdbc:sqlite:`/`duckdb:`/`h2:file:` url's file) is taken under the install folder
+  (`drishti.home`), never the working folder, by the same rule as [Launch roots](#launch-roots) (`Roots.anchorValue`). A table's `path`
+  (relative to its lake) and URLs are kept as given.
+- **Secrets** stay in the second file or the environment; every `password`, `secret`, `token` and `key` value is masked wherever it is shown.
+
+### Broker keys and one example per security form
+
+The keys are the plugins' own (plugins/drishti-plugin-kafka/README.md; `tls.*` is the shared TLS module, `TlsSettings`):
+
+| Plugin | Connection | Security |
+|---|---|---|
+| kafka (and var-pv-stream) | `bootstrap-servers` | `security.protocol` (`PLAINTEXT`, `SSL`, `SASL_PLAINTEXT`, `SASL_SSL`; inferred when absent), `flavour` (`apache`, `confluent`), `tls.*`, `sasl.mechanism` (`PLAIN`, `SCRAM-SHA-256`, `SCRAM-SHA-512`, `OAUTHBEARER`, `GSSAPI`), `sasl.username`, `sasl.password` (or `sasl.password-file`), `api-key`/`api-secret` (Confluent), `sasl.oauth.token-endpoint`/`client-id`/`client-secret`/`scope`, `sasl.kerberos.principal`/`keytab`/`service-name`/`use-ticket-cache`/`krb5-conf`, `client.<any Kafka property>` |
+| activemq | `broker-url` (`ssl://` for TLS, also inside `failover:(...)`) | `user`, `password`, `tls.*` |
+| rabbitmq | `uri` (`amqps://` for TLS; user and password are in it) | `auth-mechanism` (`plain`, `external`: the client certificate), `tls.*` |
+
+`tls.*` (every broker): `tls.ca-file` (PEM, one or many), `tls.truststore` + `tls.truststore-type` (`PKCS12`, `JKS`) + `tls.truststore-password`,
+`tls.trust-jvm-default`, `tls.cert-file` + `tls.key-file` (PEM; `tls.key-password` for an encrypted key), `tls.keystore` + `tls.keystore-type`
++ `tls.keystore-password` (+ `tls.key-alias`, `tls.key-password`), `tls.verify-hostname` (default `true`), `tls.protocols`,
+`tls.cipher-suites`; every password also as its `-file` twin. AWS MSK IAM is not offered.
+
+```
+[broker.default]                 # Kafka, PLAINTEXT
+type=kafka
+bootstrap-servers=kafka-dev:9092
+
+[broker.kafka-tls]               # TLS with the bank's private CA (PEM); hostname verification on
+type=kafka
+bootstrap-servers=kafka-1:9093,kafka-2:9093
+security.protocol=SSL
+tls.ca-file=/etc/drishti/tls/bank-ca.pem
+
+[broker.kafka-mtls]              # mutual TLS, PEM files (tls.key-password in secrets.ini for an encrypted key)
+type=kafka
+bootstrap-servers=kafka-1:9093
+security.protocol=SSL
+tls.ca-file=/etc/drishti/tls/bank-ca.pem
+tls.cert-file=/etc/drishti/tls/drishti.pem
+tls.key-file=/etc/drishti/tls/drishti.key
+
+[broker.kafka-stores]            # mutual TLS, PKCS12 key store (one alias) and JKS trust store; host names not checked
+type=kafka
+bootstrap-servers=10.20.0.11:9093
+security.protocol=SSL
+tls.truststore=/etc/drishti/tls/truststore.jks
+tls.truststore-type=JKS
+tls.keystore=/etc/drishti/tls/drishti.p12
+tls.keystore-type=PKCS12
+tls.key-alias=drishti
+tls.verify-hostname=false
+
+[broker.kafka-plain]             # SASL PLAIN over TLS (sasl.password in secrets.ini)
+type=kafka
+bootstrap-servers=kafka-1:9094
+security.protocol=SASL_SSL
+sasl.mechanism=PLAIN
+sasl.username=drishti
+tls.ca-file=/etc/drishti/tls/bank-ca.pem
+
+[broker.kafka-scram]             # SCRAM-SHA-512 (SCRAM-SHA-256 alike); secrets.ini: sasl.password-file=/run/secrets/kafka-scram
+type=kafka
+bootstrap-servers=kafka-1:9094
+security.protocol=SASL_SSL
+sasl.mechanism=SCRAM-SHA-512
+sasl.username=drishti
+tls.ca-file=/etc/drishti/tls/bank-ca.pem
+
+[broker.kafka-oauth]             # OAUTHBEARER, client credentials (sasl.oauth.client-secret in secrets.ini)
+type=kafka
+bootstrap-servers=kafka-1:9095
+security.protocol=SASL_SSL
+sasl.mechanism=OAUTHBEARER
+sasl.oauth.token-endpoint=https://idp.bank.internal/oauth2/token
+sasl.oauth.client-id=drishti
+sasl.oauth.scope=kafka
+
+[broker.kafka-kerberos]          # GSSAPI with a keytab
+type=kafka
+bootstrap-servers=kafka-1:9096
+security.protocol=SASL_SSL
+sasl.mechanism=GSSAPI
+sasl.kerberos.principal=drishti@BANK.INTERNAL
+sasl.kerberos.keytab=/etc/drishti/kerberos/drishti.keytab
+sasl.kerberos.krb5-conf=/etc/krb5.conf
+
+[broker.kafka-kinit]             # GSSAPI from the ticket cache (after kinit)
+type=kafka
+bootstrap-servers=kafka-1:9097
+security.protocol=SASL_PLAINTEXT
+sasl.mechanism=GSSAPI
+sasl.kerberos.use-ticket-cache=true
+
+[broker.confluent]               # Confluent Cloud (api-key, api-secret in secrets.ini); client.* is any Kafka property
+type=kafka
+flavour=confluent
+bootstrap-servers=pkc-xxxxx.us-east-1.aws.confluent.cloud:9092
+client.max.poll.records=500
+
+[broker.activemq]                # ActiveMQ over TLS, user and password (password in secrets.ini)
+type=activemq
+broker-url=failover:(ssl://amq-1:61617,ssl://amq-2:61617)
+user=drishti
+tls.ca-file=/etc/drishti/tls/bank-ca.pem
+
+[broker.rabbit]                  # RabbitMQ over TLS; secrets.ini: [broker.rabbit] password=...
+type=rabbitmq
+uri=amqps://drishti:${broker.rabbit.password}@rabbit:5671/risk
+tls.ca-file=/etc/drishti/tls/bank-ca.pem
+
+[broker.rabbit-cert]             # RabbitMQ, the client certificate is the log-in
+type=rabbitmq
+uri=amqps://rabbit:5671/risk
+auth-mechanism=external
+tls.ca-file=/etc/drishti/tls/bank-ca.pem
+tls.cert-file=/etc/drishti/tls/drishti.pem
+tls.key-file=/etc/drishti/tls/drishti.key
+```
+
+A connector then says only its own part:
+
+```yaml
+# config/connectors/trade-murex-live.yaml (a site override), or [connector.trade-murex-live] broker=kafka-scram
+settings:
+  broker: kafka-scram
+  topics: [murex.trades]
+```
 
 ## Placeholders: `${NAME:default}`
 
@@ -207,6 +398,25 @@ Each row was tried against a scratch server. Points to know:
   (`optional:file:${DRISHTI_PACKS_OVERLAY:${drishti.data.dir:./data}/packs/added.yaml}`, `s3a://${LAKE_BUCKET:bank-lake}/drishti`).
   The bundled file nests none.
 * **Your own files** can use the syntax anywhere (`password: ${TRADES_DB_PASSWORD}`).
+
+**Every other file the server reads: the one resolver.** The files Spring does not read itself are resolved by one resolver,
+`com.ash.drishti.settingsfile.Placeholders`, with the same syntax: `${key}`, `${key:default}`, `${key:-default}` (the shell's form), nested
+in the default (`${lake.risk.root:${DRISHTI_DELTA_ROOT:/srv/lake}}`), inside a longer value. `key` is a settings key (`lake.risk.root`,
+`broker.kafka-eu.sasl.password`) or an environment variable's name (`DRISHTI_DELTA_ROOT`). The order, first found wins:
+
+1. an explicit `-D` system property;
+2. the settings files (`-Ddrishti.settings.file`: their entries are system properties; a `-D` still wins, a later file beats an earlier one);
+3. the environment: the key as written, then its variable form (`lake.risk.root` is `LAKE_RISK_ROOT`; `.` and `-` become `_`) — what
+   `secrets.env` and `bin/start-*` export lands here;
+4. the default; with none, the reference is an error naming the key and the three ways to give it (a lake file, a data load, a TLS or proxy
+   secret), empty (a network file) or kept as written (where a later step resolves it).
+
+Inside the server a reader passes the server's own view, which holds the same sources in the same order plus a `--setting` and the
+configuration files. The readers that use it: the lake files (`config/lakes/*.yaml`), the data-load files and the data inbox's loader,
+the connector secrets and the shared TLS and proxy settings (`tls.*`, `proxy.*`, `Secrets`), the AI and MCP provider files, the network files
+(`config/net/`), every plugin that read the environment (Kafka, its schema registry, JDBC, MongoDB, Redis, Cassandra, Aerospike), and the
+named lakes, databases and brokers (`NamedResources`). Spring reads `application.yaml`, the engines' files, the packs and the connector files
+with its own placeholders over the same sources, so a settings-file key works in them too.
 
 **The console (Python).** `drishti-console/core/config.py` reads the same syntax, with differences: `NAME` is an
 **environment variable only** (no system properties, no other config keys); the default after the colon is text up to
@@ -1130,7 +1340,7 @@ servers). The environment variables of this section are in the [environment vari
 
 | Key | Default | Meaning |
 |---|---|---|
-| `database-url` / `database-user` / `database-password` | `jdbc:sqlite:./data/identity/drishti.db` / empty / empty (`DRISHTI_IDENTITY_DB_URL`, `_USER`, `_PASSWORD`) | The database; `jdbc:postgresql://host:5432/drishti` for PostgreSQL. |
+| `database-url` / `database-user` / `database-password` | `jdbc:sqlite:./data/identity/drishti.db` / empty / empty (`DRISHTI_IDENTITY_DB_URL`, `_USER`, `_PASSWORD`) | The database; `jdbc:postgresql://host:5432/drishti` for PostgreSQL. By name: `[db.identity] url=`, `user=`, `password=` in the settings files win over the variables ([Named lakes, databases and brokers](#named-lakes-databases-and-brokers)). |
 | `database-pool-size` | unset | Connections in the pool. Unset: PostgreSQL uses [`drishti.db.pool.size`](#drishtidbpool--database-connection-pools) (`20`), with its times and leak detection; SQLite is an embedded file with one writer at a time, is not pooled in that sense, and keeps `8`. |
 | `refresh-seconds` | `15` | How soon servers sharing one database see each other's role and pack changes. |
 | `iterations` | `240000` | PBKDF2-HMAC-SHA256 iterations for new password hashes. |
@@ -1469,7 +1679,7 @@ in their own file, named by `drishti.store.file` (`DRISHTI_STORE_FILE`, default 
 | `backend` | `filesystem` | `filesystem`, `sqlite`, `postgres` or `s3`. |
 | `filesystem.root` | `<data folder>/fstore` | The folder (`data/fstore`). On a cluster it must be a **shared mount** (NFS, EFS, SMB) at the same path on every node. `DRISHTI_STORE_ROOT` overrides it. |
 | `sqlite.url` | `jdbc:sqlite:<data folder>/identity/drishti.db` | The Drishti database itself (one node). The table `drishti_content` is in its complete schema file. |
-| `postgres.url`, `user`, `password`, `pool` | none, `drishti`, `${DRISHTI_STORE_PASSWORD:}`, `4` | Usually the Drishti database. Needed for `backend: postgres`. |
+| `postgres.url`, `user`, `password`, `pool` | `${db.store.url:}`, `${db.store.user:drishti}`, `${db.store.password:${DRISHTI_STORE_PASSWORD:}}`, `4` | Usually the Drishti database. Needed for `backend: postgres`. The database by name: `[db.store]` in the settings file ([Named lakes, databases and brokers](#named-lakes-databases-and-brokers)). |
 | `s3.bucket`, `prefix`, `region`, `endpoint`, `path-style`, `access-key`, `secret-key` | none, empty, `us-east-1`, empty (AWS), `false`, `${DRISHTI_STORE_ACCESS_KEY:}`, `${DRISHTI_STORE_SECRET_KEY:}` | S3 or a compatible store that honours `If-Match` / `If-None-Match` (MinIO: `endpoint` and `path-style: true`). Empty keys: the AWS default credentials chain. |
 
 Every node of a cluster must use the same settings; a node that finds another node recorded with a different root logs
@@ -2490,7 +2700,7 @@ Packs declare their connectors in `pack.yaml` with placeholders, so you switch t
 | `DRISHTI_LAKE_ENABLED` | `true` | every shipped pack | Switch every pack's data connector off (the demo samples still answer). Leave it `true` with the `postgres`, `aerospike` or `duckdb` profile: those profiles change the plugin of the same connectors, and this switch would turn them off too. |
 | `DRISHTI_ALLOW_INSECURE_TLS` | unset | every connector with `tls.*` | Must be `true` for a connector to run with `tls.insecure-trust-all: true` (development only). |
 | `DRISHTI_STREAM_TRADING` | `false` | trading | Turn on the `trading-stream` Kafka connector. |
-| `DRISHTI_KAFKA_BOOTSTRAP` | `localhost:9092` | trading, market-risk | Its brokers (and the PV topic's). |
+| `BROKER_DEFAULT_BOOTSTRAP_SERVERS` | `localhost:9092` | trading, market-risk | Its brokers (and the PV topic's): the default broker by name, `[broker.default] bootstrap-servers=` in the settings file ([Named lakes, databases and brokers](#named-lakes-databases-and-brokers)). |
 | `DRISHTI_TRADING_TOPIC` | `drishti.trading.trades` | trading | Its topic. |
 | `DRISHTI_STREAM_DISK_CACHE` | `true` | trading | Its disk cache on or off. |
 | `DRISHTI_CACHE_ROOT` | `<data>/cache` | trading | Disk cache root (one sub-directory per connector). |
@@ -2504,7 +2714,7 @@ Packs declare their connectors in `pack.yaml` with placeholders, so you switch t
 Example: the trading pack with its live Kafka stream.
 
 ```bash
-DRISHTI_PACKS=trading DRISHTI_STREAM_TRADING=true DRISHTI_KAFKA_BOOTSTRAP=kafka:9092 \
+DRISHTI_PACKS=trading DRISHTI_STREAM_TRADING=true BROKER_DEFAULT_BOOTSTRAP_SERVERS=kafka:9092 \
   java -Djava.io.tmpdir=data/tmp/server -jar kernel/drishti-server/target/drishti-server-2.9.11.g-exec.jar
 ```
 
@@ -2787,7 +2997,7 @@ compose files in `deploy/` show these variables in use; see [OPERATIONS_GUIDE.md
 | `DRISHTI_PUBLIC_URL`, `DRISHTI_CONSOLE_URL`, `DRISHTI_EMBED_KEY_FILE` | S | `drishti.embed.issuer`, `.audiences`, `.signing-key` |
 | `DRISHTI_OIDC_CLIENT_SECRET`, `DRISHTI_OIDC_REDIRECT_URI` | C | `auth.oidc.*` |
 | `DRISHTI_SEED_ADMIN` and other identity variables | S | see [ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md) |
-| `DRISHTI_DELTA_ROOT`, `DRISHTI_DELTA_ENGINE`, `DRISHTI_LAKE_ENABLED`, `DRISHTI_STREAM_*`, `DRISHTI_KAFKA_BOOTSTRAP`, `DRISHTI_TRADING_TOPIC`, `DRISHTI_VAR_PV_*`, `DRISHTI_CACHE_*`, `DRISHTI_FEED_*`, `FRED_API_KEY`, `DRISHTI_FRED_SERIES` | S (packs) | [pack connectors](#environment-variables-used-by-the-packs-and-profiles) |
+| `DRISHTI_DELTA_ROOT`, `DRISHTI_DELTA_ENGINE`, `DRISHTI_LAKE_ENABLED`, `DRISHTI_STREAM_*`, `DRISHTI_TRADING_TOPIC`, `DRISHTI_VAR_PV_*`, `DRISHTI_CACHE_*`, `DRISHTI_FEED_*`, `FRED_API_KEY`, `DRISHTI_FRED_SERIES` | S (packs) | [pack connectors](#environment-variables-used-by-the-packs-and-profiles) |
 | `SPRING_PROFILES_ACTIVE`, `DRISHTI_PG_*`, `DRISHTI_AEROSPIKE_*`, `DRISHTI_DUCKDB_*`, `DRISHTI_FILES_ROOT`, `DRISHTI_ICEBERG_*`, `DRISHTI_MONGODB_*`, `DRISHTI_REDIS_*` | S | [profiles](#profiles-another-store-instead-of-delta-lake) |
 | `DRISHTI_CONSOLE_HOST`, `DRISHTI_CONSOLE_PORT`, `DRISHTI_BACKEND_URL`, `DRISHTI_USER` | C | `server.*`, `backend.url`, `ui.user` |
 | `DRISHTI_AUTH_ENABLED`, `DRISHTI_SESSION_SECRET`, `DRISHTI_SECURE_COOKIE` | C | `auth.*` |
@@ -5779,7 +5989,7 @@ Where user content is kept so every node of a cluster reaches it ([DATA_ARCHITEC
 | `backend` | string | `filesystem` |  | every node (the same everywhere) | Project Drishti · Any data. Any domain. One grammar. Copyright (c) 2026 Ashutosh Sinha &lt;ajsinha@gmail.com&gt;. All rights reserved. PROPRIETARY AND CONFIDENTIAL. This file is the confidential and proprietary property of Ashutosh Sinha. Unauthorised copying, use, modification, distribution or disclosure of this file, via any medium, is strictly prohibited except with the express prior written permission of the copyright holder. See the LICENSE file in the root of this repository for the full terms. The content store (docs/architecture/DATA\_ARCHITECTURE.md): where user content (Build workbench Designs today) is kept so that every node of a Drishti\*net cluster reaches it. The server reads this file at start (drishti.store.file in application.yaml); a missing file or key means the value shown here. Every node of a cluster must use the same settings. Examples: config/store.examples/. filesystem \| sqlite \| postgres \| s3 | restart |  | admin |
 | `filesystem.root` | string | `<data>/fstore` |  | every node (the same everywhere) | A folder; on a cluster it must be a SHARED mount (NFS, EFS, SMB) at the same path on every node. DRISHTI\_STORE\_ROOT overrides it. | restart |  | admin |
 | `sqlite.url` | string | `jdbc:sqlite:<data>/identity/drishti.db` |  | every node (the same everywhere) | the Drishti database itself (one node) | restart |  | admin |
-| `postgres.url` | string | `""` |  | every node (the same everywhere) | e.g. jdbc:postgresql://db:5432/drishti (the Drishti database) | restart |  | admin |
+| `postgres.url` | string | empty |  | every node (the same everywhere) | e.g. jdbc:postgresql://db:5432/drishti (the Drishti database) | restart |  | admin |
 | `postgres.user` | string | `drishti` |  | every node (the same everywhere) | the database user | restart |  | admin |
 | `postgres.password` | string | empty | `DRISHTI_STORE_PASSWORD` | every node (the same everywhere) | its password, from the environment only (secret) | restart |  | admin |
 | `postgres.pool` | integer | `4` |  | every node (the same everywhere) | connections the store keeps at most | restart |  | expert |
@@ -6440,7 +6650,6 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_JDBC_PASSWORD` | `drishti.sources.plugins.jdbc.settings.password` | empty | server | its database password (from the environment) |
 | `DRISHTI_JDBC_URL` | `drishti.sources.plugins.jdbc.settings.url` | empty | server | the JDBC URL of that instance |
 | `DRISHTI_JDBC_USER` | `drishti.sources.plugins.jdbc.settings.user` | empty | server | its database user |
-| `DRISHTI_KAFKA_BOOTSTRAP` | Kafka brokers | `localhost:9092` | packs | The brokers of the trading stream and the VaR PV topic |
 | `DRISHTI_KERNEL_JAR` | the kernel's thin jar, the kernel's thin jar | `packaging/drishti-kernel-app/target/drishti-kernel-*-exec.jar` | tools | The jar `drishti.py module run` starts with one module only (CLI\_REFERENCE.md, module run) |
 | `DRISHTI_LABS_CALC` | `drishti.calc.enabled`, `labs.calc` | `false` | console, server | Labs: off as shipped; on also needs a role with calc, and a pack that enables it for the view's kind |
 | `DRISHTI_LAKES_DIR` | drishti.lakes.dir | `<config>/lakes` | server | The lake folder: one config/lakes/&lt;lake&gt;.yaml per lake, read by the server, the loader, the data inbox and the tools (docs/guides/DATA\_LAKE\_GUIDE.md) |

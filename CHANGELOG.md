@@ -18,6 +18,19 @@
 
 ## Unreleased
 
+- **Named lakes, databases and brokers.** A system has any number of each, every one a section of the settings files and referred to by
+  name, with no global one: `[lake.<name>] root=`/`storage.<key>=` win over that lake file's root and storage; `[db.<name>] url= user=
+  password=` (a jdbc connector's `db: <name>`; `drishti.identity.database-*` read `db.identity.*`, the content store's postgres
+  `db.store.*`); `[broker.<name>] type=kafka|activemq|rabbitmq` with the plugin's own connection and security keys (every TLS, SASL
+  PLAIN/SCRAM/OAUTHBEARER/GSSAPI, Confluent and `client.*` form), named by a connector's `broker: <name>`; `[pack.<pack>] lake=` moves one
+  pack's demo-lake connectors; `[connector.<name>]` overrides any setting of one connector. One helper, `com.ash.drishti.common.NamedResources`,
+  applied where every connector starts (and in its test and preview); the server installs its settings view. The shipped Kafka templates
+  say `broker: default` (a Kafka at localhost:9092 until `[broker.default]` says otherwise); `DRISHTI_KAFKA_BOOTSTRAP` is replaced by
+  `broker.default.bootstrap-servers` (`BROKER_DEFAULT_BOOTSTRAP_SERVERS`). Relative files and folders of a connector's settings are taken
+  under `drishti.home` by the launch roots' rule, now one function (`Roots.anchorValue`, used by `LaunchRoots`). Examples:
+  `config/settings.examples/{dev,test,prod,secrets}.ini`; docs/admin/CONFIGURATION.md "The settings file", "Named lakes, databases and
+  brokers" and "Placeholders" (the one resolver, its order, its readers).
+
 - **The console at a URL sub-path behind a reverse proxy.** New console setting `server.base_path` (`DRISHTI_CONSOLE_BASE_PATH`, blank: `/`):
   `/drishti` serves the console at `https://host/drishti/`, whether the proxy keeps or strips the prefix. The outermost middleware takes the
   base off each request and puts it on `Location` headers and cookie paths (`Path=/drishti`); `request.base_url` names it (sign-in
