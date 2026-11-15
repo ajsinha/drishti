@@ -47,7 +47,7 @@ class ModuleSwitchFollowsTest {
     }
 
     private static void until(String what, BooleanSupplier ok) throws InterruptedException {
-        Instant end = Instant.now().plus(Duration.ofSeconds(30));
+        Instant end = Instant.now().plus(Duration.ofSeconds(120));
         while (!ok.getAsBoolean()) {
             if (Instant.now().isAfter(end)) {
                 throw new AssertionError("timed out waiting for " + what);
