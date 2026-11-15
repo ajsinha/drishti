@@ -117,8 +117,12 @@ class SafeRegexTest {
     @Test
     @Timeout(5)
     void extractStaysLinearOnCatastrophicPatterns() {
+        // linear time is what is checked (the whole test has 5 s): the per-value budget is lifted, so a busy machine (the drill's other
+        // lanes) and a cold JIT do not trip the 50 ms guard that protects a server from one value
         String text = "a".repeat(8000) + "!";
-        assertThat(SafeRegex.compile("^(a+)+$", false).extract(text, 1)).isNull();
-        assertThat(SafeRegex.compile("(a|aa)+!", false).extract(text, 0)).hasSize(8001);
+        SafeRegex.Limits roomy = new SafeRegex.Limits(SafeRegex.Limits.defaults().maxPattern(), SafeRegex.Limits.defaults().maxProgram(),
+                SafeRegex.Limits.defaults().maxInput(), java.util.concurrent.TimeUnit.SECONDS.toNanos(4));
+        assertThat(SafeRegex.compile("^(a+)+$", false, roomy).extract(text, 1)).isNull();
+        assertThat(SafeRegex.compile("(a|aa)+!", false, roomy).extract(text, 0)).hasSize(8001);
     }
 }
