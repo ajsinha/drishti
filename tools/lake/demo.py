@@ -46,7 +46,8 @@ generate at its first start, except with --lake elsewhere, where it is written f
 only, the trades themselves (BMO_LEGAL_ENTITY read as LEGAL_ENTITY), a counterparty record for each real counterparty, an ISDA
 agreement and a netting set per counterparty and legal entity holding its real trades. Nothing is written to data/testdata, and a
 real trade whose id the test data already uses is left out (the test data wins). Staging files live under <data>/build/lake-demo and
-are removed at the end. The file connector's sample feed is written to <data>/feeds as well. Needs PyYAML, and deltalake and pyarrow (engine deltalake, the default; --engine auto uses the server jar).
+are removed at the end. The file connector's sample feed is written to <data>/feeds as well. Needs PyYAML; the default writer (--engine auto) is the parallel Java loader of the server's exec jar when it is found (else Drishti's
+Java writer, else deltalake and pyarrow). Independent tables load at the same time (--jobs, --memory-mb); a table the Java loader fails on is loaded again by Drishti's writer.
 
 A server must not keep serving the old figures: its BI store (<data>/bi-store) holds columns and rollups read from the lake. After the
 build, lake demo sends the data-load signal (POST /api/v1/packs/{pack}/loads) for every table and business date it wrote to the server
@@ -72,6 +73,7 @@ import urllib.parse
 import urllib.request
 from datetime import date, datetime, timezone
 
+HEAP_MB = 4096                                           # one Java loader's heap (the loader's own default)
 HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 sys.path.insert(0, str(HERE))
@@ -238,11 +240,17 @@ class DemoLake:
         self.tables: list[str] = []
         self.written: list[tuple[str, str, str]] = []    # (pack, kind, table) of every table written
         self.left_out: list[str] = []
+        self.staged: dict[tuple[pathlib.Path, str], tuple[int, str | None]] = {}   # day folders staged and kept for a retry: (rows, key)
         self.cleared: set[pathlib.Path] = set()          # tables already cleared in this run (a shared table has several datasets)
         self.dates = self.target_dates(a.as_of)
         self.shift = {o: n for o, n in zip(self.manifest.dates, self.dates) if o != n}
         self.run_id = datetime.now().strftime("%Y%m%dT%H%M%S")
         self.server_note = ""
+        self.jobs = max(1, getattr(a, "jobs", None) or self.default_jobs())
+        if not getattr(a, "jobs", None):                    # the default jobs: as many as the memory has 4 GB heaps for
+            self.jobs = max(1, min(self.jobs, self.default_memory_mb() // HEAP_MB))
+        self.memory_mb = getattr(a, "memory_mb", None) or self.jobs * HEAP_MB
+        self.engine = getattr(a, "engine", "auto")
         sys.path.insert(0, str(ROOT / "tools"))
         import demonames
         # the bank's own names (config/demo/names.yaml, --names): rewritten as the documents are staged, never in data/testdata
@@ -305,10 +313,15 @@ class DemoLake:
                 d = self._cal.add_business_days(d, step)
                 n += step
             self._offset = n
-        try:
-            return self._cal.add_business_days(date.fromisoformat(day), self._offset).isoformat()
-        except ValueError:
-            return day
+            self._moved_days: dict[str, str] = {}
+        got = self._moved_days.get(day)                     # the same few hundred dates over millions of rows: worked out once
+        if got is None:
+            try:
+                got = self._cal.add_business_days(date.fromisoformat(day), self._offset).isoformat()
+            except ValueError:
+                got = day
+            self._moved_days[day] = got
+        return got
 
     def run(self) -> int:
         if getattr(self.a, "dry_run", False):              # say the names it would apply, build nothing
@@ -327,11 +340,11 @@ class DemoLake:
         import build as LB
         self.lb = LB
         self.staging.mkdir(parents=True, exist_ok=True)
+        self.engine, why = self.choose_engine()
+        print(f"  lake writer: {self.engine} ({why}); {self.jobs} dataset{'s' if self.jobs != 1 else ''} at a time")
         worst = 0
         try:
-            for ds in self.manifest.datasets:
-                if self.wanted(ds):
-                    worst = max(worst, self.dataset(ds))
+            worst = self.run_groups()
         finally:
             shutil.rmtree(self.staging, ignore_errors=True)
             with contextlib.suppress(OSError):
@@ -342,6 +355,147 @@ class DemoLake:
         self.server_note = self.tell_server()
         self.report(elapsed, notes)
         return worst
+
+    # ---- engine, concurrency ---------------------------------------------------------------------------------------------------------
+    def choose_engine(self) -> tuple[str, str]:
+        """The lake writer: the parallel Java loader when the server's exec jar is found (--engine auto, the default), else Drishti's
+        Java writer, else the Python deltalake package, the last fallback; an explicit --engine is taken as given."""
+        eng = self.a.engine
+        if eng != "auto":
+            return eng, "asked for"
+        sys.path.insert(0, str(HERE))
+        import javaload
+        import writers
+        if javaload.command(getattr(self.a, "jar", None), getattr(self.a, "java", None)):
+            return "java", "the parallel lake loader in the server's exec jar"
+        name, why = writers.choose("auto", getattr(self.a, "jar", None), getattr(self.a, "java", None))
+        return name, why
+
+    @staticmethod
+    def default_jobs() -> int:
+        return max(1, min(6, (os.cpu_count() or 4) // 4))
+
+    @staticmethod
+    def default_memory_mb() -> int:
+        """The memory a build may use for its loaders: three quarters of what is available."""
+        try:
+            with open("/proc/meminfo", encoding="utf-8") as fh:
+                for line in fh:
+                    if line.startswith("MemAvailable:"):
+                        return max(2048, int(line.split()[1]) * 3 // 4096)
+        except (OSError, ValueError):
+            pass
+        return 4 * HEAP_MB
+
+    def engine_args(self) -> list[str]:
+        """The loader's own settings for this job: its share of the cores (a table is written by this many threads)."""
+        out = ["--engine", self.engine]
+        if self.engine == "java":
+            out += ["--loader-set", f"parallel.writers={max(1, (os.cpu_count() or 4) // self.jobs)}"]
+        for k in ("jar", "java"):
+            if getattr(self.a, k, None):
+                out += [f"--{k}", getattr(self.a, k)]
+        return out
+
+    def group_key(self, ds: dict) -> str:
+        """Datasets that write one table (trades_shared) or share a staged folder (the exposure run) form a group, loaded in order, one
+        after the other; the groups are independent of each other."""
+        if ds.get("folder") in self.EXPOSURE_FOLDERS:
+            return "exposure"
+        domain, table = self.packs.table(ds["pack"], ds["connector"], ds["kind"])
+        return f"{domain}/{table}"
+
+    def size_of(self, ds: dict) -> int:
+        folder = self.testdata / (ds.get("folder") or "")
+        try:
+            return sum(f.stat().st_size for f in folder.rglob("*") if f.is_file()) if ds.get("folder") else 0
+        except OSError:
+            return 0
+
+    def run_groups(self) -> int:
+        """Every wanted dataset, the independent groups at once in a pool of processes (a process each: the staging is Python, so threads
+        would share one core), the largest first. The results are merged in the manifest's order, so the lake and its report do not
+        depend on who finished first."""
+        wanted = [ds for ds in self.manifest.datasets if self.wanted(ds)]
+        groups: dict[str, list[dict]] = {}
+        for ds in wanted:
+            groups.setdefault(self.group_key(ds), []).append(ds)
+        order = list(groups)
+        self.groups = [groups[k] for k in order]
+        self.heap_mb = max(1024, self.memory_mb // self.jobs)
+        results: dict[int, tuple] = {}
+        by_size = sorted(range(len(self.groups)), key=lambda i: -sum(self.size_of(d) for d in self.groups[i]))
+        import multiprocessing
+        if self.jobs > 1 and len(self.groups) > 1 and self.engine != "deltalake" and "fork" in multiprocessing.get_all_start_methods():   # (deltalake's runtime does not survive a fork)
+            results = self.run_in_processes(by_size)
+        else:
+            for i in by_size:
+                results[i] = self.run_group(i)[1]
+        worst = 0
+        for i in range(len(self.groups)):                 # the manifest's order
+            code, tables, written, left_out, cleared = results[i]
+            worst = max(worst, code)
+            self.tables += [t for t in tables if t not in self.tables]
+            self.written += [w for w in written if w not in self.written]
+            self.left_out += left_out
+            self.cleared |= cleared
+        return worst
+
+    def run_in_processes(self, order: list[int]) -> dict[int, tuple]:
+        """The groups, ``jobs`` at a time, each in a forked process of its own (not a daemon: a dated dataset stages its dates in
+        processes too); the result of each comes back through a queue."""
+        import multiprocessing
+        import queue
+        ctx = multiprocessing.get_context("fork")
+        q = ctx.Queue()
+        pending, running, results = list(order), {}, {}
+        while pending or running:
+            while pending and len(running) < self.jobs:
+                i = pending.pop(0)
+                running[i] = ctx.Process(target=_group_child, args=(self, i, q), daemon=False)
+                running[i].start()
+            try:
+                i, r = q.get(timeout=2)
+                results[i] = r
+                running.pop(i).join()
+            except queue.Empty:
+                for i, pr in list(running.items()):       # one that died without an answer (killed): failed, the rest go on
+                    if not pr.is_alive() and pr.exitcode:
+                        print(f"  {self.group_key(self.groups[i][0])}: the process ended with code {pr.exitcode}", file=sys.stderr)
+                        results[i] = (1, [], [], [], set())
+                        running.pop(i)
+        return results
+
+    def run_group(self, i: int) -> tuple[int, tuple]:
+        started = time.monotonic()
+        self.run_engine = self.engine
+        i, r = self.run_group_inner(i)
+        if not self.a.quiet:
+            print(f"  [{self.group_key(self.groups[i][0])} took {time.monotonic() - started:.0f} s]", flush=True)
+        return i, r
+
+    def run_group_inner(self, i: int) -> tuple[int, tuple]:
+        """One group's datasets in a process of its own (or here, with one job). With the Java loader a table that failed there (a
+        table too large for its share of the memory, say) is loaded again, in full, by Drishti's own writer: that table only."""
+        os.environ.setdefault("DRISHTI_LAKE_LOADER_HEAP", f"{self.heap_mb}m")
+        eng = self.engine
+        if eng == "java" and len(self.groups[i]) > 1 and self.group_key(self.groups[i][0]) != "exposure":
+            eng = "drishti"        # several systems writing partitions of one table (trades_shared): the Java loader's overwrite-partitions replaces the other systems' too
+        for attempt in (eng, "drishti") if eng == "java" else (eng,):
+            self.engine = attempt
+            self.tables, self.written, self.left_out, self.cleared = [], [], [], set()
+            for ds in self.groups[i]:
+                code = self.dataset(ds)
+                if code:
+                    break
+            if not code or eng != "java" or attempt == "drishti":
+                break
+            print(f"  {self.group_key(self.groups[i][0])}: the Java loader failed: loading it again with Drishti's writer", file=sys.stderr, flush=True)
+        self.engine = self.run_engine
+        for t in list(self.staged):                          # a folder kept for a retry
+            shutil.rmtree(t[0], ignore_errors=True)
+            self.staged.pop(t)
+        return i, (code, self.tables, self.written, self.left_out, self.cleared)
 
     # ---- the server's BI store ---------------------------------------------------------------------------------------------------------
     def bi_store(self) -> pathlib.Path:
@@ -515,19 +669,22 @@ class DemoLake:
         folder = self.staging / f"{domain}-{table}"
         shutil.rmtree(folder, ignore_errors=True)
         folder.mkdir(parents=True)
-        rows, other = 0, 0
-        for day, parts in feedfiles.read_table(self.dated_source(ds)).items():
-            moved = self.move_day(day) if self.shift else day
-            with (folder / f"{table}.{moved}.jsonl").open("w", encoding="utf-8") as fh:
-                for part in parts:
-                    for line in part.lines():
-                        doc = self.names.rewrite(self.redate_dated(json.loads(line)))
-                        if doc.get("BUSINESS_DATE") not in (None, moved):
-                            other += 1                        # counted only: the file's date is the row's (the rules, section 1)
-                        fh.write(json.dumps(doc, separators=(",", ":"), ensure_ascii=False) + "\n")
-                        rows += 1
+        self._dated = feedfiles.read_table(self.dated_source(ds))
+        self._dated_folder, self._dated_table = folder, table
+        days = list(self._dated)
+        global _STAGER
+        _STAGER = self
+        import multiprocessing
+        if self.engine != "deltalake" and len(days) > 1 and "fork" in multiprocessing.get_all_start_methods():
+            # each date is its own file: staged by a process each (a date's rows are moved by Python, one core a date)
+            with multiprocessing.get_context("fork").Pool(min(len(days), max(2, (os.cpu_count() or 4) // 2))) as pool:
+                done = pool.map(_stage_dated_day, days)
+        else:
+            done = [self.stage_dated_day(day) for day in days]
+        rows, other = sum(r for r, _ in done), sum(o for _, o in done)
+        self._dated = None
         argv = ["--from", str(folder), "--pack", str(pack_dir(ds["pack"], self.packs.dir)), "--kind", ds["kind"], "--connector", ds["connector"],
-                "--key", ds["key"], "--mode", REPLACE, "--lake", self.lake_name, "--lake-root", str(self.lake), "--engine", self.a.engine,
+                "--key", ds["key"], "--mode", REPLACE, "--lake", self.lake_name, "--lake-root", str(self.lake), *self.engine_args(),
                 "-q", "--no-stamp"]
         code, summary = self.lb.run(self.lb.build_parser().parse_args(argv), say=lambda *x, **k: None)
         if code:
@@ -544,6 +701,42 @@ class DemoLake:
                   + (" (failed)" if code == 1 else ""))
         return code
 
+    def stage_dated_day(self, day: str) -> tuple[int, int]:
+        """One date of a dated dataset staged as <table>.<moved date>.jsonl; (rows, rows whose BUSINESS_DATE is not the file's)."""
+        moved = self.move_day(day) if self.shift else day
+        rows, other = 0, 0
+        with (self._dated_folder / f"{self._dated_table}.{moved}.jsonl").open("w", encoding="utf-8") as fh:
+            for part in self._dated[day]:
+                for line in part.lines():
+                    doc = self.names.rewrite(self.redate_dated(json.loads(line)))
+                    if doc.get("BUSINESS_DATE") not in (None, moved):
+                        other += 1                        # counted only: the file's date is the row's (the rules, section 1)
+                    fh.write(json.dumps(doc, separators=(",", ":"), ensure_ascii=False) + "\n")
+                    rows += 1
+        return rows, other
+
+    def stage_days(self, ds: dict, table: str, days_dir: pathlib.Path, key: str | None) -> tuple[int, str | None]:
+        """Every day of an undated dataset staged as <table>.<YYYY-MM-DD>.jsonl in one folder, its documents moved to the lake's dates
+        and renamed by the configured names; (rows, the key)."""
+        shutil.rmtree(days_dir, ignore_errors=True)
+        days_dir.mkdir(parents=True)
+        rows = 0
+        moved: dict[str, tuple[str, str]] = {}               # key -> (the line, its moved and renamed text): a document that did not change
+        snapshot = "snapshot" in ds                           # between two days is moved once, not once a day
+        for day, state in zip(self.dates, self.states(ds)):
+            if key is None:
+                key = next((k for k in json.loads(next(iter(state.values()))) if k.endswith("_ID")), "id") if state else "id"
+            out = []
+            for k, line in state.items():
+                got = moved.get(k)
+                if got is None or got[0] != line:
+                    got = moved[k] = (line, self.names.rewrite_line(line if snapshot else self.redate(line)))   # the configured names
+                out.append(got[1])
+            with (days_dir / f"{table}.{day}.jsonl").open("w", encoding="utf-8") as fh:
+                fh.write("\n".join(out) + "\n" if out else "")
+            rows += len(state)
+        return rows, key
+
     def dataset(self, ds: dict) -> int:
         pack, kind, connector = ds["pack"], ds["kind"], ds["connector"]
         domain, table = self.packs.table(pack, connector, kind)
@@ -559,22 +752,21 @@ class DemoLake:
         # every day staged under its name into one folder, then one load of the folder: the load takes each file's date from its name and
         # replaces each date (one commit a date), one run (one JVM with --engine java) for the table instead of one a day
         days_dir = self.staging / f"{table}.days"
-        shutil.rmtree(days_dir, ignore_errors=True)
-        days_dir.mkdir(parents=True)
-        for day, state in zip(self.dates, self.states(ds)):
-            if key is None:
-                key = next((k for k in json.loads(next(iter(state.values()))) if k.endswith("_ID")), "id") if state else "id"
-            with (days_dir / f"{table}.{day}.jsonl").open("w", encoding="utf-8") as fh:
-                for line in state.values():
-                    fh.write(self.names.rewrite_line(line if "snapshot" in ds else self.redate(line)) + "\n")   # the configured names
-            rows += len(state)
+        tag = (days_dir, ds.get("folder") or ds["kind"])      # a table several datasets share has one folder, one dataset at a time
+        if tag not in self.staged:                            # (kept when the Java loader failed on it: Drishti's writer loads the same files)
+            for old in [t for t in self.staged if t[0] == days_dir]:
+                self.staged.pop(old)                          # another dataset's, kept for a retry: replaced
+            self.staged[tag] = self.stage_days(ds, table, days_dir, key)
+        rows, key = self.staged[tag]
         argv = ["--from", str(days_dir), "--pack", str(pack_dir(pack, self.packs.dir)), "--kind", kind, "--connector", connector, "--key", key or "id",
-                "--mode", mode, "--lake", self.lake_name, "--lake-root", str(self.lake), "--engine", self.a.engine, "-q", "--no-stamp"]
+                "--mode", mode, "--lake", self.lake_name, "--lake-root", str(self.lake), *self.engine_args(), "-q", "--no-stamp"]
         code, summary = self.lb.run(self.lb.build_parser().parse_args(argv), say=lambda *x, **k: None)
         if code:
             print(f"  {domain}/{table}: {summary.get('status')} {summary.get('error', '')}", file=sys.stderr)
         worst = max(worst, code)
-        shutil.rmtree(days_dir, ignore_errors=True)
+        if not (code and self.engine == "java"):             # kept for the retry of a failed Java load
+            shutil.rmtree(days_dir, ignore_errors=True)
+            self.staged.pop(tag, None)
         self.cleared.add(path)
         self.checkpoint(path)
         if f"{domain}/{table}" not in self.tables:      # a table several datasets share is listed, and the server told, once
@@ -597,7 +789,9 @@ class DemoLake:
         try:
             from deltalake import DeltaTable
             DeltaTable(str(path)).create_checkpoint()
-        except Exception:                                     # noqa: BLE001 - an optimisation: the table reads without it
+        except BaseException as e:                            # noqa: BLE001 - an optimisation: the table reads without it
+            if isinstance(e, KeyboardInterrupt):
+                raise
             pass
 
     # ---- connector files -----------------------------------------------------------------------------------------------------------------
@@ -722,7 +916,12 @@ def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
     p.add_argument("--connectors-dir", help="the connector files' folder (default DRISHTI_CONNECTORS_DIR, else config/connectors)")
     p.add_argument("--as-of", default="today", metavar="today|data|YYYY-MM-DD", help="the last business date of the lake: today (default: "
                    "the server's current business date, so the demo opens on data), data (the test data's own dates) or a date")
-    p.add_argument("--engine", choices=("auto", "drishti", "deltalake", "java"), default="deltalake", help="the lake writer (default deltalake; java: the parallel lake loader, a whole table at a time)")
+    p.add_argument("--engine", choices=("auto", "drishti", "deltalake", "java"), default="auto", help="the lake writer (default auto: the parallel lake loader "
+                   "when the server's exec jar is found, else Drishti's Java writer, else the Python deltalake package; a table the Java loader fails on is loaded again by Drishti's writer)")
+    p.add_argument("--jobs", type=int, metavar="N", help="datasets loaded at the same time (default: a quarter of the cores, at most 6)")
+    p.add_argument("--memory-mb", type=int, metavar="MB", help="the loaders' heaps together, shared by the jobs (default: 4 GB a job)")
+    p.add_argument("--jar", help="the drishti-server exec jar for the Java loader (default: DRISHTI_JAR, then kernel/drishti-server/target)")
+    p.add_argument("--java", help="the java executable (default: JAVA_HOME, then the PATH)")
     p.add_argument("--with-real", metavar="FILE[,FILE]", help="LOCAL ONLY: real trade extracts (JSON) whose counterparties, agreements and "
                    "netting sets are added to the local lake, never to data/testdata")
     p.add_argument("--only", metavar="PREFIX[,PREFIX]", help="only these datasets: a folder prefix (trades/, core/counterparty) or a pack name")
@@ -748,6 +947,17 @@ def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
 def build_parser(add_help: bool = True) -> argparse.ArgumentParser:
     return add_arguments(argparse.ArgumentParser(prog="lake demo", description=__doc__.split("\n\n")[0], add_help=add_help,
                                                  formatter_class=argparse.RawDescriptionHelpFormatter, epilog=__doc__.split("\n\n", 1)[1]))
+
+
+def _group_child(lake: "DemoLake", i: int, q) -> None:
+    q.put(lake.run_group(i))
+
+
+_STAGER = None
+
+
+def _stage_dated_day(day: str) -> tuple[int, int]:
+    return _STAGER.stage_dated_day(day)
 
 
 def run(a) -> int:
