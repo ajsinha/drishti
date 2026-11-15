@@ -39,7 +39,7 @@ kind in parts listed under `parts:`) into funds/<kind> for funds-store: no pack 
 
 Connector files: the packs' Delta connectors read the demo lake (lake: demo), ${DRISHTI_DELTA_ROOT:<data>/delta/demo}. With the default lake nothing needs
 changing; a connector file (config/connectors/<name>.yaml) that points elsewhere, or any of them when --lake is another folder, is
-written to point at the lake (its earlier text kept in <data>/connectors/history/). A missing file is left for the server to
+rewritten in place to point at the lake (its root only; git or a backup keeps the earlier text). A missing file is left for the server to
 generate at its first start, except with --lake elsewhere, where it is written from the pack's template.
 
 --with-real FILE[,FILE]: LOCAL ONLY. Reads real trade extracts (a JSON array of trades, as endur.json) and adds, to the local lake
