@@ -18,7 +18,7 @@
 <div class="asof-banner srch-nodata" role="status" data-no-data><i class="bi bi-calendar-x" aria-hidden="true"></i>
   No {{ data.kind | replace('-', ' ') }} data is loaded for <b class="mono">{{ data.noData.businessDate }}</b>. The newest date with data is
   <b class="mono">{{ data.noData.latestDate }}</b>.
-  <a class="lnk" href="/asof?d={{ data.noData.latestDate }}&amp;next={{ here | urlencode }}">Search on {{ data.noData.latestDate }}</a></div>
+  <a class="lnk" href="{{ BASE }}/asof?d={{ data.noData.latestDate }}&amp;next={{ here | urlencode }}">Search on {{ data.noData.latestDate }}</a></div>
 {% endif %}
 {# Some sources (a trading system's connector each) hold no load for the date and answer from their newest earlier one (server: asOfNotices):
    said per source system, so the rows of an older date are never shown silently as the date asked. #}

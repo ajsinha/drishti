@@ -25,7 +25,7 @@
   <p class="text-muted-d">Tokens people made on <em>My account</em> for scripts, notebooks and spreadsheets. Each acts as its owner
     (their roles and packs at the time): a <em>read</em> token only reads, and a token with write scopes (<span class="mono">bi:write</span>,
     <span class="mono">design:write</span> …) may also change what those scopes name, and nothing else. A disabled user's tokens stop at
-    once. Secrets are never stored, only their hashes. Every creation and revocation is in the <a href="/admin/audit">audit log</a>.</p>
+    once. Secrets are never stored, only their hashes. Every creation and revocation is in the <a href="{{ BASE }}/admin/audit">audit log</a>.</p>
   <p class="adm-msg" data-msg role="status" aria-live="polite"></p>
   <div class="tbl-wrap"><table class="tbl adm-tbl">
     <thead><tr><th>Owner</th><th>Name</th><th>Id</th><th>Scopes</th><th>Created</th><th>Expires</th><th>Last used</th><th>Status</th><th></th></tr></thead>
@@ -41,4 +41,4 @@
 </div>
 {% endblock %}
 {% block footer %}{% include "_footer.html" %}{% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_view.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_roles.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_view.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_roles.js?v={{ ASSET_V }}"></script>{% endblock %}

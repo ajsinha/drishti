@@ -23,7 +23,7 @@
 {% block title %}{{ PRODUCT }}{% if TAGLINE %} — {{ TAGLINE }}{% endif %}{% endblock %}
 {% block screen %}home{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_trading-landing.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_trading-landing.css?v={{ ASSET_V }}">{% endblock %}
 {% macro go(cmd) %}/go?q={{ (cmd ~ ' <GO>') | urlencode }}{% endmacro %}
 {% set groups = [
   ("Blotter", "blotter", [("TRD", "Trades"), ("CTRD", "A counterparty's trades"), ("PTRD", "A portfolio's trades"), ("LTRD", "A legal entity's trades"), ("ITRD", "An index's trades")]),
@@ -38,13 +38,13 @@
 <div class="tl" data-trading-landing="{{ landing }}">
   <nav class="tl-switch" aria-label="Choose your Home">
     <span class="tl-switch-l">Home</span>
-    {% for l in landings %}<a href="{{ l.href }}"{% if l.id == landing %} aria-current="page" class="on"{% endif %} data-landing-link="{{ l.id }}">{{ l.title }}</a>{% endfor %}
-    <span class="tl-lenses">{% for link in lens_links(request) %}<a class="tl-lens" href="{{ link.href }}" data-lens-link="{{ link.name }}"><i class="bi bi-{{ 'box-arrow-left' if link.leave else 'eye' }}" aria-hidden="true"></i> {{ link.label }}</a>{% endfor %}</span>
+    {% for l in landings %}<a href="{{ l.href | u }}"{% if l.id == landing %} aria-current="page" class="on"{% endif %} data-landing-link="{{ l.id }}">{{ l.title }}</a>{% endfor %}
+    <span class="tl-lenses">{% for link in lens_links(request) %}<a class="tl-lens" href="{{ link.href | u }}" data-lens-link="{{ link.name }}"><i class="bi bi-{{ 'box-arrow-left' if link.leave else 'eye' }}" aria-hidden="true"></i> {{ link.label }}</a>{% endfor %}</span>
   </nav>
 
   <section class="tl-who" aria-label="Whose figures">
     <p class="tl-meta" data-tl-who aria-live="polite">…</p>
-    <form class="tl-viewas" action="/home/trading/view-as" method="get" data-tl-viewas hidden>
+    <form class="tl-viewas" action="{{ BASE }}/home/trading/view-as" method="get" data-tl-viewas hidden>
       <label for="tlAs">View as</label>
       <drishti-select id="tlAs" name="as" data-tl-as label="View as"><option value="">Pick a trader or a desk…</option></drishti-select>
       <button type="submit" class="tl-btn">View</button>
@@ -53,21 +53,21 @@
 
   {% if landing == 'explorer' %}
   <section class="tl-hero" aria-label="Command line"{{ part(PP, 'hero') }}>
-    <form class="tl-big" action="/go" method="get" role="search" autocomplete="off">
+    <form class="tl-big" action="{{ BASE }}/go" method="get" role="search" autocomplete="off">
       <label class="visually-hidden" for="tlCmd">Command</label>
       <span class="mono" aria-hidden="true">&gt;</span>
       <input id="tlCmd" name="q" class="mono" type="text" spellcheck="false" placeholder="a trade, a book, a counterparty, a position…">
     </form>
-    {% if chips %}<div class="tl-chips">{% for c in chips %}<a class="tl-chip mono" href="{{ go(c) }}">{{ c }}</a>{% endfor %}</div>{% endif %}
+    {% if chips %}<div class="tl-chips">{% for c in chips %}<a class="tl-chip mono" href="{{ (go(c)) | u }}">{{ c }}</a>{% endfor %}</div>{% endif %}
   </section>
   <div class="tl-qc tl-groups">
     {% for title, gid, cmds in groups %}
     <section class="tl-q" aria-labelledby="tlG{{ gid }}"{{ part(PP, 'quick') }}><h2 id="tlG{{ gid }}">{{ title }}</h2>
-      <ul class="tl-cmds" data-tl-group="{{ gid }}">{% for code, label in cmds %}<li><a class="mono" href="{{ go(code) }}">{{ code }}</a> <span>{{ label }}</span></li>{% endfor %}</ul>
+      <ul class="tl-cmds" data-tl-group="{{ gid }}">{% for code, label in cmds %}<li><a class="mono" href="{{ (go(code)) | u }}">{{ code }}</a> <span>{{ label }}</span></li>{% endfor %}</ul>
     </section>
     {% endfor %}
     <section class="tl-q" aria-labelledby="tlRecH"{{ part(PP, 'quick') }}><h2 id="tlRecH">Recently opened</h2>
-      <ul data-tl-recents>{% for r in recents %}<li><a class="mono" href="{{ go(r) }}">{{ r }}</a></li>{% else %}<li class="tl-muted">Nothing yet: type a command above</li>{% endfor %}</ul>
+      <ul data-tl-recents>{% for r in recents %}<li><a class="mono" href="{{ (go(r)) | u }}">{{ r }}</a></li>{% else %}<li class="tl-muted">Nothing yet: type a command above</li>{% endfor %}</ul>
     </section>
   </div>
 
@@ -148,13 +148,13 @@
     <section class="tl-card" aria-labelledby="tlQcH"{{ part(PP, 'table') }}>
       <h2 id="tlQcH">Quick commands</h2>
       <nav class="tl-qc" data-tl-quick aria-label="Quick commands">
-        {% for c in cards %}<a class="tl-q" href="{{ c.href }}" data-home-card="{{ c.cmd }}"><code class="mono">{{ c.cmd }}</code><span>{{ c.title }}</span></a>{% endfor %}
+        {% for c in cards %}<a class="tl-q" href="{{ c.href | u }}" data-home-card="{{ c.cmd }}"><code class="mono">{{ c.cmd }}</code><span>{{ c.title }}</span></a>{% endfor %}
       </nav>
     </section>
   </div>
   {% endif %}
-  <p class="tl-classic"><a href="/?landing=today">The classic Home</a></p>
+  <p class="tl-classic"><a href="{{ BASE }}/?landing=today">The classic Home</a></p>
   {{ foot(PP, request.url | string) }}
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_trading-landing.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_trading-landing.js?v={{ ASSET_V }}"></script>{% endblock %}

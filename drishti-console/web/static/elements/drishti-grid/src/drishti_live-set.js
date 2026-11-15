@@ -22,7 +22,7 @@
    source) and Pivot ›, which hands the same kind, filters, grouping and numbers to the Pivot, refreshing live when the kind is live.
    The page supplies two things and nothing else: api (httpLiveApi, or any object with rows, row, edit, window, history and mine) and channel
    (any object with subscribe(handlers) that answers an unsubscribe function; the console's Drishti.Channel keyed live:<id> is one). */
-import { h, announce } from '../../drishti-core/src/drishti_index.js';
+import { h, announce, url as drishtiUrl } from '../../drishti-core/src/drishti_index.js';
 import { selectElement } from '../../drishti-inputs/src/drishti_index.js';
 import { Grid } from './drishti_grid-view.js';
 import { ROW_KEY, ROW_VERSION, LiveRows, gridColumns, windowIds, pivotLayout, pivotHref, staticSpec, staticApi } from './drishti_live-model.js';
@@ -391,7 +391,7 @@ export class LiveSetGrid {
    */
   toPivot() {
     const href = this.pivotAddress();
-    if (this.o.navigate) { this.o.navigate(href); } else { this.doc.defaultView.location.assign(href); }
+    if (this.o.navigate) { this.o.navigate(href); } else { this.doc.defaultView.location.assign(drishtiUrl(href)); }
   }
 
   /**

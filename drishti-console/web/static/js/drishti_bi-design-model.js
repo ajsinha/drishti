@@ -161,13 +161,13 @@
       } else {
         head.append(h('p', {}, B.icon('boxes'), ' Model ', h('strong', { text: f.title || S.ref }), ' ', h('code', { text: S.ref })),
           h('p', { class: 'text-muted-d bi-small-note' }, 'This report references the model; it does not own it. ', h('span', { 'data-affects': '' })),
-          h('p', {}, h('a', { class: 'btn-pill btn-ghost bi-small', href: '/bi/models', 'data-open-model': '', text: 'Open the model' })));
+          h('p', {}, h('a', { class: 'btn-pill btn-ghost bi-small', href: drishti_url('/bi/models'), 'data-open-model': '', text: 'Open the model' })));
       }
     };
     draw();
     pane.insertBefore(head, pane.querySelector('[data-fields-search]'));
     if (link) {
-      if (m.implicit) { link.href = '/bi/ds/' + encodeURIComponent(m.dataset || ''); link.lastChild.textContent = ' The dataset'; } else { link.hidden = true; }
+      if (m.implicit) { link.href = drishti_url('/bi/ds/' + encodeURIComponent(m.dataset || '')); link.lastChild.textContent = ' The dataset'; } else { link.hidden = true; }
     }
     // the model item's page: by id when the model list names it
     const work = [];
@@ -175,7 +175,7 @@
       B.layer.get('datasets').then((d) => {
         const it = (d.models || []).find((x) => x.kind === 'model' && x.name === m.name);
         const a = head.querySelector('[data-open-model]');
-        if (a && it) { a.href = '/build/tables?kind=model&item=' + B.id2path(it.id); }
+        if (a && it) { a.href = drishti_url('/build/tables?kind=model&item=' + B.id2path(it.id)); }
       }).catch(() => {});
     }
     if (!m.implicit) {
@@ -266,14 +266,14 @@
         const others = (c.known ? c.consumers : []).filter((x) => x.kind === 'report' && x.id !== S.reportId);
         if (!others.length) {
           B.near(btn, 'Made the shared model ' + r.ref + ' (a draft) and moved this report onto it. Opening it…', false);
-          window.setTimeout(() => { window.location.href = r.href; }, 900);
+          window.setTimeout(() => { window.location.href = drishti_url(r.href); }, 900);
           return null;
         }
         const box = h('div', { class: 'bi-warn', 'data-rebind-box': '', role: 'group', 'aria-label': 'Other reports on the same dataset' }, h('p', { text: 'Made the shared model ' + r.ref + ' (a draft); this report now references it. ' + others.length + ' other report' + (others.length === 1 ? '' : 's') + ' read the same dataset. Move them onto the model too?' }),
           h('ul', { class: 'bi-layer-list' }, others.map((x) => h('li', {}, h('label', {}, h('input', { type: 'checkbox', checked: true, 'data-rebind': x.id }), ' ' + x.title)))));
         const yes = h('button', { type: 'button', class: 'btn-pill btn-accent bi-small', 'data-rebind-go': '', text: 'Move the ticked reports' });
         const no = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-small', 'data-rebind-skip': '', text: 'Leave them' });
-        const leave = () => { window.location.href = r.href; };
+        const leave = () => { window.location.href = drishti_url(r.href); };
         yes.addEventListener('click', () => B.busy(yes, () => B.layer.post('rebind', { ref: r.ref, reports: B.qa('[data-rebind]', box).filter((i) => i.checked).map((i) => i.getAttribute('data-rebind')) })).then(leave).catch((e) => B.near(yes, e.message, true)));
         no.addEventListener('click', leave);
         box.append(yes, ' ', no);

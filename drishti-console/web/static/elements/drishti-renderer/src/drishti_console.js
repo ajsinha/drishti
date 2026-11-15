@@ -26,7 +26,7 @@ import { strip } from './drishti_view.js';
 import { personFetch } from './drishti_net.js';
 import { drawNestedPivots } from './drishti_nested.js';
 import { consoleTables } from '../../drishti-grid/src/drishti_index.js';
-import { textSortKey, compareTextKeys } from '../../drishti-core/src/drishti_index.js';
+import { textSortKey, compareTextKeys, url as drishtiUrl } from '../../drishti-core/src/drishti_index.js';
 
 /** The console's scripts still loaded, in the order they need each other (colfilter before tables). */
 export const SCRIPTS = ['colfilter', 'tables', 'zoom', 'controls'];
@@ -40,7 +40,7 @@ const loaded = () => assets.memoised('console-behaviours', async () => {
     // a picker's list floats in the host page's body: drishti-inputs' rules are adopted by the host's document as a constructed sheet
     // (a <link> to the console would be refused by a host CSP of style-src 'self'; an adopted sheet asks nothing of style-src)
     try {
-      const res = await fetch(assets.statics('elements/drishti-inputs/drishti_inputs.css'), { credentials: 'omit' });
+      const res = await fetch(drishtiUrl(assets.statics('elements/drishti-inputs/drishti_inputs.css')), { credentials: 'omit' });
       if (res.ok) {
         const sheet = new CSSStyleSheet();
         sheet.replaceSync(await res.text());

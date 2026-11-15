@@ -29,7 +29,7 @@
 
   function say(text, bad) { status.textContent = text; status.classList.toggle('bad', !!bad); }
   function post(url, body) {
-    return fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) })
+    return fetch(drishti_url(url), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) })
       .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { return { ok: r.ok, body: j, status: r.status }; }); });
   }
   function why(r) {
@@ -54,7 +54,7 @@
     e.preventDefault();
     var value = String(PF.getField('value') || ''), reason = String(PF.getField('reason') || '').trim();
     if (!reason) { err.textContent = 'Say why: the approver reads it.'; err.hidden = false; return; }
-    post('/admin/configuration/propose', { key: current.dataset.key, area: current.dataset.area, value: value,
+    post(drishti_url('/admin/configuration/propose'), { key: current.dataset.key, area: current.dataset.area, value: value,
                                           was: current.dataset.value || '', reason: reason }).then(function (r) {
       if (!r.ok) { err.textContent = why(r); err.hidden = false; return; }
       dlg.close();
@@ -67,7 +67,7 @@
     b.addEventListener('click', function () {
       var li = b.closest('[data-proposal]'), verb = b.dataset.decide, comment = '';
       if (verb === 'reject') { comment = window.prompt('Why reject it? (the proposer reads it)', '') || ''; }
-      post('/admin/configuration/proposals/' + encodeURIComponent(li.dataset.proposal) + '/' + verb, { comment: comment }).then(function (r) {
+      post(drishti_url('/admin/configuration/proposals/') + encodeURIComponent(li.dataset.proposal) + '/' + verb, { comment: comment }).then(function (r) {
         if (!r.ok) { say(why(r), true); return; }
         say((verb === 'approve' ? 'Approved' : verb === 'reject' ? 'Rejected' : 'Withdrawn') + ': ' + r.body.key + '.');
         window.location.reload();

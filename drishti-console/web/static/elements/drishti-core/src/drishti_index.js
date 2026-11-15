@@ -20,6 +20,7 @@
 import { installResize } from './drishti_resize.js';
 import { GridKeys } from './drishti_keys.js';
 import { load } from './drishti_loader.js';
+import { installBase } from './drishti_base.js';
 
 export { MINUS, EMPTY, MASK, COMPACT_UNITS, plainDigits, roundHalfUp, group, formatNumber, formatPercent, formatBasisPoints, formatCurrency,
   formatCompact, defineFormats, hasFormat, namedFormat, formatNames, formatSpec, formatNamed, formatter, formatPythonFloat, BYTE_UNITS,
@@ -28,6 +29,7 @@ export { parseDate, daysInMonth, isoDate, today, formatDate, formatDateRange, is
   businessDaysBetween } from './drishti_dates.js';
 export { DEFAULT_THEME, THEME_STORAGE_KEY, TEXT_TOKENS, GROUND_TOKENS, themes, scheme, currentTheme, setTheme, token, tokens, parseColor,
   luminance, contrastRatio, readableOn, contrastProblems } from './drishti_theme.js';
+export { basePath, setBase, url, routePath, installBase } from './drishti_base.js';
 export { AS_OF_HEADER, ApiError, errorWords, ApiClient, createClient, api, call } from './drishti_api.js';
 export { EventBus, createBus, bus } from './drishti_events.js';
 export { SELECTION_EVENT, linkGrid, publishSelection } from './drishti_link.js';
@@ -54,6 +56,7 @@ export { DENSITIES, blend, alpha, visualTheme, toneColour, rampColour, formatter
  */
 export function install(root) {
   const D = root.Drishti = root.Drishti || {};
+  installBase(root);                  // window.drishti_url: the console's URL sub-path (drishti_base.js)
   D.GridKeys = GridKeys;
   D.elements = D.elements || {};
   D.elements.load = load;

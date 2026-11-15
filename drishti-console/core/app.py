@@ -35,6 +35,7 @@ from core.backend import drs_advice, drs_message
 from core.edition import hidden_hint as _hidden_hint
 from core.config import Settings
 from core.nextpath import to_login
+from core import base_path as _base_path
 
 WEB = Path(__file__).resolve().parent.parent / "web"
 _PAGE_KINDS = ("", "share", "datamap", "data", "form", "functions", "pack")      # missing.html for a console page, not an entity
@@ -273,19 +274,20 @@ class AuthGate(BaseHTTPMiddleware):
         return response
 
 
-def worker_csp(host: str) -> str:
-    """The worker's policy for the host the browser used. A host that is not plainly a host (nothing to trust in a
-    header) gets 'none': Calc then cannot start, which is the safe failure."""
+def worker_csp(host: str, base: str = "") -> str:
+    """The worker's policy for the host the browser used (``base``: the console's URL sub-path, core/base_path.py). A host that is not plainly
+    a host (nothing to trust in a header) gets 'none': Calc then cannot start, which is the safe failure."""
     host = (host or "").strip()
     if not _HOST.match(host):
         return WORKER_CSP.format(connect="'none'")
-    return WORKER_CSP.format(connect=f"{host}/static/ {host}{PYODIDE}")
+    return WORKER_CSP.format(connect=f"{host}{base}/static/ {host}{base}{PYODIDE}")
 
 
 class AppEngines:
     """Each request, websocket and the lifespan (and the tasks it starts: the backend watch) of this app read this app's engines
     (core/engines.py State) and modules (core/modules.py State), never another app's of the same process: a module global here let a real stack's console, polling its
-    server every few seconds, hide an engine's pages in a stand-in console of another browser test file in the same worker. Outermost."""
+    server every few seconds, hide an engine's pages in a stand-in console of another browser test file in the same worker. Outermost but
+    for core/base_path.py's BasePath."""
 
     def __init__(self, app):
         self.app = app
@@ -311,7 +313,7 @@ class SecurityHeaders(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
         response = await call_next(request)
         path = request.url.path
-        policy = worker_csp(request.headers.get("host", "")) if path == WORKER else PLAYGROUND_CSP if path == PLAYGROUND_FRAME else CSP
+        policy = worker_csp(request.headers.get("host", ""), _base_path.of(request)) if path == WORKER else PLAYGROUND_CSP if path == PLAYGROUND_FRAME else CSP
         response.headers.setdefault("Content-Security-Policy", policy)
         if path.startswith(PYODIDE) and response.status_code == 200:
             response.headers["Cache-Control"] = "public, max-age=31536000, immutable"   # the URL names the version
@@ -470,6 +472,9 @@ def create_app(settings: Settings) -> FastAPI:
         REFRESH_MIN=_bounded(settings.get("views.refresh_min_seconds", 5), 1, 3600, 5),
         ABOUT_PREFETCH=str(settings.get("ui.about_prefetch", True)).lower() not in ("false", "0", "no", "off"),
     )
+    base = _base_path.normalize(settings.get("server.base_path", ""))    # the console's URL sub-path behind a proxy (core/base_path.py); "" = /
+    app.state.base_path = base
+    _base_path.install(templates.env, base)                               # BASE and the filter u: href="{{ BASE }}/bi", "{{ item.href | u }}"
     from core.asof import to_local
 
     templates.env.globals["known_local"] = to_local
@@ -661,7 +666,8 @@ def create_app(settings: Settings) -> FastAPI:
     app.add_middleware(AuthGate)
     app.add_middleware(SameOrigin, allowed=settings.get("auth.allowed_origins") or ())    # before any session work
     app.add_middleware(SecurityHeaders)
-    app.add_middleware(AppEngines)                       # outermost: every request reads its own app's engines
+    app.add_middleware(AppEngines)                       # every request reads its own app's engines
+    app.add_middleware(_base_path.BasePath, base=base)   # outermost: the URL sub-path off what comes in, onto Location and cookie paths
     app.add_exception_handler(BodyError, problem)
     app.add_exception_handler(ClientDisconnect, gone)
     from core.notfound import not_found

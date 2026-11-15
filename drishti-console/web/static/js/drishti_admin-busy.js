@@ -38,7 +38,7 @@
       return;
     }
     said.textContent = "Applying…";
-    fetch("/admin/api/busy/override", {
+    fetch(drishti_url("/admin/api/busy/override"), {
       method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify({ mode: mode, reason: reason, minutes: parseInt(box.querySelector("[data-busy-minutes]").value, 10) || 30 })
     }).then(function (r) {

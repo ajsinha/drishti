@@ -87,7 +87,7 @@
   function start() {
     var t0 = performance.now();
     status('Starting Python…');
-    worker = new Worker(drawer.getAttribute('data-worker'), { type: 'module', name: 'drishti-calc' });
+    worker = new Worker(drishti_url(drawer.getAttribute('data-worker')), { type: 'module', name: 'drishti-calc' });
     ready = new Promise(function (resolve, reject) {
       worker.onmessage = function (e) {
         var m = e.data || {};
@@ -122,7 +122,7 @@
 
   function context() {
     var path = encodeURIComponent(kind) + '/' + encodeURIComponent(id);
-    return Promise.all([fetch('/api/view/' + path).then(json), fetch('/api/raw/' + path).then(json)]).then(function (res) {
+    return Promise.all([fetch(drishti_url('/api/view/' + path)).then(json), fetch(drishti_url('/api/raw/' + path)).then(json)]).then(function (res) {
       var vm = res[0].ok ? res[0].b : {}, raw = res[1].ok ? res[1].b : {};
       return JSON.stringify({ ref: vm.ref || { kind: kind, id: id }, title: vm.title, strip: vm.strip, panels: vm.panels || [],
         provenance: vm.provenance || raw.provenance || {}, doc: raw.data || {} });
@@ -161,13 +161,13 @@
     var q = [];
     var add = function (k, v) { if (v != null && v !== '') { q.push(encodeURIComponent(k) + '=' + encodeURIComponent(v)); } };
     var path;
-    if (op === 'get') { path = '/api/raw/' + encodeURIComponent(a.kind) + '/' + encodeURIComponent(a.id); }
-    else if (op === 'search') { path = '/api/calc/search'; add('q', a.q); }
-    else if (op === 'columns') { path = '/api/calc/columns/' + encodeURIComponent(a.kind); add('paths', a.paths); add('limit', a.limit); }
-    else if (op === 'history') { path = '/api/series/' + encodeURIComponent(a.kind) + '/' + encodeURIComponent(a.id); add('path', a.path); add('days', a.days); }
-    else if (op === 'bi.datasets') { return '/bi/api/datasets'; }                       // drishti_bi: the BI engine, as this person (the console passes the session on)
-    else if (op === 'bi.model') { return '/bi/api/datasets/' + encodeURIComponent(a.dataset).replace(/%3A/g, ':'); }
-    else if (op === 'bi.query') { return '/bi/api/mq'; }                                   // one model query (drishti_bi builds it, with its model)
+    if (op === 'get') { path = drishti_url('/api/raw/') + encodeURIComponent(a.kind) + '/' + encodeURIComponent(a.id); }
+    else if (op === 'search') { path = drishti_url('/api/calc/search'); add('q', a.q); }
+    else if (op === 'columns') { path = drishti_url('/api/calc/columns/') + encodeURIComponent(a.kind); add('paths', a.paths); add('limit', a.limit); }
+    else if (op === 'history') { path = drishti_url('/api/series/') + encodeURIComponent(a.kind) + '/' + encodeURIComponent(a.id); add('path', a.path); add('days', a.days); }
+    else if (op === 'bi.datasets') { return drishti_url('/bi/api/datasets'); }                       // drishti_bi: the BI engine, as this person (the console passes the session on)
+    else if (op === 'bi.model') { return drishti_url('/bi/api/datasets/') + encodeURIComponent(a.dataset).replace(/%3A/g, ':'); }
+    else if (op === 'bi.query') { return drishti_url('/bi/api/mq'); }                                   // one model query (drishti_bi builds it, with its model)
     else { return null; }
     add('asOf', a.asOf);
     return path + (q.length ? '?' + q.join('&') : '');
@@ -181,7 +181,7 @@
     if (running) { running.reads++; status('Reading ' + m.op + '…'); }
     var init = { credentials: 'same-origin' };
     if (m.op === 'bi.query') { init = { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(a.body || {}) }; }
-    fetch(url, init).then(function (r) {
+    fetch(drishti_url(url), init).then(function (r) {
       return r.text().then(function (t) {
         if (running) { running.bytes += t.length; }
         var b = {};
@@ -343,7 +343,7 @@
 
   // ---- snippets: the packs' and the user's own ------------------------------------------------------------------------
   function loadSnippets() {
-    return fetch('/api/calc/snippets?kind=' + encodeURIComponent(kind)).then(json).then(function (res) {
+    return fetch(drishti_url('/api/calc/snippets?kind=' + encodeURIComponent(kind))).then(json).then(function (res) {
       if (!res.ok) { say(res.b.detail || 'Snippets could not be read', true); return; }
       snippets = res.b;
       var group = function (label, list, prefix) {                 // drishti-inputs' Select: the packs' snippets, then mine, in groups
@@ -370,7 +370,7 @@
     var name = window.prompt('Save this code as (your snippets, on this server):', mine || '');
     if (name == null || !name.trim()) { return; }
     var body = { code: code(), kind: kind, description: '' };
-    fetch('/api/calc/snippets/' + encodeURIComponent(name.trim()), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+    fetch(drishti_url('/api/calc/snippets/' + encodeURIComponent(name.trim())), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       .then(json).then(function (res) {
         if (!res.ok) { say(Drishti.drsMessage(res.b, 'not saved'), true); return; }
         mine = res.b.name;
@@ -380,7 +380,7 @@
   });
   delBtn.addEventListener('click', function () {
     if (!mine || !window.confirm('Delete your snippet "' + mine + '"?')) { return; }
-    fetch('/api/calc/snippets/' + encodeURIComponent(mine), { method: 'DELETE' }).then(json).then(function (res) {
+    fetch(drishti_url('/api/calc/snippets/' + encodeURIComponent(mine)), { method: 'DELETE' }).then(json).then(function (res) {
       if (!res.ok) { say(res.b.detail || 'not deleted', true); return; }
       say('Deleted ' + mine + '.');
       mine = null;

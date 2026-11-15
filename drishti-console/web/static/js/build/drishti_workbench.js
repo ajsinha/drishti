@@ -66,13 +66,13 @@ store.state.baseMoved = init.baseMoved || null;
     store.emit('say', split ? 'Split view: the design and the YAML side by side.' : 'Single view.');
   });
   function summarise() {
-    WB.call('POST', '/studio/summary', { yaml: store.state.yaml }).then(function (r) { $('[data-summary]').innerHTML = r.body.html || ''; });
+    WB.call('POST', drishti_url('/studio/summary'), { yaml: store.state.yaml }).then(function (r) { $('[data-summary]').innerHTML = r.body.html || ''; });
   }
   store.on('doc', function (x) { if (x.changed && centre.current() === 'summary') { summarise(); } });
 
   // ---- the parts ---------------------------------------------------------------------------------------------------------------
   var canvas, inspector, actions, data, versions, about, form, controls;
-  var schemaP = fetch('/studio/schema').then(function (r) { return r.json(); });
+  var schemaP = fetch(drishti_url('/studio/schema')).then(function (r) { return r.json(); });
   var toasts = new window.Drishti.elements.core.ToastTray({ bare: true, single: true, timeout: 8000 });     // one toast at a time, with its action (drishti-core)
   function toast(text, label, run) {
     toasts.show({ className: 'wb-toast', attrs: { 'data-toast': '' }, text: text + ' · ', action: { label: label, className: 'btn-pill btn-accent', run: run } });
@@ -102,7 +102,7 @@ store.state.baseMoved = init.baseMoved || null;
   var ship = WB.Ship(root, store, { yaml: yaml });
   var saving = WB.Saving(root, store, { yaml: yaml, data: data, ship: ship, examples: JSON.parse(d.examples || '[]') });
   var commands = WB.Commands(store, { actions: actions, centre: centre, right: right, canvas: function () { return canvas; }, tests: tests, saving: saving, ship: ship, versions: versions,
-    yaml: yaml, guide: '/help/rachana-reference#screen-designer-and-the-build-workbench' });
+    yaml: yaml, guide: drishti_url('/help/rachana-reference#screen-designer-and-the-build-workbench') });
 
   // ---- the status bar --------------------------------------------------------------------------------------------------------
   var pos = $('[data-sample-pos]'), result = $('[data-result]'), revEl = $('[data-rev]'), undoB = $('[data-undo]'), redoB = $('[data-redo]'), fileChip = $('[data-file-chip]');
@@ -166,7 +166,7 @@ store.state.baseMoved = init.baseMoved || null;
     auto.addEventListener('click', function () {
       var draft = function () {
       store.emit('say', 'Drafting a screen...');
-      return WB.call('POST', '/build/designs/' + encodeURIComponent(store.state.id) + '/autodesign', {}).then(function (r) {
+      return WB.call('POST', drishti_url('/build/designs/') + encodeURIComponent(store.state.id) + '/autodesign', {}).then(function (r) {
         if (!r.ok) { store.emit('say', WB.why(r), true); return; }
         WB.call('GET', store.base).then(function (g) {
           if (g.ok) { store.adopt({ rev: g.body.rev, yaml: g.body.sutra, status: g.body.status, opsAt: g.body.opsAt, opsCount: (g.body.ops || []).length, problems: [], previewHtml: r.body.previewHtml }, 'autodesign'); }
@@ -198,7 +198,7 @@ store.state.baseMoved = init.baseMoved || null;
     var a = e.target.closest && e.target.closest('a[href]');
     if (!a || a.target === '_blank' || e.defaultPrevented || e.ctrlKey || e.metaKey || e.shiftKey || /^#|^javascript:/.test(a.getAttribute('href'))) { return; }
     if (!inspector.pending() && !yaml.pending() && !notes.pending() && !about.pending() && !form.pending() && !controls.pending()) { return; }
-    e.preventDefault(); var href = a.href; held().then(function () { window.location.href = href; }, function () { window.location.href = href; });
+    e.preventDefault(); var href = a.href; held().then(function () { window.location.href = drishti_url(href); }, function () { window.location.href = drishti_url(href); });
   }, true);
   $('[data-inspector]').addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && !e.defaultPrevented && !e.target.closest('.wb-menu, [role=listbox]')) { e.preventDefault(); canvas.focus(); }

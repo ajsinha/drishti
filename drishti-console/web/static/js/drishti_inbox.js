@@ -20,7 +20,7 @@
   'use strict';
 
   function post(path, body, keep) {
-    return fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, credentials: 'same-origin',
+    return fetch(drishti_url(path), { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, credentials: 'same-origin',
       body: JSON.stringify(body), keepalive: !!keep }).then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { return { ok: r.ok, j: j }; }); });
   }
   function bell(unread) {
@@ -44,7 +44,7 @@
       var one = e.target.closest('[data-inbox-read]');
       if (one) {
         var row = one.closest('.inbox-row');
-        post('/api/inbox/read', { seqs: [parseInt(row.getAttribute('data-seq'), 10)] }).then(function (r) {
+        post(drishti_url('/api/inbox/read'), { seqs: [parseInt(row.getAttribute('data-seq'), 10)] }).then(function (r) {
           if (!r.ok) { say(r.j.detail || 'could not mark it read'); return; }
           mark(row); bell(r.j.unread); say('Marked read.');
         });
@@ -53,7 +53,7 @@
       var open = e.target.closest('[data-inbox-open]');
       if (open) {                                               // opening a notice reads it; the page may be leaving, so keep the request alive
         var r2 = open.closest('.inbox-row');
-        if (r2.getAttribute('data-read') !== 'true') { post('/api/inbox/read', { seqs: [parseInt(r2.getAttribute('data-seq'), 10)] }, true); }
+        if (r2.getAttribute('data-read') !== 'true') { post(drishti_url('/api/inbox/read'), { seqs: [parseInt(r2.getAttribute('data-seq'), 10)] }, true); }
       }
     });
     var all = page.querySelector('[data-inbox-mark-all]');
@@ -62,7 +62,7 @@
         var top = 0;
         rows().forEach(function (r) { top = Math.max(top, parseInt(r.getAttribute('data-seq'), 10) || 0); });
         if (!top) { say('Nothing to mark.'); return; }
-        post('/api/inbox/read', { upTo: top }).then(function (r) {
+        post(drishti_url('/api/inbox/read'), { upTo: top }).then(function (r) {
           if (!r.ok) { say(r.j.detail || 'could not mark them read'); return; }
           rows().forEach(mark); bell(r.j.unread); say('All marked read.');
         });
@@ -78,7 +78,7 @@
       var name = sw.getAttribute('data-switch-on'), msg = document.querySelector('[data-switch-msg]');
       if (active.indexOf(name) < 0) { active.push(name); }
       sw.disabled = true;
-      post('/api/packs', { active: active }).then(function (r) {
+      post(drishti_url('/api/packs'), { active: active }).then(function (r) {
         if (r.ok) { window.location.reload(); } else { sw.disabled = false; if (msg) { msg.textContent = r.j.detail || 'could not switch it on'; } }
       });
     });

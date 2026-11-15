@@ -19,7 +19,7 @@
 #}
 {% extends "base.html" %}
 {% block title %}BI runs · {{ PRODUCT }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi-runs.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_bi-runs.css?v={{ ASSET_V }}">{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
@@ -28,7 +28,7 @@
   <h1 class="ws-h">BI runs <span class="bi-runs-live" data-admin-live title="Asked again every 5 seconds while this page is open">⟳ live</span></h1>
   <p class="text-muted-d">Every BI question goes through one bounded pipeline. Long ones run in the background with their own slots, memory and threads, so they never
     slow the people reading dashboards. This page shows the gate, the queue, the result store and how honest the estimates were. It shows state, sizes and nodes, never a
-    value. <a href="/admin/bi">BI settings</a> · <a href="/admin/bi/usage">BI usage</a></p>
+    value. <a href="{{ BASE }}/admin/bi">BI settings</a> · <a href="{{ BASE }}/admin/bi/usage">BI usage</a></p>
   <form class="bi-runs-filters bi-runs-admin-filters" data-admin-filters aria-label="Which server">
     <label>Node<drishti-select native name="node" class="studio-select" data-admin-node label="Node"><option value="">all</option></drishti-select></label>
   </form>
@@ -42,7 +42,7 @@
   <h2 class="ws-h" id="suggestions">Repeated heavy questions</h2>
   <p class="text-muted-d">Heavy questions asked often enough that a rollup would make them instant (counted per model, grain and the shape of the filters, never a value).
     <strong>Accept</strong> adds the drafted rollup to the model's draft, to be reviewed and published like any change; <strong>Dismiss</strong> stops suggesting it.
-    The model designer shows a notice while a model has open suggestions. <a href="/help/run-suggestions">How suggestions work</a></p>
+    The model designer shows a notice while a model has open suggestions. <a href="{{ BASE }}/help/run-suggestions">How suggestions work</a></p>
   <p class="adm-msg" data-admin-suggest-msg role="status" aria-live="polite"></p>
   <div class="tbl-wrap"><table class="tbl adm-tbl" data-admin-suggest data-plain>
     <caption class="visually-hidden">Repeated heavy questions</caption>
@@ -50,4 +50,4 @@
     <tbody></tbody></table></div>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-runs.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-runs-admin.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_bi-lib.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_bi-runs.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_bi-runs-admin.js?v={{ ASSET_V }}"></script>{% endblock %}

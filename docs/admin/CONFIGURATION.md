@@ -550,6 +550,7 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 | `DRISHTI_CONSOLE_PORT` | `server.port` | `17480` | The console's port. |
 | `DRISHTI_CONSOLE_WORKERS` | `server.workers` | `4` | Processes serving the console's pages (they share the port; one Python process uses one core). `1` runs a single process. |
 | `DRISHTI_CONSOLE_SHUTDOWN_SECONDS` | `server.shutdown_seconds` | `5` | On a stop, how long open streams (the live channel of reports, boards and views) may stay before they are closed; the browser says *Disconnected* and reconnects to the next console. |
+| `DRISHTI_CONSOLE_BASE_PATH` | `server.base_path` | empty | The URL sub-path behind a reverse proxy (`/drishti` for `https://host/drishti/`); empty: the console is at `/`. See [The console's URL sub-path](#the-consoles-url-sub-path-serverbase_path). |
 | `DRISHTI_BACKEND_URL` | `backend.url` | `http://127.0.0.1:18480` | Where the server is. |
 | `DRISHTI_BACKEND_URLS` | `backend.urls` | empty | Several servers of one Drishti*net cluster, comma-separated; one is enough (the console learns the rest). Empty: `backend.url` alone. See [The console and several servers](#the-console-and-several-servers-drishtinet). |
 | `DRISHTI_BACKEND_DISCOVER` | `backend.discover` | `true` | With `backend.urls`: pull the member list from the server in use every `discover_every` and keep it. |
@@ -750,6 +751,22 @@ the next; a read that failed on the way is tried once on another server, a write
 `<console data dir>/net/servers.json`; a member the cluster reports dead or left is dropped from it, the configured `urls` never are. A set-aside
 server that answers again is used for new sessions after a minute. Every server needs the same token secret (or OIDC issuer), so the session
 carries over. Without Drishti*net, `backend.urls` still works as a list of identical servers.
+
+### The console's URL sub-path: `server.base_path`
+
+Behind a reverse proxy that serves the console under a path (`https://intranet.bank.example/drishti/`), name that path once:
+
+```yaml
+# drishti-console/config/application.local.yaml   (or DRISHTI_CONSOLE_BASE_PATH=/drishti)
+server:
+  base_path: /drishti        # blank (the default): the console is at /
+```
+
+The console then takes `/drishti` off every request (the proxy may keep the prefix or strip it), and puts it on everything it sends: the pages'
+links, scripts and style sheets, every API call and live stream the scripts make, redirects (`Location`) and cookie paths (`Path=/drishti`). The
+page names it once (`<meta name="drishti-base" content="/drishti">`); the scripts build every console URL through one helper, `drishti_url()`
+(drishti-core), and the templates through `{{ BASE }}` and the filter `u`. A static test (`drishti-console/tests/test_base_path_guard.py`) refuses
+a new root-absolute URL that skips them. A restart applies a change. The proxy settings: [OPERATIONS_GUIDE.md › TLS and the reverse proxy](../guides/OPERATIONS_GUIDE.md#113-tls-and-the-reverse-proxy).
 
 ### AI and MCP policy settings
 
@@ -2567,6 +2584,7 @@ You should see uvicorn report `Uvicorn running on http://127.0.0.1:17481`.
 | `server.port` | `17480` (`DRISHTI_CONSOLE_PORT`) | Listening port. |
 | `server.workers` | `4` (`DRISHTI_CONSOLE_WORKERS`) | Worker processes on that port (`run_drishti_web.py`). Each keeps short-lived copies of what the server says about a user (settings, packs, view layouts, saved pivots, BI powers, the session check); a change made through one worker writes the user's stamp under the console's data folder (`<console data>/user-stamps`, one small file per user) and every worker reads its copy again at its next page, in every browser of the user. A change to a role (its BI powers in Admin, BI settings; anything in Admin, Roles; a role deleted) writes the stamp for everyone, so every holder's copies are read again at once. Consoles behind one address that share no data folder see each other's changes within `ui.user_cache_seconds` (10 s), sessions within `auth.recheck_seconds`. |
 | `server.shutdown_seconds` | `5` (`DRISHTI_CONSOLE_SHUTDOWN_SECONDS`) | On a stop, the longest an open stream keeps a worker; then it is closed and the worker ends. |
+| `server.base_path` | empty (`DRISHTI_CONSOLE_BASE_PATH`) | The URL sub-path the console is served under behind a reverse proxy (`/drishti`): taken off every request, put on every link, script, API call, redirect and cookie path. Empty: at `/`. |
 | `backend.url` | `http://127.0.0.1:18480` (`DRISHTI_BACKEND_URL`) | The Drishti server. |
 | `backend.timeout_seconds` | `15` | Per call to the server. Longer than the server's own read limit (`drishti.sources.fetch-timeout`, 10 s), so the server's answer, including a timed-out read's `DRS-1004`, comes through. |
 | `backend.name` | the product name (`ui.product`) | The name of the single server when `servers` is not set; the picker and the top bar show it. |
@@ -2779,16 +2797,16 @@ compose files in `deploy/` show these variables in use; see [OPERATIONS_GUIDE.md
 
 ## Every setting
 
-Every key of every kind: 2,214 settings in 20 areas, and 353 environment variables. Each row has the same shape: the key, its type, its default (*none*: no default, the setting is off or unset until given; *empty*: an empty value), the environment variable that sets it, what it applies to, its meaning, whether a change needs a restart or is picked up live, and the release that added it (blank: before 2.6). Generated by `tools/settings_catalogue.py` from the files themselves, each meaning the file's own comment; `--check` fails the drill when a key has no meaning or the page is out of date. The console shows this page searchable at Help → Configuration (`/help/configuration`), with the values in effect for an administrator.
+Every key of every kind: 2,215 settings in 20 areas, and 354 environment variables. Each row has the same shape: the key, its type, its default (*none*: no default, the setting is off or unset until given; *empty*: an empty value), the environment variable that sets it, what it applies to, its meaning, whether a change needs a restart or is picked up live, and the release that added it (blank: before 2.6). Generated by `tools/settings_catalogue.py` from the files themselves, each meaning the file's own comment; `--check` fails the drill when a key has no meaning or the page is out of date. The console shows this page searchable at Help → Configuration (`/help/configuration`), with the values in effect for an administrator.
 
-Every setting has a **tier** (the last column; Admin → Configuration shows them by tier): **everyday** 18, **admin** 1,779, **expert** 417. *Everyday* is what a business lead changes (the lenses, the VaR and exposure confidences, the scenario window, the feature switches); *admin* is what an operator sets; *expert* is performance and internals. The tiers are kept in `tools/settings_schemas.yaml` (`tiers`), one place.
+Every setting has a **tier** (the last column; Admin → Configuration shows them by tier): **everyday** 18, **admin** 1,780, **expert** 417. *Everyday* is what a business lead changes (the lenses, the VaR and exposure confidences, the scenario window, the feature switches); *admin* is what an operator sets; *expert* is performance and internals. The tiers are kept in `tools/settings_schemas.yaml` (`tiers`), one place.
 
 | Area | Settings |
 |---|---|
 | [The server: `application.yaml`](#the-server-applicationyaml) | 578 |
 | [Compute engines: `config/engines/*.yaml`](#compute-engines-configenginesyaml) | 329 |
 | [Modules: `config/modules/*.yaml`](#modules-configmodulesyaml) | 5 |
-| [The console: `application.yaml`](#the-console-applicationyaml) | 182 |
+| [The console: `application.yaml`](#the-console-applicationyaml) | 183 |
 | [The console's other files](#the-consoles-other-files) | 108 |
 | [Connectors: every plugin's settings](#connectors-every-plugins-settings) | 539 |
 | [Packs: `pack.yaml`](#packs-packyaml) | 137 |
@@ -2805,7 +2823,7 @@ Every setting has a **tier** (the last column; Admin → Configuration shows the
 | [The data inbox's routing rules: `config/dataload.yaml`](#the-data-inboxs-routing-rules-configdataloadyaml) | 2 |
 | [The UI kit: `config/ui-kit/brand.yaml`](#the-ui-kit-configui-kitbrandyaml) | 19 |
 | [AI providers and MCP servers: `config/ai/`, `config/mcp/`](#ai-providers-and-mcp-servers-configai-configmcp) | 37 |
-| [Environment variable index](#environment-variable-index) | 353 |
+| [Environment variable index](#environment-variable-index) | 354 |
 
 Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.governance.*` and `drishti.ui-kit.*`, the console's `views.refresh_min_seconds`) are rows of the server and console tables below; the Sutra grammar itself is [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md).
 
@@ -2827,7 +2845,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `spring.ai.model.audio.speech` | string | `none` |  | server | Spring AI's speech auto-configuration: off | restart |  | admin |
 | `spring.ai.model.audio.transcription` | string | `none` |  | server | Spring AI's transcription auto-configuration: off | restart |  | admin |
 | `spring.main.banner-mode` | boolean | `off` |  | server | no Spring banner at start | restart |  | admin |
-| `spring.config.import` | list | empty |  | server | files read after this one: the engines' files (config/engines/&lt;id&gt;.yaml), application.local.yaml in the working directory, then the packs overlay Admin -&gt; Packs writes (DRISHTI\_PACKS\_OVERLAY, default &lt;data dir&gt;/packs/added.yaml) | restart |  | admin |
+| `spring.config.import` | list | empty |  | server | files read after this one: the engines' files (config/engines/&lt;id&gt;.yaml), application.local.yaml in the install folder (drishti.home), then the packs overlay Admin -&gt; Packs writes (DRISHTI\_PACKS\_OVERLAY, default &lt;data dir&gt;/packs/added.yaml) | restart |  | admin |
 | `spring.jpa.open-in-view` | boolean | `false` |  | server | no lazy loading while a view renders: the identity services load what they return | restart |  | admin |
 
 #### `logging`
@@ -3601,7 +3619,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
-| `drishti.identity.database-url` | string | `jdbc:sqlite:./data/identity/drishti.db` | `DRISHTI_IDENTITY_DB_URL` | server | Users, roles defined in Admin → Roles, saved workspaces/monitors/settings and the audit trail live in one database (JPA). SQLite by default: a single file, nothing to install. For PostgreSQL: DRISHTI\_IDENTITY\_DB\_URL=jdbc:postgresql://db:5432/drishti DRISHTI\_IDENTITY\_DB\_USER=drishti DRISHTI\_IDENTITY\_DB\_PASSWORD=... The schema (drishti-identity: db/schema-sqlite.sql, db/schema-postgres.sql) is applied at start; no migrations. | restart |  | admin |
+| `drishti.identity.database-url` | string | `jdbc:sqlite:<data>/identity/drishti.db` | `DRISHTI_IDENTITY_DB_URL` | server | Users, roles defined in Admin → Roles, saved workspaces/monitors/settings and the audit trail live in one database (JPA). SQLite by default: a single file, nothing to install. For PostgreSQL: DRISHTI\_IDENTITY\_DB\_URL=jdbc:postgresql://db:5432/drishti DRISHTI\_IDENTITY\_DB\_USER=drishti DRISHTI\_IDENTITY\_DB\_PASSWORD=... The schema (drishti-identity: db/schema-sqlite.sql, db/schema-postgres.sql) is applied at start; no migrations. | restart |  | admin |
 | `drishti.identity.database-user` | string | empty | `DRISHTI_IDENTITY_DB_USER` | server | the identity database's user (PostgreSQL) | restart |  | admin |
 | `drishti.identity.database-password` | string | empty | `DRISHTI_IDENTITY_DB_PASSWORD` | server | its password, from the environment (secret) | restart |  | admin |
 | `drishti.identity.refresh-seconds` | integer | `15` |  | server | servers sharing one database see each other's role and pack changes this soon | restart |  | admin |
@@ -4395,6 +4413,7 @@ One file per module (banking, capitalmarkets, economy), `config/modules/<module>
 | `server.port` | integer | `17480` | `DRISHTI_CONSOLE_PORT` | console | the console's HTTP port | restart |  | admin |
 | `server.workers` | integer | `4` | `DRISHTI_CONSOLE_WORKERS` | console | processes serving pages (one Python process uses one core: ~40 pages/s measured); 1 = one process | restart |  | expert |
 | `server.shutdown_seconds` | integer | `5` | `DRISHTI_CONSOLE_SHUTDOWN_SECONDS` | console | on a stop, how long open streams (live pages) may stay before they are closed; the browser then reconnects | restart |  | admin |
+| `server.base_path` | string | empty | `DRISHTI_CONSOLE_BASE_PATH` | console | the URL sub-path behind a reverse proxy, e.g. /drishti for https://host/drishti/ (blank: served at /); the proxy may keep or strip it | restart |  | admin |
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
@@ -5759,7 +5778,7 @@ Where user content is kept so every node of a cluster reaches it ([DATA_ARCHITEC
 |---|---|---|---|---|---|---|---|---|
 | `backend` | string | `filesystem` |  | every node (the same everywhere) | Project Drishti · Any data. Any domain. One grammar. Copyright (c) 2026 Ashutosh Sinha &lt;ajsinha@gmail.com&gt;. All rights reserved. PROPRIETARY AND CONFIDENTIAL. This file is the confidential and proprietary property of Ashutosh Sinha. Unauthorised copying, use, modification, distribution or disclosure of this file, via any medium, is strictly prohibited except with the express prior written permission of the copyright holder. See the LICENSE file in the root of this repository for the full terms. The content store (docs/architecture/DATA\_ARCHITECTURE.md): where user content (Build workbench Designs today) is kept so that every node of a Drishti\*net cluster reaches it. The server reads this file at start (drishti.store.file in application.yaml); a missing file or key means the value shown here. Every node of a cluster must use the same settings. Examples: config/store.examples/. filesystem \| sqlite \| postgres \| s3 | restart |  | admin |
 | `filesystem.root` | string | `<data>/fstore` |  | every node (the same everywhere) | A folder; on a cluster it must be a SHARED mount (NFS, EFS, SMB) at the same path on every node. DRISHTI\_STORE\_ROOT overrides it. | restart |  | admin |
-| `sqlite.url` | string | `jdbc:sqlite:./data/identity/drishti.db` |  | every node (the same everywhere) | the Drishti database itself (one node) | restart |  | admin |
+| `sqlite.url` | string | `jdbc:sqlite:<data>/identity/drishti.db` |  | every node (the same everywhere) | the Drishti database itself (one node) | restart |  | admin |
 | `postgres.url` | string | `""` |  | every node (the same everywhere) | e.g. jdbc:postgresql://db:5432/drishti (the Drishti database) | restart |  | admin |
 | `postgres.user` | string | `drishti` |  | every node (the same everywhere) | the database user | restart |  | admin |
 | `postgres.password` | string | empty | `DRISHTI_STORE_PASSWORD` | every node (the same everywhere) | its password, from the environment only (secret) | restart |  | admin |
@@ -6320,6 +6339,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_COMPUTE_SAMPLE_WORKERS` | `compute.pools.<pool>.workers.max` (compute) | `4` | compute | as many as this node should run: configuration only, no limit in the code |
 | `DRISHTI_CONNECTORS_DIR` | `drishti.sources.connectors-dir` | `<config>/connectors` | server | Named connectors: several instances of a plugin, each with its own settings. They live in FILES, one per connector: &lt;connectors-dir&gt;/&lt;name&gt;.yaml the file name is the connector's logical name; packs refer to it by that name. The folder is watched: a changed file restarts only that connector, a new file starts one, a deleted file stops it. See docs/guides/DATA\_GUIDE.md section 9 and Admin -&gt; Connectors. Ready-made files: config/connectors.examples/. created on first write |
 | `DRISHTI_CONSOLE_BACKEND_CHECK_SECONDS` | `backend.check_seconds` | `5` | console | how often the console asks each server if it is there (0 = never); pages show a banner and recover when it returns |
+| `DRISHTI_CONSOLE_BASE_PATH` | `server.base_path` | empty | console | the URL sub-path behind a reverse proxy, e.g. /drishti for https://host/drishti/ (blank: served at /); the proxy may keep or strip it |
 | `DRISHTI_CONSOLE_DATA_DIR` | `backend.data_dir` | empty | console | what the console keeps between runs (net/servers.json); blank: &lt;data dir&gt;/console |
 | `DRISHTI_CONSOLE_HOST` | `server.host` | `0.0.0.0` | console | every interface, so other machines (and phones) can open it; 127.0.0.1 = this machine only |
 | `DRISHTI_CONSOLE_PORT` | `server.port` | `17480` | console | the console's HTTP port |
@@ -6411,7 +6431,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_ICEBERG_URI` | iceberg profile | empty | profile | A REST catalog's URI |
 | `DRISHTI_ICEBERG_WAREHOUSE` | iceberg profile | empty | profile | A REST catalog's warehouse |
 | `DRISHTI_IDENTITY_DB_PASSWORD` | `drishti.identity.database-password` | empty | server | its password, from the environment |
-| `DRISHTI_IDENTITY_DB_URL` | `drishti.identity.database-url` | `jdbc:sqlite:./data/identity/drishti.db` | server | Users, roles defined in Admin → Roles, saved workspaces/monitors/settings and the audit trail live in one database (JPA). SQLite by default: a single file, nothing to install. For PostgreSQL: DRISHTI\_IDENTITY\_DB\_URL=jdbc:postgresql://db:5432/drishti DRISHTI\_IDENTITY\_DB\_USER=drishti DRISHTI\_IDENTITY\_DB\_PASSWORD=... The schema (drishti-identity: db/schema-sqlite.sql, db/schema-postgres.sql) is applied at start; no migrations. |
+| `DRISHTI_IDENTITY_DB_URL` | `drishti.identity.database-url` | `jdbc:sqlite:<data>/identity/drishti.db` | server | Users, roles defined in Admin → Roles, saved workspaces/monitors/settings and the audit trail live in one database (JPA). SQLite by default: a single file, nothing to install. For PostgreSQL: DRISHTI\_IDENTITY\_DB\_URL=jdbc:postgresql://db:5432/drishti DRISHTI\_IDENTITY\_DB\_USER=drishti DRISHTI\_IDENTITY\_DB\_PASSWORD=... The schema (drishti-identity: db/schema-sqlite.sql, db/schema-postgres.sql) is applied at start; no migrations. |
 | `DRISHTI_IDENTITY_DB_USER` | `drishti.identity.database-user` | empty | server | the identity database's user (PostgreSQL) |
 | `DRISHTI_INDEX_DIR` | `drishti.index.dir` | empty | server | Where the connectors' multi-day type-ahead index keeps closed days as block-compressed segment files (one subfolder per connector). Blank: &lt;data dir&gt;/index. Size is capped per connector by its index.max-disk; a day that rolls out of the window, is evicted by the cap or is rebuilt gives its disk back at once. |
 | `DRISHTI_JAR` | `lakes.jar` | empty | console | the drishti-server exec jar that carries the writer (default: kernel/drishti-server/target) |

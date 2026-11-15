@@ -29,7 +29,7 @@
   if (!root) { return; }
   var G = window.Drishti.elements && window.Drishti.elements.grid;
   var $ = function (s) { return root.querySelector(s); };
-  var API = "/api/pivot";
+  var API = drishti_url("/api/pivot");
   // the aggregations only the engine computes, offered in the wells beside the grid's own (the grid never computes one here)
   var SERVER_FUNCS = [{name: "median", label: "Median"}, {name: "var_samp", label: "Variance"}, {name: "stddev_samp", label: "Standard deviation"}];
   var state = {catalogue: null, answer: null, diff: null, grid: null, selection: [], chart: null, savedView: null, slicers: [], force: false,
@@ -65,7 +65,7 @@
     var o = {method: method, headers: {"Accept": "application/json"}, credentials: "same-origin"};
     if (signal) { o.signal = signal; }
     if (body !== undefined) { o.headers["Content-Type"] = "application/json"; o.body = JSON.stringify(body); }
-    return fetch(API + path, o).then(function (r) {
+    return fetch(drishti_url(API + path), o).then(function (r) {
       return r.text().then(function (t) {
         var j = {};
         try { j = t ? JSON.parse(t) : {}; } catch (e) { j = {detail: t}; }
@@ -484,7 +484,7 @@
       if (!state.selection.length) { notice("select a cell first: its rows are exported"); return; }
       body.coords = coordsOf(state.selection[0].key);
     }
-    fetch("/api/pivot/export", {method: "POST", credentials: "same-origin", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)})
+    fetch(drishti_url("/api/pivot/export"), {method: "POST", credentials: "same-origin", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)})
       .then(function (r) {
         if (!r.ok) { return r.json().then(function (j) { throw new Error(j.detail || r.statusText); }); }
         var cd = r.headers.get("Content-Disposition") || "";

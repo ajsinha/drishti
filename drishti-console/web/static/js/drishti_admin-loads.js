@@ -46,7 +46,7 @@
     return { notify: { roles: csv(v.roles || ''), users: csv(v.users || ''), email: !!v.email }, smoke: v.smoke || 0, expect: expect };
   }
   function send(method, body) {
-    return fetch('/admin/api/loads/' + encodeURIComponent(pack) + '/config', { method: method, headers: { 'Content-Type': 'application/json' },
+    return fetch(drishti_url('/admin/api/loads/' + encodeURIComponent(pack) + '/config'), { method: method, headers: { 'Content-Type': 'application/json' },
       body: body ? JSON.stringify(body) : undefined })
       .then(function (r) { return r.json().catch(function () { return {}; }).then(function (b) { return { ok: r.ok, body: b }; }); });
   }
@@ -81,7 +81,7 @@
       if (v.batchId && String(v.batchId).trim()) { body.batchId = String(v.batchId).trim(); }
       if (v.note && String(v.note).trim()) { body.note = String(v.note).trim(); }
       am.textContent = 'Announcing...';
-      fetch('/admin/api/packs/' + encodeURIComponent(pack) + '/loads', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      fetch(drishti_url('/admin/api/packs/' + encodeURIComponent(pack) + '/loads'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
         .then(function (r) { return r.json().catch(function () { return {}; }).then(function (b) { return { ok: r.ok, body: b }; }); })
         .then(function (res) {
           if (res.ok) { am.textContent = (res.body.duplicate ? 'Announced before: nothing ran again.' : 'Announced: ' + (res.body.summary || res.body.status || 'done')); window.setTimeout(function () { location.reload(); }, 1200); }

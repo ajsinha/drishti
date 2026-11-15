@@ -19,7 +19,7 @@
    (drishti-grid, Drishti Elements: sort, filter, pages, keyboard); drishti_admin-bindings.js sends a proposal or a decision. #}
 {% extends "base.html" %}
 {% block title %}Data bindings · {{ PRODUCT }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_admin-loads.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_admin-inbox.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-loads.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-inbox.css?v={{ ASSET_V }}">{% endblock %}
 {% block screen %}admin{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
@@ -31,7 +31,7 @@
   <p class="text-muted-d ib-intro">Which connector or lake table serves each kind the modules need. One binding per kind, shared by every module that
     needs it; connectors and credentials are the site's, modules only name kinds. A change is proposed here and applied, without a restart, when a
     second administrator approves it. The file is <span class="mono">{{ st.file or 'config/bindings.yaml' }}</span>; see the
-    <a href="/help/admin#23-data-bindings">Administration guide</a>.</p>
+    <a href="{{ BASE }}/help/admin#23-data-bindings">Administration guide</a>.</p>
   <p class="ib-said" data-bindings-said role="status" aria-live="polite"></p>
 {% if error %}
   <p class="adm-warn" role="alert" data-bindings-error><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
@@ -121,4 +121,4 @@
 </div>
 
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_admin-bindings.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_admin-bindings.js?v={{ ASSET_V }}"></script>{% endblock %}

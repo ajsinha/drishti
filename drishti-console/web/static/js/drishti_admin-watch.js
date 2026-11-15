@@ -80,7 +80,7 @@
   function tick() {
     clearTimeout(timer);
     if (document.hidden) { timer = setTimeout(tick, every); return; }
-    fetch(url, { cache: 'no-store', credentials: 'same-origin' }).then(function (r) { return r.ok ? r.json() : Promise.reject(new Error(String(r.status))); }).then(function (b) {
+    fetch(drishti_url(url), { cache: 'no-store', credentials: 'same-origin' }).then(function (r) { return r.ok ? r.json() : Promise.reject(new Error(String(r.status))); }).then(function (b) {
       failures = 0;
       var rows = (b.rows || []).filter(function (r) { return !only || r.name === only; });
       if (only) { b.stamp = JSON.stringify(rows); }

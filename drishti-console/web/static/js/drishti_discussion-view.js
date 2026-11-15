@@ -110,7 +110,7 @@
     var tools = el('div', 'disc-tools');
     if (c.edited) { tools.appendChild(btn('(edited)', 'history', { title: 'Show the earlier versions' })); }
     if (c.pin && c.href && differs(c.pin, ctx)) {
-      var a = el('a', 'fk disc-b', 'Open as it was'); a.href = c.href;
+      var a = el('a', 'fk disc-b', 'Open as it was'); a.href = drishti_url(c.href);
       a.title = 'Open this page as the writer saw it (' + pinText(c.pin) + ')';
       tools.appendChild(a);
     }

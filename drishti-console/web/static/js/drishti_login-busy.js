@@ -43,7 +43,7 @@
   function send() {
     sending(true);
     var body = new URLSearchParams(new FormData(form));
-    return fetch(form.action || "/login", {
+    return fetch(drishti_url(form.action || "/login"), {
       method: "POST", credentials: "same-origin", redirect: "follow",
       headers: { "Content-Type": "application/x-www-form-urlencoded", "X-Drishti-Busy": "1" }, body: body.toString()
     }).then(function (r) {
@@ -57,7 +57,7 @@
             cancel: function () { window.Drishti.Busy.done(host); host.textContent = ""; waiting(false); } });
         });
       }
-      if (r.redirected) { location.assign(r.url); return; }
+      if (r.redirected) { location.assign(drishti_url(r.url)); return; }
       return r.text().then(function (html) { document.open(); document.write(html); document.close(); });
     }).catch(function () { sending(false); window.Drishti.Busy.done(host); waiting(false); form.submit(); });
   }

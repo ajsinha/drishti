@@ -28,7 +28,7 @@
   'use strict';
   const B = (window.drishtiBi = window.drishtiBi || {});
   const h = (...a) => B.h(...a);
-  const GUIDE = '/help/rachana-reference';
+  const GUIDE = drishti_url('/help/rachana-reference');
   const WORDS = { aggregate: ['true', 'false', 'null', 'ALL', 'in', 'not in'], row: ['true', 'false', 'null', 'in', 'not in'] };   // Rachana's words (&&, ||, !, ?: are operators)
   let catalogue = null, uid = 0;
 
@@ -94,7 +94,7 @@
     const probs = h('ul', { class: 'bi-xe-problems', 'data-xe-problems': '', 'aria-live': 'polite' });
     const tryOut = h('div', { class: 'bi-xe-tryout', 'data-xe-tryout': '', 'aria-live': 'polite' });
     const tryBtn = opts.tryIt ? h('button', { type: 'button', class: 'btn-pill btn-ghost bi-small bi-xe-try', 'data-xe-try': '' }, B.icon('play'), ' Try it') : null;
-    const help = h('a', { class: 'bi-xe-help', href: GUIDE, target: '_blank', rel: 'noopener', 'data-xe-guide': '', title: 'The expression guide: every function, with examples' }, B.icon('question-circle'), h('span', { class: 'visually-hidden', text: 'Expression guide' }));
+    const help = h('a', { class: 'bi-xe-help', href: drishti_url(GUIDE), target: '_blank', rel: 'noopener', 'data-xe-guide': '', title: 'The expression guide: every function, with examples' }, B.icon('question-circle'), h('span', { class: 'visually-hidden', text: 'Expression guide' }));
     const wrap = h('div', { class: 'bi-xe', 'data-xe': scope });
     const row = h('div', { class: 'bi-xe-row' });
     input.parentNode.insertBefore(wrap, input);
@@ -196,7 +196,7 @@
     function drawCard(f) {
       B.clear(card).append(h('code', { class: 'bi-xe-sig', text: f.signature }), f.returns ? h('small', { class: 'text-muted-d', text: ' → ' + f.returns }) : null,
         f.description ? h('p', { text: f.description }) : null, f.example ? h('p', {}, h('small', { text: 'Example ' }), h('code', { text: f.example })) : null,
-        h('a', { href: f.link, target: '_blank', rel: 'noopener', 'data-xe-card-link': f.name, text: 'More in the guide' }));
+        h('a', { href: drishti_url(f.link), target: '_blank', rel: 'noopener', 'data-xe-card-link': f.name, text: 'More in the guide' }));
       card.setAttribute('data-xe-card', f.name);
       card.hidden = false;
     }

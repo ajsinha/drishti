@@ -16,7 +16,9 @@
 /* The API client: one way to call a Drishti server (or any JSON API). The session is the browser's (cookies, same origin by default); an
    error is an ApiError in words with its DRS code ("DRS-1001 No trade IRS-48213 here"), never a bare status; a GET that meets a
    network failure or a busy server (502, 503, 504) is tried again with a growing pause; a call can be aborted (an AbortSignal) and has a
-   time limit; the as-of date of the page goes with every call as X-Drishti-As-Of. */
+   time limit; the as-of date of the page goes with every call as X-Drishti-As-Of. A root-absolute path is put under the console's URL
+   sub-path (drishti_base.js). */
+import { url } from './drishti_base.js';
 
 /** The header that carries the page's as-of date (the console's core/asof.py reads it). */
 export const AS_OF_HEADER = 'X-Drishti-As-Of';
@@ -112,7 +114,7 @@ export class ApiClient {
 
   /** @private */
   url(path) {
-    return /^https?:\/\//.test(path) || path.charAt(0) === '/' ? path : this.o.base.replace(/\/$/, '') + '/' + path;
+    return /^https?:\/\//.test(path) ? path : path.charAt(0) === '/' ? url(path) : url(this.o.base.replace(/\/$/, '') + '/' + path);
   }
 
   /** @private */

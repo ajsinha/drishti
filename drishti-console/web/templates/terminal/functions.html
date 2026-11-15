@@ -15,7 +15,7 @@
 #}
 {% extends "base.html" %}
 {% block title %}Functions · {{ PRODUCT }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_functions.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_functions.css?v={{ ASSET_V }}">{% endblock %}
 {% block screen %}func{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
@@ -26,7 +26,7 @@
    and per pack, batched (Undo, Review N changes) and sent with one reason; the history and each server's version sit in "Cluster". #}
 <div class="adm func" data-functions{% if admin %} data-commands data-hash="{{ c.hash }}"{% endif %}>
   <h1 class="ws-h">Functions <span class="func-word mono" title="Type FUNC, or FUNC and words to filter, then &lt;GO&gt;">FUNC</span>
-    <a class="emb-help" href="/help/admin#20-functions-func-every-command-and-turning-one-on-or-off" aria-label="Help: Functions" title="Help: Functions">?</a></h1>
+    <a class="emb-help" href="{{ BASE }}/help/admin#20-functions-func-every-command-and-turning-one-on-or-off" aria-label="Help: Functions" title="Help: Functions">?</a></h1>
   {% if admin %}
   <p class="text-muted-d">Every command of the packs, what it does, and whether it is on. As an administrator you also see the commands that
     are <b>off</b>, and switch them: a command that is off is <b>not active</b> everywhere (typed, by its page, its API, the command line tool,
@@ -58,14 +58,14 @@
           {% if admin %}<th scope="col" class="cmd-col">Everyone</th>{% endif %}</tr></thead>
         {% for p in c.packs %}
         <tbody data-pack="{{ p.name }}" data-pack-text="{{ (p.name ~ ' ' ~ (p.title or '')) | lower }}"{% if admin %} data-pack-on="{{ 'true' if p.on else 'false' }}"{% if p.neededBy %} data-needed-by="{{ p.neededBy | join(', ') }}"{% endif %}{% endif %}{% if not p.shown %} hidden{% endif %}>
-          <tr class="cmd-pack"><th scope="rowgroup" colspan="4"><a class="cmd-pack-name" href="{{ p.form }}" title="Its search form: FORM {{ p.name }}">{{ p.title or p.name }}</a> <span class="mono text-muted-d">{{ p.name }}</span>
+          <tr class="cmd-pack"><th scope="rowgroup" colspan="4"><a class="cmd-pack-name" href="{{ p.form | u }}" title="Its search form: FORM {{ p.name }}">{{ p.title or p.name }}</a> <span class="mono text-muted-d">{{ p.name }}</span>
             <span class="text-muted-d" data-pack-counts>· {{ p.commands | length }} command{{ '' if p.commands | length == 1 else 's' }}</span>
             {% if admin and not p.on %}<span class="st st-bad">pack off</span>{% endif %}</th>
             {% if admin %}<td class="cmd-col"><label class="cmd-switch"><input type="checkbox" data-switch="pack" data-name="{{ p.name }}"{% if p.on %} checked{% endif %}
               aria-label="Pack {{ p.name }} on for everyone"> <span>Pack</span></label></td>{% endif %}</tr>
           {% for m in p.commands %}
           <tr data-command="{{ m.code }}" data-kind="{{ m.kind }}" data-on="{{ 'true' if m.on else 'false' }}" data-text="{{ m.text }}"{% if not m.on %} class="cmd-is-off"{% endif %}{% if m.hidden %} hidden{% endif %}{% if m.since %} data-since="{{ m.since[:10] }}"{% endif %}{% if m.reason %} data-reason="{{ m.reason }}"{% endif %}>
-            <th scope="row" class="mono cmd-code{% if not m.on %} cmd-off-code{% endif %}">{% if m.href %}<a href="{{ m.href }}" data-go="{{ m.go }}" title="Open {{ m.go }}">{{ m.code }}</a>{% else %}<span>{{ m.code }}</span>{% endif %}{% if not m.on %} <span class="st st-bad">off</span>{% endif %}</th>
+            <th scope="row" class="mono cmd-code{% if not m.on %} cmd-off-code{% endif %}">{% if m.href %}<a href="{{ m.href | u }}" data-go="{{ m.go }}" title="Open {{ m.go }}">{{ m.code }}</a>{% else %}<span>{{ m.code }}</span>{% endif %}{% if not m.on %} <span class="st st-bad">off</span>{% endif %}</th>
             <td>{{ m.label }}</td>
             <td class="cmd-desc">{{ m.description or '' }}</td>
             <td class="mono text-muted-d func-ex">{% if m.example %}{{ m.example }}{% else %}<span class="func-form">search form</span>{% endif %}</td>
@@ -117,4 +117,4 @@
   {% endif %}
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_functions.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_functions.js?v={{ ASSET_V }}"></script>{% endblock %}

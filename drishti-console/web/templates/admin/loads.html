@@ -15,16 +15,16 @@
 #}
 {% extends "base.html" %}
 {% block title %}Data loads · {{ pack }} · {{ PRODUCT }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_admin-loads.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-loads.css?v={{ ASSET_V }}">{% endblock %}
 {% block screen %}admin{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
 <div class="adm" data-loads data-pack="{{ pack }}">
-  <h1>Data loads <a class="mono" href="/admin/packs/{{ pack | urlencode }}" title="Open pack {{ pack }}">{{ pack }}</a></h1>
+  <h1>Data loads <a class="mono" href="{{ BASE }}/admin/packs/{{ pack | urlencode }}" title="Open pack {{ pack }}">{{ pack }}</a></h1>
   {% with tab='packs' %}{% include "admin/_nav.html" %}{% endwith %}
-  <p><a href="/admin/packs">&larr; Packs</a></p>
-  <p class="text-muted-d">Your ETL tells {{ PRODUCT }} when a batch has landed (<a href="/help/data-guide#1-telling-drishti-new-data-has-landed">Telling {{ PRODUCT }} new data has landed</a>);
+  <p><a href="{{ BASE }}/admin/packs">&larr; Packs</a></p>
+  <p class="text-muted-d">Your ETL tells {{ PRODUCT }} when a batch has landed (<a href="{{ BASE }}/help/data-guide#1-telling-drishti-new-data-has-landed">Telling {{ PRODUCT }} new data has landed</a>);
     {{ PRODUCT }} then refreshes what it caches, checks the data is readable, evaluates alert rules, and tells the people this pack names.
     {{ PRODUCT }} does not load the data: it reads it where it lives. <span class="mono">/</span> focuses the filter, <span class="mono">e</span> opens the expectations settings.</p>
 
@@ -46,10 +46,10 @@
     <button type="button" class="btn-pill btn-ghost" data-announce-open><i class="bi bi-megaphone" aria-hidden="true"></i> Announce a load</button></p>
 
   <h2 class="ws-h" id="history">History</h2>
-  <form class="adm-bar loads-filter" method="get" action="/admin/packs/{{ pack }}/loads" role="search" aria-label="Filter the loads">
+  <form class="adm-bar loads-filter" method="get" action="{{ BASE }}/admin/packs/{{ pack }}/loads" role="search" aria-label="Filter the loads">
     {{ admin_form('loads_filter', kinds=kinds, kind=f_kind, status=f_status, day=f_date) }}{# drishti-inputs' Form, embedded: kind, status and date as before (core/admin_forms.py) #}
     <button class="btn-pill btn-ghost" type="submit">Filter</button>
-    {% if f_kind or f_status or f_date %}<a class="fk" href="/admin/packs/{{ pack }}/loads">Clear</a>{% endif %}
+    {% if f_kind or f_status or f_date %}<a class="fk" href="{{ BASE }}/admin/packs/{{ pack }}/loads">Clear</a>{% endif %}
   </form>
   <div class="tbl-wrap"><table class="tbl adm-tbl loads-tbl" data-loads-table>
     <caption class="visually-hidden">Data loads, newest first</caption>
@@ -101,4 +101,4 @@
 </div>
 {% endblock %}
 {% block footer %}{% include "_footer.html" %}{% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_admin-loads.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_admin-loads.js?v={{ ASSET_V }}"></script>{% endblock %}

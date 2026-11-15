@@ -36,7 +36,7 @@
   var __m = {};
   /* ---- src/drishti_arrow.js ---- */
   __m["src/drishti_arrow.js"] = (function () {
-    var staticUrl = __lib("drishti-core").staticUrl, loadScript = __lib("drishti-core").loadScript;
+    var staticUrl = __lib("drishti-core").staticUrl, loadScript = __lib("drishti-core").loadScript, drishtiUrl = __lib("drishti-core").url;
     const ARROW_MEDIA = 'application/vnd.apache.arrow.stream';
     const ARROW_VENDOR = 'vendor/apache-arrow/21.1.0/Arrow.es2015.min.js';
     const SAFE = typeof BigInt === 'function' ? BigInt(Number.MAX_SAFE_INTEGER) : null;
@@ -200,7 +200,7 @@
     }
     class ArrowClient {
       constructor(o) {
-        this.o = Object.assign({ capabilitiesUrl: '/api/v1/data/capabilities' }, o);
+        this.o = Object.assign({ capabilitiesUrl: drishtiUrl('/api/v1/data/capabilities') }, o);
         this.caps = null;
       }
       capabilities() {

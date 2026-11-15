@@ -15,7 +15,7 @@
 #}
 {% extends "base.html" %}
 {% block title %}Health · {{ PRODUCT }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_admin-detail.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-detail.css?v={{ ASSET_V }}">{% endblock %}
 {% block screen %}admin{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
@@ -25,7 +25,7 @@
   {% with tab='health' %}{% include "admin/_nav.html" %}{% endwith %}
   <p class="text-muted-d">Every connector and pack {{ PRODUCT }} depends on. Refreshes every 5 seconds; connectors that are down reconnect by themselves.
     The same figures are at <span class="mono">GET /api/v1/admin/health</span> for external monitoring. Every setting, with the value in effect
-    on this server and console and where it came from: <a href="/help/configuration"><i class="bi bi-sliders" aria-hidden="true"></i> Configuration</a>.</p>
+    on this server and console and where it came from: <a href="{{ BASE }}/help/configuration"><i class="bi bi-sliders" aria-hidden="true"></i> Configuration</a>.</p>
   <div data-health-body>{% include "admin/_health_body.html" %}</div>
   {% if h.get('busy') %}
   {# busy protection's operator override: outside the refreshing body, so what is typed is kept (OPERATIONS_GUIDE.md "Busy protection") #}
@@ -43,4 +43,4 @@
   {% endif %}
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_admin.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_admin-retry.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_admin-index.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_admin-busy.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_admin.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_admin-retry.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_admin-index.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_admin-busy.js?v={{ ASSET_V }}"></script>{% endblock %}

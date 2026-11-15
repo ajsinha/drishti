@@ -36,7 +36,7 @@
   }
 
   function send(action, body) {
-    return window.Drishti.elements.core.api.send('POST', '/admin/api/bindings/' + action, body || {})   // drishti-core's client: never rejects
+    return window.Drishti.elements.core.api.send('POST', drishti_url('/admin/api/bindings/') + action, body || {})   // drishti-core's client: never rejects
       .then(function (res) {
         var j = res.body || {};
         if (!res.ok) {

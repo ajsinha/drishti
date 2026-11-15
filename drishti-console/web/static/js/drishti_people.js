@@ -40,8 +40,8 @@
     var cb = new I.Combobox(host, {
       input: input, suggest: true, minChars: opts.minQuery || 2, debounceMs: DELAY_MS, label: input.getAttribute('aria-label') || 'People and roles',
       source: function (q, signal) {
-        var url = '/api/directory?q=' + encodeURIComponent(q) + (opts.kind ? '&kind=' + encodeURIComponent(opts.kind) : '');
-        return fetch(url, { headers: { Accept: 'application/json' }, credentials: 'same-origin', signal: signal })
+        var url = drishti_url('/api/directory?q=') + encodeURIComponent(q) + (opts.kind ? '&kind=' + encodeURIComponent(opts.kind) : '');
+        return fetch(drishti_url(url), { headers: { Accept: 'application/json' }, credentials: 'same-origin', signal: signal })
           .then(function (r) { return r.json().catch(function () { return []; }); })
           .then(function (list) {
             var taken = opts.taken ? opts.taken() : {};

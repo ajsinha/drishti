@@ -15,7 +15,7 @@
 #}
 {% extends "base.html" %}
 {% block title %}Export data · {{ PRODUCT }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_functions.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_data-view.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_functions.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_data-view.css?v={{ ASSET_V }}">{% endblock %}
 {% block screen %}data{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
@@ -26,7 +26,7 @@
 <div class="adm dv" data-dataview data-kind="{{ kind }}" data-sel="{{ sel | tojson | forceescape }}"
      data-dataset="{{ (chosen or {}) | tojson | forceescape }}">
   <h1 class="ws-h">Export data <span class="func-word mono" title="Type EXPORT, or EXPORT and a dataset and a date, then &lt;GO&gt; (DATA works too)">{{ command_text }}</span>
-    <a class="emb-help" href="/help/user-guide#export-data" aria-label="Help: Export data" title="Help: Export data">?</a></h1>
+    <a class="emb-help" href="{{ BASE }}/help/user-guide#export-data" aria-label="Help: Export data" title="Help: Export data">?</a></h1>
   <p class="text-muted-d dv-lede">Every data source, its datasets and the dates each holds; download a day as JSON Lines, gzip-compressed. Download only, not a viewer.</p>
   {% if error %}<p class="dv-error" role="alert" data-error>{{ error }}</p>{% endif %}
 
@@ -41,7 +41,7 @@
           <tr class="dv-group"><th colspan="3" scope="rowgroup">{{ pack | replace('-', ' ') | upper }}{% if items[0].connector %} · {{ items[0].format }} connector {{ items[0].connector }}{% endif %}</th></tr>
           {% for d in items %}
           <tr class="dv-row{% if d.kind == kind %} on{% endif %}" data-row data-text="{{ (d.kind ~ ' ' ~ d.title ~ ' ' ~ pack ~ ' ' ~ d.format ~ ' ' ~ (d.code or '')) | lower }}">
-            <td><a href="/data?kind={{ d.kind | urlencode }}" data-pick="{{ d.kind }}"{% if d.kind == kind %} aria-current="true"{% endif %}>{{ d.kind }}</a>
+            <td><a href="{{ BASE }}/data?kind={{ d.kind | urlencode }}" data-pick="{{ d.kind }}"{% if d.kind == kind %} aria-current="true"{% endif %}>{{ d.kind }}</a>
               {% if d.code %}<span class="mono text-muted-d dv-code">{{ d.code }}</span>{% endif %}
               {% if d.internalOnly %}<span class="dv-badge dv-internal" title="Its source's terms restrict reuse{% if d.refused %}: not downloadable here{% endif %}">internal only</span>{% endif %}</td>
             <td><span class="dv-fmt">{{ d.format or '—' }}</span></td>
@@ -62,7 +62,7 @@
       {% else %}
       <div class="dv-card dv-facts">
         <div class="dv-facts-h"><h2>{{ chosen.kind }}</h2><span class="text-muted-d">{{ chosen.pack }} pack{% if chosen.description %} · {{ chosen.description }}{% endif %}</span>
-          <span class="dv-links">{% if chosen.contract %}<a href="{{ chosen.contract }}">data contract</a> · {% endif %}<a href="/what?q={{ chosen.title | urlencode }}">Knowledge</a> · <a href="/datamap?kind={{ chosen.kind | urlencode }}">DATAMAP</a>{% if pivot_on is defined and pivot_on() %} · <a href="/pivot?source={{ chosen.kind | urlencode }}" title="Pivot this table: PIVOT {{ chosen.kind }} &lt;GO&gt;">Pivot</a>{% endif %}</span></div>
+          <span class="dv-links">{% if chosen.contract %}<a href="{{ chosen.contract | u }}">data contract</a> · {% endif %}<a href="{{ BASE }}/what?q={{ chosen.title | urlencode }}">Knowledge</a> · <a href="{{ BASE }}/datamap?kind={{ chosen.kind | urlencode }}">DATAMAP</a>{% if pivot_on is defined and pivot_on() %} · <a href="{{ BASE }}/pivot?source={{ chosen.kind | urlencode }}" title="Pivot this table: PIVOT {{ chosen.kind }} &lt;GO&gt;">Pivot</a>{% endif %}</span></div>
         <dl class="dv-dl">
           <dt>Source</dt><dd>connector {{ chosen.connector }} ({{ chosen.format | lower }}){% if chosen.table %} · table <span class="mono">{{ chosen.table }}</span>{% endif %}</dd>
           <dt>Format</dt><dd>{{ chosen.format }}</dd>
@@ -121,4 +121,4 @@
   </div>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_data-view.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_data-view.js?v={{ ASSET_V }}"></script>{% endblock %}

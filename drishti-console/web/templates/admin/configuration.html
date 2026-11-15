@@ -15,7 +15,7 @@
 #}
 {% extends "base.html" %}
 {% block title %}Configuration · {{ PRODUCT }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_config-editor.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_config-editor.css?v={{ ASSET_V }}">{% endblock %}
 {% block screen %}admin{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
@@ -27,7 +27,7 @@
   {% with tab='configuration' %}{% include "admin/_nav.html" %}{% endwith %}
   <p class="text-muted-d">Every setting of every kind, in three tiers: <b>everyday</b> (what a business lead changes), <b>admin</b> (what an
     operator sets) and <b>expert</b> (performance and internals). A change is a <b>proposal</b>: nothing changes until a second administrator
-    approves it. Secrets are never shown here. The reference with every row is <a class="lnk" href="/help/configuration">Help → Configuration</a>.</p>
+    approves it. Secrets are never shown here. The reference with every row is <a class="lnk" href="{{ BASE }}/help/configuration">Help → Configuration</a>.</p>
   {% if server_error %}<p class="cfe-warn" role="status" data-server-error><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> The server did not answer: {{ drs_message(server_error.code, server_error.detail, " ") }}</p>{% endif %}
 
   <section class="cfe-queue" aria-labelledby="cfeWaitH" data-waiting>
@@ -62,10 +62,10 @@
   </details>
 
   <nav class="cfe-tiers" aria-label="Tiers">{% for t, label in tiers %}
-    <a href="/admin/configuration?tier={{ t }}{% if q %}&amp;q={{ q | urlencode }}{% endif %}" data-tier="{{ t }}"{% if tier == t %} aria-current="page"{% endif %}>{{ label }} <small>{{ counts[t] }}</small></a>
-  {% endfor %}<a href="/admin/configuration?tier=all{% if q %}&amp;q={{ q | urlencode }}{% endif %}" data-tier="all"{% if tier == 'all' %} aria-current="page"{% endif %}>Every tier <small>{{ total }}</small></a></nav>
+    <a href="{{ BASE }}/admin/configuration?tier={{ t }}{% if q %}&amp;q={{ q | urlencode }}{% endif %}" data-tier="{{ t }}"{% if tier == t %} aria-current="page"{% endif %}>{{ label }} <small>{{ counts[t] }}</small></a>
+  {% endfor %}<a href="{{ BASE }}/admin/configuration?tier=all{% if q %}&amp;q={{ q | urlencode }}{% endif %}" data-tier="all"{% if tier == 'all' %} aria-current="page"{% endif %}>Every tier <small>{{ total }}</small></a></nav>
 
-  <form class="cfe-search" method="get" action="/admin/configuration" role="search" data-cfe-search>
+  <form class="cfe-search" method="get" action="{{ BASE }}/admin/configuration" role="search" data-cfe-search>
     <input type="hidden" name="tier" value="{{ tier }}">
     {{ admin_form('config_search', q=q, area=area, areas=areas) }}
     <button class="btn-pill btn-ghost" type="submit">Search</button>
@@ -98,4 +98,4 @@
   <p class="cfe-status" role="status" aria-live="polite" data-cfe-status></p>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_config-editor.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_config-editor.js?v={{ ASSET_V }}"></script>{% endblock %}

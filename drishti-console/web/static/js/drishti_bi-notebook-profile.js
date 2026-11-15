@@ -28,7 +28,7 @@
     if (key === shownFor) { return; }
     shownFor = key;
     meta.textContent = 'Profiling the extract…';
-    X.post('/bi/notebook/profile', { extract: X.spec }).then((p) => {
+    X.post(drishti_url('/bi/notebook/profile'), { extract: X.spec }).then((p) => {
       meta.textContent = 'Worked out by the console over ' + p.inputRows.toLocaleString('en-US') + ' rows' + (p.truncatedInput ? ' (the extract was cut)' : '') + ' in ' + (p.ms || 0) + ' ms.'
         + (p.masked.length ? ' Masked for you: ' + p.masked.join(', ') + '.' : '');
       B.txView.profile(out, p, { masked: p.masked });

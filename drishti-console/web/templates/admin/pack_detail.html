@@ -15,18 +15,18 @@
 #}
 {% extends "base.html" %}
 {% block title %}{{ p.title or p.name }} · Packs · {{ PRODUCT }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_admin-detail.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_readme.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_admin-artifacts.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-detail.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_readme.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-artifacts.css?v={{ ASSET_V }}">{% endblock %}
 {% block screen %}admin{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
 {% from "_macros/retry.html" import retry_note, retry_button %}
 {% set loaded = p.loaded %}
-<div class="adm" data-pack-admin data-pack-detail="{{ p.name }}" data-watch="/admin/api/packs/stamp">
+<div class="adm" data-pack-admin data-pack-detail="{{ p.name }}" data-watch="{{ BASE }}/admin/api/packs/stamp">
   {% with tab='packs' %}{% include "admin/_nav.html" %}{% endwith %}
-  <p class="adm-crumb"><a href="/admin/packs">Packs</a> <span aria-hidden="true">/</span> <span class="mono">{{ p.name }}</span></p>
+  <p class="adm-crumb"><a href="{{ BASE }}/admin/packs">Packs</a> <span aria-hidden="true">/</span> <span class="mono">{{ p.name }}</span></p>
   <h1 class="ws-h">{{ p.title or p.name }}{% if p.sample %} <span class="st st-warn" data-sample-badge title="A sample pack: a demonstration, shown or hidden by the sample-pack setting">Sample</span>{% endif %}
-    <a class="emb-help" href="/help/build-guide#31-the-packs-that-ship-turning-them-on-who-sees-which" aria-label="Help: domain packs and this page" title="Help: domain packs and this page">?</a></h1>
+    <a class="emb-help" href="{{ BASE }}/help/build-guide#31-the-packs-that-ship-turning-them-on-who-sees-which" aria-label="Help: domain packs and this page" title="Help: domain packs and this page">?</a></h1>
   {% if p.description %}<p class="text-muted-d">{{ p.description }}</p>{% endif %}
   <p class="adm-msg" data-msg role="status" aria-live="polite"></p>
 
@@ -43,8 +43,8 @@
           <ul class="det-list">{% for x in p.sutraProblems[:20] %}<li class="mono">{{ x }}</li>{% endfor %}{% if p.sutraProblems | length > 20 %}<li class="text-muted-d">and {{ p.sutraProblems | length - 20 }} more</li>{% endif %}</ul></div>{% endif %}
         {% if p.retry %}{{ retry_button('packs') }}{% endif %}</dd>
       <dt>Changed</dt><dd class="mono">{% if p.updatedAt %}{{ when_local(p.updatedAt) }} by {{ p.updatedBy }}{% else %}—{% endif %}</dd>
-      <dt>Builds on</dt><dd data-extends>{% for x in p.extends or [] %}<a class="mono" href="/admin/packs/{{ x }}">{{ x }}</a>{{ ', ' if not loop.last }}{% else %}<span class="text-muted-d">nothing</span>{% endfor %}</dd>
-      <dt>Needed by</dt><dd data-needed-by>{% for x in p.requiredBy or [] %}<a class="mono" href="/admin/packs/{{ x }}">{{ x }}</a>{{ ', ' if not loop.last }}{% else %}<span class="text-muted-d">no other pack</span>{% endfor %}</dd>
+      <dt>Builds on</dt><dd data-extends>{% for x in p.extends or [] %}<a class="mono" href="{{ BASE }}/admin/packs/{{ x }}">{{ x }}</a>{{ ', ' if not loop.last }}{% else %}<span class="text-muted-d">nothing</span>{% endfor %}</dd>
+      <dt>Needed by</dt><dd data-needed-by>{% for x in p.requiredBy or [] %}<a class="mono" href="{{ BASE }}/admin/packs/{{ x }}">{{ x }}</a>{{ ', ' if not loop.last }}{% else %}<span class="text-muted-d">no other pack</span>{% endfor %}</dd>
     </dl>
     <p class="adm-actions det-actions">{% if loaded %}
       <button type="button" class="fk" data-switch="{{ 'off' if p.enabled else 'on' }}"
@@ -65,8 +65,8 @@
       {% if m.refresh %}<dt>Refresh</dt><dd class="mono">{{ m.refresh }}</dd>{% endif %}
     </dl>
     <details class="pd-readme-body" data-readme-body open>
-      <summary>The README (data structures, screens, sources, dependencies) · <a href="/admin/api/packs/{{ p.name }}/readme" class="mono">JSON</a></summary>
-      <div class="help-article readme-article">{{ readme.html | safe }}</div>
+      <summary>The README (data structures, screens, sources, dependencies) · <a href="{{ BASE }}/admin/api/packs/{{ p.name }}/readme" class="mono">JSON</a></summary>
+      <div class="help-article readme-article">{{ readme.html | based | safe }}</div>
     </details>
   </section>
   {% endif %}
@@ -96,8 +96,8 @@
       <tbody>{% for k in d.kinds or [] %}<tr data-kind="{{ k.kind }}">
         <th scope="row" class="mono">{{ k.kind }}{% if k.label and k.label != k.kind %}<div class="text-muted-d">{{ k.label }}</div>{% endif %}</th>
         <td class="mono">{{ k.mnemonic or '—' }}</td>
-        <td>{% if examples.get(k.kind) %}<a class="mono" href="/v/{{ k.kind | urlencode }}/{{ examples[k.kind] | urlencode }}" data-example>{{ examples[k.kind] }}</a>{% else %}<span class="text-muted-d">no record yet{% if not p.enabled %} (pack is off){% endif %}</span>{% endif %}</td>
-        <td><a href="/form/{{ p.name | urlencode }}?kind={{ k.kind | urlencode }}" data-form-link>FORM {{ p.name }}</a></td>
+        <td>{% if examples.get(k.kind) %}<a class="mono" href="{{ BASE }}/v/{{ k.kind | urlencode }}/{{ examples[k.kind] | urlencode }}" data-example>{{ examples[k.kind] }}</a>{% else %}<span class="text-muted-d">no record yet{% if not p.enabled %} (pack is off){% endif %}</span>{% endif %}</td>
+        <td><a href="{{ BASE }}/form/{{ p.name | urlencode }}?kind={{ k.kind | urlencode }}" data-form-link>FORM {{ p.name }}</a></td>
         <td class="mono">{% if k.declaredForm %}{{ k.formFields | length }} declared{% else %}<span class="text-muted-d">inferred</span>{% endif %}
           {% if k.formFields %}<div class="text-muted-d" title="{{ k.formFields | join(', ') }}">{{ k.formFields[:4] | join(', ') }}{{ ' …' if k.formFields | length > 4 }}</div>{% endif %}</td>
       </tr>{% else %}<tr><td colspan="5" class="text-muted-d">This pack brings no kind.</td></tr>{% endfor %}</tbody>
@@ -111,7 +111,7 @@
       <thead><tr><th scope="col">Sutra</th><th scope="col">Kind</th><th scope="col">Versions</th><th scope="col"><span class="visually-hidden">Open</span></th></tr></thead>
       <tbody>{% for s in d.sutras %}<tr><th scope="row" class="mono">{{ s.name }}</th><td class="mono">{{ s.kind or '—' }}</td>
         <td class="mono">{% for v in s.versions or [s.version] %}v{{ v }}{{ ', ' if not loop.last }}{% endfor %}</td>
-        <td>{% if design_on() %}<a class="fk" href="/studio?sutra={{ (s.name ~ '@' ~ ((s.versions or [s.version]) | last)) | urlencode }}" aria-label="Open {{ s.name }} in the Build workbench">Open in Build</a>{% endif %}</td></tr>
+        <td>{% if design_on() %}<a class="fk" href="{{ BASE }}/studio?sutra={{ (s.name ~ '@' ~ ((s.versions or [s.version]) | last)) | urlencode }}" aria-label="Open {{ s.name }} in the Build workbench">Open in Build</a>{% endif %}</td></tr>
       {% endfor %}</tbody></table></div>
     {% else %}<p class="text-muted-d">No Sutra of its own: the kinds are shown with the generated screen.</p>{% endif %}
   </section>
@@ -128,7 +128,7 @@
         <td class="mono num">{{ r.count }}</td>
         <td class="mono{% if r.state != 'one' %} t-neg{% endif %}">{% if r.state == 'none' %}none (inferred){% else %}{{ r.sutras | join(', ') }}{% if r.state == 'several' %} (several){% endif %}{% endif %}</td>
         <td class="mono">{{ (r.shown or []) | join(', ') or '–' }}</td>
-        <td><a class="lnk mono" href="/v/{{ k.kind }}/{{ r.example | urlencode }}">{{ r.example }}</a></td></tr>{% endfor %}</tbody>
+        <td><a class="lnk mono" href="{{ BASE }}/v/{{ k.kind }}/{{ r.example | urlencode }}">{{ r.example }}</a></td></tr>{% endfor %}</tbody>
     </table></div>{% endfor %}
   </section>{% endif %}
 
@@ -138,12 +138,12 @@
       <caption class="visually-hidden">The connectors this pack reads through</caption>
       <thead><tr><th scope="col">Connector</th><th scope="col">Status</th><th scope="col">Kinds from this pack</th><th scope="col"><span class="visually-hidden">Action</span></th></tr></thead>
       <tbody>{% for c in sources.connectors %}<tr data-connector="{{ c.name }}">
-        <th scope="row" class="mono">{% if c.defined %}<a href="/admin/connectors/{{ c.name | urlencode }}">{{ c.name }}</a>{% else %}{{ c.name }}{% endif %}</th>
+        <th scope="row" class="mono">{% if c.defined %}<a href="{{ BASE }}/admin/connectors/{{ c.name | urlencode }}">{{ c.name }}</a>{% else %}{{ c.name }}{% endif %}</th>
         <td>{% if c.defined %}<span class="st {{ {'ok': 'st-ok', 'down': 'st-bad', 'warn': 'st-warn'}.get(c.level, '') }}" data-badge>{{ c.label or (c.state | lower | replace('_', ' ')) }}</span>
           {% if c.level in ('warn', 'down') and c.health %}<div class="{{ 't-bad' if c.level == 'down' else 't-warn' }}">{{ c.health }}</div>{% endif %}
           {% else %}<span class="st st-bad">missing</span> <span class="text-muted-d">nothing defines it</span>{% endif %}</td>
         <td class="mono">{{ (c.kinds or []) | join(', ') or '—' }}</td>
-        <td>{% if c.defined %}<a class="fk" href="/admin/connectors/{{ c.name | urlencode }}">Open</a>{% else %}<a class="fk" href="{{ c.createUrl }}" aria-label="Create connector {{ c.name }}">Create</a>{% endif %}</td></tr>
+        <td>{% if c.defined %}<a class="fk" href="{{ BASE }}/admin/connectors/{{ c.name | urlencode }}">Open</a>{% else %}<a class="fk" href="{{ c.createUrl | u }}" aria-label="Create connector {{ c.name }}">Create</a>{% endif %}</td></tr>
       {% endfor %}</tbody></table></div>
     {% else %}<p class="text-muted-d">This pack names no connector.</p>{% endif %}
   </section>
@@ -163,7 +163,7 @@
     <p data-loads-summary>{{ exp | length }} expectation{{ '' if exp | length == 1 else 's' }} today{% if exp %}:
       {% for s in exp %}<span class="mono">{{ s.kind }}</span> <span class="st {{ {'on-time': 'st-ok', 'landed-late': 'st-warn', 'late': 'st-bad', 'missing': 'st-bad', 'failed': 'st-bad'}.get(s.state, '') }}">{{ s.state }}</span>{{ ', ' if not loop.last }}{% endfor %}{% endif %}.
       {% if loads %}Last load: <span class="mono">{{ loads[0].kind }} {{ loads[0].businessDate }}</span>{% if loads[0].receivedAt %} at {{ when_local(loads[0].receivedAt) }}{% endif %}.{% else %}No load has been announced yet.{% endif %}
-      <a href="/admin/packs/{{ p.name | urlencode }}/loads">Open the data loads page</a>.</p>
+      <a href="{{ BASE }}/admin/packs/{{ p.name | urlencode }}/loads">Open the data loads page</a>.</p>
   </section>
   {% endif %}
 
@@ -187,4 +187,4 @@
 </div>
 {% endblock %}
 {% block footer %}{% include "_footer.html" %}{% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_view.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_roles.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_artifact-uninstall.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_admin-packs.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_admin-pack-data.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_admin-retry.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_admin-watch.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_view.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_roles.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_artifact-uninstall.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_admin-packs.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_admin-pack-data.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_admin-retry.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_admin-watch.js?v={{ ASSET_V }}"></script>{% endblock %}

@@ -253,7 +253,7 @@
   /** A finished run's result as a file (CSV, Excel or JSON Lines), made by the server from the stored result as the caller's own version: masked cells stay masked. */
   R.exportRun = function (run, fmt, tell) {
     tell('Preparing the ' + (fmt === 'xlsx' ? 'Excel' : fmt === 'jsonl' ? 'JSON Lines' : 'CSV') + ' file…', false);
-    return fetch('/bi/api/runs/' + encodeURIComponent(run.id) + '/export', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', Accept: '*/*' }, body: JSON.stringify({ format: fmt }) })
+    return fetch(drishti_url('/bi/api/runs/' + encodeURIComponent(run.id) + '/export'), { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', Accept: '*/*' }, body: JSON.stringify({ format: fmt }) })
       .then((res) => {
         if (!res.ok) { return res.json().catch(() => ({})).then((d) => { throw Object.assign(new Error(d.detail || res.statusText), { code: d.code, detail: d.detail || res.statusText }); }); }
         const cd = res.headers.get('Content-Disposition') || '', m = /filename="?([^";]+)"?/.exec(cd);
@@ -346,7 +346,7 @@
   };
 
   // ---- the run card (section 6.2) ---------------------------------------------------------------------------------------------------------------------
-  R.runsHref = (id) => '/bi/w/me?tab=runs' + (id ? '&run=' + encodeURIComponent(id) : '');
+  R.runsHref = (id) => drishti_url('/bi/w/me?tab=runs') + (id ? '&run=' + encodeURIComponent(id) : '');
 
   /** A progress bar with its number, or the word "running" when progress is not measured (never a guessed bar). */
   function bar(run) {
@@ -399,9 +399,9 @@
       const said = h('span', { class: 'bi-run-note', role: 'status' });
       const ex = R.exportButtons(r, (t, bad) => { said.textContent = t; said.classList.toggle('bi-run-bad', !!bad); });
       if (ex) { acts.appendChild(ex); }
-      acts.appendChild(h('a', { class: 'btn-pill btn-ghost', href: R.runsHref(r.id), 'data-run-open-runs': '', text: 'Open in Runs' }));
+      acts.appendChild(h('a', { class: 'btn-pill btn-ghost', href: drishti_url(R.runsHref(r.id)), 'data-run-open-runs': '', text: 'Open in Runs' }));
       acts.appendChild(said);
-      acts.appendChild(h('a', { class: 'bi-run-help', href: '/help/run-card', 'data-run-help': '', text: 'What is this?' }));
+      acts.appendChild(h('a', { class: 'bi-run-help', href: drishti_url('/help/run-card'), 'data-run-help': '', text: 'What is this?' }));
       el.appendChild(acts);
     };
     draw(run);
@@ -445,7 +445,7 @@
     const go = btn('Run in background', { 'data-run-go': '' }, (e) => B.busy(e.currentTarget, () => Promise.resolve(o.run()).catch((x) => { msg.textContent = R.words(x.code, x.detail); msg.classList.add('bi-run-bad'); })), true);
     const narrow = o.narrow ? btn('Narrow the dates', { 'data-run-narrow': '' }, () => { msg.textContent = 'Choose fewer dates above, and the visual asks again.'; o.narrow(); }) : null;
     const not = btn('Not now', { 'data-run-not': '' }, () => { msg.textContent = 'Not run. Nothing was read.'; go.focus(); });
-    el.appendChild(h('p', { class: 'bi-run-acts' }, go, narrow, not, h('a', { class: 'bi-run-help', href: confirm ? '/help/run-confirm' : '/help/run-needed', text: 'Why?' })));
+    el.appendChild(h('p', { class: 'bi-run-acts' }, go, narrow, not, h('a', { class: 'bi-run-help', href: drishti_url(confirm ? '/help/run-confirm' : '/help/run-needed'), text: 'Why?' })));
     el.appendChild(msg);
     el.addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.preventDefault(); not.click(); } });
     return el;
@@ -518,7 +518,7 @@
   function say(box, text, run) {
     box.hidden = false;
     B.clear(box).appendChild(document.createTextNode(text + ' '));
-    box.appendChild(h('a', { href: R.runsHref(pinned), text: 'Open in Runs' }));
+    box.appendChild(h('a', { href: drishti_url(R.runsHref(pinned)), text: 'Open in Runs' }));
     const said = h('span', { class: 'bi-run-note', role: 'status' });
     const ex = run ? R.exportButtons(run, (t, bad) => { said.textContent = ' ' + t; said.classList.toggle('bi-run-bad', !!bad); }) : null;
     if (ex) { box.appendChild(document.createTextNode(' ')); box.appendChild(ex); box.appendChild(said); }

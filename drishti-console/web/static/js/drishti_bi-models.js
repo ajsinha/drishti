@@ -30,7 +30,7 @@
   /** Starts a report on a model or a dataset's implicit model: asks where, makes the draft, opens the designer. */
   function startReport(anchor, target, title) {
     return B.askWorkspace(anchor, 'Start the report', 'Start the report in').then((ws) => B.busy(anchor, () => B.layer.post('report', Object.assign({ title: title, workspace: ws }, target))))
-      .then((r) => { window.location.href = r.href; }).catch((e) => { if (!e.cancelled) { B.near(anchor, e.message, true); } });
+      .then((r) => { window.location.href = drishti_url(r.href); }).catch((e) => { if (!e.cancelled) { B.near(anchor, e.message, true); } });
   }
 
   // ---- the start page ------------------------------------------------------------------------------------------------
@@ -39,15 +39,15 @@
     function card(d, kind) {
       const use = h('button', { type: 'button', class: 'btn-pill btn-accent bi-small', 'data-use': d.name, text: 'Use' });
       use.addEventListener('click', () => startReport(use, kind === 'model' ? { model: d.query || d.name + '@1' } : { dataset: d.name }, d.title + ' report'));
-      const open = kind === 'model' ? '/build/tables?kind=model&item=' + B.id2path(d.id) : '/bi/ds/' + encodeURIComponent(kind === 'pack' ? d.name : d.id);
+      const open = kind === 'model' ? drishti_url('/build/tables?kind=model&item=') + B.id2path(d.id) : drishti_url('/bi/ds/') + encodeURIComponent(kind === 'pack' ? d.name : d.id);
       const meta = kind === 'pack' ? d.pack + ' pack · ' + (MODE[d.mode] || d.mode) + ' · ' + d.columns + ' columns' : kind === 'model' ? (d.kind === 'compat' ? 'dataset (version 1, read as a model)' : 'model ' + (d.version || '')) + ' · ' + (d.status || '') : (d.status || '');
       return h('article', { class: 'bi-card', 'data-layer-card': d.name, 'data-kind': kind, 'data-search': (d.name + ' ' + d.title + ' ' + (d.pack || '') + ' ' + (d.kind || '')).toLowerCase() },
-        h('h3', {}, h('a', { href: open, text: d.title })),
+        h('h3', {}, h('a', { href: drishti_url(open), text: d.title })),
         h('p', { class: 'bi-card-meta mono', text: kind === 'model' ? (d.name || '') : d.name }),
         h('p', { class: 'bi-card-badges' }, d.endorsement === 'certified' ? badge('certified', 'bi-certified', 'patch-check') : null, kind === 'pack' ? badge('read-only', '', 'lock') : null),
         h('p', { class: 'bi-card-meta', text: meta }),
         d.description ? h('p', { class: 'bi-card-desc text-muted-d', text: String(d.description).slice(0, 160) }) : null,
-        h('p', { class: 'bi-actions' }, use, ' ', h('a', { class: 'btn-pill btn-ghost bi-small', href: open, text: kind === 'model' && d.kind !== 'compat' ? 'Open the designer' : 'Open' })));
+        h('p', { class: 'bi-actions' }, use, ' ', h('a', { class: 'btn-pill btn-ghost bi-small', href: drishti_url(open), text: kind === 'model' && d.kind !== 'compat' ? 'Open the designer' : 'Open' })));
     }
     function draw() {
       const t = (q('input[data-search]').value || '').trim().toLowerCase();

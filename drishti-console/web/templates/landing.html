@@ -20,7 +20,7 @@
 {% block content %}
 <section class="lp-hero">
   <div class="lp-wrap">
-    {% if request.query_params.get('signedout') and AUTH_ENABLED and not me %}<p class="lp-notice" role="status" data-signed-out><i class="bi bi-check-circle" aria-hidden="true"></i> Signed out. <a class="lnk" href="{{ SIGN_IN_URL }}">Sign in again</a></p>{% endif %}
+    {% if request.query_params.get('signedout') and AUTH_ENABLED and not me %}<p class="lp-notice" role="status" data-signed-out><i class="bi bi-check-circle" aria-hidden="true"></i> Signed out. <a class="lnk" href="{{ SIGN_IN_URL | u }}">Sign in again</a></p>{% endif %}
     <div class="lp-home{% if facts_on %} has-dyk{% endif %}" data-lp-home>
       <div class="lp-home-head">
         <span class="lp-badge"><span class="dot" aria-hidden="true"></span>A live entity terminal</span>
@@ -33,16 +33,16 @@
           a netting set — into a dense, linked, ticking view. No hand-built screens: a layout grammar
           called <b>Sutra</b> describes the view, and inference fills whatever it leaves out.</p>
         <div class="lp-cta">
-          {% if back %}<a class="btn-pill btn-accent" href="{{ back.href }}" data-landing-back accesskey="b"><i class="bi bi-arrow-left" aria-hidden="true"></i> Back to {{ back.label }}</a>{% endif %}
-          <a class="btn-pill {{ 'btn-ghost' if back else 'btn-accent' }}" href="/t"><i class="bi bi-terminal" aria-hidden="true"></i> Open the terminal</a>
+          {% if back %}<a class="btn-pill btn-accent" href="{{ back.href | u }}" data-landing-back accesskey="b"><i class="bi bi-arrow-left" aria-hidden="true"></i> Back to {{ back.label }}</a>{% endif %}
+          <a class="btn-pill {{ 'btn-ghost' if back else 'btn-accent' }}" href="{{ BASE }}/t"><i class="bi bi-terminal" aria-hidden="true"></i> Open the terminal</a>
           <a class="btn-pill btn-ghost" href="#grammar">How the grammar works</a>
-          {% for link in lens_links(request) %}<a class="btn-pill btn-ghost" href="{{ link.href }}" data-lens-link="{{ link.name }}"><i class="bi bi-{{ 'box-arrow-left' if link.leave else 'eye' }}" aria-hidden="true"></i> {{ link.label }}</a>{% endfor %}
+          {% for link in lens_links(request) %}<a class="btn-pill btn-ghost" href="{{ link.href | u }}" data-lens-link="{{ link.name }}"><i class="bi bi-{{ 'box-arrow-left' if link.leave else 'eye' }}" aria-hidden="true"></i> {{ link.label }}</a>{% endfor %}
         </div>
       </div>
       {% if facts_on %}{% include "_dyk.html" %}{% endif %}
     </div>
     {% if home_cards %}<nav class="lp-quick" aria-label="Quick commands">
-      {% for c in home_cards %}<a class="lp-quick-card" href="{{ c.href }}" data-home-card="{{ c.cmd }}">{% if c.icon %}<i class="bi bi-{{ c.icon }}" aria-hidden="true"></i>{% endif %}<b>{{ c.title }}</b><span>{{ c.cmd }}</span></a>
+      {% for c in home_cards %}<a class="lp-quick-card" href="{{ c.href | u }}" data-home-card="{{ c.cmd }}">{% if c.icon %}<i class="bi bi-{{ c.icon }}" aria-hidden="true"></i>{% endif %}<b>{{ c.title }}</b><span>{{ c.cmd }}</span></a>
       {% endfor %}
     </nav>{% endif %}
     <div class="lp-stage">
@@ -63,7 +63,7 @@
       {% set n = house.rooms | length %}
       <p class="lp-lead">{{ PRODUCT }} is one kernel with {{ n }} module{{ '' if n == 1 else 's' }} plugged in{% if n %}: {{ house.rooms | map(attribute='title') | join(', ') }}{% endif %}.
         Each module is a room with its own screens; an empty socket takes another <code>.dmod</code>. Your product, your way.</p>
-      <div class="lp-cta"><a class="btn-pill btn-ghost" href="/help/how-it-fits" data-house-link><i class="bi bi-diagram-3" aria-hidden="true"></i> How it fits together</a></div>
+      <div class="lp-cta"><a class="btn-pill btn-ghost" href="{{ BASE }}/help/how-it-fits" data-house-link><i class="bi bi-diagram-3" aria-hidden="true"></i> How it fits together</a></div>
     </div>
     <figure class="house-figure">{{ kernel_and_rooms(house) }}
       <figcaption>{{ PRODUCT }}{% if TAGLINE %} · {{ TAGLINE }}{% endif %}</figcaption></figure>
@@ -74,7 +74,7 @@
     <div role="listitem"><b>0</b><span>hand-built screens</span></div>
     <div role="listitem"><b>7</b><span>pipeline stages</span></div>
     <div role="listitem"><b>&lt;50ms</b><span>warm view p99 target</span></div>
-    <div role="listitem"><a class="lp-stat-link" href="/help/rachana-reference#panels-the-twenty-two-kinds-and-developing-a-new-one" title="Key-value, table, tabs, line, area, bar, ladder, links, status, provenance, markdown, gauge, metric, surface, waterfall, histogram, scatter, candlestick, graph, timeline and pivot: what each shows"><b>21</b><span>panel kinds in the grammar</span></a></div>
+    <div role="listitem"><a class="lp-stat-link" href="{{ BASE }}/help/rachana-reference#panels-the-twenty-two-kinds-and-developing-a-new-one" title="Key-value, table, tabs, line, area, bar, ladder, links, status, provenance, markdown, gauge, metric, surface, waterfall, histogram, scatter, candlestick, graph, timeline and pivot: what each shows"><b>21</b><span>panel kinds in the grammar</span></a></div>
   </div>
 </div>{% endif %}
 
@@ -149,7 +149,7 @@
     <div class="lp-shots">
       {% for s in showcase %}
       <figure class="lp-shot">
-        <img src="/static/img/drishti_shot-{{ s.slug }}.png" alt="{{ s.title }} view" loading="lazy">
+        <img src="{{ BASE }}/static/img/drishti_shot-{{ s.slug }}.png" alt="{{ s.title }} view" loading="lazy">
         <figcaption class="meta">{% if s.cmd %}<span class="cmd">{{ s.cmd }} &lt;GO&gt;</span>{% endif %}<span class="text-muted-d">{{ s.title }} · Sutra {{ s.sutra }}</span></figcaption>
       </figure>
       {% endfor %}
@@ -164,6 +164,6 @@
   </div>
 </section>{% endif %}
 {% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_dyk.css?v={{ ASSET_V }}">{% endblock %}
-{% block scripts %}<script src="/static/js/drishti_landing.js?v={{ ASSET_V }}"></script>{% if facts_on %}
-<script src="/static/js/drishti_dyk.js?v={{ ASSET_V }}"></script>{% endif %}{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_dyk.css?v={{ ASSET_V }}">{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_landing.js?v={{ ASSET_V }}"></script>{% if facts_on %}
+<script src="{{ BASE }}/static/js/drishti_dyk.js?v={{ ASSET_V }}"></script>{% endif %}{% endblock %}

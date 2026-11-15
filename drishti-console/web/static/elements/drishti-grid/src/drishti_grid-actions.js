@@ -25,7 +25,7 @@ import { aggFunc } from './drishti_aggregate.js';
 import { XLSX_TYPE } from './drishti_export.js';
 import { columnMenuItems, cellMenuItems, FUNCTION_KEYS, parseCondition, pivotMeasures } from './drishti_grid-ui.js';
 import { LAYOUTS, DENSITIES } from './drishti_grid-model-base.js';
-import { openDialog, h } from '../../drishti-core/src/drishti_index.js';
+import { openDialog, h, url as drishtiUrl } from '../../drishti-core/src/drishti_index.js';
 import { editorOf } from './drishti_grid-edit.js';
 
 /**
@@ -100,7 +100,7 @@ function download(v, name, data, type) {
   const win = v.doc.defaultView, blob = new win.Blob([data], { type: type });
   v.lastExport = { name: name, type: type, size: blob.size };
   if (v.o.download) { v.o.download(name, blob); return; }
-  const a = h(v.doc, 'a', { attrs: { href: win.URL.createObjectURL(blob), download: name } });
+  const a = h(v.doc, 'a', { attrs: { href: drishtiUrl(win.URL.createObjectURL(blob)), download: name } });
   v.doc.body.appendChild(a);
   a.click();
   a.remove();

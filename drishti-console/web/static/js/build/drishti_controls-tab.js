@@ -54,7 +54,7 @@
   WB.ControlsTab = function (pane, store) {
     var $ = function (s) { return pane.querySelector(s); };
     var list = $('[data-ctl-list]'), src = $('[data-ctl-src]'), probBox = $('[data-ctl-problems]'), prev = $('[data-ctl-preview]'), statusEl = $('[data-ctl-status]');
-    var base = '/build/designs/' + encodeURIComponent(store.state.id);
+    var base = drishti_url('/build/designs/') + encodeURIComponent(store.state.id);
     var items = [], saveT = 0, applying = false, mine = 0, runtime = null, previewToken = 0, loaded = false;
     window.Drishti.elements.designer.sortableList(list, { row: '.wbf-card', dragClass: 'wbf-drag', overClass: 'wbf-over', onMove: function (from, to) { reorder(from, to); } });   // a card dragged to another place (drishti-designer)
 
@@ -241,7 +241,7 @@
 
     // ---- the small live preview ---------------------------------------------------------------------------------------------------------------
     function rewrite(html) { return html.replace(/\b(id|aria-labelledby|aria-controls|for)="(p-|h-|pv-)/g, '$1="wbc-$2'); }
-    function fetchJson(url) { return fetch(url, { credentials: 'same-origin', headers: { Accept: 'application/json' } }).then(function (r) { return r.json().then(function (j) { if (!r.ok) { throw new Error(j.detail || 'HTTP ' + r.status); } return j; }); }); }
+    function fetchJson(url) { return fetch(drishti_url(url), { credentials: 'same-origin', headers: { Accept: 'application/json' } }).then(function (r) { return r.json().then(function (j) { if (!r.ok) { throw new Error(j.detail || 'HTTP ' + r.status); } return j; }); }); }
     function refreshPreview() {
       loaded = true;
       var mineP = ++previewToken, sample = store.state.sample || '';

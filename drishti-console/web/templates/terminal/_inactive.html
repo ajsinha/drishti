@@ -23,7 +23,7 @@
   <p>An administrator has turned this command off. Its pages, data and links are not available until it is turned on again.</p>
   <p class="text-muted-d">{% if since %}Off since <span class="mono">{{ since }}</span> · {% endif %}Ask an administrator if you need it.</p>
   <div class="cmd-off-acts">
-    <a class="btn-pill btn-accent" href="/t" data-back>Back to where I was</a>
-    <a class="btn-pill btn-ghost" href="/func">Commands that are on</a>
+    <a class="btn-pill btn-accent" href="{{ BASE }}/t" data-back>Back to where I was</a>
+    <a class="btn-pill btn-ghost" href="{{ BASE }}/func">Commands that are on</a>
   </div>
 </section>

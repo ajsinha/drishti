@@ -21,7 +21,7 @@
   'use strict';
   var box = document.querySelector('[data-maint]');
   if (!box || !box.querySelector('[data-mt-run]')) { return; }
-  var API = '/admin/api/lakes/maintain';
+  var API = drishti_url('/admin/api/lakes/maintain');
   var $ = function (sel) { return box.querySelector(sel); };
   var $$ = function (sel) { return Array.prototype.slice.call(box.querySelectorAll(sel)); };
   /* the domain choice, the settings and the new schedule are drishti-inputs' Forms from the server's schemas (core/admin_forms.py); the
@@ -41,7 +41,7 @@
     return e;
   }
   function api(method, url, body) {
-    return fetch(url, { method: method, credentials: 'same-origin', headers: body ? { 'Content-Type': 'application/json', 'Accept': 'application/json' } : { 'Accept': 'application/json' },
+    return fetch(drishti_url(url), { method: method, credentials: 'same-origin', headers: body ? { 'Content-Type': 'application/json', 'Accept': 'application/json' } : { 'Accept': 'application/json' },
       body: body ? JSON.stringify(body) : undefined }).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (j) {
         if (!r.ok) { throw new Error((j && j.detail) || ('the console said ' + r.status)); }

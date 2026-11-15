@@ -414,9 +414,10 @@ class ModuleParts:
 
         env = base.overlay(loader=Loader(), autoescape=True)
         env.globals = dict(base.globals)
-        env.globals.update(asset=part.asset, module={"id": part.id, "version": part.version, "title": part.title},
-                           url_for=lambda rid, **kw: (part.route(rid).url(part.id, **kw) if part.route(rid) else "#"),
-                           api=lambda path, **q: f"/m/{part.id}/api/{path.lstrip('/')}")
+        pre = str(base.globals.get("BASE", "") or "")     # the console's URL sub-path behind a proxy (core/base_path.py)
+        env.globals.update(asset=lambda path: pre + part.asset(path), module={"id": part.id, "version": part.version, "title": part.title},
+                           url_for=lambda rid, **kw: (pre + part.route(rid).url(part.id, **kw) if part.route(rid) else "#"),
+                           api=lambda path, **q: f"{pre}/m/{part.id}/api/{path.lstrip('/')}")
         env.globals["elements"] = env.get_template("kernel/elements.html").module
         self._envs[key] = env
         return env

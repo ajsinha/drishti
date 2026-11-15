@@ -51,7 +51,7 @@
       const cancel = h('button', { type: 'button', class: 'btn-pill btn-ghost', 'data-admin-cancel': r.id, 'aria-label': 'Cancel the run of ' + r.runner + ': ' + (r.title || r.id), text: 'Cancel' });
       cancel.addEventListener('click', () => B.confirm(cancel, 'Cancel ' + r.runner + '\'s run? They are told it was cancelled by an administrator.', 'Cancel the run').then((yes) => {
         if (!yes) { return; }
-        fetch('/bi/api/admin/runs/' + encodeURIComponent(r.id) + '/cancel', { method: 'POST', credentials: 'same-origin', headers: { Accept: 'application/json' } })
+        fetch(drishti_url('/bi/api/admin/runs/' + encodeURIComponent(r.id) + '/cancel'), { method: 'POST', credentials: 'same-origin', headers: { Accept: 'application/json' } })
           .then((res) => res.json().catch(() => ({})).then((j) => { if (!res.ok) { throw j; } B.near(cancel, 'Cancelled. ' + r.runner + ' is told.', false); load(); }))
           .catch((e) => B.near(cancel, R.words(e.code, e.detail), true));
       }));
@@ -74,13 +74,13 @@
   const onlyModel = new URLSearchParams(window.location.search).get('model');
   let shownSig = null;
   function decide(s, verb, b) {
-    B.busy(b, () => fetch('/bi/api/admin/runs/suggestions/' + encodeURIComponent(s.id) + '/' + verb, { method: 'POST', credentials: 'same-origin', headers: { Accept: 'application/json', 'Content-Type': 'application/json' }, body: '{}' })
+    B.busy(b, () => fetch(drishti_url('/bi/api/admin/runs/suggestions/' + encodeURIComponent(s.id) + '/' + verb), { method: 'POST', credentials: 'same-origin', headers: { Accept: 'application/json', 'Content-Type': 'application/json' }, body: '{}' })
       .then((res) => res.json().catch(() => ({})).then((j) => {
         if (!res.ok) { throw j; }
         B.clear(sMsg);
         if (verb === 'dismiss') { sMsg.textContent = 'Dismissed: the rollup for ' + s.model + ' at ' + [].concat(s.grain || []).join(' × ') + ' is no longer suggested.'; } else if (j.item) {
           sMsg.append('Accepted: the rollup ' + ((j.rollup || s.rollup || {}).name || '') + ' is in the draft of ' + s.model + '. Review it and publish it as any change. ',
-            h('a', { href: '/bi/i/' + B.id2path(j.item), 'data-sugg-open': j.item, text: 'Open the model' }));
+            h('a', { href: drishti_url('/bi/i/' + B.id2path(j.item)), 'data-sugg-open': j.item, text: 'Open the model' }));
         } else { sMsg.textContent = 'Accepted. ' + s.model + ' is a pack\'s model: add the YAML shown under the suggestion to it by hand.'; }
         shownSig = null;
         return load();
@@ -102,7 +102,7 @@
         acc.addEventListener('click', () => decide(s, 'accept', acc));
         dis.addEventListener('click', () => decide(s, 'dismiss', dis));
         acts.append(acc, dis);
-      } else if (s.item) { acts.appendChild(h('a', { class: 'btn-pill btn-ghost', href: '/bi/i/' + B.id2path(s.item), text: 'Open the model' })); }
+      } else if (s.item) { acts.appendChild(h('a', { class: 'btn-pill btn-ghost', href: drishti_url('/bi/i/' + B.id2path(s.item)), text: 'Open the model' })); }
       const yaml = s.yaml ? h('details', {}, h('summary', { text: 'The rollup' + (s.rollup && s.rollup.name ? ' ' + s.rollup.name : '') }), h('pre', { class: 'bi-sugg-yaml', text: s.yaml })) : null;
       suggest.appendChild(h('tr', { 'data-sugg': s.id, 'data-sugg-status': st }, h('th', { scope: 'row', class: 'mono', text: s.model || '' }),
         h('td', {}, h('span', { text: grain }), s.words ? h('small', { class: 'text-muted-d', text: ' ' + s.words }) : null, yaml),
@@ -116,7 +116,7 @@
   function load() {
     window.clearTimeout(timer);
     const p = nodeSel.value ? '?node=' + encodeURIComponent(nodeSel.value) : '';
-    return fetch('/bi/api/admin/runs' + p, { credentials: 'same-origin', headers: { Accept: 'application/json' } })
+    return fetch(drishti_url('/bi/api/admin/runs' + p), { credentials: 'same-origin', headers: { Accept: 'application/json' } })
       .then((r) => r.json().catch(() => ({})).then((d) => { if (!r.ok) { throw d; } msg.textContent = ''; draw(d); }))
       .catch((e) => { msg.textContent = 'The runs could not be read: ' + R.words(e.code, e.detail); })
       .then(() => { if (!document.hidden) { timer = window.setTimeout(load, 5000); } });

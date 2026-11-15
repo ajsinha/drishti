@@ -37,7 +37,7 @@
     if (!link || !link.kind || !link.id) { return; }
     if (options && options.navigate) { options.navigate(link); return; }
     var a = document.createElement('a');
-    a.href = '/v/' + encodeURIComponent(link.kind) + '/' + encodeURIComponent(link.id);
+    a.href = drishti_url('/v/' + encodeURIComponent(link.kind) + '/' + encodeURIComponent(link.id));
     a.hidden = true;
     el.appendChild(a);
     a.click();                                   // bubbles: a workspace pane turns it into a selection (drishti_view.js)
@@ -52,7 +52,7 @@
     ul.textContent = '';
     list.forEach(function (p) {
       var li = document.createElement('li'), a = document.createElement('a');
-      a.className = 'lnk'; a.href = '/v/' + encodeURIComponent(p.link.kind) + '/' + encodeURIComponent(p.link.id); a.textContent = p.name;
+      a.className = 'lnk'; a.href = drishti_url('/v/' + encodeURIComponent(p.link.kind) + '/' + encodeURIComponent(p.link.id)); a.textContent = p.name;
       li.appendChild(a);
       if (p.text) { var s2 = document.createElement('span'); s2.className = 'mono'; s2.textContent = p.text; li.appendChild(s2); }
       ul.appendChild(li);

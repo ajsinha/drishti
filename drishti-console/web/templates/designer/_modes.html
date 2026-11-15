@@ -21,7 +21,7 @@
   {% if key == 'describe' %}{% set href = '/designer/new' %}
   {% elif key == 'customize' %}{% set href = ('/v/' ~ (k | urlencode) ~ '/' ~ (i | urlencode) ~ ('?customize=' ~ (d | urlencode) if d else '')) if k and i else '#' %}
   {% else %}{% set href = '/designer/' ~ key ~ page_q %}{% endif %}
-  <a class="dz-btn" data-dz-mode="{{ key }}" href="{{ href }}"{% if key == mode %} aria-current="page"{% endif %}{% if not on %} aria-disabled="true" title="{{ label }}: coming later"{% elif key == 'customize' and not (k and i) %} title="Customize: open any page and press Customize"{% endif %}>{{ label }}</a>
+  <a class="dz-btn" data-dz-mode="{{ key }}" href="{{ href | u }}"{% if key == mode %} aria-current="page"{% endif %}{% if not on %} aria-disabled="true" title="{{ label }}: coming later"{% elif key == 'customize' and not (k and i) %} title="Customize: open any page and press Customize"{% endif %}>{{ label }}</a>
   {% endfor %}
   <label class="dz-first">Open first
     <drishti-select data-dz-default label="The designer mode you open first">
@@ -29,4 +29,4 @@
     </drishti-select>
   </label>
 </nav>
-<script src="/static/js/drishti_designer-modes.js?v={{ ASSET_V }}" defer></script>
+<script src="{{ BASE }}/static/js/drishti_designer-modes.js?v={{ ASSET_V }}" defer></script>

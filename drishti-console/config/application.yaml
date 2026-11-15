@@ -20,6 +20,7 @@ server:
   port: ${DRISHTI_CONSOLE_PORT:17480}  # the console's HTTP port
   workers: ${DRISHTI_CONSOLE_WORKERS:4}      # processes serving pages (one Python process uses one core: ~40 pages/s measured); 1 = one process
   shutdown_seconds: ${DRISHTI_CONSOLE_SHUTDOWN_SECONDS:5}   # on a stop, how long open streams (live pages) may stay before they are closed; the browser then reconnects
+  base_path: ${DRISHTI_CONSOLE_BASE_PATH:}   # the URL sub-path behind a reverse proxy, e.g. /drishti for https://host/drishti/ (blank: served at /); the proxy may keep or strip it
 tmp_dir: ${DRISHTI_CONSOLE_TMP_DIR:}      # base of the console's temp folder drishti-console-<pid> (blank: DRISHTI_TMP_DIR, then <data dir>/tmp/console when started by run_drishti_web.py); removed on exit; left-over ones are listed on Health, never deleted automatically
 external_lib: ${DRISHTI_EXTERNAL_LIB:}   # base of the external library folder (blank: external_lib in the repository root); <base>/python is importable, <base>/java is the server's
 backend:

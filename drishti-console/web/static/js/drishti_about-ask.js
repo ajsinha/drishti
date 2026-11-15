@@ -46,7 +46,7 @@
     var send = form.querySelector('[data-ask-send]');
     send.disabled = true;
     show(box, 'Asking…', true);
-    fetch(box.getAttribute('data-ask-url'), {
+    fetch(drishti_url(box.getAttribute('data-ask-url')), {
       method: 'POST', credentials: 'same-origin',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify({ question: q })

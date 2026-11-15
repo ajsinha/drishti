@@ -19,7 +19,7 @@
    when, why and where each stands. Raw JSON: the full stored record of the row (GET .../rows/{entity}, not only the grid's columns),
    collapsible, with a Copy button, the version shown, a note when it changed since the panel opened it, and masked fields drawn as masked
    and never copied as a value. The panel decides nothing: the server refuses an edit made on an older version (409) and says who changed it. */
-import { h, MASK } from '../../drishti-core/src/drishti_index.js';
+import { h, MASK, url as drishtiUrl } from '../../drishti-core/src/drishti_index.js';
 import { Form } from '../../drishti-inputs/src/drishti_index.js';
 import { ROW_KEY, ROW_VERSION, editItems, editSchema, linkFor, maskedPaths, changedFields } from './drishti_live-model.js';
 
@@ -112,9 +112,9 @@ export class RecordPanel {
     const d = this.doc;
     const links = (this.spec.links || []).map((l) => linkFor(l, this.row));
     if (this.spec.kind && !this.spec.static && !links.some((l) => l.label === 'Open')) {   // every record of a kind has its page
-      links.unshift({ label: 'Open', href: '/v/' + encodeURIComponent(this.spec.kind) + '/' + encodeURIComponent(this.id) });
+      links.unshift({ label: 'Open', href: drishtiUrl('/v/' + encodeURIComponent(this.spec.kind) + '/' + encodeURIComponent(this.id)) });
     }
-    return h(d, 'div', { cls: 'dg-live-links' }, links.map((x) => h(d, 'a', { cls: 'dg-live-link', text: x.label, attrs: { href: x.href }, data: { link: x.label } })).concat(
+    return h(d, 'div', { cls: 'dg-live-links' }, links.map((x) => h(d, 'a', { cls: 'dg-live-link', text: x.label, attrs: { href: drishtiUrl(x.href) }, data: { link: x.label } })).concat(
       (this.o.actions || []).map((a) => h(d, 'button', { cls: 'dg-live-link', text: a.label, attrs: { type: 'button' }, data: { action: a.label }, on: { click: () => a.run(this.row) } }))));
   }
 

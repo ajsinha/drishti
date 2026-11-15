@@ -32,7 +32,7 @@
   if (readonly) { layoutSel.component.setDisabled(true); }           // the layout: drishti-inputs' Select (<drishti-select>)
 
   function say(t, bad) { msg.textContent = t; msg.classList.toggle('t-bad', !!bad); }
-  function src(ref) { return ref ? '/v/' + encodeURIComponent(ref.kind) + '/' + encodeURIComponent(ref.id) + '?embed=1' : 'about:blank'; }
+  function src(ref) { return ref ? drishti_url('/v/') + encodeURIComponent(ref.kind) + '/' + encodeURIComponent(ref.id) + '?embed=1' : 'about:blank'; }
 
   var live = root.querySelector('[data-ws-live]');
   function announce(t) { if (live) { live.textContent = ''; setTimeout(function () { live.textContent = t; }, 30); } }
@@ -57,7 +57,7 @@
       follows.addEventListener('drishti:change', function () { p.follows = follows.value === '' || follows.value === null ? null : +follows.value; });
       node.querySelector('[data-pane-cmd]').addEventListener('submit', function (e) {
         e.preventDefault();
-        fetch('/api/resolve', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: input.value }) })
+        fetch(drishti_url('/api/resolve'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: input.value }) })
           .then(function (r) { return r.json().then(function (b) { return { ok: r.ok, b: b }; }); })
           .then(function (res) { if (res.ok) { open(i, res.b.ref); } else { say(res.b.detail || 'Unknown entity', true); } });
       });
@@ -69,8 +69,8 @@
       });
       var frame = node.querySelector('iframe');
       frame.title = 'Pane ' + (i + 1) + (p.title ? ': ' + p.title : '');
-      frame.src = src(p.ref);
-      node.querySelector('[data-open]').href = p.ref ? '/v/' + p.ref.kind + '/' + p.ref.id : '#';
+      frame.src = drishti_url(src(p.ref));
+      node.querySelector('[data-open]').href = drishti_url(p.ref ? '/v/' + p.ref.kind + '/' + p.ref.id : '#');
       frames.push(frame);
       grid.appendChild(node);
     });
@@ -81,8 +81,8 @@
     ws.panes[i].ref = ref;
     var pane = grid.children[i];
     pane.querySelector('[data-pane-input]').value = ref.id;
-    pane.querySelector('[data-open]').href = '/v/' + ref.kind + '/' + ref.id;
-    frames[i].src = src(ref);
+    pane.querySelector('[data-open]').href = drishti_url('/v/' + ref.kind + '/' + ref.id);
+    frames[i].src = drishti_url(src(ref));
   }
 
   window.addEventListener('message', function (e) {
@@ -108,10 +108,10 @@
   function save(name) {
     var body = { layout: ws.layout, panes: ws.panes.map(function (p) { return { ref: p.ref, follows: p.follows, title: p.title || '' }; }) };
     if (ws.sizes) { body.sizes = ws.sizes; }
-    return fetch('/w/api/' + encodeURIComponent(name), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+    return fetch(drishti_url('/w/api/' + encodeURIComponent(name)), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       .then(function (r) { return r.json().then(function (b) { return { ok: r.ok, b: b }; }); })
       .then(function (res) {
-        if (res.ok) { say('Saved “' + name + '”.'); if (name !== root.dataset.name) { location.href = '/w/' + encodeURIComponent(name); } }
+        if (res.ok) { say('Saved “' + name + '”.'); if (name !== root.dataset.name) { location.href = drishti_url('/w/' + encodeURIComponent(name)); } }
         else { say(Drishti.drsMessage(res.b), true); }
       });
   }
@@ -125,7 +125,7 @@
   on('[data-share-open]', 'click', function () { shareForm.hidden = !shareForm.hidden; });
   function list(v) { return v.split(',').map(function (x) { return x.trim(); }).filter(Boolean); }
   function share(body) {
-    return fetch('/w/api/' + encodeURIComponent(root.dataset.name) + '/share', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+    return fetch(drishti_url('/w/api/' + encodeURIComponent(root.dataset.name) + '/share'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       .then(function (r) { return r.json().then(function (b) { return { ok: r.ok, b: b }; }); });
   }
   if (shareForm) {
@@ -149,7 +149,7 @@
   }
   on('[data-delete]', 'click', function () {
     if (!window.confirm('Delete workspace “' + root.dataset.name + '”?')) { return; }
-    fetch('/w/api/' + encodeURIComponent(root.dataset.name) + '/delete', { method: 'POST' }).then(function () { location.href = '/w'; });
+    fetch(drishti_url('/w/api/' + encodeURIComponent(root.dataset.name) + '/delete'), { method: 'POST' }).then(function () { location.href = drishti_url('/w'); });
   });
   // ---- keys: Alt+1..4 moves to a pane, Alt+0 back to the toolbar, wherever the focus is (UX-07). Inside a pane the keys
   // reach the pane's own document, which hands them here (drishti_app.js, a same-origin message checked above).

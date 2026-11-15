@@ -17,7 +17,7 @@
     C2, C5); drishti_genomics-pages.js fills it from the module's API (rows, never a layout): the grids on drishti-grid, the gene's
     lollipop on drishti-chart through the module's own kind, genomics.lollipop (elements/drishti-genomics). -#}
 {% extends "kernel/page.html" %}
-{% block assets %}<link rel="stylesheet" href="{{ asset('css/drishti_genomics.css') }}">{% endblock %}
+{% block assets %}<link rel="stylesheet" href="{{ (asset('css/drishti_genomics.css')) | u }}">{% endblock %}
 {% block page %}
 <div class="drishti-genomics" data-genomics-route="{{ route.id }}" data-genomics-id="{{ params.id or '' }}"
      data-genomics-api="{{ api('') }}" data-genomics-base="{{ url_for('variants')|replace('/variants', '') }}">
@@ -45,4 +45,4 @@
 {{ elements.notice("Synthetic data: every sample and variant here is made up.", tone="info") }}
 </div>
 {% endblock %}
-{% block scripts %}<script src="/m/{{ module.id }}/elements/drishti-genomics/{{ module.version }}/drishti_genomics.js"></script><script src="{{ asset('js/drishti_genomics-pages.js') }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/m/{{ module.id }}/elements/drishti-genomics/{{ module.version }}/drishti_genomics.js"></script><script src="{{ asset('js/drishti_genomics-pages.js') }}"></script>{% endblock %}

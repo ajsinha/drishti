@@ -51,6 +51,6 @@
     <tbody>{% for x in rf.rows[:10] %}<tr><td class="mono">{{ x.at[11:19] }}</td><td>{{ x.who }}</td><td>{{ x.what }}</td><td>{{ x.why }}</td><td class="mono">{{ x.code }}</td><td class="num mono">{{ x.retryAfterSeconds }} s</td></tr>{% endfor %}</tbody>
   </table></div>
   {% else %}<p class="text-muted-d" data-busy-none>Nothing has had to wait.</p>{% endif %}
-  <p class="text-muted-d busy-note">Settings: <span class="mono">drishti.admission.*</span> in <a href="/help/configuration">Configuration</a> (warn and wait levels). Markers on each bar: <span class="t-warn">warn</span>, <span class="t-neg">wait</span>.</p>
+  <p class="text-muted-d busy-note">Settings: <span class="mono">drishti.admission.*</span> in <a href="{{ BASE }}/help/configuration">Configuration</a> (warn and wait levels). Markers on each bar: <span class="t-warn">warn</span>, <span class="t-neg">wait</span>.</p>
 </div></section>
 {% endif %}

@@ -58,7 +58,7 @@
     $("[data-pg-meta]").textContent = "loading…";
     grid.textContent = "";
     S.grid = null;
-    return fetch("/api/play/grid?" + q.toString(), { headers: { Accept: "application/json" }, credentials: "same-origin" }).then(function (r) {
+    return fetch(drishti_url("/api/play/grid?" + q.toString()), { headers: { Accept: "application/json" }, credentials: "same-origin" }).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (b) {
         if (!r.ok) { throw new Error(b.detail || ("HTTP " + r.status)); }
         return b;
@@ -73,7 +73,7 @@
   function remember() {
     var u = new URL(window.location.href), d = root.dataset;
     ["ccy", "h", "m", "q", "esq", "set"].forEach(function (k) { if (d[k]) { u.searchParams.set(k, d[k]); } else { u.searchParams.delete(k); } });
-    window.history.replaceState(null, "", u.toString());
+    window.history.replaceState(null, "", drishti_url(u.toString()));
   }
 
   // ------------------------------------------------------------------------------------------------------------ the columns
@@ -246,7 +246,7 @@
     explainCell(r, c);
     var col = c > 0 ? S.cols[c - 1] : null, a = $("[data-pg-smat]");
     var id = col && col.kind === "pos" ? col.p.id : S.data.canonical;
-    a.href = "/smat?id=" + encodeURIComponent(id) + (S.data.currency !== "USD" ? "&ccy=" + S.data.currency : "");
+    a.href = drishti_url("/smat?id=" + encodeURIComponent(id) + (S.data.currency !== "USD" ? "&ccy=" + S.data.currency : ""));
   }
 
   // ------------------------------------------------------------------------------------------------------------ the explanation
@@ -336,7 +336,7 @@
     root.querySelectorAll("[data-pg-set]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.pgSet === (lens.set === "STRESSED" ? "stressed" : "normal"))); });
     var c = $("[data-pg-ccy]").component;
     if (!c.options.length) {
-      fetch("/api/var/currencies", { credentials: "same-origin" }).then(function (r) { return r.ok ? r.json() : { listed: [] }; }).then(function (x) {
+      fetch(drishti_url("/api/var/currencies"), { credentials: "same-origin" }).then(function (r) { return r.ok ? r.json() : { listed: [] }; }).then(function (x) {
         var all = (x.listed || []).concat((x.available || []).filter(function (a) { return (x.listed || []).indexOf(a) < 0; }));
         if (all.indexOf(d.currency) < 0) { all.unshift(d.currency); }
         c.setOptions(all, d.currency);
@@ -367,7 +367,7 @@
   $("[data-pg-export]").addEventListener("click", function () {
     var q = params();
     q.set("count", $("[data-pg-count]").value);
-    window.location.href = "/api/play/export.xlsx?" + q.toString();
+    window.location.href = drishti_url("/api/play/export.xlsx?" + q.toString());
   });
   $("[data-pg-copy]").addEventListener("click", function () {
     var t = $("[data-pg-formula]").textContent;

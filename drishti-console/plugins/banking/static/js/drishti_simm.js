@@ -45,7 +45,7 @@
     return q;
   }
   function getJson(url, opts) {
-    return fetch(url, Object.assign({ headers: { Accept: "application/json" }, credentials: "same-origin" }, opts || {})).then(function (r) {
+    return fetch(drishti_url(url), Object.assign({ headers: { Accept: "application/json" }, credentials: "same-origin" }, opts || {})).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (b) {
         if (!r.ok) { throw new Error((b.code ? b.code + " " : "") + (b.detail || r.status)); }
         return b;
@@ -94,7 +94,7 @@
   function select(id) {
     ns = id;
     $("[data-sm-detail]").innerHTML = "<p class=\"muted\">loading " + esc(id) + "…</p>";
-    getJson("/api/simm?" + query().toString()).then(function (a) { meta(a); breakdown(a); }).catch(function (e) { $("[data-sm-detail]").innerHTML = "<p class=\"bad\">" + esc(e.message) + "</p>"; });
+    getJson(drishti_url("/api/simm?") + query().toString()).then(function (a) { meta(a); breakdown(a); }).catch(function (e) { $("[data-sm-detail]").innerHTML = "<p class=\"bad\">" + esc(e.message) + "</p>"; });
     if (!$("[data-sm-pane=against]").hidden) { against(); }
   }
   function sets() {
@@ -102,7 +102,7 @@
     if (cpty) { q.set("counterparty", cpty); }
     var asOf = new URLSearchParams(window.location.search).get("asOf");   // the list follows the page's date, as the breakdown does
     if (asOf) { q.set("asOf", asOf); }
-    getJson("/api/simm/netting-sets?" + q.toString()).then(function (l) {
+    getJson(drishti_url("/api/simm/netting-sets?") + q.toString()).then(function (l) {
       var rows = l.rows.map(function (r) {
         return { id: r.nettingSet, ns: r.nettingSet, counterparty: r.counterparty, imCollect: r.imCollect, imPost: r.imPost, version: r.version || "", status: r.status, theirCall: r.theirCall };
       });
@@ -120,7 +120,7 @@
   }
   function against() {
     if (!ns) { $("[data-sm-against]").innerHTML = "<p class=\"muted\">Select a netting set.</p>"; return; }
-    getJson("/api/simm/against?" + query().toString()).then(function (c) {
+    getJson(drishti_url("/api/simm/against?") + query().toString()).then(function (c) {
       var rows = [];
       c.rows.forEach(function (r, i) {
         rows.push({ id: "t" + i, side: r.direction, riskClass: "total", drishti: r.drishti, theirs: r.theirs, difference: r.difference, status: r.status, total: true });
@@ -198,7 +198,7 @@
     if (steps[want]) { steps[want].scrollIntoView({ block: "nearest" }); }
   }
   function play() {
-    var url = recipe ? "/api/simm/recipes/" + encodeURIComponent(recipe) : "/api/simm/playground?" + query({ side: state.side, compare: $("[data-sm-compare]").value }).toString();
+    var url = recipe ? drishti_url("/api/simm/recipes/") + encodeURIComponent(recipe) : drishti_url("/api/simm/playground?") + query({ side: state.side, compare: $("[data-sm-compare]").value }).toString();
     $("[data-sm-meta]").textContent = "loading…";
     getJson(url).then(function (a) {
       state.data = a;
@@ -227,12 +227,12 @@
       if (ev.target.matches("[data-sm-side]")) { state.side = ev.target.value; recipe = ""; play(); }
     });
     $("[data-sm-save]").addEventListener("click", function () {
-      getJson("/api/simm/recipes?" + query().toString(), { method: "POST" }).then(function (r) {
+      getJson(drishti_url("/api/simm/recipes?") + query().toString(), { method: "POST" }).then(function (r) {
         notice("Saved as recipe " + r.id + ": " + r.command + " computes it again to the cent (inputs as known at " + r.knownAt + ").");
       }).catch(function (e) { notice(e.message, true); });
     });
     $("[data-sm-export]").addEventListener("click", function () {
-      window.location.href = "/api/simm/export.xlsx?" + query({ side: state.side }).toString();
+      window.location.href = drishti_url("/api/simm/export.xlsx?" + query({ side: state.side }).toString());
     });
   }
   if (mode === "play") { playground(); } else { screen(); }

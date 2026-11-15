@@ -18,7 +18,7 @@
    Load now and Retry stay in the line above the board. #}
 {% extends "base.html" %}
 {% block title %}Data inbox · Data loads · {{ PRODUCT }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_admin-loads.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_admin-inbox.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-loads.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-inbox.css?v={{ ASSET_V }}">{% endblock %}
 {% block screen %}admin{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
@@ -30,9 +30,9 @@
   <p class="text-muted-d ib-intro">Files dropped in the inbox folder with a <span class="mono">.ready</span> marker are loaded into the lake by {{ PRODUCT }}
     every interval. The columns follow a file's way through the folders: waiting in <span class="mono">inbox/</span>, loading in
     <span class="mono">inprocess/&lt;run&gt;/</span>, done in <span class="mono">outbox/</span>. Times are the server's.
-    See the <a href="/help/data-guide#7-the-data-inbox-drop-files-and-they-load">Data guide</a>.</p>
+    See the <a href="{{ BASE }}/help/data-guide#7-the-data-inbox-drop-files-and-they-load">Data guide</a>.</p>
   <p class="ib-said" data-inbox-said role="status" aria-live="polite"></p>
-  <p class="ib-drop-note text-muted-d" data-inbox-drop>Drop a data file anywhere on this page to open it in <a href="/admin/loads/upload">Upload</a>.</p>
+  <p class="ib-drop-note text-muted-d" data-inbox-drop>Drop a data file anywhere on this page to open it in <a href="{{ BASE }}/admin/loads/upload">Upload</a>.</p>
   <div data-inbox-body>{% include "admin/_inbox_body.html" %}</div>
   <section class="ib-sec" data-undo aria-labelledby="ib-undo-h">
     <h2 class="ib-h2" id="ib-undo-h">Undo a load</h2>
@@ -50,4 +50,4 @@
 </div>
 {% endblock %}
 {% block footer %}{% include "_footer.html" %}{% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_admin-inbox.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_admin-inbox.js?v={{ ASSET_V }}"></script>{% endblock %}

@@ -45,7 +45,7 @@
 
     /** POSTs files to a Design; resolves to {ok, status, body}. */
     send: function (id, files) {
-      return fetch('/build/designs/' + encodeURIComponent(id) + '/files', {
+      return fetch(drishti_url('/build/designs/' + encodeURIComponent(id) + '/files'), {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ files: files })
       }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, status: r.status, body: j }; }); });
     }

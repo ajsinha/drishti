@@ -37,7 +37,7 @@
     return e;
   }
   function json(method, url, body) {
-    return fetch(url, { method: method, headers: { 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) })
+    return fetch(drishti_url(url), { method: method, headers: { 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) })
       .then(function (r) { return (r.status === 204 ? Promise.resolve({}) : r.json()).then(function (j) { return { ok: r.ok, status: r.status, body: j }; }); });
   }
   /** The server's words with its field names turned into the page's (UX-11): 'refs.kind' is the kind of the stored entity. */
@@ -97,9 +97,9 @@
     b.addEventListener('click', function () {
       b.disabled = true;
       say(createStatus, 'Opening a copy of ' + b.dataset.example + '...');
-      json('POST', '/build/examples/' + encodeURIComponent(b.dataset.example) + '/open', {}).then(function (r) {
+      json('POST', drishti_url('/build/examples/') + encodeURIComponent(b.dataset.example) + '/open', {}).then(function (r) {
         if (!r.ok) { b.disabled = false; say(createStatus, why(r), true); return; }
-        window.location.href = r.body.url;
+        window.location.href = drishti_url(r.body.url);
       }, function () { b.disabled = false; say(createStatus, 'The console could not be reached. Try again.', true); });
     });
   });
@@ -142,7 +142,7 @@
       if (start === 'existing') { if (more.yaml) { body.sutra = more.yaml; } else { body.base = more.base; } }
       if (start === 'empty') { body.empty = true; }
       say(createStatus, 'Creating the design...');
-      return json('POST', '/build/designs', body).then(function (r) {
+      return json('POST', drishti_url('/build/designs'), body).then(function (r) {
         if (!r.ok) { throw new Error(why(r)); }
         return run(r.body.id, start, more);
       });
@@ -154,7 +154,7 @@
 
   /** The steps after the design exists; a failure names the step and links to the design as it stands. */
   function run(id, start, more) {
-    var url = '/build/d/' + encodeURIComponent(id);
+    var url = drishti_url('/build/d/') + encodeURIComponent(id);
     function step(label, r) {
       if (r.ok) { return r; }
       var e = new Error(label + ': ' + why(r));
@@ -167,21 +167,21 @@
         .then(function (files) { return F.send(id, files); }).then(function (r) { return step('The files', r); });
     }
     if (more.schema) {
-      chain = chain.then(function () { say(createStatus, 'Generating synthetic samples...'); return json('POST', '/build/designs/' + id + '/samples',
+      chain = chain.then(function () { say(createStatus, 'Generating synthetic samples...'); return json('POST', drishti_url('/build/designs/') + id + '/samples',
         { schema: more.schema, count: parseInt($('[data-schema-count]').value, 10) || 5 }); }).then(function (r) { return step('The schema', r); });
     }
     if (more.refs) {
-      chain = chain.then(function () { say(createStatus, 'Adding the stored entities...'); return json('POST', '/build/designs/' + id + '/samples', { refs: more.refs }); })
+      chain = chain.then(function () { say(createStatus, 'Adding the stored entities...'); return json('POST', drishti_url('/build/designs/') + id + '/samples', { refs: more.refs }); })
         .then(function (r) { return step('The stored entities', r); });
     }
     if (start === 'auto') {
-      chain = chain.then(function () { say(createStatus, 'Auto-designing a first screen...'); return json('POST', '/build/designs/' + id + '/autodesign', {}); })
+      chain = chain.then(function () { say(createStatus, 'Auto-designing a first screen...'); return json('POST', drishti_url('/build/designs/') + id + '/autodesign', {}); })
         .then(function (r) { return step('Auto-design', r); });
     }
-    return chain.then(function () { window.location.href = url; }, function (e) {
+    return chain.then(function () { window.location.href = drishti_url(url); }, function (e) {
       $('[data-create]').disabled = false;
       say(createStatus, e.message + (e.partial ? ' The design was created: ' : ''), true);
-      if (e.partial) { var a = el('a', 'lnk', 'open it as it stands'); a.href = e.partial; createStatus.appendChild(a); }
+      if (e.partial) { var a = el('a', 'lnk', 'open it as it stands'); a.href = drishti_url(e.partial); createStatus.appendChild(a); }
     });
   }
 })();

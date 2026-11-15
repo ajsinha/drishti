@@ -25,13 +25,13 @@
   var count = 0, badge = bell.querySelector('[data-bell-count]');
   // the toasts: drishti-core's tray (a live region); a burst shows three toasts and one "N more on the bell"
   var tray = new window.Drishti.elements.core.ToastTray({ className: 'toasts', max: 3, timeout: 9000,
-    more: { href: '/inbox', className: 'toast-a sev-info notice toast-more', html: function (n) { return '<b>+' + n + '</b> more on the bell'; } } });
+    more: { href: drishti_url('/inbox'), className: 'toast-a sev-info notice toast-more', html: function (n) { return '<b>+' + n + '</b> more on the bell'; } } });
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function show() { badge.textContent = String(count); badge.hidden = count <= 0; }
   window.Drishti.Channel.subscribe('alerts', { hello: onHello, notice: onNotice, switches: onSwitches, edit: onEdit });   // on the tab's one live connection (drishti_channel.js)
   // the server's first event on the feed: from here on alerts, notices and write-back edits reach this tab (the bell says so to tests and tools)
   function onHello() { bell.setAttribute('data-alerts-live', ''); }
-  fetch('/api/inbox/count', { headers: { Accept: 'application/json' }, credentials: 'same-origin' })
+  fetch(drishti_url('/api/inbox/count'), { headers: { Accept: 'application/json' }, credentials: 'same-origin' })
     .then(function (r) { return r.ok ? r.json() : { unread: 0 }; })
     .then(function (j) { count += (j && j.unread) || 0; show(); })
     .catch(function () { /* the count is a convenience */ });
@@ -62,7 +62,7 @@
     var page = document.querySelector('[data-view][data-kind]');
     var here = page && ((page.getAttribute('data-kind') === d.kind && page.getAttribute('data-id') === d.entity)
       || (page.getAttribute('data-kind') === d.pageKind && page.getAttribute('data-id') === d.pageId));
-    var href = '/v/' + encodeURIComponent(d.kind) + '/' + encodeURIComponent(d.entity);
+    var href = drishti_url('/v/') + encodeURIComponent(d.kind) + '/' + encodeURIComponent(d.entity);
     if (d.mine && ['applied', 'refused', 'conflicted', 'rejected', 'approved', 'confirmed', 'refused-at-source'].indexOf(d.type) >= 0) {
       var what = { applied: 'was applied', refused: 'was refused', conflicted: 'is conflicted: the record moved', rejected: 'was rejected',
         approved: 'was approved', confirmed: 'was confirmed by the source', 'refused-at-source': 'was refused by the source' }[d.type];
@@ -95,12 +95,12 @@
     try { m = JSON.parse(sessionStorage.getItem('drishti-edit-mark') || 'null'); sessionStorage.removeItem('drishti-edit-mark'); } catch (e) { m = null; }
     if (page && m && m.kind === page.getAttribute('data-kind') && m.id === page.getAttribute('data-id')) { editMark(page, m.text); }
   }());
-  function toast(cls, href, html) { tray.show({ className: cls, href: href, html: html }); }
+  function toast(cls, href, html) { tray.show({ className: cls, href: drishti_url(href), html: html }); }
   function onNotice(n) {
     count++; show();
     var alertPath = (n.type === 'alert' || n.type === 'notice') && typeof n.id === 'string' && n.id.charAt(0) === '/' && n.id.charAt(1) !== '/' ? n.id : '';       // an alert on a number: the path it opens
     var run = n.type === 'bi-run' ? String(n.entityId || n.id || '') : '';                 // a BI run finished (ARCHITECTURE.md §28 3.5): it opens where its result is drawn
-    var href = run ? '/bi/run/' + encodeURIComponent(run) : alertPath ? alertPath : n.shareId ? '/share/' + encodeURIComponent(n.shareId) : (n.access && n.kind && n.id ? '/v/' + encodeURIComponent(n.kind) + '/' + encodeURIComponent(n.id) : '/inbox');
+    var href = run ? drishti_url('/bi/run/') + encodeURIComponent(run) : alertPath ? alertPath : n.shareId ? drishti_url('/share/') + encodeURIComponent(n.shareId) : (n.access && n.kind && n.id ? drishti_url('/v/') + encodeURIComponent(n.kind) + '/' + encodeURIComponent(n.id) : drishti_url('/inbox'));
     var label = run ? (/^Run\b/.test(n.title || '') ? '' : 'Run') : n.type || 'notice';       // "Run finished: …" needs no second "Run"
     toast('toast-a sev-info notice', href, (label ? '<b>' + esc(label) + '</b> ' : '') + esc(n.title) + (n.excerpt ? ' <span class="toast-x">\u201c' + esc(n.excerpt) + '\u201d</span>' : ''));
     if (window.Notification && Notification.permission === 'granted') {
@@ -108,7 +108,7 @@
     }
   }
   window.Drishti.keys.register({ id: 'inbox.open', keys: ['Alt+I'], scope: 'global', group: 'Go to', description: 'Your inbox: what people sent you',
-    run: function () { window.location.href = '/inbox'; } });
+    run: function () { window.location.href = drishti_url('/inbox'); } });
   bell.addEventListener('click', function () {
     if (window.Notification && Notification.permission === 'default') { Notification.requestPermission(); }
   });

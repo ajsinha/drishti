@@ -64,10 +64,10 @@
 
   function go(i) {
     var s = box.items[i];
-    if (s && s.href) { window.location.href = s.href; return; }          // FORM <pack> [kind]: the pack's search form
+    if (s && s.href) { window.location.href = drishti_url(s.href); return; }          // FORM <pack> [kind]: the pack's search form
     if (s && s.type === 'range') { input.value = s.complete; form.submit(); return; }   // TRD 1000015 30: the history page, through <GO>
     if (s && s.id) {
-      window.location.href = '/v/' + encodeURIComponent(s.kind) + '/' + encodeURIComponent(s.id);
+      window.location.href = drishti_url('/v/' + encodeURIComponent(s.kind) + '/' + encodeURIComponent(s.id));
       return;
     }
     if (s) { complete(i); return; }
@@ -85,7 +85,7 @@
       box.close();
     }
     if (history) { show(); return; }
-    fetch('/api/history', { headers: { Accept: 'application/json' } })
+    fetch(drishti_url('/api/history'), { headers: { Accept: 'application/json' } })
       .then(function (r) { return r.ok ? r.json() : []; })
       .then(function (h) { history = Array.isArray(h) ? h : []; show(); })
       .catch(function () { history = []; });
@@ -113,7 +113,7 @@
     fill(a.getAttribute('data-fill'));
   });
   var asked = new URLSearchParams(location.search).get('cmd');
-  if (asked && location.pathname === '/t') { fill(asked); }
+  if (asked && drishti_route() === '/t') { fill(asked); }      // the route, without the console's URL sub-path
   D.keys.register({ id: 'command.focus', keys: ['/'], scope: 'global', group: 'Command line', description: 'Focus the command line, from anywhere',
     run: function () { input.focus(); } });
   D.keys.describe({ id: 'command.keys', keys: ['ArrowUp', 'ArrowDown', 'Tab', 'Enter', 'Escape'], scope: 'panel', area: 'command-line', group: 'Command line',

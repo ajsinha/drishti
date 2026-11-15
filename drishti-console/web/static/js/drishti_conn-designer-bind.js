@@ -163,7 +163,7 @@
     n.classList.toggle('bad', !!bad);
   }
   function refreshContext() {
-    return D.api('GET', '/build/connector/api/context').then(function (r) { if (r.ok) { S.ctx = r.body; } return r; });
+    return D.api('GET', drishti_url('/build/connector/api/context')).then(function (r) { if (r.ok) { S.ctx = r.body; } return r; });
   }
   /** After the proposals: the decision. Our proposals leave the waiting list when a second administrator approves or rejects them. */
   function decided() {
@@ -207,7 +207,7 @@
       S.kinds.forEach(function (kind) {
         chain = chain.then(function (ok) {
           if (!ok) { return false; }
-          return D.api('POST', '/admin/api/bindings/propose', { kind: kind, binding: bindingFor(kind), reason: reason }).then(function (p) {
+          return D.api('POST', drishti_url('/admin/api/bindings/propose'), { kind: kind, binding: bindingFor(kind), reason: reason }).then(function (p) {
             if (!p.ok) { D.say(kind + ': ' + D.why(p), true); eye('a', 'stopped at ' + kind + ' (the connector is saved; the kinds before it are proposed)', true); return false; }
             mine.push(p.body.id);
             return true;
