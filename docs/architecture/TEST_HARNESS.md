@@ -409,6 +409,16 @@ It never skips a lane the commits touch; it pushes like a full drill when everyt
 this: an unknown path reaches every lane, a pass on another branch does not count, an unknown diff reruns the lane, every lane name is
 the drill's.
 
+**Waves.** The lanes do not all start at once: a busy CPU makes a browser page miss a tick, and the Maven forks and the tool tests use
+every core they are given. With `DRILL_WAVES=on` (the default) the drill runs **wave 1**, the CPU-heavy lanes (`java21`, `java25`,
+`tools-a`, `tools-b`, all niced), and when it has finished **wave 2**, the lanes that need a quiet machine or are light (`browser`,
+`other`, `containers`, `anywhere`). The browser lane's time is about 25 to 30 minutes alone and the Java 21 verify about 45 to 75
+minutes ([BENCHMARK.md](../admin/BENCHMARK.md)), so two waves take about the sum of the two, a little more than the longest lane
+started together, in exchange for browser tests that run on an idle machine. A failed wave stops the drill before the next one
+(`--keep-going` runs it anyway; the lanes never started record no pass, so a `--fix` drill runs them). `--lanes` and `--fix` split only
+the lanes they chose (a wave with none is skipped). `DRILL_WAVES=off` starts every lane at once, as a quiet 24-core machine can
+bear. `drill_lanes.py waves --mode on|off LANE...` prints the split; `test_drill_lanes.py` checks it.
+
 ### 3.23 Shared read-only servers
 
 A VaR file that only reads asks `var_server(..., shared=True)`: its hot folder and official results are then inside the server's own

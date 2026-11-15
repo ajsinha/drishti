@@ -24,6 +24,9 @@
       is left out only when it passed at an ancestor of HEAD and nothing changed since that commit can reach it. ``files`` is "all", or
       for a console lane that ran whole at an ancestor and failed only in some files: those files plus every console test file the
       changes since can reach (tools/drillkit/affected.py, which selects everything for a path it cannot place).
+  drill_lanes.py waves --mode on|off LANE...
+      The lanes split into the drill's waves, one wave a line (DRILL_WAVES; wave 1: java21 java25 tools-a tools-b, wave 2: browser other
+      containers anywhere); off: one line with every lane.
   drill_lanes.py touched --base REF [--head REF]
       The lanes the changes base..head can reach, with the first path that reaches each.
 
@@ -44,6 +47,18 @@ ROOT = Path(__file__).resolve().parents[2]
 #: every lane of the full drill's second stage (tools/drill.sh), in its order
 LANES = ("browser", "other", "tools-a", "tools-b", "java21", "java25", "containers", "anywhere")
 ALL = frozenset(LANES)
+#: the full drill's two waves (DRILL_WAVES=on, the default): the Maven and CPU-heavy lanes first, then the lanes a busy CPU breaks (a
+#: browser page that misses a tick) beside the light ones. DRILL_WAVES=off starts every lane at once, as before.
+WAVE_1 = ("java21", "java25", "tools-a", "tools-b")
+WAVE_2 = ("browser", "other", "containers", "anywhere")
+
+
+def waves(lanes, on: bool = True) -> list[list[str]]:
+    """The lanes to run split into waves, each in LANES order; empty waves are dropped. Off: one wave with every lane."""
+    chosen = [lane for lane in LANES if lane in set(lanes)]
+    if not on:
+        return [chosen] if chosen else []
+    return [w for w in ([lane for lane in chosen if lane in WAVE_1], [lane for lane in chosen if lane in WAVE_2]) if w]
 _JAVA_RUNS = frozenset({"browser", "tools-a", "tools-b", "java21", "java25", "containers", "anywhere"})   # what starts the server jar or the Java code
 #: path (regular expression) -> the lanes a change there can reach; a path reaches the union of every rule it matches, and a path no
 #: rule matches reaches every lane (the safe default: a new folder is tested everywhere until a rule names it). Measured, not guessed:
@@ -196,6 +211,12 @@ def cmd_touched(a) -> int:
     return 0
 
 
+def cmd_waves(a) -> int:
+    for w in waves(a.lanes, a.mode != "off"):
+        print(" ".join(w))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="drill_lanes.py", description="The fix drill's lane choice.")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -218,6 +239,10 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--base", required=True)
     s.add_argument("--head", default="HEAD")
     s.set_defaults(run=cmd_touched)
+    s = sub.add_parser("waves")
+    s.add_argument("--mode", default="on", choices=("on", "off"))
+    s.add_argument("lanes", nargs="*")
+    s.set_defaults(run=cmd_waves)
     a = p.parse_args(argv)
     return a.run(a)
 

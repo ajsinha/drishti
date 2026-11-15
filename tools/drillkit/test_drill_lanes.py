@@ -151,3 +151,26 @@ class OwnFoldersOnly(unittest.TestCase):
         text = (ROOT / "tools" / "drill.sh").read_text(encoding="utf-8")
         self.assertIn('[[ "$(basename "$DRILL_TMP")" == *drill* ]] ||', text)
         self.assertIn('[[ "$(basename "$COPY_BASE")" == *drill-copies* ]] ||', text)
+
+
+class Waves(unittest.TestCase):
+    def test_waves_on_puts_the_cpu_heavy_lanes_first_and_the_browser_lanes_second(self):
+        self.assertEqual(L.waves(L.LANES), [["tools-a", "tools-b", "java21", "java25"], ["browser", "other", "containers", "anywhere"]])
+
+    def test_waves_off_is_one_wave_in_lane_order(self):
+        self.assertEqual(L.waves(L.LANES, on=False), [list(L.LANES)])
+
+    def test_every_lane_is_in_exactly_one_wave(self):
+        self.assertEqual(sorted(L.WAVE_1 + L.WAVE_2), sorted(L.LANES))
+
+    def test_a_subset_keeps_only_its_lanes_and_drops_the_empty_wave(self):
+        self.assertEqual(L.waves(["browser", "java21"]), [["java21"], ["browser"]])
+        self.assertEqual(L.waves(["browser", "other"]), [["browser", "other"]])
+        self.assertEqual(L.waves(["tools-a"]), [["tools-a"]])
+        self.assertEqual(L.waves([]), [])
+        self.assertEqual(L.waves([], on=False), [])
+
+    def test_the_drill_script_uses_the_waves_and_documents_the_switch(self):
+        text = (ROOT / "tools" / "drill.sh").read_text(encoding="utf-8")
+        self.assertIn("drill_lanes.py waves --mode", text)
+        self.assertIn("DRILL_WAVES", text)

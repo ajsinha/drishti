@@ -27,6 +27,9 @@
 #                               since their last pass can reach (tools/drillkit/drill_lanes.py); a console lane that failed in some files
 #                               runs those and the files the fix reaches. Never skips a lane the commits touch. The release drill is --full.
 #   tools/drill.sh --lanes a,b  the gate, then these lanes only (browser, other, tools-a, tools-b, java21, java25, containers, anywhere); verify only
+#   DRILL_WAVES=on|off          on (default): the lanes run in two waves, so the 24 cores are not shared by everything at once (a busy CPU
+#                               breaks browser tests): wave 1 java21, java25, tools-a, tools-b; wave 2 browser, other, containers, anywhere.
+#                               off: every lane at once. --lanes and --fix still run only the lanes they choose.
 #   DRILL_CONTAINERS=full|smoke the containers lane: full runs every Testcontainers test after the browser lane as well as the smoke test;
 #                               smoke never; default: full only when the diff since origin/main needs it (container_smoke.py full-needed)
 #   tools/drill.sh --affected [--base REF] [--dry-run]   only the Maven modules and test files the diff against REF (default origin/develop) can reach
@@ -666,18 +669,35 @@ else
   : > "$LOGS/pageloads.jsonl"                  # each page's load time in the lanes' browser tests (tools/drillkit/pageloads.py)
   : > "$LOGS/snapshots.jsonl"; rm -rf "$LOGS/snapshot-diffs"   # the visual snapshots of the page walk (drishti-console/tests/snapshots.py)
   # a failed browser test is re-run by file, two files at a time (one at a time took 35 minutes for nine files in the 2026-11-11 drill)
-  [[ -n ${RUN_LANE[browser]:-} ]] && { start_job console-browser console_lane browser "$browser_workers" "${DRILL_BROWSER_RERUNS:-2}"; stage2+=(console-browser); }
-  [[ -n ${RUN_LANE[other]:-} ]] && { start_job console-other niced 5 console_lane other "$other_workers" 2; stage2+=(console-other); }
-  [[ -n ${RUN_LANE[tools-a]:-} ]] && { start_job tools-a niced 5 tools_lane_a; stage2+=(tools-a); }
-  [[ -n ${RUN_LANE[tools-b]:-} ]] && { start_job tools-b niced 5 tools_lane_b; stage2+=(tools-b); }
-  [[ -n ${RUN_LANE[java21]:-} ]] && { start_job java21 niced 5 java21_verify; stage2+=(java21); }
-  [[ -n ${RUN_LANE[containers]:-} ]] && { start_job containers niced 5 containers; stage2+=(containers); }
-  [[ -n ${RUN_LANE[anywhere]:-} ]] && { start_job anywhere niced 5 release_anywhere; stage2+=(anywhere); }
-  if [[ -n ${RUN_LANE[java25]:-} ]]; then
-    if [[ -x "$JAVA25_HOME/bin/java" ]]; then start_job java25 niced 10 java25_verify; stage2+=(java25)
-    else echo "drill: no JDK 25 at $JAVA25_HOME (set JAVA25_HOME): the forward-compatibility run is skipped" >&2; fi
-  fi
-  rc=0; (( ${#stage2[@]} == 0 )) || watch_jobs "${stage2[@]}" || rc=1
+  # one lane's start; the Java 25 lane is skipped (with a note) when there is no JDK 25
+  start_lane() {
+    case $1 in
+      browser) start_job console-browser console_lane browser "$browser_workers" "${DRILL_BROWSER_RERUNS:-2}"; stage2+=(console-browser) ;;
+      other) start_job console-other niced 5 console_lane other "$other_workers" 2; stage2+=(console-other) ;;
+      tools-a) start_job tools-a niced 5 tools_lane_a; stage2+=(tools-a) ;;
+      tools-b) start_job tools-b niced 5 tools_lane_b; stage2+=(tools-b) ;;
+      java21) start_job java21 niced 5 java21_verify; stage2+=(java21) ;;
+      containers) start_job containers niced 5 containers; stage2+=(containers) ;;
+      anywhere) start_job anywhere niced 5 release_anywhere; stage2+=(anywhere) ;;
+      java25)
+        if [[ -x "$JAVA25_HOME/bin/java" ]]; then start_job java25 niced 10 java25_verify; stage2+=(java25)
+        else echo "drill: no JDK 25 at $JAVA25_HOME (set JAVA25_HOME): the forward-compatibility run is skipped" >&2; fi ;;
+    esac
+  }
+  # The lanes run in two waves (DRILL_WAVES=on, the default; off starts every lane at once): wave 1 the Maven and CPU-heavy lanes (java21,
+  # java25, tools-a, tools-b), wave 2 the lanes a busy CPU breaks (browser, other, containers, anywhere). A lane named by --lanes or chosen
+  # by --fix still runs only itself; an empty wave is skipped. A failed wave stops the drill (--keep-going runs the next wave anyway).
+  rc=0; wave_no=0
+  WAVES=(); (( ${#RUN_LANE[@]} == 0 )) || mapfile -t WAVES < <(python3 tools/drillkit/drill_lanes.py waves --mode "${DRILL_WAVES:-on}" "${!RUN_LANE[@]}")
+  for wave in "${WAVES[@]}"; do
+    wave_no=$(( wave_no + 1 )); before=${#stage2[@]}
+    echo "drill: lanes, wave $wave_no of ${#WAVES[@]}: $wave"
+    for lane in $wave; do start_lane "$lane"; done
+    started=("${stage2[@]:$before}")
+    if (( ${#started[@]} )) && ! watch_jobs "${started[@]}"; then
+      rc=1; (( KEEP_GOING )) || { echo "drill: wave $wave_no failed: the next wave is not started" >&2; break; }
+    fi
+  done
   # what passed, for the next fix drill: a lane that ran whole and passed, or a console lane that ran whole and failed in some files
   for n in "${stage2[@]}"; do
     lane=${n#console-}

@@ -648,7 +648,7 @@ then only the lanes that have not passed at an ancestor of HEAD or that the comm
 these lanes only, to verify: `browser`, `other`, `tools-a`, `tools-b`, `java21`, `java25`, `containers`). The VaR proof of a patch is the
 in-process `VarGoldenMatrixTest`; the server-against-server API comparison runs for releases only. `DRILL_MVN_ARGS="..."` adds Maven arguments to every Maven run (for example
 `-Ddrishti.test.forks=1` to run the test classes serially). `DRILL_BROWSER_WORKERS` and `DRILL_OTHER_WORKERS` set the console
-lanes' workers (the browser lane's default comes from the memory available), `DRILL_BROWSER_RERUNS` the browser-lane files re-run at a time (default 2), `DRILL_CONTAINERS` the containers lane (`full`: every
+lanes' workers (the browser lane's default comes from the memory available), `DRILL_WAVES` (`on`, the default: the CPU-heavy lanes first, then the browser, other, containers and anywhere lanes; `off`: all lanes at once), `DRILL_BROWSER_RERUNS` the browser-lane files re-run at a time (default 2), `DRILL_CONTAINERS` the containers lane (`full`: every
 Testcontainers test too; `smoke`: never; default: when the diff since `origin/main` needs them), `DRILL_LANE_LIMIT` a console lane's
 time limit in seconds (default three hours), `DRILL_GATE_THREADS` the gate build's Maven threads (default `1C`, one per CPU). The
 script prints
