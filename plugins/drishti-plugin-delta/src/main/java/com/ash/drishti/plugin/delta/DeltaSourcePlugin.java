@@ -184,6 +184,11 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     private volatile java.util.concurrent.ScheduledFuture<?> diskDocsRetry;
     /** The periodic reindex: cancelled at close, so a stopped connector reads nothing and logs nothing (QA2-23). */
     private volatile java.util.concurrent.ScheduledFuture<?> reindexTask;
+    /** Set while a document cache found locked is being retried (cleared when it opened, when the time ran out and at close). */
+    private volatile SourceContext diskRetryCtx;
+    private volatile long diskRetryUntil;
+    private volatile long diskNextTry;
+    private final Object diskRetryLock = new Object();
     /** Seconds between attempts to open a document cache found locked (tests shorten it). */
     static long diskRetrySeconds = 30;
     /** Kind to the document paths its pack promotes to columns ({@code layout.<kind>.columns}). */
@@ -336,18 +341,12 @@ public final class DeltaSourcePlugin implements SourcePlugin {
                 org.slf4j.LoggerFactory.getLogger(DeltaSourcePlugin.class).warn("{}: documents are not cached on disk ({}): reads go on without it{}", sourceName,
                         failed, ctx.scheduler() == null ? "" : "; trying again every 30 s for 10 minutes");
                 if (ctx.scheduler() != null) {
-                    long until = System.nanoTime() + TimeUnit.MINUTES.toNanos(10);
-                    diskDocsRetry = ctx.scheduler().scheduleWithFixedDelay(() -> {
-                        String again = openDiskDocs(ctx);
-                        if (again == null) {
-                            org.slf4j.LoggerFactory.getLogger(DeltaSourcePlugin.class).info("{}: documents are cached on disk again", sourceName);
-                        } else if (System.nanoTime() < until) {
-                            return;
-                        } else {
-                            org.slf4j.LoggerFactory.getLogger(DeltaSourcePlugin.class).warn("{}: documents are not cached on disk until the next start ({})", sourceName, again);
-                        }
-                        diskDocsRetry.cancel(false);
-                    }, diskRetrySeconds, diskRetrySeconds, TimeUnit.SECONDS);
+                    diskRetryUntil = System.nanoTime() + TimeUnit.MINUTES.toNanos(10);
+                    diskNextTry = System.nanoTime() + TimeUnit.SECONDS.toNanos(diskRetrySeconds);
+                    diskRetryCtx = ctx;
+                    // on the timer, and also on demand (disk(): a read or a stats call finds no cache and the interval has passed), so a busy
+                    // scheduler (the one that also runs the reindex) cannot starve the retry
+                    diskDocsRetry = ctx.scheduler().scheduleWithFixedDelay(() -> retryDisk(true), diskRetrySeconds, diskRetrySeconds, TimeUnit.SECONDS);
                 }
             }
         }
@@ -833,8 +832,9 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         String key = ref.kind() + "\u001f" + l.version() + "@" + l.timestamp() + "\u001f" + d + "\u001f" + ref.id();
         String heapKey = owner + "\u001f" + key;                // the heap cache may be shared by connectors; the disk one is this connector's
         String json = docs.getIfPresent(heapKey);
-        if (json == null && diskDocs != null) {                // second tier: documents read before, on disk (also by an earlier run)
-            byte[] b = diskDocs.get(key);
+        com.ash.drishti.diskcache.DiskCache disk = disk();
+        if (json == null && disk != null) {                // second tier: documents read before, on disk (also by an earlier run)
+            byte[] b = disk.get(key);
             if (b != null) {
                 json = new String(b, StandardCharsets.UTF_8);
                 docs.put(heapKey, json);
@@ -851,8 +851,8 @@ public final class DeltaSourcePlugin implements SourcePlugin {
             if (json != null) {
                 // the disk first: a document in the heap tier is already on disk, so a reader the heap answers never leaves the disk
                 // without it (the start-up warm-up and a page reading one document at once; a close dropping the warm-up's late write)
-                if (diskDocs != null) {
-                    diskDocs.put(key, json.getBytes(StandardCharsets.UTF_8));
+                if (disk != null) {
+                    disk.put(key, json.getBytes(StandardCharsets.UTF_8));
                 }
                 docs.put(heapKey, json);
             }
@@ -1328,6 +1328,39 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         return Optional.of(new com.ash.drishti.api.ColumnSet(all.ids(), nums, texts, all.businessDate()));
     }
 
+    /** The document cache on disk, or null; while one found locked is being retried, a call after the retry interval tries to open it. */
+    private com.ash.drishti.diskcache.DiskCache disk() {
+        com.ash.drishti.diskcache.DiskCache d = diskDocs;
+        if (d != null || diskRetryCtx == null || System.nanoTime() - diskNextTry < 0) {
+            return d;
+        }
+        retryDisk(false);
+        return diskDocs;
+    }
+
+    /** One attempt to open a locked document cache (from the timer or on demand); stops retrying once it opened or ten minutes passed. */
+    private void retryDisk(boolean force) {
+        synchronized (diskRetryLock) {
+            SourceContext ctx = diskRetryCtx;
+            if (ctx == null || diskDocs != null || !force && System.nanoTime() - diskNextTry < 0) {
+                return;
+            }
+            diskNextTry = System.nanoTime() + TimeUnit.SECONDS.toNanos(diskRetrySeconds);
+            String again = openDiskDocs(ctx);
+            if (again == null) {
+                org.slf4j.LoggerFactory.getLogger(DeltaSourcePlugin.class).info("{}: documents are cached on disk again", sourceName);
+            } else if (System.nanoTime() - diskRetryUntil < 0) {
+                return;
+            } else {
+                org.slf4j.LoggerFactory.getLogger(DeltaSourcePlugin.class).warn("{}: documents are not cached on disk until the next start ({})", sourceName, again);
+            }
+            diskRetryCtx = null;
+            if (diskDocsRetry != null) {
+                diskDocsRetry.cancel(false);
+            }
+        }
+    }
+
     /** Opens the RocksDB document cache; null when it opened, else why it did not (it is a cache: reads go on without it). */
     private String openDiskDocs(SourceContext ctx) {
         java.nio.file.Path dir = java.nio.file.Path.of(ctx.setting("doc-disk-cache.dir", com.ash.drishti.api.DataDir.under("cache/" + sourceName + "/docs")));
@@ -1366,10 +1399,11 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         if (dated.enabled()) {
             m.putAll(dated.health());
         }
-        if (diskDocs != null) {
-            m.put("docsOnDiskMB", diskDocs.sizeOnDisk() / (1024 * 1024));
-            m.put("docsOnDiskHits", diskDocs.hits());
-            m.put("docsOnDiskMisses", diskDocs.misses());
+        com.ash.drishti.diskcache.DiskCache disk = disk();
+        if (disk != null) {
+            m.put("docsOnDiskMB", disk.sizeOnDisk() / (1024 * 1024));
+            m.put("docsOnDiskHits", disk.hits());
+            m.put("docsOnDiskMisses", disk.misses());
         }
         if (idMapFolder != null) {
             m.putAll(idMapFolder.stats());
@@ -1453,6 +1487,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         if (reindexTask != null) {
             reindexTask.cancel(false);
         }
+        diskRetryCtx = null;                 // a closed connector opens no cache
         loaders.shutdownNow();               // loads in flight are abandoned; their callers get an error, not a hang
         try {
             // a background read still inside the disk cache keeps its store open (and locked) after the close below, until it leaves:
