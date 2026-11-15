@@ -140,7 +140,7 @@ class LiveFeedTest {
         f.pause(false, "ops-1");                                             // a queue
         assertThat(f.accept(msg("MX-1", trade("MX-1", 1, "B1")))).as("not acknowledged: it waits").isFalse();
         assertThat(f.state("UP", false, 0.05)).isEqualTo(FeedState.PAUSED);
-        assertThat((Map<?, ?>) f.stats().get("paused")).containsEntry("by", "ops-1").containsEntry("skips", false);
+        assertThat((Map<String, Object>) f.stats().get("paused")).containsEntry("by", "ops-1").containsEntry("skips", false);
         f.resume();
         assertThat(f.accept(msg("MX-1", trade("MX-1", 1, "B1")))).isTrue();
         assertThat(book(f, "MX-1")).isEqualTo("B1");

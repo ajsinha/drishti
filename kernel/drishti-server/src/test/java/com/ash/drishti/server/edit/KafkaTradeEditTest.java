@@ -178,6 +178,16 @@ class KafkaTradeEditTest {
                 && System.nanoTime() < until) {
             Thread.sleep(250);
         }
+        // the feed as Admin sees it (its state, counts and newest rejects), when the trade never arrived: the reason in the failure
+        assertThat(mvc.perform(get("/api/v1/views/trade/EN-1").header("Authorization", tia)).andReturn().getResponse().getStatus())
+                .as(() -> {
+                    try {
+                        return "the live connector's feed: " + mvc.perform(get("/api/v1/admin/live/trade-endur-live").header("Authorization", as("ada", "admin")))
+                                .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+                    } catch (Exception e) {
+                        return e.toString();
+                    }
+                }).isEqualTo(200);
         assertThat(topic()).hasSize(1);
 
         JsonNode sent = call("POST", "/api/v1/live/trade/edit", tia, Map.of("entity", "EN-1", "basedOn", 1, "reason", "booked to the wrong book",

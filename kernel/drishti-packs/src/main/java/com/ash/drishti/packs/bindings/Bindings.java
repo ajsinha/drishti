@@ -328,6 +328,9 @@ public record Bindings(Map<String, Binding> byKind) {
         if (live.size() != new LinkedHashSet<>(live).size()) {
             throw new Invalid(kind + ": a connector is named twice in 'live'");
         }
+        if (liveBoth && live.isEmpty()) {
+            throw new Invalid(kind + ": 'live: {apply: both}' names its connectors (connectors: [...])");
+        }
         String lake = null;
         String table = null;
         Map<String, String> writeTo = new LinkedHashMap<>();
@@ -366,9 +369,6 @@ public record Bindings(Map<String, Binding> byKind) {
             throw new Invalid(kind + ": the binding names nothing (read, live, write or demo)");
         }
         String note = m.get("note") == null ? "" : String.valueOf(m.get("note"));
-        if (liveBoth && live.isEmpty()) {
-            throw new Invalid(kind + ": 'live: {apply: both}' names its connectors (connectors: [...])");
-        }
         return new Binding(kind, read, union, live, lake, table, demo, note, writeTo, liveBoth);
     }
 }
