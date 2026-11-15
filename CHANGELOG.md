@@ -24,6 +24,9 @@
   names a moved table's folder correctly when the lake sits under a folder named `data`.
 - **No empty answer that looks true for positions and system baskets.** Right after a start (inputs loading, busy protection, no vectors
   read yet) a list, count or pivot of `position` or `system-basket` answers the refusal with its reason, never 0 rows.
+- **Elements 2 reach the console again from another origin.** Served under `/embed/v2/`, the element took `/embed/v2` for the
+  console's root and asked `/embed/v2/embed/v2/views/...` (a 404 without CORS headers, so the view never went live); the root is now
+  the static root less `static/` or `embed/v2/`, the base path kept.
 - **A page's freshness follows what its source says now.** A refresh whose provenance no longer names an update time or a
   stale-after clears the ones it had; a source that was stale and recovered no longer stays marked stale until a reload.
 - **A site file that gives only `root` moves its template's lake.** Over a template that names a lake, a connector override with

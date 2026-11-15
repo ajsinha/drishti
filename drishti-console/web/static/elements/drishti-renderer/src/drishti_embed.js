@@ -33,7 +33,8 @@ export const cfg = { server: '', tokenProvider: null, auth: null, retryMinMs: 20
  * The console the elements read when no server is named: the one that serves the library.
  * @returns {string}
  */
-export const serverOf = () => (cfg.server || statics('').replace(/static\/$/, '')).replace(/\/$/, '');
+// the console's root (its base path kept): the static root less static/, or, served to other origins under /embed/v2/, less that
+export const serverOf = () => (cfg.server || statics('').replace(/(?:static|embed\/v2)\/$/, '')).replace(/\/$/, '');
 
 
 /**
