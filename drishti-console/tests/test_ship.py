@@ -150,7 +150,8 @@ def test_a_share_link_shows_sutra_ops_and_sample_names_never_contents_and_can_be
     page = app_client.get(made["path"])
     assert page.status_code == 200 and "data-shared" in page.text and "read-only" in page.text
     assert "a.json" in page.text and "b.json" in page.text and "sutra: ship" in page.text
-    assert "T-1" not in page.text and "rates" not in page.text                    # the sample contents never reach the page
+    main = page.text.split('<main id="main">', 1)[1].split("</main>", 1)[0]       # the page's own content (the top bar and menus name other things)
+    assert "T-1" not in main and "rates" not in main                               # the sample contents never reach the page
     assert "data-save" not in page.text and "data-yaml-src" not in page.text       # no editing controls
     assert "/static/js/build/drishti_shared.js" in page.text and app_client.get("/static/js/build/drishti_shared.js").status_code == 200
     assert app_client.get(f"/build/d/{id_}?share=wrong").status_code == 404

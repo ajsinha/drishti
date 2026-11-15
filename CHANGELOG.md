@@ -43,6 +43,8 @@
   as* like every other panel instead of staying on its loading dots.
 - **Records lists without a stream.** A records list whose set has no live stream (TRD, FUND, USEQ over a lake that does not push) said
   *CONNECTING* for as long as it was open; it now says *STATIC* once its rows are drawn.
+- **A history command's pick list keeps its range.** Since search results became the records grid, a history command over a range that matched several
+  records listed them but a row opened its page, not its history; each row's panel now has **History**, over the range asked.
 - **Production data loads: the runbook rehearsal's findings.** Separate loads of several source systems into one shared table
   (`trading.trades_shared`) replace only their own `SOURCE_SYSTEM` slice of a date (Delta by partition, Iceberg by the files' bounds; a row of
   another system is rejected; a shared table that cannot be split refuses a replace; an undo restores the slice alone): before, the last

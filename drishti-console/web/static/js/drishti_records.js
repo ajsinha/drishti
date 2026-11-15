@@ -117,9 +117,11 @@
 
   function auto(root) {
     (root || document).querySelectorAll('[data-records]:not([data-records-mode])').forEach(function (host) {
-      var set = host.getAttribute('data-live-set') || '';
-      mount(host, { set: set, live: host.getAttribute('data-live') === 'on', spec: json(host.getAttribute('data-spec'), null), rows: set ? null : json(host.getAttribute('data-rows'), []),
-        offset: +host.getAttribute('data-drishti-offset') || 0, limit: +host.getAttribute('data-limit') || 0, title: host.getAttribute('data-title') || '' });
+      var set = host.getAttribute('data-live-set') || '', spec = json(host.getAttribute('data-spec'), null), hq = host.getAttribute('data-history') || '';
+      // a pick list of a history command (TRD MX-2000 HIST 3M): each record's panel opens its history over the range asked
+      var history = hq && spec && spec.kind ? [{ label: 'History', run: function (r) { window.location.href = '/v/' + encodeURIComponent(spec.kind) + '/' + encodeURIComponent(r.__id) + '/history?' + hq; } }] : undefined;
+      mount(host, { set: set, live: host.getAttribute('data-live') === 'on', spec: spec, rows: set ? null : json(host.getAttribute('data-rows'), []),
+        offset: +host.getAttribute('data-drishti-offset') || 0, limit: +host.getAttribute('data-limit') || 0, title: host.getAttribute('data-title') || '', rowActions: history });
     });
   }
   window.Drishti.records = { mount: mount, auto: auto, table: table };
