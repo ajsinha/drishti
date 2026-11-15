@@ -44,7 +44,7 @@ Every example below uses invented, Endur-style data (`TRADE_ID`, `PRODUCT_TYPE`,
 13. [The in-memory lake](#13-the-in-memory-lake)
 14. [Delta protocol compliance](#14-delta-protocol-compliance)
 15. [Iceberg spec compliance](#15-iceberg-spec-compliance)
-16. [Runbooks: production data into the lake](#16-runbooks-production-data-into-the-lake) (16.1: [scenario PVs for VaR](#161-production-position-level-scenario-pvs-for-var-explain-and-why-it-moved))
+16. [Runbooks: production data into the lake](#16-runbooks-production-data-into-the-lake) (16.1: [scenario PVs for VaR](#161-production-position-level-scenario-pvs-for-var-explain-and-why-it-moved); 16.2: [trades](#162-production-trades-from-the-source-systems); 16.3: [netting sets](#163-production-netting-sets-with-their-agreements-and-csas))
 
 ## 1. What a lake is
 
@@ -2467,3 +2467,290 @@ significant digits compress less: plan 1.5 to 2 times); the lake about 1.75 GB; 
 added 0.64 GB at 1M); a tuned Java loader run **about 1 to 2.5 minutes** (parse 52,000 rows/s over 24 threads: 25 s; seven files written in parallel at 17,000 rows/s each: 11 s; then the commit; the target is five minutes or less) ([BENCHMARK.md 7.1](../admin/BENCHMARK.md#71-the-200000-position-var-inputs-the-python-path-and-the-java-loader): 20 s
 for 1M positions × 509 values); the first open of a date 25 to 60 s ([BENCHMARK.md 5.4](../admin/BENCHMARK.md#54-a-dates-first-open): 25 to 27 s at 1M), then
 the official capture. With 509 values a vector the gzip, the lake and the hot file about double. The first real day's own numbers replace these.
+
+### 16.2 Production trades from the source systems
+
+**What this loads.** The trades of Endur, Calypso, Murex, WSS, SwapOne and ICI, as JSON Lines in each system's own field names (`UPPER_SNAKE`, as
+Endur names them), into the one canonical `trade` kind (`TRD`). A source system is a **module** (`modules/source-<system>/`) that brings a
+connector template, a field map (`mappings/<system>-trade.yaml`), a routing rule for the inbox (`dataload.yaml`) and its own on/off switch. The trade's
+contract is [`trade.contract.yaml`](../../modules/banking/dmod/packs/trading/contracts/trade.contract.yaml), published as
+[TRD](../contracts/packs/trading.md#trd-trade-trade). **Trades reach VaR only at trade grain, which is not used now**: VaR is fed by position-level scenario PVs
+(16.1) and is unchanged by anything in this section, including switching a source off.
+
+**The modules and where each lands** (tested with the synthetic files of `data/testdata/trades`, 13,400 trades over two dates):
+
+| System | File name the module's rule takes | Native key | Field map | Table (as shipped) |
+|---|---|---|---|---|
+| Endur | `endur-<date>.jsonl.gz` | `TRADE_ID` | identity (Endur writes the canonical fields) | `trading.trade_endur` |
+| Calypso | `calypso-<date>.jsonl.gz` | `TRADE_ID` | identity | `trading.trade_calypso` |
+| Murex | `murex-<date>.jsonl.gz` | `TRADE_ID` | identity | `trading.trade_murex` |
+| WSS | `wss-<date>.jsonl.gz` | `DEAL_REF` | `mappings/wss-trade.yaml` (`DEAL_STATE`, `DEAL_TYPE`, `FAMILY`, `DIR` …) | `trading.trades_shared` |
+| SwapOne | `swapone-<date>.jsonl.gz` | `SWAP_ID` | `mappings/swapone-trade.yaml` (`LIFECYCLE`, `SWAP_FAMILY`, `PAY_LEG.NOTIONAL` …) | `trading.trades_shared` |
+| ICI | `ici-<date>.jsonl.gz` | `TICKET_NO` | `mappings/ici-trade.yaml` (`HEADER.STATE`, `INSTRUMENT.KIND`, `PARTIES.CPTY` …) | `trading.trades_shared` |
+
+The rule's `date-pattern` reads the date from the name (`-(\d{4}-\d{2}-\d{2})\.`): the name must carry it. The files are stored **as the system sent them**; the
+`map:` is applied when trades are **read** (Raw JSON on a trade page shows the stored native record), and `set: {SOURCE_SYSTEM: <SYS>}` stamps the system into
+rows that lack the field. Every field of the contract is listed, with its type and whether it is required, in the contract; **the load checks no field of a trade**
+(tested: WSS, SwapOne and ICI rows carry almost none of the canonical names natively and load whole; what the map does not fill shows empty on the page). The
+fields to get right are the key (`TRADE_ID` or the system's native key), `SOURCE_SYSTEM`, the status, the product, the counterparty, the legal entity and the book.
+
+#### Prerequisites
+
+| Check | Value |
+|---|---|
+| Server heap and loader heap | as 16.1 (`DRISHTI_DATALOAD_LOADER_HEAP`); trades are far lighter than vectors |
+| Disk | 1 million trades a day: the files 0.7 to 1.2 GB gzip (measured 0.65 to 1.2 KB a trade), the lake 1.1 to 2.5 KB a trade, an estimate from the measured 13,400; the inbox keeps a copy 30 days |
+| Inbox | on, one owner node (as 16.1) |
+| The source modules | on: `config/modules/source-<system>.yaml` has `enabled: true` (Admin → Modules) |
+| A token | `loads:write` |
+
+#### Where WSS, SwapOne and ICI go: give each its own table
+
+As shipped the three go to **one shared table** `trading.trades_shared` split by `where: SOURCE_SYSTEM = '<SYS>'`, and the inbox runs **one load a file**, each a
+replace of the date: **tested, the last file loaded wins**: three files for 2026-07-08 (207 WSS, 240 SwapOne, 230 ICI trades) left 230 rows in the table (ICI's), and the
+page showed no WSS and no SwapOne. Do not load several systems into a shared table by separate files. **Give each system its own table**, as Endur,
+Calypso and Murex have (tested: 207, 240 and 230 rows, then 221, 250 and 248 after the second date, all six systems exact):
+
+```yaml
+# config/dataload.yaml (read again every cycle, no restart): the site's rules come first
+dataload:
+  rules:
+    - match: "wss-*.jsonl.gz"
+      pack: trading
+      kind: trade
+      connector: trade-wss
+      table: trade_wss                      # its own table
+      key: DEAL_REF
+      date-from: name
+      date-pattern: '-(\d{4}-\d{2}-\d{2})\.'
+    # the same for swapone-*.jsonl.gz (table trade_swapone, key SWAP_ID, connector trade-swapone)
+    # and ici-*.jsonl.gz (table trade_ici, key TICKET_NO, connector trade-ici)
+```
+
+```yaml
+# config/lakes/demo.yaml, under tables:   (the lake file is the truth; layout as the other three trade tables)
+  trading.trade_wss:
+    kind: trade
+    promote: [SOURCE_SYSTEM]
+    sort-by: [id]                # sorted by the key, with small row groups: one trade is one row group
+    file-rows: 250000
+    row-group-rows: 1000
+    id: DEAL_REF                 # SWAP_ID, TICKET_NO for the others
+    maintenance: {compaction: true, target-file-mb: 256, vacuum: 7d}
+```
+
+```yaml
+# config/connectors/trade-wss.yaml: the read side; the same for swapone and ici. It replaces the module's template (no where:, its own table).
+name: trade-wss
+plugin: delta
+kinds: [trade]
+settings:
+  lake: demo
+  lake-tables: trading.trade_wss
+  union: true
+  source-name: trade-wss
+  set: {SOURCE_SYSTEM: WSS}
+  map: mappings/wss-trade.yaml
+```
+
+Restart the server once so the connectors are read. **The table of an inbox load comes from a rule's `table:` (or the `.ready`'s `table:` for a plain file with no rule),
+never from the site's connector file**: the connector file only decides what is *read* and which constants are stamped (tested: with the lake entry and the connector file but no
+rule, the load still went to `trades_shared`). A tar cannot carry them either: a tar folder must name a table the pack knows (`trade_endur`, `trade_calypso`,
+`trade_murex`; the others are refused, *no pack, kind or table of that name*, and `trades_shared` is refused as ambiguous between three connectors, tested).
+If your site prefers the shared table, send the three systems **in one file a date** (`SOURCE_SYSTEM` on every row) and keep one load a date.
+
+#### Step by step (Linux; each command was run as written)
+
+**1. The files.** One file per system and date, named by the rule, gzipped. **Chunking:** a system's files that are ready in one inbox cycle are **one load and
+one Delta commit a date** (tested: `endur-part1-2026-07-08.jsonl.gz` and `endur-part2-…` made one commit of 4,407 trades); parts of 250,000 to 500,000 trades each, any name matching the
+rule's glob and carrying the date, `endur-part1-2026-07-08.jsonl.gz`. Files for different systems are different loads (one commit each).
+
+**2. Drop the files and their markers.** `.ready` last; an empty marker is enough (the lake is the inbox's `lake:` setting, `demo`). Add `sha256:`
+(`sha256sum`) when you want the file checked; for a plain file `rows:` is checked as well.
+
+```bash
+INBOX=<data>/dataload/inbox
+cp /landing/endur-part1-2026-07-08.jsonl.gz /landing/endur-part2-2026-07-08.jsonl.gz /landing/calypso-2026-07-08.jsonl.gz \
+   /landing/murex-2026-07-08.jsonl.gz /landing/wss-2026-07-08.jsonl.gz /landing/swapone-2026-07-08.jsonl.gz /landing/ici-2026-07-08.jsonl.gz $INBOX/
+for f in $INBOX/*-2026-07-08.jsonl.gz; do touch $f.ready; done                       # Windows: ni "$f.ready"
+export DRISHTI_SERVER=http://host:18480
+python3 tools/drishti.py dataload run --token-file ~/.drishti-token                   # after the 30 s of stability
+python3 tools/drishti.py dataload status --token-file ~/.drishti-token                # done  7 loaded
+```
+
+The three systems' tars are possible too, **for Endur, Calypso and Murex only**: `trade_endur/<date>/…`, `trade_calypso/<date>/…`, `trade_murex/<date>/…` in one tar with one
+`.ready` (a tar loads whole or not at all; tested, 605 trades).
+
+**3. The second date**, the same with `2026-07-09`. **Which trades a date holds is your choice and it matters**: the trade pages, the blotter and the pivot read **one business
+date's rows**, so a trade is seen on a date only when that date's file carries it (tested: a trade of the 2026-07-08 file is not found on 2026-07-09, whose file held only the
+day's changes: *no source holds trade/1000001 … for 2026-07-09*). Send each date's full set of live trades, or knowingly only the day's changes.
+
+**4. The CLI alternative** (`--engine java`, never the Python writer; one run over a system's files, one commit a date):
+
+```bash
+python3 tools/drishti.py lake build --engine java --from /landing/endur-2026-07-08 --as-of 2026-07-08 --lake demo --pack modules/banking/dmod/packs/trading \
+   --kind trade --connector trade-endur --key TRADE_ID --signal $DRISHTI_SERVER --token-file ~/.drishti-token \
+   --loader-set parallel.writers=16 --loader-set memory.budget-mb=20480 --loader-set memory.spill-dir=/fast/spill        # DRISHTI_LAKE_LOADER_HEAP=24g
+```
+
+**5. Verify** (the output is from the tested run):
+
+```bash
+python3 tools/drishti.py pivot run --source trade --date 2026-07-08 --rows SOURCE_SYSTEM --values "count()" $T
+```
+
+```text
+SOURCE_SYSTEM    count()
+CALYPSO            3,471
+ENDUR              4,407
+ICI                  230
+MUREX              4,198
+SWAPONE              240
+WSS                  207
+Grand total       12,753
+```
+
+1. **The counts are the files'** (`zcat endur-*.gz | wc -l`), per system; a system missing from the list is off, or loaded to a table no connector reads.
+2. **A trade** of each system: `python3 tools/drishti.py view get trade/<TRADE_ID> --date 2026-07-08 $T` (about 0.2 s whatever the table: one row group), the same in the console as `TRD <id>`, the
+   trade page's Raw JSON for the stored native record, the Trades menu's **blotter** (`/live/trade`) with a filter on `SOURCE_SYSTEM`.
+3. **The map worked**: WSS `DEAL_STATE: Verified` shows as status `NEW`, SwapOne `SWAP_FAMILY: CDS` as product `CDS_SINGLE`, ICI `INSTRUMENT.SIDE` as `BUY_SELL_CODE`.
+4. **A filter**: `--filter SOURCE_SYSTEM=WSS` (tested: 14 on 2026-07-09).
+
+**Switching a source system on and off.** Admin → Modules, or `enabled: false` in `config/modules/source-<system>.yaml`: **no restart** (tested: ICI left the pivot within 15 seconds and
+came back when switched on). Its trades leave the pages, the blotter, search and BI, its inbox rule goes with it (a site rule stays), and VaR is unchanged.
+
+**A new or changed attribute.** The stored row keeps what the system sent, so a new field costs nothing at load: add it to the system's map (`modules/source-<system>/mappings/<system>-trade.yaml` or a
+`map:` file beside the site's connector: `<canonical>: <native.path>`, with `values:`, `first-of:`, `scale:`, `as:`; section 6.2) and the page shows it; **not tested here**
+whether a connector re-reads a changed map without a restart (restart, or Admin → Connectors). For a **new shape of JSONL** (a seventh system, or a file you cannot map by hand) use the Pack designer's **A source for an existing kind**
+([BUILD_GUIDE.md 8.9](BUILD_GUIDE.md#89-a-source-for-an-existing-kind)): it proposes the map from the file, writes the module `source-<system>` with its rule, connector and map, and deploys it.
+
+#### Troubleshooting
+
+| You see | Why | Do |
+|---|---|---|
+| `failed/`: *no rule matches this name* | the name does not fit `<system>-*.jsonl.gz` | rename, or add a rule |
+| `failed/`: *… is neither the date … nor an extension* | a name with a word between table and date, for a file with no rule | use the rule's pattern (`endur-part1-2026-07-08.jsonl.gz`) |
+| the trades of the system are missing, the others are there | its module is off, or its connector reads a table that holds nothing | `enabled: true`; `pivot run` per system; Admin → Connectors |
+| two systems' trades vanished after loading | a shared table with one load per system (replace) | own tables (above) |
+| `refused, nothing was loaded: trade_ici: no pack, kind or table of that name` | a tar folder that is not a known table | plain files with a rule, or the three known folders |
+| `404 no source holds trade/<id> … for <date>` | the id is not in that date's file | ask the date that has it; send full dates |
+| a page shows empty fields for a mapped system | the native field is not in the map | add it (above) |
+| `DRS-5034` on Admin → Connectors | a `where`, a missing or duplicate map entry | the reason names it |
+
+#### Do not
+
+- Do not load several systems into one shared table by separate files; do not name a part without the date.
+- Do not drop a file without its `.ready`, or edit it in the inbox; do not mix two systems' trades in one file for an own-table system.
+- Do not edit the stored data to fit the map: change the map.
+- Do not expect trades to feed VaR: that is the scenario PVs (16.1).
+- **Never commit production trades**, nor a sample row with real values; rehearse on `data/testdata/trades` (synthetic).
+
+#### Printable checklist
+
+```text
+BEFORE   [ ] source modules on   [ ] own tables for WSS/SwapOne/ICI: rule (config/dataload.yaml) + lake entry + connector file, server restarted
+         [ ] inbox on, token   [ ] disk for the files twice (inbox, outbox)   [ ] loader heap as 16.1
+FILES    [ ] <system>-<date>.jsonl.gz (parts: <system>-partN-<date>.jsonl.gz)   [ ] native key present   [ ] each date a full set (or deltas knowingly)
+LOAD     [ ] cp files   [ ] touch .ready   [ ] dataload run   [ ] status: done N loaded
+VERIFY   [ ] pivot count per SOURCE_SYSTEM = rows sent   [ ] view get trade/<id> --date D for one trade of each system   [ ] blotter filter SOURCE_SYSTEM
+         [ ] mapped fields filled   [ ] switch one source off and on again
+```
+
+#### What was measured
+
+13,400 trades of the six systems in two dates (12,753 and 647), gzip 9.4 MB, one 24-thread workstation, `-Xmx4g` loader. The seven files of the first date: **11 s** from claim to loaded
+(one JVM a connector: 1 to 3 s each; Murex 4,198 trades of 64 MB as text in 2.3 s). Stored size a trade: Endur about 1.5 KB, Calypso 1.1 KB, Murex 2.5 KB (15 KB as text). The lake:
+Endur partitioned by `PRODUCT_TYPE`, Calypso and Murex by `PRODUCT_GROUP`, the others by date alone. **Estimate for 1M trades a date**: 1 to 3 GB of lake, the load one to a few minutes
+(the loader parsed 166 MB/s of text in 16.1's run; Murex-shaped trades are 15 KB of text each, 15 GB, about 2 minutes of parsing). The files of one system are one run: split a day of 1M into parts of 250,000 to 500,000.
+
+### 16.3 Production netting sets, with their agreements and CSAs
+
+**What this loads.** The counterparty-risk pack's `netting-set` (`NSET`), with the `agreement` (`AGR`) and `csa` (`CSA`) it points at, from the xVA engine and the legal
+documents system: one JSON object per netting set and business date, its member trades inside it (`TRADES`). The contracts are
+[`netting-set`](../../modules/banking/dmod/packs/counterparty-risk/contracts/netting-set.contract.yaml),
+[`agreement`](../../modules/banking/dmod/packs/counterparty-risk/contracts/agreement.contract.yaml) and
+[`csa`](../../modules/banking/dmod/packs/counterparty-risk/contracts/csa.contract.yaml), published with the pack ([contracts](../contracts/packs/counterparty-risk.md)).
+
+**Related inputs, and how they link.**
+
+| Kind | Needed | Link |
+|---|---|---|
+| `netting-set` | the batch | `AGREEMENT`, `CSA`, `COUNTERPARTY`, `LEGAL_ENTITY`, `CREDIT_LIMIT`, `CVA_RESULT`, `SACCR`, `SIMM`, `COLLATERAL_BALANCE` name the other kinds' ids |
+| `agreement` | yes, one per master agreement | `CSAS` lists its CSAs; `COUNTERPARTY` |
+| `csa` | yes, one per agreement and bank legal entity | `AGREEMENT`, `NETTING_SETS`, `COLLATERAL_BALANCES` |
+| `counterparty`, `legal-entity` (core pack) | already in the lake: the page names them | `COUNTERPARTY`, `LEGAL_ENTITY` |
+| `credit-limit`, `cva`, `sa-ccr`, `simm`, `collateral-balance` | optional: the sections of the netting-set page that read them show *Under construction* or empty without them | the ids above |
+| `exposure-path` | optional: the exposure profile, EPE and PFE (*no exposure paths in any connector* otherwise, tested) | `NETTING_SET` |
+
+**Fields.** The netting set's contract: 19 fields, 18 required. The ones the pages read: `NETTING_SET_ID` (the key, `NS-<counterparty>-<legal entity>`), `TRADE_COUNT`, `NET_MTM`, `COLLATERAL`, `LIMIT`, `CVA`,
+`TRADES` (the member trades, one element each with its id, status, product, notional, maturity and MtM), `BY_ASSET`, `COUNTERPARTY`, `AGREEMENT`, `CSA`, `LEGAL_ENTITY`,
+`NETTING_ENFORCEABLE` (false treats the trades gross). The load rejects nothing of them (tested path: the rehearsal's records carry all 19). `TRADE_IDS` is optional.
+
+**Layout.** The lake file has `credit.netting-set: {id: NETTING_SET_ID}`: partitioned by business date only, the writer's default sort and row groups. One date of 5,000 sets is one small file;
+the record page opened in 0.28 s (client included). For a production count of tens of thousands add the trades' layout (`sort-by: [id]`, `row-group-rows: 1000`) to the entry: **not tested here**, the
+default layout was.
+
+#### Step by step (Linux; each command was run as written)
+
+**1. The files.** One tar a business date: `netting-set/<date>/`, `agreement/<date>/`, `csa/<date>/` (section 4.4: the folders are the pack's kinds), parts of 50,000 sets each at about 3.3 KB of text a
+set (tested size; a set with a few hundred trades is larger).
+
+```bash
+python3 tools/pvgen/bulk_netting.py --out /rehearsal/ns --dates 2026-07-08,2026-07-09 --sets 5000          # a rehearsal batch: synthetic, never commit
+tar -C /rehearsal/ns -cf /rehearsal/nset-2026-07-08.tar netting-set/2026-07-08 agreement/2026-07-08 csa/2026-07-08
+```
+
+**2. Drop it** with its `.ready` last, and run the cycle (as 16.1 step 2):
+
+```bash
+cp /rehearsal/nset-2026-07-08.tar $INBOX/
+printf 'lake: demo\nsha256: %s\n' $(sha256sum /rehearsal/nset-2026-07-08.tar | cut -c1-64) > $INBOX/nset-2026-07-08.tar.ready
+python3 tools/drishti.py dataload run --token-file ~/.drishti-token
+```
+
+**3. The second date**, the same with 2026-07-09 (both tars in one cycle load as two runs). Each tar loads three tables, **one commit a date for each** (tested: 6 loads, 6 commits for two dates).
+With the CLI use `--engine java` and one run per kind (16.1 step 4).
+
+**4. Verify.**
+
+```bash
+python3 tools/drishti.py pivot run --source netting-set --date 2026-07-09 --rows LEGAL_ENTITY --values "count()" --values "sum(NET_MTM)" $T
+python3 tools/drishti.py view get "netting-set/NS-SOLARIS-TKY-004320" --date 2026-07-09 $T          # the record page; console: NSET <id>
+python3 tools/drishti.py view get "csa/CSA-ALDERSHOT-FRA-000000" --date 2026-07-09 $T                 # CSA, and agreement/<id> for AGR
+python3 tools/drishti.py lake status --lake demo $T                                                    # credit/netting-set, legal/csa, legal/agreement: rows, dates
+```
+
+Tested: 5,000 netting sets, 5,000 CSAs and 2,764 agreements on each date; the pivot's grand total 5,000 on each date; the page shows *Trades 14*, net MtM, collateral and the **Member trades (14 of 14)** table; EPE
+and PFE are empty until `exposure-path` rows exist. **Pass `--date`**: without it the page asks the newest date any source has (here 2026-11-13) and answers *no source holds netting-set/… (file for 2026-11-13)*.
+
+#### Troubleshooting
+
+| You see | Why | Do |
+|---|---|---|
+| `404 no source holds netting-set/<id> … for <date>` | the date asked has no such set | `--date` of a loaded date |
+| a netting set's page says *Under construction* for CVA, empty EPE and PFE | `cva` / `exposure-path` not loaded | load them  |
+| the CSA page does not list its sets | `NETTING_SETS` missing on the CSA | send it, or the agreement's `CSAS` |
+| `refused … no pack, kind or table of that name` | a tar folder that is not a kind of the pack | `netting-set`, `agreement`, `csa` |
+| *already loaded in run …* | same bytes sent twice | change the file |
+
+#### Do not
+
+- Do not send a netting set whose `CSA` or `AGREEMENT` is not in the same date's files: the link pages are empty.
+- Do not name the tar's folders in other words, or put the date in the `.ready` of a tar.
+- **Never commit production netting sets** (counterparty names, limits and MtM are confidential); rehearse on `tools/pvgen/bulk_netting.py`.
+
+#### Printable checklist
+
+```text
+BEFORE   [ ] inbox on, token   [ ] disk (the tar twice)   [ ] counterparties and legal entities already loaded (core pack)
+FILES    [ ] NETTING_SET_ID, AGREEMENT, CSA, COUNTERPARTY, LEGAL_ENTITY, TRADES on every set   [ ] every AGREEMENT and CSA the sets name is in the same date's files
+         [ ] one tar a date: netting-set/<date>/ agreement/<date>/ csa/<date>/   [ ] sha256 in the .ready
+LOAD     [ ] earlier date first   [ ] cp tar   [ ] .ready LAST   [ ] dataload run   [ ] done N loaded
+VERIFY   [ ] pivot count = sets sent, per date   [ ] view get netting-set/<id> --date D   [ ] the CSA and agreement pages   [ ] lake status shows both dates
+```
+
+#### What was measured
+
+5,000 netting sets (a 3.3 KB set, 16 MB gzip a date as text 3 times that), 5,000 CSAs and 2,764 agreements on each of two dates, generated in 9 s; the inbox loaded both tars in one cycle,
+each table of each tar in 1.0 to 1.7 s (JVM start included): 44 MB of lake for 10,000 sets (4.4 KB a set), pivot of 5,000 sets 2.6 to 3.1 s the first time. **Estimate**: tens of thousands of sets a day are tens of MB of
+tar and a load of seconds.
