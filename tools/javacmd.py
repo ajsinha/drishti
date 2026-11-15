@@ -37,6 +37,16 @@ from pathlib import Path
 
 FLAG = "-Djava.io.tmpdir="
 
+# The optional settings file (tools/settingsfile.py, --settings): when a tool was given one, every JVM it starts gets
+# -Ddrishti.settings.file=<the same absolute path>, unless the arguments already carry one.
+SETTINGS_FLAG = "-Ddrishti.settings.file="
+_SETTINGS: list = []
+
+
+def set_settings(path) -> None:
+    """Remembers the settings file (an absolute path, already checked) for every ``java_cmd`` of this process; None clears it."""
+    _SETTINGS[:] = [str(path)] if path else []
+
 
 def server_tmp(cwd=None, env=None) -> Path:
     """The server's temp base for a server started in ``cwd`` with ``env``: DRISHTI_TMP_DIR, else <data dir>/tmp/server."""
@@ -96,9 +106,10 @@ def java_cmd(java, args, tmp=None, cwd=None, env=None) -> list:
     args = [str(a) for a in args]
     cache = [] if any(a.startswith(CACHE_FLAG) for a in args) else [CACHE_LIMIT]
     compact = version_flags(java, args)
+    settings = [SETTINGS_FLAG + _SETTINGS[0]] if _SETTINGS and not any(a.startswith(SETTINGS_FLAG) for a in args) else []
     if any(a.startswith(FLAG) for a in args):
-        return [str(java), *compact, *cache, *args]
-    return [str(java), tmp_flag(tmp, cwd, env), *compact, *cache, *args]
+        return [str(java), *settings, *compact, *cache, *args]
+    return [str(java), tmp_flag(tmp, cwd, env), *settings, *compact, *cache, *args]
 
 
 @contextlib.contextmanager

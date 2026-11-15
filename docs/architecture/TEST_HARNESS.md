@@ -625,7 +625,7 @@ both absolute (`testing/drishti-testroots`, a test dependency every module inher
 `-Ddrishti.settings.file=/absolute/path/drishti.ini` ([the format](../admin/CONFIGURATION.md)), then the test class's own code location
 (its `target/test-classes` up to the nearest `pom.xml`, and from there to the folder holding `.mvn/`); never the working folder. Nothing needs
 setting for a test built by Maven's importer. To pin or override roots once for all tests in IntelliJ: Run > Edit Configurations > Edit
-configuration templates > JUnit > VM options: `-Ddrishti.settings.file=/home/me/drishti.ini`. `TestPathsGuardTest` (Java) and
+configuration templates > JUnit > VM options: `-Ddrishti.settings.file=/home/me/drishti.ini`. One file per setup works well; `config/settings.examples/test.ini` is a commented starting point. `TestPathsGuardTest` (Java) and
 `tests/test_paths_guard.py` (Python) fail on a test that builds a path from the working folder.
 
 ## 7. Measuring a run

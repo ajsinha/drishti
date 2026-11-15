@@ -131,12 +131,53 @@ def _merge(base: dict[str, Any], over: dict[str, Any]) -> dict[str, Any]:
     return base
 
 
+def _pop_settings_option(argv: list[str]) -> tuple[list[str], str | None]:
+    """``argv`` without ``--settings <path>`` / ``--settings=<path>``, and the path (the same option as tools/drishti.py)."""
+    rest: list[str] = []
+    path = None
+    it = iter(argv)
+    for a in it:
+        if a == "--settings":
+            path = next(it, None)
+            if path is None:
+                raise SystemExit("--settings needs the absolute path of the settings file")
+        elif a.startswith("--settings="):
+            path = a.split("=", 1)[1]
+        else:
+            rest.append(a)
+    return rest, path
+
+
+def _read_settings_file(path: str) -> dict[str, str]:
+    """The optional settings file (the format of kernel/drishti-settingsfile and tools/settingsfile.py): absolute path only, key=value
+    lines, ``#``/``;`` comments, ``[section]`` lines ignored. Keys the console does not know are harmless."""
+    p = Path(path)
+    if not p.is_absolute():
+        raise SystemExit(f"--settings must be a full absolute path, got \"{path}\" (never searched for, never relative to the working folder)")
+    if not p.is_file():
+        raise SystemExit(f"--settings names {p}, which is not a file")
+    out: dict[str, str] = {}
+    for n, raw in enumerate(p.read_text(encoding="utf-8").splitlines(), 1):
+        line = raw.strip()
+        if not line or line.startswith(("#", ";")) or (line.startswith("[") and line.endswith("]")):
+            continue
+        key, eq, value = line.partition("=")
+        if not eq or not key.strip():
+            raise SystemExit(f"{p}:{n}: expected key=value, got \"{line}\"")
+        out[key.strip()] = value.strip()
+    return out
+
+
 def load_settings(config_dir: Path, argv: list[str] | None = None) -> Settings:
     files: list[dict[str, Any]] = []
     for name in ("application.yaml", "application.local.yaml"):
         path = config_dir / name
         files.append(_interpolate(yaml.safe_load(path.read_text(encoding="utf-8")) or {}) if path.exists() else {})
     base, over = files
+    argv, settings_path = _pop_settings_option(list(argv or []))
+    if settings_path:                       # --settings /abs/drishti.ini: the file's keys sit below the environment and the command line
+        for k, v in _read_settings_file(settings_path).items():
+            _set(over, k, _coerce(v))
     for key, value in os.environ.items():
         if key.startswith(_ENV_PREFIX):
             _set(over, key[len(_ENV_PREFIX):].lower().replace("__", "."), _coerce(value))

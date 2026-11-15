@@ -168,6 +168,11 @@ drishti.data.dir=/srv/drishti/data
 - Blank lines and lines starting with `#` or `;` are comments. The first `=` splits key from value.
 - Java: `-Ddrishti.settings.file=/abs/drishti.ini` (the IDE's VM options, Maven's `-D`, surefire's `argLine`); the loader is
   `com.ash.drishti.settingsfile.SettingsFile.applyFromSystemProperty()` (module `kernel/drishti-settingsfile`, reached through `drishti-common`).
+- Python tools: `python tools/drishti.py --settings /abs/drishti.ini ...` reads the same format (`tools/settingsfile.py`) and passes
+  `-Ddrishti.settings.file=<the same path>` to every JVM it starts.
+- One file per environment: commented examples for a developer machine, a test setup and production are in
+  `config/settings.examples/` (`dev.ini`, `test.ini`, `prod.ini`, placeholders such as `/path/to/drishti`). Copy one out and edit it; nothing
+  reads that folder automatically, and secrets stay in `secrets.env`, referenced by path.
 - Tests find the repository and their module through it too (`drishti.repo.root`, `drishti.module.root`); see
   [the test harness](../architecture/TEST_HARNESS.md#running-tests-from-an-ide).
 
