@@ -23,6 +23,7 @@ com.ash.drishti.identity.collab
 com.ash.drishti.identity.content
 com.ash.drishti.lakeconfig
 com.ash.drishti.lakeio
+com.ash.drishti.messaging
 com.ash.drishti.net.transport
 com.ash.drishti.packs
 com.ash.drishti.plugin.iceberg
