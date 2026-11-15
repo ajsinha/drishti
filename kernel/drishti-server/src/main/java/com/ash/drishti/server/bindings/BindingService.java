@@ -326,7 +326,9 @@ public final class BindingService {
                     layer = connectors.layered(name).map(ConnectorLayers.Effective::layer)
                             .orElse(reg.applied(name).isPresent() ? ConnectorLayers.TEMPLATE : "plugin");
                 } catch (RuntimeException e) {                 // a site file that cannot be used: Admin -> Connectors says why
-                    layer = "unusable: " + e.getMessage();
+                    // a generated file of a connector the server itself defines (an engine's: var-positions, var-system-baskets) has no template
+                    // to merge over and is not used: the connector it names runs and serves from the server's own definition
+                    layer = reg.applied(name).isPresent() ? ConnectorLayers.TEMPLATE : "unusable: " + e.getMessage();
                 }
                 c.put("layer", layer);
                 c.put("plugin", reg.applied(name).map(com.ash.drishti.engine.source.SourcesProperties.ConnectorSettings::plugin).orElse(name));

@@ -501,8 +501,9 @@ public final class ConnectorManager {
                 }
             }
         }
+        com.ash.drishti.api.resolution.ConfigResolution res = com.ash.drishti.packs.PackPaths.resolution(env);
         // a module's template no pack carries (its kinds are in no loaded pack): the resolution the packs were loaded from holds it
-        com.ash.drishti.api.resolution.ModuleTemplates.Template m = com.ash.drishti.packs.PackPaths.resolution(env).templates().get(name);
+        com.ash.drishti.api.resolution.ModuleTemplates.Template m = res.templates().get(name);
         if (m != null) {
             return Optional.of(new Template(m.module(), com.ash.drishti.packs.PackEnvironmentPostProcessor.officialReaders(env).apply(m.definition())));
         }
@@ -622,7 +623,8 @@ public final class ConnectorManager {
     }
 
     private ConnectorLayers.Effective layered(String name, String text) {
-        return ConnectorLayers.effective(files, name, text, template(name).map(Template::definition).orElse(null));
+        Optional<Template> t = template(name);
+        return ConnectorLayers.effective(files, name, text, t.map(Template::definition).orElse(null));
     }
 
     /** The connector names a pack refers to for which nothing is defined (the pack loads; those kinds report it). */
