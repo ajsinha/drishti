@@ -70,7 +70,7 @@ public final class PackLoader {
      * {@code <name>/pack.yaml} wins (packs installed from a registry come before the shipped ones).
      */
     public List<Pack> load(List<Path> dirs, List<String> enabled) {
-        return load(byFolders(dirs), enabled);
+        return load(byFolders(dirs), enabled, null);
     }
 
     /**
@@ -78,12 +78,12 @@ public final class PackLoader {
      * section 18.4): the site, the modules that are on, the kernel. A pack no layer has stops the load with the places looked in.
      */
     public List<Pack> load(com.ash.drishti.api.resolution.ConfigResolution resolution, List<String> enabled) {
-        return load(locator(resolution), enabled);
+        return load(locator(resolution), enabled, resolution);
     }
 
     /** Reads one pack the resolution finds; throws {@link IllegalStateException} when no layer has it. */
     public Pack readOne(com.ash.drishti.api.resolution.ConfigResolution resolution, String name) {
-        return readAt(locator(resolution).apply(name), name, null);
+        return readAt(locator(resolution).apply(name), name, null, resolution);
     }
 
     /** The pack folder of a name in a resolution, or a {@link IllegalStateException} naming the layers looked in (DRS-1041 / DRS-1043). */
@@ -110,12 +110,12 @@ public final class PackLoader {
         };
     }
 
-    private List<Pack> load(java.util.function.Function<String, Path> locate, List<String> enabled) {
+    private List<Pack> load(java.util.function.Function<String, Path> locate, List<String> enabled, com.ash.drishti.api.resolution.ConfigResolution res) {
         Map<String, Pack> done = new LinkedHashMap<>();
         for (String name : enabled) {
             String n = name.trim();
             if (!n.isEmpty()) {
-                visit(locate, n, done, new java.util.ArrayDeque<>());
+                visit(locate, n, done, new java.util.ArrayDeque<>(), res);
             }
         }
         return new ArrayList<>(done.values());
@@ -149,7 +149,7 @@ public final class PackLoader {
 
     /** Reads one pack from the first folder that has it; throws {@link IllegalStateException} when none does or the manifest is wrong. */
     public Pack readOne(List<Path> dirs, String name) {
-        return readAt(byFolders(dirs).apply(name), name, null);
+        return readAt(byFolders(dirs).apply(name), name, null, null);
     }
 
     /** The names of the pack folders (those holding a {@code pack.yaml}) in the folders, the first folder winning a name. */
@@ -168,7 +168,8 @@ public final class PackLoader {
         return List.copyOf(out);
     }
 
-    private void visit(java.util.function.Function<String, Path> locate, String name, Map<String, Pack> done, java.util.Deque<String> path) {
+    private void visit(java.util.function.Function<String, Path> locate, String name, Map<String, Pack> done, java.util.Deque<String> path,
+            com.ash.drishti.api.resolution.ConfigResolution res) {
         if (done.containsKey(name)) {
             return;
         }
@@ -177,15 +178,15 @@ public final class PackLoader {
         }
         path.addLast(name);
         String requiredBy = path.size() > 1 ? path.toArray(new String[0])[path.size() - 2] : null;
-        Pack p = readAt(locate.apply(name), name, requiredBy);
+        Pack p = readAt(locate.apply(name), name, requiredBy, res);
         for (String r : p.parents()) {
-            visit(locate, r.trim(), done, path);
+            visit(locate, r.trim(), done, path, res);
         }
         path.removeLast();
         done.put(name, p);
     }
 
-    private Pack readAt(Path packDir, String n, String requiredBy) {
+    private Pack readAt(Path packDir, String n, String requiredBy, com.ash.drishti.api.resolution.ConfigResolution res) {
         Path manifest = packDir.resolve("pack.yaml");
         if (!Files.isRegularFile(manifest)) {
             throw new IllegalStateException("pack '" + n + "' not found at " + manifest
@@ -196,7 +197,7 @@ public final class PackLoader {
             if (!n.equals(m.get("pack"))) {
                 throw new IllegalStateException(manifest + " declares pack '" + m.get("pack") + "', expected '" + n + "'");
             }
-            m = withModuleConnectors(manifest, n, m);
+            m = withModuleConnectors(manifest, n, m, res);
             return new Pack(n, String.valueOf(m.getOrDefault("version", "0")), String.valueOf(m.getOrDefault("title", n)),
                     String.valueOf(m.getOrDefault("description", "")), packDir.toAbsolutePath(), m);
         } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
@@ -216,7 +217,7 @@ public final class PackLoader {
      * source system's connectors (docs/guides/DATA_GUIDE.md, "Connector layers").
      */
     @SuppressWarnings("unchecked")
-    static Map<String, Object> withModuleConnectors(Path manifest, String pack, Map<String, Object> m) throws IOException {
+    static Map<String, Object> withModuleConnectors(Path manifest, String pack, Map<String, Object> m, com.ash.drishti.api.resolution.ConfigResolution res) throws IOException {
         if (m.get("connectors") != null && !(m.get("connectors") instanceof Map<?, ?>)) {
             return m;                                                    // a list of names: no templates of its own, none added
         }
@@ -226,7 +227,8 @@ public final class PackLoader {
         } else if (m.get("kinds") instanceof Map<?, ?> km) {
             km.keySet().forEach(k -> kinds.add(String.valueOf(k)));
         }
-        Map<String, Map<String, Object>> mods = com.ash.drishti.lakeconfig.ModuleConnectors.forKinds(kinds);
+        // the resolution this load was given (a server's own), never another one in the same process
+        Map<String, Map<String, Object>> mods = res != null ? res.templatesForKinds(kinds) : com.ash.drishti.lakeconfig.ModuleConnectors.forKinds(kinds);
         if (mods.isEmpty()) {
             return m;
         }

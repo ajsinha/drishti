@@ -409,4 +409,21 @@ final class ConnectorInstance implements SourcePlugin {
     public void close() {
         delegate.close();
     }
+
+    // a connector writes with its plugin's write path (APPROVALS_GUIDE.md section 5.4): the instance is the plugin, so it passes it on
+
+    @Override
+    public java.util.Optional<String> writeKey() {
+        return delegate.writeKey();
+    }
+
+    @Override
+    public List<String> checkWrite(String command, java.util.Map<String, Object> block, java.util.Set<String> known) {
+        return delegate.checkWrite(command, block, known);
+    }
+
+    @Override
+    public com.ash.drishti.api.write.WriteResult write(com.ash.drishti.api.write.WriteCommand command) throws Exception {
+        return delegate.write(command);
+    }
 }

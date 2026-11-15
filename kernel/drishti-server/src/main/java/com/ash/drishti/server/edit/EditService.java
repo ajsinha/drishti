@@ -350,8 +350,11 @@ public final class EditService {
         if ("source".equals(c.target())) {
             String system = c.origin("sourceSystem");
             if (system != null && c.connector() == null) {
-                throw refused(p, c.key(), "source " + system + " has no write path for " + c.command() + ": a change goes only to the system the "
-                        + "record came from");
+                List<String> own = route.connectorsOf(system);
+                String why = own.isEmpty() ? "no connector of " + system + " writes"
+                        : own.stream().map(n -> n + ": " + commands.unusable(n, c.command(), c.kind()).orElse("usable")).collect(java.util.stream.Collectors.joining("; "));
+                throw refused(p, c.key(), "source " + system + " has no write path for " + c.command() + " (" + why + "): a change goes only to the "
+                        + "system the record came from");
             }
             if (c.connector() == null || c.command() == null) {
                 throw refused(p, c.key(), "the form sends to a source but names no connector or command");

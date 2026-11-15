@@ -280,7 +280,8 @@ public final class ConnectorLayers {
         PackLoader.flatten("", t.get("settings") instanceof Map<?, ?> s ? (Map<String, Object>) s : Map.of(), flat);
         List<String> kinds = ConnectorFiles.kindNames(t.get("kinds"));
         return files.render(header.isEmpty() ? "" : "# " + header, String.valueOf(t.get("plugin")), t.get("enabled"), kinds,
-                t.get("description") == null ? "" : String.valueOf(t.get("description")), flat, Map.of(), ConnectorFiles.computeOf(t));
+                t.get("description") == null ? "" : String.valueOf(t.get("description")), flat, Map.of(), ConnectorFiles.computeOf(t),
+                t.get("writes") instanceof Map<?, ?> w ? (Map<String, Object>) w : Map.of());   // a template's write commands are part of it (18.6)
     }
 
     /**

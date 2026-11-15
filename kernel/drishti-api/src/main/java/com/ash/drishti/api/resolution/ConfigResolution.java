@@ -82,6 +82,17 @@ public record ConfigResolution(ResolutionSettings settings, Predicate<String> ac
         return build(ResolutionSettings.of(p::get), id -> true);
     }
 
+    /**
+     * A resolution of this process's own settings, built now (a command line, a loader process): each setting from its system property,
+     * else its environment variable ({@code drishti.packs.dir} -> {@code DRISHTI_PACKS_DIR}). Never another server's in the same JVM.
+     */
+    public static ConfigResolution ofProcess() {
+        return offline(k -> {
+            String v = System.getProperty(k);
+            return v != null ? v : System.getenv(k.toUpperCase(java.util.Locale.ROOT).replace('.', '_').replace('-', '_'));
+        });
+    }
+
     /** Every pack folder of this resolution, in pack-name order. */
     public List<Path> packDirs() {
         return new java.util.TreeMap<>(packs.packs()).values().stream().map(PackResolver.Located::dir).toList();
@@ -96,7 +107,7 @@ public record ConfigResolution(ResolutionSettings settings, Predicate<String> ac
     public static ConfigResolution currentOrOffline() {
         ConfigResolution r = CURRENT.get();
         if (r == null) {
-            r = offline(System::getProperty);
+            r = ofProcess();
             CURRENT.compareAndSet(null, r);
             r = CURRENT.get();
         }

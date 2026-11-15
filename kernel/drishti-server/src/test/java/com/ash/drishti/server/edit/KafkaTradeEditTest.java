@@ -18,7 +18,6 @@ package com.ash.drishti.server.edit;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.ash.drishti.server.security.TokenVerifier;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -111,7 +110,9 @@ class KafkaTradeEditTest {
         if (body != null) {
             req = req.contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(body));
         }
-        String out = mvc.perform(req).andExpect(status().is(expect)).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+        var res = mvc.perform(req).andReturn().getResponse();
+        String out = res.getContentAsString(StandardCharsets.UTF_8);
+        assertThat(res.getStatus()).as(method + " " + url + ": " + out).isEqualTo(expect);
         return out.isBlank() ? json.createObjectNode() : json.readTree(out);
     }
 
@@ -185,7 +186,8 @@ class KafkaTradeEditTest {
         until = System.nanoTime() + TimeUnit.SECONDS.toNanos(30);
         String refused = "";
         while (System.nanoTime() < until) {
-            var r = mvc.perform(post("/api/v1/live/trade/edit").header("Authorization", kim).contentType(MediaType.APPLICATION_JSON)
+            var r = mvc.perform(post("/api/v1/live/trade/edit").header("Authorization", tia)   // a trader (the checker holds no edit power)
+                    .contentType(MediaType.APPLICATION_JSON)
                     .content(json.writeValueAsString(Map.of("entity", "EN-1", "basedOn", 1, "reason", "late",
                             "items", List.of(Map.of("field", "PRICE", "from", 10.5, "to", 11)))))).andReturn().getResponse();
             if (r.getStatus() == 409) {

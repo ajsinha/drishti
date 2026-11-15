@@ -139,7 +139,7 @@ public class CatalogController {
             m.put("sample", p.sample());
             // where the pack was found (KERNEL_AND_MODULES.md section 18): the console reads the pack's files from here, never by a folder rule
             m.put("dir", p.dir().toString());
-            com.ash.drishti.api.resolution.ConfigResolution res = com.ash.drishti.api.resolution.ConfigResolution.current();
+            com.ash.drishti.api.resolution.ConfigResolution res = packRegistry.resolution();
             com.ash.drishti.api.resolution.PackResolver.Located at = res == null ? null : res.packs().packs().get(p.name());
             m.put("origin", at == null ? "" : at.origin());
             m.put("kinds", p.kinds().stream().filter(k -> !packAccess.commandOff(k) && edition.kindShown(k)).toList());   // a command turned off: its kind is not named

@@ -590,13 +590,16 @@ public final class SutraCli {
             if (Files.isRegularFile(p)) {
                 found.add(unit(p));
             } else if (Files.isDirectory(p)) {
-                boolean root = !packRoot(p.toAbsolutePath().normalize()).isEmpty();      // config/packs: <pack>/tests is each pack's samples
-                try (Stream<Path> walk = Files.walk(p)) {
-                    for (Path f : walk.filter(x -> x.getFileName().toString().endsWith(".sutra.yaml"))
-                            .filter(x -> !p.relativize(x).startsWith("tests"))
-                            .filter(x -> !root || !inPackTests(p.relativize(x)))
-                            .sorted().toList()) {
-                        found.add(unit(f));
+                // a packs root (config/packs): each pack's sutras folder, wherever the resolution finds the pack (a module's too); its
+                // tests/ are samples. Any other folder: searched as it is
+                List<Path> sutraDirs = packRoot(p.toAbsolutePath().normalize());
+                for (Path base : sutraDirs.isEmpty() ? List.of(p) : sutraDirs) {
+                    try (Stream<Path> walk = Files.walk(base)) {
+                        for (Path f : walk.filter(x -> x.getFileName().toString().endsWith(".sutra.yaml"))
+                                .filter(x -> !base.relativize(x).startsWith("tests"))
+                                .sorted().toList()) {
+                            found.add(unit(f));
+                        }
                     }
                 }
             } else {
@@ -679,7 +682,7 @@ public final class SutraCli {
             return List.of();
         }
         List<Path> out = new ArrayList<>();
-        com.ash.drishti.api.resolution.ConfigResolution r = com.ash.drishti.api.resolution.ConfigResolution.currentOrOffline();
+        com.ash.drishti.api.resolution.ConfigResolution r = com.ash.drishti.api.resolution.ConfigResolution.ofProcess();
         if (dir.toAbsolutePath().normalize().equals(r.settings().siteDir())) {   // the site's packs folder: every pack the resolution finds
             r.packs().packs().values().stream().map(l -> l.dir().resolve("sutras")).filter(Files::isDirectory).forEach(out::add);
             return out.stream().sorted().toList();
@@ -693,16 +696,6 @@ public final class SutraCli {
             }
         }
         return out.stream().sorted().toList();
-    }
-
-    /** Whether a file under a packs root is in a pack's {@code tests} folder ({@code <pack>/tests/...} or {@code <domain>/<pack>/tests/...}). */
-    private static boolean inPackTests(Path rel) {
-        for (int i = 1; i <= 2 && i < rel.getNameCount() - 1; i++) {
-            if (rel.getName(i).toString().equals("tests")) {
-                return true;
-            }
-        }
-        return false;
     }
 
     private static boolean hasBlocks(Path dir) {

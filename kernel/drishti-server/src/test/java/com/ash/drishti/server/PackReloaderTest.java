@@ -37,7 +37,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BooleanSupplier;
 import java.util.stream.Stream;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,16 +46,18 @@ import org.springframework.boot.test.context.SpringBootTest;
  * Live pack reload against real folders: a pack folder added, edited (well and badly), extended by another and deleted, a
  * burst of callers, and the sample-pack mode. The watcher polls every 200 ms here; every change is picked up without a restart.
  */
-@SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=alpha",
+@SpringBootTest(properties = {"drishti.packs.dir=${drishti.test.dir}/pack-reloader/packs",
+        "drishti.packs.installed-dir=${drishti.test.dir}/pack-reloader/installed",
+        "drishti.packs.overlay=${drishti.test.dir}/pack-reloader/added.yaml", "drishti.packs.settings-dir=${drishti.test.dir}/pack-reloader/settings",
+        "drishti.sources.connectors-dir=${drishti.test.dir}/pack-reloader/connectors",
+        "drishti.packs.samples-file=${drishti.test.dir}/pack-reloader/samples-mode",
+        "drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=alpha",
         "drishti.packs.watch=poll", "drishti.packs.poll=200ms", "drishti.packs.reload-debounce=100ms",
         "drishti.retry.packs.initial=300ms", "drishti.retry.packs.max=1s", "drishti.retry.packs.jitter=0",
         "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/packreload-${random.uuid}/identity.db"})
 class PackReloaderTest {
 
     static Path root;
-    private static final String[] SYSTEM_PROPERTIES = {"drishti.packs.dir", "drishti.packs.installed-dir", "drishti.packs.overlay",
-            "drishti.packs.settings-dir", "drishti.sources.connectors-dir", "drishti.packs.samples-file"};
-    private static final java.util.Map<String, String> BEFORE = new java.util.HashMap<>();
     private static final String SUTRA = """
             rachana: 1
             sutra: widget-view
@@ -71,36 +72,14 @@ class PackReloaderTest {
             """;
 
     static {
-        for (String k : SYSTEM_PROPERTIES) {
-            BEFORE.put(k, System.getProperty(k));
-        }
         try {
-            root = TestRun.temp("drishti-reload");
+            root = com.ash.drishti.server.TestRun.dir("pack-reloader");   // its own folder, named in the properties above
             write("alpha", "Alpha", List.of(), List.of("thing"), "ALP", false, false);
-            System.setProperty("drishti.packs.dir", root.resolve("packs").toString());
-            System.setProperty("drishti.packs.installed-dir", root.resolve("installed").toString());
-            System.setProperty("drishti.packs.overlay", root.resolve("added.yaml").toString());
-            System.setProperty("drishti.packs.settings-dir", root.resolve("settings").toString());
-            System.setProperty("drishti.sources.connectors-dir", root.resolve("connectors").toString());
-            System.setProperty("drishti.packs.samples-file", root.resolve("samples-mode").toString());
         } catch (IOException e) {
             throw new ExceptionInInitializerError(e);
         }
     }
 
-    @AfterAll
-    static void forgetTheFolders() throws IOException {
-        for (String k : SYSTEM_PROPERTIES) {
-            if (BEFORE.get(k) == null) {
-                System.clearProperty(k);
-            } else {
-                System.setProperty(k, BEFORE.get(k));
-            }
-        }
-        try (Stream<Path> s = Files.walk(root)) {
-            s.sorted(Comparator.reverseOrder()).forEach(p -> p.toFile().delete());
-        }
-    }
 
     @Autowired PackRegistry registry;
     @Autowired PackReloader reloader;

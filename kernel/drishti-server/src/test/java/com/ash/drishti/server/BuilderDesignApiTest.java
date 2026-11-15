@@ -133,7 +133,7 @@ class BuilderDesignApiTest {
         JsonNode d = design(body("trade", docs));
         assertThat(d.path("samples").asInt()).isEqualTo(4);
         assertThat(d.path("yaml").asText()).contains("emphasis: true");
-        assertThat(d.path("reasons").path("strip.MTM").asText()).contains("varies");
+        assertThat(d.path("reasons").path("strip.MTM").asText()).contains("key figure").contains("emphasised");   // the value, first and emphasised
         for (JsonNode p : d.path("preview").path("panels")) {
             assertThat(p.path("error").asText("")).isEmpty();
         }

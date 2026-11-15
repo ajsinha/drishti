@@ -35,10 +35,18 @@ public final class PackRegistry {
     /** The kinds of packs unloaded while running, by kind: an open view of one says the pack was removed. */
     private final java.util.Map<String, String> removedKinds = new java.util.concurrent.ConcurrentHashMap<>();
 
+    private final Environment env;
+
     public PackRegistry(Environment env) {
+        this.env = env;
         String loaded = env.getProperty("drishti.packs.loaded", "");
         List<String> names = Arrays.stream(loaded.split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList();
         this.state = state(new PackLoader().load(PackPaths.resolve(env), names));      // its own settings: never another context's resolution
+    }
+
+    /** This server's resolution (KERNEL_AND_MODULES.md section 18): where each pack came from. */
+    public com.ash.drishti.api.resolution.ConfigResolution resolution() {
+        return PackPaths.resolution(env);
     }
 
     private static State state(List<Pack> packs) {

@@ -183,7 +183,7 @@ public final class CliLauncher {
                 if (java.nio.file.Files.isRegularFile(yaml)) {
                     names.add(packName(yaml, d.getFileName().toString()));
                     java.nio.file.Path found = d;
-                    boolean resolved = com.ash.drishti.api.resolution.ConfigResolution.currentOrOffline().packs().packs().values().stream().anyMatch(l -> l.dir().equals(found));
+                    boolean resolved = com.ash.drishti.api.resolution.ConfigResolution.ofProcess().packs().packs().values().stream().anyMatch(l -> l.dir().equals(found));
                     if (!resolved && !com.ash.drishti.api.PackFolders.roots(packsDir).contains(d.getParent()) && outside == null) {   // a pack the resolution finds is inside
                         outside = d.getParent();
                     }

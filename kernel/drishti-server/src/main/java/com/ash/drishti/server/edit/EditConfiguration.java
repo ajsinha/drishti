@@ -70,11 +70,12 @@ public class EditConfiguration {
     }
 
     @Bean
-    public ConnectorWrites connectorWrites(ObjectProvider<ConnectorManager> connectors, SourceRegistry registry, ObjectProvider<SwitchLedger> switches) {
+    public ConnectorWrites connectorWrites(ObjectProvider<ConnectorManager> connectors, SourceRegistry registry, ObjectProvider<SwitchLedger> switches,
+            org.springframework.core.env.Environment env) {
         return new ConnectorWrites(name -> {
             ConnectorManager m = connectors.getIfAvailable();
             return m == null ? null : m.effective(name).orElse(null);       // the effective connector: a module's template counts, not only a file
-        }, registry::plugin, switches.getIfAvailable());
+        }, registry::plugin, switches.getIfAvailable()).resolvedBy(env::resolvePlaceholders);
     }
 
     @Bean(destroyMethod = "close")

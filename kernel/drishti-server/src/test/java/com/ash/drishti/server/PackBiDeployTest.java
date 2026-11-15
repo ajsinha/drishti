@@ -42,7 +42,14 @@ import org.springframework.test.web.servlet.MockMvc;
  * deploy through the same import (published items with the pack as their audience, kept so the import can be rolled back), and held, not forced, when it
  * would break a report somebody else published.
  */
-@SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=lakepack",
+@SpringBootTest(properties = {"drishti.packs.dir=${drishti.test.dir}/pack-bi-deploy/packs",
+        "drishti.packs.installed-dir=${drishti.test.dir}/pack-bi-deploy/installed",
+        "drishti.packs.overlay=${drishti.test.dir}/pack-bi-deploy/added.yaml",
+        "drishti.packs.settings-dir=${drishti.test.dir}/pack-bi-deploy/settings",
+        "drishti.sources.connectors-dir=${drishti.test.dir}/pack-bi-deploy/connectors",
+        "drishti.packs.deploy.history-file=${drishti.test.dir}/pack-bi-deploy/history.jsonl",
+        "drishti.bi.governance.imports-dir=${drishti.test.dir}/pack-bi-deploy/imports",
+        "drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=lakepack",
         "drishti.bi.dir=${drishti.test.dir}/pack-bi-folder", "drishti.bi.query.store-dir=${drishti.test.dir}/pack-bi-store", "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/pack-bi-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -85,29 +92,16 @@ class PackBiDeployTest {
                   - { id: n, type: card, title: Items, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Count of lake_items] } }
             """;
 
-    private static final String[] SYSTEM_PROPERTIES = {"drishti.packs.dir", "drishti.packs.installed-dir", "drishti.packs.overlay", "drishti.packs.settings-dir",
-            "drishti.packs.deploy.history-file", "drishti.sources.connectors-dir", "drishti.bi.governance.imports-dir"};
-    private static final Map<String, String> BEFORE = new java.util.HashMap<>();
 
     static {
-        for (String k : SYSTEM_PROPERTIES) {
-            BEFORE.put(k, System.getProperty(k));
-        }
         try {
-            root = TestRun.temp("drishti-pack-bi");
+            root = com.ash.drishti.server.TestRun.dir("pack-bi-deploy");   // its own folder, named in the properties above
             Path pack = Files.createDirectories(root.resolve("packs/lakepack"));
             Files.createDirectories(pack.resolve("sutras"));
             Files.writeString(pack.resolve("pack.yaml"), packYaml("1.0.0"));
             Files.writeString(pack.resolve("sutras/item.v1.sutra.yaml"), SUTRA);
             Path day = Files.createDirectories(root.resolve("files-a/2026-10-05"));
             Files.writeString(day.resolve("item.jsonl"), "{\"id\":\"I-1\"}\n");
-            System.setProperty("drishti.packs.dir", root.resolve("packs").toString());
-            System.setProperty("drishti.packs.installed-dir", root.resolve("installed").toString());
-            System.setProperty("drishti.packs.overlay", root.resolve("added.yaml").toString());
-            System.setProperty("drishti.packs.settings-dir", root.resolve("settings").toString());
-            System.setProperty("drishti.sources.connectors-dir", root.resolve("connectors").toString());
-            System.setProperty("drishti.packs.deploy.history-file", root.resolve("history.jsonl").toString());
-            System.setProperty("drishti.bi.governance.imports-dir", root.resolve("imports").toString());
         } catch (Exception e) {
             throw new ExceptionInInitializerError(e);
         }
@@ -118,16 +112,6 @@ class PackBiDeployTest {
                 + "connectors:\n  item-store:\n    plugin: file\n    kinds: [item]\n    settings:\n      root: " + root.resolve("files-a") + "\nroutes:\n  item: item-store\n";
     }
 
-    @org.junit.jupiter.api.AfterAll
-    static void forgetTheFolders() {
-        for (String k : SYSTEM_PROPERTIES) {
-            if (BEFORE.get(k) == null) {
-                System.clearProperty(k);
-            } else {
-                System.setProperty(k, BEFORE.get(k));
-            }
-        }
-    }
 
     @Autowired MockMvc mvc;
 

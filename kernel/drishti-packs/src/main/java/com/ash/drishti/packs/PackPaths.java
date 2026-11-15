@@ -108,7 +108,14 @@ public final class PackPaths {
     public static com.ash.drishti.api.resolution.ConfigResolution resolve(Environment env) {
         com.ash.drishti.registry.EmbeddedAccessRegistry access = Modules.of(env);
         com.ash.drishti.api.resolution.ConfigResolution r = com.ash.drishti.api.resolution.ConfigResolution.build(settings(env), access::moduleOn);
-        com.ash.drishti.api.resolution.ConfigResolution.install(r);
+        java.util.concurrent.atomic.AtomicReference<com.ash.drishti.api.resolution.ConfigResolution> held = holder(env);
+        com.ash.drishti.api.resolution.ConfigResolution before = held == null ? null : held.getAndSet(r);
+        // the process-wide one (the lake readers of a server process, which have no environment) follows the first server's settings only:
+        // another Spring context of other settings in the same JVM (a test) keeps its resolution to itself and never replaces it
+        com.ash.drishti.api.resolution.ConfigResolution process = com.ash.drishti.api.resolution.ConfigResolution.current();
+        if (process == null || process.settings().equals(r.settings()) || (before != null && process == before)) {
+            com.ash.drishti.api.resolution.ConfigResolution.install(r);
+        }
         synchronized (WATCHED) {
             if (WATCHED.put(access, Boolean.TRUE) == null) {
                 // a module switched on or off at run time: one rebuild, one resolution.changed for packs, connectors, bindings and inbox rules
@@ -124,10 +131,38 @@ public final class PackPaths {
         return r;
     }
 
-    /** The process's current resolution, resolved now when there is none yet. */
+    /**
+     * This environment's (one Spring context's) current resolution, resolved now when it has none yet. Never another context's: a test JVM
+     * holds many servers of different settings at once.
+     */
     public static com.ash.drishti.api.resolution.ConfigResolution resolution(Environment env) {
-        com.ash.drishti.api.resolution.ConfigResolution r = com.ash.drishti.api.resolution.ConfigResolution.current();
+        java.util.concurrent.atomic.AtomicReference<com.ash.drishti.api.resolution.ConfigResolution> held = holder(env);
+        com.ash.drishti.api.resolution.ConfigResolution r = held == null ? null : held.get();
         return r != null ? r : resolve(env);
+    }
+
+    private static final String HOLDER = "drishti.config-resolution";
+
+    /** The resolution's slot inside the environment itself (a property source that answers no property), so it lives and dies with it. */
+    @SuppressWarnings("unchecked")
+    private static java.util.concurrent.atomic.AtomicReference<com.ash.drishti.api.resolution.ConfigResolution> holder(Environment env) {
+        if (!(env instanceof org.springframework.core.env.ConfigurableEnvironment c)) {
+            return null;
+        }
+        synchronized (c) {
+            org.springframework.core.env.PropertySource<?> ps = c.getPropertySources().get(HOLDER);
+            if (ps != null && ps.getSource() instanceof java.util.concurrent.atomic.AtomicReference<?> ref) {
+                return (java.util.concurrent.atomic.AtomicReference<com.ash.drishti.api.resolution.ConfigResolution>) ref;
+            }
+            java.util.concurrent.atomic.AtomicReference<com.ash.drishti.api.resolution.ConfigResolution> ref = new java.util.concurrent.atomic.AtomicReference<>();
+            c.getPropertySources().addLast(new org.springframework.core.env.PropertySource<Object>(HOLDER, ref) {
+                @Override
+                public Object getProperty(String name) {
+                    return null;
+                }
+            });
+            return ref;
+        }
     }
 
     /** The packs an administrator deployed ({@code drishti.packs.installed-dir}): part of the site layer. */

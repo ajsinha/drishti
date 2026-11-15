@@ -105,10 +105,13 @@ public final class PackDeployService {
 
     private final com.ash.drishti.packs.edition.Edition edition;
 
+    private final Environment env;
+
     public PackDeployService(Environment env, DeployProperties props, RegistryProperties registryProps, PackRegistry running,
             ObjectProvider<BuildProperties> build, SutraRegistry sutras, ViewPipeline pipeline, ShapeService shapes, AutoDesigner designer,
             JsonCodec codec, com.ash.drishti.packs.ConnectorFiles connectorFiles) {
         this.connectorFiles = connectorFiles;
+        this.env = env;
         this.edition = com.ash.drishti.packs.edition.Editions.of(env);
         this.installed = Path.of(com.ash.drishti.packs.PackPaths.installedDir(env)).toAbsolutePath().normalize();
         this.packsDir = Path.of(com.ash.drishti.packs.PackPaths.packsDir(env)).toAbsolutePath().normalize();
@@ -641,8 +644,14 @@ public final class PackDeployService {
 
     /** Where the resolution finds a shipped pack (a module's or the kernel's), else {@code <packs>/<name>} (not there). */
     private Path shipped(String name) {
-        com.ash.drishti.api.resolution.ConfigResolution r = com.ash.drishti.api.resolution.ConfigResolution.currentOrOffline();
+        com.ash.drishti.api.resolution.ConfigResolution r = com.ash.drishti.packs.PackPaths.resolution(env);
         com.ash.drishti.api.resolution.PackResolver.Located at = r.packs().packs().get(name);
+        if (at != null && at.dir().toAbsolutePath().normalize().startsWith(installed)) {
+            // the deployed copy is what runs: the shipped one is what the layers below the deployed packs find
+            com.ash.drishti.api.resolution.PackResolver.Layout l = r.settings().layout();
+            at = com.ash.drishti.api.resolution.PackResolver.resolve(new com.ash.drishti.api.resolution.PackResolver.Layout(l.site(), l.kernel(), l.modules(),
+                    l.store(), null, l.extra()), r.active(), com.ash.drishti.api.resolution.ResolutionSettings::yaml).packs().get(name);
+        }
         return at != null ? at.dir() : packsDir.resolve(name);
     }
 }
