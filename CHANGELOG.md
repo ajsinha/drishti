@@ -22,6 +22,8 @@
   cluster membership, compute, file store, cache) is moved aside to `data/tmp/stale-<stamp>/` and listed before the drill starts, when
   no server runs from the checkout. Lake loader children get the launch roots of the process that starts them, and Iceberg's Health
   names a moved table's folder correctly when the lake sits under a folder named `data`.
+- **No empty answer that looks true for positions and system baskets.** Right after a start (inputs loading, busy protection, no vectors
+  read yet) a list, count or pivot of `position` or `system-basket` answers the refusal with its reason, never 0 rows.
 
 - **Named lakes, databases and brokers.** A system has any number of each, every one a section of the settings files and referred to by
   name, with no global one: `[lake.<name>] root=`/`storage.<key>=` win over that lake file's root and storage; `[db.<name>] url= user=
