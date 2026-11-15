@@ -52,6 +52,7 @@ READ_SECONDS = 45
 REFUSED = re.compile(r"not available to you|not part of|not active|is not in |not allowed|not permitted|not entitled|forbidden|"
                      r"permission|may not open|may not |not enabled|switched off|turned off|DRS-1016|DRS-1020|DRS-4023|"
                      r"requires (the )?(role|admin)|administrator|no access to any kind of pack|no access to|is not running on this server", re.I)
+EXPLAINED_CODE = re.compile(r"(?:is|are) refused \( DRS-\d+ \)")
 FAULT = re.compile(r"DRS-\d+|not found|no such|has no columns|Traceback|Internal Server Error|Server error|Unhandled exception|cannot read command", re.I)
 #: a connector's failure (DRS-5034 ...) as an Admin page lists it: the connector's own state, which the config sweep owns; one message: its connector, its reason, the parenthesis that follows
 CONNECTOR_ALERT = re.compile(r"DRS-5034 connector [^:]+:[^()]*(?:\([^)]*\))?")
@@ -212,6 +213,10 @@ def check(c: Client, word: str, cmd: str, has_data: bool, expect_off: bool) -> d
             return done("refused", text[:160])
         return done("FAIL", f"HTTP {status}: {text[:180]}")
     own = CONNECTOR_ALERT.sub(" ", text) if path.path.startswith("/admin/") else text      # DRS-5034 on an Admin page is a connector's state it lists (config's matter), not this page failing
+    if path.path.startswith("/admin/"):
+        own = EXPLAINED_CODE.sub(" ", own)                                                  # a help sentence that names the code of a refusal ("is refused ( DRS-9196 ): migrate it ...") is not a refusal
+    if path.path == "/admin/audit":                                                         # the audit trail lists past requests and their errors: data, not this page failing
+        own = ""
     hit = FAULT.search(own)
     if hit:
         found = re.search(r".{0,60}" + re.escape(hit.group(0)) + r".{0,100}", own)

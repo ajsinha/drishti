@@ -130,7 +130,7 @@ public class CommandController {
         if (mnemonics.of(words[0].toUpperCase(Locale.ROOT)).isEmpty()) {
             return words.length == 1 && parser.parse(words[0]).isPresent() ? split : Optional.empty();   // MX-20000001 30
         }
-        if (words.length < 2 || SEARCHY.matcher(" " + words[1] + " ").find()) {
+        if (words.length < 2 || SEARCHY.matcher(" " + SearchQuery.withoutIdParams(words[1]) + " ").find()) {
             return Optional.empty();                                // TRD 30 opens trade 30; TRD desk=rates 30 stays a search
         }
         Optional<EntityRef> whole = parser.parse(text);             // BOND UST 2030: the whole rest is tried as an id first
@@ -154,7 +154,7 @@ public class CommandController {
         for (HistoryRange.Bad bad : HistoryRange.malformed(text, maxDays)) {
             String[] words = bad.command().split("\\s+", 2);
             boolean mnemonic = mnemonics.of(words[0].toUpperCase(Locale.ROOT)).isPresent();
-            if (mnemonic ? words.length < 2 || SEARCHY.matcher(" " + words[1] + " ").find() : words.length != 1) {
+            if (mnemonic ? words.length < 2 || SEARCHY.matcher(" " + SearchQuery.withoutIdParams(words[1]) + " ").find() : words.length != 1) {
                 continue;                                           // TRD 0 is trade 0; TRD desk=rates 0 is a search
             }
             Optional<EntityRef> ref = parser.parse(bad.command());

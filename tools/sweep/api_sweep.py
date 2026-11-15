@@ -457,7 +457,10 @@ def check(t: Target, e: dict, res: Resolver) -> dict:
         return done("FAIL", f"HTTP {status} with an empty body")
     if "json" in r["ctype"] and body.strip() and not r["cut"]:
         try:
-            json.loads(body)
+            if e["path"].endswith(".jsonl"):                     # JSON Lines: one JSON document a line
+                [json.loads(ln) for ln in body.decode("utf-8").splitlines() if ln.strip()]
+            else:
+                json.loads(body)
         except ValueError:
             return done("FAIL", "the body is not JSON though it says it is")
     return done("pass", "empty JSON answer" if text.strip() in ("[]", "{}") else ("" if real else "answered for the missing id"))

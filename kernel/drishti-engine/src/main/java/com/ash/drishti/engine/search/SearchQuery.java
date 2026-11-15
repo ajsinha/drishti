@@ -134,6 +134,14 @@ public record SearchQuery(String head, String condition, String orderBy, boolean
         return text != null && text.matches("(?is)^\\s*\\S+\\s+(where|order\\s+by|limit)\\s+.+");
     }
 
+    /** The parameters that ride on a computed kind's id ({@code CORR-EU-EQ~window=20~estimator=ledoit-wolf}): an {@code =} there is part of the id, no field condition. */
+    private static final Pattern ID_PARAMS = Pattern.compile("~[A-Za-z][\\w.-]*=[^\\s~]*");
+
+    /** The text with the parameters of an id taken out ({@code CORR-X~a=1} becomes {@code CORR-X~}), for the checks that look for an operator. */
+    public static String withoutIdParams(String text) {
+        return text == null ? "" : ID_PARAMS.matcher(text).replaceAll("~");
+    }
+
     private static final Pattern OPERATOR = Pattern.compile("(?i)(!=|<>|<=|>=|==|=|<|>|\\scontains\\s|\\sstartswith\\s|\\smatches\\s|\\smatchescase\\s)");
     private static final Pattern STARTS_WITH_OPERATOR = Pattern.compile("(?i)^(!=|<>|<=|>=|==|=|<|>|contains\\s|startswith\\s|matches\\s|matchescase\\s)");
     private static final Pattern SUFFIX = Pattern.compile("(?i)^(order\\s+by|limit)\\s.*");
@@ -170,7 +178,7 @@ public record SearchQuery(String head, String condition, String orderBy, boolean
         String pattern = null;
         String tail = rest;
         boolean condition = first.equalsIgnoreCase("not") || first.startsWith("(");
-        if (!condition && !OPERATOR.matcher(" " + first + " ").find() && !STARTS_WITH_OPERATOR.matcher(after).find()) {
+        if (!condition && !OPERATOR.matcher(" " + withoutIdParams(first) + " ").find() && !STARTS_WITH_OPERATOR.matcher(after).find()) {
             pattern = first;                                               // the first word names entities: see matches
             tail = after;
         }
@@ -189,7 +197,7 @@ public record SearchQuery(String head, String condition, String orderBy, boolean
             return false;
         }
         String rest = t.substring(sp).trim();
-        return looksLikeSearch(t) || rest.contains("*") || OPERATOR.matcher(" " + rest + " ").find() || indexOfSpace(rest, 0) >= 0;
+        return looksLikeSearch(t) || rest.contains("*") || OPERATOR.matcher(" " + withoutIdParams(rest) + " ").find() || indexOfSpace(rest, 0) >= 0;
     }
 
     /** Whether an entity matches a pick pattern (see {@link #pick}), ignoring case. */

@@ -110,4 +110,11 @@ class SearchQueryTest {
         assertThat(SearchQuery.looksLikePick("TRD")).isFalse();
         assertThat(SearchQuery.pick("TRD not status = matured").condition()).isEqualTo("! (lower($.status) == lower('matured'))");
     }
+
+    @Test
+    void parametersOnAComputedIdAreNoFieldCondition() {
+        assertThat(SearchQuery.looksLikePick("CORRC CORR-G10FX~estimator=ledoit-wolf")).isFalse();
+        assertThat(SearchQuery.withoutIdParams("CORR-EU-EQ~window=20~estimator=ledoit-wolf")).isEqualTo("CORR-EU-EQ~~");
+        assertThat(SearchQuery.looksLikePick("CORRC desk=rates")).isTrue();
+    }
 }
