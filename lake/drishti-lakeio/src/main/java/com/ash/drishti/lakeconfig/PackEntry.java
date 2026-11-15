@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 
 /**
  * What a pack recommends for a kind's table (docs/architecture/DATA_ARCHITECTURE.md section 3, decision L2), read from its {@code pack.yaml}:
