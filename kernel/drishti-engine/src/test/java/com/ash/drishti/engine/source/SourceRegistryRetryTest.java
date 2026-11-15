@@ -171,13 +171,24 @@ class SourceRegistryRetryTest {
     void aModulesComputedKindThatAConnectorFileNamesStartsThatConnectorAndLeavesWithTheModule() throws Exception {
         var file = new SourcesProperties.ConnectorSettings("baskets", true, List.of("system-basket"), Map.of());
         try (SourceRegistry r = registry(Map.of("var-baskets", file))) {
-            assertThat(r.connectorStatuses().get("var-baskets").state()).isEqualTo("FAILED");    // no plugin named baskets: the module is not loaded yet
+            assertThat(r.connectorStatuses().get("var-baskets").state()).isEqualTo("WAITING");   // no plugin named baskets: the module is not loaded yet
             Runnable unload = r.attachExtension(new ComputedKindSource(new Baskets()), Map.of());
             assertThat(r.plugin("var-baskets")).isPresent();
             assertThat(r.connectorStatuses().get("var-baskets").state()).isEqualTo("RUNNING");
             assertThat(r.plugin("baskets")).isEmpty();                                          // a type, not a source routed beside the file's
             unload.run();
             assertThat(r.plugin("var-baskets")).isEmpty();
+        }
+    }
+
+    @Test
+    void aConnectorWaitingForAModuleFailsInWordsOnceTheModulesHaveLoadedWithoutIt() throws Exception {
+        var file = new SourcesProperties.ConnectorSettings("baskets", true, List.of("system-basket"), Map.of());
+        try (SourceRegistry r = registry(Map.of("var-baskets", file))) {
+            assertThat(r.connectorStatuses().get("var-baskets").state()).isEqualTo(SourceRegistry.WAITING);
+            r.modulesLoaded();                                                                  // no module brought the type
+            assertThat(r.connectorStatuses().get("var-baskets").state()).isEqualTo("FAILED");
+            assertThat(r.connectorStatuses().get("var-baskets").problem()).contains("no plugin named 'baskets'");
         }
     }
 }

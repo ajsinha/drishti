@@ -35,6 +35,10 @@ from wb_live import _stack
 ROOT = Path(__file__).resolve().parents[2]
 FROM = "v2.9.11.i_2_3"
 ONLY = "trading,core,market-data,counterparty-risk,market-risk"   # the demo packs whose connectors the tag generated: trades per system, VaR inputs
+#: every trade of three systems and the VaR inputs on one server: past the default heap (OutOfMemoryError reading the trades)
+HEAP = "3072m"
+#: the VaR inputs a module computes (positions from the trades, the seeded system baskets): counted although no lake table holds them
+VAR_COMPUTED = ("position", "system-basket", "pnl-vector")
 SYSTEMS = ("ENDUR", "CALYPSO", "MUREX", "WSS", "SWAPONE", "ICI")
 
 
@@ -48,7 +52,7 @@ def _counts(server: str) -> dict[str, object]:
     With the demo off a kind the demo lake holds says UNBOUND in the bindings and is still read: it is counted."""
     out: dict[str, object] = {}
     for row in _get(server, "/api/v1/admin/bindings").get("kinds", []):
-        if row.get("state") == "COMPUTED":
+        if row.get("state") == "COMPUTED" and row["kind"] not in VAR_COMPUTED:
             continue
         try:
             c = _get(server, f"/api/v1/data/{row['kind']}/count")
@@ -70,7 +74,8 @@ def rows_newest(folder: Path) -> int | None:
     if not (folder / "_delta_log").is_dir():
         return None
     from deltalake import DeltaTable
-    acts = DeltaTable(str(folder)).get_add_actions(flatten=True).to_pydict()
+    import pyarrow as pa
+    acts = pa.table(DeltaTable(str(folder)).get_add_actions(flatten=True)).to_pydict()
     n = acts.get("num_records") or []
     dates = next((v for k, v in acts.items() if k.lower() == "partition.business_date"), None)
     if dates is None:                                  # not partitioned by date: every row
@@ -162,7 +167,7 @@ def site(tmp_path_factory) -> Path:
 
 def test_every_demo_kind_keeps_its_record_count_after_the_upgrade(tmp_path_factory, lake, site):
     env = {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true", "DRISHTI_VAR_SYSTEM_BASKETS_SEED": "true"}
-    gen = _stack(tmp_path_factory, env)
+    gen = _stack(tmp_path_factory, env, heap=HEAP)
     st = next(gen)
     try:
         fresh = _counts(st.server)
@@ -179,7 +184,7 @@ def test_every_demo_kind_keeps_its_record_count_after_the_upgrade(tmp_path_facto
     up_env = {**env, "DRISHTI_CONNECTORS_DIR": str(site / "connectors")}
     if (site / "bindings.yaml").is_file():
         up_env["DRISHTI_BINDINGS_FILE"] = str(site / "bindings.yaml")
-    gen = _stack(tmp_path_factory, up_env, work=work)
+    gen = _stack(tmp_path_factory, up_env, work=work, heap=HEAP)
     st = next(gen)
     try:
         upgraded = _counts(st.server)
@@ -200,7 +205,14 @@ def test_every_demo_kind_keeps_its_record_count_after_the_upgrade(tmp_path_facto
     pointing_wrong = [r for r in bmap if r["table"] and (r["main"] or 0) > 0 and (r["exists"] is False or not r["rows"])]
     assert not pointing_wrong, "connectors read a missing or empty table where the release had data:\n" + "\n".join(f"  {r}" for r in pointing_wrong)
     # every kind the release served from the lake is served now, with the same rows on the newest date
-    drop = [r for r in table if (r["main"] or 0) > 0 and (r["fresh"] != r["main"] or r["upgraded"] != r["main"])]
+    # the trades of the systems the release had no connector for (its source modules are new: WSS, SWAPONE, ICI) are added, never lost
+    new_systems = {site_name: sum((m.get(f"trade[{s}]") or 0) for s in SYSTEMS if main.get(f"trade[{s}]") is None)
+                   for site_name, m in (("fresh", fresh), ("upgraded", upgraded))}
+    for r in table:
+        if r["kind"] == "trade":
+            r["fresh_less_new"], r["upgraded_less_new"] = (r["fresh"] or 0) - new_systems["fresh"], (r["upgraded"] or 0) - new_systems["upgraded"]
+    drop = [r for r in table if (r["main"] or 0) > 0 and (r.get("fresh_less_new", r["fresh"]) != r["main"]
+                                                          or r.get("upgraded_less_new", r["upgraded"]) != r["main"])]
     assert not drop, "counts differ from the release's:\n" + "\n".join(f"  {r}" for r in drop)
     # the VaR inputs the lake does not hold (positions from trades, the seeded system baskets) are served on both
     for k in ("position", "system-basket"):

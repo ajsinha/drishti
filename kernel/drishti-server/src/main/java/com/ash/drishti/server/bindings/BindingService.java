@@ -321,8 +321,14 @@ public final class BindingService {
                 String name = p.manifest().name();
                 Map<String, Object> c = new LinkedHashMap<>();
                 c.put("connector", name);
-                c.put("layer", connectors.layered(name).map(ConnectorLayers.Effective::layer)
-                        .orElse(reg.applied(name).isPresent() ? ConnectorLayers.TEMPLATE : "plugin"));
+                String layer;
+                try {
+                    layer = connectors.layered(name).map(ConnectorLayers.Effective::layer)
+                            .orElse(reg.applied(name).isPresent() ? ConnectorLayers.TEMPLATE : "plugin");
+                } catch (RuntimeException e) {                 // a site file that cannot be used: Admin -> Connectors says why
+                    layer = "unusable: " + e.getMessage();
+                }
+                c.put("layer", layer);
                 c.put("plugin", reg.applied(name).map(com.ash.drishti.engine.source.SourcesProperties.ConnectorSettings::plugin).orElse(name));
                 c.put("lake", reg.lakeOf(name));
                 String table = reg.tableOf(name, res.kind()).orElse(null);

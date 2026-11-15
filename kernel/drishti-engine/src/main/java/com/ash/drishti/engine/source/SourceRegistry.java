@@ -905,7 +905,7 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
         Map<String, String> own;
         try {
             own = ownSettings(connector, c);
-        } catch (IllegalStateException e) {
+        } catch (RuntimeException e) {                 // a secret not set, a lake not known: the connector's own status says why
             return Optional.empty();
         }
         String root = own.get("root");
