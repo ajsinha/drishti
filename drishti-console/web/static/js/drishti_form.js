@@ -30,7 +30,7 @@
     if (!on) { return; }
     try {
       var key = 'drishti.forms.recent.' + (on.getAttribute('data-who') || ''), list = JSON.parse(localStorage.getItem(key) || '[]');
-      var href = on.getAttribute('data-recent-form');
+      var href = drishti_route(on.getAttribute('data-recent-form'));   // kept as the route (/form/...): the home puts it under the base
       list = [{ href: href, label: on.getAttribute('data-label') }].concat(list.filter(function (r) { return r.href !== href; })).slice(0, 8);
       localStorage.setItem(key, JSON.stringify(list));
     } catch (e) { /* storage refused: no recents, nothing else lost */ }
@@ -59,7 +59,7 @@
     }
     var cb = new I.Combobox(host, { label: 'Find a ' + w.label, placeholder: 'Type to find among ' + (o.count || 'the') + ' values', minChars: 1, debounceMs: 200,
       source: function (q, signal) {
-        return fetch(o.url + '&q=' + encodeURIComponent(q), { credentials: 'same-origin', signal: signal })
+        return fetch(drishti_url(o.url + '&q=' + encodeURIComponent(q)), { credentials: 'same-origin', signal: signal })
           .then(function (r) { return r.ok ? r.json() : { values: [] }; })
           .then(function (res) { return (res.values || []).filter(function (v) { return picked.indexOf(v) < 0; }); });
       } });
@@ -97,7 +97,7 @@
     toggle.title = (hide ? 'Show' : 'Hide') + ' the form (Alt+F)';
     var icon = toggle.querySelector('i'); if (icon) { icon.className = 'bi bi-chevron-' + (hide ? 'down' : 'up'); }
     var u = new URL(location.href); u.searchParams.set('form', hide ? 'hidden' : 'shown');
-    history.replaceState(null, '', u.pathname + u.search);
+    history.replaceState(null, '', drishti_url(u.pathname + u.search));
     if (by) { try { sessionStorage.setItem('drishti.form', hide ? 'hidden' : 'shown'); } catch (e) { /* no storage: the address still carries it */ } }
     if (by === 'show') { var first = form.querySelector('.qf-field .qf-v, .qf-field input:not([type=hidden])'); if (first) { first.focus(); } }
     else if (by === 'hide') { toggle.focus(); }
@@ -151,7 +151,7 @@
     f.addEventListener('submit', function (e) {
       e.preventDefault();
       var out = f.querySelector('[data-qf-saved]');
-      fetch('/form/save', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      fetch(drishti_url('/form/save'), { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
         body: JSON.stringify({ name: f.elements.name.value, path: f.getAttribute('data-qf-save') }) })
         .then(function (r) { return r.json().then(function (b) { return { ok: r.ok, body: b }; }); })
         .then(function (r) { out.textContent = r.ok ? 'Saved. Find it under your saved searches.' : (r.body.code + ': ' + r.body.detail); })

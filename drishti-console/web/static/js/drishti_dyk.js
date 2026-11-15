@@ -145,13 +145,13 @@
     $('[data-dyk-why-text]').textContent = f.why || '';
     var more = $('[data-dyk-more]');
     more.hidden = !f.knowledgeHref;
-    if (f.knowledgeHref) { more.href = f.knowledgeHref; }
+    if (f.knowledgeHref) { more.href = drishti_url(f.knowledgeHref); }
     var open = $('[data-dyk-open]');
     open.textContent = 'Open ' + f.command;
-    open.href = f.href;
+    open.href = drishti_url(f.href);
     var what = $('[data-dyk-what]');
     what.hidden = !f.whatHref;
-    if (f.whatHref) { what.href = f.whatHref; what.textContent = 'WHAT ' + f.what; }
+    if (f.whatHref) { what.href = drishti_url(f.whatHref); what.textContent = 'WHAT ' + f.what; }
     $('[data-dyk-next]').hidden = facts.length < 2;
     $('[data-dyk-actions]').hidden = false;
     tile.setAttribute('data-fact', f.id);
@@ -165,7 +165,7 @@
   });
 
   function load() {
-    fetch('/api/home/facts', { credentials: 'same-origin', headers: { Accept: 'application/json' } })
+    fetch(drishti_url('/api/home/facts'), { credentials: 'same-origin', headers: { Accept: 'application/json' } })
       .then(function (r) { return r.ok ? r.json() : { facts: [] }; })
       .then(function (d) {
         facts = (d && d.facts) || [];

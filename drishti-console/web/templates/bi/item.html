@@ -27,12 +27,12 @@
 <div class="bi-callout" data-warnings hidden></div>
 <section class="bi-sec" data-sec-review aria-labelledby="iRev" hidden><h2 id="iRev"><i class="bi bi-shield-check" aria-hidden="true"></i> Review</h2>
   <div data-review-body></div></section>
-<p><a class="btn-pill btn-accent" data-open-dataset href="/bi/datasets" hidden><i class="bi bi-diagram-3" aria-hidden="true"></i> Open the model and run a query</a>
-  <a class="btn-pill btn-ghost" data-open-notebook href="/bi/notebook" hidden><i class="bi bi-journal-code" aria-hidden="true"></i> Open in the Notebook</a>
-  <a class="btn-pill btn-ghost" data-open-model href="/build/tables" hidden><i class="bi bi-pencil-square" aria-hidden="true"></i> Open in Tables &amp; models</a>
-  <a class="btn-pill btn-accent" data-open-report href="/bi/designer" hidden><i class="bi bi-bar-chart-line" aria-hidden="true"></i> Open the report</a>
-  <a class="btn-pill btn-accent" data-open-board href="/bi/designer" hidden><i class="bi bi-tv" aria-hidden="true"></i> Open the board</a>
-  <a class="btn-pill btn-ghost" data-open-design href="/bi/designer" hidden><i class="bi bi-pencil-square" aria-hidden="true"></i> Open in the designer</a></p>
+<p><a class="btn-pill btn-accent" data-open-dataset href="{{ BASE }}/bi/datasets" hidden><i class="bi bi-diagram-3" aria-hidden="true"></i> Open the model and run a query</a>
+  <a class="btn-pill btn-ghost" data-open-notebook href="{{ BASE }}/bi/notebook" hidden><i class="bi bi-journal-code" aria-hidden="true"></i> Open in the Notebook</a>
+  <a class="btn-pill btn-ghost" data-open-model href="{{ BASE }}/build/tables" hidden><i class="bi bi-pencil-square" aria-hidden="true"></i> Open in Tables &amp; models</a>
+  <a class="btn-pill btn-accent" data-open-report href="{{ BASE }}/bi/designer" hidden><i class="bi bi-bar-chart-line" aria-hidden="true"></i> Open the report</a>
+  <a class="btn-pill btn-accent" data-open-board href="{{ BASE }}/bi/designer" hidden><i class="bi bi-tv" aria-hidden="true"></i> Open the board</a>
+  <a class="btn-pill btn-ghost" data-open-design href="{{ BASE }}/bi/designer" hidden><i class="bi bi-pencil-square" aria-hidden="true"></i> Open in the designer</a></p>
 <section class="bi-sec" aria-labelledby="iBody"><h2 id="iBody">Body <small class="bi-soon" data-body-is></small></h2>
   <p class="text-muted-d">The YAML of this item: stored, versioned and published here. A dataset is queried, a report is drawn and a board is shown live (the links above); a notebook is stored and versioned here but not run.</p>
   <pre class="bi-body mono" data-body tabindex="0"></pre></section>
@@ -77,4 +77,4 @@
 <section class="bi-sec" data-sec-lineage aria-labelledby="iLin" hidden><h2 id="iLin"><i class="bi bi-diagram-2" aria-hidden="true"></i> Lineage</h2>
   <div data-lineage></div></section>
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-govern.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-extras.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_bi.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_bi-lib.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_bi-govern.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_bi-extras.js?v={{ ASSET_V }}"></script>{% endblock %}

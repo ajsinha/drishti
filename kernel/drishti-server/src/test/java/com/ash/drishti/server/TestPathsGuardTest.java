@@ -45,6 +45,8 @@ class TestPathsGuardTest {
 
     /** The call forms that build a path from literals. */
     static final Pattern CALL = Pattern.compile("(?:Path\\.of|Paths\\.get|new File)\\(\\s*\"([^\"]*)\"");
+    /** A data or configuration folder given to a test server as a relative path: the configuration imports read it before any root is resolved. */
+    static final Pattern IMPORTED = Pattern.compile("\"(?:--)?(?:drishti\\.(?:data|config)\\.dir|DRISHTI_(?:DATA|CONFIG|ENGINES)_DIR|DRISHTI_PACKS_OVERLAY)=(?![/$\"])");
 
     /**
      * Relative by design, each with its reason: "file-suffix|text on the line". Empty today: every test path is anchored. Add an entry only
@@ -62,6 +64,9 @@ class TestPathsGuardTest {
         for (Path file : testSources()) {
             List<String> lines = Files.readAllLines(file);
             for (int i = 0; i < lines.size(); i++) {
+                if (IMPORTED.matcher(lines.get(i)).find()) {
+                    offenders.add(REPO.relativize(file) + ":" + (i + 1) + "  " + lines.get(i).trim());
+                }
                 Matcher m = CALL.matcher(lines.get(i));
                 while (m.find()) {
                     if (m.group(1).startsWith("/") || m.group(1).matches("[A-Za-z]:.*")) continue;   // absolute

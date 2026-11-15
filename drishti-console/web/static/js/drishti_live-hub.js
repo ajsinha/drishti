@@ -37,9 +37,17 @@
   var TYPES = ['view', 'frame', 'gone', 'alert', 'notice', 'row', 'hello', 'tick', 'status', 'answer', 'run', 'progress', 'state', 'done', 'failed', 'updated', 'switches', 'edit', 'patch', 'reshape', 'ended', 'rows', 'resync'];               // run: a BI run changed (ARCHITECTURE.md §28 3.5); patch, reshape, ended: a live pivot (pivotlive:<id>); rows, resync: a live result set (live:<id>, with hello); progress..updated: a computed panel's request (compute:<id>); switches: Admin -> Functions; edit: write-back
   var REPLAY = ['view', 'hello', 'deleted', 'gone'];
 
+  /* The channel under the console's URL sub-path (core/base_path.py): a page has drishti_url (drishti-core); the SharedWorker has no page,
+     so its base is what comes before /static/js/ in its own address. */
+  function channelUrl() {
+    if (typeof root.drishti_url === 'function') { return root.drishti_url('/api/channel'); }
+    var p = root.location ? String(root.location.pathname) : '', at = p.indexOf('/static/js/');
+    return (at > 0 ? p.slice(0, at) : '') + '/api/channel';
+  }
+
   function Hub(opts) {
     this.o = opts || {};
-    this.url = this.o.url || '/api/channel';
+    this.url = this.o.url || channelUrl();
     this.tabs = {};              // tab id -> {send, who, keys: {key: true}, pending: {key: true}, seen}
     this.keys = {};              // key -> {tabs: {tab id: true}, replay: {view, hello, deleted, gone}}
     this.who = null;             // the session the channel runs (or will run) as

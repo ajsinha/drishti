@@ -146,7 +146,7 @@
           if (Object.keys(t).length) { m.theme = t; } else { delete m.theme; }
         }) }
       });
-      host.appendChild(h('a', { class: 'bi-small', href: '/bi/design/theme/new', 'data-new-theme': '', text: 'Make a theme' }));
+      host.appendChild(h('a', { class: 'bi-small', href: drishti_url('/bi/design/theme/new'), 'data-new-theme': '', text: 'Make a theme' }));
     });
     if (m.pages.some((p) => p.layout === 'board')) {
       formIn(fmt, {

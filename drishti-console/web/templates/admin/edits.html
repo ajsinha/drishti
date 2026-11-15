@@ -15,7 +15,7 @@
 #}
 {% extends "base.html" %}
 {% block title %}Edits · {{ PRODUCT }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_admin-packs.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-packs.css?v={{ ASSET_V }}">{% endblock %}
 {% block screen %}admin{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
@@ -66,7 +66,7 @@
     <tbody>{% for c in s.connectors %}
       <tr><td class="mono">{{ c.connector }} <span class="text-muted-d">({{ c.plugin }})</span></td><td class="mono">{{ c.commands | join(', ') }}</td>
         <td>{% for cmd, ps in (c.problems or {}).items() %}{% for p in ps %}<div class="text-danger-d">{{ p }}</div>{% endfor %}{% endfor %}{% if not c.problems %}none{% endif %}</td>
-        <td><form method="post" action="/admin/edits/connectors/{{ c.connector }}" class="d-inline">
+        <td><form method="post" action="{{ BASE }}/admin/edits/connectors/{{ c.connector }}" class="d-inline">
           <input type="hidden" name="on" value="{{ 'false' if c.on else 'true' }}">
           {{ admin_form('field', key='reason', name='reason', title='Why', required=True, maxLength=500, placeholder='Why', layout='inline') }}
           <button class="btn btn-sm {{ 'btn-outline-danger' if c.on else 'btn-primary' }}" type="submit" data-writes-switch="{{ c.connector }}">{{ 'Switch off' if c.on else 'Switch on' }}</button>
@@ -79,7 +79,7 @@
   {% if not overlays %}<p class="text-muted-d">None.</p>{% else %}
   <div class="tbl-wrap"><table class="tbl adm-tbl" data-overlays>
     <thead><tr><th scope="col">Record</th><th scope="col">Field</th><th scope="col">Value</th><th scope="col">The source says</th><th scope="col">By</th><th scope="col">Change</th></tr></thead>
-    <tbody>{% for o in overlays %}<tr><td><a class="lnk mono" href="/v/{{ o.kind }}/{{ o.entity | urlencode }}">{{ o.kind }} {{ o.entity }}</a></td>
+    <tbody>{% for o in overlays %}<tr><td><a class="lnk mono" href="{{ BASE }}/v/{{ o.kind }}/{{ o.entity | urlencode }}">{{ o.kind }} {{ o.entity }}</a></td>
       <td class="mono">{{ o.path | replace('$.', '') }}</td><td class="mono">{{ o.value }}</td><td class="mono">{{ o.sourceValue if o.sourceValue is not none else '—' }}</td>
       <td>{{ o.by }}</td><td class="mono">{{ o.change[:16] }}…</td></tr>{% endfor %}</tbody></table></div>
   {% endif %}

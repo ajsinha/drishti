@@ -49,7 +49,7 @@ public final class TlsHttp {
      * downgrade.
      */
     public static TlsMaterial material(java.util.Map<String, String> settings, String url, String urlSetting) {
-        return material(settings, url, urlSetting, System::getenv);
+        return material(settings, url, urlSetting, com.ash.drishti.settingsfile.Placeholders::process);
     }
 
     /** As {@link #material(java.util.Map, String, String)}, reading environment variables through {@code env}. */

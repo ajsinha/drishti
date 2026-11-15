@@ -149,7 +149,7 @@ def cmd_module(a, extra) -> int:
     """`module pack|check|inspect`: the standalone module tool (java -jar drishti-module-tool.jar), no Maven needed; the same code as the
     Maven plugin's goals."""
     args = [a.module_cmd, absolute(a.path)]
-    for flag, val in (("--jar", getattr(a, "module_jar", None)), ("--out", getattr(a, "out", None)), ("--project", getattr(a, "project", None))):
+    for flag, val in (("--jar", getattr(a, "module_jar", None)), ("--out", getattr(a, "out", None) or (str(ROOT / "dist") if a.module_cmd == "pack" else None)), ("--project", getattr(a, "project", None))):
         if val:
             args += [flag, absolute(val)]
     if getattr(a, "cycles", None) is not None:
@@ -515,7 +515,7 @@ def cmd_pack_bundle(a, extra) -> int:
     PB = pack_bundle()
     need_yaml()
     pack = pathlib.Path(a.pack).resolve()
-    out = pathlib.Path(a.out).resolve() if a.out else pathlib.Path.cwd() / "dist"
+    out = pathlib.Path(a.out).resolve() if a.out else ROOT / "dist"   # the default output folder is <Drishti folder>/dist, never the working folder
     if not a.no_check:
         chk = argparse.Namespace(packs=[str(pack)], strict=False, junit=None, tail=0, json=False, jar=a.jar, java=a.java)
         if cmd_pack_check(chk, extra):

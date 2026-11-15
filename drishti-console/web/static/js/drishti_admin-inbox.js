@@ -54,14 +54,14 @@
   }
   function refresh() {
     if (document.hidden) { schedule(); return; }
-    fetch('/admin/loads/inbox?partial=1', { headers: { Accept: 'text/html' }, credentials: 'same-origin' })
+    fetch(drishti_url('/admin/loads/inbox?partial=1'), { headers: { Accept: 'text/html' }, credentials: 'same-origin' })
       .then(function (r) { return r.ok ? r.text() : null; })
       .then(function (html) { if (html) { body.innerHTML = html; columns(); } })
       .catch(function () { /* offline: keep the last picture */ })
       .then(schedule);
   }
   function post(url, data) {
-    return fetch(url, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    return fetch(drishti_url(url), { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify(data || {}) })
       .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { return { ok: r.ok, body: j }; }); })
       .catch(function () { return { ok: false, body: { detail: 'the console could not reach the server' } }; });
@@ -75,11 +75,11 @@
     var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
     if (!f) { return; }
     say('Uploading ' + f.name + '…');
-    fetch('/admin/api/dataload/upload?file=' + encodeURIComponent(f.name), { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/octet-stream', Accept: 'application/json' }, body: f })
+    fetch(drishti_url('/admin/api/dataload/upload?file=' + encodeURIComponent(f.name)), { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/octet-stream', Accept: 'application/json' }, body: f })
       .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { return { ok: r.ok, body: j }; }); })
       .then(function (r) {
         if (!r.ok) { say(problem(r.body), true); return; }
-        location.href = '/admin/loads/upload?item=' + encodeURIComponent(r.body.id);
+        location.href = drishti_url('/admin/loads/upload?item=' + encodeURIComponent(r.body.id));
       })
       .catch(function () { say('the console could not reach the server', true); });
   });
@@ -90,7 +90,7 @@
     if (run && !run.disabled) {
       run.disabled = true;
       say('Load now: asking the server...');
-      post('/admin/api/dataload/run').then(function (res) {
+      post(drishti_url('/admin/api/dataload/run')).then(function (res) {
         run.disabled = false;
         if (!res.ok) { say('Load now: ' + problem(res.body), true); return; }
         if (res.body.started) {
@@ -104,7 +104,7 @@
       var file = retry.getAttribute('data-retry');
       retry.disabled = true;
       say('Retry ' + file + ': asking the server...');
-      post('/admin/api/dataload/retry', { file: file }).then(function (res) {
+      post(drishti_url('/admin/api/dataload/retry'), { file: file }).then(function (res) {
         retry.disabled = false;
         if (!res.ok) { say('Retry ' + file + ': ' + problem(res.body), true); return; }
         say(res.body.file + ': back in the inbox (from ' + res.body.from + '); ' + res.body.next + '.');
@@ -134,7 +134,7 @@
       if (e.target.closest('[data-undo-check]')) {
         if (!id) { say('Undo: give the load id', true); return; }
         say('Undo ' + id + ': checking (nothing changes)...');
-        post('/admin/api/dataload/undo', { loadId: id }).then(function (res) {
+        post(drishti_url('/admin/api/dataload/undo'), { loadId: id }).then(function (res) {
           if (!res.ok) { say('Undo: ' + problem(res.body), true); return; }
           show(res.body);
           say(res.body.text);
@@ -145,7 +145,7 @@
         var typed = window.prompt('Type the load id to undo it (' + checked + '):');
         if ((typed || '').trim() !== checked) { say('Undo: not confirmed; nothing changed', true); return; }
         go.disabled = true;
-        post('/admin/api/dataload/undo', { loadId: checked, confirm: typed.trim() }).then(function (res) {
+        post(drishti_url('/admin/api/dataload/undo'), { loadId: checked, confirm: typed.trim() }).then(function (res) {
           if (!res.ok) { say('Undo: ' + problem(res.body), true); go.disabled = false; return; }
           show(res.body);
           say(res.body.text);

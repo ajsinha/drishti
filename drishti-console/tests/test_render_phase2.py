@@ -23,7 +23,7 @@ import json
 import re
 
 from jinja2 import Environment, FileSystemLoader
-from core import half_up
+from core import base_path, half_up
 
 from conftest import CONSOLE, FIXTURES
 from core import channel, render_dist as rd
@@ -121,6 +121,7 @@ def test_v2_is_off_with_embedding(client):
 def _macros():
     e = Environment(loader=FileSystemLoader(str(WEB / "templates")), extensions=["jinja2.ext.do"], autoescape=True)
     half_up.install(e)
+    base_path.install(e)                        # BASE and the filter u (core/base_path.py)
     e.globals.update(ASSET_V="", design_on=lambda: True)
     return e.get_template("_macros/panels.html").module
 

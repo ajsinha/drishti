@@ -86,7 +86,7 @@
   function runPython(cell) {
     if (!X.pythonRuns) { note(cell.out, 'Python does not run on this server: ' + (X.pythonWhy || ''), true); return Promise.resolve(); }
     note(cell.out, 'Running on the server…');
-    return X.post('/bi/notebook/python', { extract: spec(), extracts: X.extras, source: cell.source }).then(function (r) {
+    return X.post(drishti_url('/bi/notebook/python'), { extract: spec(), extracts: X.extras, source: cell.source }).then(function (r) {
       clear(cell.out);
       cell.out.appendChild(h('p', { class: 'bi-result-meta', 'data-engine': 'python', 'data-target': r.target,
         text: 'Ran on the server\'s compute pool in ' + r.ms + ' ms over ' + r.inputRows + ' rows' + (r.truncatedInput ? ' (cut to the extract limit)' : '') + (r.masked && r.masked.length ? ' · masked: ' + r.masked.join(', ') : '') }));
@@ -112,7 +112,7 @@
     if (!X.ex) { note(cell.out, 'Open an extract first.', true); return Promise.resolve(); }
     if (kind === 'python') { return runPython(cell); }                                            // Python runs on the server's compute pool, never here
     note(cell.out, 'Running…');
-    return X.post('/bi/notebook/sql', { extract: spec(), sql: cell.source }).then(function (r) {
+    return X.post(drishti_url('/bi/notebook/sql'), { extract: spec(), sql: cell.source }).then(function (r) {
       clear(cell.out);
       var where = SQL_NAME + ', run by the server over ' + r.model + ' as you' + (r.plan ? ' · plan ' + String(r.plan).slice(0, 12) : '') + (r.masked && r.masked.length ? ' · masked: ' + r.masked.join(', ') : '');
       cell.out.appendChild(h('p', { class: 'bi-result-meta', 'data-engine': 'dsql', text: r.rowCount + ' rows' + (r.truncated ? ' (cut to the SQL row limit)' : '') + ' in ' + r.ms + ' ms · ' + where }));
@@ -126,7 +126,7 @@
     var title = (q('input[name=title]', root).value || 'Notebook cell') + ' (' + to + ')';
     var body = { to: to, name: title, source: cell.source, extracts: X.extras, columns: X.ex ? X.ex.columns.map(function (c) { return c.name; }) : [] };
     X.promoteOnce(anchor, 'python:' + to + ':' + cell.source, function (existing) {
-      return X.post('/bi/notebook/promote', body).then(function (d) {
+      return X.post(drishti_url('/bi/notebook/promote'), body).then(function (d) {
         var saved = existing ? B.api('PUT', '/items/' + B.id2path(existing), { body: d.yaml }) : X.createItem('python', d.title, d.yaml);
         return saved.then(function (it) { return { item: it, text: 'Python ' + to + (existing ? ' draft updated: ' : ' draft saved in your workspace: ') + it.title + '. ' + d.notes.join(' ') }; });
       });

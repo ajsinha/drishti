@@ -74,13 +74,13 @@
   /* ---- src/drishti_cells.js ---- */
   __m["src/drishti_cells.js"] = (function () {
     var h = __m["src/drishti_dom.js"].h, str = __m["src/drishti_dom.js"].str, toneClass = __m["src/drishti_dom.js"].toneClass;
-    var chipList = __lib("drishti-core").chipList, isListValue = __lib("drishti-core").isListValue;
+    var chipList = __lib("drishti-core").chipList, isListValue = __lib("drishti-core").isListValue, basePath = __lib("drishti-core").basePath, drishtiUrl = __lib("drishti-core").url;
     const enc = (s) => encodeURIComponent(String(s == null ? '' : s));
     function entityHref(R, link) {
-      return (R.server || '') + '/v/' + enc(link.kind) + '/' + String(link.id == null ? '' : link.id).split('/').map(enc).join('/');
+      return (R.server || basePath()) + '/v/' + enc(link.kind) + '/' + String(link.id == null ? '' : link.id).split('/').map(enc).join('/');
     }
     function entityLink(R, link, label, cls = 'lnk') {
-      return h('a', { class: cls, href: entityHref(R, link), 'data-r-link': 'entity', 'data-r-kind': link.kind, 'data-r-id': link.id }, label);
+      return h('a', { class: cls, href: drishtiUrl(entityHref(R, link)), 'data-r-link': 'entity', 'data-r-kind': link.kind, 'data-r-id': link.id }, label);
     }
     function cellText(R, c) {
       c = c || {};
@@ -91,7 +91,7 @@
       if (c.link) { return entityLink(R, c.link, str(c.text)); }
       const t = c.text;
       if (typeof t === 'string' && (t.startsWith('https://') || t.startsWith('http://')) && !t.includes(' ')) {
-        return h('a', { class: 'lnk ext', href: t, target: R.outsideLinks === 'new-window' ? '_blank' : null, rel: 'noopener noreferrer nofollow', title: t, 'data-r-link': 'outside' }, t);
+        return h('a', { class: 'lnk ext', href: drishtiUrl(t), target: R.outsideLinks === 'new-window' ? '_blank' : null, rel: 'noopener noreferrer nofollow', title: t, 'data-r-link': 'outside' }, t);
       }
       if (isListValue(t)) { return chipList(document, t, { label: c.label || '' }); }   // a list attribute (fmt: list): chips
       return str(t);
@@ -108,7 +108,7 @@
   })();
   /* ---- src/drishti_kinds.js ---- */
   __m["src/drishti_kinds.js"] = (function () {
-    var roundHalfUp = __lib("drishti-core").roundHalfUp, formatNumber = __lib("drishti-core").formatNumber, formatPythonFloat = __lib("drishti-core").formatPythonFloat;
+    var roundHalfUp = __lib("drishti-core").roundHalfUp, formatNumber = __lib("drishti-core").formatNumber, formatPythonFloat = __lib("drishti-core").formatPythonFloat, basePath = __lib("drishti-core").basePath, drishtiUrl = __lib("drishti-core").url;
     var docPivotable = __lib("drishti-grid").docPivotable, docDrill = __lib("drishti-grid").docDrill, docPivot = __lib("drishti-grid").docPivot, docPlainTable = __lib("drishti-grid").docPlainTable;
     var h = __m["src/drishti_dom.js"].h, str = __m["src/drishti_dom.js"].str, icon = __m["src/drishti_dom.js"].icon, toneClass = __m["src/drishti_dom.js"].toneClass, capitalize = __m["src/drishti_dom.js"].capitalize;
     var cellText = __m["src/drishti_cells.js"].cellText, entity = __m["src/drishti_cells.js"].entity, entityLink = __m["src/drishti_cells.js"].entityLink, fields = __m["src/drishti_cells.js"].fields;
@@ -232,13 +232,13 @@
         const t = f.text || '', w = t.split(' ');
         let dd;
         if (f.label === 'Layout' && w.length > 2 && w[0] === 'Sutra' && w[2].slice(0, 1) === 'v' && R.designOn) {
-          let href = (R.server || '') + '/studio?sutra=' + pyQuote(w[1] + '@' + w[2].slice(1));
+          let href = (R.server || basePath()) + '/studio?sutra=' + pyQuote(w[1] + '@' + w[2].slice(1));
           if (ref && ref.kind && ref.id) { href += '&kind=' + pyQuote(ref.kind) + '&id=' + pyQuote(ref.id); }
           dd = ['Sutra ', h('a', { 'data-prov-sutra': true, href, title: 'Open this Sutra in the designer', 'data-r-link': 'console' }, w[1] + ' ' + w[2]),
             w.length > 3 ? ' ' + w.slice(3).join(' ') : ''];
         } else if (f.label === 'Source' && t.includes(', gen ')) {
           const src = t.split(', gen ');
-          dd = [h('a', { 'data-prov-source': true, href: (R.server || '') + '/admin/connectors/' + pyQuote(src[0]), title: "Open this connector's page", 'data-r-link': 'console' }, src[0]), ', gen ' + src[1]];
+          dd = [h('a', { 'data-prov-source': true, href: drishtiUrl((R.server || basePath()) + '/admin/connectors/' + pyQuote(src[0])), title: "Open this connector's page", 'data-r-link': 'console' }, src[0]), ', gen ' + src[1]];
         } else { dd = str(f.text); }
         return h('div', null, h('dt', null, str(f.label)), h('dd', { class: 'mono' }, dd));
       }));
@@ -356,7 +356,7 @@
         h('span', { class: 'pnl-code' }, p.code ? str(p.code) : '', p.code && p.key ? ' · ' : '', p.key ? str(p.key) : '',
           p.inferred ? [' ', h('span', { class: 'inf', title: p.explanation || 'completed by inference' }, 'inferred')] : null, ' ',
           R.chrome && DOWNLOADS.includes(p.kind) && !p.empty ? [downloads(p), ' '] : null,
-          R.help === false ? null : h('a', { class: 'pnl-help', href: (R.server || '') + '/help/panels#' + p.kind, title: 'What a ' + p.kind + ' panel shows', 'aria-label': 'Help on ' + p.kind + ' panels', 'data-r-link': 'console' }, icon('question-circle')))),
+          R.help === false ? null : h('a', { class: 'pnl-help', href: drishtiUrl((R.server || basePath()) + '/help/panels#' + p.kind), title: 'What a ' + p.kind + ' panel shows', 'aria-label': 'Help on ' + p.kind + ' panels', 'data-r-link': 'console' }, icon('question-circle')))),
       h('div', { class: 'pnl-b' }, p.compute && p.compute.state !== 'ready'
         ? [computeState(R, p), p.compute.hasResult ? h('div', { class: 'cmp-last' }, body(R, p, ref)) : null]
         : body(R, p, ref)));
@@ -368,7 +368,7 @@
   })();
   /* ---- src/drishti_net.js ---- */
   __m["src/drishti_net.js"] = (function () {
-    var createClient = __lib("drishti-core").createClient, AS_OF_HEADER = __lib("drishti-core").AS_OF_HEADER;
+    var createClient = __lib("drishti-core").createClient, AS_OF_HEADER = __lib("drishti-core").AS_OF_HEADER, basePath = __lib("drishti-core").basePath, drishtiUrl = __lib("drishti-core").url;
     var LiveClient = __lib("drishti-data").LiveClient;
     const FIXES = {
       401: 'Sign in to the console, or give render() a token: { token: () => fetchMyDrishtiToken() }.',
@@ -399,7 +399,7 @@
     function personFetch(o) {
       return async (url, init) => {
         const hd = Object.assign({}, (init && init.headers) || {}, await personHeaders({ token: o.token }));
-        return fetch(url, Object.assign({}, init, { headers: hd, credentials: o.credentials || (o.server ? 'include' : 'same-origin'), cache: 'no-store' }));
+        return fetch(drishtiUrl(url), Object.assign({}, init, { headers: hd, credentials: o.credentials || (o.server ? 'include' : 'same-origin'), cache: 'no-store' }));
       };
     }
     const enc = (s) => encodeURIComponent(String(s));
@@ -408,11 +408,11 @@
       if (typeof o.viewUrl === 'function') { return o.viewUrl(ref); }
       const q = new URLSearchParams();
       for (const [k, v] of Object.entries(ref.controls || {})) { q.set(k.startsWith('ctl.') ? k : 'ctl.' + k, v); }
-      return (o.server || '') + '/api/view/' + enc(ref.kind) + '/' + idPath(ref.id) + (q.toString() ? '?' + q : '');
+      return (o.server || basePath()) + '/api/view/' + enc(ref.kind) + '/' + idPath(ref.id) + (q.toString() ? '?' + q : '');
     }
     async function fetchView(o, ref) {
       if (!ref || !ref.kind || !ref.id) { throw problem('DRS-9104', 'a view needs a kind and an id', 'render(el, { kind: "trade", id: "IRS-48213" }).'); }
-      const client = createClient({ credentials: o.credentials || (o.server ? 'include' : 'same-origin'), retries: 0, fetch: (u, init) => fetch(u, Object.assign({}, init, { cache: 'no-store' })) });
+      const client = createClient({ credentials: o.credentials || (o.server ? 'include' : 'same-origin'), retries: 0, fetch: (u, init) => fetch(drishtiUrl(u), Object.assign({}, init, { cache: 'no-store' })) });
       try {
         return await client.get(viewUrl(o, ref), { headers: await personHeaders(o) });
       } catch (e) {
@@ -426,7 +426,7 @@
     function streamUrl(o, ref) {
       if (typeof ref === 'string') { return ref; }
       if (typeof o.streamUrl === 'function') { return o.streamUrl(ref); }
-      return (o.server || '') + '/api/stream/' + enc(ref.kind) + '/' + idPath(ref.id) + '?raw=1';
+      return (o.server || basePath()) + '/api/stream/' + enc(ref.kind) + '/' + idPath(ref.id) + '?raw=1';
     }
     const STREAM_EVENTS = ['view', 'frame', 'message', 'gone'];
     function openStream(o, refOrUrl, on) {
@@ -451,6 +451,7 @@
     var h = __m["src/drishti_dom.js"].h, str = __m["src/drishti_dom.js"].str, icon = __m["src/drishti_dom.js"].icon, clear = __m["src/drishti_dom.js"].clear;
     var pyQuote = __m["src/drishti_kinds.js"].pyQuote;
     var personFetch = __m["src/drishti_net.js"].personFetch;
+    var basePath = __lib("drishti-core").basePath, drishtiUrl = __lib("drishti-core").url;
     const WHY = { missing: 'is missing in this document', null: 'is null in this document', 'empty list': 'is an empty list', masked: 'is hidden for your role',
       'no values': 'has no values', 'no data': 'has no data' };
     const VERDICT = { true: 'its condition held', false: 'its condition was false', error: 'its condition could not be evaluated', masked: 'its condition depends on a hidden field' };
@@ -459,7 +460,7 @@
     function layer(name, n, open, title, ...body) {
       return h('details', { class: 'about-layer', 'data-layer': name, id: 'about-l' + n, open: open ? true : null }, h('summary', null, h('h3', null, title)), body);
     }
-    const link = (R, href, text, attrs) => h('a', Object.assign({ href: (R.server || '') + href, 'data-r-link': 'console' }, attrs || {}), text);
+    const link = (R, href, text, attrs) => h('a', Object.assign({ href: drishtiUrl((R.server || basePath()) + href), 'data-r-link': 'console' }, attrs || {}), text);
     function about(R, ex) {
       const s = (ex.layout || {}).sutra, ab = ex.about || {}, desc = ab.sutraDescription || (s ? s.description : null);
       if (!(ab.text || desc || (ab.panels || []).length)) { return null; }
@@ -528,7 +529,7 @@
       const n = ex.next || {}, ref = ex.ref || {}, items = [];
       (n.keys || []).forEach((k) => {
         if (k.link) {
-          items.push(h('li', null, h('kbd', null, str(k.key)), ' ', h('a', { href: (R.server || '') + '/v/' + pyQuote(k.link.kind) + '/' + pyQuote(k.link.id),
+          items.push(h('li', null, h('kbd', null, str(k.key)), ' ', h('a', { href: drishtiUrl((R.server || basePath()) + '/v/' + pyQuote(k.link.kind) + '/' + pyQuote(k.link.id)),
             'data-r-link': 'entity', 'data-r-kind': k.link.kind, 'data-r-id': k.link.id }, str(k.label)),
           k.link.id && String(k.link.id).toLowerCase() !== String(k.label || '').toLowerCase() ? [' ', h('span', { class: 'about-note mono' }, str(k.link.id))] : null));
         } else if (k.action === 'denied') { items.push(h('li', null, h('kbd', null, str(k.key)), ' ' + str(k.label) + ' ', h('span', { class: 'about-note' }, '(no access)'))); }
@@ -543,7 +544,7 @@
     function ask(R, ex) {
       if (!(ex.ask && ex.ask.enabled)) { return null; }
       const ref = ex.ref || {};
-      return h('section', { class: 'about-ask', 'data-about-ask': true, 'data-ask-url': (R.server || '') + '/v/' + pyQuote(ref.kind) + '/' + pyQuote(ref.id) + '/ask', 'aria-labelledby': 'about-ask-h' },
+      return h('section', { class: 'about-ask', 'data-about-ask': true, 'data-ask-url': (R.server || basePath()) + '/v/' + pyQuote(ref.kind) + '/' + pyQuote(ref.id) + '/ask', 'aria-labelledby': 'about-ask-h' },
         h('h3', { id: 'about-ask-h' }, 'Ask about this page'),
         h('form', { class: 'about-ask-form', 'data-ask-form': true },
           h('label', { class: 'visually-hidden', for: 'about-ask-q' }, 'Your question about this page'),
@@ -567,7 +568,7 @@
     function aboutUrl(o, ref, generation) {
       if (typeof o.aboutUrl === 'function') { return o.aboutUrl(ref, generation); }
       const enc = (s) => encodeURIComponent(String(s));
-      return (o.server || '') + '/v/' + enc(ref.kind) + '/' + String(ref.id).split('/').map(enc).join('/') + '/about?format=json' + (generation ? '&generation=' + generation : '');
+      return (o.server || basePath()) + '/v/' + enc(ref.kind) + '/' + String(ref.id).split('/').map(enc).join('/') + '/about?format=json' + (generation ? '&generation=' + generation : '');
     }
     function aboutSheet(s, v) {
       const btn = v.querySelector('[data-r-about]');
@@ -917,12 +918,13 @@
     var cellText = __m["src/drishti_cells.js"].cellText;
     var panel = __m["src/drishti_kinds.js"].panel;
     var arrange = __m["src/drishti_layout.js"].arrange, gridDom = __m["src/drishti_layout.js"].gridDom;
+    var drishtiUrl = __lib("drishti-core").url;
     function banners(R, vm) {
       const pv = vm.provenance || {}, out = [], asof = R.asOf || 'live', picked = (R.businessDate || {}).selected || asof;
       if (asof !== 'live' && !pv.businessDate) {
         out.push(h('p', { class: 'asof-banner asof-unheld', role: 'alert' }, icon('exclamation-triangle'), ' ', h('b', null, 'No data held for ' + picked),
           ': no dated store has ' + str((vm.ref || {}).id) + ' for that date. Shown instead: the current data of ', h('b', null, str(pv.source)), ', a source that keeps no dates, as a still snapshot that does not update.',
-          R.backToLive ? [' ', h('a', { href: R.backToLive, 'data-r-link': 'console' }, 'Back to live')] : null));
+          R.backToLive ? [' ', h('a', { href: drishtiUrl(R.backToLive), 'data-r-link': 'console' }, 'Back to live')] : null));
       } else if (asof !== 'live' && pv.businessDate && pv.businessDate !== (R.businessDate || {}).selected) {
         out.push(h('p', { class: 'asof-banner', role: 'status' }, icon('calendar2-week'), ' Latest data on or before ' + str((R.businessDate || {}).selected) + ' is from ',
           h('b', { class: 'mono' }, pv.businessDate), '.'));
@@ -1047,14 +1049,14 @@
     var personFetch = __m["src/drishti_net.js"].personFetch;
     var drawNestedPivots = __m["src/drishti_nested.js"].drawNestedPivots;
     var consoleTables = __lib("drishti-grid").consoleTables;
-    var textSortKey = __lib("drishti-core").textSortKey, compareTextKeys = __lib("drishti-core").compareTextKeys;
+    var textSortKey = __lib("drishti-core").textSortKey, compareTextKeys = __lib("drishti-core").compareTextKeys, drishtiUrl = __lib("drishti-core").url;
     const SCRIPTS = ['colfilter', 'tables', 'zoom', 'controls'];
     const BUNDLES = ['drishti-core', 'drishti-inputs'];
     const loaded = () => assets.memoised('console-behaviours', async () => {
       const E = (window.Drishti && window.Drishti.elements) || {};
       if (!E.inputs) {
         try {
-          const res = await fetch(assets.statics('elements/drishti-inputs/drishti_inputs.css'), { credentials: 'omit' });
+          const res = await fetch(drishtiUrl(assets.statics('elements/drishti-inputs/drishti_inputs.css')), { credentials: 'omit' });
           if (res.ok) {
             const sheet = new CSSStyleSheet();
             sheet.replaceSync(await res.text());
@@ -1254,6 +1256,7 @@
     var aboutSheet = __m["src/drishti_about.js"].aboutSheet;
     var embedRecords = __m["src/drishti_console.js"].embedRecords;
     var signInFor = __m["src/drishti_signin.js"].signInFor, gate = __m["src/drishti_signin.js"].gate;
+    var drishtiUrl = __lib("drishti-core").url;
     const NAV = ['in-place', 'host', 'new-window', 'follow'];
     const BEHAVIOURS = ['library', 'host', 'console'];
     const AUTH = ['token', 'popup', 'session'];
@@ -1272,7 +1275,7 @@
         this.auth = o.auth || (typeof o.token === 'function' ? 'token' : 'session');
         if (!AUTH.includes(this.auth)) { throw problem('DRS-9108', 'auth must be one of ' + AUTH.join(', ') + ', not ' + this.auth, "Leave it out: 'token' when you give a token, else the console's session."); }
         if (this.auth === 'popup') {
-          o.server = o.server || new URL(assets.statics('')).origin;
+          o.server = o.server || assets.statics('').replace(/static\/$/, '').replace(/\/$/, '');   // the console's root, its URL sub-path kept
           this.signin = signInFor(o.server);
           if (typeof o.token !== 'function') { o.token = () => this.signin.get(); }
           o.credentials = 'omit';
@@ -1418,8 +1421,8 @@
         const detail = Object.assign({ kind: link.kind, id: link.id, href, target: 'entity', navigation: this.o.navigation }, info || {});
         if (!this.emit('navigate', detail)) { return false; }
         if (this.o.navigation === 'host') { return false; }
-        if (this.o.navigation === 'new-window') { window.open(href, '_blank', 'noopener'); return true; }
-        if (this.o.navigation === 'follow') { window.location.assign(href); return true; }       // a chart point or a key: the page goes there, as a link would
+        if (this.o.navigation === 'new-window') { window.open(drishtiUrl(href), '_blank', 'noopener'); return true; }
+        if (this.o.navigation === 'follow') { window.location.assign(drishtiUrl(href)); return true; }       // a chart point or a key: the page goes there, as a link would
         this.unsubscribe();
         this.load({ kind: link.kind, id: link.id }, true);
         return true;
@@ -1441,7 +1444,7 @@
         const kind = a.getAttribute('data-r-link');
         const pnl = a.closest('.pnl'), panelId = pnl ? pnl.getAttribute('data-panel') : null;
         const native = (target, mode) => {
-          const d = { target, href: a.href, panel: panelId, source: 'link', navigation: this.o.navigation, mode };
+          const d = { target, href: drishtiUrl(a.href), panel: panelId, source: 'link', navigation: this.o.navigation, mode };
           if (target === 'entity') { d.kind = a.getAttribute('data-r-kind'); d.id = a.getAttribute('data-r-id'); }
           if (!this.emit('navigate', d)) { e.preventDefault(); }
         };
@@ -1453,8 +1456,8 @@
           const mode = kind === 'console' ? this.o.consoleLinks : this.o.outsideLinks;
           if (mode === 'follow' || (mode === 'new-window' && kind === 'outside')) { native(kind, mode); return; }   // the link itself (target=_blank: the user's own new tab)
           e.preventDefault();
-          if (!this.emit('navigate', { target: kind, href: a.href, panel: panelId, source: 'link', navigation: this.o.navigation })) { return; }
-          if (mode === 'new-window') { window.open(a.href, '_blank', 'noopener'); }
+          if (!this.emit('navigate', { target: kind, href: drishtiUrl(a.href), panel: panelId, source: 'link', navigation: this.o.navigation })) { return; }
+          if (mode === 'new-window') { window.open(drishtiUrl(a.href), '_blank', 'noopener'); }
         }
       }
       key(b) {
@@ -1718,10 +1721,11 @@
     var LiveClient = __lib("drishti-data").LiveClient;
     var signInFor = __m["src/drishti_signin.js"].signInFor;
     var statics = __m["src/drishti_assets.js"].statics;
+    var drishtiUrl = __lib("drishti-core").url;
     const ELEMENTS_VERSION = '2.3.0';
     const API = '/embed/v2';
     const cfg = { server: '', tokenProvider: null, auth: null, retryMinMs: 2000, retryMaxMs: 30000, silenceMs: 30000, closeGraceMs: 1500 };
-    const serverOf = () => (cfg.server || new URL(statics('')).origin).replace(/\/$/, '');
+    const serverOf = () => (cfg.server || statics('').replace(/static\/$/, '')).replace(/\/$/, '');
     function usePopup(server) {
       const si = signInFor(server || serverOf());
       if (!cfg.tokenProvider || cfg.tokenProvider.popup !== si) {
@@ -1763,7 +1767,7 @@
     async function authed(url, init, signal) {
       for (let attempt = 0; ; attempt++) {
         const t = await getToken(attempt > 0);
-        const res = await fetch(url, Object.assign({}, init, { signal, cache: 'no-store', credentials: 'omit',
+        const res = await fetch(drishtiUrl(url), Object.assign({}, init, { signal, cache: 'no-store', credentials: 'omit',
           headers: Object.assign({}, init && init.headers, t ? { Authorization: 'Bearer ' + t } : {}) }));
         if (res.status === 401) { if (attempt === 0 && cfg.tokenProvider) { continue; } needers.forEach((fn) => fn(cfg.tokenProvider ? 'refused' : 'missing')); }
         return res;

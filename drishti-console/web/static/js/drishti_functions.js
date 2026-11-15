@@ -58,7 +58,7 @@
     try {
       var url = new URL(window.location.href);
       if (find.value.trim()) { url.searchParams.set('q', find.value.trim()); } else { url.searchParams.delete('q'); }
-      window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
+      window.history.replaceState(window.history.state, '', drishti_url(url.pathname + url.search + url.hash));
     } catch (e) { /* an old browser keeps the address as it is */ }
   }
   find.addEventListener('input', filter);
@@ -152,7 +152,7 @@
     }).join('');
     off.filter(function (c) { return c.scope === 'command' && !impacts[c.name]; }).forEach(function (c) {
       impacts[c.name] = 'asking';
-      fetch('/admin/api/commands/' + encodeURIComponent(c.name) + '/impact', { headers: { Accept: 'application/json' } })
+      fetch(drishti_url('/admin/api/commands/' + encodeURIComponent(c.name) + '/impact'), { headers: { Accept: 'application/json' } })
         .then(function (r) { return r.ok ? r.json() : null; })
         .then(function (j) { impacts[c.name] = j || { uses: [] }; var li = $('[data-uses="' + c.name + '"]'); if (li) { li.innerHTML = uses(c.name); } })
         .catch(function () { impacts[c.name] = { uses: [] }; });
@@ -173,7 +173,7 @@
     if (!n.length) { return; }
     apply.disabled = true;
     say(smsg, 'Applying…');
-    fetch('/admin/api/commands', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    fetch(drishti_url('/admin/api/commands'), { method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ reason: reason.value.trim(), changes: n }) })
       .then(function (r) { return r.json().catch(function () { return {}; }).then(function (b) { return { ok: r.ok, body: b }; }); })
       .then(function (res) {
@@ -188,7 +188,7 @@
   // ---- history, and changes made elsewhere -------------------------------------------------------------------------------
   function history() {
     var body = $('[data-history] tbody');
-    fetch('/admin/api/commands/history?limit=100', { headers: { Accept: 'application/json' } })
+    fetch(drishti_url('/admin/api/commands/history?limit=100'), { headers: { Accept: 'application/json' } })
       .then(function (r) { return r.ok ? r.json() : { items: [] }; })
       .then(function (j) {
         var items = j.items || [];

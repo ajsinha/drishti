@@ -213,12 +213,14 @@ def env_names(raw: str) -> list[str]:
 
 def placeholder_default(raw: str) -> str | None:
     """The value when no environment variable is set: ``${A:${B:x}}`` -> ``x``; ``${A}`` -> None (no default); ``${drishti.data.dir}``
-    reads as ``./data``, the data folder's default."""
-    text = _SPRING_REF.sub("./data", raw)
+    reads as ``<data>``, the data folder (``<config>``, ``<home>``, ``<modules>`` likewise: the launch roots, never a working-directory path)."""
+    text = _SPRING_REF.sub("<data>", raw)
     prev = None
     while prev != text:
         prev = text
         text = re.sub(r"\$\{[A-Za-z][A-Za-z0-9_.\-]*:((?:[^{}]|\{[^{}]*\})*)\}", lambda m: m.group(1), text)
+    for ref, word in (("${drishti.config.dir}", "<config>"), ("${drishti.home}", "<home>"), ("${drishti.modules.home}", "<modules>")):
+        text = text.replace(ref, word)
     if re.search(r"\$\{[A-Z][A-Z0-9_]*\}", text):
         if text.strip().startswith("${") and text.strip().endswith("}"):
             return None

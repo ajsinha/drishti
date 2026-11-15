@@ -55,7 +55,6 @@ public final class NetSchema {
         }
     }
 
-    private static final Pattern ENV = Pattern.compile("\\$\\{([A-Za-z_][A-Za-z0-9_.]*)(?::([^}]*))?}");
     private static final Pattern SECRET_REF = Pattern.compile("\\$\\{[A-Za-z_][A-Za-z0-9_.]*(:)?}");
     private static final Pattern DURATION = Pattern.compile("(\\d+(?:\\.\\d+)?)\\s*(ms|s|m|h|d)");
     /** The least a cluster key may be, as the token secret (TokenVerifier). */
@@ -223,14 +222,7 @@ public final class NetSchema {
         if (raw == null) {
             return "";
         }
-        Matcher mt = ENV.matcher(raw);
-        StringBuilder out = new StringBuilder();
-        while (mt.find()) {
-            String v = env.apply(mt.group(1));
-            mt.appendReplacement(out, Matcher.quoteReplacement(v != null ? v : mt.group(2) != null ? mt.group(2) : ""));
-        }
-        mt.appendTail(out);
-        return out.toString();
+        return com.ash.drishti.settingsfile.Placeholders.resolveOr(raw, env, "");   // the one resolver, through this view; unset: empty
     }
 
     /** {@code 150ms}, {@code 5s}, {@code 10m}, {@code 24h}, {@code 1d}, or an ISO-8601 duration ({@code PT5S}). */

@@ -581,7 +581,7 @@ public final class ConnectorFiles {
      */
     private Path markerFile(String name) {
         requireName(name);
-        for (Path p : List.of(state.resolve(GENERATED), dir.resolve(GENERATED), dir.resolve("." + GENERATED))) {
+        for (Path p : List.of(state.resolve(GENERATED), dir.resolve(GENERATED))) {
             if (Files.isRegularFile(p.resolve(name + ".properties"))) {
                 return p.resolve(name + ".properties");
             }

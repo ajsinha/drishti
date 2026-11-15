@@ -48,7 +48,7 @@
   }
   var HIDDEN_GRACE_MS = 10000, PING_MS = 10000, WORKER_WAIT_MS = 3000, HI_WAIT_MS = 5000;
   var me = document.currentScript;
-  var HUB_URL = me && me.src ? me.src.replace(/(?:drishti_)?channel\.js(\?|$)/, 'drishti_live-hub.js$1') : '/static/js/drishti_live-hub.js';
+  var HUB_URL = me && me.src ? me.src.replace(/(?:drishti_)?channel\.js(\?|$)/, 'drishti_live-hub.js$1') : drishti_url('/static/js/drishti_live-hub.js');
   var meta = document.querySelector('meta[name="drishti-live"]');
   var WHO = meta ? meta.getAttribute('content') || '' : '';
   var TAB = Math.random().toString(36).slice(2) + Date.now().toString(36);
@@ -116,7 +116,7 @@
     var settled = false, port;
     function fallback() { if (!settled) { settled = true; try { port.close(); } catch (e) { /* never opened */ } elect(); } }
     try {
-      var worker = new window.SharedWorker(HUB_URL, { name: 'drishti-live' });
+      var worker = new window.SharedWorker(drishti_url(HUB_URL), { name: 'drishti-live' });
       port = worker.port;
       worker.onerror = fallback;
       port.onmessage = function (e) {

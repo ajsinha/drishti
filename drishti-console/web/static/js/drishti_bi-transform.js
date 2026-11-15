@@ -32,7 +32,7 @@
   window.Drishti.transform = S;                                       // the browser tests read the state
 
   function post(path, body) {
-    return fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, credentials: 'same-origin', body: JSON.stringify(body) })
+    return fetch(drishti_url(path), { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, credentials: 'same-origin', body: JSON.stringify(body) })
       .then((r) => r.json().catch(() => ({})).then((d) => {
         if (!r.ok) { const e = new Error((d.code ? d.code + ' ' : '') + (d.detail || r.statusText)); e.code = d.code; e.traceback = d.traceback; throw e; }
         return d;
@@ -199,7 +199,7 @@
   // ---- snippets ------------------------------------------------------------------------------------------------------------------------------------
   const picker = q('[data-picker]'), snipSel = q('[data-snippet]'), paramsEl = q('[data-params]');
   function loadSnippets() {
-    return fetch('/bi/transform/snippets', { credentials: 'same-origin' }).then((r) => r.json()).then((d) => {
+    return fetch(drishti_url('/bi/transform/snippets'), { credentials: 'same-origin' }).then((r) => r.json()).then((d) => {
       S.snippets = d.snippets || [];
       const byGroup = {}, items = [{ value: '', label: '(choose a snippet)' }];      // drishti-inputs' Select, the snippets in their groups
       S.snippets.forEach((s) => { (byGroup[s.group] = byGroup[s.group] || []).push(s); });
@@ -265,7 +265,7 @@
   q('[data-open-snippets]').addEventListener('click', () => openPicker());
   q('[data-picker-close]').addEventListener('click', () => { picker.hidden = true; });
   snipSel.addEventListener('change', () => drawParams(S.snippets.find((s) => s.id === snipSel.value)));
-  function renderSnippet(id, params) { return post('/bi/transform/snippet', { id, params, inputs: names() }); }
+  function renderSnippet(id, params) { return post(drishti_url('/bi/transform/snippet'), { id, params, inputs: names() }); }
   picker.addEventListener('submit', (ev) => {
     ev.preventDefault();
     const s = S.snippets.find((x) => x.id === snipSel.value);
@@ -299,7 +299,7 @@
     const meta = q('[data-run-meta]');
     meta.textContent = 'Running the steps on the rows you may see…';
     root.setAttribute('data-running', 'true');
-    return post('/bi/transform/steps', { spec: specToSend() }).then((a) => {
+    return post(drishti_url('/bi/transform/steps'), { spec: specToSend() }).then((a) => {
       if (me !== S.seq) { return; }
       S.run = a;
       const rowsIn = (a.inputs || []).map((i) => i.name + ' ' + i.rows.toLocaleString('en-US')).join(', ');
@@ -360,7 +360,7 @@
   // ---- the YAML: shown, editable, read back --------------------------------------------------------------------------------------------------------
   function yaml() {
     if (!S.spec.inputs.length) { return Promise.resolve(); }
-    return post('/bi/transform/compose', { spec: specToSend() }).then((c) => {
+    return post(drishti_url('/bi/transform/compose'), { spec: specToSend() }).then((c) => {
       q('[data-yaml-python]').value = c.python;
       q('[data-yaml-dataset]').value = c.dataset;
       S.composed = c;
@@ -368,7 +368,7 @@
   }
   q('[data-yaml-read]').addEventListener('click', () => {
     const btn = q('[data-yaml-read]');
-    B.busy(btn, () => post('/bi/transform/parse', { python: q('[data-yaml-python]').value, dataset: q('[data-yaml-dataset]').value }).then((d) => {
+    B.busy(btn, () => post(drishti_url('/bi/transform/parse'), { python: q('[data-yaml-python]').value, dataset: q('[data-yaml-dataset]').value }).then((d) => {
       open(d.spec);
       B.near(btn, 'Read back: ' + d.spec.steps.length + ' steps over ' + d.spec.inputs.length + ' inputs.', false);
     }).catch((e) => B.near(btn, e.message, true)));
@@ -384,7 +384,7 @@
   // ---- saving: two drafts in your workspace --------------------------------------------------------------------------------------------------------
   q('[data-save]').addEventListener('click', () => {
     const btn = q('[data-save]'), out = q('[data-save-msg]');
-    B.busy(btn, () => post('/bi/transform/compose', { spec: specToSend() }).then((c) => {
+    B.busy(btn, () => post(drishti_url('/bi/transform/compose'), { spec: specToSend() }).then((c) => {
       const title = c.spec.title || c.spec.name;
       const savePy = S.items.python ? B.api('PUT', '/items/' + B.id2path(S.items.python), { body: c.python })
         : B.api('POST', '/workspaces/me/items', { kind: 'python', title, description: 'A Python Transform built in the Transform editor.', body: c.python });
@@ -396,10 +396,10 @@
       }).then((ds) => {
         S.items.dataset = ds.id || S.items.dataset;
         const a = q('[data-open-python]'), b = q('[data-open-dataset]');
-        a.href = '/bi/i/' + B.id2path(S.items.python); a.hidden = false;
-        b.href = '/bi/i/' + B.id2path(S.items.dataset); b.hidden = false;
+        a.href = drishti_url('/bi/i/' + B.id2path(S.items.python)); a.hidden = false;
+        b.href = drishti_url('/bi/i/' + B.id2path(S.items.dataset)); b.hidden = false;
         out.textContent = 'Saved as two drafts in your workspace: the Python item and the dataset. Check and publish the Python item first, then the dataset.';
-        history.replaceState(null, '', '/bi/transform?item=' + encodeURIComponent(S.items.python) + '&dataset=' + encodeURIComponent(S.items.dataset));
+        history.replaceState(null, '', drishti_url('/bi/transform?item=' + encodeURIComponent(S.items.python) + '&dataset=' + encodeURIComponent(S.items.dataset)));
       });
     }).catch((e) => { out.textContent = e.message; B.near(btn, e.message, true); }));
   });
@@ -414,7 +414,7 @@
     return Promise.all([B.api('GET', '/items/' + B.id2path(item)), ds ? B.api('GET', '/items/' + B.id2path(ds)) : Promise.resolve(null)]).then((got) => {
       S.items.python = got[0].can && got[0].can.edit === false ? null : item;
       S.items.dataset = got[1] && !(got[1].can && got[1].can.edit === false) ? ds : null;
-      return post('/bi/transform/parse', { python: got[0].body || '', dataset: got[1] ? got[1].body || '' : '' }).then((d) => open(d.spec));
+      return post(drishti_url('/bi/transform/parse'), { python: got[0].body || '', dataset: got[1] ? got[1].body || '' : '' }).then((d) => open(d.spec));
     });
   }).catch((e) => say(e.message, true));
 })();

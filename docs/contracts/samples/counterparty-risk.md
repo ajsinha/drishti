@@ -1158,7 +1158,7 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 | `BUSINESS_DATE` | date (YYYY-MM-DD) | required | The close of business the run starts from (t0); the lake's partition. | — | `"2026-09-30"` |
 | `RUN_ID` | string | required | The simulation run the row belongs to: a RUN_ID of the simulation-run kind (XR-<date>-<nn>), the same on every row of the run. | pattern `^XR-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]+$`; links to `simulation-run` | `"XR-2026-09-30-01"` |
 | `TRADE_ID` | string | required | The trade valued on the paths: a TRADE_ID of the trading pack's trade kind (ENDUR digits, CLY-…, MX-…), as text. | pattern `^((MX\|CLY)-)?\d+$`; links to `trade` | `"CLY-3000280"` |
-| `SOURCE_SYSTEM` | string | required | The trade's booking system: ENDUR, CALYPSO or MUREX. | one of `CALYPSO`, `ENDUR`, `MUREX` | `"CALYPSO"` |
+| `SOURCE_SYSTEM` | string | required | The trade's booking system: ENDUR, CALYPSO or MUREX. | one of `CALYPSO`, `ENDUR`, `ICI`, `MUREX`, `SWAPONE`, `WSS` | `"CALYPSO"` |
 | `NETTING_SET` | string | required | The netting set the trade belongs to (its membership wins when they differ). | pattern `^NS-`; links to `netting-set` | `"NS-ALDERSHOT-FRA"` |
 | `COUNTERPARTY` | string | required | The trade's counterparty, denormalised from its netting set: a COUNTERPARTY_ID of the core pack's counterparty kind (CP-…). | pattern `^CP-`; links to `counterparty` | `"CP-ALDERSHOT"` |
 | `LEGAL_ENTITY` | string | required | The bank's legal entity that booked the trade: an ENTITY_ID of the core pack's legal-entity kind (LE-…). | pattern `^LE-`; links to `legal-entity` | `"LE-FRA"` |

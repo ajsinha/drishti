@@ -450,7 +450,7 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 |---|---|---|---|---|---|
 | `VALUATION_ID` | string | required | The record's id (the business key) | pattern `^TVAL-` | `"TVAL-1000001"` |
 | `TRADE_ID` | string | required | The trade valued: a TRADE_ID of the trading pack's trade kind, as text (ENDUR digits, CLY-…, MX-…). | links to `trade` | `"1000001"` |
-| `SOURCE_SYSTEM` | string | required | The trade's booking system: ENDUR, CALYPSO or MUREX. | one of `CALYPSO`, `ENDUR`, `MUREX` | `"ENDUR"` |
+| `SOURCE_SYSTEM` | string | required | The trade's booking system: ENDUR, CALYPSO or MUREX. | one of `CALYPSO`, `ENDUR`, `ICI`, `MUREX`, `SWAPONE`, `WSS` | `"ENDUR"` |
 | `PRODUCT_TYPE` | string | required | The trade's product type as booked (ComSwap, IRS_FIXFLOAT …), the trade's PRODUCT_TYPE. | — | `"ComSwap"` |
 | `PRODUCT_GROUP` | string | required | The trade's product group (Commodity, Rates, FX, Credit, Equity …). | — | `"Commodity"` |
 | `PORTFOLIO` | string | required | The book the trade sits in: a BOOK_ID of the core pack's book kind (BOOK-…). | pattern `^BOOK-`; links to `book` | `"BOOK-COMM-2"` |
@@ -1576,7 +1576,7 @@ The example is from the **P&L vector by position, full run** record.
 | `VALUE_TYPE` | string | required | What the values are (VAR_GUIDE.md section 15.13): PV, scenario PVs and BASE_PV in CURRENCY; PNL, a P&L vector. It must be the record's payload (refused as DRS-5208 when it is not) and agree with its system's pin when drishti.var.inputs pins one (DRS-5209). | one of `PV`, `PNL` | `"PNL"` |
 | `GRAIN` | string | required | What one record is (VAR_GUIDE.md section 15.13): TRADE, one trade, with its TRADE_ID (its position derived by the pack's rules); POSITION, one position its source system sends whole, with its POSITION_ID, placed by its book (LEGAL_ENTITY, DESK, TT_BOOK) and naming its trades in TRADE_IDS when it knows them. It must match the id (DRS-5208) and the pin (DRS-5209); one source system sends one form and one grain on one date (DRS-5210). | one of `TRADE`, `POSITION` | `"POSITION"` |
 | `CURRENCY` | string | required | The currency the P&L values are in (USD in the demo). A vector in another currency is converted to USD per scenario with that scenario's FX (approximate: the currency move inside the trade is already folded into the vector; counted in tradesWithoutPv); a currency with no scenario FX on the date rejects the row (DRS-5207). The trade's own currency is TRADE_CURRENCY. | — | `"USD"` |
-| `SOURCE_SYSTEM` | string | required | The booking system the trade comes from (MUREX and CALYPSO in the demo); kept for people and audit, not read by the engine. | one of `CALYPSO`, `MUREX` | `"MUREX"` |
+| `SOURCE_SYSTEM` | string | required | The booking system the trade comes from (MUREX and CALYPSO in the demo); kept for people and audit, not read by the engine. | one of `CALYPSO`, `ENDUR`, `ICI`, `MUREX`, `SWAPONE`, `WSS` | `"MUREX"` |
 | `VECTOR_ID` | string | required | The record's id (the business key) | pattern `^(PNL\|PV)-` | `"PNL-POS-BOOK-EQD-2~SEC-WARRANT-USD-01-HS-509"` |
 | `BUSINESS_DATE` | date (YYYY-MM-DD) | required | The close of business the vector belongs to (YYYY-MM-DD); the lake's business_date partition. | — | `"2026-09-30"` |
 | `TRADE_STATUS` | string | required | The trade's status the batch priced: NEW, VALIDATED and AMENDED count on the date; others are left out. | one of `AMENDED`, `VALIDATED` | `"AMENDED"` |

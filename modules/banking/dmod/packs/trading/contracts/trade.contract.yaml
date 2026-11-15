@@ -21,7 +21,7 @@ version: '1.1'
 class: fundamental
 status: active
 title: Trade
-description: 'A booked trade as its source system (ENDUR, CALYPSO or MUREX) extracts it in the common schema: the deal, its legs with their cash flows and resets, and its events.'
+description: 'A booked trade as its source system (ENDUR, CALYPSO, MUREX, WSS, SWAPONE or ICI) extracts it in the common schema: the deal, its legs with their cash flows and resets, and its events.'
 source: murex, calypso
 grain: One row per trade per business date, keyed by TRADE_ID.
 key:
@@ -73,12 +73,15 @@ fields:
 - name: SOURCE_SYSTEM
   type: text
   presence: required
-  description: 'The booking system the trade comes from: ENDUR, CALYPSO or MUREX (upper case).'
+  description: 'The booking system the trade comes from: one of the shipped source systems, ENDUR, CALYPSO, MUREX, WSS, SWAPONE or ICI (upper case).'
   example: ENDUR
   enum:
-  - CALYPSO
   - ENDUR
+  - CALYPSO
   - MUREX
+  - WSS
+  - SWAPONE
+  - ICI
 - name: SOURCE_UPDATE_TIME
   type: timestamp
   presence: optional

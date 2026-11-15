@@ -55,7 +55,7 @@
 <p class="asof-banner asof-unheld" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
   <b>No data held for {{ picked }}</b>: no dated store has {{ vm.ref.id }} for that date. Shown instead:
   the current data of <b>{{ vm.provenance.source }}</b>, a source that keeps no dates, as a still snapshot that does not update.
-  {% if not embed %}<a href="/asof?d=live&amp;next={{ back_href }}">Back to live</a>{% endif %}</p>
+  {% if not embed %}<a href="{{ BASE }}/asof?d=live&amp;next={{ back_href }}">Back to live</a>{% endif %}</p>
 {% elif asof != 'live' and vm.provenance.businessDate and vm.provenance.businessDate != (business_date or {}).selected %}
 <p class="asof-banner" role="status"><i class="bi bi-calendar2-week" aria-hidden="true"></i>
   Latest data on or before {{ (business_date or {}).selected }} is from <b class="mono">{{ vm.provenance.businessDate }}</b>.</p>

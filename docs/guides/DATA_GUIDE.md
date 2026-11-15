@@ -1341,7 +1341,7 @@ connectors:
     enabled: ${DRISHTI_STREAM_EQUITY:false}
     kinds: [order]
     settings:
-      bootstrap-servers: ${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}
+      broker: default
       topics: equity.orders
       kind: order
       id-field: orderId
@@ -1612,7 +1612,7 @@ enabled: "${DRISHTI_STREAM_TRADING:false}"
 kinds:
 - trade
 settings:
-  bootstrap-servers: "${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}"
+  broker: default
   topics: "${DRISHTI_TRADING_TOPIC:drishti.trading.trades}"
   kind: trade
   id-field: TRADE_ID

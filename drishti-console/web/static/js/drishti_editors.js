@@ -70,8 +70,8 @@
   function api(method, path, body) {
     var opt = { method: method, headers: { Accept: 'application/json' }, credentials: 'same-origin' };
     if (body !== undefined && method !== 'GET') { opt.headers['Content-Type'] = 'application/json'; opt.body = JSON.stringify(body); }
-    var url = path.charAt(0) === '/' ? path : '/build/tables/api/' + path;
-    return fetch(url, opt).then(function (r) {
+    var url = path.charAt(0) === '/' ? path : drishti_url('/build/tables/api/') + path;
+    return fetch(drishti_url(url), opt).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (d) {
         if (!r.ok) { var e = new Error((d.code ? d.code + ' ' : '') + (d.detail || r.statusText)); e.status = r.status; e.code = d.code; throw e; }
         return d;
@@ -136,12 +136,12 @@
   /* ---- the header ----------------------------------------------------------------------------------------------------------- */
   function status() {
     if (!S) {
-      shell.setStatus(null); shell.setTitle('Tables & models'); shell.setCrumbs(['Build', { label: 'Tables & models', href: '/build/tables' }, 'Choose an object']);
+      shell.setStatus(null); shell.setTitle('Tables & models'); shell.setCrumbs(['Build', { label: 'Tables & models', href: drishti_url('/build/tables') }, 'Choose an object']);
       buttons();
       return;
     }
     shell.setTitle(S.name || 'New ' + (S.python ? 'Python-driven table' : S.kind));
-    shell.setCrumbs(['Build', { label: 'Tables & models', href: '/build/tables' }, S.python ? 'Python-driven tables' : S.kind === 'model' ? 'Semantic models' : 'Tables']);
+    shell.setCrumbs(['Build', { label: 'Tables & models', href: drishti_url('/build/tables') }, S.python ? 'Python-driven tables' : S.kind === 'model' ? 'Semantic models' : 'Tables']);
     shell.setStatus({ status: S.origin === 'file' ? 'shipped' : S.status, version: S.version, origin: S.origin, dirty: S.dirty });
     buttons();
   }
@@ -363,7 +363,7 @@
       S.dirty = false;
       S.python = kind === 'table' && !!(r.doc && r.doc.from && r.doc.from.python);
       S.pythonFields = r.python || null;
-      history.replaceState(null, '', '/build/tables?kind=' + encodeURIComponent(kind) + (S.item ? '&item=' + encodeURIComponent(S.item) : '&name=' + encodeURIComponent(S.name)));
+      history.replaceState(null, '', drishti_url('/build/tables?kind=' + encodeURIComponent(kind) + (S.item ? '&item=' + encodeURIComponent(S.item) : '&name=' + encodeURIComponent(S.name))));
       return shown();
     }).catch(function (e) { say(e.message, true); }).then(function () { root.setAttribute('aria-busy', 'false'); });
   }
@@ -392,7 +392,7 @@
     S.pythonFields = o.pythonFields || null;
     S.doc = o.doc || null;
     S.yaml = o.yaml || '';
-    history.replaceState(null, '', '/build/tables?new=' + (o.python ? 'python' : o.kind));
+    history.replaceState(null, '', drishti_url('/build/tables?new=' + (o.python ? 'python' : o.kind)));
     status();
     applyMode();
     return runCheck(o.doc ? { doc: o.doc } : {}).then(function () { drawVisual(); drawYaml(false); });
@@ -428,7 +428,7 @@
     var go = h('button', { type: 'button', class: 'ed-btn ed-primary', 'data-save-go': '' }, 'Save draft');
     form.appendChild(h('p', {}, go));
     if (!S.item) {
-      api('GET', '/build/tables/workspaces').then(function (list) {
+      api('GET', drishti_url('/build/tables/workspaces')).then(function (list) {
         var shared = (list || []).filter(function (w) { return !w.personal; }).map(function (w) { return { value: w.id, label: w.name }; });
         ws.component.setOptions(ws.component.options.concat(shared), shared.length ? shared[0].value : 'me');
       }).catch(function () { /* the personal workspace is always there */ });
@@ -445,7 +445,7 @@
       if (S.origin !== 'item') { S.origin = 'item'; }
       say('Saved as a draft. Propose it for review when it is ready: nothing goes live until another person approves it.');
       status();
-      history.replaceState(null, '', '/build/tables?kind=' + S.kind + '&item=' + encodeURIComponent(S.item));
+      history.replaceState(null, '', drishti_url('/build/tables?kind=' + S.kind + '&item=' + encodeURIComponent(S.item)));
       return loadObjects();
     }).catch(function (e) { say(e.message, true); throw e; });
   }
@@ -468,7 +468,7 @@
     E.prefs = { mode: 'both', yamlOpen: true, layout: 'studio' };
     E.pythonRuns = root.getAttribute('data-python-runs') === 'true';           // the server runs authored Python safely (else data-python-why says why)
     E.pythonWhy = root.getAttribute('data-python-why') || '';
-    shell = E.shell = new K.DesignerShell(root, { crumbs: ['Build', { label: 'Tables & models', href: '/build/tables' }, 'Choose an object'], title: 'Tables & models',
+    shell = E.shell = new K.DesignerShell(root, { crumbs: ['Build', { label: 'Tables & models', href: drishti_url('/build/tables') }, 'Choose an object'], title: 'Tables & models',
       search: 'Search tables and models', newItems: [{ id: 'table', label: 'Table or virtual table' }, { id: 'model', label: 'Semantic model' }, { id: 'python', label: 'Python-driven table' }],
       canMode: function (m) { return m === 'visual' && S && !S.ok ? 'The visual view waits until the YAML reads: fix the line marked below.' : true; } });
     root.classList.add('ed');

@@ -30,6 +30,7 @@ import { startBehaviours } from './drishti_console.js';
 import { aboutSheet } from './drishti_about.js';
 import { embedRecords } from './drishti_console.js';
 import { signInFor, gate } from './drishti_signin.js';
+import { url as drishtiUrl } from '../../drishti-core/src/drishti_index.js';
 
 const NAV = ['in-place', 'host', 'new-window', 'follow'];
 const BEHAVIOURS = ['library', 'host', 'console'];
@@ -52,7 +53,7 @@ export class Screen {
     this.auth = o.auth || (typeof o.token === 'function' ? 'token' : 'session');
     if (!AUTH.includes(this.auth)) { throw problem('DRS-9108', 'auth must be one of ' + AUTH.join(', ') + ', not ' + this.auth, "Leave it out: 'token' when you give a token, else the console's session."); }
     if (this.auth === 'popup') {
-      o.server = o.server || new URL(assets.statics('')).origin;
+      o.server = o.server || assets.statics('').replace(/static\/$/, '').replace(/\/$/, '');   // the console's root, its URL sub-path kept
       this.signin = signInFor(o.server);
       if (typeof o.token !== 'function') { o.token = () => this.signin.get(); }
       o.credentials = 'omit';
@@ -213,8 +214,8 @@ export class Screen {
     const detail = Object.assign({ kind: link.kind, id: link.id, href, target: 'entity', navigation: this.o.navigation }, info || {});
     if (!this.emit('navigate', detail)) { return false; }
     if (this.o.navigation === 'host') { return false; }
-    if (this.o.navigation === 'new-window') { window.open(href, '_blank', 'noopener'); return true; }
-    if (this.o.navigation === 'follow') { window.location.assign(href); return true; }       // a chart point or a key: the page goes there, as a link would
+    if (this.o.navigation === 'new-window') { window.open(drishtiUrl(href), '_blank', 'noopener'); return true; }
+    if (this.o.navigation === 'follow') { window.location.assign(drishtiUrl(href)); return true; }       // a chart point or a key: the page goes there, as a link would
     this.unsubscribe();
     this.load({ kind: link.kind, id: link.id }, true);
     return true;
@@ -238,7 +239,7 @@ export class Screen {
     // a link the browser follows itself (navigation 'follow', the console's own pages): the event first, then the link as a link, so
     // Ctrl+click, a middle click and "open in a new tab" behave as on any page; cancelling the event keeps the page where it is
     const native = (target, mode) => {
-      const d = { target, href: a.href, panel: panelId, source: 'link', navigation: this.o.navigation, mode };
+      const d = { target, href: drishtiUrl(a.href), panel: panelId, source: 'link', navigation: this.o.navigation, mode };
       if (target === 'entity') { d.kind = a.getAttribute('data-r-kind'); d.id = a.getAttribute('data-r-id'); }
       if (!this.emit('navigate', d)) { e.preventDefault(); }
     };
@@ -250,8 +251,8 @@ export class Screen {
       const mode = kind === 'console' ? this.o.consoleLinks : this.o.outsideLinks;
       if (mode === 'follow' || (mode === 'new-window' && kind === 'outside')) { native(kind, mode); return; }   // the link itself (target=_blank: the user's own new tab)
       e.preventDefault();
-      if (!this.emit('navigate', { target: kind, href: a.href, panel: panelId, source: 'link', navigation: this.o.navigation })) { return; }
-      if (mode === 'new-window') { window.open(a.href, '_blank', 'noopener'); }
+      if (!this.emit('navigate', { target: kind, href: drishtiUrl(a.href), panel: panelId, source: 'link', navigation: this.o.navigation })) { return; }
+      if (mode === 'new-window') { window.open(drishtiUrl(a.href), '_blank', 'noopener'); }
     }
   }
   key(b) {

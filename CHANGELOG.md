@@ -53,6 +53,35 @@
   from; the six `trade-<system>-live` templates and `drishti.py pack new --source-for --live` name their data connector. The reasons a
   live message is rejected have their codes (DRS-1062 to DRS-1072). `binding-hint.live` is gone from the contract format
   ([LIVE_CONNECTORS_DESIGN.md](docs/architecture/LIVE_CONNECTORS_DESIGN.md), decisions in its section 15).
+- **Named lakes, databases and brokers.** A system has any number of each, every one a section of the settings files and referred to by
+  name, with no global one: `[lake.<name>] root=`/`storage.<key>=` win over that lake file's root and storage; `[db.<name>] url= user=
+  password=` (a jdbc connector's `db: <name>`; `drishti.identity.database-*` read `db.identity.*`, the content store's postgres
+  `db.store.*`); `[broker.<name>] type=kafka|activemq|rabbitmq` with the plugin's own connection and security keys (every TLS, SASL
+  PLAIN/SCRAM/OAUTHBEARER/GSSAPI, Confluent and `client.*` form), named by a connector's `broker: <name>`; `[pack.<pack>] lake=` moves one
+  pack's demo-lake connectors; `[connector.<name>]` overrides any setting of one connector. One helper, `com.ash.drishti.common.NamedResources`,
+  applied where every connector starts (and in its test and preview); the server installs its settings view. The shipped Kafka templates
+  say `broker: default` (a Kafka at localhost:9092 until `[broker.default]` says otherwise); `DRISHTI_KAFKA_BOOTSTRAP` is replaced by
+  `broker.default.bootstrap-servers` (`BROKER_DEFAULT_BOOTSTRAP_SERVERS`). Relative files and folders of a connector's settings are taken
+  under `drishti.home` by the launch roots' rule, now one function (`Roots.anchorValue`, used by `LaunchRoots`). Examples:
+  `config/settings.examples/{dev,test,prod,secrets}.ini`; docs/admin/CONFIGURATION.md "The settings file", "Named lakes, databases and
+  brokers" and "Placeholders" (the one resolver, its order, its readers).
+
+- **The console at a URL sub-path behind a reverse proxy.** New console setting `server.base_path` (`DRISHTI_CONSOLE_BASE_PATH`, blank: `/`):
+  `/drishti` serves the console at `https://host/drishti/`, whether the proxy keeps or strips the prefix. The outermost middleware takes the
+  base off each request and puts it on `Location` headers and cookie paths (`Path=/drishti`); `request.base_url` names it (sign-in
+  redirects, share links). Pages carry `<meta name="drishti-base">`; templates write `{{ BASE }}` (and `| u` for a URL from data, `| based`
+  for a guide's HTML); every script builds console URLs through one helper, `drishti_url()` (drishti-core's `url()`, also behind its API
+  client, loader, the renderer's server default and the grid, chart, data and insight libraries), with `drishti_route()` for comparisons
+  with `location.pathname`. A link or form drawn from server data is put under the base when used. A static guard
+  (`tests/test_base_path_guard.py`) fails on a new root-absolute console URL that skips them.
+- **Every path absolute, the second sweep.** Every other path setting (any `drishti.*` folder or file key, `DRISHTI_*_DIR/_FILE/_ROOT/_PATH`
+  variables, a local database URL's file, the log file, the TLS stores) given as a relative path is taken under the install folder and
+  listed in the `resolved paths:` block; the settings the configuration imports read (data, config and engines folders, the packs
+  overlay) must be absolute. The plain-Java readers (type-ahead index, lib, temp, native cache, connectors folder, FRTB parameters,
+  `external_lib`, the feeds root) go through the same roots. Python tools default to the Drishti folder, never the working directory
+  (`pack bundle`/`module pack` output under `<Drishti>/dist`). The server run configurations name `drishti.home`. New **Admin →
+  Configuration → Resolved paths** shows every root and anchored setting with where it came from. Guards: relative fallbacks, `..`
+  climbs and `toAbsolutePath()` of a raw setting in Java; the main Python code; every script under `bin/`, `tools/`, `deploy/`.
 - **Launch roots: no folder from the working directory.** The server resolves its install folder (`drishti.home`), data, configuration,
   packs, modules, module switches, access, lakes, connectors and inbox folders to absolute paths at start, from their settings or under
   the install folder, logs them in one `resolved paths:` block, and refuses to start, naming the setting, when the modules folder is

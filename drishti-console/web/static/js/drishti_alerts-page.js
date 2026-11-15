@@ -21,13 +21,13 @@
   if (!root) { return; }
   var form = root.querySelector('[data-rule-form]'), msg = root.querySelector('[data-msg]');
   function post(url, body) {
-    return fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) })
+    return fetch(drishti_url(url), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) })
       .then(function (r) { return r.json().then(function (b) { return { ok: r.ok, b: b }; }); });
   }
   form.addEventListener('submit', function (e) {
     e.preventDefault();
     var f = form.elements;
-    post('/alerts/api/' + encodeURIComponent(f.name.value.trim()), { kind: f.kind.value.trim(), id: f.id.value.trim(), when: f.when.value,
+    post(drishti_url('/alerts/api/') + encodeURIComponent(f.name.value.trim()), { kind: f.kind.value.trim(), id: f.id.value.trim(), when: f.when.value,
       severity: f.severity.value, message: f.message.value })
       .then(function (res) { if (res.ok) { location.reload(); } else { msg.textContent = Drishti.drsMessage(res.b); msg.classList.add('t-bad'); } });
   });
@@ -39,6 +39,6 @@
     });
   });
   root.querySelectorAll('[data-delete-rule]').forEach(function (b) {
-    b.addEventListener('click', function () { post('/alerts/api/' + encodeURIComponent(b.dataset.deleteRule) + '/delete').then(function () { location.reload(); }); });
+    b.addEventListener('click', function () { post(drishti_url('/alerts/api/') + encodeURIComponent(b.dataset.deleteRule) + '/delete').then(function () { location.reload(); }); });
   });
 })();

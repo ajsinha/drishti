@@ -49,8 +49,8 @@
       { id: 'validate', label: 'Check', title: 'Check the draft on the server', enabled: true, attrs: { 'data-check': '' } },
       { id: 'viewAs', label: 'View which version', enabled: true, hidden: true, attrs: { 'data-view-as': '' },
         choices: [{ value: 'draft', label: 'View: my draft' }, { value: 'published', label: 'View: as readers see it (published)', disabled: true }] },
-      { id: 'view', label: 'View', title: 'Open the report page: authors see the saved draft', href: '/bi', attrs: { 'data-view-link': '' } },
-      { id: 'item', label: 'Item page', title: 'The item page', href: '/bi', attrs: { 'data-item-link': '' } },
+      { id: 'view', label: 'View', title: 'Open the report page: authors see the saved draft', href: drishti_url('/bi'), attrs: { 'data-view-link': '' } },
+      { id: 'item', label: 'Item page', title: 'The item page', href: drishti_url('/bi'), attrs: { 'data-item-link': '' } },
       { id: 'propose', label: 'Publish', title: 'Save, then publish (or propose for review where the workspace requires it)', enabled: true, attrs: { 'data-publish': '' } },
       { id: 'saveCopy', label: 'Save a copy', enabled: true, hidden: true, attrs: { 'data-save-copy': '' } },
       { id: 'save', label: 'Save', title: 'Save the draft (Ctrl+S)', primary: true, enabled: true, attrs: { 'data-save': '' } }],
@@ -62,7 +62,7 @@
   const body = Array.prototype.slice.call(root.children);                   // the designer's own content, moved into the shell's editor pane
   const narrow = window.matchMedia && window.matchMedia('(max-width: 900px)').matches;
   const shell = (S.shell = new K.DesignerShell(root, {
-    crumbs: [{ label: 'BI', href: '/bi' }, { label: 'Studio', href: '/bi/designer' }, (KINDS.find((k) => k[0] === kind) || [])[1] || 'Reports'],
+    crumbs: [{ label: 'BI', href: drishti_url('/bi') }, { label: 'Studio', href: drishti_url('/bi/designer') }, (KINDS.find((k) => k[0] === kind) || [])[1] || 'Reports'],
     title: kind === 'theme' ? 'Theme' : 'Report', label: 'BI Studio', search: 'Find an item', modes: kind === 'theme',      // a theme's YAML is the shell's panel (Visual, YAML, Both); a report's is its designer's tab
     preview: false, docs: true, collapsible: true,
     dock: [{ id: 'problems', label: 'Problems' }, { id: 'query', label: 'Query' }], actions: ACTIONS[kind] || ACTIONS.report,
@@ -74,11 +74,11 @@
 
   /** Where an item opens in the Studio. */
   S.href = function (i) {
-    if (i.kind === 'theme') { return '/bi/design/theme/' + B.id2path(i.id); }
-    if (i.kind === 'model' || i.kind === 'table') { return '/build/tables?kind=' + i.kind + '&item=' + B.id2path(i.id); }
-    if (i.kind === 'dataset') { return '/bi/d/' + B.id2path(i.id); }
-    if (i.kind === 'report') { return '/bi/design/' + B.id2path(i.id); }
-    return '/bi/i/' + B.id2path(i.id);
+    if (i.kind === 'theme') { return drishti_url('/bi/design/theme/') + B.id2path(i.id); }
+    if (i.kind === 'model' || i.kind === 'table') { return drishti_url('/build/tables?kind=') + i.kind + '&item=' + B.id2path(i.id); }
+    if (i.kind === 'dataset') { return drishti_url('/bi/d/') + B.id2path(i.id); }
+    if (i.kind === 'report') { return drishti_url('/bi/design/') + B.id2path(i.id); }
+    return drishti_url('/bi/i/') + B.id2path(i.id);
   };
   const kindOf = (i) => (i.kind === 'report' && i.board ? 'board' : i.kind);
 
@@ -86,7 +86,7 @@
   let items = [];
   function drawExplorer() {
     shell.setObjects(KINDS.map(([k, title]) => ({ id: k, label: title, items: items.filter((i) => kindOf(i) === k).map((i) => ({
-      id: i.id, label: i.title, detail: i.workspaceName || '', search: i.workspaceName || '', href: S.href(i), current: i.id === S.current,
+      id: i.id, label: i.title, detail: i.workspaceName || '', search: i.workspaceName || '', href: drishti_url(S.href(i)), current: i.id === S.current,
       badge: i.status !== 'published' ? i.status : '', title: i.title + ' · ' + (i.workspaceName || '') })) })));
   }
   function loadItems() {
@@ -99,21 +99,21 @@
 
   /** + New: a report (the start page, which asks for its model), a board, a theme, a dataset or a model. */
   const NEW = {
-    report: () => { window.location.href = '/bi/designer'; },
+    report: () => { window.location.href = drishti_url('/bi/designer'); },
     board: () => B.api('POST', '/workspaces/me/items', { kind: 'board', title: 'Board ' + new Date().toISOString().slice(0, 16).replace('T', ' '), description: '' })
-      .then((it) => { window.location.href = '/bi/design/' + B.id2path(it.id); }),
-    theme: () => { window.location.href = '/bi/design/theme/new'; },
-    dataset: () => { window.location.href = '/build/tables?new=table'; },
-    model: () => { window.location.href = '/bi/models'; }
+      .then((it) => { window.location.href = drishti_url('/bi/design/' + B.id2path(it.id)); }),
+    theme: () => { window.location.href = drishti_url('/bi/design/theme/new'); },
+    dataset: () => { window.location.href = drishti_url('/build/tables?new=table'); },
+    model: () => { window.location.href = drishti_url('/bi/models'); }
   };
   shell.on('new', (n) => { if (NEW[n.id]) { Promise.resolve(NEW[n.id]()).catch((e) => shell.say(e.message, true)); } });
 
   // ---- the open items above the designer ------------------------------------------------------------------------------------------
-  function drawDocs() { shell.setDocs(read('sessionStorage', TABS, []).map((t) => ({ id: t.id, label: t.title, href: t.href, current: t.id === S.current }))); }
+  function drawDocs() { shell.setDocs(read('sessionStorage', TABS, []).map((t) => ({ id: t.id, label: t.title, href: drishti_url(t.href), current: t.id === S.current }))); }
   shell.on('close', (c) => {
     const rest = read('sessionStorage', TABS, []).filter((o) => o.id !== c.id);
     write('sessionStorage', TABS, rest);
-    if (c.id === S.current && rest.length) { window.location.href = rest[rest.length - 1].href; } else { drawDocs(); }
+    if (c.id === S.current && rest.length) { window.location.href = drishti_url(rest[rest.length - 1].href); } else { drawDocs(); }
   });
 
   /** A designer says which item it holds: it joins the open items and is marked in the Explorer. */

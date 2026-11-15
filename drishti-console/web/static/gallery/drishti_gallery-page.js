@@ -87,7 +87,7 @@
 
   const FETCHED = new Map();
   function text(u) {
-    if (!FETCHED.has(u)) { FETCHED.set(u, fetch(u).then((r) => (r.ok ? r.text() : ''))); }
+    if (!FETCHED.has(u)) { FETCHED.set(u, fetch(drishti_url(u)).then((r) => (r.ok ? r.text() : ''))); }
     return FETCHED.get(u);
   }
 

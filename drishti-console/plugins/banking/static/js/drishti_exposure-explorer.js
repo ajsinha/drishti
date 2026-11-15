@@ -55,9 +55,9 @@
   }
   function api(path, q, opts) {
     opts = opts || {};
-    var url = "/api/exposure/" + path + "?" + query(q, opts.plain);
+    var url = drishti_url("/api/exposure/") + path + "?" + query(q, opts.plain);
     if (!opts.fresh && cache.has(url)) return cache.get(url);
-    var pr = fetch(url, { headers: { Accept: "application/json" }, credentials: "same-origin" }).then(function (r) {
+    var pr = fetch(drishti_url(url), { headers: { Accept: "application/json" }, credentials: "same-origin" }).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (b) {
         if (!r.ok) { var e = new Error(b.detail || ("HTTP " + r.status)); e.status = r.status; e.code = b.code; e.body = b; throw e; }
         return b;
@@ -68,7 +68,7 @@
     return pr;
   }
   function send(path, body) {
-    return fetch("/api/exposure/" + path + (S.asOf ? "?asOf=" + encodeURIComponent(S.asOf) : ""), {
+    return fetch(drishti_url("/api/exposure/" + path + (S.asOf ? "?asOf=" + encodeURIComponent(S.asOf) : "")), {
       method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify(body)
     }).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (b) {
@@ -132,7 +132,7 @@
   function words(scope) { return "EXP " + scope; }
   function trdLink(id) {
     var a = h("a", null, "TRD " + id);
-    a.href = "/go?q=" + encodeURIComponent("TRD " + id + " <GO>");
+    a.href = drishti_url("/go?q=" + encodeURIComponent("TRD " + id + " <GO>"));
     a.title = "Open the trade's page (TRD " + id + ")";
     a.addEventListener("click", function (ev) { ev.stopPropagation(); });
     return a;
@@ -152,7 +152,7 @@
       var u = new URL(location.href);
       u.searchParams.set("scope", scope);
       ["from", "capture"].forEach(function (k) { u.searchParams.delete(k); });
-      history.pushState({ scope: scope }, "", u.toString());
+      history.pushState({ scope: scope }, "", drishti_url(u.toString()));
     }
     $("[data-xx-cmd]").textContent = words(scope);
     var topIn = document.querySelector("#cmd, input[name=q]");
@@ -251,9 +251,9 @@
     renderChart(d);
     bindExplain(d);
     var csv = $("[data-xx-csv]");
-    csv.href = "/api/exposure/scope/profile?" + query({ scope: d.canonical, format: "csv" });
+    csv.href = drishti_url("/api/exposure/scope/profile?" + query({ scope: d.canonical, format: "csv" }));
     var jl = $("[data-xx-jsonl]");
-    if (jl) { jl.href = "/api/exposure/scope/profile?" + query({ scope: d.canonical, format: "jsonl" }); }
+    if (jl) { jl.href = drishti_url("/api/exposure/scope/profile?" + query({ scope: d.canonical, format: "jsonl" })); }
     document.title = "Exposure · " + d.label + (document.body.dataset.product ? " · " + document.body.dataset.product : "");
   }
 
@@ -405,7 +405,7 @@
     var a = $("[data-xx-predeal]"), lev = level(S.head), id = S.head ? S.head.canonical.slice(S.head.canonical.indexOf(":") + 1) : "";
     if (!a) return;
     a.hidden = lev !== "counterparty" && lev !== "netting-set";
-    a.href = "/predeal?" + (lev === "counterparty" ? "counterparty=" : "nettingSet=") + encodeURIComponent(id);
+    a.href = drishti_url("/predeal?" + (lev === "counterparty" ? "counterparty=" : "nettingSet=") + encodeURIComponent(id));
   }
 
   function counterparties() {
@@ -513,11 +513,11 @@
       }), int);
     var p = h("p", "xx-note after", "USD. CSV of the profile: ");
     var a = h("a", null, "download");
-    a.href = "/api/exposure/scope/profile?" + query({ scope: d.canonical, format: "csv" });
+    a.href = drishti_url("/api/exposure/scope/profile?" + query({ scope: d.canonical, format: "csv" }));
     p.appendChild(a);
     p.appendChild(document.createTextNode(" · "));
     var aj = h("a", null, "JSON Lines");
-    aj.href = "/api/exposure/scope/profile?" + query({ scope: d.canonical, format: "jsonl" });
+    aj.href = drishti_url("/api/exposure/scope/profile?" + query({ scope: d.canonical, format: "jsonl" }));
     p.appendChild(aj);
     p.appendChild(document.createTextNode(" · drishti.py exposure profile '" + d.canonical + "' --csv (or --jsonl) · GET /api/v1/risk/exposure/scope/profile?format=csv"));
     pane.appendChild(p);
@@ -618,7 +618,7 @@
         function (v, r) { return r && r.id === "share" ? (v === null || v === undefined ? "—" : pct(v)) : int(v); });
       var acts = h("div", "xx-actions");
       var open = h("a", "btn btn-sm xx-btn", "Open TRD " + d.trade.id);
-      open.href = "/go?q=" + encodeURIComponent("TRD " + d.trade.id + " <GO>");
+      open.href = drishti_url("/go?q=" + encodeURIComponent("TRD " + d.trade.id + " <GO>"));
       var back = h("button", "btn btn-sm xx-btn", "Back to " + d.trade.nettingSet);
       back.type = "button";
       back.addEventListener("click", function () { select(set); });
@@ -660,11 +660,11 @@
             act.appendChild(cmp);
             act.appendChild(document.createTextNode(" "));
             var csv = h("a", null, "CSV");
-            csv.href = "/api/exposure/captures/" + encodeURIComponent(id) + "/csv";
+            csv.href = drishti_url("/api/exposure/captures/" + encodeURIComponent(id) + "/csv");
             act.appendChild(csv);
             act.appendChild(document.createTextNode(" "));
             var jsonl = h("a", null, "JSONL");
-            jsonl.href = "/api/exposure/captures/" + encodeURIComponent(id) + "/jsonl";
+            jsonl.href = drishti_url("/api/exposure/captures/" + encodeURIComponent(id) + "/jsonl");
             act.appendChild(jsonl);
             return act;
           } }] });
@@ -847,7 +847,7 @@
     var u = new URL(location.href);
     if (S.q !== 0.95) u.searchParams.set("q", S.q); else u.searchParams.delete("q");
     if (S.collateral !== "lagged") u.searchParams.set("collateral", S.collateral); else u.searchParams.delete("collateral");
-    history.replaceState({ scope: S.scope }, "", u.toString());
+    history.replaceState({ scope: S.scope }, "", drishti_url(u.toString()));
   }
 
   function official() {

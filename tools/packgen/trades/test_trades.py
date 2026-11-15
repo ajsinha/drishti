@@ -126,17 +126,20 @@ class CommonSchemaTest(unittest.TestCase):
             self.assertEqual(set(subs), whens[product], product)
         self.assertEqual(len(matches), 130)                    # 125 products of the taxonomy and Endur's five, one Sutra each
 
-    def test_the_three_trade_connectors_each_carry_their_own_layout(self):
+    def test_every_trade_connector_carries_its_own_layout(self):
         """A layout shared as a YAML anchor reached only the first connector (the others read no columns, so drop-downs and pivots
-        saw one system): the manifest spells it out for each."""
+        saw one system): the manifest spells it out for each. The trade connectors live in their source modules (one table per
+        system, modules/source-<system>/connectors/trade-<system>.yaml); the layout stays in the trading pack's lake: entries."""
         import yaml
         text = (ROOT / "modules" / "banking" / "dmod" / "packs" / "trading" / "pack.yaml").read_text(encoding="utf-8")
         self.assertNotRegex(text, r"[&*]id\d")
-        spec = yaml.safe_load(text)
-        conns, tables = spec["connectors"], spec["lake"]["tables"]        # the layout lives in the pack's lake: entries (DATA_LAKE_GUIDE.md)
-        for name in ("trade-endur", "trade-calypso", "trade-murex"):
-            entry = conns[name]["settings"]["lake-tables"]
-            self.assertIn("SOURCE_SYSTEM", tables[entry]["promote"], name)
+        tables = yaml.safe_load(text)["lake"]["tables"]        # the layout lives in the pack's lake: entries (DATA_LAKE_GUIDE.md)
+        files = sorted((ROOT / "modules").glob("source-*/connectors/trade-*.yaml"))
+        files = [f for f in files if not f.stem.endswith("-live")]
+        self.assertGreaterEqual(len(files), len(S.SYSTEMS))
+        for f in files:
+            entry = yaml.safe_load(f.read_text(encoding="utf-8"))["settings"]["lake-tables"]
+            self.assertIn("SOURCE_SYSTEM", tables[entry]["promote"], f.name)
 
 
 if __name__ == "__main__":

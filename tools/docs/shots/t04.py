@@ -49,7 +49,7 @@ def file_connector(c: Ctx):
     d.locator("[data-f-plugin]").select_option("file")
     d.locator("[data-f-name]").fill("desk-quotes")
     d.locator("[data-f-description]").fill("Desk quotes from the tutorial folder")
-    d.locator("[data-setting='root']").fill("./docs/tutorials/data/desk-quotes")
+    d.locator("[data-setting='root']").fill(str(ROOT / "docs" / "tutorials" / "data" / "desk-quotes"))
     d.locator("[data-setting='id-field']").fill("ID")
     d.locator("[data-setting='lookback-days']").fill("60")
     d.locator("[data-kind-in]").fill("desk-quote")

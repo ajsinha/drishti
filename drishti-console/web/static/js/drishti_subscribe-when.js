@@ -76,7 +76,7 @@
   try {
     var target = JSON.parse(form.elements.target.value || '{}');
     if (note && target.type === 'report' && target.id) {
-      fetch('/bi/api/reports/' + encodeURIComponent(target.id).replace(/%3A/g, ':'), { credentials: 'same-origin', headers: { Accept: 'application/json' } })
+      fetch(drishti_url('/bi/api/reports/' + encodeURIComponent(target.id).replace(/%3A/g, ':')), { credentials: 'same-origin', headers: { Accept: 'application/json' } })
         .then(function (r) { return r.ok ? r.json() : null; })
         .then(function (rep) {
           var r = rep && rep.report;

@@ -47,7 +47,6 @@ depends-on:
   settings:
   - DRISHTI_CACHE_RESET_AT
   - DRISHTI_CACHE_ROOT
-  - DRISHTI_KAFKA_BOOTSTRAP
   - DRISHTI_STREAM_CACHE_GB
   - DRISHTI_STREAM_DISK_CACHE
   - DRISHTI_STREAM_STALE_AFTER
@@ -414,7 +413,7 @@ The connectors it brings (written once to `config/connectors/<name>.yaml`, then 
 | `trading-stream` | `kafka` | `trade` | `${DRISHTI_STREAM_TRADING:false}` |
 | `trade-pages` | `derived` | `counterparty-trades`, `portfolio-trades`, `legal-entity-trades`, `index-trades` | on |
 
-Settings (environment variables) its connectors read: `DRISHTI_CACHE_RESET_AT`, `DRISHTI_CACHE_ROOT`, `DRISHTI_KAFKA_BOOTSTRAP`, `DRISHTI_STREAM_CACHE_GB`, `DRISHTI_STREAM_DISK_CACHE`, `DRISHTI_STREAM_STALE_AFTER`, `DRISHTI_STREAM_TRADING`, `DRISHTI_TRADING_TOPIC`.
+Settings (environment variables) its connectors read: `DRISHTI_CACHE_RESET_AT`, `DRISHTI_CACHE_ROOT`, `DRISHTI_STREAM_CACHE_GB`, `DRISHTI_STREAM_DISK_CACHE`, `DRISHTI_STREAM_STALE_AFTER`, `DRISHTI_STREAM_TRADING`, `DRISHTI_TRADING_TOPIC`.
 
 ## Refreshing the data
 

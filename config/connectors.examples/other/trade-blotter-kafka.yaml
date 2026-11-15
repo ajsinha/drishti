@@ -21,7 +21,7 @@ plugin: kafka
 kinds: [trade]
 description: The demo's live trades, and the trade blotter's amendments written back to them
 settings:
-  bootstrap-servers: ${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}
+  broker: default
   topics: [drishti.trading.trades]
   kind: trade
   id-field: TRADE_ID

@@ -139,7 +139,7 @@ class EconomicsSutraNextEquivalenceTest {
         List<Path> inline = new ArrayList<>();
         for (String kind : SCREENS.keySet()) {
             Path p = SITE.resolve(kind + ".v2.sutra.yaml");
-            Files.copy(Path.of(TestRoots.module(), "src", "test", "resources", "sutra-next"+ kind + ".v2.sutra.yaml"), p);
+            Files.copy(Path.of(TestRoots.module(), "src", "test", "resources", "sutra-next", kind + ".v2.sutra.yaml"), p);
             inline.add(p);
         }
         try {

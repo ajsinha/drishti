@@ -41,7 +41,7 @@
     ta.hidden = true;
     ta.after(host);
     var editor = new window.Drishti.elements.inputs.CodeEditor(host, { mode: 'yaml', label: 'About text (about.yaml)', lineWrapping: true, height: 260, tabLeaves: true, value: ta.value });
-    var base = '/build/designs/' + encodeURIComponent(store.state.id), previewT = 0, saveT = 0, token = 0, applying = false, loaded = false, last = null;
+    var base = drishti_url('/build/designs/') + encodeURIComponent(store.state.id), previewT = 0, saveT = 0, token = 0, applying = false, loaded = false, last = null;
 
     function value() { return editor.getValue(); }
     function set(text) {

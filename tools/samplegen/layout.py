@@ -106,6 +106,8 @@ def layouts_for_domain(domain: str, packs: pathlib.Path = PACKS) -> dict[str, La
                 lay = Layout.from_settings(settings, kind)
                 if lay:
                     out[kind] = lay
+        for _folder, kind, lay in _lake_entries(manifest, domain):   # a kind no pack connector reads: its first table's layout
+            out.setdefault(kind, lay)
     return out
 
 
@@ -127,6 +129,26 @@ def layouts_by_table(domain: str, packs: pathlib.Path = PACKS) -> dict[str, tupl
                 lay = Layout.from_settings(settings, kind)
                 if lay:
                     out[str(named.get(kind) or settings.get(f"table.{kind}") or kind)] = (kind, lay)
+        for folder, kind, lay in _lake_entries(manifest, domain):
+            out.setdefault(folder, (kind, lay))
+    return out
+
+
+def _lake_entries(manifest: dict, domain: str) -> list[tuple[str, str, Layout]]:
+    """The pack's own lake: entries of `domain` that lay a table out, in the pack's order: (folder, kind, layout). Whoever reads the
+    table: a source module's connector (trade-endur, one table per system) reads a table the trading pack lays out, so its layout is
+    found by the table although the pack declares no connector for it."""
+    import packlake
+    out = []
+    for name, entry in ((manifest.get("lake") or {}).get("tables") or {}).items():
+        tdomain, _, folder = str(name).partition(".")
+        if tdomain != domain or not isinstance(entry, dict):
+            continue
+        kind = entry.get("kind") or folder
+        view = packlake.settings_view(manifest, {"kinds": [kind], "settings": {"lake": "demo", "lake-tables": name}})
+        lay = Layout.from_settings(view, kind)
+        if lay:
+            out.append((folder, kind, lay))
     return out
 
 

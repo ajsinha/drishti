@@ -17,16 +17,16 @@
    and units, the time mode, the security, the YAML (read-only for a pack's), and the next steps. Drawn by static/js/drishti_bi-models.js. #}
 {% extends "bi/shell.html" %}
 {% block bi_title %}Dataset{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi-layer.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_bi-layer.css?v={{ ASSET_V }}">{% endblock %}
 {% block bi_main %}
 <div data-layer-dataset data-ready="">
-<header class="bi-head"><p class="bi-crumb"><a href="/bi/models">Models and datasets</a></p>
+<header class="bi-head"><p class="bi-crumb"><a href="{{ BASE }}/bi/models">Models and datasets</a></p>
   <h1 data-title>Dataset</h1><p class="bi-card-badges" data-badges></p><p class="text-muted-d" data-desc></p></header>
 <p class="bi-msg" data-msg role="status" aria-live="polite"></p>
 <p class="bi-actions bi-layer-next" data-actions>
   <button type="button" class="btn-pill btn-accent" data-use><i class="bi bi-bar-chart-line" aria-hidden="true"></i> Start a report on it</button>
-  <a class="btn-pill btn-ghost" data-make-model href="/build/tables?new=model"><i class="bi bi-diagram-3" aria-hidden="true"></i> Make it a model</a>
-  <a class="btn-pill btn-ghost" data-narrow href="/build/tables?new=table"><i class="bi bi-funnel" aria-hidden="true"></i> Narrow it</a>
+  <a class="btn-pill btn-ghost" data-make-model href="{{ BASE }}/build/tables?new=model"><i class="bi bi-diagram-3" aria-hidden="true"></i> Make it a model</a>
+  <a class="btn-pill btn-ghost" data-narrow href="{{ BASE }}/build/tables?new=table"><i class="bi bi-funnel" aria-hidden="true"></i> Narrow it</a>
 </p>
 <dl class="bi-layer-facts" data-facts></dl>
 <section class="bi-sec" aria-labelledby="dcH"><h2 id="dcH">Columns</h2>
@@ -58,4 +58,4 @@
 <section class="bi-sec" aria-labelledby="dyH"><h2 id="dyH">YAML</h2><p class="text-muted-d" data-yaml-note></p><pre class="bi-body mono" data-yaml tabindex="0"></pre></section>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-layer.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-layer-ops.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-models.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_bi.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_bi-lib.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_bi-layer.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_bi-layer-ops.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_bi-models.js?v={{ ASSET_V }}"></script>{% endblock %}

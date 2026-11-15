@@ -31,7 +31,7 @@
   var $$ = function (sel) { return Array.prototype.slice.call(root.querySelectorAll(sel)); };
 
   function get(path) {
-    return fetch(path, { headers: { Accept: "application/json" }, credentials: "same-origin" }).then(function (r) {
+    return fetch(drishti_url(path), { headers: { Accept: "application/json" }, credentials: "same-origin" }).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (b) {
         if (!r.ok) { var e = new Error((b && b.detail) || ("HTTP " + r.status)); e.code = b && b.code; throw e; }
         return b;
@@ -59,7 +59,7 @@
     wrap.appendChild(el("span", "rl-pill " + tone(status), pct(u)));
     return wrap;
   }
-  function link(href, label) { var a = el("a", "", label); a.href = href; return a; }
+  function link(href, label) { var a = el("a", "", label); a.href = drishti_url(href); return a; }
   /** A short ranked table (desks, counterparties): a risk grid of name (a link), the figure (the server's) and the limit use as a bar. */
   function ranked(box, rows, o) {
     if (!rows.length) { box.textContent = ""; box.appendChild(el("p", "rl-muted", o.empty)); return; }
@@ -81,7 +81,7 @@
   }
 
   // the BANK VaR headline and the page's business date
-  get("/api/var/scope?scope=BANK").then(function (h) {
+  get(drishti_url("/api/var/scope?scope=BANK")).then(function (h) {
     text("[data-rl-var]", money(h.var));
     text("[data-rl-var-s]", "ES " + money(h.es) + " · " + Math.round((h.confidence || 0) * 100) + "% · 1 day");
     var E = window.Drishti && window.Drishti.Explain;               // the one Explain › on the bank's VaR (VAR_GUIDE.md 3.11)
@@ -95,7 +95,7 @@
 
   // its backtest: the light and the exceptions (scope/history)
   if ($("[data-rl-backtest]")) {
-    get("/api/var/scope/history?scope=BANK").then(function (h) {
+    get(drishti_url("/api/var/scope/history?scope=BANK")).then(function (h) {
       var b = h.backtest || {};
       if (b.light === undefined) { text("[data-rl-backtest]", "—"); return; }
       text("[data-rl-backtest]", String(b.light).toLowerCase() + " · " + b.exceptions);
@@ -106,7 +106,7 @@
   }
 
   // the bank's exposure headline
-  get("/api/exposure/scope?scope=BANK").then(function (h) {
+  get(drishti_url("/api/exposure/scope?scope=BANK")).then(function (h) {
     text("[data-rl-epe]", money(h.epe));
     text("[data-rl-epe-s]", "PFE peak " + money(h.peakPfe));
   }).catch(function (e) { text("[data-rl-epe]", "—"); text("[data-rl-epe-s]", e.message); });
@@ -124,7 +124,7 @@
     })(tree.groups || tree.children || tree.nodes || []);
     return { cptys: out, sets: sets };
   }
-  get("/api/exposure/tree").then(function (t) {
+  get(drishti_url("/api/exposure/tree")).then(function (t) {
     var c = counterparties(t);
     text("[data-rl-cpty]", String(c.cptys.length));
     text("[data-rl-cpty-s]", c.sets + " netting sets");
@@ -134,7 +134,7 @@
     if (!body) return;
     var rows = c.cptys.filter(function (n) { return n.epe !== undefined; })
       .sort(function (a, b) { return ((b.limit && b.limit.use) || 0) - ((a.limit && a.limit.use) || 0) || (b.epe || 0) - (a.epe || 0); }).slice(0, 8)
-      .map(function (n) { return { id: n.scope, scope: n.scope, name: n.label || n.id, href: "/exposure?scope=" + encodeURIComponent(n.scope), figure: n.epe, use: n.limit ? n.limit.use : null,
+      .map(function (n) { return { id: n.scope, scope: n.scope, name: n.label || n.id, href: drishti_url("/exposure?scope=" + encodeURIComponent(n.scope)), figure: n.epe, use: n.limit ? n.limit.use : null,
         status: n.limit ? n.limit.status : null }; });
     ranked(body, rows, { title: "Exposure by counterparty", name: "Counterparty", figure: "EPE", empty: "No counterparty exposure on this date" });
   }).catch(function (e) { text("[data-rl-cpty]", "—"); breaches.credit = null; said($("[data-rl-cptys]"), e); });
@@ -150,7 +150,7 @@
       var leafLevel = nodes.filter(function (n) { return String(n.level || "").toUpperCase() === "DESK"; });
       var list = (leafLevel.length ? leafLevel : nodes.filter(function (n) { return n.depth === 2; }))
         .sort(function (a, b) { return (b.limitUse || 0) - (a.limitUse || 0) || (b.var || 0) - (a.var || 0); }).slice(0, 8)
-        .map(function (n) { return { id: n.scope, scope: n.scope, name: n.name || n.id, href: "/var?scope=" + encodeURIComponent(n.scope) + "&hierarchy=" + hierarchy, figure: n.var,
+        .map(function (n) { return { id: n.scope, scope: n.scope, name: n.name || n.id, href: drishti_url("/var?scope=" + encodeURIComponent(n.scope) + "&hierarchy=" + hierarchy), figure: n.var,
           use: n.limitUse === undefined ? null : n.limitUse, status: n.limitStatus || null }; });
       ranked(desks, list, { title: "VaR by desk", name: "Desk", figure: "VaR", empty: "No desks in " + hierarchy });
     }
@@ -177,7 +177,7 @@
         .sort(function (a, b) { return b.limitUse - a.limitUse; }).slice(0, 16);
       if (!cells.length) heat.appendChild(el("p", "rl-muted", "No limits set in " + hierarchy));
       cells.forEach(function (n) {
-        var a = link("/var?scope=" + encodeURIComponent(n.scope) + "&hierarchy=" + hierarchy, "");
+        var a = link(drishti_url("/var?scope=") + encodeURIComponent(n.scope) + "&hierarchy=" + hierarchy, "");
         a.className = "rl-cell " + tone(n.limitStatus);
         a.appendChild(el("b", "", n.name || n.id));
         a.appendChild(el("span", "", "VaR " + pct(n.limitUse)));
@@ -195,14 +195,14 @@
     var opts = R.varHierarchyTree(rows, { title: "Node", label: "VaR hierarchy " + hierarchy, chrome: false, openDepth: 2, fields: ["VAR", "LIMIT_USE"],
       measures: { VAR: { label: "VaR", childSum: false, column: { width: 84 } }, LIMIT_USE: { label: "Limit use", column: { width: 120 } } },
       grid: { fitRows: 14, phoneWidth: 1, labelColumn: { header: hierarchy, width: 190, cellRenderer: function (c) {
-        return link("/var?scope=" + encodeURIComponent(c.row.scope) + "&hierarchy=" + hierarchy, c.row.LABEL);
+        return link(drishti_url("/var?scope=") + encodeURIComponent(c.row.scope) + "&hierarchy=" + hierarchy, c.row.LABEL);
       } }, rowData: function (r) { return { scope: r.scope || null }; } } });
     var host = box.querySelector(":scope > drishti-tree");
     if (!host) { box.textContent = ""; host = document.createElement("drishti-tree"); box.appendChild(host); }
     host.options = opts;
   }
   function loadTree() {
-    get("/api/var/tree?hierarchy=" + encodeURIComponent(hierarchy)).then(paintTree).catch(function (e) {
+    get(drishti_url("/api/var/tree?hierarchy=") + encodeURIComponent(hierarchy)).then(paintTree).catch(function (e) {
       breaches.var = null;
       said($("[data-rl-desks]"), e); said($("[data-rl-tree]"), e); said($("[data-rl-heat]"), e);
     });
@@ -224,21 +224,21 @@
     });
   }
   Promise.all([
-    get("/api/var/intraday/streams").then(function (s) {           // the PV topics' streams: their state and last message
+    get(drishti_url("/api/var/intraday/streams")).then(function (s) {           // the PV topics' streams: their state and last message
       (Array.isArray(s) ? s : s.streams || []).forEach(function (st) {
         if (!st) return;
         lines.push({ at: st.lastMessage || st.windowOpened || "", text: "Intraday " + (st.connector || st.topic || "stream") + ": " + (st.state || "running")
           + (st.waiting ? ", " + st.waiting + " waiting" : "") });
       });
     }).catch(function () {}),
-    get("/api/var/official").then(function (o) {                   // the date's official record, when there is one
+    get(drishti_url("/api/var/official")).then(function (o) {                   // the date's official record, when there is one
       var d = o.date || o.businessDate || ((o.dates || [])[0] || {}).date || (o.dates || [])[0];
       if (d) {
         lines.push({ at: o.capturedAt || o.computedAt || "", text: "VaR official record captured for " + d });
         text("[data-rl-official]", " · VaR official record " + d);
       }
     }).catch(function () {}),
-    get("/api/exposure/official").then(function (o) {
+    get(drishti_url("/api/exposure/official")).then(function (o) {
       var d = o.date || o.businessDate || ((o.dates || [])[0] || {}).date || (o.dates || [])[0];
       if (d) lines.push({ at: o.capturedAt || o.computedAt || "", text: "Exposure official record captured for " + d });
     }).catch(function () {})
@@ -250,13 +250,13 @@
   // B: the person's saved VaR baskets
   var baskets = $("[data-rl-baskets]");
   if (baskets) {
-    get("/api/var/baskets").then(function (b) {
+    get(drishti_url("/api/var/baskets")).then(function (b) {
       baskets.textContent = "";
       var list = (b.baskets || b || []).slice(0, 6);
       if (!list.length) baskets.appendChild(el("li", "rl-muted", "No baskets yet: build one on the VaR page"));
       list.forEach(function (x) {
         var li = el("li");
-        li.appendChild(link("/var?scope=" + encodeURIComponent("BASKET:" + (x.owner || "") + "/" + (x.name || "")), "★ " + (x.name || "")));
+        li.appendChild(link(drishti_url("/var?scope=") + encodeURIComponent("BASKET:" + (x.owner || "") + "/" + (x.name || "")), "★ " + (x.name || "")));
         baskets.appendChild(li);
       });
     }).catch(function (e) { said(baskets, e); });

@@ -245,12 +245,18 @@ def _checks(s: Server) -> float:
 
 
 def _packs_with_form(install: Path) -> set[str]:
+    """The install's packs with a form (the site's and kernel's, and the code module's .dmod folder), found through the one pack
+    resolution (core/resolution.py) read from the install folder."""
     import yaml
+    from core import resolution as R
     out = set()
-    for f in list(install.glob("modules/*/dmod/packs/*/pack.yaml")) + list(install.glob("config/packs/*/pack.yaml")) + list(install.glob("config/packs/*/*/pack.yaml")):
-        m = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
+    packs = R.build(R.Settings.from_env(env={}, base=install)).packs
+    for p in (packs[n] for n in packs):
+        if p.folder is None or (p.origin == "MODULE" and "dmod" not in p.folder.parts):
+            continue
+        m = yaml.safe_load((p.folder / "pack.yaml").read_text(encoding="utf-8")) or {}
         if isinstance(m.get("form"), dict) and m["form"]:
-            out.add(f.parent.name)
+            out.add(p.name)
     return out
 
 

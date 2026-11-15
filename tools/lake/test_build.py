@@ -323,7 +323,8 @@ class BuildTest(unittest.TestCase):
         a = args(src=[str(self.src)], lake=str(self.lake), pack=str(pack), engine="deltalake")
         code, s = build.run(a, quiet)
         self.assertEqual(code, 0, s.get("error"))
-        rows = self.table().to_pyarrow_table().to_pylist()
+        from deltalake import DeltaTable
+        rows = DeltaTable(str(self.lake / "book" / "deal")).to_pyarrow_table().to_pylist()   # the pack's connector names its domain: book
         self.assertTrue(rows)
         self.assertEqual({json.loads(r["doc"])["SOURCE_SYSTEM"] for r in rows}, {"SWAPONE"})
 

@@ -35,7 +35,7 @@
       var name = store.state.sample;
       if (!name || store.state.file) { return Promise.resolve(store.state.file ? store.state.file.document : undefined); }
       if (!docCache[name]) {
-        docCache[name] = WB.call('GET', '/build/designs/' + encodeURIComponent(store.state.id) + '/sample?name=' + encodeURIComponent(name)).then(function (r) { return r.ok ? r.body : undefined; });
+        docCache[name] = WB.call('GET', drishti_url('/build/designs/') + encodeURIComponent(store.state.id) + '/sample?name=' + encodeURIComponent(name)).then(function (r) { return r.ok ? r.body : undefined; });
       }
       return docCache[name];
     }
@@ -58,7 +58,7 @@
         return ps;
       } });
     var editor = pane.editor;
-    fetch('/studio/schema').then(function (r) { return r.ok ? r.json() : null; })
+    fetch(drishti_url('/studio/schema')).then(function (r) { return r.ok ? r.json() : null; })
       .then(function (raw) { if (raw && raw.properties) { schema = new K.YamlSchema(raw); editor.runLint(); } })
       .catch(function () { /* the editor works without it */ });
     editor.on('cursor', function (c) {

@@ -33,7 +33,7 @@
   }
   if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', mount); } else { mount(); }
   function save(list) {
-    return fetch('/m/api/' + encodeURIComponent(name), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ entities: list }) })
+    return fetch(drishti_url('/m/api/' + encodeURIComponent(name)), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ entities: list }) })
       .then(function (r) { return r.json().then(function (b) { return { ok: r.ok, b: b }; }); });
   }
   if (window.Drishti.Channel) {
@@ -53,7 +53,7 @@
   root.querySelector('[data-add]').addEventListener('submit', function (e) {
     e.preventDefault();
     var input = e.target.querySelector('input');
-    fetch('/api/resolve', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: input.value }) })
+    fetch(drishti_url('/api/resolve'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: input.value }) })
       .then(function (r) { return r.json().then(function (b) { return { ok: r.ok, b: b }; }); })
       .then(function (res) {
         if (!res.ok) { msg.textContent = res.b.detail || 'Unknown entity'; return null; }
@@ -62,6 +62,6 @@
       .then(function (res) { if (res && res.ok) { location.reload(); } else if (res) { msg.textContent = res.b.detail; } });
   });
   root.querySelector('[data-delete]').addEventListener('click', function () {
-    if (window.confirm('Delete monitor “' + name + '”?')) { fetch('/m/api/' + encodeURIComponent(name) + '/delete', { method: 'POST' }).then(function () { location.href = '/m'; }); }
+    if (window.confirm('Delete monitor “' + name + '”?')) { fetch(drishti_url('/m/api/' + encodeURIComponent(name) + '/delete'), { method: 'POST' }).then(function () { location.href = drishti_url('/m'); }); }
   });
 })();

@@ -81,7 +81,7 @@ public record TlsSettings(
 
     /** The settings under {@code prefix} ({@code tls.}), reading the process environment for placeholders. */
     public static TlsSettings parse(Map<String, String> settings, String prefix) {
-        return parse(settings, prefix, System::getenv);
+        return parse(settings, prefix, com.ash.drishti.settingsfile.Placeholders::process);
     }
 
     /** As {@link #parse(Map, String)}, reading environment variables through {@code env}. */

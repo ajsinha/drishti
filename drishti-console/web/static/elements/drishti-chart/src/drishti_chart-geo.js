@@ -20,6 +20,7 @@
    fitted to any other country (a plate carrée scaled at the middle latitude where a conic cannot fit, near the equator). Projected y
    grows downwards, as on a screen; the engine draws the shapes with an identity projection. No tiles, no map service: nothing leaves
    the network. Pure functions and a loader with an injected fetch, so Node tests read the same files. */
+import { url as drishtiUrl } from '../../drishti-core/src/drishti_index.js';
 
 const RAD = Math.PI / 180;
 
@@ -276,8 +277,8 @@ export function findPlace(geo, code) {
  */
 export function createGeoLoader(o) {
   o = o || {};
-  const base = (o.base || '/static/vendor/echarts/maps/').replace(/\/?$/, '/');
-  const get = o.fetchJson || ((url) => fetch(url, { credentials: 'same-origin' }).then((r) => { if (!r.ok) { throw new Error('map ' + url + ': ' + r.status); } return r.json(); }));
+  const base = (o.base || drishtiUrl('/static/vendor/echarts/maps/')).replace(/\/?$/, '/');
+  const get = o.fetchJson || ((url) => fetch(drishtiUrl(url), { credentials: 'same-origin' }).then((r) => { if (!r.ok) { throw new Error('map ' + url + ': ' + r.status); } return r.json(); }));
   const cache = { world: null, regions: {} }, loads = [];
   const fetched = (file) => { loads.push(file); return Promise.resolve().then(() => get(base + file)); };
   return {

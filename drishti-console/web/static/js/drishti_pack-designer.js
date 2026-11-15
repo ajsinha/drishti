@@ -24,7 +24,7 @@
   if (!root) { return; }
   var E = window.Drishti.elements, C = E.core, I = E.inputs, G = E.grid;
   var $ = function (s) { return root.querySelector(s); };
-  var BASE = '/build/pack/api/ws';
+  var BASE = drishti_url('/build/pack/api/ws');
   var ORDERS = { kind: ['data', 'kind', 'source', 'design', 'finalize', 'deploy'], source: ['data', 'map', 'layout', 'finalize', 'deploy'] };
   var ORDER = ORDERS.kind;                                    // the steps of the mode: a new kind (today), or a source for an existing kind
 
@@ -40,7 +40,7 @@
 
   // ---- small helpers ------------------------------------------------------------------------------------------------------
   function api(method, url, body) {
-    return fetch(url, { method: method, headers: body === undefined ? {} : { 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) })
+    return fetch(drishti_url(url), { method: method, headers: body === undefined ? {} : { 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) })
       .then(function (r) { return (r.status === 204 ? Promise.resolve({}) : r.json().catch(function () { return {}; })).then(function (j) { return { ok: r.ok, status: r.status, body: j }; }); },
         function () { return { ok: false, status: 0, body: { detail: 'The console could not be reached.' } }; });
   }

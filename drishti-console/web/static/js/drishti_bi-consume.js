@@ -159,7 +159,7 @@
 
   // ---- standing queries ------------------------------------------------------------------------------------------------------
   // keepalive: a DELETE sent while the tab closes (pagehide) still reaches the server, so a closed tab never holds standing queries
-  const drop = (id) => fetch('/bi/api' + B.viewPath('/mq/subscribe/' + encodeURIComponent(id)), { method: 'DELETE', credentials: 'same-origin', keepalive: true, headers: { Accept: 'application/json' } }).catch(() => {});
+  const drop = (id) => fetch(drishti_url('/bi/api' + B.viewPath('/mq/subscribe/' + encodeURIComponent(id))), { method: 'DELETE', credentials: 'same-origin', keepalive: true, headers: { Accept: 'application/json' } }).catch(() => {});
   /** A refusal for want of room (DRS-9181 the server's, DRS-9182 yours): said as such, never a bare "Not updating". */
   const FULL = { 'DRS-9181': 'The server follows as many live queries as it may; this visual was asked once. It updates again when others close.',
     'DRS-9182': 'You follow too many live queries (other tabs or pages); close a tab, or wait a minute for closed ones to be freed, then reload.' };

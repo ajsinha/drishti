@@ -23,7 +23,7 @@
 {% block title %}Pre-deal check · {{ PRODUCT }}{% endblock %}
 {% block screen %}predeal{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_var-regulatory.css?v={{ ASSET_V }}">{% include "terminal/_risk_elements_css.html" %}{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_var-regulatory.css?v={{ ASSET_V }}">{% include "terminal/_risk_elements_css.html" %}{% endblock %}
 {% block nav %}{% with command_text=(command or 'PREDEAL') ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
 <div class="rg" data-predeal data-command="{{ command }}" data-counterparty="{{ counterparty }}" data-netting-set="{{ netting_set }}" data-asof="{{ as_of }}">
@@ -31,7 +31,7 @@
     <h1>Pre-deal check</h1>
     <span class="rg-word" data-pd-word>{{ command or 'PREDEAL' }}</span>
     <span class="rg-meta" data-pd-source aria-live="polite">loading the counterparties…</span>
-    <a class="rg-meta" href="/help/context/exposure" title="Help: the pre-deal check (EXPOSURE_GUIDE.md section 18.9)"><i class="bi bi-question-circle" aria-hidden="true"></i></a>
+    <a class="rg-meta" href="{{ BASE }}/help/context/exposure" title="Help: the pre-deal check (EXPOSURE_GUIDE.md section 18.9)"><i class="bi bi-question-circle" aria-hidden="true"></i></a>
   </div>
   <p class="rg-notice" data-pd-notice role="status" hidden></p>
   <div class="rg-grid">
@@ -44,7 +44,7 @@
       <ul class="rg-note" data-pd-reasons></ul>
       <div class="rg-bar rg-gap">
         <button type="button" class="rg-btn" data-pd-explain data-explain-primary aria-keyshortcuts="E" title="Explain the check: the formula with its values, the inputs and lineage (E); every tile has its own">Explain ›</button>
-        <a class="rg-btn" data-pd-exposure href="/exposure">The counterparty's exposure</a>
+        <a class="rg-btn" data-pd-exposure href="{{ BASE }}/exposure">The counterparty's exposure</a>
         <span class="rg-meta mono" data-pd-cli></span>
       </div>
     </section>
@@ -74,4 +74,4 @@
   </section>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script>{% include "terminal/_risk_elements.html" %}<script src="/static/js/drishti_exposure-predeal.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script>{% include "terminal/_risk_elements.html" %}<script src="{{ BASE }}/static/js/drishti_exposure-predeal.js?v={{ ASSET_V }}"></script>{% endblock %}

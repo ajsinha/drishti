@@ -52,7 +52,7 @@
     return q;
   }
   function getJson(url, opts) {
-    return fetch(url, Object.assign({ headers: { Accept: "application/json" }, credentials: "same-origin" }, opts || {})).then(function (r) {
+    return fetch(drishti_url(url), Object.assign({ headers: { Accept: "application/json" }, credentials: "same-origin" }, opts || {})).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (b) {
         if (!r.ok) { throw new Error((b.code ? b.code + " " : "") + (b.detail || r.status)); }
         return b;
@@ -132,7 +132,7 @@
   function drill(cls, m) {
     var d = $("[data-fr-drill]");
     d.innerHTML = "<p class=\"muted\">loading " + esc(cls) + "…</p>";
-    getJson("/api/frtb/explain?" + query({ "class": cls }).toString()).then(function (x) {
+    getJson(drishti_url("/api/frtb/explain?") + query({ "class": cls }).toString()).then(function (x) {
       var c = (x.classes || []).filter(function (y) { return y.measure === m; })[0];
       if (!c) { d.innerHTML = "<p>No " + esc(m.toLowerCase()) + " in " + esc(cls) + ".</p>"; return; }
       d.innerHTML = "<h3>" + esc(CLASS[cls] || cls) + " " + esc(m.toLowerCase()) + "</h3><p class=\"mono\">" + SC.map(function (s, i) { return s + " " + money(c.charge[i]); }).join(" · ") + "</p>";
@@ -150,7 +150,7 @@
   }
   function contrib() {
     var by = $("[data-fr-by]").value;
-    getJson("/api/frtb/contributions?" + query({ by: by }).toString()).then(function (c) {
+    getJson(drishti_url("/api/frtb/contributions?") + query({ by: by }).toString()).then(function (c) {
       var rows = c.rows.slice(0, 200).map(function (r, i) { return { id: String(i), key: r.key, contribution: r.contribution, share: r.share }; });
       rows.push({ id: "SUM", key: "Sum (" + (c.addsUp ? "adds up to the total" : "does not add up") + ")", contribution: c.sum, total: true });   // the server's sum
       grid("[data-fr-contrib]", { title: "Contributions by " + c.by, rows: rows, getRowClass: function (r) { return r.total ? "tot" : null; },
@@ -159,7 +159,7 @@
     }).catch(function (e) { notice(e.message, true); });
   }
   function capital() {
-    getJson("/api/frtb/sa?" + query().toString()).then(function (a) {
+    getJson(drishti_url("/api/frtb/sa?") + query().toString()).then(function (a) {
       state.data = a;
       meta(a);
       stack(a);
@@ -233,7 +233,7 @@
     if (steps[want]) { steps[want].scrollIntoView({ block: "nearest" }); }
   }
   function play() {
-    var url = recipe ? "/api/frtb/recipes/" + encodeURIComponent(recipe) : "/api/frtb/playground?" + query({ compare: $("[data-fr-compare]").value }).toString();
+    var url = recipe ? drishti_url("/api/frtb/recipes/") + encodeURIComponent(recipe) : drishti_url("/api/frtb/playground?") + query({ compare: $("[data-fr-compare]").value }).toString();
     $("[data-fr-meta]").textContent = "loading…";
     getJson(url).then(function (a) {
       state.data = a;
@@ -256,12 +256,12 @@
       if (ev.target.matches("[data-fr-compare]")) { recipe = ""; play(); }
     });
     $("[data-fr-save]").addEventListener("click", function () {
-      getJson("/api/frtb/recipes?" + query().toString(), { method: "POST" }).then(function (r) {
+      getJson(drishti_url("/api/frtb/recipes?") + query().toString(), { method: "POST" }).then(function (r) {
         notice("Saved as recipe " + r.id + ": " + r.command + " computes it again to the cent (inputs as known at " + r.knownAt + ").");
       }).catch(function (e) { notice(e.message, true); });
     });
     $("[data-fr-export]").addEventListener("click", function () {
-      window.location.href = "/api/frtb/export.xlsx?" + query().toString();
+      window.location.href = drishti_url("/api/frtb/export.xlsx?" + query().toString());
     });
   }
   if (mode === "play") { playground(); } else { capital(); }

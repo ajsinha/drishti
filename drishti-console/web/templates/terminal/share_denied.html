@@ -36,7 +36,7 @@
   <p>This link does not open anything for you. It may have been sent to someone else, or it may be mistyped.</p>
   <p class="text-muted-d">If you were sent it, ask the person who shared it, or your administrator.</p>
   {% endif %}
-  <p><a href="/t">Back to the terminal</a> &middot; <a href="/inbox">Your inbox</a></p>
+  <p><a href="{{ BASE }}/t">Back to the terminal</a> &middot; <a href="{{ BASE }}/inbox">Your inbox</a></p>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_inbox.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_inbox.js?v={{ ASSET_V }}"></script>{% endblock %}

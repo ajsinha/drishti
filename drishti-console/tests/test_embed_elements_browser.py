@@ -179,7 +179,7 @@ def stack(request, tmp_path_factory):
         work.mkdir()
         env = dict(os.environ, DRISHTI_PACKS="trading,counterparty-risk,market-risk", DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_SECURITY_ENABLED="true",
                    DRISHTI_TOKEN_SECRET=SECRET, DRISHTI_EMBED_ENABLED="true", DRISHTI_PUBLIC_URL=SERVER, DRISHTI_CONSOLE_URL=CONSOLE_URL)
-        s.procs["server"] = subprocess.Popen(java_cmd(java, ["-jar", jars[0], f"--server.port={SERVER_PORT}", "--drishti.security.registered-users-only=false"], tmp=tmp / "jvm-tmp", cwd=work),
+        s.procs["server"] = subprocess.Popen(java_cmd(java, ["-jar", jars[0], f"--server.port={SERVER_PORT}", "--drishti.security.registered-users-only=false"], tmp=tmp / "jvm-tmp", cwd=work, env=env),
                                              cwd=work, env=env, stdout=open(tmp / "server.log", "ab"), stderr=subprocess.STDOUT)
         _wait(SERVER + "/actuator/health", 120)
     s.app_secret = register_host()

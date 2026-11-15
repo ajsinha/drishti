@@ -131,7 +131,8 @@ class LakeDemo(unittest.TestCase):
             self.assertTrue(ns and ns[0]["TRADE_IDS"] == ["99000001"], ns[:1])
             self.assertFalse(any(b"MADE UP VAULTS" in __import__("gzip").decompress(f.read_bytes()) for f in td.rglob("*.jsonl.gz")))
             self.assertIn(f"root: {json.dumps(str(lake.resolve()))}", (conn / "trade-endur.yaml").read_text())
-            self.assertEqual(len(list((data / "connectors" / "history").glob("trade-endur.*.yaml"))), 1)
+            # the file is rewritten in place (its root only): no history copy (connector files are the site's; git keeps their past)
+            self.assertEqual(list((data / "connectors" / "history").glob("trade-endur.*.yaml")), [])
             self.assertTrue((conn / "trade-calypso.yaml").is_file())          # a lake elsewhere: the missing files are written
             self.assertFalse((data / "build" / "lake-demo").exists())        # staging removed
             self.assertTrue((data / "feeds" / "fixing.jsonl").is_file())                # the sample feed, JSON Lines
@@ -140,7 +141,7 @@ class LakeDemo(unittest.TestCase):
             told = {(path.split("/")[4], body["kind"], body["businessDate"]) for path, body in server.got}
             self.assertIn(("trading", "trade", "2026-10-30"), told)
             self.assertIn(("core", "counterparty", "2026-10-22"), told)
-            self.assertEqual(len(server.got), 8 * 7, sorted(told))              # 4 trade tables (Endur, Calypso, Murex, the shared one of WSS, SwapOne and ICI), counterparty (and group), netting set, agreement
+            self.assertEqual(len(server.got), 10 * 7, sorted(told))             # 6 trade tables (one per source system), counterparty (and group), netting set, agreement
             self.assertIn("data-load signals", out.getvalue())
             stamp = data / "bi-store" / "lake-rebuilt.json"
             self.assertEqual(json.loads(stamp.read_text())["tables"], ["reference/desk"])

@@ -204,7 +204,7 @@
     const go = h('button', { type: 'button', class: 'btn-pill btn-accent bi-small', 'data-composed-create': '', text: 'Create the draft and review it' });
     go.addEventListener('click', () => {
       B.api('POST', '/workspaces/me/items', { kind: 'dataset', title: 'Composed: ' + tick.from.title + ' and ' + tick.to.title, description: 'Started from the designer\'s links.', body: yaml })
-        .then((it) => { window.location.href = '/bi/m/' + B.id2path(it.id); }).catch((e) => D.say(e.message, true));
+        .then((it) => { window.location.href = drishti_url('/bi/m/' + B.id2path(it.id)); }).catch((e) => D.say(e.message, true));
     });
     host.appendChild(go);
   }

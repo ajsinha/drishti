@@ -32,7 +32,8 @@ needs_node = pytest.mark.skipif(node is None, reason="needs Node to run drishti_
 
 
 def play(script: str):
-    prelude = ("global.window = {location: {search: ''}, setTimeout, clearTimeout, addEventListener() {}}; global.document = {addEventListener() {}, querySelector() { return null; }, querySelectorAll() { return []; }}; require(%s); const B = window.drishtiBi;\n"
+    prelude = ("global.drishti_url = (u) => u; "   # drishti-core's helper (the console at /): the page loads it first
+               "global.window = {location: {search: ''}, setTimeout, clearTimeout, addEventListener() {}}; global.document = {addEventListener() {}, querySelector() { return null; }, querySelectorAll() { return []; }}; require(%s); const B = window.drishtiBi;\n"
                "const later = (v, ms) => new Promise((r) => setTimeout(() => r(v), ms));\n" % json.dumps(str(JS / "drishti_bi-lib.js")))
     out = subprocess.run([node, "-e", prelude + script], capture_output=True, text=True, timeout=30)
     assert out.returncode == 0, out.stderr

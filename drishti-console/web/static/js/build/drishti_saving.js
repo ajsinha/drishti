@@ -39,14 +39,14 @@
       if (!can) { say(why(), true); return Promise.resolve(false); }
       return hooks.yaml.flush().then(function () {
         say(review ? 'Submitting for review...' : 'Saving...');
-        return WB.call('POST', '/build/designs/' + encodeURIComponent(store.state.id) + '/propose', { note: note ? note.value : '' });
+        return WB.call('POST', drishti_url('/build/designs/') + encodeURIComponent(store.state.id) + '/propose', { note: note ? note.value : '' });
       }).then(function (r) {
         if (r === false) { return false; }
         if (r.ok && r.body.status && hooks.ship) { store.state.status = r.body.status; hooks.ship.paint(r.body.status); }
         if (r.ok && r.body.proposal) {
           var p = r.body.proposal;
           say('Submitted for review as ' + p.id + ': ' + p.name + ' v' + p.version + ', with the check matrix, sample names and notes. An approver makes it live.');
-          var a = WB.el('a', 'lnk', ' Open the review', { href: '/approvals/sutra/' + encodeURIComponent(p.id) });
+          var a = WB.el('a', 'lnk', ' Open the review', { href: drishti_url('/approvals/sutra/' + encodeURIComponent(p.id)) });
           document.querySelector('[data-say]').appendChild(a);
           return true;
         }
@@ -94,8 +94,8 @@
       WB.menu.open({ title: 'File', anchor: fileB, filter: true, items: items, onPick: function (it) {
         if (it.value === 'open') { open(); return; }
         say('Opening a copy of ' + it.value + '...');
-        WB.call('POST', '/build/examples/' + encodeURIComponent(it.value) + '/open').then(function (r) {
-          if (r.ok) { window.location.href = r.body.url + '?tab=split'; } else { say(WB.why(r), true); }
+        WB.call('POST', drishti_url('/build/examples/') + encodeURIComponent(it.value) + '/open').then(function (r) {
+          if (r.ok) { window.location.href = drishti_url(r.body.url + '?tab=split'); } else { say(WB.why(r), true); }
         });
       } });
     }

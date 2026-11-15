@@ -147,7 +147,7 @@ class TheModule(Fixture):
         live = yaml.safe_load((mod / "connectors" / "source-swapone-live.yaml").read_text())
         self.assertIn("amend-trade", live["writes"])
         self.assertEqual("source-swapone", live["companion-of"])       # the live companion of the read connector (LIVE_CONNECTORS_DESIGN.md 2.2)
-        self.assertIn("${", live["settings"]["bootstrap-servers"])
+        self.assertEqual(live["settings"]["broker"], "default")          # the broker by name: [broker.default] in the settings file
         section = yaml.safe_load((mod / m["sections"][0]["fragment"]).read_text())
         self.assertEqual(section["panels"][0]["when"], "$.SOURCE_SYSTEM == 'SWAPONE'")
         self.assertIn("CLEARING_HOUSE", [c["label"] for c in section["panels"][0]["columns"]])

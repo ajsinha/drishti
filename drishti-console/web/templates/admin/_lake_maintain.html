@@ -18,7 +18,7 @@
 {{ "keep all dates" if s["keep-business-days"] is none else ("{:,}".format(s["keep-business-days"]) ~ " business days") }} · {{ s["target-file-mb"] }} MB files · {{ "checkpoint" if s.checkpoint else "no checkpoint" }} · {{ "no vacuum" if s["vacuum-hours"] is none else ("vacuum " ~ s["vacuum-hours"] ~ " h") }}
 {%- endmacro %}
 <section class="mt" data-maint aria-labelledby="lkTables">
-  <h2 class="lk-h2" id="lkTables">The lakes <a class="emb-help" href="/help/lake-maintenance" aria-label="Help: lake maintenance" title="Help: lake maintenance">?</a></h2>
+  <h2 class="lk-h2" id="lkTables">The lakes <a class="emb-help" href="{{ BASE }}/help/lake-maintenance" aria-label="Help: lake maintenance" title="Help: lake maintenance">?</a></h2>
   <p class="text-muted-d mt-intro">Tick the tables to maintain: retention drops old business dates, compaction merges small files, a checkpoint shortens the log,
     vacuum removes files no longer used. An Iceberg table (Format: Iceberg) expires its old snapshots instead of vacuum and also removes orphan
     files (files no snapshot uses, at least 72 hours old); the risk domains keep 7 years whatever is set. <strong>Dry run</strong> shows what would change; <strong>Maintain now</strong> does it in the background, one run at a time per lake.
@@ -38,7 +38,7 @@
       <th scope="col" class="num">Partitions</th><th scope="col" class="num">Business dates</th><th scope="col">Latest date</th><th scope="col">Last build</th>{% if maint %}<th scope="col">Maintenance</th>{% endif %}</tr></thead>
     <tbody>{% set owners = {} %}{% if maint %}{% for m in maint.tables %}{% set _ = owners.update({m.root ~ "|" ~ m.table: m}) %}{% endfor %}{% endif %}
     {% for t in tables %}{% set m = owners.get(t.root ~ "|" ~ t.table) %}<tr data-lake-table="{{ t.table }}" data-root="{{ t.root }}" data-domain="{{ t.domain }}"{% if maint %}{% if m and m.owned %} data-select-id="{{ t.root }}|{{ t.table }}"{% else %} class="mt-foreign" data-select-off="{{ m.reason if m else 'not readable' }}"{% endif %}{% endif %}>
-      <th scope="row"><a class="mono" href="/admin/lakes/table?root={{ t.root | urlencode }}&amp;table={{ t.table | urlencode }}" title="Dates, columns, commits and loads of {{ t.table }}">{{ t.table }}</a><br><small class="text-muted-d">{{ t.root }}</small></th>
+      <th scope="row"><a class="mono" href="{{ BASE }}/admin/lakes/table?root={{ t.root | urlencode }}&amp;table={{ t.table | urlencode }}" title="Dates, columns, commits and loads of {{ t.table }}">{{ t.table }}</a><br><small class="text-muted-d">{{ t.root }}</small></th>
       <td data-mt-format="{{ t.format or 'delta' }}">{{ "Iceberg" if t.format == "iceberg" else "Delta" }}</td>
       {% if t.error %}<td colspan="7" class="text-muted-d">Not readable: {{ t.error }}</td>{% else %}
       <td class="num mono">{{ "{:,}".format(t.rows) if t.rows is not none else "?" }}</td><td class="num mono" data-mt-files>{{ t.files }}</td><td class="num mono" data-mt-size>{{ t.size }}</td>

@@ -87,7 +87,7 @@ final class ChildLoads {
                 if (!quiet) {
                     out.println("child kind " + c.kind() + ": " + rows.get(c.kind()) + " rows from " + c.field() + " of " + kind);
                 }
-                LoadConfig child = LoadConfig.of(childTree(tree, c, files), System::getenv);
+                LoadConfig child = LoadConfig.of(childTree(tree, c, files), com.ash.drishti.settingsfile.Placeholders::process);
                 int code = LakeLoad.runOne(child, null, out, json, quiet, System.nanoTime()).code();
                 worst = worse(worst, code);
                 if (code == LakeLoad.FAILED || code == LakeLoad.LOCKED) {

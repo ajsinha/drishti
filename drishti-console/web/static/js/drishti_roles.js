@@ -43,7 +43,7 @@
         var go = on ? Promise.resolve(true) : ask('Switch ' + name + ' off?', 'Switch ' + name + ' off for everyone? Its kinds cannot be opened until it is switched on again.', 'Switch off', true);
         go.then(function (yes) {
           if (!yes) { return; }
-          fetch('/admin/api/packs/' + encodeURIComponent(name), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ enabled: on }) })
+          fetch(drishti_url('/admin/api/packs/' + encodeURIComponent(name)), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ enabled: on }) })
             .then(function (r) { return r.json().then(function (body) { return { ok: r.ok, body: body }; }); })
             .then(function (res) {
               pmsg.textContent = res.ok ? name + ' is ' + (on ? 'on' : 'off') + '.' : Drishti.drsMessage(res.body);
@@ -61,14 +61,14 @@
         var row = b.closest('[data-pack]'), name = row.getAttribute('data-pack'), version = row.getAttribute('data-version');
         var action = b.getAttribute('data-load') || b.getAttribute('data-registry');
         var url = b.hasAttribute('data-registry')
-          ? '/admin/api/registry/' + encodeURIComponent(name) + (action === 'install' ? '/' + encodeURIComponent(version) + '/install' : '/rollback')
-          : '/admin/api/packs/' + encodeURIComponent(name) + '/' + action;
+          ? drishti_url('/admin/api/registry/') + encodeURIComponent(name) + (action === 'install' ? '/' + encodeURIComponent(version) + '/install' : '/rollback')
+          : drishti_url('/admin/api/packs/') + encodeURIComponent(name) + '/' + action;
         var verb = { load: 'Load ', unload: 'Unload ', install: 'Install ', rollback: 'Roll back ' }[action];
         ask(verb + name + '?', verb + name + (action === 'install' ? ' ' + version : '') + '? It takes effect now, with no restart.', verb.trim(), action === 'unload').then(function (yes) {
           if (!yes) { return; }
           lmsg.classList.remove('t-bad');
           lmsg.textContent = (action === 'unload' ? 'Unloading ' : 'Checking ') + name + '…';
-          fetch(url, { method: 'POST' })
+          fetch(drishti_url(url), { method: 'POST' })
             .then(function (r) { return r.json().then(function (body) { return { ok: r.ok, body: body }; }); })
             .then(function (res) {
               if (!res.ok) { lmsg.textContent = Drishti.drsMessage(res.body); lmsg.classList.add('t-bad'); staleRow(res.body, lmsg); return; }
@@ -77,7 +77,7 @@
               // wait for the server to go and come back, then show the new state
               var seenDown = false, started = Date.now();
               (function poll() {
-                fetch('/readyz', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (s) {
+                fetch(drishti_url('/readyz'), { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (s) {
                   if (s.status !== 'UP') { seenDown = true; }
                   if (s.status === 'UP' && (seenDown || Date.now() - started > 15000)) { location.reload(); return; }
                   lmsg.textContent = 'Restarting the server… ' + Math.round((Date.now() - started) / 1000) + ' s';
@@ -95,7 +95,7 @@
       b.addEventListener('click', function () {
         var id = b.closest('tr').getAttribute('data-token');
         if (!window.confirm('Revoke token ' + id + '? Anything using it stops working at once.')) { return; }
-        fetch('/admin/api/tokens/' + encodeURIComponent(id) + '/revoke', { method: 'POST' }).then(function (r) {
+        fetch(drishti_url('/admin/api/tokens/' + encodeURIComponent(id) + '/revoke'), { method: 'POST' }).then(function (r) {
           if (r.ok) { location.reload(); } else { r.json().then(function (body) { tadm.querySelector('[data-msg]').textContent = Drishti.drsMessage(body); }); }
         });
       });
@@ -110,7 +110,7 @@
   var PERMISSIONS = Object.keys((F.schema.properties.permissions || {}).properties || {});   // the module permissions (core/admin_forms.py)
 
   function post(url, body) {
-    return fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) })
+    return fetch(drishti_url(url), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) })
       .then(function (r) { return r.json().catch(function () { return {}; }).then(function (b) { return { ok: r.ok, body: b }; }); });
   }
   function say(el, text, bad) { el.textContent = text; el.classList.toggle('t-bad', !!bad); el.classList.toggle('t-ok', !bad); }
@@ -154,7 +154,7 @@
       kinds: F.getField('all') ? ['*'] : String(F.getField('kinds') || '').split(/[\s,]+/).filter(Boolean) };
     POWERS.forEach(function (k) { body[k] = F.getField('powers.' + k) === true; });     // an unticked power is false, never left out
     body.permissions = PERMISSIONS.filter(function (k) { return (F.getField('permissions') || {})[k] === true; });   // every one said: unticked is gone
-    post('/admin/api/roles/' + encodeURIComponent(String(F.getField('name') || '').trim()), body).then(function (res) {
+    post(drishti_url('/admin/api/roles/') + encodeURIComponent(String(F.getField('name') || '').trim()), body).then(function (res) {
       if (res.ok) { dlg.close(); say(msg, (editing ? 'Saved ' : 'Created ') + res.body.name + '.'); setTimeout(function () { location.reload(); }, 400); }
       else { say(dmsg, Drishti.drsMessage(res.body), true); }
     });
@@ -166,7 +166,7 @@
     if (del) {
       del.addEventListener('click', function () {
         if (!window.confirm('Delete the role ' + role.name + '?')) { return; }
-        post('/admin/api/roles/' + encodeURIComponent(role.name) + '/delete').then(function (res) {
+        post(drishti_url('/admin/api/roles/') + encodeURIComponent(role.name) + '/delete').then(function (res) {
           if (res.ok) { say(msg, 'Deleted ' + role.name + '.'); setTimeout(function () { location.reload(); }, 400); }
           else { say(msg, Drishti.drsMessage(res.body), true); }
         });

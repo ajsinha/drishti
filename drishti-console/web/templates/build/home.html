@@ -19,7 +19,7 @@
 {% block title %}Build · {{ PRODUCT }}{% endblock %}
 {% block screen %}build{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_build.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_build-home.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_build.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_build-home.css?v={{ ASSET_V }}">{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% macro refs(list) -%}
   {%- for r in list[:3] %}{% set t, _, n = r.partition(':') %}<span class="bh-ref" title="{{ t }}">{{ n }}</span>{% if not loop.last %}, {% endif %}{% endfor -%}
@@ -31,25 +31,25 @@
     {% for g in groups if g.types %}
     <h2 class="bh-group">{{ g.label }}</h2>
     {% for t in g.types %}{% set n = rows.get(t.id) %}
-    <a class="bh-kind" href="/build?type={{ t.id }}" data-kind="{{ t.id }}" title="{{ t.blurb }}"{% if chosen and chosen.id == t.id and not q %} aria-current="page"{% endif %}>
+    <a class="bh-kind" href="{{ BASE }}/build?type={{ t.id }}" data-kind="{{ t.id }}" title="{{ t.blurb }}"{% if chosen and chosen.id == t.id and not q %} aria-current="page"{% endif %}>
       <i class="bi bi-{{ t.icon }}" aria-hidden="true"></i><span>{{ t.label }}</span>
       <small class="bh-count{% if t.id == 'review' and n %} warn{% endif %}" data-count>{% if n is none %}<span title="Not available right now">–</span>{% else %}{{ n | length }}{% endif %}</small></a>
     {% endfor %}{% endfor %}
-    <a class="bh-kind bh-tiles-link" href="/build?tiles=1" data-show-tiles><i class="bi bi-grid" aria-hidden="true"></i><span>Show the task tiles</span></a>
+    <a class="bh-kind bh-tiles-link" href="{{ BASE }}/build?tiles=1" data-show-tiles><i class="bi bi-grid" aria-hidden="true"></i><span>Show the task tiles</span></a>
   </nav>
   <section class="bh-main">
     <header class="bh-hdr">
       <div><div class="crumbs">Build{% if q %} › Search{% elif chosen %} › {{ (groups | selectattr('id', 'equalto', chosen.group) | first).label }}{% endif %}</div>
         <h1>{% if q %}Everything matching “{{ q }}”{% elif chosen %}{{ chosen.label }}{% else %}Build{% endif %}</h1></div>
       <span class="bh-sp"></span>
-      <form class="bh-search" method="get" action="/build" role="search">
+      <form class="bh-search" method="get" action="{{ BASE }}/build" role="search">
         <label class="visually-hidden" for="bhQ">Search everything you can build</label>
         <input id="bhQ" name="q" type="search" value="{{ q }}" placeholder="Search everything you can build" data-search>
         <button class="btn-pill btn-ghost" type="submit"><i class="bi bi-search" aria-hidden="true"></i><span class="visually-hidden">Search</span></button>
       </form>
       {% if news %}<details class="bh-new" data-new>
         <summary class="btn-pill btn-accent"><i class="bi bi-plus-lg" aria-hidden="true"></i> New</summary>
-        <ul role="list">{% for t in news %}<li><a href="{{ t.new }}" data-new-kind="{{ t.id }}"><i class="bi bi-{{ t.icon }}" aria-hidden="true"></i> {{ t.new_label or t.label }}</a></li>{% endfor %}</ul>
+        <ul role="list">{% for t in news %}<li><a href="{{ t.new | u }}" data-new-kind="{{ t.id }}"><i class="bi bi-{{ t.icon }}" aria-hidden="true"></i> {{ t.new_label or t.label }}</a></li>{% endfor %}</ul>
       </details>{% endif %}
     </header>
 
@@ -70,16 +70,16 @@
     <section class="bh-tiles" aria-label="What do you want to build?" data-tiles>
       <h2 class="bh-sub">What do you want to build?</h2>
       <div class="bh-tile-row">{% for t in tasks %}
-        <a class="bh-tile" href="/build?type={{ t.first }}" data-task="{{ t.id }}"><b>{{ t.label }}</b><span>{{ t.blurb }}</span><span class="bh-tile-n">{{ t.count }}</span></a>
+        <a class="bh-tile" href="{{ BASE }}/build?type={{ t.first }}" data-task="{{ t.id }}"><b>{{ t.label }}</b><span>{{ t.blurb }}</span><span class="bh-tile-n">{{ t.count }}</span></a>
       {% endfor %}</div>
       <div class="bh-two">
         <div class="bh-card"><h3>Continue where you left off</h3>{% set recent = (rows.get('recent') or [])[:3] %}
-          {% if recent %}<ul role="list">{% for it in recent %}<li><a class="lnk" href="{{ it.href }}">{{ it.name }}</a> <span class="text-muted-d">{{ it.kind }} · {{ it.status }}</span></li>{% endfor %}</ul>
+          {% if recent %}<ul role="list">{% for it in recent %}<li><a class="lnk" href="{{ it.href | u }}">{{ it.name }}</a> <span class="text-muted-d">{{ it.kind }} · {{ it.status }}</span></li>{% endfor %}</ul>
           {% else %}<p class="text-muted-d">Nothing yet: pick a tile to start.</p>{% endif %}</div>
         <div class="bh-card"><h3>Waiting for you</h3>{% set waiting = rows.get('review') or [] %}
-          {% if waiting %}<a class="lnk" href="/build?type=review">{{ waiting | length }} to review</a>{% else %}<p class="text-muted-d">Nothing waiting.</p>{% endif %}</div>
+          {% if waiting %}<a class="lnk" href="{{ BASE }}/build?type=review">{{ waiting | length }} to review</a>{% else %}<p class="text-muted-d">Nothing waiting.</p>{% endif %}</div>
       </div>
-      <p><a class="btn-pill btn-ghost" href="/build?tiles=0{% if chosen %}&amp;type={{ chosen.id }}{% endif %}" data-hide-tiles>Hide these tiles</a></p>
+      <p><a class="btn-pill btn-ghost" href="{{ BASE }}/build?tiles=0{% if chosen %}&amp;type={{ chosen.id }}{% endif %}" data-hide-tiles>Hide these tiles</a></p>
     </section>
     {% endif %}
 
@@ -98,15 +98,15 @@
       <tbody>{% for it in others %}
         <tr data-item="{{ it.ref }}">
           {% set gone = (needs or {}).get(it.ref) %}{# kept, marked, not openable while a module it uses is off or removed (KERNEL_AND_MODULES.md 12.6) #}
-          <td>{% if it.href and not gone %}<a class="lnk" href="{{ it.href }}">{{ it.name }}</a>{% else %}{{ it.name }}{% endif %}{% for n in gone or [] %} <span class="st st-warn" data-needs-module="{{ n.module }}">{{ n.words }}</span>{% endfor %}</td>
+          <td>{% if it.href and not gone %}<a class="lnk" href="{{ it.href | u }}">{{ it.name }}</a>{% else %}{{ it.name }}{% endif %}{% for n in gone or [] %} <span class="st st-warn" data-needs-module="{{ n.module }}">{{ n.words }}</span>{% endfor %}</td>
           <td>{{ it.kind }}</td><td>{{ it.status }}</td>
           <td>{{ refs(it.uses) }}</td><td>{{ refs(lineage.get(it.ref, [])) }}</td>
           <td>{% if it.changed %}<time data-ms="{{ it.changed }}"></time>{% endif %}{% if it.by %}{% if it.changed %}, {% endif %}{{ it.by }}{% endif %}</td></tr>
       {% endfor %}</tbody></table></div></div></section>
     {% elif q %}<p class="text-muted-d" data-empty>Nothing you can build matches “{{ q }}”.</p>
-    {% elif chosen and chosen.id != 'drafts' %}<p class="text-muted-d" data-empty>None yet.{% if chosen.new %} <a class="lnk" href="{{ chosen.new }}">Start one</a>.{% endif %}</p>
+    {% elif chosen and chosen.id != 'drafts' %}<p class="text-muted-d" data-empty>None yet.{% if chosen.new %} <a class="lnk" href="{{ chosen.new | u }}">Start one</a>.{% endif %}</p>
     {% endif %}
   </section>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_build-home.js?v={{ ASSET_V }}"></script>{% if for_you %}<script src="/static/js/drishti_build-for-you.js?v={{ ASSET_V }}"></script>{% endif %}{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_build-home.js?v={{ ASSET_V }}"></script>{% if for_you %}<script src="{{ BASE }}/static/js/drishti_build-for-you.js?v={{ ASSET_V }}"></script>{% endif %}{% endblock %}

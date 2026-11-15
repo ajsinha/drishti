@@ -37,7 +37,7 @@
         var t = m[0], n;
         if (t[0] === '*') { n = WB.el('strong', null, t.slice(2, -2)); }
         else if (t[0] === '`') { n = WB.el('code', null, t.slice(1, -1)); }
-        else { var mm = /^\[([^\]]+)\]\(([^)]+)\)$/.exec(t); n = WB.el('a', 'lnk', mm[1], { href: mm[2], rel: 'noopener' }); }
+        else { var mm = /^\[([^\]]+)\]\(([^)]+)\)$/.exec(t); n = WB.el('a', 'lnk', mm[1], { href: drishti_url(mm[2]), rel: 'noopener' }); }
         parent.appendChild(n); last = m.index + t.length;
       }
       if (last < s.length) { parent.appendChild(document.createTextNode(s.slice(last))); }
@@ -67,7 +67,7 @@
       timer = 0;
       if (area.value === saved) { return Promise.resolve(); }
       var text = area.value;
-      return WB.call('PATCH', '/build/designs/' + encodeURIComponent(store.state.id), { notes: text }).then(function (r) {
+      return WB.call('PATCH', drishti_url('/build/designs/') + encodeURIComponent(store.state.id), { notes: text }).then(function (r) {
         if (!r.ok) { store.emit('say', 'The notes were not saved: ' + WB.why(r), true); return; }
         saved = text; store.emit('say', 'Notes saved.');
       });

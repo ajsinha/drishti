@@ -72,7 +72,7 @@
         else if (s.synthetic) { li.appendChild(WB.el('span', 'bs-role', 'synthetic', { title: 'Generated from a schema: not evidence that a screen works on real data' })); }
         var rm = WB.el('button', 'btn-pill btn-ghost', 'Remove', { type: 'button', 'data-remove': '', 'aria-label': 'Remove ' + name });
         rm.addEventListener('click', function () {
-          WB.call('DELETE', '/build/designs/' + encodeURIComponent(st.id) + '/samples?name=' + encodeURIComponent(name)).then(function (r) {
+          WB.call('DELETE', drishti_url('/build/designs/') + encodeURIComponent(st.id) + '/samples?name=' + encodeURIComponent(name)).then(function (r) {
             if (!r.ok) { store.emit('say', WB.why(r), true); return; }
             adopt(r.body); store.emit('say', 'Removed ' + name + '.');
           });
@@ -104,7 +104,7 @@
 
     function reloadShape() {
       if (!store.state.samples.length) { shapeBox.hidden = true; fields = []; actions.fields([]); return Promise.resolve(); }
-      return WB.call('GET', '/build/designs/' + encodeURIComponent(store.state.id) + '/shape').then(function (r) {
+      return WB.call('GET', drishti_url('/build/designs/') + encodeURIComponent(store.state.id) + '/shape').then(function (r) {
         if (!r.ok) { note.textContent = 'The shape could not be made: ' + WB.why(r); return; }
         note.textContent = '';
         shapeBox.hidden = false;                                                  // shown first: the tree grid measures its width

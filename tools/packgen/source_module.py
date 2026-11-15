@@ -122,7 +122,7 @@ def connector_files(a, n: dict, m: dict) -> dict[str, dict]:
     if a.live:
         live = {"plugin": "kafka", "companion-of": n["name"], "enabled": f"${{DRISHTI_{n['system']}_LIVE:false}}", "kinds": [n["kind"]],
                 "description": f"{n['system']}'s {n['kind']}s as they are booked (off until the site sets the servers and the topic)",
-                "settings": {"bootstrap-servers": "${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}", "topics": [f"{n['low']}.{n['kind']}s"],
+                "settings": {"broker": "default", "topics": [f"{n['low']}.{n['kind']}s"],
                              "set": {"SOURCE_SYSTEM": n["system"]}, "map": n["map"]}}   # kind, key and order: the kind's contract
         if a.write_back:
             live["writes"] = {f"amend-{n['kind']}": {"kind": n["kind"], "kafka": {"topic": f"{n['low']}.{n['kind']}s.amend", "shape": "document",
@@ -245,9 +245,12 @@ The guide: [guide.md](guide.md).
 
 def load(a, n: dict, cli, say=print) -> int:
     """--load: the native records into the table with SOURCE_SYSTEM stamped (data ingest --store delta)."""
-    lake = a.lake or (pathlib.Path(os.environ["DRISHTI_DELTA_ROOT"]) if os.environ.get("DRISHTI_DELTA_ROOT") else None)
+    sys.path.insert(0, str(HERE.parent / "lake"))
+    import lakeconfig as LC   # noqa: E402  (the one place that names the demo lake's root variable)
+    env = os.environ.get(LC.DEMO_ROOT_ENV)
+    lake = a.lake or (pathlib.Path(env) if env else None)
     if lake is None:
-        raise SystemExit("--load needs --lake <the lake's Delta root> (or DRISHTI_DELTA_ROOT)")
+        raise SystemExit(f"--load needs --lake <the lake's Delta root> (or {LC.DEMO_ROOT_ENV})")
     domain, table = n["table"].split(".", 1)
     with tempfile.TemporaryDirectory(dir=os.environ.get("TMPDIR")) as tmp:
         files = []

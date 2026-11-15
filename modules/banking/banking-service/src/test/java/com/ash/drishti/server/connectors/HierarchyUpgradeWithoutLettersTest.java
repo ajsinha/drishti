@@ -46,7 +46,7 @@ import org.springframework.test.web.servlet.MockMvc;
  */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.packs.enabled=market-risk,counterparty-risk",
         "drishti.sources.plugins.demo.enabled=false",
-        "drishti.sources.connectors-dir=target/hierarchy-upgrade/connectors", "drishti.data.dir=target/hierarchy-upgrade/data",
+        "drishti.sources.connectors-dir=target/hierarchy-upgrade/connectors", "drishti.data.dir=${drishti.module.root}/target/hierarchy-upgrade/data",
         "DRISHTI_DELTA_ROOT=target/hierarchy-upgrade/data/delta/demo",      // the older files' root and the demo lake's: one folder
         "drishti.var.official.on-start=false", "drishti.ccr.exposure.official.on-start=false", "drishti.ccr.exposure.close-grace-seconds=0",
         "drishti.var.threads=2", "drishti.var.tier.close-grace-seconds=0",

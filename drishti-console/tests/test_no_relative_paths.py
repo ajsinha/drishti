@@ -22,9 +22,13 @@ The guard reads the main code of every Maven module (``*/src/main/java``) and th
 
 - ``Path.of("x")``, ``Paths.get("x")``, ``new File("x")`` with a relative literal first argument;
 - ``user.dir`` (the working folder by another name);
+- a relative fallback of a path setting: ``getProperty("drishti.x.dir", "modules")``, ``getenv().getOrDefault("DRISHTI_X_DIR", "x")``,
+  ``getOrDefault("--out", ".")``;
+- ``"."`` or ``".."`` as any argument of ``Path.of``/``Paths.get``/``resolve``/``new File`` (``Path.of(x, "..", "..")`` climbs from wherever x is);
+- ``Path.of(System.getProperty(..)).toAbsolutePath()`` (a relative setting would be the working folder's: use ``Roots.anchored``);
 - a ``"./..."`` literal in Java code;
 - a placeholder default that is relative: ``${x:./...}``, ``${x:../...}``, ``${x:.}``, ``${x:data/...}``, ``${x:config/...}``, ``${x:modules/...}``;
-- a shipped YAML value that is a bare relative folder of the install (``./x``, ``config/...``, ``data/...``, ``modules/...``).
+- a shipped YAML, JSON or properties value that is a bare relative folder of the install (``./x``, ``config/...``, ``data/...``, ``modules/...``).
 
 ALLOWED lists the exceptions, each with its reason; a line not listed fails the gate."""
 from __future__ import annotations
@@ -60,8 +64,9 @@ ALLOWED: dict[str, list[tuple[str, str]]] = {
     # benchmarks and the test kit run under Maven in their own module folder: their scratch is target/ there by design
     "testing/": [("Path.of(\"target\"", "a benchmark's or the test kit's scratch under its module's target/"),
                  ("Path.of(\"examples/packs", "a benchmark's fixture, run from the repository")],
-    # the connector map lookup (SourceRegistry.shapeBases) is being anchored on wip/i4-dailyfix
-    "kernel/drishti-engine/src/main/java/com/ash/drishti/engine/source/SourceRegistry.java": [("Path.of(\"", "map: lookup, anchored on wip/i4-dailyfix")],
+    # the standalone module tool (drishti-module-tool.jar, no install folder): its output defaults to the developer's current folder, as
+    # documented ("--out <dir>", DEVELOPER_GUIDE.md); a typed command in the developer's shell, not a path of the server
+    "kernel/drishti-module-runtime/src/main/java/com/ash/drishti/module/tool/ModuleTool.java": [('getOrDefault("--out", ".")', "the standalone tool's documented default")],
     # a module's own files named relative to the module folder (module.yaml keys, packs' config) are resolved against that folder, not the
     # working folder: they are not install folders
     "modules/": [(": mappings/", "relative to the module folder"), (": console/", "relative to the module folder"),
@@ -79,6 +84,12 @@ JAVA_LITERAL_PATH = re.compile(r"""\b(?:Path\.of|Paths\.get|new\s+File)\(\s*"(?!
 DOT_LITERAL = re.compile(r'"\.\.?/[^"]*"')
 USER_DIR = re.compile(r"""["']user\.dir["']""")
 RELATIVE_DEFAULT = re.compile(r"\$\{[A-Za-z0-9_.\-]+:(?:\.{1,2}/|\.\}|(?:data|config|modules|plugins|sutras)/)")
+RELATIVE_FALLBACK = re.compile(r"""(?:getProperty|getenv|getOrDefault|requireNonNullElse)\(\s*"(?:--[^"]*|(?:drishti\.|DRISHTI_)[^"]*"""
+                               r"""(?:dir|root|path|home|file|folder|lib|DIR|ROOT|PATH|HOME|FILE|FOLDER|LIB)[^"]*)"\s*,\s*"(?!/)(?![A-Za-z]:)"""
+                               r"""(?!(?:none|auto|off|on|true|false|\d+)")([^"$]+)"\s*\)""")
+CLIMB = re.compile(r"""(?:Path\.of|Paths\.get|\.resolve|new\s+File)\([^;()]*"\.\.?"\s*[,)]""")
+ABS_SETTING = re.compile(r"""(?:Path\.of|Paths\.get)\(\s*System\.(?:getProperty|getenv)\([^;]*?\)\s*\)\s*\.toAbsolutePath""")
+JAVA_RULES = (JAVA_LITERAL_PATH, DOT_LITERAL, USER_DIR, RELATIVE_DEFAULT, RELATIVE_FALLBACK, CLIMB, ABS_SETTING)
 YAML_RELATIVE_VALUE = re.compile(r"^\s*[A-Za-z0-9_.\-]+:\s*(?:\./|\.\./|config/|data/|modules/)[^\s#]*", re.M)
 
 
@@ -104,7 +115,7 @@ def _files(kind: str) -> list[str]:
     """The files the guard reads, by walking the repository (a static test starts no process): main Java, or the shipped YAML."""
     if kind == "java":
         return sorted(f for f in _walk(ROOT, (".java",)) if "/src/main/java/" in f)
-    return sorted(f for f in _walk(ROOT, (".yaml", ".yml"))
+    return sorted(f for f in _walk(ROOT, (".yaml", ".yml", ".json", ".properties"))
                   if "/src/main/resources/" in f or f.startswith(("config/", "modules/")))
 
 
@@ -131,7 +142,7 @@ def java_findings() -> list[str]:
             code = _code(line)
             if not code:
                 continue
-            hits = [m.group(0) for r in (JAVA_LITERAL_PATH, DOT_LITERAL, USER_DIR, RELATIVE_DEFAULT) for m in r.finditer(code)]
+            hits = [m.group(0) for r in JAVA_RULES for m in r.finditer(code)]
             if hits and not _allowed(f, line):
                 out.append(f"{f}:{n}: {line.strip()[:160]}")
     return out
@@ -171,8 +182,17 @@ def test_no_shipped_yaml_defaults_a_path_to_the_working_folder():
     ('@Value("${drishti.x:${drishti.config.dir}/y}") String y', False),
     ('String w = System.getProperty("user.dir");', True),
     ('Path p = Path.of(Roots.config("bi"));', False),
+    ('Path.of(System.getProperty("drishti.modules.home", "modules"), "banking")', True),
+    ('env.getProperty("drishti.feeds.root", ".")', True),
+    ('System.getenv().getOrDefault("DRISHTI_EXTERNAL_LIB", "external_lib")', True),
+    ('env.getProperty("drishti.packs.watch", "auto")', False),
+    ('f.getOrDefault("dir", "desc")', False),
+    ('Path up = base.resolve("..");', True),
+    ('Path up = Path.of(x, "..", "..");', True),
+    ('Path p = Path.of(System.getProperty("drishti.x.dir")).toAbsolutePath();', True),
+    ('name.startsWith(".") || p.resolve("module.yaml")', False),
 ])
 def test_the_guard_sees_what_it_should(text, hit):
     code = _code(text)
-    found = any(r.search(code) for r in (JAVA_LITERAL_PATH, DOT_LITERAL, USER_DIR, RELATIVE_DEFAULT))
+    found = any(r.search(code) for r in JAVA_RULES)
     assert found is hit, text

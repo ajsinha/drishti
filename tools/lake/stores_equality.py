@@ -93,7 +93,7 @@ class Server:
                lakeconfig.DEMO_ROOT_ENV: str(d / "delta"), "DRISHTI_NET_DIR": str(d / "net"), "DRISHTI_MCP_DIR": str(d / "mcp"),
                "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true", "DRISHTI_PACKS": "core,trading"}
         env.pop("DRISHTI_ICEBERG_ROOT", None)
-        cmd = java_cmd(writers.find_java(), [f"-Xmx{heap}", "-jar", writers.find_jar()], tmp=d / "tmp" / "server")
+        cmd = java_cmd(writers.find_java(), [f"-Xmx{heap}", "-jar", writers.find_jar()], tmp=d / "tmp" / "server", cwd=ROOT, env=env)
         self.base = f"http://127.0.0.1:{port}"
         self.log = open(d / "logs" / "server.log", "w")
         self.proc = subprocess.Popen(cmd, cwd=ROOT, env=env, stdout=self.log, stderr=subprocess.STDOUT)

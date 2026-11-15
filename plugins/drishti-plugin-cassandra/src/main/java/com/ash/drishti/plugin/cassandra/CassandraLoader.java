@@ -147,8 +147,8 @@ public final class CassandraLoader implements AutoCloseable {
     public CassandraLoader(Options options, LoadGuard guard) {
         this.options = options;
         this.guard = guard;
-        CassandraSessions.Plan plan = CassandraSessions.plan(options.settings(), System::getenv);
-        this.store = new CassandraStore(CassandraSessions.open(options.settings(), plan, System::getenv), 1,
+        CassandraSessions.Plan plan = CassandraSessions.plan(options.settings(), com.ash.drishti.settingsfile.Placeholders::process);
+        this.store = new CassandraStore(CassandraSessions.open(options.settings(), plan, com.ash.drishti.settingsfile.Placeholders::process), 1,
                 Duration.ofSeconds(Math.max(5, Long.parseLong(options.settings().getOrDefault("connect-timeout-ms", "30000")) / 1000)));
         this.permits = Math.max(1, options.inFlight());
         this.inFlight = new Semaphore(permits);

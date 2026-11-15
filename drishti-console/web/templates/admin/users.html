@@ -23,7 +23,7 @@
   <h1>Users</h1>
   {% with tab='users' %}{% include "admin/_nav.html" %}{% endwith %}
   <div class="adm-bar">
-    <form method="get" action="/admin/users" role="search">{{ admin_form('search', name='q', value=q, title='Search users', placeholder='Search name, email, role') }}</form>
+    <form method="get" action="{{ BASE }}/admin/users" role="search">{{ admin_form('search', name='q', value=q, title='Search users', placeholder='Search name, email, role') }}</form>
     <button type="button" class="btn-pill btn-accent" data-new><i class="bi bi-person-plus" aria-hidden="true"></i> New user</button>
   </div>
   <p class="adm-msg" data-msg role="status" aria-live="polite"></p>
@@ -61,4 +61,4 @@
 </div>
 {% endblock %}
 {% block footer %}{% include "_footer.html" %}{% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_view.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_admin.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_view.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_admin.js?v={{ ASSET_V }}"></script>{% endblock %}

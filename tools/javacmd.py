@@ -19,7 +19,7 @@ RocksDB and CatBoost unpack their native code that way; without the flag every J
 system /tmp, which has a per-user quota (a full one crashes Chromium and the browser tests).
 
 The folder: ``tmp`` when given (a test stack passes a folder under its own tmp_path), else the server's own temp base, as
-``TempFiles.configuredBase`` computes it: ``DRISHTI_TMP_DIR``, else ``<DRISHTI_DATA_DIR or <cwd>/data>/tmp/server``. The server removes
+``TempFiles.configuredBase`` computes it: ``DRISHTI_TMP_DIR``, else ``<DRISHTI_DATA_DIR or <Drishti folder>/data>/tmp/server``. The server removes
 stale native copies from that base at start. The folder is made if absent (Java warns and the libraries fail on a missing one).
 A ``-Djava.io.tmpdir=`` already in the arguments wins. Standard library only: the console tests load it through ``java_launch.py``.
 
@@ -41,7 +41,7 @@ FLAG = "-Djava.io.tmpdir="
 def server_tmp(cwd=None, env=None) -> Path:
     """The server's temp base for a server started in ``cwd`` with ``env``: DRISHTI_TMP_DIR, else <data dir>/tmp/server."""
     env = os.environ if env is None else env
-    base = Path(cwd) if cwd else Path.cwd()
+    base = Path(cwd) if cwd else REPO
     given = (env.get("DRISHTI_TMP_DIR") or "").strip()
     if given:
         p = Path(given)

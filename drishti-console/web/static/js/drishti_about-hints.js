@@ -170,7 +170,7 @@
     var more = h('button', 'about-more', 'About this page'); more.type = 'button';
     more.addEventListener('click', function () { closePop(false); api.reveal({ panel: id }); });
     links.appendChild(more);
-    var guide = h('a', null, 'The ' + kind + ' panel'); guide.href = a.getAttribute('href');
+    var guide = h('a', null, 'The ' + kind + ' panel'); guide.href = drishti_url(a.getAttribute('href'));
     links.appendChild(guide);
     pop.appendChild(links);
     pop.hidden = false; popFor = a;
@@ -183,7 +183,7 @@
     if (visible(pop) && popFor === a) { closePop(true); return; }
     closePop(false); hideTip();
     api.ensure().then(function (idx) {
-      if (!idx || !buildPop(a, idx)) { if (options.open) { options.open(a.getAttribute('href')); } else { location.href = a.getAttribute('href'); } }       // nothing to say: today's link
+      if (!idx || !buildPop(a, idx)) { if (options.open) { options.open(a.getAttribute('href')); } else { location.href = drishti_url(a.getAttribute('href')); } }       // nothing to say: today's link
     });
   }
   on(root, 'click', function (e) {

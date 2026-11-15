@@ -40,7 +40,7 @@
     const list = q('[data-drafts]'), wsSel = q('[data-new-workspace]');
     B.api('GET', '/me').then((me) => {                                  // the power is explained before anyone fills a form that cannot be saved
       if ((me.powers || []).indexOf('bi-author') < 0) {
-        const note = h('p', { class: 'bi-warn', role: 'alert', 'data-need-author': '' }, h('strong', { text: 'You need the bi-author power to design. ' }), 'Your roles give you ' + ((me.powers || []).join(', ') || 'no BI power') + '. Ask an administrator to add bi-author to one of your roles (Admin, BI settings). You can still open published reports from the ', h('a', { href: '/bi/catalogue', text: 'catalogue' }), '.');
+        const note = h('p', { class: 'bi-warn', role: 'alert', 'data-need-author': '' }, h('strong', { text: 'You need the bi-author power to design. ' }), 'Your roles give you ' + ((me.powers || []).join(', ') || 'no BI power') + '. Ask an administrator to add bi-author to one of your roles (Admin, BI settings). You can still open published reports from the ', h('a', { href: drishti_url('/bi/catalogue'), text: 'catalogue' }), '.');
         q('[data-design-start]').before(note);
         B.qa('form button[type=submit], form input, form drishti-select', q('[data-design-start]')).forEach((el) => { el.disabled = true; });
         B.qa('[data-sample-copy]', q('[data-design-start]')).forEach((el) => { el.disabled = true; });
@@ -50,7 +50,7 @@
     B.fillWorkspaces(wsSel).then((wss) => Promise.all(wss.map((w) => B.api('GET', '/workspaces/' + encodeURIComponent(w.id) + '/items').then((items) => items.filter((i) => i.kind === 'report').map((i) => ({ i, w }))))))
       .then((groups) => {
         [].concat.apply([], groups).forEach(({ i, w }) => {
-          list.appendChild(h('li', { 'data-id': i.id }, h('a', { href: '/bi/design/' + B.id2path(i.id), text: i.title }), ' ', h('span', { class: 'text-muted-d', text: i.status + ' · ' + w.name })));
+          list.appendChild(h('li', { 'data-id': i.id }, h('a', { href: drishti_url('/bi/design/' + B.id2path(i.id)), text: i.title }), ' ', h('span', { class: 'text-muted-d', text: i.status + ' · ' + w.name })));
         });
         q('[data-no-drafts]').hidden = list.children.length > 0;
       }).catch((e) => say(e.message, true));
@@ -64,12 +64,12 @@
     }).then((items) => {
       const box = q('[data-samples]');
       items.filter((i) => i.kind === 'report').forEach((i) => {
-        const board = !!i.board, open = '/bi/design/';                          // a board is a report with board pages (2.4.0)
+        const board = !!i.board, open = drishti_url('/bi/design/');                          // a board is a report with board pages (2.4.0)
         const copy = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-small', 'data-sample-copy': i.id, 'aria-label': 'Copy and design ' + i.title, text: 'Copy and design' });
         copy.addEventListener('click', () => B.askWorkspace(copy, 'Copy and open', 'Copy ' + i.title + ' into').then((to) => B.api('GET', '/items/' + B.id2path(i.id)).then((full) =>
           B.api('POST', '/workspaces/' + encodeURIComponent(to) + '/items', { kind: i.kind, title: i.title, description: i.description || '', body: B.copyBody(full.body) })))
-          .then((it) => { window.location.href = open + B.id2path(it.id); }).catch((e) => { if (!e.cancelled) { say(e.message, true); } }));
-        box.appendChild(h('li', { 'data-sample': i.id }, h('a', { href: '/bi/r/' + B.id2path(i.id), text: i.title }), ' ', h('span', { class: 'text-muted-d', text: (board ? 'Board. ' : '') + (i.description || '') }), ' ', copy));
+          .then((it) => { window.location.href = drishti_url(open + B.id2path(it.id)); }).catch((e) => { if (!e.cancelled) { say(e.message, true); } }));
+        box.appendChild(h('li', { 'data-sample': i.id }, h('a', { href: drishti_url('/bi/r/' + B.id2path(i.id)), text: i.title }), ' ', h('span', { class: 'text-muted-d', text: (board ? 'Board. ' : '') + (i.description || '') }), ' ', copy));
       });
       q('[data-no-samples]').hidden = box.children.length > 0;
     }).catch(() => { q('[data-no-samples]').hidden = false; });
@@ -78,7 +78,7 @@
     if (bws) {
       B.fillWorkspaces(bws).then((wss) => Promise.all(wss.map((w) => B.api('GET', '/workspaces/' + encodeURIComponent(w.personal ? 'me' : w.id) + '/items').then((items) => items.filter((i) => i.kind === 'report' && i.board).map((i) => ({ i, w }))))))
         .then((groups) => {
-          [].concat.apply([], groups).forEach(({ i, w }) => bdrafts.appendChild(h('li', { 'data-id': i.id }, h('a', { href: '/bi/design/' + B.id2path(i.id), text: i.title }), ' ', h('span', { class: 'text-muted-d', text: i.status + ' · ' + w.name }))));
+          [].concat.apply([], groups).forEach(({ i, w }) => bdrafts.appendChild(h('li', { 'data-id': i.id }, h('a', { href: drishti_url('/bi/design/' + B.id2path(i.id)), text: i.title }), ' ', h('span', { class: 'text-muted-d', text: i.status + ' · ' + w.name }))));
           q('[data-no-board-drafts]').hidden = bdrafts.children.length > 0;
         }).catch((err) => say(err.message, true));
       q('[data-new-board]').addEventListener('submit', (e) => {
@@ -86,7 +86,7 @@
         const title = q('[data-new-board-title]').value.trim() || 'My board';
         const body = 'rachana: 1\nreport: ' + (B.slug(title) || 'my-board') + '\ntitle: ' + JSON.stringify(title) + '\npages:\n  - id: page1\n    title: Page 1\n    layout: board\n    visuals: []\n';
         const go = q('[data-new-board] [type=submit]');
-        B.busy(go, () => B.api('POST', '/workspaces/' + encodeURIComponent(bws.value || 'me') + '/items', { kind: 'report', title, description: '', body }).then((it) => { window.location.href = '/bi/design/' + B.id2path(it.id); }).catch((err) => B.near(go, err.message, true)));
+        B.busy(go, () => B.api('POST', '/workspaces/' + encodeURIComponent(bws.value || 'me') + '/items', { kind: 'report', title, description: '', body }).then((it) => { window.location.href = drishti_url('/bi/design/' + B.id2path(it.id)); }).catch((err) => B.near(go, err.message, true)));
       });
     }
     q('[data-new]').addEventListener('submit', (e) => {
@@ -97,7 +97,7 @@
       const body = 'rachana: 1\nreport: ' + name + '\ntitle: ' + JSON.stringify(title) + '\n' + B.sourceLine(ref) + '\npages:\n  - id: page1\n    title: Page 1\n    visuals: []\n';
       const go = q('[data-new] [type=submit]');
       const also = (q('[data-new-also]').value || []).filter((v) => v !== ref).map((v) => String(v).replace(/^file:dataset:/, ''));
-      B.busy(go, () => B.api('POST', '/workspaces/' + encodeURIComponent(wsSel.value || 'me') + '/items', { kind: 'report', title, description: '', body }).then((it) => { window.location.href = '/bi/design/' + B.id2path(it.id) + (also.length ? '?also=' + encodeURIComponent(also.join(',')) : ''); }).catch((err) => B.near(go, err.message, true)));
+      B.busy(go, () => B.api('POST', '/workspaces/' + encodeURIComponent(wsSel.value || 'me') + '/items', { kind: 'report', title, description: '', body }).then((it) => { window.location.href = drishti_url('/bi/design/' + B.id2path(it.id) + (also.length ? '?also=' + encodeURIComponent(also.join(',')) : '')); }).catch((err) => B.near(go, err.message, true)));
     });
     return;
   }
@@ -500,7 +500,7 @@
   function saveCopy(fromStale) {
     return B.askWorkspace(q('[data-save-copy]').hidden ? q('[data-save]') : q('[data-save-copy]'), 'Save the copy', 'Save the copy into').then((to) => D.flushYaml().then((yaml) => B.api('POST', '/workspaces/' + encodeURIComponent(to) + '/items', { kind: 'report', title: (D.model.title || 'Report') + ' (copy)', description: D.model.description || '', body: yaml }))).then((it) => {
       D.dirty = false;
-      window.location.href = '/bi/design/' + B.id2path(it.id);
+      window.location.href = drishti_url('/bi/design/' + B.id2path(it.id));
     }).catch((e) => { if (!e.cancelled) { say(e.message, true); } if (fromStale) { throw e; } });
   }
 
@@ -511,7 +511,7 @@
     const done = (review) => (it) => {
       D.item = it;
       say(review ? 'Proposed for review. Open the item page to follow it; this draft is now frozen until it is approved or withdrawn.' : 'Published.');
-      window.setTimeout(() => { window.location.href = '/bi/i/' + B.id2path(itemId); }, 900);
+      window.setTimeout(() => { window.location.href = drishti_url('/bi/i/' + B.id2path(itemId)); }, 900);
     };
     const go = () => {
       const review = D.item && D.item.workspaceReviewRequired;
@@ -617,13 +617,13 @@
     const frozen = item.status === 'proposed';
     D.readOnly = !!item.shipped || frozen || !(item.can && item.can.edit);
     q('[data-title]').textContent = item.title;
-    q('[data-item-link]').href = '/bi/i/' + B.id2path(itemId);
+    q('[data-item-link]').href = drishti_url('/bi/i/' + B.id2path(itemId));
     const viewAs = q('[data-view-as]');
-    const viewHref = () => '/bi/r/' + B.id2path(itemId) + (viewAs.value === 'published' ? '?as=published' : '');
-    q('[data-view-link]').href = viewHref();
+    const viewHref = () => drishti_url('/bi/r/') + B.id2path(itemId) + (viewAs.value === 'published' ? '?as=published' : '');
+    q('[data-view-link]').href = drishti_url(viewHref());
     if (item.publishedVersion > 0 || item.shipped) { viewAs.component.setOptions(viewAs.component.options.map((o) => Object.assign({}, o, { disabled: false }))); }      // a Select (the shell's choice)
     viewAs.hidden = false;
-    viewAs.addEventListener('change', () => { q('[data-view-link]').href = viewHref(); });
+    viewAs.addEventListener('change', () => { q('[data-view-link]').href = drishti_url(viewHref()); });
     q('[data-save-copy]').hidden = !D.readOnly;
     q('[data-dmain]').classList.toggle('bi-ro', D.readOnly);                       // the palette, the fields and the visuals' delete look switched off, as they are
     if (B.studio && B.studio.shell) { B.studio.shell.setLabel('propose', item.workspaceReviewRequired ? 'Propose' : 'Publish'); }
@@ -681,7 +681,7 @@
     if (e.status === 404 || e.status === 403) {                      // not there, or not yours to open: a page that says so, not a half-drawn designer
       B.clear(root).appendChild(h('section', { class: 'bi-sec', 'data-design-denied': '' }, h('h1', { text: e.status === 404 ? 'This report is not available' : 'You cannot open this report' }),
         h('p', { text: e.status === 404 ? 'There is no report here, or it is in a workspace you cannot see.' : 'You do not have the BI power or the workspace role this needs.' }),
-        h('p', {}, h('a', { class: 'btn-pill btn-accent', href: '/bi/designer', text: 'Back to the designer' }), ' ', h('a', { class: 'btn-pill btn-ghost', href: '/bi/catalogue', text: 'Open the catalogue' }))));
+        h('p', {}, h('a', { class: 'btn-pill btn-accent', href: drishti_url('/bi/designer'), text: 'Back to the designer' }), ' ', h('a', { class: 'btn-pill btn-ghost', href: drishti_url('/bi/catalogue'), text: 'Open the catalogue' }))));
       return;
     }
     say(e.message, true);

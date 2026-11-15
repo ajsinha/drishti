@@ -357,13 +357,13 @@
   }
 
   function getJson(url) {
-    return fetch(url, { headers: { Accept: 'application/json' }, credentials: 'same-origin' }).then(function (r) {
+    return fetch(drishti_url(url), { headers: { Accept: 'application/json' }, credentials: 'same-origin' }).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (b) { if (!r.ok) { throw new Error((b && (b.detail || b.message)) || ('HTTP ' + r.status)); } return b; });
     });
   }
 
   function loadLive() {
-    return getJson('/admin/api/capacity/live').then(function (l) { st.live = l; st.liveError = null; }, function (e) { st.liveError = 'Live figures unavailable: ' + e.message; })
+    return getJson(drishti_url('/admin/api/capacity/live')).then(function (l) { st.live = l; st.liveError = null; }, function (e) { st.liveError = 'Live figures unavailable: ' + e.message; })
       .then(function () { if (st.plan) { recompute(); } });
   }
 
@@ -379,7 +379,7 @@
     var q = ['inputs=' + encodeURIComponent(mode)], o = overrides();
     Object.keys(o).forEach(function (k) { q.push(encodeURIComponent(k) + '=' + encodeURIComponent(o[k])); });
     var a = document.createElement('a');
-    a.href = '/admin/api/capacity/workbook.xlsx?' + q.join('&');
+    a.href = drishti_url('/admin/api/capacity/workbook.xlsx?' + q.join('&'));
     a.download = '';
     document.body.appendChild(a);
     a.click();
@@ -439,7 +439,7 @@
     });
     if (page.getAttribute('data-help')) {                               // F1: the guide's Capacity section, not the Admin guide's top
       window.Drishti.keys.register({ id: 'capacity.help', keys: ['F1', 'Alt+Shift+1'], scope: 'screen', area: 'capacity', group: 'Help', typing: true,
-        description: 'Help: the Capacity section of the guide', run: function () { window.location.href = page.getAttribute('data-help'); } });
+        description: 'Help: the Capacity section of the guide', run: function () { window.location.href = drishti_url(page.getAttribute('data-help')); } });
     }
     if (phone.matches) { page.querySelectorAll('details[data-tier="more"]').forEach(function (d) { d.removeAttribute('open'); }); }
     document.addEventListener('visibilitychange', function () { if (!document.hidden) { loadLive(); } });
@@ -454,7 +454,7 @@
   }
 
   try { st.inputs = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { st.inputs = {}; }
-  getJson('/admin/api/capacity').then(function (plan) {
+  getJson(drishti_url('/admin/api/capacity')).then(function (plan) {
     st.plan = plan;
     Object.keys(st.inputs).forEach(function (k) { if (typed(k, st.inputs[k]) === undefined) { delete st.inputs[k]; } });
     buildInputs();

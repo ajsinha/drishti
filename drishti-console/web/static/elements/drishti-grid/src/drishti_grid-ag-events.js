@@ -18,6 +18,7 @@
    and column objects as an application reads them, the column state both ways, and the widths (sizeColumnsToFit with flex, autoHeight). */
 import { AG_EVENTS } from './drishti_grid-ag-map.js';
 import { AG_GROUP_COLUMN } from './drishti_grid-ag.js';
+import { url as drishtiUrl } from '../../drishti-core/src/drishti_index.js';
 
 /** drishti-grid's events and the AG events each raises. */
 const FROM = {
@@ -321,7 +322,7 @@ export class AgEvents {
     const win = g ? g.doc.defaultView : null, blob = win ? new win.Blob([data], { type: type }) : data;
     if (hook) { hook(name, blob); return; }
     const a = g.doc.createElement('a');
-    a.href = win.URL.createObjectURL(blob);
+    a.href = drishtiUrl(win.URL.createObjectURL(blob));
     a.download = name;
     g.doc.body.appendChild(a);
     a.click();

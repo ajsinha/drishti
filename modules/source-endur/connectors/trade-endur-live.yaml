@@ -24,7 +24,7 @@ kinds:
 - trade
 description: Endur's live trades, and the trade blotter's amendments written back to them
 settings:
-  bootstrap-servers: ${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}
+  broker: default
   topics:
   - ${DRISHTI_ENDUR_TOPIC:drishti.trading.endur.trades}
   stale-after: ${DRISHTI_STREAM_STALE_AFTER:15m}

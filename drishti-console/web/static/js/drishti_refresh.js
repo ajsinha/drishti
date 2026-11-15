@@ -29,7 +29,7 @@
   var d = view.dataset;
   var MIN = Math.max(1, +d.refreshMin || 5);
   var LIVE = view.hasAttribute('data-live'), STILL = view.hasAttribute('data-static') || view.hasAttribute('data-customizing');
-  var base = '/v/' + encodeURIComponent(d.kind) + '/' + d.id.split('/').map(encodeURIComponent).join('/');
+  var base = drishti_url('/v/') + encodeURIComponent(d.kind) + '/' + d.id.split('/').map(encodeURIComponent).join('/');
   var CHOICES = [5, 10, 15, 30, 60, 120, 300, 600, 900, 1800, 3600];
   var prefs = parse(d.refreshPrefs) || {};
   prefs.panels = prefs.panels || {};
@@ -172,7 +172,7 @@
     saveTimer = setTimeout(function () {
       var body = { refresh: {} };
       body.refresh[d.screen] = { all: !!prefs.all, panels: prefs.panels };
-      fetch('/api/settings', { method: 'PATCH', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      fetch(drishti_url('/api/settings'), { method: 'PATCH', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
         .catch(function () {});
     }, 400);
   }
@@ -230,7 +230,7 @@
   }
   function fetchPanels(ids) {
     ids.forEach(function (id) { panels[id].busy = true; });
-    return fetch(base + '/panels' + query([['panels', ids.join(',')]]), { credentials: 'same-origin', headers: { Accept: 'application/json' } })
+    return fetch(drishti_url(base + '/panels' + query([['panels', ids.join(',')]])), { credentials: 'same-origin', headers: { Accept: 'application/json' } })
       .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) { throw j; } return j; }); })
       .then(function (j) {
         var prov = j.provenance || {};

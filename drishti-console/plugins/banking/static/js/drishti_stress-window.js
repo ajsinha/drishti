@@ -47,9 +47,9 @@
       return b;
     });
   }
-  function get(path) { return fetch("/api/var/" + path, { headers: { Accept: "application/json" }, credentials: "same-origin" }).then(answer); }
+  function get(path) { return fetch(drishti_url("/api/var/" + path), { headers: { Accept: "application/json" }, credentials: "same-origin" }).then(answer); }
   function post(path, body) {
-    return fetch("/api/var/" + path, { method: "POST", credentials: "same-origin",
+    return fetch(drishti_url("/api/var/" + path), { method: "POST", credentials: "same-origin",
       headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify(body) }).then(answer);
   }
   function remember() {
@@ -195,7 +195,7 @@
           { id: "act", field: "status", header: "", width: 170, sortable: false, cellRenderer: function (x) {
             if (x.row.status !== "PROPOSED") return "";
             if (x.row.mine) return "awaiting another person";
-            var go = h("a", "sw-btn small", "Decide in Approvals"); go.href = "/approvals/stress-window/" + encodeURIComponent(x.row.id);
+            var go = h("a", "sw-btn small", "Decide in Approvals"); go.href = drishti_url("/approvals/stress-window/" + encodeURIComponent(x.row.id));
             go.setAttribute("data-sw-approvals", x.row.id);
             return go; } }] });
     }).catch(function () { box.textContent = ""; });

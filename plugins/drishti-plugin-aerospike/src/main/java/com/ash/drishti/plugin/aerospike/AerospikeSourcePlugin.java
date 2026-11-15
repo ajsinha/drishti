@@ -142,7 +142,7 @@ public final class AerospikeSourcePlugin implements SourcePlugin {
             policy.readPolicyDefault.totalTimeout = ms;
             policy.writePolicyDefault.totalTimeout = ms;
         }
-        AerospikeTls.Plan tlsPlan = AerospikeTls.plan(ctx.settings(), System::getenv);   // fails the start, naming the setting and the file
+        AerospikeTls.Plan tlsPlan = AerospikeTls.plan(ctx.settings(), com.ash.drishti.settingsfile.Placeholders::process);   // fails the start, naming the setting and the file
         this.tls = tlsPlan.tls();
         AerospikeTls.apply(policy, tlsPlan);
         AerospikeTls.applyAuthMode(policy, ctx.settings(), tlsPlan);

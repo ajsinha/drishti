@@ -28,7 +28,7 @@
   function show(d) { if (d.showModal) { d.showModal(); } else { d.setAttribute('open', ''); } }
   function hide(d) { if (d.close) { d.close(); } else { d.removeAttribute('open'); } }
   function send(path, body) {
-    return fetch('/admin/compute/api' + path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) })
+    return fetch(drishti_url('/admin/compute/api' + path), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) })
       .then(function (r) { return r.json().catch(function () { return {}; }).then(function (b) { return { ok: r.ok, body: b }; }); });
   }
   function problem(b, fallback) { return (b.code ? b.code + ' ' : '') + (b.detail || fallback); }

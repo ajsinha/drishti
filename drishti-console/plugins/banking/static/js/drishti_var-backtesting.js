@@ -46,13 +46,13 @@
   async function load() {
     $("[data-bt-source]").textContent = "loading…";
     const asOf = root.dataset.asof ? "&asOf=" + encodeURIComponent(root.dataset.asof) : "";
-    const r = await fetch("/api/var/backtesting?scope=" + encodeURIComponent(scope) + asOf, { credentials: "same-origin" });
+    const r = await fetch(drishti_url("/api/var/backtesting?scope=" + encodeURIComponent(scope) + asOf), { credentials: "same-origin" });
     const j = await r.json();
     if (!r.ok) { notice(j.detail || "the backtest could not be computed"); $("[data-bt-source]").textContent = ""; return; }
     data = j;
     if (j.parts && (!parts || j.parts.length > 1)) { parts = j.parts; }
-    $("[data-bt-xlsx]").href = "/api/var/backtesting?format=xlsx&scope=" + encodeURIComponent(scope) + asOf;
-    history.replaceState(null, "", "/var/backtesting?scope=" + encodeURIComponent(scope));
+    $("[data-bt-xlsx]").href = drishti_url("/api/var/backtesting?format=xlsx&scope=" + encodeURIComponent(scope) + asOf);
+    history.replaceState(null, "", drishti_url("/var/backtesting?scope=" + encodeURIComponent(scope)));
     draw();
   }
 
@@ -142,7 +142,7 @@
       getRowClass: (r) => (r.node === sel ? "rg-sel" : null), getRowData: (r) => ({ node: r.node }),
       onRow: (r) => { scope = "NODE:" + r.node; load(); },
       columns: [{ field: "scope", header: "Scope", width: 150, pinned: "left",
-        cellRenderer: (x) => el("a", { href: "/var/backtesting?scope=" + encodeURIComponent("NODE:" + x.row.node) }, x.text) },
+        cellRenderer: (x) => el("a", { href: drishti_url("/var/backtesting?scope=" + encodeURIComponent("NODE:" + x.row.node)) }, x.text) },
         R.figureColumn("var", "VaR 99%", { format: mln }),
         count("a99", "99% actual"), count("h99", "99% hypo"), count("a975", "97.5% actual", 100), count("h975", "97.5% hypo", 100),
         { field: "zone", header: "Zone", width: 80, cellRenderer: (x) => pill(x.value) },
@@ -167,7 +167,7 @@
       columns: [{ field: "date", header: "Date", width: 100 }, n("var990", "VaR 99% (day before)"), n("actual", "Actual"), n("hypothetical", "Hypothetical"),
         n("riskTheoretical", "Risk-theoretical"), { field: "which", header: "Which", width: 90 }, n("excess", "Excess"),
         { field: "drivers", header: "Desks that drove it", width: 220 },
-        { field: "prior", header: "Open", width: 140, cellRenderer: (x) => el("a", { href: "/var?scope=" + encodeURIComponent("NODE:" + node) + "&asOf=" + x.value }, "VaR of " + x.value) }] });
+        { field: "prior", header: "Open", width: 140, cellRenderer: (x) => el("a", { href: drishti_url("/var?scope=" + encodeURIComponent("NODE:" + node) + "&asOf=" + x.value) }, "VaR of " + x.value) }] });
     const u = data.untested || [];
     $("[data-bt-untested]").textContent = u.length ? u.length + " day(s) not tested: " + u.slice(0, 5).map((x) => x.date + " (" + x.reason + ")").join("; ") : "";
   }

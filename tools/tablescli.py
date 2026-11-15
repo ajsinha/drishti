@@ -30,7 +30,6 @@ read definitions and sample files only. Paths are read from the folder you run t
 from __future__ import annotations
 
 import argparse
-import os
 import subprocess
 
 from javacmd import cli_tmp, java_cmd
@@ -63,7 +62,7 @@ def register(groups, ctx: dict) -> None:
         with cli_tmp() as tmp:   # the command writes nothing under the data folder
             cmd = java_cmd(java, ["-jar", jar, "tables", *args, *(extra or [])], tmp=tmp)
             try:
-                return subprocess.run(cmd, cwd=os.getcwd()).returncode
+                return subprocess.run(cmd).returncode   # runs where the user is: a typed relative argument means what it means in their shell
             except FileNotFoundError as e:
                 raise ctx["CliError"](f"cannot run {cmd[0]}: {e.strerror}; pass --java or set JAVA_HOME") from None
 

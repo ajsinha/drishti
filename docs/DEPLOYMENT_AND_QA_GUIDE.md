@@ -441,6 +441,9 @@ The same settings can live in one file, given by its absolute path: `start-serve
 
 **TLS.** Put both behind the company's reverse proxy (or the servers' own TLS) before anyone else uses them, and leave
 `DRISHTI_SECURE_COOKIE` on: [OPERATIONS_GUIDE.md › TLS and the reverse proxy](guides/OPERATIONS_GUIDE.md#113-tls-and-the-reverse-proxy).
+When the proxy serves the console under a path (`https://intranet.example/drishti/`), start the console with `DRISHTI_CONSOLE_BASE_PATH=/drishti`
+([CONFIGURATION.md › The console's URL sub-path](admin/CONFIGURATION.md#the-consoles-url-sub-path-serverbase_path)); verify that
+`https://intranet.example/drishti/login` opens and that its links stay under `/drishti/`.
 
 **A cluster** (several servers acting as one) is started node by node with `start-server --node`: the worked examples, three nodes on one
 machine and on three machines, are in [section 10.6](#106-start-order-and-joining).

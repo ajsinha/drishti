@@ -20,6 +20,7 @@
 import { h, str, icon, clear } from './drishti_dom.js';
 import { pyQuote } from './drishti_kinds.js';
 import { personFetch } from './drishti_net.js';
+import { basePath, url as drishtiUrl } from '../../drishti-core/src/drishti_index.js';
 
 const WHY = { missing: 'is missing in this document', null: 'is null in this document', 'empty list': 'is an empty list', masked: 'is hidden for your role',
   'no values': 'has no values', 'no data': 'has no data' };
@@ -30,7 +31,7 @@ const within = (s) => String(s || '').replace(/PT/g, '').toLowerCase();
 function layer(name, n, open, title, ...body) {
   return h('details', { class: 'about-layer', 'data-layer': name, id: 'about-l' + n, open: open ? true : null }, h('summary', null, h('h3', null, title)), body);
 }
-const link = (R, href, text, attrs) => h('a', Object.assign({ href: (R.server || '') + href, 'data-r-link': 'console' }, attrs || {}), text);
+const link = (R, href, text, attrs) => h('a', Object.assign({ href: drishtiUrl((R.server || basePath()) + href), 'data-r-link': 'console' }, attrs || {}), text);
 
 function about(R, ex) {
   const s = (ex.layout || {}).sutra, ab = ex.about || {}, desc = ab.sutraDescription || (s ? s.description : null);
@@ -104,7 +105,7 @@ function next(R, ex) {
   const n = ex.next || {}, ref = ex.ref || {}, items = [];
   (n.keys || []).forEach((k) => {
     if (k.link) {
-      items.push(h('li', null, h('kbd', null, str(k.key)), ' ', h('a', { href: (R.server || '') + '/v/' + pyQuote(k.link.kind) + '/' + pyQuote(k.link.id),
+      items.push(h('li', null, h('kbd', null, str(k.key)), ' ', h('a', { href: drishtiUrl((R.server || basePath()) + '/v/' + pyQuote(k.link.kind) + '/' + pyQuote(k.link.id)),
         'data-r-link': 'entity', 'data-r-kind': k.link.kind, 'data-r-id': k.link.id }, str(k.label)),
       k.link.id && String(k.link.id).toLowerCase() !== String(k.label || '').toLowerCase() ? [' ', h('span', { class: 'about-note mono' }, str(k.link.id))] : null));
     } else if (k.action === 'denied') { items.push(h('li', null, h('kbd', null, str(k.key)), ' ' + str(k.label) + ' ', h('span', { class: 'about-note' }, '(no access)'))); }
@@ -121,7 +122,7 @@ function next(R, ex) {
 function ask(R, ex) {
   if (!(ex.ask && ex.ask.enabled)) { return null; }
   const ref = ex.ref || {};
-  return h('section', { class: 'about-ask', 'data-about-ask': true, 'data-ask-url': (R.server || '') + '/v/' + pyQuote(ref.kind) + '/' + pyQuote(ref.id) + '/ask', 'aria-labelledby': 'about-ask-h' },
+  return h('section', { class: 'about-ask', 'data-about-ask': true, 'data-ask-url': (R.server || basePath()) + '/v/' + pyQuote(ref.kind) + '/' + pyQuote(ref.id) + '/ask', 'aria-labelledby': 'about-ask-h' },
     h('h3', { id: 'about-ask-h' }, 'Ask about this page'),
     h('form', { class: 'about-ask-form', 'data-ask-form': true },
       h('label', { class: 'visually-hidden', for: 'about-ask-q' }, 'Your question about this page'),
@@ -152,7 +153,7 @@ export function aboutBody(R, got) {
 function aboutUrl(o, ref, generation) {
   if (typeof o.aboutUrl === 'function') { return o.aboutUrl(ref, generation); }
   const enc = (s) => encodeURIComponent(String(s));
-  return (o.server || '') + '/v/' + enc(ref.kind) + '/' + String(ref.id).split('/').map(enc).join('/') + '/about?format=json' + (generation ? '&generation=' + generation : '');
+  return (o.server || basePath()) + '/v/' + enc(ref.kind) + '/' + String(ref.id).split('/').map(enc).join('/') + '/about?format=json' + (generation ? '&generation=' + generation : '');
 }
 
 /**
