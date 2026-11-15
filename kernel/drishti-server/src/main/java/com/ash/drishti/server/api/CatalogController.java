@@ -137,8 +137,8 @@ public class CatalogController {
             m.put("description", p.description());
             m.put("console", withoutInactive(p.manifest().getOrDefault("console", Map.of())));
             m.put("sample", p.sample());
-            // where the pack was found (KERNEL_AND_MODULES.md section 18): the console reads the pack's files from here, never by a folder rule
-            m.put("dir", p.dir().toString());
+            // where the pack was found, in words (KERNEL_AND_MODULES.md section 18); its folder is never sent: the console asks the pack's
+            // console answer (THIN_CONSOLE_DESIGN.md 3.4), and folders are administrators' knowledge (GET /api/v1/admin/... of Admin -> Packs)
             com.ash.drishti.api.resolution.ConfigResolution res = packRegistry.resolution();
             com.ash.drishti.api.resolution.PackResolver.Located at = res == null ? null : res.packs().packs().get(p.name());
             m.put("origin", at == null ? "" : at.origin());
