@@ -963,7 +963,8 @@ def live_problems(c: dict, restate_kinds=RESTATE_KINDS) -> list[str]:
     out = []
     names = {f["name"] for f in c.get("fields") or [] if isinstance(f, dict) and f.get("name")}
     names |= {f"{p}.{f['name']}" for p, fs in (c.get("nested") or {}).items() for f in fs or [] if isinstance(f, dict) and f.get("name")}
-    named = [("order", f) for f in live.get("order") or []] + [(k, live[k]) for k in ("changed-at", "changed-by", "as-of") if live.get(k)]
+    named = [("order", f) for f in live.get("order") or []] + [("land-key", f) for f in live.get("land-key") or []] \
+        + [(k, live[k]) for k in ("changed-at", "changed-by", "as-of") if live.get(k)]
     for key, f in named:
         if names and f not in names:
             out.append(f"live.{key} names {f}, which is not a field of the contract")
@@ -978,7 +979,9 @@ def live_problems(c: dict, restate_kinds=RESTATE_KINDS) -> list[str]:
             out.append("live.closed-dates: restate is for a landed kind (apply: land)")
         if c.get("kind") not in restate_kinds:
             out.append(f"live.closed-dates: restate is allowed only for {', '.join(sorted(restate_kinds))} (drishti.live.restate-kinds)")
-    if allowed and not c.get("key"):
+    if live.get("land-key") and live.get("apply") != "land":
+        out.append("live.land-key is a landed kind's window key (apply: land)")
+    if allowed and not c.get("key") and not live.get("land-key"):
         out.append("live: the kind has no key: (a live row replaces the lake's row by key); give it a key or write allowed: false")
     return out
 

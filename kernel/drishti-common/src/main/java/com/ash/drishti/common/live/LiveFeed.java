@@ -250,6 +250,9 @@ public final class LiveFeed implements LiveIntake {
      * @param given the key the envelope states (it must equal the row's), or null
      */
     private void row(LiveMessage m, String kind, String messageKey, LiveRecord.Op op, String body, String given, String envelopeAsOf) {
+        if ((kind == null || kind.isBlank()) && body != null && settings.containsKey("kind-by.field")) {
+            kind = kindBy(body);
+        }
         if (kind == null || kind.isBlank()) {
             reject(null, LiveReject.UNKNOWN_KIND, "the message names no kind (shape " + shapeOf(m.stream()) + "; the connector's kind: setting names it for documents)", m);
             return;
@@ -296,7 +299,8 @@ public final class LiveFeed implements LiveIntake {
             }
             doc = JSON.valueToTree(shaped.data().unwrap());
         }
-        String key = rules.key().isEmpty() && given != null ? given : keyOf(kind, rules, doc, m);
+        String key = rules.key().isEmpty() && given != null ? given : rules.apply() == LiveRules.Apply.LAND && !rules.landKey().isEmpty()
+                ? landKey(rules, doc) : keyOf(kind, rules, doc, m);
         if (key == null) {
             reject(kind, LiveReject.NO_KEY, rules.key().isEmpty() ? "no key: the message has no key and the connector names no id-field"
                     : "the key " + String.join(", ", rules.key()) + " is missing or empty", m);
@@ -361,7 +365,7 @@ public final class LiveFeed implements LiveIntake {
             LocalDate d = date(r.asOf());
             if (d == null) {
                 r = new LiveRecord(r.kind(), r.key(), r.op(), r.order(), r.changedAt(), r.changedBy(), live.toString(), r.doc(), r.position(), r.source());
-            } else if (d.isBefore(live)) {
+            } else if (d.isBefore(live) && !(rules.apply() == LiveRules.Apply.LAND && rules.closedDates() == LiveRules.ClosedDates.RESTATE)) {
                 reject(r.kind(), LiveReject.CLOSED_DATE, "the row is of " + d + ", before the live date " + live, m);
                 return;
             } else if (d.isAfter(live)) {
@@ -381,7 +385,50 @@ public final class LiveFeed implements LiveIntake {
                 return;
             }
         }
+        if (rules.apply() == LiveRules.Apply.LAND) {
+            land(r);
+            return;
+        }
         applied(r);
+    }
+
+    /**
+     * A landed kind's row (section 2.4): into the lander's window, the newest per key; the window becomes one batch of the lake. A row with
+     * no lander (a feed outside a server) is rejected as not landed.
+     */
+    private void land(LiveRecord r) {
+        LiveLander l = lander;
+        if (l == null || r.doc() == null) {
+            count(r.doc() == null ? "late" : "rejected");               // a tombstone carries no row of a landed kind; no lander: nothing lands
+            return;
+        }
+        count(l.offer(r, r.doc()) ? "windowed" : "late");
+    }
+
+    private volatile LiveLander lander;
+
+    /** The lander of this connector's landed kinds. */
+    public void lander(LiveLander l) {
+        lander = l;
+    }
+
+    /** The lander, or null. */
+    public LiveLander lander() {
+        return lander;
+    }
+
+    /** Lands the window when it is due (called every second by the connector); its rejects go to the reject log. */
+    public void landIfDue() {
+        LiveLander l = lander;
+        if (l != null) {
+            l.flushIfDue((kind, code, why) -> {
+                count("rejected");
+                count("rejected.landing");
+                if (rejects != null) {
+                    rejects.write(connector, kind, code, why);
+                }
+            });
+        }
     }
 
     /**
@@ -436,6 +483,10 @@ public final class LiveFeed implements LiveIntake {
     }
 
     private void applied(LiveRecord r) {
+        if (contracts.rules(r.kind()).apply() == LiveRules.Apply.LAND) {
+            land(r);                                                   // a held row of a landed kind, applied at the roll
+            return;
+        }
         byte[] json = r.doc() == null ? null : bytes(r.doc());
         LiveState.Outcome o = state.apply(r, json);
         count(o.name().toLowerCase(java.util.Locale.ROOT));
@@ -459,6 +510,17 @@ public final class LiveFeed implements LiveIntake {
         }
     }
 
+    /** A landed row's window key: the first of the contract's {@code land-key} fields the row has (a position's PVs: POSITION_ID). */
+    private static String landKey(LiveRules rules, ObjectNode doc) {
+        for (String f : rules.landKey()) {
+            String v = text(doc.get(f));
+            if (v != null) {
+                return v;
+            }
+        }
+        return null;
+    }
+
     private String keyOf(String kind, LiveRules rules, ObjectNode doc, LiveMessage m) {
         if (!rules.key().isEmpty()) {
             List<String> parts = new ArrayList<>();
@@ -479,6 +541,20 @@ public final class LiveFeed implements LiveIntake {
             }
         }
         return m.key() == null || m.key().isBlank() ? null : stripKind(kind, m.key());
+    }
+
+    /**
+     * The kind a row's field names ({@code kind-by.field: VALUE_TYPE} with {@code kind-by.PV: scenario-pv}, {@code kind-by.PNL:
+     * pnl-vector}): one topic of rows of two kinds told apart by a field. Null when the field's value names none.
+     */
+    private String kindBy(String body) {
+        try {
+            JsonNode n = JSON.readTree(body);
+            String v = n == null ? null : text(n.get(settings.get("kind-by.field").strip()));
+            return v == null ? null : settings.get("kind-by." + v);
+        } catch (IOException e) {
+            return null;                                               // not JSON: the row's own read rejects it
+        }
     }
 
     private String kindOf(LiveMessage m) {
@@ -708,6 +784,10 @@ public final class LiveFeed implements LiveIntake {
         out.put("lastMessage", lastMessage == null ? null : lastMessage.toString());
         out.put("liveDate", seenLiveDate == null ? null : seenLiveDate.toString());
         out.put("heldForNextDate", held());
+        LiveLander l = lander;
+        if (l != null) {
+            out.put("landing", l.describe());
+        }
         LiveState.Reconcile rc = lastReconcile;
         if (rc != null) {
             out.put("lastReconcile", Map.of("kind", rc.kind(), "load", String.valueOf(rc.loadDate()), "absorbed", rc.absorbed(), "carried", rc.carried(),

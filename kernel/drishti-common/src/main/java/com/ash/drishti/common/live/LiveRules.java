@@ -55,10 +55,12 @@ import java.util.regex.Pattern;
  * @param keepVersions  the versions per key the live state keeps for a record's Changes today
  * @param reorderWindow how long a merge-patch gap is held for its missing versions
  * @param maxMessageKb  the largest message accepted, 0: the site's {@code drishti.live.max-message-kb}
+ * @param landKey       a landed kind's window key: the first of these fields a row has (a trade's PVs by {@code TRADE_ID}, a position's
+ *                      by {@code POSITION_ID}); empty: the contract's key
  */
 public record LiveRules(String kind, boolean allowed, List<String> key, List<String> order, String changedAt, String changedBy, String asOf,
         Partial partial, String deleteWhen, Apply apply, Duration conflate, Absorb absorb, Duration ttl, long maxRows, Validate validate,
-        Effective effective, ClosedDates closedDates, int keepVersions, Duration reorderWindow, int maxMessageKb) {
+        Effective effective, ClosedDates closedDates, int keepVersions, Duration reorderWindow, int maxMessageKb, List<String> landKey) {
 
     /** The code of every problem {@link #parse} reports. */
     public static final String CODE = "DRS-1060";
@@ -66,7 +68,7 @@ public record LiveRules(String kind, boolean allowed, List<String> key, List<Str
     public static final Set<String> RESTATE_KINDS = Set.of("scenario-pv", "pnl-vector");
     /** The keys of a {@code live:} block. */
     public static final Set<String> KEYS = Set.of("allowed", "order", "changed-at", "changed-by", "as-of", "partial", "delete", "apply", "conflate",
-            "absorb", "retention", "validate", "effective", "closed-dates", "keep-versions", "reorder-window", "max-message-kb");
+            "absorb", "retention", "validate", "effective", "closed-dates", "keep-versions", "reorder-window", "max-message-kb", "land-key");
 
     /** {@code partial:}: whole rows, or a JSON Merge Patch (RFC 7386) over the row held. */
     public enum Partial { WHOLE, MERGE }
@@ -97,6 +99,7 @@ public record LiveRules(String kind, boolean allowed, List<String> key, List<Str
     public LiveRules {
         key = key == null ? List.of() : List.copyOf(key);
         order = order == null ? List.of() : List.copyOf(order);
+        landKey = landKey == null ? List.of() : List.copyOf(landKey);
     }
 
     /**
@@ -125,7 +128,7 @@ public record LiveRules(String kind, boolean allowed, List<String> key, List<Str
     /** The defaults of a kind with no {@code live:} block (section 2.3): the safe ones. */
     public static LiveRules defaults(String kind, List<String> key, boolean computed) {
         return new LiveRules(kind, !computed, key, List.of(), null, null, null, Partial.WHOLE, null, Apply.OVERLAY, Duration.ZERO, Absorb.RESET,
-                DEFAULT_TTL, DEFAULT_MAX_ROWS, Validate.STRICT, Effective.AT_ONCE, ClosedDates.REJECT, 1, DEFAULT_REORDER, 0);
+                DEFAULT_TTL, DEFAULT_MAX_ROWS, Validate.STRICT, Effective.AT_ONCE, ClosedDates.REJECT, 1, DEFAULT_REORDER, 0, List.of());
     }
 
     /**
@@ -213,11 +216,18 @@ public record LiveRules(String kind, boolean allowed, List<String> key, List<Str
         Duration reorder = block.get("reorder-window") == null ? DEFAULT_REORDER
                 : duration(block.get("reorder-window"), DEFAULT_REORDER, at + ": reorder-window", problems);
         int maxKb = (int) (block.get("max-message-kb") == null ? 0 : number(block.get("max-message-kb"), 0, at + ": max-message-kb", problems));
-        if (allowed && key.isEmpty()) {
+        List<String> landKey = strings(block.get("land-key"));
+        for (String f : landKey) {
+            field(f, fields, at + ": land-key", problems);
+        }
+        if (!landKey.isEmpty() && apply != Apply.LAND) {
+            problems.add(at + ": land-key is a landed kind's window key (apply: land)");
+        }
+        if (allowed && key.isEmpty() && landKey.isEmpty()) {
             problems.add(at + ": the kind has no key: (a live row replaces the lake's row by key); give the contract its key or write allowed: false");
         }
         LiveRules rules = new LiveRules(kind, allowed, key, order, changedAt, changedBy, asOf, partial, deleteWhen, apply, conflate, absorb, ttl,
-                maxRows, validate, effective, closed, Math.max(1, keep), reorder, maxKb);
+                maxRows, validate, effective, closed, Math.max(1, keep), reorder, maxKb, landKey);
         List<String> worded = problems.stream().map(p -> p + " (" + CODE + ")").toList();
         return new Parsed(worded.isEmpty() ? rules : off(rules), worded);
     }
@@ -225,7 +235,7 @@ public record LiveRules(String kind, boolean allowed, List<String> key, List<Str
     /** A kind whose rules cannot be used takes no feed until they are fixed (never a guess at what the contract meant). */
     private static LiveRules off(LiveRules r) {
         return new LiveRules(r.kind, false, r.key, r.order, r.changedAt, r.changedBy, r.asOf, r.partial, r.deleteWhen, r.apply, r.conflate,
-                r.absorb, r.ttl, r.maxRows, r.validate, r.effective, r.closedDates, r.keepVersions, r.reorderWindow, r.maxMessageKb);
+                r.absorb, r.ttl, r.maxRows, r.validate, r.effective, r.closedDates, r.keepVersions, r.reorderWindow, r.maxMessageKb, r.landKey);
     }
 
     /** The contract's field names: {@code fields} and the paths of {@code nested} with their fields ({@code LEGS[].NOTIONAL}). */

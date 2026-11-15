@@ -65,6 +65,13 @@ public final class LiveSource implements SourcePlugin {
     private volatile LiveFeed feed;
     private volatile LiveState state;
     private volatile ScheduledFuture<?> expiry;
+    private volatile ScheduledFuture<?> landings;
+    private volatile Landing landing = Landing.NONE;
+
+    /** Where this connector's landed kinds go: the server's lake writer (LIVE_CONNECTORS_DESIGN.md section 2.4). */
+    public void landing(Landing l) {
+        landing = l == null ? Landing.NONE : l;
+    }
     private volatile String name;
 
     /**
@@ -125,6 +132,7 @@ public final class LiveSource implements SourcePlugin {
             }
         }, s, rejects, dates, new LiveCheckpoints(under("live/checkpoints", name + ".json")), under("live/reconcile", null));
         s.reload(e -> f.reread(e, transport::readBack));
+        f.lander(new LiveLander(name, ctx.settings(), b -> landing.land(b), Clock.systemUTC()));
         this.state = s;
         this.feed = f;
         transport.current(this::fetchQuietly);
@@ -135,6 +143,13 @@ public final class LiveSource implements SourcePlugin {
                 LOG.log(System.Logger.Level.DEBUG, name + ": live state expiry: " + e.getMessage());
             }
         }, 1, 1, TimeUnit.MINUTES);
+        landings = ctx.scheduler().scheduleWithFixedDelay(() -> {
+            try {
+                f.landIfDue();                                         // a window due (its age, its keys, "apply now") becomes a batch
+            } catch (RuntimeException e) {
+                LOG.log(System.Logger.Level.WARNING, name + ": a landing failed: " + e.getMessage());
+            }
+        }, 1, 1, TimeUnit.SECONDS);
         transport.receive(f);
     }
 
@@ -266,6 +281,19 @@ public final class LiveSource implements SourcePlugin {
         ScheduledFuture<?> e = expiry;
         if (e != null) {
             e.cancel(false);
+        }
+        ScheduledFuture<?> l = landings;
+        if (l != null) {
+            l.cancel(false);
+        }
+        LiveFeed f = feed;
+        if (f != null && f.lander() != null) {
+            try {
+                f.lander().applyNow();
+                f.landIfDue();                                         // what waits is landed before the connector goes, not lost
+            } catch (RuntimeException x) {
+                LOG.log(System.Logger.Level.WARNING, name + ": the window waiting at close was not landed: " + x.getMessage());
+            }
         }
         plugin.close();
         LiveState s = state;

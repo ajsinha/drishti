@@ -69,7 +69,8 @@
         "closed-dates": {"enum": ["reject", "restate"]},
         "keep-versions": {"type": "integer", "minimum": 1},
         "reorder-window": {"$ref": "#/$defs/duration"},
-        "max-message-kb": {"type": "integer", "minimum": 1}
+        "max-message-kb": {"type": "integer", "minimum": 1},
+        "land-key": {"type": "array", "items": {"type": "string"}}
       }
     },
     "fields": {"type": "array", "items": {"$ref": "#/$defs/field"}},

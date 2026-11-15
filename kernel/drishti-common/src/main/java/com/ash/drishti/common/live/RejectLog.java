@@ -67,14 +67,23 @@ public final class RejectLog {
 
     /** Writes one reject. */
     public void write(String connector, String kind, LiveReject reason, String detail, LiveMessage m) {
+        write(connector, kind, reason.reason(), reason.code().code(), detail, m);
+    }
+
+    /** Writes one reject an engine made of a landed row (its own code: {@code DRS-5201} ...): reason {@code landing}. */
+    public void write(String connector, String kind, String code, String detail) {
+        write(connector, kind, "landing", code, detail, null);
+    }
+
+    private void write(String connector, String kind, String reason, String code, String detail, LiveMessage m) {
         ObjectNode line = JSON.createObjectNode();
         line.put("at", clock.instant().toString());
         line.put("connector", connector);
         if (kind != null) {
             line.put("kind", kind);
         }
-        line.put("reason", reason.reason());
-        line.put("code", reason.code().code());
+        line.put("reason", reason);
+        line.put("code", code);
         line.put("detail", detail);
         if (m != null) {
             line.put("position", String.valueOf(m.position()));

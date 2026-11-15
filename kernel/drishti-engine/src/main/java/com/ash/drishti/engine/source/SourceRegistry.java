@@ -201,6 +201,14 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
         liveDates = dates == null ? com.ash.drishti.common.live.LiveDates.NONE : dates;
     }
 
+    /** Where landed kinds' windows go (LIVE_CONNECTORS_DESIGN.md section 2.4): the server's lake writer once it is told. */
+    private volatile com.ash.drishti.common.live.Landing landing = com.ash.drishti.common.live.Landing.NONE;
+
+    /** The server's lake writer for landed kinds. */
+    public void landing(com.ash.drishti.common.live.Landing l) {
+        landing = l == null ? com.ash.drishti.common.live.Landing.NONE : l;
+    }
+
     /** A kind's live rules (its contract's {@code live:} block, else the defaults): what decides which of a live row and a lake row is newer. */
     public com.ash.drishti.common.live.LiveRules liveRules(String kind) {
         return liveContracts.rules(kind);
@@ -554,8 +562,11 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
             if (plugin instanceof com.ash.drishti.api.live.LiveTransport) {
                 // a messaging plugin is a transport: the kernel's one live intake and state answer its reads, and its rows are shaped as
                 // they arrive, before they are validated (LIVE_CONNECTORS_DESIGN.md sections 3.1 and 7)
-                plugin = new com.ash.drishti.common.live.LiveSource(plugin, currentContracts(), new java.util.HashSet<>(c.kinds()),
-                        shape.none() ? null : shape::apply, com.ash.drishti.common.live.LiveDates.of(() -> liveDates.live(), d -> liveDates.next(d)));
+                com.ash.drishti.common.live.LiveSource live = new com.ash.drishti.common.live.LiveSource(plugin, currentContracts(),
+                        new java.util.HashSet<>(c.kinds()), shape.none() ? null : shape::apply,
+                        com.ash.drishti.common.live.LiveDates.of(() -> liveDates.live(), d -> liveDates.next(d)));
+                live.landing(b -> landing.land(b));                    // the server's lake writer, read when a window lands
+                plugin = live;
                 return new ConnectorInstance(name, new java.util.HashSet<>(c.kinds()), plugin, shape, systems, true);
             }
             return new ConnectorInstance(name, new java.util.HashSet<>(c.kinds()), plugin, shape, systems);
