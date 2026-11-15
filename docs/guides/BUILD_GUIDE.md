@@ -5279,6 +5279,9 @@ constant, `{CANONICAL: {"values": {"Y": "YES"}}}` a value map.
 
 **The YAML.** The map becomes `mappings/swapone-trade.yaml` in the module (step 3): `canonical field: native field`, constants and value maps.
 
+You should see every required field of the kind mapped or given a constant, the leftover native fields listed under the grid, and after
+**Propose again** (or the command with `--map-edits`) the dropped guess shown without a native field.
+
 ### Step 3 · The module the designer writes
 
 **In the UI.** **Layout**: choose **A shared table + where**, table `trading.trades_shared` (WSS and ICI share it; SwapOne's rows are told apart by
@@ -5326,7 +5329,7 @@ dataload:
       date-from: name
 ```
 
-Auto-deploy loads the module within seconds; **Admin → Modules** lists `source-swapone` as running.
+Auto-deploy loads the module within seconds. You should see `source-swapone` listed as running on **Admin → Modules**, with all fifteen checks passed.
 
 ### Step 4 · Drop the file in the inbox
 
@@ -5342,6 +5345,9 @@ python3 tools/drishti.py dataload status
 **The YAML.** The rule of step 3 is all there is: the name `swapone-2026-07-08.jsonl.gz` matches `swapone-*.jsonl*`, so the file goes to the
 trade kind through the connector `source-swapone`, and `date-from: name` makes `2026-07-08` its business date.
 
+You should see the file picked up within seconds: `dataload status` (and **Admin → Data inbox**) names it with the rule `swapone-*.jsonl*` and the
+connector `source-swapone`, and the `.ready` file is gone from the inbox.
+
 ### Step 5 · It lands in `trading.trades_shared`, stamped SWAPONE
 
 **In the UI.** **Admin → Loads** shows the load: the file, its rows, the table it went to and the date.
@@ -5355,6 +5361,8 @@ python3 tools/drishti.py lake show
 
 **The YAML.** The connector's `set: { SOURCE_SYSTEM: SWAPONE }` stamped the column into every row the inbox stored; `partition-by: [SOURCE_SYSTEM]` in the
 lake file keeps the systems' rows apart on disk; `where:` reads back only SwapOne's.
+
+You should see one load of `swapone-2026-07-08.jsonl.gz` into `trading.trades_shared` for `2026-07-08`, every row loaded and none rejected.
 
 ### Step 6 · `TRD` and the blotter
 
@@ -5380,6 +5388,8 @@ sections:
 
 While the module runs, its fragment's panels are appended to every Sutra of the kind `trade`; they leave with the module.
 
+You should see the `SW1-…` trades in `TRD` beside the other systems', and on `TRD SW1-4000000` the **SWAPONE fields** section after the canonical ones.
+
 ### Step 7 · A row rule
 
 A role may see only some records of a kind. A desk that books only SwapOne swaps should see only SwapOne trades.
@@ -5403,6 +5413,8 @@ drishti:
 A person with this role (and no other that opens trades) sees only SwapOne's trades in `TRD`, search and the blotter; a trade of another system is
 *not found*. Aggregates (VaR, BI totals) keep their own scope model ([ACCESS_MODEL.md section 10](../architecture/ACCESS_MODEL.md#10-row-rules)).
 
+You should see, signed in as that person, only `SW1-…` ids in `TRD`, and *not found* for a trade of another system.
+
 ### Step 8 · Switch it off and on
 
 **In the UI.** **Admin → Modules**, `source-swapone`, **Disable**. The trades of SwapOne leave the trade kind, the section leaves the page, and nothing
@@ -5416,6 +5428,8 @@ python3 tools/drishti.py module enable source-swapone
 ```
 
 **The YAML.** `config/modules/source-swapone.yaml` holds `enabled: false` while it is off.
+
+You should see, while it is off, no `SW1-…` trade in `TRD` and no **SWAPONE fields** section; after **Enable**, both back.
 
 ### What you built
 

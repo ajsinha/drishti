@@ -54,7 +54,7 @@ def test_install_remove_and_reinstall_take_every_surface_with_them(client, backe
         return {"savedSearches": [{"name": "hellos", "path": "/form/greeter-pack/greeter-greeting?q=a"}]}
     monkeypatch.setattr(backend, "settings", settings, raising=False)
 
-    async def form(pack, kind, ident=None):
+    async def form(pack, kind, ident=None, kinds_only=False):
         from core.backend import BackendError
         raise BackendError(404, "DRS-4040", "no form here")
     monkeypatch.setattr(backend, "form", form, raising=False)
