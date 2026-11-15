@@ -277,6 +277,8 @@ template wholesale, so it repeats the topic, kind and id field).
 
 ### Try it
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 docker compose -f deploy/docker/compose.data.yaml up -d kafka            # apache/kafka 3.9.1, single-node KRaft, compacted
 uv run --with kafka-python python tools/samplegen/stream.py \

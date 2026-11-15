@@ -1613,6 +1613,8 @@ Names follow `export.filename()`: `1000015-history-2026-09-08-2026-10-19.csv`. T
 
 In `tools/drishti.py`, a new group `history` (argparse, `cmd_history_get(a, extra)`, the shared `server_parent()` options):
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```text
 drishti.py history trade 1000015 --days 30
 drishti.py history equity EQ-CSCA --range 3M --fields PRICE,CHANGE_1D

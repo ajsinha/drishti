@@ -321,6 +321,8 @@ report sign-offs go through one Approvals queue with four eyes. Anything that de
 With a 64-bit Java 21 (JDK) and [uv](https://docs.astral.sh/uv/) for the console's Python (Maven ships with the repository), from the
 repository root ([OPERATIONS_GUIDE.md section 2](docs/guides/OPERATIONS_GUIDE.md#2-install-and-run-on-one-machine) has every step):
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 # 1. Build the runnable server (the kernel, with the first-party modules it installs at the first start)
 ./mvnw -q package -DskipTests -pl :drishti-app -am

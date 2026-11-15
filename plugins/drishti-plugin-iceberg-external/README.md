@@ -274,6 +274,8 @@ document as a JSON Schema, with the id (`x-drishti-role: key`), the business dat
 (`x-drishti-link`), and the pack maker turns the schemas into a pack (the kind, its fields, a Sutra listing them, links), to edit like
 any pack ([BUILD_GUIDE.md](../../docs/guides/BUILD_GUIDE.md#8-the-pack-designer-create--new-pack)):
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 java -cp "$(./mvnw -q -o dependency:build-classpath -pl plugins/drishti-plugin-iceberg-external -Dmdep.outputFile=/dev/stdout):plugins/drishti-plugin-iceberg-external/target/classes" \
   com.ash.drishti.plugin.icebergext.StarterSchemas --out build/risk-mart-schemas \

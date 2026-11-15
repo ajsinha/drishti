@@ -65,6 +65,8 @@ The database holds, per domain, the collections of the [mongodb connector README
 
 ## Examples
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 export DRISHTI_MONGODB_URI=mongodb://db.example.com:27017 DRISHTI_MONGODB_DATABASE=drishti
 tools/load-mongodb.sh "$DRISHTI_MONGODB_URI" "$DRISHTI_MONGODB_DATABASE"     # the samples: 1,791 documents x 10 business days

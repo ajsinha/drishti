@@ -207,6 +207,8 @@ look-back window). It is flagged once: a notice to the people the pack names, an
 The walk-through, with real output and pictures, is [tutorial 12 · Load data daily](../tutorials/12-a-day-of-bank-data.md): say when you expect data (step 1), announce a load from the command line (step 2), a failed
 batch (step 3), the same through the API (step 4), the history and what is due (step 5) and an alert for a missing day (step 6). In short: **announce** a batch when your ETL has written it,
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```
 $ drishti-console/.venv/bin/python tools/drishti.py data landed --pack market-risk --kind stress-scenario --date 2026-10-16 --rows 8 --batch eod-20261016-1
 stress-scenario for 2026-10-16 loaded: 8 rows; 0 alerts fired

@@ -1764,6 +1764,8 @@ The exposure paths are **synthetic** (one correlated factor per asset class and 
 `XR-2026-09-30-01` of 200 paths on a 24-date grid for 74 netting sets of 23 counterparties, 8,022 live trades). Build it with the reference
 tables beside it, on the data's own date (2026-09-30), so your numbers are the ones below:
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 python3 tools/drishti.py lake demo --as-of data \
   --only counterparty-risk/simulation-run,counterparty-risk/exposure-path,counterparty-risk/netting-set,counterparty-risk/csa,counterparty-risk/collateral-balance,counterparty-risk/credit-limit,market-risk/trade-valuation,core/counterparty,core/counterparty-group,core/legal-entity

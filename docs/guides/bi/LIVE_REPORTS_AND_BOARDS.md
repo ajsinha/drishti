@@ -471,6 +471,8 @@ restart every queued or running run is resumed or marked failed with its reason.
 
 `drishti.py bi runs` does what the Runs tab does, as the token's user ([CLI_REFERENCE.md](../CLI_REFERENCE.md) section 5.7):
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```
 $ python3 tools/drishti.py bi runs list --state running,done --since 7d
 r-java-2-01JAC4Q8Z6T3M4R9B0X1Y2Z3W4  MTM by desk and month

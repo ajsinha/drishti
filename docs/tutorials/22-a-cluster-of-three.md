@@ -60,6 +60,8 @@ the node is on, the address the others call it at, its tags and the key, which i
 **From the command line.** `drishti.py net set` writes one setting and checks the file as the server would. It refuses `enabled: true`
 until the key is there:
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```text
 $ drishti.py net set node.enabled true
 drishti: node.yaml was not written: enabled: true needs the cluster key: secret: ${DRISHTI_NET_SECRET} with the variable set (at least 32 bytes)

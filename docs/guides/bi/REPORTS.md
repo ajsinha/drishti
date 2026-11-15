@@ -318,6 +318,8 @@ only what the netting set carries as it ticks (net MTM, collateral, limit, trade
 the API as the token's user ([CLI_REFERENCE.md](../CLI_REFERENCE.md#bi-workspaces-and-the-catalogue-rupaka)); the token scopes are `bi:write`,
 `bi:approve` and `bi:admin`:
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```
 $ drishti.py bi workspace list
 id                            role          items  name

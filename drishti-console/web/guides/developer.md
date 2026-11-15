@@ -38,6 +38,8 @@ made.
 
 The Java and Python references are **generated at build time and never kept in the repository**. One command builds both:
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```
 python3 tools/api_docs.py build --maven        # Javadoc through Maven's api-docs profile, then pdoc
 python3 tools/api_docs.py zip                  # drishti-api-reference-<version>.zip, attached to the GitHub release

@@ -135,6 +135,8 @@ You have a folder of JSON Lines (or one file). **One command** turns it into **o
 Sutras, the data in a Delta lake partitioned by business date, a checksummed bundle, a server configuration, start scripts and a
 `README.txt` with your real values filled in.
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 drishti-console/.venv/bin/python tools/drishti.py pack make data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz \
     --kind trade --match PRODUCT_TYPE --name my-bank

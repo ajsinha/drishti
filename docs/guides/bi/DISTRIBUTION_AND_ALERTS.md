@@ -534,6 +534,8 @@ security:
 **From the command line** put both files in the workspace, publish them, and ask for the dataset's refresh state (`bi item new` reads the kind from the
 file name; the ids differ on your machine):
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```text
 $ python3 tools/drishti.py bi item new economics-desk docs/tutorials/data/trades-daily.dataset.yaml
 bi-c767a5fd15  dataset  Trades refreshed daily  draft in Economics desk

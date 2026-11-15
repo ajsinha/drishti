@@ -34,6 +34,8 @@ Java 17 or newer (21 recommended). The Arrow Flight jars, version 19.0.0 (the se
 
 ## Run
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 cd examples/clients/java
 export DRISHTI_FLIGHT_URL=grpc+tls://<a node's real address>:18815

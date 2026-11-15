@@ -251,6 +251,8 @@ scans a table: no `ALLOW FILTERING`, no token range.
 `tools/load-cassandra.sh` (Windows: `tools\windows\load-cassandra.ps1`; `drishti.py data load --store cassandra` runs it) loads the
 packs' sample data and optionally a generated book through `CassandraLoader` (in the plugin):
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 tools/load-cassandra.sh localhost:9042 datacenter1 --create --create-keyspace 1                   # the samples x 10 days
 tools/load-cassandra.sh localhost:9042 datacenter1 --create --trades 10000 --days 3               # and a book, streamed

@@ -165,6 +165,8 @@ banking domains: `config/connectors.examples/duckdb/`. Every setting is also in
 
 Load data:
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 tools/load-duckdb.sh data/duckdb/drishti.duckdb                              # the banking samples
 tools/load-duckdb.sh data/duckdb/drishti.duckdb --trades 10000 --days 3      # and 10,000 generated trades a day for 3 days

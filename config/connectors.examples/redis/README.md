@@ -68,6 +68,8 @@ column hash `{<domain>:<kind>:<yyyyMMdd>}:cols:<g>`, the zstd dictionaries `<dom
 
 ## Examples
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 export DRISHTI_REDIS_URI=redis://cache.example.com:6379
 tools/load-redis.sh "$DRISHTI_REDIS_URI"                     # the samples: 1,791 documents x 10 business days

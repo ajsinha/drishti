@@ -151,6 +151,8 @@ run configurations are in [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#2-install-an
 the pack's `samples/`. Security is off unless you turn it on, so the `curl` lines below need no token; on a server with security on add
 `-H "Authorization: Bearer $DRISHTI_TOKEN"`.
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 DRISHTI_PORT=18996 DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,helpdesk \

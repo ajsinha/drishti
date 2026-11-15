@@ -89,6 +89,8 @@ sizing planner (`tools/sizing_planner.py`, and **Admin → Capacity** in the con
 
 **A. Build it** from a clone (needs the JDK only; the repository carries Maven):
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 git clone https://github.com/ajsinha/drishti.git && cd drishti
 ./mvnw -q clean package -DskipTests -pl :drishti-app -am            # Windows: .\mvnw.cmd -q clean package -DskipTests -pl :drishti-app -am

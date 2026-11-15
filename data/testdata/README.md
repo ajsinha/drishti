@@ -62,6 +62,8 @@ On Windows, offline, with your own ENDUR files: [How to QA in Windows Environmen
    and the server jar: the run configuration **Drishti build server jar** (or `./mvnw -q package -DskipTests -pl drishti-app -am`).
 3. **Build the demo lakes**: the run configuration **Build demo lakes**, or
 
+   Run these from the Drishti folder (the repository root, or the install folder of a release).
+
    ```bash
    drishti-console/.venv/bin/python tools/drishti.py lake demo
    ```

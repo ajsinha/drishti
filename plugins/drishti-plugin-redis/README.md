@@ -228,6 +228,8 @@ the pack's template wholesale, so it repeats the promoted layout the pack declar
 `tools/load-redis.sh` loads the banking packs' sample data (`tools/packgen/banking/make_data.py`), and optionally a large generated
 book, through `RedisLoader` (in the plugin):
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 tools/load-redis.sh redis://localhost:6379                                  # the samples: 1,791 documents x 10 days
 tools/load-redis.sh redis://localhost:6379 --trades 1000000 --days 2       # and a book of a million trades, streamed

@@ -29,6 +29,8 @@ a double-click. The options are the same everywhere; on Windows `--env-file` may
 | `start-cluster`, `stop-cluster` | a cluster on one machine from a cluster file (`--cluster FILE`, default `deploy/stack/stack.yaml`): the nodes, then the console (or each console of a `consoles:` list, each with its `distribution:`); or only those named |
 | `drishti-node` | one node's drain before a stop and its readiness (`drain`, `undrain`, `status`, `wait-ready`, `run`): the stop hook of the service unit and the images |
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 bin/start-all.sh --demo                                   # the demo, with development secrets (not for production)
 bin/start-all.sh --demo --distribution finance            # Drishti Finance (risk, genomics, all: docs/architecture/DISTRIBUTIONS.md)

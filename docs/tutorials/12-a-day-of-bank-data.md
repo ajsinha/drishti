@@ -68,6 +68,8 @@ expect:
 
 Your job's last step is one command:
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```text
 $ drishti-console/.venv/bin/python tools/drishti.py data landed --pack trading --kind trade --date 2026-10-15 --rows 15000 --rejected 0 --batch eod-20261015 --source nightly-trade-etl
 trade for 2026-10-15 loaded: 15,000 rows, 0 rejected; 0 alerts fired

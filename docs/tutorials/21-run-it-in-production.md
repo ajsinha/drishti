@@ -273,6 +273,8 @@ For **monitoring**, Prometheus scrapes `/actuator/prometheus` with `Authorizatio
 
 And the machine itself, in one command, before you start anything:
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```text
 $ python3 tools/drishti.py doctor --server http://localhost:18480
 GREEN  java                    /usr/lib/jvm/java-21-openjdk-amd64/bin/java: Java 21.0 (Ubuntu)

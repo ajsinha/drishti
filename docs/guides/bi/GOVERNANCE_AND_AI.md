@@ -519,6 +519,8 @@ approves. Add sue as a member of the workspace: after **Create workspace** follo
 once its dataset is through review. **In the UI** that is **My workspace → New item** (or the workspace's own **New item**), kind *dataset* then
 *model*, **Paste YAML**, in `Rates desk`; **on the command line**, as ann (`bi item new` reads the kind from the file name):
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```text
 $ python3 tools/drishti.py bi item new rates-desk docs/tutorials/data/rates-trades.dataset.yaml --audience bi-steward,bi-writer,viewer
 bi-ba201206d6  dataset  Rates trades  draft in Rates desk

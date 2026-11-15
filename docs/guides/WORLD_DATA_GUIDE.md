@@ -81,6 +81,8 @@ Part III · Where the data comes from
 The pack is **off by default**, like `us-equities` and `gleif`, and needs `us-equities` (its holdings link to the companies there; with
 `gleif` on, the LEIs open their records too). Load it and build its tables into the lake:
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 export DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif,funds
 python3 tools/drishti.py lake demo                    # every table; or: python3 tools/build_demo_lakes.py --only funds

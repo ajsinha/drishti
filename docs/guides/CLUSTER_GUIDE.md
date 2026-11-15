@@ -92,6 +92,8 @@ node.yaml, a seed's `url` in `peers/*.yaml` (checked by `drishti.py net check|se
 it loads the folder), and every member address learned by gossip, which is never kept nor passed on. Even three nodes on one machine use
 the machine's real address. There is no escape hatch. The refusal names the address to use:
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```text
 $ drishti.py net set node.advertise-url http://127.0.0.1:18784
 drishti: node.yaml was not written: 'http://127.0.0.1:18784' is a loopback or wildcard address (loopback): the address this node advertises must be an address other machines can call (this machine's address is 192.168.1.20: use http://192.168.1.20:18784); or leave advertise-url out and the node advertises that address with its port
