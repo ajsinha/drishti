@@ -114,9 +114,11 @@ class SourceModuleInstallTest {
         assertThat(rule.path("match").asText()).isEqualTo("swapone-*.jsonl.gz");
         assertThat(rule.path("date-pattern").asText()).isNotBlank();
         assertThat(rule.path("connector").asText()).isEqualTo("trade-swapone");
+        // the templates by their connectors' names (KERNEL_AND_MODULES.md section 18.5); the other shapes are examples to copy
         try (Stream<Path> s = Files.list(installed.resolve("connectors"))) {
-            assertThat(s.map(p -> p.getFileName().toString()).sorted().toList()).contains("delta.yaml", "files.yaml", "iceberg.yaml", "kafka.yaml");
+            assertThat(s.map(p -> p.getFileName().toString()).sorted().toList()).contains("trade-swapone.yaml", "trade-swapone-live.yaml", "examples");
         }
+        assertThat(installed.resolve("connectors/examples/files.yaml")).isRegularFile();
         assertThat(installed.resolve("mappings/swapone-trade.yaml")).isRegularFile();
 
         delete(modules.resolve("installed/source-swapone"));                       // uninstalled
