@@ -28,8 +28,8 @@ import java.util.stream.Stream;
  * Where a pack's folder is: the one rule every Java reader follows (docs/architecture/DOMAIN_MODULES.md section 8). A packs root
  * ({@code config/packs}, the installed packs, {@code examples/packs}) holds packs directly ({@code <root>/<pack>/pack.yaml}) or one level
  * down in <b>domain folders</b> ({@code <root>/<domain>/<pack>/pack.yaml}): a folder of the root with no {@code pack.yaml} of its own.
- * The product's packs live in the module that owns them ({@code modules/banking/dmod/packs/trading}, {@link #moduleRoots}); the packs
- * folder itself holds a site's own packs (and the kernel's {@code core} ones). The console's and the tools' Python twin is
+ * The product's packs live in the module that owns them ({@code modules/banking/dmod/packs/trading}, found by
+ * {@link com.ash.drishti.api.resolution.ConfigResolution}); the packs folder itself holds a site's own packs (and the kernel's {@code core} ones). The console's and the tools' Python twin is
  * {@code drishti-console/core/pack_paths.py}; tests hold both to the layout.
  */
 public final class PackFolders {
@@ -38,8 +38,8 @@ public final class PackFolders {
     }
 
     /**
-     * The folders packs are in under a root: the root itself, then each domain folder in name order; for the product's packs folder
-     * ({@code <home>/config/packs}) also the {@code packs/} folder of every module beside it ({@link #moduleRoots}).
+     * The folders packs are in under a root: the root itself, then each domain folder in name order (the modules' packs are found by
+     * {@link com.ash.drishti.api.resolution.ConfigResolution}, not here).
      */
     public static List<Path> roots(Path root) {
         List<Path> out = new ArrayList<>();
