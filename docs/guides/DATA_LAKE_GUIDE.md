@@ -389,7 +389,7 @@ touch data/dataload/inbox/trade_endur.2026-11-06.ready          # or trade_endur
 ```
 
 **Loading production position-level scenario PVs.** Each morning's batch is one file of `scenario-pv` records (every field in the checklist of
-[VAR_GUIDE.md section 15.13](VAR_GUIDE.md#1513-inputs-any-form-any-grain)), its currency FX in `fx-scenario` ([contract](../contracts/packs/market-risk.md#fxs-scenario-fx-of-a-currency-509-scenarios-fx-scenario), [example](../contracts/samples/market-risk.md#fx-scenario)) and the date's scenario set in
+[VAR_GUIDE.md section 15.13](VAR_GUIDE.md#1513-inputs-any-form-any-grain)), its currency FX in `fx-scenario` ([contract](../contracts/packs/market-risk.md#fxs-scenario-fx-of-a-currency-one-rate-per-scenario-fx-scenario), [example](../contracts/samples/market-risk.md#fx-scenario)) and the date's scenario set in
 `scenario-set` ([contract](../contracts/packs/market-risk.md#sset-scenario-set-scenario-set), [example](../contracts/samples/market-risk.md#scenario-set)); the `.ready` file goes in last:
 
 ```bash
@@ -1094,7 +1094,7 @@ The Inbox screen shows it as *held*; delete the `hold:` line (or set it to `fals
 
 A tar (`.tar`, `.tgz`, `.tar.gz`, `.tar.zip`) holds `<folder>/<YYYY-MM-DD>/<files>.jsonl[.gz]`, nothing else (operating-system litter
 such as `__MACOSX/` and `.DS_Store` is ignored). **Each top folder is a table or a kind**: a table name (`trade_endur`, `trade_calypso`,
-`trade_murex`, the tables of the kind `trade`, one per source system) writes that table; a kind name (`scenario-pv` ([contract](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv), [example](../contracts/samples/market-risk.md#scenario-pv)), `var-limit`)
+`trade_murex`, the tables of the kind `trade`, one per source system) writes that table; a kind name (`scenario-pv` ([contract](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-position-or-trade-one-pv-per-scenario-its-currency-scenario-pv), [example](../contracts/samples/market-risk.md#scenario-pv)), `var-limit`)
 writes the kind's one table. Names compare without case and with `_` and `-` alike (`var_limit` is the kind `var-limit`):
 
 ```text

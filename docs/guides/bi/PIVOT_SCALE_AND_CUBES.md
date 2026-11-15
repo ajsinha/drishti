@@ -315,7 +315,7 @@ text fields are the rows and columns, its numbers the measures. The record shows
 The source `var` is the VaR engine's book of the date, built from these rows (or `pnl-vector` rows, [VAR_GUIDE.md section
 36](../VAR_GUIDE.md#36-var-data-every-dataset-the-engine-reads)): its text columns (DESK, CURRENCY, PRODUCT_GROUP …) are the fields.
 
-- **Data contract:** [`scenario-pv`](../../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv) (SPV), key `SCENARIO_PV_ID`; 40 fields, 28 required; the file [`scenario-pv.contract.yaml`](../../../modules/banking/dmod/packs/market-risk/contracts/scenario-pv.contract.yaml).
+- **Data contract:** [`scenario-pv`](../../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-position-or-trade-one-pv-per-scenario-its-currency-scenario-pv) (SPV), key `SCENARIO_PV_ID`; 40 fields, 28 required; the file [`scenario-pv.contract.yaml`](../../../modules/banking/dmod/packs/market-risk/contracts/scenario-pv.contract.yaml).
 - **Example:** [a real record of the test data, every field explained](../../contracts/samples/market-risk.md#scenario-pv) (files `data/testdata/market-risk/scenario-pv/scenario-pv-*.tar`).
 
 ### 5.4 `position`: positions
@@ -330,7 +330,7 @@ A stored position table, pivoted like any other kind. The demo derives its posit
 Each trade's scenario P&L; its columns (`LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `CURRENCY`,
 `COUNTERPARTY`, …) are the cube's dimensions.
 
-- **Data contract:** [`pnl-vector`](../../contracts/packs/market-risk.md#pnlv-pl-vector-509-scenarios-pnl-vector) (PNLV), key `VECTOR_ID`; 39 fields, 27 required; the file [`pnl-vector.contract.yaml`](../../../modules/banking/dmod/packs/market-risk/contracts/pnl-vector.contract.yaml).
+- **Data contract:** [`pnl-vector`](../../contracts/packs/market-risk.md#pnlv-pl-vector-one-pl-per-scenario-pnl-vector) (PNLV), key `VECTOR_ID`; 39 fields, 27 required; the file [`pnl-vector.contract.yaml`](../../../modules/banking/dmod/packs/market-risk/contracts/pnl-vector.contract.yaml).
 - **Example:** none in the demo data (it ships scenario PVs); the record's shape is [its sample](../../contracts/samples/market-risk.md#pnl-vector).
 
 ### 5.6 `scenario-set`: the scenario days
@@ -459,7 +459,7 @@ engine's position sensitivities. Each input's fields are its data contract; the 
 
 | Input | Kind | What the cube reads from it |
 |---|---|---|
-| Scenario P&L vectors or scenario PVs | `pnl-vector`, `scenario-pv` (+ [`fx-scenario`](../../contracts/samples/market-risk.md#fx-scenario) ([contract](../../contracts/packs/market-risk.md#fxs-scenario-fx-of-a-currency-509-scenarios-fx-scenario))) | every trade's vector; its columns (`LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `CURRENCY`, `COUNTERPARTY`, …) as dimensions |
+| Scenario P&L vectors or scenario PVs | `pnl-vector`, `scenario-pv` (+ [`fx-scenario`](../../contracts/samples/market-risk.md#fx-scenario) ([contract](../../contracts/packs/market-risk.md#fxs-scenario-fx-of-a-currency-one-rate-per-scenario-fx-scenario))) | every trade's vector; its columns (`LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `CURRENCY`, `COUNTERPARTY`, …) as dimensions |
 | Scenario set | `scenario-set` | the scenario days of the histogram and the explain |
 | Hierarchies and VaR limits | the trades' promoted columns, `var-limit` | the hierarchy levels as dimensions (`MGMT.DESK`, `LEGAL.LEGAL-ENTITY`, `LL.LIMIT_LETTER`), `limit()` and `limit_use()` |
 | Position sensitivities and the factor dictionary | `position-sensitivity`, `risk-factor` | `dv01()`, `cs01()`, the ladder and the heat map ([FRTB_SA_GUIDE.md section 3](../FRTB_SA_GUIDE.md#3-the-inputs-and-their-data-contract)) |

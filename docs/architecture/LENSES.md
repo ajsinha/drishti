@@ -2551,7 +2551,7 @@ measure) and the placement columns. A dimension that is a position column puts a
 #### 6.6.5 D3 `pnl-vector`, `scenario-pv`, `fx-scenario`: existing, extended
 
 One row per trade or position, date and scenario set; vector column `PNL` (USD, gain positive, oldest scenario first) or `SCENARIO_PV` with
-`fx-scenario` turning PVs into USD ([contract](../contracts/packs/market-risk.md#pnlv-pl-vector-509-scenarios-pnl-vector); load checks
+`fx-scenario` turning PVs into USD ([contract](../contracts/packs/market-risk.md#pnlv-pl-vector-one-pl-per-scenario-pnl-vector); load checks
 [VAR_GUIDE section 20.3](../guides/VAR_GUIDE.md#203-what-the-load-checks)). About 20 GB of JSON a day at 2.3M; 4.7 GB float32 hot, 14 GB at
 1,518 values across 27 shards of 0.52 GB.
 

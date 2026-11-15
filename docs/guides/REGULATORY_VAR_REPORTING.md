@@ -692,9 +692,9 @@ the sign-off. Submission stays with the bank's reporting team; a regulator's ele
 
 | Input | Contract | Grain and cadence | Used by | Status |
 |---|---|---|---|---|
-| P&L vectors | [PNLV](../contracts/packs/market-risk.md#pnlv-pl-vector-509-scenarios-pnl-vector) | per trade or position, date, scenario set; daily | every VaR, ES and stressed figure | **Built** |
-| Scenario PVs (the alternative form, with the base PV) | [SPV](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv) | per trade, date, scenario set; daily | the same; the base PVs of [section 5](#5-hypothetical-pl-derived-from-base-pvs) | **Built** |
-| Scenario FX | [FXS](../contracts/packs/market-risk.md#fxs-scenario-fx-of-a-currency-509-scenarios-fx-scenario) | per currency, date; daily | scenario PVs to USD; the FX of [section 5](#5-hypothetical-pl-derived-from-base-pvs) | **Built** |
+| P&L vectors | [PNLV](../contracts/packs/market-risk.md#pnlv-pl-vector-one-pl-per-scenario-pnl-vector) | per trade or position, date, scenario set; daily | every VaR, ES and stressed figure | **Built** |
+| Scenario PVs (the alternative form, with the base PV) | [SPV](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-position-or-trade-one-pv-per-scenario-its-currency-scenario-pv) | per trade, date, scenario set; daily | the same; the base PVs of [section 5](#5-hypothetical-pl-derived-from-base-pvs) | **Built** |
+| Scenario FX | [FXS](../contracts/packs/market-risk.md#fxs-scenario-fx-of-a-currency-one-rate-per-scenario-fx-scenario) | per currency, date; daily | scenario PVs to USD; the FX of [section 5](#5-hypothetical-pl-derived-from-base-pvs) | **Built** |
 | Scenario sets (normal and stress) | [SSET](../contracts/packs/market-risk.md#sset-scenario-set-scenario-set) | per set, date; daily (stress at least weekly in the US) | VaR, stressed VaR | **Built** |
 | Risk hierarchies (management, legal, limit letters, a risk-type hierarchy) | built from the trades' promoted columns ([VAR_GUIDE 15.14](VAR_GUIDE.md#1514-hierarchies-from-promoted-columns)); limits [VLIM](../contracts/packs/market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit) | per node, date | every node figure; risk types by hierarchy | **Built** |
 | VaR limits | [VLIM](../contracts/packs/market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit) | per node, date | limit use; Volcker metric 1 (VaR limits) | **Built** |
