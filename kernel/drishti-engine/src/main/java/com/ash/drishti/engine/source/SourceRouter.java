@@ -122,6 +122,21 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
         return out;
     }
 
+    /**
+     * The stream connectors of {@code kind} that wait for their broker (their health says {@code WAITING}): a page of the kind serves
+     * the lake snapshot and says its live updates are paused. Each entry is the connector's own words.
+     */
+    public List<String> livePaused(String kind) {
+        List<String> out = new java.util.ArrayList<>();
+        for (SourcePlugin p : registry.plugins()) {
+            if ((p.manifest().kinds().contains(kind) || bound.getOrDefault(kind, List.of()).contains(p.manifest().name()))
+                    && SourceHealth.of(p) == SourceHealth.WAITING) {
+                out.add(p.manifest().name() + ": " + p.health().replaceFirst("^WAITING:\\s*", ""));
+            }
+        }
+        return out;
+    }
+
     /** The connectors' registry this router reads through (the source systems' switches, the connectors' shapes, Raw JSON's native read). */
     public SourceRegistry registry() {
         return registry;

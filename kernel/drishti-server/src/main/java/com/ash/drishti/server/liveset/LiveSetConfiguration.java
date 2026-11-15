@@ -104,6 +104,11 @@ public class LiveSetConfiguration {
             }
 
             @Override
+            public java.util.List<String> livePaused(String kind) {
+                return router.livePaused(kind);
+            }
+
+            @Override
             public java.util.Set<String> excluded(String kind) {
                 return router.excluded(kind);
             }

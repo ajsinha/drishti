@@ -271,6 +271,12 @@ public class LiveSetController {
             m.put("excludes", off);
             m.put("banner", "excludes " + String.join(", ", off) + " (switched off)");
         }
+        List<String> paused = sets.livePaused(spec.kind());
+        if (!paused.isEmpty()) {
+            // a stream whose broker is not there is calm: the page serves the lake snapshot and says its live updates are paused
+            m.put("livePaused", paused);
+            m.putIfAbsent("banner", "live updates paused: " + String.join("; ", paused));
+        }
         String no = sets.readOnly(principal, spec);
         m.put("editable", no == null);
         m.put("readOnly", no);

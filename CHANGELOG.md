@@ -18,6 +18,13 @@
 
 ## Unreleased
 
+- **Stream connectors are calm when their broker is not there.** An enabled `kafka`, `activemq`, `rabbitmq` or `var-pv-stream` connector (the
+  `trade-<system>-live` connectors included) whose broker does not answer is no longer down or an error: its health says `WAITING: broker not
+  reachable at host:port - live updates paused; retrying`, Admin shows *waiting for broker*, overall health and readiness stay up, a blotter serves
+  the lake snapshot with a *live updates paused* banner, the log has one line when it starts waiting and one when it connects (no ERROR, no stack
+  traces, no per-retry lines), and a broker that appears later is found without a restart. Missing `topics`, `destinations` or `queues` is *not
+  configured*. The plugins look at the broker's port before opening a client, so the clients' own retry noise never starts.
+
 - **Trading Home with nobody to view as.** Today's blotter, now a records grid rather than a table, says *Pick a trader or a desk to view
   as* like every other panel instead of staying on its loading dots.
 - **Records lists without a stream.** A records list whose set has no live stream (TRD, FUND, USEQ over a lake that does not push) said
