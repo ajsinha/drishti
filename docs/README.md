@@ -165,6 +165,7 @@ repeat.
 | Understand live updates (SSE, frames, reconnects) | [DATA_ARCHITECTURE.md › Live updates](architecture/DATA_ARCHITECTURE.md#1-live-updates) |
 | See the design of live feeds for any kind (a live companion for every data connector: contract rules, order, business dates, the next lake load, Admin and live-mark mock-ups; decided, building in i5) | [LIVE_CONNECTORS_DESIGN.md](architecture/LIVE_CONNECTORS_DESIGN.md) |
 | See how release i5 makes a compute engine local or remote behind one lookup, and the detailed cluster design (JGroups and Apache Ratis behind a thin wrapper, placement per engine, modules in the digest, module promotion between clusters, security between nodes, tests, build plan, mock-ups; design, not built) | [ENGINES_IN_THE_CLUSTER.md](architecture/ENGINES_IN_THE_CLUSTER.md) and [CLUSTER_I5_DESIGN.md](architecture/CLUSTER_I5_DESIGN.md) |
+| See the design of market risk in release i6 (the VaR engine extended with decomposition, liquidity-adjusted VaR and concentration; P&L explain, stress testing, FRTB-SA and SIMM completed, FRTB-IMA and the default risk charge; no pricing library: every value is supplied; contracts between engines, input sizes, goldens, build plan, the documentation skeleton with the VaR engine as built, mock-ups; design, not built) | [MARKET_RISK_I6_DESIGN.md](architecture/MARKET_RISK_I6_DESIGN.md), [market-risk-i6/](architecture/market-risk-i6/README.md) |
 
 ### Run and administer it
 

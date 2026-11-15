@@ -1,0 +1,160 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+
+# Planned data contract of the risk-factor-observation input (proposed command RFOB): docs/architecture/MARKET_RISK_I6_DESIGN.md section 9.
+kind: risk-factor-observation
+mnemonic: RFOB
+pack: market-risk
+version: '1.0'
+class: input
+status: planned
+title: 'Real-price observations of a risk factor (for the eligibility test)'
+description: 'The days on which a real price was observed for a risk factor: a transaction of the bank, a verifiable transaction between
+  other parties, a committed quote, or a vendor''s count of them. The FRTB internal models engine counts them over the last 12 months for
+  the risk factor eligibility test (Basel MAR31): a factor that passes is modellable and stays in the expected shortfall; one that fails
+  is non-modellable and is capitalised by its stress scenario (the nmrf-stress contract). Planned: no command, no data and no engine
+  reads it yet.'
+source: The bank's trade repository and its real-price data vendors (pooled observation services)
+grain: One row per risk factor, observation type and BUSINESS_DATE on which at least one real price was observed, keyed by
+  OBSERVATION_ID (RFOB-<RISK_FACTOR>-<OBSERVATION_TYPE>-<BUSINESS_DATE>).
+key:
+- OBSERVATION_ID
+id-pattern:
+- ^RFOB-
+list:
+  requires: [RISK_FACTOR, RISK_CLASS]
+  why: 'observations are per risk factor: give a factor or a risk class'
+dated-by: BUSINESS_DATE
+cadence:
+  frequency: daily
+  due: within the vendor's publication lag (a vendor may publish a period late; a late row is loaded into its own date)
+binding-hint:
+  lake-table: risk.risk-factor-observation
+  partition:
+  - BUSINESS_DATE
+  columns:
+  - OBSERVATION_ID
+  - RISK_FACTOR
+  - RISK_CLASS
+  - OBSERVATION_TYPE
+  - OBSERVATION_COUNT
+  - VENDOR
+  - BUCKETING
+fields:
+- name: OBSERVATION_ID
+  type: id
+  presence: required
+  description: The row's id, RFOB-<RISK_FACTOR>-<OBSERVATION_TYPE>-<BUSINESS_DATE> (the business key).
+  example: RFOB-CR/SPREAD/ACME-CORP/SNR/5Y-TRANSACTION-2026-09-30
+  pattern: ^RFOB-
+- name: BUSINESS_DATE
+  type: date
+  presence: required
+  description: The day the real price was observed (YYYY-MM-DD). The test counts at most one observation a day for a factor, however
+    many rows and whatever the counts.
+  example: '2026-09-30'
+- name: RISK_FACTOR
+  type: id
+  presence: required
+  description: The factor, a RISK_FACTOR of the factor dictionary, or the bucket of a curve or surface when BUCKETING says so.
+  example: CR/SPREAD/ACME-CORP/SNR/5Y
+  link: risk-factor
+- name: RISK_CLASS
+  type: text
+  presence: optional
+  description: The factor's risk class, for partition pruning; checked against the dictionary.
+  example: CR
+- name: OBSERVATION_TYPE
+  type: text
+  presence: required
+  description: 'What was observed: TRANSACTION (the bank''s own), THIRD_PARTY_TRANSACTION (verifiable, between other parties),
+    COMMITTED_QUOTE or VENDOR (a vendor''s evidence).'
+  example: TRANSACTION
+  enum: [TRANSACTION, THIRD_PARTY_TRANSACTION, COMMITTED_QUOTE, VENDOR]
+- name: OBSERVATION_COUNT
+  type: integer
+  presence: required
+  description: How many real prices of this type were observed on the day (1 or more); kept for evidence, the test counts the day once.
+  example: 3
+- name: VENDOR
+  type: text
+  presence: optional
+  description: The vendor or pool that supplied the evidence (OBSERVATION_TYPE VENDOR or THIRD_PARTY_TRANSACTION).
+  example: demo-real-price-pool
+- name: BUCKETING
+  type: text
+  presence: required
+  description: 'How a point of a curve, surface or cube is counted: OWN (the bank''s own buckets, one factor per bucket) or REGULATORY
+    (the standard buckets of the rules). One approach per risk class and date.'
+  example: OWN
+  enum: [OWN, REGULATORY]
+- name: EVIDENCE_REF
+  type: text
+  presence: optional
+  description: Where the evidence is kept (a trade id, a vendor file and line), for audit; never read by the engine.
+  example: CLY-3000087
+- name: SOURCE
+  type: text
+  presence: required
+  description: The system the row came from.
+  example: demo-trade-repository
+- name: AS_OF
+  type: timestamp
+  presence: required
+  description: When the source produced the row (UTC); a later row of the same id replaces the earlier.
+  example: '2026-10-01T04:00:00Z'
+links:
+- field: RISK_FACTOR
+  kind: risk-factor
+validation:
+- rule: required
+  fields:
+  - OBSERVATION_ID
+  - BUSINESS_DATE
+  - RISK_FACTOR
+  - OBSERVATION_TYPE
+  - OBSERVATION_COUNT
+  - BUCKETING
+  - SOURCE
+  - AS_OF
+- rule: unique
+  key:
+  - OBSERVATION_ID
+  per: BUSINESS_DATE
+- rule: pattern
+  field: OBSERVATION_ID
+  pattern: ^RFOB-
+- rule: link
+  field: RISK_FACTOR
+  kind: risk-factor
+- rule: enum
+  field: OBSERVATION_TYPE
+  values: [TRANSACTION, THIRD_PARTY_TRANSACTION, COMMITTED_QUOTE, VENDOR]
+- rule: enum
+  field: BUCKETING
+  values: [OWN, REGULATORY]
+- rule: range
+  field: OBSERVATION_COUNT
+  min: 1
+notes:
+- 'JSON Lines, one row per line (UTF-8; .jsonl or .jsonl.gz). Example line: {"OBSERVATION_ID":"RFOB-CR/SPREAD/ACME-CORP/SNR/5Y-TRANSACTION-2026-09-30","BUSINESS_DATE":"2026-09-30","RISK_FACTOR":"CR/SPREAD/ACME-CORP/SNR/5Y","RISK_CLASS":"CR","OBSERVATION_TYPE":"TRANSACTION","OBSERVATION_COUNT":3,"BUCKETING":"OWN","EVIDENCE_REF":"CLY-3000087","SOURCE":"demo-trade-repository","AS_OF":"2026-10-01T04:00:00Z"}'
+- 'The test (MAR31, the thresholds in the engine''s parameter file): over the 12 months to the date, a factor passes with at least 24
+  observation days and no 90-day period with fewer than 4, or with at least 100 observation days. A day with no row is a day with no
+  observation; a date whose delivery is missing (no load signal) is "not delivered", shown on the result, and the test of that date is
+  refused rather than run short.'
+- 'Sizing: 50,000 factors with on average 100 observation days a year is 5 million rows a year, about 60 MB as Parquet.'
+review:
+- 'Whether the bank sends observations at factor level or at the level of the instruments observed, with the instrument to factor
+  mapping kept upstream (this contract assumes the mapping is done upstream).'

@@ -1,0 +1,251 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+
+# Planned data contract of the hypothetical-pnl input (proposed command HPL): docs/architecture/MARKET_RISK_I6_DESIGN.md section 6.
+kind: hypothetical-pnl
+mnemonic: HPL
+pack: market-risk
+version: '1.0'
+class: input
+status: planned
+title: 'Hypothetical P&L of a position (daily)'
+description: 'The hypothetical P&L (HPL) of each position for one day: the positions of the end of the previous business date revalued by
+  the front-office pricing models on the business date''s market, nothing traded, no fees, no reserves and no time effect beyond the one
+  day. Supplied by the bank; Drishti never prices. The P&L explain engine sums it to any scope, compares it with the risk-theoretical
+  P&L (the realised-pv contract) for the unexplained P&L and the P&L attribution test, and with the official VaR of the day before for
+  backtesting. Planned: no command, no data and no engine reads it yet.'
+source: The bank's front-office P&L system (the product control or P&L attribution batch)
+grain: One row per position (GRAIN POSITION) or trade (GRAIN TRADE) and BUSINESS_DATE (the day the market moved), keyed by HPL_ID
+  (HPL-<POSITION_ID or TRADE_ID>-<BUSINESS_DATE>); one complete file per date.
+key:
+- HPL_ID
+id-pattern:
+- ^HPL-
+list:
+  requires: [POSITION_ID, TRADE_ID, TT_BOOK, DESK]
+  why: 'hypothetical P&L is per position: give a position, trade, book or desk'
+dated-by: BUSINESS_DATE
+cadence:
+  frequency: daily
+  due: by the next business day's morning run, with the desk P&L (a position missing on a date is named, never read as zero)
+binding-hint:
+  lake-table: risk.hypothetical-pnl
+  partition:
+  - BUSINESS_DATE
+  columns:
+  - HPL_ID
+  - GRAIN
+  - POSITION_ID
+  - TRADE_ID
+  - POSITION_DATE
+  - SOURCE_SYSTEM
+  - LEGAL_ENTITY
+  - DIVISION
+  - DESK
+  - TT_BOOK
+  - REGULATORY_DESK_ID
+  - PRODUCT_GROUP
+  - PRODUCT_TYPE
+  - HPL
+  - CURRENCY
+  - STATUS
+  - BATCH_ID
+  - COMPUTED_AT
+fields:
+- name: HPL_ID
+  type: id
+  presence: required
+  description: The row's id, HPL-<POSITION_ID or TRADE_ID>-<BUSINESS_DATE> (the business key).
+  example: HPL-POS-BOOK-RATES-1~MX-20000002-2026-09-30
+  pattern: ^HPL-
+- name: BUSINESS_DATE
+  type: date
+  presence: required
+  description: 'The day the market moved (YYYY-MM-DD): the P&L is from the close of POSITION_DATE to the close of this date.'
+  example: '2026-09-30'
+- name: POSITION_DATE
+  type: date
+  presence: required
+  description: The business date whose end-of-day positions were held constant; it must be the business day before BUSINESS_DATE in
+    the desk's calendar, and the date of the realised-pv rows it is compared with.
+  example: '2026-09-29'
+- name: GRAIN
+  type: text
+  presence: required
+  description: 'What one row is: POSITION (its POSITION_ID) or TRADE (its TRADE_ID); one source system sends one grain on one date,
+    the same grain as its scenario PVs.'
+  example: POSITION
+  enum: [TRADE, POSITION]
+- name: POSITION_ID
+  type: id
+  presence: optional
+  description: The position, at GRAIN POSITION (required then); the same id as in scenario-pv on POSITION_DATE.
+  example: POS-BOOK-RATES-1~MX-20000002
+  pattern: ^POS-
+  link: position
+- name: TRADE_ID
+  type: id
+  presence: optional
+  description: The trade, at GRAIN TRADE (required then).
+  example: MX-20000002
+  link: trade
+- name: SOURCE_SYSTEM
+  type: text
+  presence: required
+  description: The system that produced the row.
+  example: MUREX
+- name: LEGAL_ENTITY
+  type: id
+  presence: required
+  description: The legal entity of the position on POSITION_DATE. Must be a promoted column.
+  example: LE-NY
+  pattern: ^LE-
+  link: legal-entity
+- name: DIVISION
+  type: id
+  presence: optional
+  description: The division of the desk.
+  example: DIV-MARKETS
+- name: DESK
+  type: id
+  presence: required
+  description: The desk of the position on POSITION_DATE. Must be a promoted column.
+  example: DESK-RATES
+  pattern: ^DESK-
+  link: desk
+- name: TT_BOOK
+  type: id
+  presence: required
+  description: The book of the position on POSITION_DATE. Must be a promoted column.
+  example: BOOK-RATES-1
+  pattern: ^BOOK-
+  link: book
+- name: REGULATORY_DESK_ID
+  type: id
+  presence: optional
+  description: The regulatory trading desk (the regulatory-desk contract) when it differs from DESK; the P&L attribution test and desk
+    backtesting group by it.
+  example: RD-RATES-NY
+- name: PRODUCT_GROUP
+  type: text
+  presence: optional
+  description: The product group, for breakdowns.
+  example: Rates
+- name: PRODUCT_TYPE
+  type: text
+  presence: optional
+  description: The product type as booked.
+  example: IRS_FIXFLOAT
+- name: HPL
+  type: amount
+  presence: optional
+  unit: CURRENCY
+  description: The hypothetical P&L of the day, positive for a gain. Required unless STATUS is failed; a failed row is counted and
+    named, never taken as zero.
+  example: -58211.4
+- name: CURRENCY
+  type: text
+  presence: required
+  description: The currency of HPL (ISO 4217); converted to the reporting currency at the business date's closing FX.
+  example: USD
+- name: PV_START
+  type: amount
+  presence: optional
+  unit: CURRENCY
+  description: The front-office PV at the close of POSITION_DATE, kept for audit and for the reconciliation with BASE_PV of the scenario PVs.
+  example: 1204500.0
+- name: PV_END
+  type: amount
+  presence: optional
+  unit: CURRENCY
+  description: The front-office PV of the same position on the business date's market.
+  example: 1146288.6
+- name: STATUS
+  type: text
+  presence: required
+  description: ok, proxied (valued by a proxy) or failed (no HPL).
+  example: ok
+  enum: [ok, proxied, failed]
+- name: PRICER
+  type: text
+  presence: optional
+  description: The front-office pricing model; kept for audit.
+  example: fo-rates-3
+- name: BATCH_ID
+  type: id
+  presence: required
+  description: The run that produced the row; one full run per source system and date.
+  example: B-HPL-2026-09-30-01
+- name: COMPUTED_AT
+  type: timestamp
+  presence: required
+  description: When the run produced the row (UTC).
+  example: '2026-10-01T05:40:00Z'
+- name: RESTATEMENT
+  type: integer
+  presence: optional
+  description: 0 for the first run of the date, then 1, 2, ... each time the date is restated.
+  example: 0
+links:
+- field: POSITION_ID
+  kind: position
+- field: TRADE_ID
+  kind: trade
+- field: LEGAL_ENTITY
+  kind: legal-entity
+- field: DESK
+  kind: desk
+- field: TT_BOOK
+  kind: book
+validation:
+- rule: required
+  fields:
+  - HPL_ID
+  - BUSINESS_DATE
+  - POSITION_DATE
+  - GRAIN
+  - SOURCE_SYSTEM
+  - LEGAL_ENTITY
+  - DESK
+  - TT_BOOK
+  - CURRENCY
+  - STATUS
+  - BATCH_ID
+  - COMPUTED_AT
+- rule: unique
+  key:
+  - HPL_ID
+  per: BUSINESS_DATE
+- rule: pattern
+  field: HPL_ID
+  pattern: ^HPL-
+- rule: enum
+  field: GRAIN
+  values: [TRADE, POSITION]
+- rule: enum
+  field: STATUS
+  values: [ok, proxied, failed]
+notes:
+- 'JSON Lines, one row per line (UTF-8; .jsonl or .jsonl.gz). Example line: {"HPL_ID":"HPL-POS-BOOK-RATES-1~MX-20000002-2026-09-30","BUSINESS_DATE":"2026-09-30","POSITION_DATE":"2026-09-29","GRAIN":"POSITION","POSITION_ID":"POS-BOOK-RATES-1~MX-20000002","SOURCE_SYSTEM":"MUREX","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-RATES","TT_BOOK":"BOOK-RATES-1","PRODUCT_GROUP":"Rates","PRODUCT_TYPE":"IRS_FIXFLOAT","HPL":-58211.4,"CURRENCY":"USD","PV_START":1204500.0,"PV_END":1146288.6,"STATUS":"ok","PRICER":"fo-rates-3","BATCH_ID":"B-HPL-2026-09-30-01","COMPUTED_AT":"2026-10-01T05:40:00Z","RESTATEMENT":0}'
+- 'Checks on load, each counted and named in every answer''s provenance: POSITION_DATE is not the business day before BUSINESS_DATE (the
+  row is refused); a position of POSITION_DATE''s scenario PVs with no HPL row (completeness, by desk: the desk''s HPL is shown as
+  incomplete with the count, and a desk under the completeness threshold is left out of the attribution test for the day, in words); a
+  desk whose rows sum to a figure that differs from the desk-pnl row''s HYPOTHETICAL_PNL by more than the tolerance (a warning with both
+  figures: the desk row stays the figure of record for backtesting).'
+- 'Sizing: 1.3 million positions a day, about 250 bytes a row as JSON and about 40 MB a date as Parquet; 250 dates about 10 GB.'
+review:
+- 'Whether the bank''s P&L system can deliver HPL per position, or only per trade or per book: a book-level delivery supports desk tests and
+  backtesting but not the drill to positions.'
+- 'The due time, and how a late trade booked after the close of POSITION_DATE is treated upstream.'

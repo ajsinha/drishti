@@ -142,9 +142,18 @@ Every command (mnemonic) of every pack has a data contract: a YAML file beside i
 | `SOCI` | `social-indicator` | [world-economy](world-economy.md#soci-social-indicator-social-indicator) | fundamental | active |  | 6 |
 | `CAPI` (proposed) | `capital-input` | [market-risk](market-risk.md#capi-market-risk-capital-inputs-per-filer-and-date-capital-input) | input | planned: no command or data yet |  | 1 |
 | `DRCI` (proposed) | `default-risk` | [market-risk](market-risk.md#drci-default-risk-inputs-the-drc-per-position-and-obligor-default-risk) | input | planned: no command or data yet |  | 1 |
+| `ESPV` (proposed) | `es-scenario-pv` | [market-risk](market-risk.md#espv-partial-shock-scenario-pvs-of-a-position-expected-shortfall-by-liquidity-horizon-es-scenario-pv) | input | planned: no command or data yet |  | 3 |
 | `FPNL` (proposed) | `finance-pnl` | [market-risk](market-risk.md#fpnl-finance-trading-pl-by-legal-entity-daily-finance-pnl) | input | planned: no command or data yet |  | 1 |
+| `HPL` (proposed) | `hypothetical-pnl` | [market-risk](market-risk.md#hpl-hypothetical-pl-of-a-position-daily-hypothetical-pnl) | input | planned: no command or data yet |  | 2 |
+| `IDEF` (proposed) | `issuer-default` | [market-risk](market-risk.md#idef-issuer-default-parameters-pd-and-the-two-systematic-factor-loadings-issuer-default) | input | planned: no command or data yet |  | 2 |
+| `MLIQ` (proposed) | `market-liquidity` | [market-risk](market-risk.md#mliq-market-liquidity-of-an-instrument-bid-ask-spread-volume-depth-market-liquidity) | input | planned: no command or data yet |  | 2 |
+| `MMOV` (proposed) | `market-move` | [market-risk](market-risk.md#mmov-market-move-of-a-risk-factor-daily-with-its-series-mapping-market-move) | input | planned: no command or data yet |  | 1 |
+| `NMRF` (proposed) | `nmrf-stress` | [market-risk](market-risk.md#nmrf-stress-scenario-pl-of-a-position-for-a-non-modellable-risk-factor-nmrf-stress) | input | planned: no command or data yet |  | 1 |
+| `RPV` (proposed) | `realised-pv` | [market-risk](market-risk.md#rpv-realised-move-pv-of-a-position-the-risk-model-daily-realised-pv) | input | planned: no command or data yet |  | 1 |
 | `RDSK` (proposed) | `regulatory-desk` | [market-risk](market-risk.md#rdsk-regulatory-trading-desk-definitions-regulatory-desk) | input | planned: no command or data yet |  | 1 |
 | `RRAI` (proposed) | `residual-risk` | [market-risk](market-risk.md#rrai-residual-risk-inputs-the-rrao-per-trade-residual-risk) | input | planned: no command or data yet |  | 1 |
+| `RFOB` (proposed) | `risk-factor-observation` | [market-risk](market-risk.md#rfob-real-price-observations-of-a-risk-factor-for-the-eligibility-test-risk-factor-observation) | input | planned: no command or data yet |  | 1 |
 | `RTYP` (proposed) | `risk-type-map` | [market-risk](market-risk.md#rtyp-var-risk-type-mapping-risk-type-map) | input | planned: no command or data yet |  | 1 |
+| `SDEF` (proposed) | `stress-definition` | [market-risk](market-risk.md#sdef-stress-scenario-definition-historical-hypothetical-regulatory-stress-definition) | input | planned: no command or data yet |  | 2 |
 | `TCF` (proposed) | `trade-cash-flow` | [market-risk](market-risk.md#tcf-trade-cash-flows-daily-trade-cash-flow) | input | planned: no command or data yet |  | 2 |
 | `VTRD` (proposed) | `volcker-trade` | [market-risk](market-risk.md#vtrd-volcker-trade-attributes-volcker-trade) | input | planned: no command or data yet |  | 1 |

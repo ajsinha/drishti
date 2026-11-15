@@ -1,0 +1,323 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+
+# Planned data contract of the es-scenario-pv input (proposed command ESPV): docs/architecture/MARKET_RISK_I6_DESIGN.md sections 9 and 13.
+kind: es-scenario-pv
+mnemonic: ESPV
+pack: market-risk
+version: '1.0'
+class: input
+status: planned
+title: 'Partial-shock scenario PVs of a position (expected shortfall by liquidity horizon)'
+description: 'The scenario values the FRTB internal models approach needs for the liquidity-horizon cascade (Basel MAR33): for each
+  position, a vector of values under 10-day scenarios in which only the risk factors of one liquidity-horizon step (all factors; then
+  only those with a horizon of 20 days or more; 40; 60; 120) and of one risk-class set (all classes, or one class with the others held)
+  are shocked, for each of the three calibrations (the full factor set on the current 12 months, the reduced set on the current 12
+  months, the reduced set on the stress period). The bank''s engine prices them; Drishti sums them to any scope, takes the 97.5%
+  expected shortfall of each sum and combines the steps. One row per vector, sent only where it differs from zero and declared on the
+  position''s first row, so nothing absent is ever read as zero. Planned: no command, no data and no engine reads it yet.'
+source: The bank's risk engine (the FRTB internal models run)
+grain: One row per position (GRAIN POSITION) or trade (GRAIN TRADE), calibration, risk-class set, liquidity-horizon step and
+  BUSINESS_DATE, keyed by ES_PV_ID (ESPV-<POSITION_ID or TRADE_ID>-<CALIBRATION>-<RISK_CLASS_SET>-<LH_STEP>); one complete file per date.
+key:
+- ES_PV_ID
+id-pattern:
+- ^ESPV-
+list:
+  requires: [POSITION_ID, TRADE_ID, TT_BOOK, DESK]
+  why: 'partial-shock scenario PVs are per position: give a position, trade, book or desk'
+dated-by: BUSINESS_DATE
+cadence:
+  frequency: daily
+  due: with the scenario PVs of the date (the calibrations a supervisor lets a bank refresh less often keep their last delivery, said on the result)
+binding-hint:
+  lake-table: risk.es-scenario-pv
+  partition:
+  - BUSINESS_DATE
+  - CALIBRATION
+  columns:
+  - ES_PV_ID
+  - VALUE_TYPE
+  - GRAIN
+  - POSITION_ID
+  - TRADE_ID
+  - SOURCE_SYSTEM
+  - LEGAL_ENTITY
+  - DIVISION
+  - DESK
+  - TT_BOOK
+  - REGULATORY_DESK_ID
+  - CALIBRATION
+  - RISK_CLASS_SET
+  - LH_STEP
+  - RISK_CLASSES
+  - LH_STEPS_SENT
+  - RISK_CLASS_SETS_SENT
+  - SCENARIO_SET_ID
+  - CURRENCY
+  - BASE_PV
+  - STATUS
+  - BATCH_ID
+  - COMPUTED_AT
+  vectors:
+  - SCENARIO_PV
+fields:
+- name: ES_PV_ID
+  type: id
+  presence: required
+  description: The row's id, ESPV-<POSITION_ID or TRADE_ID>-<CALIBRATION>-<RISK_CLASS_SET>-<LH_STEP> (the business key).
+  example: ESPV-POS-BOOK-RATES-1~MX-20000002-RS-ALL-20
+  pattern: ^ESPV-
+- name: VALUE_TYPE
+  type: text
+  presence: required
+  description: 'PV (SCENARIO_PV holds values, BASE_PV the value today: P&L(s) = SCENARIO_PV(s) - BASE_PV) or PNL (SCENARIO_PV holds the
+    P&L of each scenario and BASE_PV is not read).'
+  example: PV
+  enum: [PV, PNL]
+- name: BUSINESS_DATE
+  type: date
+  presence: required
+  description: The close of business the positions and the values belong to (YYYY-MM-DD).
+  example: '2026-09-30'
+- name: GRAIN
+  type: text
+  presence: required
+  description: POSITION (its POSITION_ID) or TRADE (its TRADE_ID), the grain of the source system's scenario PVs on the date.
+  example: POSITION
+  enum: [TRADE, POSITION]
+- name: POSITION_ID
+  type: id
+  presence: optional
+  description: The position, at GRAIN POSITION (required then); the same id as in scenario-pv on the date.
+  example: POS-BOOK-RATES-1~MX-20000002
+  pattern: ^POS-
+  link: position
+- name: TRADE_ID
+  type: id
+  presence: optional
+  description: The trade, at GRAIN TRADE (required then).
+  example: MX-20000002
+  link: trade
+- name: SOURCE_SYSTEM
+  type: text
+  presence: required
+  description: The system that produced the row.
+  example: MUREX
+- name: LEGAL_ENTITY
+  type: id
+  presence: required
+  description: The legal entity. Must be a promoted column.
+  example: LE-NY
+  pattern: ^LE-
+  link: legal-entity
+- name: DIVISION
+  type: id
+  presence: optional
+  description: The division of the desk.
+  example: DIV-MARKETS
+- name: DESK
+  type: id
+  presence: required
+  description: The desk. Must be a promoted column.
+  example: DESK-RATES
+  pattern: ^DESK-
+  link: desk
+- name: TT_BOOK
+  type: id
+  presence: required
+  description: The book. Must be a promoted column.
+  example: BOOK-RATES-1
+  pattern: ^BOOK-
+  link: book
+- name: REGULATORY_DESK_ID
+  type: id
+  presence: optional
+  description: The regulatory trading desk when it differs from DESK; the capital figures group by it.
+  example: RD-RATES-NY
+- name: CALIBRATION
+  type: text
+  presence: required
+  description: 'Which of the three expected shortfalls the vector feeds: FC (the full set of risk factors, the current 12 months), RC
+    (the reduced set, the current 12 months) or RS (the reduced set, the stress period).'
+  example: RS
+  enum: [FC, RC, RS]
+- name: RISK_CLASS_SET
+  type: text
+  presence: required
+  description: 'The risk classes shocked: ALL (every class together, the unconstrained figure) or one of IR, CS, EQ, FX, CM (that class
+    shocked, the others held at today''s level).'
+  example: ALL
+  enum: [ALL, IR, CS, EQ, FX, CM]
+- name: LH_STEP
+  type: integer
+  presence: required
+  unit: days
+  description: 'The liquidity-horizon step: 10 (every factor of the set shocked), or 20, 40, 60, 120 (only the factors whose liquidity
+    horizon is that many days or longer shocked, the others held). Every scenario is a 10-day move.'
+  example: 20
+  enum: [10, 20, 40, 60, 120]
+- name: RISK_CLASSES
+  type: text list
+  presence: required
+  description: 'The risk classes the position has factors in. A position in one class sends only RISK_CLASS_SET ALL: its ALL vectors are
+    also that class''s. A position in several sends ALL and each of its classes.'
+  example: '["IR"]'
+- name: LH_STEPS_SENT
+  type: list
+  presence: required
+  description: 'The steps this position sends for this calibration and risk-class set, for example [10, 20, 40]: a step not listed is
+    declared zero (the position has no factor of that horizon or longer in the set). A listed step whose row is missing refuses the
+    position for the date (counted, named); nothing absent is read as zero unless it is declared here. The same list on every row of the
+    position, calibration and set.'
+  example: '[10, 20, 40]'
+- name: RISK_CLASS_SETS_SENT
+  type: text list
+  presence: required
+  description: The risk-class sets this position sends for this calibration, for the same check.
+  example: '["ALL"]'
+- name: SCENARIO_SET_ID
+  type: id
+  presence: required
+  description: 'The scenario set whose SCENARIO_DATES order the vector: a set of SET_TYPE ES_CURRENT for the calibrations FC and RC, of
+    SET_TYPE ES_STRESS for RS, HORIZON_DAYS 10. Every row of one calibration on one date names the same set.'
+  example: ES-STRESS-250
+- name: CURRENCY
+  type: text
+  presence: required
+  description: 'The reporting currency (USD). Unlike scenario-pv, the values are not accepted in the trade''s own currency: an FX factor has
+    a liquidity horizon of its own, so the conversion is part of each step''s shock and must be done by the engine that applies the shocks.'
+  example: USD
+  enum: [USD]
+- name: BASE_PV
+  type: amount
+  presence: optional
+  unit: USD
+  description: The position's value today, from the same run (required at VALUE_TYPE PV).
+  example: 1204500.0
+- name: SCENARIO_PV
+  type: vector
+  presence: optional
+  unit: USD
+  description: The position's value (or P&L, by VALUE_TYPE) under each scenario of the set, oldest first; required unless STATUS is failed.
+    A scenario that failed to price is null and the position is then not loaded (never filled with zero).
+  note: one value per scenario of the calibration's set (250 by default)
+- name: STATUS
+  type: text
+  presence: required
+  description: ok, proxied or failed.
+  example: ok
+  enum: [ok, proxied, failed]
+- name: PRICER
+  type: text
+  presence: optional
+  description: The pricer that valued the row; kept for audit.
+  example: demo-factor-model
+- name: MODEL_VERSION
+  type: text
+  presence: optional
+  description: The pricer's model version; kept for audit.
+  example: demo-2
+- name: BATCH_ID
+  type: id
+  presence: required
+  description: The run that produced the row; one batch per date across the three calibrations.
+  example: B-ES-2026-09-30-01
+- name: COMPUTED_AT
+  type: timestamp
+  presence: required
+  description: When the run produced the row (UTC).
+  example: '2026-09-30T07:10:00Z'
+links:
+- field: POSITION_ID
+  kind: position
+- field: TRADE_ID
+  kind: trade
+- field: LEGAL_ENTITY
+  kind: legal-entity
+- field: DESK
+  kind: desk
+- field: TT_BOOK
+  kind: book
+validation:
+- rule: required
+  fields:
+  - ES_PV_ID
+  - VALUE_TYPE
+  - BUSINESS_DATE
+  - GRAIN
+  - SOURCE_SYSTEM
+  - LEGAL_ENTITY
+  - DESK
+  - TT_BOOK
+  - CALIBRATION
+  - RISK_CLASS_SET
+  - LH_STEP
+  - RISK_CLASSES
+  - LH_STEPS_SENT
+  - RISK_CLASS_SETS_SENT
+  - SCENARIO_SET_ID
+  - CURRENCY
+  - STATUS
+  - BATCH_ID
+  - COMPUTED_AT
+- rule: unique
+  key:
+  - ES_PV_ID
+  per: BUSINESS_DATE
+- rule: pattern
+  field: ES_PV_ID
+  pattern: ^ESPV-
+- rule: enum
+  field: VALUE_TYPE
+  values: [PV, PNL]
+- rule: enum
+  field: GRAIN
+  values: [TRADE, POSITION]
+- rule: enum
+  field: CALIBRATION
+  values: [FC, RC, RS]
+- rule: enum
+  field: RISK_CLASS_SET
+  values: [ALL, IR, CS, EQ, FX, CM]
+- rule: enum
+  field: LH_STEP
+  values: [10, 20, 40, 60, 120]
+- rule: enum
+  field: CURRENCY
+  values: [USD]
+- rule: enum
+  field: STATUS
+  values: [ok, proxied, failed]
+- rule: vector-length
+  field: SCENARIO_PV
+  same: every row of one business date and calibration
+notes:
+- 'JSON Lines, one row per line (UTF-8; .jsonl or .jsonl.gz; a date may be a tar of files, one per calibration). The vector of the example is cut to its first 3 values: a row carries all of its set (250). Example line: {"ES_PV_ID":"ESPV-POS-BOOK-RATES-1~MX-20000002-RS-ALL-20","VALUE_TYPE":"PV","BUSINESS_DATE":"2026-09-30","GRAIN":"POSITION","POSITION_ID":"POS-BOOK-RATES-1~MX-20000002","SOURCE_SYSTEM":"MUREX","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-RATES","TT_BOOK":"BOOK-RATES-1","CALIBRATION":"RS","RISK_CLASS_SET":"ALL","LH_STEP":20,"RISK_CLASSES":["IR"],"LH_STEPS_SENT":[10,20,40],"RISK_CLASS_SETS_SENT":["ALL"],"SCENARIO_SET_ID":"ES-STRESS-250","CURRENCY":"USD","BASE_PV":1204500.0,"SCENARIO_PV":[1131220.5,1259870.0,1190044.25],"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","BATCH_ID":"B-ES-2026-09-30-01","COMPUTED_AT":"2026-09-30T07:10:00Z"}'
+- 'What the three calibrations and five steps are for (Basel MAR33): per calibration and risk-class set, ES = sqrt( ES(step 10)^2 + sum
+  over the later steps j of ( ES(step j) x sqrt( (LH_j - LH_j-1) / 10 ) )^2 ); then ES of the set = ES(RS) x max( ES(FC) / ES(RC), 1 );
+  the capital figure is half the ALL figure plus half the sum of the five classes'' figures.'
+- 'Sizing at 1.3 million positions and 250 scenarios (docs/architecture/MARKET_RISK_I6_DESIGN.md section 13): one vector for every
+  position is 2.6 GB as 64-bit values; the dense worst case (3 calibrations x 6 sets x 5 steps = 90 vectors a position) is 234 GB a
+  date; with the rules above (zero steps declared, single-class positions send ALL only) the expected delivery is 8 to 9 vectors a
+  position, 21 to 23 GB a date before compression.'
+- 'The engine never mixes runs: one BATCH_ID across the calibrations of a date, the date''s scenario-pv positions and these positions
+  must be the same set (a position of an internal-models desk with scenario PVs and no rows here is named, and its desk''s figure is
+  marked incomplete, never computed short).'
+review:
+- 'Whether the bank can deliver at position grain, or only at desk grain for the first deliveries (27 MB a date for 150 desks; no drill
+  below the desk and no ad-hoc scope).'
+- 'Which calibrations the bank''s supervisor lets it refresh less often than daily, and how often.'
+- 'Whether positions of desks without internal-models approval are sent at all (they are capitalised by the standardised approach).'

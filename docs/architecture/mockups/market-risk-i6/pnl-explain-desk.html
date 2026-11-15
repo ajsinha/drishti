@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  A screen mock-up (market-risk-i6/pnl-explain-desk.html), self-contained: system fonts, everything inline, nothing from a CDN.
+  Dark theme by default; open it with #light for the light theme. Illustrative figures. Proposed, nothing built:
+  docs/architecture/MARKET_RISK_I6_DESIGN.md section 18.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>P&L explain: the desk view</title>
+<script>if(location.hash==='#light')document.documentElement.classList.add('light');</script>
+<style>
+:root{
+  --bg:#0e1628; --bg2:#121c33; --panel:#16213a; --panel2:#1b2744; --line:#26345a; --line2:#1f2b49;
+  --ink:#e7ecf5; --muted:#93a0b8; --amber:#e8a33a; --link:#7fb2ff; --pos:#7fb2ff; --neg:#f2955a;
+  --ok:#5fd39a; --warn:#f2c14e; --bad:#ff7a7a; --onacc:#14100a;
+  --ok-t:rgba(95,211,154,.14); --warn-t:rgba(242,193,78,.16); --bad-t:rgba(255,122,122,.15); --hl:rgba(127,178,255,.10);
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace; color-scheme:dark;
+}
+html.light{
+  --bg:#f7f5f0; --bg2:#efebe3; --panel:#ffffff; --panel2:#faf8f4; --line:#e2dcd0; --line2:#ece7dd;
+  --ink:#172440; --muted:#55607a; --amber:#985b0a; --link:#1f5fc4; --pos:#1f5fc4; --neg:#b4491a;
+  --ok:#1b784c; --warn:#8a6100; --bad:#b42323; --onacc:#ffffff;
+  --ok-t:rgba(27,120,76,.10); --warn-t:rgba(138,97,0,.10); --bad-t:rgba(180,35,35,.09); --hl:rgba(31,95,196,.07); color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px}
+a{color:var(--link);text-decoration:none}
+.page{max-width:1568px;margin:0 auto;padding:18px 16px 28px;display:flex;flex-direction:column;gap:12px}
+.intro h1{font-size:20px;margin:0 0 4px} .intro p{margin:0;color:var(--muted);max-width:120ch;line-height:1.5;font-size:13.5px}
+.bar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:8px 14px;border:1px solid var(--line);border-radius:8px;background:var(--bg2)}
+.brand{font-weight:700;letter-spacing:.12em;color:var(--amber)}
+.cmd{flex:1 1 300px;max-width:640px;height:32px;display:flex;align-items:center;padding:0 14px;border:1px solid var(--amber);border-radius:16px;font-family:var(--mono);color:var(--amber);font-size:13px;white-space:nowrap;overflow:hidden}
+.menus{display:flex;gap:4px;margin-left:auto;font-size:13px;flex-wrap:wrap} .menus span{padding:5px 10px;border-radius:6px;color:var(--muted)} .menus span.on{background:var(--panel2);color:var(--ink)}
+.head{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline} .head h2{margin:0;font-size:17px} .head .meta{color:var(--muted);font-size:12.5px}
+.ctrls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pick{font-size:12.5px;padding:4px 10px;border:1px solid var(--line);border-radius:14px;background:var(--panel)} .pick b{color:var(--muted);font-weight:500;margin-right:4px}
+.btn{font-size:12.5px;padding:5px 12px;border:1px solid var(--line);border-radius:6px;background:var(--panel2);white-space:nowrap}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:14px;overflow:hidden} .seg span{padding:4px 11px;font-size:12.5px;color:var(--muted)} .seg span.on{background:var(--panel2);color:var(--ink);font-weight:600}
+.grid{display:grid;gap:12px} .g2{grid-template-columns:repeat(auto-fit,minmax(420px,1fr))} .g3{grid-template-columns:2fr 1fr}
+@media(max-width:1000px){.g3{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;min-width:0;overflow-x:auto}
+.card h3{margin:0 0 8px;font-size:13.5px} .card h3 span{color:var(--muted);font-weight:400;font-size:12px;margin-left:6px}
+table{border-collapse:separate;border-spacing:0;font-size:12.5px;font-variant-numeric:tabular-nums;width:100%}
+th,td{padding:4px 8px;white-space:nowrap;text-align:right;border-bottom:1px solid var(--line2)} td{font-family:var(--mono)}
+th{background:var(--panel2);color:var(--muted);font-weight:500;font-size:12px} th.l,td.l{text-align:left;font-family:var(--sans)}
+tr.sel td{background:var(--hl)}
+.neg{color:var(--neg)} .posv{color:var(--pos)} .muted{color:var(--muted)} .ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)}
+.pill{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11.5px;font-family:var(--sans);font-weight:600}
+.pill.g{background:var(--ok-t);color:var(--ok)} .pill.a{background:var(--warn-t);color:var(--warn)} .pill.r{background:var(--bad-t);color:var(--bad)} .pill.n{background:var(--panel2);color:var(--muted)}
+.kpis{display:flex;flex-wrap:wrap;gap:10px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 14px;min-width:150px;flex:1 1 150px}
+.kpi .k{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em} .kpi .v{font-family:var(--mono);font-size:20px;margin-top:2px} .kpi .s{font-size:12px;color:var(--muted);margin-top:2px}
+.kpi.ea{border-left:3px solid var(--warn)} .kpi.er{border-left:3px solid var(--bad)} .kpi.eg{border-left:3px solid var(--ok)}
+.note{font-size:12px;color:var(--muted);line-height:1.5} .notice{font-size:12.5px;padding:7px 12px;border-radius:6px;background:var(--warn-t);color:var(--warn);border:1px solid var(--warn)}
+.mono{font-family:var(--mono)} svg text{font-family:var(--sans);fill:var(--muted);font-size:11px} svg{max-width:100%;height:auto}
+.formula{font-family:var(--mono);font-size:12.5px;line-height:1.9;white-space:pre;overflow-x:auto}
+.heat td{text-align:right} .h1{background:rgba(242,149,90,.10)} .h2{background:rgba(242,149,90,.22)} .h3{background:rgba(242,149,90,.38)} .h4{background:rgba(255,122,122,.50)} .hp{background:rgba(127,178,255,.14)}
+footer{font-size:12px;color:var(--muted);line-height:1.5;border-top:1px solid var(--line);padding-top:8px}
+</style>
+</head>
+<body><div class="page">
+<div class="intro"><h1>P&amp;L explain: the desk view</h1>
+<p>One desk, one day: what it made, what yesterday's positions would have made (HPL), what the risk model says they made (RTPL), the gap
+and its causes; below, whether the model still explains the desk (the attribution test) and whether VaR was large enough (the backtest).</p></div>
+<div class="bar"><span class="brand">DRISHTI</span><div class="cmd">PNL DESK:RATES &lt;GO&gt;</div><div class="menus"><span class="">VaR</span><span class="on">P&L explain</span><span class="">Stress</span><span class="">FRTB-SA</span><span class="">FRTB-IMA</span><span class="">DRC</span><span class="">SIMM</span></div></div>
+<div class="head"><h2>Rates <span class="muted" style="font-weight:400">· regulatory desk RD-RATES-NY</span></h2>
+<span class="meta">market of 2026-09-30 on the positions of 2026-09-29 · USD · computed by P&amp;L explain on drishti-a</span></div>
+<div class="ctrls"><span class="pick"><b>Date</b>2026-09-30</span><span class="pick"><b>Scope</b>DESK:RATES</span>
+<span class="seg"><span class="on">Day</span><span>250 days</span></span><span class="seg"><span class="on">By risk class</span><span>By factor</span><span>By book</span></span>
+<span class="btn">Explain</span><span class="btn">Playground</span><span class="btn">Export</span></div>
+<div class="notice">3 of 41,208 positions have no hypothetical P&amp;L for the day (0.02% of gross market value): listed below, not taken as zero. The desk is within the completeness threshold.</div>
+<div class="kpis">
+<div class="kpi"><div class="k">Actual (APL)</div><div class="v posv">+1,912,400</div><div class="s">finance, clean</div></div>
+<div class="kpi"><div class="k">Hypothetical (HPL)</div><div class="v posv">+1,486,250</div><div class="s">desk row 1,486,900 · differs by 650</div></div>
+<div class="kpi"><div class="k">Risk-theoretical (RTPL)</div><div class="v posv">+1,402,110</div><div class="s">from realised-move PVs · exact</div></div>
+<div class="kpi ea"><div class="k">Unexplained</div><div class="v">+84,140</div><div class="s">5.7% of HPL · HPL − RTPL</div></div>
+<div class="kpi ea"><div class="k">Attribution test</div><div class="v"><span class="pill a">Amber</span></div><div class="s">Spearman 0.83 · KS 0.097 · 250 days</div></div>
+<div class="kpi eg"><div class="k">Backtest, 12 months</div><div class="v"><span class="pill g">Green</span></div><div class="s">99%: 2 of 12 · 97.5%: 7 of 30</div></div>
+</div>
+<div class="grid g2">
+<div class="card"><h3>From yesterday's positions to today's P&amp;L <span>USD thousands · click a bar to explain it</span></h3>
+<svg viewBox="0 0 640 250" width="640" role="img" aria-label="Waterfall of the day's P&L">
+<line x1="40" y1="200" x2="630" y2="200" stroke="var(--line)"/>
+<rect x="50" y="99.7" width="46" height="100.3" fill="var(--pos)" rx="2"/><text x="73" y="216" text-anchor="middle">Rates delta</text><text x="73" y="94.7" text-anchor="middle">+1,180</text>
+<rect x="112" y="99.7" width="46" height="5.3" fill="var(--neg)" rx="2"/><text x="135" y="216" text-anchor="middle">Gamma</text><text x="135" y="94.7" text-anchor="middle">-62</text>
+<rect x="174" y="92.4" width="46" height="12.6" fill="var(--pos)" rx="2"/><text x="197" y="216" text-anchor="middle">Vega</text><text x="197" y="87.4" text-anchor="middle">+148</text>
+<rect x="236" y="84.2" width="46" height="8.2" fill="var(--pos)" rx="2"/><text x="259" y="216" text-anchor="middle">Theta</text><text x="259" y="79.2" text-anchor="middle">+96</text>
+<rect x="298" y="82.4" width="46" height="2.0" fill="var(--pos)" rx="2"/><text x="321" y="216" text-anchor="middle">Credit</text><text x="321" y="77.4" text-anchor="middle">+22</text>
+<rect x="360" y="80.8" width="46" height="2.0" fill="var(--pos)" rx="2"/><text x="383" y="216" text-anchor="middle">FX</text><text x="383" y="75.8" text-anchor="middle">+18</text>
+<rect x="422" y="73.7" width="46" height="7.2" fill="var(--warn)" rx="2"/><text x="445" y="216" text-anchor="middle">Residual</text><text x="445" y="68.7" text-anchor="middle">+84</text>
+<rect x="484" y="73.7" width="46" height="126.3" fill="var(--muted)" rx="2"/><text x="507" y="216" text-anchor="middle">HPL</text><text x="507" y="68.7" text-anchor="middle">1,486</text>
+<rect x="546" y="37.4" width="46" height="36.2" fill="var(--ok)" rx="2"/><text x="569" y="216" text-anchor="middle">New, fees</text><text x="569" y="32.4" text-anchor="middle">+426</text>
+<rect x="608" y="37.4" width="46" height="162.6" fill="var(--muted)" rx="2"/><text x="631" y="216" text-anchor="middle">APL</text><text x="631" y="32.4" text-anchor="middle">1,912</text>
+<text x="40" y="240">Attribution from the sensitivities of 2026-09-29 and the moves of 2026-09-30 · 2 factors with a stale move (marked in the table)</text>
+</svg></div>
+<div class="card"><h3>HPL against RTPL, 250 days <span>each point a day · today ringed</span></h3>
+<svg viewBox="0 0 640 250" width="640" role="img" aria-label="Scatter of hypothetical against risk-theoretical P&L">
+<line x1="60" y1="225" x2="620" y2="225" stroke="var(--line)"/><line x1="60" y1="15" x2="60" y2="225" stroke="var(--line)"/>
+<line x1="60" y1="225" x2="620" y2="15" stroke="var(--line)" stroke-dasharray="4 4"/>
+<circle cx="310" cy="120" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="353" cy="131" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="277" cy="150" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="292" cy="155" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="287" cy="138" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="591" cy="36" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="386" cy="108" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="320" cy="133" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="244" cy="159" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="449" cy="93" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="325" cy="135" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="427" cy="102" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="286" cy="133" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="266" cy="157" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="332" cy="124" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="404" cy="100" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="352" cy="138" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="217" cy="146" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="353" cy="119" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="376" cy="89" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="459" cy="72" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="134" cy="188" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="477" cy="72" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="379" cy="111" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="395" cy="93" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="228" cy="175" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="338" cy="120" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="334" cy="113" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="267" cy="165" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="443" cy="87" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="312" cy="139" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="268" cy="157" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="394" cy="89" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="454" cy="63" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="228" cy="159" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="312" cy="117" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="242" cy="178" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="368" cy="126" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="308" cy="129" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="427" cy="83" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="373" cy="102" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="434" cy="99" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="353" cy="137" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="547" cy="46" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="330" cy="117" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="232" cy="151" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="401" cy="108" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="152" cy="198" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="248" cy="163" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="339" cy="109" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="374" cy="118" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="411" cy="87" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="326" cy="127" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="351" cy="99" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="566" cy="30" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="217" cy="166" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="225" cy="167" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="338" cy="121" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="448" cy="84" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="219" cy="156" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="198" cy="173" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="218" cy="161" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="400" cy="95" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="326" cy="130" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="282" cy="163" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="293" cy="119" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="411" cy="74" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="356" cy="111" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="359" cy="101" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="431" cy="93" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="255" cy="146" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="181" cy="192" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="292" cy="140" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="279" cy="132" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="264" cy="134" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="341" cy="134" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="307" cy="147" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="431" cy="69" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="252" cy="123" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="441" cy="78" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="311" cy="159" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="208" cy="187" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="217" cy="160" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="365" cy="123" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="342" cy="113" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="460" cy="66" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="353" cy="112" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="445" cy="92" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="329" cy="121" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="380" cy="100" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="420" cy="96" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="435" cy="76" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="348" cy="112" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="323" cy="109" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="273" cy="139" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="439" cy="84" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="269" cy="150" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="384" cy="98" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="177" cy="170" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="244" cy="170" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="385" cy="106" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="304" cy="131" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="402" cy="92" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="248" cy="151" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="342" cy="99" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="330" cy="122" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="255" cy="146" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="342" cy="134" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="415" cy="104" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="290" cy="140" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="262" cy="151" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="473" cy="48" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="519" cy="47" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="479" cy="75" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="338" cy="101" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="342" cy="124" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="292" cy="149" r="2.6" fill="var(--pos)" opacity=".7"/><circle cx="428" cy="76" r="2.6" fill="var(--pos)" opacity=".7"/>
+<circle cx="466" cy="70" r="6" fill="none" stroke="var(--amber)" stroke-width="2"/><circle cx="466" cy="70" r="2.6" fill="var(--amber)"/>
+<text x="340" y="244" text-anchor="middle">RTPL</text><text x="18" y="120" transform="rotate(-90 18 120)" text-anchor="middle">HPL</text>
+<text x="612" y="30" text-anchor="end">Spearman 0.83 (amber below 0.80, red below 0.70)</text>
+</svg></div>
+</div>
+<div class="grid g3">
+<div class="card"><h3>Regulatory desks <span>the day and the tests · a row opens its desk</span></h3>
+<table><tr><th class="l">Desk</th><th>APL</th><th>HPL</th><th>RTPL</th><th>Unexplained</th><th>Complete</th><th>Spearman</th><th>KS</th><th class="l">Attribution</th><th>Exc. 99%</th><th>Exc. 97.5%</th><th class="l">Backtest</th></tr>
+<tr class="sel"><td class="l"><a>Rates</a></td><td>1,912,400</td><td>1,486,250</td><td>1,402,110</td><td>84,140</td><td>99.98%</td><td class="warn">0.83</td><td class="warn">0.097</td><td class="l"><span class="pill a">Amber</span></td><td>2</td><td>7</td><td class="l"><span class="pill g">Passes</span></td></tr>
+<tr><td class="l"><a>Credit</a></td><td class="neg">−402,150</td><td class="neg">−388,900</td><td class="neg">−371,480</td><td class="neg">−17,420</td><td>100%</td><td>0.91</td><td>0.061</td><td class="l"><span class="pill g">Green</span></td><td>4</td><td>11</td><td class="l"><span class="pill g">Passes</span></td></tr>
+<tr><td class="l"><a>FX</a></td><td>266,300</td><td>241,700</td><td>239,950</td><td>1,750</td><td>100%</td><td>0.96</td><td>0.044</td><td class="l"><span class="pill g">Green</span></td><td>1</td><td>5</td><td class="l"><span class="pill g">Passes</span></td></tr>
+<tr><td class="l"><a>Equity derivatives</a></td><td class="neg">−1,120,800</td><td class="neg">−955,300</td><td class="neg">−604,210</td><td class="neg">−351,090</td><td>99.4%</td><td class="bad">0.66</td><td class="bad">0.131</td><td class="l"><span class="pill r">Red</span></td><td>9</td><td>24</td><td class="l"><span class="pill g">Passes</span></td></tr>
+<tr><td class="l"><a>Commodities</a></td><td>88,940</td><td>102,300</td><td class="muted">not delivered</td><td class="muted">—</td><td class="warn">71%</td><td class="muted">212 of 250 days</td><td class="muted">—</td><td class="l"><span class="pill n">Not enough days</span></td><td class="bad">13</td><td>28</td><td class="l"><span class="pill r">Fails</span></td></tr>
+</table>
+<p class="note">Commodities: the realised-move PVs of 2026-09-30 were not delivered (load state: late), so no RTPL is shown for the day; the approximate figure from the newest scenario is available under Explain and is never used for the test.</p></div>
+<div class="card"><h3>Largest unexplained positions <span>Rates · HPL − RTPL</span></h3>
+<table><tr><th class="l">Position</th><th>HPL</th><th>RTPL</th><th>Gap</th></tr>
+<tr><td class="l"><a>Bermudan swaption EUR 10Y</a></td><td>212,400</td><td>168,050</td><td>44,350</td></tr>
+<tr><td class="l"><a>CMS spread option USD</a></td><td class="neg">−80,120</td><td class="neg">−101,300</td><td>21,180</td></tr>
+<tr><td class="l"><a>Inflation swap GBP 30Y</a></td><td>55,900</td><td>41,720</td><td>14,180</td></tr>
+<tr><td class="l"><a>IRS EUR 5Y</a> <span class="pill n">proxied</span></td><td class="neg">−58,211</td><td class="neg">−54,150</td><td class="neg">−4,061</td></tr>
+<tr><td class="l muted">41,201 others</td><td></td><td></td><td>8,491</td></tr></table>
+<h3 style="margin-top:12px">No hypothetical P&amp;L delivered <span>3 positions</span></h3>
+<table><tr><th class="l">Position</th><th>Market value</th></tr>
+<tr><td class="l"><a>FRA USD 3x6 (booked late)</a></td><td>412,000</td></tr><tr><td class="l"><a>Cap EUR 2Y</a></td><td>96,300</td></tr><tr><td class="l"><a>IRS CAD 2Y</a></td><td>55,120</td></tr></table></div>
+</div>
+<footer>Mock-up for the product owner. Built from Drishti Elements only: the grid, chips, the chart library, the Explain drawer.
+Every figure is computed on the server from values the bank supplied; the page only draws. Illustrative figures.</footer>
+</div></body></html>

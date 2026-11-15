@@ -1,0 +1,192 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+
+# Planned data contract of the issuer-default input (proposed command IDEF): docs/architecture/MARKET_RISK_I6_DESIGN.md section 10.
+kind: issuer-default
+mnemonic: IDEF
+pack: market-risk
+version: '1.0'
+class: input
+status: planned
+title: 'Issuer default parameters (PD and the two systematic factor loadings)'
+description: 'What the default risk charge''s simulation needs to know about each issuer, beside the jump-to-default amounts of the
+  positions (the default-risk contract): the one-year probability of default, the two systematic factors the issuer loads on (the global
+  factor and one sector or region factor) with the loadings, and the classification they were derived from. The bank estimates them
+  (from credit spreads or listed equity prices); Drishti simulates joint defaults from them and prices nothing. Planned: no command, no
+  data and no engine reads it yet.'
+source: The bank's credit risk or default-risk model team (the issuer master with model parameters)
+grain: One row per issuer and BUSINESS_DATE (a slowly changing table; a date without a delivery keeps the last), keyed by ISSUER.
+key:
+- ISSUER
+dated-by: BUSINESS_DATE
+cadence:
+  frequency: on change
+  due: before the weekly default-risk run; a change takes effect from the business date it is delivered for
+binding-hint:
+  lake-table: risk.issuer-default
+  columns:
+  - ISSUER
+  - ISSUER_NAME
+  - PD
+  - PD_SOURCE
+  - RATING
+  - SECTOR_FACTOR
+  - BETA_GLOBAL
+  - BETA_SECTOR
+  - SECTOR
+  - REGION
+  - DEFAULTED
+fields:
+- name: ISSUER
+  type: id
+  presence: required
+  description: The issuer or reference entity, the OBLIGOR of the default-risk rows (an LEI preferred).
+  example: 5493001KJTIIGC8Y1R12
+- name: BUSINESS_DATE
+  type: date
+  presence: required
+  description: The business date the row applies from (YYYY-MM-DD).
+  example: '2026-09-30'
+- name: ISSUER_NAME
+  type: text
+  presence: optional
+  description: The issuer's name, for the screens.
+  example: Acme Corporation
+- name: PD
+  type: rate
+  presence: required
+  unit: a probability over one year (0.0125 is 1.25%)
+  description: The one-year probability of default. A value below the rules' floor (0.0003) is raised to it, and the result says how
+    many issuers were floored; a defaulted issuer has DEFAULTED true and its PD is not read.
+  example: 0.0125
+- name: PD_SOURCE
+  type: text
+  presence: required
+  description: 'Where the PD comes from: INTERNAL (the bank''s approved internal ratings), EXTERNAL (an external rating''s default rate)
+    or MARKET_IMPLIED (never accepted for the regulatory figure: used for analysis only, and said).'
+  example: INTERNAL
+  enum: [INTERNAL, EXTERNAL, MARKET_IMPLIED]
+- name: RATING
+  type: text
+  presence: optional
+  description: The rating the PD belongs to, for breakdowns.
+  example: BB
+- name: SECTOR_FACTOR
+  type: id
+  presence: required
+  description: The second systematic factor the issuer loads on, one per sector, region or sector and region as the bank's model
+    defines them; issuers naming the same id share the factor. The factors are independent of the global factor and of each other
+    (a bank whose sector factors are correlated delivers the loadings after it has made them orthogonal).
+  example: SF-INDUSTRIALS-NA
+- name: BETA_GLOBAL
+  type: rate
+  presence: required
+  description: The loading on the global factor, between -1 and 1.
+  example: 0.5
+- name: BETA_SECTOR
+  type: rate
+  presence: required
+  description: The loading on SECTOR_FACTOR, between -1 and 1; BETA_GLOBAL squared plus BETA_SECTOR squared must be below 1 (the rest
+    is the issuer's own risk). A row that breaks it is refused.
+  example: 0.3
+- name: CORRELATION_BASIS
+  type: text
+  presence: required
+  description: 'What the loadings were estimated from: EQUITY (listed equity prices) or SPREAD (credit spreads).'
+  example: EQUITY
+  enum: [EQUITY, SPREAD]
+- name: CALIBRATION_START
+  type: date
+  presence: optional
+  description: The start of the period the loadings were estimated on (the rules ask for at least ten years including a stress period).
+  example: '2007-01-02'
+- name: CALIBRATION_END
+  type: date
+  presence: optional
+  description: The end of that period.
+  example: '2026-06-30'
+- name: SECTOR
+  type: text
+  presence: optional
+  description: The issuer's sector, for breakdowns and concentration.
+  example: Industrials
+- name: REGION
+  type: text
+  presence: optional
+  description: The issuer's region, for breakdowns and concentration.
+  example: North America
+- name: DEFAULTED
+  type: boolean
+  presence: optional
+  description: The issuer has defaulted; its positions lose their jump-to-default in every path.
+  example: false
+- name: SOURCE
+  type: text
+  presence: required
+  description: The system the row came from.
+  example: demo-credit-model
+- name: AS_OF
+  type: timestamp
+  presence: required
+  description: When the source produced the row (UTC).
+  example: '2026-09-30T20:00:00Z'
+validation:
+- rule: required
+  fields:
+  - ISSUER
+  - BUSINESS_DATE
+  - PD
+  - PD_SOURCE
+  - SECTOR_FACTOR
+  - BETA_GLOBAL
+  - BETA_SECTOR
+  - CORRELATION_BASIS
+  - SOURCE
+  - AS_OF
+- rule: unique
+  key:
+  - ISSUER
+  per: BUSINESS_DATE
+- rule: range
+  field: PD
+  min: 0
+  max: 1
+- rule: range
+  field: BETA_GLOBAL
+  min: -1
+  max: 1
+- rule: range
+  field: BETA_SECTOR
+  min: -1
+  max: 1
+- rule: enum
+  field: PD_SOURCE
+  values: [INTERNAL, EXTERNAL, MARKET_IMPLIED]
+- rule: enum
+  field: CORRELATION_BASIS
+  values: [EQUITY, SPREAD]
+notes:
+- 'JSON Lines, one row per line (UTF-8; .jsonl or .jsonl.gz). Example line: {"ISSUER":"5493001KJTIIGC8Y1R12","BUSINESS_DATE":"2026-09-30","ISSUER_NAME":"Acme Corporation","PD":0.0125,"PD_SOURCE":"INTERNAL","RATING":"BB","SECTOR_FACTOR":"SF-INDUSTRIALS-NA","BETA_GLOBAL":0.5,"BETA_SECTOR":0.3,"CORRELATION_BASIS":"EQUITY","CALIBRATION_START":"2007-01-02","CALIBRATION_END":"2026-06-30","SECTOR":"Industrials","REGION":"North America","DEFAULTED":false,"SOURCE":"demo-credit-model","AS_OF":"2026-09-30T20:00:00Z"}'
+- 'The model: an issuer defaults within the year when BETA_GLOBAL x Z + BETA_SECTOR x Z(SECTOR_FACTOR) + sqrt(1 - BETA_GLOBAL^2 -
+  BETA_SECTOR^2) x e falls below the standard normal quantile of PD, with Z, each sector factor and e independent standard normals.
+  The correlation of two issuers of one sector factor is the product of their global loadings plus the product of their sector
+  loadings; of two issuers of different sector factors, the product of their global loadings.'
+- 'An obligor of the default-risk rows with no row here is never given a default PD or loading: its positions are listed under "issuer
+  parameters missing" and the charge is marked incomplete.'
+review:
+- 'Whether the bank delivers loadings, or the equity or spread return series of each issuer for Drishti to estimate them (a
+  regression on supplied series, no pricing; the design recommends delivered loadings first).'
+- 'Whether a third factor type is needed (the rules ask for two types of systematic factor; some banks use country and industry as
+  separate factors).'

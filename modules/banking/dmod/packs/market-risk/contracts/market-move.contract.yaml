@@ -1,0 +1,189 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+
+# Planned data contract of the market-move input (proposed command MMOV): docs/architecture/MARKET_RISK_I6_DESIGN.md section 6.
+kind: market-move
+mnemonic: MMOV
+pack: market-risk
+version: '1.0'
+class: input
+status: planned
+title: 'Market move of a risk factor (daily, with its series mapping)'
+description: 'The one-day move of each risk factor of the factor dictionary, in the unit its sensitivities are quoted in, with the
+  market-data series it was read from. P&L explain multiplies it by the sensitivities of the day before (delta x move, half gamma x
+  move squared, vega x volatility move); sensitivity-based stress and reverse stress read its history for volatilities and
+  correlations. Statistics on supplied numbers only: no curve is built and nothing is priced. Planned: no command, no data and no
+  engine reads it yet.'
+source: The bank's market-data or risk system (the closes its sensitivities were computed from)
+grain: One row per risk factor and BUSINESS_DATE, keyed by MOVE_ID (MMOV-<RISK_FACTOR>-<BUSINESS_DATE>).
+key:
+- MOVE_ID
+id-pattern:
+- ^MMOV-
+list:
+  requires: [RISK_FACTOR, RISK_CLASS]
+  why: 'market moves are per risk factor: give a factor or a risk class'
+dated-by: BUSINESS_DATE
+cadence:
+  frequency: daily
+  due: with the sensitivities of the business date
+binding-hint:
+  lake-table: risk.market-move
+  partition:
+  - BUSINESS_DATE
+  columns:
+  - MOVE_ID
+  - RISK_FACTOR
+  - RISK_CLASS
+  - PREVIOUS_DATE
+  - LEVEL_PREVIOUS
+  - LEVEL
+  - MOVE
+  - MOVE_UNIT
+  - SERIES_REF
+  - QUALITY
+  - BATCH_ID
+fields:
+- name: MOVE_ID
+  type: id
+  presence: required
+  description: The row's id, MMOV-<RISK_FACTOR>-<BUSINESS_DATE> (the business key).
+  example: MMOV-IR/CURVE/EUR/ESTR/5Y-2026-09-30
+  pattern: ^MMOV-
+- name: BUSINESS_DATE
+  type: date
+  presence: required
+  description: The close the move ends on (YYYY-MM-DD).
+  example: '2026-09-30'
+- name: PREVIOUS_DATE
+  type: date
+  presence: required
+  description: The close the move starts from, the business day before in the factor's calendar.
+  example: '2026-09-29'
+- name: RISK_FACTOR
+  type: id
+  presence: required
+  description: The factor, a RISK_FACTOR of the factor dictionary; a factor not in the dictionary refuses the row.
+  example: IR/CURVE/EUR/ESTR/5Y
+  link: risk-factor
+- name: RISK_CLASS
+  type: text
+  presence: optional
+  description: The factor's risk class, as the dictionary has it; sent for partition pruning, checked against the dictionary.
+  example: IR
+- name: LEVEL_PREVIOUS
+  type: rate
+  presence: required
+  unit: the factor's quotation (per cent for a rate, a price, a volatility in points)
+  description: The factor's level at the close of PREVIOUS_DATE.
+  example: 2.412
+- name: LEVEL
+  type: rate
+  presence: required
+  unit: the factor's quotation
+  description: The factor's level at the close of BUSINESS_DATE.
+  example: 2.442
+- name: MOVE
+  type: rate
+  presence: required
+  unit: MOVE_UNIT
+  description: 'The move in the unit of the factor''s sensitivities: basis points for DV01 and CS01, per cent for a spot or price DELTA,
+    volatility points for VEGA. Checked against LEVEL and LEVEL_PREVIOUS (a difference beyond rounding refuses the row).'
+  example: 3.0
+- name: MOVE_UNIT
+  type: text
+  presence: required
+  description: 'BP (absolute, basis points), PCT (relative, per cent) or VOL_POINT (absolute, volatility points).'
+  example: BP
+  enum: [BP, PCT, VOL_POINT]
+- name: SERIES_REF
+  type: text
+  presence: required
+  description: 'The series mapping: the market-data series the levels were read from, as the market-data pack names it (the
+    dictionary''s MARKET_DATA_REF when the factor has one). Explain shows it under every factor''s move.'
+  example: curve:EUR-ESTR:5Y
+- name: QUALITY
+  type: text
+  presence: required
+  description: 'OBSERVED (a close of the day), STALE (carried from an earlier day: the days stale in STALE_DAYS) or PROXY (the move of
+    PROXY_OF). A stale or proxied move is used and counted, and the explained P&L it produces is marked.'
+  example: OBSERVED
+  enum: [OBSERVED, STALE, PROXY]
+- name: STALE_DAYS
+  type: integer
+  presence: optional
+  description: Business days since the level was last observed (QUALITY STALE).
+  example: 0
+- name: PROXY_OF
+  type: id
+  presence: optional
+  description: The factor whose move stands in (QUALITY PROXY).
+  example: IR/CURVE/EUR/ESTR/7Y
+  link: risk-factor
+- name: SOURCE
+  type: text
+  presence: required
+  description: The system the row came from.
+  example: demo-market-data
+- name: BATCH_ID
+  type: id
+  presence: required
+  description: The run that produced the row; it should be the batch of the day's sensitivities.
+  example: B-SENS-2026-09-30-01
+links:
+- field: RISK_FACTOR
+  kind: risk-factor
+- field: PROXY_OF
+  kind: risk-factor
+validation:
+- rule: required
+  fields:
+  - MOVE_ID
+  - BUSINESS_DATE
+  - PREVIOUS_DATE
+  - RISK_FACTOR
+  - LEVEL_PREVIOUS
+  - LEVEL
+  - MOVE
+  - MOVE_UNIT
+  - SERIES_REF
+  - QUALITY
+  - SOURCE
+  - BATCH_ID
+- rule: unique
+  key:
+  - MOVE_ID
+  per: BUSINESS_DATE
+- rule: pattern
+  field: MOVE_ID
+  pattern: ^MMOV-
+- rule: link
+  field: RISK_FACTOR
+  kind: risk-factor
+- rule: enum
+  field: MOVE_UNIT
+  values: [BP, PCT, VOL_POINT]
+- rule: enum
+  field: QUALITY
+  values: [OBSERVED, STALE, PROXY]
+notes:
+- 'JSON Lines, one row per line (UTF-8; .jsonl or .jsonl.gz). Example line: {"MOVE_ID":"MMOV-IR/CURVE/EUR/ESTR/5Y-2026-09-30","BUSINESS_DATE":"2026-09-30","PREVIOUS_DATE":"2026-09-29","RISK_FACTOR":"IR/CURVE/EUR/ESTR/5Y","RISK_CLASS":"IR","LEVEL_PREVIOUS":2.412,"LEVEL":2.442,"MOVE":3.0,"MOVE_UNIT":"BP","SERIES_REF":"curve:EUR-ESTR:5Y","QUALITY":"OBSERVED","STALE_DAYS":0,"SOURCE":"demo-market-data","BATCH_ID":"B-SENS-2026-09-30-01"}'
+- 'A factor with sensitivities on PREVIOUS_DATE and no move on BUSINESS_DATE is never moved by zero: its sensitivities'' P&L is left in
+  the unexplained P&L and the factor is listed under "no move delivered" with the amount at stake.'
+- 'Sizing: one row per factor a day; 50,000 factors about 3 MB a date as Parquet.'
+review:
+- 'Whether the bank delivers the moves, or wants Drishti to derive them from the market-data pack''s series through the dictionary''s
+  MARKET_DATA_REF (a subtraction of two supplied closes; the design recommends delivered moves, so the closes are the ones the
+  sensitivities were computed from).'

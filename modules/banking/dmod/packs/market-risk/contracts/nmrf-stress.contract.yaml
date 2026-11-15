@@ -1,0 +1,248 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+
+# Planned data contract of the nmrf-stress input (proposed command NMRF): docs/architecture/MARKET_RISK_I6_DESIGN.md section 9.
+kind: nmrf-stress
+mnemonic: NMRF
+pack: market-risk
+version: '1.0'
+class: input
+status: planned
+title: 'Stress-scenario P&L of a position for a non-modellable risk factor'
+description: 'For each position and each non-modellable risk factor it depends on (a factor that fails the eligibility test), the
+  position''s P&L under that factor''s stress scenario, up and down, as the bank''s engine prices it. Drishti sums the P&L of a factor
+  over a scope, takes the worse direction as the factor''s stress loss, and aggregates the factors into the stressed expected shortfall
+  add-on (Basel MAR33). Planned: no command, no data and no engine reads it yet.'
+source: The bank's risk engine (the non-modellable risk factor run of the FRTB internal models batch)
+grain: One row per position (or trade), non-modellable risk factor and BUSINESS_DATE, keyed by NMRF_STRESS_ID
+  (NMRF-<POSITION_ID or TRADE_ID>-<RISK_FACTOR>).
+key:
+- NMRF_STRESS_ID
+id-pattern:
+- ^NMRF-
+list:
+  requires: [POSITION_ID, TRADE_ID, TT_BOOK, DESK, RISK_FACTOR]
+  why: 'stress P&L is per position and factor: give a position, trade, book, desk or factor'
+dated-by: BUSINESS_DATE
+cadence:
+  frequency: daily
+  due: with the partial-shock scenario PVs of the date
+binding-hint:
+  lake-table: risk.nmrf-stress
+  partition:
+  - BUSINESS_DATE
+  columns:
+  - NMRF_STRESS_ID
+  - GRAIN
+  - POSITION_ID
+  - TRADE_ID
+  - LEGAL_ENTITY
+  - DESK
+  - TT_BOOK
+  - REGULATORY_DESK_ID
+  - RISK_FACTOR
+  - NMRF_TYPE
+  - LIQUIDITY_HORIZON
+  - METHOD
+  - STRESS_PNL_UP
+  - STRESS_PNL_DOWN
+  - CURRENCY
+  - STATUS
+  - BATCH_ID
+fields:
+- name: NMRF_STRESS_ID
+  type: id
+  presence: required
+  description: The row's id, NMRF-<POSITION_ID or TRADE_ID>-<RISK_FACTOR> (the business key).
+  example: NMRF-POS-BOOK-CREDIT-1~CLY-3000087-CR/SPREAD/ACME-CORP/SNR/5Y
+  pattern: ^NMRF-
+- name: BUSINESS_DATE
+  type: date
+  presence: required
+  description: The close of business the position and the P&L belong to (YYYY-MM-DD).
+  example: '2026-09-30'
+- name: GRAIN
+  type: text
+  presence: required
+  description: POSITION (its POSITION_ID) or TRADE (its TRADE_ID).
+  example: POSITION
+  enum: [TRADE, POSITION]
+- name: POSITION_ID
+  type: id
+  presence: optional
+  description: The position, at GRAIN POSITION (required then).
+  example: POS-BOOK-CREDIT-1~CLY-3000087
+  pattern: ^POS-
+  link: position
+- name: TRADE_ID
+  type: id
+  presence: optional
+  description: The trade, at GRAIN TRADE (required then).
+  example: CLY-3000087
+  link: trade
+- name: LEGAL_ENTITY
+  type: id
+  presence: required
+  description: The legal entity. Must be a promoted column.
+  example: LE-NY
+  pattern: ^LE-
+  link: legal-entity
+- name: DESK
+  type: id
+  presence: required
+  description: The desk. Must be a promoted column.
+  example: DESK-CREDIT
+  pattern: ^DESK-
+  link: desk
+- name: TT_BOOK
+  type: id
+  presence: required
+  description: The book. Must be a promoted column.
+  example: BOOK-CREDIT-1
+  pattern: ^BOOK-
+  link: book
+- name: REGULATORY_DESK_ID
+  type: id
+  presence: optional
+  description: The regulatory trading desk when it differs from DESK.
+  example: RD-CREDIT-NY
+- name: RISK_FACTOR
+  type: id
+  presence: required
+  description: The non-modellable factor, a RISK_FACTOR of the factor dictionary. A row for a factor the eligibility test passes on the
+    date is a warning (the factor is in the expected shortfall, the row is not used).
+  example: CR/SPREAD/ACME-CORP/SNR/5Y
+  link: risk-factor
+- name: NMRF_TYPE
+  type: text
+  presence: required
+  description: 'How the factor aggregates: IDIOSYNCRATIC_CREDIT (credit-spread risk of one issuer, zero correlation with the others),
+    IDIOSYNCRATIC_EQUITY (the same for equity) or OTHER (aggregated with the rules'' correlation).'
+  example: IDIOSYNCRATIC_CREDIT
+  enum: [IDIOSYNCRATIC_CREDIT, IDIOSYNCRATIC_EQUITY, OTHER]
+- name: LIQUIDITY_HORIZON
+  type: integer
+  presence: required
+  unit: days
+  description: The liquidity horizon the stress scenario was calibrated to (the factor's, at least 20).
+  example: 60
+- name: METHOD
+  type: text
+  presence: required
+  description: 'How the bank calibrated the stress scenario: DIRECT, STEPWISE, HISTORICAL or MAX_LOSS; kept for the result and audit.'
+  example: STEPWISE
+  enum: [DIRECT, STEPWISE, HISTORICAL, MAX_LOSS]
+- name: STRESS_PNL_UP
+  type: amount
+  presence: optional
+  unit: CURRENCY
+  description: The position's P&L when the factor takes its upward stress shock, positive for a gain. At least one direction is
+    required unless STATUS is failed; a method with one scenario sends it as STRESS_PNL_DOWN.
+  example: -412000.0
+- name: STRESS_PNL_DOWN
+  type: amount
+  presence: optional
+  unit: CURRENCY
+  description: The position's P&L when the factor takes its downward stress shock, positive for a gain.
+  example: 388500.0
+- name: CURRENCY
+  type: text
+  presence: required
+  description: The reporting currency (USD).
+  example: USD
+  enum: [USD]
+- name: STRESS_PERIOD_START
+  type: date
+  presence: optional
+  description: The start of the stress period the scenario was calibrated on.
+  example: '2008-06-02'
+- name: STRESS_PERIOD_END
+  type: date
+  presence: optional
+  description: The end of that period.
+  example: '2009-06-01'
+- name: STATUS
+  type: text
+  presence: required
+  description: ok, proxied or failed (counted and named, never taken as zero).
+  example: ok
+  enum: [ok, proxied, failed]
+- name: BATCH_ID
+  type: id
+  presence: required
+  description: The run that produced the row, the batch of the date's partial-shock scenario PVs.
+  example: B-ES-2026-09-30-01
+- name: COMPUTED_AT
+  type: timestamp
+  presence: required
+  description: When the run produced the row (UTC).
+  example: '2026-09-30T07:25:00Z'
+links:
+- field: POSITION_ID
+  kind: position
+- field: TRADE_ID
+  kind: trade
+- field: RISK_FACTOR
+  kind: risk-factor
+- field: LEGAL_ENTITY
+  kind: legal-entity
+- field: DESK
+  kind: desk
+- field: TT_BOOK
+  kind: book
+validation:
+- rule: required
+  fields:
+  - NMRF_STRESS_ID
+  - BUSINESS_DATE
+  - GRAIN
+  - LEGAL_ENTITY
+  - DESK
+  - TT_BOOK
+  - RISK_FACTOR
+  - NMRF_TYPE
+  - LIQUIDITY_HORIZON
+  - METHOD
+  - CURRENCY
+  - STATUS
+  - BATCH_ID
+  - COMPUTED_AT
+- rule: unique
+  key:
+  - NMRF_STRESS_ID
+  per: BUSINESS_DATE
+- rule: pattern
+  field: NMRF_STRESS_ID
+  pattern: ^NMRF-
+- rule: link
+  field: RISK_FACTOR
+  kind: risk-factor
+- rule: enum
+  field: NMRF_TYPE
+  values: [IDIOSYNCRATIC_CREDIT, IDIOSYNCRATIC_EQUITY, OTHER]
+- rule: enum
+  field: METHOD
+  values: [DIRECT, STEPWISE, HISTORICAL, MAX_LOSS]
+- rule: range
+  field: LIQUIDITY_HORIZON
+  min: 20
+notes:
+- 'JSON Lines, one row per line (UTF-8; .jsonl or .jsonl.gz). Example line: {"NMRF_STRESS_ID":"NMRF-POS-BOOK-CREDIT-1~CLY-3000087-CR/SPREAD/ACME-CORP/SNR/5Y","BUSINESS_DATE":"2026-09-30","GRAIN":"POSITION","POSITION_ID":"POS-BOOK-CREDIT-1~CLY-3000087","LEGAL_ENTITY":"LE-NY","DESK":"DESK-CREDIT","TT_BOOK":"BOOK-CREDIT-1","RISK_FACTOR":"CR/SPREAD/ACME-CORP/SNR/5Y","NMRF_TYPE":"IDIOSYNCRATIC_CREDIT","LIQUIDITY_HORIZON":60,"METHOD":"STEPWISE","STRESS_PNL_UP":-412000.0,"STRESS_PNL_DOWN":388500.0,"CURRENCY":"USD","STRESS_PERIOD_START":"2008-06-02","STRESS_PERIOD_END":"2009-06-01","STATUS":"ok","BATCH_ID":"B-ES-2026-09-30-01","COMPUTED_AT":"2026-09-30T07:25:00Z"}'
+- 'The factor''s stress loss of a scope is max( -sum of STRESS_PNL_UP, -sum of STRESS_PNL_DOWN, 0 ) over the scope''s positions: the
+  directions are summed before the worse is taken, so a hedge inside the scope offsets. A factor the eligibility test fails that has
+  sensitivities in the scope and no row here is listed under "no stress scenario delivered" and the add-on is marked incomplete.'
+- 'Sizing: sparse; a bank with 5,000 non-modellable factors and on average 40 positions a factor sends 200,000 rows a date, about 8 MB.'
+review:
+- 'Whether the bank''s engine delivers both directions for every method, and whether it already scales the loss to the liquidity horizon.'

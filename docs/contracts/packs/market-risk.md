@@ -1401,11 +1401,20 @@ Contracts of inputs designed before their data exists (`status: planned`): no co
 | Proposed command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
 | [CAPI](#capi-market-risk-capital-inputs-per-filer-and-date-capital-input) | `capital-input` | input | planned: no command or data yet | 16 | 1 |
-| [DRCI](#drci-default-risk-inputs-the-drc-per-position-and-obligor-default-risk) | `default-risk` | input | planned: no command or data yet | 15 | 1 |
+| [DRCI](#drci-default-risk-inputs-the-drc-per-position-and-obligor-default-risk) | `default-risk` | input | planned: no command or data yet | 21 | 1 |
+| [ESPV](#espv-partial-shock-scenario-pvs-of-a-position-expected-shortfall-by-liquidity-horizon-es-scenario-pv) | `es-scenario-pv` | input | planned: no command or data yet | 27 | 3 |
 | [FPNL](#fpnl-finance-trading-pl-by-legal-entity-daily-finance-pnl) | `finance-pnl` | input | planned: no command or data yet | 13 | 1 |
+| [HPL](#hpl-hypothetical-pl-of-a-position-daily-hypothetical-pnl) | `hypothetical-pnl` | input | planned: no command or data yet | 23 | 2 |
+| [IDEF](#idef-issuer-default-parameters-pd-and-the-two-systematic-factor-loadings-issuer-default) | `issuer-default` | input | planned: no command or data yet | 17 | 2 |
+| [MLIQ](#mliq-market-liquidity-of-an-instrument-bid-ask-spread-volume-depth-market-liquidity) | `market-liquidity` | input | planned: no command or data yet | 14 | 2 |
+| [MMOV](#mmov-market-move-of-a-risk-factor-daily-with-its-series-mapping-market-move) | `market-move` | input | planned: no command or data yet | 15 | 1 |
+| [NMRF](#nmrf-stress-scenario-pl-of-a-position-for-a-non-modellable-risk-factor-nmrf-stress) | `nmrf-stress` | input | planned: no command or data yet | 21 | 1 |
+| [RPV](#rpv-realised-move-pv-of-a-position-the-risk-model-daily-realised-pv) | `realised-pv` | input | planned: no command or data yet | 20 | 1 |
 | [RDSK](#rdsk-regulatory-trading-desk-definitions-regulatory-desk) | `regulatory-desk` | input | planned: no command or data yet | 13 | 1 |
 | [RRAI](#rrai-residual-risk-inputs-the-rrao-per-trade-residual-risk) | `residual-risk` | input | planned: no command or data yet | 12 | 1 |
+| [RFOB](#rfob-real-price-observations-of-a-risk-factor-for-the-eligibility-test-risk-factor-observation) | `risk-factor-observation` | input | planned: no command or data yet | 11 | 1 |
 | [RTYP](#rtyp-var-risk-type-mapping-risk-type-map) | `risk-type-map` | input | planned: no command or data yet | 9 | 1 |
+| [SDEF](#sdef-stress-scenario-definition-historical-hypothetical-regulatory-stress-definition) | `stress-definition` | input | planned: no command or data yet | 18 | 2 |
 | [TCF](#tcf-trade-cash-flows-daily-trade-cash-flow) | `trade-cash-flow` | input | planned: no command or data yet | 10 | 2 |
 | [VTRD](#vtrd-volcker-trade-attributes-volcker-trade) | `volcker-trade` | input | planned: no command or data yet | 13 | 1 |
 
@@ -1474,7 +1483,7 @@ The jump-to-default inputs of the FRTB standardised default risk charge for non-
 
 |  |  |
 |---|---|
-| Contract | [default-risk.contract.yaml](../../../modules/banking/dmod/packs/market-risk/contracts/default-risk.contract.yaml) · version 1.0 |
+| Contract | [default-risk.contract.yaml](../../../modules/banking/dmod/packs/market-risk/contracts/default-risk.contract.yaml) · version 1.1 |
 | Class | input |
 | Status | planned: no command or data yet |
 | Source | The bank's risk system or issuer master (obligor, seniority, rating) with the positions' notionals and market values |
@@ -1505,21 +1514,110 @@ The jump-to-default inputs of the FRTB standardised default risk charge for non-
 | `MATURITY_DATE` | date | optional |  | The instrument's maturity (of the derivative, not its underlying), for the scaling min(max(M, 0.25), 1) (MAR22.15 to MAR22.18); not for cash equity. | `2028-09-30` |  |
 | `CASH_EQUITY_MATURITY` | rate | optional |  | For cash equity, 0.25 or 1 (years) at the bank's choice (MAR22.16); absent, the parameter file's. | `1` |  |
 | `RECOVERY_INDEPENDENT` | boolean | optional |  | The price does not depend on the recovery (MAR22.12): the LGD is 100%. | `False` |  |
+| `JTD` | amount | optional | CURRENCY | The bank's own jump-to-default of the row: the loss if the obligor defaulted now, positive for a loss (a long credit exposure), negative for a gain (a short), from the bank's pricing with its LGD. Read by the default risk charge's simulation (the internal models approach, docs/architecture/MARKET_RISK_I6_DESIGN.md section 10); the standardised charge never reads it (it derives its jump-to-default from NOTIONAL, MARKET_VALUE and the regulatory LGD). Absent: the simulation uses LGD x NOTIONAL + (MARKET_VALUE - NOTIONAL) with the row's LGD, and says so. | `5800000` |  |
+| `LGD` | rate | optional |  | The bank's loss given default for the row (0.6 is 60%), for the simulation; absent with JTD absent, the row is left out of the simulation and named, never given a default LGD. | `0.6` |  |
+| `INSTRUMENT_CLASS` | text | optional |  | DEBT or EQUITY: the simulation's equity sub-portfolio may use a shorter liquidity horizon (the engine's setting). | `DEBT`, `EQUITY` |  |
+| `LEGAL_ENTITY` | id | optional |  | The legal entity of the position, for scopes (a promoted column where sent). | `LE-NY` | `legal-entity` |
+| `DESK` | id | optional |  | The desk of the position, for scopes and the desk rows of the capital figures (a promoted column where sent). | `DESK-CREDIT` | `desk` |
+| `TT_BOOK` | id | optional |  | The book of the position, for scopes (a promoted column where sent). | `BOOK-CREDIT-1` | `book` |
 
 **Validation**
 
 - required: fields `DEFAULT_RISK_ID`, `BUSINESS_DATE`, `BATCH_ID`, `OBLIGOR`, `DRC_BUCKET`, `SENIORITY`, `CREDIT_QUALITY`, `NOTIONAL`, `MARKET_VALUE`, `CURRENCY`
 - unique: key `DEFAULT_RISK_ID`; per BUSINESS_DATE
 - pattern: field DEFAULT_RISK_ID; pattern ^DRC-
+- enum: field INSTRUMENT_CLASS; values `DEBT`, `EQUITY`
 
 **Notes**
 
+- 1.1 (planned for the default risk charge's simulation): the optional JTD, LGD, INSTRUMENT_CLASS, LEGAL_ENTITY, DESK and TT_BOOK. One table serves both charges: the standardised charge reads the 1.0 fields, the simulation JTD (or its parts), LGD and the issuer's parameters (the issuer-default contract, by OBLIGOR). Example line with them: {"DEFAULT_RISK_ID":"DRC-POS-BOOK-CREDIT-1~CLY-3000087-5493001KJTIIGC8Y1R12-B-DRC-2026-09-30-01","BUSINESS_DATE":"2026-09-30","POSITION_ID":"POS-BOOK-CREDIT-1~CLY-3000087","BATCH_ID":"B-DRC-2026-09-30-01","OBLIGOR":"5493001KJTIIGC8Y1R12","DRC_BUCKET":"CORPORATE","SENIORITY":"SENIOR","CREDIT_QUALITY":"BBB","NOTIONAL":10000000,"MARKET_VALUE":9800000,"CURRENCY":"USD","MATURITY_DATE":"2028-09-30","JTD":5800000,"LGD":0.6,"INSTRUMENT_CLASS":"DEBT","LEGAL_ENTITY":"LE-NY","DESK":"DESK-CREDIT","TT_BOOK":"BOOK-CREDIT-1"}
 - JSON Lines, one row per line (UTF-8, gzip). Example line: {"DEFAULT_RISK_ID":"DRC-POS-BOOK-CREDIT-1~CLY-3000087-5493001KJTIIGC8Y1R12-B-DRC-2026-09-30-01","BUSINESS_DATE":"2026-09-30","POSITION_ID":"POS-BOOK-CREDIT-1~CLY-3000087","BATCH_ID":"B-DRC-2026-09-30-01","OBLIGOR":"5493001KJTIIGC8Y1R12","DRC_BUCKET":"CORPORATE","SENIORITY":"SENIOR","CREDIT_QUALITY":"BBB","NOTIONAL":10000000,"MARKET_VALUE":9800000,"CURRENCY":"USD","MATURITY_DATE":"2028-09-30"}
 - Signs are checked on load: a bought CDS has a negative NOTIONAL, a sold put on a bond a positive one; MARKET_VALUE has the notional's sign.
 
 **To review (1)**
 
 - Whether the bank's risk system delivers the obligor, seniority and rating with the positions, or Drishti joins them from an issuer master.
+
+## ESPV: Partial-shock scenario PVs of a position (expected shortfall by liquidity horizon) (`es-scenario-pv`)
+
+The scenario values the FRTB internal models approach needs for the liquidity-horizon cascade (Basel MAR33): for each position, a vector of values under 10-day scenarios in which only the risk factors of one liquidity-horizon step (all factors; then only those with a horizon of 20 days or more; 40; 60; 120) and of one risk-class set (all classes, or one class with the others held) are shocked, for each of the three calibrations (the full factor set on the current 12 months, the reduced set on the current 12 months, the reduced set on the stress period). The bank's engine prices them; Drishti sums them to any scope, takes the 97.5% expected shortfall of each sum and combines the steps. One row per vector, sent only where it differs from zero and declared on the position's first row, so nothing absent is ever read as zero. Planned: no command, no data and no engine reads it yet.
+
+|  |  |
+|---|---|
+| Contract | [es-scenario-pv.contract.yaml](../../../modules/banking/dmod/packs/market-risk/contracts/es-scenario-pv.contract.yaml) · version 1.0 |
+| Class | input |
+| Status | planned: no command or data yet |
+| Source | The bank's risk engine (the FRTB internal models run) |
+| Grain | One row per position (GRAIN POSITION) or trade (GRAIN TRADE), calibration, risk-class set, liquidity-horizon step and BUSINESS_DATE, keyed by ES_PV_ID (ESPV-<POSITION_ID or TRADE_ID>-<CALIBRATION>-<RISK_CLASS_SET>-<LH_STEP>); one complete file per date. |
+| Key | `ES_PV_ID` |
+| Id pattern | `^ESPV-` |
+| Dated by | `BUSINESS_DATE` |
+| Cadence | daily (due: with the scenario PVs of the date (the calibrations a supervisor lets a bank refresh less often keep their last delivery, said on the result)) |
+| Binding hint | lake table `risk.es-scenario-pv`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
+| Columns | `ES_PV_ID`, `VALUE_TYPE`, `GRAIN`, `POSITION_ID`, `TRADE_ID`, `SOURCE_SYSTEM`, `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `REGULATORY_DESK_ID`, `CALIBRATION`, `RISK_CLASS_SET`, `LH_STEP`, `RISK_CLASSES`, `LH_STEPS_SENT`, `RISK_CLASS_SETS_SENT`, `SCENARIO_SET_ID`, `CURRENCY`, `BASE_PV`, `STATUS`, `BATCH_ID`, `COMPUTED_AT` |
+| Vectors | `SCENARIO_PV` |
+| Partitioned by | `BUSINESS_DATE`, `CALIBRATION` |
+
+**Fields**
+
+| Field | Type | Presence | Unit | Description | Example or values | Link |
+|---|---|---|---|---|---|---|
+| `ES_PV_ID` | id | required |  | The row's id, ESPV-<POSITION_ID or TRADE_ID>-<CALIBRATION>-<RISK_CLASS_SET>-<LH_STEP> (the business key). | `ESPV-POS-BOOK-RATES-1~MX-20000002-RS-ALL-20` (pattern `^ESPV-`) |  |
+| `VALUE_TYPE` | text | required |  | PV (SCENARIO_PV holds values, BASE_PV the value today: P&L(s) = SCENARIO_PV(s) - BASE_PV) or PNL (SCENARIO_PV holds the P&L of each scenario and BASE_PV is not read). | `PV`, `PNL` |  |
+| `BUSINESS_DATE` | date | required |  | The close of business the positions and the values belong to (YYYY-MM-DD). | `2026-09-30` |  |
+| `GRAIN` | text | required |  | POSITION (its POSITION_ID) or TRADE (its TRADE_ID), the grain of the source system's scenario PVs on the date. | `TRADE`, `POSITION` |  |
+| `POSITION_ID` | id | optional |  | The position, at GRAIN POSITION (required then); the same id as in scenario-pv on the date. | `POS-BOOK-RATES-1~MX-20000002` (pattern `^POS-`) | `position` |
+| `TRADE_ID` | id | optional |  | The trade, at GRAIN TRADE (required then). | `MX-20000002` | `trade` |
+| `SOURCE_SYSTEM` | text | required |  | The system that produced the row. | `MUREX` |  |
+| `LEGAL_ENTITY` | id | required |  | The legal entity. Must be a promoted column. | `LE-NY` (pattern `^LE-`) | `legal-entity` |
+| `DIVISION` | id | optional |  | The division of the desk. | `DIV-MARKETS` |  |
+| `DESK` | id | required |  | The desk. Must be a promoted column. | `DESK-RATES` (pattern `^DESK-`) | `desk` |
+| `TT_BOOK` | id | required |  | The book. Must be a promoted column. | `BOOK-RATES-1` (pattern `^BOOK-`) | `book` |
+| `REGULATORY_DESK_ID` | id | optional |  | The regulatory trading desk when it differs from DESK; the capital figures group by it. | `RD-RATES-NY` |  |
+| `CALIBRATION` | text | required |  | Which of the three expected shortfalls the vector feeds: FC (the full set of risk factors, the current 12 months), RC (the reduced set, the current 12 months) or RS (the reduced set, the stress period). | `FC`, `RC`, `RS` |  |
+| `RISK_CLASS_SET` | text | required |  | The risk classes shocked: ALL (every class together, the unconstrained figure) or one of IR, CS, EQ, FX, CM (that class shocked, the others held at today's level). | `ALL`, `IR`, `CS`, `EQ`, `FX`, `CM` |  |
+| `LH_STEP` | integer | required | days | The liquidity-horizon step: 10 (every factor of the set shocked), or 20, 40, 60, 120 (only the factors whose liquidity horizon is that many days or longer shocked, the others held). Every scenario is a 10-day move. | `10`, `20`, `40`, `60`, `120` |  |
+| `RISK_CLASSES` | text list | required |  | The risk classes the position has factors in. A position in one class sends only RISK_CLASS_SET ALL: its ALL vectors are also that class's. A position in several sends ALL and each of its classes. | `["IR"]` |  |
+| `LH_STEPS_SENT` | list | required |  | The steps this position sends for this calibration and risk-class set, for example [10, 20, 40]: a step not listed is declared zero (the position has no factor of that horizon or longer in the set). A listed step whose row is missing refuses the position for the date (counted, named); nothing absent is read as zero unless it is declared here. The same list on every row of the position, calibration and set. | `[10, 20, 40]` |  |
+| `RISK_CLASS_SETS_SENT` | text list | required |  | The risk-class sets this position sends for this calibration, for the same check. | `["ALL"]` |  |
+| `SCENARIO_SET_ID` | id | required |  | The scenario set whose SCENARIO_DATES order the vector: a set of SET_TYPE ES_CURRENT for the calibrations FC and RC, of SET_TYPE ES_STRESS for RS, HORIZON_DAYS 10. Every row of one calibration on one date names the same set. | `ES-STRESS-250` |  |
+| `CURRENCY` | text | required |  | The reporting currency (USD). Unlike scenario-pv, the values are not accepted in the trade's own currency: an FX factor has a liquidity horizon of its own, so the conversion is part of each step's shock and must be done by the engine that applies the shocks. | `USD` |  |
+| `BASE_PV` | amount | optional | USD | The position's value today, from the same run (required at VALUE_TYPE PV). | `1204500.0` |  |
+| `SCENARIO_PV` | vector | optional | USD | The position's value (or P&L, by VALUE_TYPE) under each scenario of the set, oldest first; required unless STATUS is failed. A scenario that failed to price is null and the position is then not loaded (never filled with zero). *one value per scenario of the calibration's set (250 by default)* |  |  |
+| `STATUS` | text | required |  | ok, proxied or failed. | `ok`, `proxied`, `failed` |  |
+| `PRICER` | text | optional |  | The pricer that valued the row; kept for audit. | `demo-factor-model` |  |
+| `MODEL_VERSION` | text | optional |  | The pricer's model version; kept for audit. | `demo-2` |  |
+| `BATCH_ID` | id | required |  | The run that produced the row; one batch per date across the three calibrations. | `B-ES-2026-09-30-01` |  |
+| `COMPUTED_AT` | timestamp | required |  | When the run produced the row (UTC). | `2026-09-30T07:10:00Z` |  |
+
+**Links:** `POSITION_ID` → `position`, `TRADE_ID` → `trade`, `LEGAL_ENTITY` → `legal-entity`, `DESK` → `desk`, `TT_BOOK` → `book`.
+
+**Validation**
+
+- required: fields `ES_PV_ID`, `VALUE_TYPE`, `BUSINESS_DATE`, `GRAIN`, `SOURCE_SYSTEM`, `LEGAL_ENTITY`, `DESK`, `TT_BOOK`, `CALIBRATION`, `RISK_CLASS_SET`, `LH_STEP`, `RISK_CLASSES`, `LH_STEPS_SENT`, `RISK_CLASS_SETS_SENT`, `SCENARIO_SET_ID`, `CURRENCY`, `STATUS`, `BATCH_ID`, `COMPUTED_AT`
+- unique: key `ES_PV_ID`; per BUSINESS_DATE
+- pattern: field ES_PV_ID; pattern ^ESPV-
+- enum: field VALUE_TYPE; values `PV`, `PNL`
+- enum: field GRAIN; values `TRADE`, `POSITION`
+- enum: field CALIBRATION; values `FC`, `RC`, `RS`
+- enum: field RISK_CLASS_SET; values `ALL`, `IR`, `CS`, `EQ`, `FX`, `CM`
+- enum: field LH_STEP; values `10`, `20`, `40`, `60`, `120`
+- enum: field CURRENCY; values `USD`
+- enum: field STATUS; values `ok`, `proxied`, `failed`
+- vector-length: field SCENARIO_PV; same every row of one business date and calibration
+
+**Notes**
+
+- JSON Lines, one row per line (UTF-8; .jsonl or .jsonl.gz; a date may be a tar of files, one per calibration). The vector of the example is cut to its first 3 values: a row carries all of its set (250). Example line: {"ES_PV_ID":"ESPV-POS-BOOK-RATES-1~MX-20000002-RS-ALL-20","VALUE_TYPE":"PV","BUSINESS_DATE":"2026-09-30","GRAIN":"POSITION","POSITION_ID":"POS-BOOK-RATES-1~MX-20000002","SOURCE_SYSTEM":"MUREX","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-RATES","TT_BOOK":"BOOK-RATES-1","CALIBRATION":"RS","RISK_CLASS_SET":"ALL","LH_STEP":20,"RISK_CLASSES":["IR"],"LH_STEPS_SENT":[10,20,40],"RISK_CLASS_SETS_SENT":["ALL"],"SCENARIO_SET_ID":"ES-STRESS-250","CURRENCY":"USD","BASE_PV":1204500.0,"SCENARIO_PV":[1131220.5,1259870.0,1190044.25],"STATUS":"ok","PRICER":"demo-factor-model","MODEL_VERSION":"demo-2","BATCH_ID":"B-ES-2026-09-30-01","COMPUTED_AT":"2026-09-30T07:10:00Z"}
+- What the three calibrations and five steps are for (Basel MAR33): per calibration and risk-class set, ES = sqrt( ES(step 10)^2 + sum over the later steps j of ( ES(step j) x sqrt( (LH_j - LH_j-1) / 10 ) )^2 ); then ES of the set = ES(RS) x max( ES(FC) / ES(RC), 1 ); the capital figure is half the ALL figure plus half the sum of the five classes' figures.
+- Sizing at 1.3 million positions and 250 scenarios (docs/architecture/MARKET_RISK_I6_DESIGN.md section 13): one vector for every position is 2.6 GB as 64-bit values; the dense worst case (3 calibrations x 6 sets x 5 steps = 90 vectors a position) is 234 GB a date; with the rules above (zero steps declared, single-class positions send ALL only) the expected delivery is 8 to 9 vectors a position, 21 to 23 GB a date before compression.
+- The engine never mixes runs: one BATCH_ID across the calibrations of a date, the date's scenario-pv positions and these positions must be the same set (a position of an internal-models desk with scenario PVs and no rows here is named, and its desk's figure is marked incomplete, never computed short).
+
+**To review (3)**
+
+- Whether the bank can deliver at position grain, or only at desk grain for the first deliveries (27 MB a date for 150 desks; no drill below the desk and no ad-hoc scope).
+- Which calibrations the bank's supervisor lets it refresh less often than daily, and how often.
+- Whether positions of desks without internal-models approval are sent at all (they are capitalised by the standardised approach).
 
 ## FPNL: Finance trading P&L by legal entity (daily) (`finance-pnl`)
 
@@ -1575,6 +1673,386 @@ Finance's daily trading P&L of each legal entity from the general ledger, with t
 **To review (1)**
 
 - The tolerance of the reconciliation (an amount, a share of the day's gross P&L, or both) is the bank's policy.
+
+## HPL: Hypothetical P&L of a position (daily) (`hypothetical-pnl`)
+
+The hypothetical P&L (HPL) of each position for one day: the positions of the end of the previous business date revalued by the front-office pricing models on the business date's market, nothing traded, no fees, no reserves and no time effect beyond the one day. Supplied by the bank; Drishti never prices. The P&L explain engine sums it to any scope, compares it with the risk-theoretical P&L (the realised-pv contract) for the unexplained P&L and the P&L attribution test, and with the official VaR of the day before for backtesting. Planned: no command, no data and no engine reads it yet.
+
+|  |  |
+|---|---|
+| Contract | [hypothetical-pnl.contract.yaml](../../../modules/banking/dmod/packs/market-risk/contracts/hypothetical-pnl.contract.yaml) · version 1.0 |
+| Class | input |
+| Status | planned: no command or data yet |
+| Source | The bank's front-office P&L system (the product control or P&L attribution batch) |
+| Grain | One row per position (GRAIN POSITION) or trade (GRAIN TRADE) and BUSINESS_DATE (the day the market moved), keyed by HPL_ID (HPL-<POSITION_ID or TRADE_ID>-<BUSINESS_DATE>); one complete file per date. |
+| Key | `HPL_ID` |
+| Id pattern | `^HPL-` |
+| Dated by | `BUSINESS_DATE` |
+| Cadence | daily (due: by the next business day's morning run, with the desk P&L (a position missing on a date is named, never read as zero)) |
+| Binding hint | lake table `risk.hypothetical-pnl`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
+| Columns | `HPL_ID`, `GRAIN`, `POSITION_ID`, `TRADE_ID`, `POSITION_DATE`, `SOURCE_SYSTEM`, `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `REGULATORY_DESK_ID`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `HPL`, `CURRENCY`, `STATUS`, `BATCH_ID`, `COMPUTED_AT` |
+| Partitioned by | `BUSINESS_DATE` |
+
+**Fields**
+
+| Field | Type | Presence | Unit | Description | Example or values | Link |
+|---|---|---|---|---|---|---|
+| `HPL_ID` | id | required |  | The row's id, HPL-<POSITION_ID or TRADE_ID>-<BUSINESS_DATE> (the business key). | `HPL-POS-BOOK-RATES-1~MX-20000002-2026-09-30` (pattern `^HPL-`) |  |
+| `BUSINESS_DATE` | date | required |  | The day the market moved (YYYY-MM-DD): the P&L is from the close of POSITION_DATE to the close of this date. | `2026-09-30` |  |
+| `POSITION_DATE` | date | required |  | The business date whose end-of-day positions were held constant; it must be the business day before BUSINESS_DATE in the desk's calendar, and the date of the realised-pv rows it is compared with. | `2026-09-29` |  |
+| `GRAIN` | text | required |  | What one row is: POSITION (its POSITION_ID) or TRADE (its TRADE_ID); one source system sends one grain on one date, the same grain as its scenario PVs. | `TRADE`, `POSITION` |  |
+| `POSITION_ID` | id | optional |  | The position, at GRAIN POSITION (required then); the same id as in scenario-pv on POSITION_DATE. | `POS-BOOK-RATES-1~MX-20000002` (pattern `^POS-`) | `position` |
+| `TRADE_ID` | id | optional |  | The trade, at GRAIN TRADE (required then). | `MX-20000002` | `trade` |
+| `SOURCE_SYSTEM` | text | required |  | The system that produced the row. | `MUREX` |  |
+| `LEGAL_ENTITY` | id | required |  | The legal entity of the position on POSITION_DATE. Must be a promoted column. | `LE-NY` (pattern `^LE-`) | `legal-entity` |
+| `DIVISION` | id | optional |  | The division of the desk. | `DIV-MARKETS` |  |
+| `DESK` | id | required |  | The desk of the position on POSITION_DATE. Must be a promoted column. | `DESK-RATES` (pattern `^DESK-`) | `desk` |
+| `TT_BOOK` | id | required |  | The book of the position on POSITION_DATE. Must be a promoted column. | `BOOK-RATES-1` (pattern `^BOOK-`) | `book` |
+| `REGULATORY_DESK_ID` | id | optional |  | The regulatory trading desk (the regulatory-desk contract) when it differs from DESK; the P&L attribution test and desk backtesting group by it. | `RD-RATES-NY` |  |
+| `PRODUCT_GROUP` | text | optional |  | The product group, for breakdowns. | `Rates` |  |
+| `PRODUCT_TYPE` | text | optional |  | The product type as booked. | `IRS_FIXFLOAT` |  |
+| `HPL` | amount | optional | CURRENCY | The hypothetical P&L of the day, positive for a gain. Required unless STATUS is failed; a failed row is counted and named, never taken as zero. | `-58211.4` |  |
+| `CURRENCY` | text | required |  | The currency of HPL (ISO 4217); converted to the reporting currency at the business date's closing FX. | `USD` |  |
+| `PV_START` | amount | optional | CURRENCY | The front-office PV at the close of POSITION_DATE, kept for audit and for the reconciliation with BASE_PV of the scenario PVs. | `1204500.0` |  |
+| `PV_END` | amount | optional | CURRENCY | The front-office PV of the same position on the business date's market. | `1146288.6` |  |
+| `STATUS` | text | required |  | ok, proxied (valued by a proxy) or failed (no HPL). | `ok`, `proxied`, `failed` |  |
+| `PRICER` | text | optional |  | The front-office pricing model; kept for audit. | `fo-rates-3` |  |
+| `BATCH_ID` | id | required |  | The run that produced the row; one full run per source system and date. | `B-HPL-2026-09-30-01` |  |
+| `COMPUTED_AT` | timestamp | required |  | When the run produced the row (UTC). | `2026-10-01T05:40:00Z` |  |
+| `RESTATEMENT` | integer | optional |  | 0 for the first run of the date, then 1, 2, ... each time the date is restated. | `0` |  |
+
+**Links:** `POSITION_ID` → `position`, `TRADE_ID` → `trade`, `LEGAL_ENTITY` → `legal-entity`, `DESK` → `desk`, `TT_BOOK` → `book`.
+
+**Validation**
+
+- required: fields `HPL_ID`, `BUSINESS_DATE`, `POSITION_DATE`, `GRAIN`, `SOURCE_SYSTEM`, `LEGAL_ENTITY`, `DESK`, `TT_BOOK`, `CURRENCY`, `STATUS`, `BATCH_ID`, `COMPUTED_AT`
+- unique: key `HPL_ID`; per BUSINESS_DATE
+- pattern: field HPL_ID; pattern ^HPL-
+- enum: field GRAIN; values `TRADE`, `POSITION`
+- enum: field STATUS; values `ok`, `proxied`, `failed`
+
+**Notes**
+
+- JSON Lines, one row per line (UTF-8; .jsonl or .jsonl.gz). Example line: {"HPL_ID":"HPL-POS-BOOK-RATES-1~MX-20000002-2026-09-30","BUSINESS_DATE":"2026-09-30","POSITION_DATE":"2026-09-29","GRAIN":"POSITION","POSITION_ID":"POS-BOOK-RATES-1~MX-20000002","SOURCE_SYSTEM":"MUREX","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-RATES","TT_BOOK":"BOOK-RATES-1","PRODUCT_GROUP":"Rates","PRODUCT_TYPE":"IRS_FIXFLOAT","HPL":-58211.4,"CURRENCY":"USD","PV_START":1204500.0,"PV_END":1146288.6,"STATUS":"ok","PRICER":"fo-rates-3","BATCH_ID":"B-HPL-2026-09-30-01","COMPUTED_AT":"2026-10-01T05:40:00Z","RESTATEMENT":0}
+- Checks on load, each counted and named in every answer's provenance: POSITION_DATE is not the business day before BUSINESS_DATE (the row is refused); a position of POSITION_DATE's scenario PVs with no HPL row (completeness, by desk: the desk's HPL is shown as incomplete with the count, and a desk under the completeness threshold is left out of the attribution test for the day, in words); a desk whose rows sum to a figure that differs from the desk-pnl row's HYPOTHETICAL_PNL by more than the tolerance (a warning with both figures: the desk row stays the figure of record for backtesting).
+- Sizing: 1.3 million positions a day, about 250 bytes a row as JSON and about 40 MB a date as Parquet; 250 dates about 10 GB.
+
+**To review (2)**
+
+- Whether the bank's P&L system can deliver HPL per position, or only per trade or per book: a book-level delivery supports desk tests and backtesting but not the drill to positions.
+- The due time, and how a late trade booked after the close of POSITION_DATE is treated upstream.
+
+## IDEF: Issuer default parameters (PD and the two systematic factor loadings) (`issuer-default`)
+
+What the default risk charge's simulation needs to know about each issuer, beside the jump-to-default amounts of the positions (the default-risk contract): the one-year probability of default, the two systematic factors the issuer loads on (the global factor and one sector or region factor) with the loadings, and the classification they were derived from. The bank estimates them (from credit spreads or listed equity prices); Drishti simulates joint defaults from them and prices nothing. Planned: no command, no data and no engine reads it yet.
+
+|  |  |
+|---|---|
+| Contract | [issuer-default.contract.yaml](../../../modules/banking/dmod/packs/market-risk/contracts/issuer-default.contract.yaml) · version 1.0 |
+| Class | input |
+| Status | planned: no command or data yet |
+| Source | The bank's credit risk or default-risk model team (the issuer master with model parameters) |
+| Grain | One row per issuer and BUSINESS_DATE (a slowly changing table; a date without a delivery keeps the last), keyed by ISSUER. |
+| Key | `ISSUER` |
+| Id pattern | — |
+| Dated by | `BUSINESS_DATE` |
+| Cadence | on change (due: before the weekly default-risk run; a change takes effect from the business date it is delivered for) |
+| Binding hint | lake table `risk.issuer-default`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
+| Columns | `ISSUER`, `ISSUER_NAME`, `PD`, `PD_SOURCE`, `RATING`, `SECTOR_FACTOR`, `BETA_GLOBAL`, `BETA_SECTOR`, `SECTOR`, `REGION`, `DEFAULTED` |
+
+**Fields**
+
+| Field | Type | Presence | Unit | Description | Example or values | Link |
+|---|---|---|---|---|---|---|
+| `ISSUER` | id | required |  | The issuer or reference entity, the OBLIGOR of the default-risk rows (an LEI preferred). | `5493001KJTIIGC8Y1R12` |  |
+| `BUSINESS_DATE` | date | required |  | The business date the row applies from (YYYY-MM-DD). | `2026-09-30` |  |
+| `ISSUER_NAME` | text | optional |  | The issuer's name, for the screens. | `Acme Corporation` |  |
+| `PD` | rate | required | a probability over one year (0.0125 is 1.25%) | The one-year probability of default. A value below the rules' floor (0.0003) is raised to it, and the result says how many issuers were floored; a defaulted issuer has DEFAULTED true and its PD is not read. | `0.0125` |  |
+| `PD_SOURCE` | text | required |  | Where the PD comes from: INTERNAL (the bank's approved internal ratings), EXTERNAL (an external rating's default rate) or MARKET_IMPLIED (never accepted for the regulatory figure: used for analysis only, and said). | `INTERNAL`, `EXTERNAL`, `MARKET_IMPLIED` |  |
+| `RATING` | text | optional |  | The rating the PD belongs to, for breakdowns. | `BB` |  |
+| `SECTOR_FACTOR` | id | required |  | The second systematic factor the issuer loads on, one per sector, region or sector and region as the bank's model defines them; issuers naming the same id share the factor. The factors are independent of the global factor and of each other (a bank whose sector factors are correlated delivers the loadings after it has made them orthogonal). | `SF-INDUSTRIALS-NA` |  |
+| `BETA_GLOBAL` | rate | required |  | The loading on the global factor, between -1 and 1. | `0.5` |  |
+| `BETA_SECTOR` | rate | required |  | The loading on SECTOR_FACTOR, between -1 and 1; BETA_GLOBAL squared plus BETA_SECTOR squared must be below 1 (the rest is the issuer's own risk). A row that breaks it is refused. | `0.3` |  |
+| `CORRELATION_BASIS` | text | required |  | What the loadings were estimated from: EQUITY (listed equity prices) or SPREAD (credit spreads). | `EQUITY`, `SPREAD` |  |
+| `CALIBRATION_START` | date | optional |  | The start of the period the loadings were estimated on (the rules ask for at least ten years including a stress period). | `2007-01-02` |  |
+| `CALIBRATION_END` | date | optional |  | The end of that period. | `2026-06-30` |  |
+| `SECTOR` | text | optional |  | The issuer's sector, for breakdowns and concentration. | `Industrials` |  |
+| `REGION` | text | optional |  | The issuer's region, for breakdowns and concentration. | `North America` |  |
+| `DEFAULTED` | boolean | optional |  | The issuer has defaulted; its positions lose their jump-to-default in every path. | `False` |  |
+| `SOURCE` | text | required |  | The system the row came from. | `demo-credit-model` |  |
+| `AS_OF` | timestamp | required |  | When the source produced the row (UTC). | `2026-09-30T20:00:00Z` |  |
+
+**Validation**
+
+- required: fields `ISSUER`, `BUSINESS_DATE`, `PD`, `PD_SOURCE`, `SECTOR_FACTOR`, `BETA_GLOBAL`, `BETA_SECTOR`, `CORRELATION_BASIS`, `SOURCE`, `AS_OF`
+- unique: key `ISSUER`; per BUSINESS_DATE
+- range: field PD; min 0; max 1
+- range: field BETA_GLOBAL; min -1; max 1
+- range: field BETA_SECTOR; min -1; max 1
+- enum: field PD_SOURCE; values `INTERNAL`, `EXTERNAL`, `MARKET_IMPLIED`
+- enum: field CORRELATION_BASIS; values `EQUITY`, `SPREAD`
+
+**Notes**
+
+- JSON Lines, one row per line (UTF-8; .jsonl or .jsonl.gz). Example line: {"ISSUER":"5493001KJTIIGC8Y1R12","BUSINESS_DATE":"2026-09-30","ISSUER_NAME":"Acme Corporation","PD":0.0125,"PD_SOURCE":"INTERNAL","RATING":"BB","SECTOR_FACTOR":"SF-INDUSTRIALS-NA","BETA_GLOBAL":0.5,"BETA_SECTOR":0.3,"CORRELATION_BASIS":"EQUITY","CALIBRATION_START":"2007-01-02","CALIBRATION_END":"2026-06-30","SECTOR":"Industrials","REGION":"North America","DEFAULTED":false,"SOURCE":"demo-credit-model","AS_OF":"2026-09-30T20:00:00Z"}
+- The model: an issuer defaults within the year when BETA_GLOBAL x Z + BETA_SECTOR x Z(SECTOR_FACTOR) + sqrt(1 - BETA_GLOBAL^2 - BETA_SECTOR^2) x e falls below the standard normal quantile of PD, with Z, each sector factor and e independent standard normals. The correlation of two issuers of one sector factor is the product of their global loadings plus the product of their sector loadings; of two issuers of different sector factors, the product of their global loadings.
+- An obligor of the default-risk rows with no row here is never given a default PD or loading: its positions are listed under "issuer parameters missing" and the charge is marked incomplete.
+
+**To review (2)**
+
+- Whether the bank delivers loadings, or the equity or spread return series of each issuer for Drishti to estimate them (a regression on supplied series, no pricing; the design recommends delivered loadings first).
+- Whether a third factor type is needed (the rules ask for two types of systematic factor; some banks use country and industry as separate factors).
+
+## MLIQ: Market liquidity of an instrument (bid-ask spread, volume, depth) (`market-liquidity`)
+
+What liquidity-adjusted VaR and the concentration measures need to know about the market a position trades in: the bid-ask spread and how much it varies, the average daily volume, the depth at the touch, and an optional liquidation period the bank sets itself. Keyed by security, product type, risk factor or position; the most specific row that matches a position applies. Drishti scales and adds supplied numbers; nothing is priced. Planned: no command, no data and no engine reads it yet.
+
+|  |  |
+|---|---|
+| Contract | [market-liquidity.contract.yaml](../../../modules/banking/dmod/packs/market-risk/contracts/market-liquidity.contract.yaml) · version 1.0 |
+| Class | input |
+| Status | planned: no command or data yet |
+| Source | The bank's market-data system or a liquidity data vendor |
+| Grain | One row per liquidity key and BUSINESS_DATE (a date without a delivery keeps the last, and the result says how old it is), keyed by LIQUIDITY_ID (MLIQ-<KEY_TYPE>-<LIQUIDITY_KEY>). |
+| Key | `LIQUIDITY_ID` |
+| Id pattern | `^MLIQ-` |
+| Dated by | `BUSINESS_DATE` |
+| Cadence | daily (due: with the market data of the date; weekly is enough for slow-moving measures (the age is shown)) |
+| Binding hint | lake table `risk.market-liquidity`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
+| Columns | `LIQUIDITY_ID`, `KEY_TYPE`, `LIQUIDITY_KEY`, `BID_ASK_SPREAD`, `SPREAD_VOLATILITY`, `AVERAGE_DAILY_VOLUME`, `VOLUME_UNIT`, `MARKET_DEPTH`, `LIQUIDATION_DAYS` |
+| Partitioned by | `BUSINESS_DATE` |
+
+**Fields**
+
+| Field | Type | Presence | Unit | Description | Example or values | Link |
+|---|---|---|---|---|---|---|
+| `LIQUIDITY_ID` | id | required |  | The row's id, MLIQ-<KEY_TYPE>-<LIQUIDITY_KEY> (the business key). | `MLIQ-SECURITY-XCH-ComFut-USD-03` (pattern `^MLIQ-`) |  |
+| `BUSINESS_DATE` | date | required |  | The business date the measures are of (YYYY-MM-DD). | `2026-09-30` |  |
+| `KEY_TYPE` | text | required |  | What LIQUIDITY_KEY names, most specific first: POSITION (a POSITION_ID), SECURITY (a SECURITY_ID), RISK_FACTOR (the position's main factor) or PRODUCT_TYPE (a default for a product type, optionally per currency). | `POSITION`, `SECURITY`, `RISK_FACTOR`, `PRODUCT_TYPE` |  |
+| `LIQUIDITY_KEY` | id | required |  | The position, security, risk factor or product type the row is for. | `XCH-ComFut-USD-03` |  |
+| `BID_ASK_SPREAD` | rate | required | a fraction of the mid price (0.0012 is 12 basis points of value) | The average relative bid-ask spread over SPREAD_WINDOW_DAYS, ask minus bid over mid. For a derivative quoted in rate or volatility terms, the spread in value terms as the bank's exit-cost method gives it. | `0.0012` |  |
+| `SPREAD_VOLATILITY` | rate | optional | a fraction of the mid price | The standard deviation of the relative spread over the same window; absent, only the average spread is charged and the result says so. | `0.0004` |  |
+| `SPREAD_WINDOW_DAYS` | integer | optional |  | The business days the spread statistics were measured over. | `60` |  |
+| `AVERAGE_DAILY_VOLUME` | amount | optional | VOLUME_UNIT | The average daily traded volume, in the unit of the positions' QUANTITY; absent, the position's liquidation period is LIQUIDATION_DAYS or the product type's default, never one day by silence. | `42000` |  |
+| `VOLUME_UNIT` | text | optional |  | The unit of the volume and depth (contracts, shares, notional in a currency). | `contracts` |  |
+| `MARKET_DEPTH` | amount | optional | VOLUME_UNIT | The size that trades at the quoted spread without moving the price. | `1500` |  |
+| `PARTICIPATION_RATE` | rate | optional |  | The share of the daily volume the bank may trade for this key (0.2 is 20%); absent, the engine's setting. | `0.2` |  |
+| `LIQUIDATION_DAYS` | rate | optional | business days | The liquidation period the bank sets for the key; when present it is used instead of the one derived from the volume. | `4` |  |
+| `SOURCE` | text | required |  | The system or vendor the row came from. | `demo-liquidity` |  |
+| `AS_OF` | timestamp | required |  | When the source produced the row (UTC). | `2026-09-30T21:00:00Z` |  |
+
+**Validation**
+
+- required: fields `LIQUIDITY_ID`, `BUSINESS_DATE`, `KEY_TYPE`, `LIQUIDITY_KEY`, `BID_ASK_SPREAD`, `SOURCE`, `AS_OF`
+- unique: key `LIQUIDITY_ID`; per BUSINESS_DATE
+- pattern: field LIQUIDITY_ID; pattern ^MLIQ-
+- enum: field KEY_TYPE; values `POSITION`, `SECURITY`, `RISK_FACTOR`, `PRODUCT_TYPE`
+- range: field BID_ASK_SPREAD; min 0
+- range: field PARTICIPATION_RATE; min 0; max 1
+
+**Notes**
+
+- JSON Lines, one row per line (UTF-8; .jsonl or .jsonl.gz). Example line: {"LIQUIDITY_ID":"MLIQ-SECURITY-XCH-ComFut-USD-03","BUSINESS_DATE":"2026-09-30","KEY_TYPE":"SECURITY","LIQUIDITY_KEY":"XCH-ComFut-USD-03","BID_ASK_SPREAD":0.0012,"SPREAD_VOLATILITY":0.0004,"SPREAD_WINDOW_DAYS":60,"AVERAGE_DAILY_VOLUME":42000,"VOLUME_UNIT":"contracts","MARKET_DEPTH":1500,"PARTICIPATION_RATE":0.2,"SOURCE":"demo-liquidity","AS_OF":"2026-09-30T21:00:00Z"}
+- How it is used: the exit cost of a position is half its absolute market value times (BID_ASK_SPREAD + k x SPREAD_VOLATILITY); its liquidation period is LIQUIDATION_DAYS, else the absolute QUANTITY over (PARTICIPATION_RATE x AVERAGE_DAILY_VOLUME), at least one day. A position no row matches is listed under "no liquidity data" with its market value, and the liquidity-adjusted figure is marked incomplete; it is never given a zero spread or a one-day period.
+- Sizing: one row per traded security and product default; 200,000 rows about 10 MB a date.
+
+**To review (2)**
+
+- How the bank measures the exit cost of OTC derivatives (a spread in value terms per product type and tenor bucket is assumed).
+- Whether liquidation periods are set by policy per product type (then only PRODUCT_TYPE rows with LIQUIDATION_DAYS are needed).
+
+## MMOV: Market move of a risk factor (daily, with its series mapping) (`market-move`)
+
+The one-day move of each risk factor of the factor dictionary, in the unit its sensitivities are quoted in, with the market-data series it was read from. P&L explain multiplies it by the sensitivities of the day before (delta x move, half gamma x move squared, vega x volatility move); sensitivity-based stress and reverse stress read its history for volatilities and correlations. Statistics on supplied numbers only: no curve is built and nothing is priced. Planned: no command, no data and no engine reads it yet.
+
+|  |  |
+|---|---|
+| Contract | [market-move.contract.yaml](../../../modules/banking/dmod/packs/market-risk/contracts/market-move.contract.yaml) · version 1.0 |
+| Class | input |
+| Status | planned: no command or data yet |
+| Source | The bank's market-data or risk system (the closes its sensitivities were computed from) |
+| Grain | One row per risk factor and BUSINESS_DATE, keyed by MOVE_ID (MMOV-<RISK_FACTOR>-<BUSINESS_DATE>). |
+| Key | `MOVE_ID` |
+| Id pattern | `^MMOV-` |
+| Dated by | `BUSINESS_DATE` |
+| Cadence | daily (due: with the sensitivities of the business date) |
+| Binding hint | lake table `risk.market-move`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
+| Columns | `MOVE_ID`, `RISK_FACTOR`, `RISK_CLASS`, `PREVIOUS_DATE`, `LEVEL_PREVIOUS`, `LEVEL`, `MOVE`, `MOVE_UNIT`, `SERIES_REF`, `QUALITY`, `BATCH_ID` |
+| Partitioned by | `BUSINESS_DATE` |
+
+**Fields**
+
+| Field | Type | Presence | Unit | Description | Example or values | Link |
+|---|---|---|---|---|---|---|
+| `MOVE_ID` | id | required |  | The row's id, MMOV-<RISK_FACTOR>-<BUSINESS_DATE> (the business key). | `MMOV-IR/CURVE/EUR/ESTR/5Y-2026-09-30` (pattern `^MMOV-`) |  |
+| `BUSINESS_DATE` | date | required |  | The close the move ends on (YYYY-MM-DD). | `2026-09-30` |  |
+| `PREVIOUS_DATE` | date | required |  | The close the move starts from, the business day before in the factor's calendar. | `2026-09-29` |  |
+| `RISK_FACTOR` | id | required |  | The factor, a RISK_FACTOR of the factor dictionary; a factor not in the dictionary refuses the row. | `IR/CURVE/EUR/ESTR/5Y` | `risk-factor` |
+| `RISK_CLASS` | text | optional |  | The factor's risk class, as the dictionary has it; sent for partition pruning, checked against the dictionary. | `IR` |  |
+| `LEVEL_PREVIOUS` | rate | required | the factor's quotation (per cent for a rate, a price, a volatility in points) | The factor's level at the close of PREVIOUS_DATE. | `2.412` |  |
+| `LEVEL` | rate | required | the factor's quotation | The factor's level at the close of BUSINESS_DATE. | `2.442` |  |
+| `MOVE` | rate | required | MOVE_UNIT | The move in the unit of the factor's sensitivities: basis points for DV01 and CS01, per cent for a spot or price DELTA, volatility points for VEGA. Checked against LEVEL and LEVEL_PREVIOUS (a difference beyond rounding refuses the row). | `3.0` |  |
+| `MOVE_UNIT` | text | required |  | BP (absolute, basis points), PCT (relative, per cent) or VOL_POINT (absolute, volatility points). | `BP`, `PCT`, `VOL_POINT` |  |
+| `SERIES_REF` | text | required |  | The series mapping: the market-data series the levels were read from, as the market-data pack names it (the dictionary's MARKET_DATA_REF when the factor has one). Explain shows it under every factor's move. | `curve:EUR-ESTR:5Y` |  |
+| `QUALITY` | text | required |  | OBSERVED (a close of the day), STALE (carried from an earlier day: the days stale in STALE_DAYS) or PROXY (the move of PROXY_OF). A stale or proxied move is used and counted, and the explained P&L it produces is marked. | `OBSERVED`, `STALE`, `PROXY` |  |
+| `STALE_DAYS` | integer | optional |  | Business days since the level was last observed (QUALITY STALE). | `0` |  |
+| `PROXY_OF` | id | optional |  | The factor whose move stands in (QUALITY PROXY). | `IR/CURVE/EUR/ESTR/7Y` | `risk-factor` |
+| `SOURCE` | text | required |  | The system the row came from. | `demo-market-data` |  |
+| `BATCH_ID` | id | required |  | The run that produced the row; it should be the batch of the day's sensitivities. | `B-SENS-2026-09-30-01` |  |
+
+**Links:** `RISK_FACTOR` → `risk-factor`, `PROXY_OF` → `risk-factor`.
+
+**Validation**
+
+- required: fields `MOVE_ID`, `BUSINESS_DATE`, `PREVIOUS_DATE`, `RISK_FACTOR`, `LEVEL_PREVIOUS`, `LEVEL`, `MOVE`, `MOVE_UNIT`, `SERIES_REF`, `QUALITY`, `SOURCE`, `BATCH_ID`
+- unique: key `MOVE_ID`; per BUSINESS_DATE
+- pattern: field MOVE_ID; pattern ^MMOV-
+- link: field RISK_FACTOR; kind risk-factor
+- enum: field MOVE_UNIT; values `BP`, `PCT`, `VOL_POINT`
+- enum: field QUALITY; values `OBSERVED`, `STALE`, `PROXY`
+
+**Notes**
+
+- JSON Lines, one row per line (UTF-8; .jsonl or .jsonl.gz). Example line: {"MOVE_ID":"MMOV-IR/CURVE/EUR/ESTR/5Y-2026-09-30","BUSINESS_DATE":"2026-09-30","PREVIOUS_DATE":"2026-09-29","RISK_FACTOR":"IR/CURVE/EUR/ESTR/5Y","RISK_CLASS":"IR","LEVEL_PREVIOUS":2.412,"LEVEL":2.442,"MOVE":3.0,"MOVE_UNIT":"BP","SERIES_REF":"curve:EUR-ESTR:5Y","QUALITY":"OBSERVED","STALE_DAYS":0,"SOURCE":"demo-market-data","BATCH_ID":"B-SENS-2026-09-30-01"}
+- A factor with sensitivities on PREVIOUS_DATE and no move on BUSINESS_DATE is never moved by zero: its sensitivities' P&L is left in the unexplained P&L and the factor is listed under "no move delivered" with the amount at stake.
+- Sizing: one row per factor a day; 50,000 factors about 3 MB a date as Parquet.
+
+**To review (1)**
+
+- Whether the bank delivers the moves, or wants Drishti to derive them from the market-data pack's series through the dictionary's MARKET_DATA_REF (a subtraction of two supplied closes; the design recommends delivered moves, so the closes are the ones the sensitivities were computed from).
+
+## NMRF: Stress-scenario P&L of a position for a non-modellable risk factor (`nmrf-stress`)
+
+For each position and each non-modellable risk factor it depends on (a factor that fails the eligibility test), the position's P&L under that factor's stress scenario, up and down, as the bank's engine prices it. Drishti sums the P&L of a factor over a scope, takes the worse direction as the factor's stress loss, and aggregates the factors into the stressed expected shortfall add-on (Basel MAR33). Planned: no command, no data and no engine reads it yet.
+
+|  |  |
+|---|---|
+| Contract | [nmrf-stress.contract.yaml](../../../modules/banking/dmod/packs/market-risk/contracts/nmrf-stress.contract.yaml) · version 1.0 |
+| Class | input |
+| Status | planned: no command or data yet |
+| Source | The bank's risk engine (the non-modellable risk factor run of the FRTB internal models batch) |
+| Grain | One row per position (or trade), non-modellable risk factor and BUSINESS_DATE, keyed by NMRF_STRESS_ID (NMRF-<POSITION_ID or TRADE_ID>-<RISK_FACTOR>). |
+| Key | `NMRF_STRESS_ID` |
+| Id pattern | `^NMRF-` |
+| Dated by | `BUSINESS_DATE` |
+| Cadence | daily (due: with the partial-shock scenario PVs of the date) |
+| Binding hint | lake table `risk.nmrf-stress`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
+| Columns | `NMRF_STRESS_ID`, `GRAIN`, `POSITION_ID`, `TRADE_ID`, `LEGAL_ENTITY`, `DESK`, `TT_BOOK`, `REGULATORY_DESK_ID`, `RISK_FACTOR`, `NMRF_TYPE`, `LIQUIDITY_HORIZON`, `METHOD`, `STRESS_PNL_UP`, `STRESS_PNL_DOWN`, `CURRENCY`, `STATUS`, `BATCH_ID` |
+| Partitioned by | `BUSINESS_DATE` |
+
+**Fields**
+
+| Field | Type | Presence | Unit | Description | Example or values | Link |
+|---|---|---|---|---|---|---|
+| `NMRF_STRESS_ID` | id | required |  | The row's id, NMRF-<POSITION_ID or TRADE_ID>-<RISK_FACTOR> (the business key). | `NMRF-POS-BOOK-CREDIT-1~CLY-3000087-CR/SPREAD/ACME-CORP/SNR/5Y` (pattern `^NMRF-`) |  |
+| `BUSINESS_DATE` | date | required |  | The close of business the position and the P&L belong to (YYYY-MM-DD). | `2026-09-30` |  |
+| `GRAIN` | text | required |  | POSITION (its POSITION_ID) or TRADE (its TRADE_ID). | `TRADE`, `POSITION` |  |
+| `POSITION_ID` | id | optional |  | The position, at GRAIN POSITION (required then). | `POS-BOOK-CREDIT-1~CLY-3000087` (pattern `^POS-`) | `position` |
+| `TRADE_ID` | id | optional |  | The trade, at GRAIN TRADE (required then). | `CLY-3000087` | `trade` |
+| `LEGAL_ENTITY` | id | required |  | The legal entity. Must be a promoted column. | `LE-NY` (pattern `^LE-`) | `legal-entity` |
+| `DESK` | id | required |  | The desk. Must be a promoted column. | `DESK-CREDIT` (pattern `^DESK-`) | `desk` |
+| `TT_BOOK` | id | required |  | The book. Must be a promoted column. | `BOOK-CREDIT-1` (pattern `^BOOK-`) | `book` |
+| `REGULATORY_DESK_ID` | id | optional |  | The regulatory trading desk when it differs from DESK. | `RD-CREDIT-NY` |  |
+| `RISK_FACTOR` | id | required |  | The non-modellable factor, a RISK_FACTOR of the factor dictionary. A row for a factor the eligibility test passes on the date is a warning (the factor is in the expected shortfall, the row is not used). | `CR/SPREAD/ACME-CORP/SNR/5Y` | `risk-factor` |
+| `NMRF_TYPE` | text | required |  | How the factor aggregates: IDIOSYNCRATIC_CREDIT (credit-spread risk of one issuer, zero correlation with the others), IDIOSYNCRATIC_EQUITY (the same for equity) or OTHER (aggregated with the rules' correlation). | `IDIOSYNCRATIC_CREDIT`, `IDIOSYNCRATIC_EQUITY`, `OTHER` |  |
+| `LIQUIDITY_HORIZON` | integer | required | days | The liquidity horizon the stress scenario was calibrated to (the factor's, at least 20). | `60` |  |
+| `METHOD` | text | required |  | How the bank calibrated the stress scenario: DIRECT, STEPWISE, HISTORICAL or MAX_LOSS; kept for the result and audit. | `DIRECT`, `STEPWISE`, `HISTORICAL`, `MAX_LOSS` |  |
+| `STRESS_PNL_UP` | amount | optional | CURRENCY | The position's P&L when the factor takes its upward stress shock, positive for a gain. At least one direction is required unless STATUS is failed; a method with one scenario sends it as STRESS_PNL_DOWN. | `-412000.0` |  |
+| `STRESS_PNL_DOWN` | amount | optional | CURRENCY | The position's P&L when the factor takes its downward stress shock, positive for a gain. | `388500.0` |  |
+| `CURRENCY` | text | required |  | The reporting currency (USD). | `USD` |  |
+| `STRESS_PERIOD_START` | date | optional |  | The start of the stress period the scenario was calibrated on. | `2008-06-02` |  |
+| `STRESS_PERIOD_END` | date | optional |  | The end of that period. | `2009-06-01` |  |
+| `STATUS` | text | required |  | ok, proxied or failed (counted and named, never taken as zero). | `ok`, `proxied`, `failed` |  |
+| `BATCH_ID` | id | required |  | The run that produced the row, the batch of the date's partial-shock scenario PVs. | `B-ES-2026-09-30-01` |  |
+| `COMPUTED_AT` | timestamp | required |  | When the run produced the row (UTC). | `2026-09-30T07:25:00Z` |  |
+
+**Links:** `POSITION_ID` → `position`, `TRADE_ID` → `trade`, `RISK_FACTOR` → `risk-factor`, `LEGAL_ENTITY` → `legal-entity`, `DESK` → `desk`, `TT_BOOK` → `book`.
+
+**Validation**
+
+- required: fields `NMRF_STRESS_ID`, `BUSINESS_DATE`, `GRAIN`, `LEGAL_ENTITY`, `DESK`, `TT_BOOK`, `RISK_FACTOR`, `NMRF_TYPE`, `LIQUIDITY_HORIZON`, `METHOD`, `CURRENCY`, `STATUS`, `BATCH_ID`, `COMPUTED_AT`
+- unique: key `NMRF_STRESS_ID`; per BUSINESS_DATE
+- pattern: field NMRF_STRESS_ID; pattern ^NMRF-
+- link: field RISK_FACTOR; kind risk-factor
+- enum: field NMRF_TYPE; values `IDIOSYNCRATIC_CREDIT`, `IDIOSYNCRATIC_EQUITY`, `OTHER`
+- enum: field METHOD; values `DIRECT`, `STEPWISE`, `HISTORICAL`, `MAX_LOSS`
+- range: field LIQUIDITY_HORIZON; min 20
+
+**Notes**
+
+- JSON Lines, one row per line (UTF-8; .jsonl or .jsonl.gz). Example line: {"NMRF_STRESS_ID":"NMRF-POS-BOOK-CREDIT-1~CLY-3000087-CR/SPREAD/ACME-CORP/SNR/5Y","BUSINESS_DATE":"2026-09-30","GRAIN":"POSITION","POSITION_ID":"POS-BOOK-CREDIT-1~CLY-3000087","LEGAL_ENTITY":"LE-NY","DESK":"DESK-CREDIT","TT_BOOK":"BOOK-CREDIT-1","RISK_FACTOR":"CR/SPREAD/ACME-CORP/SNR/5Y","NMRF_TYPE":"IDIOSYNCRATIC_CREDIT","LIQUIDITY_HORIZON":60,"METHOD":"STEPWISE","STRESS_PNL_UP":-412000.0,"STRESS_PNL_DOWN":388500.0,"CURRENCY":"USD","STRESS_PERIOD_START":"2008-06-02","STRESS_PERIOD_END":"2009-06-01","STATUS":"ok","BATCH_ID":"B-ES-2026-09-30-01","COMPUTED_AT":"2026-09-30T07:25:00Z"}
+- The factor's stress loss of a scope is max( -sum of STRESS_PNL_UP, -sum of STRESS_PNL_DOWN, 0 ) over the scope's positions: the directions are summed before the worse is taken, so a hedge inside the scope offsets. A factor the eligibility test fails that has sensitivities in the scope and no row here is listed under "no stress scenario delivered" and the add-on is marked incomplete.
+- Sizing: sparse; a bank with 5,000 non-modellable factors and on average 40 positions a factor sends 200,000 rows a date, about 8 MB.
+
+**To review (1)**
+
+- Whether the bank's engine delivers both directions for every method, and whether it already scales the loss to the liquidity horizon.
+
+## RPV: Realised-move PV of a position (the risk model, daily) (`realised-pv`)
+
+The risk model's value of each position of the previous business date under the market move that was realised on the business date: the same pricers, risk factors and approximations as the scenario PVs, applied to one more scenario, the day that happened. Drishti computes the risk-theoretical P&L (RTPL) from it: RTPL = REALISED_PV x FX(business date) - BASE_PV x FX(position date), or takes RTPL as sent (VALUE_TYPE PNL). It is its own kind and does not ride in scenario-pv: a scenario-PV row is valued on its business date for positions of that date and carries a vector of the window's length, while this row is one number valued one day later for positions that are already history. Planned: no command, no data and no engine reads it yet.
+
+|  |  |
+|---|---|
+| Contract | [realised-pv.contract.yaml](../../../modules/banking/dmod/packs/market-risk/contracts/realised-pv.contract.yaml) · version 1.0 |
+| Class | input |
+| Status | planned: no command or data yet |
+| Source | The bank's risk engine (the run that produces the scenario PVs, one day later) |
+| Grain | One row per position (GRAIN POSITION) or trade (GRAIN TRADE) and BUSINESS_DATE (the day the market moved), keyed by REALISED_PV_ID (RPV-<POSITION_ID or TRADE_ID>-<BUSINESS_DATE>); one complete file per date. |
+| Key | `REALISED_PV_ID` |
+| Id pattern | `^RPV-` |
+| Dated by | `BUSINESS_DATE` |
+| Cadence | daily (due: with the scenario PVs of the business date (the same run prices yesterday's positions on today's market)) |
+| Binding hint | lake table `risk.realised-pv`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
+| Columns | `REALISED_PV_ID`, `VALUE_TYPE`, `GRAIN`, `POSITION_ID`, `TRADE_ID`, `POSITION_DATE`, `SOURCE_SYSTEM`, `LEGAL_ENTITY`, `DESK`, `TT_BOOK`, `REGULATORY_DESK_ID`, `CURRENCY`, `BASE_PV`, `REALISED_PV`, `RTPL`, `STATUS`, `BATCH_ID`, `COMPUTED_AT` |
+| Partitioned by | `BUSINESS_DATE` |
+
+**Fields**
+
+| Field | Type | Presence | Unit | Description | Example or values | Link |
+|---|---|---|---|---|---|---|
+| `REALISED_PV_ID` | id | required |  | The row's id, RPV-<POSITION_ID or TRADE_ID>-<BUSINESS_DATE> (the business key). | `RPV-POS-BOOK-RATES-1~MX-20000002-2026-09-30` (pattern `^RPV-`) |  |
+| `VALUE_TYPE` | text | required |  | What the values are: PV (BASE_PV and REALISED_PV in CURRENCY, converted by Drishti) or PNL (RTPL as sent, in CURRENCY). The same form as the source system's scenario rows. | `PV`, `PNL` |  |
+| `BUSINESS_DATE` | date | required |  | The day the market moved (YYYY-MM-DD): REALISED_PV is valued on this date's closing risk factors. | `2026-09-30` |  |
+| `POSITION_DATE` | date | required |  | The business date whose end-of-day positions are valued (the business day before BUSINESS_DATE); BASE_PV is the BASE_PV of that date's scenario-pv row, and a difference beyond the tolerance is a warning naming both. | `2026-09-29` |  |
+| `GRAIN` | text | required |  | POSITION (its POSITION_ID) or TRADE (its TRADE_ID), the grain of the source system's scenario PVs. | `TRADE`, `POSITION` |  |
+| `POSITION_ID` | id | optional |  | The position, at GRAIN POSITION (required then). | `POS-BOOK-RATES-1~MX-20000002` (pattern `^POS-`) | `position` |
+| `TRADE_ID` | id | optional |  | The trade, at GRAIN TRADE (required then). | `MX-20000002` | `trade` |
+| `SOURCE_SYSTEM` | text | required |  | The system that produced the row. | `MUREX` |  |
+| `LEGAL_ENTITY` | id | required |  | The legal entity of the position on POSITION_DATE. Must be a promoted column. | `LE-NY` (pattern `^LE-`) | `legal-entity` |
+| `DESK` | id | required |  | The desk of the position on POSITION_DATE. Must be a promoted column. | `DESK-RATES` (pattern `^DESK-`) | `desk` |
+| `TT_BOOK` | id | required |  | The book of the position on POSITION_DATE. Must be a promoted column. | `BOOK-RATES-1` (pattern `^BOOK-`) | `book` |
+| `REGULATORY_DESK_ID` | id | optional |  | The regulatory trading desk when it differs from DESK. | `RD-RATES-NY` |  |
+| `CURRENCY` | text | required |  | The currency of the values (ISO 4217). | `EUR` |  |
+| `BASE_PV` | amount | optional | CURRENCY | The risk model's PV at the close of POSITION_DATE (required at VALUE_TYPE PV). | `1120300.0` |  |
+| `REALISED_PV` | amount | optional | CURRENCY | The risk model's PV of the same position on BUSINESS_DATE's closing risk factors, the valuation date moved by one day as the bank's HPL does (required at VALUE_TYPE PV unless STATUS is failed). | `1066150.0` |  |
+| `RTPL` | amount | optional | CURRENCY | The risk-theoretical P&L as sent (required at VALUE_TYPE PNL unless STATUS is failed); at VALUE_TYPE PV it is derived by Drishti and an upstream value is ignored. | `-54150.0` |  |
+| `RISK_MODEL` | text | required |  | The risk model and version that valued the row; it must be the model of the date's scenario PVs (the P&L attribution test compares the model that produces the capital figure, not another). | `demo-factor-model/demo-2` |  |
+| `STATUS` | text | required |  | ok, proxied or failed (no value; counted and named, never taken as zero). | `ok`, `proxied`, `failed` |  |
+| `BATCH_ID` | id | required |  | The run that produced the row. | `B-RPV-2026-09-30-01` |  |
+| `COMPUTED_AT` | timestamp | required |  | When the run produced the row (UTC). | `2026-10-01T05:55:00Z` |  |
+
+**Links:** `POSITION_ID` → `position`, `TRADE_ID` → `trade`, `LEGAL_ENTITY` → `legal-entity`, `DESK` → `desk`, `TT_BOOK` → `book`.
+
+**Validation**
+
+- required: fields `REALISED_PV_ID`, `VALUE_TYPE`, `BUSINESS_DATE`, `POSITION_DATE`, `GRAIN`, `SOURCE_SYSTEM`, `LEGAL_ENTITY`, `DESK`, `TT_BOOK`, `CURRENCY`, `RISK_MODEL`, `STATUS`, `BATCH_ID`, `COMPUTED_AT`
+- unique: key `REALISED_PV_ID`; per BUSINESS_DATE
+- pattern: field REALISED_PV_ID; pattern ^RPV-
+- enum: field VALUE_TYPE; values `PV`, `PNL`
+- enum: field GRAIN; values `TRADE`, `POSITION`
+- enum: field STATUS; values `ok`, `proxied`, `failed`
+
+**Notes**
+
+- JSON Lines, one row per line (UTF-8; .jsonl or .jsonl.gz). Example line: {"REALISED_PV_ID":"RPV-POS-BOOK-RATES-1~MX-20000002-2026-09-30","VALUE_TYPE":"PV","BUSINESS_DATE":"2026-09-30","POSITION_DATE":"2026-09-29","GRAIN":"POSITION","POSITION_ID":"POS-BOOK-RATES-1~MX-20000002","SOURCE_SYSTEM":"MUREX","LEGAL_ENTITY":"LE-NY","DESK":"DESK-RATES","TT_BOOK":"BOOK-RATES-1","CURRENCY":"EUR","BASE_PV":1120300.0,"REALISED_PV":1066150.0,"RISK_MODEL":"demo-factor-model/demo-2","STATUS":"ok","BATCH_ID":"B-RPV-2026-09-30-01","COMPUTED_AT":"2026-10-01T05:55:00Z"}
+- FX: at VALUE_TYPE PV, RTPL in USD = REALISED_PV x FX(BUSINESS_DATE close) - BASE_PV x FX(POSITION_DATE close), both rates from the market-data pack's fx-spot; a currency with no rate on either date refuses the row (counted, named).
+- Without this kind the P&L explain engine can still show an approximate RTPL (the newest scenario of the business date's scenario PVs, which applies the realised move to the business date's positions, not the previous date's). That figure is labelled approximate everywhere and is never used for the P&L attribution test or a filed backtest.
+- Sizing: 1.3 million rows a date, about 35 MB as Parquet.
+
+**To review (1)**
+
+- Whether the bank's risk engine can run yesterday's positions on today's market as one extra scenario (most can: it is the same batch with one more market state), and at what time it is delivered.
 
 ## RDSK: Regulatory trading desk definitions (`regulatory-desk`)
 
@@ -1678,6 +2156,63 @@ The residual risk add-on's inputs (Basel MAR23): one row per trade and business 
 
 - Which product control system flags back-to-back trades and listed or centrally clearable instruments at the bank.
 
+## RFOB: Real-price observations of a risk factor (for the eligibility test) (`risk-factor-observation`)
+
+The days on which a real price was observed for a risk factor: a transaction of the bank, a verifiable transaction between other parties, a committed quote, or a vendor's count of them. The FRTB internal models engine counts them over the last 12 months for the risk factor eligibility test (Basel MAR31): a factor that passes is modellable and stays in the expected shortfall; one that fails is non-modellable and is capitalised by its stress scenario (the nmrf-stress contract). Planned: no command, no data and no engine reads it yet.
+
+|  |  |
+|---|---|
+| Contract | [risk-factor-observation.contract.yaml](../../../modules/banking/dmod/packs/market-risk/contracts/risk-factor-observation.contract.yaml) · version 1.0 |
+| Class | input |
+| Status | planned: no command or data yet |
+| Source | The bank's trade repository and its real-price data vendors (pooled observation services) |
+| Grain | One row per risk factor, observation type and BUSINESS_DATE on which at least one real price was observed, keyed by OBSERVATION_ID (RFOB-<RISK_FACTOR>-<OBSERVATION_TYPE>-<BUSINESS_DATE>). |
+| Key | `OBSERVATION_ID` |
+| Id pattern | `^RFOB-` |
+| Dated by | `BUSINESS_DATE` |
+| Cadence | daily (due: within the vendor's publication lag (a vendor may publish a period late; a late row is loaded into its own date)) |
+| Binding hint | lake table `risk.risk-factor-observation`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
+| Columns | `OBSERVATION_ID`, `RISK_FACTOR`, `RISK_CLASS`, `OBSERVATION_TYPE`, `OBSERVATION_COUNT`, `VENDOR`, `BUCKETING` |
+| Partitioned by | `BUSINESS_DATE` |
+
+**Fields**
+
+| Field | Type | Presence | Unit | Description | Example or values | Link |
+|---|---|---|---|---|---|---|
+| `OBSERVATION_ID` | id | required |  | The row's id, RFOB-<RISK_FACTOR>-<OBSERVATION_TYPE>-<BUSINESS_DATE> (the business key). | `RFOB-CR/SPREAD/ACME-CORP/SNR/5Y-TRANSACTION-2026-09-30` (pattern `^RFOB-`) |  |
+| `BUSINESS_DATE` | date | required |  | The day the real price was observed (YYYY-MM-DD). The test counts at most one observation a day for a factor, however many rows and whatever the counts. | `2026-09-30` |  |
+| `RISK_FACTOR` | id | required |  | The factor, a RISK_FACTOR of the factor dictionary, or the bucket of a curve or surface when BUCKETING says so. | `CR/SPREAD/ACME-CORP/SNR/5Y` | `risk-factor` |
+| `RISK_CLASS` | text | optional |  | The factor's risk class, for partition pruning; checked against the dictionary. | `CR` |  |
+| `OBSERVATION_TYPE` | text | required |  | What was observed: TRANSACTION (the bank's own), THIRD_PARTY_TRANSACTION (verifiable, between other parties), COMMITTED_QUOTE or VENDOR (a vendor's evidence). | `TRANSACTION`, `THIRD_PARTY_TRANSACTION`, `COMMITTED_QUOTE`, `VENDOR` |  |
+| `OBSERVATION_COUNT` | integer | required |  | How many real prices of this type were observed on the day (1 or more); kept for evidence, the test counts the day once. | `3` |  |
+| `VENDOR` | text | optional |  | The vendor or pool that supplied the evidence (OBSERVATION_TYPE VENDOR or THIRD_PARTY_TRANSACTION). | `demo-real-price-pool` |  |
+| `BUCKETING` | text | required |  | How a point of a curve, surface or cube is counted: OWN (the bank's own buckets, one factor per bucket) or REGULATORY (the standard buckets of the rules). One approach per risk class and date. | `OWN`, `REGULATORY` |  |
+| `EVIDENCE_REF` | text | optional |  | Where the evidence is kept (a trade id, a vendor file and line), for audit; never read by the engine. | `CLY-3000087` |  |
+| `SOURCE` | text | required |  | The system the row came from. | `demo-trade-repository` |  |
+| `AS_OF` | timestamp | required |  | When the source produced the row (UTC); a later row of the same id replaces the earlier. | `2026-10-01T04:00:00Z` |  |
+
+**Links:** `RISK_FACTOR` → `risk-factor`.
+
+**Validation**
+
+- required: fields `OBSERVATION_ID`, `BUSINESS_DATE`, `RISK_FACTOR`, `OBSERVATION_TYPE`, `OBSERVATION_COUNT`, `BUCKETING`, `SOURCE`, `AS_OF`
+- unique: key `OBSERVATION_ID`; per BUSINESS_DATE
+- pattern: field OBSERVATION_ID; pattern ^RFOB-
+- link: field RISK_FACTOR; kind risk-factor
+- enum: field OBSERVATION_TYPE; values `TRANSACTION`, `THIRD_PARTY_TRANSACTION`, `COMMITTED_QUOTE`, `VENDOR`
+- enum: field BUCKETING; values `OWN`, `REGULATORY`
+- range: field OBSERVATION_COUNT; min 1
+
+**Notes**
+
+- JSON Lines, one row per line (UTF-8; .jsonl or .jsonl.gz). Example line: {"OBSERVATION_ID":"RFOB-CR/SPREAD/ACME-CORP/SNR/5Y-TRANSACTION-2026-09-30","BUSINESS_DATE":"2026-09-30","RISK_FACTOR":"CR/SPREAD/ACME-CORP/SNR/5Y","RISK_CLASS":"CR","OBSERVATION_TYPE":"TRANSACTION","OBSERVATION_COUNT":3,"BUCKETING":"OWN","EVIDENCE_REF":"CLY-3000087","SOURCE":"demo-trade-repository","AS_OF":"2026-10-01T04:00:00Z"}
+- The test (MAR31, the thresholds in the engine's parameter file): over the 12 months to the date, a factor passes with at least 24 observation days and no 90-day period with fewer than 4, or with at least 100 observation days. A day with no row is a day with no observation; a date whose delivery is missing (no load signal) is "not delivered", shown on the result, and the test of that date is refused rather than run short.
+- Sizing: 50,000 factors with on average 100 observation days a year is 5 million rows a year, about 60 MB as Parquet.
+
+**To review (1)**
+
+- Whether the bank sends observations at factor level or at the level of the instruments observed, with the instrument to factor mapping kept upstream (this contract assumes the mapping is done upstream).
+
 ## RTYP: VaR risk-type mapping (`risk-type-map`)
 
 Which regulatory risk type each trade belongs to, for VaR by risk type (interest rate, credit spread, equity, foreign exchange, commodity) and its diversification line in the annual report, the US 217.212 disclosures and Pillar 3. A mapping names a hierarchy node, a product type or a single trade; the most specific wins (trade, then product type, then node). Each trade then belongs wholly to one risk type: the risk type's VaR is the VaR of its trades and diversification is the total less the sum of the risk types. Planned: no command, no data and no engine reads it yet (docs/guides/REGULATORY_VAR_REPORTING.md sections 4.5 and 7).
@@ -1727,6 +2262,78 @@ Which regulatory risk type each trade belongs to, for VaR by risk type (interest
 **To review (1)**
 
 - Whether the bank maps by node, by product type, or both; and whether a sixth type (inflation, or a residual "other") is wanted.
+
+## SDEF: Stress scenario definition (historical, hypothetical, regulatory) (`stress-definition`)
+
+One scenario of the bank's stress programme: its name and type (a historical episode, a hypothetical scenario of the bank's own, or a regulator's scenario with its programme), its shocks to risk factors in machine-readable form, who owns and approved it and when it is valid, and its place in the stress scenario set. The scenario's position values are priced by the bank and ride in scenario-pv under a scenario set of SET_TYPE STRESS_TEST, whose SCENARIO_IDS list these ids in the vectors' order; Drishti sums them to any scope. The shocks are also what the sensitivity-based estimate multiplies by the sensitivities. Planned: no command, no data and no engine reads it yet.
+
+|  |  |
+|---|---|
+| Contract | [stress-definition.contract.yaml](../../../modules/banking/dmod/packs/market-risk/contracts/stress-definition.contract.yaml) · version 1.0 |
+| Class | input |
+| Status | planned: no command or data yet |
+| Source | The bank's stress-testing team (the stress programme's scenario library) |
+| Grain | One row per scenario and validity start, keyed by SCENARIO_ID and VALID_FROM. |
+| Key | `SCENARIO_ID`, `VALID_FROM` |
+| Id pattern | — |
+| Dated by | `VALID_FROM` |
+| Cadence | on change (due: before the first business date a scenario's values are delivered for) |
+| Binding hint | lake table `risk.stress-definition`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
+| Columns | `SCENARIO_ID`, `NAME`, `SCENARIO_TYPE`, `PROGRAMME`, `SEVERITY`, `STATUS`, `VALID_FROM`, `VALID_TO` |
+
+**Fields**
+
+| Field | Type | Presence | Unit | Description | Example or values | Link |
+|---|---|---|---|---|---|---|
+| `SCENARIO_ID` | id | required |  | The scenario's id; the id the stress scenario set lists in SCENARIO_IDS. | `SCN-GFC-2008` (pattern `^SCN-`) |  |
+| `NAME` | text | required |  | The scenario's name on the screens. | `Global financial crisis, September to November 2008` |  |
+| `SCENARIO_TYPE` | text | required |  | HISTORICAL (the moves of a past period, WINDOW_START to WINDOW_END), HYPOTHETICAL (the bank's own design) or REGULATORY (a supervisor's scenario, PROGRAMME names it). | `HISTORICAL`, `HYPOTHETICAL`, `REGULATORY` |  |
+| `PROGRAMME` | text | optional |  | The regulatory or internal programme the scenario belongs to, with its year (required at SCENARIO_TYPE REGULATORY). | `Board stress programme 2026` |  |
+| `DESCRIPTION` | text | optional |  | The narrative, shown with the result. | `Credit spreads widen sharply, equities fall, rates rally, the dollar strengthens` |  |
+| `SEVERITY` | text | required |  | MODERATE, SEVERE or EXTREME, as the programme grades it. | `MODERATE`, `SEVERE`, `EXTREME` |  |
+| `WINDOW_START` | date | optional |  | The first day of the historical period (SCENARIO_TYPE HISTORICAL). | `2008-09-12` |  |
+| `WINDOW_END` | date | optional |  | The last day of the historical period. | `2008-11-20` |  |
+| `HORIZON_DAYS` | integer | required | business days | The horizon the shocks were calibrated over; the shocks are applied at once (no time passes, nothing is rebalanced). | `49` |  |
+| `SHOCKS` | record list | required |  | The shocks, one element per risk factor or group of factors; the nested table lists the fields. A scenario delivered only as position values still lists its headline shocks, for the narrative and the sensitivity-based estimate. |  |  |
+| `FULL_REVALUATION` | boolean | required |  | The bank delivers position values for the scenario (in scenario-pv, under the stress scenario set). False - the scenario exists only as shocks and every figure of it is a sensitivity-based estimate, marked as such. | `True` |  |
+| `OWNER` | text | required |  | The team that owns the scenario. | `Market risk stress testing` |  |
+| `APPROVED_BY` | text | optional |  | The committee or person that approved it. | `Market risk committee` |  |
+| `APPROVED_ON` | date | optional |  | The approval date. | `2026-01-15` |  |
+| `STATUS` | text | required |  | ACTIVE, DRAFT (shown to its owner only) or RETIRED. | `ACTIVE`, `DRAFT`, `RETIRED` |  |
+| `VALID_FROM` | date | required |  | The first business date the definition applies to. | `2026-01-15` |  |
+| `VALID_TO` | date | optional |  | The last business date it applies to; empty while it is current. |  |  |
+| `SOURCE` | text | required |  | The system the row came from. | `demo-stress-library` |  |
+
+**Nested `SHOCKS[]`**
+
+| Field | Type | Presence | Unit | Description | Example or values | Link |
+|---|---|---|---|---|---|---|
+| `SELECTOR` | text | required |  | The factors shocked: a RISK_FACTOR of the dictionary, or a pattern over the factor naming standard with * for any part (IR/CURVE/USD/*/*: every US dollar curve point). The most specific selector that matches a factor applies to it; a factor no selector matches is not shocked, and the result lists how many sensitivities that left unshocked. | `CR/SPREAD/*/*/*` |  |
+| `SHOCK_TYPE` | text | required |  | BP (absolute, basis points), PCT (relative, per cent) or VOL_POINT (absolute, volatility points): the unit of the factor's sensitivities. | `BP`, `PCT`, `VOL_POINT` |  |
+| `VALUE` | rate | required |  | The size of the shock, signed. | `250` |  |
+| `TENOR_FROM` | text | optional |  | The shortest tenor the element applies to, for a shock that differs along a curve. | `2Y` |  |
+| `TENOR_TO` | text | optional |  | The longest tenor the element applies to. | `10Y` |  |
+
+**Validation**
+
+- required: fields `SCENARIO_ID`, `NAME`, `SCENARIO_TYPE`, `SEVERITY`, `HORIZON_DAYS`, `SHOCKS`, `FULL_REVALUATION`, `OWNER`, `STATUS`, `VALID_FROM`, `SOURCE`
+- unique: key `SCENARIO_ID`, `VALID_FROM`; per VALID_FROM
+- pattern: field SCENARIO_ID; pattern ^SCN-
+- enum: field SCENARIO_TYPE; values `HISTORICAL`, `HYPOTHETICAL`, `REGULATORY`
+- enum: field SEVERITY; values `MODERATE`, `SEVERE`, `EXTREME`
+- enum: field STATUS; values `ACTIVE`, `DRAFT`, `RETIRED`
+- enum: field SHOCKS[].SHOCK_TYPE; values `BP`, `PCT`, `VOL_POINT`
+
+**Notes**
+
+- JSON Lines, one row per line (UTF-8; .jsonl or .jsonl.gz). Example line: {"SCENARIO_ID":"SCN-GFC-2008","NAME":"Global financial crisis, September to November 2008","SCENARIO_TYPE":"HISTORICAL","PROGRAMME":"Board stress programme 2026","DESCRIPTION":"Credit spreads widen sharply, equities fall, rates rally, the dollar strengthens","SEVERITY":"SEVERE","WINDOW_START":"2008-09-12","WINDOW_END":"2008-11-20","HORIZON_DAYS":49,"SHOCKS":[{"SELECTOR":"CR/SPREAD/*/*/*","SHOCK_TYPE":"BP","VALUE":250},{"SELECTOR":"EQ/SPOT/*","SHOCK_TYPE":"PCT","VALUE":-34},{"SELECTOR":"IR/CURVE/USD/*/*","SHOCK_TYPE":"BP","VALUE":-120,"TENOR_FROM":"2Y","TENOR_TO":"10Y"}],"FULL_REVALUATION":true,"OWNER":"Market risk stress testing","APPROVED_BY":"Market risk committee","APPROVED_ON":"2026-01-15","STATUS":"ACTIVE","VALID_FROM":"2026-01-15","SOURCE":"demo-stress-library"}
+- How the position values ride in scenario-pv (docs/architecture/MARKET_RISK_I6_DESIGN.md section 7.2): the date's stress scenario set is a scenario-set row of SET_TYPE STRESS_TEST whose SCENARIO_IDS (a planned additive field of scenario-set 1.2) lists the scenario ids in order; each position sends one scenario-pv row for that set, its SCENARIO_PV holding one value per listed scenario. A scenario listed in the set and not defined here, or defined with FULL_REVALUATION true and absent from the set, is named on the result.
+- A scenario a person builds on the screen is Drishti-owned (kept in the content store with its author) and uses the same SHOCKS shape; it is never written to this table.
+
+**To review (2)**
+
+- Whether the bank's scenario library can export shocks by risk factor in the factor naming standard, or only as a narrative with position values.
+- The stress limits per scenario and scope: whether they come with the limits of var-limit or as their own input.
 
 ## TCF: Trade cash flows (daily) (`trade-cash-flow`)
 

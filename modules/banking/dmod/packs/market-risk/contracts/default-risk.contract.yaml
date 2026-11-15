@@ -17,7 +17,7 @@
 kind: default-risk
 mnemonic: DRCI
 pack: market-risk
-version: '1.0'
+version: '1.1'
 class: input
 status: planned
 title: 'Default risk inputs (the DRC, per position and obligor)'
@@ -150,6 +150,46 @@ fields:
   presence: optional
   description: 'The price does not depend on the recovery (MAR22.12): the LGD is 100%.'
   example: false
+- name: JTD
+  type: amount
+  presence: optional
+  unit: CURRENCY
+  description: 'The bank''s own jump-to-default of the row: the loss if the obligor defaulted now, positive for a loss (a long credit
+    exposure), negative for a gain (a short), from the bank''s pricing with its LGD. Read by the default risk charge''s simulation
+    (the internal models approach, docs/architecture/MARKET_RISK_I6_DESIGN.md section 10); the standardised charge never reads it
+    (it derives its jump-to-default from NOTIONAL, MARKET_VALUE and the regulatory LGD). Absent: the simulation uses LGD x NOTIONAL +
+    (MARKET_VALUE - NOTIONAL) with the row''s LGD, and says so.'
+  example: 5800000
+- name: LGD
+  type: rate
+  presence: optional
+  description: The bank's loss given default for the row (0.6 is 60%), for the simulation; absent with JTD absent, the row is left out
+    of the simulation and named, never given a default LGD.
+  example: 0.6
+- name: INSTRUMENT_CLASS
+  type: text
+  presence: optional
+  description: 'DEBT or EQUITY: the simulation''s equity sub-portfolio may use a shorter liquidity horizon (the engine''s setting).'
+  example: DEBT
+  enum: [DEBT, EQUITY]
+- name: LEGAL_ENTITY
+  type: id
+  presence: optional
+  description: The legal entity of the position, for scopes (a promoted column where sent).
+  example: LE-NY
+  link: legal-entity
+- name: DESK
+  type: id
+  presence: optional
+  description: The desk of the position, for scopes and the desk rows of the capital figures (a promoted column where sent).
+  example: DESK-CREDIT
+  link: desk
+- name: TT_BOOK
+  type: id
+  presence: optional
+  description: The book of the position, for scopes (a promoted column where sent).
+  example: BOOK-CREDIT-1
+  link: book
 validation:
 - rule: required
   fields:
@@ -170,7 +210,11 @@ validation:
 - rule: pattern
   field: DEFAULT_RISK_ID
   pattern: ^DRC-
+- rule: enum
+  field: INSTRUMENT_CLASS
+  values: [DEBT, EQUITY]
 notes:
+- '1.1 (planned for the default risk charge''s simulation): the optional JTD, LGD, INSTRUMENT_CLASS, LEGAL_ENTITY, DESK and TT_BOOK. One table serves both charges: the standardised charge reads the 1.0 fields, the simulation JTD (or its parts), LGD and the issuer''s parameters (the issuer-default contract, by OBLIGOR). Example line with them: {"DEFAULT_RISK_ID":"DRC-POS-BOOK-CREDIT-1~CLY-3000087-5493001KJTIIGC8Y1R12-B-DRC-2026-09-30-01","BUSINESS_DATE":"2026-09-30","POSITION_ID":"POS-BOOK-CREDIT-1~CLY-3000087","BATCH_ID":"B-DRC-2026-09-30-01","OBLIGOR":"5493001KJTIIGC8Y1R12","DRC_BUCKET":"CORPORATE","SENIORITY":"SENIOR","CREDIT_QUALITY":"BBB","NOTIONAL":10000000,"MARKET_VALUE":9800000,"CURRENCY":"USD","MATURITY_DATE":"2028-09-30","JTD":5800000,"LGD":0.6,"INSTRUMENT_CLASS":"DEBT","LEGAL_ENTITY":"LE-NY","DESK":"DESK-CREDIT","TT_BOOK":"BOOK-CREDIT-1"}'
 - 'JSON Lines, one row per line (UTF-8, gzip). Example line: {"DEFAULT_RISK_ID":"DRC-POS-BOOK-CREDIT-1~CLY-3000087-5493001KJTIIGC8Y1R12-B-DRC-2026-09-30-01","BUSINESS_DATE":"2026-09-30","POSITION_ID":"POS-BOOK-CREDIT-1~CLY-3000087","BATCH_ID":"B-DRC-2026-09-30-01","OBLIGOR":"5493001KJTIIGC8Y1R12","DRC_BUCKET":"CORPORATE","SENIORITY":"SENIOR","CREDIT_QUALITY":"BBB","NOTIONAL":10000000,"MARKET_VALUE":9800000,"CURRENCY":"USD","MATURITY_DATE":"2028-09-30"}'
 - 'Signs are checked on load: a bought CDS has a negative NOTIONAL, a sold put on a bond a positive one; MARKET_VALUE has the notional''s sign.'
 review:

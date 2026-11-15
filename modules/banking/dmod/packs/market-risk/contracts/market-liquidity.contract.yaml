@@ -1,0 +1,171 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+
+# Planned data contract of the market-liquidity input (proposed command MLIQ): docs/architecture/MARKET_RISK_I6_DESIGN.md section 5.
+kind: market-liquidity
+mnemonic: MLIQ
+pack: market-risk
+version: '1.0'
+class: input
+status: planned
+title: 'Market liquidity of an instrument (bid-ask spread, volume, depth)'
+description: 'What liquidity-adjusted VaR and the concentration measures need to know about the market a position trades in: the
+  bid-ask spread and how much it varies, the average daily volume, the depth at the touch, and an optional liquidation period the bank
+  sets itself. Keyed by security, product type, risk factor or position; the most specific row that matches a position applies. Drishti
+  scales and adds supplied numbers; nothing is priced. Planned: no command, no data and no engine reads it yet.'
+source: The bank's market-data system or a liquidity data vendor
+grain: One row per liquidity key and BUSINESS_DATE (a date without a delivery keeps the last, and the result says how old it is),
+  keyed by LIQUIDITY_ID (MLIQ-<KEY_TYPE>-<LIQUIDITY_KEY>).
+key:
+- LIQUIDITY_ID
+id-pattern:
+- ^MLIQ-
+dated-by: BUSINESS_DATE
+cadence:
+  frequency: daily
+  due: with the market data of the date; weekly is enough for slow-moving measures (the age is shown)
+binding-hint:
+  lake-table: risk.market-liquidity
+  partition:
+  - BUSINESS_DATE
+  columns:
+  - LIQUIDITY_ID
+  - KEY_TYPE
+  - LIQUIDITY_KEY
+  - BID_ASK_SPREAD
+  - SPREAD_VOLATILITY
+  - AVERAGE_DAILY_VOLUME
+  - VOLUME_UNIT
+  - MARKET_DEPTH
+  - LIQUIDATION_DAYS
+fields:
+- name: LIQUIDITY_ID
+  type: id
+  presence: required
+  description: The row's id, MLIQ-<KEY_TYPE>-<LIQUIDITY_KEY> (the business key).
+  example: MLIQ-SECURITY-XCH-ComFut-USD-03
+  pattern: ^MLIQ-
+- name: BUSINESS_DATE
+  type: date
+  presence: required
+  description: The business date the measures are of (YYYY-MM-DD).
+  example: '2026-09-30'
+- name: KEY_TYPE
+  type: text
+  presence: required
+  description: 'What LIQUIDITY_KEY names, most specific first: POSITION (a POSITION_ID), SECURITY (a SECURITY_ID), RISK_FACTOR (the
+    position''s main factor) or PRODUCT_TYPE (a default for a product type, optionally per currency).'
+  example: SECURITY
+  enum: [POSITION, SECURITY, RISK_FACTOR, PRODUCT_TYPE]
+- name: LIQUIDITY_KEY
+  type: id
+  presence: required
+  description: The position, security, risk factor or product type the row is for.
+  example: XCH-ComFut-USD-03
+- name: BID_ASK_SPREAD
+  type: rate
+  presence: required
+  unit: a fraction of the mid price (0.0012 is 12 basis points of value)
+  description: The average relative bid-ask spread over SPREAD_WINDOW_DAYS, ask minus bid over mid. For a derivative quoted in rate or
+    volatility terms, the spread in value terms as the bank's exit-cost method gives it.
+  example: 0.0012
+- name: SPREAD_VOLATILITY
+  type: rate
+  presence: optional
+  unit: a fraction of the mid price
+  description: The standard deviation of the relative spread over the same window; absent, only the average spread is charged and the
+    result says so.
+  example: 0.0004
+- name: SPREAD_WINDOW_DAYS
+  type: integer
+  presence: optional
+  description: The business days the spread statistics were measured over.
+  example: 60
+- name: AVERAGE_DAILY_VOLUME
+  type: amount
+  presence: optional
+  unit: VOLUME_UNIT
+  description: The average daily traded volume, in the unit of the positions' QUANTITY; absent, the position's liquidation period is
+    LIQUIDATION_DAYS or the product type's default, never one day by silence.
+  example: 42000
+- name: VOLUME_UNIT
+  type: text
+  presence: optional
+  description: The unit of the volume and depth (contracts, shares, notional in a currency).
+  example: contracts
+- name: MARKET_DEPTH
+  type: amount
+  presence: optional
+  unit: VOLUME_UNIT
+  description: The size that trades at the quoted spread without moving the price.
+  example: 1500
+- name: PARTICIPATION_RATE
+  type: rate
+  presence: optional
+  description: The share of the daily volume the bank may trade for this key (0.2 is 20%); absent, the engine's setting.
+  example: 0.2
+- name: LIQUIDATION_DAYS
+  type: rate
+  presence: optional
+  unit: business days
+  description: The liquidation period the bank sets for the key; when present it is used instead of the one derived from the volume.
+  example: 4
+- name: SOURCE
+  type: text
+  presence: required
+  description: The system or vendor the row came from.
+  example: demo-liquidity
+- name: AS_OF
+  type: timestamp
+  presence: required
+  description: When the source produced the row (UTC).
+  example: '2026-09-30T21:00:00Z'
+validation:
+- rule: required
+  fields:
+  - LIQUIDITY_ID
+  - BUSINESS_DATE
+  - KEY_TYPE
+  - LIQUIDITY_KEY
+  - BID_ASK_SPREAD
+  - SOURCE
+  - AS_OF
+- rule: unique
+  key:
+  - LIQUIDITY_ID
+  per: BUSINESS_DATE
+- rule: pattern
+  field: LIQUIDITY_ID
+  pattern: ^MLIQ-
+- rule: enum
+  field: KEY_TYPE
+  values: [POSITION, SECURITY, RISK_FACTOR, PRODUCT_TYPE]
+- rule: range
+  field: BID_ASK_SPREAD
+  min: 0
+- rule: range
+  field: PARTICIPATION_RATE
+  min: 0
+  max: 1
+notes:
+- 'JSON Lines, one row per line (UTF-8; .jsonl or .jsonl.gz). Example line: {"LIQUIDITY_ID":"MLIQ-SECURITY-XCH-ComFut-USD-03","BUSINESS_DATE":"2026-09-30","KEY_TYPE":"SECURITY","LIQUIDITY_KEY":"XCH-ComFut-USD-03","BID_ASK_SPREAD":0.0012,"SPREAD_VOLATILITY":0.0004,"SPREAD_WINDOW_DAYS":60,"AVERAGE_DAILY_VOLUME":42000,"VOLUME_UNIT":"contracts","MARKET_DEPTH":1500,"PARTICIPATION_RATE":0.2,"SOURCE":"demo-liquidity","AS_OF":"2026-09-30T21:00:00Z"}'
+- 'How it is used: the exit cost of a position is half its absolute market value times (BID_ASK_SPREAD + k x SPREAD_VOLATILITY); its
+  liquidation period is LIQUIDATION_DAYS, else the absolute QUANTITY over (PARTICIPATION_RATE x AVERAGE_DAILY_VOLUME), at least one day.
+  A position no row matches is listed under "no liquidity data" with its market value, and the liquidity-adjusted figure is marked
+  incomplete; it is never given a zero spread or a one-day period.'
+- 'Sizing: one row per traded security and product default; 200,000 rows about 10 MB a date.'
+review:
+- 'How the bank measures the exit cost of OTC derivatives (a spread in value terms per product type and tenor bucket is assumed).'
+- 'Whether liquidation periods are set by policy per product type (then only PRODUCT_TYPE rows with LIQUIDATION_DAYS are needed).'

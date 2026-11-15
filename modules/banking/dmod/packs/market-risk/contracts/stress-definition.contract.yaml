@@ -1,0 +1,224 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+
+# Planned data contract of the stress-definition input (proposed command SDEF): docs/architecture/MARKET_RISK_I6_DESIGN.md section 7.
+# When the stress engine is built it takes over the command SCN and the stored stress-scenario kind retires in the same release.
+kind: stress-definition
+mnemonic: SDEF
+pack: market-risk
+version: '1.0'
+class: input
+status: planned
+title: 'Stress scenario definition (historical, hypothetical, regulatory)'
+description: 'One scenario of the bank''s stress programme: its name and type (a historical episode, a hypothetical scenario of the
+  bank''s own, or a regulator''s scenario with its programme), its shocks to risk factors in machine-readable form, who owns and approved
+  it and when it is valid, and its place in the stress scenario set. The scenario''s position values are priced by the bank and ride in
+  scenario-pv under a scenario set of SET_TYPE STRESS_TEST, whose SCENARIO_IDS list these ids in the vectors'' order; Drishti sums them
+  to any scope. The shocks are also what the sensitivity-based estimate multiplies by the sensitivities. Planned: no command, no data
+  and no engine reads it yet.'
+source: The bank's stress-testing team (the stress programme's scenario library)
+grain: One row per scenario and validity start, keyed by SCENARIO_ID and VALID_FROM.
+key:
+- SCENARIO_ID
+- VALID_FROM
+dated-by: VALID_FROM
+cadence:
+  frequency: on change
+  due: before the first business date a scenario's values are delivered for
+binding-hint:
+  lake-table: risk.stress-definition
+  columns:
+  - SCENARIO_ID
+  - NAME
+  - SCENARIO_TYPE
+  - PROGRAMME
+  - SEVERITY
+  - STATUS
+  - VALID_FROM
+  - VALID_TO
+fields:
+- name: SCENARIO_ID
+  type: id
+  presence: required
+  description: The scenario's id; the id the stress scenario set lists in SCENARIO_IDS.
+  example: SCN-GFC-2008
+  pattern: ^SCN-
+- name: NAME
+  type: text
+  presence: required
+  description: The scenario's name on the screens.
+  example: Global financial crisis, September to November 2008
+- name: SCENARIO_TYPE
+  type: text
+  presence: required
+  description: 'HISTORICAL (the moves of a past period, WINDOW_START to WINDOW_END), HYPOTHETICAL (the bank''s own design) or REGULATORY
+    (a supervisor''s scenario, PROGRAMME names it).'
+  example: HISTORICAL
+  enum: [HISTORICAL, HYPOTHETICAL, REGULATORY]
+- name: PROGRAMME
+  type: text
+  presence: optional
+  description: The regulatory or internal programme the scenario belongs to, with its year (required at SCENARIO_TYPE REGULATORY).
+  example: Board stress programme 2026
+- name: DESCRIPTION
+  type: text
+  presence: optional
+  description: The narrative, shown with the result.
+  example: Credit spreads widen sharply, equities fall, rates rally, the dollar strengthens
+- name: SEVERITY
+  type: text
+  presence: required
+  description: 'MODERATE, SEVERE or EXTREME, as the programme grades it.'
+  example: SEVERE
+  enum: [MODERATE, SEVERE, EXTREME]
+- name: WINDOW_START
+  type: date
+  presence: optional
+  description: The first day of the historical period (SCENARIO_TYPE HISTORICAL).
+  example: '2008-09-12'
+- name: WINDOW_END
+  type: date
+  presence: optional
+  description: The last day of the historical period.
+  example: '2008-11-20'
+- name: HORIZON_DAYS
+  type: integer
+  presence: required
+  unit: business days
+  description: The horizon the shocks were calibrated over; the shocks are applied at once (no time passes, nothing is rebalanced).
+  example: 49
+- name: SHOCKS
+  type: record list
+  presence: required
+  description: The shocks, one element per risk factor or group of factors; the nested table lists the fields. A scenario delivered
+    only as position values still lists its headline shocks, for the narrative and the sensitivity-based estimate.
+- name: FULL_REVALUATION
+  type: boolean
+  presence: required
+  description: The bank delivers position values for the scenario (in scenario-pv, under the stress scenario set). False - the
+    scenario exists only as shocks and every figure of it is a sensitivity-based estimate, marked as such.
+  example: true
+- name: OWNER
+  type: text
+  presence: required
+  description: The team that owns the scenario.
+  example: Market risk stress testing
+- name: APPROVED_BY
+  type: text
+  presence: optional
+  description: The committee or person that approved it.
+  example: Market risk committee
+- name: APPROVED_ON
+  type: date
+  presence: optional
+  description: The approval date.
+  example: '2026-01-15'
+- name: STATUS
+  type: text
+  presence: required
+  description: ACTIVE, DRAFT (shown to its owner only) or RETIRED.
+  example: ACTIVE
+  enum: [ACTIVE, DRAFT, RETIRED]
+- name: VALID_FROM
+  type: date
+  presence: required
+  description: The first business date the definition applies to.
+  example: '2026-01-15'
+- name: VALID_TO
+  type: date
+  presence: optional
+  description: The last business date it applies to; empty while it is current.
+- name: SOURCE
+  type: text
+  presence: required
+  description: The system the row came from.
+  example: demo-stress-library
+nested:
+  SHOCKS[]:
+  - name: SELECTOR
+    type: text
+    presence: required
+    description: 'The factors shocked: a RISK_FACTOR of the dictionary, or a pattern over the factor naming standard with * for any part
+      (IR/CURVE/USD/*/*: every US dollar curve point). The most specific selector that matches a factor applies to it; a factor no
+      selector matches is not shocked, and the result lists how many sensitivities that left unshocked.'
+    example: CR/SPREAD/*/*/*
+  - name: SHOCK_TYPE
+    type: text
+    presence: required
+    description: 'BP (absolute, basis points), PCT (relative, per cent) or VOL_POINT (absolute, volatility points): the unit of the
+      factor''s sensitivities.'
+    example: BP
+    enum: [BP, PCT, VOL_POINT]
+  - name: VALUE
+    type: rate
+    presence: required
+    description: The size of the shock, signed.
+    example: 250
+  - name: TENOR_FROM
+    type: text
+    presence: optional
+    description: The shortest tenor the element applies to, for a shock that differs along a curve.
+    example: 2Y
+  - name: TENOR_TO
+    type: text
+    presence: optional
+    description: The longest tenor the element applies to.
+    example: 10Y
+validation:
+- rule: required
+  fields:
+  - SCENARIO_ID
+  - NAME
+  - SCENARIO_TYPE
+  - SEVERITY
+  - HORIZON_DAYS
+  - SHOCKS
+  - FULL_REVALUATION
+  - OWNER
+  - STATUS
+  - VALID_FROM
+  - SOURCE
+- rule: unique
+  key:
+  - SCENARIO_ID
+  - VALID_FROM
+  per: VALID_FROM
+- rule: pattern
+  field: SCENARIO_ID
+  pattern: ^SCN-
+- rule: enum
+  field: SCENARIO_TYPE
+  values: [HISTORICAL, HYPOTHETICAL, REGULATORY]
+- rule: enum
+  field: SEVERITY
+  values: [MODERATE, SEVERE, EXTREME]
+- rule: enum
+  field: STATUS
+  values: [ACTIVE, DRAFT, RETIRED]
+- rule: enum
+  field: SHOCKS[].SHOCK_TYPE
+  values: [BP, PCT, VOL_POINT]
+notes:
+- 'JSON Lines, one row per line (UTF-8; .jsonl or .jsonl.gz). Example line: {"SCENARIO_ID":"SCN-GFC-2008","NAME":"Global financial crisis, September to November 2008","SCENARIO_TYPE":"HISTORICAL","PROGRAMME":"Board stress programme 2026","DESCRIPTION":"Credit spreads widen sharply, equities fall, rates rally, the dollar strengthens","SEVERITY":"SEVERE","WINDOW_START":"2008-09-12","WINDOW_END":"2008-11-20","HORIZON_DAYS":49,"SHOCKS":[{"SELECTOR":"CR/SPREAD/*/*/*","SHOCK_TYPE":"BP","VALUE":250},{"SELECTOR":"EQ/SPOT/*","SHOCK_TYPE":"PCT","VALUE":-34},{"SELECTOR":"IR/CURVE/USD/*/*","SHOCK_TYPE":"BP","VALUE":-120,"TENOR_FROM":"2Y","TENOR_TO":"10Y"}],"FULL_REVALUATION":true,"OWNER":"Market risk stress testing","APPROVED_BY":"Market risk committee","APPROVED_ON":"2026-01-15","STATUS":"ACTIVE","VALID_FROM":"2026-01-15","SOURCE":"demo-stress-library"}'
+- 'How the position values ride in scenario-pv (docs/architecture/MARKET_RISK_I6_DESIGN.md section 7.2): the date''s stress scenario set
+  is a scenario-set row of SET_TYPE STRESS_TEST whose SCENARIO_IDS (a planned additive field of scenario-set 1.2) lists the scenario ids
+  in order; each position sends one scenario-pv row for that set, its SCENARIO_PV holding one value per listed scenario. A scenario
+  listed in the set and not defined here, or defined with FULL_REVALUATION true and absent from the set, is named on the result.'
+- 'A scenario a person builds on the screen is Drishti-owned (kept in the content store with its author) and uses the same SHOCKS
+  shape; it is never written to this table.'
+review:
+- 'Whether the bank''s scenario library can export shocks by risk factor in the factor naming standard, or only as a narrative with
+  position values.'
+- 'The stress limits per scenario and scope: whether they come with the limits of var-limit or as their own input.'

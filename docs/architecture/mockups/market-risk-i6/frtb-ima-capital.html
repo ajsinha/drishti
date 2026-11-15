@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  A screen mock-up (market-risk-i6/frtb-ima-capital.html), self-contained: system fonts, everything inline, nothing from a CDN.
+  Dark theme by default; open it with #light for the light theme. Illustrative figures. Proposed, nothing built:
+  docs/architecture/MARKET_RISK_I6_DESIGN.md section 18.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FRTB-IMA: desk zones and capital</title>
+<script>if(location.hash==='#light')document.documentElement.classList.add('light');</script>
+<style>
+:root{
+  --bg:#0e1628; --bg2:#121c33; --panel:#16213a; --panel2:#1b2744; --line:#26345a; --line2:#1f2b49;
+  --ink:#e7ecf5; --muted:#93a0b8; --amber:#e8a33a; --link:#7fb2ff; --pos:#7fb2ff; --neg:#f2955a;
+  --ok:#5fd39a; --warn:#f2c14e; --bad:#ff7a7a; --onacc:#14100a;
+  --ok-t:rgba(95,211,154,.14); --warn-t:rgba(242,193,78,.16); --bad-t:rgba(255,122,122,.15); --hl:rgba(127,178,255,.10);
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace; color-scheme:dark;
+}
+html.light{
+  --bg:#f7f5f0; --bg2:#efebe3; --panel:#ffffff; --panel2:#faf8f4; --line:#e2dcd0; --line2:#ece7dd;
+  --ink:#172440; --muted:#55607a; --amber:#985b0a; --link:#1f5fc4; --pos:#1f5fc4; --neg:#b4491a;
+  --ok:#1b784c; --warn:#8a6100; --bad:#b42323; --onacc:#ffffff;
+  --ok-t:rgba(27,120,76,.10); --warn-t:rgba(138,97,0,.10); --bad-t:rgba(180,35,35,.09); --hl:rgba(31,95,196,.07); color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px}
+a{color:var(--link);text-decoration:none}
+.page{max-width:1568px;margin:0 auto;padding:18px 16px 28px;display:flex;flex-direction:column;gap:12px}
+.intro h1{font-size:20px;margin:0 0 4px} .intro p{margin:0;color:var(--muted);max-width:120ch;line-height:1.5;font-size:13.5px}
+.bar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:8px 14px;border:1px solid var(--line);border-radius:8px;background:var(--bg2)}
+.brand{font-weight:700;letter-spacing:.12em;color:var(--amber)}
+.cmd{flex:1 1 300px;max-width:640px;height:32px;display:flex;align-items:center;padding:0 14px;border:1px solid var(--amber);border-radius:16px;font-family:var(--mono);color:var(--amber);font-size:13px;white-space:nowrap;overflow:hidden}
+.menus{display:flex;gap:4px;margin-left:auto;font-size:13px;flex-wrap:wrap} .menus span{padding:5px 10px;border-radius:6px;color:var(--muted)} .menus span.on{background:var(--panel2);color:var(--ink)}
+.head{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline} .head h2{margin:0;font-size:17px} .head .meta{color:var(--muted);font-size:12.5px}
+.ctrls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pick{font-size:12.5px;padding:4px 10px;border:1px solid var(--line);border-radius:14px;background:var(--panel)} .pick b{color:var(--muted);font-weight:500;margin-right:4px}
+.btn{font-size:12.5px;padding:5px 12px;border:1px solid var(--line);border-radius:6px;background:var(--panel2);white-space:nowrap}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:14px;overflow:hidden} .seg span{padding:4px 11px;font-size:12.5px;color:var(--muted)} .seg span.on{background:var(--panel2);color:var(--ink);font-weight:600}
+.grid{display:grid;gap:12px} .g2{grid-template-columns:repeat(auto-fit,minmax(420px,1fr))} .g3{grid-template-columns:2fr 1fr}
+@media(max-width:1000px){.g3{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;min-width:0;overflow-x:auto}
+.card h3{margin:0 0 8px;font-size:13.5px} .card h3 span{color:var(--muted);font-weight:400;font-size:12px;margin-left:6px}
+table{border-collapse:separate;border-spacing:0;font-size:12.5px;font-variant-numeric:tabular-nums;width:100%}
+th,td{padding:4px 8px;white-space:nowrap;text-align:right;border-bottom:1px solid var(--line2)} td{font-family:var(--mono)}
+th{background:var(--panel2);color:var(--muted);font-weight:500;font-size:12px} th.l,td.l{text-align:left;font-family:var(--sans)}
+tr.sel td{background:var(--hl)}
+.neg{color:var(--neg)} .posv{color:var(--pos)} .muted{color:var(--muted)} .ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)}
+.pill{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11.5px;font-family:var(--sans);font-weight:600}
+.pill.g{background:var(--ok-t);color:var(--ok)} .pill.a{background:var(--warn-t);color:var(--warn)} .pill.r{background:var(--bad-t);color:var(--bad)} .pill.n{background:var(--panel2);color:var(--muted)}
+.kpis{display:flex;flex-wrap:wrap;gap:10px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 14px;min-width:150px;flex:1 1 150px}
+.kpi .k{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em} .kpi .v{font-family:var(--mono);font-size:20px;margin-top:2px} .kpi .s{font-size:12px;color:var(--muted);margin-top:2px}
+.kpi.ea{border-left:3px solid var(--warn)} .kpi.er{border-left:3px solid var(--bad)} .kpi.eg{border-left:3px solid var(--ok)}
+.note{font-size:12px;color:var(--muted);line-height:1.5} .notice{font-size:12.5px;padding:7px 12px;border-radius:6px;background:var(--warn-t);color:var(--warn);border:1px solid var(--warn)}
+.mono{font-family:var(--mono)} svg text{font-family:var(--sans);fill:var(--muted);font-size:11px} svg{max-width:100%;height:auto}
+.formula{font-family:var(--mono);font-size:12.5px;line-height:1.9;white-space:pre;overflow-x:auto}
+.heat td{text-align:right} .h1{background:rgba(242,149,90,.10)} .h2{background:rgba(242,149,90,.22)} .h3{background:rgba(242,149,90,.38)} .h4{background:rgba(255,122,122,.50)} .hp{background:rgba(127,178,255,.14)}
+footer{font-size:12px;color:var(--muted);line-height:1.5;border-top:1px solid var(--line);padding-top:8px}
+</style>
+</head>
+<body><div class="page">
+<div class="intro"><h1>FRTB-IMA: desk zones and capital</h1>
+<p>Which desks qualify for internal models today, what each contributes, and the capital formula with every term open to Explain. The
+terms that come from other engines say which engine and whether its figure is the official one.</p></div>
+<div class="bar"><span class="brand">DRISHTI</span><div class="cmd">FRIMA BANK &lt;GO&gt;</div><div class="menus"><span class="">VaR</span><span class="">P&L explain</span><span class="">Stress</span><span class="">FRTB-SA</span><span class="on">FRTB-IMA</span><span class="">DRC</span><span class="">SIMM</span></div></div>
+<div class="head"><h2>Drishti Bank <span class="muted" style="font-weight:400">· internal models capital</span></h2>
+<span class="meta">2026-09-30 · USD millions · Basel parameter file 1.0 · official · computed by FRTB-IMA on drishti-c</span></div>
+<div class="ctrls"><span class="pick"><b>Date</b>2026-09-30</span><span class="pick"><b>Regime</b>Basel</span><span class="seg"><span class="on">Capital</span><span>Expected shortfall</span><span>Risk factors</span><span>History</span></span>
+<span class="btn">Explain</span><span class="btn">Playground</span><span class="btn">Export</span></div>
+<div class="notice">60-day means use 60 of 60 official records. Reduced set explains 83% of the full-set ES (at least 75% needed). 14 non-modellable factors have sensitivities and no stress scenario: the add-on is marked incomplete.</div>
+<div class="kpis">
+<div class="kpi"><div class="k">Capital</div><div class="v">441.4</div><div class="s">of which internal models 340.0</div></div>
+<div class="kpi"><div class="k">IMCC (modellable)</div><div class="v">205.0</div><div class="s">60-day mean 190.0 × 1.50</div></div>
+<div class="kpi ea"><div class="k">SES (non-modellable)</div><div class="v">16.6</div><div class="s">incomplete · 312 factors</div></div>
+<div class="kpi"><div class="k">DRC</div><div class="v">40.0</div><div class="s">week of 09-25 · 12-week mean 37.2 · DRC engine</div></div>
+<div class="kpi ea"><div class="k">Amber surcharge</div><div class="v">11.4</div><div class="s">k 0.143 × (420.0 − 340.0)</div></div>
+<div class="kpi"><div class="k">Standardised, every desk</div><div class="v">560.0</div><div class="s">the cap · FRTB-SA engine, official</div></div>
+</div>
+<div class="grid g3">
+<div class="card"><h3>Regulatory desks <span>a row opens its desk; a zone opens the test behind it</span></h3>
+<table><tr><th class="l">Desk</th><th class="l">Approved</th><th>Exc. 99%</th><th>Exc. 97.5%</th><th class="l">Backtest</th><th>Spearman</th><th>KS</th><th class="l">Attribution</th><th class="l">Treatment</th><th>ES</th><th>SES</th><th>SA alone</th></tr>
+<tr><td class="l"><a>FX</a></td><td class="l">yes</td><td>1</td><td>5</td><td class="l"><span class="pill g">Passes</span></td><td>0.96</td><td>0.044</td><td class="l"><span class="pill g">Green</span></td><td class="l">Internal models</td><td>38.2</td><td>0.9</td><td>96.0</td></tr>
+<tr><td class="l"><a>Credit</a></td><td class="l">yes</td><td>4</td><td>11</td><td class="l"><span class="pill g">Passes</span></td><td>0.91</td><td>0.061</td><td class="l"><span class="pill g">Green</span></td><td class="l">Internal models</td><td>81.5</td><td>9.8</td><td>204.0</td></tr>
+<tr class="sel"><td class="l"><a>Rates</a></td><td class="l">yes</td><td>2</td><td>7</td><td class="l"><span class="pill g">Passes</span></td><td class="warn">0.83</td><td class="warn">0.097</td><td class="l"><span class="pill a">Amber</span></td><td class="l">Internal models + surcharge</td><td>122.4</td><td>5.9</td><td>120.0</td></tr>
+<tr><td class="l"><a>Equity derivatives</a></td><td class="l">yes</td><td>9</td><td>24</td><td class="l"><span class="pill g">Passes</span></td><td class="bad">0.66</td><td class="bad">0.131</td><td class="l"><span class="pill r">Red</span></td><td class="l">Standardised</td><td class="muted">—</td><td class="muted">—</td><td>58.0</td></tr>
+<tr><td class="l"><a>Commodities</a></td><td class="l">yes</td><td class="bad">13</td><td>28</td><td class="l"><span class="pill r">Fails</span></td><td class="muted">212 days</td><td class="muted">—</td><td class="l"><span class="pill n">Not enough days</span></td><td class="l">Standardised</td><td class="muted">—</td><td class="muted">—</td><td>41.0</td></tr>
+<tr><td class="l"><a>Structured credit</a></td><td class="l">no</td><td class="muted">—</td><td class="muted">—</td><td class="l muted">—</td><td class="muted">—</td><td class="muted">—</td><td class="l muted">—</td><td class="l">Standardised</td><td class="muted">—</td><td class="muted">—</td><td>12.0</td></tr>
+</table>
+<p class="note">ES and SES of a desk alone; the bank's figures are computed on the internal-models desks together, never added up from the rows. Standardised charges are not additive either: the three sets used by the formula are in the card to the right.</p></div>
+<div class="card"><h3>The capital formula <span>click a term to explain it</span></h3>
+<div class="formula">C_A       = max( 205.0 + 16.6 , 1.50 × 190.0 + 15.0 )
+          = max( 221.6 , 300.0 )                  = <b>300.0</b>
+IMA_GA    = C_A + DRC = 300.0 + 40.0              = <b>340.0</b>
+k         = 0.5 × SA(amber) / SA(green, amber)
+          = 0.5 × 120.0 / 420.0                   = 0.143
+Surcharge = k × max(0, 420.0 − 340.0)             = <b>11.4</b>
+C_U       = SA of the standardised desks together = <b>90.0</b>
+Capital   = min( 340.0 + 11.4 + 90.0 , 560.0 )
+            + max( 0 , 340.0 − 420.0 )            = <b>441.4</b></div>
+<p class="note">Multiplier 1.50: the bank's backtest is green (3 exceptions at 99% in 250 days; VaR engine, official). SA figures: FRTB-SA engine, three runs over desk sets, official.</p></div>
+</div>
+<div class="grid g2">
+<div class="card"><h3>Rates: expected shortfall by liquidity horizon <span>stress calibration · USD millions</span></h3>
+<table><tr><th class="l">Risk classes</th><th>10 days</th><th>20+</th><th>40+</th><th>60+</th><th>120</th><th>ES, reduced, stress</th><th>× full / reduced</th><th>ES</th></tr>
+<tr><td class="l">All together</td><td>88.0</td><td>46.1</td><td>22.4</td><td>9.0</td><td>2.1</td><td>106.4</td><td>1.15</td><td>122.4</td></tr>
+<tr><td class="l">Interest rate</td><td>81.3</td><td>44.0</td><td>21.9</td><td>9.0</td><td>2.1</td><td>99.6</td><td>1.14</td><td>113.5</td></tr>
+<tr><td class="l">Credit spread</td><td>6.2</td><td>6.2</td><td>5.8</td><td>1.1</td><td class="muted">0</td><td>12.1</td><td>1.00</td><td>12.1</td></tr>
+<tr><td class="l">FX</td><td>9.4</td><td>3.0</td><td class="muted">0</td><td class="muted">0</td><td class="muted">0</td><td>9.9</td><td>1.21</td><td>12.0</td></tr>
+<tr><td class="l">Equity, commodity</td><td class="muted">0</td><td class="muted">0</td><td class="muted">0</td><td class="muted">0</td><td class="muted">0</td><td class="muted">0</td><td class="muted">—</td><td class="muted">0</td></tr>
+</table>
+<svg viewBox="0 0 640 70" width="640" role="img" aria-label="The steps' share of the squared ES"><rect x="10" y="20" width="424" height="22" fill="var(--pos)"/><rect x="434" y="20" width="116" height="22" fill="var(--amber)"/><rect x="550" y="20" width="55" height="22" fill="var(--warn)"/><rect x="605" y="20" width="18" height="22" fill="var(--neg)"/><rect x="623" y="20" width="7" height="22" fill="var(--bad)"/>
+<text x="10" y="58">Share of ES²: 10 days 68% · 20+ 19% · 40+ 9% · 60+ 3% · 120 1%. A grey 0 is a step every position of the desk declared zero.</text></svg></div>
+<div class="card"><h3>Non-modellable factors <span>Rates · the eligibility test and the stress loss</span></h3>
+<table><tr><th class="l">Risk factor</th><th>Obs. days, 12 months</th><th>Fewest in 90 days</th><th class="l">Test</th><th class="l">Bank's flag</th><th class="l">Type</th><th>Stress loss</th></tr>
+<tr><td class="l"><a>IR/CURVE/HUF/BUBOR/30Y</a></td><td>17</td><td>1</td><td class="l"><span class="pill r">Fails</span></td><td class="l">not modellable</td><td class="l">other</td><td>3.4</td></tr>
+<tr><td class="l"><a>VOL/IR/EUR/20Y/30Y</a></td><td>26</td><td>3</td><td class="l"><span class="pill r">Fails</span></td><td class="l">not modellable</td><td class="l">other</td><td>2.2</td></tr>
+<tr><td class="l"><a>INF/CPI-CA/20Y</a></td><td>31</td><td>5</td><td class="l"><span class="pill g">Passes</span></td><td class="l warn">not modellable</td><td class="l">other</td><td class="muted">differs</td></tr>
+<tr><td class="l"><a>IR/BASIS/NOK</a></td><td>9</td><td>0</td><td class="l"><span class="pill r">Fails</span></td><td class="l">not modellable</td><td class="l">other</td><td class="warn">no scenario</td></tr>
+</table>
+<p class="note">"Differs": Drishti's count passes the factor while the bank's engine treated it as non-modellable; both are shown and the desk's figure follows the bank's vectors.</p></div>
+</div>
+<footer>Mock-up for the product owner. Built from Drishti Elements only: the grid, chips, the chart library, the Explain drawer.
+Every figure is computed on the server from values the bank supplied; the page only draws. Illustrative figures.</footer>
+</div></body></html>
