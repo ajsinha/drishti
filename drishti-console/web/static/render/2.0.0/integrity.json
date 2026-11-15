@@ -1,8 +1,8 @@
 {
   "bytes": {
     "css": 248565,
-    "js": 176086,
-    "js_gzip": 66070
+    "js": 176230,
+    "js_gzip": 66134
   },
   "contracts": [
     1
@@ -37,8 +37,8 @@
       "integrity": "sha384-PW9CfV1CwQHT7q8M/sHmjLllH9gON9MO3r3yFG6FSzf2QnPduLWDPvMvmWSc9mEg"
     },
     "../../elements/drishti-renderer/src/drishti_embed.js": {
-      "bytes": 10060,
-      "integrity": "sha384-oWOnMRTSBFG0OTxYHIbYOQksB2gYBeSiShTokTRS872QgsrUCFB4IC8b6i+/j/F6"
+      "bytes": 10204,
+      "integrity": "sha384-9x7eycNRrmGr5cUawrSAKtES1TguBT7EV7talg/WsYT/IXpI7eQNBRw855VZRxr4"
     },
     "../../elements/drishti-renderer/src/drishti_index.js": {
       "bytes": 2421,
