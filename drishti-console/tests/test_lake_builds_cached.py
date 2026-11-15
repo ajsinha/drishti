@@ -12,13 +12,11 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""No console test builds a lake of its own (docs/architecture/TEST_HARNESS.md, "The cached demo lake"): every demo lake, VaR or exposure
-lake, trade-grain lake, feed lake or BI sample lake a test reads comes from tools/drillkit/lake_cache.py, built ONCE per hash of the test
-data, generators and loaders (across runs and drills) by the parallel Java loader, and a stack whose server may write gets a copy or its
-own write folders (var_stack.own_folders). A drill's browser lane once spent 13 minutes and 110 errors on fixtures that built their lakes
-with the Python writer under pytest's temporary folder.
-
-The Python writer (``--engine deltalake``, ``write_deltalake``, tools/samplegen/load_rows.py) is named only where ALLOWED says why."""
+"""Every console test reads the ONE shared test lake (docs/architecture/TEST_HARNESS.md, "The shared test lake", owner 2026-11-15): the full
+demo lake of the saved test data, built once per source hash by the parallel Java loader (tools/drillkit/lake_cache.py, var_stack.shared_lake),
+read only. No test builds a lake of its own, asks for a subset of it, copies it or names the Python writer; a test that has to write to a
+lake is parked to i6 (var_stack.PARKED_I6, a visible skip) and only a parked file may still do so. A drill's browser lane once spent most
+of its time on fixtures that built their own lakes with the Python writer."""
 import re
 from pathlib import Path
 
@@ -28,43 +26,53 @@ pytestmark = pytest.mark.static   # a quick file check: the drill's gate runs it
 
 HERE = Path(__file__).resolve().parent
 
-#: the Python writer named on purpose, each with its reason
+#: files that are no test but may name the writer, each with its reason
 ALLOWED = {
-    "test_admin_lakes.py": "Admin → Lakes' build is the subject: a 31-row synthetic file the test writes, built by lake build (engine auto, the Java loader)",
-    "test_admin_lake_maintain.py": "its tiny lake is built inside lake_cache.cached (Java loader); another system's one-row table stands in through the Python writer",
-    "bi_report_stack.py": "the BI sample lake's loader (tools/samplegen/load_rows.py) has no Java route: it runs only inside lake_cache.cached",
-    "bi_exposure_fixture.py": "the script bi_report_stack's cached build runs (the BI samples' official exposure table)",
+    "bi_report_stack.py": "make_lake: the BI sample lake of the parked BI tests and the docs' screenshots (bi_report_shots.py)",
+    "bi_exposure_fixture.py": "the script make_lake runs (the BI samples' official exposure table)",
     "test_lake_builds_cached.py": "this guard",
 }
-#: builds a lake: the Python writer, or a lake demo / lake build / feed load of its own
+#: the Python writer, or a lake built, loaded or copied by a test
 WRITER = re.compile(r"""["']--engine["'],\s*["']deltalake["']|engine\s*=\s*["']deltalake["']|write_deltalake\(|load_rows\.py|load\s*=\s*["']python["']""")
-BUILDS = re.compile(r"""["']lake["'],\s*["'](demo|build)["']|build_demo_lakes""")
-CACHED = re.compile(r"lake_cache\b|_lake_cache\(|\.cached\(|demo_lake\(|var_lake\(")
+BUILDS = re.compile(r"""["']lake["'],\s*["'](demo|build)["']|build_demo_lakes|\.cached\(|lake_copy\(|copytree\([^)\n]*(lake|delta)\b""")
+SUBSET = re.compile(r"""demo_lake\(\s*(?!["']{2})["']|["']--only["']""")      # a lake of some datasets: the shared lake holds them all
+PARKED = re.compile(r"\bPARKED_I6\b")
 
 
 def _files():
-    return sorted(p for p in HERE.glob("*.py"))
+    return sorted(HERE.glob("*.py"))
 
 
-def test_no_test_names_the_python_writer_unless_it_says_why():
-    bad = [f"{p.name}:{n}: {line.strip()[:120]}" for p in _files() if p.name not in ALLOWED
-           for n, line in enumerate(p.read_text(encoding="utf-8").splitlines(), 1) if WRITER.search(line)]
-    assert not bad, ("the Python lake writer is slow and builds per run; read the cached lake (var_stack.var_lake, demo_lake_copy, "
-                     "lake_cache.cached with the Java loader), or add the file to ALLOWED with why it tests the writer itself:\n  " + "\n  ".join(bad))
+def _parked(text: str) -> bool:
+    return bool(PARKED.search(text))
 
 
-def test_every_lake_a_test_builds_is_built_inside_the_cache():
+def test_no_test_builds_copies_or_subsets_a_lake_unless_it_is_parked():
     bad = []
     for p in _files():
-        text = p.read_text(encoding="utf-8")
-        if p.name in ALLOWED or not BUILDS.search(text):
+        if p.name in ALLOWED or p.name == "var_stack.py":
             continue
-        if not CACHED.search(text):
-            bad.append(p.name)
-    assert not bad, "these build a lake outside tools/drillkit/lake_cache.py (built once per source hash, reused across runs): " + ", ".join(bad)
+        text = p.read_text(encoding="utf-8")
+        if _parked(text):
+            continue
+        for n, line in enumerate(text.splitlines(), 1):
+            if WRITER.search(line) or BUILDS.search(line) or SUBSET.search(line):
+                bad.append(f"{p.name}:{n}: {line.strip()[:120]}")
+    assert not bad, ("read the ONE shared lake (var_stack.shared_lake / shared_folder), read only; a test that must write to a lake is "
+                     "parked to i6 (@PARKED_I6):\n  " + "\n  ".join(bad))
 
 
-def test_the_allowed_files_still_need_it():
-    stale = [n for n in ALLOWED if n != "test_lake_builds_cached.py" and not ((HERE / n).is_file()
-             and (WRITER.search((HERE / n).read_text(encoding="utf-8")) or BUILDS.search((HERE / n).read_text(encoding="utf-8"))))]
-    assert not stale, "no longer name the Python writer or build a lake: take them out of ALLOWED: " + ", ".join(stale)
+def test_the_shared_lake_is_the_only_lake_var_stack_makes():
+    text = (HERE / "var_stack.py").read_text(encoding="utf-8")
+    calls = re.findall(r"demo_lake\(([^)]*)\)", text)
+    assert calls == ['"", SHARED_AS_OF, SHARED_EXTRA'], calls
+    assert not WRITER.search(text) and not re.search(r"lake_copy|copytree|\.cached\(", text)
+
+
+def test_the_parked_tests_say_why():
+    from var_stack import PARKED_I6_REASON
+    assert PARKED_I6_REASON == "parked to i6: writes to a lake (owner 2026-11-15)"
+    listed = (HERE.parents[1] / "docs" / "architecture" / "TEST_HARNESS.md").read_text(encoding="utf-8")
+    parked = sorted(p.name for p in _files() if p.name != "var_stack.py" and p.name not in ALLOWED and _parked(p.read_text(encoding="utf-8")))
+    missing = [n for n in parked if n not in listed]
+    assert not missing, "parked to i6 but not in TEST_HARNESS.md's parked list: " + ", ".join(missing)

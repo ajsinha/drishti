@@ -26,6 +26,8 @@ from pathlib import Path
 
 import pytest
 
+from var_stack import PARKED_I6  # noqa: E402 - tests parked to i6
+
 pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install playwright)")
 if importlib.util.find_spec("deltalake") is None:
     pytest.skip("the build needs deltalake and pyarrow", allow_module_level=True)
@@ -93,6 +95,7 @@ def book(n=300):
              "QUANTITY": 100.0 * i, "LEGS": [{"LEG_ID": 1, "CASH_FLOWS": [{"AMOUNT": i}]}]} for i in range(n)]
 
 
+@PARKED_I6   # writes to a lake: parked to i6 (owner 2026-11-15)
 def test_a_file_becomes_a_lake_bound_and_announced(browser, lakes_console, tmp_path):
     url, backend, root = lakes_console
     src = tmp_path / "book.2026-10-16.json"                       # its business date in its name (the load rules)

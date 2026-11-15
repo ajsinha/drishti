@@ -32,7 +32,7 @@ import pytest
 
 from test_var_explorer_browser import open_var, painted, shot
 from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and helpers
-from var_stack import VAR_TRADES, var_data, var_lake, var_server
+from var_stack import shared_lake, var_server
 from select_helpers import choose, labels, value  # <drishti-select>: drishti-inputs' Select
 
 THEMES = ["terminal", "light", "wallstreet", "blue", "green", "crimson", "crimson-dark", "terminal-green", "terminal-crimson", "terminal-blue"]
@@ -42,7 +42,7 @@ TILE = "document.querySelector('.vx-tile[data-tile=\"%d\"] %s').innerText"
 @pytest.fixture(scope="module")
 def stack(tmp_path_factory):
     # the whole 509-scenario set (the figures below are the full set's); the shipped window is 250 (VarWindowApiTest covers it)
-    yield from var_server(tmp_path_factory, var_lake(tmp_path_factory, var_data(*VAR_TRADES)), DRISHTI_VAR_SCENARIO_WINDOW="all", shared=True)   # reads only: the pool guards it
+    yield from var_server(tmp_path_factory, shared_lake(tmp_path_factory), DRISHTI_VAR_SCENARIO_WINDOW="all", shared=True)   # reads only: the pool guards it
 
 
 def money(text: str) -> float:

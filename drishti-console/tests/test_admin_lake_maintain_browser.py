@@ -26,6 +26,9 @@ from pathlib import Path
 
 import pytest
 
+from var_stack import PARKED_I6  # noqa: E402 - parked to i6
+pytestmark = [PARKED_I6]   # every test here writes to a lake: parked to i6 (owner 2026-11-15)
+
 pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install playwright)")
 if importlib.util.find_spec("deltalake") is None:
     pytest.skip("the lake needs deltalake and pyarrow", allow_module_level=True)

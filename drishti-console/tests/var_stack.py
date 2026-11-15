@@ -12,16 +12,16 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The VaR browser files' stack: the market-risk pack's committed VaR data built into a scratch lake ONCE PER TEST RUN for every worker
-(browser_harness.shared_once; the build takes minutes), and a real server over it per file (wb_live's pool), the demo connector off
-(docs/architecture/TEST_HARNESS.md section 3.12). Files asking the same data and business date read the same lake; the servers only
-read it (each has its own VaR hot folder and its own folder for the official results it publishes). A file split in two asks the same
-and pays only its server's start again."""
+"""The browser files' lake and VaR stack (docs/architecture/TEST_HARNESS.md, "The shared test lake"): every browser test reads ONE lake, the
+full demo lake of the saved test data (every dataset, ending SHARED_AS_OF, the committed exposure run), built once per hash of the test
+data, generators and loaders by the parallel Java loader (tools/drillkit/lake_cache.py) and reused across runs and drills. It is read
+only: no test builds a lake of its own, takes a subset of it or copies it; a server over it writes to its own folders (own_folders). A
+test that has to write to a lake is parked (PARKED_I6). A real server over it per file (wb_live's pool), the demo connector off.
+
+PARKED_I6 lists the tests parked to i6 because they write to a lake (owner 2026-11-15); TEST_HARNESS lists them too."""
 from __future__ import annotations
 
 import datetime
-import hashlib
-import subprocess
 import sys
 from pathlib import Path
 
@@ -42,42 +42,26 @@ VAR_HEAP = "1536m"
 
 
 def var_data(*more: str, limits: bool = True) -> str:
-    """The ``--only`` list: the market-risk VaR tables (and the limits, when ``limits``), then ``more`` (trades/murex, trades/endur ...)."""
+    """The VaR datasets a file reads (the market-risk VaR tables, the limits when ``limits``, then ``more``): a statement of what it needs;
+    the shared lake holds them all."""
     return ",".join([f"market-risk/{k}" for k in RISK + (("var-limit",) if limits else ())] + ["core/desk", "core/book", "core/legal-entity"] + list(more))
 
 
 def last_weekday() -> str:
-    """Today, or the Friday before on a weekend: the business date the lakes end on (yyyy-MM-dd)."""
+    """Today, or the Friday before on a weekend (yyyy-MM-dd)."""
     d = datetime.date.today()
     while d.weekday() >= 5:
         d -= datetime.timedelta(days=1)
     return d.isoformat()
 
 
-def var_lake(tmp_path_factory, only: str, as_of: str | None = None, extra: tuple[str, ...] = (), needs: str = "risk/scenario-pv") -> Path:
-    """The cached demo lake of ``only`` ending ``as_of`` (default: :func:`last_weekday`; ``data``: the test data's own dates): built ONCE per
-    hash of the test data, generators and lake code, across runs and drills, by the parallel Java loader (tools/drillkit/lake_cache.py), and
-    looked up once per run (the first worker that asks). Read-only: a file that writes gets :func:`lake_copy` of it. Skips when it cannot be
-    built or lacks ``needs`` (a table folder under the lake). ``extra``: more ``lake demo`` options (``--exposure committed``)."""
-    import browser_harness
+#: the shared lake's last business date (fixed, so the visual snapshots and the walk's pages are the same every day) and its options
+SHARED_AS_OF = "2026-11-06"
+SHARED_EXTRA = ("--exposure", "committed")
 
-    as_of = as_of or last_weekday()
-
-    run = browser_harness.run_dir(tmp_path_factory)
-    key = "var-lake-" + hashlib.sha1("|".join((only, as_of, *extra, needs)).encode()).hexdigest()[:12]
-
-    def make():
-        lake_cache = _lake_cache()
-        try:
-            lake = lake_cache.demo_lake(only, as_of, extra) / "delta"   # lake demo's default writer: the parallel Java loader of the exec jar
-        except RuntimeError as e:
-            return {"lake": "", "error": "could not build the demo lake: " + str(e)}
-        return {"lake": str(lake), "error": None if (lake / needs).is_dir() else f"no {needs} in the cached lake {lake}"}
-
-    got = browser_harness.shared_once(run, key, make)
-    if got["error"]:
-        pytest.skip(got["error"])
-    return Path(got["lake"])
+#: the tests parked to i6 because they write to a lake (owner 2026-11-15): shown as skipped with this reason in every run and drill report
+PARKED_I6_REASON = "parked to i6: writes to a lake (owner 2026-11-15)"
+PARKED_I6 = pytest.mark.skip(reason=PARKED_I6_REASON)
 
 
 def _lake_cache():
@@ -87,61 +71,28 @@ def _lake_cache():
     return lake_cache
 
 
-def lake_copy(lake: Path, dest: Path) -> Path:
-    """A copy of a (cached, shared) lake at ``dest/delta``: data files are hard links where both sit on one file system (Delta writes new
-    files and never changes one; else copied), each _delta_log a real copy (a log file may be rewritten in place). The original is never written."""
-    import os
-    import shutil
+def shared_folder(tmp_path_factory) -> Path:
+    """The shared lake's cache folder (``delta/`` the lake, ``connectors/`` the connector files the build wrote beside it): looked up once per
+    run by the first worker that asks; skips when it cannot be built."""
+    import browser_harness
 
-    def link(src, dst):
+    def make():
         try:
-            os.link(src, dst)
-        except OSError:                                  # another file system (a tmpfs /tmp): a plain copy
-            shutil.copy2(src, dst)
+            return {"folder": str(_lake_cache().demo_lake("", SHARED_AS_OF, SHARED_EXTRA)), "error": None}
+        except RuntimeError as e:
+            return {"folder": "", "error": "could not build the shared demo lake: " + str(e)}
 
-    out = dest / "delta"
-    shutil.copytree(lake, out, copy_function=link, ignore=shutil.ignore_patterns("_delta_log"))
-    for log in lake.rglob("_delta_log"):
-        shutil.copytree(log, out / log.relative_to(lake))
-    return out
-
-
-def demo_lake_copy(only: str, as_of: str, dest: Path, connectors: Path | None = None) -> Path:
-    """The cached demo lake of ``only`` (built once per source hash by the Java loader) copied to ``dest/delta`` (:func:`lake_copy`), for a
-    stack whose server writes beside its lake (live connectors); ``connectors``: where to put the connector files the build wrote beside it."""
-    import shutil
-
-    try:
-        folder = _lake_cache().demo_lake(only, as_of)
-    except RuntimeError as e:
-        pytest.skip(str(e))
-    if connectors is not None and (folder / "connectors").is_dir():
-        shutil.copytree(folder / "connectors", connectors, dirs_exist_ok=True)
-    return lake_copy(folder / "delta", dest)
+    got = browser_harness.shared_once(browser_harness.run_dir(tmp_path_factory), "shared-lake", make)
+    if got["error"]:
+        pytest.skip(got["error"])
+    return Path(got["folder"])
 
 
-def trade_grain(lake: Path, budget: int = 40) -> None:
-    """A small trade-grain morning on the lake's newest date, replacing its position records (the demo is position grain; the engine's trade
-    paths stay covered): each trade its own record, Endur as scenario PVs, Calypso and Murex as P&L vectors, at most ``budget`` trades a book."""
-    day = max(p.name.split("=")[1] for p in (lake / "risk" / "scenario-pv").iterdir() if p.name.startswith("business_date="))
-    r = subprocess.run([sys.executable, str(ROOT / "tools" / "pvgen" / "morning.py"), "--grain", "trade", "--pv-systems", "ENDUR", "--budget", str(budget), "--date", day,
-                        "--out", str(lake.parent / "morning"), "--lake", str(lake)], capture_output=True, text=True, cwd=ROOT, timeout=900)
-    if r.returncode != 0:
-        raise RuntimeError("could not write the trade-grain morning: " + (r.stderr or r.stdout)[-400:])
-
-
-def trade_grain_lake(lake: Path, budget: int = 40) -> Path:
-    """The cached lake ``lake`` with :func:`trade_grain` on its newest date, itself cached: built once per source hash (a copy of ``lake``
-    beside it in the cache, hard links, then the morning written into the copy), read-only like every cached lake. ``lake`` is never written."""
-    lake_cache = _lake_cache()
-
-    def build(work: Path) -> None:
-        trade_grain(lake_copy(lake, work), budget)
-
-    try:
-        return lake_cache.cached("trade-grain|" + str(lake) + "|" + str(budget), build) / "delta"
-    except RuntimeError as e:
-        pytest.skip(str(e))
+def shared_lake(tmp_path_factory, needs: str = "risk/scenario-pv") -> Path:
+    """The ONE shared lake (``delta/``), read only; fails when it lacks ``needs`` (a table folder a file reads)."""
+    lake = shared_folder(tmp_path_factory) / "delta"
+    assert (lake / needs).is_dir(), f"the shared lake {lake} has no {needs}"
+    return lake
 
 
 def own_folders(tmp_path_factory, shared: bool = False) -> dict[str, str]:

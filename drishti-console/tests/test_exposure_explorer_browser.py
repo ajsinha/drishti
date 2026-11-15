@@ -51,7 +51,7 @@ def stack(tmp_path_factory):
     """The cached exposure lake of the test data's own dates with the committed run (built once per source hash by the Java loader;
     read-only, the server writes its own folders)."""
     import var_stack
-    lake = var_stack.var_lake(tmp_path_factory, EXP_DATA, as_of="data", extra=("--exposure", "committed"), needs="risk/exposure-path")
+    lake = var_stack.shared_lake(tmp_path_factory, needs="risk/exposure-path")
     for st in _stack(tmp_path_factory, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true",
                                         **var_stack.own_folders(tmp_path_factory)}):
         _engine_ready(str(st))

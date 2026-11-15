@@ -110,11 +110,12 @@ class _Fake(BaseHTTPRequestHandler):
 
 
 class Stack:
-    def __init__(self, tmp: Path, connectors_on: bool = True, offline: bool = False, lake: bool = False):
+    def __init__(self, tmp: Path, connectors_on: bool = True, offline: bool = False, lake: bool = False, shared: Path | None = None):
         """``offline``: DRISHTI_OFFLINE=true over a demo lake of the news-and-markets pack built from the committed snapshot
-        (``drishti.py lake demo --only news-and-markets``), with the live connectors still switched on in their files. ``lake``: the same
+        (the ONE shared read-only test lake, var_stack.shared_folder), with the live connectors still switched on in their files. ``lake``: the same
         demo lake with offline mode off (the live connectors as ``connectors_on`` says)."""
         self.tmp, self.procs, self.connectors_on, self.offline, self.lake, self.fake = tmp, {}, connectors_on, offline, lake or offline, None
+        self.shared = shared            # the shared lake's cache folder (var_stack.shared_folder): its delta/ and connectors/
 
     def start(self) -> "Stack":
         for port in (SERVER_PORT, CONSOLE_PORT):
@@ -134,8 +135,10 @@ class Stack:
                    DRISHTI_NEWS_ENABLED=on, DRISHTI_NEWS_URL=base + "/rss/search", DRISHTI_YFINANCE_ENABLED=on, DRISHTI_YFINANCE_URL=base + "/v8/finance/chart",
                    DRISHTI_CONNECTORS_DIR=str(work / "connectors"), DRISHTI_GRAPH_LINK_BUDGET="3s")
         if self.lake:
-            from var_stack import demo_lake_copy
-            lake = demo_lake_copy("news-and-markets", "today", self.tmp, work / "connectors")   # the cached lake (once per source hash), copied: live news writes
+            import shutil
+            folder = Path(self.shared)                                                      # the ONE shared read-only lake (var_stack.shared_folder)
+            lake = folder / "delta"
+            shutil.copytree(folder / "connectors", work / "connectors", dirs_exist_ok=True)
             env.update(DRISHTI_DELTA_ROOT=str(lake), DRISHTI_DATA_DIR=str(work / "data"))
             if self.offline:
                 env["DRISHTI_OFFLINE"] = "true"

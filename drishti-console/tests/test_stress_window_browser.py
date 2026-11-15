@@ -33,7 +33,7 @@ def stack(tmp_path_factory):
     """The cached VaR demo lake with its P&L history, ending the last weekday (built once per source hash by the Java loader; read-only,
     the server writes its own folders)."""
     import var_stack
-    yield from var_stack.var_server(tmp_path_factory, var_stack.var_lake(tmp_path_factory, DATA), heap="768m")
+    yield from var_stack.var_server(tmp_path_factory, var_stack.shared_lake(tmp_path_factory, needs="risk/pnl-history"), heap="768m")
 
 
 def test_the_page_draws_its_chart_and_tables_across_the_page(stack, browser):

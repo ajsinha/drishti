@@ -32,7 +32,11 @@ def _stack(tmp_path_factory, on, offline=False, lake=False):
         if news_stack.listening(port):
             pytest.skip(f"port {port} is in use: stop whatever listens there")
     try:
-        return news_stack.Stack(tmp_path_factory.mktemp("newsstack"), connectors_on=on, offline=offline, lake=lake).start()
+        shared = None
+        if offline or lake:
+            from var_stack import shared_folder
+            shared = shared_folder(tmp_path_factory)
+        return news_stack.Stack(tmp_path_factory.mktemp("newsstack"), connectors_on=on, offline=offline, lake=lake, shared=shared).start()
     except FileNotFoundError as e:
         pytest.skip(str(e))
 

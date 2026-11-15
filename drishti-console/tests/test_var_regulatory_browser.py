@@ -71,7 +71,7 @@ def stack(tmp_path_factory):
     lake = Path(os.environ["DRISHTI_VAR_REG_LAKE"]) if os.environ.get("DRISHTI_VAR_REG_LAKE") else None
     if lake is None or not (lake / "risk" / "desk-pnl").is_dir():
         # the cached lake of the test data's own dates (built once per source hash by the Java loader; read-only, the server writes its own folders)
-        lake = var_stack.var_lake(tmp_path_factory, VAR_DATA + ",market-risk/desk-pnl", as_of="data")
+        lake = var_stack.shared_lake(tmp_path_factory, needs="risk/desk-pnl")
     assert (lake / "risk" / "desk-pnl").is_dir(), "the lake has no desk-pnl table: " + ", ".join(sorted(p.name for p in (lake / "risk").iterdir()))
     for st in _stack(tmp_path_factory, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true",
                                         **var_stack.own_folders(tmp_path_factory), "DRISHTI_SECURITY_ENABLED": "true", "DRISHTI_TOKEN_SECRET": TOKEN_SECRET,
