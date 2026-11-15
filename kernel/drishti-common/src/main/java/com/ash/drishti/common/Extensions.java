@@ -89,6 +89,61 @@ public final class Extensions {
         return out;
     }
 
+    /** Changes of the live set under way: the server's first load of its modules, a module swapping versions. */
+    private static final java.util.concurrent.atomic.AtomicInteger CHANGING = new java.util.concurrent.atomic.AtomicInteger();
+    private static final Object SETTLED = new Object();
+    private static final AtomicLong STARTED = new AtomicLong();
+
+    /** How many changes of the live set have begun (a read is calm when this did not move and nothing was changing across it). */
+    public static long changes() {
+        return STARTED.get();
+    }
+
+    /**
+     * A change of the live set begins that takes a module's contributions away for a moment or brings them late: the server's first load of
+     * its modules (its web layer answers before the modules have loaded), a module unloaded and loaded again in another version. Until the
+     * returned action runs (idempotent), a collection point that misses what it was asked for can {@link #awaitSettled wait} for the change
+     * instead of answering "not here".
+     */
+    public static Runnable changing() {
+        STARTED.incrementAndGet();
+        CHANGING.incrementAndGet();
+        AtomicBoolean done = new AtomicBoolean();
+        return () -> {
+            if (done.compareAndSet(false, true)) {
+                CHANGING.decrementAndGet();
+                synchronized (SETTLED) {
+                    SETTLED.notifyAll();
+                }
+            }
+        };
+    }
+
+    /** True when no change of the live set is under way. */
+    public static boolean settled() {
+        return CHANGING.get() <= 0;
+    }
+
+    /** Waits until no change of the live set is under way, at most {@code millis}; true when settled. */
+    public static boolean awaitSettled(long millis) {
+        long until = System.nanoTime() + java.util.concurrent.TimeUnit.MILLISECONDS.toNanos(millis);
+        synchronized (SETTLED) {
+            while (!settled()) {
+                long left = java.util.concurrent.TimeUnit.NANOSECONDS.toMillis(until - System.nanoTime());
+                if (left <= 0) {
+                    return false;
+                }
+                try {
+                    SETTLED.wait(left);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
     /** A counter that changes whenever a contribution is added or withdrawn (caches over the live set follow it). */
     public static long version() {
         return VERSION.get();

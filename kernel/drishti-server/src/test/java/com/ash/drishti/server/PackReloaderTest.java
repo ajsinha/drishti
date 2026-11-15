@@ -348,4 +348,73 @@ class PackReloaderTest {
         assertThat(pack("solo").title()).isEqualTo(onDisk);                                      // the last write is what runs
         assertThat(names().stream().filter("solo"::equals).count()).isEqualTo(1);                // never twice
     }
+
+    @Autowired com.ash.drishti.server.explain.NumberExplainService explain;
+    @Autowired ResolutionFollower follower;
+
+    /** A module's explainer (as banking's VaR one), contributed the way the module host contributes it (Extensions). */
+    record ModuleExplainer(String kind) implements com.ash.drishti.kernel.api.explain.Explainer {
+        @Override
+        public String title() {
+            return "a module's number";
+        }
+
+        @Override
+        public List<String> measures() {
+            return List.of("v");
+        }
+
+        @Override
+        public com.ash.drishti.kernel.api.explain.Explanation explain(com.ash.drishti.kernel.api.security.Principal p,
+                com.ash.drishti.kernel.api.explain.ExplainRequest r) {
+            return new com.ash.drishti.kernel.api.explain.Explanation(kind, "v", "BANK", "V").value(1.0, "USD", "2026-11-06").formula("V = 1");
+        }
+    }
+
+    @Test
+    void theWatchStartsOnceTheModulesHaveLoadedAndFindsNothingChanged() {
+        // the server is ready: its modules have loaded (ModuleDeployConfiguration#startModules), the first load is no change under way any
+        // more, and the watch compares with what the folders hold now, so its first look reloads nothing
+        assertThat(com.ash.drishti.common.Extensions.settled()).isTrue();
+        assertThat(reloader.watchState()).isNotEqualTo("OFF");
+        assertThat(reloader.fingerprints()).isEqualTo(reloader.seen());
+    }
+
+    @Test
+    void explainAnswersContinuouslyThroughPackReloadsAndResolutionFollows() throws Exception {
+        Runnable withdraw = com.ash.drishti.common.Extensions.add(com.ash.drishti.kernel.api.explain.Explainer.class, "banking",
+                new ModuleExplainer("reload-kind"));
+        java.util.concurrent.atomic.AtomicInteger answers = new java.util.concurrent.atomic.AtomicInteger();
+        List<String> failures = new CopyOnWriteArrayList<>();
+        java.util.concurrent.atomic.AtomicBoolean stop = new java.util.concurrent.atomic.AtomicBoolean();
+        ExecutorService pool = Executors.newFixedThreadPool(4);
+        try {
+            for (int i = 0; i < 4; i++) {
+                pool.submit(() -> {
+                    while (!stop.get()) {
+                        try {
+                            explain.explain(null, new com.ash.drishti.kernel.api.explain.ExplainRequest("reload-kind", "v", "all", java.util.Map.of("scope", "BANK")));
+                            answers.incrementAndGet();
+                        } catch (RuntimeException e) {
+                            failures.add(e.toString());
+                        }
+                    }
+                });
+            }
+            for (int n = 0; n < 5; n++) {
+                write("alpha", "Alpha " + n, List.of(), List.of("thing"), "ALP", false, false);        // a pack edited: reloaded
+                assertThat(reloader.reconcile("test", "explain through a reload", Set.of("alpha")).reloaded()).contains("alpha");
+                follower.follow();                                                                     // the resolution rebuilt and followed
+            }
+            until("a thousand answers", () -> answers.get() >= 1000);
+        } finally {
+            stop.set(true);
+            pool.shutdown();
+            pool.awaitTermination(10, TimeUnit.SECONDS);
+            withdraw.run();
+            write("alpha", "Alpha", List.of(), List.of("thing"), "ALP", false, false);
+        }
+        assertThat(failures).as("explain answered through every reload").isEmpty();
+        until("alpha back as it was", () -> pack("alpha") != null && pack("alpha").title().equals("Alpha"));
+    }
 }

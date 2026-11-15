@@ -42,6 +42,9 @@ public final class NumberExplainService {
     /** The registry ids of the Explain work not built yet start with this (config/under-construction.yaml). */
     public static final String PLANNED = "explain-";
 
+    /** How long a question waits for the modules to settle (their first load, a version swap) before a missing kind is "not here". */
+    static final long SETTLE_MILLIS = 30_000;
+
     private final Map<String, Explainer> byKind = new TreeMap<>();
 
     /** The explainers by kind: the beans, then a loaded module's (a kind already explained keeps its bean). */
@@ -98,7 +101,7 @@ public final class NumberExplainService {
         if (r.kind().isEmpty()) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "give the kind of number: kind=" + String.join(", kind=", explainers().keySet()));
         }
-        Explainer e = explainers().get(r.kind());
+        Explainer e = explainer(r.kind());
         if (e == null) {
             throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no explainer of the kind " + r.kind() + " on this server (the kinds: "
                     + String.join(", ", explainers().keySet()) + ")");
@@ -129,6 +132,28 @@ public final class NumberExplainService {
             }
         });
         return out;
+    }
+
+    /**
+     * The explainer of a kind, running. While the modules are still loading (the server's first seconds) or one is swapping versions, its
+     * explainer and engine come back in a moment: the question waits for them (at most {@link #SETTLE_MILLIS}) rather than hearing "no
+     * explainer" or "engine off" for a module that is on. A miss counts only when it was read with nothing changing before, during and after.
+     */
+    private Explainer explainer(String kind) {
+        long until = System.nanoTime() + java.util.concurrent.TimeUnit.MILLISECONDS.toNanos(SETTLE_MILLIS);
+        while (true) {
+            long changes = com.ash.drishti.common.Extensions.changes();
+            boolean calm = com.ash.drishti.common.Extensions.settled();
+            Explainer e = explainers().get(kind);
+            if (e != null && running(e)) {
+                return e;
+            }
+            long left = java.util.concurrent.TimeUnit.NANOSECONDS.toMillis(until - System.nanoTime());
+            if (calm && com.ash.drishti.common.Extensions.settled() && changes == com.ash.drishti.common.Extensions.changes() || left <= 0) {
+                return e;
+            }
+            com.ash.drishti.common.Extensions.awaitSettled(left);
+        }
     }
 
     private boolean running(Explainer e) {

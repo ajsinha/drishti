@@ -265,6 +265,7 @@ public final class ModuleNode implements AutoCloseable {
      */
     public List<String> reloadChanged() {
         lock.lock();
+        Runnable change = () -> { };
         try {
             List<String> did = new ArrayList<>();
             if (folders.isEmpty() || runtime == null) {
@@ -280,6 +281,9 @@ public final class ModuleNode implements AutoCloseable {
                 if (now == e.getValue()) {
                     continue;
                 }
+                if (did.isEmpty()) {
+                    change = com.ash.drishti.common.Extensions.changing();   // unloaded and loaded again: a collection point waits for it
+                }
                 ModuleRuntime.UnloadReport r = runtime.unload(id, ModuleRuntime.Leave.DISABLE, true);
                 stamps.remove(id);
                 did.add(id + " changed: unloaded (" + (Boolean.TRUE.equals(r.leakFree()) ? "leak-free" : "LEAK: " + r.failures()) + ")");
@@ -292,6 +296,7 @@ public final class ModuleNode implements AutoCloseable {
             did.forEach(d -> LOG.info("development mode: {}", d));
             return did;
         } finally {
+            change.run();
             lock.unlock();
         }
     }
@@ -890,13 +895,24 @@ public final class ModuleNode implements AutoCloseable {
         return swapping.contains(id);
     }
 
+    /** The live set's change of each swapping module ({@link com.ash.drishti.common.Extensions#changing}): ended when its swap ends. */
+    private final Map<String, Runnable> swapChanges = new ConcurrentHashMap<>();
+
     private void beginSwap(String id) {
         swapping.add(id);
+        Runnable before = swapChanges.put(id, com.ash.drishti.common.Extensions.changing());
+        if (before != null) {
+            before.run();
+        }
     }
 
     private void endSwap(String id) {
         swapLock.lock();
         try {
+            Runnable c = swapChanges.remove(id);
+            if (c != null) {
+                c.run();
+            }
             swapping.remove(id);
             swapSignal.signalAll();
         } finally {
