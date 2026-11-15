@@ -236,13 +236,13 @@ def _js_files() -> list[Path]:
     files = [p for p in files if not (p.parent.parent.name == "elements" and p.name.startswith("drishti_"))]   # a library's bundle: its src/ is read
     files = [p for p in files if "harness" not in p.name and p.name != "drishti_catalogue.js"]    # the libraries' test pages; generated data
     files += list((CONSOLE / "plugins").glob("*/static/**/*.js"))
-    files += [p for p in (ROOT / "modules").rglob("*.js") if "console" in p.parts and "static" in p.parts and "node_modules" not in p.parts]
+    files += [p for p in (ROOT / "modules").rglob("*.js") if "console" in p.parts and "static" in p.parts and not ({"node_modules", "target"} & set(p.parts))]   # never build output
     return sorted(files)
 
 
 def _templates() -> list[Path]:
     files = list((CONSOLE / "web" / "templates").rglob("*.html")) + list((CONSOLE / "plugins").glob("*/templates/**/*.html"))
-    files += [p for p in (ROOT / "modules").rglob("*.html") if "console" in p.parts and ("templates" in p.parts or "pages" in p.parts)]
+    files += [p for p in (ROOT / "modules").rglob("*.html") if "console" in p.parts and ("templates" in p.parts or "pages" in p.parts) and "target" not in p.parts]   # never build output
     return sorted(files)
 
 

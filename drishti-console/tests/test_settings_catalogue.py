@@ -163,7 +163,7 @@ def test_the_comment_reader():
     by = {e.key: e for e in S.read_commented_yaml(f)}
     assert by["inline.wait"].comment.startswith("how long a request waits")
     assert S.split_comment('color: "#2a9d8f"  # a colour') == ('color: "#2a9d8f"', "a colour")
-    assert S.placeholder_default("${DRISHTI_FEEDS:${drishti.data.dir}/feeds}") == "./data/feeds"
+    assert S.placeholder_default("${DRISHTI_FEEDS:${drishti.data.dir}/feeds}") == "<data>/feeds"   # the data folder named, never a working-folder path
     assert S.placeholder_default("${ANTHROPIC_API_KEY}") is None
     assert S.env_names("${A_B:${C_D:x}}") == ["A_B", "C_D"]
     assert S.since("2.9.7 (CLUSTER_GUIDE.md 6.4): the log") == "2.9.7" and S.since("section 5.6") == ""

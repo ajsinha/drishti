@@ -137,4 +137,4 @@ def test_the_help_centre_admin_pages_and_health_link_to_it(client):
     page = client.get("/admin/configuration").text                                       # the Admin tabs lead to the editor, which links here
     assert 'href="/admin/configuration"' in page and 'href="/help/configuration"' in page
     health = (ROOT / "drishti-console/web/templates/admin/health.html").read_text(encoding="utf-8")
-    assert 'href="/help/configuration"' in health
+    assert 'href="{{ BASE }}/help/configuration"' in health                       # under the console's base path
