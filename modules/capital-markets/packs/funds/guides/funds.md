@@ -116,6 +116,8 @@ Where each kind's data comes from, how it reaches the lake and how to check it. 
 | Nasdaq Trader symbol directory (which tickers are ETFs) | https://www.nasdaqtrader.com/dynamic/SymDir/ | public symbol directory files | no | `python3 tools/drishti.py feed run funds -- nasdaq` |
 | GLEIF golden copy level 2: fund relationships (managed by, sub-fund of, feeder to) | https://goldencopy.gleif.org | CC0 1.0 | no | `python3 tools/drishti.py feed run funds -- gleif` |
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 python3 tools/drishti.py feed status funds                                  # its last runs: last success, rows, failures (offline: the run ledger)
 python3 tools/drishti.py feed run funds --dry-run                           # what would be fetched and loaded; changes nothing

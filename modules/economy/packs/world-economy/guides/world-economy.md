@@ -231,6 +231,8 @@ Where each kind's data comes from, how it reaches the lake and how to check it. 
 
 **Internal only:** IMF World Economic Outlook (DataMapper). The terms restrict reuse or forbid redistribution: the data is for internal demonstrations only, never written into a committed folder without `--internal-ok`, and must be raised with the owner before any client or external use.
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 python3 tools/drishti.py feed status world-development                  # its last runs: last success, rows, failures (offline: the run ledger)
 python3 tools/drishti.py feed run world-development --dry-run           # what would be fetched and loaded; changes nothing
@@ -240,6 +242,8 @@ python3 tools/drishti.py feed run world-development --since 2026-01-01  # pull a
 ```
 
 The same through the wrappers: `tools/feeds/feed.sh run world-development` on Linux and macOS, `.\tools\windows\feed.ps1 run world-development` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](../../../../../docs/guides/WORLD_DATA_GUIDE.md)).
+
+Run these from the Drishti folder (the repository root, or the install folder of a release).
 
 ```bash
 python3 tools/drishti.py feed status world-economy                        # its last runs: last success, rows, failures (offline: the run ledger)
