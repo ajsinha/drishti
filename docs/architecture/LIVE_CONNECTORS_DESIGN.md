@@ -376,7 +376,8 @@ the cut-off absorbed up to) in the Drishti database, and the intake drops what l
 
 **Every reconcile leaves a record**: kind, load, counts (absorbed, carried, orphans, deletes carried, lake rows new to the day), the
 first 100 orphans as JSONL at `${drishti.data.dir}/live/reconcile/<kind>/<date>.jsonl`, an audit entry, and a line in the Admin
-panel. An orphan count over `reconcile.orphan-alert` raises a platform alert.
+panel. An orphan count over the platform alert rule `live-reconcile-orphans` (`config/alerts/platform-alerts.yaml`, 100) raises a
+platform alert.
 
 **Landed kinds** need no reconcile: their intraday batches are in the lake, the newest row per key wins by `order:`, and a full load of
 the date replaces the date.
@@ -390,8 +391,8 @@ leaves the state as it was. A row is the load's when its date is the load's date
 extract time in the `.ready` file or the announcement) is not read yet. **Checkpoints** are kept in one JSON file per live connector
 (`<data folder>/live/checkpoints/<connector>.json`), not yet in the Drishti database: the cut-off for `by-cutoff`, the partitions'
 positions for `reset`. **The record**: `<data folder>/live/reconcile/<kind>/<load date>.jsonl` (the counts, then the first 100 orphans),
-an audit entry (`live-reconcile`), the last one in the connector's Health measures. Not yet: the orphan alert
-(`reconcile.orphan-alert`) and the Admin line (L7); open views of an absorbed row are not told (the lake's row is as new; they move
+an audit entry (`live-reconcile`), the last one in the connector's Health measures and its line on the Admin panel; the orphan alert
+is the platform rule `live-reconcile-orphans` (L7). Open views of an absorbed row are not told (the lake's row is as new; they move
 to it at their next read).
 
 ## 7. Where it plugs in

@@ -76,6 +76,20 @@ groups:
         for: 5m
         labels: {severity: warning}
         annotations: {summary: "source {{ $labels.source }} on {{ $labels.instance }} is behind its stale-after"}
+      - alert: DrishtiLiveFeedNeedsAttention
+        expr: drishti_live_attention > 0
+        for: 5m
+        labels: {severity: warning}
+        annotations: {summary: "live feed {{ $labels.connector }} needs attention on {{ $labels.instance }}"}
+      - alert: DrishtiLiveFeedRejectsHigh
+        expr: drishti_live_rejected / drishti_live_arrived > 0.05
+        for: 15m
+        labels: {severity: warning}
+        annotations: {summary: "live feed {{ $labels.connector }} rejects {{ $value | humanizePercentage }} of its messages"}
+      - alert: DrishtiLiveReconcileOrphans
+        expr: drishti_live_reconcile_orphans > 100
+        labels: {severity: warning}
+        annotations: {summary: "{{ $value }} orphans when the load of {{ $labels.kind }} reconciled live feed {{ $labels.connector }}"}
       - alert: DrishtiFeedsNeedAttention
         expr: drishti_feeds_attention > 0
         labels: {severity: warning}

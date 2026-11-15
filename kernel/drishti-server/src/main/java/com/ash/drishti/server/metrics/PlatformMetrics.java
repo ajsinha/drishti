@@ -92,6 +92,12 @@ public final class PlatformMetrics {
     private final MultiGauge sourceAge;
     private final MultiGauge feeds;
     private final MultiGauge loadAge;
+    private final MultiGauge liveAttention;
+    private final MultiGauge liveRejected;
+    private final MultiGauge liveArrived;
+    private final MultiGauge liveOrphans;
+    /** The live feeds as Health shows them (LiveFeeds.list), once that service exists. */
+    private volatile Supplier<List<Map<String, Object>>> liveFeeds = List::of;
     private final Map<String, long[]> cacheCounts = new ConcurrentHashMap<>();     // cache -> {hits, misses}, the last sample
     private volatile double diskFree = Double.NaN;
     private volatile double diskGuard = Double.NaN;
@@ -128,6 +134,12 @@ public final class PlatformMetrics {
         sourceAge = MultiGauge.builder("drishti.source.update.age.seconds").description("seconds since a source last received new data")
                 .register(registry);
         feeds = MultiGauge.builder("drishti.feeds.attention").description("expected loads needing attention now, by state").register(registry);
+        liveAttention = MultiGauge.builder("drishti.live.attention").description("a live feed's state: 0 ok, 1 amber (STALE, DEGRADED), 2 fault (DOWN)")
+                .register(registry);
+        liveRejected = MultiGauge.builder("drishti.live.rejected").description("live messages a feed rejected since its start").register(registry);
+        liveArrived = MultiGauge.builder("drishti.live.arrived").description("live messages a feed applied or rejected since its start").register(registry);
+        liveOrphans = MultiGauge.builder("drishti.live.reconcile.orphans").description("orphans of a feed's last reconcile of a kind at a load")
+                .register(registry);
         loadAge = MultiGauge.builder("drishti.loads.last.ready.age.seconds").description("seconds since a pack's last ready load")
                 .register(registry);
         Gauge.builder("drishti.disk.free.bytes", this, m -> m.diskFree).description("free space on the data folder's disk").baseUnit("bytes")
@@ -155,6 +167,7 @@ public final class PlatformMetrics {
         part("memory", this::sampleMemory);
         part("sources", this::sampleSources);
         part("feeds", this::sampleFeeds);
+        part("live", this::sampleLive);
         long now = clock.millis();
         if (now - diskSampledAt >= diskIntervalMillis) {
             diskSampledAt = now;
@@ -271,6 +284,37 @@ public final class PlatformMetrics {
         sourceUp.register(up, true);
         sourceStale.register(stale, true);
         sourceAge.register(age, true);
+    }
+
+    /** The live feeds' rows (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 7.9), sampled with the other gauges. */
+    public void liveFeeds(Supplier<List<Map<String, Object>>> feeds) {
+        this.liveFeeds = feeds == null ? List::of : feeds;
+    }
+
+    void sampleLive() {
+        List<MultiGauge.Row<?>> attention = new ArrayList<>();
+        List<MultiGauge.Row<?>> rejected = new ArrayList<>();
+        List<MultiGauge.Row<?>> arrived = new ArrayList<>();
+        List<MultiGauge.Row<?>> orphans = new ArrayList<>();
+        for (Map<String, Object> f : liveFeeds.get()) {
+            Tags t = Tags.of("connector", String.valueOf(f.get("connector")));
+            Object a = f.get("attention");
+            attention.add(MultiGauge.Row.of(t, "fault".equals(a) ? 2 : "amber".equals(a) ? 1 : 0));
+            if (f.get("counts") instanceof Map<?, ?> c) {
+                long rej = c.entrySet().stream().filter(e -> String.valueOf(e.getKey()).startsWith("rejected"))
+                        .mapToLong(e -> ((Number) e.getValue()).longValue()).sum();
+                long applied = c.get("applied") instanceof Number n ? n.longValue() : 0;
+                rejected.add(MultiGauge.Row.of(t, rej));
+                arrived.add(MultiGauge.Row.of(t, rej + applied));
+            }
+            if (f.get("lastReconcile") instanceof Map<?, ?> rc && rc.get("orphans") instanceof Number n) {
+                orphans.add(MultiGauge.Row.of(t.and("kind", String.valueOf(rc.get("kind"))), n.longValue()));
+            }
+        }
+        liveAttention.register(attention, true);
+        liveRejected.register(rejected, true);
+        liveArrived.register(arrived, true);
+        liveOrphans.register(orphans, true);
     }
 
     void sampleFeeds() {

@@ -107,6 +107,44 @@ public final class LiveSource implements SourcePlugin {
         return feed;
     }
 
+    /** Whether the transport replays what its broker holds at start (a topic) or delivers each message once (a queue). */
+    public boolean replayable() {
+        return transport.replayable();
+    }
+
+    /**
+     * An administrator's pause (LIVE_CONNECTORS_DESIGN.md section 7.9): a queue's messages wait at the broker (not acknowledged); a
+     * replayable topic's are skipped and counted, read again at the next start. False when the feed has not started.
+     */
+    public boolean pause(String by) {
+        LiveFeed f = feed;
+        if (f == null) {
+            return false;
+        }
+        f.pause(transport.replayable(), by);
+        return true;
+    }
+
+    /** Takes messages again after a pause; false when the feed has not started. */
+    public boolean resume() {
+        LiveFeed f = feed;
+        if (f == null) {
+            return false;
+        }
+        f.resume();
+        return true;
+    }
+
+    /** The feed's state (section 7.9); {@code stale} from its {@code stale-after}, rejects over {@code rejectRatio} make it degraded. */
+    public FeedState state(boolean stale, double rejectRatio) {
+        LiveFeed f = feed;
+        String h = health();
+        if (f == null) {
+            return h != null && h.startsWith("WAITING") ? FeedState.WAITING : h != null && h.startsWith("DOWN") ? FeedState.DOWN : FeedState.CATCHING_UP;
+        }
+        return f.state(h, stale, rejectRatio);
+    }
+
     @Override
     public PluginManifest manifest() {
         PluginManifest m = plugin.manifest();

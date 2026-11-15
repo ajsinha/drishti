@@ -2111,7 +2111,7 @@ The rules are `config/alerts/platform-alerts.yaml` (`drishti.metrics.alerts.file
 `divide-by` metric, `aggregate`, `function` (`value`, or `increase` over `window`), `above` or `below`, `for`, `severity` and a `summary`. As shipped:
 `cache-near-limit` (95% for an hour), `memory-budget-squeezed` (more than 3 times an hour), `heap-after-gc-high` (85% for 10 minutes),
 `direct-memory-high` (80%, critical), `disk-folder-near-cap` / `-at-cap`, `disk-free-near-guard` / `-under-guard` (new dates refused, `DRS-5218`),
-`mapped-deleted-files`, `source-down` (5 minutes, critical), `source-stale`, `feeds-need-attention`, `views-slow`, `live-late`, `server-errors`,
+`mapped-deleted-files`, `source-down` (5 minutes, critical), `source-stale`, `live-feed-needs-attention`, `live-feed-rejects-high`, `live-reconcile-orphans` (over 100), `feeds-need-attention`, `views-slow`, `live-late`, `server-errors`,
 `db-pool-waiting` and `member-suspect`. When one opens the server logs it, counts it in `drishti_alerts_open` and tells every enabled user with a
 role in `drishti.metrics.alerts.notify-roles` (`admin`) in their inbox, opening **Admin → Health → Alerts**; it closes when the value is back. `GET
 /api/v1/admin/alerts` (administrators) has the rules, the open and the recent alerts (`keep`, 200). With Prometheus and Alertmanager load

@@ -51,6 +51,8 @@ class LiveRulesTest {
         assertThat(r.byArrival()).isTrue();
         assertThat(r.partial()).isEqualTo(LiveRules.Partial.WHOLE);
         assertThat(r.apply()).isEqualTo(LiveRules.Apply.OVERLAY);
+        assertThat(r.inWords()).containsKeys("Applied", "Newer means", "Messages", "At the next load", "Kept");
+        assertThat(r.inWords().get("Kept")).isEqualTo("2 days, 2,000,000 rows at most");
         assertThat(r.absorb()).isEqualTo(LiveRules.Absorb.RESET);
         assertThat(r.validate()).isEqualTo(LiveRules.Validate.STRICT);
         assertThat(r.closedDates()).isEqualTo(LiveRules.ClosedDates.REJECT);

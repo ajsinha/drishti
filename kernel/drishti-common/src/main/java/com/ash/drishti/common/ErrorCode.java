@@ -117,6 +117,8 @@ public enum ErrorCode {
     LIVE_NOT_ALLOWED("DRS-1071", 422),
     /** A live message rejected ({@code too-large}): over {@code drishti.live.max-message-kb}, or nested or listed past the bounds. */
     LIVE_TOO_LARGE("DRS-1072", 422),
+    /** No live feed by that name (a kafka, activemq or rabbitmq connector), or it is not running: nothing to pause, resume or land. */
+    LIVE_FEED_NOT_FOUND("DRS-1073", 404),
     SUTRA_PARSE("DRS-2001", 422),
     SUTRA_INVALID("DRS-2002", 422),
     SUTRA_NOT_FOUND("DRS-2003", 404),

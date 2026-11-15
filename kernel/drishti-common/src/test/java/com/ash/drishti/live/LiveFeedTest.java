@@ -133,6 +133,41 @@ class LiveFeedTest {
     }
 
     @Test
+    void aPausedQueueLeavesItsMessagesAtTheBrokerAPausedTopicSkipsThem() {
+        LiveFeed f = feed(new Trades(ordered()), Map.of("kind", "trade"), null);
+        f.caughtUp();
+        assertThat(f.state("UP", false, 0.05)).isEqualTo(FeedState.LIVE);
+        f.pause(false, "ops-1");                                             // a queue
+        assertThat(f.accept(msg("MX-1", trade("MX-1", 1, "B1")))).as("not acknowledged: it waits").isFalse();
+        assertThat(f.state("UP", false, 0.05)).isEqualTo(FeedState.PAUSED);
+        assertThat((Map<?, ?>) f.stats().get("paused")).containsEntry("by", "ops-1").containsEntry("skips", false);
+        f.resume();
+        assertThat(f.accept(msg("MX-1", trade("MX-1", 1, "B1")))).isTrue();
+        assertThat(book(f, "MX-1")).isEqualTo("B1");
+        f.pause(true, "ops-1");                                              // a replayable topic
+        assertThat(f.accept(msg("MX-2", trade("MX-2", 1, "B2")))).as("skipped, read again at the next start").isTrue();
+        assertThat(book(f, "MX-2")).isNull();
+        assertThat(f.counted("skipped.paused")).isEqualTo(1);
+        assertThat(f.counted("paused")).isEqualTo(1);
+    }
+
+    @Test
+    void theStateIsOneListOfWords() {
+        LiveFeed f = feed(new Trades(ordered()), Map.of("kind", "trade"), null);
+        assertThat(f.state("UP", false, 0.05)).isEqualTo(FeedState.CATCHING_UP);
+        f.caughtUp();
+        assertThat(f.state("WAITING: broker not reachable at k:9092 (live updates paused)", false, 0.05)).isEqualTo(FeedState.WAITING);
+        assertThat(f.state("DOWN: SaslAuthenticationException", false, 0.05)).isEqualTo(FeedState.DOWN);
+        assertThat(f.state("UP", true, 0.05)).isEqualTo(FeedState.STALE);
+        for (int i = 0; i < 10; i++) {
+            f.accept(msg("X-" + i, "{not json"));
+        }
+        assertThat(f.state("UP", false, 0.05)).isEqualTo(FeedState.DEGRADED);
+        assertThat(FeedState.DEGRADED.attention()).isEqualTo("amber");
+        assertThat(FeedState.NOT_CONFIGURED.words()).isEqualTo("NOT CONFIGURED");
+    }
+
+    @Test
     void aReplayOfTheSamePositionIsADuplicate() {
         LiveFeed f = feed(new Trades(ordered()), Map.of("kind", "trade"), null);
         LiveMessage m = msg("MX-1", trade("MX-1", 1, "B1"));

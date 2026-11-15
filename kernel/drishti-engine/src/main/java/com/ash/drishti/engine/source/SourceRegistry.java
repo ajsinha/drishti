@@ -210,7 +210,7 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
     }
 
     /** The kernel's live source of a connector (a live transport's), or empty. */
-    private Optional<com.ash.drishti.live.LiveSource> live(String connector) {
+    public Optional<com.ash.drishti.live.LiveSource> live(String connector) {
         return plugin(connector).map(p -> p instanceof ConnectorInstance ci ? ci.delegate() : p)
                 .filter(p -> p instanceof com.ash.drishti.live.LiveSource).map(com.ash.drishti.live.LiveSource.class::cast);
     }

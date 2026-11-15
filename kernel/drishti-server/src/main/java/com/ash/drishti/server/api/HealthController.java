@@ -53,6 +53,7 @@ public class HealthController {
     private final SourceRegistry registry;
     /** Each kind's live rules from its contract (LIVE_CONNECTORS_DESIGN.md section 2.3): a block with a problem is a Health line (DRS-1060). */
     private final com.ash.drishti.server.live.LiveContracts liveContracts;
+    private final com.ash.drishti.server.live.LiveFeeds liveFeeds;
     private final SourceRouter router;
     private final PackRegistry packs;
     private final SutraRegistry sutras;
@@ -147,8 +148,9 @@ public class HealthController {
             com.ash.drishti.server.bi.BiFolder biFolder, com.ash.drishti.server.RetryService retry,
             ObjectProvider<com.zaxxer.hikari.HikariDataSource> identityDataSource, com.ash.drishti.identity.IdentityProperties identity,
             com.ash.drishti.server.security.MaskCoverage masks, com.ash.drishti.server.design.HistoryDefinitions history,
-            com.ash.drishti.server.live.LiveContracts liveContracts) {
+            com.ash.drishti.server.live.LiveContracts liveContracts, com.ash.drishti.server.live.LiveFeeds liveFeeds) {
         this.liveContracts = liveContracts;
+        this.liveFeeds = liveFeeds;
         this.history = history;
         this.masks = masks;
         this.identityDataSource = identityDataSource;
@@ -223,8 +225,10 @@ public class HealthController {
         long packProblems = packRows.stream().filter(r -> !"OK".equals(r.get("status"))).count();
         String hotReload = sutras.hotReload();          // STOPPED: the Sutra watcher ended, edits are not picked up until a restart
         List<com.ash.drishti.server.loads.ExpectationService.State> dataLate = expectations.attention(java.time.Instant.now());
+        List<Map<String, Object>> feeds = liveFeeds.list();            // the live feeds' grid (LIVE_CONNECTORS_DESIGN.md section 9.1, option A read-only)
+        boolean feedAttention = feeds.stream().anyMatch(f -> !"ok".equals(f.get("attention")));
         String overall = sources.isEmpty() || down == sources.size() ? "DOWN"
-                : down > 0 || degraded > 0 || stale > 0 || !failures.isEmpty() || packProblems > 0 || !packs.problems().isEmpty() || !liveContracts.problems().isEmpty() || !dataLate.isEmpty() || hotReload.startsWith("STOPPED") || !connectors.fileProblems().isEmpty() ? "DEGRADED"
+                : down > 0 || degraded > 0 || stale > 0 || feedAttention || !failures.isEmpty() || packProblems > 0 || !packs.problems().isEmpty() || !liveContracts.problems().isEmpty() || !dataLate.isEmpty() || hotReload.startsWith("STOPPED") || !connectors.fileProblems().isEmpty() ? "DEGRADED"
                 : "OK";   // stale: behind its stale-after; degraded: a connector that cannot read some of its data
         out.put("status", overall);
         out.put("summary", Map.of("sources", sources.size(), "sourcesDown", down, "sourcesDegraded", degraded, "failedToStart", failures.size(),
@@ -281,6 +285,7 @@ public class HealthController {
             }
         });
         out.put("packsNotLoaded", loadedNames);
+        out.put("liveFeeds", feeds);                                    // every live feed: its state in words, rate, rows, rejects, last reconcile
         out.put("liveRules", liveContracts.problems());                 // DRS-1060: a contract's live: block that cannot be used (the kind takes no feed)
         out.put("masksMatchingNothing", masks.unmatched());              // DRS-6011: a redact entry that names no field of the loaded packs
         out.put("retry", retry.snapshot());

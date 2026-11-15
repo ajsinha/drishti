@@ -126,6 +126,49 @@ public record LiveRules(String kind, boolean allowed, List<String> key, List<Str
     }
 
     /** The defaults of a kind with no {@code live:} block (section 2.3): the safe ones. */
+    /**
+     * The rules in words, as the Admin drawer and the CLI show them (LIVE_CONNECTORS_DESIGN.md section 9.1, "The kind's rules"): applied,
+     * newer means, messages, at the next load, kept. One line each, by label.
+     */
+    public java.util.Map<String, String> inWords() {
+        java.util.Map<String, String> m = new java.util.LinkedHashMap<>();
+        if (!allowed) {
+            m.put("Live", "not allowed: the contract says end of day only");
+            return m;
+        }
+        m.put("Applied", switch (apply) {
+            case OVERLAY -> "at once over the lake's rows";
+            case LAND -> "landed in the lake by window, as one batch per kind and date";
+            case BOTH -> "at once over the lake's rows, and landed in the lake by window (the site's binding)";
+        });
+        m.put("Newer means", order.isEmpty() ? "arrived later (the contract names no order field)"
+                : "a higher " + String.join(", then a later ", order));
+        m.put("Messages", (partial == Partial.MERGE ? "changed fields merged into the row" : "whole records") + ", checked "
+                + switch (validate) {
+                    case STRICT -> "against the contract (a bad one is rejected)";
+                    case LENIENT -> "leniently (unknown fields kept, a wrong type rejected)";
+                    case DEFERRED -> "by the engine that uses them";
+                });
+        m.put("At the next load", switch (absorb) {
+            case BY_ORDER -> "absorbed by " + (order.isEmpty() ? "order" : order.get(0)) + "; later changes carried";
+            case BY_CUTOFF -> "absorbed when changed before the load's cut-off; later changes carried";
+            case RESET -> "the live rows of the date are dropped; the lake's stand";
+        });
+        m.put("Kept", humanDuration(ttl) + ", " + String.format(Locale.ROOT, "%,d", maxRows) + " rows at most");
+        if (effective == Effective.NEXT_LOAD) {
+            m.put("Effective", "from the next load (reference data)");
+        }
+        if (!conflate.isZero()) {
+            m.put("Conflated", "one change per key every " + humanDuration(conflate));
+        }
+        return m;
+    }
+
+    private static String humanDuration(Duration d) {
+        long s = d.toSeconds();
+        return s % 86_400 == 0 ? s / 86_400 + (s == 86_400 ? " day" : " days") : s % 3_600 == 0 ? s / 3_600 + " h" : s % 60 == 0 ? s / 60 + " min" : s + " s";
+    }
+
     /** These rules with {@code apply} as the site's binding asks ({@code both}: overlaid at once and landed by window too). */
     public LiveRules withApply(Apply a) {
         return a == apply ? this : new LiveRules(kind, allowed, key, order, changedAt, changedBy, asOf, partial, deleteWhen, a, conflate, absorb,

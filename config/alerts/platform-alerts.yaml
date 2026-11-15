@@ -102,6 +102,25 @@ rules:
     for: 5m                        # how long
     severity: warn                 # warn
     summary: "source {source} is behind its stale-after"  # the line
+  live-feed-needs-attention:       # a live feed STALE or DEGRADED (amber) or DOWN (LIVE_CONNECTORS_DESIGN.md section 7.9)
+    metric: drishti.live.attention # 0 ok, 1 amber, 2 fault
+    above: 0                       # amber or fault
+    for: 5m                        # how long
+    severity: warn                 # warn
+    summary: "live feed {connector} needs attention (Admin -> Health, Live feeds)"  # the line
+  live-feed-rejects-high:          # a live feed rejecting more than 5% of what arrives (its reject log says why)
+    metric: drishti.live.rejected  # rejected since its start
+    divide-by: drishti.live.arrived  # applied or rejected since its start
+    above: 0.05                    # share of what arrived
+    for: 15m                       # how long
+    severity: warn                 # warn
+    format: percent                # percent
+    summary: "live feed {connector} rejects {value} of its messages (its reject log: <data folder>/live/rejects/{connector}/)"  # the line
+  live-reconcile-orphans:          # a load left many live rows as orphans (the source's extract and its feed disagree; section 6)
+    metric: drishti.live.reconcile.orphans  # orphans of the feed's last reconcile of a kind
+    above: 100                     # orphans: the reconcile record lists the first 100
+    severity: warn                 # warn
+    summary: "{value} orphans when the load of {kind} reconciled live feed {connector} (<data folder>/live/reconcile/{kind}/)"  # the line
   feeds-need-attention:            # expected loads late, missing or failed (Data loads, expectations)
     metric: drishti.feeds.attention  # expected loads by state
     above: 0                       # any

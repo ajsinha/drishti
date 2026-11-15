@@ -152,6 +152,15 @@ public final class LiveFeed implements LiveIntake {
 
     @Override
     public boolean accept(LiveMessage m) {
+        if (paused) {
+            if (skipWhenPaused) {
+                count("skipped.paused");                                // a replayable topic: skipped now, read again at the next start
+                return true;
+            }
+            count("paused");                                            // a queue: not acknowledged, it waits at the broker
+            return false;
+        }
+        tick();
         try {
             lastMessage = m.timestamp() == null ? Instant.now() : m.timestamp();
             roll();
@@ -166,6 +175,90 @@ public final class LiveFeed implements LiveIntake {
             reject(null, LiveReject.CONTRACT, "the message could not be read: " + e.getMessage(), m);
             return true;
         }
+    }
+
+    // -- pause and rate (section 7.9) -----------------------------------------------------------------------------------------
+
+    private volatile boolean paused;
+    private volatile boolean skipWhenPaused;
+    private volatile String pausedBy;
+    private volatile Instant pausedAt;
+    private long minute = -1;
+    private long thisMinute;
+    private long lastMinute;
+
+    /**
+     * An administrator's pause: messages are not taken until {@link #resume}. A queue's wait at the broker ({@code skip} false: not
+     * acknowledged); a replayable topic's are skipped and counted ({@code skip} true), read again at the next start.
+     */
+    public void pause(boolean skip, String by) {
+        skipWhenPaused = skip;
+        pausedBy = by;
+        pausedAt = Instant.now();
+        paused = true;
+    }
+
+    /** Takes messages again. */
+    public void resume() {
+        paused = false;
+        pausedBy = null;
+        pausedAt = null;
+    }
+
+    /** True while an administrator has paused the feed. */
+    public boolean paused() {
+        return paused;
+    }
+
+    /** Who paused it and when, or null. */
+    public Map<String, Object> pausedBy() {
+        return paused ? Map.of("by", String.valueOf(pausedBy), "at", String.valueOf(pausedAt), "skips", skipWhenPaused) : null;
+    }
+
+    private synchronized void tick() {
+        long now = System.currentTimeMillis() / 60_000;
+        if (now != minute) {
+            lastMinute = now == minute + 1 ? thisMinute : 0;
+            thisMinute = 0;
+            minute = now;
+        }
+        thisMinute++;
+    }
+
+    /** Messages a minute: those of the last whole minute. */
+    public synchronized long perMinute() {
+        long now = System.currentTimeMillis() / 60_000;
+        return now == minute ? lastMinute : now == minute + 1 ? thisMinute : 0;
+    }
+
+    /**
+     * The feed's state from what it knows (section 7.9): the transport's health ({@code WAITING ...}, {@code DOWN ...}, {@code UP}), a pause,
+     * catching up, staleness ({@code stale}, from its {@code stale-after}), and rejects over {@code rejectRatio} of what arrived (at least
+     * ten), unabsorbed rows expired, or messages not kept: degraded. Off, not configured and standby are the server's to say.
+     */
+    public FeedState state(String health, boolean stale, double rejectRatio) {
+        String h = health == null ? "" : health;
+        if (h.startsWith("DOWN") && notKept == null) {
+            return FeedState.DOWN;
+        }
+        if (paused) {
+            return FeedState.PAUSED;
+        }
+        if (h.startsWith("WAITING")) {
+            return FeedState.WAITING;
+        }
+        if (notKept != null) {
+            return FeedState.DEGRADED;
+        }
+        if (!caughtUp || h.contains("catching up")) {
+            return FeedState.CATCHING_UP;
+        }
+        long rejected = counts.entrySet().stream().filter(e -> e.getKey().startsWith("rejected")).mapToLong(e -> e.getValue().sum()).sum();
+        long applied = counted("applied");
+        if ((rejected >= 10 && rejected > rejectRatio * (rejected + applied)) || counted("expired") > 0) {          // rows that outlived their retention, no load absorbed them
+            return FeedState.DEGRADED;
+        }
+        return stale ? FeedState.STALE : FeedState.LIVE;
     }
 
     /** Why the durable live state last failed to keep a message, until one is kept again; null when it keeps them. */
@@ -788,6 +881,8 @@ public final class LiveFeed implements LiveIntake {
     public Map<String, Object> stats() {
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("caughtUp", caughtUp);
+        out.put("perMinute", perMinute());
+        out.put("paused", pausedBy());
         out.put("rows", state.size());
         out.put("memoryMb", Math.round(state.memoryBytes() / 1048576.0 * 10) / 10.0);
         if (state.disk() != null) {
