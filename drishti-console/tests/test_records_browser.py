@@ -142,5 +142,7 @@ def test_the_records_list_has_one_count(browser, stack):
     pg = opened(browser, url, "/s?q=TRD", width=1440)
     assert "rows ×" not in pg.locator(".rc-host .dg-status").inner_text()                # the grid's own count is not repeated in its status bar
     assert "30 trades" in pg.locator(".rc-host .dg-live-chip").inner_text()
+    # live or not, the chip leaves CONNECTING: a set with no stream says STATIC once its snapshot is drawn (no hello ever comes)
+    pg.wait_for_function("() => document.querySelector('.rc-host .dg-live-chip').dataset.state !== 'connecting'", timeout=30000)
     assert pg.locator(".cmp-sum span:has(b)").count() == 0 or "match" in pg.locator(".cmp-sum").inner_text()
     assert not pg.errors

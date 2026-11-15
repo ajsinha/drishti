@@ -87,7 +87,10 @@
     }
     var live = new grid.LiveSetGrid(host, opts);
     host.setAttribute('data-records-mode', o.set ? 'engine' : 'static');
-    live.start().then(function () { host.setAttribute('data-records-ready', 'true'); },
+    live.start().then(function () {
+      if (opts.channel === NONE) { live.setState('live'); }     // no stream will ever say hello: the snapshot is the answer (STATIC), never a lasting CONNECTING
+      host.setAttribute('data-records-ready', 'true');
+    },
       function (e) { host.textContent = (e && e.message) || 'The rows could not be read.'; });
     host.drishtiRecords = live;
     if (o.fill || host.hasAttribute('data-records-fill')) { fill(host); }
