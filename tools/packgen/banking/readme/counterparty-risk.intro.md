@@ -60,3 +60,9 @@ and EEPE for any scope (`NSET:`, `CPTY:`, `GROUP:`, `LE:`, `DESK:`, `TRD:`); the
 figures computed as they open. There is no stored `exposure-profile` kind (`EXP-<cp>-<le>`): `EXP EXP-ALDERSHOT-FRA`
 opens `EXP NSET:NS-ALDERSHOT-FRA`. The exposure explorer ([EXPOSURE_GUIDE.md section 3](../../../docs/guides/EXPOSURE_GUIDE.md#3-the-explorer-screen-by-screen))
 walks from the bank to a trade; [the exposure tutorial](../../../docs/guides/EXPOSURE_GUIDE.md) does it on the test data.
+
+**Intraday.** `netting-set`, `collateral-balance`, `margin-call` and `credit-limit` may be fed live by any `kafka`, `activemq` or
+`rabbitmq` connector a site binds to them (`companion-of: credit-store`): whole rows ordered by `UPDATED_AT`, overlaid at once and
+absorbed by the evening's load (`absorb: by-cutoff`; a limit `absorb: reset`, effective at once, so limit bars move with it). EE and PFE
+stay the exposure engine's official result on the close
+([LIVE_CONNECTORS_DESIGN.md section 8.6](../../../docs/architecture/LIVE_CONNECTORS_DESIGN.md#86-netting-sets-and-collateral)).

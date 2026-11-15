@@ -152,6 +152,30 @@ class LiveFeedTest {
     }
 
     @Test
+    void aConflatedKindTellsTheScreensTheLatestPerKeyAPeriodWhileItsStateTakesEveryMessage() {
+        Map<String, Object> live = new LinkedHashMap<>(ordered());
+        live.put("conflate", "1s");
+        LiveFeed f = feed(new Trades(live), Map.of("kind", "trade"), null);
+        f.caughtUp();
+        List<String> seen = new java.util.concurrent.CopyOnWriteArrayList<>();
+        f.subscribe(EntityRef.of("trade", "MX-1"), d -> seen.add(d.data().get("BOOK").asText()));
+        f.accept(msg("MX-1", trade("MX-1", 1, "B1")));
+        f.accept(msg("MX-1", trade("MX-1", 2, "B2")));
+        f.accept(msg("MX-1", trade("MX-1", 3, "B3")));
+        assertThat(book(f, "MX-1")).as("the state took every message").isEqualTo("B3");
+        assertThat(seen).as("nothing told before the flush").isEmpty();
+        Instant t0 = Instant.parse("2026-11-16T10:00:00Z");
+        f.flushConflated(t0);
+        assertThat(seen).containsExactly("B3");
+        assertThat(f.counted("conflated")).isEqualTo(2);
+        f.accept(msg("MX-1", trade("MX-1", 4, "B4")));
+        f.flushConflated(t0.plusMillis(500));
+        assertThat(seen).as("within the period: held").containsExactly("B3");
+        f.flushConflated(t0.plusSeconds(1));
+        assertThat(seen).containsExactly("B3", "B4");
+    }
+
+    @Test
     void theStateIsOneListOfWords() {
         LiveFeed f = feed(new Trades(ordered()), Map.of("kind", "trade"), null);
         assertThat(f.state("UP", false, 0.05)).isEqualTo(FeedState.CATCHING_UP);

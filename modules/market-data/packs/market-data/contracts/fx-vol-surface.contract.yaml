@@ -36,6 +36,14 @@ binding-hint:
   lake-table: market.fx-vol-surface
   test-data:
   - data/testdata/market-data/fx-vol-surface
+live:                                    # what a live message means for this kind (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 8)
+  order: [BUILT_AT]
+  changed-at: BUILT_AT
+  partial: whole
+  apply: overlay
+  conflate: 30s
+  max-message-kb: 8192                   # a surface or cube can be megabytes
+  absorb: by-cutoff
 fields:
 - name: SURFACE_ID
   type: id
@@ -82,6 +90,11 @@ fields:
   example: FX-AUDUSD
   pattern: ^FX-
   link: fx-spot
+- name: BUILT_AT
+  type: timestamp
+  presence: optional
+  description: 'When the source built this, ISO-8601 UTC: what makes one live build newer than another (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 8.3); absent in the end-of-day rows.'
+  example: '2026-11-13T14:00:05Z'
 nested:
   GRID[]:
   - name: EXPIRY

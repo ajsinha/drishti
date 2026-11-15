@@ -1116,11 +1116,16 @@ Drishti's memory does not grow with the days kept ([the Aerospike connector](../
 **Live trades from Kafka**:
 
 ```bash
-uv run --with kafka-python python tools/samplegen/stream.py --rate 5          # 5 trades a second to drishti.trading.trades
-DRISHTI_STREAM_TRADING=true DRISHTI_PACKS=trading java -Djava.io.tmpdir=data/tmp/server -jar drishti-server.jar
+uv run --with kafka-python python tools/samplegen/stream.py --system ENDUR --rate 5   # Endur's trades, 5 amendments a second
+uv run --with kafka-python python tools/samplegen/market_stream.py --rate 20            # quotes, curves and surfaces, 20 ticks a second
+DRISHTI_STREAM_ENDUR=true DRISHTI_MARKET_STREAM=true java -Djava.io.tmpdir=data/tmp/server -jar drishti-server.jar
 ```
 
-`stream.py` also takes `--bootstrap` (`localhost:9092`), `--topic`, `--samples` and `--seconds` (0: until stopped). The trading pack's
+`stream.py` publishes a source system's trades to its live companion's topic (`drishti.trading.<system>.trades`, read by
+`trade-<system>-live`); `market_stream.py` publishes the market-data pack's quotes, curves and surfaces to `drishti.market.<kind>`
+(read by `market-store-live`: a price kind's tick is its moved fields, a curve is sent whole; the screens get the latest per instrument
+once a conflation period, the contract's `conflate`). Both take `--bootstrap` (`localhost:9092`), `--rate`, `--samples` and `--seconds`
+(0: until stopped); `stream.py --topic` and `market_stream.py --kinds` choose. The trading pack's
 `trading-stream` connector reads its broker by name (`broker: default`, `[broker.default]` in the settings file), `DRISHTI_TRADING_TOPIC`, `DRISHTI_STREAM_STALE_AFTER` (15m: shown as behind) and keeps
 the day's messages in a disk cache (`DRISHTI_STREAM_DISK_CACHE`, `DRISHTI_CACHE_ROOT`, `DRISHTI_STREAM_CACHE_GB`, cleared at `DRISHTI_CACHE_RESET_AT`).
 

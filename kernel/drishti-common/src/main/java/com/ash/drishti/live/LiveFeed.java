@@ -603,19 +603,62 @@ public final class LiveFeed implements LiveIntake {
         }
         EntityRef ref = EntityRef.of(r.kind(), r.key());
         Provenance p = new Provenance(connector, r.position() == null ? 0 : r.position().offset(), r.changedAt(), true);
+        java.time.Duration every = contracts.rules(r.kind()).conflate();
         if (r.op() == LiveRecord.Op.DELETE) {
             if (caughtUp) {
                 index.remove(ref);
             }
-            listeners.tell(ref, EntityDocument.deleted(ref, p));
+            tell(ref, EntityDocument.deleted(ref, p), every);
             return;
         }
         if (caughtUp) {
             index.add(hit(r.kind(), r.key()));
         }
         if (listeners.wanted(ref)) {
-            listeners.tell(ref, new EntityDocument(ref, parse.apply(json), p));
+            tell(ref, new EntityDocument(ref, parse.apply(json), p), every);
         }
+    }
+
+    // -- conflation (section 2.3, conflate: a period): the state takes every message at once; viewers get the latest per key a period ----
+
+    private final Map<EntityRef, EntityDocument> conflated = new java.util.concurrent.ConcurrentHashMap<>();
+    private final Map<String, Instant> toldAt = new java.util.concurrent.ConcurrentHashMap<>();
+
+    private void tell(EntityRef ref, EntityDocument d, java.time.Duration every) {
+        if (every == null || every.isZero()) {
+            listeners.tell(ref, d);
+            return;
+        }
+        if (conflated.put(ref, d) != null) {
+            count("conflated");                                        // a newer one in the same period: only the latest reaches the screens
+        }
+    }
+
+    /**
+     * Tells the open views the latest of each conflated key whose kind's period has passed since it last told them (called every second by
+     * the live source; a test calls it with its own clock).
+     */
+    public void flushConflated(Instant now) {
+        if (conflated.isEmpty()) {
+            return;
+        }
+        java.util.Set<String> due = new java.util.HashSet<>();
+        for (EntityRef ref : List.copyOf(conflated.keySet())) {
+            String kind = ref.kind();
+            if (!due.contains(kind)) {
+                Instant last = toldAt.get(kind);
+                java.time.Duration every = contracts.rules(kind).conflate();
+                if (last != null && !every.isZero() && now.isBefore(last.plus(every))) {
+                    continue;
+                }
+                due.add(kind);
+            }
+            EntityDocument d = conflated.remove(ref);
+            if (d != null) {
+                listeners.tell(ref, d);
+            }
+        }
+        due.forEach(k -> toldAt.put(k, now));
     }
 
     /** A landed row's window key: the first of the contract's {@code land-key} fields the row has (a position's PVs: POSITION_ID). */

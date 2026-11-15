@@ -12,15 +12,17 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Streams a pack's sample trades to Kafka, then keeps them ticking, so Drishti's Live views update from a real
-stream (the trading pack's `trading-stream` connector, switched on with DRISHTI_STREAM_TRADING=true).
+"""Streams a source system's sample trades to its Kafka topic, then keeps them ticking, so Drishti's Live views update from a real
+stream: the source module's live companion (trade-<system>-live, switched on with DRISHTI_STREAM_<SYSTEM>=true) reads
+drishti.trading.<system>.trades (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 8.1).
 
-    uv run --with kafka-python python tools/samplegen/stream.py [--bootstrap localhost:9092] [--topic drishti.trading.trades]
+    uv run --with kafka-python python tools/samplegen/stream.py [--system ENDUR] [--bootstrap localhost:9092] [--topic T]
                                                                 [--samples modules/banking/dmod/packs/trading/samples] [--rate 5] [--seconds 0]
 
-Each trade is published once, keyed by its TRADE_ID (the topic is the state: the latest message per trade wins), then `--rate` random
-trades per second get a new PRICE (a trade carries no MTM: that is the market-risk pack's trade valuation) and a new SOURCE_UPDATE_TIME.
-`--seconds 0` runs until interrupted.
+The trades of the system (their SOURCE_SYSTEM; every sample trade when none is) are published once, keyed by TRADE_ID, with
+SOURCE_SYSTEM set to the system, then `--rate` random trades per second get a new PRICE (a trade carries no MTM: that is the market-risk
+pack's trade valuation), a new SOURCE_UPDATE_TIME and the next TRADE_VERSION. `--topic` overrides the system's topic; `--seconds 0` runs
+until interrupted.
 
 Every message carries a numeric TRADE_VERSION and UPDATED_BY (the demo trade blotter's version and who made it, modules/trading
 blotters/trade.blotter.yaml): a tick is a new version by STREAM, so the blotter merges by version and refuses an edit made on an older one,
@@ -44,16 +46,22 @@ def main():
 
     ap = argparse.ArgumentParser()
     ap.add_argument("--bootstrap", default="localhost:9092")
-    ap.add_argument("--topic", default="drishti.trading.trades")
+    ap.add_argument("--system", default="ENDUR", help="the source system: ENDUR, CALYPSO, MUREX, WSS, SWAPONE or ICI")
+    ap.add_argument("--topic", default=None, help="default drishti.trading.<system>.trades, the companion's topic")
     ap.add_argument("--samples", default=str(pathlib.Path(__file__).resolve().parents[2] / "modules/banking/dmod/packs/trading/samples"))
     ap.add_argument("--rate", type=float, default=5.0)
     ap.add_argument("--seconds", type=float, default=0.0)
     a = ap.parse_args()
+    a.system = a.system.strip().upper()
+    a.topic = a.topic or f"drishti.trading.{a.system.lower()}.trades"
     producer = KafkaProducer(bootstrap_servers=a.bootstrap, key_serializer=str.encode,
                              value_serializer=lambda d: json.dumps(d, ensure_ascii=False).encode(), linger_ms=20)
     trades = {}
-    for d in packsamples.read(pathlib.Path(a.samples)).get("trade", {}).values():
+    every = list(packsamples.read(pathlib.Path(a.samples)).get("trade", {}).values())
+    mine = [d for d in every if str(d.get("SOURCE_SYSTEM") or "").upper() == a.system] or every
+    for d in mine:
         d.pop("_meta", None)
+        d["SOURCE_SYSTEM"] = a.system
         versioned(d, d.get("TRADER_ID") or "BOOKING")
         trades[str(d["TRADE_ID"])] = d
         producer.send(a.topic, key=str(d["TRADE_ID"]), value=d)

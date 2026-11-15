@@ -36,6 +36,12 @@ binding-hint:
   lake-table: credit.netting-set
   test-data:
   - data/testdata/counterparty-risk/netting-set
+live:                                    # what a live message means for this kind (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 8)
+  order: [UPDATED_AT]                     # newer: a later change at the source
+  changed-at: UPDATED_AT
+  partial: whole
+  apply: overlay
+  absorb: by-cutoff
 fields:
 - name: NETTING_SET_ID
   type: id
@@ -156,6 +162,11 @@ fields:
   presence: optional
   description: The member trades' ids, the same trades as TRADES[].TRADE_ID, as text (ENDUR digits, CLY-…, MX-…); empty when the set has no live trade on the date.
   link: trade
+- name: UPDATED_AT
+  type: timestamp
+  presence: optional
+  description: 'When the source last changed this record, ISO-8601 UTC: what makes one live message newer than another (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 8.6); absent in the end-of-day rows.'
+  example: '2026-11-13T10:42:03Z'
 nested:
   TRADES[]:
   - name: TRADE_ID

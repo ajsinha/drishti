@@ -23,12 +23,12 @@ One section per command of the pack: the shape of its data, how it is stored and
 |---|---|---|---|---|---|
 | [AGR](#agr-master-agreement-agreement) | `agreement` | fundamental | active | 9 | 4 |
 | [CSA](#csa-credit-support-annex-csa) | `csa` | fundamental | active | 18 | 5 |
-| [NSET](#nset-netting-set-netting-set) | `netting-set` | fundamental | active | 19 | 9 |
-| [LIM](#lim-credit-limit-credit-limit) | `credit-limit` | fundamental | active | 11 | 5 |
+| [NSET](#nset-netting-set-netting-set) | `netting-set` | fundamental | active | 20 | 9 |
+| [LIM](#lim-credit-limit-credit-limit) | `credit-limit` | fundamental | active | 12 | 5 |
 | [CVA](#cva-cva--xva-cva) | `cva` | fundamental | active | 10 | 6 |
 | [SACCR](#saccr-sa-ccr-exposure-sa-ccr) | `sa-ccr` | fundamental | active | 10 | 8 |
-| [COLL](#coll-collateral-balance-collateral-balance) | `collateral-balance` | fundamental | active | 8 | 5 |
-| [MC](#mc-margin-call-margin-call) | `margin-call` | fundamental | active | 11 | 6 |
+| [COLL](#coll-collateral-balance-collateral-balance) | `collateral-balance` | fundamental | active | 9 | 5 |
+| [MC](#mc-margin-call-margin-call) | `margin-call` | fundamental | active | 12 | 6 |
 | [SIMM](#simm-isda-simm-initial-margin-simm) | `simm` | fundamental | active | 8 | 4 |
 | [XRUN](#xrun-exposure-simulation-run-simulation-run) | `simulation-run` | input | active | 24 | 3 |
 | [XPATH](#xpath-exposure-path-a-trades-mtm-on-every-path-at-a-grid-date-exposure-path) | `exposure-path` | input | active | 22 | 6 |
@@ -199,7 +199,7 @@ Trades that net on close-out under one agreement and CSA, with exposure and coll
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `credit.netting-set`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/counterparty-risk/netting-set |
-| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
+| Live | order `UPDATED_AT`; whole rows; overlay; absorb by-cutoff; validate strict |
 | Worked example | [counterparty-risk/netting-set](../samples/counterparty-risk.md#netting-set) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -225,6 +225,7 @@ Trades that net on close-out under one agreement and CSA, with exposure and coll
 | `LEGAL_ENTITY` | id | required |  | The bank's legal entity on the bank's side of the set: an ENTITY_ID of the core pack's legal-entity kind (LE-…). | `LE-FRA` (pattern `^LE-`) | `legal-entity` |
 | `NETTING_ENFORCEABLE` | boolean | required |  | true when a legal opinion confirms close-out netting is enforceable for the set; false treats the trades gross. | `True` |  |
 | `TRADE_IDS` | id list | optional |  | The member trades' ids, the same trades as TRADES[].TRADE_ID, as text (ENDUR digits, CLY-…, MX-…); empty when the set has no live trade on the date. |  | `trade` |
+| `UPDATED_AT` | timestamp | optional |  | When the source last changed this record, ISO-8601 UTC: what makes one live message newer than another (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 8.6); absent in the end-of-day rows. | `2026-11-13T10:42:03Z` |  |
 
 **Nested `TRADES[]`**
 
@@ -304,7 +305,7 @@ PFE limit by tenor bucket for a counterparty, with utilisation.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `credit.credit-limit`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/counterparty-risk/credit-limit |
-| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
+| Live | order `UPDATED_AT`; whole rows; overlay; absorb reset; validate strict; effective at-once |
 | Worked example | [counterparty-risk/credit-limit](../samples/counterparty-risk.md#credit-limit) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -322,6 +323,7 @@ PFE limit by tenor bucket for a counterparty, with utilisation.
 | `COUNTERPARTY` | id | required |  | The counterparty the limit is set for: a COUNTERPARTY_ID of the core pack's counterparty kind (CP-…). | `CP-ALDERSHOT` (pattern `^CP-`) | `counterparty` |
 | `APPROVED_BY` | text | required |  | The committee or officer that approved the limit. | `Credit Risk Committee` |  |
 | `REVIEW_DUE` | date | required |  | The date the limit is next due for credit review (YYYY-MM-DD). | `2027-03-19` |  |
+| `UPDATED_AT` | timestamp | optional |  | When the source last changed this record, ISO-8601 UTC: what makes one live message newer than another (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 8.6); absent in the end-of-day rows. | `2026-11-13T10:42:03Z` |  |
 
 **Nested `BUCKETS[]`**
 
@@ -526,7 +528,7 @@ Collateral held and posted under a CSA, by asset, after haircuts.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `collateral.collateral-balance`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/counterparty-risk/collateral-balance |
-| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
+| Live | order `UPDATED_AT`; whole rows; overlay; absorb by-cutoff; validate strict |
 | Worked example | [counterparty-risk/collateral-balance](../samples/counterparty-risk.md#collateral-balance) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -541,6 +543,7 @@ Collateral held and posted under a CSA, by asset, after haircuts.
 | `POSITIONS` | record list | required |  | The collateral assets behind the balance, one element per asset held or posted, with its market value, haircut and value after the haircut. |  |  |
 | `CSA` | id | required |  | The CSA the collateral is exchanged under: a CSA_ID of the csa kind (CSA-…). | `CSA-ALDERSHOT-FRA` (pattern `^CSA-`) | `csa` |
 | `NETTING_SET` | id | required |  | The netting set the collateral secures: a NETTING_SET_ID of the netting-set kind (NS-<counterparty>-<legal entity>). | `NS-ALDERSHOT-FRA` (pattern `^NS-`) | `netting-set` |
+| `UPDATED_AT` | timestamp | optional |  | When the source last changed this record, ISO-8601 UTC: what makes one live message newer than another (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 8.6); absent in the end-of-day rows. | `2026-11-13T10:42:03Z` |  |
 
 **Nested `POSITIONS[]`**
 
@@ -592,7 +595,7 @@ A variation or initial margin call and its settlement status.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `collateral.margin-call`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/counterparty-risk/margin-call |
-| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
+| Live | order `UPDATED_AT`; whole rows; overlay; absorb by-cutoff; validate strict |
 | Worked example | [counterparty-risk/margin-call](../samples/counterparty-risk.md#margin-call) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -610,6 +613,7 @@ A variation or initial margin call and its settlement status.
 | `NETTING_SET` | id | required |  | The netting set the call is for: a NETTING_SET_ID of the netting-set kind (NS-<counterparty>-<legal entity>). | `NS-ALDERSHOT-FRA` (pattern `^NS-`) | `netting-set` |
 | `CSA` | id | required |  | The CSA the call is made under: a CSA_ID of the csa kind (CSA-…). | `CSA-ALDERSHOT-FRA` (pattern `^CSA-`) | `csa` |
 | `CURRENCY` | text | required |  | The currency of the call's amounts, ISO 4217. | `USD` |  |
+| `UPDATED_AT` | timestamp | optional |  | When the source last changed this record, ISO-8601 UTC: what makes one live message newer than another (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 8.6); absent in the end-of-day rows. | `2026-11-13T10:42:03Z` |  |
 
 **Nested `EVENTS[]`**
 

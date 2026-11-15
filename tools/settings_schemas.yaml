@@ -500,6 +500,8 @@ env:
   - { name: DRISHTI_CACHE_ROOT, by: packs, default: "<data>/cache", sets: "trading-stream cache root", meaning: "Disk cache root (one folder per connector)" }
   - { name: DRISHTI_STREAM_CACHE_GB, by: packs, default: "10", sets: "trading-stream cache size", meaning: "The trading stream's disk cache size, in GB" }
   - { name: DRISHTI_CACHE_RESET_AT, by: packs, default: "02:00", sets: "trading-stream cache reset", meaning: "The disk cache's nightly clearing time (New York)" }
+  - { name: DRISHTI_MARKET_STREAM, by: packs, default: "false", sets: "market-store-live enabled", meaning: "Turn on the market-data pack's live companion market-store-live: intraday quotes, fixings, curves and surfaces over the close, one Kafka topic per kind (drishti.market.<kind>)" }
+  - { name: DRISHTI_MARKET_STALE_AFTER, by: packs, default: 5m, sets: "market-store-live stale-after", meaning: "How long without a market message before its feed is STALE (amber in Health)" }
   - { name: DRISHTI_VAR_PV_STREAM, by: packs, default: "false", sets: "risk-store-live enabled", meaning: "Turn on the market-risk pack's risk-store-live connector: the pricing systems' PV topic, landed by window into intraday batches" }
   - { name: DRISHTI_VAR_PV_TOPIC, by: packs, default: drishti.risk.pv-updates, sets: "risk-store-live topics", meaning: "Its topic: JSON Lines of scenario-pv or pnl-vector records per message" }
   - { name: DRISHTI_VAR_INTRADAY_KAFKA_WINDOW, by: packs, default: 5m, sets: "risk-store-live land.window", meaning: "How long the PV topic's window collects before it lands as one batch" }

@@ -281,6 +281,55 @@ connectors:
     settings:
       lake: demo
       lake-tables: market.ir-curve,market.repo-curve,market.fx-spot,market.fx-forward-curve,market.fx-vol-surface,market.ir-vol-cube,market.cap-vol-surface,market.equity,market.equity-index,market.dividend-curve,market.equity-vol-surface,market.credit-curve,market.inflation-index,market.inflation-curve,market.commodity,market.commodity-curve,market.commodity-vol-surface,market.rate-fixing,market.bond,market.correlation-matrix
+  market-store-live:
+    plugin: kafka
+    companion-of: market-store
+    enabled: ${DRISHTI_MARKET_STREAM:false}
+    description: 'Intraday market data over the lake''s close: one topic per kind (drishti.market.<kind>), each message the kind''s
+      row or its changed price fields; the latest per key reaches the screens once a period (the contract''s conflate)'
+    kinds:
+    - fx-spot
+    - equity
+    - equity-index
+    - commodity
+    - bond
+    - rate-fixing
+    - inflation-index
+    - ir-curve
+    - repo-curve
+    - fx-forward-curve
+    - credit-curve
+    - dividend-curve
+    - inflation-curve
+    - commodity-curve
+    - fx-vol-surface
+    - equity-vol-surface
+    - commodity-vol-surface
+    - cap-vol-surface
+    - ir-vol-cube
+    settings:
+      broker: default
+      topics: drishti.market.fx-spot,drishti.market.equity,drishti.market.equity-index,drishti.market.commodity,drishti.market.bond,drishti.market.rate-fixing,drishti.market.inflation-index,drishti.market.ir-curve,drishti.market.repo-curve,drishti.market.fx-forward-curve,drishti.market.credit-curve,drishti.market.dividend-curve,drishti.market.inflation-curve,drishti.market.commodity-curve,drishti.market.fx-vol-surface,drishti.market.equity-vol-surface,drishti.market.commodity-vol-surface,drishti.market.cap-vol-surface,drishti.market.ir-vol-cube
+      stale-after: ${DRISHTI_MARKET_STALE_AFTER:5m}
+      kind.drishti.market.fx-spot: fx-spot
+      kind.drishti.market.equity: equity
+      kind.drishti.market.equity-index: equity-index
+      kind.drishti.market.commodity: commodity
+      kind.drishti.market.bond: bond
+      kind.drishti.market.rate-fixing: rate-fixing
+      kind.drishti.market.inflation-index: inflation-index
+      kind.drishti.market.ir-curve: ir-curve
+      kind.drishti.market.repo-curve: repo-curve
+      kind.drishti.market.fx-forward-curve: fx-forward-curve
+      kind.drishti.market.credit-curve: credit-curve
+      kind.drishti.market.dividend-curve: dividend-curve
+      kind.drishti.market.inflation-curve: inflation-curve
+      kind.drishti.market.commodity-curve: commodity-curve
+      kind.drishti.market.fx-vol-surface: fx-vol-surface
+      kind.drishti.market.equity-vol-surface: equity-vol-surface
+      kind.drishti.market.commodity-vol-surface: commodity-vol-surface
+      kind.drishti.market.cap-vol-surface: cap-vol-surface
+      kind.drishti.market.ir-vol-cube: ir-vol-cube
   nyfed-sofr-feed:
     plugin: feed
     enabled: ${DRISHTI_FEED_NYFED_SOFR:false}

@@ -18,6 +18,15 @@
 
 ## Unreleased
 
+- **Live feeds, step L8: market data, netting and collateral, limits.** The market-data pack's quotes, fixings, curves and surfaces
+  take a live feed over the close: the companion `market-store-live` (off until `DRISHTI_MARKET_STREAM=true`) reads one Kafka topic per
+  kind, `drishti.market.<kind>`. Each contract says how: a price kind takes ticks of its changed fields ordered by the new `QUOTE_TIME`,
+  a fixing one new point by `FIXED_AT`, a curve or a surface only whole by `BUILT_AT`; the screens get the latest per instrument once a
+  conflation period (1 s, 5 s, 30 s) while the live state takes every message; the close's load replaces the day's ticks. A live quote
+  never moves VaR, exposure or P&L. `correlation-matrix` and `position` take no feed (`live.allowed: false`). `netting-set`,
+  `collateral-balance`, `margin-call`, `credit-limit` and `var-limit` take whole rows by a new `UPDATED_AT` (limits effective at once).
+  `tools/samplegen/market_stream.py` publishes demo ticks; `tools/samplegen/stream.py --system ENDUR` now publishes a source system's
+  trades to its live companion's topic. The live results tutorial goes on to the next load's reconcile.
 - **Live feeds, step L7: what an administrator and a reader see.** Every live feed has one state in one list of words, the same in Health,
   Admin, the CLI and on a page: `OFF`, `NOT CONFIGURED`, `WAITING`, `CATCHING UP`, `LIVE`, `STALE`, `DEGRADED` (rejects over
   `drishti.live.degraded.reject-ratio`, 5%), `PAUSED`, `STANDBY`, `DOWN`. Admin → Data bindings has a Live column and a drawer per kind:

@@ -35,6 +35,8 @@ cadence:
   due: when the date's pnl-vector rows are loaded (derived at once)
 binding-hint:
   computed: true
+live:                                    # what a live message means for this kind (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 8)
+  allowed: false                         # derived only (decision Q5): its trades and PVs are live, it is never fed
 fields:
 - name: POSITION_ID
   type: id

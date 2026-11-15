@@ -22,24 +22,24 @@ One section per command of the pack: the shape of its data, how it is stored and
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
 | [CRV](#crv-interest-rate-curve-ir-curve) | `ir-curve` | fundamental | active | 15 | 7 |
-| [REPO](#repo-repo-curve-repo-curve) | `repo-curve` | fundamental | active | 6 | 6 |
-| [FX](#fx-fx-spot-rate-fx-spot) | `fx-spot` | fundamental | active | 11 | 6 |
-| [FXF](#fxf-fx-forward-curve-fx-forward-curve) | `fx-forward-curve` | fundamental | active | 7 | 4 |
-| [FXV](#fxv-fx-volatility-surface-fx-vol-surface) | `fx-vol-surface` | fundamental | active | 8 | 5 |
-| [IRV](#irv-swaption-volatility-cube-ir-vol-cube) | `ir-vol-cube` | fundamental | active | 6 | 5 |
-| [CPV](#cpv-capfloor-volatility-surface-cap-vol-surface) | `cap-vol-surface` | fundamental | active | 5 | 5 |
-| [EQ](#eq-equity-equity) | `equity` | fundamental | active | 15 | 5 |
-| [EQX](#eqx-equity-index-equity-index) | `equity-index` | fundamental | active | 10 | 6 |
-| [DIV](#div-dividend-curve-dividend-curve) | `dividend-curve` | fundamental | active | 6 | 6 |
-| [EQV](#eqv-equity-volatility-surface-equity-vol-surface) | `equity-vol-surface` | fundamental | active | 7 | 5 |
-| [CDS](#cds-credit-curve-credit-curve) | `credit-curve` | fundamental | active | 10 | 6 |
-| [INF](#inf-inflation-index-inflation-index) | `inflation-index` | fundamental | active | 8 | 5 |
-| [INFC](#infc-inflation-curve-inflation-curve) | `inflation-curve` | fundamental | active | 7 | 5 |
-| [CMD](#cmd-commodity-commodity) | `commodity` | fundamental | active | 10 | 5 |
-| [CMDC](#cmdc-commodity-forward-curve-commodity-curve) | `commodity-curve` | fundamental | active | 8 | 6 |
-| [CMDV](#cmdv-commodity-volatility-surface-commodity-vol-surface) | `commodity-vol-surface` | fundamental | active | 4 | 5 |
-| [FIX](#fix-rate-index-fixings-rate-fixing) | `rate-fixing` | fundamental | active | 7 | 7 |
-| [BND](#bnd-bond-security-master-bond) | `bond` | fundamental | active | 15 | 6 |
+| [REPO](#repo-repo-curve-repo-curve) | `repo-curve` | fundamental | active | 7 | 6 |
+| [FX](#fx-fx-spot-rate-fx-spot) | `fx-spot` | fundamental | active | 12 | 6 |
+| [FXF](#fxf-fx-forward-curve-fx-forward-curve) | `fx-forward-curve` | fundamental | active | 8 | 4 |
+| [FXV](#fxv-fx-volatility-surface-fx-vol-surface) | `fx-vol-surface` | fundamental | active | 9 | 5 |
+| [IRV](#irv-swaption-volatility-cube-ir-vol-cube) | `ir-vol-cube` | fundamental | active | 7 | 5 |
+| [CPV](#cpv-capfloor-volatility-surface-cap-vol-surface) | `cap-vol-surface` | fundamental | active | 6 | 5 |
+| [EQ](#eq-equity-equity) | `equity` | fundamental | active | 16 | 5 |
+| [EQX](#eqx-equity-index-equity-index) | `equity-index` | fundamental | active | 11 | 6 |
+| [DIV](#div-dividend-curve-dividend-curve) | `dividend-curve` | fundamental | active | 7 | 6 |
+| [EQV](#eqv-equity-volatility-surface-equity-vol-surface) | `equity-vol-surface` | fundamental | active | 8 | 5 |
+| [CDS](#cds-credit-curve-credit-curve) | `credit-curve` | fundamental | active | 11 | 6 |
+| [INF](#inf-inflation-index-inflation-index) | `inflation-index` | fundamental | active | 9 | 5 |
+| [INFC](#infc-inflation-curve-inflation-curve) | `inflation-curve` | fundamental | active | 8 | 5 |
+| [CMD](#cmd-commodity-commodity) | `commodity` | fundamental | active | 11 | 5 |
+| [CMDC](#cmdc-commodity-forward-curve-commodity-curve) | `commodity-curve` | fundamental | active | 9 | 6 |
+| [CMDV](#cmdv-commodity-volatility-surface-commodity-vol-surface) | `commodity-vol-surface` | fundamental | active | 5 | 5 |
+| [FIX](#fix-rate-index-fixings-rate-fixing) | `rate-fixing` | fundamental | active | 8 | 7 |
+| [BND](#bnd-bond-security-master-bond) | `bond` | fundamental | active | 16 | 6 |
 | [CORR](#corr-correlation-matrix-correlation-matrix) | `correlation-matrix` | fundamental | active | 5 | 4 |
 | [CORRC](#corrc-correlations-of-a-factor-set-computed-from-price-history-correlation-result) | `correlation-result` | computed | active | 14 | 0 |
 | [EQB](#eqb-an-equitys-beta-against-its-index-computed-from-price-history-equity-beta) | `equity-beta` | computed | active | 12 | 0 |
@@ -61,7 +61,7 @@ Discounting (OIS), projection (IBOR/term RFR), government or basis curve for a c
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.ir-curve`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/ir-curve |
-| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
+| Live | order `BUILT_AT`; whole rows; overlay; absorb by-cutoff; validate strict; conflate 5s |
 | Worked example | [market-data/ir-curve](../samples/market-data.md#ir-curve) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -147,7 +147,7 @@ General-collateral or specials repo rates by term.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.repo-curve`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/repo-curve |
-| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
+| Live | order `BUILT_AT`; whole rows; overlay; absorb by-cutoff; validate strict; conflate 5s |
 | Worked example | [market-data/repo-curve](../samples/market-data.md#repo-curve) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -160,6 +160,7 @@ General-collateral or specials repo rates by term.
 | `OVERNIGHT` | amount | required | fraction | The overnight repo rate, as a fraction (0.0352 is 3.52%). | `0.0352` |  |
 | `AS_OF` | date | required |  | The date the curve was built for (the business date). | `2026-09-30` |  |
 | `POINTS` | record list | required |  | The repo term structure: one object per term, shortest first (ON to 1Y). |  |  |
+| `BUILT_AT` | timestamp | optional |  | When the source built this, ISO-8601 UTC: what makes one live build newer than another (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 8.3); absent in the end-of-day rows. | `2026-11-13T14:00:05Z` |  |
 
 **Nested `POINTS[]`**
 
@@ -206,7 +207,7 @@ Spot rate for a currency pair with bid/ask.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.fx-spot`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/fx-spot |
-| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
+| Live | order `QUOTE_TIME`; merge rows; overlay; absorb by-cutoff; validate strict; conflate 1s |
 | Worked example | [market-data/fx-spot](../samples/market-data.md#fx-spot) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -224,6 +225,7 @@ Spot rate for a currency pair with bid/ask.
 | `CONVENTIONS` | record | required |  | The pair's market conventions: base and quote currency, pip factor, spot lag, settlement calendars, NDF or not. |  |  |
 | `FX_FORWARD_CURVE` | id | required |  | Its forward curve: a CURVE_ID of the market-data pack's fx-forward-curve kind (FXF-…). | `FXF-AUDUSD` (pattern `^FXF-`) | `fx-forward-curve` |
 | `FX_VOL_SURFACE` | id | required |  | Its volatility surface: a SURFACE_ID of the market-data pack's fx-vol-surface kind (FXV-…). | `FXV-AUDUSD` (pattern `^FXV-`) | `fx-vol-surface` |
+| `QUOTE_TIME` | timestamp | optional |  | When the source quoted this price, ISO-8601 UTC: what makes one live tick newer than another (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 8.3); absent in the end-of-day rows. | `2026-11-13T14:02:11Z` |  |
 
 **Nested `HISTORY[]`**
 
@@ -285,7 +287,7 @@ Forward points by tenor for a pair.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.fx-forward-curve`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/fx-forward-curve |
-| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
+| Live | order `BUILT_AT`; whole rows; overlay; absorb by-cutoff; validate strict; conflate 5s |
 | Worked example | [market-data/fx-forward-curve](../samples/market-data.md#fx-forward-curve) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -299,6 +301,7 @@ Forward points by tenor for a pair.
 | `POINTS_1Y` | amount | required | pips | The 1-year forward points: (forward minus spot) times the pip factor (10,000; 100 for a JPY pair). | `6.6` |  |
 | `POINTS` | record list | required |  | The forward curve: one object per tenor, shortest first (ON to 2Y). |  |  |
 | `FX_SPOT` | id | required |  | The pair's spot record: a PAIR of the market-data pack's fx-spot kind (FX-…). | `FX-AUDUSD` (pattern `^FX-`) | `fx-spot` |
+| `BUILT_AT` | timestamp | optional |  | When the source built this, ISO-8601 UTC: what makes one live build newer than another (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 8.3); absent in the end-of-day rows. | `2026-11-13T14:00:05Z` |  |
 
 **Nested `POINTS[]`**
 
@@ -345,7 +348,7 @@ Implied vols by expiry and delta (ATM, 25D RR/BF).
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.fx-vol-surface`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/fx-vol-surface |
-| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
+| Live | order `BUILT_AT`; whole rows; overlay; absorb by-cutoff; validate strict; conflate 30s |
 | Worked example | [market-data/fx-vol-surface](../samples/market-data.md#fx-vol-surface) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -360,6 +363,7 @@ Implied vols by expiry and delta (ATM, 25D RR/BF).
 | `GRID` | record list | required |  | The surface: one object per expiry, shortest first, quoted by delta. |  |  |
 | `MODEL` | text | required |  | The smile model and quoting of the surface (e.g. Vanna-volga smile, delta-quoted). | `Vanna-volga smile, delta-quoted` |  |
 | `FX_SPOT` | id | required |  | The pair's spot record: a PAIR of the market-data pack's fx-spot kind (FX-…). | `FX-AUDUSD` (pattern `^FX-`) | `fx-spot` |
+| `BUILT_AT` | timestamp | optional |  | When the source built this, ISO-8601 UTC: what makes one live build newer than another (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 8.3); absent in the end-of-day rows. | `2026-11-13T14:00:05Z` |  |
 
 **Nested `GRID[]`**
 
@@ -413,7 +417,7 @@ Normal (bp) swaption vols by expiry × tenor.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.ir-vol-cube`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/ir-vol-cube |
-| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
+| Live | order `BUILT_AT`; whole rows; overlay; absorb by-cutoff; validate strict; conflate 30s |
 | Worked example | [market-data/ir-vol-cube](../samples/market-data.md#ir-vol-cube) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -426,6 +430,7 @@ Normal (bp) swaption vols by expiry × tenor.
 | `V_1Y_10Y` | amount | required | bp (normal vol) | The 1-year into 10-year at-the-money swaption volatility: a normal volatility in basis points a year. | `137.22` |  |
 | `V_5Y_5Y` | amount | required | bp (normal vol) | The 5-year into 5-year at-the-money swaption volatility: a normal volatility in basis points a year. | `132.72` |  |
 | `GRID` | record list | required |  | The at-the-money swaption grid: one object per option expiry, shortest first, with a column per underlying swap tenor. |  |  |
+| `BUILT_AT` | timestamp | optional |  | When the source built this, ISO-8601 UTC: what makes one live build newer than another (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 8.3); absent in the end-of-day rows. | `2026-11-13T14:00:05Z` |  |
 
 **Nested `GRID[]`**
 
@@ -474,7 +479,7 @@ Cap vols by maturity and strike.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.cap-vol-surface`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/cap-vol-surface |
-| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
+| Live | order `BUILT_AT`; whole rows; overlay; absorb by-cutoff; validate strict; conflate 30s |
 | Worked example | [market-data/cap-vol-surface](../samples/market-data.md#cap-vol-surface) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -486,6 +491,7 @@ Cap vols by maturity and strike.
 | `ATM_5Y` | amount | required | bp (normal vol) | The 5-year at-the-money cap volatility: a normal volatility in basis points a year. | `124.3` |  |
 | `GRID` | record list | required |  | The surface: one object per cap maturity, shortest first, with the at-the-money and fixed-strike volatilities. |  |  |
 | `MODEL` | text | required |  | The volatility model and quoting of the surface (e.g. Normal, stripped caplets). | `Normal, stripped caplets` |  |
+| `BUILT_AT` | timestamp | optional |  | When the source built this, ISO-8601 UTC: what makes one live build newer than another (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 8.3); absent in the end-of-day rows. | `2026-11-13T14:00:05Z` |  |
 
 **Nested `GRID[]`**
 
@@ -534,7 +540,7 @@ A listed stock: price, dividends, sector and identifiers.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.equity`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/equity |
-| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
+| Live | order `QUOTE_TIME`; merge rows; overlay; absorb by-cutoff; validate strict; conflate 1s |
 | Worked example | [market-data/equity](../samples/market-data.md#equity) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -556,6 +562,7 @@ A listed stock: price, dividends, sector and identifiers.
 | `EQUITY_VOL_SURFACE` | id | required |  | Its volatility surface: a SURFACE_ID of the market-data pack's equity-vol-surface kind (EQV-…). | `EQV-CSCA` (pattern `^EQV-`) | `equity-vol-surface` |
 | `DIVIDEND_CURVE` | id | required |  | Its dividend curve: a CURVE_ID of the market-data pack's dividend-curve kind (DIV-…). | `DIV-CSCA` (pattern `^DIV-`) | `dividend-curve` |
 | `EQUITY_INDEX` | id | optional |  | The index it belongs to, when one: an INDEX_ID of the market-data pack's equity-index kind (EQX-…). | `EQX-UKX` (pattern `^EQX-`) | `equity-index` |
+| `QUOTE_TIME` | timestamp | optional |  | When the source quoted this price, ISO-8601 UTC: what makes one live tick newer than another (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 8.3); absent in the end-of-day rows. | `2026-11-13T14:02:11Z` |  |
 
 **Nested `HISTORY[]`**
 
@@ -628,7 +635,7 @@ Index level with its largest constituents.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.equity-index`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/equity-index |
-| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
+| Live | order `QUOTE_TIME`; merge rows; overlay; absorb by-cutoff; validate strict; conflate 1s |
 | Worked example | [market-data/equity-index](../samples/market-data.md#equity-index) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -645,6 +652,7 @@ Index level with its largest constituents.
 | `HISTORY` | record list | required |  | The index's daily closes, oldest first: one object per business day. |  |  |
 | `EQUITY_VOL_SURFACE` | id | required |  | Its volatility surface: a SURFACE_ID of the market-data pack's equity-vol-surface kind (EQV-…). | `EQV-NDX` (pattern `^EQV-`) | `equity-vol-surface` |
 | `DIVIDEND_CURVE` | id | required |  | Its dividend curve: a CURVE_ID of the market-data pack's dividend-curve kind (DIV-…). | `DIV-NDX` (pattern `^DIV-`) | `dividend-curve` |
+| `QUOTE_TIME` | timestamp | optional |  | When the source quoted this price, ISO-8601 UTC: what makes one live tick newer than another (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 8.3); absent in the end-of-day rows. | `2026-11-13T14:02:11Z` |  |
 
 **Nested `CONSTITUENTS[]`**
 
@@ -704,7 +712,7 @@ Expected dividends by year (implied from dividend futures and forwards).
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.dividend-curve`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/dividend-curve |
-| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
+| Live | order `BUILT_AT`; whole rows; overlay; absorb by-cutoff; validate strict; conflate 5s |
 | Worked example | [market-data/dividend-curve](../samples/market-data.md#dividend-curve) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -717,6 +725,7 @@ Expected dividends by year (implied from dividend futures and forwards).
 | `POINTS` | record list | required |  | The projected dividends: one object per calendar year, earliest first (YEAR, and AMOUNT per share or index point in the underlier's currency). |  |  |
 | `UNDERLYING_EQUITY` | id | optional |  | The same underlier when it is a share: a TICKER of the market-data pack's equity kind (EQ-…). | `EQ-CSCA` (pattern `^EQ-`) | `equity` |
 | `UNDERLYING_INDEX` | id | optional |  | The same underlier when it is an index: an INDEX_ID of the market-data pack's equity-index kind (EQX-…). | `EQX-NDX` (pattern `^EQX-`) | `equity-index` |
+| `BUILT_AT` | timestamp | optional |  | When the source built this, ISO-8601 UTC: what makes one live build newer than another (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 8.3); absent in the end-of-day rows. | `2026-11-13T14:00:05Z` |  |
 
 **Nested `POINTS[]`**
 
@@ -766,7 +775,7 @@ Implied vols by expiry and moneyness.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.equity-vol-surface`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/equity-vol-surface |
-| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
+| Live | order `BUILT_AT`; whole rows; overlay; absorb by-cutoff; validate strict; conflate 30s |
 | Worked example | [market-data/equity-vol-surface](../samples/market-data.md#equity-vol-surface) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -780,6 +789,7 @@ Implied vols by expiry and moneyness.
 | `SKEW_1Y` | amount | required | vol points | The 1-year skew: the volatility at 90% moneyness minus the volatility at 110%, in volatility points. | `3.63` |  |
 | `GRID` | record list | required |  | The surface: one object per expiry, shortest first, with the volatilities at 80% to 120% moneyness. |  |  |
 | `MODEL` | text | required |  | The smile model and quoting of the surface (e.g. SVI, moneyness-quoted). | `SVI, moneyness-quoted` |  |
+| `BUILT_AT` | timestamp | optional |  | When the source built this, ISO-8601 UTC: what makes one live build newer than another (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 8.3); absent in the end-of-day rows. | `2026-11-13T14:00:05Z` |  |
 
 **Nested `GRID[]`**
 
@@ -828,7 +838,7 @@ CDS par spreads by tenor, recovery and implied default probabilities.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.credit-curve`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/credit-curve |
-| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
+| Live | order `BUILT_AT`; whole rows; overlay; absorb by-cutoff; validate strict; conflate 5s |
 | Worked example | [market-data/credit-curve](../samples/market-data.md#credit-curve) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -845,6 +855,7 @@ CDS par spreads by tenor, recovery and implied default probabilities.
 | `POINTS` | record list | required |  | The term structure: one object per CDS tenor, shortest first (6M to 10Y). |  |  |
 | `ISSUER` | id | required |  | The reference entity: an ISSUER_ID of the core pack's issuer kind (ISS-…). | `ISS-BUND` (pattern `^ISS-`) | `issuer` |
 | `CURRENCY` | text | required |  | The currency of the CDS contracts the curve is built from, ISO 4217. | `EUR`, `USD` |  |
+| `BUILT_AT` | timestamp | optional |  | When the source built this, ISO-8601 UTC: what makes one live build newer than another (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 8.3); absent in the end-of-day rows. | `2026-11-13T14:00:05Z` |  |
 
 **Nested `POINTS[]`**
 
@@ -897,7 +908,7 @@ Published CPI fixings (US CPI-U NSA, HICPxT, UK RPI…).
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.inflation-index`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/inflation-index |
-| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
+| Live | order `FIXED_AT`; merge rows; overlay; absorb by-cutoff; validate strict |
 | Worked example | [market-data/inflation-index](../samples/market-data.md#inflation-index) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -912,6 +923,7 @@ Published CPI fixings (US CPI-U NSA, HICPxT, UK RPI…).
 | `CURRENCY` | text | required |  | The currency of the economy the index measures, ISO 4217. | `EUR` |  |
 | `FIXINGS` | record list | required |  | The monthly index levels, latest month first: one object per month. |  |  |
 | `INFLATION_CURVE` | id | required |  | Its breakeven curve: a CURVE_ID of the market-data pack's inflation-curve kind (INFC-…). | `INFC-HICPX` (pattern `^INFC-`) | `inflation-curve` |
+| `FIXED_AT` | timestamp | optional |  | When the fixing was published, ISO-8601 UTC: what makes one live fixing newer than another (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 8.3); absent in the end-of-day rows. | `2026-11-13T11:00:00Z` |  |
 
 **Nested `FIXINGS[]`**
 
@@ -959,7 +971,7 @@ Zero-coupon breakevens by tenor, with monthly seasonality.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.inflation-curve`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/inflation-curve |
-| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
+| Live | order `BUILT_AT`; whole rows; overlay; absorb by-cutoff; validate strict; conflate 5s |
 | Worked example | [market-data/inflation-curve](../samples/market-data.md#inflation-curve) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -973,6 +985,7 @@ Zero-coupon breakevens by tenor, with monthly seasonality.
 | `POINTS` | record list | required |  | The breakeven curve: one object per tenor, shortest first (1Y to 30Y). |  |  |
 | `SEASONALITY` | record list | required |  | The monthly seasonal adjustments of the index: one object per calendar month, January first. |  |  |
 | `INFLATION_INDEX` | id | required |  | The same index, as a link: an INDEX_ID of the market-data pack's inflation-index kind (INF-…). | `INF-HICPX` (pattern `^INF-`) | `inflation-index` |
+| `BUILT_AT` | timestamp | optional |  | When the source built this, ISO-8601 UTC: what makes one live build newer than another (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 8.3); absent in the end-of-day rows. | `2026-11-13T14:00:05Z` |  |
 
 **Nested `POINTS[]`**
 
@@ -1027,7 +1040,7 @@ A traded commodity with its benchmark, unit and venue.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.commodity`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/commodity |
-| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
+| Live | order `QUOTE_TIME`; merge rows; overlay; absorb by-cutoff; validate strict; conflate 1s |
 | Worked example | [market-data/commodity](../samples/market-data.md#commodity) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -1044,6 +1057,7 @@ A traded commodity with its benchmark, unit and venue.
 | `SPEC` | record | required |  | The futures contract's specification: contract code, unit, exchange, settlement, listing cycle, tick size, trading hours. |  |  |
 | `COMMODITY_CURVE` | id | required |  | Its futures curve: a CURVE_ID of the market-data pack's commodity-curve kind (CMDC-…). | `CMDC-BRENT` (pattern `^CMDC-`) | `commodity-curve` |
 | `COMMODITY_VOL_SURFACE` | id | required |  | Its volatility surface: a SURFACE_ID of the market-data pack's commodity-vol-surface kind (CMDV-…). | `CMDV-BRENT` (pattern `^CMDV-`) | `commodity-vol-surface` |
+| `QUOTE_TIME` | timestamp | optional |  | When the source quoted this price, ISO-8601 UTC: what makes one live tick newer than another (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 8.3); absent in the end-of-day rows. | `2026-11-13T14:02:11Z` |  |
 
 **Nested `OHLC[]`**
 
@@ -1115,7 +1129,7 @@ Futures settlement prices by delivery month.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.commodity-curve`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/commodity-curve |
-| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
+| Live | order `BUILT_AT`; whole rows; overlay; absorb by-cutoff; validate strict; conflate 5s |
 | Worked example | [market-data/commodity-curve](../samples/market-data.md#commodity-curve) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -1130,6 +1144,7 @@ Futures settlement prices by delivery month.
 | `POINTS` | record list | required |  | The futures curve: one object per contract month, front month first (twelve months). |  |  |
 | `COMMODITY_REF` | id | required |  | The commodity: a COMMODITY_ID of the market-data pack's commodity kind (CMD-…). | `CMD-BRENT` (pattern `^CMD-`) | `commodity` |
 | `UNIT` | text | required |  | The price unit of the curve's points (e.g. USD/bbl, USD/MMBtu, USD/oz, USD/lb, USc/bu). | `USD/MMBtu`, `USD/bbl`, `USD/lb`, `USD/oz`, `USc/bu` |  |
+| `BUILT_AT` | timestamp | optional |  | When the source built this, ISO-8601 UTC: what makes one live build newer than another (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 8.3); absent in the end-of-day rows. | `2026-11-13T14:00:05Z` |  |
 
 **Nested `POINTS[]`**
 
@@ -1181,7 +1196,7 @@ Implied vols by delivery month and moneyness.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.commodity-vol-surface`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/commodity-vol-surface |
-| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
+| Live | order `BUILT_AT`; whole rows; overlay; absorb by-cutoff; validate strict; conflate 30s |
 | Worked example | [market-data/commodity-vol-surface](../samples/market-data.md#commodity-vol-surface) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -1192,6 +1207,7 @@ Implied vols by delivery month and moneyness.
 | `COMMODITY` | text | required |  | The commodity's name (Brent crude oil …). | `Brent crude oil` |  |
 | `ATM_FRONT` | amount | required | percent | The front month's at-the-money implied volatility, in percent a year. | `31.32` |  |
 | `GRID` | record list | required |  | The surface: one object per contract month, front first, with the volatilities at 90%, 100% and 110% moneyness. |  |  |
+| `BUILT_AT` | timestamp | optional |  | When the source built this, ISO-8601 UTC: what makes one live build newer than another (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 8.3); absent in the end-of-day rows. | `2026-11-13T14:00:05Z` |  |
 
 **Nested `GRID[]`**
 
@@ -1238,7 +1254,7 @@ Published overnight and term rate fixings (SOFR, €STR, SONIA…).
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.rate-fixing`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/rate-fixing |
-| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
+| Live | order `FIXED_AT`; merge rows; overlay; absorb by-cutoff; validate strict |
 | Worked example | [market-data/rate-fixing](../samples/market-data.md#rate-fixing) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -1252,6 +1268,7 @@ Published overnight and term rate fixings (SOFR, €STR, SONIA…).
 | `TENOR` | text | required |  | The index tenor (Overnight). | `Overnight` |  |
 | `CURRENCY` | text | required |  | The currency of the overnight rate, ISO 4217. | `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  |
 | `FIXINGS` | record list | required |  | The daily fixings, latest first: one object per publication day. |  |  |
+| `FIXED_AT` | timestamp | optional |  | When the fixing was published, ISO-8601 UTC: what makes one live fixing newer than another (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 8.3); absent in the end-of-day rows. | `2026-11-13T11:00:00Z` |  |
 
 **Nested `FIXINGS[]`**
 
@@ -1302,7 +1319,7 @@ A listed bond: terms, price, yield, spreads and analytics.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.bond`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/bond |
-| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
+| Live | order `QUOTE_TIME`; merge rows; overlay; absorb by-cutoff; validate strict; conflate 1s |
 | Worked example | [market-data/bond](../samples/market-data.md#bond) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -1324,6 +1341,7 @@ A listed bond: terms, price, yield, spreads and analytics.
 | `HISTORY` | record list | required |  | The bond's daily price history, oldest first: one object per business day. |  |  |
 | `ISSUER` | id | required |  | The issuer: an ISSUER_ID of the core pack's issuer kind (ISS-…). | `ISS-VERDANT` (pattern `^ISS-`) | `issuer` |
 | `BENCHMARK_CURVE` | id | required |  | The government curve the bond is spread over: a CURVE_ID of the market-data pack's ir-curve kind (CRV-<ccy>-GOVT). | `CRV-USD-GOVT` (pattern `^CRV-`) | `ir-curve` |
+| `QUOTE_TIME` | timestamp | optional |  | When the source quoted this price, ISO-8601 UTC: what makes one live tick newer than another (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 8.3); absent in the end-of-day rows. | `2026-11-13T14:02:11Z` |  |
 
 **Nested `TERMS`**
 
@@ -1395,7 +1413,7 @@ A correlation set: the factors whose pairwise correlations basket, quanto and sp
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.correlation-matrix`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/correlation-matrix |
-| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
+| Live | no feed (`allowed: false`) |
 | Worked example | [market-data/correlation-matrix](../samples/market-data.md#correlation-matrix) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**

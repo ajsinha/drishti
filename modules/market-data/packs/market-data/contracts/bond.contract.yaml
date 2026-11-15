@@ -36,6 +36,13 @@ binding-hint:
   lake-table: market.bond
   test-data:
   - data/testdata/market-data/bond
+live:                                    # what a live message means for this kind (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 8)
+  order: [QUOTE_TIME]                     # newer: a later quote
+  changed-at: QUOTE_TIME
+  partial: merge                         # a tick carries the price fields; the rest stays from the base
+  apply: overlay
+  conflate: 1s                           # the latest per key a second reaches the screens
+  absorb: by-cutoff                      # the close replaces the day's ticks
 fields:
 - name: ISIN
   type: id
@@ -119,6 +126,11 @@ fields:
   example: CRV-USD-GOVT
   pattern: ^CRV-
   link: ir-curve
+- name: QUOTE_TIME
+  type: timestamp
+  presence: optional
+  description: 'When the source quoted this price, ISO-8601 UTC: what makes one live tick newer than another (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 8.3); absent in the end-of-day rows.'
+  example: '2026-11-13T14:02:11Z'
 nested:
   TERMS:
   - name: CURRENCY

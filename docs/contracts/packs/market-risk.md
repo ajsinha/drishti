@@ -32,7 +32,7 @@ One section per command of the pack: the shape of its data, how it is stored and
 | [SPV](#spv-scenario-pvs-of-a-position-or-trade-one-pv-per-scenario-its-currency-scenario-pv) | `scenario-pv` | input | active | 40 | 5 |
 | [FXS](#fxs-scenario-fx-of-a-currency-one-rate-per-scenario-fx-scenario) | `fx-scenario` | input | active | 9 | 3 |
 | [SSET](#sset-scenario-set-scenario-set) | `scenario-set` | input | active | 13 | 3 |
-| [VLIM](#vlim-var-limit-of-a-hierarchy-node-var-limit) | `var-limit` | input | active | 10 | 0 |
+| [VLIM](#vlim-var-limit-of-a-hierarchy-node-var-limit) | `var-limit` | input | active | 11 | 0 |
 | [DPNL](#dpnl-desk-pl-actual-and-hypothetical-daily-desk-pnl) | `desk-pnl` | input | active | 10 | 0 |
 | [PNLH](#pnlh-long-history-pl-of-a-hierarchy-node-stress-window-selection-pnl-history) | `pnl-history` | input | active | 16 | 0 |
 | [SENS](#sens-position-sensitivities-position-sensitivity) | `position-sensitivity` | input | active | 28 | 1 |
@@ -892,7 +892,7 @@ The VaR limit of one node of a hierarchy, keyed by the hierarchy and the node's 
 | Binding hint | lake table `risk.var-limit`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `LIMIT_ID`, `HIERARCHY`, `NODE_ID`, `LIMIT_VAR`, `CURRENCY` |
 | Test data | data/testdata/market-risk/var-limit |
-| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
+| Live | order `UPDATED_AT`; whole rows; overlay; absorb reset; validate strict; effective at-once |
 | Worked example | [market-risk/var-limit](../samples/market-risk.md#var-limit) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -909,6 +909,7 @@ The VaR limit of one node of a hierarchy, keyed by the hierarchy and the node's 
 | `BUSINESS_DATE` | date | required |  | The close of business the limit applies to (YYYY-MM-DD). | `2026-09-30` |  |
 | `VALID_FROM` | date | required |  | The first date the limit is valid (YYYY-MM-DD). Informational. | `2026-01-02` |  |
 | `VALID_TO` | date | optional |  | The last date the limit is valid (YYYY-MM-DD); null while it is open-ended. Informational. |  |  |
+| `UPDATED_AT` | timestamp | optional |  | When the source last changed this record, ISO-8601 UTC: what makes one live message newer than another (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 8.6); absent in the end-of-day rows. | `2026-11-13T10:42:03Z` |  |
 
 **Validation**
 

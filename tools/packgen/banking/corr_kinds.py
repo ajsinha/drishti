@@ -64,6 +64,20 @@ CONNECTORS["equity-analytics"] = {
     "cache": {"results": 500, "ttl": "1h"},
     "limits": {"timeout": "30s", "wait": "5s", "max-inflight-per-user": 4},
 }
+#: the market kinds a live feed may change (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 8.3): every lake table of market-store but
+#: correlation-matrix (an end-of-day estimate, live.allowed false); each contract's live: block says how (order, merge or whole, conflation)
+LIVE_KINDS = ["fx-spot", "equity", "equity-index", "commodity", "bond", "rate-fixing", "inflation-index", "ir-curve", "repo-curve",
+              "fx-forward-curve", "credit-curve", "dividend-curve", "inflation-curve", "commodity-curve", "fx-vol-surface", "equity-vol-surface",
+              "commodity-vol-surface", "cap-vol-surface", "ir-vol-cube"]
+LIVE_TOPIC = "drishti.market."          # a site's own topic names: its connector file's topics and kind.<topic> (DATA_GUIDE.md section 9)
+CONNECTORS["market-store-live"] = {
+    "plugin": "kafka", "companion-of": "market-store", "enabled": "${DRISHTI_MARKET_STREAM:false}",
+    "description": "Intraday market data over the lake's close: one topic per kind (drishti.market.<kind>), each message the kind's row or its "
+                   "changed price fields; the latest per key reaches the screens once a period (the contract's conflate)",
+    "kinds": LIVE_KINDS,
+    "settings": dict({"broker": "default", "topics": ",".join(LIVE_TOPIC + k for k in LIVE_KINDS), "stale-after": "${DRISHTI_MARKET_STALE_AFTER:5m}"},
+                     **{"kind." + LIVE_TOPIC + k: k for k in LIVE_KINDS}),
+}
 EXAMPLES = [("CORR CORR-EU-EQ", "European equities · correlations computed from the factors' price history (window and estimator on the page)"),
             ("CORRC CORR-G10FX~estimator=ledoit-wolf", "The computed kind itself: G10 FX correlations, Ledoit-Wolf shrinkage"),
             ("EQB EQ-NVTK", "Novatek's beta against the Nasdaq-100, computed from both price histories")]

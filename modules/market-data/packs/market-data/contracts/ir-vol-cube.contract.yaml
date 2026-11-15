@@ -36,6 +36,14 @@ binding-hint:
   lake-table: market.ir-vol-cube
   test-data:
   - data/testdata/market-data/ir-vol-cube
+live:                                    # what a live message means for this kind (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 8)
+  order: [BUILT_AT]
+  changed-at: BUILT_AT
+  partial: whole
+  apply: overlay
+  conflate: 30s
+  max-message-kb: 8192                   # a surface or cube can be megabytes
+  absorb: by-cutoff
 fields:
 - name: CUBE_ID
   type: id
@@ -69,6 +77,11 @@ fields:
   type: record list
   presence: required
   description: 'The at-the-money swaption grid: one object per option expiry, shortest first, with a column per underlying swap tenor.'
+- name: BUILT_AT
+  type: timestamp
+  presence: optional
+  description: 'When the source built this, ISO-8601 UTC: what makes one live build newer than another (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 8.3); absent in the end-of-day rows.'
+  example: '2026-11-13T14:00:05Z'
 nested:
   GRID[]:
   - name: EXPIRY

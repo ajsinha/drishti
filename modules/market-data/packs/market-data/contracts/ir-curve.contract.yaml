@@ -36,6 +36,13 @@ binding-hint:
   lake-table: market.ir-curve
   test-data:
   - data/testdata/market-data/ir-curve
+live:                                    # what a live message means for this kind (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 8)
+  order: [BUILT_AT]                         # newer: a later build
+  changed-at: BUILT_AT
+  partial: whole                         # a curve is consistent only as a whole
+  apply: overlay
+  conflate: 5s
+  absorb: by-cutoff
 fields:
 - name: CURVE_ID
   type: id

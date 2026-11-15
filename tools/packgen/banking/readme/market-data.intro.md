@@ -73,6 +73,15 @@ The market data the trading and risk packs price with: interest-rate, repo, FX-f
 curves; FX, cap, swaption, equity and commodity volatility surfaces; FX spots, equities, equity indexes, commodities, bonds, rate
 fixings, inflation indexes and a correlation matrix. Products select their curves and surfaces by the ids defined here.
 
+**Intraday.** The lake holds the close; the live companion `market-store-live` (`companion-of: market-store`, off until
+`DRISHTI_MARKET_STREAM=true`, the broker named `default`) carries the day's changes over it from one Kafka topic per kind,
+`drishti.market.<kind>`, for every kind but `correlation-matrix` (an end-of-day estimate). Each contract's `live:` block says how: a price
+kind (`fx-spot`, `equity`, `equity-index`, `commodity`, `bond`) takes ticks of its changed fields ordered by `QUOTE_TIME`, at most one a
+second reaching the screens; a fixing one new point by `FIXED_AT`; a curve or a surface only whole, by `BUILT_AT`, at most one every 5 or
+30 seconds. The close's load replaces the day's ticks (`absorb: by-cutoff`). A live quote moves what a record page and a market monitor
+show, never VaR, exposure or P&L, which stay on the close. `tools/samplegen/market_stream.py` publishes a demo feed
+([LIVE_CONNECTORS_DESIGN.md section 8.3](../../../docs/architecture/LIVE_CONNECTORS_DESIGN.md#83-market-data-the-20-lake-tables-of-the-market-data-pack)).
+
 ## Data sources and licences
 
 The committed samples are synthetic. Five feed connectors (off by default) read the same kinds live from official public sources;

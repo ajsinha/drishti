@@ -36,6 +36,13 @@ binding-hint:
   lake-table: market.inflation-curve
   test-data:
   - data/testdata/market-data/inflation-curve
+live:                                    # what a live message means for this kind (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 8)
+  order: [BUILT_AT]                         # newer: a later build
+  changed-at: BUILT_AT
+  partial: whole                         # a curve is consistent only as a whole
+  apply: overlay
+  conflate: 5s
+  absorb: by-cutoff
 fields:
 - name: CURVE_ID
   type: id
@@ -75,6 +82,11 @@ fields:
   example: INF-HICPX
   pattern: ^INF-
   link: inflation-index
+- name: BUILT_AT
+  type: timestamp
+  presence: optional
+  description: 'When the source built this, ISO-8601 UTC: what makes one live build newer than another (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 8.3); absent in the end-of-day rows.'
+  example: '2026-11-13T14:00:05Z'
 nested:
   POINTS[]:
   - name: TENOR

@@ -37,6 +37,8 @@ binding-hint:
   lake-table: market.correlation-matrix
   test-data:
   - data/testdata/market-data/correlation-matrix
+live:                                    # what a live message means for this kind (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 8)
+  allowed: false                         # an end-of-day estimate: never fed live
 fields:
 - name: MATRIX_ID
   type: id

@@ -21,7 +21,8 @@ the kernel's live intake and live state, Kafka on it) and L3 (the router's merge
 defaults from the contract, the six trade templates) L4 (business dates and the roll, reconcile at a load, checkpoints, the reconcile
 record) and L5 (the live lander; scenario PVs and P&L vectors on it) and L6 (ActiveMQ and RabbitMQ as transports over a durable live
 state; `apply: both`; the lake loader's landing of a kind no engine owns) and L7 (the feed states in one list of words, `/admin/live`,
-the Live column and drawer of Data bindings, Health's Live feeds, the alerts, `drishti.py live`, the live mark and the row dot). Nothing else in this
+the Live column and drawer of Data bindings, Health's Live feeds, the alerts, `drishti.py live`, the live mark and the row dot) and L8
+(the market, netting, collateral and limit contracts' `live:` blocks, `market-store-live`, conflation, the demo publishers). Nothing else in this
 document is built unless a section says "today".** It answers the product owner's request: *"for all data connectors there can be a
 live connector, generally speaking."*
 
@@ -563,7 +564,8 @@ What changes for a site: nothing visible. What changes in files: section 10.
 
 ### 8.2 Positions
 
-`position` is computed (derived by the VaR engine, never delivered), so it takes no companion. With the engine at `live: overlay` a
+`position` is computed (derived by the VaR engine, never delivered), so it takes no companion (built, L8: its contract says
+`live: {allowed: false}`). With the engine at `live: overlay` a
 position's quantity and the trades that build it follow the trade feed; its VaR follows landed PVs. `POS <GO>` ticks through the
 same live set as any kind. **Positions are derived only** (decision Q5): `position`'s contract says `live.allowed: false`, and no
 binding may give it a lake of delivered positions or a companion.
@@ -581,7 +583,13 @@ history in the lake (decision Q7: that history is the publisher's job first).
 | Volatility | `fx-vol-surface`, `equity-vol-surface`, `commodity-vol-surface`, `cap-vol-surface`, `ir-vol-cube` | `SURFACE_ID`, `CUBE_ID` | a build time | `whole` | 30 s | large rows (up to megabytes): `max-message-kb` raised for these kinds |
 | Correlation | `correlation-matrix` | `MATRIX_ID` | n/a | n/a | n/a | `live.allowed: false`: an end-of-day estimate |
 
-`absorb: by-cutoff` for all of them (the close's snapshot replaces the day's ticks). The computed `correlation-result` and
+`absorb: by-cutoff` for all of them (the close's snapshot replaces the day's ticks).
+
+Built (L8): the 19 contracts' `live:` blocks and their order fields (`QUOTE_TIME` on the price kinds, `FIXED_AT` on the fixings,
+`BUILT_AT` on every curve and surface; optional, absent in the close's rows), `correlation-matrix` at `allowed: false`, the companion
+`market-store-live` (one topic per kind, `drishti.market.<kind>`, `DRISHTI_MARKET_STREAM`). Conflation is at the views: the live state
+takes every message at once (a queue's durability is unchanged) and each open view gets the latest per key once a period (counted
+`conflated`). `tools/samplegen/market_stream.py` publishes ticks of the price kinds and whole curves and surfaces. The computed `correlation-result` and
 `equity-beta` take no feed. A live quote changes what a record page and a market monitor show; it does **not** move VaR, exposure or
 P&L (decision Q6, section 7.5).
 
@@ -617,12 +625,21 @@ One rule is particular to them: **`effective:`**. A change to a book's desk alte
 | `at-once` | record pages, blotters and pick lists show the change at once; a limit change moves limit bars at once |
 | `next-load` (the default for books, desks and anything a hierarchy is built from; decision Q10) | the change is shown on the record with *effective from the next load*; trees, pivots and VaR scopes keep the day's structure |
 
+Built (L8): `var-limit` and `credit-limit` take whole rows ordered by `UPDATED_AT`, `absorb: reset`, `effective: at-once`. The packs
+have no stored `counterparty`, `legal-entity`, `book`, `desk` or `trader` kind today (they are attributes of the trades); a pack that adds
+one writes `effective: next-load` in its contract. Trees, pivots and VaR scopes read the lake's day today, so `next-load` holds by
+construction; the BI live read (L9) leaves a `next-load` kind at its snapshot.
+
 ### 8.6 Netting sets and collateral
 
 `netting-set`, `nset-mtm`, `cpty-mtm`, `collateral-balance`, `margin-call`, `credit-limit`: whole rows keyed by their ids,
 `order:` the source's update time, `apply: overlay`, `absorb: by-cutoff`. Today's live exposure model
 (`config/tables/banking/live_exposure_netting.table.yaml`) reads them through the live read instead of its own table. EE and PFE stay
 the exposure engine's official result (section 7.5); the page already says so.
+
+Built (L8): the `live:` blocks of `netting-set`, `collateral-balance` and `margin-call` (whole rows by `UPDATED_AT`, `absorb: by-cutoff`).
+`nset-mtm` and `cpty-mtm` are computed kinds today: live by derivation, never fed. The live exposure table moves onto the live read with
+the BI live read (L9), which deletes its own copy.
 
 ### 8.7 Other modules
 
@@ -742,7 +759,7 @@ in; L6 to L10 use it.
 | **L5** (built) | The live lander; scenario PVs and P&L vectors on it; parity on Delta, Iceberg and files | L | `VarPvStreamPlugin`, `VarPvWindow`, `pv-updates`, `drishti.var.intraday.kafka.*` | VAR_GUIDE 8.4, CONFIGURATION (generated) |
 | **L6** (built) | ActiveMQ and RabbitMQ on the transport SPI; `apply: both`; the lake loader's landing | M | `MessageStateSource`, `state.*` | the two READMEs |
 | **L7** (built) | Admin (option B: the Live column and drawer in Data bindings; option A's grid read-only under Health), Health states and measures, alerts, the CLI, the live mark's words on every page | L | the PV stream's admin endpoints (kept one release, a view of `/admin/live`) | ADMIN_GUIDE, OPERATIONS_GUIDE, CLI_REFERENCE, API_REFERENCE |
-| **L8** | Kinds: market data (20 contracts' `live:` blocks, quote-time fields, the companion, conflation), netting sets and collateral, reference data with `effective:`, derived positions at `live: overlay`; demo publishers in `tools/samplegen` | L | the live exposure table's own copy | the packs' READMEs and guides, a tutorial (feed → blotter → load → reconcile) |
+| **L8** (built) | Kinds: market data (20 contracts' `live:` blocks, quote-time fields, the companion, conflation), netting sets and collateral, reference data with `effective:`, derived positions at `live: overlay`; demo publishers in `tools/samplegen` | L | the live exposure table's own copy | the packs' READMEs and guides, a tutorial (feed → blotter → load → reconcile) |
 | **L9** | BI and pivot: the live read for `mode: live`, the snapshot chip, incremental additive measures | M (L with incremental) | BI's live table copy | BI guides |
 | **L10** | Cluster: the singleton feed part on the i5 lease, the relay of a singleton's state, fail-over tests; an engine's `live:` input reaches it through the i5 **engine lookup by name** (an engine local or remote, placed per engine: IMPLEMENTATION_PLAN, *i5, engines anywhere*), never a node of its own choosing | M | | CLUSTER_GUIDE |
 

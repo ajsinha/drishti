@@ -186,6 +186,7 @@ public final class LiveSource implements SourcePlugin {
         landings = ctx.scheduler().scheduleWithFixedDelay(() -> {
             try {
                 f.landIfDue();                                         // a window due (its age, its keys, "apply now") becomes a batch
+                f.flushConflated(Instant.now());                       // conflated kinds: the latest per key a period reaches the views
             } catch (RuntimeException e) {
                 LOG.log(System.Logger.Level.WARNING, name + ": a landing failed: " + e.getMessage());
             }

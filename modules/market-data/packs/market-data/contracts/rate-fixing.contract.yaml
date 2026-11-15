@@ -36,6 +36,12 @@ binding-hint:
   lake-table: market.rate-fixing
   test-data:
   - data/testdata/market-data/rate-fixing
+live:                                    # what a live message means for this kind (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 8)
+  order: [FIXED_AT]
+  changed-at: FIXED_AT
+  partial: merge                         # one new point
+  apply: overlay
+  absorb: by-cutoff
 fields:
 - name: INDEX_ID
   type: id
@@ -97,6 +103,11 @@ fields:
   type: record list
   presence: required
   description: 'The daily fixings, latest first: one object per publication day.'
+- name: FIXED_AT
+  type: timestamp
+  presence: optional
+  description: 'When the fixing was published, ISO-8601 UTC: what makes one live fixing newer than another (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 8.3); absent in the end-of-day rows.'
+  example: '2026-11-13T11:00:00Z'
 nested:
   FIXINGS[]:
   - name: DATE

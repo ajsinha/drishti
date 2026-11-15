@@ -36,6 +36,13 @@ binding-hint:
   lake-table: credit.credit-limit
   test-data:
   - data/testdata/counterparty-risk/credit-limit
+live:                                    # what a live message means for this kind (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 8)
+  order: [UPDATED_AT]                     # newer: a later change at the source
+  changed-at: UPDATED_AT
+  partial: whole
+  apply: overlay
+  absorb: reset
+  effective: at-once
 fields:
 - name: LIMIT_ID
   type: id
@@ -100,6 +107,11 @@ fields:
   presence: required
   description: 'The date the limit is next due for credit review (YYYY-MM-DD).'
   example: '2027-03-19'
+- name: UPDATED_AT
+  type: timestamp
+  presence: optional
+  description: 'When the source last changed this record, ISO-8601 UTC: what makes one live message newer than another (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 8.6); absent in the end-of-day rows.'
+  example: '2026-11-13T10:42:03Z'
 nested:
   BUCKETS[]:
   - name: BUCKET

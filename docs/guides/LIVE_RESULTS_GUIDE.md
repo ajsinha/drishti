@@ -368,29 +368,36 @@ messaging connector) and gives the connector the `adjust-stock` command under `w
 period the lake's retention names, one partition at a time; the file store prunes its dated folders. The three behave alike
 ([DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md)).
 
-## 13. Tutorial: a Kafka feed, a ticking blotter, an edit with four eyes, written back, Pivot
+## 13. Tutorial: a Kafka feed, a ticking blotter, an edit with four eyes, written back, the next load, Pivot
 
 The worked example is the trading module's trade blotter on the demo data. Each step says what you do in the UI, from a terminal (CLI)
 and in the file (YAML). `$B` is the server's `/api/v1`, `$DRISHTI_TOKEN` a token of a trader.
 
-**Step 1 · Bind the feed.** *YAML*, `config/bindings.yaml`: the kind reads its snapshot from the lake and its changes from Kafka.
+**Step 1 · Switch the feed on.** Each source module ships its data connector and its live companion (`trade-endur` and
+`trade-endur-live`, `companion-of: trade-endur`, reading `drishti.trading.endur.trades` from the broker named `default`). *UI*: Admin →
+Data bindings, row `trade`, **Live…**: switch `trade-endur-live` on, say why, **Propose change**; a second administrator approves.
+*CLI*: `drishti.py live on trade --connector trade-endur-live --reason "Endur intraday"`, then `drishti.py approvals list`. *YAML*,
+`config/bindings.yaml` after the approval (the companion also needs its switch, `DRISHTI_STREAM_ENDUR=true`, and the broker's address,
+`[broker.default] bootstrap-servers=` in the settings file):
 
 ```yaml
 bindings:
   trade:
     read: [trade-endur, trade-murex]
     union: true
-    live: trade-kafka
+    live: [trade-endur-live]
 ```
 
-*UI*: Admin shows the kind with its live source. *CLI*: `drishti.py module list | grep trading` shows the module on.
+Start a demo feed: `uv run --with kafka-python python tools/samplegen/stream.py --system ENDUR --rate 5` publishes Endur's sample trades
+and amends five a second. `drishti.py live list` then says `trade-endur-live  LIVE`.
 
-**Step 2 · Watch it tick.** *UI*: open **Trading › Trade blotter**; the live mark reads `LIVE`. Publish an amended trade to the topic and its row
-turns amber and its changed cells flash. *CLI*:
+**Step 2 · Watch it tick.** *UI*: open **Trading › Trade blotter**; the live mark reads `LIVE · base 13 Nov close + 412 changes · 2 s ago`. Publish an
+amended trade to the topic and its row turns amber, its changed cells flash and its key carries the row dot (changed today by a feed). *CLI*:
 
 ```bash
 curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" "$B/live/trade/rows?limit=3" | jq '{total, live, rows: [.rows[].id]}'
-echo '{"TRADE_ID":"MX-20004163","TRADE_VERSION":8,"PRICE":101.25}' | kcat -P -b $BROKER -t trades.v1 -k MX-20004163
+echo '{"TRADE_ID":"EN-1002344","SOURCE_SYSTEM":"ENDUR","TRADE_VERSION":8,"PRICE":101.25, ...the whole trade...}' \
+  | kcat -P -b $BROKER -t drishti.trading.endur.trades -k EN-1002344
 ```
 
 *YAML*: nothing more: the declaration's `columns:` and `sort:` decide what you see.
@@ -413,7 +420,16 @@ requester cannot (`self-approval: false`). *CLI*: the approvals commands of [APP
 source's record comes back through the feed, and **History** in the panel lists who, when, why. *CLI*: the same guide lists a change's state.
 *YAML*: the connector's `writes: amend-trade:` block (section 8).
 
-**Step 6 · Pivot ›.** *UI*: group the grid by **Book** (the subtotals tick), then press **Pivot ›**: the Pivot opens on the same kind with the
+**Step 6 · The next load absorbs the day.** When the evening's lake load of `trade` is ready, each live connector of the kind
+reconciles its rows of that date against it by the contract's `live.absorb` (`by-order` for trades: a live row the load holds at the
+same or a newer `TRADE_VERSION` gives way to the lake's; one changed after the load's cut-off is carried; one the load does not hold,
+changed before the cut-off, is an orphan, dropped and listed). *UI*: Admin → Health, **Live feeds**: the feed's line reads
+`load of 2026-11-13 (trade): 1800 absorbed, 40 carried, 0 orphans`; the blotter's mark starts again from the new base. *CLI*:
+`drishti.py live show trade`; the record: `<data folder>/live/reconcile/trade/2026-11-13.jsonl` (the counts, then the first 100
+orphans); the audit log's `live-reconcile` entry. *YAML*: `live.absorb` in `trade.contract.yaml`; the alert `live-reconcile-orphans` in
+`config/alerts/platform-alerts.yaml` says when a load leaves more than 100 orphans.
+
+**Step 7 · Pivot ›.** *UI*: group the grid by **Book** (the subtotals tick), then press **Pivot ›**: the Pivot opens on the same kind with the
 filters, the grouping as rows and the quantities as sums, live while the trades are. *CLI*: none; the Pivot is a console page.
 
 Pictures for the steps are listed in [section 14](#14-screenshots-to-add).
