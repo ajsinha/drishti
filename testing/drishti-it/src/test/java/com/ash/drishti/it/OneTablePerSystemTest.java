@@ -59,12 +59,7 @@ class OneTablePerSystemTest {
     Path tmp;
 
     private static Path repo() {
-        Path p = Path.of("").toAbsolutePath();
-        while (p != null && !Files.isDirectory(p.resolve("modules/source-swapone"))) {
-            p = p.getParent();
-        }
-        assertThat(p).as("the repository root").isNotNull();
-        return p;
+        return Path.of(com.ash.drishti.testroots.TestRoots.repo());   // absolute, from drishti.repo.root (never the working folder)
     }
 
     private static void copy(Path from, Path to) throws Exception {
