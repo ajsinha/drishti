@@ -2478,7 +2478,8 @@ deployed over a shipped one in an earlier release is treated the same way: the s
    `connectors/examples/` are examples to copy and are not templates. Two templates of one name: neither is used (DRS-1045).
 2. **Site file** `config/connectors/<name>.yaml`, merged over the template key by key (a setting's dotted path is its key:
    `settings.set.SOURCE_SYSTEM`). **Any key may be changed, the plugin included, and every other key is still inherited**; a key set
-   to `null` removes the inherited one. With no template of that name the file is a complete **site connector** and must name its
+   to `null` removes the inherited one. Over a template that names a lake, `settings.root` alone keeps the lake (its tables are read
+   under that root); with `domain`, `table.<kind>` or `layout.<kind>` it is the older form and the lake keys are dropped. With no template of that name the file is a complete **site connector** and must name its
    plugin.
 3. **Secrets**: `${VAR}` and `file:` references, resolved when the connector starts. A template never holds one.
 
