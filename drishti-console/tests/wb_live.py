@@ -127,8 +127,12 @@ def live_auth_console(tmp_path_factory):
 
 
 #: what a server writes while it only serves reads (its log, its temp and cache folders, the VaR engine's hot files and the official
-#: capture it makes of the newest date at start, from the lake it reads): a shared server's data folder is compared without these (TEST_HARNESS.md, "Shared read-only servers")
-DERIVED = re.compile(r"(^|/)(server\.log|jvm-tmp|tmp|logs|dumps|var-hot|var/hot|var/official|ccr/official|cache|caches|diskcache)(/|$)|\.(lock|log|tmp|pid)$")
+#: capture it makes of the newest date at start, from the lake it reads, now kept in the file store with its sequence; the audit of the
+#: reads; the derived trade pages; the personal BI workspace made on a person's first visit): a shared server's data folder is compared
+#: without these (TEST_HARNESS.md, "Shared read-only servers")
+DERIVED = re.compile(r"(^|/)(server\.log|jvm-tmp|tmp|logs|dumps|var-hot|var/hot|var/official|ccr/official|cache|caches|diskcache|derived"
+                     r"|fstore/items/var/captures(-seq)?|fstore/items/audit|fstore/items/audit-heads|fstore/items/bi/workspaces)(/|$)"
+                     r"|\.(lock|log|tmp|pid)$")
 
 
 def fingerprint(work: Path) -> dict[str, tuple[int, int]]:
