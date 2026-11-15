@@ -562,6 +562,23 @@ def _distribution_modules(s: Settings, found: dict[str, Module]) -> set[str] | N
     return out
 
 
+def _default_enabled(s: Settings, layout: Layout) -> list[str] | None:
+    """The packs that load when ``drishti.packs.enabled`` is unset or ``default``, as the server decides (drishti-packs
+    ``PackPaths.enabled``): a named distribution's (every pack of its modules: None here, the modules on decide); else the default list
+    (``config/packs/default-packs.yaml``, by module): a pack a module lists but the default list leaves out (US equities) is AVAILABLE,
+    not loaded, on the console as on the server."""
+    if _distribution_modules(s, find_modules(layout)) is not None:
+        return None
+    f = s.kernel_dir.parent / "default-packs.yaml"
+    try:
+        packs = (_yaml(f) or {}).get("packs") if f.is_file() else None
+    except (OSError, ValueError, yaml.YAMLError):
+        return None
+    groups = packs.values() if isinstance(packs, dict) else [packs] if isinstance(packs, list) else []
+    out = [str(p).strip() for g in groups for p in (g or []) if str(p).strip()]
+    return list(dict.fromkeys(out)) or None
+
+
 def active_modules(s: Settings, found: dict[str, Module] | None = None) -> dict[str, str]:
     """The offline decision of what is on (the twin of the access registry, licence not evaluated): every module found, by id ->
     '' when on, else the reason. A setting (``DRISHTI_MODULES_<ID>_ENABLED``) wins; else a module the distribution does not carry is
@@ -629,6 +646,8 @@ def build(s: Settings | None = None, modules: Iterable[str] | str | None = None,
         active = lambda m: m in ids                                  # noqa: E731
     en = s.enabled if enabled is None else enabled
     names = [x.strip() for x in en.split(",")] if isinstance(en, str) else list(en)
+    if not [n for n in names if n and n != "default"]:              # unset or "default": as the server (PackPaths.enabled)
+        names = _default_enabled(s, layout) or []
     r = resolve(layout, active, names if [n for n in names if n] else None)
     r.settings = s
     r.reasons = {m: (reasons.get(m) or ("" if active(m) else "off")) for m in r.modules}
