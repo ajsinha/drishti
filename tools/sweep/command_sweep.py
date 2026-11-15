@@ -64,9 +64,12 @@ PARKED = {"XRUN XR-2026-09-30-01": "parked until the CCR engine is built (owner 
                                    "built --as-of holds XR-<that date>-01",
           "XPATH XR-2026-09-30-01~CLY-3000280~0": "parked until the CCR engine is built (owner 2026-11-15), with XRUN"}
 #: functions the owner parked as a whole: a run of theirs that fails is "parked" with the reason (a pass stays a pass)
-PARKED_FUNCTIONS = {"STR": "parked: stress testing out of i4 scope (owner 2026-11-15)",
-                    "SSPNL": "parked: stress testing out of i4 scope (owner 2026-11-15)",
+PARKED_FUNCTIONS = {"STR": "parked: FRTB/stress out of i4 scope (owner 2026-11-15)",
+                    "SSPNL": "parked: FRTB/stress out of i4 scope (owner 2026-11-15)",
                     "TRACK": "parked: public US equities data, not the owner's flows (owner 2026-11-15)",
+                    "FRSA BANK": "parked: FRTB/stress out of i4 scope (owner 2026-11-15)",
+                    "PLAY FRTB EXAMPLE": "parked: FRTB/stress out of i4 scope (owner 2026-11-15)",
+                    "FRTB": "parked: FRTB/stress out of i4 scope (owner 2026-11-15)",
                     "XOFC": "parked until the CCR engine is built (owner 2026-11-15): test stacks start with the official exposure capture off"}
 RESERVED = ["BI", "RUPAKA", "FORM", "FUNC", "WHAT", "DATAMAP", "DATA", "EXPORT", "PIVOT"]
 ADMIN_PAGES = ["users", "roles", "packs", "commands", "tokens", "access", "connectors", "artifacts", "ai", "loads", "lakes", "collab",
