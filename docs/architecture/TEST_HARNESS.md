@@ -246,7 +246,6 @@ gone. The parked tests:
 | `test_bi_reports_cross_browser.py` | all (8) | the same |
 | `test_python_runtime_answers.py` | all (2) | the same |
 | `test_expression_recipes.py` | every recipe on the demo lake (1 of 2) | the same |
-| `test_release_from_other_folder.py` | all (3) | the release builds its own lake from another folder |
 | `test_var_explorer_browser.py` | the six over the trade-grain date (`trade_stack`) | a trade-grain morning written into a lake |
 | `test_var_currency_browser.py` | a trade page's currency (1 of 4) | the same |
 
@@ -568,18 +567,18 @@ The report is `data/sweep/api-sweep-<stamp>.md` and `.jsonl` (not committed).
 Relative paths hurt more than once, so every full drill proves the release works from anywhere: the drill's **`anywhere`** lane
 (`tools/drill.sh`, `release_anywhere`; `--lanes anywhere` runs it alone) runs `drishti-console/tests/test_release_from_other_folder.py`. It is a
 release blocker: a failure fails the drill, and `--fix` runs it again whenever the commits touch `bin/`, the tools, the kernel or anything the
-server reads. It is not in the gate (a lake load takes minutes).
+server reads. It is not in the gate (three server starts take minutes).
 
 - **The install**: `git archive HEAD` unpacked into a scratch folder on the disk (`data/tmp/anywhere-*`, never `/tmp`, which is memory on a
   build machine) plus the gate's server jar, as the deployment guide makes the release ZIP.
-- **The lake**: the VaR kinds, the desk/book/entity references and the Murex and Endur trades, loaded with the **Java loader** by the install's
-  own `tools/drishti.py lake demo --engine java`, run from the other folder; cached per hash of the sources like the drill's other lakes
-  (about 5 minutes the first time, seconds after).
+- **The lake**: the ONE shared test lake (section 3.12), read only, its absolute path in the lake cache (`DRISHTI_LAKE_CACHE`) given to
+  `--lake-root`; the install builds no lake. The server's state (its VaR hot folder, the official VaR and exposure roots) is in its own
+  scratch data folder.
 - **The server**: the install's `bin/start-server.sh --background`, its process folder and `--workdir` both a different scratch folder, the demo
   off, no `DRISHTI_*` setting inherited from the drill. VAR BANK has a non-zero headline, VAR EXPLAIN BANK answers 200 with no error code, POS and
   TRD have rows and FORMS answers; the server is then stopped and started twice more, and VAR BANK is the same figure every time.
 - **The paths**: the `resolved paths:` block the server logs at start (`LaunchRoots`) is parsed on every start: each path absolute, each under the
-  install or the data folder, none under the working folder, and the working folder is left empty.
+  install, the data folder or the shared lake's folder, none under the working folder, and the working folder is left empty.
 - **Negative cases**: a required root that is missing (`DRISHTI_MODULES_HOME` naming no folder) and a relative `DRISHTI_HOME` each stop the start
   within seconds with the message that names the setting and the folder.
 - **Windows**: `test_ps1_roots` (marked `static`, so the gate runs it) reads `bin/lib/common.ps1` and `bin/start-server.ps1`: the install folder
