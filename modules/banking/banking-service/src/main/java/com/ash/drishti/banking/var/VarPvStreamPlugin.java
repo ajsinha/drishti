@@ -163,7 +163,7 @@ public final class VarPvStreamPlugin implements SourcePlugin {
                 }
                 c.assign(parts);
                 c.seekToBeginning(parts);
-                state = "UP: reading " + parts.size() + " partitions";
+                state = "reading " + parts.size() + " partitions";
                 watch.connected(bootstrap);
                 while (!stop.get()) {
                     for (ConsumerRecord<String, String> r : c.poll(Duration.ofMillis(pollMs))) {
@@ -313,7 +313,7 @@ public final class VarPvStreamPlugin implements SourcePlugin {
 
     @Override
     public String health() {
-        return state;
+        return state.startsWith("reading") ? "UP: " + state : state;       // the state as the admin status shows it; health says UP while it reads
     }
 
     @Override
