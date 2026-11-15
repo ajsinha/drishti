@@ -72,6 +72,12 @@ public final class LiveSource implements SourcePlugin {
     public void landing(Landing l) {
         landing = l == null ? Landing.NONE : l;
     }
+    private volatile LiveCheckpointStore checkpointStore = LiveCheckpointStore.NONE;
+
+    /** Where this connector's checkpoints are kept (the Drishti database, LIVE_CONNECTORS_DESIGN.md section 6); set before the feed starts. */
+    public void checkpoints(LiveCheckpointStore s) {
+        checkpointStore = s == null ? LiveCheckpointStore.NONE : s;
+    }
     private volatile String name;
 
     /**
@@ -170,7 +176,7 @@ public final class LiveSource implements SourcePlugin {
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
-        }, s, rejects, dates, new LiveCheckpoints(under("live/checkpoints", name + ".json")), under("live/reconcile", null));
+        }, s, rejects, dates, new LiveCheckpoints(name, checkpointStore), under("live/reconcile", null));
         s.reload(e -> f.reread(e, transport::readBack));
         f.lander(new LiveLander(name, ctx.settings(), b -> landing.land(b), Clock.systemUTC()));
         this.state = s;

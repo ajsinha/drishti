@@ -73,6 +73,21 @@ class LiveReconcileTest {
         };
     }
 
+    /** The Drishti database's role, in memory: what a connector's checkpoints hold after a restart (the JDBC store has its own test). */
+    private static final class MapStore implements LiveCheckpointStore {
+        private final Map<String, Map<String, LiveCheckpoints.Kind>> held = new java.util.HashMap<>();
+
+        @Override
+        public Map<String, LiveCheckpoints.Kind> load(String connector) {
+            return new java.util.HashMap<>(held.getOrDefault(connector, Map.of()));
+        }
+
+        @Override
+        public void save(String connector, String kind, LiveCheckpoints.Kind checkpoint) {
+            held.computeIfAbsent(connector, c -> new java.util.HashMap<>()).put(kind, checkpoint);
+        }
+    }
+
     private final AtomicReference<LocalDate> today = new AtomicReference<>(D13);
     private final LiveDates dates = LiveDates.of(today::get, d -> d.getDayOfWeek() == java.time.DayOfWeek.FRIDAY ? d.plusDays(3) : d.plusDays(1));
     private long offset;
@@ -157,8 +172,8 @@ class LiveReconcileTest {
 
     @Test
     void aByCutoffCheckpointKeepsAReplayFromBringingAbsorbedRowsBack() {
-        Path file = tmp.resolve("checkpoints").resolve("trade-live.json");
-        LiveFeed f = feed("by-cutoff", new LiveCheckpoints(file));
+        MapStore store = new MapStore();
+        LiveFeed f = feed("by-cutoff", new LiveCheckpoints("trade-live", store));
         LiveMessage early = msg("A", 1, "2026-11-13T10:00:00Z", null);
         LiveMessage late = msg("B", 1, "2026-11-13T19:00:00Z", null);
         f.accept(early);
@@ -166,7 +181,7 @@ class LiveReconcileTest {
         LiveState.Reconcile r = f.reconcile("trade", D13, Instant.parse("2026-11-13T18:00:00Z"), k -> Optional.of(List.of(1)));
         assertThat(r.absorbed()).isEqualTo(1);
         assertThat(r.carried()).isEqualTo(1);
-        LiveFeed restarted = feed("by-cutoff", new LiveCheckpoints(file));   // a restart: the topic replays from the beginning
+        LiveFeed restarted = feed("by-cutoff", new LiveCheckpoints("trade-live", store));   // a restart: the topic replays from the beginning
         restarted.accept(early);
         restarted.accept(late);
         assertThat(held(restarted, "A")).isFalse();
@@ -176,13 +191,13 @@ class LiveReconcileTest {
 
     @Test
     void aResetCheckpointDropsWhatWasAppliedBeforeIt() {
-        Path file = tmp.resolve("checkpoints").resolve("reset.json");
-        LiveFeed f = feed("reset", new LiveCheckpoints(file));
+        MapStore store = new MapStore();
+        LiveFeed f = feed("reset", new LiveCheckpoints("trade-live", store));
         LiveMessage a = msg("A", 1, "2026-11-13T10:00:00Z", null);
         f.accept(a);
         f.reconcile("trade", D13, Instant.parse("2026-11-13T18:00:00Z"), k -> Optional.of(List.of(1)));
         assertThat(f.state().size()).isZero();
-        LiveFeed restarted = feed("reset", new LiveCheckpoints(file));
+        LiveFeed restarted = feed("reset", new LiveCheckpoints("trade-live", store));
         restarted.accept(a);
         LiveMessage after = msg("A", 2, "2026-11-13T20:00:00Z", null);
         restarted.accept(after);

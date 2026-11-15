@@ -209,6 +209,14 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
         landing = l == null ? com.ash.drishti.live.Landing.NONE : l;
     }
 
+    /** Where the live connectors' checkpoints are kept (LIVE_CONNECTORS_DESIGN.md section 6): the Drishti database once the server tells. */
+    private volatile com.ash.drishti.live.LiveCheckpointStore liveCheckpoints = com.ash.drishti.live.LiveCheckpointStore.NONE;
+
+    /** The server's checkpoint store: a live connector reads it when its feed starts, so it must be told before the connectors start. */
+    public void liveCheckpoints(com.ash.drishti.live.LiveCheckpointStore s) {
+        liveCheckpoints = s == null ? com.ash.drishti.live.LiveCheckpointStore.NONE : s;
+    }
+
     /** The kernel's live source of a connector (a live transport's), or empty. */
     public Optional<com.ash.drishti.live.LiveSource> live(String connector) {
         return plugin(connector).map(p -> p instanceof ConnectorInstance ci ? ci.delegate() : p)
@@ -602,6 +610,17 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
                         new java.util.HashSet<>(c.kinds()), shape.none() ? null : shape::apply,
                         com.ash.drishti.live.LiveDates.of(() -> liveDates.live(), d -> liveDates.next(d)));
                 live.landing(b -> landing.land(b));                    // the server's lake writer, read when a window lands
+                live.checkpoints(new com.ash.drishti.live.LiveCheckpointStore() {     // the server's database, looked up at each call
+                    @Override
+                    public java.util.Map<String, com.ash.drishti.live.LiveCheckpoints.Kind> load(String connector) {
+                        return liveCheckpoints.load(connector);
+                    }
+
+                    @Override
+                    public void save(String connector, String kind, com.ash.drishti.live.LiveCheckpoints.Kind checkpoint) {
+                        liveCheckpoints.save(connector, kind, checkpoint);
+                    }
+                });
                 plugin = live;
                 return new ConnectorInstance(name, new java.util.HashSet<>(c.kinds()), plugin, shape, systems, true);
             }

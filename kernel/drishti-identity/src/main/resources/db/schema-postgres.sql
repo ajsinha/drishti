@@ -637,3 +637,24 @@ CREATE TABLE IF NOT EXISTS drishti_edit_cursor (
     seq      BIGINT       NOT NULL,
     PRIMARY KEY (consumer, lane)
 );
+
+-- Live intake checkpoints (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 6): what a replay must not bring back, per live connector and
+-- kind. drishti_live_checkpoint: the cut-off a by-cutoff reconcile absorbed up to; drishti_live_position: for a reset, the last offset
+-- applied in each stream partition. Both only move forward (an update names the old value), so a node that takes a feed over, or a
+-- stale write, never moves a checkpoint back. Read when a feed starts, written after every reconcile.
+CREATE TABLE IF NOT EXISTS drishti_live_checkpoint (
+    connector  VARCHAR(256) NOT NULL,
+    kind       VARCHAR(128) NOT NULL,
+    cutoff_at  TIMESTAMP WITH TIME ZONE,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    PRIMARY KEY (connector, kind)
+);
+CREATE TABLE IF NOT EXISTS drishti_live_position (
+    connector        VARCHAR(256) NOT NULL,
+    kind             VARCHAR(128) NOT NULL,
+    stream           VARCHAR(512) NOT NULL,
+    stream_partition INTEGER      NOT NULL,
+    last_offset      BIGINT       NOT NULL,
+    updated_at       TIMESTAMP WITH TIME ZONE NOT NULL,
+    PRIMARY KEY (connector, kind, stream, stream_partition)
+);

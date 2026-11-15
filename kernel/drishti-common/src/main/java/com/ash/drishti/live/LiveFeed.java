@@ -109,7 +109,7 @@ public final class LiveFeed implements LiveIntake {
     /** As the full constructor, with no dates checked, no checkpoints kept and no reconcile record written (a feed outside a server). */
     public LiveFeed(String connector, Set<String> kinds, Map<String, String> settings, KindContracts contracts, UnaryOperator<EntityDocument> shape,
             Function<byte[], DataNode> parse, LiveState state, RejectLog rejects) {
-        this(connector, kinds, settings, contracts, shape, parse, state, rejects, LiveDates.NONE, new LiveCheckpoints(null), null);
+        this(connector, kinds, settings, contracts, shape, parse, state, rejects, LiveDates.NONE, LiveCheckpoints.memory(), null);
     }
 
     /**
@@ -129,7 +129,7 @@ public final class LiveFeed implements LiveIntake {
             Function<byte[], DataNode> parse, LiveState state, RejectLog rejects, LiveDates dates, LiveCheckpoints checkpoints,
             java.nio.file.Path reconcileDir) {
         this.dates = dates == null ? LiveDates.NONE : dates;
-        this.checkpoints = checkpoints == null ? new LiveCheckpoints(null) : checkpoints;
+        this.checkpoints = checkpoints == null ? LiveCheckpoints.memory() : checkpoints;
         this.reconcileDir = reconcileDir;
         this.connector = connector;
         this.kinds = kinds == null ? Set.of() : Set.copyOf(kinds);

@@ -18,6 +18,9 @@
 
 ## Unreleased
 
+- **The live intake's checkpoints are in the Drishti database.** `drishti_live_checkpoint` and `drishti_live_position` (both schema
+  files) replace the JSON file per connector under `<data folder>/live/checkpoints`; a feed reads them when it starts, so the node that
+  takes it over continues where the last stopped, and a write only moves a checkpoint forward.
 - **Live feeds, step L7: what an administrator and a reader see.** Every live feed has one state in one list of words, the same in Health,
   Admin, the CLI and on a page: `OFF`, `NOT CONFIGURED`, `WAITING`, `CATCHING UP`, `LIVE`, `STALE`, `DEGRADED` (rejects over
   `drishti.live.degraded.reject-ratio`, 5%), `PAUSED`, `STANDBY`, `DOWN`. Admin → Data bindings has a Live column and a drawer per kind:

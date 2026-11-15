@@ -389,9 +389,11 @@ table above; `LiveReconciler` on the server, run off the request threads when a 
 lake's row of every key the live state holds for the load's date (live connectors left out) before any row moves, so a store that fails
 leaves the state as it was. A row is the load's when its date is the load's date or earlier; a later live date's rows are untouched.
 **The cut-off** is when the load was received less `drishti.live.reconcile.settle` (5 m); a cut-off the load states itself (its
-extract time in the `.ready` file or the announcement) is not read yet. **Checkpoints** are kept in one JSON file per live connector
-(`<data folder>/live/checkpoints/<connector>.json`), not yet in the Drishti database: the cut-off for `by-cutoff`, the partitions'
-positions for `reset`. **The record**: `<data folder>/live/reconcile/<kind>/<load date>.jsonl` (the counts, then the first 100 orphans),
+extract time in the `.ready` file or the announcement) is not read yet. **Checkpoints** are kept in the Drishti database (SQLite or PostgreSQL, one
+statement set for both): `drishti_live_checkpoint` (per connector and kind, the cut-off for `by-cutoff`) and `drishti_live_position`
+(per connector, kind, stream and partition, the last offset for `reset`). A feed reads its connector's rows when it starts, which is
+how the node that takes a feed over continues; every write only moves a checkpoint forward (`JdbcLiveCheckpointStore`; the kernel's
+module sees `LiveCheckpointStore`). A server without the database keeps them in memory. **The record**: `<data folder>/live/reconcile/<kind>/<load date>.jsonl` (the counts, then the first 100 orphans),
 an audit entry (`live-reconcile`), the last one in the connector's Health measures and its line on the Admin panel; the orphan alert
 is the platform rule `live-reconcile-orphans` (L7). Open views of an absorbed row are not told (the lake's row is as new; they move
 to it at their next read).
