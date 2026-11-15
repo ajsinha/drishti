@@ -18,6 +18,15 @@
 
 ## Unreleased
 
+- **Live feeds, step L2: one live intake and one live state in the kernel; Kafka is a transport.** A messaging plugin now only
+  connects (or waits calmly), receives and hands each message with its position to the kernel (`com.ash.drishti.api.live`); the
+  kernel decodes it (`shape`: document, envelope or jsonl), applies the connector's where/set/map, checks it against the kind's contract
+  (`live.validate`, strict by default), orders it (the contract's `live.order`, then the position), merges a patch for a `partial:
+  merge` kind, keeps the newest row per key with deletes remembered, and answers every read, search and tick of the connector from
+  there. Rejected messages go to `<data folder>/live/rejects/<connector>/<date>.jsonl` and the connector's counters, never to a page.
+  The Kafka plugin's own index, caches, listeners, one-pass snapshot and type-ahead are gone, and its `mode` setting is no longer
+  read (said once at start): a feed over a lake is a companion (`companion-of:`). `cache-mb` and `disk-cache.*` keep their meaning, now
+  for the live state. Health shows each live connector's `live` measures (rows, memory, applied, duplicate, late, rejected by reason).
 - **Live feeds for any kind, step L1: the kind's live rules and the companion connector.** A contract may hold a `live:` block (order,
   changed-at and changed-by, as-of, whole rows or merge patches, deletes, overlay or land, conflation, how the next load absorbs the
   live state, retention, validation, effective, closed dates): checked against the contract by `drishti.py contract check` and when the

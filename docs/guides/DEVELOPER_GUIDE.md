@@ -2144,7 +2144,8 @@ settings:
 with `drishti.sources.routes.trade: recent-files` in the site configuration (or a pack's `routes:`). Other plugins follow the same
 shape: a Delta connector on S3 (`root: s3a://…`, `s3.endpoint`, `s3.access-key: ${LAKE_ACCESS_KEY}`), a JDBC connector in table mode
 (`url`, `user`, `password: ${PG_PASSWORD}`, `table: orders.entities`) or in query mode (`query.<kind>` and `ids.<kind>` SQL), a Kafka
-connector in `mode: ticks` (it only pushes changes to open views; the documents come from the dated stores) or `mode: state`.
+connector (a live transport: the kernel's live state answers its reads; as a companion of a dated store, `companion-of:`, it changes
+only that store's rows).
 
 Which of them answers a read is decided as in [How a request picks a connector](#how-a-request-picks-a-connector):
 a store that holds the date is authoritative for it, so keep the dated stores of one kind **disjoint by date**: here `recent-files`

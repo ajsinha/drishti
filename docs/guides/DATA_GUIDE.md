@@ -1134,7 +1134,7 @@ Which definition wins (environment and the deprecated `drishti.sources.connector
 | in Apache Cassandra, ScyllaDB, DataStax Astra or Amazon Keyspaces | `cassandra` | a partition per business day; a day appears whole or not at all | [cassandra](../../plugins/drishti-plugin-cassandra/README.md) |
 | JSON objects in a bucket (S3, MinIO, Ceph) | `s3` | documents another system writes, one per entity; no reverse lookups | [s3](../../plugins/drishti-plugin-s3/README.md) |
 | behind an in-house HTTP/JSON API | `rest` | one GET per entity, the owner's current answer; no search, undated | [rest](../../docs/connectors/types/rest/README.md) |
-| on Kafka (live) | `kafka` | entities whose latest state is published to a topic; `mode: ticks` as a change feed over a store | [kafka](../../plugins/drishti-plugin-kafka/README.md) |
+| on Kafka (live) | `kafka` | entities whose latest state is published to a topic; a companion (`companion-of:`) as the change feed of a store | [kafka](../../plugins/drishti-plugin-kafka/README.md) |
 | on ActiveMQ Classic or RabbitMQ (live) | `activemq`, `rabbitmq` | queues that deliver once: the latest document per entity kept in a local state store | [activemq](../../plugins/drishti-plugin-activemq/README.md), [rabbitmq](../../plugins/drishti-plugin-rabbitmq/README.md) |
 | public rates and FX (SOFR, €STR, ECB FX, the Treasury curve, FRED) | `feed` | real reference rates beside a pack's own; needs outbound HTTPS or a mirror | [feeds](../../docs/connectors/types/feed/README.md) |
 | headlines for a named entity | `news` | computed on demand (`NEWS-Federal_Reserve`); off as shipped | [news](../../docs/connectors/types/news/README.md) |
@@ -1188,22 +1188,22 @@ which serves every kind). Then:
 | a picked date | `trade-endur` (dated first) → `file` → `trading-stream` | the lake, for that date; a static snapshot |
 | a date the lake does not hold | as above | `file` if it has a dated folder; else Kafka's current document, with the banner *No data held for <date>* (the current data of trading-stream) |
 
-**`state` or `ticks`.** In `state` mode (the default) Kafka keeps an index of the topic and answers Live reads
-itself, as above. With `mode: ticks` it keeps nothing (no index, no cache, no disk) and answers no reads: the lake
-or database answers every read, and Kafka only pushes each new message to the views that are open. Use it when the
-store already has the day's data and the topic is just the change feed, or the topic is too large to index:
+**A feed over a lake: the live companion.** A Kafka connector keeps nothing of its own: the kernel's live intake keeps
+the newest row per key of what it brings, and answers Live reads from it, as above
+([LIVE_CONNECTORS_DESIGN.md](../architecture/LIVE_CONNECTORS_DESIGN.md)). When the lake holds the day and the topic is its change
+feed, make the Kafka connector the lake connector's **companion**: its rows change only that connector's rows, and it goes with
+it when that connector (or its module) is off:
 
 ```yaml
-# config/connectors/trading-stream.yaml
+# config/connectors/trade-endur-live.yaml (the source-endur module ships this template, off)
 plugin: kafka
-settings: { mode: ticks, bootstrap-servers: "${DRISHTI_KAFKA_BOOTSTRAP}", topics: drishti.trading.trades,
-            kind: trade, id-field: tradeId }
+companion-of: trade-endur
+settings: { broker: default, topics: drishti.trading.endur.trades, kind: trade }
 ```
 
-The view is live because a connector *pushes* the kind (the plugin answers `pushes(ref)` with true in ticks mode),
-not because the document that answered is live: `TRD MX-20000001` reads from `trade-endur` (its provenance names the
-lake), shows the green Live button, and each message for MX-20000001 on the topic repaints it within a frame. A picked
-business date stays a static snapshot either way.
+Every live connector *pushes* its kinds (`pushes(ref)`): a view reads its row (a row the feed has not brought comes from
+the lake, its provenance naming the lake), shows the green Live button, and each message for the trade repaints it within
+a frame. A picked business date stays a static snapshot either way. The former `mode: state | ticks` setting is not read.
 
 #### Several domains
 

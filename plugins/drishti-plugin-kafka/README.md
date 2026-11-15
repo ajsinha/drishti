@@ -16,7 +16,7 @@
 ---
 connector: kafka
 category: plugin
-summary: Live entities from Kafka topics, the latest message per key, read from the beginning of every partition with no consumer group; views tick on each message.
+summary: Kafka as a live transport, read from the beginning of every partition with no consumer group; the kernel's live intake keeps the newest row per key and every view ticks on each message.
 capabilities:
 - fetch
 - search
@@ -27,9 +27,12 @@ settings:
 - kind
 - id-field
 - kind.*
+- shape
+- shape.*
 - id-field.*
 - mode
-- search
+- max-message-kb
+- rejects.keep-days
 - poll-ms
 - cache-mb
 - disk-cache.*
@@ -63,26 +66,28 @@ settings:
 - tls.*
 - proxy.*
 auth: None, TLS or mutual TLS (tls.*, PEM or PKCS12/JKS), SASL PLAIN, SCRAM-SHA-256/512, OAUTHBEARER and GSSAPI (Kerberos keytab or ticket cache), Confluent Cloud API key and secret (flavour confluent); Schema Registry by basic auth or bearer token. Secrets as ${ENV} or a *-file setting.
-licence: Apache Kafka client (kafka-clients, Apache-2.0) and Apache Avro (Apache-2.0, for Schema Registry payloads), bundled; the optional disk cache uses RocksDB (rocksdbjni, Apache-2.0/GPL-2.0), bundled.
+licence: Apache Kafka client (kafka-clients, Apache-2.0) and Apache Avro (Apache-2.0, for Schema Registry payloads), bundled; the live state's optional disk cache uses RocksDB (rocksdbjni, Apache-2.0/GPL-2.0), bundled.
 windows: Works on Windows (pure Java client); the optional disk cache's RocksDB library is unpacked from its jar into the server's temp folder (no .exe). The broker runs elsewhere; the Testcontainers tests skip where Docker is not reachable.
 doc: plugins/drishti-plugin-kafka/README.md
 ---
 # The kafka connector
 
-Plugin `kafka` (`plugins/drishti-plugin-kafka`): the latest state of each entity from one or more topics, kept current for as long
-as the server runs, with views that repaint within a frame of a new message. Pair it with a dated store (Delta Lake, PostgreSQL,
-Aerospike) for history.
+Plugin `kafka` (`plugins/drishti-plugin-kafka`): a **live transport**
+([LIVE_CONNECTORS_DESIGN.md section 2.5](../../docs/architecture/LIVE_CONNECTORS_DESIGN.md#25-transports)). It connects (or waits
+calmly for its broker), reads its topics and hands every record, with its topic, partition and offset, to the kernel's **live
+intake**, which decodes it, applies the connector's `where`, `set` and `map`, checks it against the kind's contract, orders it and
+keeps the newest row per key in the **live state**. Every read of the connector (a record, a kind's rows, type-ahead, the ticks of
+open views and live sets) is answered by the kernel from that state, the same for every transport. Pair it with a dated store
+(Delta Lake, PostgreSQL, Aerospike) for history; as a **live companion** (`companion-of: <data connector>`) it changes only that
+connector's rows.
 
 ## What it reads
 
-A **compacted topic keyed by entity** is the store: at start the connector assigns itself every partition of each topic in `topics`
-(`assign`, not `subscribe`), seeks to the beginning and reads for as long as it runs; the latest message per entity wins. It sets no
-`group.id` and commits nothing, so every Drishti server reads the whole topic on its own. It keeps an index of where each entity's
-latest message is, a memory cache (and, if enabled, a RocksDB disk cache), and type-ahead by id. It is undated (no business dates),
-declares no reverse lookups and no field searches.
-
-`mode: ticks` keeps no index and answers no reads: it only pushes new messages to open views of its kinds, whichever store answered
-them (a lake holds the day, the topic is the change feed).
+At start the plugin assigns itself every partition of each topic in `topics` (`assign`, not `subscribe`), seeks to the beginning and
+reads for as long as it runs. It sets no `group.id` and commits nothing, so every Drishti server reads the whole topic on its own and
+builds the same live state; a restart replays the topic (`replayable`). The plugin itself holds no rows: what a message means is the
+kind's contract (its `live:` block: order, deletes, partial updates, validation) and the connector's decode settings (`shape`,
+`kind`, `id-field`), both read by the kernel. It is undated (no business dates), declares no reverse lookups and no field searches.
 
 ### When to use it
 
@@ -90,7 +95,7 @@ them (a lake holds the day, the topic is the change feed).
 |---|---|
 | entities whose latest state is published to a topic whenever it changes (trades, positions, quotes, limits) | history: the connector is undated; pair it with a dated store ([With a lake for history](#with-a-lake-for-history)) |
 | views that must tick within a frame of a change | reverse lookups (*Linked entities*, impact with F8): it declares none |
-| a change feed over data a store already serves (`ticks` mode) | searches over fields of the documents: it offers type-ahead by id only |
+| a change feed over data a store already serves (a companion, `companion-of:`) | searches over fields of the documents: it offers type-ahead by id only |
 | a topic other systems already consume, read without a consumer group | a queue that delivers each message once ([ActiveMQ](../drishti-plugin-activemq/README.md), [RabbitMQ](../drishti-plugin-rabbitmq/README.md): they keep their own state store) |
 
 On a compacted topic Kafka keeps the latest message per key, so the topic's size follows the number of entities, not the
@@ -100,12 +105,13 @@ number of changes, and a restart replays one message per entity.
 
 - **No consumer group, no commits.** `enable.auto.commit` is `false` and no `group.id` is set. Every Drishti server reads the
   whole topic on its own and builds the same state; adding a server rebalances nobody.
-- **One consumer thread per connector** (virtual thread `drishti-kafka-<source-name>`) polls every `poll-ms` and applies records
-  in poll order. In state mode a second consumer, the **reader** (`drishti-<source-name>-reader`, `max.poll.records` 1), reads a
-  single record back by offset when a document is not cached.
-- **Ordering** is per partition: the latest message for a key wins provided every message of an entity goes to the same partition
-  (the producer's default partitioner does that for a fixed key). An entity written under two keys (`NS-1` and `netting-set/NS-1`)
-  in two partitions has no defined winner.
+- **One consumer thread per connector** (virtual thread `drishti-kafka-<source-name>`) polls every `poll-ms` and hands records to
+  the intake in poll order. A second consumer, the **reader** (`drishti-<source-name>-reader`, `max.poll.records` 1), reads a single
+  record back by offset when the live state no longer holds a document in memory.
+- **Ordering** is the contract's `live.order` (a version, an event time), then the position within a partition
+  ([LIVE_CONNECTORS_DESIGN.md section 4](../../docs/architecture/LIVE_CONNECTORS_DESIGN.md#4-order-duplicates-and-late-events)): a
+  kind with a version is right across partitions and redeliveries; a kind ordered by arrival only within one partition, so key every
+  message of an entity the same way.
 - **Generation and time:** the generation is the message offset, `fetchedAt` the message timestamp. The newest applied timestamp is
   `lastUpdate` in Admin → Health, compared with `stale-after` (the trading pack sets `15m` on `trading-stream`).
 - How a tick reaches the browser: [DATA_ARCHITECTURE.md, Streaming sources](../../docs/architecture/DATA_ARCHITECTURE.md#streaming-sources).
@@ -173,40 +179,42 @@ The site-wide summary is in [CONFIGURATION.md](../../docs/admin/CONFIGURATION.md
 ## Data structure
 
 Keys are strings and values JSON text (or the Confluent wire format with `value-format: confluent` / `schema-registry.url`, decoded
-to JSON: Avro and JSON Schema; Protobuf is not supported yet and its messages are skipped and logged). A topic is read in one of two shapes:
+to JSON: Avro and JSON Schema; Protobuf is not supported yet and its messages are skipped and logged). The `shape` of a topic's
+messages ([LIVE_CONNECTORS_DESIGN.md section 3.1](../../docs/architecture/LIVE_CONNECTORS_DESIGN.md#31-three-shapes-one-canonical-record)),
+by default `document` when the connector names the topic's kind and `envelope` otherwise:
 
-- **Mapped** (the topic has `kind.<topic>`, or `kind` for every topic): the value is the whole document. **Id rule:** the message key;
-  without a key, the document's field `id-field.<topic>` (else `id-field`, default `id`). Keep the key equal to the id: a keyed message
-  is indexed by its key without parsing the value.
+- **`document`** (the topic has `kind.<topic>`, or `kind` for every topic): the value is the kind's row. **Key:** the contract's
+  `key:` fields (joined with `|`); a message key, when present, must equal it (`key-mismatch` otherwise). A kind whose contract has no
+  key takes the field `id-field.<topic>` (else `id-field`), else the message key.
 
   ```text
   topic: drishti.trading.trades      key: MX-20000001
   value: {"SOURCE_SYSTEM": "MUREX", "TRADE_ID": "MX-20000001", "PRODUCT_TYPE": "IRS_FIXFLOAT", "CURRENCY": "AUD", "LEGS": […], …}
   ```
 
-- **Envelope** (no kind for the topic): one topic carries many kinds. Key it `<kind>/<id>` so compaction and tombstones work.
+- **`envelope`** (no kind for the topic): one topic carries many kinds, `{"kind", "key", "op", "asOf", "doc"}` (`id` is read for
+  `key`; `op` is `upsert`, `delete` or, for a kind whose contract says `partial: merge`, `patch`). Key it `<kind>/<key>` so compaction
+  and tombstones work.
 
   ```text
   topic: risk.envelopes              key: netting-set/NS-ALDERSHOT-FRA
-  value: {"kind": "netting-set", "id": "NS-ALDERSHOT-FRA", "doc": {"NETTING_SET_ID": "NS-ALDERSHOT-FRA", "NET_MTM": -339550, …}}
+  value: {"kind": "netting-set", "key": "NS-ALDERSHOT-FRA", "doc": {"NETTING_SET_ID": "NS-ALDERSHOT-FRA", "NET_MTM": -339550, …}}
   ```
 
-- **Deletes:** a null value (a tombstone) on a mapped key or an envelope key `<kind>/<id>`, or an envelope with `"doc": null`, removes
-  the entity from the index, the caches and type-ahead, and is pushed to open views (greyed, with when it was deleted). An empty value is
-  not a tombstone; an envelope tombstone keyed by a bare id is ignored.
-- **Provenance:** `generation` is the message offset, `fetchedAt` the message timestamp, `live: true`, no `businessDate`. The document
-  is the value exactly; nested structures (`LEGS[].CASH_FLOWS[]`, `EVENTS[]`) stay inside it.
-
-A keyed message on a mapped topic is indexed under its key **without parsing the value**; the value is parsed only when someone views
-the entity or it is cached. That is what makes mapped topics cheap at volume. If the document's `id-field` disagrees with the key, a
-parsed message is tracked under both. A compacted topic refuses a message without a key. Every envelope is parsed; an envelope whose
-value is not JSON, or has no `kind` or `id`, is skipped. A mapped message whose value is not JSON is indexed by key, and a later read
-of it answers "not held".
+- **`jsonl`**: the value is several rows, one a line, each read as a `document`.
+- **Deletes:** a null value (a tombstone) on a document key or an envelope key `<kind>/<key>`, an envelope with `"op": "delete"` or
+  `"doc": null`. The live state keeps the delete (so an older message cannot bring the row back), the row leaves type-ahead, and open
+  views are told (greyed, with when it was deleted). An empty value is not a tombstone.
+- **Rejects:** a message that is not JSON, has no key, breaks the kind's contract, names a kind the connector does not serve, or is over
+  `max-message-kb` is never applied and never an error on a page: it goes to the reject log
+  (`<data folder>/live/rejects/<connector>/<date>.jsonl`, `rejects.keep-days`) with its reason and code (DRS-1062 to DRS-1072), and
+  the connector's counters in Health.
+- **Provenance:** `generation` is the message offset, `fetchedAt` the row's event time (the contract's `changed-at`, else the message
+  timestamp), `live: true`, no `businessDate`.
 
 A delete is pushed to open views as a `deleted` patch: the view keeps its last document, greyed, under a banner with the tombstone's
 time, and repaints if a later message brings the entity back
-([DATA_ARCHITECTURE.md, Deleted entities](../../docs/architecture/DATA_ARCHITECTURE.md#deleted-entities)); this works in
-`mode: ticks` too. The id leaves type-ahead at once, and opening it answers "not held" so the next connector is asked. With
+([DATA_ARCHITECTURE.md, Deleted entities](../../docs/architecture/DATA_ARCHITECTURE.md#deleted-entities)). With
 `kafka-console-producer.sh` send a real null with `--property null.marker=NULL` and the line `MX-20000001|NULL`.
 
 ## Examples
@@ -272,8 +280,9 @@ settings:
   tls.ca-file: /etc/drishti/tls/ca.pem
 ```
 
-The stream as a change feed over the lake: the same file as `trading-stream` with `mode: ticks` (the file replaces the pack's
-template wholesale, so it repeats the topic, kind and id field).
+The stream as a change feed over the lake is a **live companion**: the source modules' `trade-<system>-live` templates say
+`companion-of: trade-<system>`, so each system's feed changes only its own rows. The former `mode` setting is not read (the server
+says so once at start).
 
 ### Try it
 
@@ -306,61 +315,37 @@ EOF
 curl -s localhost:18480/api/v1/entities/netting-set/NS-ALDERSHOT-FRA/raw | jq -c .provenance   # "source":"risk-stream","live":true,"generation":0
 ```
 
-## Modes: state and ticks
+## The live state: reads, caches and memory
 
-| | `state` (default) | `ticks` |
-|---|---|---|
-| reads (`fetch`) | answered from the topic | never: always "not held" |
-| index, memory cache, disk cache, reader consumer | yes (disk cache when enabled) | no |
-| type-ahead | yes (`search: true`) | no |
-| pushes new messages to open views | views it answers | views of its kinds, whichever store answered |
-| reads the topic from the beginning at start | yes | yes (to reach the end; mapped keyed messages are not parsed unless watched) |
-| use it when | the topic is the store for Live | a lake or database already holds the day's data, or the topic is too large to index |
+The kernel's live state answers every read of a Kafka connector
+([LIVE_CONNECTORS_DESIGN.md section 7.6](../../docs/architecture/LIVE_CONNECTORS_DESIGN.md#76-retention-and-ttl)):
 
-In `ticks` mode a view of `TRD MX-20000001` reads from `trade-endur` (its provenance names the lake), shows the live dot, and each
-message for the trade repaints it within a frame ([../../docs/guides/DATA_GUIDE.md section 8, Combining connectors](../../docs/guides/DATA_GUIDE.md#84-combining-connectors)).
+| Path | How |
+|---|---|
+| one entity, its document in memory | a map lookup and a JSON parse, no I/O |
+| one entity, on the disk cache | one RocksDB get |
+| one entity, neither | the one record read back from Kafka by offset, through the one reader (200 ms polls, 5 s at most) |
+| a deleted entity | "not held": the next store is asked |
+| a kind's rows (a live blotter's first rows, a memory table) | every row the state holds, in one pass, no second consumer |
+| type-ahead | in memory, prefix then substring match, subtitle `<kind> · <source-name>`; built at the first catch-up, then per new key |
+| a picked business date | asked after the dated stores; answers its current document with the *No data held for <date>* banner, no ticks |
+| live push | every applied row of a watched entity or kind, parsed only when someone watches |
 
-## Read paths and caches
+**Memory.** Each key costs its entry (order, position, times); documents are held by size up to `cache-mb` (256), past it read from
+the disk cache or back from the topic. `cache-mb: 0` keeps no documents in memory. Rows leave after the kind's `live.retention`
+(`ttl` 2 d, `max-rows` 2,000,000).
 
-| Path | State mode | Ticks mode |
-|---|---|---|
-| one entity, cached in memory | a map lookup, no I/O | not held |
-| one entity, on the disk cache | one RocksDB get and a JSON parse | not held |
-| one entity, neither | one record read back from Kafka by offset, through the one reader | not held |
-| type-ahead | in memory, prefix then substring match, subtitle `<kind> · <source-name>` | none |
-| a picked business date | asked after the dated stores; answers its current document with the *No data held for <date>* banner, no ticks | not held |
-| reverse lookups, field searches, pick lists, derived kinds, impact | none; the dated stores serve them | none |
-| live push | every message for a watched entity | every message for a watched entity of its kinds |
-
-**One entity, state mode:** (1) the memory cache, which a new message for a cached or watched entity replaces as it arrives;
-(2) the index (topic, partition, offset); no entry is "not held"; (3) the disk cache; (4) the reader seeks to the offset and polls
-(200 ms at a time, 5 s at most). Cold reads run one at a time behind one lock (at most 5 s wait). A record that cannot be read (broker
-away, offset removed by retention, not JSON) is a miss, not an error. A document read this way is cached only if the index still
-points at the same offset, so a stale or deleted document never sticks. With the default `drishti.sources.fetch-timeout` (10 s) a
-cold read while the broker is away answers "not held" after 5 s and the next store answers; at or below 5 s it ends with `DRS-1004`.
-
-**Live push:** each message for a watched entity is parsed once on the consumer thread and handed to every listener; the engine
-merges ticks within a frame (`drishti.live.frame`, 50 ms) and keeps one subscription per entity however many watch it
-([DATA_ARCHITECTURE.md, Guarantees and limits](../../docs/architecture/DATA_ARCHITECTURE.md#guarantees-and-limits)). Type-ahead is
-built in one go at the first catch-up (empty until then), then grows per new entity.
-
-**Memory.** The index (kind, id, topic, partition, offset per entity) and the type-ahead index grow with the number of entities;
-recently read and watched documents are bounded by `cache-mb`, weighed by message text length (4,096 when unknown). Parsed documents
-take more heap than their text, so budget a multiple of `cache-mb`; `cache-mb: 0` keeps nothing.
-
-**Disk** (`disk-cache.enabled: true`, state mode): every applied message is also written to the connector's own RocksDB store, so a
-document not in memory is read from local disk instead of Kafka. It lives in `disk-cache.dir`, default
-`<disk-cache.root>/<source-name>`, one `gen-<millis>-<n>` folder per generation; mapped values raw, envelopes as their `doc`, keyed
-`<kind>/<id>`, LZ4, no write-ahead log. FIFO compaction drops the oldest files past `disk-cache.max-gb` (10). It is cleared nightly at
-`disk-cache.reset-at` (`02:00`, `never` or blank never) in `disk-cache.zone` by swapping in an empty store (readers never wait), and
-deleted at every start because the topic is replayed anyway. Health shows `diskMb`, `diskHits`, `diskMisses`, `diskClears`. **Purge**
-(Admin → Caches) drops the memory cache and clears the disk cache; the index stays.
+**Disk** (`disk-cache.enabled: true`): every applied row is also written to the connector's own RocksDB store, so a document not in
+memory is read from local disk instead of Kafka. It lives in `disk-cache.dir`, default `<disk-cache.root>/<source-name>`; FIFO
+compaction drops the oldest files past `disk-cache.max-gb` (10); it is cleared nightly at `disk-cache.reset-at` (`02:00`, `never` or
+blank never) in `disk-cache.zone`. Health shows the connector's `live` measures (rows, memory and disk, applied, duplicate, late,
+rejected by reason, caught up). **Purge** (Admin → Caches) drops the documents in memory and clears the disk cache; the rows stay.
 
 ## Start, restarts and outages
 
 | Moment | What happens | Health |
 |---|---|---|
-| start | settings read; the reader created (state mode); the consumer thread started | `DOWN: not started` |
+| start | settings read; the reader created; the kernel's intake attached and the consumer thread started | the broker's waiting words until the first look |
 | first connection | partitions listed (30 s at most per topic), assigned, each seeked to its beginning; end offsets noted | `UP (catching up)` |
 | catch-up | every message applied; reads answer from what is applied so far (possibly an older version) | `UP (catching up)` |
 | every partition at the end offset noted at start | type-ahead built | `UP` |
@@ -374,7 +359,7 @@ up (broker down at start, topic missing, a fatal error), a supervisor recreates 
 | Health | When |
 |---|---|
 | `DOWN: <SimpleName>: <message> (reconnecting)` | the consumer failed, e.g. `IllegalStateException: topic … has no partitions yet`, or `TimeoutException` when no broker answered the metadata request within 30 s |
-| `DOWN: <message> (retrying)` | the supervisor could not create a consumer (ticks mode; in state mode a configuration error the client rejects stops the start: `failedToStart`) |
+| `DOWN: <message> (retrying)` | the supervisor could not create a consumer (a configuration error the client rejects at start stops the start instead: `failedToStart`) |
 
 While the broker is away, cached documents still answer, other reads fall through to the next store after the 5 s reader wait, and
 open views resume ticking with the next message. If retention removed messages during the outage, the consumer applies
@@ -383,17 +368,15 @@ skipped until the next restart.
 
 ## Scale
 
-- **Memory per entity** (an estimate from the data structures): an index entry of about 150–200 bytes and a type-ahead entry of about
-  200–250 bytes for an 11-character id, so roughly **0.4–0.5 GB of heap per million entities**, plus the memory cache and the
-  client's fetch buffers.
-- **Throughput:** one consumer thread applies every message; keyed mapped messages are decoded as text and indexed without parsing
-  JSON unless watched or cached; envelopes are parsed one by one. Catch-up time is reading the topic once; watch `indexedEntities` grow
-  in Health. Cold reads queue behind the one reader; the disk cache removes most of them.
+- **Memory per entity:** the live state's entry and its type-ahead entry, about 0.5 GB of heap per million entities (the design's
+  target, measured in the performance drill), plus the documents in memory (`cache-mb`) and the client's fetch buffers.
+- **Throughput:** one consumer thread hands every message to the intake, which parses and checks it against the kind's contract
+  (`validate: strict` by default; `deferred` checks only the key and order). Catch-up time is reading the topic once; watch the
+  `live.rows` measure grow in Health. Cold reads queue behind the one reader; the disk cache removes most of them.
 - **A million entities a day:** a compacted topic replays about a million messages at restart. With documents of about 7.8 KB of JSON
   one version of every trade is about 7.8 GB before LZ4; keep `disk-cache.max-gb` above the compressed size of the day's distinct
-  documents. A topic retained by time replays every change: keep retention near one business day or compact it. Too large to index,
-  or already loaded into a store: `mode: ticks`.
-- **Several servers:** each reads every partition in full and keeps its own index, so the broker serves the topic once per server.
+  documents. A topic retained by time replays every change: keep retention near one business day or compact it.
+- **Several servers:** each reads every partition in full and keeps its own live state, so the broker serves the topic once per server.
 
 ### With a lake for history
 
@@ -405,7 +388,7 @@ Configure the same kind on a dated store as well and the router does the rest
 | Live | `trading-stream` (live first) → `trade-endur` → `file` | Kafka; a trade Kafka does not hold (matured, deleted) falls through to the lake's newest date |
 | a picked date | `trade-endur` (dated first) → `file` → `trading-stream` | the lake for that date; Kafka's current document comes last, with the *No data held for <date>* banner |
 
-With `mode: ticks` the lake answers every read and Kafka only ticks the open views. Long history in the lake:
+Long history in the lake:
 [the delta connector](../drishti-plugin-delta/README.md).
 
 ## Security: TLS, SASL and Confluent
@@ -560,7 +543,7 @@ tools/pvgen/publish-kafka.sh --bootstrap localhost:9092 --rate 20 --seconds 60 -
 
 `GET /api/v1/admin/health`, the connector's row:
 `{"name": "trading-stream", "health": "UP", "live": true, "dated": false, "search": true, "cache": {"indexedEntities": 750,
-"memoryEntries": 12, "memoryMb": 0.1, "diskMb": 3.4, "diskHits": 9, "diskMisses": 0, "diskClears": 0}}`.
+"live": {"caughtUp": true, "rows": 750, "memoryMb": 0.1, "diskMb": 3.4, "counts": {"applied": 812, "duplicate": 0, "late": 3}}}}`.
 
 | Symptom | Likely cause | What to do |
 |---|---|---|
@@ -570,11 +553,11 @@ tools/pvgen/publish-kafka.sh --bootstrap localhost:9092 --rate 20 --seconds 60 -
 | `DOWN: IllegalStateException: topic … has no partitions yet (reconnecting)` | the topic does not exist | create it (compacted, keyed) |
 | `DOWN: TimeoutException: … (reconnecting)` behind TLS or SASL | missing security settings, or a wrong advertised listener | [Security](#security-tls-sasl-and-confluent); check the broker's advertised listeners |
 | `DOWN: no connection to the broker (reconnecting)` | unreachable for 10 s | bring it back; it resumes where it stopped |
-| `UP (catching up)` for long | a large or uncompacted topic | watch `indexedEntities`; compact it or use `mode: ticks` |
+| `UP (catching up)` for long | a large or uncompacted topic | watch `live.rows`; compact it |
+| rows missing, `rejected` counts rising | messages that break the kind's contract, a key that differs from the row's | read `<data folder>/live/rejects/<connector>/<date>.jsonl`; fix the producer |
 | Health shows the connector stale | nothing new for `stale-after` | check the producer; `lastUpdate` is the newest message's time |
 | a view does not tick | another live source answered (the demo samples), or the entity is not in the topic | `DRISHTI_DEMO_ENABLED=false`; check `provenance.source` |
 | a delete does not delete | an envelope tombstone keyed by a bare id, or an empty value instead of null | key envelopes `<kind>/<id>`; send a real null |
-| an entity disappears after a bad message | a mapped value that is not JSON became its latest | fix the producer; publish a good message for the key |
 | cold reads slow under load | they queue behind the one reader | `disk-cache.enabled: true`; raise `cache-mb` |
 | `DRS-1004` while the broker is down | a cold read waited for Kafka and the reader lock past `fetch-timeout` | keep `fetch-timeout` at 10 s so reads fall through; enable the disk cache |
 | messages skipped after a long outage | resume offset removed by retention, `auto.offset.reset` `latest` | `client.auto.offset.reset: earliest`, or restart to replay |
@@ -584,16 +567,15 @@ Security errors are in [Common errors and fixes](#common-errors-and-fixes).
 ## Checklist for production
 
 1. A **compacted topic keyed by entity id** (`<kind>/<id>` for envelopes); each entity under one key.
-2. Prefer **mapped** topics (a kind per topic) for volume: keyed mapped messages are indexed without parsing.
-3. Give the connector **`kinds:`** and **`stale-after`**.
-4. **State or ticks:** state when the topic is the store for Live, ticks when a dated store already holds the data or the topic is too
-   large to index.
+2. Prefer **document** topics (a kind per topic) and give the kind's contract a `live:` block with an `order:` field (a version).
+3. Give the connector **`kinds:`** and **`stale-after`**; a feed over a lake is a **companion** (`companion-of:`).
+4. Watch the reject counters for a day before relying on the feed.
 5. Heap about 0.5 GB per million entities plus `cache-mb` several times over; the **disk cache** on local disk with
    `disk-cache.max-gb` above a day's distinct documents.
 6. First-class security settings, secrets in the environment, `Describe` and `Read` on the topics.
 7. Consider `client.auto.offset.reset: earliest` so a long outage never skips messages.
 8. A **dated store** for the same kinds; check the order in [With a lake for history](#with-a-lake-for-history).
-9. After start: `UP (catching up)` then `UP`, `indexedEntities` near the number of entities, and a view's `provenance.source`.
+9. After start: `UP (catching up)` then `UP`, `live.rows` near the number of entities, and a view's `provenance.source`.
 
 ## See also
 

@@ -16,7 +16,8 @@
 # Live connectors: a live companion for any data connector (design, decided; building in i5)
 
 **Status: design for release i5, decided by the product owner (section 15); steps L1 to L10 are built in i5. Built: L1 (the
-contract's `live:` block and its checks, `companion-of:` in the resolver, the reject reasons and their codes). Nothing else in this
+contract's `live:` block and its checks, `companion-of:` in the resolver, the reject reasons and their codes) and L2 (the transport SPI,
+the kernel's live intake and live state, Kafka on it). Nothing else in this
 document is built unless a section says "today".** It answers the product owner's request: *"for all data connectors there can be a
 live connector, generally speaking."*
 
@@ -167,6 +168,14 @@ the date and its intraday batches. That is today's scenario-PV behaviour, stated
 A transport plugin does four things: connect (or WAIT), receive, hand each message to the kernel's **live intake** with its transport
 position (topic, partition, offset; or delivery tag), and acknowledge when told. Everything else (decode, map, validate, order,
 apply, notify, health, rejects) is the kernel's, written once.
+
+Built (L2): the SPI is `com.ash.drishti.api.live` (`LiveTransport`: `receive(intake)`, `replayable()`, `readBack(position)`,
+`current(read)` for its write-back; `LiveIntake`: `accept(message)`, `caughtUp()`; `LiveMessage`, `LivePosition`). The kernel wraps
+every plugin that is a transport in its `LiveSource` (the `LiveFeed` intake and the `LiveState`), which answers every read of the
+connector. **The connection is by name:** a companion says `broker: <name>` and the kernel merges that broker's settings section
+(`[broker.<name>]` of the settings files: servers, security, TLS) under the connector's own before the plugin starts; a transport
+reads no other place for its broker. Not yet built from sections 3 to 6: `replace` sets (3.5), the merge patch's lake base and its gap
+handling (3.3), business dates (5) and reconcile at a load (6), conflation; they come with L3 and L4.
 
 | Transport | Replay at start | Order it gives | Consumed by (section 7.8) | Status |
 |---|---|---|---|---|
@@ -684,7 +693,7 @@ in; L6 to L10 use it.
 |---|---|---|---|---|
 | **L0** | The owner's answers (section 15); the two mock-up choices | done | | this document |
 | **L1** (built) | Contract `live:` block (parser, load checks, generated contract docs); `companion-of:` in the resolver; reject reasons and their codes | M | `binding-hint.live` | contracts README, KERNEL_AND_MODULES 5.2 and 18.5 |
-| **L2** | The live intake and the live state (kernel): decode, map, validate, order, apply; the transport SPI; Kafka on it | L | the Kafka plugin's index, caches, `mode` | Kafka README, DATA_ARCHITECTURE *Streaming sources* |
+| **L2** (built) | The live intake and the live state (kernel): decode, map, validate, order, apply; the transport SPI; Kafka on it | L | the Kafka plugin's index, caches, `mode` | Kafka README, DATA_ARCHITECTURE *Streaming sources* |
 | **L3** | The router's merged read; live sets on the shared state; blotter defaults from the contract; the six trade templates | L | per-set live side; repeated keys | LIVE_RESULTS_GUIDE sections 6 and 7 |
 | **L4** | Business dates, the roll, reconcile at a load (three absorb rules), checkpoints, the reconcile record | L | | DATA_LAKE_GUIDE (loads), LIVE_RESULTS_GUIDE |
 | **L5** | The live lander; scenario PVs and P&L vectors on it; parity on Delta, Iceberg and files | L | `VarPvStreamPlugin`, `VarPvWindow`, `pv-updates`, `drishti.var.intraday.kafka.*` | VAR_GUIDE 8.4, CONFIGURATION (generated) |

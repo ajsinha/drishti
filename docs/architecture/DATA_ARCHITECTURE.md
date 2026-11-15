@@ -859,12 +859,12 @@ connectors:
    patch and says *"MX-29000001 was deleted at …"* over its last state, greyed ([Deleted entities](#deleted-entities)),
    and the id leaves type-ahead at once.
 
-Other shapes: without `kind`/`id-field` the connector expects **envelopes**,
-`{"kind": "trade", "id": "MX-20000001", "doc": {…}}`, and a tombstone's key is `kind/id`. `mode: ticks` keeps nothing in
-memory (although it still replays the topic from the beginning at start, `UP (catching up)`) and only drives the
-ticks of open views while a store (Delta Lake, a database) serves the documents: such a
-view is live although its document came from the store, because a live connector declares that it pushes the kind
-(`SourcePlugin.pushes`), and it subscribes there.
+Other shapes: without `kind` the connector expects **envelopes**, `{"kind": "trade", "key": "MX-20000001", "doc": {…}}`,
+and a tombstone's key is `kind/key`. The plugin keeps nothing: it hands every record to the kernel's **live intake**, which
+decodes, maps, checks it against the kind's contract and keeps the newest row per key in the **live state**
+([LIVE_CONNECTORS_DESIGN.md section 7](LIVE_CONNECTORS_DESIGN.md#7-where-it-plugs-in)); every read and every tick of the
+connector comes from there, the same for every transport. A view of a kind a live connector pushes is live even when its
+document came from a store (`SourcePlugin.pushes`), and it subscribes there.
 See [DEVELOPER_GUIDE.md](../guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one) for every Kafka setting.
 
 ### The demo source
