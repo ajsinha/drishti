@@ -305,7 +305,7 @@ form:
     type: enum
     group: Identity
     order: 2
-    help: 'ENDUR, CALYPSO or MUREX: the booking system the trade comes from.'
+    help: 'ENDUR, CALYPSO, MUREX, WSS, SWAPONE or ICI: the booking system the trade comes from.'
   - path: COUNTERPARTY
     label: Counterparty
     type: enum

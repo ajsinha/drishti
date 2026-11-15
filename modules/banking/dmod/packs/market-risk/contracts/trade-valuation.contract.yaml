@@ -80,7 +80,10 @@ fields:
   enum:
   - CALYPSO
   - ENDUR
+  - ICI
   - MUREX
+  - SWAPONE
+  - WSS
 - name: PRODUCT_TYPE
   type: text
   presence: required
