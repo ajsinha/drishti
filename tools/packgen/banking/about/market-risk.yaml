@@ -242,7 +242,7 @@ kinds:
         term: "Component VaR"
         means: "The position's share of its book's VaR (Euler allocation), computed by the VaR engine as the page opens: the shares of a book's positions add up to its VaR; a hedge has a negative share."
         unit: "USD"
-      VAR_ENGINE.PNL: { term: "P&L vector", means: "The position's P&L under each historical scenario day (509 of them): the sum of its trades' vectors, computed as the page opens.", unit: "USD", sign: "Positive is a gain." }
+      VAR_ENGINE.PNL: { term: "P&L vector", means: "The position's P&L under each historical scenario day of the window (scenario-window, default 250): the sum of its trades' vectors, computed as the page opens.", unit: "USD", sign: "Positive is a gain." }
   pnl-vector:
     title: P&L vector of a trade
     about: >-
@@ -389,7 +389,7 @@ kinds:
       SCOPE: { term: "Scope", means: "The set of trades asked about, in the scope grammar: BANK, DESK:RATES, POS:<id>, PORT:<id>, BANK - DESK:CREDIT." }
       VAR: { use: "var99" }
       ES: { use: "es975" }
-      K: { term: "VaR rank", means: "Which worst scenario the VaR is: the 6th worst of 509 at 99%." }
+      K: { term: "VaR rank", means: "Which worst scenario the VaR is: over the default window of 250 scenarios, the 3rd worst at 99% (the scenario-window setting decides the count)." }
       SUM_STANDALONE: { term: "Sum of standalone VaRs", means: "The VaRs of the parts, each as if alone, added up.", unit: "USD" }
       DIVERSIFICATION: { term: "Diversification", means: "The sum of the parts' standalone VaRs minus the scope's VaR: what holding them together saves.", unit: "USD" }
       LIMIT_USE: { term: "Limit use", means: "The VaR over the node's or portfolio's VaR limit." }

@@ -46,9 +46,9 @@ KINDS = {
     "position": ("POS", "Position", "^POS-", "POSITION_ID"),
     # the system baskets (VAR_GUIDE.md section 5.7): kept in the basket store, not data; served for PORT <id> (their page) and PORT <GO>
     "system-basket": ("PORT", "System basket (the bank's baskets, kept in Drishti)", "^PF-", "PORTFOLIO_ID"),
-    "pnl-vector": ("PNLV", "P&L vector (509 scenarios)", "^PV-", "VECTOR_ID"),     # the ids before 2.9.5 (PNL- ids: ID_PATTERNS_FIRST)
-    "scenario-pv": ("SPV", "Scenario PVs of a trade (509 scenarios, its currency)", "^SPV-", "SCENARIO_PV_ID"),
-    "fx-scenario": ("FXS", "Scenario FX of a currency (509 scenarios)", "^FXS-", "FX_SCENARIO_ID"),
+    "pnl-vector": ("PNLV", "P&L vector (one P&L per scenario)", "^PV-", "VECTOR_ID"),     # the ids before 2.9.5 (PNL- ids: ID_PATTERNS_FIRST)
+    "scenario-pv": ("SPV", "Scenario PVs of a position or trade (one PV per scenario, its currency)", "^SPV-", "SCENARIO_PV_ID"),
+    "fx-scenario": ("FXS", "Scenario FX of a currency (one rate per scenario)", "^FXS-", "FX_SCENARIO_ID"),
     "scenario-set": ("SSET", "Scenario set", "^HS-", "SCENARIO_SET_ID"),
     # 2.9.5: a node's VaR limit by hierarchy and node id (USD), for the hierarchies whose limits name it (LL in the demo)
     "var-limit": ("VLIM", "VaR limit of a hierarchy node", "^VL-", "LIMIT_ID"),
