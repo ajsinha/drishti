@@ -1495,6 +1495,12 @@ credentials stay in the connector files and the secret store, and no module ever
 | `UNBOUND` | nothing serves it | a **required** need switches off exactly the functions that use it, and they explain themselves: the page is the needs-data page (*Exposure needs data: exposure-path is not bound*, with links to Admin → Data bindings and Help), the command line says the same and the API answers `409 DRS-1035`; an optional one hides its features |
 | `COMPUTED` | a module computes it (`position`, `system-basket`, `var-result`) | never bound |
 
+**Tables read** (on the same page; `GET /api/v1/admin/bindings/map`) is the binding map: for every kind, each connector a read asks in
+order, its layer (`template`, `override` or `site`), its plugin and lake, the table it reads resolved to its full location
+(`<root>/<domain>/<folder>`) and whether that table exists. A connector of a Delta or Iceberg lake that points at a missing table shows
+**missing**: the place to look first when a page says a kind has no rows. The release's upgrade test reads the same map and fails when a
+connector reads a missing or empty table where the release before held data.
+
 A kind finds its data in this order, first hit wins: the site's binding, the distribution's default, a lake by convention, the demo lake,
 else unbound. The red banner names every required need that is unbound and the functions it switched off (they answer `404 DRS-1026` with
 that reason until the kind is bound).

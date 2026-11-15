@@ -18,6 +18,14 @@
 
 ## Unreleased
 
+- **Demo off over a built demo lake serves every kind again.** The source modules' trade connectors read their `map:` file from the
+  module's folder: every module template now carries the setting `module-dir` (the folder its relative files are read from), so the six
+  trade connectors start and the trades of every system are read (a fresh and an upgraded site alike). A connector that names a module's
+  engine class or plugin type before the modules have loaded waits for them (state `WAITING`, one INFO line) and starts once they have;
+  no `ClassNotFoundException` at start. **Admin → Data bindings → Tables read** (`GET /api/v1/admin/bindings/map`) shows each kind's
+  connectors with the table each reads and whether it exists; `test_upgrade_counts` checks it and compares every kind's count on the
+  newest date with the release before (the VaR inputs included); `test_boot_demo_off_browser` boots a demo-off stack (VAR BANK, POS,
+  TRD, FORMS).
 - **Configuration resolution: one resolver, three layers, the server only reads.** Every pack is found in one waterfall: the site
   (`config/packs/<pack>`, deployed packs first; a site pack of a shipped name replaces it only with `replaces: <pack>`, otherwise the
   shipped one is read and the clash is listed), then each module that is on (its manifest's `packs:` list, in its folder under

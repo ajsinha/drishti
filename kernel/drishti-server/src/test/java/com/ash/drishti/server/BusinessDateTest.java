@@ -68,14 +68,16 @@ class BusinessDateTest {
                 .andExpect(jsonPath("$.data.rating").value("A"));
     }
 
+    /** The agreements come only from undated sources (the lake holds trades and counterparties, which it serves alone). */
     @Test
     void anUndatedSourceStillAnswersAndSaysSo() throws Exception {
-        mvc.perform(get("/api/v1/views/trade/IRS-48213").header("X-Drishti-As-Of", "2026-09-29"))
+        mvc.perform(get("/api/v1/views/agreement/ISDA-2002-0417").header("X-Drishti-As-Of", "2026-09-29"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.provenance.businessDate").doesNotExist())
                 .andExpect(jsonPath("$.provenance.live").value(false));
-        mvc.perform(get("/api/v1/views/trade/IRS-48213"))
-                .andExpect(jsonPath("$.provenance.live").value(true));
+        mvc.perform(get("/api/v1/views/agreement/ISDA-2002-0417"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.provenance.businessDate").doesNotExist());
     }
 
     @Test

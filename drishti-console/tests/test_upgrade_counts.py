@@ -34,7 +34,7 @@ from wb_live import _stack
 
 ROOT = Path(__file__).resolve().parents[2]
 FROM = "v2.9.11.i_2_3"
-ONLY = "trading,core,market-data,counterparty-risk"     # the demo packs whose connectors the tag generated (trade per system among them)
+ONLY = "trading,core,market-data,counterparty-risk,market-risk"   # the demo packs whose connectors the tag generated: trades per system, VaR inputs
 SYSTEMS = ("ENDUR", "CALYPSO", "MUREX", "WSS", "SWAPONE", "ICI")
 
 
@@ -65,42 +65,76 @@ def _counts(server: str) -> dict[str, object]:
     return out
 
 
+def rows_newest(folder: Path) -> int | None:
+    """A Delta table's rows on its newest business date, from its log's add actions (no data file read); None when there is no table."""
+    if not (folder / "_delta_log").is_dir():
+        return None
+    from deltalake import DeltaTable
+    acts = DeltaTable(str(folder)).get_add_actions(flatten=True).to_pydict()
+    n = acts.get("num_records") or []
+    dates = next((v for k, v in acts.items() if k.lower() == "partition.business_date"), None)
+    if dates is None:                                  # not partitioned by date: every row
+        return int(sum(x or 0 for x in n))
+    newest = max(d for d in dates if d is not None) if any(d is not None for d in dates) else None
+    return int(sum(x or 0 for x, d in zip(n, dates) if d == newest))
+
+
+def _lake_entries() -> dict[str, dict]:
+    import yaml
+    doc = yaml.safe_load((ROOT / "config" / "lakes" / "demo.yaml").read_text(encoding="utf-8")) or {}
+    return {k: (v or {}) for k, v in (doc.get("tables") or {}).items()}
+
+
+def _tables_of(kind: str, settings: dict, entries: dict[str, dict]) -> list[str]:
+    """The demo lake's tables a connector of the release reads for ``kind``: its lake-tables, else the lake file's entries of the kind."""
+    named = [x.strip() for x in str(settings.get("lake-tables") or "").split(",") if x.strip()]
+    if named:
+        return [t for t in named if (entries.get(t) or {}).get("kind", t.split(".", 1)[1]) in (kind, kind.replace("-", "_"))] or (named if len(named) == 1 else [])
+    return [t for t, e in entries.items() if e.get("kind", t.split(".", 1)[1]) == kind]
+
+
 def _main(site: Path, lake: Path) -> dict[str, object]:
     """What the release of the fixture served from this lake: for each kind, the rows of the newest business date in the tables its
-    generated connector files read (lake-tables), summed over the connectors that name the kind (a union); per source system for trades
-    (each of its trade connectors stamps one system). Read with deltalake, as the files say; no server of that release is started."""
+    generated connector files read (lake-tables, else the lake file's entry of the kind), summed over the connectors that name the kind
+    (a union); per source system for trades (each of its trade connectors stamps one system). Read from the Delta logs; no server of that
+    release is started."""
     import yaml
     try:
-        import pyarrow.compute as pc
-        from deltalake import DeltaTable
+        import deltalake  # noqa: F401
     except ImportError:
         return {}
-
-    def rows(table: str) -> int | None:
-        folder = lake / table.replace(".", "/", 1)
-        if not folder.is_dir():
-            return 0
-        t = DeltaTable(str(folder)).to_pyarrow_table()
-        if "BUSINESS_DATE" in t.column_names and t.num_rows:
-            newest = pc.max(t["BUSINESS_DATE"])
-            return int(pc.sum(pc.equal(t["BUSINESS_DATE"], newest)).as_py() or 0)
-        return t.num_rows
-
+    entries = _lake_entries()
     out: dict[str, int] = {}
     for f in sorted((site / "connectors").glob("*.yaml")):
         d = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
         st = d.get("settings") or {}
-        tables = [x.strip() for x in str(st.get("lake-tables") or "").split(",") if x.strip()]
-        if d.get("plugin") != "delta" or st.get("lake") != "demo" or not tables:
+        if d.get("plugin") != "delta" or st.get("lake") != "demo":
             continue
         for kind in d.get("kinds") or []:
-            mine = [t for t in tables if t.split(".", 1)[1] in (kind, kind.replace("-", "_"))] or (tables if len(tables) == 1 else [])
-            n = sum(rows(t) or 0 for t in mine)
+            mine = _tables_of(kind, st, entries)
+            if not mine:
+                continue
+            n = sum(rows_newest(lake / t.replace(".", "/", 1)) or 0 for t in mine)
             out[kind] = out.get(kind, 0) + n
             # the system: the connector's stamp, else its one table's (trading.trade_endur: ENDUR, as that release named them)
-            system = str(st.get("set.SOURCE_SYSTEM") or (tables[0].rsplit("_", 1)[-1].upper() if len(tables) == 1 and "trade_" in tables[0] else ""))
+            stamp = st.get("set").get("SOURCE_SYSTEM") if isinstance(st.get("set"), dict) else st.get("set.SOURCE_SYSTEM")
+            system = str(stamp or (mine[0].rsplit("_", 1)[-1].upper() if len(mine) == 1 and "trade_" in mine[0] else ""))
             if kind == "trade" and system:
                 out[f"trade[{system}]"] = out.get(f"trade[{system}]", 0) + n
+    return out
+
+
+def _binding_map(server: str) -> dict[str, list[dict]]:
+    """The server's binding map (GET /api/v1/admin/bindings/map): each kind's read connectors, each with the table it reads and that
+    table's rows on its newest business date, read here from the very path the server resolved."""
+    out: dict[str, list[dict]] = {}
+    for k in _get(server, "/api/v1/admin/bindings/map").get("kinds", []):
+        reads = []
+        for c in k.get("reads") or []:
+            t = c.get("table")
+            c = {**c, "rows": rows_newest(Path(t)) if t and "://" not in t else None}
+            reads.append(c)
+        out[k["kind"]] = reads
     return out
 
 
@@ -127,11 +161,12 @@ def site(tmp_path_factory) -> Path:
 
 
 def test_every_demo_kind_keeps_its_record_count_after_the_upgrade(tmp_path_factory, lake, site):
-    env = {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true"}
+    env = {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true", "DRISHTI_VAR_SYSTEM_BASKETS_SEED": "true"}
     gen = _stack(tmp_path_factory, env)
     st = next(gen)
     try:
         fresh = _counts(st.server)
+        fresh_map = _binding_map(st.server)
     finally:
         next(gen, None)
 
@@ -148,6 +183,7 @@ def test_every_demo_kind_keeps_its_record_count_after_the_upgrade(tmp_path_facto
     st = next(gen)
     try:
         upgraded = _counts(st.server)
+        upgraded_map = _binding_map(st.server)
     finally:
         next(gen, None)
 
@@ -155,6 +191,20 @@ def test_every_demo_kind_keeps_its_record_count_after_the_upgrade(tmp_path_facto
     table = [{"kind": k, "main": main.get(k), "fresh": fresh.get(k), "upgraded": upgraded.get(k)} for k in sorted(set(fresh) | set(upgraded))]
     if os.environ.get("DRISHTI_COUNT_TABLE"):
         Path(os.environ["DRISHTI_COUNT_TABLE"]).write_text(json.dumps(table, indent=1) + "\n", encoding="utf-8")
+    # the binding map: every connector a read asks points at a table that exists and holds rows wherever the release held some
+    bmap = [{"kind": k, "site": site_name, "connector": c["connector"], "layer": c.get("layer"), "plugin": c.get("plugin"), "lake": c.get("lake"),
+             "table": c.get("table"), "exists": c.get("exists"), "rows": c.get("rows"), "main": main.get(k)}
+            for site_name, m in (("fresh", fresh_map), ("upgraded", upgraded_map)) for k in sorted(m) for c in m[k]]
+    if os.environ.get("DRISHTI_BINDING_MAP"):
+        Path(os.environ["DRISHTI_BINDING_MAP"]).write_text(json.dumps(bmap, indent=1) + "\n", encoding="utf-8")
+    pointing_wrong = [r for r in bmap if r["table"] and (r["main"] or 0) > 0 and (r["exists"] is False or not r["rows"])]
+    assert not pointing_wrong, "connectors read a missing or empty table where the release had data:\n" + "\n".join(f"  {r}" for r in pointing_wrong)
+    # every kind the release served from the lake is served now, with the same rows on the newest date
+    drop = [r for r in table if (r["main"] or 0) > 0 and (r["fresh"] != r["main"] or r["upgraded"] != r["main"])]
+    assert not drop, "counts differ from the release's:\n" + "\n".join(f"  {r}" for r in drop)
+    # the VaR inputs the lake does not hold (positions from trades, the seeded system baskets) are served on both
+    for k in ("position", "system-basket"):
+        assert fresh.get(k) and upgraded.get(k), f"{k}: fresh {fresh.get(k)}, upgraded {upgraded.get(k)}"
     assert _hashes(site / "connectors") == before, "the server changed a site connector file at start"
     assert fresh.get("trade"), f"no trades on a fresh site: {fresh}"
     no_trades = [s for s in SYSTEMS if (main.get(f"trade[{s}]") or 0) > 0 and not upgraded.get(f"trade[{s}]")]

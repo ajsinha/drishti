@@ -68,6 +68,9 @@ public final class JavaRunner implements EngineRunner {
             ClassNotFoundException missing = null;
             for (ClassLoader cl : loaders) {
                 String moved = moved(cl).get(className);
+                if (className.equals(moved)) {
+                    moved = null;                        // a module that lists its own class as moved names no move
+                }
                 if (moved != null) {                 // a class a module moved (a connector file written before the move still names it)
                     LOG.info("{}: the engine class {} is now {}; the connector's file can name the new one", connector, className, moved);
                 }
@@ -86,7 +89,7 @@ public final class JavaRunner implements EngineRunner {
             }
             return new JavaRunner((ComputeEngine) c.getDeclaredConstructor().newInstance());
         } catch (ReflectiveOperationException | LinkageError e) {
-            throw new IllegalArgumentException(connector + ": the engine class " + className + " cannot be loaded: " + e);
+            throw new IllegalArgumentException(connector + ": the engine class " + className + " cannot be loaded: " + e, e);
         }
     }
 

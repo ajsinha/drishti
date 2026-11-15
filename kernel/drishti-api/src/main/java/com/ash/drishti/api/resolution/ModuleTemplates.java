@@ -39,8 +39,11 @@ public final class ModuleTemplates {
 
     /** The template key that names the module a template came from (never a connector setting). */
     public static final String FROM_MODULE = "from-module";
-    /** The template key that names the folder a template's relative files are read from (never a connector setting). */
-    public static final String BASE_DIR = "base-dir";
+    /**
+     * The setting that names the module's folder, which a template's relative files (its {@code map:}) are read from: the kernel sets it on
+     * every module template (SourceShape reads it first), as it does for a module's connector extension.
+     */
+    public static final String MODULE_DIR = "module-dir";
 
     /**
      * One template.
@@ -48,7 +51,7 @@ public final class ModuleTemplates {
      * @param name       the connector's name
      * @param module     the module that brings it
      * @param file       the template's file
-     * @param definition the file's content without {@code name:}, with {@link #FROM_MODULE} and {@link #BASE_DIR}
+     * @param definition the file's content without {@code name:}, with {@link #FROM_MODULE} and the setting {@link #MODULE_DIR}
      */
     public record Template(String name, String module, Path file, Map<String, Object> definition) {}
 
@@ -65,6 +68,7 @@ public final class ModuleTemplates {
     }
 
     /** The templates of the modules that are on, by connector name in name order; problems are added to {@code problems}. */
+    @SuppressWarnings("unchecked")
     public static Map<String, Template> of(Collection<PackResolver.Module> modules, Predicate<String> active,
             Function<Path, Map<String, Object>> yaml, List<String> problems) {
         Map<String, List<Template>> found = new TreeMap<>();
@@ -92,7 +96,10 @@ public final class ModuleTemplates {
                 Object n = c.remove("name");
                 String name = n == null || String.valueOf(n).isBlank() ? stem : String.valueOf(n).strip();
                 c.put(FROM_MODULE, m.id());
-                c.put(BASE_DIR, m.home().toString());
+                Map<String, Object> settings = c.get("settings") instanceof Map<?, ?> sm ? new LinkedHashMap<>((Map<String, Object>) sm)
+                        : new LinkedHashMap<>();
+                settings.putIfAbsent(MODULE_DIR, m.home().toAbsolutePath().normalize().toString());
+                c.put("settings", settings);
                 found.computeIfAbsent(name, k -> new ArrayList<>()).add(new Template(name, m.id(), f, c));
             }
         }

@@ -117,8 +117,14 @@ class NetLiveBiTest {
                 "--drishti.sources.connectors.finance-lake.enabled=false", "--drishti.sources.connectors.rep-lake.plugin=file",
                 "--drishti.sources.connectors.rep-lake.kinds[0]=trade", "--drishti.sources.connectors.rep-lake.settings.root=" + root.resolve("lake"),
                 "--drishti.sources.connectors.rep-lake.settings.id-field=TRADE_ID", "--drishti.sources.connectors.rep-lake.settings.rescan-seconds=3600");
+        // A's trades for a viewer are the ticking samples (bound to the demo explicitly: beside the lake connector nothing else would serve
+        // them); the BI dataset reads the lake connector by name
+        Path aBindings = root.resolve("a/bindings.yaml");
+        Files.createDirectories(aBindings.getParent());
+        Files.writeString(aBindings, "format: 1\nbindings:\n  trade:\n    demo: true\n");
         List<String> a = new ArrayList<>(common);
-        a.addAll(List.of("--drishti.sources.plugins.demo.settings.ticking=true", "--drishti.bi.query.store-dir=" + root.resolve("a/bi-store")));
+        a.addAll(List.of("--drishti.sources.plugins.demo.settings.ticking=true", "--drishti.bi.query.store-dir=" + root.resolve("a/bi-store"),
+                "--drishti.bindings.file=" + aBindings));
         List<String> b = new ArrayList<>(common);
         b.addAll(List.of("--drishti.sources.plugins.demo.enabled=false", "--drishti.sources.connectors.rep-lake.enabled=false",
                 "--drishti.bi.query.store-dir=" + root.resolve("b/bi-store")));

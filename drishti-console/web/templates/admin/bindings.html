@@ -71,6 +71,24 @@
     </table></div>
   </section>
 
+  <section class="ib-sec" aria-labelledby="bd-map-h">
+    <h2 class="ib-h2" id="bd-map-h">Tables read</h2>
+    <div class="tbl-wrap"><table class="tbl adm-tbl" data-bindings-map>
+      <caption class="visually-hidden">Every kind: the connectors a read asks, in order, each one's layer, plugin, lake and the table it reads</caption>
+      <thead><tr><th scope="col">Kind</th><th scope="col">Connector</th><th scope="col">Layer</th><th scope="col">Plugin</th><th scope="col">Lake</th>
+        <th scope="col">Table</th><th scope="col">Exists</th></tr></thead>
+      <tbody>
+      {% for k in tables %}{% for c in k.reads or [] %}
+        <tr data-map-kind="{{ k.kind }}" data-map-connector="{{ c.connector }}">
+          <td class="mono">{{ k.kind }}</td><td class="mono">{{ c.connector }}</td><td>{{ c.layer }}</td><td class="mono">{{ c.plugin }}</td>
+          <td class="mono">{{ c.lake or '-' }}</td><td class="mono">{{ c.table or '-' }}</td>
+          <td>{% if c.exists is none %}-{% elif c.exists %}<span class="st st-ok">yes</span>{% else %}<span class="st st-bad">missing</span>{% endif %}</td>
+        </tr>
+      {% endfor %}{% endfor %}
+      </tbody>
+    </table></div>
+  </section>
+
   <section class="ib-sec" aria-labelledby="bd-form-h" data-bindings-form hidden>
     <h2 class="ib-h2" id="bd-form-h">Bind <span class="mono" data-bind-kind-label></span></h2>
     <div data-bind-form>

@@ -194,11 +194,18 @@ public class ModuleDeployConfiguration {
     /** Loads the active modules placed here once the server's web layer is up (the request mapping exists). */
     @org.springframework.context.event.EventListener(org.springframework.boot.context.event.ApplicationReadyEvent.class)
     public void startModules(org.springframework.boot.context.event.ApplicationReadyEvent e) {
-        nodeRef = e.getApplicationContext().getBean(ModuleNode.class).start(e.getApplicationContext());
-        if (e.getApplicationContext().getEnvironment().getProperty("drishti.modules.shipped", Boolean.class, true)) {
-            e.getApplicationContext().getBean(ModuleDeployService.class).installShipped(shipped(ModuleDeployConfiguration.root(
-                    e.getApplicationContext().getEnvironment()).resolve("shipped")), "the distribution")
-                    .forEach(l -> LoggerFactory.getLogger(ModuleNode.class).info("the distribution's modules: {}", l));
+        try {
+            nodeRef = e.getApplicationContext().getBean(ModuleNode.class).start(e.getApplicationContext());
+            if (e.getApplicationContext().getEnvironment().getProperty("drishti.modules.shipped", Boolean.class, true)) {
+                e.getApplicationContext().getBean(ModuleDeployService.class).installShipped(shipped(ModuleDeployConfiguration.root(
+                        e.getApplicationContext().getEnvironment()).resolve("shipped")), "the distribution")
+                        .forEach(l -> LoggerFactory.getLogger(ModuleNode.class).info("the distribution's modules: {}", l));
+            }
+        } finally {
+            // the modules are in: a connector that named a module's engine class before they loaded starts now (the start's order, not a
+            // retry); one whose class is still missing fails in words from here on
+            e.getApplicationContext().getBeanProvider(com.ash.drishti.engine.source.SourceRegistry.class).ifAvailable(
+                    com.ash.drishti.engine.source.SourceRegistry::modulesLoaded);
         }
         started = true;
     }
