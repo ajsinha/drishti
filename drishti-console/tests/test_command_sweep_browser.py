@@ -40,6 +40,9 @@ ROLE, ROLE_PASSWORD = "sweep-trader", "long-enough-pass-1"
 SWEEP_PACKS = WALK_PACKS + ",gleif"
 #: the sweeps' servers start without the official exposure capture (CCR is parked for i4, owner 2026-11-15: it took minutes at every start)
 SWEEP_ENV = {"DRISHTI_EXPOSURE_OFFICIAL": "false"}
+#: the sweeps' server heap: the full demo lake's dates open beside each other (Why it moved opens the previous one); at 1536m the server
+#: spent the sweep over 85% of its heap and refused or timed out (TEST_HARNESS.md, "The command sweep")
+SWEEP_HEAP = "6g"
 
 
 def sweep_lake(tmp_path_factory):
@@ -58,7 +61,7 @@ def signed_in_stack(tmp_path_factory):
         return
     from wb_live import TOKEN_SECRET
     lake = sweep_lake(tmp_path_factory)
-    for st in var_server(tmp_path_factory, lake, auth=True, DRISHTI_SECURITY_ENABLED="true", DRISHTI_TOKEN_SECRET=TOKEN_SECRET,
+    for st in var_server(tmp_path_factory, lake, auth=True, heap=SWEEP_HEAP, DRISHTI_SECURITY_ENABLED="true", DRISHTI_TOKEN_SECRET=TOKEN_SECRET,
                          DRISHTI_DATALOAD_ENABLED="true", DRISHTI_DATALOAD_DIR=str(tmp_path_factory.mktemp("sweep-dataload")),
                          DRISHTI_PACKS=SWEEP_PACKS, DRISHTI_LENSES="risk,world,market,trading,markets", **SWEEP_ENV):
         _packs_ready(st.server, SWEEP_PACKS.split(","), token_secret=TOKEN_SECRET)
