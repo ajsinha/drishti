@@ -172,6 +172,7 @@ public class ConnectorController {
             @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireAdmin(p);
         String text;
+        List<String> asked = body != null && body.get("kinds") instanceof List<?> l ? l.stream().map(String::valueOf).toList() : List.of();
         if (body == null || body.isEmpty()) {
             text = connectors.files().text(name);
             if (text == null) {
@@ -180,7 +181,7 @@ public class ConnectorController {
         } else {
             text = connectors.textOf(name, body, p.user());
         }
-        Map<String, Object> out = connectors.test(name, text);
+        Map<String, Object> out = connectors.test(name, text, asked);   // the kinds the designer means to bind it to: what it holds of them
         audit.record(p.user(), "connector-tested", name, Boolean.TRUE.equals(out.get("ok")) ? "reachable" : "problem");
         return out;
     }
