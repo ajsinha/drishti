@@ -251,7 +251,7 @@ def stack(tmp_path_factory):
                    DRISHTI_OIDC_ENABLED="true", DRISHTI_OIDC_ISSUER=IDP, DRISHTI_OIDC_CLIENT_ID="drishti")
         log = tmp / "server.log"
         procs["server"] = subprocess.Popen(java_cmd(str(JAVA), ["-Xmx768m", "-jar", jars[0], f"--server.port={SERVER_PORT}", "--drishti.security.registered-users-only=false",
-                                                                 "--drishti.security.oidc.default-roles=viewer"], tmp=tmp / "jvm-tmp", cwd=work),
+                                                                 "--drishti.security.oidc.default-roles=viewer"], tmp=tmp / "jvm-tmp", cwd=work, env=env),
                                            cwd=work, env=env, stdout=log.open("ab"), stderr=subprocess.STDOUT)
         _wait(SERVER + "/actuator/health", 600, procs["server"], log)
         _admin("POST", "/admin/embed/apps", {"id": APP, "name": "Intranet page", "origins": [HOST], "scopes": ["embed:view", "embed:about"],

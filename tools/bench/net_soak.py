@@ -297,7 +297,7 @@ class Soak:
                 "--drishti.sources.plugins.demo.enabled=false", "--drishti.security.registered-users-only=false",
                 "--drishti.security.redact=" + ",".join(REDACT)]
         log = open(self.work / f"server-{name}.log", "ab")
-        self.procs[name] = subprocess.Popen(java_cmd(self.java, args, tmp=work / "data" / "tmp" / "server", cwd=work), cwd=work, env=env, stdout=log,
+        self.procs[name] = subprocess.Popen(java_cmd(self.java, args, tmp=work / "data" / "tmp" / "server", cwd=work, env=env), cwd=work, env=env, stdout=log,
                                             stderr=subprocess.STDOUT)
         wait_up(f"http://127.0.0.1:{port}/actuator/health", 240)
 

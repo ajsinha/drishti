@@ -143,7 +143,7 @@ class Stack:
             env.update(DRISHTI_DELTA_ROOT=str(lake), DRISHTI_DATA_DIR=str(work / "data"))
             if self.offline:
                 env["DRISHTI_OFFLINE"] = "true"
-        self.procs["server"] = subprocess.Popen(java_cmd(java, ["-Xmx768m", "-jar", jars[0], f"--server.port={SERVER_PORT}"], tmp=self.tmp / "jvm-tmp", cwd=work), cwd=work, env=env,
+        self.procs["server"] = subprocess.Popen(java_cmd(java, ["-Xmx768m", "-jar", jars[0], f"--server.port={SERVER_PORT}"], tmp=self.tmp / "jvm-tmp", cwd=work, env=env), cwd=work, env=env,
                                                 stdout=open(self.tmp / "server.log", "ab"), stderr=subprocess.STDOUT)
         wait(SERVER + "/actuator/health", proc=self.procs["server"])
         cenv = dict(os.environ)
