@@ -22,6 +22,7 @@
    a table with data-no-chart has none). A table with data-plain is left as it is (a form laid out as a table). */
 (function () {
   'use strict';
+  function drishti_url(p) { var f = globalThis.drishti_url; return typeof f === 'function' && f !== drishti_url ? f(p) : p; }   // drishti-core's base helper when the page has it; a page without it (the renderer, an embed) keeps the URL as it is
   var me = document.currentScript;
   var CF = (window.drishtiModules || {}).colFilter;     // column filters; loaded before this script
   var VER = me && /[?&]v=([^&]+)/.exec(me.src || '') ? /[?&]v=([^&]+)/.exec(me.src)[1] : '';

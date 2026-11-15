@@ -21,6 +21,7 @@
    screen guide as everywhere: drishti_app.js). The same fetch feeds the panel popovers and field hints (drishti_about-hints.js). On a phone it is a bottom sheet that traps the focus; Esc closes it and the focus goes back. */
 (function () {
   'use strict';
+  function drishti_url(p) { var f = globalThis.drishti_url; return typeof f === 'function' && f !== drishti_url ? f(p) : p; }   // drishti-core's base helper when the page has it; a page without it (the renderer, an embed) keeps the URL as it is
   var me = document.currentScript;
   /** init(root, options): the About drawer under root (the document or a ShadowRoot: the element renders its own drawer markup).
       options: fetch(url, init) and url(path) (default: the page's own), reload() (the drawer's "refresh" link; default: reload the

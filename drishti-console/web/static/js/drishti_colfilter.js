@@ -26,6 +26,7 @@
    raw value. */
 (function () {
   'use strict';
+  function drishti_url(p) { var f = globalThis.drishti_url; return typeof f === 'function' && f !== drishti_url ? f(p) : p; }   // drishti-core's base helper when the page has it; a page without it (the renderer, an embed) keeps the URL as it is
   var MASK = '•••', LIST_MAX = 500;
 
   // ---- values and types ----------------------------------------------------------------------------------------

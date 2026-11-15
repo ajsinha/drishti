@@ -19,6 +19,7 @@
    loaded after it), and the controls find the pickers. Deleted with the renderer 1.2.0 (ELEMENTS.md section 12, step 8). */
 (function () {
   "use strict";
+  function drishti_url(p) { var f = globalThis.drishti_url; return typeof f === 'function' && f !== drishti_url ? f(p) : p; }   // drishti-core's base helper when the page has it; a page without it (the renderer, an embed) keeps the URL as it is
   var me = document.currentScript, D = window.Drishti || {};
   if (!me || !me.src || (D.elements && D.elements.inputs)) { return; }
   var base = me.src.replace(/js\/(?:drishti_)?multiselect\.js.*$/, "");

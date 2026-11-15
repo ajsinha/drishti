@@ -22,6 +22,7 @@
    format names. Loaded in the page (window.Drishti.pivotEngine) and under node for tests (module.exports). */
 (function (root) {
   'use strict';
+  function drishti_url(p) { var f = globalThis.drishti_url; return typeof f === 'function' && f !== drishti_url ? f(p) : p; }   // drishti-core's base helper when the page has it; a page without it (the renderer, an embed) keeps the URL as it is
   var US = '\u001f', RS = '\u001e', BLANK = '(blank)';
   var AGG_LABEL = { sum: 'Sum', count: 'Count', avg: 'Average', min: 'Min', max: 'Max', distinct: 'Distinct count' };
   /** The chart's aggregations as the engine's functions. */
