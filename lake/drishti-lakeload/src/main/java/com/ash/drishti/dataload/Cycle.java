@@ -258,7 +258,11 @@ public final class Cycle {
             List<FileOutcome> files) throws IOException {
         String sha = Ledger.sha256(file);
         JsonNode before = ledger.loaded(sha);
-        if (before != null && !settings.reloadDuplicates()) {
+        String replacedSince = before == null ? null : replacedSince(before);
+        if (replacedSince != null) {
+            LOG.info("data inbox: {} was loaded in run {}, but {}: loaded again", name, before.path("run").asText(), replacedSince);
+        }
+        if (before != null && replacedSince == null && !settings.reloadDuplicates()) {
             String why = "already loaded in run " + before.path("run").asText() + " on " + before.path("at").asText() + " (" + before.path("file").asText()
                     + ", the same SHA-256): not loaded again";
             ledger.write(run, name, Ledger.DUPLICATE, JSON.createObjectNode().put("sha256", sha).put("size", size).put("reason", why)
@@ -296,6 +300,49 @@ public final class Cycle {
             return null;
         }
         return new Claimed(name, file, marker, sha, size, note, route);
+    }
+
+    /**
+     * Why an identical file loaded before is not in the lake any more (null: it is, or that cannot be said, and the file is a duplicate):
+     * the duplicate check keys on what the lake holds now, not only on the file's checksum (DATA_LAKE_GUIDE.md section 3.1). Each table the
+     * earlier load committed (a tar: each of its tables) is asked which dates still hold that load's rows ({@code _load_id}); a date the
+     * load wrote that holds none of them now was replaced (or undone) by a later load, and the file loads again.
+     */
+    static String replacedSince(JsonNode loaded) {
+        List<JsonNode> parts = new ArrayList<>();
+        parts.add(loaded);
+        loaded.path("tables").forEach(t -> parts.add(t.path("load")));
+        for (JsonNode p : parts) {
+            String table = p.path("table").asText("");
+            JsonNode dates = p.has("dates") ? p.path("dates") : p.path("commit").path("dates");
+            if (table.isEmpty() || dates.size() == 0 || p.path("loads").size() == 0) {
+                continue;
+            }
+            java.util.Set<String> holding = new java.util.TreeSet<>();
+            boolean known = true;
+            for (var it = p.path("loads").fieldNames(); it.hasNext(); ) {
+                java.util.Set<String> h = LakeUndo.datesHolding(table, it.next());
+                if (h == null) {
+                    known = false;
+                    break;
+                }
+                holding.addAll(h);
+            }
+            if (!known) {
+                continue;
+            }
+            List<String> gone = new ArrayList<>();
+            dates.fieldNames().forEachRemaining(d -> {
+                if (!holding.contains(d)) {
+                    gone.add(d);
+                }
+            });
+            if (!gone.isEmpty()) {
+                return "its date " + String.join(", ", gone) + " in " + table.replace('\\', '/').replaceAll(".*/([^/]+/[^/]+)$", "$1")
+                        + " no longer holds its rows (replaced or undone since)";
+            }
+        }
+        return null;
     }
 
     /** One table's files through the loader; on a failure of several files, each again alone, so one bad file fails alone. */
@@ -379,8 +426,16 @@ public final class Cycle {
             if (l.summary() != null) {
                 rep.set("load", l.summary());
             }
+            String rejects = rejectsText(l.summary(), code == LakeLoad.PARTIAL);
+            if (rejects != null) {
+                rep.put("rejects", rejects);
+                String n = c.name() + ": " + rejects;
+                if (!notices.contains(n)) {
+                    notices.add(n);                                  // loud: the cycle's notices (Admin, the log as a warning, the CLI)
+                }
+            }
             outbox.done(run, c.file(), c.marker(), rep);
-            files.add(new FileOutcome(c.name(), Ledger.LOADED, code == LakeLoad.PARTIAL ? "loaded with rejects" : null, c.route().pack(),
+            files.add(new FileOutcome(c.name(), Ledger.LOADED, rejects, c.route().pack(),
                     c.route().kind(), versions(l.summary()), l.summary() == null ? 0 : l.summary().path("accepted").asLong(),
                     l.summary() == null ? 0 : l.summary().path("rejected").asLong(), dateNote(l.summary(), c.name())));
         }
@@ -402,6 +457,28 @@ public final class Cycle {
         long rejected = 0;
         Map<String, Long> versions = new LinkedHashMap<>();
         Loaded last = null;
+        if (tar.note().rows() != null) {
+            // rows: in its .ready file: every table folder read first without writing (a dry run), the documents of all of them must match
+            long docs = 0;
+            List<String> each = new ArrayList<>();
+            for (Routes.Route r : tar.tables()) {
+                Loaded check = runLoader(run, List.of(tar.as(r)), List.of("--dry-run"), "check-" + r.dataset());
+                long n = check.summary() == null ? -1 : check.summary().path("documents").asLong(-1);
+                if (check.result().code() == LakeLoad.FAILED && n < 0) {
+                    fail(run, tar.name(), tar.file(), tar.marker(), tar.sha(), tar.size(), "table " + r.dataset() + ": its check failed before loading: "
+                            + reason(check) + "; nothing was loaded", check.summary(), ledger, outbox, files);
+                    return;
+                }
+                docs += Math.max(0, n);
+                each.add(r.dataset() + " " + n);
+            }
+            if (docs != tar.note().rows()) {
+                fail(run, tar.name(), tar.file(), tar.marker(), tar.sha(), tar.size(), "its .ready file says " + tar.note().rows()
+                        + " rows, the archive holds " + docs + " documents (" + String.join(", ", each) + "): not loaded, nothing was written", null,
+                        ledger, outbox, files);
+                return;
+            }
+        }
         for (Routes.Route r : tar.tables()) {
             Loaded l = runLoader(run, List.of(tar.as(r)), List.of("--run-id", runId), "tar-" + r.dataset());
             last = l;
@@ -444,9 +521,52 @@ public final class Cycle {
                 rep.put("warning", unread);
             }
         }
+        String rejects = rejectsText(tables, rejected);
+        if (rejects != null) {
+            rep.put("rejects", rejects);
+            notices.add(tar.name() + ": " + rejects);
+        }
         outbox.done(run, tar.file(), tar.marker(), rep);
-        files.add(new FileOutcome(tar.name(), Ledger.LOADED, rejected > 0 ? "loaded with rejects" : null, tar.route().pack(), tar.route().kind(),
+        files.add(new FileOutcome(tar.name(), Ledger.LOADED, rejects, tar.route().pack(), tar.route().kind(),
                 versions, rows, rejected));
+    }
+
+    /**
+     * The words of a load that rejected rows, with the counts and the reasons ({@code loaded with rejects: 3 of 120 rows rejected: no id
+     * (field 'TRADE_ID' is missing or empty) 2; ...}): what the Admin page, the outcome and {@code drishti.py dataload} say. Null when none.
+     */
+    static String rejectsText(JsonNode summary, boolean partial) {
+        long rej = summary == null ? 0 : summary.path("rejected").asLong();
+        if (rej == 0) {
+            return partial ? "loaded with rejects" : null;
+        }
+        return "loaded with rejects: " + rej + " of " + summary.path("documents").asLong() + " rows rejected: " + reasons(summary.path("rejects").path("byReason"));
+    }
+
+    /** The same for an archive: each table's rejects. */
+    static String rejectsText(ArrayNode tables, long rejected) {
+        if (rejected == 0) {
+            return null;
+        }
+        List<String> each = new ArrayList<>();
+        for (JsonNode t : tables) {
+            long r = t.path("load").path("rejected").asLong();
+            if (r > 0) {
+                each.add(t.path("table").asText() + " " + r + " of " + t.path("load").path("documents").asLong() + ": "
+                        + reasons(t.path("load").path("rejects").path("byReason")));
+            }
+        }
+        return "loaded with rejects: " + rejected + " rows rejected (" + String.join("; ", each) + ")";
+    }
+
+    private static String reasons(JsonNode byReason) {
+        List<String> out = new ArrayList<>();
+        byReason.fields().forEachRemaining(e -> {
+            if (out.size() < 5) {
+                out.add(e.getKey() + " (" + e.getValue().asLong() + ")");
+            }
+        });
+        return out.isEmpty() ? "see the load's rejects file" : String.join("; ", out) + (byReason.size() > 5 ? "; …" : "");
     }
 
     /** Undoes load {@code loadId} in the tables an archive had committed; the words for the failure's reason. */

@@ -113,7 +113,7 @@ class CycleTest {
                 org.assertj.core.groups.Tuple.tuple("trades-some.jsonl", "loaded"), org.assertj.core.groups.Tuple.tuple("trades-bad.jsonl", "failed"),
                 org.assertj.core.groups.Tuple.tuple("trades-good.jsonl", "loaded"));
         assertThat(r.files()).filteredOn(o -> o.file().equals("trades-some.jsonl")).singleElement().satisfies(o -> {
-            assertThat(o.reason()).isEqualTo("loaded with rejects");
+            assertThat(o.reason()).startsWith("loaded with rejects: 1 of 1 rows rejected");
             assertThat(o.rejected()).isEqualTo(1);
         });
         assertThat(r.files()).filteredOn(o -> o.file().equals("trades-bad.jsonl")).singleElement().extracting(Cycle.FileOutcome::reason).asString()

@@ -228,6 +228,29 @@ public final class LakeUndo {
         return out;
     }
 
+    /**
+     * The dates of a Delta table at {@code table} whose current files may still hold load {@code id}'s rows (the data inbox's duplicate check:
+     * a file sent again is loaded again when a later load replaced its date). Null when it cannot be said (not a Delta table, unreadable):
+     * the caller keeps its own answer.
+     */
+    public static java.util.Set<String> datesHolding(String table, String id) {
+        try {
+            Engine engine = LakeWriter.engineFor(table, Map.of());
+            Snapshot s = Table.forPath(engine, table).getLatestSnapshot(engine);
+            if (s.getSchema().indexOf(RowPlan.LOAD_ID) < 0) {
+                return null;
+            }
+            return new java.util.TreeSet<>(candidateDates(engine, s, id));
+        } catch (TableNotFoundException e) {
+            boolean local = !table.contains("://") || table.startsWith("file:");
+            Path p = local ? Path.of(table.replaceFirst("^file:(//)?", "")) : null;
+            // a local folder that is gone: nothing of the load is there; anything else (an Iceberg table, a store): not known here
+            return p != null && !Files.exists(p) ? java.util.Set.of() : null;
+        } catch (IOException | RuntimeException e) {
+            return null;
+        }
+    }
+
     /** The dates whose files' {@code _load_id} statistics may hold {@code id} (a file without them may too). */
     static List<String> candidateDates(Engine engine, Snapshot s, String id) throws IOException {
         TreeSet<String> out = new TreeSet<>();

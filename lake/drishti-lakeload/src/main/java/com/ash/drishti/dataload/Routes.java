@@ -528,6 +528,14 @@ public final class Routes {
                     continue;
                 }
                 for (com.ash.drishti.lakeconfig.PackEntry.PackTable t : tablesOf(info)) {
+                    // a connector's own name (trade_wss: trade-wss), whatever table it writes: every source module that is on brings its
+                    // connector, so its folder in a tar or its file name routes to it (a shared table's slice, LoadConfig.withSlice)
+                    if (info.kinds().contains(t.kind()) && norm(t.connector()).equals(want) && !norm(t.table()).equals(want)
+                            && (givenKind == null || givenKind.equals(t.kind()))) {
+                        known.add(p + "/" + norm(t.connector()).replace('-', '_'));
+                        hits.add(new String[] {p, t.kind(), t.connector()});
+                        continue;
+                    }
                     if (norm(t.table()).equals(norm(t.kind())) || !info.kinds().contains(t.kind())) {
                         continue;                               // a kind's own name: matched above
                     }

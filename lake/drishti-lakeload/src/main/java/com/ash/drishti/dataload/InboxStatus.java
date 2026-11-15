@@ -381,7 +381,8 @@ final class InboxStatus {
                 int n = c.files().size();
                 int failed = by.getOrDefault(Ledger.FAILED, 0);
                 int loaded = by.getOrDefault(Ledger.LOADED, 0);
-                outcome = failed > 0 ? "failed-files" : loaded > 0 ? "loaded" : by.containsKey(Ledger.DUPLICATE) ? "duplicate" : "returned";
+                outcome = failed > 0 ? "failed-files" : loaded > 0 ? (rejects > 0 ? "loaded-with-rejects" : "loaded")
+                        : by.containsKey(Ledger.DUPLICATE) ? "duplicate" : "returned";
                 List<String> parts = new ArrayList<>();
                 String split = by.size() > 1 ? ": " + String.join(", ", by.entrySet().stream().map(x -> x.getValue() + " " + x.getKey()).toList()) : "";
                 parts.add(n + (n == 1 ? " file" : " files") + split);
@@ -402,6 +403,7 @@ final class InboxStatus {
             r.put("label", switch (outcome) {
                 case "nothing" -> "nothing ready";
                 case "failed-files" -> by.get(Ledger.FAILED) + " failed";
+                case "loaded-with-rejects" -> "loaded · " + count(rejects) + " rejected";
                 default -> outcome;
             });
             r.put("text", text);

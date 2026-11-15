@@ -145,6 +145,35 @@ class NewLakeKeysTest {
                 .hasMessageContaining("trade_murex: no pack, kind or table").hasMessageContaining("book/trade_endur");
     }
 
+    /** WSS, SwapOne and ICI (source modules) write one shared table: a tar folder or a file named after the connector routes to it. */
+    @Test
+    void aTarFolderNamedAfterAConnectorOfASharedTableRoutesToThatConnector() throws Exception {
+        Path pack = bookPack(tmp);
+        String y = Files.readString(pack.resolve("pack.yaml")).replace("  risk:\n", """
+                  trade-wss:
+                    plugin: delta
+                    kinds: [trade]
+                    settings: {lake: demo, lake-tables: book.trades_shared, set: {SOURCE_SYSTEM: WSS}}
+                  trade-swapone:
+                    plugin: delta
+                    kinds: [trade]
+                    settings: {lake: demo, lake-tables: book.trades_shared, set: {SOURCE_SYSTEM: SWAPONE}}
+                  trade-ici:
+                    plugin: delta
+                    kinds: [trade]
+                    settings: {lake: demo, lake-tables: book.trades_shared, set: {SOURCE_SYSTEM: ICI}}
+                  risk:
+                """).replace("    book.var-limit:", "    book.trades_shared: {kind: trade, partition-by: [SOURCE_SYSTEM], promote: [SOURCE_SYSTEM]}\n    book.var-limit:");
+        Files.writeString(pack.resolve("pack.yaml"), y);
+        Routes routes = Routes.read(tmp.resolve("none.yaml"), "demo", packs(pack));
+        List<Routes.Route> tar = routes.routeTar("eod.tar", List.of("trade_endur", "trade_wss", "trade_swapone", "trade_ici"), ReadyNote.EMPTY);
+        assertThat(tar).extracting(Routes.Route::connector).containsExactly("trade-endur", "trade-wss", "trade-swapone", "trade-ici");
+        assertThat(tar).extracting(Routes.Route::kind).containsOnly("trade");
+        assertThat(routes.route("trade_ici.2026-11-06.jsonl.gz", null).connector()).isEqualTo("trade-ici");
+        assertThatThrownBy(() -> routes.routeTar("eod.tar", List.of("trades_shared"), ReadyNote.EMPTY))
+                .as("the shared table itself names no one connector").hasMessageContaining("more than one table of that name");
+    }
+
     @Test
     void theReadyFilesKeyWinsInTheNewLakesEntry() throws Exception {
         Path pack = bookPack(tmp);
