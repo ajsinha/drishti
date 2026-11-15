@@ -345,10 +345,9 @@ public final class Blas {
     public static Path defaultCacheDir() {
         String c = setting("drishti.native.cache-dir", "DRISHTI_NATIVE_CACHE_DIR");
         if (c != null && !c.isBlank()) {
-            return Path.of(c);
+            return com.ash.drishti.api.Roots.anchored(c.strip());     // a relative value: under the install folder
         }
-        String data = System.getProperty("drishti.data.dir");
-        return Path.of(data == null || data.isBlank() ? com.ash.drishti.api.Roots.data() : data, "native-cache");
+        return Path.of(com.ash.drishti.api.Roots.data("native-cache"));
     }
 
     private static String setting(String property, String env) {

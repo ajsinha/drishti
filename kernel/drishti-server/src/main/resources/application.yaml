@@ -35,7 +35,7 @@ spring:
   main:
     banner-mode: off  # no Spring banner at start
   config:
-    # files read after this one: the engines' files (config/engines/<id>.yaml), application.local.yaml in the working directory, then the packs overlay Admin -> Packs writes
+    # files read after this one: the engines' files (config/engines/<id>.yaml), application.local.yaml in the install folder (drishti.home), then the packs overlay Admin -> Packs writes
     # (DRISHTI_PACKS_OVERLAY, default <data dir>/packs/added.yaml)
     import:
       # the engines' own files (docs/guides/ADMIN_GUIDE.md section 3): the jar's copy, then the site's, which wins key by key

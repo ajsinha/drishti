@@ -77,8 +77,7 @@ public record PackEntry(String domain, String table, String key, String date, Li
         }
         Path file = Files.isDirectory(pack) ? pack.resolve("pack.yaml") : pack;
         // the layers (KERNEL_AND_MODULES.md section 18.5): the template's constants, then the site override's key by key (null removes one)
-        String dir = System.getProperty("drishti.sources.connectors-dir", System.getenv().getOrDefault("DRISHTI_CONNECTORS_DIR", com.ash.drishti.api.Roots.config("connectors")));
-        Path siteFile = Path.of(dir, connector + ".yaml");
+        Path siteFile = com.ash.drishti.api.Roots.connectors().resolve(connector + ".yaml");
         JsonNode site = Files.isRegularFile(siteFile) ? new YAMLMapper().readTree(Files.readString(siteFile)) : null;
         JsonNode template = manifest(file).path("connectors").path(connector);
         if (!template.isMissingNode() && !(site != null && site.path("settings").size() > 0 && !site.path("plugin").isMissingNode()

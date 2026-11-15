@@ -125,19 +125,37 @@ public final class LaunchRoots implements EnvironmentPostProcessor, Ordered {
         }
         Map<String, Object> values = new LinkedHashMap<>(r.values());
         Object home = values.get(HOME);
+        Path homePath = home == null ? null : Path.of(home.toString());
+        java.util.Set<String> roots = java.util.Set.copyOf(values.keySet());
+        env.getPropertySources().addFirst(new MapPropertySource(SOURCE, values));   // first, so the other settings' placeholders see the absolute roots
         List<String> anchoredProblems = new ArrayList<>();
+        // the path variables (DRISHTI_*_DIR, _FILE, _ROOT, ...): anchored under their own names, so a placeholder ${DRISHTI_X:...} and
+        // Spring's relaxed binding both see the absolute value
+        Map<String, Object> envValues = new LinkedHashMap<>();
+        PropertySource<?> sysEnv = env.getPropertySources().get(org.springframework.core.env.StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME);
+        if (sysEnv instanceof EnumerablePropertySource<?> e) {
+            List<String> envKeys = java.util.Arrays.stream(e.getPropertyNames()).filter(n -> PATH_ENV.matcher(n).matches()).sorted().toList();
+            envValues.putAll(anchorSettings(envKeys, k -> {
+                Object v = sysEnv.getProperty(k);
+                return v == null ? null : v.toString();
+            }, homePath, anchoredProblems));
+            if (!envValues.isEmpty()) {
+                env.getPropertySources().addAfter(SOURCE, new org.springframework.core.env.SystemEnvironmentPropertySource(
+                        SOURCE + "-" + org.springframework.core.env.StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME, envValues));
+            }
+        }
         Map<String, String> anchored = anchorSettings(names(env), k -> {
             try {
-                return values.containsKey(k) ? null : env.getProperty(k);
-            } catch (IllegalArgumentException e) {
+                return roots.contains(k) ? null : env.getProperty(k);
+            } catch (IllegalArgumentException ex) {
                 return null;                                          // a placeholder nothing resolves: not a path to anchor
             }
-        }, home == null ? null : Path.of(home.toString()), anchoredProblems);
+        }, homePath, anchoredProblems);
         if (!anchoredProblems.isEmpty()) {
             throw new IllegalStateException("the server cannot start: " + String.join("; ", anchoredProblems) + "\n" + r.report());
         }
         values.putAll(anchored);
-        env.getPropertySources().addFirst(new MapPropertySource(SOURCE, values));
+        envValues.forEach((k, v) -> anchored.put(k, v.toString()));
         for (String k : List.of(HOME, "drishti.modules.home", "drishti.config.dir")) {   // for code with no Spring environment (a record's default)
             Object v = r.values().get(k);
             if (v != null && System.getProperty(k) == null) {
@@ -152,7 +170,15 @@ public final class LaunchRoots implements EnvironmentPostProcessor, Ordered {
      * {@code root}, {@code path} or {@code home}, and Spring's own log file and TLS stores.
      */
     static final java.util.regex.Pattern PATH_KEY = java.util.regex.Pattern.compile(
-            "^drishti\\..*[.-](?:dir|dirs|file|folder|root|path|home)$|^logging\\.file\\.(?:name|path)$|^server\\.ssl\\.(?:key|trust)-store$");
+            "^drishti\\..*[.-](?:dir|dirs|file|folder|root|path|home|url)$|^logging\\.file\\.(?:name|path)$|^server\\.ssl\\.(?:key|trust)-store$"
+            + "|^spring\\.datasource\\.url$");
+    /** A JDBC URL of a database in a local file (SQLite, DuckDB, H2): its file part is a path. */
+    private static final java.util.regex.Pattern FILE_DB = java.util.regex.Pattern.compile("^(jdbc:(?:sqlite|duckdb|h2:file):)(.+)$");
+    /** The settings the configuration imports name (application.yaml spring.config.import): each must be absolute when given. */
+    static final List<String> IMPORTED = List.of("DRISHTI_ENGINES_DIR", "drishti.config.dir", "DRISHTI_CONFIG_DIR", "DRISHTI_PACKS_OVERLAY",
+            "drishti.data.dir", "DRISHTI_DATA_DIR");
+    /** An environment variable that names a folder or a file. */
+    static final java.util.regex.Pattern PATH_ENV = java.util.regex.Pattern.compile("^DRISHTI_[A-Z0-9_]*_(?:DIR|DIRS|FILE|FOLDER|ROOT|PATH|HOME)$");
     /** A value that is not a local relative path: a URL or a scheme ({@code s3:}, {@code mem:}, {@code classpath:}, {@code jdbc:}), a word. */
     private static final java.util.regex.Pattern NOT_A_PATH = java.util.regex.Pattern.compile(
             "^(?:[A-Za-z][A-Za-z0-9+.-]+:.*|none|auto|off|on|true|false|-?[0-9]+(?:\\.[0-9]+)?)$");
@@ -163,9 +189,10 @@ public final class LaunchRoots implements EnvironmentPostProcessor, Ordered {
     private static List<String> names(ConfigurableEnvironment env) {
         java.util.Set<String> out = new java.util.TreeSet<>();
         for (PropertySource<?> ps : env.getPropertySources()) {
-            if (ps instanceof EnumerablePropertySource<?> e && !ps.getName().equals("configurationProperties") && !ps.getName().contains("Environment")) {
+            if (ps instanceof EnumerablePropertySource<?> e && !ps.getName().equals("configurationProperties") && !ps.getName().contains("Environment")
+                    && !ps.getName().startsWith(SOURCE)) {
                 for (String k : e.getPropertyNames()) {
-                    if (PATH_KEY.matcher(k).matches()) {
+                    if (PATH_KEY.matcher(k).matches() || PATH_ENV.matcher(k).matches()) {
                         out.add(k);
                     }
                 }
@@ -187,19 +214,38 @@ public final class LaunchRoots implements EnvironmentPostProcessor, Ordered {
     static Map<String, String> anchorSettings(List<String> keys, Function<String, String> property, Path home, List<String> problems) {
         Map<String, String> out = new LinkedHashMap<>();
         for (String k : keys) {
-            if (k.equals(HOME)) {
+            if (k.equals(HOME) || k.contains(".routes.")) {      // a route maps a kind (such as exposure-path) to its source: a name, not a path
                 continue;
             }
             String v = property.apply(k);
             if (blank(v)) {
                 continue;
             }
-            boolean list = k.endsWith("dirs") || k.startsWith("drishti.") && k.endsWith(".path");
+            boolean list = k.endsWith("dirs") || k.endsWith("DIRS") || k.startsWith("drishti.") && k.endsWith(".path") || k.endsWith("_PATH");
             List<String> fixed = new ArrayList<>();
             boolean changed = false;
             for (String part : list ? v.split(",", -1) : new String[] {v}) {
                 String x = part.strip();
-                if (x.isEmpty() || ABSOLUTE.matcher(x).matches() || NOT_A_PATH.matcher(x).matches() || x.contains("{")) {
+                java.util.regex.Matcher db = FILE_DB.matcher(x);
+                if (db.matches()) {                                       // jdbc:sqlite:<file>: the file part, unless absolute or in memory
+                    String file = db.group(2);
+                    if (file.startsWith(":") || ABSOLUTE.matcher(file).matches() || file.contains("{")) {
+                        fixed.add(part);
+                    } else if (home == null) {
+                        problems.add(k + " is '" + x + "', a database file at a relative path, and " + HOME + " (DRISHTI_HOME) is not set");
+                        fixed.add(part);
+                    } else {
+                        fixed.add(db.group(1) + home.resolve(file).normalize());
+                        changed = true;
+                    }
+                    continue;
+                }
+                if ((k.endsWith("url") || k.endsWith("URL")) && !k.equals("drishti.packs.registry.url")) {   // any other URL is not a path (the registry's may be a folder)
+                    fixed.add(part);
+                    continue;
+                }
+                if (x.isEmpty() || ABSOLUTE.matcher(x).matches() || NOT_A_PATH.matcher(x).matches() || x.contains("{")
+                        || x.startsWith("$") || x.startsWith("@")) {             // a JSON path, a placeholder left as text
                     fixed.add(part);
                     continue;
                 }
@@ -310,6 +356,13 @@ public final class LaunchRoots implements EnvironmentPostProcessor, Ordered {
                 values.put(key, path.toString());                         // and the one that named it (a former name), as the same folder
             }
             rows.add(new Resolved(root.name(), path, from, exists));
+        }
+        for (String k : IMPORTED) {   // read by spring.config.import before this runs: a relative value there would be the process's folder
+            String v = property.apply(k);
+            if (!blank(v) && !ABSOLUTE.matcher(v.strip()).matches()) {
+                problems.add(k + " is '" + v.strip() + "', a relative path: the configuration files it names (the engines' files, the packs overlay)"
+                        + " are read before the roots are resolved, so give it as an absolute path");
+            }
         }
         String extra = property.apply(EXTRA);
         if (!blank(extra)) {

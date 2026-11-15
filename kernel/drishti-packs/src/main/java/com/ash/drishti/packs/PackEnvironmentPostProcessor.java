@@ -69,7 +69,7 @@ public final class PackEnvironmentPostProcessor implements EnvironmentPostProces
             names.removeAll(notInEdition);
         }
         String connDir = env.getProperty("drishti.sources.connectors-dir", System.getenv().getOrDefault("DRISHTI_CONNECTORS_DIR", com.ash.drishti.api.Roots.config("connectors")));
-        ConnectorFiles files = new ConnectorFiles(java.nio.file.Path.of(connDir), java.nio.file.Path.of(PackPaths.dataDir(env), "connectors"));
+        ConnectorFiles files = new ConnectorFiles(com.ash.drishti.api.Roots.anchored(connDir), com.ash.drishti.api.Roots.anchored(PackPaths.dataDir(env)).resolve("connectors"));
         PackLoader loader = new PackLoader(files);
         // where every pack is: the one resolution (KERNEL_AND_MODULES.md section 18), installed for every reader of this process
         com.ash.drishti.api.resolution.ConfigResolution resolution = PackPaths.resolve(env);

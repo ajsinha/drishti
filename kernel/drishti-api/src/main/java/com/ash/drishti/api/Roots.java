@@ -83,6 +83,15 @@ public final class Roots {
         return base(MODULES, "DRISHTI_MODULES_HOME", "modules").toString();
     }
 
+    /**
+     * The site's connectors folder for code with no Spring environment: {@code drishti.sources.connectors-dir}, else
+     * {@code DRISHTI_CONNECTORS_DIR}, else {@code <config>/connectors}; absolute.
+     */
+    public static Path connectors() {
+        String v = setting("drishti.sources.connectors-dir", "DRISHTI_CONNECTORS_DIR");
+        return v == null ? Path.of(config("connectors")) : anchored(v);
+    }
+
     /** A value as an absolute path: as given when absolute, else under the install folder (never the working folder). */
     public static Path anchored(String value) {
         Path p = Path.of(value);

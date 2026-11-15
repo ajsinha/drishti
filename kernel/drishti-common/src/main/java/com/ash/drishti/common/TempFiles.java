@@ -65,7 +65,7 @@ public final class TempFiles {
         if (p == null || p.isBlank()) {
             p = System.getenv("DRISHTI_TMP_DIR");
         }
-        return p == null || p.isBlank() ? System.getProperty("java.io.tmpdir", "/tmp") : p;
+        return p == null || p.isBlank() ? System.getProperty("java.io.tmpdir", "/tmp") : com.ash.drishti.api.Roots.anchored(p.strip()).toString();
     }
 
     public static String configuredBase() {
@@ -73,7 +73,7 @@ public final class TempFiles {
         if (p == null || p.isBlank()) {
             p = System.getenv("DRISHTI_TMP_DIR");
         }
-        return p == null || p.isBlank() ? com.ash.drishti.api.DataDir.under("tmp/server") : p;
+        return p == null || p.isBlank() ? com.ash.drishti.api.DataDir.under("tmp/server") : com.ash.drishti.api.Roots.anchored(p.strip()).toString();
     }
 
     /**

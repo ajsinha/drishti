@@ -121,4 +121,39 @@ class LaunchRootsTest {
         LaunchRoots.Result r = resolve(Map.of("drishti.home", home.toString(), "drishti.packs.extra-dirs", home.resolve("gone").toString()));
         assertThat(String.join("; ", r.problems())).contains("extra packs: " + home.resolve("gone") + " (drishti.packs.extra-dirs) is not there");
     }
+    @Test
+    void everyOtherRelativePathSettingIsTakenUnderTheInstallFolder(@TempDir Path tmp) {
+        Map<String, String> s = new java.util.LinkedHashMap<>();
+        s.put("drishti.collab.dir", "site/collab");
+        s.put("drishti.rachana.dirs", "sutras, " + tmp.resolve("abs"));
+        s.put("drishti.reports.folder", tmp.resolve("reports").toString());
+        s.put("drishti.packs.registry.url-file", "s3://bucket/x");
+        s.put("drishti.store.root", "");
+        s.put("drishti.feeds.path", "/{kind}/{id}");
+        s.put("drishti.sources.routes.exposure-path", "ccr-lake");
+        s.put("drishti.sources.plugins.x.settings.root", "$.ROOT");
+        s.put("DRISHTI_INDEX_DIR", "idx");
+        s.put("drishti.identity.database-url", "jdbc:sqlite:target/id/drishti.db");
+        s.put("drishti.other.database-url", "jdbc:sqlite::memory:");
+        s.put("drishti.ai.base-url", "localhost:8080");
+        s.put("DRISHTI_LIB_PATH", "lib1,lib2");
+        java.util.List<String> problems = new java.util.ArrayList<>();
+        Map<String, String> out = LaunchRoots.anchorSettings(java.util.List.copyOf(s.keySet()), s::get, tmp, problems);
+        assertThat(problems).isEmpty();
+        assertThat(out).containsEntry("drishti.collab.dir", tmp.resolve("site/collab").toString())
+                .containsEntry("drishti.rachana.dirs", tmp.resolve("sutras") + "," + " " + tmp.resolve("abs"))
+                .containsEntry("DRISHTI_INDEX_DIR", tmp.resolve("idx").toString())
+                .containsEntry("drishti.identity.database-url", "jdbc:sqlite:" + tmp.resolve("target/id/drishti.db"))
+                .containsEntry("DRISHTI_LIB_PATH", tmp.resolve("lib1") + "," + tmp.resolve("lib2"))
+                .doesNotContainKeys("drishti.other.database-url", "drishti.ai.base-url", "drishti.sources.routes.exposure-path", "drishti.sources.plugins.x.settings.root", "drishti.reports.folder", "drishti.packs.registry.url-file", "drishti.store.root", "drishti.feeds.path");
+        assertThat(LaunchRoots.PATH_KEY.matcher("drishti.logging.max-files").matches()).isFalse();
+        assertThat(LaunchRoots.PATH_ENV.matcher("DRISHTI_HOME").matches()).isFalse();
+    }
+
+    @Test
+    void aRelativePathSettingWithNoInstallFolderStopsTheStart() {
+        java.util.List<String> problems = new java.util.ArrayList<>();
+        LaunchRoots.anchorSettings(java.util.List.of("drishti.collab.dir"), k -> "collab", null, problems);
+        assertThat(String.join("; ", problems)).contains("drishti.collab.dir is 'collab', a relative path").contains("drishti.home");
+    }
 }

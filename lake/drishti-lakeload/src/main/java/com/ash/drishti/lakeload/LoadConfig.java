@@ -342,8 +342,7 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
 
     /** A connector's table as the site's own connector file names it ({@code settings.lake-tables}, its first entry's table), else the template's. */
     private static String siteTable(String connector, String template) {
-        String dir = System.getProperty("drishti.sources.connectors-dir", System.getenv().getOrDefault("DRISHTI_CONNECTORS_DIR", com.ash.drishti.api.Roots.config("connectors")));
-        Path f = Path.of(dir, connector + ".yaml");
+        Path f = com.ash.drishti.api.Roots.connectors().resolve(connector + ".yaml");
         if (!Files.isRegularFile(f)) {
             return template;
         }
