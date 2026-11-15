@@ -85,6 +85,18 @@ class FormApiTest {
     }
 
     @Test
+    void kindsOnlyAnswersThePackAndItsKindsWithoutAForm() throws Exception {
+        // the forms home lists every pack's kinds: no form is built, no data read (it took 15 s cold when each pack built its first form)
+        mvc.perform(get("/api/v1/forms/trading").param("kindsOnly", "true").header("Authorization", as("searcher")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.pack").value("trading"))
+                .andExpect(jsonPath("$.kinds[*].kind", hasItem("trade")))
+                .andExpect(jsonPath("$.form").doesNotExist())
+                .andExpect(jsonPath("$.kind").doesNotExist());
+        mvc.perform(get("/api/v1/forms/trading").param("kindsOnly", "true").header("Authorization", as("nothing"))).andExpect(status().isForbidden());
+    }
+
+    @Test
     void theFormOfAPackYouCannotOpenIsRefused() throws Exception {
         mvc.perform(get("/api/v1/forms/trading").header("Authorization", as("nothing"))).andExpect(status().isForbidden());
         mvc.perform(get("/api/v1/forms/no-such-pack").header("Authorization", as("searcher"))).andExpect(status().isBadRequest());

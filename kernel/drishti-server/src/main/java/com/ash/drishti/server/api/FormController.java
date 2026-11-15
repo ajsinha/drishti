@@ -216,15 +216,24 @@ public class FormController {
             return read.get(0);
         };
         FormSpec spec = declared.orElseGet(() -> infer(kind, samples.get()));
+        // the first documents whole, read once for every dropdown that neither a column, a glossary nor the samples fill: at most
+        // enum-scan-rows documents, never the whole kind (a search "where FIELD != ''" per dropdown read every trade, one by one)
+        List<List<Map<String, Object>>> docs = new ArrayList<>(1);
+        java.util.function.Supplier<List<Map<String, Object>>> first = () -> {
+            if (docs.isEmpty()) {
+                docs.add(firstDocuments(kind, asOf, principal));
+            }
+            return docs.get(0);
+        };
         List<FormField> fields = new ArrayList<>();
         for (FormField f : spec.fields()) {
-            fields.add(f.type() == FieldType.ENUM && f.values().isEmpty() ? withValues(f, kind, samples, asOf, principal) : f);
+            fields.add(f.type() == FieldType.ENUM && f.values().isEmpty() ? withValues(f, kind, samples, first, asOf, principal) : f);
         }
         return new FormSpec(kind, spec.calendar(), fields, spec.inferred());
     }
 
-    private FormField withValues(FormField f, String kind, java.util.function.Supplier<Map<String, List<Object>>> samples, AsOf asOf,
-            Principal principal) {
+    private FormField withValues(FormField f, String kind, java.util.function.Supplier<Map<String, List<Object>>> samples,
+            java.util.function.Supplier<List<Map<String, Object>>> first, AsOf asOf, Principal principal) {
         TreeSet<String> found = new TreeSet<>();
         about.forKind(kind).map(a -> a.glossary().get(f.path())).map(GlossaryEntry::values).ifPresent(v -> found.addAll(v.keySet()));
         if (found.isEmpty() && !entitlements.masked(principal, f.path())) {   // the whole column, every connector of a union
@@ -233,17 +242,10 @@ public class FormController {
         if (found.isEmpty()) {                                        // a source that is not columnar: the sampled rows
             samples.get().getOrDefault(f.path(), List.of()).stream().filter(v -> v != null && !String.valueOf(v).isBlank()).forEach(v -> found.add(String.valueOf(v)));
         }
-        if (found.isEmpty()) {                                        // not one of the key columns: read it from the data
-            try {
-                String code = mnemonics.codeFor(kind);
-                StructuredSearch.Result r = search.run(SearchQuery.parse((code == null ? kind : code) + " where " + f.path() + " != '' limit " + enumScanRows), asOf,
-                        data -> entitlements.redact(principal, data));
-                r.rows().forEach(row -> Optional.ofNullable(row.values().get("$." + f.path())).ifPresent(v -> found.add(String.valueOf(v))));
-            } catch (RuntimeException e) {
-                // no values: the person types one
-            }
+        if (found.isEmpty()) {                                        // not one of the key columns: read it from the first documents
+            first.get().forEach(d -> Optional.ofNullable(at(d, f.path())).filter(v -> !String.valueOf(v).isBlank()).ifPresent(v -> found.add(String.valueOf(v))));
         }
-        return f.withValues(new ArrayList<>(found), f.depends().isEmpty() ? Map.of() : parents(f, kind, asOf, principal));
+        return f.withValues(new ArrayList<>(found), f.depends().isEmpty() ? Map.of() : parents(f, kind, first, asOf, principal));
     }
 
     /**
@@ -251,7 +253,8 @@ public class FormController {
      * depends on that it occurs with, read from the data (every connector serving the kind), so the form offers only the sub types of the
      * product types chosen. Empty when the data cannot be read: then every value is offered.
      */
-    private Map<String, List<String>> parents(FormField f, String kind, AsOf asOf, Principal principal) {
+    private Map<String, List<String>> parents(FormField f, String kind, java.util.function.Supplier<List<Map<String, Object>>> first, AsOf asOf,
+            Principal principal) {
         boolean open = !entitlements.masked(principal, f.path()) && !entitlements.masked(principal, f.depends());
         String version = open ? router.dataVersion(kind, asOf).orElse(null) : null;   // cached per data version for fields the caller sees
         String key = kind + "|" + f.path() + "<" + f.depends() + "|" + (asOf.live() ? "live" : asOf.businessDate() + "@" + asOf.knownAt()) + "|" + version;
@@ -261,7 +264,7 @@ public class FormController {
                 return cached;
             }
         }
-        Map<String, List<String>> computed = computeParents(f, kind, asOf, principal);
+        Map<String, List<String>> computed = computeParents(f, kind, first, asOf, principal);
         if (version != null && !computed.isEmpty()) {
             parentValues.put(key, computed);
         }
@@ -271,7 +274,8 @@ public class FormController {
     private final com.github.benmanes.caffeine.cache.Cache<String, Map<String, List<String>>> parentValues = com.github.benmanes.caffeine.cache.Caffeine
             .newBuilder().maximumSize(2_000).expireAfterAccess(java.time.Duration.ofHours(12)).build();
 
-    private Map<String, List<String>> computeParents(FormField f, String kind, AsOf asOf, Principal principal) {
+    private Map<String, List<String>> computeParents(FormField f, String kind, java.util.function.Supplier<List<Map<String, Object>>> first, AsOf asOf,
+            Principal principal) {
         Map<String, java.util.TreeSet<String>> by = new java.util.TreeMap<>();
         boolean[] whole = {false};                                    // every source answered as columns: no documents to read
         if (!entitlements.masked(principal, f.path()) && !entitlements.masked(principal, f.depends())) {
@@ -286,22 +290,17 @@ public class FormController {
                 }
             });
         }
-        // and the documents the sources list, when a source is not columnar (a thousand documents read one by one: seconds cold)
-        try {
-            String code = mnemonics.codeFor(kind);
-            List<StructuredSearch.Row> rows = whole[0] ? List.of() : search.run(SearchQuery.parse((code == null ? kind : code) + " where " + f.path()
-                    + " != '' and " + f.depends() + " != '' limit " + enumScanRows), asOf, data -> entitlements.redact(principal, data)).rows();
-            for (var row : rows) {
-                Object child = row.values().get("$." + f.path());
-                Object parent = row.values().get("$." + f.depends());
-                if (child != null && parent != null) {
+        if (!whole[0]) {                                              // a source that is not columnar: the first documents
+            for (Map<String, Object> d : first.get()) {
+                Object child = at(d, f.path());
+                Object parent = at(d, f.depends());
+                if (child != null && parent != null && !String.valueOf(child).isBlank() && !String.valueOf(parent).isBlank()) {
                     by.computeIfAbsent(String.valueOf(child), x -> new java.util.TreeSet<>()).add(String.valueOf(parent));
                 }
             }
-        } catch (RuntimeException e) {
-            if (by.isEmpty()) {
-                return Map.of();
-            }
+        }
+        if (by.isEmpty()) {
+            return Map.of();
         }
         Map<String, List<String>> out = new LinkedHashMap<>();
         by.forEach((k, v) -> out.put(k, List.copyOf(v)));
@@ -346,6 +345,37 @@ public class FormController {
         } catch (RuntimeException e) {
             return Optional.empty();
         }
+    }
+
+    /** The first {@code enumScanRows} documents of the kind as the caller sees them (masks applied), each as a map; empty when none can be read. */
+    private List<Map<String, Object>> firstDocuments(String kind, AsOf asOf, Principal principal) {
+        try {
+            var hits = router.list(kind, "", enumScanRows, java.time.Duration.ofSeconds(10), asOf, new com.ash.drishti.engine.source.SourceFailures()).hits();
+            List<com.ash.drishti.api.EntityRef> refs = hits.stream().map(h -> h.ref()).distinct().limit(enumScanRows).toList();
+            List<Map<String, Object>> out = new ArrayList<>();
+            router.fetchAll(refs, java.time.Duration.ofSeconds(10), asOf).values().forEach(d -> {
+                if (d != null && !d.deleted() && entitlements.redact(principal, d.data()).unwrap() instanceof Map<?, ?> m) {
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> doc = (Map<String, Object>) m;
+                    out.add(doc);
+                }
+            });
+            return out;
+        } catch (RuntimeException e) {
+            return List.of();                                         // no values: the person types one
+        }
+    }
+
+    /** The value at a dotted path of a document, or null. */
+    private static Object at(Map<String, Object> doc, String path) {
+        Object cur = doc;
+        for (String part : path.split("\\.")) {
+            if (!(cur instanceof Map<?, ?> m)) {
+                return null;
+            }
+            cur = m.get(part);
+        }
+        return cur;
     }
 
     private FormSpec infer(String kind, Map<String, List<Object>> samples) {
