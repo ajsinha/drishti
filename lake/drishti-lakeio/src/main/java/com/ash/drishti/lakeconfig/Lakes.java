@@ -50,8 +50,6 @@ public final class Lakes {
     public static final String ENV = "DRISHTI_LAKES_DIR";
     /** The variable that names the demo lake's root (config/lakes/demo.yaml: {@code ${DRISHTI_DELTA_ROOT:<data>/delta/demo}}). */
     public static final String DEMO_ROOT_ENV = "DRISHTI_DELTA_ROOT";
-    /** The lake folder when neither is set. */
-    public static final String DEFAULT_DIR = "config/lakes";
     /** At most this many partition columns after {@code business_date}. */
     public static final int MAX_PARTITIONS = 4;
 
@@ -94,7 +92,7 @@ public final class Lakes {
         return "iceberg".equals(format) ? "${drishti.data.dir:./data}/iceberg/" + name : defaultRoot(name);
     }
 
-    /** The lake folder: {@value #PROPERTY}, else {@value #ENV}, else {@value #DEFAULT_DIR}. */
+    /** The lake folder: {@value #PROPERTY}, else {@value #ENV}, else {@code <config>/lakes}; absolute (a relative value is under the install folder). */
     public static Path dir() {
         String p = System.getProperty(PROPERTY);
         if (p == null || p.isBlank()) {

@@ -123,14 +123,106 @@ public final class LaunchRoots implements EnvironmentPostProcessor, Ordered {
         if (!r.problems().isEmpty()) {
             throw new IllegalStateException("the server cannot start: " + String.join("; ", r.problems()) + "\n" + r.report());
         }
-        env.getPropertySources().addFirst(new MapPropertySource(SOURCE, r.values()));
+        Map<String, Object> values = new LinkedHashMap<>(r.values());
+        Object home = values.get(HOME);
+        List<String> anchoredProblems = new ArrayList<>();
+        Map<String, String> anchored = anchorSettings(names(env), k -> {
+            try {
+                return values.containsKey(k) ? null : env.getProperty(k);
+            } catch (IllegalArgumentException e) {
+                return null;                                          // a placeholder nothing resolves: not a path to anchor
+            }
+        }, home == null ? null : Path.of(home.toString()), anchoredProblems);
+        if (!anchoredProblems.isEmpty()) {
+            throw new IllegalStateException("the server cannot start: " + String.join("; ", anchoredProblems) + "\n" + r.report());
+        }
+        values.putAll(anchored);
+        env.getPropertySources().addFirst(new MapPropertySource(SOURCE, values));
         for (String k : List.of(HOME, "drishti.modules.home", "drishti.config.dir")) {   // for code with no Spring environment (a record's default)
             Object v = r.values().get(k);
             if (v != null && System.getProperty(k) == null) {
                 System.setProperty(k, v.toString());
             }
         }
-        log.info(r.report());
+        log.info(r.report() + (anchored.isEmpty() ? "" : anchoredReport(anchored)));
+    }
+
+    /**
+     * A setting that names a folder or a file: a {@code drishti.*} key ending in {@code dir}, {@code dirs}, {@code file}, {@code folder},
+     * {@code root}, {@code path} or {@code home}, and Spring's own log file and TLS stores.
+     */
+    static final java.util.regex.Pattern PATH_KEY = java.util.regex.Pattern.compile(
+            "^drishti\\..*[.-](?:dir|dirs|file|folder|root|path|home)$|^logging\\.file\\.(?:name|path)$|^server\\.ssl\\.(?:key|trust)-store$");
+    /** A value that is not a local relative path: a URL or a scheme ({@code s3:}, {@code mem:}, {@code classpath:}, {@code jdbc:}), a word. */
+    private static final java.util.regex.Pattern NOT_A_PATH = java.util.regex.Pattern.compile(
+            "^(?:[A-Za-z][A-Za-z0-9+.-]+:.*|none|auto|off|on|true|false|-?[0-9]+(?:\\.[0-9]+)?)$");
+    /** An absolute local path: POSIX, a Windows drive, or a UNC share. */
+    private static final java.util.regex.Pattern ABSOLUTE = java.util.regex.Pattern.compile("^(?:/|\\\\|[A-Za-z]:[\\\\/]).*");
+
+    /** Every path key the configuration names (every source but the environment variables, which are read through the keys they fill). */
+    private static List<String> names(ConfigurableEnvironment env) {
+        java.util.Set<String> out = new java.util.TreeSet<>();
+        for (PropertySource<?> ps : env.getPropertySources()) {
+            if (ps instanceof EnumerablePropertySource<?> e && !ps.getName().equals("configurationProperties") && !ps.getName().contains("Environment")) {
+                for (String k : e.getPropertyNames()) {
+                    if (PATH_KEY.matcher(k).matches()) {
+                        out.add(k);
+                    }
+                }
+            }
+        }
+        return List.copyOf(out);
+    }
+
+    /**
+     * Every other path setting made absolute (docs/admin/CONFIGURATION.md, "Launch roots"): a relative value is taken under the install
+     * folder, never the process's folder; a list ({@code ...dirs}, {@code drishti...path}) is anchored entry by entry. A relative value with
+     * no install folder named is a problem that stops the start. Returns only the settings it changed.
+     *
+     * @param keys     the path settings the configuration names
+     * @param property a setting's resolved value (null: not set, or already a launch root)
+     * @param home     the install folder, absolute, or null
+     * @param problems where a relative value with no install folder is reported
+     */
+    static Map<String, String> anchorSettings(List<String> keys, Function<String, String> property, Path home, List<String> problems) {
+        Map<String, String> out = new LinkedHashMap<>();
+        for (String k : keys) {
+            if (k.equals(HOME)) {
+                continue;
+            }
+            String v = property.apply(k);
+            if (blank(v)) {
+                continue;
+            }
+            boolean list = k.endsWith("dirs") || k.startsWith("drishti.") && k.endsWith(".path");
+            List<String> fixed = new ArrayList<>();
+            boolean changed = false;
+            for (String part : list ? v.split(",", -1) : new String[] {v}) {
+                String x = part.strip();
+                if (x.isEmpty() || ABSOLUTE.matcher(x).matches() || NOT_A_PATH.matcher(x).matches() || x.contains("{")) {
+                    fixed.add(part);
+                    continue;
+                }
+                if (home == null) {
+                    problems.add(k + " is '" + x + "', a relative path, and " + HOME + " (DRISHTI_HOME) is not set: give an absolute path, or set " + HOME);
+                    fixed.add(part);
+                    continue;
+                }
+                fixed.add(home.resolve(x).normalize().toString());
+                changed = true;
+            }
+            if (changed) {
+                out.put(k, String.join(",", fixed));
+            }
+        }
+        return out;
+    }
+
+    /** The settings {@link #anchorSettings} made absolute, for the {@code resolved paths:} block. */
+    static String anchoredReport(Map<String, String> anchored) {
+        StringBuilder b = new StringBuilder("\n  relative settings, taken under the install folder:");
+        anchored.forEach((k, v) -> b.append("\n    ").append(k).append(" = ").append(v));
+        return b.toString();
     }
 
     /**
