@@ -54,6 +54,8 @@ Where each kind's data comes from, how it reaches the lake and how to check it. 
 |---|---|---|---|---|
 | GDELT 1.0 daily event files | https://data.gdeltproject.org/events/ | GDELT terms: free for any use with a citation | no | `python3 tools/drishti.py feed run gdelt-events` |
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 python3 tools/drishti.py feed status gdelt-events                  # its last runs: last success, rows, failures (offline: the run ledger)
 python3 tools/drishti.py feed run gdelt-events --dry-run           # what would be fetched and loaded; changes nothing

@@ -488,7 +488,7 @@ tracking ETF holds stay in the pack, in no index.
 
 ## Refreshing the data
 
-The pack's data feed fetches, builds and checks in one step, and loads its lake every day (guide: `docs/guides/WORLD_DATA_GUIDE.md`, us-equities):
+The pack's data feed fetches, builds and checks in one step, and loads its lake every day (guide: `docs/guides/WORLD_DATA_GUIDE.md`, us-equities). Run these from the Drishti folder (the repository root, or the install folder of a release).
 
 ```bash
 python3 tools/drishti.py feed status us-equities                 # its last runs: last success, rows, failures

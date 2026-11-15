@@ -376,7 +376,7 @@ GLEIF publishes the LEI data free of charge under CC0 1.0: anyone may use it wit
 
 ## Refreshing the data
 
-The pack's data feed fetches, builds and checks in one step, and loads its lake every day (guide: `docs/guides/WORLD_DATA_GUIDE.md`, gleif):
+The pack's data feed fetches, builds and checks in one step, and loads its lake every day (guide: `docs/guides/WORLD_DATA_GUIDE.md`, gleif). Run these from the Drishti folder (the repository root, or the install folder of a release).
 
 ```bash
 python3 tools/drishti.py feed status gleif                       # its last runs: last success, rows, failures

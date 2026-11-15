@@ -172,6 +172,8 @@ N-MFP, not N-PORT).
 
 ## Refreshing the data
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 python3 tools/drishti.py feed status funds                 # its last runs: last success, rows, failures
 python3 tools/drishti.py feed run funds --dry-run      # what would be fetched; changes nothing

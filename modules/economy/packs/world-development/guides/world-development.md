@@ -57,6 +57,8 @@ Where each kind's data comes from, how it reaches the lake and how to check it. 
 |---|---|---|---|---|
 | World Bank World Development Indicators API (v2), pulled only by the world-development feed | https://api.worldbank.org/v2 | CC BY 4.0 | no | `python3 tools/drishti.py feed run world-development` |
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 python3 tools/drishti.py feed status world-development                  # its last runs: last success, rows, failures (offline: the run ledger)
 python3 tools/drishti.py feed run world-development --dry-run           # what would be fetched and loaded; changes nothing
