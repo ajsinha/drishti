@@ -35,11 +35,6 @@ public final class BankingVocabulary implements DomainVocabulary {
     }
 
     @Override
-    public Set<String> namedLakeWriters() {
-        return Set.of("var-pv-stream");
-    }
-
-    @Override
     public Map<String, String> engineDependencyNotes() {
         return Map.of("frtb-sa", ": its scopes (desks, books, limit letters) are VaR's and its inputs are the position sensitivities",
                 "simm", ": it reads the position sensitivities and the factor dictionary");

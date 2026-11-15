@@ -40,7 +40,7 @@ NAMES = re.compile(
     r"""(?x)
     ["'](?:VAR|PVAR|SMAT|SWIN|EXP|PREDEAL|FRSA|SIMM|MCUBE|CCUBE|VRES|VOFF|SENS|RFAC)["']      # a command word as a string
     | ["'](?:var|exposure|frtb-sa|simm|mr-cube|sensitivities)["']                                  # an engine id
-    | \b(?:var-engine|var-positions|var-pv-stream|exposure-engine)\b                               # its connectors
+    | \b(?:var-engine|var-positions|risk-store-live|exposure-engine)\b                               # its connectors
     | /api/v1/risk\b | /api/v1/(?:var|exposure|frtb|simm|sensitivities|risk-factors|pivot/mr)\b   # its API, new and old
     | ["'`]/(?:var|exposure|frtb|simm|smat|play|mcube)(?:[/?"'`]|$)                                # its console pages
     | /api/(?:var|exposure|frtb|simm|smat|play|pivot/mr|home/trading|home/market)/                 # its console APIs

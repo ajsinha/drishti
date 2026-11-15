@@ -336,7 +336,7 @@ LENS_PARAMS = ("horizon", "method", "confidence", "esConfidence", "set")
 #: the answers a browser may take as Arrow (2.9.7, measured: DATA_GUIDE.md › Data formats: JSON Lines is the standard, section 6), with where each one's table is; the P&L path
 #: stays JSON (509 numbers and the page around them: Arrow was no smaller and no faster)
 ARROW_TABLES = {"scope/contributions": ("records", "rows")}
-#: an administrator's "apply now" of a PV topic's waiting window (the var-pv-stream connector, VAR_GUIDE.md section 8.4)
+#: an administrator's "apply now" of a PV topic's waiting window (the live connector risk-store-live, VAR_GUIDE.md section 8.4)
 APPLY_NOW = re.compile(r"^intraday/streams/[A-Za-z0-9_.-]{1,80}/apply$")
 PROPOSAL = re.compile(r"^stress-window/proposals/SWP-[0-9]{1,12}$")
 

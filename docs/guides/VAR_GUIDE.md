@@ -1950,19 +1950,20 @@ run.
 #### Intraday updates from Kafka
 
 A pricing system may publish the same updates to a **PV topic** instead of writing files; the two channels mix on one date, the latest
-`COMPUTED_AT` per trade winning across both. The market-risk pack's connector **`pv-updates`** (plugin `var-pv-stream`, **off by
-default**: `DRISHTI_VAR_PV_STREAM=true`) reads it like the Kafka connector (every partition from the beginning, no consumer group, its
-`bootstrap-servers`, security and `client.*` settings; [KAFKA_CONNECTOR.md section 17](../../plugins/drishti-plugin-kafka/README.md#the-var-pv-topic-var-pv-stream)).
+`COMPUTED_AT` per trade winning across both. The market-risk pack's live connector **`risk-store-live`** (plugin `kafka`, the
+companion of `risk-store`, **off by default**: `DRISHTI_VAR_PV_STREAM=true`) reads it as every Kafka connector does (every partition from
+the beginning, no consumer group, its broker by name) and hands its rows to the kernel's **live lander**: the contracts of `scenario-pv`
+and `pnl-vector` say `live.apply: land` ([LIVE_CONNECTORS_DESIGN.md section 8.4](../architecture/LIVE_CONNECTORS_DESIGN.md#84-scenario-pvs-and-pl-vectors-intraday)).
 
 ```text
 pricing system ──► PV topic (each message's value JSONL text: one or more records; the key not read)
-                     │  var-pv-stream: a window of drishti.var.intraday.kafka.window (5m), the latest record per trade
-                     │  (COMPUTED_AT, then partition, offset and line)
-                     │  flushed early at `max-trades` (500) or by an administrator's "apply now"
+                     │  risk-store-live: each line's kind by VALUE_TYPE (PV a scenario PV, else a P&L vector)
+                     │  the kernel's live lander: a window of land.window (5m), the latest record per trade or position
+                     │  (COMPUTED_AT, then the position), landed early at land.max-keys (500) or by an administrator's "apply now"
                      ▼
-               the guards (date, morning run, held update, scenario set, a finite vector of the set's length)
+               the VaR engine's guards (date, morning run, held update, scenario set, a finite vector of the set's length)
                      ▼
-               ONE intraday batch in the lake (RUN_KIND INTRADAY, BATCH_ID K-<date>-<time>-<n>), Drishti's lake writer
+               ONE intraday batch per kind in the lake (RUN_KIND INTRADAY, BATCH_ID L-<kind>-<date>-<span>), Drishti's lake writer
                      ▼
                the data-load signal: the intraday layer applies it as it applies a file
 ```
@@ -1971,18 +1972,18 @@ pricing system ──► PV topic (each message's value JSONL text: one or more 
 |---|---|
 | a message of another business date than the newest loaded | ignored, counted (`otherDate`) |
 | `COMPUTED_AT` before the morning run, or not later than the update the date holds for the trade (a redelivery; the topic replayed after a restart) | ignored, counted (`beforeMorning`, `notNewer`): nothing is applied twice |
-| a cancel line (`TRADE_STATUS: CANCELLED`, its vector null), as in the files | the trade cancelled; a tombstone (a null value) carries no record: ignored, counted |
+| a cancel line (`TRADE_STATUS: CANCELLED`, its vector null), as in the files | the trade cancelled; a tombstone (a null value) carries no record: ignored, counted (`tombstones`) |
 | a blank line | skipped |
-| a line that is not a JSON object with a `TRADE_ID` | rejected, `DRS-5201`, with its partition, offset and line number (`p0:12 line 2`); the message's other lines are applied |
-| another `SCENARIO_SET_ID` | rejected, `DRS-5203`; listed in the stream's status and the date's `intraday.rejections` (the provenance's `intradayRejections`) |
+| a line that is not JSON, or has neither a `TRADE_ID` nor a `POSITION_ID` | rejected by the live connector (`not-json` DRS-1062, `no-key` DRS-1063) into its reject log, with the message's position; the message's other lines are landed |
+| another `SCENARIO_SET_ID` | rejected, `DRS-5203`; in the live connector's reject log and the date's `intraday.rejections` (the provenance's `intradayRejections`) |
 | a null, non-numeric or infinite value, the wrong length, no `BASE_PV` | rejected, `DRS-5206` or `DRS-5201`, with its place; never filled with zero |
 
 The window's rows are written with the trades' table layout of the loaded pack and announced as a data load of the kind (one signal a
-window). The window goes to the lake in the lake's own format: one Delta commit on a Delta risk lake or, when the
+batch: a window holding both kinds lands as two batches, one each). The window goes to the lake in the lake's own format: one Delta commit on a Delta risk lake or, when the
 kind's table is an Iceberg table (`<lake>/risk/<kind>/metadata`, no `_delta_log`), one Iceberg append (`LakeAppends`: nothing replaced,
 the vector as `list<double>`; the connector's `lake` must then name the Iceberg root, e.g. `<data>/iceberg` after `build_demo_lakes.py
---store risk=iceberg`, which switches `risk-store.yaml` but not `pv-updates`); either way the intraday layer applies it the same ([section 29.3](#293-how-the-lake-tools-and-the-delta-plugin-carry-a-vector)). The lake is the record: a restart rebuilds the layer from the lake, and the stream reading the topic again writes nothing it
-already holds.
+--store risk=iceberg`, which switches `risk-store.yaml` but not `risk-store-live`); either way the intraday layer applies it the same ([section 29.3](#293-how-the-lake-tools-and-the-delta-plugin-carry-a-vector)). The lake is the record: a restart rebuilds the layer from the lake, and the stream reading the topic again writes nothing it
+already holds; a window landed twice (a take-over) carries the same batch id.
 
 **The message.** A message's value is **JSONL text**, UTF-8: one or more PV records, one JSON object a line, each exactly a row of the
 `scenario-pv` or `pnl-vector` contract (the same rows as the files); one message may carry one trade or many, both forms and cancels.
@@ -1997,16 +1998,16 @@ The key is not read: it may be absent or name a batch. An example message of thr
 
 | Setting | Default | |
 |---|---|---|
-| `drishti.var.intraday.kafka.window` | `${DRISHTI_VAR_INTRADAY_KAFKA_WINDOW:5m}` | the window: everything received in it becomes one intraday batch, every five minutes |
-| `drishti.var.intraday.kafka.max-trades` | `${DRISHTI_VAR_INTRADAY_KAFKA_MAX_TRADES:500}` | an earlier flush once this many trades wait |
-| connector `pv-updates` `enabled` | `${DRISHTI_VAR_PV_STREAM:false}` | the stream on |
+| connector `risk-store-live` `enabled` | `${DRISHTI_VAR_PV_STREAM:false}` | the stream on |
+| its `land.window` | `${DRISHTI_VAR_INTRADAY_KAFKA_WINDOW:5m}` | the window: everything received in it becomes one intraday batch per kind, every five minutes |
+| its `land.max-keys` | `${DRISHTI_VAR_INTRADAY_KAFKA_MAX_TRADES:500}` | an earlier landing once this many trades wait |
 | its `broker` | `default` | the brokers, by name: `[broker.default]` in the settings file (docs/admin/CONFIGURATION.md, "Named lakes, databases and brokers"); a Kafka at localhost:9092 when none |
-| its `topic` | `${DRISHTI_VAR_PV_TOPIC:drishti.risk.pv-updates}` | the PV topic |
-| its `lake` | `${DRISHTI_DELTA_ROOT:./data/delta/demo}` | the risk lake's root (an Iceberg risk lake: the root holding `risk/<kind>/metadata`) |
+| its `topics` | `${DRISHTI_VAR_PV_TOPIC:drishti.risk.pv-updates}` | the PV topic |
+| its `lake` | `demo` | the lake the windows are written to (a lake of `config/lakes/`, or the root of an Iceberg risk lake holding `risk/<kind>/metadata`) |
 
-**Admin.** `GET /api/v1/risk/var/intraday/streams` (the topic, state, waiting trades, offsets, counts, the last ten windows and the newest 20
-rejections) and `POST /api/v1/risk/var/intraday/streams/{connector}/apply` (administrators: the waiting window now); the connector's page
-in Admin has an **Apply now** button.
+**Admin.** `GET /api/v1/risk/var/intraday/streams` (each live connector of the PV topic: its health, waiting rows, window, the last ten
+batches, its counts, and the engine's status with its newest 20 rejections) and `POST /api/v1/risk/var/intraday/streams/{connector}/apply`
+(administrators: the waiting window landed now); a Kafka connector's page in Admin has an **Apply now** button.
 
 **Sizing.** A record is 4–8 KB (509 numbers as JSON text): 10,000 updates a day are 40–80 MB on the topic, whatever the records per
 message; a window of a few hundred trades is written and applied in about a second. **Tested** (`VarPvStreamTest`, in-process Kafka): a
@@ -2477,8 +2478,8 @@ by `VarProperties` (`@ConfigurationProperties("drishti.var")`); `GET /api/v1/ris
 | `drishti.var.official.enabled`, `.publish`, `.root`, `.retention-years`, `.on-start`, `.jsonl` | `${DRISHTI_VAR_OFFICIAL:true}`, `true`, `${DRISHTI_DELTA_ROOT:…/delta}`, `7`, `true`, `true` | the same | the official end-of-day captures and their published results ([section 19](#19-official-end-of-day-results)) |
 | `drishti.var.official.format` | `${DRISHTI_VAR_OFFICIAL_FORMAT:delta}` | `delta`; anything else but `iceberg` is refused at start | the published table's format, Delta (Drishti's lake writer) or Iceberg (Drishti's Iceberg engine); a table keeps the format it was created in ([section 19](#19-official-end-of-day-results)) |
 | `drishti.var.official.storage` | `{}` | none: the default AWS credential chain | the `s3.*` settings for an `s3://` root (`s3.region`, `s3.endpoint`, `s3.access-key`/`s3.secret-key`, `s3.path-style`) |
-| `drishti.var.intraday.kafka.window` | `${DRISHTI_VAR_INTRADAY_KAFKA_WINDOW:5m}` | 5 minutes | the PV topic's window: everything received in it is one intraday batch ([section 8.4](#84-what-if-pricing-and-intraday-recomputes)) |
-| `drishti.var.intraday.kafka.max-trades` | `${DRISHTI_VAR_INTRADAY_KAFKA_MAX_TRADES:500}` | 500 | a window is applied earlier once this many trades wait |
+| `risk-store-live` `land.window` | `${DRISHTI_VAR_INTRADAY_KAFKA_WINDOW:5m}` | 5 minutes | the PV topic's window: everything received in it is one intraday batch ([section 8.4](#84-what-if-pricing-and-intraday-recomputes)) |
+| `risk-store-live` `land.max-keys` | `${DRISHTI_VAR_INTRADAY_KAFKA_MAX_TRADES:500}` | 500 | a window is applied earlier once this many trades wait |
 | `drishti.var.tier.mode` | `${DRISHTI_VAR_TIER:mapped}` | `mapped` (anything but `heap`) | `mapped`: each loaded date a memory-mapped hot file ([section 26](#26-the-tiered-memory-and-the-hot-file)); `heap`: float64 rows on the heap |
 | `drishti.var.tier.dir` | `${DRISHTI_VAR_HOT_DIR:${drishti.data.dir:./data}/var/hot}` | `<data folder>/var/hot` | the hot files, one folder per business date; put it on fast local disk |
 | `drishti.var.tier.disk-dates` | `60` | 60 (below 1) | hot files kept on disk; the least recently used beyond it are deleted |
@@ -5425,7 +5426,7 @@ the figures. By purpose:
 | memory, the hot file and its disk (the cache) | `drishti.var.tier.mode`, `drishti.var.tier.dir`, `drishti.var.tier.disk-dates`, `drishti.var.tier.max-disk-gb`, `drishti.var.tier.keep-on-shutdown`, `drishti.var.memory-budget-mb`, `drishti.var.hot-dates`, `drishti.var.threads`, `drishti.var.load-threads`, `drishti.var.view-cache-mb`, `drishti.memory.cache-share` |
 | reporting currencies | `drishti.var.currencies`, `drishti.var.currency-retention-dates` |
 | the official record | `drishti.var.official.enabled`, `drishti.var.official.format`, `drishti.var.official.root`, `drishti.var.official.currencies` |
-| intraday | `drishti.var.intraday.kafka.window`, `drishti.var.intraday.kafka.max-trades`, `drishti.var.version-check` |
+| intraday | `risk-store-live`'s `land.window`, `land.max-keys`, `drishti.var.version-check` |
 | the scenario matrix | `drishti.var.smat.max-days` |
 | sharding | the pack's `sharding:` block and `drishti.var.sharding.*` ([section 28](#28-sharding-across-drishtinet)) |
 | who sees what | `drishti.var.access` ([section 9](#9-who-sees-what-entitlements-and-audit)) |
@@ -6393,7 +6394,7 @@ every figure agrees
 ```
 
 **You should see** the bank move from 112,041,646 to **111,939,005** (ES 160,143,809 to 159,035,721), the badge, *intraday* in the Explain drawer's *Inputs & lineage*, and every line of the check `ok`. The official end-of-day
-record is still the morning run's. The same updates can come from Kafka (the `pv-updates` connector, off by default; the publisher
+record is still the morning run's. The same updates can come from Kafka (the `risk-store-live` connector, off by default; the publisher
 `tools/pvgen/publish-kafka.sh`): [VAR_GUIDE.md section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes).
 
 **Further in the guide:** [section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)
@@ -7066,7 +7067,7 @@ $ drishti.py var show BANK --ccy EUR
 **You should see** exactly Part A's figures: 112,041,646 and 160,143,809 for the bank, 29,280,653 for LL-0011, 111,837,045 EUR.
 Only the data version differs: an Iceberg fingerprint of the date's files instead of Delta's. The equality is tested on every scope,
 both currencies, VaR, ES, components and intraday batches (`VarFormatEqualityTest`), and for exposure (`ExposureFormatEqualityTest`).
-Intraday batches on an Iceberg lake are Iceberg appends made by the pricing system's writer or by the Kafka stream (whose `pv-updates`
+Intraday batches on an Iceberg lake are Iceberg appends made by the pricing system's writer or by the Kafka stream (whose `risk-store-live`
 connector's `lake` must then name `data/iceberg`); `drishti.py var intraday --load` appends to Delta only
 ([VAR_GUIDE.md section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)).
 

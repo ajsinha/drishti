@@ -97,7 +97,6 @@ compute:
   connectors:
   - var-engine
   - var-positions
-  - var-pv-stream
   - exposure-engine
 packs:
   folder: packs

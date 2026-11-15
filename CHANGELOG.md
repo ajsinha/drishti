@@ -18,6 +18,14 @@
 
 ## Unreleased
 
+- **Live feeds, step L5: landed kinds, and the PV topic on them.** A kind whose contract says `live.apply: land` collects in the kernel's
+  live lander, the newest row per key (`live.land-key`), and each window (`land.window`, `land.max-keys`, or Apply now) lands as one
+  batch per kind and date, its id from its transport span, through the engine that owns the kind (`KindLanding`). The PV topic is now
+  the market-risk pack's `risk-store-live` (plugin `kafka`, the companion of `risk-store`, `shape: jsonl`, each line's kind by
+  `VALUE_TYPE`); the VaR engine's checks and lake writer are unchanged and report into the connector's reject log. `var-pv-stream`
+  (`VarPvStreamPlugin`, `VarPvWindow`), the `pv-updates` connector and `drishti.var.intraday.kafka.*` are gone; their variables
+  (`DRISHTI_VAR_PV_STREAM`, `DRISHTI_VAR_PV_TOPIC`, `DRISHTI_VAR_INTRADAY_KAFKA_WINDOW`, `..._MAX_TRADES`) keep working as the new
+  connector's defaults. `GET /api/v1/risk/var/intraday/streams` shows the live connector's window and counts; Apply now lands it.
 - **Live feeds, step L4: business dates and the next lake load.** Live rows belong to the server's current business date: a row of the
   next business date is held and applied when the date rolls (`next-date.max-rows`), an earlier one is rejected (closed-date), a later
   one too (future-date). When a load of a kind finishes ready, each live connector of the kind reconciles its rows of that date against

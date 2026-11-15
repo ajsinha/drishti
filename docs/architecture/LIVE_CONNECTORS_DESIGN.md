@@ -18,8 +18,8 @@
 **Status: design for release i5, decided by the product owner (section 15); steps L1 to L10 are built in i5. Built: L1 (the
 contract's `live:` block and its checks, `companion-of:` in the resolver, the reject reasons and their codes) L2 (the transport SPI,
 the kernel's live intake and live state, Kafka on it) and L3 (the router's merged read, live sets seeded from the shared state, blotter
-defaults from the contract, the six trade templates) and L4 (business dates and the roll, reconcile at a load, checkpoints, the reconcile
-record). Nothing else in this
+defaults from the contract, the six trade templates) L4 (business dates and the roll, reconcile at a load, checkpoints, the reconcile
+record) and L5 (the live lander; scenario PVs and P&L vectors on it). Nothing else in this
 document is built unless a section says "today".** It answers the product owner's request: *"for all data connectors there can be a
 live connector, generally speaking."*
 
@@ -586,6 +586,14 @@ P&L (decision Q6, section 7.5).
 
 Behaviour is today's, to the row.
 
+Built (L5): the kernel's `LiveLander` (the window, the newest row per key by `live.land-key` and `order:`, due at `land.window`,
+`land.max-keys` or "apply now", one batch per kind and date, the batch id from its transport span) and the `KindLanding` an engine
+provides (`com.ash.drishti.kernel.api.data`); the VaR engine's landing of `scenario-pv` and `pnl-vector` writes Delta or Iceberg as the
+risk lake's table is. `kind-by` tells one topic's two kinds apart by `VALUE_TYPE`. Deleted: `VarPvStreamPlugin`, `VarPvWindow`, the
+`pv-updates` connector, the pseudo-kind `pv-update`, `drishti.var.intraday.kafka.*` (their variables are the new template's defaults).
+Not yet: a generic landing for a kind no engine owns (written straight through the lake loader), and the file store as a landing
+target; a kind with no landing is said in the connector's reject log.
+
 ### 8.5 Reference and portfolio data
 
 `counterparty`, `legal-entity`, `book`, `desk`, `trader`, stored `portfolio`s, `var-limit`, `credit-limit`: a few changes a day, whole
@@ -720,7 +728,7 @@ in; L6 to L10 use it.
 | **L2** (built) | The live intake and the live state (kernel): decode, map, validate, order, apply; the transport SPI; Kafka on it | L | the Kafka plugin's index, caches, `mode` | Kafka README, DATA_ARCHITECTURE *Streaming sources* |
 | **L3** (built) | The router's merged read; live sets on the shared state; blotter defaults from the contract; the six trade templates | L | per-set live side; repeated keys | LIVE_RESULTS_GUIDE sections 6 and 7 |
 | **L4** (built) | Business dates, the roll, reconcile at a load (three absorb rules), checkpoints, the reconcile record | L | | DATA_LAKE_GUIDE (loads), LIVE_RESULTS_GUIDE |
-| **L5** | The live lander; scenario PVs and P&L vectors on it; parity on Delta, Iceberg and files | L | `VarPvStreamPlugin`, `VarPvWindow`, `pv-updates`, `drishti.var.intraday.kafka.*` | VAR_GUIDE 8.4, CONFIGURATION (generated) |
+| **L5** (built) | The live lander; scenario PVs and P&L vectors on it; parity on Delta, Iceberg and files | L | `VarPvStreamPlugin`, `VarPvWindow`, `pv-updates`, `drishti.var.intraday.kafka.*` | VAR_GUIDE 8.4, CONFIGURATION (generated) |
 | **L6** | ActiveMQ and RabbitMQ on the transport SPI; `apply: both` | M | `MessageStateSource`, `state.*` | the two READMEs |
 | **L7** | Admin (option B: the Live column and drawer in Data bindings; option A's grid read-only under Health), Health states and measures, alerts, the CLI, the live mark's words on every page | L | the PV stream's admin endpoints | ADMIN_GUIDE, OPERATIONS_GUIDE, CLI_REFERENCE, API_REFERENCE |
 | **L8** | Kinds: market data (20 contracts' `live:` blocks, quote-time fields, the companion, conflation), netting sets and collateral, reference data with `effective:`, derived positions at `live: overlay`; demo publishers in `tools/samplegen` | L | the live exposure table's own copy | the packs' READMEs and guides, a tutorial (feed → blotter → load → reconcile) |

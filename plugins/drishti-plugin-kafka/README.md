@@ -33,6 +33,10 @@ settings:
 - mode
 - max-message-kb
 - next-date.max-rows
+- kind-by.*
+- land.*
+- lake
+- pack
 - rejects.keep-days
 - poll-ms
 - cache-mb
@@ -513,34 +517,48 @@ The shared rules are in [DATA_GUIDE.md section 10, proxy](../../docs/guides/DATA
 **not** proxied. The one HTTP part, the **Schema Registry**, goes through the proxy when one applies (plain forwarding, or `CONNECT` for
 an `https://` registry with `schema-registry.tls.*` kept); a refused proxy login surfaces as a message that names the proxy.
 
-## The VaR PV topic (var-pv-stream)
+## Landed kinds: the VaR PV topic
 
-The market-risk pack's connector `pv-updates` (plugin `var-pv-stream`, off by default: `DRISHTI_VAR_PV_STREAM=true`) reads a pricing
-system's **PV topic** the same way (every partition from the beginning, no consumer group, the same `bootstrap-servers`, security and
-`client.*` settings) and turns it into **intraday batches of the risk lake**
-([VAR_GUIDE.md, What-if pricing and intraday recomputes](../../docs/guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)).
+A kind whose contract says `live.apply: land` is not kept in the live state: its rows collect in the kernel's **live lander**, the newest
+per key, and every window (`land.window`, 5 minutes; earlier at `land.max-keys`, 500, or on an administrator's **Apply now**) lands as one
+batch per kind and business date in the lake, then the data-load signal
+([LIVE_CONNECTORS_DESIGN.md section 2.4](../../docs/architecture/LIVE_CONNECTORS_DESIGN.md#24-two-ways-to-apply-chosen-per-kind)). The
+engine that owns the kind checks and writes the batch. The market-risk pack's **`risk-store-live`** (off by default:
+`DRISHTI_VAR_PV_STREAM=true`) is the one shipped: the PV topic of the pricing systems, its scenario PVs and P&L vectors landed as intraday
+batches of the risk lake ([VAR_GUIDE.md section 8.4](../../docs/guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)).
 
-- **The topic:** a message's value is JSONL text, one row a line of the `scenario-pv` or `pnl-vector` contract with `COMPUTED_AT`
-  ([market-risk contracts](../../docs/contracts/packs/market-risk.md)); the key is not read. A cancel is a line with `TRADE_STATUS:
-  CANCELLED` and a null vector; a tombstone is ignored; a malformed line is rejected (`DRS-5201`, with partition, offset and line) and
-  the message's other lines applied.
-- **The window:** records collect for `drishti.var.intraday.kafka.window` (`5m`), the latest per trade (by `COMPUTED_AT`, then
-  partition, offset, line), flushed early at `drishti.var.intraday.kafka.max-trades` (`500`) or on **Apply now**
-  (`POST /api/v1/var/intraday/streams/pv-updates/apply`). A window is one intraday batch (`RUN_KIND: INTRADAY`,
-  `BATCH_ID: K-<date>-<time>-<n>`) written by Drishti's lake writer and announced as a data load.
-- **The guards:** another business date, a record computed before the morning run or not later than what the day holds (a redelivery,
-  a replay) is ignored; another scenario set (`DRS-5203`), a failed scenario (`DRS-5206`) or a non-contract object (`DRS-5201`) is
-  rejected, never filled with zero, and listed in `GET /api/v1/var/intraday/streams` and the VaR page's provenance.
-- **Sizing:** a record is 4–8 KB; 10,000 updates a day are 40–80 MB on the topic.
-- **Settings:** `broker` (`default`: the `[broker.default]` section of the settings file, a Kafka at localhost:9092 when none), `topic` (`${DRISHTI_VAR_PV_TOPIC:drishti.risk.pv-updates}`),
-  `lake` (`${DRISHTI_DELTA_ROOT:./data/delta/demo}`, tables `<lake>/risk/scenario-pv` and `<lake>/risk/pnl-vector`), `poll-ms` (`200`).
+```yaml
+risk-store-live:
+  plugin: kafka
+  companion-of: risk-store
+  enabled: ${DRISHTI_VAR_PV_STREAM:false}
+  kinds: [scenario-pv, pnl-vector]
+  settings:
+    broker: default
+    topics: ${DRISHTI_VAR_PV_TOPIC:drishti.risk.pv-updates}
+    shape: jsonl                         # a message's value is JSONL text: one record a line
+    kind-by.field: VALUE_TYPE            # each line's kind: PV a scenario PV, PNL (or none) a P&L vector
+    kind-by.PV: scenario-pv
+    kind-by.PNL: pnl-vector
+    kind-by.default: pnl-vector
+    land.window: ${DRISHTI_VAR_INTRADAY_KAFKA_WINDOW:5m}
+    land.max-keys: ${DRISHTI_VAR_INTRADAY_KAFKA_MAX_TRADES:500}
+    lake: demo                           # the lake the windows are written to
+    pack: market-risk                    # the pack the windows are announced for
+```
+
+- **The window key** is the contract's `live.land-key`: a trade's `TRADE_ID`, or a position's `POSITION_ID`; the newest by
+  `COMPUTED_AT` wins. A batch's id is `L-<kind>-<date>-<span>` (its first and last positions), so a window landed twice is one batch.
+- **The engine's checks** (another scenario set `DRS-5203`, a failed scenario `DRS-5206`, a vector of the wrong length `DRS-5201`, a
+  record not of its system's form `DRS-5208`/`DRS-5209`; another date, before the morning run or not newer: ignored and counted) go to
+  the connector's reject log with their codes; a line that is not JSON is the connector's own `not-json` reject. A tombstone carries no
+  row of a landed kind: counted (`tombstones`).
 - **The publisher:** `tools/pvgen/publish-kafka.sh` (`tools\windows\pvgen-publish-kafka.ps1`) sends amended, new and cancelled trades of
-  the demo's date (`--per-message`, `--rate`, `--seconds`, `--seed`, `--pv-systems`, `--pnl-systems`, `--all-vectors`, `--dry-run`);
-  `--save` writes the rows for `tools/pvgen/check.sh`, which recomputes the answer and compares it with the server's
+  the demo's date; `--save` writes the rows for `tools/pvgen/check.sh`
   ([VAR_GUIDE.md, Producing P&L vectors](../../docs/guides/VAR_GUIDE.md#1512-producing-pl-vectors-and-scenario-pvs)).
 
 ```bash
-DRISHTI_VAR_PV_STREAM=true BROKER_DEFAULT_BOOTSTRAP_SERVERS=localhost:9092 ./drishti.sh start
+DRISHTI_VAR_PV_STREAM=true ./drishti.sh start
 tools/pvgen/publish-kafka.sh --bootstrap localhost:9092 --rate 20 --seconds 60 --save pv-sent.jsonl
 ```
 

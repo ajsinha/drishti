@@ -41,7 +41,7 @@ engines:
     bi: [banking.market_risk_var_]
     cli: [var, play var]
     playgrounds: [var, pvar]
-    connectors: [var-engine, var-positions, var-pv-stream]
+    connectors: [var-engine, var-positions]
     kinds: [var-result]
     inputs: [pnl-vector, scenario-pv]
     ai-tools: []

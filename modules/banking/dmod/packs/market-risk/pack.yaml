@@ -250,14 +250,23 @@ connectors:
     enabled: ${DRISHTI_VAR_ENABLED:true}
     kinds:
     - system-basket
-  pv-updates:
-    plugin: var-pv-stream
+  risk-store-live:
+    plugin: kafka
+    companion-of: risk-store
     enabled: ${DRISHTI_VAR_PV_STREAM:false}
     kinds:
-    - pv-update
+    - scenario-pv
+    - pnl-vector
     settings:
       broker: default
-      topic: ${DRISHTI_VAR_PV_TOPIC:drishti.risk.pv-updates}
+      topics: ${DRISHTI_VAR_PV_TOPIC:drishti.risk.pv-updates}
+      shape: jsonl
+      kind-by.field: VALUE_TYPE
+      kind-by.PV: scenario-pv
+      kind-by.PNL: pnl-vector
+      kind-by.default: pnl-vector
+      land.window: ${DRISHTI_VAR_INTRADAY_KAFKA_WINDOW:5m}
+      land.max-keys: ${DRISHTI_VAR_INTRADAY_KAFKA_MAX_TRADES:500}
       lake: demo
       pack: market-risk
   var-engine:

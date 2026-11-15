@@ -211,7 +211,7 @@ CHECKLIST = {
         "One `BATCH_ID` and one `SCENARIO_SET_ID` per date across both forms (`DRS-5203`); `COMPUTED_AT` in UTC.",
         "Intraday: send only the changed trades, `RUN_KIND` `INTRADAY`, a new `BATCH_ID`, a `COMPUTED_AT` later than the morning run's (the "
         "latest per trade wins); a cancel is a row with `TRADE_STATUS` `CANCELLED` and the vector null. The same rows may be published to the "
-        "PV topic on Kafka (connector `pv-updates`).",
+        "PV topic on Kafka (connector `risk-store-live`).",
         "`VALUE_TYPE` must match the payload and `GRAIN` the id (`DRS-5208`); a pinned system's form (`drishti.var.inputs`) must match (`DRS-5209`).",
     ],
     "pnl-vector": ["`PNL` and `PV` in `CURRENCY` (USD in the demo), whole currency units, gain positive, loss negative, from the bank's point "

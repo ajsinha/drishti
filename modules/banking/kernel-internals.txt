@@ -26,7 +26,6 @@ com.ash.drishti.lakeio
 com.ash.drishti.net.transport
 com.ash.drishti.packs
 com.ash.drishti.plugin.iceberg
-com.ash.drishti.plugin.kafka
 com.ash.drishti.server.admission
 com.ash.drishti.server.approvals
 com.ash.drishti.server.bi.engine
@@ -48,7 +47,4 @@ com.ash.drishti.server.security
 com.ash.drishti.server.shard
 com.ash.drishti.server.collab.snapshot   # bytecode
 com.github.benmanes.caffeine.cache   # library
-org.apache.kafka.clients.consumer   # library
-org.apache.kafka.common   # library
-org.apache.kafka.common.serialization   # library
 org.yaml.snakeyaml   # library

@@ -192,7 +192,7 @@ class SourceRegistryRetryTest {
         }
     }
 
-    /** A module's connector type that runs only under a connector's settings (banking's var-pv-stream: a Kafka topic and brokers). */
+    /** A module's connector type that runs only under a connector's settings (a topic and brokers it cannot guess). */
     public static final class NeedsConnector implements SourcePlugin {
         public PluginManifest manifest() {
             return new PluginManifest("needs-connector", "t", Set.of("pv-update"), SourceCapabilities.FETCH_ONLY);

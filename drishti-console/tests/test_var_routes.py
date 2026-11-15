@@ -138,7 +138,7 @@ def test_every_answer_passes_the_reporting_currency_to_the_engine(client, backen
 
 
 def test_apply_now_of_a_pv_stream_goes_to_the_engine(client, backend, monkeypatch):
-    """The var-pv-stream connector's Apply now (VAR_GUIDE.md section 8.4): the console passes the POST on as the user (the engine
+    """The PV topic's live connector's Apply now (VAR_GUIDE.md section 8.4): the console passes the POST on as the user (the engine
     checks the administrator), and the streams' status; any other path under intraday/ is refused."""
     seen = []
 
@@ -146,9 +146,9 @@ def test_apply_now_of_a_pv_stream_goes_to_the_engine(client, backend, monkeypatc
         seen.append((method, path, body, params))
         return {"status": "applied", "rows": 3, "batchId": "K-2026-09-30-1"}
     engine_fakes.patch(monkeypatch, backend, var=var)
-    r = client.post("/api/var/intraday/streams/pv-updates/apply")
+    r = client.post("/api/var/intraday/streams/risk-store-live/apply")
     assert r.status_code == 200 and r.json()["rows"] == 3
-    assert seen[-1][:2] == ("POST", "/intraday/streams/pv-updates/apply")
+    assert seen[-1][:2] == ("POST", "/intraday/streams/risk-store-live/apply")
     assert client.get("/api/var/intraday/streams").status_code == 200 and seen[-1][1] == "/intraday/streams"
     assert client.post("/api/var/intraday/other/apply").status_code == 404
 

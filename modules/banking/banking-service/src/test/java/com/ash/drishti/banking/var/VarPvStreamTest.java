@@ -29,7 +29,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -57,9 +56,10 @@ import org.springframework.test.web.servlet.MockMvc;
 
 /**
  * Intraday updates from the PV topic (VAR_GUIDE.md section 8.4, Kafka), over the in-process Kafka the Kafka plugin's tests use (no
- * Docker, no .exe): each message's value JSONL text, one or more records; the {@code var-pv-stream} connector collects a window, keeps
- * the latest record per trade, appends the window to the lake as one intraday batch and announces it; the intraday layer applies it as it
- * applies a file. A message of several records (the latest of a trade winning, a blank line skipped); a message mixing trades, a cancel
+ * Docker, no .exe): each message's value JSONL text, one or more records; the live connector ({@code kafka}, {@code shape: jsonl}, its
+ * rows' kind by VALUE_TYPE) hands them to the kernel's live lander, which keeps the latest record per trade in a window and lands it as
+ * one batch per kind; the VaR engine checks it, appends it to the lake as one intraday batch and announces it; the intraday layer applies
+ * it as it applies a file (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 8.4). A message of several records (the latest of a trade winning, a blank line skipped); a message mixing trades, a cancel
  * line and a malformed line (rejected with its place, the others applied); a tombstone ignored; an early flush at {@code max-trades};
  * "apply now" through the API; the guards (another date, before the morning run, another scenario set, a failed scenario, a
  * redelivery); a restart replaying the topic without applying anything again; file batches and Kafka windows mixed on one date; and the
@@ -84,9 +84,13 @@ import org.springframework.test.web.servlet.MockMvc;
                 + "MATURITY_DATE,STATUS,SCENARIO_SET_ID,BATCH_ID,RUN_KIND,COMPUTED_AT,VALUE_TYPE,GRAIN,POSITION_ID,SOURCE_SYSTEM,TRADE_IDS",
         "drishti.sources.connectors.risk-lake.settings.layout.scenario-pv.vectors=SCENARIO_PV",
         "drishti.sources.connectors.var-positions.plugin=var-positions", "drishti.sources.connectors.var-positions.kinds[0]=position",
-        "drishti.sources.connectors.pv-test.plugin=var-pv-stream", "drishti.sources.connectors.pv-test.kinds[0]=pv-update",
-        "drishti.sources.connectors.pv-test.settings.topic=pv-updates", "drishti.sources.connectors.pv-test.settings.poll-ms=50",
-        "drishti.var.intraday.kafka.window=10m", "drishti.var.intraday.kafka.max-trades=3",
+        "drishti.sources.connectors.pv-test.plugin=kafka", "drishti.sources.connectors.pv-test.kinds[0]=scenario-pv",
+        "drishti.sources.connectors.pv-test.kinds[1]=pnl-vector",
+        "drishti.sources.connectors.pv-test.settings.topics=pv-updates", "drishti.sources.connectors.pv-test.settings.poll-ms=50",
+        "drishti.sources.connectors.pv-test.settings.shape=jsonl", "drishti.sources.connectors.pv-test.settings.kind-by.field=VALUE_TYPE",
+        "drishti.sources.connectors.pv-test.settings.kind-by.PV=scenario-pv", "drishti.sources.connectors.pv-test.settings.kind-by.PNL=pnl-vector",
+        "drishti.sources.connectors.pv-test.settings.kind-by.default=pnl-vector",
+        "drishti.sources.connectors.pv-test.settings.land.window=10m", "drishti.sources.connectors.pv-test.settings.land.max-keys=3",
         "drishti.var.inputs.SYS-B.form=pv", "drishti.var.inputs.SYS-B.grain=position",
         "drishti.sources.routes.pnl-vector=risk-lake", "drishti.sources.routes.position=var-positions",
         "drishti.sources.routes.scenario-set=risk-lake", "drishti.sources.routes.var-limit=risk-lake",
@@ -165,6 +169,8 @@ class VarPvStreamTest {
     @Autowired TokenVerifier tokens;
     @Autowired VarService svc;
     @Autowired VarOfficial official;
+    @Autowired VarPvStream landing;
+    @Autowired com.ash.drishti.engine.source.SourceRegistry registry;
 
     private String token(String role) {
         return "Bearer " + tokens.mint("rita", List.of(role), 300);
@@ -192,8 +198,17 @@ class VarPvStreamTest {
         producer.send(new ProducerRecord<>("pv-updates", key, null)).get(10, TimeUnit.SECONDS);
     }
 
-    static VarPvStreamPlugin stream() {
-        return VarPvStreamPlugin.RUNNING.get("pv-test");
+    /** The live connector as the VaR API shows it: its window, its counts, the engine's status. */
+    private Map<String, Object> stream() {
+        return registry.landers("scenario-pv").stream().filter(m -> "pv-test".equals(m.get("connector"))).findFirst().orElse(null);
+    }
+
+    /** One of the connector's counts (the kernel's: decode, windowed, late, rejected by reason). */
+    @SuppressWarnings("unchecked")
+    private long fed(String k) {
+        Map<String, Object> s = stream();
+        Object v = s == null ? null : ((Map<String, Object>) s.get("counts")).get(k);
+        return v == null ? 0 : ((Number) v).longValue();
     }
 
     static void waitFor(BooleanSupplier ok, int seconds) throws InterruptedException {
@@ -204,8 +219,13 @@ class VarPvStreamTest {
         assertThat(ok.getAsBoolean()).as("waited " + seconds + " s").isTrue();
     }
 
+    /** One of the VaR engine's counts of what it landed. */
     private long count(String k) {
-        return ((Number) stream().describe().get(k)).longValue();
+        return ((Number) landing.status().get(k)).longValue();
+    }
+
+    private void landNow() {
+        registry.landNow("pv-test");
     }
 
     private JsonNode applyNow() throws Exception {
@@ -222,24 +242,23 @@ class VarPvStreamTest {
     @Test
     @Order(1)
     void aMessageOfSeveralRecordsTheLatestOfEachTradeWinning() throws Exception {
-        assertThat(svc.props().intraday().kafka().maxTrades()).isEqualTo(3);                      // drishti.var.intraday.kafka
         double morning = ask("/api/v1/risk/var/scope", "BANK", DAY, null).get("var").asDouble();
         assertThat(morning).isPositive();
         ask("/api/v1/risk/var/scope", "BANK", DAY, "EUR");
-        waitFor(() -> stream() != null && String.valueOf(stream().describe().get("state")).startsWith("reading"), 60);
+        waitFor(() -> stream() != null && String.valueOf(stream().get("health")).startsWith("UP"), 60);
         send("batch-7", vec("T1", 150, VarLakeFixture.scale(VarLakeFixture.U, 150), "T10:00:00Z"),    // one message, three records:
                 vec("T1", 120, VarLakeFixture.scale(VarLakeFixture.U, 120), "T09:30:00Z"),               // T1's latest COMPUTED_AT wins
                 "",                                                                                        // a blank line: skipped
                 vec("N1", -30, VarLakeFixture.scale(VarLakeFixture.V, -30), "T10:00:00Z"));
-        waitFor(() -> ((Number) stream().describe().get("waiting")).intValue() == 2, 30);
+        waitFor(() -> ((Number) stream().get("waiting")).intValue() == 2, 30);
         JsonNode r = applyNow();                                                                    // "apply now", through the API
-        assertThat(r.get("status").asText()).as(r.toString()).isEqualTo("applied");
-        assertThat(r.get("rows").asInt()).isEqualTo(2);
-        assertThat(r.get("why").asText()).isEqualTo("apply now");
+        JsonNode last = r.get("lastBatches").get(r.get("lastBatches").size() - 1);
+        assertThat(last.get("written").asInt()).as(r.toString()).isEqualTo(2);
+        assertThat(last.get("why").asText()).isEqualTo("apply now");
         waitFor(() -> svc.date(DAY).book().intraday() != null && svc.date(DAY).book().intraday().info().trades() == 2, 30);
         JsonNode t1 = ask("/api/v1/risk/var/scope", "TRD:T1", DAY, null);
         assertThat(t1.get("var").asDouble()).isEqualTo(1500);                                    // 150 x the worst unit move of 10
-        assertThat(t1.at("/intraday/batches/0").asText()).startsWith("K-" + DAY);
+        assertThat(t1.at("/intraday/batches/0").asText()).startsWith("L-pnl-vector-" + DAY);   // the kernel's batch: its transport span
     }
 
     @Test
@@ -251,7 +270,8 @@ class VarPvStreamTest {
         waitFor(() -> !svc.loader().version(DAY).equals(before), 20);
         official.onLoad("scenario-pv", DAY);
         long batches = count("batches");
-        long rejected = count("rejected");
+        long notJson = fed("rejected.not-json");
+        long tombstones = fed("tombstones");
         tombstone("T2");                                                                             // a tombstone: no record, ignored
         Map<String, Object> cancel = vec("T2", -40, null, "T11:00:00Z");                             // a cancel line, as in the files
         cancel.put("TRADE_STATUS", "CANCELLED");
@@ -260,22 +280,19 @@ class VarPvStreamTest {
                 "{\"TRADE_ID\": \"T9\", \"PNL\": [1, 2,",                                              // malformed: rejected, the rest applied
                 cancel,
                 VarIntradayLake.pv(DAY, "P1", "EUR", 1200, VarPvFixture.plus(1200, VarLakeFixture.U, 30), "INTRADAY", "x", DAY + "T11:00:00Z",
-                        "HS-20"));                                                                  // three trades: max-trades, an early flush
+                        "HS-20"));                                                                  // three keys: max-keys, an early landing
         long until = System.nanoTime() + TimeUnit.SECONDS.toNanos(30);
-        while (count("batches") != batches + 1 && System.nanoTime() < until) {
+        while (count("batches") != batches + 2 && System.nanoTime() < until) {                       // one batch per kind
             Thread.sleep(50);
         }
-        assertThat(count("batches")).as(String.valueOf(stream().describe())).isEqualTo(batches + 1);
-        assertThat(count("rejected")).isEqualTo(rejected + 1);
-        assertThat(count("tombstonesIgnored")).isEqualTo(1);
-        @SuppressWarnings("unchecked")
-        List<String> bad = (List<String>) stream().describe().get("rejections");
-        assertThat(bad.get(bad.size() - 1)).startsWith("DRS-5201 p").contains("line 2");
+        assertThat(count("batches")).as(String.valueOf(stream())).isEqualTo(batches + 2);
+        assertThat(fed("rejected.not-json")).as("the malformed line: in the reject log, the rest landed").isEqualTo(notJson + 1);
+        assertThat(fed("tombstones")).isEqualTo(tombstones + 1);
         waitFor(() -> svc.date(DAY).book().intraday().info().trades() == 5, 30);
         assertThat(ask("/api/v1/risk/var/scope", "TRD:T2", DAY, null).at("/provenance/unknown").toString()).contains("T2");
         @SuppressWarnings("unchecked")
-        List<Map<String, Object>> w = (List<Map<String, Object>>) stream().describe().get("lastWindows");
-        assertThat(w.get(w.size() - 1).get("why")).isEqualTo("max-trades");
+        List<Map<String, Object>> w = (List<Map<String, Object>>) stream().get("lastBatches");
+        assertThat(String.valueOf(w.get(w.size() - 1).get("why"))).isEqualTo("max-keys 3");
     }
 
     @Test
@@ -303,16 +320,15 @@ class VarPvStreamTest {
         send("T1", vec("T1", 150, VarLakeFixture.scale(VarLakeFixture.U, 150), "T10:00:00Z"));    // a redelivery: not newer
         // three keys flush early (max-trades), the rest when asked: ask until every message has been through
         waitFor(() -> {
-            stream().applyNow();
-            stream().flushIfDue();
+            landNow();
             return count("otherDate") == other + 1 && count("beforeMorning") == early + 1 && count("notNewer") == same + 1
                     && count("rejected") == rejected + 2;
         }, 30);
         @SuppressWarnings("unchecked")
-        List<String> why = (List<String>) stream().describe().get("rejections");
-        assertThat(String.join("\n", why)).contains("DRS-5206 T4 (p").contains("DRS-5203 P2 (p");
+        List<String> why = (List<String>) landing.status().get("rejections");
+        assertThat(String.join("\n", why)).contains("DRS-5206 T4 (batch").contains("DRS-5203 P2 (batch");
         assertThat(ask("/api/v1/risk/var/scope", "BANK", DAY, null).at("/provenance/intradayRejections").toString()).contains("DRS-5206 T4")
-                .contains("DRS-5203 P2").contains("DRS-5201 p");
+                .contains("DRS-5203 P2");
         assertThat(svc.date(DAY).book().intraday().info().trades()).isEqualTo(5);                  // nothing of these applied
     }
 
@@ -350,24 +366,24 @@ class VarPvStreamTest {
         svc.reload(DAY);                                                                            // the server again: the lake rebuilds the day
         assertThat(svc.scoped(null, "NODE:MGMT~BANK", DAY, null).measures().var()).isCloseTo(before, within(0.005));
         // a new stream reads the topic from the beginning: every message is already in the lake, nothing is written again
-        VarPvStream again = new VarPvStream(svc, lake, (k, w) -> VarConfiguration.layout(null, k, w), (k, d, b, n) -> official.onLoad(k, d));
-        VarPvWindow w = new VarPvWindow(Duration.ofMinutes(5), 1000);
-        long off = 0;
+        VarPvStream again = new VarPvStream(svc, settings -> lake, (k, w) -> VarConfiguration.layout(null, k, w),
+                (k, d, b, n, st) -> official.onLoad(k, d));
+        List<String> rows = new ArrayList<>();
         for (Object[] s : SENT) {
-            for (VarPvWindow.Msg m : VarPvStreamPlugin.records(new org.apache.kafka.clients.consumer.ConsumerRecord<>("pv-updates", 0, off++,
-                    (String) s[0], (String) s[1]))) {
-                if (m.bad() == null) {
-                    w.add(m, Instant.now());
+            for (String line : ((String) s[1]).split("\n")) {
+                if (!line.isBlank() && line.strip().endsWith("}")) {
+                    rows.add(line.strip());                                                       // every record the topic holds, again
                 }
             }
         }
-        Map<String, Object> r = again.apply(w.drain(), "replay");
-        assertThat(r.get("status")).as(r.toString()).isEqualTo("nothing new");
+        com.ash.drishti.kernel.api.data.KindLanding.Landed r = again.land(new com.ash.drishti.kernel.api.data.KindLanding.Batch("replay",
+                "pnl-vector", DAY, "replay", rows, Map.of()));
+        assertThat(r.written()).as(r.toString()).isZero();
         long after = parquets("pnl-vector") + parquets("scenario-pv");
         assertThat(after).isEqualTo(rows);
         JsonNode st = JSON.readTree(mvc.perform(get("/api/v1/risk/var/intraday/streams").header("Authorization", token("risk")))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
-        assertThat(st.get(0).get("topic").asText()).isEqualTo("pv-updates");
+        assertThat(st.get(0).get("connector").asText()).isEqualTo("pv-test");
         Map<String, Object> once = new LinkedHashMap<>(again.status());
         assertThat(((Number) once.get("applied")).longValue()).isZero();
     }
@@ -404,13 +420,12 @@ class VarPvStreamTest {
         unsaid.remove("VALUE_TYPE");                                   // does not say what it is
         send("mixed", pvTrade, pvPosition, pnlTrade, pnlPosition, offPin, unsaid);
         waitFor(() -> {
-            stream().applyNow();
-            stream().flushIfDue();
+            landNow();
             return count("rejected") >= rejected + 2 && svc.date(DAY).book().intraday().info().trades() == before + 4;
         }, 30);
         @SuppressWarnings("unchecked")
-        List<String> why = (List<String>) stream().describe().get("rejections");
-        assertThat(String.join("\n", why)).contains("DRS-5209 p").contains("SYS-B is pinned to pv, position").contains("DRS-5208 p")
+        List<String> why = (List<String>) landing.status().get("rejections");
+        assertThat(String.join("\n", why)).contains("DRS-5209 batch").contains("SYS-B is pinned to pv, position").contains("DRS-5208 batch")
                 .contains("no VALUE_TYPE");
         assertThat(ask("/api/v1/risk/var/scope", "POS:PB1", DAY, null).get("var").asDouble()).isPositive();
         assertThat(ask("/api/v1/risk/var/scope", "POS:PD1", DAY, null).get("var").asDouble()).isPositive();

@@ -77,6 +77,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class VarController {
 
     private final VarService svc;
+    private final com.ash.drishti.engine.source.SourceRegistry registry;
+    private final VarPvStream landing;
     private final VarViews views;
     private final VarCaptures captures;
     private final VarOfficial official;
@@ -87,7 +89,10 @@ public class VarController {
 
     VarController(VarService svc, VarViews views, VarOfficial official, Entitlements entitlements,
             org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.collab.InboxService> inbox,
-            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.collab.InboxHub> hub) {
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.collab.InboxHub> hub,
+            com.ash.drishti.engine.source.SourceRegistry registry, VarPvStream landing) {
+        this.registry = registry;
+        this.landing = landing;
         this.svc = svc;
         this.official = official;
         this.views = views;
@@ -374,25 +379,35 @@ public class VarController {
         return m;
     }
 
-    /** The PV topics' streams (the {@code var-pv-stream} connectors, VAR_GUIDE.md section 8.4): their windows and what they applied. */
+    /**
+     * The PV topic's live connectors (VAR_GUIDE.md section 8.4; risk-store-live): each one's window (waiting rows, the window, the last
+     * batches) and counts, and what the VaR engine did with the windows it landed. A view of the live connectors (Admin: Live feeds).
+     */
     @GetMapping("/intraday/streams")
     public List<Map<String, Object>> streams(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireOpen(p, svc.props().kinds().vector());
-        return VarPvStreamPlugin.RUNNING.values().stream().map(VarPvStreamPlugin::describe).toList();
+        List<Map<String, Object>> out = new java.util.ArrayList<>();
+        java.util.Set<String> seen = new java.util.HashSet<>();
+        for (String kind : List.of("scenario-pv", "pnl-vector")) {
+            for (Map<String, Object> m : registry.landers(kind)) {
+                if (seen.add(String.valueOf(m.get("connector")))) {
+                    Map<String, Object> one = new java.util.LinkedHashMap<>(m);
+                    one.put("engine", landing.status());
+                    out.add(one);
+                }
+            }
+        }
+        return out;
     }
 
-    /** An administrator's "apply now": the stream's waiting window applied at once, as one intraday batch. */
+    /** An administrator's "apply now": the live connector's waiting window landed at once, as intraday batches. */
     @PostMapping("/intraday/streams/{name}/apply")
     public Map<String, Object> applyNow(@PathVariable String name, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireAdmin(p);
-        VarPvStreamPlugin s = VarPvStreamPlugin.RUNNING.get(name);
-        if (s == null) {
-            throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no PV stream " + name + " running (a var-pv-stream connector, enabled)");
-        }
-        s.applyNow();
-        Map<String, Object> r = s.flushIfDue();
+        Map<String, Object> r = registry.landNow(name).orElseThrow(() -> new DrishtiException(ErrorCode.ENTITY_NOT_FOUND,
+                "no live connector " + name + " lands the PV topic here (risk-store-live, enabled)"));
         svc.audit(p.user(), "var-intraday-apply-now", name, String.valueOf(r));
-        return r == null ? Map.of("status", "nothing waiting") : r;
+        return r;
     }
 
     /** Drops the loaded dates, so the next request reads the lake again (after a new load). Administrators only. */

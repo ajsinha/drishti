@@ -2040,8 +2040,8 @@ curl -s localhost:18480/api/v1/admin/health | python3 -m json.tool | head -40
 
 #### Stream connectors without their broker: WAITING, not DOWN
 
-A stream connector (the `kafka`, `activemq` and `rabbitmq` plugins, the source-system `trade-<system>-live` connectors, the banking
-`var-pv-stream`) that is enabled but cannot reach its broker is not failing: the lake snapshot is served and only the live updates wait.
+A stream connector (the `kafka`, `activemq` and `rabbitmq` plugins, the source-system `trade-<system>-live` connectors, the market-risk
+pack's `risk-store-live`) that is enabled but cannot reach its broker is not failing: the lake snapshot is served and only the live updates wait.
 
 | State on Admin → Connectors / Health | Meaning | Counts as |
 |---|---|---|

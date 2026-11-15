@@ -48,5 +48,6 @@ plugins.phone_page("var", {"tiles": ("must", "Headline VaR, ES and limit use"), 
 plugins.phone_page("exposure", {"tiles": ("must", "CE, EPE and peak PFE"), "chart": ("glance", "Profile"), "tabs": ("more", "Netting sets, trades and limits"),
                                 "tree": ("more", "Scopes"), "fan": ("desk", "Paths")})
 
-plugins.connector_action("var-pv-stream", "Apply now", "Apply the waiting window of {name} now, as one intraday batch",
-                         "The PV topic's waiting window applied now, as one intraday batch (VAR_GUIDE.md section 8.4)", "/api/var/intraday/streams/{name}/apply")
+plugins.connector_action("kafka", "Apply now", "Land the waiting window of {name} now, as intraday batches",
+                         "A live connector of landed kinds (risk-store-live, the PV topic): its waiting window landed now, as intraday batches "
+                         "(VAR_GUIDE.md section 8.4)", "/api/var/intraday/streams/{name}/apply")

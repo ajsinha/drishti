@@ -209,6 +209,42 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
         landing = l == null ? com.ash.drishti.common.live.Landing.NONE : l;
     }
 
+    /** The kernel's live source of a connector (a live transport's), or empty. */
+    private Optional<com.ash.drishti.common.live.LiveSource> live(String connector) {
+        return plugin(connector).map(p -> p instanceof ConnectorInstance ci ? ci.delegate() : p)
+                .filter(p -> p instanceof com.ash.drishti.common.live.LiveSource).map(com.ash.drishti.common.live.LiveSource.class::cast);
+    }
+
+    /**
+     * The live connectors that land {@code kind} (its contract's {@code apply: land}), each as Health and Admin show it: its name, health,
+     * its window (waiting rows, window, last batches) and its counts (LIVE_CONNECTORS_DESIGN.md section 7.9).
+     */
+    public List<Map<String, Object>> landers(String kind) {
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (String name : List.copyOf(plugins.keySet())) {
+            live(name).filter(l -> l.feed() != null && l.feed().lander() != null && l.manifest().kinds().contains(kind)).ifPresent(l -> {
+                Map<String, Object> m = new LinkedHashMap<>();
+                m.put("connector", name);
+                m.put("health", l.health());
+                m.put("state", l.health());
+                m.put("lastMessage", l.feed().stats().get("lastMessage"));
+                m.putAll(l.feed().lander().describe());
+                m.put("counts", l.feed().stats().get("counts"));
+                out.add(m);
+            });
+        }
+        return out;
+    }
+
+    /** An administrator's "apply now": the connector's waiting window landed at once; its window as it is after; empty: no such connector. */
+    public Optional<Map<String, Object>> landNow(String connector) {
+        return live(connector).filter(l -> l.feed() != null && l.feed().lander() != null).map(l -> {
+            l.feed().lander().applyNow();
+            l.feed().landIfDue();
+            return l.feed().lander().describe();
+        });
+    }
+
     /** A kind's live rules (its contract's {@code live:} block, else the defaults): what decides which of a live row and a lake row is newer. */
     public com.ash.drishti.common.live.LiveRules liveRules(String kind) {
         return liveContracts.rules(kind);

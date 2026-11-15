@@ -38,51 +38,90 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiFunction;
 
 /**
- * A window of the PV topic turned into one intraday batch (VAR_GUIDE.md section 8.4, Kafka): the window's latest record per trade (a
- * record is one JSONL line of a message; a message carries one or more),
- * checked, written to the lake as ONE batch of the {@code scenario-pv} kind (and of {@code pnl-vector} for a trade sent as a P&amp;L
- * vector), {@code RUN_KIND: INTRADAY} and the window's {@code BATCH_ID}, by Drishti's own lake writer (the {@code lake build} path), then
- * announced as a data-load of the kind, so the intraday layer applies it exactly as it applies a file. A restart rebuilds from the lake,
- * never from Kafka.
+ * The VaR engine's landing of scenario PVs and P&amp;L vectors (VAR_GUIDE.md section 8.4; docs/architecture/LIVE_CONNECTORS_DESIGN.md
+ * section 8.4): the kernel's live lander hands it each window of the PV topic's live connector ({@code risk-store-live}: the newest record
+ * per trade or position, by {@code COMPUTED_AT}), one batch per kind and business date; the engine checks it, writes it to the lake as ONE
+ * batch of its kind ({@code RUN_KIND: INTRADAY}, the batch's id), by Drishti's own lake writer (the {@code lake build} path; Delta or
+ * Iceberg as the lake's table is), then announces it as a data-load of the kind, so the intraday layer applies it exactly as it applies a
+ * file. A restart rebuilds from the lake, never from the topic.
  *
- * <p>The guards: a record of another business date is ignored (counted); one computed before the morning run, or not later than the
- * update the date already holds for the trade (a redelivery, a restart replaying the topic), is ignored; one of another scenario set
- * ({@code DRS-5203}), with PVs that are not the set's length of finite numbers (509 in the demo) ({@code DRS-5201}, {@code DRS-5206}: never filled with zero), or
- * a line that is not a JSON object of the contract ({@code DRS-5201}) is rejected and listed with its partition, offset and line number,
- * in the admin status and in the date's {@code intraday.rejections}; the other lines of its message are applied. A cancel is a cancel
- * line ({@code TRADE_STATUS: CANCELLED}, its vector null), as in the files; a tombstone carries no record and is ignored.
+ * <p>The engine's checks stay the engine's and are reported through the live connector's reject log: a record of another business date
+ * is ignored (counted); one computed before the morning run, or not later than the update the date already holds for the trade (a
+ * redelivery, a restart replaying the topic), is ignored; one of another scenario set ({@code DRS-5203}), with PVs that are not the set's
+ * length of finite numbers ({@code DRS-5201}, {@code DRS-5206}: never filled with zero), or not of its system's form ({@code DRS-5208},
+ * {@code DRS-5209}) is rejected. A cancel is a cancel line ({@code TRADE_STATUS: CANCELLED}, its vector null), as in the files.
  */
-final class VarPvStream {
+final class VarPvStream implements com.ash.drishti.kernel.api.data.KindLanding {
 
     private static final ObjectMapper JSON = new ObjectMapper();
     private static final int LISTED = 20;
     private final VarService svc;
-    private final Path lake;
+    private final java.util.function.Function<Map<String, String>, Path> lakes;
     private final BiFunction<String, String, List<String>> columns;
     private final Announcer announcer;
     private final Map<String, AtomicLong> counts = new LinkedHashMap<>();
     private final List<String> rejections = new ArrayList<>();
     private final List<Map<String, Object>> windows = new ArrayList<>();
-    private int seq;
+    /** The rejects of the batch being landed (under the applying lock), handed back to the live connector's reject log. */
+    private List<Rejected> current;
+
+    /** One record of a window: its trade (or position), the row's text, when it was computed, and where it is in the batch. */
+    record Msg(String key, String value, String computedAt, String where) {}
 
     /** Announces a batch landed (the data-load signal: LoadService in the server, a direct call in a test). */
     interface Announcer {
-        void landed(String kind, LocalDate date, String batchId, long rows);
+        void landed(String kind, LocalDate date, String batchId, long rows, Map<String, String> settings);
     }
 
     /**
-     * @param lake the risk lake's root (its tables {@code <lake>/risk/<kind>})
+     * @param lakes the lake root a batch is written to, from its connector's settings ({@code lake}: a lake's name, its tables
+     *              {@code <lake>/risk/<kind>})
      * @param columns the promoted columns of a kind's table (the pack's layout: kind, "columns" or "vectors")
      */
-    VarPvStream(VarService svc, Path lake, BiFunction<String, String, List<String>> columns, Announcer announcer) {
+    VarPvStream(VarService svc, java.util.function.Function<Map<String, String>, Path> lakes, BiFunction<String, String, List<String>> columns,
+            Announcer announcer) {
         this.svc = svc;
-        this.lake = lake;
+        this.lakes = lakes;
         this.columns = columns;
         this.announcer = announcer;
-        for (String k : List.of("received", "applied", "batches", "otherDate", "beforeMorning", "notNewer", "rejected", "unknownCancel",
-                "tombstonesIgnored")) {
+        for (String k : List.of("received", "applied", "batches", "otherDate", "beforeMorning", "notNewer", "rejected", "unknownCancel")) {
             counts.put(k, new AtomicLong());
         }
+    }
+
+    @Override
+    public java.util.Set<String> kinds() {
+        return java.util.Set.of("scenario-pv", "pnl-vector");
+    }
+
+    /** One window of one kind from the kernel's lander: checked, written, announced; the engine's rejects in the answer. */
+    @Override
+    public Landed land(Batch b) {
+        List<Msg> msgs = new ArrayList<>();
+        int n = 0;
+        for (String text : b.rows()) {
+            n++;
+            JsonNode row;
+            try {
+                row = JSON.readTree(text);
+            } catch (IOException e) {
+                row = JSON.createObjectNode();
+            }
+            boolean position = "POSITION".equalsIgnoreCase(row.path("GRAIN").asText(""));
+            String key = row.path(position ? "POSITION_ID" : "TRADE_ID").asText(null);
+            msgs.add(new Msg(key, text, row.hasNonNull("COMPUTED_AT") ? row.get("COMPUTED_AT").asText() : Instant.now().toString(),
+                    "batch " + b.batchId() + " row " + n));
+        }
+        Path lake;
+        try {
+            lake = lakes.apply(b.settings());
+        } catch (RuntimeException e) {
+            return new Landed(0, List.of(), "the lake of " + b.connector() + " is not known: " + e.getMessage());
+        }
+        Map<String, Object> out = apply(msgs, "window", lake, b.batchId(), b.settings());
+        List<Rejected> rejected = out.get("rejects") instanceof List<?> l ? l.stream().map(Rejected.class::cast).toList() : List.of();
+        long written = out.get("rows") instanceof Number x ? x.longValue() : 0;
+        return new Landed(written, rejected, out.get("error") == null ? null : String.valueOf(out.get("error")));
     }
 
     private void count(String k, long n) {
@@ -91,6 +130,9 @@ final class VarPvStream {
 
     private synchronized void reject(String code, String trade, String why) {
         count("rejected", 1);
+        if (current != null) {
+            current.add(new Rejected(trade, code, why));
+        }
         rejections.add(code + " " + trade + ": " + why);
         while (rejections.size() > LISTED) {
             rejections.remove(0);
@@ -106,30 +148,30 @@ final class VarPvStream {
         return m;
     }
 
-    /** A tombstone (a null value) carries no record: ignored, counted. */
-    void tombstone() {
-        count("tombstonesIgnored", 1);
-    }
-
     /**
      * One window's latest records (and its unreadable lines), applied as one intraday batch; returns what it did. One window at a time,
      * under a {@link java.util.concurrent.locks.ReentrantLock} (2.9.7): before, a {@code synchronized} method loaded the date from the lake
      * and wrote the batch under the monitor, which pins a virtual thread's carrier on Java 21. The date is loaded before the lock.
      */
-    Map<String, Object> apply(List<VarPvWindow.Msg> msgs, String why) {
+    Map<String, Object> apply(List<Msg> msgs, String why, Path lake, String batch, Map<String, String> settings) {
         LocalDate day = svc.loader().latest();
         VarDate loaded = day == null || msgs.isEmpty() ? null : svc.date(day);      // a lake read, outside every lock
         applying.lock();
         try {
-            return apply(msgs, why, day, loaded);
+            current = new ArrayList<>();
+            Map<String, Object> out = apply(msgs, why, day, loaded, lake, batch, settings);
+            out.put("rejects", List.copyOf(current));
+            return out;
         } finally {
+            current = null;
             applying.unlock();
         }
     }
 
     private final java.util.concurrent.locks.ReentrantLock applying = new java.util.concurrent.locks.ReentrantLock();
 
-    private Map<String, Object> apply(List<VarPvWindow.Msg> msgs, String why, LocalDate day, VarDate loaded) {
+    private Map<String, Object> apply(List<Msg> msgs, String why, LocalDate day, VarDate loaded, Path lake, String batch,
+            Map<String, String> settings) {
         Map<String, Object> out = new LinkedHashMap<>();
         count("received", msgs.size());
         if (day == null || msgs.isEmpty()) {
@@ -142,16 +184,9 @@ final class VarPvStream {
         int setLength = usd.intake().setLength() > 0 ? usd.intake().setLength() : book.width();   // a row carries the whole set
         VarIntradayRows held = usd.intraday();
         String morningAt = held != null ? held.morningAt() : null;
-        String batch = "K-" + day + "-" + Instant.now().toString().replaceAll("[^0-9]", "").substring(0, 14) + "-" + String.format("%03d", ++seq);
         Map<String, List<ObjectNode>> rows = new LinkedHashMap<>();
         List<String> dateRejections = new ArrayList<>();
-        for (VarPvWindow.Msg m : msgs) {
-            if (m.bad() != null) {                                      // a line that could not be read: rejected and listed, never zero
-                String code = m.bad().substring(0, 8);
-                reject(code, m.where(), m.bad().substring(9));
-                dateRejections.add(code + " " + m.where() + ": " + m.bad().substring(9));
-                continue;
-            }
+        for (Msg m : msgs) {
             JsonNode v;
             try {
                 v = JSON.readTree(m.value());
@@ -246,7 +281,7 @@ final class VarPvStream {
             String written = null;
             for (Map.Entry<String, List<ObjectNode>> e : rows.entrySet()) {
                 try {
-                    write(e.getKey(), day, e.getValue());
+                    write(lake, e.getKey(), day, e.getValue());
                     written = e.getKey();
                 } catch (IOException | RuntimeException ex) {
                     w.put("error", e.getKey() + ": " + ex.getMessage());
@@ -256,7 +291,7 @@ final class VarPvStream {
             if (written != null) {
                 // one signal for the window: the intraday layer reads both kinds' new batches at once (a second signal of the same batch
                 // would read as a full run)
-                announcer.landed(written, day, batch, n);
+                announcer.landed(written, day, batch, n, settings);
                 count("applied", n);
                 count("batches", 1);
             }
@@ -293,7 +328,7 @@ final class VarPvStream {
     }
 
     /** Appends one kind's rows to its table as one commit (the same writer and layout as {@code lake build}). */
-    private void write(String kind, LocalDate day, List<ObjectNode> rows) throws IOException {
+    private void write(Path lake, String kind, LocalDate day, List<ObjectNode> rows) throws IOException {
         String vector = kind.equals("scenario-pv") ? "SCENARIO_PV" : "PNL";
         String key = kind.equals("scenario-pv") ? "SCENARIO_PV_ID" : "VECTOR_ID";
         List<String> promoted = columns.apply(kind, "columns");

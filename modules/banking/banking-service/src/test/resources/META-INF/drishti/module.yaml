@@ -32,7 +32,7 @@ module:
     # what a distribution's visibility filter reads besides the packs and functions (DISTRIBUTIONS.md): the top menus and Help it owns
     menus: [blotter, positions, risk, counterparties]
     help: [banking]
-    connectors: [var-engine, var-positions, var-pv-stream, exposure-engine]
+    connectors: [var-engine, var-positions, exposure-engine]
     # the API (the old prefixes beside the new: answered for one release by the module, and refused with it when the module is off)
     api: [/api/v1/risk, /api/v1/var, /api/v1/exposure, /api/v1/frtb, /api/v1/simm, /api/v1/sensitivities, /api/v1/risk-factors, /api/v1/pivot/mr]
     # the functions (command words): the engines' words with the APIs behind them, then the packs' commands (their kinds' own APIs); the

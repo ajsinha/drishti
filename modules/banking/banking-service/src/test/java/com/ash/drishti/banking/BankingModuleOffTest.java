@@ -115,7 +115,7 @@ class BankingModuleOffTest {
     void noPackOfItsDomainAndNoConnectorOfItsOwn() {
         List<String> loaded = packs.packs().stream().map(Pack::name).toList();
         assertThat(loaded).contains("core", "world-economy", "market-data").doesNotContainAnyElementsOf(BANKING_PACKS);
-        for (String c : List.of("var-engine", "var-positions", "var-pv-stream", "exposure-engine")) {
+        for (String c : List.of("var-engine", "var-positions", "risk-store-live", "exposure-engine")) {
             assertThat(sources.connectorStatuses()).as(c).doesNotContainKey(c);
         }
         assertThat(sources.plugins()).as("its connector plugins").noneMatch(p -> p.getClass().getName().startsWith("com.ash.drishti.banking."));

@@ -190,7 +190,11 @@ public final class LiveFeed implements LiveIntake {
             return;
         }
         String shapeName = shapeOf(m.stream());
-        if (shapeName.equals("jsonl") && m.value() != null) {
+        if (shapeName.equals("jsonl") && m.value() == null) {
+            count("tombstones");                                       // JSONL rows each name their key: a tombstone carries no row
+            return;
+        }
+        if (shapeName.equals("jsonl")) {
             for (String line : m.value().split("\n")) {
                 if (!line.isBlank()) {
                     row(m, kindOf(m), m.key(), LiveRecord.Op.UPSERT, line, null, null);
@@ -545,13 +549,13 @@ public final class LiveFeed implements LiveIntake {
 
     /**
      * The kind a row's field names ({@code kind-by.field: VALUE_TYPE} with {@code kind-by.PV: scenario-pv}, {@code kind-by.PNL:
-     * pnl-vector}): one topic of rows of two kinds told apart by a field. Null when the field's value names none.
+     * pnl-vector}): one topic of rows of two kinds told apart by a field; {@code kind-by.default} when the field is absent or names none.
      */
     private String kindBy(String body) {
         try {
             JsonNode n = JSON.readTree(body);
             String v = n == null ? null : text(n.get(settings.get("kind-by.field").strip()));
-            return v == null ? null : settings.get("kind-by." + v);
+            return v == null ? settings.get("kind-by.default") : settings.getOrDefault("kind-by." + v, settings.get("kind-by.default"));
         } catch (IOException e) {
             return null;                                               // not JSON: the row's own read rejects it
         }

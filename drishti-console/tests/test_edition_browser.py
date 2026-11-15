@@ -47,7 +47,7 @@ class RiskBackend(FakeBackend):
     async def var(self, method, path, ident, body=None, raw=False, **params):
         return {"/scope": {"var": 112_040_000, "es": 131_000_000, "confidence": 0.99, "businessDate": "2026-09-30", "currency": "USD"},
                 "/scope/history": {"backtest": {"days": 250, "exceptions": 5, "light": "amber", "kupiecPValue": 0.21}},
-                "/tree": TREE, "/intraday/streams": [{"connector": "var-pv-stream", "state": "running", "waiting": 3, "lastMessage": "2026-09-30T11:00:00Z"}],
+                "/tree": TREE, "/intraday/streams": [{"connector": "risk-store-live", "state": "running", "waiting": 3, "lastMessage": "2026-09-30T11:00:00Z"}],
                 "/official": {"date": "2026-09-30"}, "/baskets": [{"owner": "alice", "name": "hedge-check"}]}.get(path, {})
 
     async def exposure(self, method, path, ident, body=None, raw=False, **params):

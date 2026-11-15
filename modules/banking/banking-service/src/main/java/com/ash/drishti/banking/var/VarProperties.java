@@ -211,32 +211,10 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
     }
 
     /**
-     * The intraday updates (VAR_GUIDE.md section 8.4).
-     *
-     * @param kafka the PV topic's micro-batches (the {@code var-pv-stream} connector)
+     * The intraday updates (VAR_GUIDE.md section 8.4): no settings of their own. The PV topic's window is its live connector's
+     * ({@code risk-store-live}: {@code land.window}, {@code land.max-keys}; docs/architecture/LIVE_CONNECTORS_DESIGN.md section 8.4).
      */
-    public record Intraday(Kafka kafka) {
-        public Intraday {
-            kafka = kafka == null ? new Kafka(null, null) : kafka;
-        }
-    }
-
-    /**
-     * The PV topic's micro-batches: everything received in a window is appended to the lake as one intraday batch and applied.
-     *
-     * @param window how long a window collects ({@code 5m}: every five minutes; {@code 30s}, {@code 1h})
-     * @param maxTrades a window is applied earlier once this many trades wait (500)
-     */
-    public record Kafka(String window, Integer maxTrades) {
-        public Kafka {
-            window = window == null || window.isBlank() ? "5m" : window.strip();
-            maxTrades = maxTrades == null || maxTrades < 1 ? 500 : maxTrades;
-        }
-
-        /** The window as a duration. */
-        public java.time.Duration windowDuration() {
-            return java.time.Duration.ofMillis((long) (VarPvStreamPlugin.seconds(window) * 1000));
-        }
+    public record Intraday() {
     }
 
     /**
@@ -414,7 +392,7 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
         currencies = currencyList(currencies == null ? List.of("USD", "EUR", "CAD", "JPY", "GBP") : currencies);
         currencyRetentionDates = currencyRetentionDates == null || currencyRetentionDates < 1 ? 5 : currencyRetentionDates;
         rootName = rootName == null ? "" : rootName;
-        intraday = intraday == null ? new Intraday(null) : intraday;
+        intraday = intraday == null ? new Intraday() : intraday;
         Map<String, Input> in = new java.util.LinkedHashMap<>();
         if (inputs != null) {
             inputs.forEach((sys, v) -> in.put(sys.strip().toUpperCase(Locale.ROOT), v == null ? new Input(null, null) : v));

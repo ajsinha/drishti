@@ -251,11 +251,6 @@ public class VarConfiguration {
     }
 
     /**
-     * The PV topic's windows into the lake (the {@code var-pv-stream} connector, VAR_GUIDE.md section 8.4): each window written to the risk
-     * lake (its {@code lake} setting, else drishti.var.official.root, the risk lake's root) with the trades' tables' layout of the loaded
-     * pack, then announced as a data-load of the kind (LoadService), so the intraday layer applies it as it applies a file.
-     */
-    /**
      * Where the PV topic's windows are written: {@code lake: <name>} (a lake of config/lakes/, its root: {@code demo} as the pack ships it),
      * or a folder named directly; unset, the demo lake's.
      */
@@ -267,33 +262,34 @@ public class VarConfiguration {
         return ref;
     }
 
+    /**
+     * The landing of scenario PVs and P&amp;L vectors (VAR_GUIDE.md section 8.4): the kernel's live lander hands each window of the PV
+     * topic's live connector ({@code risk-store-live}) to the VaR engine, which checks it, writes it to the risk lake (the connector's
+     * {@code lake}) with the trades' tables' layout of the loaded pack, then announces it as a data-load of the kind (LoadService), so the
+     * intraday layer applies it as it applies a file.
+     */
     @Bean
-    Object varPvStreamSinks(VarService svc, VarOfficial official, VarProperties props, ObjectProvider<LoadService> loads,
-            ObjectProvider<PackRegistry> packs, com.ash.drishti.engine.source.SourceRegistry registry) {
-        VarPvStreamPlugin.install(settings -> {
-            String root = pvLake(settings.get("lake"));
-            if (root == null || root.isBlank()) {
-                throw new com.ash.drishti.api.PluginNotConfigured("var-pv-stream needs settings.lake (the lake the PVs go to: demo)");
-            }
-            String pack = settings.getOrDefault("pack", "market-risk");
-            String topic = settings.getOrDefault("topic", "drishti.risk.pv-updates");
-            return new VarPvStream(svc, Path.of(root), (kind, what) -> layout(packs, kind, what), (kind, date, batch, rows) -> {
-                LoadService l = loads.getIfAvailable();
-                try {
-                    if (l != null) {
-                        l.announce(pack, new LoadService.Announcement(kind, date.toString(), null, "ready", rows, 0L, "kafka:" + topic, batch,
-                                "a window of the PV topic: " + rows + " intraday updates"), VarPvStreamPlugin.NAME);
-                        return;
+    VarPvStream varPvLanding(VarService svc, VarOfficial official, ObjectProvider<LoadService> loads, ObjectProvider<PackRegistry> packs,
+            com.ash.drishti.engine.source.SourceRegistry registry) {
+        VarPvStream v = new VarPvStream(svc, settings -> Path.of(pvLake(settings.get("lake"))), (kind, what) -> layout(packs, kind, what),
+                (kind, date, batch, rows, settings) -> {
+                    LoadService l = loads.getIfAvailable();
+                    String pack = settings.getOrDefault("pack", "market-risk");
+                    try {
+                        if (l != null) {
+                            l.announce(pack, new LoadService.Announcement(kind, date.toString(), null, "ready", rows, 0L,
+                                    "live:" + settings.getOrDefault("source-name", "risk-store-live"), batch,
+                                    "a window of the PV topic: " + rows + " intraday updates"), "live-lander");
+                            return;
+                        }
+                    } catch (com.ash.drishti.common.DrishtiException e) {
+                        // the pack not loaded under that name (another pack serves the kinds): the engine is told directly
                     }
-                } catch (com.ash.drishti.common.DrishtiException e) {
-                    // the pack not loaded under that name (another pack serves the kinds): the engine is told directly
-                }
-                registry.plugins().stream().filter(x -> x.manifest().serves(kind))
-                        .forEach(com.ash.drishti.api.SourcePlugin::refreshVersions);   // the new version seen at once
-                official.onLoad(kind, date);
-            });
-        }, props.intraday().kafka());
-        return new Object();                                            // a marker: the install is what this bean is for
+                    registry.plugins().stream().filter(x -> x.manifest().serves(kind))
+                            .forEach(com.ash.drishti.api.SourcePlugin::refreshVersions);   // the new version seen at once
+                    official.onLoad(kind, date);
+                });
+        return v;                                                       // a KindLanding: the kernel's live lander finds it by its kinds
     }
 
     /** The promoted columns of a trades' table in the loaded pack's Delta layout ({@code layout.<kind>.columns}); the engine's own else. */

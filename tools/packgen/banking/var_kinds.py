@@ -119,11 +119,15 @@ CONNECTORS = {
     "var-positions": {"plugin": "var-positions", "enabled": "${DRISHTI_VAR_ENABLED:true}", "kinds": ["position"]},
     # the system baskets of the basket store (VAR_GUIDE.md section 5.7), served for their page (PORT <id>) and list (PORT <GO>)
     "var-system-baskets": {"plugin": "var-system-baskets", "enabled": "${DRISHTI_VAR_ENABLED:true}", "kinds": ["system-basket"]},
-    # 2.9.4: the PV topic of the pricing systems, windowed into intraday batches of the lake (VAR_GUIDE.md section 8.4); off by default,
-    # as every Kafka connector of the packs
-    "pv-updates": {"plugin": "var-pv-stream", "enabled": "${DRISHTI_VAR_PV_STREAM:false}", "kinds": ["pv-update"],
-                   "settings": {"broker": "default", "topic": "${DRISHTI_VAR_PV_TOPIC:drishti.risk.pv-updates}",
-                                "lake": "demo", "pack": "market-risk"}},
+    # the PV topic of the pricing systems (VAR_GUIDE.md section 8.4): risk-store's live companion, its scenario PVs and P&L vectors landed
+    # in windows as intraday batches of the lake (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 8.4); off by default, as every Kafka
+    # connector of the packs
+    "risk-store-live": {"plugin": "kafka", "companion-of": "risk-store", "enabled": "${DRISHTI_VAR_PV_STREAM:false}",
+                        "kinds": ["scenario-pv", "pnl-vector"],
+                        "settings": {"broker": "default", "topics": "${DRISHTI_VAR_PV_TOPIC:drishti.risk.pv-updates}", "shape": "jsonl",
+                                     "kind-by.field": "VALUE_TYPE", "kind-by.PV": "scenario-pv", "kind-by.PNL": "pnl-vector",
+                                     "kind-by.default": "pnl-vector", "land.window": "${DRISHTI_VAR_INTRADAY_KAFKA_WINDOW:5m}",
+                                     "land.max-keys": "${DRISHTI_VAR_INTRADAY_KAFKA_MAX_TRADES:500}", "lake": "demo", "pack": "market-risk"}},
     "var-engine": {
         "plugin": "reactive", "mode": "reactive", "enabled": "${DRISHTI_VAR_ENABLED:true}",
         "description": "The VaR of any scope, computed when asked by the server's VaR engine (the additive aggregation over the hot store), "

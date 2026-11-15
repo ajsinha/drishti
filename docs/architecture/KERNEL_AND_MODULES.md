@@ -878,10 +878,11 @@ left out, and a connector defined only in properties is never written into the f
 
 ### 5.7 Computed kinds and the end of module connectors
 
-Today banking ships connector plugins (`var-positions`, `var-pv-stream`) and reactive connectors (`var-engine`, `exposure-engine`). Under
+Today banking ships a connector plugin (`var-positions`) and reactive connectors (`var-engine`, `exposure-engine`). Under
 G4 these are not connectors: they **compute** a kind from other kinds. They become `KindProvider`s in the module: `position` and
-`var-result` are *computed kinds* (`provides.kinds[].computed: true`), never bindable, always the module's. The transport part of
-`var-pv-stream` (reading Kafka) is the kernel's Kafka connector bound as `scenario-pv`'s `live:` source; banking subscribes to the kind.
+`var-result` are *computed kinds* (`provides.kinds[].computed: true`), never bindable, always the module's. The PV topic is the
+kernel's Kafka connector `risk-store-live`, `risk-store`'s live companion; the kernel's live lander lands its windows, and banking's VaR
+engine provides the landing of `scenario-pv` and `pnl-vector` (a `KindLanding`: its checks, the lake writer, the data-load signal).
 Connector files written for the old names keep loading for one release (today's `moved-classes.properties` mechanism).
 
 ### 5.8 Changing a binding
@@ -2185,7 +2186,7 @@ console, and Java context builders become available as an option for later modul
    service or a new SPI; the architecture test *module imports only the kernel API* turns on.
 4. Empty the allow list file by file: words to the module's manifest, engine knowledge to the engine catalogue, `edition.py`'s banking
    words to lens files, `drishti_pivot.js`'s MR bits to the plugin's `screens.pivot`.
-5. `var-positions`, `var-pv-stream` → `KindProvider`; `var-engine`, `exposure-engine` reactive connectors → computed kinds; contracts'
+5. `var-positions` → `KindProvider`; `var-engine`, `exposure-engine` reactive connectors → computed kinds; contracts'
    `storage:` → `binding-hint:`; `bindings migrate` on the demo and test sites.
 6. The packager: lay banking's files into the Maven project of section 8.10 ([project-mapping.txt](kernel-and-modules/examples/banking/project-mapping.txt)) and the `.dmod` layout (a `git mv` of the plugin, packs, lenses, BI, lakes, docs into a
    `modules/banking/` source tree in the repo; the repo remains one repository, the module builds separately from it).
