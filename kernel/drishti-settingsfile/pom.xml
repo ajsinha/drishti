@@ -28,4 +28,24 @@
     <dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter</artifactId><scope>test</scope></dependency>
     <dependency><groupId>org.assertj</groupId><artifactId>assertj-core</artifactId><scope>test</scope></dependency>
   </dependencies>
+  <!-- standalone (Spring Boot's parent, not drishti-parent): the same Spotless check as every module (ADR-007), so the gate's
+       `spotless:check` finds the plugin here too -->
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>com.diffplug.spotless</groupId>
+        <artifactId>spotless-maven-plugin</artifactId>
+        <version>3.10.2</version>
+        <configuration>
+          <java>
+            <includes><include>src/**/*.java</include></includes>
+            <removeUnusedImports/>
+            <trimTrailingWhitespace/>
+            <endWithNewline/>
+            <indent><spaces>true</spaces><spacesPerTab>4</spacesPerTab></indent>
+          </java>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>
