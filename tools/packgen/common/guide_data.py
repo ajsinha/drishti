@@ -296,15 +296,14 @@ def retrieval_section(pack: str, items: list[dict]) -> list[str]:
                     "internal demonstrations only, never written into a committed folder without `--internal-ok`, and must be raised with "
                     "the owner before any client or external use.", ""]
         feeds = sorted({s["external"][i]["feed"] for i in used_ext if s["external"][i].get("feed") in s["feeds"]})
-        for k, fd in enumerate(feeds):
+        for fd in feeds:
             info = s["feeds"][fd]
             ex = [(f"feed status {fd}", "its last runs: last success, rows, failures (offline: the run ledger)"),
                   (f"feed run {fd} --dry-run", "what would be fetched and loaded; changes nothing"),
                   (f"feed run {fd}", f"pull today's data and load it into the lake `{_lake(fd)}` (what the daily schedule runs)")]
             ex += [(f"feed run {fd} {e[0]}", e[1]) for e in info.get("examples") or []]
             w = max(len(f"python3 tools/drishti.py {e[0]}") for e in ex) + 2
-            # the first feed block of a guide says where to run it (the repository root or the install folder)
-            out += (["Run these from the Drishti folder (the repository root, or the install folder of a release).", ""] if k == 0 else []) + ["```bash"] + [f"python3 tools/drishti.py {e[0]}".ljust(w) + f"# {e[1]}" for e in ex] + ["```", "",
+            out += ["```bash"] + [f"python3 tools/drishti.py {e[0]}".ljust(w) + f"# {e[1]}" for e in ex] + ["```", "",
                     f"The same through the wrappers: `tools/feeds/feed.sh run {fd}` on Linux and macOS, `.\\tools\\windows\\feed.ps1 run {fd}` "
                     "on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or "
                     "`--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](../../../../../docs/guides/WORLD_DATA_GUIDE.md)).", ""]
