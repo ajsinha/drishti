@@ -132,3 +132,58 @@ routes:
   sutra: market-data/equity-beta
   function: EQB
   title: An equity's beta against its index (computed from price history)
+- id: core
+  path: /market-data/core
+  sutra: core/catalog
+  function: CORE
+  title: Core parties and organisation
+- id: cpty
+  path: /market-data/counterparty/{id}
+  sutra: counterparty-and-legal/counterparty
+  function: CPTY
+  title: Counterparty
+- id: grp
+  path: /market-data/counterparty-group/{id}
+  sutra: counterparty-and-legal/counterparty-group
+  function: GRP
+  title: Counterparty group
+- id: iss
+  path: /market-data/issuer/{id}
+  sutra: counterparty-and-legal/issuer
+  function: ISS
+  title: Issuer
+- id: ccp
+  path: /market-data/ccp/{id}
+  sutra: counterparty-and-legal/ccp
+  function: CCP
+  title: Central counterparty
+- id: le
+  path: /market-data/legal-entity/{id}
+  sutra: organisation/legal-entity
+  function: LE
+  title: Bank legal entity
+- id: book
+  path: /market-data/book/{id}
+  sutra: organisation/book
+  function: BOOK
+  title: Book
+- id: desk
+  path: /market-data/desk/{id}
+  sutra: organisation/desk
+  function: DESK
+  title: Desk
+- id: trdr
+  path: /market-data/trader/{id}
+  sutra: organisation/trader
+  function: TRDR
+  title: Trader
+- id: cal
+  path: /market-data/calendar/{id}
+  sutra: market-data/calendar
+  function: CAL
+  title: Holiday calendar
+- id: clr
+  path: /market-data/clearing-account/{id}
+  sutra: collateral-and-margin/clearing-account
+  function: CLR
+  title: Clearing account
