@@ -721,7 +721,7 @@ def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
     p.add_argument("--connectors-dir", help="the connector files' folder (default DRISHTI_CONNECTORS_DIR, else config/connectors)")
     p.add_argument("--as-of", default="today", metavar="today|data|YYYY-MM-DD", help="the last business date of the lake: today (default: "
                    "the server's current business date, so the demo opens on data), data (the test data's own dates) or a date")
-    p.add_argument("--engine", choices=("auto", "drishti", "deltalake"), default="deltalake", help="the lake writer (default deltalake)")
+    p.add_argument("--engine", choices=("auto", "drishti", "deltalake", "java"), default="deltalake", help="the lake writer (default deltalake; java: the parallel lake loader, a whole table at a time)")
     p.add_argument("--with-real", metavar="FILE[,FILE]", help="LOCAL ONLY: real trade extracts (JSON) whose counterparties, agreements and "
                    "netting sets are added to the local lake, never to data/testdata")
     p.add_argument("--only", metavar="PREFIX[,PREFIX]", help="only these datasets: a folder prefix (trades/, core/counterparty) or a pack name")
