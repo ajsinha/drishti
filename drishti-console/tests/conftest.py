@@ -110,6 +110,12 @@ class FakeBackend:
             return {**page, "rows": page["rows"][off:off + lim], "offset": off}
         return {"unread": 0} if path.endswith("/count") else {"items": []}
 
+    async def engine(self, method, path, ident, /, body=None, raw=False, accept="", timeout=None, **params):
+        """A compute engine (core/backend.py ``engine``): the stand-in has none switched on, so it answers as a server with that engine
+        off (404), unless the test gives the engine's fake (tests/engine_fakes.py). A page's risk tile then says so instead of a 500."""
+        from core.backend import BackendError
+        raise BackendError(404, "DRS-1001", f"no engine at {path} on this stand-in server")
+
     async def live_query(self, q, ident=None, again=True, limit=1000):
         """The server's live set of a search (GET /api/v1/live/query), as the server makes it: the search's answer (this stand-in's own
         ``search``) as the set's page: its rows as documents at the columns' fields, the summary as ``search``; static (no live binding)

@@ -61,7 +61,7 @@ class ModuleSettingsTest {
     void theEnvironmentGivesTheModulesKeyToTheOldKeyAndHealthNamesTheOldKeysASiteSets() {
         StandardEnvironment env = new StandardEnvironment();
         env.getPropertySources().addFirst(new MapPropertySource("Config resource 'file [application.local.yaml]' via location 'x'",
-                Map.of("drishti.module.banking.var.window", "500", "drishti.var.hot-dates", "3", "drishti.module-manifests-dir", "../../modules")));
+                Map.of("drishti.module.banking.var.window", "500", "drishti.var.hot-dates", "3", "drishti.modules.home", "../../modules")));   // the modules folder's key (launch roots), over the forks' "none"
         new ModuleSettingsEnvironmentPostProcessor().postProcessEnvironment(env, null);
         assertThat(env.getProperty("drishti.var.scenario-window")).as("the module's key reaches the code that reads the old key").isEqualTo("500");
         assertThat(env.getProperty(ModuleSettingsEnvironmentPostProcessor.INFO + ".deprecated"))

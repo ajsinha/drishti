@@ -22,6 +22,7 @@
    The matrix itself is in drishti_bi-matrix.js. A table is drawn by drishti-grid (Drishti Elements), every figure the engine's as it came. */
 (function () {
   'use strict';
+  function drishti_url(p) { var f = globalThis.drishti_url; return typeof f === 'function' && f !== drishti_url ? f(p) : p; }   // drishti-core's base helper when the page has it; a page without it (the renderer, an embed) keeps the URL as it is
   const B = window.drishtiBi;
   const h = B.h;
   const V = B.visuals;

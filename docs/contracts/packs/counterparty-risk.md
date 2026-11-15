@@ -840,7 +840,7 @@ One trade's mark to market on every path of a simulation run at one grid date, i
 - pattern: field PATH_ROW_ID; pattern ^XR-[^~]+~.+~[0-9]+$
 - link: field RUN_ID; kind simulation-run
 - link: field TRADE_ID; kind trade
-- enum: field SOURCE_SYSTEM; values `CALYPSO`, `ENDUR`, `MUREX`
+- enum: field SOURCE_SYSTEM; values `CALYPSO`, `ENDUR`, `ICI`, `MUREX`, `SWAPONE`, `WSS`
 - link: field NETTING_SET; kind netting-set
 - link: field COUNTERPARTY; kind counterparty
 - link: field LEGAL_ENTITY; kind legal-entity

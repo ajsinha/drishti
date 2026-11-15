@@ -220,35 +220,33 @@ def conn_console():
     thread.join(10)
 
 
-def test_create_test_save_edit_disable_and_uninstall_is_the_only_way_out(browser, conn_console):
+def test_edit_test_save_disable_and_uninstall_is_the_only_way_out(browser, conn_console):
+    """Creating a connector is the connector designer's (test_connector_designer_browser.py: New connector and "n" open it); a
+    connector the designer made is edited here: the form from its plugin's settings, the secrets rule, Test, Save, history, Disable and
+    Uninstall."""
     url, backend = conn_console
+    backend.files["orders-db"] = {"text": "plugin: jdbc\nkinds: [item]\nsettings:\n  url: jdbc:postgresql://db.example.com:5432/orders\n"
+                                          "  user: drishti\n  password: ${ORDERS_DB_PASSWORD}\n", "v": 1, "history": []}
     page = browser.new_page()
     page.on("dialog", lambda d: d.accept())
     page.goto(url + "/admin/connectors")
     assert "item-store" in page.locator("[data-list]").inner_text()
+    assert page.locator("[data-new]").get_attribute("href").endswith("/build/connector/designer")   # one way to create: the designer
 
-    # --- create: the form is generated from the plugin's settings
-    page.click("[data-new]")
+    # --- the editor: the form is generated from the plugin's settings
+    page.locator("tr[data-conn='orders-db']").get_by_role("button", name="Edit orders-db").click()
     dlg = page.locator("[data-edit-dialog]")
-    dlg.locator("[data-f-name]").wait_for()
-    assert S.values(page, "[data-edit-dialog] [data-f-plugin]") == ["file", "jdbc"]               # drishti-inputs' Select
-    assert dlg.locator("[data-setting='root']").count() == 1                                      # the default plugin's own fields
-    dlg.locator("[data-f-plugin]").select_option("jdbc")
+    dlg.locator("[data-f-description]").wait_for()
+    assert dlg.locator("[data-f-name]").get_attribute("readonly") is not None                     # the name is the file name: it does not change
+    assert dlg.locator("[data-f-plugin] .di-select-control").get_attribute("aria-disabled") == "true"
     for s in ("url", "user", "password", "pool-size", "tls.enabled", "tls.ca-file", "tls.truststore-password"):
         assert dlg.locator(f"[data-setting='{s}']").count() == 1, s
     assert dlg.locator("[data-group='tls'] legend").inner_text() == "TLS"                         # a TLS section because the plugin supports TLS
-    assert dlg.locator("[data-setting='root']").count() == 0                                      # and the file plugin's fields are gone
+    assert dlg.locator("[data-setting='root']").count() == 0                                      # no file plugin's fields
     assert dlg.locator("[data-setting='url']").get_attribute("aria-required") == "true"
     assert "(required)" in dlg.locator(".di-form-field:has(> [data-setting='url']) > label").inner_text()
     assert dlg.locator("[data-setting='pool-size']").get_attribute("placeholder") == "4"          # defaults show as placeholders
-    assert dlg.locator("[data-setting='password']").get_attribute("placeholder") == "${ENV_VAR} or file:/run/secrets/name"
-    dlg.locator("[data-f-name]").fill("orders-db")
-    assert dlg.locator("[data-file-name]").inner_text() == "orders-db.yaml"
-    dlg.locator("[data-kind-in]").fill("item")
-    dlg.locator("[data-kind-add]").click()
-    assert dlg.locator("[data-chips]").inner_text().startswith("item")
-    dlg.locator("[data-setting='url']").fill("jdbc:postgresql://db.example.com:5432/orders")
-    dlg.locator("[data-setting='user']").fill("drishti")
+    assert dlg.locator("[data-setting='user']").input_value() == "drishti"
 
     # a literal credential is refused with a clear message, and nothing is sent
     sent = len(backend.calls)
@@ -270,7 +268,6 @@ def test_create_test_save_edit_disable_and_uninstall_is_the_only_way_out(browser
     out = dlg.locator("[data-test-out]").inner_text()
     assert "Reachable" in out and "2026-10-05" in out and "item" in out
     assert backend.tests[-1]["settings"]["url"].startswith("jdbc:postgresql://db.example")
-    dlg.locator("[data-setting='url']").evaluate("n => n.value")                                   # (form tab is hidden now; the draft is read from it)
     dlg.locator("[data-tab='form']").click()
     dlg.locator("[data-setting='url']").fill("jdbc:postgresql://unreachable.example.com/orders")
     dlg.locator("[data-test]").click()
@@ -279,21 +276,7 @@ def test_create_test_save_edit_disable_and_uninstall_is_the_only_way_out(browser
     dlg.locator("[data-tab='form']").click()
     dlg.locator("[data-setting='url']").fill("jdbc:postgresql://db.example.com:5432/orders")
 
-    # save: the file appears, the page reloads with the connector in the list
-    dlg.locator("[data-save]").click()
-    page.wait_for_function("() => document.querySelector('tr[data-conn=\"orders-db\"]') !== null", timeout=15000)
-    assert "orders-db" in backend.files and "${ORDERS_DB_PASSWORD}" in backend.files["orders-db"]["text"]
-    assert "hunter2" not in backend.files["orders-db"]["text"]
-    row = page.locator("tr[data-conn='orders-db']")
-    assert "running" in row.inner_text() and "jdbc" in row.inner_text()
-
-    # --- edit: the YAML tab and the form edit one draft
-    row.get_by_role("button", name="Edit orders-db").click()
-    dlg = page.locator("[data-edit-dialog]")
-    dlg.locator("[data-f-description]").wait_for()
-    assert dlg.locator("[data-f-name]").get_attribute("readonly") is not None                     # the name is the file name: it does not change
-    assert dlg.locator("[data-f-plugin] .di-select-control").get_attribute("aria-disabled") == "true"
-    assert dlg.locator("[data-setting='user']").input_value() == "drishti"
+    # --- the YAML tab and the form edit one draft
     dlg.locator("[data-tab='yaml']").click()
     yaml = dlg.locator("[data-yaml]")
     assert "url: jdbc:postgresql://db.example.com:5432/orders" in yaml.input_value()
@@ -311,7 +294,9 @@ def test_create_test_save_edit_disable_and_uninstall_is_the_only_way_out(browser
     dlg.locator("[data-save]").click()
     page.wait_for_function("() => document.querySelector('tr[data-conn=\"orders-db\"] .text-muted-d') !== null && document.body.innerText.includes('Orders database')", timeout=15000)
     assert "pool-size: 12" in backend.files["orders-db"]["text"] and "description: Orders database" in backend.files["orders-db"]["text"]
+    assert "${ORDERS_DB_PASSWORD}" in backend.files["orders-db"]["text"] and "hunter2" not in backend.files["orders-db"]["text"]
     assert backend.files["orders-db"]["v"] == 2
+    assert "jdbc" in page.locator("tr[data-conn='orders-db']").inner_text()
 
     # history: the earlier text is kept; the diff shows the change
     page.locator("tr[data-conn='orders-db']").get_by_role("button", name="Edit orders-db").click()
@@ -388,9 +373,14 @@ def test_the_editor_works_from_the_keyboard(browser, conn_console):
     assert page.locator("tr[data-conn='item-store']").is_hidden() and page.locator("[data-filter-none]").is_visible()
     page.locator("[data-filter]").fill("")
     page.locator("h1").click()
-    page.keyboard.press("n")                                                                       # n opens New connector
+    page.keyboard.press("n")                                                                       # n opens the connector designer (New connector)
+    page.wait_for_url("**/build/connector/designer")
+    page.goto(url + "/admin/connectors")
+    edit = page.locator("tr[data-conn='item-store']").get_by_role("button", name="Edit item-store")
+    edit.focus()
+    page.keyboard.press("Enter")                                                                   # the editor from the keyboard
     dlg = page.locator("[data-edit-dialog]")
-    dlg.locator("[data-f-name]").wait_for()
+    dlg.locator("[data-f-description]").wait_for()
     assert dlg.get_attribute("aria-labelledby") == "connTitle"
     tab = dlg.locator("[data-tab='form']")
     tab.focus()
@@ -401,7 +391,7 @@ def test_the_editor_works_from_the_keyboard(browser, conn_console):
     page.wait_for_function("() => document.querySelector('[data-tab=\"form\"]').getAttribute('aria-selected') === 'true'")
     page.keyboard.press("Escape")
     page.wait_for_function("() => !document.querySelector('[data-edit-dialog]').open")
-    page.wait_for_function("() => document.activeElement && document.activeElement.hasAttribute('data-new')", timeout=3000)     # back on what opened it
+    page.wait_for_function("() => document.activeElement && document.activeElement.getAttribute('aria-label') === 'Edit item-store'", timeout=3000)   # back on what opened it
     page.close()
 
 
@@ -411,9 +401,9 @@ def test_the_page_fits_a_phone_and_the_dark_theme_with_big_targets(browser, conn
     page = ctx.new_page()
     page.goto(url + "/admin/connectors")
     assert page.evaluate("() => document.documentElement.scrollWidth <= window.innerWidth + 1")
-    page.click("[data-new]")
+    page.locator("tr[data-conn='item-store']").get_by_role("button", name="Edit item-store").click()
     dlg = page.locator("[data-edit-dialog]")
-    dlg.locator("[data-f-name]").wait_for()
+    dlg.locator("[data-f-description]").wait_for()
     box = dlg.bounding_box()
     assert box["x"] >= 0 and box["x"] + box["width"] <= 391
     assert page.evaluate("() => document.documentElement.scrollWidth <= window.innerWidth + 1")
@@ -428,14 +418,13 @@ def test_the_page_fits_a_phone_and_the_dark_theme_with_big_targets(browser, conn
 
 def test_a_refused_save_shows_its_error_beside_save_and_on_the_field(browser, conn_console):
     url, backend = conn_console
+    backend.files["bad-db"] = {"text": "plugin: jdbc\nkinds: [item]\nsettings:\n  url: jdbc:postgresql://db.example.com/x\n", "v": 1, "history": []}
+    before = backend.files["bad-db"]["text"]
     page = browser.new_page(viewport={"width": 1100, "height": 700})
     page.goto(url + "/admin/connectors")
-    page.click("[data-new]")
+    page.locator("tr[data-conn='bad-db']").get_by_role("button", name="Edit bad-db").click()
     dlg = page.locator("[data-edit-dialog]")
-    dlg.locator("[data-f-name]").wait_for()
-    dlg.locator("[data-f-plugin]").select_option("jdbc")
-    dlg.locator("[data-f-name]").fill("bad-db")
-    dlg.locator("[data-setting='url']").fill("jdbc:postgresql://db.example.com/x")
+    dlg.locator("[data-f-description]").wait_for()
     dlg.locator("[data-setting='pool-size']").fill("abc")
     dlg.locator("[data-save]").click()
     dlg.locator("[data-edit-msg].t-bad").wait_for()
@@ -448,7 +437,8 @@ def test_a_refused_save_shows_its_error_beside_save_and_on_the_field(browser, co
     assert "whole number" in dlg.locator(".di-form-field:has(> [data-setting='pool-size']) > .di-msg").inner_text()
     assert page.evaluate("() => document.activeElement.getAttribute('data-setting')") == "pool-size"           # focused and scrolled to
     assert dlg.locator("[data-save]").is_enabled() and dlg.locator("[data-save]").inner_text() == "Save"       # not stuck on Saving...
-    assert "bad-db" not in backend.files
+    assert backend.files["bad-db"]["text"] == before and backend.files["bad-db"]["v"] == 1
+    del backend.files["bad-db"]
     page.close()
 
 

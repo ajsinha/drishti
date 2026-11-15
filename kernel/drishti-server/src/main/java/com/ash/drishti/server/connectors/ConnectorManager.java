@@ -1472,6 +1472,14 @@ public final class ConnectorManager {
 
     /** Starts a throwaway instance on the text's settings, reads from it, and reports; nothing running is touched. */
     public Map<String, Object> test(String name, String text) {
+        return test(name, text, List.of());
+    }
+
+    /**
+     * {@link #test(String, String)} with the kinds the person means to bind it to ({@code asked}: the connector designer's Kinds, before a
+     * binding exists): a file names no kind (config/bindings.yaml does), so without them a new connector's test could list nothing it holds.
+     */
+    public Map<String, Object> test(String name, String text, List<String> asked) {
         ConnectorFiles.Definition d;
         try {
             d = files.parse(name, text);
@@ -1508,7 +1516,8 @@ public final class ConnectorManager {
             @SuppressWarnings("unchecked")
             List<String> ks = (List<String>) u.get("kinds");
             return ks.stream();
-        }), bindings.kindsOf(name).stream()).distinct().toList() : d.kinds();
+        }), java.util.stream.Stream.concat(bindings.kindsOf(name).stream(), (asked == null ? List.<String>of() : asked).stream()))
+                .filter(k -> k != null && !k.isBlank()).distinct().toList() : d.kinds();
         ConnectionProbe.Result r = probe.probe(d.plugin(), kinds, read, probeDates, probeTimeoutMs);
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("connector", name);

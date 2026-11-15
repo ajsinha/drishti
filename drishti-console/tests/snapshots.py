@@ -71,6 +71,8 @@ _STILL = """async ([quiet, today, repo]) => {
   st.textContent = '*, *::before, *::after { transition: none !important; animation: none !important; caret-color: transparent !important; scroll-behavior: auto !important; }'
                  + ' ::-webkit-scrollbar { display: none; } .toasts, [data-changed] { display: none !important; }';
   document.head.appendChild(st);
+  // the console's policy (style-src 'self') refuses that inline sheet: what must not show is hidden through the CSSOM, which it allows
+  for (const e of document.querySelectorAll('.toasts, [data-changed]')) { e.style.setProperty('display', 'none', 'important'); }
   await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
 }"""
 

@@ -778,9 +778,12 @@ validation:
 - rule: enum
   field: SOURCE_SYSTEM
   values:
-  - CALYPSO
   - ENDUR
+  - CALYPSO
   - MUREX
+  - WSS
+  - SWAPONE
+  - ICI
 - rule: link
   field: TRADE_ID
   kind: trade

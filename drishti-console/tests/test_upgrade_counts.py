@@ -24,6 +24,8 @@ import json
 import os
 import subprocess
 import sys
+import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -47,12 +49,35 @@ def _get(base: str, path: str):
         return json.loads(r.read().decode("utf-8"))
 
 
+#: the VaR-computed kinds the demo always holds: asked right after the start, they answer rows or say they cannot yet, never a silent 0
+VAR_READY = ("position", "system-basket")
+
+
+def _var_count(server: str, kind: str) -> int | None:
+    """A VaR-computed kind's count, asked as soon as the server is up: while the engine's inputs load (or busy protection refuses the
+    load) the answer is a refusal with its reason, asked again for up to three minutes; an answer of 0 rows is never a placeholder."""
+    deadline = time.monotonic() + 180
+    while True:
+        try:
+            c = _get(server, f"/api/v1/data/{kind}/count")
+            n = c.get("total", c.get("rows"))
+            assert n, f"{kind}: {n} rows answered while the demo holds some: an empty answer that looks true ({c})"
+            return n
+        except urllib.error.HTTPError as e:
+            if time.monotonic() > deadline:
+                raise AssertionError(f"{kind}: still refused after three minutes: {e.code} {e.read()[:300]!r}") from e
+            time.sleep(5)
+
+
 def _counts(server: str) -> dict[str, object]:
     """Every kind of the bindings but the computed ones, and its record count on the newest date (None: the Data view does not open it).
     With the demo off a kind the demo lake holds says UNBOUND in the bindings and is still read: it is counted."""
     out: dict[str, object] = {}
     for row in _get(server, "/api/v1/admin/bindings").get("kinds", []):
         if row.get("state") == "COMPUTED" and row["kind"] not in VAR_COMPUTED:
+            continue
+        if row["kind"] in VAR_READY:
+            out[row["kind"]] = _var_count(server, row["kind"])
             continue
         try:
             c = _get(server, f"/api/v1/data/{row['kind']}/count")

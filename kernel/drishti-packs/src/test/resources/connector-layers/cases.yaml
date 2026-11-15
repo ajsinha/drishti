@@ -206,6 +206,25 @@ cases:
     domain: trading
 
 - name: trade-endur
+  why: a file that gives only root moves the template's lake to another folder (drishti.py lake demo --lake); it keeps the lake
+  template: endur
+  file: |
+    settings:
+      root: /scratch/delta
+  layer: override
+  superseded: false
+  plugin: delta
+  enabled: ${DRISHTI_LAKE_ENABLED:true}
+  settings:
+    lake: demo
+    lake-tables: trading.trade_endur
+    union: "true"
+    source-name: trade-endur
+    set.SOURCE_SYSTEM: ENDUR
+    map: mappings/endur-trade.yaml
+    root: /scratch/delta
+
+- name: trade-endur
   why: a generated file an earlier release wrote and nobody edited is superseded; the template is in force
   template: endur
   file: |

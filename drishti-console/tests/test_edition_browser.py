@@ -64,7 +64,12 @@ def risk_console():
 
     app = create_app(load_settings(CONSOLE / "config"))
     app.state.backend = RiskBackend()
-    app.state.editions.learn({"product": "Drishti Risk", "edition": {"name": "risk", "title": "Drishti Risk"}})
+    # a lens is a workspace the person works in (docs/admin/LENSES.md), never the server's edition: the server offers it,
+    # and the person's settings name it
+    app.state.editions.learn({"product": "Drishti Risk", "edition": None, "lenses": ["risk"]})
+    async def _in_risk(ident=None):
+        return {"lens": "risk"}
+    app.state.backend.settings = _in_risk
     server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=PORT, log_level="warning", timeout_graceful_shutdown=2))
     thread = threading.Thread(target=server.run, daemon=True)
     thread.start()

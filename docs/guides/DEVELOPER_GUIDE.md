@@ -675,6 +675,10 @@ with `--no-push`), the working tree is clean (`drill: commit your changes first`
   with Error Prone, Javadoc with doclint, Spotless and the Java 21 bytecode rule, running only the rule tests (`drishti-it`,
   `TokenScopeGuardTest`, `ArrowAnswersTest`). Its jar is the one stage 2 starts.
 
+Before it starts, with no server running from the checkout, the drill moves a server's state left in the data folder by an earlier
+run (`modules/installed/`, `identity/`, `net/`, `compute/`, `fstore/`, `cache/`) aside to `<data dir>/tmp/stale-<stamp>/` and lists it,
+so every drill starts from the same data folder; nothing is deleted.
+
 **Stage 2** (the long runs side by side, each with its own log in `<data dir>/drill/`; all must pass):
 
 - **The console suite in two lanes**: a **browser lane** (every file that drives Chromium or starts a live stack on the scratch

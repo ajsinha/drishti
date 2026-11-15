@@ -199,7 +199,7 @@ def run(a, p: dict, as_of, lake: str, iceberg: bool, workdir: pathlib.Path, prog
     summary_file = workdir / "loader-summary.json"
     java_bin, args = base
     cmd = java_cmd(java_bin, [*args, "--config", str(cfg_file), "--summary", str(summary_file), "--no-lock", "--no-run-log", "-q"],
-                   tmp=workdir / "tmp")
+                   tmp=workdir / "tmp", env=env)
     for kv in getattr(a, "loader_set", None) or []:
         cmd += ["--set", kv]
     if progress_file:

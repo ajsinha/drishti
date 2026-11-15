@@ -27,6 +27,7 @@
    options.urlState (write the address; default true on a page), options.scope (remembering), options.initial (ctl.* text to start from). */
 (function () {
   'use strict';
+  function drishti_url(p) { var f = globalThis.drishti_url; return typeof f === 'function' && f !== drishti_url ? f(p) : p; }   // drishti-core's base helper when the page has it; a page without it (the renderer, an embed) keeps the URL as it is
   var me = document.currentScript, auto = !(me && me.hasAttribute('data-manual'));
   var reg = (window.drishtiModules = window.drishtiModules || {});
   var SEARCH_PAUSE = 250;

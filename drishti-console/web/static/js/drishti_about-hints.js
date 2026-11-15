@@ -22,6 +22,7 @@
    the `?` stays a link to the panel kind's guide, as before. */
 (function () {
   'use strict';
+  function drishti_url(p) { var f = globalThis.drishti_url; return typeof f === 'function' && f !== drishti_url ? f(p) : p; }   // drishti-core's base helper when the page has it; a page without it (the renderer, an embed) keeps the URL as it is
   var me = document.currentScript;
   /** init(root, options): panel `?` popovers and field hints under root (the document or a ShadowRoot). options.about is the
       About drawer's API (default window.Drishti.about: the console's), options.open(href) opens a link (default: navigate).

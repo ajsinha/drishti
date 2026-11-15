@@ -35,6 +35,7 @@ pytestmark = pytest.mark.browser
 THEMES = ("terminal", "light")
 SHOTS = os.environ.get("DRISHTI_HELP_SHOTS")
 TILES = ["Get started", "Risk measures", "Analytics and BI", "Data", "Build", "Operate", "Reference", "Knowledge", "Internal"]
+MODULE_TILES = {"Capital markets", "Economy and public sector", "Market data", "Trading"}   # modules/*/console/plugin.yaml
 
 
 @pytest.fixture(scope="module")
@@ -115,7 +116,8 @@ def test_the_front_door_and_a_section(browser, console_url, theme):
         most = [t.strip() for t in page.locator("[data-help-most] a").all_text_contents()]
         assert most == ["User guide", "VaR guide", "Tutorials", "What's new"], most
         tiles = [t.strip() for t in page.locator("[data-help-tiles] .hub-tile-t").all_text_contents()]
-        assert tiles == TILES, tiles
+        # the core's sections, then a section for each module whose console parts this console hosts (its plugin.yaml title)
+        assert tiles[:len(TILES)] == TILES and set(tiles[len(TILES):]) <= MODULE_TILES, tiles
         tops = page.evaluate("[...document.querySelectorAll('[data-help-tiles] .hub-tile')].map(t => Math.round(t.getBoundingClientRect().top))")
         assert len(set(tops)) < len(tops)                                       # several tiles to a row on a desktop
         _shot(page, f"01-help-front-door-{theme}")

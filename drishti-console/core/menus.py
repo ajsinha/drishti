@@ -115,8 +115,8 @@ def _holds(request, edition: Edition, need: str, ctx: dict) -> bool:
         return edition.admin_page_shown(value)
     if kind == "pack":
         return value in {p.get("name") for p in (ctx.get("pack_switcher") or []) if p.get("active", True)}
-    if kind == "cmd":
-        return edition.typed_shown(value)
+    if kind == "cmd":                                            # offered, and served: a pack's command only while a pack that has it is on
+        return edition.typed_shown(value) and _pack_command_on(request, value)
     if kind == "route":
         return _has_route(request, value)
     if kind == "engine":                                         # requires: engine:frtb-sa (ADMIN_GUIDE.md 5.2): it runs and the role opens it
@@ -124,6 +124,24 @@ def _holds(request, edition: Edition, need: str, ctx: dict) -> bool:
     if kind == "module":                                         # requires: module:banking (ACCESS_MODEL.md: on for this person)
         return modules.module_on(value)
     return True
+
+
+def _pack_command_on(request, text: str) -> bool:
+    """Whether a command that belongs to a pack (its code or one of its mnemonics, any pack the one resolver finds) has a pack that
+    loads: the US equities pack, listed by its module but not enabled (default-packs.yaml), takes its USEQ entry out of the menus, as the
+    server then answers "cannot read command". A command no pack names (a console word, a module function) holds."""
+    head = str(text or "").split()[0].upper() if str(text or "").split() else ""
+    store = getattr(request.app.state, "packs", None)
+    if not head or store is None:
+        return True
+    from core import distribution as _dist
+    from core import resolution as _res
+    try:
+        owners = [p for p in store.resolution().packs.all()
+                  if p.manifest is not None and p.manifest.is_file() and head in _dist._pack_file_commands(p.manifest)]
+    except Exception:  # noqa: BLE001 - a pack folder unreadable for a moment: the menu as before, never a failed page
+        return True
+    return not owners or any(p.state == _res.LOADED for p in owners)
 
 
 def holds(request, need: str, ctx: dict) -> bool:

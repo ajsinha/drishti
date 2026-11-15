@@ -419,7 +419,8 @@ scenario window, `test_var_lens_browser.py` and `test_var_page_scope_browser.py`
 setting, enter a lens on the server) keep a server of their own.
 
 **The guard.** The pool fingerprints a shared server's scratch folder (every file's size and time, the server's log, temporary, cache and
-VaR hot folders left out: `wb_live.DERIVED`) when a file gets the server and again when the file is done; a file that wrote anything there
+VaR hot folders, and what a server writes while serving reads (the official capture and its sequence in the file store, the audit of
+the reads, the derived trade pages, a person's first BI workspace) left out: `wb_live.DERIVED`) when a file gets the server and again when the file is done; a file that wrote anything there
 fails in its teardown with the files it wrote, and the server is stopped instead of handed on, so no file ever sees another file's data.
 The browser-rules test (`test_browser_rules.py`, rule 4) is unchanged: every server still comes from the pool.
 
