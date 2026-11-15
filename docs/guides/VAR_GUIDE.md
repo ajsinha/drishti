@@ -3121,19 +3121,7 @@ present it must say the same (`DRS-5208`). **The currency caveat:** scenario PVs
 currency with each scenario's FX (section 15.11); a P&L vector's conversion is approximate, since the currency move inside the trade is
 already folded into the vector, so `inputsBySystem.<system>.tradesWithoutPv` counts the records that limit multi-currency exactness.
 
-**Loading production position-level scenario PVs.** What the owner's batch must carry, per record of `scenario-pv` (JSONL, one object per line):
-
-| Field | Required | What |
-|---|---|---|
-| `VALUE_TYPE` `PV`, `GRAIN` `POSITION`, `POSITION_ID` | yes | what the record is; `POSITION_ID` unique on the date |
-| `CURRENCY`, `SCENARIO_PV`, `BASE_PV`, `VALUATION_DATE`, `BASE_VALUATION_DATE` | yes | the PVs, in one currency (`TRADE_CURRENCY` when the position's own differs: USD PVs of an EUR position), with `fx-scenario` for every non-USD `CURRENCY` |
-| `SOURCE_SYSTEM` | yes | selects its pin below |
-| `BUSINESS_DATE`, `SCENARIO_SET_ID`, `BATCH_ID`, `COMPUTED_AT`, `RUN_KIND` `FULL` | yes | the run; one `BATCH_ID` a date, `SCENARIO_SET_ID` `HS-509` (509 values) or the configured window (250) |
-| `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `LIMIT_LETTER` | yes | every hierarchy level column promoted: the book placement and tree are read from the record, never derived |
-| `TRADE_STATUS`, `MATURITY_DATE`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `SECURITY_ID`, `COUNTERPARTY`, `DIRECTION`, `QUANTITY`, `TAGS` | as available | scopes, baskets, rules |
-| `TRADE_IDS` | optional | the trades the position sums: their pages then link it, and `TRD:<trade>` answers in words |
-
-Rules: **one form and one grain per system per date** (`DRS-5210`: a date holding a system's positions and trades, or PVs and P&L vectors, is refused). A position under two nodes of a hierarchy is **one record per node**, its id `<position>@<level value>` (the demo: `POS-BOOK-RATES-1~XCH-BOND_FUTURE-AUD-01@DIV-MARKETS/LL-0010`), so every record has one value per level column. Pin it (`drishti.var.inputs`): `ENDUR: {form: pv, grain: position}` and the same for each system; `make_var_data.py --inputs-config` prints the demo's. Then load it (a `.ready` beside the file; [DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md), section 3.1), with `fx-scenario` and `scenario-set` for the date.
+**Loading production position-level scenario PVs.** The fields are the contract's ([`scenario-pv.contract.yaml`](../../modules/banking/dmod/packs/market-risk/contracts/scenario-pv.contract.yaml)); which of them the engine reads, what each missing one does, the files, the load, the two dates Why it moved needs and the checks are the runbook [DATA_LAKE_GUIDE.md 16.1](DATA_LAKE_GUIDE.md#161-production-position-level-scenario-pvs-for-var-explain-and-why-it-moved). **One form and one grain per system per date** (`DRS-5210`), and a position under two nodes of a hierarchy is one record per node, its id `<position>@<level value>` (the demo: `POS-BOOK-RATES-1~XCH-BOND_FUTURE-AUD-01@DIV-MARKETS/LL-0010`). Pin it with `drishti.var.inputs`: `ENDUR: {form: pv, grain: position}` and the same for each system; `make_var_data.py --inputs-config` prints the demo's.
 
 **Visibility.** Every answer's provenance carries `inputsBySystem`: per source system on the date, `form`, `grain`, `rows`,
 `decidedBy` (*record fields*, or *record fields, agreeing with the pin pv, position*) and `tradesWithoutPv`; `GET /api/v1/risk/var/status`

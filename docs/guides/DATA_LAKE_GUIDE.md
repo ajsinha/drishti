@@ -44,6 +44,7 @@ Every example below uses invented, Endur-style data (`TRADE_ID`, `PRODUCT_TYPE`,
 13. [The in-memory lake](#13-the-in-memory-lake)
 14. [Delta protocol compliance](#14-delta-protocol-compliance)
 15. [Iceberg spec compliance](#15-iceberg-spec-compliance)
+16. [Runbooks: production data into the lake](#16-runbooks-production-data-into-the-lake) (16.1: [scenario PVs for VaR](#161-production-position-level-scenario-pvs-for-var-explain-and-why-it-moved))
 
 ## 1. What a lake is
 
@@ -388,31 +389,7 @@ cp /landing/trade_endur.2026-11-06.jsonl.gz data/dataload/inbox/
 touch data/dataload/inbox/trade_endur.2026-11-06.ready          # or trade_endur.2026-11-06.jsonl.gz.ready
 ```
 
-**Loading production position-level scenario PVs.** Each morning's batch is one file of `scenario-pv` records (every field in the checklist of
-[VAR_GUIDE.md section 15.13](VAR_GUIDE.md#1513-inputs-any-form-any-grain)), its currency FX in `fx-scenario` ([contract](../contracts/packs/market-risk.md#fxs-scenario-fx-of-a-currency-one-rate-per-scenario-fx-scenario), [example](../contracts/samples/market-risk.md#fx-scenario)) and the date's scenario set in
-`scenario-set` ([contract](../contracts/packs/market-risk.md#sset-scenario-set-scenario-set), [example](../contracts/samples/market-risk.md#scenario-set)); the `.ready` file goes in last:
-
-```bash
-# drop/scenario-pv.2026-11-06.jsonl.gz holds one object per position, for example (the vector cut here to 3 of 509 values):
-# {"VALUE_TYPE":"PV","GRAIN":"POSITION","POSITION_ID":"POS-BOOK-RATES-1~XCH-BOND_FUTURE-AUD-01@DIV-MARKETS/LL-0010","CURRENCY":"USD",
-#  "TRADE_CURRENCY":"AUD","SOURCE_SYSTEM":"MUREX","SCENARIO_PV_ID":"SPV-...-HS-509","BUSINESS_DATE":"2026-11-06","SCENARIO_SET_ID":"HS-509",
-#  "TRADE_STATUS":"VALIDATED","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-RATES","TT_BOOK":"BOOK-RATES-1","LIMIT_LETTER":"LL-0010",
-#  "PRODUCT_GROUP":"Rates","PRODUCT_TYPE":"BOND_FUTURE","DIRECTION":"LONG","QUANTITY":25,"TAGS":"","BASE_PV":1250000.00,
-#  "VALUATION_DATE":"2026-11-06","BASE_VALUATION_DATE":"2026-11-06","SCENARIO_PV":[1249500.00,1251120.00,1247800.00],"STATUS":"ok",
-#  "BATCH_ID":"B-2026-11-06-01","COMPUTED_AT":"2026-11-06T06:00:00Z","RUN_KIND":"FULL","TRADE_IDS":["MX-20000002"]}
-cp drop/scenario-pv.2026-11-06.jsonl.gz drop/fx-scenario.2026-11-06.jsonl.gz drop/scenario-set.2026-11-06.jsonl.gz data/dataload/inbox/
-cat > data/dataload/inbox/scenario-pv.2026-11-06.jsonl.gz.ready <<'YAML'
-lake: risklake
-pack: market-risk
-kind: scenario-pv
-mode: replace
-rows: 7993                          # refuses a file cut short
-YAML
-touch data/dataload/inbox/fx-scenario.2026-11-06.jsonl.gz.ready data/dataload/inbox/scenario-set.2026-11-06.jsonl.gz.ready
-```
-
-Pin each system's form and grain in `drishti.var.inputs` (`ENDUR: {form: pv, grain: position}`, the same for the others): a record that
-disagrees is refused and listed. One system sends one form and one grain per date; a position under two nodes of a hierarchy is one record per node.
+**Loading a production batch.** Position-level scenario PVs for VaR, step by step with the files, the fields, the checks and the traps (a name without a date loads under today's date): [16.1](#161-production-position-level-scenario-pvs-for-var-explain-and-why-it-moved).
 
 **One cycle**, every `interval` (10 minutes), on the owner node:
 
@@ -2199,3 +2176,277 @@ from pyiceberg.table import StaticTable
 t = StaticTable.from_metadata("file:///srv/drishti/data/iceberg/risk/pnl-vector/metadata/v12.metadata.json")
 print(t.scan(row_filter="business_date = '2026-09-30'").to_arrow().num_rows)
 ```
+
+## 16. Runbooks: production data into the lake
+
+One runbook per kind of production feed, each tested end to end on a synthetic batch shaped like production. Each follows one shape:
+prerequisites, the fields, the steps, the files and their names, chunking, two dates, the layout, verification, troubleshooting, a do-not list and a
+checklist to print.
+
+### 16.1 Production position-level scenario PVs, for VaR, Explain and Why it moved
+
+**What this loads.** A pricing system's morning batch: one `scenario-pv` record per **position** (`GRAIN: POSITION`, `POSITION_ID` set, no
+`TRADE_ID`), about 1.3 million positions a business date, `UPPER_SNAKE` field names, JSON Lines (many large files, plain or `.gz`). With it the
+VaR page, Explain and **Why it moved** are fast: a date opens from one memory-mapped hot file. The kind is `scenario-pv` (command `SPV`); its contract
+is [`scenario-pv.contract.yaml`](../../modules/banking/dmod/packs/market-risk/contracts/scenario-pv.contract.yaml), published as
+[SPV](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-position-or-trade-one-pv-per-scenario-its-currency-scenario-pv). The engine's rules for
+forms and grains are [VAR_GUIDE.md section 15.13](VAR_GUIDE.md#1513-inputs-any-form-any-grain); this section is the procedure.
+
+**Every input a position-grain date needs.**
+
+| Kind | Needed? | Why |
+|---|---|---|
+| `scenario-pv` | **yes**, the batch itself | the values |
+| `scenario-set` | **yes**, one row a date | the scenario days: `SCENARIO_COUNT` must equal every vector's length; the engine uses the newest `scenario-window` of them |
+| `fx-scenario` | **yes** when any `CURRENCY` is not USD (one row per currency and date, `RATES` as long as the set) | otherwise the rates are derived from `fx-spot` history, which covers every scenario day only on a bank's own FX history; a currency with neither rejects its rows (`DRS-5207`) |
+| a position or hierarchy kind | **no** | a position record places itself: `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `LIMIT_LETTER` build both trees; nothing is derived from trades |
+| `var-limit` | optional | the Limit column and limit use |
+| `desk-pnl`, `pnl-history` | optional | backtesting, stressed VaR |
+| trades (`trade_*`) | optional | trade pages only; position grain never joins them |
+
+#### Prerequisites
+
+| Check | Value | Where |
+|---|---|---|
+| Java | 21 or newer | `java -version` |
+| Server heap | **8 to 10 GB** for 1.3M positions and two to three open dates | `bin/start-server.sh --heap 10g` (Windows: `bin\start-server.ps1 -Heap 10g`). The measured book is about 0.77 GB of heap at 1M positions ([VAR_GUIDE.md 27.1](VAR_GUIDE.md#271-bytes-per-date)), so about 1 GB at 1.3M, and a date kept open about 1.5 GB of `-Xmx`; `-Xmx6g` served 1M positions with two dates |
+| Loader heap | `6g` | `DRISHTI_DATALOAD_LOADER_HEAP=6g` (default `4g`): a separate process, memory bounded by the loader's budget, the rest spilled to disk |
+| Reporting currencies | `DRISHTI_VAR_CURRENCIES=USD` **for the first load** | the default builds EUR, CAD, JPY and GBP books ahead, each about 77% of the USD book's disk; add them when you need them |
+| Open dates | `DRISHTI_VAR_HOT_DATES=3` | the default 10 keeps up to ten dates open |
+| Disk | see the table below; the guard `drishti.disk.min-free-percent` (10) and `min-free-gb` (20), both must hold, else a date is refused `503 DRS-5218` | `df -h` of the data folder |
+| Scenario window | `drishti.var.scenario-window` (default 250: the newest N of the set; `all` uses the whole set) | `config/engines/var.yaml` |
+| Inbox | on, on one owner node | `drishti.py server engines on dataload` (the demo starts it on); in a cluster, the owner node's `<data>/dataload` |
+| A token | scope `loads:write` (an administrator's will do) | My account, API tokens; `--token-file F` or `DRISHTI_TOKEN`; `DRISHTI_SERVER=http://host:18480` |
+
+Put the settings in the server's env file and start it:
+
+```bash
+cat >> server.env <<'EOF'
+DRISHTI_VAR_CURRENCIES=USD
+DRISHTI_VAR_HOT_DATES=3
+DRISHTI_DATALOAD_LOADER_HEAP=6g
+EOF
+bin/start-server.sh --env-file server.env --heap 10g --background      # Windows: bin\start-server.ps1 -EnvFile server.env -Heap 10g -Background
+```
+
+**Disk**, 1.3M positions, 250 values a vector, two dates, **estimated** from the measured 20,000-position run (below; 509 values roughly doubles the lake and
+the hot files):
+
+| Folder | One date | Two dates |
+|---|---|---|
+| your landing area | 1.3 GB gzip (4.3 GB as text) | 2.6 GB |
+| `<data>/dataload/`: inbox, then `outbox/` (kept `keep-outbox-days`, 30) | 1.3 GB, once in each | 2.6 GB at once, 5.2 GB kept |
+| the lake, `<lake>/risk/scenario-pv/` | 1.75 GB | 3.5 GB; **a replaced date keeps its old files** until vacuum (`time-travel: 30d`, `vacuum: 7d` in the lake file): budget a second copy of any date you load twice |
+| VaR hot files, `<data>/var/hot/` | 2.7 GB (USD) | 5.4 GB; with the five default currencies about 11 GB a date |
+| temp (a load's spill, `<data>/tmp`) | up to 10 GB | |
+| **Plan on** | | **about 30 GB free** for two dates with USD only, 60 GB with the default currencies |
+
+#### Fields: what each record must carry
+
+The contract lists 41 fields, 28 required. The load rejects a row for the few the engine reads; the others are kept for audit and navigation. This
+table is what happened when each was dropped from a test date:
+
+| Field | Send it | If missing (tested) |
+|---|---|---|
+| `VALUE_TYPE` = `PV`, `GRAIN` = `POSITION`, `POSITION_ID`, `CURRENCY`, `SOURCE_SYSTEM` | always; `POSITION_ID` unique on the date | the row is rejected `DRS-5208` (*no GRAIN: every PV record says what it is …*) |
+| `BUSINESS_DATE`, `SCENARIO_SET_ID` | always; the set's id the same on every row and in `scenario-set` | `DRS-5203` for the date |
+| `SCENARIO_PV` | always: as many values as the set's `SCENARIO_COUNT`, oldest scenario first, none `null` or NaN | `DRS-5201` wrong length; `DRS-5206` a null: the row is not loaded, never zero-filled |
+| `BASE_PV` | always (the same run's PV today; P&L = PV(s) × FX(s) − BASE_PV × FX(base)) | **every row rejected**, `DRS-5201 … no BASE_PV` |
+| `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `LIMIT_LETTER` | always: the trees are built from them | the row sits under **(Blank)** and the answer warns `DRS-5211`: loaded, but not where you want it |
+| `BATCH_ID` (one a date), `COMPUTED_AT`, `RUN_KIND` = `FULL`, `RESTATEMENT` (0, then 1, 2 …) | always | two `BATCH_ID`s on a date refuse the date `DRS-5203`; with none the date loads |
+| `SCENARIO_PV_ID` (`SPV-<POSITION_ID>-<SCENARIO_SET_ID>`) | always: the contract's key, what `SPV` pages are named by | loaded without it, but the record page and key-based lookups rely on it |
+| `VALUATION_DATE`, `BASE_VALUATION_DATE` | the business date | loaded when absent; `DRS-5201` when sent and different |
+| `TRADE_STATUS`, `MATURITY_DATE`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `SECURITY_ID`, `COUNTERPARTY`, `DIRECTION`, `QUANTITY`, `INSTRUMENT`, `PORTFOLIO`, `TAGS`, `STRATEGY`, `TRADE_CURRENCY` | as you have them: they feed scopes (`CPTY:`, `WHERE:`), baskets and the pages | loaded when all are absent |
+| `TRADE_IDS` | optional: the position's trades, kept for navigation | loaded |
+| `STATUS`, `PRICER`, `MODEL_VERSION` | audit | loaded when absent |
+| `TRADE_ID` | **never** at position grain | a `TRADE`-grain row beside positions of one system refuses the date, `DRS-5210` |
+
+A position under two nodes of a hierarchy is one record per node, its id `<position>@<level value>`
+([VAR_GUIDE.md 15.13](VAR_GUIDE.md#1513-inputs-any-form-any-grain)). The pin `drishti.var.inputs` (`<SYSTEM>: {form: pv, grain: position}`) is
+optional; a record that disagrees with it is refused `DRS-5209`.
+
+**The layout the lake file gives it** (`config/lakes/demo.yaml`, `risk.scenario-pv`; the lake file is the truth, never a command line): partitioned by
+business date, then `SCENARIO_SET_ID` and `GRAIN` (one folder a date at position grain), files of about 256 MB (`file-size-mb`), row groups of 16 MB
+(`row-group-mb`), `zstd` for columns and vectors, `sort-by: [LEGAL_ENTITY, DIVISION, DESK, TT_BOOK, TRADE_ID]`. At position grain `TRADE_ID` is empty,
+so rows are ordered by book and then arrive in file order. **The change that adds `POSITION_ID` to `sort-by` is being made on branch `wip/i4-accept`**; once
+it is in your `config/lakes/demo.yaml`, a lookup of one position reads one row group instead of the book's. It applies to dates loaded after it, so load
+the two dates after it is in. VaR reads the whole date and is unaffected either way.
+
+#### Step by step (Linux; each command was run as written)
+
+**1. Name and cut the files.** One tar per business date, with one folder per kind and, inside it, the date's folder (section 4.4). The parts of a
+date go in the same folder under any names (`part-0001.jsonl.gz`): **a tar is the way to send one date in several files by the inbox**, and it loads
+all three tables or none.
+
+```text
+eod-2026-11-12.tar
+├── scenario-set/2026-11-12/scenario-set.jsonl.gz       one row
+├── fx-scenario/2026-11-12/fx-scenario.jsonl.gz         one row a non-USD currency
+└── scenario-pv/2026-11-12/part-0001.jsonl.gz           the positions, in as many parts as you like
+    scenario-pv/2026-11-12/part-0002.jsonl.gz
+```
+
+Chunking: **200,000 to 400,000 positions a part** (about 200 to 400 MB of gzip at 250 values), each part gzipped: several parts are decompressed and
+parsed in parallel, one part by one reader (a single 5 GB file loads on one core). The lake writes its own files of about 256 MB whatever you send. Do not
+gzip the tar: its parts are already compressed.
+
+```bash
+cd /landing/2026-11-12                                    # holds scenario-set/ fx-scenario/ scenario-pv/, each with the date's folder
+tar -cf /landing/eod-2026-11-12.tar scenario-set/2026-11-12 fx-scenario/2026-11-12 scenario-pv/2026-11-12     # Windows 10+: the same in PowerShell
+sha256sum /landing/eod-2026-11-12.tar | cut -c1-64        # Windows: (Get-FileHash eod-2026-11-12.tar -Algorithm SHA256).Hash.ToLower()
+```
+
+**2. Drop the tar, and its `.ready` last** (section 3.1). The `.ready` is YAML, named after the tar in full. `sha256:` is checked before anything is
+written (a wrong one goes to `failed/`: *the SHA-256 in its .ready file is not the file's*); `rows:` is **not** checked for a tar (tested), so count in
+step 5. `lake: demo` is the lake holding your demo data.
+
+```bash
+INBOX=<data>/dataload/inbox                               # the owner node's data folder; Admin → Data loads → Inbox shows it
+cp /landing/eod-2026-11-12.tar $INBOX/
+cat > $INBOX/eod-2026-11-12.tar.ready <<EOF
+lake: demo
+sha256: $(sha256sum /landing/eod-2026-11-12.tar | cut -c1-64)
+EOF
+```
+
+The inbox takes the pair once both are unchanged for 30 seconds (`stable-seconds`). Do not wait for the 10-minute cycle:
+
+```bash
+export DRISHTI_SERVER=http://host:18480
+python3 tools/drishti.py dataload run --token-file ~/.drishti-token      # "Load now": a cycle started
+python3 tools/drishti.py dataload status --token-file ~/.drishti-token   # waiting / failed / last cycles
+```
+
+`status` ends with `done  1 loaded` when it worked (tested: 11 seconds for a 20,000-position date). The file, its marker and a report
+`eod-….tar.loaded.json` are then in `outbox/<day>/<run>/`, with the loader's log under `loads/`; a failure is in `failed/<day>/<run>/` with
+`.failed.json` in words, and `drishti.py dataload retry <file>` puts it back.
+
+**3. The second date.** **Why it moved needs two dates**: it compares a date with the one before it (`var explain --from … --to …`, default the
+previous one). Load the previous business day the same way, each date its own tar with its own `scenario-set` (the later set's days are the earlier's
+rolled by one).
+
+```bash
+# repeat steps 1 and 2 with 2026-11-13
+```
+
+Sending the identical file again is skipped as *already loaded in run …*, even when the date was overwritten since (tested). To reload, change the file (a
+rebuilt tar differs) or set `drishti.dataload.reload-duplicates: true` for the run.
+
+**4. The CLI alternative** (no inbox: a terminal, cron, or a machine that is not the owner node). One folder a table and date, the date given by
+`--as-of` (never trust a name, see the troubleshooting), `--signal` tells the server; `scenario-set` first:
+
+```bash
+for k in scenario-set fx-scenario scenario-pv; do
+  python3 tools/drishti.py lake build --from /landing/2026-11-12/$k/2026-11-12 --as-of 2026-11-12 --lake demo --kind $k \
+     --pack modules/banking/dmod/packs/market-risk --signal $DRISHTI_SERVER --token-file ~/.drishti-token
+done
+```
+
+It ends `lake-build ok exit=0 … rows=20000 rejected=0` (7.3 s for 20,000 positions into a new table, 10.2 s replacing a date). For 1.3M positions add
+`--engine java` (the parallel loader the inbox uses: bounded memory, spill to disk; tested through the inbox only). Exit 2 is loaded with rejects: read
+the summary file it names. `--plan` and `--dry-run` show the route and count without writing.
+
+**5. Verify** (the output below is from the tested run; `$T` is `--token-file ~/.drishti-token`).
+
+```bash
+python3 tools/drishti.py lake status --lake demo $T            # risk/scenario-pv: rows, files, size, dates, latest date
+python3 tools/drishti.py var show BANK --date 2026-11-12 $T
+```
+
+```text
+VAR BANK  ·  Drishti Bank  ·  node  ·  2026-11-12
+  VaR 99%   1,355,248 USD   (the 3th worst of 250)
+  ES 97.5%   1,327,210 USD   (mean of the 7 worst)
+  20000 trades in 20000 positions
+  pnl-vector and scenario-pv (20000 trades from scenario PVs) · batch B-2026-11-12-01 of 2026-11-12 · …
+```
+
+1. **The count is the file's.** `20000 trades in 20000 positions` equals the rows you sent (`zcat part-*.gz | wc -l`).
+2. **Nothing was rejected.** A rejected row is skipped and the date still answers, so this check is not optional:
+
+```bash
+python3 tools/drishti.py var show BANK --date 2026-11-12 --json $T | python3 -c "import sys,json; p=json.load(sys.stdin)['provenance']; print('rejected',p['rejected'],p['scenarioWindow']['note']); [print(' ',x) for x in p.get('rejections',[])+p.get('warnings',[])]"
+```
+
+   Expect `rejected 0` and no lines under it. The window line says what was used (*newest 250 of 509 scenarios …*).
+3. **The tree is yours.** `var tree --date … $T` and `var parts BANK --date … $T` list the divisions, desks and books from your columns; a **(Blank)** node
+   means a level column was empty.
+4. **One position.** `var show "POS:<POSITION_ID>" --date … $T`, and its record `python3 tools/drishti.py view get "scenario-pv/SPV-<POSITION_ID>-<SCENARIO_SET_ID>" --date … $T`
+   (in the console: `SPV <id>`).
+5. **Why it moved.** `python3 tools/drishti.py var explain BANK --from 2026-11-12 --to 2026-11-13 $T` prints the steps and `the steps add up: yes`
+   (0.3 s tested); the same in the VaR page's Explain drawer, tab *Why it moved*.
+6. **The first open of a date** builds its hot file (`<data>/var/hot/<date>/inputs-….vhot`). The load signal also starts the **official end-of-day capture** by
+   itself (tested: `official VaR capture of 2026-11-12 … status=captured`), so **a load by mistake leaves an official record**: rehearse with
+   `drishti.var.official.enabled: false`. A date reloaded after a signal is picked up in the background (within the 30 s version check): if the batch id
+   shown is still the old run, ask again.
+
+**6. After the load.** Compaction is not needed: the loader writes files of the target size (one file of 26.8 MB for 20,000 positions, about seven of
+256 MB for 1.3M). Replaced dates leave their old files until vacuum; `drishti.py lake maintain --once --tables risk/scenario-pv` runs vacuum and
+checkpoint per the lake file's `maintenance:` (it needs the `deltalake`, `pyarrow` and `pyyaml` Python libraries and a `<data>/lakes/lake-maintenance.yaml`
+written by Admin → Data loads → Lakes → Maintain; **not run in this rehearsal**, [OPERATIONS_GUIDE.md section 16](OPERATIONS_GUIDE.md#16-lake-maintenance-and-scheduling)).
+Undo a wrong load with `drishti.py dataload undo <load-id>` (a dry run; `--yes` undoes it; section 5.5).
+
+#### Troubleshooting
+
+| You see | Why | Do |
+|---|---|---|
+| `failed/`: *'part-0001' is neither the date … nor an extension* | a plain part named `scenario-pv.2026-11-12.part-0001.jsonl` | put the parts in a tar (step 1) |
+| a file loaded but the date is **today's**, and the real data of that date is gone | **a name with no date loads under the business today, and replace mode replaces that date** (tested: `scenario-pv.jsonl` replaced a loaded date with 490 rows) | `dataload undo <load-id>`, or load the date again from its tar (changed bytes); give the routing rule `date-from: name` in `config/dataload.yaml`, or always send a tar or `<table>.<date>.jsonl.gz` |
+| *already loaded in run …* | the same SHA-256 was loaded before | change the file, or `reload-duplicates` |
+| `failed/`: *the SHA-256 in its .ready file is not the file's* | cut short in transfer, or the wrong hash | resend, correct the marker, `dataload retry` |
+| `422 DRS-5210` *ENDUR sent {PV/POSITION=167, PV/TRADE=1}* | a trade-grain row in a position-grain date | remove it: one form and one grain a date |
+| `DRS-5203` *the vectors come from 2 runs (BATCH_ID …)* … *answered from <earlier date> instead* | two `BATCH_ID`s, or a `SCENARIO_SET_ID` that is not the set's | one batch a date; the page answers the earlier date meanwhile |
+| rejected `DRS-5208` *no GRAIN* | a record without `VALUE_TYPE`, `GRAIN`, its id, `CURRENCY` or `SOURCE_SYSTEM` | add them (`drishti.py var convert`) |
+| rejected `DRS-5206` *1 scenario failed to price: 17 (2025-12-12)* | a `null` or NaN in `SCENARIO_PV` | price it, or leave the position out: it is never zero-filled |
+| rejected `DRS-5201` *the row has 249 scenario PVs; the scenario set has 250* | a vector of another length than `SCENARIO_COUNT` | fix the batch or the set |
+| rejected `DRS-5201` *no BASE_PV* | no base PV | send it |
+| rejected `DRS-5207` *its PVs are in CHF and the date has no CHF scenario FX* | no `fx-scenario` row for the currency | send it for the date |
+| `DRS-5211`, a **(Blank)** node | a level column empty on some rows | fill it |
+| `503 DRS-5204`, `DRS-5218` | the heap budget or the disk guard | free disk or raise the heap; open dates keep answering |
+| `404` on `/api/v1/risk/var/scope` just after a start | the banking module is still installing | wait; `bin/status.sh` |
+
+#### Do not
+
+- Do not send **trade** and **position** grain for one source system on one date, nor two forms (PV and P&L vectors); do not send a position and, alone, a trade it names.
+- Do not name a file without its date (`scenario-pv.jsonl`) or with extra words in the name: the date becomes today's.
+- Do not put the `.ready` before the file is complete; do not edit a file in the inbox.
+- Do not mix `BATCH_ID`s or scenario sets within a date; do not send `null` in a vector; do not restate a date under its old `BATCH_ID` (next `RESTATEMENT`, a new `BATCH_ID`, the whole date again: replace mode takes the whole date).
+- Do not leave the five default reporting currencies on for the first load of 1.3M positions.
+- **Never commit production data**: no file of the batch, no sample row with real values, no `.ready` with a real path. Rehearse on `tools/pvgen/bulk_positions.py`.
+
+#### Printable checklist
+
+```text
+BEFORE   [ ] java 21   [ ] heap 8-10g   [ ] loader heap 6g   [ ] DRISHTI_VAR_CURRENCIES=USD   [ ] disk: 30 GB free (guard 20 GB and 10%)
+         [ ] var.scenario-window 250 (or all)   [ ] inbox on   [ ] token (loads:write)   [ ] rehearsed with tools/pvgen/bulk_positions.py
+FILES    [ ] every row: VALUE_TYPE PV, GRAIN POSITION, POSITION_ID, CURRENCY, SOURCE_SYSTEM, BUSINESS_DATE, SCENARIO_SET_ID, BASE_PV,
+             SCENARIO_PV (= SCENARIO_COUNT values, no null), LEGAL_ENTITY, DIVISION, DESK, TT_BOOK, LIMIT_LETTER, BATCH_ID (one a date), COMPUTED_AT
+         [ ] no TRADE_ID, no trade-grain row   [ ] scenario-set (1 row) and fx-scenario (1 row a non-USD currency) for the same date
+         [ ] parts of 200-400K positions, gzip   [ ] one tar a date: scenario-set/<date>/ fx-scenario/<date>/ scenario-pv/<date>/   [ ] sha256 noted
+LOAD     [ ] the earlier date first   [ ] cp tar to the inbox   [ ] .ready LAST (lake: demo, sha256)   [ ] dataload run   [ ] status: done 1 loaded
+         [ ] then the later date
+VERIFY   [ ] var show BANK: positions = rows sent   [ ] rejected 0, no warnings, no (Blank)   [ ] var explain --from D-1 --to D: adds up
+         [ ] SPV <position> opens   [ ] lake status shows both dates   [ ] disk still above the guard
+IF WRONG [ ] dataload undo <load-id> (dry run, then --yes)   [ ] never an undated name   [ ] dataload retry after fixing a failed file
+```
+
+#### What was measured (a rehearsal, not production)
+
+20,000 positions × 250 values a date, two consecutive business dates (2026-11-12, then 2026-11-13 with 400 positions fewer), four gzip parts a date,
+generated by `tools/pvgen/bulk_positions.py`; one 24-thread workstation, NVMe, Java 21, 4 GB server and loader heaps, a server built from this branch.
+
+| Step | Measured |
+|---|---|
+| input a date | 66.8 MB as text (3,343 B a position), **20.3 MB gzip** (1,016 B a position) |
+| inbox, a tar of three tables (claim to outbox) | **11 s**; `scenario-pv` 3.9 s of it (read 0.5 s, parse 0.5 s, write 1.7 s, commit 0.1 s), loader peak heap **646 MB** |
+| `lake build` CLI | 7.3 s (new table), 10.2 s (replacing a date, with `--signal`) |
+| the lake | `business_date=…/SCENARIO_SET_ID=HS-250/GRAIN=POSITION/`, 1 file of **26.8 MB** a date from the Java loader (30.5 MB from the CLI's writer): 1,340 B a position |
+| first open of a date, with the official capture | about 1.5 s; the USD hot file **42.1 MB** (2.1 KB a position), each extra currency 32.2 MB |
+| `var show BANK`, `var explain` | 0.2 s, 0.3 s |
+| server process after both dates | 2.0 GB resident |
+
+**Extrapolated to 1.3M positions a date (an estimate: sizes scale with positions, times do not).** Text 4.3 GB, gzip about 1.3 GB (PVs with more
+significant digits compress less: plan 1.5 to 2 times); the lake about 1.75 GB; the USD hot file about 2.7 GB plus the node aggregates (27,000 nodes
+added 0.64 GB at 1M); a loader run 1 to 3 minutes ([BENCHMARK.md 7.1](../admin/BENCHMARK.md#71-the-200000-position-var-inputs-the-python-path-and-the-java-loader): 20 s
+for 1M positions × 509 values); the first open of a date 25 to 60 s ([BENCHMARK.md 5.4](../admin/BENCHMARK.md#54-a-dates-first-open): 25 to 27 s at 1M), then
+the official capture. With 509 values a vector the gzip, the lake and the hot file about double. The first real day's own numbers replace these.

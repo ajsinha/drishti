@@ -17,8 +17,9 @@
     python tools/pvgen/bulk_positions.py --out data/rehearsal --dates 2026-11-12,2026-11-13 --positions 20000 --scenarios 250 \
         [--parts 4] [--gzip] [--seed 7]
 
-Per date it writes ``scenario-pv.<date>.part-NNNN.jsonl[.gz]`` (--parts files of about equal rows), ``fx-scenario.<date>.jsonl`` and
-``scenario-set.<date>.jsonl``: the three inputs a position-grain VaR date needs (docs/guides/DATA_LAKE_GUIDE.md, the scenario PV
+Per date it writes ``<out>/scenario-pv/<date>/part-NNNN.jsonl[.gz]`` (--parts files of about equal rows),
+``<out>/fx-scenario/<date>/fx-scenario.jsonl[.gz]`` and ``<out>/scenario-set/<date>/scenario-set.jsonl[.gz]``: the tar layout
+(``tar -czf eod.tar.gz scenario-set fx-scenario scenario-pv`` in <out>), and one folder a table and date for ``lake build --from``. The three inputs a position-grain VaR date needs (docs/guides/DATA_LAKE_GUIDE.md, the scenario PV
 runbook). The positions are the same on every date (a few percent retire and arrive), each PV path is one series of daily
 moves, so a later date's vector is the earlier one's shifted by a day (the scenario window rolls): "Why it moved" then has something
 to explain. Synthetic only; never commit the output.
@@ -76,12 +77,17 @@ def main():
         iso = day.isoformat()
         set_dates = [d.isoformat() for d in business_days_before(day, s)]
         batch = f"B-{iso}-01"
-        with opener(os.path.join(a.out, f"scenario-set.{iso}{ext}")) as f:
+        def target(table, name):
+            d = os.path.join(a.out, table, iso)
+            os.makedirs(d, exist_ok=True)
+            return os.path.join(d, name + ext)
+
+        with opener(target("scenario-set", "scenario-set")) as f:
             f.write(json.dumps({"SCENARIO_SET_ID": f"HS-{s}", "BUSINESS_DATE": iso, "SCENARIO_DATES": set_dates,
                                 "SCENARIO_COUNT": s, "WINDOW_START": set_dates[0], "WINDOW_END": set_dates[-1],
                                 "HORIZON_DAYS": 1, "REVALUATION": "full", "SOURCE_BATCH": batch,
                                 "DESCRIPTION": f"Historical simulation, {s} business days, equal weights"}) + "\n")
-        with opener(os.path.join(a.out, f"fx-scenario.{iso}{ext}")) as f:
+        with opener(target("fx-scenario", "fx-scenario")) as f:
             for c, r in CCYS.items():
                 if c == "USD":
                     continue
@@ -92,8 +98,7 @@ def main():
         per = -(-n // a.parts)
         for part in range(a.parts):
             lo, hi = part * per, min(n, (part + 1) * per)
-            name = f"scenario-pv.{iso}.part-{part + 1:04d}{ext}" if a.parts > 1 else f"scenario-pv.{iso}{ext}"
-            with opener(os.path.join(a.out, name)) as f:
+            with opener(target("scenario-pv", f"part-{part + 1:04d}")) as f:
                 for p in range(lo, hi):
                     if i > 0 and p % 50 == 0:      # a few percent arrive and retire between the dates
                         continue
