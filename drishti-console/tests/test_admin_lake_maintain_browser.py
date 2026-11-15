@@ -62,7 +62,7 @@ def maint_console(tmp_path_factory):
     make_lake(root)
     app = create_app(load_settings(CONSOLE / "config"))
     app.state.backend = SignalBackend()
-    app.state.lakes = Lakes(LakeSettings(roots=[root], tools_dir=REPO / "tools", engine="deltalake", data_dir=work / "data", schedules=False))
+    app.state.lakes = Lakes(LakeSettings(roots=[root], tools_dir=REPO / "tools", data_dir=work / "data", schedules=False))
     port = _free_port()
     server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=port, log_level="warning", timeout_graceful_shutdown=2))
     thread = threading.Thread(target=server.run, daemon=True)

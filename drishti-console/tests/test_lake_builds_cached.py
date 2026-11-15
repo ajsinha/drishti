@@ -30,10 +30,8 @@ HERE = Path(__file__).resolve().parent
 
 #: the Python writer named on purpose, each with its reason
 ALLOWED = {
-    "test_admin_lakes.py": "Admin → Lakes' build over the CLI's Python writer route, on a 31-row synthetic file the test writes itself (not a demo lake)",
-    "test_admin_lakes_browser.py": "the same build from the browser, a 300-row synthetic file: the Python writer route of Admin → Lakes",
-    "test_admin_lake_maintain.py": "lake maintenance (tools/lake/maintain.py runs on the deltalake package) over a 120-row table the test writes",
-    "test_admin_lake_maintain_browser.py": "the same maintenance from the browser, over test_admin_lake_maintain.make_lake",
+    "test_admin_lakes.py": "Admin → Lakes' build is the subject: a 31-row synthetic file the test writes, built by lake build (engine auto, the Java loader)",
+    "test_admin_lake_maintain.py": "its tiny lake is built inside lake_cache.cached (Java loader); another system's one-row table stands in through the Python writer",
     "bi_report_stack.py": "the BI sample lake's loader (tools/samplegen/load_rows.py) has no Java route: it runs only inside lake_cache.cached",
     "bi_exposure_fixture.py": "the script bi_report_stack's cached build runs (the BI samples' official exposure table)",
     "test_lake_builds_cached.py": "this guard",

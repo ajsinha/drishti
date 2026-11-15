@@ -13,10 +13,11 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Admin → Data loads → Lakes in a real browser: a synthetic export uploaded with progress, its fields scanned with the id, date and
-classifier suggested, a new lake built with the CLI's engine (deltalake), the connector bound and each date announced, the summary with a
+classifier suggested, a new lake built with the CLI's engine (auto: the Java loader where the exec jar is), the connector bound and each date announced, the summary with a
 link to open a record; and the page at phone width without sideways scrolling. Chromium through Playwright against a console with a
 stand-in server; skipped when Playwright, its Chromium or deltalake is missing."""
 import importlib.util
+import re
 import json
 import socket
 import threading
@@ -73,7 +74,7 @@ def lakes_console(tmp_path_factory):
     root = tmp_path_factory.mktemp("lakes") / "lake"
     app = create_app(load_settings(CONSOLE / "config"))
     app.state.backend = LakesBackend()
-    app.state.lakes = Lakes(LakeSettings(roots=[root], tools_dir=REPO / "tools", engine="deltalake"))
+    app.state.lakes = Lakes(LakeSettings(roots=[root], tools_dir=REPO / "tools"))          # engine auto
     port = _free_port()
     server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=port, log_level="warning", timeout_graceful_shutdown=2))
     thread = threading.Thread(target=server.run, daemon=True)
@@ -123,7 +124,7 @@ def test_a_file_becomes_a_lake_bound_and_announced(browser, lakes_console, tmp_p
     page.locator("[data-run]").click()
     page.locator("[data-result] .loads-sum").first.wait_for(timeout=120000)
     result = page.locator("[data-result]").inner_text()
-    assert "Loaded 300 rows from 300 documents" in result and "engine deltalake" in result
+    assert "Loaded 300 rows from 300 documents" in result and re.search(r"engine (java|drishti|deltalake)", result), result
     assert "Connector book-store created" in result and "Load of 2026-10-16 announced (verified)" in result
     assert page.locator("[data-result] table tbody tr").count() == 3                       # one row per classifier value
     link = page.locator("[data-result] a.btn-pill")
