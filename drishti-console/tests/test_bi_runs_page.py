@@ -60,7 +60,7 @@ def test_the_rail_links_to_my_runs_with_a_count_and_g_r_is_listed(bi):
     r = client.get("/bi/catalogue")
     assert 'href="/bi/w/me?tab=runs"' in r.text and "data-runs-count" in r.text
     js = (Path(__file__).resolve().parent.parent / "web" / "static" / "js" / "drishti_bi.js").read_text()
-    assert "id: 'bi.go.' +" in js and "'/bi/w/me?tab=runs', 'your runs'" in js          # g r: the keymap lists it (? on the page)
+    assert "id: 'bi.go.' +" in js and "drishti_url('/bi/w/me?tab=runs'), 'your runs'" in js          # g r: the keymap lists it (? on the page), under the console's base path
 
 
 @pytest.mark.parametrize("typed", ["BI RUNS <GO>", "bi runs", "Rupaka runs"])
