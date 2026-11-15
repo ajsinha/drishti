@@ -29,7 +29,7 @@ One section per command of the pack: the shape of its data, how it is stored and
 
 ## TRD: Trade (`trade`)
 
-A booked trade as its source system (ENDUR, CALYPSO or MUREX) extracts it in the common schema: the deal, its legs with their cash flows and resets, and its events.
+A booked trade as its source system (ENDUR, CALYPSO, MUREX, WSS, SWAPONE or ICI) extracts it in the common schema: the deal, its legs with their cash flows and resets, and its events.
 
 |  |  |
 |---|---|
@@ -52,7 +52,7 @@ A booked trade as its source system (ENDUR, CALYPSO or MUREX) extracts it in the
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `SOURCE_SYSTEM` | text | required |  | The booking system the trade comes from: ENDUR, CALYPSO or MUREX (upper case). | `CALYPSO`, `ENDUR`, `MUREX` |  |
+| `SOURCE_SYSTEM` | text | required |  | The booking system the trade comes from: one of the shipped source systems, ENDUR, CALYPSO, MUREX, WSS, SWAPONE or ICI (upper case). | `ENDUR`, `CALYPSO`, `MUREX`, `WSS`, `SWAPONE`, `ICI` |  |
 | `SOURCE_UPDATE_TIME` | timestamp | optional |  | When the booking system last changed the trade, ISO-8601 UTC; moves with every amendment (empty on an ENDUR trade never amended). | `2026-09-30T18:30:00Z` |  |
 | `UPDATED_BY` | text | optional |  | Who last changed the trade: a person or a system id. The blotter names it when an edit is refused because the trade changed again. | `TRADER-014` |  |
 | `TRADE_DATE` | date | required |  | The date the trade was agreed. | `2025-06-20` |  |
