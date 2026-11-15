@@ -56,7 +56,9 @@ from core.guides import GithubSlugger  # noqa: E402
 NOT_DOCS = ("drishti-console/web/static/vendor/", "plugins/drishti-connectors/src/test/",
             "tools/packgen/", "tools/elements-demo/", "data/", "config/packs/core/gleif/")
 # History: names that were true when written. Links in these must still resolve; the names in them need not exist.
-HISTORY = ("CHANGELOG.md", "RELEASE_NOTES.md")
+HISTORY = ("CHANGELOG.md", "RELEASE_NOTES.md",
+           # the configuration-resolution working paper: an inventory of the code at one commit (its paths and line numbers are of then)
+           "docs/architecture/pack-resolution-inventory.md")
 
 
 @functools.lru_cache(maxsize=None)

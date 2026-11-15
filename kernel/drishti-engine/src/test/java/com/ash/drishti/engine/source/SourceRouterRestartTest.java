@@ -63,7 +63,7 @@ class SourceRouterRestartTest {
     @Test
     void aReadDuringAConnectorFileSwapWaitsForTheNewConnector() throws Exception {
         var props = new SourcesProperties(Map.of("trade", "trade-endur"), null, Map.of("holder", new SourcesProperties.PluginSettings(false, Map.of())),
-                Duration.ofSeconds(2), null, Map.of("trade-endur", cs("delta")), null, "off", null, Duration.ofMillis(600), null);
+                Duration.ofSeconds(2), null, Map.of("trade-endur", cs("delta")), null, "off", null, Duration.ofMillis(600));
         SourceRegistry registry = new SourceRegistry(List.of(new Holder()), props, new JsonCodec());
         SourceRouter router = new SourceRouter(registry, props, Executors.newVirtualThreadPerTaskExecutor());
         EntityRef ref = EntityRef.of("trade", "1000001");

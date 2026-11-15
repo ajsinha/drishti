@@ -115,7 +115,7 @@ class ConnectorManagerTest {
         var startup = new java.util.LinkedHashMap<String, SourcesProperties.ConnectorSettings>(app);
         defs.forEach((n, d) -> startup.put(n, new SourcesProperties.ConnectorSettings(d.plugin(), d.isEnabled(), d.kinds(), d.settings())));
         var props = new SourcesProperties(Map.of(), null, Map.of(), Duration.ofSeconds(1), null, startup, dir.resolve("connectors").toString(), "poll",
-                Duration.ofMillis(50), Duration.ZERO, true);
+                Duration.ofMillis(50), Duration.ZERO);
         SourcePlugin proto = new Fake();
         registry = new SourceRegistry(List.of(proto), props, new JsonCodec());
         ConnectionProbe probe = new ConnectionProbe(List.of(proto), new JsonCodec());
@@ -217,7 +217,7 @@ class ConnectorManagerTest {
             Files.writeString(pack.resolve("pack.yaml"), "pack: risk\nkinds: [trade]\n");
             MockEnvironment penv = new MockEnvironment().withProperty("drishti.packs.dir", dir.resolve("packs").toString()).withProperty("drishti.packs.loaded", "risk");
             penv.getPropertySources().addFirst(env.getPropertySources().get("applicationConfig: [classpath:/application.yaml]"));
-            var props = new SourcesProperties(Map.of(), null, Map.of(), Duration.ofSeconds(1), null, Map.of(), dir.resolve("c").toString(), "off", null, Duration.ZERO, true);
+            var props = new SourcesProperties(Map.of(), null, Map.of(), Duration.ofSeconds(1), null, Map.of(), dir.resolve("c").toString(), "off", null, Duration.ZERO);
             new ConnectorManager(new ConnectorFiles(dir.resolve("c")), new SourceRegistry(List.of(new Fake()), props, new JsonCodec()), props, new PackRegistry(penv), penv,
                     new SettingCatalogue(List.of(new Fake())), new ConnectionProbe(List.of(new Fake()), new JsonCodec()), 2, 5);
         } finally {

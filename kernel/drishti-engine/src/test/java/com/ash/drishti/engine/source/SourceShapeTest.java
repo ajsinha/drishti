@@ -197,7 +197,7 @@ class SourceShapeTest {
     private SourceRouter router(Map<String, Map<String, String>> connectors) {
         var cfg = new LinkedHashMap<String, SourcesProperties.ConnectorSettings>();
         connectors.forEach((n, s) -> cfg.put(n, new SourcesProperties.ConnectorSettings("store", true, List.of("trade"), s)));
-        var props = new SourcesProperties(Map.of(), null, Map.of(), Duration.ofSeconds(2), null, cfg, tmp.toString(), null, null, null, null);
+        var props = new SourcesProperties(Map.of(), null, Map.of(), Duration.ofSeconds(2), null, cfg, tmp.toString(), null, null, null);
         SourceRegistry registry = new SourceRegistry(List.of(new Store()), props, new JsonCodec());
         registry.shapeBases(List.of(tmp));
         SourceRouter r = new SourceRouter(registry, props, Executors.newVirtualThreadPerTaskExecutor());

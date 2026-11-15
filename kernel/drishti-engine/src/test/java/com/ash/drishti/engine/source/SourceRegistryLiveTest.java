@@ -76,7 +76,7 @@ class SourceRegistryLiveTest {
     private static SourceRegistry registry(Duration drain, Map<String, SourcesProperties.ConnectorSettings> initial) {
         Recorder.LOG.clear();
         Recorder.OPEN.set(0);
-        var props = new SourcesProperties(Map.of(), null, Map.of("recorder", new SourcesProperties.PluginSettings(false, Map.of())), Duration.ofSeconds(1), null, initial, null, "off", null, drain, null);
+        var props = new SourcesProperties(Map.of(), null, Map.of("recorder", new SourcesProperties.PluginSettings(false, Map.of())), Duration.ofSeconds(1), null, initial, null, "off", null, drain);
         return new SourceRegistry(List.of(new Recorder()), props, new JsonCodec());
     }
 

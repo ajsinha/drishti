@@ -6456,7 +6456,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   `config/connectors-settings.yaml`; `notify` only lists; `off`), as a shared edit with the old text in the history, one log line and an
   audit entry. Settings an administrator changed and kinds no pack serves are never changed automatically. **Admin → Connectors →
   Template updates** lists every drifted connector beside its template with *Add missing kinds*, *Regenerate from template*, *Remove
-  obsolete kinds* and *Fix all additive*; the Connectors tab shows a count. [CONNECTOR_FILES.md](docs/guides/DATA_GUIDE.md#template-updates).
+  obsolete kinds* and *Fix all additive*; the Connectors tab shows a count. [CONNECTOR_FILES.md](docs/guides/DATA_GUIDE.md#connector-layers).
 
 - **New: connector edits made through Admin reach every node of a cluster.** Files in `config/connectors` stay the base (GitOps); an
   Admin create, edit, enable or disable, restore or delete is a shared edit in the content store (`config/connectors/<name>.yaml`, with

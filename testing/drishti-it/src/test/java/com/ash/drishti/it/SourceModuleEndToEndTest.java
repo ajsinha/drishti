@@ -145,7 +145,7 @@ class SourceModuleEndToEndTest {
         settings.put("doc-disk-cache.dir", tmp.resolve("cache/docs").toString());
         var cfgs = new LinkedHashMap<String, SourcesProperties.ConnectorSettings>();
         cfgs.put(connector, new SourcesProperties.ConnectorSettings("delta", true, List.of("trade"), settings));
-        var props = new SourcesProperties(Map.of(), null, Map.of(), Duration.ofSeconds(5), null, cfgs, tmp.toString(), null, null, null, null);
+        var props = new SourcesProperties(Map.of(), null, Map.of(), Duration.ofSeconds(5), null, cfgs, tmp.toString(), null, null, null);
         SourceRegistry registry = new SourceRegistry(List.of(new DeltaSourcePlugin()), props, new JsonCodec());
         registry.systems().installed(List.of(new SourceSystems.System("SWAPONE", "source-swapone", java.util.Set.of("trade"), true)));
         SourceRouter router = new SourceRouter(registry, props, Executors.newVirtualThreadPerTaskExecutor());

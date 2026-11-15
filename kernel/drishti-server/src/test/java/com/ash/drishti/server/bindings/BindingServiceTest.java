@@ -108,7 +108,7 @@ class BindingServiceTest {
         var startup = new java.util.LinkedHashMap<String, SourcesProperties.ConnectorSettings>();
         files.readAll(new java.util.HashMap<>()).forEach((n, d) -> startup.put(n, new SourcesProperties.ConnectorSettings(d.plugin(), true, d.kinds(), d.settings())));
         var props = new SourcesProperties(Map.of(), null, Map.of(), Duration.ofSeconds(1), null, startup, dir.resolve("connectors").toString(), "poll",
-                Duration.ofMillis(50), Duration.ZERO, true);
+                Duration.ofMillis(50), Duration.ZERO);
         SourcePlugin proto = new Fake();
         SourceRegistry registry = new SourceRegistry(List.of(proto), props, new JsonCodec());
         SourceRouter router = new SourceRouter(registry, props, exec);
