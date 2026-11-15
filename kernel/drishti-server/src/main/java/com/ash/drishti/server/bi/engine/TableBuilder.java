@@ -161,14 +161,17 @@ final class TableBuilder {
                         + ": reading documents one by one (slow for a large table; promote the columns in the connector's layout, or fewer columns)");
                 create(c, stage, cols, cols.stream().map(x -> numeric(x) ? ColumnBatch.Type.NUMBER : ColumnBatch.Type.TEXT).toList(), each);
                 java.util.concurrent.atomic.AtomicReference<LocalDate> seen = new java.util.concurrent.atomic.AtomicReference<>();
-                // a table that names its connector reads that connector's documents only (never another's of the same kind), for its newest date when none is asked
+                // a table that names its connector reads that connector's documents only (never another's of the same kind); with no date asked,
+                // every table reads the newest date its connectors hold and is filed under that date: reading the current business date
+                // (empty when the newest load is older) and filing the empty read under the newest date made that date look empty for good
                 List<SourcePlugin> named = t.connector().isBlank() ? List.of() : plugins;
-                rows = records(duck, stage, t, named, cols, date == null && !named.isEmpty() ? newestDate(plugin, t.kind()) : date, warnings, seen);
+                LocalDate readAt = date != null ? date : newestDate(plugins, t.kind());
+                rows = records(duck, stage, t, named, cols, readAt, warnings, seen);
                 if (resolved == null) {
                     resolved = seen.get();                        // the business date the source says the documents are for
                 }
                 if (resolved == null) {
-                    resolved = newestDate(plugin, t.kind());      // else the newest date the connector holds
+                    resolved = readAt;                            // else the date read
                 }
             }
             if (resolved == null) {
@@ -195,13 +198,20 @@ final class TableBuilder {
         });
     }
 
-    /** The newest business date the connector says it holds for the kind, or the current business date when it cannot say. */
-    private LocalDate newestDate(SourcePlugin plugin, String kind) {
-        try {
-            return plugin.inventory(kind, 1).keySet().stream().max(java.util.Comparator.naturalOrder()).orElse(sources.currentDate());
-        } catch (RuntimeException e) {
-            return sources.currentDate();
+    /** The newest business date any of the connectors says it holds for the kind, or the current business date when none can say. */
+    private LocalDate newestDate(List<SourcePlugin> plugins, String kind) {
+        LocalDate best = null;
+        for (SourcePlugin p : plugins) {
+            try {
+                LocalDate d = p.heldDates(kind).map(java.util.NavigableSet::last)          // cheap first: what the source keeps
+                        .or(() -> p.latestDate(kind))
+                        .orElseGet(() -> p.inventory(kind, 1).keySet().stream().max(java.util.Comparator.naturalOrder()).orElse(null));
+                best = d == null ? best : best == null || d.isAfter(best) ? d : best;
+            } catch (RuntimeException e) {
+                // this one cannot say
+            }
         }
+        return best != null ? best : sources.currentDate();
     }
 
     /** A scan of every connector, or null (documents are read) when one of them cannot scan the kind as columns. */

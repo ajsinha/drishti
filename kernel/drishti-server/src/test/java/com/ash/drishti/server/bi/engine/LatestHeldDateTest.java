@@ -213,6 +213,51 @@ class LatestHeldDateTest {
     }
 
     @Test
+    void aTableOfNoNamedConnectorWhoseSourceCannotSayItsDatesReadsTheNewestItHoldsNotAnEmptyToday() throws Exception {
+        // the pack's dataset (source: { kind: trade }, no connector named) over a connector that reads documents only and says its dates by
+        // inventory alone: asked as of today (DAY2, nothing loaded), the trades are read at the newest date held (DAY1) and stated, never 0 rows
+        TestLake lake = new TestLake(false) {
+            final SourcePlugin endur = new SourcePlugin() {
+                @Override
+                public PluginManifest manifest() {
+                    return new PluginManifest("trade-endur", "1", Set.of("trade"), new SourceCapabilities(false, false, false, true));
+                }
+
+                @Override
+                public void start(SourceContext context) {}
+
+                @Override
+                public Optional<EntityDocument> fetch(EntityRef ref) {
+                    return Optional.empty();
+                }
+
+                @Override
+                public Map<LocalDate, Long> inventory(String kind, int maxDates) {
+                    Map<LocalDate, Long> out = new java.util.TreeMap<>(java.util.Comparator.reverseOrder());
+                    trades.forEach((d, l) -> out.put(d, (long) l.size()));
+                    return out;
+                }
+            };
+
+            @Override
+            public Optional<SourcePlugin> plugin(String connector, String kind) {
+                return connector.isBlank() && "trade".equals(kind) ? Optional.of(endur) : super.plugin(connector, kind);
+            }
+        };
+        lake.trades.remove(TestLake.DAY2);
+        QueryProperties props = QueryProperties.defaults(store.toString());
+        try (QueryService service = new QueryService(props, new DuckDbEngine(props), lake, Clock.systemUTC())) {
+            DatasetParser.Result r = Layered.dataset(TestLake.yaml().replace("source: { connector: trading-lake, kind: trade }", "source: { kind: trade }"));
+            var ds = new QueryService.Loaded("file:dataset:held-unnamed", Layers.key("file:dataset:held-unnamed"), r.dataset(), "h1");
+            String asOf = "{\"fields\": [\"desks.region\"], \"measures\": [\"Trades\"], \"dates\": {\"from\": \"" + TestLake.DAY2 + "\"}}";
+            assertThat(total(service, ds, asOf)).isEqualTo(lake.trades.get(TestLake.DAY1).size());
+            var answer = service.query(ds, QueryRequest.of(new ObjectMapper().readTree(asOf)), WHO, true);
+            assertThat(answer.meta().tableDates()).containsEntry("trades", TestLake.DAY1.toString());
+            assertThat(total(service, ds)).as("no date asked: the newest held").isEqualTo(lake.trades.get(TestLake.DAY1).size());
+        }
+    }
+
+    @Test
     void anEmptyLatestIsNeverCachedAsTheAnswer() throws Exception {
         TestLake lake = new TestLake(true);
         var day2 = lake.trades.remove(TestLake.DAY2);           // the source answers 'the latest' with nothing: built for today, empty
