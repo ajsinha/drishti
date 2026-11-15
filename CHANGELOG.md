@@ -43,7 +43,9 @@
   for a guide's HTML); every script builds console URLs through one helper, `drishti_url()` (drishti-core's `url()`, also behind its API
   client, loader, the renderer's server default and the grid, chart, data and insight libraries), with `drishti_route()` for comparisons
   with `location.pathname`. A link or form drawn from server data is put under the base when used. A static guard
-  (`tests/test_base_path_guard.py`) fails on a new root-absolute console URL that skips them.
+  (`tests/test_base_path_guard.py`) fails on a new root-absolute console URL that skips them. The scripts a page without drishti-core
+  loads (embeds, the client-side renderer's pages, the live hub's worker) use the helper through a local guard that keeps the URL as it is
+  when the page has none (the maps drew "The map did not load" in the renderer without it); the same guard test checks every such script.
 - **Every path absolute, the second sweep.** Every other path setting (any `drishti.*` folder or file key, `DRISHTI_*_DIR/_FILE/_ROOT/_PATH`
   variables, a local database URL's file, the log file, the TLS stores) given as a relative path is taken under the install folder and
   listed in the `resolved paths:` block; the settings the configuration imports read (data, config and engines folders, the packs
