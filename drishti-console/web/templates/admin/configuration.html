@@ -44,6 +44,23 @@
     {% endfor %}</ul></details>{% endif %}
   </section>
 
+  <details class="cfe-paths" data-resolved-paths{% if not path_roots %} hidden{% endif %}>
+    <summary>Resolved paths <small class="cfe-n">{{ path_roots | length }}</small></summary>
+    <p class="text-muted-d">Every folder the server uses, absolute, as it resolved them at start: from its own setting, or under the install
+      folder (<code>drishti.home</code>). Nothing is taken from the folder the server was started in. A change is made in the setting named.</p>
+    <div class="tbl-wrap"><table class="tbl cfe-tbl" aria-label="Resolved paths" data-path-roots>
+      <thead><tr><th>Root</th><th>Path</th><th>From</th></tr></thead>
+      <tbody>{% for r in path_roots %}
+        <tr data-root="{{ r.name }}"><td>{{ r.name }}</td><td><code>{{ r.path or '(none)' }}</code>{% if r.path and not r.exists %} <span class="cfe-warn">not there</span>{% endif %}</td>
+          <td class="text-muted-d">{{ r.from }}</td></tr>{% endfor %}
+      </tbody></table></div>
+    {% if path_settings %}<div class="tbl-wrap"><table class="tbl cfe-tbl" aria-label="Relative settings taken under the install folder" data-path-settings>
+      <thead><tr><th>Setting given as a relative path</th><th>Taken as</th><th>From</th></tr></thead>
+      <tbody>{% for a in path_settings %}
+        <tr data-path-key="{{ a.key }}"><td><code>{{ a.key }}</code></td><td><code>{{ a.path }}</code></td><td class="text-muted-d">{{ a.from }}</td></tr>{% endfor %}
+      </tbody></table></div>{% endif %}
+  </details>
+
   <nav class="cfe-tiers" aria-label="Tiers">{% for t, label in tiers %}
     <a href="/admin/configuration?tier={{ t }}{% if q %}&amp;q={{ q | urlencode }}{% endif %}" data-tier="{{ t }}"{% if tier == t %} aria-current="page"{% endif %}>{{ label }} <small>{{ counts[t] }}</small></a>
   {% endfor %}<a href="/admin/configuration?tier=all{% if q %}&amp;q={{ q | urlencode }}{% endif %}" data-tier="all"{% if tier == 'all' %} aria-current="page"{% endif %}>Every tier <small>{{ total }}</small></a></nav>

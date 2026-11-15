@@ -81,6 +81,23 @@ public final class LaunchRoots implements EnvironmentPostProcessor, Ordered {
     /** The connectors folder's environment variable, read as is by the older readers. */
     static final String CONNECTORS_ENV = "DRISHTI_CONNECTORS_DIR";
 
+    /** A relative path setting taken under the install folder: its key, its absolute value, where the relative value came from. */
+    public record Anchored(String key, String path, String from) {
+    }
+
+    /** What one start resolved, for Admin → Configuration ("Resolved paths"): the roots and the anchored settings. */
+    public record Snapshot(List<Resolved> roots, List<Anchored> anchored) {
+    }
+
+    private static final Map<ConfigurableEnvironment, Snapshot> SNAPSHOTS = new java.util.WeakHashMap<>();
+
+    /** What the start of the server with this environment resolved; null when this post-processor did not run for it. */
+    public static Snapshot snapshot(ConfigurableEnvironment env) {
+        synchronized (SNAPSHOTS) {
+            return SNAPSHOTS.get(env);
+        }
+    }
+
     /** One resolved root: its name, its absolute folder, where it came from, and whether it is there. */
     public record Resolved(String name, Path path, String from, boolean exists) {
     }
@@ -154,8 +171,14 @@ public final class LaunchRoots implements EnvironmentPostProcessor, Ordered {
         if (!anchoredProblems.isEmpty()) {
             throw new IllegalStateException("the server cannot start: " + String.join("; ", anchoredProblems) + "\n" + r.report());
         }
+        List<Anchored> shown = new ArrayList<>();
+        anchored.forEach((k, v) -> shown.add(new Anchored(k, v, origin(env, k))));
+        envValues.forEach((k, v) -> shown.add(new Anchored(k, v.toString(), "(environment variable)")));
         values.putAll(anchored);
         envValues.forEach((k, v) -> anchored.put(k, v.toString()));
+        synchronized (SNAPSHOTS) {
+            SNAPSHOTS.put(env, new Snapshot(r.roots(), List.copyOf(shown)));
+        }
         for (String k : List.of(HOME, "drishti.modules.home", "drishti.config.dir")) {   // for code with no Spring environment (a record's default)
             Object v = r.values().get(k);
             if (v != null && System.getProperty(k) == null) {
