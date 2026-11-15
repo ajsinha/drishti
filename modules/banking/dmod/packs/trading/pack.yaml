@@ -71,7 +71,7 @@ connectors:
     kinds:
     - trade
     settings:
-      bootstrap-servers: ${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}
+      broker: default
       topics: ${DRISHTI_TRADING_TOPIC:drishti.trading.trades}
       kind: trade
       id-field: TRADE_ID

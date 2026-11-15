@@ -23,7 +23,7 @@ kinds:
 - trade
 description: SwapOne's live trades, and the trade blotter's amendments written back to them
 settings:
-  bootstrap-servers: ${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}
+  broker: default
   topics:
   - ${DRISHTI_SWAPONE_TOPIC:drishti.trading.swapone.trades}
   kind: trade

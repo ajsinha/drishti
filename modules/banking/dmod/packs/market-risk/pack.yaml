@@ -256,7 +256,7 @@ connectors:
     kinds:
     - pv-update
     settings:
-      bootstrap-servers: ${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}
+      broker: default
       topic: ${DRISHTI_VAR_PV_TOPIC:drishti.risk.pv-updates}
       lake: demo
       pack: market-risk

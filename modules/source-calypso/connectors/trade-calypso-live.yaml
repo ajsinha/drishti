@@ -23,7 +23,7 @@ kinds:
 - trade
 description: Calypso's live trades, and the trade blotter's amendments written back to them
 settings:
-  bootstrap-servers: ${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}
+  broker: default
   topics:
   - ${DRISHTI_CALYPSO_TOPIC:drishti.trading.calypso.trades}
   kind: trade

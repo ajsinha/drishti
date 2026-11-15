@@ -493,7 +493,6 @@ env:
   - { name: DRISHTI_CCR_DERIVED_ENABLED, by: packs, default: "true", sets: "counterparty-risk's derived connector", meaning: "The counterparty-risk pack's derived kinds (netting-set and counterparty totals) on or off" }
   - { name: DRISHTI_MR_DERIVED_ENABLED, by: packs, default: "true", sets: "market-risk's derived connector", meaning: "The market-risk pack's derived kinds on or off" }
   - { name: DRISHTI_STREAM_TRADING, by: packs, default: "false", sets: "trading-stream enabled", meaning: "Turn on the trading pack's trading-stream Kafka connector" }
-  - { name: DRISHTI_KAFKA_BOOTSTRAP, by: packs, default: "localhost:9092", sets: "Kafka brokers", meaning: "The brokers of the trading stream and the VaR PV topic" }
   - { name: DRISHTI_TRADING_TOPIC, by: packs, default: drishti.trading.trades, sets: "trading-stream topic", meaning: "The trading stream's topic" }
   - { name: DRISHTI_STREAM_STALE_AFTER, by: packs, default: 15m, sets: "trading-stream stale-after", meaning: "The trading stream is stale after this long without a message" }
   - { name: DRISHTI_STREAM_DISK_CACHE, by: packs, default: "true", sets: "trading-stream disk cache", meaning: "The trading stream's disk cache on or off" }

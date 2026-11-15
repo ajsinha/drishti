@@ -223,7 +223,7 @@ def manifest(name: str) -> dict:
                                                                                "source-name": cname}}
         m["routes"]["trade"] = "trade-endur"
         m["connectors"]["trading-stream"] = {"plugin": "kafka", "enabled": "${DRISHTI_STREAM_TRADING:false}", "kinds": ["trade"],
-                                             "settings": {"bootstrap-servers": "${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}",
+                                             "settings": {"broker": "default",
                                                           "topics": "${DRISHTI_TRADING_TOPIC:drishti.trading.trades}",
                                                           "kind": "trade", "id-field": "TRADE_ID",
                                                           # a live stream with no new trade for this long is shown as behind
