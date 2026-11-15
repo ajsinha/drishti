@@ -16,7 +16,10 @@
 {# Admin → Data bindings (docs/guides/ADMIN_GUIDE.md, "Data bindings"; KERNEL_AND_MODULES.md section 5; mock-up A,
    docs/architecture/kernel-and-modules/mockups/data-bindings.html), from GET /api/v1/admin/bindings as `st`: one row per kind, the red banner
    when a required need is unbound, the bind form and the proposals a second administrator decides. The tables are console tables
-   (drishti-grid, Drishti Elements: sort, filter, pages, keyboard); drishti_admin-bindings.js sends a proposal or a decision. #}
+   (drishti-grid, Drishti Elements: sort, filter, pages, keyboard); drishti_admin-bindings.js sends a proposal or a decision. The Live column and
+   its drawer (LIVE_CONNECTORS_DESIGN.md section 9.1, option B, mock-up admin-B.html) are from GET /api/v1/admin/live as `live` (by kind):
+   each kind's feeds in the one list of state words, and drishti_admin-live.js's drawer with a switch per feed, the kind's rules in words and
+   Propose change (a binding change, four eyes). #}
 {% extends "base.html" %}
 {% block title %}Data bindings · {{ PRODUCT }}{% endblock %}
 {% block head %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-loads.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-inbox.css?v={{ ASSET_V }}">{% endblock %}
@@ -59,12 +62,15 @@
           <td class="mono">{{ (k.usedBy or [])|join(', ') or '-' }}</td>
           <td class="mono">{{ (k.read or [])|join(', ') or '-' }}{% if k.binding and k.binding.union %} <span class="text-muted-d">(union)</span>{% endif %}
             {% if k.binding and k.binding.write %}<div class="text-muted-d">writes {{ k.binding.write.lake }} · {{ k.binding.write.table }}</div>{% endif %}</td>
-          <td class="mono">{{ (k.binding or {}).get('live') or '-' }}</td>
+          <td data-live-cell="{{ k.kind }}">{% if live.get(k.kind) %}{% for p in live_summary[k.kind] %}<span class="st {{ p.tone }}">{{ p.state }}{% if live[k.kind]|length > 1 %} {{ p.count }}{% endif %}</span> {% endfor %}
+            {% set lb = (k.binding or {}).get('live') %}{% if lb is mapping and lb.get('apply') == 'both' %}<div class="text-muted-d">overlaid and landed</div>{% endif %}
+            {% if k.state != 'COMPUTED' %}<button type="button" class="btn-pill ib-btn" data-live-open="{{ k.kind }}" aria-haspopup="dialog">Live…</button>{% endif %}
+            {% elif k.state == 'COMPUTED' %}<span class="text-muted-d">follows its inputs</span>{% else %}<span class="text-muted-d">-</span>{% endif %}</td>
           <td>{{ {'SITE': 'site binding', 'DEFAULT': 'distribution default', 'CONVENTION': 'convention', 'DEMO': 'demo lake', 'COMPUTED': 'a module', 'NONE': '-'}.get(k.origin, k.origin) }}</td>
           <td class="mono">{{ k.lastLoad or '-' }}</td>
           <td><span class="st {{ PILL.get(k.state, '') }}">{{ k.state }}</span>{% if k.reason %}<div class="text-muted-d">{{ k.reason }}</div>{% endif %}</td>
           <td>{% if k.state != 'COMPUTED' %}<button type="button" class="btn-pill ib-btn" data-binding-edit="{{ k.kind }}" data-read="{{ (k.binding or {}).get('read', [])|join(', ') }}"
-            data-live="{{ (k.binding or {}).get('live') or '' }}" data-union="{{ 'true' if (k.binding or {}).get('union') else '' }}" data-demo="{{ 'true' if (k.binding or {}).get('demo') else '' }}">Bind…</button>{% endif %}</td>
+            data-live="{% set lb = (k.binding or {}).get('live') %}{{ (lb.get('connectors') or [])|join(', ') if lb is mapping else (lb|join(', ') if lb is iterable and lb is not string else (lb or '')) }}" data-union="{{ 'true' if (k.binding or {}).get('union') else '' }}" data-demo="{{ 'true' if (k.binding or {}).get('demo') else '' }}">Bind…</button>{% endif %}</td>
         </tr>
       {% endfor %}
       </tbody>
@@ -117,8 +123,37 @@
     </table></div>
     {% endif %}
   </section>
+  {# one kind's live feeds for the drawer: what the server said (GET /api/v1/admin/live), and each kind's binding as it is now #}
+  <script type="application/json" data-live-feeds>{{ {'feeds': live, 'kinds': live_kinds} | tojson }}</script>
 {% endif %}
 </div>
 
+<aside class="raw live-drawer" data-live-drawer role="dialog" aria-modal="true" aria-labelledby="liveDrawerH" hidden>
+  <header><h2 id="liveDrawerH" class="ib-h2"><span class="mono" data-live-kind></span> · Live</h2><span class="text-muted-d" data-live-count></span>
+    <button type="button" class="raw-x" data-live-close aria-label="Close">&times;</button></header>
+  <div class="live-body">
+    <p class="text-muted-d">Every connector of the kind with a live companion, on or off. A change is a binding change: proposed here, approved by a
+      second administrator, applied without a restart.</p>
+    <div class="tbl-wrap"><table class="tbl adm-tbl" data-live-feeds-table>
+      <caption class="visually-hidden">The kind's live feeds: the data connector, its companion, its state, messages a minute, and whether it is on</caption>
+      <thead><tr><th scope="col">Data connector</th><th scope="col">Companion</th><th scope="col">State</th><th scope="col" class="num">a minute</th><th scope="col">On</th></tr></thead>
+      <tbody data-live-rows></tbody>
+    </table></div>
+    <div data-live-notes></div>
+    <section aria-labelledby="liveRulesH"><h3 class="ib-h2" id="liveRulesH">The kind's rules <span class="text-muted-d">from its contract, the same for every feed</span></h3>
+      <dl class="live-rules" data-live-rules></dl></section>
+    <section aria-labelledby="liveFlowH"><h3 class="ib-h2" id="liveFlowH">How it flows</h3><p class="mono" data-live-flow></p></section>
+    <div class="live-acts">
+      <a class="btn-pill ib-btn" data-live-connector-link href="#">Open connector</a>
+      <button type="button" class="btn-pill ib-btn" data-live-act="pause">Pause</button>
+      <button type="button" class="btn-pill ib-btn" data-live-act="resume">Resume</button>
+      <button type="button" class="btn-pill ib-btn" data-live-act="apply-now" hidden>Apply now</button>
+      <a class="btn-pill ib-btn" href="{{ BASE }}/admin/health#live-feeds">Feed detail ›</a>
+    </div>
+    <div data-live-propose-host>{{ admin_form('live_propose') }}</div>
+    <p class="live-acts"><button type="button" class="btn-pill btn-accent" data-live-propose>Propose change…</button>
+      <span class="ib-said" data-live-said role="status" aria-live="polite"></span></p>
+  </div>
+</aside>
 {% endblock %}
-{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_admin-bindings.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_admin-bindings.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_admin-live.js?v={{ ASSET_V }}"></script>{% endblock %}

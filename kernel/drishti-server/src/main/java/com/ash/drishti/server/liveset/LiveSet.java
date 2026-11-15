@@ -62,9 +62,14 @@ public final class LiveSet implements AutoCloseable {
 
     /**
      * One record of the set: its key, version, the sequence of its last change, the document, when it arrived, and its rank (the sequence
-     * it first came in with, kept when it changes: a search's set keeps the search's order by it).
+     * it first came in with, kept when it changes: a search's set keeps the search's order by it), and whether a live feed gave it (the row
+     * dot of a page's live mark, LIVE_CONNECTORS_DESIGN.md section 9.2: a row changed today by a feed; a row without it is the lake's).
      */
-    public record Row(String id, long version, long seq, DataNode doc, Instant arrived, long rank) {
+    public record Row(String id, long version, long seq, DataNode doc, Instant arrived, long rank, boolean live) {
+
+        public Row(String id, long version, long seq, DataNode doc, Instant arrived, long rank) {
+            this(id, version, seq, doc, arrived, rank, false);
+        }
 
         public Row(String id, long version, long seq, DataNode doc, Instant arrived) {
             this(id, version, seq, doc, arrived, seq);
@@ -246,7 +251,7 @@ public final class LiveSet implements AutoCloseable {
                 return;
             }
             long n = seq.incrementAndGet();
-            Row r = new Row(id, v, n, d.data(), Instant.now(clock), old == null ? n : old.rank());
+            Row r = new Row(id, v, n, d.data(), Instant.now(clock), old == null ? n : old.rank(), d.provenance() != null && d.provenance().live());
             rows.put(id, r);
             removed.remove(id);
             applied.incrementAndGet();
@@ -421,7 +426,7 @@ public final class LiveSet implements AutoCloseable {
             if (!who.scope().test().test(r.doc())) {
                 continue;                                     // outside the reader's row scope: never counted, never shown
             }
-            Row seen = who.unmasked() ? r : new Row(r.id(), r.version(), r.seq(), who.redact().apply(r.doc()), r.arrived(), r.rank());
+            Row seen = who.unmasked() ? r : new Row(r.id(), r.version(), r.seq(), who.redact().apply(r.doc()), r.arrived(), r.rank(), r.live());
             if (f == null || text(project(seen.doc(), shown)).contains(f)) {
                 all.add(seen);
             }
@@ -516,6 +521,9 @@ public final class LiveSet implements AutoCloseable {
         m.put("id", r.id());
         m.put("version", r.version());
         m.put("seq", r.seq());
+        if (r.live()) {
+            m.put("live", true);                              // a live feed's row: the page's row dot
+        }
         DataNode d = redact == null ? r.doc() : redact.apply(r.doc());
         m.put("doc", d.unwrap());
         return m;

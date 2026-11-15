@@ -62,6 +62,14 @@ public class LiveSetController {
 
     private com.ash.drishti.server.switches.CommandCatalog catalog;
 
+    private com.ash.drishti.server.live.LiveMarks marks;
+
+    /** The live marks (LIVE_CONNECTORS_DESIGN.md section 9.2): a page of a kind fed live says, in words, what its rows are. */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    public void setMarks(com.ash.drishti.server.live.LiveMarks marks) {
+        this.marks = marks;
+    }
+
     /** The commands' catalogue: a kind whose contract declares {@code list: requires} is never listed whole (see {@link #kindRows}). */
     @org.springframework.beans.factory.annotation.Autowired(required = false)
     public void setCatalog(com.ash.drishti.server.switches.CommandCatalog catalog) {
@@ -194,6 +202,9 @@ public class LiveSetController {
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("set", described(spec, principal));
         out.put("live", set.live());
+        if (set.live() && marks != null) {
+            marks.of(spec.kind()).ifPresent(m -> out.put("mark", m));   // the page's live mark: what the rows are, in words
+        }
         out.put("total", page.total());
         out.put("seq", page.seq());
         out.put("offset", offset);

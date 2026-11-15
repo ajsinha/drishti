@@ -65,7 +65,8 @@ The screen is the grid with the record's panel beside it: the Drishti Elements g
 | Grouping | one field; the declaration's `subtotals:` are summed per group and stay current as records tick |
 | The tray (**My changes**) | the person's changes waiting: awaiting an approver, sent to the source, applied, refused (with why) |
 | **Pivot ›** | opens the Pivot on the same kind with the grid's filters, the grouping as rows and the numbers as sums |
-| The live mark | the binding it ticks from, the messages per minute and the latency |
+| The live mark | what the rows are, in one fixed list of words: `LIVE · base 13 Nov close + 412 changes · 2 s ago · 2,342 /min`, `LIVE · catching up`, `PAUSED · waiting for the broker · showing base 13 Nov close + 412 changes up to 10:42` (amber, never an error: the rows are right as of that time and ticking resumes by itself), `PAUSED · by an administrator`, `STALE · nothing since 10:42` ([LIVE_CONNECTORS_DESIGN.md section 9.2](../architecture/LIVE_CONNECTORS_DESIGN.md#92-what-people-see-three-options-for-the-live-mark)) |
+| The row dot | a green dot beside the key of a row a live feed changed today; a row without one is the lake's |
 
 **Raw JSON** is the full stored record, including the fields the grid has no column for, as the person may see it (a masked field shows as
 masked and is copied as the mask), with **Copy**, the version and sequence. A page of a kind fed by several source systems says when one is

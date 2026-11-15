@@ -31,6 +31,22 @@ import { RecordPanel, isPending, itemsText, stateWords } from './drishti_live-pa
 /** The states the status chip shows. */
 export const LIVE_STATES = Object.freeze(['connecting', 'live', 'reconnecting', 'paused', 'ended', 'failed']);
 
+/**
+ * A live set's mark in words (LIVE_CONNECTORS_DESIGN.md section 9.2, option 1): the server's words, then how recent and the rate,
+ * `LIVE · base 13 Nov close + 412 changes · 2 s ago · 2,342 /min`; a paused or stale mark is its words alone.
+ * @param {{state: string, words: string, lastMessage: ?string, perMinute: number}} m the page's `mark`
+ * @param {number} now milliseconds
+ * @returns {string}
+ */
+export function markWords(m, now) {
+  if (!m || !m.words) { return ''; }
+  if (m.state !== 'LIVE' || m.words.indexOf('catching up') >= 0) { return m.words; }
+  const at = m.lastMessage ? Date.parse(m.lastMessage) : NaN;
+  const s = isNaN(at) ? null : Math.max(0, Math.round((now - at) / 1000));
+  const ago = s === null ? '' : ' · ' + (s < 60 ? s + ' s ago' : s < 3600 ? Math.round(s / 60) + ' min ago' : Math.round(s / 3600) + ' h ago');
+  return m.words + ago + (m.perMinute ? ' · ' + Number(m.perMinute).toLocaleString('en-US') + ' /min' : '');
+}
+
 const SNAPSHOT_ROWS = 5000;
 const WINDOW_DELAY_MS = 200;
 
@@ -125,8 +141,10 @@ export class LiveSetGrid {
     this.status.setAttribute('data-state', s);
     const n = this.rows.size, total = this.rows.total;
     const count = (this.paged ? n.toLocaleString('en-US') + ' of ' + total.toLocaleString('en-US') : total.toLocaleString('en-US')) + ' ' + (this.spec.noun || 'rows');
-    this.status.textContent = ({ connecting: 'CONNECTING', live: this.live ? 'LIVE' : 'STATIC', reconnecting: 'RECONNECTING', paused: 'PAUSED', ended: 'ENDED', failed: 'FAILED' })[s] + ' · ' + count
+    const mark = s === 'live' && this.live && this.mark ? markWords(this.mark, Date.now()) : null;   // the kind's live mark, in the one list of words
+    this.status.textContent = (mark || ({ connecting: 'CONNECTING', live: this.live ? 'LIVE' : 'STATIC', reconnecting: 'RECONNECTING', paused: 'PAUSED', ended: 'ENDED', failed: 'FAILED' })[s]) + ' · ' + count
       + (note ? ' · ' + note : '');
+    if (mark) { this.status.setAttribute('data-mark', this.mark.state || 'LIVE'); } else { this.status.removeAttribute('data-mark'); }
     this.status.setAttribute('data-rows', total);
   }
 
@@ -162,6 +180,7 @@ export class LiveSetGrid {
     const s = this.spec.sort || {};
     return this.api.rows({ limit: this.o.snapshotRows || SNAPSHOT_ROWS, offset: this.o.offset || undefined, sort: s.field, descending: s.descending ? 'true' : '' }).then((r) => {
       this.live = !!r.live;
+      this.mark = r.mark || null;                         // what the rows are, in words (the server's: base, changes, the feeds' state)
       const rows = this.rows.load(r.rows || [], r.total, r.seq);
       this.paged = this.rows.total > rows.length;
       return rows;

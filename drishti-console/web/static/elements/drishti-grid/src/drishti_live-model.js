@@ -25,6 +25,8 @@ import { MASK, hasFormat, url as drishtiUrl } from '../../drishti-core/src/drish
 export const ROW_KEY = '__id';
 /** The grid row's version property. */
 export const ROW_VERSION = '__v';
+/** The grid row's mark of a row a live feed gave (the row dot, LIVE_CONNECTORS_DESIGN.md section 9.2); a row without it is the lake's. */
+export const ROW_LIVE = '__live';
 
 /** The most rows the page window names at once (the server's page is 5,000); a set larger than the grid holds is windowed. */
 export const WINDOW_ROWS = 400;
@@ -40,6 +42,7 @@ export function gridRow(r) {
   const row = Object.assign({}, r.doc || {});
   row[ROW_KEY] = String(r.id);
   row[ROW_VERSION] = r.version === undefined || r.version === null ? -1 : r.version;
+  if (r.live) { row[ROW_LIVE] = true; }
   return row;
 }
 
@@ -57,7 +60,7 @@ export function gridColumns(spec) {
       const n = /^[a-z]+(\d)$/.exec(String(c.format));
       if (hasFormat(c.format)) { col.format = c.format; } else if (n) { col.format = { decimals: +n[1] }; }
     }
-    if (c.type === 'id') { col.pinned = 'left'; }
+    if (c.type === 'id') { col.pinned = 'left'; col.cellClass = (v, row) => (row && row[ROW_LIVE] ? 'dg-live-dot' : ''); }   // the row dot: changed today by a feed
     if (String(c.field).indexOf('.') > 0) { col.valueGetter = (row) => digValue(row, c.field); }   // a nested field (counterparty.name) of the record
     if (c.type === 'list') { col.valueGetter = (row) => (Array.isArray(row[c.field]) ? row[c.field].join(', ') : row[c.field]); }
     if (c.type === 'status') { col.cellClass = (v) => 'dg-live-st dg-live-st-' + String(v || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }

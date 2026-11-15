@@ -20,7 +20,8 @@ contract's `live:` block and its checks, `companion-of:` in the resolver, the re
 the kernel's live intake and live state, Kafka on it) and L3 (the router's merged read, live sets seeded from the shared state, blotter
 defaults from the contract, the six trade templates) L4 (business dates and the roll, reconcile at a load, checkpoints, the reconcile
 record) and L5 (the live lander; scenario PVs and P&L vectors on it) and L6 (ActiveMQ and RabbitMQ as transports over a durable live
-state; `apply: both`; the lake loader's landing of a kind no engine owns). Nothing else in this
+state; `apply: both`; the lake loader's landing of a kind no engine owns) and L7 (the feed states in one list of words, `/admin/live`,
+the Live column and drawer of Data bindings, Health's Live feeds, the alerts, `drishti.py live`, the live mark and the row dot). Nothing else in this
 document is built unless a section says "today".** It answers the product owner's request: *"for all data connectors there can be a
 live connector, generally speaking."*
 
@@ -740,7 +741,7 @@ in; L6 to L10 use it.
 | **L4** (built) | Business dates, the roll, reconcile at a load (three absorb rules), checkpoints, the reconcile record | L | | DATA_LAKE_GUIDE (loads), LIVE_RESULTS_GUIDE |
 | **L5** (built) | The live lander; scenario PVs and P&L vectors on it; parity on Delta, Iceberg and files | L | `VarPvStreamPlugin`, `VarPvWindow`, `pv-updates`, `drishti.var.intraday.kafka.*` | VAR_GUIDE 8.4, CONFIGURATION (generated) |
 | **L6** (built) | ActiveMQ and RabbitMQ on the transport SPI; `apply: both`; the lake loader's landing | M | `MessageStateSource`, `state.*` | the two READMEs |
-| **L7** | Admin (option B: the Live column and drawer in Data bindings; option A's grid read-only under Health), Health states and measures, alerts, the CLI, the live mark's words on every page | L | the PV stream's admin endpoints | ADMIN_GUIDE, OPERATIONS_GUIDE, CLI_REFERENCE, API_REFERENCE |
+| **L7** (built) | Admin (option B: the Live column and drawer in Data bindings; option A's grid read-only under Health), Health states and measures, alerts, the CLI, the live mark's words on every page | L | the PV stream's admin endpoints (kept one release, a view of `/admin/live`) | ADMIN_GUIDE, OPERATIONS_GUIDE, CLI_REFERENCE, API_REFERENCE |
 | **L8** | Kinds: market data (20 contracts' `live:` blocks, quote-time fields, the companion, conflation), netting sets and collateral, reference data with `effective:`, derived positions at `live: overlay`; demo publishers in `tools/samplegen` | L | the live exposure table's own copy | the packs' READMEs and guides, a tutorial (feed → blotter → load → reconcile) |
 | **L9** | BI and pivot: the live read for `mode: live`, the snapshot chip, incremental additive measures | M (L with incremental) | BI's live table copy | BI guides |
 | **L10** | Cluster: the singleton feed part on the i5 lease, the relay of a singleton's state, fail-over tests; an engine's `live:` input reaches it through the i5 **engine lookup by name** (an engine local or remote, placed per engine: IMPLEMENTATION_PLAN, *i5, engines anywhere*), never a node of its own choosing | M | | CLUSTER_GUIDE |

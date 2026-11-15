@@ -1003,12 +1003,57 @@ async def bindings_page(request: Request):
             return render(request, "admin/forbidden.html", status_code=e.page_status, error=e)
         st, error = {}, e
     tables = []                       # the binding map: each kind's read connectors and the tables they read (GET /bindings/map)
+    live = {}                         # the live feeds by kind (GET /live): the Live column and its drawer (LIVE_CONNECTORS_DESIGN.md section 9.1)
     if not error:
         try:
             tables = (await request.app.state.backend.admin("GET", "/bindings/map", me) or {}).get("kinds", [])
         except BackendError:
             tables = []
-    return render(request, "admin/bindings.html", st=st or {}, tables=tables, error=error, me=me, status=await _status(request))
+        try:
+            for f in (await request.app.state.backend.admin("GET", "/live", me) or {}).get("feeds", []):
+                for k in f.get("kinds") or []:
+                    live.setdefault(k, []).append(f)
+        except BackendError:
+            live = {}
+    live_kinds = {k.get("kind"): {"binding": k.get("binding"), "read": k.get("read")} for k in (st or {}).get("kinds") or [] if k.get("kind") in live}
+    return render(request, "admin/bindings.html", st=st or {}, tables=tables, live=live, live_summary={k: live_summary(v) for k, v in live.items()},
+                  live_kinds=live_kinds, error=error, me=me, status=await _status(request))
+
+
+def live_summary(feeds: list) -> list:
+    """The Live column's pills: each state with how many feeds are in it, the ones that need attention first, then LIVE, then the rest."""
+    order = ["DOWN", "DEGRADED", "STALE", "WAITING", "PAUSED", "CATCHING UP", "LIVE", "NOT CONFIGURED", "STANDBY", "OFF"]
+    n: dict = {}
+    for f in feeds:
+        n[f.get("state", "OFF")] = n.get(f.get("state", "OFF"), 0) + 1
+    tone = {"DOWN": "st-bad", "DEGRADED": "st-warn", "STALE": "st-warn", "LIVE": "st-ok"}
+    return [{"state": s, "count": n[s], "tone": tone.get(s, "")} for s in sorted(n, key=lambda s: order.index(s) if s in order else len(order))]
+
+
+@router.get("/api/live/{connector}")
+async def live_detail(request: Request, connector: str):
+    """One live feed for the Data bindings drawer: its row, its kinds' rules in words, its newest rejects, how it flows (GET /live/{c})."""
+    me = ident(request)
+    if not me.is_admin:
+        return _admins_only()
+    try:
+        return await request.app.state.backend.admin("GET", f"/live/{quote(connector, safe='')}", me)
+    except BackendError as e:
+        return _problem(e)
+
+
+@router.post("/api/live/{connector}/{action}")
+async def live_action(request: Request, connector: str, action: str):
+    """``pause``, ``resume`` or ``apply-now`` of a live feed: the server does it, audited (POST /live/{c}/{action})."""
+    me = ident(request)
+    if not me.is_admin:
+        return _admins_only()
+    if action not in ("pause", "resume", "apply-now"):
+        return JSONResponse({"code": "DRS-5001", "detail": "unknown action"}, status_code=400)
+    try:
+        return await request.app.state.backend.admin("POST", f"/live/{quote(connector, safe='')}/{action}", me, {})
+    except BackendError as e:
+        return _problem(e)
 
 
 @router.post("/api/bindings/{action}")

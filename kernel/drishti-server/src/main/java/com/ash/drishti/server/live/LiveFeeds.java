@@ -116,6 +116,10 @@ public final class LiveFeeds {
                 m.put("rows", st.get("rows"));
                 m.put("diskMb", st.get("diskMb"));
                 m.put("counts", st.get("counts"));
+                if (st.get("counts") instanceof Map<?, ?> c) {
+                    m.put("rejected", c.entrySet().stream().filter(e -> String.valueOf(e.getKey()).startsWith("rejected"))
+                            .mapToLong(e -> ((Number) e.getValue()).longValue()).sum());
+                }
                 m.put("lastMessage", st.get("lastMessage"));
                 m.put("liveDate", st.get("liveDate"));
                 m.put("paused", st.get("paused"));

@@ -1497,6 +1497,19 @@ credentials stay in the connector files and the secret store, and no module ever
 | `UNBOUND` | nothing serves it | a **required** need switches off exactly the functions that use it, and they explain themselves: the page is the needs-data page (*Exposure needs data: exposure-path is not bound*, with links to Admin → Data bindings and Help), the command line says the same and the API answers `409 DRS-1035`; an optional one hides its features |
 | `COMPUTED` | a module computes it (`position`, `system-basket`, `var-result`) | never bound |
 
+**The Live column** shows the kind's live feeds (its `kafka`, `activemq` or `rabbitmq` connectors, a companion of each data connector) in
+the one list of words: `LIVE`, `CATCHING UP`, `WAITING` (the broker is not reachable: live updates paused, the lake's rows shown, retried by
+itself), `STALE`, `DEGRADED` (rejects over `drishti.live.degraded.reject-ratio`, 5%, or rows that outlived their retention), `PAUSED`, `OFF`,
+`NOT CONFIGURED` (with what is missing), `DOWN`; with several feeds, a count per state. *Live…* opens the kind's drawer: each feed with
+its data connector, state, messages a minute and a switch; what a waiting feed is waiting for; **the kind's rules** from its contract in
+words (applied, newer means, messages, at the next load, kept); how it flows; *Pause* and *Resume* (a queue's messages wait at the broker,
+a topic's are skipped and read again at the next start; audited `live-pause`, `live-resume`), *Apply now* for a landed kind; and
+**Propose change**: the kind's binding with the switched-on feeds as its `live:` list (*Land it in the lake by window too* writes
+`live: {connectors: [...], apply: both}`), decided by a second administrator like any binding. `drishti.py live` is the same from a
+terminal ([CLI_REFERENCE.md section 9](CLI_REFERENCE.md#live-the-live-feeds-of-every-kind)). Admin → Health lists every feed read-only
+under **Live feeds** (state, rate, rows, rejects, the last message, the last reconcile at a load), and the platform alerts
+`live-feed-needs-attention`, `live-feed-rejects-high` and `live-reconcile-orphans` watch them.
+
 **Tables read** (on the same page; `GET /api/v1/admin/bindings/map`) is the binding map: for every kind, each connector a read asks in
 order, its layer (`template`, `override` or `site`), its plugin and lake, the table it reads resolved to its full location
 (`<root>/<domain>/<folder>`) and whether that table exists. A connector of a Delta or Iceberg lake that points at a missing table shows

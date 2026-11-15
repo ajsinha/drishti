@@ -127,3 +127,17 @@ test('the HTTP api asks the console\'s /api/live addresses and rejects with the 
     '/api/changes?kind=trade&entity=T-1&limit=50', '/api/live/trade/edit']);
   assert.equal(calls[2][0], 'POST');
 });
+
+test('a live feed\'s row carries the row dot and the page says what its rows are (LIVE_CONNECTORS_DESIGN.md section 9.2)', () => {
+  const row = G.gridRow({ id: 'T-1', version: 2, live: true, doc: { TRADE_ID: 'T-1' } });
+  assert.equal(row[G.ROW_LIVE], true);
+  assert.equal(G.gridRow(server('T-2', 1))[G.ROW_LIVE], undefined);
+  const key = G.gridColumns(spec).find((c) => c.field === 'TRADE_ID');
+  assert.equal(key.cellClass('T-1', row), 'dg-live-dot');
+  const now = Date.parse('2026-11-14T10:42:05Z');
+  assert.equal(G.markWords({ state: 'LIVE', words: 'LIVE · base 13 Nov close + 412 changes', lastMessage: '2026-11-14T10:42:03Z', perMinute: 2342 }, now),
+    'LIVE · base 13 Nov close + 412 changes · 2 s ago · 2,342 /min');
+  assert.equal(G.markWords({ state: 'PAUSED', words: 'PAUSED · waiting for the broker · showing base 13 Nov close + 412 changes up to 10:42' }, now),
+    'PAUSED · waiting for the broker · showing base 13 Nov close + 412 changes up to 10:42');
+  assert.equal(G.markWords(null, now), '');
+});

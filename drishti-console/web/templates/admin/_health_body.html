@@ -186,6 +186,29 @@
     <tr class="hl-row-down"><td class="mono">{% if name in connectors %}<a href="{{ BASE }}/admin/connectors/{{ name | urlencode }}" title="Open connector {{ name }}">{{ name }}</a>{% else %}{{ name }}{% endif %}</td><td><span class="hl-badge hl-bad">FAILED</span></td><td colspan="8" class="hl-err">did not start: {{ why }}{{ retry_note((h.retry or {}).get('connectors', {}).get(name)) }}</td></tr>{% endfor %}
   </tbody></table></div></div></section>
 
+{% if h.liveFeeds %}{% set ftone = {'ok': 'ok', 'amber': 'warn', 'fault': 'bad'} %}
+{# the live feeds, read-only (LIVE_CONNECTORS_DESIGN.md section 9.1: option A's grid under Health; the switch is in Data bindings) #}
+<h2 class="ws-h" id="live-feeds">Live feeds</h2>
+<section class="pnl" aria-label="Live feeds" data-health-live-feeds><div class="pnl-b"><div class="tbl-wrap"><table class="tbl hl-tbl">
+  <caption class="visually-hidden">Every live feed: its state, rate, rows held, rejects and the last reconcile at a load</caption>
+  <thead><tr><th>Feed</th><th>Kinds</th><th>State</th><th class="num">a minute</th><th class="num">Rows</th><th class="num">Rejected</th><th>Last message</th><th>Last reconcile</th></tr></thead>
+  <tbody>{% for f in h.liveFeeds %}
+    <tr class="{{ 'hl-row-down' if f.attention == 'fault' else '' }}" data-live-feed="{{ f.connector }}">
+      <td class="mono">{% if f.connector in connectors %}<a href="{{ BASE }}/admin/connectors/{{ f.connector | urlencode }}" title="Open connector {{ f.connector }}">{{ f.connector }}</a>{% else %}{{ f.connector }}{% endif %}<div class="cmp-path">{{ f.plugin }}{% if f.companionOf %} · companion of {{ f.companionOf }}{% endif %}</div></td>
+      <td class="mono">{{ (f.kinds or []) | join(', ') or '-' }}</td>
+      <td><span class="hl-badge hl-{{ ftone.get(f.attention, 'ok') }}">{{ f.state }}</span>{% if f.why %}<div class="cmp-path">{{ f.why }}</div>{% elif f.state not in ('LIVE', 'OFF') and f.health %}<div class="cmp-path">{{ f.health }}</div>{% endif %}{% if f.paused %}<div class="cmp-path">by {{ f.paused.by }}{{ ': messages are skipped' if f.paused.skips else ': messages wait at the broker' }}</div>{% endif %}</td>
+      <td class="num mono">{{ f.perMinute if f.perMinute is not none else '' }}</td>
+      <td class="num mono">{{ f.rows if f.rows is not none else '' }}</td>
+      <td class="num mono{{ ' t-warn' if f.rejected }}">{{ f.rejected if f.rejected is not none else '' }}</td>
+      <td class="mono">{{ (f.lastMessage or '—')[:19] | replace('T', ' ') }}</td>
+      <td class="cmp-path" data-live-reconcile>{{ f.reconcileLine or '' }}</td>
+    </tr>{% endfor %}
+  </tbody></table></div>
+  {% for k, problems in (h.liveRules or {}).items() %}<p class="hl-err" role="status"><b class="mono">{{ k }}</b> takes no live feed: {{ problems | join('; ') }}</p>{% endfor %}
+  <p class="text-muted-d">Switch a kind's feeds in <a href="{{ BASE }}/admin/bindings">Data bindings</a>; <span class="mono">drishti.py live list</span> is the same table.</p>
+</div></section>
+{% endif %}
+
 {% if h.identityPool %}<p class="mono cmp-path" data-identity-pool>Identity database pool ({{ 'SQLite' if h.identityPool.exempt else 'PostgreSQL' }}): {{ pool_line(h.identityPool) }}</p>{% endif %}
 {% for w in (h.poolsAttention or []) %}<p class="hl-err" role="alert" data-pool-attention><b>Connection pool</b> {{ w }}</p>{% endfor %}
 

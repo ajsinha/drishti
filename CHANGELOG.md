@@ -18,6 +18,16 @@
 
 ## Unreleased
 
+- **Live feeds, step L7: what an administrator and a reader see.** Every live feed has one state in one list of words, the same in Health,
+  Admin, the CLI and on a page: `OFF`, `NOT CONFIGURED`, `WAITING`, `CATCHING UP`, `LIVE`, `STALE`, `DEGRADED` (rejects over
+  `drishti.live.degraded.reject-ratio`, 5%), `PAUSED`, `STANDBY`, `DOWN`. Admin → Data bindings has a Live column and a drawer per kind:
+  each feed with a switch, the kind's rules from its contract in words, Pause, Resume and Apply now (audited), and Propose change, a
+  binding proposal a second administrator approves (with *land it too*: `apply: both`). Admin → Health lists every feed read-only under
+  Live feeds, with the last reconcile at a load; the platform alerts `live-feed-needs-attention`, `live-feed-rejects-high` and
+  `live-reconcile-orphans` (over 100 orphans) watch them. `GET /api/v1/admin/live` (and `/{connector}`, `/rejects`, `/pause`, `/resume`,
+  `/apply-now`; DRS-1073) and `drishti.py live list|show|on|off|pause|resume|apply-now|rejects` are the same from outside. A blotter of a
+  kind fed live says what its rows are (`LIVE · base 13 Nov close + 412 changes · 2 s ago · 2,342 /min`; `PAUSED · waiting for the
+  broker · ...` in amber, never an error), and a row a feed changed today carries a dot.
 - **Live feeds, step L6: ActiveMQ and RabbitMQ on the kernel's live intake, and `apply: both`.** The two queue connectors are now thin
   transports like Kafka: they connect (or wait calmly for their broker), receive, and hand each message to the kernel's live intake,
   which decodes it, checks it against the kind's contract and keeps the newest row per key. A queue sends nothing again, so its live

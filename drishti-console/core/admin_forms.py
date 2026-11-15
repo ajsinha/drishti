@@ -445,6 +445,16 @@ def bindings_bind(*, connectors=(), **_) -> Markup:
                   attrs={"data-bind-fields": ""}, label="The binding", **ALONE)
 
 
+def live_propose(**_) -> Markup:
+    """Admin → Data bindings, a kind's Live drawer: land it too (apply both) and why. The drawer's script sends the kind's binding with the
+    feeds switched on as the proposal ``{kind, binding, reason}`` (LIVE_CONNECTORS_DESIGN.md section 9.1); a second administrator approves."""
+    props = {"both": K.check("Land it in the lake by window too (apply: both)", "both",
+                             description="Overlaid at once, and written to the kind's table by window: the site's choice, never the contract's"),
+             "reason": K.text("Why", "reason", maxLength=500)}
+    return K.host(K.schema(props, required=["reason"]), {"both": False, "reason": ""}, attrs={"data-live-propose-fields": ""},
+                  label="The change", **ALONE)
+
+
 def placement_plan(*, placement: str = "", **_) -> Markup:
     """Admin → Cluster → Modules, Plan a placement: the whole config/placement.yaml and why (the page's script sends ``{placement, reason}``;
     the server refuses heavy work everywhere, unknown parts and in-process modules, and a second administrator applies)."""
@@ -480,7 +490,7 @@ def module_plan(*, modules=(), module: str = "", version: str = "", action: str 
 
 
 BUILDERS: dict[str, Callable[..., Markup]] = {
-    "bindings_bind": bindings_bind,
+    "bindings_bind": bindings_bind, "live_propose": live_propose,
     "module_upload": module_upload, "module_plan": module_plan,
     "placement_plan": placement_plan,
     "connector_head": connector_head,

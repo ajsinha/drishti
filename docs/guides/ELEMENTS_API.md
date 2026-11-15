@@ -7180,6 +7180,10 @@ The grid row's key and version properties (the record's own fields keep their na
 
 The grid row's version property.
 
+#### `ROW_LIVE`
+
+The grid row's mark of a row a live feed gave (the row dot, LIVE_CONNECTORS_DESIGN.md section 9.2); a row without it is the lake's.
+
 #### `WINDOW_ROWS`
 
 The most rows the page window names at once (the server's page is 5,000); a set larger than the grid holds is windowed.
@@ -7583,6 +7587,17 @@ Returns `void`.
 Stops following and takes the grid and the panel away.
 
 Returns `void`.
+
+#### `markWords(m, now)`
+
+A live set's mark in words (LIVE_CONNECTORS_DESIGN.md section 9.2, option 1): the server's words, then how recent and the rate, `LIVE · base 13 Nov close + 412 changes · 2 s ago · 2,342 /min`; a paused or stale mark is its words alone.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `m` | `{state: string, words: string, lastMessage: ?string, perMinute: number}` | the page's `mark` |
+| `now` | `number` | milliseconds |
+
+Returns `string`.
 
 ### drishti_plain-render.js
 

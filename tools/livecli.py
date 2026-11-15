@@ -39,6 +39,8 @@ def _q(s: str) -> str:
 
 
 def _rejected(f: dict) -> int:
+    if f.get("rejected") is not None:
+        return int(f["rejected"])
     return sum(int(v or 0) for k, v in (f.get("counts") or {}).items() if str(k).startswith("rejected"))
 
 

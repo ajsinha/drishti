@@ -709,6 +709,11 @@ table.tbl tr.tbl-filter th::after { content: none; }
 .phrase .phrase-q { font-size: var(--d-fs-16); margin: 0 var(--d-sp-6_4); }
 .phrase-steps { margin: var(--d-sp-6_4) 0; padding-left: var(--d-sp-19_2); font-size: var(--d-fs-14_08); }
 
+/* Admin -> Data bindings, a kind's Live drawer (drishti_admin-live.js; LIVE_CONNECTORS_DESIGN.md section 9.1, option B): F9's drawer */
+.live-drawer .live-body { flex: 1; overflow: auto; padding: var(--d-sp-14_4); display: flex; flex-direction: column; gap: var(--d-sp-12); }
+.live-drawer .live-rules { display: grid; grid-template-columns: max-content 1fr; gap: var(--d-sp-4_8) var(--d-sp-12); margin: 0; }
+.live-drawer .live-rules dt { color: var(--d-muted); } .live-drawer .live-rules dd { margin: 0; }
+.live-drawer .live-acts { display: flex; flex-wrap: wrap; gap: var(--d-sp-8); align-items: center; }
 /* Calc (drishti_calc.js): Python on a view, in a drawer like F9's, wider for code and its output */
 .calc-drawer { width: min(940px, 96vw); }
 .calc-drawer header { flex-wrap: wrap; }

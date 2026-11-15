@@ -349,6 +349,10 @@
 .dg-live-chip[data-state="live"] { color: var(--d-ok); border-color: var(--d-ok); }
 .dg-live-chip[data-state="paused"], .dg-live-chip[data-state="reconnecting"], .dg-live-chip[data-state="connecting"] { color: var(--d-warn); border-color: var(--d-warn); }
 .dg-live-chip[data-state="ended"], .dg-live-chip[data-state="failed"] { color: var(--d-bad); border-color: var(--d-bad); }
+/* the live mark (LIVE_CONNECTORS_DESIGN.md section 9.2): the server's words for what the rows are; amber when paused or stale */
+.dg-live-chip[data-mark="PAUSED"], .dg-live-chip[data-mark="STALE"] { color: var(--d-warn); border-color: var(--d-warn); }
+/* the row dot: a row a live feed changed today (rows without it are the lake's) */
+.dg-live-dot::before { content: ""; display: inline-block; width: 6px; height: 6px; margin-right: 6px; border-radius: 50%; background: var(--d-ok); vertical-align: middle; }
 .dg-live-btn { background: transparent; border: 1px solid var(--d-border); border-radius: 7px; padding: 3px 10px; cursor: pointer; color: var(--d-ink); white-space: nowrap; font: inherit; }
 .dg-live-btn:hover, .dg-live-btn:focus-visible { border-color: var(--d-accent); }
 .dg-live-btn[aria-pressed="true"], .dg-live-btn[aria-expanded="true"] { background: var(--d-accent-tint); border-color: var(--d-accent); color: var(--d-accent); }
