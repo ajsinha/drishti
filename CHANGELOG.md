@@ -18,6 +18,16 @@
 
 ## Unreleased
 
+- **Live feeds for any kind, step L1: the kind's live rules and the companion connector.** A contract may hold a `live:` block (order,
+  changed-at and changed-by, as-of, whole rows or merge patches, deletes, overlay or land, conflation, how the next load absorbs the
+  live state, retention, validation, effective, closed dates): checked against the contract by `drishti.py contract check` and when the
+  packs load (Health `liveRules`, DRS-1060), and shown on each contract's page. A computed kind takes no feed; a restatement of closed
+  dates is for scenario PVs and P&L vectors only (`drishti.live.restate-kinds`). Any data connector may have one live companion, a
+  connector on kafka, activemq or rabbitmq with `companion-of: <data connector>`; it serves that connector's kinds and goes with it
+  (DRS-1061 when its data connector is not here). A kind's live connectors, unbound, are the companions of the connectors it is read
+  from; the six `trade-<system>-live` templates and `drishti.py pack new --source-for --live` name their data connector. The reasons a
+  live message is rejected have their codes (DRS-1062 to DRS-1072). `binding-hint.live` is gone from the contract format
+  ([LIVE_CONNECTORS_DESIGN.md](docs/architecture/LIVE_CONNECTORS_DESIGN.md), decisions in its section 15).
 - **Launch roots: no folder from the working directory.** The server resolves its install folder (`drishti.home`), data, configuration,
   packs, modules, module switches, access, lakes, connectors and inbox folders to absolute paths at start, from their settings or under
   the install folder, logs them in one `resolved paths:` block, and refuses to start, naming the setting, when the modules folder is

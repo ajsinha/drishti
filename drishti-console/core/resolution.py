@@ -796,6 +796,10 @@ def _unedited(text: str, marker: Path | None = None) -> bool:
     return False
 
 
+#: The key that makes a connector a data connector's live companion (LIVE_CONNECTORS_DESIGN.md section 2.2).
+COMPANION_OF = "companion-of"
+
+
 def _enabled(v: Any) -> str:
     """``enabled:`` as text: true when not set; a quoted "true" or "false" is the same switch; a ``${VAR:true}`` placeholder as it is."""
     if v is None:
@@ -826,11 +830,12 @@ class Effective:
     writes: Any = None
     requires: Any = None
     base_dirs: dict = field(default_factory=dict)
+    companion_of: str = ""                                           # the data connector this live companion accompanies (LIVE_CONNECTORS_DESIGN.md 2.2)
 
     def as_dict(self) -> dict:
         return {"name": self.name, "plugin": self.plugin, "enabled": self.enabled, "kinds": list(self.kinds), "description": self.description,
                 "settings": dict(self.settings), "layer": self.layer, "origins": dict(self.origins), "superseded": self.superseded,
-                "templateFrom": self.template_from, "file": str(self.file or ""), "writes": self.writes}
+                "templateFrom": self.template_from, "file": str(self.file or ""), "writes": self.writes, "companionOf": self.companion_of}
 
 
 @dataclass(frozen=True)
@@ -851,7 +856,22 @@ def _whole(name: str, raw: dict, layer: str, owner: str = "", base: Path | None 
     settings = {k: _text(v) for k, v in flatten(st).items()}
     return Effective(name, str(plugin).strip(), _enabled(raw.get("enabled")), _kinds(raw.get("kinds")), str(raw.get("description") or ""),
                      settings, layer, {k: layer for k in settings}, False, owner, file, raw.get("writes"), raw.get("requires"),
-                     {k: base for k in settings} if base else {})
+                     {k: base for k in settings} if base else {}, _companion(name, raw))
+
+
+def _companion(name: str, raw: dict) -> str:
+    """``companion-of:`` checked as the Java parser checks it (ConnectorFiles.parse): a connector's name, never the connector itself."""
+    v = raw.get(COMPANION_OF)
+    if v is None or not str(v).strip():
+        return ""
+    v = str(v).strip()
+    if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,63}", v):
+        raise Unusable(f"{name}.yaml: 'companion-of' names a data connector ('trade-endur'), not '{v}'")
+    if v == name:
+        raise Unusable(f"{name}.yaml: a connector cannot be its own live companion ('companion-of' names the data connector it accompanies)")
+    if str(raw.get("plugin") or "").strip() == "reactive":
+        raise Unusable(f"{name}.yaml: a reactive connector computes; it is never a live companion (no 'companion-of')")
+    return v
 
 
 def _legacy(keys: Iterable[str]) -> bool:
@@ -921,7 +941,11 @@ def effective(name: str, text: str | None, template: Template | dict | None, fil
                     str(raw["description"]) if raw.get("description") is not None else tdef.description,
                     settings, OVERRIDE, origins, False, t.owner, file,
                     raw["writes"] if raw.get("writes") is not None else tdef.writes,
-                    raw["requires"] if raw.get("requires") is not None else tdef.requires, bases)
+                    raw["requires"] if raw.get("requires") is not None else tdef.requires, bases,
+                    _companion(name, {**raw, "plugin": raw.get("plugin") or tdef.plugin}) if raw.get(COMPANION_OF) is not None
+                    else tdef.companion_of)
+    if raw.get(COMPANION_OF) is not None:
+        out.origins[COMPANION_OF] = OVERRIDE
     return out
 
 
@@ -1034,6 +1058,72 @@ class Connectors:
         """The connectors in force whose definition names ``kind`` (a template's ``kinds:``), by name."""
         return [e for e in self.all().values() if kind in e.kinds]
 
+    def _companion_view(self) -> dict[str, tuple]:
+        return {n: (e.plugin, e.companion_of, list(e.kinds)) for n, e in self.all().items()}
+
+    def companion_problems(self) -> dict[str, str]:
+        """What is wrong with each live companion, by name (the twin of Companions.problems); a companion listed is not used."""
+        return companion_problems(self._companion_view())
+
+    def companion_kinds(self, name: str) -> list[str]:
+        """The kinds a connector serves live: a companion's own, else its data connector's; none when it is not used."""
+        return companion_kinds(name, self._companion_view())
+
+
+#: The plugins a live companion may use: the transports (decision Q9: no others). The Java twin: Companions.TRANSPORTS.
+TRANSPORTS = frozenset({"kafka", "activemq", "rabbitmq"})
+
+
+def companion_problems(connectors: Mapping[str, tuple]) -> dict[str, str]:
+    """``{name: (plugin, companion_of, kinds)}`` -> what is wrong with each companion (the twin of Companions.problems, DRS-1061)."""
+    out: dict[str, str] = {}
+    for name, (plugin, of, kinds) in connectors.items():
+        if not of:
+            continue
+        data = connectors.get(of)
+        why = None
+        if data is None:
+            why = f"is the live companion of {of}, which is not here (its file removed or its module off): it is not used"
+        elif data[1]:
+            why = f"is the live companion of {of}, which is itself a live companion: name the data connector"
+        elif plugin not in TRANSPORTS:
+            why = f"is a live companion on plugin {plugin}, which pushes nothing: use {', '.join(sorted(TRANSPORTS))}"
+        elif data[2] and not set(kinds) <= set(data[2]):
+            extra = [k for k in kinds if k not in data[2]]
+            why = (f"names {', '.join(extra)}, which its data connector {of} does not serve ({', '.join(data[2])}): a companion changes only "
+                   "its data connector's rows")
+        if why:
+            out[name] = f"connector {name} {why} (DRS-1061)"
+    return out
+
+
+def companion_kinds(name: str, connectors: Mapping[str, tuple], bad: Mapping[str, str] | None = None) -> list[str]:
+    """The twin of Companions.kinds: a companion's own kinds, else its data connector's; none when it is not used."""
+    if name not in connectors:
+        return []
+    plugin, of, kinds = connectors[name]
+    if not of:
+        return list(kinds)
+    bad = companion_problems(connectors) if bad is None else bad
+    if name in bad or of not in connectors:
+        return []
+    return list(kinds) or list(connectors[of][2])
+
+
+def live_connectors(kind: str, read: list[str], connectors: Mapping[str, tuple]) -> list[str]:
+    """The twin of Companions.live: the companions of ``read`` that serve ``kind``, in read order, then the live connectors with no data
+    connector that name it (a kind with no lake)."""
+    bad = companion_problems(connectors)
+    out: list[str] = []
+    for r in read:
+        for n, (_plugin, of, _kinds) in connectors.items():
+            if of == r and kind in companion_kinds(n, connectors, bad) and n not in out:
+                out.append(n)
+    for n, (plugin, of, kinds) in connectors.items():
+        if not of and plugin in TRANSPORTS and kind in kinds and n not in read and n not in out:
+            out.append(n)
+    return out
+
 
 # --------------------------------------------------------------------------------------------------------------------------- bindings
 
@@ -1085,7 +1175,7 @@ class Bindings:
             return {"kind": kind, "connectors": known, "union": bool(b.get("union", len(known) > 1)), "origin": "site", "state": "BOUND",
                     "reason": "config/bindings.yaml", "set_aside": aside}
         routed = [c for c in self.routes.get(kind, []) if c in conns]
-        named = [n for n, e in conns.items() if kind in e.kinds and n not in routed and e.plugin not in STREAMS]
+        named = [n for n, e in conns.items() if kind in e.kinds and n not in routed and e.plugin not in STREAMS and not e.companion_of]
         declared = routed + named
         if declared:
             union = any(conns[n].settings.get("union") == "true" for n in declared) or len(declared) > 1
@@ -1098,11 +1188,14 @@ class Bindings:
                 "set_aside": aside}
 
     def live(self, kind: str) -> list[str]:
+        """The kind's live connectors (KERNEL_AND_MODULES.md 18.6, Live): the site binding's ``live``, else the companions of the connectors
+        it is read from that serve the kind, in read order, then the live connectors with no data connector that name it (a kind with no
+        lake). The Java twin: Companions.live."""
         b = self.site.get(kind) if isinstance(self.site.get(kind), dict) else {}
         v = b.get("live")
         if v:
             return [str(x) for x in (v if isinstance(v, list) else [v])]
-        return [n for n, e in self.r.connectors.all().items() if kind in e.kinds and e.plugin in STREAMS]
+        return live_connectors(kind, self.read(kind)["connectors"], self.r.connectors._companion_view())
 
     def write(self, kind: str, system: str | None = None) -> str:
         """The connector a correction of ``kind`` (from ``system``) is written to; LookupError DRS-9308 (none) or DRS-9309 (several)."""

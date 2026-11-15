@@ -51,6 +51,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class HealthController {
 
     private final SourceRegistry registry;
+    /** Each kind's live rules from its contract (LIVE_CONNECTORS_DESIGN.md section 2.3): a block with a problem is a Health line (DRS-1060). */
+    private final com.ash.drishti.server.live.LiveContracts liveContracts;
     private final SourceRouter router;
     private final PackRegistry packs;
     private final SutraRegistry sutras;
@@ -144,7 +146,9 @@ public class HealthController {
             org.springframework.core.env.Environment env, com.ash.drishti.server.loads.ExpectationService expectations, com.ash.drishti.server.connectors.ConnectorManager connectors,
             com.ash.drishti.server.bi.BiFolder biFolder, com.ash.drishti.server.RetryService retry,
             ObjectProvider<com.zaxxer.hikari.HikariDataSource> identityDataSource, com.ash.drishti.identity.IdentityProperties identity,
-            com.ash.drishti.server.security.MaskCoverage masks, com.ash.drishti.server.design.HistoryDefinitions history) {
+            com.ash.drishti.server.security.MaskCoverage masks, com.ash.drishti.server.design.HistoryDefinitions history,
+            com.ash.drishti.server.live.LiveContracts liveContracts) {
+        this.liveContracts = liveContracts;
         this.history = history;
         this.masks = masks;
         this.identityDataSource = identityDataSource;
@@ -220,7 +224,7 @@ public class HealthController {
         String hotReload = sutras.hotReload();          // STOPPED: the Sutra watcher ended, edits are not picked up until a restart
         List<com.ash.drishti.server.loads.ExpectationService.State> dataLate = expectations.attention(java.time.Instant.now());
         String overall = sources.isEmpty() || down == sources.size() ? "DOWN"
-                : down > 0 || degraded > 0 || stale > 0 || !failures.isEmpty() || packProblems > 0 || !packs.problems().isEmpty() || !dataLate.isEmpty() || hotReload.startsWith("STOPPED") || !connectors.fileProblems().isEmpty() ? "DEGRADED"
+                : down > 0 || degraded > 0 || stale > 0 || !failures.isEmpty() || packProblems > 0 || !packs.problems().isEmpty() || !liveContracts.problems().isEmpty() || !dataLate.isEmpty() || hotReload.startsWith("STOPPED") || !connectors.fileProblems().isEmpty() ? "DEGRADED"
                 : "OK";   // stale: behind its stale-after; degraded: a connector that cannot read some of its data
         out.put("status", overall);
         out.put("summary", Map.of("sources", sources.size(), "sourcesDown", down, "sourcesDegraded", degraded, "failedToStart", failures.size(),
@@ -277,6 +281,7 @@ public class HealthController {
             }
         });
         out.put("packsNotLoaded", loadedNames);
+        out.put("liveRules", liveContracts.problems());                 // DRS-1060: a contract's live: block that cannot be used (the kind takes no feed)
         out.put("masksMatchingNothing", masks.unmatched());              // DRS-6011: a redact entry that names no field of the loaded packs
         out.put("retry", retry.snapshot());
         out.put("sutras", Map.of("hotReload", hotReload, "problemFiles", sutras.problems().size()));

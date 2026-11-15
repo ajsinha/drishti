@@ -282,6 +282,7 @@ schemas:
       - { key: enabled, type: boolean, default: "true", meaning: "false: the connector stays stopped, its file kept" }
       - { key: description, type: string, default: "", meaning: "A line shown in Admin -> Connectors" }
       - { key: kinds, type: list, default: "what the plugin reports", meaning: "The kinds it serves" }
+      - { key: companion-of, type: string, default: "", meaning: "A live companion: the data connector whose rows this feed changes (kafka, activemq or rabbitmq; docs/architecture/LIVE_CONNECTORS_DESIGN.md section 2.2). It serves that connector's kinds, or the subset kinds: names; with that connector absent or off it is not used (DRS-1061)" }
       - { key: settings, type: map, default: "{}", meaning: "The plugin's settings, as the tables above (every plugin, the shared tls.* and proxy.*, the plugin's own)" }
       - { key: "settings.*", type: map, meaning: "One setting of the plugin" }
       - { key: writes, type: map, default: "{}", meaning: "Named commands that write an approved change back to the source (APPROVALS_GUIDE.md section 5.4): JDBC or Kafka; off until an administrator switches the connector's writes on" }

@@ -18,6 +18,7 @@
 # until an administrator switches them on (Admin -> Edits).
 name: trade-calypso-live                      # the connector this template defines (KERNEL_AND_MODULES.md section 18.5)
 plugin: kafka
+companion-of: trade-calypso                  # the data connector whose rows this feed changes (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 2.2)
 enabled: ${DRISHTI_STREAM_CALYPSO:false}
 kinds:
 - trade

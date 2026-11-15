@@ -141,17 +141,40 @@ public record ConfigResolution(ResolutionSettings settings, Predicate<String> ac
         return packs.dir(name);
     }
 
-    /** The modules' templates for the kinds a pack defines: what joins that pack's {@code connectors:} (a pack's own wins a name). */
+    /**
+     * The modules' templates for the kinds a pack defines: what joins that pack's {@code connectors:} (a pack's own wins a name). A live
+     * companion's template ({@code companion-of:}, docs/architecture/LIVE_CONNECTORS_DESIGN.md section 2.2) that names no kinds serves its
+     * data connector's; one whose data connector no module brings joins nothing (a site's own data connector is matched by the server).
+     */
     public Map<String, Map<String, Object>> templatesForKinds(java.util.Collection<String> kinds) {
         Map<String, Map<String, Object>> out = new java.util.LinkedHashMap<>();
         templates.forEach((n, t) -> {
-            Object k = t.definition().get("kinds");
-            List<String> names = k instanceof List<?> l ? l.stream().map(String::valueOf).toList()
-                    : k instanceof Map<?, ?> m ? m.keySet().stream().map(String::valueOf).toList() : List.of();
+            List<String> names = kindsOf(t.definition());
             if (!names.isEmpty() && kinds.contains(names.get(0))) {
-                out.put(n, t.definition());
+                Map<String, Object> d = t.definition();
+                if (d.get("kinds") == null) {                           // a companion: its data connector's kinds, stated for the pack's reader
+                    d = new java.util.LinkedHashMap<>(d);
+                    d.put("kinds", names);
+                }
+                out.put(n, d);
             }
         });
         return out;
+    }
+
+    /** The kinds a template names; a live companion that names none, its data connector template's. */
+    public List<String> kindsOf(Map<String, Object> template) {
+        List<String> own = kindNames(template.get("kinds"));
+        Object of = template.get("companion-of");
+        if (!own.isEmpty() || of == null) {
+            return own;
+        }
+        ModuleTemplates.Template data = templates.get(String.valueOf(of).strip());
+        return data == null || data.definition().get("companion-of") != null ? List.of() : kindNames(data.definition().get("kinds"));
+    }
+
+    private static List<String> kindNames(Object k) {
+        return k instanceof List<?> l ? l.stream().map(String::valueOf).toList()
+                : k instanceof Map<?, ?> m ? m.keySet().stream().map(String::valueOf).toList() : List.of();
     }
 }

@@ -42,11 +42,34 @@
       "properties": {
         "lake-table": {"type": "string", "pattern": "^[a-z0-9_-]+\\.[a-z0-9_.-]+$"},
         "partition": {"type": "array", "items": {"type": "string"}},
-        "live": {"enum": ["optional", "required", "none"]},
         "computed": {"type": "boolean"},
         "columns": {"type": "array", "items": {"type": "string"}},
         "vectors": {"type": "array", "items": {"type": "string"}},
         "test-data": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "live": {
+      "description": "What a live message means for the kind (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 2.3): the companion connector holds the transport only. Absent: arrival order, whole rows, overlay, reset at the next load, strict.",
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "allowed": {"type": "boolean"},
+        "order": {"type": "array", "items": {"type": "string"}},
+        "changed-at": {"type": "string"},
+        "changed-by": {"type": "string"},
+        "as-of": {"type": "string"},
+        "partial": {"enum": ["whole", "merge"]},
+        "delete": {"type": "object", "additionalProperties": false, "properties": {"when": {"type": ["string", "null"]}}},
+        "apply": {"enum": ["overlay", "land"]},
+        "conflate": {"type": "string", "pattern": "^(none|[0-9]+(ms|s|m|h|d))$"},
+        "absorb": {"enum": ["by-order", "by-cutoff", "reset"]},
+        "retention": {"type": "object", "additionalProperties": false,
+                      "properties": {"ttl": {"$ref": "#/$defs/duration"}, "max-rows": {"type": "integer", "minimum": 1}}},
+        "validate": {"enum": ["strict", "lenient", "deferred"]},
+        "effective": {"enum": ["at-once", "next-load"]},
+        "closed-dates": {"enum": ["reject", "restate"]},
+        "keep-versions": {"type": "integer", "minimum": 1},
+        "reorder-window": {"$ref": "#/$defs/duration"},
+        "max-message-kb": {"type": "integer", "minimum": 1}
       }
     },
     "fields": {"type": "array", "items": {"$ref": "#/$defs/field"}},
@@ -70,6 +93,7 @@
     {"if": {"properties": {"status": {"const": "retiring"}}}, "then": {"required": ["retiring-in", "replaced-by"]}}
   ],
   "$defs": {
+    "duration": {"type": "string", "pattern": "^[0-9]+(ms|s|m|h|d)$"},
     "release": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+( or [0-9]+\\.[0-9]+\\.[0-9]+)?$"},
     "field": {
       "type": "object", "additionalProperties": false, "required": ["name", "type", "presence"],

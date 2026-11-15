@@ -949,6 +949,40 @@ def drift(contract: dict, packs_dir: Path = PACKS, testdata: Path = TESTDATA) ->
     return out
 
 
+#: The kinds whose landed feed may restate a closed date (decision Q12): the server's drishti.live.restate-kinds default.
+RESTATE_KINDS = ("scenario-pv", "pnl-vector")
+
+
+def live_problems(c: dict, restate_kinds=RESTATE_KINDS) -> list[str]:
+    """What the schema cannot say about a contract's ``live:`` block (LIVE_CONNECTORS_DESIGN.md section 2.3; the server's LiveRules checks
+    the same when the pack loads, DRS-1060): every field it names is the contract's, a computed kind takes no feed, by-order needs an
+    order, a restatement is for a landed kind the site lists, a live kind has a key."""
+    live = c.get("live")
+    if not isinstance(live, dict):
+        return []
+    out = []
+    names = {f["name"] for f in c.get("fields") or [] if isinstance(f, dict) and f.get("name")}
+    names |= {f"{p}.{f['name']}" for p, fs in (c.get("nested") or {}).items() for f in fs or [] if isinstance(f, dict) and f.get("name")}
+    named = [("order", f) for f in live.get("order") or []] + [(k, live[k]) for k in ("changed-at", "changed-by", "as-of") if live.get(k)]
+    for key, f in named:
+        if names and f not in names:
+            out.append(f"live.{key} names {f}, which is not a field of the contract")
+    computed = c.get("class") == "computed" or bool((c.get("binding-hint") or {}).get("computed"))
+    allowed = live.get("allowed", not computed)
+    if computed and allowed:
+        out.append("live: a computed kind is live by derivation from its inputs and takes no feed; write allowed: false")
+    if live.get("absorb") == "by-order" and not live.get("order"):
+        out.append("live.absorb: by-order needs an order: field the lake keeps; write order: or absorb: reset")
+    if live.get("closed-dates") == "restate":
+        if live.get("apply") != "land":
+            out.append("live.closed-dates: restate is for a landed kind (apply: land)")
+        if c.get("kind") not in restate_kinds:
+            out.append(f"live.closed-dates: restate is allowed only for {', '.join(sorted(restate_kinds))} (drishti.live.restate-kinds)")
+    if allowed and not c.get("key"):
+        out.append("live: the kind has no key: (a live row replaces the lake's row by key); give it a key or write allowed: false")
+    return out
+
+
 def check(packs_dir: Path = PACKS, testdata: Path = TESTDATA, data: bool = True) -> list[str]:
     """Every problem: a mnemonic without a contract, a contract without a mnemonic, an invalid contract, one that no longer matches
     its pack (identity, policy) or, with ``data``, its data."""
@@ -961,7 +995,7 @@ def check(packs_dir: Path = PACKS, testdata: Path = TESTDATA, data: bool = True)
         if c is None:
             out.append(f"{cmd['code']} ({cmd['kind']}): no contract: run  drishti.py contract bootstrap {cmd['kind']} --write")
             continue
-        probs = schema_problems(c)
+        probs = schema_problems(c) + live_problems(c)
         for k, want in (("kind", cmd["kind"]), ("pack", cmd["pack"]), ("mnemonic", cmd["code"])):
             if c.get(k) != want:
                 probs.append(f"{k} is '{c.get(k)}', the pack says '{want}'")
@@ -996,7 +1030,7 @@ def _contract_files(packs_dir: Path) -> list[Path]:
 def planned_problems(c: dict, f: Path, codes: set[str]) -> list[str]:
     """A planned contract: an input designed before its data exists (no command, no data, no test data yet). It must be valid, name
     its own pack and file, and keep its proposed mnemonic free of the commands that exist."""
-    probs = schema_problems(c)
+    probs = schema_problems(c) + live_problems(c)
     stem = f.name.removesuffix(".contract.yaml")
     if c.get("kind") != stem:
         probs.append(f"kind is '{c.get('kind')}', the file says '{stem}'")
@@ -1082,6 +1116,7 @@ def _contract_md(c: dict, f: Path, pack_dir_rel: str) -> list[str]:
         rows.append(["Partitioned by", _v(st["partition"])])
     if st.get("test-data"):
         rows.append(["Test data", ", ".join(st["test-data"])])
+    rows.append(["Live", live_words(c)])
     worked = sample_pages(c)
     if worked:
         rows.append(["Worked example", " · ".join(f"[{name}](../samples/{name.split('/', 1)[0]}.md#{name.split('/', 1)[1]})" for name in worked)
@@ -1112,6 +1147,28 @@ def _contract_md(c: dict, f: Path, pack_dir_rel: str) -> list[str]:
     if c.get("review"):
         out += [f"**To review ({len(c['review'])})**", ""] + [f"- {n}" for n in c["review"]] + [""]
     return out
+
+
+def live_words(c: dict) -> str:
+    """A contract's live rules in one cell (LIVE_CONNECTORS_DESIGN.md section 2.3): what a live message means for the kind."""
+    computed = c.get("class") == "computed" or bool((c.get("binding-hint") or {}).get("computed"))
+    live = c.get("live") if isinstance(c.get("live"), dict) else None
+    if computed and not (live or {}).get("allowed"):
+        return "no feed: computed, live by derivation from its inputs"
+    if live is None:
+        return "any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict"
+    if live.get("allowed") is False:
+        return "no feed (`allowed: false`)"
+    order = ", ".join(f"`{x}`" for x in live.get("order") or []) or "arrival"
+    parts = [f"order {order}", f"{live.get('partial', 'whole')} rows", live.get("apply", "overlay"),
+             f"absorb {live.get('absorb', 'reset')}", f"validate {live.get('validate', 'strict')}"]
+    if live.get("conflate") not in (None, "none"):
+        parts.append(f"conflate {live['conflate']}")
+    if live.get("effective"):
+        parts.append(f"effective {live['effective']}")
+    if live.get("closed-dates") == "restate":
+        parts.append("restates closed dates")
+    return "; ".join(parts)
 
 
 def _repo_rel(p: Path) -> str:

@@ -121,7 +121,7 @@ def connector_files(a, n: dict, m: dict) -> dict[str, dict]:
                          "set": {"SOURCE_SYSTEM": n["system"]}, "map": n["map"], "union": True, "source-name": n["name"]}}
     out = {n["name"]: read}
     if a.live:
-        live = {"plugin": "kafka", "enabled": f"${{DRISHTI_{n['system']}_LIVE:false}}", "kinds": [n["kind"]],
+        live = {"plugin": "kafka", "companion-of": n["name"], "enabled": f"${{DRISHTI_{n['system']}_LIVE:false}}", "kinds": [n["kind"]],
                 "description": f"{n['system']}'s {n['kind']}s as they are booked (off until the site sets the servers and the topic)",
                 "settings": {"bootstrap-servers": "${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}", "topics": [f"{n['low']}.{n['kind']}s"], "kind": n["kind"],
                              "id-field": key or "id", "set": {"SOURCE_SYSTEM": n["system"]}, "map": n["map"]}}

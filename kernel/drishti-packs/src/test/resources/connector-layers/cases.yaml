@@ -31,8 +31,59 @@ templates:
       set:
         SOURCE_SYSTEM: ENDUR
       map: mappings/endur-trade.yaml
+  endur-live:
+    plugin: kafka
+    enabled: ${DRISHTI_STREAM_ENDUR:false}
+    companion-of: trade-endur
+    settings:
+      topics: drishti.trading.endur.trades
 
 cases:
+- name: trade-endur-live
+  why: a live companion's template names its data connector (companion-of, LIVE_CONNECTORS_DESIGN.md section 2.2)
+  template: endur-live
+  file: |
+    settings:
+      topics: drishti.trading.endur.site
+  layer: override
+  superseded: false
+  plugin: kafka
+  enabled: ${DRISHTI_STREAM_ENDUR:false}
+  companion-of: trade-endur
+  settings:
+    topics: drishti.trading.endur.site
+
+- name: trade-endur-live
+  why: an override may name another data connector; the key's layer is the override's
+  template: endur-live
+  file: |
+    companion-of: trade-endur-eu
+  layer: override
+  superseded: false
+  plugin: kafka
+  enabled: ${DRISHTI_STREAM_ENDUR:false}
+  companion-of: trade-endur-eu
+  settings:
+    topics: drishti.trading.endur.trades
+  origins:
+    companion-of: override
+
+- name: quotes-live
+  why: companion-of names a connector, never anything else
+  template: null
+  file: |
+    plugin: kafka
+    companion-of: Market Store!
+  error: true
+
+- name: quotes-live
+  why: a connector cannot be its own companion
+  template: null
+  file: |
+    plugin: kafka
+    companion-of: quotes-live
+  error: true
+
 - name: trade-endur
   why: an override changes a table and adds a constant; everything else is the template's
   template: endur
@@ -240,3 +291,40 @@ cases:
       lake: demo
       lake-tables: trading.trade_murex
   error: true
+
+# Live companions across connectors (Companions in Java, companion_problems and live_connectors in Python): each case is the connectors in
+# force as {name: {plugin, companion-of, kinds}}, the problems by companion (a fragment of the words), and each kind's live connectors given
+# its read connectors.
+companions:
+- why: each source system's companion serves its own connector's kinds; a companion with a problem is never live
+  connectors:
+    trade-endur: {plugin: delta, kinds: [trade]}
+    trade-murex: {plugin: delta, kinds: [trade]}
+    trade-endur-live: {plugin: kafka, companion-of: trade-endur}
+    trade-murex-live: {plugin: kafka, companion-of: trade-murex, kinds: [trade]}
+    trade-calypso-live: {plugin: kafka, companion-of: trade-calypso}
+  problems:
+    trade-calypso-live: "which is not here"
+  live:
+  - {kind: trade, read: [trade-endur, trade-murex], want: [trade-endur-live, trade-murex-live]}
+  - {kind: trade, read: [trade-murex], want: [trade-murex-live]}
+- why: a subset of the data connector's kinds; a kind outside it, a plugin that pushes nothing, a companion of a companion
+  connectors:
+    market-store: {plugin: delta, kinds: [fx-spot, equity, ir-curve]}
+    market-store-live: {plugin: kafka, companion-of: market-store, kinds: [fx-spot, equity]}
+    market-store-jdbc: {plugin: jdbc, companion-of: market-store}
+    market-store-extra: {plugin: rabbitmq, companion-of: market-store, kinds: [fx-spot, weather]}
+    market-store-relay: {plugin: activemq, companion-of: market-store-live}
+  problems:
+    market-store-jdbc: "pushes nothing"
+    market-store-extra: "names weather"
+    market-store-relay: "itself a live companion"
+  live:
+  - {kind: fx-spot, read: [market-store], want: [market-store-live]}
+  - {kind: ir-curve, read: [market-store], want: []}
+- why: a live connector with no data connector feeds a kind that has no lake
+  connectors:
+    pricing-results: {plugin: kafka, kinds: [price-result]}
+  problems: {}
+  live:
+  - {kind: price-result, read: [], want: [pricing-results]}

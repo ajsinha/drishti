@@ -532,7 +532,8 @@ public final class ConnectorManager {
         PackLoader.flatten("", d.get("settings") instanceof Map<?, ?> s ? (Map<String, Object>) s : Map.of(), flat);
         List<String> kinds = ConnectorFiles.kindNames(d.get("kinds"));
         return files.render("# The default suggested by pack '" + t.pack() + "'.", String.valueOf(d.get("plugin")), d.get("enabled"), kinds,
-                d.get("description") == null ? "" : String.valueOf(d.get("description")), flat, Map.of(), ConnectorFiles.computeOf(d));
+                d.get("description") == null ? "" : String.valueOf(d.get("description")), flat, Map.of(), ConnectorFiles.computeOf(d),
+                Map.of(), d.get(ConnectorFiles.COMPANION_OF) == null ? "" : String.valueOf(d.get(ConnectorFiles.COMPANION_OF)));
     }
 
     // -- reading ---------------------------------------------------------------------------------------------------
@@ -620,6 +621,11 @@ public final class ConnectorManager {
         } catch (RuntimeException e) {
             return Optional.empty();
         }
+    }
+
+    /** The kinds a connector's template names ({@code kinds:}); empty for a site connector (its kinds are the bindings'). */
+    private List<String> templateKinds(String name) {
+        return template(name).map(t -> ConnectorFiles.kindNames(t.definition().get("kinds"))).orElse(List.of());
     }
 
     private ConnectorLayers.Effective layered(String name, String text) {
@@ -1039,6 +1045,16 @@ public final class ConnectorManager {
         }
         // writes: (APPROVALS_GUIDE.md › The design and its reasons, section 5.4): a command without its guard or idempotency clause, or naming an unknown :param, is refused
         // and the connector stays read-only for it; said as a warning, so the connector itself still loads and reads
+        // a live companion (LIVE_CONNECTORS_DESIGN.md section 2.2): its data connector in force, a messaging plugin, only that connector's kinds
+        if (d.companion()) {
+            Map<String, com.ash.drishti.packs.Companions.Connector> pair = new LinkedHashMap<>();
+            pair.put(d.name(), com.ash.drishti.packs.Companions.of(d, templateKinds(d.name())));
+            effective(d.companionOf()).ifPresent(x -> pair.put(x.name(), com.ash.drishti.packs.Companions.of(x, templateKinds(x.name()))));
+            String why = com.ash.drishti.packs.Companions.problems(pair).get(d.name());
+            if (why != null) {
+                out.add(new Problem("warning", ConnectorFiles.COMPANION_OF, why));
+            }
+        }
         com.ash.drishti.server.edit.ConnectorWrites.problems(d, registry.plugin(d.name())).forEach((cmd, ps) ->
                 ps.forEach(m -> out.add(new Problem("warning", "writes." + cmd, m + " (this command is refused: the connector stays read-only for it)"))));
         return out;
@@ -1078,7 +1094,9 @@ public final class ConnectorManager {
         flat.remove(ConnectorFiles.COMPUTE_SETTING);
         return files.render("# Written from Admin -> Connectors by " + user + " on " + java.time.LocalDate.now(java.time.ZoneOffset.UTC) + ".", String.valueOf(body.get("plugin")),
                 body.get("enabled"), kinds, body.get("description") == null ? "" : String.valueOf(body.get("description")), flat, requires, compute,
-                before == null ? Map.of() : before.writes());          // nor writes: (APPROVALS_GUIDE.md › The design and its reasons, section 5.4): kept as written
+                before == null ? Map.of() : before.writes(),           // nor writes: (APPROVALS_GUIDE.md › The design and its reasons, section 5.4): kept as written
+                body.get(ConnectorFiles.COMPANION_OF) != null ? String.valueOf(body.get(ConnectorFiles.COMPANION_OF))
+                        : before == null ? "" : before.companionOf());  // a live companion stays one (LIVE_CONNECTORS_DESIGN.md section 2.2)
     }
 
     /** Parses a text as the named connector's file and validates it; throws DRS-5031 with every error. */

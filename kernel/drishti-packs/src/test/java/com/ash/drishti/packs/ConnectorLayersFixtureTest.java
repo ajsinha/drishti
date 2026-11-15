@@ -66,12 +66,38 @@ class ConnectorLayersFixtureTest {
             Map<String, String> want = new LinkedHashMap<>();
             ((Map<String, Object>) c.get("settings")).forEach((k, v) -> want.put(k, String.valueOf(v)));
             assertThat(e.definition().settings()).as(why).isEqualTo(want);
+            if (c.containsKey("companion-of")) {
+                assertThat(e.definition().companionOf()).as(why).isEqualTo(c.get("companion-of"));
+            }
             if (c.get("origins") instanceof Map<?, ?> o) {
                 o.forEach((k, v) -> assertThat(e.origins().get(String.valueOf(k))).as(why + ": " + k).isEqualTo(v));
             }
         }
         assertThat(Files.exists(dir.resolve("connectors"))).as("the resolver writes nothing").isFalse();
         assertThat(Files.exists(dir.resolve("data"))).as("the resolver writes nothing").isFalse();
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void theCompanionCasesGiveTheProblemsAndTheLiveConnectorsTheFixtureSays() throws Exception {
+        Map<String, Object> doc = new ObjectMapper(new YAMLFactory()).readValue(CASES.toFile(), new TypeReference<Map<String, Object>>() {});
+        List<Map<String, Object>> cases = (List<Map<String, Object>>) doc.get("companions");
+        assertThat(cases).hasSizeGreaterThan(2);
+        for (Map<String, Object> c : cases) {
+            String why = String.valueOf(c.get("why"));
+            Map<String, Companions.Connector> conns = new LinkedHashMap<>();
+            ((Map<String, Map<String, Object>>) c.get("connectors")).forEach((n, d) -> conns.put(n, new Companions.Connector(n,
+                    String.valueOf(d.get("plugin")), d.get("companion-of") == null ? "" : String.valueOf(d.get("companion-of")),
+                    d.get("kinds") == null ? List.of() : (List<String>) d.get("kinds"))));
+            Map<String, String> problems = Companions.problems(conns);
+            Map<String, String> want = (Map<String, String>) c.get("problems");
+            assertThat(problems.keySet()).as(why).containsExactlyInAnyOrderElementsOf(want.keySet());
+            want.forEach((n, frag) -> assertThat(problems.get(n)).as(why + ": " + n).contains(frag).contains("DRS-1061"));
+            for (Map<String, Object> l : (List<Map<String, Object>>) c.get("live")) {
+                assertThat(Companions.live(String.valueOf(l.get("kind")), (List<String>) l.get("read"), conns)).as(why + ": " + l)
+                        .containsExactlyElementsOf((List<String>) l.get("want"));
+            }
+        }
     }
 
     @Test

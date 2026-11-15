@@ -15,7 +15,8 @@
 -->
 # Live connectors: a live companion for any data connector (design, decided; building in i5)
 
-**Status: design for release i5, decided by the product owner (section 15); steps L1 to L10 are built in i5. Nothing in this
+**Status: design for release i5, decided by the product owner (section 15); steps L1 to L10 are built in i5. Built: L1 (the
+contract's `live:` block and its checks, `companion-of:` in the resolver, the reject reasons and their codes). Nothing else in this
 document is built unless a section says "today".** It answers the product owner's request: *"for all data connectors there can be a
 live connector, generally speaking."*
 
@@ -135,7 +136,9 @@ live:
 ```
 
 The key is the contract's `key:` (it exists). Every field the block names is checked to be in the contract when the pack loads, the way
-a blotter declaration is checked today. `binding-hint.live: optional` (today's hint) is replaced by `live.allowed`.
+a blotter declaration is checked today (built, L1: `LiveRules` in the kernel, `LiveContracts` on the server, Health `liveRules`, DRS-1060;
+`drishti.py contract check` the same offline). `binding-hint.live` is gone; `live.allowed` replaces it. `apply: both` is never written in a
+contract (a site's binding asks for it, Q7).
 
 A kind without a `live:` block may still be fed (the owner's "any kind"): the defaults are `order:` arrival, `partial: whole`,
 `apply: overlay`, `absorb: reset`, `validate: strict`. They are the safe ones: whole records, cleared at the next load.
@@ -238,17 +241,18 @@ A reject is never an error on anybody's page. It goes to three places:
    rejections list). Payloads are shown to data administrators only, masked like any record.
 3. Optionally **a dead-letter destination** on the same broker (`rejects: {forward: <topic or queue>}`), for the source's own team.
 
-| Reason | Example |
-|---|---|
-| `not-json`, `no-key`, `key-mismatch` | the message key says `MX-1`, the row says `MX-2` |
-| `contract` | a required field is missing; `PRICE` is text |
-| `unknown-kind` | an envelope names a kind the companion does not serve |
-| `closed-date`, `future-date` | section 5 |
-| `patch-without-base`, `replace-incomplete` | sections 3.3, 3.5 |
-| `not-allowed` | the contract says `live.allowed: false` |
+| Reason | Code | Example |
+|---|---|---|
+| `not-json`, `no-key`, `key-mismatch` | DRS-1062, DRS-1063, DRS-1064 | the message key says `MX-1`, the row says `MX-2` |
+| `contract` | DRS-1065 | a required field is missing; `PRICE` is text |
+| `unknown-kind` | DRS-1066 | an envelope names a kind the companion does not serve |
+| `closed-date`, `future-date` | DRS-1067, DRS-1068 | section 5 |
+| `patch-without-base`, `replace-incomplete` | DRS-1069, DRS-1070 | sections 3.3, 3.5 |
+| `not-allowed` | DRS-1071 | the contract says `live.allowed: false` |
+| `too-large` | DRS-1072 | over `max-message-kb`, the nesting depth or the array length (section 7.7) |
 
-A feed whose rejects pass `rejects.max-ratio` (5% over five minutes) is DEGRADED (amber) and keeps running. Error codes for these are
-allotted at step L1; the reasons above are their names.
+A feed whose rejects pass `rejects.max-ratio` (5% over five minutes) is DEGRADED (amber) and keeps running. The reasons and their codes
+are the kernel's `LiveReject` (built, L1); the meanings are in the [API reference's error table](../guides/API_REFERENCE.md#error-code-table).
 
 ### 3.5 Replacing a whole set
 
@@ -679,7 +683,7 @@ in; L6 to L10 use it.
 | Step | What | Size | Deletes | Docs with it |
 |---|---|---|---|---|
 | **L0** | The owner's answers (section 15); the two mock-up choices | done | | this document |
-| **L1** | Contract `live:` block (parser, load checks, generated contract docs); `companion-of:` in the resolver; reject reasons and their codes | M | `binding-hint.live` | contracts README, KERNEL_AND_MODULES 5.2 and 18.5 |
+| **L1** (built) | Contract `live:` block (parser, load checks, generated contract docs); `companion-of:` in the resolver; reject reasons and their codes | M | `binding-hint.live` | contracts README, KERNEL_AND_MODULES 5.2 and 18.5 |
 | **L2** | The live intake and the live state (kernel): decode, map, validate, order, apply; the transport SPI; Kafka on it | L | the Kafka plugin's index, caches, `mode` | Kafka README, DATA_ARCHITECTURE *Streaming sources* |
 | **L3** | The router's merged read; live sets on the shared state; blotter defaults from the contract; the six trade templates | L | per-set live side; repeated keys | LIVE_RESULTS_GUIDE sections 6 and 7 |
 | **L4** | Business dates, the roll, reconcile at a load (three absorb rules), checkpoints, the reconcile record | L | | DATA_LAKE_GUIDE (loads), LIVE_RESULTS_GUIDE |

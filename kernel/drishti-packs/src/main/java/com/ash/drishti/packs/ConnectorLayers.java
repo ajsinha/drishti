@@ -220,7 +220,11 @@ public final class ConnectorLayers {
         ConnectorFiles.Definition d = new ConnectorFiles.Definition(name, effectivePlugin, raw.get("enabled") != null ? o.enabled() : t.enabled(),
                 raw.get("kinds") != null ? o.kinds() : t.kinds(), raw.get("description") != null ? o.description() : t.description(), settings,
                 text, ConnectorFiles.etag(text), o.modified(), raw.get("requires") != null ? o.requires() : t.requires(), compute,
-                raw.get("writes") != null ? o.writes() : t.writes());
+                raw.get("writes") != null ? o.writes() : t.writes(),
+                raw.get(ConnectorFiles.COMPANION_OF) != null ? o.companionOf() : t.companionOf());
+        if (raw.get(ConnectorFiles.COMPANION_OF) != null) {
+            origins.put(ConnectorFiles.COMPANION_OF, OVERRIDE);
+        }
         return new Effective(d, OVERRIDE, origins, false);
     }
 
@@ -281,7 +285,8 @@ public final class ConnectorLayers {
         List<String> kinds = ConnectorFiles.kindNames(t.get("kinds"));
         return files.render(header.isEmpty() ? "" : "# " + header, String.valueOf(t.get("plugin")), t.get("enabled"), kinds,
                 t.get("description") == null ? "" : String.valueOf(t.get("description")), flat, Map.of(), ConnectorFiles.computeOf(t),
-                t.get("writes") instanceof Map<?, ?> w ? (Map<String, Object>) w : Map.of());   // a template's write commands are part of it (18.6)
+                t.get("writes") instanceof Map<?, ?> w ? (Map<String, Object>) w : Map.of(),    // a template's write commands are part of it (18.6)
+                t.get(ConnectorFiles.COMPANION_OF) == null ? "" : String.valueOf(t.get(ConnectorFiles.COMPANION_OF)));   // and its data connector
     }
 
     /**
@@ -299,6 +304,12 @@ public final class ConnectorLayers {
         }
         if (!wanted.description().equals(t.description())) {
             out.put("description", wanted.description());
+        }
+        if (!wanted.companionOf().equals(t.companionOf())) {
+            if (wanted.companionOf().isEmpty()) {
+                return null;                                               // no longer a companion: only a complete file says so
+            }
+            out.put(ConnectorFiles.COMPANION_OF, wanted.companionOf());
         }
         Map<String, Object> settings = new LinkedHashMap<>();
         for (Map.Entry<String, String> e : wanted.settings().entrySet()) {

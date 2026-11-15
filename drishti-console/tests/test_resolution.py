@@ -67,8 +67,22 @@ def test_connector_fixture(case):
     assert e.plugin == case["plugin"]
     assert e.enabled == str(case["enabled"])
     assert e.settings == {k: str(v) for k, v in case["settings"].items()}
+    if "companion-of" in case:
+        assert e.companion_of == case["companion-of"]
     for k, layer in (case.get("origins") or {}).items():
         assert e.origins.get(k) == layer, (k, e.origins)
+
+
+@pytest.mark.parametrize("case", CONN_CASES["companions"], ids=[c["why"] for c in CONN_CASES["companions"]])
+def test_companion_fixture(case):
+    """Live companions (LIVE_CONNECTORS_DESIGN.md 2.2): the same problems and live connectors as Companions in Java."""
+    conns = {n: (d["plugin"], d.get("companion-of") or "", list(d.get("kinds") or [])) for n, d in case["connectors"].items()}
+    problems = R.companion_problems(conns)
+    assert set(problems) == set(case["problems"] or {})
+    for n, frag in (case["problems"] or {}).items():
+        assert frag in problems[n] and "DRS-1061" in problems[n], problems[n]
+    for want in case["live"]:
+        assert R.live_connectors(want["kind"], want["read"], conns) == want["want"], want
 
 
 def _site(tmp_path: Path, switch: bool | None) -> R.Settings:
@@ -143,3 +157,27 @@ def test_the_repository_reads_every_shipped_pack_once():
         assert (p.folder / "pack.yaml").is_file()
     assert r.connectors.find("trade-endur").template_from == "module source-endur"
     assert not [x.message for x in r.connectors.problems]
+
+
+@pytest.mark.parametrize("on", [True, False])
+def test_a_live_companion_follows_its_data_connector(tmp_path, on):
+    """A module's live companion (companion-of: trade-endur) is the kind's live connector, never a read one; with its module off it
+    goes with its data connector (LIVE_CONNECTORS_DESIGN.md section 2.2)."""
+    s = _site(tmp_path, on)
+    _tree(tmp_path, {"modules/source-endur/connectors/trade-endur-live.yaml":
+                     "name: trade-endur-live\nplugin: kafka\nenabled: false\ncompanion-of: trade-endur\nsettings:\n  topics: [t]\n"})
+    r = R.build(s)
+    if on:
+        assert r.connectors.find("trade-endur-live").companion_of == "trade-endur"
+        assert r.bindings.read("trade")["connectors"] == ["trade-endur"]
+        assert r.bindings.live("trade") == ["trade-endur-live"]
+        assert r.connectors.companion_kinds("trade-endur-live") == ["trade"]
+        assert r.connectors.companion_problems() == {}
+    else:
+        assert r.connectors.find("trade-endur-live") is None
+        assert r.bindings.live("trade") == []
+
+
+def test_every_shipped_companion_is_usable():
+    """Every live companion the modules ship names a data connector in force, on a messaging plugin (DRS-1061)."""
+    assert R.repository().connectors.companion_problems() == {}

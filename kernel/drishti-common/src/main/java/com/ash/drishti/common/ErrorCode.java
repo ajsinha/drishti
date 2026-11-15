@@ -84,6 +84,39 @@ public enum ErrorCode {
     MODULE_DEPLOY_REFUSED("DRS-1033", 422),
     /** A module deployment that failed on a node and was rolled back on every node (the words name the node and why). */
     MODULE_DEPLOY_FAILED("DRS-1034", 409),
+    /**
+     * A kind's {@code live:} rules (its contract, docs/architecture/LIVE_CONNECTORS_DESIGN.md section 2.3) cannot be used: a field the
+     * contract does not have, a value outside its words, live allowed on a computed kind, or a restatement of closed dates on a kind
+     * {@code drishti.live.restate-kinds} does not list. Reported when the pack loads (Health); the kind takes no live feed until fixed.
+     */
+    LIVE_RULES_INVALID("DRS-1060", 422),
+    /**
+     * A live companion ({@code companion-of:}, LIVE_CONNECTORS_DESIGN.md section 2.2) that is not used: its data connector is not here or is
+     * itself a companion, it is not on a messaging plugin, or it names a kind its data connector does not serve.
+     */
+    LIVE_COMPANION_INVALID("DRS-1061", 422),
+    /** A live message rejected (LIVE_CONNECTORS_DESIGN.md section 3.4, reason {@code not-json}): the payload is not JSON (or JSONL). */
+    LIVE_NOT_JSON("DRS-1062", 422),
+    /** A live message rejected ({@code no-key}): a field of the contract's key is missing or empty. */
+    LIVE_NO_KEY("DRS-1063", 422),
+    /** A live message rejected ({@code key-mismatch}): the transport's message key differs from the row's contract key. */
+    LIVE_KEY_MISMATCH("DRS-1064", 422),
+    /** A live message rejected ({@code contract}): the row breaks the kind's contract (a required field missing, a wrong type or value). */
+    LIVE_CONTRACT("DRS-1065", 422),
+    /** A live message rejected ({@code unknown-kind}): an envelope names a kind the companion does not serve. */
+    LIVE_UNKNOWN_KIND("DRS-1066", 422),
+    /** A live message rejected ({@code closed-date}): its business date is before the kind's live date and may not be restated. */
+    LIVE_CLOSED_DATE("DRS-1067", 422),
+    /** A live message rejected ({@code future-date}): its business date is after the next business date. */
+    LIVE_FUTURE_DATE("DRS-1068", 422),
+    /** A live message rejected ({@code patch-without-base}): a partial update with no row to apply it to and not every required field. */
+    LIVE_PATCH_WITHOUT_BASE("DRS-1069", 422),
+    /** A live message rejected ({@code replace-incomplete}): a whole-set replacement whose end did not arrive in time or whose count differs. */
+    LIVE_REPLACE_INCOMPLETE("DRS-1070", 422),
+    /** A live message rejected ({@code not-allowed}): the kind's contract says {@code live.allowed: false}. */
+    LIVE_NOT_ALLOWED("DRS-1071", 422),
+    /** A live message rejected ({@code too-large}): over {@code drishti.live.max-message-kb}, or nested or listed past the bounds. */
+    LIVE_TOO_LARGE("DRS-1072", 422),
     SUTRA_PARSE("DRS-2001", 422),
     SUTRA_INVALID("DRS-2002", 422),
     SUTRA_NOT_FOUND("DRS-2003", 404),

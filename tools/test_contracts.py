@@ -425,6 +425,40 @@ class Checks(unittest.TestCase):
             self.assertIn("**To review", page)
 
 
+class LiveRules(unittest.TestCase):
+    """A contract's live: block (LIVE_CONNECTORS_DESIGN.md section 2.3): the schema says its words, live_problems what the schema
+    cannot (the server's LiveRules checks the same at pack load), live_words the cell of the contract's page."""
+
+    BASE = {"kind": "trade", "class": "fundamental", "key": ["TRADE_ID"],
+            "fields": [{"name": n, "type": "text", "presence": "optional"} for n in ("TRADE_ID", "TRADE_VERSION", "SOURCE_UPDATE_TIME", "UPDATED_BY")]}
+
+    def test_the_designs_trade_block_is_valid(self):
+        c = dict(self.BASE, live={"order": ["TRADE_VERSION", "SOURCE_UPDATE_TIME"], "changed-at": "SOURCE_UPDATE_TIME",
+                                  "changed-by": "UPDATED_BY", "partial": "whole", "apply": "overlay", "absorb": "by-order",
+                                  "retention": {"ttl": "2d", "max-rows": 2000000}, "validate": "strict", "conflate": "none"})
+        self.assertEqual([], C.live_problems(c))
+        self.assertEqual([], [p for p in C.schema_problems(c) if p.startswith("live")])
+        self.assertIn("order `TRADE_VERSION`, `SOURCE_UPDATE_TIME`", C.live_words(c))
+
+    def test_the_schema_refuses_unknown_words_and_both(self):
+        for bad in ({"partial": "deltas"}, {"apply": "both"}, {"conflate": "fast"}, {"colour": "blue"}, {"retention": {"ttl": "2 weeks"}}):
+            self.assertTrue([p for p in C.schema_problems(dict(self.BASE, live=bad)) if p.startswith("live")], bad)
+
+    def test_fields_computed_kinds_by_order_and_restatements(self):
+        probs = lambda live, **kw: C.live_problems(dict(self.BASE, live=live, **kw))          # noqa: E731
+        self.assertIn("not a field of the contract", probs({"order": ["TRADE_VERSON"]})[0])
+        self.assertIn("computed kind", probs({"allowed": True}, **{"class": "computed"})[0])
+        self.assertEqual([], probs({"allowed": False}, **{"class": "computed"}))
+        self.assertIn("by-order needs an order", probs({"absorb": "by-order"})[0])
+        self.assertIn("allowed only for pnl-vector, scenario-pv", probs({"apply": "land", "closed-dates": "restate"})[0])
+        self.assertEqual([], C.live_problems({**self.BASE, "kind": "scenario-pv", "live": {"apply": "land", "closed-dates": "restate"}}))
+
+    def test_the_page_says_what_a_live_message_means(self):
+        self.assertIn("defaults", C.live_words(self.BASE))
+        self.assertIn("computed", C.live_words({**self.BASE, "class": "computed"}))
+        self.assertIn("no feed", C.live_words({**self.BASE, "live": {"allowed": False}}))
+
+
 class Commands(unittest.TestCase):
     def run_main(self, *argv) -> tuple[int, str]:
         out = io.StringIO()

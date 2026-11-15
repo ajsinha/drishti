@@ -3155,6 +3155,19 @@ and the fix for the codes that need more than the meaning.
 | DRS-1046 | — | connector file not used | a site connector file says `template: <owner>` (or an earlier release generated it) and that template is not here (its module is off or removed): the file is listed, never run on its own |
 | DRS-1047 | — | two packs folders | `drishti.packs.dir` (the former name) and `drishti.packs.site-dir` name different folders: the server does not start; keep one |
 | DRS-1048 | — | inbox rules unreadable | a module's `dataload.yaml` cannot be read: its files are not matched by the inbox until it is fixed (Admin → Health) |
+| DRS-1060 | — | live rules invalid | a contract's `live:` block ([LIVE_CONNECTORS_DESIGN.md section 2.3](../architecture/LIVE_CONNECTORS_DESIGN.md#23-the-contracts-live-block)) names a field the contract does not have, a word outside its list, live on a computed kind, or a restatement of closed dates on a kind `drishti.live.restate-kinds` does not list: Health `liveRules` names the kind and the file; the kind takes no live feed until it is fixed |
+| DRS-1061 | — | live companion not used | a connector with `companion-of:` whose data connector is not here (its file removed, its module off) or is itself a companion, that is not on kafka, activemq or rabbitmq, or that names a kind its data connector does not serve: Admin → Connectors shows it on the connector |
+| DRS-1062 | — | live reject: not-json | a live message that is not JSON (or JSONL): written to the feed's reject log, counted; never an error on a page |
+| DRS-1063 | — | live reject: no-key | a live message without the contract's key fields |
+| DRS-1064 | — | live reject: key-mismatch | the transport's message key differs from the row's contract key (`MX-1` against `MX-2`) |
+| DRS-1065 | — | live reject: contract | the row breaks the kind's contract: a required field missing, a wrong type or value |
+| DRS-1066 | — | live reject: unknown-kind | an envelope names a kind its companion does not serve |
+| DRS-1067 | — | live reject: closed-date | the row's business date is before the kind's live date and the kind may not restate it |
+| DRS-1068 | — | live reject: future-date | the row's business date is after the next business date |
+| DRS-1069 | — | live reject: patch-without-base | a partial update with no row to apply it to and not every required field |
+| DRS-1070 | — | live reject: replace-incomplete | a whole-set replacement whose end did not arrive in time or whose row count differs: the set before it stands |
+| DRS-1071 | — | live reject: not-allowed | the kind's contract says `live.allowed: false` (official results, computed kinds) |
+| DRS-1072 | — | live reject: too-large | a message over its size, nesting or list bounds |
 | DRS-1035 | 409 | needs data | a function that is installed and on but whose required data no source serves (`EXP needs data: exposure-path is not bound; ask your data administrator`): its API answers this with the need and `function`; its console page is the needs-data page (200, links to Admin → Data bindings and Help) and the command line says the same words. Binding the data turns it on; never 404 |
 | DRS-1032 | 503 | module part unavailable | a module part runs on no node that is up (or is not placed at all, or a forwarded request reached a node it is not placed on); it is never run on an unplaced node |
 | DRS-1017 | 403 | edition pack refused | the server's edition lists its packs with allow-only ([LENSES.md](ADMIN_GUIDE.md#12-what-a-lens-is)): Admin → Packs load, Deploy archive (a failed check) and the registry install refuse any other pack. Add the pack to the edition's packs, or set `drishti.edition-spec.packs.allow-only=false` |

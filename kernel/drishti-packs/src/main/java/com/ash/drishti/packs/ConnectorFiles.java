@@ -60,7 +60,9 @@ public final class ConnectorFiles {
     /** A connector's logical name: lower case letters, digits and hyphens, starting with a letter or digit. */
     public static final Pattern NAME = Pattern.compile("[a-z0-9][a-z0-9-]{0,63}");
     private static final Set<String> KEYS = Set.of("name", "plugin", "enabled", "kinds", "description", "settings", "requires", "mode", "reads",
-            "engine", "triggers", "coalesce", "cache", "limits", "history", "incremental", "writes");
+            "engine", "triggers", "coalesce", "cache", "limits", "history", "incremental", "writes", COMPANION_OF);
+    /** The key that makes a connector the live companion of a data connector (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 2.2). */
+    public static final String COMPANION_OF = "companion-of";
     /** The keys of a computation (docs/architecture/DATA_ARCHITECTURE.md › Reactive connectors, section 5): only a connector of the {@code reactive} plugin has them. */
     public static final List<String> COMPUTE_KEYS = List.of("reads", "engine", "triggers", "coalesce", "cache", "limits", "history", "incremental");
     /** The setting a reactive connector's computation reaches its plugin in: the {@code compute} block as JSON. */
@@ -101,10 +103,18 @@ public final class ConnectorFiles {
      * @param writes the {@code writes:} block as written (APPROVALS_GUIDE.md › The design and its reasons, section 5.4): named commands, each with its plugin's template, its
      *        concurrency guard and idempotency clause; empty when the connector is read-only (every shipped one). The server validates it
      *        when the connector loads; a connector writes only once an administrator also switches its writes on
+     * @param companionOf the data connector this one is the live companion of ({@code companion-of:},
+     *        docs/architecture/LIVE_CONNECTORS_DESIGN.md section 2.2): its messages change that connector's rows; empty for any other connector
      */
     public record Definition(String name, String plugin, String enabled, List<String> kinds, String description,
             Map<String, String> settings, String text, String etag, Instant modified, Map<String, Object> requires, Map<String, Object> compute,
-            Map<String, Object> writes) {
+            Map<String, Object> writes, String companionOf) {
+
+        /** A definition that is no live companion. */
+        public Definition(String name, String plugin, String enabled, List<String> kinds, String description, Map<String, String> settings,
+                String text, String etag, Instant modified, Map<String, Object> requires, Map<String, Object> compute, Map<String, Object> writes) {
+            this(name, plugin, enabled, kinds, description, settings, text, etag, modified, requires, compute, writes, "");
+        }
 
         /** A definition without {@code writes:}. */
         public Definition(String name, String plugin, String enabled, List<String> kinds, String description, Map<String, String> settings,
@@ -132,6 +142,12 @@ public final class ConnectorFiles {
             settings = settings == null ? Map.of() : java.util.Collections.unmodifiableMap(new LinkedHashMap<>(settings));
             description = description == null ? "" : description;
             enabled = enabled == null || enabled.isBlank() ? "true" : enabled;
+            companionOf = companionOf == null ? "" : companionOf.strip();
+        }
+
+        /** True when this connector is a data connector's live companion. */
+        public boolean companion() {
+            return !companionOf.isEmpty();
         }
 
         /** True unless the file says {@code enabled: false} (a placeholder counts as on: it is resolved by the server). */
@@ -307,7 +323,8 @@ public final class ConnectorFiles {
         for (String k : m.keySet()) {
             if (!KEYS.contains(k)) {
                 throw new InvalidFile(name + ".yaml: unknown key '" + k + "' (allowed: plugin, enabled, kinds, description, settings, requires; "
-                        + "a reactive connector also mode, reads, engine, triggers, coalesce, cache, limits, history; a connector that writes also writes)");
+                        + "a reactive connector also mode, reads, engine, triggers, coalesce, cache, limits, history; a connector that writes also writes; "
+                        + "a live companion also companion-of)");
             }
         }
         if (m.get("name") != null && !name.equals(String.valueOf(m.get("name")))) {
@@ -377,8 +394,20 @@ public final class ConnectorFiles {
         }
         @SuppressWarnings("unchecked")
         Map<String, Object> writes = wr == null ? Map.of() : (Map<String, Object>) wr;
+        Object co = m.get(COMPANION_OF);
+        String companionOf = co == null ? "" : String.valueOf(co).strip();
+        if (!companionOf.isEmpty() && !NAME.matcher(companionOf).matches()) {
+            throw new InvalidFile(name + ".yaml: 'companion-of' names a data connector ('trade-endur'), not '" + companionOf + "'");
+        }
+        if (companionOf.equals(name)) {
+            throw new InvalidFile(name + ".yaml: a connector cannot be its own live companion ('companion-of' names the data connector it accompanies)");
+        }
+        if (!companionOf.isEmpty() && reactive) {
+            throw new InvalidFile(name + ".yaml: a reactive connector computes; it is never a live companion (no 'companion-of')");
+        }
         return new Definition(name, String.valueOf(plugin).trim(), en == null ? null : String.valueOf(en), kinds,
-                m.get("description") == null ? "" : String.valueOf(m.get("description")), settings, text, etag(text), null, requires, compute, writes);
+                m.get("description") == null ? "" : String.valueOf(m.get("description")), settings, text, etag(text), null, requires, compute, writes,
+                companionOf);
     }
 
     /** A pack template's computation when its plugin is {@code reactive} (empty otherwise, or when it is not usable: the file says why). */
@@ -670,8 +699,17 @@ public final class ConnectorFiles {
     /** As above, keeping a {@code writes:} block (APPROVALS_GUIDE.md › The design and its reasons, section 5.4) as written. */
     public String render(String header, String plugin, Object enabled, List<String> kinds, String description, Map<String, ?> settings,
             Map<String, Object> requires, Map<String, Object> compute, Map<String, Object> writes) {
+        return render(header, plugin, enabled, kinds, description, settings, requires, compute, writes, "");
+    }
+
+    /** As above, keeping {@code companion-of:} (a live companion, LIVE_CONNECTORS_DESIGN.md section 2.2) as written. */
+    public String render(String header, String plugin, Object enabled, List<String> kinds, String description, Map<String, ?> settings,
+            Map<String, Object> requires, Map<String, Object> compute, Map<String, Object> writes, String companionOf) {
         Map<String, Object> doc = new LinkedHashMap<>();
         doc.put("plugin", plugin);
+        if (companionOf != null && !companionOf.isBlank()) {
+            doc.put(COMPANION_OF, companionOf.strip());
+        }
         if (compute != null && compute.get("mode") != null) {
             doc.put("mode", compute.get("mode"));
         }
