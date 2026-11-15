@@ -27,4 +27,4 @@ it (Drishti Finance lists both) the Markets lens also shows curves, FX, quotes a
 | Help | `docs/help.yaml`: the packs' guides, the world-data tutorial |
 | Data it needs | `data/needs.yaml`: every kind, bound by the site to its own connectors |
 
-US equity prices (`PXH`, read live) stay internal-only and off as shipped. The module carries no connector.
+US equity prices (`PXH`, read live) stay internal-only and off as shipped. The module carries its packs' connector templates (read-only; hosts and secrets are the site's placeholders); the site overrides them in `config/connectors/`.

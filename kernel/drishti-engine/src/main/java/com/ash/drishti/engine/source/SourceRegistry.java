@@ -162,7 +162,12 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
     /** Where a connector's relative {@code map:} file is looked for after its module's folder (the connectors' folder first). */
     private volatile List<java.nio.file.Path> shapeBases;
 
-    /** The connectors' folder (drishti.sources.connectors-dir), then config/connectors, config and the working folder. */
+    /**
+     * Where a relative {@code map:} is looked for after the connector's own module folder (a template's {@code module-dir}): the site's
+     * connectors folder ({@code drishti.sources.connectors-dir}, the folder of the site's connector files), as an absolute path. Nothing
+     * relative to the working folder: a map that is in neither is a refusal naming the paths tried (DRS-5034), never a connector that
+     * quietly reads zero trades.
+     */
     private List<java.nio.file.Path> shapeBases() {
         List<java.nio.file.Path> set = shapeBases;
         if (set != null) {
@@ -170,11 +175,8 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
         }
         List<java.nio.file.Path> out = new ArrayList<>();
         if (props != null && props.connectorsDir() != null && !props.connectorsDir().isBlank()) {
-            out.add(java.nio.file.Path.of(props.connectorsDir()));
+            out.add(java.nio.file.Path.of(props.connectorsDir()).toAbsolutePath().normalize());
         }
-        out.add(java.nio.file.Path.of("config", "connectors"));
-        out.add(java.nio.file.Path.of("config"));
-        out.add(java.nio.file.Path.of("."));
         return out;
     }
 

@@ -22,8 +22,7 @@ SwapOne is an OTC swaps system (mocked here: a synthetic look-alike, snake_case,
 plugin: delta
 settings:
   lake: main
-  lake-tables: trading.trades_shared
-  where: SOURCE_SYSTEM = 'SWAPONE'
+  lake-tables: trading.trade_swapone                # its own table: one table a trading system
   set: { SOURCE_SYSTEM: SWAPONE }
   map: mappings/swapone-trade.yaml
 ```

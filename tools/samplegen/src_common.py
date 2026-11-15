@@ -21,8 +21,8 @@ about 6% of the live book is amended each later day (the system's own version co
 
 These trades carry NO positions and NO scenario P&L: nothing the VaR reads is generated for them, so every VaR figure stays what it was.
 
-A landing table shared by several systems (trading.trades_shared) needs to know whose row it is: the feed tags every document with
-SOURCE_SYSTEM (the only canonical field in a native document); the module's where: predicate splits the table by it."""
+Each system lands in its own table (trading.trade_wss, trade_swapone, trade_ici: one table a trading system, always); the feed still
+tags every document with SOURCE_SYSTEM (the only canonical field in a native document), which the module's connector also sets."""
 from __future__ import annotations
 
 import json

@@ -338,7 +338,22 @@ public final class VarService implements AutoCloseable {
             throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no P&L vectors in any connector (kind " + props.kinds().vector()
                     + "): build the demo lake (drishti.py lake demo) or point the market-risk pack's risk-store at your lake");
         }
-        return load(asked == null || asked.isAfter(latest) ? latest : asked, 0);
+        if (asked == null) {
+            return load(latest, 0);
+        }
+        // a date with no P&L load is never answered silently from an older one: the newest earlier date answers, and says so
+        LocalDate held = asked.isAfter(latest) ? latest : loader.previous(asked.plusDays(1));
+        if (held == null || held.equals(asked)) {
+            return load(asked, 0);
+        }
+        return load(held, 0).warned(carriedWarning(asked, held));
+    }
+
+    /** The words of a VaR date answered from an earlier one (VAR_GUIDE.md, "A date with no data"): the page shows them prominently. */
+    static final String CARRIED = "scenario P&L for ";
+
+    static String carriedWarning(LocalDate asked, LocalDate answered) {
+        return CARRIED + asked + " not loaded — showing " + answered;
     }
 
     /** True on a thread computing the official records: every date read without its intraday layer (VAR_GUIDE.md section 8.4). */

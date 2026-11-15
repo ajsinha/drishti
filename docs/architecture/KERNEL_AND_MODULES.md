@@ -98,7 +98,7 @@ them or off the glue between them. The names below are used throughout; *the ker
 | G1 | **A domain-free kernel**: general BI and aggregation (packs runtime, Sutras, Rachana, Pivot, BI, tables and models, lakes, connectors, search, Explain, approvals, security, cluster, Elements core) that serves a bank, a hospital or a genome lab unchanged | the kernel boots and serves BI, Pivot and its own reference data with **no module installed**; `tools/domain_strings_allowed.yaml` is empty |
 | G2 | **Modules built and shipped separately**, like Linux kernel modules: one signed file (`.dmod`) per module, compiled against the kernel API only, dropped into a configured folder | the banking module is built in its own build against the SDK jars and passes its suite against the kernel alone |
 | G3 | **A module carries everything its capability needs**: Java compute, services and API; Python compute; packs (kinds, contracts, Sutras, samples); console routes, templates, the domain Elements library, CSS on the theme tokens; lenses, functions, Home cards; feeds; Help, guides, tutorials, glossary; settings schema; licence feature | removing `banking.dmod` leaves no banking word, page, file, Help page, engine or API anywhere ([ACCESS_MODEL.md section 6](ACCESS_MODEL.md#6-guarantees-as-tests), extended to "not installed") |
-| G4 | **The kernel controls connectors.** A module declares the *data* it needs (kinds and contracts); the site binds its configured connectors and lake tables to them | no connector name, plugin id, host or credential in any module file (a packager check); Admin → Data bindings shows every need and what serves it |
+| G4 | **The kernel controls connectors.** A module declares the *data* it needs (kinds and contracts); the site binds its configured connectors and lake tables to them | no host or credential in any module file, and no connector outside its read-only templates, whose site values are `${...}` placeholders (a packager check, C9); Admin → Data bindings shows every need and what serves it |
 | G5 | **White label by configuration**: one distribution file picks modules, brand, theme, lenses, Home and docs | `drishti.finance` and a sample `drishti.genomics` boot from configuration only, from the same kernel build |
 | G6 | **VaR exactly equal** through every phase | the 2.9.11.c VaR check, bit for bit, at the 509 and 250 windows |
 
@@ -900,7 +900,9 @@ administrator (four eyes), audited, applied **hot**: the kernel validates the ne
 
 - A module's files contain no connector, plugin, host, URL of a data source, user name, password, key or token: the packager and V1 scan
   for connector keys (`plugin:`, `connector:`, `bootstrap-servers`, `jdbc:`, `password`, `secret`, `token`) and known secret patterns, and
-  refuse.
+  refuse. The one exception is the read-only **connector templates** (section 18.5): a pack's `connectors:` section and a source module's
+  `connectors/` files travel with the module (an installed module serves its kinds as its source folder does) and name plugins, kinds and
+  lakes, but every host, user and secret in them is a `${...}` placeholder the site fills; the site's override and secrets stay the site's.
 - At run time a module has no API to read connector settings or secrets; `Kinds` returns rows, never the connection.
 - Feeds a module ships (public sources such as the ECB rates) name a public URL and need no credentials; one that needs a key reads it
   from the kernel's secret store by a **name the site provides** in the feed's binding (`feeds.market-data.api-key: ${secret:ecb}`), not from
@@ -1222,7 +1224,7 @@ Every module passes it to be signed with a publisher key (`drishti:sign` refuses
 | C6 | **Routes namespaced** | every route under `/m/<id>/`; aliases and words checked against the reserved names (9.9); no route registered by code (no controller or `@RequestMapping` in a console jar) |
 | C7 | **Help, guide, tutorial present** | `docs/README.md` with front matter; a Help section; one guide and one tutorial per `docs.features` row; the docs gates (links, images, register) on the module's `docs/` |
 | C8 | **Data contracts present** | every kind in `provides.kinds` has a contract (`contract-format: 1`) with `binding-hint:` and no `storage:`; every need names a contract range |
-| C9 | **No secrets, no connectors, pure Python** | the secret patterns and connector keys of section 5.10 in every file, including templates and samples; the module's Python (section 4.6): entry points exist, declared requirements vendored as pure-Python wheels, nothing compiled |
+| C9 | **No secrets, no connectors, pure Python** | the secret patterns and connector keys of section 5.10 in every file, samples included; the connector templates (a pack's `connectors:` section, a source module's `connectors/` files, section 18.5) may name plugins and kinds, and every host, user and secret in them is a `${...}` placeholder; the module's Python (section 4.6): entry points exist, declared requirements vendored as pure-Python wheels, nothing compiled |
 | C10 | **Licence headers** | the publisher's header on every source file (the parent pom's check) |
 | C11 | **Functions answer** | every word in `functions.yaml` answers through the harness (a page, a view or an API) |
 | C12 | **Two people at once** | the session-isolation test: two people, different row rules, concurrent requests, no crossed data in any page, API or cache |
@@ -2478,7 +2480,9 @@ deployed over a shipped one in an earlier release is treated the same way: the s
    plugin.
 3. **Secrets**: `${VAR}` and `file:` references, resolved when the connector starts. A template never holds one.
 
-A relative file in a setting (`map: mappings/endur-trade.yaml`) is read from the folder of the layer that set the key.
+A relative file in a setting (`map: mappings/endur-trade.yaml`) is read from the folder of the layer that set the key: a template's
+from its module's folder (installed or development), a site file's from the connectors folder (`drishti.sources.connectors-dir`), both
+absolute; never from the server's working folder. A map in neither refuses the connector (DRS-5034) naming the paths tried.
 
 | A site file… | is… |
 |---|---|

@@ -289,6 +289,7 @@ final class VarViews {
             tradeSourceBanner(out);                                    // trade grain only: position grain never reads trades
         }
         out.put("businessDate", s.date().date().toString());
+        out.put("asOfNotice", asOfNotice(s.date()));                 // the date asked had no P&L load: said, never silent
         out.put("var", round(s.measures().var()));
         out.put("es", round(s.measures().es()));
         out.put("k", s.measures().k());
@@ -1096,6 +1097,7 @@ final class VarViews {
         out.put("canonical", s.res().canonical());
         out.put("label", s.label());
         out.put("businessDate", usd.date().toString());
+        out.put("asOfNotice", asOfNotice(usd));                 // the date asked had no P&L load: said, never silent
         out.put("currency", page);
         out.put("var", round(pageVar));
         out.put("lens", lensNote(s));
@@ -1438,6 +1440,7 @@ final class VarViews {
         out.put("hierarchyInfo", info);
         out.put("title", svc.hierarchies().title(h));
         out.put("businessDate", d.date().toString());
+        out.put("asOfNotice", asOfNotice(d));                 // the date asked had no P&L load: said, never silent
         out.put("nodes", rows);
         // var-limit rows of this hierarchy's nodes with no positions on the date: shown as "limit, no positions", never dropped
         List<Map<String, Object>> idle = new ArrayList<>();
@@ -1573,5 +1576,10 @@ final class VarViews {
 
     private static Object nan(double v) {
         return Double.isNaN(v) ? null : v;
+    }
+
+    /** The date's "answered from an earlier date" warning (VarService#carriedWarning), or null: the VaR page shows it prominently. */
+    static String asOfNotice(VarDate d) {
+        return d.warnings().stream().filter(w -> w.startsWith(VarService.CARRIED)).findFirst().orElse(null);
     }
 }

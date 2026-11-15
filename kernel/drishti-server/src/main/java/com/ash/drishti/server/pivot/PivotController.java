@@ -140,6 +140,8 @@ public class PivotController {
         if (body.get("view") instanceof String id) {
             a.put("savedView", id);
         }
+        // a source (a trading system's connector) with no load for the date answers from its newest earlier one: said, per source
+        a.put("asOfNotices", kinds.asOfNotices(view.source(), view.date()));
         audited(p, "pivot.query", view, "; cells=" + a.get("cellCount"));
         return a;
     }

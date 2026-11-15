@@ -161,6 +161,36 @@ class CycleTest {
                 .isEqualTo("its .ready file says 3 rows, the file holds 2 documents: not loaded");
     }
 
+    /**
+     * The daily-loads rehearsal: a .ready file with {@code rows: 3}, a file of 3 documents, one rejected under the shipped
+     * reject-max-percent 0. The reason is the reject, never the count (which matches).
+     */
+    @Test
+    void aRowCountThatMatchesIsNeverGivenAsTheReasonWhenRowsWereRejected() {
+        com.fasterxml.jackson.databind.node.ObjectNode s = new com.fasterxml.jackson.databind.ObjectMapper().createObjectNode()
+                .put("documents", 3).put("rejected", 1);
+        s.putObject("rejects").putObject("byReason").put("no id", 1);
+        String failure = "1 of 3 documents rejected (33.33%), more than rejects.max-pct 0.0: nothing was written";
+        assertThat(Cycle.checkFailed(3, 3, failure, s)).isEqualTo(
+                "its check failed before loading: 1 of 3 documents rejected (33.33%), more than reject-max-percent 0.0 (no id (1)): not loaded");
+        assertThat(Cycle.checkFailed(4, 3, failure, s)).isEqualTo("its check failed before loading: 1 of 3 documents rejected (33.33%), "
+                + "more than reject-max-percent 0.0 (no id (1)); its .ready file says 4 rows, the file holds 3 documents: not loaded");
+        assertThat(Cycle.checkFailed(3, 2, null, null)).isEqualTo("its .ready file says 3 rows, the file holds 2 documents: not loaded");
+    }
+
+    /** The rehearsal: .loaded.json said route.mode append while the lake file's entry made the load a replace; the report says the mode run. */
+    @Test
+    void theReportedModeIsTheModeTheLoadRan() {
+        com.fasterxml.jackson.databind.ObjectMapper json = new com.fasterxml.jackson.databind.ObjectMapper();
+        com.fasterxml.jackson.databind.node.ObjectNode route = json.createObjectNode().put("mode", "append");
+        com.fasterxml.jackson.databind.node.ObjectNode replaced = json.createObjectNode().put("mode", "overwrite-dates").put("modeFrom", "the lake file's entry");
+        assertThat(Cycle.effectiveMode(route.deepCopy(), List.of(replaced)).toString())
+                .isEqualTo("{\"mode\":\"replace\",\"modeFrom\":\"the lake file's entry\"}");
+        com.fasterxml.jackson.databind.node.ObjectNode appended = json.createObjectNode().put("mode", "append").put("modeFrom", "given (--mode or the .ready file)");
+        assertThat(Cycle.effectiveMode(route.deepCopy(), List.of(replaced, appended)).path("mode").asText()).isEqualTo("per table");
+        assertThat(Cycle.effectiveMode(route.deepCopy(), List.of()).path("mode").asText()).as("no summary: the route's").isEqualTo("append");
+    }
+
     @Test
     void unknownNamesLinksNoRuleAndABadMarkerGoToFailedWithTheReason() throws IOException {
         Fixture f = new Fixture(tmp);

@@ -26,6 +26,30 @@
   `start-cluster`, the images (now carrying `modules/`, the distribution, engine, lake, module-switch and store files) and the systemd
   unit name the roots; before, a server started from another folder (a cluster node's own folder, a container, a test) found no
   modules and failed with DRS-1041 for every pack. A static check fails the gate on any new working-directory path.
+- **Installed modules keep their connector templates (release blocker).** The module packer no longer drops a pack's `connectors:` section
+  (`content.yaml` `sections-out` is gone): banking, market data, capital markets and economy installed from their `.dmod` serve their kinds
+  from their templates at every start. Before, the first start read the development folder and every restart read the installed copy,
+  whose packs had no templates: risk-store, var-engine, var-positions, var-system-baskets, var-results and mr-derived vanished and VaR
+  answered `404 DRS-1001`. Conformance C9 accepts a pack's templates and holds their hosts and secrets to `${...}` placeholders.
+- **One table a trading system, always.** WSS, SwapOne and ICI load into their own tables, `trading.trade_wss`, `trade_swapone` and
+  `trade_ici`, as Endur, Calypso and Murex do: connector templates (no `where:`), the demo lake file, the trading pack's lake entries, the
+  test data (`trades/<system>/trade_<system>.<date>.jsonl.gz`) and its generator, the tutorial and guides. `trading.trades_shared` is gone
+  from the shipped configuration (the loader's per-system slice replace stays, generic). Scenario PVs stay one table, one complete file
+  or tar per business date: a partial file replaces the whole date (DATA_LAKE_GUIDE 16.1, 17.4).
+- **A date with no data is said, never answered silently from an older one.** VaR for a date with no scenario-P&L load answers the newest
+  earlier date with `asOfNotice` (*scenario P&L for D not loaded — showing D-1*), shown under the VaR page's header; the official capture of
+  such a date is skipped. Pivots (`POST /api/v1/pivot/query`) and record lists (`/api/v1/live/query`, `/api/v1/live/kinds/{word}/rows`)
+  answer `asOfNotices`, one per source system's connector that shows an earlier date, and the pages show them.
+- **A connector's map is anchored.** A relative `map:` is read from the connector's own module folder (a template) or the site's
+  connectors folder, as absolute paths; the fallbacks relative to the working folder (`config/connectors`, `config`, `.`) are gone, and a
+  map in neither refuses the connector naming the paths tried, never a system read as zero trades.
+- **Data inbox words.** A file whose `.ready` gives `rows:` and whose check run rejects a row says the rejects (*1 of 3 documents rejected,
+  more than reject-max-percent 0*), not the matching count; `.loaded.json` `route.mode` is the mode the load ran (with `modeFrom`);
+  `dataload undo` sends the data-load signal a load sends, so pages read the table again at once; `lake status --lake demo` reads the lake
+  of that name.
+
+- **Daily loads runbook.** DATA_LAKE_GUIDE.md section 17: the business-day cycle (files per system and day, markers, order, cut-off), proof that a day's load leaves the earlier days' rows and Delta versions untouched, per-system slices, corrections, late files, undo, portfolio data as a full snapshot per day, what a missing day answers, scheduler examples (cron, systemd, Task Scheduler), the verification script and the one-page checklist; tested on three business days of five systems and the reference kinds.
+
 - **Trading Home with nobody to view as.** Today's blotter, now a records grid rather than a table, says *Pick a trader or a desk to view
   as* like every other panel instead of staying on its loading dots.
 - **Records lists without a stream.** A records list whose set has no live stream (TRD, FUND, USEQ over a lake that does not push) said

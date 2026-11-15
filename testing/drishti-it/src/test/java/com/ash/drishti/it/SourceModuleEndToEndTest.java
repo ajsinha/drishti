@@ -48,7 +48,7 @@ import org.junit.jupiter.api.io.TempDir;
 /**
  * A source system end to end, on the real files of the module {@code modules/source-swapone} and the trading pack: a mocked
  * {@code swapone-<date>.jsonl.gz} with its {@code .ready} in the inbox is matched by the module's inbox rule, loaded through the module's
- * connector into {@code trading.trades_shared} with {@code SOURCE_SYSTEM = SWAPONE} stamped, and the trade kind (what TRD lists) shows it
+ * connector into its own table {@code trading.trade_swapone} (one table a trading system) with {@code SOURCE_SYSTEM = SWAPONE} stamped, and the trade kind (what TRD lists) shows it
  * through the module's field map; switching the system off removes it, on brings it back, without a restart.
  */
 class SourceModuleEndToEndTest {
@@ -110,7 +110,7 @@ class SourceModuleEndToEndTest {
         String connector = rule.path("connector").asText();
         assertThat(connector).isEqualTo("trade-swapone");
 
-        // the load, through the module's connector: the shared table, the system stamped
+        // the load, through the module's connector: its own table, the system stamped
         Path lake = tmp.resolve("lake");
         Path cfg = tmp.resolve("load.yaml");
         Files.writeString(cfg, "source:\n  files: '" + file + "'\n  as-of: " + DAY + "\n  id: " + rule.path("key").asText() + "\n  pack: '" + pack + "'\n  connector: "
@@ -122,7 +122,8 @@ class SourceModuleEndToEndTest {
         ByteArrayOutputStream said = new ByteArrayOutputStream();
         assertThat(LakeLoad.run(new String[] {"--config", cfg.toString(), "-q"}, new PrintStream(said, true, StandardCharsets.UTF_8)))
                 .as(said.toString(StandardCharsets.UTF_8)).isZero();
-        assertThat(lake.resolve("trading/trades_shared/_delta_log")).as("the rows land in the shared table").isDirectory();
+        assertThat(lake.resolve("trading/trade_swapone/_delta_log")).as("the rows land in its own table").isDirectory();
+        assertThat(lake.resolve("trading/trades_shared")).as("no shared table").doesNotExist();
 
         // the connector of the module's template, on the lake the load wrote
         JsonNode template = yaml.readTree(Files.readString(module.resolve("connectors/trade-swapone.yaml")));
@@ -138,7 +139,7 @@ class SourceModuleEndToEndTest {
         settings.remove("lake-tables");
         settings.put("root", lake.toString());
         settings.put("domain", "trading");
-        settings.put("table.trade", "trades_shared");
+        settings.put("table.trade", "trade_swapone");
         settings.put("engine", "native");
         settings.put("module-dir", module.toString());               // how the server finds the module's map file
         settings.put("id-map-disk.dir", tmp.resolve("cache/idmaps").toString());

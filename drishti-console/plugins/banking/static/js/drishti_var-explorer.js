@@ -309,6 +309,8 @@
 
   function renderHeadline(d) {
     $("[data-vx-date]").textContent = d.businessDate;
+    var asOf = $("[data-vx-asof]");                         // the date asked had no P&L load: the earlier date that answered, said prominently
+    if (asOf) { asOf.textContent = d.asOfNotice ? "⚠ " + d.asOfNotice : ""; asOf.hidden = !d.asOfNotice; }
     $("[data-vx-set]").textContent = (d.provenance.scenarioSet || "").split(" · ")[0];
     $("[data-vx-version]").textContent = d.provenance.vectors.split("data version ")[1] || "";
     var ln = d.lens || {}, sum = ln.method === "SUM", sq = ln.method === "SQRT10", unit = sum ? "windows" : "scenarios";

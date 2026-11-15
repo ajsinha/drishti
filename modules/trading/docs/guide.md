@@ -97,7 +97,7 @@ positions and no scenario P&L, so the VaR does not move).
 A module's manifest names its parts with one set of keys: `connectors` (the folder of connector templates), `mappings` (kind to map file),
 `dataload` (the inbox rules file) and `sections` (what it adds to the kind's page). These templates are the one home of the system's
 connectors: the trading pack declares none of them. A file dropped in the inbox (`swapone-2026-11-03.jsonl.gz`; no `.ready` is needed, the
-rule's `date-pattern` reads the date from the name) goes by the module's rule to `trading.trades_shared`, its connector's `set:` stamps `SOURCE_SYSTEM = SWAPONE` into each stored row, and `TRD` lists
+rule's `date-pattern` reads the date from the name) goes by the module's rule to its own table `trading.trade_swapone`, its connector's `set:` stamps `SOURCE_SYSTEM = SWAPONE` into each stored row, and `TRD` lists
 it; switch `source-swapone` off and it is gone, on and it is back.
 
 A module ships: `connectors/` (read from Delta, Iceberg and files; a Kafka live stream whose `writes:` is the write-back of
@@ -141,7 +141,8 @@ columns. `drishti.py pack new --source-for KIND` proposes dotted paths for neste
 expression with one capture group around the date, `-(\d{4}-\d{2}-\d{2})\.` for `swapone-2026-11-03.jsonl.gz`. A date written
 `20261103` takes `date-format: YYYYMMDD`. A `.ready` file's `business-date:` still wins; a name the pattern does not match is refused.
 
-**Layout A: a table each** (Endur, Calypso and Murex in the demo): the connector reads its own table, no `where` is needed.
+**One table a trading system, always** (Endur, Calypso, Murex, WSS, SwapOne and ICI: `trading.trade_<system>`): the connector reads
+its own table, no `where` is needed, and a day's file of one system replaces that system's date and nothing else.
 
 ```yaml
 # config/connectors/trade-endur.yaml
@@ -151,19 +152,6 @@ settings:
   lake-tables: trading.trade_endur
   set: { SOURCE_SYSTEM: ENDUR }
   map: mappings/endur-trade.yaml
-```
-
-**Layout B: one shared table, split by `where`** (WSS, SwapOne and ICI in the demo, `trading.trades_shared`, partitioned by `SOURCE_SYSTEM`):
-
-```yaml
-# config/connectors/trade-wss.yaml
-plugin: delta
-settings:
-  lake: main
-  lake-tables: trading.trades_shared
-  where: SOURCE_SYSTEM = 'WSS'
-  set: { SOURCE_SYSTEM: WSS }
-  map: mappings/wss-trade.yaml
 ```
 
 The kind reads them all as a union (`config/demo/bindings.yaml`, written by `drishti.py lake demo`, on by default; `--no-bindings` leaves it out):
