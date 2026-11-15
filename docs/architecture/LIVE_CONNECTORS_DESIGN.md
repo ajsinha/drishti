@@ -688,7 +688,7 @@ in; L6 to L10 use it.
 | **L7** | Admin (option B: the Live column and drawer in Data bindings; option A's grid read-only under Health), Health states and measures, alerts, the CLI, the live mark's words on every page | L | the PV stream's admin endpoints | ADMIN_GUIDE, OPERATIONS_GUIDE, CLI_REFERENCE, API_REFERENCE |
 | **L8** | Kinds: market data (20 contracts' `live:` blocks, quote-time fields, the companion, conflation), netting sets and collateral, reference data with `effective:`, derived positions at `live: overlay`; demo publishers in `tools/samplegen` | L | the live exposure table's own copy | the packs' READMEs and guides, a tutorial (feed → blotter → load → reconcile) |
 | **L9** | BI and pivot: the live read for `mode: live`, the snapshot chip, incremental additive measures | M (L with incremental) | BI's live table copy | BI guides |
-| **L10** | Cluster: the singleton feed part on the i5 lease, the relay of a singleton's state, fail-over tests | M | | CLUSTER_GUIDE |
+| **L10** | Cluster: the singleton feed part on the i5 lease, the relay of a singleton's state, fail-over tests; an engine's `live:` input reaches it through the i5 **engine lookup by name** (an engine local or remote, placed per engine: IMPLEMENTATION_PLAN, *i5, engines anywhere*), never a node of its own choosing | M | | CLUSTER_GUIDE |
 
 All ten steps are in i5 (decision Q11). Order and drills: L1 → L2 → L3 are one chain; L4 and L5 follow L3 and are independent of
 each other; L6, L7, L8 follow; L9 next; **L10 last**, because it depends on i5's cluster work. About seven builder-weeks in all; one
