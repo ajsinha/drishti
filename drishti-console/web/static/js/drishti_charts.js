@@ -23,6 +23,7 @@
    are, what each one's data is, and what a click on an entity does. */
 (function () {
   'use strict';
+  function drishti_url(p) { var f = globalThis.drishti_url; return typeof f === 'function' && f !== drishti_url ? f(p) : p; }   // drishti-core's base helper when the page has it; a page without it (the renderer, an embed) keeps the URL as it is
   var SELECTOR = '.chart[data-chart], .xchart[data-xchart], .surface[data-surface]';
 
   function lib() { return window.Drishti.elements && window.Drishti.elements.chart; }

@@ -21,6 +21,7 @@ to Australia and its regions and back, with the cross-filter on the rest of the 
 Skipped when Playwright, Chromium or the built server jar is missing, or a scratch port is in use. Never run with pytest -n (the ports are fixed)."""
 from __future__ import annotations
 
+import datetime
 import glob
 import os
 import shutil
@@ -93,8 +94,9 @@ def stack(tmp_path_factory):
     copy_samples(work / "config/bi", ["world-economics"])               # the model and the dataset it reads
     shutil.copy(ROOT / "config/bi/reports/world-economics.report.yaml", work / "config/bi/reports")
     # the dataset reads its own connector only (2.4.0), the pack's macro-store lake, which a scratch server has not built: a site file of that name
-    # replaces the template with a file connector over the pack's sample economies, as one business date
-    day = tmp / "macro" / "2026-10-07"
+    # replaces the template with a file connector over the pack's sample economies, as one business date: five days back, on or before any
+    # business date the console asks for today and within the file connector's lookback (lookback-days, 10), never a fixed date that ages out
+    day = tmp / "macro" / (datetime.date.today() - datetime.timedelta(days=5)).isoformat()
     day.mkdir(parents=True)
     shutil.copy(ROOT / "modules/economy/packs/world-economy/samples/economy.jsonl", day / "economy.jsonl")
     (work / "config" / "connectors").mkdir(parents=True)

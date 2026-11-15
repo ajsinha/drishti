@@ -1725,7 +1725,7 @@
     const ELEMENTS_VERSION = '2.3.0';
     const API = '/embed/v2';
     const cfg = { server: '', tokenProvider: null, auth: null, retryMinMs: 2000, retryMaxMs: 30000, silenceMs: 30000, closeGraceMs: 1500 };
-    const serverOf = () => (cfg.server || statics('').replace(/static\/$/, '')).replace(/\/$/, '');
+    const serverOf = () => (cfg.server || statics('').replace(/(?:static|embed\/v2)\/$/, '')).replace(/\/$/, '');
     function usePopup(server) {
       const si = signInFor(server || serverOf());
       if (!cfg.tokenProvider || cfg.tokenProvider.popup !== si) {

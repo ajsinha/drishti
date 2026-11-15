@@ -354,7 +354,7 @@ A trade's valuation from the risk engine, for every source system: MTM, one-day 
 - unique: key `VALUATION_ID`; per business_date
 - pattern: field VALUATION_ID; pattern ^TVAL-
 - link: field TRADE_ID; kind trade
-- enum: field SOURCE_SYSTEM; values `CALYPSO`, `ENDUR`, `MUREX`
+- enum: field SOURCE_SYSTEM; values `CALYPSO`, `ENDUR`, `ICI`, `MUREX`, `SWAPONE`, `WSS`
 - link: field PORTFOLIO; kind book
 - link: field DESK; kind desk
 - link: field COUNTERPARTY; kind counterparty

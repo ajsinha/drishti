@@ -29,16 +29,18 @@
      codeOf(params)     the place code of an ECharts click or hover on a map built by option() */
 (function () {
   'use strict';
+  function drishti_url(p) { var f = globalThis.drishti_url; return typeof f === 'function' && f !== drishti_url ? f(p) : p; }   // drishti-core's base helper when the page has it; a page without it (the renderer, an embed) keeps the URL as it is
   var SELF = document.currentScript && document.currentScript.src ? document.currentScript.src : '';
   // an embedded element loads this file from /embed/v1/js/ and the shapes from /embed/v1/ on the same server; the console, from its static folder
   // the client-side renderer (static/render/) loads it from a console that may not be the page's origin: the shapes come from beside it
   var BASE = /\/embed\/v1\/js\/(?:drishti_)?geomap\.js/.test(SELF) ? SELF.replace(/js\/(?:drishti_)?geomap\.js.*$/, '')
-    : /\/js\/(?:drishti_)?geomap\.js/.test(SELF) ? SELF.replace(/js\/(?:drishti_)?geomap\.js.*$/, 'vendor/echarts/maps/') : drishti_url('/static/vendor/echarts/maps/');   // /static/js/ or /embed/v2/js/: the maps beside it
+    : /\/js\/(?:drishti_)?geomap\.js/.test(SELF) ? SELF.replace(/js\/(?:drishti_)?geomap\.js.*$/, 'vendor/echarts/maps/')
+    : drishti_url('/static/vendor/echarts/maps/');   // /static/js/ or /embed/v2/js/: the maps beside it (a URL that already carries the base path)
   var WORLD = 'drishti-world';
   var cache = { world: null, regions: {} };
 
   function load(url) {
-    return fetch(drishti_url(url), { credentials: 'same-origin' }).then(function (r) { if (!r.ok) { throw new Error('map ' + r.status); } return r.json(); });
+    return fetch(url, { credentials: 'same-origin' }).then(function (r) { if (!r.ok) { throw new Error('map ' + r.status); } return r.json(); });
   }
 
   function world() {

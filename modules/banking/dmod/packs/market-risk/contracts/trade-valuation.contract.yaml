@@ -258,7 +258,10 @@ validation:
   values:
   - CALYPSO
   - ENDUR
+  - ICI
   - MUREX
+  - SWAPONE
+  - WSS
 - rule: link
   field: PORTFOLIO
   kind: book

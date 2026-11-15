@@ -63,9 +63,9 @@ def test_a_source_for_the_trade_kind_is_mapped_edited_placed_and_made(browser, d
         # the map: every record read, each canonical field with its native field and a confidence
         page.locator("[data-map-grid]").get_by_text("COUNTERPARTY", exact=True).first.wait_for(timeout=LONG)
         grid = page.locator("[data-map-grid]").inner_text()
-        assert "cptyCode" in grid and "notionalAmt" in grid and "dealRef" in grid
+        assert "CPTY_CODE" in grid and "NOTIONAL_AMT" in grid and "DEAL_REF" in grid
         assert "required missing" in page.locator("[data-map-kpi]").inner_text()
-        assert "brokerRef" in page.locator("[data-unmapped]").inner_text()           # the native fields with no canonical one
+        assert "BROKER_REF" in page.locator("[data-unmapped]").inner_text()           # the native fields with no canonical one
 
         # edit the map: drop a guess (the row's native field set to none)
         page.locator("[data-map-grid] .dg-row", has_text=re.compile(r"^COUNTERPARTY_UEN")).first.click()

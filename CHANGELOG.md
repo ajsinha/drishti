@@ -18,6 +18,21 @@
 
 ## Unreleased
 
+- **The drill starts from a clean data folder.** A server's state an earlier run left in the data folder (installed modules, identities,
+  cluster membership, compute, file store, cache) is moved aside to `data/tmp/stale-<stamp>/` and listed before the drill starts, when
+  no server runs from the checkout. Lake loader children get the launch roots of the process that starts them, and Iceberg's Health
+  names a moved table's folder correctly when the lake sits under a folder named `data`.
+- **No empty answer that looks true for positions and system baskets.** Right after a start (inputs loading, busy protection, no vectors
+  read yet) a list, count or pivot of `position` or `system-basket` answers the refusal with its reason, never 0 rows.
+- **Elements 2 reach the console again from another origin.** Served under `/embed/v2/`, the element took `/embed/v2` for the
+  console's root and asked `/embed/v2/embed/v2/views/...` (a 404 without CORS headers, so the view never went live); the root is now
+  the static root less `static/` or `embed/v2/`, the base path kept.
+- **A page's freshness follows what its source says now.** A refresh whose provenance no longer names an update time or a
+  stale-after clears the ones it had; a source that was stale and recovered no longer stays marked stale until a reload.
+- **A site file that gives only `root` moves its template's lake.** Over a template that names a lake, a connector override with
+  `settings.root` alone (what `drishti.py lake demo --lake` writes) keeps the lake and its tables and reads them under that root; with
+  `domain`, `table.<kind>` or `layout.<kind>` it is the older form, as before. A scratch demo lake was read as no tables at all.
+
 - **Named lakes, databases and brokers.** A system has any number of each, every one a section of the settings files and referred to by
   name, with no global one: `[lake.<name>] root=`/`storage.<key>=` win over that lake file's root and storage; `[db.<name>] url= user=
   password=` (a jdbc connector's `db: <name>`; `drishti.identity.database-*` read `db.identity.*`, the content store's postgres
@@ -38,7 +53,9 @@
   for a guide's HTML); every script builds console URLs through one helper, `drishti_url()` (drishti-core's `url()`, also behind its API
   client, loader, the renderer's server default and the grid, chart, data and insight libraries), with `drishti_route()` for comparisons
   with `location.pathname`. A link or form drawn from server data is put under the base when used. A static guard
-  (`tests/test_base_path_guard.py`) fails on a new root-absolute console URL that skips them.
+  (`tests/test_base_path_guard.py`) fails on a new root-absolute console URL that skips them. The scripts a page without drishti-core
+  loads (embeds, the client-side renderer's pages, the live hub's worker) use the helper through a local guard that keeps the URL as it is
+  when the page has none (the maps drew "The map did not load" in the renderer without it); the same guard test checks every such script.
 - **Every path absolute, the second sweep.** Every other path setting (any `drishti.*` folder or file key, `DRISHTI_*_DIR/_FILE/_ROOT/_PATH`
   variables, a local database URL's file, the log file, the TLS stores) given as a relative path is taken under the install folder and
   listed in the `resolved paths:` block; the settings the configuration imports read (data, config and engines folders, the packs

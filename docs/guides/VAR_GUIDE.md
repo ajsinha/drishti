@@ -123,7 +123,10 @@ may sit side by side on one date (a trade in one form only), and nothing downstr
 **Computed in memory and in the hot file, never written to Delta.** The derived P&L of a scenario-PV trade, the derived positions and every
 total (a node's or a scope's vector) exist only in the server's memory and in the hot file, its disposable local copy. No table of derived
 P&L, positions or totals exists in the lake, and nothing the engine computes is written back as an input: the positions are served as the
-`position` kind by the `var-positions` connector with no figure stored on them, computed as their page opens. The only VaR figures that
+`position` kind by the `var-positions` connector with no figure stored on them, computed as their page opens. A list, a count or a pivot of
+positions or system baskets never answers an empty result in place of rows it cannot read yet: while the date's inputs load, busy protection
+defers the load, or no vectors are read yet, it answers that refusal with its reason (and `Retry-After` when busy), and the console says so
+and asks again. The only VaR figures that
 reach a lake table are the **official record's** published rows (`risk-results/var-official`: one row per node and capture, VaR, ES and
 their companions, no vectors), which no engine reads back. A capture keeps its scope's vector in the content store, as part of the record,
 so that it reopens exactly as it was.

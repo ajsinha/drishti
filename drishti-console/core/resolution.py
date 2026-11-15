@@ -139,13 +139,15 @@ class Layout:
     modules: Path | None = None
     store: Path | None = None
     installed: Path | None = None
+    #: a test's or a tool's own folders of packs (``drishti.packs.extra-dirs``, the retired example packs): part of the site, after it
+    extras: tuple = ()
 
     @staticmethod
     def of(site: Path | str, modules: Path | str | None = None, store: Path | str | None = None, installed: Path | str | None = None,
-           kernel: Path | str | None = None) -> "Layout":
+           kernel: Path | str | None = None, extras: Iterable[Path | str] = ()) -> "Layout":
         s = _norm(site)
         return Layout(s, _norm(kernel) if kernel else s / "core", _norm(modules) if modules else None, _norm(store) if store else None,
-                      _norm(installed) if installed else None)
+                      _norm(installed) if installed else None, tuple(_norm(e) for e in extras))
 
 
 @dataclass(frozen=True)
@@ -358,6 +360,7 @@ def _site_roots(layout: Layout) -> list[Path]:
     for d in _dirs(layout.site):
         if not (d / "pack.yaml").is_file() and d != layout.kernel:
             out.append(d)                                            # a group folder of the site
+    out += [e for e in layout.extras if e not in out]               # the extra pack folders, after the site (the Java twin's extraDirs)
     return out
 
 
@@ -464,6 +467,7 @@ class Settings:
     enabled: str = ""
     overrides: tuple = ()                                            # (module id, on) from the settings and DRISHTI_MODULES_<ID>_ENABLED
     data_dir: Path | None = None
+    extra_dirs: tuple = ()                                           # drishti.packs.extra-dirs (DRISHTI_PACKS_EXTRA_DIRS; console packs.extra_dirs)
 
     @staticmethod
     def from_env(settings=None, console_dir: Path | str | None = None, env: Mapping | None = None, base: Path | str | None = None) -> "Settings":
@@ -514,7 +518,9 @@ class Settings:
             distribution=get("distribution") or _env(env, "DRISHTI_DISTRIBUTION"),
             enabled=_env(env, "DRISHTI_PACKS") or get("packs.enabled"),
             overrides=tuple(sorted(overrides)),
-            data_dir=data)
+            data_dir=data,
+            extra_dirs=tuple(path(x.strip(), root) for x in (_env(env, "DRISHTI_PACKS_EXTRA_DIRS") or get("packs.extra_dirs")).split(",")
+                             if x.strip()))
 
     @staticmethod
     def repository(root: Path | str | None = None) -> "Settings":
@@ -522,7 +528,7 @@ class Settings:
         return Settings.from_env(env={}, base=root or REPO)
 
     def layout(self) -> Layout:
-        return Layout(self.site_dir, self.kernel_dir, self.modules_home, self.modules_path, self.installed_dir)
+        return Layout(self.site_dir, self.kernel_dir, self.modules_home, self.modules_path, self.installed_dir, self.extra_dirs)
 
 
 # ------------------------------------------------------------------------------------------------------------------- what is on, offline
@@ -554,6 +560,23 @@ def _distribution_modules(s: Settings, found: dict[str, Module]) -> set[str] | N
             out.add(mid)
             todo += list(found[mid].requires) if mid in found else []
     return out
+
+
+def _default_enabled(s: Settings, layout: Layout) -> list[str] | None:
+    """The packs that load when ``drishti.packs.enabled`` is unset or ``default``, as the server decides (drishti-packs
+    ``PackPaths.enabled``): a named distribution's (every pack of its modules: None here, the modules on decide); else the default list
+    (``config/packs/default-packs.yaml``, by module): a pack a module lists but the default list leaves out (US equities) is AVAILABLE,
+    not loaded, on the console as on the server."""
+    if _distribution_modules(s, find_modules(layout)) is not None:
+        return None
+    f = s.kernel_dir.parent / "default-packs.yaml"
+    try:
+        packs = (_yaml(f) or {}).get("packs") if f.is_file() else None
+    except (OSError, ValueError, yaml.YAMLError):
+        return None
+    groups = packs.values() if isinstance(packs, dict) else [packs] if isinstance(packs, list) else []
+    out = [str(p).strip() for g in groups for p in (g or []) if str(p).strip()]
+    return list(dict.fromkeys(out)) or None
 
 
 def active_modules(s: Settings, found: dict[str, Module] | None = None) -> dict[str, str]:
@@ -623,6 +646,8 @@ def build(s: Settings | None = None, modules: Iterable[str] | str | None = None,
         active = lambda m: m in ids                                  # noqa: E731
     en = s.enabled if enabled is None else enabled
     names = [x.strip() for x in en.split(",")] if isinstance(en, str) else list(en)
+    if not [n for n in names if n and n != "default"]:              # unset or "default": as the server (PackPaths.enabled)
+        names = _default_enabled(s, layout) or []
     r = resolve(layout, active, names if [n for n in names if n] else None)
     r.settings = s
     r.reasons = {m: (reasons.get(m) or ("" if active(m) else "off")) for m in r.modules}
@@ -895,7 +920,11 @@ def effective(name: str, text: str | None, template: Template | dict | None, fil
     bases = dict(tdef.base_dirs)
     # one lake form: a file in the older form (root, domain, table.*, layout.*) does not get the template's lake keys, and a file naming
     # a lake does not keep the template's older keys
-    if _legacy(k for k, v in own.items() if v is not None):
+    given = [k for k, v in own.items() if v is not None]
+    # a file that gives only root over a template naming a lake moves that lake's root (lake demo --lake): it keeps the lake, its root
+    # wins when the lake is expanded (ConnectorLake.expand)
+    moves_root = "lake" in settings and "root" in given and not any(k == "domain" or k.startswith("table.") or (k.startswith("layout.") and not k.endswith(".type-ahead")) for k in given)
+    if _legacy(given) and not moves_root:
         for k in ("lake", "lake-tables"):
             settings.pop(k, None)
             origins.pop(k, None)

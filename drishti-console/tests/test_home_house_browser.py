@@ -74,7 +74,7 @@ def _open(browser, base, width, height, theme):  # noqa: F811
     ctx = browser.new_context(viewport={"width": width, "height": height})
     ctx.add_init_script(f"try {{ localStorage.setItem('drishti.theme', '{theme}'); }} catch (e) {{}}")
     pg = ctx.new_page()
-    pg.goto(base + "/", wait_until="load")
+    pg.goto(base + "/?landing=today", wait_until="load")   # the product's Home: Drishti Risk starts in its risk workspace (lenses.default)
     return ctx, pg
 
 

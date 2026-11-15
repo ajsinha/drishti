@@ -571,8 +571,24 @@ servers_here() {   # java processes whose working folder is this repository (a s
   done
   return 0
 }
-DATA_BEFORE=$(data_files)
 SERVERS_HERE=$(servers_here | tr '\n' ' ')
+# a server's state left in the data folder by an earlier run (a test or tool that wrote here, a stopped server) changes what the
+# tests see (installed modules, identities, cluster membership): with no server running from this folder, it is moved aside to
+# data/tmp/stale-<stamp>/ (nothing deleted) and listed, so every drill starts from the same data folder
+STALE_STATE=(modules/installed identity net compute fstore cache)
+stale_state_aside() {
+  [[ -d "$DATA" && -z "${SERVERS_HERE// /}" ]] || return 0
+  local d found=() to
+  for d in "${STALE_STATE[@]}"; do [[ -e "$DATA/$d" ]] && found+=("$d"); done
+  (( ${#found[@]} )) || return 0
+  to="$DATA/tmp/stale-$(date +%Y%m%d-%H%M%S)"
+  echo "drill: a server's state was left in $DATA/; moved aside to $to/ (look, then delete it):" >&2
+  for d in "${found[@]}"; do
+    mkdir -p "$to/$(dirname "$d")" && mv "$DATA/$d" "$to/$d" && echo "  $DATA/$d" >&2
+  done
+}
+stale_state_aside
+DATA_BEFORE=$(data_files)
 data_unchanged() {
   local changed; changed=$(comm -13 <(printf '%s\n' "$DATA_BEFORE") <(data_files) | cut -f1 | grep -v '^$' || true)
   [[ -z "$changed" ]] && return 0

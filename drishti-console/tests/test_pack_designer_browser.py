@@ -64,7 +64,7 @@ def test_the_old_url_redirects_to_the_designer(browser, designer):
     sign_in(page, str(designer))
     page.goto(str(designer) + "/build/pack/new")
     assert page.url.endswith("/build/pack/designer")
-    assert page.locator("[data-pack-designer]").count() == 1 and page.locator(".pd-step").count() == 6
+    assert page.locator("[data-pack-designer]").count() == 1 and page.locator(".pd-step:visible").count() == 6   # the Map and Layout steps show only for a source of an existing kind
     ctx.close()
 
 
