@@ -56,6 +56,15 @@ final class ExposureOfficial implements AutoCloseable {
     });
     private final ReentrantLock lock = new ReentrantLock();
 
+    /** Run after each commit to the published tables: the results connectors that read them are tried at once (a fresh lake has no tables
+     * until the first capture, and a connector that found none waits for its back-off). */
+    private volatile Runnable published = () -> { };
+
+    /** See {@link #published}. */
+    void onPublished(Runnable r) {
+        this.published = r == null ? () -> { } : r;
+    }
+
     ExposureOfficial(ExposureService svc, ExposurePublisher publisher) {
         this.svc = svc;
         this.publisher = publisher;
@@ -215,6 +224,7 @@ final class ExposureOfficial implements AutoCloseable {
                 long vn = nodeRows.isEmpty() ? -1 : publisher.publish(ExposurePublisher.NODES, date, nodeRows);
                 index.put("published", "risk-results/" + ExposurePublisher.CPTY + " (" + publisher.describe(vc) + ")"
                         + (vn < 0 ? "" : ", risk-results/" + ExposurePublisher.NODES + " (" + publisher.describe(vn) + ")"));
+                published.run();
             } catch (java.io.IOException | RuntimeException e) {
                 index.put("publishError", publisher.format() + " tables under " + publisher.where() + ": " + e.getMessage());
                 LOG.warn("the official exposure results of {} could not be published to the {} tables under {}: {}", date, publisher.format(),

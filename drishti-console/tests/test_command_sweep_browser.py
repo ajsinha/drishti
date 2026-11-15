@@ -38,36 +38,15 @@ ADMIN, ADMIN_PASSWORD = "drishti-dev-admin", "drishti-dev-admin123"
 ROLE, ROLE_PASSWORD = "sweep-trader", "long-enough-pass-1"
 #: the packs the sweeps' server serves: the walk's and GLEIF's (every pack the full demo lake has data for)
 SWEEP_PACKS = WALK_PACKS + ",gleif"
+#: the sweeps' servers start without the official exposure capture (CCR is parked for i4, owner 2026-11-15: it took minutes at every start)
+SWEEP_ENV = {"DRISHTI_EXPOSURE_OFFICIAL": "false"}
 
 
 def sweep_lake(tmp_path_factory):
     """The full demo lake the sweeps run on: every dataset of the saved test data (data/testdata) through the lake builder, ending on the
-    walk's fixed date, the committed exposure run (its official capture at start takes seconds); built once per hash of the test data and
-    the builder (tools/drillkit/lake_cache.py), reused while they are unchanged."""
+    walk's fixed date, the committed exposure run; built once per hash of the test data and the builder (tools/drillkit/lake_cache.py),
+    reused while they are unchanged."""
     return var_lake(tmp_path_factory, "", as_of=SNAPSHOT_DATE, extra=("--exposure", "committed"))
-
-
-def official_ready(server: str, token_secret: str = "", seconds: float = 300) -> None:
-    """The exposure engine's official capture of the lake's newest date is in (at start: its results connector reads the tables it
-    publishes, and the Admin pages list that connector), so a sweep never meets the minute after a start."""
-    import time
-    import urllib.error
-    import urllib.request
-
-    from core.auth import mint_token
-
-    deadline = time.monotonic() + seconds
-    while time.monotonic() < deadline:
-        headers = {"Authorization": "Bearer " + mint_token(ADMIN, ["admin"], token_secret, 300)} if token_secret else {}
-        try:
-            with urllib.request.urlopen(urllib.request.Request(f"{server}/api/v1/risk/exposure/official?asOf={SNAPSHOT_DATE}", headers=headers),
-                                        timeout=30) as r:
-                if r.status == 200:
-                    return
-        except (urllib.error.URLError, OSError):
-            pass
-        time.sleep(2)   # wait-ok: the official capture at start runs in the background
-    pytest.fail(f"the official exposure capture of {SNAPSHOT_DATE} was not in within {seconds:.0f} s")
 
 
 @pytest.fixture(scope="module")
@@ -81,9 +60,8 @@ def signed_in_stack(tmp_path_factory):
     lake = sweep_lake(tmp_path_factory)
     for st in var_server(tmp_path_factory, lake, auth=True, DRISHTI_SECURITY_ENABLED="true", DRISHTI_TOKEN_SECRET=TOKEN_SECRET,
                          DRISHTI_DATALOAD_ENABLED="true", DRISHTI_DATALOAD_DIR=str(tmp_path_factory.mktemp("sweep-dataload")),
-                         DRISHTI_PACKS=SWEEP_PACKS, DRISHTI_LENSES="risk,world,market,trading,markets"):
+                         DRISHTI_PACKS=SWEEP_PACKS, DRISHTI_LENSES="risk,world,market,trading,markets", **SWEEP_ENV):
         _packs_ready(st.server, SWEEP_PACKS.split(","), token_secret=TOKEN_SECRET)
-        official_ready(st.server, TOKEN_SECRET)
         role = os.environ.get("DRISHTI_SWEEP_ROLE", "")        # a role user is swept only when asked for: report-only
         if role:
             _make_role_user(str(st))

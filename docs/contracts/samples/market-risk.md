@@ -588,7 +588,7 @@ Fields no record above has, found by reading all 2 rows, with how many rows fill
 
 <a id="scenario-pv"></a>
 
-## Scenario PVs of a trade (509 scenarios, its currency): scenario-pv (SPV)
+## Scenario PVs of a position or trade (one PV per scenario, its currency): scenario-pv (SPV)
 
 A trade's present value under each historical scenario and its base PV of the same run, in the trade's own currency: the form of a trade's scenario P&L a bank may send instead of a P&L vector (VAR_GUIDE.md section 15.9). The VaR engine turns it into the trade's USD P&L when it loads the date: P&L(s) = PV(s) x FX(s) - PV(base) x FX(base). One row per trade, business date and scenario set (BUSINESS_DATE), keyed by SCENARIO_PV_ID; a trade is in this kind or in pnl-vector, never both on one date. Read by the **market-risk** pack's connector `risk-store` (lake table `risk.scenario-pv`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-28 to 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (15,986 records on 2026-09-30), never a change on the day before. Beside the morning run, intraday updates are appended during the day (only the changed trades, `RUN_KIND` `INTRADAY`); the forms the test data lacks come from the pack's samples (`modules/banking/dmod/packs/market-risk/samples/scenario-pv.jsonl`, `modules/banking/dmod/packs/market-risk/samples/intraday/scenario-pv.2026-09-30.jsonl`).
 
@@ -926,7 +926,7 @@ Fields no record above has, found by reading all 15,993 rows, with how many rows
 
 ### See also
 
-- Data contract: [SPV in the market-risk pack's contracts](../packs/market-risk.md#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv) (`modules/banking/dmod/packs/market-risk/contracts/scenario-pv.contract.yaml`, the source of every meaning on this page).
+- Data contract: [SPV in the market-risk pack's contracts](../packs/market-risk.md#spv-scenario-pvs-of-a-position-or-trade-one-pv-per-scenario-its-currency-scenario-pv) (`modules/banking/dmod/packs/market-risk/contracts/scenario-pv.contract.yaml`, the source of every meaning on this page).
 - [15.9 `scenario-pv`: scenario PVs per trade, in the trade's currency](../../guides/VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)
 - [8.4 What-if pricing and intraday recomputes](../../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)
 - [15.13 Inputs: any form, any grain](../../guides/VAR_GUIDE.md#1513-inputs-any-form-any-grain)
@@ -936,7 +936,7 @@ Fields no record above has, found by reading all 15,993 rows, with how many rows
 
 <a id="fx-scenario"></a>
 
-## Scenario FX of a currency (509 scenarios): fx-scenario (FXS)
+## Scenario FX of a currency (one rate per scenario): fx-scenario (FXS)
 
 A currency's rate against USD today and under each historical scenario, as the risk batch supplies it (VAR_GUIDE.md section 15.9): the VaR engine converts scenario PVs and reporting currencies with it. A currency the batch does not supply is derived from the FX history (fx-spot). One row per currency, business date and scenario set (BUSINESS_DATE), keyed by FX_SCENARIO_ID (FXS-<CURRENCY>-<SCENARIO_SET_ID>). Read by the **market-risk** pack's connector `risk-store` (lake table `risk.fx-scenario`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-28 to 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (12 records on 2026-09-30), never a change on the day before.
 
@@ -1010,7 +1010,7 @@ None: all 12 rows were read, and every field any of them has is in the record ab
 
 ### See also
 
-- Data contract: [FXS in the market-risk pack's contracts](../packs/market-risk.md#fxs-scenario-fx-of-a-currency-509-scenarios-fx-scenario) (`modules/banking/dmod/packs/market-risk/contracts/fx-scenario.contract.yaml`, the source of every meaning on this page).
+- Data contract: [FXS in the market-risk pack's contracts](../packs/market-risk.md#fxs-scenario-fx-of-a-currency-one-rate-per-scenario-fx-scenario) (`modules/banking/dmod/packs/market-risk/contracts/fx-scenario.contract.yaml`, the source of every meaning on this page).
 - [15.9 `scenario-pv`: scenario PVs per trade, in the trade's currency](../../guides/VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)
 - [VaR in Drishti: the complete guide](../../guides/VAR_GUIDE.md)
 - [1. Market risk](../../knowledge/risk.md#1-market-risk)
@@ -1541,7 +1541,7 @@ Fields no record above has, found by reading all 867 rows, with how many rows fi
 
 <a id="pnl-vector"></a>
 
-## P&L vector (509 scenarios): pnl-vector (PNLV)
+## P&L vector (one P&L per scenario): pnl-vector (PNLV)
 
 One trade's (or one position's) P&L under every scenario of the date's scenario set, gain positive, in CURRENCY, with the terms the VaR engine places it by. One row per trade (GRAIN TRADE) or position (GRAIN POSITION), business date and scenario set, keyed by VECTOR_ID (PNL-<TRADE_ID or POSITION_ID>-<SCENARIO_SET_ID>). Read by the **market-risk** pack's connector `risk-store` (lake table `risk.pnl-vector`). There is **no committed test data** for this kind: the sample comes from the pack's samples (`modules/banking/dmod/packs/market-risk/samples/pnl-vector.jsonl`, 2 records). A bank or a public refresh delivers it in the same JSON Lines shape.
 
@@ -1759,7 +1759,7 @@ Fields no record above has, found by reading all 2 rows, with how many rows fill
 
 ### See also
 
-- Data contract: [PNLV in the market-risk pack's contracts](../packs/market-risk.md#pnlv-pl-vector-509-scenarios-pnl-vector) (`modules/banking/dmod/packs/market-risk/contracts/pnl-vector.contract.yaml`, the source of every meaning on this page).
+- Data contract: [PNLV in the market-risk pack's contracts](../packs/market-risk.md#pnlv-pl-vector-one-pl-per-scenario-pnl-vector) (`modules/banking/dmod/packs/market-risk/contracts/pnl-vector.contract.yaml`, the source of every meaning on this page).
 - [15.2 `pnl-vector`: one P&L vector per trade](../../guides/VAR_GUIDE.md#152-pnl-vector-one-pl-vector-per-trade)
 - [8.4 What-if pricing and intraday recomputes](../../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)
 - [15.13 Inputs: any form, any grain](../../guides/VAR_GUIDE.md#1513-inputs-any-form-any-grain)

@@ -126,6 +126,36 @@ class SearchOrderTest {
         }
     }
 
+    /** Nothing to test and no order: only the first `limit` documents (by id) are read, the answer is the same and its count is all of them. */
+    @Test
+    void aLimitWithNothingToTestReadsOnlyThoseDocuments() {
+        List<String> physical = List.of("T-09", "T-03", "T-07", "T-01", "T-05");
+        List<Object> mtm = List.of(5.0, 1.0, 5.0, 1.0, 5.0);
+        java.util.concurrent.atomic.AtomicInteger reads = new java.util.concurrent.atomic.AtomicInteger();
+        Store store = new Store("pg", physical, mtm, false);
+        StructuredSearch s = search(new SourcePlugin() {
+            public PluginManifest manifest() {
+                return store.manifest();
+            }
+
+            public void start(SourceContext c) {}
+
+            public Optional<EntityDocument> fetch(EntityRef ref) {
+                reads.incrementAndGet();
+                return store.fetch(ref);
+            }
+
+            public List<EntityHit> search(String kind, String text, int limit) {
+                return store.search(kind, text, limit);
+            }
+        });
+        StructuredSearch.Result r = s.run(SearchQuery.parse("TRD limit 2"), AsOf.LATEST, d -> d);
+        assertThat(r.rows().stream().map(x -> x.ref().id()).toList()).containsExactly("T-01", "T-03");
+        assertThat(r.matched()).isEqualTo(5);
+        assertThat(reads.get()).as("two documents read, not five").isEqualTo(2);
+        assertThat(ids(s, "TRD where mtm > 2 limit 2")).as("a condition still reads them all").containsExactly("T-05", "T-07");
+    }
+
     /** DATA-17: entities with no sort value come last in id order, either direction. */
     @Test
     void entitiesWithNoSortValueComeLastInIdOrder() {

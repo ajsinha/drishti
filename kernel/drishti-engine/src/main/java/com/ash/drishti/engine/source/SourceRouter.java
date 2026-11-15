@@ -771,7 +771,10 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
                     + String.join(", ", candidates.stream().map(p -> p.manifest().name()).toList()) + "; " + routed + ", which kind '"
                     + ref.kind() + "' is routed to, " + off + ")");
         }
-        throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no source holds " + ref);
+        // what was asked, where and for which date: an input kind's data comes from its source system, so the answer says what was not found
+        throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no source holds " + ref + (candidates.isEmpty() ? ""
+                : " (asked " + String.join(", ", candidates.stream().map(p -> p.manifest().name()).toList())
+                        + (asOf.businessDate() == null ? "" : " for " + asOf.businessDate()) + ")"));
     }
 
     /**
@@ -1131,9 +1134,20 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
             }
             String name = p.manifest().name();
             boolean read;
+            RuntimeException[] callers = {null};               // what the caller's own sink threw: passed on as it is, never the source failing
             try {
-                read = p.documents(kind, asOf, d -> sink.accept(named(d, name)));
+                read = p.documents(kind, asOf, d -> {
+                    try {
+                        sink.accept(named(d, name));
+                    } catch (RuntimeException e) {
+                        callers[0] = e;
+                        throw e;
+                    }
+                });
             } catch (Exception e) {
+                if (callers[0] != null) {
+                    throw callers[0];
+                }
                 throw new SourceFailure(ErrorCode.SOURCE_FAILED, name, SourceFailure.reason(e, props.fetchTimeout()),
                         name + " failed reading every " + kind + detailOf(e), e);
             }

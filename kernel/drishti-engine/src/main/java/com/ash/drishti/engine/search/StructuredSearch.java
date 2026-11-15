@@ -196,6 +196,15 @@ public final class StructuredSearch {
         if (partial) {
             hits = hits.subList(0, props.maxScan());
         }
+        int listed = hits.size();                               // every one matches when nothing is tested: the count the answer gives
+        boolean firstOnly = false;
+        if (condition == null && order == null && unknown.isEmpty() && hits.size() > q.limit()) {
+            // nothing to test and no order: the first `limit` entities are the answer, so only they are read (TRD limit 1000 read every
+            // listed trade one by one, up to the scan limit, and kept a thousand: 15 s for a form's first rows on a cold server)
+            // the same order the read rows are given in (by id): the same answer, read with `limit` reads instead of all
+            hits = hits.stream().sorted(Comparator.comparing((EntityHit h) -> h.ref().id())).limit(q.limit()).toList();
+            firstOnly = true;
+        }
         Map<EntityRef, String> titles = new LinkedHashMap<>();
         hits.forEach(h -> titles.put(h.ref(), h.title()));
         Map<EntityRef, EntityDocument> docs = router.fetchAll(titles.keySet(), props.budget(), asOf, failures);
@@ -235,8 +244,8 @@ public final class StructuredSearch {
         }
         matches.sort(ordering(order != null, q.descending()));
         List<Row> rows = matches.stream().limit(q.limit()).map(Match::row).toList();
-        return new Result(kind, q.condition(), q.orderBy(), paths, rows, docs.size(), matches.size(), partial,
-                Math.round((System.nanoTime() - t0) / 1e4) / 100.0, failures.asMap(), ids(matches));
+        return new Result(kind, q.condition(), q.orderBy(), paths, rows, docs.size(), firstOnly ? Math.max(matches.size(), listed) : matches.size(),
+                partial, Math.round((System.nanoTime() - t0) / 1e4) / 100.0, failures.asMap(), ids(matches));
     }
 
     /**

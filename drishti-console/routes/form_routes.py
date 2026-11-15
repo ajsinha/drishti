@@ -46,7 +46,7 @@ async def forms_home(request: Request):
 
     async def one(p):
         try:
-            info = await backend.form(p["name"], "", me)
+            info = await backend.form(p["name"], "", me, kinds_only=True)   # the kinds only: no form is built, no data read
         except BackendError:
             return None                      # no access to any kind, or the pack is not visible to this person: not listed
         kinds = [{"kind": k["kind"], "label": k["label"], "mnemonic": k.get("mnemonic", ""), "fields": p["forms"][k["kind"]]}

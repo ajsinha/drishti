@@ -110,7 +110,7 @@ fields:
 - name: K
   type: integer
   presence: required
-  description: The VaR rank (the 6th worst of 509 at 99%; the 26th at 95%; the 5th of the 500 windows of the 10-day sum at 99%).
+  description: The VaR rank over the scenario window (scenario-window, default 250, the 3rd worst at 99%, the 13th at 95%; for the 10-day sum, the rank among its overlapping windows).
 - name: ES_COUNT
   type: integer
   presence: required

@@ -231,6 +231,18 @@ class SourceShapeTest {
     }
 
     @Test
+    void aCallerThatStopsReadingGetsItsOwnExceptionBackNotASourceFailure() {
+        final class Enough extends RuntimeException {
+        }
+        SourceRouter r = sharedSplit();
+        // a download whose client went away, or a page that has its rows: the source did not fail (it was DRS-1003 "failed reading every trade")
+        assertThatThrownBy(() -> r.documents("trade", AsOf.LATEST, d -> {
+            throw new Enough();
+        })).isInstanceOf(Enough.class);
+        assertThat(all(r).keySet()).containsExactly("C1", "E1", "E2");
+    }
+
+    @Test
     void aSharedTableIsSplitBetweenTwoSystemsByWhere() throws Exception {
         SourceRouter r = sharedSplit();
         assertThat(all(r).keySet()).containsExactly("C1", "E1", "E2");

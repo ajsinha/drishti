@@ -20,7 +20,7 @@ pack: market-risk
 version: '1.1'
 class: input
 status: active
-title: Scenario PVs of a trade (509 scenarios, its currency)
+title: Scenario PVs of a position or trade (one PV per scenario, its currency)
 description: 'A trade''s present value under each historical scenario and its base PV of the same run, in the trade''s own currency: the
   form of a trade''s scenario P&L a bank may send instead of a P&L vector (VAR_GUIDE.md section 15.9). The VaR engine turns it
   into the trade''s USD P&L when it loads the date: P&L(s) = PV(s) x FX(s) - PV(base) x FX(base).'
@@ -123,7 +123,7 @@ fields:
   type: id
   presence: required
   description: The record's id (the business key)
-  example: SPV-1000054-HS-509
+  example: SPV-POS-BOOK-COMM-1~1000054-HS-509
   pattern: ^SPV-
   link: scenario-pv
 - name: SECURITY_ID

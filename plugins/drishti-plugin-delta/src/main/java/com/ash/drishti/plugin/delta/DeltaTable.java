@@ -831,6 +831,46 @@ final class DeltaTable {
         return out;
     }
 
+    /**
+     * Several entities' vector columns from one file of a date in one read (a page of records: one decode of the file's vector columns
+     * instead of one per record); an id the file does not hold is absent.
+     */
+    Map<String, Map<String, double[]>> vectorsOf(Layout layout, LocalDate date, int fileIndex, java.util.Set<String> ids, List<String> vectorColumns) {
+        List<Row> files = layout.files().getOrDefault(date, List.of());
+        if (fileIndex < 0 || fileIndex >= files.size() || vectorColumns.isEmpty() || ids.isEmpty()) {
+            return Map.of();
+        }
+        if (ids.size() == 1) {
+            String id = ids.iterator().next();
+            Map<String, double[]> one = vectorsOf(layout, date, fileIndex, id, vectorColumns);
+            return one.isEmpty() ? Map.of() : Map.of(id, one);
+        }
+        StructType schema = new StructType().add(idColumn, StringType.STRING);
+        for (String c : vectorColumns) {
+            schema = schema.add(c, vectorType(layout, c));
+        }
+        Map<String, Map<String, double[]>> out = new java.util.HashMap<>();
+        raw(files.get(fileIndex), layout.physical(schema), Optional.empty(), batch -> {
+            io.delta.kernel.data.ColumnVector idv = batch.getColumnVector(0);
+            for (int r = 0; r < batch.getSize() && out.size() < ids.size(); r++) {
+                if (idv.isNullAt(r) || !ids.contains(idv.getString(r))) {
+                    continue;
+                }
+                Map<String, double[]> vs = new LinkedHashMap<>();
+                for (int c = 0; c < vectorColumns.size(); c++) {
+                    io.delta.kernel.data.ColumnVector v = batch.getColumnVector(c + 1);
+                    if (!v.isNullAt(r)) {
+                        double[][] one = {new double[0]};
+                        int len = copy(v.getArray(r), one);
+                        vs.put(vectorColumns.get(c), java.util.Arrays.copyOf(one[0], len));
+                    }
+                }
+                out.putIfAbsent(idv.getString(r), vs);
+            }
+        });
+        return out;
+    }
+
     /** A vector column's read type: the table's own element type when it is {@code float} (float32), else {@code list<double>}. */
     static io.delta.kernel.types.ArrayType vectorType(Layout layout, String column) {
         if (layout.schema() != null && layout.schema().indexOf(column) >= 0

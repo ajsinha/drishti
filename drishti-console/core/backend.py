@@ -312,9 +312,10 @@ class BackendClient:
         params = {"offset": offset, "limit": limit, **({"sort": sort, "descending": str(bool(descending)).lower()} if sort else {})}
         return await self._get(f"/live/kinds/{quote(word, safe='')}/rows", ident, **params)
 
-    async def form(self, pack: str, kind: str = "", ident=None) -> dict:
-        """The search form of a pack's kind (query by form): its fields, declared or inferred, and the kinds you may open."""
-        return await self._get(f"/forms/{quote(pack, safe='')}", ident, **({"kind": kind} if kind else {}))
+    async def form(self, pack: str, kind: str = "", ident=None, kinds_only: bool = False) -> dict:
+        """The search form of a pack's kind (query by form): its fields, declared or inferred, and the kinds you may open;
+        ``kinds_only``: the pack and its kinds you may open, no form (reads no data: the forms home)."""
+        return await self._get(f"/forms/{quote(pack, safe='')}", ident, **({"kind": kind} if kind else {}), **({"kindsOnly": "true"} if kinds_only else {}))
 
     async def form_compile(self, pack: str, kind: str, body: dict, ident=None) -> dict:
         """The form's criteria as a command of the search grammar: ``{command}``."""

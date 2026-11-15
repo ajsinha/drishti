@@ -347,7 +347,7 @@ Links: `PORTFOLIO_ID` → `system-basket`.
 
 ### `pnl-vector`
 
-**P&L vector (509 scenarios)** · mnemonic `PNLV` · read through connector `risk-store`.
+**P&L vector (one P&L per scenario)** · mnemonic `PNLV` · read through connector `risk-store`.
 
 One trade's P&L under each of the 509 scenario days, in USD: the grain every VaR is summed from, with the trade's terms the server derives its position from
 
@@ -401,7 +401,7 @@ Links: `POSITION_ID` → `position`, `TRADE_ID` → `trade`, `TRADE_IDS` → `tr
 
 ### `scenario-pv`
 
-**Scenario PVs of a trade (509 scenarios, its currency)** · mnemonic `SPV` · read through connector `risk-store`.
+**Scenario PVs of a position or trade (one PV per scenario, its currency)** · mnemonic `SPV` · read through connector `risk-store`.
 
 About: Scenario PVs of a trade.
 
@@ -455,7 +455,7 @@ Links: `POSITION_ID` → `position`, `SCENARIO_PV_ID` → `scenario-pv`, `TRADE_
 
 ### `fx-scenario`
 
-**Scenario FX of a currency (509 scenarios)** · mnemonic `FXS` · read through connector `risk-store`.
+**Scenario FX of a currency (one rate per scenario)** · mnemonic `FXS` · read through connector `risk-store`.
 
 About: Scenario FX of a currency.
 
@@ -635,9 +635,9 @@ No samples ship: documents are read live from its connector `mr-derived` (plugin
 | `TVAL` | `trade-valuation` | Trade valuation |
 | `POS` | `position` | Position |
 | `PORT` | `system-basket` | System basket (the bank's baskets, kept in Drishti) |
-| `PNLV` | `pnl-vector` | P&L vector (509 scenarios) |
-| `SPV` | `scenario-pv` | Scenario PVs of a trade (509 scenarios, its currency) |
-| `FXS` | `fx-scenario` | Scenario FX of a currency (509 scenarios) |
+| `PNLV` | `pnl-vector` | P&L vector (one P&L per scenario) |
+| `SPV` | `scenario-pv` | Scenario PVs of a position or trade (one PV per scenario, its currency) |
+| `FXS` | `fx-scenario` | Scenario FX of a currency (one rate per scenario) |
 | `SSET` | `scenario-set` | Scenario set |
 | `VLIM` | `var-limit` | VaR limit of a hierarchy node |
 | `DPNL` | `desk-pnl` | Desk P&L: actual and hypothetical (daily) |

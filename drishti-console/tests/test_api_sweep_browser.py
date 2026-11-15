@@ -24,7 +24,7 @@ from pathlib import Path
 
 import pytest
 
-from test_command_sweep_browser import SWEEP_PACKS, official_ready, sweep_lake
+from test_command_sweep_browser import SWEEP_ENV, SWEEP_PACKS, sweep_lake
 from test_page_walk_browser import _packs_ready
 from var_stack import var_server
 
@@ -39,9 +39,8 @@ def stack(tmp_path_factory):
         return
     for st in var_server(tmp_path_factory, sweep_lake(tmp_path_factory), DRISHTI_DATALOAD_ENABLED="true",
                          DRISHTI_DATALOAD_DIR=str(tmp_path_factory.mktemp("api-sweep-dataload")), DRISHTI_PACKS=SWEEP_PACKS,
-                         DRISHTI_LENSES="risk,world,market,trading,markets"):
+                         DRISHTI_LENSES="risk,world,market,trading,markets", **SWEEP_ENV):
         _packs_ready(st.server, SWEEP_PACKS.split(","))
-        official_ready(st.server)
         yield st
 
 

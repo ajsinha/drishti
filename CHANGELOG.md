@@ -18,6 +18,16 @@
 
 ## Unreleased
 
+- **i4 acceptance: cold pages and the sweeps.** A page of records with vector columns (SPV, the owner's position-grain scenario PVs, and
+  XPATH) reads each file's vectors once for the page instead of once per record (1.6 s to 0.3 s warm for SPV, 2.4 s to 0.5 s for XPATH).
+  The forms home asks the server for each pack's kinds only (`GET /api/v1/forms/{pack}?kindsOnly=true`, no data read: 15.5 s to 0.5 s
+  cold); a form reads sample rows only when a dropdown needs them, and a search with nothing to test and no order reads only its first
+  `limit` documents. A caller that stops reading a whole kind (a closed download) is no longer recorded as the table failing (DRS-1003);
+  "no source holds" names the connectors asked and the date. Each official VaR or exposure publish tries its results connector at once
+  (it waited up to five minutes after a fresh lake's first capture). The titles of the P&L vector, scenario PV and scenario FX kinds no
+  longer name 509 scenarios (the window is `scenario-window`, default 250); SPV's example is a position. The drill's command and API
+  sweeps run on the full demo lake (every dataset of the saved test data, cached), sign in for their readiness checks, start without the
+  official exposure capture, time a slow run again on its own, and list parked runs (XRUN, XPATH, XOFC, STR, SSPNL, TRACK) by name.
 - **Sweep integration.** The command sweep, its fixes and the API sweep are on one branch. Fixed at the root: `GET /api/v1/bi/model/kinds` no longer fails with DRS-9026 when a connector is disabled or not running (the kind is skipped and listed under `skipped` with the reason); `API_REFERENCE.md` documents the `/admin/loads/{pack}` aliases and the module APIs (genomics sample, archetype greeting; section 38); `ArtifactApiTest` binds its kind to its connector through the bindings (connector files no longer name kinds).
 - **Trade blotter: new trades on top, the lake's trades in the snapshot, a trade-editor role.** A blotter whose own order is newest
   first (`sort:` descending by its `changed-at` or version) puts new and changed rows on top: a paged viewer at the top of that order is

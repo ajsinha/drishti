@@ -69,13 +69,13 @@ mnemonics:
     label: System basket (the bank's baskets, kept in Drishti)
   PNLV:
     kind: pnl-vector
-    label: P&L vector (509 scenarios)
+    label: P&L vector (one P&L per scenario)
   SPV:
     kind: scenario-pv
-    label: Scenario PVs of a trade (509 scenarios, its currency)
+    label: Scenario PVs of a position or trade (one PV per scenario, its currency)
   FXS:
     kind: fx-scenario
-    label: Scenario FX of a currency (509 scenarios)
+    label: Scenario FX of a currency (one rate per scenario)
   SSET:
     kind: scenario-set
     label: Scenario set

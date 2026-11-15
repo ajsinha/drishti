@@ -108,10 +108,12 @@ public class FormController {
     /**
      * The form of a pack's kind ({@code ?kind=} picks one; the first the caller may open otherwise), with every kind the caller may
      * open so the console can offer a selector. Fields are marked {@code indexed} when the kind's source keeps them as columns.
+     * {@code ?kindsOnly=true}: the pack and the kinds only, no form (the forms home lists every pack's kinds and reads no data: building
+     * a form reads the kind's rows for its dropdowns, seconds per pack on a cold server).
      */
     @GetMapping("/{pack}")
-    public Map<String, Object> form(@PathVariable String pack, @RequestParam(required = false) String kind, AsOf asOf,
-            @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
+    public Map<String, Object> form(@PathVariable String pack, @RequestParam(required = false) String kind,
+            @RequestParam(defaultValue = "false") boolean kindsOnly, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
         Pack p = pack(principal, pack);
         List<Map<String, Object>> kinds = new ArrayList<>();
         for (String k : p.kinds()) {
@@ -128,12 +130,15 @@ public class FormController {
         if (kinds.stream().noneMatch(k -> k.get("kind").equals(chosen))) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "pack '" + p.name() + "' has no kind '" + chosen + "' you may open");
         }
-        FormSpec spec = specOf(p, chosen, asOf, principal);
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("pack", p.name());
         out.put("code", p.code());
         out.put("title", p.title());
         out.put("kinds", kinds);
+        if (kindsOnly) {
+            return out;
+        }
+        FormSpec spec = specOf(p, chosen, asOf, principal);
         out.put("kind", chosen);
         out.put("mnemonic", mnemonics.codeFor(chosen) == null ? chosen : mnemonics.codeFor(chosen));
         Map<String, Object> form = spec.toMap();
@@ -201,8 +206,16 @@ public class FormController {
 
     private FormSpec buildSpec(Pack p, String kind, AsOf asOf, Principal principal) {
         Optional<FormSpec> declared = definitions.declared(p, kind);
-        Map<String, List<Object>> samples = sample(kind, asOf, principal);
-        FormSpec spec = declared.orElseGet(() -> infer(kind, samples));
+        // the first rows, read only when needed (an inferred form, a dropdown no column and no glossary fills): a declared form whose
+        // dropdowns come from the columns reads no documents (reading a thousand trades one by one made FORM trading 15 s cold)
+        List<Map<String, List<Object>>> read = new ArrayList<>(1);
+        java.util.function.Supplier<Map<String, List<Object>>> samples = () -> {
+            if (read.isEmpty()) {
+                read.add(sample(kind, asOf, principal));
+            }
+            return read.get(0);
+        };
+        FormSpec spec = declared.orElseGet(() -> infer(kind, samples.get()));
         List<FormField> fields = new ArrayList<>();
         for (FormField f : spec.fields()) {
             fields.add(f.type() == FieldType.ENUM && f.values().isEmpty() ? withValues(f, kind, samples, asOf, principal) : f);
@@ -210,14 +223,15 @@ public class FormController {
         return new FormSpec(kind, spec.calendar(), fields, spec.inferred());
     }
 
-    private FormField withValues(FormField f, String kind, Map<String, List<Object>> samples, AsOf asOf, Principal principal) {
+    private FormField withValues(FormField f, String kind, java.util.function.Supplier<Map<String, List<Object>>> samples, AsOf asOf,
+            Principal principal) {
         TreeSet<String> found = new TreeSet<>();
         about.forKind(kind).map(a -> a.glossary().get(f.path())).map(GlossaryEntry::values).ifPresent(v -> found.addAll(v.keySet()));
         if (found.isEmpty() && !entitlements.masked(principal, f.path())) {   // the whole column, every connector of a union
             found.addAll(distinctOf(kind, f.path(), asOf));
         }
         if (found.isEmpty()) {                                        // a source that is not columnar: the sampled rows
-            samples.getOrDefault(f.path(), List.of()).stream().filter(v -> v != null && !String.valueOf(v).isBlank()).forEach(v -> found.add(String.valueOf(v)));
+            samples.get().getOrDefault(f.path(), List.of()).stream().filter(v -> v != null && !String.valueOf(v).isBlank()).forEach(v -> found.add(String.valueOf(v)));
         }
         if (found.isEmpty()) {                                        // not one of the key columns: read it from the data
             try {
@@ -259,8 +273,10 @@ public class FormController {
 
     private Map<String, List<String>> computeParents(FormField f, String kind, AsOf asOf, Principal principal) {
         Map<String, java.util.TreeSet<String>> by = new java.util.TreeMap<>();
+        boolean[] whole = {false};                                    // every source answered as columns: no documents to read
         if (!entitlements.masked(principal, f.path()) && !entitlements.masked(principal, f.depends())) {
             columnValues(kind, List.of(f.path(), f.depends()), asOf).ifPresent(c -> {
+                whole[0] = true;
                 for (int i = 0; i < c.size(); i++) {
                     Object child = c.value(f.path(), i);
                     Object parent = c.value(f.depends(), i);
@@ -270,11 +286,12 @@ public class FormController {
                 }
             });
         }
-        try {                                                         // and the documents the sources list (a source that is not columnar)
+        // and the documents the sources list, when a source is not columnar (a thousand documents read one by one: seconds cold)
+        try {
             String code = mnemonics.codeFor(kind);
-            StructuredSearch.Result r = search.run(SearchQuery.parse((code == null ? kind : code) + " where " + f.path() + " != '' and " + f.depends()
-                    + " != '' limit " + enumScanRows), asOf, data -> entitlements.redact(principal, data));
-            for (var row : r.rows()) {
+            List<StructuredSearch.Row> rows = whole[0] ? List.of() : search.run(SearchQuery.parse((code == null ? kind : code) + " where " + f.path()
+                    + " != '' and " + f.depends() + " != '' limit " + enumScanRows), asOf, data -> entitlements.redact(principal, data)).rows();
+            for (var row : rows) {
                 Object child = row.values().get("$." + f.path());
                 Object parent = row.values().get("$." + f.depends());
                 if (child != null && parent != null) {

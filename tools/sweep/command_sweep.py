@@ -57,6 +57,8 @@ EXPLAINED_CODE = re.compile(r"(?:is|are) refused \( DRS-\d+ \)")
 FAULT = re.compile(r"DRS-\d+|not found|no such|has no columns|Traceback|Internal Server Error|Server error|Unhandled exception|cannot read command", re.I)
 #: a connector's failure (DRS-5034 ...) as an Admin page lists it: the connector's own state, which the config sweep owns; one message: its connector, its reason, the parenthesis that follows
 CONNECTOR_ALERT = re.compile(r"DRS-5034 connector [^:]+:[^()]*(?:\([^)]*\))?")
+#: a connector whose lake tables are not there yet (an official results lake before its first capture) as an Admin page lists it: its state
+LAKE_STATE = re.compile(r"lake [\w.-]+, tables [^:]+: no such folder\. Check \S+, load the pack's data, or see Admin > Connectors(?: \([^)]*\))?")
 #: runs the owner parked, each with its reason: reported as "parked" (listed in the report), never a FAIL and never silently skipped
 PARKED = {"XRUN XR-2026-09-30-01": "parked until the CCR engine is built (owner 2026-11-15): the example names the test data's run, a lake "
                                    "built --as-of holds XR-<that date>-01",
@@ -64,7 +66,8 @@ PARKED = {"XRUN XR-2026-09-30-01": "parked until the CCR engine is built (owner 
 #: functions the owner parked as a whole: a run of theirs that fails is "parked" with the reason (a pass stays a pass)
 PARKED_FUNCTIONS = {"STR": "parked: stress testing out of i4 scope (owner 2026-11-15)",
                     "SSPNL": "parked: stress testing out of i4 scope (owner 2026-11-15)",
-                    "TRACK": "parked: public US equities data, not the owner's flows (owner 2026-11-15)"}
+                    "TRACK": "parked: public US equities data, not the owner's flows (owner 2026-11-15)",
+                    "XOFC": "parked until the CCR engine is built (owner 2026-11-15): test stacks start with the official exposure capture off"}
 RESERVED = ["BI", "RUPAKA", "FORM", "FUNC", "WHAT", "DATAMAP", "DATA", "EXPORT", "PIVOT"]
 ADMIN_PAGES = ["users", "roles", "packs", "commands", "tokens", "access", "connectors", "artifacts", "ai", "loads", "lakes", "collab",
                "embedding", "bi", "audit", "net", "edits", "compute", "engines", "health", "caches", "capacity", "scopes", "data-out",
@@ -245,7 +248,7 @@ def check(c: Client, word: str, cmd: str, has_data: bool, expect_off: bool) -> d
         if REFUSED.search(text) or expect_off:
             return done("refused", text[:160])
         return done("FAIL", f"HTTP {status}: {text[:180]}")
-    own = CONNECTOR_ALERT.sub(" ", text) if path.path.startswith("/admin/") else text      # DRS-5034 on an Admin page is a connector's state it lists (config's matter), not this page failing
+    own = LAKE_STATE.sub(" ", CONNECTOR_ALERT.sub(" ", text)) if path.path.startswith("/admin/") else text      # DRS-5034 on an Admin page is a connector's state it lists (config's matter), not this page failing
     if path.path.startswith("/admin/"):
         own = EXPLAINED_CODE.sub(" ", own)                                                  # a help sentence that names the code of a refusal ("is refused ( DRS-9196 ): migrate it ...") is not a refusal
     if path.path == "/admin/audit":                                                         # the audit trail lists past requests and their errors: data, not this page failing
@@ -325,6 +328,14 @@ def main(argv=None) -> int:
     lock = threading.Lock()
     with (out / f"sweep-{stamp}.jsonl").open("w", encoding="utf-8") as live, ThreadPoolExecutor(a.workers) as ex:   # the JSONL grows a run at a time
         rows = list(ex.map(one, jobs))
+        # a time is judged alone: a run that was slow beside the others is timed again on its own (at 4 workers the machine's load read as
+        # slowness: STR 46 s in the sweep, 0.08 s alone); the second time is the one kept, the first is named
+        for i, r in enumerate(rows):
+            if r["result"] == "FAIL" and r["message"].startswith("slow:") and a.workers > 1:
+                again = one(jobs[i])
+                if again["result"] != "FAIL" or not again["message"].startswith("slow:"):
+                    again["message"] = (again["message"] + " " if again["message"] else "") + f"(timed alone: {r['secs']} s beside the others)"
+                rows[i] = again
     tally = {k: sum(1 for r in rows if r["result"] == k) for k in ("pass", "refused", "parked", "FAIL")}
     lines = [f"# Command sweep {stamp}", "", f"{a.base}: {len(funcs)} functions, {len(rows)} runs in {time.monotonic() - t0:.0f} s "
              f"(pass {tally['pass']}, refused {tally['refused']}, parked {tally['parked']}, FAIL {tally['FAIL']}).", "",

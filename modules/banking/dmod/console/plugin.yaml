@@ -147,17 +147,17 @@ routes:
   path: /market-risk/pnl-vector/{id}
   sutra: market-risk/pnl-vector
   function: PNLV
-  title: P&L vector (509 scenarios)
+  title: P&L vector (one P&L per scenario)
 - id: spv
   path: /market-risk/scenario-pv/{id}
   sutra: market-risk/scenario-pv
   function: SPV
-  title: Scenario PVs of a trade (509 scenarios, its currency)
+  title: Scenario PVs of a position or trade (one PV per scenario, its currency)
 - id: fxs
   path: /market-risk/fx-scenario/{id}
   sutra: market-risk/fx-scenario
   function: FXS
-  title: Scenario FX of a currency (509 scenarios)
+  title: Scenario FX of a currency (one rate per scenario)
 - id: sset
   path: /market-risk/scenario-set/{id}
   sutra: market-risk/scenario-set

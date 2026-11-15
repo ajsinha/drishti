@@ -476,6 +476,22 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
         return names.size();
     }
 
+    /**
+     * Data the connectors of {@code kind} read was just written by this server (an official capture's first commit makes the results
+     * tables): each of them that is failing is tried at once, on the calling thread, instead of at its next back-off (up to
+     * {@code drishti.retry.max}, five minutes, once it counts as permanent). Returns how many were tried.
+     */
+    public int retryFailingFor(String kind) {
+        List<String> names = new ArrayList<>();
+        applied.forEach((name, c) -> {
+            if (c.kinds().contains(kind) && retry.failing(name)) {
+                names.add(name);
+            }
+        });
+        names.forEach(this::retryNow);
+        return names.size();
+    }
+
     /** Hears every failure and recovery, for the audit log. */
     public void retryListener(com.ash.drishti.common.RetryBoard.Listener l) {
         retry.listener(l);

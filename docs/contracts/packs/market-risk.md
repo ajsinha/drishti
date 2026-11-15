@@ -28,9 +28,9 @@ One section per command of the pack: the shape of its data, how it is stored and
 | [TVAL](#tval-trade-valuation-trade-valuation) | `trade-valuation` | fundamental | active | 21 | 6 |
 | [POS](#pos-position-position) | `position` | drishti-owned | active | 32 | 5 |
 | [PORT](#port-system-basket-the-banks-baskets-kept-in-drishti-system-basket) | `system-basket` | drishti-owned | active | 11 | 0 |
-| [PNLV](#pnlv-pl-vector-509-scenarios-pnl-vector) | `pnl-vector` | input | active | 39 | 5 |
-| [SPV](#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv) | `scenario-pv` | input | active | 40 | 5 |
-| [FXS](#fxs-scenario-fx-of-a-currency-509-scenarios-fx-scenario) | `fx-scenario` | input | active | 9 | 3 |
+| [PNLV](#pnlv-pl-vector-one-pl-per-scenario-pnl-vector) | `pnl-vector` | input | active | 39 | 5 |
+| [SPV](#spv-scenario-pvs-of-a-position-or-trade-one-pv-per-scenario-its-currency-scenario-pv) | `scenario-pv` | input | active | 40 | 5 |
+| [FXS](#fxs-scenario-fx-of-a-currency-one-rate-per-scenario-fx-scenario) | `fx-scenario` | input | active | 9 | 3 |
 | [SSET](#sset-scenario-set-scenario-set) | `scenario-set` | input | active | 13 | 3 |
 | [VLIM](#vlim-var-limit-of-a-hierarchy-node-var-limit) | `var-limit` | input | active | 10 | 0 |
 | [DPNL](#dpnl-desk-pl-actual-and-hypothetical-daily-desk-pnl) | `desk-pnl` | input | active | 10 | 0 |
@@ -540,7 +540,7 @@ A system basket in terms of the positions inside it: longs and shorts, market va
 
 - The system baskets are kept in Drishti's basket store (VAR_GUIDE.md section 5.7), never read from data: a holder of the permission var:system-baskets creates, edits and retires them in Construct your basket or imports them as YAML; the demo's are the market-risk pack's seed (seeds/system-baskets.yaml). Their VaR limits are var-limit rows (HIERARCHY PORTFOLIO), their figures the engine's as the page opens (VAR_ENGINE), never stored.
 
-## PNLV: P&L vector (509 scenarios) (`pnl-vector`)
+## PNLV: P&L vector (one P&L per scenario) (`pnl-vector`)
 
 One trade's (or one position's) P&L under every scenario of the date's scenario set, gain positive, in CURRENCY, with the terms the VaR engine places it by.
 
@@ -646,7 +646,7 @@ One trade's (or one position's) P&L under every scenario of the date's scenario 
 - enum values inferred from the data, not from a glossary: SOURCE_SYSTEM, TRADE_STATUS, PRODUCT_GROUP, CURRENCY, DIRECTION: confirm they are closed lists.
 - no unit stated for the amounts QUANTITY (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
-## SPV: Scenario PVs of a trade (509 scenarios, its currency) (`scenario-pv`)
+## SPV: Scenario PVs of a position or trade (one PV per scenario, its currency) (`scenario-pv`)
 
 A trade's present value under each historical scenario and its base PV of the same run, in the trade's own currency: the form of a trade's scenario P&L a bank may send instead of a P&L vector (VAR_GUIDE.md section 15.9). The VaR engine turns it into the trade's USD P&L when it loads the date: P&L(s) = PV(s) x FX(s) - PV(base) x FX(base).
 
@@ -677,7 +677,7 @@ A trade's present value under each historical scenario and its base PV of the sa
 | `POSITION_ID` | id | optional |  | The position, at GRAIN POSITION (required then, and no TRADE_ID): used as it is, never derived from trades. At GRAIN TRADE it is absent (the engine derives the trade's position). | `POS-ENDUR-BOOK-COMM-1-ComSwap-USD` | `position` |
 | `CURRENCY` | text | required |  | The currency both PVs are in: the trade's own currency (one stated currency for a whole file is the same thing). | `CAD`, `EUR`, `USD` |  |
 | `SOURCE_SYSTEM` | text | required |  | The booking system the trade comes from (ENDUR in the demo); kept for people and audit, not read by the engine. | `ENDUR` |  |
-| `SCENARIO_PV_ID` | id | required |  | The record's id (the business key) | `SPV-1000054-HS-509` (pattern `^SPV-`) | `scenario-pv` |
+| `SCENARIO_PV_ID` | id | required |  | The record's id (the business key) | `SPV-POS-BOOK-COMM-1~1000054-HS-509` (pattern `^SPV-`) | `scenario-pv` |
 | `SECURITY_ID` | id | optional |  | The security or exchange contract the trade is in (securities and listed products): Drishti keys the trade's position by book and security. | `XCH-ComFut-USD-08` |  |
 | `INSTRUMENT` | text | required |  | The instrument's name, the position's label on the pages. | `ENGY-SWAP EUR 2026-09` |  |
 | `BUSINESS_DATE` | date | required |  | The close of business the PVs belong to (YYYY-MM-DD); the lake's business_date partition. | `2026-09-30` |  |
@@ -758,7 +758,7 @@ A trade's present value under each historical scenario and its base PV of the sa
 - enum values inferred from the data, not from a glossary: TRADE_STATUS, PRODUCT_TYPE, CURRENCY, DIRECTION: confirm they are closed lists.
 - no unit stated for the amounts QUANTITY (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
-## FXS: Scenario FX of a currency (509 scenarios) (`fx-scenario`)
+## FXS: Scenario FX of a currency (one rate per scenario) (`fx-scenario`)
 
 A currency's rate against USD today and under each historical scenario, as the risk batch supplies it (VAR_GUIDE.md section 15.9): the VaR engine converts scenario PVs and reporting currencies with it. A currency the batch does not supply is derived from the FX history (fx-spot).
 
@@ -1230,7 +1230,7 @@ The VaR, ES, decomposition, worst scenarios and P&L vector of any scope (the sco
 | `HORIZON` | text | optional |  | The horizon of every figure (VAR_GUIDE.md section 18.6): 1D, or 10D with the parameter horizon=10d (VRES BANK~horizon=10d~method=sum), from the same 1-day scenario P&Ls (no other input). | `1D`, `10D` |  |
 | `METHOD` | text | optional |  | How a 10-day figure is made: SQRT10 (the 1-day figures × √10) or SUM (each scenario the sum of 10 consecutive 1-day scenario P&Ls, 509 scenarios giving 500 overlapping windows; then SCENARIOS is the windows and PNL the windows' sums); empty at 1 day. | `SQRT10`, `SUM` |  |
 | `SET` | text | optional |  | The scenario set of every figure (VAR_GUIDE.md section 18.8): NORMAL, or STRESSED with the parameter set=stressed (VRES BANK~set=stressed): the scope on the date's stress scenario set, in USD; a date without one is refused in words. | `NORMAL`, `STRESSED` |  |
-| `K` | integer | required |  | The VaR rank (the 6th worst of 509 at 99%; the 26th at 95%; the 5th of the 500 windows of the 10-day sum at 99%). |  |  |
+| `K` | integer | required |  | The VaR rank over the scenario window (scenario-window, default 250, the 3rd worst at 99%, the 13th at 95%; for the 10-day sum, the rank among its overlapping windows). |  |  |
 | `ES_COUNT` | integer | required |  | The number of worst scenarios averaged into the ES. |  |  |
 | `SCENARIOS` | integer | required |  | The number of scenarios in the scope's P&L vector (the scenario set's SCENARIO_COUNT). |  |  |
 | `LIMIT` | amount | optional | CURRENCY | The scope's VaR limit (a node's or portfolio's), converted to the answer's currency; null when it has none. |  |  |

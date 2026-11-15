@@ -71,6 +71,15 @@ final class VarOfficial implements AutoCloseable {
         return this;
     }
 
+    /** Run after each commit to the published tables: the results connectors that read them are tried at once (a fresh lake has no tables
+     * until the first capture, and a connector that found none waits for its back-off). */
+    private volatile Runnable published = () -> { };
+
+    /** See {@link #published}. */
+    void onPublished(Runnable r) {
+        this.published = r == null ? () -> { } : r;
+    }
+
     VarOfficial(VarService svc, VarViews views, VarPublisher publisher) {
         this.svc = svc;
         this.views = views;
@@ -273,6 +282,7 @@ final class VarOfficial implements AutoCloseable {
             try {
                 long v = publisher.publish(date, rows);
                 index.put("published", "risk-results/var-official (" + publisher.describe(v) + ")");   // never the server's own folder
+                published.run();
             } catch (java.io.IOException | RuntimeException e) {
                 String fmt = publisher.sink().format();
                 index.put("publishError", fmt + " table " + publisher.where() + ": " + e.getMessage());

@@ -237,7 +237,8 @@ public class VarConfiguration {
     }
 
     @Bean(destroyMethod = "close")
-    VarOfficial varOfficial(VarService svc, VarViews views, VarProperties props, ObjectProvider<LoadService> loads) {
+    VarOfficial varOfficial(VarService svc, VarViews views, VarProperties props, ObjectProvider<LoadService> loads,
+            ObjectProvider<com.ash.drishti.engine.source.SourceRegistry> sources) {
         var off = props.official();                                      // a folder or s3://, Delta (the default) or Iceberg (2.9.5)
         VarOfficial o = new VarOfficial(svc, views, new VarPublisher(com.ash.drishti.banking.official.OfficialSink.of(off.format(), off.root(),
                 off.storage(), off.retentionYears()), off.jsonl()));
@@ -245,6 +246,7 @@ public class VarConfiguration {
         if (l != null) {
             l.onReady(r -> o.onLoad(r.kind(), r.businessDate()));          // the data-load signal reloads the date, then captures it
         }
+        o.onPublished(() -> sources.ifAvailable(r -> r.retryFailingFor("var-official")));   // the var-results connector
         return o;
     }
 

@@ -20,7 +20,7 @@ pack: market-risk
 version: '1.1'
 class: input
 status: active
-title: P&L vector (509 scenarios)
+title: P&L vector (one P&L per scenario)
 description: 'One trade''s (or one position''s) P&L under every scenario of the date''s scenario set, gain positive, in CURRENCY, with the terms the VaR engine places it by.'
 source: Synthetic sample data (tools/packgen/banking)
 grain: 'One row per trade (GRAIN TRADE) or position (GRAIN POSITION), business date and scenario set, keyed by VECTOR_ID (PNL-<TRADE_ID or POSITION_ID>-<SCENARIO_SET_ID>).'
