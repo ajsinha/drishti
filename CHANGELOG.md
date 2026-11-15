@@ -18,6 +18,10 @@
 
 ## Unreleased
 
+- **Test lakes are built once and reused.** Every lake a console test reads (VaR, exposure, stress, regulatory, trade-grain, funds, news,
+  public-sector feeds, the BI sample lake) comes from the drill's lake cache, built once per hash of the test data, generators and
+  loaders by the parallel Java loader and reused across runs and drills; a stack whose server writes gets a copy or its own write
+  folders. A quick file check fails on any other test that builds a lake itself or names the Python writer.
 - **Menus follow the packs that load.** With `drishti.packs.enabled` unset the console loads the same default packs as the server
   (`config/packs/default-packs.yaml`); a menu entry of a pack's command (USEQ, EDGAR, LEIC, FUND) is drawn only while a pack that has
   it loads, so no menu opens "cannot read command".

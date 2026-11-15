@@ -54,30 +54,70 @@ def last_weekday() -> str:
     return d.isoformat()
 
 
-def var_lake(tmp_path_factory, only: str, as_of: str | None = None, extra: tuple[str, ...] = ()) -> Path:
-    """The lake of ``only`` ending ``as_of`` (default: :func:`last_weekday`), built by the first worker of the run that asks; skips when
-    it cannot be built. ``extra``: more ``lake demo`` options (``--exposure committed``)."""
+def var_lake(tmp_path_factory, only: str, as_of: str | None = None, extra: tuple[str, ...] = (), needs: str = "risk/scenario-pv") -> Path:
+    """The cached demo lake of ``only`` ending ``as_of`` (default: :func:`last_weekday`; ``data``: the test data's own dates): built ONCE per
+    hash of the test data, generators and lake code, across runs and drills, by the parallel Java loader (tools/drillkit/lake_cache.py), and
+    looked up once per run (the first worker that asks). Read-only: a file that writes gets :func:`lake_copy` of it. Skips when it cannot be
+    built or lacks ``needs`` (a table folder under the lake). ``extra``: more ``lake demo`` options (``--exposure committed``)."""
     import browser_harness
 
     as_of = as_of or last_weekday()
 
     run = browser_harness.run_dir(tmp_path_factory)
-    key = "var-lake-" + hashlib.sha1("|".join((only, as_of, *extra)).encode()).hexdigest()[:12]
+    key = "var-lake-" + hashlib.sha1("|".join((only, as_of, *extra, needs)).encode()).hexdigest()[:12]
 
     def make():
-        sys.path.insert(0, str(ROOT / "tools" / "drillkit"))
-        import lake_cache   # built once per hash of the test data, generators and lake code, across runs (TEST_HARNESS.md, "The cached demo lake")
-
+        lake_cache = _lake_cache()
         try:
-            lake = lake_cache.demo_lake(only, as_of, extra) / "delta"   # the Python writer: auto starts a JVM for every table and business day
+            lake = lake_cache.demo_lake(only, as_of, extra) / "delta"   # lake demo's default writer: the parallel Java loader of the exec jar
         except RuntimeError as e:
-            return {"lake": "", "error": "could not build the VaR demo lake: " + str(e)}
-        return {"lake": str(lake), "error": None if (lake / "risk" / "scenario-pv").is_dir() else f"no scenario-pv in the cached lake {lake}"}
+            return {"lake": "", "error": "could not build the demo lake: " + str(e)}
+        return {"lake": str(lake), "error": None if (lake / needs).is_dir() else f"no {needs} in the cached lake {lake}"}
 
     got = browser_harness.shared_once(run, key, make)
     if got["error"]:
         pytest.skip(got["error"])
     return Path(got["lake"])
+
+
+def _lake_cache():
+    if str(ROOT / "tools" / "drillkit") not in sys.path:
+        sys.path.insert(0, str(ROOT / "tools" / "drillkit"))
+    import lake_cache   # TEST_HARNESS.md, "The cached demo lake"
+    return lake_cache
+
+
+def lake_copy(lake: Path, dest: Path) -> Path:
+    """A copy of a (cached, shared) lake at ``dest/delta``: data files are hard links where both sit on one file system (Delta writes new
+    files and never changes one; else copied), each _delta_log a real copy (a log file may be rewritten in place). The original is never written."""
+    import os
+    import shutil
+
+    def link(src, dst):
+        try:
+            os.link(src, dst)
+        except OSError:                                  # another file system (a tmpfs /tmp): a plain copy
+            shutil.copy2(src, dst)
+
+    out = dest / "delta"
+    shutil.copytree(lake, out, copy_function=link, ignore=shutil.ignore_patterns("_delta_log"))
+    for log in lake.rglob("_delta_log"):
+        shutil.copytree(log, out / log.relative_to(lake))
+    return out
+
+
+def demo_lake_copy(only: str, as_of: str, dest: Path, connectors: Path | None = None) -> Path:
+    """The cached demo lake of ``only`` (built once per source hash by the Java loader) copied to ``dest/delta`` (:func:`lake_copy`), for a
+    stack whose server writes beside its lake (live connectors); ``connectors``: where to put the connector files the build wrote beside it."""
+    import shutil
+
+    try:
+        folder = _lake_cache().demo_lake(only, as_of)
+    except RuntimeError as e:
+        pytest.skip(str(e))
+    if connectors is not None and (folder / "connectors").is_dir():
+        shutil.copytree(folder / "connectors", connectors, dirs_exist_ok=True)
+    return lake_copy(folder / "delta", dest)
 
 
 def trade_grain(lake: Path, budget: int = 40) -> None:
@@ -87,24 +127,30 @@ def trade_grain(lake: Path, budget: int = 40) -> None:
     r = subprocess.run([sys.executable, str(ROOT / "tools" / "pvgen" / "morning.py"), "--grain", "trade", "--pv-systems", "ENDUR", "--budget", str(budget), "--date", day,
                         "--out", str(lake.parent / "morning"), "--lake", str(lake)], capture_output=True, text=True, cwd=ROOT, timeout=900)
     if r.returncode != 0:
-        pytest.skip("could not write the trade-grain morning: " + (r.stderr or r.stdout)[-400:])
+        raise RuntimeError("could not write the trade-grain morning: " + (r.stderr or r.stdout)[-400:])
 
 
-def trade_grain_copy(lake: Path, dest: Path, budget: int = 40) -> Path:
-    """A copy of a (cached, shared) lake with :func:`trade_grain` on its newest date; the original is never written. Data files are hard
-    links (Delta writes new files and never changes one), each _delta_log a real copy (a log file may be rewritten in place)."""
-    import os
-    import shutil
+def trade_grain_lake(lake: Path, budget: int = 40) -> Path:
+    """The cached lake ``lake`` with :func:`trade_grain` on its newest date, itself cached: built once per source hash (a copy of ``lake``
+    beside it in the cache, hard links, then the morning written into the copy), read-only like every cached lake. ``lake`` is never written."""
+    lake_cache = _lake_cache()
 
-    def copy(src: Path, dst: Path) -> None:
-        shutil.copytree(src, dst, copy_function=os.link, ignore=shutil.ignore_patterns("_delta_log"))
-        for log in src.rglob("_delta_log"):
-            shutil.copytree(log, dst / log.relative_to(src))
+    def build(work: Path) -> None:
+        trade_grain(lake_copy(lake, work), budget)
 
-    out = dest / "delta"
-    copy(lake, out)
-    trade_grain(out, budget)
-    return out
+    try:
+        return lake_cache.cached("trade-grain|" + str(lake) + "|" + str(budget), build) / "delta"
+    except RuntimeError as e:
+        pytest.skip(str(e))
+
+
+def own_folders(tmp_path_factory, shared: bool = False) -> dict[str, str]:
+    """The settings that keep a server's writes off its (cached, read-only) lake: its VaR hot folder and the roots it publishes the official
+    VaR and exposure results to. ``shared``: inside the server's scratch folder (the same settings for every file that shares it)."""
+    if shared:
+        return {"DRISHTI_VAR_HOT_DIR": "data/var/hot", "DRISHTI_VAR_OFFICIAL_ROOT": "data/var/official", "DRISHTI_CCR_EXPOSURE_OFFICIAL_ROOT": "data/ccr/official"}
+    return {"DRISHTI_VAR_HOT_DIR": str(tmp_path_factory.mktemp("var-hot")), "DRISHTI_VAR_OFFICIAL_ROOT": str(tmp_path_factory.mktemp("var-official")),
+            "DRISHTI_CCR_EXPOSURE_OFFICIAL_ROOT": str(tmp_path_factory.mktemp("ccr-official"))}
 
 
 def var_server(tmp_path_factory, lake: Path, shared: bool = False, auth: bool = False, heap: str = VAR_HEAP, **env: str):
@@ -120,11 +166,7 @@ def var_server(tmp_path_factory, lake: Path, shared: bool = False, auth: bool = 
     from test_var_explorer_browser import _engine_ready
     from wb_live import _stack
 
-    if shared:
-        own = {"DRISHTI_VAR_HOT_DIR": "data/var/hot", "DRISHTI_VAR_OFFICIAL_ROOT": "data/var/official", "DRISHTI_CCR_EXPOSURE_OFFICIAL_ROOT": "data/ccr/official"}
-    else:
-        own = {"DRISHTI_VAR_HOT_DIR": str(tmp_path_factory.mktemp("var-hot")), "DRISHTI_VAR_OFFICIAL_ROOT": str(tmp_path_factory.mktemp("var-official")),
-               "DRISHTI_CCR_EXPOSURE_OFFICIAL_ROOT": str(tmp_path_factory.mktemp("ccr-official"))}
+    own = own_folders(tmp_path_factory, shared)
     for st in _stack(tmp_path_factory, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true", "DRISHTI_VAR_SYSTEM_BASKETS_SEED": "true",
                                         **own, **env}, auth=auth, heap=heap, shared=shared):
         _engine_ready(str(st), opener=signed_in(str(st)) if auth else None)

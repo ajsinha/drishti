@@ -40,7 +40,9 @@ from typing import Callable
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCES = ("data/testdata", "tools/testdata", "tools/pvgen", "tools/lake", "tools/drishti.py", "tools/build_demo_lakes.py", "tools/demonames.py", "config/demo",
-           "config/packs", "config/lakes", "tools/packgen", "lake/drishti-lakeload/src/main", "lake/drishti-deltalake/src/main")
+           "config/packs", "config/lakes", "tools/packgen", "lake/drishti-lakeload/src/main", "lake/drishti-deltalake/src/main",
+           ":(glob)modules/**/packs/**",        # the modules' packs (their kinds, layouts and loaders' rules) since packs moved into modules
+           "tools/feeds", "tools/samplegen", "drishti-console/tests/bi_exposure_fixture.py")   # the other cached builds: the feeds' lakes, the BI sample lake
 DONE = "BUILT"
 KEEP = 3
 

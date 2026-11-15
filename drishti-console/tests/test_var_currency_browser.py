@@ -33,7 +33,7 @@ import pytest
 
 from test_var_explorer_browser import open_var, painted, shot
 from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and helpers
-from var_stack import VAR_TRADES, trade_grain_copy, var_data, var_lake, var_server
+from var_stack import VAR_TRADES, trade_grain_lake, var_data, var_lake, var_server
 from select_helpers import choose, options, value, values  # <drishti-select>: drishti-inputs' Select
 
 @pytest.fixture(scope="module")
@@ -44,7 +44,7 @@ def stack(tmp_path_factory):
 @pytest.fixture(scope="module")
 def trade_stack(tmp_path_factory):
     """The same data with a small trade-grain morning on its newest date (the demo is position grain): a trade page and its currency."""
-    lake = trade_grain_copy(var_lake(tmp_path_factory, var_data(*VAR_TRADES)), tmp_path_factory.mktemp("var-trade-lake"))
+    lake = trade_grain_lake(var_lake(tmp_path_factory, var_data(*VAR_TRADES)))       # cached, read-only: the server writes its own folders
     yield from var_server(tmp_path_factory, lake)
 
 

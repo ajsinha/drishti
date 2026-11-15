@@ -36,8 +36,6 @@ data built into a scratch lake (lake demo --only market-risk/<the VaR kinds>) an
 
 Screenshots go to DRISHTI_VAR_SHOTS when it names a folder. Skipped when Playwright, Chromium, the built server jar or a JDK is missing."""
 import os
-import subprocess
-import sys
 import time
 import urllib.error
 import urllib.parse
@@ -48,8 +46,6 @@ from pathlib import Path
 import pytest
 
 from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and helpers
-from var_stack import VAR_HEAP
-from wb_live import _stack
 from select_helpers import choose, labels  # <drishti-select>: drishti-inputs' Select
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -62,36 +58,19 @@ PAINT_BUDGET_MS = int(os.environ.get("DRISHTI_VAR_PAINT_BUDGET_MS", "1500"))
 
 @pytest.fixture(scope="module")
 def stack(tmp_path_factory):
-    work = tmp_path_factory.mktemp("var-lake")
-    lake = work / "delta"
-    r = subprocess.run([sys.executable, str(ROOT / "tools" / "drishti.py"), "lake", "demo", "--lake", str(lake), "--data-dir", str(work / "data"),
-                        "--connectors-dir", str(work / "connectors"), "--as-of", "today", "--only", VAR_DATA, "--no-signal", "-q",
-                        "--engine", "deltalake"], capture_output=True, text=True, cwd=ROOT, timeout=1500)   # the Python writer, in this process: auto starts a JVM for every table and business day
-    if r.returncode != 0 or not (lake / "risk" / "scenario-pv").is_dir():
-        pytest.skip("could not build the VaR demo lake: " + (r.stderr or r.stdout)[-400:])
-    for st in _stack(tmp_path_factory, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true", "DRISHTI_VAR_SYSTEM_BASKETS_SEED": "true",
-                                        "DRISHTI_COMPUTE_ENABLED": "false",    # the what-if needs no compute workers
-                                        "DRISHTI_VAR_SCENARIO_WINDOW": "all"}, heap=VAR_HEAP):   # the full 509-scenario set the figures below are written for
-        _engine_ready(str(st))
-        yield st
+    """The cached VaR demo lake (built once per source hash by the Java loader; read-only, the server writes its own folders)."""
+    import var_stack
+    yield from var_stack.var_server(tmp_path_factory, var_stack.var_lake(tmp_path_factory, VAR_DATA),
+                                    DRISHTI_COMPUTE_ENABLED="false",    # the what-if needs no compute workers
+                                    DRISHTI_VAR_SCENARIO_WINDOW="all")  # the full 509-scenario set the figures below are written for
 
 
 @pytest.fixture(scope="module")
 def trade_stack(tmp_path_factory):
-    """The explorer over a small trade-grain date (var_stack.trade_grain): the engine's trade paths, the demo itself being position grain."""
+    """The explorer over a small trade-grain date (var_stack.trade_grain_lake, cached too): the engine's trade paths, the demo itself being position grain."""
     import var_stack
-    work = tmp_path_factory.mktemp("var-trade-lake")
-    lake = work / "delta"
-    r = subprocess.run([sys.executable, str(ROOT / "tools" / "drishti.py"), "lake", "demo", "--lake", str(lake), "--data-dir", str(work / "data"),
-                        "--connectors-dir", str(work / "connectors"), "--as-of", "today", "--only", VAR_DATA, "--no-signal", "-q",
-                        "--engine", "deltalake"], capture_output=True, text=True, cwd=ROOT, timeout=1500)
-    if r.returncode != 0:
-        pytest.skip("could not build the VaR demo lake: " + (r.stderr or r.stdout)[-400:])
-    var_stack.trade_grain(lake)
-    for st in _stack(tmp_path_factory, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true", "DRISHTI_VAR_SYSTEM_BASKETS_SEED": "true",
-                                        "DRISHTI_COMPUTE_ENABLED": "false", "DRISHTI_VAR_SCENARIO_WINDOW": "all"}, heap=VAR_HEAP):
-        _engine_ready(str(st))
-        yield st
+    lake = var_stack.trade_grain_lake(var_stack.var_lake(tmp_path_factory, VAR_DATA))
+    yield from var_stack.var_server(tmp_path_factory, lake, DRISHTI_COMPUTE_ENABLED="false", DRISHTI_VAR_SCENARIO_WINDOW="all")
 
 
 def _engine_ready(base, seconds=120, opener=None):

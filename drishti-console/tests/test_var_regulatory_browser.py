@@ -32,8 +32,6 @@ date. Three people sign in: a maker, a checker and an approver.
 built server jar or a JDK is missing."""
 import json
 import os
-import subprocess
-import sys
 import time
 import urllib.error
 import urllib.request
@@ -42,7 +40,7 @@ from pathlib import Path
 import pytest
 
 from core.auth import mint_token
-from test_var_explorer_browser import ROOT, VAR_DATA
+from test_var_explorer_browser import VAR_DATA
 from risk_elements import chart, chart_ready, grid_ready, grid_rows
 from select_helpers import choose, value  # <drishti-select>: drishti-inputs' Select
 from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and helpers
@@ -69,18 +67,14 @@ def _server(st, method, path, seconds=60):
 
 @pytest.fixture(scope="module")
 def stack(tmp_path_factory):
+    import var_stack
     lake = Path(os.environ["DRISHTI_VAR_REG_LAKE"]) if os.environ.get("DRISHTI_VAR_REG_LAKE") else None
     if lake is None or not (lake / "risk" / "desk-pnl").is_dir():
-        work = tmp_path_factory.mktemp("var-reg-lake")
-        lake = lake or work / "delta"
-        r = subprocess.run([sys.executable, str(ROOT / "tools" / "drishti.py"), "lake", "demo", "--lake", str(lake), "--data-dir", str(work / "data"),
-                            "--connectors-dir", str(work / "connectors"), "--as-of", "data", "--only", VAR_DATA + ",market-risk/desk-pnl",
-                            "--no-signal", "-q", "--engine", "deltalake"], capture_output=True, text=True, cwd=ROOT, timeout=1500)   # the Python writer, in this process: auto starts a JVM for every table and business day
-        if r.returncode != 0 or not (lake / "risk" / "scenario-pv").is_dir():
-            pytest.skip("could not build the VaR demo lake: " + (r.stderr or r.stdout)[-400:])
+        # the cached lake of the test data's own dates (built once per source hash by the Java loader; read-only, the server writes its own folders)
+        lake = var_stack.var_lake(tmp_path_factory, VAR_DATA + ",market-risk/desk-pnl", as_of="data")
     assert (lake / "risk" / "desk-pnl").is_dir(), "the lake has no desk-pnl table: " + ", ".join(sorted(p.name for p in (lake / "risk").iterdir()))
     for st in _stack(tmp_path_factory, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true",
-                                        "DRISHTI_SECURITY_ENABLED": "true", "DRISHTI_TOKEN_SECRET": TOKEN_SECRET,
+                                        **var_stack.own_folders(tmp_path_factory), "DRISHTI_SECURITY_ENABLED": "true", "DRISHTI_TOKEN_SECRET": TOKEN_SECRET,
                                         "DRISHTI_REGULATORY_SYNTHETICHISTORY": "true",
                                         "DRISHTI_VAR_SCENARIO_WINDOW": "all"}, auth=True, heap="1536m"):   # the synthetic history is seeded from the days beyond a 250-day window: the whole set
         # 1.5 GB: a year of official VaR history, its backtests by desk and three report runs held 89-97% of a 768 MB heap after G1's own

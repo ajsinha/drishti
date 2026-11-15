@@ -52,28 +52,42 @@ BOOKS = ["BOOK-FX-1", "BOOK-FI-1", "BOOK-EQ-1"]
 
 def make_lake(target: Path, days: int = 3) -> str | None:
     """A small Delta lake (a few thousand rows, never millions) made with ``tools/packgen/banking/make_data.py --lake``, which the cross-pack and the cashflow samples
-    read. ``DRISHTI_BI_DELTA_ROOT`` names one that exists; else it is made with ``uv run --with deltalake ...`` (needs uv and its cache); None when neither works."""
+    read. ``DRISHTI_BI_DELTA_ROOT`` names one that exists; else the cached one (tools/drillkit/lake_cache.py: built ONCE per hash of the test
+    data, generators and loaders, across runs and drills, with ``uv run --with deltalake ...``; tools/samplegen/load_rows.py has no Java route)
+    is copied to ``target`` (the servers publish beside their lake). None when it cannot be built."""
     have = os.environ.get("DRISHTI_BI_DELTA_ROOT")
     if have:
         return have
     uv = shutil.which("uv")
     if not uv:
         return None
-    # generate, then load (docs/guides/DATA_GUIDE.md): the history as JSONL rows beside the lake, then those rows into Delta
-    rows = target.parent / "build" / "lake-rows"
-    done = subprocess.run([uv, "run", "--offline", "--with", "pyyaml", "python", str(ROOT / "tools/packgen/banking/make_data.py"), "--lake", str(target),
-                           "--days", str(days), "--rows", str(rows), "--no-load", "--data-dir", str(target.parent)],
-                          capture_output=True, text=True, timeout=600, cwd=ROOT)
-    if done.returncode == 0:
-        done = subprocess.run([uv, "run", "--offline", "--with", "deltalake", "--with", "pyarrow", "--with", "pyyaml", "python", str(ROOT / "tools/samplegen/load_rows.py"),
-                               "--root", str(target), "--rows", str(rows / "banking-history.tar"), "--restated", str(rows / "banking-restated.tar")],
+    from var_stack import _lake_cache, lake_copy
+
+    def build(folder: Path) -> None:
+        lake = folder / "delta"
+        # generate, then load (docs/guides/DATA_GUIDE.md): the history as JSONL rows beside the lake, then those rows into Delta
+        rows = folder / "build" / "lake-rows"
+        done = subprocess.run([uv, "run", "--offline", "--with", "pyyaml", "python", str(ROOT / "tools/packgen/banking/make_data.py"), "--lake", str(lake),
+                               "--days", str(days), "--rows", str(rows), "--no-load", "--data-dir", str(folder)],
                               capture_output=True, text=True, timeout=600, cwd=ROOT)
-    if done.returncode != 0 or not (target / "trading").exists():
+        if done.returncode == 0:
+            done = subprocess.run([uv, "run", "--offline", "--with", "deltalake", "--with", "pyarrow", "--with", "pyyaml", "python", str(ROOT / "tools/samplegen/load_rows.py"),
+                                   "--root", str(lake), "--rows", str(rows / "banking-history.tar"), "--restated", str(rows / "banking-restated.tar")],
+                                  capture_output=True, text=True, timeout=600, cwd=ROOT)
+        if done.returncode != 0 or not (lake / "trading").exists():
+            raise RuntimeError("the BI sample lake: " + (done.stderr or done.stdout)[-800:])
+        # the published official exposure the BI samples read since 2.9.0 (the lake has netting sets but no exposure paths): tests/bi_exposure_fixture.py
+        pub = subprocess.run([uv, "run", "--offline", "--with", "deltalake", "--with", "pyarrow", "python", str(CONSOLE / "tests" / "bi_exposure_fixture.py"), str(lake)],
+                             capture_output=True, text=True, timeout=300, cwd=ROOT)
+        if pub.returncode != 0:
+            raise RuntimeError("the BI sample lake's exposure: " + (pub.stderr or pub.stdout)[-800:])
+
+    try:
+        cached = _lake_cache().cached(f"bi-banking|{days}", build) / "delta"
+    except RuntimeError:
         return None
-    # the published official exposure the BI samples read since 2.9.0 (the lake has netting sets but no exposure paths): tests/bi_exposure_fixture.py
-    pub = subprocess.run([uv, "run", "--offline", "--with", "deltalake", "--with", "pyarrow", "python", str(CONSOLE / "tests" / "bi_exposure_fixture.py"), str(target)],
-                         capture_output=True, text=True, timeout=300, cwd=ROOT)
-    return str(target) if pub.returncode == 0 else None
+    target.mkdir(parents=True, exist_ok=True)
+    return str(lake_copy(cached, target))                    # <target>/delta
 
 
 def api(method: str, path: str, user: str, roles: list, body=None):

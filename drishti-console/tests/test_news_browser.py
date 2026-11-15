@@ -31,8 +31,6 @@ def _stack(tmp_path_factory, on, offline=False, lake=False):
     for port in (news_stack.SERVER_PORT, news_stack.CONSOLE_PORT):
         if news_stack.listening(port):
             pytest.skip(f"port {port} is in use: stop whatever listens there")
-    if offline or lake:
-        pytest.importorskip("deltalake", reason="lake demo needs deltalake and pyarrow")
     try:
         return news_stack.Stack(tmp_path_factory.mktemp("newsstack"), connectors_on=on, offline=offline, lake=lake).start()
     except FileNotFoundError as e:

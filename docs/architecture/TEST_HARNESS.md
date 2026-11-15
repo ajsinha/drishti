@@ -258,7 +258,17 @@ paint timings) are masked.
 `tools/drillkit/lake_cache.py` builds a demo lake once per hash of what makes it: the committed test data, its generators, the lake code and the pack
 definitions (the working tree's edits included). The lake is under `<cache>/<hash>/`, where `<cache>` is `DRISHTI_LAKE_CACHE`, else
 `<data>/tmp/lake-cache` (a drill keeps the newest three hashes). Every test stack and check reuses it across runs; a build runs under a lock held across
-processes, so workers wait for it rather than repeat it. A cached lake is read only: a test that writes to a lake (`trade_grain`) builds its own.
+processes, so workers wait for it rather than repeat it. The build is `lake demo`'s default writer, the parallel Java loader of the exec jar.
+
+Every lake a console test reads comes from here: the VaR, exposure, stress and regulatory stacks (`var_stack.var_lake`, with `needs:` the
+table it must hold), the trade-grain lake (`var_stack.trade_grain_lake`: the cached lake plus a trade-grain morning, cached itself), the
+funds and news lakes (`var_stack.demo_lake_copy`), the public-sector feed lakes (the recorded feeds loaded by the Java route) and the BI
+sample lake (`bi_report_stack.make_lake`). A cached lake is read only: a server over it writes to its own folders
+(`var_stack.own_folders`: the VaR hot folder and the official VaR and exposure roots), and a stack whose server writes beside its lake
+(live connectors, the BI samples' publications) gets a copy (`var_stack.lake_copy`: hard links on one file system, else copies; each
+`_delta_log` a real copy). `tests/test_lake_builds_cached.py` (a quick file check) fails on any other test that names the Python writer or
+builds a lake outside the cache; the few that test the Python writer itself (Admin → Lakes' build and maintenance on small synthetic
+files) are listed there with the reason.
 `python3 tools/drillkit/lake_cache.py build --only market-risk --as-of 2026-09-30` builds or finds one and prints its path.
 
 ### 3.16 Affected tests

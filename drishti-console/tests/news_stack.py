@@ -134,12 +134,8 @@ class Stack:
                    DRISHTI_NEWS_ENABLED=on, DRISHTI_NEWS_URL=base + "/rss/search", DRISHTI_YFINANCE_ENABLED=on, DRISHTI_YFINANCE_URL=base + "/v8/finance/chart",
                    DRISHTI_CONNECTORS_DIR=str(work / "connectors"), DRISHTI_GRAPH_LINK_BUDGET="3s")
         if self.lake:
-            lake = self.tmp / "delta"
-            built = subprocess.run([sys.executable, str(ROOT / "tools" / "drishti.py"), "lake", "demo", "--only", "news-and-markets", "--lake", str(lake),
-                                    "--as-of", "today", "--connectors-dir", str(work / "connectors"), "--no-signal", "-q"],
-                                   env=dict(os.environ, DRISHTI_DATA_DIR=str(self.tmp / "data")), capture_output=True, text=True, timeout=600)
-            if built.returncode:
-                raise RuntimeError("lake demo failed: " + built.stderr[-2000:])
+            from var_stack import demo_lake_copy
+            lake = demo_lake_copy("news-and-markets", "today", self.tmp, work / "connectors")   # the cached lake (once per source hash), copied: live news writes
             env.update(DRISHTI_DELTA_ROOT=str(lake), DRISHTI_DATA_DIR=str(work / "data"))
             if self.offline:
                 env["DRISHTI_OFFLINE"] = "true"
