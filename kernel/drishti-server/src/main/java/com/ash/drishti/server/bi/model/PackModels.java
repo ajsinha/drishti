@@ -86,19 +86,41 @@ public final class PackModels {
 
     // ---- the offer ---------------------------------------------------------------------------------------------------
 
+    /** A kind left out of the offer, and why (its connector is not running). */
+    public record Skipped(String pack, String kind, String connector, String reason) {}
+
+    /** What the reader is offered: the tables, and the kinds left out because their connector is not running. */
+    public record Offer(List<TableInfo> tables, List<Skipped> skipped) {}
+
     /** Every kind the reader may open, with its columns. */
     public List<TableInfo> offer() {
+        return offerAll().tables();
+    }
+
+    /**
+     * Every kind the reader may open, with its columns; a kind whose connector is switched off or not running is skipped and listed with
+     * the reason (a disabled connector never breaks the listing of the others).
+     */
+    public Offer offerAll() {
         List<TableInfo> out = new ArrayList<>();
+        List<Skipped> skipped = new ArrayList<>();
         Set<String> names = new HashSet<>();
         for (Pack pack : packs.packs()) {
             for (String kind : pack.kinds()) {
                 if (mayOpen.test(kind)) {
-                    out.add(info(pack, kind, names));
+                    try {
+                        out.add(info(pack, kind, names));
+                    } catch (com.ash.drishti.common.DrishtiException e) {
+                        if (e.errorCode() != com.ash.drishti.common.ErrorCode.QUERY_SOURCE) {
+                            throw e;
+                        }
+                        skipped.add(new Skipped(pack.name(), kind, pack.routes().getOrDefault(kind, ""), e.getMessage()));
+                    }
                 }
             }
         }
         out.sort(Comparator.comparing(TableInfo::pack).thenComparing(TableInfo::kind));
-        return out;
+        return new Offer(out, skipped);
     }
 
     /** One kind of a pack as a table with its columns (promoted by its connector, else from the pack's samples), whoever may open it: what a pack-generated dataset is made of. */

@@ -18,6 +18,7 @@
 
 ## Unreleased
 
+- **Sweep integration.** The command sweep, its fixes and the API sweep are on one branch. Fixed at the root: `GET /api/v1/bi/model/kinds` no longer fails with DRS-9026 when a connector is disabled or not running (the kind is skipped and listed under `skipped` with the reason); `API_REFERENCE.md` documents the `/admin/loads/{pack}` aliases and the module APIs (genomics sample, archetype greeting; section 38); `ArtifactApiTest` binds its kind to its connector through the bindings (connector files no longer name kinds).
 - **Trade blotter: new trades on top, the lake's trades in the snapshot, a trade-editor role.** A blotter whose own order is newest
   first (`sort:` descending by its `changed-at` or version) puts new and changed rows on top: a paged viewer at the top of that order is
   sent them to insert (`top` in the `rows` event, `top: true` in its window) and the grid keeps the declaration's order, so a new trade
@@ -76,6 +77,26 @@
   `v2.9.11.i_2_3` (`tools/upgrade_fixture.py`, `test_upgrade_counts.py`: every demo kind keeps its record count), `ModuleSwitchFollowsTest`,
   `KafkaTradeEditTest` (one versioned message, four eyes, a stale correction refused naming who changed the record).
 
+- **Command sweep fixes.** A live result set read a pick (`TRD 1002868`, `NEWS NEWS-Bitcoin`, `XRUN XR-...`) with the strict search reader, so the
+  console's appended `limit 100` made DRS-4004 "cannot read ... limit 100"; it now reads picks as the command line does. `ADMIN DATA-OUT` (and
+  any Admin page of an engine that runs nowhere) answers the engine's DRS-1020 refusal on the command line and is left out of the offered
+  pages, instead of redirecting to a 404. The sweep: a refusal to a role ("no access to any kind of pack", an engine not running) is "refused";
+  a connector's DRS-5034 on an Admin page is not that page failing; the Explain page is checked through its API; the drill sweeps as the
+  administrator on a sign-in stack of its own (a role user optional and report-only); "The command sweep" is in TEST_HARNESS.md.
+
+- **Write endpoints tested (BI, pivot, exports, runs).** Each of the BI, pivot, run, export, monitor and alert-rule write endpoints that had no test now
+  has one: a valid request with its effect read back (the saved view gone, the run kept or scheduled or shared, the exported file's cells, the rule
+  deleted) and an invalid one refused with its DRS code. `POST /export/grid.csv`, `/export/grid.xlsx` and `/export/grid.jsonl` refuse a body that is
+  not a JSON object (`400`, `DRS-5001`; `415` for another content type) instead of sending an empty file. `api_sweep.py --writes-only` maps the writes
+  to their tests without a running server.
+
+- **The API sweep.** `tools/sweep/api_sweep.py` lists every endpoint of the server (every controller of the kernel and the modules) and of the
+  console (every route) from the source and calls each GET as the administrator, with real ids, kinds and dates of the saved test data and the
+  first id of the parent list for any other path variable: a 5xx, an unexpected 4xx, an empty body, a timeout or an answer over 10 s fails.
+  Writes are never called: each is listed with the test that covers it, and one with none is flagged. Endpoints present in the code and
+  missing from `API_REFERENCE.md`, and the reverse, are reported. A drill step in the browser lane (`test_api_sweep_browser.py`); the report
+  is `data/sweep/api-sweep-<stamp>.md`. `TEST_HARNESS.md` 3.27 and 3.28 describe it with the command sweep.
+
 - **Documentation consolidated: fewer, larger documents.** Each risk measure's tutorial is the last part of its guide (VaR, exposure, FRTB-SA, SIMM);
   one BI guide holds the pivot, virtual tables and models, reports, the Notebook and the groupings, each with its tutorial; one World and public data guide holds
   the funds, the external feeds and the public sector with their two tutorials; the Arrow Flight reference joins the Flight guide; the source-system tutorial
@@ -93,6 +114,12 @@
   repeats the key is not drawn; the header, the pager and the grid's status bar no longer repeat the count. Signed out, `/live/<id>` goes to
   sign-in and back, as `/t` does. New grid options `ribbon`, `pivotToggle`, `toolbarItems`, `quietStatus`; one mount (`records.mount`) serves
   the blotter page too.
+- **The API sweep.** `tools/sweep/api_sweep.py` lists every endpoint of the server (every controller of the kernel and the modules) and of the
+  console (every route) from the source and calls each GET as the administrator, with real ids, kinds and dates of the saved test data and the
+  first id of the parent list for any other path variable: a 5xx, an unexpected 4xx, an empty body, a timeout or an answer over 10 s fails.
+  Writes are never called: each is listed with the test that covers it, and one with none is flagged. Endpoints present in the code and
+  missing from `API_REFERENCE.md`, and the reverse, are reported. A drill step in the browser lane (`test_api_sweep_browser.py`); the report
+  is `data/sweep/api-sweep-<stamp>.md`. `TEST_HARNESS.md` 3.27 and 3.28 describe it with the command sweep.
 
 - **Richer source field maps; the inbox date from the name.** A source module's map (`map:`) reads dotted paths into nested native JSON,
   `from: [a, b]` / `first-of` (the first non-empty), `scale`, `as` (`yyyymmdd`, `yyyymmddhhmmss`, `epoch-millis`, `epoch-seconds`, `iso`),

@@ -201,6 +201,57 @@ class WriteBackFlowTest {
         return as("rae", "reader");
     }
 
+    /** An applied correction stays shown as an overlay until an administrator withdraws it, with a reason; then the source's value shows again. */
+    @Test
+    void anAdministratorWithdrawsAnOverlayAndTheSourcesValueShowsAgain() throws Exception {
+        String tia = as("tia", "trader");
+        String kim = as("kim", "checker");
+        String ada = as("ada", "admin");
+        JsonNode row = null;
+        for (JsonNode r : tradesForm(tia).path("rows")) {
+            if (row == null && r.path("values").path("notional").asDouble() < 29_000_000 && r.path("values").path("notional").asDouble() > 1_000_000) {
+                row = r;
+            }
+        }
+        assertThat(row).isNotNull();
+        String trade = row.path("key").asText();
+        BigDecimal was = row.path("values").path("notional").decimalValue();
+        BigDecimal now = was.add(BigDecimal.valueOf(777));
+        Map<String, Object> seen = new HashMap<>();
+        seen.put("trade_id", trade);
+        seen.put("notional", was);
+        String draftId = call("POST", "/api/v1/drafts", tia, Map.of("kind", "portfolio-trades", "id", "BOOK-RATES-2", "sutra", "book-desk", "panel", "trades", "mode", "edit",
+                "records", List.of(Map.of("record", trade, "values", Map.of("notional", now), "was", seen))), 201).path("draft").asText();
+        JsonNode sent = call("POST", "/api/v1/changes", tia, Map.of("draft", draftId, "reason", "to withdraw"), 202).path("changes").get(0);
+        String id = sent.path("id").asText();
+        call("POST", "/api/v1/approvals/change/" + id + "/approve", kim, Map.of(), 200);
+        waitFor(id, "applied", tia);
+        assertThat(call("GET", "/api/v1/admin/edits/overlays", ada, null, 200).path("overlays").findValuesAsText("change")).contains(id);
+        // refused: not an administrator, and no reason; the overlay stays
+        assertThat(call("POST", "/api/v1/admin/edits/overlays/" + id + "/withdraw", tia, Map.of("reason", "x"), 403).path("code").asText()).isEqualTo("DRS-5002");
+        JsonNode noReason = call("POST", "/api/v1/admin/edits/overlays/" + id + "/withdraw", ada, Map.of("reason", " "), 400);
+        assertThat(noReason.path("code").asText()).startsWith("DRS-");
+        assertThat(call("GET", "/api/v1/admin/edits/overlays", ada, null, 200).path("overlays").findValuesAsText("change")).contains(id);
+        // withdrawn: gone from the open overlays, every reader sees the source's value again, and the withdrawal is audited with its reason
+        JsonNode done = call("POST", "/api/v1/admin/edits/overlays/" + id + "/withdraw", ada, Map.of("reason", "keyed on the wrong trade"), 200);
+        assertThat(done.path("change").asText()).isEqualTo(id);
+        assertThat(done.path("withdrawn").asInt()).isGreaterThanOrEqualTo(1);
+        assertThat(call("GET", "/api/v1/admin/edits/overlays", ada, null, 200).path("overlays").findValuesAsText("change")).doesNotContain(id);
+        JsonNode after = null;
+        for (JsonNode r : tradesForm(rae()).path("rows")) {
+            if (trade.equals(r.path("key").asText())) {
+                after = r;
+            }
+        }
+        assertThat(after).isNotNull();
+        assertThat(after.path("values").path("notional").decimalValue()).as("the source's value shows again").isEqualByComparingTo(was);
+        assertThat(mvc.perform(get("/api/v1/admin/audit").header("Authorization", ada)).andReturn().getResponse().getContentAsString())
+                .contains("edit-overlay-withdrawn").contains("keyed on the wrong trade");
+        // a second withdrawal has nothing to withdraw
+        JsonNode again = call("POST", "/api/v1/admin/edits/overlays/" + id + "/withdraw", ada, Map.of("reason", "again"), 404);
+        assertThat(again.path("code").asText()).startsWith("DRS-");
+    }
+
     @Test
     void withoutTheEditPowerOrAReasonOrOnAReadOnlyFieldNothingIsSubmitted() throws Exception {
         Map<String, Object> change = Map.of("kind", "trade", "entity", "T-1", "reason", "x", "items", List.of(Map.of("field", "NOTIONAL", "from", 1, "to", 2)));

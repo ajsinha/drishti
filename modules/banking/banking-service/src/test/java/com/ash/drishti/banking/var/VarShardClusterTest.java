@@ -493,6 +493,59 @@ class VarShardClusterTest {
         assertThat(plain.body()).contains("DRS-5051");
     }
 
+    /** A batch of row sets summed by one owner in one signed call is each set's {@code /partial}; a bad batch, an unsigned call and rows beyond the shard are refused. */
+    @Test
+    @Order(5)
+    void aBatchOfPartialsIsEachSetsPartialAndABadBatchIsRefused() throws Exception {
+        VarShards a = cluster.node("a").bean(VarService.class).shards();
+        com.ash.drishti.compute.shard.ShardMap m = a.map(DAY);
+        var http = cluster.node("a").net().http();
+        Map<String, String> hdr = Map.of("Content-Type", "application/json", com.ash.drishti.net.security.NetHeaders.HOP, "1");
+        com.ash.drishti.compute.vector.OrdinalSet one = com.ash.drishti.compute.vector.OrdinalSet.of(0);
+        int shard = -1;
+        String digest = null;
+        JsonNode single = null;
+        for (int i = 0; i < m.size() && single == null; i++) {                       // a shard that node b serves
+            String d = cluster.node("b").bean(VarService.class).loader().shardDigest(DAY, new VarShardScope(m, i));
+            var r = http.send(cluster.node("b").url(), "POST", "/api/v1/risk/var/partial", hdr, VarShardRows.request(DAY, "USD", m, i, d, one),
+                    java.time.Duration.ofSeconds(20));
+            if (r.status() == 200) {
+                shard = i;
+                digest = d;
+                single = new com.fasterxml.jackson.databind.ObjectMapper().readTree(r.text());
+            }
+        }
+        assertThat(single).as("b serves a shard of " + DAY).isNotNull();
+        var batch = http.send(cluster.node("b").url(), "POST", "/api/v1/risk/var/partials", hdr,
+                VarShardRows.request(DAY, "USD", m, shard, digest, List.of(one, one)), java.time.Duration.ofSeconds(20));
+        assertThat(batch.status()).as(batch.text()).isEqualTo(200);
+        JsonNode b = new com.fasterxml.jackson.databind.ObjectMapper().readTree(batch.text());
+        assertThat(b.path("shard").asInt()).isEqualTo(shard);
+        assertThat(b.path("rows")).hasSize(2);
+        assertThat(b.path("rows").get(0).asInt()).isEqualTo(single.path("rows").asInt());
+        assertThat(b.path("sums")).as("one sum per set").hasSize(2);
+        assertThat(b.path("sums").get(0).asText()).as("the batch's first sum is the single partial's sum").isEqualTo(single.path("sum").asText());
+        assertThat(b.path("sums").get(1).asText()).isEqualTo(b.path("sums").get(0).asText());
+        // another data version is the stale refusal, as for /partial
+        var stale = http.send(cluster.node("b").url(), "POST", "/api/v1/risk/var/partials", hdr,
+                VarShardRows.request(DAY, "USD", m, shard, "0".repeat(64), List.of(one)), java.time.Duration.ofSeconds(20));
+        assertThat(stale.status()).as(stale.text()).isEqualTo(409);
+        assertThat(stale.text()).contains("DRS-5216");
+        // no runs at all, and rows beyond the shard's trades
+        var empty = http.send(cluster.node("b").url(), "POST", "/api/v1/risk/var/partials", hdr,
+                VarShardRows.request(DAY, "USD", m, shard, digest, List.<com.ash.drishti.compute.vector.OrdinalSet>of()), java.time.Duration.ofSeconds(20));
+        assertThat(empty.status()).as(empty.text()).isEqualTo(400);
+        assertThat(empty.text()).contains("DRS-").contains("runs is a list");
+        var beyond = http.send(cluster.node("b").url(), "POST", "/api/v1/risk/var/partials", hdr,
+                VarShardRows.request(DAY, "USD", m, shard, digest, List.of(com.ash.drishti.compute.vector.OrdinalSet.of(1_000_000))), java.time.Duration.ofSeconds(20));
+        assertThat(beyond.status()).as(beyond.text()).isEqualTo(400);
+        // a person's call with no cluster signature is refused
+        HttpResponse<String> plain = cluster.call("POST", cluster.node("b").url() + "/api/v1/risk/var/partials",
+                new String(VarShardRows.request(DAY, "USD", m, shard, digest, List.of(one)), StandardCharsets.UTF_8), "Authorization", rita());
+        assertThat(plain.statusCode()).as(plain.body()).isEqualTo(401);
+        assertThat(plain.body()).contains("DRS-5051");
+    }
+
     /**
      * The drain before a stop (CD2) and readiness (CD1) on a real cluster: C drained is out of service at once, its shards go to the other
      * owners while every answer stays the same, and it is safe to stop once it holds none; undrained, it is ready again and takes its pinned

@@ -184,11 +184,14 @@ async def go(request: Request, q: str = ""):
 def admin_redirect(request: Request, ed, rest: list[str]):
     """``ADMIN`` (the first Admin page the edition keeps) or ``ADMIN <page>`` (``ADMIN USERS``, ``ADMIN LOADS``), for an administrator; the
     Admin pages themselves check again. Anyone else, or a page the edition does not keep, is told so on the command line."""
+    from core import engines as _engines
     me = getattr(request.state, "identity", None)
     if me is None or not me.is_admin:
         return RedirectResponse(f"/t?error={quote('ADMIN is for administrators')}", status_code=303)
-    kept = [p for p in ADMIN_PAGES if ed.admin_page_shown(p)]
+    kept = [p for p in ADMIN_PAGES if ed.admin_page_shown(p) and _engines.path_engine("/admin/" + p) is None]   # a page of an engine that runs nowhere is not offered
     page = rest[0].lower() if rest else (kept[0] if kept else "")
+    if (off := _engines.path_engine("/admin/" + page)) is not None:        # ADMIN DATA-OUT with Arrow Flight off: said in the server's words, not a 404 page
+        return RedirectResponse(f"/t?error={quote(_engines.refusal(off))}", status_code=303)
     if page not in kept:
         return RedirectResponse(f"/t?error={quote(f'DRS-4023 no Admin page {page!r} in {ed.title}: ADMIN ' + ', '.join(kept).upper())}", status_code=303)
     return RedirectResponse(f"/admin/{page}", status_code=303)

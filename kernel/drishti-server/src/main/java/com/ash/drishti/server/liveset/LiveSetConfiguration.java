@@ -61,7 +61,7 @@ public class LiveSetConfiguration {
             @Override
             public java.util.Optional<java.util.List<String>> fields(String query) {
                 try {
-                    return java.util.Optional.of(SearchQuery.parse(query).documentPaths().stream().map(p -> p.startsWith("$.") ? p.substring(2) : p)
+                    return java.util.Optional.of(SearchQuery.pick(query).documentPaths().stream().map(p -> p.startsWith("$.") ? p.substring(2) : p)
                             .distinct().toList());
                 } catch (RuntimeException e) {
                     return java.util.Optional.empty();
@@ -73,7 +73,7 @@ public class LiveSetConfiguration {
                 if (router.documents(kind, AsOf.LATEST, sink)) {
                     return true;
                 }
-                StructuredSearch.Result r = search.run(SearchQuery.parse(query != null ? query : kind + " limit " + SearchQuery.MAX_LIMIT), AsOf.LATEST, d -> d);
+                StructuredSearch.Result r = search.run(SearchQuery.pick(query != null ? query : kind + " limit " + SearchQuery.MAX_LIMIT), AsOf.LATEST, d -> d);
                 for (StructuredSearch.Row row : r.rows()) {
                     EntityDocument d = router.fetch(row.ref(), AsOf.LATEST).get(30, TimeUnit.SECONDS);
                     if (d != null) {
@@ -110,7 +110,7 @@ public class LiveSetConfiguration {
 
             @Override
             public Predicate<DataNode> condition(String query) {
-                return search.condition(SearchQuery.parse(query));
+                return search.condition(SearchQuery.pick(query));
             }
 
             @Override

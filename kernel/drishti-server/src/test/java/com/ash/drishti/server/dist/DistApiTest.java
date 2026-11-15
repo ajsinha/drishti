@@ -445,6 +445,17 @@ class DistApiTest {
                 "recipients", List.of("nobi"))).andExpect(status().isUnprocessableEntity());
         send("POST", "/api/v1/me/subscriptions/ghost/run", as("ann", "bi-analyst"), null).andExpect(status().isNotFound());
         send("DELETE", "/api/v1/me/subscriptions/mine", as("ann", "bi-analyst"), null).andExpect(status().isNoContent());
+        // an administrator pauses and resumes someone else's subscription; the owner's list shows it; a person who is not an administrator may not
+        send("POST", "/api/v1/admin/subscriptions/wes/pdf/pause", as("rita", "bi-risk"), null).andExpect(status().isForbidden());
+        assertThat(ok(send("POST", "/api/v1/admin/subscriptions/wes/pdf/pause", admin(), null)).path("enabled").asBoolean()).isFalse();
+        assertThat(ok(send("GET", "/api/v1/me/subscriptions/pdf", as("wes", "report-author"), null)).path("enabled").asBoolean()).isFalse();
+        assertThat(ok(send("POST", "/api/v1/admin/subscriptions/wes/pdf/pause", admin(), null)).path("enabled").asBoolean()).as("paused twice, still paused").isFalse();
+        JsonNode back = ok(send("POST", "/api/v1/admin/subscriptions/wes/pdf/resume", admin(), null));
+        assertThat(back.path("enabled").asBoolean()).isTrue();
+        assertThat(back.path("nextRun").asText()).isNotBlank();
+        assertThat(ok(send("GET", "/api/v1/me/subscriptions/pdf", as("wes", "report-author"), null)).path("enabled").asBoolean()).isTrue();
+        send("POST", "/api/v1/admin/subscriptions/wes/ghost/pause", admin(), null).andExpect(status().isNotFound()).andExpect(jsonPath("$.code").value("DRS-1001"));
+        send("POST", "/api/v1/admin/subscriptions/wes/ghost/resume", admin(), null).andExpect(status().isNotFound());
         send("DELETE", "/api/v1/admin/subscriptions/wes/pdf", admin(), null).andExpect(status().isNoContent());
         send("DELETE", "/api/v1/admin/subscriptions/wes/pdf", admin(), null).andExpect(status().isNotFound());
     }

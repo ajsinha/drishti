@@ -158,6 +158,23 @@ class PackModelsTest {
     }
 
     @Test
+    void aKindWhoseConnectorIsNotRunningIsSkippedAndSaidNeverBreakingTheListing() {
+        SourceGateway off = new Lake() {
+            @Override
+            public Optional<SourcePlugin> plugin(String connector, String kind) {
+                if ("region".equals(kind)) {
+                    throw new com.ash.drishti.common.DrishtiException(com.ash.drishti.common.ErrorCode.QUERY_SOURCE, "connector 'regions-store' is not running");
+                }
+                return super.plugin(connector, kind);
+            }
+        };
+        PackModels.Offer offer = new PackModels(registry, graph, off, QueryProperties.defaults("target/none"), Set.of("order", "customer", "region")::contains).offerAll();
+        assertThat(offer.tables()).extracting(PackModels.TableInfo::kind).containsExactly("customer", "order");
+        assertThat(offer.skipped()).extracting(PackModels.Skipped::kind).containsExactly("region");
+        assertThat(offer.skipped().get(0).reason()).contains("not running");
+    }
+
+    @Test
     void thePacksLinkGraphBecomesACrossPackRelationship() {
         PackModels.Draft d = models(Set.of("order", "customer", "region")).start(List.of("order", "customer"), "shop-model");
         assertThat(d.relationships()).hasSize(1);

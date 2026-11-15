@@ -1012,4 +1012,129 @@ class ModelAcceptanceTest {
         assertThat(call("POST", "/api/v1/bi/runs/" + id + "/rerun", reader("rob"), Map.of("fresh", true)).andReturn().getResponse().getStatus()).isIn(403, 404);
         call("POST", "/api/v1/bi/runs/" + id + "/rerun", reader("rita"), Map.of("data", "yesterday")).andExpect(status().isBadRequest());
     }
+
+    // ---- the write endpoints of the runs API: each with its effect read back, and a refusal with its DRS code ----
+
+    /** A finished run of an as-of-2026-10-07 model query, asked by {@code who} (waits for it). */
+    String doneRun(String who) throws Exception {
+        Map<String, Object> q = Map.of("mq", 1, "model", "acc-trades", "select", Map.of("fields", List.of("trades.desk"), "measures", List.of("Notional")),
+                "time", Map.of("as-of", "2026-10-07"));
+        String id = ok(call("POST", "/api/v1/bi/runs", reader(who), Map.of("source", Map.of("type", "mq", "mq", q), "options", Map.of("wait", 0, "confirm", true))))
+                .path("run").path("id").asText();
+        for (int i = 0; i < 200 && !ok(call("GET", "/api/v1/bi/runs/" + id, reader(who), null)).path("state").asText().equals("done"); i++) {
+            Thread.sleep(50);
+        }
+        assertThat(ok(call("GET", "/api/v1/bi/runs/" + id, reader(who), null)).path("state").asText()).isEqualTo("done");
+        return id;
+    }
+
+    void problem(ResultActions r, int status, String code) throws Exception {
+        var res = r.andReturn().getResponse();
+        assertThat(res.getStatus()).as(res.getContentAsString()).isEqualTo(status);
+        assertThat(json.readTree(res.getContentAsString()).path("code").asText()).as(res.getContentAsString()).isEqualTo(code);
+    }
+
+    @Test @Order(22)
+    void keepSetsHowLongAResultStaysAndOnlyItsOwnerMayAskIt() throws Exception {
+        String id = doneRun("rita");
+        JsonNode kept = ok(call("POST", "/api/v1/bi/runs/" + id + "/keep", reader("rita"), Map.of("days", 3)));
+        java.time.Instant after = java.time.Instant.parse(kept.path("expiresAt").asText());
+        assertThat(java.time.Duration.between(java.time.Instant.now(), after).toDays()).isBetween(2L, 3L);
+        assertThat(ok(call("GET", "/api/v1/bi/runs/" + id, reader("rita"), null)).path("expiresAt").asText()).isEqualTo(kept.path("expiresAt").asText());     // stored
+        assertThat(ok(call("POST", "/api/v1/bi/runs/" + id + "/keep", reader("rita"), Map.of("days", 3))).path("state").asText()).isEqualTo("done");        // again
+        problem(call("POST", "/api/v1/bi/runs/" + id + "/keep", reader("rob"), Map.of("days", 3)), 404, "DRS-9080");
+        problem(call("POST", "/api/v1/bi/runs/no-such-run/keep", reader("rita"), Map.of()), 404, "DRS-9080");
+    }
+
+    @Test @Order(23)
+    void sharingARunGivesTheRecipientItAndUnsharingTakesItBack() throws Exception {
+        String id = doneRun("rita");
+        problem(call("GET", "/api/v1/bi/runs/" + id, reader("rob"), null), 404, "DRS-9080");            // not shared yet
+        JsonNode shared = ok(call("POST", "/api/v1/bi/runs/" + id + "/share", reader("rita"), Map.of("to", List.of("rob"))));
+        assertThat(shared.path("shares").size()).isEqualTo(1);
+        assertThat(shared.path("shares").get(0).path("recipient").asText()).isEqualTo("rob");
+        assertThat(shared.path("shares").get(0).path("mode").asText()).as(shared.toString()).isNotBlank();
+        assertThat(ok(call("GET", "/api/v1/bi/runs/" + id, reader("rob"), null)).path("id").asText()).isEqualTo(id);                                   // the effect
+        assertThat(ok(call("GET", "/api/v1/bi/runs/" + id + "/result", reader("rob"), null)).path("rows").size()).isPositive();
+        assertThat(ok(call("POST", "/api/v1/bi/runs/" + id + "/share", reader("rita"), Map.of("to", "rob"))).path("shares").size()).isEqualTo(1);          // again
+        problem(call("POST", "/api/v1/bi/runs/" + id + "/share", reader("rita"), Map.of()), 400, "DRS-5001");
+        problem(call("POST", "/api/v1/bi/runs/" + id + "/share", reader("hana"), Map.of("to", "ann")), 404, "DRS-9080");
+        call("DELETE", "/api/v1/bi/runs/" + id + "/share/" + "rob", reader("rita"), null).andExpect(status().isNoContent());
+        problem(call("GET", "/api/v1/bi/runs/" + id, reader("rob"), null), 404, "DRS-9080");
+        problem(call("DELETE", "/api/v1/bi/runs/" + id + "/share/" + "rob", reader("rita"), null), 404, "DRS-9080");
+        problem(call("DELETE", "/api/v1/bi/runs/" + id + "/share/" + "rob", reader("rob"), null), 404, "DRS-9080");
+    }
+
+    @Test @Order(24)
+    void deletingAResultExpiresTheRunAndTheResultIsGone() throws Exception {
+        String id = doneRun("rita");
+        assertThat(ok(call("GET", "/api/v1/bi/runs/" + id, reader("rita"), null)).path("can").path("open").asBoolean()).isTrue();
+        problem(call("DELETE", "/api/v1/bi/runs/" + id + "/result", reader("rob"), null), 404, "DRS-9080");
+        call("DELETE", "/api/v1/bi/runs/" + id + "/result", reader("rita"), null).andExpect(status().isNoContent());
+        JsonNode run = ok(call("GET", "/api/v1/bi/runs/" + id, reader("rita"), null));
+        assertThat(run.path("state").asText()).isEqualTo("expired");
+        assertThat(run.path("can").path("open").asBoolean()).isFalse();
+        var gone = call("GET", "/api/v1/bi/runs/" + id + "/result", reader("rita"), null).andReturn().getResponse();
+        assertThat(json.readTree(gone.getContentAsString()).path("code").asText()).as(gone.getContentAsString()).isEqualTo("DRS-9084");
+        call("DELETE", "/api/v1/bi/runs/" + id + "/result", reader("rita"), null).andExpect(status().isNoContent());                   // again: still expired
+        assertThat(ok(call("GET", "/api/v1/bi/runs/" + id, reader("rita"), null)).path("state").asText()).isEqualTo("expired");
+        problem(call("DELETE", "/api/v1/bi/runs/no-such-run/result", reader("rita"), null), 404, "DRS-9080");
+    }
+
+    @Test @Order(25)
+    void aRunIsScheduledChangedPausedAndDeleted() throws Exception {
+        String id = doneRun("rita");
+        JsonNode s = ok(call("POST", "/api/v1/bi/runs/" + id + "/schedule", reader("rita"), Map.of("schedule", "daily 07:30")));
+        String sid = s.path("id").asText();
+        assertThat(sid).startsWith("rs-");
+        assertThat(s.path("schedule").asText()).isEqualTo("daily 07:30");
+        assertThat(s.path("enabled").asBoolean()).isTrue();
+        assertThat(ok(call("GET", "/api/v1/bi/runs/schedules", reader("rita"), null)).path("schedules").toString()).contains(sid);
+        assertThat(ok(call("GET", "/api/v1/bi/runs/schedules", reader("rob"), null)).path("schedules").toString()).doesNotContain(sid);
+        JsonNode changed = ok(call("PUT", "/api/v1/bi/runs/schedules/" + sid, reader("rita"), Map.of("schedule", "weekly mon 08:00")));
+        assertThat(changed.path("schedule").asText()).isEqualTo("weekly mon 08:00");
+        JsonNode paused = ok(call("PUT", "/api/v1/bi/runs/schedules/" + sid, reader("rita"), Map.of("enabled", false)));
+        assertThat(paused.path("enabled").asBoolean()).isFalse();
+        assertThat(paused.path("schedule").asText()).isEqualTo("weekly mon 08:00");
+        assertThat(ok(call("GET", "/api/v1/bi/runs/schedules", reader("rita"), null)).path("schedules").toString()).contains("weekly mon 08:00");
+        assertThat(ok(call("PUT", "/api/v1/bi/runs/schedules/" + sid, reader("rita"), Map.of("enabled", false))).path("enabled").asBoolean()).isFalse();   // again
+        problem(call("POST", "/api/v1/bi/runs/" + id + "/schedule", reader("rita"), Map.of()), 400, "DRS-5001");
+        var odd = call("POST", "/api/v1/bi/runs/" + id + "/schedule", reader("rita"), Map.of("schedule", "whenever it suits")).andReturn().getResponse();
+        assertThat(odd.getStatus()).as(odd.getContentAsString()).isBetween(400, 422);
+        assertThat(json.readTree(odd.getContentAsString()).path("code").asText()).startsWith("DRS-");
+        problem(call("POST", "/api/v1/bi/runs/" + id + "/schedule", reader("rob"), Map.of("schedule", "daily 07:30")), 404, "DRS-9080");
+        problem(call("PUT", "/api/v1/bi/runs/schedules/" + sid, reader("rob"), Map.of("enabled", true)), 404, "DRS-9080");
+        problem(call("DELETE", "/api/v1/bi/runs/schedules/" + sid, reader("rob"), null), 404, "DRS-9080");
+        call("DELETE", "/api/v1/bi/runs/schedules/" + sid, reader("rita"), null).andExpect(status().isNoContent());
+        assertThat(ok(call("GET", "/api/v1/bi/runs/schedules", reader("rita"), null)).path("schedules").toString()).doesNotContain(sid);
+        problem(call("DELETE", "/api/v1/bi/runs/schedules/" + sid, reader("rita"), null), 404, "DRS-9080");
+        problem(call("PUT", "/api/v1/bi/runs/schedules/" + sid, reader("rita"), Map.of("enabled", true)), 404, "DRS-9080");
+    }
+
+    @Test @Order(26)
+    void cancellingARunAsItsOwnerOrAnAdministratorLeavesItCancelledOrAlreadyDone() throws Exception {
+        Map<String, Object> q = Map.of("mq", 1, "model", "acc-trades", "select", Map.of("fields", List.of("trades.desk"), "measures", List.of("Notional")),
+                "time", Map.of("as-of", DAY));
+        for (boolean admin : new boolean[] {false, true}) {
+            String id = ok(call("POST", "/api/v1/bi/runs", reader("rita"), Map.of("source", Map.of("type", "mq", "mq", q), "options", Map.of("wait", 0, "confirm", true, "fresh", true))))
+                    .path("run").path("id").asText();
+            ResultActions c = admin ? call("POST", "/api/v1/bi/admin/runs/" + id + "/cancel", as("ops", "admin"), null) : call("POST", "/api/v1/bi/runs/" + id + "/cancel", reader("rita"), null);
+            c.andExpect(status().isAccepted());
+            for (int i = 0; i < 200 && ok(call("GET", "/api/v1/bi/runs/" + id, reader("rita"), null)).path("state").asText().matches("queued|running|storing"); i++) {
+                Thread.sleep(50);
+            }
+            JsonNode last = ok(call("GET", "/api/v1/bi/runs/" + id, reader("rita"), null));
+            assertThat(last.path("state").asText()).isIn("cancelled", "done", "reused");        // a run that finished before the cancel stays done
+            if (last.path("state").asText().equals("cancelled")) {
+                assertThat(last.path("code").asText()).isEqualTo("DRS-9083");
+                assertThat(ok(call("POST", "/api/v1/bi/runs/" + id + "/cancel", reader("rita"), null)).path("state").asText()).isEqualTo("cancelled");     // again
+            }
+        }
+        String mine = doneRun("rita");
+        problem(call("POST", "/api/v1/bi/runs/" + mine + "/cancel", reader("rob"), null), 404, "DRS-9080");
+        problem(call("POST", "/api/v1/bi/runs/no-such-run/cancel", reader("rita"), null), 404, "DRS-9080");
+        problem(call("POST", "/api/v1/bi/admin/runs/" + mine + "/cancel", reader("rob"), null), 403, "DRS-9002");
+        problem(call("POST", "/api/v1/bi/admin/runs/no-such-run/cancel", as("ops", "admin"), null), 404, "DRS-9080");
+        assertThat(ok(call("POST", "/api/v1/bi/runs/" + mine + "/cancel", reader("rita"), null)).path("state").asText()).isEqualTo("done");        // a finished run is returned as it is
+    }
 }

@@ -475,6 +475,65 @@ Every speed-up of the drill changes how a test runs, never what it proves. For e
 does not hold `drill`, or a `DRISHTI_DRILL_COPY_DIR` whose name does not hold `drill-copies`, is refused. `tools/drillkit/test_drill_lanes.py`
 (`OwnFoldersOnly`) checks every `rm` and `find … -exec rm` in the drill against that list.
 
+### 3.27 The command sweep
+
+`tools/sweep/command_sweep.py` types every function a person can type and checks what comes back. The functions come from the FUNC directory
+itself (every command of every module that is on, with its example), the top bar's module commands, the reserved words (FORM, WHAT, BI, FUNC,
+DATAMAP, DATA, EXPORT, PIVOT, ADMIN `<page>`) and VaR's sub-commands. Each is typed bare (`WORD <GO>`), with its FUNC example and with real
+ids of the saved test data (`data/testdata`, read streamed, never copied: the first id of a kind and a random one), signed in as the
+administrator and, when asked, as a role user. Only HTTP is used; what the browser draws is checked through the API it reads (VaR's headline
+number, the Explain page's `/api/explain`).
+
+```
+python3 tools/sweep/command_sweep.py --base http://host:port --admin USER --admin-password PW [--role USER --role-password PW --report-only USER]
+```
+
+A run fails on: no answer or a 5xx; a 4xx that is not a clean refusal; a DRS error, "not found" or a server error on the page; a list with
+no rows where the demo has data; no VaR headline; an empty main area (a page drawn in the browser is checked through its API instead); more
+than 10 seconds. A refusal told in words (not available to you, not part of the edition, not active, an engine that runs nowhere, no access to a
+pack) is a pass marked "refused" unless it is slow. A connector's DRS-5034 on an Admin page is that connector's state, which the page lists; it
+is not the page failing. The report is `data/sweep/sweep-<stamp>.md` and `.jsonl` (not committed), written as the runs finish.
+
+In the drill the browser lane runs it as `test_command_sweep_browser.py` on a server of its own with sign-in on over the page walk's cached lake,
+as the administrator: any FAIL fails the drill. Setting `DRISHTI_SWEEP_ROLE` also signs in as a role user the test creates; that user's FAILs
+are in the report and never block. `DRISHTI_SWEEP_BASE` (with `_ADMIN`, `_ADMIN_PASSWORD`, `_ROLE`, `_ROLE_PASSWORD`) sweeps a console that
+is already running. The drill keeps its report in its logs folder (`<data>/drill/sweep/`).
+
+### 3.28 The API sweep
+
+`tools/sweep/api_sweep.py` is the other half: every endpoint of the server and of the console, called as the administrator.
+
+- **The list comes from the source.** The server's `@GetMapping`, `@PostMapping`, `@PutMapping`, `@DeleteMapping` and `@PatchMapping` methods
+  (the class's `@RequestMapping` prefix and the `@RequestParam`s) in the kernel and every module, and the console's FastAPI route decorators
+  (read with `ast`: the router's prefix, the function's parameters). The actuator's `mappings` and the OpenAPI document are administrator
+  endpoints that need the operational token, not a person's, so the source is read instead; it is the one place both halves are complete.
+- **The guide is checked both ways.** Every endpoint in the code and not in `docs/guides/API_REFERENCE.md`, and every row of the guide with no
+  endpoint behind it, are listed in the report (the matching rules are those of `drishti-console/tests/test_docs_api_endpoints.py`, loaded from
+  it, which covers the kernel and banking only; the sweep covers every module). The console's `/api` routes the guide does not name are listed as
+  information.
+- **GET endpoints are called with real values.** Kinds, ids and the newest business date come from the saved test data
+  (`data/testdata/**/*.jsonl.gz`, streamed, never copied); any other path variable takes the first id the parent list endpoint answers with
+  (`GET /bi/datasets` for `/bi/datasets/{id}`; `ALT_LISTS` names the few collections listed elsewhere); a variable no list yields gets a
+  deliberately missing id. An event stream is read for up to four seconds.
+- **The server's bearer token** is `--token`, or (the documented flow) one personal API token of the administrator made through the console
+  (`POST /api/tokens`, one day), revoked when the sweep ends. Without `--admin` the console is open and the server is asked without a token.
+- **Results.** `pass`: 2xx with a body (JSON that parses), within 10 s. `missing-id ok`: a 4xx for the missing id. `refused`: a clean refusal that
+  says why (a feature or engine that is off, a power the administrator does not hold, no history kept for the kind). `needs input`: a 4xx whose
+  message names an input the sweep cannot know (a scope, a netting set, a cell reference) or whose id was guessed from a list; listed, never hidden.
+  `not served`: a route the console does not mount (embedding) or a module that is not installed. `FAIL`: a 5xx, any other 4xx, an empty body,
+  a timeout, an answer over 10 s (asked once more alone before it counts, because eight calls run at once). Exit 1 on any FAIL.
+- **Writes are never called.** Every `POST`, `PUT`, `PATCH` and `DELETE` is listed with the test that exercises it (found by its path and method
+  in the test sources: `covered by tests: <test> (<file>:<line>)`), and one with no test is marked `NO TEST`. The writes are never called on a
+  shared stack; they are the tests' business.
+- **The drill step** is `drishti-console/tests/test_api_sweep_browser.py` in the browser lane, on the page walk's server and its cached lake,
+  HTTP only and quick; any FAIL fails the drill. `DRISHTI_PAGEWALK_BASE` (the console) with the server URL in the test's own environment variable sweeps a stack already running.
+
+```bash
+python3 tools/sweep/api_sweep.py --console http://host:27480 --server http://host:28480 --admin USER --admin-password PW
+```
+
+The report is `data/sweep/api-sweep-<stamp>.md` and `.jsonl` (not committed).
+
 ## 4. Numbers to hold
 
 | What | Number |
