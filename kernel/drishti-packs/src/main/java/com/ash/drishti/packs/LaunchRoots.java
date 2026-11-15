@@ -290,8 +290,15 @@ public final class LaunchRoots implements EnvironmentPostProcessor, Ordered {
             for (String k : root.keys()) {
                 String v = property.apply(k);
                 if (!blank(v)) {
-                    key = k;
-                    given = v.strip();
+                    if (NONE.equals(v.strip()) && given == null) {   // "none" is the weakest answer: a folder another key names wins
+                        key = k;
+                        given = NONE;
+                        continue;
+                    }
+                    if (given == null || NONE.equals(given)) {
+                        key = k;
+                        given = v.strip();
+                    }
                     break;
                 }
             }

@@ -116,6 +116,15 @@ class LaunchRootsTest {
     }
 
     @Test
+    void aFolderAnotherKeyNamesWinsOverNone(@TempDir Path tmp) throws Exception {
+        Path home = install(tmp);
+        LaunchRoots.Result r = resolve(Map.of("drishti.home", home.toString(), "drishti.modules.home", "none",
+                "drishti.module-manifests-dir", home.resolve("modules").toString()));
+        assertThat(r.problems()).isEmpty();
+        assertThat(r.values()).containsEntry("drishti.modules.home", home.resolve("modules").toString());
+    }
+
+    @Test
     void extraPackFoldersMustBeThere(@TempDir Path tmp) throws Exception {
         Path home = install(tmp);
         LaunchRoots.Result r = resolve(Map.of("drishti.home", home.toString(), "drishti.packs.extra-dirs", home.resolve("gone").toString()));
