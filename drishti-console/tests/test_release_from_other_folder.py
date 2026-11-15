@@ -120,10 +120,16 @@ def install(tmp_path_factory) -> Path:
 
 
 @pytest.fixture(scope="module")
-def lake(tmp_path_factory) -> Path:
+def lake() -> Path:
     """The ONE shared test lake, read only (an absolute path in the lake cache, DRISHTI_LAKE_CACHE): the install reads it, never writes it;
-    the server's VaR hot folder and official roots are in its own data folder (Server.env)."""
-    return var_stack.shared_lake(tmp_path_factory)
+    the server's VaR hot folder and official roots are in its own data folder (Server.env). Asked of the cache directly: this file's
+    tmp_path_factory is its own scratch on the disk, not pytest's."""
+    try:
+        out = var_stack.shared_cache_folder() / "delta"
+    except RuntimeError as e:
+        pytest.fail(f"the shared test lake: {e}")
+    assert (out / "risk" / "scenario-pv").is_dir(), f"no scenario-pv in the shared lake {out}"
+    return out
 
 
 class Server:

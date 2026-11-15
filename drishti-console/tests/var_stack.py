@@ -71,6 +71,12 @@ def _lake_cache():
     return lake_cache
 
 
+def shared_cache_folder() -> Path:
+    """The shared lake's folder in the lake cache (built under the cache's lock when missing; a lookup takes milliseconds when it is there).
+    RuntimeError when it cannot be built. For a file without pytest's tmp_path_factory; the others ask :func:`shared_folder`."""
+    return _lake_cache().demo_lake("", SHARED_AS_OF, SHARED_EXTRA)
+
+
 def shared_folder(tmp_path_factory) -> Path:
     """The shared lake's cache folder (``delta/`` the lake, ``connectors/`` the connector files the build wrote beside it): looked up once per
     run by the first worker that asks; skips when it cannot be built."""
@@ -78,7 +84,7 @@ def shared_folder(tmp_path_factory) -> Path:
 
     def make():
         try:
-            return {"folder": str(_lake_cache().demo_lake("", SHARED_AS_OF, SHARED_EXTRA)), "error": None}
+            return {"folder": str(shared_cache_folder()), "error": None}
         except RuntimeError as e:
             return {"folder": "", "error": "could not build the shared demo lake: " + str(e)}
 
