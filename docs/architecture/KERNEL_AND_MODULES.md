@@ -1065,6 +1065,8 @@ Undeploy and *move a part* are plans too (placement without the module, or with 
 
 **The Python script: `drishti.py module deploy`** (part of the existing CLI, in `tools/modulecli.py`), Terraform-style:
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```
 drishti.py module deploy banking-3.0.1.dmod --placement config/placement.yaml --plan [--out plan.json] [--json]
 drishti.py module deploy --apply plan.json            # this plan only; non-zero exit on failure or a stale plan

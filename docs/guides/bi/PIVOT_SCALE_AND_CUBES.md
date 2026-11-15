@@ -79,6 +79,8 @@ for exact with `"exact": true` beside the view, or for ≈ at any size with `"ex
   "exact": true }
 ```
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```
 drishti.py pivot run --source trade --rows DESK --values "distinct(COUNTERPARTY)" --approximate    # ≈, ±1.6%, at any size
 drishti.py pivot run --source trade --rows DESK --values "distinct(COUNTERPARTY)" --exact          # exact on request, at any size

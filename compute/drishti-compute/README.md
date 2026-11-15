@@ -74,6 +74,8 @@ class SumEngine(Engine):
 
 ## Tests
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 ./mvnw clean test -pl :drishti-compute -am -Ddrishti.compute.test.python=<python 3.10+>   # Java: pools, warm mode, fan-out, environments, approvals
 <python> -m pytest compute/drishti-compute/src/test/python                                       # the SDK: codec (and pyarrow agreement), sample engine, worker protocol

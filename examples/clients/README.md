@@ -52,6 +52,8 @@ export DRISHTI_EXAMPLE_STREAM_BATCHES=2          # batches a stream example take
 
 ## Python notebooks (`python/`)
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 python3 -m venv ~/venvs/drishti-examples && . ~/venvs/drishti-examples/bin/activate
 pip install -r examples/clients/python/requirements.txt jupyterlab

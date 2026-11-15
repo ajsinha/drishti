@@ -80,6 +80,8 @@ The id rule (bucket = Murmur3 of the id), generations and promoted columns are i
 
 ## Examples
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 cp config/connectors.examples/cassandra/*.yaml config/connectors/       # or only the domains you want
 export DRISHTI_CASSANDRA_CONTACT_POINTS=cass-1.example.com:9042 DRISHTI_CASSANDRA_DATACENTER=dc-east

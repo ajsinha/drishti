@@ -63,6 +63,8 @@ Each table is a Delta table (`_delta_log/` and Parquet files partitioned by `bus
 
 ## Examples
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 deploy/aws/delta-s3/delta-s3.sh create --bucket acme-drishti-lake --prefix delta --role drishti-server
 export DRISHTI_DELTA_S3_BUCKET=acme-drishti-lake DRISHTI_DELTA_S3_PREFIX=delta AWS_REGION=eu-west-2

@@ -356,6 +356,8 @@ refreshes everything that reads the table.
 
 **Turn it on.** The inbox is an engine, off as shipped: Admin → Engines → **Data inbox**, or
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 python3 tools/drishti.py server engines on dataload --reason "load risklake"
 ```

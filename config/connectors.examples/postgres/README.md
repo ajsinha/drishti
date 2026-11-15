@@ -69,6 +69,8 @@ The database holds, per domain, the table mode layout (see the [jdbc connector R
 
 ## Examples
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 export DRISHTI_PG_URL=jdbc:postgresql://db.example.com:5432/drishti DRISHTI_PG_USER=drishti DRISHTI_PG_PASSWORD=...
 tools/load-postgres.sh "$DRISHTI_PG_URL"                       # the samples: 1,791 documents x 10 business days

@@ -2481,6 +2481,8 @@ Precedence (low to high): the file, the local file, `DRISHTI_CONSOLE__…` varia
 
 The environment form is `DRISHTI_CONSOLE__` followed by the key with `.` written as `__`, in any case:
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 DRISHTI_CONSOLE__SERVER__PORT=17481 python drishti-console/run_drishti_web.py
 # same as

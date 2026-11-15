@@ -20,6 +20,8 @@ editing, the declaration, the API and the settings are the platform's: [Live res
 
 ## 1. Switch it on (tutorial)
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 # 1. the module is on (Admin -> Modules, or the distribution lists it)
 drishti.py module list | grep trading

@@ -310,6 +310,8 @@ requests; the live run is `deploy/aws/iceberg/check-glue.sh --s3-tables <ARN>`.
 `tools/load-iceberg.sh` (Windows: `tools\windows\load-iceberg.ps1`) loads the packs' samples and, optionally, a generated book through
 `IcebergLoader`:
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 tools/load-iceberg.sh ./data/iceberg                                   # the sample documents
 tools/load-iceberg.sh ./data/iceberg --trades 10000 --days 3           # and a book of 10,000 trades, streamed

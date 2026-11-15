@@ -98,6 +98,8 @@ machine otherwise idle (no other Drishti stack); each configuration alone.
 
 ### 2.2 The store benchmark
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 tools/bench/scale.sh delta 10000                       # Delta Lake, engine native, 10,000 trades a day x 3 days
 tools/bench/scale.sh postgres 50000 --out results.jsonl

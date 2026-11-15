@@ -556,6 +556,8 @@ Deleting a user removes their role and pack rows with them (`ON DELETE CASCADE`)
 
 To try it locally with Docker (the repository's compose file runs PostgreSQL 18 on port 5432, or `DRISHTI_PG_PORT`):
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 docker compose -f deploy/docker/compose.data.yaml up -d postgres
 docker compose -f deploy/docker/compose.data.yaml exec postgres psql -U drishti -c 'CREATE DATABASE drishti_identity'

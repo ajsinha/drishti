@@ -1489,6 +1489,8 @@ the audit trail and the owner's notice are its control.
 
 **YAML: import and export only.** The system baskets are not configuration: YAML is a way in and out, never their home.
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 drishti.py var baskets export --scope system > baskets.yaml   # every system basket, retired ones too (--scope mine: your own baskets)
 drishti.py var baskets import baskets.yaml                    # the diff: add, change (each field from, to), same, invalid (why); nothing written

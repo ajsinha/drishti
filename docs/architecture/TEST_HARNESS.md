@@ -309,6 +309,8 @@ the width; a drishti-inputs Form on the page is measured as `form_layout.py` mea
 
 Run it alone:
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_page_walk_browser.py      # starts its own stack
 DRISHTI_PAGEWALK_BASE=http://<host>:<console port> drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_page_walk_browser.py   # a running console

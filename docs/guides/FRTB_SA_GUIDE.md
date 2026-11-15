@@ -514,6 +514,8 @@ weather derivative.
 
 **From the command line.**
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 python3 tools/drishti.py frtb sa EXAMPLE
 ```

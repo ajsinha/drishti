@@ -117,6 +117,8 @@ drishti:
 It has **no connector file**: connector files in `config/connectors/` are for the connectors that read your systems. Switch it off for
 one start, or for good:
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 DRISHTI_DEMO_ENABLED=false java -jar kernel/drishti-server/target/drishti-server-*-exec.jar
 java -jar kernel/drishti-server/target/drishti-server-*-exec.jar --drishti.sources.plugins.demo.enabled=false

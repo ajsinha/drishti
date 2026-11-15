@@ -79,6 +79,8 @@ as bins (`layout.<kind>.columns`). The record layout and the bin rule are in the
 
 ## Examples
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 cp config/connectors.examples/aerospike/*.yaml config/connectors/       # or only the domains you want
 export DRISHTI_AEROSPIKE_HOSTS=aero-1.example.com:3000 DRISHTI_AEROSPIKE_NAMESPACE=drishti

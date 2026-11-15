@@ -448,6 +448,8 @@ DRS-5333 no SIMM version is installed …*.
 
 **From the command line.** Install the toy file as a version (a bank copies its licensed file instead) and restart the server:
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 mkdir -p config/simm
 cp modules/banking/banking-compute/src/test/resources/simm/simm-toy.yaml config/simm/

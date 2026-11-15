@@ -92,6 +92,8 @@ You should see the application: its origin, the two ways it signs in, the scopes
 
 The host is a few files: a page, a script, and a **backend** that asks Drishti for a token for the signed-in user. Start it with the secret you copied:
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 python3 tools/elements-demo/server.py --port 17944 --app harbour-crm \
     --console http://127.0.0.1:17480 --server http://127.0.0.1:18480 --secret "<the secret>"

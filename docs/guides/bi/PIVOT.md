@@ -245,6 +245,8 @@ figures are the ones the run returned. Each is saved as a view, so it opens with
 
 ![Notional by desk and year: the legs' notional](../img/pivot/notional-by-desk-and-year.jpg)
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```
 drishti.py pivot run --source trade --rows '$.TT_GROUP' --cols '$.TRADE_DATE:year' --values 'sum($.LEGS[*].NOTIONAL)'
 ```
