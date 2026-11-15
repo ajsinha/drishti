@@ -87,7 +87,7 @@ public class IdentityConfiguration {
         com.ash.drishti.identity.content.ContentStoreSettings s = com.ash.drishti.identity.content.ContentStoreSettings.load(file, data, env::resolvePlaceholders);
         String root = env.getProperty("drishti.store.root", "");
         if (!root.isBlank()) {
-            s = s.withFsRoot(java.nio.file.Path.of(root));
+            s = s.withFsRoot(com.ash.drishti.api.Roots.anchored(root));   // relative: under the install folder
         }
         com.ash.drishti.identity.content.ContentStore store = s.open();
         String node = env.getProperty("drishti.net.node-id", "");
