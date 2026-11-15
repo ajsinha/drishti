@@ -41,6 +41,7 @@ One country's World Development Indicators: the latest of each, the world map sh
 | Cadence | daily (due: the world-development feed's schedule (30 6 * * * UTC); a pull with nothing new writes nothing and the lake keeps its latest date) |
 | Binding hint | lake table `development.development-profile`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | modules/economy/packs/world-development/samples |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [world-development/development-profile](../samples/world-development.md#development-profile) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -128,6 +129,7 @@ One World Development Indicator of one country by year: the history, the latest 
 | Cadence | daily (due: the world-development feed's schedule (30 6 * * * UTC); a pull with nothing new writes nothing and the lake keeps its latest date) |
 | Binding hint | lake table `development.development-series`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | modules/economy/packs/world-development/samples |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [world-development/development-series](../samples/world-development.md#development-series) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**

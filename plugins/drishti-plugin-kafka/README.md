@@ -25,10 +25,10 @@ settings:
 - bootstrap-servers
 - topics
 - kind
-- id-field
 - kind.*
 - shape
 - shape.*
+- id-field
 - id-field.*
 - mode
 - max-message-kb
@@ -124,15 +124,19 @@ number of changes, and a restart replays one message per entity.
 |---|---|---|---|
 | `bootstrap-servers` | string | `localhost:9092` | Broker list host:port,... |
 | `topics` | list |  | **Required.** Comma list; without it the plugin stays idle (`PluginNotConfigured`) |
-| `kind` | string |  | Mapped messages on every topic: their kind |
-| `id-field` | string | `id` | Mapped messages without a key: the id field, every topic |
+| `kind` | string |  | The kind of the documents on every topic (read by the kernel's live intake, docs/architecture/LIVE_CONNECTORS_DESIGN.md section 3.1) |
 | `kind.*` | string |  | Kind per topic: kind.<topic> |
-| `id-field.*` | string |  | Id field per kind: id-field.<kind> |
-| `mode` | one of state, ticks | `state` | `state` (index, caches, reads) or `ticks` (no reads; pushes to views of its kinds) |
-| `search` | boolean | `true` | Keep ids for type-ahead (state mode only) |
+| `shape` | one of document, envelope, jsonl |  | What a message is: the kind's row (document), {kind, key, op, asOf, doc} (envelope), or several rows (jsonl). Default per topic: document when the topic's kind is named, else envelope |
+| `shape.*` | string |  | Shape per topic: shape.<topic> |
+| `id-field` | string |  | A kind whose contract has no key: the field that is its key, every topic (else the message key) |
+| `id-field.*` | string |  | Id field per topic: id-field.<topic> |
+| `mode` | string |  | No longer read (said once at start): a companion (companion-of:) is a feed over a lake, what ticks was; a live connector without one holds its rows, what state was. Remove it |
+| `max-message-kb` | int | `1024` | A larger message is rejected (too-large, DRS-1072) |
+| `next-date.max-rows` | int | `100000` | Rows of the next business date held until the live date rolls; more are rejected (future-date) |
+| `rejects.keep-days` | int | `7` | Days of the reject log kept (<data folder>/live/rejects/<connector>/<date>.jsonl) |
 | `poll-ms` | int | `200` | Poll interval |
-| `cache-mb` | int | `256` | Memory cache, weighed by message length |
-| `disk-cache.*` | string |  | On-disk cache (enabled, dir, max-gb, ...) |
+| `cache-mb` | int | `256` | The live state's documents held in memory, by size; past it a document is read back from the topic by its offset |
+| `disk-cache.*` | string |  | The live state's documents on local disk (enabled, dir, root, max-gb, reset-at, zone) |
 | `client.*` | string |  | Any Kafka client property (client.max.poll.records); applied last, wins over everything above. Fetches default to `fetch.max.bytes` 4 MB and `max.partition.fetch.bytes` 1 MB (Kafka's own default is 50 MB; each poll thread reads a fetch through a temporary direct buffer): `client.fetch.max.bytes` and `client.max.partition.fetch.bytes` raise them |
 | `value-format` | one of string, confluent |  | string (default), or confluent to read the Confluent wire format (implied by schema-registry.url) |
 | `flavour` | one of apache, confluent | `apache` | confluent: Confluent Cloud defaults (SASL PLAIN with api-key and api-secret, DNS lookup of all addresses) |

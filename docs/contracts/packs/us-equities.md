@@ -47,6 +47,7 @@ A US listed company: key facts, ten years of annual financials, recent SEC filin
 | Binding hint | lake table `us-equities.us-company`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `TICKER`, `NAME`, `LEI_LEGAL_NAME`, `CIK`, `LEI`, `EXCHANGE`, `INDEX_TEXT`, `SECTOR`, `SIC`, `SIC_DESCRIPTION`, `STATE_OF_INCORPORATION`, `REVENUE` |
 | Test data | data/testdata/us-equities/us-company |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [us-equities/us-company](../samples/us-equities.md#us-company) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -197,6 +198,7 @@ An equity index's members (Dow 30, Nasdaq-100, S&P 500) as their tracking ETF re
 | Binding hint | lake table `us-equities.index-membership`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `INDEX`, `NAME`, `MEMBERS` |
 | Test data | data/testdata/us-equities/index-membership |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [us-equities/index-membership](../samples/us-equities.md#index-membership) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -268,6 +270,7 @@ A sector by its SIC code, computed from the companies when asked: its companies 
 | Dated by | `on request` |
 | Cadence | on change (due: recomputed from its source kind (connector refresh 60s)) |
 | Binding hint | computed by Drishti, never bound; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
+| Live | no feed: computed, live by derivation from its inputs |
 
 **Fields**
 
@@ -335,6 +338,7 @@ The filings browser: the latest SEC filings of the covered companies, of every f
 | Binding hint | lake table `us-equities.filing-feed`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `FEED`, `NAME`, `FILINGS` |
 | Test data | data/testdata/us-equities/filing-feed |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [us-equities/filing-feed](../samples/us-equities.md#filing-feed) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -413,6 +417,7 @@ One SEC filing: its company, form, dates, 8-K items and its links on EDGAR (meta
 | Binding hint | lake table `us-equities.filing`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `ACCESSION`, `COMPANY`, `COMPANY_NAME`, `FORM`, `FILED`, `REPORT_DATE` |
 | Test data | data/testdata/us-equities/filing |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [us-equities/filing](../samples/us-equities.md#filing) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -476,6 +481,7 @@ One financial concept of one company (revenue, net income, assets...) over up to
 | Binding hint | lake table `us-equities.financial-fact`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `FACT_ID`, `COMPANY`, `COMPANY_NAME`, `CONCEPT`, `LABEL`, `LATEST`, `LATEST_YEAR` |
 | Test data | data/testdata/us-equities/financial-fact |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [us-equities/financial-fact](../samples/us-equities.md#financial-fact) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -542,6 +548,7 @@ A company's quote and a year of daily prices, read live by the us-equities-price
 | Dated by | `snapshot` |
 | Cadence | intraday (due: on demand, when the connector is on) |
 | Binding hint | any source the site binds; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 
 **Fields**
 

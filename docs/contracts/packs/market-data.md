@@ -61,6 +61,7 @@ Discounting (OIS), projection (IBOR/term RFR), government or basis curve for a c
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.ir-curve`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/ir-curve |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [market-data/ir-curve](../samples/market-data.md#ir-curve) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -146,6 +147,7 @@ General-collateral or specials repo rates by term.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.repo-curve`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/repo-curve |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [market-data/repo-curve](../samples/market-data.md#repo-curve) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -204,6 +206,7 @@ Spot rate for a currency pair with bid/ask.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.fx-spot`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/fx-spot |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [market-data/fx-spot](../samples/market-data.md#fx-spot) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -282,6 +285,7 @@ Forward points by tenor for a pair.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.fx-forward-curve`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/fx-forward-curve |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [market-data/fx-forward-curve](../samples/market-data.md#fx-forward-curve) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -341,6 +345,7 @@ Implied vols by expiry and delta (ATM, 25D RR/BF).
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.fx-vol-surface`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/fx-vol-surface |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [market-data/fx-vol-surface](../samples/market-data.md#fx-vol-surface) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -408,6 +413,7 @@ Normal (bp) swaption vols by expiry × tenor.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.ir-vol-cube`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/ir-vol-cube |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [market-data/ir-vol-cube](../samples/market-data.md#ir-vol-cube) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -468,6 +474,7 @@ Cap vols by maturity and strike.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.cap-vol-surface`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/cap-vol-surface |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [market-data/cap-vol-surface](../samples/market-data.md#cap-vol-surface) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -527,6 +534,7 @@ A listed stock: price, dividends, sector and identifiers.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.equity`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/equity |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [market-data/equity](../samples/market-data.md#equity) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -620,6 +628,7 @@ Index level with its largest constituents.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.equity-index`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/equity-index |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [market-data/equity-index](../samples/market-data.md#equity-index) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -695,6 +704,7 @@ Expected dividends by year (implied from dividend futures and forwards).
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.dividend-curve`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/dividend-curve |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [market-data/dividend-curve](../samples/market-data.md#dividend-curve) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -756,6 +766,7 @@ Implied vols by expiry and moneyness.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.equity-vol-surface`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/equity-vol-surface |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [market-data/equity-vol-surface](../samples/market-data.md#equity-vol-surface) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -817,6 +828,7 @@ CDS par spreads by tenor, recovery and implied default probabilities.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.credit-curve`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/credit-curve |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [market-data/credit-curve](../samples/market-data.md#credit-curve) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -885,6 +897,7 @@ Published CPI fixings (US CPI-U NSA, HICPxT, UK RPI…).
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.inflation-index`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/inflation-index |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [market-data/inflation-index](../samples/market-data.md#inflation-index) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -946,6 +959,7 @@ Zero-coupon breakevens by tenor, with monthly seasonality.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.inflation-curve`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/inflation-curve |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [market-data/inflation-curve](../samples/market-data.md#inflation-curve) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -1013,6 +1027,7 @@ A traded commodity with its benchmark, unit and venue.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.commodity`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/commodity |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [market-data/commodity](../samples/market-data.md#commodity) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -1100,6 +1115,7 @@ Futures settlement prices by delivery month.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.commodity-curve`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/commodity-curve |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [market-data/commodity-curve](../samples/market-data.md#commodity-curve) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -1165,6 +1181,7 @@ Implied vols by delivery month and moneyness.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.commodity-vol-surface`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/commodity-vol-surface |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [market-data/commodity-vol-surface](../samples/market-data.md#commodity-vol-surface) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -1221,6 +1238,7 @@ Published overnight and term rate fixings (SOFR, €STR, SONIA…).
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.rate-fixing`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/rate-fixing |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [market-data/rate-fixing](../samples/market-data.md#rate-fixing) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -1284,6 +1302,7 @@ A listed bond: terms, price, yield, spreads and analytics.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.bond`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/bond |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [market-data/bond](../samples/market-data.md#bond) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -1376,6 +1395,7 @@ A correlation set: the factors whose pairwise correlations basket, quanto and sp
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.correlation-matrix`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/correlation-matrix |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [market-data/correlation-matrix](../samples/market-data.md#correlation-matrix) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -1424,6 +1444,7 @@ The pairwise correlations of a correlation set's factors, computed when asked fr
 | Dated by | `on request` |
 | Cadence | on change (due: computed on request and again when the correlation sets, equities or FX spots load (data-version trigger)) |
 | Binding hint | computed by Drishti, never bound; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
+| Live | no feed: computed, live by derivation from its inputs |
 
 **Fields**
 
@@ -1486,6 +1507,7 @@ An equity's beta, alpha, correlation and R squared against its index (EQUITY_IND
 | Dated by | `on request` |
 | Cadence | on change (due: computed on request and again when the equities or indices load (data-version trigger)) |
 | Binding hint | computed by Drishti, never bound; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
+| Live | no feed: computed, live by derivation from its inputs |
 
 **Fields**
 

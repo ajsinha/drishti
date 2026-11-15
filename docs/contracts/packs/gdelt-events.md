@@ -40,6 +40,7 @@ What the world's news reported about one country yesterday (GDELT): events, tone
 | Cadence | daily (due: the gdelt-events feed's schedule (30 8 * * * UTC); a pull with nothing new writes nothing and the lake keeps its latest date) |
 | Binding hint | lake table `gdelt.event-country`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | modules/economy/packs/gdelt-events/samples |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [gdelt-events/event-country](../samples/gdelt-events.md#event-country) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**

@@ -53,6 +53,7 @@ An economy: output, growth, prices, jobs, debt and external balance, and output 
 | Binding hint | lake table `macro.economy`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `NAME`, `ISO3`, `REGION_NAME`, `INCOME_NAME`, `GDP_USD_BN`, `GDP_PER_CAPITA`, `GROWTH`, `INFLATION`, `UNEMPLOYMENT`, `POPULATION_M` |
 | Test data | modules/economy/packs/world-economy/samples |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [world-economy/economy](../samples/world-economy.md#economy) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -163,6 +164,7 @@ One headline statistic of one economy: the series, the latest value, the change 
 | Cadence | static (due: to be confirmed) |
 | Binding hint | lake table `macro.macro-indicator`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | modules/economy/packs/world-economy/samples |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [world-economy/macro-indicator](../samples/world-economy.md#macro-indicator) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -252,6 +254,7 @@ The IMF World Economic Outlook: growth, inflation, unemployment, external balanc
 | Cadence | static (due: to be confirmed) |
 | Binding hint | lake table `macro.economic-forecast`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | modules/economy/packs/world-economy/samples |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [world-economy/economic-forecast](../samples/world-economy.md#economic-forecast) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -335,6 +338,7 @@ Unemployment, participation, youth and female labour, and employment and output 
 | Cadence | static (due: to be confirmed) |
 | Binding hint | lake table `macro.labour-market`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | modules/economy/packs/world-economy/samples |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [world-economy/labour-market](../samples/world-economy.md#labour-market) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -416,6 +420,7 @@ Government debt and net lending (IMF) with revenue, expense and military spendin
 | Cadence | static (due: to be confirmed) |
 | Binding hint | lake table `macro.fiscal-position`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | modules/economy/packs/world-economy/samples |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [world-economy/fiscal-position](../samples/world-economy.md#fiscal-position) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -501,6 +506,7 @@ A World Bank region or income group (or the world), computed from its member eco
 | Dated by | `on request` |
 | Cadence | on change (due: recomputed from its source kind (connector refresh 60s)) |
 | Binding hint | computed by Drishti, never bound; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
+| Live | no feed: computed, live by derivation from its inputs |
 
 **Fields**
 
@@ -577,6 +583,7 @@ A state or territory (ISO 3166-2): population, GDP and GDP per head.
 | Binding hint | lake table `macro.region-economy`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `ISO3`, `COUNTRY_NAME`, `REGION_CODE`, `NAME`, `POPULATION`, `GDP_USD_BN`, `GDP_PER_CAPITA`, `YEAR`, `SOURCE` |
 | Test data | modules/economy/packs/world-economy/samples |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [world-economy/region-economy](../samples/world-economy.md#region-economy) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -655,6 +662,7 @@ A country: government type, capital, legislature and seats by party, office hold
 | Cadence | static (due: to be confirmed) |
 | Binding hint | lake table `civic.jurisdiction`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | modules/economy/packs/world-economy/samples |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [world-economy/jurisdiction](../samples/world-economy.md#jurisdiction) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -779,6 +787,7 @@ A political party that won seats in the lower chamber at the most recent electio
 | Cadence | static (due: to be confirmed) |
 | Binding hint | lake table `civic.party`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | modules/economy/packs/world-economy/samples |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [world-economy/party](../samples/world-economy.md#party) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -853,6 +862,7 @@ The chief of state or head of government of a country as the CIA World Factbook 
 | Cadence | static (due: to be confirmed) |
 | Binding hint | lake table `civic.office-holder`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | modules/economy/packs/world-economy/samples |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [world-economy/office-holder](../samples/world-economy.md#office-holder) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -931,6 +941,7 @@ The most recent election to a chamber or to the executive, with the system, term
 | Cadence | static (due: to be confirmed) |
 | Binding hint | lake table `civic.election`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | modules/economy/packs/world-economy/samples |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [world-economy/election](../samples/world-economy.md#election) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -1021,6 +1032,7 @@ A World Bank region: its countries, population, life expectancy, women in parlia
 | Cadence | static (due: to be confirmed) |
 | Binding hint | lake table `civic.region`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | modules/economy/packs/world-economy/samples |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [world-economy/region](../samples/world-economy.md#region) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -1108,6 +1120,7 @@ A social or governance statistic of one country over time, with the regional com
 | Cadence | static (due: to be confirmed) |
 | Binding hint | lake table `civic.social-indicator`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | modules/economy/packs/world-economy/samples |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [world-economy/social-indicator](../samples/world-economy.md#social-indicator) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**

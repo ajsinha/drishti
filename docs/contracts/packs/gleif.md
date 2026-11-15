@@ -45,6 +45,7 @@ A legal entity from its LEI record: key facts, addresses, registration and renew
 | Binding hint | lake table `gleif.lei-entity`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `LEI`, `NAME`, `LEI_COUNTRY`, `LEGAL_CITY`, `LEGAL_FORM`, `REGISTRATION_STATUS`, `RENEWAL_LATE`, `SEGMENT`, `NEXT_RENEWAL`, `US_COMPANY` |
 | Test data | data/testdata/gleif/lei-entity |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [gleif/lei-entity](../samples/gleif.md#lei-entity) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -185,6 +186,7 @@ An ownership group, computed from the entities when asked: the ultimate parent w
 | Dated by | `on request` |
 | Cadence | on change (due: recomputed from its source kind (connector refresh 60s)) |
 | Binding hint | computed by Drishti, never bound; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
+| Live | no feed: computed, live by derivation from its inputs |
 
 **Fields**
 
@@ -273,6 +275,7 @@ One consolidation relationship from GLEIF's level 2 data: the child, its direct 
 | Binding hint | lake table `gleif.lei-relationship`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `RELATIONSHIP_ID`, `LEVEL`, `CHILD_ENTITY`, `PARENT_ENTITY`, `RELATIONSHIP_STATUS` |
 | Test data | data/testdata/gleif/lei-relationship |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [gleif/lei-relationship](../samples/gleif.md#lei-relationship) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -343,6 +346,7 @@ A country's legal entities in the pack, computed from the entities when asked: t
 | Dated by | `on request` |
 | Cadence | on change (due: recomputed from its source kind (connector refresh 60s)) |
 | Binding hint | computed by Drishti, never bound; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
+| Live | no feed: computed, live by derivation from its inputs |
 
 **Fields**
 
@@ -412,6 +416,7 @@ An ISIN, BIC or MIC and the legal entity GLEIF's mapping files give it.
 | Binding hint | lake table `gleif.lei-mapping`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `IDENTIFIER`, `TYPE`, `ENTITY_LEI`, `ENTITY_NAME` |
 | Test data | data/testdata/gleif/lei-mapping |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [gleif/lei-mapping](../samples/gleif.md#lei-mapping) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**

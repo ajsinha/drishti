@@ -43,6 +43,7 @@ A topic and the news about it: headlines (newest first) with their publishers an
 | Cadence | static (due: to be confirmed) |
 | Binding hint | lake table `news.news-topic`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | modules/economy/packs/news-and-markets/samples |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [news-and-markets/news-topic](../samples/news-and-markets.md#news-topic) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -97,6 +98,7 @@ The headlines for one name, as the news connector computed them: newest first, f
 | Cadence | intraday (due: on demand, when the connector is on) |
 | Binding hint | any source the site binds; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/news-and-markets/news |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [news-and-markets/news](../samples/news-and-markets.md#news) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -196,6 +198,7 @@ A listed company: its live quote and price history (yfinance connector) and its 
 | Cadence | static (due: to be confirmed) |
 | Binding hint | lake table `news.listed-company`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | modules/economy/packs/news-and-markets/samples |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [news-and-markets/listed-company](../samples/news-and-markets.md#listed-company) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -254,6 +257,7 @@ A quote and recent price history for a ticker, as the yfinance connector compute
 | Cadence | intraday (due: on demand, when the connector is on) |
 | Binding hint | any source the site binds; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/news-and-markets/quote |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [news-and-markets/quote](../samples/news-and-markets.md#quote) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**

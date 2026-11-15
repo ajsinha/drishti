@@ -60,7 +60,7 @@ public final class ConnectorFiles {
     /** A connector's logical name: lower case letters, digits and hyphens, starting with a letter or digit. */
     public static final Pattern NAME = Pattern.compile("[a-z0-9][a-z0-9-]{0,63}");
     private static final Set<String> KEYS = Set.of("name", "plugin", "enabled", "kinds", "description", "settings", "requires", "mode", "reads",
-            "engine", "triggers", "coalesce", "cache", "limits", "history", "incremental", "writes", COMPANION_OF);
+            "engine", "triggers", "coalesce", "cache", "limits", "history", "incremental", "writes", "companion-of");
     /** The key that makes a connector the live companion of a data connector (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 2.2). */
     public static final String COMPANION_OF = "companion-of";
     /** The keys of a computation (docs/architecture/DATA_ARCHITECTURE.md › Reactive connectors, section 5): only a connector of the {@code reactive} plugin has them. */

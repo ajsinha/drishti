@@ -49,6 +49,7 @@ A legal entity the bank trades with: identifiers (LEI, UEN), rating, sector, cou
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `reference.counterparty`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/core/counterparty |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [core/counterparty](../samples/core.md#counterparty) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -168,6 +169,7 @@ Economic group of related counterparties (obligor group).
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `reference.counterparty-group`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/core/counterparty-group |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [core/counterparty-group](../samples/core.md#counterparty-group) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -224,6 +226,7 @@ Issuer of bonds and reference entity for CDS.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `reference.issuer`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/core/issuer |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [core/issuer](../samples/core.md#issuer) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -286,6 +289,7 @@ A clearing house with its default fund and margin model.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `reference.ccp`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/core/ccp |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [core/ccp](../samples/core.md#ccp) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -341,6 +345,7 @@ The bank's own booking entity.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `reference.legal-entity`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/core/legal-entity |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [core/legal-entity](../samples/core.md#legal-entity) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -417,6 +422,7 @@ A trading book: owner desk, trades and risk.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `reference.book`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/core/book |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [core/book](../samples/core.md#book) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -495,6 +501,7 @@ A trading desk: books, limits and risk results.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `reference.desk`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/core/desk |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [core/desk](../samples/core.md#desk) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -571,6 +578,7 @@ A trader and their books.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `reference.trader`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/core/trader |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [core/trader](../samples/core.md#trader) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -628,6 +636,7 @@ Business-day calendar (USNY, TARGET, GBLO, JPTO…).
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `reference.calendar`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/core/calendar |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [core/calendar](../samples/core.md#calendar) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -688,6 +697,7 @@ An account at a CCP holding cleared trades and margin.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `reference.clearing-account`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/core/clearing-account |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [core/clearing-account](../samples/core.md#clearing-account) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**

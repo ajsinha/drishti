@@ -41,6 +41,7 @@ One central bank: its policy rate, the last move, the rate's history and the mar
 | Cadence | daily (due: the central-banks feed's schedule (15 22 * * 1-5 UTC); a pull with nothing new writes nothing and the lake keeps its latest date) |
 | Binding hint | lake table `centralbank.central-bank`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | modules/economy/packs/central-banks/samples |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [central-banks/central-bank](../samples/central-banks.md#central-bank) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -126,6 +127,7 @@ One central-bank or market series from FRED or the Bank of Canada: the history, 
 | Cadence | daily (due: the central-banks feed's schedule (15 22 * * 1-5 UTC); a pull with nothing new writes nothing and the lake keeps its latest date) |
 | Binding hint | lake table `centralbank.rate-series`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | modules/economy/packs/central-banks/samples |
+| Live | any companion may feed it with the defaults: arrival order, whole rows, overlay, cleared at the next load, strict |
 | Worked example | [central-banks/rate-series](../samples/central-banks.md#rate-series) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**

@@ -46,6 +46,7 @@ A booked trade as its source system (ENDUR, CALYPSO, MUREX, WSS, SWAPONE or ICI)
 | Columns | `TRADE_ID`, `SOURCE_SYSTEM`, `PRODUCT_TYPE`, `PRODUCT_SUB_TYPE`, `PRODUCT_GROUP`, `TRADE_STATUS`, `TRADE_VERSION`, `BUY_SELL_CODE`, `CURRENCY`, `QUANTITY`, `TRADE_DATE`, `MATURITY_DATE`, `COUNTERPARTY`, `LEGAL_ENTITY`, `PORTFOLIO`, `TRADER_ID`, `NOTIONAL`, `INDEX_NAME` |
 | Partitioned by | `PRODUCT_TYPE` |
 | Test data | data/testdata/trades/endur, data/testdata/trades/calypso, data/testdata/trades/murex |
+| Live | order `TRADE_VERSION`, `SOURCE_UPDATE_TIME`; whole rows; overlay; absorb by-order; validate strict |
 | Worked example | [trades/endur](../samples/trades.md#endur) · [trades/calypso](../samples/trades.md#calypso) · [trades/murex](../samples/trades.md#murex) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
@@ -253,6 +254,7 @@ Every trade with a counterparty, from every source system: its trades (every sta
 | Dated by | `on request` |
 | Cadence | on change (due: recomputed from its source kind (connector refresh 60s)) |
 | Binding hint | computed by Drishti, never bound; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
+| Live | no feed: computed, live by derivation from its inputs |
 
 **Fields**
 
@@ -325,6 +327,7 @@ Every trade of a portfolio (book), from every source system: its trades (every s
 | Dated by | `on request` |
 | Cadence | on change (due: recomputed from its source kind (connector refresh 60s)) |
 | Binding hint | computed by Drishti, never bound; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
+| Live | no feed: computed, live by derivation from its inputs |
 
 **Fields**
 
@@ -397,6 +400,7 @@ Every trade a legal entity of the bank booked, from every source system: its tra
 | Dated by | `on request` |
 | Cadence | on change (due: recomputed from its source kind (connector refresh 60s)) |
 | Binding hint | computed by Drishti, never bound; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
+| Live | no feed: computed, live by derivation from its inputs |
 
 **Fields**
 
@@ -469,6 +473,7 @@ Every trade with a leg on an index (the first leg that names one): its trades (e
 | Dated by | `on request` |
 | Cadence | on change (due: recomputed from its source kind (connector refresh 60s)) |
 | Binding hint | computed by Drishti, never bound; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
+| Live | no feed: computed, live by derivation from its inputs |
 
 **Fields**
 
