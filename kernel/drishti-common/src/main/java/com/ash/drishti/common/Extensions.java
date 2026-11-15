@@ -91,7 +91,9 @@ public final class Extensions {
 
     /** Changes of the live set under way: the server's first load of its modules, a module swapping versions. */
     private static final java.util.concurrent.atomic.AtomicInteger CHANGING = new java.util.concurrent.atomic.AtomicInteger();
-    private static final Object SETTLED = new Object();
+    // a lock, not a monitor: a virtual thread waiting for the live set to settle must not pin its carrier (Java 21)
+    private static final java.util.concurrent.locks.ReentrantLock SETTLE_LOCK = new java.util.concurrent.locks.ReentrantLock();
+    private static final java.util.concurrent.locks.Condition SETTLED = SETTLE_LOCK.newCondition();
     private static final AtomicLong STARTED = new AtomicLong();
 
     /** How many changes of the live set have begun (a read is calm when this did not move and nothing was changing across it). */
@@ -112,8 +114,11 @@ public final class Extensions {
         return () -> {
             if (done.compareAndSet(false, true)) {
                 CHANGING.decrementAndGet();
-                synchronized (SETTLED) {
-                    SETTLED.notifyAll();
+                SETTLE_LOCK.lock();
+                try {
+                    SETTLED.signalAll();
+                } finally {
+                    SETTLE_LOCK.unlock();
                 }
             }
         };
@@ -127,19 +132,22 @@ public final class Extensions {
     /** Waits until no change of the live set is under way, at most {@code millis}; true when settled. */
     public static boolean awaitSettled(long millis) {
         long until = System.nanoTime() + java.util.concurrent.TimeUnit.MILLISECONDS.toNanos(millis);
-        synchronized (SETTLED) {
+        SETTLE_LOCK.lock();
+        try {
             while (!settled()) {
-                long left = java.util.concurrent.TimeUnit.NANOSECONDS.toMillis(until - System.nanoTime());
+                long left = until - System.nanoTime();
                 if (left <= 0) {
                     return false;
                 }
                 try {
-                    SETTLED.wait(left);
+                    SETTLED.awaitNanos(left);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     return false;
                 }
             }
+        } finally {
+            SETTLE_LOCK.unlock();
         }
         return true;
     }
