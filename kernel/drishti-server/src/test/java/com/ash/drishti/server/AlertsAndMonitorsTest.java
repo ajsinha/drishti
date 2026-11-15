@@ -17,6 +17,7 @@ package com.ash.drishti.server;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -110,5 +111,22 @@ class AlertsAndMonitorsTest {
             }
         }
         assertThat(rows).isGreaterThanOrEqualTo(3);
+    }
+
+    @Test
+    void aRuleAndAMonitorAreDeletedAndAMissingOneIsNotFound() throws Exception {
+        String rule = "{\"title\":\"GoneSoon\",\"severity\":\"warn\",\"source\":{\"type\":\"field\",\"kind\":\"trade\",\"id\":\"IRS-48213\","
+                + "\"field\":\"$.mtm < 0\"},\"condition\":{\"type\":\"rule\"},\"trigger\":{\"mode\":\"after-load\",\"kind\":\"trade\"}}";
+        mvc.perform(put("/api/v1/alerts/rules/GoneSoon").header("X-Drishti-User", "del").contentType(MediaType.APPLICATION_JSON).content(rule))
+                .andExpect(status().isOk());
+        mvc.perform(delete("/api/v1/alerts/rules/GoneSoon").header("X-Drishti-User", "other")).andExpect(status().isNotFound());      // another person's rule is not reachable
+        mvc.perform(delete("/api/v1/alerts/rules/GoneSoon").header("X-Drishti-User", "del")).andExpect(status().isNoContent());
+        mvc.perform(get("/api/v1/alerts/rules/GoneSoon").header("X-Drishti-User", "del")).andExpect(status().isNotFound());
+        mvc.perform(delete("/api/v1/alerts/rules/GoneSoon").header("X-Drishti-User", "del")).andExpect(status().isNotFound());
+
+        mvc.perform(put("/api/v1/me/monitors/Gone").header("X-Drishti-User", "del").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"entities\":[{\"kind\":\"trade\",\"id\":\"IRS-48213\"}]}")).andExpect(status().isOk());
+        mvc.perform(delete("/api/v1/me/monitors/Gone").header("X-Drishti-User", "del")).andExpect(status().isNoContent());
+        mvc.perform(delete("/api/v1/me/monitors/Gone").header("X-Drishti-User", "del")).andExpect(status().isNotFound());
     }
 }
