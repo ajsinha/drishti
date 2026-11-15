@@ -14,7 +14,6 @@ written permission of the copyright holder.
 See the LICENSE file in the root of this repository for the full terms.
 """
 import re
-import subprocess
 from pathlib import Path
 
 import pytest
@@ -62,12 +61,9 @@ def violates(text: str, suffix: str) -> bool:
 
 
 def _tracked(*names: str) -> list[Path]:
-    try:
-        out = subprocess.run(["git", "ls-files", *SCRIPT_DIRS], cwd=ROOT, capture_output=True, text=True, check=True).stdout.split("\n")
-        files = [ROOT / n for n in out if n]
-    except (OSError, subprocess.CalledProcessError):
-        files = [p for d in SCRIPT_DIRS for p in (ROOT / d).rglob("*") if p.is_file()]
-    skip = ("node_modules", ".venv", "/testdata/", "/fixtures/")
+    # a walk of the folders (a static test starts no process); build output and environments are not scripts of the product
+    files = [p for d in SCRIPT_DIRS for p in (ROOT / d).rglob("*") if p.is_file()]
+    skip = ("node_modules", ".venv", "/testdata/", "/fixtures/", "/target/", "/__pycache__/", "/cache/")
     return [p for p in files if p.is_file() and not any(s in p.as_posix() for s in skip) and any(p.name.endswith(x) for x in names)]
 
 

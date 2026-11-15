@@ -127,6 +127,6 @@ class EffectiveSettingsControllerTest {
         Map<String, Object> out = EffectiveSettingsController.paths(s);
         assertThat(out.get("roots").toString()).contains("name=data").contains("path=/srv/drishti/data").contains("exists=true");
         assertThat(out.get("anchored").toString()).contains("drishti.collab.dir").contains("/srv/drishti/collab").doesNotContain("/srv/drishti/s,");
-        assertThat(EffectiveSettingsController.paths(null)).containsEntry("roots", List.of());
+        assertThat(EffectiveSettingsController.paths((com.ash.drishti.packs.LaunchRoots.Snapshot) null)).containsEntry("roots", List.of());
     }
 }

@@ -284,7 +284,7 @@ Trades in 125 products across rates, FX, credit, equity, commodities, inflation,
 
 | Command | Opens | What it does | Example | Data | Change |
 |---|---|---|---|---|---|
-| `TRD` | Trade | A booked trade as its source system (ENDUR, CALYPSO or MUREX) extracts it in the common schema: the deal, its legs with their cash flows and resets, and its events. | `TRD MX-20000001` | fundamental |  |
+| `TRD` | Trade | A booked trade as its source system (ENDUR, CALYPSO, MUREX, WSS, SWAPONE or ICI) extracts it in the common schema: the deal, its legs with their cash flows and resets, and its events. | `TRD MX-20000001` | fundamental |  |
 | `CTRD` | Counterparty trades (derived from trades) | Every trade with a counterparty, from every source system: its trades (every status, a status filter), upcoming payments, notional by product type and index, maturities, payments by month. | `CTRD CP-ALDERSHOT` | computed |  |
 | `PTRD` | Portfolio trades (derived from trades) | Every trade of a portfolio (book), from every source system: its trades (every status, a status filter), upcoming payments, notional by product type and index, maturities, payments by month. |  | computed |  |
 | `LTRD` | Legal entity trades (derived from trades) | Every trade a legal entity of the bank booked, from every source system: its trades (every status, a status filter), upcoming payments, notional by product type and index, maturities, payments by month. |  | computed |  |

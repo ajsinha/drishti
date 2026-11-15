@@ -85,7 +85,7 @@ def test_the_worker_points_pyodide_at_this_origin_for_everything():
         assert option in worker, option
     assert "new URL(path, self.location.origin)" in worker          # absolute, but on this origin
     template = (WEB / "templates/terminal/_calc.html").read_text(encoding="utf-8")
-    assert 'data-runtime="{{ calc.runtime.base' in template
+    assert 'data-runtime="{{ (calc.runtime.base if calc.runtime.installed else \'\') | u }}"' in template   # under the console's base path (| u)
     from core.calc import Runtime
     assert Runtime(REPO / "nowhere").base == ""
 
