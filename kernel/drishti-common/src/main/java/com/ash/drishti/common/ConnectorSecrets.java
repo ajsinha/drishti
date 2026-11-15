@@ -34,7 +34,7 @@ public final class ConnectorSecrets {
     private static final Pattern SECRET_KEY = Pattern.compile(
             "(?i).*(password|passwd|secret|token|api[-_.]?key|access[-_.]?key|private[-_.]?key|credential).*");
     // one reference, or KEY:SECRET references; a reference may default to empty (${DB_PASSWORD:}: a store with no sign-in), never to a value
-    private static final Pattern ENV_ONLY = Pattern.compile("\\$\\{[A-Za-z_][A-Za-z0-9_]*:?}(:\\$\\{[A-Za-z_][A-Za-z0-9_]*:?})*");
+    private static final Pattern ENV_ONLY = Pattern.compile("\\$\\{[A-Za-z_][A-Za-z0-9_.-]*:?}(:\\$\\{[A-Za-z_][A-Za-z0-9_.-]*:?})*");
     private static final Pattern URL_PASSWORD = Pattern.compile("(?i)(password|pwd)=(?!\\$\\{)[^&;]+|://[^/@\\s:]+:(?!\\$\\{)[^/@\\s]+@");
     private static final String FILE = "file:";
 

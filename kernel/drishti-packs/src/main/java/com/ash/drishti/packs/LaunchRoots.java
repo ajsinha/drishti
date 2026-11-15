@@ -423,9 +423,9 @@ public final class LaunchRoots implements EnvironmentPostProcessor, Ordered {
 
     /** The source that set a key, in words (an environment variable, a system property, the command line, a configuration file). */
     private static String origin(ConfigurableEnvironment env, String key) {
-        String fromFile = System.getProperty(FROM_FILE, "");
-        if (!fromFile.isEmpty() && java.util.Arrays.asList(fromFile.split(",")).contains(key)) {
-            return "(" + System.getProperty("drishti.settings.file") + ")";
+        String file = com.ash.drishti.settingsfile.SettingsFile.sourceOf(key);   // the settings file that set it (one of several)
+        if (file != null && System.getProperty(key) != null) {
+            return "(" + file + ")";
         }
         for (PropertySource<?> ps : env.getPropertySources()) {
             if (ps.getName().equals("configurationProperties")) {        // Spring's view over every other source: name the real one

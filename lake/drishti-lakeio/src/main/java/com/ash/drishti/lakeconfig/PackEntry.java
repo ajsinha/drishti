@@ -116,7 +116,7 @@ public record PackEntry(String domain, String table, String key, String date, Li
             // several tables of one kind (trade_endur, trade_calypso): the connector's table picks; else the first of the kind
             String wanted = connector == null ? null : tableOf(m, connector, kind);
             if (entryKind.equals(kind) && (wanted == null || wanted.equals(folder) || e.getValue().path("path").asText("").endsWith("/" + wanted))) {
-                LakeTable t = Lakes.table(new Lakes.Values(file.toString(), System::getenv), file.toString(), "delta", e.getKey(), e.getValue(),
+                LakeTable t = Lakes.table(new Lakes.Values(file.toString(), com.ash.drishti.settingsfile.Placeholders::process), file.toString(), "delta", e.getKey(), e.getValue(),
                         JsonNodeFactory.instance.objectNode());
                 Map<String, String> flat = t.flatten();
                 if (ingest.path("flatten").size() > 0) {        // the ingest block's flatten replaces the entry's, as on the older path

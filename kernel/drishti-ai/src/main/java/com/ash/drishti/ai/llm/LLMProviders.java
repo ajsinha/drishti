@@ -40,7 +40,7 @@ public final class LLMProviders {
 
     static {
         for (ProviderFactory f : ProviderFactories.discover(List.of())) {
-            register(wrap(f, System::getenv));
+            register(wrap(f, com.ash.drishti.settingsfile.Placeholders::process));
         }
     }
 

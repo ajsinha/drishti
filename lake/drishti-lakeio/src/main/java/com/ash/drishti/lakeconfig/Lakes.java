@@ -104,7 +104,7 @@ public final class Lakes {
         return com.ash.drishti.api.Roots.anchored(p == null || p.isBlank() ? com.ash.drishti.api.Roots.config("lakes") : p.strip());
     }
 
-    private static volatile Function<String, String> properties = System::getenv;
+    private static volatile Function<String, String> properties = com.ash.drishti.settingsfile.Placeholders::process;
 
     /**
      * How a lake file's references are resolved by {@link #current()}: the server installs its own settings (its environment, system
@@ -112,7 +112,7 @@ public final class Lakes {
      * setting is seen; null: the process's environment.
      */
     public static void useProperties(Function<String, String> lookup) {
-        properties = lookup == null ? System::getenv : lookup;
+        properties = lookup == null ? com.ash.drishti.settingsfile.Placeholders::process : lookup;
     }
 
     private static final Pattern NAMED = Pattern.compile("\\$\\{([A-Za-z_][A-Za-z0-9_.-]*)");
@@ -161,7 +161,7 @@ public final class Lakes {
 
     /** The lakes of {@link #dir()} with the process's environment. */
     public static Lakes load() {
-        return read(dir(), System::getenv);
+        return read(dir(), com.ash.drishti.settingsfile.Placeholders::process);
     }
 
     /**
@@ -532,25 +532,11 @@ public final class Lakes {
             if (raw == null) {
                 return null;
             }
-            String now = raw;
-            for (int round = 0; round < 8 && REF.matcher(now).find(); round++) {
-                Matcher m = REF.matcher(now);
-                StringBuilder out = new StringBuilder();
-                while (m.find()) {
-                    String val = lookup(m.group(1));
-                    if (val == null || val.isEmpty()) {
-                        val = m.group(2);
-                    }
-                    if (val == null) {
-                        throw new IllegalArgumentException(where + ": " + key + ": the environment variable " + m.group(1) + " is not set and "
-                                + "the reference gives no default (${" + m.group(1) + ":default})");
-                    }
-                    m.appendReplacement(out, Matcher.quoteReplacement(val));
-                }
-                m.appendTail(out);
-                now = out.toString();
+            try {   // the one resolver (com.ash.drishti.settingsfile.Placeholders), through this reader's view
+                return com.ash.drishti.settingsfile.Placeholders.require(raw, this::lookup);
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException(where + ": " + key + ": " + e.getMessage() + " (or give the reference a default: ${name:default})", e);
             }
-            return now;
         }
 
         /**

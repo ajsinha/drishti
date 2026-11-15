@@ -115,7 +115,7 @@ public final class ProxySettings {
 
     /** The proxy for a connector whose target is {@code targetUrl} (null when not known), reading the process environment. */
     public static ProxySettings resolve(Map<String, String> settings, String targetUrl) {
-        return resolve(settings, targetUrl, System::getenv);
+        return resolve(settings, targetUrl, com.ash.drishti.settingsfile.Placeholders::process);
     }
 
     /** The proxy for a connector whose target is {@code targetUrl}, reading environment variables through {@code env}. */

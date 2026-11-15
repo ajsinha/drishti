@@ -59,7 +59,7 @@ final class KafkaSecurity {
     private KafkaSecurity() {}
 
     static Result translate(Map<String, String> settings) {
-        return translate(settings, System::getenv, Clock.systemUTC());
+        return translate(settings, com.ash.drishti.settingsfile.Placeholders::process, Clock.systemUTC());
     }
 
     static Result translate(Map<String, String> settings, Function<String, String> env, Clock clock) {
