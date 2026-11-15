@@ -26,6 +26,10 @@
   connectors with the table each reads and whether it exists; `test_upgrade_counts` checks it and compares every kind's count on the
   newest date with the release before (the VaR inputs included); `test_boot_demo_off_browser` boots a demo-off stack (VAR BANK, POS,
   TRD, FORMS).
+- **A search leaves out a source system that holds none of the kind.** As whole-kind reads already did, a search or pick list no
+  longer asks a union member (a source module's connector) whose table is not there, so a site without SwapOne, WSS or ICI data gets
+  an exact answer, not a partial one naming them. `sutra test <folder>` checks the folder's own Sutras again beside the packs it holds
+  (`docs/guides/examples`), each pack's `tests/` read as samples.
 - **Configuration resolution: one resolver, three layers, the server only reads.** Every pack is found in one waterfall: the site
   (`config/packs/<pack>`, deployed packs first; a site pack of a shipped name replaces it only with `replaces: <pack>`, otherwise the
   shipped one is read and the clash is listed), then each module that is on (its manifest's `packs:` list, in its folder under

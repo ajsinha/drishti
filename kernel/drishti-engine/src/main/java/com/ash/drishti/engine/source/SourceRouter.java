@@ -978,6 +978,13 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
      */
     private java.util.Set<String> listed(String kind, AsOf asOf, SourceFailures failures) {
         List<SourcePlugin> ordered = candidates(kind);
+        // a source system whose table is not there (a site without SwapOne, a lake not loaded) holds none and leaves the listing, as it
+        // leaves the whole-kind read: it is no failure of the search. Kept only when every source would be left out (the search says why)
+        List<SourcePlugin> holding = ordered.stream().filter(p -> !registry.union(p.manifest().name()) || !holdsNone(p, kind))
+                .collect(java.util.stream.Collectors.toCollection(ArrayList::new));
+        if (!holding.isEmpty()) {
+            ordered = holding;
+        }
         readOrder(ordered, asOf);
         java.util.Set<String> out = new java.util.HashSet<>();
         boolean unionHeld = false;

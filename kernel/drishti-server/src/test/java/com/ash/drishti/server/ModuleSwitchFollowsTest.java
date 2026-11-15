@@ -67,8 +67,9 @@ class ModuleSwitchFollowsTest {
         assertThat(rulesOf("source-endur")).isTrue();
 
         access.setEnabled("economy", false, "test");
-        until("world-economy to unload", () -> !names().contains("world-economy"));
-        assertThat(ConfigResolution.current().packs().off()).containsKey("world-economy");
+        // the packs unload from the new resolution, which is published as current a moment apart: wait for both
+        until("world-economy to unload", () -> !names().contains("world-economy")
+                && ConfigResolution.current().packs().off().containsKey("world-economy"));
         assertThat(names()).contains("trading");                                              // nothing else moves
 
         access.setEnabled("source-endur", false, "test");

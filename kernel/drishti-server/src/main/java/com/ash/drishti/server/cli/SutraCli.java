@@ -592,13 +592,20 @@ public final class SutraCli {
             } else if (Files.isDirectory(p)) {
                 // a packs root (config/packs): each pack's sutras folder, wherever the resolution finds the pack (a module's too); its
                 // tests/ are samples. Any other folder: searched as it is
-                List<Path> sutraDirs = packRoot(p.toAbsolutePath().normalize());
-                for (Path base : sutraDirs.isEmpty() ? List.of(p) : sutraDirs) {
+                // (a folder that holds packs and Sutras of its own, docs/guides/examples: both, its packs' tests/ left out)
+                Path abs = p.toAbsolutePath().normalize();
+                List<Path> sutraDirs = packRoot(abs);
+                java.util.Set<Path> seen = new java.util.HashSet<>();
+                boolean site = abs.equals(com.ash.drishti.api.resolution.ConfigResolution.ofProcess().settings().siteDir());
+                List<Path> bases = new ArrayList<>(site ? sutraDirs : List.of(abs));
+                for (Path base : bases) {
                     try (Stream<Path> walk = Files.walk(base)) {
                         for (Path f : walk.filter(x -> x.getFileName().toString().endsWith(".sutra.yaml"))
-                                .filter(x -> !base.relativize(x).startsWith("tests"))
+                                .filter(x -> !base.relativize(x).startsWith("tests") && !inPackTests(x))
                                 .sorted().toList()) {
-                            found.add(unit(f));
+                            if (seen.add(f.normalize())) {
+                                found.add(unit(f));
+                            }
                         }
                     }
                 }
@@ -696,6 +703,16 @@ public final class SutraCli {
             }
         }
         return out.stream().sorted().toList();
+    }
+
+    /** Whether a file is in a pack's {@code tests} folder (a folder named tests whose parent holds a {@code pack.yaml}): samples, not Sutras. */
+    private static boolean inPackTests(Path f) {
+        for (Path d = f.toAbsolutePath().normalize().getParent(); d != null && d.getParent() != null; d = d.getParent()) {
+            if (d.getFileName().toString().equals("tests") && Files.isRegularFile(d.getParent().resolve("pack.yaml"))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static boolean hasBlocks(Path dir) {
