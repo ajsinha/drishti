@@ -81,7 +81,7 @@ class VarInstalledModuleRestartTest {
         props.put("drishti.identity.database-url", "jdbc:sqlite:" + work.resolve("identity.db"));
 
         for (int start = 1; start <= 3; start++) {                         // the first start and two restarts over the same folders
-            try (ConfigurableApplicationContext ctx = new SpringApplicationBuilder(BankingTestServer.class).properties(props).run()) {
+            try (ConfigurableApplicationContext ctx = new SpringApplicationBuilder(BankingTestServer.class).run(args(props))) {
                 PackRegistry packs = ctx.getBean(PackRegistry.class);
                 com.ash.drishti.packs.Pack mr = packs.packs().stream().filter(p -> p.name().equals("market-risk")).findFirst().orElse(null);
                 assertThat(mr).as("start " + start).isNotNull();
@@ -97,6 +97,11 @@ class VarInstalledModuleRestartTest {
                 assertThat(h.path("var").isNumber() || h.path("headline").path("var").isNumber()).as(r.body()).isTrue();
             }
         }
+    }
+
+    /** The settings as command-line arguments: they win over the test fork's system properties (drishti.packs.enabled, drishti.data.dir ...). */
+    private static String[] args(Map<String, Object> props) {
+        return props.entrySet().stream().map(e -> "--" + e.getKey() + "=" + e.getValue()).toArray(String[]::new);
     }
 
     /**

@@ -511,7 +511,7 @@ class VarApiTest {
     void aDateThatIsNotOneRunIsAnsweredByTheDateBeforeAndADuplicateTradeIsRefused() throws Exception {
         // a date with no P&L load is never answered silently from an older one (the daily-loads rehearsal): the date that answered and the
         // warning, in the headline and the provenance; the figures are the earlier date's own
-        java.time.LocalDate unloaded = VarLakeFixture.DAY.plusDays(5);
+        java.time.LocalDate unloaded = VarLakeFixture.DAY.plusDays(2);       // the business date (2026-10-02): no load yet
         JsonNode carried = json.readTree(mvc.perform(get("/api/v1/risk/var/scope").param("scope", "BANK").param("asOf", unloaded.toString())
                 .header("Authorization", as("rita", "risk"))).andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
         assertThat(carried.get("businessDate").asText()).isEqualTo(VarLakeFixture.DAY.toString());

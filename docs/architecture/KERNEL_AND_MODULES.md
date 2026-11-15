@@ -2480,7 +2480,9 @@ deployed over a shipped one in an earlier release is treated the same way: the s
    plugin.
 3. **Secrets**: `${VAR}` and `file:` references, resolved when the connector starts. A template never holds one.
 
-A relative file in a setting (`map: mappings/endur-trade.yaml`) is read from the folder of the layer that set the key.
+A relative file in a setting (`map: mappings/endur-trade.yaml`) is read from the folder of the layer that set the key: a template's
+from its module's folder (installed or development), a site file's from the connectors folder (`drishti.sources.connectors-dir`), both
+absolute; never from the server's working folder. A map in neither refuses the connector (DRS-5034) naming the paths tried.
 
 | A site file… | is… |
 |---|---|

@@ -32,6 +32,9 @@
   earlier date with `asOfNotice` (*scenario P&L for D not loaded — showing D-1*), shown under the VaR page's header; the official capture of
   such a date is skipped. Pivots (`POST /api/v1/pivot/query`) and record lists (`/api/v1/live/query`, `/api/v1/live/kinds/{word}/rows`)
   answer `asOfNotices`, one per source system's connector that shows an earlier date, and the pages show them.
+- **A connector's map is anchored.** A relative `map:` is read from the connector's own module folder (a template) or the site's
+  connectors folder, as absolute paths; the fallbacks relative to the working folder (`config/connectors`, `config`, `.`) are gone, and a
+  map in neither refuses the connector naming the paths tried, never a system read as zero trades.
 - **Data inbox words.** A file whose `.ready` gives `rows:` and whose check run rejects a row says the rejects (*1 of 3 documents rejected,
   more than reject-max-percent 0*), not the matching count; `.loaded.json` `route.mode` is the mode the load ran (with `modeFrom`);
   `dataload undo` sends the data-load signal a load sends, so pages read the table again at once; `lake status --lake demo` reads the lake
