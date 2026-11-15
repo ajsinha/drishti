@@ -495,10 +495,16 @@ than 10 seconds. A refusal told in words (not available to you, not part of the 
 pack) is a pass marked "refused" unless it is slow. A connector's DRS-5034 on an Admin page is that connector's state, which the page lists; it
 is not the page failing. The report is `data/sweep/sweep-<stamp>.md` and `.jsonl` (not committed), written as the runs finish.
 
-In the drill the browser lane runs it as `test_command_sweep_browser.py` on a server of its own with sign-in on over the full demo lake (every dataset of the saved test data through the lake builder, ending on the walk's date, built once per hash and cached like the walk's lake; never the walk's thin lake),
+In the drill the browser lane runs it as `test_command_sweep_browser.py` on a server of its own with sign-in on over the full demo lake (every dataset of the saved test data through the lake builder, ending on the walk's date, built once per hash and cached like the walk's lake; never the walk's thin lake; its server has a 6 GB heap, as the full lake needs, and starts without the official exposure capture),
 as the administrator: any FAIL fails the drill. Setting `DRISHTI_SWEEP_ROLE` also signs in as a role user the test creates; that user's FAILs
 are in the report and never block. `DRISHTI_SWEEP_BASE` (with `_ADMIN`, `_ADMIN_PASSWORD`, `_ROLE`, `_ROLE_PASSWORD`) sweeps a console that
 is already running (`DRISHTI_SWEEP_AS_OF` the date its lake was built to). The drill keeps its report in its logs folder (`<data>/drill/sweep/`).
+
+**The Explain hammer** (`tools/drillkit/explain_hammer.py`) proves Explain never drops out: it asks `GET /api/v1/explain` (kind=var, part=all,
+for `--scopes`) and the VaR headline without a pause from a server's first answer, with other VaR work beside it (`--beside`), while a pack
+file is touched (`--touch`: the watcher reloads that pack) and a module is switched off and on (`--switch`: the resolution is rebuilt and
+followed), and logs every answer that is not a 200 with its time, status, code and detail. Exit 1 on any such answer after the server first
+answered (`--since-ready`: after each check's first 200).
 
 ### 3.28 The API sweep
 

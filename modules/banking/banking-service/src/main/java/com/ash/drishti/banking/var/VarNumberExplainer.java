@@ -130,7 +130,13 @@ final class VarNumberExplainer implements Explainer {
         checks(x, h, prov);
         if (r.wants("why")) {
             if ("var".equals(measure)) {
-                why(x, p, scope, r, lens);
+                try {
+                    why(x, p, scope, r, lens);
+                } catch (com.ash.drishti.server.admission.BusyRefusal busy) {
+                    // the date compared with could not be opened just now (busy protection: memory, loads): the number, its formula,
+                    // inputs and checks stand, and Why it moved says it waits, with the seconds to wait (the page asks for it again)
+                    x.whyBusy(busy.errorCode().code(), busy.title(), busy.because(), busy.retryAfterSeconds());
+                }
             } else {
                 x.unbuilt("why", "explain-why-es-parametric");
             }

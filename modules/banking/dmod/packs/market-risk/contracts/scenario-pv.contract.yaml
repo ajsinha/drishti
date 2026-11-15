@@ -21,11 +21,11 @@ version: '1.1'
 class: input
 status: active
 title: Scenario PVs of a position or trade (one PV per scenario, its currency)
-description: 'A trade''s present value under each historical scenario and its base PV of the same run, in the trade''s own currency: the
-  form of a trade''s scenario P&L a bank may send instead of a P&L vector (VAR_GUIDE.md section 15.9). The VaR engine turns it
-  into the trade''s USD P&L when it loads the date: P&L(s) = PV(s) x FX(s) - PV(base) x FX(base).'
+description: 'A position''s or trade''s present value under each historical scenario and its base PV of the same run, in its own currency: the
+  form of a position''s or trade''s scenario P&L a bank may send instead of a P&L vector (VAR_GUIDE.md section 15.9). The VaR engine turns it
+  into the USD P&L when it loads the date: P&L(s) = PV(s) x FX(s) - PV(base) x FX(base).'
 source: Synthetic sample data (tools/packgen/var/make_var_data.py, scenario_fx.py)
-grain: One row per trade, business date and scenario set (BUSINESS_DATE), keyed by SCENARIO_PV_ID; a trade is in this kind or in pnl-vector,
+grain: One row per position (GRAIN POSITION) or trade (GRAIN TRADE), business date and scenario set (BUSINESS_DATE), keyed by SCENARIO_PV_ID; a position or trade is in this kind or in pnl-vector,
   never both on one date.
 key:
 - SCENARIO_PV_ID
@@ -272,7 +272,7 @@ fields:
   unit: the trade's currency (CURRENCY)
   description: 'The trade''s present value under each historical scenario day, oldest first: index i is the scenario set''s day i. A scenario
     that failed to price is null: the trade is then not loaded (DRS-5206), never filled with zero.'
-  note: 509 values in the test data
+  note: one value per scenario of the date's window
 - name: STATUS
   type: text
   presence: required

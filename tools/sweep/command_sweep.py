@@ -64,9 +64,12 @@ PARKED = {"XRUN XR-2026-09-30-01": "parked until the CCR engine is built (owner 
                                    "built --as-of holds XR-<that date>-01",
           "XPATH XR-2026-09-30-01~CLY-3000280~0": "parked until the CCR engine is built (owner 2026-11-15), with XRUN"}
 #: functions the owner parked as a whole: a run of theirs that fails is "parked" with the reason (a pass stays a pass)
-PARKED_FUNCTIONS = {"STR": "parked: stress testing out of i4 scope (owner 2026-11-15)",
-                    "SSPNL": "parked: stress testing out of i4 scope (owner 2026-11-15)",
+PARKED_FUNCTIONS = {"STR": "parked: FRTB/stress out of i4 scope (owner 2026-11-15)",
+                    "SSPNL": "parked: FRTB/stress out of i4 scope (owner 2026-11-15)",
                     "TRACK": "parked: public US equities data, not the owner's flows (owner 2026-11-15)",
+                    "FRSA BANK": "parked: FRTB/stress out of i4 scope (owner 2026-11-15)",
+                    "PLAY FRTB EXAMPLE": "parked: FRTB/stress out of i4 scope (owner 2026-11-15)",
+                    "FRTB": "parked: FRTB/stress out of i4 scope (owner 2026-11-15)",
                     "XOFC": "parked until the CCR engine is built (owner 2026-11-15): test stacks start with the official exposure capture off"}
 RESERVED = ["BI", "RUPAKA", "FORM", "FUNC", "WHAT", "DATAMAP", "DATA", "EXPORT", "PIVOT"]
 ADMIN_PAGES = ["users", "roles", "packs", "commands", "tokens", "access", "connectors", "artifacts", "ai", "loads", "lakes", "collab",
@@ -273,11 +276,18 @@ def check(c: Client, word: str, cmd: str, has_data: bool, expect_off: bool) -> d
             return done("FAIL", f"no VaR headline for {scope}")
         row["headline"] = head["var"]
     elif path.path == "/explain":                                       # drawn in the browser from /api/explain: checked through that
-        api = c.get("/api/explain?" + path.query + "&part=all")
-        try:
-            got = json.loads(api["body"])
-        except ValueError:
-            got = None
+        for attempt in range(4):     # a part the server asked to wait (Why it moved: the date it compares with is busy) is asked again, as the page does
+            api = c.get("/api/explain?" + path.query + "&part=all")
+            try:
+                got = json.loads(api["body"])
+            except ValueError:
+                got = None
+            busy = (got.get("why") or {}) if isinstance(got, dict) and isinstance(got.get("why"), dict) else {}
+            if not busy.get("busy") or attempt == 3:
+                break
+            time.sleep(min(30, max(1, int(busy.get("retryAfterSeconds") or 5))))
+        if busy.get("busy"):
+            row["message"] = "Why it moved still waiting after three tries: " + str(busy.get("because", ""))[:120]
         if api["status"] != 200 or not isinstance(got, dict) or got.get("code"):
             why = (got.get("code", "") + " " + str(got.get("detail", ""))) if isinstance(got, dict) else api["body"][:120]
             return done("FAIL", f"the explanation's API answered HTTP {api['status']} in {api['secs']:.1f} s: {why.strip()[:160]}")

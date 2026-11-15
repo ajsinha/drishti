@@ -32,6 +32,7 @@
    Everything is the server's (GET /api/explain, the person's own entitlements): the browser computes nothing, it places text. */
 import { compareAgain, mountWhyPage, whyPageFits } from './drishti_insight-why.js';
 import { explainLink, upgradeLinks, drawNote } from './drishti_insight-link.js';
+import { showBusy, answerError } from './drishti_insight-busy.js';
 /**
  * Installs the one Explain in a page (once): the preview, the drawer, the full page when the page is /explain, the keys, and Drishti.Explain.
  * @param {Window} win the page's window
@@ -76,7 +77,7 @@ export function installExplain(win) {
     }
     var p = fetch(url, init).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (b) {
-        if (!r.ok) { var e = new Error(b.detail || ("HTTP " + r.status)); e.status = r.status; throw e; }
+        if (!r.ok) throw answerError(r, b);                          // a busy refusal (503, DRS-950x) is counted down and asked again: busy()
         return b;
       });
     });
@@ -84,6 +85,9 @@ export function installExplain(win) {
     p.catch(function () { delete cache[key]; });
     return p;
   }
+
+  /** Busy protection's message in place of an answer (drishti_insight-busy.js); ``retry`` asks again past the cache. */
+  function busy(host, e, retry) { return showBusy(window, host, e, function () { cache = {}; retry(); }); }
 
   /** The full page's link: the request's parameters, and a body (a pivot cell's view) carried along as one JSON parameter, so the page asks the same. */
   function pageUrl(req, tab) {
@@ -248,6 +252,7 @@ export function installExplain(win) {
     }).catch(function (e) {
       if (seq !== S.seq) return;
       body.textContent = "";
+      if (busy(body, e, function () { show(tab); })) { drawer.dataset.state = "busy"; return; }
       body.appendChild(h("p", "dx-err", e.message || String(e)));
       drawer.dataset.state = "failed";
     });
@@ -332,6 +337,8 @@ export function installExplain(win) {
   }
 
   function why(host, a, x, inDrawer) {
+    var again = inDrawer ? function () { show("why"); } : function () { var root = host.closest("[data-explain-request]"); if (root) renderPage(root); };
+    if (x.busy && busy(host, x, again)) return Promise.resolve();    // the date compared with waits: the rest stands, this part counts down
     if (!x.available) {
       if (x.underConstruction) uc(host, x.underConstruction);
       if (x.note) host.appendChild(h("p", "dx-muted", x.note));
@@ -428,6 +435,7 @@ export function installExplain(win) {
       });
     }).catch(function (e) {
       var g = root.querySelector("[data-dx-grid]");
+      if (busy(g, e, function () { renderPage(root); })) { root.dataset.state = "busy"; return; }
       g.textContent = e.message || String(e);
       if (first === "why" && req.from) {                    // a compare date the engine cannot answer: said, and the way back
         var back = h("button", "dx-chip", "Compare with the previous day");

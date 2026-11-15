@@ -114,6 +114,7 @@ tables:
     vectors: [PNL]
     id: VECTOR_ID
     date: BUSINESS_DATE
+    sort-by: [LEGAL_ENTITY, DIVISION, DESK, TT_BOOK, POSITION_ID, TRADE_ID]   # a record by its position or trade: its row group, not the whole file
   risk.scenario-pv:
     promote: [VALUE_TYPE, GRAIN, TRADE_ID, POSITION_ID, CURRENCY, SOURCE_SYSTEM, SECURITY_ID, INSTRUMENT, LEGAL_ENTITY, DIVISION, DESK, TT_BOOK,
       LIMIT_LETTER, PORTFOLIO, STRATEGY, PRODUCT_GROUP, PRODUCT_TYPE, COUNTERPARTY, DIRECTION, QUANTITY, BASE_PV, VALUATION_DATE, BASE_VALUATION_DATE,
@@ -122,7 +123,7 @@ tables:
     id: SCENARIO_PV_ID
     date: BUSINESS_DATE
     partition-by: [SCENARIO_SET_ID, GRAIN]
-    sort-by: [LEGAL_ENTITY, DIVISION, DESK, TT_BOOK, TRADE_ID]
+    sort-by: [LEGAL_ENTITY, DIVISION, DESK, TT_BOOK, POSITION_ID, TRADE_ID]   # POSITION_ID: a position-grain record (TRADE_ID empty) found by its row group
     compression: zstd
     vector-compression: zstd
     file-size-mb: 256

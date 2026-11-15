@@ -244,7 +244,7 @@ kinds:
         unit: "USD"
       VAR_ENGINE.PNL: { term: "P&L vector", means: "The position's P&L under each historical scenario day of the window (scenario-window, default 250): the sum of its trades' vectors, computed as the page opens.", unit: "USD", sign: "Positive is a gain." }
   pnl-vector:
-    title: P&L vector of a trade
+    title: P&L vector of a position or trade
     about: >-
       ${$.TRADE_ID}'s P&L under each of the ${size($.PNL)} scenario days of ${$.SCENARIO_SET_ID} on ${$.BUSINESS_DATE}, in USD: the grain every
       VaR is summed from. The trade is ${$.DIRECTION} in ${$.TT_BOOK}; Drishti derives its position from it.
@@ -257,7 +257,7 @@ kinds:
       PV: { term: "Present value", means: "The trade's value on the business date.", unit: "USD" }
       STATUS: { term: "Batch status", means: "ok, proxied (priced by a proxy) or failed (no vector: counted, never taken as zero)." }
   scenario-pv:
-    title: Scenario PVs of a trade
+    title: Scenario PVs of a position or trade
     about: >-
       ${$.TRADE_ID}'s value under each of the ${size($.SCENARIO_PV)} scenario days of ${$.SCENARIO_SET_ID} on ${$.BUSINESS_DATE}, in its own
       currency ${$.CURRENCY}, beside its base PV of the same run: Drishti turns them into the trade's USD P&L when it loads the date

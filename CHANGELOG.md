@@ -28,10 +28,24 @@
   longer name 509 scenarios (the window is `scenario-window`, default 250); SPV's example is a position. The drill's command and API
   sweeps run on the full demo lake (every dataset of the saved test data, cached), sign in for their readiness checks, start without the
   official exposure capture, time a slow run again on its own, and list parked runs (XRUN, XPATH, XOFC, STR, SSPNL, TRACK) by name.
+- **VaR opens the date before the newest at start** (`drishti.var.preload-previous-date`, default true, config/engines/var.yaml): after
+  the newest date (and its official capture), so the first "Why it moved" after a restart compares two open dates; the busy protection may
+  refuse it, and it then opens on the first ask. The demo lake sorts scenario PVs and P&L vectors by position within the book
+  (`sort-by: [LEGAL_ENTITY, DIVISION, DESK, TT_BOOK, POSITION_ID, TRADE_ID]`), so a position-grain record is found by its row group.
 - **A kind can require a narrowing before it is listed.** A data contract's `list: {requires: [fields], why}` (docs/contracts/README.md):
   scenario PVs, P&L vectors, scenario FX and exposure paths declare it. Bare (`SPV <GO>`) opens the kind's search form with the line
   why; `SPV <id>` opens the record with its vector; `SPV where TT_BOOK = '...'` lists from the store; `GET /api/v1/live/kinds/SPV/rows`
   answers `400 DRS-5001` naming the fields, never a scan of a million positions' scenarios.
+- **VAR EXPLAIN never drops out.** The failures of VAR EXPLAIN and VAR BANK EXPLAIN in the first command sweep after a server start were the
+  busy protection: Why it moved opens the business date before the one shown, and on a cold server short of memory that load was refused
+  (`503 DRS-9502`), which failed the whole explanation. Now the explanation answers (the number, formula, inputs, checks) and only Why it
+  moved says it waits, with the seconds to wait; the drawer and the full page show the busy countdown and ask again by themselves (a busy
+  refusal of the whole answer too, where it used to be a bare error). Two more gaps closed at the root: a question asked in the second
+  between the web layer answering and the modules loading (or while a module swaps versions) waited for the module's explainer instead of
+  hearing "no explainer of the kind var" (`Extensions.changing`); and the packs watcher starts once the modules have loaded, from what
+  their folders hold then, so it no longer reloads every module pack 15 s after start although nothing changed. Proven by
+  `tools/drillkit/explain_hammer.py` (TEST_HARNESS.md section 3.27) and the server tests ExplainThroughModuleChangesTest and PackReloaderTest.
+
 - **Sweep integration.** The command sweep, its fixes and the API sweep are on one branch. Fixed at the root: `GET /api/v1/bi/model/kinds` no longer fails with DRS-9026 when a connector is disabled or not running (the kind is skipped and listed under `skipped` with the reason); `API_REFERENCE.md` documents the `/admin/loads/{pack}` aliases and the module APIs (genomics sample, archetype greeting; section 38); `ArtifactApiTest` binds its kind to its connector through the bindings (connector files no longer name kinds).
 - **Trade blotter: new trades on top, the lake's trades in the snapshot, a trade-editor role.** A blotter whose own order is newest
   first (`sort:` descending by its `changed-at` or version) puts new and changed rows on top: a paged viewer at the top of that order is

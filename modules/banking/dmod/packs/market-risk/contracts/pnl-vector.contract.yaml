@@ -282,7 +282,7 @@ fields:
   presence: required
   unit: USD
   description: 'The trade''s P&L under each historical scenario day, oldest first: index i is the scenario set''s day i.'
-  note: 509 values in the test data
+  note: one value per scenario of the date's window
 - name: STATUS
   type: text
   presence: required

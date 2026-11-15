@@ -35,8 +35,7 @@ public class PackReloadConfiguration {
             Mnemonics mnemonics, AuditLog audit, SamplePolicy samples, org.springframework.beans.factory.ObjectProvider<com.ash.drishti.common.LiveSettings> live) {
         PackReloader r = new PackReloader(env, registry, connectors, sutras, mnemonics,
                 new PackOverlay(Path.of(com.ash.drishti.packs.PackPaths.overlay(env))), audit, samples, () -> live.orderedStream().toList());
-        r.start();
-        return r;
+        return r;                               // the watch starts once the modules have loaded (PackReloader#modulesLoaded)
     }
 
     /** What is failing and being retried, across packs, connectors, AI providers and MCP servers; and Retry now. */

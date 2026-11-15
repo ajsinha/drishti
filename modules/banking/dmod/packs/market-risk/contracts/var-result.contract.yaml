@@ -98,7 +98,7 @@ fields:
   type: text
   presence: optional
   description: 'How a 10-day figure is made: SQRT10 (the 1-day figures × √10) or SUM (each scenario the sum of 10 consecutive
-    1-day scenario P&Ls, 509 scenarios giving 500 overlapping windows; then SCENARIOS is the windows and PNL the windows'' sums); empty at 1 day.'
+    1-day scenario P&Ls, a window of N scenarios giving N-9 overlapping windows; then SCENARIOS is the windows and PNL the windows'' sums); empty at 1 day.'
   enum: [SQRT10, SUM]
 - name: SET
   type: text

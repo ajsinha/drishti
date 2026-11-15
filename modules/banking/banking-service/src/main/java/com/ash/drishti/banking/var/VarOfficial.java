@@ -95,6 +95,11 @@ final class VarOfficial implements AutoCloseable {
      * or the capture fails, it tries again every few seconds, for {@link #START_WAIT}; then the failure is logged and the next data-load
      * signal captures the date instead.
      */
+    /** Runs {@code work} on the capture's own thread once what is queued there (the capture at start) is done. */
+    void then(Runnable work) {
+        runner.execute(work);
+    }
+
     void later(java.util.function.Supplier<java.time.LocalDate> date) {
         runner.execute(() -> {
             long until = System.nanoTime() + START_WAIT.toNanos();
