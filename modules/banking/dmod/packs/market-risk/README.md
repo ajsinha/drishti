@@ -403,7 +403,7 @@ Links: `POSITION_ID` → `position`, `TRADE_ID` → `trade`, `TRADE_IDS` → `tr
 
 **Scenario PVs of a position or trade (one PV per scenario, its currency)** · mnemonic `SPV` · read through connector `risk-store`.
 
-About: Scenario PVs of a trade.
+About: Scenario PVs of a position or trade.
 
 **Id:** pattern `^SPV-`.
 
