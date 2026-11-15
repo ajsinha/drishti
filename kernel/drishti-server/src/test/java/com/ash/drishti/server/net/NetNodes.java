@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.net;
 
+import com.ash.drishti.net.transport.PeerHttp;
 import com.ash.drishti.server.DrishtiApplication;
 import java.io.IOException;
 import java.net.URI;
@@ -167,6 +168,31 @@ public final class NetNodes implements AutoCloseable {
             b.header("Content-Type", "application/json");
         }
         return http.send(b.build(), HttpResponse.BodyHandlers.ofString());
+    }
+
+    /**
+     * A call signed with the cluster key as another node of the cluster makes it (the node-only endpoints answer only these): {@code headers} are
+     * pairs (the on-behalf-of person is {@code X-Drishti-User}), the body is sent as JSON unless a {@code Content-Type} pair says otherwise.
+     */
+    public static PeerHttp.Answer signed(String baseUrl, String method, String path, byte[] body, String... headers) throws IOException, InterruptedException {
+        PeerHttp peer = new PeerHttp(() -> new com.ash.drishti.net.security.ClusterKey(KEY, "", System::currentTimeMillis), () -> "n-test-peer",
+                () -> Duration.ofSeconds(5), u -> Map.of());
+        Map<String, String> h = new LinkedHashMap<>();
+        if (body != null) {
+            h.put("Content-Type", "application/json");
+        }
+        for (int i = 0; i + 1 < headers.length; i += 2) {
+            h.put(headers[i], headers[i + 1]);
+        }
+        try {
+            return peer.send(baseUrl, method, path, h, body, Duration.ofSeconds(20));
+        } finally {
+            peer.close();
+        }
+    }
+
+    public static PeerHttp.Answer signed(String baseUrl, String method, String path, String body, String... headers) throws IOException, InterruptedException {
+        return signed(baseUrl, method, path, body == null ? null : body.getBytes(java.nio.charset.StandardCharsets.UTF_8), headers);
     }
 
     @Override

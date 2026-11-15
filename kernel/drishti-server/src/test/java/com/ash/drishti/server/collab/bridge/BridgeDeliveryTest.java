@@ -423,4 +423,50 @@ class BridgeDeliveryTest {
         assertThatThrownBy(() -> h.sender.test("nobody", "root", "x")).isInstanceOf(DrishtiException.class)
                 .satisfies(e -> assertThat(((DrishtiException) e).errorCode().code()).isEqualTo("DRS-7014"));
     }
+
+    @Test
+    void theTestPostThroughTheAdminEndpointReportsTheStatusAndRefusesWithItsCodes() throws Exception {
+        BridgeHarness h = harness("teams", everything());
+        var controller = new BridgeAdminController(h.registry, h.sender, h.outbox, h.entitlements, h.props);
+        var mvc = org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup(controller)
+                .setControllerAdvice(new Refusals()).build();
+        var admin = new com.ash.drishti.kernel.api.security.Principal("root", java.util.List.of("admin"));
+        // the endpoint's status is the endpoint's own, and what was posted is what the fake chat endpoint received
+        String ok = mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/v1/admin/collab/bridges/desk/test")
+                .requestAttr(com.ash.drishti.kernel.api.security.Principal.ATTRIBUTE, admin)).andReturn().getResponse().getContentAsString();
+        assertThat(JSON.readTree(ok).path("status").asInt()).isEqualTo(200);
+        assertThat(JSON.readTree(ok).path("sent").asBoolean()).isTrue();
+        assertThat(h.hits).hasSize(1);
+        assertThat(h.hits.get(0).body()).contains("Test message from Drishti");
+        assertThat(h.audited).anySatisfy(e -> assertThat(e).contains("collab.bridge.test|desk|HTTP 200"));
+        // the endpoint is down: 503 DRS-7013 and the secret path is nowhere in the answer; a bridge nobody configured: 404 DRS-7014
+        h.status.set(500);
+        var down = mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/v1/admin/collab/bridges/desk/test")
+                .requestAttr(com.ash.drishti.kernel.api.security.Principal.ATTRIBUTE, admin)).andReturn().getResponse();
+        assertThat(down.getStatus()).isEqualTo(503);
+        assertThat(down.getContentAsString()).contains("DRS-7013", "HTTP 500").doesNotContain("xyzSECRETtoken", "T0SECRET");
+        var unknown = mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/v1/admin/collab/bridges/nobody/test")
+                .requestAttr(com.ash.drishti.kernel.api.security.Principal.ATTRIBUTE, admin)).andReturn().getResponse();
+        assertThat(unknown.getStatus()).isEqualTo(404);
+        assertThat(unknown.getContentAsString()).contains("DRS-7014");
+        // a person who is not an administrator is refused before anything is posted
+        int before = h.hits.size();
+        org.mockito.Mockito.doThrow(new DrishtiException(com.ash.drishti.common.ErrorCode.FORBIDDEN, "not an administrator")).when(h.entitlements).requireAdmin(org.mockito.ArgumentMatchers.any());
+        var denied = mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/v1/admin/collab/bridges/desk/test")
+                .requestAttr(com.ash.drishti.kernel.api.security.Principal.ATTRIBUTE, new com.ash.drishti.kernel.api.security.Principal("tia", java.util.List.of("trader"))))
+                .andReturn().getResponse();
+        assertThat(denied.getStatus()).isEqualTo(403);
+        assertThat(denied.getContentAsString()).contains("DRS-");
+        assertThat(h.hits).hasSize(before);
+    }
+
+    /** What the server's exception handler does for a refusal, as far as this test needs: its status, DRS code and words. */
+    @org.springframework.web.bind.annotation.RestControllerAdvice
+    static class Refusals {
+        @org.springframework.web.bind.annotation.ExceptionHandler(DrishtiException.class)
+        org.springframework.http.ResponseEntity<String> refused(DrishtiException e) {
+            return org.springframework.http.ResponseEntity.status(e.errorCode().httpStatus()).contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                    .body("{\"code\":\"" + e.errorCode().code() + "\",\"detail\":\"" + e.getMessage().replace("\"", "'") + "\"}");
+        }
+    }
 }

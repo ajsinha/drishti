@@ -56,9 +56,20 @@ class RegistryApiTest {
         s.initSign(acme.getPrivate());
         s.update(archive);
         String sha = java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(archive));
-        Files.writeString(reg.resolve("index.json"), "{\"packs\": [{\"name\": \"widgets\", \"version\": \"1.0.0\", \"title\": \"Widgets\", "
+        byte[] newer = PackRegistryClientTest.zip(PackRegistryClientTest.pack("widgets", "1.1.0"));
+        Files.write(reg.resolve("widgets-1.1.0.zip"), newer);
+        s.initSign(acme.getPrivate());
+        s.update(newer);
+        String newerSignature = Base64.getEncoder().encodeToString(s.sign());
+        String newerSha = java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(newer));
+        s.initSign(acme.getPrivate());
+        s.update(archive);
+        String signature = Base64.getEncoder().encodeToString(s.sign());
+        Files.writeString(reg.resolve("index.json"), "{\"packs\": [{\"name\": \"widgets\", \"version\": \"1.1.0\", \"title\": \"Widgets\", "
+                + "\"file\": \"widgets-1.1.0.zip\", \"sha256\": \"" + newerSha + "\", \"size\": " + newer.length + ", \"publisher\": \"acme\", "
+                + "\"signature\": \"" + newerSignature + "\"}, {\"name\": \"widgets\", \"version\": \"1.0.0\", \"title\": \"Widgets\", "
                 + "\"file\": \"widgets-1.0.0.zip\", \"sha256\": \"" + sha + "\", \"size\": " + archive.length + ", \"publisher\": \"acme\", "
-                + "\"signature\": \"" + Base64.getEncoder().encodeToString(s.sign()) + "\"}, {\"name\": \"rogue\", \"version\": \"1.0.0\", "
+                + "\"signature\": \"" + signature + "\"}, {\"name\": \"rogue\", \"version\": \"1.0.0\", "
                 + "\"file\": \"rogue-1.0.0.zip\", \"sha256\": \"00\", \"size\": 1, \"publisher\": \"nobody\", \"signature\": \"AA==\"}]}");
         r.add("drishti.packs.registry.url", reg::toString);
         r.add("drishti.packs.registry.trusted-keys.acme", () -> Base64.getEncoder().encodeToString(acme.getPublic().getEncoded()));
@@ -82,5 +93,32 @@ class RegistryApiTest {
         assertThat(Files.readString(root.resolve("added.yaml"))).contains("- widgets");
         mvc.perform(get("/api/v1/admin/registry")).andExpect(jsonPath("$.packs[?(@.name=='widgets')].installedVersion").value(org.hamcrest.Matchers.hasItem("1.0.0")));
         mvc.perform(get("/api/v1/admin/packs")).andExpect(jsonPath("$[?(@.name=='widgets')].loaded").value(org.hamcrest.Matchers.hasItem(true)));   // installed and in use at once, no restart
+    }
+
+    @Test
+    void aPackGoesBackToTheVersionInstalledBeforeAndNothingFurther() throws Exception {
+        mvc.perform(post("/api/v1/admin/registry/widgets/1.0.0/install")).andExpect(status().isOk());
+        mvc.perform(post("/api/v1/admin/registry/widgets/1.1.0/install")).andExpect(status().isOk()).andExpect(jsonPath("$.installed").value("1.1.0"))
+                .andExpect(jsonPath("$.replaced").value("1.0.0"));
+        assertThat(Files.readString(root.resolve("installed/widgets/pack.yaml"))).contains("1.1.0");
+        mvc.perform(get("/api/v1/admin/registry")).andExpect(jsonPath("$.packs[?(@.name=='widgets')].installedVersion").value(org.hamcrest.Matchers.hasItem("1.1.0")));
+        // back to 1.0.0: the files, the listing and the loaded pack all say so
+        mvc.perform(post("/api/v1/admin/registry/widgets/rollback")).andExpect(status().isOk()).andExpect(jsonPath("$.installed").value("1.0.0"));
+        assertThat(Files.readString(root.resolve("installed/widgets/pack.yaml"))).contains("1.0.0").doesNotContain("1.1.0");
+        mvc.perform(get("/api/v1/admin/registry")).andExpect(jsonPath("$.packs[?(@.name=='widgets')].installedVersion").value(org.hamcrest.Matchers.hasItem("1.0.0")));
+        mvc.perform(get("/api/v1/admin/packs")).andExpect(jsonPath("$[?(@.name=='widgets')].loaded").value(org.hamcrest.Matchers.hasItem(true)));
+        // every earlier copy kept is a step back (each install keeps the one it replaced); when none is left the rollback is refused with a code
+        int steps = 0;
+        while (steps < 10 && mvc.perform(post("/api/v1/admin/registry/widgets/rollback")).andReturn().getResponse().getStatus() == 200) {
+            steps++;
+        }
+        assertThat(steps).as("the steps back before the earliest").isLessThan(10);
+        mvc.perform(post("/api/v1/admin/registry/widgets/rollback")).andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(org.hamcrest.Matchers.startsWith("DRS-")))
+                .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("no earlier version")));
+        mvc.perform(post("/api/v1/admin/registry/widgets/1.0.0/install")).andExpect(status().isOk());       // the pack is usable again after the refusal
+        mvc.perform(post("/api/v1/admin/registry/never-installed/rollback")).andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(org.hamcrest.Matchers.startsWith("DRS-")));
+        assertThat(Files.readString(root.resolve("installed/widgets/pack.yaml"))).contains("1.0.0");
     }
 }
