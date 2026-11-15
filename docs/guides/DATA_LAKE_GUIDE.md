@@ -2210,7 +2210,7 @@ forms and grains are [VAR_GUIDE.md section 15.13](VAR_GUIDE.md#1513-inputs-any-f
 |---|---|---|
 | Java | 21 or newer | `java -version` |
 | Server heap | **8 to 10 GB** for 1.3M positions and two to three open dates | `bin/start-server.sh --heap 10g` (Windows: `bin\start-server.ps1 -Heap 10g`). The measured book is about 0.77 GB of heap at 1M positions ([VAR_GUIDE.md 27.1](VAR_GUIDE.md#271-bytes-per-date)), so about 1 GB at 1.3M, and a date kept open about 1.5 GB of `-Xmx`; `-Xmx6g` served 1M positions with two dates |
-| Loader heap | `6g` | `DRISHTI_DATALOAD_LOADER_HEAP=6g` (default `4g`): a separate process, memory bounded by the loader's budget, the rest spilled to disk |
+| Loader heap | `16g` | `DRISHTI_DATALOAD_LOADER_HEAP=16g` for the inbox (default `4g`; the loader's budget is half of it): a separate process, memory bounded, the rest spilled to disk; for the CLI, `DRISHTI_LAKE_LOADER_HEAP` |
 | Reporting currencies | `DRISHTI_VAR_CURRENCIES=USD` **for the first load** | the default builds EUR, CAD, JPY and GBP books ahead, each about 77% of the USD book's disk; add them when you need them |
 | Open dates | `DRISHTI_VAR_HOT_DATES=3` | the default 10 keeps up to ten dates open |
 | Disk | see the table below; the guard `drishti.disk.min-free-percent` (10) and `min-free-gb` (20), both must hold, else a date is refused `503 DRS-5218` | `df -h` of the data folder |
@@ -2224,7 +2224,7 @@ Put the settings in the server's env file and start it:
 cat >> server.env <<'EOF'
 DRISHTI_VAR_CURRENCIES=USD
 DRISHTI_VAR_HOT_DATES=3
-DRISHTI_DATALOAD_LOADER_HEAP=6g
+DRISHTI_DATALOAD_LOADER_HEAP=16g
 EOF
 bin/start-server.sh --env-file server.env --heap 10g --background      # Windows: bin\start-server.ps1 -EnvFile server.env -Heap 10g -Background
 ```
@@ -2332,19 +2332,36 @@ rolled by one).
 Sending the identical file again is skipped as *already loaded in run …*, even when the date was overwritten since (tested). To reload, change the file (a
 rebuilt tar differs) or set `drishti.dataload.reload-duplicates: true` for the run.
 
-**4. The CLI alternative** (no inbox: a terminal, cron, or a machine that is not the owner node). One folder a table and date, the date given by
-`--as-of` (never trust a name, see the troubleshooting), `--signal` tells the server; `scenario-set` first:
+**4. The CLI alternative, tuned** (no inbox: a terminal, cron, or a machine that is not the owner node). **Always the Java loader** (`--engine java`):
+readers, parsers and writers on every core, memory bounded and spilled to disk, **one Delta commit per business date and table** however many files
+the folder holds. The Python writer (`auto` below `--java-above-mb`) is never used for a production batch. One folder a table and date, the
+date given by `--as-of` (never trust a name, see the troubleshooting), `--signal` tells the server; `scenario-set` and `fx-scenario` first (tiny), then
+the positions as **one run over the date's folder**, not a run per part:
 
 ```bash
-for k in scenario-set fx-scenario scenario-pv; do
-  python3 tools/drishti.py lake build --from /landing/2026-11-12/$k/2026-11-12 --as-of 2026-11-12 --lake demo --kind $k \
+export DRISHTI_LAKE_LOADER_HEAP=24g                       # the loader's -Xmx (default 4g); the budget below must be under nine tenths of it
+mkdir -p /fast/spill                                      # local NVMe, 15 to 30 GB free; removed when the load ends
+for k in scenario-set fx-scenario; do
+  python3 tools/drishti.py lake build --engine java --from /landing/2026-11-12/$k/2026-11-12 --as-of 2026-11-12 --lake demo --kind $k \
      --pack modules/banking/dmod/packs/market-risk --signal $DRISHTI_SERVER --token-file ~/.drishti-token
 done
+python3 tools/drishti.py lake build --engine java --from /landing/2026-11-12/scenario-pv/2026-11-12 --as-of 2026-11-12 --lake demo --kind scenario-pv \
+   --pack modules/banking/dmod/packs/market-risk --signal $DRISHTI_SERVER --token-file ~/.drishti-token \
+   --loader-set parallel.writers=16 --loader-set memory.budget-mb=20480 --loader-set memory.spill-dir=/fast/spill
 ```
 
-It ends `lake-build ok exit=0 … rows=20000 rejected=0` (7.3 s for 20,000 positions into a new table, 10.2 s replacing a date). For 1.3M positions add
-`--engine java` (the parallel loader the inbox uses: bounded memory, spill to disk; tested through the inbox only). Exit 2 is loaded with rejects: read
-the summary file it names. `--plan` and `--dry-run` show the route and count without writing.
+`parallel.writers` (default 8, at most the cores) is the number of Parquet files written at once: 1.3M positions are about seven files of 256 MB, so 8 to 16
+is enough; `parallel.readers` and `parallel.parsers` default to every core (give a number only to leave cores to the server). The budget covers the read
+queue, the sort buffers and the writers; rows that do not fit are sorted and spilled to `memory.spill-dir`. The loader's last line is `lake-build ok exit=0 …
+rows=… rejected=0`; the summary file it names has every stage's throughput. Exit 2 is loaded with rejects (read the summary). `--plan` and `--dry-run` show the
+route and count without writing. **Tested** at 20,000 positions: 3.8 s wall, 24 cores busy (21 s of CPU), one commit, one file, loader peak heap 646 MB
+(`parallel.writers=24`, `memory.budget-mb=6144`, `DRISHTI_LAKE_LOADER_HEAP=8g`).
+
+**The inbox uses the same Java loader** (the ledger says `engine: java-loader`), one run a table: all files of the same connector or table that are ready in a
+cycle are **one load and one commit per date** (tested: two parts of an Endur date, one commit); the three tables of a tar are three loads, each one commit a date. Files
+for **different connectors** are separate loads even when the connectors read the same table (tested: WSS, SwapOne and ICI into one shared table: three
+commits, three versions). So send a date as **one tar** (this section) and tune the inbox's loader with `DRISHTI_DATALOAD_LOADER_HEAP`; the inbox does not take
+`--loader-set` options per drop: its settings are `drishti.dataload.*` and the lake file's layout.
 
 **5. Verify** (the output below is from the tested run; `$T` is `--token-file ~/.drishti-token`).
 
@@ -2417,7 +2434,7 @@ Undo a wrong load with `drishti.py dataload undo <load-id>` (a dry run; `--yes` 
 #### Printable checklist
 
 ```text
-BEFORE   [ ] java 21   [ ] heap 8-10g   [ ] loader heap 6g   [ ] DRISHTI_VAR_CURRENCIES=USD   [ ] disk: 30 GB free (guard 20 GB and 10%)
+BEFORE   [ ] java 21   [ ] heap 8-10g   [ ] loader heap 16g   [ ] DRISHTI_VAR_CURRENCIES=USD   [ ] disk: 30 GB free (guard 20 GB and 10%)
          [ ] var.scenario-window 250 (or all)   [ ] inbox on   [ ] token (loads:write)   [ ] rehearsed with tools/pvgen/bulk_positions.py
 FILES    [ ] every row: VALUE_TYPE PV, GRAIN POSITION, POSITION_ID, CURRENCY, SOURCE_SYSTEM, BUSINESS_DATE, SCENARIO_SET_ID, BASE_PV,
              SCENARIO_PV (= SCENARIO_COUNT values, no null), LEGAL_ENTITY, DIVISION, DESK, TT_BOOK, LIMIT_LETTER, BATCH_ID (one a date), COMPUTED_AT
@@ -2439,14 +2456,14 @@ generated by `tools/pvgen/bulk_positions.py`; one 24-thread workstation, NVMe, J
 |---|---|
 | input a date | 66.8 MB as text (3,343 B a position), **20.3 MB gzip** (1,016 B a position) |
 | inbox, a tar of three tables (claim to outbox) | **11 s**; `scenario-pv` 3.9 s of it (read 0.5 s, parse 0.5 s, write 1.7 s, commit 0.1 s), loader peak heap **646 MB** |
-| `lake build` CLI | 7.3 s (new table), 10.2 s (replacing a date, with `--signal`) |
-| the lake | `business_date=…/SCENARIO_SET_ID=HS-250/GRAIN=POSITION/`, 1 file of **26.8 MB** a date from the Java loader (30.5 MB from the CLI's writer): 1,340 B a position |
+| `lake build --engine java`, tuned, one run over the four parts | **3.8 s** wall, 20,000 rows at 7,700 rows/s end to end (parse 52,000 rows/s, 24 threads; write 16,800 rows/s a file; commit 0.07 s), one commit |
+| the lake | `business_date=…/SCENARIO_SET_ID=HS-250/GRAIN=POSITION/`, 1 file of **26.8 MB** a date (the Python writer 30.5 MB): 1,340 B a position |
 | first open of a date, with the official capture | about 1.5 s; the USD hot file **42.1 MB** (2.1 KB a position), each extra currency 32.2 MB |
 | `var show BANK`, `var explain` | 0.2 s, 0.3 s |
 | server process after both dates | 2.0 GB resident |
 
 **Extrapolated to 1.3M positions a date (an estimate: sizes scale with positions, times do not).** Text 4.3 GB, gzip about 1.3 GB (PVs with more
 significant digits compress less: plan 1.5 to 2 times); the lake about 1.75 GB; the USD hot file about 2.7 GB plus the node aggregates (27,000 nodes
-added 0.64 GB at 1M); a loader run 1 to 3 minutes ([BENCHMARK.md 7.1](../admin/BENCHMARK.md#71-the-200000-position-var-inputs-the-python-path-and-the-java-loader): 20 s
+added 0.64 GB at 1M); a tuned Java loader run **about 1 to 2.5 minutes** (parse 52,000 rows/s over 24 threads: 25 s; seven files written in parallel at 17,000 rows/s each: 11 s; then the commit; the target is five minutes or less) ([BENCHMARK.md 7.1](../admin/BENCHMARK.md#71-the-200000-position-var-inputs-the-python-path-and-the-java-loader): 20 s
 for 1M positions × 509 values); the first open of a date 25 to 60 s ([BENCHMARK.md 5.4](../admin/BENCHMARK.md#54-a-dates-first-open): 25 to 27 s at 1M), then
 the official capture. With 509 values a vector the gzip, the lake and the hot file about double. The first real day's own numbers replace these.
