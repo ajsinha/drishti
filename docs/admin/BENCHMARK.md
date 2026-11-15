@@ -1665,7 +1665,35 @@ load (many workers and the Java builds beside them), so they are an upper bound 
 `DRISHTI_PAGEWALK_BUDGET`).
 
 <!-- pageloads:begin (tools/drillkit/pageloads.py --write; the last drill's browser lane) -->
-Not measured yet: the next drill writes it.
+Measured 2026-11-11: 2,899 page loads of 390 pages; the 25 slowest by p95 (slow from 2 s).
+
+| Page | Loads | p95 | Median |
+|---|---:|---:|---:|
+| `/play` (slow) | 9 | 9.26 s | 0.33 s |
+| `/v/trade/1000101` (slow) | 1 | 6.22 s | 6.22 s |
+| `/v/trade/MX-00003` (slow) | 1 | 5.88 s | 5.88 s |
+| `/v/listed-company/CO-AAPL` (slow) | 4 | 5.84 s | 5.22 s |
+| `/page.html` (slow) | 5 | 5.06 s | 3.06 s |
+| `/v/news-topic/TOPIC-FED` (slow) | 3 | 4.37 s | 0.83 s |
+| `/v/development-profile/WDI-CAN` (slow) | 1 | 4.17 s | 4.17 s |
+| `/v/release-source/PRESS-FED` (slow) | 1 | 3.99 s | 3.99 s |
+| `/v/fund/QQQ` (slow) | 1 | 3.97 s | 3.97 s |
+| `/help/configuration` (slow) | 12 | 3.94 s | 0.54 s |
+| `/admin/artifacts` (slow) | 18 | 3.62 s | 0.56 s |
+| `/var` (slow) | 89 | 3.50 s | 0.47 s |
+| `/v/system-basket/PF-RATES-DESK` (slow) | 1 | 3.45 s | 3.45 s |
+| `/v/trade/MX-20000001` (slow) | 17 | 3.43 s | 0.72 s |
+| `/v/us-company/AAPL` (slow) | 1 | 3.35 s | 3.35 s |
+| `/bi/transform` (slow) | 7 | 3.31 s | 0.27 s |
+| `/func` (slow) | 9 | 3.07 s | 0.16 s |
+| `/v/jurisdiction/JUR-AUS` (slow) | 2 | 2.96 s | 2.18 s |
+| `/v/event-country/GDELT-USA` (slow) | 1 | 2.84 s | 2.84 s |
+| `/lens/risk` (slow) | 6 | 2.69 s | 0.29 s |
+| `/bi/r/file:report:pnl-vs-exposure` (slow) | 2 | 2.63 s | 1.49 s |
+| `/bi/r/file:report:py-server` (slow) | 1 | 2.56 s | 2.56 s |
+| `/v/quote/QUOTE-MSFT` (slow) | 1 | 2.54 s | 2.54 s |
+| `/admin/net` (slow) | 27 | 2.39 s | 0.32 s |
+| `/bi/r/file:report:live-trading-desk` (slow) | 11 | 2.38 s | 0.45 s |
 <!-- pageloads:end -->
 
 ## 19. The BI scale gate
