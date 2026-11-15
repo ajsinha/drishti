@@ -30,7 +30,6 @@ ALLOWED lists the exceptions, each with its reason; a line not listed fails the 
 from __future__ import annotations
 
 import re
-import subprocess
 from pathlib import Path
 
 import pytest
@@ -83,8 +82,30 @@ RELATIVE_DEFAULT = re.compile(r"\$\{[A-Za-z0-9_.\-]+:(?:\.{1,2}/|\.\}|(?:data|co
 YAML_RELATIVE_VALUE = re.compile(r"^\s*[A-Za-z0-9_.\-]+:\s*(?:\./|\.\./|config/|data/|modules/)[^\s#]*", re.M)
 
 
-def _files(*patterns: str) -> list[str]:
-    return [f for f in subprocess.run(["git", "ls-files", *patterns], cwd=ROOT, capture_output=True, text=True, check=True).stdout.split() if f]
+#: folders never read: build output, environments, the drill's and the tests' scratch
+SKIP = {".git", "target", "node_modules", ".venv", "data", "__pycache__", ".claude"}
+
+
+def _walk(base: Path, suffixes: tuple) -> list[str]:
+    out = []
+    if not base.is_dir():
+        return out
+    for p in base.iterdir():
+        if p.name in SKIP or p.is_symlink():
+            continue
+        if p.is_dir():
+            out += _walk(p, suffixes)
+        elif p.suffix in suffixes:
+            out.append(p.relative_to(ROOT).as_posix())
+    return out
+
+
+def _files(kind: str) -> list[str]:
+    """The files the guard reads, by walking the repository (a static test starts no process): main Java, or the shipped YAML."""
+    if kind == "java":
+        return sorted(f for f in _walk(ROOT, (".java",)) if "/src/main/java/" in f)
+    return sorted(f for f in _walk(ROOT, (".yaml", ".yml"))
+                  if "/src/main/resources/" in f or f.startswith(("config/", "modules/")))
 
 
 def _allowed(path: str, line: str) -> bool:
@@ -105,7 +126,7 @@ def _code(line: str) -> str:
 
 def java_findings() -> list[str]:
     out = []
-    for f in _files("*/src/main/java/*.java"):
+    for f in _files("java"):
         for n, line in enumerate((ROOT / f).read_text(encoding="utf-8").splitlines(), 1):
             code = _code(line)
             if not code:
@@ -118,7 +139,7 @@ def java_findings() -> list[str]:
 
 def yaml_findings() -> list[str]:
     out = []
-    for f in _files("*/src/main/resources/*.yaml", "*/src/main/resources/*.yml", "config/*.yaml", "modules/*.yaml"):
+    for f in _files("yaml"):
         if "/src/test/" in f:
             continue
         for n, line in enumerate((ROOT / f).read_text(encoding="utf-8").splitlines(), 1):

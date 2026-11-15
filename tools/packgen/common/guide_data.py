@@ -303,7 +303,7 @@ def retrieval_section(pack: str, items: list[dict]) -> list[str]:
                   (f"feed run {fd}", f"pull today's data and load it into the lake `{_lake(fd)}` (what the daily schedule runs)")]
             ex += [(f"feed run {fd} {e[0]}", e[1]) for e in info.get("examples") or []]
             w = max(len(f"python3 tools/drishti.py {e[0]}") for e in ex) + 2
-            out += ["```bash"] + [f"python3 tools/drishti.py {e[0]}".ljust(w) + f"# {e[1]}" for e in ex] + ["```", "",
+            out += ["Run these from the Drishti folder (the repository root, or the install folder of a release).", "", "```bash"] + [f"python3 tools/drishti.py {e[0]}".ljust(w) + f"# {e[1]}" for e in ex] + ["```", "",
                     f"The same through the wrappers: `tools/feeds/feed.sh run {fd}` on Linux and macOS, `.\\tools\\windows\\feed.ps1 run {fd}` "
                     "on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or "
                     "`--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](../../../../../docs/guides/WORLD_DATA_GUIDE.md)).", ""]
