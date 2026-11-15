@@ -18,6 +18,20 @@
 
 ## Unreleased
 
+- **Installed modules keep their connector templates (release blocker).** The module packer no longer drops a pack's `connectors:` section
+  (`content.yaml` `sections-out` is gone): banking, market data, capital markets and economy installed from their `.dmod` serve their kinds
+  from their templates at every start. Before, the first start read the development folder and every restart read the installed copy,
+  whose packs had no templates: risk-store, var-engine, var-positions, var-system-baskets, var-results and mr-derived vanished and VaR
+  answered `404 DRS-1001`. Conformance C9 accepts a pack's templates and holds their hosts and secrets to `${...}` placeholders.
+- **A date with no data is said, never answered silently from an older one.** VaR for a date with no scenario-P&L load answers the newest
+  earlier date with `asOfNotice` (*scenario P&L for D not loaded — showing D-1*), shown under the VaR page's header; the official capture of
+  such a date is skipped. Pivots (`POST /api/v1/pivot/query`) and record lists (`/api/v1/live/query`, `/api/v1/live/kinds/{word}/rows`)
+  answer `asOfNotices`, one per source system's connector that shows an earlier date, and the pages show them.
+- **Data inbox words.** A file whose `.ready` gives `rows:` and whose check run rejects a row says the rejects (*1 of 3 documents rejected,
+  more than reject-max-percent 0*), not the matching count; `.loaded.json` `route.mode` is the mode the load ran (with `modeFrom`);
+  `dataload undo` sends the data-load signal a load sends, so pages read the table again at once; `lake status --lake demo` reads the lake
+  of that name.
+
 - **Daily loads runbook.** DATA_LAKE_GUIDE.md section 17: the business-day cycle (files per system and day, markers, order, cut-off), proof that a day's load leaves the earlier days' rows and Delta versions untouched, per-system slices, corrections, late files, undo, portfolio data as a full snapshot per day, what a missing day answers, scheduler examples (cron, systemd, Task Scheduler), the verification script and the one-page checklist; tested on three business days of five systems and the reference kinds.
 
 - **Trading Home with nobody to view as.** Today's blotter, now a records grid rather than a table, says *Pick a trader or a desk to view

@@ -357,9 +357,8 @@ public final class Cycle {
             Loaded check = runLoader(run, List.of(c), List.of("--dry-run"), "check");
             long docs = check.summary() == null ? -1 : check.summary().path("documents").asLong(-1);
             if (check.result().code() == LakeLoad.FAILED || docs != c.note().rows()) {
-                fail(run, c.name(), c.file(), c.marker(), c.sha(), c.size(), check.result().code() == LakeLoad.FAILED && docs < 0
-                        ? "its check failed before loading: " + reason(check) : "its .ready file says " + c.note().rows() + " rows, the file holds "
-                        + docs + " documents: not loaded", check.summary(), ledger, outbox, files);
+                fail(run, c.name(), c.file(), c.marker(), c.sha(), c.size(), checkFailed(c.note().rows(), docs, check.result().code() == LakeLoad.FAILED
+                        ? reason(check) : null, check.summary()), check.summary(), ledger, outbox, files);
                 continue;
             }
             go.add(c);
@@ -405,7 +404,7 @@ public final class Cycle {
             }
             return;
         }
-        ObjectNode routeNode = routeNode(go.get(0).route(), l.batch());
+        ObjectNode routeNode = effectiveMode(routeNode(go.get(0).route(), l.batch()), List.of(l.summary()));
         for (Claimed c : go) {
             ledger.write(run, c.name(), Ledger.LOADED, loadedFields(l.summary(), routeNode, c.sha(), c.size()));
         }
@@ -464,9 +463,10 @@ public final class Cycle {
             for (Routes.Route r : tar.tables()) {
                 Loaded check = runLoader(run, List.of(tar.as(r)), List.of("--dry-run"), "check-" + r.dataset());
                 long n = check.summary() == null ? -1 : check.summary().path("documents").asLong(-1);
-                if (check.result().code() == LakeLoad.FAILED && n < 0) {
-                    fail(run, tar.name(), tar.file(), tar.marker(), tar.sha(), tar.size(), "table " + r.dataset() + ": its check failed before loading: "
-                            + reason(check) + "; nothing was loaded", check.summary(), ledger, outbox, files);
+                if (check.result().code() == LakeLoad.FAILED) {           // rows rejected beyond reject-max-percent, a bad line ...: the real cause
+                    fail(run, tar.name(), tar.file(), tar.marker(), tar.sha(), tar.size(), "table " + r.dataset() + ": "
+                            + checkFailed(n, n, reason(check), check.summary()).replace(": not loaded", "") + "; nothing was loaded",
+                            check.summary(), ledger, outbox, files);
                     return;
                 }
                 docs += Math.max(0, n);
@@ -504,7 +504,9 @@ public final class Cycle {
                 t.set("load", l.summary());
             }
         }
-        ObjectNode routeNode = routeNode(tar.route(), "inbox:" + run).put("loadId", loadId);
+        List<JsonNode> summaries = new ArrayList<>();
+        tables.forEach(t -> summaries.add(t.path("load")));
+        ObjectNode routeNode = effectiveMode(routeNode(tar.route(), "inbox:" + run), summaries).put("loadId", loadId);
         ObjectNode fields = loadedFields(last == null ? null : last.summary(), routeNode, tar.sha(), tar.size());
         fields.set("tables", tables);
         ledger.write(run, tar.name(), Ledger.LOADED, fields);
@@ -616,6 +618,24 @@ public final class Cycle {
         return new Loaded(res, s, dir, batch);
     }
 
+    /**
+     * Why a file whose {@code .ready} names its rows was not loaded, in the real cause's words: the check run failed (rows rejected beyond
+     * {@code reject-max-percent}, a bad line ...: {@code failure}, with the rejects' reasons), and/or the file's documents differ from the
+     * count; a count that matches is never given as the cause.
+     */
+    static String checkFailed(long said, long docs, String failure, JsonNode summary) {
+        String count = docs >= 0 && docs != said ? "its .ready file says " + said + " rows, the file holds " + docs + " documents" : null;
+        if (failure == null) {
+            return count + ": not loaded";
+        }
+        String why = failure.replace("rejects.max-pct", "reject-max-percent").replace(": nothing was written", "");
+        long rej = summary == null ? 0 : summary.path("rejected").asLong();
+        if (rej > 0) {
+            why += " (" + reasons(summary.path("rejects").path("byReason")) + ")";
+        }
+        return "its check failed before loading: " + why + (count == null ? "" : "; " + count) + ": not loaded";
+    }
+
     private static String reason(Loaded l) {
         String e = l.summary() == null ? null : l.summary().path("error").asText(null);
         if (e != null && !e.isBlank()) {
@@ -685,6 +705,29 @@ public final class Cycle {
         n.put("connector", r.connector()).put("table", r.table()).put("dateField", r.dateField()).put("asOf", r.asOf() == null ? null : r.asOf().toString())
                 .put("dateFrom", r.dateFrom()).put("dateBy", r.dateBy()).put("mode", r.mode());
         return n;
+    }
+
+    /**
+     * The route's {@code mode} as the load ran it ({@code replace} or {@code append}, with {@code modeFrom}: given, the lake file's entry,
+     * the inbox's default-mode), from the loader's summaries; the route's own default would say {@code append} for a load the lake file's
+     * entry made a replace. An archive whose tables loaded in different modes says {@code per table} (each table's {@code load.mode}).
+     */
+    static ObjectNode effectiveMode(ObjectNode route, List<JsonNode> summaries) {
+        java.util.Set<String> modes = new java.util.LinkedHashSet<>();
+        java.util.Set<String> from = new java.util.LinkedHashSet<>();
+        for (JsonNode s : summaries) {
+            if (s != null && s.hasNonNull("mode")) {
+                modes.add("append".equals(s.path("mode").asText()) ? "append" : "replace");
+                if (s.hasNonNull("modeFrom")) {
+                    from.add(s.path("modeFrom").asText());
+                }
+            }
+        }
+        if (!modes.isEmpty()) {
+            route.put("mode", modes.size() == 1 ? modes.iterator().next() : "per table");
+            route.put("modeFrom", from.size() == 1 ? from.iterator().next() : from.isEmpty() ? null : "per table");
+        }
+        return route;
     }
 
     /**

@@ -438,6 +438,15 @@ class CommandLineTest(unittest.TestCase):
                 self.assertEqual(drishti.main(["lake", "status", "--lake", str(lake)]), 0)
             self.assertIn("lock: free", out.getvalue())
             self.assertIn("lake-build partial", out.getvalue())
+            # a lake's name resolves where its lake file says, as the other lake commands do (the rehearsal: --lake demo said "no tables")
+            from unittest import mock
+            with mock.patch.dict(os.environ, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_LAKES_DIR": tmp}):
+                out = io.StringIO()
+                with contextlib.redirect_stdout(out):
+                    self.assertEqual(drishti.main(["lake", "status", "--lake", "demo"]), 0)
+            self.assertIn(f"lake {lake}", out.getvalue())
+            self.assertIn("tables (1):", out.getvalue())
+            self.assertIn("trading/deal", out.getvalue())
             out = io.StringIO()
             with contextlib.redirect_stdout(out):
                 self.assertEqual(drishti.main(["lake", "scan", str(src)]), 0)

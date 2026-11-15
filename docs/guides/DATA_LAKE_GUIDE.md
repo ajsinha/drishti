@@ -1204,7 +1204,9 @@ table and one date**; a tar is the one container for several.
 
 The mode of a load, first match wins: `--mode` or the `.ready` file's `mode:`; the table's `load-mode` in its lake file (`replace` when
 not set); the inbox's `default-mode`; `append`. **So a table in a lake file loads in replace mode unless its entry, the `.ready` file or
-the command line says `append`.** (`lake build` writes replace as `--mode overwrite-dates`.)
+the command line says `append`.** (`lake build` writes replace as `--mode overwrite-dates`.) A loaded file's report (`.loaded.json`, and the ledger's line) says the mode
+the load ran: `route.mode` `replace` or `append` and `route.modeFrom` (*given (--mode or the .ready file)*, *the lake file's entry*, *the
+inbox's default-mode*); an archive whose tables ran in different modes says `per table` (each table's `load.mode`).
 
 An append table keeps the same safety as replace: each load carries a **batch id** recorded in the date's commit (Delta: a transaction
 id `drishti-batch:<batch>:<date>`; Iceberg: the snapshot summary's `drishti.batch`), and a batch already committed for a date is never
@@ -1298,14 +1300,17 @@ block ([BUILD_GUIDE section 8.1.4](BUILD_GUIDE.md#814-child-tables-an-array-of-r
 
 ## 6. Pointing Drishti at a lake
 
-A lake is read by the Delta and Iceberg connectors that name it. A connector file (`config/connectors/<name>.yaml`, written from the
-pack's template at the first start and yours to edit) says `lake:` and, where a kind has several tables, `lake-tables:`; root, folders,
-partitions and promoted columns come from the lake file. To read your scenario PVs and VaR nodes from `risklake`, edit
-`config/connectors/risk-store.yaml`:
+A lake is read by the Delta and Iceberg connectors that name it. A connector is its **template** (the `connectors:` section of its
+pack's `pack.yaml`, or a source module's `connectors/` file) with **your override** merged over it (`config/connectors/<name>.yaml`, only
+the keys you change) and the secrets resolved when it starts (KERNEL_AND_MODULES.md section 18.5). The template travels with its module:
+a module installed from its `.dmod` (the distribution installs banking, market data, capital markets and economy at the first start)
+carries its packs' templates, and the server reads them from the installed module at every start. **The server writes no connector
+file**: with no override the template is the connector. A connector says `lake:` and, where a kind has several tables, `lake-tables:`;
+root, folders, partitions and promoted columns come from the lake file. To read your scenario PVs and VaR nodes from `risklake`, write
+`config/connectors/risk-store.yaml` with only what differs from the template (Admin → Connectors writes the same):
 
 ```yaml
-plugin: delta
-enabled: true
+template: pack market-risk
 settings:
   lake: risklake
   lake-tables: risk.scenario-pv,risk.var-limit
@@ -2322,7 +2327,7 @@ The inbox takes the pair once both are unchanged for 30 seconds (`stable-seconds
 
 ```bash
 export DRISHTI_SERVER=http://host:18480
-python3 tools/drishti.py dataload run --wait --token-file ~/.drishti-token   # "Load now", then each file's outcome; exit 0, 2 (rejects), 1 (failed)
+python3 tools/drishti.py dataload run --wait --token-file ~/.drishti-token   # "Load now", then each file's outcome; exit 0, 1 (failed), 2 (rejects, only above 0%)
 python3 tools/drishti.py dataload status --token-file ~/.drishti-token       # waiting / failed / last cycles
 ```
 
@@ -2379,7 +2384,7 @@ commits, three versions), and each replaces **only its own `SOURCE_SYSTEM` slice
 **5. Verify** (the output below is from the tested run; `$T` is `--token-file ~/.drishti-token`).
 
 ```bash
-python3 tools/drishti.py lake status --lake demo $T            # risk/scenario-pv: rows, files, size, dates, latest date
+python3 tools/drishti.py lake status --lake demo               # (reads the lake folder: no token) risk/scenario-pv: rows, files, size, dates, latest date
 python3 tools/drishti.py var show BANK --date 2026-11-12 $T
 ```
 
@@ -2425,7 +2430,8 @@ Undo a wrong load with `drishti.py dataload undo <load-id>` (a dry run; `--yes` 
 | `failed/`: *its business date is ambiguous …* | no date given or named, and the rows carry several dates (or some none) | one date a file, named |
 | `failed/`: *its name says D, but none of its rows carries that date* | the name and `BUSINESS_DATE` disagree on every row | fix the name or the rows; a replace never puts another day's rows under D |
 | `failed/`: *its .ready file says N rows, the archive holds M documents* | cut short, or a wrong `rows:` | resend, or correct the marker |
-| `run --wait` exit 2, *loaded with rejects: N of M rows rejected: …* | rows refused by the load (the reasons follow) | fix and resend the date; check 2 of step 5 |
+| `run --wait` exit 1, `failed/`: *its check failed before loading: 1 of 3 documents rejected (33.33%), more than reject-max-percent 0.0 (<reason> (1)): not loaded* | with the shipped `reject-max-percent: 0` **any rejected row fails the whole file**: nothing is committed (with `rows:` in the `.ready` the check run says it before loading) | fix the rows and resend the date |
+| `run --wait` exit 2, *loaded with rejects: N of M rows rejected: …* | only when `reject-max-percent` is above 0 and the share rejected is within it: the good rows are committed (the reasons follow) | fix and resend the date; check 2 of step 5 |
 | *already loaded in run …* | the same SHA-256 was loaded before and the lake still holds it | nothing to do; `reload-duplicates` to force |
 | `failed/`: *the SHA-256 in its .ready file is not the file's* | cut short in transfer, or the wrong hash | resend, correct the marker, `dataload retry` |
 | `422 DRS-5210` *ENDUR sent {PV/POSITION=167, PV/TRADE=1}* | a trade-grain row in a position-grain date | remove it: one form and one grain a date |
@@ -2551,7 +2557,7 @@ cp /landing/endur-part1-2026-07-08.jsonl.gz /landing/endur-part2-2026-07-08.json
    /landing/murex-2026-07-08.jsonl.gz /landing/wss-2026-07-08.jsonl.gz /landing/swapone-2026-07-08.jsonl.gz /landing/ici-2026-07-08.jsonl.gz $INBOX/
 for f in $INBOX/*-2026-07-08.jsonl.gz; do touch $f.ready; done                       # Windows: ni "$f.ready"
 export DRISHTI_SERVER=http://host:18480
-python3 tools/drishti.py dataload run --wait --token-file ~/.drishti-token            # after the 30 s of stability; exit 0, 2 (rejects), 1 (failed)
+python3 tools/drishti.py dataload run --wait --token-file ~/.drishti-token            # after the 30 s of stability; exit 0, 1 (failed), 2 (rejects, only above 0%)
 python3 tools/drishti.py dataload status --token-file ~/.drishti-token                # done  7 loaded
 ```
 
@@ -2696,7 +2702,7 @@ With the CLI use `--engine java` and one run per kind (16.1 step 4).
 python3 tools/drishti.py pivot run --source netting-set --date 2026-07-09 --rows LEGAL_ENTITY --values "count()" --values "sum(NET_MTM)" $T
 python3 tools/drishti.py view get "netting-set/NS-SOLARIS-TKY-004320" --date 2026-07-09 $T          # the record page; console: NSET <id>
 python3 tools/drishti.py view get "csa/CSA-ALDERSHOT-FRA-000000" --date 2026-07-09 $T                 # CSA, and agreement/<id> for AGR
-python3 tools/drishti.py lake status --lake demo $T                                                    # credit/netting-set, legal/csa, legal/agreement: rows, dates
+python3 tools/drishti.py lake status --lake demo                                                       # credit/netting-set, legal/csa, legal/agreement: rows, dates
 ```
 
 Tested: 5,000 netting sets, 5,000 CSAs and 2,764 agreements on each date; the pivot's grand total 5,000 on each date; the page shows *Trades 14*, net MtM, collateral and the **Member trades (14 of 14)** table; EPE
@@ -2826,7 +2832,7 @@ restarts and corrections below); 2026-07-09 is 113,266 and 2026-07-10 is 132,262
 says *the steps add up: yes* (market +18,996). Check it yourself, with no server needed:
 
 ```bash
-python3 tools/drishti.py lake status --lake <data>/delta/demo        # dates, rows and last build of every table (the lake's folder, not its name)
+python3 tools/drishti.py lake status --lake demo                     # dates, rows and last build of every table (a lake's name, or its folder)
 python3 - <<'EOF'                                                       # live rows per partition and the versions of one table, from the Delta log (a library is not needed)
 import json, glob, collections, sys
 t = sys.argv[1] if len(sys.argv) > 1 else "<data>/delta/demo/trading/trades_shared"
@@ -2877,9 +2883,9 @@ The core pack's `book`, `desk`, `legal-entity`, `counterparty`, `trader` (and `c
   - a record page (`view get book/BOOK-COMM-1 --date 2026-07-13`) answers **the newest earlier date, and says so** (`provenance.businessDate: 2026-07-10`); nothing is copied into the lake;
   - a pivot of the kind (`pivot run --source book --date 2026-07-13`) is refused: *DRS-4003 book holds no data on 2026-07-13: its dates run from 2026-07-08 to 2026-07-10*;
   - a trade page by id (`view get trade/1000001 --date 2026-07-13`) is `404 no source holds trade/1000001 … for 2026-07-13` (a trade is seen on a date only when that date's file carries it, 16.2);
-  - **but a trade pivot for a date with files from only some systems answers with every other system's newest earlier date**: on 2026-07-13, with only WSS loaded, the pivot showed Endur 124, Calypso 202, Murex 258 (their 2026-07-10 rows) beside WSS 2. **So counts per system on a page cannot show a missing feed: the ledger can** (17.8's `verify-day.sh`).
-- **VaR with no PV tar for the date** answers **the newest earlier date**, with that date in the header (*VAR BANK · … · 2026-07-10* for a request of 2026-07-13) and **no warning**; `var explain --from 2026-07-10 --to 2026-07-13` is refused (*from must be before to*). Nothing is carried into the lake. The hierarchy
-  of a VaR date is that date's PV rows, so a missing book file changes no VaR number; a missing PV tar makes the date answer as yesterday. **Always read the date in the header**, and let the verification job check it.
+  - a trade pivot or a trade list for a date with files from only some systems shows each other system's newest earlier date **and says so, per system**: on 2026-07-13, with only WSS loaded, the pivot shows Endur, Calypso and Murex from 2026-07-10 beside WSS, with the notice *Not every source has data for 2026-07-13: trade-endur: no load for 2026-07-13, showing 2026-07-10; …* (the pivot's and the records page's banner; `asOfNotices` in `POST /api/v1/pivot/query` and the live sets' `/api/v1/live/query` and `/api/v1/live/kinds/{word}/rows`, one entry per source system: `connector`, `asked`, `answered`). A date with no data is never answered silently from an older one.
+- **VaR with no PV tar for the date** answers **the newest earlier date, with a warning**: the page shows *⚠ scenario P&L for 2026-07-13 not loaded — showing 2026-07-10* under the header, whose business date is 2026-07-10; the API answers `businessDate: 2026-07-10` and `asOfNotice` (and the same words in `provenance.warnings`). The figures are 2026-07-10's own, unchanged. The official capture of 2026-07-13 is skipped with that reason, never published from the earlier date. `var explain --from 2026-07-10 --to 2026-07-13` is refused (*from must be before to*). Nothing is carried into the lake. The hierarchy
+  of a VaR date is that date's PV rows, so a missing book file changes no VaR number; a missing PV tar makes the date answer as yesterday, said on the page. The verification job (17.8) checks it too.
 
 ### 17.6 Scenario PVs every day
 
@@ -2903,7 +2909,7 @@ The core pack's `book`, `desk`, `legal-entity`, `counterparty`, `trader` (and `c
 | **The identical file again** (a retry, a double drop) | nothing to do | `duplicate`, *already loaded in run …*, exit 0; the lake is unchanged. A file whose rows a later load replaced loads again (re-sending 2026-07-09's tar after the Murex-only load) |
 | **An extra file for a date, added to what is there** (a late trade, an intraday delta) | `mode: append` in the **file's own `.ready`**, and different `TRADE_ID`s | Endur 2026-07-09: 138 → **143**, one version `add 5`, the original 138 untouched; the new ids open (`view get trade/9100001 --date 2026-07-09`). Append never deduplicates across files: send only new or changed ids |
 | **An extra file without `mode: append`** | **do not**: replace mode takes the system's whole date | tested: a 3-trade Calypso "late" file for 2026-07-10 left **3** trades where 202 were (`remove 202 add 3`) |
-| **Undo a bad load** | `drishti.py dataload undo <load-id>` (a dry run; `--yes`): the id is in the file's `.loaded.json` (`loads`) | the 3-trade replace was undone: **202 rows restored**, version history `…, remove 202 add 3, remove 3 add 202`. **A server page took up to a minute to show it** (the undo sends no refresh signal; the next version check, 30 s, does), so wait before reading |
+| **Undo a bad load** | `drishti.py dataload undo <load-id>` (a dry run; `--yes`): the id is in the file's `.loaded.json` (`loads`) | the 3-trade replace was undone: **202 rows restored**, version history `…, remove 202 add 3, remove 3 add 202`. The undo sends the same data-load signal a load sends, one per table and date undone (the answer's `signals`), so the pages and pivots read the table again at once |
 | **A tar** with a wrong date or table folder | the whole tar is refused, nothing written | 16.1, 16.3 |
 | **Never**: edit a file in the inbox, put the marker first, name a file without its date, send two systems in one trade file, send a partial portfolio or PV file for a date | | 17.4, 17.5, 17.6 |
 
@@ -2915,12 +2921,11 @@ The core pack's `book`, `desk`, `legal-entity`, `counterparty`, `trader` (and `c
 | `duplicate … already loaded in run …` | the same SHA-256, rows still in the lake | 0 | nothing |
 | `failed: its .ready file says 999 rows, the file holds 9 documents: not loaded` | `rows:` wrong, or the file is cut short | 1 | resend, or correct the marker; `dataload retry <file>` |
 | `failed: the rule endur-*.jsonl.gz takes the business date from the name … carries none … rename it, or give business-date:` | a name with no date | 1 | rename; or `business-date: YYYY-MM-DD` in the marker |
-| `failed: 1 of 3 documents rejected (33.33%), more than rejects.max-pct 0.0: nothing was written` | **with the shipped `reject-max-percent: 0` a single rejected row fails the whole file**: nothing is committed | 1 | fix the row and resend; or set `drishti.dataload.reject-max-percent` to the share you accept |
-| `failed: its .ready file says 3 rows, the file holds 3 documents: not loaded` | **the same rejected-row case when the marker carries `rows:`: the message names the rows check, not the rejects** | 1 | read the file's `.failed.json` (`rejects.byReason`) |
+| `failed: 1 of 3 documents rejected (33.33%), more than rejects.max-pct 0.0: nothing was written` (no `rows:` in the marker) | **with the shipped `reject-max-percent: 0` a single rejected row fails the whole file**: nothing is committed | 1 | fix the row and resend; or set `drishti.dataload.reject-max-percent` to the share you accept |
+| `failed: its check failed before loading: 1 of 3 documents rejected (33.33%), more than reject-max-percent 0.0 (<reason> (1)): not loaded` | the same rejected-row case when the marker carries `rows:` (the check run before the load says the real cause; a count that differs is added after it) | 1 | fix the row and resend |
 | `loaded with rejects: 1 of 3 rows rejected: SOURCE_SYSTEM is ICI, not this load's WSS (1)` | `reject-max-percent` above the share (40 in the test): the good rows are committed, the bad ones are in `rejects` | **2** | fix the rows, resend the date; **do not use the date meanwhile** (the pivot showed WSS 2 of 3) |
 | `refused, nothing was loaded: … no pack, kind or table of that name` | a tar folder that is no kind | 1 | 16.1, 16.2 |
 | `503 DRS-5218` | the disk guard (10% free **and** 20 GB) | | free disk (17.8) |
-| `404 DRS-1001: no P&L vectors in any connector (kind pnl-vector)` on `var show` after a restart | the market-risk connector files `risk-store`, `var-engine`, `var-positions`, `var-system-baskets`, `var-results` do not exist in `config/connectors/`: **the installed module's pack carries no `connectors:` section, and the server writes no connector file** | | create the files (section 6: `lake: demo`, `lake-tables: risk.scenario-pv,…`) before the first load, and keep them |
 
 Where the alerts show: **Admin → Data loads → Inbox** (Waiting, Loading, Last cycles with *notice:* lines, **Failures** with the reason and **Retry**), `drishti.py dataload status`, the file's
 `.loaded.json`/`.failed.json` in `outbox/<day>/<run>/` and `failed/<day>/<run>/`, and `ledger/ledger-<yyyy-MM>.jsonl` (kept for ever).
@@ -2986,7 +2991,7 @@ exit $rc
 #!/usr/bin/env bash
 # verify-day.sh YYYY-MM-DD: exit 0 only when (1) every expected feed has a loaded line for THAT date in the inbox's ledger, with 0 rejects, and
 # (2) VaR answers for that very date with nothing rejected. (A pivot or a VaR page asked for a date with no file answers from the newest earlier date
-# of each connector, so counts alone cannot show a missing feed: the ledger can.)
+# of each connector and says so on the page (asOfNotices, asOfNotice); a job reads the ledger.)
 set -u
 D="${1:?usage: verify-day.sh YYYY-MM-DD}"
 export DRISHTI_SERVER="${DRISHTI_SERVER:-http://drishti-owner:18480}"
@@ -3026,8 +3031,8 @@ By hand, the same, with the numbers each check should give (`$T` = `--token-file
 
 | Check | Command | Expect |
 |---|---|---|
-| Rows per date per table | `drishti.py lake status --lake <data>/delta/demo` | every table's latest date is today |
-| Per system | the Delta-log script of 17.3 for `trades_shared` and each `trade_<system>`; or `pivot run --source trade --date D --rows SOURCE_SYSTEM --values "count()" $T` (a trade page can show another system's older date: 17.5) | the file's rows (`zcat file \| wc -l`) |
+| Rows per date per table | `drishti.py lake status --lake demo` (a lake's name, or its folder) | every table's latest date is today |
+| Per system | the Delta-log script of 17.3 for `trades_shared` and each `trade_<system>`; or `pivot run --source trade --date D --rows SOURCE_SYSTEM --values "count()" $T` (a system with no load for D is shown from its earlier date with a notice per system: 17.5) | the file's rows (`zcat file \| wc -l`) |
 | Rejects | `.loaded.json` of each file, `dataload status`, exit code | 0 |
 | VaR | `var show BANK --date D --json $T` | the date in the header is D; `provenance.rejected` 0; no warnings; positions = rows sent |
 | Explain | `var explain BANK --from D-1 --to D $T` | *the steps add up: yes* |

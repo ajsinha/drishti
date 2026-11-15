@@ -153,8 +153,17 @@ class LakeRoutingTest {
         assertThat(lines(dry)).as("found in risklake, not in the inbox default booklake").containsExactly("demo/trade removed 1");
         assertThat((List<?>) inbox.undo(inRisk, "booklake", true).get("lines")).as("the lake given wins: none of its rows in booklake").isEmpty();
 
+        int before = f.signals.size();
         java.util.Map<String, Object> done = inbox.undo(inRisk, null, false);
         assertThat((List<?>) done.get("lines")).hasSize(1);
+        // the same data-load signal a load sends, so pivots and pages read the table again at once (the rehearsal: ~30 s of the undone figure)
+        assertThat(f.signals.subList(before, f.signals.size())).singleElement().satisfies(s -> {
+            assertThat(s.pack()).isEqualTo("demo-pack");
+            assertThat(s.kind()).isEqualTo("trade");
+            assertThat(s.date()).isEqualTo(java.time.LocalDate.of(2026, 11, 2));
+            assertThat(s.batch()).isEqualTo("undo:" + inRisk + "#demo/trade@2026-11-02");
+        });
+        assertThat((List<?>) done.get("signals")).singleElement().asString().endsWith("demo-pack/trade signalled");
         assertThat((List<?>) inbox.undo(inRisk, null, true).get("lines")).as("undone: nothing left").isEmpty();
         assertThat(inbox.undo(inBook, null, true)).containsEntry("lake", "booklake");
         assertThat(lines(inbox.undo(inBook, null, true))).as("the booklake load untouched").containsExactly("demo/trade removed 2");
