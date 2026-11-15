@@ -28,6 +28,10 @@
   longer name 509 scenarios (the window is `scenario-window`, default 250); SPV's example is a position. The drill's command and API
   sweeps run on the full demo lake (every dataset of the saved test data, cached), sign in for their readiness checks, start without the
   official exposure capture, time a slow run again on its own, and list parked runs (XRUN, XPATH, XOFC, STR, SSPNL, TRACK) by name.
+- **VaR opens the date before the newest at start** (`drishti.var.preload-previous-date`, default true, config/engines/var.yaml): after
+  the newest date (and its official capture), so the first "Why it moved" after a restart compares two open dates; the busy protection may
+  refuse it, and it then opens on the first ask. The demo lake sorts scenario PVs and P&L vectors by position within the book
+  (`sort-by: [LEGAL_ENTITY, DIVISION, DESK, TT_BOOK, POSITION_ID, TRADE_ID]`), so a position-grain record is found by its row group.
 - **A kind can require a narrowing before it is listed.** A data contract's `list: {requires: [fields], why}` (docs/contracts/README.md):
   scenario PVs, P&L vectors, scenario FX and exposure paths declare it. Bare (`SPV <GO>`) opens the kind's search form with the line
   why; `SPV <id>` opens the record with its vector; `SPV where TT_BOOK = '...'` lists from the store; `GET /api/v1/live/kinds/SPV/rows`
