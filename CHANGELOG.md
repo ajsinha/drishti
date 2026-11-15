@@ -18,6 +18,8 @@
 
 ## Unreleased
 
+- **Daily loads runbook.** DATA_LAKE_GUIDE.md section 17: the business-day cycle (files per system and day, markers, order, cut-off), proof that a day's load leaves the earlier days' rows and Delta versions untouched, per-system slices, corrections, late files, undo, portfolio data as a full snapshot per day, what a missing day answers, scheduler examples (cron, systemd, Task Scheduler), the verification script and the one-page checklist; tested on three business days of five systems and the reference kinds.
+
 - **Production data loads: the runbook rehearsal's findings.** Separate loads of several source systems into one shared table
   (`trading.trades_shared`) replace only their own `SOURCE_SYSTEM` slice of a date (Delta by partition, Iceberg by the files' bounds; a row of
   another system is rejected; a shared table that cannot be split refuses a replace; an undo restores the slice alone): before, the last
