@@ -3670,7 +3670,7 @@ title: Drishti CRO
 description: Risk appetite, what changed overnight and the decisions for the Chief Risk Officer
 packs:
   enabled:
-    core: [core, gleif]
+    market-data: [core, market-data]
     banking: [market-data, trading, market-risk, counterparty-risk, risk-appetite, liquidity, capital, climate]  # last four proposed
     economy: [news-and-markets, world-economy]
   allow-only: true

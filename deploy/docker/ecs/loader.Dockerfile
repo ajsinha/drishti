@@ -32,6 +32,7 @@ WORKDIR /opt/drishti/app
 COPY kernel/drishti-server/target/drishti-server-*-exec.jar /opt/drishti/app.jar
 COPY tools/ tools/
 COPY config/packs/ config/packs/
+COPY modules/ modules/
 COPY deploy/aws/ deploy/aws/
 COPY deploy/docker/ecs/loader-entrypoint.sh /opt/drishti/bin/entrypoint.sh
 # compiled once here, so the read-only root never needs __pycache__ written at run time

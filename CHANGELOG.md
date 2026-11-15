@@ -24,6 +24,8 @@
   `CLR`); the kernel keeps `gleif` and `compute-demo`, and `kernel.yaml` lists no pack. A distribution without the market-data module
   (Drishti Genomics) carries no counterparty, book or desk; the `kernel-packs:` line of its file is no longer needed. The kernel-core
   start check (DRS-1040) is gone: no code used it.
+  **Upgrade:** the market-data module is now 1.1.0. An installed older market-data `.dmod` wins over the folder and lacks `core`, so
+  `trading` and `market-data` stop with DRS-1041: replace it with the 1.1.0 package (`modules/market-data` packed by the module tool) on every node.
 - **The Pack designer offers one table a trading system.** The "shared table + where" layout and `pack new --shared-table` are removed; a
   source module reads its own table (`--own-table` names another). The loader's per-`SOURCE_SYSTEM` slice replace is unchanged.
 

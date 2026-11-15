@@ -133,7 +133,7 @@
               <arguments>
                 <argument>check</argument><argument>${drishti.dmods}/banking-1.0.0.dmod</argument>
                 <argument>--first-party</argument><argument>${project.build.outputDirectory}/META-INF/drishti/first-party.yaml</argument>
-                <argument>--with</argument><argument>${drishti.dmods}/market-data-1.0.0.dmod</argument>
+                <argument>--with</argument><argument>${drishti.dmods}/market-data-1.1.0.dmod</argument>
                 <argument>--cycles</argument><argument>2</argument>
               </arguments>
             </configuration>

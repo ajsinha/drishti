@@ -21,6 +21,7 @@ COPY --from=pyodide /src/drishti-console/web/static/vendor/pyodide/ web/static/v
 # The help centre renders the repository's documents, so they ship with the console.
 COPY docs/ /opt/drishti/docs/
 COPY config/packs/ /opt/drishti/config/packs/
+COPY modules/ /opt/drishti/modules/
 COPY config/lenses/ /opt/drishti/config/lenses/
 COPY config/distributions/ /opt/drishti/config/distributions/
 # Build -> New pack makes its bundle with the same module as `drishti.py pack bundle` (builder.tools_dir, ../tools from the console).

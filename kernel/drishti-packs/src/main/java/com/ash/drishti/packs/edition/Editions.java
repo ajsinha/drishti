@@ -133,7 +133,7 @@ public final class Editions {
     }
 
     /**
-     * A lens's packs ({@code packs.enabled}): by module ({@code {core: [core], banking: [trading, ...]}}, in order) or a plain list (a site's
+     * A lens's packs ({@code packs.enabled}): by module ({@code {market-data: [core, market-data], banking: [trading, ...]}}, in order) or a plain list (a site's
      * override); flattened in order, each pack once.
      */
     private static List<String> packs(Binder b, String key) {

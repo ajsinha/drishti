@@ -33,6 +33,7 @@ COPY --from=pyodide /src/drishti-console/web/static/vendor/pyodide/ web/static/v
 # the help centre renders the repository's documents; packs as shipped, outside the EFS paths (as in the server image)
 COPY docs/ /opt/drishti/docs/
 COPY config/packs/ /opt/drishti/shipped/packs/
+COPY modules/ /opt/drishti/modules/
 COPY config/lenses/ /opt/drishti/config/lenses/
 COPY config/distributions/ /opt/drishti/config/distributions/
 COPY tools/packbundle.py /opt/drishti/tools/packbundle.py

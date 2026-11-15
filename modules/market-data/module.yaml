@@ -16,7 +16,7 @@
 # The distribution files list it by id, and their visibility filter reads this file: its packs, functions, menus and Help.
 format: 1
 id: market-data
-version: 1.0.0
+version: 1.1.0
 title: Market data
 about: 'The core parties and organisation (counterparties, groups, issuers, CCPs, legal entities, books, desks, traders, calendars), curves, volatility surfaces, FX, equities, credit, inflation, commodities, fixings and bonds: the market data both Drishti Risk and Drishti
   Finance show'

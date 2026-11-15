@@ -163,6 +163,18 @@ class AccessRegistryTest {
         assertThat(r.module("aml").orElseThrow().reason()).contains("needs the module 'banking'");
     }
 
+    /** Market data off while a module that requires it stays on: the dependant goes off too and says so in words, nothing throws. */
+    @Test
+    void marketDataOffTakesTheModuleThatRequiresItAndSaysSoInWords() throws IOException {
+        write(modules.resolve("market-data.yaml"), "id: market-data\ndomain: core\ncode: false\nenabled: false\ncontributes: {packs: [core, market-data]}\n");
+        write(modules.resolve("trading.yaml"), "id: trading\ncode: false\nrequires: [market-data]\n");
+        EmbeddedAccessRegistry r = registry();
+        assertThat(r.moduleOn("market-data")).isFalse();
+        assertThat(r.moduleOn("trading")).isFalse();
+        assertThat(r.module("trading").orElseThrow().reason()).contains("needs the module 'market-data'");
+        assertThat(r.module("market-data").orElseThrow().reason()).contains("switched off");
+    }
+
     @Test
     void aCodeModuleNamedWithoutItsJarIsNotInstalled() throws IOException {
         write(modules.resolve("gov.yaml"), "id: gov\ndomain: gov\ncontributes: {packs: [budget]}\n");
