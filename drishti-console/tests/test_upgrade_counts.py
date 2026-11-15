@@ -24,6 +24,7 @@ import json
 import os
 import subprocess
 import sys
+import time
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -57,6 +58,14 @@ def _counts(server: str) -> dict[str, object]:
         try:
             c = _get(server, f"/api/v1/data/{row['kind']}/count")
             out[row["kind"]] = c.get("total", c.get("rows"))
+            # a VaR kind is computed from the engine's inputs, which load in the background on the first ask: until then it lists
+            # nothing (VarPositionsProvider). On a busy machine (the drill) that takes longer than the other kinds' counts, so it is
+            # asked again for up to three minutes; a kind that stays empty still fails below
+            deadline = time.monotonic() + 180
+            while row["kind"] in ("position", "system-basket") and not out[row["kind"]] and time.monotonic() < deadline:
+                time.sleep(5)
+                c = _get(server, f"/api/v1/data/{row['kind']}/count")
+                out[row["kind"]] = c.get("total", c.get("rows"))
         except Exception:                              # noqa: BLE001  (a kind the Data view does not serve: listed without a count)
             out[row["kind"]] = None
     for system in SYSTEMS:                             # the trades of each source system: the regression of 2026-11-14 lost them all
