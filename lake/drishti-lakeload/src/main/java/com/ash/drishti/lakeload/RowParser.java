@@ -86,6 +86,8 @@ final class RowParser {
     private final String[] setNames;
     private final String[] setValues;
     private final int[] setSlots;
+    /** Per set: constant, whether it is a partition column (a slice of a shared table: a load replaces only its own slice). */
+    private final boolean[] setSlice;
     private final Set<String> topNames;
     private final DoubleList[] vectors;
     private final boolean[] vectorPresent;
@@ -144,6 +146,11 @@ final class RowParser {
         setSlots = new int[setNames.length];
         for (int i = 0; i < setNames.length; i++) {
             setSlots[i] = slot(slots, setNames[i], false);
+        }
+        setSlice = new boolean[setNames.length];
+        for (int i = 0; i < setNames.length; i++) {
+            String n = setNames[i];
+            setSlice[i] = plan.slice.containsKey(RowPlan.column(n));
         }
         vectors = new DoubleList[plan.vectors.size()];
         vectorPresent = new boolean[vectors.length];
@@ -493,6 +500,13 @@ final class RowParser {
             case Cap.FLOAT -> PyJson.idOfFloat(k.num);
             default -> k.text;
         };
+        for (int i = 0; i < setNames.length; i++) {
+            String own = setSlice[i] ? scalarText(caps[setSlots[i]]) : null;
+            if (own != null && !own.equals(setValues[i])) {    // another slice's row: this load replaces only its own (DATA_LAKE_GUIDE.md section 5)
+                return setNames[i] + " is " + own + ", not this load's " + setValues[i] + " (a load into a shared table writes and replaces only its own "
+                        + setNames[i] + " slice)";
+            }
+        }
         otherDate = false;
         if (fileDay != NO_FILE_DAY) {                      // the file's business date (FileDates.decide): the row's own date is only counted
             epochDay = fileDay;

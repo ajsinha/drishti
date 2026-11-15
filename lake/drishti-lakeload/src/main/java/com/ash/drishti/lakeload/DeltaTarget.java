@@ -314,7 +314,8 @@ final class DeltaTarget implements TableTarget {
         List<Row> actions = new ArrayList<>();
         if (before != null && !cfg.target().appends()) {   // replace: the date's earlier files go in the same commit; append keeps them
             String day = date.toString();
-            actions.addAll(LakeWriter.removals(engine, before, pv -> day.equals(pv.get("business_date"))));
+            Map<String, String> slice = cfg.source().slice();      // a shared table: only this load's slice of the date
+            actions.addAll(LakeWriter.removals(engine, before, pv -> day.equals(pv.get("business_date")) && TableTarget.inSlice(pv, slice)));
         }
         Map<List<String>, List<DataFileStatus>> byPartition = new LinkedHashMap<>();
         for (WrittenFile f : files) {

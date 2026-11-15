@@ -80,6 +80,8 @@ final class RowPlan {
     final Map<String, String> flatten;
     /** Constants stamped into each row that lacks the field (a connector's set:). */
     final Map<String, String> set;
+    /** The constants that split a shared table (LoadConfig.withSlice), by column: a row of another slice is rejected. */
+    final Map<String, String> slice;
     final List<SortRef> sort = new ArrayList<>();
     /** Key components that make a shard group: the partition values and the sort fields before the id. */
     final int groupComponents;
@@ -94,6 +96,7 @@ final class RowPlan {
         this.latestBy = s.latestBy() == null || s.latestBy().isBlank() ? null : s.latestBy();
         this.flatten = new LinkedHashMap<>(s.flatten());
         this.set = new LinkedHashMap<>(s.set());
+        this.slice = s.slice();
         List<String> promote = new ArrayList<>(s.promote());
         flatten.keySet().stream().filter(n -> !promote.contains(n)).forEach(promote::add);
         partition.addAll(s.partitionBy());

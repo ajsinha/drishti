@@ -64,10 +64,19 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
     /** The input files and what a row is. */
     record Source(List<String> files, boolean recursive, Map<String, String> storage, String id, String date, LocalDate asOf,
             List<String> promote, List<String> vectors, Map<String, String> flatten, List<String> partitionBy, String latestBy, String dateFrom,
-            Map<String, String> set) {
+            Map<String, String> set, Map<String, String> slice) {
         Source(List<String> files, boolean recursive, Map<String, String> storage, String id, String date, LocalDate asOf, List<String> promote,
                 List<String> vectors, Map<String, String> flatten, List<String> partitionBy, String latestBy, String dateFrom) {
-            this(files, recursive, storage, id, date, asOf, promote, vectors, flatten, partitionBy, latestBy, dateFrom, Map.of());
+            this(files, recursive, storage, id, date, asOf, promote, vectors, flatten, partitionBy, latestBy, dateFrom, Map.of(), Map.of());
+        }
+
+        /**
+         * {@code set}: the connector's constants, stamped into rows that lack the field; {@code slice}: those of them that split a table
+         * several connectors write (by column), so a replace takes out only this load's slice of a date ({@link #withSlice}); empty: the
+         * table is the load's alone and a replace takes the whole date.
+         */
+        Source {
+            slice = slice == null ? Map.of() : Map.copyOf(slice);
         }
     }
 
@@ -285,6 +294,68 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
         return new LoadConfig(source, target, parallel, memory, rejects, r, lock, archive, datasets, datasetsSummary, tree);
     }
 
+    /**
+     * The load's slice of a shared table (DATA_LAKE_GUIDE.md section 5.1): when other connectors of the pack (a module's templates, a
+     * site's {@code lake-tables:} over them) write the same table as this load (WSS, SwapOne and ICI into {@code trading.trades_shared}),
+     * the connector's {@code set:} constants that are a partition column (Delta) or a promoted column (Iceberg, partitioned by date alone)
+     * split it, and a replace takes out only this load's slice of each date. A shared table with no such column refuses a replace: it would
+     * take out the other connectors' rows of the date.
+     */
+    static Source withSlice(Source src, String packDir, String connector, String kind, String table, String format, String loadMode) {
+        if (packDir == null || connector == null || kind == null || src.set().isEmpty()) {
+            return src;
+        }
+        List<String> sharing = new ArrayList<>();
+        try {
+            Map<String, String> tableOf = new LinkedHashMap<>();
+            for (PackEntry.PackTable x : PackEntry.tables(Path.of(packDir))) {
+                if (x.kind().equals(kind)) {
+                    tableOf.put(x.connector(), siteTable(x.connector(), x.table()));
+                }
+            }
+            String mine = table != null ? table.substring(table.lastIndexOf('.') + 1) : tableOf.get(connector);
+            if (mine == null) {
+                return src;
+            }
+            tableOf.forEach((c, t) -> {
+                if (t.equals(mine) || c.equals(connector)) {
+                    sharing.add(c);
+                }
+            });
+        } catch (IOException | RuntimeException e) {
+            return src;
+        }
+        if (sharing.size() < 2) {
+            return src;
+        }
+        List<String> columns = (format.equals("iceberg") ? src.promote() : src.partitionBy()).stream().map(RowPlan::column).toList();
+        Map<String, String> slice = TableTarget.slice(src.set(), columns);
+        if (slice.isEmpty() && !LakeTable.APPEND.equals(loadMode)) {
+            throw new IllegalArgumentException("the table of connector " + connector + " is shared by " + String.join(", ", sharing.stream().sorted().toList())
+                    + ": a replace would take out the other connectors' rows of the date; split it by the connector's set: column "
+                    + String.join(", ", src.set().keySet()) + " (" + (format.equals("iceberg") ? "promote:" : "partition-by:")
+                    + " in the lake file's entry), or give each connector its own table (DATA_LAKE_GUIDE.md section 16.2)");
+        }
+        return new Source(src.files(), src.recursive(), src.storage(), src.id(), src.date(), src.asOf(), src.promote(), src.vectors(), src.flatten(),
+                src.partitionBy(), src.latestBy(), src.dateFrom(), src.set(), slice);
+    }
+
+    /** A connector's table as the site's own connector file names it ({@code settings.lake-tables}, its first entry's table), else the template's. */
+    private static String siteTable(String connector, String template) {
+        String dir = System.getProperty("drishti.sources.connectors-dir", System.getenv().getOrDefault("DRISHTI_CONNECTORS_DIR", "./config/connectors"));
+        Path f = Path.of(dir, connector + ".yaml");
+        if (!Files.isRegularFile(f)) {
+            return template;
+        }
+        try {
+            JsonNode n = new YAMLMapper().readTree(Files.readString(f)).path("settings").path("lake-tables");
+            String first = n.isTextual() ? n.asText().split(",")[0].trim() : null;
+            return first == null || first.isEmpty() ? template : first.substring(first.lastIndexOf('.') + 1);
+        } catch (IOException | RuntimeException e) {
+            return template;
+        }
+    }
+
     private static LoadConfig single(ObjectNode tree, Function<String, String> env) {
         Reader r = new Reader(env);
         JsonNode s = tree.path("source");
@@ -401,9 +472,9 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
         Map<String, String> sourceStorage = storage(r, s.path("storage-options"), "source.storage-options");
         Source src = new Source(files, r.bool(s, "recursive", false), sourceStorage, id == null ? "id" : id, date, asOf, promote, vectors, flatten,
                 entry != null ? entry.partitionBy() : r.list(s, "partition-by"), latestBy == null ? DEFAULT_LATEST_BY : latestBy.strip(), dateFrom,
-                constants);
+                constants, Map.of());
 
-        String tf = r.text(t, "format", entry != null ? entry.format() : "delta").toLowerCase(Locale.ROOT);
+        String tf =r.text(t, "format", entry != null ? entry.format() : "delta").toLowerCase(Locale.ROOT);
         if (entry != null) {
             agree(entry, "format", tf, entry.format());
         }
@@ -434,7 +505,8 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
             throw new IllegalArgumentException("source.partition-by is Delta's: an Iceberg table of the layout is partitioned by business date alone "
                     + "(keep the fields as promote: columns)");
         }
-        Map<String, String> targetStorage = t.has("storage-options") ? storage(r, t.path("storage-options"), "target.storage-options") : sourceStorage;
+        src = withSlice(src, packDir, r.text(s, "connector", null), r.text(t, "kind", null), r.text(t, "table", null), tf, loadMode);
+        Map<String, String> targetStorage =t.has("storage-options") ? storage(r, t.path("storage-options"), "target.storage-options") : sourceStorage;
         Map<String, String> iceberg = r.map(t.path("iceberg"), "target.iceberg");
         iceberg.keySet().stream().filter(k -> SECRETS.contains(k) && !isReference(t.path("iceberg").path(k).asText())).findFirst().ifPresent(k -> {
             throw new IllegalArgumentException("target.iceberg." + k + ": a secret is never written in the file; give ${AN_ENVIRONMENT_VARIABLE}");

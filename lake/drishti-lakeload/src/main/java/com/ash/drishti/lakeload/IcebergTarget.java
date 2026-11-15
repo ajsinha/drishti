@@ -242,10 +242,31 @@ final class IcebergTarget implements TableTarget {
             }
             s = Operations.append(table, add, summary).orElseThrow(() -> new IllegalStateException("the commit of " + date + " made no snapshot"));
         } else {
-            s = Operations.replacePartitions(table, f -> date.equals(dateOf(f)), add, summary)
+            Map<String, String> slice = cfg.source().slice();      // a shared table: only this load's slice of the date
+            s = Operations.replacePartitions(table, f -> date.equals(dateOf(f)) && inSlice(f, slice), add, summary)
                     .orElseThrow(() -> new IllegalStateException("the commit of " + date + " made no snapshot"));
         }
         return s.snapshotId();
+    }
+
+    /**
+     * Whether a data file holds only rows of the load's slice (TableTarget.slice; an Iceberg table is partitioned by date alone, so the slice
+     * is read from the file's column bounds: lower and upper both the slice's value). A file with no bounds for the column is another's.
+     */
+    private boolean inSlice(DataFile f, Map<String, String> slice) {
+        for (Map.Entry<String, String> e : slice.entrySet()) {
+            NestedField c = table.metadata().schema().field(e.getKey());
+            if (c == null || !(c.type() instanceof Type.Primitive p)) {
+                return false;
+            }
+            byte[] lo = f.lowerBounds() == null ? null : f.lowerBounds().get(c.id());
+            byte[] hi = f.upperBounds() == null ? null : f.upperBounds().get(c.id());
+            if (lo == null || hi == null || !e.getValue().equals(String.valueOf(com.ash.drishti.iceberg.types.Values.fromBytes(p, lo)))
+                    || !e.getValue().equals(String.valueOf(com.ash.drishti.iceberg.types.Values.fromBytes(p, hi)))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /** The snapshot summary key that names an append's batch and date. */

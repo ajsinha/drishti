@@ -208,8 +208,16 @@ public final class LakeUndo {
                 Snapshot before = Table.forPath(engine, table).getSnapshotAsOfVersion(engine, replacedAt - 1);
                 List<TableUpkeep.Staged> old = TableUpkeep.rows(engine, before, pv -> date.equals(pv.get("business_date")), true);
                 if (old != null) {
-                    restored = old.size();
-                    List<TableUpkeep.Staged> all = new ArrayList<>(old);
+                    // a replace of one slice of a shared table (LoadConfig.withSlice) left the other slices' rows: those are in kept already
+                    java.util.Set<String> still = new java.util.HashSet<>();
+                    kept.forEach(k -> still.add(k.line()));
+                    List<TableUpkeep.Staged> all = new ArrayList<>();
+                    for (TableUpkeep.Staged o : old) {
+                        if (!still.contains(o.line())) {
+                            all.add(o);
+                        }
+                    }
+                    restored = all.size();
                     all.addAll(kept);
                     kept = all;
                 }

@@ -48,6 +48,35 @@ interface TableTarget extends AutoCloseable {
         }
     }
 
+    /**
+     * The slice a load writes in a shared table (DATA_LAKE_GUIDE.md section 5): the connector's {@code set:} constants whose column is one
+     * of {@code columns} (Delta: a partition column, {@code SOURCE_SYSTEM} of {@code trading.trades_shared}), by column. A replace takes out
+     * only the date's files of this slice, so separate loads of several source systems into one table never replace each other. Empty: the
+     * whole date is the load's.
+     */
+    static Map<String, String> slice(Map<String, String> set, java.util.Collection<String> columns) {
+        Map<String, String> out = new LinkedHashMap<>();
+        if (set != null && columns != null) {
+            set.forEach((k, v) -> {
+                String c = RowPlan.column(k);
+                if (v != null && columns.contains(c)) {
+                    out.put(c, v);
+                }
+            });
+        }
+        return out;
+    }
+
+    /** Whether a file with these partition values (by column) is in the slice. */
+    static boolean inSlice(Map<String, String> values, Map<String, String> slice) {
+        for (Map.Entry<String, String> e : slice.entrySet()) {
+            if (!e.getValue().equals(values.get(e.getKey()))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     /** Creates the table or checks it, and adds the columns it lacks (Iceberg) or reports them left out (Delta). */
     void open(Columns columns) throws IOException;
 
