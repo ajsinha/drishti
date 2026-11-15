@@ -52,7 +52,7 @@ class HitIndexTest {
         org.assertj.core.api.Assertions.assertThat(all.get(0).ref().id()).isEqualTo("CLY-30000001");            // id order, no sort of a million
         org.assertj.core.api.Assertions.assertThat(inner).isNotEmpty().allSatisfy(h -> org.assertj.core.api.Assertions.assertThat(h.ref().id()).contains("0000123"));
         org.assertj.core.api.Assertions.assertThat(index.search("trade", "MX-99999999", 5)).extracting(h -> h.ref().id()).containsExactly("MX-99999999");
-        org.assertj.core.api.Assertions.assertThat(ms).isLessThan(500);
+        org.assertj.core.api.Assertions.assertThat(ms).as("no sort of a million: seconds if it did").isLessThan(5_000);
     }
 
     @Test

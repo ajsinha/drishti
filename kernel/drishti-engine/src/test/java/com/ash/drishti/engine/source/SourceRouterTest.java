@@ -166,7 +166,7 @@ class SourceRouterTest {
                 .containsOnlyKeys(EntityRef.of("trade", "T1"));
         long t0 = System.nanoTime();
         assertThat(r.search(null, "", 10, Duration.ofMillis(50))).extracting(EntityHit::title).containsExactly("T1");
-        assertThat((System.nanoTime() - t0) / 1_000_000).isLessThan(500);
+        assertThat((System.nanoTime() - t0) / 1_000_000).isLessThan(900);   // the slow plugin takes 1000: returning before it does is the point
     }
 
     /** A stream that keeps nothing (Kafka in ticks mode): it serves no read but pushes every update for its kind. */

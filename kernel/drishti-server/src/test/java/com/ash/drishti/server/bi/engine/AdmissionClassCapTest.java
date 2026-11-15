@@ -68,7 +68,8 @@ class AdmissionClassCapTest {
             Admission.Ticket t = a.enter("probe" + i, "probe-model-" + i, QueryContext.WorkClass.INTERACTIVE, Duration.ofMillis(100));
             t.close();
         }
-        assertThat((System.nanoTime() - t0) / 1_000_000).isLessThan(100);
+        // six probes that queued would each wait their 100 ms budget (600 ms and a refusal): taken at once is well under that
+        assertThat((System.nanoTime() - t0) / 1_000_000).isLessThan(450);
         @SuppressWarnings("unchecked")
         Map<String, Object> bgStats = (Map<String, Object>) ((Map<String, Object>) a.stats().get("byClass")).get("background");
         assertThat(bgStats).containsEntry("running", 2).containsEntry("cap", 2).containsEntry("waiting", 6L);
@@ -119,10 +120,9 @@ class AdmissionClassCapTest {
         while (((Number) a.stats().get("waiting")).intValue() < 1 && System.nanoTime() < deadline) {
             Thread.sleep(2);
         }
-        long t0 = System.nanoTime();
         waiter.interrupt();
         waiter.join(2000);
-        assertThat((System.nanoTime() - t0) / 1_000_000).isLessThan(100);
+        assertThat(waiter.isAlive()).as("the interrupted waiter returned").isFalse();
         assertThat(refused.get()).isEqualTo(1);
         assertThat(a.stats()).containsEntry("waiting", 0);
         held.close();

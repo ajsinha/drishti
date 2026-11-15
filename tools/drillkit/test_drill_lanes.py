@@ -174,3 +174,10 @@ class Waves(unittest.TestCase):
         text = (ROOT / "tools" / "drill.sh").read_text(encoding="utf-8")
         self.assertIn("drill_lanes.py waves --mode", text)
         self.assertIn("DRILL_WAVES", text)
+
+    def test_every_java_lane_runs_maven_fail_at_end_and_lists_the_failing_modules(self):
+        text = (ROOT / "tools" / "drill.sh").read_text(encoding="utf-8")
+        self.assertIn("fae=(--fail-at-end)", text)
+        self.assertIn('"${fae[@]}" "${goals[@]}"', text)         # copy_verify is the one place every Java lane runs Maven
+        self.assertIn("FAILED MODULES", text)
+        self.assertIn("DRILL_MVN_FAE", text)

@@ -29,6 +29,8 @@
 #   tools/drill.sh --lanes a,b  the gate, then these lanes only (browser, other, tools-a, tools-b, java21, java25, containers, anywhere); verify only
 #   DRILL_BROWSER_RESERVE_GB, DRILL_BROWSER_WORKER_GB   the browser lane's sizing: memory left to everything else (default 8) and one
 #                               worker's budget (default 3); measure with drill_monitor.py summary <data>/drill/monitor-browser.csv
+#   DRILL_MVN_FAE=on|off        on (default): every Java lane runs Maven with --fail-at-end, so one failing module does not hide the others;
+#                               the lane lists the failing modules and test classes at its end. off: stop at the first failing module.
 #   DRILL_WAVES=on|off          on (default): the lanes run in two waves, so the 24 cores are not shared by everything at once (a busy CPU
 #                               breaks browser tests): wave 1 java21, java25, tools-a, tools-b; wave 2 browser, other, containers, anywhere.
 #                               off: every lane at once. --lanes and --fix still run only the lanes they choose.
@@ -437,7 +439,20 @@ copy_verify() {   # name, JDK, Drishti*net test ports, whether the copy's data/ 
     JAVA_HOME="$jdk" ./mvnw -q -o clean package -DskipTests ${DRILL_MVN_ARGS:-} || return $?
     after 7200 "$COPY_THEN_WAIT"; echo "drill: $name tests start at $(date +%T)"; goals=(verify)
   fi
-  DRISHTI_NET_IT_PORTS="$ports" JAVA_HOME="$jdk" ./mvnw -q -o "${goals[@]}" -Dsurefire.rerunFailingTestsCount=1 "$@" ${DRILL_MVN_ARGS:-} || rc=$?
+  # --fail-at-end: one failing module does not hide the others (modules that depend on it are skipped; DRILL_MVN_FAE=off stops at the first)
+  local fae=(--fail-at-end); [[ ${DRILL_MVN_FAE:-on} == off ]] && fae=()
+  DRISHTI_NET_IT_PORTS="$ports" JAVA_HOME="$jdk" ./mvnw -q -o "${fae[@]}" "${goals[@]}" -Dsurefire.rerunFailingTestsCount=1 "$@" ${DRILL_MVN_ARGS:-} || rc=$?
+  if (( rc != 0 )); then   # the modules whose tests failed (a failure that passed on its re-run is a flake, not listed), each with its failing classes
+    local rep mod bad_mods=""
+    while IFS= read -r rep; do
+      grep -q -E '<(failure|error)\b' "$rep" 2>/dev/null || continue
+      mod=${rep%%/target/surefire-reports/*}; bad_mods+="${mod#./}  ${rep##*/TEST-}"$'\n'
+    done < <(find . -path '*/target/surefire-reports/TEST-*.xml' 2>/dev/null | sort)
+    if [[ -n $bad_mods ]]; then
+      echo "drill: $name: FAILED MODULES (module, test class):"; printf '%s' "$bad_mods" | sed 's/\.xml$//; s/^/  /'
+      echo "drill: $name: modules failing: $(printf '%s' "$bad_mods" | awk '{print $1}' | sort -u | paste -sd' ')"
+    else echo "drill: $name: Maven failed with no failing test report (a build, plugin or compile error): see the log above"; fi
+  fi
   local flaky
   flaky=$(grep -l -E '<flaky(Failure|Error)' $(find . -path '*/target/surefire-reports/TEST-*.xml' 2>/dev/null) /dev/null 2>/dev/null \
           | sed -E 's|.*/TEST-(.*)\.xml|\1|' | sort -u || true)

@@ -145,7 +145,7 @@ class SourceRouterHistoryTest {
         };
         long t0 = System.nanoTime();
         SourceHistory.Routed r = router(slow).history(request().withBudget(Duration.ofMillis(200)));
-        assertThat(Duration.ofNanos(System.nanoTime() - t0)).isLessThan(Duration.ofMillis(1_500));
+        assertThat(Duration.ofNanos(System.nanoTime() - t0)).isLessThan(Duration.ofMillis(1_900));   // the slow read sleeps 2 s
         assertThat(r.failures()).isNotEmpty().allSatisfy(f -> assertThat(f.reason()).isEqualTo(HistoryReads.TIMED_OUT));
     }
 

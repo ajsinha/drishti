@@ -452,6 +452,16 @@ datetime.timedelta(days=5)`), or declares its fixture connector with `lookback-d
 `tools/drillkit/test_no_time_bombs.py` fails a console test file that builds a day folder from a literal date without either, unless
 the file is listed there with the reason it cannot age out.
 
+**Every Java lane runs Maven with `--fail-at-end`** (`DRILL_MVN_FAE=off` stops at the first failing module): one failing module no longer
+hides the others (the modules that depend on it are skipped). At its end the lane lists every module and test class whose report holds
+a failure or error (a test that passed on its re-run is a flake, listed in `flakes.log`, not here) and a one-line list of the failing
+modules; a Maven failure with no failing test report says so (a compile or plugin error).
+
+**Wall-clock assertions.** A test never fails on a stopwatch alone. A latency check takes the best of several batches (a load spike or a
+collection hits one batch), a "returned before the slow thing finished" check is bounded just under the slow thing's own duration, and
+a bound that only guards a hang is the generous one a `@Timeout` would give. Where an operation count or an n against 2n ratio says the
+same, it is used instead.
+
 ### 3.23 Shared read-only servers
 
 A VaR file that only reads asks `var_server(..., shared=True)`: its hot folder and official results are then inside the server's own
