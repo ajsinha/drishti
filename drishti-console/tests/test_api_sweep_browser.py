@@ -13,8 +13,8 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The API sweep as a drill step (tools/sweep/api_sweep.py; TEST_HARNESS.md, "The API sweep"): every GET endpoint of the server and of the console,
-called with real values of the saved test data, on the page walk's server over its cached lake; any FAIL fails the drill. HTTP only, eight calls
-at a time. The report (Markdown and JSONL) is kept in DRISHTI_SWEEP_OUT (the drill's logs folder), else data/sweep/.
+called with real values of the saved test data, on a server of its own over the full demo lake the command sweep reads (built once and cached;
+owner 2026-11-15: never the page walk's thin lake); any FAIL fails the drill. HTTP only, eight calls at a time. The report (Markdown and JSONL) is kept in DRISHTI_SWEEP_OUT (the drill's logs folder), else data/sweep/.
 
 DRISHTI_PAGEWALK_BASE=<console URL> with DRISHTI_SWEEP_SERVER=<server URL> sweeps a stack that is already running; DRISHTI_SWEEP_ADMIN /
 _ADMIN_PASSWORD sign in to its console. The drill's stack is open (no sign-in), so it runs as its one user."""
@@ -22,9 +22,27 @@ import importlib.util
 import os
 from pathlib import Path
 
-from test_page_walk_browser import stack  # noqa: F401 - the fixture: the walk's server
+import pytest
+
+from test_command_sweep_browser import SWEEP_PACKS, official_ready, sweep_lake
+from test_page_walk_browser import _packs_ready
+from var_stack import var_server
 
 SWEEP = Path(__file__).resolve().parents[2] / "tools" / "sweep" / "api_sweep.py"
+
+
+@pytest.fixture(scope="module")
+def stack(tmp_path_factory):
+    """An open server and console (no sign-in) over the full demo lake; DRISHTI_PAGEWALK_BASE: one already running."""
+    if os.environ.get("DRISHTI_PAGEWALK_BASE"):
+        yield os.environ["DRISHTI_PAGEWALK_BASE"].rstrip("/")
+        return
+    for st in var_server(tmp_path_factory, sweep_lake(tmp_path_factory), DRISHTI_DATALOAD_ENABLED="true",
+                         DRISHTI_DATALOAD_DIR=str(tmp_path_factory.mktemp("api-sweep-dataload")), DRISHTI_PACKS=SWEEP_PACKS,
+                         DRISHTI_LENSES="risk,world,market,trading,markets"):
+        _packs_ready(st.server, SWEEP_PACKS.split(","))
+        official_ready(st.server)
+        yield st
 
 
 def test_every_get_endpoint_answers_clean(stack, capsys):

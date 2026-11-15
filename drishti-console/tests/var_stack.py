@@ -108,8 +108,9 @@ def trade_grain_copy(lake: Path, dest: Path, budget: int = 40) -> Path:
 
 
 def var_server(tmp_path_factory, lake: Path, shared: bool = False, auth: bool = False, heap: str = VAR_HEAP, **env: str):
-    """A real server and console over ``lake``, its VaR engine ready; ``env``: more DRISHTI_* settings. Its VaR hot folder and the root
-    it publishes the official results to (``<root>/risk-results``, VAR_GUIDE section 19) are its own: the lake is read, never written.
+    """A real server and console over ``lake``, its VaR engine ready; ``env``: more DRISHTI_* settings. Its VaR hot folder and the roots
+    it publishes the official VaR and exposure results to (``<root>/risk-results``, VAR_GUIDE section 19, EXPOSURE_GUIDE section 20; the
+    exposure root defaults to the lake's own) are its own: the lake is read, never written.
 
     ``auth``: sign-in on (the development administrator: drishti-dev-admin / drishti-dev-admin123).
 
@@ -120,9 +121,10 @@ def var_server(tmp_path_factory, lake: Path, shared: bool = False, auth: bool = 
     from wb_live import _stack
 
     if shared:
-        own = {"DRISHTI_VAR_HOT_DIR": "data/var/hot", "DRISHTI_VAR_OFFICIAL_ROOT": "data/var/official"}
+        own = {"DRISHTI_VAR_HOT_DIR": "data/var/hot", "DRISHTI_VAR_OFFICIAL_ROOT": "data/var/official", "DRISHTI_CCR_EXPOSURE_OFFICIAL_ROOT": "data/ccr/official"}
     else:
-        own = {"DRISHTI_VAR_HOT_DIR": str(tmp_path_factory.mktemp("var-hot")), "DRISHTI_VAR_OFFICIAL_ROOT": str(tmp_path_factory.mktemp("var-official"))}
+        own = {"DRISHTI_VAR_HOT_DIR": str(tmp_path_factory.mktemp("var-hot")), "DRISHTI_VAR_OFFICIAL_ROOT": str(tmp_path_factory.mktemp("var-official")),
+               "DRISHTI_CCR_EXPOSURE_OFFICIAL_ROOT": str(tmp_path_factory.mktemp("ccr-official"))}
     for st in _stack(tmp_path_factory, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true", "DRISHTI_VAR_SYSTEM_BASKETS_SEED": "true",
                                         **own, **env}, auth=auth, heap=heap, shared=shared):
         _engine_ready(str(st), opener=signed_in(str(st)) if auth else None)

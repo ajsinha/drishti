@@ -495,7 +495,7 @@ than 10 seconds. A refusal told in words (not available to you, not part of the 
 pack) is a pass marked "refused" unless it is slow. A connector's DRS-5034 on an Admin page is that connector's state, which the page lists; it
 is not the page failing. The report is `data/sweep/sweep-<stamp>.md` and `.jsonl` (not committed), written as the runs finish.
 
-In the drill the browser lane runs it as `test_command_sweep_browser.py` on a server of its own with sign-in on over the page walk's cached lake,
+In the drill the browser lane runs it as `test_command_sweep_browser.py` on a server of its own with sign-in on over the full demo lake (every dataset of the saved test data through the lake builder, ending on the walk's date, built once per hash and cached like the walk's lake; never the walk's thin lake),
 as the administrator: any FAIL fails the drill. Setting `DRISHTI_SWEEP_ROLE` also signs in as a role user the test creates; that user's FAILs
 are in the report and never block. `DRISHTI_SWEEP_BASE` (with `_ADMIN`, `_ADMIN_PASSWORD`, `_ROLE`, `_ROLE_PASSWORD`) sweeps a console that
 is already running (`DRISHTI_SWEEP_AS_OF` the date its lake was built to). The drill keeps its report in its logs folder (`<data>/drill/sweep/`).
@@ -526,7 +526,7 @@ is already running (`DRISHTI_SWEEP_AS_OF` the date its lake was built to). The d
 - **Writes are never called.** Every `POST`, `PUT`, `PATCH` and `DELETE` is listed with the test that exercises it (found by its path and method
   in the test sources: `covered by tests: <test> (<file>:<line>)`), and one with no test is marked `NO TEST`. The writes are never called on a
   shared stack; they are the tests' business.
-- **The drill step** is `drishti-console/tests/test_api_sweep_browser.py` in the browser lane, on the page walk's server and its cached lake,
+- **The drill step** is `drishti-console/tests/test_api_sweep_browser.py` in the browser lane, on a server of its own over the command sweep's full demo lake (above),
   HTTP only and quick; any FAIL fails the drill. `DRISHTI_PAGEWALK_BASE` (the console) with the server URL in the test's own environment variable sweeps a stack already running.
 
 ```bash

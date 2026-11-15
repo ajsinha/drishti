@@ -13,11 +13,12 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The command sweep as a drill step (tools/sweep/command_sweep.py; TEST_HARNESS.md, "The command sweep"): every function of the FUNC directory,
-bare, with its example and with real ids of the saved test data, on a server of its own (sign-in on) over the walk's cached lake; any FAIL fails the drill.
+bare, with its example and with real ids of the saved test data, on a server of its own (sign-in on) over the full demo lake (every dataset of the
+saved test data, built once and cached: :func:`sweep_lake`; owner 2026-11-15: never the page walk's thin lake); any FAIL fails the drill.
 The report (Markdown and JSONL) is kept in DRISHTI_SWEEP_OUT (the drill's logs folder), else data/sweep/.
 
 DRISHTI_SWEEP_BASE=<console URL> sweeps a console that is already running; DRISHTI_SWEEP_ADMIN / _ADMIN_PASSWORD / _ROLE / _ROLE_PASSWORD sign in to
-it. Otherwise the test starts its own server with sign-in on over the walk's cached lake (the walk's own stack is open, with no sign-in, so it
+it. Otherwise the test starts its own server with sign-in on over the full demo lake (the walk's own stack is open, with no sign-in, so it
 could never show a role's refusals): the sweep signs in as the administrator (blocking); with DRISHTI_SWEEP_ROLE set it also signs in as a role user the test creates
 (a trader), report-only."""
 import importlib.util
@@ -29,12 +30,44 @@ from pathlib import Path
 
 import pytest
 
-from test_page_walk_browser import SNAPSHOT_DATE, WALK_DATA, WALK_PACKS, _packs_ready
-from var_stack import var_data, var_lake, var_server
+from test_page_walk_browser import SNAPSHOT_DATE, WALK_PACKS, _packs_ready
+from var_stack import var_lake, var_server
 
 SWEEP = Path(__file__).resolve().parents[2] / "tools" / "sweep" / "command_sweep.py"
 ADMIN, ADMIN_PASSWORD = "drishti-dev-admin", "drishti-dev-admin123"
 ROLE, ROLE_PASSWORD = "sweep-trader", "long-enough-pass-1"
+#: the packs the sweeps' server serves: the walk's and GLEIF's (every pack the full demo lake has data for)
+SWEEP_PACKS = WALK_PACKS + ",gleif"
+
+
+def sweep_lake(tmp_path_factory):
+    """The full demo lake the sweeps run on: every dataset of the saved test data (data/testdata) through the lake builder, ending on the
+    walk's fixed date, the committed exposure run (its official capture at start takes seconds); built once per hash of the test data and
+    the builder (tools/drillkit/lake_cache.py), reused while they are unchanged."""
+    return var_lake(tmp_path_factory, "", as_of=SNAPSHOT_DATE, extra=("--exposure", "committed"))
+
+
+def official_ready(server: str, token_secret: str = "", seconds: float = 300) -> None:
+    """The exposure engine's official capture of the lake's newest date is in (at start: its results connector reads the tables it
+    publishes, and the Admin pages list that connector), so a sweep never meets the minute after a start."""
+    import time
+    import urllib.error
+    import urllib.request
+
+    from core.auth import mint_token
+
+    deadline = time.monotonic() + seconds
+    while time.monotonic() < deadline:
+        headers = {"Authorization": "Bearer " + mint_token(ADMIN, ["admin"], token_secret, 300)} if token_secret else {}
+        try:
+            with urllib.request.urlopen(urllib.request.Request(f"{server}/api/v1/risk/exposure/official?asOf={SNAPSHOT_DATE}", headers=headers),
+                                        timeout=30) as r:
+                if r.status == 200:
+                    return
+        except (urllib.error.URLError, OSError):
+            pass
+        time.sleep(2)   # wait-ok: the official capture at start runs in the background
+    pytest.fail(f"the official exposure capture of {SNAPSHOT_DATE} was not in within {seconds:.0f} s")
 
 
 @pytest.fixture(scope="module")
@@ -45,11 +78,12 @@ def signed_in_stack(tmp_path_factory):
             os.environ.get("DRISHTI_SWEEP_ROLE", ""), os.environ.get("DRISHTI_SWEEP_ROLE_PASSWORD", "")
         return
     from wb_live import TOKEN_SECRET
-    lake = var_lake(tmp_path_factory, var_data(*WALK_DATA), as_of=SNAPSHOT_DATE, extra=("--exposure", "committed"))
+    lake = sweep_lake(tmp_path_factory)
     for st in var_server(tmp_path_factory, lake, auth=True, DRISHTI_SECURITY_ENABLED="true", DRISHTI_TOKEN_SECRET=TOKEN_SECRET,
                          DRISHTI_DATALOAD_ENABLED="true", DRISHTI_DATALOAD_DIR=str(tmp_path_factory.mktemp("sweep-dataload")),
-                         DRISHTI_PACKS=WALK_PACKS, DRISHTI_LENSES="risk,world,market,trading,markets"):
-        _packs_ready(st.server, WALK_PACKS.split(","), token_secret=TOKEN_SECRET)
+                         DRISHTI_PACKS=SWEEP_PACKS, DRISHTI_LENSES="risk,world,market,trading,markets"):
+        _packs_ready(st.server, SWEEP_PACKS.split(","), token_secret=TOKEN_SECRET)
+        official_ready(st.server, TOKEN_SECRET)
         role = os.environ.get("DRISHTI_SWEEP_ROLE", "")        # a role user is swept only when asked for: report-only
         if role:
             _make_role_user(str(st))

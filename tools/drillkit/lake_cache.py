@@ -40,7 +40,7 @@ from typing import Callable
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCES = ("data/testdata", "tools/testdata", "tools/pvgen", "tools/lake", "tools/drishti.py", "tools/build_demo_lakes.py", "tools/demonames.py", "config/demo",
-           "config/packs", "lake/drishti-lakeload/src/main", "lake/drishti-deltalake/src/main")
+           "config/packs", "config/lakes", "tools/packgen", "lake/drishti-lakeload/src/main", "lake/drishti-deltalake/src/main")
 DONE = "BUILT"
 KEEP = 3
 
@@ -88,11 +88,12 @@ def cached(name: str, build: Callable[[Path], None], root: Path = ROOT) -> Path:
 
 
 def demo_lake(only: str, as_of: str, extra: tuple[str, ...] = (), root: Path = ROOT, python: str = sys.executable) -> Path:
-    """The folder of a demo lake of ``only`` ending ``as_of`` (``delta/`` inside), built with the Python writer once per hash."""
+    """The folder of a demo lake of ``only`` ending ``as_of`` (``delta/`` inside), built with the Python writer once per hash. ``only``
+    empty: every dataset of the saved test data (the full demo lake the sweeps run on, about 3 GB and a quarter of an hour to build)."""
     def build(work: Path) -> None:
         r = subprocess.run([python, str(root / "tools" / "drishti.py"), "lake", "demo", "--lake", str(work / "delta"), "--data-dir", str(work / "data"),
-                            "--connectors-dir", str(work / "connectors"), "--as-of", as_of, "--only", only, "--no-signal", "-q",
-                            "--engine", "deltalake", *extra], capture_output=True, text=True, cwd=root, timeout=1500)
+                            "--connectors-dir", str(work / "connectors"), "--as-of", as_of, *(("--only", only) if only else ()), "--no-signal", "-q",
+                            "--engine", "deltalake", *extra], capture_output=True, text=True, cwd=root, timeout=1500 if only else 3600)
         if r.returncode != 0:
             raise RuntimeError("lake demo failed: " + (r.stderr or r.stdout)[-800:])
     return cached("|".join((only, as_of, *extra)), build, root)

@@ -61,6 +61,10 @@ CONNECTOR_ALERT = re.compile(r"DRS-5034 connector [^:]+:[^()]*(?:\([^)]*\))?")
 PARKED = {"XRUN XR-2026-09-30-01": "parked until the CCR engine is built (owner 2026-11-15): the example names the test data's run, a lake "
                                    "built --as-of holds XR-<that date>-01",
           "XPATH XR-2026-09-30-01~CLY-3000280~0": "parked until the CCR engine is built (owner 2026-11-15), with XRUN"}
+#: functions the owner parked as a whole: a run of theirs that fails is "parked" with the reason (a pass stays a pass)
+PARKED_FUNCTIONS = {"STR": "parked: stress testing out of i4 scope (owner 2026-11-15)",
+                    "SSPNL": "parked: stress testing out of i4 scope (owner 2026-11-15)",
+                    "TRACK": "parked: public US equities data, not the owner's flows (owner 2026-11-15)"}
 RESERVED = ["BI", "RUPAKA", "FORM", "FUNC", "WHAT", "DATAMAP", "DATA", "EXPORT", "PIVOT"]
 ADMIN_PAGES = ["users", "roles", "packs", "commands", "tokens", "access", "connectors", "artifacts", "ai", "loads", "lakes", "collab",
                "embedding", "bi", "audit", "net", "edits", "compute", "engines", "health", "caches", "capacity", "scopes", "data-out",
@@ -229,8 +233,8 @@ def check(c: Client, word: str, cmd: str, has_data: bool, expect_off: bool) -> d
     def done(result: str, msg: str = "") -> dict:
         if result != "FAIL" and r["secs"] > BUDGET:                      # a refusal that takes 30 s is no clean refusal
             result, msg = "FAIL", f"slow: {r['secs']:.1f} s over the {BUDGET:.0f} s budget ({result}: {msg[:80]})"
-        if result == "FAIL" and cmd in PARKED:
-            result, msg = "parked", PARKED[cmd] + f" (it was: {msg[:120]})"
+        if result == "FAIL" and (cmd in PARKED or word in PARKED_FUNCTIONS):
+            result, msg = "parked", (PARKED.get(cmd) or PARKED_FUNCTIONS[word]) + f" (it was: {msg[:120]})"
         row["result"], row["message"] = result, msg[:240]
         return row
     if status == 0:
