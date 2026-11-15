@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.messaging;
+package com.ash.drishti.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

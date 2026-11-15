@@ -84,7 +84,7 @@ public final class VarPvStreamPlugin implements SourcePlugin {
     private volatile Thread loop;
     private volatile String state = "starting";
     private volatile String bootstrap = "";
-    private volatile com.ash.drishti.messaging.BrokerWaiting.Watch watch;
+    private volatile com.ash.drishti.api.BrokerWaiting.Watch watch;
     private volatile Instant lastMessage;
     private final Map<Integer, Long> offsets = new ConcurrentHashMap<>();
     private volatile java.util.function.Function<Properties, KafkaConsumer<String, String>> consumers =
@@ -127,8 +127,8 @@ public final class VarPvStreamPlugin implements SourcePlugin {
         long pollMs = Long.parseLong(ctx.setting("poll-ms", "200"));
         RUNNING.put(source, this);
         bootstrap = String.valueOf(p.get(org.apache.kafka.clients.consumer.ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG));
-        watch = new com.ash.drishti.messaging.BrokerWaiting.Watch(source, LOG);
-        state = com.ash.drishti.messaging.BrokerWaiting.message(bootstrap);   // until the first look
+        watch = new com.ash.drishti.api.BrokerWaiting.Watch(source, LOG::info);
+        state = com.ash.drishti.api.BrokerWaiting.message(bootstrap);   // until the first look
         loop = Thread.ofVirtual().name("drishti-var-pv-" + source).start(() -> run(p, pollMs));
     }
 
@@ -140,11 +140,11 @@ public final class VarPvStreamPlugin implements SourcePlugin {
 
     /** Reads the topic from the beginning, every partition, and applies each window when it is due; reconnects after a failure. */
     private void run(Properties p, long pollMs) {
-        List<String> endpoints = com.ash.drishti.messaging.BrokerWaiting.endpoints(bootstrap);
+        List<String> endpoints = com.ash.drishti.api.BrokerWaiting.endpoints(bootstrap);
         long backoff = 1_000;
         while (!stop.get()) {
-            if (!com.ash.drishti.messaging.BrokerWaiting.reachable(endpoints, 1_000)) {
-                state = com.ash.drishti.messaging.BrokerWaiting.message(bootstrap);   // calm: the lake is served, the live windows wait
+            if (!com.ash.drishti.api.BrokerWaiting.reachable(endpoints, 1_000)) {
+                state = com.ash.drishti.api.BrokerWaiting.message(bootstrap);   // calm: the lake is served, the live windows wait
                 watch.waiting(bootstrap);
                 try {
                     Thread.sleep(backoff);
@@ -152,7 +152,7 @@ public final class VarPvStreamPlugin implements SourcePlugin {
                     Thread.currentThread().interrupt();
                     return;
                 }
-                backoff = com.ash.drishti.messaging.BrokerWaiting.next(backoff);
+                backoff = com.ash.drishti.api.BrokerWaiting.next(backoff);
                 continue;
             }
             backoff = 1_000;

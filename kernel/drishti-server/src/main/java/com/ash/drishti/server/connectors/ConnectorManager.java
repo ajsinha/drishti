@@ -740,7 +740,7 @@ public final class ConnectorManager {
         if (!"RUNNING".equals(state)) {
             return new String[] {"warn", "NOT_LOADED".equals(state) ? "not started" : String.valueOf(state).toLowerCase(java.util.Locale.ROOT)};
         }
-        if (com.ash.drishti.messaging.BrokerWaiting.is(health)) {
+        if (com.ash.drishti.api.BrokerWaiting.is(health)) {
             return new String[] {"ok", "waiting for broker (live updates paused)"};   // calm: the snapshot is served, only the live updates wait
         }
         if (health != null && health.startsWith("DOWN") || retrying) {
