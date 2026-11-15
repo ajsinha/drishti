@@ -185,6 +185,29 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
         return systems;
     }
 
+    /** The loaded kinds' contracts the live connectors read their kinds' rules from (LIVE_CONNECTORS_DESIGN.md section 2.3). */
+    private volatile com.ash.drishti.common.live.KindContracts liveContracts = com.ash.drishti.common.live.KindContracts.NONE;
+
+    /** The server's contracts, once its packs are loaded; a live connector started earlier reads them from then on. */
+    public void liveContracts(com.ash.drishti.common.live.KindContracts contracts) {
+        liveContracts = contracts == null ? com.ash.drishti.common.live.KindContracts.NONE : contracts;
+    }
+
+    /** The contracts as a live connector reads them: always the registry's current ones. */
+    private com.ash.drishti.common.live.KindContracts currentContracts() {
+        return new com.ash.drishti.common.live.KindContracts() {
+            @Override
+            public com.ash.drishti.common.live.LiveRules rules(String kind) {
+                return liveContracts.rules(kind);
+            }
+
+            @Override
+            public java.util.Map<String, Object> contract(String kind) {
+                return liveContracts.contract(kind);
+            }
+        };
+    }
+
     /** Where a relative {@code map:} file is looked for (after the connector's module folder): the site's connectors folder first. */
     public void shapeBases(List<java.nio.file.Path> bases) {
         this.shapeBases = List.copyOf(bases);
@@ -514,7 +537,15 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
             // where, set and map (DATA_LAKE_GUIDE.md, "Several source systems"): one shape for every plugin; a shape that cannot be used
             // refuses the connector here (DRS-5034), shown on Admin -> Connectors
             SourceShape shape = SourceShape.of(name, c.settings(), shapeBases());
-            return new ConnectorInstance(name, new java.util.HashSet<>(c.kinds()), ComputedKindSource.fresh(proto), shape, systems);
+            SourcePlugin plugin = ComputedKindSource.fresh(proto);
+            if (plugin instanceof com.ash.drishti.api.live.LiveTransport) {
+                // a messaging plugin is a transport: the kernel's one live intake and state answer its reads, and its rows are shaped as
+                // they arrive, before they are validated (LIVE_CONNECTORS_DESIGN.md sections 3.1 and 7)
+                plugin = new com.ash.drishti.common.live.LiveSource(plugin, currentContracts(), new java.util.HashSet<>(c.kinds()),
+                        shape.none() ? null : shape::apply);
+                return new ConnectorInstance(name, new java.util.HashSet<>(c.kinds()), plugin, shape, systems, true);
+            }
+            return new ConnectorInstance(name, new java.util.HashSet<>(c.kinds()), plugin, shape, systems);
         } catch (ReflectiveOperationException e) {
             throw new IllegalStateException("cannot create " + c.plugin() + ": " + e.getMessage());
         }

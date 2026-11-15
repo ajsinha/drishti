@@ -19,6 +19,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.EntityDocument;
 import com.ash.drishti.api.EntityRef;
+import com.ash.drishti.common.live.KindContracts;
+import com.ash.drishti.common.live.LiveSource;
 import com.ash.drishti.testkit.DatedSourceContract;
 import java.time.Duration;
 import java.util.Map;
@@ -34,12 +36,27 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.kafka.test.EmbeddedKafkaKraftBroker;
 
-/** The Kafka live source against an in-process KRaft broker: state from the log, live pushes, tombstones, both shapes. */
+/**
+ * Kafka as a live transport with the kernel's live intake and state behind it (LIVE_CONNECTORS_DESIGN.md section 2.5), against an
+ * in-process KRaft broker: state from the log, live pushes, tombstones, both shapes, read-back by offset, the disk cache.
+ */
 class KafkaSourcePluginTest {
 
     static EmbeddedKafkaKraftBroker broker;
     static KafkaProducer<String, String> producer;
-    static KafkaSourcePlugin plugin;
+    static LiveSource plugin;
+
+    /** A Kafka connector as the kernel runs it, not yet started: the plugin wrapped in the live source. */
+    static LiveSource wrap() {
+        return new LiveSource(new KafkaSourcePlugin(), KindContracts.NONE, java.util.Set.of(), null);
+    }
+
+    /** As {@link #wrap}, started with {@code settings}. */
+    static LiveSource live(Map<String, String> settings) throws Exception {
+        LiveSource s = wrap();
+        s.start(DatedSourceContract.context(settings));
+        return s;
+    }
 
     @BeforeAll
     static void start() throws Exception {
@@ -57,10 +74,9 @@ class KafkaSourcePluginTest {
         send("trades", "T-2", null);                                                     // tombstone: T-2 is gone
         send("entities", "netting-set/NS-1", "{\"kind\":\"netting-set\",\"id\":\"NS-1\",\"doc\":{\"nettingSetId\":\"NS-1\",\"netMtm\":2}}");
         send("entities", "NS-2", "{\"kind\":\"netting-set\",\"id\":\"NS-2\",\"doc\":{\"nettingSetId\":\"NS-2\",\"netMtm\":7}}");  // keyed by the bare id
-        send("entities", "x", "not json");                                               // skipped
-        plugin = new KafkaSourcePlugin();
-        plugin.start(DatedSourceContract.context(Map.of("bootstrap-servers", broker.getBrokersAsString(), "topics", "trades,entities",
-                "kind.trades", "trade", "id-field.trades", "tradeId", "source-name", "trade-stream", "poll-ms", "50")));
+        send("entities", "x", "not json");                                               // rejected (not-json): the stream goes on
+        plugin = live(Map.of("bootstrap-servers", broker.getBrokersAsString(), "topics", "trades,entities",
+                "kind.trades", "trade", "id-field.trades", "tradeId", "source-name", "trade-stream", "poll-ms", "50"));
         waitFor(() -> "UP".equals(plugin.health()), 30);
     }
 
@@ -94,6 +110,7 @@ class KafkaSourcePluginTest {
         assertThat(plugin.fetch(EntityRef.of("netting-set", "NS-2")).orElseThrow().data().get("netMtm").asDouble()).isEqualTo(7);
         assertThat(plugin.manifest().kinds()).contains("trade", "netting-set");
         assertThat(plugin.manifest().capabilities().live()).isTrue();
+        assertThat(plugin.feed().counted("rejected.not-json")).isEqualTo(1);              // in the reject log, never an error
     }
 
     @Test
@@ -159,9 +176,8 @@ class KafkaSourcePluginTest {
 
     @Test
     void withNoCacheEveryReadGoesBackToTheLogByOffset() throws Exception {
-        KafkaSourcePlugin lean = new KafkaSourcePlugin();
-        lean.start(DatedSourceContract.context(Map.of("bootstrap-servers", broker.getBrokersAsString(), "topics", "trades",
-                "kind", "trade", "id-field", "tradeId", "cache-mb", "0", "source-name", "lean")));
+        LiveSource lean = live(Map.of("bootstrap-servers", broker.getBrokersAsString(), "topics", "trades",
+                "kind", "trade", "id-field", "tradeId", "cache-mb", "0", "source-name", "lean"));
         try {
             waitFor(() -> "UP".equals(lean.health()), 30);
             assertThat(lean.fetch(EntityRef.of("trade", "T-1")).orElseThrow().data().get("tradeId").asText()).isEqualTo("T-1");
@@ -174,17 +190,16 @@ class KafkaSourcePluginTest {
     @Test
     void theDiskCacheServesTheDaysLiveDataFromTheConnectorsOwnStore() throws Exception {
         java.nio.file.Path root = java.nio.file.Files.createTempDirectory("drishti-cache");
-        KafkaSourcePlugin disked = new KafkaSourcePlugin();
-        disked.start(DatedSourceContract.context(Map.of("bootstrap-servers", broker.getBrokersAsString(), "topics", "trades",
+        LiveSource disked = live(Map.of("bootstrap-servers", broker.getBrokersAsString(), "topics", "trades",
                 "kind", "trade", "id-field", "tradeId", "cache-mb", "0", "source-name", "desk-stream",
-                "disk-cache.enabled", "true", "disk-cache.root", root.toString(), "disk-cache.reset-at", "02:00")));
+                "disk-cache.enabled", "true", "disk-cache.root", root.toString(), "disk-cache.reset-at", "02:00"));
         try {
             waitFor(() -> "UP".equals(disked.health()), 30);
             assertThat(disked.fetch(EntityRef.of("trade", "T-1")).orElseThrow().data().get("tradeId").asText()).isEqualTo("T-1");
-            assertThat(disked.diskCache().hits()).isPositive();                         // served from RocksDB, not Kafka
+            assertThat(disked.feed().state().disk().hits()).isPositive();                         // served from RocksDB, not Kafka
             assertThat(root.resolve("desk-stream")).isDirectory();                      // the connector's own store
             assertThat(disked.fetch(EntityRef.of("trade", "T-2"))).isEmpty();
-            disked.diskCache().clear();                                                 // what the nightly reset does
+            disked.feed().state().disk().clear();                                                 // what the nightly reset does
             assertThat(disked.fetch(EntityRef.of("trade", "T-1"))).isPresent();          // still answered, from the log
         } finally {
             disked.close();
@@ -192,34 +207,14 @@ class KafkaSourcePluginTest {
     }
 
     @Test
-    void ticksModeKeepsNothingButStillPushes() throws Exception {
-        KafkaSourcePlugin ticks = new KafkaSourcePlugin();
-        ticks.start(DatedSourceContract.context(Map.of("bootstrap-servers", broker.getBrokersAsString(), "topics", "trades",
-                "kind", "trade", "id-field", "tradeId", "mode", "ticks", "source-name", "ticks")));
+    void theFormerModeSettingIsNotReadAndEveryLiveConnectorPushesItsKinds() throws Exception {
+        LiveSource ticks = live(Map.of("bootstrap-servers", broker.getBrokersAsString(), "topics", "trades",
+                "kind", "trade", "id-field", "tradeId", "mode", "ticks", "source-name", "ticks"));
         try {
             waitFor(() -> "UP".equals(ticks.health()), 30);
-            assertThat(ticks.fetch(EntityRef.of("trade", "T-1"))).isEmpty();                 // the store serves the entity
-            CompletableFuture<EntityDocument> pushed = new CompletableFuture<>();
-            try (var sub = ticks.subscribe(EntityRef.of("trade", "T-9"), pushed::complete)) {
-                send("trades", "T-9", "{\"tradeId\":\"T-9\",\"mtm\":42}");
-                assertThat(pushed.get(15, TimeUnit.SECONDS).data().get("mtm").asDouble()).isEqualTo(42);
-            }
-        } finally {
-            ticks.close();
-        }
-    }
-
-    @Test
-    void inTicksModeItServesNoReadsButPushesEveryUpdateForItsKinds() throws Exception {
-        KafkaSourcePlugin ticks = new KafkaSourcePlugin();
-        ticks.start(DatedSourceContract.context(Map.of("bootstrap-servers", broker.getBrokersAsString(), "topics", "trades",
-                "kind", "trade", "id-field", "tradeId", "mode", "ticks", "source-name", "ticks")));
-        try {
-            waitFor(() -> "UP".equals(ticks.health()), 30);
-            assertThat(ticks.fetch(EntityRef.of("trade", "T-1"))).isEmpty();                   // keeps nothing: the lake answers reads
+            assertThat(ticks.fetch(EntityRef.of("trade", "T-1"))).isPresent();                // one live state: mode is gone
             assertThat(ticks.pushes(EntityRef.of("trade", "T-1"))).isTrue();
             assertThat(ticks.pushes(EntityRef.of("curve", "C-1"))).isFalse();
-            assertThat(plugin.pushes(EntityRef.of("trade", "T-1"))).isFalse();                // state mode serves what it pushes
             CompletableFuture<EntityDocument> pushed = new CompletableFuture<>();
             try (var sub = ticks.subscribe(EntityRef.of("trade", "T-44"), pushed::complete)) {
                 send("trades", "T-44", "{\"tradeId\":\"T-44\",\"mtm\":9}");
@@ -228,5 +223,11 @@ class KafkaSourcePluginTest {
         } finally {
             ticks.close();
         }
+    }
+
+    @Test
+    void thePluginAloneHoldsNoRows() throws Exception {
+        assertThat(((KafkaSourcePlugin) plugin.plugin()).fetch(EntityRef.of("trade", "T-1"))).isEmpty();
+        assertThat(((KafkaSourcePlugin) plugin.plugin()).replayable()).isTrue();
     }
 }

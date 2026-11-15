@@ -489,15 +489,17 @@ plugins:
     settings:
       - { name: bootstrap-servers, default: "localhost:9092", desc: "Broker list host:port,...", group: connection }
       - { name: topics, type: list, required: true, desc: "Comma list; without it the plugin stays idle (`PluginNotConfigured`)", group: connection }
-      - { name: kind, desc: "Mapped messages on every topic: their kind", group: mapping }
-      - { name: id-field, default: id, desc: "Mapped messages without a key: the id field, every topic", group: mapping }
+      - { name: kind, desc: "The kind of the documents on every topic (read by the kernel's live intake, docs/architecture/LIVE_CONNECTORS_DESIGN.md section 3.1)", group: mapping }
       - { name: "kind.*", desc: "Kind per topic: kind.<topic>", group: mapping }
-      - { name: "id-field.*", desc: "Id field per kind: id-field.<kind>", group: mapping }
-      - { name: mode, type: "enum:state|ticks", default: state, desc: "`state` (index, caches, reads) or `ticks` (no reads; pushes to views of its kinds)", group: mapping }
-      - { name: search, type: boolean, desc: "Keep ids for type-ahead (state mode only)", group: mapping, default: "true" }
+      - { name: shape, type: "enum:document|envelope|jsonl", desc: "What a message is: the kind's row (document), {kind, key, op, asOf, doc} (envelope), or several rows (jsonl). Default per topic: document when the topic's kind is named, else envelope", group: mapping }
+      - { name: "shape.*", desc: "Shape per topic: shape.<topic>", group: mapping }
+      - { name: id-field, desc: "A kind whose contract has no key: the field that is its key, every topic (else the message key)", group: mapping }
+      - { name: "id-field.*", desc: "Id field per topic: id-field.<topic>", group: mapping }
+      - { name: max-message-kb, type: int, default: "1024", desc: "A larger message is rejected (too-large, DRS-1072)", group: mapping }
+      - { name: "rejects.keep-days", type: int, default: "7", desc: "Days of the reject log kept (<data folder>/live/rejects/<connector>/<date>.jsonl)", group: mapping }
       - { name: poll-ms, type: int, desc: "Poll interval", group: tuning, default: "200" }
-      - { name: cache-mb, type: int, desc: "Memory cache, weighed by message length", group: tuning, default: "256" }
-      - { name: "disk-cache.*", desc: "On-disk cache (enabled, dir, max-gb, ...)", group: tuning }
+      - { name: cache-mb, type: int, desc: "The live state's documents held in memory, by size; past it a document is read back from the topic by its offset", group: tuning, default: "256" }
+      - { name: "disk-cache.*", desc: "The live state's documents on local disk (enabled, dir, root, max-gb, reset-at, zone)", group: tuning }
       - { name: "client.*", desc: "Any Kafka client property (client.max.poll.records); applied last, wins over everything above. Fetches default to `fetch.max.bytes` 4 MB and `max.partition.fetch.bytes` 1 MB (Kafka's own default is 50 MB; each poll thread reads a fetch through a temporary direct buffer): `client.fetch.max.bytes` and `client.max.partition.fetch.bytes` raise them", group: tuning }
       - { name: value-format, type: "enum:string|confluent", desc: "string (default), or confluent to read the Confluent wire format (implied by schema-registry.url)", group: mapping }
       - { name: flavour, type: "enum:apache|confluent", default: apache, desc: "confluent: Confluent Cloud defaults (SASL PLAIN with api-key and api-secret, DNS lookup of all addresses)", group: security }

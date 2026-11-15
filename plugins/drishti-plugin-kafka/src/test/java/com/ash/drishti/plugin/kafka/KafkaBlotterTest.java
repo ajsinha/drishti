@@ -55,7 +55,7 @@ class KafkaBlotterTest {
 
     static EmbeddedKafkaKraftBroker broker;
     static KafkaProducer<String, String> producer;
-    static KafkaSourcePlugin plugin;
+    static com.ash.drishti.common.live.LiveSource plugin;
 
     @BeforeAll
     static void start() throws Exception {
@@ -69,7 +69,7 @@ class KafkaBlotterTest {
         send("MX-1", "{\"TRADE_ID\":\"MX-1\",\"VERSION\":1,\"BOOK\":\"B1\",\"UPDATED_BY\":\"ann\"}");
         send("MX-1", "{\"TRADE_ID\":\"MX-1\",\"VERSION\":2,\"BOOK\":\"B2\",\"UPDATED_BY\":\"kim\",\"UPDATED_AT\":\"10:02:11\"}");
         send("MX-2", "{\"TRADE_ID\":\"MX-2\",\"VERSION\":1,\"BOOK\":\"B1\"}");
-        plugin = new KafkaSourcePlugin();
+        plugin = KafkaSourcePluginTest.wrap();
         plugin.start(DatedSourceContract.context(Map.of("bootstrap-servers", broker.getBrokersAsString(), "topics", "blotter-trades",
                 "kind.blotter-trades", "trade", "id-field.blotter-trades", "TRADE_ID", "source-name", "trade-kafka", "poll-ms", "20")));
         waitFor(() -> "UP".equals(plugin.health()), 30);

@@ -25,7 +25,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,16 +34,9 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.common.PartitionInfo;
-import org.apache.kafka.common.TopicPartition;
-import org.apache.kafka.common.serialization.Deserializer;
-import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 
 /**
@@ -225,58 +217,6 @@ final class KafkaWrites implements AutoCloseable {
         }
         written.remove(ref, mine);                         // the stream caught up
         return fromStream;
-    }
-
-    /**
-     * Reads {@code topics} from the beginning to their end offsets with a consumer of its own and keeps the latest value per key that
-     * {@code keyOf} accepts (null: not of the kind); a tombstone removes the key.
-     */
-    static Map<String, String> snapshot(Properties consumerProps, List<String> topics, Deserializer<String> values, String sourceName,
-            Function<ConsumerRecord<String, String>, String> keyOf) {
-        Properties p = new Properties();
-        p.putAll(consumerProps);
-        p.put(ConsumerConfig.CLIENT_ID_CONFIG, "drishti-" + sourceName + "-snapshot");
-        p.remove(ConsumerConfig.GROUP_ID_CONFIG);
-        Map<String, String> out = new HashMap<>();
-        try (KafkaConsumer<String, String> c = new KafkaConsumer<>(p, new StringDeserializer(), values)) {
-            List<TopicPartition> parts = new ArrayList<>();
-            for (String t : topics) {
-                List<PartitionInfo> info = c.partitionsFor(t, Duration.ofSeconds(10));
-                if (info != null) {
-                    info.forEach(i -> parts.add(new TopicPartition(t, i.partition())));
-                }
-            }
-            if (parts.isEmpty()) {
-                return out;
-            }
-            c.assign(parts);
-            c.seekToBeginning(parts);
-            Map<TopicPartition, Long> end = c.endOffsets(parts, Duration.ofSeconds(10));
-            long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(60);
-            while (System.nanoTime() < deadline && !done(c, end)) {
-                for (ConsumerRecord<String, String> r : c.poll(Duration.ofMillis(200))) {
-                    String id = keyOf.apply(r);
-                    if (id == null) {
-                        continue;
-                    }
-                    if (r.value() == null) {
-                        out.remove(id);
-                    } else {
-                        out.put(id, r.value());
-                    }
-                }
-            }
-        }
-        return out;
-    }
-
-    private static boolean done(KafkaConsumer<String, String> c, Map<TopicPartition, Long> end) {
-        for (Map.Entry<TopicPartition, Long> e : end.entrySet()) {
-            if (c.position(e.getKey()) < e.getValue()) {
-                return false;
-            }
-        }
-        return true;
     }
 
     @Override

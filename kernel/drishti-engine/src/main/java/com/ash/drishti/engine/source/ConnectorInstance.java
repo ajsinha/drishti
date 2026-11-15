@@ -42,6 +42,8 @@ final class ConnectorInstance implements SourcePlugin {
     private final SourcePlugin delegate;
     private final SourceShape shape;
     private final SourceSystems systems;
+    /** True for a live connector: its feed applied the shape as rows arrived, so only the system switch is checked on the way out. */
+    private final boolean shapedOnArrival;
 
     /** The plugin instance this connector runs. */
     SourcePlugin delegate() {
@@ -53,6 +55,11 @@ final class ConnectorInstance implements SourcePlugin {
     }
 
     ConnectorInstance(String name, Set<String> kinds, SourcePlugin delegate, SourceShape shape, SourceSystems systems) {
+        this(name, kinds, delegate, shape, systems, false);
+    }
+
+    ConnectorInstance(String name, Set<String> kinds, SourcePlugin delegate, SourceShape shape, SourceSystems systems, boolean shapedOnArrival) {
+        this.shapedOnArrival = shapedOnArrival;
         this.name = name;
         this.kinds = Set.copyOf(kinds);
         this.delegate = delegate;
@@ -83,7 +90,7 @@ final class ConnectorInstance implements SourcePlugin {
         if (switchedOff()) {
             return null;
         }
-        EntityDocument out = shape.apply(d);
+        EntityDocument out = shapedOnArrival ? d : shape.apply(d);
         if (out != null && !out.deleted() && systems != null && !systems.off().isEmpty() && out.data() != null
                 && systems.off(out.data().get(SourceShape.SOURCE_SYSTEM).asText())) {
             return null;

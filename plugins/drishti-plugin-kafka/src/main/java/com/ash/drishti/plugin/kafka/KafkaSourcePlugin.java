@@ -15,24 +15,19 @@
  */
 package com.ash.drishti.plugin.kafka;
 
-import com.ash.drishti.api.DataNode;
 import com.ash.drishti.api.EntityDocument;
-import com.ash.drishti.api.EntityHit;
 import com.ash.drishti.api.EntityRef;
-import com.ash.drishti.api.HitIndex;
 import com.ash.drishti.api.PluginManifest;
-import com.ash.drishti.api.Provenance;
 import com.ash.drishti.api.SourceCapabilities;
 import com.ash.drishti.api.SourceContext;
 import com.ash.drishti.api.SourcePlugin;
-import com.ash.drishti.api.Subscription;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.ByteArrayInputStream;
+import com.ash.drishti.api.live.LiveIntake;
+import com.ash.drishti.api.live.LiveMessage;
+import com.ash.drishti.api.live.LivePosition;
+import com.ash.drishti.api.live.LiveTransport;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -41,7 +36,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
+import java.util.function.Function;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -50,75 +45,52 @@ import org.apache.kafka.common.errors.WakeupException;
 import org.apache.kafka.common.serialization.StringDeserializer;
 
 /**
- * A live source over Kafka: each topic carries entity documents, and the latest message per entity is the entity
- * (compacted-topic semantics). At start the plugin reads every partition from the beginning, then keeps consuming;
- * each new message is pushed to every open view of its entity, so views tick from the stream. No consumer group
- * commits are made, so every server builds the same state independently.
+ * Kafka as a live transport (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 2.5): it connects (or waits calmly for its broker),
+ * reads every partition of its topics from the beginning with no consumer group and no commits (so every server builds the same state on
+ * its own), and hands each record to the kernel's live intake with its position. The kernel decodes, maps, validates, orders and keeps
+ * the rows, answers every read and ticks every view ({@link com.ash.drishti.api.live.LiveTransport}); this plugin holds no rows of its own.
+ * It reads a record back by its offset when the kernel no longer holds a document in memory, and writes approved changes back to a topic
+ * ({@link KafkaWrites}).
  *
- * <p><b>Memory stays bounded.</b> In {@code state} mode (default) the plugin keeps an index of where each entity's
- * latest message is (partition and offset: with its id and map entry, about 0.4–0.5 GB per million entities) and a cache of recently read documents limited
- * by size ({@code cache-mb}, 256): a miss reads that one record back from Kafka by its offset. Messages for entities
- * nobody is viewing are not even parsed. In {@code ticks} mode it keeps nothing: a store (Delta Lake, a database)
- * serves the entities and the stream only drives the ticks of open views. Reverse lookups are left to the stores.
- *
- * <p><b>Disk cache</b> ({@code disk-cache.enabled: true}): every message is also written to this connector's own
- * RocksDB store on local disk, so the day's live data is served from disk instead of re-read from Kafka. Each
- * connector has its own store ({@code disk-cache.dir}, default {@code ./data/cache/<connector>}; root
- * {@code DRISHTI_CACHE_ROOT}), its own budget ({@code disk-cache.max-gb}, 10) and its own nightly clearing
- * ({@code disk-cache.reset-at}, {@code 02:00}, in {@code disk-cache.zone}, {@code America/New_York}).
- *
- * <p>Two message shapes. <b>Envelope</b> (default): {@code {"kind": "trade", "id": "MX-20000001", "doc": {...}}}.
- * <b>Mapped</b>: {@code kind.<topic>: trade} and {@code id-field.<topic>: tradeId} (or {@code kind} and {@code id-field} for
- * every topic) make the whole value the document.
- * A message whose value is null (a tombstone) deletes the entity.
- *
- * <p>Settings: {@code bootstrap-servers}, {@code topics} (comma list), {@code kind.<topic>}, {@code id-field.<topic>},
- * {@code mode} ({@code state} or {@code ticks}), {@code cache-mb} (256), {@code search} (true: keep identifiers for
- * type-ahead), {@code poll-ms} (200), {@code source-name} ({@code kafka}), {@code client.<property>} (any Kafka consumer property,
- * e.g. {@code client.security.protocol}).
+ * <p>Settings: {@code bootstrap-servers} (from the broker the connector names, {@code broker: <name>}), {@code topics} (comma list),
+ * {@code poll-ms} (200), {@code source-name}, {@code value-format} and {@code schema-registry.url} (the Confluent wire format),
+ * {@code client.<property>} (any Kafka consumer property); the security settings of {@link KafkaSecurity}. What a message means
+ * ({@code shape}, {@code kind}, {@code id-field}, {@code cache-mb}, {@code disk-cache.*}) is read by the kernel's intake. The former
+ * {@code mode} setting is no longer read: a companion ({@code companion-of:}) is a feed over a lake (what {@code ticks} was), a live
+ * connector without one holds its rows (what {@code state} was).
  */
-public final class KafkaSourcePlugin implements SourcePlugin {
+public final class KafkaSourcePlugin implements SourcePlugin, LiveTransport {
 
-    private static final ObjectMapper JSON = new ObjectMapper();
-    /** Where an entity's latest message is. */
-    private record Pos(int partition, long offset, String topic) {}
-
-    private final Map<EntityRef, Pos> positions = new ConcurrentHashMap<>();
-    private com.github.benmanes.caffeine.cache.Cache<EntityRef, EntityDocument> cache;
-    private KafkaConsumer<String, String> reader;
-    /** Guards the cold-miss reader (a KafkaConsumer is single-threaded). A ReentrantLock: the guarded poll is network I/O. */
-    private final java.util.concurrent.locks.ReentrantLock readerLock = new java.util.concurrent.locks.ReentrantLock();
-    private boolean ticksOnly;
-    private com.ash.drishti.diskcache.DiskCache disk;
-    private boolean searchable;
-    private final com.ash.drishti.api.KindListeners listeners = new com.ash.drishti.api.KindListeners();
-    private volatile KafkaWrites writes;
-    private volatile List<String> allTopics = List.of();
-    private final Set<String> kinds = ConcurrentHashMap.newKeySet();
-    private final HitIndex index = new HitIndex();
-    private final AtomicReference<String> health = new AtomicReference<>("DOWN: not started");
     private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(KafkaSourcePlugin.class);
+    /** How long the consumer may have no broker connection before health says so (short blips are not reported). */
+    static final long BROKER_LOST_MS = 10_000;
+
+    private final AtomicReference<String> health = new AtomicReference<>("DOWN: not started");
     /** Where the broker is looked for, and the one-line transitions of waiting for it (a broker that is not there is calm, not a fault). */
     private volatile String bootstrap = "";
     private volatile com.ash.drishti.api.BrokerWaiting.Watch watch;
-    /** How long the consumer may have no broker connection before health says so (short blips are not reported). */
-    static final long BROKER_LOST_MS = 10_000;
-    private final Map<String, String> kindOfTopic = new HashMap<>();
-    private final Map<String, String> idFieldOfTopic = new HashMap<>();
     private volatile KafkaConsumer<String, String> consumer;   // replaced when the supervisor reconnects
     private volatile Properties consumerProps;
     /** The next offset to read per partition: a reconnect resumes here instead of replaying the topic. */
     private final Map<TopicPartition, Long> resumeAt = new ConcurrentHashMap<>();
+    private KafkaConsumer<String, String> reader;
+    /** Guards the read-back reader (a KafkaConsumer is single-threaded). A ReentrantLock: the guarded poll is network I/O. */
+    private final java.util.concurrent.locks.ReentrantLock readerLock = new java.util.concurrent.locks.ReentrantLock();
+    private final java.util.concurrent.locks.ReentrantLock writesLock = new java.util.concurrent.locks.ReentrantLock();
+    private volatile KafkaWrites writes;
+    private volatile Function<EntityRef, Optional<EntityDocument>> current = ref -> Optional.empty();
     private Thread loop;
     private SourceContext context;
     private String sourceName;
+    private List<String> topics = List.of();
+    private long pollMs = 200;
+    private final Set<String> kinds = new HashSet<>();
     private volatile boolean caughtUp;
     private volatile boolean running = true;
     private volatile boolean closed;
+    private volatile Instant lastUpdate;
     private com.ash.drishti.api.tls.TlsMaterial tls;
     private org.apache.kafka.common.serialization.Deserializer<String> valueDeserializer = new StringDeserializer();
-    private String defaultKind;
-    private String defaultIdField = "id";
 
     /**
      * The consumer properties: the connector's own, then the security settings translated to Kafka properties, then every
@@ -151,7 +123,7 @@ public final class KafkaSourcePlugin implements SourcePlugin {
      * The value deserializer: plain text, or (with {@code schema-registry.url} or {@code value-format: confluent}) text that also
      * reads the Confluent wire format, see {@link ConfluentValueDeserializer}.
      */
-    private static org.apache.kafka.common.serialization.Deserializer<String> valueDeserializer(java.util.Map<String, String> settings) {
+    private static org.apache.kafka.common.serialization.Deserializer<String> valueDeserializer(Map<String, String> settings) {
         String format = settings.getOrDefault("value-format", "").strip().toLowerCase(java.util.Locale.ROOT);
         boolean registry = settings.get("schema-registry.url") != null && !settings.get("schema-registry.url").isBlank();
         if (format.equals("string") || (format.isEmpty() && !registry)) {
@@ -165,32 +137,27 @@ public final class KafkaSourcePlugin implements SourcePlugin {
 
     @Override
     public PluginManifest manifest() {
-        Set<String> k = new HashSet<>(kinds);
-        k.addAll(kindOfTopic.values());
-        if (defaultKind != null) {
-            k.add(defaultKind);
-        }
-        return new PluginManifest(sourceName == null ? "kafka" : sourceName, "1.0", k, new SourceCapabilities(true, false, searchable, false));
+        return new PluginManifest(sourceName == null ? "kafka" : sourceName, "1.0", Set.copyOf(kinds), new SourceCapabilities(true, false, true, false));
     }
 
     @Override
     public void start(SourceContext ctx) {
         this.context = ctx;
         this.sourceName = ctx.setting("source-name", "kafka");
-        List<String> topics = List.of(ctx.setting("topics", "").split(",")).stream().map(String::trim).filter(s -> !s.isEmpty()).toList();
-        this.allTopics = topics;
+        this.topics = List.of(ctx.setting("topics", "").split(",")).stream().map(String::trim).filter(s -> !s.isEmpty()).toList();
         if (topics.isEmpty()) {
             throw new com.ash.drishti.api.PluginNotConfigured("kafka needs settings.topics");
         }
-        this.defaultKind = ctx.setting("kind", null);
-        this.defaultIdField = ctx.setting("id-field", "id");
         ctx.settings().forEach((k, v) -> {
-            if (k.startsWith("kind.")) {
-                kindOfTopic.put(k.substring(5), v);
-            } else if (k.startsWith("id-field.")) {
-                idFieldOfTopic.put(k.substring(9), v);
+            if ((k.equals("kind") || k.startsWith("kind.")) && v != null && !v.isBlank()) {
+                kinds.add(v.strip());                                 // what the kernel's intake will read the topics as
             }
         });
+        String mode = ctx.setting("mode", "");
+        if (!mode.isBlank()) {
+            LOG.info("{}: 'mode: {}' is no longer read: a companion (companion-of: <data connector>) is a feed over a lake (what ticks was); "
+                    + "a live connector without one holds its rows (what state was). Remove the setting.", sourceName, mode);
+        }
         KafkaSecurity.Result security = KafkaSecurity.translate(ctx.settings());
         Properties p = consumerProperties(ctx.settings(), sourceName, security);
         this.tls = security.tls();
@@ -199,37 +166,30 @@ public final class KafkaSourcePlugin implements SourcePlugin {
         this.watch = new com.ash.drishti.api.BrokerWaiting.Watch(sourceName, LOG::info);
         health.set(com.ash.drishti.api.BrokerWaiting.message(bootstrap));   // until the supervisor has looked
         consumerProps = p;                           // the consumer is created (and re-created) by the supervisor
-        this.ticksOnly = "ticks".equals(ctx.setting("mode", "state"));
-        this.searchable = !ticksOnly && Boolean.parseBoolean(ctx.setting("search", "true"));
-        long cacheBytes = Long.parseLong(ctx.setting("cache-mb", "256")) * 1024 * 1024;
-        this.cache = com.github.benmanes.caffeine.cache.Caffeine.newBuilder().maximumWeight(cacheBytes)
-                .weigher((EntityRef ref, EntityDocument d) -> weights.getOrDefault(ref, 4096))
-                .removalListener((EntityRef ref, EntityDocument d, com.github.benmanes.caffeine.cache.RemovalCause c) -> {
-                    if (ref != null && c.wasEvicted()) {
-                        weights.remove(ref);                           // 2.9.7: an evicted entity's weight goes with it
-                    }
-                }).build();
-        if (!ticksOnly && Boolean.parseBoolean(ctx.setting("disk-cache.enabled", "false"))) {
-            try {
-                String dir = ctx.setting("disk-cache.dir", ctx.setting("disk-cache.root", com.ash.drishti.api.DataDir.under("cache")) + "/" + sourceName);
-                String at = ctx.setting("disk-cache.reset-at", "02:00");
-                disk = new com.ash.drishti.diskcache.DiskCache(java.nio.file.Path.of(dir),
-                        (long) (Double.parseDouble(ctx.setting("disk-cache.max-gb", "10")) * 1024 * 1024 * 1024),
-                        at.isBlank() || "never".equals(at) ? null : java.time.LocalTime.parse(at),
-                        java.time.ZoneId.of(ctx.setting("disk-cache.zone", "America/New_York")), ctx.scheduler(), java.time.Clock.systemUTC());
-            } catch (java.io.IOException e) {
-                throw new IllegalStateException(e.getMessage(), e);
-            }
+        Properties rp = new Properties();
+        rp.putAll(p);
+        rp.put(ConsumerConfig.CLIENT_ID_CONFIG, "drishti-" + sourceName + "-reader");
+        rp.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, "1");
+        reader = new KafkaConsumer<>(rp, new StringDeserializer(), valueDeserializer);
+        this.pollMs = Long.parseLong(ctx.setting("poll-ms", "200"));
+    }
+
+    @Override
+    public boolean replayable() {
+        return true;
+    }
+
+    @Override
+    public void current(Function<EntityRef, Optional<EntityDocument>> read) {
+        this.current = read == null ? ref -> Optional.empty() : read;
+    }
+
+    @Override
+    public void receive(LiveIntake intake) {
+        if (loop != null) {
+            throw new IllegalStateException(sourceName + " is already receiving");
         }
-        if (!ticksOnly) {
-            Properties rp = new Properties();
-            rp.putAll(p);
-            rp.put(ConsumerConfig.CLIENT_ID_CONFIG, "drishti-" + sourceName + "-reader");
-            rp.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, "1");
-            reader = new KafkaConsumer<>(rp, new StringDeserializer(), valueDeserializer);
-        }
-        long pollMs = Long.parseLong(ctx.setting("poll-ms", "200"));
-        loop = Thread.ofVirtual().name("drishti-kafka-" + sourceName).start(() -> supervise(topics, pollMs));
+        loop = Thread.ofVirtual().name("drishti-kafka-" + sourceName).start(() -> supervise(intake));
     }
 
     /**
@@ -237,7 +197,7 @@ public final class KafkaSourcePlugin implements SourcePlugin {
      * itself; when it gives up (the broker was down at start, the topic is not there yet, a fatal error), the
      * supervisor waits (1 s doubling to 30 s), creates a new consumer and resumes where the last one stopped.
      */
-    private void supervise(List<String> topics, long pollMs) {
+    private void supervise(LiveIntake intake) {
         long backoff = 1_000;
         List<String> endpoints = com.ash.drishti.api.BrokerWaiting.endpoints(bootstrap);
         while (running) {
@@ -265,7 +225,7 @@ public final class KafkaSourcePlugin implements SourcePlugin {
             long started = System.nanoTime();
             try {
                 if (running) {
-                    run(c, topics, pollMs);
+                    run(c, intake);
                 }
             } catch (WakeupException e) {
                 // closing
@@ -302,7 +262,7 @@ public final class KafkaSourcePlugin implements SourcePlugin {
         }
     }
 
-    private void run(KafkaConsumer<String, String> c, List<String> topics, long pollMs) {
+    private void run(KafkaConsumer<String, String> c, LiveIntake intake) {
         List<TopicPartition> parts = new ArrayList<>();
         for (String t : topics) {
             List<org.apache.kafka.common.PartitionInfo> infos = c.partitionsFor(t, Duration.ofSeconds(30));
@@ -329,7 +289,7 @@ public final class KafkaSourcePlugin implements SourcePlugin {
         long lostSince = 0;
         while (running) {
             for (ConsumerRecord<String, String> r : c.poll(Duration.ofMillis(pollMs))) {
-                apply(r);
+                hand(intake, r);
                 resumeAt.put(new TopicPartition(r.topic(), r.partition()), r.offset() + 1);
             }
             // the client rides out a broker outage inside poll() without failing, so health watches its connections:
@@ -348,202 +308,78 @@ public final class KafkaSourcePlugin implements SourcePlugin {
             if (!caughtUp && end.entrySet().stream().allMatch(e -> c.position(e.getKey()) >= e.getValue())) {
                 caughtUp = true;
                 health.set("UP");
-                rebuildIndex();
+                intake.caughtUp();
             }
         }
     }
 
-    /** Approximate size of each cached document (its message length), for the cache's weigher. */
-    private final Map<EntityRef, Integer> weights = new ConcurrentHashMap<>();
+    /** One record to the kernel's intake, with its position; the stream goes on whatever the intake makes of it. */
+    void hand(LiveIntake intake, ConsumerRecord<String, String> r) {
+        Instant at = Instant.ofEpochMilli(r.timestamp());
+        Instant was = lastUpdate;
+        if (was == null || at.isAfter(was)) {
+            lastUpdate = at;                                  // one consumer thread hands records: no lost update
+        }
+        intake.accept(message(r));
+    }
 
-    /**
-     * One message. Mapped messages are indexed from their key without parsing unless someone is viewing the entity
-     * or it is cached; envelopes need their kind and id, so they are parsed.
-     */
-    /** The newest message's time: when the stream last brought new data. */
-    private volatile java.time.Instant lastUpdate;
+    private static LiveMessage message(ConsumerRecord<String, String> r) {
+        return new LiveMessage(r.key(), r.value(), new LivePosition(r.topic(), r.partition(), r.offset()), Instant.ofEpochMilli(r.timestamp()));
+    }
 
+    /** The newest record's time: when the stream last brought new data. */
     @Override
-    public java.time.Instant lastUpdate() {
+    public Instant lastUpdate() {
         return lastUpdate;
     }
 
-    void apply(ConsumerRecord<String, String> r) {
-        java.time.Instant at = java.time.Instant.ofEpochMilli(r.timestamp());
-        java.time.Instant was = lastUpdate;
-        if (was == null || at.isAfter(was)) {
-            lastUpdate = at;                                  // one consumer thread applies records: no lost update
-        }
-        String mapped = kindOfTopic.getOrDefault(r.topic(), defaultKind);
-        if (mapped != null && r.key() != null) {
-            EntityRef ref = EntityRef.of(mapped, r.key());
-            track(ref, r);
-            // after track: a fetch that cached an older document either sees the new position and drops it, or
-            // finished before track, in which case this check sees its entry and replaces it
-            if (r.value() == null) {
-                deleted(ref, r);
-                return;
-            }
-            boolean wanted = listeners.wanted(ref) || cache.getIfPresent(ref) != null;
-            if (!wanted) {
-                return;
-            }
-        }
-        parseAndPush(r);
+    /** This plugin holds no rows: the kernel's live state answers every read of a live connector. */
+    @Override
+    public Optional<EntityDocument> fetch(EntityRef ref) {
+        return Optional.empty();
     }
 
-    private void track(EntityRef ref, ConsumerRecord<String, String> r) {
-        if (ticksOnly) {
-            return;
+    /**
+     * Reads the one record at {@code at} (the kernel no longer holds its document in memory); a single reader, so reads are serialised.
+     * Waits at most five seconds for the reader, and gives up (empty) once the plugin is closing.
+     */
+    @Override
+    public Optional<LiveMessage> readBack(LivePosition at) {
+        if (reader == null || at.offset() < 0) {
+            return Optional.empty();
         }
-        if (r.value() == null) {
-            positions.remove(ref);
-            weights.remove(ref);
-            if (disk != null) {
-                disk.delete(diskKey(ref));
-            }
-            return;
-        }
-        if (disk != null && kindOfTopic.getOrDefault(r.topic(), defaultKind) != null) {
-            disk.put(diskKey(ref), r.value().getBytes(java.nio.charset.StandardCharsets.UTF_8));
-        }
-        boolean isNew = positions.put(ref, new Pos(r.partition(), r.offset(), r.topic())) == null;
-        kinds.add(ref.kind());
-        if (isNew && caughtUp && searchable) {
-            index.add(new EntityHit(ref, ref.id(), ref.kind() + " · " + sourceName));
-        }
-    }
-
-    private void parseAndPush(ConsumerRecord<String, String> r) {
         try {
-            String kind;
-            String id;
-            JsonNode doc;
-            String mapped = kindOfTopic.getOrDefault(r.topic(), defaultKind);
-            if (mapped != null) {
-                kind = mapped;
-                if (r.value() == null) {
-                    id = r.key();
-                    doc = null;
-                } else {
-                    doc = JSON.readTree(r.value());
-                    String field = idFieldOfTopic.getOrDefault(r.topic(), defaultIdField);
-                    id = doc.path(field).asText(r.key());
-                }
-            } else {
-                if (r.value() == null) {
-                    String[] k = r.key() == null ? new String[0] : r.key().split("/", 2);
-                    if (k.length < 2) {
-                        return;
+            if (closed || !readerLock.tryLock(5, java.util.concurrent.TimeUnit.SECONDS)) {
+                return Optional.empty();
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return Optional.empty();
+        }
+        try {
+            if (closed) {
+                return Optional.empty();
+            }
+            TopicPartition tp = new TopicPartition(at.stream(), at.partition());
+            reader.assign(List.of(tp));
+            reader.seek(tp, at.offset());
+            long until = System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(5);
+            while (System.nanoTime() < until) {
+                for (ConsumerRecord<String, String> r : reader.poll(Duration.ofMillis(200))) {
+                    if (r.offset() == at.offset()) {
+                        return Optional.of(message(r));
                     }
-                    kind = k[0];
-                    id = k[1];
-                    doc = null;
-                } else {
-                    JsonNode env = JSON.readTree(r.value());
-                    kind = env.path("kind").asText(null);
-                    id = env.path("id").asText(null);
-                    doc = env.get("doc");
+                    if (r.offset() > at.offset()) {
+                        return Optional.empty();
+                    }
                 }
             }
-            if (kind == null || id == null) {
-                return;
-            }
-            EntityRef ref = EntityRef.of(kind, id);
-            if (doc == null || doc.isNull()) {
-                positions.remove(ref);
-                weights.remove(ref);
-                if (disk != null) {
-                    disk.delete(diskKey(ref));
-                }
-                deleted(ref, r);
-                return;
-            }
-            if (mapped == null || !ref.id().equals(r.key())) {   // apply() tracked only a mapped message, by its key
-                track(ref, r);
-            }
-            if (disk != null && mapped == null) {
-                disk.put(diskKey(ref), JSON.writeValueAsBytes(doc));
-            }
-            DataNode data = context.parseJson(new ByteArrayInputStream(JSON.writeValueAsBytes(doc)));
-            EntityDocument d = new EntityDocument(ref, data, new Provenance(sourceName, r.offset(), Instant.ofEpochMilli(r.timestamp()), true));
-            if (!ticksOnly && (cache.getIfPresent(ref) != null || listeners.watched(ref))) {
-                weights.put(ref, r.value() == null ? 64 : r.value().length());
-                cache.put(ref, d);
-            }
-            tell(ref, d);
-        } catch (Exception e) {
-            // a malformed message is skipped; the stream goes on
+            return Optional.empty();
+        } catch (org.apache.kafka.common.KafkaException | IllegalStateException e) {
+            return Optional.empty();                  // broker trouble or closing: a miss, not an error for the viewer
+        } finally {
+            readerLock.unlock();
         }
-    }
-
-    /**
-     * A tombstone (or an envelope whose {@code doc} is null): the entity leaves the cache and type-ahead, and every open
-     * view of it is told, so it says the entity was deleted instead of showing the last document.
-     */
-    private void deleted(EntityRef ref, ConsumerRecord<String, String> r) {
-        cache.invalidate(ref);
-        if (searchable && caughtUp) {
-            index.remove(ref);                       // before catching up, the index is built from positions at the end
-        }
-        tell(ref, EntityDocument.deleted(ref, new Provenance(sourceName, r.offset(), Instant.ofEpochMilli(r.timestamp()), true)));
-    }
-
-    /** Hands a document (or a deletion) to the open views of the entity and to the subscribers of its whole kind (a live blotter). */
-    private void tell(EntityRef ref, EntityDocument d) {
-        listeners.tell(ref, d);
-    }
-
-    @Override
-    public Subscription subscribeKind(String kind, Consumer<EntityDocument> listener) {
-        return listeners.kind(kind, listener);
-    }
-
-    /**
-     * Every entity of the kind as the topics hold it now, in one pass: a separate consumer reads each partition from the beginning to
-     * its end offset and keeps the latest document per entity (a live blotter's first rows, a memory table's fill). False in ticks mode.
-     */
-    @Override
-    public boolean documents(String kind, com.ash.drishti.api.AsOf asOf, Consumer<EntityDocument> sink) throws Exception {
-        if (ticksOnly || consumerProps == null) {
-            return false;
-        }
-        boolean mappedKind = kindOfTopic.containsValue(kind) || kind.equals(defaultKind);
-        Map<String, String> latest = KafkaWrites.snapshot(consumerProps, topicsOf(kind), valueDeserializer, sourceName, r -> {
-            String mapped = kindOfTopic.getOrDefault(r.topic(), defaultKind);
-            if (mapped != null) {
-                if (!mapped.equals(kind)) {
-                    return null;
-                }
-                return r.key();
-            }
-            String[] k = r.key() == null ? new String[0] : r.key().split("/", 2);
-            return k.length == 2 && k[0].equals(kind) ? k[1] : null;
-        });
-        for (Map.Entry<String, String> e : latest.entrySet()) {
-            if (e.getValue() == null) {
-                continue;
-            }
-            JsonNode v = JSON.readTree(e.getValue());
-            JsonNode doc = mappedKind ? v : v.get("doc");
-            if (doc == null || doc.isNull()) {
-                continue;
-            }
-            DataNode data = context.parseJson(new ByteArrayInputStream(JSON.writeValueAsBytes(doc)));
-            sink.accept(new EntityDocument(EntityRef.of(kind, e.getKey()), data, new Provenance(sourceName, 0, Instant.now(), true)));
-        }
-        return true;
-    }
-
-    private List<String> topicsOf(String kind) {
-        List<String> out = new ArrayList<>();
-        for (String t : allTopics) {
-            String mapped = kindOfTopic.getOrDefault(t, defaultKind);
-            if (mapped == null || mapped.equals(kind)) {
-                out.add(t);
-            }
-        }
-        return out;
     }
 
     /** {@code kafka:} commands of a connector's {@code writes:} (docs/guides/APPROVALS_GUIDE.md section 10): see {@link KafkaWrites}. */
@@ -571,170 +407,7 @@ public final class KafkaSourcePlugin implements SourcePlugin {
                 writesLock.unlock();
             }
         }
-        return w.write(command, ref -> {
-            try {
-                return fetch(ref);
-            } catch (Exception e) {
-                throw new IllegalStateException(e.getMessage(), e);
-            }
-        });
-    }
-
-    private final java.util.concurrent.locks.ReentrantLock writesLock = new java.util.concurrent.locks.ReentrantLock();
-
-    private void rebuildIndex() {
-        if (!searchable) {
-            return;
-        }
-        List<EntityHit> hits = new ArrayList<>();
-        positions.keySet().forEach(ref -> hits.add(new EntityHit(ref, ref.id(), ref.kind() + " · " + sourceName)));
-        index.replaceAll(hits);
-    }
-
-    @Override
-    public Optional<EntityDocument> fetch(EntityRef ref) {
-        if (ticksOnly) {
-            return Optional.empty();
-        }
-        EntityDocument hit = cache.getIfPresent(ref);
-        if (hit != null) {
-            return Optional.of(hit);
-        }
-        Pos pos = positions.get(ref);
-        if (pos == null) {
-            return Optional.empty();
-        }
-        if (disk != null) {
-            byte[] bytes = disk.get(diskKey(ref));
-            if (bytes != null) {
-                try {
-                    DataNode data = context.parseJson(new ByteArrayInputStream(bytes));
-                    EntityDocument d = new EntityDocument(ref, data, new Provenance(sourceName, pos.offset(), Instant.now(), true));
-                    weights.put(ref, bytes.length);
-                    cacheIfCurrent(ref, pos, d);
-                    return Optional.of(d);
-                } catch (java.io.IOException e) {
-                    disk.delete(diskKey(ref));
-                }
-            }
-        }
-        ConsumerRecord<String, String> r = readAt(pos);
-        if (r == null) {
-            return Optional.empty();
-        }
-        {
-            // a cache miss: parse the record once for this caller and keep it (within the cache's size limit)
-            try {
-                String mapped = kindOfTopic.getOrDefault(r.topic(), defaultKind);
-                JsonNode doc = JSON.readTree(r.value());
-                JsonNode body = mapped != null ? doc : doc.get("doc");
-                DataNode data = context.parseJson(new ByteArrayInputStream(JSON.writeValueAsBytes(body)));
-                EntityDocument d = new EntityDocument(ref, data, new Provenance(sourceName, r.offset(), Instant.ofEpochMilli(r.timestamp()), true));
-                weights.put(ref, r.value().length());
-                cacheIfCurrent(ref, pos, d);
-                return Optional.of(d);
-            } catch (Exception e) {
-                return Optional.empty();
-            }
-        }
-    }
-
-    /**
-     * Caches a document read at {@code pos} unless the entity moved on meanwhile (a newer record or a tombstone was
-     * applied while this fetch was reading): then the entry is dropped, so a stale or deleted document never sticks.
-     */
-    private void cacheIfCurrent(EntityRef ref, Pos pos, EntityDocument d) {
-        cache.put(ref, d);
-        if (!pos.equals(positions.get(ref))) {
-            cache.invalidate(ref);
-        }
-    }
-
-    /**
-     * Reads the one record at {@code pos} (a cache miss); a single reader, so reads are serialised. Waits at most
-     * the read budget for the reader, and gives up (a miss) once the plugin is closing.
-     */
-    private ConsumerRecord<String, String> readAt(Pos pos) {
-        try {
-            if (closed || !readerLock.tryLock(5, java.util.concurrent.TimeUnit.SECONDS)) {
-                return null;
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            return null;
-        }
-        try {
-            if (closed) {
-                return null;
-            }
-            TopicPartition tp = new TopicPartition(pos.topic(), pos.partition());
-            reader.assign(List.of(tp));
-            reader.seek(tp, pos.offset());
-            long until = System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(5);
-            while (System.nanoTime() < until) {
-                for (ConsumerRecord<String, String> r : reader.poll(Duration.ofMillis(200))) {
-                    if (r.offset() == pos.offset()) {
-                        return r;
-                    }
-                    if (r.offset() > pos.offset()) {
-                        return null;
-                    }
-                }
-            }
-            return null;
-        } catch (org.apache.kafka.common.KafkaException | IllegalStateException e) {
-            return null;                      // broker trouble or closing: a miss, not an error for the viewer
-        } finally {
-            readerLock.unlock();
-        }
-    }
-
-    /** In ticks mode this connector keeps nothing but pushes every message for its kinds to the views another store serves. */
-    @Override
-    public boolean pushes(EntityRef ref) {
-        return ticksOnly && manifest().kinds().contains(ref.kind());
-    }
-
-    @Override
-    public Subscription subscribe(EntityRef ref, Consumer<EntityDocument> listener) {
-        return listeners.entity(ref, listener);
-    }
-
-    @Override
-    public List<EntityHit> search(String kind, String text, int limit) {
-        return index.search(kind, text, limit);
-    }
-
-    @Override
-    public Map<String, Object> cacheStats() {
-        Map<String, Object> out = new java.util.LinkedHashMap<>();
-        out.put("indexedEntities", positions.size());
-        out.put("memoryEntries", cache.estimatedSize());
-        out.put("memoryMb", Math.round(cache.asMap().keySet().stream().mapToLong(r -> weights.getOrDefault(r, 0)).sum() / 1048576.0 * 10) / 10.0);
-        if (disk != null) {
-            out.put("diskMb", Math.round(disk.sizeOnDisk() / 1048576.0 * 10) / 10.0);
-            out.put("diskHits", disk.hits());
-            out.put("diskMisses", disk.misses());
-            out.put("diskClears", disk.resets());
-        }
-        return out;
-    }
-
-    @Override
-    public void purgeCaches() {
-        cache.invalidateAll();
-        if (disk != null) {
-            disk.clear();
-        }
-    }
-
-    private static String diskKey(EntityRef ref) {
-        return ref.kind() + "/" + ref.id();
-    }
-
-    /** The disk cache, if enabled (for tests and metrics). */
-    com.ash.drishti.diskcache.DiskCache diskCache() {
-        return disk;
+        return w.write(command, current);
     }
 
     @Override
@@ -753,8 +426,6 @@ public final class KafkaSourcePlugin implements SourcePlugin {
         }
         if (loop != null) {
             loop.interrupt();                        // ends a supervisor waiting to reconnect
-        }
-        if (loop != null) {
             try {
                 loop.join(10_000);           // the loop ends at the wakeup; its consumer.close is bounded to 2 s
             } catch (InterruptedException e) {
@@ -768,9 +439,6 @@ public final class KafkaSourcePlugin implements SourcePlugin {
             } finally {
                 readerLock.unlock();
             }
-        }
-        if (disk != null) {
-            disk.close();                     // safe even if the loop still writes: the disk cache drops late calls
         }
         KafkaWrites w = writes;
         if (w != null) {

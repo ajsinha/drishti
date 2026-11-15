@@ -42,23 +42,32 @@ import org.springframework.stereotype.Component;
  * change ({@link PackRegistry#version()}); the first pack that holds a kind's contract is its owner, as for every other reader of contracts.
  */
 @Component
-public final class LiveContracts {
+public final class LiveContracts implements com.ash.drishti.common.live.KindContracts {
 
     private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
 
-    private record Snapshot(long version, Map<String, LiveRules> rules, Map<String, List<String>> problems) {}
+    private record Snapshot(long version, Map<String, LiveRules> rules, Map<String, Map<String, Object>> contracts, Map<String, List<String>> problems) {}
 
     private final PackRegistry packs;
     private final Set<String> restateKinds;
-    private volatile Snapshot snapshot = new Snapshot(-1, Map.of(), Map.of());
+    private volatile Snapshot snapshot = new Snapshot(-1, Map.of(), Map.of(), Map.of());
 
-    public LiveContracts(PackRegistry packs, Environment env) {
+    public LiveContracts(PackRegistry packs, Environment env, com.ash.drishti.engine.source.SourceRegistry registry) {
         this.packs = packs;
         String listed = env.getProperty("drishti.live.restate-kinds", String.join(",", LiveRules.RESTATE_KINDS));
         this.restateKinds = Set.copyOf(Arrays.stream(listed.split(",")).map(String::strip).filter(s -> !s.isEmpty()).toList());
+        registry.liveContracts(this);                                    // the live connectors read their kinds' rules from here
+    }
+
+    /** The kind's contract as read; empty when no loaded pack holds one. */
+    @Override
+    public Map<String, Object> contract(String kind) {
+        Map<String, Object> c = current().contracts().get(kind);
+        return c == null ? Map.of() : c;
     }
 
     /** The live rules of {@code kind}: its contract's block, else the defaults (a kind with no contract: arrival order, no key). */
+    @Override
     public LiveRules rules(String kind) {
         LiveRules r = current().rules().get(kind);
         return r != null ? r : LiveRules.defaults(kind, List.of(), false);
@@ -90,6 +99,7 @@ public final class LiveContracts {
 
     private Snapshot read(long version) {
         Map<String, LiveRules> rules = new TreeMap<>();
+        Map<String, Map<String, Object>> contracts = new TreeMap<>();
         Map<String, List<String>> problems = new TreeMap<>();
         for (Pack p : packs.packs()) {
             Path dir = p.resolve("contracts");
@@ -105,6 +115,7 @@ public final class LiveContracts {
                     contract(f).ifPresent(c -> {
                         LiveRules.Parsed parsed = LiveRules.parse(c, restateKinds);
                         rules.put(kind, parsed.rules());
+                        contracts.put(kind, java.util.Collections.unmodifiableMap(c));
                         if (!parsed.ok()) {
                             problems.put(kind, parsed.problems().stream().map(m -> m + " [" + f + "]").toList());
                         }
@@ -114,7 +125,7 @@ public final class LiveContracts {
                 problems.put("pack " + p.name(), List.of("its contracts (" + dir + ") cannot be listed: " + e.getMessage() + " (" + LiveRules.CODE + ")"));
             }
         }
-        return new Snapshot(version, Map.copyOf(rules), java.util.Collections.unmodifiableMap(new LinkedHashMap<>(problems)));
+        return new Snapshot(version, Map.copyOf(rules), Map.copyOf(contracts), java.util.Collections.unmodifiableMap(new LinkedHashMap<>(problems)));
     }
 
     private static Optional<Map<String, Object>> contract(Path f) {
