@@ -43,7 +43,7 @@ public record LiveRecord(String kind, String key, Op op, List<Object> order, Ins
     public enum Op { UPSERT, DELETE, PATCH }
 
     public LiveRecord {
-        order = order == null ? List.of() : List.copyOf(order);
+        order = order == null ? List.of() : java.util.Collections.unmodifiableList(new java.util.ArrayList<>(order));   // a missing order value is null
     }
 
     /**

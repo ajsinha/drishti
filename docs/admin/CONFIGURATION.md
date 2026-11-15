@@ -3233,17 +3233,6 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 |---|---|---|---|---|---|---|---|---|
 | `drishti.edit.file` | string | `<config>/edit/edit.yaml` | `DRISHTI_EDIT_FILE` | server | Write-back (docs/guides/APPROVALS\_GUIDE.md): its settings are in their own folder (edit.yaml, lanes.yaml, policy.yaml, retention.yaml). Off as shipped (edit.enabled: false there): a fresh install or an upgrade is read-only. | restart |  | admin |
 
-#### `drishti.live`
-
-| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
-|---|---|---|---|---|---|---|---|---|
-| `drishti.live.restate-kinds` | string | `scenario-pv,pnl-vector` | `DRISHTI_LIVE_RESTATE_KINDS` | server | the kinds whose landed feed may restate a closed, not signed-off date (closed-dates: restate in the contract; comma-separated) | restart |  | admin |
-| `drishti.live.reconcile.settle` | duration | `5m` | `DRISHTI_LIVE_RECONCILE_SETTLE` | server | a load's cut-off is when it was received less this: live rows changed on or before it are the load's (absorb: by-cutoff; orphans) | restart |  | admin |
-| `drishti.live.frame` | duration | `50ms` |  | server | ticks within one frame coalesce (latest wins) | restart |  | admin |
-| `drishti.live.heartbeat` | duration | `15s` |  | server | SSE keep-alive comment | restart |  | admin |
-| `drishti.live.max-streams` | integer | `20000` |  | server | live streams (views and monitors) the server keeps open at once; further requests are refused | restart |  | admin |
-| `drishti.live.window` | duration | `30s` |  | server | rolling window for the p99 shown in the top bar | restart |  | admin |
-
 #### `drishti.live-sets`
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
@@ -4055,6 +4044,17 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `drishti.datamap.ttl` | duration | `PT15M` |  | server | a built map is read again after this | restart |  | admin |
 | `drishti.datamap.read-budget` | duration | `PT30S` |  | server | one listing or column read | restart |  | admin |
 | `drishti.datamap.threads` | integer | `4` |  | server | kinds read at once | restart |  | expert |
+
+#### `drishti.live`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
+|---|---|---|---|---|---|---|---|---|
+| `drishti.live.frame` | duration | `50ms` |  | server | ticks within one frame coalesce (latest wins) | restart |  | admin |
+| `drishti.live.heartbeat` | duration | `15s` |  | server | SSE keep-alive comment | restart |  | admin |
+| `drishti.live.max-streams` | integer | `20000` |  | server | live streams (views and monitors) the server keeps open at once; further requests are refused | restart |  | admin |
+| `drishti.live.window` | duration | `30s` |  | server | rolling window for the p99 shown in the top bar | restart |  | admin |
+| `drishti.live.restate-kinds` | string | `scenario-pv,pnl-vector` | `DRISHTI_LIVE_RESTATE_KINDS` | server | the kinds whose landed feed may restate a closed, not signed-off date (closed-dates: restate in the contract; comma-separated) | restart |  | admin |
+| `drishti.live.reconcile.settle` | duration | `5m` | `DRISHTI_LIVE_RECONCILE_SETTLE` | server | a load's cut-off is when it was received less this: live rows changed on or before it are the load's (absorb: by-cutoff; orphans) | restart |  | admin |
 
 #### `drishti.graph`
 
