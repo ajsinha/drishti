@@ -76,6 +76,24 @@ class ArchitectureRulesTest {
                     "com.ash.drishti.identity..", "com.ash.drishti.rachana..", "com.ash.drishti.packs..");
 
     /**
+     * The cluster's libraries stay behind the thin wrapper (docs/architecture/CLUSTER_I5_DESIGN.md section 3): JGroups is imported only by
+     * its membership provider ({@code com.ash.drishti.net.member.jgroups}); every other class reaches membership through {@code Membership}.
+     */
+    @ArchTest
+    static final ArchRule jgroupsOnlyInItsProvider = noClasses()
+            .that().resideOutsideOfPackage("com.ash.drishti.net.member.jgroups..")
+            .should().dependOnClassesThat().resideInAPackage("org.jgroups..");
+
+    /**
+     * Apache Ratis is imported only by the ratis agreement provider ({@code com.ash.drishti.net.agreement.ratis}, the module
+     * {@code drishti-net-ratis}, loaded only in ratis mode); every other class reaches agreement through {@code Agreement}.
+     */
+    @ArchTest
+    static final ArchRule ratisOnlyInItsProvider = noClasses()
+            .that().resideOutsideOfPackage("com.ash.drishti.net.agreement.ratis..")
+            .should().dependOnClassesThat().resideInAPackage("org.apache.ratis..");
+
+    /**
      * The table layer (drishti-tables, docs/architecture/ARCHITECTURE.md §28 Q30) depends one way: on Rachana (paths and expressions) and the pivot engine
      * (the function catalogue, the compiler), never on BI or anything else of the server, and it is plain Java (the server wires it in).
      * BI depends on the layer, never the reverse.

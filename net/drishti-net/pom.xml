@@ -26,14 +26,28 @@
   </parent>
   <artifactId>drishti-net</artifactId>
   <name>drishti-net</name>
-  <description>Drishti*net: many servers as one (membership by gossip over HTTP, capability digests, routing, the cluster key)</description>
+  <description>Drishti*net: many servers as one (membership on JGroups behind the Membership wrapper, agreement behind the Agreement wrapper, capability digests, routing, the cluster key)</description>
   <dependencies>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-common</artifactId></dependency>
     <dependency><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-databind</artifactId></dependency>
     <dependency><groupId>com.fasterxml.jackson.dataformat</groupId><artifactId>jackson-dataformat-yaml</artifactId></dependency>
     <dependency><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId></dependency>
+    <!-- membership (CLUSTER_I5_DESIGN.md section 3.1): imported only under com.ash.drishti.net.member.jgroups (ArchitectureRulesTest) -->
+    <dependency><groupId>org.jgroups</groupId><artifactId>jgroups</artifactId></dependency>
     <dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter</artifactId><scope>test</scope></dependency>
     <dependency><groupId>org.assertj</groupId><artifactId>assertj-core</artifactId><scope>test</scope></dependency>
   </dependencies>
+  <build>
+    <plugins>
+      <!-- the test jar: the provider contract suites (AgreementContract, MembershipContract) and SimMembership, reused by drishti-net-ratis -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <executions>
+          <execution><goals><goal>test-jar</goal></goals></execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 </project>

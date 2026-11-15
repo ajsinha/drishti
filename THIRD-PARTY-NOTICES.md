@@ -54,6 +54,9 @@ Drishti is proprietary. It bundles or builds with these third-party components u
 | DuckDB JDBC driver (`duckdb_jdbc`, with DuckDB's native library inside, `drishti-plugin-duckdb`) | MIT |
 | Aerospike Java client (`aerospike-client-jdk21`, `drishti-plugin-aerospike`) | Apache-2.0 |
 | Apache Cassandra Java driver (`java-driver-core`, `drishti-plugin-cassandra`) | Apache-2.0 |
+| JGroups 5.5.8.Final (`org.jgroups:jgroups`; the cluster's membership in `drishti-net`, TCP only) | Apache-2.0 |
+| Apache Ratis 3.3.1 (`ratis-server`, `ratis-grpc`, `ratis-client`, `ratis-common`, `ratis-proto`, `ratis-server-api`, `ratis-metrics-api`; the ratis agreement mode, `drishti-net-ratis`, shipped in `lib/`) | Apache-2.0 |
+| Apache Ratis Thirdparty 1.1.0 (`ratis-thirdparty-misc`: gRPC, Netty, protobuf, Guava shaded under `org.apache.ratis.thirdparty`, with the drishti-net-ratis module; its native transports and OpenSSL are switched off, nothing native is loaded) | Apache-2.0 (gRPC, Netty, Guava), BSD-3-Clause (protobuf) |
 
 ## Data bundled in the `world-economy` pack
 

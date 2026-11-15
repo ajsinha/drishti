@@ -25,15 +25,28 @@ import java.util.HexFormat;
 import java.util.regex.Pattern;
 
 /**
- * This node's stable id: {@code node-id} from {@code node.yaml} when set, else the one kept in {@code <data dir>/net/node-id},
- * generated once ({@code n-} and ten hex digits) the first time the cluster is switched on.
+ * A member as the membership knows it (CLUSTER_I5_DESIGN.md section 3): its stable id, the address of its cluster port and its role.
+ * The id is {@code node-id} from {@code node.yaml} when set, else the one kept in {@code <data dir>/net/node-id}, generated once
+ * ({@code n-} and ten hex digits) the first time the cluster is switched on ({@link #resolve}).
+ *
+ * @param id the node's id
+ * @param address {@code host:port} of its cluster port (the real address, never a loopback one), or empty when not known
+ * @param role {@link #SERVER} or {@link #WITNESS}
  */
-public final class NodeIdentity {
+public record NodeIdentity(String id, String address, String role) {
 
     /** What a node id may be: lower-case letters, digits and dashes, starting with a letter or digit, at most 64. */
     public static final Pattern ID = Pattern.compile("[a-z0-9][a-z0-9-]{0,63}");
 
-    private NodeIdentity() {
+    /** A server: everything. */
+    public static final String SERVER = "server";
+    /** A witness: membership and agreement only, no lake, no modules, no API but health. */
+    public static final String WITNESS = "witness";
+
+    public NodeIdentity {
+        id = id == null ? "" : id;
+        address = address == null ? "" : address;
+        role = role == null || role.isBlank() ? SERVER : role;
     }
 
     public static String resolve(String configured, Path file) {
