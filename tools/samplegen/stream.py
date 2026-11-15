@@ -45,7 +45,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--bootstrap", default="localhost:9092")
     ap.add_argument("--topic", default="drishti.trading.trades")
-    ap.add_argument("--samples", default="modules/banking/dmod/packs/trading/samples")
+    ap.add_argument("--samples", default=str(pathlib.Path(__file__).resolve().parents[2] / "modules/banking/dmod/packs/trading/samples"))
     ap.add_argument("--rate", type=float, default=5.0)
     ap.add_argument("--seconds", type=float, default=0.0)
     a = ap.parse_args()

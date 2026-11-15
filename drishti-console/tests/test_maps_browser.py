@@ -103,7 +103,7 @@ def stack(tmp_path_factory):
                DRISHTI_DATA_DIR=str(work / "data"))
     procs = []
     try:
-        procs.append(subprocess.Popen(java_cmd(JAVA, ["-Xmx768m", "-jar", jars[0], f"--server.port={SERVER_PORT}", f"--drishti.bi.query.store-dir={tmp / 'store'}"], tmp=tmp / "jvm-tmp", cwd=work), cwd=work, env=env,
+        procs.append(subprocess.Popen(java_cmd(JAVA, ["-Xmx768m", "-jar", jars[0], f"--server.port={SERVER_PORT}", f"--drishti.bi.query.store-dir={tmp / 'store'}"], tmp=tmp / "jvm-tmp", cwd=work, env=env), cwd=work, env=env,
                                       stdout=open(tmp / "server.log", "ab"), stderr=subprocess.STDOUT))
         wait(f"http://127.0.0.1:{SERVER_PORT}/actuator/health")
         procs.append(subprocess.Popen([sys.executable, str(CONSOLE / "run_drishti_web.py"), f"--server.port={CONSOLE_PORT}", f"--backend.url=http://127.0.0.1:{SERVER_PORT}"],

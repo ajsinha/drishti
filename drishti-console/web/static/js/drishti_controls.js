@@ -494,11 +494,11 @@
   if (!auto) { return; }
   var v = document.querySelector('[data-view]');
   if (!v || !v.hasAttribute('data-controls')) { return; }
-  var base = '/v/' + encodeURIComponent(v.dataset.kind) + '/' + v.dataset.id.split('/').map(encodeURIComponent).join('/');
+  var base = drishti_url('/v/') + encodeURIComponent(v.dataset.kind) + '/' + v.dataset.id.split('/').map(encodeURIComponent).join('/');
   init(document, {
     view: v, scope: v.getAttribute('data-view-sutra') || v.dataset.kind,
     panelsUrl: function (q) { return base + '/panels?' + q + (v.dataset.chosenSutra ? '&sutra=' + encodeURIComponent(v.dataset.chosenSutra) : '') + (v.dataset.design ? '&design=' + encodeURIComponent(v.dataset.design) : ''); },
-    fetchJson: function (url) { return fetch(url, { credentials: 'same-origin', headers: { Accept: 'application/json' } }).then(function (r) { if (!r.ok) { throw new Error('HTTP ' + r.status); } return r.json(); }); },
+    fetchJson: function (url) { return fetch(drishti_url(url), { credentials: 'same-origin', headers: { Accept: 'application/json' } }).then(function (r) { if (!r.ok) { throw new Error('HTTP ' + r.status); } return r.json(); }); },
     afterSwap: function (fresh) {
       if (window.Drishti.layout) { window.Drishti.layout.decorate(fresh); }
       if (window.Drishti.view) { window.Drishti.view.enhance(fresh); }

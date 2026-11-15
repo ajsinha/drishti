@@ -326,7 +326,7 @@ A trade's valuation from the risk engine, for every source system: MTM, one-day 
 |---|---|---|---|---|---|---|
 | `VALUATION_ID` | id | required |  | The record's id (the business key) | `TVAL-1000001` (pattern `^TVAL-`) |  |
 | `TRADE_ID` | id | required |  | The trade valued: a TRADE_ID of the trading pack's trade kind, as text (ENDUR digits, CLY-…, MX-…). | `1000001` | `trade` |
-| `SOURCE_SYSTEM` | text | required |  | The trade's booking system: ENDUR, CALYPSO or MUREX. | `CALYPSO`, `ENDUR`, `MUREX` |  |
+| `SOURCE_SYSTEM` | text | required |  | The trade's booking system: ENDUR, CALYPSO or MUREX. | `CALYPSO`, `ENDUR`, `ICI`, `MUREX`, `SWAPONE`, `WSS` |  |
 | `PRODUCT_TYPE` | text | required |  | The trade's product type as booked (ComSwap, IRS_FIXFLOAT …), the trade's PRODUCT_TYPE. | `ComSwap` |  |
 | `PRODUCT_GROUP` | text | required |  | The trade's product group (Commodity, Rates, FX, Credit, Equity …). | `Commodity` |  |
 | `PORTFOLIO` | id | required |  | The book the trade sits in: a BOOK_ID of the core pack's book kind (BOOK-…). | `BOOK-COMM-2` (pattern `^BOOK-`) | `book` |
@@ -570,7 +570,7 @@ One trade's (or one position's) P&L under every scenario of the date's scenario 
 | `TRADE_ID` | id | optional |  | Trade: the trade it refers to, at GRAIN TRADE (required then) | `MX-20000274` (pattern `^((MX\|CLY)-)?\d+$`) | `trade` |
 | `POSITION_ID` | id | optional |  | The position, at GRAIN POSITION (required then, and no TRADE_ID): used as it is, never derived from trades. At GRAIN TRADE it is absent (the engine derives the trade's position). | `POS-ENDUR-BOOK-COMM-1-ComSwap-USD` | `position` |
 | `CURRENCY` | text | required |  | The currency the P&L values are in (USD in the demo). A vector in another currency is converted to USD per scenario with that scenario's FX (approximate: the currency move inside the trade is already folded into the vector; counted in tradesWithoutPv); a currency with no scenario FX on the date rejects the row (DRS-5207). The trade's own currency is TRADE_CURRENCY. | `USD` |  |
-| `SOURCE_SYSTEM` | text | required |  | The booking system the trade comes from (MUREX and CALYPSO in the demo); kept for people and audit, not read by the engine. | `CALYPSO`, `MUREX` |  |
+| `SOURCE_SYSTEM` | text | required |  | The booking system the trade comes from (MUREX and CALYPSO in the demo); kept for people and audit, not read by the engine. | `CALYPSO`, `ENDUR`, `ICI`, `MUREX`, `SWAPONE`, `WSS` |  |
 | `VECTOR_ID` | id | required |  | The record's id (the business key) | `PNL-MX-20000274-HS-509` (pattern `^(PNL\|PV)-`) |  |
 | `TRADE_CURRENCY` | text | optional |  | The trade's (or position's) own currency when it is not the P&L's: what scopes, rules and the pages' Trade currency read. Absent: CURRENCY. | `GBP` |  |
 | `SECURITY_ID` | id | optional |  | The security or exchange contract the trade is in (securities and listed products): Drishti keys the trade's position by book and security. | `SEC-WARRANT-USD-01` |  |

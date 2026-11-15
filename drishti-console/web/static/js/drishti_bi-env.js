@@ -52,7 +52,7 @@
   q('[data-export]').addEventListener('submit', function (e) {
     e.preventDefault();
     var f = e.target.elements;
-    fetch('/bi/api/bundle?workspace=' + encodeURIComponent(f.workspace.value) + '&dependencies=' + (f.dependencies.checked ? 'true' : 'false'), { credentials: 'same-origin' }).then(function (r) {
+    fetch(drishti_url('/bi/api/bundle?workspace=' + encodeURIComponent(f.workspace.value) + '&dependencies=' + (f.dependencies.checked ? 'true' : 'false')), { credentials: 'same-origin' }).then(function (r) {
       return r.json().then(function (d) { if (!r.ok) { var er = new Error((d.code ? d.code + ' ' : '') + (d.detail || r.statusText)); throw er; } return d; });
     }).then(function (d) {
       var blob = new Blob([JSON.stringify(d, null, 2)], { type: 'application/json' });

@@ -38,7 +38,7 @@
   function sumOf(step, text) { var n = $('[data-sum="' + step + '"]'); if (n) { n.textContent = text; } }
   function fire(name, arg) { (S.on[name] || []).forEach(function (f) { f(arg); }); }
   function on(name, f) { (S.on[name] = S.on[name] || []).push(f); }
-  var CON = '/admin/connectors/api';
+  var CON = drishti_url('/admin/connectors/api');
   function q(s) { return encodeURIComponent(s); }
   function list(text) { return String(text || '').split(/[,\s]+/).map(function (s) { return s.trim(); }).filter(Boolean); }
   function spec() { return S.ctx && S.plugin ? S.ctx.plugins.filter(function (p) { return p.name === S.plugin; })[0] : null; }
@@ -273,7 +273,7 @@
   window.Drishti.ConnDesigner = { root: root, S: S, api: api, why: why, say: say, show: show, go: go, sumOf: sumOf, on: on, fire: fire, field: field, draft: draft, q: q, CON: CON, list: list };
 
   // ---- start: the types installed, the kinds, the bindings ----------------------------------------------------------------------------
-  api('GET', '/build/connector/api/context').then(function (r) {
+  api('GET', drishti_url('/build/connector/api/context')).then(function (r) {
     if (!r.ok) { say(why(r), true); return; }
     S.ctx = r.body;
     $('[data-known-kinds]').innerHTML = '';
@@ -283,7 +283,7 @@
     loadSummaries();
     var pre = root.getAttribute('data-new');
     if (pre) {                                                                // a pack's link: ?new=<name> pre-fills from its suggestion
-      api('GET', '/build/connector/api/suggestion/' + q(pre)).then(function (s) {
+      api('GET', drishti_url('/build/connector/api/suggestion/') + q(pre)).then(function (s) {
         if (s.ok && s.body.plugin) {
           S.plugin = s.body.plugin; S.name = pre; S.kinds = s.body.kinds || []; S.settings = s.body.settings || {}; S.description = s.body.description || '';
           sumOf('type', S.plugin);

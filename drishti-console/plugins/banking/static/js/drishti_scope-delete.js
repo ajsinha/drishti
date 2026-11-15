@@ -74,12 +74,12 @@
 
   function remove(b, reason) {
     var cut = String(b.id).indexOf("/");
-    var url = "/api/var/baskets/" + encodeURIComponent(String(b.id).slice(0, cut)) + "/" + encodeURIComponent(String(b.id).slice(cut + 1));
+    var url = drishti_url("/api/var/baskets/") + encodeURIComponent(String(b.id).slice(0, cut)) + "/" + encodeURIComponent(String(b.id).slice(cut + 1));
     var q = new URLSearchParams();
     if (b.version !== undefined && b.version !== null) q.set("version", String(b.version));
     if (reason) q.set("reason", reason);
     url += q.toString() ? "?" + q.toString() : "";
-    return fetch(url, { method: "DELETE", credentials: "same-origin", headers: { Accept: "application/json" } }).then(function (r) {
+    return fetch(drishti_url(url), { method: "DELETE", credentials: "same-origin", headers: { Accept: "application/json" } }).then(function (r) {
       if (r.ok) return true;
       return r.json().catch(function () { return {}; }).then(function (body) {
         var e = new Error(body.detail || ("HTTP " + r.status));

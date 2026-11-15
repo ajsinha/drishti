@@ -289,7 +289,7 @@
     btn.disabled = true;
     $('[data-eng-done]').hidden = true;
     $('[data-eng-error]').hidden = true;
-    fetch('/admin/api/engines', {method: 'POST', headers: {'Content-Type': 'application/json', Accept: 'application/json'},
+    fetch(drishti_url('/admin/api/engines'), {method: 'POST', headers: {'Content-Type': 'application/json', Accept: 'application/json'},
       credentials: 'same-origin', body: JSON.stringify(body)})
       .then(function (r) { return r.json().then(function (j) { return {ok: r.ok, j: j}; }); })
       .then(function (res) {
@@ -318,17 +318,17 @@
   function ask(url, ms) {
     var ctl = window.AbortController ? new AbortController() : null;
     var t = ctl ? setTimeout(function () { ctl.abort(); }, ms) : 0;
-    return fetch(url, {headers: {Accept: 'application/json'}, credentials: 'same-origin', signal: ctl ? ctl.signal : undefined})
+    return fetch(drishti_url(url), {headers: {Accept: 'application/json'}, credentials: 'same-origin', signal: ctl ? ctl.signal : undefined})
       .then(function (r) { clearTimeout(t); return r.ok ? r.json() : null; })
       .catch(function () { clearTimeout(t); return null; });
   }
   var asking = 'asking the server…';
   function refresh() {
-    var engines = ask('/admin/api/engines', 15000).then(function (j) {     // each answer drawn as it arrives
+    var engines = ask(drishti_url('/admin/api/engines'), 15000).then(function (j) {     // each answer drawn as it arrives
       if (j && j.engines) { view = j; asking = ''; } else if (!view.engines) { asking = 'the server is not answering: reload to ask again'; }
       drawAll();
     });
-    var hist = ask('/admin/api/engines/history?limit=50', 15000).then(function (j) { if (j && j.changes) { history = j.changes; drawHistory(); } });
+    var hist = ask(drishti_url('/admin/api/engines/history?limit=50'), 15000).then(function (j) { if (j && j.changes) { history = j.changes; drawHistory(); } });
     return Promise.all([engines, hist]);
   }
 

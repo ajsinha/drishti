@@ -81,10 +81,32 @@ public final class ConnectorLayers {
         for (String packName : PackLoader.lineage(packs).order()) {
             packs.stream().filter(p -> p.name().equals(packName)).findFirst().ifPresent(p -> p.connectorTemplates().forEach((n, t) -> {
                 if (!out.containsKey(n)) {
-                    out.put(n, new Template(n, p.moduleOfConnector(n).map(m -> "module " + m).orElse("pack " + p.name()), adjust.apply(t)));
+                    out.put(n, new Template(n, p.moduleOfConnector(n).map(m -> "module " + m).orElse("pack " + p.name()),
+                            adjust.apply(packBound(p.name(), t))));
                 }
             }));
         }
+        return out;
+    }
+
+    /**
+     * A pack's template with its lake bound by name (docs/admin/CONFIGURATION.md, "Named lakes, databases and brokers"): a template that
+     * reads the shared demo lake reads {@code pack.<pack>.lake} instead when that is set, so moving one pack's data never moves another's;
+     * the template as given otherwise.
+     */
+    @SuppressWarnings("unchecked")
+    public static Map<String, Object> packBound(String pack, Map<String, Object> t) {
+        if (t == null || !(t.get("settings") instanceof Map<?, ?> s) || !(s.get(ConnectorLake.LAKE) instanceof String lake)) {
+            return t;
+        }
+        String bound = com.ash.drishti.common.NamedResources.packLake(pack, lake);
+        if (bound.equals(lake)) {
+            return t;
+        }
+        Map<String, Object> out = new LinkedHashMap<>(t);
+        Map<String, Object> settings = new LinkedHashMap<>((Map<String, Object>) s);
+        settings.put(ConnectorLake.LAKE, bound);
+        out.put("settings", settings);
         return out;
     }
 

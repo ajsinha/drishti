@@ -30,7 +30,7 @@
     {% if profile.lastLoginAt %}<div><dt>Last sign-in</dt><dd class="mono">{{ profile.lastLoginAt[:16] | replace('T', ' ') }} UTC</dd></div>{% endif %}
   </dl>
   {% if not must %}{# until the password is changed only the change is offered (and enforced) #}
-  <form class="login-box adm-pw" method="post" action="/account/settings" id="settings">
+  <form class="login-box adm-pw" method="post" action="{{ BASE }}/account/settings" id="settings">
     <h2>Settings</h2>
     <p class="text-muted-d adm-hint">Kept with your account, so they follow you to any browser.</p>
     {% if saved %}<p class="adm-msg" role="status">Saved.</p>{% endif %}
@@ -86,7 +86,7 @@
       roles allow at the moment of each call, and stops when your account is disabled. By default it only <b>reads</b>. Tick a scope below
       to let it change things too; a token with a write scope must expire, and everything it writes is recorded in the audit log. Send it as
       <span class="mono">Authorization: Bearer drk_…</span> to <span class="mono">{{ api_base }}/api/v1/…</span>
-      (see the <a href="/help/api">API guide</a> and the <a href="/help/cli-guide">command-line guide</a>). The secret is shown once; revoke a token you no longer use.</p>
+      (see the <a href="{{ BASE }}/help/api">API guide</a> and the <a href="{{ BASE }}/help/cli-guide">command-line guide</a>). The secret is shown once; revoke a token you no longer use.</p>
     <div class="tbl-wrap"><table class="tbl" data-plain><thead><tr><th>Name</th><th>Can</th><th>Created</th><th>Expires</th><th>Last used</th><th>Status</th><th></th></tr></thead><tbody>
       {% for t in tokens or [] %}<tr data-token="{{ t.id }}"><td>{{ t.name }} <span class="mono text-muted-d">{{ t.id }}</span></td>
         <td data-scopes>{% set sc = t.scopes or ['read'] %}{% if sc == ['read'] %}<span class="text-muted-d">read only</span>{% else %}<span class="mono">Can: {{ sc | join(', ') }}</span>{% endif %}</td>
@@ -128,4 +128,4 @@
 </div>
 {% endblock %}
 {% block footer %}{% include "_footer.html" %}{% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_view.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_admin.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_view.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_admin.js?v={{ ASSET_V }}"></script>{% endblock %}

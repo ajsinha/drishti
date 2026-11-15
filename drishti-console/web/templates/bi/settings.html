@@ -15,7 +15,7 @@
 #}
 {% extends "base.html" %}
 {% block title %}BI settings · {{ PRODUCT }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_admin-artifacts.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-artifacts.css?v={{ ASSET_V }}">{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
@@ -24,7 +24,7 @@
   <h1 class="ws-h">BI settings</h1>
   <p class="text-muted-d">Business intelligence (Rupaka). Roles hold the powers; the workspace policy says who creates shared workspaces.
     <b class="mono">bi</b> opens BI and published content, <b class="mono">bi-author</b> creates and publishes in workspaces, <b class="mono">bi-steward</b> certifies,
-    <b class="mono">bi-admin</b> manages BI and sees every workspace. A higher power also opens BI. Administrators hold all four. <a href="/admin/bi/usage" data-usage-link>BI usage</a>: what is asked, by whom, and how it is answered. <a href="/admin/bi/runs" data-runs-link>BI runs</a>: what runs in the background now, the result store, and how honest the estimates are.</p>
+    <b class="mono">bi-admin</b> manages BI and sees every workspace. A higher power also opens BI. Administrators hold all four. <a href="{{ BASE }}/admin/bi/usage" data-usage-link>BI usage</a>: what is asked, by whom, and how it is answered. <a href="{{ BASE }}/admin/bi/runs" data-runs-link>BI runs</a>: what runs in the background now, the result store, and how honest the estimates are.</p>
   <p class="adm-msg" data-msg role="status" aria-live="polite"></p>
   <form class="bi-form bi-inline" data-policy>
     <label>Who creates shared workspaces
@@ -40,12 +40,12 @@
   {% if bi_files is not none %}
   <h2 class="ws-h" id="shipped">Shipped files <span class="text-muted-d">({{ bi_files | length }} in config/bi)</span></h2>
   <p class="text-muted-d">The tables and models that ship in <span class="mono">config/tables</span>, and the reports, boards, notebooks and Python items in <span class="mono">config/bi</span>. <b>Disable</b> hides one from the catalogue and keeps the file;
-    <b>Uninstall</b> shows what depends on it first, then moves the file to the archive. The whole list, with packs and connectors, is Admin, <a href="/admin/artifacts">Artifacts</a>.</p>
+    <b>Uninstall</b> shows what depends on it first, then moves the file to the archive. The whole list, with packs and connectors, is Admin, <a href="{{ BASE }}/admin/artifacts">Artifacts</a>.</p>
   <div class="tbl-wrap"><table class="tbl adm-tbl" data-shipped>
     <caption class="visually-hidden">Shipped BI files</caption>
     <thead><tr><th scope="col">File</th><th scope="col">Kind</th><th scope="col">Status</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
     <tbody>{% for f in bi_files %}
-      <tr data-file="{{ f.subtype }}:{{ f.name }}"><th scope="row"><a class="mono" href="{{ f.link }}">{{ f.name }}</a></th><td><span class="art-kind">{{ f.subtype }}</span></td>
+      <tr data-file="{{ f.subtype }}:{{ f.name }}"><th scope="row"><a class="mono" href="{{ f.link | u }}">{{ f.name }}</a></th><td><span class="art-kind">{{ f.subtype }}</span></td>
         <td><span class="st {{ {'on': 'st-ok', 'problem': 'st-bad'}.get(f.state, '') }}">{{ {'on': 'on', 'off': 'disabled', 'problem': 'problem'}.get(f.state, f.state) }}</span></td>
         <td class="adm-actions"><button type="button" class="fk" data-uninstall data-mode="disable" data-kind="bi" data-subtype="{{ f.subtype }}" data-name="{{ f.name }}" aria-label="Disable {{ f.name }}">{{ 'Disable' if f.state != 'off' else 'Disabled' }}</button>
           <button type="button" class="fk emb-danger" data-uninstall data-kind="bi" data-subtype="{{ f.subtype }}" data-name="{{ f.name }}" aria-label="Uninstall {{ f.name }}">Uninstall…</button></td></tr>
@@ -55,4 +55,4 @@
   <p class="text-muted-d">Built-in roles come from configuration (<span class="mono">drishti.security.roles.&lt;role&gt;.bi</span>) and are read-only here; roles you define in Admin, Roles are editable.</p>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi.js?v={{ ASSET_V }}"></script>{% if bi_files is not none %}<script src="/static/js/drishti_artifact-uninstall.js?v={{ ASSET_V }}"></script>{% endif %}{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_bi.js?v={{ ASSET_V }}"></script>{% if bi_files is not none %}<script src="{{ BASE }}/static/js/drishti_artifact-uninstall.js?v={{ ASSET_V }}"></script>{% endif %}{% endblock %}

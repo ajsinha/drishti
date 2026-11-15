@@ -38,7 +38,7 @@
   function say(text, bad) { B.say(q('[data-msg]'), text, bad); }
   X.say = say;
   X.post = function (path, body) {
-    return fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, credentials: 'same-origin', body: JSON.stringify(body) })
+    return fetch(drishti_url(path), { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, credentials: 'same-origin', body: JSON.stringify(body) })
       .then(function (r) {
         return r.json().catch(function () { return {}; }).then(function (d) {
           if (!r.ok) { var e = new Error((d.code ? d.code + ' ' : '') + (d.detail || r.statusText)); e.code = d.code; e.traceback = d.traceback; throw e; }
@@ -117,7 +117,7 @@
   /** Opens (or reopens) the extract for `spec` and redraws the tabs. */
   X.open = function (spec) {
     say('Opening the extract…');
-    return X.post('/bi/notebook/extract', spec).then(function (ex) {
+    return X.post(drishti_url('/bi/notebook/extract'), spec).then(function (ex) {
       X.ex = ex; X.spec = spec; X.qual = spec.fields || [];
       var masked = ex.masked.length ? ' Masked for you: ' + ex.masked.join(', ') + '.' : '';
       q('[data-info]', root).textContent = ex.rowCount + ' rows' + (ex.truncated ? ' of ' + ex.total + ' (cut to the row limit)' : '') + ', ' + ex.columns.length + ' columns.' + masked;
@@ -147,7 +147,7 @@
   X.tell = function (anchor, text, bad, item) {
     say('');
     var box = B.near(anchor, text, bad);
-    if (box && item && !bad) { box.appendChild(document.createTextNode(' ')); box.appendChild(h('a', { class: 'lnk', href: '/bi/i/' + B.id2path(item.id), 'data-promoted-link': '', text: 'Open the draft' })); }
+    if (box && item && !bad) { box.appendChild(document.createTextNode(' ')); box.appendChild(h('a', { class: 'lnk', href: drishti_url('/bi/i/' + B.id2path(item.id)), 'data-promoted-link': '', text: 'Open the draft' })); }
   };
   /** Runs `make(existingItemId | null)` (resolves with {item, text}). When `key` was promoted before, asks beside the button: update that draft, or save another. */
   X.promoteOnce = function (anchor, key, make) {
@@ -178,7 +178,7 @@
     var target = targetSel.value;
     var body = Object.assign({ to: 'report', name: title, dataset: X.spec.dataset, columns: X.ex.columns.map(function (c) { return c.name; }), qualified: X.qual, target: target || undefined, page: pageIn.value.trim() || undefined }, extra);
     var make = function (existing) {
-      return X.post('/bi/notebook/promote', body).then(function (d) {
+      return X.post(drishti_url('/bi/notebook/promote'), body).then(function (d) {
         var saved = target ? B.api('PUT', '/items/' + B.id2path(target), { body: d.yaml }) : existing ? B.api('PUT', '/items/' + B.id2path(existing), { body: d.yaml }) : X.createItem('report', d.title, d.yaml);
         return saved.then(function (it) {
           X.lastPromoted = { item: it.id, visual: d.visual || 'sql' };
@@ -196,7 +196,7 @@
     var reports = [].concat.apply([], lists.map(function (l) { return Array.isArray(l) ? l : (l.items || []); })).filter(function (it) { return it.kind === 'report'; });
     targetSel.component.setOptions(targetSel.component.options.concat(reports.map(function (it) { return { value: it.id, label: 'the report: ' + it.title }; })));      // drishti-inputs' Select
   }).catch(function () {});
-  function link(it) { var a = q('[data-saved]', root); a.href = '/bi/i/' + B.id2path(it.id); a.hidden = false; }
+  function link(it) { var a = q('[data-saved]', root); a.href = drishti_url('/bi/i/' + B.id2path(it.id)); a.hidden = false; }
   X.link = link;
 
   // ---- notebooks -----------------------------------------------------------------------------------------------------------------
@@ -214,7 +214,7 @@
     e.preventDefault();
     if (!X.spec) { say('Open an extract first.', true); return; }
     var nb = X.body();
-    X.post('/bi/notebook/check', { notebook: nb }).then(function (c) {
+    X.post(drishti_url('/bi/notebook/check'), { notebook: nb }).then(function (c) {
       if (!c.valid) { throw new Error(c.problems.map(function (p) { return p.code + ' ' + p.message; }).join('; ')); }
       var save = X.item && X.item.can && X.item.can.edit ? B.api('PUT', '/items/' + B.id2path(X.item.id), { title: nb.title, body: c.yaml }) : X.createItem('notebook', nb.title, c.yaml);
       return save.then(function (it) { X.item = it; say('Saved as a notebook: ' + nb.title + (it.version ? '' : '.')); link(it); });
@@ -243,7 +243,7 @@
   }
   function openNotebook(id) {
     return B.api('GET', '/items/' + B.id2path(id)).then(function (it) {
-      return X.post('/bi/notebook/check', { yaml: it.body || '' }).then(function (c) {
+      return X.post(drishti_url('/bi/notebook/check'), { yaml: it.body || '' }).then(function (c) {
         if (!c.valid) { throw new Error(c.problems.map(function (p) { return p.code + ' ' + p.message; }).join('; ')); }
         X.item = it;
         if (!notebookSel.component.options.some(function (o) { return o.value === it.id; })) { notebookSel.component.setOptions(notebookSel.component.options.concat([{ value: it.id, label: it.title }])); }   // a draft is not in the catalogue

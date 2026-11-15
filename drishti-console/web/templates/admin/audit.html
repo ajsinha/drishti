@@ -22,7 +22,7 @@
 <div class="adm">
   <h1>Audit log</h1>
   {% with tab='audit' %}{% include "admin/_nav.html" %}{% endwith %}
-  <form class="adm-bar" method="get" action="/admin/audit" role="search">{{ admin_form('search', name='subject', value=subject, title='User', placeholder='Filter by user') }}</form>
+  <form class="adm-bar" method="get" action="{{ BASE }}/admin/audit" role="search">{{ admin_form('search', name='subject', value=subject, title='User', placeholder='Filter by user') }}</form>
   <div class="tbl-wrap"><table class="tbl">
     <thead><tr><th>When (UTC)</th><th>Actor</th><th>Action</th><th>User</th><th>Detail</th></tr></thead>
     <tbody>{% for e in events %}<tr><td class="mono">{{ e.at[:19] | replace('T', ' ') }}</td><td class="mono">{{ e.actor }}</td>
@@ -33,4 +33,4 @@
 </div>
 {% endblock %}
 {% block footer %}{% include "_footer.html" %}{% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_view.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_view.js?v={{ ASSET_V }}"></script>{% endblock %}

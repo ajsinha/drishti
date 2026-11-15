@@ -22,7 +22,7 @@
 {% block title %}{{ 'FRTB-SA Playground' if mode == 'play' else 'FRTB-SA capital' }} · {{ scope or recipe or 'FRTB' }} · {{ PRODUCT }}{% endblock %}
 {% block screen %}{{ screen }}{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_var-playground.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_frtb-sa.css?v={{ ASSET_V }}">{% include "terminal/_risk_elements_css.html" %}{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_var-playground.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_frtb-sa.css?v={{ ASSET_V }}">{% include "terminal/_risk_elements_css.html" %}{% endblock %}
 {% block nav %}{% with command_text=command_text ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
 <div class="pg fr" data-frtb data-mode="{{ mode }}" data-scope="{{ scope }}" data-recipe="{{ recipe or '' }}">
@@ -31,13 +31,13 @@
       {{ 'FRTB-SA Playground' if mode == 'play' else 'FRTB-SA capital' }}</h1>
     <nav class="pg-path mono" aria-label="The scope">{{ scope or recipe }}</nav>
     <span class="pg-meta" data-fr-meta aria-live="polite">{% if scope or recipe %}loading…{% endif %}</span>
-    <a class="pg-help" href="/help/context/frtb-sa" title="Help: FRTB-SA (the guide)" aria-label="Help: FRTB-SA"><i class="bi bi-question-circle" aria-hidden="true"></i></a>
-    {% if mode == 'play' and scope %}<a class="pg-link" href="/frtb?scope={{ scope|urlencode }}">Capital screen</a>{% elif scope %}<a class="pg-link" href="/play/frtb?scope={{ scope|urlencode }}">Open in the playground</a>{% endif %}
+    <a class="pg-help" href="{{ BASE }}/help/context/frtb-sa" title="Help: FRTB-SA (the guide)" aria-label="Help: FRTB-SA"><i class="bi bi-question-circle" aria-hidden="true"></i></a>
+    {% if mode == 'play' and scope %}<a class="pg-link" href="{{ BASE }}/frtb?scope={{ scope|urlencode }}">Capital screen</a>{% elif scope %}<a class="pg-link" href="{{ BASE }}/play/frtb?scope={{ scope|urlencode }}">Open in the playground</a>{% endif %}
   </div>
-  <form class="pg-ask" method="get" action="{{ '/play/frtb' if mode == 'play' else '/frtb' }}">
+  <form class="pg-ask" method="get" action="{{ ('/play/frtb' if mode == 'play' else '/frtb') | u }}">
     <label>Scope <input class="pg-input mono" name="scope" value="{{ scope }}" placeholder="BANK, DESK:DESK-RATES, BOOK:BOOK-FX-1, EXAMPLE" autocomplete="off"></label>
     <button type="submit" class="pg-btn primary">Open</button>
-    <a class="pg-link" href="/api/frtb/template.xlsx" download title="The workbook of the design's hand-built cases: every figure a formula">Hand-built cases workbook</a>
+    <a class="pg-link" href="{{ BASE }}/api/frtb/template.xlsx" download title="The workbook of the design's hand-built cases: every figure a formula">Hand-built cases workbook</a>
   </form>
   <p class="pg-notice" data-fr-notice role="status" hidden></p>
   {% if scope or recipe %}
@@ -80,5 +80,5 @@
   {% endif %}
 </div>
 {% include "terminal/_risk_elements.html" %}
-<script src="/static/js/drishti_frtb-sa.js?v={{ ASSET_V }}"></script>
+<script src="{{ BASE }}/static/js/drishti_frtb-sa.js?v={{ ASSET_V }}"></script>
 {% endblock %}

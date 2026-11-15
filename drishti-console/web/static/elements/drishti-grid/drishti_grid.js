@@ -1402,7 +1402,7 @@
   })();
   /* ---- src/drishti_doc-table.js ---- */
   __m["src/drishti_doc-table.js"] = (function () {
-    var h = __lib("drishti-core").h, roundHalfUp = __lib("drishti-core").roundHalfUp;
+    var h = __lib("drishti-core").h, roundHalfUp = __lib("drishti-core").roundHalfUp, drishtiUrl = __lib("drishti-core").url;
     const str = (v) => (v === null || v === undefined ? '' : String(v));
     const defTone = (c) => (c && c.tone ? ' t-' + c.tone : '');
     function flat(out, c) {
@@ -1460,7 +1460,7 @@
       const src = panel.data.pivot && panel.data.pivot.source;
       if (!src) { return docTable(doc, panel.data, hooks); }
       const e = mk(doc), title = panel.title || panel.id;
-      return [docTable(doc, panel.data, hooks), e('p', { class: 'pv-open' }, e('a', { class: 'btn btn-sm btn-outline-secondary', href: '/pivot?source=' + encodeURIComponent(src).replace(/%2F/g, '/'),
+      return [docTable(doc, panel.data, hooks), e('p', { class: 'pv-open' }, e('a', { class: 'btn btn-sm btn-outline-secondary', href: drishtiUrl('/pivot?source=' + encodeURIComponent(src).replace(/%2F/g, '/')),
         title: 'Pivot ' + title + ': rows, columns, values and filters, every total from its own rows (bi/PIVOT.md)' }, 'Pivot'))];
     }
     function drRows(k, pid, rows, numeric, prefix, deeper, noun) {
@@ -2941,7 +2941,7 @@
     var XLSX_TYPE = __m["src/drishti_export.js"].XLSX_TYPE;
     var columnMenuItems = __m["src/drishti_grid-ui.js"].columnMenuItems, cellMenuItems = __m["src/drishti_grid-ui.js"].cellMenuItems, FUNCTION_KEYS = __m["src/drishti_grid-ui.js"].FUNCTION_KEYS, parseCondition = __m["src/drishti_grid-ui.js"].parseCondition, pivotMeasures = __m["src/drishti_grid-ui.js"].pivotMeasures;
     var LAYOUTS = __m["src/drishti_grid-model-base.js"].LAYOUTS, DENSITIES = __m["src/drishti_grid-model-base.js"].DENSITIES;
-    var openDialog = __lib("drishti-core").openDialog, h = __lib("drishti-core").h;
+    var openDialog = __lib("drishti-core").openDialog, h = __lib("drishti-core").h, drishtiUrl = __lib("drishti-core").url;
     var editorOf = __m["src/drishti_grid-edit.js"].editorOf;
     function onKey(v, e) {
       const m = v.model, k = e.key, mod = e.ctrlKey || e.metaKey;
@@ -3001,7 +3001,7 @@
       const win = v.doc.defaultView, blob = new win.Blob([data], { type: type });
       v.lastExport = { name: name, type: type, size: blob.size };
       if (v.o.download) { v.o.download(name, blob); return; }
-      const a = h(v.doc, 'a', { attrs: { href: win.URL.createObjectURL(blob), download: name } });
+      const a = h(v.doc, 'a', { attrs: { href: drishtiUrl(win.URL.createObjectURL(blob)), download: name } });
       v.doc.body.appendChild(a);
       a.click();
       a.remove();
@@ -6547,6 +6547,7 @@
   __m["src/drishti_grid-ag-events.js"] = (function () {
     var AG_EVENTS = __m["src/drishti_grid-ag-map.js"].AG_EVENTS;
     var AG_GROUP_COLUMN = __m["src/drishti_grid-ag.js"].AG_GROUP_COLUMN;
+    var drishtiUrl = __lib("drishti-core").url;
     const FROM = {
       cellClicked: ['cellClicked', 'rowClicked'], cellDoubleClicked: ['cellDoubleClicked', 'rowDoubleClicked'], cellValueChanged: ['cellValueChanged'],
       focusChanged: ['cellFocused'], selectionChanged: ['selectionChanged'], rangeChanged: ['cellSelectionChanged', 'rangeSelectionChanged'],
@@ -6740,7 +6741,7 @@
         const win = g ? g.doc.defaultView : null, blob = win ? new win.Blob([data], { type: type }) : data;
         if (hook) { hook(name, blob); return; }
         const a = g.doc.createElement('a');
-        a.href = win.URL.createObjectURL(blob);
+        a.href = drishtiUrl(win.URL.createObjectURL(blob));
         a.download = name;
         g.doc.body.appendChild(a);
         a.click();
@@ -6984,7 +6985,7 @@
   })();
   /* ---- src/drishti_live-model.js ---- */
   __m["src/drishti_live-model.js"] = (function () {
-    var MASK = __lib("drishti-core").MASK, hasFormat = __lib("drishti-core").hasFormat;
+    var MASK = __lib("drishti-core").MASK, hasFormat = __lib("drishti-core").hasFormat, drishtiUrl = __lib("drishti-core").url;
     const ROW_KEY = '__id';
     const ROW_VERSION = '__v';
     const WINDOW_ROWS = 400;
@@ -7019,7 +7020,7 @@
           col.cellRenderer = (p) => {
             const to = c.hrefField ? p.row && p.row[c.hrefField] : String(c.href).replace(/\{([A-Za-z0-9_]+)\}/g, (m, f) => encodeURIComponent(p.row && p.row[f] !== undefined && p.row[f] !== null ? p.row[f] : ''));
             if (!to || !/^\/(?!\/)/.test(String(to))) { return null; }
-            const a = p.doc.createElement('a'); a.className = 'lnk'; a.setAttribute('href', String(to)); a.textContent = p.text; return a;
+            const a = p.doc.createElement('a'); a.className = 'lnk'; a.setAttribute('href', drishtiUrl(String(to))); a.textContent = p.text; return a;
           };
         }
         return col;
@@ -7103,7 +7104,7 @@
       return { source: spec.kind, view: { rows: groups, columns: [], values: values.length ? values : [{ measure: 'count()', as: 'Rows' }], filters: filters } };
     }
     function pivotHref(layout, live) {
-      return '/pivot?source=' + encodeURIComponent(layout.source) + '&lay=' + encodeURIComponent(JSON.stringify(layout.view)) + (live ? '&live=1' : '');
+      return drishtiUrl('/pivot?source=') + encodeURIComponent(layout.source) + '&lay=' + encodeURIComponent(JSON.stringify(layout.view)) + (live ? '&live=1' : '');
     }
     function linkFor(link, row) {
       return { label: link.label, href: String(link.href).replace(/\{([A-Z0-9_]+)\}/g, (m, f) => encodeURIComponent(row && row[f] !== undefined && row[f] !== null ? row[f] : '')) };
@@ -7121,7 +7122,7 @@
       return Array.from(keys).filter((k) => JSON.stringify((then || {})[k]) !== JSON.stringify((now || {})[k]));
     }
     function httpLiveApi(o) {
-      const base = (o.base || '/api/live').replace(/\/$/, ''), id = encodeURIComponent(o.id);
+      const base = (o.base || drishtiUrl('/api/live')).replace(/\/$/, ''), id = encodeURIComponent(o.id);
       const f = o.fetch || ((typeof fetch === 'function') ? fetch.bind(globalThis) : null);
       const call = (method, path, body) => f(path, { method: method, credentials: 'same-origin', headers: body ? { 'Content-Type': 'application/json', Accept: 'application/json' } : { Accept: 'application/json' },
         body: body ? JSON.stringify(body) : undefined }).then((r) => r.json().catch(() => ({})).then((j) => {
@@ -7134,8 +7135,8 @@
         row: (entity) => call('GET', base + '/' + id + '/rows/' + encodeURIComponent(entity)),
         edit: (body) => call('POST', base + '/' + id + '/edit', body),
         window: (stream, body) => call('POST', base + '/' + id + '/stream/' + encodeURIComponent(stream) + '/window', body),
-        history: (kind, entity) => call('GET', '/api/changes?' + q({ kind: kind, entity: entity, limit: 50 })),
-        mine: (kind) => call('GET', '/api/changes?' + q({ mine: 'true', kind: kind, limit: 100 }))
+        history: (kind, entity) => call('GET', drishtiUrl('/api/changes?') + q({ kind: kind, entity: entity, limit: 50 })),
+        mine: (kind) => call('GET', drishtiUrl('/api/changes?') + q({ mine: 'true', kind: kind, limit: 100 }))
       };
     }
     function inferType(rows, field) {
@@ -7180,7 +7181,7 @@
   })();
   /* ---- src/drishti_live-panel.js ---- */
   __m["src/drishti_live-panel.js"] = (function () {
-    var h = __lib("drishti-core").h, MASK = __lib("drishti-core").MASK;
+    var h = __lib("drishti-core").h, MASK = __lib("drishti-core").MASK, drishtiUrl = __lib("drishti-core").url;
     var Form = __lib("drishti-inputs").Form;
     var ROW_KEY = __m["src/drishti_live-model.js"].ROW_KEY, ROW_VERSION = __m["src/drishti_live-model.js"].ROW_VERSION, editItems = __m["src/drishti_live-model.js"].editItems, editSchema = __m["src/drishti_live-model.js"].editSchema, linkFor = __m["src/drishti_live-model.js"].linkFor, maskedPaths = __m["src/drishti_live-model.js"].maskedPaths, changedFields = __m["src/drishti_live-model.js"].changedFields;
     const TERMINAL = ['applied', 'refused', 'conflicted', 'withdrawn', 'rejected', 'failed'];
@@ -7235,9 +7236,9 @@
         const d = this.doc;
         const links = (this.spec.links || []).map((l) => linkFor(l, this.row));
         if (this.spec.kind && !this.spec.static && !links.some((l) => l.label === 'Open')) {   // every record of a kind has its page
-          links.unshift({ label: 'Open', href: '/v/' + encodeURIComponent(this.spec.kind) + '/' + encodeURIComponent(this.id) });
+          links.unshift({ label: 'Open', href: drishtiUrl('/v/' + encodeURIComponent(this.spec.kind) + '/' + encodeURIComponent(this.id)) });
         }
-        return h(d, 'div', { cls: 'dg-live-links' }, links.map((x) => h(d, 'a', { cls: 'dg-live-link', text: x.label, attrs: { href: x.href }, data: { link: x.label } })).concat(
+        return h(d, 'div', { cls: 'dg-live-links' }, links.map((x) => h(d, 'a', { cls: 'dg-live-link', text: x.label, attrs: { href: drishtiUrl(x.href) }, data: { link: x.label } })).concat(
           (this.o.actions || []).map((a) => h(d, 'button', { cls: 'dg-live-link', text: a.label, attrs: { type: 'button' }, data: { action: a.label }, on: { click: () => a.run(this.row) } }))));
       }
       drawRecord() {
@@ -7364,7 +7365,7 @@
   })();
   /* ---- src/drishti_live-set.js ---- */
   __m["src/drishti_live-set.js"] = (function () {
-    var h = __lib("drishti-core").h, announce = __lib("drishti-core").announce;
+    var h = __lib("drishti-core").h, announce = __lib("drishti-core").announce, drishtiUrl = __lib("drishti-core").url;
     var selectElement = __lib("drishti-inputs").selectElement;
     var Grid = __m["src/drishti_grid-view.js"].Grid;
     var ROW_KEY = __m["src/drishti_live-model.js"].ROW_KEY, ROW_VERSION = __m["src/drishti_live-model.js"].ROW_VERSION, LiveRows = __m["src/drishti_live-model.js"].LiveRows, gridColumns = __m["src/drishti_live-model.js"].gridColumns, windowIds = __m["src/drishti_live-model.js"].windowIds, pivotLayout = __m["src/drishti_live-model.js"].pivotLayout, pivotHref = __m["src/drishti_live-model.js"].pivotHref, staticSpec = __m["src/drishti_live-model.js"].staticSpec, staticApi = __m["src/drishti_live-model.js"].staticApi;
@@ -7600,7 +7601,7 @@
       }
       toPivot() {
         const href = this.pivotAddress();
-        if (this.o.navigate) { this.o.navigate(href); } else { this.doc.defaultView.location.assign(href); }
+        if (this.o.navigate) { this.o.navigate(href); } else { this.doc.defaultView.location.assign(drishtiUrl(href)); }
       }
       destroy() {
         clearTimeout(this.timer);

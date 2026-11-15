@@ -1121,7 +1121,7 @@ DRISHTI_STREAM_TRADING=true DRISHTI_PACKS=trading java -Djava.io.tmpdir=data/tmp
 ```
 
 `stream.py` also takes `--bootstrap` (`localhost:9092`), `--topic`, `--samples` and `--seconds` (0: until stopped). The trading pack's
-`trading-stream` connector reads `DRISHTI_KAFKA_BOOTSTRAP`, `DRISHTI_TRADING_TOPIC`, `DRISHTI_STREAM_STALE_AFTER` (15m: shown as behind) and keeps
+`trading-stream` connector reads its broker by name (`broker: default`, `[broker.default]` in the settings file), `DRISHTI_TRADING_TOPIC`, `DRISHTI_STREAM_STALE_AFTER` (15m: shown as behind) and keeps
 the day's messages in a disk cache (`DRISHTI_STREAM_DISK_CACHE`, `DRISHTI_CACHE_ROOT`, `DRISHTI_STREAM_CACHE_GB`, cleared at `DRISHTI_CACHE_RESET_AT`).
 
 ### 7.4 Public feeds
@@ -1751,6 +1751,29 @@ server {
 ```
 
 Check from outside: `curl -sI https://drishti.bank.example/healthz | head -1` shows `HTTP/2 200`.
+
+**At a URL sub-path** (`https://intranet.bank.example/drishti/`, the console sharing a host with other applications): set the console's
+`server.base_path` (`DRISHTI_CONSOLE_BASE_PATH=/drishti`, [CONFIGURATION.md](../admin/CONFIGURATION.md#the-consoles-url-sub-path-serverbase_path))
+and restart it. The proxy may forward the path as it is (`proxy_pass http://127.0.0.1:17480;`) or strip the prefix
+(`proxy_pass http://127.0.0.1:17480/;`): the console accepts both, and every link, script, API call, live stream, redirect and cookie it
+sends names `/drishti/...` (cookies get `Path=/drishti`, so they never reach the host's other applications).
+
+```nginx
+    location /drishti/ {
+        proxy_pass         http://127.0.0.1:17480;     # the path as it is; the console takes /drishti off itself
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_set_header   Connection        "";
+        proxy_buffering    off;
+        proxy_read_timeout 1h;
+    }
+```
+
+Check: `curl -sI https://intranet.bank.example/drishti/login | head -1` shows `HTTP/2 200`, and the page source has
+`<meta name="drishti-base" content="/drishti">`. The console still answers on its own port without the prefix (`http://host:17480/login`), so the
+health checks need no change.
 
 - **Cookies** are `Secure` by default: keep `DRISHTI_SECURE_COOKIE` unset once TLS is in place. The session cookie is `HttpOnly`,
   `SameSite=Lax` and holds only a signed reference to a session the server keeps.

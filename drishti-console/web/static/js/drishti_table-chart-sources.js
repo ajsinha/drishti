@@ -114,7 +114,7 @@
     var base = dom(t, o), fields = null;
     function catalogue() {
       if (!fields) {
-        fields = fetchJson('/api/pivot/catalogue?source=' + encodeURIComponent(source)).then(function (c) {
+        fields = fetchJson(drishti_url('/api/pivot/catalogue?source=') + encodeURIComponent(source)).then(function (c) {
           var byLabel = {};
           (c.fields || []).forEach(function (f) { byLabel[norm(f.label)] = f.name; byLabel[norm(f.name)] = f.name; });
           return byLabel;

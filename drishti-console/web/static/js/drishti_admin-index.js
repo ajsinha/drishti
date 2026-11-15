@@ -23,7 +23,7 @@
   var panel = document.querySelector('[data-index-panel]');
   var timers = {};
 
-  function url(name, tail) { return '/admin/connectors/api/' + encodeURIComponent(name) + '/index' + (tail || ''); }
+  function url(name, tail) { return drishti_url('/admin/connectors/api/') + encodeURIComponent(name) + '/index' + (tail || ''); }
   function el(tag, attrs, text) {
     var e = document.createElement(tag);
     Object.keys(attrs || {}).forEach(function (k) { e.setAttribute(k, attrs[k]); });
@@ -82,7 +82,7 @@
 
   function poll(name) {
     clearTimeout(timers[name]);
-    fetch(url(name)).then(function (r) { return r.json().then(function (b) { return { ok: r.ok, b: b }; }); }).then(function (r) {
+    fetch(drishti_url(url(name))).then(function (r) { return r.json().then(function (b) { return { ok: r.ok, b: b }; }); }).then(function (r) {
       if (!r.ok) { say(name, window.Drishti.drsMessage ? window.Drishti.drsMessage(r.b, 'Could not read the index') : 'Could not read the index', true); return; }
       var rl = r.b.reload || {};
       render(name, r.b);
@@ -106,7 +106,7 @@
     if (b.getAttribute('data-kind')) { body.kind = b.getAttribute('data-kind'); }
     if (b.getAttribute('data-date')) { body.date = b.getAttribute('data-date'); }
     say(name, 'Starting…');
-    fetch(url(name, '/reload'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(function (r) {
+    fetch(drishti_url(url(name, '/reload')), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (j) { return { ok: r.ok, body: j }; });
     }).then(function (r) {
       if (!r.ok) {

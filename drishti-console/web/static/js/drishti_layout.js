@@ -34,7 +34,7 @@
   var base = [];
   try { base = JSON.parse(view.getAttribute('data-layout-base') || '[]'); } catch (e) { base = []; }
   var on = false, dirty = false, snapshot = null, drag = null;
-  var url = '/api/layout/' + encodeURIComponent(view.getAttribute('data-sutra')) + '/' + encodeURIComponent(view.dataset.kind);
+  var url = drishti_url('/api/layout/') + encodeURIComponent(view.getAttribute('data-sutra')) + '/' + encodeURIComponent(view.dataset.kind);
 
   // ---- the panels and their sizes -------------------------------------------------------------------
   function panels(col) {
@@ -190,7 +190,7 @@
     });
   }
   function send(method, body) {
-    return fetch(url, { method: method, headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: body ? JSON.stringify(body) : undefined })
+    return fetch(drishti_url(url), { method: method, headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: body ? JSON.stringify(body) : undefined })
       .then(function (r) { return r.json().catch(function () { return {}; }).then(function (b) { return { ok: r.ok, b: b }; }); });
   }
   function save(stay) {
@@ -401,7 +401,7 @@
     var drop = drawer.querySelector('[data-promote-drop]').checked;
     pre.textContent = 'Loading…';
     ul.textContent = '';
-    fetch(url + '/promotion?dropHidden=' + drop, { headers: { Accept: 'application/json' } })
+    fetch(drishti_url(url + '/promotion?dropHidden=' + drop), { headers: { Accept: 'application/json' } })
       .then(function (r) { return r.json().then(function (b) { return { ok: r.ok, b: b }; }); })
       .then(function (res) {
         if (!res.ok) { pre.textContent = Drishti.drsMessage(res.b); return; }
@@ -435,7 +435,7 @@
       var out = drawer.querySelector('[data-promote-msg]'), btn = drawer.querySelector('[data-promote-submit]');
       btn.disabled = true;
       out.textContent = 'Submitting…';
-      fetch(url + '/promotion', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      fetch(drishti_url(url + '/promotion'), { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
         body: JSON.stringify({ note: e.target.note.value, dropHidden: drawer.querySelector('[data-promote-drop]').checked }) })
         .then(function (r) { return r.json().then(function (b) { return { ok: r.ok, b: b }; }); })
         .then(function (res) {
@@ -445,7 +445,7 @@
           out.classList.remove('t-bad');
           if (res.b.proposal) {
             out.appendChild(document.createTextNode('Proposed as ' + res.b.proposal.name + ' v' + res.b.proposal.version + ' (' + res.b.proposal.id + '): '));
-            var a = document.createElement('a'); a.className = 'lnk'; a.href = res.b.href; a.textContent = 'open the review'; out.appendChild(a);
+            var a = document.createElement('a'); a.className = 'lnk'; a.href = drishti_url(res.b.href); a.textContent = 'open the review'; out.appendChild(a);
           } else if (res.b.saved) {
             out.textContent = res.b.saved.name + ' v' + res.b.saved.version + ' is live.';
           }

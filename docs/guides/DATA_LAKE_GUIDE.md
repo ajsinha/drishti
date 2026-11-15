@@ -189,6 +189,10 @@ Values may name environment variables or server settings: `${NAME}`, `${NAME:def
 it. An unknown key, a format that is not delta or iceberg, a fifth partition column, a load mode that is not replace or append, a
 secret written as a value, or a `lake:` that differs from the file's name: each refuses the file with the key named.
 
+A site moves a lake by its name without editing its file: `[lake.<name>] root=` and `storage.<key>=` in the settings files win over the
+file's `root:` and `storage:`, and a pack's demo-lake connectors read another lake with `[pack.<pack>] lake=<name>`; each lake moves alone
+([CONFIGURATION.md, "Named lakes, databases and brokers"](../admin/CONFIGURATION.md#named-lakes-databases-and-brokers)).
+
 A table's entry:
 
 | Key | Means | Section |
@@ -2193,6 +2197,8 @@ print(t.scan(row_filter="business_date = '2026-09-30'").to_arrow().num_rows)
 ```
 
 ## 16. Runbooks: production data into the lake
+
+The kinds these runbooks (sections 16 and 17) load, each with its sample record and its data contract: `agreement` ([sample](../contracts/samples/counterparty-risk.md#agreement), [contract](../contracts/packs/counterparty-risk.md#agr-master-agreement-agreement)), `clearing-account` ([sample](../contracts/samples/core.md#clearing-account), [contract](../contracts/packs/core.md#clr-clearing-account-clearing-account)), `collateral-balance` ([sample](../contracts/samples/counterparty-risk.md#collateral-balance), [contract](../contracts/packs/counterparty-risk.md#coll-collateral-balance-collateral-balance)), `counterparty-group` ([sample](../contracts/samples/core.md#counterparty-group), [contract](../contracts/packs/core.md#grp-counterparty-group-counterparty-group)), `credit-limit` ([sample](../contracts/samples/counterparty-risk.md#credit-limit), [contract](../contracts/packs/counterparty-risk.md#lim-credit-limit-credit-limit)), `csa` ([sample](../contracts/samples/counterparty-risk.md#csa), [contract](../contracts/packs/counterparty-risk.md#csa-credit-support-annex-csa)), `desk-pnl` ([sample](../contracts/samples/market-risk.md#desk-pnl), [contract](../contracts/packs/market-risk.md#dpnl-desk-pl-actual-and-hypothetical-daily-desk-pnl)), `exposure-path` ([sample](../contracts/samples/counterparty-risk.md#exposure-path), [contract](../contracts/packs/counterparty-risk.md#xpath-exposure-path-a-trades-mtm-on-every-path-at-a-grid-date-exposure-path)), `fx-scenario` ([sample](../contracts/samples/market-risk.md#fx-scenario), [contract](../contracts/packs/market-risk.md#fxs-scenario-fx-of-a-currency-one-rate-per-scenario-fx-scenario)), `fx-spot` ([sample](../contracts/samples/market-data.md#fx-spot), [contract](../contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot)), `legal-entity` ([sample](../contracts/samples/core.md#legal-entity), [contract](../contracts/packs/core.md#le-bank-legal-entity-legal-entity)), `netting-set` ([sample](../contracts/samples/counterparty-risk.md#netting-set), [contract](../contracts/packs/counterparty-risk.md#nset-netting-set-netting-set)), `pnl-history` ([sample](../contracts/samples/market-risk.md#pnl-history), [contract](../contracts/packs/market-risk.md#pnlh-long-history-pl-of-a-hierarchy-node-stress-window-selection-pnl-history)), `sa-ccr` ([sample](../contracts/samples/counterparty-risk.md#sa-ccr), [contract](../contracts/packs/counterparty-risk.md#saccr-sa-ccr-exposure-sa-ccr)), `scenario-set` ([sample](../contracts/samples/market-risk.md#scenario-set), [contract](../contracts/packs/market-risk.md#sset-scenario-set-scenario-set)).
 
 One runbook per kind of production feed, each tested end to end on a synthetic batch shaped like production. Each follows one shape:
 prerequisites, the fields, the steps, the files and their names, chunking, two dates, the layout, verification, troubleshooting, a do-not list and a

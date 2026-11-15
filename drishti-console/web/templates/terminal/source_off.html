@@ -22,7 +22,7 @@
   <h1 class="mono">{{ id }}</h1>
   <p role="status">{% if systems|length == 1 %}Source {{ systems[0] }} is switched off.{% else %}Sources {{ systems|join(', ') }} are switched off.{% endif %}
     The details of this {{ kind }} come from {% if systems|length == 1 %}it{% else %}them{% endif %}, so they are not available now. Numbers computed from scenario PVs, such as VaR, are not affected.</p>
-  <p><a href="/t">Back to the terminal</a></p>
+  <p><a href="{{ BASE }}/t">Back to the terminal</a></p>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_view.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_view.js?v={{ ASSET_V }}"></script>{% endblock %}

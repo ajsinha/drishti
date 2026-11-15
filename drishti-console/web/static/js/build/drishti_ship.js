@@ -27,7 +27,7 @@
   WB.Ship = function (root, store, hooks) {
     var $ = function (s) { return root.querySelector(s); };
     var init = JSON.parse(root.dataset.init || '{}');
-    var id = store.state.id, base = '/build/designs/' + encodeURIComponent(id);
+    var id = store.state.id, base = drishti_url('/build/designs/') + encodeURIComponent(id);
     var chip = $('[data-status-chip]'), shipB = $('[data-ship-menu]'), saveB = $('[data-save]'), box = $('[data-share-box]');
     var bound = init.boundFile || '', shared = !!init.shared, enabled = !!init.fileBinding;
     var say = function (t, bad) { store.emit('say', t, bad); };
@@ -40,7 +40,7 @@
       chip.className = 'bs-role wb-state wb-state-' + word;
       if (word === 'proposed') {
         chip.appendChild(document.createTextNode('proposed '));
-        chip.appendChild(WB.el('a', 'lnk', arg, { href: '/approvals/sutra/' + encodeURIComponent(arg) }));
+        chip.appendChild(WB.el('a', 'lnk', arg, { href: drishti_url('/approvals/sutra/' + encodeURIComponent(arg)) }));
         chip.title = 'Waiting for an approver';
       } else if (word === 'live') {
         chip.textContent = 'live ' + arg;
@@ -184,8 +184,8 @@
         if (bound) { items.push({ label: 'Save to ' + bound, detail: 'Write the Sutra to the file now', value: 'savefile' }, { label: 'Unbind from ' + bound, detail: 'Saving goes to the registry again', value: 'unbind' }); }
       }
       WB.menu.open({ title: 'Ship', anchor: shipB, filter: true, items: items, onPick: function (it) {
-        if (it.value === 'export') { window.location.href = base + '/export'; say('Exporting the pack fragment...'); }
-        else if (it.value === 'import') { window.location.href = '/build/new#import'; }
+        if (it.value === 'export') { window.location.href = drishti_url(base + '/export'); say('Exporting the pack fragment...'); }
+        else if (it.value === 'import') { window.location.href = drishti_url('/build/new#import'); }
         else if (it.value === 'rebase') { rebase(); }
         else if (it.value === 'share') { share(); }
         else if (it.value === 'revoke') { revoke(); }

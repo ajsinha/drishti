@@ -212,12 +212,12 @@
   var timer = null, asked = 0;
   function changed() {
     var p = query();
-    history.replaceState(null, "", "/data?" + p.toString());
+    history.replaceState(null, "", drishti_url("/data?" + p.toString()));
     var nCols = picked().length;
     $("[data-colcount]").textContent = nCols + " of " + boxes.length + (nCols === boxes.length ? " · all" : "");
     var dl = $("[data-download]");
     var dp = new URLSearchParams(p); dp.delete("kind");
-    dl.href = "/data/" + encodeURIComponent(kind) + "/download" + (dp.toString() ? "?" + dp.toString() : "");
+    dl.href = drishti_url("/data/" + encodeURIComponent(kind) + "/download" + (dp.toString() ? "?" + dp.toString() : ""));
     dl.textContent = "Download " + kind + "_" + (sel.date || "latest") + ".jsonl.gz";
     $("[data-cli]").textContent = cli(p);
     $("[data-rows]").textContent = "…";
@@ -236,7 +236,7 @@
 
   function count(dp) {
     var mine = ++asked;
-    fetch("/api/data/" + encodeURIComponent(kind) + "/count" + (dp.toString() ? "?" + dp.toString() : ""), {credentials: "same-origin"})
+    fetch(drishti_url("/api/data/" + encodeURIComponent(kind) + "/count" + (dp.toString() ? "?" + dp.toString() : "")), {credentials: "same-origin"})
       .then(function (r) { return r.json().then(function (j) { return {ok: r.ok, j: j}; }); })
       .then(function (a) {
         if (mine !== asked) { return; }
@@ -282,7 +282,7 @@
     busyHost.__busyAt = Date.now();
     var again = function () {
       var u = $("[data-download]").href;
-      location.assign(u + (u.indexOf("?") >= 0 ? "&" : "?") + "tries=" + busyHost.__busyTries);
+      location.assign(drishti_url(u + (u.indexOf("?") >= 0 ? "&" : "?") + "tries=" + busyHost.__busyTries));
       setTimeout(function () {                              // still here: the download started (a refusal comes back as a page)
         window.Drishti.Busy.done(busyHost);
         busyHost.textContent = "";

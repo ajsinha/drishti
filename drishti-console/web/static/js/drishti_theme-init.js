@@ -35,7 +35,10 @@ document.addEventListener('click', function (ev) {
   var a = ev.target && ev.target.closest ? ev.target.closest('a[href]') : null;
   if (!a || ev.defaultPrevented || ev.button !== 0 || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) { return; }
   var url = new URL(a.getAttribute('href'), location.href);
-  if (url.origin !== location.origin || !/^\/(lens\/[^/]+|home\/landing\/[^/]+)$/.test(url.pathname)) { return; }
+  // the route without the console's URL sub-path (<meta name="drishti-base">; this script runs before drishti-core's drishti_route)
+  var meta = document.querySelector('meta[name="drishti-base"]'), base = ((meta && meta.getAttribute('content')) || '').replace(/\/+$/, '');
+  var route = base && url.pathname.indexOf(base + '/') === 0 ? url.pathname.slice(base.length) : url.pathname;
+  if (url.origin !== location.origin || !/^\/(lens\/[^/]+|home\/landing\/[^/]+)$/.test(route)) { return; }
   ev.preventDefault();
   var f = document.createElement('form');
   f.method = 'post';

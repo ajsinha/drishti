@@ -19,11 +19,11 @@
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
 <div class="adm compare">
-  <nav class="crumbs" aria-label="Breadcrumb"><a href="/v/{{ kind }}/{{ id | urlencode }}">← {{ id }}</a></nav>
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="{{ BASE }}/v/{{ kind }}/{{ id | urlencode }}">← {{ id }}</a></nav>
   <h1>What changed in <span class="mono">{{ id }}</span></h1>
   <p class="text-muted-d">Every field of the document compared between two business dates. Add a <b>known at</b> time to the earlier side
     to see what was restated since: the same date, as it was known then and as it is known now.</p>
-  <form class="cmp-form" method="get" action="/compare/{{ kind }}/{{ id | urlencode }}">
+  <form class="cmp-form" method="get" action="{{ BASE }}/compare/{{ kind }}/{{ id | urlencode }}">
     <label>From (business date)<input class="mono" type="date" name="from" value="{{ form.get('from', '') }}"></label>
     <label>Known at (optional)<input class="mono" type="datetime-local" name="fromKnownAt" value="{{ from_known or '' }}"></label>
     <label>To (business date)<input class="mono" type="date" name="to" value="{{ form.get('to', '') }}"></label>
@@ -35,12 +35,12 @@
     <div class="cmp-sum">
       <span><b class="mono">{{ data.from.businessDate }}</b>{% if data.from.knownAt %} known at <span class="mono">{{ known_local(data.from.knownAt, (business_date or {}).zone) | replace('T', ' ') }}</span>{% endif %}
         → <b class="mono">{{ data.to.businessDate }}</b>{% if data.to.knownAt %} known at <span class="mono">{{ known_local(data.to.knownAt, (business_date or {}).zone) | replace('T', ' ') }}</span>{% endif %}</span>
-      {% set base = '/compare/' ~ kind ~ '/' ~ (id | urlencode) ~ '?from=' ~ form.get('from', '') ~ '&to=' ~ form.get('to', '') ~ ('&fromKnownAt=' ~ from_known if from_known else '') %}
-      <a class="lnk{% if not only %} on{% endif %}" href="{{ base }}">{{ data.changed + data.added + data.removed }} changes</a>
+      {% set base = BASE ~ '/compare/' ~ kind ~ '/' ~ (id | urlencode) ~ '?from=' ~ form.get('from', '') ~ '&to=' ~ form.get('to', '') ~ ('&fromKnownAt=' ~ from_known if from_known else '') %}
+      <a class="lnk{% if not only %} on{% endif %}" href="{{ base | u }}">{{ data.changed + data.added + data.removed }} changes</a>
       <a class="lnk" href="{{ base }}&only=changed"><span class="cmp-k changed">changed</span> {{ data.changed }}</a>
       <a class="lnk" href="{{ base }}&only=added"><span class="cmp-k added">added</span> {{ data.added }}</a>
       <a class="lnk" href="{{ base }}&only=removed"><span class="cmp-k removed">removed</span> {{ data.removed }}</a>
-      <a class="lnk" href="/export/compare/{{ kind }}/{{ id | urlencode }}.csv?from={{ form.get('from', '') }}&to={{ form.get('to', '') }}{% if from_known %}&fromKnownAt={{ from_known | urlencode }}{% endif %}" title="Download the changes as CSV"><i class="bi bi-download" aria-hidden="true"></i> CSV</a>
+      <a class="lnk" href="{{ BASE }}/export/compare/{{ kind }}/{{ id | urlencode }}.csv?from={{ form.get('from', '') }}&to={{ form.get('to', '') }}{% if from_known %}&fromKnownAt={{ from_known | urlencode }}{% endif %}" title="Download the changes as CSV"><i class="bi bi-download" aria-hidden="true"></i> CSV</a>
       <span class="text-muted-d mono">{{ data.from.provenance.source }} · generation {{ data.from.provenance.generation }} → {{ data.to.provenance.generation }}</span>
     </div>
     <div class="cmp-grid{% if side %} cmp-has-side{% endif %}">
@@ -75,4 +75,4 @@
   {% endif %}
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script>{% endblock %}

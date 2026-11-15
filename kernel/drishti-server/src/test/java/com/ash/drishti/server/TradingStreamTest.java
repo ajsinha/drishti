@@ -75,7 +75,7 @@ class TradingStreamTest {
 
     @DynamicPropertySource
     static void kafka(DynamicPropertyRegistry r) {
-        r.add("DRISHTI_KAFKA_BOOTSTRAP", BROKER::getBrokersAsString);
+        r.add("broker.default.bootstrap-servers", BROKER::getBrokersAsString);   // the default broker by name ([broker.default])
     }
 
     @AfterAll

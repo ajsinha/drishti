@@ -74,6 +74,42 @@ public class EffectiveSettingsController {
         return snapshot(env, System::getenv);
     }
 
+    /**
+     * The launch roots and every other path setting as this server resolved them at start (docs/admin/CONFIGURATION.md, "Launch roots"):
+     * {@code {roots: [{name, path, from, exists}], anchored: [{key, path, from}]}}; Admin → Configuration shows them under "Resolved paths".
+     */
+    @GetMapping("/paths")
+    public Map<String, Object> paths(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        entitlements.requireAdmin(p);
+        return paths(com.ash.drishti.packs.LaunchRoots.snapshot(env));
+    }
+
+    static Map<String, Object> paths(com.ash.drishti.packs.LaunchRoots.Snapshot s) {
+        List<Map<String, Object>> roots = new ArrayList<>();
+        List<Map<String, Object>> anchored = new ArrayList<>();
+        if (s != null) {
+            for (com.ash.drishti.packs.LaunchRoots.Resolved r : s.roots()) {
+                Map<String, Object> row = new LinkedHashMap<>();
+                row.put("name", r.name());
+                row.put("path", r.path() == null ? "" : r.path().toString());
+                row.put("from", r.from());
+                row.put("exists", r.exists());
+                roots.add(row);
+            }
+            for (com.ash.drishti.packs.LaunchRoots.Anchored a : s.anchored()) {
+                Map<String, Object> row = new LinkedHashMap<>();
+                row.put("key", a.key());
+                row.put("path", isSecret(a.key()) ? MASK : maskUrl(a.path()));
+                row.put("from", a.from());
+                anchored.add(row);
+            }
+        }
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("roots", roots);
+        out.put("anchored", anchored);
+        return out;
+    }
+
     static Map<String, Object> snapshot(ConfigurableEnvironment env, Function<String, String> getenv) {
         Map<String, TreeMap<Integer, String>> lists = new TreeMap<>();
         Set<String> names = new java.util.TreeSet<>();

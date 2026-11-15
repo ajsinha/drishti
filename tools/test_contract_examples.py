@@ -37,7 +37,7 @@ TOKEN = re.compile(r"`([^`]+)`")
 NAME = re.compile(r"[A-Za-z_][A-Za-z0-9_\-]*")
 FIELD = re.compile(r"^[A-Za-z][A-Za-z0-9_]*$")  # stored rows UPPER_SNAKE, API answers camelCase
 JSON_BLOCK = re.compile(r"^```json[ \t]*\n(.*?)^```", re.S | re.M)
-PACK_LINK = re.compile(r"\((?:\.\./)+(config/packs/[^)#\s]+\.contract\.yaml)\)")
+PACK_LINK = re.compile(r"\((?:\.\./)+((?:config/packs|modules)/[^)#\s]+\.contract\.yaml)\)")   # a pack in the site's packs or in a module
 PRESENCE_HEADERS = {"req.", "req", "presence", "required"}
 
 
@@ -106,8 +106,7 @@ class Page:
     def _read_pack_contracts(self) -> None:
         for rel in sorted(set(PACK_LINK.findall(self.text))):
             f = ROOT / rel
-            if not f.is_file():
-                continue
+            assert f.is_file(), f"{self.path.name} links {rel}, which is not there"   # a moved contract: the link follows it
             doc = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
             stack = list(doc.get("fields") or [])
             for nested in (doc.get("nested") or {}).values():

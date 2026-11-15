@@ -481,9 +481,9 @@ env:
   - { name: DRISHTI_HAMMER_TOKEN, by: tools, default: "(none)", sets: "the Explain hammer's bearer token", meaning: "The token tools/drillkit/explain_hammer.py sends to a server with sign-in on (else its --token)" }
   - { name: DRISHTI_LAKE_CACHE, by: tools, default: "<data>/tmp/lake-cache", sets: "the cached demo lakes' folder", meaning: "Where tools/drillkit/lake_cache.py keeps the demo lakes the test stacks and checks reuse, one per hash of the test data, generators and lake code" }
   # the packs' connectors (modules/<module>/packs/<pack>/pack.yaml)
-  - { name: DRISHTI_DELTA_ROOT, by: packs, default: "./data/delta/demo", sets: "the demo lake's root (config/lakes/demo.yaml)", meaning: "Root of the demo lake, which every pack's Delta connector reads (lake: demo); every lake's own default is <data>/delta/<lake>" }
+  - { name: DRISHTI_DELTA_ROOT, by: packs, default: "<data>/delta/demo", sets: "the demo lake's root (config/lakes/demo.yaml)", meaning: "Root of the demo lake, which every pack's Delta connector reads (lake: demo); every lake's own default is <data>/delta/<lake>" }
   - { name: DRISHTI_LAKES_RELOCATE_ON_START, by: server, default: "true", sets: "drishti.lakes.relocate-on-start", meaning: "At start, move a demo lake built in the older layout (<data>/delta/<domain>) into <data>/delta/demo once, safely (verified, moved back on any error, never a delete); false: only by drishti.py lake relocate demo (docs/guides/OPERATIONS_GUIDE.md)" }
-  - { name: DRISHTI_LAKES_DIR, by: server, default: "./config/lakes", sets: "drishti.lakes.dir", meaning: "The lake folder: one config/lakes/<lake>.yaml per lake, read by the server, the loader, the data inbox and the tools (docs/guides/DATA_LAKE_GUIDE.md)" }
+  - { name: DRISHTI_LAKES_DIR, by: server, default: "<config>/lakes", sets: "drishti.lakes.dir", meaning: "The lake folder: one config/lakes/<lake>.yaml per lake, read by the server, the loader, the data inbox and the tools (docs/guides/DATA_LAKE_GUIDE.md)" }
   - { name: DRISHTI_DATALOAD_LAKE, by: server, default: demo, sets: "drishti.dataload.lake", meaning: "The lake (config/lakes/<lake>.yaml) the data inbox writes to; a folder is the older form" }
   - { name: DRISHTI_DELTA_ENGINE, by: packs, default: native, sets: "delta engine", meaning: "native, hadoop or auto, for every Delta connector without its own engine" }
   - { name: DRISHTI_LAKE_ENABLED, by: packs, default: "true", sets: "the packs' data connectors", meaning: "false switches every pack's data connector off (the demo samples still answer)" }
@@ -493,11 +493,10 @@ env:
   - { name: DRISHTI_CCR_DERIVED_ENABLED, by: packs, default: "true", sets: "counterparty-risk's derived connector", meaning: "The counterparty-risk pack's derived kinds (netting-set and counterparty totals) on or off" }
   - { name: DRISHTI_MR_DERIVED_ENABLED, by: packs, default: "true", sets: "market-risk's derived connector", meaning: "The market-risk pack's derived kinds on or off" }
   - { name: DRISHTI_STREAM_TRADING, by: packs, default: "false", sets: "trading-stream enabled", meaning: "Turn on the trading pack's trading-stream Kafka connector" }
-  - { name: DRISHTI_KAFKA_BOOTSTRAP, by: packs, default: "localhost:9092", sets: "Kafka brokers", meaning: "The brokers of the trading stream and the VaR PV topic" }
   - { name: DRISHTI_TRADING_TOPIC, by: packs, default: drishti.trading.trades, sets: "trading-stream topic", meaning: "The trading stream's topic" }
   - { name: DRISHTI_STREAM_STALE_AFTER, by: packs, default: 15m, sets: "trading-stream stale-after", meaning: "The trading stream is stale after this long without a message" }
   - { name: DRISHTI_STREAM_DISK_CACHE, by: packs, default: "true", sets: "trading-stream disk cache", meaning: "The trading stream's disk cache on or off" }
-  - { name: DRISHTI_CACHE_ROOT, by: packs, default: "./data/cache", sets: "trading-stream cache root", meaning: "Disk cache root (one folder per connector)" }
+  - { name: DRISHTI_CACHE_ROOT, by: packs, default: "<data>/cache", sets: "trading-stream cache root", meaning: "Disk cache root (one folder per connector)" }
   - { name: DRISHTI_STREAM_CACHE_GB, by: packs, default: "10", sets: "trading-stream cache size", meaning: "The trading stream's disk cache size, in GB" }
   - { name: DRISHTI_CACHE_RESET_AT, by: packs, default: "02:00", sets: "trading-stream cache reset", meaning: "The disk cache's nightly clearing time (New York)" }
   - { name: DRISHTI_VAR_PV_STREAM, by: packs, default: "false", sets: "pv-updates enabled", meaning: "Turn on the market-risk pack's pv-updates connector: the pricing systems' PV topic, windowed into intraday batches" }
@@ -523,8 +522,8 @@ env:
   - { name: DRISHTI_AEROSPIKE_NAMESPACE, by: profile, default: test, sets: "aerospike profile", meaning: "Its namespace" }
   - { name: DRISHTI_DUCKDB_PATH, by: profile, default: data/duckdb/drishti.duckdb, sets: "duckdb profile", meaning: "The duckdb profile's file (one file, a schema per domain)" }
   - { name: DRISHTI_DUCKDB_MEMORY, by: profile, default: 1GB, sets: "duckdb profile", meaning: "The shared DuckDB instance's memory limit" }
-  - { name: DRISHTI_FILES_ROOT, by: profile, default: "./data/files", sets: "files profile", meaning: "The files profile's root (<root>/<domain>/<date>/<kind>.jsonl)" }
-  - { name: DRISHTI_ICEBERG_ROOT, by: profile, default: "./data/iceberg", sets: "iceberg profile", meaning: "The iceberg profile's root (path-based tables); also the lake tools' Iceberg root" }
+  - { name: DRISHTI_FILES_ROOT, by: profile, default: "<data>/files", sets: "files profile", meaning: "The files profile's root (<root>/<domain>/<date>/<kind>.jsonl)" }
+  - { name: DRISHTI_ICEBERG_ROOT, by: profile, default: "<data>/iceberg", sets: "iceberg profile", meaning: "The iceberg profile's root (path-based tables); also the lake tools' Iceberg root" }
   - { name: DRISHTI_ICEBERG_CATALOG, by: profile, default: hadoop, sets: "iceberg profile", meaning: "hadoop (path-based tables) or rest" }
   - { name: DRISHTI_ICEBERG_URI, by: profile, default: "", sets: "iceberg profile", meaning: "A REST catalog's URI" }
   - { name: DRISHTI_ICEBERG_WAREHOUSE, by: profile, default: "", sets: "iceberg profile", meaning: "A REST catalog's warehouse" }

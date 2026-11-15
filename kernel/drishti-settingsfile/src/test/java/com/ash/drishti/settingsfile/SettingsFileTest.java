@@ -28,7 +28,9 @@ class SettingsFileTest {
 
     @AfterEach
     void clean() {
-        for (String k : new String[] {SettingsFile.PROPERTY, "sf.test.a", "sf.test.b", "sf.test.c"}) System.clearProperty(k);
+        for (String k : new String[] {SettingsFile.PROPERTY, "sf.test.a", "sf.test.b", "sf.test.c", "lake.risk.root", "lake.trading.root",
+                "db.reporting.url", "db.reporting.password", "connector.trade-murex.lake"}) System.clearProperty(k);
+        SettingsFile.reset();
     }
 
     private Path write(Path dir, String text) throws Exception {
@@ -72,5 +74,42 @@ class SettingsFileTest {
         assertThatThrownBy(SettingsFile::applyFromSystemProperty).isInstanceOf(IllegalStateException.class).hasMessageContaining("not a file");
         System.setProperty(SettingsFile.PROPERTY, write(dir, "no equals sign\n").toString());
         assertThatThrownBy(SettingsFile::applyFromSystemProperty).isInstanceOf(IllegalStateException.class).hasMessageContaining(":1:");
+    }
+
+    @Test
+    void aDottedSectionIsANamespaceSoOneLakeNeverReadsAnothers(@TempDir Path dir) throws Exception {
+        Path f = write(dir, "[lake.risk]\nroot=/lakes/risk\n[lake.trading]\nroot=/lakes/trading\n[roots]\nsf.test.a=/full/name\n");
+        assertThat(SettingsFile.read(f.toString())).containsEntry("lake.risk.root", "/lakes/risk").containsEntry("lake.trading.root", "/lakes/trading")
+                .as("a section without a dot is a label: full names").containsEntry("sf.test.a", "/full/name");
+    }
+
+    @Test
+    void severalFilesALaterOneWinsAndAnExplicitPropertyBeatsThemAll(@TempDir Path dir) throws Exception {
+        Path base = dir.resolve("base.ini");
+        Path secrets = dir.resolve("secrets.ini");
+        Files.writeString(base, "[db.reporting]\nurl=jdbc:postgresql://db/rep\npassword=changeme\n[lake.risk]\nroot=/a\n");
+        Files.writeString(secrets, "[db.reporting]\npassword=s3cret\n");
+        System.setProperty("lake.risk.root", "/explicit");
+        System.setProperty(SettingsFile.PROPERTY, base + " , " + secrets);
+        assertThat(SettingsFile.applyFromSystemProperty()).containsExactly("db.reporting.url", "db.reporting.password");
+        assertThat(System.getProperty("db.reporting.password")).isEqualTo("s3cret");
+        assertThat(System.getProperty("lake.risk.root")).isEqualTo("/explicit");
+        assertThat(SettingsFile.sourceOf("db.reporting.password")).isEqualTo(secrets.toString());
+        assertThat(SettingsFile.sourceOf("db.reporting.url")).isEqualTo(base.toString());
+        assertThat(SettingsFile.filesRead()).containsExactly(base.toString(), secrets.toString());
+    }
+
+    @Test
+    void secretsAreMasked() {
+        assertThat(SettingsFile.shown("db.reporting.password", "s3cret")).isEqualTo(SettingsFile.MASK);
+        assertThat(SettingsFile.shown("broker.kafka-eu.sasl-token", "t")).isEqualTo(SettingsFile.MASK);
+        assertThat(SettingsFile.shown("lake.risk.root", "/a")).isEqualTo("/a");
+        assertThat(SettingsFile.shown("db.reporting.password", "")).isEmpty();
+    }
+
+    @Test
+    void aRelativePathInAListIsRefused(@TempDir Path dir) throws Exception {
+        System.setProperty(SettingsFile.PROPERTY, write(dir, "a.b=1\n") + ",secrets.ini");
+        assertThatThrownBy(SettingsFile::applyFromSystemProperty).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("absolute");
     }
 }

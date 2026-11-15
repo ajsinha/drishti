@@ -21,7 +21,7 @@
     s.dataset.wired = '1';
     s.addEventListener('drishti:change', function (e) {                    // drishti-inputs' Select (<drishti-select>)
       var picked = e.detail.option;
-      fetch('/designer/mode', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode: e.detail.value }) })
+      fetch(drishti_url('/designer/mode'), { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode: e.detail.value }) })
         .then(function (r) { s.setAttribute('data-dz-saved', r.ok ? e.detail.value : ''); s.title = r.ok ? 'Saved: you open ' + (picked ? picked.label : e.detail.value) + ' first' : 'Not saved'; });
     });
   });

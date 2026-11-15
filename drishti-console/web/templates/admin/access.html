@@ -26,7 +26,7 @@
     (blank: live). Refused reads are not here: they are refused. Kept {{ stats.keepDays or 90 }} days.
     {% if stats.dropped %}<b class="t-warn">{{ stats.dropped }} events were dropped</b> because the database could not keep up.{% endif %}</p>
   {% if error %}<p class="pnl-err" role="alert">{{ error.code }} {{ error.detail }}</p>{% endif %}
-  <form class="alert-form" method="get" action="/admin/access">
+  <form class="alert-form" method="get" action="{{ BASE }}/admin/access">
     {{ admin_form('access_filter', f=f) }}
     <button type="submit" class="btn-pill btn-accent">Show</button>
   </form>
@@ -34,9 +34,9 @@
     <thead><tr><th>When (UTC)</th><th>Person</th><th>What</th><th>Entity or search</th><th>Business day</th></tr></thead>
     <tbody>{% for r in rows %}
       <tr><td class="mono">{{ r.at[:19] | replace('T', ' ') }}</td>
-        <td><a class="lnk mono" href="/admin/access?user={{ r.user | urlencode }}">{{ r.user }}</a></td><td>{{ r.action }}</td>
-        <td>{% if r.entityId %}<a class="lnk mono" href="/v/{{ r.kind }}/{{ r.entityId | urlencode }}">{{ r.kind }} {{ r.entityId }}</a>
-          <a class="text-muted-d" href="/admin/access?kind={{ r.kind | urlencode }}&id={{ r.entityId | urlencode }}" title="Everyone who looked at it">(all)</a>
+        <td><a class="lnk mono" href="{{ BASE }}/admin/access?user={{ r.user | urlencode }}">{{ r.user }}</a></td><td>{{ r.action }}</td>
+        <td>{% if r.entityId %}<a class="lnk mono" href="{{ BASE }}/v/{{ r.kind }}/{{ r.entityId | urlencode }}">{{ r.kind }} {{ r.entityId }}</a>
+          <a class="text-muted-d" href="{{ BASE }}/admin/access?kind={{ r.kind | urlencode }}&id={{ r.entityId | urlencode }}" title="Everyone who looked at it">(all)</a>
           {% if r.detail %}<span class="mono text-muted-d">{{ r.detail }}</span>{% endif %}
           {% else %}<span class="mono">{{ r.detail or r.kind or '' }}</span>{% endif %}</td>
         <td class="mono">{{ r.businessDate or '' }}</td></tr>

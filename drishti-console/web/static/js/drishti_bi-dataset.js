@@ -48,7 +48,7 @@
   function api(method, path, body) {
     var opt = { method: method, headers: { 'Accept': 'application/json' }, credentials: 'same-origin' };
     if (body !== undefined && method !== 'GET') { opt.headers['Content-Type'] = 'application/json'; opt.body = JSON.stringify(body); }
-    return fetch('/bi/api' + path, opt).then(function (r) {
+    return fetch(drishti_url('/bi/api' + path), opt).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (data) {
         if (!r.ok) { var e = new Error((data.code ? data.code + ' ' : '') + (data.detail || r.statusText)); e.code = data.code; e.status = r.status; throw e; }
         return data;
@@ -68,7 +68,7 @@
       d.datasets.forEach(function (x) {
         box.appendChild(h('article', { class: 'bi-card', 'data-id': x.id, 'data-kind': 'dataset' },
           h('header', {}, h('span', { class: 'bi-kind' }, icon('hdd-stack'), ' dataset')),
-          h('h3', {}, h('a', { href: '/bi/d/' + id2path(x.id), text: x.title })),
+          h('h3', {}, h('a', { href: drishti_url('/bi/d/' + id2path(x.id)), text: x.title })),
           x.description ? h('p', { class: 'bi-card-desc', text: x.description }) : null,
           h('p', { class: 'bi-card-badges' }, x.endorsement === 'promoted' ? badge('promoted', 'bi-promoted', 'bookmark-star') : x.endorsement === 'certified' ? badge('certified', 'bi-certified', 'patch-check') : null,
             x.sample ? badge('sample', '', 'mortarboard') : null, x.valid ? null : badge(x.errors + ' error' + (x.errors === 1 ? '' : 's'), 'bi-status', 'exclamation-triangle')),

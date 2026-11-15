@@ -19,12 +19,12 @@
 {% block title %}New pack · {{ PRODUCT }}{% endblock %}
 {% block screen %}build{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_build.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_pack-designer.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/elements/drishti-grid/drishti_grid.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_build.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_pack-designer.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/elements/drishti-grid/drishti_grid.css?v={{ ASSET_V }}">{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
 <div class="adm bs pd" data-pack-designer data-can-author="{{ 'true' if can_author else 'false' }}" data-is-admin="{{ 'true' if is_admin else 'false' }}"
      data-max-mb="{{ limits.maxMb }}" data-accept="{{ limits.accept | join(',') }}">
-  <nav class="crumbs" aria-label="Breadcrumb"><a href="/build">My designs</a> · <a href="/help/build-guide#8-the-pack-designer-create--new-pack">Pack designer guide <span aria-hidden="true">?</span></a></nav>
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="{{ BASE }}/build">My designs</a> · <a href="{{ BASE }}/help/build-guide#8-the-pack-designer-create--new-pack">Pack designer guide <span aria-hidden="true">?</span></a></nav>
   <h1>New pack</h1>
   {% if not can_author %}<p class="pd-warn" role="note">Your roles do not include the author power (the built-in author and admin roles hold it, and an administrator can give it to another role in Admin → Roles). You can look, but not start a pack.</p>{% endif %}
   <div class="pd-work">
@@ -173,7 +173,7 @@
 </div>
 {% endblock %}
 {% block scripts %}
-<script src="/static/js/drishti_pack-designer.js?v={{ ASSET_V }}"></script>
-<script src="/static/js/drishti_pack-designer-steps.js?v={{ ASSET_V }}"></script>
-<script src="/static/js/drishti_pack-designer-source.js?v={{ ASSET_V }}"></script>
+<script src="{{ BASE }}/static/js/drishti_pack-designer.js?v={{ ASSET_V }}"></script>
+<script src="{{ BASE }}/static/js/drishti_pack-designer-steps.js?v={{ ASSET_V }}"></script>
+<script src="{{ BASE }}/static/js/drishti_pack-designer-source.js?v={{ ASSET_V }}"></script>
 {% endblock %}

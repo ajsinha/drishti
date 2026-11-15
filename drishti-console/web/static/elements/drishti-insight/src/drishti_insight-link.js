@@ -16,6 +16,7 @@
 /* The one "Explain ›" control (VAR_GUIDE.md section 3.11): every figure of a measure with an explanation carries it, a guard test
    says where (drishti-console/tests/test_var_explain_everywhere.py). A link to the number's full page at Why it moved; a click (or E when
    it is focused) opens the drawer in place instead, through the Explain's own click handler (data-explain-trigger). */
+import { url as drishtiUrl } from '../../drishti-core/src/drishti_index.js';
 
 const TITLE = 'Explain: the formula with its values, the inputs and lineage, why it moved, the workbook (E)';
 
@@ -32,7 +33,7 @@ export function explainLink(doc, req, o, pageUrl) {
   const a = doc.createElement('a');
   a.className = 'dx-link' + (o.cls ? ' ' + o.cls : '');
   a.textContent = o.text || 'Explain ›';
-  a.href = pageUrl(req, o.tab || 'why');
+  a.href = drishtiUrl(pageUrl(req, o.tab || 'why'));
   a.setAttribute('data-explain', JSON.stringify(req));
   a.setAttribute('data-explain-tab', o.tab || 'why');
   a.setAttribute('data-explain-trigger', '');
@@ -56,7 +57,7 @@ export function upgradeLinks(root, pageUrl) {
     el.classList.add('dx-link');
     el.setAttribute('data-explain-trigger', '');
     el.setAttribute('data-explain-tab', tab);
-    if (el.tagName === 'A') { el.href = pageUrl(req, tab); }
+    if (el.tagName === 'A') { el.href = drishtiUrl(pageUrl(req, tab)); }
     if (!el.textContent.trim()) { el.textContent = 'Explain ›'; }
     if (!el.title) { el.title = TITLE; }
   });
@@ -86,7 +87,7 @@ export function drawNote(doc, host, n) {
       var tr = h("tr");
       r.cells.forEach(function (c, i) {
         var td = h("td", "mono");
-        if (i === 0 && r.href) { var a = h("a", null, c); a.href = r.href; td.appendChild(a); } else td.textContent = c;
+        if (i === 0 && r.href) { var a = h("a", null, c); a.href = drishtiUrl(r.href); td.appendChild(a); } else td.textContent = c;
         tr.appendChild(td);
       });
       tb.appendChild(tr);
@@ -98,10 +99,10 @@ export function drawNote(doc, host, n) {
     more.type = "button";
     more.addEventListener("click", function () {
       page += 1;
-      fetch(list.moreHref + "&page=" + page).then(function (r) { return r.json(); }).then(function (b) {
+      fetch(drishtiUrl(list.moreHref + "&page=" + page)).then(function (r) { return r.json(); }).then(function (b) {
         add((b.rows || []).map(function (r) {
           return { cells: [r.position, (r.trades || []).map(function (x) { return x.trade + " (" + x.maturity + ")"; }).join(", ")],
-            href: "/v/position/" + encodeURIComponent(r.position) + "?asOf=" + encodeURIComponent(b.businessDate) };
+            href: drishtiUrl("/v/position/" + encodeURIComponent(r.position) + "?asOf=" + encodeURIComponent(b.businessDate)) };
         }));
         more.hidden = !b.more;
       });

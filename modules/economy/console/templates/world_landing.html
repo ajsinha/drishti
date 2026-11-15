@@ -24,7 +24,7 @@
 {% extends "kernel/page.html" %}
 {% block title %}{{ PRODUCT }}{% endblock %}
 {% block screen %}home{% endblock %}
-{% block assets %}<link rel="stylesheet" href="{{ asset('css/drishti_world-landing.css') }}">{% endblock %}
+{% block assets %}<link rel="stylesheet" href="{{ (asset('css/drishti_world-landing.css')) | u }}">{% endblock %}
 {% macro go(cmd) %}/go?q={{ (cmd ~ ' <GO>') | urlencode }}{% endmacro %}
 {% block content %}
 {% from "kernel/phone.html" import part, foot, back %}{% set PP = phone_parts(request, 'landing') %}{# the phone display (docs/guides/BUILD_GUIDE.md 8) #}
@@ -33,8 +33,8 @@
 <div class="wl" data-world-landing="{{ landing }}" data-topics="{{ topics | join(',') }}">
   <nav class="wl-switch" aria-label="Choose your Home">
     <span class="wl-switch-l">Home</span>
-    {% for l in landings %}<a href="{{ l.href }}"{% if l.id == landing %} aria-current="page" class="on"{% endif %} data-landing-link="{{ l.id }}">{{ l.title }}</a>{% endfor %}
-    <span class="wl-lenses">{% for link in lens_links(request) %}<a class="wl-lens" href="{{ link.href }}" data-lens-link="{{ link.name }}"><i class="bi bi-{{ 'box-arrow-left' if link.leave else 'eye' }}" aria-hidden="true"></i> {{ link.label }}</a>{% endfor %}</span>
+    {% for l in landings %}<a href="{{ l.href | u }}"{% if l.id == landing %} aria-current="page" class="on"{% endif %} data-landing-link="{{ l.id }}">{{ l.title }}</a>{% endfor %}
+    <span class="wl-lenses">{% for link in lens_links(request) %}<a class="wl-lens" href="{{ link.href | u }}" data-lens-link="{{ link.name }}"><i class="bi bi-{{ 'box-arrow-left' if link.leave else 'eye' }}" aria-hidden="true"></i> {{ link.label }}</a>{% endfor %}</span>
   </nav>
 
   {% if landing != 'explorer' %}
@@ -44,12 +44,12 @@
 
   {% if landing == 'explorer' %}
   <section class="wl-hero" aria-label="Command line"{{ part(PP, 'hero') }}>
-    <form class="wl-big" action="/go" method="get" role="search" autocomplete="off">
+    <form class="wl-big" action="{{ BASE }}/go" method="get" role="search" autocomplete="off">
       <label class="visually-hidden" for="wlCmd">Command</label>
       <span class="mono" aria-hidden="true">&gt;</span>
       <input id="wlCmd" name="q" class="mono" type="text" spellcheck="false" placeholder="an economy, a company, an LEI, a fund, a topic…">
     </form>
-    {% if chips %}<div class="wl-chips">{% for c in chips %}<a class="wl-chip mono" href="{{ go(c) }}">{{ c }}</a>{% endfor %}</div>{% endif %}
+    {% if chips %}<div class="wl-chips">{% for c in chips %}<a class="wl-chip mono" href="{{ (go(c)) | u }}">{{ c }}</a>{% endfor %}</div>{% endif %}
     <div class="wl-strip" data-wl-counts>
       <span>Economies <b class="mono" data-wl-count="ECON">…</b></span>
       {% if cm %}<span>US companies <b class="mono" data-wl-count="USEQ">…</b></span>{% endif %}
@@ -60,15 +60,15 @@
     </div>
   </section>
   <div class="wl-qc">
-    <div class="wl-q"><h2>Recently opened</h2><ul data-wl-recents>{% for r in recents %}<li><a class="mono" href="{{ go(r) }}">{{ r }}</a></li>{% else %}<li class="wl-muted">Nothing yet: type a command above</li>{% endfor %}</ul></div>
+    <div class="wl-q"><h2>Recently opened</h2><ul data-wl-recents>{% for r in recents %}<li><a class="mono" href="{{ (go(r)) | u }}">{{ r }}</a></li>{% else %}<li class="wl-muted">Nothing yet: type a command above</li>{% endfor %}</ul></div>
     <div class="wl-q"><h2>Knowledge</h2><ul>
-      <li><a href="/help/knowledge-world#2-economies">Economies</a></li><li><a href="/help/knowledge-world#1-companies-funds-and-etfs">Companies, funds and ETFs</a></li>
-      <li><a href="/help/knowledge-data#2-entities-and-ownership">Entities and ownership</a></li><li><a href="/what">What is…?</a></li></ul></div>
+      <li><a href="{{ BASE }}/help/knowledge-world#2-economies">Economies</a></li><li><a href="{{ BASE }}/help/knowledge-world#1-companies-funds-and-etfs">Companies, funds and ETFs</a></li>
+      <li><a href="{{ BASE }}/help/knowledge-data#2-entities-and-ownership">Entities and ownership</a></li><li><a href="{{ BASE }}/what">What is…?</a></li></ul></div>
     <div class="wl-q"><h2>Data map</h2><ul>
-      <li><a href="/datamap">How economies, companies, entities and funds link up</a></li><li><a href="{{ go('FUNC') }}">Every command of {{ PRODUCT }}</a></li></ul></div>
+      <li><a href="{{ BASE }}/datamap">How economies, companies, entities and funds link up</a></li><li><a href="{{ go('FUNC') | u }}">Every command of {{ PRODUCT }}</a></li></ul></div>
     <div class="wl-q"><h2>Learn</h2><ul>
-      <li><a href="/help/docs-tutorials-06-groupings-and-analytics">Groupings and analytics</a></li><li><a href="/help/docs-tutorials-13-world-data#part-c--funds-and-etfs">Funds and ETFs</a></li>
-      <li><a href="/help/external-data">External data: where it comes from</a></li></ul></div>
+      <li><a href="{{ BASE }}/help/docs-tutorials-06-groupings-and-analytics">Groupings and analytics</a></li><li><a href="{{ BASE }}/help/docs-tutorials-13-world-data#part-c--funds-and-etfs">Funds and ETFs</a></li>
+      <li><a href="{{ BASE }}/help/external-data">External data: where it comes from</a></li></ul></div>
   </div>
   {% elif landing == 'map' %}
   <section class="wl-card" aria-labelledby="wlMapH"{{ part(PP, 'map') }}>
@@ -100,11 +100,11 @@
   </div>
   {% else %}
   <section class="wl-tiles" aria-label="Headline figures"{{ part(PP, 'tiles') }}>
-    <a class="wl-tile" href="{{ go('ECG ECG-WLD') }}" data-wl-tile="world"><span class="k">World GDP growth</span><span class="v mono" data-wl-world>…</span><span class="s" data-wl-world-s></span></a>
-    <a class="wl-tile" href="{{ go('QUOTE where PRICE > 0 order by CHANGE_PCT desc') }}" data-wl-tile="breadth"><span class="k">Quotes up · down</span><span class="v mono" data-wl-breadth>…</span><span class="s" data-wl-breadth-s></span></a>
-    <a class="wl-tile" href="{{ go('QUOTE where PRICE > 0 order by CHANGE_PCT desc') }}" data-wl-tile="mover"><span class="k">Biggest mover</span><span class="v mono" data-wl-mover>…</span><span class="s" data-wl-mover-s></span></a>
-    {% if cm %}<a class="wl-tile" href="{{ go('EDGAR 8-K') }}" data-wl-tile="filings"><span class="k">New SEC filings</span><span class="v mono" data-wl-filings>…</span><span class="s" data-wl-filings-s></span></a>{% endif %}
-    {% if cm %}<a class="wl-tile" href="{{ go('FUND where NET_ASSETS > 0 order by NET_ASSETS desc') }}" data-wl-tile="funds"><span class="k">Funds and ETFs</span><span class="v mono" data-wl-funds-n>…</span><span class="s" data-wl-funds-s></span></a>{% endif %}
+    <a class="wl-tile" href="{{ (go('ECG ECG-WLD')) | u }}" data-wl-tile="world"><span class="k">World GDP growth</span><span class="v mono" data-wl-world>…</span><span class="s" data-wl-world-s></span></a>
+    <a class="wl-tile" href="{{ (go('QUOTE where PRICE > 0 order by CHANGE_PCT desc')) | u }}" data-wl-tile="breadth"><span class="k">Quotes up · down</span><span class="v mono" data-wl-breadth>…</span><span class="s" data-wl-breadth-s></span></a>
+    <a class="wl-tile" href="{{ (go('QUOTE where PRICE > 0 order by CHANGE_PCT desc')) | u }}" data-wl-tile="mover"><span class="k">Biggest mover</span><span class="v mono" data-wl-mover>…</span><span class="s" data-wl-mover-s></span></a>
+    {% if cm %}<a class="wl-tile" href="{{ (go('EDGAR 8-K')) | u }}" data-wl-tile="filings"><span class="k">New SEC filings</span><span class="v mono" data-wl-filings>…</span><span class="s" data-wl-filings-s></span></a>{% endif %}
+    {% if cm %}<a class="wl-tile" href="{{ (go('FUND where NET_ASSETS > 0 order by NET_ASSETS desc')) | u }}" data-wl-tile="funds"><span class="k">Funds and ETFs</span><span class="v mono" data-wl-funds-n>…</span><span class="s" data-wl-funds-s></span></a>{% endif %}
   </section>
   <div class="wl-cols">
     <section class="wl-card" aria-labelledby="wlMovedH"{{ part(PP, 'table') }}>
@@ -118,12 +118,12 @@
   </div>
   {% if cards %}
   <nav class="wl-qc" aria-label="Quick commands">
-    {% for c in cards %}<a class="wl-q" href="{{ c.href }}" data-home-card="{{ c.cmd }}"><code class="mono">{{ c.cmd }}</code><span>{{ c.title }}</span></a>{% endfor %}
+    {% for c in cards %}<a class="wl-q" href="{{ c.href | u }}" data-home-card="{{ c.cmd }}"><code class="mono">{{ c.cmd }}</code><span>{{ c.title }}</span></a>{% endfor %}
   </nav>
   {% endif %}
   {% endif %}
-  <p class="wl-classic"><a href="/?landing=today">The classic Home</a></p>
+  <p class="wl-classic"><a href="{{ BASE }}/?landing=today">The classic Home</a></p>
   {{ foot(PP, request.url | string) }}
 </div>
 {% endblock %}
-{% block scripts %}<script src="{{ asset('js/drishti_world-landing.js') }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ (asset('js/drishti_world-landing.js')) | u }}"></script>{% endblock %}

@@ -16,6 +16,7 @@
 /* The workbook export: a number's live-formula workbook (the server's .xlsx with its formulas and a Provenance sheet, or the
    playground that exports one), found through the one Explain's Workbook part and downloaded. The browser builds no workbook: the
    server writes it, as the person asking (their entitlements, row rules and masks). */
+import { url as drishtiUrl } from '../../drishti-core/src/drishti_index.js';
 
 /**
  * The workbook links of an Explain answer (its Workbook part): each {label, href, note}.
@@ -43,7 +44,7 @@ export function exportWorkbook(req, o) {
       const u = a && a.workbook && a.workbook.underConstruction;
       throw new Error(u ? 'the workbook of this number is not built yet: ' + (u.title || u.id) : 'no workbook for this number');
     }
-    win.location.assign(links[0].href);
+    win.location.assign(drishtiUrl(links[0].href));
     return links[0];
   });
 }

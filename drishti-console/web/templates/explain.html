@@ -20,16 +20,16 @@
 {% block title %}Explain · {{ PRODUCT }}{% endblock %}
 {% block screen %}explain{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/elements/drishti-chart/drishti_chart.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/elements/drishti-chart/drishti_chart.css?v={{ ASSET_V }}">{% endblock %}
 {% block content %}
 <div class="dx-full" data-explain-page data-explain-request="{{ explain_request }}" data-explain-tab="{{ explain_tab }}">
   <div class="dx-page-head">
     <div><div class="dx-crumb" data-dx-crumb>Explain</div><h1 data-dx-title>explaining…</h1><p class="dx-origin" data-dx-origin></p></div>
     <button type="button" class="dx-btn" data-dx-print title="Print this explanation">Print</button>
-    <a class="dx-btn" data-dx-back href="{{ back or '/' }}">Back to the screen</a>
+    <a class="dx-btn" data-dx-back href="{{ (back or '/') | u }}">Back to the screen</a>
   </div>
   <div class="dx-grid" data-dx-grid></div>
   <div class="dx-page-checks" data-dx-checks></div>
 </div>
 {% endblock %}
-{% block scripts %}{# the waterfall of Why it moved, layout A (drishti-chart) #}<script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script><script src="/static/elements/drishti-chart/drishti_chart.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}{# the waterfall of Why it moved, layout A (drishti-chart) #}<script src="{{ BASE }}/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/elements/drishti-chart/drishti_chart.js?v={{ ASSET_V }}"></script>{% endblock %}

@@ -33,7 +33,7 @@
       list.textContent = '';
       ds.forEach(function (d) {
         var li = document.createElement('li'), a = document.createElement('a');
-        a.className = 'lnk'; a.href = '/build/d/' + encodeURIComponent(d.id); a.textContent = d.name || d.id;
+        a.className = 'lnk'; a.href = drishti_url('/build/d/' + encodeURIComponent(d.id)); a.textContent = d.name || d.id;
         li.appendChild(a);
         li.appendChild(document.createTextNode(' · ' + (d.samples || []).length + ' sample' + ((d.samples || []).length === 1 ? '' : 's')));
         list.appendChild(li);
@@ -43,7 +43,7 @@
     });
   }
   function post(type, body) {
-    return fetch('/build/import', { method: 'POST', headers: { 'Content-Type': type, Accept: 'application/json' }, body: body }).then(done, function () { say('The console could not be reached. Try again.', true); });
+    return fetch(drishti_url('/build/import'), { method: 'POST', headers: { 'Content-Type': type, Accept: 'application/json' }, body: body }).then(done, function () { say('The console could not be reached. Try again.', true); });
   }
   $('[data-import-zip]').addEventListener('change', function (e) {
     var f = e.target.files[0];

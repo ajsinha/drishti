@@ -182,7 +182,7 @@
     D.api('GET', D.ws()).then(function (r) {
       S.result = r.body.result;
       var a = $('[data-download]');
-      a.href = D.ws() + '/dmod';
+      a.href = drishti_url(D.ws() + '/dmod');
       a.hidden = false;
       a.textContent = 'Download ' + S.result.dmod + ' (' + D.bytes(S.result.bytes) + ')';
       D.sumOf('finalize', n + ' of 15 checks passed');
@@ -214,7 +214,7 @@
     var first = S.analysis.sutras[0], key = S.analysis.kinds[first.kind].key, id = first.samples[0] || {};
     key.split('.').forEach(function (k) { id = id && id[k]; });
     var a = $('[data-open]');
-    a.href = '/m/' + encodeURIComponent(S.result.name) + '/' + encodeURIComponent(S.result.name) + '/' + encodeURIComponent(first.kind) + '/' + encodeURIComponent(id);
+    a.href = drishti_url('/m/' + encodeURIComponent(S.result.name) + '/' + encodeURIComponent(S.result.name) + '/' + encodeURIComponent(first.kind) + '/' + encodeURIComponent(id));
     a.textContent = 'Open the screen of ' + id;
     a.hidden = false;
   }

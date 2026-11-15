@@ -15,7 +15,7 @@
 #}
 {% extends "base.html" %}
 {% block title %}{{ p.title }} · {{ PRODUCT }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_readme.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_readme.css?v={{ ASSET_V }}">{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
@@ -28,10 +28,10 @@
     <thead><tr><th>Mnemonic</th><th>Kind</th><th class="num">How many</th><th>Example</th><th>Key fields</th></tr></thead>
     <tbody>{% for k in p.kinds %}
       <tr>
-        <td><a class="lnk mono" href="/s?q={{ (k.mnemonic or k.kind) | urlencode }}">{{ k.mnemonic or '—' }}</a></td>
+        <td><a class="lnk mono" href="{{ BASE }}/s?q={{ (k.mnemonic or k.kind) | urlencode }}">{{ k.mnemonic or '—' }}</a></td>
         <td>{{ k.label }} <span class="text-muted-d mono">{{ k.kind }}</span></td>
         <td class="num mono">{{ '{:,}'.format(k.count) }}{% if k.more %}+{% endif %}</td>
-        <td class="mono">{% if k.example %}<a class="lnk" href="/v/{{ k.kind }}/{{ k.example | urlencode }}">{{ (k.mnemonic ~ ' ') if k.mnemonic else '' }}{{ k.example }}</a>{% else %}—{% endif %}</td>
+        <td class="mono">{% if k.example %}<a class="lnk" href="{{ BASE }}/v/{{ k.kind }}/{{ k.example | urlencode }}">{{ (k.mnemonic ~ ' ') if k.mnemonic else '' }}{{ k.example }}</a>{% else %}—{% endif %}</td>
         <td class="text-muted-d">{{ k.columns | join(', ') or 'the first fields of each document' }}</td>
       </tr>
     {% endfor %}</tbody>
@@ -46,7 +46,7 @@
       {% if readme.html %}
       <details class="pd-readme-body" data-readme-structures>
         <summary>Data structures: each kind's id, fields and nested structures</summary>
-        <div class="help-article readme-article">{{ readme.html | safe }}</div>
+        <div class="help-article readme-article">{{ readme.html | based | safe }}</div>
       </details>
       {% endif %}
     </div>
@@ -54,4 +54,4 @@
   {% endif %}
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script>{% endblock %}

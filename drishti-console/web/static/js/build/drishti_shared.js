@@ -36,7 +36,7 @@
   }
   function post(body) {
     body.token = token;
-    return fetch('/build/shared/' + encodeURIComponent(id) + '/preview', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(body) }).then(show);
+    return fetch(drishti_url('/build/shared/' + encodeURIComponent(id) + '/preview'), { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(body) }).then(show);
   }
 
   $('[data-try-file]').addEventListener('change', function (e) {

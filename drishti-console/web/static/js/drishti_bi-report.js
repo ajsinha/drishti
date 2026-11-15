@@ -129,7 +129,7 @@
     const targets = throughTargets(spec, sel);
     targets.forEach((t) => out.push(mk('bi-through', 'box-arrow-up-right', 'Drill through to ' + t.title, () => { drillThrough(t, current() || sel); }, { 'data-act': 'drill-through', 'data-page': t.id })));
     const key = terminalTarget(spec, sel);
-    if (key) { out.push(mk('bi-toterm', 'terminal', 'Open ' + key.value + ' in the terminal', () => { window.location.href = '/v/' + encodeURIComponent(key.kind) + '/' + encodeURIComponent(String(key.value)); }, { 'data-act': 'open-terminal' })); }
+    if (key) { out.push(mk('bi-toterm', 'terminal', 'Open ' + key.value + ' in the terminal', () => { window.location.href = drishti_url('/v/' + encodeURIComponent(key.kind) + '/' + encodeURIComponent(String(key.value))); }, { 'data-act': 'open-terminal' })); }
     out.push(mk('bi-rows', 'list-ul', state.rows[spec.id] ? 'Back to the visual' : 'Show the rows behind this visual', () => toggleRows(spec, current()), { 'data-act': 'rows', 'aria-pressed': state.rows[spec.id] ? 'true' : 'false' }));
     out.push(mk('bi-astable', 'table', state.asTable[spec.id] ? 'Show as a chart' : 'Show as a table', () => { state.asTable[spec.id] = !state.asTable[spec.id]; redraw(spec.id); }, { 'data-act': 'as-table', 'aria-pressed': state.asTable[spec.id] ? 'true' : 'false' }));
     if (chartable(spec)) { out.push(mk('bi-chart', 'bar-chart-line', 'Chart this table (K)', (ev) => chartOf(spec, ev.currentTarget), { 'data-act': 'chart', 'aria-keyshortcuts': 'K' })); }
@@ -155,7 +155,7 @@
       if (!long) { p.set('state', st); }
       const btn = ev && ev.currentTarget;
       if (long && btn) { B.near(btn, 'The filters on the screen were too long to carry, so the alert starts without them.', false); }
-      window.setTimeout(() => window.location.assign('/alerts/new?' + p.toString()), long ? 1800 : 0);
+      window.setTimeout(() => window.location.assign(drishti_url('/alerts/new?' + p.toString())), long ? 1800 : 0);
     }, { 'data-act': 'alert-me' });
   }
   const VGROUP = {};
@@ -224,7 +224,7 @@
    * interaction that would need a background run is refused at once with the way forward. A ?run=<id> in the address draws its visual from the stored result.
    */
   function ask(spec, entry, token, quiet) {
-    const path = '/reports/' + B.id2path(reportId) + '/query';
+    const path = drishti_url('/reports/') + B.id2path(reportId) + '/query';
     const body = { page: pageId, visual: spec.id, state: stateFor(spec) };
     const R = B.runs;
     if (!R || !B.ask || quiet) { return B.enqueue(() => B.api('POST', path, body)); }
@@ -446,7 +446,7 @@
   function drawTabs() {
     const nav = B.clear(q('[data-pages]'));
     visiblePages().forEach((p) => {
-      const a = h('a', { href: '/bi/r/' + B.id2path(reportId) + '/' + encodeURIComponent(p.id), class: 'bi-tab', role: 'tab', 'data-page': p.id, 'aria-selected': p.id === pageId ? 'true' : 'false', text: p.title });
+      const a = h('a', { href: drishti_url('/bi/r/' + B.id2path(reportId) + '/' + encodeURIComponent(p.id)), class: 'bi-tab', role: 'tab', 'data-page': p.id, 'aria-selected': p.id === pageId ? 'true' : 'false', text: p.title });
       if (p.id === pageId) { a.setAttribute('aria-current', 'page'); }
       a.addEventListener('click', (e) => { if (e.ctrlKey || e.metaKey || e.shiftKey) { return; } e.preventDefault(); go(p.id, []); });
       nav.appendChild(a);
@@ -497,8 +497,8 @@
     state.rows = {};
     state.asTable = {};
     Object.keys(state.drills).forEach((k) => { delete state.drills[k]; });
-    const url = '/bi/r/' + B.id2path(reportId) + '/' + encodeURIComponent(page) + (state.carry.length ? '?carry=' + encodeURIComponent(JSON.stringify(state.carry)) : '');
-    if (push !== false) { window.history.pushState({ page, carry: state.carry }, '', url); }
+    const url = drishti_url('/bi/r/') + B.id2path(reportId) + '/' + encodeURIComponent(page) + (state.carry.length ? '?carry=' + encodeURIComponent(JSON.stringify(state.carry)) : '');
+    if (push !== false) { window.history.pushState({ page, carry: state.carry }, '', drishti_url(url)); }
     drawTabs();
     drawGrid();
     q('[data-back]').hidden = !state.carry.length;
@@ -571,7 +571,7 @@
       }));
     }
     if (window.ResizeObserver) { new ResizeObserver(() => frames.forEach((e) => e.frame.resize())).observe(q('[data-grid]')); }
-    q('[data-design]').href = '/bi/design/' + B.id2path(reportId);
+    q('[data-design]').href = drishti_url('/bi/design/' + B.id2path(reportId));
   }
 
   /** The model's parameters and calculation groups as slicers above the page (a report on a model; a 2.1 dataset has none). */

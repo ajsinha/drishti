@@ -98,7 +98,7 @@
     body.textContent = 'Loading…';
     rawJson = null;
     if (text) { text.textContent = ''; }
-    fetch('/api/raw/' + encodeURIComponent(view.dataset.kind) + '/' + encodeURIComponent(view.dataset.id))
+    fetch(drishti_url('/api/raw/' + encodeURIComponent(view.dataset.kind) + '/' + encodeURIComponent(view.dataset.id)))
       .then(function (r) { return r.json(); })
       .then(function (d) {
         if (d.provenance) { meta.textContent = d.provenance.source + ' · gen ' + d.provenance.generation; }
@@ -156,8 +156,8 @@
   // ---- export and share (W18) ------------------------------------------------------------------
   if (view) {
     document.querySelectorAll('[data-export-panel]').forEach(function (a) {
-      a.href = '/export/' + encodeURIComponent(view.dataset.kind) + '/' + encodeURIComponent(view.dataset.id) + '/' +
-        encodeURIComponent(a.getAttribute('data-export-panel')) + '.' + (a.getAttribute('data-export-ext') || 'csv');
+      a.href = drishti_url('/export/' + encodeURIComponent(view.dataset.kind) + '/' + encodeURIComponent(view.dataset.id) + '/' +
+        encodeURIComponent(a.getAttribute('data-export-panel')) + '.' + (a.getAttribute('data-export-ext') || 'csv'));
       a.hidden = false;
       var menu = a.closest('[data-export-menu]');           // one download button, CSV or JSON Lines in its menu
       if (menu) { menu.hidden = false; }
@@ -190,11 +190,11 @@
     if (action === 'panel') {
       var p = document.getElementById('p-' + btn.getAttribute('data-target'));
       if (p) { p.scrollIntoView({ behavior: 'smooth', block: 'start' }); p.focus({ preventScroll: true }); p.classList.remove('flash'); void p.offsetWidth; p.classList.add('flash'); }
-    } else if (action === 'link') { window.location.href = btn.getAttribute('data-href'); }
+    } else if (action === 'link') { window.location.href = drishti_url(btn.getAttribute('data-href')); }
     else if (action === 'raw') { toggleRaw(); }
     else if (action === 'back') { history.back(); }
     else if (action === 'impact' && view) {
-      window.location.href = '/impact/' + encodeURIComponent(view.dataset.kind) + '/' + encodeURIComponent(view.dataset.id);
+      window.location.href = drishti_url('/impact/' + encodeURIComponent(view.dataset.kind) + '/' + encodeURIComponent(view.dataset.id));
     }
   }
   document.querySelectorAll('[data-fkey]').forEach(function (b) { b.addEventListener('click', function () { run(b); }); });
@@ -233,7 +233,7 @@
       var ref = null;
       try { ref = document.referrer ? new URL(document.referrer) : null; } catch (e) { ref = null; }
       var hist = ref && ref.origin === location.origin && ref.pathname === back.getAttribute('href') ? ref.pathname + ref.search : back.getAttribute('href');
-      back.setAttribute('href', hist);
+      back.setAttribute('href', drishti_url(hist));
       trail = [{ label: 'History of ' + here.label, url: hist }];
     }
     var at = trail.findIndex(function (c) { return c.url === here.url; });

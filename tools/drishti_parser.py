@@ -121,7 +121,7 @@ def build_parser(h) -> argparse.ArgumentParser:
         if name in ("pack", "check"):
             mp.add_argument("--jar", dest="module_jar", help="the module's jar, copied to java/ under the name module.yaml gives")
         if name == "pack":
-            mp.add_argument("--out", default=".", help="the folder the .dmod is written to (default: the current folder)")
+            mp.add_argument("--out", help="the folder the .dmod is written to (default: <Drishti folder>/dist)")
         if name == "check":
             mp.add_argument("--project", help="the project folder, whose Java sources C10 reads for licence headers")
             mp.add_argument("--cycles", type=int, help="load/unload cycles of C15 (default 50)")
@@ -162,7 +162,7 @@ def build_parser(h) -> argparse.ArgumentParser:
              "Runs `pack check` first (--no-check to skip). The archive is reproducible: the same content gives the same bytes.\n"
              "example:\n  drishti.py pack bundle config/packs/my-bank --out dist\nGuide: docs/guides/OPERATIONS_GUIDE.md")
     pb.add_argument("pack")
-    pb.add_argument("--out", metavar="DIR", help="where to write the bundle (default ./dist)")
+    pb.add_argument("--out", metavar="DIR", help="where to write the bundle (default <Drishti folder>/dist)")
     pb.add_argument("--requires-server", metavar="VERSION", help="the minimum server version recorded in the manifest (default: this checkout's version)")
     pb.add_argument("--no-check", action="store_true", help="do not run lint/test before bundling")
     pb.add_argument("--json", action="store_true", help="print the result as JSON")

@@ -44,9 +44,9 @@ One page per domain, a section per data type: a real record of the committed tes
 
 | Kind | Command | Test data | Rows | Needed for | What one record is |
 |---|---|---|---|---|---|
-| [`trade` ENDUR](trades.md#endur) | `TRD` | `trades/endur/`, a snapshot, then daily changes | 12,478 | VaR (positions, status, maturity) and exposure (maturity, status) | A booked trade as its source system (ENDUR, CALYPSO or MUREX) extracts it in the common schema: the deal, its legs with their cash flows and resets, and its events. |
-| [`trade` CALYPSO](trades.md#calypso) | `TRD` | `trades/calypso/`, a snapshot, then daily changes | 18,494 | VaR (positions, status, maturity) and exposure (maturity, status) | A booked trade as its source system (ENDUR, CALYPSO or MUREX) extracts it in the common schema: the deal, its legs with their cash flows and resets, and its events. |
-| [`trade` MUREX](trades.md#murex) | `TRD` | `trades/murex/`, a snapshot, then daily changes | 19,597 | VaR (positions, status, maturity) and exposure (maturity, status) | A booked trade as its source system (ENDUR, CALYPSO or MUREX) extracts it in the common schema: the deal, its legs with their cash flows and resets, and its events. |
+| [`trade` ENDUR](trades.md#endur) | `TRD` | `trades/endur/`, a snapshot, then daily changes | 12,478 | VaR (positions, status, maturity) and exposure (maturity, status) | A booked trade as its source system (ENDUR, CALYPSO, MUREX, WSS, SWAPONE or ICI) extracts it in the common schema: the deal, its legs with their cash flows and resets, and its events. |
+| [`trade` CALYPSO](trades.md#calypso) | `TRD` | `trades/calypso/`, a snapshot, then daily changes | 18,494 | VaR (positions, status, maturity) and exposure (maturity, status) | A booked trade as its source system (ENDUR, CALYPSO, MUREX, WSS, SWAPONE or ICI) extracts it in the common schema: the deal, its legs with their cash flows and resets, and its events. |
+| [`trade` MUREX](trades.md#murex) | `TRD` | `trades/murex/`, a snapshot, then daily changes | 19,597 | VaR (positions, status, maturity) and exposure (maturity, status) | A booked trade as its source system (ENDUR, CALYPSO, MUREX, WSS, SWAPONE or ICI) extracts it in the common schema: the deal, its legs with their cash flows and resets, and its events. |
 
 ## Market-risk inputs (VaR)
 

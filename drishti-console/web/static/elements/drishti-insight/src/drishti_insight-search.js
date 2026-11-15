@@ -20,6 +20,7 @@
 
      var box = Drishti.searchBox(input, { where: 'all', list: ul, grouped: true, row: fn(item, q) -> html, keys: fn(e, box) -> handled,
                                           go: fn(item, i, box), enter: fn(box) })                                            */
+import { url as drishtiUrl } from '../../drishti-core/src/drishti_index.js';
 /**
  * Installs the one search box in a page (once): Drishti.searchBox, Drishti.find (Alt+K) and the top bar's search button.
  * @param {Window} win the page's window
@@ -44,7 +45,7 @@ export function installSearch(win) {
   }
   function hrefOf(s) {
     if (s.href) { return s.href; }
-    if (s.id && s.kind && s.type !== 'range') { return '/v/' + encodeURIComponent(s.kind) + '/' + encodeURIComponent(s.id); }
+    if (s.id && s.kind && s.type !== 'range') { return drishtiUrl('/v/') + encodeURIComponent(s.kind) + '/' + encodeURIComponent(s.id); }
     return '';
   }
 
@@ -113,7 +114,7 @@ export function installSearch(win) {
       if (ctrl) { ctrl.abort(); }
       if (opts.minChars && q.trim().length < opts.minChars) { box.items = []; box.answer = null; open(false); return; }
       ctrl = window.AbortController ? new AbortController() : null;
-      fetch('/api/search?in=' + encodeURIComponent(where) + '&q=' + encodeURIComponent(q), { signal: ctrl ? ctrl.signal : undefined, headers: { Accept: 'application/json' } })
+      fetch(drishtiUrl('/api/search?in=' + encodeURIComponent(where) + '&q=' + encodeURIComponent(q)), { signal: ctrl ? ctrl.signal : undefined, headers: { Accept: 'application/json' } })
         .then(function (r) { return r.ok ? r.json() : null; })
         .then(function (data) {
           box.answer = data;
@@ -130,7 +131,7 @@ export function installSearch(win) {
       var s = box.items[i];
       if (opts.go && opts.go(s, i, box) !== false) { return; }
       var href = s ? hrefOf(s) : '';
-      if (href) { window.location.href = href; }
+      if (href) { window.location.href = drishtiUrl(href); }
     };
 
     input.addEventListener('input', function () { clearTimeout(timer); timer = setTimeout(box.fetch, opts.debounce == null ? 60 : opts.debounce); });

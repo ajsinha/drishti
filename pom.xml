@@ -228,8 +228,6 @@
   <dependencies>
     <dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter</artifactId><scope>test</scope></dependency>
     <dependency><groupId>org.assertj</groupId><artifactId>assertj-core</artifactId><scope>test</scope></dependency>
-    <!-- TestRoots: where a test finds the repository and its module, with or without surefire's properties -->
-    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-testroots</artifactId><version>${project.version}</version><scope>test</scope></dependency>
   </dependencies>
 
   <build>
@@ -345,6 +343,15 @@
   </build>
 
   <profiles>
+    <!-- TestRoots: where a test finds the repository and its module, with or without surefire's properties. Only a module with tests of
+         its own takes it (a module built alone, such as drishti-elements in its profile, then needs nothing from the local repository) -->
+    <profile>
+      <id>testroots</id>
+      <activation><file><exists>${project.basedir}/src/test/java</exists></file></activation>
+      <dependencies>
+        <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-testroots</artifactId><version>${project.version}</version><scope>test</scope></dependency>
+      </dependencies>
+    </profile>
     <!-- Drishti Elements as a WebJar (docs/guides/EMBED_GUIDE.md): `mvn -P elements -pl :drishti-elements package` writes
          packaging/drishti-elements/target/drishti-elements-<train>.jar; the files come from tools/elements/cli.py webjar-tree (Python 3). -->
     <profile>

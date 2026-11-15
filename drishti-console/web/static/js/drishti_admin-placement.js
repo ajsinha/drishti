@@ -33,7 +33,7 @@
   }
 
   function send(action, body) {
-    return window.Drishti.elements.core.api.send('POST', '/admin/net/api/placement/' + action, body || {})   // drishti-core's client: never rejects
+    return window.Drishti.elements.core.api.send('POST', drishti_url('/admin/net/api/placement/') + action, body || {})   // drishti-core's client: never rejects
       .then(function (res) {
         var j = res.body || {};
         if (!res.ok) {
@@ -41,7 +41,7 @@
           return;
         }
         say(action === 'plan' ? 'Planned: a second administrator applies it.' : 'Done: ' + (j.state || action) + '.');
-        setTimeout(function () { window.location.assign('/admin/net?tab=modules'); }, 1200);
+        setTimeout(function () { window.location.assign(drishti_url('/admin/net?tab=modules')); }, 1200);
       });
   }
 

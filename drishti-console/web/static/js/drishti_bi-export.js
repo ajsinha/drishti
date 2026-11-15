@@ -68,12 +68,12 @@
       const fmt = a.getAttribute('data-export-fmt'), p = query();
       tell(a, 'Preparing the ' + fmt.toUpperCase() + '...', false);
       // fetched, not navigated to, so a refusal (switched off, over a limit, a visual that cannot be drawn) is said beside the button instead of replacing the report
-      fetch('/dist/bi/' + B.id2path(B.reportView.id) + '.' + fmt + '?' + p.toString(), { credentials: 'same-origin' }).then((r) => {
+      fetch(drishti_url('/dist/bi/' + B.id2path(B.reportView.id) + '.' + fmt + '?' + p.toString()), { credentials: 'same-origin' }).then((r) => {
         if (!r.ok) { return r.json().catch(() => ({})).then((d) => { throw new Error((d.code ? d.code + ' ' : '') + (d.detail || d.title || r.statusText)); }); }
         return r.blob().then((blob) => ({ blob, name: fileName(r.headers.get('Content-Disposition') || '') || (B.reportView.id.replace(/[^\w.-]+/g, '-') + '.' + fmt) }));
       }).then(({ blob, name }) => {
         const url = URL.createObjectURL(blob), dl = document.createElement('a');
-        dl.href = url; dl.download = name; document.body.appendChild(dl); dl.click(); dl.remove();
+        dl.href = drishti_url(url); dl.download = name; document.body.appendChild(dl); dl.click(); dl.remove();
         window.setTimeout(() => URL.revokeObjectURL(url), 10000);
         tell(a, 'Downloaded ' + name + '.' + (p.dropped ? DROPPED : ''), false);
       }).catch((err) => tell(a, err.message, true));
@@ -87,13 +87,13 @@
     p.set('id', B.reportView.id);
     p.set('title', B.reportView.title);
     tell(sub, 'Opening the subscription form...' + (p.dropped ? DROPPED : ''), false);
-    window.setTimeout(() => window.location.assign('/reports/subscribe?' + p.toString()), p.dropped ? 1800 : 0);
+    window.setTimeout(() => window.location.assign(drishti_url('/reports/subscribe?' + p.toString())), p.dropped ? 1800 : 0);
   });
 
   /** Export and Subscribe appear only when they work for this person; when they do not, a line says why (the administrator's switches, or the person's own limit). */
   function entitlements() {
     const why = box.querySelector('[data-export-why]'), says = [];
-    return fetch('/dist/status', { credentials: 'same-origin', headers: { Accept: 'application/json' } }).then((r) => (r.ok ? r.json() : null)).then((st) => {
+    return fetch(drishti_url('/dist/status'), { credentials: 'same-origin', headers: { Accept: 'application/json' } }).then((r) => (r.ok ? r.json() : null)).then((st) => {
       if (!st) { return; }
       const fmts = box.querySelectorAll('[data-export-fmt]');
       if (!st.export.enabled) {

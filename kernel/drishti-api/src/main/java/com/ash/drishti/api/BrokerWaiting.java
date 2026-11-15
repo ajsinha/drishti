@@ -29,7 +29,7 @@ import java.util.regex.Pattern;
  * ({@link #is}), which health, readiness and the Admin pages read as OK; it logs one line when it starts waiting and one when it
  * connects ({@link Watch}); and it looks at the broker's port ({@link #reachable}) before it opens a client, so the client's own
  * retry noise never starts. A broker that appears later is found by the next look, with no restart. Part of the plugin API
- * (beside {@link SourcePlugin}): the kernel's stream connectors and a module's own stream (banking's var-pv-stream) share it.
+ * (beside {@link SourcePlugin}): the kernel's stream connectors and a module's own stream connectors share it.
  */
 public final class BrokerWaiting {
 

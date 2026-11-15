@@ -28,7 +28,7 @@
   function say(text, bad) { B.say(q('[data-msg]'), text, bad); }
   function fail(e) { say(e.message, true); }
   function stamp(iso) { return iso ? iso.replace('T', ' ').replace(/\.\d+Z?$|Z$/, '') : ''; }
-  function link(it) { return h('a', { href: '/bi/i/' + encodeURIComponent(it.id).replace(/%3A/g, ':'), text: it.title }); }
+  function link(it) { return h('a', { href: drishti_url('/bi/i/' + encodeURIComponent(it.id).replace(/%3A/g, ':')), text: it.title }); }
   function badge(text, cls, ic) { return h('span', { class: 'bi-badge ' + (cls || '') }, ic ? icon(ic) : null, ' ' + text); }
   function endorse(it) {
     if (it.endorsement === 'certified') { return badge('certified', 'bi-certified', 'patch-check'); }
@@ -111,7 +111,7 @@
     if (im.altered && im.altered.length) {
       box.appendChild(h('p', { class: 'text-muted-d', text: im.altered.length + ' published report' + (im.altered.length === 1 ? '' : 's') + ' use' + (im.altered.length === 1 ? 's' : '') + ' them and will show different figures (not refused):' }));
       box.appendChild(h('ul', { 'data-altered': true }, im.altered.map(function (x) {
-        return h('li', {}, x.visible ? [h('a', { href: '/bi/i/' + encodeURIComponent(x.id).replace(/%3A/g, ':'), text: x.title }), ' — ', h('span', { class: 'mono', text: x.uses.join('; ') })] : '(a report you cannot see)');
+        return h('li', {}, x.visible ? [h('a', { href: drishti_url('/bi/i/' + encodeURIComponent(x.id).replace(/%3A/g, ':')), text: x.title }), ' — ', h('span', { class: 'mono', text: x.uses.join('; ') })] : '(a report you cannot see)');
       })));
     }
   }
@@ -135,7 +135,7 @@
     else {
       box.appendChild(h('p', { class: 'bi-bad-line', text: im.published.length + ' published report' + (im.published.length === 1 ? '' : 's') + ' would break' + (im.refused ? ': the publish is refused' + (im.canForce ? ' (you may force it)' : '') : '') + '.' }));
       box.appendChild(h('ul', {}, im.published.map(function (x) {
-        return h('li', {}, x.visible ? [h('a', { href: '/bi/i/' + encodeURIComponent(x.id).replace(/%3A/g, ':'), text: x.title }), ' uses ', h('span', { class: 'mono', text: x.uses.join('; ') })] : '(a report you cannot see)');
+        return h('li', {}, x.visible ? [h('a', { href: drishti_url('/bi/i/' + encodeURIComponent(x.id).replace(/%3A/g, ':')), text: x.title }), ' uses ', h('span', { class: 'mono', text: x.uses.join('; ') })] : '(a report you cannot see)');
       })));
     }
     if (im.drafts && im.drafts.length) { box.appendChild(h('p', { class: 'text-muted-d', text: im.drafts.length + ' draft report' + (im.drafts.length === 1 ? '' : 's') + ' also use' + (im.drafts.length === 1 ? 's' : '') + ' them.' })); }
@@ -295,7 +295,7 @@
   /** An approval goes through the one Approvals queue (the BI item is its kind bi); publishing stays the item's own. */
   function send(sub, note, extra) {
     if (sub !== 'approve') { return B.api('POST', path() + '/' + sub, Object.assign({ note: note }, extra)); }
-    return fetch('/approvals/api/item/bi/' + encodeURIComponent(item.id).replace(/%3A/g, ':') + '/approve', { method: 'POST', credentials: 'same-origin',
+    return fetch(drishti_url('/approvals/api/item/bi/' + encodeURIComponent(item.id).replace(/%3A/g, ':') + '/approve'), { method: 'POST', credentials: 'same-origin',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ comment: note, params: extra }) })
       .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) { var e = new Error(j.detail || ('HTTP ' + r.status)); e.code = j.code; throw e; } return j; }); });
   }

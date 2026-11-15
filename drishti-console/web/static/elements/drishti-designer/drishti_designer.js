@@ -1230,13 +1230,13 @@
   })();
   /* ---- src/drishti_shell-parts.js ---- */
   __m["src/drishti_shell-parts.js"] = (function () {
-    var h = __lib("drishti-core").h;
+    var h = __lib("drishti-core").h, drishtiUrl = __lib("drishti-core").url;
     var Select = __lib("drishti-inputs").Select;
     var entryAttrs = __m["src/drishti_palette.js"].entryAttrs;
     function actionElement(doc, a, emit) {
       const attrs = Object.assign({ 'data-act': a.id, title: a.title || null, 'data-dd-title': a.title || '', hidden: !!a.hidden }, entryAttrs(a.attrs));
       const cls = 'dd-btn' + (a.primary ? ' dd-primary' : '');
-      if (a.href !== undefined) { return h(doc, 'a', { cls: cls + ' dd-link', text: a.label, attrs: Object.assign(attrs, { href: a.href || '#' }) }); }
+      if (a.href !== undefined) { return h(doc, 'a', { cls: cls + ' dd-link', text: a.label, attrs: Object.assign(attrs, { href: drishtiUrl(a.href || '#') }) }); }
       if (a.choices) {                                                         // drishti-inputs' Select in a <drishti-select> (its value and change as a select's)
         attrs['aria-label'] = a.label;
         const box = h(doc, 'drishti-select', { cls: 'dd-layout-pick dd-choice', attrs });
@@ -1268,7 +1268,7 @@
       shell.groups.forEach((g) => {
         const list = g.items.filter((x) => !term || (x.label + ' ' + (x.search || x.detail || '')).toLowerCase().indexOf(term) >= 0);
         const ul = h(doc, 'ul', { cls: 'dd-list', attrs: { role: 'list' } }, list.map((x) => h(doc, 'li', {}, [h(doc, x.href ? 'a' : 'button', { cls: 'dd-obj' + (x.current ? ' dd-on' : ''),
-          attrs: { type: x.href ? null : 'button', href: x.href || null, title: x.title || null, 'aria-current': x.current ? (x.href ? 'page' : 'true') : null, 'data-object': x.id, 'data-object-item': (x.data && x.data.item) || '' },
+          attrs: { type: x.href ? null : 'button', href: drishtiUrl(x.href || null), title: x.title || null, 'aria-current': x.current ? (x.href ? 'page' : 'true') : null, 'data-object': x.id, 'data-object-item': (x.data && x.data.item) || '' },
           on: x.href ? {} : { click: () => shell.events.emit('open', { group: g.id, item: x }) } }, [h(doc, 'span', { cls: 'dd-obj-n', text: x.label },
           x.badge ? [h(doc, 'span', { cls: 'dd-obj-badge', text: x.badge })] : []), h(doc, 'small', { text: x.detail || '' })])])));
         shell.objects.appendChild(h(doc, 'section', { cls: 'dd-group', attrs: { 'data-group': g.id } }, [h(doc, 'h2', {}, [g.label + ' ', h(doc, 'small', { text: String(list.length) })]),
@@ -1285,7 +1285,7 @@
         const doc = this.doc;
         this.el.textContent = '';
         (list || []).forEach((d) => {
-          const tab = h(doc, 'a', { cls: 'dd-doc-tab', text: d.label, attrs: { href: d.href, role: 'tab', 'data-dd-doc': d.id, 'aria-selected': String(!!d.current), title: d.title || d.label } });
+          const tab = h(doc, 'a', { cls: 'dd-doc-tab', text: d.label, attrs: { href: drishtiUrl(d.href), role: 'tab', 'data-dd-doc': d.id, 'aria-selected': String(!!d.current), title: d.title || d.label } });
           const x = h(doc, 'button', { cls: 'dd-doc-x', text: '×', attrs: { type: 'button', 'data-dd-doc-close': d.id, 'aria-label': 'Close ' + d.label } });
           x.addEventListener('click', (e) => { e.preventDefault(); this.emit('close', { id: d.id }); });
           this.el.appendChild(h(doc, 'span', { cls: 'dd-doc' + (d.current ? ' dd-on' : '') }, [tab, x]));
@@ -1329,7 +1329,7 @@
   })();
   /* ---- src/drishti_shell.js ---- */
   __m["src/drishti_shell.js"] = (function () {
-    var EventBus = __lib("drishti-core").EventBus, announce = __lib("drishti-core").announce, h = __lib("drishti-core").h, openDialog = __lib("drishti-core").openDialog, closeDialog = __lib("drishti-core").closeDialog;
+    var EventBus = __lib("drishti-core").EventBus, announce = __lib("drishti-core").announce, h = __lib("drishti-core").h, openDialog = __lib("drishti-core").openDialog, closeDialog = __lib("drishti-core").closeDialog, drishtiUrl = __lib("drishti-core").url;
     var actionElement = __m["src/drishti_shell-parts.js"].actionElement, drawObjectGroups = __m["src/drishti_shell-parts.js"].drawObjectGroups, layoutPick = __m["src/drishti_shell-parts.js"].layoutPick, DocTabs = __m["src/drishti_shell-parts.js"].DocTabs, Dock = __m["src/drishti_shell-parts.js"].Dock;
     const SHELL_ACTIONS = Object.freeze([
       { id: 'validate', label: 'Validate', title: 'Check the definition now (Ctrl+Enter)' },
@@ -1530,7 +1530,7 @@
         (crumbs || []).forEach((x, i) => {
           if (i) { c.appendChild(this.doc.createTextNode(' › ')); }
           const last = i === crumbs.length - 1, label = typeof x === 'string' ? x : x.label;
-          c.appendChild(typeof x !== 'string' && x.href ? h(this.doc, 'a', { text: label, attrs: { href: x.href } }) : h(this.doc, 'span', { text: label, attrs: last ? { 'data-crumb-group': '' } : {} }));
+          c.appendChild(typeof x !== 'string' && x.href ? h(this.doc, 'a', { text: label, attrs: { href: drishtiUrl(x.href) } }) : h(this.doc, 'span', { text: label, attrs: last ? { 'data-crumb-group': '' } : {} }));
         });
       }
       setTitle(t) { this.titleEl.textContent = t || ''; }

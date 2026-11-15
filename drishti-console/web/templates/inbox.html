@@ -16,16 +16,16 @@
 {# The inbox (ARCHITECTURE.md §31, Inbox): shares (and later mentions and replies) as the server renders them for this reader now. #}
 {% extends "base.html" %}
 {% block title %}Inbox · {{ PRODUCT }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_dist.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_dist.css?v={{ ASSET_V }}">{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
 <div class="adm inbox" data-inbox>
   <h1>Inbox</h1>
-  <p class="text-muted-d">What people sent you, and the <a href="/alerts">alerts</a> that fired for you: a number that crossed a limit, a board tile that turned red. Their rules and history are on the Alerts page.</p>
+  <p class="text-muted-d">What people sent you, and the <a href="{{ BASE }}/alerts">alerts</a> that fired for you: a number that crossed a limit, a board tile that turned red. Their rules and history are on the Alerts page.</p>
   <nav class="inbox-tabs" aria-label="Filter the inbox">
-    {% for key, name, _ in tabs %}<a class="fk{% if tab == key %} on{% endif %}" href="/inbox?tab={{ key }}{% if unread %}&amp;unread=1{% endif %}"{% if tab == key %} aria-current="page"{% endif %}>{{ name }}</a>{% endfor %}
-    <a class="fk{% if unread %} on{% endif %}" href="/inbox?tab={{ tab }}{% if not unread %}&amp;unread=1{% endif %}" aria-pressed="{{ 'true' if unread else 'false' }}">Unread only</a>
+    {% for key, name, _ in tabs %}<a class="fk{% if tab == key %} on{% endif %}" href="{{ BASE }}/inbox?tab={{ key }}{% if unread %}&amp;unread=1{% endif %}"{% if tab == key %} aria-current="page"{% endif %}>{{ name }}</a>{% endfor %}
+    <a class="fk{% if unread %} on{% endif %}" href="{{ BASE }}/inbox?tab={{ tab }}{% if not unread %}&amp;unread=1{% endif %}" aria-pressed="{{ 'true' if unread else 'false' }}">Unread only</a>
     <button type="button" class="fk inbox-mark" data-inbox-mark-all>Mark all read</button>
   </nav>
   <p class="adm-msg" data-inbox-msg role="status" aria-live="polite">{{ error }}</p>
@@ -37,7 +37,7 @@
       <span class="inbox-when mono" title="{{ r.at }}">{{ when_local(r.at) }}</span>
       <span class="inbox-type">{{ r.typeLabel or (r.type | capitalize) }}</span>
       <span class="inbox-main">
-        {% if r.href %}<a class="inbox-open" href="{{ r.href }}" data-inbox-open>{{ r.title }}</a>{% else %}<span>{{ r.title }}</span>{% endif %}
+        {% if r.href %}<a class="inbox-open" href="{{ r.href | u }}" data-inbox-open>{{ r.title }}</a>{% else %}<span>{{ r.title }}</span>{% endif %}
         {% if r.excerpt %}<span class="inbox-excerpt">&ldquo;{{ r.excerpt }}&rdquo;</span>{% endif %}
         {% if not r.read %}<span class="visually-hidden">unread</span>{% endif %}
       </span>
@@ -45,10 +45,10 @@
     </li>
     {% endfor %}
   </ol>
-  {% if more %}<p><a class="fk" href="/inbox?tab={{ tab }}{% if unread %}&amp;unread=1{% endif %}&amp;before={{ more }}">Older &rarr;</a></p>{% endif %}
+  {% if more %}<p><a class="fk" href="{{ BASE }}/inbox?tab={{ tab }}{% if unread %}&amp;unread=1{% endif %}&amp;before={{ more }}">Older &rarr;</a></p>{% endif %}
   {% elif not error %}
   <p class="inbox-empty">Nothing here yet. When someone shares a view with you, or an alert of yours fires, it arrives here and in the bell.</p>
   {% endif %}
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_inbox.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_inbox.js?v={{ ASSET_V }}"></script>{% endblock %}

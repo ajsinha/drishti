@@ -16,22 +16,22 @@
 {# An alert on a number: new, or an existing one with its history (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 20). #}
 {% extends "base.html" %}
 {% block title %}{{ 'Alert ' ~ alert.name if alert else 'New alert' }} · {{ PRODUCT }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_dist.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_dist.css?v={{ ASSET_V }}">{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
 {% set editing = alert is not none %}
 <div class="adm" data-alert-form-page>
   <h1>{% if editing %}Alert: {{ alert.name }}{% else %}Alert me{% endif %}</h1>
-  <p class="text-muted-d">Watch one number and be told in your <a href="/inbox?tab=alert">inbox</a> (and by email or a chat bridge, if you ask) when it crosses a limit, moves too far, or does
+  <p class="text-muted-d">Watch one number and be told in your <a href="{{ BASE }}/inbox?tab=alert">inbox</a> (and by email or a chat bridge, if you ask) when it crosses a limit, moves too far, or does
     not arrive. <b>The number is read as you</b>: with your row rules and masks. If it is masked for you the alert never judges it and never shows it. After it fires it stays quiet until
     the value is back inside the limit (by the <i>hysteresis</i>, if you set one), and does not fire again within the <i>cooldown</i>.</p>
   {% if msg %}<p class="adm-msg" role="status">{{ msg }}</p>{% endif %}
   {% if error %}<p class="pnl-err" role="alert">{{ error }}</p>{% endif %}
   {% if editing %}<p class="al-facts"><span class="st st-{{ {'active': 'bad', 'armed': 'ok', 'paused': 'warn'}[standing] }}" data-standing>{{ standing }}</span>
-    <span class="text-muted-d">{{ alert.label }} · {{ alert.describe }}</span> <a class="lnk" href="{{ alert.link }}">Open it</a></p>{% endif %}
+    <span class="text-muted-d">{{ alert.label }} · {{ alert.describe }}</span> <a class="lnk" href="{{ alert.link | u }}">Open it</a></p>{% endif %}
   <section class="pnl"><header class="pnl-h"><h3>{{ 'Change it' if editing else 'What to watch, and when to tell you' }}</h3></header><div class="pnl-b">
-    <form class="alert-form al-form" method="post" action="{{ '/alerts/measure/' ~ (alert.name | urlencode) if editing else '/alerts/new' }}" data-alert-form>
+    <form class="alert-form al-form" method="post" action="{{ ('/alerts/measure/' ~ (alert.name | urlencode) if editing else '/alerts/new') | u }}" data-alert-form>
       <p class="text-muted-d wide2" data-name-rule>Name: Letters, digits, spaces, dots, dashes and underscores; start with a letter or digit; up to 64 characters.</p>
       {{ form_host or '' }}{# drishti-inputs' Form from the server's schema (core/alert_form.py), embedded: every control named as before #}
       <p class="text-muted-d wide2" data-visual-titles aria-live="polite"></p>
@@ -42,7 +42,7 @@
       <div class="al-actions wide2">
         <button type="submit" class="btn-pill btn-accent dist-act">{{ 'Save changes' if editing else 'Save alert' }}</button>
         <button type="button" class="btn-pill btn-ghost dist-act" data-check-now>Check now</button>
-        <a class="btn-pill btn-ghost dist-act" href="/alerts">{{ 'Back' if editing else 'Cancel' }}</a>
+        <a class="btn-pill btn-ghost dist-act" href="{{ BASE }}/alerts">{{ 'Back' if editing else 'Cancel' }}</a>
       </div>
       <p class="al-check-out wide2" data-check-out role="status" aria-live="polite"></p>
     </form>
@@ -51,9 +51,9 @@
   {% if editing %}
   <section class="pnl"><header class="pnl-h"><h3>History</h3><span class="pnl-code">{{ (alert.history or []) | length }}</span></header><div class="pnl-b">
     <div class="al-act-row">
-      <form method="post" action="/alerts/measure/{{ alert.name | urlencode }}/check"><button class="fk dist-act" type="submit">Look now</button></form>
-      <form method="post" action="/alerts/measure/{{ alert.name | urlencode }}/{{ 'resume' if not alert.enabled else 'pause' }}"><button class="fk dist-act" type="submit">{{ 'Resume' if not alert.enabled else 'Pause' }}</button></form>
-      <form method="post" action="/alerts/measure/{{ alert.name | urlencode }}/delete"><button class="fk dist-act" type="submit">Delete</button></form>
+      <form method="post" action="{{ BASE }}/alerts/measure/{{ alert.name | urlencode }}/check"><button class="fk dist-act" type="submit">Look now</button></form>
+      <form method="post" action="{{ BASE }}/alerts/measure/{{ alert.name | urlencode }}/{{ 'resume' if not alert.enabled else 'pause' }}"><button class="fk dist-act" type="submit">{{ 'Resume' if not alert.enabled else 'Pause' }}</button></form>
+      <form method="post" action="{{ BASE }}/alerts/measure/{{ alert.name | urlencode }}/delete"><button class="fk dist-act" type="submit">Delete</button></form>
     </div>
     {% if alert.history %}<div class="tbl-wrap"><table class="tbl al-hist" data-plain data-history>
       <thead><tr><th>When</th><th>What</th><th>Message</th><th>Sent to</th></tr></thead>
@@ -66,4 +66,4 @@
   {% endif %}
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_alert-form.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_alert-form.js?v={{ ASSET_V }}"></script>{% endblock %}

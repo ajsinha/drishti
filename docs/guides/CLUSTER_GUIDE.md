@@ -656,7 +656,7 @@ scattered to shard owners. Roles exist to size and isolate work (a whole-bank BI
 | **Python compute** | `config/compute/compute.yaml` pools (`risk`, `exposure`) | `workers`, `memory` per worker | on servers / on the exposure server / hosts of their own | VaR owners |
 | **Database** | PostgreSQL (identity, sessions, edit log, run leases) | `DRISHTI_IDENTITY_DB_URL`; pools per `drishti.db.pool.size` | 1 (SQLite allowed) / 1 + standby / 1 + standby | app servers |
 | **Lake** | S3 (Delta or Iceberg) or a shared file system | `DRISHTI_DELTA_ROOT` | managed | — |
-| **Kafka** | the PV topic for intraday | `DRISHTI_KAFKA_BOOTSTRAP`, `DRISHTI_VAR_PV_STREAM` | optional / 3 brokers / 3 brokers | — |
+| **Kafka** | the PV topic for intraday | `[broker.default] bootstrap-servers`, `DRISHTI_VAR_PV_STREAM` | optional / 3 brokers / 3 brokers | — |
 
 Pilot means about 200,000 positions and 1,500 portfolios with up to 50 active people: three all-in-one servers (each owner and
 coordinator) and two consoles. A pilot console may share a host with a coordinator.

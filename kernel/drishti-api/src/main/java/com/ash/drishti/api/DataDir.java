@@ -31,13 +31,9 @@ public final class DataDir {
     private DataDir() {
     }
 
-    /** The umbrella folder as configured, not made absolute. */
+    /** The umbrella folder, absolute: as configured (a relative value under the install folder), else {@code <drishti.home>/data}; never the working folder. */
     public static String root() {
-        String p = System.getProperty(PROPERTY);
-        if (p == null || p.isBlank()) {
-            p = System.getenv(ENV);
-        }
-        return p == null || p.isBlank() ? Roots.data() : p.strip();   // neither set: <drishti.home>/data, never the working folder
+        return Roots.data();
     }
 
     /** A folder under the umbrella, e.g. {@code under("delta")} is {@code <drishti.home>/data/delta} by default. */

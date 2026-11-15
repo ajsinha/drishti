@@ -24,7 +24,7 @@
   if (window.Drishti.__serverWatch) { return; }
   window.Drishti.__serverWatch = true;
   var realFetch = window.fetch ? window.fetch.bind(window) : null;
-  var PROBE = '/healthz/backend';
+  var PROBE = drishti_url('/healthz/backend');
   var MIN = 2000, MAX = 30000;
   var banner = null, text = null, retry = null, reloadBtn = null, close = null;
   var down = false, dismissed = false, mustReload = false, polling = false, delay = MIN, timer = null, hideTimer = null;

@@ -18,11 +18,11 @@
    Pivot's: "Open in Pivot". Drawn by static/js/drishti_bi-notebook.js and drishti_bi-notebook-cells.js; the strict policy of every BI page applies. #}
 {% extends "bi/shell.html" %}
 {% block bi_title %}Notebook{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/elements/drishti-grid/drishti_grid.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/elements/drishti-chart/drishti_chart.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi-expr.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi-notebook.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi-consume.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi-transform.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/elements/drishti-grid/drishti_grid.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/elements/drishti-chart/drishti_chart.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_bi-expr.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_bi-notebook.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_bi-consume.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_bi-transform.css?v={{ ASSET_V }}">{% endblock %}
 {% block bi_main %}
 <header class="bi-head"><h1>Notebook</h1>
   <p class="text-muted-d">Open a model as an extract of the rows you may see (masked columns stay masked), then query it with SQL cells, run by the server as you, and Python cells, run on the server's compute pool. Save the work as a notebook; promote a cell into a Python item or a report draft.
-    To slice and total a table, use the <a href="/pivot" data-open-pivot>Pivot</a>.</p></header>
+    To slice and total a table, use the <a href="{{ BASE }}/pivot" data-open-pivot>Pivot</a>.</p></header>
 <p class="bi-msg" data-msg role="status" aria-live="polite"></p>
 <div class="bx" id="bx" data-max-rows="{{ limits.max_rows }}" data-sql-rows="{{ limits.sql_max_rows }}" data-sql-chars="{{ limits.sql_max_chars }}" data-may-python="{{ 'true' if may_python else 'false' }}" data-python-runs="{{ 'true' if python_runs else 'false' }}" data-python-why="{{ python_why or '' }}">
 <form class="bi-form bx-open" data-open aria-label="Open an extract">
@@ -60,7 +60,7 @@
   <button type="button" role="tab" class="btn-pill btn-ghost" id="bxT-profile" aria-controls="bxP-profile" aria-selected="false" tabindex="-1" data-tab="profile">Profile</button>
 </div>
 <section id="bxP-sql" role="tabpanel" aria-labelledby="bxT-sql" data-pane="sql">
-  <p class="text-muted-d" data-sql-help>One read-only SELECT, at most {{ limits.sql_max_rows }} rows back: {{ PRODUCT }} SQL over the model the extract reads, run by the <strong>server</strong> as you. Its tables are the model's aliases and <code>MEASURE('name')</code> is a measure (<a href="/help/api#8-drishti-sql-apiv1bisql">the SQL guide</a>).</p>
+  <p class="text-muted-d" data-sql-help>One read-only SELECT, at most {{ limits.sql_max_rows }} rows back: {{ PRODUCT }} SQL over the model the extract reads, run by the <strong>server</strong> as you. Its tables are the model's aliases and <code>MEASURE('name')</code> is a measure (<a href="{{ BASE }}/help/api#8-drishti-sql-apiv1bisql">the SQL guide</a>).</p>
   <div data-cells="sql"></div>
   <div class="bi-actions"><button type="button" class="btn-pill btn-ghost" data-add="sql"><i class="bi bi-plus-lg" aria-hidden="true"></i> SQL cell</button>
     <button type="button" class="btn-pill btn-ghost" data-run-all="sql"><i class="bi bi-play-fill" aria-hidden="true"></i> Run all</button></div>
@@ -76,7 +76,7 @@
 </section>
 <section id="bxP-profile" role="tabpanel" aria-labelledby="bxT-profile" data-pane="profile" hidden>
   <p class="text-muted-d">Every column of the extract: its type, what its text looks like, empty values, distinct values, whether it could be a key, the range, the most common values and a histogram.
-    Worked out over the rows you may see, with no code of yours (the same panel as the <a href="/bi/transform">Transform editor</a>'s).</p>
+    Worked out over the rows you may see, with no code of yours (the same panel as the <a href="{{ BASE }}/bi/transform">Transform editor</a>'s).</p>
   <p class="bi-result-meta" data-profile-meta role="status" aria-live="polite"></p>
   <div class="tx-profile" data-profile-out></div>
 </section>
@@ -88,4 +88,4 @@
 </form>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/elements/drishti-grid/drishti_grid.js?v={{ ASSET_V }}"></script><script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script><script src="/static/elements/drishti-chart/drishti_chart.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-expr-editor.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-layer.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-query-panel.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-python.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-consume.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-notebook.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-notebook-cells.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-notebook-extracts.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-transform-view.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-notebook-profile.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/elements/drishti-grid/drishti_grid.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/elements/drishti-chart/drishti_chart.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_bi.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_bi-lib.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_bi-expr-editor.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_bi-layer.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_bi-query-panel.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_bi-python.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_bi-consume.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_bi-notebook.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_bi-notebook-cells.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_bi-notebook-extracts.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_bi-transform-view.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_bi-notebook-profile.js?v={{ ASSET_V }}"></script>{% endblock %}

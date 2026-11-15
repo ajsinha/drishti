@@ -36,6 +36,7 @@
   var __m = {};
   /* ---- src/drishti_insight-why.js ---- */
   __m["src/drishti_insight-why.js"] = (function () {
+    var drishtiUrl = __lib("drishti-core").url;
     function whyPageFits(a) {
       const x = a && a.why;
       return !!(x && x.available && x.answer && Array.isArray(x.answer.lines) && x.answer.lines.length);
@@ -199,7 +200,7 @@
       const wb = ((a.workbook || {}).links || [])[0], head = root.querySelector('.dx-page-head');
       if (wb && head && !root.querySelector('[data-dx-wb]')) {
         const w = k.h('a', 'dx-btn', 'Workbook');
-        w.href = wb.href;
+        w.href = drishtiUrl(wb.href);
         w.setAttribute('data-dx-wb', '');
         head.insertBefore(w, head.querySelector('[data-dx-print]'));
       }
@@ -214,7 +215,7 @@
       if (from) { next.from = from; } else { delete next.from; }
       const u = new URL(win.location.href);
       if (from) { u.searchParams.set('from', from); } else { u.searchParams.delete('from'); }
-      win.history.replaceState(win.history.state, '', u.toString());
+      win.history.replaceState(win.history.state, '', drishtiUrl(u.toString()));
       root.setAttribute('data-explain-request', JSON.stringify(next));
       rerender(root);
     }
@@ -222,13 +223,14 @@
   })();
   /* ---- src/drishti_insight-link.js ---- */
   __m["src/drishti_insight-link.js"] = (function () {
+    var drishtiUrl = __lib("drishti-core").url;
     const TITLE = 'Explain: the formula with its values, the inputs and lineage, why it moved, the workbook (E)';
     function explainLink(doc, req, o, pageUrl) {
       o = o || {};
       const a = doc.createElement('a');
       a.className = 'dx-link' + (o.cls ? ' ' + o.cls : '');
       a.textContent = o.text || 'Explain ›';
-      a.href = pageUrl(req, o.tab || 'why');
+      a.href = drishtiUrl(pageUrl(req, o.tab || 'why'));
       a.setAttribute('data-explain', JSON.stringify(req));
       a.setAttribute('data-explain-tab', o.tab || 'why');
       a.setAttribute('data-explain-trigger', '');
@@ -245,7 +247,7 @@
         el.classList.add('dx-link');
         el.setAttribute('data-explain-trigger', '');
         el.setAttribute('data-explain-tab', tab);
-        if (el.tagName === 'A') { el.href = pageUrl(req, tab); }
+        if (el.tagName === 'A') { el.href = drishtiUrl(pageUrl(req, tab)); }
         if (!el.textContent.trim()) { el.textContent = 'Explain ›'; }
         if (!el.title) { el.title = TITLE; }
       });
@@ -267,7 +269,7 @@
           var tr = h("tr");
           r.cells.forEach(function (c, i) {
             var td = h("td", "mono");
-            if (i === 0 && r.href) { var a = h("a", null, c); a.href = r.href; td.appendChild(a); } else td.textContent = c;
+            if (i === 0 && r.href) { var a = h("a", null, c); a.href = drishtiUrl(r.href); td.appendChild(a); } else td.textContent = c;
             tr.appendChild(td);
           });
           tb.appendChild(tr);
@@ -279,10 +281,10 @@
         more.type = "button";
         more.addEventListener("click", function () {
           page += 1;
-          fetch(list.moreHref + "&page=" + page).then(function (r) { return r.json(); }).then(function (b) {
+          fetch(drishtiUrl(list.moreHref + "&page=" + page)).then(function (r) { return r.json(); }).then(function (b) {
             add((b.rows || []).map(function (r) {
               return { cells: [r.position, (r.trades || []).map(function (x) { return x.trade + " (" + x.maturity + ")"; }).join(", ")],
-                href: "/v/position/" + encodeURIComponent(r.position) + "?asOf=" + encodeURIComponent(b.businessDate) };
+                href: drishtiUrl("/v/position/" + encodeURIComponent(r.position) + "?asOf=" + encodeURIComponent(b.businessDate)) };
             }));
             more.hidden = !b.more;
           });
@@ -317,6 +319,7 @@
     var compareAgain = __m["src/drishti_insight-why.js"].compareAgain, mountWhyPage = __m["src/drishti_insight-why.js"].mountWhyPage, whyPageFits = __m["src/drishti_insight-why.js"].whyPageFits;
     var explainLink = __m["src/drishti_insight-link.js"].explainLink, upgradeLinks = __m["src/drishti_insight-link.js"].upgradeLinks, drawNote = __m["src/drishti_insight-link.js"].drawNote;
     var showBusy = __m["src/drishti_insight-busy.js"].showBusy, answerError = __m["src/drishti_insight-busy.js"].answerError;
+    var drishtiUrl = __lib("drishti-core").url;
     function installExplain(win) {
       const window = win, document = win.document;
       window.Drishti = window.Drishti || {};
@@ -344,14 +347,14 @@
         var key = q.toString() + (req.body ? JSON.stringify(req.body) : "");
         if (cache[key]) return cache[key];
         var init = { headers: { Accept: "application/json" }, credentials: "same-origin" };
-        var url = "/api/explain?" + q.toString();
+        var url = drishtiUrl("/api/explain?") + q.toString();
         if (req.body) {
-          url = "/api/explain";
+          url = drishtiUrl("/api/explain");
           init.method = "POST";
           init.headers["Content-Type"] = "application/json";
           init.body = JSON.stringify(Object.assign({}, req.body, Object.fromEntries(q)));
         }
-        var p = fetch(url, init).then(function (r) {
+        var p = fetch(drishtiUrl(url), init).then(function (r) {
           return r.json().catch(function () { return {}; }).then(function (b) {
             if (!r.ok) throw answerError(r, b);                          // a busy refusal (503, DRS-950x) is counted down and asked again: busy()
             return b;
@@ -365,7 +368,7 @@
       function pageUrl(req, tab) {
         var q = query(req, tab ? { tab: tab } : {});
         if (req.body) q.set("body", JSON.stringify(req.body));
-        return "/explain?" + q.toString();
+        return drishtiUrl("/explain?") + q.toString();
       }
       function withDates(req) {
         return Object.assign({}, req, S.from ? { from: S.from } : {}, S.to ? { to: S.to } : {});
@@ -405,7 +408,7 @@
           TABS.forEach(function (t, i) {
             if (i) links.appendChild(document.createTextNode(" · "));
             var l = h("a", null, t[1] === "Inputs & lineage" ? "Inputs" : t[1]);
-            l.href = pageUrl(req, t[0]);
+            l.href = drishtiUrl(pageUrl(req, t[0]));
             l.dataset.explainLink = t[0];
             l.addEventListener("click", function (ev) { ev.preventDefault(); closePreview(); open(req, t[0], anchor); });
             links.appendChild(l);
@@ -475,7 +478,7 @@
         drawer.style.top = window.innerWidth > 640 && bar ? Math.max(0, Math.round(bar.getBoundingClientRect().bottom)) + "px" : "";
         drawer.hidden = false;
         drawer.classList.add("dx-open");
-        drawer.querySelector("[data-dx-page]").href = pageUrl(withDates(req), tab || "formula");
+        drawer.querySelector("[data-dx-page]").href = drishtiUrl(pageUrl(withDates(req), tab || "formula"));
         document.body.dataset.explainOpen = "1";
         show(tab || "formula");
         drawer.focus();
@@ -495,7 +498,7 @@
           b.setAttribute("aria-selected", on ? "true" : "false");
           b.tabIndex = on ? 0 : -1;
         });
-        drawer.querySelector("[data-dx-page]").href = pageUrl(withDates(S.req), tab);
+        drawer.querySelector("[data-dx-page]").href = drishtiUrl(pageUrl(withDates(S.req), tab));
         var body = drawer.querySelector("[data-dx-body]");
         body.textContent = "";
         body.appendChild(h("p", "dx-muted", tab === "why" ? "computing why it moved…" : "explaining…"));
@@ -573,7 +576,7 @@
           (x.links || []).forEach(function (l) {
             var li = h("li");
             var link = h("a", "dx-wb", l.label);
-            link.href = l.href;
+            link.href = drishtiUrl(l.href);
             link.dataset.dxWorkbook = "";
             li.appendChild(link);
             if (l.note) li.appendChild(h("span", "dx-muted", " · " + l.note));
@@ -584,7 +587,7 @@
           (a.links || []).forEach(function (l) {
             var p = h("p", "dx-muted");
             var link = h("a", null, l.label + " ›");
-            link.href = l.href;
+            link.href = drishtiUrl(l.href);
             p.appendChild(link);
             host.appendChild(p);
           });
@@ -641,7 +644,7 @@
       function paintPanels(host, a, t, panels) {
         var model = { contract: "1.0", ref: { kind: "explain", id: a.kind + ":" + a.subject }, title: { pill: "Why it moved", id: t.title + " · " + t.from + " to " + t.to },
                       strip: [], panels: panels, keys: [], provenance: { source: "the server's Explain, GET /api/v1/explain?kind=" + a.kind } };
-        lib = lib || import("/static/render/2.0.0/drishti-render.js");
+        lib = lib || import(drishtiUrl("/static/render/2.0.0/drishti-render.js"));
         return lib.then(function (R) {
           var v = R.render(host, model, { theme: document.documentElement.getAttribute("data-theme") || "terminal", header: "none", help: false,
                                           tables: true, live: false, navigation: "host", device: window.innerWidth <= 640 ? "phone" : "desk" });
@@ -772,6 +775,7 @@
   })();
   /* ---- src/drishti_insight-search.js ---- */
   __m["src/drishti_insight-search.js"] = (function () {
+    var drishtiUrl = __lib("drishti-core").url;
     function installSearch(win) {
       const window = win, document = win.document;
       window.Drishti = window.Drishti || {};
@@ -790,7 +794,7 @@
       }
       function hrefOf(s) {
         if (s.href) { return s.href; }
-        if (s.id && s.kind && s.type !== 'range') { return '/v/' + encodeURIComponent(s.kind) + '/' + encodeURIComponent(s.id); }
+        if (s.id && s.kind && s.type !== 'range') { return drishtiUrl('/v/') + encodeURIComponent(s.kind) + '/' + encodeURIComponent(s.id); }
         return '';
       }
       function searchBox(input, opts) {
@@ -857,7 +861,7 @@
           if (ctrl) { ctrl.abort(); }
           if (opts.minChars && q.trim().length < opts.minChars) { box.items = []; box.answer = null; open(false); return; }
           ctrl = window.AbortController ? new AbortController() : null;
-          fetch('/api/search?in=' + encodeURIComponent(where) + '&q=' + encodeURIComponent(q), { signal: ctrl ? ctrl.signal : undefined, headers: { Accept: 'application/json' } })
+          fetch(drishtiUrl('/api/search?in=' + encodeURIComponent(where) + '&q=' + encodeURIComponent(q)), { signal: ctrl ? ctrl.signal : undefined, headers: { Accept: 'application/json' } })
             .then(function (r) { return r.ok ? r.json() : null; })
             .then(function (data) {
               box.answer = data;
@@ -874,7 +878,7 @@
           var s = box.items[i];
           if (opts.go && opts.go(s, i, box) !== false) { return; }
           var href = s ? hrefOf(s) : '';
-          if (href) { window.location.href = href; }
+          if (href) { window.location.href = drishtiUrl(href); }
         };
         input.addEventListener('input', function () { clearTimeout(timer); timer = setTimeout(box.fetch, opts.debounce == null ? 60 : opts.debounce); });
         if (opts.fetchOnFocus !== false) { input.addEventListener('focus', function () { box.lastQ = null; box.fetch(); }); }
@@ -943,6 +947,7 @@
   })();
   /* ---- src/drishti_insight-approvals.js ---- */
   __m["src/drishti_insight-approvals.js"] = (function () {
+    var drishtiUrl = __lib("drishti-core").url;
     function startApprovals(win) {
       const window = win, document = win.document;
       window.Drishti = window.Drishti || {};
@@ -965,9 +970,9 @@
           return j;
         });
       }
-      function get(path) { return fetch('/approvals/api/' + path, { headers: { Accept: 'application/json' }, credentials: 'same-origin' }).then(answer); }
+      function get(path) { return fetch(drishtiUrl('/approvals/api/' + path), { headers: { Accept: 'application/json' }, credentials: 'same-origin' }).then(answer); }
       function post(path, body) {
-        return fetch('/approvals/api/' + path, { method: 'POST', credentials: 'same-origin',
+        return fetch(drishtiUrl('/approvals/api/' + path), { method: 'POST', credentials: 'same-origin',
           headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(body || {}) }).then(answer);
       }
       function enc(s) { return encodeURIComponent(s).replace(/%3A/g, ':').replace(/%40/g, '@'); }
@@ -983,8 +988,8 @@
         if (state.box !== 'inbox') { q.set('box', state.box); }
         if (state.group) { q.set('group', state.group); }
         if (state.kind) { q.set('kind', state.kind); }
-        var path = state.open ? '/approvals/' + state.open.kind + '/' + enc(state.open.id) : '/approvals';
-        history.replaceState(null, '', path + (q.toString() ? '?' + q : ''));
+        var path = state.open ? drishtiUrl('/approvals/') + state.open.kind + '/' + enc(state.open.id) : drishtiUrl('/approvals');
+        history.replaceState(null, '', drishtiUrl(path + (q.toString() ? '?' + q : '')));
       }
       function row(e) {
         var i = e.item, li = h('li', { class: 'ap-row' + (e.dueSoon ? ' soon' : ''), 'data-ap-row': i.kind + '/' + i.id });
@@ -1111,7 +1116,7 @@
         var st = $('[data-ap-item-status]');
         st.textContent = it.status === 'pending' ? (o.dueSoon && it.due ? 'waiting · due ' + it.due : 'waiting') + (it.stage ? ' · ' + it.stage : '') : it.status;
         st.className = 'ap-status ' + (it.status === 'pending' ? 'wait' : it.status === 'approved' || it.status === 'signed' ? 'ok' : 'no');
-        var link = $('[data-ap-item-link]'); link.href = it.link || '#'; link.hidden = !it.link;
+        var link = $('[data-ap-item-link]'); link.href = drishtiUrl(it.link || '#'); link.hidden = !it.link;
         $('[data-ap-item-facts]').textContent = 'Asked by ' + (it.maker || '?') + ' ' + when(it.at) + (it.reason ? ': “' + it.reason + '”' : '')
           + (it.decidedBy ? ' · decided by ' + it.decidedBy + ' ' + when(it.decidedAt) : '');
         ['approve', 'reject', 'withdraw'].forEach(function (a) { $('[data-ap-act="' + a + '"]').hidden = o.actions.indexOf(a) < 0; });
@@ -1119,7 +1124,7 @@
         params(o.actions.indexOf('approve') >= 0 ? it.kind : '');
         diff(o.detail.diff);
         if (it.kind === 'sutra') {                              // a Sutra: its diff with the moved panels, and the workbench's evidence (the console draws them)
-          fetch('/approvals/api/view/sutra/' + enc(it.id), { credentials: 'same-origin', headers: { Accept: 'text/html' } })
+          fetch(drishtiUrl('/approvals/api/view/sutra/' + enc(it.id)), { credentials: 'same-origin', headers: { Accept: 'text/html' } })
             .then(function (r) { return r.ok ? r.text() : null; })
             .then(function (html) {
               if (html && state.open && state.open.kind === 'sutra' && state.open.id === it.id) {
@@ -1179,6 +1184,7 @@
   })();
   /* ---- src/drishti_insight-workbook.js ---- */
   __m["src/drishti_insight-workbook.js"] = (function () {
+    var drishtiUrl = __lib("drishti-core").url;
     function workbookLinks(answer) {
       const w = answer && answer.workbook;
       return (w && Array.isArray(w.links) ? w.links : []).filter((l) => l && l.href);
@@ -1193,7 +1199,7 @@
           const u = a && a.workbook && a.workbook.underConstruction;
           throw new Error(u ? 'the workbook of this number is not built yet: ' + (u.title || u.id) : 'no workbook for this number');
         }
-        win.location.assign(links[0].href);
+        win.location.assign(drishtiUrl(links[0].href));
         return links[0];
       });
     }

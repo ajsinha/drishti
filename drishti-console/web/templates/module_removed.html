@@ -19,7 +19,7 @@
    marked "needs module X"; a reinstall restores it. #}
 {% extends "base.html" %}
 {% block title %}{{ route.title or 'Not available' }} · {{ PRODUCT }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_admin-modules.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-modules.css?v={{ ASSET_V }}">{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
@@ -31,7 +31,7 @@
       that use it are kept, marked <span class="st">needs module {{ route.module }}</span>, and come back when it is reinstalled.</p>
     {% if me and me.is_admin %}<p class="mod-admin" data-module-gone-admin><b>Administrator:</b> removed by {{ route.by or '-' }} on
       {{ (route.at or '')[:16]|replace('T', ' ') }} · deployment <span class="mono">{{ route.deployment or '-' }}</span> ·
-      <a href="/admin/modules?module={{ (route.module or '')|urlencode }}">Admin › Modules</a></p>{% endif %}
+      <a href="{{ BASE }}/admin/modules?module={{ (route.module or '')|urlencode }}">Admin › Modules</a></p>{% endif %}
     {% elif route.state == 'absent' %}
     <h1 class="ib-h2">Not part of this distribution</h1>
     <p>{{ route.what or 'This page' }} belongs to the {{ route.title or route.module }} module, which this distribution does not carry.</p>
@@ -42,7 +42,7 @@
     <h1 class="ib-h2">Not available</h1>
     <p>There is no page at <span class="mono">{{ path }}</span>.</p>
     {% endif %}
-    <p class="mod-actions"><a class="btn-pill ib-btn" href="/">Go to Home</a> <a class="btn-pill ib-btn" href="/help">Search</a></p>
+    <p class="mod-actions"><a class="btn-pill ib-btn" href="{{ BASE }}/">Go to Home</a> <a class="btn-pill ib-btn" href="{{ BASE }}/help">Search</a></p>
   </section>
 </div>
 {% endblock %}

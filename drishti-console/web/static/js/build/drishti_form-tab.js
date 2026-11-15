@@ -41,7 +41,7 @@
     var $ = function (s) { return pane.querySelector(s); };
     var list = $('[data-form-list]'), src = $('[data-form-src]'), palBox = $('[data-form-palette]'), probBox = $('[data-form-problems]'),
       prev = $('[data-form-preview]'), statusEl = $('[data-form-status]');
-    var base = '/build/designs/' + encodeURIComponent(store.state.id);
+    var base = drishti_url('/build/designs/') + encodeURIComponent(store.state.id);
     var fields = [], palette = [], starter = [], inforce = '', previewT = 0, saveT = 0, token = 0, loaded = false, applying = false;
     window.Drishti.elements.designer.sortableList(list, { row: '.wbf-card', dragClass: 'wbf-drag', overClass: 'wbf-over', onMove: function (from, to) { reorder(from, to); } });   // a card dragged to another place (drishti-designer)
 

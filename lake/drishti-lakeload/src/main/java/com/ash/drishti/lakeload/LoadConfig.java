@@ -35,8 +35,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Everything one load does, from a YAML file (docs/guides/CLI_REFERENCE.md section 4.13 lists every key): where the JSON Lines are, what a row
@@ -130,7 +128,6 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
     /** The timestamp field that decides which of an id's records on one date is kept (CLI_REFERENCE.md section 4.13); blank: the last read. */
     static final String DEFAULT_LATEST_BY = "COMPUTED_AT";
     static final List<String> DEFAULT_SORT = List.of("LEGAL_ENTITY", "DESK", "id");
-    private static final Pattern ENV = Pattern.compile("\\$\\{([A-Za-z_][A-Za-z0-9_]*)(?::-([^}]*))?}");
     private static final Set<String> SECRETS = Set.of("access-key", "secret-key", "s3.access-key", "s3.secret-key", "session-token",
             "s3.session-token", "credential", "token");
     private static final Map<String, Set<String>> KEYS = Map.of(
@@ -149,7 +146,7 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
 
     /** Reads {@code file} (YAML or JSON) and applies {@code overrides} ({@code key.path=value}). */
     static LoadConfig read(Path file, List<String> overrides) throws IOException {
-        return read(file, overrides, System::getenv);
+        return read(file, overrides, com.ash.drishti.settingsfile.Placeholders::process);
     }
 
     static LoadConfig read(Path file, List<String> overrides, Function<String, String> env) throws IOException {
@@ -342,8 +339,7 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
 
     /** A connector's table as the site's own connector file names it ({@code settings.lake-tables}, its first entry's table), else the template's. */
     private static String siteTable(String connector, String template) {
-        String dir = System.getProperty("drishti.sources.connectors-dir", System.getenv().getOrDefault("DRISHTI_CONNECTORS_DIR", com.ash.drishti.api.Roots.config("connectors")));
-        Path f = Path.of(dir, connector + ".yaml");
+        Path f = com.ash.drishti.api.Roots.connectors().resolve(connector + ".yaml");
         if (!Files.isRegularFile(f)) {
             return template;
         }
@@ -725,21 +721,9 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
     /** Reads values with {@code ${VAR}} expanded. */
     record Reader(Function<String, String> env) {
 
+        /** Every {@code ${key}} / {@code ${key:-default}} through the one resolver (com.ash.drishti.settingsfile.Placeholders), this reader's view. */
         String expand(String s) {
-            Matcher m = ENV.matcher(s);
-            StringBuilder out = new StringBuilder();
-            while (m.find()) {
-                String v = env.apply(m.group(1));
-                if (v == null) {
-                    v = m.group(2);
-                }
-                if (v == null) {
-                    throw new IllegalArgumentException("${" + m.group(1) + "} is not set in the environment");
-                }
-                m.appendReplacement(out, Matcher.quoteReplacement(v));
-            }
-            m.appendTail(out);
-            return out.toString();
+            return com.ash.drishti.settingsfile.Placeholders.require(s, env);
         }
 
         String text(JsonNode n, String key, String dflt) {

@@ -66,10 +66,10 @@ public final class RabbitMqSourcePlugin extends MessageStateSource {
 
     @Override
     protected void connect() {
+        tls = tlsMaterial();                         // fails the start at once, with the file and the reason, when TLS is misconfigured
         if (java.util.Arrays.stream(context.setting("queues", "").split(",")).allMatch(q -> q.isBlank())) {
             throw new com.ash.drishti.api.PluginNotConfigured("rabbitmq needs settings.queues");   // not a fault: the connector is idle
         }
-        tls = tlsMaterial();                         // fails the start at once, with the file and the reason, when TLS is misconfigured
         watch = new com.ash.drishti.api.BrokerWaiting.Watch(sourceName, LOG::info);
         health.set(com.ash.drishti.api.BrokerWaiting.message(where()));   // until the supervisor has looked
         loop = Thread.ofVirtual().name("drishti-rabbitmq-" + sourceName).start(this::firstConnection);

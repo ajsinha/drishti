@@ -84,7 +84,7 @@
   api.ask = function (numbers) {
     var body = { fields: [{ name: 'V', type: 'number' }], rows: numbers.map(function (n) { return [n]; }),
       view: { rows: [], columns: [], values: [{ measure: 'avg(V)', as: 'avg' }], expandTo: { rows: 1, columns: 1 } } };
-    return fetch('/api/pivot/inline', { method: 'POST', credentials: 'same-origin',
+    return fetch(drishti_url('/api/pivot/inline'), { method: 'POST', credentials: 'same-origin',
       headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (a) {
         var g = a && a.cells && a.cells['*|*'];
@@ -243,7 +243,7 @@
   function writeUrl(panel, column, f) {
     var u = new URL(location.href), key = PREFIX + panel + '.' + column;
     if (f) { u.searchParams.set(key, encode(f)); } else { u.searchParams.delete(key); }
-    history.replaceState(history.state, '', u.pathname + u.search + u.hash);
+    history.replaceState(history.state, '', drishti_url(u.pathname + u.search + u.hash));
   }
   var MEM = (window.Drishti.key ? window.Drishti.key('drishti.columnFilters') : 'drishti.columnFilters');
   /** Off unless the page says <body data-remember-filters="on"> (a per-user setting) or this browser has drishti.rememberFilters = on. */

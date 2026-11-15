@@ -22,7 +22,7 @@
   <h1>Page not found</h1>
   <p class="pnl-err" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> The console has no page at <span class="mono">{{ path }}</span>.{% if detail %} {{ detail }}{% endif %}</p>
   <p class="text-muted-d">Check the address, or type part of an identifier in the command line to see what exists.</p>
-  <p><a href="/t">Back to the terminal</a></p>
+  <p><a href="{{ BASE }}/t">Back to the terminal</a></p>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_view.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_view.js?v={{ ASSET_V }}"></script>{% endblock %}

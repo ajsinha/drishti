@@ -71,7 +71,7 @@ public final class TlsContexts {
 
     /** The SSL context, trust and key material {@code s} describes. */
     public static TlsMaterial build(TlsSettings s) {
-        return build(s, System::getenv, Clock.systemUTC());
+        return build(s, com.ash.drishti.settingsfile.Placeholders::process, Clock.systemUTC());
     }
 
     /** As {@link #build(TlsSettings)}, reading environment variables through {@code env} and judging expiry by {@code clock}. */

@@ -33,13 +33,13 @@
     if (v === 0 || Math.abs(v) >= 1) { return gridFmt(v); }
     return v.toLocaleString("en-US", {maximumSignificantDigits: 4});
   };
-  var API = "/api/pivot";
+  var API = drishti_url("/api/pivot");
   var $ = function (s) { return document.querySelector(s); };
 
   function call(method, path, body) {
     var o = {method: method, headers: {"Accept": "application/json"}, credentials: "same-origin"};
     if (body !== undefined) { o.headers["Content-Type"] = "application/json"; o.body = JSON.stringify(body); }
-    return fetch(API + path, o).then(function (r) {
+    return fetch(drishti_url(API + path), o).then(function (r) {
       return r.text().then(function (t) {
         var j = {};
         try { j = t ? JSON.parse(t) : {}; } catch (e) { j = {detail: t}; }

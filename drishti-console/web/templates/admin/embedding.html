@@ -15,18 +15,18 @@
 #}
 {% extends "base.html" %}
 {% block title %}Embedding · {{ PRODUCT }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_admin-embedding.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-embedding.css?v={{ ASSET_V }}">{% endblock %}
 {% block screen %}admin{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
 <div class="adm" data-embedding>
   {% with tab='embedding' %}{% include "admin/_nav.html" %}{% endwith %}
-  <h1 class="ws-h">Embedding <a class="emb-help" href="/help/admin#7-embedding-host-applications" aria-label="Help: embedding host applications" title="Help: embedding host applications">?</a></h1>
+  <h1 class="ws-h">Embedding <a class="emb-help" href="{{ BASE }}/help/admin#7-embedding-host-applications" aria-label="Help: embedding host applications" title="Help: embedding host applications">?</a></h1>
   <p class="text-muted-d">The web applications allowed to show {{ PRODUCT }} views in their own pages ({{ PRODUCT }} Elements). Each host application
     has exact origins, a client secret or a public key it authenticates with, and the scopes it may use and the kinds and BI reports it may show. Usage counts since
     {% if since %}{{ when_local(since) }}{% else %}the server started{% endif %} and starts again at a restart.
-    See <a href="/help/admin#7-embedding-host-applications">Embedding host applications</a>.
+    See <a href="{{ BASE }}/help/admin#7-embedding-host-applications">Embedding host applications</a>.
     <span class="mono">n</span> registers an application, <span class="mono">/</span> focuses the filter.</p>
   {% if not embed_enabled %}<p class="adm-warn" role="status"><i class="bi bi-info-circle" aria-hidden="true"></i>
     Embedding is switched off on this server (<span class="mono">drishti.embed.enabled</span>). You can register applications now; no token is made until it is on.</p>{% endif %}
@@ -101,4 +101,4 @@
 </div>
 {% endblock %}
 {% block footer %}{% include "_footer.html" %}{% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_admin-embedding.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_admin-embedding.js?v={{ ASSET_V }}"></script>{% endblock %}

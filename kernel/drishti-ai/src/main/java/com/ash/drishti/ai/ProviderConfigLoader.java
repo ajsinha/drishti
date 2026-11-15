@@ -43,7 +43,7 @@ public final class ProviderConfigLoader {
     public record Loaded(List<ProviderConfig> providers, Map<String, String> errors) {}
 
     private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
-    private static final Pattern ENV = Pattern.compile("^\\$\\{([A-Za-z_][A-Za-z0-9_]*)(?::-?([^}]*))?}$");
+    private static final Pattern ENV = Pattern.compile("^\\$\\{([A-Za-z_][A-Za-z0-9_.-]*)(?::-?([^}]*))?}$");
     private static final Pattern NAME = Pattern.compile("[A-Za-z0-9][A-Za-z0-9_.-]{0,63}");
 
     private ProviderConfigLoader() {}
@@ -158,7 +158,7 @@ public final class ProviderConfigLoader {
     /** The proxy password is an {@code ${ENV}} reference or a {@code proxy.password-file}, never the value itself. */
     static void requireProxyPasswordReference(Map<String, String> settings, Function<String, String> env) {
         String pw = settings.get("proxy.password");
-        if (pw != null && !pw.isBlank() && !pw.strip().matches("\\$\\{[A-Za-z_][A-Za-z0-9_]*(:-?[^}]*)?}")) {
+        if (pw != null && !pw.isBlank() && !pw.strip().matches("\\$\\{[A-Za-z_][A-Za-z0-9_.-]*(:-?[^}]*)?}")) {
             throw new LlmException(LlmException.Kind.CONFIG,
                     "proxy.password must be an ${ENV_NAME} placeholder (or use proxy.password-file); passwords are never written into a file");
         }
@@ -167,7 +167,7 @@ public final class ProviderConfigLoader {
         }
     }
 
-    /** {@code ${NAME}} or {@code ${NAME:-fallback}} read from the environment; anything else is a literal and refused. */
+    /** {@code ${NAME}} or {@code ${NAME:-fallback}} (a settings key such as {@code ${ai.openai.api-key}} too): a -D, the settings files, the environment; anything else is a literal and refused. */
     public static String resolveKey(String raw, Function<String, String> env) {
         if (raw.isEmpty()) {
             return "";
@@ -177,7 +177,7 @@ public final class ProviderConfigLoader {
             throw new LlmException(LlmException.Kind.CONFIG,
                     "api-key must be an ${ENV_NAME} placeholder; keys are never written into a file");
         }
-        String v = env.apply(m.group(1));
+        String v = com.ash.drishti.settingsfile.Placeholders.lookup(m.group(1), env);   // the one resolver's order, through this view
         return v == null || v.isBlank() ? (m.group(2) == null ? "" : m.group(2)) : v.strip();
     }
 

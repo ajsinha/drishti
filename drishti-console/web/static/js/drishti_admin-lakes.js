@@ -39,7 +39,7 @@
   function fmt(n) { return window.Drishti.elements.core.formatNumber(Number(n || 0), { maxDecimals: 3 }); }
   function mb(n) { return window.Drishti.elements.core.formatBytes(n); }
   function api(method, url, body) {
-    return fetch(url, { method: method, credentials: 'same-origin', headers: body ? { 'Content-Type': 'application/json', 'Accept': 'application/json' } : { 'Accept': 'application/json' },
+    return fetch(drishti_url(url), { method: method, credentials: 'same-origin', headers: body ? { 'Content-Type': 'application/json', 'Accept': 'application/json' } : { 'Accept': 'application/json' },
       body: body ? JSON.stringify(body) : undefined }).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (j) {
         if (!r.ok) { throw new Error((j && j.detail) || ('the console said ' + r.status)); }
@@ -58,7 +58,7 @@
     box.hidden = false;
     say('');
     var xhr = new XMLHttpRequest();
-    xhr.open('POST', '/admin/api/lakes/upload?name=' + encodeURIComponent(f.name));
+    xhr.open('POST', drishti_url('/admin/api/lakes/upload?name=') + encodeURIComponent(f.name));
     xhr.setRequestHeader('Content-Type', 'application/octet-stream');
     xhr.setRequestHeader('Accept', 'application/json');
     xhr.upload.onprogress = function (e) {
@@ -71,7 +71,7 @@
       state.upload = j;
       bar.value = 100;
       text.textContent = 'Uploaded ' + j.name + ' (' + mb(j.size) + '). Reading its fields…';
-      api('POST', '/admin/api/lakes/uploads/' + encodeURIComponent(j.id) + '/scan').then(function (scan) {
+      api('POST', drishti_url('/admin/api/lakes/uploads/') + encodeURIComponent(j.id) + '/scan').then(function (scan) {
         state.scan = scan;
         text.textContent = 'Uploaded ' + j.name + ' (' + mb(j.size) + ').';
         fields(scan);
@@ -134,7 +134,7 @@
 
   // 3. target ------------------------------------------------------------------------------------------------------
   function targets() {
-    return api('GET', '/admin/api/lakes/targets').then(function (t) {
+    return api('GET', drishti_url('/admin/api/lakes/targets')).then(function (t) {
       state.targets = t;
       var packs = [['', 'No pack (bind and announce later)']], firstPack = '';
       t.connectors.forEach(function (c, i) {
@@ -180,7 +180,7 @@
       bind: !!chosen.connector && t('bind') === true, signal: !!chosen.pack && t('signal') === true };     // an unticked box is false
     say('');
     $('[data-run]').disabled = true;
-    api('POST', '/admin/api/lakes/jobs', body).then(function (job) {
+    api('POST', drishti_url('/admin/api/lakes/jobs'), body).then(function (job) {
       state.job = job;
       show('run');
       $('[data-step="run"]').scrollIntoView({ block: 'start' });
@@ -188,7 +188,7 @@
     }).catch(function (e) { say(e.message, true); $('[data-run]').disabled = false; });
   });
   function poll() {
-    api('GET', '/admin/api/lakes/jobs/' + encodeURIComponent(state.job.id)).then(function (j) {
+    api('GET', drishti_url('/admin/api/lakes/jobs/') + encodeURIComponent(state.job.id)).then(function (j) {
       var p = j.progress || {}, bar = $('[data-run-bar]'), text = $('[data-run-text]');
       if (p.phase === 'reading' || p.phase === 'read') {
         bar.value = p.bytesTotal ? Math.round(60 * p.bytesRead / p.bytesTotal) : 5;
@@ -230,7 +230,7 @@
     if (j.bind) { box.appendChild(el('p', { 'class': j.bind.ok ? 'loads-sum' : 'lk-warn' }, j.bind.ok ? 'Connector ' + j.bind.connector + (j.bind.created ? ' created' : ' updated') + ' to read this lake.' : 'The connector was not bound: ' + j.bind.error)); }
     (j.signal || []).forEach(function (x) { box.appendChild(el('p', { 'class': x.ok ? '' : 'lk-warn' }, 'Load of ' + x.date + (x.ok ? ' announced' + (x.verified ? ' (' + x.verified + ')' : '') : ' not announced: ' + x.error))); });
     if (s.sampleId) {
-      var a = el('a', { href: '/v/' + encodeURIComponent(s.kind) + '/' + encodeURIComponent(s.sampleId) + (s.sampleDate ? '?asOf=' + s.sampleDate : ''), 'class': 'btn-pill btn-accent' }, 'Open ' + s.kind + ' ' + s.sampleId);
+      var a = el('a', { href: drishti_url('/v/' + encodeURIComponent(s.kind) + '/' + encodeURIComponent(s.sampleId) + (s.sampleDate ? '?asOf=' + s.sampleDate : '')), 'class': 'btn-pill btn-accent' }, 'Open ' + s.kind + ' ' + s.sampleId);
       var p = el('p'); p.appendChild(a); box.appendChild(p);
     }
     if (s.summaryFile) { box.appendChild(el('p', { 'class': 'text-muted-d' }, 'Summary: ' + s.summaryFile)); }

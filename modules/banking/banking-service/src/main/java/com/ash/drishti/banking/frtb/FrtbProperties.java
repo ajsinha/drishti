@@ -42,7 +42,7 @@ public record FrtbProperties(Boolean enabled, String parametersDir, String sensi
     public FrtbProperties {
         enabled = enabled == null || enabled;
         // config/engines/frtb-sa.yaml names it under ${drishti.modules.home}; without that file, under the server's modules folder (LaunchRoots)
-        parametersDir = blank(parametersDir) ? java.nio.file.Path.of(System.getProperty("drishti.modules.home", "modules"), "banking", "dmod", "packs",
+        parametersDir = blank(parametersDir) ? java.nio.file.Path.of(com.ash.drishti.api.Roots.modules(), "banking", "dmod", "packs",
                 "market-risk", "capital").toString() : parametersDir.strip();
         sensitivityKind = blank(sensitivityKind) ? "position-sensitivity" : sensitivityKind.strip();
         factorKind = blank(factorKind) ? "risk-factor" : factorKind.strip();

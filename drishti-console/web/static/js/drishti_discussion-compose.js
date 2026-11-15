@@ -44,8 +44,8 @@
     } });
     var people = new I.TypeAhead({ debounceMs: DELAY_MS, minChars: 0, cacheSize: 20,
       source: function (q, signal) {
-        var url = '/api/directory?q=' + encodeURIComponent(q) + '&limit=8' + (opts.kind ? '&kind=' + encodeURIComponent(opts.kind) : '');
-        return fetch(url, { headers: { Accept: 'application/json' }, credentials: 'same-origin', signal: signal })
+        var url = drishti_url('/api/directory?q=') + encodeURIComponent(q) + '&limit=8' + (opts.kind ? '&kind=' + encodeURIComponent(opts.kind) : '');
+        return fetch(drishti_url(url), { headers: { Accept: 'application/json' }, credentials: 'same-origin', signal: signal })
           .then(function (r) { return r.json().catch(function () { return []; }); })
           .then(function (found) {
             return (Array.isArray(found) ? found : []).map(function (e) {

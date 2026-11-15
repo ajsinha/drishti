@@ -119,7 +119,7 @@ class NetStack:
                 f"--drishti.sources.connectors-dir={work / 'connectors'}", "--drishti.sources.connectors.finance-lake.enabled=false"]
         if name != "b":
             args.append("--drishti.sources.plugins.demo.enabled=false")       # the demo's trades (and their ticks) are on b only
-        cmd = java_cmd(java, args, tmp=work / "jtmp")                     # its native libraries unpack in its own folder, not /tmp
+        cmd = java_cmd(java, args, tmp=work / "jtmp", cwd=work, env=env)                     # its native libraries unpack in its own folder, not /tmp
         self.procs[name] = subprocess.Popen(cmd, cwd=work, env=env, stdout=open(self.tmp / f"server-{name}.log", "ab"), stderr=subprocess.STDOUT)
         wait(url(name) + "/actuator/health", proc=self.procs[name])
 

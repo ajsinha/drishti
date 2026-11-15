@@ -1196,7 +1196,7 @@ store already has the day's data and the topic is just the change feed, or the t
 ```yaml
 # config/connectors/trading-stream.yaml
 plugin: kafka
-settings: { mode: ticks, bootstrap-servers: "${DRISHTI_KAFKA_BOOTSTRAP}", topics: drishti.trading.trades,
+settings: { mode: ticks, broker: default, topics: drishti.trading.trades,
             kind: trade, id-field: tradeId }
 ```
 
@@ -1341,7 +1341,7 @@ connectors:
     enabled: ${DRISHTI_STREAM_EQUITY:false}
     kinds: [order]
     settings:
-      bootstrap-servers: ${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}
+      broker: default
       topics: equity.orders
       kind: order
       id-field: orderId
@@ -1612,7 +1612,7 @@ enabled: "${DRISHTI_STREAM_TRADING:false}"
 kinds:
 - trade
 settings:
-  bootstrap-servers: "${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}"
+  broker: default
   topics: "${DRISHTI_TRADING_TOPIC:drishti.trading.trades}"
   kind: trade
   id-field: TRADE_ID

@@ -26,7 +26,7 @@
     document.querySelectorAll('[data-ai-test-result]').forEach(function (n) { if (n.getAttribute('data-ai-test-result') === name) { out = n; } });
     b.disabled = true;
     if (out) { out.textContent = 'Testing…'; out.removeAttribute('data-ok'); }
-    fetch('/admin/ai/api/test/' + encodeURIComponent(name), {
+    fetch(drishti_url('/admin/ai/api/test/' + encodeURIComponent(name)), {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}'
     }).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (body) { return { ok: r.ok, body: body }; });
