@@ -713,12 +713,23 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
     /**
      * A loaded module's connector extension, one way for every module: a plugin type the site's connector files name is installed as a
      * type ({@link #attachType}: those connectors start with it); any other is routed as a source of its own with {@code settings}
-     * ({@link #attach(SourcePlugin, Map)}).
+     * ({@link #attach(SourcePlugin, Map)}). A plugin that cannot run on its own ({@link com.ash.drishti.api.PluginNotConfigured}: it is
+     * configured only by a connector, as the market-risk pack's optional live streams) is installed as a type too, whatever the order in
+     * which the packs' connectors and the modules arrive: the module never fails for it, and a connector that names it later starts with it.
      */
     public Runnable attachExtension(SourcePlugin plugin, Map<String, String> settings) {
         String type = plugin.manifest().name();
         boolean named = applied.values().stream().anyMatch(c -> type.equals(c.plugin()));
-        return named ? attachType(plugin) : attach(plugin, settings);
+        if (named) {
+            return attachType(plugin);
+        }
+        try {
+            return attach(plugin, settings);
+        } catch (com.ash.drishti.api.PluginNotConfigured e) {
+            LOG.info("module connector type {} needs a connector to configure it ({}): installed as a type, idle until one names it", type,
+                    e.getMessage());
+            return attachType(plugin);
+        }
     }
 
     /** The state of a connector whose class is a module's that has not loaded yet: it starts when the modules have loaded. */

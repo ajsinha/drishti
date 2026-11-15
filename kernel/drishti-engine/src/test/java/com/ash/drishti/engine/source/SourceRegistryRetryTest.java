@@ -191,4 +191,49 @@ class SourceRegistryRetryTest {
             assertThat(r.connectorStatuses().get("var-baskets").problem()).contains("no plugin named 'baskets'");
         }
     }
+
+    /** A module's connector type that runs only under a connector's settings (banking's var-pv-stream: a Kafka topic and brokers). */
+    public static final class NeedsConnector implements SourcePlugin {
+        public PluginManifest manifest() {
+            return new PluginManifest("needs-connector", "t", Set.of("pv-update"), SourceCapabilities.FETCH_ONLY);
+        }
+
+        public void start(SourceContext c) {
+            if (c.setting("topic", null) == null) {
+                throw new com.ash.drishti.api.PluginNotConfigured("needs-connector needs settings.topic");
+            }
+            LOG.add("started on " + c.setting("topic", null));
+        }
+
+        public Optional<EntityDocument> fetch(EntityRef ref) {
+            return Optional.empty();
+        }
+    }
+
+    @Test
+    void aModulesTypeThatNeedsAConnectorNeverFailsTheModuleWhateverArrivesFirst() throws Exception {
+        // the module before the pack's connector file (the order that once refused the banking module): installed as a type, idle
+        try (SourceRegistry r = registry(Map.of())) {
+            Runnable unload = r.attachExtension(new NeedsConnector(), Map.of("module-dir", "/m"));
+            assertThat(r.plugin("needs-connector")).isEmpty();
+            assertThat(LOG).isEmpty();
+            // the connector that configures it, switched off (no Kafka): off quietly
+            r.apply("pv-updates", new SourcesProperties.ConnectorSettings("needs-connector", false, List.of("pv-update"), Map.of("topic", "t1")));
+            assertThat(r.connectorStatuses().get("pv-updates").state()).isEqualTo("DISABLED");
+            // switched on: it starts with the connector's settings
+            r.apply("pv-updates", new SourcesProperties.ConnectorSettings("needs-connector", true, List.of("pv-update"), Map.of("topic", "t1")));
+            assertThat(r.plugin("pv-updates")).isPresent();
+            assertThat(LOG).containsExactly("started on t1");
+            unload.run();
+            assertThat(r.plugin("pv-updates")).isEmpty();
+        }
+        // the connector file first, off: a type the same way
+        try (SourceRegistry r = registry(Map.of("pv-updates",
+                new SourcesProperties.ConnectorSettings("needs-connector", false, List.of("pv-update"), Map.of("topic", "t1"))))) {
+            Runnable unload = r.attachExtension(new NeedsConnector(), Map.of());
+            assertThat(r.plugin("needs-connector")).isEmpty();
+            assertThat(r.connectorStatuses().get("pv-updates").state()).isEqualTo("DISABLED");
+            unload.run();
+        }
+    }
 }
