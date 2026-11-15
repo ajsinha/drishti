@@ -45,7 +45,12 @@ def market_console():
     market_landing.forget()
     app = create_app(load_settings(CONSOLE / "config"))
     app.state.backend = MarketBackend()
-    app.state.editions.learn({"product": "Drishti Market", "edition": {"name": "market", "title": "Drishti Market"}})
+    # a lens is a workspace the person works in (docs/admin/LENSES.md), never the server's edition: the server offers it,
+    # and the person's settings name it
+    app.state.editions.learn({"product": "Drishti Market", "edition": None, "lenses": ["market"]})
+    async def _in_market(ident=None):
+        return {"lens": "market"}
+    app.state.backend.settings = _in_market
     server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=PORT, log_level="warning", timeout_graceful_shutdown=2))
     thread = threading.Thread(target=server.run, daemon=True)
     thread.start()
@@ -90,7 +95,7 @@ def test_each_market_landing_fills_from_the_pack_and_fits(browser, market_consol
             page.wait_for_function("() => document.querySelector('[data-ml-group-count=credit]').textContent === '48'")   # 16 CDS + 32 bonds
             assert page.locator("[data-ml-count=CRV]").inner_text() == "28"
             recents = page.locator("[data-ml-recents]").inner_text()
-            assert "CRV CRV-USD-OIS" in recents and "ECON" not in recents and "TRD" not in recents
+            assert "CRV CRV-USD-OIS" in recents and "VAR BANK" in recents   # a lens arranges, never hides: every command opened is recent
         else:
             page.wait_for_function("() => document.querySelectorAll('[data-ml-exceptions] tr[data-ml-exception]').length === 7")
             assert page.locator("[data-ml-critical]").inner_text() == "3"

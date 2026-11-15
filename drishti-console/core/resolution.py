@@ -139,13 +139,15 @@ class Layout:
     modules: Path | None = None
     store: Path | None = None
     installed: Path | None = None
+    #: a test's or a tool's own folders of packs (``drishti.packs.extra-dirs``, the retired example packs): part of the site, after it
+    extras: tuple = ()
 
     @staticmethod
     def of(site: Path | str, modules: Path | str | None = None, store: Path | str | None = None, installed: Path | str | None = None,
-           kernel: Path | str | None = None) -> "Layout":
+           kernel: Path | str | None = None, extras: Iterable[Path | str] = ()) -> "Layout":
         s = _norm(site)
         return Layout(s, _norm(kernel) if kernel else s / "core", _norm(modules) if modules else None, _norm(store) if store else None,
-                      _norm(installed) if installed else None)
+                      _norm(installed) if installed else None, tuple(_norm(e) for e in extras))
 
 
 @dataclass(frozen=True)
@@ -358,6 +360,7 @@ def _site_roots(layout: Layout) -> list[Path]:
     for d in _dirs(layout.site):
         if not (d / "pack.yaml").is_file() and d != layout.kernel:
             out.append(d)                                            # a group folder of the site
+    out += [e for e in layout.extras if e not in out]               # the extra pack folders, after the site (the Java twin's extraDirs)
     return out
 
 
@@ -464,6 +467,7 @@ class Settings:
     enabled: str = ""
     overrides: tuple = ()                                            # (module id, on) from the settings and DRISHTI_MODULES_<ID>_ENABLED
     data_dir: Path | None = None
+    extra_dirs: tuple = ()                                           # drishti.packs.extra-dirs (DRISHTI_PACKS_EXTRA_DIRS; console packs.extra_dirs)
 
     @staticmethod
     def from_env(settings=None, console_dir: Path | str | None = None, env: Mapping | None = None, base: Path | str | None = None) -> "Settings":
@@ -514,7 +518,9 @@ class Settings:
             distribution=get("distribution") or _env(env, "DRISHTI_DISTRIBUTION"),
             enabled=_env(env, "DRISHTI_PACKS") or get("packs.enabled"),
             overrides=tuple(sorted(overrides)),
-            data_dir=data)
+            data_dir=data,
+            extra_dirs=tuple(path(x.strip(), root) for x in (_env(env, "DRISHTI_PACKS_EXTRA_DIRS") or get("packs.extra_dirs")).split(",")
+                             if x.strip()))
 
     @staticmethod
     def repository(root: Path | str | None = None) -> "Settings":
@@ -522,7 +528,7 @@ class Settings:
         return Settings.from_env(env={}, base=root or REPO)
 
     def layout(self) -> Layout:
-        return Layout(self.site_dir, self.kernel_dir, self.modules_home, self.modules_path, self.installed_dir)
+        return Layout(self.site_dir, self.kernel_dir, self.modules_home, self.modules_path, self.installed_dir, self.extra_dirs)
 
 
 # ------------------------------------------------------------------------------------------------------------------- what is on, offline
