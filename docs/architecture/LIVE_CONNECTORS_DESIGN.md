@@ -13,10 +13,11 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Live connectors: a live companion for any data connector (design, not built)
+# Live connectors: a live companion for any data connector (design, decided; building in i5)
 
-**Status: design for release i5. Nothing in this document is built unless a section says "today".** It answers the product owner's
-request: *"for all data connectors there can be a live connector, generally speaking."*
+**Status: design for release i5, decided by the product owner (section 15); steps L1 to L10 are built in i5. Nothing in this
+document is built unless a section says "today".** It answers the product owner's request: *"for all data connectors there can be a
+live connector, generally speaking."*
 
 One sentence: **every kind keeps its dated record in a lake; any kind may also have a live feed, declared the same way for every kind,
 whose messages are checked against the kind's contract and merged over the lake's snapshot by key and order, and which the next lake
@@ -49,7 +50,7 @@ What this document does not repeat (one home per fact):
 12. [Performance targets](#12-performance-targets)
 13. [Build plan](#13-build-plan)
 14. [Risks](#14-risks)
-15. [Open questions for the product owner](#15-open-questions-for-the-product-owner)
+15. [Decisions](#15-decisions)
 
 ## 1. Where we are today
 
@@ -151,7 +152,8 @@ A kind without a `live:` block may still be fed (the owner's "any kind"): the de
 | Today | the `kafka`, `activemq`, `rabbitmq` plugins and the live result-set engine | `var-pv-stream` |
 
 `both` overlays at once and lands by window: for a kind fed by a queue that keeps no history, where a restart must not lose the day
-(the lake replaces today's RocksDB state store as the durable copy).
+(the lake replaces today's RocksDB state store as the durable copy). It is never a contract's default for an `overlay` kind: a site
+asks for it in the kind's binding (`live: {apply: both}`), decision Q7.
 
 Landing writes through the lake writer, so it is the same on Delta, Iceberg and the file store (JSONL in the dated folder). A landed
 table is append-only within a date; its current row per key is the newest by the contract's `order:`; a full load of the date replaces
@@ -168,7 +170,7 @@ apply, notify, health, rejects) is the kernel's, written once.
 | Kafka | yes (from the beginning, no group) | per partition | every placed node | exists; becomes a thin transport |
 | ActiveMQ / JMS | no (queue), durable topic | per destination | one node (singleton) | exists; becomes a thin transport |
 | RabbitMQ | no (queue); yes (a stream) | per queue | one node (singleton) | exists; becomes a thin transport |
-| Later: Solace, IBM MQ, Azure Event Hubs / AWS Kinesis, a WebSocket or SSE feed, a watched folder of JSONL | varies | varies | by `replayable:` of the plugin | not planned; the transport SPI is the only work |
+| Later: Solace, IBM MQ, Azure Event Hubs / AWS Kinesis, a WebSocket or SSE feed, a watched folder of JSONL | varies | varies | by `replayable:` of the plugin | not planned (decision Q9: no new transports); the transport SPI is the only work when one is wanted |
 
 ## 3. A live message and the kind's contract
 
@@ -224,7 +226,7 @@ A live message is held to the same contract as a loaded file, by the same valida
 
 | `validate:` | When | For |
 |---|---|---|
-| `strict` (default) | on arrival; a failing message is rejected, the row keeps its last good state | everything, unless measured too slow |
+| `strict` (default, decision Q8) | on arrival; a failing message is rejected, the row keeps its last good state | everything, unless measured too slow |
 | `lenient` | on arrival; missing optional structure and unknown fields pass, type faults are rejected | a source mid-migration |
 | `deferred` | key and order on arrival; the body when the row is first read or landed | very large keyed topics (today's cheap path: a keyed message is indexed without parsing) |
 
@@ -309,13 +311,14 @@ A record's date is its `live.as-of` field, else the envelope's `asOf`, else the 
 | The record's date | What happens |
 |---|---|
 | the live date | applied |
-| earlier (a closed date) | `overlay`: rejected `closed-date`. `land`: appended to that date as a restatement only when the contract says `closed-dates: restate` and the date is not signed off; otherwise rejected |
+| earlier (a closed date) | `overlay`: rejected `closed-date`. `land`: appended to that date as a restatement only when the contract says `closed-dates: restate` and the date is not signed off; otherwise rejected. `closed-dates: restate` is allowed on `scenario-pv` and `pnl-vector` only (decision Q12), checked when the pack loads |
 | the next business date, before the roll | held (bounded, `next-date.max-rows`) and applied at the roll |
 | later than that | rejected `future-date` |
 
 **At the roll** the live rows not yet absorbed stay, still shadowing the base, until a load absorbs them or their retention ends
-(section 6); they are shown as *carried from 13 Nov*. Nothing is copied forward into the lake by Drishti: a `overlay` kind's history is
-what its source delivers.
+(section 6); they are shown as *carried from 13 Nov*. Nothing is copied forward into the lake by Drishti: an `overlay` kind's history is
+what its source delivers. **Intraday history is the publisher's job** (decision Q7): a source that wants the day's changes kept
+publishes them to its own store or extract; Drishti lands an `overlay` kind (`apply: both`) only where a site's binding asks for it.
 
 ## 6. End of day: the next lake load absorbs the live state
 
@@ -337,7 +340,7 @@ The cases that need a decision, and their defaults:
 
 | Case | Default | Why |
 |---|---|---|
-| A live row whose key is **not in the load**, changed before the cut-off | dropped, reported as an **orphan** | the source's own extract says it does not exist |
+| A live row whose key is **not in the load**, changed before the cut-off | dropped, reported as an **orphan** (decision Q3) | the source's own extract says it does not exist |
 | The same, changed after the cut-off | carried | booked after the extract |
 | A live **delete** whose key is in the load, older than the delete | still hidden (carried) | deleted after the extract |
 | A live delete older than the load's row | dropped: the row shows again | the source brought it back |
@@ -395,6 +398,8 @@ Unchanged in what it shows and in its API. Two things move below it:
 
 A pivot over 1.3 million positions should not recompute on every tick, and a signed-off report must not move. So:
 
+Decided (Q4): snapshot by default, live by choice.
+
 | Level | What it is | When |
 |---|---|---|
 | **Snapshot** (default) | the pivot or report reads the base; a chip says `snapshot 13 Nov close · 412 newer changes · Refresh` | every pivot and report unless it asks otherwise |
@@ -430,6 +435,10 @@ Generalise the plumbing, keep the arithmetic where it is.
 
 Computed kinds (`position`, `var-result`, `exposure-result`) have no companion: they are live *by derivation* from their inputs. A
 figure that includes live input always says so (*intraday*, *live*), and official figures never do.
+
+**Live quotes never move VaR, exposure or P&L** (decision Q6). A live price, curve or surface changes what a record page, a blotter and
+a market monitor show; valuations follow their own inputs (scenario PVs, P&L vectors, the morning run's market data), and no engine
+reads market data from the live state. A guard test holds it: no engine's `live:` is `overlay` on a market-data kind.
 
 ### 7.6 Retention and TTL
 
@@ -509,12 +518,13 @@ What changes for a site: nothing visible. What changes in files: section 10.
 
 `position` is computed (derived by the VaR engine, never delivered), so it takes no companion. With the engine at `live: overlay` a
 position's quantity and the trades that build it follow the trade feed; its VaR follows landed PVs. `POS <GO>` ticks through the
-same live set as any kind. A site whose position-keeping system *delivers* positions is question Q5.
+same live set as any kind. **Positions are derived only** (decision Q5): `position`'s contract says `live.allowed: false`, and no
+binding may give it a lake of delivered positions or a companion.
 
 ### 8.3 Market data: the 20 lake tables of the market-data pack
 
-One companion (`market-store-live`), one topic per kind. All `apply: overlay`; `land` is an option per kind for a site that wants
-intraday history in the lake.
+One companion (`market-store-live`), one topic per kind. All `apply: overlay`; `both` only where a site's binding asks for intraday
+history in the lake (decision Q7: that history is the publisher's job first).
 
 | Group | Kinds (lake table `market.<kind>`) | Key | `order:` | `partial:` | `conflate:` | Notes |
 |---|---|---|---|---|---|---|
@@ -526,13 +536,13 @@ intraday history in the lake.
 
 `absorb: by-cutoff` for all of them (the close's snapshot replaces the day's ticks). The computed `correlation-result` and
 `equity-beta` take no feed. A live quote changes what a record page and a market monitor show; it does **not** move VaR, exposure or
-any valuation by itself: those follow their own inputs (section 7.5).
+P&L (decision Q6, section 7.5).
 
 ### 8.4 Scenario PVs and P&L vectors (intraday)
 
 | | |
 |---|---|
-| Contract `live:` | `order: [COMPUTED_AT]`, `apply: land`, `partial: whole`, `delete.when: "TRADE_STATUS = 'CANCELLED' and SCENARIO_PV is null"` (today's cancel line), `closed-dates: restate` |
+| Contract `live:` | `order: [COMPUTED_AT]`, `apply: land`, `partial: whole`, `delete.when: "TRADE_STATUS = 'CANCELLED' and SCENARIO_PV is null"` (today's cancel line), `closed-dates: restate` (these two kinds only, decision Q12) |
 | Companion | `risk-store-live` (replaces `pv-updates`), `shape: jsonl`, `kinds: [scenario-pv, pnl-vector]` |
 | Window | 5 m, earlier at 500 keys, "apply now": the lander's settings, per kind |
 | Rejects | another `SCENARIO_SET_ID`, a time before the morning run: the engine's checks stay the engine's and are reported through the same reject log |
@@ -549,7 +559,7 @@ One rule is particular to them: **`effective:`**. A change to a book's desk alte
 | `live.effective:` | Meaning |
 |---|---|
 | `at-once` | record pages, blotters and pick lists show the change at once; a limit change moves limit bars at once |
-| `next-load` (default for anything a hierarchy is built from) | the change is shown on the record with *effective from the next load*; trees, pivots and VaR scopes keep the day's structure |
+| `next-load` (the default for books, desks and anything a hierarchy is built from; decision Q10) | the change is shown on the record with *effective from the next load*; trees, pivots and VaR scopes keep the day's structure |
 
 ### 8.6 Netting sets and collateral
 
@@ -565,7 +575,7 @@ a pull, not a push; it stays a feed job and may take a companion when a push sou
 
 ## 9. Admin and what people see
 
-Mock-ups first: the product owner picks, then it is built. All are static HTML made only of Drishti Elements patterns (the page
+Mock-ups first: the product owner picked **Admin B with A's grid under Health** (Q1) and **live mark 1 with 2's row dot** (Q2). All are static HTML made only of Drishti Elements patterns (the page
 header, the grid, status pills, the switch, the drawer, the banner, KPI tiles, the grid's live mark); no new component is proposed.
 They are in [mockups/live-connectors/](mockups/live-connectors/); add `#light` to an address for the light theme.
 
@@ -577,7 +587,7 @@ They are in [mockups/live-connectors/](mockups/live-connectors/); add `#light` t
 | **B** | [admin-B.html](mockups/live-connectors/admin-B.html): a **Live column in Data bindings** | Admin → Data bindings already lists every kind with read and write; add Live (state and switch) and a drawer with the feed's detail | one home: the binding is the fact being changed; no new page | the bindings grid gets wider; monitoring is a drawer away |
 | **C** | [admin-C.html](mockups/live-connectors/admin-C.html): **each connector with its companion** | Admin → Connectors shows a data connector and its live companion as a pair, with the path broker → checks → live state → lake load drawn out | closest to the owner's sentence; best for explaining and for diagnosis | per connector, so a kind fed by six systems is six cards; busiest screen |
 
-**Recommended: B to switch, plus A's grid read-only under Health as the monitor.** The switch is where the binding is (one way to
+**Chosen (Q1): B to switch, plus A's grid read-only under Health as the monitor.** The switch is where the binding is (one way to
 change it, four eyes as for any binding); Health gets the one table an operator watches. C's path drawing is reused as the drawer's
 *How it flows* section.
 
@@ -596,7 +606,7 @@ CLI equal: `drishti.py live list | show <kind> | on <kind> | off <kind> | pause 
 Each mock-up shows the same four situations: a blotter that is live, the same with its broker away (*live updates paused*, never an
 error), a record page, and a pivot that is a snapshot with newer changes waiting.
 
-**Recommended: 1** for blotters and record pages (it is the mark people already know, and the words answer "as of when?" without a
+**Chosen (Q2): 1** for blotters and record pages (it is the mark people already know, and the words answer "as of when?" without a
 click), with option 2's row dot for rows changed today, and the snapshot chip of every option on pivots and reports.
 
 The words are fixed, one list for every screen: `LIVE`, `LIVE · catching up`, `PAUSED · waiting for the broker`, `PAUSED · by an
@@ -668,21 +678,21 @@ in; L6 to L10 use it.
 
 | Step | What | Size | Deletes | Docs with it |
 |---|---|---|---|---|
-| **L0** | The owner's answers to section 15; the two mock-up choices | — | | this document |
+| **L0** | The owner's answers (section 15); the two mock-up choices | done | | this document |
 | **L1** | Contract `live:` block (parser, load checks, generated contract docs); `companion-of:` in the resolver; reject reasons and their codes | M | `binding-hint.live` | contracts README, KERNEL_AND_MODULES 5.2 and 18.5 |
 | **L2** | The live intake and the live state (kernel): decode, map, validate, order, apply; the transport SPI; Kafka on it | L | the Kafka plugin's index, caches, `mode` | Kafka README, DATA_ARCHITECTURE *Streaming sources* |
 | **L3** | The router's merged read; live sets on the shared state; blotter defaults from the contract; the six trade templates | L | per-set live side; repeated keys | LIVE_RESULTS_GUIDE sections 6 and 7 |
 | **L4** | Business dates, the roll, reconcile at a load (three absorb rules), checkpoints, the reconcile record | L | | DATA_LAKE_GUIDE (loads), LIVE_RESULTS_GUIDE |
 | **L5** | The live lander; scenario PVs and P&L vectors on it; parity on Delta, Iceberg and files | L | `VarPvStreamPlugin`, `VarPvWindow`, `pv-updates`, `drishti.var.intraday.kafka.*` | VAR_GUIDE 8.4, CONFIGURATION (generated) |
 | **L6** | ActiveMQ and RabbitMQ on the transport SPI; `apply: both` | M | `MessageStateSource`, `state.*` | the two READMEs |
-| **L7** | Admin (the chosen option), Health states and measures, alerts, the CLI, the live mark's words on every page | L | the PV stream's admin endpoints | ADMIN_GUIDE, OPERATIONS_GUIDE, CLI_REFERENCE, API_REFERENCE |
+| **L7** | Admin (option B: the Live column and drawer in Data bindings; option A's grid read-only under Health), Health states and measures, alerts, the CLI, the live mark's words on every page | L | the PV stream's admin endpoints | ADMIN_GUIDE, OPERATIONS_GUIDE, CLI_REFERENCE, API_REFERENCE |
 | **L8** | Kinds: market data (20 contracts' `live:` blocks, quote-time fields, the companion, conflation), netting sets and collateral, reference data with `effective:`, derived positions at `live: overlay`; demo publishers in `tools/samplegen` | L | the live exposure table's own copy | the packs' READMEs and guides, a tutorial (feed → blotter → load → reconcile) |
 | **L9** | BI and pivot: the live read for `mode: live`, the snapshot chip, incremental additive measures | M (L with incremental) | BI's live table copy | BI guides |
 | **L10** | Cluster: the singleton feed part on the i5 lease, the relay of a singleton's state, fail-over tests | M | | CLUSTER_GUIDE |
 
-Order and drills: L1 → L2 → L3 are one chain; L4 and L5 follow L3 and are independent of each other; L6, L7, L8 follow and can run
-three builders in parallel; L9 and L10 last. L10 depends on i5's cluster work. About seven builder-weeks in all; one feature drill
-after L8, one performance and hardening drill after L10.
+All ten steps are in i5 (decision Q11). Order and drills: L1 → L2 → L3 are one chain; L4 and L5 follow L3 and are independent of
+each other; L6, L7, L8 follow; L9 next; **L10 last**, because it depends on i5's cluster work. About seven builder-weeks in all; one
+feature drill after L8, one performance and hardening drill after L10.
 
 ## 14. Risks
 
@@ -696,23 +706,23 @@ after L8, one performance and hardening drill after L10.
 | Fail-over of a queue feed loses the state | followers hold a replica; `apply: both` for kinds that must survive a full restart |
 | A live reference change breaks a hierarchy mid-day | `effective: next-load` is the default for anything a hierarchy is built from |
 | Scope: "any kind" invites feeds for official results | `live.allowed: false` on signed-off and computed kinds, checked at load |
-| i5 is also the cluster and the console | L1 to L9 do not depend on either; only L10 does |
+| i5 is also the cluster and the console, and holds all ten steps | L1 to L9 do not depend on either; only L10 does, and it is last; a slip of the cluster work moves L10 alone |
 
-## 15. Open questions for the product owner
+## 15. Decisions
 
-Each has a recommendation; an answer of "as recommended" to all is enough to start L1.
+The product owner's answers (2026-11-15). Where an answer differs from the recommendation, the sections named were changed to match.
 
-| # | Question | Recommendation |
-|---|---|---|
-| Q1 | **Admin view**: option A, B or C (section 9.1)? | B to switch, A's grid under Health |
-| Q2 | **Live mark**: option 1, 2 or 3 (section 9.2)? | 1, with 2's row dot |
-| Q3 | **A live row the next load does not contain** (changed before the load's cut-off): drop it and report (the lake wins), or keep it? | drop and report |
-| Q4 | **Pivots and BI**: snapshot by default with a *newer changes* chip, live by choice under a row cap; incremental sums later (L9)? Or live by default? | snapshot by default |
-| Q5 | **Positions**: stay derived only, or also allow a site to bind a position-keeping system's positions (lake and feed) as a fundamental kind? | derived only in i5; the second is a contract decision for a later release |
-| Q6 | **Do live quotes move valuations?** The design says no: a live price changes what is shown, never VaR, exposure or P&L, which follow their own inputs. Confirm. | confirm |
-| Q7 | **Intraday history**: should `overlay` kinds also be landed (`both`) by default so the lake keeps the day's changes, or only where a site asks? | only where asked (storage and the meaning of a dated snapshot) |
-| Q8 | **Validation default**: `strict` on arrival for every kind, accepting some throughput cost, with `deferred` as the exception? | yes |
-| Q9 | **Transports after the three**: which first, if any (Solace, IBM MQ, Event Hubs / Kinesis, a WebSocket feed, a watched JSONL folder)? | none in i5; the SPI is ready for them |
-| Q10 | **Reference data** intraday: `effective: next-load` as the default for books, desks and anything a hierarchy uses? | yes |
-| Q11 | **Scope of i5**: all of L1 to L10 (about seven builder-weeks) beside the cluster and the console, or L1 to L7 in i5 and L8 to L10 after? | L1 to L7 in i5; L8 to L10 the release after |
-| Q12 | **Closed dates**: may a landed feed restate a closed, not signed-off date (today's `var intraday --date`), for every landed kind or scenario PVs only? | scenario PVs and P&L vectors only |
+| # | Question | Decision | Sections |
+|---|---|---|---|
+| Q1 | Admin view (section 9.1) | **B** to switch (the Live column and drawer in Data bindings), with **A's grid** read-only under Health as the monitor | 9.1, 13 (L7) |
+| Q2 | Live mark (section 9.2) | **1** (the pill in the page's bar), with **2's row dot** for rows changed today; the snapshot chip on pivots and reports | 9.2 |
+| Q3 | A live row the next load does not contain, changed before the cut-off | **drop and report** (an orphan; the lake wins) | 6 |
+| Q4 | Pivots and BI | **snapshot by default**, live by choice under the row cap; incremental additive measures in L9 | 7.3 |
+| Q5 | Positions | **derived only**: `position` takes no lake of delivered positions and no companion | 8.2 |
+| Q6 | Do live quotes move valuations? | **confirmed: never.** Live quotes never move VaR, exposure or P&L | 7.5, 8.3 |
+| Q7 | Intraday history of `overlay` kinds | **the publisher's job.** Drishti lands an `overlay` kind (`apply: both`) only where a site's binding asks | 2.4, 5, 8.3 |
+| Q8 | Validation default | **`strict`** on arrival for every kind; `deferred` the exception | 3.4 |
+| Q9 | Transports after Kafka, ActiveMQ and RabbitMQ | **none**: no new transports; the SPI stays ready | 2.5 |
+| Q10 | Reference data intraday | **`effective: next-load`** the default for books, desks and anything a hierarchy uses | 8.5 |
+| Q11 | Scope of i5 | **all of L1 to L10 in i5**; L10 depends on i5's cluster work and is last | 13, 14 |
+| Q12 | Closed dates | **scenario PVs and P&L vectors only** may restate a closed, not signed-off date | 5, 8.4 |
