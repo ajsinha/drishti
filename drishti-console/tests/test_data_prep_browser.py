@@ -99,6 +99,8 @@ class PrepStack(bi_report_stack.ReportStack):
         (work / "config" / "connectors" / "prep-store.yaml").write_text(PREP_STORE.format(root=lake))
         # the kind's route serves the same trades, so the editor offers their UPPER_SNAKE fields (the pack dataset of kind trade is read through trade-endur)
         (work / "config" / "connectors" / "trade-endur.yaml").write_text(PREP_STORE.format(root=lake))
+        # which connector serves a kind is the site's bindings file (a connector file's kinds: is no longer read): trade from trade-endur
+        (work / "config" / "bindings.yaml").write_text("format: 1\nbindings:\n  trade: { read: [trade-endur] }\n")
         (work / "config" / "bi" / "datasets" / "prep-trades.dataset.yaml").write_text(PREP_DATASET)
         (work / "config" / "bi" / "models").mkdir(parents=True, exist_ok=True)
         (work / "config" / "bi" / "models" / "prep-model.model.yaml").write_text(PREP_MODEL)
@@ -190,7 +192,7 @@ def test_a_transform_reading_a_connector_is_built_step_by_step_without_yaml(stac
     assert {k: v for k, v in got.items() if k != "fields"} == {"kind": "trade", "pack": "trading", "connector": "prep-store"} and sorted(got["fields"]) == sorted(fields)
     assert s["run"]["complete"] and s["run"]["inputs"][0]["rows"] == 60 and s["run"]["inputs"][0]["asOf"] == DAY, s["run"]["inputs"][0]   # the connector's newest day
     expect(page.locator("[data-step='0'] [data-step-state]")).to_contain_text("60 rows")
-    expect(page.locator("[data-prows] table tbody tr")).to_have_count(20)                     # the first 20 rows of the step's frame
+    expect(page.locator("[data-prows] .dg-live-chip")).to_have_attribute("data-rows", "20")        # the first 20 rows of the step's frame (the records grid, static)
     shot(page, "01-input.png", page.locator(".tx-inputs"))
 
     add_snippet(page, "filter-values", lambda: (page.select_option("[data-param=column]", "PORTFOLIO"), page.fill("[data-param=values]", "BOOK-FX-1")))
@@ -218,7 +220,7 @@ def test_a_transform_reading_a_connector_is_built_step_by_step_without_yaml(stac
     shot(page, "03-steps.png", page.locator(".tx-work"))
 
     page.click("[data-step='1'] .tx-pick")                                                     # back to a step: its own rows again
-    expect(page.locator("[data-prows] table tbody tr")).to_have_count(20)
+    expect(page.locator("[data-prows] .dg-live-chip")).to_have_attribute("data-rows", "20")        # the records grid, static
     page.click("[data-step='3'] .tx-pick")
 
     page.click("[data-yaml-box] summary")                                                      # the YAML was written, not typed
