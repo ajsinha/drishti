@@ -1098,7 +1098,8 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
             return List.of();
         }
         readOrder(candidates, asOf);
-        List<SourcePlugin> union = candidates.stream().filter(p -> registry.union(p.manifest().name())).toList();
+        // a source system whose table is not there (a site without Calypso) holds none and leaves the whole-kind read, as it leaves the columns
+        List<SourcePlugin> union = candidates.stream().filter(p -> registry.union(p.manifest().name()) && !holdsNone(p, kind)).toList();
         return union.isEmpty() ? List.of(candidates.get(0)) : union;
     }
 

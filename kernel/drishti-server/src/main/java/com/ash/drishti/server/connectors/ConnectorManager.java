@@ -501,6 +501,11 @@ public final class ConnectorManager {
                 }
             }
         }
+        // a module's template no pack carries (its kinds are in no loaded pack): the resolution the packs were loaded from holds it
+        com.ash.drishti.api.resolution.ModuleTemplates.Template m = com.ash.drishti.packs.PackPaths.resolution(env).templates().get(name);
+        if (m != null) {
+            return Optional.of(new Template(m.module(), com.ash.drishti.packs.PackEnvironmentPostProcessor.officialReaders(env).apply(m.definition())));
+        }
         return Optional.empty();
     }
 

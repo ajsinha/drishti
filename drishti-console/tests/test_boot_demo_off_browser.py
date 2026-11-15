@@ -31,7 +31,22 @@ from test_workbench_browser import browser  # noqa: F401 - the browser fixture
 @pytest.fixture(scope="module")
 def stack(tmp_path_factory):
     lake = var_lake(tmp_path_factory, var_data(*VAR_TRADES))
-    yield from var_server(tmp_path_factory, lake)
+    yield from var_server(tmp_path_factory, lake, heap="3072m")   # every trade of six systems and the VaR inputs
+
+
+def _packs_with_form() -> set[str]:
+    import pathlib
+    import yaml
+    root = pathlib.Path(__file__).resolve().parents[2]
+    out = set()
+    for f in list(root.glob("modules/*/dmod/packs/*/pack.yaml")) + list(root.glob("packs/*/pack.yaml")):
+        m = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
+        if isinstance(m.get("form"), dict) and m["form"]:
+            out.add(f.parent.name)
+    return out
+
+
+WITH_FORM = _packs_with_form()
 
 
 def _wait(pg, js, timeout=120_000):
@@ -43,13 +58,18 @@ def test_a_demo_off_stack_boots_with_var_positions_trades_and_every_form(stack, 
     pg = browser.new_page(viewport={"width": 1600, "height": 1000})
     try:
         pg.goto(stack + "/go?q=VAR+BANK")
-        _wait(pg, "!!document.querySelector('[data-var][data-painted]')")
+        _wait(pg, "() => !!document.querySelector('[data-var][data-painted]')")
         headline = pg.locator('.vx-tile[data-tile="0"] .v').inner_text().strip()
         assert re.search(r"\d", headline), f"the bank's VaR has no headline: {headline!r}"
 
         for word in ("POS", "TRD"):
             pg.goto(stack + "/go?q=" + word)
-            _wait(pg, "document.querySelectorAll('.dg-row, tbody tr').length > 0")
+            try:
+                _wait(pg, "() => document.querySelectorAll('.dg-row, tbody tr').length > 0", timeout=40_000)
+            except Exception:
+                with urllib.request.urlopen(stack.server + "/api/v1/admin/bindings/map", timeout=60) as r:
+                    kinds = [k for k in json.loads(r.read().decode())["kinds"] if k["kind"] in ("trade", "position")]
+                pytest.fail(f"{word}: {pg.url}\n{json.dumps(kinds, indent=1)[:6000]}", pytrace=False)
             assert pg.locator(".dg-row, tbody tr").count() > 0, f"{word} lists no rows"
 
         with urllib.request.urlopen(stack.server + "/api/v1/packs", timeout=60) as r:
@@ -57,10 +77,18 @@ def test_a_demo_off_stack_boots_with_var_positions_trades_and_every_form(stack, 
         rows = body if isinstance(body, list) else body.get("packs", [])
         names = sorted({str(p.get("name") or p.get("pack")) for p in rows if isinstance(p, dict) and not p.get("sample")} - {"None"})
         assert names, f"the server lists no packs: {str(body)[:300]}"
+        names = [n for n in names if n in WITH_FORM]          # FORMS lists the packs that declare a form: section
         pg.goto(stack + "/forms")
-        page = pg.inner_text("body")
+        page = pg.content()               # each pack section carries its name and title in data-text (the page shows the title)
         missing = [n for n in names if n not in page and n.replace("-", " ").lower() not in page.lower()]
-        assert not missing, f"FORMS does not list the packs {missing}"
+        why = ""
+        for n in missing:
+            try:
+                with urllib.request.urlopen(stack.server + "/api/v1/forms/" + n, timeout=60) as r:
+                    why += f"\n{n}: {r.read().decode()[:300]}"
+            except Exception as e:                                      # noqa: BLE001
+                why += f"\n{n}: {e} {getattr(e, 'read', lambda: b'')().decode()[:400]}"
+        assert not missing, f"FORMS does not list the packs {missing}{why}"
     finally:
         pg.close()
     log = (stack.work / "server.log").read_text(errors="replace")
