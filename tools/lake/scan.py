@@ -32,7 +32,7 @@ from collections import Counter
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import jsonstream  # noqa: E402
-import stage  # noqa: E402
+import rowrule  # noqa: E402
 
 MAX_DEPTH = 3
 MAX_FIELDS = 2000
@@ -72,10 +72,10 @@ def _walk(doc: dict, prefix: str, depth: int, out: dict, cap: int) -> None:
             f.blank += 1
         if t in ("text", "number", "boolean"):
             if t == "text" or (t == "number" and isinstance(v, int) and 19000101 <= v <= 21001231):
-                if stage.parse_day(v) is not None:
+                if rowrule.parse_day(v) is not None:
                     f.dates += 1
             if not f.many:
-                key = stage.scalar_text(v)
+                key = rowrule.scalar_text(v)
                 if key in f.values or len(f.values) < cap:
                     f.values[key] += 1
                 else:

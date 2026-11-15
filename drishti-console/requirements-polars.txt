@@ -1,0 +1,26 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+#
+# Optional: the Polars lake-loader engine (`lake build --engine polars`, docs/architecture/POLARS_LOADER_DESIGN.md section 6). Install
+# beside requirements.txt, in the same environment:
+#
+#     pip install -r requirements.txt -r requirements-polars.txt
+#
+# These are the versions the engine is proven on; the exact files with their hashes are config/compute/locks/polars.lock
+# (`pip install --require-hashes --no-deps -r config/compute/locks/polars.lock` installs exactly those). No wheel is kept in git; a
+# machine without a network uses a wheel folder (tools/windows/polars-check.ps1 -Download builds one). `python tools/drishti.py doctor`
+# reports whether the engine is installed. Check a Windows machine first with tools/windows/polars-check.ps1.
+polars==2.1.0
+deltalake==1.6.6
+pyarrow==26.0.1

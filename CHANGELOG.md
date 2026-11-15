@@ -18,6 +18,11 @@
 
 ## Unreleased
 
+- **The loader contract is a fixture, and the Python path's row rule is one function.** `loader-contract/cases.yaml` (about 75 cases of
+  rules C1 to C31) is run on the Java loader and the pure-Python path by `tools/lake/test_loader_contract.py`; a case a path misses today
+  is named in `known`. `tools/lake/rowrule.py` holds the row rule `stage.Stager` calls; no behaviour change. The optional Polars engine's
+  libraries are pinned in `requirements-polars.txt` and `config/compute/locks/polars.lock`, and `tools/windows/polars-check.ps1` runs
+  the design's three Windows checks (the engine itself is not built).
 - **The drill starts from a clean data folder.** A server's state an earlier run left in the data folder (installed modules, identities,
   cluster membership, compute, file store, cache) is moved aside to `data/tmp/stale-<stamp>/` and listed before the drill starts, when
   no server runs from the checkout. Lake loader children get the launch roots of the process that starts them, and Iceberg's Health

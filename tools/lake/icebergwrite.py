@@ -32,6 +32,7 @@ import subprocess
 import threading
 
 import feedfiles
+import rowrule
 import stage
 import stores
 import writers
@@ -57,7 +58,7 @@ def lines(domain: str, table: str, by_day: dict, partition_names: list[str], typ
 
 def _cell(name: str, v, vectors: set[str], lists: set[str] = frozenset()):
     if name in lists:                               # a list attribute: its values as texts, a list<string> column (section 2.4)
-        return stage.list_texts(v)
+        return rowrule.list_texts(v)
     if isinstance(v, (list, dict)) and name not in vectors:
         return json.dumps(v, ensure_ascii=False, separators=(",", ":"))
     return v

@@ -498,10 +498,10 @@ class IdsAreTextTest(unittest.TestCase):
             self.assertEqual(sorted(json.loads(r["doc"])["TRADE_ID"] for r in rows), sorted(self.WANT))
 
     def test_an_older_table_with_a_number_trade_id_column_still_takes_rows(self):
-        import stage
+        import rowrule
         import writers
-        self.assertTrue(stage.is_id_field("TRADE_ID") and stage.is_id_field("counterparty__id") and stage.is_id_field("TRADE_IDS"))
-        self.assertFalse(stage.is_id_field("PAID") or stage.is_id_field("NOTIONAL"))
+        self.assertTrue(rowrule.is_id_field("TRADE_ID") and rowrule.is_id_field("counterparty__id") and rowrule.is_id_field("TRADE_IDS"))
+        self.assertFalse(rowrule.is_id_field("PAID") or rowrule.is_id_field("NOTIONAL"))
         self.assertEqual(writers._cell("1000008", "double"), 1000008.0)        # the table keeps its type; the row is not lost
-        self.assertEqual(stage.id_text(1000008.0), "1000008")
-        self.assertEqual(stage.id_text("007123"), "007123")
+        self.assertEqual(rowrule.id_text(1000008.0), "1000008")
+        self.assertEqual(rowrule.id_text("007123"), "007123")

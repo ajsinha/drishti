@@ -4247,7 +4247,7 @@ with its limit use, from the latest result version of each date; it never adds V
 
 ### 20.1 At `lake build`
 
-`tools/lake/stage.py` rejects a document (counted per reason, the first 50 kept with file and line) with no key, no business date, a
+`tools/lake/rowrule.py` (the row rule `stage.py` calls) rejects a document (counted per reason, the first 50 kept with file and line) with no key, no business date, a
 date that is not a date, a document that is not an object, or a vector field that is not a list of numbers (`the vector field 'PNL' is
 not a list of numbers`). A `null` element inside a vector is accepted and stays null (the engine rejects the row, section 20.3).
 

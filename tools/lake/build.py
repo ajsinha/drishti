@@ -69,6 +69,7 @@ import archives  # noqa: E402
 import feedroute  # noqa: E402
 import filedate  # noqa: E402
 import jsonstream  # noqa: E402
+import rowrule  # noqa: E402
 import stage  # noqa: E402
 import writers  # noqa: E402
 
@@ -399,7 +400,7 @@ def plan(a) -> dict:
         if not any(n.lower() == str(a.table).lower() for n, _k, _c in known):
             raise BuildError(f"--table {a.table}: not a table of the pack (known: {', '.join(sorted({n for n, _k, _c in known}, key=str.lower))})")
     for col in p["partition_by"] + p["promote"]:
-        if stage.column_name(col) in RESERVED:
+        if rowrule.column_name(col) in RESERVED:
             raise BuildError(f"'{col}' is a column the lake keeps itself (id, doc, business_date): choose another name")
     if len(p["partition_by"]) > 4:
         raise BuildError("at most 4 partition columns (each multiplies the folders of a date)")
@@ -586,7 +587,7 @@ def check_partition_names(names) -> None:
     character Spark refuses in a column name without column mapping (`` ,;{}()\\n\\t=``) or one a folder name would change
     (``/ \\ % : # ? * " ' [ ] ^``, control characters) is refused, as Databricks refuses it."""
     for n in names:
-        col = stage.column_name(n)
+        col = rowrule.column_name(n)
         bad = sorted({c for c in col if c in PARTITION_NAME_REFUSED})
         if not col or bad:
             raise BuildError(f"partition column {n!r} cannot name a Delta partition folder (characters {''.join(bad)!r}); "
@@ -623,7 +624,7 @@ def _go(a, p, as_of, lake, table, summary, prog, started, say, remote_root: str 
     st.run = summary["run"]
     try:
         if table and not iceberg:                                          # a table of another partitioning fails before anything is read
-            writers.check_layout(writers.Table(table, [stage.column_name(c) for c in p["partition_by"]], {}, a.mode, a.batch_rows, []))
+            writers.check_layout(writers.Table(table, [rowrule.column_name(c) for c in p["partition_by"]], {}, a.mode, a.batch_rows, []))
         files = jsonstream.input_files(a.src, a.recursive, table=p["table"] or p["kind"], tar_table=getattr(a, "_tar_table", None))
         if not files:
             raise BuildError("no *.json, *.jsonl, *.ndjson, *.gz or archive (.zip, .tar.gz, .tgz, .tar) files in " + ", ".join(map(str, a.src)))
@@ -649,7 +650,7 @@ def _go(a, p, as_of, lake, table, summary, prog, started, say, remote_root: str 
         prog.update(force=True, phase="read",bytesRead=total_bytes, bytesTotal=total_bytes, documents=st.stats.read, rejected=st.stats.rejected)
         read_s = time.monotonic() - t0
         by_day = st.by_day()
-        names = [stage.column_name(c) for c in p["partition_by"]]
+        names = [rowrule.column_name(c) for c in p["partition_by"]]
         summary["rows"] = {d.isoformat(): sum(x.rows for x in parts) for d, parts in by_day.items()}
         summary["partitions"] = [{"date": d.isoformat(), "values": dict(zip(names, x.values)), "rows": x.rows}
                                  for d, parts in by_day.items() for x in parts]

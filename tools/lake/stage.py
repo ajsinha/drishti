@@ -37,15 +37,15 @@ from dataclasses import dataclass, field
 from datetime import date
 
 import jsonstream
+import rowrule
+from rowrule import column_name, get, MISSING  # noqa: F401 - the row rule's helpers the staged form and the duplicate rule use
 
-MISSING = object()
 KEEP_REJECTS = 50                    # rejects kept with where and why (all are counted)
 KEEP_DUPLICATE_EXAMPLES = 10         # duplicates named (kept and dropped file:line); all are counted
 LATEST_BY = "COMPUTED_AT"
 LOAD_ID, SOURCE_FILE = "_load_id", "_source_file"   # the columns every row carries (DATA_LAKE_GUIDE.md section 5)            # the timestamp field that decides which duplicate is kept (CLI_REFERENCE.md section 4.13)
 OPEN_FILES = 64                      # staged files kept open at once
 DUPLICATE_WATCH = 5_000_000          # ids remembered (8 bytes each) to find duplicates; past this, duplicates are neither found nor dropped
-_YMD = re.compile(r"^(\d{4})(\d{2})(\d{2})$")
 _ISO = re.compile(r"^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2})(?:[.,](\d+))?)?)?\s*(Z|z|[+-]\d{2}(?::?\d{2})?)?$")
 
 
@@ -74,127 +74,6 @@ def instant_micros(v) -> int | None:
             return None
         off = (-1 if z[0] == "-" else 1) * (oh * 3600 + om * 60)
     return (day * 86400 + h * 3600 + mi * 60 + s - off) * 1_000_000 + frac
-
-
-def get(doc, path: str):
-    """The value at a dotted path (``index.group``), MISSING when absent."""
-    cur = doc
-    for part in path.split("."):
-        if isinstance(cur, dict) and part in cur:
-            cur = cur[part]
-        else:
-            return MISSING
-    return cur
-
-
-_STEP = re.compile(r"([^.\[\]]+)|\[(\d+)\]")
-
-
-def get_indexed(doc, path: str):
-    """The value at a path that may index lists (``LEGS[0].NOTIONAL``, ``LEGS[1].INDEX.NAME``), MISSING when absent."""
-    cur = doc
-    for name, index in _STEP.findall(path):
-        if name:
-            if isinstance(cur, dict) and name in cur:
-                cur = cur[name]
-            else:
-                return MISSING
-        else:
-            i = int(index)
-            if isinstance(cur, list) and i < len(cur):
-                cur = cur[i]
-            else:
-                return MISSING
-    return cur
-
-
-def column_name(path: str) -> str:
-    """The physical column of a promoted path or partition: counterparty.id -> counterparty__id (as tools/samplegen/layout.py)."""
-    return path.replace(".", "__")
-
-
-def parse_day(v) -> date | None:
-    """A business date from a field: an ISO date or date-time text (2026-10-01, 2026-10-01T17:00:00Z), yyyymmdd as text or a number."""
-    if v is None or v is MISSING or isinstance(v, bool):
-        return None
-    if isinstance(v, int):
-        v = str(v)
-    if not isinstance(v, str):
-        return None
-    s = v.strip()
-    m = _YMD.match(s)
-    try:
-        if m:
-            return date(int(m[1]), int(m[2]), int(m[3]))
-        return date.fromisoformat(s[:10]) if len(s) >= 10 else None
-    except ValueError:
-        return None
-
-
-def scalar_text(v) -> str | None:
-    """A partition value as text (Hive folders hold text): None for missing or null, JSON for an object or array."""
-    if v is MISSING or v is None:
-        return None
-    if isinstance(v, str):
-        return v
-    if isinstance(v, bool):
-        return "true" if v else "false"
-    if isinstance(v, (int, float)):
-        return str(v)
-    return json.dumps(v, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
-
-
-_ID_FIELD = re.compile(r"(?i)(^|_)(id|ids|ref|refs|key)$")
-
-
-def is_id_field(path: str) -> bool:
-    """A field named like an id or key (ID, TRADE_ID, TRADE_IDS, DEAL_REF, counterparty.id): its column is text, whatever the values."""
-    return bool(_ID_FIELD.search(path.replace("__", ".").rsplit(".", 1)[-1]))
-
-
-def is_simple_list(v) -> bool:
-    """A list of simple values (texts, numbers, booleans, nulls): a promoted field whose every value is one is written as an
-    array<string> column (DATA_LAKE_GUIDE.md section 2.4); a list holding an object or a list stays in the document."""
-    return isinstance(v, list) and not any(isinstance(x, (list, dict)) for x in v)
-
-
-def list_texts(v) -> list[str] | None:
-    """A list attribute's values as texts (ListValues.java): a number in its plain text (5, never 5.0), a null left out; a single value
-    is a list of one; JSON text of a list is read as the list."""
-    if v is None:
-        return None
-    if isinstance(v, str) and v.startswith("["):
-        try:
-            parsed = json.loads(v)
-            if is_simple_list(parsed):
-                v = parsed
-        except ValueError:
-            pass
-    items = v if isinstance(v, list) else [v]
-    out = []
-    for x in items:
-        if x is None:
-            continue
-        if isinstance(x, bool):
-            out.append("true" if x else "false")
-        elif isinstance(x, float) and x.is_integer() and abs(x) < 1e18:
-            out.append(str(int(x)))
-        elif isinstance(x, (list, dict)):
-            out.append(json.dumps(x, ensure_ascii=False, separators=(",", ":")))
-        else:
-            out.append(str(x))
-    return out
-
-
-def id_text(v) -> str | None:
-    """An id as its exact text: 1000008 (a number in the file) -> "1000008", never "1000008.0"; text unchanged (leading zeros kept)."""
-    if isinstance(v, float) and v.is_integer() and abs(v) < 1e18:
-        return str(int(v))
-    return scalar_text(v)
-
-
-def _number(v) -> bool:
-    return isinstance(v, (int, float)) and not isinstance(v, bool)
 
 
 @dataclass
@@ -252,7 +131,7 @@ class Stager:
                  partition_by: list[str], promote: list[str], flatten: dict | None = None, vectors: list[str] | None = None,
                  latest_by: str | None = LATEST_BY):
         self.folder, self.key, self.date_field, self.as_of = folder, key, date_field, as_of
-        self.set: dict = {}                                                    # a connector's set: constants (build.plan reads them)
+        self._set: dict = {}
         self.latest_by = (latest_by or "").strip() or None
         self._twice: dict[date, set] = {}                                      # per date: the id hashes seen more than once
         # flattened fields (the pack's layout.<kind>.flatten: NOTIONAL: LEGS[0].NOTIONAL): a plain field of the document and a
@@ -266,6 +145,7 @@ class Stager:
         self.stats = Stats(numeric={column_name(p): True for p in self.promote})
         self.stats.numeric.update({LOAD_ID: False, SOURCE_FILE: False})          # every row: the load that wrote it and its file
         self.run = ""
+        self._plan = self._row_plan()
         self._load_ids: dict[str, str] = {}
         self._open: OrderedDict[tuple, object] = OrderedDict()
         self._seen: dict[date, set] = {}
@@ -274,6 +154,19 @@ class Stager:
         self.today: date | None = None
         if folder:
             folder.mkdir(parents=True, exist_ok=True)
+
+    @property
+    def set(self) -> dict:
+        """A connector's ``set:`` constants (build.plan reads them); setting them rebuilds the row rule's plan."""
+        return self._set
+
+    @set.setter
+    def set(self, values: dict) -> None:
+        self._set = dict(values or {})
+        self._plan = self._row_plan()
+
+    def _row_plan(self) -> rowrule.RowPlan:
+        return rowrule.RowPlan(self.key, tuple(self.partition_by), tuple(self.promote), self.flatten, tuple(self.vectors), self._set)
 
     def file(self, label: str, name_date: date | None, folder_date: date | None = None, given: date | None = None, top: str | None = None,
              dated: str | None = None) -> None:
@@ -325,65 +218,16 @@ class Stager:
         if isinstance(doc, jsonstream.Bad):
             st.reject(doc.where, doc.reason)
             return
-        if self.set and isinstance(doc, dict):          # the connector's set: constants are stored in a row that lacks the field
-            lacking = {n: v for n, v in self.set.items() if n not in doc}
-            if lacking:
-                doc = {**doc, **lacking}
-        kv = get(doc, self.key)
-        if kv is MISSING or kv is None or kv == "":
-            st.reject(where, f"no id (field '{self.key}' is missing or empty)")
+        r = rowrule.row(self._plan, doc, self._day_of)
+        if isinstance(r, rowrule.Reject):
+            st.reject(where, r.reason)
             return
-        if isinstance(kv, (dict, list)):
-            st.reject(where, f"the id field '{self.key}' is not a single value")
-            return
-        ident = id_text(kv)
-        if _number(kv) and isinstance(doc, dict) and self.key in doc:       # the document carries its id as text too
-            doc = {**doc, self.key: ident}
-        own = None
-        cur = self.cur
-        if cur is not None:                                  # the file's date (filedate.decide): the row's own only counted
-            if cur.outside is None:
-                st.reject(where, cur.error or "no business date")
-                return
-            day = cur.outside
-            own = parse_day(get(doc, self.date_field)) if self.date_field else None
-        elif self.as_of:
-            day = self.as_of
-        else:
-            raw = get(doc, self.date_field)
-            day = parse_day(raw)
-            if day is None:
-                st.reject(where, f"no business date (field '{self.date_field}' is " + ("missing or empty)" if raw in (MISSING, None, "") else "not a date)"))
-                return
-        if self.flatten and isinstance(doc, dict):
-            added = {n: v for n, path in self.flatten.items() if n not in doc and (v := get_indexed(doc, path)) is not MISSING}
-            if added:
-                doc = {**doc, **added}
-        vecs = {}
-        for p in self.vectors:
-            v = get(doc, p) if isinstance(doc, dict) else MISSING
-            if v is MISSING or v is None:
-                continue
-            if not isinstance(v, list) or not all(_number(x) or x is None for x in v):
-                st.reject(where, f"the vector field '{p}' is not a list of numbers")
-                return
-            vecs[column_name(p)] = v
-            doc = {**doc, p: {"$vector": column_name(p)}} if "." not in p else doc
-        values = tuple(scalar_text(get(doc, p)) for p in self.partition_by)
-        promoted = {}
-        for p in self.promote:
-            v = get(doc, p)
-            v = None if v is MISSING else v
-            name = column_name(p)
-            if v is not None and not _number(v):
-                st.numeric[name] = False
-            if v is not None:                                           # a list attribute: every value a list of simple values (section 2.4)
-                st.lists[name] = st.lists.get(name, True) and is_simple_list(v)
-            if is_id_field(p) or p == self.key:                         # an id column is text even when every id is a number
-                st.numeric[name] = False
-                v = id_text(v) if _number(v) else v
-            promoted[name] = v
-        promoted.update(vecs)
+        cur, day, ident = self.cur, r.day, r.ident
+        for name in r.not_numeric:
+            st.numeric[name] = False
+        for name, simple in r.lists:                                     # a list attribute: every value a list of simple values (section 2.4)
+            st.lists[name] = st.lists.get(name, True) and simple
+        promoted = r.promoted
         if cur is not None:
             promoted[LOAD_ID], promoted[SOURCE_FILE] = cur.load_id, cur.label
         h = int.from_bytes(hashlib.blake2b(ident.encode("utf-8"), digest_size=8).digest(), "big")
@@ -396,18 +240,32 @@ class Stager:
         st.accepted += 1
         if cur is not None:
             cur.accepted += 1
-            if own is not None and own != day:
+            if r.own is not None and r.own != day:
                 cur.other += 1
         if st.sample is None:
             st.sample = (ident, day.isoformat())
-        part = self.parts.get((day, values))
+        part = self.parts.get((day, r.values))
         if part is None:
-            part = self.parts[(day, values)] = Part(day, values, self.folder / f"{len(self.parts) + 1}.rows" if self.folder else pathlib.Path(""))
+            part = self.parts[(day, r.values)] = Part(day, r.values, self.folder / f"{len(self.parts) + 1}.rows" if self.folder else pathlib.Path(""))
         part.rows += 1
-        text = json.dumps(doc, ensure_ascii=False, separators=(",", ":"))
-        st.doc_bytes += len(text)
+        st.doc_bytes += len(r.text)
         if self.folder:
-            self._handle(part).write(row_line(ident, text, promoted, st.read, where))
+            self._handle(part).write(row_line(ident, r.text, promoted, st.read, where))
+
+    def _day_of(self, doc):
+        """The business date of a document (rule C9, the Python path's form: filedate.decide): ``(day, own)`` or the reason it has none."""
+        cur = self.cur
+        if cur is not None:                                  # the file's date (filedate.decide): the row's own only counted
+            if cur.outside is None:
+                return cur.error or "no business date"
+            return cur.outside, (rowrule.parse_day(rowrule.get(doc, self.date_field)) if self.date_field else None)
+        if self.as_of:
+            return self.as_of, None
+        raw = rowrule.get(doc, self.date_field)
+        day = rowrule.parse_day(raw)
+        if day is None:
+            return f"no business date (field '{self.date_field}' is " + ("missing or empty)" if raw in (rowrule.MISSING, None, "") else "not a date)")
+        return day, None
 
     def _handle(self, part: Part):
         k = (part.day, part.values)

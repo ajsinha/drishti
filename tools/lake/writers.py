@@ -35,7 +35,8 @@ import subprocess
 import sys
 import zipfile
 
-from stage import Part, list_texts, read_rows, row_line
+from rowrule import list_texts
+from stage import Part, read_rows, row_line
 
 LAKE_CLASS = "com/ash/drishti/deltalake/write/LakeWriter.class"
 ROOT = pathlib.Path(__file__).resolve().parents[2]

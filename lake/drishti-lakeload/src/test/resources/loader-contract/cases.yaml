@@ -1,0 +1,495 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The loader contract as a fixture (docs/architecture/POLARS_LOADER_DESIGN.md, sections 2 and 4.1): what a load of some files does, by
+# rule C1 to C31. Every engine must give the same answer; the runner is tools/lake/loadercontract.py (its docstring defines a case, and
+# `python tools/lake/loadercontract.py java python` prints the answer of each engine) and tools/lake/test_loader_contract.py.
+#
+# The Java loader is the contract: a case it fails is a finding for the owner, never a change to the case. `known` names an engine that
+# differs from the contract today and why (the design's section 2.4); a known engine must still differ, so the list cannot go stale.
+# A case names no table unless it needs one: the default is kind deal, id ID, date field DATE, no promoted columns. Dates are quoted,
+# a line that is text is written as it is, a mapping as compact JSON, `$today` is the business today.
+#
+# Not here, because they are rules of the inbox or need a second process: C5 (the .ready file's sha256 and rows), C8 (a table locked
+# by another run, exit 3), C21 (child kinds: lake/drishti-lakeload/src/test/resources/childkinds), C26 (the Delta protocol, read from
+# the log by the interop tests), C27 (file layout) and C28 (memory).
+cases:
+
+# ----------------------------------------------------------------------------------------------- names and dates (C3, C9, C10)
+- name: the date of a file is its name's, dashes
+  rules: [C3, C9]
+  files: {deal.2026-10-01.jsonl: [{ID: a, DATE: '2026-10-01'}, {ID: b, DATE: '2026-10-01'}]}
+  expect: {exit: 0, rows: {'2026-10-01': [a, b]}, file-dates: {deal.2026-10-01.jsonl: ['2026-10-01', name]}}
+
+- name: the date of a file is its name's, yyyymmdd
+  rules: [C3, C9]
+  files: {deal.20261002.jsonl: [{ID: a, DATE: '2026-10-02'}]}
+  expect: {exit: 0, rows: {'2026-10-02': [a]}, file-dates: {deal.20261002.jsonl: ['2026-10-02', name]}}
+
+- name: a part number does not disturb the date
+  rules: [C3]
+  files: {deal.2026-10-01.part-1.jsonl: [{ID: a, DATE: '2026-10-01'}], deal.2026-10-01.part-2.jsonl: [{ID: b, DATE: '2026-10-01'}]}
+  expect: {exit: 0, rows: {'2026-10-01': [a, b]}}
+
+- name: a name with a bad date part is refused whatever else is given
+  rules: [C3]
+  files: {deal.2026-13-45.jsonl: [{ID: a, DATE: '2026-10-01'}]}
+  run: {as-of: '2026-10-01'}
+  expect: {exit: 1, absent: true}
+
+- name: a name with a date in the future is refused
+  rules: [C3]
+  files: {deal.2999-01-01.jsonl: [{ID: a, DATE: '2999-01-01'}]}
+  expect: {exit: 1, absent: true}
+
+- name: a name without a date takes the one date its rows carry
+  rules: [C9]
+  files: {deal.jsonl: [{ID: a, DATE: '2026-10-05'}, {ID: b, DATE: '2026-10-05'}]}
+  expect: {exit: 0, rows: {'2026-10-05': [a, b]}, file-dates: {deal.jsonl: ['2026-10-05', rows]}}
+  known: {python: "C9: a file with no date in its name loads under the business today; the rows' own date is only counted"}
+
+- name: a replace of a file without a date whose rows carry none is refused
+  rules: [C9]
+  files: {deal.jsonl: [{ID: a}, {ID: b}]}
+  expect: {exit: 1, absent: true}
+  known: {python: "C9: loads under the business today, none of the three refusals"}
+
+- name: a replace of a file without a date whose rows carry several is refused
+  rules: [C9]
+  files: {deal.jsonl: [{ID: a, DATE: '2026-10-01'}, {ID: b, DATE: '2026-10-02'}]}
+  expect: {exit: 1, absent: true}
+  known: {python: "C9: loads under the business today, none of the three refusals"}
+
+- name: a file named for one date whose rows all carry another is refused
+  rules: [C9]
+  files: {deal.2026-10-01.jsonl: [{ID: a, DATE: '2026-10-02'}, {ID: b, DATE: '2026-10-02'}]}
+  expect: {exit: 1, absent: true}
+  known: {python: "C9: loads under the file's date and counts the rows' dates"}
+
+- name: a row whose own date differs is loaded under its file's date and counted
+  rules: [C9, C10]
+  files: {deal.2026-10-01.jsonl: [{ID: a, DATE: '2026-10-01'}, {ID: b, DATE: '2026-10-01'}, {ID: c, DATE: '2026-10-02'}]}
+  expect: {exit: 0, rows: {'2026-10-01': [a, b, c]}, other-date-rows: 1}
+
+- name: --as-of beats the name
+  rules: [C9]
+  files: {deal.2026-10-01.jsonl: [{ID: a}, {ID: b}]}
+  run: {as-of: '2026-10-02'}
+  expect: {exit: 0, rows: {'2026-10-02': [a, b]}, file-dates: {deal.2026-10-01.jsonl: ['2026-10-02', given]}}
+
+- name: the .ready file's business date is the date of a file without one
+  rules: [C5, C9]
+  files: {deal.jsonl: [{ID: a}, {ID: b}]}
+  ready: {deal.jsonl: {business-date: '2026-10-02'}}
+  expect: {exit: 0, rows: {'2026-10-02': [a, b]}, file-dates: {deal.jsonl: ['2026-10-02', ready]}}
+
+- name: date-from name refuses a name without a date
+  rules: [C9]
+  files: {deal.jsonl: [{ID: a, DATE: '2026-10-01'}]}
+  run: {date-from: name}
+  expect: {exit: 1, absent: true}
+
+- name: an append of rows without any date is loaded under the business today
+  rules: [C7, C9]
+  files: {deal.jsonl: [{ID: a}, {ID: b}]}
+  run: {mode: append}
+  expect: {exit: 0, rows: {$today: [a, b]}, file-dates: {deal.jsonl: [$today, today]}}
+
+# ----------------------------------------------------------------------------------------------- input forms and archives (C1, C2, C4)
+- name: a zip of one file
+  rules: [C1]
+  files: {book.zip: {archive: zip, members: {deal.2026-10-01.jsonl: [{ID: a, DATE: '2026-10-01'}, {ID: b, DATE: '2026-10-01'}]}}}
+  expect: {exit: 0, rows: {'2026-10-01': [a, b]}}
+
+- name: a tar of one table and two dates
+  rules: [C1, C4]
+  files:
+    book.tar: {archive: tar, members: {deal/2026-10-01/part.jsonl: [{ID: a, DATE: '2026-10-01'}], deal/2026-10-02/part.jsonl: [{ID: b, DATE: '2026-10-02'}]}}
+  expect: {exit: 0, rows: {'2026-10-01': [a], '2026-10-02': [b]}, commits: 2}
+
+- name: a tar.gz is read like a tar
+  rules: [C1, C4]
+  files:
+    book.tar.gz: {archive: tar.gz, members: {deal/2026-10-01/part.jsonl: [{ID: a, DATE: '2026-10-01'}]}}
+  expect: {exit: 0, rows: {'2026-10-01': [a]}}
+
+- name: a tar's dates are its folders' and --as-of cannot override them
+  rules: [C4]
+  files:
+    book.tar: {archive: tar, members: {deal/2026-10-01/part.jsonl: [{ID: a, DATE: '2026-10-01'}]}}
+  run: {as-of: '2026-10-05'}
+  expect: {exit: 1, absent: true}
+
+- name: a tar of a table no pack has is refused
+  rules: [C4]
+  files:
+    book.tar: {archive: tar, members: {nosuch/2026-10-01/part.jsonl: [{ID: a, DATE: '2026-10-01'}]}}
+  expect: {exit: 1, absent: true}
+
+- name: an archive member that escapes its folder refuses the archive
+  rules: [C2]
+  files:
+    book.tar: {archive: tar, members: {deal/2026-10-01/part.jsonl: [{ID: a, DATE: '2026-10-01'}], ../evil.jsonl: [{ID: x}]}}
+  expect: {exit: 1, absent: true}
+
+- name: every member of a multi-member gzip is read
+  rules: [C1]
+  files: {deal.2026-10-01.jsonl.gz: {gzip-members: [[{ID: a, DATE: '2026-10-01'}], [{ID: b, DATE: '2026-10-01'}]]}}
+  expect: {exit: 0, rows: {'2026-10-01': [a, b]}}
+
+- name: the format is sniffed from the first bytes, not the name
+  rules: [C1]
+  files: {deal.2026-10-01.jsonl: {gzip: true, lines: [{ID: a, DATE: '2026-10-01'}]}}
+  expect: {exit: 0, rows: {'2026-10-01': [a]}}
+
+# ----------------------------------------------------------------------------------------------- ids, constants, flatten, document text (C11 to C13, C18)
+- name: a number id is its exact text and the document carries it as text
+  rules: [C11]
+  files: {deal.2026-10-01.jsonl: ['{"ID":1000008,"DATE":"2026-10-01","N":1}']}
+  expect: {exit: 0, rows: {'2026-10-01': ['1000008']}, docs: {'1000008': '{"ID":"1000008","DATE":"2026-10-01","N":1}'}}
+
+- name: a float id that is whole is never written with .0
+  rules: [C11]
+  files: {deal.2026-10-01.jsonl: ['{"ID":1000009.0,"DATE":"2026-10-01"}']}
+  expect: {exit: 0, rows: {'2026-10-01': ['1000009']}}
+
+- name: leading zeros of a text id are kept
+  rules: [C11]
+  files: {deal.2026-10-01.jsonl: [{ID: '007123', DATE: '2026-10-01'}]}
+  expect: {exit: 0, rows: {'2026-10-01': ['007123']}}
+
+- name: a missing, null or empty id is rejected
+  rules: [C11, C19, C30]
+  files: {deal.2026-10-01.jsonl: [{ID: null, DATE: '2026-10-01'}, {DATE: '2026-10-01'}, {ID: '', DATE: '2026-10-01'}, {ID: x, DATE: '2026-10-01'}]}
+  expect: {exit: 2, rows: {'2026-10-01': [x]}, rejected: 3, rejects: {"no id (field 'ID' is missing or empty)": 3}}
+
+- name: an object or a list as id is rejected
+  rules: [C11, C19]
+  files: {deal.2026-10-01.jsonl: [{ID: {a: 1}, DATE: '2026-10-01'}, {ID: [1, 2], DATE: '2026-10-01'}, {ID: ok, DATE: '2026-10-01'}]}
+  expect: {exit: 2, rows: {'2026-10-01': [ok]}, rejects: {"the id field 'ID' is not a single value": 2}}
+
+- name: the connector's set constants are stored in a row that lacks the field, never over one that has it
+  rules: [C12]
+  table: {set: {SRC: X}, promote: [SRC]}
+  files: {deal.2026-10-01.jsonl: [{ID: s1, DATE: '2026-10-01'}, {ID: s2, DATE: '2026-10-01', SRC: Y}]}
+  expect:
+    exit: 0
+    docs: {s1: '{"ID":"s1","DATE":"2026-10-01","SRC":"X"}'}
+    columns: {s1: {SRC: X}, s2: {SRC: Y}}
+
+- name: a flattened field joins the document and the columns, never replacing one the document has
+  rules: [C13]
+  table: {flatten: {N: 'LEGS[0].N'}}
+  files:
+    deal.2026-10-01.jsonl:
+    - '{"ID":"f1","DATE":"2026-10-01","LEGS":[{"N":5.5}]}'
+    - '{"ID":"f2","DATE":"2026-10-01","N":1.0,"LEGS":[{"N":9}]}'
+  expect:
+    exit: 0
+    docs: {f1: '{"ID":"f1","DATE":"2026-10-01","LEGS":[{"N":5.5}],"N":5.5}', f2: '{"ID":"f2","DATE":"2026-10-01","N":1.0,"LEGS":[{"N":9}]}'}
+    columns: {f1: {N: 5.5}, f2: {N: 1.0}}
+
+- name: a flattened path that is not there adds nothing
+  rules: [C13]
+  table: {flatten: {N: 'LEGS[3].N'}}
+  files: {deal.2026-10-01.jsonl: ['{"ID":"f3","DATE":"2026-10-01","LEGS":[{"N":5.5}]}']}
+  expect: {exit: 0, docs: {f3: '{"ID":"f3","DATE":"2026-10-01","LEGS":[{"N":5.5}]}'}, columns: {f3: {N: null}}}
+
+- name: non-ASCII text, escapes and control characters are written as Python writes them
+  rules: [C18]
+  files:
+    deal.2026-10-01.jsonl:
+    - '{"ID":"u1","DATE":"2026-10-01","T":"Zürich \"q\" \n\t \u0001 😀"}'
+  expect: {exit: 0, docs: {u1: '{"ID":"u1","DATE":"2026-10-01","T":"Zürich \"q\" \n\t \u0001 😀"}'}}
+
+- name: numbers are written as Python writes them
+  rules: [C18]
+  files: {deal.2026-10-01.jsonl: ['{"ID":"n1","DATE":"2026-10-01","A":1e-05,"B":1.0,"C":12345678901234567890,"D":0.1,"E":1E+22}']}
+  expect: {exit: 0, docs: {n1: '{"ID":"n1","DATE":"2026-10-01","A":1e-05,"B":1.0,"C":12345678901234567890,"D":0.1,"E":1e+22}'}}
+
+- name: key order is kept
+  rules: [C18]
+  files: {deal.2026-10-01.jsonl: ['{"Z":1,"DATE":"2026-10-01","ID":"o1","A":2}']}
+  expect: {exit: 0, docs: {o1: '{"Z":1,"DATE":"2026-10-01","ID":"o1","A":2}'}}
+
+- name: duplicate keys of a document are kept
+  rules: [C18]
+  files: {deal.2026-10-01.jsonl: ['{"ID":"k1","DATE":"2026-10-01","A":1,"A":2}']}
+  expect: {exit: 0, docs: {k1: '{"ID":"k1","DATE":"2026-10-01","A":1,"A":2}'}}
+  known: {python: "C18: a decoded dictionary has one value for a key"}
+
+# ----------------------------------------------------------------------------------------------- vectors (C14)
+- name: a vector leaves the document, which keeps the marker
+  rules: [C14]
+  table: {vectors: [PNL]}
+  files: {deal.2026-10-01.jsonl: [{ID: v1, DATE: '2026-10-01', PNL: [1.5, 2.5, 3.5]}]}
+  expect: {exit: 0, docs: {v1: '{"ID":"v1","DATE":"2026-10-01","PNL":{"$vector":"PNL"}}'}, columns: {v1: {PNL: [1.5, 2.5, 3.5]}}}
+
+- name: a null element of a vector stays null
+  rules: [C14]
+  table: {vectors: [PNL]}
+  files: {deal.2026-10-01.jsonl: [{ID: v2, DATE: '2026-10-01', PNL: [1.0, null, 3.0]}]}
+  expect: {exit: 0, columns: {v2: {PNL: [1.0, null, 3.0]}}}
+
+- name: a row without the vector is loaded, its vector null
+  rules: [C14]
+  table: {vectors: [PNL]}
+  files: {deal.2026-10-01.jsonl: [{ID: v3, DATE: '2026-10-01'}]}
+  expect: {exit: 0, columns: {v3: {PNL: null}}}
+
+- name: a text inside a vector rejects the row
+  rules: [C14, C19]
+  table: {vectors: [PNL]}
+  files: {deal.2026-10-01.jsonl: [{ID: v4, DATE: '2026-10-01', PNL: [1.0, x]}, {ID: v5, DATE: '2026-10-01', PNL: [1.0]}]}
+  expect: {exit: 2, rows: {'2026-10-01': [v5]}, rejects: {"the vector field 'PNL' is not a list of numbers": 1}}
+
+- name: a vector that is not a list rejects the row
+  rules: [C14, C19]
+  table: {vectors: [PNL]}
+  files: {deal.2026-10-01.jsonl: [{ID: v6, DATE: '2026-10-01', PNL: 7}]}
+  expect: {exit: 1, absent: true}
+
+- name: an empty vector is a vector of no values
+  rules: [C14]
+  table: {vectors: [PNL]}
+  files: {deal.2026-10-01.jsonl: [{ID: v7, DATE: '2026-10-01', PNL: []}]}
+  expect: {exit: 0, columns: {v7: {PNL: []}}}
+
+- name: a vector at a dotted path leaves the document as it is
+  rules: [C14]
+  table: {vectors: [RISK.PNL]}
+  files: {deal.2026-10-01.jsonl: ['{"ID":"d1","DATE":"2026-10-01","RISK":{"PNL":[1.0,2.0]}}']}
+  expect: {exit: 0, docs: {d1: '{"ID":"d1","DATE":"2026-10-01","RISK":{"PNL":[1.0,2.0]}}'}, columns: {d1: {RISK__PNL: [1.0, 2.0]}}}
+
+- name: vectors of 509 values load
+  rules: [C14]
+  table: {vectors: [PNL]}
+  files: {deal.2026-10-01.jsonl: {gen: {count: 3, id: 'g{i}', date: '2026-10-01', vector: {field: PNL, length: 509}}}}
+  expect: {exit: 0, rows: {'2026-10-01': [g0, g1, g2]}}
+
+# ----------------------------------------------------------------------------------------------- columns (C15, C16, C22)
+- name: a promoted field whose every value is a number is a double column
+  rules: [C16]
+  table: {promote: [N]}
+  files: {deal.2026-10-01.jsonl: [{ID: a, DATE: '2026-10-01', N: 1}, {ID: b, DATE: '2026-10-01', N: 2.5}, {ID: c, DATE: '2026-10-01'}]}
+  expect: {exit: 0, types: {N: double}, columns: {a: {N: 1.0}, b: {N: 2.5}, c: {N: null}}}
+
+- name: a promoted field of numbers and texts is a string column
+  rules: [C16]
+  table: {promote: [N]}
+  files: {deal.2026-10-01.jsonl: [{ID: a, DATE: '2026-10-01', N: 1}, {ID: b, DATE: '2026-10-01', N: x}]}
+  expect: {exit: 0, types: {N: string}, columns: {b: {N: x}}}
+
+- name: a field named like an id is a string column whatever its values
+  rules: [C16]
+  table: {promote: [DEAL_REF]}
+  files: {deal.2026-10-01.jsonl: [{ID: a, DATE: '2026-10-01', DEAL_REF: 12}]}
+  expect: {exit: 0, types: {DEAL_REF: string}, columns: {a: {DEAL_REF: '12'}}}
+
+- name: a list of simple values is an array of texts, a null element left out
+  rules: [C16]
+  table: {promote: [TAGS]}
+  files: {deal.2026-10-01.jsonl: [{ID: a, DATE: '2026-10-01', TAGS: [1, x, null]}]}
+  expect: {exit: 0, columns: {a: {TAGS: ['1', x]}}}
+
+- name: a list holding an object is a string column of its JSON text
+  rules: [C16]
+  table: {promote: [TAGS]}
+  files: {deal.2026-10-01.jsonl: [{ID: a, DATE: '2026-10-01', TAGS: [{k: 1}]}]}
+  expect: {exit: 0, types: {TAGS: string}, columns: {a: {TAGS: '[{"k":1}]'}}}
+
+- name: a column null on every row loads
+  rules: [C16]
+  table: {promote: [N]}
+  files: {deal.2026-10-01.jsonl: [{ID: a, DATE: '2026-10-01', N: null}, {ID: b, DATE: '2026-10-01'}]}
+  expect: {exit: 0, columns: {a: {N: null}, b: {N: null}}}
+
+- name: a partition value is text, a boolean as true or false, an empty value null
+  rules: [C15]
+  table: {partition-by: [FLAG]}
+  files: {deal.2026-10-01.jsonl: [{ID: a, DATE: '2026-10-01', FLAG: true}, {ID: b, DATE: '2026-10-01', FLAG: 7}, {ID: c, DATE: '2026-10-01', FLAG: ''}, {ID: d, DATE: '2026-10-01'}]}
+  expect: {exit: 0, columns: {a: {FLAG: 'true'}, b: {FLAG: '7'}, c: {FLAG: null}, d: {FLAG: null}}}
+
+- name: a table of another partitioning is refused
+  rules: [C16, C22]
+  before:
+  - table: {partition-by: [DESK]}
+    files: {deal.2026-10-01.jsonl: [{ID: a, DATE: '2026-10-01', DESK: R}]}
+  files: {deal.2026-10-02.jsonl: [{ID: b, DATE: '2026-10-02', DESK: R}]}
+  expect: {exit: 1, rows: {'2026-10-01': [a]}}
+
+- name: every row carries its load and its file
+  rules: [C17]
+  files: {deal.2026-10-01.jsonl: [{ID: a, DATE: '2026-10-01'}]}
+  expect: {exit: 0, columns: {a: {_source_file: deal.2026-10-01.jsonl}}}
+
+# ----------------------------------------------------------------------------------------------- rejects (C19, C30)
+- name: a line that is not JSON is a reject, the load still succeeds with exit 2
+  rules: [C19, C30]
+  files: {deal.2026-10-01.jsonl: ['{not json', {ID: a, DATE: '2026-10-01'}]}
+  expect: {exit: 2, rows: {'2026-10-01': [a]}, rejected: 1}
+
+- name: a line that is not an object is a reject
+  rules: [C19]
+  files: {deal.2026-10-01.jsonl: ['[1,2]', {ID: a, DATE: '2026-10-01'}]}
+  expect: {exit: 2, rows: {'2026-10-01': [a]}, rejected: 1}
+
+- name: more rejects than max-pct write nothing
+  rules: [C19, C30]
+  files: {deal.2026-10-01.jsonl: [{ID: a, DATE: '2026-10-01'}, {ID: b, DATE: '2026-10-01'}, {ID: c, DATE: '2026-10-01'}, {ID: d, DATE: '2026-10-01'}, {ID: e, DATE: '2026-10-01'}, {ID: f, DATE: '2026-10-01'}, {ID: g, DATE: '2026-10-01'}, {ID: h, DATE: '2026-10-01'}, {ID: i, DATE: '2026-10-01'}, {DATE: '2026-10-01'}]}
+  run: {loader-set: [rejects.max-pct=5]}
+  expect: {exit: 1, absent: true}
+  known: {python: "C19: no rejects.max-pct"}
+
+- name: rejects at exactly max-pct load, with exit 2
+  rules: [C19, C30]
+  files: {deal.2026-10-01.jsonl: [{ID: a, DATE: '2026-10-01'}, {ID: b, DATE: '2026-10-01'}, {ID: c, DATE: '2026-10-01'}, {ID: d, DATE: '2026-10-01'}, {ID: e, DATE: '2026-10-01'}, {ID: f, DATE: '2026-10-01'}, {ID: g, DATE: '2026-10-01'}, {ID: h, DATE: '2026-10-01'}, {ID: i, DATE: '2026-10-01'}, {DATE: '2026-10-01'}]}
+  run: {loader-set: [rejects.max-pct=10]}
+  expect: {exit: 2, rejected: 1}
+
+- name: a load in which every document is rejected writes nothing
+  rules: [C19, C30]
+  files: {deal.2026-10-01.jsonl: [{DATE: '2026-10-01'}, {DATE: '2026-10-01'}]}
+  expect: {exit: 1, absent: true}
+
+# ----------------------------------------------------------------------------------------------- duplicates (C20)
+- name: of an id's copies the latest by timestamp is kept
+  rules: [C20]
+  table: {latest-by: COMPUTED_AT, promote: [N]}
+  files: {deal.2026-10-01.jsonl: [{ID: a, DATE: '2026-10-01', COMPUTED_AT: '2026-10-01T10:00:00Z', N: 2}, {ID: a, DATE: '2026-10-01', COMPUTED_AT: '2026-10-01T09:00:00Z', N: 1}]}
+  expect: {exit: 0, rows: {'2026-10-01': [a]}, columns: {a: {N: 2.0}}, duplicates: {'2026-10-01': 1}}
+
+- name: a tie keeps the last read
+  rules: [C20]
+  table: {latest-by: COMPUTED_AT, promote: [N]}
+  files: {deal.2026-10-01.jsonl: [{ID: a, DATE: '2026-10-01', COMPUTED_AT: '2026-10-01T10:00:00Z', N: 1}, {ID: a, DATE: '2026-10-01', COMPUTED_AT: '2026-10-01T10:00:00Z', N: 2}]}
+  expect: {exit: 0, columns: {a: {N: 2.0}}}
+
+- name: a copy with a timestamp beats one without
+  rules: [C20]
+  table: {latest-by: COMPUTED_AT, promote: [N]}
+  files: {deal.2026-10-01.jsonl: [{ID: a, DATE: '2026-10-01', COMPUTED_AT: '2026-10-01T10:00:00Z', N: 1}, {ID: a, DATE: '2026-10-01', N: 2}]}
+  expect: {exit: 0, columns: {a: {N: 1.0}}}
+
+- name: an offset is honoured when timestamps are compared
+  rules: [C20]
+  table: {latest-by: COMPUTED_AT, promote: [N]}
+  files: {deal.2026-10-01.jsonl: [{ID: a, DATE: '2026-10-01', COMPUTED_AT: '2026-10-01T09:00:00Z', N: 2}, {ID: a, DATE: '2026-10-01', COMPUTED_AT: '2026-10-01T10:00:00+02:00', N: 1}]}
+  expect: {exit: 0, columns: {a: {N: 2.0}}}
+
+- name: a timestamp without an offset is UTC
+  rules: [C20]
+  table: {latest-by: COMPUTED_AT, promote: [N]}
+  files: {deal.2026-10-01.jsonl: [{ID: a, DATE: '2026-10-01', COMPUTED_AT: '2026-10-01T09:30:00', N: 1}, {ID: a, DATE: '2026-10-01', COMPUTED_AT: '2026-10-01T09:00:00Z', N: 2}]}
+  expect: {exit: 0, columns: {a: {N: 1.0}}}
+
+- name: copies in two parts of one date are resolved across the parts, the later path winning without a timestamp
+  rules: [C20]
+  table: {promote: [N]}
+  files: {deal.2026-10-01.part-1.jsonl: [{ID: a, DATE: '2026-10-01', N: 1}], deal.2026-10-01.part-2.jsonl: [{ID: a, DATE: '2026-10-01', N: 2}]}
+  expect: {exit: 0, rows: {'2026-10-01': [a]}, columns: {a: {N: 2.0}}, duplicates: {'2026-10-01': 1}}
+
+- name: one id on two dates is not a duplicate
+  rules: [C20]
+  files: {deal.2026-10-01.jsonl: [{ID: a, DATE: '2026-10-01'}], deal.2026-10-02.jsonl: [{ID: a, DATE: '2026-10-02'}]}
+  expect: {exit: 0, rows: {'2026-10-01': [a], '2026-10-02': [a]}, duplicates: {}}
+
+# ----------------------------------------------------------------------------------------------- replace (C23)
+- name: a replace reloads the dates it holds and no other
+  rules: [C23]
+  before:
+  - files: {deal.2026-10-01.jsonl: [{ID: a, DATE: '2026-10-01'}, {ID: b, DATE: '2026-10-01'}], deal.2026-10-02.jsonl: [{ID: c, DATE: '2026-10-02'}]}
+  files: {deal.2026-10-01.jsonl: [{ID: d, DATE: '2026-10-01'}]}
+  expect: {exit: 0, rows: {'2026-10-01': [d], '2026-10-02': [c]}}
+
+- name: reloading the same file changes nothing
+  rules: [C23]
+  before:
+  - files: {deal.2026-10-01.jsonl: [{ID: a, DATE: '2026-10-01'}, {ID: b, DATE: '2026-10-01'}]}
+  files: {deal.2026-10-01.jsonl: [{ID: a, DATE: '2026-10-01'}, {ID: b, DATE: '2026-10-01'}]}
+  expect: {exit: 0, rows: {'2026-10-01': [a, b]}}
+
+- name: an empty file touches nothing
+  rules: [C23]
+  before:
+  - files: {deal.2026-10-01.jsonl: [{ID: a, DATE: '2026-10-01'}]}
+  files: {deal.2026-10-01.jsonl: []}
+  expect: {rows: {'2026-10-01': [a]}}
+
+- name: a shared table replaces only its own slice of the date
+  rules: [C23]
+  table: {partition-by: [SOURCE_SYSTEM], promote: [SOURCE_SYSTEM], set: {SOURCE_SYSTEM: WSS}}
+  before:
+  - table: {set: {SOURCE_SYSTEM: ENDUR}}
+    files: {deal.2026-10-01.jsonl: [{ID: e1, DATE: '2026-10-01'}, {ID: e2, DATE: '2026-10-01'}]}
+  - files: {deal.2026-10-01.jsonl: [{ID: w1, DATE: '2026-10-01'}]}
+  files: {deal.2026-10-01.jsonl: [{ID: w2, DATE: '2026-10-01'}]}
+  expect: {exit: 0, rows: {'2026-10-01': [e1, e2, w2]}}
+  known: {python: "C23: replaces the whole date of a shared table"}
+
+- name: a row of another slice of a shared table is a reject
+  rules: [C19, C23]
+  table: {partition-by: [SOURCE_SYSTEM], promote: [SOURCE_SYSTEM], set: {SOURCE_SYSTEM: WSS}}
+  files: {deal.2026-10-01.jsonl: [{ID: w1, DATE: '2026-10-01'}, {ID: x1, DATE: '2026-10-01', SOURCE_SYSTEM: ENDUR}]}
+  expect: {exit: 2, rows: {'2026-10-01': [w1]}, rejected: 1}
+  known: {python: "C19: no slice reject"}
+
+# ----------------------------------------------------------------------------------------------- append and commits (C24, C25)
+- name: an append adds rows
+  rules: [C24]
+  before:
+  - files: {deal.2026-10-01.jsonl: [{ID: a, DATE: '2026-10-01'}]}
+    run: {mode: append, batch-id: b1}
+  files: {deal.2026-10-01.jsonl: [{ID: b, DATE: '2026-10-01'}]}
+  run: {mode: append, batch-id: b2}
+  expect: {exit: 0, rows: {'2026-10-01': [a, b]}}
+
+- name: a batch already committed for a date is skipped
+  rules: [C24]
+  before:
+  - files: {deal.2026-10-01.jsonl: [{ID: a, DATE: '2026-10-01'}]}
+    run: {mode: append, batch-id: b1}
+  files: {deal.2026-10-01.jsonl: [{ID: a, DATE: '2026-10-01'}]}
+  run: {mode: append, batch-id: b1}
+  expect: {exit: 0, rows: {'2026-10-01': [a]}}
+  known: {python: "C24: no batch id, the rows are appended again"}
+
+- name: one commit per business date
+  rules: [C25]
+  files: {deal.2026-10-01.jsonl: [{ID: a, DATE: '2026-10-01'}], deal.2026-10-02.jsonl: [{ID: b, DATE: '2026-10-02'}], deal.2026-10-05.jsonl: [{ID: c, DATE: '2026-10-05'}]}
+  expect: {exit: 0, commits: 3, rows: {'2026-10-01': [a], '2026-10-02': [b], '2026-10-05': [c]}}
+
+# ----------------------------------------------------------------------------------------------- the record, dry run and plan (C29 to C31)
+- name: the summary carries its keys
+  rules: [C29]
+  files: {deal.2026-10-01.jsonl: [{ID: a, DATE: '2026-10-01'}]}
+  expect: {exit: 0, summary-keys: [rows, documents, accepted, rejected, fileDates, exitCode], run-log-lines: 1}
+
+- name: a dry run counts and writes nothing
+  rules: [C31]
+  files: {deal.2026-10-01.jsonl: [{ID: a, DATE: '2026-10-01'}, {ID: b, DATE: '2026-10-01'}]}
+  run: {dry-run: true}
+  expect: {exit: 0, absent: true, rows: {}, summary-keys: [rows, accepted]}
+
+- name: a dry run reports its rejects
+  rules: [C19, C31]
+  files: {deal.2026-10-01.jsonl: [{ID: a, DATE: '2026-10-01'}, {DATE: '2026-10-01'}]}
+  run: {dry-run: true}
+  expect: {exit: 2, absent: true, rejected: 1}
+
+- name: a plan reads nothing and writes nothing
+  rules: [C31]
+  files: {deal.2026-10-01.jsonl: [{ID: a, DATE: '2026-10-01'}]}
+  run: {plan: true}
+  expect: {exit: 0, absent: true}

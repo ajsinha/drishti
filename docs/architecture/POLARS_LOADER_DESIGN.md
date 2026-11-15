@@ -16,7 +16,7 @@
 
 # A Polars engine for the lake loader (design, not built)
 
-**Status:** design only, 2026-11-15. No product code exists for it. Requested by the product owner: keep Polars at hand as a lake
+**Status:** design; steps P0 to P2 of the build plan (section 7) are built, the engine itself (P3 onwards) is not. Decided by the owner, 2026-11-15: Q1 retire the old Python path after the three-way benchmark; byte-identical document text; a Delta-only engine; larger vector tables accepted; `auto` never picks Polars until benchmarked; P0 to P2 first. Requested by the product owner: keep Polars at hand as a lake
 loader option, "a delta loader using polars ... should follow exact same behavior that our current loaders have".
 
 **What this document is.** (1) The loader's behaviour written down as one contract every engine must meet, with where each rule
@@ -217,9 +217,10 @@ Polars has no setting that caps its memory. The budget (C28) is kept by construc
 
 ### 4.1 One fixture, every engine
 
-`lake/drishti-lakeload/src/test/resources/loader-contract/cases.yaml`, in the manner of `pack-resolution/cases.yaml`: read by a
-Java test (`LoaderContractTest`, `LakeLoad` in process) and a Python test (`tools/lake/test_loader_contract.py`, through
-`drishti.py lake build`, once per engine: `java`, `polars`, and the Python path while it exists).
+`lake/drishti-lakeload/src/test/resources/loader-contract/cases.yaml`, in the manner of `pack-resolution/cases.yaml`: read by the runner `tools/lake/loadercontract.py` (its docstring defines a case) and its test `tools/lake/test_loader_contract.py`, which
+run `lake build` in process once per engine: `java` (the contract), `python` (the old path, while it exists) and `polars` (when built).
+A case lists in `known` the engines that differ today and why (section 2.4); a known engine that now passes fails the test, so the list
+cannot go stale. A Java test running `LakeLoad` in process on the same file stays to do (P1's Java runner).
 
 A case: `files` (name → lines, or a small generator: n rows, a vector length, duplicates), `ready`, `lake` (the lake file's entry),
 `pack` (key, date, `set:`, shared tables), `run` (mode, `--as-of`, batch id, settings), `before` (earlier loads that set the table
@@ -339,8 +340,8 @@ machine that has Java (a small addition to `--plan`: it prints the resolved load
 ### 6.2 Packaging
 
 - **Optional.** `drishti-console/requirements.txt` already carries `pyarrow` and `deltalake`; Polars goes into a second file,
-  `drishti-console/requirements-polars.txt` (`polars`, pinned), with exact versions and hashes in a lock beside
-  `config/compute/locks/python.lock`. `drishti.py doctor` reports it as optional (`lake build --engine polars`).
+  `drishti-console/requirements-polars.txt` (pinned), with exact versions and hashes in `config/compute/locks/polars.lock` (from
+  `polars.in` by `tools/python_lock.py`, beside `python.lock`). `drishti.py doctor` reports it as optional (`lake build --engine polars`).
 - **Not vendored in git.** The three wheels are tens of megabytes of binaries per platform and Python version. For a machine with
   no network, the release carries a wheel folder built with `pip download --only-binary=:all: --platform win_amd64
   --python-version 3.13 -r requirements-polars.txt -d wheels` and installed with `pip install --no-index --find-links wheels`.
@@ -358,7 +359,8 @@ Not checked, and what could still stop it: (a) the Windows wheels themselves wer
 DLLs loaded from a user's folder would block Polars as it would have blocked pyarrow; (c) the default Polars runtime needs a CPU
 with AVX2 (`polars[rtcompat]` is the build for older ones); (d) the Microsoft C runtime must be present (it comes with Python).
 
-To verify on the laptop, before any build work depends on it:
+To verify on the laptop, before any build work depends on it, run `tools/windows/polars-check.ps1` (`-Download` first builds the wheel
+folder; `-Wheels` names it). It runs these three checks, stopping at the first that fails:
 
 ```powershell
 # 1. no .exe inside the wheels (run in the folder they were downloaded to)
@@ -389,9 +391,9 @@ Each step ends green on the fixture for what it covers; no step needs a lake bui
 
 | Step | What | Size | Gate |
 |---|---|---|---|
-| P0 | Section 6.3's three checks on the Windows QA laptop | an hour, by the owner or QA | stop here if a wheel does not load |
-| P1 | **The contract fixture**: `loader-contract/cases.yaml`, the Java runner, the Python runner for `--engine java`; the comparators (one reader, the log reader). About 60 cases | large: 3 to 4 days | the Java loader passes every case; each case it fails is a finding for the owner, not a change to the case |
-| P2 | **The row rule as one function** `stage.row`, brought up to the contract (C9, C19, C20: section 2.4), with a differential test against the Java loader on the fixture's documents and on generated ones | medium: 2 days | the Python path passes the row and date groups |
+| P0 | **Built**: section 6.3's three checks as `tools/windows/polars-check.ps1`, `requirements-polars.txt` and `polars.in`/`polars.lock`. To run on the Windows QA laptop | an hour, by the owner or QA | stop here if a wheel does not load |
+| P1 | **Built (Python runner; the Java runner remains)**: **the contract fixture**: `loader-contract/cases.yaml`, the Java runner, the Python runner for `--engine java`; the comparators (one reader, the log reader). About 60 cases | large: 3 to 4 days | the Java loader passes every case; each case it fails is a finding for the owner, not a change to the case |
+| P2 | **Built, the row part**: the row rule as one function, `tools/lake/rowrule.py` `row()` (rejects, ids, constants, flatten, vector marker, document text, partition values, promoted columns), called by `stage.Stager`; no behaviour change. **To do**: the file-level rules C9, C19 (`max-pct`, slice) and C20 (the id watch limit) of section 2.4, closed in the Python path or left to its retirement; a differential test against the Java loader on generated documents | medium: 2 days | the Python path passes the row and date groups |
 | P3 | **`polarsload.py`, one process**: configuration in, summary out; replace with the slice, append with the batch, one commit a date, new and existing tables; the refusals of 3.4 | large: 3 to 4 days | the Polars engine passes every case; engine against engine equal |
 | P4 | **Workers, staging, the memory budget**; the streaming sort measured under a hard process limit; the spill check | medium: 2 to 3 days | a 10,000-position load under a 256 MB limit writes the same table; the decision on large dates (3.5) |
 | P5 | **Interop** (4.2) and undo and maintain across engines | medium: 1 to 2 days | all readers, both directions |

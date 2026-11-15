@@ -1,0 +1,25 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+#
+# The optional Polars lake-loader engine's libraries (docs/architecture/POLARS_LOADER_DESIGN.md section 6.2): the whole environment it
+# adds to the console's, transitive packages included, one version each, proven together on Python 3.13 (the probe of section 9). The
+# lock beside it, polars.lock, is written by tools/python_lock.py with the hashes; the console's own requirements are not in it
+# (drishti-console/requirements-polars.txt names the same pins for pip). Python 3.12 or later: arro3-core needs typing-extensions below it.
+polars==2.1.0
+polars-runtime-32==2.1.0
+deltalake==1.6.6
+arro3-core==0.9.1
+deprecated==3.0.1
+wrapt==2.5.2
+pyarrow==26.0.1
