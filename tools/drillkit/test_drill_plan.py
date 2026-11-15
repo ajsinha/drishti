@@ -36,6 +36,27 @@ class WorkerSizing(unittest.TestCase):
         self.assertEqual(P.browser_workers(mem_gb=200, threads=8, per_worker_gb=2.5, reserve_gb=24), 6)     # threads less two
         self.assertEqual(P.browser_workers(mem_gb=10, threads=24, per_worker_gb=2.5, reserve_gb=24), 1)     # never none
 
+    def test_the_default_reserve_is_small_and_the_memory_settings_come_from_the_environment(self):
+        self.assertEqual(P.RESERVE_GB, 8.0)          # the waves keep the Java lanes out of the browser lane: 38 GB free gives 10 workers, not 3
+        self.assertEqual(P.browser_workers(mem_gb=38, threads=24), 10)
+        import os
+        old = dict(os.environ)
+        try:
+            os.environ["DRILL_BROWSER_RESERVE_GB"], os.environ["DRILL_BROWSER_WORKER_GB"] = "12", "4"
+            self.assertEqual((P._env_gb("DRILL_BROWSER_RESERVE_GB", 8.0), P._env_gb("DRILL_BROWSER_WORKER_GB", 3.0)), (12.0, 4.0))
+            os.environ["DRILL_BROWSER_RESERVE_GB"] = "nonsense"
+            self.assertEqual(P._env_gb("DRILL_BROWSER_RESERVE_GB", 8.0), 8.0)
+            os.environ["DRILL_BROWSER_RESERVE_GB"] = "-1"
+            self.assertEqual(P._env_gb("DRILL_BROWSER_RESERVE_GB", 8.0), 8.0)
+        finally:
+            os.environ.clear()
+            os.environ.update(old)
+
+    def test_the_gate_runs_the_renderer_integrity_check(self):
+        text = (ROOT / "tools" / "drill.sh").read_text(encoding="utf-8")
+        self.assertIn("python3 tools/render_sheet.py --check", text)
+        self.assertNotIn("--reserve-gb 24", text)
+
     def test_the_cap_is_the_scratch_ports_cap(self):
         text = (ROOT / "drishti-console" / "tests" / "scratch_ports.py").read_text(encoding="utf-8")
         low = int(text.split("LOW, STRIDE = ")[1].split(",")[0])

@@ -27,6 +27,8 @@
 #                               since their last pass can reach (tools/drillkit/drill_lanes.py); a console lane that failed in some files
 #                               runs those and the files the fix reaches. Never skips a lane the commits touch. The release drill is --full.
 #   tools/drill.sh --lanes a,b  the gate, then these lanes only (browser, other, tools-a, tools-b, java21, java25, containers, anywhere); verify only
+#   DRILL_BROWSER_RESERVE_GB, DRILL_BROWSER_WORKER_GB   the browser lane's sizing: memory left to everything else (default 8) and one
+#                               worker's budget (default 3); measure with drill_monitor.py summary <data>/drill/monitor-browser.csv
 #   DRILL_WAVES=on|off          on (default): the lanes run in two waves, so the 24 cores are not shared by everything at once (a busy CPU
 #                               breaks browser tests): wave 1 java21, java25, tools-a, tools-b; wave 2 browser, other, containers, anywhere.
 #                               off: every lane at once. --lanes and --fix still run only the lanes they choose.
@@ -167,10 +169,10 @@ mem_gb=$(awk '/^MemTotal:/ { print int($2 / 1048576) }' /proc/meminfo 2>/dev/nul
 clamp() { local v=$1; (( v < $2 )) && v=$2; (( v > $3 )) && v=$3; echo "$v"; }
 other_workers=${DRILL_OTHER_WORKERS:-$(clamp $(( cpus / 3 )) 1 8)}
 while (( other_workers + 20 > mem_gb && other_workers > 2 )); do other_workers=$(( other_workers - 1 )); done
-# the browser lane: (memory available now less the Java verify's 20 GB and 4 GB to spare) divided by one browser worker's budget, at most
+# the browser lane: (memory available now less DRILL_BROWSER_RESERVE_GB, default 8: the waves keep the Java lanes out of the browser lane) divided by one browser worker's budget, at most
 # the CPU threads less two and the scratch ports' 12 (TEST_HARNESS.md, "Worker sizing"). The other lane is not reserved: it ends in about
 # five minutes, before the browser workers reach their peak; the memory floor (DRILL_MIN_FREE_GB) holds a test back while memory is short.
-browser_workers=${DRILL_BROWSER_WORKERS:-$(python3 tools/drillkit/drill_plan.py workers --reserve-gb 24 --threads "$cpus")}
+browser_workers=${DRILL_BROWSER_WORKERS:-$(python3 tools/drillkit/drill_plan.py workers --threads "$cpus")}
 export DRISHTI_LAKE_CACHE="${DRISHTI_LAKE_CACHE:-$(pwd -P)/$DATA/tmp/lake-cache}"   # the demo lakes, built once per hash (tools/drillkit/lake_cache.py)
 LANE_LIMIT=${DRILL_LANE_LIMIT:-10800}   # a console lane that runs three hours has hung: it fails the drill instead of blocking it
 echo "drill: $cpus CPUs, ${mem_gb} GB: console lanes browser $browser_workers workers, other $other_workers workers"
@@ -256,6 +258,7 @@ gate_static() {
     "python3 tools/contracts.py check"                 # every command has a data contract that matches its pack and data
     "python3 tools/contracts.py docs --check"          # the contracts' pages are current
     "python3 tools/testdata/sample_docs.py --check"    # the data samples' pages are current
+    "python3 tools/render_sheet.py --check"            # the frozen client renderer: its sheet and render/<version>/integrity.json match its sources
     "python3 tools/api_docs.py check-python")          # every public Python function, class and method has a docstring and type hints
   # (tools/test_no_hidden_names.py runs in the tool tests only: its pack-make case needs the server jar, which the gate runs before)
   local gen

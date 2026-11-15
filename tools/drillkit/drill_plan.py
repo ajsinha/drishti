@@ -73,8 +73,20 @@ SPREAD_WORDS = re.compile(r"^(?:@pytest\.mark\.spread\b|pytestmark\s*=.*\bpytest
 # one browser worker's memory at its peak (its Chromium, its stand-in console, its real server's JVM and that of the file it runs),
 # measured on the release machine (TEST_HARNESS.md, "Measurements": about 4 GB a worker at 9 workers, 2026-11-05); the drill's Java
 # verify and other lane are reserved beside it
-PER_WORKER_GB = 3.0
-RESERVE_GB = 24.0
+def _env_gb(name: str, default: float) -> float:
+    """A memory setting in GB from the environment (a bad or non-positive value falls back to the default)."""
+    try:
+        v = float(os.environ.get(name, ""))
+        return v if v > 0 else default
+    except ValueError:
+        return default
+
+
+#: DRILL_BROWSER_WORKER_GB: one browser worker's budget; DRILL_BROWSER_RESERVE_GB: memory left to everything else while the browser lane
+#: runs (the drill's waves keep the Java lanes out of it; the other lane, the containers smoke test and the OS stay). Measure a worker:
+#: ``drill_monitor.py summary <data>/drill/monitor-browser.csv`` after a drill (peak memory and workers), divide the peak by the workers.
+PER_WORKER_GB = _env_gb("DRILL_BROWSER_WORKER_GB", 3.0)
+RESERVE_GB = _env_gb("DRILL_BROWSER_RESERVE_GB", 8.0)
 MAX_WORKERS = 12             # drishti-console/tests/scratch_ports.py MAX_WORKERS: each worker's ports in a block of their own
 BUDGET_SECONDS = 300         # a browser file's tests together; a longer file is split into spread tests or listed with its reason
 

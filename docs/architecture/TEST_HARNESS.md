@@ -178,11 +178,17 @@ file, and written with the offset.
 
 ### 3.9 Worker sizing
 
-`tools/drillkit/drill_plan.py workers`: the memory available (`MemAvailable`) less what runs beside the lane (in the drill: the Java
-verify's 20 GB and 4 GB to spare; the other lane is not reserved, it ends in about five minutes, before the browser workers peak, and
-the memory floor `DRILL_MIN_FREE_GB` holds a test back while memory is short), divided by one browser worker's budget (3 GB: its Chromium,
-its stand-in console, its session server's JVM and the JVM of the file it runs; section 3.18), at most the CPU threads less two and at most 12 (the
-ports), at least 1. `DRILL_BROWSER_WORKERS` overrides it.
+`tools/drillkit/drill_plan.py workers`: the memory available (`MemAvailable`) less a reserve for everything else
+(`DRILL_BROWSER_RESERVE_GB`, default 8: the drill's waves, section 3.22, keep the Java lanes out of the browser lane; the other lane
+is not reserved, it ends in about five minutes, before the browser workers peak, and the memory floor `DRILL_MIN_FREE_GB` holds a
+test back while memory is short), divided by one browser worker's budget (`DRILL_BROWSER_WORKER_GB`, default 3 GB: its Chromium,
+its stand-in console, its session server's JVM and the JVM of the file it runs; section 3.18). To measure a worker, run
+`python3 tools/drillkit/drill_monitor.py summary <data>/drill/monitor-browser.csv` after a drill: the peak memory of the lane divided
+by its workers is the budget to set. The result is at most the CPU threads less two and at most 12 (the ports), at least 1;
+`DRILL_BROWSER_WORKERS` overrides it.
+
+The gate's static checks also include `python3 tools/render_sheet.py --check`: the frozen client renderer's sheet and
+`render/<version>/integrity.json` must match its sources, so a changed renderer source (without a new version) fails in minutes.
 
 ### 3.10 The drill's lane
 
