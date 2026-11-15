@@ -335,7 +335,7 @@ class ModuleDeployClusterTest {
         assertThat(list.path("modules").findValuesAsText("id")).contains("greeter");
     }
 
-    static com.ash.drishti.net.transport.PeerHttp.Answer peer(String node, String path, Object body) throws Exception {
+    static com.ash.drishti.net.transport.PeerHttp.Answer post(String node, String path, Object body) throws Exception {
         return NetNodes.signed(cluster.node(node).url(), "POST", path, JSON.writeValueAsString(body), "X-Drishti-User", "node-caller");
     }
 
@@ -366,22 +366,22 @@ class ModuleDeployClusterTest {
         com.ash.drishti.net.transport.PeerHttp.Answer second = chunk(node, "pd-1", 1, java.util.Arrays.copyOfRange(b1, half, b1.length));
         assertThat(JSON.readTree(second.text()).path("bytes").asInt()).isEqualTo(b1.length - half);
         // a wrong SHA-256 is refused and the staged files are removed
-        refused(peer(node, "/api/v1/net/modules/stage/pd-1", Map.of("id", "peerdemo", "version", "1.0.0", "sha", "0".repeat(64))), "SHA-256");
+        refused(post(node, "/api/v1/net/modules/stage/pd-1", Map.of("id", "peerdemo", "version", "1.0.0", "sha", "0".repeat(64))), "SHA-256");
         // the package stays, so the right SHA-256 stages it; nothing runs for that, and an abort removes it again
-        assertThat(JSON.readTree(peer(node, "/api/v1/net/modules/stage/pd-1", Map.of("id", "peerdemo", "version", "1.0.0", "sha", sha(v1))).text())
+        assertThat(JSON.readTree(post(node, "/api/v1/net/modules/stage/pd-1", Map.of("id", "peerdemo", "version", "1.0.0", "sha", sha(v1))).text())
                 .path("ready").asBoolean()).isTrue();
         assertThat(c.runtime().loaded("peerdemo")).isEmpty();
-        peer(node, "/api/v1/net/modules/abort/pd-1", Map.of());
+        post(node, "/api/v1/net/modules/abort/pd-1", Map.of());
         // a deployment nothing arrived for
-        refused(peer(node, "/api/v1/net/modules/stage/pd-none", Map.of("id", "peerdemo", "version", "1.0.0", "sha", sha(v1))), "no package arrived");
+        refused(post(node, "/api/v1/net/modules/stage/pd-none", Map.of("id", "peerdemo", "version", "1.0.0", "sha", sha(v1))), "no package arrived");
 
         chunk(node, "pd-2", 0, b1);
-        JsonNode staged = JSON.readTree(peer(node, "/api/v1/net/modules/stage/pd-2", Map.of("id", "peerdemo", "version", "1.0.0", "sha", sha(v1))).text());
+        JsonNode staged = JSON.readTree(post(node, "/api/v1/net/modules/stage/pd-2", Map.of("id", "peerdemo", "version", "1.0.0", "sha", sha(v1))).text());
         assertThat(staged.path("ready").asBoolean()).isTrue();
         assertThat(c.runtime().loaded("peerdemo")).as("staged, not yet running").isEmpty();
         // activation: refused for what was not staged; then the module runs here, with nothing before it
-        refused(peer(node, "/api/v1/net/modules/activate/pd-9", Map.of("id", "peerdemo", "version", "1.0.0")), "not staged");
-        JsonNode act = JSON.readTree(peer(node, "/api/v1/net/modules/activate/pd-2", Map.of("id", "peerdemo", "version", "1.0.0")).text());
+        refused(post(node, "/api/v1/net/modules/activate/pd-9", Map.of("id", "peerdemo", "version", "1.0.0")), "not staged");
+        JsonNode act = JSON.readTree(post(node, "/api/v1/net/modules/activate/pd-2", Map.of("id", "peerdemo", "version", "1.0.0")).text());
         assertThat(act.path("loaded").asText()).isEqualTo("1.0.0");
         assertThat(act.path("previous").isNull()).isTrue();
         assertThat(c.runtime().loaded("peerdemo")).isPresent();
@@ -390,7 +390,7 @@ class ModuleDeployClusterTest {
         // the registry entry another node sends is recorded here
         ModuleNode.Entry entry = new ModuleNode.Entry("peerdemo", "1.0.0", ModuleNode.State.ACTIVE, "Test peerdemo", "peerdemo", List.of("PRD"), List.of(),
                 "", "node-caller", "2026-11-14T10:00:00Z", "pd-2");
-        assertThat(JSON.readTree(peer(node, "/api/v1/net/modules/registry", entry).text()).path("recorded").asText()).isEqualTo("peerdemo");
+        assertThat(JSON.readTree(post(node, "/api/v1/net/modules/registry", entry).text()).path("recorded").asText()).isEqualTo("peerdemo");
         assertThat(c.entry("peerdemo")).hasValueSatisfying(e -> {
             assertThat(e.version()).isEqualTo("1.0.0");
             assertThat(e.by()).isEqualTo("node-caller");
@@ -399,32 +399,32 @@ class ModuleDeployClusterTest {
 
         // an upgrade, then its roll back: the old version runs again; a second roll back changes nothing
         chunk(node, "pd-3", 0, Files.readAllBytes(v2));
-        peer(node, "/api/v1/net/modules/stage/pd-3", Map.of("id", "peerdemo", "version", "1.1.0", "sha", sha(v2)));
-        JsonNode up = JSON.readTree(peer(node, "/api/v1/net/modules/activate/pd-3", Map.of("id", "peerdemo", "version", "1.1.0")).text());
+        post(node, "/api/v1/net/modules/stage/pd-3", Map.of("id", "peerdemo", "version", "1.1.0", "sha", sha(v2)));
+        JsonNode up = JSON.readTree(post(node, "/api/v1/net/modules/activate/pd-3", Map.of("id", "peerdemo", "version", "1.1.0")).text());
         assertThat(up.path("previous").asText()).isEqualTo("1.0.0");
         assertThat(c.runtime().loaded("peerdemo").orElseThrow().manifest().version()).isEqualTo("1.1.0");
         for (int i = 0; i < 2; i++) {
-            JsonNode back = JSON.readTree(peer(node, "/api/v1/net/modules/rollback", Map.of("id", "peerdemo", "version", "1.1.0", "previous", "1.0.0")).text());
+            JsonNode back = JSON.readTree(post(node, "/api/v1/net/modules/rollback", Map.of("id", "peerdemo", "version", "1.1.0", "previous", "1.0.0")).text());
             assertThat(back.path("restored").asText()).isEqualTo("1.0.0");
             assertThat(c.runtime().loaded("peerdemo").orElseThrow().manifest().version()).isEqualTo("1.0.0");
         }
 
         // abort: what arrived is removed, and staging it afterwards is refused; aborting again is no error
         chunk(node, "pd-4", 0, b1);
-        assertThat(JSON.readTree(peer(node, "/api/v1/net/modules/abort/pd-4", Map.of()).text()).path("aborted").asText()).isEqualTo("pd-4");
-        refused(peer(node, "/api/v1/net/modules/stage/pd-4", Map.of("id", "peerdemo", "version", "1.0.0", "sha", sha(v1))), "no package arrived");
-        assertThat(peer(node, "/api/v1/net/modules/abort/pd-4", Map.of()).status()).isEqualTo(200);
+        assertThat(JSON.readTree(post(node, "/api/v1/net/modules/abort/pd-4", Map.of()).text()).path("aborted").asText()).isEqualTo("pd-4");
+        refused(post(node, "/api/v1/net/modules/stage/pd-4", Map.of("id", "peerdemo", "version", "1.0.0", "sha", sha(v1))), "no package arrived");
+        assertThat(post(node, "/api/v1/net/modules/abort/pd-4", Map.of()).status()).isEqualTo(200);
 
         // unload: the module leaves this node (switched off); again, there is nothing of it to unload
-        JsonNode off = JSON.readTree(peer(node, "/api/v1/net/modules/unload", Map.of("id", "peerdemo", "leave", "DISABLE")).text());
+        JsonNode off = JSON.readTree(post(node, "/api/v1/net/modules/unload", Map.of("id", "peerdemo", "leave", "DISABLE")).text());
         assertThat(off.path("leakFree").asBoolean()).isTrue();
         assertThat(c.runtime().loaded("peerdemo")).isEmpty();
-        assertThat(JSON.readTree(peer(node, "/api/v1/net/modules/unload", Map.of("id", "peerdemo", "leave", "DISABLE")).text()).path("steps").toString())
+        assertThat(JSON.readTree(post(node, "/api/v1/net/modules/unload", Map.of("id", "peerdemo", "leave", "DISABLE")).text()).path("steps").toString())
                 .contains("nothing of it was loaded here");
         // a way of leaving nobody knows is refused, not a 500
-        refused(peer(node, "/api/v1/net/modules/unload", Map.of("id", "peerdemo", "leave", "VANISH")), null);
+        refused(post(node, "/api/v1/net/modules/unload", Map.of("id", "peerdemo", "leave", "VANISH")), null);
         // rolled back with no previous version: it leaves, and what it was is not here
-        peer(node, "/api/v1/net/modules/rollback", Map.of("id", "peerdemo", "version", "1.0.0"));
+        post(node, "/api/v1/net/modules/rollback", Map.of("id", "peerdemo", "version", "1.0.0"));
         assertThat(c.runtime().loaded("peerdemo")).isEmpty();
     }
 
