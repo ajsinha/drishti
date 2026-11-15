@@ -19,23 +19,23 @@
 {% block nav %}{% include "help/_nav.html" %}{% endblock %}
 {% block content %}
 <div class="help-wrap help-guide">
-  <nav class="crumbs help-crumbs" aria-label="Breadcrumb"><a href="/help">Help</a><span class="sep">/</span>
-    <a href="/help/section/{{ category.id }}">{{ category.name }}</a><span class="sep">/</span><span>{{ guide.title }}</span></nav>
+  <nav class="crumbs help-crumbs" aria-label="Breadcrumb"><a href="{{ BASE }}/help">Help</a><span class="sep">/</span>
+    <a href="{{ BASE }}/help/section/{{ category.id }}">{{ category.name }}</a><span class="sep">/</span><span>{{ guide.title }}</span></nav>
   <div class="help-layout">
     <aside class="help-toc" aria-label="On this page">
       <div data-resize="panel" data-resize-key="help.toc" data-resize-var="--help-side" data-resize-min="180" data-resize-max="640" aria-label="Resize the contents list"></div>
-      <form class="help-search small" action="/help/search" method="get" role="search"><i class="bi bi-search" aria-hidden="true"></i>
+      <form class="help-search small" action="{{ BASE }}/help/search" method="get" role="search"><i class="bi bi-search" aria-hidden="true"></i>
         <label class="visually-hidden" for="hs">Search help</label><input id="hs" name="q" type="search" placeholder="Search help"></form>
       {% if page.toc %}<h2>On this page</h2><ol>{% for t in page.toc %}<li><a href="#{{ t.id }}">{{ t.name }}</a>
         {% if t.children %}<ol>{% for c in t.children %}<li><a href="#{{ c.id }}">{{ c.name }}</a></li>{% endfor %}</ol>{% endif %}</li>{% endfor %}</ol>{% endif %}
-      <h2>In {{ category.name }}</h2><ul>{% for g in category.guides %}<li{% if g.slug == guide.slug %} aria-current="page"{% endif %}><a href="/help/{{ g.slug }}">{{ g.title }}</a></li>{% endfor %}</ul>
+      <h2>In {{ category.name }}</h2><ul>{% for g in category.guides %}<li{% if g.slug == guide.slug %} aria-current="page"{% endif %}><a href="{{ BASE }}/help/{{ g.slug }}">{{ g.title }}</a></li>{% endfor %}</ul>
     </aside>
     <article class="help-article">
       <header><span class="badge-kind">{{ guide.kind }}</span><h1>{{ guide.title | product }}</h1><p class="lead">{{ guide.summary | product }}</p></header>
-      {{ page.html | safe }}
+      {{ page.html | based | safe }}
       <footer class="help-foot">Found something out of date? The source is <span class="mono">{{ guide.path.name }}</span>; the in-app help renders the repository's documents, so fixing the file fixes this page.</footer>
     </article>
   </div>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_help.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_help.js?v={{ ASSET_V }}"></script>{% endblock %}

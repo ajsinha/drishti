@@ -19,7 +19,7 @@
    the same kind, filters and grouping. The server's rules (rights, masks, versions, four eyes) are never decided here; this only draws them.
    The connection is not here either: any object with subscribe(handlers) is a channel (the console's live channel, a test's manual one),
    and httpLiveApi is the one way a page reaches the server's /live endpoints. */
-import { MASK, hasFormat } from '../../drishti-core/src/drishti_index.js';
+import { MASK, hasFormat, url as drishtiUrl } from '../../drishti-core/src/drishti_index.js';
 
 /** The grid row's key and version properties (the record's own fields keep their names). */
 export const ROW_KEY = '__id';
@@ -74,7 +74,7 @@ export function gridColumns(spec) {
       col.cellRenderer = (p) => {
         const to = c.hrefField ? p.row && p.row[c.hrefField] : String(c.href).replace(/\{([A-Za-z0-9_]+)\}/g, (m, f) => encodeURIComponent(p.row && p.row[f] !== undefined && p.row[f] !== null ? p.row[f] : ''));
         if (!to || !/^\/(?!\/)/.test(String(to))) { return null; }
-        const a = p.doc.createElement('a'); a.className = 'lnk'; a.setAttribute('href', String(to)); a.textContent = p.text; return a;
+        const a = p.doc.createElement('a'); a.className = 'lnk'; a.setAttribute('href', drishtiUrl(String(to))); a.textContent = p.text; return a;
       };
     }
     return col;
@@ -227,7 +227,7 @@ export function pivotLayout(spec, o) {
  * @returns {string}
  */
 export function pivotHref(layout, live) {
-  return '/pivot?source=' + encodeURIComponent(layout.source) + '&lay=' + encodeURIComponent(JSON.stringify(layout.view)) + (live ? '&live=1' : '');
+  return drishtiUrl('/pivot?source=') + encodeURIComponent(layout.source) + '&lay=' + encodeURIComponent(JSON.stringify(layout.view)) + (live ? '&live=1' : '');
 }
 
 /**
@@ -273,7 +273,7 @@ export function changedFields(then, now) {
  * @returns {{rows: Function, row: Function, edit: Function, window: Function, history: Function, mine: Function}}
  */
 export function httpLiveApi(o) {
-  const base = (o.base || '/api/live').replace(/\/$/, ''), id = encodeURIComponent(o.id);
+  const base = (o.base || drishtiUrl('/api/live')).replace(/\/$/, ''), id = encodeURIComponent(o.id);
   const f = o.fetch || ((typeof fetch === 'function') ? fetch.bind(globalThis) : null);
   const call = (method, path, body) => f(path, { method: method, credentials: 'same-origin', headers: body ? { 'Content-Type': 'application/json', Accept: 'application/json' } : { Accept: 'application/json' },
     body: body ? JSON.stringify(body) : undefined }).then((r) => r.json().catch(() => ({})).then((j) => {
@@ -286,8 +286,8 @@ export function httpLiveApi(o) {
     row: (entity) => call('GET', base + '/' + id + '/rows/' + encodeURIComponent(entity)),
     edit: (body) => call('POST', base + '/' + id + '/edit', body),
     window: (stream, body) => call('POST', base + '/' + id + '/stream/' + encodeURIComponent(stream) + '/window', body),
-    history: (kind, entity) => call('GET', '/api/changes?' + q({ kind: kind, entity: entity, limit: 50 })),
-    mine: (kind) => call('GET', '/api/changes?' + q({ mine: 'true', kind: kind, limit: 100 }))
+    history: (kind, entity) => call('GET', drishtiUrl('/api/changes?') + q({ kind: kind, entity: entity, limit: 50 })),
+    mine: (kind) => call('GET', drishtiUrl('/api/changes?') + q({ mine: 'true', kind: kind, limit: 100 }))
   };
 }
 

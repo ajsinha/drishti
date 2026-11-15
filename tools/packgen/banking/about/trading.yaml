@@ -216,7 +216,7 @@ vocabulary:
   gamma: { term: "Gamma", means: "How much the option's delta changes for a move in the underlying; it measures the curvature of the value.", unit: "USD" }
   vega: { term: "Vega", means: "The change in value for a one-point rise in implied volatility.", unit: "USD per vol point" }
   # the production-shaped trade (tools/packgen/trades/schema.py): the same upper-snake attributes in every source system
-  SOURCE_SYSTEM: { term: "Source system", means: "The booking system the trade comes from: ENDUR, CALYPSO or MUREX. Each feeds the trade view through a connector of its own." }
+  SOURCE_SYSTEM: { term: "Source system", means: "The booking system the trade comes from: one of the shipped source systems, ENDUR, CALYPSO, MUREX, WSS, SWAPONE or ICI. Each feeds the trade view through a connector of its own.", values: { ENDUR: "Endur", CALYPSO: "Calypso", MUREX: "Murex", WSS: "WSS", SWAPONE: "SwapOne", ICI: "ICI" } }
   SOURCE_UPDATE_TIME: { term: "Updated in the source", means: "When the booking system last changed the trade; blank when the extract does not say." }
   TRADE_DATE: { term: "Trade date", means: "The day the trade was agreed." }
   INPUT_DATE: { term: "Input date", means: "The day the trade was entered in the booking system; it can be after the trade date." }

@@ -22,7 +22,7 @@
 {% block title %}{{ 'SIMM Playground' if mode == 'play' else 'SIMM' }} · {{ netting_set or counterparty or recipe or 'netting sets' }} · {{ PRODUCT }}{% endblock %}
 {% block screen %}{{ screen }}{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_var-playground.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_frtb-sa.css?v={{ ASSET_V }}">{% include "terminal/_risk_elements_css.html" %}{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_var-playground.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_frtb-sa.css?v={{ ASSET_V }}">{% include "terminal/_risk_elements_css.html" %}{% endblock %}
 {% block nav %}{% with command_text=command_text ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
 <div class="pg fr sm" data-simm data-mode="{{ mode }}" data-ns="{{ netting_set }}" data-cpty="{{ counterparty }}" data-recipe="{{ recipe or '' }}">
@@ -31,13 +31,13 @@
       {{ 'SIMM Playground' if mode == 'play' else 'ISDA SIMM initial margin' }}</h1>
     <nav class="pg-path mono" aria-label="The netting set">{{ netting_set or counterparty or recipe }}</nav>
     <span class="pg-meta" data-sm-meta aria-live="polite">loading…</span>
-    <a class="pg-help" href="/help/context/simm" title="Help: ISDA SIMM (the guide)" aria-label="Help: ISDA SIMM"><i class="bi bi-question-circle" aria-hidden="true"></i></a>
-    {% if mode == 'play' and netting_set %}<a class="pg-link" href="/simm?nettingSet={{ netting_set|urlencode }}">SIMM screen</a>{% elif netting_set %}<a class="pg-link" href="/play/simm?nettingSet={{ netting_set|urlencode }}">Open in the playground</a>{% endif %}
+    <a class="pg-help" href="{{ BASE }}/help/context/simm" title="Help: ISDA SIMM (the guide)" aria-label="Help: ISDA SIMM"><i class="bi bi-question-circle" aria-hidden="true"></i></a>
+    {% if mode == 'play' and netting_set %}<a class="pg-link" href="{{ BASE }}/simm?nettingSet={{ netting_set|urlencode }}">SIMM screen</a>{% elif netting_set %}<a class="pg-link" href="{{ BASE }}/play/simm?nettingSet={{ netting_set|urlencode }}">Open in the playground</a>{% endif %}
   </div>
-  <form class="pg-ask" method="get" action="{{ '/play/simm' if mode == 'play' else '/simm' }}">
+  <form class="pg-ask" method="get" action="{{ ('/play/simm' if mode == 'play' else '/simm') | u }}">
     <label>Netting set <input class="pg-input mono" name="nettingSet" value="{{ netting_set }}" placeholder="NS-ALDERSHOT-LDN, EXAMPLE, or a scope (an analytic)" autocomplete="off"></label>
     <button type="submit" class="pg-btn primary">Open</button>
-    <a class="pg-link" href="/api/simm/template.xlsx" download title="The workbook of the hand-built examples: every figure a formula, every licensed parameter cell empty">Template workbook</a>
+    <a class="pg-link" href="{{ BASE }}/api/simm/template.xlsx" download title="The workbook of the hand-built examples: every figure a formula, every licensed parameter cell empty">Template workbook</a>
   </form>
   <p class="pg-notice" data-sm-notice role="status" hidden></p>
   {% if mode == 'screen' %}
@@ -71,5 +71,5 @@
   {% endif %}
 </div>
 {% include "terminal/_risk_elements.html" %}
-<script src="/static/js/drishti_simm.js?v={{ ASSET_V }}"></script>
+<script src="{{ BASE }}/static/js/drishti_simm.js?v={{ ASSET_V }}"></script>
 {% endblock %}

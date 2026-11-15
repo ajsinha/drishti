@@ -58,6 +58,10 @@ async def page(request: Request, q: str = "", tier: str = "everyday", area: str 
     except BackendError as e:
         server, server_error = {}, e
     console = console_effective(request.app.state.settings, CONSOLE_DIR / "config")
+    try:   # the server's launch roots and every other path setting, absolute, each with where it came from ("Resolved paths")
+        paths = await request.app.state.backend.admin("GET", "/settings/paths", me)
+    except BackendError as e:
+        paths, server_error = {}, server_error or e
     try:
         proposals = (await request.app.state.backend.admin("GET", "/settings/proposals", me)).get("proposals") or []
     except BackendError as e:
@@ -70,7 +74,8 @@ async def page(request: Request, q: str = "", tier: str = "everyday", area: str 
     waiting = [p for p in proposals if p.get("state") == "proposed"]
     return render(request, "admin/configuration.html", rows=shown, matched=len(picked), total=len(every), counts=counts, tiers=config_editor.TIERS,
                   tier=tier, q=q, area=area, areas=areas, waiting=waiting, decided=[p for p in proposals if p.get("state") != "proposed"][:20],
-                  server_error=server_error, viewer=me.user, page_rows=config_editor.PAGE_ROWS, screen="admin")
+                  server_error=server_error, viewer=me.user, page_rows=config_editor.PAGE_ROWS, screen="admin",
+                  path_roots=paths.get("roots") or [], path_settings=paths.get("anchored") or [])
 
 
 @router.post("/configuration/propose")

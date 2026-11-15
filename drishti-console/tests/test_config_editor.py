@@ -30,6 +30,9 @@ from core.auth import Identity
 from core.backend import BackendError
 from core.config import load_settings
 
+PATHS = {"roots": [{"name": "data", "path": "/srv/drishti/data", "from": "drishti.data.dir (systemEnvironment)", "exists": True},
+                   {"name": "lakes", "path": "/srv/drishti/config/lakes", "from": "default under config", "exists": False}],
+         "anchored": [{"key": "drishti.collab.dir", "path": "/srv/drishti/collab", "from": "(application.local.yaml)"}]}
 SERVER = {"settings": [
     {"key": "drishti.var.confidence", "value": "0.975", "origin": "file", "source": "application.local.yaml", "secret": False},
     {"key": "drishti.security.secret", "value": "••••", "origin": "env", "source": "DRISHTI_TOKEN_SECRET", "secret": True},
@@ -49,6 +52,8 @@ def editor(backend, monkeypatch, tmp_path):
     async def admin(method, path, ident, body=None, **params):
         if path == "/settings":
             return SERVER
+        if path == "/settings/paths":
+            return PATHS
         if path == "/settings/proposals" and method == "GET":
             return {"proposals": list(reversed(kept))}
         if path == "/settings/proposals" and method == "POST":
@@ -149,6 +154,13 @@ def test_a_viewer_may_not_open_or_propose(editor):
     vic = _as(editor, "vic")
     assert vic.get("/admin/configuration").status_code == 403
     assert vic.post("/admin/configuration/propose", json={"key": "drishti.lenses", "area": "server", "value": "risk", "reason": "x"}).status_code == 403
+
+
+def test_the_resolved_paths_show_each_root_and_where_it_came_from(editor):
+    page = _as(editor).get("/admin/configuration").text
+    assert "Resolved paths" in page and 'data-root="data"' in page and "/srv/drishti/data" in page
+    assert "drishti.data.dir (systemEnvironment)" in page and "not there" in page   # the lakes folder named but absent
+    assert 'data-path-key="drishti.collab.dir"' in page and "/srv/drishti/collab" in page
 
 
 def test_the_console_file_keeps_its_other_keys(tmp_path):

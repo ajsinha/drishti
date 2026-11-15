@@ -21,12 +21,12 @@
   {% if not AUTH_ENABLED and not request.app.state.oidc.enabled and not error %}<div class="login-box">
     <h1>Sign in</h1>
     <p class="pnl-note" role="status" data-sign-in-off>Sign-in is off on this server, so there is nothing to sign in to: you already act as the development user.</p>
-    <a class="btn-pill btn-accent" href="/t">Open the terminal</a>
+    <a class="btn-pill btn-accent" href="{{ BASE }}/t">Open the terminal</a>
   </div>{% else %}
-  <form method="post" action="/login" class="login-box" autocomplete="on">
+  <form method="post" action="{{ BASE }}/login" class="login-box" autocomplete="on">
     <h1>Sign in</h1>
     {% if SERVERS %}<p class="login-srv"><span class="srv-dot" data-srv-color="{{ SERVER.color or 'var(--d-link)' }}" aria-hidden="true"></span>
-      to <b>{{ SERVER.name }}</b> · <a class="lnk" href="/servers">another server</a></p>{% endif %}
+      to <b>{{ SERVER.name }}</b> · <a class="lnk" href="{{ BASE }}/servers">another server</a></p>{% endif %}
     {% if error %}<p class="pnl-err" role="alert">{{ error }}</p>{% endif %}
     {# busy protection (docs/guides/OPERATIONS_GUIDE.md "Busy protection"): when sign-ins wait, the calm message counts down here and signs in by itself #}
     <div data-busy-host{% if busy %} data-busy="{{ busy | tojson | forceescape }}"{% endif %}></div>
@@ -36,10 +36,10 @@
     <button type="submit" class="btn-pill btn-accent" data-sign-in>Sign in</button>
     {% set sso = request.app.state.oidc %}{% if sso.enabled %}
     <p class="login-or">or</p>
-    <a class="btn-pill btn-ghost login-sso" href="/auth/oidc/login?next={{ next | urlencode }}"><i class="bi bi-shield-lock" aria-hidden="true"></i> {{ sso.label }}</a>
+    <a class="btn-pill btn-ghost login-sso" href="{{ BASE }}/auth/oidc/login?next={{ next | urlencode }}"><i class="bi bi-shield-lock" aria-hidden="true"></i> {{ sso.label }}</a>
     {% endif %}
   </form>{% endif %}
-  <p class="login-back"><a class="lnk" href="/" data-login-back><i class="bi bi-arrow-left" aria-hidden="true"></i> Back to the home page</a></p>
+  <p class="login-back"><a class="lnk" href="{{ BASE }}/" data-login-back><i class="bi bi-arrow-left" aria-hidden="true"></i> Back to the home page</a></p>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_login-busy.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_login-busy.js?v={{ ASSET_V }}"></script>{% endblock %}

@@ -40,12 +40,11 @@ class LakeConfigError(RuntimeError):
 
 
 def lakes_dir() -> pathlib.Path:
-    """The lake folder: DRISHTI_LAKES_DIR, else ./config/lakes (as the server's ``drishti.lakes.dir``)."""
+    """The lake folder: DRISHTI_LAKES_DIR, else <Drishti folder>/config/lakes (as the server's ``drishti.lakes.dir``)."""
     given = os.environ.get("DRISHTI_LAKES_DIR")
     if given:
         return pathlib.Path(given)
-    here = pathlib.Path("./config/lakes")
-    return here if here.is_dir() else ROOT / "config" / "lakes"      # a tool run from elsewhere: this checkout's lake files
+    return ROOT / "config" / "lakes"                                 # this checkout's lake files, wherever the tool is run from
 
 
 def is_lake_name(ref: str | None, folder: pathlib.Path | None = None) -> bool:
@@ -222,7 +221,7 @@ def disagree(what: str, given, lakes, entry: dict) -> None:
 # ------------------------------------------------------------------------------------------------ drishti.py lake show|check|migrate-config
 
 def _connectors_dir(a) -> pathlib.Path:
-    return pathlib.Path(getattr(a, "connectors_dir", None) or os.environ.get("DRISHTI_CONNECTORS_DIR") or "./config/connectors")
+    return pathlib.Path(getattr(a, "connectors_dir", None) or os.environ.get("DRISHTI_CONNECTORS_DIR") or ROOT / "config" / "connectors")
 
 
 def cmd_show(a) -> int:

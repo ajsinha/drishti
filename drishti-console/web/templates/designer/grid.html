@@ -17,11 +17,11 @@
 {% block title %}Grid · {{ PRODUCT }}{% endblock %}
 {% block screen %}build{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_designer.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_designer-grid.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_designer.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_designer-grid.css?v={{ ASSET_V }}">{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
 <div class="dz-shell gd-shell" data-grid{% if draft %} data-draft="{{ draft }}"{% endif %} data-kind="{{ kind }}" data-id="{{ id }}">
-  <nav class="crumbs" aria-label="Breadcrumb"><a href="/build">My designs</a>{% if kind and id %} · <a href="/v/{{ kind | urlencode }}/{{ id | urlencode }}">Back to the page</a>{% endif %} · <a href="/help/rachana-reference#31-the-sutra-designer-customize-describe-outline-and-grid">Designer guide</a></nav>
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="{{ BASE }}/build">My designs</a>{% if kind and id %} · <a href="{{ BASE }}/v/{{ kind | urlencode }}/{{ id | urlencode }}">Back to the page</a>{% endif %} · <a href="{{ BASE }}/help/rachana-reference#31-the-sutra-designer-customize-describe-outline-and-grid">Designer guide</a></nav>
   <h1>Grid</h1>
   {% include "designer/_modes.html" %}
   {% if problem %}<p class="dz-note dz-problem" role="alert">{{ problem }}</p>{% endif %}
@@ -29,21 +29,21 @@
   <section class="gd-start" aria-label="Start">
     <p>Grid shows a screen as a spreadsheet: columns A, B, C, rows 1, 2, 3, and in each cell a panel written as a formula, such as
       <code>B2 = field-list@1(rows: $src; source: {kind: trade, id: @A2.open.trade})</code>. Open any page, press <b>Customize</b>, then <b>Grid</b>;
-      or describe a screen in <a href="/designer/new">Describe</a> and choose <b>Edit in Grid</b>.</p>
-    <form class="dz-line" method="get" action="/designer/grid">
+      or describe a screen in <a href="{{ BASE }}/designer/new">Describe</a> and choose <b>Edit in Grid</b>.</p>
+    <form class="dz-line" method="get" action="{{ BASE }}/designer/grid">
       <label class="visually-hidden" for="gdKind">Kind</label><input id="gdKind" name="kind" placeholder="kind (trade)" value="{{ kind }}" required>
       <label class="visually-hidden" for="gdId">Id</label><input id="gdId" name="id" placeholder="id (MX-20000001)" value="{{ id }}" required>
       <button type="submit" class="dz-btn dz-primary">Open this page as a grid</button>
     </form>
   </section>
   {% else %}
-  <p class="gd-narrow dz-note" data-gd-narrow>Grid needs a wider screen. <a class="dz-btn" href="/designer/outline?kind={{ kind | urlencode }}&amp;id={{ id | urlencode }}&amp;design={{ draft | urlencode }}">Open it in Outline</a></p>
+  <p class="gd-narrow dz-note" data-gd-narrow>Grid needs a wider screen. <a class="dz-btn" href="{{ BASE }}/designer/outline?kind={{ kind | urlencode }}&amp;id={{ id | urlencode }}&amp;design={{ draft | urlencode }}">Open it in Outline</a></p>
   <div class="gd-main">
   <div class="ol-bar gd-bar" role="region" aria-label="Grid">
     <span class="dz-msg" data-gd-msg role="status" aria-live="polite"></span>
     <span class="dz-grow"></span>
     <button type="button" class="dz-btn" data-gd-yaml aria-expanded="false">Show the Sutra</button>
-    <a class="dz-btn" data-gd-open href="/v/{{ kind | urlencode }}/{{ id | urlencode }}?design={{ draft }}">Open full page</a>
+    <a class="dz-btn" data-gd-open href="{{ BASE }}/v/{{ kind | urlencode }}/{{ id | urlencode }}?design={{ draft }}">Open full page</a>
     <button type="button" class="dz-btn" data-gd-cancel>Cancel</button>
     <button type="button" class="dz-btn dz-primary" data-gd-done title="Keep it as your own version of this page: only you see it until you share">Keep as my page</button>
   </div>
@@ -70,7 +70,7 @@
     <div class="gd-sheet" data-gd-sheet role="grid" aria-label="The screen, as a spreadsheet"></div>
     <section class="ol-preview gd-preview" aria-label="Live preview">
       <div class="dz-result-h">Live preview · as you · it changes as you type formulas</div>
-      <iframe title="The screen as the grid says" data-gd-preview src="/v/{{ kind | urlencode }}/{{ id | urlencode }}?design={{ draft }}&amp;embed=1"></iframe>
+      <iframe title="The screen as the grid says" data-gd-preview src="{{ BASE }}/v/{{ kind | urlencode }}/{{ id | urlencode }}?design={{ draft }}&amp;embed=1"></iframe>
     </section>
   </div>
   <pre class="dz-yaml mono" data-gd-sutra hidden aria-label="The Sutra (read only)"></pre>
@@ -78,4 +78,4 @@
   {% endif %}
 </div>
 {% endblock %}
-{% block scripts %}{% include "_designer_kit.html" %}<script src="/static/js/drishti_designer-grid.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}{% include "_designer_kit.html" %}<script src="{{ BASE }}/static/js/drishti_designer-grid.js?v={{ ASSET_V }}"></script>{% endblock %}

@@ -73,7 +73,7 @@
     path = B.viewPath(path);
     const opt = { method, headers: { Accept: 'application/json' }, credentials: 'same-origin' };
     if (body !== undefined && method !== 'GET') { opt.headers['Content-Type'] = 'application/json'; opt.body = JSON.stringify(body); }
-    return fetch('/bi/api' + path, opt).then((r) => r.json().catch(() => ({})).then((data) => {
+    return fetch(drishti_url('/bi/api' + path), opt).then((r) => r.json().catch(() => ({})).then((data) => {
       if (!r.ok) {
         const e = new Error((data.code ? data.code + ' ' : '') + (data.detail || r.statusText));
         e.code = data.code; e.status = r.status; e.detail = data.detail || r.statusText;
@@ -98,7 +98,7 @@
     path = B.viewPath(path);
     const wait = waitSeconds == null ? 2 : Math.max(0, Number(waitSeconds) || 0);
     const opt = { method: 'POST', credentials: 'same-origin', headers: { Accept: 'application/json', 'Content-Type': 'application/json', Prefer: 'respond-async, wait=' + wait }, body: JSON.stringify(body || {}) };
-    return fetch('/bi/api' + path, opt).then((r) => r.json().catch(() => ({})).then((data) => {
+    return fetch(drishti_url('/bi/api' + path), opt).then((r) => r.json().catch(() => ({})).then((data) => {
       if (r.status === 202) { return { run: data && data.run ? data.run : data }; }
       if (r.status === 409 && data.code === 'DRS-9082') { return { confirm: data }; }
       if (r.status === 409 && data.code === 'DRS-9089') { return { needed: data }; }

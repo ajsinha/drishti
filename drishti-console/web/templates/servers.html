@@ -34,7 +34,7 @@
         <td class="mono">{{ st.version or '—' }}</td>
         <td>{% if st.signIn %}{{ 'password' if st.signIn.password }}{% if st.signIn.singleSignOn %} · single sign-on{% endif %}{% if not st.signIn.required %} · open{% endif %}{% else %}—{% endif %}</td>
         <td>{{ 'signed in' if r.signed_in else 'not signed in' }}</td>
-        <td>{% if r.current %}<span class="text-muted-d">current</span>{% else %}<a class="btn-pill btn-accent btn-sm-pill" href="/connect/{{ s.id }}?next=/t">Use</a>{% endif %}</td>
+        <td>{% if r.current %}<span class="text-muted-d">current</span>{% else %}<a class="btn-pill btn-accent btn-sm-pill" href="{{ BASE }}/connect/{{ s.id }}?next=/t">Use</a>{% endif %}</td>
       </tr>{% endfor %}</tbody></table></div></div></section>
 </div>
 {% endblock %}

@@ -40,7 +40,7 @@
   function call(method, path, body, headers, query) {
     var o = { method: method, headers: Object.assign({}, headers || {}) };
     if (body !== undefined && body !== null) { o.headers['Content-Type'] = 'application/json'; o.body = JSON.stringify(body); }
-    return fetch('/admin/connectors/api' + path + (query || ''), o).then(function (r) {
+    return fetch(drishti_url('/admin/connectors/api' + path + (query || '')), o).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (b) { return { ok: r.ok, status: r.status, body: b }; });
     });
   }
@@ -89,7 +89,7 @@
 
   // ---- row actions --------------------------------------------------------------------------------------------------------
   var onDetail = root.hasAttribute('data-detail');
-  function reloadSoon(gone) { setTimeout(function () { if (gone && onDetail) { location.href = '/admin/connectors'; } else { location.reload(); } }, 600); }
+  function reloadSoon(gone) { setTimeout(function () { if (gone && onDetail) { location.href = drishti_url('/admin/connectors'); } else { location.reload(); } }, 600); }
   function fetchDetail(name) { return call('GET', '/' + q(name)); }
 
   // Feedback on the button itself: stopping a connector takes a few seconds, and the page message may be scrolled out of view.
@@ -529,7 +529,7 @@
   function noDialog() { return !dlg.open && !confirmDlg.open; }
   if (newBtn) {
     window.Drishti.keys.register({ id: 'connectors.new', keys: ['N'], scope: 'screen', area: 'admin-connectors', group: 'Connectors', description: 'A new connector',
-      when: noDialog, run: function () { window.location.assign('/build/connector/designer'); } });
+      when: noDialog, run: function () { window.location.assign(drishti_url('/build/connector/designer')); } });
   }
   if (filter) {
     window.Drishti.keys.register({ id: 'connectors.filter', keys: ['/'], scope: 'screen', area: 'admin-connectors', group: 'Connectors', description: 'Focus the filter',
@@ -544,7 +544,7 @@
       else if (params.get('tab') === 'test') { $('[data-test]').click(); }
     });
   }
-  else if (params.get('new')) { window.location.replace('/build/connector/designer?new=' + q(params.get('new'))); }      // creating is the designer's job: a pack's old link lands there, pre-filled from its suggestion
+  else if (params.get('new')) { window.location.replace(drishti_url('/build/connector/designer?new=' + q(params.get('new')))); }      // creating is the designer's job: a pack's old link lands there, pre-filled from its suggestion
 
   // the connector's own page (/admin/connectors/<name>): its buttons reuse the list's actions and the editor
   if (onDetail) {
@@ -560,7 +560,7 @@
       else if (act === 'reset') { reset(me); }
       else if (act === 'post-action') {               // a module's connector action (core/plugins.py connector_action)
         b.disabled = true;
-        fetch(b.dataset.url.replace('{name}', q(me)), { method: 'POST' }).then(function (r) {
+        fetch(drishti_url(b.dataset.url.replace('{name}', q(me))), { method: 'POST' }).then(function (r) {
           return r.json().catch(function () { return {}; }).then(function (x) { return { ok: r.ok, status: r.status, body: x }; });
         }).then(function (r) {
           b.disabled = false;

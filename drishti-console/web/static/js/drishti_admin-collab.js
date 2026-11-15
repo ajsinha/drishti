@@ -38,7 +38,7 @@
   function problem(r) { return (r.j && r.j.code ? r.j.code + ': ' : '') + ((r.j && r.j.detail) || 'the request failed'); }
 
   function api(method, url, body) {
-    return fetch(url, { method: method, credentials: 'same-origin', headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    return fetch(drishti_url(url), { method: method, credentials: 'same-origin', headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: body ? JSON.stringify(body) : undefined })
       .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { return { ok: r.ok, status: r.status, j: j }; }); })
       .catch(function () { return { ok: false, status: 0, j: { detail: 'The console could not be reached. Try again.' } }; });
@@ -73,7 +73,7 @@
     var q = fields(form); q.limit = 25;
     if (append && next) { q.after = next; }
     if (!keep) { say('Searching…'); }
-    api('GET', '/admin/collab/api/threads?' + query(q)).then(function (r) {
+    api('GET', drishti_url('/admin/collab/api/threads?') + query(q)).then(function (r) {
       if (!r.ok) { say(problem(r), true); return; }
       if (!append) { clear(body); }
       (r.j.items || []).forEach(function (t) { body.appendChild(threadRow(t)); });
@@ -104,7 +104,7 @@
 
   function openComments(kind, eid, tid, keep) {
     if (!keep) { say('Loading…'); }
-    api('GET', '/api/threads/' + encodeURIComponent(kind) + '/' + path(eid)).then(function (r) {
+    api('GET', drishti_url('/api/threads/') + encodeURIComponent(kind) + '/' + path(eid)).then(function (r) {
       if (!r.ok) { say(problem(r), true); return; }
       shown = (r.j || []).filter(function (t) { return t.id === tid; })[0] || null;
       if (!shown) { say('That thread is not shown to you here (it may be on another page of the entity).', true); return; }
@@ -120,7 +120,7 @@
     li.appendChild(box);
     var F = new I.Form(box, { schema: { type: 'object', required: ['reason'], properties: { reason: { type: 'string', title: 'Why this comment is hidden', maxLength: 400,
       placeholder: 'Reason (shown to readers)' } } }, submitLabel: 'Hide', resetButton: false, doneText: '', layout: 'columns',
-      onSubmit: function (v) { return api('POST', '/api/comment/' + encodeURIComponent(cid) + '/hide', { reason: String(v.reason).trim() }).then(function (r) { done(r, 'Comment hidden.'); }); } });
+      onSubmit: function (v) { return api('POST', drishti_url('/api/comment/') + encodeURIComponent(cid) + '/hide', { reason: String(v.reason).trim() }).then(function (r) { done(r, 'Comment hidden.'); }); } });
     F.form.querySelector('.di-form-actions').appendChild(btn('Cancel', 'cancel'));
     F.form.querySelector('input').focus();
   }
@@ -136,21 +136,21 @@
     if (act === 'open') { openComments(b.getAttribute('data-kind'), b.getAttribute('data-eid'), tid); }
     else if (act === 'hide') { hideForm(b.closest('li'), cid); }
     else if (act === 'cancel') { var f = b.closest('.acol-reason'); f.parentNode.removeChild(f); }
-    else if (act === 'unhide') { api('POST', '/api/comment/' + encodeURIComponent(cid) + '/unhide').then(function (r) { done(r, 'Comment shown again.'); }); }
+    else if (act === 'unhide') { api('POST', drishti_url('/api/comment/') + encodeURIComponent(cid) + '/unhide').then(function (r) { done(r, 'Comment shown again.'); }); }
     else if (act === 'lock' || act === 'unlock') {
-      api('POST', '/api/thread/' + encodeURIComponent(tid) + '/state', { state: act === 'lock' ? 'locked' : 'open' }).then(function (r) {
+      api('POST', drishti_url('/api/thread/') + encodeURIComponent(tid) + '/state', { state: act === 'lock' ? 'locked' : 'open' }).then(function (r) {
         if (!r.ok) { say(problem(r), true); return; }
         say(act === 'lock' ? 'Thread locked: nobody can reply until it is unlocked.' : 'Thread unlocked.'); search(false, true);
       });
     } else if (act === 'release') {
-      api('DELETE', '/admin/collab/api/holds/' + encodeURIComponent(b.getAttribute('data-hold'))).then(function (r) { if (r.ok) { say('Hold released.'); } else { say(problem(r), true); } holds(); });
+      api('DELETE', drishti_url('/admin/collab/api/holds/') + encodeURIComponent(b.getAttribute('data-hold'))).then(function (r) { if (r.ok) { say('Hold released.'); } else { say(problem(r), true); } holds(); });
     } else if (act === 'outbox-retry') {
-      api('POST', '/admin/collab/api/outbox/' + encodeURIComponent(b.getAttribute('data-seq')) + '/retry').then(function (r) {
+      api('POST', drishti_url('/admin/collab/api/outbox/') + encodeURIComponent(b.getAttribute('data-seq')) + '/retry').then(function (r) {
         say(r.ok ? 'Queued to be sent again.' : problem(r), !r.ok); outbox();
       });
     } else if (act === 'bridge-test') {
       var name = b.getAttribute('data-name'); say('Testing ' + name + '…');
-      api('POST', '/admin/collab/api/bridges/' + encodeURIComponent(name) + '/test').then(function (r) {
+      api('POST', drishti_url('/admin/collab/api/bridges/') + encodeURIComponent(name) + '/test').then(function (r) {
         say(r.ok ? 'Test message posted to ' + name + ' (HTTP ' + r.j.status + ').' : problem(r), !r.ok); bridges();
       });
     }
@@ -167,7 +167,7 @@
   function holds() {
     if (!holdTable) { return; }
     var active = $('[data-acol-active-holds]').checked;
-    api('GET', '/admin/collab/api/holds' + (active ? '?active=true' : '')).then(function (r) {
+    api('GET', drishti_url('/admin/collab/api/holds') + (active ? '?active=true' : '')).then(function (r) {
       var tb = holdTable.querySelector('tbody'); clear(tb);
       if (!r.ok) { say(problem(r), true); return; }
       (r.j || []).forEach(function (h) {
@@ -183,7 +183,7 @@
   }
   if ($('[data-acol-hold-form]')) {                 // the scope's own fields show through the schema's conditions
     holdForm = formOf($('[data-acol-hold-form]'), function () {
-      return api('POST', '/admin/collab/api/holds', fields(holdForm)).then(function (r) {
+      return api('POST', drishti_url('/admin/collab/api/holds'), fields(holdForm)).then(function (r) {
         if (r.ok) { say('Hold ' + r.j.id + ' placed.'); holdForm.setField('reason', undefined); } else { say(problem(r), true); }
         holds();
       });
@@ -200,13 +200,13 @@
     var c = j.counts || {};
     expOut.appendChild(document.createTextNode('Export ' + j.id + ': ' + j.state + (c.shares != null ? ' (' + c.shares + ' shares, ' + c.threads + ' threads, ' + c.comments + ' comments)' : '') + (j.error ? ' ' + j.error : '') + ' '));
     if (j.state === 'done') {
-      var a = el('a', 'fk', 'Download once'); a.href = '/admin/collab/api/exports/' + encodeURIComponent(j.id) + '/download'; a.setAttribute('data-acol-download', '');
+      var a = el('a', 'fk', 'Download once'); a.href = drishti_url('/admin/collab/api/exports/' + encodeURIComponent(j.id) + '/download'); a.setAttribute('data-acol-download', '');
       a.addEventListener('click', function () { setTimeout(function () { expOut.textContent = 'Export ' + j.id + ' was downloaded; the server no longer holds it.'; }, 300); });
       expOut.appendChild(a);
     }
   }
   function poll(id) {
-    api('GET', '/admin/collab/api/exports/' + encodeURIComponent(id)).then(function (r) {
+    api('GET', drishti_url('/admin/collab/api/exports/') + encodeURIComponent(id)).then(function (r) {
       if (!r.ok) { say(problem(r), true); return; }
       exportView(r.j);
       if (r.j.state === 'queued' || r.j.state === 'running') { timer = setTimeout(function () { poll(id); }, 1000); }
@@ -215,7 +215,7 @@
   if (expHost) {
     expForm = formOf(expHost, function () {
       clearTimeout(timer);
-      return api('POST', '/admin/collab/api/exports', fields(expForm)).then(function (r) {
+      return api('POST', drishti_url('/admin/collab/api/exports'), fields(expForm)).then(function (r) {
         if (!r.ok) { say(problem(r), true); return; }
         say('Export started.'); exportView(r.j); poll(r.j.id);
       });
@@ -224,7 +224,7 @@
     var vf = formOf($('[data-acol-verify-form]'), function () {
       vo.textContent = 'Verifying…'; clear(vp);
       var t = fields(vf).thread || '';
-      return api('GET', '/admin/collab/api/verify' + (t ? '?thread=' + encodeURIComponent(t) : '')).then(function (r) {
+      return api('GET', drishti_url('/admin/collab/api/verify') + (t ? '?thread=' + encodeURIComponent(t) : '')).then(function (r) {
         if (!r.ok) { vo.textContent = ''; say(problem(r), true); return; }
         var j = r.j;
         if (j.thread) { vo.textContent = j.ok ? 'Thread ' + j.thread + ': chain intact (' + j.steps + ' steps).' : 'Thread ' + j.thread + ': BROKEN. ' + (j.problem || ''); vo.classList.toggle('t-bad', !j.ok); return; }
@@ -241,7 +241,7 @@
   if (ret) {
     ret.addEventListener('click', function () {
       var out = $('[data-acol-ret]'); out.textContent = 'Counting…';
-      api('POST', '/admin/collab/api/retention').then(function (r) {
+      api('POST', drishti_url('/admin/collab/api/retention')).then(function (r) {
         if (!r.ok) { out.textContent = ''; say(problem(r), true); return; }
         out.textContent = 'Dry run: ' + r.j.threadsPurged + ' threads and ' + r.j.sharesPurged + ' shares would be removed; ' + r.j.threadsHeld + ' threads and ' + r.j.sharesHeld + ' shares are kept by a hold. Nothing was deleted.';
       });
@@ -249,7 +249,7 @@
   }
   function bridges() {
     var t = $('[data-acol-bridges]'); if (!t) { return; }
-    api('GET', '/admin/collab/api/bridges').then(function (r) {
+    api('GET', drishti_url('/admin/collab/api/bridges')).then(function (r) {
       var tb = t.querySelector('tbody'); clear(tb);
       if (!r.ok) { say(problem(r), true); return; }
       $('[data-acol-br-head]').textContent = (r.j.enabled ? 'Bridges are on' : 'Bridges are off') + ' (render as ' + r.j.renderAs + ', at most ' + r.j.perMinute + ' a minute).';
@@ -267,7 +267,7 @@
   // ---- the mail outbox (admin) -------------------------------------------------------------------------------------------------
   function outbox() {
     var t = $('[data-acol-outbox]'); if (!t) { return; }
-    api('GET', '/admin/collab/api/outbox').then(function (r) {
+    api('GET', drishti_url('/admin/collab/api/outbox')).then(function (r) {
       var tb = t.querySelector('tbody'); clear(tb);
       if (!r.ok) { say(problem(r), true); return; }
       var c = r.j.counts || {}, head = (r.j.enabled ? (r.j.available ? 'Email is on.' : 'Email is on but cannot send (no mail server or console-url).') : 'Email is off.') +
@@ -288,7 +288,7 @@
   if (mailTest) {
     mailTest.addEventListener('click', function () {
       say('Sending a test mail…');
-      api('POST', '/admin/collab/api/mail-test').then(function (r) { say(r.ok ? 'Test mail sent to ' + r.j.to + '.' : problem(r), !r.ok); outbox(); });
+      api('POST', drishti_url('/admin/collab/api/mail-test')).then(function (r) { say(r.ok ? 'Test mail sent to ' + r.j.to + '.' : problem(r), !r.ok); outbox(); });
     });
   }
   outbox();
@@ -297,7 +297,7 @@
   var hList = $('[data-acol-hidden-list]'), hTable = $('[data-acol-hidden]'), hMore = $('[data-acol-hidden-more]'), hNext = null;
   function hiddenRows(append) {
     var q = { limit: 50 }; if (append && hNext) { q.after = hNext; }
-    api('GET', '/admin/collab/api/hidden?' + query(q)).then(function (r) {
+    api('GET', drishti_url('/admin/collab/api/hidden?') + query(q)).then(function (r) {
       if (!r.ok) { say(problem(r), true); return; }
       var tb = hTable.querySelector('tbody'); if (!append) { clear(tb); }
       (r.j.items || []).forEach(function (h) {

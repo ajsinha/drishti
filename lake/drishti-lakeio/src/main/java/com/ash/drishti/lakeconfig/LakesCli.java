@@ -75,10 +75,10 @@ public final class LakesCli {
         Path dir = o.containsKey("dir") ? Path.of(o.get("dir")) : Lakes.dir();
         switch (args[0]) {
             case "dump" -> {
-                return Map.of("dir", dir.toString(), "lakes", Lakes.read(dir, System::getenv).describe());
+                return Map.of("dir", dir.toString(), "lakes", Lakes.read(dir, com.ash.drishti.settingsfile.Placeholders::process).describe());
             }
             case "table" -> {
-                Lake l = Lakes.read(dir, System::getenv).get(need(o, "lake"));
+                Lake l = Lakes.read(dir, com.ash.drishti.settingsfile.Placeholders::process).get(need(o, "lake"));
                 LakeTable t = l.require(o.get("domain"), need(o, "kind"), o.get("table"));
                 Map<String, Object> m = t.describe();
                 m.put("location", l.location(t));
@@ -89,7 +89,7 @@ public final class LakesCli {
                 return m;
             }
             case "check" -> {
-                Lakes lakes = Lakes.read(dir, System::getenv);
+                Lakes lakes = Lakes.read(dir, com.ash.drishti.settingsfile.Placeholders::process);
                 Map<String, Map.Entry<String, Map<String, String>>> conns = o.containsKey("connectors") ? connectors(Path.of(o.get("connectors")))
                         : Map.of();
                 List<LakeCheck.Finding> f = LakeCheck.check(lakes, conns);
@@ -114,7 +114,7 @@ public final class LakesCli {
             case "add-entry" -> {
                 String lake = need(o, "lake");
                 Path file = Lakes.file(dir, lake);
-                Lakes.read(dir, System::getenv).get(lake);
+                Lakes.read(dir, com.ash.drishti.settingsfile.Placeholders::process).get(lake);
                 String kind = need(o, "kind");
                 LakeTable t = PackEntry.read(Path.of(need(o, "pack")), kind, o.get("connector")).toTable(kind);
                 boolean added = LakeFiles.addTable(file, t);

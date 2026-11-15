@@ -19,11 +19,11 @@
 {% block title %}{{ title }} · {{ PRODUCT }}{% endblock %}
 {% block content %}
 <div class="login">
-  <form method="post" action="{{ action }}" class="login-box" data-confirm-post>
+  <form method="post" action="{{ action | u }}" class="login-box" data-confirm-post>
     <h1>{{ title }}</h1>
     <p>{{ text }}</p>
     <button type="submit" class="btn-pill btn-accent">{{ title }}</button>
-    <a class="lnk" href="/">Not now</a>
+    <a class="lnk" href="{{ BASE }}/">Not now</a>
   </form>
 </div>
 {% endblock %}

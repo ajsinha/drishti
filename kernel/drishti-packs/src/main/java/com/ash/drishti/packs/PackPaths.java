@@ -22,12 +22,11 @@ import org.springframework.core.env.Environment;
 
 /**
  * Where the pack folders and the pack runtime files are, from the environment: the packs folder
- * ({@code drishti.packs.dir}, default {@code ./config/packs}) and the files under the data umbrella
- * ({@code drishti.data.dir}, default {@code ./data}) that each have their own setting. One place, so every reader agrees.
+ * ({@code drishti.packs.dir}, default {@code <config>/packs}) and the files under the data umbrella
+ * ({@code drishti.data.dir}, default {@code <home>/data}), each absolute (com.ash.drishti.api.Roots) that each have their own setting. One place, so every reader agrees.
  */
 public final class PackPaths {
 
-    public static final String DEFAULT_PACKS = "config/packs";
     /**
      * The packs enabled when {@code drishti.packs.enabled} is not set (or blank) and no edition names them: the one list,
      * {@code config/packs/default-packs.yaml} (copied into this jar at build; the console reads the same file).

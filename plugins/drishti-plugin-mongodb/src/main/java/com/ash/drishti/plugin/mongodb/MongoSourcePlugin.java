@@ -167,7 +167,7 @@ public final class MongoSourcePlugin implements SourcePlugin {
         });
         int timeout = Integer.parseInt(ctx.setting("connect-timeout-ms", "3000"));
         String uri = ctx.setting("uri", "mongodb://localhost:27017");
-        MongoTls.Plan tlsPlan = MongoTls.plan(ctx.settings(), uri, System::getenv);   // fails the start, naming the setting and the file
+        MongoTls.Plan tlsPlan = MongoTls.plan(ctx.settings(), uri, com.ash.drishti.settingsfile.Placeholders::process);   // fails the start, naming the setting and the file
         this.tls = tlsPlan.tls();
         MongoClientSettings.Builder builder = MongoClientSettings.builder().applyConnectionString(new ConnectionString(uri))
                 .readPreference(ReadPreference.valueOf(ctx.setting("read-preference", "primary")))

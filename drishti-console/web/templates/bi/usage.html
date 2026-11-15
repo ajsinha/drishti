@@ -19,7 +19,7 @@
 #}
 {% extends "base.html" %}
 {% block title %}BI usage · {{ PRODUCT }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_bi.css?v={{ ASSET_V }}">{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
@@ -28,7 +28,7 @@
   <h1 class="ws-h">BI usage</h1>
   <p class="text-muted-d">What BI is asked, by whom, and how it is answered: from the audit log (every model query, report visual and SQL statement), the engine's counters and
     the server's Python runtime. Use it to find the models that need a rollup (many questions, few from the cache), the busiest readers, and whether Python runs.
-    <a href="/admin/bi">BI settings</a></p>
+    <a href="{{ BASE }}/admin/bi">BI settings</a></p>
   {% if usage %}
   <p class="bi-usage-facts" data-usage-facts><b>{{ usage.total }}</b> questions and <b>{{ usage.sql }}</b> SQL statements in the last {{ usage.events }} audit events
     {% if usage.from %}({{ usage.from[:16] | replace('T', ' ') }} to {{ usage.to[:16] | replace('T', ' ') }}){% endif %}; <b>{{ usage.hitRate }} %</b> answered from the cache.</p>
@@ -55,4 +55,4 @@
   <details data-usage-engine><summary>{{ engine.engine }} · live tables, transforms, limits and connector pools</summary><pre class="bi-explain-text">{{ engine | tojson(indent=1) }}</pre></details>{% endif %}
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script>{% endblock %}

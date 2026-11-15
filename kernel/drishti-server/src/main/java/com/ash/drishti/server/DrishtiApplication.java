@@ -72,6 +72,12 @@ public class DrishtiApplication {
         if (!fromFile.isEmpty()) {
             System.setProperty(com.ash.drishti.packs.LaunchRoots.FROM_FILE, String.join(",", fromFile));
         }
+        for (String f : com.ash.drishti.settingsfile.SettingsFile.filesRead()) {   // each file by its path; a secret's value never shown
+            StringBuilder b = new StringBuilder("settings file ").append(f).append(':');
+            com.ash.drishti.settingsfile.SettingsFile.sources().entrySet().stream().filter(e -> e.getValue().equals(f)).map(java.util.Map.Entry::getKey).sorted()
+                    .forEach(k -> b.append("\n  ").append(k).append(" = ").append(com.ash.drishti.settingsfile.SettingsFile.shown(k, System.getProperty(k))));
+            System.out.println(b);
+        }
         com.ash.drishti.common.JvmTempDir.ensureExists();   // -Djava.io.tmpdir=<data>/tmp/server may name a folder a fresh clone lacks
         if (com.ash.drishti.server.cli.CliLauncher.isCli(args)) {            // `sutra lint|test|shape|design|preview <path>`: no web server
             // no server temp folder under the data folder: the command's scratch folder is made in the JVM's temp folder (or DRISHTI_TMP_DIR)

@@ -17,7 +17,7 @@
    choice), the open documents above the editor (a studio that edits several objects in turn: each a tab that goes to its address, with
    a close button) and the dock under the editor (tabs of panes the host fills: problems, a query, a log; a count on a tab; the tab that
    is open pressed again folds the dock away). Every text goes in as text; a host's own attributes are data-* only. */
-import { h } from '../../drishti-core/src/drishti_index.js';
+import { h, url as drishtiUrl } from '../../drishti-core/src/drishti_index.js';
 import { Select } from '../../drishti-inputs/src/drishti_index.js';
 import { entryAttrs } from './drishti_palette.js';
 
@@ -47,7 +47,7 @@ import { entryAttrs } from './drishti_palette.js';
 export function actionElement(doc, a, emit) {
   const attrs = Object.assign({ 'data-act': a.id, title: a.title || null, 'data-dd-title': a.title || '', hidden: !!a.hidden }, entryAttrs(a.attrs));
   const cls = 'dd-btn' + (a.primary ? ' dd-primary' : '');
-  if (a.href !== undefined) { return h(doc, 'a', { cls: cls + ' dd-link', text: a.label, attrs: Object.assign(attrs, { href: a.href || '#' }) }); }
+  if (a.href !== undefined) { return h(doc, 'a', { cls: cls + ' dd-link', text: a.label, attrs: Object.assign(attrs, { href: drishtiUrl(a.href || '#') }) }); }
   if (a.choices) {                                                         // drishti-inputs' Select in a <drishti-select> (its value and change as a select's)
     attrs['aria-label'] = a.label;
     const box = h(doc, 'drishti-select', { cls: 'dd-layout-pick dd-choice', attrs });
@@ -94,7 +94,7 @@ export function drawObjectGroups(shell) {
   shell.groups.forEach((g) => {
     const list = g.items.filter((x) => !term || (x.label + ' ' + (x.search || x.detail || '')).toLowerCase().indexOf(term) >= 0);
     const ul = h(doc, 'ul', { cls: 'dd-list', attrs: { role: 'list' } }, list.map((x) => h(doc, 'li', {}, [h(doc, x.href ? 'a' : 'button', { cls: 'dd-obj' + (x.current ? ' dd-on' : ''),
-      attrs: { type: x.href ? null : 'button', href: x.href || null, title: x.title || null, 'aria-current': x.current ? (x.href ? 'page' : 'true') : null, 'data-object': x.id, 'data-object-item': (x.data && x.data.item) || '' },
+      attrs: { type: x.href ? null : 'button', href: drishtiUrl(x.href || null), title: x.title || null, 'aria-current': x.current ? (x.href ? 'page' : 'true') : null, 'data-object': x.id, 'data-object-item': (x.data && x.data.item) || '' },
       on: x.href ? {} : { click: () => shell.events.emit('open', { group: g.id, item: x }) } }, [h(doc, 'span', { cls: 'dd-obj-n', text: x.label },
       x.badge ? [h(doc, 'span', { cls: 'dd-obj-badge', text: x.badge })] : []), h(doc, 'small', { text: x.detail || '' })])])));
     shell.objects.appendChild(h(doc, 'section', { cls: 'dd-group', attrs: { 'data-group': g.id } }, [h(doc, 'h2', {}, [g.label + ' ', h(doc, 'small', { text: String(list.length) })]),
@@ -125,7 +125,7 @@ export class DocTabs {
     const doc = this.doc;
     this.el.textContent = '';
     (list || []).forEach((d) => {
-      const tab = h(doc, 'a', { cls: 'dd-doc-tab', text: d.label, attrs: { href: d.href, role: 'tab', 'data-dd-doc': d.id, 'aria-selected': String(!!d.current), title: d.title || d.label } });
+      const tab = h(doc, 'a', { cls: 'dd-doc-tab', text: d.label, attrs: { href: drishtiUrl(d.href), role: 'tab', 'data-dd-doc': d.id, 'aria-selected': String(!!d.current), title: d.title || d.label } });
       const x = h(doc, 'button', { cls: 'dd-doc-x', text: '×', attrs: { type: 'button', 'data-dd-doc-close': d.id, 'aria-label': 'Close ' + d.label } });
       x.addEventListener('click', (e) => { e.preventDefault(); this.emit('close', { id: d.id }); });
       this.el.appendChild(h(doc, 'span', { cls: 'dd-doc' + (d.current ? ' dd-on' : '') }, [tab, x]));

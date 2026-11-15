@@ -81,6 +81,23 @@ public final class LaunchRoots implements EnvironmentPostProcessor, Ordered {
     /** The connectors folder's environment variable, read as is by the older readers. */
     static final String CONNECTORS_ENV = "DRISHTI_CONNECTORS_DIR";
 
+    /** A relative path setting taken under the install folder: its key, its absolute value, where the relative value came from. */
+    public record Anchored(String key, String path, String from) {
+    }
+
+    /** What one start resolved, for Admin → Configuration ("Resolved paths"): the roots and the anchored settings. */
+    public record Snapshot(List<Resolved> roots, List<Anchored> anchored) {
+    }
+
+    private static final Map<ConfigurableEnvironment, Snapshot> SNAPSHOTS = new java.util.WeakHashMap<>();
+
+    /** What the start of the server with this environment resolved; null when this post-processor did not run for it. */
+    public static Snapshot snapshot(ConfigurableEnvironment env) {
+        synchronized (SNAPSHOTS) {
+            return SNAPSHOTS.get(env);
+        }
+    }
+
     /** One resolved root: its name, its absolute folder, where it came from, and whether it is there. */
     public record Resolved(String name, Path path, String from, boolean exists) {
     }
@@ -123,14 +140,123 @@ public final class LaunchRoots implements EnvironmentPostProcessor, Ordered {
         if (!r.problems().isEmpty()) {
             throw new IllegalStateException("the server cannot start: " + String.join("; ", r.problems()) + "\n" + r.report());
         }
-        env.getPropertySources().addFirst(new MapPropertySource(SOURCE, r.values()));
+        Map<String, Object> values = new LinkedHashMap<>(r.values());
+        Object home = values.get(HOME);
+        Path homePath = home == null ? null : Path.of(home.toString());
+        java.util.Set<String> roots = java.util.Set.copyOf(values.keySet());
+        env.getPropertySources().addFirst(new MapPropertySource(SOURCE, values));   // first, so the other settings' placeholders see the absolute roots
+        List<String> anchoredProblems = new ArrayList<>();
+        // the path variables (DRISHTI_*_DIR, _FILE, _ROOT, ...): anchored under their own names, so a placeholder ${DRISHTI_X:...} and
+        // Spring's relaxed binding both see the absolute value
+        Map<String, Object> envValues = new LinkedHashMap<>();
+        PropertySource<?> sysEnv = env.getPropertySources().get(org.springframework.core.env.StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME);
+        if (sysEnv instanceof EnumerablePropertySource<?> e) {
+            List<String> envKeys = java.util.Arrays.stream(e.getPropertyNames()).filter(n -> PATH_ENV.matcher(n).matches()).sorted().toList();
+            envValues.putAll(anchorSettings(envKeys, k -> {
+                Object v = sysEnv.getProperty(k);
+                return v == null ? null : v.toString();
+            }, homePath, anchoredProblems));
+            if (!envValues.isEmpty()) {
+                env.getPropertySources().addAfter(SOURCE, new org.springframework.core.env.SystemEnvironmentPropertySource(
+                        SOURCE + "-" + org.springframework.core.env.StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME, envValues));
+            }
+        }
+        Map<String, String> anchored = anchorSettings(names(env), k -> {
+            try {
+                return roots.contains(k) ? null : env.getProperty(k);
+            } catch (IllegalArgumentException ex) {
+                return null;                                          // a placeholder nothing resolves: not a path to anchor
+            }
+        }, homePath, anchoredProblems);
+        if (!anchoredProblems.isEmpty()) {
+            throw new IllegalStateException("the server cannot start: " + String.join("; ", anchoredProblems) + "\n" + r.report());
+        }
+        List<Anchored> shown = new ArrayList<>();
+        anchored.forEach((k, v) -> shown.add(new Anchored(k, v, origin(env, k))));
+        envValues.forEach((k, v) -> shown.add(new Anchored(k, v.toString(), "(environment variable)")));
+        values.putAll(anchored);
+        envValues.forEach((k, v) -> anchored.put(k, v.toString()));
+        synchronized (SNAPSHOTS) {
+            SNAPSHOTS.put(env, new Snapshot(r.roots(), List.copyOf(shown)));
+        }
         for (String k : List.of(HOME, "drishti.modules.home", "drishti.config.dir")) {   // for code with no Spring environment (a record's default)
             Object v = r.values().get(k);
             if (v != null && System.getProperty(k) == null) {
                 System.setProperty(k, v.toString());
             }
         }
-        log.info(r.report());
+        log.info(r.report() + (anchored.isEmpty() ? "" : anchoredReport(anchored)));
+    }
+
+    /**
+     * A setting that names a folder or a file: a {@code drishti.*} key ending in {@code dir}, {@code dirs}, {@code file}, {@code folder},
+     * {@code root}, {@code path} or {@code home}, and Spring's own log file and TLS stores.
+     */
+    static final java.util.regex.Pattern PATH_KEY = java.util.regex.Pattern.compile(
+            "^drishti\\..*[.-](?:dir|dirs|file|folder|root|path|home|url)$|^logging\\.file\\.(?:name|path)$|^server\\.ssl\\.(?:key|trust)-store$"
+            + "|^spring\\.datasource\\.url$");
+    /** The settings the configuration imports name (application.yaml spring.config.import): each must be absolute when given. */
+    static final List<String> IMPORTED = List.of("DRISHTI_ENGINES_DIR", "drishti.config.dir", "DRISHTI_CONFIG_DIR", "DRISHTI_PACKS_OVERLAY",
+            "drishti.data.dir", "DRISHTI_DATA_DIR");
+    /** An environment variable that names a folder or a file. */
+    static final java.util.regex.Pattern PATH_ENV = java.util.regex.Pattern.compile("^DRISHTI_[A-Z0-9_]*_(?:DIR|DIRS|FILE|FOLDER|ROOT|PATH|HOME)$");
+
+    /** Every path key the configuration names (every source but the environment variables, which are read through the keys they fill). */
+    private static List<String> names(ConfigurableEnvironment env) {
+        java.util.Set<String> out = new java.util.TreeSet<>();
+        for (PropertySource<?> ps : env.getPropertySources()) {
+            if (ps instanceof EnumerablePropertySource<?> e && !ps.getName().equals("configurationProperties") && !ps.getName().contains("Environment")
+                    && !ps.getName().startsWith(SOURCE)) {
+                for (String k : e.getPropertyNames()) {
+                    if (PATH_KEY.matcher(k).matches() || PATH_ENV.matcher(k).matches()) {
+                        out.add(k);
+                    }
+                }
+            }
+        }
+        return List.copyOf(out);
+    }
+
+    /**
+     * Every other path setting made absolute (docs/admin/CONFIGURATION.md, "Launch roots"): a relative value is taken under the install
+     * folder, never the process's folder; a list ({@code ...dirs}, {@code drishti...path}) is anchored entry by entry. A relative value with
+     * no install folder named is a problem that stops the start. Returns only the settings it changed.
+     *
+     * @param keys     the path settings the configuration names
+     * @param property a setting's resolved value (null: not set, or already a launch root)
+     * @param home     the install folder, absolute, or null
+     * @param problems where a relative value with no install folder is reported
+     */
+    static Map<String, String> anchorSettings(List<String> keys, Function<String, String> property, Path home, List<String> problems) {
+        Map<String, String> out = new LinkedHashMap<>();
+        for (String k : keys) {
+            if (k.equals(HOME) || k.contains(".routes.")) {      // a route maps a kind (such as exposure-path) to its source: a name, not a path
+                continue;
+            }
+            String v = property.apply(k);
+            if (blank(v)) {
+                continue;
+            }
+            boolean list = k.endsWith("dirs") || k.endsWith("DIRS") || k.startsWith("drishti.") && k.endsWith(".path") || k.endsWith("_PATH");
+            List<String> fixed = new ArrayList<>();
+            boolean changed = false;
+            for (String part : list ? v.split(",", -1) : new String[] {v}) {
+                String r = com.ash.drishti.api.Roots.anchorValue(k, part, home, problems);    // the one rule (docs/admin/CONFIGURATION.md, "Launch roots")
+                fixed.add(r);
+                changed |= !r.equals(part);
+            }
+            if (changed) {
+                out.put(k, String.join(",", fixed));
+            }
+        }
+        return out;
+    }
+
+    /** The settings {@link #anchorSettings} made absolute, for the {@code resolved paths:} block. */
+    static String anchoredReport(Map<String, String> anchored) {
+        StringBuilder b = new StringBuilder("\n  relative settings, taken under the install folder:");
+        anchored.forEach((k, v) -> b.append("\n    ").append(k).append(" = ").append(v));
+        return b.toString();
     }
 
     /**
@@ -219,6 +345,13 @@ public final class LaunchRoots implements EnvironmentPostProcessor, Ordered {
             }
             rows.add(new Resolved(root.name(), path, from, exists));
         }
+        for (String k : IMPORTED) {   // read by spring.config.import before this runs: a relative value there would be the process's folder
+            String v = property.apply(k);
+            if (!blank(v) && !com.ash.drishti.api.Roots.isAbsolute(v)) {
+                problems.add(k + " is '" + v.strip() + "', a relative path: the configuration files it names (the engines' files, the packs overlay)"
+                        + " are read before the roots are resolved, so give it as an absolute path");
+            }
+        }
         String extra = property.apply(EXTRA);
         if (!blank(extra)) {
             List<String> abs = new ArrayList<>();
@@ -255,9 +388,9 @@ public final class LaunchRoots implements EnvironmentPostProcessor, Ordered {
 
     /** The source that set a key, in words (an environment variable, a system property, the command line, a configuration file). */
     private static String origin(ConfigurableEnvironment env, String key) {
-        String fromFile = System.getProperty(FROM_FILE, "");
-        if (!fromFile.isEmpty() && java.util.Arrays.asList(fromFile.split(",")).contains(key)) {
-            return "(" + System.getProperty("drishti.settings.file") + ")";
+        String file = com.ash.drishti.settingsfile.SettingsFile.sourceOf(key);   // the settings file that set it (one of several)
+        if (file != null && System.getProperty(key) != null) {
+            return "(" + file + ")";
         }
         for (PropertySource<?> ps : env.getPropertySources()) {
             if (ps.getName().equals("configurationProperties")) {        // Spring's view over every other source: name the real one

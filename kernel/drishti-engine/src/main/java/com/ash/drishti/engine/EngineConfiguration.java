@@ -107,10 +107,10 @@ public class EngineConfiguration {
      */
     static java.util.Map<String, java.nio.file.Path> oldLibFolders(org.springframework.core.env.Environment env, SourcesProperties props) {
         java.util.Map<String, java.nio.file.Path> old = new java.util.LinkedHashMap<>();
-        String ext = env.getProperty("drishti.external-lib", System.getenv().getOrDefault("DRISHTI_EXTERNAL_LIB", "external_lib"));
-        old.put("external_lib/java", java.nio.file.Path.of(ext.isBlank() ? "external_lib" : ext, "java"));
+        String ext = env.getProperty("drishti.external-lib", System.getenv().getOrDefault("DRISHTI_EXTERNAL_LIB", ""));
+        old.put("external_lib/java", com.ash.drishti.api.Roots.anchored(ext.isBlank() ? com.ash.drishti.api.Roots.home("external_lib") : ext.strip()).resolve("java"));
         if (props.pluginDir() != null && !props.pluginDir().isBlank()) {
-            old.put("drishti.sources.plugin-dir", java.nio.file.Path.of(props.pluginDir()));
+            old.put("drishti.sources.plugin-dir", com.ash.drishti.api.Roots.anchored(props.pluginDir().strip()));
         }
         return old;
     }

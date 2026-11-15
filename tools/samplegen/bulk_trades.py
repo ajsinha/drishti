@@ -208,7 +208,7 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--jsonl", default=None, help="write loader rows instead: FILE.tar (trade/<YYYY-MM-DD>/ folders, any --days), or a plain "
                                                   "file or - (standard output) of one day (--days 1), for tools/load-aerospike.sh "
                                                   "and the other stores' loaders: the documents with the fields the trading pack promotes")
-    ap.add_argument("--out", default=os.environ.get("DRISHTI_DATA_DIR", "data") + "/build/bulk",
+    ap.add_argument("--out", default=(os.environ.get("DRISHTI_DATA_DIR") or str(Path(__file__).resolve().parents[2] / "data")) + "/build/bulk",
                     help="where the JSONL files go: <out>/<system>/trade_<system>.<date>.jsonl.gz (default <data>/build/bulk)")
     ap.add_argument("--no-lake", action="store_true", help="write the JSONL files only; load them later with drishti.py lake build")
     ap.add_argument("--engine", default="auto", choices=("auto", "drishti", "deltalake"), help="the lake writer lake build uses (default auto)")

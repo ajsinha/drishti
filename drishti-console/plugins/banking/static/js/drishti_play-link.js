@@ -34,7 +34,7 @@
     var q = new URLSearchParams(window.location.search), out = new URLSearchParams();
     out.set("scope", q.get("scope") || root.dataset.scope || "BANK");
     ["asOf", "ccy", "h", "m", "q", "esq", "set"].forEach(function (k) { if (q.get(k)) { out.set(k, q.get(k)); } });
-    a.href = "/play?" + out.toString();
+    a.href = drishti_url("/play?" + out.toString());
   }
   refresh();
   ["mouseenter", "focus", "mousedown", "touchstart"].forEach(function (e) { a.addEventListener(e, refresh, { passive: true }); });

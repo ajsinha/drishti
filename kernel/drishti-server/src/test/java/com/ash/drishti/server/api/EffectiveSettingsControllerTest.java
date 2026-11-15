@@ -117,4 +117,16 @@ class EffectiveSettingsControllerTest {
         assertThatThrownBy(() -> c.effective(viewer)).isInstanceOf(DrishtiException.class);
         assertThat(c.effective(new Principal("root", List.of("admin")))).containsKey("settings");
     }
+
+    @Test
+    void theResolvedPathsComeWithWhereEachCameFrom() {
+        var s = new com.ash.drishti.packs.LaunchRoots.Snapshot(
+                List.of(new com.ash.drishti.packs.LaunchRoots.Resolved("data", java.nio.file.Path.of("/srv/drishti/data"), "drishti.data.dir (env)", true)),
+                List.of(new com.ash.drishti.packs.LaunchRoots.Anchored("drishti.collab.dir", "/srv/drishti/collab", "(application.local.yaml)"),
+                        new com.ash.drishti.packs.LaunchRoots.Anchored("drishti.x.secret-file", "/srv/drishti/s", "(env)")));
+        Map<String, Object> out = EffectiveSettingsController.paths(s);
+        assertThat(out.get("roots").toString()).contains("name=data").contains("path=/srv/drishti/data").contains("exists=true");
+        assertThat(out.get("anchored").toString()).contains("drishti.collab.dir").contains("/srv/drishti/collab").doesNotContain("/srv/drishti/s,");
+        assertThat(EffectiveSettingsController.paths(null)).containsEntry("roots", List.of());
+    }
 }

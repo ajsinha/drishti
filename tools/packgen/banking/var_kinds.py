@@ -122,7 +122,7 @@ CONNECTORS = {
     # 2.9.4: the PV topic of the pricing systems, windowed into intraday batches of the lake (VAR_GUIDE.md section 8.4); off by default,
     # as every Kafka connector of the packs
     "pv-updates": {"plugin": "var-pv-stream", "enabled": "${DRISHTI_VAR_PV_STREAM:false}", "kinds": ["pv-update"],
-                   "settings": {"bootstrap-servers": "${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}", "topic": "${DRISHTI_VAR_PV_TOPIC:drishti.risk.pv-updates}",
+                   "settings": {"broker": "default", "topic": "${DRISHTI_VAR_PV_TOPIC:drishti.risk.pv-updates}",
                                 "lake": "demo", "pack": "market-risk"}},
     "var-engine": {
         "plugin": "reactive", "mode": "reactive", "enabled": "${DRISHTI_VAR_ENABLED:true}",

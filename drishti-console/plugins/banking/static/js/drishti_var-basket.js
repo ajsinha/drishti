@@ -67,10 +67,10 @@
     return (p ? "&asOf=" + encodeURIComponent(p) : "") + (c && /^[A-Za-z]{3}$/.test(c) ? "&ccy=" + encodeURIComponent(c.toUpperCase()) : "");
   }
   function get(path) {
-    return fetch("/api/var/" + path + asOf(), { headers: { Accept: "application/json" }, credentials: "same-origin" }).then(reply);
+    return fetch(drishti_url("/api/var/" + path + asOf()), { headers: { Accept: "application/json" }, credentials: "same-origin" }).then(reply);
   }
   function post(path, body) {
-    return fetch("/api/var/" + path + (asOf() ? "?" + asOf().slice(1) : ""), { method: "POST", credentials: "same-origin",
+    return fetch(drishti_url("/api/var/" + path + (asOf() ? "?" + asOf().slice(1) : "")), { method: "POST", credentials: "same-origin",
       headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify(body) }).then(reply);
   }
   function reply(r) {
@@ -733,7 +733,7 @@
     if (!scope) return;
     lastScope = compose() || lastScope;
     if (attached && attached.onOpen) { attached.onOpen(scope); return; }
-    location.href = "/var?scope=" + encodeURIComponent(scope);
+    location.href = drishti_url("/var?scope=" + encodeURIComponent(scope));
   }
 
   /** Lays a scope into the sheet, as the server lays it out: a saved basket (Edit), a portfolio's copy (Edit a copy), an ad-hoc scope. */
@@ -796,7 +796,7 @@
   /** The sheet as a workbook, made by the server (it checks every cell again). */
   function download() {
     el.msg.textContent = "making the workbook…";
-    fetch("/api/var/basket/sheet.xlsx" + (asOf() ? "?" + asOf().slice(1) : ""), { method: "POST", credentials: "same-origin",
+    fetch(drishti_url("/api/var/basket/sheet.xlsx" + (asOf() ? "?" + asOf().slice(1) : "")), { method: "POST", credentials: "same-origin",
       headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: T.name || "basket", sheet: payload() }) })
       .then(function (r) {
         if (!r.ok) return r.json().catch(function () { return {}; }).then(function (b) { throw new Error(b.detail || "HTTP " + r.status); });

@@ -25,6 +25,6 @@
     'ai': 'manage the AI providers', 'collab': 'manage collaboration', 'access': 'see who may open what'} %}
     {% set seg = (request.url.path.split('/')[2] if request.url.path.split('/') | length > 2 else '') %}
     Only administrators can {{ area.get(seg, 'use the administration pages') }}.{% endif %}</p>
-  <p><a href="/t">Back to the terminal</a></p></div>
+  <p><a href="{{ BASE }}/t">Back to the terminal</a></p></div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_view.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_view.js?v={{ ASSET_V }}"></script>{% endblock %}

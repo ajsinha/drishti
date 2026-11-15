@@ -26,7 +26,7 @@
    may not approve their own proposal. The panes' contents are the host's (a LayoutCanvas, an Inspector, a YamlPane, a preview).
    A studio that edits several objects in turn adds the open documents above the editor (docs), a dock of panes under it (dock: problems,
    a query) and a left rail that folds away (collapsible); its header's actions may be links, toggles and choices too (drishti_shell-parts.js). */
-import { EventBus, announce, h, openDialog, closeDialog } from '../../drishti-core/src/drishti_index.js';
+import { EventBus, announce, h, openDialog, closeDialog, url as drishtiUrl } from '../../drishti-core/src/drishti_index.js';
 import { actionElement, drawObjectGroups, layoutPick, DocTabs, Dock } from './drishti_shell-parts.js';
 
 /** The header's actions, in order, with their words. */
@@ -336,7 +336,7 @@ export class DesignerShell {
     (crumbs || []).forEach((x, i) => {
       if (i) { c.appendChild(this.doc.createTextNode(' › ')); }
       const last = i === crumbs.length - 1, label = typeof x === 'string' ? x : x.label;
-      c.appendChild(typeof x !== 'string' && x.href ? h(this.doc, 'a', { text: label, attrs: { href: x.href } }) : h(this.doc, 'span', { text: label, attrs: last ? { 'data-crumb-group': '' } : {} }));
+      c.appendChild(typeof x !== 'string' && x.href ? h(this.doc, 'a', { text: label, attrs: { href: drishtiUrl(x.href) } }) : h(this.doc, 'span', { text: label, attrs: last ? { 'data-crumb-group': '' } : {} }));
     });
   }
 

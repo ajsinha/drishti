@@ -30,7 +30,7 @@ from jinja2 import Environment, FileSystemLoader
 
 from core.app import CSP
 from scratch_ports import worker_port
-from core import half_up, render_dist, screen_grid
+from core import base_path, half_up, render_dist, screen_grid
 
 CONSOLE = Path(__file__).resolve().parent.parent
 WEB = CONSOLE / "web"
@@ -52,6 +52,7 @@ def env(design_on: bool) -> Environment:
         e = Environment(loader=FileSystemLoader(str(WEB / "templates")), extensions=["jinja2.ext.do"], autoescape=True)
         e.globals.update(ASSET_V="", design_on=(lambda: design_on))
         half_up.install(e)
+        base_path.install(e)                        # BASE and the filter u (core/base_path.py)
         _envs[design_on] = e
     return _envs[design_on]
 

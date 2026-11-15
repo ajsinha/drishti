@@ -19,7 +19,7 @@
    only, no form: a distribution is a file, taken at the next start. The modules table is a console table (drishti-grid, Drishti Elements). #}
 {% extends "base.html" %}
 {% block title %}White label · {{ PRODUCT }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_admin-inbox.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_admin-white-label.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-inbox.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-white-label.css?v={{ ASSET_V }}">{% endblock %}
 {% block screen %}admin{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
@@ -29,7 +29,7 @@
   <h1 class="ws-h">White label</h1>
   <p class="text-muted-d ib-intro">One kernel build, one console build; each distribution is a file in <span class="mono">{{ directory }}</span>
     naming its brand, theme, modules, lenses, Home and Help. What a distribution leaves out does not exist in it. A change to a file is taken at
-    the next start; a site adds its own file beside the shipped ones. See the <a href="/help/admin">Administration guide</a>.</p>
+    the next start; a site adds its own file beside the shipped ones. See the <a href="{{ BASE }}/help/admin">Administration guide</a>.</p>
   {% for p in problems %}<p class="adm-warn" role="alert" data-white-label-problem>{{ p }}</p>{% endfor %}
   {% for d in deprecated %}<p class="ib-warn" data-white-label-deprecated>Deprecated: {{ d }}</p>{% endfor %}
   <div class="wl-grid" data-white-label-cards>

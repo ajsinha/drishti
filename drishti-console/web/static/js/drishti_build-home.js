@@ -41,7 +41,7 @@
   var status = root.querySelector('[data-status]');
   function say(text, bad) { status.textContent = text; status.classList.toggle('bad', !!bad); }
   function json(method, url, body) {
-    return fetch(url, { method: method, headers: { 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) })
+    return fetch(drishti_url(url), { method: method, headers: { 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) })
       .then(function (r) { return (r.status === 204 ? Promise.resolve({}) : r.json()).then(function (j) { return { ok: r.ok, body: j, status: r.status }; }); });
   }
   function why(r) { return window.Drishti.drsMessage({ code: r.body.code || ('HTTP ' + r.status), detail: r.body.detail }, 'The request failed'); }
@@ -51,7 +51,7 @@
     bulk.addEventListener('click', function () {
       var n = root.querySelectorAll('tr[data-scratch="1"]').length;
       if (!window.confirm('Delete all ' + n + ' scratch (unnamed) designs and their samples? Named designs are kept. This cannot be undone.')) { return; }
-      json('DELETE', '/build/designs').then(function (r) {
+      json('DELETE', drishti_url('/build/designs')).then(function (r) {
         if (!r.ok) { say(why(r), true); return; }
         window.location.reload();
       }, function () { say('The console could not be reached. Try again.', true); });
@@ -63,14 +63,14 @@
     row.querySelector('[data-delete]').addEventListener('click', function () {
       var name = row.dataset.name || 'this unnamed design';
       if (!window.confirm('Delete ' + name + ' and the samples it holds? This cannot be undone.')) { return; }
-      json('DELETE', '/build/designs/' + id).then(function (r) {
+      json('DELETE', drishti_url('/build/designs/') + id).then(function (r) {
         if (!r.ok) { say(why(r), true); return; }
         row.remove();
         say('Deleted.');
       }, function () { say('The console could not be reached. Try again.', true); });
     });
     row.querySelector('[data-duplicate]').addEventListener('click', function () {
-      json('POST', '/build/designs/' + id + '/duplicate', {}).then(function (r) {
+      json('POST', drishti_url('/build/designs/') + id + '/duplicate', {}).then(function (r) {
         if (!r.ok) { say(why(r), true); return; }
         window.location.reload();
       }, function () { say('The console could not be reached. Try again.', true); });
@@ -87,7 +87,7 @@
       input.focus();
       cancel.addEventListener('click', function () { cell.innerHTML = old; });
       function commit() {
-        json('PATCH', '/build/designs/' + id, { name: input.value }).then(function (r) {
+        json('PATCH', drishti_url('/build/designs/') + id, { name: input.value }).then(function (r) {
           if (!r.ok) { say(why(r), true); return; }
           window.location.reload();
         }, function () { say('The console could not be reached. Try again.', true); });

@@ -57,7 +57,7 @@
     var url = new URL(window.location.href);
     if (words.length) url.searchParams.set("q", input.value.trim()); else url.searchParams.delete("q");
     if (area) url.searchParams.set("area", area); else url.searchParams.delete("area");
-    window.history.replaceState(null, "", url.pathname + url.search + url.hash);
+    window.history.replaceState(null, "", drishti_url(url.pathname + url.search + url.hash));
   }
 
   input.addEventListener("input", function () { clearTimeout(timer); timer = setTimeout(apply, 120); });

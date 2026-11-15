@@ -21,13 +21,13 @@
    /admin/artifacts/api/...; the page is reloaded after a change and shows what was done (sessionStorage carries the sentence). */
 (function () {
   'use strict';
-  var API = '/admin/artifacts/api/';
+  var API = drishti_url('/admin/artifacts/api/');
   var FLASH = 'drishti.artifacts.flash';
   var dlg = document.querySelector('[data-uninstall-dialog]');
   var typedDlg = document.querySelector('[data-typed-dialog]');
 
   function call(method, path, body) {
-    return fetch(API + path, { method: method, headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined })
+    return fetch(drishti_url(API + path), { method: method, headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined })
       .then(function (r) { return r.json().catch(function () { return {}; }).then(function (b) { return { ok: r.ok, status: r.status, body: b }; }); });
   }
   function words(b) { return (b.code ? b.code + ' ' : '') + (b.detail || 'the server refused'); }
@@ -182,7 +182,7 @@
     go.onclick = function () { run(mode === 'disable' ? 'disable' : 'uninstall', cascaded(), typedName()); };
     show(dlg);
 
-    fetch(API + 'impact' + q).then(function (r) { return r.json().then(function (b) { return { ok: r.ok, body: b }; }); }).then(function (res) {
+    fetch(drishti_url(API + 'impact' + q)).then(function (r) { return r.json().then(function (b) { return { ok: r.ok, body: b }; }); }).then(function (res) {
       if (!res.ok) { text.textContent = words(res.body); text.classList.add('t-bad'); return; }
       text.classList.remove('t-bad');
       impact = res.body;

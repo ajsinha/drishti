@@ -15,7 +15,7 @@
 #}
 {% extends "base.html" %}
 {% block title %}All subscriptions · {{ PRODUCT }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_dist.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_dist.css?v={{ ASSET_V }}">{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
@@ -25,7 +25,7 @@
     only the owner can change what it sends.</p>
   {% if msg %}<p class="adm-msg" role="status">{{ msg }}</p>{% endif %}
   {% if error %}<p class="pnl-err" role="alert">{{ error }}</p>{% endif %}
-  <section class="pnl"><header class="pnl-h"><h3>All subscriptions</h3><span class="pnl-code">{{ items | length }}</span><a class="lnk dist-link" href="/reports">Your own</a></header><div class="pnl-b">
+  <section class="pnl"><header class="pnl-h"><h3>All subscriptions</h3><span class="pnl-code">{{ items | length }}</span><a class="lnk dist-link" href="{{ BASE }}/reports">Your own</a></header><div class="pnl-b">
     {% if items %}<div class="tbl-wrap"><table class="tbl dist-tbl" data-plain>
       <thead><tr><th>Owner</th><th>Name</th><th>What</th><th>When</th><th>To</th><th>Next run (UTC)</th><th>Last run</th><th></th></tr></thead>
       <tbody>{% for s in items %}{% set last = (s.runs or [None])[0] %}
@@ -38,8 +38,8 @@
           <td>{% if last %}<span class="{{ 't-bad' if last.status in ['failed', 'partial'] else '' }}">{{ last.status }}</span> <span class="mono text-muted-d">{{ last.at[:16] | replace('T', ' ') }}</span>
             · {{ last.sent }} sent{% if last.failed %}, {{ last.failed }} failed{% endif %}{% else %}—{% endif %}</td>
           <td class="rpt-actions">
-            <form method="post" action="/reports/all/{{ s.owner | urlencode }}/{{ s.name | urlencode }}/{{ 'resume' if not s.enabled else 'pause' }}"><button class="fk dist-act" type="submit">{{ 'Resume' if not s.enabled else 'Pause' }}</button></form>
-            <form method="post" action="/reports/all/{{ s.owner | urlencode }}/{{ s.name | urlencode }}/delete"><button class="fk dist-act" type="submit">Delete</button></form></td></tr>
+            <form method="post" action="{{ BASE }}/reports/all/{{ s.owner | urlencode }}/{{ s.name | urlencode }}/{{ 'resume' if not s.enabled else 'pause' }}"><button class="fk dist-act" type="submit">{{ 'Resume' if not s.enabled else 'Pause' }}</button></form>
+            <form method="post" action="{{ BASE }}/reports/all/{{ s.owner | urlencode }}/{{ s.name | urlencode }}/delete"><button class="fk dist-act" type="submit">Delete</button></form></td></tr>
       {% endfor %}</tbody></table></div>
     {% else %}<p class="text-muted-d">No subscriptions on this server.</p>{% endif %}
   </div></section>

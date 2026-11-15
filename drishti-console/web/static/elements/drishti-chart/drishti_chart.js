@@ -778,6 +778,7 @@
   })();
   /* ---- src/drishti_chart-geo.js ---- */
   __m["src/drishti_chart-geo.js"] = (function () {
+    var drishtiUrl = __lib("drishti-core").url;
     const RAD = Math.PI / 180;
     function equalEarth(lon, lat) {
       const A1 = 1.340264, A2 = -0.081106, A3 = 0.000893, A4 = 0.003796, M = Math.sqrt(3) / 2;
@@ -911,8 +912,8 @@
     }
     function createGeoLoader(o) {
       o = o || {};
-      const base = (o.base || '/static/vendor/echarts/maps/').replace(/\/?$/, '/');
-      const get = o.fetchJson || ((url) => fetch(url, { credentials: 'same-origin' }).then((r) => { if (!r.ok) { throw new Error('map ' + url + ': ' + r.status); } return r.json(); }));
+      const base = (o.base || drishtiUrl('/static/vendor/echarts/maps/')).replace(/\/?$/, '/');
+      const get = o.fetchJson || ((url) => fetch(drishtiUrl(url), { credentials: 'same-origin' }).then((r) => { if (!r.ok) { throw new Error('map ' + url + ': ' + r.status); } return r.json(); }));
       const cache = { world: null, regions: {} }, loads = [];
       const fetched = (file) => { loads.push(file); return Promise.resolve().then(() => get(base + file)); };
       return {
@@ -1048,7 +1049,7 @@
   })();
   /* ---- src/drishti_map-view.js ---- */
   __m["src/drishti_map-view.js"] = (function () {
-    var h = __lib("drishti-core").h, ToastTray = __lib("drishti-core").ToastTray;
+    var h = __lib("drishti-core").h, ToastTray = __lib("drishti-core").ToastTray, drishtiUrl = __lib("drishti-core").url;
     var createGeoLoader = __m["src/drishti_chart-geo.js"].createGeoLoader, fitView = __m["src/drishti_chart-geo.js"].fitView;
     var buildMap = __m["src/drishti_chart-map.js"].buildMap;
     var rowsOf = __m["src/drishti_chart-data.js"].rowsOf;
@@ -1065,7 +1066,7 @@
       constructor(chart) {
         this.c = chart;
         const w = chart.win, eb = w.Drishti && w.Drishti.elements && w.Drishti.elements.base;
-        this.base = chart.o.mapsBase || (eb ? eb.replace(/elements\/$/, '') + 'vendor/echarts/maps/' : '/static/vendor/echarts/maps/');
+        this.base = chart.o.mapsBase || (eb ? eb.replace(/elements\/$/, '') + 'vendor/echarts/maps/' : drishtiUrl('/static/vendor/echarts/maps/'));
         this.loader = geoLoader(this.base, chart.o.fetchMap);
         this.mode = MAP_MODES.indexOf(chart.o.mapMode) >= 0 ? chart.o.mapMode : 'ranking';
         this.metricIndex = 0;
@@ -1102,7 +1103,7 @@
       }
       load() {
         const s = this.c.spec, d = s.data || {};
-        const rows = d.source ? Promise.resolve((this.c.o.fetch || ((u) => this.c.win.fetch(u, { credentials: 'same-origin' }).then((r) => r.json())))(d.source)).then(rowsOf)
+        const rows = d.source ? Promise.resolve((this.c.o.fetch || ((u) => this.c.win.fetch(drishtiUrl(u), { credentials: 'same-origin' }).then((r) => r.json())))(d.source)).then(rowsOf)
           : Promise.resolve(rowsOf(Array.isArray(this.c.rawSpec.data) ? this.c.rawSpec.data : d));
         return rows.then((r) => { this.c.rows = r; this.levelRows = {}; return this.go(s.level && s.level !== 'world' ? String(s.level).toUpperCase() : 'world'); }, (e) => this.c.fail(e));
       }
@@ -1473,7 +1474,7 @@
   })();
   /* ---- src/drishti_chart-view.js ---- */
   __m["src/drishti_chart-view.js"] = (function () {
-    var h = __lib("drishti-core").h, renderExplain = __lib("drishti-core").renderExplain, EventBus = __lib("drishti-core").EventBus, sharedBus = __lib("drishti-core").bus, announce = __lib("drishti-core").announce, SELECTION_EVENT = __lib("drishti-core").SELECTION_EVENT;
+    var h = __lib("drishti-core").h, renderExplain = __lib("drishti-core").renderExplain, EventBus = __lib("drishti-core").EventBus, sharedBus = __lib("drishti-core").bus, announce = __lib("drishti-core").announce, SELECTION_EVENT = __lib("drishti-core").SELECTION_EVENT, drishtiUrl = __lib("drishti-core").url;
     var normalizeSpec = __m["src/drishti_chart-spec.js"].normalizeSpec, kindOf = __m["src/drishti_chart-spec.js"].kindOf;
     var rowsOf = __m["src/drishti_chart-data.js"].rowsOf;
     var chartTheme = __m["src/drishti_chart-theme.js"].chartTheme, formatterFor = __m["src/drishti_chart-theme.js"].formatterFor;
@@ -1580,7 +1581,7 @@
         if (this.map) { return this.map.load(); }
         if (d.source) {
           this.loadingEl.hidden = false;
-          const get = this.o.fetch || ((u) => this.win.fetch(u, { credentials: 'same-origin' }).then((r) => { if (!r.ok) { throw new Error(u + ': ' + r.status); } return r.json(); }));
+          const get = this.o.fetch || ((u) => this.win.fetch(drishtiUrl(u), { credentials: 'same-origin' }).then((r) => { if (!r.ok) { throw new Error(u + ': ' + r.status); } return r.json(); }));
           return Promise.resolve(get(d.source)).then((ans) => { this.rows = rowsOf(ans); this.loadingEl.hidden = true; this.draw(); }, (e) => { this.loadingEl.hidden = true; this.fail(e); });
         }
         this.rows = rowsOf(this.rawSpec.data && Array.isArray(this.rawSpec.data) ? this.rawSpec.data : d);

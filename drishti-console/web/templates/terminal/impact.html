@@ -19,7 +19,7 @@
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
 <div class="adm impact">
-  <nav class="crumbs" aria-label="Breadcrumb"><a href="/v/{{ kind }}/{{ id | urlencode }}">← {{ id }}</a></nav>
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="{{ BASE }}/v/{{ kind }}/{{ id | urlencode }}">← {{ id }}</a></nav>
   <h1>Impact of <span class="mono">{{ id }}</span></h1>
   <p class="text-muted-d">What depends on this {{ kind | replace('-', ' ') }}: the entities that reference it, and what those roll into. Built in {{ data.elapsedMs }} ms.</p>
   {% for level, heading in [(1, 'Depends on it directly'), (2, 'Rolls up into')] %}
@@ -32,8 +32,8 @@
         <span class="pnl-code">{% if g.total %}total {{ g.total }}{% endif %}{% if g.mnemonic %} · {{ g.mnemonic }}{% endif %}</span></header>
       <div class="pnl-b">
         {% if g['items'] %}<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Entity</th>{% if level == 2 %}<th>Via</th>{% endif %}<th class="num">Measure</th></tr></thead><tbody>
-          {% for it in g['items'] %}<tr><td><a class="lnk mono" href="/v/{{ it.ref.kind }}/{{ it.ref.id | urlencode }}">{{ it.ref.id }}</a>
-            <a class="tbar-link" href="/impact/{{ it.ref.kind }}/{{ it.ref.id | urlencode }}" title="Impact of {{ it.ref.id }}"><i class="bi bi-diagram-3" aria-hidden="true"></i></a></td>
+          {% for it in g['items'] %}<tr><td><a class="lnk mono" href="{{ BASE }}/v/{{ it.ref.kind }}/{{ it.ref.id | urlencode }}">{{ it.ref.id }}</a>
+            <a class="tbar-link" href="{{ BASE }}/impact/{{ it.ref.kind }}/{{ it.ref.id | urlencode }}" title="Impact of {{ it.ref.id }}"><i class="bi bi-diagram-3" aria-hidden="true"></i></a></td>
             {% if level == 2 %}<td class="mono">{{ it.via }}</td>{% endif %}
             <td class="num mono{% if it.measure and it.measure.startswith('−') %} t-neg{% elif it.measure and it.measure.startswith('+') %} t-pos{% endif %}">{{ it.measure or '' }}</td></tr>{% endfor %}
         </tbody></table></div>{% endif %}
@@ -45,4 +45,4 @@
   {% endfor %}
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script>{% endblock %}

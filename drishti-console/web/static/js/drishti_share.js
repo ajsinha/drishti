@@ -33,7 +33,7 @@
   function config() {
     if (conf) { return Promise.resolve(conf); }
     if (!confAsked) {
-      confAsked = fetch('/api/collab' + (view && view.getAttribute('data-kind') ? '?kind=' + encodeURIComponent(view.getAttribute('data-kind')) : ''), { headers: { Accept: 'application/json' }, credentials: 'same-origin' })
+      confAsked = fetch(drishti_url('/api/collab' + (view && view.getAttribute('data-kind') ? '?kind=' + encodeURIComponent(view.getAttribute('data-kind')) : '')), { headers: { Accept: 'application/json' }, credentials: 'same-origin' })
         .then(function (r) { return r.ok ? r.json() : { enabled: false }; })
         .catch(function () { return { enabled: false }; })
         .then(function (c) { conf = c || { enabled: false }; return conf; });
@@ -84,12 +84,12 @@
   function preview() {
     if (!picked.length) { picSay('Choose who to send to first: the picture is made for them.', true); return; }
     picSay('Drawing the preview…'); picImg.hidden = true;
-    fetch('/api/share/preview-picture', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'image/png' }, credentials: 'same-origin', body: JSON.stringify(body()) })
+    fetch(drishti_url('/api/share/preview-picture'), { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'image/png' }, credentials: 'same-origin', body: JSON.stringify(body()) })
       .then(function (r) {
         if (!r.ok) { return r.json().catch(function () { return {}; }).then(function (j) { picSay((j.code ? j.code + ': ' : '') + (j.detail || 'no preview'), true); }); }
         return r.blob().then(function (b) {
           var fr = new FileReader();                                  // a data: URL, the page's img-src allows 'self' and data:
-          fr.onload = function () { picImg.src = fr.result; picImg.hidden = false; picSay('This is what the people you chose will get.'); };
+          fr.onload = function () { picImg.src = drishti_url(fr.result); picImg.hidden = false; picSay('This is what the people you chose will get.'); };
           fr.readAsDataURL(b);
         });
       })
@@ -197,7 +197,7 @@
     if (!picked.length) { say('Choose at least one person or role to send to.', true); to.focus(); return; }
     if (noteBox.value.trim().length > limit()) { say('The note is longer than ' + limit() + ' characters.', true); noteBox.focus(); return; }
     sending = true; send.disabled = true; say('Sending…'); warn.hidden = true;
-    fetch('/api/share', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, credentials: 'same-origin', body: JSON.stringify(body()) })
+    fetch(drishti_url('/api/share'), { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, credentials: 'same-origin', body: JSON.stringify(body()) })
       .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { return { ok: r.ok, j: j }; }); })
       .then(function (r) {
         sending = false; send.disabled = false;

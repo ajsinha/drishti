@@ -24,7 +24,7 @@
   if (m) {
     var names = {};
     try { names = JSON.parse(hub.getAttribute('data-help-sections') || '{}'); } catch (e) { names = {}; }
-    if (names[m[1]]) { location.replace('/help/section/' + encodeURIComponent(names[m[1]])); return; }
+    if (names[m[1]]) { location.replace(drishti_url('/help/section/' + encodeURIComponent(names[m[1]]))); return; }
   }
   var input = document.querySelector('[data-help-filter]');
   if (input) {
@@ -46,7 +46,7 @@
     if (all) {
       all.addEventListener('click', function (e) {
         var q = input.value.trim();
-        if (q) { e.preventDefault(); location.href = '/help/search?q=' + encodeURIComponent(q); }
+        if (q) { e.preventDefault(); location.href = drishti_url('/help/search?q=' + encodeURIComponent(q)); }
       });
     }
   }

@@ -24,7 +24,7 @@
       <input id="monAdd" class="studio-in mono" placeholder="Add: command or identifier"></form>
     <button type="button" class="btn-pill btn-ghost" data-delete>Delete monitor</button></div>
   <p class="adm-msg" data-msg role="status" aria-live="polite"></p>
-  <div class="rc-host" data-records-fill data-monitor-grid data-rows="{{ grid_rows | tojson | forceescape }}" data-spec="{{ {'title': name, 'columns': grid_columns, 'links': [{'label': 'Open', 'href': '/v/{KIND}/{ID}'}, {'label': 'Set an alert', 'href': '/alerts?kind={KIND}&id={ID}'}]} | tojson | forceescape }}" aria-label="{{ name }}"></div>
+  <div class="rc-host" data-records-fill data-monitor-grid data-rows="{{ grid_rows | tojson | forceescape }}" data-spec="{{ {'title': name, 'columns': grid_columns, 'links': [{'label': 'Open', 'href': BASE ~ '/v/{KIND}/{ID}'}, {'label': 'Set an alert', 'href': BASE ~ '/alerts?kind={KIND}&id={ID}'}]} | tojson | forceescape }}" aria-label="{{ name }}"></div>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_monitor.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_monitor.js?v={{ ASSET_V }}"></script>{% endblock %}

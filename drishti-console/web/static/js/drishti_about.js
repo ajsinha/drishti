@@ -29,7 +29,7 @@
       are never touched. */
   function init(root, options) {
   options = options || {};
-  var doFetch = options.fetch || function (u, o) { return fetch(u, o); };
+  var doFetch = options.fetch || function (u, o) { return fetch(drishti_url(u), o); };
   var toUrl = options.url || function (p) { return p; };
   var setHtml = options.setHtml || function (el, html) { el.innerHTML = html; };       // the element passes its sanitising, Trusted Types writer
   // an element's renderer draws the body from the explanation's JSON when an embed passes one (options.draw); a console page uses the HTML

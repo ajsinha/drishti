@@ -46,6 +46,23 @@ public final class PackEnvironmentPostProcessor implements EnvironmentPostProces
                 return null;
             }
         });
+        // the named lakes, databases and brokers ([lake.<name>], [db.<name>], [broker.<name>], [connector.<name>], [pack.<name>]) read
+        // through the same settings: the settings files' entries, -D, the environment, a --setting or a test's property
+        com.ash.drishti.common.NamedResources.useView(k -> {
+            try {
+                return env.getProperty(k);
+            } catch (IllegalArgumentException e) {
+                return null;
+            }
+        }, () -> {
+            java.util.Set<String> keys = new java.util.LinkedHashSet<>();
+            for (org.springframework.core.env.PropertySource<?> ps : env.getPropertySources()) {
+                if (ps instanceof org.springframework.core.env.EnumerablePropertySource<?> e && !ps.getName().equals("configurationProperties")) {
+                    keys.addAll(Arrays.asList(e.getPropertyNames()));
+                }
+            }
+            return keys;
+        });
         if (System.getProperty(com.ash.drishti.api.DataDir.PROPERTY) == null) {           // plugins have no Spring environment: hand them the umbrella
             System.setProperty(com.ash.drishti.api.DataDir.PROPERTY, PackPaths.dataDir(env));
         }
@@ -69,7 +86,7 @@ public final class PackEnvironmentPostProcessor implements EnvironmentPostProces
             names.removeAll(notInEdition);
         }
         String connDir = env.getProperty("drishti.sources.connectors-dir", System.getenv().getOrDefault("DRISHTI_CONNECTORS_DIR", com.ash.drishti.api.Roots.config("connectors")));
-        ConnectorFiles files = new ConnectorFiles(java.nio.file.Path.of(connDir), java.nio.file.Path.of(PackPaths.dataDir(env), "connectors"));
+        ConnectorFiles files = new ConnectorFiles(com.ash.drishti.api.Roots.anchored(connDir), com.ash.drishti.api.Roots.anchored(PackPaths.dataDir(env)).resolve("connectors"));
         PackLoader loader = new PackLoader(files);
         // where every pack is: the one resolution (KERNEL_AND_MODULES.md section 18), installed for every reader of this process
         com.ash.drishti.api.resolution.ConfigResolution resolution = PackPaths.resolve(env);

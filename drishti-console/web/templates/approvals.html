@@ -21,14 +21,14 @@
 {% block title %}Approvals · {{ PRODUCT }}{% endblock %}
 {% block screen %}approvals{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_build-workbench.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_approvals.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_build-workbench.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_approvals.css?v={{ ASSET_V }}">{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
 <div class="ap-page" data-approvals data-box="{{ box }}" data-group="{{ group }}" data-kind="{{ kind }}" data-item-kind="{{ item_kind }}" data-item-id="{{ item_id }}"
      data-user="{{ me.user if me else '' }}">
   <div class="ap-head">
     <h1 class="ap-title">Approvals</h1>
-    <a class="ap-help" href="/help/context/approvals" title="Help: the Approvals queue" aria-label="Help: the Approvals queue"><i class="bi bi-question-circle" aria-hidden="true"></i></a>
+    <a class="ap-help" href="{{ BASE }}/help/context/approvals" title="Help: the Approvals queue" aria-label="Help: the Approvals queue"><i class="bi bi-question-circle" aria-hidden="true"></i></a>
     <p class="ap-meta" data-ap-meta aria-live="polite">loading…</p>
   </div>
   <nav class="ap-filters" aria-label="Which items">

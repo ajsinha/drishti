@@ -16,7 +16,7 @@
 {# drishti-designer, the designer kit (docs/architecture/ELEMENTS.md section 8.9): every designer and editor page includes this in its
    scripts block, before its own scripts (base.html already loads drishti-core, drishti-inputs and drishti-grid; the kit's outline is
    drishti-tree's, so drishti-tree comes first). #}
-<link rel="stylesheet" href="/static/elements/drishti-grid/drishti_grid.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/elements/drishti-tree/drishti_tree.css?v={{ ASSET_V }}">
-<link rel="stylesheet" href="/static/elements/drishti-designer/drishti_designer.css?v={{ ASSET_V }}">
-<script src="/static/elements/drishti-tree/drishti_tree.js?v={{ ASSET_V }}"></script>
-<script src="/static/elements/drishti-designer/drishti_designer.js?v={{ ASSET_V }}"></script>
+<link rel="stylesheet" href="{{ BASE }}/static/elements/drishti-grid/drishti_grid.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/elements/drishti-tree/drishti_tree.css?v={{ ASSET_V }}">
+<link rel="stylesheet" href="{{ BASE }}/static/elements/drishti-designer/drishti_designer.css?v={{ ASSET_V }}">
+<script src="{{ BASE }}/static/elements/drishti-tree/drishti_tree.js?v={{ ASSET_V }}"></script>
+<script src="{{ BASE }}/static/elements/drishti-designer/drishti_designer.js?v={{ ASSET_V }}"></script>

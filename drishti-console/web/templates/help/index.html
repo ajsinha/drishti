@@ -27,7 +27,7 @@
     <p class="hub-sub">{{ count }} page{{ '' if count == 1 else 's' }}{% if engines_hidden %} · the pages of engines not running here are left out{% endif %}
       · press <kbd>F1</kbd> anywhere for help on the screen you are on</p>
   </header>
-  <form class="help-search hub-search" action="/help/search" method="get" role="search">
+  <form class="help-search hub-search" action="{{ BASE }}/help/search" method="get" role="search">
     <i class="bi bi-search" aria-hidden="true"></i>
     <label class="visually-hidden" for="help-q">Search help</label>
     <input id="help-q" name="q" type="search" autocomplete="off" data-help-q placeholder="Search all {{ count }} pages of help…">
@@ -37,13 +37,13 @@
   <section class="hub-most" aria-labelledby="hub-most-h">
     <h2 id="hub-most-h" class="hub-h">Most used</h2>
     <div class="hub-chips" data-help-most>
-      {% for m in most %}<a class="hub-chip" href="/help/{{ m.slug }}"><span class="hub-chip-ic"><i class="bi bi-{{ m.icon }}" aria-hidden="true"></i></span>{{ m.label | product }}</a>{% endfor %}
+      {% for m in most %}<a class="hub-chip" href="{{ BASE }}/help/{{ m.slug }}"><span class="hub-chip-ic"><i class="bi bi-{{ m.icon }}" aria-hidden="true"></i></span>{{ m.label | product }}</a>{% endfor %}
     </div>
   </section>
   {% endif %}
   <div class="hub-tiles" data-help-tiles>
     {% for s in sections %}
-    <a class="hub-tile" href="/help/section/{{ s.id }}" data-section="{{ s.id }}">
+    <a class="hub-tile" href="{{ BASE }}/help/section/{{ s.id }}" data-section="{{ s.id }}">
       <span class="hub-tile-ic"><i class="bi bi-{{ s.icon }}" aria-hidden="true"></i></span>
       <span class="hub-tile-t">{{ s.name }}</span>
       <span class="hub-tile-d">{{ s.blurb | product }}</span>
@@ -51,8 +51,8 @@
     </a>
     {% endfor %}
   </div>
-  <p class="hub-links"><a href="/about"><i class="bi bi-info-circle" aria-hidden="true"></i> About {{ PRODUCT }}</a>
-    {% if competitive %}<a href="/help/competitive-analysis"><i class="bi bi-binoculars" aria-hidden="true"></i> Competitive analysis</a>{% endif %}</p>
+  <p class="hub-links"><a href="{{ BASE }}/about"><i class="bi bi-info-circle" aria-hidden="true"></i> About {{ PRODUCT }}</a>
+    {% if competitive %}<a href="{{ BASE }}/help/competitive-analysis"><i class="bi bi-binoculars" aria-hidden="true"></i> Competitive analysis</a>{% endif %}</p>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_help.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_help.js?v={{ ASSET_V }}"></script>{% endblock %}

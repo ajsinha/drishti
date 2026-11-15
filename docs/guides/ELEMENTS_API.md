@@ -534,6 +534,54 @@ The text tokens of a theme that read under 4.5:1 on one of its grounds (opaque c
 
 Returns `Array&lt;{text: string, ground: string, ratio: number}&gt;`.
 
+### drishti_base.js
+
+#### `basePath()`
+
+The base: '' (served at /) or '/drishti' (never a trailing slash). setBase() wins over the page's meta (read once: it is in the head, before every script); a worker reads globalThis.DRISHTI_BASE.
+
+Returns `string`.
+
+#### `setBase(base)`
+
+Names the base for the libraries where the page has no meta (a host application, a worker); null goes back to the page's.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `base` | `?string` | for example '/drishti' |
+
+Returns `void`.
+
+#### `url(path)`
+
+A root-absolute URL of the console under the base: '/api/x' -&gt; '/drishti/api/x'. Anything else (relative, '//host', 'https:', a URL that already carries the base, not a string) comes back as it is, so calling it twice is harmless.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `path` | `*` |  |
+
+Returns `*`.
+
+#### `routePath(pathname)`
+
+A path of this page (location.pathname) as the console's routes name it: '/drishti/bi/x' -&gt; '/bi/x'.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[pathname]` | `string` | default location.pathname |
+
+Returns `string`.
+
+#### `installBase(root)`
+
+In a page: window.drishti_url and window.drishti_route (and Drishti.url, Drishti.routePath, Drishti.basePath) for the console's classic scripts; under a base, a link or form the server drew from data (a menu's href, a guide's link) with a root-absolute URL is put under the base the moment it is used (pressed, focused, submitted), so nothing reaches the host's root.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `root` | `Window` |  |
+
+Returns `void`.
+
 ### drishti_api.js
 
 #### `AS_OF_HEADER`

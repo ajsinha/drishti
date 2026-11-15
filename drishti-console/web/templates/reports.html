@@ -15,7 +15,7 @@
 #}
 {% extends "base.html" %}
 {% block title %}Reports · {{ PRODUCT }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_dist.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_dist.css?v={{ ASSET_V }}">{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
@@ -26,10 +26,10 @@
     (or after the day's data lands), <b>rendered for each recipient</b> with their own masks and row rules. Press <b>Subscribe</b> on a report or a view to make one.</p>
   <nav class="rep-links" aria-label="Reports">
     <a href="#subscriptions"><i class="bi bi-envelope-paper" aria-hidden="true"></i> My subscriptions</a>
-    <a href="/alerts#measure"><i class="bi bi-bell" aria-hidden="true"></i> My alerts</a>
-    {% if bi_me and bi_me.enabled %}<a href="/bi/catalogue?kind=report"><i class="bi bi-bar-chart-line" aria-hidden="true"></i> BI reports and boards</a>{% endif %}
-    {% if me and me.is_admin %}<a href="/reports/all"><i class="bi bi-envelope-paper-heart" aria-hidden="true"></i> All subscriptions</a>
-    <a href="/alerts/all"><i class="bi bi-bell-fill" aria-hidden="true"></i> All alerts</a>{% endif %}
+    <a href="{{ BASE }}/alerts#measure"><i class="bi bi-bell" aria-hidden="true"></i> My alerts</a>
+    {% if bi_me and bi_me.enabled %}<a href="{{ BASE }}/bi/catalogue?kind=report"><i class="bi bi-bar-chart-line" aria-hidden="true"></i> BI reports and boards</a>{% endif %}
+    {% if me and me.is_admin %}<a href="{{ BASE }}/reports/all"><i class="bi bi-envelope-paper-heart" aria-hidden="true"></i> All subscriptions</a>
+    <a href="{{ BASE }}/alerts/all"><i class="bi bi-bell-fill" aria-hidden="true"></i> All alerts</a>{% endif %}
   </nav>
   <label class="rep-find"><span class="visually-hidden">Find a report</span>
     <input class="studio-in" type="search" placeholder="Find a report or subscription: name, what, when, to…" data-rep-filter autocomplete="off"></label>
@@ -37,12 +37,12 @@
   {% if msg %}<p class="adm-msg" role="status">{{ msg }}</p>{% endif %}
   {% if error %}<p class="pnl-err" role="alert">{{ error }}</p>{% endif %}
   <section class="pnl" id="subscriptions"><header class="pnl-h"><h3>Your reports and subscriptions</h3><span class="pnl-code">{{ rows | length }}</span>
-    {% if me and me.is_admin %}<a class="lnk dist-link" href="/reports/all">Everyone's subscriptions</a>{% endif %}</header><div class="pnl-b">
+    {% if me and me.is_admin %}<a class="lnk dist-link" href="{{ BASE }}/reports/all">Everyone's subscriptions</a>{% endif %}</header><div class="pnl-b">
     {% if rows %}<div class="tbl-wrap"><table class="tbl dist-tbl" data-plain>
       <thead><tr><th>Name</th><th>What</th><th>When</th><th>To</th><th>Next run (UTC)</th><th>Last run</th><th></th></tr></thead>
       <tbody>{% for r in rows %}{% set last = (r.runs or [None])[0] %}
         <tr data-row-kind="{{ r.kind }}" data-row-name="{{ r.name }}"><td>{{ r.name }} <span class="badge-kind">{{ 'subscription' if r.kind == 'subscription' else 'report' }}</span>{% if not r.enabled %} <span class="badge-kind">paused</span>{% endif %}</td>
-          <td><a class="lnk dist-link{{ ' mono' if r.kind == 'report' else '' }}" href="{{ r.href }}">{{ r.what }}</a>{% if r.note %}<div class="cmp-path">{{ r.note }}</div>{% endif %}</td>
+          <td><a class="lnk dist-link{{ ' mono' if r.kind == 'report' else '' }}" href="{{ r.href | u }}">{{ r.what }}</a>{% if r.note %}<div class="cmp-path">{{ r.note }}</div>{% endif %}</td>
           <td class="mono">{{ r.when }}</td>
           <td>{{ r.to }}{% if r.to_note %}<div class="cmp-path{{ ' mono' if r.kind == 'report' else '' }}">{{ r.to_note }}</div>{% endif %}</td>
           <td class="mono">{{ (r.next or ('after a data load' if 'after-load' in r.when else '—'))[:16] | replace('T', ' ') }}</td>
@@ -59,14 +59,14 @@
               </details>{% endif %}
             {% else %}—{% endif %}</td>
           <td class="rpt-actions">
-            <form method="post" action="{{ r.base }}/run"><button class="fk dist-act" type="submit">Run now</button></form>
-            {% if r.kind == 'subscription' %}<form method="post" action="{{ r.base }}/{{ 'resume' if not r.enabled else 'pause' }}"><button class="fk dist-act" type="submit">{{ 'Resume' if not r.enabled else 'Pause' }}</button></form>{% endif %}
-            <form method="post" action="{{ r.base }}/delete"><button class="fk dist-act" type="submit">Delete</button></form></td></tr>
+            <form method="post" action="{{ r.base | u }}/run"><button class="fk dist-act" type="submit">Run now</button></form>
+            {% if r.kind == 'subscription' %}<form method="post" action="{{ r.base | u }}/{{ 'resume' if not r.enabled else 'pause' }}"><button class="fk dist-act" type="submit">{{ 'Resume' if not r.enabled else 'Pause' }}</button></form>{% endif %}
+            <form method="post" action="{{ r.base | u }}/delete"><button class="fk dist-act" type="submit">Delete</button></form></td></tr>
       {% endfor %}</tbody></table></div>
     {% else %}<p class="text-muted-d">None yet. Make a scheduled report below, press <b>Schedule…</b> on a search, or press <b>Subscribe</b> on a BI report or a view.</p>{% endif %}
   </div></section>
   <section class="pnl"><header class="pnl-h"><h3>New report, or change one (same name)</h3></header><div class="pnl-b">
-    <form class="alert-form" method="post" action="/reports">
+    <form class="alert-form" method="post" action="{{ BASE }}/reports">
       <label>Name<input name="name" class="studio-in" value="{{ form.name or '' }}" required maxlength="64"></label>
       <label class="wide">Search<input name="query" class="studio-in mono" value="{{ form.query or '' }}" placeholder="TRD where mtm < -1000000" required></label>
       <label>When<input name="schedule" class="studio-in mono" value="{{ form.schedule or '' }}" list="rptWhen" required></label>
@@ -87,4 +87,4 @@
   </div></section>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_reports-find.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_reports-find.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script>{% endblock %}

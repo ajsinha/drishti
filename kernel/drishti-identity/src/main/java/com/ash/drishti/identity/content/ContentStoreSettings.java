@@ -57,7 +57,7 @@ public record ContentStoreSettings(String backend, Path fsRoot, String jdbcUrl, 
         }
         Map<String, Object> fs = map(m, "filesystem");
         String root = str(fs, "root", "", resolve);
-        Path fsRoot = (root.isBlank() ? dataDir.resolve("fstore") : Path.of(root)).toAbsolutePath().normalize();
+        Path fsRoot = root.isBlank() ? dataDir.resolve("fstore").toAbsolutePath().normalize() : com.ash.drishti.api.Roots.anchored(root);   // relative: under the install folder
         Map<String, Object> db = map(m, backend.equals("postgres") ? "postgres" : "sqlite");
         String url = str(db, "url", backend.equals("postgres") ? "" : "jdbc:sqlite:" + dataDir.resolve("identity").resolve("drishti.db").toAbsolutePath().normalize(), resolve);
         Map<String, Object> s3 = map(m, "s3");

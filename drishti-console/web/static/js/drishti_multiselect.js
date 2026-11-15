@@ -25,14 +25,14 @@
   var v = /[?&]v=([^&]+)/.exec(me.src), q = v ? "?v=" + v[1] : "";
   try {
     var l = document.createElement("link");
-    l.rel = "stylesheet"; l.href = base + "elements/drishti-inputs/drishti_inputs.css" + q;
+    l.rel = "stylesheet"; l.href = drishti_url(base + "elements/drishti-inputs/drishti_inputs.css" + q);
     document.head.appendChild(l);
   } catch (e) { /* no style sheet: the pickers still work */ }
   ["elements/drishti-core/drishti_core.js", "elements/drishti-inputs/drishti_inputs.js"].forEach(function (p) {
     if (p.indexOf("core") > 0 && D.elements && D.elements.core) { return; }
     try {
       var s = document.createElement("script");
-      s.src = base + p + q;
+      s.src = drishti_url(base + p + q);
       s.async = false;
       document.head.appendChild(s);
     } catch (e) { /* a host that allows only its own trusted script URLs: the controls keep plain fields */ }

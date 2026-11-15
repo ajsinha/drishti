@@ -23,7 +23,7 @@
    Where the bytes come from: Flight over HTTP when the server offers it (a POST of the ticket to its do-get address, an Arrow stream
    back; ArrowClient asks the server's capabilities once), else Arrow over HTTP (Accept: application/vnd.apache.arrow.stream), else JSON.
    The Drishti server answers Arrow over HTTP today; its Flight service is gRPC (docs/architecture/DATA_ARCHITECTURE.md), which a browser cannot speak. */
-import { staticUrl, loadScript } from '../../drishti-core/src/drishti_index.js';
+import { staticUrl, loadScript, url as drishtiUrl } from '../../drishti-core/src/drishti_index.js';
 
 /** The media type of an Arrow IPC stream. */
 export const ARROW_MEDIA = 'application/vnd.apache.arrow.stream';
@@ -294,7 +294,7 @@ export class ArrowClient {
    *   capabilitiesUrl: where the server says what it offers ({flightHttp: {doGet: url}}); flight: false never asks, an object names it
    */
   constructor(o) {
-    this.o = Object.assign({ capabilitiesUrl: '/api/v1/data/capabilities' }, o);
+    this.o = Object.assign({ capabilitiesUrl: drishtiUrl('/api/v1/data/capabilities') }, o);
     this.caps = null;
   }
 

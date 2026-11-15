@@ -56,7 +56,7 @@
     });
   }
   function get(path, params) {
-    return fetch("/api/exposure/" + path + "?" + q(params || {}), { credentials: "same-origin", headers: { Accept: "application/json" } }).then(json);
+    return fetch(drishti_url("/api/exposure/" + path + "?" + q(params || {})), { credentials: "same-origin", headers: { Accept: "application/json" } }).then(json);
   }
   function notice(t) { var n = $("[data-pd-notice]"); n.hidden = !t; n.textContent = t || ""; }
   function problem(e) {
@@ -166,7 +166,7 @@
     delete root.dataset.decision;
     $("[data-pd-source]").textContent = "checking…";
     var t0 = performance.now();
-    return fetch("/api/exposure/predeal" + (asOf ? "?asOf=" + encodeURIComponent(asOf) : ""), { method: "POST", credentials: "same-origin",
+    return fetch(drishti_url("/api/exposure/predeal" + (asOf ? "?asOf=" + encodeURIComponent(asOf) : "")), { method: "POST", credentials: "same-origin",
       headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify(body(v)) }).then(json).then(function (a) {
       S.answer = a;
       draw(a, (performance.now() - t0) / 1000);
@@ -181,7 +181,7 @@
     root.dataset.decision = a.decision;
     root.dataset.status = status || "none";
     $("[data-pd-word]").textContent = a.command || "PREDEAL";
-    history.replaceState(null, "", "/predeal?command=" + encodeURIComponent(a.command || "") + (asOf ? "&asOf=" + encodeURIComponent(asOf) : ""));
+    history.replaceState(null, "", drishti_url("/predeal?command=" + encodeURIComponent(a.command || "") + (asOf ? "&asOf=" + encodeURIComponent(asOf) : "")));
     $("[data-pd-source]").textContent = [a.businessDate ? "business date " + a.businessDate : "", a.runId ? "run " + a.runId : "",
       a.confidence ? "PFE " + pct(a.confidence).replace(".0%", "%") : "", a.checkId ? a.checkId + " (audited)" : "", secs ? window.Drishti.elements.core.formatNumber(secs, { maxDecimals: 1 }) + " s" : ""]
       .filter(Boolean).join(" · ");
@@ -202,7 +202,7 @@
     tiles(a, lim, base, w, inc);
     limits(lim);
     $("[data-pd-cli]").textContent = "drishti.py exposure predeal \"" + (a.command || "") + "\"";
-    $("[data-pd-exposure]").href = "/exposure?scope=" + encodeURIComponent("CPTY:" + (a.counterparty || ""));
+    $("[data-pd-exposure]").href = drishti_url("/exposure?scope=" + encodeURIComponent("CPTY:" + (a.counterparty || "")));
     $("[data-pd-explain]").setAttribute("data-explain", JSON.stringify(req("decision")));
     whatIf(a, lim, base, w, inc);
     fillForm(a);

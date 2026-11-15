@@ -128,8 +128,11 @@ def manifest(request: Request):
              {"src": "/static/img/icons/drishti_favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any"}]
     if g.get("APPLE_TOUCH_ICON") or g.get("FAVICON"):
         icons = [{"src": str(g.get("APPLE_TOUCH_ICON") or g.get("FAVICON")), "sizes": "any", "purpose": "any"}]
+    from core import base_path
+    base = base_path.of(request)                     # the console's URL sub-path behind a proxy (core/base_path.py)
+    icons = [dict(i, src=base_path.prefixed(base, i["src"])) for i in icons]
     body = {"name": name, "short_name": name, "description": " ".join(x for x in (tagline, str(g.get("COPYRIGHT") or "")) if x),
-            "start_url": "/t", "scope": "/", "display": "standalone", "background_color": "#0e1628", "theme_color": "#0e1628", "icons": icons}
+            "start_url": base + "/t", "scope": base + "/", "display": "standalone", "background_color": "#0e1628", "theme_color": "#0e1628", "icons": icons}
     return JSONResponse(body, media_type="application/manifest+json", headers={"Cache-Control": "no-cache"})
 
 

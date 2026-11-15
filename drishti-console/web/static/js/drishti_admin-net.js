@@ -38,7 +38,7 @@
     var h = { 'Accept': 'application/json' };
     if (body) { h['Content-Type'] = 'application/json'; }
     Object.keys(headers || {}).forEach(function (k) { h[k] = headers[k]; });
-    return fetch(url, { method: method, credentials: 'same-origin', headers: h, body: body ? JSON.stringify(body) : undefined }).then(function (r) {
+    return fetch(drishti_url(url), { method: method, credentials: 'same-origin', headers: h, body: body ? JSON.stringify(body) : undefined }).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (j) {
         if (!r.ok) { var e = new Error((j && j.detail) || ('the console said ' + r.status)); e.body = j; e.status = r.status; throw e; }
         return j;
@@ -57,7 +57,7 @@
       if (on && focus) { t.focus(); }
     });
     $$('[data-pane]').forEach(function (p) { p.hidden = p.getAttribute('data-pane') !== name; });
-    try { history.replaceState(null, '', '/admin/net?tab=' + encodeURIComponent(name)); } catch (e) { /* a sandboxed frame */ }
+    try { history.replaceState(null, '', drishti_url('/admin/net?tab=' + encodeURIComponent(name))); } catch (e) { /* a sandboxed frame */ }
     root.setAttribute('data-tab', name);
     if (NET.opened && NET.opened[name]) { NET.opened[name](); }
   }
@@ -119,7 +119,7 @@
   }
   function refresh() {
     if (document.hidden) { return Promise.resolve(); }
-    return api('GET', '/admin/net/api/members').then(render).catch(function () { /* the next poll tries again */ });
+    return api('GET', drishti_url('/admin/net/api/members')).then(render).catch(function () { /* the next poll tries again */ });
   }
   NET.refresh = refresh;
   setInterval(refresh, 5000);
@@ -128,7 +128,7 @@
     var b = e.target.closest('[data-remove]');
     if (b) {
       var id = b.getAttribute('data-remove');
-      api('DELETE', '/admin/net/api/members/' + encodeURIComponent(id)).then(function () { say('Removed ' + id + ' from the member table.'); return refresh(); })
+      api('DELETE', drishti_url('/admin/net/api/members/') + encodeURIComponent(id)).then(function () { say('Removed ' + id + ' from the member table.'); return refresh(); })
         .catch(function (err) { say(err.message, true); });
       return;
     }
@@ -137,7 +137,7 @@
       var action = a.getAttribute('data-action'), sure = a.getAttribute('data-confirm');
       if (sure && !window.confirm(sure)) { return; }
       a.disabled = true;
-      api('POST', '/admin/net/api/action/' + action).then(function () { window.location.reload(); })
+      api('POST', drishti_url('/admin/net/api/action/') + action).then(function () { window.location.reload(); })
         .catch(function (err) { a.disabled = false; say(err.message, true); });
     }
   });
@@ -147,7 +147,7 @@
       e.preventDefault();
       var url = $('[data-seed]').value.trim();
       if (!url) { say('Type the seed as host:port or an address.', true); return; }
-      api('POST', '/admin/net/api/seeds', { url: url }).then(function (r) {
+      api('POST', drishti_url('/admin/net/api/seeds'), { url: url }).then(function (r) {
         say('Saved ' + r.file + (r.answered ? '; it answered and its members are listed.' : '; it did not answer yet (it is tried every round).'));
         window.Drishti.elements.inputs.formOf(seedForm.querySelector('[data-di-form]')).setValue({ seed: '' });
         return refresh();
@@ -191,7 +191,7 @@
     return tr;
   }
   NET.opened.map = function () {
-    api('GET', '/admin/net/api/capabilities').then(function (c) {
+    api('GET', drishti_url('/admin/net/api/capabilities')).then(function (c) {
       var body = $('[data-map] tbody');
       body.textContent = '';
       (c.kinds || []).forEach(function (k) { body.appendChild(mapRow(k)); });
@@ -216,7 +216,7 @@
         if (v) { q.push(x[0] + '=' + encodeURIComponent(v)); }
       });
       if ($('[data-ex-dated]').checked) { q.push('dated=true'); }
-      api('GET', '/admin/net/api/explain?' + q.join('&')).then(function (r) {
+      api('GET', drishti_url('/admin/net/api/explain?') + q.join('&')).then(function (r) {
         var box = $('[data-explained]');
         box.hidden = false;
         var route = $('[data-ex-route]');
@@ -234,7 +234,7 @@
   }
   var trafficRefresh = $('[data-traffic-refresh]');
   if (trafficRefresh) {
-    trafficRefresh.addEventListener('click', function () { window.location.assign('/admin/net?tab=routing'); });
+    trafficRefresh.addEventListener('click', function () { window.location.assign(drishti_url('/admin/net?tab=routing')); });
   }
 
   // access --------------------------------------------------------------------------------------------------------
@@ -249,7 +249,7 @@
         if (nodes.length) { roles[i.getAttribute('data-role-nodes')] = nodes; }
       });
       var body = { roles: roles, tags: words($('[data-node-tags]').value), peerOnlyPacks: words($('[data-node-peer-only]').value) };
-      api('PUT', '/admin/net/api/access', body).then(function (r) {
+      api('PUT', drishti_url('/admin/net/api/access'), body).then(function (r) {
         say('Saved: applied on this node at once, and told to the others with its digest.');
         (r.byRole || []).forEach(function (x) {
           var row = $('[data-access] tr[data-role="' + x.role + '"] td:last-child');
@@ -285,7 +285,7 @@
   function open(id) {
     say('');
     diff.hidden = true;
-    return api('GET', '/admin/net/api/file?id=' + encodeURIComponent(id)).then(function (f) {
+    return api('GET', drishti_url('/admin/net/api/file?id=') + encodeURIComponent(id)).then(function (f) {
       current = { id: id, etag: f.exists ? f.etag : '', text: f.text || '' };
       editor.hidden = false;
       $('[data-editing]').textContent = id + (f.exists ? '' : ' (new)');
@@ -315,19 +315,19 @@
   historyList.addEventListener('click', function (e) {
     var b = e.target.closest('[data-rev]');
     if (!b || !current.id) { return; }
-    api('GET', '/admin/net/api/file/revision?id=' + encodeURIComponent(current.id) + '&rev=' + encodeURIComponent(b.getAttribute('data-rev')))
+    api('GET', drishti_url('/admin/net/api/file/revision?id=') + encodeURIComponent(current.id) + '&rev=' + encodeURIComponent(b.getAttribute('data-rev')))
       .then(function (r) { diff.hidden = false; diff.textContent = 'Changes from that version to the file now:\n\n' + lineDiff(r.text, current.text); })
       .catch(function (err) { say(err.message, true); });
   });
   $('[data-check]').addEventListener('click', function () {
-    api('POST', '/admin/net/api/file/check?id=' + encodeURIComponent(current.id), { text: yaml.value }).then(function (r) {
+    api('POST', drishti_url('/admin/net/api/file/check?id=') + encodeURIComponent(current.id), { text: yaml.value }).then(function (r) {
       showProblems(r.problems);
       say(r.ok ? current.id + ' would be taken' + ((r.problems || []).length ? ', with warnings.' : '.') : current.id + ' would be refused: see the problems.', !r.ok);
     }).catch(function (err) { say(err.message, true); });
   });
   $('[data-save]').addEventListener('click', function () {
     var id = current.id;
-    api('PUT', '/admin/net/api/file?id=' + encodeURIComponent(id), { text: yaml.value }, { 'If-Match': current.etag }).then(function (r) {
+    api('PUT', drishti_url('/admin/net/api/file?id=') + encodeURIComponent(id), { text: yaml.value }, { 'If-Match': current.etag }).then(function (r) {
       return open(id).then(function () {
         say('Saved ' + id + ' (version ' + r.etag + '). The server applied it.');
         showProblems(r.problems);
@@ -336,9 +336,9 @@
   });
   $('[data-delete]').addEventListener('click', function () {
     if (!current.id || !window.confirm('Delete ' + current.id + '? Its text is kept in the history; its settings go back to their defaults.')) { return; }
-    api('DELETE', '/admin/net/api/file?id=' + encodeURIComponent(current.id), null, { 'If-Match': current.etag }).then(function () {
+    api('DELETE', drishti_url('/admin/net/api/file?id=') + encodeURIComponent(current.id), null, { 'If-Match': current.etag }).then(function () {
       say('Deleted ' + current.id + '.');
-      window.location.assign('/admin/net?tab=files');
+      window.location.assign(drishti_url('/admin/net?tab=files'));
     }).catch(function (err) { say(err.message, true); });
   });
 })();

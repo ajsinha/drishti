@@ -204,8 +204,8 @@
     extra: [{ name: 'scope', control: { kind: 'select', values: ['BANK', 'DESK:RATES', 'DESK:FX'] }, desc: 'The number\'s scope.' }],
     mount: function (host, values, ctx) {
       const doc = host.ownerDocument, I = ctx.E.insight, h = ctx.h;
-      const answer = { workbook: { links: [{ label: 'VaR workbook (' + values.scope + ')', href: '/api/var/workbook?scope=' + encodeURIComponent(values.scope), note: 'live formulas, a Provenance sheet' }] } };
-      const win = { location: { assign: (u) => ctx.log('opened', { href: u }) }, Drishti: { Explain: { ask: () => Promise.resolve(answer) } } };
+      const answer = { workbook: { links: [{ label: 'VaR workbook (' + values.scope + ')', href: drishti_url('/api/var/workbook?scope=' + encodeURIComponent(values.scope)), note: 'live formulas, a Provenance sheet' }] } };
+      const win = { location: { assign: (u) => ctx.log('opened', { href: drishti_url(u) }) }, Drishti: { Explain: { ask: () => Promise.resolve(answer) } } };
       const rows = I.workbookLinks(answer).map((l) => h(doc, 'li', { text: l.label + ' · ' + l.href + (l.note ? ' · ' + l.note : '') }));
       const go = () => I.exportWorkbook({ kind: 'var', measure: 'var', scope: values.scope }, { win: win }).then((l) => ctx.log('exported', { label: l.label }));
       const el = h(doc, 'div', { cls: 'gx-fn' }, [h(doc, 'ul', {}, rows),

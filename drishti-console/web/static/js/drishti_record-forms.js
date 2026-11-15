@@ -74,7 +74,7 @@
   }
   function valueOf(f, n) { return f.type === 'bool' ? n.checked : f.type === 'entity' ? (n.getAttribute('data-value') || '') : n.value == null ? '' : n.value; }
   function api(method, path, body) {
-    return fetch('/api/drafts' + (path || ''), { method: method, credentials: 'same-origin',
+    return fetch(drishti_url('/api/drafts' + (path || '')), { method: method, credentials: 'same-origin',
       headers: body ? { 'Content-Type': 'application/json', Accept: 'application/json' } : { Accept: 'application/json' }, body: body ? JSON.stringify(body) : undefined })
       .then(function (r) {
         if (r.status === 204) { return null; }
@@ -113,7 +113,7 @@
     function set(v) {
       n.setAttribute('data-value', X.empty(v) ? '' : String(v));
       open.hidden = X.empty(v) || !f.entity;
-      if (!open.hidden) { open.href = '/v/' + encodeURIComponent(f.entity.kind) + '/' + encodeURIComponent(v); open.setAttribute('aria-label', 'Open ' + label(v)); }
+      if (!open.hidden) { open.href = drishti_url('/v/' + encodeURIComponent(f.entity.kind) + '/' + encodeURIComponent(v)); open.setAttribute('aria-label', 'Open ' + label(v)); }
     }
     function local(q) { q = q.toLowerCase(); return opts.filter(function (o) { return !q || o.value.toLowerCase().indexOf(q) >= 0 || o.label.toLowerCase().indexOf(q) >= 0; }); }
     function source(text, signal) {
@@ -124,7 +124,7 @@
       if (f.entity.pack) { p.set('pack', f.entity.pack); }
       if (f.entity.label) { p.set('label', f.entity.label); }
       if (f.entity.value) { p.set('value', f.entity.value); }
-      return fetch('/api/forms/lookup?' + p.toString(), { credentials: 'same-origin', headers: { Accept: 'application/json' }, signal: signal })
+      return fetch(drishti_url('/api/forms/lookup?' + p.toString()), { credentials: 'same-origin', headers: { Accept: 'application/json' }, signal: signal })
         .then(function (r) { return r.ok ? r.json() : null; })
         .catch(function (e) { if (e && e.name === 'AbortError') { throw e; } return null; })
         .then(function (j) {
@@ -848,7 +848,7 @@
   if (Object.keys(forms).length) {
     var q = new URLSearchParams({ kind: page.kind, id: page.id });
     if (page.sutra) { q.set('sutra', page.sutra); }
-    fetch('/api/drafts?' + q.toString(), { credentials: 'same-origin', headers: { Accept: 'application/json' } })
+    fetch(drishti_url('/api/drafts?' + q.toString()), { credentials: 'same-origin', headers: { Accept: 'application/json' } })
       .then(function (r) { return r.ok ? r.json() : []; })
       .then(function (list) { drafts = Array.isArray(list) ? list : []; Object.keys(forms).forEach(function (k) { bar(forms[k]); }); })
       .catch(function () {});
