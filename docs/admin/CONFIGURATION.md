@@ -153,6 +153,29 @@ A connector that failed to start appears in the `failedToStart` map, name to rea
 
 ---
 
+## The settings file: `-Ddrishti.settings.file`
+
+An optional file of `key=value` lines whose **full absolute path** is given on the command line, never discovered: no environment search, no
+home folder, no working folder. A relative path is refused and a missing file is an error with a clear message.
+
+```
+# drishti.ini
+[paths]                                   # a [section] line is accepted for grouping and ignored; keys are always full names
+drishti.data.dir=/srv/drishti/data
+```
+
+- Every entry becomes a system property **unless that property is already set**: an explicit `-D` beats the file, the file beats the defaults.
+- Blank lines and lines starting with `#` or `;` are comments. The first `=` splits key from value.
+- Java: `-Ddrishti.settings.file=/abs/drishti.ini` (the IDE's VM options, Maven's `-D`, surefire's `argLine`); the loader is
+  `com.ash.drishti.settingsfile.SettingsFile.applyFromSystemProperty()` (module `kernel/drishti-settingsfile`, reached through `drishti-common`).
+- Python tools: `python tools/drishti.py --settings /abs/drishti.ini ...` reads the same format (`tools/settingsfile.py`) and passes
+  `-Ddrishti.settings.file=<the same path>` to every JVM it starts.
+- One file per environment: commented examples for a developer machine, a test setup and production are in
+  `config/settings.examples/` (`dev.ini`, `test.ini`, `prod.ini`, placeholders such as `/path/to/drishti`). Copy one out and edit it; nothing
+  reads that folder automatically, and secrets stay in `secrets.env`, referenced by path.
+- Tests find the repository and their module through it too (`drishti.repo.root`, `drishti.module.root`); see
+  [the test harness](../architecture/TEST_HARNESS.md#running-tests-from-an-ide).
+
 ## Placeholders: `${NAME:default}`
 
 Many values in `application.yaml` are written `${NAME:default}`, for example `port: ${DRISHTI_PORT:18480}`.
