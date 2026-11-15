@@ -317,3 +317,49 @@ def test_the_guard_reads_scripts_as_meant(snippet, bad):
 ])
 def test_the_guard_reads_templates_as_meant(snippet, bad):
     assert bool(template_offenders(snippet)) is bad
+
+
+# ---- the scripts a page WITHOUT drishti-core loads (embeds, the client-side renderer, the live hub's SharedWorker) ----------------------------
+# drishti_url is defined by drishti-core (drishti_base.js installBase); a page that never loads drishti-core (a host page with an embed, the
+# renderer's library page) has no such global, and an unguarded call throws (the map that "did not load"). Each such script either declares
+# the local guard below (drishti-core's helper when present, else the URL as it is) or tests for the helper on the very line it calls it.
+LOCAL_GUARD = "function drishti_url(p) { var f = globalThis.drishti_url; return typeof f === 'function' && f !== drishti_url ? f(p) : p; }"
+_NAMES = re.compile(r"""['"]([a-z][a-z0-9-]*)['"]""")
+
+
+def _names_in(path: Path, start: str) -> set[str]:
+    """The quoted script names of the list that starts with ``start`` (up to its closing bracket) in a source file."""
+    src = path.read_text(encoding="utf-8")
+    i = src.index(start) + len(start)
+    j = min(k for k in (src.find("]", i), src.find("}", i), src.find(")\n", i)) if k > 0)
+    return set(_NAMES.findall(src[i:j]))
+
+
+def standalone_scripts() -> list[Path]:
+    """The console's scripts that a page without drishti-core may load: embed v1's enhancers, what the renderers load beside themselves
+    (2.x through /embed/v2/js/, the frozen 1.2.0, the Elements renderer's console behaviours), the maps and the live hub's SharedWorker."""
+    names = (_names_in(CONSOLE / "routes" / "embed_routes.py", "ENHANCERS = (")
+             | _names_in(CONSOLE / "web" / "embed" / "assets.js", "ENHANCERS = [")
+             | _names_in(CONSOLE / "routes" / "embed_v2_routes.py", "SCRIPTS = {")
+             | _names_in(STATIC / "render" / "1.2.0" / "m" / "console.js", "SCRIPTS = [")
+             | _names_in(STATIC / "elements" / "drishti-renderer" / "src" / "drishti_console.js", "SCRIPTS = [")
+             | {"geomap", "live-hub"})
+    files = [STATIC / "js" / f"drishti_{n}.js" for n in sorted(names) if not n.startswith("elements-")]
+    return [f for f in files if f.exists()]
+
+
+def test_scripts_loaded_without_drishti_core_guard_drishti_url():
+    files = standalone_scripts()
+    assert len(files) >= 20 and STATIC / "js" / "drishti_geomap.js" in files and STATIC / "js" / "drishti_bi-lib.js" in files
+    offenders = []
+    for f in files:
+        src = f.read_text(encoding="utf-8")
+        if LOCAL_GUARD in src:
+            continue
+        bare = re.sub(r"/\*.*?\*/", lambda m: "\n" * m.group(0).count("\n"), src, flags=re.S)    # comments keep their lines
+        for n, line in enumerate(bare.splitlines(), 1):
+            code = line.split("//")[0]
+            if re.search(r"\bdrishti_url\s*\(", code) and "typeof" not in code:
+                offenders.append(f"{f.relative_to(ROOT)}:{n}  {line.strip()[:100]}")
+    assert not offenders, ("a script loaded on pages without drishti-core (embeds, the renderer) calls drishti_url unguarded; add inside its "
+                           "IIFE:\n  " + LOCAL_GUARD + "\n" + "\n".join(offenders))

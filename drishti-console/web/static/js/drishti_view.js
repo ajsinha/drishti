@@ -18,6 +18,7 @@
    breadcrumbs (per browser tab) and the market clock. */
 (function () {
   'use strict';
+  function drishti_url(p) { var f = globalThis.drishti_url; return typeof f === 'function' && f !== drishti_url ? f(p) : p; }   // drishti-core's base helper when the page has it; a page without it (the renderer, an embed) keeps the URL as it is
   var me = document.currentScript, auto = !(me && me.hasAttribute('data-manual'));   // data-manual: a root-scoped caller (the element) runs init itself
   var view = auto ? document.querySelector('[data-view]') : null;
 

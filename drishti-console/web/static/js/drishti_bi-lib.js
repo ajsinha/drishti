@@ -19,6 +19,7 @@
    few helpers about report models. Exposes window.drishtiBi. */
 (function () {
   'use strict';
+  function drishti_url(p) { var f = globalThis.drishti_url; return typeof f === 'function' && f !== drishti_url ? f(p) : p; }   // drishti-core's base helper when the page has it; a page without it (the renderer, an embed) keeps the URL as it is
   const B = (window.drishtiBi = window.drishtiBi || {});
 
   /** h('div', {class: 'x', text: 'y', 'data-k': 1}, child, [children], 'text') */

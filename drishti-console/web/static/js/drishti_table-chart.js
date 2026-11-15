@@ -25,6 +25,7 @@
    chart ← → points, ↑ ↓ series, Home/End. Settings are kept per table for the tab's life (saving them is a later step). */
 (function () {
   'use strict';
+  function drishti_url(p) { var f = globalThis.drishti_url; return typeof f === 'function' && f !== drishti_url ? f(p) : p; }   // drishti-core's base helper when the page has it; a page without it (the renderer, an embed) keeps the URL as it is
   function E() { return window.Drishti.tableChartEngine; }
   function PE() { return window.Drishti.pivotEngine || (window.drishtiModules || {}).pivotEngine; }
   var MEMO = {};                                      // identity -> the settings a reader chose, for the tab's life
