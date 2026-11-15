@@ -50,12 +50,12 @@ public final class RabbitMqSourcePlugin extends MessageStateSource {
     private volatile Connection connection;
     private Thread loop;
     private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(RabbitMqSourcePlugin.class);
-    private volatile com.ash.drishti.messaging.BrokerWaiting.Watch watch;
+    private volatile com.ash.drishti.api.BrokerWaiting.Watch watch;
 
     /** The broker's endpoint, for the look before a connection and the words of health. */
     private String where() {
         String uri = context.setting("uri", "amqp://guest:guest@localhost:5672/%2f");
-        java.util.List<String> e = com.ash.drishti.messaging.BrokerWaiting.endpoints(uri);
+        java.util.List<String> e = com.ash.drishti.api.BrokerWaiting.endpoints(uri);
         return e.isEmpty() ? redact(uri) : String.join(",", e);
     }
 
@@ -70,8 +70,8 @@ public final class RabbitMqSourcePlugin extends MessageStateSource {
             throw new com.ash.drishti.api.PluginNotConfigured("rabbitmq needs settings.queues");   // not a fault: the connector is idle
         }
         tls = tlsMaterial();                         // fails the start at once, with the file and the reason, when TLS is misconfigured
-        watch = new com.ash.drishti.messaging.BrokerWaiting.Watch(sourceName, LOG);
-        health.set(com.ash.drishti.messaging.BrokerWaiting.message(where()));   // until the supervisor has looked
+        watch = new com.ash.drishti.api.BrokerWaiting.Watch(sourceName, LOG::info);
+        health.set(com.ash.drishti.api.BrokerWaiting.message(where()));   // until the supervisor has looked
         loop = Thread.ofVirtual().name("drishti-rabbitmq-" + sourceName).start(this::firstConnection);
     }
 
@@ -127,9 +127,9 @@ public final class RabbitMqSourcePlugin extends MessageStateSource {
     /** Until the first connection succeeds; after that the client's automatic recovery takes over. */
     private void firstConnection() {
         long backoff = 1_000;
-        java.util.List<String> endpoints = com.ash.drishti.messaging.BrokerWaiting.endpoints(context.setting("uri", "amqp://guest:guest@localhost:5672/%2f"));
+        java.util.List<String> endpoints = com.ash.drishti.api.BrokerWaiting.endpoints(context.setting("uri", "amqp://guest:guest@localhost:5672/%2f"));
         while (running) {
-            if (com.ash.drishti.messaging.BrokerWaiting.reachable(endpoints, 1_000)) {
+            if (com.ash.drishti.api.BrokerWaiting.reachable(endpoints, 1_000)) {
                 try {
                     open();
                     watch.connected(where());
@@ -139,13 +139,13 @@ public final class RabbitMqSourcePlugin extends MessageStateSource {
                     closeConnection();
                 }
             } else {
-                health.set(com.ash.drishti.messaging.BrokerWaiting.message(where()));   // calm: the snapshot is served, live updates wait
+                health.set(com.ash.drishti.api.BrokerWaiting.message(where()));   // calm: the snapshot is served, live updates wait
                 watch.waiting(where());
             }
             if (!pause(backoff)) {
                 return;
             }
-            backoff = com.ash.drishti.messaging.BrokerWaiting.next(backoff);
+            backoff = com.ash.drishti.api.BrokerWaiting.next(backoff);
         }
     }
 
@@ -199,7 +199,7 @@ public final class RabbitMqSourcePlugin extends MessageStateSource {
     public String health() {
         Connection c = connection;
         if (c != null && !c.isOpen()) {
-            return com.ash.drishti.messaging.BrokerWaiting.lost(where());
+            return com.ash.drishti.api.BrokerWaiting.lost(where());
         }
         return super.health();
     }

@@ -171,7 +171,8 @@ class ActiveMqTlsTest extends MessageSourceContract {
                 if (h.startsWith("UP")) {
                     return h;
                 }
-                if (!h.startsWith("DOWN: connecting") && !h.startsWith("DOWN: not started")) {
+                // the passing states (looking for the broker, connecting, reconnecting) are not a reason: WAITING
+                if (!com.ash.drishti.api.BrokerWaiting.is(h) && !h.startsWith("DOWN: not started")) {
                     seen.add(h);
                 }
                 Thread.sleep(100);

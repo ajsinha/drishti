@@ -59,11 +59,8 @@ class OneTablePerSystemTest {
     Path tmp;
 
     private static Path repo() {
-        Path p = Path.of("").toAbsolutePath();
-        while (p != null && !Files.isDirectory(p.resolve("modules/source-swapone"))) {
-            p = p.getParent();
-        }
-        assertThat(p).as("the repository root").isNotNull();
+        Path p = Path.of(com.ash.drishti.testroots.TestRoots.repo());   // the repository, absolute, never the working folder
+        assertThat(p.resolve("modules/source-swapone")).as("the repository root").isDirectory();
         return p;
     }
 

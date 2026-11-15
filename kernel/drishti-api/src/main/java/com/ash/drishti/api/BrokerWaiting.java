@@ -13,22 +13,23 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.messaging;
+package com.ash.drishti.api;
 
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.slf4j.Logger;
 
 /**
  * The calm state of a stream connector whose broker is not there. A connector that is enabled but cannot reach its broker is not
  * failing: the lake snapshot is served, and only the live updates are paused. Its health text starts with {@code WAITING}
  * ({@link #is}), which health, readiness and the Admin pages read as OK; it logs one line when it starts waiting and one when it
  * connects ({@link Watch}); and it looks at the broker's port ({@link #reachable}) before it opens a client, so the client's own
- * retry noise never starts. A broker that appears later is found by the next look, with no restart.
+ * retry noise never starts. A broker that appears later is found by the next look, with no restart. Part of the plugin API
+ * (beside {@link SourcePlugin}): the kernel's stream connectors and a module's own stream (banking's var-pv-stream) share it.
  */
 public final class BrokerWaiting {
 
@@ -96,10 +97,11 @@ public final class BrokerWaiting {
     /** One connector's transitions: one INFO line when it starts waiting, one when it connects, nothing in between. */
     public static final class Watch {
         private final String name;
-        private final Logger log;
+        private final Consumer<String> log;
         private Boolean up;                // null until the first look
 
-        public Watch(String name, Logger log) {
+        /** {@code log}: where the two lines go, e.g. {@code LOG::info} of the connector's own logger. */
+        public Watch(String name, Consumer<String> log) {
             this.name = name;
             this.log = log;
         }
@@ -108,7 +110,7 @@ public final class BrokerWaiting {
         public synchronized void waiting(String endpoint) {
             if (up == null || up) {
                 up = false;
-                log.info("{}: broker not reachable at {} - live updates paused; retrying until it is", name, endpoint);
+                log.accept(name + ": broker not reachable at " + endpoint + " - live updates paused; retrying until it is");
             }
         }
 
@@ -116,7 +118,7 @@ public final class BrokerWaiting {
         public synchronized void connected(String endpoint) {
             if (up == null || !up) {
                 up = true;
-                log.info("{}: connected to the broker at {} - live updates resumed", name, endpoint);
+                log.accept(name + ": connected to the broker at " + endpoint + " - live updates resumed");
             }
         }
     }

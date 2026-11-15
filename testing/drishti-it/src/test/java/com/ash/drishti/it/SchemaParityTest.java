@@ -38,7 +38,7 @@ import org.junit.jupiter.api.Test;
  */
 class SchemaParityTest {
 
-    private static final Path DB = Path.of(TestRoots.module(), "kernel", "drishti-identity", "src", "main", "resources", "db");
+    private static final Path DB = Path.of(TestRoots.repo(), "kernel", "drishti-identity", "src", "main", "resources", "db");
     private static final Pattern TABLE = Pattern.compile("CREATE TABLE IF NOT EXISTS (\\w+) \\((.*?)\\);", Pattern.DOTALL);
     /** Columns the SQLite file leaves to IdentityDatabase, which adds them in code (SQLite has no ADD COLUMN IF NOT EXISTS), and why. */
     private static final Map<String, String> SQLITE_ADDS_IN_CODE = Map.of(

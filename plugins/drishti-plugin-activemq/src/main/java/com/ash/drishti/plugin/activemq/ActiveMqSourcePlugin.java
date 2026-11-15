@@ -59,11 +59,11 @@ public final class ActiveMqSourcePlugin extends MessageStateSource {
     private volatile Connection connection;
     private Thread loop;
     private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(ActiveMqSourcePlugin.class);
-    private volatile com.ash.drishti.messaging.BrokerWaiting.Watch watch;
+    private volatile com.ash.drishti.api.BrokerWaiting.Watch watch;
 
     /** The broker's endpoints, for the look before a connection and the words of health. */
     private String where() {
-        List<String> e = com.ash.drishti.messaging.BrokerWaiting.endpoints(brokerUrl());
+        List<String> e = com.ash.drishti.api.BrokerWaiting.endpoints(brokerUrl());
         return e.isEmpty() ? brokerUrl() : String.join(",", e);
     }
 
@@ -78,8 +78,8 @@ public final class ActiveMqSourcePlugin extends MessageStateSource {
             throw new com.ash.drishti.api.PluginNotConfigured("activemq needs settings.destinations");   // not a fault: the connector is idle
         }
         tls = tlsMaterial();                         // fails the start at once, with the file and the reason, when TLS is misconfigured
-        watch = new com.ash.drishti.messaging.BrokerWaiting.Watch(sourceName, LOG);
-        health.set(com.ash.drishti.messaging.BrokerWaiting.message(where()));   // until the supervisor has looked
+        watch = new com.ash.drishti.api.BrokerWaiting.Watch(sourceName, LOG::info);
+        health.set(com.ash.drishti.api.BrokerWaiting.message(where()));   // until the supervisor has looked
         loop = Thread.ofVirtual().name("drishti-activemq-" + sourceName).start(this::supervise);
     }
 
@@ -125,15 +125,15 @@ public final class ActiveMqSourcePlugin extends MessageStateSource {
 
     private void supervise() {
         long backoff = 1_000;
-        List<String> endpoints = com.ash.drishti.messaging.BrokerWaiting.endpoints(brokerUrl());
+        List<String> endpoints = com.ash.drishti.api.BrokerWaiting.endpoints(brokerUrl());
         while (running) {
-            if (!com.ash.drishti.messaging.BrokerWaiting.reachable(endpoints, 1_000)) {
-                health.set(com.ash.drishti.messaging.BrokerWaiting.message(where()));   // calm: the snapshot is served, live updates wait
+            if (!com.ash.drishti.api.BrokerWaiting.reachable(endpoints, 1_000)) {
+                health.set(com.ash.drishti.api.BrokerWaiting.message(where()));   // calm: the snapshot is served, live updates wait
                 watch.waiting(where());
                 if (!pause(backoff)) {
                     return;
                 }
-                backoff = com.ash.drishti.messaging.BrokerWaiting.next(backoff);
+                backoff = com.ash.drishti.api.BrokerWaiting.next(backoff);
                 continue;
             }
             long started = System.nanoTime();
@@ -154,6 +154,17 @@ public final class ActiveMqSourcePlugin extends MessageStateSource {
             }
             backoff = Math.min(30_000, backoff * 2);
         }
+    }
+
+    /** True when the broker answered and refused the connection (a TLS failure anywhere in the chain), not when it is absent. */
+    static boolean refused(Throwable e) {
+        for (Throwable c = e; c != null; c = c.getCause()) {
+            if (c instanceof javax.net.ssl.SSLException || c instanceof java.security.cert.CertificateException
+                    || c instanceof java.security.GeneralSecurityException) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** The chain of causes, as {@code ; caused by SSLHandshakeException: PKIX path building failed ...}: a TLS failure is in there. */
@@ -184,13 +195,17 @@ public final class ActiveMqSourcePlugin extends MessageStateSource {
 
                 @Override
                 public void onException(java.io.IOException error) {
-                    health.set(com.ash.drishti.messaging.BrokerWaiting.lost(where()));
+                    if (refused(error)) {         // the broker is there and refuses us (TLS: an untrusted CA, a wrong host name, no client
+                        health.set("DOWN: " + error.getClass().getSimpleName() + ": " + error.getMessage() + causes(error) + " (reconnecting)");
+                        return;                   // certificate): a fault to fix, never the calm wait for an absent broker
+                    }
+                    health.set(com.ash.drishti.api.BrokerWaiting.lost(where()));
                     watch.waiting(where());
                 }
 
                 @Override
                 public void transportInterupted() {
-                    health.set(com.ash.drishti.messaging.BrokerWaiting.lost(where()));
+                    health.set(com.ash.drishti.api.BrokerWaiting.lost(where()));
                     watch.waiting(where());
                 }
 

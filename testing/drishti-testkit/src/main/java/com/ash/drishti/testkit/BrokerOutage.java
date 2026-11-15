@@ -54,13 +54,14 @@ public abstract class BrokerOutage {
         SourcePlugin p = start(port, Files.createTempDirectory("drishti-outage"));
         try {
             Thread.sleep(1000);
-            assertThat(p.health()).startsWith("DOWN");                               // up, waiting for its broker
+            // up and calm while its broker is absent: WAITING, not a failure (com.ash.drishti.api.BrokerWaiting)
+            assertThat(com.ash.drishti.api.BrokerWaiting.is(p.health())).as(p.health()).isTrue();
             try (AutoCloseable b = broker(port)) {
                 MessageSourceContract.eventually(() -> p.health().startsWith("UP"), 90);
                 send(port, MessageSourceContract.TRADES, "{\"tradeId\":\"O-1\",\"mtm\":1}");
                 MessageSourceContract.eventually(() -> has(p, "O-1"), 30);
             }
-            MessageSourceContract.eventually(() -> p.health().startsWith("DOWN"), 60);   // the broker died
+            MessageSourceContract.eventually(() -> com.ash.drishti.api.BrokerWaiting.is(p.health()), 60);   // the broker died: waiting again
             try (AutoCloseable b = broker(port)) {
                 send(port, MessageSourceContract.TRADES, "{\"tradeId\":\"O-2\",\"mtm\":2}");
                 MessageSourceContract.eventually(() -> has(p, "O-2"), 90);            // reconnected by itself
