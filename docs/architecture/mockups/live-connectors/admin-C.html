@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  A screen mock-up (live-connectors/admin-C.html), self-contained: system fonts, everything inline, nothing from a CDN.
+  Dark theme by default; open it with #light for the light theme. Its design is docs/architecture/LIVE_CONNECTORS_DESIGN.md
+  (section 9). Static: every figure is an example. Made only of Drishti Elements patterns (page header, grid, pills, switch,
+  drawer, banner, KPI tiles, the grid's live mark); it proposes no new component.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin → Connectors: option C, each connector with its live companion</title>
+<script>if(location.hash==='#light')document.documentElement.classList.add('light');</script>
+<style>
+:root{
+  --bg:#0e1628; --bg2:#121c33; --panel:#16213a; --panel2:#1b2744; --line:#26345a; --line2:#1f2b49;
+  --ink:#e7ecf5; --muted:#93a0b8; --amber:#e8a33a; --link:#7fb2ff; --ok:#5fd39a; --warn:#f2c14e; --bad:#ff7a7a;
+  --hl:rgba(127,178,255,.10); --onacc:#14100a;
+  --ok-t:rgba(95,211,154,.14); --warn-t:rgba(242,193,78,.16); --bad-t:rgba(255,122,122,.15);
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  color-scheme:dark;
+}
+html.light{
+  --bg:#f7f5f0; --bg2:#efebe3; --panel:#ffffff; --panel2:#faf8f4; --line:#e2dcd0; --line2:#ece7dd;
+  --ink:#172440; --muted:#55607a; --amber:#985b0a; --link:#1f5fc4; --ok:#1b784c; --warn:#8a6100; --bad:#b42323;
+  --hl:rgba(31,95,196,.07); --onacc:#ffffff;
+  --ok-t:rgba(27,120,76,.10); --warn-t:rgba(138,97,0,.10); --bad-t:rgba(180,35,35,.09);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px}
+a{color:var(--link);text-decoration:none}
+.page{max-width:1568px;margin:0 auto;padding:18px 16px 28px;display:flex;flex-direction:column;gap:12px}
+.intro h1{font-size:20px;margin:0 0 4px}
+.intro p{margin:0;color:var(--muted);max-width:120ch;line-height:1.5;font-size:13.5px}
+.rec{display:inline-block;margin-left:10px;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;background:var(--ok-t);color:var(--ok);border:1px solid var(--ok);vertical-align:middle}
+.alt{display:inline-block;margin-left:10px;padding:2px 10px;border-radius:12px;font-size:12px;color:var(--muted);border:1px solid var(--line);vertical-align:middle}
+.bar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:8px 14px;border:1px solid var(--line);border-radius:8px;background:var(--bg2)}
+.brand{font-weight:700;letter-spacing:.12em;color:var(--amber)}
+.cmd{flex:1 1 260px;max-width:560px;white-space:nowrap;overflow:hidden;height:32px;display:flex;align-items:center;padding:0 14px;border:1px solid var(--amber);border-radius:16px;font-family:var(--mono);color:var(--amber);font-size:13px}
+.menus{display:flex;flex-wrap:wrap;gap:4px;margin-left:auto;font-size:13px}
+.menus span{padding:5px 10px;border-radius:6px;color:var(--muted)} .menus span.on{background:var(--panel2);color:var(--ink)}
+.head{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.head h2{margin:0;font-size:17px} .meta{color:var(--muted);font-size:12.5px}
+.crumb{font-family:var(--mono);color:var(--link);font-size:12.5px}
+.sp{margin-left:auto}
+.btn{font-size:12.5px;padding:5px 12px;border:1px solid var(--line);border-radius:6px;color:var(--ink);background:var(--panel2);white-space:nowrap;display:inline-block}
+.btn.p{background:var(--amber);border-color:var(--amber);color:var(--onacc);font-weight:600}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.seg span{padding:4px 11px;font-size:12.5px;color:var(--muted)} .seg span.on{background:var(--panel2);color:var(--ink);font-weight:600}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;min-width:0}
+.card h3{margin:0 0 8px;font-size:13.5px} .card h3 span{color:var(--muted);font-weight:400;font-size:12px;margin-left:6px}
+.scroll{overflow-x:auto}
+table{border-collapse:separate;border-spacing:0;font-size:12.5px;font-variant-numeric:tabular-nums;width:100%}
+th,td{padding:5px 8px;white-space:nowrap;text-align:right;border-bottom:1px solid var(--line2)}
+td{font-family:var(--mono)}
+th{background:var(--panel2);color:var(--muted);font-weight:500;font-size:12px}
+th.l,td.l{text-align:left;font-family:var(--sans)}
+tr.sel td{background:var(--hl)}
+tr.grp td{background:var(--bg2);font-family:var(--sans);font-weight:600;text-align:left;color:var(--muted)}
+tr.new td{background:var(--ok-t)} tr.amd td{background:var(--warn-t)}
+.muted{color:var(--muted)} .ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)}
+.pill{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11.5px;font-family:var(--sans);font-weight:600;white-space:nowrap}
+.pill.g{background:var(--ok-t);color:var(--ok)} .pill.a{background:var(--warn-t);color:var(--warn)} .pill.r{background:var(--bad-t);color:var(--bad)} .pill.n{background:var(--panel2);color:var(--muted)}
+.sw{display:inline-block;width:30px;height:16px;border-radius:8px;background:var(--line);position:relative;vertical-align:middle}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:var(--muted)}
+.sw.on{background:var(--ok)} .sw.on::after{left:16px;background:var(--onacc)}
+.kpis{display:flex;flex-wrap:wrap;gap:10px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 14px;min-width:140px;flex:1 1 140px}
+.kpi .k{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.kpi .v{font-family:var(--mono);font-size:20px;margin-top:2px} .kpi .s{font-size:12px;color:var(--muted);margin-top:2px}
+.kpi.ea{border-left:3px solid var(--warn)} .kpi.eg{border-left:3px solid var(--ok)}
+.note{font-size:12px;color:var(--muted);line-height:1.5}
+.banner{padding:7px 12px;border-radius:6px;font-size:12.5px;background:var(--warn-t);color:var(--warn);border:1px solid var(--warn)}
+.split{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:12px}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media(max-width:1000px){.split,.two{grid-template-columns:minmax(0,1fr)}}
+dl{display:grid;grid-template-columns:130px minmax(0,1fr);gap:4px 10px;margin:0;font-size:12.5px}
+dt{color:var(--muted)} dd{margin:0}
+.mono{font-family:var(--mono)}
+.flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px}
+.flow .st{padding:6px 10px;border:1px solid var(--line);border-radius:6px;background:var(--panel2);line-height:1.35}
+.flow .st b{display:block;font-size:12.5px} .flow .ar{color:var(--muted)}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--ok);vertical-align:middle}
+.dot.a{background:var(--warn)} .dot.n{background:var(--muted)} .dot.s{width:6px;height:6px;margin-right:4px}
+.strip{display:flex;flex-wrap:wrap;align-items:stretch;border:1px solid var(--line);border-radius:6px;overflow:hidden;font-size:12px}
+.strip div{padding:5px 10px;border-right:1px solid var(--line);line-height:1.35} .strip div:last-child{border-right:0}
+.strip .b{background:var(--panel2);flex:0 0 auto} .strip .c{flex:1 1 200px;background:var(--ok-t)} .strip .c.a{background:var(--warn-t)} .strip .c.n{background:var(--panel)}
+.strip small{display:block;color:var(--muted)}
+.pop{border:1px solid var(--line);border-radius:8px;background:var(--panel2);padding:10px 12px;max-width:420px;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+.sit{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:0 0 6px}
+footer{font-size:12px;color:var(--muted);line-height:1.5;border-top:1px solid var(--line);padding-top:8px}
+</style>
+</head>
+<body>
+<div class="page">
+<div class="intro"><h1>Admin, option C: connector and companion as a pair <span class="alt">alternative</span></h1><p>Admin → Connectors shows each data connector beside its live companion, with the path a message takes drawn out: broker, checks, live state (or window), over the lake, the next load. Closest to "every data connector can have a live connector" and best for diagnosis; but it is per connector, so trades from six systems are six cards.</p></div>
+<div class="bar"><span class="brand">DRISHTI</span><span class="cmd">ADMIN CONNECTORS &lt;GO&gt;</span>
+<div class="menus"><span>Modules</span><span>Packs</span><span class="on">Connectors</span><span>Data bindings</span><span>Live feeds</span><span>Engines</span><span>Edits</span><span>Health</span></div></div>
+<div class="head"><span class="crumb">Admin › Connectors</span><h2>Connectors</h2><span class="meta">each data connector with its live companion</span>
+<span class="sp seg"><span>List</span><span class="on">Pairs</span></span><span class="btn">Filter…</span></div>
+<div class="two"><div class="card"><h3>trade-murex <span>delta · trade</span></h3>
+<div class="two"><div><p class="sit">The record (lake)</p><dl><dt>Connector</dt><dd class="mono">trade-murex</dd><dt>State</dt><dd><span class="pill g">UP</span> newest date 13 Nov</dd><dt>Kinds</dt><dd>trade</dd></dl></div>
+<div><p class="sit">Its live companion</p><dl><dt>Connector</dt><dd class="mono">trade-murex-live</dd><dt>Transport</dt><dd>Kafka · drishti.trading.murex.trades</dd><dt>State</dt><dd><span class="pill g">LIVE</span> &nbsp; <span class="sw on"></span></dd></dl></div></div>
+<div style="margin-top:10px"><div class="flow">
+<div class="st"><b>Broker</b>kafka-1.bank:9093<br><span class="ok">connected</span></div><span class="ar">→</span>
+<div class="st"><b>Checks</b>contract trade 1.1<br>2 rejected today</div><span class="ar">→</span>
+<div class="st"><b>Live state</b>6,871 rows<br>newest wins by TRADE_VERSION</div><span class="ar">→</span>
+<div class="st"><b>Over the lake</b>base 13 Nov close<br>merged by TRADE_ID</div><span class="ar">→</span>
+<div class="st"><b>Next load</b>absorbs by version<br>last: 07:02, 5,112 absorbed</div></div></div></div><div class="card"><h3>trade-calypso <span>delta · trade</span></h3>
+<div class="two"><div><p class="sit">The record (lake)</p><dl><dt>Connector</dt><dd class="mono">trade-calypso</dd><dt>State</dt><dd><span class="pill g">UP</span> newest date 13 Nov</dd><dt>Kinds</dt><dd>trade</dd></dl></div>
+<div><p class="sit">Its live companion</p><dl><dt>Connector</dt><dd class="mono">trade-calypso-live</dd><dt>Transport</dt><dd>Kafka · drishti.trading.calypso.trades</dd><dt>State</dt><dd><span class="pill a">WAITING</span> &nbsp; <span class="sw on"></span></dd></dl></div></div>
+<div style="margin-top:10px"><div class="flow"><div class="st"><b>Broker</b>kafka-2.bank:9093<br><span class="warn">not reachable</span></div><span class="ar">→</span>
+<div class="st"><b>Checks</b>waiting</div><span class="ar">→</span><div class="st"><b>Live state</b>0 rows</div><span class="ar">→</span>
+<div class="st"><b>Over the lake</b>base 13 Nov close<br>snapshot only</div><span class="ar">→</span><div class="st"><b>Next load</b>nothing to absorb</div></div></div><div class="banner" style="margin-top:10px">Live updates paused: the broker is not reachable. Nothing is wrong with the data shown; it is the lake's.</div></div><div class="card"><h3>risk-store <span>iceberg · scenario-pv, pnl-vector + 25</span></h3>
+<div class="two"><div><p class="sit">The record (lake)</p><dl><dt>Connector</dt><dd class="mono">risk-store</dd><dt>State</dt><dd><span class="pill g">UP</span> newest date 13 Nov</dd><dt>Kinds</dt><dd>scenario-pv, pnl-vector + 25</dd></dl></div>
+<div><p class="sit">Its live companion</p><dl><dt>Connector</dt><dd class="mono">risk-store-live</dd><dt>Transport</dt><dd>Kafka · drishti.risk.pv-updates</dd><dt>State</dt><dd><span class="pill g">LIVE · lands every 5 m</span> &nbsp; <span class="sw on"></span></dd></dl></div></div>
+<div style="margin-top:10px"><div class="flow"><div class="st"><b>Broker</b>kafka-1.bank:9093<br><span class="ok">connected</span></div><span class="ar">→</span>
+<div class="st"><b>Checks</b>contract scenario-pv 1.1<br>1 rejected (other scenario set)</div><span class="ar">→</span>
+<div class="st"><b>Window</b>37 trades waiting<br>applies in 2:10</div><span class="ar">→</span>
+<div class="st"><b>Written to the lake</b>batch K-1116-1100-07<br>intraday rows, Iceberg</div><span class="ar">→</span>
+<div class="st"><b>Signal</b>VaR: intraday · 5 trades</div></div></div><div style="margin-top:10px"><span class="btn">Apply the window now</span></div></div><div class="card"><h3>credit-store <span>delta · netting-set, collateral-balance + 13</span></h3>
+<div class="two"><div><p class="sit">The record (lake)</p><dl><dt>Connector</dt><dd class="mono">credit-store</dd><dt>State</dt><dd><span class="pill g">UP</span> newest date 13 Nov</dd><dt>Kinds</dt><dd>netting-set, collateral-balance + 13</dd></dl></div>
+<div><p class="sit">Its live companion</p><dl><dt>Connector</dt><dd class="mono">—</dd><dt>Transport</dt><dd>—</dd><dt>State</dt><dd><span class="pill n">NONE</span> &nbsp; <span class="sw"></span></dd></dl></div></div>
+<div style="margin-top:10px"><div class="flow"><div class="st"><b>No companion yet</b>this connector's kinds may be fed live:<br>netting-set, collateral-balance, credit-limit</div><span class="ar">→</span><div class="st"><b>Add one</b>from the module's template<br>credit-store-live (RabbitMQ)</div></div></div><div style="margin-top:10px"><span class="btn p">Propose a live companion…</span></div></div></div><footer>The path drawing is reused in option B's drawer as "How it flows". Other options: <a href="admin-A.html">A (a Live feeds page)</a>, <a href="admin-B.html">B (in Data bindings)</a>. Design: <a href="../../LIVE_CONNECTORS_DESIGN.md">LIVE_CONNECTORS_DESIGN.md</a>, section 9.</footer>
+</div></body></html>

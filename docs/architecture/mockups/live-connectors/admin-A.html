@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  A screen mock-up (live-connectors/admin-A.html), self-contained: system fonts, everything inline, nothing from a CDN.
+  Dark theme by default; open it with #light for the light theme. Its design is docs/architecture/LIVE_CONNECTORS_DESIGN.md
+  (section 9). Static: every figure is an example. Made only of Drishti Elements patterns (page header, grid, pills, switch,
+  drawer, banner, KPI tiles, the grid's live mark); it proposes no new component.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin → Live feeds: option A, one page for every feed</title>
+<script>if(location.hash==='#light')document.documentElement.classList.add('light');</script>
+<style>
+:root{
+  --bg:#0e1628; --bg2:#121c33; --panel:#16213a; --panel2:#1b2744; --line:#26345a; --line2:#1f2b49;
+  --ink:#e7ecf5; --muted:#93a0b8; --amber:#e8a33a; --link:#7fb2ff; --ok:#5fd39a; --warn:#f2c14e; --bad:#ff7a7a;
+  --hl:rgba(127,178,255,.10); --onacc:#14100a;
+  --ok-t:rgba(95,211,154,.14); --warn-t:rgba(242,193,78,.16); --bad-t:rgba(255,122,122,.15);
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  color-scheme:dark;
+}
+html.light{
+  --bg:#f7f5f0; --bg2:#efebe3; --panel:#ffffff; --panel2:#faf8f4; --line:#e2dcd0; --line2:#ece7dd;
+  --ink:#172440; --muted:#55607a; --amber:#985b0a; --link:#1f5fc4; --ok:#1b784c; --warn:#8a6100; --bad:#b42323;
+  --hl:rgba(31,95,196,.07); --onacc:#ffffff;
+  --ok-t:rgba(27,120,76,.10); --warn-t:rgba(138,97,0,.10); --bad-t:rgba(180,35,35,.09);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px}
+a{color:var(--link);text-decoration:none}
+.page{max-width:1568px;margin:0 auto;padding:18px 16px 28px;display:flex;flex-direction:column;gap:12px}
+.intro h1{font-size:20px;margin:0 0 4px}
+.intro p{margin:0;color:var(--muted);max-width:120ch;line-height:1.5;font-size:13.5px}
+.rec{display:inline-block;margin-left:10px;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;background:var(--ok-t);color:var(--ok);border:1px solid var(--ok);vertical-align:middle}
+.alt{display:inline-block;margin-left:10px;padding:2px 10px;border-radius:12px;font-size:12px;color:var(--muted);border:1px solid var(--line);vertical-align:middle}
+.bar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:8px 14px;border:1px solid var(--line);border-radius:8px;background:var(--bg2)}
+.brand{font-weight:700;letter-spacing:.12em;color:var(--amber)}
+.cmd{flex:1 1 260px;max-width:560px;white-space:nowrap;overflow:hidden;height:32px;display:flex;align-items:center;padding:0 14px;border:1px solid var(--amber);border-radius:16px;font-family:var(--mono);color:var(--amber);font-size:13px}
+.menus{display:flex;flex-wrap:wrap;gap:4px;margin-left:auto;font-size:13px}
+.menus span{padding:5px 10px;border-radius:6px;color:var(--muted)} .menus span.on{background:var(--panel2);color:var(--ink)}
+.head{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.head h2{margin:0;font-size:17px} .meta{color:var(--muted);font-size:12.5px}
+.crumb{font-family:var(--mono);color:var(--link);font-size:12.5px}
+.sp{margin-left:auto}
+.btn{font-size:12.5px;padding:5px 12px;border:1px solid var(--line);border-radius:6px;color:var(--ink);background:var(--panel2);white-space:nowrap;display:inline-block}
+.btn.p{background:var(--amber);border-color:var(--amber);color:var(--onacc);font-weight:600}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.seg span{padding:4px 11px;font-size:12.5px;color:var(--muted)} .seg span.on{background:var(--panel2);color:var(--ink);font-weight:600}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;min-width:0}
+.card h3{margin:0 0 8px;font-size:13.5px} .card h3 span{color:var(--muted);font-weight:400;font-size:12px;margin-left:6px}
+.scroll{overflow-x:auto}
+table{border-collapse:separate;border-spacing:0;font-size:12.5px;font-variant-numeric:tabular-nums;width:100%}
+th,td{padding:5px 8px;white-space:nowrap;text-align:right;border-bottom:1px solid var(--line2)}
+td{font-family:var(--mono)}
+th{background:var(--panel2);color:var(--muted);font-weight:500;font-size:12px}
+th.l,td.l{text-align:left;font-family:var(--sans)}
+tr.sel td{background:var(--hl)}
+tr.grp td{background:var(--bg2);font-family:var(--sans);font-weight:600;text-align:left;color:var(--muted)}
+tr.new td{background:var(--ok-t)} tr.amd td{background:var(--warn-t)}
+.muted{color:var(--muted)} .ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)}
+.pill{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11.5px;font-family:var(--sans);font-weight:600;white-space:nowrap}
+.pill.g{background:var(--ok-t);color:var(--ok)} .pill.a{background:var(--warn-t);color:var(--warn)} .pill.r{background:var(--bad-t);color:var(--bad)} .pill.n{background:var(--panel2);color:var(--muted)}
+.sw{display:inline-block;width:30px;height:16px;border-radius:8px;background:var(--line);position:relative;vertical-align:middle}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:var(--muted)}
+.sw.on{background:var(--ok)} .sw.on::after{left:16px;background:var(--onacc)}
+.kpis{display:flex;flex-wrap:wrap;gap:10px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 14px;min-width:140px;flex:1 1 140px}
+.kpi .k{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.kpi .v{font-family:var(--mono);font-size:20px;margin-top:2px} .kpi .s{font-size:12px;color:var(--muted);margin-top:2px}
+.kpi.ea{border-left:3px solid var(--warn)} .kpi.eg{border-left:3px solid var(--ok)}
+.note{font-size:12px;color:var(--muted);line-height:1.5}
+.banner{padding:7px 12px;border-radius:6px;font-size:12.5px;background:var(--warn-t);color:var(--warn);border:1px solid var(--warn)}
+.split{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:12px}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media(max-width:1000px){.split,.two{grid-template-columns:minmax(0,1fr)}}
+dl{display:grid;grid-template-columns:130px minmax(0,1fr);gap:4px 10px;margin:0;font-size:12.5px}
+dt{color:var(--muted)} dd{margin:0}
+.mono{font-family:var(--mono)}
+.flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px}
+.flow .st{padding:6px 10px;border:1px solid var(--line);border-radius:6px;background:var(--panel2);line-height:1.35}
+.flow .st b{display:block;font-size:12.5px} .flow .ar{color:var(--muted)}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--ok);vertical-align:middle}
+.dot.a{background:var(--warn)} .dot.n{background:var(--muted)} .dot.s{width:6px;height:6px;margin-right:4px}
+.strip{display:flex;flex-wrap:wrap;align-items:stretch;border:1px solid var(--line);border-radius:6px;overflow:hidden;font-size:12px}
+.strip div{padding:5px 10px;border-right:1px solid var(--line);line-height:1.35} .strip div:last-child{border-right:0}
+.strip .b{background:var(--panel2);flex:0 0 auto} .strip .c{flex:1 1 200px;background:var(--ok-t)} .strip .c.a{background:var(--warn-t)} .strip .c.n{background:var(--panel)}
+.strip small{display:block;color:var(--muted)}
+.pop{border:1px solid var(--line);border-radius:8px;background:var(--panel2);padding:10px 12px;max-width:420px;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+.sit{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:0 0 6px}
+footer{font-size:12px;color:var(--muted);line-height:1.5;border-top:1px solid var(--line);padding-top:8px}
+</style>
+</head>
+<body>
+<div class="page">
+<div class="intro"><h1>Admin, option A: a Live feeds page <span class="alt">alternative</span></h1><p>One new Admin page lists every kind with its live companion, state, rate, lag, rejects and the switch; the selected feed is reviewed in the panel on the right (the pattern of Admin → Engines). Everything live is in one place; the switch lives away from the binding it changes.</p></div>
+<div class="bar"><span class="brand">DRISHTI</span><span class="cmd">ADMIN LIVE &lt;GO&gt;</span>
+<div class="menus"><span>Modules</span><span>Packs</span><span>Connectors</span><span>Data bindings</span><span class="on">Live feeds</span><span>Engines</span><span>Edits</span><span>Health</span></div></div>
+<div class="head"><span class="crumb">Admin › Live feeds</span><h2>Live feeds</h2><span class="meta">every kind that has, or may have, a live feed · business date 16 Nov 2026</span>
+<span class="sp seg"><span class="on">All</span><span>On</span><span>Needs attention</span></span><span class="btn">Filter…</span></div>
+<div class="kpis">
+<div class="kpi eg"><div class="k">Feeds live</div><div class="v">7</div><div class="s">of 11 switched on</div></div>
+<div class="kpi ea"><div class="k">Waiting for a broker</div><div class="v">1</div><div class="s">calm: snapshot served</div></div>
+<div class="kpi ea"><div class="k">Stale or degraded</div><div class="v">2</div><div class="s">ir-curve · collateral-balance</div></div>
+<div class="kpi"><div class="k">Messages a minute</div><div class="v">40,782</div><div class="s">p99 to applied 41 ms</div></div>
+<div class="kpi"><div class="k">Rejected today</div><div class="v">51</div><div class="s">48 from one feed</div></div>
+<div class="kpi"><div class="k">Live rows held</div><div class="v">9,087</div><div class="s">71 MB of 2 GB</div></div></div>
+<div class="split"><div class="card"><h3>Feeds by kind <span>grouped by data connector · click a row</span></h3><div class="scroll"><table>
+<tr><th class="l">Kind</th><th class="l">Live companion</th><th class="l">Transport</th><th class="l">Applied</th><th class="l">State</th><th>Rate</th><th>Lag p99</th><th>Rejects</th><th>Held</th><th>Carried</th><th>On</th></tr>
+<tr class="grp"><td colspan="11">Trading · 6 source systems</td></tr><tr><td class="l">trade</td><td class="l">trade-endur-live</td><td class="l">Kafka</td><td class="l">overlay</td><td class="l"><span class="pill g">LIVE</span></td><td>412 /min</td><td>38 ms</td><td>0</td><td>1,204</td><td>3</td><td><span class="sw on"></span></td></tr><tr class="sel"><td class="l">trade</td><td class="l">trade-murex-live</td><td class="l">Kafka</td><td class="l">overlay</td><td class="l"><span class="pill g">LIVE</span></td><td>1,930 /min</td><td>41 ms</td><td>2</td><td>6,871</td><td>0</td><td><span class="sw on"></span></td></tr><tr><td class="l">trade</td><td class="l">trade-calypso-live</td><td class="l">Kafka</td><td class="l">overlay</td><td class="l"><span class="pill a">WAITING</span></td><td>—</td><td>—</td><td>—</td><td>0</td><td>0</td><td><span class="sw on"></span></td></tr><tr><td class="l">trade</td><td class="l">trade-wss-live</td><td class="l">ActiveMQ</td><td class="l">overlay</td><td class="l"><span class="pill n">OFF</span></td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td><span class="sw"></span></td></tr><tr class="grp"><td colspan="11">Market data · market-store</td></tr><tr><td class="l">fx-spot</td><td class="l">market-store-live</td><td class="l">Kafka</td><td class="l">overlay · 1 s</td><td class="l"><span class="pill g">LIVE</span></td><td>9,600 /min</td><td>22 ms</td><td>0</td><td>160</td><td>0</td><td><span class="sw on"></span></td></tr><tr><td class="l">equity</td><td class="l">market-store-live</td><td class="l">Kafka</td><td class="l">overlay · 1 s</td><td class="l"><span class="pill g">LIVE</span></td><td>28,740 /min</td><td>25 ms</td><td>0</td><td>479</td><td>0</td><td><span class="sw on"></span></td></tr><tr><td class="l">ir-curve</td><td class="l">market-store-live</td><td class="l">Kafka</td><td class="l">overlay · 5 s</td><td class="l"><span class="pill a">STALE</span></td><td>0 /min</td><td>—</td><td>0</td><td>64</td><td>0</td><td><span class="sw on"></span></td></tr><tr><td class="l">fx-vol-surface</td><td class="l">market-store-live</td><td class="l">Kafka</td><td class="l">overlay · 30 s</td><td class="l"><span class="pill n">OFF</span></td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td><span class="sw"></span></td></tr><tr><td class="l">correlation-matrix</td><td class="l">—</td><td class="l">—</td><td class="l">not allowed</td><td class="l"><span class="pill n">END OF DAY ONLY</span></td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td><span class="muted">—</span></td></tr><tr class="grp"><td colspan="11">Market risk · risk-store</td></tr><tr><td class="l">scenario-pv</td><td class="l">risk-store-live</td><td class="l">Kafka</td><td class="l">land · 5 m</td><td class="l"><span class="pill g">LIVE</span></td><td>14 /min</td><td>window 2:10</td><td>1</td><td>37 waiting</td><td>—</td><td><span class="sw on"></span></td></tr><tr><td class="l">position</td><td class="l">—</td><td class="l">—</td><td class="l">derived</td><td class="l"><span class="pill g">FOLLOWS trade</span></td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td><span class="muted">—</span></td></tr><tr class="grp"><td colspan="11">Counterparty risk · credit-store</td></tr><tr><td class="l">netting-set</td><td class="l">credit-store-live</td><td class="l">RabbitMQ</td><td class="l">overlay</td><td class="l"><span class="pill g">LIVE</span></td><td>55 /min</td><td>70 ms</td><td>0</td><td>212</td><td>0</td><td><span class="sw on"></span></td></tr><tr><td class="l">collateral-balance</td><td class="l">credit-store-live</td><td class="l">RabbitMQ</td><td class="l">overlay</td><td class="l"><span class="pill a">DEGRADED</span></td><td>31 /min</td><td>90 ms</td><td>48</td><td>97</td><td>0</td><td><span class="sw on"></span></td></tr><tr class="grp"><td colspan="11">Reference · reference-store</td></tr><tr><td class="l">counterparty</td><td class="l">reference-store-live</td><td class="l">ActiveMQ</td><td class="l">overlay · next load</td><td class="l"><span class="pill n">NOT CONFIGURED</span></td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td><span class="sw on"></span></td></tr></table></div>
+<p class="note" style="margin:8px 0 0"><b>Carried</b>: live rows a lake load has not yet absorbed. <b>WAITING</b> is healthy: the broker is not reachable and the pages show the snapshot. A kind marked <i>end of day only</i> or <i>derived</i> takes no feed.</p></div>
+<div class="card"><h3>trade · trade-murex-live <span>companion of trade-murex</span></h3>
+<dl>
+<dt>State</dt><dd><span class="pill g">LIVE</span> since 07:02:11</dd>
+<dt>Transport</dt><dd class="mono">kafka · drishti.trading.murex.trades</dd>
+<dt>Applied as</dt><dd>shown at once over the lake's rows (overlay)</dd>
+<dt>Newer means</dt><dd>a higher TRADE_VERSION, then a later SOURCE_UPDATE_TIME</dd>
+<dt>Messages</dt><dd>whole records; a null value deletes</dd>
+<dt>Today</dt><dd class="mono">118,204 applied · 311 duplicate · 9 late · 2 rejected</dd>
+<dt>Lag</dt><dd class="mono">p50 12 ms · p99 41 ms · 0 behind</dd>
+<dt>Holding</dt><dd class="mono">6,871 rows · 54 MB of 2 GB</dd>
+<dt>Last load</dt><dd>14 Nov 07:02: 5,112 absorbed, 0 carried, 0 not in the load</dd>
+<dt>Consumed by</dt><dd>drishti-main, drishti-b (each reads the topic)</dd>
+</dl>
+<h3 style="margin-top:12px">How it flows</h3><div class="flow">
+<div class="st"><b>Broker</b>kafka-1.bank:9093<br><span class="ok">connected</span></div><span class="ar">→</span>
+<div class="st"><b>Checks</b>contract trade 1.1<br>2 rejected today</div><span class="ar">→</span>
+<div class="st"><b>Live state</b>6,871 rows<br>newest wins by TRADE_VERSION</div><span class="ar">→</span>
+<div class="st"><b>Over the lake</b>base 13 Nov close<br>merged by TRADE_ID</div><span class="ar">→</span>
+<div class="st"><b>Next load</b>absorbs by version<br>last: 07:02, 5,112 absorbed</div></div>
+<h3 style="margin-top:12px">Rejected <span>newest 2 of 2 · data administrators only</span></h3>
+<div class="scroll"><table><tr><th class="l">When</th><th class="l">Reason</th><th class="l">Key</th><th class="l">Detail</th></tr>
+<tr><td class="l">10:41:07</td><td class="l">contract</td><td class="l">MX-20004163</td><td class="l">PRICE is text ("n/a")</td></tr>
+<tr><td class="l">09:12:55</td><td class="l">key-mismatch</td><td class="l">MX-20001200</td><td class="l">row says MX-20001201</td></tr></table></div>
+<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px"><span class="btn">Pause</span><span class="btn">Download rejects (JSONL)</span><span class="btn">Reconcile records</span><span class="btn p">Propose switching off…</span></div>
+<p class="note" style="margin:10px 0 0">Switching a feed on or off is proposed here and applied by a second administrator. A feed whose broker is away waits calmly: pages keep the lake's snapshot and say <i>live updates paused</i>.</p></div></div><footer>Recommended use of this grid: read-only under Health as the monitor, with option B for switching. Other options: <a href="admin-B.html">B (in Data bindings)</a>, <a href="admin-C.html">C (connector pairs)</a>. Design: <a href="../../LIVE_CONNECTORS_DESIGN.md">LIVE_CONNECTORS_DESIGN.md</a>, section 9.</footer>
+</div></body></html>

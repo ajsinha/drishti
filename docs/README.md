@@ -163,6 +163,7 @@ repeat.
 | Connect your own data by doing it once | [tutorial 15](tutorials/15-connect-your-data.md) |
 | Know the shape of a command's data (fields, types, keys, links, checks) or draft the contract of a new kind | [contracts/packs/README.md](contracts/packs/README.md) and [contracts/README.md](contracts/README.md#16-contracts-of-every-command) (`drishti.py contract`) |
 | Understand live updates (SSE, frames, reconnects) | [DATA_ARCHITECTURE.md › Live updates](architecture/DATA_ARCHITECTURE.md#1-live-updates) |
+| See the design of live feeds for any kind (a live companion for every data connector: contract rules, order, business dates, the next lake load, Admin and live-mark mock-ups; proposed, not built) | [LIVE_CONNECTORS_DESIGN.md](architecture/LIVE_CONNECTORS_DESIGN.md) |
 
 ### Run and administer it
 
