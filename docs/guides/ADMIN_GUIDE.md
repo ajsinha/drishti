@@ -1191,13 +1191,13 @@ also in the audit log (`command-disabled`, `command-enabled`, `pack-disabled`, `
 ### 20.5 Several servers
 
 On a cluster ([OPERATIONS_GUIDE.md](CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet)) a change made on any server reaches
-every other within a gossip round or two, and is written to each server's own database before it takes effect there:
+every other within a moment (members publish their switches hash as vitals), and is written to each server's own database before it takes effect there:
 
 - Every change carries a **stamp** (a hybrid logical clock: the wall time in milliseconds and a counter, never behind a stamp the server has
   seen) and the **node** it was made on. When two changes of one switch meet, the newer by (stamp, node) wins, so every server reaches the
   same state whatever order it hears them in.
-- Each member's gossip entry carries the hash of its switches (`switchesHash`, beside `digestHash`). A server whose hash differs from a
-  peer's pulls the peer's switches (`GET /api/v1/net/switches`, signed with the cluster key, on the gossip port too) and merges them. Both
+- Each member's vitals carry the hash of its switches (`switchesHash`, beside `digestHash`). A server whose hash differs from a
+  peer's pulls the peer's switches (`GET /api/v1/net/switches`, signed with the cluster key, answered on the priority path) and merges them. Both
   sides of a difference pull, so a server that was down or cut off while changes were made catches up when it comes back, and a change it
   made meanwhile reaches the others.
 - A server starts from what its own database holds, then reconciles with its peers.
@@ -1393,7 +1393,7 @@ with `403`); a personal API token never may.
 
 Each node reads its own `config/engines/` folder, so nodes differ by design (the VaR shard owners run `var`; the counterparty nodes
 `exposure`; a console node none). Each node publishes its engines in its capability digest (the service `engines`), so a change reaches
-the peers within a gossip round. A request for an engine's API arriving at a node that does not run it is **forwarded** to a node that
+the peers at once (vitals). A request for an engine's API arriving at a node that does not run it is **forwarded** to a node that
 does (the least loaded, signed with the cluster key, for the caller; the answer names the node in `X-Drishti-Engine-Node`); an engine that
 is starting or stopping on a node is not routed to; no node runs it: `404 DRS-1020`. People are offered an engine when any reachable node
 runs it; a node going down that was the only one running an engine makes its words disappear within the failure detector's time, and come

@@ -26,10 +26,9 @@ settings:
 - node.yaml secret
 - node.yaml previous-secret
 - node.yaml advertise-url
+- node.yaml seeds
+- node.yaml cluster-port
 - node.yaml tls.*
-- peers/<name>.yaml url
-- peers/<name>.yaml tags
-- peers/<name>.yaml tls.*
 - routing.yaml forward-timeout
 - routing.yaml link-budget
 - routing.yaml join-wait
@@ -74,9 +73,9 @@ ready-made copies in `config/net.examples/`). The ones that shape it:
 | `node.yaml` `secret` | secret | none (needed with `enabled: true`) | The cluster key, only as `${DRISHTI_NET_SECRET}`; signs every call |
 | `node.yaml` `previous-secret` | secret | none | A second key also accepted during a rollover |
 | `node.yaml` `advertise-url` | URL | this machine's primary IPv4 address with the server's port | The address peers call this node at; `localhost`, loopback, wildcard and link-local addresses are refused |
-| `node.yaml` `tls.*` | TLS settings | none | Mutual TLS between nodes ([TLS](../../../guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy)) |
-| `peers/<name>.yaml` `url` | URL | none | A seed peer's real address; one seed is enough, gossip finds the rest |
-| `peers/<name>.yaml` `tags`, `tls.*` | list, TLS settings | none | The tags it should carry; TLS overrides for this peer |
+| `node.yaml` `cluster-port` | number | `7946` | The TCP port the membership layer listens on (and `cluster-port` + 100 for its failure detector); open both between nodes |
+| `node.yaml` `seeds` | list of `host:cluster-port` | none | Real addresses of members to join through; one seed is enough, the agreed view lists the rest. Mutual TLS on the cluster port is `[net.tls]` in the settings file |
+| `node.yaml` `tls.*` | TLS settings | none | Mutual TLS of the signed HTTP calls between nodes on the server port ([TLS](../../../guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy)) |
 | `routing.yaml` `forward-timeout` | duration | `5s` | One peer fetch (a history waits at least this, or the read's budget) |
 | `routing.yaml` `link-budget` | duration | `1s` | A view's linked entity that only a peer holds |
 | `routing.yaml` `join-wait` | duration | `2s` | A node still joining waits this long for its peers' digests before `DRS-5052` |
@@ -100,12 +99,12 @@ ready-made copies in `config/net.examples/`). The ones that shape it:
 ```yaml
 # config/net/node.yaml on node b
 enabled: true
+cluster-port: 7946
 advertise-url: http://192.168.1.21:18480      # the machine's real address (or leave it out to have it detected)
 tags: [region:emea]
 secret: ${DRISHTI_NET_SECRET}
 
-# config/net/peers/drishti-a.yaml
-url: http://192.168.1.20:18480
+seeds: [192.168.1.20:7946]
 ```
 
 With `DRISHTI_NET_SECRET` the same on both (`openssl rand -hex 32`), node b opens a trade only node a holds as if it were local; the

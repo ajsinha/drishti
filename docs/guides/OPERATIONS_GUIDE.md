@@ -349,7 +349,7 @@ Nothing Drishti writes is hidden (no dot-folders of its own), and everything it 
 | `data/feeds/`, `data/loads/`, `data/governance/`, `data/collab/`, `data/reports/` | the file connector's feeds, data-load history, Sutra proposals, collaboration files, report output |
 | `data/cache/`, `data/derived/`, `data/index/` | the connectors' disk caches (id maps, documents, Kafka), the grouped pages, the type-ahead index segments: all rebuilt from the sources |
 | `data/tmp/` | `server/drishti-<pid>` and `console/drishti-console-<pid>` (removed on a clean stop); `server` is also the JVM's temporary folder; `maven` (`./mvnw`), `drill` (the release drill) |
-| `data/net/` | Drishti\*net, when it is on: `node-id`, `peers.json`, `history/` |
+| `data/net/` | Drishti\*net, when it is on: `node-id`, `members.json`, `history/` |
 | `data/dataload/`, `data/lakes/`, `data/compute/`, `data/uninstalled/` | the data inbox, lake maintenance's file and history, the compute workers' environments and scratch, uninstalled artifacts |
 | `data/qa/`, `data/build/`, `data/drill/` | the QA profile's own data, tool output, the drill's logs |
 
@@ -2901,7 +2901,7 @@ The server writes state in a few folders; the console writes nothing that needs 
 | `data/connectors/history/`, `data/bi/imports/` | earlier texts of connector files; what each BI import replaced (*Roll back this import*) | yes, with the folders above | copy |
 | `data/packs/` | `installed/`, `added.yaml`, `deploy-history.jsonl`, `samples-mode` | **yes** | copy |
 | `data/loads/`, `data/designs/`, `data/collab/` (file store only), `data/reports/` | load history and expectation overrides; old-style designs; collaboration files; report output | yes (reports as you need) | copy |
-| `data/net/node-id` | this node's id (keep it, or the node rejoins as a new member); `peers.json` optional | yes | copy |
+| `data/net/node-id` | this node's id (keep it, or the node rejoins as a new member); `members.json` optional | yes | copy |
 | `data/state/<connector>/` | ActiveMQ and RabbitMQ connectors' latest document of each entity: the only copy (a queue does not send twice) | yes, if you use them | **with the server stopped** (a copy while it writes is not consistent); or rely on the source to re-send |
 | `data/uninstalled/` | uninstalled artifacts, kept `uninstalled-keep` | as long as you want them | copy |
 | `data/delta/` | the lakes and the official results (append-only records) | by their owners | your data platform's policy |
@@ -2975,7 +2975,7 @@ python3 tools/drishti.py lake relocate demo               # exit 0 moved (or not
 
 ## 19. Several servers
 
-**Drishti\*net** makes several Drishti servers act as one: each server (a **node**) tells the others by gossip over HTTP which packs, kinds and data it
+**Drishti\*net** makes several Drishti servers act as one: each server (a **node**) tells the others (membership over TCP on the cluster port, digests over signed HTTP) which packs, kinds and data it
 serves; a request one node cannot answer is answered by another, and a person connected to any node sees the same pages. It is off by default (a server
 with no `config/net/node.yaml` saying `enabled: true` is a single server). Nodes advertise a real address (never `localhost` or `0.0.0.0`), share one
 key (`DRISHTI_NET_SECRET`), keep their clocks in step, and are watched on **Admin → Cluster**. Setting one up, its files, security, routing, draining, rolling
@@ -3537,12 +3537,12 @@ is suspect`, `refused a call from ...`) and **Admin → Cluster** shows the memb
 
 | You see | Fix |
 |---|---|
-| A node will not join (no members) | Admin → Cluster: *Cluster on*? `node.yaml` refused (the Files tab says why)? `curl -s <seed>/api/v1/net/ping` from the node must answer `401 DRS-5051`. `enabled: true` needs `secret: ${DRISHTI_NET_SECRET}` set in the environment; the seed reachable and enabled |
+| A node will not join (no members) | Admin → Cluster: *Cluster on*? `node.yaml` refused (the Files tab says why)? the seed's server port must answer `/api/v1/net/ping` from this node, and its `cluster-port` and `cluster-port` + 100 (TCP) must be open to it; the seed is `host:cluster-port`, a real address. `enabled: true` needs `secret: ${DRISHTI_NET_SECRET}` set in the environment, the same key and cluster name as the seed's |
 | `... is a loopback or wildcard address: the address this node advertises must be an address other machines can call` | members advertise a real address (`localhost`, `127.x`, `::1`, `0.0.0.0`, `::` and names resolving to them are refused): use the address the message names, or leave `advertise-url` out |
 | `refused a call from ... bad signature`; `signed 75 s away from this node's clock` | the same `DRISHTI_NET_SECRET` on every node (rotate with the previous key accepted first); NTP on every node |
 | `DRS-5052 ... cannot be reached now`, `DRS-5053 ... did not answer`; *Your selections were reset ... Pick again.*; a search partial naming a node | the node holding that data is down, drained or slow: Admin → Cluster → Members and Routing; start, rejoin or undrain it; **Remove** a node retired for good |
 | Admin → Health says *Last administrator kept* | two administrators removed the last two at once: one was kept (audit `last-admin-kept`); make another administrator first |
-| A member flaps between alive and suspect | a slow network or long pauses: raise `suspect-after` (and `dead-after`) in `gossip.yaml`, or fix the pauses |
+| A member flaps between alive and suspect | a slow network or long pauses: raise `suspect-after` in `[net.membership]` of the settings file, or fix the pauses |
 
 ## 22. Error codes
 

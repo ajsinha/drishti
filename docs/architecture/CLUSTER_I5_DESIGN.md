@@ -16,7 +16,7 @@
 
 # The cluster in release i5: the detailed design
 
-**Status: design, nothing built.** This is the detailed design the owner asked for before any i5 cluster code: the cluster on standard
+**Status: steps C0 to C2 are built on branch wip/i5-cluster (their tests wait for the owner's go); the rest is designed, not built.** This is the detailed design the owner asked for before any i5 cluster code: the cluster on standard
 libraries, engines local or remote behind one lookup, modules and parts in the digest, module promotion between clusters, security
 between nodes, what Admin and the console show, the tests and the build plan. Coding starts when i4 has shipped and the owner has
 answered the questions of [section 13](#13-open-questions-for-the-owner).

@@ -18,6 +18,20 @@
 
 ## Unreleased
 
+- **Cluster membership on JGroups (i5 steps C0 to C2; tests pending).** Drishti*net members join through JGroups over TCP only, on
+  `cluster-port` (default 7946, with the failure detector on `cluster-port` + 100), with agreed views (the same members in the same
+  order and a view id), discovery by `seeds`, `file`, `jdbc` or `s3`, a join authenticated by the cluster key, and mutual TLS on the
+  cluster port with `[net.tls]` (else a channel key derived from the cluster key). Members publish vitals on change and every 10 s;
+  digests are still pulled over signed HTTP. New node.yaml keys `cluster-port`, `agreement-port`, `seeds` (host:cluster-port) and
+  `role`; new `[net.membership]`, `[net.agreement]`, `[net.tls]` and `[net.engines]` settings; `drishti.py net add-seed` and the
+  `membership:` block of deploy/stack/stack.yaml. Apache Ratis 3.3.1 is in the new `net/drishti-net-ratis` module (not wired in yet).
+  Protocol 2: a gossip-era node cannot join, so moving a cluster is a short full stop. Removed: the gossip membership (`Gossiper`,
+  `POST /api/v1/net/gossip`, the gossip port), `gossip.yaml`, the `peers/` folder and `peers.json` (replaced by node.yaml `seeds`
+  and `<data dir>/net/members.json`), `drishti.py net add-peer`, the `net.node.gossip-port` and `net.membership.interval`, `fanout`,
+  `indirect-probes`, `dead-after` and `persist-every` settings (refused, naming the replacement), and the metrics
+  `drishti.net.gossip.rounds` and `drishti.net.gossip.exchange` (replaced by `drishti.cluster.view.changes`). `GET /api/v1/net/ping`
+  takes no target; member rows carry `clusterAddress` and `role`; Health shows `clusterPort` and `view`. The guides, tutorial 22 and
+  the architecture documents follow.
 - **The drill starts from a clean data folder.** A server's state an earlier run left in the data folder (installed modules, identities,
   cluster membership, compute, file store, cache) is moved aside to `data/tmp/stale-<stamp>/` and listed before the drill starts, when
   no server runs from the checkout. Lake loader children get the launch roots of the process that starts them, and Iceberg's Health

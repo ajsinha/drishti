@@ -86,8 +86,8 @@ it is a retired example pack):
  ticking)   dated)      bus. date) driver)                                   live)        FRED)
 ```
 
-Two things sit beside this picture. With **Drishti\*net** switched on (section 13a), several such servers gossip with each
-other, each with its own sources, and any of them answers any request; the console is given one server and learns the
+Two things sit beside this picture. With **Drishti\*net** switched on (section 13a), several such servers form a cluster with each
+other (agreed membership views), each with its own sources, and any of them answers any request; the console is given one server and learns the
 others. And every Python run (Transforms, python visuals, Python-driven tables, Notebook cells) is the server's, on its compute pool `python`
 in a strict sandbox ([bi/NOTEBOOK_AND_PYTHON.md section 19](#291-one-python-runtime)); the console runs none.
 
@@ -302,7 +302,7 @@ Each row names what to change for a common need and the document that explains i
 | Make a dataset, report or board (business intelligence) | YAML files in `config/bi/` (watched) or the BI pages (workspaces, designer, Model view); the query runs on the server over DuckDB with the reader's masks and row rules | [README.md](../guides/bi/README.md), [MODELS_AND_DATASETS_FOR_REPORTS.md](../guides/bi/MODELS_AND_DATASETS_FOR_REPORTS.md#1-models-and-datasets-what-a-report-reads), [REPORT_FILE_FORMAT_STATEMENTS.md](../guides/bi/REPORT_FILE_FORMAT_STATEMENTS.md#1-the-report-file-pages-visuals-filters-and-slicers), [ARCHITECTURE.md §28](#28-business-intelligence-on-the-table-layer) |
 | Show a view inside another web application | register the application in Admin → Embedding; the page uses `<drishti-view>` | [EMBED_GUIDE.md](#30-the-client-renderer-and-drishti-elements) |
 | Use a language model, or an MCP tool server | a provider file in `config/ai/` or `config/mcp/` and `drishti.ai.enabled` / `drishti.mcp.enabled` (both off by default) | [AI_GUIDE.md](../guides/AI_GUIDE.md#1-model-providers), [AI_GUIDE.md](../guides/AI_GUIDE.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy) |
-| Run several servers as one (Drishti\*net) | the files of `config/net/` (`node.yaml` with `enabled: true` and the cluster key, a seed in `peers/`), or Admin → Cluster → Files; members advertise a real address, never a loopback one | [OPERATIONS_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet), [tutorial 22](../tutorials/22-a-cluster-of-three.md) |
+| Run several servers as one (Drishti\*net) | the files of `config/net/` (`node.yaml` with `enabled: true` and the cluster key, seeds in node.yaml), or Admin → Cluster → Files; members advertise a real address, never a loopback one | [OPERATIONS_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet), [tutorial 22](../tutorials/22-a-cluster-of-three.md) |
 | Lay a report out on paper (a statement, one per recipient) | `layout: statement` on a report page and the report's `statement:`; BI Studio's Paper tab | [STATEMENTS.md](../guides/bi/REPORT_FILE_FORMAT_STATEMENTS.md#4-statements-paginated-reports-page-exact-one-per-reader) |
 | Make something that failed (a pack, a connector, a provider) try again | nothing: it is retried with backoff; Retry now in Admin | [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#138-retries-what-failed-is-tried-again-by-itself) |
 
@@ -964,7 +964,7 @@ Maven multi-module reactor on `spring-boot-starter-parent`, `groupId com.ash.dri
 | `drishti-iceberg` | Drishti's own Apache Iceberg engine without Hadoop (reads, writes, path-based and REST catalogs), used by the `iceberg` (engine `native`) and `iceberg-external` connectors ([DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#3-drishti-iceberg-apache-iceberg-on-iceberg-core-with-no-hadoop)) | – |
 | `drishti-deltalake` | A Delta Kernel engine without Hadoop (local disk, Windows included, and S3), used by the Delta connector | – |
 | `drishti-lakeload` | The parallel lake loader: JSON Lines (folder or S3) into Delta or Iceberg tables of the connectors' layout, every stage multi-threaded and memory bounded, one commit per business date; `drishti.py lake build --engine java` ([PARALLEL_LOADER.md](DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-drishti-lakeload)); the data inbox (`dataload`); the in-memory lake, plain Java ([IN_MEMORY_LAKE.md](DATA_ARCHITECTURE.md#98-the-package-memlake-in-drishti-lakeload)): the `mem://` stores (the `mem` storage provider of `drishti-lakeio`), tables, replenish jobs, eviction, compaction, the owner binding, the guard (`Retention`), the host checks | `drishti-lakeio`, `drishti-deltalake`, `drishti-iceberg` |
-| `drishti-net` | Drishti*net's core, no Spring ([CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet)): the member table and SWIM-style gossip over HTTP (`MemberTable`, `Gossiper`, `PeersFile`), the cluster key and on-behalf-of tokens (`ClusterKey`, `OnBehalfOf`), the `config/net/` folder and its schema (`NetFolder`, `NetSchema`), signed HTTP between nodes (`PeerHttp`) | – |
+| `drishti-net` | Drishti*net's core, no Spring ([CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet)): the member table and the thin wrapper on JGroups (membership over TCP) and Apache Ratis (agreement, in its own `net/drishti-net-ratis` module), the cluster key and on-behalf-of tokens (`ClusterKey`, `OnBehalfOf`), the `config/net/` folder and its schema (`NetFolder`, `NetSchema`), signed HTTP between nodes (`PeerHttp`) | – |
 | `drishti-registry` | The access registry, plain Java ([ACCESS_MODEL.md](ACCESS_MODEL.md)): licence → module → lens → function → permission decided in one place (`AccessRegistry`, `EmbeddedAccessRegistry`), over the YAML store (`AccessStore`, `YamlAccessStore`: the modules' manifests, `config/modules/`, `config/access/`); nothing else reads the access model | wired by `server.modules.ModuleConfiguration` |
 | `drishti-server` | **The** Spring Boot application, the core: `DrishtiApplication`, REST controllers, SSE, security (`TokenFilter`, OIDC), governance, alerts, actuator, OpenAPI; the SPIs a domain module fills (`PivotSourceProvider`, `CacheGroup`, `CapacityFigures`, `HealthFigures`, `ApiAlias`, `@ConditionalOnModule`) | controllers, filters |
 | `drishti-compute-banking` | The banking domain's maths, no Spring ([DOMAIN_MODULES.md](DOMAIN_MODULES.md)): VaR and ES, parametric, components, backtesting, the scope algebra, exposure, FRTB-SA, SIMM, beta and correlation (`com.ash.drishti.banking.compute`) | – |
@@ -989,18 +989,17 @@ How a production cluster is deployed (roles, counts, sharding of VaR and exposur
 downtime) is [CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md), the deployment reference.
 
 Off by default ([CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet), [OPERATIONS_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet)). With `config/net/node.yaml` switched on, a server is a **node**:
-`NetService` keeps the member table and runs a gossip round every second on a virtual thread (push-pull with three random members over
-`POST /api/v1/net/gossip`, probes, suspicion, death), saves `<data dir>/net/peers.json` and rejoins from it after a restart. `NetCallFilter`
+`NetService` keeps the member table from the agreed views JGroups delivers (`JGroupsMembership`), saves `<data dir>/net/members.json` and rejoins from it after a restart. `NetCallFilter`
 (before the token filter) checks the cluster key on every call between nodes. What each node offers, and the routing of a request to the
 node that can answer it, sit behind the source router (`SourceRouter`), so nothing above it learns about the cluster.
 `IdentitySync` and `StateSync` copy users, roles and user state between nodes over signed batches; a peer's change that would leave a node
 with no enabled administrator is repaired as it is applied (audited `last-admin-kept`). A member advertises only a real address
 (`HostAddress`: `advertise-url`, else this machine's primary IPv4 with the port; loopback and wildcard addresses are refused in the files
-and never kept from gossip).
+and never kept from a member's vitals).
 
 ```text
-   console ──► any node (B)            A ◄──gossip──► B ◄──gossip──► C
-                 │                      every node: the member table, saved to <data dir>/net/peers.json
+   console ──► any node (B)            A ◄──agreed view──► B ◄──► C
+                 │                      every node: the member table, saved to <data dir>/net/members.json
                  └ NetCallFilter (cluster key) ─► TokenFilter ─► controllers ─► SourceRouter ─► local sources
 ```
 
@@ -1069,7 +1068,7 @@ The main endpoints; [API_REFERENCE.md](../guides/API_REFERENCE.md) lists every o
 | `GET`/`PUT`/`POST` | `/admin/connectors…` · `/admin/packs…` · `/admin/registry…` | connectors as files, packs, deploy, the signed registry |
 | `GET`/`POST` | `/threads…` · `/shares…` · `/me/inbox…` | discussion and sharing ([ARCHITECTURE.md §31](#31-collaboration-write-back-and-approvals)) |
 | `GET`/`POST`/`PUT` | `/bi/…` | Rūpaka: workspaces, datasets, models and the model query, Drishti SQL, reports (format schemas, themes; boards are report pages), Python, governance |
-| `GET`/`POST`/`PUT` | `/net/…` | Drishti\*net between nodes (signed with the cluster key: gossip, digest, fetch, search, group, subscribe, state) and for administrators (members, files, capabilities, access, security, explain, traffic) ([OPERATIONS_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet)) |
+| `GET`/`POST`/`PUT` | `/net/…` | Drishti\*net between nodes (signed with the cluster key: ping, digest, fetch, search, group, subscribe, state) and for administrators (members, files, capabilities, access, security, explain, traffic) ([OPERATIONS_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet)) |
 | `POST` | `/ai/chat` · `/ai/mcp/{server}/tools/{tool}` | the AI and MCP layers (off by default) |
 | `POST` | `/embed/token` and the `embed:` scopes | embedded views for other web applications ([EMBED_GUIDE.md](#30-the-client-renderer-and-drishti-elements)) |
 
@@ -2097,7 +2096,7 @@ on an engine and what disappears at the moment of the change; C's matrix is the 
 | `EngineFilesTest` | the import order (environment > local file > engine file > shipped copy), each other key name with its warning, the jar copies identical to the site files |
 | `EngineRegistryTest` | an engine off at start creates no thread, opens no date, registers no connector or computed kind, reserves no memory; on, it does |
 | `EngineApiTest` | a whole server: an engine turned off answers `404 DRS-1020` in words and on again answers; a dependency refusal (`DRS-1021`); the file written with its switch and `changed`; History; VaR off with its dependents hides its BI datasets and API |
-| `EngineClusterTest` (two members) | `frtb-sa` on one member only: the other's console shows FRSA and its answer is the first member's, routed; off there: `404` within the gossip time; the digest carries `engines` |
+| `EngineClusterTest` (two members) | `frtb-sa` on one member only: the other's console shows FRSA and its answer is the first member's, routed; off there: `404` within the view change; the digest carries `engines` |
 | `EditionWorldServerTest` | a lens's `var: off` preset switches the engine off |
 | `tests/test_engine_off_everywhere.py` (console) | for every engine of the catalogue (generated from it): its words unknown on the command line, in FUNC, type-ahead and search; no menu item, Help entry, tile, chip, BI dataset or playground link on any route; the CLI exits 3 with the words |
 | `tests/test_engines_browser.py` | the page: switch, reason, review, refusal words, restart pill, history (with the guide's screenshots) |
@@ -2957,7 +2956,7 @@ the same way. A form over another kind's rows (the book desk's trades) writes th
 
 ### 31.5 Ownership and fencing across a cluster
 
-Gossip and the ring cannot guarantee one owner after a network split, so ownership is **taken in the store** and every write is **fenced**:
+Membership and the ring cannot guarantee one owner after a network split, so ownership is **taken in the store** and every write is **fenced**:
 
 ```sql
 UPDATE drishti_edit_lane SET owner_node = :me, epoch = epoch + 1, lease_until = <now> + :lease
@@ -3113,81 +3112,60 @@ because masks are binary (two mask classes per entity).
 
 ## 32. Clusters inside: membership, placement and routing
 
-How Drishti\*net and the shard machinery work inside: the member table and gossip, the capability digest, routing, the copying of
+How Drishti\*net and the shard machinery work inside: the member table and the agreed views, the capability digest, routing, the copying of
 identity and user state, the shard map, rendezvous placement, handover and the scatter-gather of partials, and the resource bounds of
 one server. Running a cluster (files, Admin → Cluster, roles, sizing, AWS, tuning) is the operators' [CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md).
 Section 13a is the short form.
 
-### 32.1 Membership by gossip (SWIM over HTTP)
+### 32.1 Membership: agreed views over TCP
 
-`drishti-net` (no Spring, no engine; an ArchUnit rule keeps it so) holds `MemberTable`, `Gossiper`, `PeersFile`, `NodeIdentity`,
-`NetFolder` and `NetSchema` (the `config/net/` folder with line numbers, history and `If-Match`), `ClusterKey`, `OnBehalfOf` and `PeerHttp`.
-In the server, `NetService` runs the node, `NetCallFilter` checks the cluster key before the token filter, `NetController` and
-`NetAdminController` serve the membership and management endpoints.
+`drishti-net` (no Spring, no engine; an ArchUnit rule keeps it so) holds the member table, `NodeIdentity`, `NetFolder` and `NetSchema`
+(the `config/net/` folder with line numbers, history and `If-Match`), `ClusterKey`, `OnBehalfOf`, `PeerHttp` and the thin wrapper on
+JGroups 5.5.8.Final. In the server, `NetService` runs the node, `JGroupsMembership` joins the cluster, `NetCallFilter` checks the cluster key
+before the token filter, `NetController` and `NetAdminController` serve the membership and management endpoints. Apache Ratis 3.3.1 sits in
+its own module, `net/drishti-net-ratis`, for the agreement service's ratis mode (mutual TLS required).
 
-**The member entry** (`Member`): `nodeId` (generated once, kept in `<data dir>/net/node-id`), `url` (a real address; loopback, wildcard,
-link-local and container-bridge addresses in any spelling are refused at the intake by `MemberTable.merge` and `HostAddress.callableUrl`),
-`gossipPort`, `incarnation` (raised only by the member itself), `heartbeat` (raised every round), `state` (`alive`, `suspect`, `dead`,
-`left`), `digestHash`, `switchesHash`, `version`, `protocol` (`Member.PROTOCOL` = 1; another protocol is listed, never routed), `tags`,
-`since` and `drained`. Beside each entry a member keeps local times only (`beatAt`, `heardAt`, a smoothed latency, `stateAt`,
-`MemberTable.Known`), so clock skew never makes a member suspect.
+**The channel.** JGroups over **TCP only**, on `cluster-port` (default 7946); its failure detector also listens on `cluster-port` + 100.
+There is no multicast, UDP, MPING or PING, and a guard test enforces it. Discovery (`[net.cluster] discovery`) is `seeds` (the default,
+TCPPING over the node.yaml `seeds`), `file`, `jdbc` or `s3`. A member joins with an HMAC of the cluster key, accepted within 60 s: another
+cluster name, or no key, never enters the view. With `[net.tls]` the cluster port uses mutual TLS; otherwise the channel is encrypted with a
+key derived from the cluster key.
 
-**A round** (`Gossiper.round`, every `interval`, on the platform thread `drishti-net-gossip`):
+**Views.** Every member sees the same members in the same order under a view id. A clean stop leaves the view at once; a killed member
+leaves it within `suspect-after` plus `verify` (10 s and 1.5 s by default); a partition merges again every `merge-every` (10 s). The member
+table keeps local times only (`heardAt`, a smoothed latency, `stateAt`), so clock skew never makes a member suspect.
 
-1. raise its own heartbeat;
-2. push-pull with `fanout` random members that are alive or suspect (a suspect one hears of its suspicion and can refute), in parallel
-   on the eight platform threads `drishti-net-gossip-io-*`, each cut at `max(200 ms, 2 × interval)`: `POST /api/v1/net/gossip` with the
-   whole table; the answer is the peer's whole table; both merge;
-3. reaching no one: try the join list (seeds, then `peers.json`, alive first), three at a time; and every 30th round exchange with one seed
-   or saved member outside the reachable table, which heals a split;
-4. detect: an alive member whose heartbeat has not risen here for `suspect-after` is pinged directly on its gossip port, then through
-   `indirect-probes` others (`GET /api/v1/net/ping?target=`); still silent, `suspect`, keeping its incarnation;
-5. suspect for `dead-after`: `dead`; dead or left entries are forgotten after `forget-after`;
-6. tell the listeners (save `peers.json` on a join or leave, pull new digests); save `peers.json` every `persist-every` anyway.
+**Vitals.** Each member publishes its vitals on change and every `vitals-every` (10 s): `nodeId`, the callable `url` (a real address;
+loopback, wildcard, link-local and container-bridge addresses in any spelling are refused at the intake by `HostAddress.callableUrl`),
+`clusterAddress`, `role` (`server` or `witness`), `digestHash`, `switchesHash`, `version`, `protocol` (2: a node of the earlier protocol
+cannot join), `tags`, `drained`. A changed `digestHash` makes the others pull the digest over signed HTTP (`GET /api/v1/net/digest`).
+Joining happens on Spring's `ApplicationReadyEvent`; the node is *joining* (`DigestService.joining()`) until it has the digest of every
+member of the view, at most `join-grace`. Left and dead entries are forgotten after `forget-after` (24 h).
 
-**The merge rule** (`Member.supersededBy`): the higher incarnation wins; at equal incarnation the worse state (`left` > `dead` > `suspect`
-> `alive`); at equal incarnation and state the higher heartbeat (it carries the newest url, tags, digest hash and drain flag). A member's
-own entry is changed only by itself: news of itself worse than `alive`, or at a higher incarnation, makes it raise its incarnation and stay
-`alive`. **Leaving** (`Gossiper.leave(3)`): `left` with a raised heartbeat, pushed to every reachable member three times. **Rejoining**
-raises the incarnation. **Joining** happens on Spring's `ApplicationReadyEvent`; the node is *joining* (`DigestService.joining()`) until it
-has the digest of every alive peer, at most `join-grace`.
-
-**Two lanes.** `PeerHttp` has a **control lane** (gossip, probes, digest pulls: HTTP/1.1, its own connections, two platform threads, a
-connect timeout of half the gossip timeout, to the member's gossip port) and a **data lane** (views, documents, history, searches, state,
-the live relay: HTTP/2 when routing.yaml's `peer-protocol` is `http2`). The receiver's **gossip port** (`GossipConnector`) is a second
-Tomcat connector with its own acceptor, 4,096 connections and eight platform threads, serving only gossip, ping and digest; on both ports
-those three are answered by the first filter (`GossipPath`), from memory, after the cluster key check. A per-path executor is not possible
-in Tomcat (an executor belongs to a connector) and a priority filter alone still needs a request thread, which is what a busy server lacks
-(`NetGossipBusyTest`: with `gossip-port: off` every node suspected both peers under load; with the port, none). HTTP/2 is primed per peer by
-one signed ping made alone (the first call, and the first after 30 s of quiet), so the upgrade happens once; streams per connection are
-raised to 1,000 (`NetConfiguration.peerHttp2Limits`); a peer without HTTP/2 answers in HTTP/1.1 on the same call.
+**Two lanes.** `PeerHttp` has a **control lane** (digest pulls and pings: HTTP/1.1, its own connections, two platform threads) and a **data
+lane** (views, documents, history, searches, state, the live relay: HTTP/2 when routing.yaml's `peer-protocol` is `http2`). The first filter
+answers `GET /api/v1/net/ping`, `/digest` and `/switches` from memory on the server port after the cluster key check, so a busy request pool
+cannot make a member look dead; there is no separate membership HTTP port. HTTP/2 is primed per peer by one signed ping made alone (the
+first call, and the first after 30 s of quiet), so the upgrade happens once; streams per connection are raised to 1,000
+(`NetConfiguration.peerHttp2Limits`); a peer without HTTP/2 answers in HTTP/1.1 on the same call.
 
 **Signatures.** `METHOD\npath?query\ntime\nnode\nsha256(body)`, HMAC-SHA256 with the cluster key, the node in `X-Drishti-Net-Node`, a 60 s
 window (`ClusterKey.WINDOW_MS`). The on-behalf-of token names the user, roles, embed app, the forwarding node, the request id and its
 audience node (`aud`), valid 30 s. Mutual TLS is the transport on top, never in place of the HMAC (which binds the call to its body, path,
 time and node).
 
-### 32.2 Message sizes and convergence
+### 32.2 Failure detection and its timing
 
-A member entry is about 350 to 450 bytes of JSON. Each round a member sends and receives `fanout` whole tables (estimates):
+With the defaults (`heartbeat` 2 s, `suspect-after` 10 s, `verify` 1.5 s), a member that crashes at t = 0 is suspected after 10 s without
+answers, verified once for 1.5 s, and then leaves the agreed view on every node together; `ShardPeers.peers` and `Member.routable` leave it
+out from that view. A member that was only slow answers the verification and stays. A stack's `membership:` block (heartbeat 1 s,
+`suspect-after` 3 s, `verify` 1 s) detects faster for tests. Larger or slower networks raise `suspect-after`.
 
-| Members | Table | Bytes a member a second | Rounds for news to reach all |
-|---|---|---|---|
-| 8 | ~3.5 KB | ~21 KB | 2 |
-| 20 | ~9 KB | ~54 KB | 2–3 |
-| 50 | ~22 KB | ~130 KB | 3–4 |
-| 100 | ~45 KB | ~270 KB | 4–5 |
+### 32.3 Vitals traffic
 
-With push-pull the informed share grows about fourfold a round: log₄ N rounds plus one or two. A heartbeat seen second-hand is up to that
-many rounds old, so at 100 members a healthy member's heartbeat can look 4 to 5 s old, just under `suspect-after`: probes answer, but
-their traffic rises, which is why larger clusters raise `suspect-after`.
-
-### 32.3 Failure detection and its timing
-
-With the defaults (1 s, 5 s, 30 s), a member that crashes at t = 0: at 5–6 s peers find its heartbeat stale, the direct ping fails
-(refused at once, or cut at 2 s on a black hole), two indirect pings fail; at 5–8 s it is `suspect` everywhere within 1–3 rounds, and
-`ShardPeers.peers` and `Member.routable` leave it out; at 35–38 s `dead`; at 24 h forgotten. A member that was only slow answers a probe
-or refutes with a higher incarnation, and nothing moved unless it stayed out longer than `stable-seconds`.
+A vitals message is a few hundred bytes; each member sends one on change and every 10 s, so the steady traffic is
+members × members × a few hundred bytes per 10 s, small even at 100 members. The digest itself (kilobytes) travels only when its hash
+changes, and only to the members that pull it.
 
 ### 32.4 The capability digest
 
@@ -3310,7 +3288,7 @@ first `ShardedMeasure`.
 
 ### 32.10 Why no consensus protocol
 
-Ownership is a pure function of shared inputs (the shard map from the same lake, the membership gossip converges on). Two members that
+Ownership is a pure function of shared inputs (the shard map from the same lake, the membership the agreed view settles on). Two members that
 briefly disagree cannot produce a wrong number: a partial is served only by a member that holds the shard at the data version asked, so
 disagreement costs a refused call. A Raft or ZooKeeper quorum would add a service and a leader for no gain in read correctness. It would help
 singleton writers under a partition (one official capture, one PV-stream reader); Drishti uses its database for that, by lease, as BI runs

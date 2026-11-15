@@ -345,7 +345,7 @@ with both.
 | BI row evaluation | `RowEval`, `SqlCompiler` | compute | interpreted per row | compiled with the Class-File API (P2) |
 | Hashing and fingerprints | `MessageDigest` (SHA-256) in 49 main classes: the inputs digest, `ShardMap`, `ShardOwners`, `Digest` (net); `CRC32C` in `VarHotFile` | compute, small volumes | JDK SHA-256 (intrinsic with SHA extensions) and CRC32C (intrinsic) | already intrinsic; xxHash only for non-cryptographic hashing of large volumes (shard keys, row fingerprints) |
 | Search and regex | `RegexSampler`, `RoleDetector`, `StructuredSearch` | compute, small | `java.util.regex` | not hot; no action |
-| Net and gossip | `PeerHttp` (JDK `HttpClient`), `Gossiper` | latency, small messages | JDK TLS | JDK TLS uses AES-GCM intrinsics; no action unless a profile says otherwise |
+| Net and membership | `PeerHttp` (JDK `HttpClient`), JGroups over TCP | latency, small messages | JDK TLS | JDK TLS uses AES-GCM intrinsics; no action unless a profile says otherwise |
 | Arrow to the browser and the console | `ArrowIpc` (hand-written over `arrow-format`), `ArrowIpcWriter` | bandwidth, small | already Arrow IPC | Arrow Flight for large transfers to Python (section 7) |
 
 ---
@@ -661,7 +661,7 @@ Every setting is listed in [CONFIGURATION.md](../admin/CONFIGURATION.md) when bu
 
 Also listed: the Java runtime (25, collector, compact headers on or off, the AOT cache used or not), the Vector API module present or
 not, and the libraries native code unpacked from jars (zstd-jni, snappy-java, RocksDB, DuckDB) with their versions. The same list is
-in `GET /status` and in the capability digest the cluster gossips.
+in `GET /status` and in the capability digest the cluster shares.
 
 ### 9.5 Failure and fallback
 

@@ -3753,7 +3753,7 @@ records. Its rows are the plan's candidates CIO1 to CIO14
 
 Drishti already records most of the evidence a CIO and a supervisor need as a side effect of running: every load with its rows and
 rejects, expectations met or missed, a contract per kind with validation, a data version and provenance on every answer, the
-configuration in one generated document, the audit and access logs, a cluster with gossip and shards, disk and cache budgets. The lens
+configuration in one generated document, the audit and access logs, a cluster with agreed membership and shards, disk and cache budgets. The lens
 adds one executive page that turns them into trends and a verdict: feeds against service levels with a **7am-ready forecast**, data
 quality per dataset with owners and history, the **BCBS 239 scorecard**, platform health and capacity (cost later), usage, security,
 change and incidents, Ask, and an **evidence pack** for a supervisor or audit.
@@ -3803,7 +3803,7 @@ change and incidents, Ask, and an **evidence pack** for a supervisor or audit.
 | Internal-only rule for public sources | **Built** as a rule and switch; a report of where each is shown not built | [EXTERNAL_DATA 9](../guides/WORLD_DATA_GUIDE.md#9-licences-and-internal-only-data) |
 | Admin → Health; Prometheus, Grafana, suggested alerts; platform metrics and alerts | **Built** | [OPERATIONS 13.2](../guides/OPERATIONS_GUIDE.md#132-admin--health), [13.4](../guides/OPERATIONS_GUIDE.md#134-prometheus-grafana-and-the-suggested-alerts), [13.6](../guides/OPERATIONS_GUIDE.md#135-platform-metrics-and-alert-rules) |
 | Drishti's own history of those metrics | **Not built** (CIO4) | [RESOURCES_AND_SCALE 8.3](../guides/CLUSTER_GUIDE.md#159-seeing-it-admin--caches-health--disk-metrics-and-alerts) |
-| Cluster gossip, VaR sharding with replicas and zones; disk caps and the cache budget | **Built** | [CLUSTER_DEPLOYMENT 4.1](ARCHITECTURE.md#321-membership-by-gossip-swim-over-http), [RESOURCES_AND_SCALE 14](ARCHITECTURE.md#3212-bounded-resources-inside-one-server) |
+| Cluster membership, VaR sharding with replicas and zones; disk caps and the cache budget | **Built** | [CLUSTER_DEPLOYMENT 4.1](ARCHITECTURE.md#321-membership-agreed-views-over-tcp), [RESOURCES_AND_SCALE 14](ARCHITECTURE.md#3212-bounded-resources-inside-one-server) |
 | Readiness, drain, the rolling upgrade runner; the N and N−1 rule | **Built**; N and N−1 planned (CD4) | [CLUSTER_DEPLOYMENT 18](../guides/CLUSTER_GUIDE.md) |
 | A history of releases and upgrades per node | **Partly**: each server reports its version; no history | [OPERATIONS 15](../guides/OPERATIONS_GUIDE.md#18-upgrades-and-rollback) |
 | Incidents; cloud cost; a BCBS 239 scorecard | **Not built** | — |
@@ -4179,7 +4179,7 @@ What each principle asks (paraphrased from BCBS 239, January 2013), the evidence
 | # | Principle | What it asks | Evidence today | Rule for the proposed score | Gap and row |
 |---|---|---|---|---|---|
 | 1 | **Governance** | a framework for risk data owned by the board and senior management, independently validated | a contract per kind; the configuration in one generated document; the audit log; four eyes on write-back | 4 if every official dataset has an owner in `feed-sla` and a contract and the scorecard was confirmed last quarter; 3 if non-official feeds lack owners; 2 if any official dataset has none | owners per feed (CIO1); confirmation (CIO3) |
-| 2 | **Data architecture and IT infrastructure** | integrated taxonomies and architecture; resilient in normal times and stress | one lake and one grammar; data versions and provenance; gossip, shard replicas and zones; disk and cache budgets | 4 with replicas, gated readiness and drain; 3 with replicas only; 2 without | — (readiness, drain and the runner are built) |
+| 2 | **Data architecture and IT infrastructure** | integrated taxonomies and architecture; resilient in normal times and stress | one lake and one grammar; data versions and provenance; cluster membership, shard replicas and zones; disk and cache budgets | 4 with replicas, gated readiness and drain; 3 with replicas only; 2 without | — (readiness, drain and the runner are built) |
 | 3 | **Accuracy and integrity** | accurate, reliable, largely automated, reconciled | contract validation with rejects; official VaR identical across shards; provenance | 4 if checks passed ≥ 99.5% and every official output reconciles; 3 at ≥ 99%; 2 below | content checks (CIO2); control totals (CIO1) |
 | 4 | **Completeness** | all material risk data across the group | rows and rejects per load, each reject listed | 4 at ≥ 99.9% on official feeds with control totals on all; 3 without some control totals; 2 below 99.5% | control totals (CIO1) |
 | 5 | **Timeliness** | timely aggregation, also in stress | expectations and late states; official capture times | 4 if the 7am record ≥ 98% over the quarter; 3 at ≥ 95%; 2 at ≥ 85%; 1 below | the record and forecast (CIO1); the mock-up shows 90%, so 2 |

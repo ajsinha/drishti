@@ -286,7 +286,7 @@ says so in its data needs (`formats: [vcf]`), and Admin → Data bindings shows 
 
 ### 2.6 Events
 
-One kernel event bus (in process, gossiped over `drishti-net` where marked). Modules subscribe through `ModuleContext.events()`; a module
+One kernel event bus (in process, carried over `drishti-net` where marked). Modules subscribe through `ModuleContext.events()`; a module
 may publish only events under its own id (`banking.*`).
 
 | Event | Payload | Typical module use |
@@ -613,7 +613,7 @@ output (`target/dmod/`), same loader, same checks, a development key (section 8.
 The owner's question: *what happens when a module is deployed on one node and not on another, and how does the console deal with it?*
 The answer: **the deployer decides which nodes get a module, part by part**. There is no default "all nodes": a module runs only where it
 is placed, heavy work never spreads by itself, every other node forwards, and the console never talks to a node's module, only to the
-cluster's registry, and its API proxy calls go to the kernel. Consoles are nodes with the role `console` (section 10.5). Drishti\*net itself (membership, gossip, the capability digest, routing, roles and tags) is
+cluster's registry, and its API proxy calls go to the kernel. Consoles are nodes with the role `console` (section 10.5). Drishti\*net itself (membership, the capability digest, routing, roles and tags) is
 [CLUSTER_GUIDE.md section 1](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet); this section adds only what modules need.
 What release i5 adds to it (placement per engine, modules and parts in the digest, leases on a standard library, promotion of a
 module between clusters) is designed in [CLUSTER_I5_DESIGN.md](CLUSTER_I5_DESIGN.md).
@@ -691,7 +691,7 @@ parts:
 
 #### 4.11.6 Drift
 
-- Each node gossips its **module fingerprint** (`id@version#sha256-of-DMOD.SIG`, with the parts it runs); drift is **a node's actual
+- Each node publishes its **module fingerprint** (`id@version#sha256-of-DMOD.SIG`, with the parts it runs); drift is **a node's actual
   state differing from its placement**.
 - Health and Admin → Cluster show a **node × module matrix**: **green** placed and active; **red** placed but missing, refused or at another
   version (that node is left out of routing for the module until *Resync* re-sends the package and activation passes); **amber**

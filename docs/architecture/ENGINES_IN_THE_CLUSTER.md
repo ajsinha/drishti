@@ -51,7 +51,7 @@ another adds more when that one is present.
 
 ## 2. What the cluster knows today (Drishti\*net)
 
-Each node gossips, over HTTP, its members and states and a capability digest: the packs and kinds it serves, the data it holds
+Each node holds the agreed membership view (JGroups over TCP) and publishes a capability digest, pulled over signed HTTP: the packs and kinds it serves, the data it holds
 (lake, dates), the compute engines running on it (`services`) and the VaR shards it owns. Requests use it:
 
 | Situation | What happens |
@@ -77,7 +77,7 @@ change. The goal: VaR on one node and FRTB on another, both used transparently b
    always land on one node; i5 lets a site write, for example, `var: {nodes: [node-a]}` and `frtb-sa: {nodes: [node-b]}`.
 2. **`needs` satisfied anywhere in the cluster.** Today an engine's `needs` is checked on the same server ("FRTB-SA needs var on this
    server, which is off", `DRS-1022`). In i5 a need is met by the engine on any node, reached through the same lookup.
-3. **Modules and their parts in the gossip digest**, beside packs, kinds, data and engines, so every node knows which module part runs
+3. **Modules and their parts in the capability digest**, beside packs, kinds, data and engines, so every node knows which module part runs
    where.
 4. **Cluster on standard libraries**: membership, failure detection and election move from hand-written gossip onto a proven standard
    library.

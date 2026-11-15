@@ -76,7 +76,7 @@ codes and, where it helps scripts, `--json`.
 | `server`, `admin` | `server health`, `caches`, `packs`, `commands`, `smoke`, `engines`, `blas`; `admin capacity` (also `admin engines`, `admin blas`) | REST `/api/v1/admin/...` (an administrator) | [8](#8-server-health-and-packs) |
 | `doctor` | `drishti.py doctor` | this machine, and with `--server` the server | [8](#doctor-is-this-machine-ready) |
 | `connector` | `list`, `get`, `apply`, `delete`, `test`, `plugins`, `enable`, `disable`, `reset`, `history` | REST (Admin → Connectors) | [9](#connector-list-get-apply-delete-test-plugins-enable-disable-reset-history) |
-| `net` | `list`, `check`, `add-peer`, `set`, `members` | the `config/net/` folder; REST for `members` | [9](#net-drishtinets-confignet-folder) |
+| `net` | `list`, `check`, `add-seed`, `set`, `members` | the `config/net/` folder; REST for `members` | [9](#net-drishtinets-confignet-folder) |
 | `view`, `history`, `convert` | `view get`, `view explain`; `history KIND ID`; `convert FILE` | REST; `tools/convertcmd.py` | [10](#10-view-history-and-convert) |
 | `design` | `list`, `create`, `get`, `save`, `check`, `autodesign`, `propose`, `proposals`, `export`, `import`, `bind`, `delete` | REST `/api/v1/builder/designs` | [11](#11-design-the-screen-designer-over-rest) |
 | `approvals`, `change`, `edits` | `approvals` list, show, approve, reject, withdraw, ask; `change` propose, submit, list, show, history; `edits status` | REST | [11](#approvals-the-one-approvals-queue) |
@@ -2865,7 +2865,7 @@ demo lake, edit `trade-endur.yaml`'s `root` instead (Admin → Connectors, or `c
 
 ### `net`: Drishti*net's config/net/ folder
 
-`drishti.py net list | check | add-peer | set` work on the folder of Drishti*net's files ([OPERATIONS_GUIDE.md](CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet)) on this machine, with no
+`drishti.py net list | check | add-seed | set` work on the folder of Drishti*net's files ([OPERATIONS_GUIDE.md](CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet)) on this machine, with no
 server needed: they check every file as the server does (the same rules, the same line numbers) and refuse to write a file the server would
 refuse. `net members` reads the member table of a running server. The folder is `--dir`, else `DRISHTI_NET_DIR`, else `./config/net` (the server's
 `drishti.net.dir`); a write is atomic and keeps the previous text under `<data dir>/net/history/` (`--data-dir`, else `DRISHTI_DATA_DIR`, else
@@ -2875,9 +2875,9 @@ refuse. `net members` reads the member table of a running server. The folder is 
 |---|---|
 | `net list [--json]` | The files (in force, refused, absent), whether the cluster is on, this node's address, tags and key state, the seeds |
 | `net check [FILE ...] [--json]` | Checks every file (or those named); exit 1 when one would be refused, with each problem's file, line and setting |
-| `net add-peer NAME URL [--tags a,b]` | Writes `peers/NAME.yaml`, a seed (`URL` is `host:port` or an address) |
-| `net set KEY [VALUE]` | Changes one setting: `node.enabled true`, `node.tags region:emea,tier:risk`, `gossip.interval 2s`, `access.roles.risk.nodes n-a,region:emea`, `peers.drishti-a.url http://host:port`; an empty value removes it |
-| `net members` | The member table of a running server (`GET /api/v1/net/members`; an administrator's token) |
+| `net add-seed HOST:PORT` | Adds `HOST:PORT` (a member's real address and its `cluster-port`, 7946 by default) to `seeds` in node.yaml |
+| `net set KEY [VALUE]` | Changes one setting: `node.enabled true`, `node.tags region:emea,tier:risk`, `node.cluster-port 7946`, `access.roles.risk.nodes n-a,region:emea`; an empty value removes it. `gossip.*` and `peers.*` keys are refused, naming the replacement |
+| `net members` | The member table of a running server (`GET /api/v1/net/members`; an administrator's token), with a cluster address column |
 
 Real output, on an empty folder:
 
@@ -2885,7 +2885,6 @@ Real output, on an empty folder:
 $ drishti.py net list
 config/net at ~/drishti/config/net: Drishti*net is off (a single server, as without the cluster)
   node.yaml     absent (defaults)
-  gossip.yaml   absent (defaults)
   routing.yaml  absent (defaults)
   access.yaml   absent (defaults)
 
@@ -2907,32 +2906,35 @@ wrote ~/drishti/config/net/node.yaml
 $ export DRISHTI_NET_SECRET=...            # at least 32 bytes, from your secret store
 $ drishti.py net set node.enabled true
 wrote ~/drishti/config/net/node.yaml
-$ drishti.py net add-peer drishti-a 192.168.1.20:18783 --tags region:emea
-wrote ~/drishti/config/net/peers/drishti-a.yaml
+$ drishti.py net add-seed 192.168.1.20:7946
+added 192.168.1.20:7946 to seeds in ~/drishti/config/net/node.yaml
 
 $ drishti.py net check
 3 file(s) checked in ~/drishti/config/net: 1 error(s); those files would be refused
-  error   gossip.yaml:1  fanout: 'lots' is not a whole number
+  error   node.yaml:6  cluster-port: 'lots' is not a number
 (exit 1)
 ```
 
 Members advertise only a real address ([OPERATIONS_GUIDE.md › Drishti*net: running several servers as one, section 2](CLUSTER_GUIDE.md#2-a-cluster-of-three)): `localhost`, `127.x.x.x`, `::1`,
-`0.0.0.0` and `::` are refused in `advertise-url` and in a seed's URL, and the message names this machine's address. `advertise-url` may be
+`0.0.0.0` and `::` are refused in `advertise-url` and in a seed, and the message names this machine's address. `advertise-url` may be
 left out: the node then advertises this machine's primary IPv4 address with the server's port (Admin → Cluster → Members shows it as *detected*).
 
 The file `net set` wrote:
 
 ```yaml
-# config/net/node.yaml (Drishti*net, docs/guides/OPERATIONS_GUIDE.md)
+# config/net/node.yaml (Drishti*net, docs/guides/CLUSTER_GUIDE.md)
 secret: ${DRISHTI_NET_SECRET}
 advertise-url: http://192.168.1.20:18784
 tags:
 - region:emea
 - tier:risk
 enabled: true
+seeds: [192.168.1.20:7946]
 ```
 
-Exit: 0 done, 1 refused or a file has an error, 2 usage (a bad peer name, a key that names no file).
+A folder from an older release (`gossip.yaml`, `peers/`) is refused with the replacement named; `net check` prints the new settings for it. The server rewrites nothing.
+
+Exit: 0 done, 1 refused or a file has an error, 2 usage (a bad seed, a key that names no file).
 
 ## 10. `view`, `history` and `convert`
 

@@ -258,9 +258,9 @@ This section is the one place for the full list of options; [bin/README.md](../b
 | `--wait SECONDS` | `300` | how long to wait for the health answer |
 | `--stop` | | the same as `stop-server` (kept for the old `start-server.ps1 -Stop`) |
 | `--node NAME` | none (a single server) | **a cluster node**: its id; its pid, log and temporary folder are named after it, so several run on one machine |
-| `--node-dir DIR` | `<data>/nodes/<node>/net`, made with a `node.yaml` when missing | the node's Drishti\*net folder (`node.yaml`, `gossip.yaml`, `peers/`; [section 10.4](#104-configuration-per-node)) |
+| `--node-dir DIR` | `<data>/nodes/<node>/net`, made with a `node.yaml` when missing | the node's Drishti\*net folder (`node.yaml`, `routing.yaml`, `access.yaml`; [section 10.4](#104-configuration-per-node)) |
 | `--node-data DIR` | the data folder | the node's own data folder (its identity database, saved members, inbox). Two servers never share one: the script refuses a second node on the same folder. Several nodes on one machine: one each, e.g. `data/nodes/<node>/data` |
-| `--seed HOST:PORT` | none | a member to join through (repeatable, or comma-separated); written to `<node-dir>/peers/` when not there yet |
+| `--seed HOST:PORT` | none | a member's `host:cluster-port` (7946 when left out) to join through (repeatable, or comma-separated); given as `NET_CLUSTER_SEEDS`, and a `seeds` list in node.yaml wins |
 | `--advertise IP` | this machine's real LAN address | the address the node advertises. Never `127.0.0.1`, `localhost` or `0.0.0.0`: the script refuses them |
 
 **`start-console` options**
@@ -429,7 +429,7 @@ with the environment above, and `drishti-console/.venv/bin/python drishti-consol
 |---|---|---|
 | 18480 (server) | the console, `drishti.py`, scripts, other servers of a cluster | `--port` on `start-server` (`DRISHTI_PORT`) |
 | 17480 (console) | people's browsers | `--port` on `start-console` (`DRISHTI_CONSOLE_PORT`) |
-| gossip (cluster only) | other servers | `gossip-port` in the node's `node.yaml` ([section 10.2](#102-network-and-ports)) |
+| membership (cluster only) | other servers | `cluster-port` (7946) and `cluster-port` + 100, TCP ([section 10.2](#102-network-and-ports)) |
 
 **Folders and the settings file.** The server never takes a folder from the directory it starts in: the install folder
 (`DRISHTI_HOME`), the data folder (`DRISHTI_DATA_DIR`) and the modules (`DRISHTI_MODULES_HOME`) are named outright (the scripts, the
@@ -916,7 +916,7 @@ Tick one column per operating system tested. *Expected* is what section 8 shows.
 
 ## 10. A cluster of three
 
-Optional. Several servers act as one (**Drishti\*net**): each holds its packs and data, they learn of each other by gossip, a request
+Optional. Several servers act as one (**Drishti\*net**): each holds its packs and data, they learn of each other through agreed membership views (JGroups over TCP), a request
 for something one node holds is forwarded to it, and the console moves to another server when its own stops. How it works inside, at
 depth: [CLUSTER_GUIDE.md](guides/CLUSTER_GUIDE.md) (the one home for the internals). This section is the complete deployment and QA path.
 
@@ -946,7 +946,7 @@ Larger estates by role: [CLUSTER_GUIDE.md › Roles and how many](guides/CLUSTER
 | Port | Between | Notes |
 |---|---|---|
 | server port (18480) | console → server, server ↔ server (forwarded requests, digests, seeds) | open between every pair of nodes and from the consoles |
-| **gossip port** | server ↔ server only | `gossip-port: auto` (default: a free port chosen at start and advertised); **a number** (for example `7946`) when a firewall must name it; `off` shares the server's port. Admin → Health shows `gossipPort` |
+| **cluster port** (7946) and **cluster port + 100** (7946 + 100) | server ↔ server only, TCP | `cluster-port` in the node's `node.yaml` (a number, default 7946); the failure detector listens on `cluster-port` + 100, so open both between nodes. Never multicast. `agreement-port` is open too only in ratis mode. Admin → Health shows `clusterPort` and `view` |
 | console port (17480) | browsers → console | from people's networks |
 
 **Advertise the real address, never `localhost`, `127.0.0.1` or `0.0.0.0`.** Each node tells the others where to call it
@@ -985,13 +985,9 @@ engines) is the **same** on every node. On each node:
 enabled: true
 node-id: drishti-b
 advertise-url: http://<host-b>:18480        # left out: this machine's real address
-gossip-port: auto                           # or 7946 behind a firewall
+cluster-port: 7946                          # and 7946 + 100 open between the nodes
+seeds: [<host-a>:7946]                      # real cluster addresses (host:cluster-port)
 secret: ${DRISHTI_NET_SECRET}               # a reference: the key itself never goes in a file
-```
-
-```yaml
-# config/net/peers/drishti-a.yaml on drishti-b and drishti-c: the seed
-url: http://<host-a>:18480
 ```
 
 **From the command line** the same, checked as the server would:
@@ -1002,7 +998,7 @@ drishti-console/.venv/bin/python tools/drishti.py net set node.node-id drishti-b
 drishti-console/.venv/bin/python tools/drishti.py net set node.secret '${DRISHTI_NET_SECRET}'
 drishti-console/.venv/bin/python tools/drishti.py net set node.advertise-url http://<host-b>:18480
 drishti-console/.venv/bin/python tools/drishti.py net set node.enabled true
-drishti-console/.venv/bin/python tools/drishti.py net add-peer drishti-a <host-a>:18480
+drishti-console/.venv/bin/python tools/drishti.py net add-seed <host-a>:7946
 drishti-console/.venv/bin/python tools/drishti.py net check                 # exit 0: every file would be taken
 ```
 
@@ -1062,7 +1058,7 @@ bin\start-console.cmd --server http://<host-a>:18480 --env-file C:\drishti-secre
 ```
 
 The first start of a node makes its Drishti\*net folder, `<data>/nodes/<node>/net` (a `node.yaml` naming `${DRISHTI_ADVERTISE_HOST}`,
-`${DRISHTI_PORT}` and `${DRISHTI_NET_SECRET}`, never the values), and `--seed` writes `peers/seed-<host>-18480.yaml`. A folder made and
+`${DRISHTI_PORT}` and `${DRISHTI_NET_SECRET}`, never the values), and `--seed` gives its seeds (`host:cluster-port`). A folder made and
 checked by hand (10.4) is given with `--node-dir`: `bin/start-server.sh --node drishti-b --node-dir /etc/drishti/net …`. A console may be
 given several entry nodes, `--server http://<host-a>:18480,http://<host-b>:18480`: it uses the first that answers.
 
@@ -1093,8 +1089,8 @@ console                 1980320  running    27480  UP         http://192.168.2.7
 and in each server's log:
 
 ```text
-INFO  … GossipConnector : net: gossip port 36009 open (8 platform threads of its own; gossip, probes and digests only)
-INFO  … NetService      : net: node drishti-b joined Drishti*net at http://<host-b>:18480 (incarnation 1, seeds [http://<host-a>:18480], 0 saved members, gossip on port 36009)
+INFO  … JGroupsMembership : net: cluster port 7946 open (TCP; failure detector on 8046)
+INFO  … NetService      : net: node drishti-b joined Drishti*net at http://<host-b>:18480 (cluster <host-b>:7946, view 3, seeds [<host-a>:7946], 0 saved members)
 INFO  … NetService      : net: member drishti-a joined
 INFO  … NetService      : net: member drishti-c joined
 ```
@@ -1132,14 +1128,14 @@ hash ring is green.
 ```text
 $ drishti-console/.venv/bin/python tools/drishti.py net members --server http://<host-a>:18480 --token-file ~/drishti-token
 3 member(s); this node drishti-a
-  node                   state  address                    version   tags  latency  incarnation
-  drishti-a (this node)  alive  http://<host-a>:18480      2.9.11.g        -        1
-  drishti-b              alive  http://<host-b>:18480      2.9.11.g        4.0 ms   1
-  drishti-c              alive  http://<host-c>:18480      2.9.11.g        4.1 ms   1
+  node                   state  address                    version   tags  latency  cluster address
+  drishti-a (this node)  alive  http://<host-a>:18480      2.9.11.g        -  <host-a>:7946
+  drishti-b              alive  http://<host-b>:18480      2.9.11.g        4.0 ms  <host-b>:7946
+  drishti-c              alive  http://<host-c>:18480      2.9.11.g        4.1 ms  <host-c>:7946
 ```
 
-**2 · Gossip health.** **Admin → Health** on each node: the Drishti\*net line (members alive and suspect, requests forwarded and failed,
-`gossipPort`).
+**2 · Membership health.** **Admin → Health** on each node: the Drishti\*net line (members alive and suspect, requests forwarded and failed,
+`clusterPort`, `view`).
 
 ![Admin → Health on a cluster node: the Drishti*net line](img/deploy/23-health-net.jpg)
 
@@ -1209,7 +1205,7 @@ nodes, then the owner. `tools/rolling-upgrade.sh` (Windows: `tools\windows\rolli
 | C2 | Each node's log | `joined Drishti*net at http://<real address>` and `member … joined` for the others | ☐ |
 | C3 | Admin → Cluster → Members | three `alive`; addresses are real, none `localhost` | ☐ |
 | C4 | `net members` | three lines, one marked this node | ☐ |
-| C5 | Admin → Health | the Drishti\*net line green; `gossipPort` as configured | ☐ |
+| C5 | Admin → Health | the Drishti\*net line green; `clusterPort` as configured | ☐ |
 | C6 | Drain a node | drained on Admin → Cluster; `safeToStop` true; `VAR BANK` answers | ☐ |
 | C7 | Undrain | the node serves again | ☐ |
 | C8 | Inbox | owner `drishti-a` only | ☐ |
@@ -1225,8 +1221,8 @@ nodes, then the owner. `tools/rolling-upgrade.sh` (Windows: `tools\windows\rolli
 | `node.yaml was not written: '… 127.0.0.1 …' is a loopback or wildcard address` | the machine's real address (the message names it), or leave `advertise-url` out |
 | `401 DRS-5051 cluster credential refused: bad signature` | the same `DRISHTI_NET_SECRET` on every node |
 | `… signed 75 s away from this node's clock` | NTP on every node |
-| A member flaps between `alive` and `suspect` | `gossip-port` on `auto` or a number (not `off`); the firewall must allow it between the nodes |
-| `net: the gossip port … cannot be reached … but … answers` | open the numbered gossip port between the nodes |
+| A member flaps between `alive` and `suspect` | `cluster-port` and `cluster-port` + 100 (TCP) open between the nodes; raise `suspect-after` in `[net.membership]` on a slow network |
+| A node never enters the view | the same cluster key and cluster name on every node; `cluster-port` and `cluster-port` + 100 open; `seeds` as `host:cluster-port` with real addresses |
 | `503 DRS-5215` naming a shard | an owner is missing: start it; the shard is rebuilt after `stable-seconds` |
 | `409 DRS-5216` | members read different lake versions: the same lake path everywhere; announce the load |
 | Admin → Cluster warns that the nodes run different editions | the same `DRISHTI_EDITION` on every node, then restart |

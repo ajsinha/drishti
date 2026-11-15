@@ -1517,7 +1517,7 @@ a key of `application.yaml` or a `@ConfigurationProperties` binding is not in th
   `NetRouting.downHolders(kind, date)`). A `range=3M` history of a CALYPSO trade asked while the MUREX holder is down, whose lake starts
   on 2026-10-02, is complete: the 54 days before 10-02 are before any lake, as the window's `loadedFrom` says. A source that keeps no
   dates, or a digest without the two dates (a node of an older release), may hold any date.
-- **A peer that refuses the connection** (it just died and gossip has not said so yet, or it is restarting and its port is not open:
+- **A peer that refuses the connection** (it just died and the view has not said so yet, or it is restarting and its port is not open:
   `ConnectException`, a reset, no route) is down as far as the read goes (SOAK-02, SOAK-03): the next holder is asked for the same
   dates, and the dates no one answered are `DRS-5052` naming it, `… cannot be reached now: drishti-c (not answering: the connection
   failed)`, for the dates its digest says it may hold. Never `DRS-1003`.
@@ -3038,7 +3038,7 @@ There is no second store to back up, secure, size or switch.
 | BI workspaces, items, versions, usage and BI runs only with `drishti.bi.store: jpa` / `drishti.bi.runs.store: local` (one node); by default they live in the content store and the `drishti_bi_*` and `drishti_bi_run*` tables are legacy, read once by the import and kept ([section 5](#5-the-content-store-user-content-every-node-reaches) section 9); the content store's table `drishti_content` when `config/store/store.yaml` says `sqlite` or `postgres` ([section 5](#5-the-content-store-user-content-every-node-reaches)) | **Caches** (RocksDB, layout and fingerprint caches): derived, safe to delete |
 | Write-back (built): `drishti_edit_lane`, `drishti_edit_log`, `drishti_edit_request` (changes awaiting approval), `drishti_overlay`, `drishti_owned`, `drishti_edit_version` (each record's version) and `drishti_edit_cursor` (how far the reactive triggers and a follower of an edit primary have read each lane) ([APPROVALS_GUIDE.md](ARCHITECTURE.md#31-collaboration-write-back-and-approvals) sections 5, 7, 11 and 19). New tables only: the schema version does not move | **Source systems** (ENDUR, CALYPSO, MUREX, connector databases): Drishti reads them, and writes to them only through a connector's `writes:` |
 | Compute approvals (built): `drishti_compute_request` (requests to approve what a connector or pool requires) and `drishti_compute_approval` (the approved items, revocable) ([README.md](../guides/bi/README.md) section 6) | Locked Python environments, staged jars and request scratch folders: files under `<data dir>/compute/` |
-| Administrators' switches (built): `drishti_switch` (commands and packs on or off, each with its hybrid-logical-clock stamp and node) and `drishti_switch_log` (every change, with who and why); the system of record that Drishti*net gossip spreads ([ADMIN_GUIDE.md (Functions)](../guides/ADMIN_GUIDE.md#206-where-it-is-kept)). New tables only: the schema version does not move | |
+| Administrators' switches (built): `drishti_switch` (commands and packs on or off, each with its hybrid-logical-clock stamp and node) and `drishti_switch_log` (every change, with who and why); the system of record that Drishti*net spreads (the members' vitals carry its hash) ([ADMIN_GUIDE.md (Functions)](../guides/ADMIN_GUIDE.md#206-where-it-is-kept)). New tables only: the schema version does not move | |
 | Anything relational added later | Files that are documents by nature (Sutras, packs, connector and net configuration): they stay files under `config/` |
 
 The rule for a new feature: **state Drishti owns and must not lose, with rows and keys, goes in the Drishti database.** A feature
@@ -3932,7 +3932,7 @@ while the cut does not move); a second replica goes to another zone when members
 members that may own shards (`ShardMembership`) are this server and the live, routable Drishti\*net members whose capability digest says
 VaR sharding is on and that are not `coordinator-only`; the view moves only once the eligible members have been the same for
 `stable-seconds`; a draining member leaves it at once. Ownership is a pure function of shared inputs (the map from the same data, the
-membership gossip converges on), and a shard is served only by a member that **holds** it at the data version the asker put the date
+membership the agreed view settles on), and a shard is served only by a member that **holds** it at the data version the asker put the date
 together from, so two members briefly disagreeing cost at most a refused call and a try on the next member, never a wrong number; a quorum
 and a leader would add nothing to correctness.
 
@@ -3986,8 +3986,8 @@ owner leaves time for its replica. Measured on three members at 200,000 position
 no errors, about 230 requests a second ([BENCHMARK.md section 4.3](../admin/BENCHMARK.md#43-users-50-100-and-200)).
 
 **Handover.** Readiness travels in the capability digest (service `var-shards`): whether sharding is on, whether the member owns shards or
-drains, per date the maps held and per shard the data digest it is ready to serve; a change raises the digest's hash in gossip and peers
-pull it within a round. Every `rebalance-seconds`, once the membership has settled, each member (1) builds from the lake (never from a
+drains, per date the maps held and per shard the data digest it is ready to serve; a change raises the digest's hash in the member's vitals and peers
+pull it at once. Every `rebalance-seconds`, once the membership has settled, each member (1) builds from the lake (never from a
 peer) the shards of dates in use that it owns and does not hold, and announces them (a date is in use while open on any member and for
 `release-after-seconds` after); (2) releases what `ShardHandover` allows: a shard it no longer owns once **every** owner has announced it
 ready for `grace-seconds`, an older data version once the newer has been ready here for the grace period, a shard of a replaced cut after

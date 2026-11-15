@@ -16,7 +16,7 @@
 # Tutorial 22 · A cluster of three (Drishti\*net)
 
 One Drishti server answers everything it holds. **Drishti*net** joins several servers into one: each keeps its own packs, connectors and data,
-they find each other by gossip, and any of them answers any request, forwarding it to the node that holds the data and applying the caller's
+they find each other through a membership layer (JGroups over TCP), and any of them answers any request, forwarding it to the node that holds the data and applying the caller's
 masks on both. The console is given one server and learns the others; when that server stops, the console moves to another and the user does
 not sign in again. This tutorial builds three nodes on one machine, opens a trade that only one of them holds through another, asks
 **Explain** where a request goes, drains a node, stops one and watches the console carry on. The reference is [OPERATIONS_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet); the
@@ -98,7 +98,7 @@ under `<data dir>/net/history/` (`node.20261019T125447821.yaml`, ...), as the se
 **In the UI** (once a server runs): **Admin → Cluster → Files**, open `node.yaml`, edit, **Check** (the problems with their line), **Save**. A save
 carries the version you read; if someone saved in between, it is refused and the page says so.
 
-![Admin → Cluster → Files on node a: node.yaml and gossip.yaml in force, routing.yaml and access.yaml not there (their defaults apply), gossip.yaml open in the editor with Check, Save, Delete and its history](img/t19/03-files-gossip.jpg)
+![Admin → Cluster → Files on node a: node.yaml in force, routing.yaml open in the editor with Check, Save, Delete and its history](img/t19/03-files-routing.jpg)
 
 **You should see:** a key in clear (`secret: abc...`) is refused by the CLI, the UI and the server alike; the key never appears in a file,
 a page, an answer or a log. So is a loopback address:
@@ -110,26 +110,28 @@ drishti: node.yaml was not written: 'http://127.0.0.1:18784' is a loopback or wi
 
 ## Step 2 · One seed
 
-Only node a needs to be named anywhere. On b and c, one peer file:
+Only node a needs to be named anywhere. On b and c, a's cluster address (host:cluster-port, 7946 by default) goes in node.yaml's `seeds`:
 
 ```text
-$ drishti.py net add-peer drishti-a $IP:18783
-wrote ~/drishti/b/net/peers/drishti-a.yaml
+$ drishti.py net add-seed $IP:7946
+added 192.168.1.20:7946 to seeds in ~/drishti/b/net/node.yaml
 $ drishti.py net list
 config/net at ~/drishti/b/net: Drishti*net is ON
-  node drishti-b  at http://192.168.1.20:18784  tags -  key set
-  seed drishti-a  http://192.168.1.20:18783
+  node drishti-b  at http://192.168.1.20:18784  cluster-port 7956  tags -  key set
+  seed 192.168.1.20:7946
   node.yaml             in force
-  gossip.yaml           absent (defaults)
   routing.yaml          absent (defaults)
   access.yaml           absent (defaults)
-  peers/drishti-a.yaml  in force
 ```
 
 ```yaml
-# config/net/peers/drishti-a.yaml (Drishti*net, docs/guides/OPERATIONS_GUIDE.md)
-url: http://<this machine's IP>:18783
+# config/net/node.yaml (Drishti*net, docs/guides/CLUSTER_GUIDE.md)
+seeds: [192.168.1.20:7946]
 ```
+
+The cluster port and the port 100 above it must be open between the nodes (TCP). Three nodes on one machine each need their own
+`cluster-port`: here a keeps 7946, b takes 7956 and c 7966 (`drishti.py net set node.cluster-port 7956`), each failure detector
+listening on its port + 100 (8046, 8056, 8066).
 
 `drishti.py net check` checks every file as the server does (exit 0 when all would be taken, 1 otherwise). Without the variable set:
 
@@ -142,14 +144,14 @@ $ drishti.py net check
 And a wrong value names its line:
 
 ```text
-$ drishti.py net set gossip.interval lots
-drishti: gossip.yaml was not written: 'lots' is not a duration (150ms, 5s, 10m, 24h)
-  error   gossip.yaml:2  interval: 'lots' is not a duration (150ms, 5s, 10m, 24h)
+$ drishti.py net set node.cluster-port lots
+drishti: node.yaml was not written: 'lots' is not a number
+  error   node.yaml:4  cluster-port: 'lots' is not a number
 ```
 
-**In the UI:** **Admin → Cluster → Members**, **Add a seed**, type `<this machine's IP>:18783` (here `192.168.1.20:18783`), **Add seed**: it is saved as a peer file and tried at once.
+**In the UI:** **Admin → Cluster → Members**, **Add a seed**, type `<this machine's IP>:7946` (here `192.168.1.20:7946`, `host:cluster-port`), **Add seed**: it is added to `seeds` in node.yaml and dialled at once, without a restart.
 
-**You should see:** `drishti.py net list` on b naming its seed `drishti-a` and `peers/drishti-a.yaml in force`; with the key unset, `net check`
+**You should see:** `drishti.py net list` on b naming its seed `192.168.1.20:7946`; with the key unset, `net check`
 exits 1 and names `node.yaml:3`.
 
 ## Step 3 · Start the three and watch them meet
@@ -170,7 +172,7 @@ option, and the layout on three machines: [DEPLOYMENT_AND_QA_GUIDE.md › sectio
 Each logs its join and each member it learns. Node b's log, as captured:
 
 ```text
-INFO ... NetService : net: node drishti-b joined Drishti*net at http://192.168.1.20:18784 (incarnation 1, seeds [http://192.168.1.20:18783], 0 saved members)
+INFO ... NetService : net: node drishti-b joined Drishti*net at http://192.168.1.20:18784 (cluster 192.168.1.20:7956, view 3, seeds [192.168.1.20:7946], 0 saved members)
 INFO ... NetService : net: member drishti-a joined
 INFO ... NetService : net: member drishti-c joined
 ```
@@ -189,16 +191,15 @@ dashed band, and the centre counts the members alive. Hover an arc for the kinds
 ```text
 $ drishti.py net members --server http://$IP:18784
 3 member(s); this node drishti-b
-  node                   state  address                 version  tags                   latency  incarnation
-  drishti-b (this node)  alive  http://192.168.1.20:18784  2.4.0    region:emea            -        1
-  drishti-a              alive  http://192.168.1.20:18783  2.4.0    region:emea,tier:risk  6.4 ms   1
-  drishti-c              alive  http://192.168.1.20:18785  2.4.0    region:apac            8.8 ms   1
+  node                   state  address                 version  tags                   latency  cluster address
+  drishti-b (this node)  alive  http://192.168.1.20:18784  2.4.0    region:emea            -  192.168.1.20:7956
+  drishti-a              alive  http://192.168.1.20:18783  2.4.0    region:emea,tier:risk  6.4 ms  192.168.1.20:7946
+  drishti-c              alive  http://192.168.1.20:18785  2.4.0    region:apac            8.8 ms  192.168.1.20:7966
 ```
 
-**You should see:** the three `alive` on every node within a few gossip rounds (rounds of 1 s). In the in-process test of three servers
+**You should see:** the three `alive` on every node within a few seconds of the third start (agreed views: the same members in the same order on every node). In the in-process test of three servers
 (`NetMembershipTest`), they listed each other about 50 ms after the third started; on three real servers the console listed all three 1.5 s
-after it started ([OPERATIONS_GUIDE.md › Drishti*net: running several servers as one, section 13](../guides/CLUSTER_GUIDE.md#11-operations-and-disaster-recovery)). A node killed is `suspect` after `suspect-after`
-and `dead` after `dead-after` more (gossip.yaml; with the 3 s and 10 s used here every node saw it in about 3 s), and its data is then asked of
+after it started ([OPERATIONS_GUIDE.md › Drishti*net: running several servers as one, section 13](../guides/CLUSTER_GUIDE.md#11-operations-and-disaster-recovery)). A node stopped cleanly leaves the view at once; a node killed leaves it within `suspect-after` plus `verify` (`[net.membership]`, 10 s and 1.5 s by default; a stack's `membership:` block uses 3 s and 1 s), and its data is then asked of
 the other holders.
 
 **The capability map** (**Admin → Cluster → Capability map**) shows, for each kind, the nodes that render it with their pack's version, and the
@@ -288,7 +289,7 @@ no refused calls.
 ## Step 7 · Drain a node, then stop one
 
 **Drain** (Admin → Cluster → Members, **Drain**, or `POST /api/v1/net/drain`): the node stops taking forwarded traffic and searches and the other
-nodes see it within a gossip round; requests for data it shares with another node go to that node. **Undrain** brings it back. Drain before
+nodes see it at once (its vitals change); requests for data it shares with another node go to that node. **Undrain** brings it back. Drain before
 maintenance; then stop it, and it leaves the cluster cleanly.
 
 **Drain for a stop** is the drain to use before stopping or upgrading a node: on the same card, it hands over forwarded work **and**
@@ -329,10 +330,10 @@ console: console moved from http://192.168.1.20:18783 to http://192.168.1.20:187
 ```text
 $ drishti.py net members --server http://$IP:18784
 3 member(s); this node drishti-b
-  node                   state  address                 version  tags                   latency  incarnation
-  drishti-b (this node)  alive  http://192.168.1.20:18784  2.4.0    region:emea            -        1
-  drishti-a              left   http://192.168.1.20:18783  2.4.0    region:emea,tier:risk  6.1 ms   1
-  drishti-c              alive  http://192.168.1.20:18785  2.4.0    region:apac            6.7 ms   1
+  node                   state  address                 version  tags                   latency  cluster address
+  drishti-b (this node)  alive  http://192.168.1.20:18784  2.4.0    region:emea            -  192.168.1.20:7956
+  drishti-a              left   http://192.168.1.20:18783  2.4.0    region:emea,tier:risk  6.1 ms  192.168.1.20:7946
+  drishti-c              alive  http://192.168.1.20:18785  2.4.0    region:apac            6.7 ms  192.168.1.20:7966
 ```
 
 ![Admin → Cluster → Members on c after a stopped: drishti-a left, b and c alive; this console's servers: 18783 set aside, 18785 in use](img/t19/09-after-a-stopped.jpg)
@@ -369,7 +370,7 @@ copied ...: N changes sent, M applied here*), your saved search in the list on b
 ## Next steps
 
 - [OPERATIONS_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet): every file and setting, the capability map, sizing, the meters (`drishti.net.members`, `.forwarded`,
-  `.gossip.rounds`, `.peer.latency`).
+  `.cluster.view.changes`, `.peer.latency`).
 - [OPERATIONS_GUIDE.md section 12a](../guides/OPERATIONS_GUIDE.md): backups of `config/net/` and `<data dir>/net/`, rolling upgrades.
 
 ## If something goes wrong
