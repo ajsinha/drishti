@@ -24,6 +24,8 @@
   names a moved table's folder correctly when the lake sits under a folder named `data`.
 - **No empty answer that looks true for positions and system baskets.** Right after a start (inputs loading, busy protection, no vectors
   read yet) a list, count or pivot of `position` or `system-basket` answers the refusal with its reason, never 0 rows.
+- **A page's freshness follows what its source says now.** A refresh whose provenance no longer names an update time or a
+  stale-after clears the ones it had; a source that was stale and recovered no longer stays marked stale until a reload.
 - **A site file that gives only `root` moves its template's lake.** Over a template that names a lake, a connector override with
   `settings.root` alone (what `drishti.py lake demo --lake` writes) keeps the lake and its tables and reads them under that root; with
   `domain`, `table.<kind>` or `layout.<kind>` it is the older form, as before. A scratch demo lake was read as no tables at all.

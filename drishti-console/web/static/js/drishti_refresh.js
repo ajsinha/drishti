@@ -235,8 +235,10 @@
       .then(function (j) {
         var prov = j.provenance || {};
         if (prov.source) { source = prov.source; d.source = prov.source; }
-        if (prov.updatedAt) { d.updated = prov.updatedAt; }
-        if (prov.staleAfter) { d.staleAfter = prov.staleAfter; }
+        if (j.provenance) {                            // the source's freshness as it says it now: one it no longer names is gone, not kept from before
+          d.updated = prov.updatedAt || '';
+          d.staleAfter = prov.staleAfter || '';
+        }
         view.toggleAttribute('data-stale', !!prov.stale);
         (j.panels || []).forEach(function (x) { swap(x); if (panels[x.id]) { panels[x.id].prov = x.provenance || null; } });
         done(ids, true);
