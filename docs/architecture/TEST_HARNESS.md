@@ -452,6 +452,13 @@ datetime.timedelta(days=5)`), or declares its fixture connector with `lookback-d
 `tools/drillkit/test_no_time_bombs.py` fails a console test file that builds a day folder from a literal date without either, unless
 the file is listed there with the reason it cannot age out.
 
+**Failures as they happen.** With `-q` and xdist a pytest lane names its failing tests only in its end summary. Every pytest lane
+(browser, other, tools-a, tools-b, anywhere) loads `tools/drillkit/drill_failures.py` and appends one line per failing phase to
+`<data>/drill/<lane>-failures.txt` the moment it fails: `nodeid  [setup|call|teardown]  one-line reason`. Under xdist the controller
+writes it from the workers' relayed reports (a worker never writes, so no line is doubled), and the lane's log gets a running
+`drill: N failing so far: <nodeid>` line. A lane's file is emptied when the lane starts; a console lane's re-run of its failed files
+appends to it, so a test that passed on the re-run still shows its first failure there. `tools/drillkit/test_drill_failures.py` checks it.
+
 **Every Java lane runs Maven with `--fail-at-end`** (`DRILL_MVN_FAE=off` stops at the first failing module): one failing module no longer
 hides the others (the modules that depend on it are skipped). At its end the lane lists every module and test class whose report holds
 a failure or error (a test that passed on its re-run is a flake, listed in `flakes.log`, not here) and a one-line list of the failing

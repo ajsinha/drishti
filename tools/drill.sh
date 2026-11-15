@@ -291,8 +291,8 @@ console_files() {   # name, workers, failed files re-run at a time, then the fil
   local out="$LOGS/console-$name.txt" rc=0 dist=loadfile
   # the browser lane by test: a file's tests stay one group on one worker unless they are marked spread (TEST_HARNESS.md)
   [[ $name == browser ]] && dist=loadgroup
-  DRISHTI_SNAPSHOT_REPORT="$LOGS/snapshots.jsonl" DRISHTI_SNAPSHOT_DIFFS="$LOGS/snapshot-diffs" DRISHTI_PAGELOAD_LOG="$LOGS/pageloads.jsonl" DRISHTI_SWEEP_OUT="$LOGS/sweep" DRILL_MIN_FREE_GB="${DRILL_MIN_FREE_GB:-6}" DRILL_TIMINGS_OUT="$LOGS/timings-$name.json" PYTHONPATH="$PWD/tools/drillkit${PYTHONPATH:+:$PYTHONPATH}" \
-    timeout --kill-after=60 "$LANE_LIMIT" "$PY" -m pytest -q -rfE -p drill_timings -n "$workers" --dist "$dist" --no-loadscope-reorder "$@" \
+  DRISHTI_SNAPSHOT_REPORT="$LOGS/snapshots.jsonl" DRISHTI_SNAPSHOT_DIFFS="$LOGS/snapshot-diffs" DRISHTI_PAGELOAD_LOG="$LOGS/pageloads.jsonl" DRISHTI_SWEEP_OUT="$LOGS/sweep" DRILL_MIN_FREE_GB="${DRILL_MIN_FREE_GB:-6}" DRILL_TIMINGS_OUT="$LOGS/timings-$name.json" DRILL_FAILURES_OUT="$LOGS/$name-failures.txt" PYTHONPATH="$PWD/tools/drillkit${PYTHONPATH:+:$PYTHONPATH}" \
+    timeout --kill-after=60 "$LANE_LIMIT" "$PY" -m pytest -q -rfE -p drill_timings -p drill_failures -n "$workers" --dist "$dist" --no-loadscope-reorder "$@" \
     > "$out" 2>&1 || rc=$?
   tail -n 5 "$out"
   (( rc == 0 )) && return 0
@@ -343,11 +343,12 @@ tool_test_files() {   # lane (a or b): its test files and folders
 }
 run_tool_tests() {   # files and folders: each in its own pytest process; returns 1 when any failed
   command -v uv >/dev/null || { echo "drill: the tools' tests need uv (it provides deltalake, pyarrow, PyYAML, pytest and moto)" >&2; return 1; }
+  export DRILLKIT="$PWD/tools/drillkit"; [[ -n ${DRILL_FAILURES_OUT:-} ]] && : > "$DRILL_FAILURES_OUT"   # the lane's failures file, one line each as they happen
   timeout --kill-after=60 3600 uv run -q --with deltalake --with pyarrow --with pyyaml --with pytest --with "moto[server]==5.2.3" bash -c '
     rc=0
     for f in "$@"; do
       t=$SECONDS
-      timeout --kill-after=30 900 python -m pytest -q -p no:cacheprovider "$f" 2>&1 | grep -v "^{\"at\""
+      PYTHONPATH="$DRILLKIT${PYTHONPATH:+:$PYTHONPATH}" timeout --kill-after=30 900 python -m pytest -q -p no:cacheprovider -p drill_failures "$f" 2>&1 | grep -v "^{\"at\""
       r=${PIPESTATUS[0]}
       echo "drill: tools $f: $(( SECONDS - t ))s$( (( r == 0 )) || echo " FAILED (exit $r)")"
       (( r == 0 )) || rc=1
@@ -355,6 +356,7 @@ run_tool_tests() {   # files and folders: each in its own pytest process; return
     exit $rc' _ "$@"
 }
 tools_lane_a() {
+  export DRILL_FAILURES_OUT="$LOGS/tools-a-failures.txt"
   set -e
   local files=()
   mapfile -t files < <(tool_test_files a)
@@ -368,6 +370,7 @@ tools_lane_a() {
   return $rc
 }
 tools_lane_b() {
+  export DRILL_FAILURES_OUT="$LOGS/tools-b-failures.txt"
   set -e
   local files=()
   mapfile -t files < <(tool_test_files b)
@@ -495,7 +498,8 @@ java21_docker() {   # every Testcontainers test: the copy is built at once, its 
 # missing required root stops the start at once with its message. About 5 minutes (the lake: cached per hash of its sources).
 ANYWHERE_TEST=drishti-console/tests/test_release_from_other_folder.py
 release_anywhere() {
-  timeout --kill-after=60 2400 "$PY" -m pytest -q -rfE -p no:cacheprovider "$ANYWHERE_TEST"   # three server starts of 100-140 s each beside the other lanes, the checks and a lake load
+  rm -f "$LOGS/anywhere-failures.txt"
+  timeout --kill-after=60 2400 env DRILL_FAILURES_OUT="$LOGS/anywhere-failures.txt" PYTHONPATH="$PWD/tools/drillkit${PYTHONPATH:+:$PYTHONPATH}" "$PY" -m pytest -q -rfE -p no:cacheprovider -p drill_failures "$ANYWHERE_TEST"   # three server starts of 100-140 s each beside the other lanes, the checks and a lake load
 }
 
 # The containers lane (TEST_HARNESS.md, "The container smoke test"): the images as shipped, built and booted on the host's network beside
