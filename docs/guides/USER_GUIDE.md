@@ -3332,6 +3332,8 @@ They are kept with your other saved documents (workspaces, monitors) in the iden
 
 The runtime is not in git (53 MB, which `du -sh` shows as 51M). `tools/fetch-pyodide.sh` installs it once:
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 tools/fetch-pyodide.sh
 ```

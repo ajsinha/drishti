@@ -50,6 +50,8 @@
     <module>kernel/drishti-identity</module>
     <module>kernel/drishti-packs</module>
     <module>kernel/drishti-ai</module>
+    <module>kernel/drishti-settingsfile</module>
+    <module>testing/drishti-testroots</module>
     <module>testing/drishti-testkit</module>
     <module>kernel/drishti-registry</module>
     <module>lake/drishti-lakeio</module>
@@ -260,6 +262,14 @@
             <!-- what a test makes at runtime (connector caches on disk, the derived pages' store) goes under target/, never a
                  data/ folder inside the repository -->
             <drishti.data.dir>${project.build.directory}/test-data</drishti.data.dir>
+            <!-- the launch roots (LaunchRoots): the anchor is the module's folder, where the forks run, named outright; a module whose
+                 tests serve the shipped modules names drishti.modules.home (drishti-server); the others serve none -->
+            <drishti.home>${project.basedir}</drishti.home>
+            <drishti.modules.home>none</drishti.modules.home>
+            <!-- where a test finds the repository's shared files (config/, modules/, docs/, examples/) and its own module's: absolute, so a
+                 test never depends on the folder the JVM was started in (guarded by TestPathsGuardTest) -->
+            <drishti.repo.root>${maven.multiModuleProjectDirectory}</drishti.repo.root>
+            <drishti.module.root>${project.basedir}</drishti.module.root>
           </systemPropertyVariables>
         </configuration>
       </plugin>
@@ -333,6 +343,15 @@
   </build>
 
   <profiles>
+    <!-- TestRoots: where a test finds the repository and its module, with or without surefire's properties. Only a module with tests of
+         its own takes it (a module built alone, such as drishti-elements in its profile, then needs nothing from the local repository) -->
+    <profile>
+      <id>testroots</id>
+      <activation><file><exists>${project.basedir}/src/test/java</exists></file></activation>
+      <dependencies>
+        <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-testroots</artifactId><version>${project.version}</version><scope>test</scope></dependency>
+      </dependencies>
+    </profile>
     <!-- Drishti Elements as a WebJar (docs/guides/EMBED_GUIDE.md): `mvn -P elements -pl :drishti-elements package` writes
          packaging/drishti-elements/target/drishti-elements-<train>.jar; the files come from tools/elements/cli.py webjar-tree (Python 3). -->
     <profile>

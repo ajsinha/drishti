@@ -163,6 +163,8 @@ replaces the pack's template wholesale, so it names the kinds and the promoted b
 
 **Walk-through:**
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 docker compose -f deploy/docker/compose.data.yaml up -d aerospike
 tools/load-aerospike.sh localhost:3000 test                                 # the samples x 10 business days

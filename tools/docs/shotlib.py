@@ -159,6 +159,8 @@ def render_panel(panel: dict) -> str:
     hu = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(hu)
     hu.install(env)                                    # the panel macros' rounding filter
+    env.globals["BASE"] = ""                           # the console's URL sub-path and its filter u (core/base_path.py): served at /
+    env.filters["u"] = lambda url: url
     return env.from_string('{% from "_macros/panels.html" import panel %}{{ panel(p) }}').render(p=panel)
 
 

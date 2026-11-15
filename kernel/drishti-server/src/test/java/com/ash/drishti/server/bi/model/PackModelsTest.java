@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.model;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -61,8 +62,8 @@ class PackModelsTest {
     private static PackRegistry registry() {
         PackRegistry r = new PackRegistry(new MockEnvironment());
         r.replace(List.of(
-                new Pack("shop", "1", "Shop", "", Path.of("target/none"), Map.of("kinds", List.of("order", "region"), "routes", Map.of("order", "orders-store"))),
-                new Pack("crm", "1", "CRM", "", Path.of("target/none"), Map.of("kinds", List.of("customer", "order-line")))));
+                new Pack("shop", "1", "Shop", "", Path.of(TestRoots.module(), "target", "none"), Map.of("kinds", List.of("order", "region"), "routes", Map.of("order", "orders-store"))),
+                new Pack("crm", "1", "CRM", "", Path.of(TestRoots.module(), "target", "none"), Map.of("kinds", List.of("customer", "order-line")))));
         return r;
     }
 

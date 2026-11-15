@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Template: copy to config/connectors/trade-wss.yaml to read WSS's trades from Iceberg (the shared table trading.trades_shared, split by where:).
+# Template: copy to config/connectors/trade-wss.yaml to read WSS's trades from Iceberg (its own table trading.trade_wss).
 # The lake (config/lakes/iceberg.yaml) is config/lakes.examples/iceberg/iceberg.yaml. Credentials are ${ENV_VAR} references.
 plugin: iceberg
 kinds:
@@ -20,10 +20,9 @@ kinds:
 description: WSS trades read from Iceberg
 settings:
   lake: iceberg
-  lake-tables: trading.trades_shared
+  lake-tables: trading.trade_wss
   union: true
   source-name: trade-wss
-  where: SOURCE_SYSTEM = 'WSS'
   set:
     SOURCE_SYSTEM: WSS
   map: mappings/wss-trade.yaml

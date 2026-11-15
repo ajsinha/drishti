@@ -27,6 +27,8 @@ and the logs under the data folder, waits for /actuator/health and prints the ad
 
   --port N            the server's port (default DRISHTI_PORT, else 18480)
   --heap SIZE         the heap limit, -Xmx (default 2g; 4g with --demo)
+  --settings FILE     a settings file (key=value lines, an absolute path): each entry a system property unless set otherwise
+                      (passed as -Ddrishti.settings.file; docs/admin/CONFIGURATION.md, "The settings file")
   --jar FILE          the server jar (default the newest kernel/drishti-server/target/drishti-server-*-exec.jar, then drishti-server*.jar here)
   --java-home DIR     the JDK (default DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH, then /usr/libexec/java_home -v 21 on macOS)
   --packs LIST        the packs to load (DRISHTI_PACKS; default the server's own, or the demo's ten with --demo)
@@ -69,7 +71,7 @@ EOF
 }
 
 PORT="" HEAP="" JAR="" JAVA_HOME_DIR="" PACKS="" DATA="" ENV_FILE="" DEMO=false ENGINE="" LAKE_ROOT="" ICEBERG=false ICEBERG_ROOT=""
-WORKDIR="$DRISHTI_ROOT" BACKGROUND=false WAIT=300 NODE="" NODE_DIR="" NODE_DATA="" SEEDS="" ADVERTISE="" DIST=""
+SETTINGS="" WORKDIR="$DRISHTI_ROOT" BACKGROUND=false WAIT=300 NODE="" NODE_DIR="" NODE_DATA="" SEEDS="" ADVERTISE="" DIST=""
 STOP=false
 JAVA_OPTS=()
 SERVER_ARGS=()
@@ -78,6 +80,7 @@ while [ $# -gt 0 ]; do
     --port) need "${2:-}" "$1"; PORT="$2"; shift 2 ;;
     --heap) need "${2:-}" "$1"; HEAP="$2"; shift 2 ;;
     --jar) need "${2:-}" "$1"; JAR="$2"; shift 2 ;;
+    --settings) need "${2:-}" "$1"; SETTINGS="$2"; shift 2 ;;
     --java-home) need "${2:-}" "$1"; JAVA_HOME_DIR="$2"; shift 2 ;;
     --packs) need "${2:-}" "$1"; PACKS="$2"; shift 2 ;;
     --data-dir) need "${2:-}" "$1"; DATA="$2"; shift 2 ;;
@@ -121,6 +124,10 @@ fi
 DATA="$(data_dir "$DATA")"
 SERVER_DATA="$(data_dir "${NODE_DATA:-$DATA}")"
 export DRISHTI_DATA_DIR="$SERVER_DATA"
+# the launch roots, absolute (docs/admin/CONFIGURATION.md, "Launch roots"): the install folder this script is in, and its modules; the server
+# takes no root from its working folder (--workdir), so a node started from another folder still finds them
+export DRISHTI_HOME="${DRISHTI_HOME:-$DRISHTI_ROOT}"
+export DRISHTI_MODULES_HOME="${DRISHTI_MODULES_HOME:-$DRISHTI_HOME/modules}"
 PORT="${PORT:-${DRISHTI_PORT:-$DEFAULT_SERVER_PORT}}"
 STEM="server${NODE:+-$NODE}"
 PID_FILE="$DATA/run/$STEM.pid"
@@ -237,6 +244,11 @@ export MALLOC_ARENA_MAX="${MALLOC_ARENA_MAX:-2}"          # glibc: two malloc ar
 FLAGS=("-Djava.io.tmpdir=$TMP" "-Xmx$HEAP" "-XX:MaxDirectMemorySize=256m" "-XX:TrimNativeHeapInterval=60000" "-Djdk.nio.maxCachedBufferSize=262144"
        "-XX:NativeMemoryTracking=summary" "-XX:+HeapDumpOnOutOfMemoryError" "-XX:HeapDumpPath=$DATA/dumps/$LABEL"
        "-Xlog:gc*:file=$DATA/logs/gc-$STEM-%p.log:time,uptime:filecount=5,filesize=20m")
+if [ -n "$SETTINGS" ]; then                 # the settings file: an absolute path that exists, never searched for
+  case "$SETTINGS" in /*) ;; *) die "--settings $SETTINGS: give the settings file as an absolute path" 2 ;; esac
+  [ -f "$SETTINGS" ] || die "--settings $SETTINGS: no such file" 2
+  FLAGS+=("-Ddrishti.settings.file=$SETTINGS")
+fi
 [ "$MAJOR" -lt 25 ] || FLAGS=("-XX:+UseCompactObjectHeaders" "${FLAGS[@]}")
 # direct memory beyond 256 MB: the in-memory lake's stores and Arrow's budget, from the one place that sizes them (a later flag wins)
 PY="$(python_for_tools)"
@@ -256,6 +268,7 @@ $BACKGROUND && ARGS+=("--drishti.logging.file=$LOG" "--logging.threshold.console
 URL="http://$URL_HOST:$PORT"
 HEALTH="http://127.0.0.1:$PORT/actuator/health"
 say "Drishti ${NODE:+node $NODE }server: $(basename "$JAR") on Java $MAJOR, port $PORT, heap $HEAP, packs ${DRISHTI_PACKS:-the default}, data $SERVER_DATA"
+say "  home $DRISHTI_HOME, modules $DRISHTI_MODULES_HOME"
 [ -z "$NODE" ] || say "  Drishti*net folder $NODE_DIR, advertising $URL"
 if [ -n "$DEV_SECRETS" ]; then
   warn "DEVELOPMENT secrets in use (NOT FOR PRODUCTION):$DEV_SECRETS. Put your own in an --env-file for anything shared."

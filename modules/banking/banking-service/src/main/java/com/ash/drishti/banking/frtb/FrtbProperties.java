@@ -41,14 +41,16 @@ public record FrtbProperties(Boolean enabled, String parametersDir, String sensi
 
     public FrtbProperties {
         enabled = enabled == null || enabled;
-        parametersDir = blank(parametersDir) ? "./modules/banking/dmod/packs/market-risk/capital" : parametersDir.strip();
+        // config/engines/frtb-sa.yaml names it under ${drishti.modules.home}; without that file, under the server's modules folder (LaunchRoots)
+        parametersDir = blank(parametersDir) ? java.nio.file.Path.of(com.ash.drishti.api.Roots.modules(), "banking", "dmod", "packs",
+                "market-risk", "capital").toString() : parametersDir.strip();
         sensitivityKind = blank(sensitivityKind) ? "position-sensitivity" : sensitivityKind.strip();
         factorKind = blank(factorKind) ? "risk-factor" : factorKind.strip();
         defaultRiskKind = blank(defaultRiskKind) ? "default-risk" : defaultRiskKind.strip();
         residualRiskKind = blank(residualRiskKind) ? "residual-risk" : residualRiskKind.strip();
         rraoFromPositions = rraoFromPositions == null || rraoFromPositions;
         maxFactors = maxFactors == null || maxFactors < 10 ? 2000 : maxFactors;
-        recipesDir = blank(recipesDir) ? "./data/frtb/recipes" : recipesDir.strip();
+        recipesDir = blank(recipesDir) ? com.ash.drishti.api.Roots.data("frtb/recipes") : recipesDir.strip();
         cacheMinutes = cacheMinutes == null || cacheMinutes < 1 ? 10 : cacheMinutes;
         playgroundTemplate = playgroundTemplate == null ? "" : playgroundTemplate.strip();
     }

@@ -120,7 +120,11 @@ fields:
   example: MUREX
   enum:
   - CALYPSO
+  - ENDUR
+  - ICI
   - MUREX
+  - SWAPONE
+  - WSS
 - name: VECTOR_ID
   type: id
   presence: required

@@ -21,7 +21,8 @@ such extracts write them: an empty string (most), ``null`` (a few), ``0`` (amoun
 extract that writes it under another name is mapped on load: :data:`RENAMED`).
 
     TRADE_ID          text, unique across the systems: ENDUR digits ("1000001" ...), CALYPSO CLY-..., MUREX MX-...; every id is text
-    SOURCE_SYSTEM     ENDUR, CALYPSO or MUREX
+    SOURCE_SYSTEM     one of the shipped source systems (ALLOWED): ENDUR, CALYPSO, MUREX, WSS, SWAPONE, ICI; the demo books
+                      generate the first three (SYSTEMS)
     PRODUCT_TYPE      selects the deal's Sutra (one per product type)
     COUNTERPARTY      a counterparty id of the core pack (its COUNTERPARTY_ID); PORTFOLIO a book id; LEGAL_ENTITY a legal entity id
 
@@ -29,7 +30,10 @@ Every check here is about names and nesting, never about values: :func:`problems
 """
 from __future__ import annotations
 
+#: the systems this generator books demo trades for
 SYSTEMS = ("ENDUR", "CALYPSO", "MUREX")
+#: every value the trade contract allows: one per shipped source module (modules/source-*)
+ALLOWED = SYSTEMS + ("WSS", "SWAPONE", "ICI")
 
 TOP = ["SOURCE_SYSTEM", "SOURCE_UPDATE_TIME", "TRADE_DATE", "INPUT_DATE", "TRADE_ID", "TRADE_STATUS", "TRADE_ACTION", "TRADE_VERSION",
        "TRANSACTION_ID", "PACKAGE_ID", "QUANTITY", "PRICE", "BUY_SELL_CODE", "PRODUCT_TYPE", "PRODUCT_SUB_TYPE", "PRODUCT_GROUP",
@@ -94,8 +98,8 @@ def problems(doc: dict) -> list[str]:
 
     tid = doc.get("TRADE_ID")
     keys(f"{tid}", doc, TOP)
-    if doc.get("SOURCE_SYSTEM") not in SYSTEMS:
-        out.append(f"{tid}: SOURCE_SYSTEM {doc.get('SOURCE_SYSTEM')!r} is not one of {SYSTEMS}")
+    if doc.get("SOURCE_SYSTEM") not in ALLOWED:
+        out.append(f"{tid}: SOURCE_SYSTEM {doc.get('SOURCE_SYSTEM')!r} is not one of {ALLOWED}")
     for i, leg in enumerate(doc.get("LEGS") or []):
         keys(f"{tid} LEGS[{i}]", leg, LEG)
         keys(f"{tid} LEGS[{i}].INDEX", leg.get("INDEX") or {}, INDEX)

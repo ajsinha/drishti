@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.pivot;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.bicompute.formula.FormulaLowering;
@@ -41,7 +42,7 @@ import org.junit.jupiter.api.io.TempDir;
  */
 class PivotFormulaMigrationTest {
 
-    static final Path CORPUS = Path.of("..", "..", "compute", "drishti-bicompute", "src", "test", "resources", "formula-parity", "corpus.yaml");
+    static final Path CORPUS = Path.of(TestRoots.repo(), "compute", "drishti-bicompute", "src", "test", "resources", "formula-parity", "corpus.yaml");
 
     @Test
     @SuppressWarnings("unchecked")

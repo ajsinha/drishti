@@ -26,4 +26,4 @@ module requires it, because the VaR, sensitivity and exposure engines read its c
 | Help | `docs/help.yaml`: the pack's guide and catalogue, the analytics tutorial |
 | Data it needs | `data/needs.yaml`: every kind, bound by the site to its own connectors |
 
-The module carries no connector: the pack's connector templates stay with the site (`config/bindings.yaml`, Admin -> Data bindings).
+The module carries its pack's connector templates (read-only; hosts and secrets are the site's placeholders): an installed module serves its kinds at every start; the site overrides a template in `config/connectors/` and binds kinds in `config/bindings.yaml` (Admin -> Data bindings).

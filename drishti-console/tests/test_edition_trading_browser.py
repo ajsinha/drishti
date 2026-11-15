@@ -34,6 +34,9 @@ THEMES = ["terminal", "light", "wallstreet", "blue", "green", "crimson", "crimso
 GREENS = ("rgb(79, 209, 139)", "rgb(26, 127, 75)")      # the accent on dark and on light themes
 
 
+_APP: dict = {}   # the module's console app and its default user, for a test that changes who "my" is
+
+
 @pytest.fixture(scope="module")
 def trading_console():
     import uvicorn
@@ -59,6 +62,7 @@ def trading_console():
 
     app.state.backend.settings, app.state.backend.patch_settings = settings, patch_settings
     app.state.editions.lenses["trading"].spec["trading"]["people"][user] = {"trader": "TRDR-ASHAH"}
+    _APP["app"], _APP["user"] = app, user
     server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=PORT, log_level="warning", timeout_graceful_shutdown=2))
     thread = threading.Thread(target=server.run, daemon=True)
     thread.start()
@@ -138,6 +142,31 @@ def test_each_trading_landing_fills_from_the_servers_answers_and_fits(browser, t
         assert not page.outside, page.outside                                          # no host but the console
     finally:
         ctx.close()
+
+
+def test_nobody_yet_says_so_in_every_panel_the_blotter_too(browser, trading_console):
+    """A person mapped to no trader or desk: every panel says to pick one, the blotter (a grid host, not a table) too, never a lasting '…'."""
+    from plugins.banking import trading_landing
+
+    block = _APP["app"].state.editions.lenses["trading"].spec["trading"]
+    mapping, matching = block["people"].pop(_APP["user"]), block.get("match-records")
+    block["match-records"] = False
+    trading_landing.forget()
+    ctx = browser.new_context(viewport={"width": 1280, "height": 900})
+    page = _page(ctx)
+    try:
+        page.goto(f"{trading_console}/?landing=trader", wait_until="load")
+        page.wait_for_function("() => document.querySelector('[data-tl-who]').textContent.includes('Nobody yet')")
+        page.wait_for_function("() => document.querySelector('[data-tl-blotter]').textContent.includes('Pick a trader or a desk to view as')")
+        assert "Pick a trader or a desk to view as" in _text(page, "[data-tl-positions]")
+    finally:
+        ctx.close()
+        block["people"][_APP["user"]] = mapping
+        if matching is None:
+            block.pop("match-records", None)
+        else:
+            block["match-records"] = matching
+        trading_landing.forget()
 
 
 def test_the_check_box_answers_end_to_end(browser, trading_console):

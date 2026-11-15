@@ -20,6 +20,7 @@ server:
   port: ${DRISHTI_CONSOLE_PORT:17480}  # the console's HTTP port
   workers: ${DRISHTI_CONSOLE_WORKERS:4}      # processes serving pages (one Python process uses one core: ~40 pages/s measured); 1 = one process
   shutdown_seconds: ${DRISHTI_CONSOLE_SHUTDOWN_SECONDS:5}   # on a stop, how long open streams (live pages) may stay before they are closed; the browser then reconnects
+  base_path: ${DRISHTI_CONSOLE_BASE_PATH:}   # the URL sub-path behind a reverse proxy, e.g. /drishti for https://host/drishti/ (blank: served at /); the proxy may keep or strip it
 tmp_dir: ${DRISHTI_CONSOLE_TMP_DIR:}      # base of the console's temp folder drishti-console-<pid> (blank: DRISHTI_TMP_DIR, then <data dir>/tmp/console when started by run_drishti_web.py); removed on exit; left-over ones are listed on Health, never deleted automatically
 external_lib: ${DRISHTI_EXTERNAL_LIB:}   # base of the external library folder (blank: external_lib in the repository root); <base>/python is importable, <base>/java is the server's
 backend:
@@ -37,7 +38,7 @@ backend:
   data_dir: ${DRISHTI_CONSOLE_DATA_DIR:}     # what the console keeps between runs (net/servers.json); blank: <data dir>/console
 ai:                                  # LLM provider layer (docs/guides/AI_GUIDE.md): OFF by default; no file is read and no model is called while off
   enabled: ${DRISHTI_AI_ENABLED:false}  # turn on the console's own LLM provider layer
-  dir: ${DRISHTI_AI_DIR:./config/ai}          # one YAML per provider; the recommended console provider is type: server (keys stay on the server)
+  dir: ${DRISHTI_AI_DIR:../config/ai}          # one YAML per provider; the recommended console provider is type: server (keys stay on the server)
   default_model: ${DRISHTI_AI_DEFAULT_MODEL:} # provider/model, or a model name only one provider has
   poll_seconds: 5                    # how often config/ai and config/mcp are looked at: a changed file is picked up with no restart
   redact: []                         # field names masked in every prompt (the same names as the server's drishti.security.redact)
@@ -46,7 +47,7 @@ ai:                                  # LLM provider layer (docs/guides/AI_GUIDE.
   policy: {mask_redacted: true, audit: true, per_user_per_minute: 0, per_user_per_day: 0, cost_per_user_per_day: 0, mask_patterns: [], features: {}}
 mcp:                                 # MCP client (docs/guides/AI_GUIDE.md): OFF by default
   enabled: ${DRISHTI_MCP_ENABLED:false}  # turn on the console's MCP client
-  dir: ${DRISHTI_MCP_DIR:./config/mcp}  # the folder of MCP server files (one YAML per server)
+  dir: ${DRISHTI_MCP_DIR:../config/mcp}  # the folder of MCP server files (one YAML per server)
   server_roles: {}                   # server -> roles allowed
   tool_roles: {}                     # "server/tool" -> roles allowed
   server_features: {}                # server -> features allowed

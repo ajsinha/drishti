@@ -30,7 +30,7 @@
   var form = panel.querySelector('[data-disc-form]'), anchor = form.querySelector('[data-disc-anchor]'), box = form.querySelector('[data-disc-body]');
   var msg = form.querySelector('[data-disc-msg]'), scope = panel.querySelector('[data-disc-scope]'), tabCount = drawer.querySelector('[data-disc-tabcount]');
   var conf = { enabled: true, collaborate: true, maxText: 2000, minQuery: 2 }, threads = [], only = { panel: '', path: '' }, counts = { entity: 0, panels: {}, fields: {} };
-  var base = '/api/threads/' + encodeURIComponent(kind) + '/' + encodeURIComponent(id);
+  var base = drishti_url('/api/threads/') + encodeURIComponent(kind) + '/' + encodeURIComponent(id);
 
   function ctx() {
     return { me: view.getAttribute('data-me'), admin: view.hasAttribute('data-admin'), pageGen: view.getAttribute('data-generation'),
@@ -39,7 +39,7 @@
   function api(method, url, body) {
     var o = { method: method, credentials: 'same-origin', headers: { Accept: 'application/json' } };
     if (body !== undefined) { o.headers['Content-Type'] = 'application/json'; o.body = JSON.stringify(body); }
-    return fetch(url, o).then(function (r) { return r.json().catch(function () { return {}; }).then(function (b) { return { ok: r.ok, status: r.status, b: b }; }); });
+    return fetch(drishti_url(url), o).then(function (r) { return r.json().catch(function () { return {}; }).then(function (b) { return { ok: r.ok, status: r.status, b: b }; }); });
   }
   function say(node, text, bad) { node.textContent = text; node.classList.toggle('bad', !!bad); }
   function problem(r) { return (r.b && (r.b.detail || r.b.code)) || ('The server answered ' + r.status); }
@@ -94,7 +94,7 @@
     });
     return placed;
   }
-  function loadCounts() { return api('GET', '/api/thread-counts/' + encodeURIComponent(kind) + '/' + encodeURIComponent(id)).then(function (r) { if (r.ok) { counts = { entity: (r.b || {}).entity || 0, panels: (r.b || {}).panels || {}, fields: (r.b || {}).fields || {} }; badges(); } }); }
+  function loadCounts() { return api('GET', drishti_url('/api/thread-counts/') + encodeURIComponent(kind) + '/' + encodeURIComponent(id)).then(function (r) { if (r.ok) { counts = { entity: (r.b || {}).entity || 0, panels: (r.b || {}).panels || {}, fields: (r.b || {}).fields || {} }; badges(); } }); }
 
   function draw() {
     list.textContent = '';
@@ -158,7 +158,7 @@
     e.preventDefault();
     var ta = f.querySelector('textarea'), pg = page();
     if (!ta.value.trim()) { return; }
-    api('POST', '/api/thread/' + f.getAttribute('data-reply') + '/comments', { generation: pg.generation, asOf: pg.asOf, knownAt: pg.knownAt, body: ta.value }).then(function (r) {
+    api('POST', drishti_url('/api/thread/') + f.getAttribute('data-reply') + '/comments', { generation: pg.generation, asOf: pg.asOf, knownAt: pg.knownAt, body: ta.value }).then(function (r) {
       var note = f.parentNode.querySelector('.disc-note') || f.parentNode.appendChild(V.el('p', 'disc-note'));
       note.setAttribute('role', 'status'); posted(r, note, ta);
     });
@@ -190,7 +190,7 @@
       case 'edit': {
         var cur = (threads.reduce(function (a, t2) { return a.concat(t2.items || []); }, []).filter(function (c) { return c.id === cid; })[0] || {}), tools = li.querySelector('.disc-tools');
         var ta = inline(li, cur.body || '', 'Edit your comment', function (text, note) {
-          api('PATCH', '/api/comment/' + cid, { body: text, revision: Number(li.getAttribute('data-revision')) }).then(function (r) { go(r, note); });
+          api('PATCH', drishti_url('/api/comment/') + cid, { body: text, revision: Number(li.getAttribute('data-revision')) }).then(function (r) { go(r, note); });
         });
         tools.hidden = true;
         window.Drishti.Compose.attach(ta, { kind: kind, minQuery: function () { return conf.minQuery; }, fields: fields });
@@ -198,21 +198,21 @@
       }
       case 'retract':
         if (!btn.hasAttribute('data-sure')) { btn.setAttribute('data-sure', '1'); btn.textContent = 'Retract: sure?'; break; }
-        api('POST', '/api/comment/' + cid + '/retract').then(function (r) { go(r); });
+        api('POST', drishti_url('/api/comment/') + cid + '/retract').then(function (r) { go(r); });
         break;
-      case 'hide': inline(li, '', 'Reason for hiding this comment', function (reason, note) { api('POST', '/api/comment/' + cid + '/hide', { reason: reason }).then(function (r) { go(r, note); }); }); break;
-      case 'unhide': api('POST', '/api/comment/' + cid + '/unhide').then(function (r) { go(r); }); break;
+      case 'hide': inline(li, '', 'Reason for hiding this comment', function (reason, note) { api('POST', drishti_url('/api/comment/') + cid + '/hide', { reason: reason }).then(function (r) { go(r, note); }); }); break;
+      case 'unhide': api('POST', drishti_url('/api/comment/') + cid + '/unhide').then(function (r) { go(r); }); break;
       case 'history':
-        api('GET', '/api/comment/' + cid + '/revisions').then(function (r) {
+        api('GET', drishti_url('/api/comment/') + cid + '/revisions').then(function (r) {
           var old = li.querySelector('.disc-hist'); if (old) { old.remove(); return; }
           var ul = V.el('ul', 'disc-hist');
           (r.ok ? r.b : []).forEach(function (v) { ul.appendChild(V.el('li', null, 'v' + v.revision + ' · ' + V.when(v.at, v.atLocal) + ' · ' + v.action + (v.body ? ': ' + v.body : ''))); });
           li.appendChild(ul);
         });
         break;
-      case 'state': api('POST', '/api/thread/' + tid + '/state', { state: btn.getAttribute('data-to') }).then(function (r) { go(r); }); break;
-      case 'follow': (btn.getAttribute('aria-pressed') === 'true' ? api('DELETE', '/api/thread/' + tid + '/follow') : api('PUT', '/api/thread/' + tid + '/follow', { muted: false })).then(function (r) { go(r); }); break;
-      case 'mute': api('PUT', '/api/thread/' + tid + '/follow', { muted: btn.getAttribute('aria-pressed') !== 'true' }).then(function (r) { go(r); }); break;
+      case 'state': api('POST', drishti_url('/api/thread/') + tid + '/state', { state: btn.getAttribute('data-to') }).then(function (r) { go(r); }); break;
+      case 'follow': (btn.getAttribute('aria-pressed') === 'true' ? api('DELETE', drishti_url('/api/thread/') + tid + '/follow') : api('PUT', drishti_url('/api/thread/') + tid + '/follow', { muted: false })).then(function (r) { go(r); }); break;
+      case 'mute': api('PUT', drishti_url('/api/thread/') + tid + '/follow', { muted: btn.getAttribute('aria-pressed') !== 'true' }).then(function (r) { go(r); }); break;
       default: break;
     }
   }
@@ -240,7 +240,7 @@
   }
 
   fillAnchors();
-  api('GET', '/api/collab').then(function (r) {
+  api('GET', drishti_url('/api/collab')).then(function (r) {
     if (r.ok && r.b) { conf = { enabled: r.b.enabled !== false, collaborate: !!r.b.collaborate, maxText: r.b.maxText || 2000, minQuery: r.b.minQuery || 2, editWindowSeconds: r.b.editWindowSeconds || 0 }; }
     if (!conf.enabled) { document.querySelectorAll('[data-discussion-open], [data-disc-tab]').forEach(function (b) { b.hidden = true; }); return; }
     form.hidden = !conf.collaborate;

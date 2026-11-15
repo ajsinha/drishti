@@ -65,7 +65,7 @@ public class PlacementConfiguration {
             AuditLog audit, Environment env) {
         String f = env.getProperty("drishti.placement.file", "");
         Path file = f.isBlank() ? Path.of(sources.connectorsDir()).toAbsolutePath().normalize().resolveSibling("placement.yaml") : Path.of(f);
-        PlacementService s = new PlacementService(file, Path.of(env.getProperty("drishti.data.dir", "./data"), "placement", "plans.json"),
+        PlacementService s = new PlacementService(file, Path.of(env.getProperty("drishti.data.dir", com.ash.drishti.api.Roots.data()), "placement", "plans.json"),
                 () -> nodes(net.getIfAvailable()), () -> self(net.getIfAvailable()), () -> inProcess(access.getIfAvailable()), audit,
                 Clock.systemUTC());
         s.singleNode(() -> {

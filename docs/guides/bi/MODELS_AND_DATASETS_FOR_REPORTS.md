@@ -308,6 +308,8 @@ your dates and some figures differ.
 The quick start of [data/testdata/README.md](../../../data/testdata/README.md) (clone, install, `lake demo`, start, open), or with the IDE's run
 configurations **Build demo lakes**, **Drishti server (demo lakes)** and **Drishti console**. From a terminal at the repository root:
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 drishti-console/.venv/bin/python tools/drishti.py lake demo
 DRISHTI_DEMO_ENABLED=false DRISHTI_SECURITY_ENABLED=true DRISHTI_TOKEN_SECRET=drishti-dev-only-token-secret-change-me-0123456789 \

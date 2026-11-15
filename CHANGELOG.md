@@ -18,6 +18,96 @@
 
 ## Unreleased
 
+- **The drill starts from a clean data folder.** A server's state an earlier run left in the data folder (installed modules, identities,
+  cluster membership, compute, file store, cache) is moved aside to `data/tmp/stale-<stamp>/` and listed before the drill starts, when
+  no server runs from the checkout. Lake loader children get the launch roots of the process that starts them, and Iceberg's Health
+  names a moved table's folder correctly when the lake sits under a folder named `data`.
+- **No empty answer that looks true for positions and system baskets.** Right after a start (inputs loading, busy protection, no vectors
+  read yet) a list, count or pivot of `position` or `system-basket` answers the refusal with its reason, never 0 rows.
+- **Elements 2 reach the console again from another origin.** Served under `/embed/v2/`, the element took `/embed/v2` for the
+  console's root and asked `/embed/v2/embed/v2/views/...` (a 404 without CORS headers, so the view never went live); the root is now
+  the static root less `static/` or `embed/v2/`, the base path kept.
+- **A page's freshness follows what its source says now.** A refresh whose provenance no longer names an update time or a
+  stale-after clears the ones it had; a source that was stale and recovered no longer stays marked stale until a reload.
+- **A site file that gives only `root` moves its template's lake.** Over a template that names a lake, a connector override with
+  `settings.root` alone (what `drishti.py lake demo --lake` writes) keeps the lake and its tables and reads them under that root; with
+  `domain`, `table.<kind>` or `layout.<kind>` it is the older form, as before. A scratch demo lake was read as no tables at all.
+
+- **Named lakes, databases and brokers.** A system has any number of each, every one a section of the settings files and referred to by
+  name, with no global one: `[lake.<name>] root=`/`storage.<key>=` win over that lake file's root and storage; `[db.<name>] url= user=
+  password=` (a jdbc connector's `db: <name>`; `drishti.identity.database-*` read `db.identity.*`, the content store's postgres
+  `db.store.*`); `[broker.<name>] type=kafka|activemq|rabbitmq` with the plugin's own connection and security keys (every TLS, SASL
+  PLAIN/SCRAM/OAUTHBEARER/GSSAPI, Confluent and `client.*` form), named by a connector's `broker: <name>`; `[pack.<pack>] lake=` moves one
+  pack's demo-lake connectors; `[connector.<name>]` overrides any setting of one connector. One helper, `com.ash.drishti.common.NamedResources`,
+  applied where every connector starts (and in its test and preview); the server installs its settings view. The shipped Kafka templates
+  say `broker: default` (a Kafka at localhost:9092 until `[broker.default]` says otherwise); `DRISHTI_KAFKA_BOOTSTRAP` is replaced by
+  `broker.default.bootstrap-servers` (`BROKER_DEFAULT_BOOTSTRAP_SERVERS`). Relative files and folders of a connector's settings are taken
+  under `drishti.home` by the launch roots' rule, now one function (`Roots.anchorValue`, used by `LaunchRoots`). Examples:
+  `config/settings.examples/{dev,test,prod,secrets}.ini`; docs/admin/CONFIGURATION.md "The settings file", "Named lakes, databases and
+  brokers" and "Placeholders" (the one resolver, its order, its readers).
+
+- **The console at a URL sub-path behind a reverse proxy.** New console setting `server.base_path` (`DRISHTI_CONSOLE_BASE_PATH`, blank: `/`):
+  `/drishti` serves the console at `https://host/drishti/`, whether the proxy keeps or strips the prefix. The outermost middleware takes the
+  base off each request and puts it on `Location` headers and cookie paths (`Path=/drishti`); `request.base_url` names it (sign-in
+  redirects, share links). Pages carry `<meta name="drishti-base">`; templates write `{{ BASE }}` (and `| u` for a URL from data, `| based`
+  for a guide's HTML); every script builds console URLs through one helper, `drishti_url()` (drishti-core's `url()`, also behind its API
+  client, loader, the renderer's server default and the grid, chart, data and insight libraries), with `drishti_route()` for comparisons
+  with `location.pathname`. A link or form drawn from server data is put under the base when used. A static guard
+  (`tests/test_base_path_guard.py`) fails on a new root-absolute console URL that skips them. The scripts a page without drishti-core
+  loads (embeds, the client-side renderer's pages, the live hub's worker) use the helper through a local guard that keeps the URL as it is
+  when the page has none (the maps drew "The map did not load" in the renderer without it); the same guard test checks every such script.
+- **Every path absolute, the second sweep.** Every other path setting (any `drishti.*` folder or file key, `DRISHTI_*_DIR/_FILE/_ROOT/_PATH`
+  variables, a local database URL's file, the log file, the TLS stores) given as a relative path is taken under the install folder and
+  listed in the `resolved paths:` block; the settings the configuration imports read (data, config and engines folders, the packs
+  overlay) must be absolute. The plain-Java readers (type-ahead index, lib, temp, native cache, connectors folder, FRTB parameters,
+  `external_lib`, the feeds root) go through the same roots. Python tools default to the Drishti folder, never the working directory
+  (`pack bundle`/`module pack` output under `<Drishti>/dist`). The server run configurations name `drishti.home`. New **Admin →
+  Configuration → Resolved paths** shows every root and anchored setting with where it came from. Guards: relative fallbacks, `..`
+  climbs and `toAbsolutePath()` of a raw setting in Java; the main Python code; every script under `bin/`, `tools/`, `deploy/`.
+- **Launch roots: no folder from the working directory.** The server resolves its install folder (`drishti.home`), data, configuration,
+  packs, modules, module switches, access, lakes, connectors and inbox folders to absolute paths at start, from their settings or under
+  the install folder, logs them in one `resolved paths:` block, and refuses to start, naming the setting, when the modules folder is
+  missing or unnamed, a setting is relative with no install folder, or a data folder nobody named has no identity database (it would
+  have made a new, empty one). Every default of the code and the shipped YAML sits under the named roots. `bin/start-server`,
+  `start-cluster`, the images (now carrying `modules/`, the distribution, engine, lake, module-switch and store files) and the systemd
+  unit name the roots; before, a server started from another folder (a cluster node's own folder, a container, a test) found no
+  modules and failed with DRS-1041 for every pack. A static check fails the gate on any new working-directory path.
+- **Installed modules keep their connector templates (release blocker).** The module packer no longer drops a pack's `connectors:` section
+  (`content.yaml` `sections-out` is gone): banking, market data, capital markets and economy installed from their `.dmod` serve their kinds
+  from their templates at every start. Before, the first start read the development folder and every restart read the installed copy,
+  whose packs had no templates: risk-store, var-engine, var-positions, var-system-baskets, var-results and mr-derived vanished and VaR
+  answered `404 DRS-1001`. Conformance C9 accepts a pack's templates and holds their hosts and secrets to `${...}` placeholders.
+- **One table a trading system, always.** WSS, SwapOne and ICI load into their own tables, `trading.trade_wss`, `trade_swapone` and
+  `trade_ici`, as Endur, Calypso and Murex do: connector templates (no `where:`), the demo lake file, the trading pack's lake entries, the
+  test data (`trades/<system>/trade_<system>.<date>.jsonl.gz`) and its generator, the tutorial and guides. `trading.trades_shared` is gone
+  from the shipped configuration (the loader's per-system slice replace stays, generic). Scenario PVs stay one table, one complete file
+  or tar per business date: a partial file replaces the whole date (DATA_LAKE_GUIDE 16.1, 17.4).
+- **A date with no data is said, never answered silently from an older one.** VaR for a date with no scenario-P&L load answers the newest
+  earlier date with `asOfNotice` (*scenario P&L for D not loaded — showing D-1*), shown under the VaR page's header; the official capture of
+  such a date is skipped. Pivots (`POST /api/v1/pivot/query`) and record lists (`/api/v1/live/query`, `/api/v1/live/kinds/{word}/rows`)
+  answer `asOfNotices`, one per source system's connector that shows an earlier date, and the pages show them.
+- **A connector's map is anchored.** A relative `map:` is read from the connector's own module folder (a template) or the site's
+  connectors folder, as absolute paths; the fallbacks relative to the working folder (`config/connectors`, `config`, `.`) are gone, and a
+  map in neither refuses the connector naming the paths tried, never a system read as zero trades.
+- **Data inbox words.** A file whose `.ready` gives `rows:` and whose check run rejects a row says the rejects (*1 of 3 documents rejected,
+  more than reject-max-percent 0*), not the matching count; `.loaded.json` `route.mode` is the mode the load ran (with `modeFrom`);
+  `dataload undo` sends the data-load signal a load sends, so pages read the table again at once; `lake status --lake demo` reads the lake
+  of that name.
+
+- **Daily loads runbook.** DATA_LAKE_GUIDE.md section 17: the business-day cycle (files per system and day, markers, order, cut-off), proof that a day's load leaves the earlier days' rows and Delta versions untouched, per-system slices, corrections, late files, undo, portfolio data as a full snapshot per day, what a missing day answers, scheduler examples (cron, systemd, Task Scheduler), the verification script and the one-page checklist; tested on three business days of five systems and the reference kinds.
+- **Stream connectors are calm when their broker is not there.** An enabled `kafka`, `activemq`, `rabbitmq` or `var-pv-stream` connector (the
+  `trade-<system>-live` connectors included) whose broker does not answer is no longer down or an error: its health says `WAITING: broker not
+  reachable at host:port - live updates paused; retrying`, Admin shows *waiting for broker*, overall health and readiness stay up, a blotter serves
+  the lake snapshot with a *live updates paused* banner, the log has one line when it starts waiting and one when it connects (no ERROR, no stack
+  traces, no per-retry lines), and a broker that appears later is found without a restart. Missing `topics`, `destinations` or `queues` is *not
+  configured*. The plugins look at the broker's port before opening a client, so the clients' own retry noise never starts.
+
+- **Trading Home with nobody to view as.** Today's blotter, now a records grid rather than a table, says *Pick a trader or a desk to view
+  as* like every other panel instead of staying on its loading dots.
+- **Records lists without a stream.** A records list whose set has no live stream (TRD, FUND, USEQ over a lake that does not push) said
+  *CONNECTING* for as long as it was open; it now says *STATIC* once its rows are drawn.
+- **A history command's pick list keeps its range.** Since search results became the records grid, a history command over a range that matched several
+  records listed them but a row opened its page, not its history; each row's panel now has **History**, over the range asked.
 - **Production data loads: the runbook rehearsal's findings.** Separate loads of several source systems into one shared table
   (`trading.trades_shared`) replace only their own `SOURCE_SYSTEM` slice of a date (Delta by partition, Iceberg by the files' bounds; a row of
   another system is rejected; a shared table that cannot be split refuses a replace; an undo restores the slice alone): before, the last

@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.server.bi.engine.ArrowTestReader;
@@ -318,7 +319,7 @@ class BiLiveApiTest {
     void aPerspectiveVisualOverTwoTablesAndAnUnknownAggregateAreRefused() throws Exception {
         String author = as("wes", "live-author");
         // the 2.1 copy keeps its Perspective pivot (config/bi has a matrix since 2.3.0, the browser computing nothing)
-        String yaml = Files.readString(Path.of("../../../kernel/drishti-server/src/test/resources/bi/samples-2.1/reports/live-trading-desk.report.yaml")).replace("aggregates: { trade.MTM: sum, trade.NOTIONAL: sum }",
+        String yaml = Files.readString(Path.of(TestRoots.repo(), "kernel", "drishti-server", "src", "test", "resources", "bi", "samples-2.1", "reports", "live-trading-desk.report.yaml")).replace("aggregates: { trade.MTM: sum, trade.NOTIONAL: sum }",
                 "aggregates: { trade.MTM: total }").replace("\ndataset: live-trading\n", "\nmodel: live-trading@1\n");   // the live sample is a model of the table layer
         JsonNode r = ok(call("POST", "/api/v1/bi/reports/validate", author, json.writeValueAsString(Map.of("yaml", yaml))));
         assertThat(r.path("valid").asBoolean()).isFalse();

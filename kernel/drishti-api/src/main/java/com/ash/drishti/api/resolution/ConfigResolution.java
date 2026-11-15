@@ -63,7 +63,7 @@ public record ConfigResolution(ResolutionSettings settings, Predicate<String> ac
     public static ConfigResolution offline(Function<String, String> property) {
         ResolutionSettings s = ResolutionSettings.of(property);
         String switches = property.apply("drishti.modules.dir");
-        Path sw = Path.of(switches == null || switches.isBlank() ? "./config/modules" : switches.strip()).toAbsolutePath().normalize();
+        Path sw = Path.of(switches == null || switches.isBlank() ? com.ash.drishti.api.Roots.config("modules") : switches.strip()).toAbsolutePath().normalize();
         Map<String, PackResolver.Module> modules = PackResolver.modules(s.layout(), ResolutionSettings::yaml, new ArrayList<>());
         return build(s, ModuleTemplates.offline(modules, sw, property, ResolutionSettings::yaml));
     }

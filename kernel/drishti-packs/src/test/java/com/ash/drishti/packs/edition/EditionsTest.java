@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.packs.edition;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.packs.PackPaths;
@@ -51,7 +52,7 @@ class EditionsTest {
 
     @Test
     void theDefaultPackListIsTheOneFile() throws Exception {
-        String file = Files.readString(Path.of("../../config/packs/default-packs.yaml"));   // by module
+        String file = Files.readString(Path.of(TestRoots.repo(), "config", "packs", "default-packs.yaml"));   // by module
         assertThat(Editions.defaultPacks()).isNotEmpty().allSatisfy(p -> assertThat(file).contains(p));
         assertThat(PackPaths.DEFAULT_ENABLED).isEqualTo(String.join(",", Editions.defaultPacks()));
     }

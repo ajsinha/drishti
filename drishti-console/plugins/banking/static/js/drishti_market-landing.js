@@ -31,7 +31,7 @@
   var $$ = function (sel) { return Array.prototype.slice.call(root.querySelectorAll(sel)); };
 
   function get(path) {
-    return fetch(path, { headers: { Accept: "application/json" }, credentials: "same-origin" }).then(function (r) {
+    return fetch(drishti_url(path), { headers: { Accept: "application/json" }, credentials: "same-origin" }).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (b) {
         if (!r.ok) { var e = new Error((b && b.detail) || ("HTTP " + r.status)); e.code = b && b.code; throw e; }
         return b;
@@ -50,8 +50,8 @@
   }
   function text(sel, v) { $$(sel).forEach(function (e) { e.textContent = v; }); }
   function el(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt !== undefined) e.textContent = txt; return e; }
-  function go(cmd) { return "/go?q=" + encodeURIComponent(cmd + " <GO>"); }
-  function link(href, label, cls) { var a = el("a", cls || "", label); a.href = href; return a; }
+  function go(cmd) { return drishti_url("/go?q=") + encodeURIComponent(cmd + " <GO>"); }
+  function link(href, label, cls) { var a = el("a", cls || "", label); a.href = drishti_url(href); return a; }
   function tone(e, v) { v = num(v); if (v !== null) e.classList.add(Math.abs(v) < 1e-9 ? "flat" : v > 0 ? "up" : "down"); return e; }
   function said(target, err, cols) {
     if (!target) return;
@@ -131,7 +131,7 @@
   }
 
   function desk() {
-    get("/api/home/market/desk").then(function (d) {
+    get(drishti_url("/api/home/market/desk")).then(function (d) {
       text("[data-ml-date]", d.dataDate || d.businessDate || "—");
       text("[data-ml-curves]", count(d.curves));
       text("[data-ml-kinds]", count(d.kinds));
@@ -147,7 +147,7 @@
     });
 
     var ex = $("[data-ml-tile='exceptions']");
-    get("/api/home/market/quality").then(function (q) {
+    get(drishti_url("/api/home/market/quality")).then(function (q) {
       var n = (q.critical || []).length + (q.warnings || []).length, parts = {};
       (q.critical || []).concat(q.warnings || []).forEach(function (e) { parts[e.check] = (parts[e.check] || 0) + 1; });
       ex.querySelector("[data-ml-v]").textContent = count(n);
@@ -157,7 +157,7 @@
     }).catch(function (e) { ex.querySelector("[data-ml-v]").textContent = "—"; ex.querySelector("[data-ml-s]").textContent = e.message; });
 
     var body = $("[data-ml-moves]"), card = $("[data-ml-moves-card]");
-    get("/api/home/market/moves").then(function (m) {
+    get(drishti_url("/api/home/market/moves")).then(function (m) {
       body.textContent = "";
       if (m.mode === "none" || !(m.items || []).length) {
         text("[data-ml-moves-how]", "no history per date");
@@ -188,7 +188,7 @@
       group: rows [group, count], sum by group); the page shows the engine's figure, never a total of its own. */
   function groupTotals(rows) {
     var view = { rows: ["G"], columns: [], values: [{ measure: "sum(N)", as: "n" }], expandTo: { rows: 1, columns: 1 } };
-    return fetch("/api/pivot/inline", { method: "POST", credentials: "same-origin", headers: { Accept: "application/json", "Content-Type": "application/json" },
+    return fetch(drishti_url("/api/pivot/inline"), { method: "POST", credentials: "same-origin", headers: { Accept: "application/json", "Content-Type": "application/json" },
       body: JSON.stringify({ fields: [{ name: "G", type: "string" }, { name: "N", type: "number" }], rows: rows, view: view }) }).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (a) {
         if (!r.ok || !a.cells) throw new Error((a && a.detail) || "the pivot engine did not answer");
@@ -204,7 +204,7 @@
       var gid = ul.getAttribute("data-ml-group");
       return Promise.all(Array.prototype.slice.call(ul.querySelectorAll("[data-ml-count]")).map(function (b) {
         var code = b.getAttribute("data-ml-count");
-        return get("/api/home/search?q=" + encodeURIComponent(code + " limit 1")).then(function (a) {
+        return get(drishti_url("/api/home/search?q=") + encodeURIComponent(code + " limit 1")).then(function (a) {
           b.textContent = count(a.matched);
           return [gid, num(a.matched)];
         }).catch(function () { b.textContent = "—"; return [gid, null]; });
@@ -225,7 +225,7 @@
 
   function quality() {
     var body = $("[data-ml-exceptions]"), checks = $("[data-ml-checks]");
-    get("/api/home/market/quality").then(function (q) {
+    get(drishti_url("/api/home/market/quality")).then(function (q) {
       text("[data-ml-date]", q.businessDate || "—");
       var crit = q.critical || [], warn = q.warnings || [];
       text("[data-ml-critical]", count(crit.length));

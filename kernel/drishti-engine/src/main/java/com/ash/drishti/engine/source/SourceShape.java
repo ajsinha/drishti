@@ -147,7 +147,8 @@ public final class SourceShape {
         if (m != null && !m.isBlank()) {
             Path p = locate(m.strip(), settings, bases);
             if (p == null) {
-                throw refused(connector, "map: " + m.strip() + " is not found (looked in the connector's module folder and " + bases + ")");
+                throw refused(connector, "map: " + m.strip() + " is not found; looked for " + tried(m.strip(), settings, bases)
+                        + " (a template's map is read from its module's folder, a site file's from the connectors folder)");
             }
             file = p.toString();
             JsonNode doc;
@@ -254,23 +255,39 @@ public final class SourceShape {
     }
 
     private static Path locate(String m, Map<String, String> settings, List<Path> bases) {
-        Path given = Path.of(m);
-        if (given.isAbsolute()) {
-            return Files.isRegularFile(given) ? given : null;
-        }
-        List<Path> where = new java.util.ArrayList<>();
-        String dir = settings.get("module-dir");
-        if (dir != null && !dir.isBlank()) {
-            where.add(Path.of(dir));
-        }
-        where.addAll(bases);
-        for (Path b : where) {
-            Path p = b.resolve(m).normalize();
+        for (Path p : candidates(m, settings, bases)) {
             if (Files.isRegularFile(p)) {
                 return p;
             }
         }
         return null;
+    }
+
+    /**
+     * The absolute files a {@code map:} may be, in order: itself when absolute; else under the connector's module folder ({@code module-dir}
+     * of a template) and the given bases (the site's connectors folder). A relative base is never used: nothing depends on the working folder.
+     */
+    private static List<Path> candidates(String m, Map<String, String> settings, List<Path> bases) {
+        Path given = Path.of(m);
+        if (given.isAbsolute()) {
+            return List.of(given.normalize());
+        }
+        List<Path> out = new java.util.ArrayList<>();
+        String dir = settings.get("module-dir");
+        if (dir != null && !dir.isBlank() && Path.of(dir).isAbsolute()) {
+            out.add(Path.of(dir).resolve(m).normalize());
+        }
+        for (Path b : bases) {
+            if (b.isAbsolute()) {
+                out.add(b.resolve(m).normalize());
+            }
+        }
+        return out;
+    }
+
+    private static String tried(String m, Map<String, String> settings, List<Path> bases) {
+        List<Path> c = candidates(m, settings, bases);
+        return c.isEmpty() ? "nowhere (the connector has no module folder and no connectors folder is set)" : c.toString();
     }
 
     private static Object constant(String v) {

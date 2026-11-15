@@ -120,7 +120,9 @@ def test_a_drain_moves_the_traffic_to_the_other_holder(browser, cluster):
 
 def test_stopping_a_moves_the_console_to_another_server_and_the_page_live_view_and_search_carry_on(browser, cluster):
     page = browser.new_page()
-    page.goto(CONSOLE_URL + "/v/trade/IRS-48213")                # held on b, which ticks; the console is on a
+    # held on b (the demo's samples tick there), relayed through a, where the console is. A netting set, not a trade: the stack's file feed is a
+    # real source of trades, and demo rows never answer beside real ones (SourceRouter: demo and real data never mix)
+    page.goto(CONSOLE_URL + "/v/netting-set/NS-NORTH-01")        # its strip shows MTM figures, which move with each tick
     page.wait_for_timeout(1500)
     ticks = Ticks(page)
     before = ticks()
@@ -155,8 +157,9 @@ def test_stopping_a_moves_the_console_to_another_server_and_the_page_live_view_a
     assert moved is not None and moved < 10, f"the console took {moved} s to move; last answer {status}: {body[-600:]}"
     print(f"net: the console moved off a stopped server in {moved:.1f} s; the open page kept ticking (repainted by its reconnect)")
     page.reload()
-    assert "IRS-48213" in page.content()
-    status, body = get(CONSOLE_URL, "/s?q=" + urllib.request.quote("TRD where BOOKING_SYSTEM = 'CALYPSO' limit 200"))
+    assert "NS-NORTH-01" in page.content()
+    # the search's rows as the page's own download gives them (the page draws its rows in the browser, from the live result set)
+    status, body = get(CONSOLE_URL, "/export/search.jsonl?q=" + urllib.request.quote("TRD where BOOKING_SYSTEM = 'CALYPSO' limit 200"))
     assert status == 200 and "CLY-00001" in body and "MX-00003" not in body, body[-600:]           # the next search answers, from b's data
     snap = json.loads(get(CONSOLE_URL, "/admin/net/api/members")[1]).get("console", {})
     assert snap.get("active") != url("a")

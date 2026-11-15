@@ -123,7 +123,10 @@ may sit side by side on one date (a trade in one form only), and nothing downstr
 **Computed in memory and in the hot file, never written to Delta.** The derived P&L of a scenario-PV trade, the derived positions and every
 total (a node's or a scope's vector) exist only in the server's memory and in the hot file, its disposable local copy. No table of derived
 P&L, positions or totals exists in the lake, and nothing the engine computes is written back as an input: the positions are served as the
-`position` kind by the `var-positions` connector with no figure stored on them, computed as their page opens. The only VaR figures that
+`position` kind by the `var-positions` connector with no figure stored on them, computed as their page opens. A list, a count or a pivot of
+positions or system baskets never answers an empty result in place of rows it cannot read yet: while the date's inputs load, busy protection
+defers the load, or no vectors are read yet, it answers that refusal with its reason (and `Retry-After` when busy), and the console says so
+and asks again. The only VaR figures that
 reach a lake table are the **official record's** published rows (`risk-results/var-official`: one row per node and capture, VaR, ES and
 their companions, no vectors), which no engine reads back. A capture keeps its scope's vector in the content store, as part of the record,
 so that it reopens exactly as it was.
@@ -1489,6 +1492,8 @@ the audit trail and the owner's notice are its control.
 
 **YAML: import and export only.** The system baskets are not configuration: YAML is a way in and out, never their home.
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 drishti.py var baskets export --scope system > baskets.yaml   # every system basket, retired ones too (--scope mine: your own baskets)
 drishti.py var baskets import baskets.yaml                    # the diff: add, change (each field from, to), same, invalid (why); nothing written
@@ -1998,7 +2003,7 @@ The key is not read: it may be absent or name a batch. An example message of thr
 | `drishti.var.intraday.kafka.window` | `${DRISHTI_VAR_INTRADAY_KAFKA_WINDOW:5m}` | the window: everything received in it becomes one intraday batch, every five minutes |
 | `drishti.var.intraday.kafka.max-trades` | `${DRISHTI_VAR_INTRADAY_KAFKA_MAX_TRADES:500}` | an earlier flush once this many trades wait |
 | connector `pv-updates` `enabled` | `${DRISHTI_VAR_PV_STREAM:false}` | the stream on |
-| its `bootstrap-servers` | `${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}` | the brokers |
+| its `broker` | `default` | the brokers, by name: `[broker.default]` in the settings file (docs/admin/CONFIGURATION.md, "Named lakes, databases and brokers"); a Kafka at localhost:9092 when none |
 | its `topic` | `${DRISHTI_VAR_PV_TOPIC:drishti.risk.pv-updates}` | the PV topic |
 | its `lake` | `${DRISHTI_DELTA_ROOT:./data/delta/demo}` | the risk lake's root (an Iceberg risk lake: the root holding `risk/<kind>/metadata`) |
 
@@ -4675,6 +4680,13 @@ section, written only for a date with cells: a date without cells is still forma
 ([section 25](#25-one-business-date-in-memory)).
 
 ### 26.2 The life of a date
+
+**A date with no P&L load is never answered silently from an older one.** A request for a date that holds no `pnl-vector` or
+`scenario-pv` rows (no load yet, or a later date than any loaded) is answered by the newest earlier date that has them, **with a
+warning**: the answer's `businessDate` is that earlier date, `asOfNotice` says *scenario P&L for 2026-07-13 not loaded — showing
+2026-07-10* (the same words in `provenance.warnings`), and the VaR page shows it under its header. The figures are the earlier date's
+own. The official capture of such a date is skipped with that reason, never published from the earlier date. A request with no date
+reads the newest date loaded, with no warning.
 
 1. **First request for a date.** The engine computes the digest of the date's inputs (the data versions of `pnl-vector`,
    `scenario-pv` and `scenario-set`, the hierarchies' configuration, the reference kinds that name the nodes, and the position rules). If `<data folder>/var/hot/<date>/inputs-<digest>.vhot` exists, it is

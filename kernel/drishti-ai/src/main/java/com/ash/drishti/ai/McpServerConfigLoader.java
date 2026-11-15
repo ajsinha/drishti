@@ -113,10 +113,10 @@ public final class McpServerConfigLoader {
             }
             return raw;
         }
-        java.util.regex.Matcher m = java.util.regex.Pattern.compile("\\$\\{([A-Za-z_][A-Za-z0-9_]*)(?::-?([^}]*))?}").matcher(raw);
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile("\\$\\{([A-Za-z_][A-Za-z0-9_.-]*)(?::-?([^}]*))?}").matcher(raw);
         StringBuilder sb = new StringBuilder();
         while (m.find()) {
-            String v = env.apply(m.group(1));
+            String v = com.ash.drishti.settingsfile.Placeholders.lookup(m.group(1), env);   // the one resolver's order, through this view
             m.appendReplacement(sb, java.util.regex.Matcher.quoteReplacement(v == null || v.isBlank() ? (m.group(2) == null ? "" : m.group(2)) : v.strip()));
         }
         m.appendTail(sb);

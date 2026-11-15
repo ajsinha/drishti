@@ -117,7 +117,7 @@ def test_impact_page(client, backend):
     r = client.get("/impact/curve/USD-SOFR")
     assert r.status_code == 200 and "Impact of" in r.text and "IRS-48213" in r.text and "total −394,160" in r.text
     assert "1 netting set you do not have access to" in r.text
-    assert "window.location.href = '/impact/'" in client.get("/static/js/drishti_view.js").text
+    assert "window.location.href = drishti_url('/impact/'" in client.get("/static/js/drishti_view.js").text   # under the console's base path
 
 
 def test_the_business_date_is_chosen_in_the_top_bar_and_sent_to_the_server(client, backend):

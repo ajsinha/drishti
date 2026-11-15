@@ -141,12 +141,12 @@ public final class CassandraSourcePlugin implements SourcePlugin {
                 .weigher((DayKey k, ColumnSet v) -> (int) Math.min(Integer.MAX_VALUE, weight(v))).build();
         this.documents = Caffeine.newBuilder().maximumWeight(Long.parseLong(ctx.setting("doc-cache-mb", "64")) * 1024 * 1024)
                 .weigher((DocKey k, String v) -> 64 + 2 * v.length()).build();
-        CassandraSessions.Plan plan = CassandraSessions.plan(ctx.settings(), System::getenv);   // fails the start, naming the setting
+        CassandraSessions.Plan plan = CassandraSessions.plan(ctx.settings(), com.ash.drishti.settingsfile.Placeholders::process);   // fails the start, naming the setting
         this.tls = plan.tls();
         this.contactPoints = plan.bundle() != null ? "the secure connect bundle " + plan.bundle().getFileName() : ctx.setting("contact-points", "");
         this.connectionsPerNode = plan.connectionsPerNode();
         Duration connect = Duration.ofMillis(Long.parseLong(ctx.setting("connect-timeout-ms", "5000")));
-        this.store = new CassandraStore(CassandraSessions.open(ctx.settings(), plan, System::getenv), Integer.parseInt(ctx.setting("scan-threads", "8")), connect);
+        this.store = new CassandraStore(CassandraSessions.open(ctx.settings(), plan, com.ash.drishti.settingsfile.Placeholders::process), Integer.parseInt(ctx.setting("scan-threads", "8")), connect);
         this.probePoints = plan.bundle() == null ? plan.contactPoints() : List.of();
         this.probeTimeout = connect;
         probeLater();                                          // why it cannot connect, in words, while the driver retries (QA3B-11)

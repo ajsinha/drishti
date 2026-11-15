@@ -25,7 +25,7 @@
   const enc = encodeURIComponent;
 
   function get(path) {
-    return fetch(api + path, { headers: { Accept: 'application/json' }, credentials: 'same-origin' }).then((r) => r.json().then((b) => {
+    return fetch(drishti_url(api + path), { headers: { Accept: 'application/json' }, credentials: 'same-origin' }).then((r) => r.json().then((b) => {
       if (!r.ok) { throw new Error(b.detail || ('HTTP ' + r.status)); }
       return b;
     }));
@@ -35,7 +35,7 @@
   function link(kind, field) {
     return { field: field, headerName: field.replace(/_/g, ' '), cellRenderer: (p) => {
       const a = document.createElement('a');
-      a.href = base + '/' + kind + '/' + enc(p.value);
+      a.href = drishti_url(base + '/' + kind + '/' + enc(p.value));
       a.textContent = p.value;
       return a;
     } };

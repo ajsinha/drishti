@@ -50,8 +50,8 @@ public record IdentityProperties(
         String databaseUrl, String databaseUser, String databasePassword, Integer databasePoolSize, String seedDisplayName) {
 
     public IdentityProperties {
-        usersFile = usersFile == null ? "./data/identity/users.json" : usersFile;
-        auditFile = auditFile == null ? "./data/identity/audit.jsonl" : auditFile;
+        usersFile = usersFile == null ? com.ash.drishti.api.Roots.data("identity/users.json") : usersFile;
+        auditFile = auditFile == null ? com.ash.drishti.api.Roots.data("identity/audit.jsonl") : auditFile;
         iterations = iterations == null ? 240_000 : iterations;
         minPasswordLength = minPasswordLength == null ? 10 : minPasswordLength;
         maxFailedAttempts = maxFailedAttempts == null ? 5 : maxFailedAttempts;
@@ -62,7 +62,7 @@ public record IdentityProperties(
         seedRoles = seedRoles == null ? List.of("admin") : List.copyOf(seedRoles);
         forcePasswordChangeOnCreate = forcePasswordChangeOnCreate != null && forcePasswordChangeOnCreate;
         forcePasswordChangeOnReset = forcePasswordChangeOnReset != null && forcePasswordChangeOnReset;
-        preferencesDir = preferencesDir == null ? "./data/identity/preferences" : preferencesDir;
+        preferencesDir = preferencesDir == null ? com.ash.drishti.api.Roots.data("identity/preferences") : preferencesDir;
         databaseUrl = databaseUrl == null || databaseUrl.isBlank() ? "jdbc:sqlite:./data/identity/drishti.db" : databaseUrl;
         databaseUser = databaseUser == null ? "" : databaseUser;
         databasePassword = databasePassword == null ? "" : databasePassword;

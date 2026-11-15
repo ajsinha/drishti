@@ -90,7 +90,7 @@
   function base() {
     var page = document.querySelector('[data-phone-page]');
     var v = document.querySelector('[data-view]');
-    var b = page ? page.getAttribute('data-phone-base') : (v ? '/v/' + encodeURIComponent(v.dataset.kind) + '/' + encodeURIComponent(v.dataset.id) : '');
+    var b = page ? page.getAttribute('data-phone-base') : (v ? drishti_url('/v/') + encodeURIComponent(v.dataset.kind) + '/' + encodeURIComponent(v.dataset.id) : '');
     var q = page ? page.getAttribute('data-phone-query') : location.search.replace(/^\?/, '');
     return { path: b, query: q };
   }
@@ -98,7 +98,7 @@
   function fetchPanel(id, compact) {
     var b = base();
     var url = b.path + '/phone/' + encodeURIComponent(id) + '?' + (compact ? 'compact=1' : 'full=1') + (b.query ? '&' + b.query : '');
-    return fetch(url, { credentials: 'same-origin', headers: { Accept: 'application/json' } }).then(function (r) {
+    return fetch(drishti_url(url), { credentials: 'same-origin', headers: { Accept: 'application/json' } }).then(function (r) {
       if (!r.ok) { throw new Error('status ' + r.status); }
       return r.json();
     });

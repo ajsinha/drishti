@@ -72,7 +72,7 @@
       const name = bound.split('@')[0];
       if (modelPages[name] === undefined) {
         modelPages[name] = '';
-        B.layer.get('datasets').then((d) => { const it = (d.models || []).find((x) => x.kind === 'model' && x.name === name); modelPages[name] = it ? '/build/tables?kind=model&item=' + B.id2path(it.id) : false; })
+        B.layer.get('datasets').then((d) => { const it = (d.models || []).find((x) => x.kind === 'model' && x.name === name); modelPages[name] = it ? drishti_url('/build/tables?kind=model&item=') + B.id2path(it.id) : false; })
           .catch(() => { modelPages[name] = false; }).then(() => drawFields());
       }
       return modelPages[name] || null;
@@ -129,7 +129,7 @@
       if (f.local) { out.push({ text: 'this report only', badge: true, tone: 'accent', attrs: { 'data-origin': 'report' } }); }
       if (f.origin) { out.push({ text: f.origin, badge: true, attrs: { 'data-origin': f.origin } }); }
       if (f.time) { out.push({ text: f.time, badge: true, tone: 'link', attrs: { 'data-time': f.time } }); }
-      if (f.move) { out.push({ text: 'Move to the model', href: f.move, attrs: { 'data-move-measure': f.name } }); }
+      if (f.move) { out.push({ text: 'Move to the model', href: drishti_url(f.move), attrs: { 'data-move-measure': f.name } }); }
       return out;
     }
 
@@ -172,7 +172,7 @@
           if (search.value) { outline.filter(search.value); }
         }
       }
-      q('[data-model-link]').href = '/bi/m/' + B.id2path(D.dataset.id || '');
+      q('[data-model-link]').href = drishti_url('/bi/m/' + B.id2path(D.dataset.id || ''));
     }
     D.drawFields = drawFields;
 
@@ -370,7 +370,7 @@
       if (v.type === 'tile') { D.tileEditor(fmt, v); }
       settings('The ' + v.type, [
         v.type === 'text' ? ['text', { type: 'string', title: 'Text', widget: 'textarea', lazy: true, hook: 'data-format-text', options: { rows: 3 } }, v.text, (x) => setTop(v, 'text', x || '')] : null,
-        v.type === 'image' ? ['src', text('Image', 'data-format-src', { placeholder: '/static/... or a data:image/ URI' }), v.src, (x) => setTop(v, 'src', trimmed(x))] : null,
+        v.type === 'image' ? ['src', text('Image', 'data-format-src', { placeholder: drishti_url('/static/... or a data:image/ URI') }), v.src, (x) => setTop(v, 'src', trimmed(x))] : null,
         v.type === 'button' ? ['label', text('Label', 'data-button-label'), v.text, (x) => setTop(v, 'text', x || '')] : null,
         v.type === 'button' ? ['navigate', { type: 'string', title: 'Go to page', enum: pages.map((x) => x.id), enumLabels: pages.map((x) => x.title), widget: 'select', emptyLabel: 'none', hook: 'data-button-page' }, act.navigate,
           (x) => D.change('Set the button', () => { v.action = x ? { navigate: x } : {}; })] : null,

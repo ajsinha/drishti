@@ -34,7 +34,7 @@
     var o = { method: method, headers: {} };
     if (body !== undefined && body !== null) { o.headers['Content-Type'] = 'application/json'; o.body = JSON.stringify(body); }
     if (init) { Object.keys(init.headers || {}).forEach(function (k) { o.headers[k] = init.headers[k]; }); if (init.rawBody) { o.body = init.rawBody; } }
-    return fetch(url, o).then(function (r) { return r.json().catch(function () { return {}; }).then(function (b) { return { ok: r.ok, status: r.status, body: b }; }); });
+    return fetch(drishti_url(url), o).then(function (r) { return r.json().catch(function () { return {}; }).then(function (b) { return { ok: r.ok, status: r.status, body: b }; }); });
   }
   function why(r) { return window.Drishti.drsMessage ? window.Drishti.drsMessage({ code: r.body.code || ('HTTP ' + r.status), detail: r.body.detail }, 'The request failed') : (r.body.detail || 'The request failed'); }
   function say(node, text, bad) { node.textContent = text; node.classList.toggle('t-bad', !!bad); node.classList.toggle('t-ok', !bad && !!text); }
@@ -51,7 +51,7 @@
     if (!body.restarting) { setTimeout(function () { location.reload(); }, 700); return; }
     var seenDown = false, started = Date.now();
     (function poll() {
-      fetch('/readyz', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (s) {
+      fetch(drishti_url('/readyz'), { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (s) {
         if (s.status !== 'UP') { seenDown = true; }
         if (s.status === 'UP' && (seenDown || Date.now() - started > 15000)) { location.reload(); return; }
         msgNode.textContent = 'Restarting the server… ' + Math.round((Date.now() - started) / 1000) + ' s';
@@ -88,7 +88,7 @@
       up.disabled = true;
       say(msg, 'Uploading and checking ' + f.name + '…');
       out.hidden = true;
-      call('POST', '/admin/api/packs/deploy', null, { headers: headers, rawBody: f }).then(function (r) {
+      call('POST', drishti_url('/admin/api/packs/deploy'), null, { headers: headers, rawBody: f }).then(function (r) {
         up.disabled = false;
         if (!r.ok) { say(msg, why(r), true); return; }
         say(msg, r.body.ok ? 'Checked: ' + r.body.pack + ' ' + r.body.version + '. Nothing has changed yet.' : 'Refused: nothing was changed.', !r.body.ok);
@@ -160,14 +160,14 @@
       if (ack) { ack.on('change', function () { go.disabled = !acked(); }); }
       out.appendChild(el('div', { class: 'adm-dlg-actions dep-actions' }, [no, go]));
       no.addEventListener('click', function () {
-        call('DELETE', '/admin/api/packs/deploy/' + q(rep.uploadId)).then(function () { out.hidden = true; say(msg, 'Discarded. Nothing was changed.'); FF.setValue({ file: '' }); up.disabled = true; });
+        call('DELETE', drishti_url('/admin/api/packs/deploy/') + q(rep.uploadId)).then(function () { out.hidden = true; say(msg, 'Discarded. Nothing was changed.'); FF.setValue({ file: '' }); up.disabled = true; });
       });
       go.addEventListener('click', function () {
         ask('Deploy ' + rep.pack + ' ' + rep.version + '?', 'Deploy ' + rep.pack + ' ' + rep.version + '? It takes effect now, with no restart. If the pack cannot be used, the old files are put back.', 'Deploy').then(function (yes) {
           if (!yes) { return; }
           go.disabled = no.disabled = true;
           say(msg, 'Deploying ' + rep.pack + ' ' + rep.version + '…');
-          call('POST', '/admin/api/packs/deploy/' + q(rep.uploadId), { acceptBreaking: acked() }).then(function (r) {
+          call('POST', drishti_url('/admin/api/packs/deploy/') + q(rep.uploadId), { acceptBreaking: acked() }).then(function (r) {
             if (!r.ok) { say(msg, why(r), true); go.disabled = no.disabled = false; return; }
             afterChange(msg, r.body);
           });
@@ -184,7 +184,7 @@
       ask('Roll ' + name + ' back?', 'Roll ' + name + ' back to ' + (version === 'shipped' ? 'the version that ships with the server' : version) + '? It takes effect now, with no restart.', 'Roll back').then(function (yes) {
         if (!yes) { return; }
         say(m, 'Rolling ' + name + ' back…');
-        call('POST', '/admin/api/packs/' + q(name) + '/rollback', { version: version }).then(function (r) {
+        call('POST', drishti_url('/admin/api/packs/') + q(name) + '/rollback', { version: version }).then(function (r) {
           if (!r.ok) { say(m, why(r), true); return; }
           afterChange(m, r.body);
         });
@@ -201,7 +201,7 @@
       go.then(function (yes) {
         if (!yes) { return; }
         say(m, 'Saving\u2026');
-        call('POST', '/admin/api/pack-samples', { mode: mode }).then(function (r) {
+        call('POST', drishti_url('/admin/api/pack-samples'), { mode: mode }).then(function (r) {
           if (!r.ok) { say(m, why(r), true); return; }
           say(m, 'Saved: sample packs are now ' + r.body.mode + '.');
           setTimeout(function () { location.reload(); }, 700);
@@ -217,7 +217,7 @@
   var dsBody = dlg.querySelector('[data-ds-body]'), dsMsg = dlg.querySelector('[data-ds-msg]'), dsTitle = dlg.querySelector('[data-ds-title]'), dsIntro = dlg.querySelector('[data-ds-intro]');
   var opener = null;
 
-  var STATE = { RUNNING: ['st st-ok', 'running'], DISABLED: ['st', 'disabled'], OFFLINE: ['st', 'off (offline mode)'], FAILED: ['st st-bad', 'failed'], IDLE: ['st st-warn', 'not configured by its plugin'],
+  var STATE = { RUNNING: ['st st-ok', 'running'], DISABLED: ['st', 'disabled'], OFFLINE: ['st', 'off (offline mode)'], FAILED: ['st st-bad', 'failed'], IDLE: ['st', 'not configured'],
     NOT_LOADED: ['st st-warn', 'not started'], NOT_CONFIGURED: ['st st-bad', 'not configured'] };
 
   function build(ds) {
@@ -226,7 +226,7 @@
     dsIntro.appendChild(document.createTextNode('A pack names the connectors it reads through; each one is a file in '));
     dsIntro.appendChild(el('span', { class: 'mono', text: ds.directory }));
     dsIntro.appendChild(document.createTextNode(' and is created, tested and changed in '));
-    dsIntro.appendChild(el('a', { href: '/admin/connectors', text: 'Admin \u2192 Connectors' }));
+    dsIntro.appendChild(el('a', { href: drishti_url('/admin/connectors'), text: 'Admin \u2192 Connectors' }));
     dsIntro.appendChild(document.createTextNode('. Several packs may use the same connector.'));
     if (!ds.connectors.length) { dsBody.appendChild(el('p', { class: 'text-muted-d', text: 'This pack names no connector.' })); return; }
     var tb = el('tbody');
@@ -234,11 +234,11 @@
       var st = STATE[c.state] || ['st', String(c.state || '').toLowerCase()];
       if (c.label) { st = [{ ok: 'st st-ok', down: 'st st-bad', warn: 'st st-warn' }[c.level] || 'st', c.label]; }       // the same words as Admin → Connectors and the CLI
       var link = c.defined
-        ? el('a', { class: 'fk', href: c.editUrl, text: 'Edit', 'aria-label': 'Edit connector ' + c.name })
-        : el('a', { class: 'fk', href: c.createUrl, text: 'Create', 'aria-label': 'Create connector ' + c.name });
+        ? el('a', { class: 'fk', href: drishti_url(c.editUrl), text: 'Edit', 'aria-label': 'Edit connector ' + c.name })
+        : el('a', { class: 'fk', href: drishti_url(c.createUrl), text: 'Create', 'aria-label': 'Create connector ' + c.name });
       var problems = (c.problems || []).map(function (x) { return el('div', { class: 't-bad', text: x }); });
       tb.appendChild(el('tr', { 'data-connector': c.name }, [
-        el('th', { scope: 'row', class: 'mono' }, [c.defined ? el('a', { href: '/admin/connectors/' + q(c.name), text: c.name }) : c.name]),
+        el('th', { scope: 'row', class: 'mono' }, [c.defined ? el('a', { href: drishti_url('/admin/connectors/' + q(c.name)), text: c.name }) : c.name]),
         el('td', {}, [el('span', { class: st[0], text: st[1] })].concat(c.health ? [el('span', { class: 'text-muted-d', text: ' ' + c.health })] : [])),
         el('td', { class: 'mono', text: c.plugin || (c.hasTemplate ? 'from the pack\'s template' : '\u2014') }),
         el('td', { class: 'mono', text: (c.kinds || []).join(', ') || '\u2014' }),
@@ -258,7 +258,7 @@
     dsBody.textContent = 'Reading the connectors\u2026';
     say(dsMsg, '');
     if (!dlg.open) { dlg.showModal(); }
-    call('GET', '/admin/api/packs/' + q(name) + '/datasource').then(function (r) {
+    call('GET', drishti_url('/admin/api/packs/') + q(name) + '/datasource').then(function (r) {
       if (!r.ok) { dsBody.textContent = ''; say(dsMsg, why(r), true); return; }
       build(r.body);
       var first = dsBody.querySelector('a') || dlg.querySelector('[data-ds-close]');

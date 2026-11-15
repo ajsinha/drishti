@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.packs.Pack;
@@ -44,10 +45,10 @@ import org.junit.jupiter.api.Test;
  */
 class ShippedExamplesPacksTest {
 
-    private static final Path BI = Path.of("..", "..", "config", "bi");
-    private static final Path PACKS = Path.of("..", "..", "config", "packs");
+    private static final Path BI = Path.of(TestRoots.repo(), "config", "bi");
+    private static final Path PACKS = Path.of(TestRoots.repo(), "config", "packs");
     /** The table layer's shipped tables and models: BI's datasets and models since the switch. */
-    private static final Path TABLES = Path.of("..", "..", "config", "tables");
+    private static final Path TABLES = Path.of(TestRoots.repo(), "config", "tables");
     private static final Pattern PACK_DATASET = Pattern.compile("\\bpack\\.([a-z0-9-]+)\\.([a-z0-9-]+)");
     private final ObjectMapper yaml = new ObjectMapper(new YAMLFactory());
 

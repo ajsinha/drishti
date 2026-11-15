@@ -149,7 +149,7 @@ public final class DatedHitIndex {
         if (p == null || p.isBlank()) {
             p = System.getenv("DRISHTI_INDEX_DIR");
         }
-        return Path.of(p == null || p.isBlank() ? DataDir.under("index") : p).toAbsolutePath().normalize();
+        return p == null || p.isBlank() ? Path.of(DataDir.under("index")).normalize() : Roots.anchored(p);   // a relative value: under the install folder
     }
 
     private static String safe(String s) {

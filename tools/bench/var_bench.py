@@ -229,7 +229,7 @@ class Bench:
                      "--drishti.var.sharding.kinds=pnl-vector"]
         args =[*(self.a.jvm_arg or []), *args, *(self.a.server_arg or [])]
         log =open(self.work / "logs" / f"{n}.out", "ab")
-        self.procs[n] = subprocess.Popen(java_cmd(str(Path(self.java) / "bin" / "java"), args, tmp=home / "data" / "tmp" / "server"), cwd=home,
+        self.procs[n] = subprocess.Popen(java_cmd(str(Path(self.java) / "bin" / "java"), args, tmp=home / "data" / "tmp" / "server", cwd=home, env=env), cwd=home,
                                          env=env, stdout=log, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, start_new_session=True)
 
     def wait_health(self, n: str, seconds: float = 600) -> float:

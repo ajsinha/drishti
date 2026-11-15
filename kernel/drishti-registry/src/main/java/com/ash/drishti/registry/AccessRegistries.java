@@ -22,17 +22,10 @@ import java.util.function.Function;
 
 /**
  * Makes the registry from a server's settings, so the server's wiring never names the store: {@code drishti.modules.dir} (default
- * {@value #MODULES_DIR}), {@code drishti.access.dir} (default {@value #ACCESS_DIR}) and each module's {@code drishti.modules.<id>.enabled}
+ * {@code <config>/modules}), {@code drishti.access.dir} (default {@code <config>/access}), each absolute (com.ash.drishti.api.Roots) and each module's {@code drishti.modules.<id>.enabled}
  * (set on the command line or in the environment, {@code DRISHTI_MODULES_<ID>_ENABLED}: it wins over the site's file).
  */
 public final class AccessRegistries {
-
-    /** The site's module files. */
-    public static final String MODULES_DIR = "./config/modules";
-    /** The site's access files. */
-    public static final String ACCESS_DIR = "./config/access";
-    /** The content modules' own manifests ({@code <id>/module.yaml} or {@code <id>/dmod/module.yaml}), {@code drishti.modules.home}. */
-    public static final String MANIFESTS_DIR = "./modules";
 
     private AccessRegistries() {
     }
@@ -44,8 +37,8 @@ public final class AccessRegistries {
      * @param loader   where the modules' shipped manifests are looked for (the server's class loader)
      */
     public static EmbeddedAccessRegistry embedded(Function<String, String> property, ClassLoader loader) {
-        String modules = orDefault(property.apply("drishti.modules.dir"), MODULES_DIR);
-        String access = orDefault(property.apply("drishti.access.dir"), ACCESS_DIR);
+        String modules = orDefault(property.apply("drishti.modules.dir"), com.ash.drishti.api.Roots.config("modules"));
+        String access = orDefault(property.apply("drishti.access.dir"), com.ash.drishti.api.Roots.config("access"));
         Function<String, Boolean> overrides = id -> {
             String v = property.apply("drishti.modules." + id + ".enabled");
             if (v == null || v.isBlank()) {
@@ -55,17 +48,17 @@ public final class AccessRegistries {
             return "true".equals(s) || "on".equals(s) || "yes".equals(s);
         };
         java.util.function.Supplier<Path> store = () -> ModulePackages.store(property);   // where the module node installs, read when used
-        return new EmbeddedAccessRegistry(new YamlAccessStore(Path.of(modules), Path.of(access), loader, manifests(property), store), overrides,
+        return new EmbeddedAccessRegistry(new YamlAccessStore(com.ash.drishti.api.Roots.anchored(modules), com.ash.drishti.api.Roots.anchored(access), loader, manifests(property), store), overrides,
                 Clock.systemUTC());
     }
 
     /**
      * The modules shipped as folders: {@code drishti.modules.home} (its former name {@code drishti.module-manifests-dir}; default
-     * {@value #MANIFESTS_DIR}), the same setting the one resolution reads (KERNEL_AND_MODULES.md section 18.2). No folder is derived from
+     * {@code <home>/modules}; a relative value is under the install folder), the same setting the one resolution reads (KERNEL_AND_MODULES.md section 18.2). No folder is derived from
      * another folder's position.
      */
     static Path manifests(Function<String, String> property) {
-        return Path.of(orDefault(property.apply("drishti.modules.home"), orDefault(property.apply("drishti.module-manifests-dir"), MANIFESTS_DIR)));
+        return com.ash.drishti.api.Roots.anchored(orDefault(property.apply("drishti.modules.home"), orDefault(property.apply("drishti.module-manifests-dir"), com.ash.drishti.api.Roots.modules())));
     }
 
     private static final java.util.Map<Object, EmbeddedAccessRegistry> SHARED = new java.util.WeakHashMap<>();

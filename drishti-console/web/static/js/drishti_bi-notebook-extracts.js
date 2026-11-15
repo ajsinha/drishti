@@ -61,7 +61,7 @@
     if (!name || !sel.value || !picked.length) { X.say('Name the extract, choose a dataset and at least one field.', true); return; }
     if (X.extras.some(function (e) { return e.name === name; })) { X.say('There is already an extract called ' + name + '.', true); return; }
     X.say('Opening the extract…');
-    X.post('/bi/notebook/extract', { dataset: sel.value, fields: picked }).then(function (ex) {
+    X.post(drishti_url('/bi/notebook/extract'), { dataset: sel.value, fields: picked }).then(function (ex) {
       X.extras.push({ name: name, dataset: sel.value, fields: picked });
       info[name] = { rows: ex.rowCount, masked: ex.masked };
       form.elements.ename.value = '';

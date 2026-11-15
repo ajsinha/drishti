@@ -192,7 +192,7 @@
       rm.addEventListener('click', function () { if (ctx.remove) { ctx.remove(m.id); } else { ctx.actions.remove(m.id, null); } });
       var bind = el('button', 'btn-pill btn-ghost', 'Bind field…', { type: 'button' });
       bind.addEventListener('click', function () { ctx.actions.menuBind(bind); });
-      return [el('span', 'bs-role', kind), el('b', 'mono', m.id), el('a', 'lnk', 'About ' + kind, { href: '/help/rachana-reference#' + kind, target: '_blank', rel: 'noopener' }), rm, bind];
+      return [el('span', 'bs-role', kind), el('b', 'mono', m.id), el('a', 'lnk', 'About ' + kind, { href: drishti_url('/help/rachana-reference#' + kind), target: '_blank', rel: 'noopener' }), rm, bind];
     }
     var kit = new D.Inspector(box, { empty: 'Loading the Rachana schema...', head: header,
       schemaFor: function () { return built ? built.schema : null; }, valuesFor: function () { return built ? JSON.parse(JSON.stringify(built.values)) : {}; } });

@@ -34,14 +34,14 @@
      the file system or the console hosts no module with a visual */
   const script = (src) => new Promise((resolve, reject) => {
     const s = document.createElement('script');
-    s.src = src;
+    s.src = drishti_url(src);
     s.onload = resolve;
     s.onerror = () => reject(new Error('Could not load ' + src));
     document.head.appendChild(s);
   });
   /* the console's answer: the visuals of the modules hosted now and the modules this person's pages may load libraries of (a library of a
      module that is off here is not asked for: the loader refuses it); nothing from the file system */
-  const answer = () => (location.protocol === 'file:' ? Promise.resolve({}) : fetch('/api/elements/visuals', { credentials: 'same-origin' })
+  const answer = () => (location.protocol === 'file:' ? Promise.resolve({}) : fetch(drishti_url('/api/elements/visuals'), { credentials: 'same-origin' })
     .then((r) => (r.ok ? r.json() : {})).catch(() => ({})));
   const moduleVisuals = (list) => list.reduce((at, v) => at.then(() => script(v.script)
     .then(() => (NS.elements.visuals && NS.elements.visuals[v.module] ? NS.elements.visuals[v.module].ready : null))

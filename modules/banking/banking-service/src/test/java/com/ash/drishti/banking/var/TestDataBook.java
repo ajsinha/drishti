@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.banking.var;
 
+import com.ash.drishti.testroots.TestRoots;
 import com.ash.drishti.banking.compute.var.CurrencyTotals;
 import com.ash.drishti.banking.compute.var.HierarchySpec;
 import com.ash.drishti.banking.compute.var.PositionRules;
@@ -49,12 +50,12 @@ final class TestDataBook {
 
     /** The repository's root (the folder holding data/testdata/market-risk). */
     static Path root() {
-        Path p = Path.of("").toAbsolutePath();
+        Path p = Path.of(TestRoots.module());
         while (p != null && !Files.isDirectory(p.resolve("data/testdata/market-risk/scenario-pv"))) {
             p = p.getParent();
         }
         if (p == null) {
-            throw new IllegalStateException("the committed test data (data/testdata/market-risk) is not above " + Path.of("").toAbsolutePath());
+            throw new IllegalStateException("the committed test data (data/testdata/market-risk) is not above " + Path.of(TestRoots.module()));
         }
         return p;
     }

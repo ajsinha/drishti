@@ -25,6 +25,7 @@
    Masked cells stay the server's mask (•••); the engine never charts them. */
 (function () {
   'use strict';
+  function drishti_url(p) { var f = globalThis.drishti_url; return typeof f === 'function' && f !== drishti_url ? f(p) : p; }   // drishti-core's base helper when the page has it; a page without it (the renderer, an embed) keeps the URL as it is
   var MASK = '•••';
   function CF() { return (window.drishtiModules || {}).colFilter; }
   function norm(s) { return String(s == null ? '' : s).replace(/\s+/g, ' ').trim(); }
@@ -114,7 +115,7 @@
     var base = dom(t, o), fields = null;
     function catalogue() {
       if (!fields) {
-        fields = fetchJson('/api/pivot/catalogue?source=' + encodeURIComponent(source)).then(function (c) {
+        fields = fetchJson(drishti_url('/api/pivot/catalogue?source=') + encodeURIComponent(source)).then(function (c) {
           var byLabel = {};
           (c.fields || []).forEach(function (f) { byLabel[norm(f.label)] = f.name; byLabel[norm(f.name)] = f.name; });
           return byLabel;

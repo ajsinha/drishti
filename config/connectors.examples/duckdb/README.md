@@ -68,6 +68,8 @@ The file holds, per domain, the layout of the [duckdb connector README](../../..
 
 ## Examples
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 tools/load-duckdb.sh data/duckdb/drishti.duckdb                 # the samples: 1,791 documents x 10 business days
 cp config/connectors.examples/duckdb/*-store.yaml config/connectors/

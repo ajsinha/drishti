@@ -77,8 +77,7 @@ public record PackEntry(String domain, String table, String key, String date, Li
         }
         Path file = Files.isDirectory(pack) ? pack.resolve("pack.yaml") : pack;
         // the layers (KERNEL_AND_MODULES.md section 18.5): the template's constants, then the site override's key by key (null removes one)
-        String dir = System.getProperty("drishti.sources.connectors-dir", System.getenv().getOrDefault("DRISHTI_CONNECTORS_DIR", "./config/connectors"));
-        Path siteFile = Path.of(dir, connector + ".yaml");
+        Path siteFile = com.ash.drishti.api.Roots.connectors().resolve(connector + ".yaml");
         JsonNode site = Files.isRegularFile(siteFile) ? new YAMLMapper().readTree(Files.readString(siteFile)) : null;
         JsonNode template = manifest(file).path("connectors").path(connector);
         if (!template.isMissingNode() && !(site != null && site.path("settings").size() > 0 && !site.path("plugin").isMissingNode()
@@ -117,7 +116,7 @@ public record PackEntry(String domain, String table, String key, String date, Li
             // several tables of one kind (trade_endur, trade_calypso): the connector's table picks; else the first of the kind
             String wanted = connector == null ? null : tableOf(m, connector, kind);
             if (entryKind.equals(kind) && (wanted == null || wanted.equals(folder) || e.getValue().path("path").asText("").endsWith("/" + wanted))) {
-                LakeTable t = Lakes.table(new Lakes.Values(file.toString(), System::getenv), file.toString(), "delta", e.getKey(), e.getValue(),
+                LakeTable t = Lakes.table(new Lakes.Values(file.toString(), com.ash.drishti.settingsfile.Placeholders::process), file.toString(), "delta", e.getKey(), e.getValue(),
                         JsonNodeFactory.instance.objectNode());
                 Map<String, String> flat = t.flatten();
                 if (ingest.path("flatten").size() > 0) {        // the ingest block's flatten replaces the entry's, as on the older path

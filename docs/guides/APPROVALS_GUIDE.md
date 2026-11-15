@@ -185,6 +185,8 @@ The server checks all of this again when you submit, and once more when the chan
 
 The same requests, for the caller's token (with the **edit** scope) or `--user` with sign-in off:
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 # propose a change to a record's fields (the same request as a form's Submit)
 drishti.py change propose --kind trade --id MX-20000012 --set NOTIONAL=28001250 --from NOTIONAL=28000000 --reason "booking typo: ticket 4411"

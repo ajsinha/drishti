@@ -21,6 +21,7 @@
    screen guide as everywhere: drishti_app.js). The same fetch feeds the panel popovers and field hints (drishti_about-hints.js). On a phone it is a bottom sheet that traps the focus; Esc closes it and the focus goes back. */
 (function () {
   'use strict';
+  function drishti_url(p) { var f = globalThis.drishti_url; return typeof f === 'function' && f !== drishti_url ? f(p) : p; }   // drishti-core's base helper when the page has it; a page without it (the renderer, an embed) keeps the URL as it is
   var me = document.currentScript;
   /** init(root, options): the About drawer under root (the document or a ShadowRoot: the element renders its own drawer markup).
       options: fetch(url, init) and url(path) (default: the page's own), reload() (the drawer's "refresh" link; default: reload the
@@ -29,7 +30,7 @@
       are never touched. */
   function init(root, options) {
   options = options || {};
-  var doFetch = options.fetch || function (u, o) { return fetch(u, o); };
+  var doFetch = options.fetch || function (u, o) { return fetch(drishti_url(u), o); };
   var toUrl = options.url || function (p) { return p; };
   var setHtml = options.setHtml || function (el, html) { el.innerHTML = html; };       // the element passes its sanitising, Trusted Types writer
   // an element's renderer draws the body from the explanation's JSON when an embed passes one (options.draw); a console page uses the HTML

@@ -192,6 +192,8 @@ files back by itself, and the history says *reverted*.
 Without the page: one command turns a folder of JSON Lines into one folder you can deploy: the pack, the data in a Delta Lake partitioned by business date, a checksummed bundle, a server
 configuration and start scripts. `pack make` wants the ids in what it reads to be unique, so give it one day's file (later days are added with `data ingest`):
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```text
 $ drishti-console/.venv/bin/python tools/drishti.py pack make docs/tutorials/data/desk-quotes/2026-09-30/desk-quote.jsonl --kind desk-quote --match VENUE --name desk-quotes --version 1.2.0 --out build/desk-quotes
 read 6 desk-quote document(s)

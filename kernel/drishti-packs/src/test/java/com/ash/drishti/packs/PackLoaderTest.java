@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.packs;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -27,9 +28,9 @@ import org.junit.jupiter.api.io.TempDir;
 
 class PackLoaderTest {
 
-    static final Path PACKS = Path.of("..", "..", "config", "packs").toAbsolutePath().normalize();
+    static final Path PACKS = Path.of(TestRoots.repo(), "config", "packs").toAbsolutePath().normalize();
     /** The retired example packs (finance, logistics, genomics…): not shipped, loadable through drishti.packs.extra-dirs. */
-    static final Path EXAMPLES = Path.of("..", "..", "examples", "packs").toAbsolutePath().normalize();
+    static final Path EXAMPLES = Path.of(TestRoots.repo(), "examples", "packs").toAbsolutePath().normalize();
 
     @Test
     void theExamplePacksLoadAndContributeProperties() {

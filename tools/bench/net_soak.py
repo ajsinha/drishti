@@ -142,12 +142,13 @@ def connector_files(lake: Path, packs: str, packs_dir: Path = ROOT / "config" / 
         raw = yaml.safe_load((pack_dir(p, packs_dir) / "pack.yaml").read_text(encoding="utf-8")) or {}
         sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
         import packlake                               # where a lake-form template's tables are: the pack's lake: entries
+        templates = packlake.with_modules(raw)       # the pack's templates and its source modules' (trade-endur ...), as written
         spec = packlake.view(raw)
         for name, c in (spec.get("connectors") or {}).items():
             if c.get("plugin") != "delta":
                 continue
             st = c.get("settings") or {}
-            template_settings = ((raw.get("connectors") or {}).get(name) or {}).get("settings") or st
+            template_settings = ((templates.get("connectors") or {}).get(name) or {}).get("settings") or st
             tables = st.get("table") if isinstance(st.get("table"), dict) else {}
             held = [k for k in c.get("kinds") or [] if (lake / str(st.get("domain") or "") / str(tables.get(k) or st.get(f"table.{k}") or k)
                                                        / "_delta_log").is_dir()]
@@ -297,7 +298,7 @@ class Soak:
                 "--drishti.sources.plugins.demo.enabled=false", "--drishti.security.registered-users-only=false",
                 "--drishti.security.redact=" + ",".join(REDACT)]
         log = open(self.work / f"server-{name}.log", "ab")
-        self.procs[name] = subprocess.Popen(java_cmd(self.java, args, tmp=work / "data" / "tmp" / "server"), cwd=work, env=env, stdout=log,
+        self.procs[name] = subprocess.Popen(java_cmd(self.java, args, tmp=work / "data" / "tmp" / "server", cwd=work, env=env), cwd=work, env=env, stdout=log,
                                             stderr=subprocess.STDOUT)
         wait_up(f"http://127.0.0.1:{port}/actuator/health", 240)
 

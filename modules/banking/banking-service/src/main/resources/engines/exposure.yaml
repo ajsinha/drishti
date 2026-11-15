@@ -45,7 +45,7 @@ drishti:
       load-threads: 2                # threads that load dates from the lake: their own pool, never the common pool
       version-check: ${DRISHTI_EXPOSURE_VERSION_CHECK:30s}   # an open date compares its lake version this often; moved: reloaded in the background (0: off)
       memory-budget-gb: ${DRISHTI_EXPOSURE_MEMORY_GB:0}   # most memory one date's netting-set matrices take while it loads (0: a quarter of the heap); over it: 503 DRS-5445
-      hot-folder: ${DRISHTI_EXPOSURE_HOT_DIR:${drishti.data.dir:./data}/ccr/hot}   # the hot files, one folder per business date; never under the repository
+      hot-folder: ${DRISHTI_EXPOSURE_HOT_DIR:${drishti.data.dir}/ccr/hot}   # the hot files, one folder per business date; never under the repository
       tier: ${DRISHTI_EXPOSURE_TIER:mapped}   # mapped: each date a float32 hot file, memory-mapped; heap: float64 on the heap
       disk-dates: 60                 # hot files kept on disk (least recently used beyond are deleted, unless the retention keeps them)
       max-disk-gb: ${DRISHTI_EXPOSURE_MAX_DISK_GB:0}   # most disk the hot files take; 0: a quarter of the disk; it wins over the retention (PO-3)
@@ -68,7 +68,7 @@ drishti:
       official:                      # the official end-of-day captures (docs/guides/EXPOSURE_GUIDE.md section 20)
         enabled: ${DRISHTI_EXPOSURE_OFFICIAL:true}   # capture every netting set, counterparty, group and hierarchy node when a date's run is complete
         publish: true                # also append them to <root>/risk-results/exposure-official and exposure-official-cpty (append-only)
-        root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}   # a folder or s3://bucket/prefix
+        root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir}/delta}   # a folder or s3://bucket/prefix
         format: ${DRISHTI_EXPOSURE_OFFICIAL_FORMAT:delta}   # delta or iceberg; BI's exposure-results connector follows it
         storage: {}                  # the s3.* settings for an s3:// root, as drishti.var.official.storage
         retention-years: 7           # the published tables keep their log and removed files (time travel) this long

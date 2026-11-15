@@ -21,7 +21,7 @@
 {% block title %}Reports · {{ report or 'review and sign-off' }} · {{ PRODUCT }}{% endblock %}
 {% block screen %}var-reports{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_var-regulatory.css?v={{ ASSET_V }}">{% include "terminal/_risk_elements_css.html" %}{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_var-regulatory.css?v={{ ASSET_V }}">{% include "terminal/_risk_elements_css.html" %}{% endblock %}
 {% block nav %}{% with command_text=command_text ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
 <div class="rg" data-reports data-report="{{ report }}" data-period="{{ period }}" data-version="{{ version }}" data-user="{{ user }}">
@@ -29,7 +29,7 @@
     <h1>Reports · review and sign-off</h1>
     <span class="rg-word" data-rp-command>VAR REPORT {{ report }} {{ period }}</span>
     <span class="rg-meta" data-rp-meta aria-live="polite"></span>
-    <a class="rg-meta" href="/help/context/var-reports" title="Help: report runs and sign-off (VAR_GUIDE.md section 18.14)"><i class="bi bi-question-circle" aria-hidden="true"></i></a>
+    <a class="rg-meta" href="{{ BASE }}/help/context/var-reports" title="Help: report runs and sign-off (VAR_GUIDE.md section 18.14)"><i class="bi bi-question-circle" aria-hidden="true"></i></a>
   </div>
   <p class="rg-notice" data-rp-notice role="status" hidden></p>
   <div class="rg-grid">
@@ -56,7 +56,7 @@
         <h2 id="rpSignTitle">Sign-off<span class="rg-sub">maker, checker, then the approver the definition names; a changed run needs a new sign-off</span></h2>
         <ol class="rg-steps" data-rp-steps></ol>
         <div class="rg-bar rg-gap">
-          <a class="rg-btn primary" data-rp-approve href="/approvals?kind=var-report" title="Sign the next step, or send the run back, in the one Approvals queue">Sign in Approvals</a>
+          <a class="rg-btn primary" data-rp-approve href="{{ BASE }}/approvals?kind=var-report" title="Sign the next step, or send the run back, in the one Approvals queue">Sign in Approvals</a>
         </div>
         <div class="rg-bar rg-gap" data-rp-files></div>
         <p class="rg-note">Files are released after the last approval; a draft before it is marked so. Submission stays with the bank's reporting team.</p>
@@ -74,4 +74,4 @@
   </div>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script>{% include "terminal/_risk_elements.html" %}<script src="/static/js/drishti_var-reports.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script>{% include "terminal/_risk_elements.html" %}<script src="{{ BASE }}/static/js/drishti_var-reports.js?v={{ ASSET_V }}"></script>{% endblock %}

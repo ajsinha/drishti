@@ -157,7 +157,7 @@ def _f(path, ftype, label=None, **more):
 
 TRADE_FORM = [
     _f("TRADE_ID", "id", "Trade id", group="Identity", order=1, help="One or many: paste a list. MX-2* is any id starting MX-2; Endur ids are numbers."),
-    _f("SOURCE_SYSTEM", "enum", "Source system", group="Identity", order=2, help="ENDUR, CALYPSO or MUREX: the booking system the trade comes from."),
+    _f("SOURCE_SYSTEM", "enum", "Source system", group="Identity", order=2, help="ENDUR, CALYPSO, MUREX, WSS, SWAPONE or ICI: the booking system the trade comes from."),
     _f("COUNTERPARTY", "enum", "Counterparty", group="Identity", order=3, help="Type in the list to find a counterparty (CP-SOLARIS)."),
     _f("PRODUCT_TYPE", "enum", "Product type", group="Product", order=4),
     _f("PRODUCT_SUB_TYPE", "enum", "Product sub type", group="Product", order=5, depends="PRODUCT_TYPE"),
@@ -223,7 +223,7 @@ def manifest(name: str) -> dict:
                                                                                "source-name": cname}}
         m["routes"]["trade"] = "trade-endur"
         m["connectors"]["trading-stream"] = {"plugin": "kafka", "enabled": "${DRISHTI_STREAM_TRADING:false}", "kinds": ["trade"],
-                                             "settings": {"bootstrap-servers": "${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}",
+                                             "settings": {"broker": "default",
                                                           "topics": "${DRISHTI_TRADING_TOPIC:drishti.trading.trades}",
                                                           "kind": "trade", "id-field": "TRADE_ID",
                                                           # a live stream with no new trade for this long is shown as behind
@@ -359,9 +359,9 @@ def files() -> dict[Path, str]:
             for cname in TRADE_SYSTEMS:
                 form["connectors"].pop(cname, None)
             form["routes"].pop("trade", None)
-        if name == "trading":     # the table WSS, SwapOne and ICI share (modules/source-wss, -swapone, -ici): not a connector of the pack
-            form["lake"]["tables"]["trading.trades_shared"] = {"kind": "trade", "partition-by": ["SOURCE_SYSTEM"], "promote": ["SOURCE_SYSTEM"],
-                                                               "sort-by": ["id"]}
+        if name == "trading":     # one table a trading system, always: WSS, SwapOne and ICI (modules/source-wss, -swapone, -ici) too
+            for system in ("wss", "swapone", "ici"):
+                form["lake"]["tables"][f"trading.trade_{system}"] = {"kind": "trade", "promote": ["SOURCE_SYSTEM"], "sort-by": ["id"]}
         body = yaml.dump(form, Dumper=_Plain, sort_keys=False, allow_unicode=True,
                          width=140)
         out[pack_dir(name) / "pack.yaml"] = f"{HEADER}\n\n{GENERATED}\n# {layout.PACKS[name]['title']} pack for Drishti.\n{body}{kept(name)}"

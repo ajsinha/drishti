@@ -19,6 +19,7 @@
    number on each date, the change, the tail scenario), the waterfall first and wide with, on its right, the clicked step's biggest
    contributors and its plain words, then Formula, Inputs & lineage and Checks folded below. Every figure is the server's; the browser
    only places it. A number whose explanation has no steps keeps the four-card page. */
+import { url as drishtiUrl } from '../../drishti-core/src/drishti_index.js';
 
 /** True when an answer's why it moved can be drawn as layout A (it has the engine's steps). @param {Object} a @returns {boolean} */
 export function whyPageFits(a) {
@@ -217,7 +218,7 @@ export function mountWhyPage(root, req, a, k) {
   const wb = ((a.workbook || {}).links || [])[0], head = root.querySelector('.dx-page-head');
   if (wb && head && !root.querySelector('[data-dx-wb]')) {
     const w = k.h('a', 'dx-btn', 'Workbook');
-    w.href = wb.href;
+    w.href = drishtiUrl(wb.href);
     w.setAttribute('data-dx-wb', '');
     head.insertBefore(w, head.querySelector('[data-dx-print]'));
   }
@@ -241,7 +242,7 @@ export function compareAgain(root, req, from, rerender) {
   if (from) { next.from = from; } else { delete next.from; }
   const u = new URL(win.location.href);
   if (from) { u.searchParams.set('from', from); } else { u.searchParams.delete('from'); }
-  win.history.replaceState(win.history.state, '', u.toString());
+  win.history.replaceState(win.history.state, '', drishtiUrl(u.toString()));
   root.setAttribute('data-explain-request', JSON.stringify(next));
   rerender(root);
 }

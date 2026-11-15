@@ -15,5 +15,6 @@
 #}
 {# One table of records of a result (a FORM's, the search page's, a bare mnemonic's): drishti-grid's LiveSetGrid, mounted by js/drishti_records.js. The host
   carries the set's id (its rows are read from /api/live/<id>/rows, its changes stream while data-live is on), the declaration (grid_spec) and, for a page
-  of a larger set (POS <GO>), the offset and the number of rows of the page. Nothing of the table is drawn here. Needs: spec, data; optional offset, limit. #}
-<div class="rc-host" data-records data-records-fill data-live-set="{{ data.live.set }}" data-live="{{ 'on' if data.live.live else 'off' }}" data-live-total="{{ data.live.total }}" data-live-seq="{{ data.live.seq }}" data-spec="{{ spec | tojson | forceescape }}"{% if offset %} data-drishti-offset="{{ offset }}"{% endif %} data-limit="{{ limit }}" aria-label="Results"></div>
+  of a larger set (POS <GO>), the offset and the number of rows of the page. Nothing of the table is drawn here. Needs: spec, data; optional offset, limit,
+  hq (a pick list of a history command: each record's panel offers History, its history over the range asked). #}
+<div class="rc-host" data-records data-records-fill data-live-set="{{ data.live.set }}" data-live="{{ 'on' if data.live.live else 'off' }}" data-live-total="{{ data.live.total }}" data-live-seq="{{ data.live.seq }}" data-spec="{{ spec | tojson | forceescape }}"{% if offset %} data-drishti-offset="{{ offset }}"{% endif %}{% if hq %} data-history="{{ hq }}"{% endif %} data-limit="{{ limit }}" aria-label="Results"></div>

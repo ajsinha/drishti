@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.banking.var;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -118,7 +119,7 @@ class VarStressWindowApiTest {
 
     @DynamicPropertySource
     static void lake(DynamicPropertyRegistry r) throws Exception {
-        lake = Files.createDirectories(Path.of("target", "var-stress-window-lake-" + System.nanoTime())).toAbsolutePath();
+        lake = Files.createDirectories(Path.of(TestRoots.module(), "target", "var-stress-window-lake-"+ System.nanoTime())).toAbsolutePath();
         VarLakeFixture.write(lake, DAY, 1.0, false, false);
         history = days(LocalDate.of(2008, 1, 1), DAYS);
         java.util.SplittableRandom rnd = new java.util.SplittableRandom(11);

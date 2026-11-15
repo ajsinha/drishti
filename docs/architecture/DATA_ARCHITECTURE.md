@@ -721,7 +721,7 @@ connectors:
     kinds:
     - desk-exposure
     settings:
-      bootstrap-servers: ${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}
+      broker: default
       topics: ${DRISHTI_RISK_RESULTS_TOPIC:risk.results}
       stale-after: 2m                       # amber in Health if the producer goes quiet
       disk-cache.enabled: true
@@ -802,7 +802,7 @@ never streams.
 
 `GET /api/v1/sources` lists every source with `"live": true` or `false`. In the sample configuration only
 `demo` is live; the `trading` pack's Kafka connector `trading-stream` becomes live when you set
-`DRISHTI_STREAM_TRADING=true` and point `DRISHTI_KAFKA_BOOTSTRAP` at your brokers.
+`DRISHTI_STREAM_TRADING=true` and point the default broker at your brokers (`[broker.default] bootstrap-servers=` in the settings file, or `BROKER_DEFAULT_BOOTSTRAP_SERVERS`).
 
 #### Worked example: making trades live from Kafka
 
@@ -815,7 +815,7 @@ connectors:
     enabled: ${DRISHTI_STREAM_TRADING:false}
     kinds: [trade]
     settings:
-      bootstrap-servers: ${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}
+      broker: default
       topics: ${DRISHTI_TRADING_TOPIC:drishti.trading.trades}
       kind: trade                 # "mapped" messages: the whole value is the trade document …
       id-field: tradeId           # … and its tradeId is the entity id
@@ -831,7 +831,7 @@ connectors:
 2. Start the server with the connector on:
 
    ```bash
-   DRISHTI_STREAM_TRADING=true DRISHTI_KAFKA_BOOTSTRAP=localhost:9092 java -jar kernel/drishti-server/target/drishti-server-*-exec.jar
+   DRISHTI_STREAM_TRADING=true BROKER_DEFAULT_BOOTSTRAP_SERVERS=localhost:9092 java -jar kernel/drishti-server/target/drishti-server-*-exec.jar
    ```
 
    `curl -s http://localhost:18480/api/v1/sources` should now list `trading-stream` with `"live":true` and
@@ -1612,6 +1612,8 @@ Names follow `export.filename()`: `1000015-history-2026-09-08-2026-10-19.csv`. T
 #### 15.3 CLI
 
 In `tools/drishti.py`, a new group `history` (argparse, `cmd_history_get(a, extra)`, the shared `server_parent()` options):
+
+Run these from the Drishti folder (the repository root, or the install folder of a release).
 
 ```text
 drishti.py history trade 1000015 --days 30

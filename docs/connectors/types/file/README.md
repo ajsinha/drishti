@@ -221,6 +221,8 @@ hold is refused with `DRS-1007` (400), never answered with today's file.
 
 ## Loading
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 tools/load-files.sh                              # the samples: 1,791 documents x 10 business days, into data/files
 tools/load-files.sh --trades 10000               # and a book of 10,000 trades a day for 3 days

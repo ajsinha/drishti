@@ -1368,1293 +1368,1284 @@ datasets:
   kind: trade
   connector: trade-wss
   key: DEAL_REF
-  table: trades_shared
+  table: trade_wss
   native: true
-  partition-by:
-  - SOURCE_SYSTEM
-  mode: overwrite-partitions
   days:
   - day: '2026-07-08'
     kind: snapshot
     documents: 207
     total: 207
     files:
-    - trades_shared.2026-07-08.jsonl.gz
+    - trade_wss.2026-07-08.jsonl.gz
     bytes: 9623
   - day: '2026-07-09'
     kind: changes
     documents: 14
     total: 207
     files:
-    - trades_shared.2026-07-09.jsonl.gz
+    - trade_wss.2026-07-09.jsonl.gz
     bytes: 1241
   - day: '2026-07-10'
     kind: changes
     documents: 11
     total: 209
     files:
-    - trades_shared.2026-07-10.jsonl.gz
+    - trade_wss.2026-07-10.jsonl.gz
     bytes: 1108
   - day: '2026-07-13'
     kind: changes
     documents: 15
     total: 212
     files:
-    - trades_shared.2026-07-13.jsonl.gz
+    - trade_wss.2026-07-13.jsonl.gz
     bytes: 1321
   - day: '2026-07-14'
     kind: changes
     documents: 15
     total: 213
     files:
-    - trades_shared.2026-07-14.jsonl.gz
+    - trade_wss.2026-07-14.jsonl.gz
     bytes: 1326
   - day: '2026-07-15'
     kind: changes
     documents: 20
     total: 214
     files:
-    - trades_shared.2026-07-15.jsonl.gz
+    - trade_wss.2026-07-15.jsonl.gz
     bytes: 1679
   - day: '2026-07-16'
     kind: changes
     documents: 16
     total: 217
     files:
-    - trades_shared.2026-07-16.jsonl.gz
+    - trade_wss.2026-07-16.jsonl.gz
     bytes: 1353
   - day: '2026-07-17'
     kind: changes
     documents: 12
     total: 220
     files:
-    - trades_shared.2026-07-17.jsonl.gz
+    - trade_wss.2026-07-17.jsonl.gz
     bytes: 1196
   - day: '2026-07-20'
     kind: changes
     documents: 21
     total: 222
     files:
-    - trades_shared.2026-07-20.jsonl.gz
+    - trade_wss.2026-07-20.jsonl.gz
     bytes: 1641
   - day: '2026-07-21'
     kind: changes
     documents: 16
     total: 223
     files:
-    - trades_shared.2026-07-21.jsonl.gz
+    - trade_wss.2026-07-21.jsonl.gz
     bytes: 1451
   - day: '2026-07-22'
     kind: changes
     documents: 9
     total: 224
     files:
-    - trades_shared.2026-07-22.jsonl.gz
+    - trade_wss.2026-07-22.jsonl.gz
     bytes: 990
   - day: '2026-07-23'
     kind: changes
     documents: 16
     total: 225
     files:
-    - trades_shared.2026-07-23.jsonl.gz
+    - trade_wss.2026-07-23.jsonl.gz
     bytes: 1321
   - day: '2026-07-24'
     kind: changes
     documents: 11
     total: 226
     files:
-    - trades_shared.2026-07-24.jsonl.gz
+    - trade_wss.2026-07-24.jsonl.gz
     bytes: 1081
   - day: '2026-07-27'
     kind: changes
     documents: 13
     total: 227
     files:
-    - trades_shared.2026-07-27.jsonl.gz
+    - trade_wss.2026-07-27.jsonl.gz
     bytes: 1292
   - day: '2026-07-28'
     kind: changes
     documents: 7
     total: 228
     files:
-    - trades_shared.2026-07-28.jsonl.gz
+    - trade_wss.2026-07-28.jsonl.gz
     bytes: 832
   - day: '2026-07-29'
     kind: changes
     documents: 15
     total: 232
     files:
-    - trades_shared.2026-07-29.jsonl.gz
+    - trade_wss.2026-07-29.jsonl.gz
     bytes: 1287
   - day: '2026-07-30'
     kind: changes
     documents: 11
     total: 232
     files:
-    - trades_shared.2026-07-30.jsonl.gz
+    - trade_wss.2026-07-30.jsonl.gz
     bytes: 1114
   - day: '2026-07-31'
     kind: changes
     documents: 18
     total: 235
     files:
-    - trades_shared.2026-07-31.jsonl.gz
+    - trade_wss.2026-07-31.jsonl.gz
     bytes: 1498
   - day: '2026-08-03'
     kind: changes
     documents: 21
     total: 237
     files:
-    - trades_shared.2026-08-03.jsonl.gz
+    - trade_wss.2026-08-03.jsonl.gz
     bytes: 1686
   - day: '2026-08-04'
     kind: changes
     documents: 21
     total: 240
     files:
-    - trades_shared.2026-08-04.jsonl.gz
+    - trade_wss.2026-08-04.jsonl.gz
     bytes: 1679
   - day: '2026-08-05'
     kind: changes
     documents: 25
     total: 242
     files:
-    - trades_shared.2026-08-05.jsonl.gz
+    - trade_wss.2026-08-05.jsonl.gz
     bytes: 1908
   - day: '2026-08-06'
     kind: changes
     documents: 18
     total: 245
     files:
-    - trades_shared.2026-08-06.jsonl.gz
+    - trade_wss.2026-08-06.jsonl.gz
     bytes: 1527
   - day: '2026-08-07'
     kind: changes
     documents: 17
     total: 248
     files:
-    - trades_shared.2026-08-07.jsonl.gz
+    - trade_wss.2026-08-07.jsonl.gz
     bytes: 1436
   - day: '2026-08-10'
     kind: changes
     documents: 16
     total: 249
     files:
-    - trades_shared.2026-08-10.jsonl.gz
+    - trade_wss.2026-08-10.jsonl.gz
     bytes: 1445
   - day: '2026-08-11'
     kind: changes
     documents: 19
     total: 251
     files:
-    - trades_shared.2026-08-11.jsonl.gz
+    - trade_wss.2026-08-11.jsonl.gz
     bytes: 1520
   - day: '2026-08-12'
     kind: changes
     documents: 25
     total: 252
     files:
-    - trades_shared.2026-08-12.jsonl.gz
+    - trade_wss.2026-08-12.jsonl.gz
     bytes: 1848
   - day: '2026-08-13'
     kind: changes
     documents: 15
     total: 253
     files:
-    - trades_shared.2026-08-13.jsonl.gz
+    - trade_wss.2026-08-13.jsonl.gz
     bytes: 1435
   - day: '2026-08-14'
     kind: changes
     documents: 15
     total: 255
     files:
-    - trades_shared.2026-08-14.jsonl.gz
+    - trade_wss.2026-08-14.jsonl.gz
     bytes: 1332
   - day: '2026-08-17'
     kind: changes
     documents: 14
     total: 256
     files:
-    - trades_shared.2026-08-17.jsonl.gz
+    - trade_wss.2026-08-17.jsonl.gz
     bytes: 1321
   - day: '2026-08-18'
     kind: changes
     documents: 15
     total: 256
     files:
-    - trades_shared.2026-08-18.jsonl.gz
+    - trade_wss.2026-08-18.jsonl.gz
     bytes: 1394
   - day: '2026-08-19'
     kind: changes
     documents: 10
     total: 258
     files:
-    - trades_shared.2026-08-19.jsonl.gz
+    - trade_wss.2026-08-19.jsonl.gz
     bytes: 1072
   - day: '2026-08-20'
     kind: changes
     documents: 19
     total: 260
     files:
-    - trades_shared.2026-08-20.jsonl.gz
+    - trade_wss.2026-08-20.jsonl.gz
     bytes: 1629
   - day: '2026-08-21'
     kind: changes
     documents: 14
     total: 262
     files:
-    - trades_shared.2026-08-21.jsonl.gz
+    - trade_wss.2026-08-21.jsonl.gz
     bytes: 1280
   - day: '2026-08-24'
     kind: changes
     documents: 22
     total: 263
     files:
-    - trades_shared.2026-08-24.jsonl.gz
+    - trade_wss.2026-08-24.jsonl.gz
     bytes: 1726
   - day: '2026-08-25'
     kind: changes
     documents: 20
     total: 263
     files:
-    - trades_shared.2026-08-25.jsonl.gz
+    - trade_wss.2026-08-25.jsonl.gz
     bytes: 1578
   - day: '2026-08-26'
     kind: changes
     documents: 16
     total: 264
     files:
-    - trades_shared.2026-08-26.jsonl.gz
+    - trade_wss.2026-08-26.jsonl.gz
     bytes: 1423
   - day: '2026-08-27'
     kind: changes
     documents: 14
     total: 267
     files:
-    - trades_shared.2026-08-27.jsonl.gz
+    - trade_wss.2026-08-27.jsonl.gz
     bytes: 1255
   - day: '2026-08-28'
     kind: changes
     documents: 21
     total: 270
     files:
-    - trades_shared.2026-08-28.jsonl.gz
+    - trade_wss.2026-08-28.jsonl.gz
     bytes: 1734
   - day: '2026-08-31'
     kind: changes
     documents: 15
     total: 271
     files:
-    - trades_shared.2026-08-31.jsonl.gz
+    - trade_wss.2026-08-31.jsonl.gz
     bytes: 1331
   - day: '2026-09-01'
     kind: changes
     documents: 17
     total: 272
     files:
-    - trades_shared.2026-09-01.jsonl.gz
+    - trade_wss.2026-09-01.jsonl.gz
     bytes: 1462
   - day: '2026-09-02'
     kind: changes
     documents: 12
     total: 273
     files:
-    - trades_shared.2026-09-02.jsonl.gz
+    - trade_wss.2026-09-02.jsonl.gz
     bytes: 1238
   - day: '2026-09-03'
     kind: changes
     documents: 16
     total: 274
     files:
-    - trades_shared.2026-09-03.jsonl.gz
+    - trade_wss.2026-09-03.jsonl.gz
     bytes: 1362
   - day: '2026-09-04'
     kind: changes
     documents: 19
     total: 275
     files:
-    - trades_shared.2026-09-04.jsonl.gz
+    - trade_wss.2026-09-04.jsonl.gz
     bytes: 1639
   - day: '2026-09-08'
     kind: changes
     documents: 19
     total: 275
     files:
-    - trades_shared.2026-09-08.jsonl.gz
+    - trade_wss.2026-09-08.jsonl.gz
     bytes: 1529
   - day: '2026-09-09'
     kind: changes
     documents: 15
     total: 275
     files:
-    - trades_shared.2026-09-09.jsonl.gz
+    - trade_wss.2026-09-09.jsonl.gz
     bytes: 1374
   - day: '2026-09-10'
     kind: changes
     documents: 19
     total: 278
     files:
-    - trades_shared.2026-09-10.jsonl.gz
+    - trade_wss.2026-09-10.jsonl.gz
     bytes: 1630
   - day: '2026-09-11'
     kind: changes
     documents: 27
     total: 279
     files:
-    - trades_shared.2026-09-11.jsonl.gz
+    - trade_wss.2026-09-11.jsonl.gz
     bytes: 1913
   - day: '2026-09-14'
     kind: changes
     documents: 14
     total: 282
     files:
-    - trades_shared.2026-09-14.jsonl.gz
+    - trade_wss.2026-09-14.jsonl.gz
     bytes: 1281
   - day: '2026-09-15'
     kind: changes
     documents: 26
     total: 284
     files:
-    - trades_shared.2026-09-15.jsonl.gz
+    - trade_wss.2026-09-15.jsonl.gz
     bytes: 1951
   - day: '2026-09-16'
     kind: changes
     documents: 18
     total: 284
     files:
-    - trades_shared.2026-09-16.jsonl.gz
+    - trade_wss.2026-09-16.jsonl.gz
     bytes: 1520
   - day: '2026-09-17'
     kind: changes
     documents: 16
     total: 284
     files:
-    - trades_shared.2026-09-17.jsonl.gz
+    - trade_wss.2026-09-17.jsonl.gz
     bytes: 1434
   - day: '2026-09-18'
     kind: changes
     documents: 22
     total: 286
     files:
-    - trades_shared.2026-09-18.jsonl.gz
+    - trade_wss.2026-09-18.jsonl.gz
     bytes: 1651
   - day: '2026-09-21'
     kind: changes
     documents: 18
     total: 286
     files:
-    - trades_shared.2026-09-21.jsonl.gz
+    - trade_wss.2026-09-21.jsonl.gz
     bytes: 1528
   - day: '2026-09-22'
     kind: changes
     documents: 21
     total: 289
     files:
-    - trades_shared.2026-09-22.jsonl.gz
+    - trade_wss.2026-09-22.jsonl.gz
     bytes: 1699
   - day: '2026-09-23'
     kind: changes
     documents: 23
     total: 293
     files:
-    - trades_shared.2026-09-23.jsonl.gz
+    - trade_wss.2026-09-23.jsonl.gz
     bytes: 1730
   - day: '2026-09-24'
     kind: changes
     documents: 20
     total: 297
     files:
-    - trades_shared.2026-09-24.jsonl.gz
+    - trade_wss.2026-09-24.jsonl.gz
     bytes: 1652
   - day: '2026-09-25'
     kind: changes
     documents: 13
     total: 297
     files:
-    - trades_shared.2026-09-25.jsonl.gz
+    - trade_wss.2026-09-25.jsonl.gz
     bytes: 1205
   - day: '2026-09-28'
     kind: changes
     documents: 15
     total: 297
     files:
-    - trades_shared.2026-09-28.jsonl.gz
+    - trade_wss.2026-09-28.jsonl.gz
     bytes: 1435
   - day: '2026-09-29'
     kind: changes
     documents: 15
     total: 299
     files:
-    - trades_shared.2026-09-29.jsonl.gz
+    - trade_wss.2026-09-29.jsonl.gz
     bytes: 1316
   - day: '2026-09-30'
     kind: changes
     documents: 19
     total: 300
     files:
-    - trades_shared.2026-09-30.jsonl.gz
+    - trade_wss.2026-09-30.jsonl.gz
     bytes: 1573
 - folder: trades/swapone
   pack: trading
   kind: trade
   connector: trade-swapone
   key: SWAP_ID
-  table: trades_shared
+  table: trade_swapone
   native: true
-  partition-by:
-  - SOURCE_SYSTEM
-  mode: overwrite-partitions
   days:
   - day: '2026-07-08'
     kind: snapshot
     documents: 240
     total: 240
     files:
-    - trades_shared.2026-07-08.jsonl.gz
+    - trade_swapone.2026-07-08.jsonl.gz
     bytes: 11253
   - day: '2026-07-09'
     kind: changes
     documents: 10
     total: 240
     files:
-    - trades_shared.2026-07-09.jsonl.gz
+    - trade_swapone.2026-07-09.jsonl.gz
     bytes: 1021
   - day: '2026-07-10'
     kind: changes
     documents: 19
     total: 242
     files:
-    - trades_shared.2026-07-10.jsonl.gz
+    - trade_swapone.2026-07-10.jsonl.gz
     bytes: 1535
   - day: '2026-07-13'
     kind: changes
     documents: 20
     total: 243
     files:
-    - trades_shared.2026-07-13.jsonl.gz
+    - trade_swapone.2026-07-13.jsonl.gz
     bytes: 1627
   - day: '2026-07-14'
     kind: changes
     documents: 15
     total: 244
     files:
-    - trades_shared.2026-07-14.jsonl.gz
+    - trade_swapone.2026-07-14.jsonl.gz
     bytes: 1379
   - day: '2026-07-15'
     kind: changes
     documents: 13
     total: 247
     files:
-    - trades_shared.2026-07-15.jsonl.gz
+    - trade_swapone.2026-07-15.jsonl.gz
     bytes: 1177
   - day: '2026-07-16'
     kind: changes
     documents: 13
     total: 249
     files:
-    - trades_shared.2026-07-16.jsonl.gz
+    - trade_swapone.2026-07-16.jsonl.gz
     bytes: 1165
   - day: '2026-07-17'
     kind: changes
     documents: 14
     total: 249
     files:
-    - trades_shared.2026-07-17.jsonl.gz
+    - trade_swapone.2026-07-17.jsonl.gz
     bytes: 1275
   - day: '2026-07-20'
     kind: changes
     documents: 15
     total: 251
     files:
-    - trades_shared.2026-07-20.jsonl.gz
+    - trade_swapone.2026-07-20.jsonl.gz
     bytes: 1314
   - day: '2026-07-21'
     kind: changes
     documents: 22
     total: 258
     files:
-    - trades_shared.2026-07-21.jsonl.gz
+    - trade_swapone.2026-07-21.jsonl.gz
     bytes: 1632
   - day: '2026-07-22'
     kind: changes
     documents: 22
     total: 258
     files:
-    - trades_shared.2026-07-22.jsonl.gz
+    - trade_swapone.2026-07-22.jsonl.gz
     bytes: 1713
   - day: '2026-07-23'
     kind: changes
     documents: 20
     total: 260
     files:
-    - trades_shared.2026-07-23.jsonl.gz
+    - trade_swapone.2026-07-23.jsonl.gz
     bytes: 1619
   - day: '2026-07-24'
     kind: changes
     documents: 14
     total: 263
     files:
-    - trades_shared.2026-07-24.jsonl.gz
+    - trade_swapone.2026-07-24.jsonl.gz
     bytes: 1227
   - day: '2026-07-27'
     kind: changes
     documents: 27
     total: 264
     files:
-    - trades_shared.2026-07-27.jsonl.gz
+    - trade_swapone.2026-07-27.jsonl.gz
     bytes: 1993
   - day: '2026-07-28'
     kind: changes
     documents: 16
     total: 265
     files:
-    - trades_shared.2026-07-28.jsonl.gz
+    - trade_swapone.2026-07-28.jsonl.gz
     bytes: 1408
   - day: '2026-07-29'
     kind: changes
     documents: 15
     total: 265
     files:
-    - trades_shared.2026-07-29.jsonl.gz
+    - trade_swapone.2026-07-29.jsonl.gz
     bytes: 1327
   - day: '2026-07-30'
     kind: changes
     documents: 18
     total: 267
     files:
-    - trades_shared.2026-07-30.jsonl.gz
+    - trade_swapone.2026-07-30.jsonl.gz
     bytes: 1462
   - day: '2026-07-31'
     kind: changes
     documents: 18
     total: 268
     files:
-    - trades_shared.2026-07-31.jsonl.gz
+    - trade_swapone.2026-07-31.jsonl.gz
     bytes: 1533
   - day: '2026-08-03'
     kind: changes
     documents: 27
     total: 274
     files:
-    - trades_shared.2026-08-03.jsonl.gz
+    - trade_swapone.2026-08-03.jsonl.gz
     bytes: 1943
   - day: '2026-08-04'
     kind: changes
     documents: 20
     total: 274
     files:
-    - trades_shared.2026-08-04.jsonl.gz
+    - trade_swapone.2026-08-04.jsonl.gz
     bytes: 1641
   - day: '2026-08-05'
     kind: changes
     documents: 16
     total: 277
     files:
-    - trades_shared.2026-08-05.jsonl.gz
+    - trade_swapone.2026-08-05.jsonl.gz
     bytes: 1405
   - day: '2026-08-06'
     kind: changes
     documents: 27
     total: 277
     files:
-    - trades_shared.2026-08-06.jsonl.gz
+    - trade_swapone.2026-08-06.jsonl.gz
     bytes: 1874
   - day: '2026-08-07'
     kind: changes
     documents: 20
     total: 279
     files:
-    - trades_shared.2026-08-07.jsonl.gz
+    - trade_swapone.2026-08-07.jsonl.gz
     bytes: 1569
   - day: '2026-08-10'
     kind: changes
     documents: 21
     total: 279
     files:
-    - trades_shared.2026-08-10.jsonl.gz
+    - trade_swapone.2026-08-10.jsonl.gz
     bytes: 1693
   - day: '2026-08-11'
     kind: changes
     documents: 21
     total: 281
     files:
-    - trades_shared.2026-08-11.jsonl.gz
+    - trade_swapone.2026-08-11.jsonl.gz
     bytes: 1649
   - day: '2026-08-12'
     kind: changes
     documents: 21
     total: 284
     files:
-    - trades_shared.2026-08-12.jsonl.gz
+    - trade_swapone.2026-08-12.jsonl.gz
     bytes: 1660
   - day: '2026-08-13'
     kind: changes
     documents: 20
     total: 288
     files:
-    - trades_shared.2026-08-13.jsonl.gz
+    - trade_swapone.2026-08-13.jsonl.gz
     bytes: 1563
   - day: '2026-08-14'
     kind: changes
     documents: 17
     total: 292
     files:
-    - trades_shared.2026-08-14.jsonl.gz
+    - trade_swapone.2026-08-14.jsonl.gz
     bytes: 1445
   - day: '2026-08-17'
     kind: changes
     documents: 28
     total: 295
     files:
-    - trades_shared.2026-08-17.jsonl.gz
+    - trade_swapone.2026-08-17.jsonl.gz
     bytes: 1941
   - day: '2026-08-18'
     kind: changes
     documents: 24
     total: 297
     files:
-    - trades_shared.2026-08-18.jsonl.gz
+    - trade_swapone.2026-08-18.jsonl.gz
     bytes: 1836
   - day: '2026-08-19'
     kind: changes
     documents: 22
     total: 298
     files:
-    - trades_shared.2026-08-19.jsonl.gz
+    - trade_swapone.2026-08-19.jsonl.gz
     bytes: 1690
   - day: '2026-08-20'
     kind: changes
     documents: 21
     total: 299
     files:
-    - trades_shared.2026-08-20.jsonl.gz
+    - trade_swapone.2026-08-20.jsonl.gz
     bytes: 1634
   - day: '2026-08-21'
     kind: changes
     documents: 28
     total: 304
     files:
-    - trades_shared.2026-08-21.jsonl.gz
+    - trade_swapone.2026-08-21.jsonl.gz
     bytes: 1981
   - day: '2026-08-24'
     kind: changes
     documents: 16
     total: 306
     files:
-    - trades_shared.2026-08-24.jsonl.gz
+    - trade_swapone.2026-08-24.jsonl.gz
     bytes: 1384
   - day: '2026-08-25'
     kind: changes
     documents: 21
     total: 307
     files:
-    - trades_shared.2026-08-25.jsonl.gz
+    - trade_swapone.2026-08-25.jsonl.gz
     bytes: 1672
   - day: '2026-08-26'
     kind: changes
     documents: 17
     total: 308
     files:
-    - trades_shared.2026-08-26.jsonl.gz
+    - trade_swapone.2026-08-26.jsonl.gz
     bytes: 1485
   - day: '2026-08-27'
     kind: changes
     documents: 15
     total: 309
     files:
-    - trades_shared.2026-08-27.jsonl.gz
+    - trade_swapone.2026-08-27.jsonl.gz
     bytes: 1376
   - day: '2026-08-28'
     kind: changes
     documents: 23
     total: 310
     files:
-    - trades_shared.2026-08-28.jsonl.gz
+    - trade_swapone.2026-08-28.jsonl.gz
     bytes: 1810
   - day: '2026-08-31'
     kind: changes
     documents: 25
     total: 313
     files:
-    - trades_shared.2026-08-31.jsonl.gz
+    - trade_swapone.2026-08-31.jsonl.gz
     bytes: 1885
   - day: '2026-09-01'
     kind: changes
     documents: 15
     total: 313
     files:
-    - trades_shared.2026-09-01.jsonl.gz
+    - trade_swapone.2026-09-01.jsonl.gz
     bytes: 1384
   - day: '2026-09-02'
     kind: changes
     documents: 13
     total: 316
     files:
-    - trades_shared.2026-09-02.jsonl.gz
+    - trade_swapone.2026-09-02.jsonl.gz
     bytes: 1225
   - day: '2026-09-03'
     kind: changes
     documents: 20
     total: 317
     files:
-    - trades_shared.2026-09-03.jsonl.gz
+    - trade_swapone.2026-09-03.jsonl.gz
     bytes: 1576
   - day: '2026-09-04'
     kind: changes
     documents: 12
     total: 318
     files:
-    - trades_shared.2026-09-04.jsonl.gz
+    - trade_swapone.2026-09-04.jsonl.gz
     bytes: 1169
   - day: '2026-09-08'
     kind: changes
     documents: 20
     total: 323
     files:
-    - trades_shared.2026-09-08.jsonl.gz
+    - trade_swapone.2026-09-08.jsonl.gz
     bytes: 1627
   - day: '2026-09-09'
     kind: changes
     documents: 21
     total: 326
     files:
-    - trades_shared.2026-09-09.jsonl.gz
+    - trade_swapone.2026-09-09.jsonl.gz
     bytes: 1634
   - day: '2026-09-10'
     kind: changes
     documents: 17
     total: 329
     files:
-    - trades_shared.2026-09-10.jsonl.gz
+    - trade_swapone.2026-09-10.jsonl.gz
     bytes: 1388
   - day: '2026-09-11'
     kind: changes
     documents: 22
     total: 330
     files:
-    - trades_shared.2026-09-11.jsonl.gz
+    - trade_swapone.2026-09-11.jsonl.gz
     bytes: 1712
   - day: '2026-09-14'
     kind: changes
     documents: 15
     total: 332
     files:
-    - trades_shared.2026-09-14.jsonl.gz
+    - trade_swapone.2026-09-14.jsonl.gz
     bytes: 1335
   - day: '2026-09-15'
     kind: changes
     documents: 26
     total: 332
     files:
-    - trades_shared.2026-09-15.jsonl.gz
+    - trade_swapone.2026-09-15.jsonl.gz
     bytes: 1885
   - day: '2026-09-16'
     kind: changes
     documents: 19
     total: 333
     files:
-    - trades_shared.2026-09-16.jsonl.gz
+    - trade_swapone.2026-09-16.jsonl.gz
     bytes: 1530
   - day: '2026-09-17'
     kind: changes
     documents: 18
     total: 336
     files:
-    - trades_shared.2026-09-17.jsonl.gz
+    - trade_swapone.2026-09-17.jsonl.gz
     bytes: 1423
   - day: '2026-09-18'
     kind: changes
     documents: 20
     total: 337
     files:
-    - trades_shared.2026-09-18.jsonl.gz
+    - trade_swapone.2026-09-18.jsonl.gz
     bytes: 1588
   - day: '2026-09-21'
     kind: changes
     documents: 19
     total: 339
     files:
-    - trades_shared.2026-09-21.jsonl.gz
+    - trade_swapone.2026-09-21.jsonl.gz
     bytes: 1580
   - day: '2026-09-22'
     kind: changes
     documents: 16
     total: 340
     files:
-    - trades_shared.2026-09-22.jsonl.gz
+    - trade_swapone.2026-09-22.jsonl.gz
     bytes: 1395
   - day: '2026-09-23'
     kind: changes
     documents: 14
     total: 341
     files:
-    - trades_shared.2026-09-23.jsonl.gz
+    - trade_swapone.2026-09-23.jsonl.gz
     bytes: 1296
   - day: '2026-09-24'
     kind: changes
     documents: 17
     total: 342
     files:
-    - trades_shared.2026-09-24.jsonl.gz
+    - trade_swapone.2026-09-24.jsonl.gz
     bytes: 1425
   - day: '2026-09-25'
     kind: changes
     documents: 15
     total: 345
     files:
-    - trades_shared.2026-09-25.jsonl.gz
+    - trade_swapone.2026-09-25.jsonl.gz
     bytes: 1306
   - day: '2026-09-28'
     kind: changes
     documents: 18
     total: 347
     files:
-    - trades_shared.2026-09-28.jsonl.gz
+    - trade_swapone.2026-09-28.jsonl.gz
     bytes: 1427
   - day: '2026-09-29'
     kind: changes
     documents: 20
     total: 349
     files:
-    - trades_shared.2026-09-29.jsonl.gz
+    - trade_swapone.2026-09-29.jsonl.gz
     bytes: 1611
   - day: '2026-09-30'
     kind: changes
     documents: 25
     total: 350
     files:
-    - trades_shared.2026-09-30.jsonl.gz
+    - trade_swapone.2026-09-30.jsonl.gz
     bytes: 1779
 - folder: trades/ici
   pack: trading
   kind: trade
   connector: trade-ici
   key: TICKET_NO
-  table: trades_shared
+  table: trade_ici
   native: true
-  partition-by:
-  - SOURCE_SYSTEM
-  mode: overwrite-partitions
   days:
   - day: '2026-07-08'
     kind: snapshot
     documents: 230
     total: 230
     files:
-    - trades_shared.2026-07-08.jsonl.gz
+    - trade_ici.2026-07-08.jsonl.gz
     bytes: 8778
   - day: '2026-07-09'
     kind: changes
     documents: 18
     total: 231
     files:
-    - trades_shared.2026-07-09.jsonl.gz
+    - trade_ici.2026-07-09.jsonl.gz
     bytes: 1272
   - day: '2026-07-10'
     kind: changes
     documents: 11
     total: 231
     files:
-    - trades_shared.2026-07-10.jsonl.gz
+    - trade_ici.2026-07-10.jsonl.gz
     bytes: 930
   - day: '2026-07-13'
     kind: changes
     documents: 16
     total: 232
     files:
-    - trades_shared.2026-07-13.jsonl.gz
+    - trade_ici.2026-07-13.jsonl.gz
     bytes: 1199
   - day: '2026-07-14'
     kind: changes
     documents: 11
     total: 235
     files:
-    - trades_shared.2026-07-14.jsonl.gz
+    - trade_ici.2026-07-14.jsonl.gz
     bytes: 894
   - day: '2026-07-15'
     kind: changes
     documents: 21
     total: 237
     files:
-    - trades_shared.2026-07-15.jsonl.gz
+    - trade_ici.2026-07-15.jsonl.gz
     bytes: 1423
   - day: '2026-07-16'
     kind: changes
     documents: 25
     total: 238
     files:
-    - trades_shared.2026-07-16.jsonl.gz
+    - trade_ici.2026-07-16.jsonl.gz
     bytes: 1568
   - day: '2026-07-17'
     kind: changes
     documents: 11
     total: 238
     files:
-    - trades_shared.2026-07-17.jsonl.gz
+    - trade_ici.2026-07-17.jsonl.gz
     bytes: 975
   - day: '2026-07-20'
     kind: changes
     documents: 14
     total: 239
     files:
-    - trades_shared.2026-07-20.jsonl.gz
+    - trade_ici.2026-07-20.jsonl.gz
     bytes: 1116
   - day: '2026-07-21'
     kind: changes
     documents: 22
     total: 242
     files:
-    - trades_shared.2026-07-21.jsonl.gz
+    - trade_ici.2026-07-21.jsonl.gz
     bytes: 1506
   - day: '2026-07-22'
     kind: changes
     documents: 11
     total: 242
     files:
-    - trades_shared.2026-07-22.jsonl.gz
+    - trade_ici.2026-07-22.jsonl.gz
     bytes: 955
   - day: '2026-07-23'
     kind: changes
     documents: 18
     total: 243
     files:
-    - trades_shared.2026-07-23.jsonl.gz
+    - trade_ici.2026-07-23.jsonl.gz
     bytes: 1299
   - day: '2026-07-24'
     kind: changes
     documents: 13
     total: 247
     files:
-    - trades_shared.2026-07-24.jsonl.gz
+    - trade_ici.2026-07-24.jsonl.gz
     bytes: 1015
   - day: '2026-07-27'
     kind: changes
     documents: 17
     total: 248
     files:
-    - trades_shared.2026-07-27.jsonl.gz
+    - trade_ici.2026-07-27.jsonl.gz
     bytes: 1247
   - day: '2026-07-28'
     kind: changes
     documents: 20
     total: 253
     files:
-    - trades_shared.2026-07-28.jsonl.gz
+    - trade_ici.2026-07-28.jsonl.gz
     bytes: 1366
   - day: '2026-07-29'
     kind: changes
     documents: 20
     total: 256
     files:
-    - trades_shared.2026-07-29.jsonl.gz
+    - trade_ici.2026-07-29.jsonl.gz
     bytes: 1409
   - day: '2026-07-30'
     kind: changes
     documents: 16
     total: 256
     files:
-    - trades_shared.2026-07-30.jsonl.gz
+    - trade_ici.2026-07-30.jsonl.gz
     bytes: 1190
   - day: '2026-07-31'
     kind: changes
     documents: 18
     total: 261
     files:
-    - trades_shared.2026-07-31.jsonl.gz
+    - trade_ici.2026-07-31.jsonl.gz
     bytes: 1230
   - day: '2026-08-03'
     kind: changes
     documents: 17
     total: 262
     files:
-    - trades_shared.2026-08-03.jsonl.gz
+    - trade_ici.2026-08-03.jsonl.gz
     bytes: 1269
   - day: '2026-08-04'
     kind: changes
     documents: 18
     total: 263
     files:
-    - trades_shared.2026-08-04.jsonl.gz
+    - trade_ici.2026-08-04.jsonl.gz
     bytes: 1325
   - day: '2026-08-05'
     kind: changes
     documents: 17
     total: 263
     files:
-    - trades_shared.2026-08-05.jsonl.gz
+    - trade_ici.2026-08-05.jsonl.gz
     bytes: 1245
   - day: '2026-08-06'
     kind: changes
     documents: 19
     total: 264
     files:
-    - trades_shared.2026-08-06.jsonl.gz
+    - trade_ici.2026-08-06.jsonl.gz
     bytes: 1364
   - day: '2026-08-07'
     kind: changes
     documents: 19
     total: 266
     files:
-    - trades_shared.2026-08-07.jsonl.gz
+    - trade_ici.2026-08-07.jsonl.gz
     bytes: 1344
   - day: '2026-08-10'
     kind: changes
     documents: 17
     total: 269
     files:
-    - trades_shared.2026-08-10.jsonl.gz
+    - trade_ici.2026-08-10.jsonl.gz
     bytes: 1269
   - day: '2026-08-11'
     kind: changes
     documents: 21
     total: 269
     files:
-    - trades_shared.2026-08-11.jsonl.gz
+    - trade_ici.2026-08-11.jsonl.gz
     bytes: 1446
   - day: '2026-08-12'
     kind: changes
     documents: 18
     total: 272
     files:
-    - trades_shared.2026-08-12.jsonl.gz
+    - trade_ici.2026-08-12.jsonl.gz
     bytes: 1282
   - day: '2026-08-13'
     kind: changes
     documents: 17
     total: 277
     files:
-    - trades_shared.2026-08-13.jsonl.gz
+    - trade_ici.2026-08-13.jsonl.gz
     bytes: 1228
   - day: '2026-08-14'
     kind: changes
     documents: 19
     total: 278
     files:
-    - trades_shared.2026-08-14.jsonl.gz
+    - trade_ici.2026-08-14.jsonl.gz
     bytes: 1367
   - day: '2026-08-17'
     kind: changes
     documents: 8
     total: 278
     files:
-    - trades_shared.2026-08-17.jsonl.gz
+    - trade_ici.2026-08-17.jsonl.gz
     bytes: 814
   - day: '2026-08-18'
     kind: changes
     documents: 20
     total: 278
     files:
-    - trades_shared.2026-08-18.jsonl.gz
+    - trade_ici.2026-08-18.jsonl.gz
     bytes: 1379
   - day: '2026-08-19'
     kind: changes
     documents: 21
     total: 279
     files:
-    - trades_shared.2026-08-19.jsonl.gz
+    - trade_ici.2026-08-19.jsonl.gz
     bytes: 1438
   - day: '2026-08-20'
     kind: changes
     documents: 15
     total: 281
     files:
-    - trades_shared.2026-08-20.jsonl.gz
+    - trade_ici.2026-08-20.jsonl.gz
     bytes: 1139
   - day: '2026-08-21'
     kind: changes
     documents: 21
     total: 282
     files:
-    - trades_shared.2026-08-21.jsonl.gz
+    - trade_ici.2026-08-21.jsonl.gz
     bytes: 1425
   - day: '2026-08-24'
     kind: changes
     documents: 14
     total: 282
     files:
-    - trades_shared.2026-08-24.jsonl.gz
+    - trade_ici.2026-08-24.jsonl.gz
     bytes: 1148
   - day: '2026-08-25'
     kind: changes
     documents: 19
     total: 283
     files:
-    - trades_shared.2026-08-25.jsonl.gz
+    - trade_ici.2026-08-25.jsonl.gz
     bytes: 1338
   - day: '2026-08-26'
     kind: changes
     documents: 17
     total: 284
     files:
-    - trades_shared.2026-08-26.jsonl.gz
+    - trade_ici.2026-08-26.jsonl.gz
     bytes: 1240
   - day: '2026-08-27'
     kind: changes
     documents: 22
     total: 286
     files:
-    - trades_shared.2026-08-27.jsonl.gz
+    - trade_ici.2026-08-27.jsonl.gz
     bytes: 1507
   - day: '2026-08-28'
     kind: changes
     documents: 15
     total: 286
     files:
-    - trades_shared.2026-08-28.jsonl.gz
+    - trade_ici.2026-08-28.jsonl.gz
     bytes: 1182
   - day: '2026-08-31'
     kind: changes
     documents: 19
     total: 286
     files:
-    - trades_shared.2026-08-31.jsonl.gz
+    - trade_ici.2026-08-31.jsonl.gz
     bytes: 1395
   - day: '2026-09-01'
     kind: changes
     documents: 12
     total: 286
     files:
-    - trades_shared.2026-09-01.jsonl.gz
+    - trade_ici.2026-09-01.jsonl.gz
     bytes: 1012
   - day: '2026-09-02'
     kind: changes
     documents: 22
     total: 289
     files:
-    - trades_shared.2026-09-02.jsonl.gz
+    - trade_ici.2026-09-02.jsonl.gz
     bytes: 1485
   - day: '2026-09-03'
     kind: changes
     documents: 11
     total: 291
     files:
-    - trades_shared.2026-09-03.jsonl.gz
+    - trade_ici.2026-09-03.jsonl.gz
     bytes: 974
   - day: '2026-09-04'
     kind: changes
     documents: 17
     total: 292
     files:
-    - trades_shared.2026-09-04.jsonl.gz
+    - trade_ici.2026-09-04.jsonl.gz
     bytes: 1272
   - day: '2026-09-08'
     kind: changes
     documents: 15
     total: 294
     files:
-    - trades_shared.2026-09-08.jsonl.gz
+    - trade_ici.2026-09-08.jsonl.gz
     bytes: 1161
   - day: '2026-09-09'
     kind: changes
     documents: 16
     total: 296
     files:
-    - trades_shared.2026-09-09.jsonl.gz
+    - trade_ici.2026-09-09.jsonl.gz
     bytes: 1186
   - day: '2026-09-10'
     kind: changes
     documents: 14
     total: 297
     files:
-    - trades_shared.2026-09-10.jsonl.gz
+    - trade_ici.2026-09-10.jsonl.gz
     bytes: 1064
   - day: '2026-09-11'
     kind: changes
     documents: 16
     total: 297
     files:
-    - trades_shared.2026-09-11.jsonl.gz
+    - trade_ici.2026-09-11.jsonl.gz
     bytes: 1200
   - day: '2026-09-14'
     kind: changes
     documents: 15
     total: 298
     files:
-    - trades_shared.2026-09-14.jsonl.gz
+    - trade_ici.2026-09-14.jsonl.gz
     bytes: 1150
   - day: '2026-09-15'
     kind: changes
     documents: 21
     total: 301
     files:
-    - trades_shared.2026-09-15.jsonl.gz
+    - trade_ici.2026-09-15.jsonl.gz
     bytes: 1377
   - day: '2026-09-16'
     kind: changes
     documents: 17
     total: 304
     files:
-    - trades_shared.2026-09-16.jsonl.gz
+    - trade_ici.2026-09-16.jsonl.gz
     bytes: 1218
   - day: '2026-09-17'
     kind: changes
     documents: 25
     total: 306
     files:
-    - trades_shared.2026-09-17.jsonl.gz
+    - trade_ici.2026-09-17.jsonl.gz
     bytes: 1603
   - day: '2026-09-18'
     kind: changes
     documents: 14
     total: 307
     files:
-    - trades_shared.2026-09-18.jsonl.gz
+    - trade_ici.2026-09-18.jsonl.gz
     bytes: 1109
   - day: '2026-09-21'
     kind: changes
     documents: 19
     total: 307
     files:
-    - trades_shared.2026-09-21.jsonl.gz
+    - trade_ici.2026-09-21.jsonl.gz
     bytes: 1350
   - day: '2026-09-22'
     kind: changes
     documents: 20
     total: 308
     files:
-    - trades_shared.2026-09-22.jsonl.gz
+    - trade_ici.2026-09-22.jsonl.gz
     bytes: 1382
   - day: '2026-09-23'
     kind: changes
     documents: 11
     total: 309
     files:
-    - trades_shared.2026-09-23.jsonl.gz
+    - trade_ici.2026-09-23.jsonl.gz
     bytes: 971
   - day: '2026-09-24'
     kind: changes
     documents: 21
     total: 311
     files:
-    - trades_shared.2026-09-24.jsonl.gz
+    - trade_ici.2026-09-24.jsonl.gz
     bytes: 1467
   - day: '2026-09-25'
     kind: changes
     documents: 16
     total: 313
     files:
-    - trades_shared.2026-09-25.jsonl.gz
+    - trade_ici.2026-09-25.jsonl.gz
     bytes: 1214
   - day: '2026-09-28'
     kind: changes
     documents: 21
     total: 316
     files:
-    - trades_shared.2026-09-28.jsonl.gz
+    - trade_ici.2026-09-28.jsonl.gz
     bytes: 1457
   - day: '2026-09-29'
     kind: changes
     documents: 20
     total: 318
     files:
-    - trades_shared.2026-09-29.jsonl.gz
+    - trade_ici.2026-09-29.jsonl.gz
     bytes: 1352
   - day: '2026-09-30'
     kind: changes
     documents: 19
     total: 320
     files:
-    - trades_shared.2026-09-30.jsonl.gz
+    - trade_ici.2026-09-30.jsonl.gz
     bytes: 1376
 - folder: counterparty-risk/agreement
   pack: counterparty-risk

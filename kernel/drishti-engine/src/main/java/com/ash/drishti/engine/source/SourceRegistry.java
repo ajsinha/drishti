@@ -162,7 +162,12 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
     /** Where a connector's relative {@code map:} file is looked for after its module's folder (the connectors' folder first). */
     private volatile List<java.nio.file.Path> shapeBases;
 
-    /** The connectors' folder (drishti.sources.connectors-dir), then config/connectors, config and the working folder. */
+    /**
+     * Where a relative {@code map:} is looked for after the connector's own module folder (a template's {@code module-dir}): the site's
+     * connectors folder ({@code drishti.sources.connectors-dir}, the folder of the site's connector files), as an absolute path. Nothing
+     * relative to the working folder: a map that is in neither is a refusal naming the paths tried (DRS-5034), never a connector that
+     * quietly reads zero trades.
+     */
     private List<java.nio.file.Path> shapeBases() {
         List<java.nio.file.Path> set = shapeBases;
         if (set != null) {
@@ -170,11 +175,8 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
         }
         List<java.nio.file.Path> out = new ArrayList<>();
         if (props != null && props.connectorsDir() != null && !props.connectorsDir().isBlank()) {
-            out.add(java.nio.file.Path.of(props.connectorsDir()));
+            out.add(java.nio.file.Path.of(props.connectorsDir()).toAbsolutePath().normalize());
         }
-        out.add(java.nio.file.Path.of("config", "connectors"));
-        out.add(java.nio.file.Path.of("config"));
-        out.add(java.nio.file.Path.of("."));
         return out;
     }
 
@@ -519,14 +521,19 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
     }
 
     /**
-     * The settings a connector's plugin is given: its own, secrets resolved, and for a Delta or Iceberg connector that names
+     * The settings a connector's plugin is given: its own with its {@code [connector.<name>]} keys over them and the section of the broker
+     * or database it names under them ({@code broker:}, {@code db:}; docs/admin/CONFIGURATION.md, "Named lakes, databases and brokers"),
+     * relative files and folders under the install folder, secrets resolved, and for a Delta or Iceberg connector that names
      * {@code lake:} what its lake file says of its kinds (root, storage, table folders, promoted columns, vectors:
      * docs/guides/DATA_LAKE_GUIDE.md). Every connector passes here, whichever file or template it came from, so the lake file is read in one
      * place. A lake that is not known, or a connector that names a lake and repeats one of its keys, fails the connector with the reason.
      */
     static Map<String, String> ownSettings(String name, SourcesProperties.ConnectorSettings c) {
-        Map<String, String> own = new LinkedHashMap<>(com.ash.drishti.common.ConnectorSecrets.resolve(c.settings()));
+        Map<String, String> own;
         try {
+            // [connector.<name>] keys, the named broker's or database's section, relative files under the install folder (NamedResources)
+            own = new LinkedHashMap<>(com.ash.drishti.common.ConnectorSecrets.resolve(
+                    com.ash.drishti.common.NamedResources.connector(name, c.plugin(), c.settings())));
             own = new LinkedHashMap<>(com.ash.drishti.lakeconfig.ConnectorLake.expand(name, c.plugin(), c.kinds(), own,
                     com.ash.drishti.lakeconfig.Lakes::current,
                     LOG::warn));

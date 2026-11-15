@@ -21,7 +21,7 @@
 {% block title %}VaR Playground{{ ' · Parametric' if measure == 'parametric' }} · {{ target or 'PLAY VAR' }} · {{ PRODUCT }}{% endblock %}
 {% block screen %}play{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}{% include "terminal/_risk_elements_css.html" %}<link rel="stylesheet" href="/static/css/drishti_var-playground.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}{% include "terminal/_risk_elements_css.html" %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_var-playground.css?v={{ ASSET_V }}">{% endblock %}
 {% block nav %}{% with command_text=command_text ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
 <div class="pg{{ ' pg-on-parametric' if measure == 'parametric' }}" data-play data-scope="{{ scope }}" data-ids="{{ ids }}" data-ccy="{{ ccy }}" data-h="{{ lens.h }}" data-m="{{ lens.m }}"
@@ -31,20 +31,20 @@
     <nav class="pg-path mono" data-pg-path aria-label="The scope">{{ target }}</nav>
     {% if target %}
     <nav class="pg-tabs" role="tablist" aria-label="The playground's tabs" data-pg-tabs>
-      <a role="tab" class="pg-tab" href="{{ tabs.var }}" aria-selected="{{ 'false' if measure == 'parametric' else 'true' }}" title="Every historical figure worked in a grid of formulas">VaR</a>
-      <a role="tab" class="pg-tab" href="{{ tabs.parametric }}" aria-selected="{{ 'true' if measure == 'parametric' else 'false' }}" data-pg-tab-parametric title="Parametric VaR worked: μ, σ, z·σ − μ and the Euler components; the workbook gains its Parametric tab">Parametric</a>
+      <a role="tab" class="pg-tab" href="{{ tabs.var | u }}" aria-selected="{{ 'false' if measure == 'parametric' else 'true' }}" title="Every historical figure worked in a grid of formulas">VaR</a>
+      <a role="tab" class="pg-tab" href="{{ tabs.parametric | u }}" aria-selected="{{ 'true' if measure == 'parametric' else 'false' }}" data-pg-tab-parametric title="Parametric VaR worked: μ, σ, z·σ − μ and the Euler components; the workbook gains its Parametric tab">Parametric</a>
     </nav>
     {% endif %}
     <span class="pg-meta" data-pg-meta aria-live="polite">{% if target %}loading…{% endif %}</span>
-    <a class="pg-help" href="/help/context/play" title="Help: the VaR Playground (VAR_GUIDE.md section 3.10)" aria-label="Help: the VaR Playground"><i class="bi bi-question-circle" aria-hidden="true"></i></a>
-    {% if KNOWLEDGE is defined and KNOWLEDGE.play %}<a class="pg-help" href="/help/{{ KNOWLEDGE.play }}" data-what-link title="What does this mean? The VaR Playground in Market risk explained"><i class="bi bi-lightbulb" aria-hidden="true"></i> What does this mean?</a>{% endif %}
+    <a class="pg-help" href="{{ BASE }}/help/context/play" title="Help: the VaR Playground (VAR_GUIDE.md section 3.10)" aria-label="Help: the VaR Playground"><i class="bi bi-question-circle" aria-hidden="true"></i></a>
+    {% if KNOWLEDGE is defined and KNOWLEDGE.play %}<a class="pg-help" href="{{ BASE }}/help/{{ KNOWLEDGE.play }}" data-what-link title="What does this mean? The VaR Playground in Market risk explained"><i class="bi bi-lightbulb" aria-hidden="true"></i> What does this mean?</a>{% endif %}
   </div>
   {% if not target %}
-  <form class="pg-ask" method="get" action="/play">
+  <form class="pg-ask" method="get" action="{{ BASE }}/play">
     <label>VaR scope <input class="pg-input mono" name="scope" placeholder="BANK, DESK:RATES, NODE:MGMT~DESK-RATES-NY" autocomplete="off"></label>
     <label>or ids <input class="pg-input mono" name="ids" placeholder="POS-10442, T-1001 (at most 50)" autocomplete="off"></label>
     <button type="submit" class="pg-btn primary">Open</button>
-    <a class="pg-link" href="/api/play/template.xlsx" download title="The empty workbook: paste scenario PVs into Data, fill Config and FX, and it recalculates offline">Empty workbook</a>
+    <a class="pg-link" href="{{ BASE }}/api/play/template.xlsx" download title="The empty workbook: paste scenario PVs into Data, fill Config and FX, and it recalculates offline">Empty workbook</a>
   </form>
   {% else %}
   <div class="pg-ctrls" role="toolbar" aria-label="Playground controls">
@@ -104,5 +104,5 @@
     so the portfolio is still the scope and its VaR the VaR page's.</p>
   {% endif %}
 </div>
-{% include "terminal/_risk_elements.html" %}<script src="/static/js/drishti_var-playground.js?v={{ ASSET_V }}"></script>
+{% include "terminal/_risk_elements.html" %}<script src="{{ BASE }}/static/js/drishti_var-playground.js?v={{ ASSET_V }}"></script>
 {% endblock %}

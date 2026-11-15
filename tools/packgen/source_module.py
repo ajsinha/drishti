@@ -17,7 +17,7 @@
 designer's second mode): a source module, not a new pack.
 
     python3 tools/drishti.py pack new data/incoming/swapone_trades.2026-11-13.jsonl --source-for trade --system SWAPONE \\
-        --shared-table trading.trades_shared --map-edits swapone-edits.json --load --deploy
+        --map-edits swapone-edits.json --load --deploy             # its own table, trading.trade_swapone (one table a trading system)
 
 1. Reads every record (tools/packgen/sourcemap.py) and proposes the field map native -> canonical, each with a confidence; the
    required canonical fields left without a native field and the native fields left without a canonical one are printed.
@@ -123,7 +123,7 @@ def connector_files(a, n: dict, m: dict) -> dict[str, dict]:
     if a.live:
         live = {"plugin": "kafka", "enabled": f"${{DRISHTI_{n['system']}_LIVE:false}}", "kinds": [n["kind"]],
                 "description": f"{n['system']}'s {n['kind']}s as they are booked (off until the site sets the servers and the topic)",
-                "settings": {"bootstrap-servers": "${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}", "topics": [f"{n['low']}.{n['kind']}s"], "kind": n["kind"],
+                "settings": {"broker": "default", "topics": [f"{n['low']}.{n['kind']}s"], "kind": n["kind"],
                              "id-field": key or "id", "set": {"SOURCE_SYSTEM": n["system"]}, "map": n["map"]}}
         if a.write_back:
             live["writes"] = {f"amend-{n['kind']}": {"kind": n["kind"], "kafka": {"topic": f"{n['low']}.{n['kind']}s.amend", "shape": "document",
@@ -246,9 +246,12 @@ The guide: [guide.md](guide.md).
 
 def load(a, n: dict, cli, say=print) -> int:
     """--load: the native records into the table with SOURCE_SYSTEM stamped (data ingest --store delta)."""
-    lake = a.lake or (pathlib.Path(os.environ["DRISHTI_DELTA_ROOT"]) if os.environ.get("DRISHTI_DELTA_ROOT") else None)
+    sys.path.insert(0, str(HERE.parent / "lake"))
+    import lakeconfig as LC   # noqa: E402  (the one place that names the demo lake's root variable)
+    env = os.environ.get(LC.DEMO_ROOT_ENV)
+    lake = a.lake or (pathlib.Path(env) if env else None)
     if lake is None:
-        raise SystemExit("--load needs --lake <the lake's Delta root> (or DRISHTI_DELTA_ROOT)")
+        raise SystemExit(f"--load needs --lake <the lake's Delta root> (or {LC.DEMO_ROOT_ENV})")
     domain, table = n["table"].split(".", 1)
     with tempfile.TemporaryDirectory(dir=os.environ.get("TMPDIR")) as tmp:
         files = []

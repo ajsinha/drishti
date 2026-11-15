@@ -243,8 +243,8 @@ public final class DataInbox {
     public Map<String, Object> undo(String id, String lake, boolean dryRun) throws Exception {
         String name = lake == null || lake.isBlank() ? null : lake.trim();
         String from = "given";
+        JsonNode line = Ledger.loadedLine(Path.of(settings.dir()).resolve("ledger"), id);
         if (name == null) {
-            JsonNode line = Ledger.loadedLine(Path.of(settings.dir()).resolve("ledger"), id);
             name = line == null ? null : line.path("route").path("lake").asText(null);
             from = "ledger";
         }
@@ -255,8 +255,56 @@ public final class DataInbox {
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("lake", name);
         out.put("lakeFrom", from);
-        out.put("lines", com.ash.drishti.lakeload.LakeUndo.undoAll(Cycle.lakeRoot(name), id, List.of(), dryRun));
+        List<Map<String, Object>> lines = com.ash.drishti.lakeload.LakeUndo.undoAll(Cycle.lakeRoot(name), id, List.of(), dryRun);
+        out.put("lines", lines);
+        if (!dryRun) {
+            out.put("signals", signalUndone(id, line, lines));
+        }
         return out;
+    }
+
+    /**
+     * After an undo, the same data-load signal a load sends, one per table and date undone, so the server's caches, pivots and pages read
+     * the table again at once (a load's signal does that; without it a pivot showed the undone figure until its refresh). The table's pack
+     * and kind are the ledger's (the load's route, or an archive's table); a table the ledger does not name (a load the inbox did not make)
+     * is undone without a signal, and said.
+     */
+    List<String> signalUndone(String id, JsonNode line, List<Map<String, Object>> lines) {
+        Map<String, String[]> kinds = new LinkedHashMap<>();
+        if (line != null) {
+            if (line.hasNonNull("table") && line.path("route").hasNonNull("kind")) {
+                kinds.put(tail(line.path("table").asText()), new String[] {line.path("route").path("pack").asText(), line.path("route").path("kind").asText()});
+            }
+            for (JsonNode t : line.path("tables")) {
+                if (t.path("load").hasNonNull("table")) {
+                    kinds.put(tail(t.path("load").path("table").asText()), new String[] {t.path("pack").asText(), t.path("kind").asText()});
+                }
+            }
+        }
+        List<String> out = new ArrayList<>();
+        for (Map<String, Object> l : lines) {
+            String table = tail(String.valueOf(l.get("table")));
+            String[] pk = kinds.get(table);
+            if (pk == null || pk[0].isBlank() || pk[1].isBlank()) {
+                out.add(table + " " + l.get("date") + ": no signal (the ledger does not name its kind; the pages read it at their next refresh)");
+                continue;
+            }
+            java.time.LocalDate date = java.time.LocalDate.parse(String.valueOf(l.get("date")));
+            long rows = l.get("restored") instanceof Number n ? n.longValue() : 0;
+            try {
+                signal.landed(new Signal.Landed(pk[0], pk[1], date, rows, null, "undo:" + id + "#" + table + "@" + date, List.of("undo of load " + id)));
+                out.add(table + " " + date + ": " + pk[0] + "/" + pk[1] + " signalled");
+            } catch (RuntimeException e) {
+                out.add(table + " " + date + ": the signal failed (" + e.getMessage() + ")");
+            }
+        }
+        return out;
+    }
+
+    /** {@code domain/table}: the last two parts of a table's path. */
+    private static String tail(String table) {
+        String[] p = table.replace('\\', '/').split("/");
+        return p.length >= 2 ? p[p.length - 2] + "/" + p[p.length - 1] : table;
     }
 
     /** What Admin and the command line show. */

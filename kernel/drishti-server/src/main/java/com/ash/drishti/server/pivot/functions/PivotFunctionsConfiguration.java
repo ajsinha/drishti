@@ -51,7 +51,7 @@ import org.springframework.context.annotation.Configuration;
 public class PivotFunctionsConfiguration {
 
     @Bean(destroyMethod = "close")
-    public PythonPool pivotPythonPool(PivotFunctionProperties props, @Value("${drishti.data.dir:./data}") String dataDir) {
+    public PythonPool pivotPythonPool(PivotFunctionProperties props, @Value("${drishti.data.dir}") String dataDir) {
         if (!props.python().enabled()) {
             return new PythonPool(null);
         }

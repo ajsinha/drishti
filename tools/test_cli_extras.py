@@ -280,7 +280,7 @@ class Completion(unittest.TestCase):
             self.assertEqual(0, subprocess.run(["bash", "-n", str(script)]).returncode)
             r = subprocess.run(["bash", str(test), str(script)], capture_output=True, text=True, cwd=D.ROOT)
         self.assertIn("A:smoke", r.stdout)
-        self.assertIn("B:delta files", r.stdout)
+        self.assertIn("B:delta iceberg files", r.stdout)   # every store of storage parity: delta, iceberg, files
 
 
 if __name__ == "__main__":

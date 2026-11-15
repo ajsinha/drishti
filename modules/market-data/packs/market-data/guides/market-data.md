@@ -303,6 +303,8 @@ Where each kind's data comes from, how it reaches the lake and how to check it. 
 | SOFR, Federal Reserve Bank of New York | https://markets.newyorkfed.org/api/rates/secured/sofr | NY Fed terms of use: reuse with attribution | no | `python3 tools/drishti.py feed run market-data -- sofr` |
 | Euro short-term rate (ECB) | https://data-api.ecb.europa.eu/service/data/EST | ECB: free reuse with the source acknowledged | no | `python3 tools/drishti.py feed run market-data -- estr` |
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 python3 tools/drishti.py feed status market-data                                         # its last runs: last success, rows, failures (offline: the run ledger)
 python3 tools/drishti.py feed run market-data --dry-run                                  # what would be fetched and loaded; changes nothing

@@ -21,7 +21,7 @@
 {% block title %}Backtesting · {{ scope }} · {{ PRODUCT }}{% endblock %}
 {% block screen %}var-backtesting{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_var-regulatory.css?v={{ ASSET_V }}">{% include "terminal/_risk_elements_css.html" %}{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_var-regulatory.css?v={{ ASSET_V }}">{% include "terminal/_risk_elements_css.html" %}{% endblock %}
 {% block nav %}{% with command_text=command_text ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
 <div class="rg" data-backtesting data-scope="{{ scope }}" data-asof="{{ as_of }}">
@@ -29,7 +29,7 @@
     <h1>Backtesting</h1>
     <span class="rg-word">VAR {{ scope }} BACKTEST</span>
     <span class="rg-meta" data-bt-source aria-live="polite">loading…</span>
-    <a class="rg-meta" href="/help/context/var-backtesting" title="Help: regulatory backtesting (VAR_GUIDE.md section 18.11)"><i class="bi bi-question-circle" aria-hidden="true"></i></a>
+    <a class="rg-meta" href="{{ BASE }}/help/context/var-backtesting" title="Help: regulatory backtesting (VAR_GUIDE.md section 18.11)"><i class="bi bi-question-circle" aria-hidden="true"></i></a>
   </div>
   <div class="rg-bar" role="toolbar" aria-label="Backtesting controls">
     <span class="rg-chips" role="group" aria-label="Scope" data-bt-scopes></span>
@@ -39,7 +39,7 @@
     </span>
     <span class="rg-meta" data-bt-window></span>
     <span class="rg-spacer"></span>
-    <a class="rg-btn" href="/var/reports/var-backtesting-chart">Open the backtesting chart report</a>
+    <a class="rg-btn" href="{{ BASE }}/var/reports/var-backtesting-chart">Open the backtesting chart report</a>
     <a class="rg-btn" data-bt-xlsx href="#" download>Export xlsx</a>
   </div>
   <p class="rg-notice" data-bt-notice role="status" hidden></p>
@@ -71,4 +71,4 @@
   </section>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script>{% include "terminal/_risk_elements.html" %}<script src="/static/js/drishti_var-backtesting.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script>{% include "terminal/_risk_elements.html" %}<script src="{{ BASE }}/static/js/drishti_var-backtesting.js?v={{ ASSET_V }}"></script>{% endblock %}

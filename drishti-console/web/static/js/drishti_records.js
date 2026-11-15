@@ -22,7 +22,7 @@
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 (function () {
   'use strict';
-  var CSS = ['/static/elements/drishti-grid/drishti_grid.css', '/static/elements/drishti-inputs/drishti_inputs.css', '/static/css/drishti_records.css'];
+  var CSS = [drishti_url('/static/elements/drishti-grid/drishti_grid.css'), drishti_url('/static/elements/drishti-inputs/drishti_inputs.css'), drishti_url('/static/css/drishti_records.css')];
   var tag = document.querySelector('script[src*="drishti_records.js"]'), version = ((tag && tag.getAttribute('src')) || '').split('?')[1] || '';
   var NONE = { subscribe: function () { return function () {}; } };
 
@@ -31,7 +31,7 @@
       var name = href.split('/').pop();
       if (document.querySelector('link[href*="' + name + '"]')) { return; }
       var l = document.createElement('link');
-      l.rel = 'stylesheet'; l.href = href + (version ? '?' + version : '');
+      l.rel = 'stylesheet'; l.href = drishti_url(href + (version ? '?' + version : ''));
       document.head.appendChild(l);
     });
   }
@@ -87,7 +87,10 @@
     }
     var live = new grid.LiveSetGrid(host, opts);
     host.setAttribute('data-records-mode', o.set ? 'engine' : 'static');
-    live.start().then(function () { host.setAttribute('data-records-ready', 'true'); },
+    live.start().then(function () {
+      if (opts.channel === NONE) { live.setState('live'); }     // no stream will ever say hello: the snapshot is the answer (STATIC), never a lasting CONNECTING
+      host.setAttribute('data-records-ready', 'true');
+    },
       function (e) { host.textContent = (e && e.message) || 'The rows could not be read.'; });
     host.drishtiRecords = live;
     if (o.fill || host.hasAttribute('data-records-fill')) { fill(host); }
@@ -114,9 +117,11 @@
 
   function auto(root) {
     (root || document).querySelectorAll('[data-records]:not([data-records-mode])').forEach(function (host) {
-      var set = host.getAttribute('data-live-set') || '';
-      mount(host, { set: set, live: host.getAttribute('data-live') === 'on', spec: json(host.getAttribute('data-spec'), null), rows: set ? null : json(host.getAttribute('data-rows'), []),
-        offset: +host.getAttribute('data-drishti-offset') || 0, limit: +host.getAttribute('data-limit') || 0, title: host.getAttribute('data-title') || '' });
+      var set = host.getAttribute('data-live-set') || '', spec = json(host.getAttribute('data-spec'), null), hq = host.getAttribute('data-history') || '';
+      // a pick list of a history command (TRD MX-2000 HIST 3M): each record's panel opens its history over the range asked
+      var history = hq && spec && spec.kind ? [{ label: 'History', run: function (r) { window.location.href = drishti_url('/v/' + encodeURIComponent(spec.kind) + '/' + encodeURIComponent(r.__id) + '/history?' + hq); } }] : undefined;
+      mount(host, { set: set, live: host.getAttribute('data-live') === 'on', spec: spec, rows: set ? null : json(host.getAttribute('data-rows'), []),
+        offset: +host.getAttribute('data-drishti-offset') || 0, limit: +host.getAttribute('data-limit') || 0, title: host.getAttribute('data-title') || '', rowActions: history });
     });
   }
   window.Drishti.records = { mount: mount, auto: auto, table: table };

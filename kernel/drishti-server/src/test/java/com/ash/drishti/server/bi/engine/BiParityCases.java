@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.engine;
 
+import com.ash.drishti.testroots.TestRoots;
 import com.ash.drishti.server.bi.dataset.UserAttributes;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -37,7 +38,7 @@ import java.util.Set;
 public final class BiParityCases {
 
     /** Where the fixtures live (the module's test resources). */
-    public static final Path FIXTURES = Path.of("src/test/resources/bi/parity/lake-test.json");
+    public static final Path FIXTURES = Path.of(TestRoots.module(), "src", "test", "resources", "bi", "parity", "lake-test.json");
 
     /** Every measure of the test lake that is an aggregate of its group's rows. */
     public static final List<String> MEASURES = List.of("Notional", "MTM", "Trades", "AvgMTM", "MTMperM", "Names", "P50", "EurMTM", "Biggest",

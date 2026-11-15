@@ -158,6 +158,8 @@ Rules that follow from this:
 - A Sutra from before Drishti 1.11 (`*.sutra.md`, a Markdown document with one fenced `sutra` block) converts in one step; the
   block becomes the file, `rachana: 1` is added, and the prose becomes `notes`:
 
+  Run these from the Drishti folder (the repository root, or the install folder of a release).
+
   ```bash
   python3 tools/rachana/md_to_yaml.py config/packs/my-pack/sutras --delete
   ```

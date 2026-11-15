@@ -23,7 +23,7 @@
 <div class="ib-board" data-inbox-board data-running="{{ 1 if run else 0 }}">
 {% if error %}
   <p class="adm-warn" role="alert" data-inbox-error><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
-    The server did not give the inbox's status: {{ error.detail or error }}{% if error.status == 404 %} (is the data inbox on? Admin → <a href="/admin/engines">Engines</a> → Data inbox){% endif %}.</p>
+    The server did not give the inbox's status: {{ error.detail or error }}{% if error.status == 404 %} (is the data inbox on? Admin → <a href="{{ BASE }}/admin/engines">Engines</a> → Data inbox){% endif %}.</p>
 {% else %}
   <section class="ib-top" aria-label="The data inbox">
     <div class="ib-fact"><span class="ib-k">Data inbox</span> <span class="st {{ 'st-ok' if st.on else 'st-warn' }}" data-inbox-on>{{ 'on' if st.on else 'off' }}</span></div>
@@ -34,7 +34,7 @@
       <button type="button" class="btn-pill btn-accent ib-btn" data-inbox-run{% if not st.on %} disabled aria-describedby="ib-off"{% endif %}><i class="bi bi-play-fill" aria-hidden="true"></i> Load now</button>
       <a class="btn-pill ib-btn" href="#ib-settings">Settings</a>
     </div>
-    {% if not st.on %}<p class="text-muted-d ib-wide" id="ib-off">The inbox is off on this server: turn it on in Admin → <a href="/admin/engines">Engines</a> → Data inbox.</p>{% endif %}
+    {% if not st.on %}<p class="text-muted-d ib-wide" id="ib-off">The inbox is off on this server: turn it on in Admin → <a href="{{ BASE }}/admin/engines">Engines</a> → Data inbox.</p>{% endif %}
   </section>
 
   <div class="ib-cols">
@@ -50,7 +50,7 @@
         <div><span class="st {{ PILL.get(w.code, '') }}">{{ w.label }}</span> <span class="text-muted-d">{{ w.detail }}</span></div>
         {% if w.rule %}<div class="{{ 'ib-warn' if w.rule.error else 'text-muted-d' }}" data-rule>{{ w.rule.text }}</div>{% endif %}
         <div class="text-muted-d">{{ w.next }}</div>
-        {% if w.code == 'no-marker' %}<div class="ib-card-act"><a class="btn-pill ib-btn" data-build-ready href="/admin/loads/upload?inbox={{ w.file | urlencode }}">Build its .ready</a></div>{% endif %}
+        {% if w.code == 'no-marker' %}<div class="ib-card-act"><a class="btn-pill ib-btn" data-build-ready href="{{ BASE }}/admin/loads/upload?inbox={{ w.file | urlencode }}">Build its .ready</a></div>{% endif %}
       </div>
       {% else %}<p class="text-muted-d">{{ b.waitingText or 'Nothing waiting: inbox/ is empty.' }}</p>{% endfor %}
       {% for m in st.markersWithoutFile or [] %}<div class="ib-card"><span class="mono ib-name">{{ m }}</span> <span class="text-muted-d">a marker without its file</span></div>{% endfor %}
@@ -93,7 +93,7 @@
         {% for n in c.notices or [] %}<div class="ib-warn">notice: {{ n }}</div>{% endfor %}
       </div>
       {% else %}<p class="text-muted-d">No cycle has run today since the server started; the ledger keeps every one.</p>{% endfor %}
-      <p class="text-muted-d">Every cycle: <span class="mono">{{ (st.folders or {}).ledger or 'ledger/' }}</span> and the <a href="/admin/loads">Loads</a> tab (source <span class="mono">inbox:</span>).</p>
+      <p class="text-muted-d">Every cycle: <span class="mono">{{ (st.folders or {}).ledger or 'ledger/' }}</span> and the <a href="{{ BASE }}/admin/loads">Loads</a> tab (source <span class="mono">inbox:</span>).</p>
     </details>
   </div>
 
@@ -107,7 +107,7 @@
       <div class="text-muted-d">run <span class="mono">{{ f.run }}</span>{% if f.atText %} · {{ f.atText }}{% endif %}{% if f.pack %} · {{ f.pack }} / {{ f.kind }}{% endif %}</div>
       <div data-reason>{{ f.reason }}</div>
       {% if f.rejectsText %}<div class="text-muted-d">{{ f.rejectsText }}</div>{% endif %}
-      <div class="ib-line"><a class="mono ib-name" href="/admin/api/dataload/report?path={{ f.report | urlencode }}" data-report>{{ f.report }}</a></div>
+      <div class="ib-line"><a class="mono ib-name" href="{{ BASE }}/admin/api/dataload/report?path={{ f.report | urlencode }}" data-report>{{ f.report }}</a></div>
       <div class="ib-actions"><button type="button" class="btn-pill ib-btn" data-retry="{{ f.file }}"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> Retry</button></div>
       <p class="text-muted-d">{{ f.retryText }}</p>
     </div>
@@ -147,7 +147,7 @@
     <p class="mono ib-wrap">{{ (st.settings or {}).text }}</p>
     <p class="text-muted-d">Folders and reports: <span class="mono">{{ (st.folders or {}).outbox }}</span> · <span class="mono">{{ (st.folders or {}).failed }}</span> ·
       <span class="mono">{{ (st.folders or {}).ledger }}</span> under <span class="mono ib-wrap">{{ st.dir }}</span>. Change them in
-      <span class="mono">config/engines/dataload.yaml</span> and the rules in <span class="mono">config/dataload.yaml</span>; Admin → <a href="/admin/engines">Engines</a> → Data inbox.</p>
+      <span class="mono">config/engines/dataload.yaml</span> and the rules in <span class="mono">config/dataload.yaml</span>; Admin → <a href="{{ BASE }}/admin/engines">Engines</a> → Data inbox.</p>
   </section>
 {% endif %}
 </div>

@@ -127,8 +127,12 @@ def live_auth_console(tmp_path_factory):
 
 
 #: what a server writes while it only serves reads (its log, its temp and cache folders, the VaR engine's hot files and the official
-#: capture it makes of the newest date at start, from the lake it reads): a shared server's data folder is compared without these (TEST_HARNESS.md, "Shared read-only servers")
-DERIVED = re.compile(r"(^|/)(server\.log|jvm-tmp|tmp|logs|dumps|var-hot|var/hot|var/official|ccr/official|cache|caches|diskcache)(/|$)|\.(lock|log|tmp|pid)$")
+#: capture it makes of the newest date at start, from the lake it reads, now kept in the file store with its sequence; the audit of the
+#: reads; the derived trade pages; the personal BI workspace made on a person's first visit): a shared server's data folder is compared
+#: without these (TEST_HARNESS.md, "Shared read-only servers")
+DERIVED = re.compile(r"(^|/)(server\.log|jvm-tmp|tmp|logs|dumps|var-hot|var/hot|var/official|ccr/official|cache|caches|diskcache|derived"
+                     r"|fstore/items/var/captures(-seq)?|fstore/items/audit|fstore/items/audit-heads|fstore/items/bi/workspaces)(/|$)"
+                     r"|\.(lock|log|tmp|pid)$")
 
 
 def fingerprint(work: Path) -> dict[str, tuple[int, int]]:
@@ -237,7 +241,7 @@ def _start_stack(tmp_path_factory, extra_env, work=None, auth=False, heap="768m"
     env = {"PATH": os.environ.get("PATH", ""), "HOME": str(work), "DRISHTI_PORT": str(port),
            **{k: os.environ[k] for k in ("DRISHTI_DISK_MINFREEGB", "DRISHTI_DISK_MINFREEPERCENT") if k in os.environ}, **extra_env}  # conftest's guard
     # the server's heap: 768 MB for a page's worth of data; a file whose server holds a year of VaR history says so (heap="1536m")
-    proc = subprocess.Popen(java_cmd(str(JAVA), [f"-Xmx{heap}", *launch()], tmp=work / "jvm-tmp"), cwd=work, env=env, stdout=(work / "server.log").open("w"), stderr=subprocess.STDOUT)
+    proc = subprocess.Popen(java_cmd(str(JAVA), [f"-Xmx{heap}", *launch()], tmp=work / "jvm-tmp", cwd=work, env=env), cwd=work, env=env, stdout=(work / "server.log").open("w"), stderr=subprocess.STDOUT)
     try:
         # a server that is still starting is waited for (on a loaded machine a cold start takes minutes): only one that exited is skipped, and one
         # that never answers fails rather than skipping every test of the file in silence

@@ -150,7 +150,9 @@ public final class Blas {
 
         /** From the system properties and the environment, with the defaults (a tool, a test, anything before the server binds). */
         public static Settings fromSystem() {
-            return new Settings(Mode.of(setting("drishti.native.blas.mode", "DRISHTI_NATIVE_BLAS_MODE")), defaultCacheDir(),
+            Mode mode = Mode.of(setting("drishti.native.blas.mode", "DRISHTI_NATIVE_BLAS_MODE"));
+            // the unpacking folder is named only where a native library may be unpacked: Java mode needs no folder (and no launch root)
+            return new Settings(mode, mode == Mode.JAVA ? null : defaultCacheDir(),
                     mb(setting("drishti.native.blas.max-call-mb", "DRISHTI_NATIVE_BLAS_MAX_CALL_MB"), 256),
                     mb(setting("drishti.native.max-bytes-mb", "DRISHTI_NATIVE_MAX_BYTES_MB"), 1024));
         }
@@ -248,7 +250,7 @@ public final class Blas {
             adminJava = null;
             return null;
         }
-        Binding n = select(new Settings(Mode.AUTO, st.cacheDir(), st.maxCallBytes(), st.maxNativeBytes()));
+        Binding n = select(new Settings(Mode.AUTO, st.cacheDir() != null ? st.cacheDir() : defaultCacheDir(), st.maxCallBytes(), st.maxNativeBytes()));
         if (n.guard() == null) {
             return "OpenBLAS cannot be used here (" + n.status().reason() + "); the pure-Java path stays";
         }
@@ -345,10 +347,9 @@ public final class Blas {
     public static Path defaultCacheDir() {
         String c = setting("drishti.native.cache-dir", "DRISHTI_NATIVE_CACHE_DIR");
         if (c != null && !c.isBlank()) {
-            return Path.of(c);
+            return com.ash.drishti.api.Roots.anchored(c.strip());     // a relative value: under the install folder
         }
-        String data = System.getProperty("drishti.data.dir");
-        return Path.of(data == null || data.isBlank() ? "./data" : data, "native-cache");
+        return Path.of(com.ash.drishti.api.Roots.data("native-cache"));
     }
 
     private static String setting(String property, String env) {

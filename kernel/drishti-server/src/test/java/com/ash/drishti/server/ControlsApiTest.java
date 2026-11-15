@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -89,7 +90,7 @@ class ControlsApiTest {
     }
 
     private JsonNode schedule() throws Exception {
-        return json.readTree(com.ash.drishti.common.PackSamples.document(Path.of("../../modules/banking/dmod/packs/trading/samples"), "trade", "MX-20000001").orElseThrow()).path("EVENTS");
+        return json.readTree(com.ash.drishti.common.PackSamples.document(Path.of(TestRoots.repo(), "modules", "banking", "dmod", "packs", "trading", "samples"), "trade", "MX-20000001").orElseThrow()).path("EVENTS");
     }
 
     @Test

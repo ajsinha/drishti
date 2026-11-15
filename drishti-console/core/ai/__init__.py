@@ -33,6 +33,12 @@ from core.ai.registry import LlmRegistry
 from core.ai.types import CallContext, ChatMessage, ChatRequest, ChatResponse, LlmError, ModelInfo  # noqa: F401  (the public names)
 
 
+def _anchored(value, base: Path) -> Path:
+    """A configured folder as an absolute path: as given when absolute, else under ``base``."""
+    p = Path(str(value))
+    return p if p.is_absolute() else (base / p).resolve()
+
+
 class AiRuntime:
     """Everything the console's AI layer needs, built once from the settings. ``backend`` is a callable returning the current backend client
     (the ``server`` provider and transport use it)."""
@@ -40,8 +46,10 @@ class AiRuntime:
     def __init__(self, settings, backend=None, env=None):
         self.enabled = _on(settings.get("ai.enabled", False))
         self.mcp_enabled = _on(settings.get("mcp.enabled", False))
-        self.dir = str(settings.get("ai.dir", "./config/ai"))
-        self.mcp_dir = str(settings.get("mcp.dir", "./config/mcp"))
+        # a relative folder is under the console's own folder, like the console's other folders (help, lenses), never the process's
+        console = Path(__file__).resolve().parent.parent.parent
+        self.dir = str(_anchored(settings.get("ai.dir", "../config/ai"), console))
+        self.mcp_dir = str(_anchored(settings.get("mcp.dir", "../config/mcp"), console))
         self._backend = backend
         redact = list(settings.get("ai.redact", []) or [])
         patterns = list(settings.get("ai.policy.mask_patterns", []) or [])

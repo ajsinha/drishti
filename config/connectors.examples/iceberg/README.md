@@ -70,6 +70,8 @@ fields, partitioned by `identity(business_date)`, sorted by `id`.
 
 ## Examples
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 tools/load-iceberg.sh ./data/iceberg                        # the samples: 1,791 documents x 10 business days
 cp config/connectors.examples/iceberg/*.yaml config/connectors/

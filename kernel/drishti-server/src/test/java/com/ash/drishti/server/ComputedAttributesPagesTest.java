@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -43,7 +44,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @AutoConfigureMockMvc
 class ComputedAttributesPagesTest {
 
-    static final Path PACKS = Path.of("").toAbsolutePath().getParent().getParent().resolve("config/packs");
+    static final Path PACKS = Path.of(TestRoots.module()).getParent().getParent().resolve("config/packs");
     static final ObjectMapper JSON = new ObjectMapper();
 
     @Autowired MockMvc mvc;

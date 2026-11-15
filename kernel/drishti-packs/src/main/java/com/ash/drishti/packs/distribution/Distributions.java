@@ -53,13 +53,11 @@ public final class Distributions {
     public static final String ARG = "distribution";
     /** The folder of the distribution files. */
     public static final String DIR = "drishti.distributions-dir";
-    public static final String DEFAULT_DIR = "./config/distributions";
     public static final String DEFAULT = "all";
     /** The kernel's own packs, words and menus, beside the distribution files. */
     public static final String KERNEL = "kernel.yaml";
     /** The folder of the module manifests (DRISHTI_MODULE_MANIFESTS_DIR). */
     public static final String MODULES_DIR = "drishti.module-manifests-dir";
-    public static final String DEFAULT_MODULES_DIR = "./modules";
 
     private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
     private static final Pattern SHORT = Pattern.compile("[a-z0-9][a-z0-9-]{0,63}");
@@ -83,7 +81,7 @@ public final class Distributions {
 
     /** The folder of the distribution files. */
     public static Path dir(Environment env) {
-        return Path.of(env.getProperty(DIR, DEFAULT_DIR));
+        return com.ash.drishti.api.Roots.anchored(env.getProperty(DIR, com.ash.drishti.api.Roots.config("distributions")));
     }
 
     /**
@@ -109,7 +107,7 @@ public final class Distributions {
         if (!Files.isRegularFile(f) && !named(env)) {
             return builtInAll();                                       // a server with no config/distributions folder: today's product
         }
-        String packsDir = env.getProperty("drishti.packs.dir", "./config/packs");
+        String packsDir = env.getProperty("drishti.packs.dir", com.ash.drishti.api.Roots.config("packs"));
         return read(f, dir.resolve(KERNEL), modulesHome(env), Path.of(packsDir), packages(env));
     }
 
@@ -129,7 +127,7 @@ public final class Distributions {
 
     /** The modules shipped as folders: {@code drishti.modules.home}, its former name {@code drishti.module-manifests-dir} (section 18.2). */
     public static Path modulesHome(Environment env) {
-        return Path.of(env.getProperty("drishti.modules.home", env.getProperty(MODULES_DIR, DEFAULT_MODULES_DIR)));
+        return com.ash.drishti.api.Roots.anchored(env.getProperty("drishti.modules.home", env.getProperty(MODULES_DIR, com.ash.drishti.api.Roots.modules())));
     }
 
     /** Drishti All with no file: every module, no filter, the product's own brand. */

@@ -190,9 +190,18 @@ tables:
     row-group-rows: 1000
     id: TRADE_ID
     maintenance: {compaction: true, target-file-mb: 256, vacuum: 7d}
-  trading.trades_shared:
+  trading.trade_wss:
     kind: trade
-    partition-by: [SOURCE_SYSTEM]
+    promote: [SOURCE_SYSTEM]
+    sort-by: [id]
+    maintenance: {compaction: true, target-file-mb: 256, vacuum: 7d}
+  trading.trade_swapone:
+    kind: trade
+    promote: [SOURCE_SYSTEM]
+    sort-by: [id]
+    maintenance: {compaction: true, target-file-mb: 256, vacuum: 7d}
+  trading.trade_ici:
+    kind: trade
     promote: [SOURCE_SYSTEM]
     sort-by: [id]
     maintenance: {compaction: true, target-file-mb: 256, vacuum: 7d}

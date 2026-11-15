@@ -74,7 +74,7 @@
   function load() {
     var days = dlg.querySelector('[data-days]').value, msg = dlg.querySelector('[data-msg]');
     msg.textContent = 'Reading ' + days + ' business days…';
-    fetch('/api/series/' + encodeURIComponent(kind) + '/' + encodeURIComponent(id) + '?days=' + days + '&path=' + encodeURIComponent(current.path))
+    fetch(drishti_url('/api/series/' + encodeURIComponent(kind) + '/' + encodeURIComponent(id) + '?days=' + days + '&path=' + encodeURIComponent(current.path)))
       .then(function (r) { return r.json().then(function (b) { return { ok: r.ok, body: b }; }); })
       .then(function (res) {
         if (!res.ok) { msg.textContent = Drishti.drsMessage(res.body); return; }
@@ -115,8 +115,8 @@
     current = { path: cell.getAttribute('data-path'), label: (cell.previousElementSibling && cell.previousElementSibling.tagName === 'DT' ? cell.previousElementSibling.textContent : cell.getAttribute('data-path')) };
     if (!dlg) { build(); }
     dlg.querySelector('[data-h]').textContent = current.label.trim() + ' · ' + id + ' over time';
-    dlg.querySelector('[data-alert-me]').href = '/alerts/new?source=field&kind=' + encodeURIComponent(kind) + '&id=' + encodeURIComponent(id)
-      + '&field=' + encodeURIComponent(current.path) + '&title=' + encodeURIComponent(current.label.trim() + ' of ' + id);
+    dlg.querySelector('[data-alert-me]').href = drishti_url('/alerts/new?source=field&kind=' + encodeURIComponent(kind) + '&id=' + encodeURIComponent(id)
+      + '&field=' + encodeURIComponent(current.path) + '&title=' + encodeURIComponent(current.label.trim() + ' of ' + id));
     dlg.showModal();
     load();
   });

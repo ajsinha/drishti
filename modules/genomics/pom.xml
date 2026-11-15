@@ -31,6 +31,8 @@
   <version>0.1.0</version>
   <name>genomics</name>
   <dependencies>
+    <!-- the repository's tests find their files through TestRoots (never the working folder); a module of this repository, so it may -->
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-testroots</artifactId><version>${drishti.sdk.version}</version><scope>test</scope></dependency>
     <!-- JSON lines (gene.jsonl): the kernel supplies Jackson at run time, so it is never inside the .dmod -->
     <dependency><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-databind</artifactId><version>2.21.4</version><scope>provided</scope></dependency>
   </dependencies>

@@ -21,8 +21,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Reads connector settings that may hold a secret: a value written as {@code ${ENV_NAME}} (or {@code ${ENV_NAME:default}}) is
@@ -31,16 +29,15 @@ import java.util.regex.Pattern;
  */
 public final class Secrets {
 
-    private static final Pattern ENV_REF = Pattern.compile("\\$\\{([A-Za-z_][A-Za-z0-9_]*)(?::([^}]*))?}");
 
     private Secrets() {}
 
     /** The setting with a {@code ${ENV}} placeholder resolved; {@code null} when absent or blank. */
     public static String get(Map<String, String> settings, String key) {
-        return get(settings, key, System::getenv);
+        return get(settings, key, null);   // the process: -D, the settings files, the environment
     }
 
-    /** As {@link #get(Map, String)}, reading environment variables through {@code env}. */
+    /** As {@link #get(Map, String)}, reading the references through {@code env} (null: the process). */
     public static String get(Map<String, String> settings, String key, Function<String, String> env) {
         String v = settings.get(key);
         return v == null || v.isBlank() ? null : expand(v.strip(), env, key);
@@ -48,10 +45,10 @@ public final class Secrets {
 
     /** The secret under {@code key}: its {@code key-file} twin if given, else the (placeholder-resolved) value. */
     public static String secret(Map<String, String> settings, String key) {
-        return secret(settings, key, System::getenv);
+        return secret(settings, key, null);
     }
 
-    /** As {@link #secret(Map, String)}, reading environment variables through {@code env}. */
+    /** As {@link #secret(Map, String)}, reading the references through {@code env} (null: the process). */
     public static String secret(Map<String, String> settings, String key, Function<String, String> env) {
         return secret(k -> get(settings, k, env), "", key);
     }
@@ -72,21 +69,16 @@ public final class Secrets {
         return get.apply(key);
     }
 
-    /** Every {@code ${NAME}} or {@code ${NAME:default}} in the value, replaced from the environment. */
+    /**
+     * Every {@code ${NAME}} or {@code ${NAME:default}} in the value, through the one resolver (com.ash.drishti.settingsfile.Placeholders): a
+     * {@code -D}, the settings files, the environment, then or {@code env} when given (an empty value is unset); a reference with no value and no default
+     * is refused, naming it.
+     */
     static String expand(String value, Function<String, String> env, String key) {
-        Matcher m = ENV_REF.matcher(value);
-        StringBuilder out = new StringBuilder();
-        while (m.find()) {
-            String v = env.apply(m.group(1));
-            if (v == null || v.isEmpty()) {
-                if (m.group(2) == null) {
-                    throw new TlsException(key + ": the environment variable " + m.group(1) + " is not set");
-                }
-                v = m.group(2);
-            }
-            m.appendReplacement(out, Matcher.quoteReplacement(v));
+        try {
+            return com.ash.drishti.settingsfile.Placeholders.require(value, env);   // env null: the process
+        } catch (IllegalArgumentException e) {
+            throw new TlsException(key + ": " + e.getMessage());
         }
-        m.appendTail(out);
-        return out.toString();
     }
 }

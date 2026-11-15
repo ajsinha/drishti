@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.edit;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.zaxxer.hikari.HikariDataSource;
@@ -164,7 +165,7 @@ class LanesTest {
 
     @Test
     void theSettingsAreOffAsShipped() {
-        EditSettings s = EditSettings.load(Path.of("..", "..", "config", "edit", "edit.yaml"), v -> v.replace("${DRISHTI_EDIT_ENABLED:false}", "false"));
+        EditSettings s = EditSettings.load(Path.of(TestRoots.repo(), "config", "edit", "edit.yaml"), v -> v.replace("${DRISHTI_EDIT_ENABLED:false}", "false"));
         assertThat(s.enabled()).isFalse();
         assertThat(s.lanes()).isEqualTo(64);
         assertThat(s.log()).isEqualTo("auto");

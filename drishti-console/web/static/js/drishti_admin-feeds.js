@@ -35,7 +35,7 @@
     var feed = b.getAttribute('data-feed-run');
     b.disabled = true;
     say('Starting ' + feed + '…');
-    fetch('/admin/api/feeds/' + encodeURIComponent(feed) + '/run', { method: 'POST', credentials: 'same-origin',
+    fetch(drishti_url('/admin/api/feeds/' + encodeURIComponent(feed) + '/run'), { method: 'POST', credentials: 'same-origin',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: '{}' })
       .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { return { ok: r.ok, body: j }; }); })
       .catch(function () { return { ok: false, body: { detail: 'the console could not reach the server' } }; })

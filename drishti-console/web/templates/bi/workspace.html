@@ -41,7 +41,7 @@
     <button type="button" class="btn-pill btn-accent bi-danger" data-confirm-yes>Delete</button>
     <button type="button" class="btn-pill btn-ghost" data-confirm-no>Cancel</button>
   </div>
-  <p class="bi-empty" data-empty hidden>No items yet. Start a report from a dataset, a board, or a notebook in the <a href="/bi/notebook">Notebook</a>; or open the <a href="/bi/catalogue">catalogue</a> to see what others have published.</p>
+  <p class="bi-empty" data-empty hidden>No items yet. Start a report from a dataset, a board, or a notebook in the <a href="{{ BASE }}/bi/notebook">Notebook</a>; or open the <a href="{{ BASE }}/bi/catalogue">catalogue</a> to see what others have published.</p>
   <p class="text-muted-d" data-need-author hidden>You can add items here, but creating them needs the bi-author power. Ask an admin for it.</p>
   <form class="bi-form" data-new-item hidden aria-label="New item">
     <h3>New item</h3>
@@ -65,7 +65,7 @@
 </div>
 <div role="tabpanel" id="wPanelRuns" aria-labelledby="wTabRuns" data-ws-panel="runs" hidden>
 <section class="bi-sec bi-runs" data-runs aria-labelledby="wRuns"><h2 id="wRuns">Runs <span class="bi-runs-live" data-runs-live-state title="Rows change as the runs do: no reload needed">⟳ live</span>
-    <a class="bi-runs-help" href="/help/runs-tab" data-runs-help><i class="bi bi-question-circle" aria-hidden="true"></i> How runs work</a></h2>
+    <a class="bi-runs-help" href="{{ BASE }}/help/runs-tab" data-runs-help><i class="bi bi-question-circle" aria-hidden="true"></i> How runs work</a></h2>
   <p class="text-muted-d">Questions that took longer than a moment run in the background: you can keep working, and the bell says when each is ready. A result is kept
     <span data-runs-retention>30</span> days after it was last opened, unless you keep it longer or promote it.</p>
   <form class="bi-runs-filters" data-runs-filters role="search" aria-label="Filter the runs">
@@ -107,5 +107,5 @@
   <div data-run-drawer-body></div>
 </aside>
 {% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_collab.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi-runs.css?v={{ ASSET_V }}">{% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-layer.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_people.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-extras.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-runs.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-runs-tab.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_collab.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_bi-runs.css?v={{ ASSET_V }}">{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_bi.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_bi-lib.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_bi-layer.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_people.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_bi-extras.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_bi-runs.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_bi-runs-tab.js?v={{ ASSET_V }}"></script>{% endblock %}

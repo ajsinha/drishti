@@ -210,7 +210,7 @@ class Workspaces:
             for k in ("sharedTable", "ownTable"):
                 v = str(body.get(k) or "").strip()
                 if v and not re.fullmatch(r"[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*", v):
-                    raise DesignerError(400, "a table is <domain>.<table> in lower case (trading.trades_shared)")
+                    raise DesignerError(400, "a table is <domain>.<table> in lower case (trading.trade_swapone)")
                 if v:
                     r[k] = v
             r["live"], r["writeBack"] = bool(body.get("live")), bool(body.get("writeBack"))

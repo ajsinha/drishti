@@ -176,6 +176,8 @@ Where each kind's data comes from, how it reaches the lake and how to check it. 
 
 **Internal only:** Google News RSS headlines (the news connector); Yahoo Finance quotes and daily history (the yfinance connector). The terms restrict reuse or forbid redistribution: the data is for internal demonstrations only, never written into a committed folder without `--internal-ok`, and must be raised with the owner before any client or external use.
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 python3 tools/drishti.py feed status news-and-markets                                   # its last runs: last success, rows, failures (offline: the run ledger)
 python3 tools/drishti.py feed run news-and-markets --dry-run                            # what would be fetched and loaded; changes nothing

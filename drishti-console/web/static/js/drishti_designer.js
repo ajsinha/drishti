@@ -24,10 +24,10 @@
   'use strict';
   var view = document.querySelector('[data-view]');
   if (!view) { return; }
-  var kind = view.dataset.kind, id = view.dataset.id, page = '/v/' + encodeURIComponent(kind) + '/' + encodeURIComponent(id);
+  var kind = view.dataset.kind, id = view.dataset.id, page = drishti_url('/v/') + encodeURIComponent(kind) + '/' + encodeURIComponent(id);
 
   function api(method, url, body) {
-    return fetch(url, { method: method, credentials: 'same-origin', headers: body ? { 'Content-Type': 'application/json' } : {},
+    return fetch(drishti_url(url), { method: method, credentials: 'same-origin', headers: body ? { 'Content-Type': 'application/json' } : {},
                         body: body ? JSON.stringify(body) : undefined })
       .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) { throw new Error(j.detail || 'Something went wrong'); } return j; }); });
   }
@@ -45,7 +45,7 @@
   if (open) {
     open.addEventListener('click', function () {
       open.disabled = true;
-      api('POST', '/designer/customize', { kind: kind, id: id }).then(function (r) { location.href = r.url; })
+      api('POST', drishti_url('/designer/customize'), { kind: kind, id: id }).then(function (r) { location.href = drishti_url(r.url); })
         .catch(function (e) { open.disabled = false; alert(e.message); });
     });
   }
@@ -62,7 +62,7 @@
   function step(body) {
     body.kind = kind; body.id = id; body.nonce = body.nonce || nonce();   // the same step sent twice (a retry) is done once
     say('Saving…', true);
-    return api('POST', '/designer/op/' + encodeURIComponent(draft), body).then(function (r) { return redraw().then(function () { return r; }); })
+    return api('POST', drishti_url('/designer/op/') + encodeURIComponent(draft), body).then(function (r) { return redraw().then(function () { return r; }); })
       .catch(function (e) { say(e.message); throw e; });
   }
   /* one action adds one panel: a click, a drop or a double click while the first add is on its way are the same add */
@@ -119,14 +119,14 @@
     el('span', { 'class': 'dz-bar-words' }, [el('i', { 'class': 'bi bi-sliders', 'aria-hidden': 'true' }), ' Customizing · only you see changes until you share']),
     msg,
     el('span', { 'class': 'dz-grow' }),
-    el('a', { 'class': 'dz-btn dz-quiet', href: '/designer/new', text: 'Describe a change' }),
-    el('a', { 'class': 'dz-btn dz-quiet', 'data-dz-outline': '', href: '/designer/outline?kind=' + encodeURIComponent(kind) + '&id=' + encodeURIComponent(id) + '&design=' + encodeURIComponent(draft), text: 'Outline' }),
-    el('a', { 'class': 'dz-btn dz-quiet', 'data-dz-grid': '', href: '/designer/grid?kind=' + encodeURIComponent(kind) + '&id=' + encodeURIComponent(id) + '&design=' + encodeURIComponent(draft), text: 'Grid' }),
+    el('a', { 'class': 'dz-btn dz-quiet', href: drishti_url('/designer/new'), text: 'Describe a change' }),
+    el('a', { 'class': 'dz-btn dz-quiet', 'data-dz-outline': '', href: drishti_url('/designer/outline?kind=' + encodeURIComponent(kind) + '&id=' + encodeURIComponent(id) + '&design=' + encodeURIComponent(draft)), text: 'Outline' }),
+    el('a', { 'class': 'dz-btn dz-quiet', 'data-dz-grid': '', href: drishti_url('/designer/grid?kind=' + encodeURIComponent(kind) + '&id=' + encodeURIComponent(id) + '&design=' + encodeURIComponent(draft)), text: 'Grid' }),
     el('button', { type: 'button', 'class': 'dz-btn', 'data-dz-cancel': '', text: 'Cancel', on: { click: function () {
-      api('POST', '/designer/cancel/' + encodeURIComponent(draft)).finally(function () { location.href = page; }); } } }),
+      api('POST', drishti_url('/designer/cancel/') + encodeURIComponent(draft)).finally(function () { location.href = drishti_url(page); }); } } }),
     el('button', { type: 'button', 'class': 'dz-btn dz-primary', 'data-dz-done': '', text: 'Done', on: { click: function () {
       say('Keeping your page…', true);
-      api('POST', '/designer/done/' + encodeURIComponent(draft), { kind: kind }).then(function () { location.href = page; })
+      api('POST', drishti_url('/designer/done/') + encodeURIComponent(draft), { kind: kind }).then(function () { location.href = drishti_url(page); })
         .catch(function (e) { say(e.message); }); } } })
   ]);
   view.insertBefore(bar, view.firstChild);
@@ -252,7 +252,7 @@
           if (v.indexOf('u:') === 0) {                    // a used table: written out first, then it is clickable
             var bits = v.split(':');
             say('Opening up the table…', true);
-            api('POST', '/designer/op/' + encodeURIComponent(draft), { op: 'unpack', index: +bits[1], kind: kind, id: id })
+            api('POST', drishti_url('/designer/op/') + encodeURIComponent(draft), { op: 'unpack', index: +bits[1], kind: kind, id: id })
               .then(function () { return step({ op: 'click', panel: bits[2], place: where.value, show: (shows[+what.value] || {}).spec }); }).catch(function (e) { say(e.message); });
           } else { step({ op: 'click', panel: v.slice(2), place: where.value, show: (shows[+what.value] || {}).spec }).catch(function () {}); }
         } } }),
@@ -299,7 +299,7 @@
     q.addEventListener('input', function () {
       clearTimeout(timer);
       timer = setTimeout(function () {
-        api('GET', '/designer/kit/' + encodeURIComponent(draft) + '?q=' + encodeURIComponent(q.value) + '&kind=' + encodeURIComponent(kind) + '&id=' + encodeURIComponent(id))
+        api('GET', drishti_url('/designer/kit/') + encodeURIComponent(draft) + '?q=' + encodeURIComponent(q.value) + '&kind=' + encodeURIComponent(kind) + '&id=' + encodeURIComponent(id))
           .then(function (r) { show(r.results); }).catch(function (e) { say(e.message); });
       }, 200);
     });
@@ -316,11 +316,11 @@
     if (state.mine) {
       foot.appendChild(el('button', { type: 'button', 'class': 'dz-btn', 'data-dz-reset': '', text: 'Reset to the pack’s page', on: { click: function () {
         if (!confirm('Forget your version of this page and use the pack’s page again?')) { return; }
-        api('POST', '/designer/reset', { kind: kind }).then(function () { return api('POST', '/designer/cancel/' + encodeURIComponent(draft)); })
-          .then(function () { location.href = page; }).catch(function (e) { say(e.message); });
+        api('POST', drishti_url('/designer/reset'), { kind: kind }).then(function () { return api('POST', drishti_url('/designer/cancel/') + encodeURIComponent(draft)); })
+          .then(function () { location.href = drishti_url(page); }).catch(function (e) { say(e.message); });
       } } }));
       foot.appendChild(el('button', { type: 'button', 'class': 'dz-btn', 'data-dz-share': '', text: 'Share', on: { click: function () {
-        api('POST', '/build/designs/' + encodeURIComponent(state.mine.id) + '/share').then(function (r) {
+        api('POST', drishti_url('/build/designs/') + encodeURIComponent(state.mine.id) + '/share').then(function (r) {
           say('Anyone you send this read-only link to can see your page’s design: ' + r.url, true);
         }).catch(function (e) { say(e.message); });
       } } }));
@@ -337,7 +337,7 @@
     } });
 
   function load() {
-    return api('GET', '/designer/state/' + encodeURIComponent(draft) + '?kind=' + encodeURIComponent(kind) + '&id=' + encodeURIComponent(id)).then(function (s) {
+    return api('GET', drishti_url('/designer/state/') + encodeURIComponent(draft) + '?kind=' + encodeURIComponent(kind) + '&id=' + encodeURIComponent(id)).then(function (s) {
       state = s;
       view.querySelectorAll('.dz-tools, .dz-need').forEach(function (t) { t.remove(); });
       s.parts.forEach(function (part) { sectionsOf(part).forEach(function (sec, i) { tools(part, sec, i === 0); }); });

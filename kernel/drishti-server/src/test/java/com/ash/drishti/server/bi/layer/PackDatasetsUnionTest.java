@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.layer;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.packs.Pack;
@@ -26,7 +27,7 @@ import org.junit.jupiter.api.Test;
 class PackDatasetsUnionTest {
 
     static Pack trading() {
-        return new Pack("trading", "1.0.0", "Trading", "", Path.of("."), Map.of("connectors", Map.of(
+        return new Pack("trading", "1.0.0", "Trading", "", Path.of(TestRoots.module(), "."), Map.of("connectors", Map.of(
                 "trade-endur", Map.of("plugin", "delta", "settings", Map.of("union", true, "domain", "trading")),
                 "trade-pages", Map.of("plugin", "derived", "settings", Map.of()))));
     }

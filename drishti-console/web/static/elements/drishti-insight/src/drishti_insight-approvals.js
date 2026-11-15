@@ -16,6 +16,7 @@
 /* The one Approvals queue (templates/approvals.html; SHARED_SCREENS.md section 2): reads /approvals/api/list, draws the due-soon items
    pinned on top and the rest newest first, opens an item (/approvals/api/item/<kind>/<id>) with its diff, effect, rules and questions, and
    posts the decision or a question. The server decides who may do what: the buttons drawn are the actions it answers. */
+import { url as drishtiUrl } from '../../drishti-core/src/drishti_index.js';
 /**
  * Starts the one Approvals queue when the page holds it ([data-approvals]); on any other page it does nothing.
  * @param {Window} win the page's window
@@ -44,9 +45,9 @@ export function startApprovals(win) {
       return j;
     });
   }
-  function get(path) { return fetch('/approvals/api/' + path, { headers: { Accept: 'application/json' }, credentials: 'same-origin' }).then(answer); }
+  function get(path) { return fetch(drishtiUrl('/approvals/api/' + path), { headers: { Accept: 'application/json' }, credentials: 'same-origin' }).then(answer); }
   function post(path, body) {
-    return fetch('/approvals/api/' + path, { method: 'POST', credentials: 'same-origin',
+    return fetch(drishtiUrl('/approvals/api/' + path), { method: 'POST', credentials: 'same-origin',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(body || {}) }).then(answer);
   }
   function enc(s) { return encodeURIComponent(s).replace(/%3A/g, ':').replace(/%40/g, '@'); }
@@ -65,8 +66,8 @@ export function startApprovals(win) {
     if (state.box !== 'inbox') { q.set('box', state.box); }
     if (state.group) { q.set('group', state.group); }
     if (state.kind) { q.set('kind', state.kind); }
-    var path = state.open ? '/approvals/' + state.open.kind + '/' + enc(state.open.id) : '/approvals';
-    history.replaceState(null, '', path + (q.toString() ? '?' + q : ''));
+    var path = state.open ? drishtiUrl('/approvals/') + state.open.kind + '/' + enc(state.open.id) : drishtiUrl('/approvals');
+    history.replaceState(null, '', drishtiUrl(path + (q.toString() ? '?' + q : '')));
   }
   function row(e) {
     var i = e.item, li = h('li', { class: 'ap-row' + (e.dueSoon ? ' soon' : ''), 'data-ap-row': i.kind + '/' + i.id });
@@ -196,7 +197,7 @@ export function startApprovals(win) {
     var st = $('[data-ap-item-status]');
     st.textContent = it.status === 'pending' ? (o.dueSoon && it.due ? 'waiting · due ' + it.due : 'waiting') + (it.stage ? ' · ' + it.stage : '') : it.status;
     st.className = 'ap-status ' + (it.status === 'pending' ? 'wait' : it.status === 'approved' || it.status === 'signed' ? 'ok' : 'no');
-    var link = $('[data-ap-item-link]'); link.href = it.link || '#'; link.hidden = !it.link;
+    var link = $('[data-ap-item-link]'); link.href = drishtiUrl(it.link || '#'); link.hidden = !it.link;
     $('[data-ap-item-facts]').textContent = 'Asked by ' + (it.maker || '?') + ' ' + when(it.at) + (it.reason ? ': “' + it.reason + '”' : '')
       + (it.decidedBy ? ' · decided by ' + it.decidedBy + ' ' + when(it.decidedAt) : '');
     ['approve', 'reject', 'withdraw'].forEach(function (a) { $('[data-ap-act="' + a + '"]').hidden = o.actions.indexOf(a) < 0; });
@@ -204,7 +205,7 @@ export function startApprovals(win) {
     params(o.actions.indexOf('approve') >= 0 ? it.kind : '');
     diff(o.detail.diff);
     if (it.kind === 'sutra') {                              // a Sutra: its diff with the moved panels, and the workbench's evidence (the console draws them)
-      fetch('/approvals/api/view/sutra/' + enc(it.id), { credentials: 'same-origin', headers: { Accept: 'text/html' } })
+      fetch(drishtiUrl('/approvals/api/view/sutra/' + enc(it.id)), { credentials: 'same-origin', headers: { Accept: 'text/html' } })
         .then(function (r) { return r.ok ? r.text() : null; })
         .then(function (html) {
           if (html && state.open && state.open.kind === 'sutra' && state.open.id === it.id) {

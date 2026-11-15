@@ -183,7 +183,7 @@ You should see one line per table, then the summary (the folder is your clone's)
 ```text
   trading/trade_endur: … rows over 60 days
   …
-Demo lake ready: …/drishti/data/delta/demo: 87 tables, 60 business days 2026-07-08 to 2026-09-30, built in 943 s
+Demo lake ready: …/drishti/data/delta/demo: 89 tables, 60 business days 2026-07-08 to 2026-09-30, built in 943 s
 Feeds: …/drishti/data/feeds/fixing.jsonl (the file connector's sample feed)
 Server: no server at http://localhost:18480: left …/drishti/data/bi-store/lake-rebuilt.json, so a server clears its stored BI columns and rollups at its next start
 Connector files:
@@ -523,7 +523,7 @@ bin\status.cmd                                                            # both
 bin\stop-all.cmd
 ```
 
-`lake demo` writes the same 87 tables as on Linux. The scripts of `bin\` are the same on Windows, Linux and macOS (`.cmd` and `.ps1` here,
+`lake demo` writes the same 89 tables as on Linux. The scripts of `bin\` are the same on Windows, Linux and macOS (`.cmd` and `.ps1` here,
 `.sh` there): `start-server` checks that Java is 21 or newer, sets `DRISHTI_DELTA_ENGINE=native` on Windows ([`delta` in CONFIGURATION.md](../admin/CONFIGURATION.md#delta--delta-lake)), adds
 `-XX:+UseCompactObjectHeaders` only on Java 25, and `--demo` sets the demo's settings with its development secrets; `start-console` makes
 the console's environment on its first run (with uv when present, else `python -m venv` and pip). Every option, where the pid, log and
@@ -1121,7 +1121,7 @@ DRISHTI_STREAM_TRADING=true DRISHTI_PACKS=trading java -Djava.io.tmpdir=data/tmp
 ```
 
 `stream.py` also takes `--bootstrap` (`localhost:9092`), `--topic`, `--samples` and `--seconds` (0: until stopped). The trading pack's
-`trading-stream` connector reads `DRISHTI_KAFKA_BOOTSTRAP`, `DRISHTI_TRADING_TOPIC`, `DRISHTI_STREAM_STALE_AFTER` (15m: shown as behind) and keeps
+`trading-stream` connector reads its broker by name (`broker: default`, `[broker.default]` in the settings file), `DRISHTI_TRADING_TOPIC`, `DRISHTI_STREAM_STALE_AFTER` (15m: shown as behind) and keeps
 the day's messages in a disk cache (`DRISHTI_STREAM_DISK_CACHE`, `DRISHTI_CACHE_ROOT`, `DRISHTI_STREAM_CACHE_GB`, cleared at `DRISHTI_CACHE_RESET_AT`).
 
 ### 7.4 Public feeds
@@ -1752,6 +1752,29 @@ server {
 
 Check from outside: `curl -sI https://drishti.bank.example/healthz | head -1` shows `HTTP/2 200`.
 
+**At a URL sub-path** (`https://intranet.bank.example/drishti/`, the console sharing a host with other applications): set the console's
+`server.base_path` (`DRISHTI_CONSOLE_BASE_PATH=/drishti`, [CONFIGURATION.md](../admin/CONFIGURATION.md#the-consoles-url-sub-path-serverbase_path))
+and restart it. The proxy may forward the path as it is (`proxy_pass http://127.0.0.1:17480;`) or strip the prefix
+(`proxy_pass http://127.0.0.1:17480/;`): the console accepts both, and every link, script, API call, live stream, redirect and cookie it
+sends names `/drishti/...` (cookies get `Path=/drishti`, so they never reach the host's other applications).
+
+```nginx
+    location /drishti/ {
+        proxy_pass         http://127.0.0.1:17480;     # the path as it is; the console takes /drishti off itself
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_set_header   Connection        "";
+        proxy_buffering    off;
+        proxy_read_timeout 1h;
+    }
+```
+
+Check: `curl -sI https://intranet.bank.example/drishti/login | head -1` shows `HTTP/2 200`, and the page source has
+`<meta name="drishti-base" content="/drishti">`. The console still answers on its own port without the prefix (`http://host:17480/login`), so the
+health checks need no change.
+
 - **Cookies** are `Secure` by default: keep `DRISHTI_SECURE_COOKIE` unset once TLS is in place. The session cookie is `HttpOnly`,
   `SameSite=Lax` and holds only a signed reference to a session the server keeps.
 - **Cross-site requests.** The console refuses a `POST`, `PUT`, `PATCH` or `DELETE` whose `Origin` (or `Referer`) is not the console itself
@@ -2014,6 +2037,21 @@ curl -s localhost:18480/api/v1/admin/health | python3 -m json.tool | head -40
   fails, [14.3](#143-direct-memory-and-the-diagnostics-of-a-long-run)), mapped files (id maps, VaR hot files: outside the heap, resident all the same),
   open files against `ulimit -n`, and descriptors open on deleted files (their disk is not given back until they close). A figure that only rises
   over days is a leak: note it with the time and take `jcmd <pid> VM.native_memory summary`.
+
+#### Stream connectors without their broker: WAITING, not DOWN
+
+A stream connector (the `kafka`, `activemq` and `rabbitmq` plugins, the source-system `trade-<system>-live` connectors, the banking
+`var-pv-stream`) that is enabled but cannot reach its broker is not failing: the lake snapshot is served and only the live updates wait.
+
+| State on Admin → Connectors / Health | Meaning | Counts as |
+|---|---|---|
+| **waiting for broker (live updates paused)**, health `WAITING: broker not reachable at host:port - live updates paused; retrying` | enabled, settings present, the broker's port does not answer (or answered and was lost) | OK: the connector is up, overall health stays `OK`, readiness `UP`, the module and server start; blotters and record pages serve the snapshot and show the banner *live updates paused* |
+| **not configured** | enabled but the setting it cannot run without is missing (`topics`, `destinations`, `queues`) | OK: idle, never an error |
+| **down** | the broker answers but the connector fails for another reason (a refused log-in, a TLS fault) | a fault, listed and retried |
+
+The log carries one INFO line when it starts waiting (`broker not reachable at host:port - live updates paused; retrying until it is`) and
+one when it connects; the retries between are silent (back-off 1 s doubling to 30 s) and nothing is logged at WARN or ERROR. When the broker
+appears the next look finds it and the connector connects, with no restart. Sweeps and drills read `WAITING` as OK.
 
 ### 13.3 The live numbers
 

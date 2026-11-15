@@ -497,7 +497,7 @@ public final class ConnectorManager {
             for (Pack p : packs.packs()) {
                 if (p.name().equals(pn) && p.connectorTemplates().containsKey(name)) {
                     return Optional.of(new Template(p.name(), com.ash.drishti.packs.PackEnvironmentPostProcessor.officialReaders(env)
-                            .apply(p.connectorTemplates().get(name))));                // the readers of official results follow their format
+                            .apply(com.ash.drishti.packs.ConnectorLayers.packBound(p.name(), p.connectorTemplates().get(name)))));                // the readers of official results follow their format
                 }
             }
         }
@@ -734,8 +734,14 @@ public final class ConnectorManager {
         if ("FAILED".equals(state)) {
             return new String[] {"down", retrying ? "failed, retrying" : "failed"};
         }
+        if ("IDLE".equals(state)) {
+            return new String[] {"ok", "not configured"};         // an optional feature nobody set up: calm, never a fault
+        }
         if (!"RUNNING".equals(state)) {
             return new String[] {"warn", "NOT_LOADED".equals(state) ? "not started" : String.valueOf(state).toLowerCase(java.util.Locale.ROOT)};
+        }
+        if (com.ash.drishti.api.BrokerWaiting.is(health)) {
+            return new String[] {"ok", "waiting for broker (live updates paused)"};   // calm: the snapshot is served, only the live updates wait
         }
         if (health != null && health.startsWith("DOWN") || retrying) {
             return new String[] {"down", retrying ? "down, retrying" : "down"};
@@ -1012,7 +1018,7 @@ public final class ConnectorManager {
                     out.add(new Problem("error", where, "one of " + t.substring(5).replace("|", ", ")));
                 }
             }
-            if (spec != null && spec.declared() && s == null) {
+            if (spec != null && spec.declared() && s == null && !com.ash.drishti.common.NamedResources.REFERENCES.containsKey(key)) {   // broker:, db: name a section
                 out.add(new Problem("warning", where, "'" + key + "' is not a setting the " + d.plugin() + " plugin reads (a typo?)"));
             }
         }
@@ -1023,9 +1029,12 @@ public final class ConnectorManager {
                 out.add(new Problem("error", "settings.proxy", String.valueOf(bad)));
             }
         }
+        boolean named = com.ash.drishti.common.NamedResources.REFERENCES.keySet().stream().anyMatch(k -> d.settings().get(k) != null
+                && !d.settings().get(k).isBlank());                // a named broker's or database's section supplies the connection
         if (on && spec != null && spec.declared()) {
             for (SettingSpec s : spec.settings()) {
                 if (s.required() && !s.name().endsWith(".*") && s.defaultValue() == null
+                        && !(named && com.ash.drishti.common.NamedResources.KNOWN.contains(s.name()))
                         && (d.settings().get(s.name()) == null || d.settings().get(s.name()).isBlank())) {
                     out.add(new Problem("error", "settings." + s.name(), "required by the " + d.plugin() + " plugin"));
                 }
@@ -1445,6 +1454,14 @@ public final class ConnectorManager {
 
     /** Starts a throwaway instance on the text's settings, reads from it, and reports; nothing running is touched. */
     public Map<String, Object> test(String name, String text) {
+        return test(name, text, List.of());
+    }
+
+    /**
+     * {@link #test(String, String)} with the kinds the person means to bind it to ({@code asked}: the connector designer's Kinds, before a
+     * binding exists): a file names no kind (config/bindings.yaml does), so without them a new connector's test could list nothing it holds.
+     */
+    public Map<String, Object> test(String name, String text, List<String> asked) {
         ConnectorFiles.Definition d;
         try {
             d = files.parse(name, text);
@@ -1466,8 +1483,8 @@ public final class ConnectorManager {
         }
         Map<String, String> read;
         try {
-            read = ConnectorSecrets.resolve(resolved);
-        } catch (IllegalStateException x) {
+            read = ConnectorSecrets.resolve(com.ash.drishti.common.NamedResources.connector(name, d.plugin(), resolved));   // as it runs
+        } catch (IllegalArgumentException | IllegalStateException x) {
             return failure(name, x.getMessage(), d.plugin());
         }
         List<String> secrets = new ArrayList<>();
@@ -1481,7 +1498,8 @@ public final class ConnectorManager {
             @SuppressWarnings("unchecked")
             List<String> ks = (List<String>) u.get("kinds");
             return ks.stream();
-        }), bindings.kindsOf(name).stream()).distinct().toList() : d.kinds();
+        }), java.util.stream.Stream.concat(bindings.kindsOf(name).stream(), (asked == null ? List.<String>of() : asked).stream()))
+                .filter(k -> k != null && !k.isBlank()).distinct().toList() : d.kinds();
         ConnectionProbe.Result r = probe.probe(d.plugin(), kinds, read, probeDates, probeTimeoutMs);
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("connector", name);
@@ -1547,7 +1565,7 @@ public final class ConnectorManager {
                 for (Map.Entry<String, String> e : d.settings().entrySet()) {
                     resolved.put(e.getKey(), env.resolveRequiredPlaceholders(e.getValue()));
                 }
-                read.putAll(ConnectorSecrets.resolve(resolved));
+                read.putAll(ConnectorSecrets.resolve(com.ash.drishti.common.NamedResources.connector(name, d.plugin(), resolved)));
             } catch (IllegalArgumentException | IllegalStateException x) {
                 problem = x.getMessage();
             }

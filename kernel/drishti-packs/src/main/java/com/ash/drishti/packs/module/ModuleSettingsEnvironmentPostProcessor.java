@@ -49,7 +49,7 @@ public final class ModuleSettingsEnvironmentPostProcessor implements Environment
 
     @Override
     public int getOrder() {
-        return Ordered.HIGHEST_PRECEDENCE + 12;
+        return Ordered.HIGHEST_PRECEDENCE + 13;   // after the edition (+ 12), which is after the launch roots
     }
 
     @Override
@@ -80,7 +80,7 @@ public final class ModuleSettingsEnvironmentPostProcessor implements Environment
     /** The settings schema of every module whose manifest declares one, by module id (the manifests folder, then the packaged modules). */
     public static Map<String, ModuleSettingsSchema> schemas(org.springframework.core.env.Environment env) {
         Map<String, ModuleSettingsSchema> out = new LinkedHashMap<>();
-        Path dir = Path.of(env.getProperty(Distributions.MODULES_DIR, Distributions.DEFAULT_MODULES_DIR));
+        Path dir = com.ash.drishti.api.Roots.anchored(env.getProperty("drishti.modules.home", env.getProperty(Distributions.MODULES_DIR, com.ash.drishti.api.Roots.modules())));
         if (Files.isDirectory(dir)) {
             try (DirectoryStream<Path> modules = Files.newDirectoryStream(dir, Files::isDirectory)) {
                 for (Path m : modules) {

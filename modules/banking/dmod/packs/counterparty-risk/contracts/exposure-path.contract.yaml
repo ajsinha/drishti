@@ -95,7 +95,10 @@ fields:
   enum:
   - CALYPSO
   - ENDUR
+  - ICI
   - MUREX
+  - SWAPONE
+  - WSS
 - name: NETTING_SET
   type: id
   presence: required
@@ -263,7 +266,10 @@ validation:
   values:
   - CALYPSO
   - ENDUR
+  - ICI
   - MUREX
+  - SWAPONE
+  - WSS
 - rule: link
   field: NETTING_SET
   kind: netting-set

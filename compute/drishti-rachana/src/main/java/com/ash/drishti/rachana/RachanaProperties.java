@@ -54,7 +54,7 @@ public record RachanaProperties(
 
     @ConstructorBinding                                  // the canonical constructor binds the settings (there is a shorter one too)
     public RachanaProperties {
-        dirs = dirs == null ? List.of("./sutras") : List.copyOf(dirs);
+        dirs = dirs == null ? List.of(com.ash.drishti.api.Roots.home("sutras")) : List.copyOf(dirs);
         hotReload = hotReload == null ? Boolean.TRUE : hotReload;
         reloadDebounce = reloadDebounce == null ? Duration.ofMillis(250) : reloadDebounce;
         expressionCacheSize = expressionCacheSize == null ? 10_000L : expressionCacheSize;

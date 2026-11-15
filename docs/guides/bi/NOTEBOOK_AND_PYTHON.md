@@ -818,6 +818,8 @@ author code runs to profile.
 The commands run over REST as the token's user (`--server`, `--token-file`, `--user` as for every REST command;
 [CLI_REFERENCE.md](../CLI_REFERENCE.md)):
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```
 drishti.py bi sql "SELECT ..." --model M [--explain] [--format table|json|csv|jsonl]   a Notebook SQL cell's statement, from the terminal
 drishti.py bi transform input FILE.dataset.yaml [--input NAME] [--limit N] [--as-of DATE] [--rows N] [--json]   each input as you: rows, masked columns, a profile

@@ -62,7 +62,7 @@ final class SchemaRegistryClient {
     private final Map<Integer, Registered> cache = new ConcurrentHashMap<>();
 
     SchemaRegistryClient(Map<String, String> settings) {
-        this(settings, System::getenv);
+        this(settings, com.ash.drishti.settingsfile.Placeholders::process);
     }
 
     SchemaRegistryClient(Map<String, String> settings, Function<String, String> env) {

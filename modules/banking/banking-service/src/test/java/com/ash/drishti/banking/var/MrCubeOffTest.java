@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.banking.var;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -71,7 +72,7 @@ class MrCubeOffTest {
 
     @DynamicPropertySource
     static void lake(DynamicPropertyRegistry r) throws Exception {
-        Path lake = Files.createDirectories(Path.of("target", "mr-cube-off-lake-" + System.nanoTime())).toAbsolutePath();
+        Path lake = Files.createDirectories(Path.of(TestRoots.module(), "target", "mr-cube-off-lake-"+ System.nanoTime())).toAbsolutePath();
         VarLakeFixture.write(lake);
         r.add("drishti.sources.connectors.risk-lake.settings.root", lake::toString);
         r.add("drishti.var.official.root", lake::toString);

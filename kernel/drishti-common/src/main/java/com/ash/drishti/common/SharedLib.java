@@ -88,13 +88,9 @@ public final class SharedLib {
             p = System.getenv("DRISHTI_LIB_PATH");
         }
         if (p == null || p.isBlank()) {
-            String data = System.getProperty("drishti.data.dir");
-            if (data == null || data.isBlank()) {
-                data = System.getenv("DRISHTI_DATA_DIR");
-            }
-            return Path.of(data == null || data.isBlank() ? "./data" : data, "lib").toAbsolutePath().normalize();
+            return Path.of(com.ash.drishti.api.Roots.data("lib"));   // the data folder's, absolute
         }
-        return Path.of(p).toAbsolutePath().normalize();
+        return com.ash.drishti.api.Roots.anchored(p.strip());         // a relative value: under the install folder, never the working folder
     }
 
     /** The one lib of this process, read at first use from {@link #folder()}. */

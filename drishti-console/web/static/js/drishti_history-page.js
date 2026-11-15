@@ -60,7 +60,7 @@
 
   function open() {
     var r = selectedRow();
-    if (r && r.getAttribute('data-href')) { window.location.href = r.getAttribute('data-href'); }
+    if (r && r.getAttribute('data-href')) { window.location.href = drishti_url(r.getAttribute('data-href')); }
   }
 
   // changes only: the days on which something moved; the header says "7 of 30 days"
@@ -76,11 +76,11 @@
     }
     var url = new URL(window.location.href);
     if (on) { url.searchParams.set('only', '1'); } else { url.searchParams.delete('only'); }
-    history.replaceState(null, '', url.toString());
+    history.replaceState(null, '', drishti_url(url.toString()));
     root.querySelectorAll('[data-hx-export]').forEach(function (a) {
       var u = new URL(a.href, window.location.href);
       if (on) { u.searchParams.set('only', '1'); } else { u.searchParams.delete('only'); }
-      a.href = u.pathname + u.search;
+      a.href = drishti_url(u.pathname + u.search);
     });
     var keep = selectedRow(), at = keep ? rows().indexOf(keep) : -1;   // the selected day stays selected when it is still shown
     select(at < 0 ? 0 : at, false);
@@ -132,12 +132,12 @@
         else if (m) { from = back(+m[1], m[2] === 'Y' ? 'year' : 'month'); }
       }
       if (a.classList.contains('on')) { on = id; }
-      return { id: id, label: id, from: from, to: end, href: a.href };
+      return { id: id, label: id, from: from, to: end, href: drishti_url(a.href) };
     }).filter(function (p) { return p.from && p.to; });
     var picker = new I.DateRangePicker(host, { presets: presets, label: 'Range', value: { from: host.getAttribute('data-from') || null, to: host.getAttribute('data-to') || null, preset: on } });
     picker.on('change', function (r) {
       var p = presets.filter(function (x) { return x.id === r.preset; })[0];
-      if (p) { window.location.href = p.href; return; }
+      if (p) { window.location.href = drishti_url(p.href); return; }
       var q = new URLSearchParams(window.location.search);
       ['days', 'range', 'from', 'to'].forEach(function (k) { q.delete(k); });
       if (r.from) { q.set('from', r.from); }
@@ -186,7 +186,7 @@
 
   function rangeButton(label) {
     var a = root.querySelector('[data-hx-range-btn="' + label + '"]');
-    if (a) { window.location.href = a.href; }
+    if (a) { window.location.href = drishti_url(a.href); }
   }
 
   if (box) {
@@ -225,14 +225,14 @@
   hx('open', ['Enter'], 'Open the day\'s view, as it was', function () { open(); });
   if (chartBtn) { hx('chart', ['Shift+K'], 'Chart these days (any column)', function () { chartDays(); }); }
   if (onlyBtn) { hx('only', ['C', 'Shift+C'], 'Changes only, on and off', function () { setOnly(!root.classList.contains('hx-only')); }); }
-  hx('diff', ['D', 'Shift+D'], 'Diff: what changed, day by day', function () { window.location.href = root.querySelector('[data-hx-key="d"]').href; });
+  hx('diff', ['D', 'Shift+D'], 'Diff: what changed, day by day', function () { window.location.href = drishti_url(root.querySelector('[data-hx-key="d"]').href); });
   hx('export', ['E', 'Shift+E'], 'Export: CSV, Excel, JSON', function () { root.querySelector('[data-hx-key="e"]').click(); });
   hx('range', ['R', 'Shift+R'], 'Type a range (30, 3M, YTD, FROM …)', function () { if (!rinput) { return false; } rinput.focus(); rinput.select(); });
   if (market) { hx('range.months', ['1', '3', '6'], '1M, 3M, 6M', function (e, chord) { rangeButton(chord + 'M'); }); }
   hx('range.year', ['Y', 'Shift+Y'], '1Y', function () { rangeButton('1Y'); });
   hx('range.ytd', ['T', 'Shift+T'], 'YTD', function () { rangeButton('YTD'); });
   hx('field', ['P', 'Shift+P'], 'Next chart field', function () { if (series.length < 2) { return false; } field = (field + 1) % series.length; draw(); });
-  hx('today', ['Escape'], 'Leave the column, else today\'s view', function () { if (col >= 0) { col = -1; markColumn(); } else if (today) { window.location.href = today; } else { return false; } });
+  hx('today', ['Escape'], 'Leave the column, else today\'s view', function () { if (col >= 0) { col = -1; markColumn(); } else if (today) { window.location.href = drishti_url(today); } else { return false; } });
   hx('share', ['Alt+S', 'Alt+Shift+S'], 'Copy a link to these rows', function () { share(); });
 
   // ---- the market shape: the chart (drishti-chart: its card, its tools, the theme's colours; the crosshair follows the selected row) ----

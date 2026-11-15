@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.common.JsonCodec;
@@ -197,7 +198,7 @@ class SutraCliHelpTest {
 
     @Test
     void theRecordedCoverageFloorOfAShippedPackHolds() throws IOException {
-        Path pack = Path.of("..", "..", "modules", "banking", "dmod", "packs", "market-risk");
+        Path pack = Path.of(TestRoots.repo(), "modules", "banking", "dmod", "packs", "market-risk");
         assertThat(pack.resolve("tests/help-coverage.txt")).exists();
         Run r = run(shipped, "test", pack.toString());
         assertThat(r.err()).isEmpty();

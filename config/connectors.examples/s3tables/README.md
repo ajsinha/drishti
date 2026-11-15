@@ -66,6 +66,8 @@ partitioned by `identity(business_date)`, sorted by `id`; vectors as `list<doubl
 
 ## Examples
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 deploy/aws/s3-tables/s3-tables.sh create --bucket drishti-risk --namespace risk --role drishti-server
 export DRISHTI_S3TABLES_ARN=arn:aws:s3tables:eu-west-2:123456789012:bucket/drishti-risk

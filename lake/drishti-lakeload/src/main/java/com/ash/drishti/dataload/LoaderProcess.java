@@ -148,7 +148,7 @@ public final class LoaderProcess implements LoadRunner {
                 return;
             }
         }
-        com.ash.drishti.lakeconfig.Lake lake = com.ash.drishti.lakeconfig.Lakes.readFile(file, System::getenv);
+        com.ash.drishti.lakeconfig.Lake lake = com.ash.drishti.lakeconfig.Lakes.readFile(file, com.ash.drishti.settingsfile.Placeholders::process);
         com.ash.drishti.lakeconfig.LakeTable entry = packEntry(r);
         // the table's entry already there; or, with no connector naming one table, any table of the kind (the lake file is the truth)
         if (lake.tables().containsKey(entry.name())
@@ -209,6 +209,14 @@ public final class LoaderProcess implements LoadRunner {
             cmd.add("-Djava.io.tmpdir=" + tmp.toAbsolutePath());
             cmd.add("-Ddrishti.tmp-dir=" + tmp.toAbsolutePath());
             cmd.add("-D" + com.ash.drishti.lakeconfig.Lakes.PROPERTY + "=" + com.ash.drishti.lakeconfig.Lakes.dir().toAbsolutePath());
+            // the launch roots this process resolved (LaunchRoots, the settings file): the loader takes no folder from its working folder.
+            // The data folder is not among them: the lake files' settings (Lakes.environment(), below) give it, as this process reads it
+            for (String key : List.of("drishti.home", "drishti.config.dir", "drishti.modules.home", "drishti.settings.file")) {
+                String v = System.getProperty(key);
+                if (v != null && !v.isBlank()) {
+                    cmd.add("-D" + key + "=" + v);
+                }
+            }
             cmd.addAll(launch);
             cmd.add("--config");
             cmd.add(config.toAbsolutePath().toString());

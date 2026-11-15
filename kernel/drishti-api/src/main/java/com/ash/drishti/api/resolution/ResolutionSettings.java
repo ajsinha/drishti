@@ -53,10 +53,10 @@ public record ResolutionSettings(Path siteDir, Path installedDir, Path kernelDir
 
     /** The settings of a server or a tool, from its resolved properties (null when not set). */
     public static ResolutionSettings of(Function<String, String> property) {
-        String data = or(property.apply("drishti.data.dir"), "./data");
+        String data = or(property.apply("drishti.data.dir"), com.ash.drishti.api.Roots.data());
         String newSite = property.apply("drishti.packs.site-dir");
-        String site = or(newSite, or(property.apply("drishti.packs.dir"), "./config/packs"));
-        String home = or(property.apply("drishti.modules.home"), or(property.apply("drishti.module-manifests-dir"), "./modules"));
+        String site = or(newSite, or(property.apply("drishti.packs.dir"), com.ash.drishti.api.Roots.config("packs")));
+        String home = or(property.apply("drishti.modules.home"), or(property.apply("drishti.module-manifests-dir"), com.ash.drishti.api.Roots.modules()));
         String store = or(property.apply("drishti.modules.path"), or(property.apply("drishti.module-deploy.dir"), data + "/modules"));
         return new ResolutionSettings(abs(site), abs(or(property.apply("drishti.packs.installed-dir"), data + "/packs/installed")),
                 abs(or(property.apply("drishti.kernel.packs-dir"), site + "/core")), abs(home), abs(store),

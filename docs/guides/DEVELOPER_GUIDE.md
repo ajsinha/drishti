@@ -242,7 +242,7 @@ The tool is built with the runtime: `kernel/drishti-module-runtime/target/drisht
 `DRISHTI_MODULE_TOOL` points the command line at another copy). `pack` takes a folder in the `.dmod` layout (`module.yaml` at its root);
 the jar named in `module.yaml`'s `java.jars` is either already under `java/` or given with `--jar`. `check` takes a `.dmod` or a folder
 (packed first) and `--project <dir>` (the sources C10 reads) and `--cycles <n>` (C15); exit 0 when every check passed, 1 when one failed or
-the module was refused, 2 for usage. `inspect` prints the manifest, the parts and the hash list's verdict. A Gradle build, for example:
+the module was refused, 2 for usage. `inspect` prints the manifest, the parts and the hash list's verdict. A Gradle build, for example. Run these from your module project's folder (the one with `src/dmod/`).
 
 ```bash
 gradle jar                                          # build/libs/greet.jar, compiled against drishti-kernel-api (compileOnly)
@@ -258,7 +258,7 @@ For Maven the SDK is three more artifacts of this repository, `com.ash.drishti:*
 | `drishti-module-parent` | the parent the project inherits: Java 21; the kernel API and Spring as `provided` (the kernel supplies them; never inside a `.dmod`); JUnit and AssertJ; the plugin's executions |
 | `drishti-module-maven-plugin` | a thin wrapper over the tool's classes: `drishti:validate` (validate phase: the manifest reads, its id and version are the pom's), `drishti:assemble` (package: `src/dmod/` plus the project's jar under `java/`, packed by the module runtime's packer into `target/dmod/<id>-<version>.dmod` with its hash list and `.sha256`), `drishti:conformance` (verify: the checks C1–C15) |
 
-**Quickstart with Maven: archetype → build → load.**
+**Quickstart with Maven: archetype → build → load.** Run these from the Drishti folder (the repository root, or the install folder of a release).
 
 ```bash
 ./mvnw -q install -pl .,drishti-sdk/drishti-module-maven-plugin,drishti-sdk/drishti-module-archetype,drishti-sdk/drishti-module-parent -am -DskipTests
@@ -278,7 +278,7 @@ does not name is placed on it, and Health notes *single node: placed here*). Aut
 deployed by plan → apply ([CLUSTER_GUIDE.md](CLUSTER_GUIDE.md)). **Production loads only verified `.dmod` packages.**
 
 **Edit → reload, in development mode.** While you work on a module, the kernel can load its build output without packing a `.dmod` and
-reload it whenever it changes, as Tomcat runs an unpacked web application:
+reload it whenever it changes, as Tomcat runs an unpacked web application. The server line runs from the Drishti folder; the `mvn` line runs from your module project's folder (the one with `src/dmod/`).
 
 ```bash
 # once: a development server (single node, never the prod or production profile) pointed at the module's exploded build output
@@ -674,6 +674,10 @@ with `--no-push`), the working tree is clean (`drill: commit your changes first`
 - **One Java 21 build of the working tree** (`gate-java.log`; `JAVA21_HOME`): `./mvnw -q -o clean package spotless:check -P api-docs -T 1C`,
   with Error Prone, Javadoc with doclint, Spotless and the Java 21 bytecode rule, running only the rule tests (`drishti-it`,
   `TokenScopeGuardTest`, `ArrowAnswersTest`). Its jar is the one stage 2 starts.
+
+Before it starts, with no server running from the checkout, the drill moves a server's state left in the data folder by an earlier
+run (`modules/installed/`, `identity/`, `net/`, `compute/`, `fstore/`, `cache/`) aside to `<data dir>/tmp/stale-<stamp>/` and lists it,
+so every drill starts from the same data folder; nothing is deleted.
 
 **Stage 2** (the long runs side by side, each with its own log in `<data dir>/drill/`; all must pass):
 
@@ -3611,7 +3615,7 @@ one worked example. Each step links the section that holds the detail instead of
 A module is an industry's knowledge in one `.dmod`: its kinds and their contracts, computations, Rachana functions, a REST API, pages
 and Help ([HOW_IT_FITS.md section 3](../../HOW_IT_FITS.md#3-modules)). It never holds a connector, a host or a credential (C9).
 
-**1. Start a project.** Either the archetype (Maven) or a plain folder:
+**1. Start a project.** Either the archetype (Maven) or a plain folder. Run this in the folder where the project should be created:
 
 ```bash
 mvn -B archetype:generate -DarchetypeGroupId=com.ash.drishti -DarchetypeArtifactId=drishti-module-archetype \
@@ -3665,7 +3669,7 @@ is in [section 1.7](#17-what-a-module-can-contribute).
 | a page | `console/plugin.yaml` (`format: 2`, `routes:`, `menus:`, `home:`, `ai:`) and a template extending `kernel/page.html`: [section 1.7, the console part](#17-a-modules-console-part) | `console/pages/hello.html` |
 | Help | `docs/README.md` with front matter (`title`, `domain`, `summary`), `docs/help.yaml` (`sections:` of `pages:` with `file:`), a guide and a tutorial (C7); shown as `/help/section/module-<id>` | `docs/` |
 
-**4. Build it, one of three ways** (one packer, one set of checks; [section 1.6](#16-the-module-sdk)):
+**4. Build it, one of three ways** (one packer, one set of checks; [section 1.6](#16-the-module-sdk)). Run these from your module project's folder (the one with `src/dmod/`); the Python line needs the path to the Drishti folder's `tools/drishti.py`.
 
 ```bash
 mvn verify                                                              # Maven: target/dmod/freight-0.1.0.dmod, then C1 ... C15

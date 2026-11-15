@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -53,7 +54,7 @@ import org.springframework.test.web.servlet.ResultActions;
 class ExamplePreviewTest {
 
     private static final ObjectMapper JSON = new ObjectMapper();
-    private static final Path EXAMPLES = Path.of("..", "..", "docs", "guides", "examples");
+    private static final Path EXAMPLES = Path.of(TestRoots.repo(), "docs", "guides", "examples");
 
     @Autowired MockMvc mvc;
     @Autowired TokenVerifier tokens;

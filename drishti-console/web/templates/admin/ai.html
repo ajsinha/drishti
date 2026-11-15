@@ -44,7 +44,7 @@
     <tbody>{% for s in d.mcpServers %}<tr data-mcp="{{ s.name }}">
       <td class="mono">{{ s.name }}</td><td>{{ s.transport }}</td><td><b>{{ s.health.status }}</b> <span class="text-muted-d">{{ s.health.detail }}</span>{{ retry_note(s.retry) }}</td>
       <td class="mono">{{ s.url or '—' }}</td>
-      <td>{% if s.enabled %}<a href="/admin/ai?tools={{ s.name | urlencode }}&where={{ where }}">Show tools</a>{% endif %}{% if s.allowedTools %} · only {{ s.allowedTools | join(', ') }}{% endif %}</td></tr>
+      <td>{% if s.enabled %}<a href="{{ BASE }}/admin/ai?tools={{ s.name | urlencode }}&where={{ where }}">Show tools</a>{% endif %}{% if s.allowedTools %} · only {{ s.allowedTools | join(', ') }}{% endif %}</td></tr>
     {% else %}<tr><td colspan="5">No MCP servers.</td></tr>{% endfor %}</tbody>
   </table></div>
   {% for f, why in (d.mcpFileErrors or {}).items() %}<p class="adm-warn" role="alert"><span class="mono">{{ f }}</span>: {{ why }}</p>{% endfor %}
@@ -71,4 +71,4 @@
 </div>
 {% endblock %}
 {% block footer %}{% include "_footer.html" %}{% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_admin-retry.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_admin-ai-test.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_admin-retry.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_admin-ai-test.js?v={{ ASSET_V }}"></script>{% endblock %}

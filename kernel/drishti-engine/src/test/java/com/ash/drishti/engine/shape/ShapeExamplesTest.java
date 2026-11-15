@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.engine.shape;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -29,7 +30,7 @@ import org.junit.jupiter.api.Test;
 /** The JSON of each documented example infers the roles its panels need, and validates against its own shape. */
 class ShapeExamplesTest {
 
-    private static final Path DIR = Path.of("..", "..", "docs", "guides", "examples");
+    private static final Path DIR = Path.of(TestRoots.repo(), "docs", "guides", "examples");
 
     private static Shape shape(String name) throws IOException {
         JsonNode doc = ShapeTestSupport.JSON.readTree(Files.readString(DIR.resolve(name + ".json")));

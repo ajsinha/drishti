@@ -169,6 +169,8 @@ read the lake as it is ([section 14](../guides/DATA_LAKE_GUIDE.md#14-delta-proto
 
 **The command line.**
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 python3 tools/drishti.py lake show
 ```

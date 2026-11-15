@@ -106,6 +106,8 @@ You should see its summary (plugin, where it is defined, whether it is switched 
 
 Everything the page does has a command. First, what the `file` plugin reads:
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```text
 $ drishti-console/.venv/bin/python tools/drishti.py connector plugins file
 plugin file

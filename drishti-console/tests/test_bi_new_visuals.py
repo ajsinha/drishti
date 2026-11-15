@@ -74,7 +74,8 @@ def test_every_new_type_is_in_the_catalogue_of_the_designer_and_has_an_icon():
 
 
 def run(script: str):
-    prelude = ("global.window = { drishtiBi: { h: () => ({}), visuals: {}, fmt: (v) => String(v), compact: (v) => String(v), label: (x) => x, clear: (x) => x, column: () => null } };"
+    prelude = ("global.drishti_url = (u) => u;"   # drishti-core's helper (the console at /): the page loads it first
+               "global.window = { drishtiBi: { h: () => ({}), visuals: {}, fmt: (v) => String(v), compact: (v) => String(v), label: (x) => x, clear: (x) => x, column: () => null } };"
                "for (const f of ['drishti_bi-visuals.js', 'drishti_bi-grids.js']) { require(%s + '/' + f); } const V = window.drishtiBi.visuals;" % json.dumps(str(STATIC / "js")))
     out = subprocess.run([node, "-e", prelude + script], capture_output=True, text=True, timeout=30)
     assert out.returncode == 0, out.stderr

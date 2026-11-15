@@ -26,7 +26,7 @@
 #   tools/drill.sh --fix        a fix drill: the gate, then only the lanes that have not passed at an ancestor of HEAD or that the commits
 #                               since their last pass can reach (tools/drillkit/drill_lanes.py); a console lane that failed in some files
 #                               runs those and the files the fix reaches. Never skips a lane the commits touch. The release drill is --full.
-#   tools/drill.sh --lanes a,b  the gate, then these lanes only (browser, other, tools-a, tools-b, java21, java25, containers); verify only
+#   tools/drill.sh --lanes a,b  the gate, then these lanes only (browser, other, tools-a, tools-b, java21, java25, containers, anywhere); verify only
 #   DRILL_CONTAINERS=full|smoke the containers lane: full runs every Testcontainers test after the browser lane as well as the smoke test;
 #                               smoke never; default: full only when the diff since origin/main needs it (container_smoke.py full-needed)
 #   tools/drill.sh --affected [--base REF] [--dry-run]   only the Maven modules and test files the diff against REF (default origin/develop) can reach
@@ -43,7 +43,8 @@
 #    data samples, the packs' generated content, the Python API reference); the docs and help console tests; the repository rules
 #    (no hidden names); the quick file checks (every test marked static: they read files and start no server, console or browser,
 #    such as the Java launch guard, the asset names, the branding guard, the browser-test rules); and one Java 21 build of the working tree (-P api-docs: Javadoc with doclint; Spotless) that runs only the
-#    rule tests: every drishti-it test (architecture, file size, caches, locks, branding, licence, connections, schemas), the
+#    rule tests: every drishti-it test (architecture, file size, caches, locks, branding, licence, connections, schemas), the path guards
+#    (TestPathsGuardTest, LakePathsGuardTest, LaunchRootsTest; the static test_no_relative_paths and test_paths_guard run with the quick checks), the
 #    token-scope guard and the Arrow answer sample the console reads. That build makes the server jar every later stage uses.
 # 2. Everything else at once, each job with its own log under <data>/drill/:
 #    - the console suite in two lanes: "browser" (files that drive a browser or start a live stack on the scratch ports; as many
@@ -65,6 +66,9 @@
 #    - the containers lane: both images built and booted on the host network beside the browser lane (tools/drillkit/container_smoke.py:
 #      health, the VaR golden through the API, four console pages), and every Testcontainers test after the browser lane when the diff
 #      since the last release touches the Dockerfiles, the JDK, native code or a module with container tests.
+#    - the anywhere lane, a release blocker (tests/test_release_from_other_folder.py): the release unpacked into a scratch install folder and
+#      started with its bin/start-server.sh from another working folder over a small Java-loaded lake; VaR, explain, POS, TRD and FORMS answer
+#      across two restarts, every resolved path absolute under the install or data folder, a missing required root stops the start at once.
 #    Each lane that passes is recorded (<data>/drill/lanes-state.json) for the fix drill (--fix).
 #    A console test that fails is run once more on its own (file by file, every file, under a time limit of twice the file's
 #    recorded time); one that passes then is a flake, kept in <data>/drill/flakes.log; one listed in tools/drill-known.txt is
@@ -298,7 +302,7 @@ gate_java() {
   set -e
   local rules; rules=$(cd testing/drishti-it/src/test/java && find . -name '*Test.java' -printf '%f\n' | sed 's/\.java$//' | sort | paste -sd, -)
   JAVA_HOME="$JAVA21_HOME" ./mvnw -q -o clean package spotless:check -P api-docs -T "${DRILL_GATE_THREADS:-1C}" \
-    -Dtest="$rules,TokenScopeGuardTest,ArrowAnswersTest" -Dsurefire.failIfNoSpecifiedTests=false ${DRILL_MVN_ARGS:-}
+    -Dtest="$rules,TokenScopeGuardTest,ArrowAnswersTest,TestPathsGuardTest,LakePathsGuardTest,LaunchRootsTest" -Dsurefire.failIfNoSpecifiedTests=false ${DRILL_MVN_ARGS:-}
   compgen -G 'kernel/drishti-server/target/drishti-server-*-exec.jar' >/dev/null || { echo "drill: the gate's build made no server jar" >&2; return 1; }
   # a filter that matched nothing would pass in silence: every rule test must have its report
   local c missing=()
@@ -464,6 +468,15 @@ java21_docker() {   # every Testcontainers test: the copy is built at once, its 
   local wait=/dev/null; [[ -n ${RUN_LANE[browser]:-} ]] && wait="$LOGS/console-browser.secs"   # no browser lane in this drill: no wait
   COPY_THEN_WAIT="$wait" copy_verify java21-docker "$JAVA21_HOME" 21783,21784,21785 none -Dtest="$classes" -Dsurefire.failIfNoSpecifiedTests=false
 }
+# The anywhere lane (TEST_HARNESS.md, "The release from another folder"): a release blocker. The gate's server jar and a git archive of HEAD
+# unpacked as an install folder, started with bin/start-server.sh from a different working folder over a small Java-loaded lake: VaR, explain,
+# POS, TRD and FORMS answer, three starts in a row, every "resolved paths:" entry absolute and under the install or data folder, and a
+# missing required root stops the start at once with its message. About 5 minutes (the lake: cached per hash of its sources).
+ANYWHERE_TEST=drishti-console/tests/test_release_from_other_folder.py
+release_anywhere() {
+  timeout --kill-after=60 1500 "$PY" -m pytest -q -rfE -p no:cacheprovider "$ANYWHERE_TEST"
+}
+
 # The containers lane (TEST_HARNESS.md, "The container smoke test"): the images as shipped, built and booted on the host's network beside
 # the browser lane (no network change for Chromium): health, the VaR golden through the API, four console pages. Every Testcontainers test
 # too (java21_docker) only when the diff since the last release needs it (the Dockerfiles, the JDK, native code, a module with container
@@ -558,8 +571,24 @@ servers_here() {   # java processes whose working folder is this repository (a s
   done
   return 0
 }
-DATA_BEFORE=$(data_files)
 SERVERS_HERE=$(servers_here | tr '\n' ' ')
+# a server's state left in the data folder by an earlier run (a test or tool that wrote here, a stopped server) changes what the
+# tests see (installed modules, identities, cluster membership): with no server running from this folder, it is moved aside to
+# data/tmp/stale-<stamp>/ (nothing deleted) and listed, so every drill starts from the same data folder
+STALE_STATE=(modules/installed identity net compute fstore cache)
+stale_state_aside() {
+  [[ -d "$DATA" && -z "${SERVERS_HERE// /}" ]] || return 0
+  local d found=() to
+  for d in "${STALE_STATE[@]}"; do [[ -e "$DATA/$d" ]] && found+=("$d"); done
+  (( ${#found[@]} )) || return 0
+  to="$DATA/tmp/stale-$(date +%Y%m%d-%H%M%S)"
+  echo "drill: a server's state was left in $DATA/; moved aside to $to/ (look, then delete it):" >&2
+  for d in "${found[@]}"; do
+    mkdir -p "$to/$(dirname "$d")" && mv "$DATA/$d" "$to/$d" && echo "  $DATA/$d" >&2
+  done
+}
+stale_state_aside
+DATA_BEFORE=$(data_files)
 data_unchanged() {
   local changed; changed=$(comm -13 <(printf '%s\n' "$DATA_BEFORE") <(data_files) | cut -f1 | grep -v '^$' || true)
   [[ -z "$changed" ]] && return 0
@@ -610,7 +639,7 @@ if [[ "$MODE" == docs ]]; then
   stage_done "docs console tests | tool tests" $t
 else
   python3 "$PLAN" lanes --durations "$DURATIONS" --out "$LOGS/lanes" --browser-workers "$browser_workers" --other-workers "$other_workers" \
-    --exclude "${GATE_CONSOLE[@]}"
+    --exclude "${GATE_CONSOLE[@]}" "$ANYWHERE_TEST"
   mv "$LOGS/lanes/browser.txt" "$LOGS/lane-browser.txt"; mv "$LOGS/lanes/other.txt" "$LOGS/lane-other.txt"; rmdir "$LOGS/lanes"
   # the lanes: every one (a full drill), those named (--lanes), or those a fix drill needs (--fix: tools/drillkit/drill_lanes.py)
   STATE="$LOGS/lanes-state.json"; HEAD_SHA=$(git rev-parse HEAD); rm -f "$LOGS"/fix-*.txt "$LOGS"/failed-*.txt
@@ -624,7 +653,7 @@ else
   elif [[ -n $ONLY_LANES ]]; then
     for lane in ${ONLY_LANES//,/ }; do RUN_LANE[$lane]=1; done
   else
-    for lane in browser other tools-a tools-b java21 java25 containers; do RUN_LANE[$lane]=1; done
+    for lane in browser other tools-a tools-b java21 java25 containers anywhere; do RUN_LANE[$lane]=1; done
   fi
   stage2=()
   # the test servers' class-data archive, built once from the gate's jar (about 20 s; each server start then about a quarter faster);
@@ -643,6 +672,7 @@ else
   [[ -n ${RUN_LANE[tools-b]:-} ]] && { start_job tools-b niced 5 tools_lane_b; stage2+=(tools-b); }
   [[ -n ${RUN_LANE[java21]:-} ]] && { start_job java21 niced 5 java21_verify; stage2+=(java21); }
   [[ -n ${RUN_LANE[containers]:-} ]] && { start_job containers niced 5 containers; stage2+=(containers); }
+  [[ -n ${RUN_LANE[anywhere]:-} ]] && { start_job anywhere niced 5 release_anywhere; stage2+=(anywhere); }
   if [[ -n ${RUN_LANE[java25]:-} ]]; then
     if [[ -x "$JAVA25_HOME/bin/java" ]]; then start_job java25 niced 10 java25_verify; stage2+=(java25)
     else echo "drill: no JDK 25 at $JAVA25_HOME (set JAVA25_HOME): the forward-compatibility run is skipped" >&2; fi

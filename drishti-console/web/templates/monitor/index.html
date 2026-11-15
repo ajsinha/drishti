@@ -20,19 +20,19 @@
 {% block content %}
 <div class="adm">
   <h1>Monitors</h1>
-  <p class="text-muted-d">A monitor is a live watchlist: one row per entity, each showing its own key figures as they tick. Pair it with <a href="/alerts">alerts</a> to be told when a figure crosses a line.</p>
+  <p class="text-muted-d">A monitor is a live watchlist: one row per entity, each showing its own key figures as they tick. Pair it with <a href="{{ BASE }}/alerts">alerts</a> to be told when a figure crosses a line.</p>
   {% if missing %}<p class="pnl-err" role="alert">There is no monitor “{{ missing }}”.</p>{% endif %}
   <h2 class="ws-h">Yours</h2>
-  {% if mine %}<ul class="ws-list">{% for n in mine %}<li><a href="/m/{{ n | urlencode }}"><i class="bi bi-list-columns" aria-hidden="true"></i> {{ n }}</a></li>{% endfor %}</ul>
+  {% if mine %}<ul class="ws-list">{% for n in mine %}<li><a href="{{ BASE }}/m/{{ n | urlencode }}"><i class="bi bi-list-columns" aria-hidden="true"></i> {{ n }}</a></li>{% endfor %}</ul>
   {% else %}<p class="text-muted-d">None yet. Start from one below; it is saved to your account.</p>{% endif %}
   <h2 class="ws-h">Starters</h2>
   <div class="help-cards">
     {% for n, s in starters.items() %}
-    <a class="help-card" href="/m/{{ n | urlencode }}?template={{ n | urlencode }}">
+    <a class="help-card" href="{{ BASE }}/m/{{ n | urlencode }}?template={{ n | urlencode }}">
       <div class="hc-title"><span class="hc-ico"><i class="bi bi-list-columns" aria-hidden="true"></i></span><span>{{ n }} <span class="badge-kind">{{ s.pack }}</span></span></div>
       <p>{{ s.entities | map(attribute='id') | join(' · ') }}</p><span class="more">Open <i class="bi bi-arrow-right" aria-hidden="true"></i></span></a>
     {% else %}<p class="text-muted-d">The enabled packs offer no starter monitors.</p>{% endfor %}
   </div>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script>{% endblock %}

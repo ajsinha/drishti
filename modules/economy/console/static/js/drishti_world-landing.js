@@ -33,7 +33,7 @@
   var G20 = ["ARG", "AUS", "BRA", "CAN", "CHN", "FRA", "DEU", "IND", "IDN", "ITA", "JPN", "KOR", "MEX", "RUS", "SAU", "ZAF", "TUR", "GBR", "USA"];
 
   function get(path) {
-    return fetch(path, { headers: { Accept: "application/json" }, credentials: "same-origin" }).then(function (r) {
+    return fetch(drishti_url(path), { headers: { Accept: "application/json" }, credentials: "same-origin" }).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (b) {
         if (!r.ok) { var e = new Error((b && b.detail) || ("HTTP " + r.status)); e.code = b && b.code; throw e; }
         return b;
@@ -41,8 +41,8 @@
     });
   }
   var cache = {};
-  function search(q) { return cache[q] || (cache[q] = get("/api/home/search?q=" + encodeURIComponent(q))); }
-  function raw(kind, id) { return get("/api/raw/" + encodeURIComponent(kind) + "/" + encodeURIComponent(id)); }
+  function search(q) { return cache[q] || (cache[q] = get(drishti_url("/api/home/search?q=") + encodeURIComponent(q))); }
+  function raw(kind, id) { return get(drishti_url("/api/raw/") + encodeURIComponent(kind) + "/" + encodeURIComponent(id)); }
   function rows(answer) {
     return (answer && answer.rows || []).map(function (r) {
       var v = {}, vals = r.values || {};
@@ -66,8 +66,8 @@
   function count(v) { return F.formatNumber(num(v), { minus: "-" }); }
   function text(sel, v) { $$(sel).forEach(function (e) { e.textContent = v; }); }
   function el(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt !== undefined) e.textContent = txt; return e; }
-  function go(cmd) { return "/go?q=" + encodeURIComponent(cmd + " <GO>"); }
-  function link(href, label, cls) { var a = el("a", cls || "", label); a.href = href; return a; }
+  function go(cmd) { return drishti_url("/go?q=") + encodeURIComponent(cmd + " <GO>"); }
+  function link(href, label, cls) { var a = el("a", cls || "", label); a.href = drishti_url(href); return a; }
   function said(target, err) {
     if (!target) return;
     target.textContent = "";
@@ -118,7 +118,7 @@
       v.appendChild(tone(el("small", "", signed(m.CHANGE_PCT, "%")), m.CHANGE_PCT));
       text("[data-wl-mover-s]", (m.NAME || "") + " · " + (num(m.PRICE) === null ? "" : "price " + F.formatNumber(Number(m.PRICE), { decimals: 2, grouping: false })));
       var t = $("[data-wl-tile=mover]");
-      if (t) t.href = go("QUOTE " + (m.SYMBOL || m._id));
+      if (t) t.href = drishti_url(go("QUOTE " + (m.SYMBOL || m._id)));
     }).catch(function (e) { text("[data-wl-breadth]", "—"); text("[data-wl-breadth-s]", e.message); text("[data-wl-mover]", "—"); });
 
     // the capital markets' parts (companies, filings, funds) are drawn only while that module is on: absent, nothing is asked
@@ -232,7 +232,7 @@
         if (group === "g7" || group === "g20") {
           var members = group === "g7" ? G7 : G20;
           econ.filter(function (e) { return members.indexOf(e.ISO3) >= 0; }).forEach(function (e) {
-            tiles.push({ name: e.NAME, href: go("ECON " + e.ISO3), fig: e, n: 0, v: num(e[f]) });
+            tiles.push({ name: e.NAME, href: drishti_url(go("ECON " + e.ISO3)), fig: e, n: 0, v: num(e[f]) });
           });
         } else {
           var key = group === "region" ? "REGION_NAME" : "INCOME_NAME", by = {};
@@ -240,7 +240,7 @@
           Object.keys(by).forEach(function (name) {
             var g = groups.filter(function (x) { return x.NAME === name; })[0], list = by[name];
             var fig = { GROWTH: weighted(list, "GROWTH"), INFLATION: weighted(list, "INFLATION"), DEBT_TO_GDP: weighted(list, "DEBT_TO_GDP") };
-            tiles.push({ name: name, href: g ? go("ECG " + g._id) : go("ECON where " + key + " = '" + name.replace(/'/g, "") + "'"), fig: fig, n: list.length, v: fig[f] });
+            tiles.push({ name: name, href: drishti_url(g ? go("ECG " + g._id) : go("ECON where " + key + " = '" + name.replace(/'/g, "") + "'")), fig: fig, n: list.length, v: fig[f] });
           });
         }
         tiles.sort(function (a, b) { return (b.v === null ? -1e9 : b.v) - (a.v === null ? -1e9 : a.v); });
@@ -302,7 +302,7 @@
 
     // what changed: the latest of each source (the IMF outlook's vintage, the filings feed, the market snapshot, GLEIF)
     var changes = $("[data-wl-changes]"), lines = [];
-    function add(rank, when, what, href) { lines.push({ rank: rank, when: when, what: what, href: href }); }
+    function add(rank, when, what, href) { lines.push({ rank: rank, when: when, what: what, href: drishti_url(href) }); }
     Promise.all([
       raw("economic-forecast", "FCST-USA-WEO").then(function (f) { if ((f.data || {}).VINTAGE) add(1, "outlook", "IMF outlook: " + f.data.VINTAGE, go("FCST FCST-USA-WEO")); }).catch(function () {}),
       latestFilings().then(function (f) { add(2, f.date.slice(5), count(f.n) + " filings on " + f.date + " (" + count(f.total) + " in the feed)", go("EDGAR 8-K")); }).catch(function () {}),

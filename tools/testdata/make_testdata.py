@@ -82,6 +82,12 @@ def table_of(packs_dir: Path, pack: str, connector: str, kind: str) -> str:
     import yaml
     spec = yaml.safe_load((pack_dir(pack, packs_dir) / "pack.yaml").read_text(encoding="utf-8"))
     st = ((spec.get("connectors") or {}).get(connector) or {}).get("settings") or {}
+    if not st:                       # a connector a source module ships (trade-endur, one table per trading system): its template
+        for f in sorted((ROOT / "modules").glob("*/connectors/*.yaml")):
+            doc = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
+            if isinstance(doc, dict) and (doc.get("name") or f.stem) == connector:
+                st = doc.get("settings") or {}
+                break
     entries = st.get("lake-tables") or []
     entries = [x.strip() for x in entries.split(",")] if isinstance(entries, str) else [str(x).strip() for x in entries]
     tables = ((spec.get("lake") or {}).get("tables") or {})

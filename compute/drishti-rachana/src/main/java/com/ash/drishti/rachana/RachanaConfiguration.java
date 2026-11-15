@@ -48,8 +48,8 @@ public class RachanaConfiguration {
      */
     @Bean(destroyMethod = "close")
     public SutraRegistry sutraRegistry(RachanaProperties props, ElCompiler elCompiler,
-            @org.springframework.beans.factory.annotation.Value("${drishti.ui-kit.dir:./config/ui-kit}") String uiKitDir,
-            @org.springframework.beans.factory.annotation.Value("${drishti.packs.dir:./config/packs}") String packsDir) {
+            @org.springframework.beans.factory.annotation.Value("${drishti.ui-kit.dir:${drishti.config.dir}/ui-kit}") String uiKitDir,
+            @org.springframework.beans.factory.annotation.Value("${drishti.packs.dir:${drishti.config.dir}/packs}") String packsDir) {
         java.nio.file.Path kit = UiKitDir.resolve(uiKitDir, packsDir);         // else beside the packs folder (another working folder)
         if (!java.nio.file.Files.isDirectory(kit.resolve("fragments"))) {
             org.slf4j.LoggerFactory.getLogger(RachanaConfiguration.class).warn("the Drishti UI kit has no fragments folder at {} (drishti.ui-kit.dir, "
@@ -66,7 +66,7 @@ public class RachanaConfiguration {
     @Bean
     public UnderConstruction underConstruction(
             @org.springframework.beans.factory.annotation.Value("${drishti.under-construction.file:}") String file,
-            @org.springframework.beans.factory.annotation.Value("${drishti.packs.dir:./config/packs}") String packsDir) {
+            @org.springframework.beans.factory.annotation.Value("${drishti.packs.dir:${drishti.config.dir}/packs}") String packsDir) {
         if ("none".equals(file)) {
             return UnderConstruction.none();                          // nothing registered (a test of the pages as their Sutras say)
         }

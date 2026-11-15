@@ -42,6 +42,8 @@ def as_search(page: dict) -> dict:
                      "values": {c: value_at(doc, c) for c in cols}})
     data["rows"] = rows
     data["live"] = {"set": (page.get("set") or {}).get("id"), "live": bool(page.get("live")), "total": page.get("total"), "seq": page.get("seq")}
+    # the sources (a trading system's connector each) that answer from an earlier date than the one asked: shown per source system
+    data["asOfNotices"] = page.get("asOfNotices") or []
     return data
 
 

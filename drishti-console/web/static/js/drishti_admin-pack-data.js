@@ -23,7 +23,7 @@
   var box = document.querySelector('[data-pack-data]');
   if (!box) { return; }
   var pack = box.getAttribute('data-pack-data');
-  var base = '/admin/api/packs/' + encodeURIComponent(pack) + '/data';
+  var base = drishti_url('/admin/api/packs/') + encodeURIComponent(pack) + '/data';
   var targetsEl = box.querySelector('[data-data-targets]'), form = box.querySelector('[data-data-form]');
   var DF = window.Drishti.elements.inputs.formOf(box.querySelector('[data-data-fields]'));   // file, kind, date: drishti-inputs' Form (core/admin_forms.py)
   function chosen() { var f = box.querySelector('[data-data-file]'); return f && f.files && f.files[0]; }
@@ -52,14 +52,14 @@
     go.disabled = !chosen() || !k || !!k.problem || !!xhr;
   }
 
-  fetch(base, { headers: { Accept: 'application/json' } }).then(function (r) { return r.json().then(function (b) { return { ok: r.ok, body: b }; }); }).then(function (r) {
+  fetch(drishti_url(base), { headers: { Accept: 'application/json' } }).then(function (r) { return r.json().then(function (b) { return { ok: r.ok, body: b }; }); }).then(function (r) {
     while (targetsEl.firstChild) { targetsEl.removeChild(targetsEl.firstChild); }
     if (!r.ok) { targetsEl.appendChild(el('p', { class: 't-bad', text: (r.body && r.body.detail) || 'Could not read what this pack loads.' })); return; }
     kinds = r.body.kinds || [];
     maxMb = r.body.maxMb || maxMb;
     if (!kinds.length) {
       // a pack that reads its connectors (a Delta lake, a database) takes no files here: say where its data does come from, not what it lacks
-      var lakes = el('a', { href: '/admin/lakes', text: 'Load a file into a lake' });
+      var lakes = el('a', { href: drishti_url('/admin/lakes'), text: 'Load a file into a lake' });
       targetsEl.appendChild(el('p', { class: 'text-muted-d', 'data-no-ingest': '' }, [document.createTextNode('This pack reads its data from its connectors, so files are not loaded into it here. For a Delta lake it reads, use '),
         lakes, document.createTextNode(' (or drishti.py lake build); a pack made by Build → New pack from data files takes files on this page.')]));
       return;
@@ -109,8 +109,8 @@
         return el('li', {}, [el('span', { class: 'st' + (s.status === 'ok' ? ' st-ok' : s.status === 'failed' ? ' st-bad' : ''), text: s.name }), ' ' + s.detail]);
       })));
     }
-    out.appendChild(el('p', { class: 'adm-actions' }, [el('a', { class: 'fk', href: '/admin/loads/' + encodeURIComponent(b.pack), text: 'Data loads of ' + b.pack }),
-      ' ', el('a', { class: 'fk', href: '/search?q=' + encodeURIComponent(b.kind), text: 'Search ' + b.kind })]));
+    out.appendChild(el('p', { class: 'adm-actions' }, [el('a', { class: 'fk', href: drishti_url('/admin/loads/' + encodeURIComponent(b.pack)), text: 'Data loads of ' + b.pack }),
+      ' ', el('a', { class: 'fk', href: drishti_url('/search?q=' + encodeURIComponent(b.kind)), text: 'Search ' + b.kind })]));
     out.hidden = false;
   }
 

@@ -358,6 +358,43 @@ class SourceShapeTest {
         assertThat(all(r).keySet()).containsExactly("C1");
     }
 
+    /**
+     * A relative {@code map:} is anchored to the connector's own module folder (a template's {@code module-dir}), else the site's connectors
+     * folder, both absolute; never the working folder. A map in neither refuses the connector naming the absolute paths tried, so a source
+     * system never reads zero trades in silence (the relative-path audit).
+     */
+    @Test
+    void aMapIsReadFromTheModuleOrTheConnectorsFolderNeverTheWorkingFolder() throws Exception {
+        Path module = Files.createDirectories(tmp.resolve("modules/source-x/mappings"));
+        Files.writeString(module.resolve("x-trade.yaml"), "fields:\n  DEAL: TRADE_ID\n");
+        Path site = Files.createDirectories(tmp.resolve("site-connectors/mappings"));
+        Files.writeString(site.resolve("y-trade.yaml"), "fields:\n  DEAL: TRADE_ID\n");
+        List<Path> bases = List.of(tmp.resolve("site-connectors"));
+        assertThat(SourceShape.of("trade-x", settings("map", "mappings/x-trade.yaml", "module-dir", tmp.resolve("modules/source-x").toString()), bases)
+                .none()).isFalse();
+        assertThat(SourceShape.of("trade-y", settings("map", "mappings/y-trade.yaml"), bases).none()).as("a site file's map: the connectors folder")
+                .isFalse();
+        // a map that is only relative to the working folder (the test's: the module's folder) is not found, and the paths tried are named
+        Files.createDirectories(Path.of("mappings"));
+        Path cwd = Path.of("mappings/cwd-only-trade.yaml");
+        try {
+            Files.writeString(cwd, "fields:\n  DEAL: TRADE_ID\n");
+            assertThatThrownBy(() -> SourceShape.of("trade-z", settings("map", "mappings/cwd-only-trade.yaml"), List.of()))
+                    .hasMessageContaining("DRS-5034").hasMessageContaining("is not found; looked for nowhere");
+            assertThatThrownBy(() -> SourceShape.of("trade-z", settings("map", "mappings/cwd-only-trade.yaml", "module-dir",
+                    tmp.resolve("modules/source-x").toString()), bases))
+                    .hasMessageContaining(tmp.resolve("modules/source-x/mappings/cwd-only-trade.yaml").toString())
+                    .hasMessageContaining(tmp.resolve("site-connectors/mappings/cwd-only-trade.yaml").toString());
+        } finally {
+            Files.deleteIfExists(cwd);
+            try (var left = Files.list(Path.of("mappings"))) {
+                if (left.findAny().isEmpty()) {
+                    Files.delete(Path.of("mappings"));
+                }
+            }
+        }
+    }
+
     @Test
     void aPredicateOrAMapThatCannotBeUsedRefusesTheConnectorWithItsCode() throws Exception {
         Files.writeString(tmp.resolve("bad-cast.yaml"), "fields:\n  A: { to: B, cast: money }\n");

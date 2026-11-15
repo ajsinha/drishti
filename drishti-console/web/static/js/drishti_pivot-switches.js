@@ -71,7 +71,7 @@
   }
 
   function progressive(body, show) {
-    return fetch("/api/pivot/query/progressive", {method: "POST", credentials: "same-origin",
+    return fetch(drishti_url("/api/pivot/query/progressive"), {method: "POST", credentials: "same-origin",
       headers: {"Content-Type": "application/json", "Accept": "text/event-stream"}, body: JSON.stringify(body)}).then(function (r) {
       if (!r.ok || !r.body) { throw new Error("the progressive answer could not start (" + r.status + ")"); }
       var reader = r.body.getReader(), dec = new TextDecoder(), buf = "";

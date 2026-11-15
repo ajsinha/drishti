@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.banking.var;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 import static org.hamcrest.Matchers.containsString;
@@ -95,7 +96,7 @@ class VarApiTest {
 
     @DynamicPropertySource
     static void lake(DynamicPropertyRegistry r) throws Exception {
-        lake = Files.createDirectories(Path.of("target", "var-lake-" + System.nanoTime())).toAbsolutePath();
+        lake = Files.createDirectories(Path.of(TestRoots.module(), "target", "var-lake-"+ System.nanoTime())).toAbsolutePath();
         VarLakeFixture.write(lake, PREV, 1.0, false, false);
         VarLakeFixture.write(lake);
         r.add("drishti.sources.connectors.risk-lake.settings.root", lake::toString);
@@ -509,6 +510,19 @@ class VarApiTest {
     @Test
     @Order(8)
     void aDateThatIsNotOneRunIsAnsweredByTheDateBeforeAndADuplicateTradeIsRefused() throws Exception {
+        // a date with no P&L load is never answered silently from an older one (the daily-loads rehearsal): the date that answered and the
+        // warning, in the headline and the provenance; the figures are the earlier date's own
+        java.time.LocalDate unloaded = VarLakeFixture.DAY.plusDays(2);       // the business date (2026-10-02): no load yet
+        JsonNode carried = json.readTree(mvc.perform(get("/api/v1/risk/var/scope").param("scope", "BANK").param("asOf", unloaded.toString())
+                .header("Authorization", as("rita", "risk"))).andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+        assertThat(carried.get("businessDate").asText()).isEqualTo(VarLakeFixture.DAY.toString());
+        assertThat(carried.get("asOfNotice").asText()).isEqualTo("scenario P&L for " + unloaded + " not loaded — showing " + VarLakeFixture.DAY);
+        assertThat(carried.at("/provenance/warnings").toString()).contains("not loaded — showing " + VarLakeFixture.DAY);
+        JsonNode own = json.readTree(mvc.perform(get("/api/v1/risk/var/scope").param("scope", "BANK").param("asOf", VarLakeFixture.DAY.toString())
+                .header("Authorization", as("rita", "risk"))).andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+        assertThat(own.get("asOfNotice").isNull()).as("the date asked holds its P&L: no notice").isTrue();
+        assertThat(carried.get("var").asDouble()).as("the earlier date's own figure").isEqualTo(own.get("var").asDouble());
+
         java.time.LocalDate next = VarLakeFixture.DAY.plusDays(1);
         VarLakeFixture.write(lake, next, 1.0, true, false);
         Thread.sleep(1500);

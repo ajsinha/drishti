@@ -1155,6 +1155,8 @@ Spring Boot serves it at `/webjars/drishti-elements/1.0.0/…` with no configura
 
 Every library brings drishti-core, and the pack tool adds what a library requires, deepest first:
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 python3 tools/drishti.py elements pack --libs grid,chart --theme dark --out web/vendor/drishti
 # packed: drishti-core 1.1.0, drishti-grid 0.4.0, drishti-chart 0.1.0; theme terminal; engines vendor/echarts/echarts.min.js

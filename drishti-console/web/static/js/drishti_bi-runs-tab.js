@@ -39,7 +39,7 @@
       const u = new URL(window.location.href);
       u.searchParams.set('tab', name);
       if (name !== 'runs') { u.searchParams.delete('run'); }
-      window.history.replaceState(null, '', u.pathname + u.search);
+      window.history.replaceState(null, '', drishti_url(u.pathname + u.search));
     }
     if (name === 'runs' && !runsStarted) { runsStarted = true; startRuns(); }
   }
@@ -202,7 +202,7 @@
     drawer.classList.remove('bi-run-drawer-open');
     openId = null;
     const u = new URL(window.location.href);
-    if (u.searchParams.has('run')) { u.searchParams.delete('run'); window.history.replaceState(null, '', u.pathname + u.search); }
+    if (u.searchParams.has('run')) { u.searchParams.delete('run'); window.history.replaceState(null, '', drishti_url(u.pathname + u.search)); }
     // the focus goes back where it came from; a row drawn again while the drawer was open (a run's event, the list reloaded) is the same
     // run's row now: focus that one, or a keyboard user is left on the bare page
     let back = returnTo;
@@ -269,7 +269,7 @@
           : g.confirm ? 'Run again needs your confirmation: it is in the list, waiting for you.' : 'Running again' + (data === 'same' ? ' as before.' : ' with the latest data.');
         if (atOnce) { got.atOnce = true; }                                   // no row on the server: its drawer is drawn from the reply only
         if (R.active(nr.state) && !g.confirm) { rerunning = nr.id; }
-        note = { id: nr.id, text, bad: false, href: reused ? '/bi/run/' + encodeURIComponent(nr.id) : null };
+        note = { id: nr.id, text, bad: false, href: drishti_url(reused ? '/bi/run/' + encodeURIComponent(nr.id) : null) };
         say(text);
         fresh.add(nr.id);
         return load().then(() => {
@@ -330,7 +330,7 @@
       acts.appendChild(act('Run in background', { 'data-run-confirm': '' }, (b) => B.busy(b, () => B.api('POST', '/runs/' + enc + '/confirm', { confirmToken: r.confirmToken || null }).then((x) => { refresh(x.run || x); said(b, 'Confirmed: it is queued.'); }).catch(failed(b))), true));
       if (can.cancel) { acts.appendChild(act('Discard', { 'data-run-discard': '' }, (b) => B.busy(b, () => B.api('POST', '/runs/' + enc + '/cancel').then((x) => { refresh(x); said(b, 'Discarded. Nothing ran.'); }).catch(failed(b))))); }
     }
-    if (can.open) { acts.appendChild(h('a', { class: 'btn-pill btn-accent', href: '/bi/run/' + enc, 'data-run-act': 'open', text: 'Open' })); }
+    if (can.open) { acts.appendChild(h('a', { class: 'btn-pill btn-accent', href: drishti_url('/bi/run/' + enc), 'data-run-act': 'open', text: 'Open' })); }
     if (can.cancel && R.active(r.state) && r.state !== 'awaiting-confirm') {
       acts.appendChild(act('Cancel', { 'data-run-act': 'cancel' }, (b) => B.busy(b, () => B.api('POST', '/runs/' + enc + '/cancel').then((x) => { refresh(x); said(b, 'Cancelled. Everything it held is freed.'); }).catch(failed(b)))));
     }
@@ -343,7 +343,7 @@
     const msg = h('p', { class: 'bi-run-dmsg', 'data-run-drawer-msg': '', hidden: !(note && note.id === r.id) });
     if (note && note.id === r.id) {
       msg.textContent = note.text; msg.classList.toggle('bi-run-bad', note.bad);
-      if (note.href) { msg.appendChild(document.createTextNode(' ')); msg.appendChild(h('a', { class: 'btn-pill btn-ghost', href: note.href, 'data-run-open-result': '', text: 'Open result' })); }
+      if (note.href) { msg.appendChild(document.createTextNode(' ')); msg.appendChild(h('a', { class: 'btn-pill btn-ghost', href: drishti_url(note.href), 'data-run-open-result': '', text: 'Open result' })); }
     }
     dBody.appendChild(msg);
 
@@ -353,7 +353,7 @@
     const parms = Object.keys(p.params || {}).map((k) => k + ' = ' + p.params[k]);
     const src = s.type === 'report' || s.type === 'board' ? 'Report "' + R.reportName(s) + '"' + (s.page ? ', page ' + s.page : '') + (s.visual ? ', visual "' + (r.title && r.title !== s.id ? r.title : R.nameOfId(s.visual)) + '"' : '') : (s.type || '') + (s.id ? ' ' + s.id : '');
     const facts = h('dl', { class: 'bi-run-facts' },
-      fact('Source', src, s.href ? h('a', { href: s.href, class: 'bi-run-link', text: ' (open the report)' }) : null),
+      fact('Source', src, s.href ? h('a', { href: drishti_url(s.href), class: 'bi-run-link', text: ' (open the report)' }) : null),
       fact('Run by', r.runner + (r.owner && r.owner !== r.runner ? ' for ' + r.owner : '') + ', computed as ' + r.runner + ' · ' + when(r.submittedAt) + (r.node ? ' on node ' + r.node : '') + (r.attempt > 1 ? ' · attempt ' + r.attempt : '')),
       fact('Filters', filters.join(' · ')),
       fact('Parameters', parms.join(' · ')),
@@ -494,9 +494,9 @@
   function promotedLinks(r) {
     const made = promoted[r.id];
     const link = (href, text, attr) => h('a', Object.assign({ href, class: 'bi-run-link', text }, attr));
-    if (!made) { return h('span', {}, ' · a draft in ', link('/bi/w/me', 'My workspace', { 'data-run-promoted-where': '' })); }
-    return h('span', {}, made.dataset ? [' · ', link('/bi/i/' + B.id2path(made.dataset), 'the draft dataset', { 'data-run-promoted-dataset': made.dataset })] : null,
-      made.report ? [' · ', link('/bi/i/' + B.id2path(made.report), 'the draft report', { 'data-run-promoted-report': made.report })] : null);
+    if (!made) { return h('span', {}, ' · a draft in ', link(drishti_url('/bi/w/me'), 'My workspace', { 'data-run-promoted-where': '' })); }
+    return h('span', {}, made.dataset ? [' · ', link(drishti_url('/bi/i/') + B.id2path(made.dataset), 'the draft dataset', { 'data-run-promoted-dataset': made.dataset })] : null,
+      made.report ? [' · ', link(drishti_url('/bi/i/') + B.id2path(made.report), 'the draft report', { 'data-run-promoted-report': made.report })] : null);
   }
   function promote(r, anchor) {
     const name = B.slug(R.titleOf(r) || 'run') || 'run';

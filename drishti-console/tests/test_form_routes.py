@@ -170,7 +170,7 @@ def test_the_forms_home_lists_packs_with_a_form_and_what_the_person_may_open(cl,
     assert 'href="/forms"' in page and 'aria-label="Forms' not in page and 'href="/reports"' in page and 'aria-label="Reports' not in page     # Forms and Reports are entries of Views
     assert cl.get("/form", follow_redirects=False).headers["location"] == "/forms"
 
-    async def refuse(pack, kind="", ident=None):                                        # the server: no kind open to this role, or a hidden sample pack
+    async def refuse(pack, kind="", ident=None, kinds_only=False):                                        # the server: no kind open to this role, or a hidden sample pack
         raise BackendError(403, "DRS-4030", "no access to any kind of pack")
     be.form = refuse
     assert "None of the packs open to you has a form" in cl.get("/forms").text

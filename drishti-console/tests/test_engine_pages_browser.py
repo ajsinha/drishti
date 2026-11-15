@@ -18,9 +18,16 @@ window; an item to finish puts its words in the command line; Why it moved (VAR 
 Skipped when Playwright, Chromium, the built server jar or a JDK is missing."""
 import pytest
 
-from test_explain_browser import stack  # noqa: F401 - the VaR server and console
 from test_var_explorer_browser import open_var
 from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and helpers
+from var_stack import VAR_TRADES, var_data, var_lake, var_server
+
+
+@pytest.fixture(scope="module")
+def stack(tmp_path_factory):
+    """The VaR server and console, this file's own: opening every Risk page writes (the person's BI workspace, the trade pages, the
+    audit), so it never shares a read-only server (TEST_HARNESS.md, "Shared read-only servers")."""
+    yield from var_server(tmp_path_factory, var_lake(tmp_path_factory, var_data(*VAR_TRADES)))
 
 _LINKS = """() => { const b = [...document.querySelectorAll('.tbar-menu-btn')].find((x) => ['Risk', 'Domains'].includes(x.textContent.trim()));
   const m = b && b.closest('.tbar-menu');

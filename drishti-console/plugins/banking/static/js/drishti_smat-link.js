@@ -37,7 +37,7 @@
   a.appendChild(document.createTextNode(" Scenario matrix"));
   function refresh() {
     var q = new URLSearchParams(window.location.search);
-    a.href = "/smat?id=" + encodeURIComponent(scope()) + (q.get("ccy") ? "&ccy=" + encodeURIComponent(q.get("ccy")) : "");
+    a.href = drishti_url("/smat?id=" + encodeURIComponent(scope()) + (q.get("ccy") ? "&ccy=" + encodeURIComponent(q.get("ccy")) : ""));
   }
   refresh();
   ["mouseenter", "focus", "mousedown", "touchstart"].forEach(function (e) { a.addEventListener(e, refresh, { passive: true }); });

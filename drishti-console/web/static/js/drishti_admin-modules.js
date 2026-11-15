@@ -40,13 +40,13 @@
       var f = input && input.files && input.files[0];
       if (!f) { say('Choose a .dmod file first.', true); return; }
       say('Uploading ' + f.name + ' and running the fifteen checks …');
-      fetch('/admin/modules/api/upload', { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: f })
+      fetch(drishti_url('/admin/modules/api/upload'), { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: f })
         .then(function (r) { return r.json().catch(function () { return {}; }).then(function (b) { return { ok: r.ok, body: b }; }); })
         .then(function (res) {
           if (!res.ok) { say(problem(res.body), true); return; }
           say('Stored ' + res.body.id + ' ' + res.body.version + ': all checks passed. Plan it on the right.');
           setTimeout(function () {
-            window.location.assign('/admin/modules/deploy?module=' + encodeURIComponent(res.body.id) + '&version=' + encodeURIComponent(res.body.version));
+            window.location.assign(drishti_url('/admin/modules/deploy?module=' + encodeURIComponent(res.body.id) + '&version=' + encodeURIComponent(res.body.version)));
           }, 900);
         });
       return;
@@ -56,9 +56,9 @@
       var F = window.Drishti.elements.inputs.formOf(host);
       if (!F.validate().ok) { say('Choose the action and the module, and say why.', true); return; }
       var v = F.getValue();
-      api.send('POST', '/admin/modules/api/plan', { action: v.action, module: v.module, version: v.version || '', reason: v.reason }).then(function (res) {
+      api.send('POST', drishti_url('/admin/modules/api/plan'), { action: v.action, module: v.module, version: v.version || '', reason: v.reason }).then(function (res) {
         if (!res.ok) { say(problem(res.body), true); return; }
-        window.location.assign('/admin/modules/deploy?plan=' + encodeURIComponent(res.body.id));
+        window.location.assign(drishti_url('/admin/modules/deploy?plan=' + encodeURIComponent(res.body.id)));
       });
       return;
     }
@@ -68,7 +68,7 @@
       var what = act.getAttribute('data-module-act');
       act.disabled = true;
       if (what === 'apply') { say('Applying: staging on every placed node, then activating …'); }
-      api.send('POST', '/admin/modules/api/' + what, { id: box.getAttribute('data-id') }).then(function (res) {
+      api.send('POST', drishti_url('/admin/modules/api/') + what, { id: box.getAttribute('data-id') }).then(function (res) {
         act.disabled = false;
         if (!res.ok) { say(problem(res.body), true); return; }
         say((res.body.state || what) + (res.body.outcome ? ': ' + res.body.outcome : '') + '.', res.body.state === 'failed');

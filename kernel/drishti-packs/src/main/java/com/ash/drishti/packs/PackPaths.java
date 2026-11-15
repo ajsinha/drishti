@@ -22,18 +22,17 @@ import org.springframework.core.env.Environment;
 
 /**
  * Where the pack folders and the pack runtime files are, from the environment: the packs folder
- * ({@code drishti.packs.dir}, default {@code ./config/packs}) and the files under the data umbrella
- * ({@code drishti.data.dir}, default {@code ./data}) that each have their own setting. One place, so every reader agrees.
+ * ({@code drishti.packs.dir}, default {@code <config>/packs}) and the files under the data umbrella
+ * ({@code drishti.data.dir}, default {@code <home>/data}), each absolute (com.ash.drishti.api.Roots) that each have their own setting. One place, so every reader agrees.
  */
 public final class PackPaths {
 
-    public static final String DEFAULT_PACKS = "./config/packs";
     /**
      * The packs enabled when {@code drishti.packs.enabled} is not set (or blank) and no edition names them: the one list,
      * {@code config/packs/default-packs.yaml} (copied into this jar at build; the console reads the same file).
      */
     public static final String DEFAULT_ENABLED = String.join(",", com.ash.drishti.packs.edition.Editions.defaultPacks());
-    private static final String LEGACY_PACKS = "./packs";
+    private static final String LEGACY_PACKS = "packs";
     private static final AtomicBoolean WARNED = new AtomicBoolean();
 
     private PackPaths() {
@@ -60,7 +59,7 @@ public final class PackPaths {
 
     /** The data umbrella ({@code drishti.data.dir}). */
     public static String dataDir(Environment env) {
-        String d = env.getProperty("drishti.data.dir", "./data");
+        String d = env.getProperty("drishti.data.dir", com.ash.drishti.api.Roots.data());
         return d.endsWith("/") || d.endsWith("\\") ? d.substring(0, d.length() - 1) : d;
     }
 
@@ -69,14 +68,14 @@ public final class PackPaths {
      * does not exist and {@code ./packs} does, that one is used, with a warning.
      */
     public static String packsDir(Environment env) {
-        String dir = env.getProperty("drishti.packs.dir", DEFAULT_PACKS);
-        if (!Files.isDirectory(Path.of(dir)) && Files.isDirectory(Path.of(LEGACY_PACKS))) {
+        String dir = env.getProperty("drishti.packs.dir", com.ash.drishti.api.Roots.config("packs"));
+        if (!Files.isDirectory(Path.of(dir)) && Files.isDirectory(Path.of(com.ash.drishti.api.Roots.home(LEGACY_PACKS)))) {
             if (WARNED.compareAndSet(false, true)) {
                 System.getLogger(PackPaths.class.getName()).log(System.Logger.Level.WARNING,
                         "The packs folder {0} does not exist; using the old location {1}. Move it with: git mv packs config/packs "
                                 + "(or set drishti.packs.dir / DRISHTI_PACKS_DIR). This fallback ends in the next release.", dir, LEGACY_PACKS);
             }
-            return LEGACY_PACKS;
+            return com.ash.drishti.api.Roots.home(LEGACY_PACKS);
         }
         return dir;
     }

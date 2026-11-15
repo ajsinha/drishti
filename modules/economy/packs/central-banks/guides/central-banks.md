@@ -59,6 +59,8 @@ Where each kind's data comes from, how it reaches the lake and how to check it. 
 | FRED, Federal Reserve Bank of St. Louis (API key in DRISHTI_FRED_API_KEY) | https://api.stlouisfed.org/fred | FRED API terms; the default series are US government works (public domain) | no | `python3 tools/drishti.py feed run central-banks` |
 | Bank of Canada Valet API | https://www.bankofcanada.ca/valet | Bank of Canada terms: free use with attribution | no | `python3 tools/drishti.py feed run central-banks` |
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 python3 tools/drishti.py feed status central-banks            # its last runs: last success, rows, failures (offline: the run ledger)
 python3 tools/drishti.py feed run central-banks --dry-run     # what would be fetched and loaded; changes nothing

@@ -27,8 +27,9 @@
    its mode, open rows and filter across them. */
 (function () {
   'use strict';
+  function drishti_url(p) { var f = globalThis.drishti_url; return typeof f === 'function' && f !== drishti_url ? f(p) : p; }   // drishti-core's base helper when the page has it; a page without it (the renderer, an embed) keeps the URL as it is
   var me = document.currentScript;
-  var ROOT = me && /\/js\/(?:drishti_)?tree-rows\.js/.test(me.src || '') ? me.src.replace(/js\/(?:drishti_)?tree-rows\.js.*$/, '') : '/static/';
+  var ROOT = me && /\/js\/(?:drishti_)?tree-rows\.js/.test(me.src || '') ? me.src.replace(/js\/(?:drishti_)?tree-rows\.js.*$/, '') : drishti_url('/static/');
   var VER = me && /[?&]v=([^&]+)/.exec(me.src || '') ? /[?&]v=([^&]+)/.exec(me.src)[1] : '';
 
   // ---- table rows with children: drishti-tree's table tree ---------------------------------------------------------
@@ -42,7 +43,7 @@
       var u = new URL(location.href), k = 'tf.' + pid;
       if ((u.searchParams.get(k) || '') === q) { return; }
       if (q) { u.searchParams.set(k, q); } else { u.searchParams.delete(k); }
-      history.replaceState(history.state, '', u.pathname + u.search + u.hash);
+      history.replaceState(history.state, '', drishti_url(u.pathname + u.search + u.hash));
     }
   };
   /** Draws the tree tables under node with drishti-tree (Drishti Elements: loaded on demand); without the library the server's table stays. */
@@ -63,7 +64,7 @@
     var at = host.getRootNode ? host.getRootNode() : document, into = at === document || !at.host ? document.head : at;
     if (into.querySelector('link[data-grid-css]')) { return; }
     var l = document.createElement('link');
-    l.rel = 'stylesheet'; l.href = ROOT + 'elements/drishti-grid/drishti_grid.css' + (VER ? '?v=' + VER : ''); l.setAttribute('data-grid-css', '');
+    l.rel = 'stylesheet'; l.href = drishti_url(ROOT + 'elements/drishti-grid/drishti_grid.css' + (VER ? '?v=' + VER : '')); l.setAttribute('data-grid-css', '');
     into.appendChild(l);
   }
   var US = '\u001f';

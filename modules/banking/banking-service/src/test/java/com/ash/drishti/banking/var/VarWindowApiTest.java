@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.banking.var;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.within;
@@ -150,7 +151,7 @@ class VarWindowApiTest {
 
     @DynamicPropertySource
     static void lake(DynamicPropertyRegistry r) throws Exception {
-        lake = Files.createDirectories(Path.of("target", "var-window-lake-" + System.nanoTime())).toAbsolutePath();
+        lake = Files.createDirectories(Path.of(TestRoots.module(), "target", "var-window-lake-"+ System.nanoTime())).toAbsolutePath();
         write(LONG, M, "HS-40");
         write(SHORT, W, "HS-25");
         r.add("drishti.sources.connectors.risk-lake.settings.root", lake::toString);

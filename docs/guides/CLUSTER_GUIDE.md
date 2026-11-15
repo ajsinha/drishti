@@ -92,6 +92,8 @@ node.yaml, a seed's `url` in `peers/*.yaml` (checked by `drishti.py net check|se
 it loads the folder), and every member address learned by gossip, which is never kept nor passed on. Even three nodes on one machine use
 the machine's real address. There is no escape hatch. The refusal names the address to use:
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```text
 $ drishti.py net set node.advertise-url http://127.0.0.1:18784
 drishti: node.yaml was not written: 'http://127.0.0.1:18784' is a loopback or wildcard address (loopback): the address this node advertises must be an address other machines can call (this machine's address is 192.168.1.20: use http://192.168.1.20:18784); or leave advertise-url out and the node advertises that address with its port
@@ -654,7 +656,7 @@ scattered to shard owners. Roles exist to size and isolate work (a whole-bank BI
 | **Python compute** | `config/compute/compute.yaml` pools (`risk`, `exposure`) | `workers`, `memory` per worker | on servers / on the exposure server / hosts of their own | VaR owners |
 | **Database** | PostgreSQL (identity, sessions, edit log, run leases) | `DRISHTI_IDENTITY_DB_URL`; pools per `drishti.db.pool.size` | 1 (SQLite allowed) / 1 + standby / 1 + standby | app servers |
 | **Lake** | S3 (Delta or Iceberg) or a shared file system | `DRISHTI_DELTA_ROOT` | managed | — |
-| **Kafka** | the PV topic for intraday | `DRISHTI_KAFKA_BOOTSTRAP`, `DRISHTI_VAR_PV_STREAM` | optional / 3 brokers / 3 brokers | — |
+| **Kafka** | the PV topic for intraday | `[broker.default] bootstrap-servers`, `DRISHTI_VAR_PV_STREAM` | optional / 3 brokers / 3 brokers | — |
 
 Pilot means about 200,000 positions and 1,500 portfolios with up to 50 active people: three all-in-one servers (each owner and
 coordinator) and two consoles. A pilot console may share a host with a coordinator.

@@ -90,6 +90,11 @@ public final class LiveSets implements AutoCloseable {
             return java.util.Set.of();
         }
 
+        /** The stream connectors of the kind that wait for their broker (the page serves the snapshot; its live updates are paused). */
+        default List<String> livePaused(String kind) {
+            return List.of();
+        }
+
         /** The query's condition as a test of one document. */
         Predicate<DataNode> condition(String query);
 
@@ -228,6 +233,11 @@ public final class LiveSets implements AutoCloseable {
     /** The trading systems switched off that feed the kind (the page's banner: "excludes ENDUR (switched off)"). */
     public java.util.Set<String> excluded(String kind) {
         return sources.excluded(kind);
+    }
+
+    /** The stream connectors of the kind that wait for their broker. */
+    public List<String> livePaused(String kind) {
+        return sources.livePaused(kind);
     }
 
     public LiveReader reader(Principal p, String kind) {

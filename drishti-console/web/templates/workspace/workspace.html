@@ -20,7 +20,7 @@
 {% block content %}
 <div class="ws" data-ws data-name="{{ name }}" data-saved="{{ 'true' if saved else 'false' }}" data-json="{{ ws | tojson | forceescape }}"{% if readonly %} data-readonly{% endif %}>
   <header class="ws-bar">
-    <a href="/w" class="tbar-link"><i class="bi bi-grid-1x2" aria-hidden="true"></i> Workspaces</a>
+    <a href="{{ BASE }}/w" class="tbar-link"><i class="bi bi-grid-1x2" aria-hidden="true"></i> Workspaces</a>
     <strong class="ws-name">{{ name }}</strong>
     {% if readonly %}<span class="badge-kind" title="Shared by {{ owner }}: you see it as they keep it">shared by {{ owner }} · read-only</span>{% endif %}
     <label class="visually-hidden" for="wsLayout">Layout</label>
@@ -62,4 +62,4 @@
 </template>
 {% endblock %}
 {% block footer %}{% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_workspace.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_workspace.js?v={{ ASSET_V }}"></script>{% endblock %}

@@ -52,7 +52,7 @@ public record SourcesProperties(
         plugins = plugins == null ? Map.of() : java.util.Collections.unmodifiableMap(new java.util.LinkedHashMap<>(plugins));
         connectors = connectors == null ? Map.of() : java.util.Collections.unmodifiableMap(new java.util.LinkedHashMap<>(connectors));   // config order is the read order
         fetchTimeout = fetchTimeout == null ? Duration.ofSeconds(10) : fetchTimeout;
-        connectorsDir = connectorsDir == null || connectorsDir.isBlank() ? "./config/connectors" : connectorsDir;
+        connectorsDir = connectorsDir == null || connectorsDir.isBlank() ? com.ash.drishti.api.Roots.config("connectors") : connectorsDir;
         connectorsWatch = connectorsWatch == null || connectorsWatch.isBlank() ? "auto" : connectorsWatch;
         connectorsPoll = connectorsPoll == null ? Duration.ofSeconds(5) : connectorsPoll;
         connectorsDrain = connectorsDrain == null ? Duration.ofSeconds(5) : connectorsDrain;

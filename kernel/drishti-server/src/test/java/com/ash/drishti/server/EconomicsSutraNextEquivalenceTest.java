@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -138,7 +139,7 @@ class EconomicsSutraNextEquivalenceTest {
         List<Path> inline = new ArrayList<>();
         for (String kind : SCREENS.keySet()) {
             Path p = SITE.resolve(kind + ".v2.sutra.yaml");
-            Files.copy(Path.of("src/test/resources/sutra-next/" + kind + ".v2.sutra.yaml"), p);
+            Files.copy(Path.of(TestRoots.module(), "src", "test", "resources", "sutra-next", kind + ".v2.sutra.yaml"), p);
             inline.add(p);
         }
         try {

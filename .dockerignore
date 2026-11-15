@@ -23,3 +23,6 @@ data
 **/node_modules
 **/target
 !kernel/drishti-server/target/drishti-server-*-exec.jar
+# the modules ship as folders the server reads (manifests, packs, connectors, data): their Java sources are built into the jar
+modules/**/src
+modules/**/pom.xml

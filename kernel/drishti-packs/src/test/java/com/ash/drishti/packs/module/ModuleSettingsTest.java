@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.packs.module;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -29,7 +30,7 @@ import org.springframework.core.env.StandardEnvironment;
 /** Banking's settings are described by its manifest and read as {@code drishti.module.banking.*}; the old keys are read for one release. */
 class ModuleSettingsTest {
 
-    private static final Path BANKING = Path.of("../../modules/banking/dmod/module.yaml");
+    private static final Path BANKING = Path.of(TestRoots.repo(), "modules", "banking", "dmod", "module.yaml");
 
     private static JsonNode manifest() throws Exception {
         return new ObjectMapper(new YAMLFactory()).readTree(BANKING.toFile());
@@ -60,7 +61,7 @@ class ModuleSettingsTest {
     void theEnvironmentGivesTheModulesKeyToTheOldKeyAndHealthNamesTheOldKeysASiteSets() {
         StandardEnvironment env = new StandardEnvironment();
         env.getPropertySources().addFirst(new MapPropertySource("Config resource 'file [application.local.yaml]' via location 'x'",
-                Map.of("drishti.module.banking.var.window", "500", "drishti.var.hot-dates", "3", "drishti.module-manifests-dir", "../../modules")));
+                Map.of("drishti.module.banking.var.window", "500", "drishti.var.hot-dates", "3", "drishti.modules.home", "../../modules")));   // the modules folder's key (launch roots), over the forks' "none"
         new ModuleSettingsEnvironmentPostProcessor().postProcessEnvironment(env, null);
         assertThat(env.getProperty("drishti.var.scenario-window")).as("the module's key reaches the code that reads the old key").isEqualTo("500");
         assertThat(env.getProperty(ModuleSettingsEnvironmentPostProcessor.INFO + ".deprecated"))

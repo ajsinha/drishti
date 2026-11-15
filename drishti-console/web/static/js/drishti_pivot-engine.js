@@ -22,6 +22,7 @@
    format names. Loaded in the page (window.Drishti.pivotEngine) and under node for tests (module.exports). */
 (function (root) {
   'use strict';
+  function drishti_url(p) { var f = globalThis.drishti_url; return typeof f === 'function' && f !== drishti_url ? f(p) : p; }   // drishti-core's base helper when the page has it; a page without it (the renderer, an embed) keeps the URL as it is
   var US = '\u001f', RS = '\u001e', BLANK = '(blank)';
   var AGG_LABEL = { sum: 'Sum', count: 'Count', avg: 'Average', min: 'Min', max: 'Max', distinct: 'Distinct count' };
   /** The chart's aggregations as the engine's functions. */
@@ -79,7 +80,7 @@
       count: n, total: n, rowOthers: ro, columnOthers: co, partial: !!a.partial };
   }
   function postJson(url, init) {
-    return fetch(url, { method: 'POST', credentials: 'same-origin', headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+    return fetch(drishti_url(url), { method: 'POST', credentials: 'same-origin', headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
       body: JSON.stringify(init.body) }).then(function (r) { return r.json().catch(function () { return {}; }); });
   }
   /** Every row of a source aggregated by the engine (POST /api/pivot/query); field(name) is the source's field of a chart field. */
@@ -87,7 +88,7 @@
     var ms = measures(arrangement, field);
     var view = { source: source, rows: arrangement.rows.map(field), columns: arrangement.columns.map(field), values: ms, expandTo: { rows: 1, columns: 1 },
       top: topOf(arrangement, field, ms) };
-    return (fetchJson || postJson)('/api/pivot/query', { method: 'POST', body: { view: view } }).then(function (a) { return fromAnswer(a, arrangement, ms); });
+    return (fetchJson || postJson)(drishti_url('/api/pivot/query'), { method: 'POST', body: { view: view } }).then(function (a) { return fromAnswer(a, arrangement, ms); });
   }
   /** The body of an inline pivot: the arrangement's fields only, renamed d0.. (rows and columns, as key texts) and v0.. (values). */
   function inlineBody(records, arrangement) {
@@ -118,7 +119,7 @@
   /** Rows the page holds ({fields, rows}) aggregated by the engine (POST /api/pivot/inline): the cube of the arrangement. */
   function inline(records, arrangement, fetchJson) {
     var b = inlineBody(records, arrangement);
-    return (fetchJson || postJson)('/api/pivot/inline', { method: 'POST', body: b.body }).then(function (a) { return fromAnswer(a, arrangement, b.measures); });
+    return (fetchJson || postJson)(drishti_url('/api/pivot/inline'), { method: 'POST', body: b.body }).then(function (a) { return fromAnswer(a, arrangement, b.measures); });
   }
 
   // ---- numbers as the Sutra's formats show them ---------------------------------------------------------------------

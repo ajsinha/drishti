@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.net;
 
+import com.ash.drishti.testroots.TestRoots;
 import com.ash.drishti.net.transport.PeerHttp;
 import com.ash.drishti.server.DrishtiApplication;
 import java.io.IOException;
@@ -80,7 +81,7 @@ public final class NetNodes implements AutoCloseable {
 
     public NetNodes(Path root) throws IOException {
         this.root = root;
-        Path lockPath = Path.of("target", "net-it.lock").toAbsolutePath();
+        Path lockPath = Path.of(TestRoots.module(), "target", "net-it.lock").toAbsolutePath();
         Files.createDirectories(lockPath.getParent());
         this.lockFile = java.nio.channels.FileChannel.open(lockPath, java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.WRITE);
         this.lock = lockFile.lock();

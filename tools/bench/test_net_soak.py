@@ -223,7 +223,8 @@ class SoakConfigurationTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             murex = self.lake(Path(tmp) / "murex", ["trading/trade_murex", "reference/counterparty", "credit/netting-set"])
             files = net_soak.connector_files(murex, "trading,counterparty-risk")
-            self.assertEqual({"trade-endur", "trade-calypso", "market-store", "legal-store", "collateral-store", "exposure-store", "exposure-results"}, set(files))   # 2.9.0: the exposure paths and the published results are Delta too
+            # one table per source system (six source modules): every trade connector whose table this lake lacks is switched off
+            self.assertEqual({"trade-endur", "trade-calypso", "trade-wss", "trade-swapone", "trade-ici", "market-store", "legal-store", "collateral-store", "exposure-store", "exposure-results"}, set(files))   # 2.9.0: the exposure paths and the published results are Delta too
             doc = yaml.safe_load(files["trade-endur"])
             self.assertEqual(("delta", False, ["trade"]), (doc["plugin"], doc["enabled"], doc["kinds"]))
             self.assertIn("enabled: false\n", files["trade-endur"])                  # a YAML boolean, never the string "false" (SOAK2-02)
@@ -231,7 +232,7 @@ class SoakConfigurationTest(unittest.TestCase):
             self.assertEqual(("demo", "trading.trade_endur"), (doc["settings"]["lake"], doc["settings"]["lake-tables"]))
             self.assertLessEqual(set(doc), {"plugin", "enabled", "kinds", "description", "settings", "name"})   # CONNECTOR_FILES section 3
             shared = self.lake(Path(tmp) / "shared", ["trading/trade_endur", "trading/trade_calypso", "reference/counterparty"])
-            self.assertEqual({"trade-murex", "market-store"}, set(net_soak.connector_files(shared, "trading")))
+            self.assertEqual({"trade-murex", "trade-wss", "trade-swapone", "trade-ici", "market-store"}, set(net_soak.connector_files(shared, "trading")))
         self.assertEqual(["core", "market-data", "trading", "counterparty-risk"], net_soak.pack_closure("trading,counterparty-risk", net_soak.ROOT / "config" / "packs"))
 
     def test_no_node_loads_a_pack_its_lake_holds_nothing_of_nor_uses_deprecated_connector_flags(self):

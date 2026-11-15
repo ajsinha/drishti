@@ -207,6 +207,8 @@ look-back window). It is flagged once: a notice to the people the pack names, an
 The walk-through, with real output and pictures, is [tutorial 12 · Load data daily](../tutorials/12-a-day-of-bank-data.md): say when you expect data (step 1), announce a load from the command line (step 2), a failed
 batch (step 3), the same through the API (step 4), the history and what is due (step 5) and an alert for a missing day (step 6). In short: **announce** a batch when your ETL has written it,
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```
 $ drishti-console/.venv/bin/python tools/drishti.py data landed --pack market-risk --kind stress-scenario --date 2026-10-16 --rows 8 --batch eod-20261016-1
 stress-scenario for 2026-10-16 loaded: 8 rows; 0 alerts fired
@@ -1194,7 +1196,7 @@ store already has the day's data and the topic is just the change feed, or the t
 ```yaml
 # config/connectors/trading-stream.yaml
 plugin: kafka
-settings: { mode: ticks, bootstrap-servers: "${DRISHTI_KAFKA_BOOTSTRAP}", topics: drishti.trading.trades,
+settings: { mode: ticks, broker: default, topics: drishti.trading.trades,
             kind: trade, id-field: tradeId }
 ```
 
@@ -1247,6 +1249,10 @@ settings:
   kind: trade
   id-field: tradeId
 ```
+
+A stream connector whose broker is not there (or whose `topics`, `destinations` or `queues` is missing) is calm, never an error: it shows
+*waiting for broker (live updates paused)* or *not configured*, the kind is served from the lake, and it connects by itself when the broker
+appears ([OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#132-admin--health)).
 
 Points to remember:
 
@@ -1335,7 +1341,7 @@ connectors:
     enabled: ${DRISHTI_STREAM_EQUITY:false}
     kinds: [order]
     settings:
-      bootstrap-servers: ${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}
+      broker: default
       topics: equity.orders
       kind: order
       id-field: orderId
@@ -1606,7 +1612,7 @@ enabled: "${DRISHTI_STREAM_TRADING:false}"
 kinds:
 - trade
 settings:
-  bootstrap-servers: "${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}"
+  broker: default
   topics: "${DRISHTI_TRADING_TOPIC:drishti.trading.trades}"
   kind: trade
   id-field: TRADE_ID
@@ -1838,7 +1844,7 @@ on a deploy. The connector that runs is computed in memory from three layers (th
 | Layer | Where | What it holds |
 |---|---|---|
 | **Template** (read-only) | a loaded pack's `connectors:` entry, or a file directly in the connectors folder of a module that is on (`modules/source-endur/connectors/trade-endur.yaml`; files under `connectors/examples/` are examples to copy, not templates) | the whole connector as shipped; its name is the file's `name:` key, else the file's name |
-| **Site override** | `config/connectors/<name>.yaml` | only the keys the site changes, merged over the template key by key (a setting's dotted path is its key: `settings.set.SOURCE_SYSTEM`). Any key may change, the plugin included; every other key is still inherited; a key set to `null` removes the inherited one. A file with no template of its name is a complete **site connector** and names its plugin |
+| **Site override** | `config/connectors/<name>.yaml` | only the keys the site changes, merged over the template key by key (a setting's dotted path is its key: `settings.set.SOURCE_SYSTEM`). Any key may change, the plugin included; every other key is still inherited; a key set to `null` removes the inherited one. Over a template that names a lake, `settings.root` alone keeps the lake and reads its tables under that root; with `domain`, `table.<kind>` or `layout.<kind>` the file is the older form and the template's lake keys are dropped. A file with no template of its name is a complete **site connector** and names its plugin |
 | **Secrets** | `${VAR}` and `file:` references in the file | resolved when the connector starts; a template never holds one |
 
 A relative file in a setting (`map: mappings/endur-trade.yaml`) is read from the folder of the layer that set the key.
@@ -3145,7 +3151,7 @@ days) and, for scale tests, a generated trade book: the scripts in [the other st
 drishti-console/.venv/bin/python tools/drishti.py lake demo
 ```
 
-(the IDE run configuration **Build demo lakes**). Measured for sixty days: **943 s (about 15 minutes), 87 tables, about 3.4 GB**, sixty business days
+(the IDE run configuration **Build demo lakes**). Measured for sixty days: **943 s (about 15 minutes), 89 tables, about 3.4 GB**, sixty business days
 ending on today's business date (the test data's 2026-07-08 to 2026-09-30, moved; `--as-of data` keeps them). The trades go to one
 table per source system, `data/delta/demo/trading/trade_endur`, `trade_calypso` and `trade_murex`, partitioned by business date and
 `PRODUCT_TYPE`, each read by its own connector (`trade-endur`, `trade-calypso`, `trade-murex`) and served together as one kind,
@@ -3162,7 +3168,7 @@ every data type, every field explained for the query that must produce it, is in
 | Trades | 5,000 per source system on the last day, 15,000 in all (4,407 ENDUR, 3,471 CALYPSO, 4,198 MUREX on the first); about 3–7% amended each day (`TRADE_VERSION` moves) |
 | Source systems | `ENDUR` (ids `1000001` …), `CALYPSO` (`CLY-3000001` …), `MUREX` (`MX-20000001` …): ids unique across them |
 | Tables | 85 (measured 2026-10-28): 3 trade tables, the test-data datasets of the banking packs (with [`var-limit`](../contracts/samples/market-risk.md#var-limit) ([contract](../contracts/packs/market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit))), the reference tables of world-economy and news-and-markets, the public-data snapshots of us-equities, gleif and funds |
-| Disk | about 3.4 GB (measured 2026-10-28, `du` of the 87 tables; the committed test data: about 181 MB, the VaR data on three business dates) |
+| Disk | about 3.4 GB (measured 2026-10-28, `du` of the 89 tables; the committed test data: about 181 MB, the VaR data on three business dates) |
 | Counterparties | fictitious look-alikes (`CP-NORTHPLAINS`, `CP-VAULTGUARD`, …), with UEN, country of risk, legal entity, agreements and netting sets holding their trades |
 
 Re-running `lake demo` rebuilds every table it writes (the folder is removed first) and is safe while a server runs: the server gets

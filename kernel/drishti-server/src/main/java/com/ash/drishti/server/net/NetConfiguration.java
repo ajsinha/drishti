@@ -84,7 +84,7 @@ public class NetConfiguration {
     @Bean(destroyMethod = "close")
     public NetService netService(NetProperties props, Environment env, ObjectProvider<org.springframework.boot.info.BuildProperties> build,
             GossipConnector gossipPort) {
-        Path state = Path.of(env.getProperty("drishti.data.dir", "./data"), "net");
+        Path state = Path.of(env.getProperty("drishti.data.dir", com.ash.drishti.api.Roots.data()), "net");
         // ${ENV} references in the files are read from the environment, then from the server's own properties (a test, a run configuration)
         NetSchema schema = new NetSchema(name -> {
             String v = System.getenv(name);
@@ -186,7 +186,7 @@ public class NetConfiguration {
             ObjectProvider<com.ash.drishti.identity.SessionStore> sessions, ObjectProvider<com.ash.drishti.identity.design.DesignService> designs,
             ObjectProvider<com.ash.drishti.identity.collab.InboxStore> inbox) {
         com.ash.drishti.identity.PreferenceStore raw = prefs instanceof ReplicatedPreferences r ? r.delegate() : prefs;
-        Path state = Path.of(env.getProperty("drishti.data.dir", "./data"), "net");
+        Path state = Path.of(env.getProperty("drishti.data.dir", com.ash.drishti.api.Roots.data()), "net");
         return new IdentitySync(sync, users, roles, tokens, audit, state, packAccess::forget, user -> {
             packAccess.forget(user);
             raw.forget(user);

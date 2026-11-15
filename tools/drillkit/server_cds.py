@@ -85,7 +85,7 @@ def build(out: Path, java: str) -> int:
     env = {"PATH": os.environ.get("PATH", ""), "HOME": str(work), "DRISHTI_PORT": str(port), "DRISHTI_DEMO_ENABLED": "false",
            "DRISHTI_OFFLINE": "true"}
     cmd = java_cmd(java, ["-Xmx768m", f"-XX:ArchiveClassesAtExit={out / 'app.jsa'}", "-Xlog:cds=off", "-Xlog:cds+dynamic=off", "-jar", str(app)],
-                   tmp=work / "jvm-tmp")
+                   tmp=work / "jvm-tmp", cwd=work, env=env)
     with (work / "server.log").open("w") as log:
         proc = subprocess.Popen(cmd, cwd=work, env=env, stdout=log, stderr=subprocess.STDOUT)
         try:

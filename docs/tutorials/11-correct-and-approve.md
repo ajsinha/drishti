@@ -61,6 +61,8 @@ DRISHTI_EDIT_ENABLED=true java -jar kernel/drishti-server/target/drishti-server-
 **You should see** in the server's log `write-back: on; edit log sqlite (auto: this node is alone), 64 lanes, node local`. **In the UI**,
 Admin → Edits says where the edit log lives and why; **on the command line**:
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 drishti-console/.venv/bin/python tools/drishti.py edits status --user ada
 # {"enabled": true, "mode": "single", "store": "sqlite", "why": "auto: this node is alone", ...}

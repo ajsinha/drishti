@@ -15,18 +15,18 @@
  */
 /* Cells, fields and entity links: the macros cell_text, tone, fields and entity of _macros/panels.html, as DOM. */
 import { h, str, toneClass } from './drishti_dom.js';
-import { chipList, isListValue } from '../../drishti-core/src/drishti_index.js';
+import { chipList, isListValue, basePath, url as drishtiUrl } from '../../drishti-core/src/drishti_index.js';
 
 const enc = (s) => encodeURIComponent(String(s == null ? '' : s));
 
 /** The href of an entity: /v/<kind>/<id> on the configured server (the id's own slashes kept, as the console's route takes a path). */
 export function entityHref(R, link) {
-  return (R.server || '') + '/v/' + enc(link.kind) + '/' + String(link.id == null ? '' : link.id).split('/').map(enc).join('/');
+  return (R.server || basePath()) + '/v/' + enc(link.kind) + '/' + String(link.id == null ? '' : link.id).split('/').map(enc).join('/');
 }
 
 /** An entity link (class lnk) with the macros' attributes, carrying its ref for in-place navigation. */
 export function entityLink(R, link, label, cls = 'lnk') {
-  return h('a', { class: cls, href: entityHref(R, link), 'data-r-link': 'entity', 'data-r-kind': link.kind, 'data-r-id': link.id }, label);
+  return h('a', { class: cls, href: drishtiUrl(entityHref(R, link)), 'data-r-link': 'entity', 'data-r-kind': link.kind, 'data-r-id': link.id }, label);
 }
 
 /** cell_text(c): an inactive value, an entity link, a bare http(s) URL as an outside link, or the text. */
@@ -41,7 +41,7 @@ export function cellText(R, c) {
   if (typeof t === 'string' && (t.startsWith('https://') || t.startsWith('http://')) && !t.includes(' ')) {
     // a page outside Drishti cannot be shown in place: by default a click is a drishti:navigate event for the host (nav.js);
     // a new tab only when the host asks for one (outsideLinks: 'new-window'), as the console's macros do
-    return h('a', { class: 'lnk ext', href: t, target: R.outsideLinks === 'new-window' ? '_blank' : null, rel: 'noopener noreferrer nofollow', title: t, 'data-r-link': 'outside' }, t);
+    return h('a', { class: 'lnk ext', href: drishtiUrl(t), target: R.outsideLinks === 'new-window' ? '_blank' : null, rel: 'noopener noreferrer nofollow', title: t, 'data-r-link': 'outside' }, t);
   }
   if (isListValue(t)) { return chipList(document, t, { label: c.label || '' }); }   // a list attribute (fmt: list): chips
   return str(t);

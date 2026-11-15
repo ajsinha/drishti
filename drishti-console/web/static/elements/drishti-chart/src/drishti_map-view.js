@@ -19,7 +19,7 @@
    (g3): 'ranking' (A, the default: a side column with the legend, the top ten with bars and the selected place with Explain and the
    drill) and 'table' (B: a floating legend, a world inset once drilled, the selected place in a floating card, a sortable table under
    the map). A click selects a place (its rows go to a linked grid) and explains it. */
-import { h, ToastTray } from '../../drishti-core/src/drishti_index.js';
+import { h, ToastTray, url as drishtiUrl } from '../../drishti-core/src/drishti_index.js';
 import { createGeoLoader, fitView } from './drishti_chart-geo.js';
 import { buildMap } from './drishti_chart-map.js';
 import { rowsOf } from './drishti_chart-data.js';
@@ -53,7 +53,7 @@ export class MapView {
   constructor(chart) {
     this.c = chart;
     const w = chart.win, eb = w.Drishti && w.Drishti.elements && w.Drishti.elements.base;
-    this.base = chart.o.mapsBase || (eb ? eb.replace(/elements\/$/, '') + 'vendor/echarts/maps/' : '/static/vendor/echarts/maps/');
+    this.base = chart.o.mapsBase || (eb ? eb.replace(/elements\/$/, '') + 'vendor/echarts/maps/' : drishtiUrl('/static/vendor/echarts/maps/'));
     this.loader = geoLoader(this.base, chart.o.fetchMap);
     this.mode = MAP_MODES.indexOf(chart.o.mapMode) >= 0 ? chart.o.mapMode : 'ranking';
     this.metricIndex = 0;
@@ -107,7 +107,7 @@ export class MapView {
    */
   load() {
     const s = this.c.spec, d = s.data || {};
-    const rows = d.source ? Promise.resolve((this.c.o.fetch || ((u) => this.c.win.fetch(u, { credentials: 'same-origin' }).then((r) => r.json())))(d.source)).then(rowsOf)
+    const rows = d.source ? Promise.resolve((this.c.o.fetch || ((u) => this.c.win.fetch(drishtiUrl(u), { credentials: 'same-origin' }).then((r) => r.json())))(d.source)).then(rowsOf)
       : Promise.resolve(rowsOf(Array.isArray(this.c.rawSpec.data) ? this.c.rawSpec.data : d));
     return rows.then((r) => { this.c.rows = r; this.levelRows = {}; return this.go(s.level && s.level !== 'world' ? String(s.level).toUpperCase() : 'world'); }, (e) => this.c.fail(e));
   }

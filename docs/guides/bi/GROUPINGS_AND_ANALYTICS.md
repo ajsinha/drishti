@@ -780,6 +780,8 @@ Ownership group (computed)*.
 
 **From the command line.**
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 python3 tools/drishti.py view get lei-group/8I5DZWZKVSZI1NUHU748
 ```

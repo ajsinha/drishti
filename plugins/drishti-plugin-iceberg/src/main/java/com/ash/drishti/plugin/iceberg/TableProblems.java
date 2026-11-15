@@ -33,7 +33,12 @@ final class TableProblems {
 
     private static final System.Logger LOGGER = System.getLogger(TableProblems.class.getName());
     private static final int MAX_REASON = 2000;
-    private static final Pattern PATH = Pattern.compile("((?:file:|s3a?://|gs://|abfss?://|/)\\S*?)/(?:metadata|data)/(\\S+)");
+    /**
+     * A file a table's metadata names, split into the table's folder and the file under it: at the LAST {@code /metadata/} or {@code /data/}
+     * of the path (an Iceberg table keeps its files in those two folders), never the first, so a lake or install under any folder named
+     * data ({@code /data/lake}, {@code /var/lib/drishti/data}) is read whole.
+     */
+    static final Pattern PATH = Pattern.compile("((?:file:|s3a?://|gs://|abfss?://|/)\\S*)/(?:metadata|data)/([^/\\s]+(?:/[^\\s]*)?)");
 
     private final String source;
     /** Where a kind's table is now (a path-based lake: {@code <root>/<domain>/<kind>}), or null when that is not known (a catalog). */

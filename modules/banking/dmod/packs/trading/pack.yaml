@@ -71,7 +71,7 @@ connectors:
     kinds:
     - trade
     settings:
-      bootstrap-servers: ${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}
+      broker: default
       topics: ${DRISHTI_TRADING_TOPIC:drishti.trading.trades}
       kind: trade
       id-field: TRADE_ID
@@ -305,7 +305,7 @@ form:
     type: enum
     group: Identity
     order: 2
-    help: 'ENDUR, CALYPSO or MUREX: the booking system the trade comes from.'
+    help: 'ENDUR, CALYPSO, MUREX, WSS, SWAPONE or ICI: the booking system the trade comes from.'
   - path: COUNTERPARTY
     label: Counterparty
     type: enum
@@ -567,10 +567,20 @@ lake:
       - id
       file-rows: 250000
       row-group-rows: 1000
-    trading.trades_shared:
+    trading.trade_wss:
       kind: trade
-      partition-by:
+      promote:
       - SOURCE_SYSTEM
+      sort-by:
+      - id
+    trading.trade_swapone:
+      kind: trade
+      promote:
+      - SOURCE_SYSTEM
+      sort-by:
+      - id
+    trading.trade_ici:
+      kind: trade
       promote:
       - SOURCE_SYSTEM
       sort-by:

@@ -309,6 +309,8 @@ the width; a drishti-inputs Form on the page is measured as `form_layout.py` mea
 
 Run it alone:
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_page_walk_browser.py      # starts its own stack
 DRISHTI_PAGEWALK_BASE=http://<host>:<console port> drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_page_walk_browser.py   # a running console
@@ -417,7 +419,8 @@ scenario window, `test_var_lens_browser.py` and `test_var_page_scope_browser.py`
 setting, enter a lens on the server) keep a server of their own.
 
 **The guard.** The pool fingerprints a shared server's scratch folder (every file's size and time, the server's log, temporary, cache and
-VaR hot folders left out: `wb_live.DERIVED`) when a file gets the server and again when the file is done; a file that wrote anything there
+VaR hot folders, and what a server writes while serving reads (the official capture and its sequence in the file store, the audit of
+the reads, the derived trade pages, a person's first BI workspace) left out: `wb_live.DERIVED`) when a file gets the server and again when the file is done; a file that wrote anything there
 fails in its teardown with the files it wrote, and the server is stopped instead of handed on, so no file ever sees another file's data.
 The browser-rules test (`test_browser_rules.py`, rule 4) is unchanged: every server still comes from the pool.
 
@@ -541,6 +544,34 @@ python3 tools/sweep/api_sweep.py --console http://host:27480 --server http://hos
 
 The report is `data/sweep/api-sweep-<stamp>.md` and `.jsonl` (not committed).
 
+### 3.29 The release from another folder (a release blocker)
+
+Relative paths hurt more than once, so every full drill proves the release works from anywhere: the drill's **`anywhere`** lane
+(`tools/drill.sh`, `release_anywhere`; `--lanes anywhere` runs it alone) runs `drishti-console/tests/test_release_from_other_folder.py`. It is a
+release blocker: a failure fails the drill, and `--fix` runs it again whenever the commits touch `bin/`, the tools, the kernel or anything the
+server reads. It is not in the gate (a lake load takes minutes).
+
+- **The install**: `git archive HEAD` unpacked into a scratch folder on the disk (`data/tmp/anywhere-*`, never `/tmp`, which is memory on a
+  build machine) plus the gate's server jar, as the deployment guide makes the release ZIP.
+- **The lake**: the VaR kinds, the desk/book/entity references and the Murex and Endur trades, loaded with the **Java loader** by the install's
+  own `tools/drishti.py lake demo --engine java`, run from the other folder; cached per hash of the sources like the drill's other lakes
+  (about 5 minutes the first time, seconds after).
+- **The server**: the install's `bin/start-server.sh --background`, its process folder and `--workdir` both a different scratch folder, the demo
+  off, no `DRISHTI_*` setting inherited from the drill. VAR BANK has a non-zero headline, VAR EXPLAIN BANK answers 200 with no error code, POS and
+  TRD have rows and FORMS answers; the server is then stopped and started twice more, and VAR BANK is the same figure every time.
+- **The paths**: the `resolved paths:` block the server logs at start (`LaunchRoots`) is parsed on every start: each path absolute, each under the
+  install or the data folder, none under the working folder, and the working folder is left empty.
+- **Negative cases**: a required root that is missing (`DRISHTI_MODULES_HOME` naming no folder) and a relative `DRISHTI_HOME` each stop the start
+  within seconds with the message that names the setting and the folder.
+- **Windows**: `test_ps1_roots` (marked `static`, so the gate runs it) reads `bin/lib/common.ps1` and `bin/start-server.ps1`: the install folder
+  comes from the script's own folder, `DRISHTI_HOME` and `DRISHTI_MODULES_HOME` are passed absolute, and the working folder anchors nothing but
+  a relative path the person typed.
+
+```bash
+drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_release_from_other_folder.py   # needs the server jar (./mvnw -q clean package -DskipTests)
+tools/drill.sh --lanes anywhere --no-push                                                              # the same, through the drill
+```
+
 ## 4. Numbers to hold
 
 | What | Number |
@@ -616,6 +647,24 @@ old pauses and starts in the test's `BASELINE`, which may only go down.
     `monkeypatch`, ...) and fixtures of its file that do the same, calls no `TestClient`, `create_app`, `_stack` or Playwright, and its
     file imports no browser, stack or `subprocess` helper. The gate runs it before the server jar exists. `test_browser_rules.py`
     checks this on every test marked `static`, the console's and the tools'.
+
+### Running tests from an IDE
+
+A Java test never reads the folder the JVM started in. It asks `TestRoots.repo()` (the repository) and `TestRoots.module()` (its own module),
+both absolute (`testing/drishti-testroots`, a test dependency every module inherits). Maven's surefire sets `drishti.repo.root` and
+`drishti.module.root`. Anywhere else (IntelliJ's own runner) they come, in this order, from an explicit `-D`, then the settings file named by
+`-Ddrishti.settings.file=/absolute/path/drishti.ini` ([the format](../admin/CONFIGURATION.md)), then the test class's own code location
+(its `target/test-classes` up to the nearest `pom.xml`, and from there to the folder holding `.mvn/`); never the working folder. Nothing needs
+setting for a test built by Maven's importer. To pin or override roots once for all tests in IntelliJ: Run > Edit Configurations > Edit
+configuration templates > JUnit > VM options: `-Ddrishti.settings.file=/home/me/drishti.ini`. `TestPathsGuardTest` (Java) and
+`tests/test_paths_guard.py` (Python) fail on a test that builds a path from the working folder.
+
+**The path guards are release-blocking and run in every gate.** The product's main code and shipped YAML: `tests/test_no_relative_paths.py`
+(static: `Path.of`/`Paths.get`/`new File` of a relative literal, `user.dir`, a `"./..."` literal, a relative placeholder default such as
+`${x:./config/y}`, a shipped value that is a bare install folder; each finding named file:line, exceptions only in its explained
+`ALLOWED`). The tests: `test_paths_guard.py` (static) and `TestPathsGuardTest`, `LakePathsGuardTest`. The launch roots: `LaunchRootsTest`.
+The gate (`tools/drill.sh --gate`, and the first stage of every drill) runs the static ones with the quick file checks and the three Java
+ones with the rule tests; a new path from the working folder fails the gate.
 
 ## 7. Measuring a run
 

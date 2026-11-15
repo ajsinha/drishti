@@ -50,7 +50,7 @@ public class EditConfiguration {
     private static final Logger LOG = LoggerFactory.getLogger(EditConfiguration.class);
 
     static Path file(Environment env) {
-        return Path.of(env.getProperty("drishti.edit.file", "./config/edit/edit.yaml"));
+        return Path.of(env.getProperty("drishti.edit.file", com.ash.drishti.api.Roots.config("edit/edit.yaml")));
     }
 
     @Bean

@@ -47,7 +47,7 @@ public class ModuleDeployConfiguration {
      */
     static List<Path> modulesPath(Environment env) {
         List<Path> folders = new ArrayList<>();
-        String setting = env.getProperty("drishti.modules.path", Path.of(env.getProperty("drishti.data.dir", "./data"), "modules").toString());
+        String setting = env.getProperty("drishti.modules.path", Path.of(env.getProperty("drishti.data.dir", com.ash.drishti.api.Roots.data()), "modules").toString());
         for (String s : setting.split("[," + java.io.File.pathSeparator + "]")) {
             if (!s.isBlank()) {
                 folders.add(Path.of(s.strip()).toAbsolutePath().normalize());
@@ -127,7 +127,7 @@ public class ModuleDeployConfiguration {
 
     static Path root(Environment env) {
         String dir = env.getProperty("drishti.module-deploy.dir", "");
-        return (dir.isBlank() ? Path.of(env.getProperty("drishti.data.dir", "./data"), "modules") : Path.of(dir)).toAbsolutePath().normalize();
+        return (dir.isBlank() ? Path.of(env.getProperty("drishti.data.dir", com.ash.drishti.api.Roots.data()), "modules") : Path.of(dir)).toAbsolutePath().normalize();
     }
 
     /**

@@ -64,6 +64,8 @@ loaders' row (`domain`, `kind`, `id`, `date`, `doc`, `columns`) or a plain docum
 
 ## Examples
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 tools/load-files.sh                                    # the samples: 1,791 documents x 10 business days into data/files
 cp config/connectors.examples/files/*-store.yaml config/connectors/

@@ -18,6 +18,8 @@
 Three Drishti servers on one machine acting as one cluster ([OPERATIONS_GUIDE.md](../../docs/guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet)), and a console that is given the first
 server alone and learns the other two from the cluster. One command starts it, one stops it, and one shows how it is doing.
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 bin/start-cluster.sh       # start what is not running: the three servers, then the console
 bin/status.sh --cluster deploy/stack/stack.yaml      # the processes and ports, the members, the console's servers

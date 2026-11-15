@@ -190,6 +190,8 @@ text. The layout's `sort-by`, `file-rows` and `row-group-rows` do not apply.
 `tools/load-mongodb.sh` loads the banking packs' samples (`tools/packgen/banking/make_data.py`), and optionally a generated book,
 through `MongoLoader` (in the plugin):
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 tools/load-mongodb.sh mongodb://localhost:27017 drishti                            # the samples: 1,791 documents x 10 days
 tools/load-mongodb.sh mongodb://localhost:27017 drishti --trades 10000 --days 3    # and a book of trades, streamed

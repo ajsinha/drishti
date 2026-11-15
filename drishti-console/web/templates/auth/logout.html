@@ -17,11 +17,11 @@
 {% block title %}Sign out · {{ PRODUCT }}{% endblock %}
 {% block content %}
 <div class="login">
-  <form method="post" action="/logout" class="login-box">
+  <form method="post" action="{{ BASE }}/logout" class="login-box">
     <h1>Sign out</h1>
     <p>{% if me %}Signed in as <b>{{ me.display }}</b>{% if SERVERS %} on <b>{{ SERVER.name }}</b>{% endif %}. {% endif %}Signing out ends this session on the server.</p>
     <button type="submit" class="btn-pill btn-accent">Sign out</button>
-    <a class="lnk" href="/t">Stay signed in</a>
+    <a class="lnk" href="{{ BASE }}/t">Stay signed in</a>
   </form>
 </div>
 {% endblock %}

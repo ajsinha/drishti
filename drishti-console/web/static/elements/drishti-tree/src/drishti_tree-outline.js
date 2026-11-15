@@ -30,7 +30,7 @@
    Enter adds the field; its data-* attributes are the host's selectors; wire gives the host the button, for a drag), a mark that is a
    link (href) or carries the host's data-* attributes, small buttons after the line (actions: remove a dataset), branches that start
    closed (startOpen) and the node's column as wide as the panel (fill). */
-import { h, announce, EventBus, trackPointer } from '../../drishti-core/src/drishti_index.js';
+import { h, announce, EventBus, trackPointer, url as drishtiUrl } from '../../drishti-core/src/drishti_index.js';
 import { HierarchyModel } from './drishti_tree-model.js';
 import { keyMove } from './drishti_tree-io.js';
 import { Tree } from './drishti_tree-view.js';
@@ -275,7 +275,7 @@ export class TreeOutline {
     if (n.data.detail) { marks.push({ text: n.data.detail, detail: true }); }                 // a nested node's detail: a muted mark
     const mark = (m) => h(doc, m.href ? 'a' : 'span', {
       cls: 'dt-mark dt-tone-' + (OUTLINE_TONES.indexOf(m.tone) >= 0 ? m.tone : m.href ? 'link' : 'muted') + (m.badge ? ' dt-badge' : '') + (m.mono ? ' dt-mono' : '') + (m.clip ? ' dt-clip' : '') + (m.detail ? ' dt-odetail' : ''),
-      text: String(m.text), attrs: Object.assign({ title: m.title || null, href: m.href || null }, dataAttrs(m.attrs)) });
+      text: String(m.text), attrs: Object.assign({ title: m.title || null, href: drishtiUrl(m.href || null) }, dataAttrs(m.attrs)) });
     const icon = n.data.icon ? h(doc, 'i', { cls: 'dt-oicon ' + n.data.icon, attrs: { 'aria-hidden': 'true' } }) : null;
     const inner = [icon, h(doc, 'span', { cls: 'dt-oname' + (o.mono === false ? ' dt-plain' : ''), text: n.label })].concat(marks.filter((m) => !m.href).map(mark));
     const b = o.button ? o.button(n) : null;

@@ -156,6 +156,8 @@ Where each kind's data comes from, how it reaches the lake and how to check it. 
 | GLEIF golden copy, level 2: relationship records and reporting exceptions | https://goldencopy.gleif.org | CC0 1.0 (attribution appreciated) | no | `python3 tools/drishti.py feed run gleif -- golden` |
 | GLEIF mapping files: BIC, ISIN, MIC and OpenCorporates to LEI | https://mapping.gleif.org | CC0 1.0 | no | `python3 tools/drishti.py feed run gleif -- mapping` |
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 python3 tools/drishti.py feed status gleif                               # its last runs: last success, rows, failures (offline: the run ledger)
 python3 tools/drishti.py feed run gleif --dry-run                        # what would be fetched and loaded; changes nothing

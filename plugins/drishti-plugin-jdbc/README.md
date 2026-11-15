@@ -263,6 +263,8 @@ question becomes a scan: `LIKE` over every row for type-ahead, `MAX(business_dat
 `tools/load-postgres.sh` loads the banking packs' sample data (`tools/packgen/banking/make_data.py`), and optionally a large
 generated book, through `PostgresLoader` (in the plugin):
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 tools/load-postgres.sh jdbc:postgresql://localhost:5432/drishti                               # samples: 1,791 documents x 10 days
 tools/load-postgres.sh jdbc:postgresql://localhost:5432/drishti --trades 50000                # and 50,000 trades a day for 3 days

@@ -786,6 +786,8 @@ band's **Page break**, **Keep together**, **Repeat the column titles on every pa
 
 #### 4.7 The command line and the API
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```
 $ drishti.py bi statement preview bi-39eb12fe47 --date 2026-10-08
 Monthly statement: 3 pages, A4 portrait, October 2026, 66 rows

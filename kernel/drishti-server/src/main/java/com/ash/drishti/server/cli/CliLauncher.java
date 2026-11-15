@@ -118,7 +118,7 @@ public final class CliLauncher {
      * are, unless {@code given} (the command line's packs), a system property or {@code env} names them already.
      */
     static java.util.Map<String, String> scratchProperties(java.nio.file.Path scratch, java.util.Map<String, String> given, java.util.Map<String, String> env) {
-        java.nio.file.Path site = java.nio.file.Path.of(com.ash.drishti.api.DataDir.root()).toAbsolutePath().normalize();
+        java.nio.file.Path site = java.nio.file.Path.of(com.ash.drishti.api.DataDir.root());   // absolute (Roots)
         java.util.Map<String, String> out = new java.util.LinkedHashMap<>();
         for (String[] r : READ_FROM_SITE) {
             boolean named = given.containsKey(r[0]) || System.getProperty(r[0]) != null || env.get(r[0]) != null
@@ -171,8 +171,8 @@ public final class CliLauncher {
     static java.util.Map<String, String> packProperties(List<String> rest) {
         java.util.Set<String> names = new java.util.LinkedHashSet<>();
         java.nio.file.Path outside = null;
-        java.nio.file.Path packsDir = java.nio.file.Path.of(System.getProperty("drishti.packs.dir",
-                java.util.Objects.requireNonNullElse(System.getenv("DRISHTI_PACKS_DIR"), "./config/packs"))).toAbsolutePath().normalize();
+        java.nio.file.Path packsDir = com.ash.drishti.api.Roots.anchored(System.getProperty("drishti.packs.dir",
+                java.util.Objects.requireNonNullElse(System.getenv("DRISHTI_PACKS_DIR"), com.ash.drishti.api.Roots.config("packs"))));
         for (String arg : rest) {
             if (arg.startsWith("-")) {
                 continue;

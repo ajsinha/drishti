@@ -101,7 +101,10 @@ def test_an_item_for_a_page_this_build_lacks_is_not_drawn(backend, monkeypatch):
 
 
 def test_a_lens_puts_its_columns_first_for_that_person_only_and_keeps_the_rest(backend, monkeypatch):
-    """A lens arranges Domains' columns (the menus its menus.top names, in its order, then the rest); it never takes one out."""
+    """A lens arranges Domains' columns (the menus its menus.top names, in its order, then the rest); it never takes one out. The
+    companies' packs (US equities, funds, GLEIF) are enabled here: by default they do not load, and their entries are not drawn."""
+    monkeypatch.setenv("DRISHTI_PACKS", "core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,"
+                                        "us-equities,funds,gleif")
     app = _app(backend, monkeypatch)
     app.state.editions.learn({"product": "Drishti", "edition": None, "lenses": ["risk", "world", "market", "trading"]})
     alice, bob = _client(app), _client(app, "bob")

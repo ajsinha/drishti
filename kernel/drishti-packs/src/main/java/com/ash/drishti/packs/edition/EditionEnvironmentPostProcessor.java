@@ -50,7 +50,7 @@ public final class EditionEnvironmentPostProcessor implements EnvironmentPostPro
 
     public static final String SOURCE = "drishti-edition";
     /** Right after the configuration files are read (ConfigDataEnvironmentPostProcessor is HIGHEST_PRECEDENCE + 10). */
-    public static final int ORDER = Ordered.HIGHEST_PRECEDENCE + 11;
+    public static final int ORDER = Ordered.HIGHEST_PRECEDENCE + 12;   // after the launch roots (LaunchRoots, + 11)
     private static final Pattern PLACEHOLDER = Pattern.compile("^\\$\\{([A-Za-z0-9_.-]+):.*}$", Pattern.DOTALL);
 
     @Override

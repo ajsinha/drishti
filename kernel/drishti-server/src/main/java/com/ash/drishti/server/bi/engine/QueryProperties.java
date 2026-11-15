@@ -53,7 +53,7 @@ public record QueryProperties(String storeDir, Duration timeout, Integer maxRows
         Double storeMaxGb, Integer storeMaxDates) {
 
     public QueryProperties {
-        storeDir = storeDir == null || storeDir.isBlank() ? "./data/bi-store" : storeDir;
+        storeDir = storeDir == null || storeDir.isBlank() ? com.ash.drishti.api.Roots.data("bi-store") : storeDir;
         timeout = positive(timeout, Duration.ofSeconds(30));
         maxRows = maxRows == null || maxRows <= 0 ? 100_000 : maxRows;
         maxBytes = maxBytes == null || maxBytes <= 0 ? 64L * 1024 * 1024 : maxBytes;

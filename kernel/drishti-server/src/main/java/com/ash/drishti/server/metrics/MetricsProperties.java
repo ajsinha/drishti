@@ -46,7 +46,7 @@ public record MetricsProperties(Boolean enabled, Duration sampleInterval, Durati
     public record Alerts(Boolean enabled, String file, List<String> notifyRoles, Integer keep) {
         public Alerts {
             enabled = enabled == null || enabled;
-            file = file == null || file.isBlank() ? "./config/alerts/platform-alerts.yaml" : file;
+            file = file == null || file.isBlank() ? com.ash.drishti.api.Roots.config("alerts/platform-alerts.yaml") : file;
             notifyRoles = notifyRoles == null ? List.of("admin") : notifyRoles.stream().map(String::trim).filter(s -> !s.isEmpty()).toList();
             keep = keep == null || keep < 0 ? 200 : keep;
         }

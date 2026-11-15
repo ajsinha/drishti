@@ -16,18 +16,18 @@
 {% extends "base.html" %}
 {% block title %}{{ guide.title }} · Help · {{ PRODUCT }}{% endblock %}
 {% block body_class %}terminal help-page{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_help-config.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_help-config.css?v={{ ASSET_V }}">{% endblock %}
 {% block nav %}{% include "help/_nav.html" %}{% endblock %}
 {% block content %}
 <div class="help-wrap help-guide cfg-page" data-cfg-page>
-  <nav class="crumbs help-crumbs" aria-label="Breadcrumb"><a href="/help">Help</a><span class="sep">/</span>
-    <a href="/help/section/{{ category.id }}">{{ category.name }}</a><span class="sep">/</span><span>{{ guide.title }}</span></nav>
+  <nav class="crumbs help-crumbs" aria-label="Breadcrumb"><a href="{{ BASE }}/help">Help</a><span class="sep">/</span>
+    <a href="{{ BASE }}/help/section/{{ category.id }}">{{ category.name }}</a><span class="sep">/</span><span>{{ guide.title }}</span></nav>
   <header class="cfg-head">
     <h1>{{ guide.title | product }}</h1>
     <p class="lead">Every setting of every kind, in one document: what it means, its default, the environment variable that sets it,
       and whether a change needs a restart.{% if admin %} The value <b>in effect</b> of each, where it came from, and a change proposed for
-      a second administrator to approve: <a href="/admin/configuration" data-cfg-admin>Admin → Configuration</a>.{% endif %}</p>
-    <form class="cfg-search" action="/help/configuration" method="get" role="search" data-cfg-form>
+      a second administrator to approve: <a href="{{ BASE }}/admin/configuration" data-cfg-admin>Admin → Configuration</a>.{% endif %}</p>
+    <form class="cfg-search" action="{{ BASE }}/help/configuration" method="get" role="search" data-cfg-form>
       <label class="visually-hidden" for="cfg-q">Search settings</label>
       <i class="bi bi-search" aria-hidden="true"></i>
       <input id="cfg-q" name="q" type="search" value="{{ q }}" autocomplete="off" data-cfg-q
@@ -38,15 +38,15 @@
         {% for a in areas %}<option value="{{ a.id }}"{% if a.id == area %} selected{% endif %}>{{ a.title }}</option>{% endfor %}
       </drishti-select>
       <button type="submit" class="btn btn-sm btn-primary">Search</button>
-      {% if q or area %}<a class="btn btn-sm btn-outline-secondary" href="/help/configuration" data-cfg-clear>Clear</a>{% endif %}
+      {% if q or area %}<a class="btn btn-sm btn-outline-secondary" href="{{ BASE }}/help/configuration" data-cfg-clear>Clear</a>{% endif %}
     </form>
     <p class="cfg-count" data-cfg-count aria-live="polite">{% if q or area %}{{ matched }} of {{ total }} settings match{% if not matched %}: try fewer words, or another area{% endif %}.{% else %}{{ total }} settings.{% endif %}</p>
   </header>
   <article class="help-article" data-cfg-article>
-    {{ page.html | safe }}
+    {{ page.html | based | safe }}
     <footer class="help-foot">The source is <span class="mono">{{ guide.path.name }}</span>: its first half is written by hand, its second half is
       generated from the configuration files by <span class="mono">tools/settings_catalogue.py</span>, so a fixed comment in a file fixes this page.</footer>
   </article>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_help.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_configuration.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_help.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_configuration.js?v={{ ASSET_V }}"></script>{% endblock %}

@@ -121,6 +121,8 @@ Each file needs what its plugin expects; the detail is in the plugin's README (`
 
 ## Examples
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 cp config/connectors.examples/other/trading-stream.yaml config/connectors/trading-stream.yaml
 # edit the hosts and paths, then give the server its secrets

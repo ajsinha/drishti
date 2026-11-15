@@ -245,6 +245,8 @@ items.
 The command line reads definitions and sample files only; it starts no server. Run it from the repository (or installation) folder:
 `config/tables` is read by default (`--root` for another folder).
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```text
 $ drishti.py tables list
 table  banking.counterparty_exposure_counterparties@1.0.0  from kind, 4 columns, materialize on-load

@@ -48,7 +48,7 @@ public class BindingsConfiguration {
         BindingService s = new BindingService(PackEnvironmentPostProcessor.bindingsFile(env, sources.connectorsDir()), connectors, router, packs,
                 DataNeeds.load(BindingsConfiguration.class.getClassLoader()), m -> reg == null || reg.moduleOn(m),
                 () -> Boolean.parseBoolean(env.resolvePlaceholders("${drishti.demo.enabled:${DRISHTI_DEMO_ENABLED:true}}").trim()), audit,
-                Path.of(env.getProperty("drishti.data.dir", "./data"), "bindings", "proposals.json"), Clock.systemUTC());
+                Path.of(env.getProperty("drishti.data.dir", com.ash.drishti.api.Roots.data()), "bindings", "proposals.json"), Clock.systemUTC());
         s.refresh();
         if (reg != null) {
             reg.dataGate(s::offReason);

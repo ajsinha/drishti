@@ -32,7 +32,7 @@ public final class UiKitDir {
 
     /** The kit folder: the configured one when it has fragments, else the packs' sibling when that has them, else the configured one. */
     public static Path resolve(String configured, String packsDir) {
-        Path set = Path.of(configured == null || configured.isBlank() ? "./config/ui-kit" : configured).toAbsolutePath().normalize();
+        Path set = Path.of(configured == null || configured.isBlank() ? com.ash.drishti.api.Roots.config("ui-kit") : configured).toAbsolutePath().normalize();
         if (Files.isDirectory(set.resolve("fragments")) || packsDir == null || packsDir.isBlank()) {
             return set;
         }

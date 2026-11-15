@@ -43,7 +43,7 @@
     return e;
   }
   function api(method, url, body) {
-    return fetch(url, { method: method, credentials: 'same-origin', headers: body ? { 'Content-Type': 'application/json' } : {}, body: body ? JSON.stringify(body) : undefined })
+    return fetch(drishti_url(url), { method: method, credentials: 'same-origin', headers: body ? { 'Content-Type': 'application/json' } : {}, body: body ? JSON.stringify(body) : undefined })
       .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) { var e = new Error(j.detail || 'Something went wrong'); e.body = j; throw e; } return j; }); });
   }
   function say(t, ok) { msg.textContent = t || ''; msg.className = 'dz-msg' + (ok ? ' dz-ok' : ''); }
@@ -225,7 +225,7 @@
   function step(body) {
     body.kind = kind; body.id = id;
     say('Saving…', true);
-    return api('POST', '/designer/grid/op/' + encodeURIComponent(draft), body)
+    return api('POST', drishti_url('/designer/grid/op/') + encodeURIComponent(draft), body)
       .then(function () { return Promise.all([load(), redraw()]); })
       .then(function () { say('Saved', true); return true; })
       .catch(function (e) {
@@ -252,12 +252,12 @@
   /* the preview, drawn again in place: the new page's grid swapped into the frame (its scripts set it up), else a reload */
   function redraw() {
     var w = frame.contentWindow, d = frame.contentDocument;
-    var url = '/v/' + encodeURIComponent(kind) + '/' + encodeURIComponent(id) + '?design=' + encodeURIComponent(draft) + '&embed=1';
-    return fetch(url, { credentials: 'same-origin', cache: 'no-store', headers: { Accept: 'text/html' } }).then(function (r) { return r.text(); }).then(function (html) {
+    var url = drishti_url('/v/') + encodeURIComponent(kind) + '/' + encodeURIComponent(id) + '?design=' + encodeURIComponent(draft) + '&embed=1';
+    return fetch(drishti_url(url), { credentials: 'same-origin', cache: 'no-store', headers: { Accept: 'text/html' } }).then(function (r) { return r.text(); }).then(function (html) {
       var fresh = new DOMParser().parseFromString(html, 'text/html').querySelector('[data-view] .vgrid'), old = d && d.querySelector('[data-view] .vgrid');
       var needsGrid = fresh && fresh.hasAttribute('data-sgrid') && !(w && (w.Drishti || {}).screenGrid);
       var needsWire = fresh && fresh.querySelector('section.pnl[data-wire]') && !(w && (w.Drishti || {}).wire);
-      if (!fresh || !old || needsGrid || needsWire) { frame.setAttribute('src', url); return; }
+      if (!fresh || !old || needsGrid || needsWire) { frame.setAttribute('src', drishti_url(url)); return; }
       var next = fresh.ownerDocument === d ? fresh : d.importNode(fresh, true);
       old.replaceWith(next);
       if ((w.Drishti || {}).screenGrid && next.hasAttribute('data-sgrid')) { (w.Drishti || {}).screenGrid.init(next); }
@@ -267,7 +267,7 @@
   }
 
   function load() {
-    return api('GET', '/designer/grid/state/' + encodeURIComponent(draft)).then(function (s) {
+    return api('GET', drishti_url('/designer/grid/state/') + encodeURIComponent(draft)).then(function (s) {
       state = s;
       if (sel.r >= rows()) { sel.r = rows() - 1; }
       if (sel.c >= s.grid.cols) { sel.c = s.grid.cols - 1; }
@@ -376,11 +376,11 @@
   var yamlBtn = root.querySelector('[data-gd-yaml]');
   yamlBtn.addEventListener('click', function () { sutra.hidden = !sutra.hidden; yamlBtn.setAttribute('aria-expanded', String(!sutra.hidden)); yamlBtn.textContent = sutra.hidden ? 'Show the Sutra' : 'Hide the Sutra'; });
   root.querySelector('[data-gd-cancel]').addEventListener('click', function () {
-    api('POST', '/designer/cancel/' + encodeURIComponent(draft)).finally(function () { location.href = '/v/' + encodeURIComponent(kind) + '/' + encodeURIComponent(id); });
+    api('POST', drishti_url('/designer/cancel/') + encodeURIComponent(draft)).finally(function () { location.href = drishti_url('/v/' + encodeURIComponent(kind) + '/' + encodeURIComponent(id)); });
   });
   root.querySelector('[data-gd-done]').addEventListener('click', function () {
     say('Keeping your page…', true);
-    api('POST', '/designer/done/' + encodeURIComponent(draft), { kind: kind }).then(function () { location.href = '/v/' + encodeURIComponent(kind) + '/' + encodeURIComponent(id); })
+    api('POST', drishti_url('/designer/done/') + encodeURIComponent(draft), { kind: kind }).then(function () { location.href = drishti_url('/v/' + encodeURIComponent(kind) + '/' + encodeURIComponent(id)); })
       .catch(function (e) { say(e.message); });
   });
   load().catch(function (e) { say(e.message); });

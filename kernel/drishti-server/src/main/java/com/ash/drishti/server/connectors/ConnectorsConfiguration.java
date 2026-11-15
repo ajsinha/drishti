@@ -35,7 +35,7 @@ public class ConnectorsConfiguration {
 
     @Bean
     public ConnectorFiles connectorFiles(SourcesProperties props, org.springframework.core.env.Environment env) {
-        return new ConnectorFiles(Path.of(props.connectorsDir()), Path.of(env.getProperty("drishti.data.dir", "./data"), "connectors"));
+        return new ConnectorFiles(Path.of(props.connectorsDir()), Path.of(env.getProperty("drishti.data.dir", com.ash.drishti.api.Roots.data()), "connectors"));
     }
 
     @Bean

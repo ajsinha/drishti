@@ -62,7 +62,7 @@ public final class ModuleWiring {
         this.router = router;
         this.audit = audit;
         this.env = env;
-        this.dataDir = Path.of(env == null ? "./data" : env.getProperty("drishti.data.dir", "./data")).toAbsolutePath().normalize();
+        this.dataDir = Path.of(env == null ? com.ash.drishti.api.Roots.data() : env.getProperty("drishti.data.dir", com.ash.drishti.api.Roots.data())).toAbsolutePath().normalize();
         this.bridge = new ModuleBridge(sources, engines, (id, p) -> folders.getOrDefault(id, Map.of()), budget);
     }
 

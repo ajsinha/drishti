@@ -55,6 +55,8 @@ Where each kind's data comes from, how it reaches the lake and how to check it. 
 |---|---|---|---|---|
 | OECD Data Explorer SDMX API | https://sdmx.oecd.org/public/rest | OECD terms: reuse with the source acknowledged (CC BY 4.0) | no | `python3 tools/drishti.py feed run oecd` |
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 python3 tools/drishti.py feed status oecd            # its last runs: last success, rows, failures (offline: the run ledger)
 python3 tools/drishti.py feed run oecd --dry-run     # what would be fetched and loaded; changes nothing

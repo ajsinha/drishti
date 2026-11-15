@@ -59,7 +59,7 @@
       opt.headers['Content-Type'] = 'application/json';
       opt.body = JSON.stringify(body);
     }
-    return fetch(path.indexOf('/bi/') === 0 ? path : '/bi/api' + path, opt).then(function (r) {
+    return fetch(drishti_url(path.indexOf('/bi/') === 0 ? path : '/bi/api' + path), opt).then(function (r) {
       if (r.status === 204) { return null; }
       return r.json().catch(function () { return {}; }).then(function (data) {
         if (!r.ok) { var e = new Error((data.code ? data.code + ' ' : '') + (data.detail || r.statusText)); e.code = data.code; e.status = r.status; throw e; }
@@ -107,7 +107,7 @@
     var fresh = it.publishedAt ? 'updated ' + ago(it.publishedAt) : 'not published';
     return h('article', { class: 'bi-card', 'data-id': it.id, 'data-kind': it.kind },
       h('header', {}, h('span', { class: 'bi-kind', title: it.kind }, icon(KIND_ICON[it.kind] || 'file-earmark'), ' ' + it.kind), fav),
-      h('h3', {}, h('a', { href: '/bi/i/' + encodeURIComponent(it.id).replace(/%3A/g, ':') , text: it.title })),
+      h('h3', {}, h('a', { href: drishti_url('/bi/i/' + encodeURIComponent(it.id).replace(/%3A/g, ':')) , text: it.title })),
       it.description ? h('p', { class: 'bi-card-desc', text: it.description }) : null,
       h('p', { class: 'bi-card-badges' }, endorsement(it), it.shipped ? badge('shipped', '', 'folder') : null, it.status && it.status !== 'published' ? badge(it.status, 'bi-status') : null,
         (it.tags || []).slice(0, 4).map(function (t) { return badge(t, 'bi-tagchip', 'tag'); })),
@@ -167,7 +167,7 @@
       var mine = ++seq, s = state();
       select();
       var url = location.pathname + '?' + s.toString();
-      if (push) { history.pushState({ kind: tab }, '', url); } else { history.replaceState({ kind: tab }, '', url); }
+      if (push) { history.pushState({ kind: tab }, '', drishti_url(url)); } else { history.replaceState({ kind: tab }, '', drishti_url(url)); }
       api('GET', '/catalogue-tabs?' + s.toString()).then(function (d) {
         if (mine !== seq) { return; }
         facets(d.facets || {}, d.workspaceNames || {});
@@ -219,7 +219,7 @@
   function wsCard(w) {
     return h('article', { class: 'bi-card bi-ws', 'data-ws': w.id },
       h('header', {}, h('span', { class: 'bi-kind' }, icon(w.personal ? 'person-workspace' : w.shipped ? 'folder' : 'diagram-3'), ' ' + (w.personal ? 'personal' : w.shipped ? 'shipped' : 'shared')), badge(w.role, 'bi-role')),
-      h('h3', {}, h('a', { href: '/bi/w/' + (w.personal ? 'me' : encodeURIComponent(w.id)), text: w.name })),
+      h('h3', {}, h('a', { href: drishti_url('/bi/w/' + (w.personal ? 'me' : encodeURIComponent(w.id))), text: w.name })),
       w.description ? h('p', { class: 'bi-card-desc', text: w.description }) : null,
       h('p', { class: 'bi-card-meta', text: w.items + (w.items === 1 ? ' item' : ' items') + (w.reviewRequired ? ' · review before publishing' : '') }));
   }
@@ -231,7 +231,7 @@
     function next(w) {
       var p = q('[data-ws-next]'), a = q('[data-ws-next-link]');
       if (!p || !a || !w || !w.id) { return; }
-      a.href = '/bi/w/' + encodeURIComponent(w.id) + '?tab=members'; a.textContent = 'add the people who share ' + w.name; p.hidden = false;
+      a.href = drishti_url('/bi/w/' + encodeURIComponent(w.id) + '?tab=members'); a.textContent = 'add the people who share ' + w.name; p.hidden = false;
     }
     form.addEventListener('submit', function (e) {
       e.preventDefault();
@@ -307,7 +307,7 @@
           var del = may ? h('button', { type: 'button', class: 'btn-pill btn-ghost bi-danger', 'data-row-delete': it.id, 'aria-label': 'Delete ' + it.title }, 'Delete') : null;
           if (pick) { pick.addEventListener('change', syncBulk); }
           if (del) { del.addEventListener('click', function () { askDelete([it]); }); }
-          tbody.appendChild(h('tr', { 'data-id': it.id }, h('td', { class: 'bi-pick' }, pick || ''), h('th', { scope: 'row' }, h('a', { href: '/bi/i/' + encodeURIComponent(it.id).replace(/%3A/g, ':'), text: it.title })),
+          tbody.appendChild(h('tr', { 'data-id': it.id }, h('td', { class: 'bi-pick' }, pick || ''), h('th', { scope: 'row' }, h('a', { href: drishti_url('/bi/i/' + encodeURIComponent(it.id).replace(/%3A/g, ':')), text: it.title })),
             h('td', { class: 'bi-shortid', title: it.id, text: shortId(it.id) }), h('td', { text: it.kind }), h('td', { text: it.status }), h('td', { text: it.publishedVersion ? 'v' + it.publishedVersion : '' }),
             h('td', {}, endorsement(it) || ''), h('td', { text: stamp(it.createdAt).slice(0, 16) }), h('td', { text: ago(it.updatedAt) }), h('td', {}, del || '')));
           rows[it.id] = it;
@@ -333,7 +333,7 @@
             near(del, self ? 'This removes you from ' + ws.name + ': you lose access to it' + (ws.role === 'admin' ? ' and may leave it with no administrator' : '') + '. Click again to confirm.' : 'Click again to remove ' + m.username + '.', true);
             return;
           }
-          busy(del, function () { return api('DELETE', '/workspaces/' + encodeURIComponent(ws.id) + '/members/' + encodeURIComponent(m.username)).then(function () { say('Removed ' + m.username + '.'); if (self) { window.location.href = '/bi/workspaces'; } else { load(); } }).catch(function (err) { near(del, err.message, true); }); });
+          busy(del, function () { return api('DELETE', '/workspaces/' + encodeURIComponent(ws.id) + '/members/' + encodeURIComponent(m.username)).then(function () { say('Removed ' + m.username + '.'); if (self) { window.location.href = drishti_url('/bi/workspaces'); } else { load(); } }).catch(function (err) { near(del, err.message, true); }); });
         });
         tb.appendChild(h('tr', { 'data-user': m.username }, h('th', { scope: 'row', text: m.username }), h('td', { text: m.role }), h('td', { text: m.addedBy }), h('td', {}, admin ? del : '')));
       });
@@ -347,9 +347,9 @@
     var START = {
       report: { hint: 'A report reads one model: choose a model (or a dataset, which reads as its own small model), and the report opens in the designer.', go: 'Create and open in the designer' },
       board: { hint: 'A board is a report with board pages: tiles from other reports beside visuals of its own. It opens in the report designer, no model needed.', go: 'Create and open in the designer' },
-      dataset: { hint: 'A table is written in Build › Tables & models: its source, columns, keys and row rules, with a live preview. Or paste a table YAML document (rachana: 3) you already have.', go: 'New table', href: '/build/tables?new=table&workspace=' },
-      model: { hint: 'A model puts tables in a star with relationships, measures and security. It is written in Build › Tables & models.', go: 'New model', href: '/build/tables?new=model&workspace=' },
-      notebook: { hint: 'A notebook is started in the Notebook (SQL and Python cells, run on the server); it saves it here with Save as a notebook.', go: 'Go to the Notebook', href: '/bi/notebook' },
+      dataset: { hint: 'A table is written in Build › Tables & models: its source, columns, keys and row rules, with a live preview. Or paste a table YAML document (rachana: 3) you already have.', go: 'New table', href: drishti_url('/build/tables?new=table&workspace=') },
+      model: { hint: 'A model puts tables in a star with relationships, measures and security. It is written in Build › Tables & models.', go: 'New model', href: drishti_url('/build/tables?new=model&workspace=') },
+      notebook: { hint: 'A notebook is started in the Notebook (SQL and Python cells, run on the server); it saves it here with Save as a notebook.', go: 'Go to the Notebook', href: drishti_url('/bi/notebook') },
       python: { hint: 'Choose what the Python item makes. It is created with a valid, commented starter body and opens in its editor, ready to change and Check.', go: 'Create and open the editor' }
     };
     function kindChanged() {
@@ -384,7 +384,7 @@
       var title = f.elements.title.value.trim() || (inYaml && inYaml[1]) || (named && named[1]) || defaultTitle('dataset');
       busy(go, function () {
         return api('POST', '/workspaces/' + encodeURIComponent(id) + '/items', { kind: /^model:/m.test(text) ? 'model' : 'table', title: title, description: f.elements.description.value, body: text })
-          .then(function (it) { window.location.href = '/bi/i/' + encodeURIComponent(it.id).replace(/%3A/g, ':'); }).catch(function (err) { near(go, err.message, true); });
+          .then(function (it) { window.location.href = drishti_url('/bi/i/' + encodeURIComponent(it.id).replace(/%3A/g, ':')); }).catch(function (err) { near(go, err.message, true); });
       });
     });
     q('[data-new-item] drishti-select[name=kind]').addEventListener('change', kindChanged);      // drishti-inputs' Select: a pick fires change
@@ -394,26 +394,26 @@
     q('[data-new-item]').addEventListener('submit', function (e) {
       e.preventDefault();
       var f = e.target, kind = f.elements.kind.value, st = START[kind];
-      if (st.href) { window.location.href = st.href + (kind === 'dataset' || kind === 'model' ? encodeURIComponent(id) : ''); return; }
+      if (st.href) { window.location.href = drishti_url(st.href + (kind === 'dataset' || kind === 'model' ? encodeURIComponent(id) : '')); return; }
       var title = f.elements.title.value.trim() || defaultTitle(kind), body, to, also = [];
       var name = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || kind;
       if (kind === 'report') {
         if (!f.elements.dataset.value) { say('Choose a main dataset: a report draws one.', true); q('[data-new-dataset]', f).focus(); return; }
         also = (q('[data-new-also]', f).value || []).filter(function (v) { return v !== f.elements.dataset.value; }).map(function (v) { return String(v).replace(/^file:dataset:/, ''); });
         body = 'rachana: 1\nreport: ' + name + '\ntitle: ' + JSON.stringify(title) + '\n' + window.drishtiBi.sourceLine(f.elements.dataset.value) + '\npages:\n  - id: page1\n    title: Page 1\n    visuals: []\n';
-        to = '/bi/design/';
+        to = drishti_url('/bi/design/');
       } else if (kind === 'python') {
         var py = window.drishtiBi && window.drishtiBi.pythonStarter;
         if (!py) { say('The starter is not loaded: reload the page.', true); return; }
         body = py(f.elements.pyinterface.value, name, title, f.elements.pyinputs.value);
-        to = '/bi/i/';
+        to = drishti_url('/bi/i/');
       } else {
         body = 'rachana: 1\nreport: ' + name + '\ntitle: ' + JSON.stringify(title) + '\npages:\n  - id: page1\n    title: Page 1\n    layout: board\n    visuals: []\n';      // a board is a report with board pages (2.4.0)
         kind = 'report';
-        to = '/bi/design/';
+        to = drishti_url('/bi/design/');
       }
       api('POST', '/workspaces/' + encodeURIComponent(id) + '/items', { kind: kind, title: title, description: f.elements.description.value, body: body })
-        .then(function (it) { window.location.href = to + encodeURIComponent(it.id).replace(/%3A/g, ':') + (kind === 'python' ? '?edit=1' : also.length ? '?also=' + encodeURIComponent(also.join(',')) : ''); }).catch(fail);
+        .then(function (it) { window.location.href = drishti_url(to + encodeURIComponent(it.id).replace(/%3A/g, ':') + (kind === 'python' ? '?edit=1' : also.length ? '?also=' + encodeURIComponent(also.join(',')) : '')); }).catch(fail);
     });
     q('[data-add-member]').addEventListener('submit', function (e) {
       e.preventDefault();
@@ -427,7 +427,7 @@
     q('[data-delete-workspace]').addEventListener('click', function (e) {
       var b = e.target;
       if (!b.getAttribute('data-sure')) { b.setAttribute('data-sure', '1'); b.textContent = 'Confirm: delete this workspace'; return; }
-      api('DELETE', '/workspaces/' + encodeURIComponent(ws.id)).then(function () { window.location.href = '/bi/workspaces'; }).catch(function (err) { b.removeAttribute('data-sure'); b.textContent = 'Delete workspace'; fail(err); });
+      api('DELETE', '/workspaces/' + encodeURIComponent(ws.id)).then(function () { window.location.href = drishti_url('/bi/workspaces'); }).catch(function (err) { b.removeAttribute('data-sure'); b.textContent = 'Delete workspace'; fail(err); });
     });
     load();
   }
@@ -467,18 +467,18 @@
       q('[data-body-is]').textContent = it.bodyIs !== 'draft' ? 'published version' : it.status === 'proposed' ? 'draft, proposed for review (frozen)' : it.status === 'published' ? 'draft, the same as the published version' : it.draftChanges ? 'draft, with changes not yet published' : 'draft';
       actions(); form(); versions(); migration();
       var open = q('[data-open-dataset]');
-      if (open) { open.hidden = it.kind !== 'dataset'; open.href = '/bi/d/' + encodeURIComponent(it.id).replace(/%3A/g, ':'); }
+      if (open) { open.hidden = it.kind !== 'dataset'; open.href = drishti_url('/bi/d/' + encodeURIComponent(it.id).replace(/%3A/g, ':')); }
       var enc = encodeURIComponent(it.id).replace(/%3A/g, ':');
       var rep = q('[data-open-report]'), des = q('[data-open-design]'), mod = q('[data-open-model]');
-      if (rep) { rep.hidden = it.kind !== 'report'; rep.href = '/bi/r/' + enc; }
+      if (rep) { rep.hidden = it.kind !== 'report'; rep.href = drishti_url('/bi/r/' + enc); }
       var nbk = q('[data-open-notebook]');
-      if (nbk) { nbk.hidden = it.kind !== 'notebook'; nbk.href = '/bi/notebook?item=' + encodeURIComponent(it.id); }
+      if (nbk) { nbk.hidden = it.kind !== 'notebook'; nbk.href = drishti_url('/bi/notebook?item=' + encodeURIComponent(it.id)); }
       var brd = q('[data-open-board]');
-      if (brd) { brd.hidden = !it.board; brd.href = '/bi/r/' + enc + '?kiosk=1'; }                 // a report with board pages (2.4.0): its kiosk
-      if (des) { const designable = it.kind === 'report'; des.hidden = !(designable && it.can && it.can.edit) && !(designable && it.shipped); des.href = '/bi/design/' + enc; des.lastChild.textContent = it.shipped ? ' Open a copy in the designer' : ' Open in the designer'; }
+      if (brd) { brd.hidden = !it.board; brd.href = drishti_url('/bi/r/' + enc + '?kiosk=1'); }                 // a report with board pages (2.4.0): its kiosk
+      if (des) { const designable = it.kind === 'report'; des.hidden = !(designable && it.can && it.can.edit) && !(designable && it.shipped); des.href = drishti_url('/bi/design/' + enc); des.lastChild.textContent = it.shipped ? ' Open a copy in the designer' : ' Open in the designer'; }
       // a table or a model is written in Build › Tables & models (docs/architecture/SHARED_SCREENS.md): one way per job
-      if (mod) { mod.hidden = !(it.kind === 'table' || it.kind === 'model'); mod.href = '/build/tables?kind=' + it.kind + '&item=' + encodeURIComponent(it.id).replace(/%3A/g, ':'); }
-      if (open && (it.kind === 'table' || it.kind === 'dataset' && /^rachana:\s*2\b/m.test(it.body || ''))) { open.href = '/bi/ds/' + enc; }   // a model-layer dataset has its own page
+      if (mod) { mod.hidden = !(it.kind === 'table' || it.kind === 'model'); mod.href = drishti_url('/build/tables?kind=' + it.kind + '&item=' + encodeURIComponent(it.id).replace(/%3A/g, ':')); }
+      if (open && (it.kind === 'table' || it.kind === 'dataset' && /^rachana:\s*2\b/m.test(it.body || ''))) { open.href = drishti_url('/bi/ds/' + enc); }   // a model-layer dataset has its own page
       document.dispatchEvent(new CustomEvent('drishti:bi-item', { detail: x }));          // drishti_bi-govern.js draws history, review, impact and lineage
     }
     function act(label, run, cls) {
@@ -504,7 +504,7 @@
     }
     /** A Python item's manifest checks (the server's) and source checks (the console's): every problem, in the warnings box. */
     function checkPython() {
-      fetch('/bi/python/check', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ yaml: it.body || '' }) })
+      fetch(drishti_url('/bi/python/check'), { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ yaml: it.body || '' }) })
         .then(function (r) { return r.json(); }).then(function (d) {
           var w = q('[data-warnings]'); clear(w); w.hidden = false;
           var list = d.problems || (d.code ? [{ level: 'error', code: d.code, path: '', message: d.detail }] : []);
@@ -538,7 +538,7 @@
       }
       if (c.withdraw) { box.appendChild(act('Withdraw proposal', function (b) { post('withdraw', null, 'Withdrawn: a draft again.', b); })); }
       if (c.approve) {                                    // decided in the one Approvals queue: what changes, its effect, the rules and questions
-        box.appendChild(h('a', { class: 'btn-pill btn-accent', 'data-bi-approvals': '', href: '/approvals/bi/' + encodeURIComponent(it.id).replace(/%3A/g, ':') }, 'Decide in Approvals'));
+        box.appendChild(h('a', { class: 'btn-pill btn-accent', 'data-bi-approvals': '', href: drishti_url('/approvals/bi/' + encodeURIComponent(it.id).replace(/%3A/g, ':')) }, 'Decide in Approvals'));
       }
       if (c.promote && it.endorsement !== 'certified') { box.appendChild(act(it.endorsement === 'promoted' ? 'Remove promotion' : 'Promote', function (b) { post('endorse', { level: it.endorsement === 'promoted' ? 'none' : 'promoted' }, it.endorsement === 'promoted' ? 'Promotion removed.' : 'Promoted: it is listed first for others.', b); })); }
       if (c.certify) { box.appendChild(act(it.endorsement === 'certified' ? 'Remove certification' : 'Certify', function (b) { post('endorse', { level: it.endorsement === 'certified' ? 'none' : 'certified' }, it.endorsement === 'certified' ? 'Certification removed.' : 'Certified.', b); })); }
@@ -547,7 +547,7 @@
       if (c.delete) {
         box.appendChild(act('Delete', function (b) {
           if (it.kind === 'model' && !b.getAttribute('data-sure')) {        // a model is shared: it is not deleted while anything uses it (a report only references it)
-            return fetch('/bi/model-api/consumers?ref=' + encodeURIComponent(it.id), { credentials: 'same-origin', headers: { Accept: 'application/json' } })
+            return fetch(drishti_url('/bi/model-api/consumers?ref=' + encodeURIComponent(it.id)), { credentials: 'same-origin', headers: { Accept: 'application/json' } })
               .then(function (r) { return r.ok ? r.json() : { known: false, consumers: [] }; }).then(function (c) {
                 if (c.known && c.consumers.length) {
                   var w = h('span', { class: 'bi-delete-impact', 'data-delete-refused': '', role: 'alert' }, 'Not deleted: ' + c.consumers.length + ' item' + (c.consumers.length === 1 ? ' uses' : 's use') + ' this model (' + c.consumers.slice(0, 5).map(function (x) { return x.title; }).join(', ') + (c.consumers.length > 5 ? ', ...' : '') + '). Move them to another model first.');
@@ -562,7 +562,7 @@
             impactOf(it.id, null, it.publishedVersion).then(function (t) { var w = h('span', { class: 'bi-delete-impact', 'data-delete-impact': '' }, t); b.after(w); });
             return;
           }
-          api('DELETE', path).then(function () { window.location.href = '/bi/w/' + encodeURIComponent(it.workspace); }).catch(function (e) { near(b, e.message, true); });
+          api('DELETE', path).then(function () { window.location.href = drishti_url('/bi/w/' + encodeURIComponent(it.workspace)); }).catch(function (e) { near(b, e.message, true); });
         }, 'btn-ghost bi-danger'));
       }
     }
@@ -574,7 +574,7 @@
       if (!B || !B.askWorkspace) { say('Reload the page to duplicate.', true); return; }
       B.askWorkspace(b, 'Duplicate here', 'Duplicate into').then(function (to) {
         return api('POST', '/workspaces/' + encodeURIComponent(to) + '/items', { kind: it.kind, title: it.title + ' (copy)', description: it.description || '', tags: (it.tags || []).join(', '), body: it.shipped && B.copyBody ? B.copyBody(it.body || '') : it.body || '' });
-      }).then(function (n) { window.location.href = '/bi/i/' + encodeURIComponent(n.id).replace(/%3A/g, ':'); }).catch(function (e) { if (!e.cancelled) { near(b, e.message, true); } });
+      }).then(function (n) { window.location.href = drishti_url('/bi/i/' + encodeURIComponent(n.id).replace(/%3A/g, ':')); }).catch(function (e) { if (!e.cancelled) { near(b, e.message, true); } });
     }
     function moveTo(b) {
       closePanels();
@@ -631,7 +631,7 @@
       var B = window.drishtiBi, go = f.querySelector('[type=submit]');
       var payload = { title: f.elements.title.value, description: f.elements.description.value, tags: f.elements.tags.value, audienceRoles: f.elements.audienceRoles.value,
         audienceUsers: f.elements.audienceUsers.value, audiencePacks: f.elements.audiencePacks.value, body: f.elements.body.value, message: f.elements.message.value };
-      var copy = function () { return B.askWorkspace(go, 'Save mine as a copy', 'Save a copy into').then(function (to) { return api('POST', '/workspaces/' + encodeURIComponent(to) + '/items', { kind: it.kind, title: payload.title + ' (copy)', description: payload.description, tags: payload.tags, body: payload.body }); }).then(function (n) { window.location.href = '/bi/i/' + encodeURIComponent(n.id).replace(/%3A/g, ':'); }); };
+      var copy = function () { return B.askWorkspace(go, 'Save mine as a copy', 'Save a copy into').then(function (to) { return api('POST', '/workspaces/' + encodeURIComponent(to) + '/items', { kind: it.kind, title: payload.title + ' (copy)', description: payload.description, tags: payload.tags, body: payload.body }); }).then(function (n) { window.location.href = drishti_url('/bi/i/' + encodeURIComponent(n.id).replace(/%3A/g, ':')); }); };
       var save = B && B.saveItem ? function () { return B.saveItem(id, payload, it.etag, go, copy); } : function () { return api('PUT', path, payload); };
       busy(go, function () {
         return save().then(function () { say('Draft saved.'); f.hidden = true; f.elements.message.value = ''; return api('GET', path).then(show); }).catch(function (err) { if (!err.cancelled) { near(go, err.message, true); } });
@@ -658,7 +658,7 @@
       q('[data-title]').textContent = 'Decision recorded';
       say(text, false);
       var m = q('[data-msg]');
-      if (m && !m.querySelector('[data-back-inbox]')) { m.appendChild(document.createTextNode(' ')); m.appendChild(h('a', { class: 'lnk', href: '/inbox', 'data-back-inbox': '', text: 'Back to the inbox' })); }
+      if (m && !m.querySelector('[data-back-inbox]')) { m.appendChild(document.createTextNode(' ')); m.appendChild(h('a', { class: 'lnk', href: drishti_url('/inbox'), 'data-back-inbox': '', text: 'Back to the inbox' })); }
     }
     /** An item that is not there, or that this reader may not see, shows the not-found message and nothing else: no empty sections, no actions, nothing of its content. */
     function notFound(e) {
@@ -704,13 +704,13 @@
   var K = window.Drishti.keys, pendingG = 0;
   var gWaits = function () { return pendingG && Date.now() - pendingG < 1500; };
   K.register({ id: 'bi.search', keys: ['/'], scope: 'screen', area: 'bi', group: 'BI', description: 'Search the catalogue',
-    run: function () { var s = q('input[data-search]'); if (s) { s.focus(); } else { window.location.href = '/bi/catalogue?focus=1'; } } });
+    run: function () { var s = q('input[data-search]'); if (s) { s.focus(); } else { window.location.href = drishti_url('/bi/catalogue?focus=1'); } } });
   K.register({ id: 'bi.go', keys: ['G'], scope: 'screen', area: 'bi', group: 'BI', label: 'g, then h c w r',
     description: 'Go to: h the Build home, c the catalogue, w your workspace, r your runs', when: function () { return !gWaits(); },
     run: function () { pendingG = Date.now(); } });
-  [['H', '/build', 'the Build home'], ['C', '/bi/catalogue', 'the catalogue'], ['W', '/bi/w/me', 'your workspace'], ['R', '/bi/w/me?tab=runs', 'your runs']].forEach(function (g) {
+  [['H', drishti_url('/build'), 'the Build home'], ['C', drishti_url('/bi/catalogue'), 'the catalogue'], ['W', drishti_url('/bi/w/me'), 'your workspace'], ['R', drishti_url('/bi/w/me?tab=runs'), 'your runs']].forEach(function (g) {
     K.register({ id: 'bi.go.' + g[0].toLowerCase(), keys: [g[0]], scope: 'screen', area: 'bi-go', hidden: true, description: 'After g: ' + g[2],
-      when: gWaits, run: function () { pendingG = 0; window.location.href = g[1]; } });
+      when: gWaits, run: function () { pendingG = 0; window.location.href = drishti_url(g[1]); } });
   });
 
   // -- start ------------------------------------------------------------------------------------------------------------

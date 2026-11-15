@@ -20,6 +20,7 @@
    Deleted with the renderer 1.2.0 (renderer 2.0.0 draws with the libraries; ELEMENTS.md section 12, step 8). */
 (function () {
   "use strict";
+  function drishti_url(p) { var f = globalThis.drishti_url; return typeof f === 'function' && f !== drishti_url ? f(p) : p; }   // drishti-core's base helper when the page has it; a page without it (the renderer, an embed) keeps the URL as it is
   var me = document.currentScript, D = window.Drishti || {};
   if (!me || !me.src || (D.elements && D.elements.grid)) { return; }
   var base = me.src.replace(/js\/(?:drishti_)?pivot-grid\.js.*$/, "");
@@ -28,7 +29,7 @@
     if (p.indexOf("core") > 0 && D.elements && D.elements.core) { return; }
     try {
       var s = document.createElement("script");
-      s.src = base + p + (v ? "?v=" + v[1] : "");
+      s.src = drishti_url(base + p + (v ? "?v=" + v[1] : ""));
       s.async = false;
       document.head.appendChild(s);
     } catch (e) { /* a host that allows only its own trusted script URLs: tree rows keep the plain table */ }

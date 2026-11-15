@@ -18,7 +18,7 @@
    (X-Drishti-Device) when the host says it. A view is read with drishti-core's API client and a stream is followed with drishti-data's
    live client (reconnect with back-off, resume from the last event id); the renderer keeps only what a ViewModel needs: its addresses,
    and every failure as a problem with a DRS code, words and the fix. */
-import { createClient, AS_OF_HEADER } from '../../drishti-core/src/drishti_index.js';
+import { createClient, AS_OF_HEADER, basePath, url as drishtiUrl } from '../../drishti-core/src/drishti_index.js';
 import { LiveClient } from '../../drishti-data/src/drishti_index.js';
 
 const FIXES = {
@@ -80,7 +80,7 @@ export async function personHeaders(o) {
 export function personFetch(o) {
   return async (url, init) => {
     const hd = Object.assign({}, (init && init.headers) || {}, await personHeaders({ token: o.token }));
-    return fetch(url, Object.assign({}, init, { headers: hd, credentials: o.credentials || (o.server ? 'include' : 'same-origin'), cache: 'no-store' }));
+    return fetch(drishtiUrl(url), Object.assign({}, init, { headers: hd, credentials: o.credentials || (o.server ? 'include' : 'same-origin'), cache: 'no-store' }));
   };
 }
 
@@ -97,7 +97,7 @@ export function viewUrl(o, ref) {
   if (typeof o.viewUrl === 'function') { return o.viewUrl(ref); }
   const q = new URLSearchParams();
   for (const [k, v] of Object.entries(ref.controls || {})) { q.set(k.startsWith('ctl.') ? k : 'ctl.' + k, v); }
-  return (o.server || '') + '/api/view/' + enc(ref.kind) + '/' + idPath(ref.id) + (q.toString() ? '?' + q : '');
+  return (o.server || basePath()) + '/api/view/' + enc(ref.kind) + '/' + idPath(ref.id) + (q.toString() ? '?' + q : '');
 }
 
 /**
@@ -108,7 +108,7 @@ export function viewUrl(o, ref) {
  */
 export async function fetchView(o, ref) {
   if (!ref || !ref.kind || !ref.id) { throw problem('DRS-9104', 'a view needs a kind and an id', 'render(el, { kind: "trade", id: "IRS-48213" }).'); }
-  const client = createClient({ credentials: o.credentials || (o.server ? 'include' : 'same-origin'), retries: 0, fetch: (u, init) => fetch(u, Object.assign({}, init, { cache: 'no-store' })) });
+  const client = createClient({ credentials: o.credentials || (o.server ? 'include' : 'same-origin'), retries: 0, fetch: (u, init) => fetch(drishtiUrl(u), Object.assign({}, init, { cache: 'no-store' })) });
   try {
     return await client.get(viewUrl(o, ref), { headers: await personHeaders(o) });
   } catch (e) {
@@ -129,7 +129,7 @@ export async function fetchView(o, ref) {
 export function streamUrl(o, ref) {
   if (typeof ref === 'string') { return ref; }
   if (typeof o.streamUrl === 'function') { return o.streamUrl(ref); }
-  return (o.server || '') + '/api/stream/' + enc(ref.kind) + '/' + idPath(ref.id) + '?raw=1';
+  return (o.server || basePath()) + '/api/stream/' + enc(ref.kind) + '/' + idPath(ref.id) + '?raw=1';
 }
 
 /** The stream's message types, as Server-Sent Events names: a whole view, live frames, a GenUI stream message, the end. */

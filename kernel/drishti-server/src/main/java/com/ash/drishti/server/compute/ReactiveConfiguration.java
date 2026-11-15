@@ -53,7 +53,7 @@ public class ReactiveConfiguration {
             ObjectProvider<AuditLog> audit, Environment env) {
         boolean inProcess = inProcessJava(ComputeConfiguration.file(env));
         ReactiveHub.get().install(new ReactiveHostImpl(router, entitlements, dates, compute, audit.getIfAvailable(), inProcess),
-                Path.of(env.getProperty("drishti.data.dir", "./data")));
+                Path.of(env.getProperty("drishti.data.dir", com.ash.drishti.api.Roots.data())));
         ScheduledExecutorService s = Executors.newSingleThreadScheduledExecutor(Thread.ofVirtual().name("reactive-sweep").factory());
         s.scheduleWithFixedDelay(() -> {
             try {

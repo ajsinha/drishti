@@ -182,7 +182,9 @@ public final class IcebergLoader {
     static void load(String[] args) throws Exception {
         String file = args[0];
         Map<String, String> settings = new HashMap<>();
-        settings.put("root", args.length > 1 && !args[1].startsWith("--") ? args[1] : com.ash.drishti.api.DataDir.under("iceberg"));
+        if (args.length > 1 && !args[1].startsWith("--")) {
+            settings.put("root", args[1]);
+        }
         int fileRows = IcebergLayout.DEFAULT_FILE_ROWS;
         long rowGroupBytes = IcebergLayout.DEFAULT_ROW_GROUP_BYTES;
         long budget = 1024L * 1024 * 1024;
@@ -206,6 +208,9 @@ public final class IcebergLoader {
                 }
             }
             i++;
+        }
+        if (!settings.containsKey("root") && !"rest".equalsIgnoreCase(settings.getOrDefault("catalog", ""))) {
+            settings.put("root", com.ash.drishti.api.DataDir.under("iceberg"));   // a folder catalog with no root given: the data folder's
         }
         IcebergLoader.Run run = new IcebergLoader.Run(settings, fileRows, rowGroupBytes, budget, threads,
                 spill.resolve("drishti-iceberg-" + ProcessHandle.current().pid()), LoadGuard.fromArgs(args));

@@ -198,7 +198,7 @@
   if (itemId === 'new') {                                                  // a new theme in your private workspace, starting from the shipped Corporate theme
     B.api('GET', '/themes/corporate').then((t) => Object.assign({}, t, { theme: 'my-theme', title: 'My theme', sample: undefined, tags: undefined, description: 'Made from Corporate.' }), () => null)
       .then((t) => B.writable().then((wss) => { const shared = wss.find((w) => !w.personal); return B.api('POST', '/workspaces/' + encodeURIComponent(shared ? shared.id : 'me') + '/items', { kind: 'theme', title: 'My theme', description: '', body: t ? textOf(t) : STARTER }); }))      // a shared workspace when you have one: a theme is published for others
-      .then((it) => { window.location.replace('/bi/design/theme/' + B.id2path(it.id)); })
+      .then((it) => { window.location.replace(drishti_url('/bi/design/theme/' + B.id2path(it.id))); })
       .catch((e) => say(e.message, true));
     return;
   }

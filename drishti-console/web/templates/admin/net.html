@@ -15,7 +15,7 @@
 #}
 {% extends "base.html" %}
 {% block title %}Net · {{ PRODUCT }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_admin-detail.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_admin-net.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-detail.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-net.css?v={{ ASSET_V }}">{% endblock %}
 {% block screen %}admin{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
@@ -23,13 +23,13 @@
 {% set node = members.node or {} %}
 <div class="adm" data-net data-tab="{{ tab }}">
   {% with tab='net' %}{% include "admin/_nav.html" %}{% endwith %}
-  <h1 class="ws-h" id="netTitle">{{ PRODUCT }}*net <a class="emb-help" href="/help/net" aria-label="Help: {{ PRODUCT }}*net" title="Help: {{ PRODUCT }}*net">?</a></h1>
+  <h1 class="ws-h" id="netTitle">{{ PRODUCT }}*net <a class="emb-help" href="{{ BASE }}/help/net" aria-label="Help: {{ PRODUCT }}*net" title="Help: {{ PRODUCT }}*net">?</a></h1>
   <details class="adm-about"><summary>About this page</summary>
   <p class="text-muted-d">Several {{ PRODUCT }} servers acting as one: each tells the others, by gossip, which packs and data it serves, and a request
     that one cannot answer is answered by another, so a person connected to any server sees the same pages. This page is the cluster as the server
     this console is on sees it. Its settings are the files of <span class="mono">{{ node.dir }}</span> (Files tab, or <span class="mono">drishti.py net</span>);
     what gossip learns is kept in <span class="mono">peers.json</span> under the server's data folder. The cluster key is never shown here, only whether it is set.
-    See the <a href="/help/net">operator's guide</a>.</p>
+    See the <a href="{{ BASE }}/help/net">operator's guide</a>.</p>
   </details>
   <p class="adm-msg" data-msg role="status" aria-live="polite"></p>
 
@@ -269,7 +269,7 @@ secret: ${DRISHTI_NET_SECRET}
     <p class="text-muted-d">Every call between nodes is signed with the cluster key (<span class="mono">DRISHTI_NET_SECRET</span>) and refused outside a 60 s window.
       The key is never shown here, only its state. To rotate it with no downtime, three rolling steps: every node accepts the new key
       (<span class="mono">previous-secret</span>), then signs with it (<span class="mono">secret</span>, the old one as <span class="mono">previous-secret</span>), then drops
-      the old one; see the <a href="/help/net">operator's guide</a>.</p>
+      the old one; see the <a href="{{ BASE }}/help/net">operator's guide</a>.</p>
     <dl class="net-dl" data-security>
       <dt>Cluster key</dt><dd>{% if security.keySet %}<span class="st st-ok">set</span>{% else %}<span class="st st-bad">not set</span>{% endif %}</dd>
       <dt>Previous key</dt><dd>{% if security.previousKeySet %}<span class="st st-warn">accepted</span>{% else %}<span class="text-muted-d">none</span>{% endif %}</dd>
@@ -320,4 +320,4 @@ secret: ${DRISHTI_NET_SECRET}
 </div>
 {% endblock %}
 {% block footer %}{% include "_footer.html" %}{% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_admin-net.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_admin-net-ring.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_admin-placement.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_admin-net.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_admin-net-ring.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_admin-placement.js?v={{ ASSET_V }}"></script>{% endblock %}

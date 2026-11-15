@@ -122,6 +122,21 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
         return out;
     }
 
+    /**
+     * The stream connectors of {@code kind} that wait for their broker (their health says {@code WAITING}): a page of the kind serves
+     * the lake snapshot and says its live updates are paused. Each entry is the connector's own words.
+     */
+    public List<String> livePaused(String kind) {
+        List<String> out = new java.util.ArrayList<>();
+        for (SourcePlugin p : registry.plugins()) {
+            if ((p.manifest().kinds().contains(kind) || bound.getOrDefault(kind, List.of()).contains(p.manifest().name()))
+                    && SourceHealth.of(p) == SourceHealth.WAITING) {
+                out.add(p.manifest().name() + ": " + p.health().replaceFirst("^WAITING:\\s*", ""));
+            }
+        }
+        return out;
+    }
+
     /** The connectors' registry this router reads through (the source systems' switches, the connectors' shapes, Raw JSON's native read). */
     public SourceRegistry registry() {
         return registry;
@@ -1391,6 +1406,59 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
             }
         }
         return Optional.ofNullable(out);
+    }
+
+    /**
+     * A source of a kind that answers a date from an earlier one: its own newest business date on or before the date asked is older
+     * ({@code answered}; null when it holds none on or before it). A date with no data is never answered silently from an older one: the
+     * pages and APIs say each of these, per source (each trading system's connector), with the date that actually answered.
+     *
+     * @param connector the source's name (trade-endur, risk-store ...)
+     * @param asked     the business date asked (a read of the latest: the newest any source of the kind holds)
+     * @param answered  the date this source's rows are of, or null when it holds nothing on or before {@code asked}
+     */
+    public record Carried(String connector, java.time.LocalDate asked, java.time.LocalDate answered) {
+
+        /** In words: {@code trade-endur: no load for 2026-07-13, showing 2026-07-10}. */
+        public String text() {
+            return connector + ": no load for " + asked + (answered == null ? ", no earlier date either" : ", showing " + answered);
+        }
+    }
+
+    /**
+     * The sources of {@code kind} that answer {@code date} (null: the latest) from an earlier date, in read order; empty when every source
+     * holds the date (or none can say cheaply, {@link SourcePlugin#heldDates}). Reads no data.
+     */
+    public List<Carried> carried(String kind, java.time.LocalDate date) {
+        Map<String, java.util.NavigableSet<java.time.LocalDate>> held = new LinkedHashMap<>();
+        List<SourcePlugin> sources = candidates(kind);
+        // the sources that answer together: a union's connectors (one per trading system); else the first that holds dates, as a read asks
+        boolean union = sources.stream().anyMatch(p -> registry.union(p.manifest().name()));
+        for (SourcePlugin p : sources) {
+            if (union ? !registry.union(p.manifest().name()) : !held.isEmpty()) {
+                continue;
+            }
+            try {
+                p.heldDates(kind).filter(s -> !s.isEmpty()).ifPresent(s -> held.put(p.manifest().name(), s));
+            } catch (RuntimeException e) {
+                // a source that cannot say is not named
+            }
+        }
+        java.time.LocalDate asked = date;
+        if (asked == null) {
+            asked = held.values().stream().map(java.util.NavigableSet::last).max(java.util.Comparator.naturalOrder()).orElse(null);
+        }
+        List<Carried> out = new ArrayList<>();
+        if (asked == null) {
+            return out;
+        }
+        for (Map.Entry<String, java.util.NavigableSet<java.time.LocalDate>> e : held.entrySet()) {
+            java.time.LocalDate d = e.getValue().floor(asked);
+            if (d == null || d.isBefore(asked)) {
+                out.add(new Carried(e.getKey(), asked, d));
+            }
+        }
+        return out;
     }
 
     /**

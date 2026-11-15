@@ -35,14 +35,17 @@ def stack(tmp_path_factory):
 
 
 def _packs_with_form() -> set[str]:
-    import pathlib
+    """The packs of the code module (banking's .dmod folder) with a form, found through the one pack resolution (core/resolution.py)."""
     import yaml
-    root = pathlib.Path(__file__).resolve().parents[2]
+    from core import resolution as R
     out = set()
-    for f in list(root.glob("modules/*/dmod/packs/*/pack.yaml")) + list(root.glob("packs/*/pack.yaml")):
-        m = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
+    packs = R.build(R.Settings.from_env(env={})).packs
+    for p in (packs[n] for n in packs):
+        if p.folder is None or p.origin != "MODULE" or "dmod" not in p.folder.parts:
+            continue
+        m = yaml.safe_load((p.folder / "pack.yaml").read_text(encoding="utf-8")) or {}
         if isinstance(m.get("form"), dict) and m["form"]:
-            out.add(f.parent.name)
+            out.add(p.name)
     return out
 
 

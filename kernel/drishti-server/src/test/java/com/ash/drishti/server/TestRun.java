@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server;
 
+import com.ash.drishti.testroots.TestRoots;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -53,7 +54,7 @@ public final class TestRun {
 
     private static Path start() {
         String set = System.getProperty(PROPERTY);
-        Path root = (set == null || set.isBlank() ? Path.of("target", "test-run", "pid-" + ProcessHandle.current().pid()) : Path.of(set))
+        Path root = (set == null || set.isBlank() ? Path.of(TestRoots.module(), "target", "test-run", "pid-"+ ProcessHandle.current().pid()) : Path.of(set))
                 .toAbsolutePath().normalize();
         delete(root);                                   // a fork number reused after a killed run starts empty
         try {

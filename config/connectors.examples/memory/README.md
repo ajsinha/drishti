@@ -68,6 +68,8 @@ columns `id`, `doc`, `business_date` and the promoted fields a table's `columns`
 
 ## Examples
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 cp config/connectors.examples/memory/news-store.yaml config/connectors/news-store.yaml
 cat config/examples/in-memory-lake.yaml >> application.local.yaml      # the store and its four tables (edit the sources for a live feed)

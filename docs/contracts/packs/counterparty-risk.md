@@ -801,7 +801,7 @@ One trade's mark to market on every path of a simulation run at one grid date, i
 | `BUSINESS_DATE` | date | required |  | The close of business the run starts from (t0); the lake's partition. | `2026-09-30` |  |
 | `RUN_ID` | id | required |  | The simulation run the row belongs to: a RUN_ID of the simulation-run kind (XR-<date>-<nn>), the same on every row of the run. | `XR-2026-09-30-01` (pattern `^XR-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]+$`) | `simulation-run` |
 | `TRADE_ID` | id | required |  | The trade valued on the paths: a TRADE_ID of the trading pack's trade kind (ENDUR digits, CLY-…, MX-…), as text. | `CLY-3000280` (pattern `^((MX\|CLY)-)?\d+$`) | `trade` |
-| `SOURCE_SYSTEM` | text | required |  | The trade's booking system: ENDUR, CALYPSO or MUREX. | `CALYPSO`, `ENDUR`, `MUREX` |  |
+| `SOURCE_SYSTEM` | text | required |  | The trade's booking system: ENDUR, CALYPSO or MUREX. | `CALYPSO`, `ENDUR`, `ICI`, `MUREX`, `SWAPONE`, `WSS` |  |
 | `NETTING_SET` | id | required |  | The netting set the trade belongs to (its membership wins when they differ). | `NS-ALDERSHOT-FRA` (pattern `^NS-`) | `netting-set` |
 | `COUNTERPARTY` | id | required |  | The trade's counterparty, denormalised from its netting set: a COUNTERPARTY_ID of the core pack's counterparty kind (CP-…). | `CP-ALDERSHOT` (pattern `^CP-`) | `counterparty` |
 | `LEGAL_ENTITY` | id | required |  | The bank's legal entity that booked the trade: an ENTITY_ID of the core pack's legal-entity kind (LE-…). | `LE-FRA` (pattern `^LE-`) | `legal-entity` |
@@ -829,7 +829,7 @@ One trade's mark to market on every path of a simulation run at one grid date, i
 - pattern: field PATH_ROW_ID; pattern ^XR-[^~]+~.+~[0-9]+$
 - link: field RUN_ID; kind simulation-run
 - link: field TRADE_ID; kind trade
-- enum: field SOURCE_SYSTEM; values `CALYPSO`, `ENDUR`, `MUREX`
+- enum: field SOURCE_SYSTEM; values `CALYPSO`, `ENDUR`, `ICI`, `MUREX`, `SWAPONE`, `WSS`
 - link: field NETTING_SET; kind netting-set
 - link: field COUNTERPARTY; kind counterparty
 - link: field LEGAL_ENTITY; kind legal-entity

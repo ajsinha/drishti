@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -46,7 +47,7 @@ class RachanaReferenceExampleTest {
 
     /** The YAML block under "A complete example, annotated". */
     static String example() throws Exception {
-        List<String> lines = Files.readAllLines(Path.of("../../docs/guides/RACHANA_REFERENCE.md"));
+        List<String> lines = Files.readAllLines(Path.of(TestRoots.repo(), "docs", "guides", "RACHANA_REFERENCE.md"));
         int section = lines.indexOf("## A complete example, annotated");
         int start = -1;
         List<String> out = new ArrayList<>();

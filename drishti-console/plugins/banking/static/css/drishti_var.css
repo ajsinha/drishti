@@ -78,6 +78,7 @@
 .vx .dg-row:hover .nm .vx-add, .vx .dg-row:focus-within .nm .vx-add, .vx .dg-row.vx-current .nm .vx-add { opacity: 1; }
 @media (hover: none) { .vx .nm .vx-add { opacity: 1; } }
 .vx-notice { margin: var(--d-sp-4) 0 var(--d-sp-6); padding: var(--d-sp-4) var(--d-sp-8); border-left: 3px solid var(--d-link); color: var(--d-muted); font-size: var(--d-fs-12); }
+.vx-asof { border-left-color: var(--d-warn); color: var(--d-ink); font-weight: 600; }
 .vx-chip { display: inline-block; font: 500 var(--d-fs-10) var(--d-font-mono); padding: 0 var(--d-sp-5); border-radius: var(--d-radius-2); border: 1px solid var(--d-border); color: var(--d-muted); }
 .vx-chip.long { color: var(--d-ok); border-color: var(--d-ok); }
 .vx-chip.short { color: var(--d-neg); border-color: var(--d-neg); }

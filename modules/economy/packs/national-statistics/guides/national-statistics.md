@@ -53,6 +53,8 @@ Where each kind's data comes from, how it reaches the lake and how to check it. 
 |---|---|---|---|---|
 | Statistics Canada Web Data Service | https://www150.statcan.gc.ca/t1/wds/rest | Statistics Canada Open Licence | no | `python3 tools/drishti.py feed run national-statistics` |
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 python3 tools/drishti.py feed status national-statistics            # its last runs: last success, rows, failures (offline: the run ledger)
 python3 tools/drishti.py feed run national-statistics --dry-run     # what would be fetched and loaded; changes nothing

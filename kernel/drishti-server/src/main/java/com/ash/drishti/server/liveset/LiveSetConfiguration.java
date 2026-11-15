@@ -104,6 +104,11 @@ public class LiveSetConfiguration {
             }
 
             @Override
+            public java.util.List<String> livePaused(String kind) {
+                return router.livePaused(kind);
+            }
+
+            @Override
             public java.util.Set<String> excluded(String kind) {
                 return router.excluded(kind);
             }
@@ -160,8 +165,9 @@ public class LiveSetConfiguration {
         });
         sets.validator(spec -> problems(spec, formats::has, kind -> contractFields(packs, kind)));
         Predicate<String> on = DomainFolders.on(env);
-        Path modules = Path.of(env.getProperty("drishti.live-sets.modules-dir", env.getProperty("drishti.modules.home", "modules")));   // the one modules setting (section 18.2)
-        Path site = Path.of(env.getProperty("drishti.live-sets.dir", "config/blotters"));
+        // the launch roots are absolute by now (LaunchRoots): the modules folder and the site's config folder, never the process's folder
+        Path modules = Path.of(env.getProperty("drishti.live-sets.modules-dir", env.getRequiredProperty("drishti.modules.home")));   // the one modules setting (section 18.2)
+        Path site = Path.of(env.getProperty("drishti.live-sets.dir", Path.of(env.getRequiredProperty("drishti.config.dir"), "blotters").toString()));
         sets.load(LiveSets.folders(modules, site, on), LiveSets::moduleOf);
         fields.addSource(sets::rules);
         EditRuntime rt = edits.getIfAvailable();

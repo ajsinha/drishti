@@ -30,7 +30,7 @@
 
   /** The console's own JSON route (not the /bi/api proxy). */
   function post(path, body) {
-    return fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, credentials: 'same-origin', body: JSON.stringify(body) })
+    return fetch(drishti_url(path), { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, credentials: 'same-origin', body: JSON.stringify(body) })
       .then((r) => r.json().catch(() => ({})).then((data) => {
         if (!r.ok) { throw failure(data.code || 'DRS-9071', data.detail || r.statusText, data.traceback); }
         return data;
@@ -39,7 +39,7 @@
 
   /** The answer for one python visual: `{kind, ..., ms, target, item, version, rows}`, worked out by the console. `args` is {report, page, state, visual}. */
   P.run = function (spec, args) {
-    return post('/bi/python/run', { report: args.report, page: args.page, visual: spec.id, state: args.state });
+    return post(drishti_url('/bi/python/run'), { report: args.report, page: args.page, visual: spec.id, state: args.state });
   };
 
   // ---- drawing -----------------------------------------------------------------------------------------------------------------

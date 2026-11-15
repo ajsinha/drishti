@@ -19,7 +19,7 @@
    (core/admin_forms.py), tables are console tables; drishti_admin-modules.js sends the upload, the plan and the decision. #}
 {% extends "base.html" %}
 {% block title %}Deploy a module · {{ PRODUCT }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_admin-inbox.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_admin-modules.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-inbox.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-modules.css?v={{ ASSET_V }}">{% endblock %}
 {% block screen %}admin{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
@@ -27,7 +27,7 @@
 {% set d = deployment %}
 <div class="adm ib" data-module-deploy>
   {% with tab='modules' %}{% include "admin/_nav.html" %}{% endwith %}
-  <p class="text-muted-d"><a href="/admin/modules">Modules</a> › Deploy</p>
+  <p class="text-muted-d"><a href="{{ BASE }}/admin/modules">Modules</a> › Deploy</p>
   <h1 class="ws-h">{% if d %}{{ d.action|capitalize }} {{ d.module }} {{ d.version }}{% if d.previous %} <span class="text-muted-d">from {{ d.previous }}</span>{% endif %}{% else %}Deploy a module{% endif %}</h1>
   <p class="ib-said" data-module-said role="status" aria-live="polite"></p>
   {% if error %}<p class="adm-warn" role="alert" data-module-error>{{ error }}</p>{% endif %}
@@ -62,7 +62,7 @@
           {% endfor %}
           </tbody>
         </table></div>
-        <p class="text-muted-d">Where each part runs is the placement: change it in <a href="/admin/net?tab=modules">Admin → Cluster → Modules</a>
+        <p class="text-muted-d">Where each part runs is the placement: change it in <a href="{{ BASE }}/admin/net?tab=modules">Admin → Cluster → Modules</a>
           (heavy parts on every node need <span class="mono">allow-all</span> and a second approval).</p>
       </section>
     </div>
@@ -108,8 +108,8 @@
           <button type="button" class="btn-pill ib-btn" data-module-act="reject">Reject</button>{% endif %}
         </div>
         {% endif %}
-        <p class="text-muted-d">After apply: <a href="/admin/health">Health</a> · <a href="/admin/net?tab=modules">node × module matrix</a> ·
-          <a href="/admin/audit">audit entry</a> · <a href="/admin/modules">Modules</a></p>
+        <p class="text-muted-d">After apply: <a href="{{ BASE }}/admin/health">Health</a> · <a href="{{ BASE }}/admin/net?tab=modules">node × module matrix</a> ·
+          <a href="{{ BASE }}/admin/audit">audit entry</a> · <a href="{{ BASE }}/admin/modules">Modules</a></p>
       </section>
       {% endif %}
     </div>
@@ -117,4 +117,4 @@
 </div>
 {% endblock %}
 {% block footer %}{% include "_footer.html" %}{% endblock %}
-{% block scripts %}<script src="/static/js/drishti_admin-modules.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_admin-modules.js?v={{ ASSET_V }}"></script>{% endblock %}

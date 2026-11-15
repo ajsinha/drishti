@@ -43,7 +43,7 @@ public class BiConfiguration {
 
     @Bean(initMethod = "start", destroyMethod = "close")
     public BiFolder biFolder(BiProperties props, org.springframework.core.env.Environment env) {
-        return new BiFolder(props.dir(), env.getProperty("drishti.tables.root", "./config/tables"), props.folderRefresh(), props.watch())
+        return new BiFolder(props.dir(), env.getProperty("drishti.tables.root", com.ash.drishti.api.Roots.config("tables")), props.folderRefresh(), props.watch())
                 .withDomains(com.ash.drishti.server.modules.DomainFolders.on(env));
     }
 
@@ -72,7 +72,7 @@ public class BiConfiguration {
 
     @Bean
     public ImportLog importLog(BiGovProperties gov, org.springframework.core.env.Environment env) {
-        String dir = gov.importsDir().isBlank() ? java.nio.file.Path.of(env.getProperty("drishti.data.dir", "./data"), "bi", "imports").toString() : gov.importsDir();
+        String dir = gov.importsDir().isBlank() ? java.nio.file.Path.of(env.getProperty("drishti.data.dir", com.ash.drishti.api.Roots.data()), "bi", "imports").toString() : gov.importsDir();
         return new ImportLog(java.nio.file.Path.of(dir), gov.importsKeep());
     }
 

@@ -48,10 +48,11 @@ public final class Lakes {
     public static final String PROPERTY = "drishti.lakes.dir";
     /** The environment variable that names the lake folder. */
     public static final String ENV = "DRISHTI_LAKES_DIR";
-    /** The variable that names the demo lake's root (config/lakes/demo.yaml: {@code ${DRISHTI_DELTA_ROOT:<data>/delta/demo}}). */
+    /**
+     * The variable that names the demo lake's root (config/lakes/demo.yaml: {@code ${DRISHTI_DELTA_ROOT:<data>/delta/demo}}); kept for the
+     * launchers and tools that set it, under {@code lake.demo.root} ({@code [lake.demo] root=}), which wins over it.
+     */
     public static final String DEMO_ROOT_ENV = "DRISHTI_DELTA_ROOT";
-    /** The lake folder when neither is set. */
-    public static final String DEFAULT_DIR = "./config/lakes";
     /** At most this many partition columns after {@code business_date}. */
     public static final int MAX_PARTITIONS = 4;
 
@@ -94,7 +95,7 @@ public final class Lakes {
         return "iceberg".equals(format) ? "${drishti.data.dir:./data}/iceberg/" + name : defaultRoot(name);
     }
 
-    /** The lake folder: {@value #PROPERTY}, else {@value #ENV}, else {@value #DEFAULT_DIR}. */
+    /** The lake folder: {@value #PROPERTY}, else {@value #ENV}, else {@code <config>/lakes}; absolute (a relative value is under the install folder). */
     public static Path dir() {
         String p = System.getProperty(PROPERTY);
         if (p == null || p.isBlank()) {
@@ -103,10 +104,10 @@ public final class Lakes {
         if (p == null || p.isBlank()) {
             p = properties.apply(ENV);
         }
-        return Path.of(p == null || p.isBlank() ? DEFAULT_DIR : p.strip());
+        return com.ash.drishti.api.Roots.anchored(p == null || p.isBlank() ? com.ash.drishti.api.Roots.config("lakes") : p.strip());
     }
 
-    private static volatile Function<String, String> properties = System::getenv;
+    private static volatile Function<String, String> properties = com.ash.drishti.settingsfile.Placeholders::process;
 
     /**
      * How a lake file's references are resolved by {@link #current()}: the server installs its own settings (its environment, system
@@ -114,7 +115,7 @@ public final class Lakes {
      * setting is seen; null: the process's environment.
      */
     public static void useProperties(Function<String, String> lookup) {
-        properties = lookup == null ? System::getenv : lookup;
+        properties = lookup == null ? com.ash.drishti.settingsfile.Placeholders::process : lookup;
     }
 
     private static final Pattern NAMED = Pattern.compile("\\$\\{([A-Za-z_][A-Za-z0-9_.-]*)");
@@ -158,12 +159,13 @@ public final class Lakes {
                 out.put(n, v);
             }
         }
+        out.putAll(com.ash.drishti.common.NamedResources.all("lake"));   // the [lake.<name>] sections: root=, storage.<key>=
         return out;
     }
 
     /** The lakes of {@link #dir()} with the process's environment. */
     public static Lakes load() {
-        return read(dir(), System::getenv);
+        return read(dir(), com.ash.drishti.settingsfile.Placeholders::process);
     }
 
     /**
@@ -338,6 +340,17 @@ public final class Lakes {
         String rootPath = v.text(root, "root", "");
         Map<String, String> storage = v.map(root.path("storage"), "storage");
         secrets(where, "storage", root.path("storage"), storage);
+        // [lake.<name>] in the settings files (docs/admin/CONFIGURATION.md, "Named lakes, databases and brokers"): its root and its
+        // storage.<key> win over the file's, so a site moves one lake by name and no other; the file keeps its tables
+        String namedRoot = v.lookup("lake." + name + ".root");
+        if (namedRoot != null && !namedRoot.isBlank()) {
+            rootPath = v.resolve("lake." + name + ".root", namedRoot.strip());
+        }
+        com.ash.drishti.common.NamedResources.section("lake", name).forEach((k, val) -> {
+            if (k.startsWith("storage.") && k.length() > "storage.".length()) {
+                storage.put(k.substring("storage.".length()), val);
+            }
+        });
         Map<String, String> catalog = new LinkedHashMap<>();
         JsonNode cat = root.path("catalog");
         if (cat.isTextual()) {
@@ -534,32 +547,18 @@ public final class Lakes {
             if (raw == null) {
                 return null;
             }
-            String now = raw;
-            for (int round = 0; round < 8 && REF.matcher(now).find(); round++) {
-                Matcher m = REF.matcher(now);
-                StringBuilder out = new StringBuilder();
-                while (m.find()) {
-                    String val = lookup(m.group(1));
-                    if (val == null || val.isEmpty()) {
-                        val = m.group(2);
-                    }
-                    if (val == null) {
-                        throw new IllegalArgumentException(where + ": " + key + ": the environment variable " + m.group(1) + " is not set and "
-                                + "the reference gives no default (${" + m.group(1) + ":default})");
-                    }
-                    m.appendReplacement(out, Matcher.quoteReplacement(val));
-                }
-                m.appendTail(out);
-                now = out.toString();
+            try {   // the one resolver (com.ash.drishti.settingsfile.Placeholders), through this reader's view
+                return com.ash.drishti.settingsfile.Placeholders.require(raw, this::lookup);
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException(where + ": " + key + ": " + e.getMessage() + " (or give the reference a default: ${name:default})", e);
             }
-            return now;
         }
 
         /**
          * A variable: the environment; a dotted name ({@code drishti.data.dir}) also as a system property and as its environment form
          * ({@code DRISHTI_DATA_DIR}), as the server resolves it.
          */
-        private String lookup(String name) {
+        String lookup(String name) {
             String v = env.apply(name);
             if ((v == null || v.isEmpty()) && (name.contains(".") || name.contains("-"))) {
                 v = System.getProperty(name);

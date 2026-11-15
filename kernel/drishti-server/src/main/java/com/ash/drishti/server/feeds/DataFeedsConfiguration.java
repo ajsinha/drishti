@@ -36,8 +36,8 @@ public class DataFeedsConfiguration {
     /** The data feeds, their gauge sampled every {@code drishti.feeds.sample-seconds}. */
     @Bean(destroyMethod = "stop")
     public DataFeeds dataFeeds(Environment env, ObjectProvider<MeterRegistry> registry) {
-        DataFeeds f = new DataFeeds(Path.of(env.getProperty("drishti.feeds.config", "./config/feeds")),
-                Path.of(env.getProperty("drishti.data.dir", "./data")), Path.of(env.getProperty("drishti.feeds.root", ".")),
+        DataFeeds f = new DataFeeds(Path.of(env.getProperty("drishti.feeds.config", com.ash.drishti.api.Roots.config("feeds"))),
+                Path.of(env.getProperty("drishti.data.dir", com.ash.drishti.api.Roots.data())), java.util.Optional.ofNullable(env.getProperty("drishti.feeds.root")).filter(s -> !s.isBlank()).map(com.ash.drishti.api.Roots::anchored).orElseGet(com.ash.drishti.api.Roots::home),
                 env.getProperty("drishti.feeds.python", ""), registry.getIfAvailable());
         f.start(Math.max(5, env.getProperty("drishti.feeds.sample-seconds", Long.class, 60L)));
         return f;

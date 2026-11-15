@@ -46,8 +46,8 @@ public class RunsConfiguration {
 
     @Bean
     RunsProperties runsProperties(Environment env) {
-        Path file = Path.of(env.getProperty("drishti.bi.runs.file", "./config/runs/runs.yaml"));
-        Path data = Path.of(env.getProperty("drishti.data.dir", "./data"));
+        Path file = Path.of(env.getProperty("drishti.bi.runs.file", com.ash.drishti.api.Roots.config("runs/runs.yaml")));
+        Path data = Path.of(env.getProperty("drishti.data.dir", com.ash.drishti.api.Roots.data()));
         RunsProperties p = RunsProperties.load(file, data, env::resolvePlaceholders);
         LOG.info("BI runs: {} (settings {}, results in {})", p.enabled() ? "on" : "off", p.origin(), p.store().dir());
         return p;
