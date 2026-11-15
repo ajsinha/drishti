@@ -4676,6 +4676,13 @@ section, written only for a date with cells: a date without cells is still forma
 
 ### 26.2 The life of a date
 
+**A date with no P&L load is never answered silently from an older one.** A request for a date that holds no `pnl-vector` or
+`scenario-pv` rows (no load yet, or a later date than any loaded) is answered by the newest earlier date that has them, **with a
+warning**: the answer's `businessDate` is that earlier date, `asOfNotice` says *scenario P&L for 2026-07-13 not loaded — showing
+2026-07-10* (the same words in `provenance.warnings`), and the VaR page shows it under its header. The figures are the earlier date's
+own. The official capture of such a date is skipped with that reason, never published from the earlier date. A request with no date
+reads the newest date loaded, with no warning.
+
 1. **First request for a date.** The engine computes the digest of the date's inputs (the data versions of `pnl-vector`,
    `scenario-pv` and `scenario-set`, the hierarchies' configuration, the reference kinds that name the nodes, and the position rules). If `<data folder>/var/hot/<date>/inputs-<digest>.vhot` exists, it is
    **mapped** and the date is open: no lake read (23 ms for a 100,000-trade date on a workstation). Otherwise the rows stream from the

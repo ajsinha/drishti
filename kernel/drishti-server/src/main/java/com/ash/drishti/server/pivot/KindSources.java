@@ -127,6 +127,38 @@ public final class KindSources implements TabularSource.Resolver {
         return data.datasets().stream().anyMatch(d -> d.kind().equals(source));
     }
 
+    /**
+     * The as-of notices of a read of kind {@code source} on {@code date} (null or blank: the latest): each of its sources (each trading
+     * system's connector) that answers from an earlier date, with that date, in words. Empty when every source holds the date, or the
+     * source is not a stored kind. Pivots, record lists and pages show them: a date with no data is never answered silently from an older one.
+     */
+    public List<Map<String, Object>> asOfNotices(String source, String date) {
+        if (source == null || !serves(source)) {
+            return List.of();
+        }
+        java.time.LocalDate d;
+        try {
+            d = date == null || date.isBlank() || "latest".equalsIgnoreCase(date) ? null : java.time.LocalDate.parse(date.strip());
+        } catch (java.time.format.DateTimeParseException e) {
+            return List.of();
+        }
+        return asOfNotices(router.carried(source, d));
+    }
+
+    /** The router's carried sources as the APIs answer them: connector, asked, answered, text. */
+    public static List<Map<String, Object>> asOfNotices(List<SourceRouter.Carried> carried) {
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (SourceRouter.Carried c : carried) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("connector", c.connector());
+            m.put("asked", c.asked().toString());
+            m.put("answered", c.answered() == null ? null : c.answered().toString());
+            m.put("text", c.text());
+            out.add(m);
+        }
+        return out;
+    }
+
     /** A value as staged: a number or text as it is, a list of simple values as its JSON text (a list member reads it back), else text. */
     static Object staged(Object o) {
         if (o == null || o instanceof Number || o instanceof String) {

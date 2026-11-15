@@ -112,6 +112,7 @@ public class LiveSetController {
         LiveSet set = sets.query(q, asOf, principal, reader, again);
         Map<String, Object> out = page(set, set.spec(), offset, limit, sort, descending, filter, principal);
         out.put("search", origin(set, reader));
+        out.put("asOfNotices", asOfNotices(kind, asOf == null || asOf.live() ? null : asOf.businessDate()));
         return out;
     }
 
@@ -149,7 +150,27 @@ public class LiveSetController {
         LiveSet set = sets.open(spec, null);
         Map<String, Object> out = page(set, spec, offset, limit, sort, descending, filter, principal);
         out.put("capped", set.capped());
+        out.put("asOfNotices", asOfNotices(kind, null));
         return out;
+    }
+
+    private com.ash.drishti.engine.source.SourceRouter router;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void router(com.ash.drishti.engine.source.SourceRouter r) {
+        this.router = r;
+    }
+
+    /**
+     * The sources of the kind (each trading system's connector) that answer the date (null: the latest) from an earlier one, in words: the
+     * records page shows them per source system, so a date with no load is never shown silently with an older date's rows.
+     */
+    private List<Map<String, Object>> asOfNotices(String kind, java.time.LocalDate date) {
+        try {
+            return router == null ? List.of() : com.ash.drishti.server.pivot.KindSources.asOfNotices(router.carried(kind, date));
+        } catch (RuntimeException e) {
+            return List.of();                                          // a source that cannot say never fails the page
+        }
     }
 
     /** A page of a set's rows: {@code offset}, {@code limit} (at most 5,000), {@code sort}, {@code descending}, {@code filter}, {@code query}. */

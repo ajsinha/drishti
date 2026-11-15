@@ -229,6 +229,11 @@
     var comp = a.computed || {};
     $("[data-pv-meta]").textContent = (a.title || a.source) + " · " + (a.date ? "business date " + a.date : "current") + " · "
       + a.cellCount + " cells · " + comp.sets + " sets (" + comp.fromCache + " from the cache) · " + comp.queries + " queries · " + comp.ms + " ms";
+    // a source (a trading system's connector) with no load for the date answers from its newest earlier one: said, per source, never silent
+    var carried = a.asOfNotices || [];
+    if (carried.length) {
+      notice("⚠ Not every source has data for " + carried[0].asked + ": " + carried.map(function (c) { return c.text; }).join("; "));
+    }
     $("[data-pv-grid-title]").textContent = (a.measures || []).map(function (m) { return m.label; }).join(", ") + " by " + ((a.rowDimensions || []).join(" › ") || "total");
     $("[data-pv-grid-sub]").textContent = "rows " + ((a.rowDimensions || []).join(" › ") || "—") + (a.columnDimensions && a.columnDimensions.length ? " · columns " + a.columnDimensions.join(" › ") : "")
       + " · subtotals " + ((a.view || {}).subtotals || "below") + " · lazy: closed nodes are not computed · " + a.exactness
