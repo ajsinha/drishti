@@ -168,16 +168,13 @@ public final class ConnectorFiles {
         this(dir, dir);
     }
 
-    /** The files in {@code dir} (user configuration); their edit history and generated-file markers in {@code state} ({@code <data dir>/connectors}). */
+    /**
+     * The files in {@code dir} (user configuration); the history of Admin's edits in {@code state} ({@code <data dir>/connectors}). Nothing
+     * is moved or written when it is made: the server writes no connector file at start.
+     */
     public ConnectorFiles(Path dir, Path state) {
         this.dir = dir.toAbsolutePath().normalize();
         this.state = state.toAbsolutePath().normalize();
-        for (String[] n : new String[][] {{".history", HISTORY}, {".generated", GENERATED}}) {
-            com.ash.drishti.common.LegacyNames.move(this.dir.resolve(n[0]), this.state.resolve(n[1]));
-            if (!this.state.equals(this.dir)) {
-                com.ash.drishti.common.LegacyNames.move(this.dir.resolve(n[1]), this.state.resolve(n[1]));
-            }
-        }
     }
 
     /** Where a connector's text comes from: {@code file}, or null. */
@@ -549,8 +546,17 @@ public final class ConnectorFiles {
      */
     public record Marker(String fileEtag, String templateFingerprint, List<String> kinds) {}
 
+    /**
+     * The marker an earlier release kept for a file it generated (read only, never written now): in the data folder's {@code generated/},
+     * else where releases before that kept it beside the files.
+     */
     private Path markerFile(String name) {
         requireName(name);
+        for (Path p : List.of(state.resolve(GENERATED), dir.resolve(GENERATED), dir.resolve("." + GENERATED))) {
+            if (Files.isRegularFile(p.resolve(name + ".properties"))) {
+                return p.resolve(name + ".properties");
+            }
+        }
         return state.resolve(GENERATED).resolve(name + ".properties");
     }
 
@@ -572,17 +578,6 @@ public final class ConnectorFiles {
                 }
             }
             return new Marker(pr.getProperty("file", ""), pr.getProperty("template", ""), kinds);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-    }
-
-    /** Records that the file now on disk with this text came from a template with this fingerprint. */
-    public void writeMarker(String name, String text, String templateFingerprint, List<String> kinds) {
-        Path f = markerFile(name);
-        try {
-            Files.createDirectories(f.getParent());
-            Files.writeString(f, "file=" + etag(text) + "\ntemplate=" + templateFingerprint + "\nkinds=" + String.join(",", kinds) + "\n", StandardCharsets.UTF_8);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

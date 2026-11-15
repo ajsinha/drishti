@@ -55,6 +55,13 @@ public class BindingController {
         return service.status();
     }
 
+    /** The binding map: each kind's read connectors with their layer, plugin, lake and resolved table, and whether it exists. */
+    @GetMapping("/map")
+    public Map<String, Object> map(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        entitlements.requireAdmin(p);
+        return Map.of("kinds", service.map());
+    }
+
     @PostMapping("/reload")
     public Map<String, Object> reload(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireAdmin(p);

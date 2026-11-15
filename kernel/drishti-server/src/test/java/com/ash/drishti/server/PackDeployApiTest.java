@@ -52,7 +52,12 @@ import org.springframework.test.web.servlet.ResultActions;
  * verification (tampering, slip, signature, version, lint, dependencies, size), the preview, deploy with the previous
  * version kept, rollback, the history; and the data source layers (pack, override file, site), validation, test connection.
  */
-@SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
+@SpringBootTest(properties = {"drishti.packs.dir=${drishti.test.dir}/pack-deploy/packs",
+        "drishti.packs.installed-dir=${drishti.test.dir}/pack-deploy/installed", "drishti.packs.overlay=${drishti.test.dir}/pack-deploy/added.yaml",
+        "drishti.packs.settings-dir=${drishti.test.dir}/pack-deploy/settings",
+        "drishti.sources.connectors-dir=${drishti.test.dir}/pack-deploy/connectors",
+        "drishti.packs.deploy.history-file=${drishti.test.dir}/pack-deploy/history.jsonl",
+        "drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
         "drishti.packs.enabled=lakepack", "drishti.packs.deploy.max-archive-mb=1",
         "drishti.sources.connectors.item-store.settings.lookback-days=7"})
 @AutoConfigureMockMvc
@@ -82,19 +87,11 @@ class PackDeployApiTest {
                 + "routes:\n  item: item-store\n" + (thing ? "  thing: item-store\n" : "") + extra;
     }
 
-    /** Folders are system properties set before the context starts: the pack loader reads them in an EnvironmentPostProcessor, before test properties exist. */
-    private static final String[] SYSTEM_PROPERTIES = {"drishti.packs.dir", "drishti.packs.installed-dir", "drishti.packs.overlay", "drishti.packs.settings-dir",
-            "drishti.packs.deploy.history-file", "drishti.sources.connectors-dir"};
 
-    /** What the build set before this class ran (surefire sets drishti.packs.dir): put back afterwards, not cleared, as the next test class in the same JVM needs it. */
-    private static final java.util.Map<String, String> BEFORE = new java.util.HashMap<>();
 
     static {
-        for (String k : SYSTEM_PROPERTIES) {
-            BEFORE.put(k, System.getProperty(k));
-        }
         try {
-            root = TestRun.temp("drishti-deploy");
+            root = com.ash.drishti.server.TestRun.dir("pack-deploy");   // its own folder, named in the properties above
             acme = KeyPairGenerator.getInstance("Ed25519").generateKeyPair();
             Path pack = Files.createDirectories(root.resolve("packs/lakepack"));
             Files.createDirectories(pack.resolve("sutras"));
@@ -104,12 +101,6 @@ class PackDeployApiTest {
             lines("files-a/2026-10-05/item.jsonl", 2);
             lines("files-a/2026-10-05/thing.jsonl", 1);
             lines("files-b/2026-10-05/item.jsonl", 5);
-            System.setProperty("drishti.packs.dir", root.resolve("packs").toString());
-            System.setProperty("drishti.packs.installed-dir", root.resolve("installed").toString());
-            System.setProperty("drishti.packs.overlay", root.resolve("added.yaml").toString());
-            System.setProperty("drishti.packs.settings-dir", root.resolve("settings").toString());
-            System.setProperty("drishti.sources.connectors-dir", root.resolve("connectors").toString());
-            System.setProperty("drishti.packs.deploy.history-file", root.resolve("history.jsonl").toString());
         } catch (Exception e) {
             throw new ExceptionInInitializerError(e);
         }
@@ -120,16 +111,6 @@ class PackDeployApiTest {
         r.add("drishti.packs.registry.trusted-keys.acme", () -> Base64.getEncoder().encodeToString(acme.getPublic().getEncoded()));
     }
 
-    @org.junit.jupiter.api.AfterAll
-    static void forgetTheFolders() {
-        for (String k : SYSTEM_PROPERTIES) {
-            if (BEFORE.get(k) == null) {
-                System.clearProperty(k);
-            } else {
-                System.setProperty(k, BEFORE.get(k));
-            }
-        }
-    }
 
     private static void lines(String file, int n) throws Exception {
         Path f = root.resolve(file);
@@ -209,10 +190,8 @@ class PackDeployApiTest {
         assertThat(c.path("names").findValuesAsText("name")).contains("item-store", "new-lake");
         assertThat(connectorFiles.exists("new-lake")).isFalse();                                  // a preview changes nothing
         mvc.perform(post("/api/v1/admin/packs/deploy/" + r.path("uploadId").asText() + "/connectors")).andExpect(status().isOk())
-                .andExpect(jsonPath("$.created[0]").value("new-lake"));
-        assertThat(connectorFiles.text("new-lake")).contains("plugin: file").contains("kinds:");     // a shared edit on a cluster (DATA_ARCHITECTURE.md 11)
-        mvc.perform(post("/api/v1/admin/packs/deploy/" + r.path("uploadId").asText() + "/connectors")).andExpect(jsonPath("$.created.length()").value(0));   // never overwritten
-        connectorFiles.delete("new-lake");
+                .andExpect(jsonPath("$.created").value(hasItem("new-lake")));        // in force from the pack's templates once deployed
+        assertThat(connectorFiles.exists("new-lake")).as("the server writes no connector file (connector layers)").isFalse();
         mvc.perform(delete("/api/v1/admin/packs/deploy/" + r.path("uploadId").asText()));
     }
 
@@ -390,12 +369,11 @@ class PackDeployApiTest {
                 .andExpect(jsonPath("$.missing.length()").value(0))
                 .andExpect(jsonPath("$.connectors[0].name").value("item-store"))
                 .andExpect(jsonPath("$.connectors[0].plugin").value("file"))
-                .andExpect(jsonPath("$.connectors[0].origin").value("file"))             // written from the pack's template at start
+                .andExpect(jsonPath("$.connectors[0].origin").value("pack"))             // the pack's template, in memory
                 .andExpect(jsonPath("$.connectors[0].defined").value(true))
                 .andExpect(jsonPath("$.connectors[0].editUrl").value("/admin/connectors?name=item-store"))
                 .andExpect(jsonPath("$.connectors[0].kinds").value(hasItem("item")));
-        assertThat(root.resolve("connectors/item-store.yaml")).exists();
-        assertThat(Files.readString(root.resolve("connectors/item-store.yaml"))).contains("plugin: file").contains("Generated at first start");
+        assertThat(root.resolve("connectors/item-store.yaml")).as("no connector file is generated at start").doesNotExist();
         mvc.perform(get("/api/v1/admin/packs/not-loaded/datasource")).andExpect(status().isNotFound());
         // the old edit doors are gone: connectors are changed in Admin -> Connectors
         mvc.perform(put("/api/v1/admin/packs/lakepack/datasource").contentType(MediaType.APPLICATION_JSON).content("{}")).andExpect(status().is4xxClientError());

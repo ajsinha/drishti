@@ -105,10 +105,13 @@ public final class PackDeployService {
 
     private final com.ash.drishti.packs.edition.Edition edition;
 
+    private final Environment env;
+
     public PackDeployService(Environment env, DeployProperties props, RegistryProperties registryProps, PackRegistry running,
             ObjectProvider<BuildProperties> build, SutraRegistry sutras, ViewPipeline pipeline, ShapeService shapes, AutoDesigner designer,
             JsonCodec codec, com.ash.drishti.packs.ConnectorFiles connectorFiles) {
         this.connectorFiles = connectorFiles;
+        this.env = env;
         this.edition = com.ash.drishti.packs.edition.Editions.of(env);
         this.installed = Path.of(com.ash.drishti.packs.PackPaths.installedDir(env)).toAbsolutePath().normalize();
         this.packsDir = Path.of(com.ash.drishti.packs.PackPaths.packsDir(env)).toAbsolutePath().normalize();
@@ -296,7 +299,7 @@ public final class PackDeployService {
             }
         }
         List<String> missing = parents.stream().filter(p -> running.packs().stream().noneMatch(x -> x.name().equals(p))
-                && !Files.isRegularFile(installed.resolve(p).resolve("pack.yaml")) && !Files.isRegularFile(com.ash.drishti.api.PackFolders.of(packsDir, p).resolve("pack.yaml"))).toList();
+                && !Files.isRegularFile(installed.resolve(p).resolve("pack.yaml")) && !Files.isRegularFile(shipped(p).resolve("pack.yaml"))).toList();
         checks.add(missing.isEmpty() ? Check.ok("dependencies", parents.isEmpty() ? "extends no other pack" : "extends " + String.join(", ", parents) + ": available")
                 : Check.fail("dependencies", "extends " + String.join(", ", missing) + ", which is neither loaded nor on disk; deploy that pack first"));
     }
@@ -327,7 +330,7 @@ public final class PackDeployService {
         return out;
     }
 
-    /** Writes connector files from the staged pack's templates for the connectors that do not exist yet; returns the names created. */
+    /** The connectors the staged pack's templates define: in force from its templates once it is deployed (no file is written). */
     public List<String> createConnectors(String uploadId) {
         Staged s = staged.get(uploadId);
         if (s == null) {
@@ -336,7 +339,8 @@ public final class PackDeployService {
         try {
             Map<String, Object> meta = PackDiffer.load(s.root()).meta();
             com.ash.drishti.packs.Pack pack = new com.ash.drishti.packs.Pack(s.name(), s.version(), s.name(), "", s.root(), meta);
-            return com.ash.drishti.packs.ConnectorBootstrap.run(List.of(pack), connectorFiles, null, true).generated();
+            // nothing is written: a deployed pack's templates are in force as they are (the template layer, ConnectorLayers)
+            return List.copyOf(pack.connectorTemplates().keySet());
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -370,7 +374,7 @@ public final class PackDeployService {
         }
         if (against == null) {
             for (Path d : List.of(installed, packsDir)) {
-                Path f = com.ash.drishti.api.PackFolders.of(d, name);   // shipped: in its domain folder
+                Path f = d.equals(installed) ? installed.resolve(name) : shipped(name);   // shipped: where the resolution finds it
                 if (Files.isRegularFile(f.resolve("pack.yaml"))) {
                     against = f;
                     where = d.equals(installed) ? "installed, not loaded" : "shipped, not loaded";
@@ -470,10 +474,10 @@ public final class PackDeployService {
             Path chosen = null;
             String chosenVersion = null;
             if (toShipped) {
-                if (!Files.isRegularFile(com.ash.drishti.api.PackFolders.of(packsDir, name).resolve("pack.yaml")) || !Files.isDirectory(target)) {
+                if (!Files.isRegularFile(shipped(name).resolve("pack.yaml")) || !Files.isDirectory(target)) {
                     throw new DrishtiException(ErrorCode.BAD_REQUEST, "'" + name + "' has no shipped version to go back to");
                 }
-                chosenVersion = versionOf(com.ash.drishti.api.PackFolders.of(packsDir, name));
+                chosenVersion = versionOf(shipped(name));
             } else {
                 List<Path> kept = keptDirs(name);
                 String runningNow = Files.exists(target) ? versionOf(target) : null;
@@ -554,11 +558,11 @@ public final class PackDeployService {
             m.put("keptAt", Instant.ofEpochMilli(stamp(dirs.get(i))).toString());
             out.add(m);
         }
-        if (Files.isDirectory(installed.resolve(name)) && Files.isRegularFile(com.ash.drishti.api.PackFolders.of(packsDir, name).resolve("pack.yaml"))) {
+        if (Files.isDirectory(installed.resolve(name)) && Files.isRegularFile(shipped(name).resolve("pack.yaml"))) {
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("version", "shipped");
             m.put("keptAt", null);
-            m.put("shippedVersion", versionOf(com.ash.drishti.api.PackFolders.of(packsDir, name)));
+            m.put("shippedVersion", versionOf(shipped(name)));
             out.add(m);
         }
         return out;
@@ -636,5 +640,18 @@ public final class PackDeployService {
         } catch (IOException e) {
             // best effort
         }
+    }
+
+    /** Where the resolution finds a shipped pack (a module's or the kernel's), else {@code <packs>/<name>} (not there). */
+    private Path shipped(String name) {
+        com.ash.drishti.api.resolution.ConfigResolution r = com.ash.drishti.packs.PackPaths.resolution(env);
+        com.ash.drishti.api.resolution.PackResolver.Located at = r.packs().packs().get(name);
+        if (at != null && at.dir().toAbsolutePath().normalize().startsWith(installed)) {
+            // the deployed copy is what runs: the shipped one is what the layers below the deployed packs find
+            com.ash.drishti.api.resolution.PackResolver.Layout l = r.settings().layout();
+            at = com.ash.drishti.api.resolution.PackResolver.resolve(new com.ash.drishti.api.resolution.PackResolver.Layout(l.site(), l.kernel(), l.modules(),
+                    l.store(), null, l.extra()), r.active(), com.ash.drishti.api.resolution.ResolutionSettings::yaml).packs().get(name);
+        }
+        return at != null ? at.dir() : packsDir.resolve(name);
     }
 }

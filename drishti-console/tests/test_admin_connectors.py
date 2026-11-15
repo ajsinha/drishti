@@ -161,3 +161,25 @@ def test_the_history_and_the_editor_say_what_the_buttons_are_for(client, backend
     page = client.get("/admin/connectors").text
     assert 'data-edit-msg' in page and page.index("data-edit-msg") > page.index("adm-dlg-actions ds-actions")       # the message sits in the sticky bar beside Save
     assert 'data-zone=' in page and "One line saying what this connector reads" in page                                                         # history times in the page's zone; Description has its own help
+
+
+def test_the_detail_page_shows_the_layer_of_each_setting_and_the_superseded_notice(client, backend, monkeypatch):
+    """Each effective setting names the layer it came from; the template is named; a superseded generated file says it is ignored."""
+    detail = {**LIST["connectors"][0], "settings": {"root": "/lake", "domain": "trading"}, "origins": {"root": "override", "domain": "template"},
+              "layer": "override", "templateFrom": "pack trading", "superseded": False, "directory": "/srv/drishti/config/connectors", "history": [], "text": "settings:\n  root: /lake\n", "tls": None}
+
+    async def admin(method, path, ident, body=None, timeout=None, headers=None, **params):
+        return {} if path == "/status" else detail
+    monkeypatch.setattr(backend, "admin", admin)
+    html = client.get("/admin/connectors/trading-lake").text
+    assert 'Template: <span class="mono">pack trading</span>' in html
+    assert 'data-origin="override"' in html and 'data-origin="template"' in html and "data-superseded" not in html
+    detail["superseded"] = True
+    html = client.get("/admin/connectors/trading-lake").text
+    assert "never edited: it is ignored, the template is in force. Safe to delete." in html
+
+
+def test_the_list_page_counts_superseded_files(client, backend, monkeypatch):
+    with_connectors(backend, monkeypatch, [])
+    html = client.get("/admin/connectors").text
+    assert "Template updates" not in html and "template-updates" not in html

@@ -55,42 +55,42 @@ class OfficialReadersTest {
         return PackEnvironmentPostProcessor.officialReaders(env);
     }
 
+    private static ConnectorFiles.Definition effective(Map<String, ConnectorLayers.Template> t, ConnectorFiles files, String name) {
+        return files.parse(name, ConnectorLayers.templateText(files, name, t.get(name).definition(), ""));
+    }
+
     @Test
-    void theVarReaderIsGeneratedForIcebergAndFollowsBackToDelta(@TempDir Path dir) throws Exception {
+    void theVarReaderFollowsTheFormatInMemoryAndNothingIsWritten(@TempDir Path dir) throws Exception {
         List<Pack> packs = packs(dir);
         ConnectorFiles files = new ConnectorFiles(dir.resolve("connectors"));
-        ConnectorBootstrap.run(packs, files, null, true, server(Map.of("drishti.var.official.format", "iceberg",
+        Map<String, ConnectorLayers.Template> t = ConnectorLayers.templates(packs, server(Map.of("drishti.var.official.format", "iceberg",
                 "drishti.var.official.root", "s3://bank-lake/risk", "drishti.var.official.storage.s3.region", "us-east-1")));
-        ConnectorFiles.Definition v = files.read("var-results");
+        ConnectorFiles.Definition v = effective(t, files, "var-results");
         assertThat(v.plugin()).isEqualTo("iceberg");
         assertThat(v.settings()).containsEntry("root", "${drishti.var.official.root:${DRISHTI_DELTA_ROOT:./data/delta}}")
                 .containsEntry("engine", "native").containsEntry("domain", "risk-results")
                 .containsEntry("s3.region", "${drishti.var.official.storage.s3.region}").containsKey("layout.var-official.columns");
-        assertThat(files.read("exposure-results").plugin()).as("the exposure format is its own").isEqualTo("delta");
-        assertThat(files.read("risk-store").plugin()).isEqualTo("delta");
-
-        ConnectorBootstrap.Result back = ConnectorBootstrap.run(packs, files, null, true, server(Map.of()));   // the format back to Delta
-        assertThat(back.regenerated()).containsExactly("var-results");
-        assertThat(files.read("var-results").plugin()).isEqualTo("delta");
-        assertThat(files.read("var-results").settings()).containsEntry("root", "${DRISHTI_DELTA_ROOT:./data/delta}").doesNotContainKey("engine");
+        assertThat(effective(t, files, "exposure-results").plugin()).as("the exposure format is its own").isEqualTo("delta");
+        assertThat(effective(t, files, "risk-store").plugin()).isEqualTo("delta");
+        Map<String, ConnectorLayers.Template> back = ConnectorLayers.templates(packs, server(Map.of()));   // the format back to Delta
+        assertThat(effective(back, files, "var-results").plugin()).isEqualTo("delta");
+        assertThat(effective(back, files, "var-results").settings()).containsEntry("root", "${DRISHTI_DELTA_ROOT:./data/delta}").doesNotContainKey("engine");
+        assertThat(Files.exists(dir.resolve("connectors"))).as("no connector file is written").isFalse();
     }
 
     @Test
-    void theExposureReaderFollowsItsOwnFormatAndAnEditedFileIsKept(@TempDir Path dir) throws Exception {
+    void theExposureReaderFollowsItsOwnFormatAndASiteOverrideIsMergedOverIt(@TempDir Path dir) throws Exception {
         List<Pack> packs = packs(dir);
         ConnectorFiles files = new ConnectorFiles(dir.resolve("connectors"));
-        ConnectorBootstrap.run(packs, files, null, true, server(Map.of()));
-        assertThat(files.read("exposure-results").plugin()).isEqualTo("delta");
-        ConnectorBootstrap.Result r = ConnectorBootstrap.run(packs, files, null, true, server(Map.of("drishti.ccr.exposure.official.format", "iceberg")));
-        assertThat(r.regenerated()).containsExactly("exposure-results");                  // never edited: it follows the format
-        assertThat(files.read("exposure-results").plugin()).isEqualTo("iceberg");
-        assertThat(files.read("var-results").plugin()).isEqualTo("delta");
-
-        files.write("var-results", files.text("var-results").replace("domain: risk-results", "domain: risk-results\n  refresh-seconds: 30"));
-        ConnectorBootstrap.Result edited = ConnectorBootstrap.run(packs, files, null, true, server(Map.of("drishti.var.official.format", "iceberg")));
-        assertThat(edited.regenerated()).doesNotContain("var-results");                   // the site's edit is kept, the change listed
-        assertThat(edited.changed()).anyMatch(c -> c.name().equals("var-results"));
-        assertThat(files.read("var-results").plugin()).isEqualTo("delta");
+        Map<String, ConnectorLayers.Template> t = ConnectorLayers.templates(packs, server(Map.of("drishti.ccr.exposure.official.format", "iceberg")));
+        assertThat(effective(t, files, "exposure-results").plugin()).isEqualTo("iceberg");
+        assertThat(effective(t, files, "var-results").plugin()).isEqualTo("delta");
+        files.write("var-results", "settings:\n  refresh-seconds: 30\n");
+        Map<String, String> problems = new java.util.LinkedHashMap<>();
+        ConnectorFiles.Definition v = ConnectorLayers.resolve(t, files, problems).get("var-results");
+        assertThat(problems).isEmpty();
+        assertThat(v.plugin()).isEqualTo("delta");
+        assertThat(v.settings()).containsEntry("refresh-seconds", "30").containsEntry("domain", "risk-results");
     }
 
     @Test

@@ -47,7 +47,7 @@ class BuilderApiTest {
     private static String samples(int n) {
         StringBuilder b = new StringBuilder("{\"samples\":[");
         for (int i = 0; i < n; i++) {
-            b.append(i == 0 ? "" : ",").append("{\"name\":\"t").append(i).append(".json\",\"document\":{\"tradeId\":\"T").append(i)
+            b.append(i == 0 ? "" : ",").append("{\"name\":\"t").append(i).append(".json\",\"document\":{\"widgetId\":\"T").append(i)
                     .append("\",\"notional\":").append(1000 * (i + 1)).append(",\"counterparty\":{\"id\":\"CP-A\",\"name\":\"A\"}}}");
         }
         return b.append("]}").toString();
@@ -59,8 +59,8 @@ class BuilderApiTest {
                         .content(samples(3)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.schema.$schema").value("https://json-schema.org/draft/2020-12/schema"))
-                .andExpect(jsonPath("$.schema.required[0]").value("tradeId"))
-                .andExpect(jsonPath("$.roles['$.tradeId'].role").value("id"))
+                .andExpect(jsonPath("$.schema.required[0]").value("widgetId"))
+                .andExpect(jsonPath("$.roles['$.widgetId'].role").value("id"))   // a name no loaded pack links to a kind (tradeId is the trading pack's link to trade)
                 .andExpect(jsonPath("$.roles['$.counterparty'].role").value("link"))
                 .andExpect(jsonPath("$.report.samples").value(3))
                 .andExpect(jsonPath("$.report.paths[?(@.path=='$.notional')].role").value("measure"));

@@ -115,13 +115,17 @@ class SourceModuleEndToEndTest {
         Path cfg = tmp.resolve("load.yaml");
         Files.writeString(cfg, "source:\n  files: '" + file + "'\n  as-of: " + DAY + "\n  id: " + rule.path("key").asText() + "\n  pack: '" + pack + "'\n  connector: "
                 + connector + "\ntarget:\n  format: delta\n  lake: '" + lake + "'\n  kind: trade\n");
+        // the loader's resolution: this site's modules folder (drishti.modules.home), every module on (KERNEL_AND_MODULES.md section 18)
+        com.ash.drishti.api.resolution.ConfigResolution.install(com.ash.drishti.api.resolution.ConfigResolution.offline(
+                k -> k.equals("drishti.modules.home") ? tmp.resolve("modules").toString() : k.equals("drishti.packs.site-dir")
+                        ? tmp.resolve("config/packs").toString() : k.equals("drishti.data.dir") ? tmp.resolve("data").toString() : null));
         ByteArrayOutputStream said = new ByteArrayOutputStream();
         assertThat(LakeLoad.run(new String[] {"--config", cfg.toString(), "-q"}, new PrintStream(said, true, StandardCharsets.UTF_8)))
                 .as(said.toString(StandardCharsets.UTF_8)).isZero();
         assertThat(lake.resolve("trading/trades_shared/_delta_log")).as("the rows land in the shared table").isDirectory();
 
         // the connector of the module's template, on the lake the load wrote
-        JsonNode template = yaml.readTree(Files.readString(module.resolve("connectors/delta.yaml")));
+        JsonNode template = yaml.readTree(Files.readString(module.resolve("connectors/trade-swapone.yaml")));
         Map<String, String> settings = new LinkedHashMap<>();
         template.path("settings").fields().forEachRemaining(e -> {
             if (e.getValue().isValueNode()) {
@@ -141,7 +145,7 @@ class SourceModuleEndToEndTest {
         settings.put("doc-disk-cache.dir", tmp.resolve("cache/docs").toString());
         var cfgs = new LinkedHashMap<String, SourcesProperties.ConnectorSettings>();
         cfgs.put(connector, new SourcesProperties.ConnectorSettings("delta", true, List.of("trade"), settings));
-        var props = new SourcesProperties(Map.of(), null, Map.of(), Duration.ofSeconds(5), null, cfgs, tmp.toString(), null, null, null, null);
+        var props = new SourcesProperties(Map.of(), null, Map.of(), Duration.ofSeconds(5), null, cfgs, tmp.toString(), null, null, null);
         SourceRegistry registry = new SourceRegistry(List.of(new DeltaSourcePlugin()), props, new JsonCodec());
         registry.systems().installed(List.of(new SourceSystems.System("SWAPONE", "source-swapone", java.util.Set.of("trade"), true)));
         SourceRouter router = new SourceRouter(registry, props, Executors.newVirtualThreadPerTaskExecutor());

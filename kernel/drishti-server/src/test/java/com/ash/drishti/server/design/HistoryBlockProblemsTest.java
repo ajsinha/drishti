@@ -23,10 +23,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -38,16 +35,17 @@ import org.springframework.test.web.servlet.MockMvc;
  * only at the first history request; fixing it on disk and reloading clears it. The pack itself keeps running (its kinds keep the default
  * history).
  */
-@SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=histpack"})
+@SpringBootTest(properties = {"drishti.packs.dir=${drishti.test.dir}/history-block/packs",
+        "drishti.packs.installed-dir=${drishti.test.dir}/history-block/installed",
+        "drishti.packs.overlay=${drishti.test.dir}/history-block/added.yaml", "drishti.packs.settings-dir=${drishti.test.dir}/history-block/settings",
+        "drishti.sources.connectors-dir=${drishti.test.dir}/history-block/connectors",
+        "drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=histpack"})
 @AutoConfigureMockMvc
 class HistoryBlockProblemsTest {
 
     static Path root;
     static final ObjectMapper JSON = new ObjectMapper();
     static final String BAD = "history:\n  item:\n    chart: [PRICE]\n    headline: PRICE2\n";
-    private static final String[] SYSTEM_PROPERTIES = {"drishti.packs.dir", "drishti.packs.installed-dir", "drishti.packs.overlay", "drishti.packs.settings-dir",
-        "drishti.sources.connectors-dir"};
-    private static final Map<String, String> BEFORE = new HashMap<>();
 
     static String packYaml(String history) {
         return "pack: histpack\nversion: 1.0.0\ntitle: History pack\nkinds: [item]\n"
@@ -56,39 +54,18 @@ class HistoryBlockProblemsTest {
     }
 
     static {
-        for (String k : SYSTEM_PROPERTIES) {
-            BEFORE.put(k, System.getProperty(k));
-        }
         try {
-            root = com.ash.drishti.server.TestRun.temp("drishti-histblock");
+            root = com.ash.drishti.server.TestRun.dir("history-block");   // its own folder, named in the properties above
             Path pack = Files.createDirectories(root.resolve("packs/histpack"));
             Files.createDirectories(pack.resolve("sutras"));
             Files.createDirectories(root.resolve("files/2026-10-02"));
             Files.writeString(root.resolve("files/2026-10-02/item.jsonl"), "{\"id\":\"I-1\",\"PRICE\":1.5}\n");
             Files.writeString(pack.resolve("pack.yaml"), packYaml(BAD));
-            System.setProperty("drishti.packs.dir", root.resolve("packs").toString());
-            System.setProperty("drishti.packs.installed-dir", root.resolve("installed").toString());
-            System.setProperty("drishti.packs.overlay", root.resolve("added.yaml").toString());
-            System.setProperty("drishti.packs.settings-dir", root.resolve("settings").toString());
-            System.setProperty("drishti.sources.connectors-dir", root.resolve("connectors").toString());
         } catch (Exception e) {
             throw new ExceptionInInitializerError(e);
         }
     }
 
-    @AfterAll
-    static void forgetTheFolders() throws Exception {
-        for (String k : SYSTEM_PROPERTIES) {
-            if (BEFORE.get(k) == null) {
-                System.clearProperty(k);
-            } else {
-                System.setProperty(k, BEFORE.get(k));
-            }
-        }
-        try (var walk = Files.walk(root)) {
-            walk.sorted(java.util.Comparator.reverseOrder()).forEach(p -> p.toFile().delete());
-        }
-    }
 
     @Autowired MockMvc mvc;
     @Autowired PackReloader reloader;

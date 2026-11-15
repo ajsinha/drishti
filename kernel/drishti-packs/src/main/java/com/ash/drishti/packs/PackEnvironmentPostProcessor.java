@@ -61,7 +61,6 @@ public final class PackEnvironmentPostProcessor implements EnvironmentPostProces
         names.addAll(org.springframework.boot.context.properties.bind.Binder.get(env)
                 .bind("drishti.packs.added", org.springframework.boot.context.properties.bind.Bindable.listOf(String.class))
                 .orElse(List.of()));
-        PackPaths.installedModulePacks(env).forEach(m -> names.addAll(m.packs()));     // a site's installed content module brings its packs
         com.ash.drishti.packs.edition.Edition edition = com.ash.drishti.packs.edition.Editions.of(env);
         List<String> notInEdition = names.stream().filter(n -> !edition.packAllowed(n)).toList();
         if (!notInEdition.isEmpty()) {                                                   // allow-only: the edition's packs, nothing else
@@ -71,14 +70,16 @@ public final class PackEnvironmentPostProcessor implements EnvironmentPostProces
         }
         String connDir = env.getProperty("drishti.sources.connectors-dir", System.getenv().getOrDefault("DRISHTI_CONNECTORS_DIR", "./config/connectors"));
         ConnectorFiles files = new ConnectorFiles(java.nio.file.Path.of(connDir), java.nio.file.Path.of(PackPaths.dataDir(env), "connectors"));
-        PackSettings overrides = new PackSettings(java.nio.file.Path.of(PackPaths.settingsDir(env)));
         PackLoader loader = new PackLoader(files);
-        List<java.nio.file.Path> dirs = PackLoader.dirs(dir, PackPaths.installedDir(env), PackPaths.extraDirs(env));
+        // where every pack is: the one resolution (KERNEL_AND_MODULES.md section 18), installed for every reader of this process
+        com.ash.drishti.api.resolution.ConfigResolution resolution = PackPaths.resolve(env);
+        resolution.problems().forEach(p -> System.getLogger(PackEnvironmentPostProcessor.class.getName()).log(System.Logger.Level.WARNING, p));
+        names.removeIf(n -> resolution.packs().off().containsKey(n.trim()));        // a pack of a module that is off: not loaded (Health says why)
         SamplePolicy samples = SamplePolicy.of(env);                                    // hidden: sample packs are not loaded
-        List<Pack> packs = loader.load(dirs, samples.select(dirs, List.copyOf(names), loader));
+        List<Pack> packs = loader.load(resolution, samples.select(resolution, List.copyOf(names), loader));
         java.util.Set<String> suppressed = new java.util.LinkedHashSet<>();
         if (samples.hidden()) {                                                          // ... and the connectors only they use do not start
-            suppressed.addAll(SamplePolicy.sampleOnlyConnectors(dirs, loader));
+            suppressed.addAll(SamplePolicy.sampleOnlyConnectors(resolution, loader));
         }
         // a pack of a module that is off is not loaded, and neither the connectors only such packs use nor the module's own start
         // (docs/architecture/ACCESS_MODEL.md: module off = gone everywhere)
@@ -98,13 +99,13 @@ public final class PackEnvironmentPostProcessor implements EnvironmentPostProces
         }
         List<Pack> loaded = packs;
         loaded.forEach(p -> suppressed.removeAll(p.connectorRefs()));
-        // connector files: migrate old per-pack overrides once, write files from the packs' templates where none exist
-        ConnectorBootstrap.Result boot = ConnectorBootstrap.run(packs, files, overrides,
-                Boolean.parseBoolean(env.getProperty("drishti.sources.connectors-generate", "true")), officialReaders(env));
-        // the packs' own properties are computed after the files exist, so a template is left out where a file stands in for it
+        // the connectors: each one's layers (template, site override, secrets) merged in memory; the server writes no connector file
+        // (docs/guides/DATA_GUIDE.md, "Connector layers"). A template is left out of the packs' properties where a site file is in force.
         env.getPropertySources().addLast(new MapPropertySource(SOURCE, loader.properties(packs)));
+        java.util.Map<String, ConnectorLayers.Template> templates = ConnectorLayers.templates(packs, officialReaders(env));
         java.util.Map<String, String> problems = new java.util.LinkedHashMap<>();
-        java.util.Map<String, ConnectorFiles.Definition> defs = new java.util.LinkedHashMap<>(files.readAll(problems));
+        java.util.Map<String, ConnectorFiles.Definition> defs = new java.util.LinkedHashMap<>(ConnectorLayers.resolve(templates, files, problems));
+        List<String> superseded = ConnectorLayers.superseded(templates, files);
         suppressed.forEach(defs::remove);
         // an enabled placeholder that resolves to neither true nor false refuses the file, as a hot reload does (QA4-04)
         for (var it = defs.entrySet().iterator(); it.hasNext();) {
@@ -133,14 +134,9 @@ public final class PackEnvironmentPostProcessor implements EnvironmentPostProces
         for (String n : suppressed) {
             fileProps.put("drishti.sources.connectors-suppressed[" + si++ + "]", n);
         }
-        for (int i = 0; i < boot.messages().size(); i++) {
-            fileProps.put("drishti.sources.connectors-bootstrap[" + i + "]", boot.messages().get(i));
-        }
-        for (int i = 0; i < boot.generated().size(); i++) {
-            fileProps.put("drishti.sources.connectors-generated[" + i + "]", boot.generated().get(i));
-        }
-        for (int i = 0; i < boot.migrated().size(); i++) {
-            fileProps.put("drishti.sources.connectors-migrated[" + i + "]", boot.migrated().get(i));
+        for (int i = 0; i < superseded.size(); i++) {
+            fileProps.put("drishti.sources.connectors-bootstrap[" + i + "]", "connector file " + superseded.get(i) + ".yaml was generated by an earlier "
+                    + "release and never edited: it is ignored, the template is in force (safe to delete)");
         }
         problems.forEach((n, m) -> fileProps.put("drishti.sources.connector-file-problems." + n, m));
         env.getPropertySources().addBefore(SOURCE, new MapPropertySource(FILES_SOURCE, fileProps));

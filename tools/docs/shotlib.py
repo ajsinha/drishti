@@ -184,9 +184,9 @@ def start_servers(work: Path, extra_env: dict | None = None) -> list:
     if not jars:
         sys.exit("build the server first: ./mvnw -o package -DskipTests -pl :drishti-app -am")
     java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"
-    for name in ("config",):
+    for name in ("config", "modules", "lib"):      # the server reads its config and its module folders beside where it runs
         if not (work / name).exists() and (ROOT / name).exists():
-            (work / name).symlink_to(ROOT / name)
+            (work / name).symlink_to(ROOT / name, target_is_directory=True)
     (work / "sutras").mkdir(exist_ok=True)
     # a guide's SERVER_ENV wins over these (the groupings tutorial loads the public-data packs too)
     env = {**os.environ, "DRISHTI_PORT": str(SERVER_PORT), "DRISHTI_PACKS": PACKS, "DRISHTI_STUDIO_SAVE": "true", "DRISHTI_BUILDER_FILE_BINDING": "true", "DRISHTI_LABS_CALC": "true",

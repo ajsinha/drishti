@@ -1112,7 +1112,7 @@ settings:                         # the plugin's settings; nesting is flattened 
   **deprecated** ([9.11](#911-moving-off-applicationyaml-and-the-old-data-source-override)).
 
 Which definition wins (environment and the deprecated `drishti.sources.connectors.*`, then the file, then the pack's template) is
-[Precedence](#precedence); how `routes:` and a file's `kinds:` decide which connector answers a kind is
+[Connector layers](#connector-layers); how `routes:` and a file's `kinds:` decide which connector answers a kind is
 [9.6](#96-how-packs-and-files-fit-together).
 
 ### 8.2 Which connector?
@@ -1229,7 +1229,7 @@ pack's template for that name **wholesale**: the settings are not merged, so wha
 `trade-endur`, start from the generated file (`drishti.py connector get trade-endur`) and edit that line:
 
 ```yaml
-# config/connectors/trade-endur.yaml (generated from the trading pack's template, then edited)
+# config/connectors/trade-endur.yaml (the site's override of the template: only this key)
 plugin: delta
 settings:
   root: /srv/lake                  # the line the site changed
@@ -1460,19 +1460,16 @@ place for one ([CONFIGURATION.md › Your own libraries](../admin/CONFIGURATION.
 them and never in a hidden folder:
 
 ```
-config/connectors/                          the site's connector files: one per connector, the name is the file name
-  trade-endur.yaml
-  trade-calypso.yaml
-  market-store.yaml
+config/connectors/                          the site's files: an override of a template (only the keys it changes), or a whole
+  trade-endur.yaml                          site connector; empty on a fresh install: the templates run as they are
+  my-warehouse.yaml
   …
 data/connectors/                            <data dir>/connectors (DRISHTI_DATA_DIR moves the data folder)
-  generated/trade-endur.properties          which files the server wrote from a pack's template, and from which version
-  history/trade-endur.20261017T213854795.yaml   every earlier text of every file, written before each change
+  history/trade-endur.20261017T213854795.yaml   every earlier text of a file Admin saved, kept before each save
 ```
 
-A `generated/<name>.properties` marker records the fingerprint of the file the server wrote and of the template it came from
-(`file=1a3893dbc61d97ee`, `template=35e7b46805591a9c`, `kinds=trade`), so the server can tell an **unedited** generated file (it
-may be regenerated when the pack's template changes) from one **you edited** (left alone, and flagged).
+The server writes here only when an administrator saves (Admin → Connectors, `drishti.py connector`). The markers an earlier release
+kept in `data/connectors/generated/` are read only to recognise the files it generated ([Connector layers](#connector-layers)).
 
 Names are lower case letters, digits and hyphens, starting with a letter or digit, at most 64 characters (`trade-endur`,
 `risk-store-2`). `plugins` and `history` are reserved. A file whose name breaks the rule (`Upper.yaml`, `a b.yaml`, `.yml`) is not
@@ -1548,11 +1545,9 @@ in `config/connectors.examples/` declares one.
 
 ### 9.4 Examples, one per store
 
-**Delta Lake** (`config/connectors/trade-endur.yaml`, exactly as the server generated it from the trading pack's template at its first
-start):
+**Delta Lake** (a whole site connector of the shape the source modules' templates have, `modules/source-endur/connectors/trade-endur.yaml`):
 
 ```yaml
-# Generated at first start from the connector template of pack 'trading'. Edit it freely: an edited file is never overwritten; an unedited one follows the pack's template at an upgrade.
 plugin: delta
 enabled: "${DRISHTI_LAKE_ENABLED:true}"
 kinds:
@@ -1574,7 +1569,7 @@ settings:
 documents), so searches, type-ahead and BI read them without opening documents. `drishti.py lake demo` writes these three tables;
 `drishti.py lake build` writes one from your own export ([CLI_REFERENCE.md](CLI_REFERENCE.md)).
 
-**A derived connector** (`config/connectors/trade-pages.yaml`, generated from the trading pack): no store behind it; it computes the
+**A derived connector** (the trading pack's `trade-pages` template): no store behind it; it computes the
 counterparty, portfolio, legal-entity and index pages from the `trade` kind (whichever connectors serve it). The first of its four
 kinds (the file has the same block for `portfolio-trades`, `legal-entity-trades` and `index-trades`):
 
@@ -1603,7 +1598,7 @@ settings:
   …
 ```
 
-**Kafka** (`config/connectors/trading-stream.yaml`, generated from the trading pack, switched off until `DRISHTI_STREAM_TRADING=true`):
+**Kafka** (the trading pack's `trading-stream` template, switched off until `DRISHTI_STREAM_TRADING=true`):
 
 ```yaml
 plugin: kafka
@@ -1765,7 +1760,7 @@ and the PKCS12 forms in `trading-stream.yaml`, `orders-queue.yaml`, `ops-events.
 A pack **names** its connectors. The trading pack's `pack.yaml` (shortened):
 
 ```yaml
-connectors:                         # a mapping: each entry is a TEMPLATE the server writes to config/connectors/<name>.yaml once
+connectors:                         # a mapping: each entry is a TEMPLATE, read where it is (the site overrides keys in config/connectors/<name>.yaml)
   trade-endur:
     plugin: delta
     enabled: ${DRISHTI_LAKE_ENABLED:true}
@@ -1834,136 +1829,48 @@ connectors of trading   [files in …/config/connectors; change them with `drish
 [exit 0]
 ```
 
-#### Precedence
+#### Connector layers
 
-Highest first. Each is documented and tested:
+The server **reads** connector configuration; it never writes, regenerates, upgrades or retires a connector file at start, on reload or
+on a deploy. The connector that runs is computed in memory from three layers (the rules, the messages and the tests:
+[KERNEL_AND_MODULES.md section 18.5](../architecture/KERNEL_AND_MODULES.md#185-connectors)):
 
-| Source | Role |
-|---|---|
-| Environment variables and `drishti.sources.connectors.*` in the server's own configuration (**deprecated**) | Override a file **setting by setting** until you move them to the file; a warning names the file to write. |
-| `config/connectors/<name>.yaml` | The site's definition. It **replaces** the pack's template for that name **wholesale**: the settings are not merged, so what the file does not say is not inherited. |
-| The pack's template (the `connectors:` mapping) | The pack's suggestion. Used to write the file once, and in memory when the file cannot be written. |
-
-A file with **no** template of that name defines a **new site connector**. When two related packs (one `extends` the other) suggest the
-same name, the more specific pack's template is the one written; two unrelated packs suggesting different definitions of one name is
-an error.
-
-#### Generation at the first start
-
-If a pack suggests a connector and no file of that name exists, the server writes it (logged, and audited as `connector-generated`),
-records a marker in `<data dir>/connectors/generated/`, and never touches a file you edited. On a fresh clone with the seven packs:
-
-```
-$ ls config/connectors
-civic-store.yaml       ecb-fx-feed.yaml     macro-store.yaml      nyfed-sofr-feed.yaml  trade-calypso.yaml  trading-stream.yaml
-collateral-store.yaml  fred-feed.yaml       market-store.yaml     reference-store.yaml  trade-endur.yaml    us-treasury-feed.yaml
-credit-store.yaml      legal-store.yaml     news-store.yaml       risk-store.yaml       trade-murex.yaml    yfinance.yaml
-ecb-estr-feed.yaml     news.yaml            trade-pages.yaml
-```
-
-The log says, per file:
-
-```
-connectors: connector file trade-endur.yaml generated from the template of pack 'trading'
-```
-
-**Edited or not.** A generated file you never edited follows its pack: when the pack's template changes (a new release), the file is
-written again from it (its text kept in the history). A file you edited is never overwritten: it gets what the template gained, every
-edit kept ([Upgrades](#upgrades)); the Connectors page and Health flag that the pack now suggests something else, and **Reset to pack
-default** takes the suggestion when you want it. If you delete a generated
-file by hand while the pack still suggests it, it is written again at the next start. To stop generating files altogether, set
-`drishti.sources.connectors-generate: false`; the templates are then used in memory. The `sutra` command line
-(`drishti.py sutra ...`, `pack check`) always runs that way: it reads the connector files that exist and writes none.
-
-**`lake demo` and connector files.** `drishti.py lake demo` checks the seven packs' Delta connector files against the lake it built:
-with the default lake (`<data>/delta`) nothing changes; with `--lake DIR` each file that points elsewhere is rewritten to point there
-(its earlier text kept in `<data dir>/connectors/history/`), and a missing one is written from the pack's template.
-
-#### Template updates
-
-A connector file generated once from an older pack template can lack kinds the pack serves now (seen in the field: `macro-store`
-without [`region-economy`](../contracts/samples/world-economy.md#region-economy) ([contract](../contracts/packs/world-economy.md#rege-region-economy-region-economy)) and `country-group`, `civic-store` without [`office-holder`](../contracts/samples/world-economy.md#office-holder) ([contract](../contracts/packs/world-economy.md#offc-office-holder-office-holder)), `risk-store` without `trade-valuation`, and old
-files still naming `central-bank-decision`, `trade-flow` and `price-basket`, which no pack uses any more). The server compares every
-connector file with its pack's current template, at start and every
-`drishti.connectors.template-check-ms` (60 s), and sorts the difference into three parts:
-
-| Part | What | Applied automatically |
+| Layer | Where | What it holds |
 |---|---|---|
-| **Missing** (additive) | kinds the template serves that the connector lacks; settings keys the template has and the connector does not (the layout entries for those kinds among them); columns a layout list of the template has and the connector's same list lacks (`layout.<kind>.columns`, `.vectors`: a pack that gained columns; the connector's own columns and order kept, the new ones appended, the file before kept beside it as `<name>.yaml.before-<yyyyMMdd-HHmmss>.bak`); parameters a reactive connector's template gained (`kinds.<kind>.params.<name>`, such as a reporting currency `ccy`; the file's own parameters kept, the file before kept beside it). Applied once at start, before the server answers, then every `template-check-ms` | with `additive` |
-| **Changed** (conflicting) | settings both have with different values: an administrator's edit | never |
-| **Obsolete** | kinds in the connector that no loaded pack serves | never |
+| **Template** (read-only) | a loaded pack's `connectors:` entry, or a file directly in the connectors folder of a module that is on (`modules/source-endur/connectors/trade-endur.yaml`; files under `connectors/examples/` are examples to copy, not templates) | the whole connector as shipped; its name is the file's `name:` key, else the file's name |
+| **Site override** | `config/connectors/<name>.yaml` | only the keys the site changes, merged over the template key by key (a setting's dotted path is its key: `settings.set.SOURCE_SYSTEM`). Any key may change, the plugin included; every other key is still inherited; a key set to `null` removes the inherited one. A file with no template of its name is a complete **site connector** and names its plugin |
+| **Secrets** | `${VAR}` and `file:` references in the file | resolved when the connector starts; a template never holds one |
 
-`template-updates` in the connectors settings file, `config/connectors-settings.yaml` (named by `drishti.connectors.settings-file`;
-`drishti.connectors.template-updates` overrides it), chooses what happens on its own:
+A relative file in a setting (`map: mappings/endur-trade.yaml`) is read from the folder of the layer that set the key.
 
 ```yaml
-# config/connectors-settings.yaml
-template-updates: additive    # additive (the default): add missing kinds and settings, keeping every edit | notify: only list | off
+# config/connectors/trade-endur.yaml: the site's override, written by Admin -> Connectors (only what differs)
+template: module source-endur
+settings:
+  lake-tables: trading.trade_endur_v2      # the rest (plugin, kinds, set: SOURCE_SYSTEM, map:) is the template's
 ```
 
-With `additive` the missing part is merged into the connector, every other value kept as it is, written to the file with the previous text in the
-history; the server logs one line, records `connector-template-update` in the
-audit trail and lists it under *Recent automatic updates*. Changed and obsolete parts are only ever changed by an administrator.
+**Admin → Connectors** shows each connector's layer (template, override, site) and the layer of every setting, and the template's owner
+(`pack trading`, `module source-endur`). **Save** writes only the keys that differ from the template, with `template: <owner>`;
+**Reset** deletes the override, so the template is in force as it is; switching a connector off writes `enabled: false` alone, and
+switching it on again removes that key (an override left with nothing removes itself). A module switched off takes its templates with it:
+its connectors stop, and a site override of one of them is listed as *not used* (DRS-1046) until the module is on again.
 
-**Admin → Connectors → Template updates** (`/admin/connectors/template-updates`; the Connectors tab shows a count when anything
-drifted, and the Connectors page links to it) lists every drifted connector with its three parts and its text beside the template's
-(stacked on a phone), and the buttons: **Add missing kinds** (merge the missing part, keep edits), **Regenerate from template** (the
-template's text replaces the connector's; asks first), **Remove obsolete kinds** (asks first) and **Fix all additive**. Every button
-keeps the old text in the history (Restore on the connector's page puts it back) and sends the version read, so a change made
-meanwhile is a `409 DRS-5032`. REST: `GET /api/v1/admin/connectors/template-updates`, `POST …/template-updates/<name>/add-missing`,
-`…/regenerate`, `…/remove-obsolete`, `…/use-template-value`, `POST …/template-updates/fix-all`. What an upgrade does to unedited and
-edited files, at any depth: [Upgrades](#upgrades).
+**Files an earlier release left.** Earlier releases wrote a whole file per template at first start. Such a file is recognised by its
+header or its stamp (`# Generated at first start from the connector template of pack '…'`, `# drishti-template: …`) or by its marker in
+`<data dir>/connectors/generated/`:
 
-#### Upgrades
+| The file… | is… |
+|---|---|
+| generated and never edited | **superseded**: not read, the template is in force; listed in Health as *safe to delete* (never deleted) |
+| generated, then edited | an override like any other: its keys win, the template supplies the rest |
+| generated, and its template is no longer here (its module is off or removed) | **not used**, listed with the module and why it is off (DRS-1046); never run as a site connector |
+| says `template: <owner>` and that template is not here | **not used** (DRS-1046) |
 
-A new release can change a pack's connector templates (a new parameter of a kind, for example; a file generated before it would refuse
-the new request). An upgrade keeps every connector file in step, with two rules:
-
-**1. A file nobody edited follows the pack.** Drishti stamps every file it writes from a template with one line after the header:
-
-```
-# Generated at first start from the connector template of pack 'market-risk'. Edit it freely: an edited file is never overwritten; an unedited one follows the pack's template at an upgrade.
-# drishti-template: pack=market-risk template=6f1c0a9d2e7b4c3a text=1b8e4f0c9a2d7e65
-```
-
-`template` is the fingerprint of the template the file came from, `text` the hash of the text below the line as written. The stamp is
-part of the text, so it travels with it: the file on disk, the history, a copy to another
-server. At start (before the server answers) and at every template check, a file whose text below the stamp still has that hash was
-never edited: when its template's fingerprint changed it is **replaced in full** by the new template, changed values included. The file
-before is kept beside it as `<name>.yaml.before-upgrade-<yyyyMMdd-HHmmss>.bak` and in the history; the log has one line, the audit trail
-`connector-template-upgrade`, and *Recent automatic updates* the notice. A CRLF save is not an edit. Files of an older generation without
-the stamp are recognised by their marker in `<data dir>/connectors/generated/` in the same way, and stamped when rewritten. **Reset to
-pack default** and **Regenerate from template** write a stamped file again, so a connector you put back follows the pack once more.
-
-**2. An edited file gets every missing key, at any depth.** The additive merge reaches the whole definition: kinds, settings, the
-layout lists (`layout.<kind>.columns`, `.vectors`), a missing `description`, and a reactive connector's computation: `kinds.<kind>.params`,
-`kinds.<kind>.result`, `reads`, `engine`, `triggers`, `coalesce`, `cache`, `limits`, `history`. Any key the template has and the file lacks
-is added. A value the file has is never overwritten. Lists are kept in the file's order and get the template's missing items appended, as
-the layout lists do; a mapping in a list that names the same thing as one of the file's (the same `kind`, `name`, `id`, `topic` or
-`connector`, such as a computed connector's read of `var-result`) is merged into it rather than added twice.
-
-**Conflicts.** The same key with a different value (an administrator's edit, or a value the pack changed under an edited file) is listed
-in **Admin → Connectors → Template updates** under *changed*, settings and definition paths alike (`refresh-seconds`, `limits.wait`,
-`reads[0].id`), each with a **Use the pack's value** button: that one key takes the template's value, every other edit stays, the old
-text goes to the history and the audit trail records `connector-template-update`. REST: `POST
-/api/v1/admin/connectors/template-updates/<name>/use-template-value` with `{"where": "settings"|"definition", "key": "<key>"}` and the
-connector's version as `If-Match`.
-
-![Template updates: an edited trade-murex, its missing columns added at start, its own file-rows listed as changed with Use the pack's value](img/connector_files/15-template-updates.jpg)
-
-A file written by `drishti.py lake demo` or `build_demo_lakes.py` (its first line *Written by …*) carries no stamp: it counts as
-edited, keeps its values and gains missing keys. A change of `plugin` is not listed as a conflict (a `var-results.yaml` that `lake demo`
-wrote stays on Delta when the official results move to Iceberg): put such a file back with **Reset to pack default**.
-
-**Example.** A reactive connector generated by an older release and edited (`limits.wait: 45s`), after an upgrade: the parameter its
-pack's template gained (`kinds.<kind>.params.ccy`) and the new triggers' kinds are added, `limits.wait` stays `45s`, and `reads[0].id`
-(`{id}` in the file, `{id}~ccy={params.ccy}` in the template) is listed as a conflict until an administrator uses the pack's value.
-
-**3. A connector the pack retired.** When a pack no longer has a connector's template (a pack that dropped `var-whatif`, for example), a file Drishti generated from that pack's template and nobody edited is
-removed at start: its text is kept beside it as `<name>.yaml.retired-<yyyyMMdd-HHmmss>.bak` and in the history, and the log says so.
-An edited file stays as it is; **Template updates** lists its kinds as *obsolete*, and **Remove obsolete kinds** or deleting the
-connector takes it away. A file of a pack the server does not load, and a site's own file, are never touched.
-
+So an upgrade needs no step: a release that moves a template (the trade connectors moved from the trading pack into the source modules)
+keeps every trade, because the old generated files are superseded by the templates wherever they now are. Connector edits that an older
+release kept in the content store and this node never folded into files are listed in Health (*save it in Admin → Connectors*) and not
+applied. `.history` and `.generated` folders an earlier release left are read only to recognise a generated file; nothing moves them.
 
 #### A pack names a connector nobody defined
 

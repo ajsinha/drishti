@@ -21,7 +21,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from core.pack_paths import manifests
+from core.resolution import manifests
 
 pytestmark = pytest.mark.static   # a quick file check: the drill's gate runs it (TEST_HARNESS.md, "Quick file checks")
 

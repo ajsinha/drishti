@@ -107,7 +107,7 @@ def trade_grain_copy(lake: Path, dest: Path, budget: int = 40) -> Path:
     return out
 
 
-def var_server(tmp_path_factory, lake: Path, shared: bool = False, **env: str):
+def var_server(tmp_path_factory, lake: Path, shared: bool = False, heap: str = VAR_HEAP, **env: str):
     """A real server and console over ``lake``, its VaR engine ready; ``env``: more DRISHTI_* settings. Its VaR hot folder and the root
     it publishes the official results to (``<root>/risk-results``, VAR_GUIDE section 19) are its own: the lake is read, never written.
 
@@ -122,6 +122,6 @@ def var_server(tmp_path_factory, lake: Path, shared: bool = False, **env: str):
     else:
         own = {"DRISHTI_VAR_HOT_DIR": str(tmp_path_factory.mktemp("var-hot")), "DRISHTI_VAR_OFFICIAL_ROOT": str(tmp_path_factory.mktemp("var-official"))}
     for st in _stack(tmp_path_factory, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true", "DRISHTI_VAR_SYSTEM_BASKETS_SEED": "true",
-                                        **own, **env}, heap=VAR_HEAP, shared=shared):
+                                        **own, **env}, heap=heap, shared=shared):
         _engine_ready(str(st))
         yield st

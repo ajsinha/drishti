@@ -56,7 +56,9 @@ from core.guides import GithubSlugger  # noqa: E402
 NOT_DOCS = ("drishti-console/web/static/vendor/", "plugins/drishti-connectors/src/test/",
             "tools/packgen/", "tools/elements-demo/", "data/", "config/packs/core/gleif/")
 # History: names that were true when written. Links in these must still resolve; the names in them need not exist.
-HISTORY = ("CHANGELOG.md", "RELEASE_NOTES.md")
+HISTORY = ("CHANGELOG.md", "RELEASE_NOTES.md",
+           # the configuration-resolution working paper: an inventory of the code at one commit (its paths and line numbers are of then)
+           "docs/architecture/pack-resolution-inventory.md")
 
 
 @functools.lru_cache(maxsize=None)
@@ -229,7 +231,7 @@ def _pack_roots(rel: str) -> list[str]:
 
 @functools.lru_cache(maxsize=None)
 def pack_roots_all() -> tuple[str, ...]:
-    """Every pack folder: a folder holding a pack.yaml under config/packs (in its domain folder, core.pack_paths) or examples/packs."""
+    """Every pack folder: a folder holding a pack.yaml under config/packs (in its domain folder, core.resolution) or examples/packs."""
     return tuple(sorted({p[: -len("/pack.yaml")] for p in tracked()
                          if re.match(r"(?:(?:config|examples)/packs/(?:[^/]+/)?|modules/[^/]+/(?:dmod/)?packs/)[^/]+/pack\.yaml$", p)}))
 

@@ -287,12 +287,13 @@ the VaR and exposure lakes; package `com.ash.drishti.server.connectors` kept, in
   core's `compute:write` keeps the sandboxes and cancellations. **Help's Risk measures section** is the plugin's
   (`drishti-console/plugins/banking/help.yaml`: `help-sections:` heads with `after:`, and `sections:` pages), merged by `core/modules.py` (`help_heads`,
   `help_pages`) into the sitemap's heads and `help.yaml`'s pages.
+- **Where a pack is found** is specified in one place, [KERNEL_AND_MODULES.md section 18](KERNEL_AND_MODULES.md#18-configuration-resolution-packs-connectors-bindings-and-inbox-rules) (the site, then the modules that are on, then the kernel); the bullet below is the layout as built before it.
 - **Packs in domain folders** (step 7): `modules/<module>/packs/<pack>`: core (core, gleif, compute-demo), banking (trading, market-data,
   market-risk, counterparty-risk), economy (world-economy, news-and-markets), capitalmarkets (us-equities, funds). **One rule** says where a
   pack is: a packs root holds packs directly or one level down in domain folders (a folder with no `pack.yaml` of its own); in Java
   `com.ash.drishti.api.PackFolders` (`roots`, `all`, `list`, `of`: plain Java in drishti-api, so the pack loader, the reloader and its
   watchers, Admin -> Packs, deploy and roll back, the Sutra CLI and the lake files' pack tables share it), in Python
-  `drishti-console/core/pack_paths.py` (`roots`, `pack_dirs`, `pack_dir`, `manifests`: the console, the tools, the generators and the tests).
+  `drishti-console/core/resolution.py` (the one resolver of KERNEL_AND_MODULES.md section 18; `pack_dirs`, `pack_dir`, `manifests` go through its layers: the console, the tools, the generators and the tests).
   A pack's `domain:` names its folder (`tools/test_pack_layout.py`). The default packs are `config/packs/default-packs.yaml`, by module.
 - **Banking configuration** (step 8): a content folder holds a domain's files one level down, and a folder named after a module is read
   only while the module is on (`server.modules.DomainFolders`): `config/lakes/banking/{var,ccr}-official.yaml` (`Lakes.files` and

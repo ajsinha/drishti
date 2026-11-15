@@ -46,7 +46,7 @@ class CliLauncherScratchTest {
         assertThat(p.get("drishti.store.root")).startsWith(scratch.toString());
         assertThat(p.get("DRISHTI_CACHE_ROOT")).startsWith(scratch.toString());
         assertThat(p).containsEntry("drishti.var.official.enabled", "false").containsEntry("drishti.ccr.exposure.official.enabled", "false")
-                .containsEntry("drishti.sources.plugins.demo.settings.ticking", "false").containsEntry("drishti.sources.connectors-generate", "false");
+                .containsEntry("drishti.sources.plugins.demo.settings.ticking", "false");
         Path site = Path.of(com.ash.drishti.api.DataDir.root()).toAbsolutePath().normalize();
         assertThat(p).as("the site's lakes are read where they are").containsEntry("DRISHTI_DELTA_ROOT", site.resolve("delta/demo").toString());
         assertThat(p).as("the site's installed modules' packs are read where they are, never written")
@@ -84,7 +84,8 @@ class CliLauncherScratchTest {
                 "sutra", "lint", sutra.toString()));
         ProcessBuilder pb = new ProcessBuilder(cmd).directory(work.toFile()).redirectErrorStream(true);
         pb.environment().keySet().removeIf(k -> k.startsWith("DRISHTI_"));
-        pb.environment().putAll(Map.of("DRISHTI_PACKS_DIR", REPO.resolve("config/packs").toString(), "DRISHTI_PACKS", "trading"));
+        pb.environment().putAll(Map.of("DRISHTI_PACKS_DIR", REPO.resolve("config/packs").toString(), "DRISHTI_MODULES_HOME", REPO.resolve("modules").toString(),
+                "DRISHTI_PACKS", "trading"));   // the shipped modules where the repository keeps them (KERNEL_AND_MODULES.md 18.2)
         Path log = jvmTmp.resolve("run.log");
         pb.redirectOutput(log.toFile());
         Process proc = pb.start();

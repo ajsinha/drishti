@@ -44,7 +44,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[3]
 if str(ROOT / "drishti-console") not in sys.path:
     sys.path.insert(0, str(ROOT / "drishti-console"))
-from core import pack_paths as PP  # noqa: E402  (the one rule for where a pack's folder is)
+from core import resolution as PP  # noqa: E402  (where a pack is: the one resolver, KERNEL_AND_MODULES.md 18)
 
 SPEC = Path(__file__).resolve().parent / "data_retrieval.yaml"
 TESTDATA = ROOT / "data" / "testdata" / "testdata.yaml"
@@ -167,7 +167,7 @@ def contracts_section(pack: str, items: list[dict], where: str | None = None) ->
     if not items:
         return []
     page = CONTRACTS_PAGE.format(pack=pack)
-    where = where or f"config/packs/<domain>/{pack}"
+    where = where or (PP.pack_dir(pack).relative_to(ROOT).as_posix() if PP.pack_dir(pack).is_relative_to(ROOT) else str(PP.pack_dir(pack)))
     examples = sample_anchors()
     out = ["## Data contracts", "",
            f"Every kind of the pack has a data contract: a YAML file beside the pack (`{where}/contracts/<kind>.contract.yaml`, "

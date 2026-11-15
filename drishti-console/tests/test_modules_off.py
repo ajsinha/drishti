@@ -149,7 +149,7 @@ def test_capital_markets_off_its_functions_are_gone(backend, monkeypatch):
     assert "USEQ" not in shown and "FUND" not in shown and "TRD" in shown
     assert "/var" in _menu_links(c.get("/t").text)                                                    # banking stays
     assert c.get("/help/docs-guides-funds-guide").status_code == 404                                 # its Help pages (domain: capitalmarkets)
-    assert c.get("/help/docs-guides-public-sector-guide").status_code == 200                         # another module's stay
+    assert c.get("/help/docs-guides-var-guide").status_code == 200                                   # another module's stay
 
 
 def test_a_single_function_off_is_gone_and_the_rest_stays(backend, monkeypatch):

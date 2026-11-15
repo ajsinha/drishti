@@ -66,7 +66,7 @@ class SourceRegistryRetryTest {
     private static SourceRegistry registry(Map<String, SourcesProperties.ConnectorSettings> initial) {
         LOG.clear();
         var props = new SourcesProperties(Map.of(), null, Map.of("stubbed", new SourcesProperties.PluginSettings(false, Map.of())), Duration.ofSeconds(1),
-                null, initial, null, "off", null, Duration.ZERO, null);
+                null, initial, null, "off", null, Duration.ZERO);
         RetryPolicy fast = new RetryPolicy(true, Duration.ofMillis(100), 2.0, Duration.ofMillis(400), 0, 3);
         return new SourceRegistry(List.of(new Stubbed()), props, new JsonCodec(), fast);
     }
@@ -106,7 +106,7 @@ class SourceRegistryRetryTest {
     void retryNowTriesAtOnceAndANewFileStartsTheCountAgain() throws Exception {
         UP.set(false);
         var props = new SourcesProperties(Map.of(), null, Map.of("stubbed", new SourcesProperties.PluginSettings(false, Map.of())), Duration.ofSeconds(1),
-                null, Map.of("lake", cs()), null, "off", null, Duration.ZERO, null);
+                null, Map.of("lake", cs()), null, "off", null, Duration.ZERO);
         RetryPolicy slow = new RetryPolicy(true, Duration.ofMinutes(5), 2.0, Duration.ofMinutes(5), 0, 3);
         try (SourceRegistry r = new SourceRegistry(List.of(new Stubbed()), props, new JsonCodec(), slow)) {
             assertThat(r.retryStatus("lake").orElseThrow().nextInSeconds(java.time.Instant.now())).isGreaterThan(200);
@@ -138,7 +138,7 @@ class SourceRegistryRetryTest {
     void retryingCanBeSwitchedOff() throws Exception {
         UP.set(false);
         var props = new SourcesProperties(Map.of(), null, Map.of("stubbed", new SourcesProperties.PluginSettings(false, Map.of())), Duration.ofSeconds(1),
-                null, Map.of("lake", cs()), null, "off", null, Duration.ZERO, null);
+                null, Map.of("lake", cs()), null, "off", null, Duration.ZERO);
         RetryPolicy off = new RetryPolicy(false, Duration.ofMillis(100), 2.0, Duration.ofMillis(400), 0, 3);
         try (SourceRegistry r = new SourceRegistry(List.of(new Stubbed()), props, new JsonCodec(), off)) {
             UP.set(true);
@@ -171,13 +171,24 @@ class SourceRegistryRetryTest {
     void aModulesComputedKindThatAConnectorFileNamesStartsThatConnectorAndLeavesWithTheModule() throws Exception {
         var file = new SourcesProperties.ConnectorSettings("baskets", true, List.of("system-basket"), Map.of());
         try (SourceRegistry r = registry(Map.of("var-baskets", file))) {
-            assertThat(r.connectorStatuses().get("var-baskets").state()).isEqualTo("FAILED");    // no plugin named baskets: the module is not loaded yet
+            assertThat(r.connectorStatuses().get("var-baskets").state()).isEqualTo("WAITING");   // no plugin named baskets: the module is not loaded yet
             Runnable unload = r.attachExtension(new ComputedKindSource(new Baskets()), Map.of());
             assertThat(r.plugin("var-baskets")).isPresent();
             assertThat(r.connectorStatuses().get("var-baskets").state()).isEqualTo("RUNNING");
             assertThat(r.plugin("baskets")).isEmpty();                                          // a type, not a source routed beside the file's
             unload.run();
             assertThat(r.plugin("var-baskets")).isEmpty();
+        }
+    }
+
+    @Test
+    void aConnectorWaitingForAModuleFailsInWordsOnceTheModulesHaveLoadedWithoutIt() throws Exception {
+        var file = new SourcesProperties.ConnectorSettings("baskets", true, List.of("system-basket"), Map.of());
+        try (SourceRegistry r = registry(Map.of("var-baskets", file))) {
+            assertThat(r.connectorStatuses().get("var-baskets").state()).isEqualTo(SourceRegistry.WAITING);
+            r.modulesLoaded();                                                                  // no module brought the type
+            assertThat(r.connectorStatuses().get("var-baskets").state()).isEqualTo("FAILED");
+            assertThat(r.connectorStatuses().get("var-baskets").problem()).contains("no plugin named 'baskets'");
         }
     }
 }

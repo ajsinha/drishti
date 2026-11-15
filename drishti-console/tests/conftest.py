@@ -708,7 +708,9 @@ class FakeBackend:
                           {**join("exposure-result", "TRADE_ID", "trade", 0, 0, "computed"), "why": "exposure-result is computed on demand, never stored"}]}
 
     async def packs(self, ident=None):
+        # each row names the pack's folder and origin, as the server's resolution answers (the retired example packs are the site's)
         return [{"name": n, "version": "1.0.0", "title": n.title(), "description": "", "console": {}, "assigned": True,
+                 "dir": str(CONSOLE.parent / "examples" / "packs" / n), "origin": "site",
                  "active": n in self.enabled_packs, **({"python": self.python[n]} if n in self.python else {})}
                 for n in ["finance", "logistics"] if n in self.enabled_packs or self.enabled_packs]
 

@@ -38,7 +38,7 @@ from datetime import date
 _CONSOLE = pathlib.Path(__file__).resolve().parents[2] / "drishti-console"
 if str(_CONSOLE) not in sys.path:
     sys.path.insert(0, str(_CONSOLE))
-from core.pack_paths import pack_dirs  # noqa: E402  (the one rule for where a pack's folder is)
+from core.resolution import pack_dirs  # noqa: E402  (where a pack is: the one resolver, KERNEL_AND_MODULES.md 18)
 
 READY = ".ready"
 #: the keys of a .ready file, in the documentation's order: the same list as the inbox's (drishti-lakeload ReadyNote.KEYS; a test compares them)

@@ -62,14 +62,19 @@ class PacksServedWithoutDemoTest {
         Set<String> fed = fedKinds();
         List<String> unserved = new ArrayList<>();
         Set<String> packs = new HashSet<>();
-        try (Stream<Path> dirs = com.ash.drishti.api.PackFolders.list(PACKS).stream()) {
+        com.ash.drishti.api.resolution.ConfigResolution repo = com.ash.drishti.api.resolution.ConfigResolution.repository(PACKS.toAbsolutePath().normalize().getParent().getParent());
+        try (Stream<Path> dirs = repo.packDirs().stream()) {
             for (Path dir : dirs.filter(d -> Files.isRegularFile(d.resolve("pack.yaml"))).sorted().toList()) {
                 String pack = dir.getFileName().toString();
                 packs.add(pack);
                 JsonNode p = YAML.readTree(dir.resolve("pack.yaml").toFile());
                 for (JsonNode k : p.path("kinds")) {
                     String kind = k.asText();
-                    if (!EXEMPT.contains(pack + "/" + kind) && !served(pack, kind, p.path("connectors"), datasets, fed)) {
+                    // the pack's own templates and those of the modules that are on and name the kind (the source modules' trade connectors)
+                    com.fasterxml.jackson.databind.node.ObjectNode conns = p.path("connectors").isObject() ? ((com.fasterxml.jackson.databind.node.ObjectNode) p.path("connectors")).deepCopy()
+                            : YAML.createObjectNode();
+                    repo.templatesForKinds(List.of(kind)).forEach((n, t) -> conns.putIfAbsent(n, YAML.valueToTree(t)));
+                    if (!EXEMPT.contains(pack + "/" + kind) && !served(pack, kind, conns, datasets, fed)) {
                         unserved.add(pack + "/" + kind);
                     }
                 }

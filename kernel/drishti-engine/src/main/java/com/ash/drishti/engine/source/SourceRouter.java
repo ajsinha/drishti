@@ -141,7 +141,7 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
      */
     public List<Serving> serving(String kind) {
         List<Serving> out = new ArrayList<>();
-        for (SourcePlugin p : candidates(kind)) {
+        for (SourcePlugin p : adjacentUnion(offered(kind))) {
             String n = p.manifest().name();
             if (!p.manifest().kinds().contains(kind) && !bound.getOrDefault(kind, List.of()).contains(n) && !n.equals(routes.get(kind))
                     && !defaults.getOrDefault(kind, List.of()).contains(n) && p.holdsNone(kind)) {
@@ -165,13 +165,34 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
      * never answer beside real data. A connector that names no kind is never asked merely because its plugin could read the kind.
      */
     List<SourcePlugin> candidates(String kind) {
+        List<SourcePlugin> out = offered(kind);
+        java.util.Set<String> demo = demoKinds;
+        if (demo != null && !demo.contains(kind)) {
+            out.removeIf(p -> samples(p.manifest().name()));     // the packs' samples answer only where the bindings say DEMO (section 18.6)
+        }
+        return adjacentUnion(out);
+    }
+
+    /** The sources that offer {@code kind} (the samples included, which {@link #candidates} reads only for a DEMO kind). */
+    private List<SourcePlugin> offered(String kind) {
         List<SourcePlugin> out = picked(kind);
         // a connector of a trading system switched off leaves every read order without a word (its source module's switch)
         out.removeIf(p -> p instanceof ConnectorInstance ci && ci.switchedOff());
         if (out.stream().anyMatch(p -> samples(p.manifest().name())) && ownLake(kind, out) != null) {
             out.removeIf(p -> samples(p.manifest().name()));
         }
-        return adjacentUnion(out);
+        return out;
+    }
+
+    /**
+     * The kinds the data bindings resolve to DEMO (the site binds them with {@code demo: true}, or nothing else offers them while the demo
+     * is on): the only kinds the packs' samples answer. Null until a binding service tells the router (a router without bindings, a test).
+     */
+    private volatile java.util.Set<String> demoKinds;
+
+    /** The binding resolution's DEMO kinds, swapped whole after every resolution (KERNEL_AND_MODULES.md section 18.6). */
+    public void demoKinds(java.util.Set<String> kinds) {
+        demoKinds = kinds == null ? null : java.util.Set.copyOf(kinds);
     }
 
     /** The sources a read of {@code kind} asks, in read order (the resolution, {@link #candidates}). */
@@ -226,20 +247,13 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
                 registry.plugin(name).filter(p -> p.manifest().serves(kind)).ifPresent(p -> ordered.putIfAbsent(name, p));
             }
         }
-        boolean byDefault = !ordered.isEmpty();
         for (SourcePlugin p : registry.plugins()) {
             if (p.manifest().serves(kind) && !namesNoKind(p)) {
                 ordered.putIfAbsent(p.manifest().name(), p);
-                byDefault |= p.manifest().kinds().contains(kind);
             }
         }
-        if (!byDefault) {
-            for (SourcePlugin p : registry.plugins()) {                 // the lake convention: a lake connector whose lake holds the kind
-                if (namesNoKind(p) && lakeConnector(p.manifest().name()) && !holdsNone(p, kind)) {
-                    ordered.putIfAbsent(p.manifest().name(), p);
-                }
-            }
-        }
+        // no guess: a lake connector that names no kind is never asked because its lake happens to hold a table of the kind's name
+        // (KERNEL_AND_MODULES.md section 18.6); the kind is declared by a template, a route or a binding, else it is UNBOUND
         return new ArrayList<>(ordered.values());
     }
 
@@ -964,6 +978,13 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
      */
     private java.util.Set<String> listed(String kind, AsOf asOf, SourceFailures failures) {
         List<SourcePlugin> ordered = candidates(kind);
+        // a source system whose table is not there (a site without SwapOne, a lake not loaded) holds none and leaves the listing, as it
+        // leaves the whole-kind read: it is no failure of the search. Kept only when every source would be left out (the search says why)
+        List<SourcePlugin> holding = ordered.stream().filter(p -> !registry.union(p.manifest().name()) || !holdsNone(p, kind))
+                .collect(java.util.stream.Collectors.toCollection(ArrayList::new));
+        if (!holding.isEmpty()) {
+            ordered = holding;
+        }
         readOrder(ordered, asOf);
         java.util.Set<String> out = new java.util.HashSet<>();
         boolean unionHeld = false;
@@ -1084,7 +1105,8 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
             return List.of();
         }
         readOrder(candidates, asOf);
-        List<SourcePlugin> union = candidates.stream().filter(p -> registry.union(p.manifest().name())).toList();
+        // a source system whose table is not there (a site without Calypso) holds none and leaves the whole-kind read, as it leaves the columns
+        List<SourcePlugin> union = candidates.stream().filter(p -> registry.union(p.manifest().name()) && !holdsNone(p, kind)).toList();
         return union.isEmpty() ? List.of(candidates.get(0)) : union;
     }
 

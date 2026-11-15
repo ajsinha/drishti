@@ -89,7 +89,7 @@ class SourceShapeParityTest {
                 "mappings/swapone-trade.yaml"));
         var cfg = new LinkedHashMap<String, SourcesProperties.ConnectorSettings>();
         connectors.forEach((n, s) -> cfg.put(n, new SourcesProperties.ConnectorSettings(plugin, true, List.of("trade"), s)));
-        var props = new SourcesProperties(Map.of(), null, Map.of(), Duration.ofSeconds(5), null, cfg, tmp.toString(), null, null, null, null);
+        var props = new SourcesProperties(Map.of(), null, Map.of(), Duration.ofSeconds(5), null, cfg, tmp.toString(), null, null, null);
         SourceRegistry registry = new SourceRegistry(List.of(new DeltaSourcePlugin(), new IcebergSourcePlugin(), new FileSourcePlugin()), props,
                 new JsonCodec());
         registry.shapeBases(List.of(tmp));

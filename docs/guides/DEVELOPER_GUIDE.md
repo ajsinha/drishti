@@ -2075,7 +2075,7 @@ You should see:
 A connector is configured by **one file**, `config/connectors/<name>.yaml`, edited in your editor, in **Admin → Connectors**, or with
 `drishti.py connector apply`, and applied to the running server without a restart. A pack does not carry connection settings: it **names** the connectors it
 reads through (`connectors: [trade-endur]` and `routes:` in its `pack.yaml`) and may **suggest** a template for each. Precedence, highest first
-(the full table and the rules are in [DATA_GUIDE.md section 9](DATA_GUIDE.md#precedence)):
+(the full table and the rules are in [DATA_GUIDE.md section 9](DATA_GUIDE.md#connector-layers)):
 
 | Source | Role |
 |---|---|

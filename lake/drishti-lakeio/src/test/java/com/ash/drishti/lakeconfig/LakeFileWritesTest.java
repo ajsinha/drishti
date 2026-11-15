@@ -44,8 +44,16 @@ class LakeFileWritesTest {
     @TempDir
     Path tmp;
 
+    /** Every shipped pack's pack.yaml where the one resolution finds it (site, modules, kernel), and the example packs. */
+    static List<Path> shippedPackFiles() throws Exception {
+        List<Path> out = new java.util.ArrayList<>(com.ash.drishti.api.resolution.ConfigResolution.repository(REPO).packDirs().stream()
+                .map(d -> d.resolve("pack.yaml")).toList());
+        out.addAll(LakeFiles.packFiles(List.of(REPO.resolve("examples/packs"))));
+        return out;
+    }
+
     static Map<String, JsonNode> shippedDemoTables() throws Exception {
-        return LakeFiles.packTables(LakeFiles.packFiles(List.of(REPO.resolve("config/packs"), REPO.resolve("examples/packs"))), "demo");
+        return LakeFiles.packTables(shippedPackFiles(), "demo");
     }
 
     @Test
@@ -66,7 +74,7 @@ class LakeFileWritesTest {
         byte[] before = Files.readAllBytes(lakes.resolve("demo.yaml"));
         // connector files in the form every shipped template had before the lake form: the old default root, its domain and kinds
         int n = 0;
-        for (Path pack : LakeFiles.packFiles(List.of(REPO.resolve("config/packs"), REPO.resolve("examples/packs")))) {
+        for (Path pack : shippedPackFiles()) {
             JsonNode m = LakeFiles.YAML.readTree(Files.readString(pack));
             for (var it = m.path("connectors").fields(); it.hasNext(); ) {
                 var c = it.next();

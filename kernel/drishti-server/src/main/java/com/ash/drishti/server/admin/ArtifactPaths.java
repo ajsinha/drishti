@@ -17,7 +17,6 @@ package com.ash.drishti.server.admin;
 
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
-import com.ash.drishti.packs.PackLoader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -55,8 +54,15 @@ public final class ArtifactPaths {
     private final Path connectors;
     private final Path bi;
     private final Path tables;
+    private final java.util.function.Supplier<com.ash.drishti.api.resolution.ConfigResolution> resolution;
 
     public ArtifactPaths(Path packs, Path installed, Path connectors, Path bi, Path tables) {
+        this(packs, installed, connectors, bi, tables, com.ash.drishti.api.resolution.ConfigResolution::currentOrOffline);
+    }
+
+    /** As above, the packs found by {@code resolution} (the server's own: KERNEL_AND_MODULES.md section 18). */
+    public ArtifactPaths(Path packs, Path installed, Path connectors, Path bi, Path tables, java.util.function.Supplier<com.ash.drishti.api.resolution.ConfigResolution> resolution) {
+        this.resolution = resolution;
         this.packs = packs.toAbsolutePath().normalize();
         this.installed = installed.toAbsolutePath().normalize();
         this.connectors = connectors.toAbsolutePath().normalize();
@@ -84,22 +90,12 @@ public final class ArtifactPaths {
         return bi;
     }
 
-    /** Every pack folder on disk, installed ones first (they win, as in the loader). */
+    /** Every pack the resolution finds (KERNEL_AND_MODULES.md section 18), its area its origin: installed, site, module:<id>, kernel. */
     public List<PackFolder> packFolders() {
         List<PackFolder> out = new ArrayList<>();
-        for (Path root : PackLoader.dirs(packs.toString(), installed.toString())) {
-            String area = root.startsWith(installed) ? "installed" : "packs";   // the roots include the domain folders (PackPaths.roots)
-            if (!Files.isDirectory(root)) {
-                continue;
-            }
-            try (var s = Files.list(root)) {
-                for (Path d : s.filter(x -> Files.isRegularFile(x.resolve("pack.yaml"))).sorted().toList()) {
-                    out.add(read(d, area));
-                }
-            } catch (IOException e) {
-                // an unreadable folder lists nothing
-            }
-        }
+        com.ash.drishti.api.resolution.ConfigResolution r = resolution.get();
+        r.packs().packs().values().forEach(l -> out.add(read(l.dir(), l.dir().startsWith(installed) ? "installed"
+                : l.layer() == com.ash.drishti.api.resolution.PackResolver.Layer.SITE ? "packs" : l.origin())));
         return out;
     }
 

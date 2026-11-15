@@ -1029,12 +1029,10 @@ routes: {trade: trade-endur}        table.trade: trade_endur, union: "true" }
 - **Credentials**: a setting whose name says it is one (`password`, `secret`, `token`, `api-key`, `access-key`, `private-key`, `credential`)
   can only be `${LAKE_PASSWORD}` or `file:/run/secrets/lake-password`; a plain value or a password inside a URL is refused (`DRS-5031`). The
   folder holds no secret, so it can live in version control.
-- **Template updates**: after a pack upgrade a connector file can lack kinds the pack serves now. A file nobody edited carries a stamp
-  (`# drishti-template: …`) and is replaced by the new template, the old one kept beside it (`.before-upgrade-….bak`) and audited; an edited
-  file gets every key its template gained and keeps every value (`template-updates: additive`, the default, in
-  `config/connectors-settings.yaml`; `notify` only lists them). **Admin → Connectors → Template updates** shows each drifted connector with *Add
-  missing kinds*, *Regenerate from template*, *Remove obsolete kinds*, *Use the pack's value* and *Fix all additive*
-  ([DATA_GUIDE.md section 9](DATA_GUIDE.md#template-updates)).
+- **Connector layers**: the server reads each connector as its template (a pack's or an on module's, read where it is) with the site's
+  override over it (`config/connectors/<name>.yaml`, only the changed keys) and writes no connector file at start, reload or deploy. A
+  file an earlier release generated and nobody edited is superseded and listed in Health as *safe to delete*; an edited one is an override
+  ([DATA_GUIDE.md section 9](DATA_GUIDE.md#connector-layers)).
 - **Archives carry names and templates only**: a pack archive never carries a site's settings; its deploy preview lists the connectors the site
   lacks and a **Create connectors** step writes them from the templates ([9.1](#91-deploy-an-archive)).
 

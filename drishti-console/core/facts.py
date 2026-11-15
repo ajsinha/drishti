@@ -36,7 +36,7 @@ import yaml
 
 from core import engine_figures as engine
 from core.facts_expr import FORMATS, Expr, ExprError, Template, fmt, overlap_rows
-from core.pack_paths import pack_dirs
+from core.resolution import pack_dirs
 
 log = logging.getLogger(__name__)
 

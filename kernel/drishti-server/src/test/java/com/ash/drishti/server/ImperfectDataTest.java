@@ -58,7 +58,7 @@ class ImperfectDataTest {
 
     static List<Sutra> allSutras() throws Exception {
         List<Sutra> out = new ArrayList<>();
-        try (Stream<Path> packs = com.ash.drishti.api.PackFolders.list(Path.of("..", "..", "config", "packs")).stream()) {
+        try (Stream<Path> packs = com.ash.drishti.api.resolution.ConfigResolution.repository(Path.of("..", "..", "config", "packs").toAbsolutePath().normalize().getParent().getParent()).packDirs().stream()) {
             for (Path pack : packs.filter(p -> Files.isDirectory(p.resolve("sutras"))).sorted().toList()) {
                 try (SutraRegistry r = new SutraRegistry(new RachanaProperties(List.of(pack.resolve("sutras").toString()), false,
                         null, null, null, null, null, null, null, null), new ElCompiler())) {

@@ -264,7 +264,6 @@ moved:
   ten-day-var: docs-guides-var-guide#186-horizons-the-two-10-day-methods-and-the-confidence-chosen
   var-confidence: docs-guides-var-guide#186-horizons-the-two-10-day-methods-and-the-confidence-chosen   # the confidence chosen (2.9.7)
   var-on-iceberg: docs-tutorials-16-load-your-own-data-into-a-new-lake#part-e--the-risk-lake-and-the-official-results-on-iceberg                        # tutorial 16, Part E: the risk lake and official results on Iceberg (2.9.5)
-  template-updates: data-guide#upgrades                          # Admin -> Connectors -> Template updates, Use the pack's value (2.9.5)
   in-memory-lake: data-lake-guide#13-the-in-memory-lake                                    # the in-memory lake (2.9.11)
   memory-lake: data-lake-guide#13-the-in-memory-lake
   in-memory-lake-guide: data-lake-guide#13-the-in-memory-lake   # docs/guides/DATA_LAKE_GUIDE.md folded into DATA_LAKE_GUIDE.md section 13

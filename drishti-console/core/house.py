@@ -22,7 +22,6 @@ import math
 from functools import lru_cache
 from pathlib import Path
 
-import yaml
 
 from core import distribution as _dist
 from core import modules as _modules
@@ -45,18 +44,10 @@ def _manifests(folder: str) -> dict:
 
 @lru_cache(maxsize=64)
 def _manifest_title(folder: str, mid: str) -> str:
-    """A module's ``title`` from its manifest under the manifests folder ('' when there is none)."""
-    root = Path(folder)
-    for d in sorted(p for p in root.iterdir() if p.is_dir()) if root.is_dir() else []:
-        for f in (d / "module.yaml", d / "src" / "dmod" / "module.yaml", d / "dmod" / "module.yaml"):
-            if f.is_file():
-                try:
-                    y = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
-                except (OSError, yaml.YAMLError):
-                    continue
-                if str(y.get("id") or "").strip() == mid:
-                    return str(y.get("title") or "")
-    return ""
+    """A module's ``title`` from its manifest under the manifests folder ('' when there is none), as the one resolver finds it."""
+    from core import resolution
+    m = resolution.module_list(Path(folder)).get(mid) if Path(folder).is_dir() else None
+    return m.title if m else ""
 
 
 def rooms(editions) -> list[dict]:

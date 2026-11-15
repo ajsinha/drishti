@@ -65,8 +65,8 @@ public record Pack(String name, String version, String title, String description
 
     /**
      * The connector definitions the pack suggests, by name: the {@code connectors:} mapping (a list of names has no
-     * definitions to read). A template is never in force by itself once a connector file of the
-     * same name exists; it is what a file is generated from, and what is used when a file cannot be written.
+     * definitions to read), with the templates its source modules bring. The template layer of each connector: a site file of the same
+     * name is merged over it in memory ({@link ConnectorLayers}); nothing is ever generated from it.
      */
     @SuppressWarnings("unchecked")
     public Map<String, Map<String, Object>> connectorTemplates() {
@@ -75,6 +75,12 @@ public record Pack(String name, String version, String title, String description
             m.forEach((k, v) -> out.put(String.valueOf(k), v instanceof Map<?, ?> d ? (Map<String, Object>) d : Map.of()));
         }
         return out;
+    }
+
+    /** The source module a template of this pack came from ({@code modules/source-<system>/connectors/}), or empty for the pack's own. */
+    public java.util.Optional<String> moduleOfConnector(String name) {
+        Object m = connectorTemplates().getOrDefault(name, Map.of()).get(com.ash.drishti.lakeconfig.ModuleConnectors.FROM_MODULE);
+        return m == null ? java.util.Optional.empty() : java.util.Optional.of(String.valueOf(m));
     }
 
     /**

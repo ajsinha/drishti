@@ -38,30 +38,6 @@ public class ConnectorsConfiguration {
         return new ConnectorFiles(Path.of(props.connectorsDir()), Path.of(env.getProperty("drishti.data.dir", "./data"), "connectors"));
     }
 
-    /**
-     * Connectors drifted from their pack's template, merged automatically when additive. The mode is {@code template-updates} in
-     * the connectors settings file ({@code drishti.connectors.settings-file}, default {@code ./config/connectors-settings.yaml}),
-     * overridden by {@code drishti.connectors.template-updates}: additive (the default), notify or off.
-     */
-    @Bean(destroyMethod = "close")
-    public TemplateUpdates templateUpdates(ConnectorManager manager, AuditLog audit, org.springframework.core.env.Environment env) {
-        String mode = env.getProperty("drishti.connectors.template-updates");
-        if (mode == null) {
-            Path f = Path.of(env.getProperty("drishti.connectors.settings-file", "./config/connectors-settings.yaml"));
-            if (java.nio.file.Files.isRegularFile(f)) {
-                try {
-                    Object v = new com.fasterxml.jackson.databind.ObjectMapper(new com.fasterxml.jackson.dataformat.yaml.YAMLFactory())
-                            .readValue(f.toFile(), java.util.Map.class).get("template-updates");
-                    mode = v == null ? null : String.valueOf(v);
-                } catch (java.io.IOException | RuntimeException e) {
-                    org.slf4j.LoggerFactory.getLogger(ConnectorsConfiguration.class).warn("{} cannot be read ({}); template-updates is additive", f, e.getMessage());
-                }
-            }
-        }
-        return new TemplateUpdates(manager, audit, TemplateUpdates.Mode.of(mode))
-                .start(env.getProperty("drishti.connectors.template-check-ms", Long.class, 60_000L));
-    }
-
     @Bean
     public SettingCatalogue settingCatalogue(ConnectionProbe probe) {
         return new SettingCatalogue(probe.discovered());
@@ -84,17 +60,27 @@ public class ConnectorsConfiguration {
         ctx.getBeanProvider(com.ash.drishti.server.net.DigestService.class).ifAvailable(d -> d.service(ConnectorFileDrift.SERVICE, drift::wire));
     }
 
+    /** The connector edits an earlier release kept in the content store and this node never folded into files (its marker is absent). */
+    static List<String> storeEdits(ConnectorFiles files, com.ash.drishti.identity.content.ContentStore store) {
+        if (java.nio.file.Files.exists(files.stateDir().resolve("overlay-folded.txt"))) {
+            return List.of();                                   // folded by the earlier release on this node: nothing is left
+        }
+        try {
+            return store.list("config/connectors/").stream().filter(k -> k.endsWith(".yaml"))
+                    .map(k -> k.substring("config/connectors/".length(), k.length() - 5)).filter(n -> !n.contains("/")).sorted().toList();
+        } catch (RuntimeException e) {
+            return List.of();
+        }
+    }
+
     @Bean(destroyMethod = "stopWatching")
     public ConnectorManager connectorManager(ConnectorFiles files, SourceRegistry registry, SourcesProperties props, PackRegistry packs,
             ConfigurableEnvironment env, SettingCatalogue catalogue, ConnectionProbe probe, DeployProperties deploy, AuditLog audit,
             org.springframework.beans.factory.ObjectProvider<com.ash.drishti.identity.content.ContentStore> store) {
-        List<String> folded = store.stream().findFirst().map(s -> new ConnectorOverlayFold(files, s, audit).run()).orElse(List.of());
         ConnectorManager m = new ConnectorManager(files, registry, props, packs, env, catalogue, probe, deploy.probeDates(), deploy.probeTimeoutSeconds());
-        m.generated().forEach(n -> audit.record("system", "connector-generated", n, "written from a pack's connector template at start"));
-        m.migrated().forEach(n -> audit.record("system", "connector-migrated", n, "moved from a pack data-source override into " + n + ".yaml"));
-        if (!folded.isEmpty()) {
-            m.applyFolded(folded);
-        }
+        // the server writes no connector file at start (KERNEL_AND_MODULES.md section 18.5): an edit an earlier release kept in the content
+        // store is not applied; Health lists it, to be saved in Admin -> Connectors
+        store.stream().findFirst().ifPresent(s -> m.storeLeftovers(storeEdits(files, s)));
         m.startWatching();
         return m;
     }

@@ -29,10 +29,8 @@ import org.springframework.core.env.ConfigurableEnvironment;
  * {@code <data>/delta/demo/} (docs/guides/OPERATIONS_GUIDE.md, "The lakes' folders"), before any connector opens a table: {@link LakeRelocate},
  * safe by construction (only the lake's known folders, by a rename, every table measured before and after, moved back on any error, never a
  * delete, recorded once). {@code drishti.lakes.relocate-on-start: false} leaves it to {@code drishti.py lake relocate demo}. A refusal is
- * logged with its reason and the server starts as it is. Once the demo lake is in its own folder, the connector files that still read it
- * by its old default root ({@code root: ${DRISHTI_DELTA_ROOT:./data/delta}}, generated before the lake form) are moved to {@code lake: demo}
- * ({@link com.ash.drishti.lakeconfig.LakeFiles#adoptDemo}, each file kept beside it first), so they follow the lake. Both run after the
- * configuration is read and before the packs' connector files are ({@code PackEnvironmentPostProcessor}).
+ * logged with its reason and the server starts as it is. It runs after the configuration is read and before the connectors
+ * are ({@code PackEnvironmentPostProcessor}); it never writes a connector file (docs/guides/DATA_GUIDE.md, "Connector layers").
  */
 public final class LakeRelocateOnStart implements EnvironmentPostProcessor, Ordered {
 
@@ -70,28 +68,9 @@ public final class LakeRelocateOnStart implements EnvironmentPostProcessor, Orde
             }
             LakeRelocate.Outcome o = LakeRelocate.relocate(lakes, LAKE, false);
             log(o);
-            adopt(env, lakes, o);
         } catch (RuntimeException e) {
             LOG.log(System.Logger.Level.WARNING, "lake " + LAKE + ": the one-time move into its own folder was not tried (" + e.getMessage()
                     + "); drishti.py lake relocate " + LAKE + " says more");
-        }
-    }
-
-    /** The connector files that read the demo lake by its old default root, moved to {@code lake: demo} once the lake was moved into its own folder. */
-    static void adopt(ConfigurableEnvironment env, Lakes lakes, LakeRelocate.Outcome o) {
-        if (!o.state().equals("moved") && !o.state().equals("done-before")) {
-            return;                                     // not moved (refused, a root of its own, nothing there): the old roots still read it
-        }
-        String dir = env.getProperty("drishti.sources.connectors-dir", System.getenv().getOrDefault("DRISHTI_CONNECTORS_DIR", "./config/connectors"));
-        try {
-            com.ash.drishti.lakeconfig.LakeFiles.Migration m = com.ash.drishti.lakeconfig.LakeFiles.adoptDemo(Path.of(dir), lakes.folder() == null
-                    ? Path.of(Lakes.DEFAULT_DIR) : lakes.folder(), true, com.ash.drishti.packs.TemplateStamp::keepPristine);   // a never-edited file stays so
-            m.notes().forEach(n -> LOG.log(System.Logger.Level.INFO, "connector " + n + " (the file before: <name>.yaml.before-lake-<time>.bak)"));
-            m.lakeFiles().keySet().forEach(f -> LOG.log(System.Logger.Level.INFO, "lake file " + f + ": the tables those connectors read that it "
-                    + "lacked were added at the end of its tables (every other line kept as it was)"));
-        } catch (java.io.IOException | RuntimeException e) {
-            LOG.log(System.Logger.Level.WARNING, "the connector files that read the demo lake by its old root were not moved to lake: demo ("
-                    + e.getMessage() + "); they read " + o.from() + " until they are");
         }
     }
 

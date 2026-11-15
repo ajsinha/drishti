@@ -60,7 +60,8 @@ class DemoPackWalksTest {
     @BeforeAll
     static void load() throws IOException {
         for (Path root : PACKS) {
-          try (Stream<Path> packs = com.ash.drishti.api.PackFolders.list(root).stream()) {     // packs in their domain folders
+          try (Stream<Path> packs = (root.endsWith(Path.of("config", "packs")) ? com.ash.drishti.api.resolution.ConfigResolution.repository(Path.of("..", "..")).packDirs()
+                  : com.ash.drishti.api.PackFolders.list(root)).stream()) {     // the product's packs where the resolution finds them; a fixture folder as it is
             for (Path pack : packs.toList()) {
                 Path samples = pack.resolve("samples");
                 if (!Files.isDirectory(samples)) {

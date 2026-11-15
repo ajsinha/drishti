@@ -113,13 +113,14 @@ class CodecsTest {
 
     @Test
     void aPackGivesTheDomainTableLayoutKeyAndFlattenedFieldsAsLakeBuildReadsThem() throws IOException {
-        java.nio.file.Path packs = java.nio.file.Path.of("").toAbsolutePath().getParent().getParent().resolve("config/packs");
-        LoadConfig risk = LoadConfig.read(null, List.of("source.files=x.jsonl", "source.pack=" + packs.resolve("banking/market-risk"), "source.date=BUSINESS_DATE",
+        com.ash.drishti.api.resolution.ConfigResolution packs = com.ash.drishti.api.resolution.ConfigResolution.repository(
+                java.nio.file.Path.of("").toAbsolutePath().getParent().getParent());   // where each shipped pack is (its module's folder)
+        LoadConfig risk = LoadConfig.read(null, List.of("source.files=x.jsonl", "source.pack=" + packs.packDir("market-risk"), "source.date=BUSINESS_DATE",
                 "target.lake=/l", "target.kind=scenario-pv"));
         assertThat(risk.target().domain()).isEqualTo("risk");
         assertThat(risk.source().vectors()).containsExactly("SCENARIO_PV");
         assertThat(risk.source().promote()).contains("LEGAL_ENTITY", "DESK", "TT_BOOK");
-        LoadConfig trades = LoadConfig.read(null, List.of("source.files=x.jsonl", "source.pack=" + packs.resolve("banking/trading"), "source.connector=trade-endur",
+        LoadConfig trades = LoadConfig.read(null, List.of("source.files=x.jsonl", "source.pack=" + packs.packDir("trading"), "source.connector=trade-endur",
                 "source.as-of=2026-10-15", "target.lake=/l", "target.kind=trade"));
         assertThat(trades.tablePath()).isEqualTo("/l/trading/trade_endur");
         assertThat(trades.source().id()).isEqualTo("TRADE_ID");

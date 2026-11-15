@@ -128,12 +128,14 @@ public final class YamlAccessStore implements AccessStore {
         packagedIds.removeAll(before);
         if (manifestsDir != null && Files.isDirectory(manifestsDir)) {      // the content modules' own manifests: one source of truth
             try (Stream<Path> dirs = Files.list(manifestsDir)) {
-                for (Path f : dirs.map(d -> d.resolve("module.yaml")).filter(Files::isRegularFile).sorted().toList()) {
-                    String where = "modules/" + f.getParent().getFileName() + "/module.yaml";
+                for (Path f : dirs.map(d -> Files.isRegularFile(d.resolve("module.yaml")) ? d.resolve("module.yaml") : d.resolve("dmod").resolve("module.yaml"))
+                        .filter(Files::isRegularFile).sorted().toList()) {
+                    String where = manifestsDir.relativize(f).toString().replace('\\', '/');
+                    where = "modules/" + where;
                     try {
                         Map<String, Object> raw = readMap(f);
-                        if (raw.get("java") != null) {
-                            continue;                                  // a module with code: its jar's manifest is the one read
+                        if (raw.get("java") != null && modules.containsKey(ModuleManifest.norm(String.valueOf(raw.get("id"))))) {
+                            continue;                                  // a module with code whose jar is here: its jar's manifest is the one read
                         }
                         ModuleManifest m = ModuleManifest.ofDmod(raw, where);
                         if (packagedIds.contains(m.id())) {

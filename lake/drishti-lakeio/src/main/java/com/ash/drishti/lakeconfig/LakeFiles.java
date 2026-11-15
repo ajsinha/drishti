@@ -304,7 +304,12 @@ public final class LakeFiles {
             if (!Files.isDirectory(root)) {
                 continue;
             }
-            com.ash.drishti.api.PackFolders.list(root).stream().map(d -> d.resolve("pack.yaml")).forEach(out::add);   // and its domain folders
+            com.ash.drishti.api.resolution.ConfigResolution r = com.ash.drishti.api.resolution.ConfigResolution.currentOrOffline();
+            if (root.toAbsolutePath().normalize().equals(r.settings().siteDir())) {   // the site's packs folder: every pack the resolution finds
+                r.packs().packs().values().forEach(l -> out.add(l.dir().resolve("pack.yaml")));
+                continue;
+            }
+            com.ash.drishti.api.PackFolders.list(root).stream().map(d -> d.resolve("pack.yaml")).forEach(out::add);   // a given folder and its domain folders
         }
         return out;
     }
@@ -557,9 +562,8 @@ public final class LakeFiles {
     }
 
     /**
-     * {@link #adoptDemo(Path, Path, boolean)}, each rewritten file's text passed through {@code restamp(before, after)} first: the server
-     * gives the pack templates' stamp ({@code TemplateStamp.keepPristine}), so a stamped file nobody edited is stamped again over its new
-     * text and still counts as unedited (it keeps following its pack's template at upgrades); an edited one stays edited.
+     * {@link #adoptDemo(Path, Path, boolean)}, each rewritten file's text passed through {@code restamp(before, after)} first (a tool's
+     * hook; the server writes no connector file).
      */
     public static Migration adoptDemo(Path connectorsDir, Path lakesDir, boolean write, java.util.function.BinaryOperator<String> restamp) throws IOException {
         Map<Path, String> lakeFiles = new LinkedHashMap<>();

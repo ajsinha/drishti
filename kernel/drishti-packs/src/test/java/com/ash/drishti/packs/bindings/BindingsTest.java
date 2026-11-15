@@ -77,6 +77,22 @@ class BindingsTest {
     }
 
     @Test
+    void aWritePathIsBoundBySourceSystemOrForEverySystem() {
+        Bindings b = Bindings.parse(Map.of("bindings", Map.of(
+                "trade", Map.of("write", Map.of("connectors", Map.of("endur", "trade-endur-live", "MUREX", "trade-murex-live"))),
+                "position", Map.of("write", Map.of("connector", "positions-out")))));
+        Bindings.Binding t = b.of("trade").orElseThrow();
+        assertThat(t.writeConnector("ENDUR")).contains("trade-endur-live");
+        assertThat(t.writeConnector("murex")).contains("trade-murex-live");
+        assertThat(t.writeConnector("CALYPSO")).isEmpty();
+        assertThat(t.read()).isEmpty();                                                   // the read is left to what is declared
+        assertThat(b.of("position").orElseThrow().writeConnector("ANY")).contains("positions-out");
+        assertThat(Bindings.parse(Map.of("bindings", b.toMap().get("bindings"))).of("trade").orElseThrow().writeTo()).isEqualTo(t.writeTo());
+        assertThatThrownBy(() -> Bindings.parse(Map.of("bindings", Map.of("trade", Map.of("write", Map.of("connectors", "x"))))))
+                .hasMessageContaining("per source system");
+    }
+
+    @Test
     void theFileIsBesideTheConnectorsFolder(@TempDir Path dir) {
         assertThat(BindingsFile.besideConnectors(dir.resolve("connectors")).path()).isEqualTo(dir.resolve("bindings.yaml").toAbsolutePath());
         assertThat(BindingsFile.besideConnectors(dir.resolve("site-a")).path().getFileName().toString()).isEqualTo("site-a-bindings.yaml");

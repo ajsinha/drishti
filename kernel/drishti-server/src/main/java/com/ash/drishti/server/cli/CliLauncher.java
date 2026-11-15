@@ -139,7 +139,6 @@ public final class CliLauncher {
             out.put(w[0], scratch.resolve(w[1]).toString());
         }
         out.put("drishti.identity.database-url", "jdbc:sqlite:" + scratch.resolve("data/identity/drishti.db"));
-        out.put("drishti.sources.connectors-generate", "false");   // the packs' connector templates are read in memory, never written to config/connectors
         out.put("drishti.var.official.enabled", "false");
         out.put("drishti.var.official.on-start", "false");
         out.put("drishti.ccr.exposure.official.enabled", "false");
@@ -183,7 +182,9 @@ public final class CliLauncher {
                 java.nio.file.Path yaml = d.resolve("pack.yaml");
                 if (java.nio.file.Files.isRegularFile(yaml)) {
                     names.add(packName(yaml, d.getFileName().toString()));
-                    if (!com.ash.drishti.api.PackFolders.roots(packsDir).contains(d.getParent()) && outside == null) {   // a domain folder is inside
+                    java.nio.file.Path found = d;
+                    boolean resolved = com.ash.drishti.api.resolution.ConfigResolution.ofProcess().packs().packs().values().stream().anyMatch(l -> l.dir().equals(found));
+                    if (!resolved && !com.ash.drishti.api.PackFolders.roots(packsDir).contains(d.getParent()) && outside == null) {   // a pack the resolution finds is inside
                         outside = d.getParent();
                     }
                     break;

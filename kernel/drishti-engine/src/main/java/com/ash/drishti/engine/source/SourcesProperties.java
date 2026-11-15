@@ -33,18 +33,17 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param connectorsWatch {@code auto} (file events, polling when unavailable), {@code poll}, or {@code off}
  * @param connectorsPoll how often files are looked at when polling (and as a safety net beside file events)
  * @param connectorsDrain how long a replaced or stopped connector stays open so reads in flight finish
- * @param connectorsGenerate write a connector file from a pack's template when none of that name exists
  */
 @ConfigurationProperties("drishti.sources")
 public record SourcesProperties(
         Map<String, String> routes, String defaultRoute, Map<String, PluginSettings> plugins, Duration fetchTimeout, String pluginDir,
         Map<String, ConnectorSettings> connectors, String connectorsDir, String connectorsWatch, Duration connectorsPoll,
-        Duration connectorsDrain, Boolean connectorsGenerate) {
+        Duration connectorsDrain) {
 
     /** The shape before connector files: the new settings take their defaults. */
     public SourcesProperties(Map<String, String> routes, String defaultRoute, Map<String, PluginSettings> plugins, Duration fetchTimeout,
             String pluginDir, Map<String, ConnectorSettings> connectors) {
-        this(routes, defaultRoute, plugins, fetchTimeout, pluginDir, connectors, null, null, null, null, null);
+        this(routes, defaultRoute, plugins, fetchTimeout, pluginDir, connectors, null, null, null, null);
     }
 
     @org.springframework.boot.context.properties.bind.ConstructorBinding
@@ -57,7 +56,6 @@ public record SourcesProperties(
         connectorsWatch = connectorsWatch == null || connectorsWatch.isBlank() ? "auto" : connectorsWatch;
         connectorsPoll = connectorsPoll == null ? Duration.ofSeconds(5) : connectorsPoll;
         connectorsDrain = connectorsDrain == null ? Duration.ofSeconds(5) : connectorsDrain;
-        connectorsGenerate = connectorsGenerate == null ? Boolean.TRUE : connectorsGenerate;
     }
 
     /**

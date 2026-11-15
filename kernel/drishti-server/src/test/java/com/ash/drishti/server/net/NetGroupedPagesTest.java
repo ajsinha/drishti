@@ -52,7 +52,6 @@ class NetGroupedPagesTest {
 
     static final String CONNECTOR = """
             plugin: derived
-            kinds: [book-pnl]
             settings:
               refresh: 1s
               book-pnl:
@@ -100,7 +99,8 @@ class NetGroupedPagesTest {
     static String[] args(Path dir, String... more) {
         List<String> a = new ArrayList<>(List.of("--drishti.security.enabled=true", "--drishti.security.secret=" + TOKEN_SECRET,
                 "--drishti.security.registered-users-only=false", "--drishti.sources.plugins.demo.enabled=false",
-                "--drishti.sources.plugins.file.settings.root=" + dir.resolve("feeds"), "--drishti.sources.plugins.file.settings.id-field=TRADE_ID"));
+                "--drishti.sources.plugins.file.settings.root=" + dir.resolve("feeds"), "--drishti.sources.plugins.file.settings.id-field=TRADE_ID",
+                "--drishti.bindings.file=" + dir.resolve("bindings.yaml")));
         a.addAll(List.of(more));
         return a.toArray(String[]::new);
     }
@@ -109,7 +109,10 @@ class NetGroupedPagesTest {
         Files.createDirectories(dir.resolve("feeds"));
         Files.write(dir.resolve("feeds/trade.jsonl"), lines);
         Files.createDirectories(dir.resolve("connectors"));
-        Files.writeString(dir.resolve("connectors/book-totals.yaml"), CONNECTOR);
+        // a site connector of its own name: one named book-totals would be an override merged over the finance pack's template of that name
+        // (KERNEL_AND_MODULES.md section 18.5); the site binding reads book-pnl from it (section 18.6)
+        Files.writeString(dir.resolve("connectors/net-book-totals.yaml"), CONNECTOR);
+        Files.writeString(dir.resolve("bindings.yaml"), "format: 1\nbindings:\n  book-pnl:\n    read: [net-book-totals]\n");
     }
 
     @BeforeAll

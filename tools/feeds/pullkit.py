@@ -45,7 +45,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT / "drishti-console") not in sys.path:
     sys.path.insert(0, str(ROOT / "drishti-console"))
-from core.pack_paths import pack_dir  # noqa: E402,F401  (the one rule for where a pack's folder is: B.pack_dir for the feeds)
+from core.resolution import pack_dir  # noqa: E402,F401  (where a pack is: the one resolver; B.pack_dir for the feeds)
 DEFAULT_UA = "Drishti ajsinha@gmail.com"     # the owner's contact, as the SEC asks (owner decision 2026-11-07); the one default
 
 

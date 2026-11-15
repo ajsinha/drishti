@@ -265,6 +265,11 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
                 settings.put(instance, ownSettings(name, c));
             } catch (IllegalStateException e) {
                 failures.put(name, e.getMessage());
+                if (waitsForModules(e)) {
+                    statuses.put(name, new ConnectorStatus(WAITING, e.getMessage(), java.time.Instant.now()));
+                    LOG.info("connector {} waits for the modules to load: {}", name, e.getMessage());
+                    return;
+                }
                 statuses.put(name, new ConnectorStatus("FAILED", e.getMessage(), java.time.Instant.now()));
                 retry.failed(name, String.valueOf(e.getMessage()), true);
             }
@@ -301,11 +306,17 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
                         continue;
                     }
                     failures.put(p.manifest().name(), String.valueOf(cause.getMessage()));
+                    boolean waits = waitsForModules(cause);
                     if (applied.containsKey(p.manifest().name())) {
-                        statuses.put(p.manifest().name(), new ConnectorStatus("FAILED", String.valueOf(cause.getMessage()), java.time.Instant.now()));
+                        statuses.put(p.manifest().name(), new ConnectorStatus(waits ? WAITING : "FAILED", String.valueOf(cause.getMessage()),
+                                java.time.Instant.now()));
                     } else {
                         plainSettings.put(p.manifest().name(), settings.get(p));
                         plainInstances.put(p.manifest().name(), p);
+                    }
+                    if (waits) {
+                        LOG.info("source plugin {} waits for the modules to load: {}", p.manifest().name(), cause.getMessage());
+                        continue;
                     }
                     LOG.error("source plugin {} failed to start", p.manifest().name(), cause);
                     retry.failed(p.manifest().name(), String.valueOf(cause.getMessage()), com.ash.drishti.common.RetryPolicy.looksPermanent(cause));
@@ -479,7 +490,7 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
         SourcePlugin proto = java.util.stream.Stream.concat(discovered.stream(), types.stream())
                 .filter(p -> p.manifest().name().equals(c.plugin())).findFirst().orElse(null);
         if (proto == null) {
-            throw new IllegalStateException("no plugin named '" + c.plugin() + "'");
+            throw new NoPlugin("no plugin named '" + c.plugin() + "'");
         }
         try {
             // where, set and map (DATA_LAKE_GUIDE.md, "Several source systems"): one shape for every plugin; a shape that cannot be used
@@ -602,6 +613,10 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
                 instance = instantiate(name, c);
             } catch (IllegalStateException e) {
                 failures.put(name, e.getMessage());
+                if (waitsForModules(e)) {
+                    LOG.info("connector {} waits for the modules to load: {}", name, e.getMessage());
+                    return status(name, WAITING, e.getMessage());
+                }
                 retry.failed(name, String.valueOf(e.getMessage()), true);
                 return status(name, "FAILED", e.getMessage());
             }
@@ -623,6 +638,10 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
                     return status(name, "IDLE", e.getMessage());
                 }
                 failures.put(name, String.valueOf(e.getMessage()));
+                if (waitsForModules(e)) {
+                    LOG.info("connector {} waits for the modules to load: {}", name, e.getMessage());
+                    return status(name, WAITING, String.valueOf(e.getMessage()));
+                }
                 if (!retry.failing(name) && e instanceof IllegalArgumentException) {
                     // a setting it refuses (QA4-05: a relocate it cannot read): the refusal names it, so one line, no stack trace
                     LOG.error("connector {} failed to start: {}", name, e.getMessage());
@@ -684,6 +703,44 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
         String type = plugin.manifest().name();
         boolean named = applied.values().stream().anyMatch(c -> type.equals(c.plugin()));
         return named ? attachType(plugin) : attach(plugin, settings);
+    }
+
+    /** The state of a connector whose class is a module's that has not loaded yet: it starts when the modules have loaded. */
+    public static final String WAITING = "WAITING";
+
+    /** False until the server's modules have loaded ({@link #modulesLoaded}): a class not found until then is a module's still to come. */
+    private volatile boolean modulesLoaded;
+
+    /**
+     * The server's modules have loaded (at start, after the module node's first load; once): the connectors that waited for a module's class
+     * start now, and one whose class is still missing fails as any connector does (its words, the retry schedule).
+     */
+    public void modulesLoaded() {
+        if (modulesLoaded) {
+            return;
+        }
+        modulesLoaded = true;
+        retryFailed();
+    }
+
+    /** A connector names a plugin type no jar and no loaded module brings (yet: a module's type, before the modules load). */
+    static final class NoPlugin extends IllegalStateException {
+        NoPlugin(String message) {
+            super(message);
+        }
+    }
+
+    /** True when {@code e} says a class is not found while the modules are still to load (a module's engine or type named early). */
+    private boolean waitsForModules(Throwable e) {
+        if (modulesLoaded) {
+            return false;
+        }
+        for (Throwable t = e; t != null; t = t.getCause() == t ? null : t.getCause()) {
+            if (t instanceof ClassNotFoundException || t instanceof NoClassDefFoundError || t instanceof NoPlugin) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** Tries every failed connector again now (a module came: the class or type a connector named may be there now). */
@@ -833,6 +890,38 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
      * connector naming its {@code root} itself, or one not known. Cheap (no lake file read): the router asks it on every read.
      */
     public String lakeOf(String connector) {
+        return lakeName(connector);
+    }
+
+    /**
+     * Where a Delta or Iceberg connector reads {@code kind}: the table's location as its plugin is given it ({@code <root>/<domain>/<folder>},
+     * the lake file's entry or the connector's own path), absolute for a local lake; empty for another plugin or a catalog lake.
+     */
+    public Optional<String> tableOf(String connector, String kind) {
+        SourcesProperties.ConnectorSettings c = connector == null ? null : applied.get(connector);
+        if (c == null || !com.ash.drishti.lakeconfig.ConnectorLake.PLUGINS.contains(c.plugin())) {
+            return Optional.empty();
+        }
+        Map<String, String> own;
+        try {
+            own = ownSettings(connector, c);
+        } catch (RuntimeException e) {                 // a secret not set, a lake not known: the connector's own status says why
+            return Optional.empty();
+        }
+        String root = own.get("root");
+        if (root == null || root.isBlank()) {
+            return Optional.empty();
+        }
+        String domain = own.getOrDefault("domain", "");
+        String folder = own.getOrDefault("table." + kind, kind);
+        String joined = (root.endsWith("/") ? root.substring(0, root.length() - 1) : root) + (domain.isBlank() ? "" : "/" + domain) + "/" + folder;
+        if (joined.contains("://")) {
+            return Optional.of(joined);
+        }
+        return Optional.of(java.nio.file.Path.of(joined).toAbsolutePath().normalize().toString());
+    }
+
+    private String lakeName(String connector) {
         SourcesProperties.ConnectorSettings c = connector == null ? null : applied.get(connector);
         if (c == null || !com.ash.drishti.lakeconfig.ConnectorLake.PLUGINS.contains(c.plugin()) || c.settings() == null) {
             return null;

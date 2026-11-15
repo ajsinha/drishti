@@ -149,6 +149,29 @@ public final class ConnectorWrites {
         return this;
     }
 
+    private volatile java.util.function.UnaryOperator<String> placeholders = java.util.function.UnaryOperator.identity();
+
+    /** Resolves the {@code ${NAME:default}} references of a command's block (a module's template names its topic so) with the server's settings. */
+    public ConnectorWrites resolvedBy(java.util.function.UnaryOperator<String> resolve) {
+        this.placeholders = resolve == null ? java.util.function.UnaryOperator.identity() : resolve;
+        return this;
+    }
+
+    private Object resolved(Object o) {
+        if (o instanceof String s) {
+            return s.contains("${") ? placeholders.apply(s) : s;
+        }
+        if (o instanceof Map<?, ?> m) {
+            Map<String, Object> out = new java.util.LinkedHashMap<>();
+            m.forEach((k, v) -> out.put(String.valueOf(k), resolved(v)));
+            return out;
+        }
+        if (o instanceof List<?> l) {
+            return l.stream().map(this::resolved).toList();
+        }
+        return o;
+    }
+
     /** Switches a connector's writes on or off (administrators; audited by the caller). */
     public void set(String connector, boolean on, String reason, String by) {
         switches.set(List.of(new SwitchLedger.Change(SwitchLedger.WRITES, connector, on)), reason, by);
@@ -177,7 +200,7 @@ public final class ConnectorWrites {
             throw new IllegalStateException("connector " + connector + "'s writes are off: an administrator switches them on (Admin -> Edits)");
         }
         @SuppressWarnings("unchecked")
-        Map<String, Object> m = (Map<String, Object>) raw;
+        Map<String, Object> m = (Map<String, Object>) resolved(raw);
         String key = plugin.orElseThrow().writeKey().orElseThrow();
         @SuppressWarnings("unchecked")
         Map<String, Object> block = (Map<String, Object>) m.get(key);

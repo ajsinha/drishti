@@ -44,7 +44,7 @@ import fetch as F  # noqa: E402
 sys.path.insert(0, str(ROOT / "tools" / "testdata"))
 import publicsnap as SNAP  # noqa: E402  (the standard data pattern: data/testdata/<pack>/<kind>/)
 
-PACK = ROOT / "config" / "packs" / "core" / "gleif"
+PACK = GD.PP.pack_dir("gleif")                                       # a kernel pack: where the one resolver finds it
 DEFAULT_CACHE = ROOT / "data" / "cache" / "gleif"
 SOURCE = "GLEIF, the Global Legal Entity Identifier Foundation (LEI records, golden copy level 2, mapping files)"
 LICENCE = "CC0 1.0 (GLEIF's terms: free of charge, no restriction; attribution appreciated)"
@@ -80,8 +80,8 @@ def _addr(a: dict | None) -> str:
 def _other_packs() -> tuple[dict[str, str], dict[str, str]]:
     """core's legal entities and counterparties by LEI: {LEI: ENTITY_ID}, {LEI: COUNTERPARTY_ID} (fictional, so none match today)."""
     out: tuple[dict[str, str], dict[str, str]] = ({}, {})
-    for f, key, into in ((ROOT / "config/packs/core/core/samples/legal-entity.jsonl", "ENTITY_ID", out[0]),
-                         (ROOT / "config/packs/core/core/samples/counterparty.jsonl", "COUNTERPARTY_ID", out[1])):
+    core = GD.PP.pack_dir("core") / "samples"
+    for f, key, into in ((core / "legal-entity.jsonl", "ENTITY_ID", out[0]), (core / "counterparty.jsonl", "COUNTERPARTY_ID", out[1])):
         if f.is_file():
             for line in f.read_text(encoding="utf-8").splitlines():
                 if line.strip():
@@ -447,8 +447,8 @@ def main(argv: list[str], extra: list[str] | None = None, cap: int | None = None
                                                   "pack; beside a widened build's pack folder otherwise)")
     a = p.parse_args(argv)
     global PACK
-    PACK = a.pack.resolve() if a.pack else ROOT / "config" / "packs" / "core" / "gleif"
-    testdata = a.testdata.resolve() if a.testdata else SNAP.default_testdata(PACK, ROOT / "config" / "packs" / "core" / "gleif")
+    PACK = a.pack.resolve() if a.pack else GD.PP.pack_dir("gleif")
+    testdata = a.testdata.resolve() if a.testdata else SNAP.default_testdata(PACK, GD.PP.pack_dir("gleif"))
     F.reduce_rr(a.cache)                                     # offline: the relationship file from the downloaded golden copy
     if (a.cache / "reduced" / "rr.json").is_file():
         docs = build(a.cache, extra, cap)

@@ -25,7 +25,7 @@ import json
 import re
 from pathlib import Path
 
-from core.pack_paths import pack_dir, pack_dirs
+from core.resolution import pack_dir, pack_dirs
 
 ROOT = Path(__file__).resolve().parents[2]
 

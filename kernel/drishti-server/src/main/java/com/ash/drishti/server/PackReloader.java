@@ -20,7 +20,6 @@ import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.engine.command.CommandsProperties;
 import com.ash.drishti.engine.command.Mnemonics;
 import com.ash.drishti.identity.AuditLog;
-import com.ash.drishti.packs.ConnectorBootstrap;
 import com.ash.drishti.packs.ConnectorFiles;
 import com.ash.drishti.packs.Pack;
 import com.ash.drishti.packs.PackEnvironmentPostProcessor;
@@ -59,7 +58,7 @@ import org.springframework.core.env.MapPropertySource;
  * deploy or registry change) come through the same {@link #reconcile} path:
  * <ul>
  *   <li>a <b>new pack folder</b> is checked together with the loaded packs, then loaded: kinds, mnemonics, Sutras and
- *   connector templates (which become connector files by the usual rule) take effect at once;</li>
+ *   connector templates (the template layer, merged in memory with the site files: ConnectorLayers) take effect at once;</li>
  *   <li>a <b>changed</b> {@code pack.yaml}, {@code about.yaml}, Sutra or sample is checked again and swapped in; a bad edit
  *   keeps the last good version and the problem is shown in Admin &rarr; Packs and on the Health page;</li>
  *   <li>a <b>deleted</b> pack is unloaded: connectors only it used stop, and open views of its kinds say the pack was
@@ -185,17 +184,20 @@ public final class PackReloader implements AutoCloseable {
         watchers.clear();
     }
 
+    /** The folders watched: every folder a pack was found in, and the site's, the deployed and the kernel's packs folders. */
     private List<Path> roots() {
-        List<Path> out = new ArrayList<>();
-        out.addAll(com.ash.drishti.api.PackFolders.roots(Path.of(packsDir).toAbsolutePath().normalize()));   // and its domain folders
-        if (installedDir != null && !installedDir.isBlank()) {
-            out.add(Path.of(installedDir).toAbsolutePath().normalize());
-        }
-        return out;
+        com.ash.drishti.api.resolution.ConfigResolution r = dirs();
+        java.util.LinkedHashSet<Path> out = new java.util.LinkedHashSet<>();
+        out.add(r.settings().siteDir());
+        out.add(r.settings().installedDir());
+        out.add(r.settings().kernelDir());
+        r.packs().packs().values().forEach(l -> out.add(l.dir().getParent()));
+        return new ArrayList<>(out);
     }
 
-    private List<Path> dirs() {
-        return PackLoader.dirs(packsDir, installedDir, com.ash.drishti.packs.PackPaths.extraDirs(env));   // installed modules come and go
+    /** The resolution, read again: modules come and go, folders appear (KERNEL_AND_MODULES.md section 18.7). */
+    private com.ash.drishti.api.resolution.ConfigResolution dirs() {
+        return com.ash.drishti.packs.PackPaths.resolve(env);
     }
 
     /** One look at the folders: acts only when something differs from what was last seen, after the change has settled. */
@@ -328,13 +330,14 @@ public final class PackReloader implements AutoCloseable {
     }
 
     /** The packs that should be loaded: the site's list, the administrator's overlay and new folders, minus hidden samples. */
-    private List<String> desired(PackLoader loader, List<Path> dirs) {
+    private List<String> desired(PackLoader loader, com.ash.drishti.api.resolution.ConfigResolution dirs) {
         LinkedHashSet<String> names = new LinkedHashSet<>(java.util.Arrays.stream(com.ash.drishti.packs.PackPaths.enabled(env).split(","))
                 .map(String::trim).filter(s -> !s.isEmpty()).toList());
         names.addAll(overlay.added());
         names.addAll(candidates);
         com.ash.drishti.packs.edition.Edition edition = com.ash.drishti.packs.edition.Editions.of(env);
         names.removeIf(n -> !edition.packAllowed(n));              // an allow-only edition: a new folder of another pack is not loaded
+        names.removeIf(n -> dirs.packs().off().containsKey(n));      // a pack of a module that is off: not loaded, and unloaded when it goes off
         return samples.select(dirs, List.copyOf(names), loader);
     }
 
@@ -352,7 +355,7 @@ public final class PackReloader implements AutoCloseable {
     }
 
     private Result reconcile(String actor, String why, Set<String> changedFolders, boolean persistNew) {
-        List<Path> dirs = dirs();
+        com.ash.drishti.api.resolution.ConfigResolution dirs = dirs();
         ConnectorFiles files = connectors.files();
         PackLoader loader = new PackLoader(files);
         Map<String, Pack> current = new LinkedHashMap<>();
@@ -424,14 +427,14 @@ public final class PackReloader implements AutoCloseable {
     }
 
     /** Reads {@code name} and, first, the packs it extends. A pack that cannot be read keeps its last good version. */
-    private void collect(PackLoader loader, List<Path> dirs, String name, String neededBy, Map<String, Pack> read, Map<String, String> problems,
+    private void collect(PackLoader loader, com.ash.drishti.api.resolution.ConfigResolution dirs, String name, String neededBy, Map<String, Pack> read, Map<String, String> problems,
             Map<String, Pack> current, Set<String> deleted, java.util.Deque<String> path) {
         if (read.containsKey(name) || path.contains(name)) {
             return;
         }
         path.addLast(name);
         Pack p;
-        boolean onDisk = dirs.stream().anyMatch(d -> Files.isRegularFile(d.resolve(name).normalize().resolve("pack.yaml")));
+        boolean onDisk = dirs.packDir(name) != null;
         try {
             if (!onDisk) {
                 throw new IllegalStateException("the pack folder is gone");
@@ -599,17 +602,12 @@ public final class PackReloader implements AutoCloseable {
     }
 
     /** Makes the accepted set the running one, including every setting packs contribute (see {@link com.ash.drishti.common.LiveSettings}). Always returns an empty list: nothing needs a restart. */
-    private List<String> apply(PackLoader loader, List<Path> dirs, ConnectorFiles files, List<Pack> packs, Map<String, Pack> current,
+    private List<String> apply(PackLoader loader, com.ash.drishti.api.resolution.ConfigResolution dirs, ConnectorFiles files, List<Pack> packs, Map<String, Pack> current,
             List<String> loaded, List<String> unloaded) {
         Map<String, Object> oldProps = env.getPropertySources().get(PackEnvironmentPostProcessor.SOURCE) instanceof MapPropertySource m
                 ? new LinkedHashMap<>(m.getSource()) : Map.of();
         List<Runnable> commits = prepareLive(loader.properties(packs));      // nothing has changed yet: a refusal here leaves everything as it was
-        ConnectorBootstrap.Result boot = ConnectorBootstrap.run(packs, files, null,
-                Boolean.parseBoolean(env.getProperty("drishti.sources.connectors-generate", "true")));
-        boot.generated().forEach(n -> audit.record("system", "connector-generated", n, "written from a pack's connector template"));
-        boot.regenerated().forEach(n -> audit.record("system", "connector-regenerated", n, "rewritten: the pack's connector template changed and the file had not been edited"));
-        boot.changed().forEach(c -> audit.record("system", "connector-template-changed", c.name(), c.message()));
-        boot.messages().forEach(m -> LOG.info("connectors: {}", m));
+        // the connectors' template layer is the packs' (and their source modules') own: nothing is written (ConnectorLayers)
         Map<String, Object> props = loader.properties(packs);
         replaceSource(PackEnvironmentPostProcessor.SOURCE, props);
         // mnemonics: recompute every code a pack ever contributed from the environment, so a site setting keeps winning
@@ -710,8 +708,8 @@ public final class PackReloader implements AutoCloseable {
                 change = true;
             }
         }
-        List<Path> dirs = dirs();           // only a pack whose folder is gone is forgotten; one hidden as a sample comes back with the mode
-        change |= added.removeIf(n -> unloaded.contains(n) && dirs.stream().noneMatch(d -> Files.isRegularFile(d.resolve(n).normalize().resolve("pack.yaml"))));
+        com.ash.drishti.api.resolution.ConfigResolution dirs = dirs();   // only a pack no layer has is forgotten; a hidden sample comes back with the mode
+        change |= added.removeIf(n -> unloaded.contains(n) && dirs.packDir(n) == null);
         if (change) {
             overlay.write(added);
         }
@@ -822,11 +820,7 @@ public final class PackReloader implements AutoCloseable {
     /** For each pack folder (one holding pack.yaml): a digest of every file's path, size and modification time. */
     Map<String, String> fingerprints() {
         Map<String, String> out = new TreeMap<>();
-        for (Path root : dirs()) {
-            for (String n : PackLoader.folders(List.of(root))) {
-                out.computeIfAbsent(n, k -> fingerprint(root.resolve(k)));
-            }
-        }
+        dirs().packs().packs().forEach((n, l) -> out.put(n, fingerprint(l.dir())));
         return out;
     }
 

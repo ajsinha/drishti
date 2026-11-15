@@ -160,7 +160,7 @@ public class LiveSetConfiguration {
         });
         sets.validator(spec -> problems(spec, formats::has, kind -> contractFields(packs, kind)));
         Predicate<String> on = DomainFolders.on(env);
-        Path modules = Path.of(env.getProperty("drishti.live-sets.modules-dir", "modules"));
+        Path modules = Path.of(env.getProperty("drishti.live-sets.modules-dir", env.getProperty("drishti.modules.home", "modules")));   // the one modules setting (section 18.2)
         Path site = Path.of(env.getProperty("drishti.live-sets.dir", "config/blotters"));
         sets.load(LiveSets.folders(modules, site, on), LiveSets::moduleOf);
         fields.addSource(sets::rules);

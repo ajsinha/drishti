@@ -1,0 +1,242 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The shared fixture of the connector layers (docs/architecture/KERNEL_AND_MODULES.md section 18.5): the Java resolver (ConnectorLayers,
+# ConnectorLayersFixtureTest) and its Python twin (drishti-console/core/resolution.py, drishti-console/tests/test_resolution.py) read
+# these cases and must give the same effective connector. Each case: a template (or null: a site-only connector), the site file's text,
+# and what comes out: the layer (template, override, site), whether the file is superseded, the plugin, enabled, and every setting
+# flattened to its dotted key as text (or error: the file cannot be used). A template is named from the templates: section (null: none).
+templates:
+  endur:
+    plugin: delta
+    enabled: ${DRISHTI_LAKE_ENABLED:true}
+    kinds: [trade]
+    description: Endur trades
+    settings:
+      lake: demo
+      lake-tables: trading.trade_endur
+      union: true
+      source-name: trade-endur
+      set:
+        SOURCE_SYSTEM: ENDUR
+      map: mappings/endur-trade.yaml
+
+cases:
+- name: trade-endur
+  why: an override changes a table and adds a constant; everything else is the template's
+  template: endur
+  file: |
+    settings:
+      lake-tables: trading.trade_endur_site
+      set:
+        BOOK: B1
+  layer: override
+  superseded: false
+  plugin: delta
+  enabled: ${DRISHTI_LAKE_ENABLED:true}
+  settings:
+    lake: demo
+    lake-tables: trading.trade_endur_site
+    union: "true"
+    source-name: trade-endur
+    set.SOURCE_SYSTEM: ENDUR
+    map: mappings/endur-trade.yaml
+    set.BOOK: B1
+  origins:
+    lake-tables: override
+    set.BOOK: override
+    lake: template
+
+- name: trade-endur
+  why: an override that only switches the connector off
+  template: endur
+  file: |
+    enabled: false
+  layer: override
+  superseded: false
+  plugin: delta
+  enabled: "false"
+  settings:
+    lake: demo
+    lake-tables: trading.trade_endur
+    union: "true"
+    source-name: trade-endur
+    set.SOURCE_SYSTEM: ENDUR
+    map: mappings/endur-trade.yaml
+
+- name: trade-endur
+  why: dotted keys are the same setting as nested ones
+  template: endur
+  file: |
+    plugin: delta
+    settings:
+      set.SOURCE_SYSTEM: ENDUR_UK
+  layer: override
+  superseded: false
+  plugin: delta
+  enabled: ${DRISHTI_LAKE_ENABLED:true}
+  settings:
+    lake: demo
+    lake-tables: trading.trade_endur
+    union: "true"
+    source-name: trade-endur
+    set.SOURCE_SYSTEM: ENDUR_UK
+    map: mappings/endur-trade.yaml
+
+- name: trade-endur
+  why: a file naming another plugin changes the plugin and still inherits every template key it does not set
+  template: endur
+  file: |
+    plugin: cassandra
+    settings:
+      contact-points: db1:9042
+  layer: override
+  superseded: false
+  plugin: cassandra
+  enabled: ${DRISHTI_LAKE_ENABLED:true}
+  settings:
+    lake: demo
+    lake-tables: trading.trade_endur
+    union: "true"
+    source-name: trade-endur
+    set.SOURCE_SYSTEM: ENDUR
+    map: mappings/endur-trade.yaml
+    contact-points: db1:9042
+  origins:
+    contact-points: override
+    lake: template
+
+- name: trade-endur
+  why: a key set to null removes the inherited one (and every setting under it)
+  template: endur
+  file: |
+    template: module source-endur
+    settings:
+      union: null
+      set: null
+  layer: override
+  superseded: false
+  plugin: delta
+  enabled: ${DRISHTI_LAKE_ENABLED:true}
+  settings:
+    lake: demo
+    lake-tables: trading.trade_endur
+    source-name: trade-endur
+    map: mappings/endur-trade.yaml
+
+- name: trade-endur
+  why: a file in the older lake form does not get the template's lake keys
+  template: endur
+  file: |
+    settings:
+      root: /data/delta
+      domain: trading
+  layer: override
+  superseded: false
+  plugin: delta
+  enabled: ${DRISHTI_LAKE_ENABLED:true}
+  settings:
+    union: "true"
+    source-name: trade-endur
+    set.SOURCE_SYSTEM: ENDUR
+    map: mappings/endur-trade.yaml
+    root: /data/delta
+    domain: trading
+
+- name: trade-endur
+  why: a generated file an earlier release wrote and nobody edited is superseded; the template is in force
+  template: endur
+  file: |
+    # Generated at first start from the connector template of pack 'trading'. Edit it freely: an edited file is never overwritten; an unedited one follows the pack's template at an upgrade.
+    # drishti-template: pack=trading template=0123456789abcdef text=e18b151410608ef8
+    plugin: delta
+    enabled: true
+    description: Endur trades
+    settings:
+      lake: demo
+      lake-tables: trading.trade_endur
+  layer: template
+  superseded: true
+  plugin: delta
+  enabled: ${DRISHTI_LAKE_ENABLED:true}
+  settings:
+    lake: demo
+    lake-tables: trading.trade_endur
+    union: "true"
+    source-name: trade-endur
+    set.SOURCE_SYSTEM: ENDUR
+    map: mappings/endur-trade.yaml
+
+- name: trade-endur
+  why: an edited generated file is the whole connector, as before
+  template: endur
+  file: |
+    # Generated at first start from the connector template of pack 'trading'. Edit it freely: an edited file is never overwritten; an unedited one follows the pack's template at an upgrade.
+    # drishti-template: pack=trading template=0123456789abcdef text=e18b151410608ef8
+    plugin: delta
+    enabled: true
+    description: Endur trades
+    settings:
+      lake: demo
+      lake-tables: trading.trade_endur_edited
+  layer: site
+  superseded: false
+  plugin: delta
+  enabled: "true"
+  settings:
+    lake: demo
+    lake-tables: trading.trade_endur_edited
+
+- name: retired-store
+  why: a file with no template is a complete site-only connector
+  template: null
+  file: |
+    plugin: jdbc
+    settings:
+      url: jdbc:postgresql://db/risk
+  layer: site
+  superseded: false
+  plugin: jdbc
+  enabled: "true"
+  settings:
+    url: jdbc:postgresql://db/risk
+
+- name: retired-store
+  why: an override whose template is gone and that names no plugin cannot be used (Admin reports it; it is never deleted)
+  template: null
+  file: |
+    settings:
+      url: jdbc:postgresql://db/risk
+  error: true
+
+- name: trade-murex
+  why: an override that names its template (template:) whose template is not here (its module is off) is not used (DRS-1046)
+  template: null
+  file: |
+    template: module source-murex
+    plugin: delta
+    settings:
+      lake-tables: trading.trade_murex_site
+  error: true
+
+- name: trade-murex
+  why: a generated file whose template is not here is not used (DRS-1046); it is never run as a site connector
+  template: null
+  file: |
+    # Generated at first start from the connector template of pack 'trading'. Edit it freely: an edited file is never overwritten; an unedited one follows the pack's template at an upgrade.
+    plugin: delta
+    settings:
+      lake: demo
+      lake-tables: trading.trade_murex
+  error: true

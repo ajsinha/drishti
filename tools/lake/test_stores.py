@@ -20,6 +20,7 @@ import yaml
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import stores  # noqa: E402
+R = stores.R                                                         # the one resolver (drishti-console/core/resolution.py)
 
 
 def test_store_values_all_first_then_each_system():
@@ -40,7 +41,7 @@ def test_where_the_iceberg_tables_go(tmp_path, monkeypatch):
     assert stores.iceberg_root(tmp_path / "data" / "delta") == (tmp_path / "ice").resolve()
 
 
-def test_switching_a_system_writes_its_connector_file_and_keeps_the_old_text(tmp_path, monkeypatch):
+def test_switching_a_system_writes_a_partial_override_and_back_to_delta_removes_it(tmp_path, monkeypatch):
     monkeypatch.delenv("DRISHTI_ICEBERG_ROOT", raising=False)
     monkeypatch.delenv("DRISHTI_DELTA_ROOT", raising=False)
     folder, data = tmp_path / "connectors", tmp_path / "data"
@@ -48,16 +49,18 @@ def test_switching_a_system_writes_its_connector_file_and_keeps_the_old_text(tmp
     assert stores.current(folder) == {"endur": "delta", "calypso": "delta", "murex": "delta"}     # no files: the packs' Delta templates
     assert "reads delta already" in stores.switch(folder, "calypso", "delta", lake, ice, data, dry=False)
     assert not folder.exists()                                                                     # nothing written for an unchanged store
-    assert "would be written" in stores.switch(folder, "calypso", "iceberg", lake, ice, data, dry=True) and not folder.exists()
+    assert "would read iceberg" in stores.switch(folder, "calypso", "iceberg", lake, ice, data, dry=True) and not folder.exists()
 
     assert "now reads iceberg, was delta" in stores.switch(folder, "calypso", "iceberg", lake, ice, data, dry=False)
     doc = yaml.safe_load((folder / "trade-calypso.yaml").read_text(encoding="utf-8"))
-    assert doc["plugin"] == "iceberg" and "kinds" not in doc         # config/bindings.yaml (or the template) binds the kind
-    s = doc["settings"]
+    # a partial override (KERNEL_AND_MODULES.md 18.5): only the keys that differ from the source module's template, which it names
+    assert doc == {"template": "module source-calypso", "plugin": "iceberg", "settings": {"lake": stores.ICEBERG_LAKE, "engine": "native"}}
+    s = R.effective("trade-calypso", (folder / "trade-calypso.yaml").read_text(encoding="utf-8"),
+                    R.repository().connectors.templates["trade-calypso"]).settings
     # the lake form (docs/guides/DATA_LAKE_GUIDE.md): the connector names the lake demo-iceberg; its file, beside the connector folder, holds
     # the table (the pack's entry, the partition field kept as a promoted column) and the root
     assert s["engine"] == "native" and s["lake"] == stores.ICEBERG_LAKE and s["lake-tables"] == "trading.trade_calypso"
-    assert s["union"] is True and s["source-name"] == "trade-calypso" and "root" not in s and "layout" not in s
+    assert s["union"] == "true" and s["source-name"] == "trade-calypso" and "root" not in s
     lf = yaml.safe_load((tmp_path / "lakes" / "demo-iceberg.yaml").read_text(encoding="utf-8"))
     assert lf["format"] == "iceberg" and lf["root"] == stores.ICEBERG_DEFAULT  # the default data folder: the portable form the server resolves
     entry = lf["tables"]["trading.trade_calypso"]
@@ -65,16 +68,14 @@ def test_switching_a_system_writes_its_connector_file_and_keeps_the_old_text(tmp
     assert stores.current(folder)["calypso"] == "iceberg" and stores.current(folder)["endur"] == "delta"
 
     assert "now reads delta, was iceberg" in stores.switch(folder, "calypso", "delta", lake, ice, data, dry=False)
-    doc = yaml.safe_load((folder / "trade-calypso.yaml").read_text(encoding="utf-8"))
-    assert doc["plugin"] == "delta" and doc["settings"]["lake"] == "demo" and "engine" not in doc["settings"]   # the pack's template
-    kept = list((data / "connectors" / "history").glob("trade-calypso.*.yaml"))
-    assert len(kept) == 1 and "plugin: iceberg" in kept[0].read_text(encoding="utf-8")
+    assert not (folder / "trade-calypso.yaml").exists()                 # the template says it all: no file
+    assert stores.current(folder)["calypso"] == "delta" and not (data / "connectors" / "history").exists()
 
 
 def test_a_lake_elsewhere_is_named_in_full(tmp_path, monkeypatch):
     monkeypatch.delenv("DRISHTI_ICEBERG_ROOT", raising=False)
-    text = stores.connector_text("murex", "iceberg", tmp_path / "x" / "delta", tmp_path / "x" / "iceberg", tmp_path / "data")
-    assert yaml.safe_load(text)["settings"]["root"] == str(tmp_path / "x" / "iceberg")
+    body, _ = stores.connector_text("murex", "iceberg", tmp_path / "x" / "delta", tmp_path / "x" / "iceberg", tmp_path / "data")
+    assert body["settings"]["root"] == str(tmp_path / "x" / "iceberg") and body["plugin"] == "iceberg"
 
 
 def test_the_risk_domain_switches_its_connector_file_and_back(tmp_path, monkeypatch):
@@ -89,7 +90,7 @@ def test_the_risk_domain_switches_its_connector_file_and_back(tmp_path, monkeypa
     assert "now reads iceberg, was delta" in stores.switch_domain(folder, "risk", "iceberg", lake, ice, data, dry=False)
     doc = yaml.safe_load((folder / "risk-store.yaml").read_text(encoding="utf-8"))
     assert doc["plugin"] == "iceberg" and doc["settings"]["engine"] == "native" and doc["settings"]["lake"] == stores.ICEBERG_LAKE
-    assert "kinds" not in doc and "risk.pnl-vector" in doc["settings"]["lake-tables"]
+    assert "kinds" not in doc and "lake-tables" not in doc["settings"] and doc["template"] == "pack market-risk"   # inherited
     lf = yaml.safe_load((tmp_path / "lakes" / "demo-iceberg.yaml").read_text(encoding="utf-8"))
     assert lf["tables"]["risk.pnl-vector"]["vectors"]                  # the vector columns go with the lake entry
     ex = yaml.safe_load((folder / "exposure-store.yaml").read_text(encoding="utf-8"))   # the CCR paths of the domain switch with it
@@ -99,8 +100,7 @@ def test_the_risk_domain_switches_its_connector_file_and_back(tmp_path, monkeypa
     assert "now reads delta, was iceberg" in stores.switch_domain(folder, "risk", "delta", lake, ice, data, dry=False)
     assert not (folder / "risk-store.yaml").exists()                     # the pack's own Delta connector serves again
     assert not (folder / "exposure-store.yaml").exists()
-    assert len(list((data / "connectors" / "history").glob("risk-store.*.yaml"))) == 1
-    assert len(list((data / "connectors" / "history").glob("exposure-store.*.yaml"))) == 1
+    assert not (data / "connectors" / "history").exists()               # no history copies: the overrides are the tool's own
 
 
 def test_a_copy_into_iceberg_leaves_a_build_record(tmp_path):

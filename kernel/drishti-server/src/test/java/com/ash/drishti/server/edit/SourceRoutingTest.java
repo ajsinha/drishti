@@ -87,7 +87,7 @@ class SourceRoutingTest {
 
     @Test
     void anEditGoesToTheSystemTheRecordCameFromNeverAnother() {
-        SourceRoute route = EditConfiguration.sourceRoute(router());
+        SourceRoute route = EditConfiguration.sourceRoute(router(), () -> null);
         assertThat(route.systemOf("trade", "E1")).contains("ENDUR");
         assertThat(route.systemOf("trade", "C1")).contains("CALYPSO");
         assertThat(route.systemOf("trade", "S1")).as("stamped by its connector's set").contains("SWAPONE");

@@ -64,7 +64,7 @@ class SutraAggregateParityTest {
         int comparisons = 0;
         int figures = 0;
         List<String> skipped = new ArrayList<>();
-        try (Stream<Path> s = com.ash.drishti.api.PackFolders.list(PACKS).stream()) {
+        try (Stream<Path> s = com.ash.drishti.api.resolution.ConfigResolution.repository(PACKS.toAbsolutePath().normalize().getParent().getParent()).packDirs().stream()) {
             for (Path pack : s.filter(p -> Files.isDirectory(p.resolve("sutras"))).sorted().toList()) {
                 List<Call> found = calls(pack.resolve("sutras"), skipped);
                 List<DataNode> docs = documents(pack.resolve("tests"));

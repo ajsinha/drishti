@@ -128,8 +128,9 @@ class BindingResolverTest {
         assertThat(r.kinds().get("trade").state()).isEqualTo(BindingState.BOUND);
         assertThat(r.kinds().get("trade").read()).containsExactly("trade-endur");
         assertThat(r.kinds().get("scenario-pv").origin()).as("the distribution's default: the pack's route").isEqualTo(Origin.DEFAULT);
-        assertThat(r.kinds().get("pnl-vector").state()).as("a lake holds it, nobody bound it").isEqualTo(BindingState.AUTO);
-        assertThat(r.kinds().get("pnl-vector").reason()).contains("confirm");
+        assertThat(r.kinds().get("pnl-vector").state()).as("a connector declares it, nobody bound it: no click").isEqualTo(BindingState.BOUND);
+        assertThat(r.kinds().get("pnl-vector").origin()).isEqualTo(Origin.DEFAULT);
+        assertThat(r.kinds().get("pnl-vector").reason()).contains("declared by lake-a");
         assertThat(r.kinds().get("var-limit").state()).isEqualTo(BindingState.DEMO);
         assertThat(r.kinds().get("desk-pnl").state()).isEqualTo(BindingState.UNBOUND);
         assertThat(r.kinds().get("position").state()).isEqualTo(BindingState.COMPUTED);

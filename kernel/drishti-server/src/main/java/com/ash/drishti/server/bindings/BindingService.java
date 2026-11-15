@@ -19,6 +19,7 @@ import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.engine.source.SourceRouter;
 import com.ash.drishti.identity.AuditLog;
+import com.ash.drishti.packs.ConnectorLayers;
 import com.ash.drishti.packs.Pack;
 import com.ash.drishti.packs.PackRegistry;
 import com.ash.drishti.packs.bindings.BindingResolver;
@@ -254,7 +255,16 @@ public final class BindingService {
                 return today;
             }
         };
-        return BindingResolver.resolve(applied, needs, facts);
+        BindingResolver.Result r = BindingResolver.resolve(applied, needs, facts);
+        // the one answer: the packs' samples are read only for the kinds this resolution puts in DEMO (demo off: none, each kind says no source)
+        Set<String> demo = new LinkedHashSet<>();
+        r.kinds().forEach((k, res) -> {
+            if (res.state() == com.ash.drishti.kernel.api.data.BindingState.DEMO) {
+                demo.add(k);
+            }
+        });
+        router.demoKinds(demo);
+        return r;
     }
 
     @SuppressWarnings("unchecked")
@@ -293,6 +303,47 @@ public final class BindingService {
         out.put("problems", r.problems());
         out.put("connectors", connectors.names());
         out.put("proposals", proposals().stream().filter(p -> "proposed".equals(p.state())).toList());
+        return out;
+    }
+
+    /**
+     * The binding map: every kind the resolution knows, the connectors a read of it asks (in order), and for each its layer (template,
+     * override or site file), plugin, lake and the table it reads, resolved (absolute for a local lake), with whether that table exists. What
+     * proves the packs' connectors point at the tables that hold the data (Admin -> Data bindings; test_upgrade_counts checks it).
+     */
+    public List<Map<String, Object>> map() {
+        BindingResolver.Result r = resolve(false);
+        List<Map<String, Object>> out = new java.util.ArrayList<>();
+        com.ash.drishti.engine.source.SourceRegistry reg = router.registry();
+        for (BindingResolver.Resolution res : r.kinds().values()) {
+            List<Map<String, Object>> reads = new java.util.ArrayList<>();
+            for (com.ash.drishti.api.SourcePlugin p : router.readers(res.kind())) {
+                String name = p.manifest().name();
+                Map<String, Object> c = new LinkedHashMap<>();
+                c.put("connector", name);
+                String layer;
+                try {
+                    layer = connectors.layered(name).map(ConnectorLayers.Effective::layer)
+                            .orElse(reg.applied(name).isPresent() ? ConnectorLayers.TEMPLATE : "plugin");
+                } catch (RuntimeException e) {                 // a site file that cannot be used: Admin -> Connectors says why
+                    // a generated file of a connector the server itself defines (a module engine's own connectors) has no template
+                    // to merge over and is not used: the connector it names runs and serves from the server's own definition
+                    layer = reg.applied(name).isPresent() ? ConnectorLayers.TEMPLATE : "unusable: " + e.getMessage();
+                }
+                c.put("layer", layer);
+                c.put("plugin", reg.applied(name).map(com.ash.drishti.engine.source.SourcesProperties.ConnectorSettings::plugin).orElse(name));
+                c.put("lake", reg.lakeOf(name));
+                String table = reg.tableOf(name, res.kind()).orElse(null);
+                c.put("table", table);
+                c.put("exists", table == null || table.contains("://") ? null : Files.isDirectory(Path.of(table)));
+                reads.add(c);
+            }
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("kind", res.kind());
+            m.put("state", res.state().name());
+            m.put("reads", reads);
+            out.add(m);
+        }
         return out;
     }
 

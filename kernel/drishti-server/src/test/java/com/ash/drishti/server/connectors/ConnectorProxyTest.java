@@ -81,7 +81,7 @@ class ConnectorProxyTest {
         MockEnvironment env = new MockEnvironment().withProperty("drishti.packs.dir", dir.resolve("packs").toString())
                 .withProperty("drishti.packs.loaded", "risk").withProperty("PX_PW", "s3cr3t-pw");
         var props = new SourcesProperties(Map.of(), null, Map.of(), Duration.ofSeconds(1), null, Map.of(), dir.resolve("connectors").toString(), "poll",
-                Duration.ofMillis(50), Duration.ZERO, true);
+                Duration.ofMillis(50), Duration.ZERO);
         FeedSourcePlugin proto = new FeedSourcePlugin();
         return new ConnectorManager(files, new SourceRegistry(List.of(proto), props, new JsonCodec()), props, new PackRegistry(env), env,
                 new SettingCatalogue(List.of(proto)), new ConnectionProbe(List.of(proto), new JsonCodec()), 2, 10);

@@ -49,7 +49,7 @@ class UnderConstructionTest {
         SutraBlocks.kit(Path.of("..", "..", "config", "ui-kit"));
         List<String> dirs = new ArrayList<>();
         for (String p : List.of("core", "counterparty-risk", "trading", "market-data", "market-risk")) {
-            dirs.add(com.ash.drishti.api.PackFolders.of(Path.of("..", "..", "config", "packs"), p).resolve("sutras").toString());
+            dirs.add(com.ash.drishti.api.resolution.ConfigResolution.repository(Path.of("..", "..", "config", "packs").toAbsolutePath().normalize().getParent().getParent()).packDir(p).resolve("sutras").toString());
         }
         return new SutraRegistry(new RachanaProperties(dirs, false, null, null, null, null, null, null, null, null), new ElCompiler());
     }

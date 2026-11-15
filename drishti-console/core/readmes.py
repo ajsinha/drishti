@@ -24,7 +24,7 @@ from pathlib import Path
 
 import markdown
 
-from core.pack_paths import pack_dir
+from core import resolution
 
 _LINK = re.compile(r'<a href="([^"]*)"([^>]*)>(.*?)</a>', re.S)
 _SAFE = re.compile(r"^(?:https?:|mailto:)", re.I)
@@ -68,7 +68,8 @@ def source_of(docs_dir: Path, kind: str, name: str, meta: dict | None = None) ->
     """Where a README sits in the repository: modules/<module>/packs/<pack>/README.md; plugins/<x>/README.md; docs/connectors/types/<t>/README.md."""
     root = Path(docs_dir).parent
     if kind == "pack":
-        return pack_dir(name, root / "config" / "packs") / "README.md"
+        found = resolution.current().packs.dir(name) or resolution.repository(root).packs.dir(name)   # where the one resolver finds it
+        return (found or resolution.repository(root).layout.site / name) / "README.md"
     if (meta or {}).get("category") == "built-in":
         return root / "docs" / "connectors" / "types" / name / "README.md"
     return root / "plugins" / f"drishti-plugin-{name}" / "README.md"

@@ -590,13 +590,23 @@ public final class SutraCli {
             if (Files.isRegularFile(p)) {
                 found.add(unit(p));
             } else if (Files.isDirectory(p)) {
-                boolean root = !packRoot(p.toAbsolutePath().normalize()).isEmpty();      // config/packs: <pack>/tests is each pack's samples
-                try (Stream<Path> walk = Files.walk(p)) {
-                    for (Path f : walk.filter(x -> x.getFileName().toString().endsWith(".sutra.yaml"))
-                            .filter(x -> !p.relativize(x).startsWith("tests"))
-                            .filter(x -> !root || !inPackTests(p.relativize(x)))
-                            .sorted().toList()) {
-                        found.add(unit(f));
+                // a packs root (config/packs): each pack's sutras folder, wherever the resolution finds the pack (a module's too); its
+                // tests/ are samples. Any other folder: searched as it is
+                // (a folder that holds packs and Sutras of its own, docs/guides/examples: both, its packs' tests/ left out)
+                Path abs = p.toAbsolutePath().normalize();
+                List<Path> sutraDirs = packRoot(abs);
+                java.util.Set<Path> seen = new java.util.HashSet<>();
+                boolean site = abs.equals(com.ash.drishti.api.resolution.ConfigResolution.ofProcess().settings().siteDir());
+                List<Path> bases = new ArrayList<>(site ? sutraDirs : List.of(abs));
+                for (Path base : bases) {
+                    try (Stream<Path> walk = Files.walk(base)) {
+                        for (Path f : walk.filter(x -> x.getFileName().toString().endsWith(".sutra.yaml"))
+                                .filter(x -> !base.relativize(x).startsWith("tests") && !inPackTests(x))
+                                .sorted().toList()) {
+                            if (seen.add(f.normalize())) {
+                                found.add(unit(f));
+                            }
+                        }
                     }
                 }
             } else {
@@ -679,7 +689,12 @@ public final class SutraCli {
             return List.of();
         }
         List<Path> out = new ArrayList<>();
-        for (Path d : com.ash.drishti.api.PackFolders.roots(dir)) {           // the packs root and its domain folders
+        com.ash.drishti.api.resolution.ConfigResolution r = com.ash.drishti.api.resolution.ConfigResolution.ofProcess();
+        if (dir.toAbsolutePath().normalize().equals(r.settings().siteDir())) {   // the site's packs folder: every pack the resolution finds
+            r.packs().packs().values().stream().map(l -> l.dir().resolve("sutras")).filter(Files::isDirectory).forEach(out::add);
+            return out.stream().sorted().toList();
+        }
+        for (Path d : com.ash.drishti.api.PackFolders.roots(dir)) {           // a folder of packs named on the command line, and its domain folders
             try (Stream<Path> s = Files.list(d)) {
                 s.filter(p -> Files.isRegularFile(p.resolve("pack.yaml")) && Files.isDirectory(p.resolve("sutras")))
                         .map(p -> p.resolve("sutras")).forEach(out::add);
@@ -690,10 +705,10 @@ public final class SutraCli {
         return out.stream().sorted().toList();
     }
 
-    /** Whether a file under a packs root is in a pack's {@code tests} folder ({@code <pack>/tests/...} or {@code <domain>/<pack>/tests/...}). */
-    private static boolean inPackTests(Path rel) {
-        for (int i = 1; i <= 2 && i < rel.getNameCount() - 1; i++) {
-            if (rel.getName(i).toString().equals("tests")) {
+    /** Whether a file is in a pack's {@code tests} folder (a folder named tests whose parent holds a {@code pack.yaml}): samples, not Sutras. */
+    private static boolean inPackTests(Path f) {
+        for (Path d = f.toAbsolutePath().normalize().getParent(); d != null && d.getParent() != null; d = d.getParent()) {
+            if (d.getFileName().toString().equals("tests") && Files.isRegularFile(d.getParent().resolve("pack.yaml"))) {
                 return true;
             }
         }

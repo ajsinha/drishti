@@ -85,7 +85,7 @@ class OfflineModeTest {
         Web.STARTS.set(0);
         Web.CALLS.set(0);
         var props = new SourcesProperties(Map.of("quote", "yfinance"), null, plain, Duration.ofSeconds(1), null, connectors, null, "off", null,
-                Duration.ZERO, null);
+                Duration.ZERO);
         return new SourceRegistry(List.of(new Web(), new Store()), props, new JsonCodec(), com.ash.drishti.common.RetryPolicy.defaults(), offline);
     }
 

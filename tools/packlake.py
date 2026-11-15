@@ -151,26 +151,22 @@ def settings_view(manifest: dict, connector: dict) -> dict:
 
 
 def with_modules(manifest: dict | None) -> dict:
-    """The pack's manifest with the connectors of every source module that requires it (modules/source-<system>/connectors/*.yaml:
-    delta.yaml is connector ``<kind>-<system>``, any other file the connector of its own name) added where the pack does not declare that
-    name itself. A source system is a module of its own."""
+    """The pack's manifest with the connector templates of every module that requires it (a source module's ``connectors/`` folder, as
+    the one resolver reads it: drishti-console/core/resolution.py) added where the pack does not declare that name itself. A source
+    system is a module of its own."""
     m = dict(manifest or {})
     if not m.get("pack") or not isinstance(m.get("connectors"), dict):
         return m
-    import yaml
+    root = pathlib.Path(__file__).resolve().parents[1]
+    if str(root / "drishti-console") not in sys.path:
+        sys.path.insert(0, str(root / "drishti-console"))
+    from core import resolution
+    r = resolution.repository()
+    needs = {mid for mid, mod in r.modules.items() if m["pack"] in mod.requires}
     conns = dict(m["connectors"])
-    generic = {"iceberg", "files", "file", "kafka", "cassandra", "s3tables", "delta-s3"}
-    for f in sorted((pathlib.Path(__file__).resolve().parents[1] / "modules").glob("source-*/connectors/*.yaml")):
-        mod = f.parents[1]
-        requires = (yaml.safe_load((mod / "module.yaml").read_text(encoding="utf-8")) or {}).get("requires") or {}
-        doc = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
-        kind = (doc.get("kinds") or [""])[0]
-        if m["pack"] not in requires or not kind or f.stem in generic:
-            continue
-        # delta.yaml is the system's read template (connector <kind>-<system>); any other file is a connector of its own name
-        name = f"{kind}-{mod.name[len('source-'):]}" if f.stem == "delta" else f.stem
-        if name not in conns:
-            conns[name] = doc
+    for name, t in r.connectors.templates.items():
+        if t.owner.startswith("module ") and t.owner[len("module "):] in needs and name not in conns and t.definition.get("kinds"):
+            conns[name] = dict(t.definition)
     m["connectors"] = conns
     return m
 

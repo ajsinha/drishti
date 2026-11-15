@@ -208,33 +208,38 @@ class ConnectorApiTest {
             manager.scan();
         }
         mvc.perform(get("/api/v1/admin/health")).andExpect(jsonPath("$.connectors.badFiles").isEmpty())
-                // the kernel without banking (the thin jar's class path): Health says it runs with no modules
-                .andExpect(jsonPath("$.modules.summary").value("no modules: the kernel runs alone"))
-                .andExpect(jsonPath("$.modules.code").isEmpty());
+                // the test forks read the repository's modules (drishti.modules.home): banking's folder manifest makes it the code module
+                .andExpect(jsonPath("$.modules.summary").value(containsString("banking")))
+                .andExpect(jsonPath("$.modules.code[*].id").value(hasItem("banking")));
     }
 
     @Test
-    void connectorsTheShippedPacksNameAreFilesAtTheSiteNow() throws Exception {
-        // the shipped packs' inline connector definitions were written out as files at start, and run from them
+    void theShippedConnectorsAreTemplatesAndNoFileIsWritten() throws Exception {
+        // the modules' and packs' connectors are read-only templates merged in memory (KERNEL_AND_MODULES.md section 18.5): listed with
+        // their owner, and the server writes no file for them at start
         mvc.perform(get("/api/v1/admin/connectors")).andExpect(status().isOk())
-                .andExpect(jsonPath("$.connectors[?(@.origin=='file' && @.template!=null)]").isNotEmpty());
+                .andExpect(jsonPath("$.connectors[?(@.origin=='pack' && @.template!=null)]").isNotEmpty());
+        assertThat(manager.names().stream().filter(n -> manager.template(n).isPresent())).isNotEmpty().noneMatch(files::exists);
         mvc.perform(get("/api/v1/admin/connectors/plugins")).andExpect(status().isOk());
     }
 
     @Test
-    void aPacksConnectorIsResetToItsDefaultOrDisabledNeverDeleted() throws Exception {
-        String name = manager.names().stream().filter(n -> manager.template(n).isPresent() && files.exists(n) && !manager.usedBy(n).isEmpty()).findFirst().orElseThrow();
+    void aShippedConnectorIsResetToItsTemplateOrDisabledNeverDeleted() throws Exception {
+        String name = manager.names().stream().filter(n -> manager.template(n).isPresent() && !files.exists(n)
+                && manager.effective(n).map(ConnectorFiles.Definition::isEnabled).orElse(false)).findFirst().orElseThrow();
+        // a template has no file to delete
         mvc.perform(delete("/api/v1/admin/connectors/" + name)).andExpect(status().isConflict())
-                .andExpect(jsonPath("$.detail").value(containsString("is named by pack")));
-        assertThat(files.exists(name)).isTrue();
-        String before = files.text(name);
-        // disabling a connector packs use asks first
-        mvc.perform(post("/api/v1/admin/connectors/" + name + "/enabled").contentType(MediaType.APPLICATION_JSON).content("{\"enabled\":false}"))
-                .andExpect(status().isConflict()).andExpect(jsonPath("$.detail").value(containsString("confirm=true")));
+                .andExpect(jsonPath("$.detail").value(containsString("disable it")));
+        assertThat(files.exists(name)).isFalse();
+        // disabling writes the site's override: only the key it changes, over the template
         mvc.perform(post("/api/v1/admin/connectors/" + name + "/enabled?confirm=true").contentType(MediaType.APPLICATION_JSON).content("{\"enabled\":false}"))
                 .andExpect(status().isOk());
+        assertThat(files.exists(name)).isTrue();
+        assertThat(files.text(name)).contains("enabled: false").doesNotContainPattern("(?m)^plugin\\s*:");
+        assertThat(manager.effective(name).orElseThrow().isEnabled()).isFalse();
+        // reset removes the override: the template is in force as it is
         mvc.perform(post("/api/v1/admin/connectors/" + name + "/reset")).andExpect(status().isOk());
-        assertThat(manager.files().read(name).isEnabled()).isTrue();
-        assertThat(files.read(name).settings()).isEqualTo(files.parse(name, before).settings());
+        assertThat(files.exists(name)).isFalse();
+        assertThat(manager.effective(name).orElseThrow().isEnabled()).isTrue();
     }
 }

@@ -130,22 +130,22 @@ public final class SamplePolicy {
     }
 
     /** The packs to load: {@code names} without the sample packs when the mode is {@code hidden}. */
-    public List<String> select(List<Path> dirs, List<String> names, PackLoader loader) {
+    public List<String> select(com.ash.drishti.api.resolution.ConfigResolution r, List<String> names, PackLoader loader) {
         if (!hidden()) {
             return names;
         }
         List<String> out = new ArrayList<>();
         for (String n : names) {
-            if (!sampleOf(dirs, n, loader)) {
+            if (!sampleOf(r, n, loader)) {
                 out.add(n);
             }
         }
         return out;
     }
 
-    private static boolean sampleOf(List<Path> dirs, String name, PackLoader loader) {
+    private static boolean sampleOf(com.ash.drishti.api.resolution.ConfigResolution r, String name, PackLoader loader) {
         try {
-            return loader.readOne(dirs, name).sample();
+            return loader.readOne(r, name).sample();
         } catch (RuntimeException e) {
             return false;                          // a pack that cannot be read is reported by the load, not hidden here
         }
@@ -155,13 +155,13 @@ public final class SamplePolicy {
      * The connectors only sample packs use: named by a sample pack on disk and by no other pack on disk. In
      * {@code hidden} mode they do not start.
      */
-    public static Set<String> sampleOnlyConnectors(List<Path> dirs, PackLoader loader) {
+    public static Set<String> sampleOnlyConnectors(com.ash.drishti.api.resolution.ConfigResolution r, PackLoader loader) {
         Map<String, Set<String>> users = new LinkedHashMap<>();
         Set<String> other = new LinkedHashSet<>();
-        for (String n : PackLoader.folders(dirs)) {
+        for (String n : r.packs().names()) {
             Pack p;
             try {
-                p = loader.readOne(dirs, n);
+                p = loader.readOne(r, n);
             } catch (RuntimeException e) {
                 continue;
             }

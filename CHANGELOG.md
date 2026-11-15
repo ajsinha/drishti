@@ -26,6 +26,55 @@
   key order instead of every document being read, so the blotter holds the lake's trades and the streamed ones merged by key and version.
   The trading pack ships the **`trade-editor`** role (`edit: true` on trades); `trader` alone reads (pack roles may now carry `edit:`).
   (docs/guides/LIVE_RESULTS_GUIDE.md sections 3 and 7)
+- **Demo off over a built demo lake serves every kind again.** The source modules' trade connectors read their `map:` file from the
+  module's folder: every module template now carries the setting `module-dir` (the folder its relative files are read from), so the six
+  trade connectors start and the trades of every system are read (a fresh and an upgraded site alike). A connector that names a module's
+  engine class or plugin type before the modules have loaded waits for them (state `WAITING`, one INFO line) and starts once they have;
+  no `ClassNotFoundException` at start. **Admin → Data bindings → Tables read** (`GET /api/v1/admin/bindings/map`) shows each kind's
+  connectors with the table each reads and whether it exists; `test_upgrade_counts` checks it and compares every kind's count on the
+  newest date with the release before (the VaR inputs included); `test_boot_demo_off_browser` boots a demo-off stack (VAR BANK, POS,
+  TRD, FORMS).
+- **A search leaves out a source system that holds none of the kind.** As whole-kind reads already did, a search or pick list no
+  longer asks a union member (a source module's connector) whose table is not there, so a site without SwapOne, WSS or ICI data gets
+  an exact answer, not a partial one naming them. `sutra test <folder>` checks the folder's own Sutras again beside the packs it holds
+  (`docs/guides/examples`), each pack's `tests/` read as samples.
+- **Configuration resolution: one resolver, three layers, the server only reads.** Every pack is found in one waterfall: the site
+  (`config/packs/<pack>`, deployed packs first; a site pack of a shipped name replaces it only with `replaces: <pack>`, otherwise the
+  shipped one is read and the clash is listed), then each module that is on (its manifest's `packs:` list, in its folder under
+  `drishti.modules.home` or its installed `.dmod`), then the kernel (`config/packs/core`). The same name twice in one layer is an error
+  naming both places. One resolver in Java (`com.ash.drishti.api.resolution`: `PackResolver`, `ModuleTemplates`, `ConfigResolution`)
+  and its Python twin (`drishti-console/core/resolution.py`), held to the shared fixtures `pack-resolution/cases.yaml` and
+  `connector-layers/cases.yaml`; the server, the loader, the command line, the console and the tools ask it, and nothing finds a
+  module's packs by the position of a folder any more. **FORMS lists every pack of every module that is on** (the console kept a pack
+  only when its folder was under `config/packs`). Admin → Packs shows each pack's origin and folder, and the packs of a module that is
+  off. Connector templates of a module that is on are the files directly in its `connectors/` folder, named by their `name:`
+  (`trade-endur`, `trade-endur-live`); the store variants moved to `connectors/examples/`. An override may change the plugin
+  (delta → iceberg) and still inherits every other key; a key set to `null` removes the inherited one; an override that names its
+  template (`template:`) or a generated file of an earlier release whose template is not here is not used (DRS-1046) instead of running
+  as a site connector. The write path of an edit reads the effective connectors (a module's template counts, not only a site file), so a
+  blotter edit finds the source's Kafka write connector (DRS-9302 on blotter edits). New settings: `drishti.packs.site-dir` (the former
+  `drishti.packs.dir` is still read), `drishti.kernel.packs-dir`, `drishti.modules.home`, `drishti.modules.path`;
+  `drishti.modules.dir` keeps its meaning (the module switches). Design: docs/architecture/KERNEL_AND_MODULES.md section 18.
+
+- **Configuration resolution, finished: bindings without guesses, the write path by source system, a module switch followed at once.**
+  A kind is read from what the site binds, else from what is shipped and declared (a template's `kinds:`, a pack's route); the router's
+  two guesses are gone: a lake connector is never asked because its lake happens to hold a table of the kind's name, and the packs'
+  samples answer only the kinds the bindings resolve to DEMO (with the demo off: none, and such a kind says *no source*, never an error).
+  An upgraded site's kinds that the guesses served resolve to the declared connectors by themselves: the `AUTO` state ("found by
+  convention: confirm") is no longer produced, so no administrator's click is needed. A binding may name where corrections are written,
+  by source system (`write: {connectors: {ENDUR: trade-endur-live}}`) or for every system (`write: {connector: …}`); a binding that names
+  only that leaves the read to what is declared. A correction goes to the record's own source first (the connector it was read from names
+  its system), to a bound or defined write connector of that system (it need not be running to be named), and every source module's live
+  template carries `SOURCE_SYSTEM` and the blotter's one command name, `amend-trade`. The demo's bindings (`config/demo/bindings.yaml`,
+  with Kafka) bind each system's corrections to its own live connector and no longer list the read connectors. A module switched on or off
+  at run time rebuilds the resolution once and the packs, connectors, bindings and source systems follow (`ResolutionFollower`); the
+  inbox reads the new rules at its next cycle. `ConnectorOverlayFold` (the start-up fold of an older release's content-store edits into
+  files) is removed: such edits are listed in Health and not applied. The access registry and the distributions read
+  `drishti.modules.home` (no folder derived from the packs folder's position), and a module with code whose jar is not on the class path
+  is known by its folder manifest (`dmod/module.yaml`), its content counted. The settings `drishti.sources.connectors-generate`,
+  `drishti.connectors.template-updates` and `template-check-ms` are gone with the generation they steered. Proofs: the upgrade test from
+  `v2.9.11.i_2_3` (`tools/upgrade_fixture.py`, `test_upgrade_counts.py`: every demo kind keeps its record count), `ModuleSwitchFollowsTest`,
+  `KafkaTradeEditTest` (one versioned message, four eyes, a stale correction refused naming who changed the record).
 
 - **Documentation consolidated: fewer, larger documents.** Each risk measure's tutorial is the last part of its guide (VaR, exposure, FRTB-SA, SIMM);
   one BI guide holds the pivot, virtual tables and models, reports, the Notebook and the groupings, each with its tutorial; one World and public data guide holds
@@ -6415,7 +6464,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   `config/connectors-settings.yaml`; `notify` only lists; `off`), as a shared edit with the old text in the history, one log line and an
   audit entry. Settings an administrator changed and kinds no pack serves are never changed automatically. **Admin → Connectors →
   Template updates** lists every drifted connector beside its template with *Add missing kinds*, *Regenerate from template*, *Remove
-  obsolete kinds* and *Fix all additive*; the Connectors tab shows a count. [CONNECTOR_FILES.md](docs/guides/DATA_GUIDE.md#template-updates).
+  obsolete kinds* and *Fix all additive*; the Connectors tab shows a count. [CONNECTOR_FILES.md](docs/guides/DATA_GUIDE.md#connector-layers).
 
 - **New: connector edits made through Admin reach every node of a cluster.** Files in `config/connectors` stay the base (GitOps); an
   Admin create, edit, enable or disable, restore or delete is a shared edit in the content store (`config/connectors/<name>.yaml`, with

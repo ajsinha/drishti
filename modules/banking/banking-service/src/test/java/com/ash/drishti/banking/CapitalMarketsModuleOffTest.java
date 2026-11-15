@@ -63,7 +63,7 @@ class CapitalMarketsModuleOffTest {
         List<String> theirs = new ArrayList<>();
         ObjectMapper yaml = new ObjectMapper(new YAMLFactory());
         for (String p : List.of("us-equities", "funds")) {
-            JsonNode pack = yaml.readTree(com.ash.drishti.api.PackFolders.of(Path.of(System.getProperty("drishti.packs.dir", "../../../config/packs")), p).resolve("pack.yaml").toFile());
+            JsonNode pack = yaml.readTree(com.ash.drishti.api.resolution.ConfigResolution.repository(Path.of(System.getProperty("drishti.packs.dir", "../../../config/packs")).toAbsolutePath().normalize().getParent().getParent()).packDir(p).resolve("pack.yaml").toFile());
             pack.path("connectors").fieldNames().forEachRemaining(theirs::add);
         }
         assertThat(theirs).isNotEmpty();

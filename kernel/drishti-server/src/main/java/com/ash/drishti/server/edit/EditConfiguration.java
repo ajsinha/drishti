@@ -21,7 +21,6 @@ import com.ash.drishti.engine.time.BusinessDates;
 import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.identity.PreferenceStore;
 import com.ash.drishti.identity.SwitchLedger;
-import com.ash.drishti.packs.ConnectorFiles;
 import com.ash.drishti.rachana.SutraRegistry;
 import com.ash.drishti.server.collab.Principals;
 import com.ash.drishti.server.connectors.ConnectorManager;
@@ -70,11 +69,12 @@ public class EditConfiguration {
     }
 
     @Bean
-    public ConnectorWrites connectorWrites(ObjectProvider<ConnectorManager> connectors, SourceRegistry registry, ObjectProvider<SwitchLedger> switches) {
+    public ConnectorWrites connectorWrites(ObjectProvider<ConnectorManager> connectors, SourceRegistry registry, ObjectProvider<SwitchLedger> switches,
+            org.springframework.core.env.Environment env) {
         return new ConnectorWrites(name -> {
             ConnectorManager m = connectors.getIfAvailable();
-            return m == null ? null : m.files().read(name);
-        }, registry::plugin, switches.getIfAvailable());
+            return m == null ? null : m.effective(name).orElse(null);       // the effective connector: a module's template counts, not only a file
+        }, registry::plugin, switches.getIfAvailable()).resolvedBy(env::resolvePlaceholders);
     }
 
     @Bean(destroyMethod = "close")
@@ -87,7 +87,7 @@ public class EditConfiguration {
         String node = planned.isBlank() ? "local" : planned;
         EditRuntime r = new EditRuntime(settings, identityDataSource, router, fields, entitlements, user -> principals.user(user).isPresent() ? principals.of(user) : null, drafts, audit, dates::current,
                 cluster.getIfAvailable(), node, clustered, writes, kind -> connectorOf(connectors.getIfAvailable(), kind));
-        r.service().route(sourceRoute(router));
+        r.service().route(sourceRoute(router, connectors::getIfAvailable));
         r.start();
         return r;
     }
@@ -96,7 +96,7 @@ public class EditConfiguration {
      * Where a change goes when several trading systems feed a kind (DATA_LAKE_GUIDE.md, "Several source systems"): the record's
      * {@code SOURCE_SYSTEM} as read (its connector's where or set), and that system's running connectors.
      */
-    static SourceRoute sourceRoute(SourceRouter router) {
+    static SourceRoute sourceRoute(SourceRouter router, java.util.function.Supplier<ConnectorManager> manager) {
         return new SourceRoute() {
             @Override
             public Optional<String> systemOf(String kind, String entity) {
@@ -107,34 +107,89 @@ public class EditConfiguration {
                 if (d == null || d.data() == null) {
                     return Optional.empty();
                 }
-                String s = d.data().get(com.ash.drishti.engine.source.SourceShape.SOURCE_SYSTEM).asText();
-                if (s.isBlank() && d.provenance() != null) {   // the connector the record came from names its system
-                    return router.registry().shape(d.provenance().source()).flatMap(com.ash.drishti.engine.source.SourceShape::system);
+                // the record's own source first: the connector it was read from names its system; else the record's SOURCE_SYSTEM
+                if (d.provenance() != null && d.provenance().source() != null) {
+                    Optional<String> own = router.registry().shape(d.provenance().source()).flatMap(com.ash.drishti.engine.source.SourceShape::system);
+                    if (own.isPresent()) {
+                        return own;
+                    }
                 }
+                var v = d.data().get(com.ash.drishti.engine.source.SourceShape.SOURCE_SYSTEM);
+                String s = v == null ? "" : v.asText();
                 return s.isBlank() ? Optional.empty() : Optional.of(s);
             }
 
             @Override
             public List<String> connectorsOf(String system) {
-                return router.registry().connectorsBySystem().getOrDefault(system, List.of());
+                java.util.Set<String> out = new java.util.TreeSet<>(router.registry().connectorsBySystem().getOrDefault(system, List.of()));
+                ConnectorManager m = manager.get();
+                if (m != null && system != null) {              // a bound or defined write connector of the system, running or not
+                    String tail = "-" + system.toLowerCase(java.util.Locale.ROOT);
+                    for (String n : m.names()) {
+                        boolean writes = m.effective(n).map(d -> !d.writes().isEmpty()).orElse(false);
+                        boolean ofSystem = n.toLowerCase(java.util.Locale.ROOT).contains(tail)
+                                || m.effective(n).map(d -> system.equalsIgnoreCase(String.valueOf(setOf(d).get(com.ash.drishti.engine.source.SourceShape.SOURCE_SYSTEM)))).orElse(false);
+                        if (writes && ofSystem) {
+                            out.add(n);
+                        }
+                    }
+                    m.bindings().byKind().values().forEach(b -> b.writeConnector(system).filter(c -> !c.isBlank()).ifPresent(out::add));
+                }
+                return List.copyOf(out);
+            }
+
+            @Override
+            public Optional<String> boundWrite(String kind, String system) {
+                ConnectorManager m = manager.get();
+                return m == null ? Optional.empty() : m.bindings().of(kind).flatMap(b -> b.writeConnector(system));
             }
         };
     }
 
-    /** The connector whose {@code writes:} a source target of a kind uses when the form names none: the one connector of the kind that writes. */
+    /** A connector's {@code settings.set} (the fields it stamps on every record, {@code SOURCE_SYSTEM} among them), or empty. */
+    private static java.util.Map<?, ?> setOf(com.ash.drishti.packs.ConnectorFiles.Definition d) {
+        Object flat = d.settings().get("set." + com.ash.drishti.engine.source.SourceShape.SOURCE_SYSTEM);      // settings as flattened keys
+        return flat == null ? java.util.Map.of() : java.util.Map.of(com.ash.drishti.engine.source.SourceShape.SOURCE_SYSTEM, flat);
+    }
+
+    /**
+     * The connector whose {@code writes:} a source target of a kind uses when the form names none (KERNEL_AND_MODULES.md section 18.6): the
+     * effective connectors (a site file, or the template of a pack or a module that is on) whose {@code writes:} name the kind; the only
+     * one, else none (a record names its system: {@link #writeConnectorOf}).
+     */
     static Optional<String> connectorOf(ConnectorManager m, String kind) {
-        if (m == null) {
-            return Optional.empty();
-        }
-        List<String> writing = m.names().stream().filter(name -> {
-            try {
-                ConnectorFiles.Definition d = m.files().read(name);
-                return d != null && !d.writes().isEmpty() && d.kinds().contains(kind);
-            } catch (RuntimeException e) {
-                return false;
-            }
-        }).toList();
+        List<String> writing = writersOf(m, kind);
         return writing.size() == 1 ? Optional.of(writing.get(0)) : Optional.empty();
+    }
+
+    /** The effective connectors whose {@code writes:} name {@code kind}, in name order. */
+    static List<String> writersOf(ConnectorManager m, String kind) {
+        if (m == null) {
+            return List.of();
+        }
+        return m.names().stream().sorted().filter(name -> m.effective(name).map(d -> d.writes().values().stream()
+                .anyMatch(w -> w instanceof java.util.Map<?, ?> wm && kind.equals(String.valueOf(wm.get("kind")))) || !d.writes().isEmpty() && d.kinds().contains(kind))
+                .orElse(false)).toList();
+    }
+
+    /**
+     * The write path of a record of {@code kind} from {@code system} (DRS-9308 none, DRS-9309 several): of the effective connectors that
+     * write the kind, the one of that system ({@code source-name} or name {@code <kind>-<system>-...}); without a system, the only one.
+     */
+    static String writeConnectorOf(ConnectorManager m, String kind, String system) {
+        List<String> writing = writersOf(m, kind);
+        List<String> mine = system == null || system.isBlank() ? writing : writing.stream()
+                .filter(n -> n.toLowerCase(java.util.Locale.ROOT).contains("-" + system.toLowerCase(java.util.Locale.ROOT))).toList();
+        if (mine.size() == 1) {
+            return mine.get(0);
+        }
+        if (mine.isEmpty()) {
+            throw new IllegalStateException("kind '" + kind + "'" + (system == null || system.isBlank() ? "" : " (source " + system + ")")
+                    + " has no write path: no connector that serves it offers writes" + (writing.isEmpty() ? "" : " for that system (writers: " + writing + ")")
+                    + "; switch on the source module's live connector or bind one in Admin -> Data bindings (write) (DRS-9308)");
+        }
+        throw new IllegalStateException("kind '" + kind + "' has " + mine.size() + " write paths, " + mine + ", and the record names no source system;"
+                + " name one in Admin -> Data bindings (write) (DRS-9309)");
     }
 
     @Bean

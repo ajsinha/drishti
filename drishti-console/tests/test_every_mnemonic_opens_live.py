@@ -88,7 +88,6 @@ def test_a_bare_mnemonic_opens_a_list_and_a_known_id_its_record(live_console):
         assert not empty, "mnemonics whose demo data is empty: " + ", ".join(empty)
 
 
-@pytest.mark.skip(reason="the console finds only config/packs/core packs until the pack-discovery redesign (site, modules by manifest packs:, kernel) lands; then drop this skip")
 def test_forms_lists_every_pack_of_every_module_that_is_on_and_each_form_opens(live_console):
     on = {p["name"] for p in packs_on(live_console.server)}
     status, index = get(str(live_console) + "/forms")

@@ -112,6 +112,7 @@ class ArtifactApiTest {
     @Autowired AuditLog audit;
     @Autowired BiFolder folder;
     @Autowired EmbedAppStore embeds;
+    @Autowired com.ash.drishti.server.connectors.ConnectorManager connectors;
 
     private static boolean ready;
 
@@ -125,7 +126,10 @@ class ArtifactApiTest {
             mvc.perform(post("/api/v1/admin/packs/" + p + "/load")).andExpect(status().isOk());
         }
         mvc.perform(put("/api/v1/admin/connectors/art-used").contentType(MediaType.APPLICATION_JSON)
-                .content("{\"plugin\":\"file\",\"kinds\":[\"artwidget\"],\"settings\":{\"root\":\"" + root.resolve("data") + "\"}}")).andExpect(status().isOk());
+                .content("{\"plugin\":\"file\",\"settings\":{\"root\":\"" + root.resolve("data") + "\"}}")).andExpect(status().isOk());
+        // the binding owns the kind (KERNEL_AND_MODULES.md section 18.6): artwidget is read from art-used
+        connectors.adopt(connectors.bindings().with("artwidget",
+                com.ash.drishti.packs.bindings.Bindings.binding("artwidget", java.util.Map.of("read", List.of("art-used")))));
         prefs.put("tester", "monitors", "art-mon", JSON.readTree("{\"name\":\"art-mon\",\"refs\":[{\"kind\":\"artwidget\",\"id\":\"W-1\"}]}"));
         prefs.put("tester", "alerts", "art-rule", JSON.readTree("{\"name\":\"art-rule\",\"ref\":{\"kind\":\"artgadget\",\"id\":\"G-1\"},\"when\":\"x>1\"}"));
         prefs.put("tester", "subscriptions", "art-sub", JSON.readTree("{\"name\":\"art-sub\",\"target\":{\"type\":\"report\",\"id\":\"file:report:art-overview\"}}"));
