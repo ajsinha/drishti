@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.delta;
 
+import com.ash.drishti.testroots.TestRoots;
 import com.ash.drishti.api.SourcePlugin;
 import com.ash.drishti.testkit.DatedSourceContract;
 import java.net.URI;
@@ -65,7 +66,7 @@ class DeltaOnS3Test extends DatedSourceContract {
             if (c.listBuckets().buckets().stream().noneMatch(b -> b.name().equals("lakes"))) {
                 c.createBucket(b -> b.bucket("lakes"));
             }
-            Path src = Path.of("src/test/resources/lake");
+            Path src = Path.of(TestRoots.module(), "src", "test", "resources", "lake");
             try (var files = Files.walk(src)) {
                 for (Path f : files.filter(Files::isRegularFile).toList()) {
                     String key = "banking/" + src.relativize(f).toString().replace('\\', '/');

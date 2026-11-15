@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.packs;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
@@ -34,7 +35,7 @@ import org.junit.jupiter.api.Test;
  */
 class ConfigReadersGuardTest {
 
-    static final Path REPO = Path.of("..", "..").toAbsolutePath().normalize();
+    static final Path REPO = Path.of(TestRoots.repo()).toAbsolutePath().normalize();
 
     /** What only the resolver may do, each with why. */
     static final List<Pattern> FORBIDDEN = List.of(

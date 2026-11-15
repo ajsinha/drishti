@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.iceberg;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -34,14 +35,14 @@ class NativeOnS3SimulatorTest {
 
     @Test
     void onS3MockInProcessTheLoaderWritesAndTheConnectorReadsATable() throws Exception {
-        try (S3MockServer s3 = S3MockServer.start(Path.of("target", "s3mock-iceberg"), "lake")) {
+        try (S3MockServer s3 = S3MockServer.start(Path.of(TestRoots.module(), "target", "s3mock-iceberg"), "lake")) {
             run(s3.endpoint());
         }
     }
 
     @Test
     void onTheMinioBinaryTheTableAndWritersAtOnce() throws Exception {
-        try (MinioServer minio = MinioServer.startOrSkip(Path.of("target", "minio-iceberg", "data"))) {
+        try (MinioServer minio = MinioServer.startOrSkip(Path.of(TestRoots.module(), "target", "minio-iceberg", "data"))) {
             minio.endpoint().bucket("lake");
             run(minio.endpoint());
         }

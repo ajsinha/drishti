@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.EntityRef;
@@ -38,7 +39,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 class GleifPackTest extends PublicPacksOnLakes {
 
-    static final Path PACK = Path.of("../../config/packs/core/gleif");
+    static final Path PACK = Path.of(TestRoots.repo(), "config", "packs", "core", "gleif");
     static final String JPM = "8I5DZWZKVSZI1NUHU748";
     static final String APPLE = "HWUPKR0MPOU8FGXBT394";
 

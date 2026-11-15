@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.board;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.server.bi.report.ReportYaml;
@@ -28,7 +29,7 @@ class BoardFormatTest {
 
     @Test
     void everyShippedBoardSurvivesAWriteAndARead() throws IOException {
-        Path folder = Path.of("src/test/resources/bi/boards-2.3");                         // the 2.3 boards (config/bi has them as reports with board pages)
+        Path folder = Path.of(TestRoots.module(), "src", "test", "resources", "bi", "boards-2.3");                         // the 2.3 boards (config/bi has them as reports with board pages)
         try (var files = Files.list(folder)) {
             for (Path f : files.filter(p -> p.getFileName().toString().endsWith(".board.yaml")).toList()) {
                 BoardParser.Result first = BoardParser.parse(Files.readString(f));

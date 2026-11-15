@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.mq;
 
+import com.ash.drishti.testroots.TestRoots;
 import com.ash.drishti.server.bi.Layered;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.server.bi.dataset.Dataset;
@@ -91,13 +92,13 @@ import java.util.stream.Stream;
 public final class BiFoundationCases {
 
     /** Where the fixtures live (the module's test resources): one JSON file per model, per report, and the live replay. */
-    public static final Path FIXTURES = Path.of("src/test/resources/bi/foundation-parity");
+    public static final Path FIXTURES = Path.of(TestRoots.module(), "src", "test", "resources", "bi", "foundation-parity");
 
     /** The shipped BI folder, read only. */
-    static final Path BI = Path.of("..", "..", "config", "bi");
+    static final Path BI = Path.of(TestRoots.repo(), "config", "bi");
 
     /** The shipped table layer (config/tables): the tables and models BI reads since the switch (docs/architecture/ARCHITECTURE.md §28 step 5), read only. */
-    static final Path TABLES = Path.of("..", "..", "config", "tables");
+    static final Path TABLES = Path.of(TestRoots.repo(), "config", "tables");
 
     /**
      * The seven persons of section 5.1: a desk-head with two desks, a desk-head with no desks (the strict {@code in}: no rows), risk, an

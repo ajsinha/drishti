@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.connectors;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -54,7 +55,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @Import(PinnedBusinessDate.class)
 class HierarchyUpgradeWithoutLettersTest {
 
-    static final Path BASE = Path.of("target", "hierarchy-upgrade").toAbsolutePath();
+    static final Path BASE = Path.of(TestRoots.module(), "target", "hierarchy-upgrade").toAbsolutePath();
     static final LocalDate DAY = LocalDate.of(2026, 9, 30);
 
     static {

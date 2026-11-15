@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.it;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.AsOf;
@@ -59,7 +60,7 @@ class SourceModuleEndToEndTest {
     Path tmp;
 
     private static Path repo() {
-        Path p = Path.of("").toAbsolutePath();
+        Path p = Path.of(TestRoots.module());
         while (p != null && !Files.isDirectory(p.resolve("modules/source-swapone"))) {
             p = p.getParent();
         }

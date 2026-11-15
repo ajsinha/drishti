@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -113,7 +114,7 @@ class UiKitApiTest {
         assertThat(r.getContentType()).isEqualTo("image/png");
         assertThat(r.getHeader("ETag")).isEqualTo("\"" + logo.path("hash").asText() + "\"");
         assertThat(r.getHeader("Cache-Control")).contains("max-age=31536000").contains("immutable");
-        assertThat(r.getContentAsByteArray()).isEqualTo(Files.readAllBytes(Path.of("../../config/ui-kit/assets/logos/drishti-logo.png")));
+        assertThat(r.getContentAsByteArray()).isEqualTo(Files.readAllBytes(Path.of(TestRoots.repo(), "config", "ui-kit", "assets", "logos", "drishti-logo.png")));
 
         MockHttpServletResponse plain = mvc.perform(get("/api/v1/ui-kit/assets/logos/drishti-logo.png").header("Authorization", bearer()))
                 .andExpect(status().isOk()).andReturn().getResponse();

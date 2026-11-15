@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.engine;
 
+import com.ash.drishti.testroots.TestRoots;
 import com.ash.drishti.server.bi.Layered;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -83,7 +84,7 @@ class GrainTest {
 
     @Test
     void theTradingRiskSampleSplitsTradeAndNettingSetMeasuresAtTheirOwnGrain() throws Exception {
-        String yaml = java.nio.file.Files.readString(Path.of("src/test/resources/bi/samples-2.1/datasets/trading-risk.dataset.yaml"));
+        String yaml = java.nio.file.Files.readString(Path.of(TestRoots.module(), "src", "test", "resources", "bi", "samples-2.1", "datasets", "trading-risk.dataset.yaml"));
         com.ash.drishti.server.bi.dataset.Dataset d = Layered.dataset(yaml).dataset();
         SqlCompiler.Reader reader = new SqlCompiler.Reader(false, Set.of("risk"), Map.of(), SqlCompiler.Masks.NONE);
         SqlCompiler c = new SqlCompiler(d, Dialect.DUCKDB);
@@ -122,7 +123,7 @@ class GrainTest {
 
     @Test
     void theTradingRiskSampleMixedRatioIsMultiFact() throws Exception {
-        String yaml = java.nio.file.Files.readString(Path.of("src/test/resources/bi/samples-2.1/datasets/trading-risk.dataset.yaml"))
+        String yaml = java.nio.file.Files.readString(Path.of(TestRoots.module(), "src", "test", "resources", "bi", "samples-2.1", "datasets", "trading-risk.dataset.yaml"))
                 .replace("measures:\n", "measures:\n  MtmPerExposure: { expr: \"measure('MTM') / measure('Exposure (EE peak)')\" }\n");
         com.ash.drishti.server.bi.dataset.Dataset d = Layered.dataset(yaml).dataset();
         SqlCompiler.Reader reader = new SqlCompiler.Reader(false, Set.of("risk"), Map.of(), SqlCompiler.Masks.NONE);

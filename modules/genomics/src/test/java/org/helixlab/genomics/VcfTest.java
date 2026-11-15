@@ -15,6 +15,7 @@
  */
 package org.helixlab.genomics;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.BufferedReader;
@@ -52,7 +53,7 @@ class VcfTest {
     @Test
     void theShippedSamplesReadIntoVariantsGenesAndTwoCohorts() {
         GenomicsData d = new GenomicsData();
-        GenomicsData.Snapshot s = d.load(List.of(Path.of("src/dmod/data/samples")));
+        GenomicsData.Snapshot s = d.load(List.of(Path.of(TestRoots.module(), "src", "dmod", "data", "samples")));
         assertThat(s.problems()).isEmpty();
         assertThat(s.variants()).hasSize(120).containsKey("HX-A001");
         assertThat(s.samples()).hasSize(24);

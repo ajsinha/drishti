@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.deploy;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -30,7 +31,7 @@ import org.junit.jupiter.api.Test;
  */
 class PackDifferTest {
 
-    private static final Path CASES = Path.of("..", "..", "tools", "testdata", "packdiff");
+    private static final Path CASES = Path.of(TestRoots.repo(), "tools", "testdata", "packdiff");
 
     @Test
     void sayTheSameAsThePythonCliFindingForFinding() throws Exception {

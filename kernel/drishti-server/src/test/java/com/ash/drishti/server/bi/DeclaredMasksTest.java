@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.server.bi.dataset.Dataset;
@@ -53,7 +54,7 @@ class DeclaredMasksTest {
         assertThat(entitlements.raw(plain)).isTrue();                    // the installation's own masks: none for anyone
         assertThat(entitlements.rawPower(plain)).isFalse();
         assertThat(entitlements.rawPower(raw)).isTrue();
-        Dataset ds = Layered.dataset(Files.readString(Path.of("../../config/tables/banking/trading_risk_counterparties.table.yaml"))).dataset();
+        Dataset ds = Layered.dataset(Files.readString(Path.of(TestRoots.repo(), "config", "tables", "banking", "trading_risk_counterparties.table.yaml"))).dataset();
         String table = ds.tables().keySet().iterator().next();
         assertThat(datasets.masks(plain, ds).masked(table, "NAME")).isTrue();
         assertThat(datasets.masks(plain, ds).masked(table, "RATING")).isTrue();

@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.python;
 
+import com.ash.drishti.testroots.TestRoots;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -54,7 +55,7 @@ public final class PythonPoolForTests {
         if (py == null) {
             return;
         }
-        r.add("drishti.compute.file", () -> Path.of("..", "..", "config", "compute", "compute.yaml").toAbsolutePath().normalize().toString());
+        r.add("drishti.compute.file", () -> Path.of(TestRoots.repo(), "config", "compute", "compute.yaml").toAbsolutePath().normalize().toString());
         r.add("DRISHTI_COMPUTE_ENABLED", () -> "true");
         r.add("DRISHTI_PYTHON", () -> py);
     }
@@ -66,7 +67,7 @@ public final class PythonPoolForTests {
                 candidates.add(c);
             }
         }
-        Path dir = Path.of("").toAbsolutePath();
+        Path dir = Path.of(TestRoots.module());
         for (int i = 0; i < 6 && dir != null; i++, dir = dir.getParent()) {
             Path venv = dir.resolve("drishti-console/.venv/bin/python");
             if (Files.isExecutable(venv)) {

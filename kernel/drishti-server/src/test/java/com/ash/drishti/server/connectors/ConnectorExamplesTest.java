@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.connectors;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.common.ConnectorSecrets;
@@ -43,7 +44,7 @@ class ConnectorExamplesTest {
 
     @Test
     void everyExampleIsValidAndHoldsNoSecret() throws IOException {
-        Path dir = Path.of("../../config/connectors.examples");
+        Path dir = Path.of(TestRoots.repo(), "config", "connectors.examples");
         ConnectorFiles files = new ConnectorFiles(dir);
         SettingCatalogue catalogue = new SettingCatalogue(new PluginDiscovery().discover());
         List<Path> all;
@@ -74,7 +75,7 @@ class ConnectorExamplesTest {
 
     @Test
     void everyExampleStartsAsCopiedWithNoEnvironmentAndPromotesProductionColumns() throws IOException {
-        Path dir = Path.of("../../config/connectors.examples");
+        Path dir = Path.of(TestRoots.repo(), "config", "connectors.examples");
         ConnectorFiles files = new ConnectorFiles(dir);
         MutablePropertySources sources = new MutablePropertySources();
         sources.addFirst(new MapPropertySource("server", Map.of("drishti.data.dir", "./data")));      // what the server itself defines; no ${DRISHTI_*}

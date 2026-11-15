@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.rachana;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -248,7 +249,7 @@ class SutraWiringTest {
 
     @Test
     void aUseCarriesItsPanelsWiring() {
-        assertThat(SutraBlocks.load(List.of(Path.of("../../config/ui-kit/fragments")))).isEmpty();
+        assertThat(SutraBlocks.load(List.of(Path.of(TestRoots.repo(), "config", "ui-kit", "fragments")))).isEmpty();
         Sutra s = parse("""
                   - use: field-list@1
                     with: { id: limit, title: Limit, rows: $src }

@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.lakeload;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -38,7 +39,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 class ChildLoadsTest {
 
     private static final ObjectMapper JSON = new ObjectMapper();
-    private static final Path FIXTURE = Path.of("src/test/resources/childkinds");
+    private static final Path FIXTURE = Path.of(TestRoots.module(), "src", "test", "resources", "childkinds");
 
     @TempDir
     Path tmp;

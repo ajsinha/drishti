@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.inference;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.DataNode;
@@ -34,7 +35,7 @@ import org.junit.jupiter.api.Test;
 
 class InferenceEngineTest {
 
-    static final Path FIXTURES = Path.of("..", "..", "examples", "packs", "finance", "samples");
+    static final Path FIXTURES = Path.of(TestRoots.repo(), "examples", "packs", "finance", "samples");
     static final ElCompiler EL = new ElCompiler();
     static final Formats F = Formats.load(null, java.util.List.of("../../examples/packs/finance/config/formats.yaml"));
     static final InferenceEngine ENGINE = new InferenceEngine(Semantics.load(null, java.util.List.of("../../examples/packs/finance/config/semantics.yaml")), Rules.builtIn());

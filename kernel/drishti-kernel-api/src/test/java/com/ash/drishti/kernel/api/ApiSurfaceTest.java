@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.kernel.api;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
@@ -86,7 +87,7 @@ class ApiSurfaceTest {
             }
         }
         java.util.Collections.sort(now);
-        Path file = Path.of("src/test/resources/kernel-api-surface.txt");
+        Path file = Path.of(TestRoots.module(), "src", "test", "resources", "kernel-api-surface.txt");
         if (Boolean.getBoolean("surface.write")) {
             Files.createDirectories(file.getParent());
             Files.write(file, now, StandardCharsets.UTF_8);

@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.delta;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.AsOf;
@@ -40,7 +41,7 @@ class DeltaDeletionVectorTest {
 
     static Path lake(String fixture) throws Exception {
         Path root = Files.createTempDirectory("drishti-dv");
-        Path src = Path.of("src/test/resources/" + fixture);
+        Path src = Path.of(TestRoots.module(), "src", "test", "resources"+ fixture);
         try (Stream<Path> files = Files.walk(src)) {
             for (Path f : files.toList()) {
                 Path to = root.resolve(src.relativize(f).toString());

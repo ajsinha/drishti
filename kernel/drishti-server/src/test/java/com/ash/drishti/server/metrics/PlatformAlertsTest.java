@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.metrics;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.micrometer.core.instrument.Counter;
@@ -200,7 +201,7 @@ class PlatformAlertsTest {
 
     @Test
     void theShippedRulesAllRead() {
-        Path shipped = Path.of("../../config/alerts/platform-alerts.yaml");
+        Path shipped = Path.of(TestRoots.repo(), "config", "alerts", "platform-alerts.yaml");
         PlatformRule.Loaded l = PlatformRule.load(shipped);
         assertThat(l.found()).isTrue();
         assertThat(l.problems()).isEmpty();

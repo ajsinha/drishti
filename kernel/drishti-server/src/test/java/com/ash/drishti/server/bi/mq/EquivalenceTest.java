@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.mq;
 
+import com.ash.drishti.testroots.TestRoots;
 import com.ash.drishti.server.bi.Layered;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -48,7 +49,7 @@ import org.junit.jupiter.api.io.TempDir;
  */
 class EquivalenceTest {
 
-    static final Path SAMPLES = Path.of("src", "test", "resources", "bi", "samples-2.1", "datasets");   // the 2.1 datasets
+    static final Path SAMPLES = Path.of(TestRoots.module(), "src", "test", "resources", "bi", "samples-2.1", "datasets");   // the 2.1 datasets
 
     @TempDir Path store;
     QueryService service;

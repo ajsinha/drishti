@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.demo;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.DataNode;
@@ -39,7 +40,7 @@ class DemoSourcePluginTest {
         JsonCodec codec = new JsonCodec();
         PLUGIN.start(new SourceContext() {
             public Map<String, String> settings() {
-                return Map.of("dirs", java.nio.file.Path.of("../../examples/packs/finance/samples").toAbsolutePath().toString(), "ticking", "false");
+                return Map.of("dirs", java.nio.file.Path.of(TestRoots.repo(), "examples", "packs", "finance", "samples").toAbsolutePath().toString(), "ticking", "false");
             }
 
             public DataNode parseJson(InputStream in) throws IOException {

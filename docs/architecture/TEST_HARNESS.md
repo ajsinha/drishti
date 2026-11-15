@@ -619,6 +619,17 @@ old pauses and starts in the test's `BASELINE`, which may only go down.
     file imports no browser, stack or `subprocess` helper. The gate runs it before the server jar exists. `test_browser_rules.py`
     checks this on every test marked `static`, the console's and the tools'.
 
+### Running tests from an IDE
+
+A Java test never reads the folder the JVM started in. It asks `TestRoots.repo()` (the repository) and `TestRoots.module()` (its own module),
+both absolute (`testing/drishti-testroots`, a test dependency every module inherits). Maven's surefire sets `drishti.repo.root` and
+`drishti.module.root`. Anywhere else (IntelliJ's own runner) they come, in this order, from an explicit `-D`, then the settings file named by
+`-Ddrishti.settings.file=/absolute/path/drishti.ini` ([the format](../admin/CONFIGURATION.md)), then the test class's own code location
+(its `target/test-classes` up to the nearest `pom.xml`, and from there to the folder holding `.mvn/`); never the working folder. Nothing needs
+setting for a test built by Maven's importer. To pin or override roots once for all tests in IntelliJ: Run > Edit Configurations > Edit
+configuration templates > JUnit > VM options: `-Ddrishti.settings.file=/home/me/drishti.ini`. `TestPathsGuardTest` (Java) and
+`tests/test_paths_guard.py` (Python) fail on a test that builds a path from the working folder.
+
 ## 7. Measuring a run
 
 - `DRISHTI_BROWSER_PROFILE=<file.jsonl>`: every page of the render suites writes its phases (page, load, rendered, settled, read,

@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.memlake;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -170,7 +171,7 @@ class RetentionParityTest {
     /** delta-rs reads what the retention committed: the same rows (skipped when no Python with the deltalake package is at hand). */
     private static void deltaRsReads(Path table, String... expected) throws Exception {
         Path py = null;
-        for (Path d = Path.of("").toAbsolutePath(); d != null && py == null; d = d.getParent()) {
+        for (Path d = Path.of(TestRoots.module()); d != null && py == null; d = d.getParent()) {
             Path c = d.resolve("drishti-console/.venv/bin/python");
             py = Files.isExecutable(c) ? c : null;
         }

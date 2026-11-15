@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.packs.module;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -29,7 +30,7 @@ import org.springframework.core.env.StandardEnvironment;
 /** Banking's settings are described by its manifest and read as {@code drishti.module.banking.*}; the old keys are read for one release. */
 class ModuleSettingsTest {
 
-    private static final Path BANKING = Path.of("../../modules/banking/dmod/module.yaml");
+    private static final Path BANKING = Path.of(TestRoots.repo(), "modules", "banking", "dmod", "module.yaml");
 
     private static JsonNode manifest() throws Exception {
         return new ObjectMapper(new YAMLFactory()).readTree(BANKING.toFile());

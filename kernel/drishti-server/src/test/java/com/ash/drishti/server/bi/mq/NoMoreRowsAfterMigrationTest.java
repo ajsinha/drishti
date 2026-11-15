@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.mq;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.server.bi.Layered;
@@ -40,7 +41,7 @@ import org.junit.jupiter.api.io.TempDir;
  */
 class NoMoreRowsAfterMigrationTest {
 
-    static final Path BEFORE = Path.of("src", "test", "resources", "bi", "before-tables");
+    static final Path BEFORE = Path.of(TestRoots.module(), "src", "test", "resources", "bi", "before-tables");
     /** The recorded persons the guard reads, by the demo user they are. */
     static final Map<String, String> WHO = Map.of("risk", "rita", "desk-head-two-desks", "hana", "analyst", "ann");
 

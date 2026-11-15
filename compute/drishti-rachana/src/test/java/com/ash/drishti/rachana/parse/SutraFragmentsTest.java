@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.rachana.parse;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.rachana.SutraProblem;
@@ -37,8 +38,8 @@ import org.junit.jupiter.api.io.TempDir;
  */
 class SutraFragmentsTest {
 
-    static final Path LIBRARY = Path.of("../../config/ui-kit/fragments");
-    static final Path MARKET = Path.of("../../modules/market-data/packs/market-data/sutras");
+    static final Path LIBRARY = Path.of(TestRoots.repo(), "config", "ui-kit", "fragments");
+    static final Path MARKET = Path.of(TestRoots.repo(), "modules", "market-data", "packs", "market-data", "sutras");
 
     @TempDir Path dir;
 

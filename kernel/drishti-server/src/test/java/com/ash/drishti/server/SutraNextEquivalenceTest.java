@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -112,7 +113,7 @@ class SutraNextEquivalenceTest {
         JsonNode afterMasked = read(VIEW, "masked");
         assertThat(layout(afterFull)).contains("ir-curve v1");
         Path inline = SITE.resolve("ir-curve.v2.sutra.yaml");
-        Files.copy(Path.of("src/test/resources/sutra-next/ir-curve.v2.sutra.yaml"), inline);
+        Files.copy(Path.of(TestRoots.module(), "src", "test", "resources", "sutra-next", "ir-curve.v2.sutra.yaml"), inline);
         try {
             sutras.reload();
             JsonNode beforeFull = read(VIEW, "full");

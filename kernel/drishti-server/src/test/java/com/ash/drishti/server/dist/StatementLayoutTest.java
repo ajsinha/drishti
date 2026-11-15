@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.dist;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -86,7 +87,7 @@ class StatementLayoutTest {
         }
         assertThat(p.pages().get(n - 1).texts("text")).as("pageBreak: before starts a new page").containsExactly("End of statement");
         assertThat(p.pages().get(n - 1).texts("cell")).isEmpty();
-        Files.write(Path.of("target/statement-sample.pdf"), StatementPdf.write(p, "Monthly statement"));
+        Files.write(Path.of(TestRoots.module(), "target", "statement-sample.pdf"), StatementPdf.write(p, "Monthly statement"));
     }
 
     @Test

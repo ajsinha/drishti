@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.cli;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
@@ -36,7 +37,7 @@ import org.junit.jupiter.api.io.TempDir;
  */
 class CliLauncherScratchTest {
 
-    private static final Path REPO = Path.of("../..").toAbsolutePath().normalize();
+    private static final Path REPO = Path.of(TestRoots.repo()).toAbsolutePath().normalize();
 
     @Test
     void theSettingsPutEveryWrittenFolderInScratchAndKeepTheSitesLakesForReading(@TempDir Path scratch) {

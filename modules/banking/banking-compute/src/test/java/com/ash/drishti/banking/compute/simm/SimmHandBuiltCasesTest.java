@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.banking.compute.simm;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.data.Offset.offset;
@@ -40,7 +41,7 @@ class SimmHandBuiltCasesTest {
 
     @BeforeAll
     static void load() throws IOException {
-        toy = Files.readAllBytes(Path.of("src/test/resources/simm/simm-toy.yaml"));
+        toy = Files.readAllBytes(Path.of(TestRoots.module(), "src", "test", "resources", "simm", "simm-toy.yaml"));
         params = SimmParams.parse(toy, Map.of());
     }
 
@@ -53,7 +54,7 @@ class SimmHandBuiltCasesTest {
         assertThat(params.complete()).isTrue();
         assertThat(params.version).isEqualTo("TOY-1");
         assertThat(params.hash).hasSize(64);
-        byte[] empty = Files.readAllBytes(Path.of("../../../docs/architecture/capital-parameters/simm.yaml"));
+        byte[] empty = Files.readAllBytes(Path.of(TestRoots.repo(), "docs", "architecture", "capital-parameters", "simm.yaml"));
         assertThatThrownBy(() -> SimmParams.parse(empty, Map.of())).hasMessageStartingWith("DRS-5333 SIMM (no version) is refused")
                 .hasMessageContaining("risk-class-correlation.InterestRate.CreditQ is missing");
         SimmParams lenient = SimmParams.lenient(empty);

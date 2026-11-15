@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.banking.compute.frtb;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.data.Offset.offset;
@@ -41,8 +42,8 @@ class FrtbHandBuiltCasesTest {
     static FrtbParams params;
 
     static Path capital() {
-        Path p = Path.of("../../..", "modules", "banking", "dmod", "packs", "market-risk", "capital");
-        return Files.isDirectory(p) ? p : Path.of("modules", "banking", "dmod", "packs", "market-risk", "capital");
+        Path p = Path.of(TestRoots.repo(), "modules", "banking", "dmod", "packs", "market-risk", "capital");
+        return Files.isDirectory(p) ? p : Path.of(TestRoots.module(), "modules", "banking", "dmod", "packs", "market-risk", "capital");
     }
 
     @BeforeAll

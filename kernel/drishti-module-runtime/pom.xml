@@ -20,6 +20,7 @@
     <groupId>com.ash.drishti</groupId>
     <artifactId>drishti-parent</artifactId>
     <version>2.9.11.g</version>
+    <relativePath>../../pom.xml</relativePath>
   </parent>
   <artifactId>drishti-module-runtime</artifactId>
   <name>drishti-module-runtime</name>

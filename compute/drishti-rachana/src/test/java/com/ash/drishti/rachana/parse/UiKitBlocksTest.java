@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.rachana.parse;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.rachana.SutraProblem;
@@ -34,7 +35,7 @@ import org.junit.jupiter.api.io.TempDir;
  */
 class UiKitBlocksTest {
 
-    static final Path KIT = Path.of("../../config/ui-kit");
+    static final Path KIT = Path.of(TestRoots.repo(), "config", "ui-kit");
 
     @TempDir Path dir;
 

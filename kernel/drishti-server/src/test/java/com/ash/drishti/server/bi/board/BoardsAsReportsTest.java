@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.board;
 
+import com.ash.drishti.testroots.TestRoots;
 import com.ash.drishti.common.Branding;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -34,8 +35,8 @@ import org.junit.jupiter.api.Test;
  */
 class BoardsAsReportsTest {
 
-    static final Path OLD = Path.of("src/test/resources/bi/boards-2.3");
-    static final Path SHIPPED = Path.of("../../config/bi/reports/banking");
+    static final Path OLD = Path.of(TestRoots.module(), "src", "test", "resources", "bi", "boards-2.3");
+    static final Path SHIPPED = Path.of(TestRoots.repo(), "config", "bi", "reports", "banking");
 
     @Test
     void eachTwoThreeBoardConvertsToAReportThatReadsBackToTheSameBoard() throws IOException {

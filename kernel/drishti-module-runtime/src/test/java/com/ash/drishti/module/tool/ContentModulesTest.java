@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.module.tool;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.module.runtime.Dmod;
@@ -37,7 +38,7 @@ import org.junit.jupiter.params.provider.ValueSource;
  */
 class ContentModulesTest {
 
-    static final Path MODULES = Path.of("../../modules");
+    static final Path MODULES = Path.of(TestRoots.repo(), "modules");
 
     @TempDir
     Path tmp;

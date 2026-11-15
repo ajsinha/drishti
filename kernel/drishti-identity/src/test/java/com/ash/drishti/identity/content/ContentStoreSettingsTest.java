@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.identity.content;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -30,17 +31,17 @@ import org.junit.jupiter.api.io.TempDir;
 /** {@code config/store/store.yaml} and its examples load; a missing file is the filesystem default; the cluster check warns on different roots. */
 class ContentStoreSettingsTest {
 
-    private static final Path DATA = Path.of("target", "content-tests", "data");
+    private static final Path DATA = Path.of(TestRoots.module(), "target", "content-tests", "data");
     private static final UnaryOperator<String> RESOLVE = s -> s.replace("${drishti.data.dir:./data}", DATA.toString())
             .replaceAll("\\$\\{[A-Z_]+:([^}]*)}", "$1");
 
     @Test
     void theShippedFileAndEveryExampleLoad() throws Exception {
-        ContentStoreSettings shipped = ContentStoreSettings.load(Path.of("..", "..", "config", "store", "store.yaml"), DATA, RESOLVE);
+        ContentStoreSettings shipped = ContentStoreSettings.load(Path.of(TestRoots.repo(), "config", "store", "store.yaml"), DATA, RESOLVE);
         assertThat(shipped.backend()).isEqualTo("filesystem");
         assertThat(shipped.fsRoot()).isEqualTo(DATA.resolve("fstore").toAbsolutePath().normalize());
         List<String> backends;
-        try (Stream<Path> s = Files.list(Path.of("..", "..", "config", "store.examples"))) {
+        try (Stream<Path> s = Files.list(Path.of(TestRoots.repo(), "config", "store.examples"))) {
             backends = s.sorted().map(p -> ContentStoreSettings.load(p, DATA, RESOLVE).backend()).toList();
         }
         assertThat(backends).containsExactlyInAnyOrder("filesystem", "filesystem", "postgres", "s3");
@@ -48,7 +49,7 @@ class ContentStoreSettingsTest {
 
     @Test
     void aMissingFileIsTheFilesystemUnderTheDataFolder() {
-        ContentStoreSettings s = ContentStoreSettings.load(Path.of("target", "no-such-store.yaml"), DATA, RESOLVE);
+        ContentStoreSettings s = ContentStoreSettings.load(Path.of(TestRoots.module(), "target", "no-such-store.yaml"), DATA, RESOLVE);
         assertThat(s.backend()).isEqualTo("filesystem");
         assertThat(s.origin()).isEqualTo("default");
         assertThatThrownBy(() -> ContentStoreSettings.from(Map.of("backend", "delta"), DATA, RESOLVE, "t")).hasMessageContaining("filesystem, sqlite, postgres or s3");
