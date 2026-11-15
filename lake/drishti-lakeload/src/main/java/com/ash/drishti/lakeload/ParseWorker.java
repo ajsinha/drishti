@@ -263,9 +263,9 @@ final class ParseWorker implements Callable<Void> {
         DateRows d = dates.computeIfAbsent(parser.epochDay, k -> new DateRows((int) Math.min(8 << 20, Math.max(64 << 10, budget / 4))));
         long order = Latest.order(c.split().id(), c.seq(), line);
         parser.record.putLong(order);                                  // the record's place in the input, last: the write stage drops duplicates by it
-        long before = d.buffer.bytes;
+        long before = d.buffer.held();
         d.buffer.add(parser.record.a, parser.record.n);
-        buffered += d.buffer.bytes - before;
+        buffered += d.buffer.held() - before;                          // the heap held (whole arenas), not the bytes used: the budget holds
         if (d.nHashes == d.hashes.length) {
             int n = d.nHashes * 2;
             d.hashes = Arrays.copyOf(d.hashes, n);

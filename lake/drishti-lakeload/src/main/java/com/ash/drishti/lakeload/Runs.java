@@ -70,6 +70,13 @@ final class Runs {
         long[] refs = new long[1024];
         int n;
         long bytes;
+        /** The heap the buffer holds: its arenas whole (used or not) and its references; what the memory budget counts. */
+        long allocated;
+
+        /** {@link #allocated} with the references. */
+        long held() {
+            return allocated + (long) refs.length * 8;
+        }
 
         Buffer() {
             this(ARENA);
@@ -84,8 +91,12 @@ final class Runs {
         void add(byte[] rec, int len) {
             int need = 4 + len;
             if (cur == null || pos + need > cur.length) {
-                cur = new byte[Math.max(arena, need)];
+                // arenas grow from 64 KB to the arena size, doubling: a buffer that holds a few rows (one of many dates, one of many parser
+                // threads) never holds a whole arena it does not use
+                int size = cur == null ? 64 * 1024 : (int) Math.min(arena, (long) cur.length * 2);
+                cur = new byte[Math.max(size, need)];
                 arenas.add(cur);
+                allocated += cur.length;
                 pos = 0;
             }
             Bytes.INT.set(cur, pos, len);
