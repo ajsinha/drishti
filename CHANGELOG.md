@@ -49,6 +49,12 @@
   of that name.
 
 - **Daily loads runbook.** DATA_LAKE_GUIDE.md section 17: the business-day cycle (files per system and day, markers, order, cut-off), proof that a day's load leaves the earlier days' rows and Delta versions untouched, per-system slices, corrections, late files, undo, portfolio data as a full snapshot per day, what a missing day answers, scheduler examples (cron, systemd, Task Scheduler), the verification script and the one-page checklist; tested on three business days of five systems and the reference kinds.
+- **Stream connectors are calm when their broker is not there.** An enabled `kafka`, `activemq`, `rabbitmq` or `var-pv-stream` connector (the
+  `trade-<system>-live` connectors included) whose broker does not answer is no longer down or an error: its health says `WAITING: broker not
+  reachable at host:port - live updates paused; retrying`, Admin shows *waiting for broker*, overall health and readiness stay up, a blotter serves
+  the lake snapshot with a *live updates paused* banner, the log has one line when it starts waiting and one when it connects (no ERROR, no stack
+  traces, no per-retry lines), and a broker that appears later is found without a restart. Missing `topics`, `destinations` or `queues` is *not
+  configured*. The plugins look at the broker's port before opening a client, so the clients' own retry noise never starts.
 
 - **Trading Home with nobody to view as.** Today's blotter, now a records grid rather than a table, says *Pick a trader or a desk to view
   as* like every other panel instead of staying on its loading dots.

@@ -2015,6 +2015,21 @@ curl -s localhost:18480/api/v1/admin/health | python3 -m json.tool | head -40
   open files against `ulimit -n`, and descriptors open on deleted files (their disk is not given back until they close). A figure that only rises
   over days is a leak: note it with the time and take `jcmd <pid> VM.native_memory summary`.
 
+#### Stream connectors without their broker: WAITING, not DOWN
+
+A stream connector (the `kafka`, `activemq` and `rabbitmq` plugins, the source-system `trade-<system>-live` connectors, the banking
+`var-pv-stream`) that is enabled but cannot reach its broker is not failing: the lake snapshot is served and only the live updates wait.
+
+| State on Admin → Connectors / Health | Meaning | Counts as |
+|---|---|---|
+| **waiting for broker (live updates paused)**, health `WAITING: broker not reachable at host:port - live updates paused; retrying` | enabled, settings present, the broker's port does not answer (or answered and was lost) | OK: the connector is up, overall health stays `OK`, readiness `UP`, the module and server start; blotters and record pages serve the snapshot and show the banner *live updates paused* |
+| **not configured** | enabled but the setting it cannot run without is missing (`topics`, `destinations`, `queues`) | OK: idle, never an error |
+| **down** | the broker answers but the connector fails for another reason (a refused log-in, a TLS fault) | a fault, listed and retried |
+
+The log carries one INFO line when it starts waiting (`broker not reachable at host:port - live updates paused; retrying until it is`) and
+one when it connects; the retries between are silent (back-off 1 s doubling to 30 s) and nothing is logged at WARN or ERROR. When the broker
+appears the next look finds it and the connector connects, with no restart. Sweeps and drills read `WAITING` as OK.
+
 ### 13.3 The live numbers
 
 `curl -s localhost:18480/api/v1/health/live` gives `{"streams":0,"topics":0,"frames":11660,"p50Ms":0.809,"p99Ms":1.198}`: open live views, distinct

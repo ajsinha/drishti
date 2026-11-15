@@ -83,6 +83,8 @@ public final class VarPvStreamPlugin implements SourcePlugin {
     private final AtomicBoolean stop = new AtomicBoolean();
     private volatile Thread loop;
     private volatile String state = "starting";
+    private volatile String bootstrap = "";
+    private volatile com.ash.drishti.messaging.BrokerWaiting.Watch watch;
     private volatile Instant lastMessage;
     private final Map<Integer, Long> offsets = new ConcurrentHashMap<>();
     private volatile java.util.function.Function<Properties, KafkaConsumer<String, String>> consumers =
@@ -124,6 +126,9 @@ public final class VarPvStreamPlugin implements SourcePlugin {
         Properties p = com.ash.drishti.plugin.kafka.KafkaClients.consumer(ctx.settings(), source);
         long pollMs = Long.parseLong(ctx.setting("poll-ms", "200"));
         RUNNING.put(source, this);
+        bootstrap = String.valueOf(p.get(org.apache.kafka.clients.consumer.ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG));
+        watch = new com.ash.drishti.messaging.BrokerWaiting.Watch(source, LOG);
+        state = com.ash.drishti.messaging.BrokerWaiting.message(bootstrap);   // until the first look
         loop = Thread.ofVirtual().name("drishti-var-pv-" + source).start(() -> run(p, pollMs));
     }
 
@@ -135,7 +140,22 @@ public final class VarPvStreamPlugin implements SourcePlugin {
 
     /** Reads the topic from the beginning, every partition, and applies each window when it is due; reconnects after a failure. */
     private void run(Properties p, long pollMs) {
+        List<String> endpoints = com.ash.drishti.messaging.BrokerWaiting.endpoints(bootstrap);
+        long backoff = 1_000;
         while (!stop.get()) {
+            if (!com.ash.drishti.messaging.BrokerWaiting.reachable(endpoints, 1_000)) {
+                state = com.ash.drishti.messaging.BrokerWaiting.message(bootstrap);   // calm: the lake is served, the live windows wait
+                watch.waiting(bootstrap);
+                try {
+                    Thread.sleep(backoff);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    return;
+                }
+                backoff = com.ash.drishti.messaging.BrokerWaiting.next(backoff);
+                continue;
+            }
+            backoff = 1_000;
             try (KafkaConsumer<String, String> c = consumers.apply(p)) {
                 List<TopicPartition> parts = new ArrayList<>();
                 for (PartitionInfo pi : c.partitionsFor(topic, Duration.ofSeconds(30))) {
@@ -144,6 +164,7 @@ public final class VarPvStreamPlugin implements SourcePlugin {
                 c.assign(parts);
                 c.seekToBeginning(parts);
                 state = "reading " + parts.size() + " partitions";
+                watch.connected(bootstrap);
                 while (!stop.get()) {
                     for (ConsumerRecord<String, String> r : c.poll(Duration.ofMillis(pollMs))) {
                         if (r.value() == null) {
@@ -164,8 +185,8 @@ public final class VarPvStreamPlugin implements SourcePlugin {
                 if (stop.get()) {
                     return;
                 }
-                state = "reconnecting: " + e.getMessage();
-                LOG.warn("VaR PV stream {}: {}; reconnecting in 5 s", source, e.toString());
+                state = "WAITING: " + e.getMessage() + " - live updates paused; retrying";
+                watch.waiting(bootstrap);
                 try {
                     Thread.sleep(5000);
                 } catch (InterruptedException ie) {
@@ -292,7 +313,7 @@ public final class VarPvStreamPlugin implements SourcePlugin {
 
     @Override
     public String health() {
-        return state;
+        return state.startsWith("reading") ? "UP: " + state : state;       // the state as the admin status shows it; health says UP while it reads
     }
 
     @Override

@@ -734,8 +734,14 @@ public final class ConnectorManager {
         if ("FAILED".equals(state)) {
             return new String[] {"down", retrying ? "failed, retrying" : "failed"};
         }
+        if ("IDLE".equals(state)) {
+            return new String[] {"ok", "not configured"};         // an optional feature nobody set up: calm, never a fault
+        }
         if (!"RUNNING".equals(state)) {
             return new String[] {"warn", "NOT_LOADED".equals(state) ? "not started" : String.valueOf(state).toLowerCase(java.util.Locale.ROOT)};
+        }
+        if (com.ash.drishti.messaging.BrokerWaiting.is(health)) {
+            return new String[] {"ok", "waiting for broker (live updates paused)"};   // calm: the snapshot is served, only the live updates wait
         }
         if (health != null && health.startsWith("DOWN") || retrying) {
             return new String[] {"down", retrying ? "down, retrying" : "down"};

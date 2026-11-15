@@ -19,7 +19,7 @@
  · longest borrow {{ ((p.longestBorrowMillis / 1000) | round(1)) ~ ' s' if p.longestBorrowMillis >= 0 else 'n/a' }}{% if p.leaksDetected %} · {{ p.leaksDetected }} leak warning{{ 's' if p.leaksDetected > 1 }}{% endif %}{% if p.timeouts %} · {{ p.timeouts }} timeout{{ 's' if p.timeouts > 1 }}{% endif %}</span>
 {%- endif -%}
 {%- endmacro %}
-{% set tone = {'OK': 'ok', 'UP': 'ok', 'DEGRADED': 'warn', 'DOWN': 'bad'} %}
+{% set tone = {'OK': 'ok', 'UP': 'ok', 'WAITING': 'ok', 'DEGRADED': 'warn', 'DOWN': 'bad'} %}
 <div class="hl-sum">
   <span class="hl-badge hl-{{ tone[h.status] }}"><i class="bi bi-{{ 'check-circle' if h.status == 'OK' else 'exclamation-triangle' }}" aria-hidden="true"></i> {{ h.status }}</span>
   <span><b>{{ h.summary.sources - h.summary.sourcesDown }}</b> of {{ h.summary.sources }} connectors up</span>

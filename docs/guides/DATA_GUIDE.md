@@ -1248,6 +1248,10 @@ settings:
   id-field: tradeId
 ```
 
+A stream connector whose broker is not there (or whose `topics`, `destinations` or `queues` is missing) is calm, never an error: it shows
+*waiting for broker (live updates paused)* or *not configured*, the kind is served from the lake, and it connects by itself when the broker
+appears ([OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#132-admin--health)).
+
 Points to remember:
 
 - **A file is the whole definition.** It names no kinds: which connectors serve a kind is `config/bindings.yaml` (Admin → Data bindings), and the connector serves what its plugin and lake hold. **Reset to pack default**

@@ -210,7 +210,7 @@ public class HealthController {
             }
             sources.add(row);
         }
-        List<String> attention = List.of("DOWN", "DEGRADED", "UP");                // what needs attention first
+        List<String> attention = List.of("DOWN", "DEGRADED", "WAITING", "UP");                // what needs attention first
         sources.sort(java.util.Comparator.<Map<String, Object>>comparingInt(r -> attention.indexOf(String.valueOf(r.get("status"))))
                 .thenComparing(r -> String.valueOf(r.get("name"))));
         Map<String, String> failures = registry.failures();
