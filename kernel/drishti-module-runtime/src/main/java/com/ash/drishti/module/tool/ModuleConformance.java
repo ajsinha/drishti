@@ -433,6 +433,16 @@ public final class ModuleConformance {
                 continue;
             }
             Matcher s = SECRET.matcher(text);
+            if (PACK_MANIFEST.matcher(f).matches()) {
+                // a pack's connector templates (pack.yaml connectors:) travel with it, as a source module's connectors/ do: the read-only
+                // templates the site's files are merged over (KERNEL_AND_MODULES.md section 18.5); every host, user and secret in them is
+                // a ${...} placeholder, and the rest of the manifest names no connector
+                if (s.find()) {
+                    out.add(f + " has \"" + s.group().trim() + "\": a connector template keeps no secret; the site's secret store does");
+                }
+                out.addAll(packManifest(dir, f, text));
+                continue;
+            }
             // the connector keys are read in YAML only, and not in module.yaml (its console.plugin names the module's plugin file): as keys of
             // the parsed document, so a sentence that says "the prices connector: off as shipped" is not one
             // a source module's connector templates and inbox rules (connectors/, dataload.yaml) name connectors by design: the site copies
@@ -452,15 +462,47 @@ public final class ModuleConformance {
     private static final Set<String> SITE_KEYS = Set.of("bootstrap-servers", "host", "hosts", "url", "uri", "endpoint", "user", "username",
             "password", "secret", "token", "api-key");
 
-    private static List<String> templateValues(Path dir, String f) {
-        List<String> out = new ArrayList<>();
+    /** A pack's manifest inside a package ({@code packs/<pack>/pack.yaml}). */
+    private static final Pattern PACK_MANIFEST = Pattern.compile("packs/[^/]+/pack\\.ya?ml");
+
+    /** A pack manifest: its {@code connectors:} templates keep the site's values as placeholders; nothing else in it names a connector. */
+    private static List<String> packManifest(Path dir, String f, String text) {
         Object doc;
         try {
             doc = YAML.readValue(dir.resolve(f).toFile(), Object.class);
         } catch (IOException e) {
-            out.add(f + ": the connector template does not read as YAML: " + e.getMessage());
+            Matcher k = CONNECTOR_KEY.matcher(text);
+            return k.find() ? List.of(f + " has \"" + k.group().trim() + "\" and does not read as YAML: " + e.getMessage()) : List.of();
+        }
+        List<String> out = new ArrayList<>();
+        if (!(doc instanceof Map<?, ?> m)) {
             return out;
         }
+        Map<Object, Object> rest = new java.util.LinkedHashMap<>(m);
+        Object templates = rest.remove("connectors");
+        if (templates != null) {
+            out.addAll(templateValues(f, templates));
+        }
+        String found = firstConnectorKey(rest);
+        if (found != null) {
+            out.add(f + " has \"" + found.trim() + "\" outside its connectors: section: a module carries no connector, host, user name, "
+                    + "password, key or token but its connector templates; the site binds the module's kinds to its own connectors");
+        }
+        return out;
+    }
+
+    private static List<String> templateValues(Path dir, String f) {
+        Object doc;
+        try {
+            doc = YAML.readValue(dir.resolve(f).toFile(), Object.class);
+        } catch (IOException e) {
+            return List.of(f + ": the connector template does not read as YAML: " + e.getMessage());
+        }
+        return templateValues(f, doc);
+    }
+
+    private static List<String> templateValues(String f, Object doc) {
+        List<String> out = new ArrayList<>();
         java.util.ArrayDeque<Object> todo = new java.util.ArrayDeque<>();
         todo.add(doc);
         while (!todo.isEmpty()) {
@@ -490,6 +532,11 @@ public final class ModuleConformance {
             Matcher k = CONNECTOR_KEY.matcher(text);
             return k.find() ? k.group() : null;
         }
+        return firstConnectorKey(doc);
+    }
+
+    /** The first connector key of a parsed YAML document, or null. */
+    private static String firstConnectorKey(Object doc) {
         java.util.ArrayDeque<Object> todo = new java.util.ArrayDeque<>();
         if (doc != null) {
             todo.add(doc);

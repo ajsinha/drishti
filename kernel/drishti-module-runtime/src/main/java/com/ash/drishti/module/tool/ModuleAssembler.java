@@ -37,9 +37,10 @@ import java.util.stream.Stream;
  * <p>A module folder may also hold {@value #CONTENT}: content the packer brings in from elsewhere in the same repository, so a pack, a
  * lens or a page that the running product still reads from its old place has one home and is never copied by hand. Each entry copies
  * {@code from} (a file or folder, relative to the module folder) to {@code to} inside the package, leaving out the folder or file names
- * of {@code leave-out}; {@code sections-out} drops those top-level sections of every {@code pack.yaml} it copies (the pack's connector
- * templates: a module carries no connector, the site binds its kinds). {@code trim} entries ({@code path}, {@code leave-out},
- * {@code sections-out}) do the same to a folder of the module itself (its packs, which live in it) after it is staged. The file itself is not packed.
+ * of {@code leave-out}. {@code trim} entries ({@code path}, {@code leave-out}) do the same to a folder of the module itself (its packs,
+ * which live in it) after it is staged. A pack keeps its whole {@code pack.yaml}, its {@code connectors:} templates included: they are
+ * the read-only templates the site's connector files are merged over (KERNEL_AND_MODULES.md section 18.5), so an installed module serves
+ * its kinds exactly as its source folder does. The file itself is not packed.
  */
 public final class ModuleAssembler {
 
@@ -225,12 +226,6 @@ public final class ModuleAssembler {
             for (com.fasterxml.jackson.databind.JsonNode x : e.path("leave-out")) {
                 delete(dir.resolve(x.asText()));
             }
-            List<String> sectionsOut = new ArrayList<>();
-            e.path("sections-out").forEach(x -> sectionsOut.add(x.asText()));
-            Path manifest = dir.resolve("pack.yaml");
-            if (!sectionsOut.isEmpty() && Files.isRegularFile(manifest)) {
-                Files.writeString(manifest, withoutSections(Files.readString(manifest, StandardCharsets.UTF_8), sectionsOut), StandardCharsets.UTF_8);
-            }
         }
         for (com.fasterxml.jackson.databind.JsonNode e : root.path("copy")) {
             Path from = source.resolve(e.path("from").asText("")).normalize();
@@ -240,8 +235,6 @@ public final class ModuleAssembler {
             }
             java.util.Set<String> leaveOut = new java.util.HashSet<>();
             e.path("leave-out").forEach(x -> leaveOut.add(x.asText()));
-            List<String> sectionsOut = new ArrayList<>();
-            e.path("sections-out").forEach(x -> sectionsOut.add(x.asText()));
             Path dest = stage.resolve(to);
             try (Stream<Path> s = Files.walk(from)) {
                 for (Path p : (Iterable<Path>) s::iterator) {
@@ -258,34 +251,12 @@ public final class ModuleAssembler {
                         Files.createDirectories(t);
                     } else {
                         Files.createDirectories(t.getParent());
-                        if (!sectionsOut.isEmpty() && "pack.yaml".equals(p.getFileName().toString())) {
-                            Files.writeString(t, withoutSections(Files.readString(p, StandardCharsets.UTF_8), sectionsOut), StandardCharsets.UTF_8);
-                        } else {
-                            Files.copy(p, t, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                        }
+                        Files.copy(p, t, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
                     }
                 }
             }
         }
     }
-
-    /** The YAML text without the named top-level sections (each runs to the next top-level key). */
-    static String withoutSections(String yaml, List<String> sections) {
-        StringBuilder out = new StringBuilder();
-        boolean skipping = false;
-        for (String line : yaml.split("\n", -1)) {
-            java.util.regex.Matcher k = TOP_KEY.matcher(line);
-            if (k.lookingAt()) {
-                skipping = sections.contains(k.group(1));
-            }
-            if (!skipping) {
-                out.append(line).append('\n');
-            }
-        }
-        return out.substring(0, Math.max(0, out.length() - 1));
-    }
-
-    private static final java.util.regex.Pattern TOP_KEY = java.util.regex.Pattern.compile("([A-Za-z_][\\w-]*):");
 
     static void copyTree(Path from, Path to) throws IOException {
         try (Stream<Path> s = Files.walk(from)) {

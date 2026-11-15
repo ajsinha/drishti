@@ -174,6 +174,9 @@ class ModuleToolTest {
         Files.writeString(src.resolve("console/static/drishti_module.css"), "/* Copyright x */\n.a { color: #ff0000; }\n");
         Files.writeString(src.resolve("console/static/rogue.js"), "import x from 'https://cdn.example.com/lib.js';\n");
         Files.writeString(src.resolve("data/source.yaml"), "connector: risklake\npassword: hunter2\n");
+        // a pack's connector templates travel with it, but a host is the site's: a ${...} placeholder, never a value
+        Files.writeString(src.resolve("packs/rogue-pack/pack.yaml"), "pack: rogue-pack\nconnectors:\n  rogue-store:\n    plugin: postgres\n    settings:\n"
+                + "      host: db.internal.example\n");
         Files.delete(src.resolve("packs/rogue-pack/contracts/rogue-greeting.yaml"));
         Files.delete(src.resolve("docs/tutorial.md"));
         Path dmod = ModuleAssembler.assemble(src, build(project, "rogue"), project.resolve("target"));
@@ -188,7 +191,9 @@ class ModuleToolTest {
         assertThat(byId.get("C5").problems()).anyMatch(p -> p.contains("inline <script>")).anyMatch(p -> p.contains("onclick="));
         assertThat(byId.get("C7").problems()).anyMatch(p -> p.contains("docs/tutorial.md, which is not in the package"));
         assertThat(byId.get("C8").problems()).anyMatch(p -> p.startsWith("kind rogue-greeting has no contract"));
-        assertThat(byId.get("C9").problems()).anyMatch(p -> p.startsWith("data/source.yaml has \"connector:\""));
+        assertThat(byId.get("C9").problems()).anyMatch(p -> p.startsWith("data/source.yaml has \"connector:\""))
+                .anyMatch(p -> p.equals("packs/rogue-pack/pack.yaml: `host` is the site's: write a ${...} placeholder (with a default if any), never a value"))
+                .noneMatch(p -> p.startsWith("packs/rogue-pack/pack.yaml has"));
         assertThat(byId.get("C10").problems()).anyMatch(p -> p.startsWith("console/static/rogue.js has no licence header"));
         assertThat(byId.get("C12").problems()).anyMatch(p -> p.startsWith("com.example.rogue.Leaky.lastAnswer is a static field that is not final"));
         for (String passing : List.of("C6", "C11", "C13", "C14", "C15")) {

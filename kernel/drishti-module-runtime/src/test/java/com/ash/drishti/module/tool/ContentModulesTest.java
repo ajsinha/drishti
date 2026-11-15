@@ -62,7 +62,9 @@ class ContentModulesTest {
         assertThat(dir.resolve(ModuleAssembler.CONTENT)).doesNotExist();                          // the list itself is not packed
         for (String pack : m.kinds().keySet()) {
             String yaml = Files.readString(dir.resolve("packs").resolve(pack).resolve("pack.yaml"), StandardCharsets.UTF_8);
-            assertThat(yaml).as(pack).doesNotContainPattern("(?m)^connectors:").contains("mnemonics:");
+            // the pack's connector templates travel with it: an installed module serves its kinds as its source folder does
+            String source = Files.readString(folder.resolve("packs").resolve(pack).resolve("pack.yaml"), StandardCharsets.UTF_8);
+            assertThat(yaml).as(pack).isEqualTo(source).contains("mnemonics:");
         }
         if ("economy".equals(id)) {
             assertThat(dir.resolve("packs/world-economy/samples")).doesNotExist();               // the IMF figures stay internal
@@ -79,11 +81,5 @@ class ContentModulesTest {
         for (String id : List.of("capital-markets", "economy")) {
             assertThat(ModuleAssembler.manifest(MODULES.resolve(id)).requires()).extracting(DmodManifest.Requirement::id).containsExactly("market-data");
         }
-    }
-
-    @Test
-    void sectionsOutDropsOnlyTheNamedTopLevelSections() {
-        String yaml = "pack: x\nconnectors:\n  a:\n    plugin: delta\n# a note\nmnemonics:\n  X: {kind: x}\n";
-        assertThat(ModuleAssembler.withoutSections(yaml, List.of("connectors"))).isEqualTo("pack: x\nmnemonics:\n  X: {kind: x}\n");
     }
 }

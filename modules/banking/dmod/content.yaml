@@ -12,27 +12,21 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The repository content the banking package brings in (not packed itself): its packs without their connector
-# templates, its lenses and its tutorials. Every file keeps one home.
+# The repository content the banking package brings in (not packed itself): its packs with their connector templates
+# (the read-only templates the site's connector files are merged over), its lenses and its tutorials. Every file keeps one home.
 trim:
 - path: packs/trading
   leave-out:
   - tests
   - tools
-  sections-out:
-  - connectors
 - path: packs/market-risk
   leave-out:
   - tests
   - tools
-  sections-out:
-  - connectors
 - path: packs/counterparty-risk
   leave-out:
   - tests
   - tools
-  sections-out:
-  - connectors
 copy:
 - from: ../../../config/lenses/banking/risk.yaml
   to: lenses/risk.yaml
