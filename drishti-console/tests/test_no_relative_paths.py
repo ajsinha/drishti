@@ -52,7 +52,7 @@ ALLOWED: dict[str, list[tuple[str, str]]] = {
     "lake/drishti-lakeio/src/main/resources/drishti/lakes/": [("${drishti.data.dir:./data}", "the lake builders' text")],
     "modules/banking/banking-service/src/main/resources/drishti/lakes/": [("${drishti.data.dir:./data}", "the lake builders' text")],
     # a pack's own files (formats:, semantics:, help:) are relative to the pack folder (PackResolver), not the working folder
-    "config/packs/": [("config/", "relative to the pack folder")],
+    "config/packs/": [(": config/", "relative to the pack folder")],
     # not paths of the server: a check that refuses '../' in an uploaded zip, and an xlsx part's relationship target
     "kernel/drishti-server/src/main/java/com/ash/drishti/server/design/PackFragment.java": [('contains("../")', "a zip-slip check")],
     "kernel/drishti-server/src/main/java/com/ash/drishti/server/dist/XlsxWriter.java": [('Target=\\"../', "an xlsx part's relative target")],
@@ -65,10 +65,10 @@ ALLOWED: dict[str, list[tuple[str, str]]] = {
     "kernel/drishti-engine/src/main/java/com/ash/drishti/engine/source/SourceRegistry.java": [("Path.of(\"", "map: lookup, anchored on wip/i4-dailyfix")],
     # a module's own files named relative to the module folder (module.yaml keys, packs' config) are resolved against that folder, not the
     # working folder: they are not install folders
-    "modules/": [("mappings/", "relative to the module folder"), ("console/", "relative to the module folder"),
-                 ("data/", "relative to the module folder"), ("docs/", "relative to the module folder"), ("connectors/", "relative to the module folder"),
-                 ("sutras/", "relative to the module folder"), ("packs/", "relative to the module folder"), ("blotters/", "relative to the module folder"),
-                 ("../", "relative to the module's help file"), ("config/", "a pack's own files, relative to the pack folder"),
+    "modules/": [(": mappings/", "relative to the module folder"), (": console/", "relative to the module folder"),
+                 (": data/", "relative to the module folder"), (": docs/", "relative to the module folder"), (": connectors/", "relative to the module folder"),
+                 (": sutras/", "relative to the module folder"), (": packs/", "relative to the module folder"), (": blotters/", "relative to the module folder"),
+                 (": ../", "relative to the module's help file"), (": config/", "a pack's own files, relative to the pack folder"),
                  # a connector setting's placeholder, resolved where the connector starts (ConnectorLayers, wip/i4-dailyfix's scope)
                  ("${DRISHTI_CACHE_ROOT:${drishti.data.dir:./data}/cache}", "a connector setting, resolved by the connector layers"),
                  ("${DRISHTI_FILES_ROOT:${drishti.data.dir:./data}/files}", "a copy-me connector example, resolved by the connector layers")],

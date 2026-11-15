@@ -18,6 +18,14 @@
 
 ## Unreleased
 
+- **Launch roots: no folder from the working directory.** The server resolves its install folder (`drishti.home`), data, configuration,
+  packs, modules, module switches, access, lakes, connectors and inbox folders to absolute paths at start, from their settings or under
+  the install folder, logs them in one `resolved paths:` block, and refuses to start, naming the setting, when the modules folder is
+  missing or unnamed, a setting is relative with no install folder, or a data folder nobody named has no identity database (it would
+  have made a new, empty one). Every default of the code and the shipped YAML sits under the named roots. `bin/start-server`,
+  `start-cluster`, the images (now carrying `modules/`, the distribution, engine, lake, module-switch and store files) and the systemd
+  unit name the roots; before, a server started from another folder (a cluster node's own folder, a container, a test) found no
+  modules and failed with DRS-1041 for every pack. A static check fails the gate on any new working-directory path.
 - **Trading Home with nobody to view as.** Today's blotter, now a records grid rather than a table, says *Pick a trader or a desk to view
   as* like every other panel instead of staying on its loading dots.
 - **Records lists without a stream.** A records list whose set has no live stream (TRD, FUND, USEQ over a lake that does not push) said
