@@ -84,4 +84,38 @@ class EngineClusterTest {
                     "{\"reason\":\"back\",\"changes\":[{\"engine\":\"frtb-sa\",\"on\":true}]}", "X-Drishti-User", "net-admin");
         }
     }
+
+    @Test
+    void aChangeSentByAnotherNodeIsAppliedHereAndAPersonOrABadBatchIsRefused() throws Exception {
+        String a = cluster.node("a").url();
+        String body = "{\"reason\":\"sent by node b\",\"changes\":[{\"engine\":\"frtb-sa\",\"on\":false}]}";
+        // not signed: a person calling the node-to-node endpoint
+        var person = cluster.call("POST", a + "/api/v1/net/engines", body);
+        assertThat(person.statusCode()).as(person.body()).isEqualTo(403);
+        assertThat(person.body()).contains("DRS-");
+        assertThat(cluster.call("GET", a + "/api/v1/admin/engines", null).body()).contains("frtb-sa");
+        try {
+            var off = NetNodes.signed(a, "POST", "/api/v1/net/engines", body, "X-Drishti-User", "net-admin");
+            assertThat(off.status()).as(off.text()).isEqualTo(200);
+            assertThat(off.text()).contains("\"outcome\":\"live\"");
+            assertThat(NetNodes.await(10_000, () -> !engines("a").runs("frtb-sa").isPresent() || !engines("b").runs("frtb-sa").isPresent())).isTrue();
+            assertThat(cluster.call("GET", a + "/api/v1/risk/frtb/sa?scope=EXAMPLE", null, "X-Drishti-User", "reader").statusCode()).as("off on a").isEqualTo(404);
+            // the same change again: nothing more to do, no error
+            assertThat(NetNodes.signed(a, "POST", "/api/v1/net/engines", body, "X-Drishti-User", "net-admin").status()).isEqualTo(200);
+            // refusals: no changes, a change with no engine, an engine nobody has, a reason too long
+            for (String bad : List.of("{\"reason\":\"x\",\"changes\":[]}", "{\"reason\":\"x\",\"changes\":[{\"on\":true}]}",
+                    "{\"reason\":\"x\",\"changes\":[{\"engine\":\"no-such-engine\",\"on\":true}]}",
+                    "{\"reason\":\"" + "r".repeat(2000) + "\",\"changes\":[{\"engine\":\"frtb-sa\",\"on\":true}]}")) {
+                var r = NetNodes.signed(a, "POST", "/api/v1/net/engines", bad, "X-Drishti-User", "net-admin");
+                assertThat(r.status()).as(bad.substring(0, Math.min(80, bad.length())) + " -> " + r.text()).isBetween(400, 499);
+                assertThat(r.text()).contains("DRS-");
+            }
+        } finally {
+            var back = NetNodes.signed(a, "POST", "/api/v1/net/engines", "{\"reason\":\"back\",\"changes\":[{\"engine\":\"frtb-sa\",\"on\":true}]}",
+                    "X-Drishti-User", "net-admin");
+            assertThat(back.status()).as(back.text()).isEqualTo(200);
+        }
+        assertThat(NetNodes.await(10_000, () -> engines("b").runs("frtb-sa").isPresent())).as("b hears it runs again").isTrue();
+        assertThat(cluster.call("GET", a + "/api/v1/admin/engines/history", null).body()).contains("frtb-sa", "sent by node b");
+    }
 }
