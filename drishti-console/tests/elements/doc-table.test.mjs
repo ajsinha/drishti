@@ -97,7 +97,8 @@ test('a plain table, a tree, a drill and a table offering Pivot are drawn as 1.2
   assert.equal(ser(G.docTable(doc, TREE, hooks)), ser(old.table(R, TREE)));
   assert.equal(ser(G.docDrill(doc, DRILL, hooks)), ser(old.drill(R, DRILL)));
   const pv = { id: 'p', title: 'Trades', data: Object.assign({ pivot: { source: 'panel/trade/T1/p' } }, PLAIN) };
-  assert.equal(serAll(G.docPivotable(doc, pv, hooks)), serAll(old.pivotable(R, pv)));
+  // 1.2.0 is frozen byte for byte and still names the pivot guide by its old file (PIVOT_GUIDE.md); the grid names where it is now
+  assert.equal(serAll(G.docPivotable(doc, pv, hooks)), serAll(old.pivotable(R, pv)).replace('(PIVOT_GUIDE.md)', '(bi/PIVOT.md)'));
   assert.equal(serAll(G.docPivotable(doc, { id: 'p', data: PLAIN }, hooks)), serAll(old.pivotable(R, { id: 'p', data: PLAIN })));
   assert.match(ser(G.docTable(doc, PLAIN, hooks)), /data-r-row="1"/);
 });

@@ -129,17 +129,17 @@ def test_the_pivot_takes_the_layout_a_live_grid_hands_over(client, backend):
 
 
 def test_a_set_of_a_module_this_distribution_lacks_answers_a_plain_page_not_a_404(client, backend, monkeypatch):
-    from core import modules
     calls = []
     serve(backend, monkeypatch, calls)
-    state = modules.state()
-    before = state.loaded
+    state = client.app.state.editions.modules                         # this app's own state (core/modules.py State), the one its requests read
+    before = state.loaded, state.parts
     state.loaded = frozenset({"core", "genomics"})                   # the server's about: the trading module is not loaded
+    state.parts = None                                                # and no module part hosted here (a hosted trading part would count as on)
     try:
         page = client.get("/live/trade-gone")
         assert page.status_code == 200 and "Not part of this distribution" in page.text
     finally:
-        state.loaded = before
+        state.loaded, state.parts = before
 
 
 def test_signed_out_a_blotter_is_behind_sign_in_and_returns_to_itself():
