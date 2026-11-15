@@ -170,6 +170,24 @@ public final class Explanation {
         return this;
     }
 
+    /**
+     * Why it moved cannot be told just now: the server's busy protection asked the date it compares with to wait (OPERATIONS_GUIDE.md,
+     * "Busy protection"). The rest of the explanation stands; this part carries the refusal's code, its calm words and the seconds to wait,
+     * so the page counts down and asks for it again by itself (drishti_busy.js), as it does for any busy refusal.
+     */
+    public Explanation whyBusy(String code, String title, String because, long retryAfterSeconds) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("available", false);
+        m.put("busy", true);
+        m.put("code", code);
+        m.put("title", title);
+        m.put("because", because);
+        m.put("retryAfterSeconds", Math.max(1, retryAfterSeconds));
+        m.put("note", "Why it moved waits: " + because + "; asked again in " + Math.max(1, retryAfterSeconds) + " s");
+        this.why = m;
+        return this;
+    }
+
     /** A workbook: the live-formula Excel (or the playground that exports one), by its console address and its API path. */
     public Explanation workbook(String label, String href, String api, String note) {
         Map<String, Object> m = new LinkedHashMap<>();

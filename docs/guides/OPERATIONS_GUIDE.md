@@ -2355,7 +2355,9 @@ When the server is short of memory or threads, new heavy work waits a moment ins
 | a BI run | `503 DRS-9504` | memory, request handlers | 60 s |
 | a bulk load of a pack's data | `503 DRS-9505` | memory, request handlers, disk | 120 s |
 
-People already working are never gated (reading an open date, drilling, sorting, exporting what is on screen). A refusal is remembered for its
+People already working are never gated (reading an open date, drilling, sorting, exporting what is on screen). An Explain whose **Why it
+moved** needs a date not yet open answers everything else (the number, formula, inputs, checks) and marks only that part as waiting, with its
+`DRS-9502`, words and `retryAfterSeconds`; the drawer and the full page count it down and ask for it again, as for any busy refusal. A refusal is remembered for its
 `Retry-After`, so a crowd gets one answer and one countdown; it lifts sooner when its cause clears. The console says it in place with a ring counting
 down, **Try now** and **Cancel**, and tries again by itself three times. The API answers `application/problem+json` with `busy: true`, `work`,
 `because` and `retryAfterSeconds`; `drishti.py` waits and retries with `--wait` (on `data get`) or `DRISHTI_WAIT_BUSY=1`; a script should do the same.

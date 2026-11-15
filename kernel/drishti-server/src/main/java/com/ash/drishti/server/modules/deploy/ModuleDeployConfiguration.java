@@ -191,6 +191,18 @@ public class ModuleDeployConfiguration {
                 env.getProperty("drishti.module-deploy.conformance-cycles", Integer.class, 5));
     }
 
+    /**
+     * The modules' first load is a change of the live contributions under way from the moment this server's beans are made: its web layer
+     * answers a second or two before the modules have loaded, and a question that needs a module's contribution (an explainer) waits for
+     * them rather than hearing it is not here. Ended when the modules have loaded, or when the server stops without getting there.
+     */
+    private final Runnable firstLoad = com.ash.drishti.common.Extensions.changing();
+
+    @jakarta.annotation.PreDestroy
+    void stopping() {
+        firstLoad.run();
+    }
+
     /** Loads the active modules placed here once the server's web layer is up (the request mapping exists). */
     @org.springframework.context.event.EventListener(org.springframework.boot.context.event.ApplicationReadyEvent.class)
     public void startModules(org.springframework.boot.context.event.ApplicationReadyEvent e) {
@@ -206,6 +218,9 @@ public class ModuleDeployConfiguration {
             // retry); one whose class is still missing fails in words from here on
             e.getApplicationContext().getBeanProvider(com.ash.drishti.engine.source.SourceRegistry.class).ifAvailable(
                     com.ash.drishti.engine.source.SourceRegistry::modulesLoaded);
+            // the packs' watch starts from what the folders hold now that the modules' packs are in place (no reload of unchanged packs)
+            e.getApplicationContext().getBeanProvider(com.ash.drishti.server.PackReloader.class).ifAvailable(com.ash.drishti.server.PackReloader::modulesLoaded);
+            firstLoad.run();
         }
         started = true;
     }
