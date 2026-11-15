@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -58,7 +59,7 @@ import org.springframework.test.web.servlet.ResultActions;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class PythonBiApiTest {
 
-    static final Path CONFIG = Path.of(System.getProperty("drishti.repo.root"), "config", "bi");
+    static final Path CONFIG = Path.of(TestRoots.repo(), "config", "bi");
     static final Path FOLDER = com.ash.drishti.server.TestRun.root().resolve("bi-py-folder");
 
     static {

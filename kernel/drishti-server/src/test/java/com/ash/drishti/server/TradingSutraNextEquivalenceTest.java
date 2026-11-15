@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -67,7 +68,7 @@ class TradingSutraNextEquivalenceTest extends PackSutraNextEquivalence {
     Map<String, String> screens() throws Exception {
         ObjectMapper json = new ObjectMapper();
         Map<String, String> first = new HashMap<>();
-        for (String line : Files.readAllLines(Path.of(System.getProperty("drishti.repo.root"), "modules", "banking", "dmod", "packs", "trading", "samples", "trade.jsonl"), StandardCharsets.UTF_8)) {
+        for (String line : Files.readAllLines(Path.of(TestRoots.repo(), "modules", "banking", "dmod", "packs", "trading", "samples", "trade.jsonl"), StandardCharsets.UTF_8)) {
             if (!line.isBlank()) {
                 JsonNode t = json.readTree(line);
                 first.putIfAbsent(t.path("SOURCE_SYSTEM").asText() + "|" + t.path("PRODUCT_TYPE").asText(), t.path("TRADE_ID").asText());

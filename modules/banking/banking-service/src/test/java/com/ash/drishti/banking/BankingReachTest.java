@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.banking;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
@@ -35,7 +36,7 @@ import org.junit.jupiter.api.Test;
  */
 class BankingReachTest {
 
-    private static final Path BANKING = Path.of(System.getProperty("drishti.module.root"), "..").toAbsolutePath().normalize();
+    private static final Path BANKING = Path.of(TestRoots.module(), "..").toAbsolutePath().normalize();
     private static final Pattern REF = Pattern.compile("\\bcom\\.ash\\.drishti\\.((?:[a-z0-9_]+\\.)*[a-z0-9_]+)\\.[A-Z]");
 
     @Test

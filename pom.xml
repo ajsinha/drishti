@@ -50,6 +50,8 @@
     <module>kernel/drishti-identity</module>
     <module>kernel/drishti-packs</module>
     <module>kernel/drishti-ai</module>
+    <module>kernel/drishti-settingsfile</module>
+    <module>testing/drishti-testroots</module>
     <module>testing/drishti-testkit</module>
     <module>kernel/drishti-registry</module>
     <module>lake/drishti-lakeio</module>
@@ -226,6 +228,8 @@
   <dependencies>
     <dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter</artifactId><scope>test</scope></dependency>
     <dependency><groupId>org.assertj</groupId><artifactId>assertj-core</artifactId><scope>test</scope></dependency>
+    <!-- TestRoots: where a test finds the repository and its module, with or without surefire's properties -->
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-testroots</artifactId><version>${project.version}</version><scope>test</scope></dependency>
   </dependencies>
 
   <build>

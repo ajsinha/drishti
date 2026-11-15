@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.banking.simm;
 
+import com.ash.drishti.testroots.TestRoots;
 import com.ash.drishti.api.DataNode;
 import com.ash.drishti.banking.frtb.FrtbData;
 import com.ash.drishti.banking.frtb.FrtbProperties;
@@ -47,8 +48,8 @@ final class SimmTestData {
     private SimmTestData() {}
 
     static Path root() {
-        Path p = Path.of(System.getProperty("drishti.repo.root"));
-        return Files.isDirectory(p.resolve("data/testdata")) ? p : Path.of(System.getProperty("drishti.module.root"), ".");
+        Path p = Path.of(TestRoots.repo());
+        return Files.isDirectory(p.resolve("data/testdata")) ? p : Path.of(TestRoots.module(), ".");
     }
 
     /** The toy parameter folder (modules/banking/banking-compute/src/test/resources/simm: simm-toy.yaml only). */

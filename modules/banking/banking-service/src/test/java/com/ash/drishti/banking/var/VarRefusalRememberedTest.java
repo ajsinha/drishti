@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.banking.var;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.common.DrishtiException;
@@ -76,7 +77,7 @@ class VarRefusalRememberedTest {
 
     @DynamicPropertySource
     static void lake(DynamicPropertyRegistry r) throws Exception {
-        lake = Files.createDirectories(Path.of(System.getProperty("drishti.module.root"), "target", "var-refusal-"+ System.nanoTime())).toAbsolutePath();
+        lake = Files.createDirectories(Path.of(TestRoots.module(), "target", "var-refusal-"+ System.nanoTime())).toAbsolutePath();
         VarLakeFixture.write(lake, VarLakeFixture.DAY, 1.0, false, false);
         r.add("drishti.sources.connectors.risk-lake.settings.root", lake::toString);
         r.add("drishti.var.official.root", lake::toString);

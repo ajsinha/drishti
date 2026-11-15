@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.rachana;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.DataNode;
@@ -32,7 +33,7 @@ import org.junit.jupiter.api.Test;
 /** Golden test: the reference Sutras applied to the demo fixtures reproduce the mockups' header strips. */
 class ReferenceSutrasTest {
 
-    static final Path FIXTURES = Path.of(System.getProperty("drishti.repo.root"), "examples", "packs", "finance", "samples");
+    static final Path FIXTURES = Path.of(TestRoots.repo(), "examples", "packs", "finance", "samples");
     static final ElCompiler EL = new ElCompiler();
     static final Formats F = Formats.load(null, java.util.List.of("../../examples/packs/finance/config/formats.yaml"));
     static SutraRegistry registry;

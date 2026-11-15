@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.iceberg;
 
+import com.ash.drishti.testroots.TestRoots;
 import com.ash.drishti.testkit.LoaderRows;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -102,7 +103,7 @@ class GlueLiveTest {
 
     @AfterAll
     static void report() throws Exception {
-        Path out = Path.of(System.getProperty("drishti.module.root"), "target", "glue-live-report.txt");
+        Path out = Path.of(TestRoots.module(), "target", "glue-live-report.txt");
         Files.createDirectories(out.getParent());
         Files.write(out, REPORT, StandardCharsets.UTF_8);
     }

@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.engine.design;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -43,7 +44,7 @@ import org.junit.jupiter.api.Test;
 class AutoDesignerTest {
 
     private static final ObjectMapper JSON = new ObjectMapper();
-    private static final Path DIR = Path.of(System.getProperty("drishti.repo.root"), "docs", "guides", "examples");
+    private static final Path DIR = Path.of(TestRoots.repo(), "docs", "guides", "examples");
     private static final Semantics SEMANTICS = Semantics.defaults();
 
     private static ShapeService shapes(BuilderProperties props) {

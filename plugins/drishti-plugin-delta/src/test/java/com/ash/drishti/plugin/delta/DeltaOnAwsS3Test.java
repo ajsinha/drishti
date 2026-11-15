@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.delta;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -61,13 +62,13 @@ class DeltaOnAwsS3Test extends DatedSourceContract {
      */
     static Map<String, String> template(Map<String, String> vars) throws Exception {
         Map<String, String> own = connectorSettings(vars);
-        Lake lake = Lakes.parse(Files.readString(Path.of(System.getProperty("drishti.repo.root"), "config", "lakes.examples", "delta-s3", "s3.yaml")), "s3", vars::get);
+        Lake lake = Lakes.parse(Files.readString(Path.of(TestRoots.repo(), "config", "lakes.examples", "delta-s3", "s3.yaml")), "s3", vars::get);
         return new HashMap<>(ConnectorLake.expand("risk-store", "delta", List.of(), own, () -> Lakes.of(lake), w -> { }));
     }
 
     /** The connector file's own settings, {@code ${VAR:default}} resolved from {@code vars} (else the default). */
     static Map<String, String> connectorSettings(Map<String, String> vars) throws Exception {
-        Path file = Path.of(System.getProperty("drishti.repo.root"), "config", "connectors.examples", "delta-s3", "risk-store.yaml");
+        Path file = Path.of(TestRoots.repo(), "config", "connectors.examples", "delta-s3", "risk-store.yaml");
         Map<String, String> out = new HashMap<>();
         boolean in = false;
         for (String line : Files.readAllLines(file)) {
@@ -115,7 +116,7 @@ class DeltaOnAwsS3Test extends DatedSourceContract {
         }
         S3Endpoint e = s3.endpoint();
         try (S3Client c = e.client()) {
-            Path src = Path.of(System.getProperty("drishti.module.root"), "src", "test", "resources", "lake");
+            Path src = Path.of(TestRoots.module(), "src", "test", "resources", "lake");
             try (var files = Files.walk(src)) {
                 for (Path f : files.filter(Files::isRegularFile).toList()) {
                     c.putObject(b -> b.bucket("drishti-lake").key("delta/" + src.relativize(f).toString().replace('\\', '/')), RequestBody.fromFile(f));

@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.feeds;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -41,7 +42,7 @@ class FeedTlsTest {
     @BeforeAll
     static void start() throws Exception {
         pki = new TlsFixture();
-        byte[] csv = Files.readAllBytes(Path.of(System.getProperty("drishti.module.root"), "src", "test", "resources", "recorded", "ecb-estr.csv"));
+        byte[] csv = Files.readAllBytes(Path.of(TestRoots.module(), "src", "test", "resources", "recorded", "ecb-estr.csv"));
         server = HttpsServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         server.setHttpsConfigurator(new HttpsConfigurator(pki.serverContext(false)));
         server.createContext("/", ex -> {
@@ -84,7 +85,7 @@ class FeedTlsTest {
     void tlsSettingsWithAFileUrlAreRefused() {
         Map<String, String> s = new HashMap<>(pki.trustOnlySettings());
         s.put("feed", "ecb-estr");
-        s.put("url", Path.of(System.getProperty("drishti.module.root"), "src", "test", "resources", "recorded", "ecb-estr.csv").toUri().toString());
+        s.put("url", Path.of(TestRoots.module(), "src", "test", "resources", "recorded", "ecb-estr.csv").toUri().toString());
         assertThatThrownBy(() -> new FeedSourcePlugin().start(DatedSourceContract.context(s))).isInstanceOf(TlsException.class)
                 .hasMessageContaining("tls.* is set but url is not https://");
     }

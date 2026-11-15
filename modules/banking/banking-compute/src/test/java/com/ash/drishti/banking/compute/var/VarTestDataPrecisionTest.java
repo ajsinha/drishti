@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.banking.compute.var;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.compute.vector.OrdinalSet;
@@ -56,12 +57,12 @@ class VarTestDataPrecisionTest {
     static Path dir;
 
     static Path root() {
-        Path p = Path.of(System.getProperty("drishti.module.root"));
+        Path p = Path.of(TestRoots.module());
         while (p != null && !Files.isDirectory(p.resolve("data/testdata/market-risk/scenario-pv"))) {
             p = p.getParent();
         }
         if (p == null) {
-            throw new IllegalStateException("the committed test data (data/testdata/market-risk) is not above " + Path.of(System.getProperty("drishti.module.root")));
+            throw new IllegalStateException("the committed test data (data/testdata/market-risk) is not above " + Path.of(TestRoots.module()));
         }
         return p;
     }

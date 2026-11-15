@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.banking.var;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -94,7 +95,7 @@ class VarCurrencyApiTest {
 
     @DynamicPropertySource
     static void lake(DynamicPropertyRegistry r) throws Exception {
-        lake = Files.createDirectories(Path.of(System.getProperty("drishti.module.root"), "target", "var-pv-lake-"+ System.nanoTime())).toAbsolutePath();
+        lake = Files.createDirectories(Path.of(TestRoots.module(), "target", "var-pv-lake-"+ System.nanoTime())).toAbsolutePath();
         VarLakeFixture.write(lake, VarLakeFixture.DAY.minusDays(1), 1.0, false, false);
         VarPvFixture.write(lake, VarLakeFixture.DAY.minusDays(1));
         VarLakeFixture.write(lake);

@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -57,7 +58,7 @@ import org.springframework.test.web.servlet.ResultActions;
 class DesignApiTest {
 
     private static final ObjectMapper JSON = new ObjectMapper();
-    private static final Path EXAMPLES = Path.of(System.getProperty("drishti.repo.root"), "docs", "guides", "examples");
+    private static final Path EXAMPLES = Path.of(TestRoots.repo(), "docs", "guides", "examples");
     private static final Path DIR = sutraDir();
     private static final String SOURCED = """
             rachana: 1

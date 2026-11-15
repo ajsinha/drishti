@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.delta;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.AsOf;
@@ -37,7 +38,7 @@ class DeltaPartitionColumnTest {
     @Test
     void aPartitionColumnReadsItsValueFromTheLog() throws Exception {
         DeltaSourcePlugin p = new DeltaSourcePlugin();
-        p.start(DatedSourceContract.context(Map.of("root", Path.of(System.getProperty("drishti.module.root"), "src", "test", "resources", "lake-partitioned").toAbsolutePath().toString(), "domain", "desk",
+        p.start(DatedSourceContract.context(Map.of("root", Path.of(TestRoots.module(), "src", "test", "resources", "lake-partitioned").toAbsolutePath().toString(), "domain", "desk",
                 "source-name", "lake", "layout.trade.columns", "PRODUCT_TYPE,CURRENCY")));
         ColumnSet c = p.columns("trade", List.of("PRODUCT_TYPE", "CURRENCY"), AsOf.of(LocalDate.parse("2026-09-30"))).orElseThrow();
         assertThat(c.size()).isEqualTo(6);

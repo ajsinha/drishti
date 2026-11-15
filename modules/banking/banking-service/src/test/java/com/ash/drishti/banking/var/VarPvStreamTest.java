@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.banking.var;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -118,7 +119,7 @@ class VarPvStreamTest {
 
     @DynamicPropertySource
     static void setUp(DynamicPropertyRegistry r) throws Exception {
-        lake = Files.createDirectories(Path.of(System.getProperty("drishti.module.root"), "target", "var-pv-stream-lake-"+ System.nanoTime())).toAbsolutePath();
+        lake = Files.createDirectories(Path.of(TestRoots.module(), "target", "var-pv-stream-lake-"+ System.nanoTime())).toAbsolutePath();
         VarIntradayLake.morning(lake, ONE_RUN, DAY);
         List<Map<String, Object>> v = new ArrayList<>();                   // ONE_RUN: the day's final state as one run
         for (Map<String, Object> row : VarIntradayLake.morningVectors(ONE_RUN)) {

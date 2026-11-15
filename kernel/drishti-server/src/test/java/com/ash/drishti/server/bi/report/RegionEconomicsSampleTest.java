@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.report;
 
+import com.ash.drishti.testroots.TestRoots;
 import com.ash.drishti.server.bi.Layered;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -34,8 +35,8 @@ import org.junit.jupiter.api.Test;
 class RegionEconomicsSampleTest {
 
     private static final ObjectMapper JSON = new ObjectMapper();
-    private static final Path SAMPLES = Path.of(System.getProperty("drishti.repo.root"), "modules", "economy", "packs", "world-economy", "samples");          // region-economy.jsonl
-    private static final Path SHAPES = Path.of(System.getProperty("drishti.repo.root"), "drishti-console", "web", "static", "vendor", "echarts", "maps", "regions");
+    private static final Path SAMPLES = Path.of(TestRoots.repo(), "modules", "economy", "packs", "world-economy", "samples");          // region-economy.jsonl
+    private static final Path SHAPES = Path.of(TestRoots.repo(), "drishti-console", "web", "static", "vendor", "echarts", "maps", "regions");
 
     private static Dataset dataset() throws IOException {
         DatasetParser.Result r = Layered.dataset(Files.readString(ReportParserTest.DATASETS.resolve("region-economics.dataset.yaml")));

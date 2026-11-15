@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.rachana.design.ops;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -37,7 +38,7 @@ import org.junit.jupiter.api.Test;
 /** Every operation on every panel kind, over the all-panels showcase and the ten other examples. */
 class OpApplierTest {
 
-    private static final Path EXAMPLES = Path.of(System.getProperty("drishti.repo.root"), "docs", "guides", "examples");
+    private static final Path EXAMPLES = Path.of(TestRoots.repo(), "docs", "guides", "examples");
     private final OpApplier applier = new OpApplier();
     private final SutraParser parser = new SutraParser();
 

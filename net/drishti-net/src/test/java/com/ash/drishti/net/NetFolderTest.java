@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.net;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -211,7 +212,7 @@ class NetFolderTest {
 
     @Test
     void theReadyMadeExamplesAreTakenAsTheyAre() throws Exception {
-        Path examples = Path.of(System.getProperty("drishti.repo.root"), "config", "net.examples").toAbsolutePath().normalize();
+        Path examples = Path.of(TestRoots.repo(), "config", "net.examples").toAbsolutePath().normalize();
         NetFolder f = new NetFolder(examples, tmp.resolve("data/net"), new NetSchema(Map.of("DRISHTI_NET_SECRET", KEY)::get));
         NetFolder.Loaded l = f.load(null);
         assertThat(l.all()).isEmpty();

@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.rachana;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -29,7 +30,7 @@ import org.junit.jupiter.api.Test;
 
 class SutraParserTest {
 
-    static final Path SUTRAS = Path.of(System.getProperty("drishti.repo.root"), "examples", "packs", "finance", "sutras");
+    static final Path SUTRAS = Path.of(TestRoots.repo(), "examples", "packs", "finance", "sutras");
     private final SutraParser parser = new SutraParser();
 
     private Sutra load(String rel) throws Exception {

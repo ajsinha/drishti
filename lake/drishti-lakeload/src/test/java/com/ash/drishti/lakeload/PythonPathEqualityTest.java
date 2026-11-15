@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.lakeload;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -49,7 +50,7 @@ import org.junit.jupiter.api.io.TempDir;
  */
 class PythonPathEqualityTest {
 
-    static final Path REPO = Path.of(System.getProperty("drishti.module.root")).getParent().getParent();
+    static final Path REPO = Path.of(TestRoots.module()).getParent().getParent();
 
     @TempDir
     Path tmp;

@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.engines;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -33,7 +34,7 @@ import org.junit.jupiter.api.Test;
  */
 class EngineCatalogueTest {
 
-    static final Path REPO = Path.of(System.getProperty("drishti.repo.root")).toAbsolutePath().normalize();
+    static final Path REPO = Path.of(TestRoots.repo()).toAbsolutePath().normalize();
 
     @Test
     void theProductsCatalogueHoldsTheElevenEnginesInOrderWithTheirLinks() {

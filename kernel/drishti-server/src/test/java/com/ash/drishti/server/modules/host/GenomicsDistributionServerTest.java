@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.modules.host;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
@@ -94,7 +95,7 @@ class GenomicsDistributionServerTest {
 
     /** The module as its own build makes it: its sources compiled against the kernel API, src/dmod packed. */
     static Path genomics(Path work) {
-        Path project = Path.of(System.getProperty("drishti.repo.root"), "modules", "genomics").toAbsolutePath().normalize();
+        Path project = Path.of(TestRoots.repo(), "modules", "genomics").toAbsolutePath().normalize();
         Path jar = ModuleFixtures.jarOf(project.resolve("src/main/java"), null, work.resolve("build"), work.resolve("build/genomics.jar"));
         return ModuleAssembler.assemble(project.resolve("src/dmod"), jar, work.resolve("stage"), work.resolve("dist"));
     }
@@ -188,7 +189,7 @@ class GenomicsDistributionServerTest {
 
     @Test
     void itsPackagePassesTheFifteenChecks() {
-        List<ModuleConformance.Check> checks = ModuleConformance.run(dmod, Path.of(System.getProperty("drishti.repo.root"), "modules", "genomics").toAbsolutePath().normalize(),
+        List<ModuleConformance.Check> checks = ModuleConformance.run(dmod, Path.of(TestRoots.repo(), "modules", "genomics").toAbsolutePath().normalize(),
                 work.resolve("conformance"), 3);
         assertThat(checks).hasSize(15);
         assertThat(checks).allSatisfy(c -> assertThat(c.status()).as(c.line()).isEqualTo(ModuleConformance.Status.PASS));

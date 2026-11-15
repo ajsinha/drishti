@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.identity.content;
 
+import com.ash.drishti.testroots.TestRoots;
 import com.ash.drishti.testkit.s3.MinioServer;
 import com.ash.drishti.testkit.s3.S3Endpoint;
 import java.nio.file.Path;
@@ -31,7 +32,7 @@ class MinioContentStoreTest extends S3ContentStoreCases {
 
     @BeforeAll
     static void up() throws Exception {
-        minio = MinioServer.startOrSkip(Path.of(System.getProperty("drishti.module.root"), "target", "minio-content", "data"));
+        minio = MinioServer.startOrSkip(Path.of(TestRoots.module(), "target", "minio-content", "data"));
         minio.endpoint().bucket("content");
         probe(minio.endpoint(), "content");
     }

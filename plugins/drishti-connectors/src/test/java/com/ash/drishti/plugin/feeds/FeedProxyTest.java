@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.feeds;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.proxy.SiteProxy;
@@ -38,7 +39,7 @@ class FeedProxyTest {
 
     @BeforeAll
     static void start() throws Exception {
-        byte[] csv = Files.readAllBytes(Path.of(System.getProperty("drishti.module.root"), "src", "test", "resources", "recorded", "ecb-estr.csv"));
+        byte[] csv = Files.readAllBytes(Path.of(TestRoots.module(), "src", "test", "resources", "recorded", "ecb-estr.csv"));
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         server.createContext("/", ex -> {
             ex.sendResponseHeaders(200, csv.length);

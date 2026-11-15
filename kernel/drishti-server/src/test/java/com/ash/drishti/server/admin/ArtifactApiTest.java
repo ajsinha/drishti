@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.admin;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItem;
@@ -450,6 +451,6 @@ class ArtifactApiTest {
     @Test
     @Order(13)
     void aPersonalApiTokenNeverReachesIt() throws Exception {
-        assertThat(Files.readString(Path.of(System.getProperty("drishti.module.root"), "src", "main", "resources", "application.yaml"))).contains("/api/v1/admin/artifacts/**");
+        assertThat(Files.readString(Path.of(TestRoots.module(), "src", "main", "resources", "application.yaml"))).contains("/api/v1/admin/artifacts/**");
     }
 }

@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.bicompute.rachana;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.rachana.el.Functions;
@@ -37,7 +38,7 @@ import org.junit.jupiter.api.Test;
  */
 class FunctionCataloguePageTest {
 
-    static final Path ROOT = Path.of(System.getProperty("drishti.repo.root"));
+    static final Path ROOT = Path.of(TestRoots.repo());
     static final Pattern NAME = Pattern.compile("`([a-z_][a-z0-9_]*)\\(");
     static final Pattern SECTION = Pattern.compile("^## (\\d+)\\.");
     static final Set<Integer> SECTIONS = Set.of(1, 2, 3, 4, 5, 6, 7, 8, 9);

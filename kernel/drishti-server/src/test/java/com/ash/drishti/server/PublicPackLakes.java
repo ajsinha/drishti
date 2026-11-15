@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server;
 
+import com.ash.drishti.testroots.TestRoots;
 import com.ash.drishti.deltalake.write.LakeManifest;
 import com.ash.drishti.deltalake.write.LakeWriter;
 import com.ash.drishti.testkit.FeedFiles;
@@ -45,8 +46,8 @@ import java.util.TreeMap;
  */
 final class PublicPackLakes {
 
-    static final Path TESTDATA = Path.of(System.getProperty("drishti.repo.root"), "data", "testdata");
-    static final Path PACKS = Path.of(System.getProperty("drishti.repo.root"), "config", "packs");
+    static final Path TESTDATA = Path.of(TestRoots.repo(), "data", "testdata");
+    static final Path PACKS = Path.of(TestRoots.repo(), "config", "packs");
     private static final ObjectMapper JSON = new ObjectMapper();
     private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
     private static final Map<String, Path> BUILT = new java.util.concurrent.ConcurrentHashMap<>();
@@ -105,7 +106,7 @@ final class PublicPackLakes {
                     }
                 }
             } else {
-                docs = samples(Path.of(System.getProperty("drishti.repo.root")).resolve(ds.path("samples").asText()), kind);
+                docs = samples(Path.of(TestRoots.repo()).resolve(ds.path("samples").asText()), kind);
             }
             table(lake.resolve(entry.domain() == null || entry.domain().isBlank() ? pack : entry.domain())
                     .resolve(entry.table() == null ? kind : entry.table()), stage.resolve(pack + "-" + kind + ".rows"), docs, promoted);

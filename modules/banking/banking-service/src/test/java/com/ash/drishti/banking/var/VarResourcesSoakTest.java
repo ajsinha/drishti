@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.banking.var;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.server.PinnedBusinessDate;
@@ -79,7 +80,7 @@ class VarResourcesSoakTest {
 
     @DynamicPropertySource
     static void lake(DynamicPropertyRegistry r) throws Exception {
-        lake = Files.createDirectories(Path.of(System.getProperty("drishti.module.root"), "target", "var-soak-"+ System.nanoTime())).toAbsolutePath();
+        lake = Files.createDirectories(Path.of(TestRoots.module(), "target", "var-soak-"+ System.nanoTime())).toAbsolutePath();
         for (int i = DATES - 1; i >= 0; i--) {
             VarLakeFixture.write(lake, VarLakeFixture.DAY.minusDays(i), 1.0, false, false);
         }

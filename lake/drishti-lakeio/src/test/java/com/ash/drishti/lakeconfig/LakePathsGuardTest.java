@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.lakeconfig;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
@@ -40,7 +41,7 @@ class LakePathsGuardTest {
     private static final Pattern SPLITS = Pattern.compile("LakeTable::parent|\\bt\\.parent\\(\\)");
 
     private static Path repo() {
-        Path p = Path.of(System.getProperty("drishti.module.root"));
+        Path p = Path.of(TestRoots.module());
         while (!Files.isDirectory(p.resolve("lake/drishti-lakeio"))) {
             p = p.getParent();
         }

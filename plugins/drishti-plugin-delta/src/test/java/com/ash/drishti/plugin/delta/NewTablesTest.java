@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.delta;
 
+import com.ash.drishti.testroots.TestRoots;
 import static com.ash.drishti.testkit.DatedSourceContract.context;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -37,7 +38,7 @@ import org.junit.jupiter.api.io.TempDir;
  */
 class NewTablesTest {
 
-    static final Path FIXTURE = Path.of(System.getProperty("drishti.module.root"), "src", "test", "resources", "lake", "desk");
+    static final Path FIXTURE = Path.of(TestRoots.module(), "src", "test", "resources", "lake", "desk");
     static final LocalDate D = LocalDate.of(2026, 9, 30);
     static final EntityRef T1 = EntityRef.of("trade", "T-1");
 

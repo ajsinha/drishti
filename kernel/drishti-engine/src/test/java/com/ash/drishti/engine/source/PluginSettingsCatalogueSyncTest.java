@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.engine.source;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.EntityDocument;
@@ -106,7 +107,7 @@ class PluginSettingsCatalogueSyncTest {
     }
 
     private static Path root() {
-        Path p = Path.of(System.getProperty("drishti.module.root"));
+        Path p = Path.of(TestRoots.module());
         while (p != null && !Files.isDirectory(p.resolve("plugins"))) {
             p = p.getParent();
         }

@@ -30,6 +30,8 @@
     latest-state store and live fan-out shared by the message-queue connectors (ActiveMQ, RabbitMQ)</description>
   <dependencies>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
+    <!-- SettingsFile (-Ddrishti.settings.file): the server reads the optional settings file through this -->
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-settingsfile</artifactId><version>${project.version}</version></dependency>
     <dependency><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-databind</artifactId></dependency>
     <dependency><groupId>com.fasterxml.jackson.dataformat</groupId><artifactId>jackson-dataformat-yaml</artifactId></dependency>
     <dependency><groupId>org.springframework</groupId><artifactId>spring-context</artifactId></dependency>

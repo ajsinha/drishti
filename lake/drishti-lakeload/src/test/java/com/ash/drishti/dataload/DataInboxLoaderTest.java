@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.dataload;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.common.FileDates;
@@ -45,7 +46,7 @@ class DataInboxLoaderTest {
     @TempDir Path tmp;
 
     static Path repo() {
-        Path p = Path.of(System.getProperty("drishti.module.root"));
+        Path p = Path.of(TestRoots.module());
         while (p != null && !Files.isDirectory(p.resolve("tools/lake/testdata/archives"))) {
             p = p.getParent();
         }
@@ -262,7 +263,7 @@ class DataInboxLoaderTest {
     @Test
     void aKindThatIsAChildOfAnotherIsSplitOffItsParentOnAnInboxLoad() throws IOException {
         Fixture f = new Fixture(tmp);
-        Path fixture = Path.of(System.getProperty("drishti.module.root"), "src", "test", "resources", "childkinds");
+        Path fixture = Path.of(TestRoots.module(), "src", "test", "resources", "childkinds");
         Files.copy(fixture.resolve("pack.yaml"), f.pack.resolve("pack.yaml"), StandardCopyOption.REPLACE_EXISTING);   // the pack deals: deal, and deal-leg child-of deal
         Files.writeString(f.rules, """
                 dataload:

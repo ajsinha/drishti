@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.report;
 
+import com.ash.drishti.testroots.TestRoots;
 import com.ash.drishti.server.bi.Layered;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -31,7 +32,7 @@ import org.junit.jupiter.api.Test;
 /** Python in BI (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 20.8): the manifest, a Python measure in a dataset, and the python visual: how each is read, checked and asked for. */
 class PythonBiTest {
 
-    static final Path PYTHON = Path.of(System.getProperty("drishti.repo.root"), "config", "bi", "python", "banking");
+    static final Path PYTHON = Path.of(TestRoots.repo(), "config", "bi", "python", "banking");
     static final List<String> PACKAGES = BiReportProperties.defaults().pythonPackages();
 
     static PythonManifest.Result manifest(String body) {

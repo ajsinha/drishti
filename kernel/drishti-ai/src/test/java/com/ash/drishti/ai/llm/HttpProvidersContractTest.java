@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.ai.llm;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -138,7 +139,7 @@ class HttpProvidersContractTest {
 
     @org.junit.jupiter.api.Test
     void theTwoCatalogueCopiesAreIdentical() throws Exception {
-        java.nio.file.Path console = java.nio.file.Path.of(System.getProperty("drishti.repo.root"), "drishti-console", "core", "ai", "providers", "llm_catalog.json");
+        java.nio.file.Path console = java.nio.file.Path.of(TestRoots.repo(), "drishti-console", "core", "ai", "providers", "llm_catalog.json");
         try (InputStream in = getClass().getResourceAsStream("/ai/llm_catalog.json")) {
             assertThat(new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8)).isEqualTo(java.nio.file.Files.readString(console));
         }

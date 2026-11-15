@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.expr;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.tables.Problem;
@@ -62,7 +63,7 @@ class DelTablesTranslatorTest {
      * The shipped datasets, models, reports and notebooks as they were before the switch (docs/architecture/ARCHITECTURE.md §28 step 5): the migration's
      * regression input while the tool lives (Q24).
      */
-    static final Path BEFORE = Path.of(System.getProperty("drishti.module.root"), "src", "test", "resources", "bi", "before-tables");
+    static final Path BEFORE = Path.of(TestRoots.module(), "src", "test", "resources", "bi", "before-tables");
 
     @Test
     void everyShippedItemConvertsAndASecondRunChangesNothing() throws Exception {

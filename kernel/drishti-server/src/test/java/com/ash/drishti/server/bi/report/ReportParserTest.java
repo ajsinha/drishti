@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.report;
 
+import com.ash.drishti.testroots.TestRoots;
 import com.ash.drishti.server.bi.Layered;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -30,8 +31,8 @@ import org.junit.jupiter.api.Test;
 /** The report parser and validator: the shipped samples are clean, and every kind of mistake comes back with its DRS code and the path of the key. */
 class ReportParserTest {
 
-    static final Path REPORTS = Path.of(System.getProperty("drishti.module.root"), "src", "test", "resources", "bi", "samples-2.1", "reports");            // the 2.1 reports on datasets (config/bi has them on models)
-    static final Path DATASETS = Path.of(System.getProperty("drishti.module.root"), "src", "test", "resources", "bi", "samples-2.1", "datasets");
+    static final Path REPORTS = Path.of(TestRoots.module(), "src", "test", "resources", "bi", "samples-2.1", "reports");            // the 2.1 reports on datasets (config/bi has them on models)
+    static final Path DATASETS = Path.of(TestRoots.module(), "src", "test", "resources", "bi", "samples-2.1", "datasets");
 
     static String report(String name) throws IOException {
         return Files.readString(REPORTS.resolve(name + ".report.yaml"));

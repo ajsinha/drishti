@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.theme;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.server.bi.report.ReportParser.Problem;
@@ -29,7 +30,7 @@ class ThemeParserTest {
 
     @Test
     void theShippedThemesAreClean() throws IOException {
-        try (var files = Files.list(Path.of(System.getProperty("drishti.repo.root"), "config", "bi", "themes"))) {
+        try (var files = Files.list(Path.of(TestRoots.repo(), "config", "bi", "themes"))) {
             List<Path> all = files.filter(f -> f.toString().endsWith(".theme.yaml")).toList();
             assertThat(all).isNotEmpty();
             for (Path f : all) {

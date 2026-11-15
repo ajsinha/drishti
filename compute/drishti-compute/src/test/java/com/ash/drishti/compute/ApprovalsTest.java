@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.compute;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -52,7 +53,7 @@ class ApprovalsTest {
         }
         SQLiteDataSource ds = new SQLiteDataSource();
         ds.setUrl("jdbc:sqlite:" + dir.resolve("drishti.db"));
-        String sql = Files.readString(Path.of(System.getProperty("drishti.repo.root"), "kernel", "drishti-identity", "src", "main", "resources", "db", "schema-sqlite.sql")).replaceAll("--[^\\n]*", "");
+        String sql = Files.readString(Path.of(TestRoots.repo(), "kernel", "drishti-identity", "src", "main", "resources", "db", "schema-sqlite.sql")).replaceAll("--[^\\n]*", "");
         try (Connection c = ds.getConnection(); Statement s = c.createStatement()) {
             for (String stmt : sql.split(";")) {
                 if (!stmt.isBlank()) {

@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.rachana;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -37,7 +38,7 @@ import org.junit.jupiter.api.Test;
  */
 class UnderConstructionTest {
 
-    static final Path FILE = Path.of(System.getProperty("drishti.repo.root"), "config", "under-construction.yaml");
+    static final Path FILE = Path.of(TestRoots.repo(), "config", "under-construction.yaml");
 
     @AfterEach
     void noKit() {
@@ -46,10 +47,10 @@ class UnderConstructionTest {
     }
 
     private static SutraRegistry packs() {
-        SutraBlocks.kit(Path.of(System.getProperty("drishti.repo.root"), "config", "ui-kit"));
+        SutraBlocks.kit(Path.of(TestRoots.repo(), "config", "ui-kit"));
         List<String> dirs = new ArrayList<>();
         for (String p : List.of("core", "counterparty-risk", "trading", "market-data", "market-risk")) {
-            dirs.add(com.ash.drishti.api.resolution.ConfigResolution.repository(Path.of(System.getProperty("drishti.repo.root"), "config", "packs").toAbsolutePath().normalize().getParent().getParent()).packDir(p).resolve("sutras").toString());
+            dirs.add(com.ash.drishti.api.resolution.ConfigResolution.repository(Path.of(TestRoots.repo(), "config", "packs").toAbsolutePath().normalize().getParent().getParent()).packDir(p).resolve("sutras").toString());
         }
         return new SutraRegistry(new RachanaProperties(dirs, false, null, null, null, null, null, null, null, null), new ElCompiler());
     }

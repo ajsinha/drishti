@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.it;
 
+import com.ash.drishti.testroots.TestRoots;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -35,7 +36,7 @@ final class RepositoryFiles {
     private RepositoryFiles() {}
 
     static Path root() {
-        Path p = Path.of(System.getProperty("drishti.module.root"));
+        Path p = Path.of(TestRoots.module());
         while (p != null && !Files.exists(p.resolve("LICENSE"))) {
             p = p.getParent();
         }

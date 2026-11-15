@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.banking.var;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -83,7 +84,7 @@ class VarMrCubeCapTest {
 
     @DynamicPropertySource
     static void lake(DynamicPropertyRegistry r) throws Exception {
-        Path lake = Files.createDirectories(Path.of(System.getProperty("drishti.module.root"), "target", "var-mr-cap-lake-"+ System.nanoTime())).toAbsolutePath();
+        Path lake = Files.createDirectories(Path.of(TestRoots.module(), "target", "var-mr-cap-lake-"+ System.nanoTime())).toAbsolutePath();
         VarStressApiTest.write(lake, VarStressApiTest.PLAIN, false);
         VarStressApiTest.write(lake, VarStressApiTest.DAY, true);
         r.add("drishti.sources.connectors.risk-lake.settings.root", lake::toString);

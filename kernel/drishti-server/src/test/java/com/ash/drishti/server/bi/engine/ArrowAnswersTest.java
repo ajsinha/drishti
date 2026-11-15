@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.engine;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -130,7 +131,7 @@ class ArrowAnswersTest {
         byte[] bytes = ArrowAnswers.encode(answer, "rows", "rows").orElseThrow();
         assertSame(rebuilt(bytes), answer);
         java.nio.file.Files.write(dir.resolve("sample.arrow"), bytes);
-        java.nio.file.Path target = java.nio.file.Path.of(System.getProperty("drishti.module.root"), "target");
+        java.nio.file.Path target = java.nio.file.Path.of(TestRoots.module(), "target");
         if (java.nio.file.Files.isDirectory(target)) {                       // the stream for pyarrow and Arrow JS to read back (DATA_GUIDE.md › Data formats: JSON Lines is the standard, section 6)
             java.nio.file.Files.write(target.resolve("arrow-answers-sample.arrow"), bytes);
         }

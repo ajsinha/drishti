@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.memlake;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.ash.drishti.deltalake.write.LakeManifest;
@@ -46,7 +47,7 @@ import org.junit.jupiter.api.io.TempDir;
 class MemoryRatiosTest {
 
     private static final ObjectMapper JSON = new ObjectMapper();
-    private static final Path TESTDATA = Path.of(System.getProperty("drishti.repo.root"), "data", "testdata").toAbsolutePath().normalize();
+    private static final Path TESTDATA = Path.of(TestRoots.repo(), "data", "testdata").toAbsolutePath().normalize();
 
     @TempDir
     Path tmp;

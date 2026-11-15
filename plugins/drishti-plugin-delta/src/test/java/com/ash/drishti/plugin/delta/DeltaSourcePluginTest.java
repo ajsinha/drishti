@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.delta;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.AsOf;
@@ -57,7 +58,7 @@ class DeltaSourcePluginTest extends DatedSourceContract {
             return cached;
         }
         Path root = Files.createTempDirectory("drishti-lake");
-        Path src = Path.of(System.getProperty("drishti.module.root"), "src", "test", "resources", "lake");
+        Path src = Path.of(TestRoots.module(), "src", "test", "resources", "lake");
         try (var files = Files.walk(src)) {
             for (Path f : files.toList()) {
                 Path to = root.resolve(src.relativize(f).toString());
@@ -142,7 +143,7 @@ class DeltaSourcePluginTest extends DatedSourceContract {
     @Test
     void aTableAddedToTheLakeIsServedFromTheNextReindexWithoutARestart() throws Exception {
         Path root = Files.createTempDirectory("drishti-lake-grow");
-        Path src = Path.of(System.getProperty("drishti.module.root"), "src", "test", "resources", "lake", "desk");
+        Path src = Path.of(TestRoots.module(), "src", "test", "resources", "lake", "desk");
         copy(src.resolve("trade"), root.resolve("desk").resolve("trade"));
         DeltaSourcePlugin p = new DeltaSourcePlugin();
         p.start(context(Map.of("root", root.toString(), "domain", "desk", "source-name", "growing", "engine", engine())));
@@ -161,7 +162,7 @@ class DeltaSourcePluginTest extends DatedSourceContract {
     void aDatesDataVersionMovesOnlyWhenACommitChangesThatDatesFiles() throws Exception {
         Path root = Files.createTempDirectory("drishti-lake-version");
         Path table = root.resolve("desk").resolve("trade");
-        copy(Path.of(System.getProperty("drishti.module.root"), "src", "test", "resources", "lake", "desk", "trade"), table);
+        copy(Path.of(TestRoots.module(), "src", "test", "resources", "lake", "desk", "trade"), table);
         Path correction = table.resolve("_delta_log").resolve("00000000000000000001.json");
         byte[] restate = Files.readAllBytes(correction);
         Files.delete(correction);                                                  // the table before the correction of 2026-09-30
@@ -193,13 +194,13 @@ class DeltaSourcePluginTest extends DatedSourceContract {
     @Test
     void aClosedConnectorStopsReindexingAndRecordsNoProblem() throws Exception {
         Path root = Files.createTempDirectory("drishti-lake-closed");
-        copy(Path.of(System.getProperty("drishti.module.root"), "src", "test", "resources", "lake", "desk", "trade"), root.resolve("desk").resolve("trade"));
+        copy(Path.of(TestRoots.module(), "src", "test", "resources", "lake", "desk", "trade"), root.resolve("desk").resolve("trade"));
         DeltaSourcePlugin p = new DeltaSourcePlugin();
         p.start(context(Map.of("root", root.toString(), "domain", "desk", "source-name", "stopped", "warm-dates", "0", "engine", engine())));
         assertThat(p.reindexScheduled()).isTrue();
         p.close();
         assertThat(p.reindexScheduled()).isFalse();
-        copy(Path.of(System.getProperty("drishti.module.root"), "src", "test", "resources", "lake", "desk", "counterparty"), root.resolve("desk").resolve("counterparty"));   // a log not read yet
+        copy(Path.of(TestRoots.module(), "src", "test", "resources", "lake", "desk", "counterparty"), root.resolve("desk").resolve("counterparty"));   // a log not read yet
         p.reindex();                                                                // a run that had already started when it was closed
         assertThat(p.listingProblem("counterparty")).isEmpty();
         assertThat(p.listingProblem("trade")).isEmpty();

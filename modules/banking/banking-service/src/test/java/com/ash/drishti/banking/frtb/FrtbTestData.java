@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.banking.frtb;
 
+import com.ash.drishti.testroots.TestRoots;
 import com.ash.drishti.api.DataNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.BufferedReader;
@@ -39,8 +40,8 @@ final class FrtbTestData {
     private FrtbTestData() {}
 
     static Path root() {
-        Path p = Path.of(System.getProperty("drishti.repo.root"));
-        return Files.isDirectory(p.resolve("data/testdata")) ? p : Path.of(System.getProperty("drishti.module.root"), ".");
+        Path p = Path.of(TestRoots.repo());
+        return Files.isDirectory(p.resolve("data/testdata")) ? p : Path.of(TestRoots.module(), ".");
     }
 
     static List<DataNode> read(String kind) {

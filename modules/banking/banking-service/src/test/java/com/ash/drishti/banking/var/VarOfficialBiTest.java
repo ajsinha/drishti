@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.banking.var;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -74,7 +75,7 @@ class VarOfficialBiTest {
                     "../tables/banking/market-risk-var.model.yaml", "reports/banking/market-risk-var.report.yaml")) {
                 Path dest = to.resolve(f.replace("../", ""));                  // the table layer's files under tables/, BI's report beside
                 Files.createDirectories(dest.getParent());
-                Files.copy(Path.of(System.getProperty("drishti.repo.root"), "config", "bi",  f), dest, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                Files.copy(Path.of(TestRoots.repo(), "config", "bi",  f), dest, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
             }
         } catch (java.io.IOException e) {
             throw new java.io.UncheckedIOException(e);

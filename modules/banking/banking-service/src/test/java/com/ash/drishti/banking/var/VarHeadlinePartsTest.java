@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.banking.var;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.banking.compute.var.VarBook;
@@ -59,7 +60,7 @@ import org.springframework.context.annotation.Import;
 @Import(PinnedBusinessDate.class)
 class VarHeadlinePartsTest {
 
-    static final Path BASE = Path.of(System.getProperty("drishti.module.root"), "target", "var-headline-parts").toAbsolutePath();
+    static final Path BASE = Path.of(TestRoots.module(), "target", "var-headline-parts").toAbsolutePath();
     static final Path LAKE = BASE.resolve("lake");
     static final LocalDate DAY = VarHierarchyFixture.DAY;
 

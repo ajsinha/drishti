@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.iceberg;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.AsOf;
@@ -58,7 +59,7 @@ class OfficialS3Test {
 
     @BeforeAll
     static void up() throws Exception {
-        s3 = S3MockServer.start(Path.of(System.getProperty("drishti.module.root"), "target", "s3mock-official"), "lake");
+        s3 = S3MockServer.start(Path.of(TestRoots.module(), "target", "s3mock-official"), "lake");
     }
 
     @AfterAll

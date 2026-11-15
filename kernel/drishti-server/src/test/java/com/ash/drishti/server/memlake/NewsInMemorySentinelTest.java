@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.memlake;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -84,7 +85,7 @@ class NewsInMemorySentinelTest {
     private static final ObjectMapper JSON = new ObjectMapper();
     /** Every value the feed sends carries this, so a marker found anywhere on a disk proves a leak. */
     static final String MARK = "SENTINEL" + UUID.randomUUID().toString().replace("-", "").substring(0, 16).toUpperCase(java.util.Locale.ROOT);
-    private static final Path REPO = Path.of(System.getProperty("drishti.repo.root")).toAbsolutePath().normalize();
+    private static final Path REPO = Path.of(TestRoots.repo()).toAbsolutePath().normalize();
     private static final HttpServer FEED = feed();
 
     @Autowired MockMvc mvc;

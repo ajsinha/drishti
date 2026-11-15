@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.cassandra;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.AsOf;
@@ -56,7 +57,7 @@ class CassandraDeltaEqualityTest {
     @BeforeAll
     static void bothStores() throws Exception {
         lake = Files.createTempDirectory("drishti-cassandra-eq");          // under target/tmp (surefire's java.io.tmpdir)
-        Path src = Path.of(System.getProperty("drishti.module.root"), "..", "drishti-plugin-delta", "src", "test", "resources", "lake");
+        Path src = Path.of(TestRoots.module(), "..", "drishti-plugin-delta", "src", "test", "resources", "lake");
         try (var files = Files.walk(src)) {
             for (Path f : files.toList()) {
                 Path to = lake.resolve(src.relativize(f).toString());

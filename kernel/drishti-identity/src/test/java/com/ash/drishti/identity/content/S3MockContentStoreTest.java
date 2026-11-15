@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.identity.content;
 
+import com.ash.drishti.testroots.TestRoots;
 import com.ash.drishti.testkit.s3.S3Endpoint;
 import com.ash.drishti.testkit.s3.S3MockServer;
 import java.nio.file.Path;
@@ -28,7 +29,7 @@ class S3MockContentStoreTest extends S3ContentStoreCases {
 
     @BeforeAll
     static void up() throws Exception {
-        s3 = S3MockServer.start(Path.of(System.getProperty("drishti.module.root"), "target", "s3mock-content"), "content");
+        s3 = S3MockServer.start(Path.of(TestRoots.module(), "target", "s3mock-content"), "content");
         probe(s3.endpoint(), "content");
     }
 

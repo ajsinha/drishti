@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.board;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.server.bi.report.ReportParser.Problem;
@@ -39,7 +40,7 @@ class BoardParserTest {
 
     @Test
     void theSampleBoardIsCleanAndKeepsItsModel() throws IOException {
-        BoardParser.Result r = BoardParser.parse(Files.readString(Path.of(System.getProperty("drishti.module.root"), "src", "test", "resources", "bi", "boards-2.3", "desk-wall.board.yaml")));
+        BoardParser.Result r = BoardParser.parse(Files.readString(Path.of(TestRoots.module(), "src", "test", "resources", "bi", "boards-2.3", "desk-wall.board.yaml")));
         assertThat(r.ok()).as(r.firstError()).isTrue();
         Board b = r.board();
         assertThat(b.name()).isEqualTo("desk-wall");

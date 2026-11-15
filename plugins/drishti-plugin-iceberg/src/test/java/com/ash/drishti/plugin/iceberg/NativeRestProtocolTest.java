@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.iceberg;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -64,7 +65,7 @@ class NativeRestProtocolTest {
 
     @BeforeEach
     void start() throws Exception {
-        try (Stream<Path> s = Files.walk(Path.of(System.getProperty("drishti.module.root"), "src", "test", "resources", "iceberg-fixtures", "fx", "ref_currencies", "metadata"))) {
+        try (Stream<Path> s = Files.walk(Path.of(TestRoots.module(), "src", "test", "resources", "iceberg-fixtures", "fx", "ref_currencies", "metadata"))) {
             metadata = Files.readString(s.filter(p -> p.toString().endsWith(".metadata.json")).sorted().reduce((a, b) -> b).orElseThrow());
         }
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);

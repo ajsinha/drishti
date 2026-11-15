@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.packs;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -35,7 +36,7 @@ import org.junit.jupiter.api.io.TempDir;
  */
 class ConnectorLayersFixtureTest {
 
-    static final Path CASES = Path.of(System.getProperty("drishti.module.root"), "src", "test", "resources", "connector-layers", "cases.yaml");
+    static final Path CASES = Path.of(TestRoots.module(), "src", "test", "resources", "connector-layers", "cases.yaml");
 
     @TempDir
     Path dir;

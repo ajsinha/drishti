@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.lakeconfig;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -37,7 +38,7 @@ import org.junit.jupiter.api.io.TempDir;
 class LakeFileWritesTest {
 
     /** The repository root (the module's parent folder, where config/ is). */
-    static final Path REPO = Path.of(System.getProperty("drishti.module.root")).getParent().getParent();
+    static final Path REPO = Path.of(TestRoots.module()).getParent().getParent();
     static final Path DEMO = REPO.resolve("config/lakes/demo.yaml");
     static final Path DEMO_JAR = REPO.resolve("lake/drishti-lakeio/src/main/resources/drishti/lakes/demo.yaml");
 

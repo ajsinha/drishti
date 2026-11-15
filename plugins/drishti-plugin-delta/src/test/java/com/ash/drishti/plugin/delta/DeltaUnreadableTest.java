@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.delta;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -83,7 +84,7 @@ class DeltaUnreadableTest {
     /** A fresh copy of the laid-out fixture lake (40 trades on each of two dates). */
     private static Path lake() throws Exception {
         Path root = Files.createTempDirectory("drishti-unreadable");
-        Path src = Path.of(System.getProperty("drishti.module.root"), "src", "test", "resources", "lake-layout");
+        Path src = Path.of(TestRoots.module(), "src", "test", "resources", "lake-layout");
         try (Stream<Path> files = Files.walk(src)) {
             for (Path f : files.toList()) {
                 Path to = root.resolve(src.relativize(f).toString());

@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.runs;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -89,7 +90,7 @@ class RunsContractTest {
 
     @Test
     void theShippedFileAndNoFileGiveTheSameDefaults(@TempDir Path data) {
-        Path shipped = Path.of(System.getProperty("drishti.repo.root"), "config", "runs", "runs.yaml");
+        Path shipped = Path.of(TestRoots.repo(), "config", "runs", "runs.yaml");
         assertThat(Files.isRegularFile(shipped)).isTrue();
         RunsProperties a = RunsProperties.load(shipped, data, s -> s.replace("${drishti.data.dir:./data}", data.toString()));
         RunsProperties b = RunsProperties.defaults(data);
@@ -114,13 +115,13 @@ class RunsContractTest {
 
     @Test
     void everyExampleReads(@TempDir Path data) throws Exception {
-        try (var files = Files.list(Path.of(System.getProperty("drishti.repo.root"), "config", "runs.examples"))) {
+        try (var files = Files.list(Path.of(TestRoots.repo(), "config", "runs.examples"))) {
             for (Path f : files.toList()) {
                 RunsProperties p = RunsProperties.load(f, data, s -> s);
                 assertThat(p.origin()).isEqualTo(f.toString());
             }
         }
-        assertThat(RunsProperties.load(Path.of(System.getProperty("drishti.repo.root"), "config", "runs.examples", "off.yaml"), data, s -> s).enabled()).isFalse();
+        assertThat(RunsProperties.load(Path.of(TestRoots.repo(), "config", "runs.examples", "off.yaml"), data, s -> s).enabled()).isFalse();
     }
 
     @Test

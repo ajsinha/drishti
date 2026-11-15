@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.banking;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.server.engines.EngineCatalogue;
@@ -31,7 +32,7 @@ import org.junit.jupiter.api.Test;
  */
 class BankingEngineCatalogueTest {
 
-    static final Path REPO = Path.of(System.getProperty("drishti.repo.root")).toAbsolutePath().normalize();
+    static final Path REPO = Path.of(TestRoots.repo()).toAbsolutePath().normalize();
 
     @Test
     void theModulesEnginesComeFirstWithTheirNeedsAndPaths() {

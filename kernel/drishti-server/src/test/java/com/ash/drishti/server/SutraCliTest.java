@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.common.JsonCodec;
@@ -48,7 +49,7 @@ import org.springframework.boot.test.context.SpringBootTest;
         "drishti.builder.designs.dir=${drishti.test.dir}/sutra-cli-files-${random.uuid}"})
 class SutraCliTest {
 
-    private static final Path ROOT = Path.of(System.getProperty("drishti.repo.root"));
+    private static final Path ROOT = Path.of(TestRoots.repo());
     private static final String SUTRA = """
             rachana: 1
             sutra: widget

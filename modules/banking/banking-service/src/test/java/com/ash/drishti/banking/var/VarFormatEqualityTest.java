@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.banking.var;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.server.IcebergMirror;
@@ -76,7 +77,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @Import(PinnedBusinessDate.class)
 class VarFormatEqualityTest {
 
-    static final Path BASE = Path.of(System.getProperty("drishti.module.root"), "target", "var-format-equality").toAbsolutePath();
+    static final Path BASE = Path.of(TestRoots.module(), "target", "var-format-equality").toAbsolutePath();
     static final Path DELTA = BASE.resolve("delta");
     static final Path ICEBERG = BASE.resolve("iceberg");
     static final Path DELTA_INTRADAY = BASE.resolve("delta-intraday");

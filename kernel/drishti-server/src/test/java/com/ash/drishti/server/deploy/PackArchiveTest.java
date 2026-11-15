@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.deploy;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -52,7 +53,7 @@ class PackArchiveTest {
     @Test
     void readsABundleMadeByPackbundlePy() throws Exception {
         // tools/packbundle.py output (pax headers for a path over 100 characters): the format both sides must agree on
-        byte[] bytes = Files.readAllBytes(Path.of(System.getProperty("drishti.module.root"), "src", "test", "resources", "deploy", "helpdesk-0.1.0.tar.gz"));
+        byte[] bytes = Files.readAllBytes(Path.of(TestRoots.module(), "src", "test", "resources", "deploy", "helpdesk-0.1.0.tar.gz"));
         PackArchive.Extracted ex = archive().extract(bytes, tmp.resolve("b"));
         assertThat(ex.root().resolve("pack.yaml")).exists();
         assertThat(ex.manifest().path("pack").asText()).isEqualTo("helpdesk");

@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.banking.var;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -93,7 +94,7 @@ class VarBusyProtectionTest {
         @Bean
         @Primary
         Signals confirmedHalfHeap(RequestsInFlight inFlight) {
-            Signals live = Signals.live(inFlight.counter(), Path.of(System.getProperty("drishti.module.root"), "target"));
+            Signals live = Signals.live(inFlight.counter(), Path.of(TestRoots.module(), "target"));
             return new Signals() {
                 public long heapAfterGcBytes() {
                     return live.heapMaxBytes() / 2;
@@ -118,7 +119,7 @@ class VarBusyProtectionTest {
 
     @DynamicPropertySource
     static void lake(DynamicPropertyRegistry r) throws Exception {
-        lake = Files.createDirectories(Path.of(System.getProperty("drishti.module.root"), "target", "var-busy-"+ System.nanoTime())).toAbsolutePath();
+        lake = Files.createDirectories(Path.of(TestRoots.module(), "target", "var-busy-"+ System.nanoTime())).toAbsolutePath();
         VarLakeFixture.write(lake);
         r.add("drishti.sources.connectors.risk-lake.settings.root", lake::toString);
         r.add("drishti.var.official.root", lake::toString);

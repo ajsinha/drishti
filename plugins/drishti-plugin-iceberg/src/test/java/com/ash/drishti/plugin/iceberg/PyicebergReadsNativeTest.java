@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.iceberg;
 
+import com.ash.drishti.testroots.TestRoots;
 import com.ash.drishti.testkit.LoaderRows;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -131,7 +132,7 @@ class PyicebergReadsNativeTest {
             written.put("layout", desk.load("trade").orElseThrow().metadataLocation());
         }
         List<String> cmd = new ArrayList<>(List.of(uv, "run", "--no-project", "--with", "pyiceberg", "--with", "pyiceberg-core", "--with", "pyarrow",
-                "--with", "sqlalchemy", "python", Path.of(System.getProperty("drishti.repo.root"), "tools", "iceberg", "readback.py").toAbsolutePath().normalize().toString()));
+                "--with", "sqlalchemy", "python", Path.of(TestRoots.repo(), "tools", "iceberg", "readback.py").toAbsolutePath().normalize().toString()));
         for (String m : written.values()) {
             cmd.add(m.replaceFirst("^file:(?!//)", "file://"));
         }

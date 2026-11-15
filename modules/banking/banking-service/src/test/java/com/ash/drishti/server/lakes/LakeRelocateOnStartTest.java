@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.lakes;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.file.Files;
@@ -76,7 +77,7 @@ class LakeRelocateOnStartTest {
      */
     @Test
     void aStartAfterTheMoveLeavesTheShippedLakeFilesAsShipped() throws Exception {
-        Path repo = Path.of(System.getProperty("drishti.repo.root")).toAbsolutePath().normalize();
+        Path repo = Path.of(TestRoots.repo()).toAbsolutePath().normalize();
         Path lakes = Files.createDirectories(tmp.resolve("config/lakes"));
         java.util.Map<String, byte[]> shipped = new java.util.TreeMap<>();
         try (var s = Files.list(repo.resolve("config/lakes"))) {

@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.net;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -42,7 +43,7 @@ class NetHistoryFreshTest {
 
     static NetNodes cluster;
     static Path lake;
-    static final Path SOURCE = Path.of(System.getProperty("drishti.repo.root"), "plugins", "drishti-plugin-delta", "src", "test", "resources", "lake").toAbsolutePath();
+    static final Path SOURCE = Path.of(TestRoots.repo(), "plugins", "drishti-plugin-delta", "src", "test", "resources", "lake").toAbsolutePath();
     static final ObjectMapper JSON = new ObjectMapper();
 
     @BeforeAll

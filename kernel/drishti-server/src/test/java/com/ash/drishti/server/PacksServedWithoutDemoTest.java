@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -41,9 +42,9 @@ import org.junit.jupiter.api.Test;
  */
 class PacksServedWithoutDemoTest {
 
-    static final Path PACKS = Path.of(System.getProperty("drishti.repo.root"), "config", "packs");
-    static final Path TESTDATA = Path.of(System.getProperty("drishti.repo.root"), "data", "testdata");
-    static final Path FEEDS = Path.of(System.getProperty("drishti.repo.root"), "config", "feeds");
+    static final Path PACKS = Path.of(TestRoots.repo(), "config", "packs");
+    static final Path TESTDATA = Path.of(TestRoots.repo(), "data", "testdata");
+    static final Path FEEDS = Path.of(TestRoots.repo(), "config", "feeds");
     /** price-history: internal-only prices, off as shipped. The published official results (var-official, exposure-official-cpty) are
      *  written by the server's own official captures into risk-results, never delivered as test data (VAR_GUIDE.md section 19).
      *  pnl-vector: the bank's alternative to scenario-pv, served by risk-store; the demo ships scenario PVs at position grain instead
@@ -141,7 +142,7 @@ class PacksServedWithoutDemoTest {
     /** The dataset's files are in the repository: its snapshot, its folder of days, or the pack samples of the kind. */
     private static boolean committed(JsonNode ds, String kind) {
         if (ds.has("samples")) {
-            return Files.isRegularFile(Path.of(System.getProperty("drishti.repo.root")).resolve(ds.path("samples").asText()).resolve(kind + ".jsonl"));
+            return Files.isRegularFile(Path.of(TestRoots.repo()).resolve(ds.path("samples").asText()).resolve(kind + ".jsonl"));
         }
         Path folder = TESTDATA.resolve(ds.path("folder").asText());   // its dated files or tars (DATA_LAKE_GUIDE.md section 5.2)
         try (Stream<Path> files = Files.list(folder)) {

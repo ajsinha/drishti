@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.DataNode;
@@ -58,7 +59,7 @@ class ImperfectDataTest {
 
     static List<Sutra> allSutras() throws Exception {
         List<Sutra> out = new ArrayList<>();
-        try (Stream<Path> packs = com.ash.drishti.api.resolution.ConfigResolution.repository(Path.of(System.getProperty("drishti.repo.root"), "config", "packs").toAbsolutePath().normalize().getParent().getParent()).packDirs().stream()) {
+        try (Stream<Path> packs = com.ash.drishti.api.resolution.ConfigResolution.repository(Path.of(TestRoots.repo(), "config", "packs").toAbsolutePath().normalize().getParent().getParent()).packDirs().stream()) {
             for (Path pack : packs.filter(p -> Files.isDirectory(p.resolve("sutras"))).sorted().toList()) {
                 try (SutraRegistry r = new SutraRegistry(new RachanaProperties(List.of(pack.resolve("sutras").toString()), false,
                         null, null, null, null, null, null, null, null), new ElCompiler())) {
@@ -92,7 +93,7 @@ class ImperfectDataTest {
     void everySutraSurvivesImperfectDocuments() throws Exception {
         List<Sutra> sutras = allSutras();
         assertThat(sutras).hasSizeGreaterThan(150);
-        Object sample = mapper.readValue(com.ash.drishti.common.PackSamples.document(Path.of(System.getProperty("drishti.repo.root"), "examples", "packs", "finance", "samples"), "trade", "IRS-48213")
+        Object sample = mapper.readValue(com.ash.drishti.common.PackSamples.document(Path.of(TestRoots.repo(), "examples", "packs", "finance", "samples"), "trade", "IRS-48213")
                 .orElseThrow(), Object.class);
         int empties = 0;
         for (Sutra s : sutras) {
@@ -121,12 +122,12 @@ class ImperfectDataTest {
     /** The deep-documents Sutra (BUILD_GUIDE.md section 6, Sutras over deep documents), over a real, deeply nested trade from the trading pack: every panel has data. */
     @Test
     void theNestedDocumentsTutorialWorksOnARealTrade() throws Exception {
-        String guide = Files.readString(Path.of(System.getProperty("drishti.repo.root"), "docs", "guides", "BUILD_GUIDE.md"));
+        String guide = Files.readString(Path.of(TestRoots.repo(), "docs", "guides", "BUILD_GUIDE.md"));
         guide = guide.substring(guide.indexOf("## 6. Sutras over deep documents"));    // the deep-documents section (was NESTED_DOCUMENTS.md)
         var m = java.util.regex.Pattern.compile("(?ms)^```yaml\\s*$\\n((?:#[^\\n]*\\n|\\s*\\n)*rachana:.*?)^```\\s*$").matcher(guide);
         assertThat(m.find()).isTrue();
         Sutra s = new com.ash.drishti.rachana.parse.SutraParser().parse(m.group(1), "BUILD_GUIDE.md", "docs");
-        DataNode trade = codec.read(com.ash.drishti.common.PackSamples.document(Path.of(System.getProperty("drishti.repo.root"), "modules", "banking", "dmod", "packs", "trading", "samples"), "trade", "MX-20000001").orElseThrow());
+        DataNode trade = codec.read(com.ash.drishti.common.PackSamples.document(Path.of(TestRoots.repo(), "modules", "banking", "dmod", "packs", "trading", "samples"), "trade", "MX-20000001").orElseThrow());
         ViewModel vm = pipeline.preview(Optional.of(s), new EntityDocument(EntityRef.of("trade", "MX-20000001"), trade,
                 new Provenance("test", 1, Instant.now(), false)));
         assertThat(vm.panels()).allSatisfy(p -> assertThat(p.empty()).as(p.id()).isFalse());

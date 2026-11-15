@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.banking.exposure;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -84,7 +85,7 @@ class ExposureApiTest {
 
     @DynamicPropertySource
     static void lake(DynamicPropertyRegistry r) throws Exception {
-        lake = Files.createDirectories(Path.of(System.getProperty("drishti.module.root"), "target", "exposure-lake-"+ System.nanoTime())).toAbsolutePath();
+        lake = Files.createDirectories(Path.of(TestRoots.module(), "target", "exposure-lake-"+ System.nanoTime())).toAbsolutePath();
         ExposureLakeFixture.write(lake);
         r.add("drishti.sources.connectors.ccr-lake.settings.root", lake::toString);
         r.add("drishti.ccr.exposure.official.root", lake::toString);

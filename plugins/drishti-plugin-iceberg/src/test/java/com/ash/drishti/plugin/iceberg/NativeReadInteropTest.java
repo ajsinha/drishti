@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.iceberg;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.iceberg.Table;
@@ -61,7 +62,7 @@ class NativeReadInteropTest {
 
     static List<String> tables() {
         List<String> out = new ArrayList<>();
-        Fixtures.expected(Path.of(System.getProperty("drishti.module.root"), "src", "test", "resources", "iceberg-fixtures")).fieldNames().forEachRemaining(out::add);
+        Fixtures.expected(Path.of(TestRoots.module(), "src", "test", "resources", "iceberg-fixtures")).fieldNames().forEachRemaining(out::add);
         return out;
     }
 

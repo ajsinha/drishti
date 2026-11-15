@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.
+  PROPRIETARY AND CONFIDENTIAL. See the LICENSE file in the root of this repository.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <!-- deliberately not a child of drishti-parent: the parent gives every module this one as a test dependency, so a child would be its own dependency -->
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>3.5.16</version>
+    <relativePath/>
+  </parent>
+  <groupId>com.ash.drishti</groupId>
+  <artifactId>drishti-testroots</artifactId>
+  <version>2.9.11.g</version>
+  <name>drishti-testroots</name>
+  <description>Where a test finds the repository and its module, from its own code location, never the working folder</description>
+  <properties>
+    <java.version>21</java.version>
+    <maven.compiler.release>21</maven.compiler.release>
+  </properties>
+  <dependencies>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-settingsfile</artifactId><version>${project.version}</version></dependency>
+  </dependencies>
+</project>

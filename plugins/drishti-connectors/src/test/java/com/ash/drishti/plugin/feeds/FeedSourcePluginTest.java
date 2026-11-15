@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.feeds;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.AsOf;
@@ -31,7 +32,7 @@ import org.junit.jupiter.api.Test;
 class FeedSourcePluginTest {
 
     static FeedSourcePlugin feed(String name, String fixture, String... extra) {
-        Map<String, String> s = new HashMap<>(Map.of("feed", name, "url", Path.of(System.getProperty("drishti.module.root"), "src", "test", "resources", "recorded",  fixture).toUri().toString()));
+        Map<String, String> s = new HashMap<>(Map.of("feed", name, "url", Path.of(TestRoots.module(), "src", "test", "resources", "recorded",  fixture).toUri().toString()));
         for (int i = 0; i + 1 < extra.length; i += 2) {
             s.put(extra[i], extra[i + 1]);
         }

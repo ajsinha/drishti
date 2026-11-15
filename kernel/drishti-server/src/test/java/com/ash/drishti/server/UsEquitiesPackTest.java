@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.EntityRef;
@@ -40,7 +41,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 class UsEquitiesPackTest extends PublicPacksOnLakes {
 
-    static final Path PACK = Path.of(System.getProperty("drishti.repo.root"), "modules", "capital-markets", "packs", "us-equities");
+    static final Path PACK = Path.of(TestRoots.repo(), "modules", "capital-markets", "packs", "us-equities");
 
     @Autowired ViewPipeline pipeline;
     @Autowired com.ash.drishti.engine.command.CommandParser commands;

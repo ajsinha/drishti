@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.engine;
 
+import com.ash.drishti.testroots.TestRoots;
 import com.ash.drishti.server.bi.Layered;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -108,7 +109,7 @@ class EngineBenchTest {
         out.add(String.format("columns layer: p50 %.2f ms, p95 %.2f ms (%d bytes on disk)", c[0], c[1], colBytes));
         out.add(String.format("rollup: p50 %.2f ms, p95 %.2f ms (%d bytes on disk)", r[0], r[1], rollBytes));
         out.add(String.format("result cache hit: p50 %.3f ms, p95 %.3f ms", h[0], h[1]));
-        Files.writeString(Path.of(System.getProperty("drishti.module.root"), "target", "bi-engine-bench.txt"), String.join("\n", out) + "\n");
+        Files.writeString(Path.of(TestRoots.module(), "target", "bi-engine-bench.txt"), String.join("\n", out) + "\n");
         out.forEach(System.out::println);
         assertThat(h[0]).isLessThan(c[0]);
         svc.close();

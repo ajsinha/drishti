@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.DataNode;
@@ -63,7 +64,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false"})
 class ViewModelSchemaTest {
 
-    private static final Path EXAMPLES = Path.of(System.getProperty("drishti.repo.root"), "docs", "guides", "examples");
+    private static final Path EXAMPLES = Path.of(TestRoots.repo(), "docs", "guides", "examples");
 
     @Autowired ViewPipeline pipeline;
     @Autowired CommandParser parser;

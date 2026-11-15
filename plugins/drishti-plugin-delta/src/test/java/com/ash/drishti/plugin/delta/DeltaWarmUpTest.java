@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.delta;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.testkit.DatedSourceContract;
@@ -28,7 +29,7 @@ import org.junit.jupiter.api.Test;
 class DeltaWarmUpTest {
 
     private static DeltaSourcePlugin start(Map<String, String> extra) throws Exception {
-        Map<String, String> settings = new HashMap<>(Map.of("root", Path.of(System.getProperty("drishti.module.root"), "src", "test", "resources", "lake").toAbsolutePath().toString(),
+        Map<String, String> settings = new HashMap<>(Map.of("root", Path.of(TestRoots.module(), "src", "test", "resources", "lake").toAbsolutePath().toString(),
                 "domain", "desk", "mode.counterparty", "effective", "source-name", "lake"));
         settings.putAll(extra);
         DeltaSourcePlugin p = new DeltaSourcePlugin();
