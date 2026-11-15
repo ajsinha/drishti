@@ -41,6 +41,7 @@ import org.apache.arrow.memory.BufferAllocator;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -57,6 +58,7 @@ import org.springframework.test.context.DynamicPropertySource;
         "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/identity-${random.uuid}/identity.db",
         "drishti.engines.flight.enabled=true", "drishti.engines.flight.port=0", "drishti.engines.flight.bind=127.0.0.1",
         "drishti.engines.flight.advertise=127.0.0.1"})
+@AutoConfigureMockMvc
 class FlightServerTest {
 
     static final TlsFixture TLS = new TlsFixture();
@@ -77,6 +79,8 @@ class FlightServerTest {
     @Autowired ApiTokenStore tokens;
     @Autowired AuditLog audit;
     @Autowired DataOutController dataOut;
+    @Autowired org.springframework.test.web.servlet.MockMvc mvc;
+    @Autowired com.ash.drishti.server.security.TokenVerifier verifier;
 
     String token(String user, Set<String> roles, List<String> scopes) {
         if (users.find(user).isEmpty()) {
@@ -147,5 +151,29 @@ class FlightServerTest {
         var d = dataOut.describe(new com.ash.drishti.kernel.api.security.Principal("root", List.of("admin")));
         assertThat(d).containsKeys("service", "nodes", "live", "recent", "limits", "tokens");
         assertThat(((java.util.Map<?, ?>) d.get("service")).get("running")).isEqualTo(true);
+    }
+
+    @Test
+    void adminStopsALiveReadAndAnUnknownOrUnauthorisedStopIsRefused() throws Exception {
+        String admin = "Bearer " + verifier.mint("root", List.of("admin"), 300);
+        String trader = "Bearer " + verifier.mint("tia", List.of("trader"), 300);
+        // a read under way: begun through the activity log as the Flight service does (the method is package-private in the engine)
+        var begin = com.ash.drishti.flight.FlightActivity.class.getDeclaredMethod("begin", com.ash.drishti.flight.FlightBackend.Caller.class,
+                FlightRequest.class, int.class);
+        begin.setAccessible(true);
+        var caller = new com.ash.drishti.flight.FlightBackend.Caller("fiona", null, "tok", Set.of("trades-only"), Set.of("data:read"));
+        var live = (com.ash.drishti.flight.FlightActivity.Live) begin.invoke(service.activity(), caller,
+                new FlightRequest(FlightRequest.Form.KIND, JsonNodeFactory.instance.objectNode().put("kind", "trade"), -1, false, -1), 0);
+        String path = "/api/v1/admin/data-out/streams/" + live.id() + "/stop";
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post(path).header("Authorization", trader))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isForbidden());
+        assertThat(live.stopped()).isFalse();
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post(path).header("Authorization", admin))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.stopped").value(live.id()));
+        assertThat(live.stopped()).isTrue();
+        assertThat(live.stoppedBy()).isEqualTo("root");
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/v1/admin/data-out/streams/no-such-read/stop")
+                .header("Authorization", admin)).andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isNotFound());
     }
 }

@@ -242,4 +242,18 @@ class ConnectorApiTest {
         assertThat(files.exists(name)).isFalse();
         assertThat(manager.effective(name).orElseThrow().isEnabled()).isTrue();
     }
+
+    @Test
+    void aDraftPreviewReadsTheFirstRecordsAndAMalformedRequestIsAClientError() throws Exception {
+        Path dir = TestRun.temp("api-docs");
+        Files.writeString(Files.createDirectories(dir.resolve("2026-10-05")).resolve("item.jsonl"), "{\"id\":\"A\"}\n{\"id\":\"B\"}\n");
+        String draft = body(dir.toString(), "").replaceFirst("\\}$", ",\"kind\":\"item\",\"date\":\"2026-10-05\"}");
+        mvc.perform(post("/api/v1/admin/connectors/api-docs/preview").contentType(MediaType.APPLICATION_JSON).content(draft))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.ok").isBoolean()).andExpect(jsonPath("$.kind").value("item"));
+        mvc.perform(post("/api/v1/admin/connectors/api-docs/preview").contentType(MediaType.APPLICATION_JSON).content(draft.replace("\"kind\":\"item\"", "\"kind\":\" \"")))
+                .andExpect(status().isBadRequest());
+        mvc.perform(post("/api/v1/admin/connectors/api-docs/preview").contentType(MediaType.APPLICATION_JSON).content(draft.replace("2026-10-05\"}", "not-a-date\"}")))
+                .andExpect(status().is4xxClientError());
+        mvc.perform(post("/api/v1/admin/connectors/api-docs/preview").contentType(MediaType.APPLICATION_JSON).content("{not json")).andExpect(status().is4xxClientError());
+    }
 }

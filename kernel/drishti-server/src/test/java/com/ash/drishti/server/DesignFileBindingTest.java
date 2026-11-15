@@ -16,6 +16,7 @@
 package com.ash.drishti.server;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -185,5 +186,15 @@ class DesignFileBindingTest {
         String who = as("ana", "author");
         String id = newDesign(who, "syncy");
         mvc.perform(get("/api/v1/builder/designs/" + id + "/sync").header("Authorization", who)).andExpect(status().is4xxClientError());
+    }
+
+    @Test
+    void unbindingDropsTheFileBindingAndAnUnknownDesignIsNotFound() throws Exception {
+        String who = as("ana", "author");
+        String id = newDesign(who, "unbound");
+        assertThat(ok(bind(who, id, "bound/unbound.v1.sutra.yaml")).path("boundFile").asText()).isEqualTo("bound/unbound.v1.sutra.yaml");
+        JsonNode after = ok(mvc.perform(delete("/api/v1/builder/designs/" + id + "/bind").header("Authorization", who)));
+        assertThat(after.path("boundFile").isMissingNode() || after.path("boundFile").isNull() || after.path("boundFile").asText().isEmpty()).isTrue();
+        mvc.perform(delete("/api/v1/builder/designs/no-such-design/bind").header("Authorization", who)).andExpect(status().isNotFound());
     }
 }

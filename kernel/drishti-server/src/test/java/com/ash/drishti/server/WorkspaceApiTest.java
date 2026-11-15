@@ -82,4 +82,17 @@ class WorkspaceApiTest {
                     .andExpect(status().isBadRequest());
         }
     }
+
+    @Test
+    void aWorkspaceIsSharedAndUnsharedAndAnUnsharedOneIsNotFound() throws Exception {
+        mvc.perform(put("/api/v1/me/workspaces/Shared desk").header("X-Drishti-User", "ash").contentType(MediaType.APPLICATION_JSON).content(CREDIT))
+                .andExpect(status().isOk());
+        mvc.perform(put("/api/v1/me/workspaces/Shared desk/share").header("X-Drishti-User", "ash").contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(put("/api/v1/me/workspaces/Shared desk/share").header("X-Drishti-User", "ash").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"everyone\":true}")).andExpect(status().isOk()).andExpect(jsonPath("$.everyone").value(true));
+        mvc.perform(delete("/api/v1/me/workspaces/Shared desk/share").header("X-Drishti-User", "ash")).andExpect(status().isNoContent());
+        mvc.perform(get("/api/v1/me/workspaces/Shared desk/share").header("X-Drishti-User", "ash")).andExpect(status().isNotFound());
+        mvc.perform(delete("/api/v1/me/workspaces/Shared desk/share").header("X-Drishti-User", "ash")).andExpect(status().isNotFound());
+    }
 }

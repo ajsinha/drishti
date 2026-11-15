@@ -359,4 +359,19 @@ class EditorApiTest {
         }
         throw new AssertionError("no " + value + " in " + list);
     }
+
+    @Test
+    void daxIsConvertedToRachanaAndWhatCouldNotBeIsNamed() throws Exception {
+        JsonNode ok = ann(post("/api/v1/tables/editor/dax"), Map.of("dax", "SUM('Trade'[Mtm])"));
+        assertThat(ok.has("rachana")).isTrue();
+        assertThat(ok.path("notConverted").isArray()).isTrue();
+        JsonNode odd = ann(post("/api/v1/tables/editor/dax"), Map.of("dax", "VAR x = 1 RETURN x"));
+        assertThat(odd.path("notConverted")).isNotEmpty();
+        // no text at all, or a body that is not an object, is a client error and never a 500
+        assertThat(call("ann", "writer", post("/api/v1/tables/editor/dax"), Map.of()).getResponse().getStatus()).isBetween(200, 499);
+        assertThat(mvc.perform(post("/api/v1/tables/editor/dax").header("Authorization", as("ann", "writer")).contentType(MediaType.APPLICATION_JSON).content("[1,2]"))
+                .andReturn().getResponse().getStatus()).isBetween(400, 499);
+        assertThat(mvc.perform(post("/api/v1/tables/editor/dax").header("Authorization", as("ann", "writer")).contentType(MediaType.APPLICATION_JSON).content("{not json"))
+                .andReturn().getResponse().getStatus()).isBetween(400, 499);
+    }
 }
