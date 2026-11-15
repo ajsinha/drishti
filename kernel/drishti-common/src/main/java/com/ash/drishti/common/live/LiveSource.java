@@ -61,6 +61,7 @@ public final class LiveSource implements SourcePlugin {
     private final KindContracts contracts;
     private final Set<String> kinds;
     private final UnaryOperator<EntityDocument> shape;
+    private final LiveDates dates;
     private volatile LiveFeed feed;
     private volatile LiveState state;
     private volatile ScheduledFuture<?> expiry;
@@ -73,6 +74,12 @@ public final class LiveSource implements SourcePlugin {
      * @param shape     the connector's where/set/map, applied as rows arrive (null: none)
      */
     public LiveSource(SourcePlugin plugin, KindContracts contracts, Set<String> kinds, UnaryOperator<EntityDocument> shape) {
+        this(plugin, contracts, kinds, shape, LiveDates.NONE);
+    }
+
+    /** As above, the live date from {@code dates} (LIVE_CONNECTORS_DESIGN.md section 5). */
+    public LiveSource(SourcePlugin plugin, KindContracts contracts, Set<String> kinds, UnaryOperator<EntityDocument> shape, LiveDates dates) {
+        this.dates = dates == null ? LiveDates.NONE : dates;
         if (!(plugin instanceof LiveTransport t)) {
             throw new IllegalArgumentException(plugin.manifest().name() + " is not a live transport");
         }
@@ -109,14 +116,14 @@ public final class LiveSource implements SourcePlugin {
         plugin.start(ctx);
         this.name = ctx.setting("source-name", plugin.manifest().name());
         LiveState s = new LiveState(Long.parseLong(ctx.setting("cache-mb", "256").strip()) * 1024 * 1024, diskCache(ctx, name));
-        RejectLog rejects = new RejectLog(rejectsDir(name), Integer.parseInt(ctx.setting("rejects.keep-days", "7").strip()), Clock.systemUTC());
+        RejectLog rejects = new RejectLog(under("live/rejects", name), Integer.parseInt(ctx.setting("rejects.keep-days", "7").strip()), Clock.systemUTC());
         LiveFeed f = new LiveFeed(name, kinds, ctx.settings(), contracts, shape, bytes -> {
             try {
                 return ctx.parseJson(new ByteArrayInputStream(bytes));
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
-        }, s, rejects);
+        }, s, rejects, dates, new LiveCheckpoints(under("live/checkpoints", name + ".json")), under("live/reconcile", null));
         s.reload(e -> f.reread(e, transport::readBack));
         this.state = s;
         this.feed = f;
@@ -131,11 +138,11 @@ public final class LiveSource implements SourcePlugin {
         transport.receive(f);
     }
 
-    /** {@code <data folder>/live/rejects/<connector>}; none (the newest kept in memory only) when the data folder is not absolute or not named. */
-    private static Path rejectsDir(String name) {
+    /** {@code <data folder>/<sub>[/<name>]}; null when the data folder is not absolute or not named (kept in memory only). */
+    private static Path under(String sub, String name) {
         try {
-            Path root = Path.of(com.ash.drishti.api.DataDir.under("live/rejects"));
-            return root.isAbsolute() ? root.resolve(name) : null;
+            Path root = Path.of(com.ash.drishti.api.DataDir.under(sub));
+            return !root.isAbsolute() ? null : name == null ? root : root.resolve(name);
         } catch (IllegalStateException e) {
             return null;
         }

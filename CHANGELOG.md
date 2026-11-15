@@ -18,6 +18,14 @@
 
 ## Unreleased
 
+- **Live feeds, step L4: business dates and the next lake load.** Live rows belong to the server's current business date: a row of the
+  next business date is held and applied when the date rolls (`next-date.max-rows`), an earlier one is rejected (closed-date), a later
+  one too (future-date). When a load of a kind finishes ready, each live connector of the kind reconciles its rows of that date against
+  the load by the contract's `live.absorb` (`by-order`, `by-cutoff`, `reset`): absorbed rows give way to the lake's, rows booked after
+  the extract are carried, rows the load does not hold that changed before its cut-off (received less `drishti.live.reconcile.settle`,
+  5 m) are orphans, dropped and listed in `<data folder>/live/reconcile/<kind>/<date>.jsonl`. Checkpoints
+  (`<data folder>/live/checkpoints/<connector>.json`) keep a replay at restart from bringing absorbed rows back. Each reconcile is
+  audited (`live-reconcile`) and shown in the connector's Health measures.
 - **Live feeds, step L3: the newer row wins, live sets start from the live state, blotters take their rules from the contract.** A
   record read Live is the newer of the live row and the lake's by the kind's `live.order` (the lake's when as new or newer: the load
   already has the change); a live delete hides an older lake row. A live set (a blotter, a FORM result, a bare mnemonic) opening is

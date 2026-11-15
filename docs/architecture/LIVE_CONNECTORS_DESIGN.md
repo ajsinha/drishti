@@ -18,7 +18,8 @@
 **Status: design for release i5, decided by the product owner (section 15); steps L1 to L10 are built in i5. Built: L1 (the
 contract's `live:` block and its checks, `companion-of:` in the resolver, the reject reasons and their codes) L2 (the transport SPI,
 the kernel's live intake and live state, Kafka on it) and L3 (the router's merged read, live sets seeded from the shared state, blotter
-defaults from the contract, the six trade templates). Nothing else in this
+defaults from the contract, the six trade templates) and L4 (business dates and the roll, reconcile at a load, checkpoints, the reconcile
+record). Nothing else in this
 document is built unless a section says "today".** It answers the product owner's request: *"for all data connectors there can be a
 live connector, generally speaking."*
 
@@ -311,8 +312,9 @@ Notes:
 
 The lake holds one snapshot of a kind per business date. Live rows belong to **one** date at a time:
 
-- **The live date** of a kind is the current business date of its calendar, rolling at `drishti.live.roll-at` in the calendar's zone
-  (the business-date rules of ADR 012).
+- **The live date** of a kind is the server's current business date (today in `drishti.business-date.zone`, rolled back to a
+  business day of `drishti.business-date.calendar`: the business-date rules of ADR 012, the same as every read); it rolls when that
+  date does. One rule, no setting of its own.
 - **The base** is the lake's newest snapshot of the kind on or before the live date. In the morning it is usually yesterday's close;
   after the day's first load it is today's.
 - **Live** (what `AsOf.LATEST` answers) **= the base, with the live state over it by key.** Every screen that shows it says so in the
@@ -370,6 +372,19 @@ panel. An orphan count over `reconcile.orphan-alert` raises a platform alert.
 
 **Landed kinds** need no reconcile: their intraday batches are in the lake, the newest row per key wins by `order:`, and a full load of
 the date replaces the date.
+
+Built (L4): `LiveDates` (the live date and the next business date from the server's business dates), the feed's date check and the rows
+held for the next date (`next-date.max-rows`, 100,000) applied at the roll; `LiveState.reconcile` with the three rules and the cases of the
+table above; `LiveReconciler` on the server, run off the request threads when a load of the kind finishes ready (Data loads), reading the
+lake's row of every key the live state holds for the load's date (live connectors left out) before any row moves, so a store that fails
+leaves the state as it was. A row is the load's when its date is the load's date or earlier; a later live date's rows are untouched.
+**The cut-off** is when the load was received less `drishti.live.reconcile.settle` (5 m); a cut-off the load states itself (its
+extract time in the `.ready` file or the announcement) is not read yet. **Checkpoints** are kept in one JSON file per live connector
+(`<data folder>/live/checkpoints/<connector>.json`), not yet in the Drishti database: the cut-off for `by-cutoff`, the partitions'
+positions for `reset`. **The record**: `<data folder>/live/reconcile/<kind>/<load date>.jsonl` (the counts, then the first 100 orphans),
+an audit entry (`live-reconcile`), the last one in the connector's Health measures. Not yet: the orphan alert
+(`reconcile.orphan-alert`) and the Admin line (L7); open views of an absorbed row are not told (the lake's row is as new; they move
+to it at their next read).
 
 ## 7. Where it plugs in
 
@@ -704,7 +719,7 @@ in; L6 to L10 use it.
 | **L1** (built) | Contract `live:` block (parser, load checks, generated contract docs); `companion-of:` in the resolver; reject reasons and their codes | M | `binding-hint.live` | contracts README, KERNEL_AND_MODULES 5.2 and 18.5 |
 | **L2** (built) | The live intake and the live state (kernel): decode, map, validate, order, apply; the transport SPI; Kafka on it | L | the Kafka plugin's index, caches, `mode` | Kafka README, DATA_ARCHITECTURE *Streaming sources* |
 | **L3** (built) | The router's merged read; live sets on the shared state; blotter defaults from the contract; the six trade templates | L | per-set live side; repeated keys | LIVE_RESULTS_GUIDE sections 6 and 7 |
-| **L4** | Business dates, the roll, reconcile at a load (three absorb rules), checkpoints, the reconcile record | L | | DATA_LAKE_GUIDE (loads), LIVE_RESULTS_GUIDE |
+| **L4** (built) | Business dates, the roll, reconcile at a load (three absorb rules), checkpoints, the reconcile record | L | | DATA_LAKE_GUIDE (loads), LIVE_RESULTS_GUIDE |
 | **L5** | The live lander; scenario PVs and P&L vectors on it; parity on Delta, Iceberg and files | L | `VarPvStreamPlugin`, `VarPvWindow`, `pv-updates`, `drishti.var.intraday.kafka.*` | VAR_GUIDE 8.4, CONFIGURATION (generated) |
 | **L6** | ActiveMQ and RabbitMQ on the transport SPI; `apply: both` | M | `MessageStateSource`, `state.*` | the two READMEs |
 | **L7** | Admin (option B: the Live column and drawer in Data bindings; option A's grid read-only under Health), Health states and measures, alerts, the CLI, the live mark's words on every page | L | the PV stream's admin endpoints | ADMIN_GUIDE, OPERATIONS_GUIDE, CLI_REFERENCE, API_REFERENCE |

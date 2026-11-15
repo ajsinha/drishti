@@ -497,6 +497,7 @@ plugins:
       - { name: "id-field.*", desc: "Id field per topic: id-field.<topic>", group: mapping }
       - { name: mode, desc: "No longer read (said once at start): a companion (companion-of:) is a feed over a lake, what ticks was; a live connector without one holds its rows, what state was. Remove it", group: mapping }
       - { name: max-message-kb, type: int, default: "1024", desc: "A larger message is rejected (too-large, DRS-1072)", group: mapping }
+      - { name: "next-date.max-rows", type: int, default: "100000", desc: "Rows of the next business date held until the live date rolls; more are rejected (future-date)", group: mapping }
       - { name: "rejects.keep-days", type: int, default: "7", desc: "Days of the reject log kept (<data folder>/live/rejects/<connector>/<date>.jsonl)", group: mapping }
       - { name: poll-ms, type: int, desc: "Poll interval", group: tuning, default: "200" }
       - { name: cache-mb, type: int, desc: "The live state's documents held in memory, by size; past it a document is read back from the topic by its offset", group: tuning, default: "256" }

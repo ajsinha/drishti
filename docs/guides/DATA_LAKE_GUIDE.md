@@ -1222,6 +1222,16 @@ tables:
     latest-by: COMPUTED_AT
 ```
 
+### 5.3.1 A load and the live rows of the day
+
+A kind with a live feed ([LIVE_CONNECTORS_DESIGN.md section 6](../architecture/LIVE_CONNECTORS_DESIGN.md#6-end-of-day-the-next-lake-load-absorbs-the-live-state))
+has the day's changes in the kernel's live state, over the lake. When a load of the kind finishes ready, every live row of the load's date
+(or earlier) is reconciled against it, by the kind's contract (`live.absorb`): `by-order` (the lake's row as new or newer absorbs the live
+row), `by-cutoff` (rows changed before the load's cut-off are the load's) or `reset` (all of them). A live row the load does not hold and
+that changed before the cut-off is an **orphan**: dropped and listed in `<data folder>/live/reconcile/<kind>/<date>.jsonl`. A row changed
+after it is carried: it was booked after the extract. Nothing is ever counted twice: each key is read from the lake or from the live
+state, never both.
+
 ### 5.4 Repeats and corrections
 
 - **The same file again** (the same SHA-256) is not loaded twice by the inbox: it goes to the outbox marked *already loaded in run …*

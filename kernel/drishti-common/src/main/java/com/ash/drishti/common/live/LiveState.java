@@ -214,6 +214,85 @@ public final class LiveState {
         return e.deleted() ? 0 : 1;
     }
 
+    /**
+     * What a reconcile did (section 6): rows the load absorbed (dropped: the lake's row answers), rows carried (newer than the load),
+     * orphans (dropped: changed before the cut-off and not in the load: the source's own extract says they do not exist), deletes carried
+     * (the row stays hidden), and the orphans themselves.
+     */
+    public record Reconcile(String kind, java.time.LocalDate loadDate, LiveRules.Absorb rule, Instant cutoff, int absorbed, int carried, int orphans,
+            int deletesCarried, List<Entry> orphanRows, Map<String, Long> positions) {}
+
+    /**
+     * Reconciles the rows of {@code kind} that belong to {@code loadDate} or before (rows of a later live date are not the load's) against a
+     * load of that date, by the kind's {@code absorb:} rule:
+     * <ul>
+     *   <li>{@code by-order}: the lake's row as new or newer by {@code live.order} absorbs the live row; older, the live row is carried. A
+     *       live delete stays (the row hidden) while the lake's row is older than it, and goes when the lake's is as new or newer.</li>
+     *   <li>{@code by-cutoff}: rows changed on or before {@code cutoff} are absorbed, later ones carried.</li>
+     *   <li>{@code reset}: every row goes.</li>
+     * </ul>
+     * In every rule a row not in the load (and not a delete) changed on or before the cut-off is an orphan, dropped and reported; changed
+     * after it, carried (booked after the extract). A delete whose key is not in the load is absorbed. The swap is per row; reads are never
+     * blocked.
+     *
+     * @param lake the lake's order values of a key in the load, empty when the load does not hold it
+     */
+    public Reconcile reconcile(String kind, java.time.LocalDate loadDate, LiveRules.Absorb rule, Instant cutoff,
+            Function<String, Optional<List<Object>>> lake) {
+        Map<String, Entry> rows = kinds.get(kind);
+        int absorbed = 0;
+        int carried = 0;
+        int orphans = 0;
+        int deletesCarried = 0;
+        List<Entry> orphanRows = new ArrayList<>();
+        Map<String, Long> positions = new java.util.TreeMap<>();
+        if (rows == null) {
+            return new Reconcile(kind, loadDate, rule, cutoff, 0, 0, 0, 0, List.of(), Map.of());
+        }
+        for (Entry e : List.copyOf(rows.values())) {
+            if (e.asOf() != null && loadDate != null && e.asOf().length() >= 10 && java.time.LocalDate.parse(e.asOf().substring(0, 10)).isAfter(loadDate)) {
+                continue;                                              // a row of a later date: not this load's
+            }
+            if (e.position() != null && e.position().offset() >= 0) {
+                positions.merge(e.position().stream() + "/" + e.position().partition(), e.position().offset(), Math::max);
+            }
+            Optional<List<Object>> l = lake.apply(e.key());
+            boolean beforeCutoff = e.changedAt() == null || cutoff == null || !e.changedAt().isAfter(cutoff);
+            boolean drop;
+            if (l.isEmpty()) {
+                if (e.deleted()) {
+                    drop = true;                                       // the load does not hold it either: the delete is absorbed
+                } else if (rule == LiveRules.Absorb.RESET || beforeCutoff) {
+                    orphans++;
+                    orphanRows.add(e);
+                    if (rows.remove(e.key(), e)) {
+                        forget(e);
+                    }
+                    continue;
+                } else {
+                    drop = false;
+                }
+            } else {
+                drop = switch (rule) {
+                    case RESET -> true;
+                    case BY_CUTOFF -> beforeCutoff;
+                    case BY_ORDER -> !e.order().isEmpty() && LiveRecord.compare(l.get(), null, e.order(), null) >= 0;
+                };
+            }
+            if (drop) {
+                if (rows.remove(e.key(), e)) {
+                    forget(e);
+                    absorbed++;
+                }
+            } else if (e.deleted()) {
+                deletesCarried++;
+            } else {
+                carried++;
+            }
+        }
+        return new Reconcile(kind, loadDate, rule, cutoff, absorbed, carried, orphans, deletesCarried, List.copyOf(orphanRows), positions);
+    }
+
     /** Empties the documents held in memory and on disk (Admin's purge); the rows stay and are read back when asked. */
     public void purge() {
         docs.invalidateAll();

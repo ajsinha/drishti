@@ -857,6 +857,45 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
         return com.ash.drishti.common.live.LiveRecord.compare(mine, null, e.order(), null) >= 0;
     }
 
+    /** The kind's live connectors (their kernel live sources), by connector name, in read order. */
+    public Map<String, com.ash.drishti.common.live.LiveSource> liveSources(String kind) {
+        Map<String, com.ash.drishti.common.live.LiveSource> out = new LinkedHashMap<>();
+        for (SourcePlugin p : candidates(kind)) {
+            com.ash.drishti.common.live.LiveSource l = liveOf(p);
+            if (l != null) {
+                out.put(p.manifest().name(), l);
+            }
+        }
+        return out;
+    }
+
+    /**
+     * The order values ({@code fields}) of {@code ref}'s row in the stores of {@code date} (live connectors left out): what a load holds of
+     * it, for a reconcile (LIVE_CONNECTORS_DESIGN.md section 6). Empty when no store holds the row for the date.
+     *
+     * @throws IllegalStateException a store failed: the reconcile does not run on a guess
+     */
+    public Optional<List<Object>> storeOrder(EntityRef ref, java.time.LocalDate date, List<String> fields) {
+        for (SourcePlugin p : candidates(ref.kind())) {
+            if (liveOf(p) != null) {
+                continue;
+            }
+            try {
+                Optional<EntityDocument> d = p.manifest().capabilities().dated() ? p.fetch(ref, AsOf.of(date)) : p.fetch(ref);
+                if (d.isPresent() && !d.get().deleted()) {
+                    List<Object> out = new ArrayList<>();
+                    for (String f : fields) {
+                        out.add(d.get().data().get(f).unwrap());
+                    }
+                    return Optional.of(out);
+                }
+            } catch (Exception e) {
+                throw new IllegalStateException(p.manifest().name() + " failed reading " + ref + " for " + date + ": " + e.getMessage(), e);
+            }
+        }
+        return Optional.empty();
+    }
+
     /**
      * Every row the kind's live connectors hold now (their shared live state), each named after its connector: a live set's rows that
      * changed before it opened (LIVE_CONNECTORS_DESIGN.md section 7.2). Deletes are not rows; a set learns of them as they come.

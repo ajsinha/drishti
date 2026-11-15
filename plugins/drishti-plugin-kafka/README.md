@@ -32,6 +32,7 @@ settings:
 - id-field.*
 - mode
 - max-message-kb
+- next-date.max-rows
 - rejects.keep-days
 - poll-ms
 - cache-mb

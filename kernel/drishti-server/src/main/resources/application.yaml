@@ -236,6 +236,8 @@ drishti:
     file: ${DRISHTI_EDIT_FILE:${drishti.config.dir}/edit/edit.yaml}
   live:                              # live feeds for any kind: the kind's live: rules in its contract, a companion per data connector (docs/architecture/LIVE_CONNECTORS_DESIGN.md)
     restate-kinds: ${DRISHTI_LIVE_RESTATE_KINDS:scenario-pv,pnl-vector}   # the kinds whose landed feed may restate a closed, not signed-off date (closed-dates: restate in the contract; comma-separated)
+    reconcile:
+      settle: ${DRISHTI_LIVE_RECONCILE_SETTLE:5m}   # a load's cut-off is when it was received less this: live rows changed on or before it are the load's (absorb: by-cutoff; orphans)
   live-sets:                         # the live result sets behind blotters, FORM results, searches and bare mnemonics (docs/guides/LIVE_RESULTS_GUIDE.md section 7)
     flush-ms: 50                     # how often each viewer's waiting changes are sent, coalesced per record (milliseconds, at least 10)
     window-capacity: 5000            # records waiting for one viewer before it is told to resync instead (back-pressure)

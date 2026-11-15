@@ -32,6 +32,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -94,6 +95,22 @@ public final class LiveFeed implements LiveIntake {
     private final int maxKb;
     private volatile boolean caughtUp;
     private volatile Instant lastMessage;
+    private final LiveDates dates;
+    private final LiveCheckpoints checkpoints;
+    private final java.nio.file.Path reconcileDir;
+    /** Records of the next business date, held until the roll (section 5), bounded by {@code next-date.max-rows}. */
+    private final java.util.Deque<Held> held = new java.util.ArrayDeque<>();
+    private final int maxHeld;
+    private volatile LocalDate seenLiveDate;
+    private volatile LiveState.Reconcile lastReconcile;
+
+    private record Held(LiveMessage message, LiveRecord record, LiveRules rules) {}
+
+    /** As the full constructor, with no dates checked, no checkpoints kept and no reconcile record written (a feed outside a server). */
+    public LiveFeed(String connector, Set<String> kinds, Map<String, String> settings, KindContracts contracts, UnaryOperator<EntityDocument> shape,
+            Function<byte[], DataNode> parse, LiveState state, RejectLog rejects) {
+        this(connector, kinds, settings, contracts, shape, parse, state, rejects, LiveDates.NONE, new LiveCheckpoints(null), null);
+    }
 
     /**
      * @param connector the live connector's name
@@ -104,9 +121,16 @@ public final class LiveFeed implements LiveIntake {
      * @param parse     JSON bytes to the document tree (the plugin context's parser)
      * @param state     the live state the rows are applied to
      * @param rejects   the reject log
+     * @param dates     the live date and the next business date (section 5)
+     * @param checkpoints what a replay must not bring back (section 6)
+     * @param reconcileDir where reconcile records are written ({@code <data folder>/live/reconcile}, absolute), or null
      */
     public LiveFeed(String connector, Set<String> kinds, Map<String, String> settings, KindContracts contracts, UnaryOperator<EntityDocument> shape,
-            Function<byte[], DataNode> parse, LiveState state, RejectLog rejects) {
+            Function<byte[], DataNode> parse, LiveState state, RejectLog rejects, LiveDates dates, LiveCheckpoints checkpoints,
+            java.nio.file.Path reconcileDir) {
+        this.dates = dates == null ? LiveDates.NONE : dates;
+        this.checkpoints = checkpoints == null ? new LiveCheckpoints(null) : checkpoints;
+        this.reconcileDir = reconcileDir;
         this.connector = connector;
         this.kinds = kinds == null ? Set.of() : Set.copyOf(kinds);
         this.settings = settings == null ? Map.of() : Map.copyOf(settings);
@@ -121,6 +145,7 @@ public final class LiveFeed implements LiveIntake {
             }
         });
         this.maxKb = parseInt(this.settings.get("max-message-kb"), DEFAULT_MAX_KB);
+        this.maxHeld = parseInt(this.settings.get("next-date.max-rows"), 100_000);
     }
 
     // -- the intake -----------------------------------------------------------------------------------------------------------
@@ -129,6 +154,7 @@ public final class LiveFeed implements LiveIntake {
     public void accept(LiveMessage m) {
         try {
             lastMessage = m.timestamp() == null ? Instant.now() : m.timestamp();
+            roll();
             take(m);
         } catch (RuntimeException e) {
             reject(null, LiveReject.CONTRACT, "the message could not be read: " + e.getMessage(), m);
@@ -320,7 +346,96 @@ public final class LiveFeed implements LiveIntake {
         apply(m, new LiveRecord(kind, key, op, order, changedAt, changedBy, asOf, doc, m.position(), connector), rules);
     }
 
+    /**
+     * The record's business date against the live date (section 5): the live date (or none: the live date) is applied; the next business
+     * date is held for the roll; an earlier one is rejected ({@code closed-date}: a landed kind's restatements are the lander's); a later
+     * one is rejected ({@code future-date}). A record a load has absorbed already (a replay, section 6) is dropped and counted.
+     */
     private void apply(LiveMessage m, LiveRecord r, LiveRules rules) {
+        if (checkpoints.absorbed(r)) {
+            count("absorbed");
+            return;
+        }
+        LocalDate live = dates.live();
+        if (live != null) {
+            LocalDate d = date(r.asOf());
+            if (d == null) {
+                r = new LiveRecord(r.kind(), r.key(), r.op(), r.order(), r.changedAt(), r.changedBy(), live.toString(), r.doc(), r.position(), r.source());
+            } else if (d.isBefore(live)) {
+                reject(r.kind(), LiveReject.CLOSED_DATE, "the row is of " + d + ", before the live date " + live, m);
+                return;
+            } else if (d.isAfter(live)) {
+                if (!d.equals(dates.next(live))) {
+                    reject(r.kind(), LiveReject.FUTURE_DATE, "the row is of " + d + ", after the next business date " + dates.next(live), m);
+                    return;
+                }
+                synchronized (held) {
+                    if (held.size() >= maxHeld) {
+                        reject(r.kind(), LiveReject.FUTURE_DATE, "the row is of the next business date " + d + " and " + maxHeld
+                                + " rows of it are held already (next-date.max-rows)", m);
+                        return;
+                    }
+                    held.addLast(new Held(m, r, rules));
+                }
+                count("held");
+                return;
+            }
+        }
+        applied(r);
+    }
+
+    /**
+     * The roll (section 5): when the live date moves, the rows held for it are applied; the rows the state holds stay, still over the
+     * base, as carried from their date until a load absorbs them or their retention ends.
+     */
+    private void roll() {
+        LocalDate live = dates.live();
+        if (live == null || live.equals(seenLiveDate)) {
+            return;
+        }
+        seenLiveDate = live;
+        List<Held> now = new ArrayList<>();
+        synchronized (held) {
+            for (java.util.Iterator<Held> it = held.iterator(); it.hasNext();) {
+                Held h = it.next();
+                LocalDate d = date(h.record().asOf());
+                if (d != null && !d.isAfter(live)) {
+                    it.remove();
+                    if (d.equals(live)) {
+                        now.add(h);
+                    } else {
+                        count("rejected.closed-date");             // held for a date that passed without its roll (a long pause)
+                    }
+                }
+            }
+        }
+        now.forEach(h -> applied(h.record()));
+    }
+
+    /** The live date as this feed saw it last, or null. */
+    public LocalDate liveDate() {
+        return seenLiveDate;
+    }
+
+    /** How many rows of the next business date are held for the roll. */
+    public int held() {
+        synchronized (held) {
+            return held.size();
+        }
+    }
+
+    private static LocalDate date(String s) {
+        if (s == null || s.length() < 10) {
+            return null;
+        }
+        try {
+            return LocalDate.parse(s.substring(0, 10));
+        } catch (java.time.format.DateTimeParseException e) {
+            return null;
+        }
+    }
+
+    private void applied(LiveRecord r) {
         byte[] json = r.doc() == null ? null : bytes(r.doc());
         LiveState.Outcome o = state.apply(r, json);
         count(o.name().toLowerCase(java.util.Locale.ROOT));
@@ -462,8 +577,74 @@ public final class LiveFeed implements LiveIntake {
         return a == null ? 0 : a.sum();
     }
 
+    /**
+     * Reconciles {@code kind} against a load of {@code loadDate} (section 6), by the kind's {@code absorb:} rule, and leaves a record: the
+     * counts, and the first 100 orphans as JSONL at {@code <reconcile dir>/<kind>/<load date>.jsonl}. A by-cutoff or reset reconcile
+     * leaves a checkpoint so a replay does not bring the absorbed rows back.
+     *
+     * @param cutoff the load's cut-off (its extract time; else when it was received, less the settle time)
+     * @param lake   the order values of a key in the load ({@code live.order}'s fields), empty when the load does not hold it
+     */
+    public LiveState.Reconcile reconcile(String kind, LocalDate loadDate, Instant cutoff, Function<String, Optional<List<Object>>> lake) {
+        LiveRules rules = contracts.rules(kind);
+        LiveState.Reconcile r = state.reconcile(kind, loadDate, rules.absorb(), cutoff, lake);
+        if (rules.absorb() == LiveRules.Absorb.BY_CUTOFF && cutoff != null) {
+            checkpoints.cutoff(kind, cutoff);
+        } else if (rules.absorb() == LiveRules.Absorb.RESET && !r.positions().isEmpty()) {
+            checkpoints.reset(kind, r.positions());
+        }
+        if (caughtUp && (r.absorbed() > 0 || r.orphans() > 0)) {
+            List<EntityHit> hits = new ArrayList<>();
+            state.entries(kind).filter(e -> !e.deleted()).forEach(e -> hits.add(hit(kind, e.key())));
+            for (String other : state.kinds()) {
+                if (!other.equals(kind)) {
+                    state.entries(other).filter(e -> !e.deleted()).forEach(e -> hits.add(hit(other, e.key())));
+                }
+            }
+            index.replaceAll(hits);
+        }
+        counts.computeIfAbsent("absorbed", k -> new LongAdder()).add(r.absorbed());
+        counts.computeIfAbsent("orphans", k -> new LongAdder()).add(r.orphans());
+        lastReconcile = r;
+        record(r);
+        return r;
+    }
+
+    /** The last reconcile, or null. */
+    public LiveState.Reconcile lastReconcile() {
+        return lastReconcile;
+    }
+
+    private void record(LiveState.Reconcile r) {
+        if (reconcileDir == null) {
+            return;
+        }
+        try {
+            java.nio.file.Path dir = reconcileDir.resolve(r.kind());
+            java.nio.file.Files.createDirectories(dir);
+            StringBuilder b = new StringBuilder();
+            ObjectNode head = JSON.createObjectNode();
+            head.put("at", Instant.now().toString()).put("connector", connector).put("kind", r.kind())
+                    .put("load", String.valueOf(r.loadDate())).put("rule", r.rule().name().toLowerCase(java.util.Locale.ROOT).replace('_', '-'))
+                    .put("cutoff", String.valueOf(r.cutoff())).put("absorbed", r.absorbed()).put("carried", r.carried())
+                    .put("orphans", r.orphans()).put("deletesCarried", r.deletesCarried());
+            b.append(head).append('\n');
+            r.orphanRows().stream().limit(100).forEach(e -> {
+                ObjectNode o = JSON.createObjectNode();
+                o.put("orphan", e.key()).put("changedAt", String.valueOf(e.changedAt())).put("position", String.valueOf(e.position()));
+                b.append(o).append('\n');
+            });
+            java.nio.file.Files.writeString(dir.resolve(r.loadDate() + ".jsonl"), b.toString(), StandardCharsets.UTF_8,
+                    java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.APPEND);
+        } catch (java.io.IOException e) {
+            System.getLogger(LiveFeed.class.getName()).log(System.Logger.Level.WARNING, "the reconcile record of " + r.kind() + " cannot be written to "
+                    + reconcileDir + ": " + e.getMessage());
+        }
+    }
+
     /** Removes what is past each kind's retention; the rows removed unabsorbed are counted ({@code expired}). */
     public void expire(Instant now) {
+        roll();
         for (String kind : state.kinds()) {
             LiveRules r = contracts.rules(kind);
             int n = state.expire(kind, now, r.ttl(), r.maxRows());
@@ -525,6 +706,13 @@ public final class LiveFeed implements LiveIntake {
         counts.forEach((k, v) -> c.put(k, v.sum()));
         out.put("counts", c);
         out.put("lastMessage", lastMessage == null ? null : lastMessage.toString());
+        out.put("liveDate", seenLiveDate == null ? null : seenLiveDate.toString());
+        out.put("heldForNextDate", held());
+        LiveState.Reconcile rc = lastReconcile;
+        if (rc != null) {
+            out.put("lastReconcile", Map.of("kind", rc.kind(), "load", String.valueOf(rc.loadDate()), "absorbed", rc.absorbed(), "carried", rc.carried(),
+                    "orphans", rc.orphans(), "deletesCarried", rc.deletesCarried()));
+        }
         return out;
     }
 
