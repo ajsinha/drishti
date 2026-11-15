@@ -130,7 +130,7 @@ def test_a_report_on_a_model_has_its_own_measures_and_the_query_as_mq_or_sql(bro
         except Exception:  # noqa: BLE001 - "not attached to the DOM": the pane was redrawn under the call
             if attempt == 2:
                 raise
-            page.wait_for_timeout(300)
+            page.wait_for_timeout(100)
     page.wait_for_timeout(500)
     page.drag_and_drop('[data-field="MTM in thousands"]', "[data-canvas-grid]", target_position={"x": 80, "y": 40})
     page.drag_and_drop('[data-field="trade.DESK"]', ".bi-dvis")
