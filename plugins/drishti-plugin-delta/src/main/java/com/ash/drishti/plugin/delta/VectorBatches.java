@@ -40,7 +40,22 @@ final class VectorBatches {
         boolean closed;
     }
 
+    /** How the first read of a file waits for the others: the window by default; a test waits on the ids joined, never on a clock. */
+    interface Window {
+        /** Returns when the batch may be read; {@code joined} is how many ids have joined it so far. */
+        void await(java.util.function.IntSupplier joined);
+    }
+
     private final ConcurrentHashMap<String, Batch> open = new ConcurrentHashMap<>();
+    private final Window window;
+
+    VectorBatches() {
+        this(joined -> java.util.concurrent.locks.LockSupport.parkNanos(WINDOW_NANOS));
+    }
+
+    VectorBatches(Window window) {
+        this.window = window;
+    }
 
     /**
      * The vectors of {@code id} from the file {@code key} names (its kind, date, file and columns), read by {@code read} with every id
@@ -60,7 +75,12 @@ final class VectorBatches {
                 b.ids.add(id);
             }
             if (leader[0]) {
-                java.util.concurrent.locks.LockSupport.parkNanos(WINDOW_NANOS);
+                Batch mine = b;
+                window.await(() -> {
+                    synchronized (mine) {
+                        return mine.ids.size();
+                    }
+                });
                 Set<String> ids;
                 synchronized (b) {
                     b.closed = true;

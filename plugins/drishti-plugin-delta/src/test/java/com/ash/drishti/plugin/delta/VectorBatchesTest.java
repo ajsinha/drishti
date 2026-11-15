@@ -41,7 +41,13 @@ class VectorBatchesTest {
 
     @Test
     void aPageAskedAtOnceIsOneReadAndEachGetsItsOwn() throws Exception {
-        VectorBatches b = new VectorBatches();
+        // the window waits until the whole page has joined (at most 10 s), not for a time a busy machine may overrun: one read, always
+        VectorBatches b = new VectorBatches(joined -> {
+            long until = System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(10);
+            while (joined.getAsInt() < 100 && System.nanoTime() < until) {
+                java.util.concurrent.locks.LockSupport.parkNanos(100_000);   // yields its carrier to the others joining
+            }
+        });
         AtomicInteger reads = new AtomicInteger();
         Set<Set<String>> asked = ConcurrentHashMap.newKeySet();
         CountDownLatch go = new CountDownLatch(1);
@@ -64,7 +70,7 @@ class VectorBatchesTest {
                 assertThat(got.get(i).get().get("PV")[0]).isEqualTo(("SPV-" + i).hashCode());
             }
         }
-        assertThat(reads.get()).as("one read for the page, at most a few when the window splits it").isLessThanOrEqualTo(3);
+        assertThat(reads.get()).as("one read for the page").isEqualTo(1);
         assertThat(asked.stream().mapToInt(Set::size).sum()).isEqualTo(100);
     }
 
