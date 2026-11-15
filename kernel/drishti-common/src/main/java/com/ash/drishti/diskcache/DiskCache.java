@@ -92,7 +92,7 @@ public final class DiskCache implements AutoCloseable {
     }
 
     static {
-        RocksDB.loadLibrary();
+        RocksLibrary.load();   // once per JVM, one caller at a time (RocksLibrary)
     }
 
     /**

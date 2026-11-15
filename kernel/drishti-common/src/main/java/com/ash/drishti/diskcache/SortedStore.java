@@ -51,7 +51,7 @@ public final class SortedStore implements AutoCloseable {
     private static final int BATCH = 10_000;
 
     static {
-        RocksDB.loadLibrary();
+        RocksLibrary.load();   // once per JVM, one caller at a time (RocksLibrary)
     }
 
     private final Path dir;
