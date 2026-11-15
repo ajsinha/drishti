@@ -1,3 +1,4 @@
-org.springframework.boot.env.EnvironmentPostProcessor=com.ash.drishti.packs.edition.EditionEnvironmentPostProcessor,\
+org.springframework.boot.env.EnvironmentPostProcessor=com.ash.drishti.packs.LaunchRoots,\
+  com.ash.drishti.packs.edition.EditionEnvironmentPostProcessor,\
   com.ash.drishti.packs.module.ModuleSettingsEnvironmentPostProcessor,\
   com.ash.drishti.packs.PackEnvironmentPostProcessor

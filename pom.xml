@@ -260,6 +260,10 @@
             <!-- what a test makes at runtime (connector caches on disk, the derived pages' store) goes under target/, never a
                  data/ folder inside the repository -->
             <drishti.data.dir>${project.build.directory}/test-data</drishti.data.dir>
+            <!-- the launch roots (LaunchRoots): the anchor is the module's folder, where the forks run, named outright; a module whose
+                 tests serve the shipped modules names drishti.modules.home (drishti-server); the others serve none -->
+            <drishti.home>${project.basedir}</drishti.home>
+            <drishti.modules.home>none</drishti.modules.home>
           </systemPropertyVariables>
         </configuration>
       </plugin>

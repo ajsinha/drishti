@@ -91,7 +91,7 @@ public class EngineConfiguration {
         }, EngineConfiguration.class.getClassLoader());
         // the shared lib folder (Tomcat's lib/): read once, at start, before any plugin is looked for
         java.nio.file.Path lib = java.nio.file.Path.of(env.getProperty("drishti.lib.path",
-                java.nio.file.Path.of(env.getProperty("drishti.data.dir", "./data"), "lib").toString()));
+                java.nio.file.Path.of(env.getProperty("drishti.data.dir", com.ash.drishti.api.Roots.data()), "lib").toString()));
         com.ash.drishti.common.SharedLib.migrate(lib, oldLibFolders(env, props), oldLibSettings(env, props));   // one way: lib/ (no dual machinery)
         com.ash.drishti.common.SharedLib.open(lib);
         java.util.List<com.ash.drishti.api.SourcePlugin> plugins = new PluginDiscovery().discover().stream()

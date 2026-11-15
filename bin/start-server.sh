@@ -121,6 +121,10 @@ fi
 DATA="$(data_dir "$DATA")"
 SERVER_DATA="$(data_dir "${NODE_DATA:-$DATA}")"
 export DRISHTI_DATA_DIR="$SERVER_DATA"
+# the launch roots, absolute (docs/admin/CONFIGURATION.md, "Launch roots"): the install folder this script is in, and its modules; the server
+# takes no root from its working folder (--workdir), so a node started from another folder still finds them
+export DRISHTI_HOME="${DRISHTI_HOME:-$DRISHTI_ROOT}"
+export DRISHTI_MODULES_HOME="${DRISHTI_MODULES_HOME:-$DRISHTI_HOME/modules}"
 PORT="${PORT:-${DRISHTI_PORT:-$DEFAULT_SERVER_PORT}}"
 STEM="server${NODE:+-$NODE}"
 PID_FILE="$DATA/run/$STEM.pid"
@@ -256,6 +260,7 @@ $BACKGROUND && ARGS+=("--drishti.logging.file=$LOG" "--logging.threshold.console
 URL="http://$URL_HOST:$PORT"
 HEALTH="http://127.0.0.1:$PORT/actuator/health"
 say "Drishti ${NODE:+node $NODE }server: $(basename "$JAR") on Java $MAJOR, port $PORT, heap $HEAP, packs ${DRISHTI_PACKS:-the default}, data $SERVER_DATA"
+say "  home $DRISHTI_HOME, modules $DRISHTI_MODULES_HOME"
 [ -z "$NODE" ] || say "  Drishti*net folder $NODE_DIR, advertising $URL"
 if [ -n "$DEV_SECRETS" ]; then
   warn "DEVELOPMENT secrets in use (NOT FOR PRODUCTION):$DEV_SECRETS. Put your own in an --env-file for anything shared."

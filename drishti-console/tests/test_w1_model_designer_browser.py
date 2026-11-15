@@ -160,7 +160,7 @@ class Stack:
                        DRISHTI_SECURITY_ENABLED="true",
                        DRISHTI_TOKEN_SECRET=SECRET, DRISHTI_BI_DIR=str(work / "config" / "bi"), DRISHTI_DATA_DIR=str(work / "data"))
             self.procs["server"] = subprocess.Popen(java_cmd(java, ["-Xmx768m", "-jar", jars[0], f"--server.port={SERVER_PORT}", "--drishti.security.registered-users-only=false",
-                                                     f"--drishti.bi.query.store-dir={self.tmp / 'store'}"], tmp=self.tmp / "jvm-tmp"), cwd=work, env=env, stdout=open(self.tmp / "server.log", "ab"),
+                                                     f"--drishti.bi.query.store-dir={self.tmp / 'store'}"], tmp=self.tmp / "jvm-tmp", cwd=work), cwd=work, env=env, stdout=open(self.tmp / "server.log", "ab"),
                                                     stderr=subprocess.STDOUT)
             wait(SERVER + "/actuator/health", proc=self.procs["server"])
             for role, bi, raw in [("bi-writer", ["bi", "bi-author"], True), ("desk-head", ["bi"], True)]:

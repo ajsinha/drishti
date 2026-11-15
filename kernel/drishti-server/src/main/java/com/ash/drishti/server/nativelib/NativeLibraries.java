@@ -66,7 +66,7 @@ public class NativeLibraries {
     public NativeLibraries(Environment env, ObjectProvider<MeterRegistry> registry) {
         String mode = env.getProperty("drishti.native.blas.mode", "auto");
         this.unknownMode = Blas.Mode.known(mode) ? null : mode;
-        String dataDir = env.getProperty("drishti.data.dir", "./data");
+        String dataDir = env.getProperty("drishti.data.dir", com.ash.drishti.api.Roots.data());
         String cache = env.getProperty("drishti.native.cache-dir", "");
         this.canary = durationOr(env.getProperty("drishti.native.blas.canary-interval", "6h"), Duration.ofHours(6));
         Blas.Settings settings = new Blas.Settings(Blas.Mode.of(mode), cache.isBlank() ? Path.of(dataDir, "native-cache") : Path.of(cache),

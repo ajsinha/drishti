@@ -49,7 +49,7 @@ estimate:
     build-rows-per-second: 300000       # a connector's column scan into a layer
     record-rows-per-second: 2000        # the record-by-record path
 store:
-  dir: ${drishti.data.dir:./data}/bi-runs  # where run results are kept on this node
+  dir: ${drishti.data.dir}/bi-runs  # where run results are kept on this node
   max-bytes: 20GB                  # unpromoted results on this node
   max-bytes-per-user: 2GB  # unpromoted results one person may keep on this node
   max-result-rows: 50000000        # DRS-9086

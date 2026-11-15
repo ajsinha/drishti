@@ -92,7 +92,7 @@ public final class SharedLib {
             if (data == null || data.isBlank()) {
                 data = System.getenv("DRISHTI_DATA_DIR");
             }
-            return Path.of(data == null || data.isBlank() ? "./data" : data, "lib").toAbsolutePath().normalize();
+            return Path.of(data == null || data.isBlank() ? com.ash.drishti.api.Roots.data() : data, "lib").toAbsolutePath().normalize();
         }
         return Path.of(p).toAbsolutePath().normalize();
     }

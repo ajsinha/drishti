@@ -51,7 +51,7 @@ public final class Lakes {
     /** The variable that names the demo lake's root (config/lakes/demo.yaml: {@code ${DRISHTI_DELTA_ROOT:<data>/delta/demo}}). */
     public static final String DEMO_ROOT_ENV = "DRISHTI_DELTA_ROOT";
     /** The lake folder when neither is set. */
-    public static final String DEFAULT_DIR = "./config/lakes";
+    public static final String DEFAULT_DIR = "config/lakes";
     /** At most this many partition columns after {@code business_date}. */
     public static final int MAX_PARTITIONS = 4;
 
@@ -103,7 +103,7 @@ public final class Lakes {
         if (p == null || p.isBlank()) {
             p = properties.apply(ENV);
         }
-        return Path.of(p == null || p.isBlank() ? DEFAULT_DIR : p.strip());
+        return com.ash.drishti.api.Roots.anchored(p == null || p.isBlank() ? com.ash.drishti.api.Roots.config("lakes") : p.strip());
     }
 
     private static volatile Function<String, String> properties = System::getenv;

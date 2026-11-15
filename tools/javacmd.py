@@ -89,16 +89,46 @@ def version_flags(java, args=()) -> list:
                                                               str(a).startswith("-XX:-UseCompactObjectHeaders") for a in args) else []
 
 
+#: the repository this file is in: its modules/ are the modules a server started from here serves
+REPO = Path(__file__).resolve().parent.parent
+
+
+def _named(key: str, envs: tuple, args: list, env) -> bool:
+    """Whether a setting is given: as a -D or --flag in the arguments, or as one of its environment variables."""
+    env = os.environ if env is None else env
+    return any(a.startswith(f"-D{key}=") or a.startswith(f"--{key}=") for a in args) or any((env.get(e) or "").strip() for e in envs)
+
+
+def root_flags(args: list, cwd=None, env=None) -> list:
+    """The launch roots of a Drishti JVM (a server or the command line, ``-jar`` a Drishti jar), as absolute paths, each only when not
+    already given (docs/admin/CONFIGURATION.md, "Launch roots"): ``drishti.home``, the folder it runs in (``cwd``; this repository when
+    none); ``drishti.data.dir``, ``<home>/data``; ``drishti.modules.home``, this repository's ``modules/``. The server never takes a root
+    from its process's folder, so a launcher names them."""
+    if "-jar" not in args or not any(Path(a).name.startswith("drishti") and a.endswith(".jar") for a in args):
+        return []
+    home = (Path(cwd) if cwd else REPO).resolve()
+    out = []
+    if not _named("drishti.home", ("DRISHTI_HOME",), args, env):
+        out.append(f"-Ddrishti.home={home}")
+    if not _named("drishti.data.dir", ("DRISHTI_DATA_DIR",), args, env):
+        out.append(f"-Ddrishti.data.dir={home / 'data'}")
+    if not _named("drishti.modules.home", ("DRISHTI_MODULES_HOME", "DRISHTI_MODULE_MANIFESTS_DIR"), args, env) \
+            and not _named("drishti.module-manifests-dir", (), args, env):
+        out.append(f"-Ddrishti.modules.home={REPO / 'modules'}")
+    return out
+
+
 def java_cmd(java, args, tmp=None, cwd=None, env=None) -> list:
-    """``[java, -Djava.io.tmpdir=<folder>, -Djdk.nio.maxCachedBufferSize=262144, *args]``; ``cwd`` and ``env`` are the ones the JVM
-    will run with (they decide the default folder). A flag already in the arguments wins. On Java 25 and later
-    ``-XX:+UseCompactObjectHeaders`` too (2.9.7)."""
+    """``[java, -Djava.io.tmpdir=<folder>, -Djdk.nio.maxCachedBufferSize=262144, <launch roots>, *args]``; ``cwd`` and ``env`` are the
+    ones the JVM will run with (they decide the default folder and the launch roots: :func:`root_flags`). A flag already in the
+    arguments wins. On Java 25 and later ``-XX:+UseCompactObjectHeaders`` too (2.9.7)."""
     args = [str(a) for a in args]
     cache = [] if any(a.startswith(CACHE_FLAG) for a in args) else [CACHE_LIMIT]
     compact = version_flags(java, args)
+    roots = root_flags(args, cwd, env)
     if any(a.startswith(FLAG) for a in args):
-        return [str(java), *compact, *cache, *args]
-    return [str(java), tmp_flag(tmp, cwd, env), *compact, *cache, *args]
+        return [str(java), *compact, *cache, *roots, *args]
+    return [str(java), tmp_flag(tmp, cwd, env), *compact, *cache, *roots, *args]
 
 
 @contextlib.contextmanager

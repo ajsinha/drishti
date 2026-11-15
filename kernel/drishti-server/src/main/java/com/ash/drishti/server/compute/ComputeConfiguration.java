@@ -49,12 +49,12 @@ public class ComputeConfiguration {
     private static final Logger LOG = LoggerFactory.getLogger(ComputeConfiguration.class);
 
     static Path file(Environment env) {
-        return Path.of(env.getProperty("drishti.compute.file", "./config/compute/compute.yaml"));
+        return Path.of(env.getProperty("drishti.compute.file", com.ash.drishti.api.Roots.config("compute/compute.yaml")));
     }
 
     @Bean
     public ComputeSettings computeSettings(Environment env, ObjectProvider<com.ash.drishti.server.net.NetService> net) {
-        Path data = Path.of(env.getProperty("drishti.data.dir", "./data"));
+        Path data = Path.of(env.getProperty("drishti.data.dir", com.ash.drishti.api.Roots.data()));
         com.ash.drishti.server.net.NetService n = net.getIfAvailable();
         String node = n == null ? "" : n.plannedNodeId();
         try {

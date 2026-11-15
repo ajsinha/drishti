@@ -59,7 +59,7 @@ drishti:
         batch-rows: 65536            # rows in each batch a function is fed (Python and Java plug-ins without an SQL form)
       java:
         enabled: false               # Java plug-in functions (a jar approved by an administrator, pinned by its SHA-256); off as shipped
-        dir: ./plugins/pivot-functions   # the plug-in folder
+        dir: ${drishti.home}/plugins/pivot-functions   # the plug-in folder
     export:
       xlsx-max-rows: 1000000         # the most rows of an xlsx export (Excel holds 1,048,576 a sheet): over it, CSV or Arrow is offered
       rows-max: 1000000              # the most member rows an export of the underlying rows writes

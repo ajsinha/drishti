@@ -46,7 +46,7 @@ public record DesignProperties(String store, String dir, Integer maxPerUser, Int
 
     public DesignProperties {
         store = store == null || store.isBlank() ? "content" : store.trim().toLowerCase();
-        dir = dir == null || dir.isBlank() ? "./data/designs" : dir;
+        dir = dir == null || dir.isBlank() ? com.ash.drishti.api.Roots.data("designs") : dir;
         maxPerUser = positive(maxPerUser, 50);
         maxSamples = positive(maxSamples, 50);
         maxMb = positive(maxMb, 25);

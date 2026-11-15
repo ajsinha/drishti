@@ -53,7 +53,7 @@ public record CollabProperties(Boolean enabled, String store, String dir, String
     public CollabProperties {
         enabled = enabled == null || enabled;
         store = store == null || store.isBlank() ? "content" : store.trim().toLowerCase();
-        dir = dir == null || dir.isBlank() ? "./data/collab" : dir;
+        dir = dir == null || dir.isBlank() ? com.ash.drishti.api.Roots.data("collab") : dir;
         consoleUrl = consoleUrl == null ? "" : consoleUrl.trim();
         directory = directory == null ? new Directory(null, null, null) : directory;
         mentionableRoles = mentionableRoles == null ? List.of("*") : List.copyOf(mentionableRoles);

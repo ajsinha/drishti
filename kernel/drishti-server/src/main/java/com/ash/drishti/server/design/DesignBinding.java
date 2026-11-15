@@ -63,7 +63,7 @@ public class DesignBinding {
     private final String devDir;
 
     public DesignBinding(DesignService designs, SutraRegistry sutras, RachanaProperties props, Entitlements entitlements,
-            @Value("${drishti.builder.file-binding:false}") boolean enabled, @Value("${drishti.builder.dev-dir:${drishti.data.dir:./data}/dev-sutras}") String devDir) {
+            @Value("${drishti.builder.file-binding:false}") boolean enabled, @Value("${drishti.builder.dev-dir:${drishti.data.dir}/dev-sutras}") String devDir) {
         this.designs = designs;
         this.sutras = sutras;
         this.props = props;

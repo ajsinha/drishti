@@ -26,5 +26,5 @@ drishti:
     residual-risk-kind: residual-risk   # the RRAO inputs; none served: derived from the positions' product types and notionals
     rrao-from-positions: true        # derive the RRAO from PRODUCT_TYPE (the parameter file's mapping) and the VaR book's notionals
     max-factors: 2000                # the most factors one playground grid and workbook holds
-    recipes-dir: ${drishti.data.dir:./data}/frtb/recipes   # saved playground recipes (PLAY FRTB RUN <id>)
+    recipes-dir: ${drishti.data.dir}/frtb/recipes   # saved playground recipes (PLAY FRTB RUN <id>)
     playground-template: ""          # a bank's workbook template folder; blank: the built-in playground/frtb-sa/template/

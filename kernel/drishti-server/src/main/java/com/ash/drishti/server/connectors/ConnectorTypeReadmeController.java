@@ -56,7 +56,7 @@ public class ConnectorTypeReadmeController {
 
     public ConnectorTypeReadmeController(Entitlements entitlements) {
         this.entitlements = entitlements;
-        this.base = Path.of("").toAbsolutePath();
+        this.base = com.ash.drishti.api.Roots.home();   // the install folder (drishti.home), never the working folder
     }
 
     @GetMapping("/{type}/readme")

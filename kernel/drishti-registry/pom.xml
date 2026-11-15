@@ -28,6 +28,8 @@
   <name>drishti-registry</name>
   <description>The access registry (docs/architecture/ACCESS_MODEL.md): licence, module, lens and permission, decided in one place and asked by every layer. The AccessRegistry interface with the embedded registry, and the AccessStore interface with the YAML store (the module manifests each module ships, config/modules/*.yaml and config/access/*.yaml). Plain Java and Jackson only, so every module can ask it; nothing else reads the access model</description>
   <dependencies>
+    <!-- the named roots (com.ash.drishti.api.Roots): a default folder is under the install folder, never the working folder -->
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId><version>${project.version}</version></dependency>
     <dependency><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-databind</artifactId></dependency>
     <dependency><groupId>com.fasterxml.jackson.dataformat</groupId><artifactId>jackson-dataformat-yaml</artifactId></dependency>
   </dependencies>

@@ -661,9 +661,9 @@ public final class SutraCli {
     static Path uiKit(java.util.Collection<Path> dirs) {
         String set = System.getProperty("drishti.ui-kit.dir", System.getenv("DRISHTI_UI_KIT_DIR"));
         if (set != null && !set.isBlank()) {
-            return Path.of(set).toAbsolutePath().normalize();
+            return com.ash.drishti.api.Roots.anchored(set);
         }
-        Path here = Path.of("config", "ui-kit").toAbsolutePath().normalize();
+        Path here = Path.of(com.ash.drishti.api.Roots.config("ui-kit"));   // the install's own kit (drishti.home), never the working folder's
         if (Files.isDirectory(here.resolve("fragments"))) {
             return here;
         }

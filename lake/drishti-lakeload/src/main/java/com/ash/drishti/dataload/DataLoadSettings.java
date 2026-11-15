@@ -42,7 +42,7 @@ public record DataLoadSettings(Boolean owner, String dir, Duration interval, Int
 
     public DataLoadSettings {
         owner = owner == null || owner;
-        dir = blank(dir) ? "./data/dataload" : dir.trim();
+        dir = blank(dir) ? com.ash.drishti.api.Roots.data("dataload") : dir.trim();
         interval = interval == null || interval.isNegative() || interval.isZero() ? Duration.ofMinutes(10) : interval;
         stableSeconds = stableSeconds == null || stableSeconds < 0 ? 30 : stableSeconds;
         maxFiles = maxFiles == null || maxFiles < 0 ? 0 : maxFiles;
@@ -56,7 +56,7 @@ public record DataLoadSettings(Boolean owner, String dir, Duration interval, Int
         reloadDuplicates = reloadDuplicates != null && reloadDuplicates;
         keepOutboxDays = keepOutboxDays == null || keepOutboxDays < 0 ? 30 : keepOutboxDays;
         lake = blank(lake) ? "demo" : lake.trim();         // a lake of config/lakes/ (a folder is the old form, read with one warning)
-        rulesFile = blank(rulesFile) ? "./config/dataload.yaml" : rulesFile.trim();
+        rulesFile = blank(rulesFile) ? com.ash.drishti.api.Roots.config("dataload.yaml") : rulesFile.trim();
         nice = nice == null || nice;
         defaultMode = blank(defaultMode) ? "append" : defaultMode.trim().toLowerCase(java.util.Locale.ROOT);
         if (!defaultMode.equals("append") && !defaultMode.equals("replace")) {

@@ -85,7 +85,7 @@ public class PivotScaleConfiguration {
             }
         }
         String dir = props.rollups().dir();
-        Path rollupDir = dir == null || dir.isBlank() ? Path.of(env.getProperty("drishti.data.dir", "./data"), "pivot", "rollups") : Path.of(dir);
+        Path rollupDir = dir == null || dir.isBlank() ? Path.of(env.getProperty("drishti.data.dir", com.ash.drishti.api.Roots.data()), "pivot", "rollups") : Path.of(dir);
         Rollups rollups = new Rollups(sources, rollupDir);
         for (Map<String, Object> d : props.definitions()) {
             try {

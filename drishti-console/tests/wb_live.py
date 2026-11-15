@@ -237,7 +237,7 @@ def _start_stack(tmp_path_factory, extra_env, work=None, auth=False, heap="768m"
     env = {"PATH": os.environ.get("PATH", ""), "HOME": str(work), "DRISHTI_PORT": str(port),
            **{k: os.environ[k] for k in ("DRISHTI_DISK_MINFREEGB", "DRISHTI_DISK_MINFREEPERCENT") if k in os.environ}, **extra_env}  # conftest's guard
     # the server's heap: 768 MB for a page's worth of data; a file whose server holds a year of VaR history says so (heap="1536m")
-    proc = subprocess.Popen(java_cmd(str(JAVA), [f"-Xmx{heap}", *launch()], tmp=work / "jvm-tmp"), cwd=work, env=env, stdout=(work / "server.log").open("w"), stderr=subprocess.STDOUT)
+    proc = subprocess.Popen(java_cmd(str(JAVA), [f"-Xmx{heap}", *launch()], tmp=work / "jvm-tmp", cwd=work), cwd=work, env=env, stdout=(work / "server.log").open("w"), stderr=subprocess.STDOUT)
     try:
         # a server that is still starting is waited for (on a loaded machine a cold start takes minutes): only one that exited is skipped, and one
         # that never answers fails rather than skipping every test of the file in silence

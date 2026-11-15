@@ -70,8 +70,8 @@ public record PivotFunctionProperties(Boolean formula, Boolean sqlMacros, Boolea
                 python.timeoutSeconds() == null || python.timeoutSeconds() <= 0 ? 30 : python.timeoutSeconds(),
                 python.memoryMb() == null || python.memoryMb() <= 0 ? 1024 : python.memoryMb(),
                 python.batchRows() == null || python.batchRows() <= 0 ? 65_536 : python.batchRows());
-        java = java == null ? new Java(false, "./plugins/pivot-functions") : java;
-        java = new Java(Boolean.TRUE.equals(java.enabled()), java.dir() == null || java.dir().isBlank() ? "./plugins/pivot-functions" : java.dir());
+        java = java == null ? new Java(false, com.ash.drishti.api.Roots.home("plugins/pivot-functions")) : java;
+        java = new Java(Boolean.TRUE.equals(java.enabled()), java.dir() == null || java.dir().isBlank() ? com.ash.drishti.api.Roots.home("plugins/pivot-functions") : java.dir());
     }
 
     /** The module's settings. */

@@ -34,6 +34,7 @@ COPY --from=pyodide /src/drishti-console/web/static/vendor/pyodide/ web/static/v
 COPY docs/ /opt/drishti/docs/
 COPY config/packs/ /opt/drishti/shipped/packs/
 COPY config/lenses/ /opt/drishti/config/lenses/
+COPY config/distributions/ /opt/drishti/config/distributions/
 COPY tools/packbundle.py /opt/drishti/tools/packbundle.py
 COPY LICENSE CHANGELOG.md RELEASE_NOTES.md THIRD-PARTY-NOTICES.md /opt/drishti/
 COPY deploy/docker/ecs/console-entrypoint.sh /opt/drishti/bin/entrypoint.sh

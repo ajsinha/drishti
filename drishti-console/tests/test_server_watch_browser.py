@@ -59,7 +59,7 @@ def start_server(tmp: Path):
     work.mkdir(exist_ok=True)
     env = dict(os.environ, DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_PACKS="trading", DRISHTI_SECURITY_ENABLED="false",
                DRISHTI_DATA_DIR=str(work / "data"))
-    p = subprocess.Popen(java_cmd(java, ["-Xmx512m", "-jar", jar, f"--server.port={SERVER_PORT}"], tmp=tmp / "jvm-tmp"), cwd=work, env=env,
+    p = subprocess.Popen(java_cmd(java, ["-Xmx512m", "-jar", jar, f"--server.port={SERVER_PORT}"], tmp=tmp / "jvm-tmp", cwd=work), cwd=work, env=env,
                          stdout=open(tmp / "server.log", "ab"), stderr=subprocess.STDOUT)
     return p
 

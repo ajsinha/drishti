@@ -43,7 +43,7 @@ public class TablesConfiguration {
     @Bean
     public TablesService tablesService(Environment env, DataViewService data, com.ash.drishti.engine.source.SourceRouter router,
             EditionCommands edition, SecurityProperties security, com.ash.drishti.identity.bi.BiStore store) {
-        Path root = Path.of(env.getProperty("drishti.tables.root", "./config/tables")).toAbsolutePath().normalize();
+        Path root = Path.of(env.getProperty("drishti.tables.root", com.ash.drishti.api.Roots.config("tables"))).toAbsolutePath().normalize();
         long maxRows = env.getProperty("drishti.tables.read-max-rows", Long.class, 2_000_000L);
         long warn = env.getProperty("drishti.tables.scan-warn-rows", Long.class, 1_000_000L);
         TablesService tables = new TablesService(root, data, router, edition, security::enabled, maxRows, warn, java.time.Clock.systemUTC());

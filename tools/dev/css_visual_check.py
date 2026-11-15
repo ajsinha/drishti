@@ -151,7 +151,7 @@ def start_server() -> subprocess.Popen | None:
         (work / "config" / "connectors").mkdir()
     env = _env({"HOME": str(work), "DRISHTI_PORT": str(SERVER_PORT), **lake_env(delta)})
     log = (work / "server.log").open("w")
-    proc = subprocess.Popen(java_cmd(str(JAVA), ["-Xmx1536m", "-jar", str(JAR)], tmp=work / "jvm-tmp"), cwd=work, env=env, stdout=log,
+    proc = subprocess.Popen(java_cmd(str(JAVA), ["-Xmx1536m", "-jar", str(JAR)], tmp=work / "jvm-tmp", cwd=work), cwd=work, env=env, stdout=log,
                             stderr=subprocess.STDOUT)
     deadline = time.monotonic() + 600
     while not _answers(f"http://127.0.0.1:{SERVER_PORT}/api/v1/rachana/schema"):

@@ -348,7 +348,7 @@ public final class Blas {
             return Path.of(c);
         }
         String data = System.getProperty("drishti.data.dir");
-        return Path.of(data == null || data.isBlank() ? "./data" : data, "native-cache");
+        return Path.of(data == null || data.isBlank() ? com.ash.drishti.api.Roots.data() : data, "native-cache");
     }
 
     private static String setting(String property, String env) {

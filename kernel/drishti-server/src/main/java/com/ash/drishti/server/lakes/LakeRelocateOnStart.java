@@ -42,7 +42,7 @@ public final class LakeRelocateOnStart implements EnvironmentPostProcessor, Orde
 
     @Override
     public int getOrder() {
-        return org.springframework.boot.context.config.ConfigDataEnvironmentPostProcessor.ORDER + 1;   // before the connector files are read
+        return org.springframework.boot.context.config.ConfigDataEnvironmentPostProcessor.ORDER + 2;   // after the launch roots (+ 1), before the connector files are read
     }
 
     @Override
@@ -62,7 +62,7 @@ public final class LakeRelocateOnStart implements EnvironmentPostProcessor, Orde
             dir = lookup.apply(Lakes.ENV);
         }
         try {
-            Lakes lakes = Lakes.read(Path.of(dir == null || dir.isBlank() ? Lakes.DEFAULT_DIR : dir.strip()), lookup);
+            Lakes lakes = Lakes.read(com.ash.drishti.api.Roots.anchored(dir == null || dir.isBlank() ? com.ash.drishti.api.Roots.config("lakes") : dir.strip()), lookup);
             if (lakes.find(LAKE).isEmpty()) {
                 return;
             }

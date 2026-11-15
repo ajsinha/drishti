@@ -63,7 +63,7 @@ public final class ModulePackages {
             return Path.of(deploy.strip());
         }
         String data = property.apply("drishti.data.dir");
-        return Path.of(data == null || data.isBlank() ? "./data" : data.strip(), "modules");
+        return Path.of(data == null || data.isBlank() ? com.ash.drishti.api.Roots.data() : data.strip(), "modules");
     }
 
     /**

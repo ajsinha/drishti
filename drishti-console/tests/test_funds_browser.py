@@ -59,7 +59,7 @@ def stack(tmp_path_factory):
     env = dict(os.environ, DRISHTI_PACKS="us-equities,funds", DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_DEMO_ENABLED="false",
                DRISHTI_SECURITY_ENABLED="false", DRISHTI_CONNECTORS_DIR=str(work / "connectors"), DRISHTI_DELTA_ROOT=str(lake),
                DRISHTI_DATA_DIR=str(work / "data"), DRISHTI_OFFLINE="true")
-    procs = [subprocess.Popen(java_cmd(java, ["-Xmx1500m", "-jar", jars[0], f"--server.port={SERVER_PORT}"], tmp=tmp / "jvm-tmp"), cwd=work, env=env,
+    procs = [subprocess.Popen(java_cmd(java, ["-Xmx1500m", "-jar", jars[0], f"--server.port={SERVER_PORT}"], tmp=tmp / "jvm-tmp", cwd=work), cwd=work, env=env,
                               stdout=open(tmp / "server.log", "ab"), stderr=subprocess.STDOUT)]
     try:
         NS.wait(SERVER + "/actuator/health", proc=procs[0])

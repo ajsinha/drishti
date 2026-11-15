@@ -81,7 +81,7 @@ def stack(tmp_path_factory):
                 DRISHTI_SECURITY_ENABLED="false", DRISHTI_DATA_DIR=str(data), DRISHTI_LAKES_DIR=str(ROOT / "config" / "lakes"),
                 DRISHTI_OFFLINE="true", DRISHTI_LENSES="world,publicsector")
     procs = [subprocess.Popen(java_cmd(java, ["-Xmx1500m", "-jar", jars[0], f"--server.port={SERVER_PORT}"],
-                                       tmp=tmp / "jvm-tmp"), cwd=work, env=senv, stdout=open(tmp / "server.log", "ab"), stderr=subprocess.STDOUT)]
+                                       tmp=tmp / "jvm-tmp", cwd=work), cwd=work, env=senv, stdout=open(tmp / "server.log", "ab"), stderr=subprocess.STDOUT)]
     try:
         NS.wait(SERVER + "/actuator/health", proc=procs[0])
         procs.append(subprocess.Popen([sys.executable, str(ROOT / "drishti-console" / "run_drishti_web.py"), f"--server.port={CONSOLE_PORT}",

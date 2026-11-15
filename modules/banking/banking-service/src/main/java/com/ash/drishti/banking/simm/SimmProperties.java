@@ -48,7 +48,7 @@ public record SimmProperties(Boolean enabled, String parametersDir, String defau
 
     public SimmProperties {
         enabled = enabled == null || enabled;
-        parametersDir = blank(parametersDir) ? "./config/simm" : parametersDir.strip();
+        parametersDir = blank(parametersDir) ? com.ash.drishti.api.Roots.config("simm") : parametersDir.strip();
         defaultVersion = defaultVersion == null ? "" : defaultVersion.strip();
         nettingSetKind = blank(nettingSetKind) ? "netting-set" : nettingSetKind.strip();
         csaKind = blank(csaKind) ? "csa" : csaKind.strip();
@@ -61,7 +61,7 @@ public record SimmProperties(Boolean enabled, String parametersDir, String defau
         productClasses = Map.copyOf(pc);
         defaultProductClass = blank(defaultProductClass) ? "RatesFX" : defaultProductClass.strip();
         maxFactors = maxFactors == null || maxFactors < 10 ? 1500 : maxFactors;
-        recipesDir = blank(recipesDir) ? "./data/simm/recipes" : recipesDir.strip();
+        recipesDir = blank(recipesDir) ? com.ash.drishti.api.Roots.data("simm/recipes") : recipesDir.strip();
         cacheMinutes = cacheMinutes == null || cacheMinutes < 1 ? 10 : cacheMinutes;
         playgroundTemplate = playgroundTemplate == null ? "" : playgroundTemplate.strip();
     }

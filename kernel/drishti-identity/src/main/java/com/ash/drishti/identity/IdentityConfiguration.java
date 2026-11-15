@@ -82,8 +82,8 @@ public class IdentityConfiguration {
     @Bean(destroyMethod = "close")
     @org.springframework.context.annotation.Primary
     public com.ash.drishti.identity.content.ContentStore contentStore(org.springframework.core.env.Environment env) {
-        java.nio.file.Path file = java.nio.file.Path.of(env.getProperty("drishti.store.file", "./config/store/store.yaml"));
-        java.nio.file.Path data = java.nio.file.Path.of(env.getProperty("drishti.data.dir", "./data"));
+        java.nio.file.Path file = java.nio.file.Path.of(env.getProperty("drishti.store.file", com.ash.drishti.api.Roots.config("store/store.yaml")));
+        java.nio.file.Path data = java.nio.file.Path.of(env.getProperty("drishti.data.dir", com.ash.drishti.api.Roots.data()));
         com.ash.drishti.identity.content.ContentStoreSettings s = com.ash.drishti.identity.content.ContentStoreSettings.load(file, data, env::resolvePlaceholders);
         String root = env.getProperty("drishti.store.root", "");
         if (!root.isBlank()) {

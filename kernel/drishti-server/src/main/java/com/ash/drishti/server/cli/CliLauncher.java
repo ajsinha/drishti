@@ -172,7 +172,7 @@ public final class CliLauncher {
         java.util.Set<String> names = new java.util.LinkedHashSet<>();
         java.nio.file.Path outside = null;
         java.nio.file.Path packsDir = java.nio.file.Path.of(System.getProperty("drishti.packs.dir",
-                java.util.Objects.requireNonNullElse(System.getenv("DRISHTI_PACKS_DIR"), "./config/packs"))).toAbsolutePath().normalize();
+                java.util.Objects.requireNonNullElse(System.getenv("DRISHTI_PACKS_DIR"), com.ash.drishti.api.Roots.config("packs")))).toAbsolutePath().normalize();
         for (String arg : rest) {
             if (arg.startsWith("-")) {
                 continue;

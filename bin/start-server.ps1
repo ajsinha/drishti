@@ -92,6 +92,10 @@ if ($o['distribution']) { $env:DRISHTI_DISTRIBUTION = $o['distribution'] }   # t
 $data = Get-DataDir (Opt $o 'datadir')
 $serverData = Get-DataDir (Opt $o 'nodedata' $data)
 $env:DRISHTI_DATA_DIR = $serverData
+# the launch roots, absolute (docs/admin/CONFIGURATION.md, "Launch roots"): the install folder this script is in, and its modules; the server
+# takes no root from its working folder (-WorkDir), so a node started from another folder still finds them
+if (-not $env:DRISHTI_HOME) { $env:DRISHTI_HOME = $script:DrishtiRoot }
+if (-not $env:DRISHTI_MODULES_HOME) { $env:DRISHTI_MODULES_HOME = Join-Path $env:DRISHTI_HOME 'modules' }
 $port = [int](Opt $o 'port' $(if ($env:DRISHTI_PORT) { $env:DRISHTI_PORT } else { $script:DefaultServerPort }))
 $stem = if ($node) { "server-$node" } else { 'server' }
 $label = if ($node) { $node } else { 'server' }
@@ -250,6 +254,7 @@ $url = "http://${urlHost}:$port"
 $health = "http://127.0.0.1:$port/actuator/health"
 $packsShown = if ($env:DRISHTI_PACKS) { $env:DRISHTI_PACKS } else { 'the default' }
 Write-Host "Drishti $(if ($node) { "node $node " })server: $(Split-Path $jar -Leaf) on Java $major, port $port, heap $heap, Delta engine $engine, packs $packsShown, data $serverData"
+Write-Host "  home $env:DRISHTI_HOME, modules $env:DRISHTI_MODULES_HOME"
 if ($node) { Write-Host "  Drishti*net folder $nodeDir, advertising $url" }
 if ($devSecrets.Count -gt 0) { Warn "DEVELOPMENT secrets in use (NOT FOR PRODUCTION): $($devSecrets -join ' '). Put your own in an --env-file for anything shared." }
 $fields = @{ port = $port; url = $url; health = $health; data = $serverData; distribution = $(if ($env:DRISHTI_DISTRIBUTION) { $env:DRISHTI_DISTRIBUTION } else { 'all' }) }
