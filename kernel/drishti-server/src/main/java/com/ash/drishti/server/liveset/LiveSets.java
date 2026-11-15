@@ -78,6 +78,13 @@ public final class LiveSets implements AutoCloseable {
         Subscription subscribe(String kind, java.util.function.Consumer<EntityDocument> listener);
 
         /**
+         * The rows the kind's live connectors hold now (the shared live state, LIVE_CONNECTORS_DESIGN.md section 7.2): a set opened at 11:00
+         * shows an amendment of 09:00. Merged in by key and version like any live change, after the snapshot.
+         */
+        default void liveRows(String kind, java.util.function.Consumer<EntityDocument> sink) {
+        }
+
+        /**
          * The record as its source's store holds it, before the connector's {@code map} and {@code set} (Raw JSON shows the source's native
          * record: DATA_LAKE_GUIDE.md, "Several source systems"), with the connector it came from; empty when no shaped connector serves it.
          */
@@ -284,6 +291,14 @@ public final class LiveSets implements AutoCloseable {
      * Reads every {@code *.blotter.yaml} in {@code dirs}; a declaration with problems is set aside and listed ({@link #problems()}).
      * {@code module} names the module a folder belongs to (null for the site's own).
      */
+    /** The kinds' live rules: a declaration's key, version, who and when default to its kind's contract (null: no defaults). */
+    private volatile Function<String, com.ash.drishti.common.live.LiveRules> contracts;
+
+    /** Sets the kinds' live rules the declarations read their defaults from; call it before {@link #load}. */
+    public void contracts(Function<String, com.ash.drishti.common.live.LiveRules> rules) {
+        this.contracts = rules;
+    }
+
     public void load(List<Path> dirs, Function<Path, String> module) {
         Map<String, LiveSetSpec> found = new LinkedHashMap<>();
         Map<String, String> bad = new LinkedHashMap<>();
@@ -297,7 +312,7 @@ public final class LiveSets implements AutoCloseable {
                     try {
                         @SuppressWarnings("unchecked")
                         Map<String, Object> m = YAML.readValue(f.toFile(), Map.class);
-                        LiveSetSpec s = LiveSetSpec.parse(m, f.getFileName().toString(), module.apply(dir));
+                        LiveSetSpec s = LiveSetSpec.parse(m, f.getFileName().toString(), module.apply(dir), contracts);
                         List<String> wrong = validator.problems(s);
                         if (!wrong.isEmpty()) {
                             String why = ErrorCode.LIVE_SET_INVALID.code() + " " + f.getFileName() + ": " + String.join("; ", wrong);
@@ -439,6 +454,16 @@ public final class LiveSets implements AutoCloseable {
 
     // ------------------------------------------------------------------------------------------------------------ sets
 
+    /**
+     * Subscribes a set to the kind's live changes and hands it the rows the live state holds now: they arrive before the set is ready, so
+     * the set applies them after its snapshot, by key and version, like any change that came in while it was read.
+     */
+    private Subscription withLiveRows(String kind, java.util.function.Consumer<EntityDocument> listener) {
+        Subscription s = sources.subscribe(kind, listener);
+        sources.liveRows(kind, listener);
+        return s;
+    }
+
     /** The shared set of a declaration and condition, opened (snapshot read, live side subscribed) on first use. */
     public LiveSet open(LiveSetSpec spec, String query) {
         String q = query == null || query.isBlank() ? spec.query() : query.strip();
@@ -464,13 +489,13 @@ public final class LiveSets implements AutoCloseable {
             if (store.isPresent() && condFields.isPresent()) {
                 // the snapshot stays in the store: pages are read from it, merged with the live side by key
                 made.pages(new StorePages(store.get(), spec.key(), condFields.get(), q == null ? null : holds));
-                made.start(l -> sources.subscribe(spec.kind(), l), null);
+                made.start(l -> withLiveRows(spec.kind(), l), null);
                 open.put(key, made);
                 return made;
             }
             boolean capping = defaulted(spec.id());
             int cap = defaultMaxRows;
-            made.start(l -> sources.subscribe(spec.kind(), l), sink -> {
+            made.start(l -> withLiveRows(spec.kind(), l), sink -> {
                 java.util.concurrent.atomic.AtomicInteger read = new java.util.concurrent.atomic.AtomicInteger();
                 java.util.function.Consumer<EntityDocument> counted = !capping ? sink : d -> {
                     if (read.incrementAndGet() > cap) {
@@ -539,7 +564,7 @@ public final class LiveSets implements AutoCloseable {
             LiveSet made = new LiveSet(bare, c, condition, clock, true);
             made.audience(r.audience());
             LiveReader.Scope scope = r.scope();
-            made.start(l -> at.live() ? sources.subscribe(kind, d -> {
+            made.start(l -> at.live() ? withLiveRows(kind, d -> {
                 if (d.deleted() || scope.test().test(d.data())) {
                     l.accept(masked(d, m));
                 } else {

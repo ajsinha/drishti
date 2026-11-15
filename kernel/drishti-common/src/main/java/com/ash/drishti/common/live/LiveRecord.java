@@ -73,9 +73,26 @@ public record LiveRecord(String kind, String key, Op op, List<Object> order, Ins
         if (a == null || b == null) {
             return a == null ? (b == null ? 0 : -1) : 1;                // a missing order value is older than any
         }
-        if (a instanceof Number x && b instanceof Number y) {
-            return Double.compare(x.doubleValue(), y.doubleValue());
+        Double x = number(a);
+        Double y = number(b);
+        if (x != null && y != null) {
+            return Double.compare(x, y);                                 // a version written as text ("10") is still a number
         }
         return String.valueOf(a).compareTo(String.valueOf(b));
+    }
+
+    private static Double number(Object v) {
+        if (v instanceof Number n) {
+            return n.doubleValue();
+        }
+        String s = String.valueOf(v).strip();
+        if (s.isEmpty() || !(Character.isDigit(s.charAt(0)) || s.charAt(0) == '-' && s.length() > 1)) {
+            return null;
+        }
+        try {
+            return Double.parseDouble(s);
+        } catch (NumberFormatException e) {
+            return null;                                                 // an ISO time: compared as text
+        }
     }
 }

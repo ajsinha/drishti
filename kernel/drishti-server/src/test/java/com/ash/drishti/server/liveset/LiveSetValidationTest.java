@@ -46,7 +46,24 @@ class LiveSetValidationTest {
 
     @SuppressWarnings("unchecked")
     static LiveSetSpec trade() throws Exception {
-        return LiveSetSpec.parse(new ObjectMapper(new YAMLFactory()).readValue(TRADE.toFile(), Map.class), "trade.blotter.yaml", "trading");
+        Map<String, Object> contract = new ObjectMapper(new YAMLFactory()).readValue(CONTRACT.toFile(), Map.class);
+        com.ash.drishti.common.live.LiveRules rules = com.ash.drishti.common.live.LiveRules.parse(contract, null).rules();
+        return LiveSetSpec.parse(new ObjectMapper(new YAMLFactory()).readValue(TRADE.toFile(), Map.class), "trade.blotter.yaml", "trading",
+                k -> "trade".equals(k) ? rules : null);
+    }
+
+    @Test
+    void theTradeBlottersKeyVersionWhoAndWhenComeFromTheContract() throws Exception {
+        LiveSetSpec spec = trade();                                     // the declaration names none of them (LIVE_CONNECTORS_DESIGN.md 7.2)
+        assertThat(spec.key()).isEqualTo("TRADE_ID");
+        assertThat(spec.version()).isEqualTo("TRADE_VERSION");
+        assertThat(spec.changedBy()).isEqualTo("UPDATED_BY");
+        assertThat(spec.changedAt()).isEqualTo("SOURCE_UPDATE_TIME");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> m = new ObjectMapper(new YAMLFactory()).readValue(TRADE.toFile(), Map.class);
+        m.put("version", "SOURCE_UPDATE_TIME");
+        assertThat(LiveSetSpec.parse(m, "trade.blotter.yaml", "trading", k -> com.ash.drishti.common.live.LiveRules.defaults(k, List.of("TRADE_ID"), false)).version()).as("a declaration that differs")
+                .isEqualTo("SOURCE_UPDATE_TIME");
     }
 
     @Test

@@ -49,7 +49,8 @@ public class LiveSetConfiguration {
             com.ash.drishti.engine.search.SearchProperties searchProps, com.ash.drishti.engine.command.Mnemonics mnemonics,
             EditableFields fields, ObjectProvider<EditRuntime> edits,
             com.ash.drishti.server.security.Entitlements entitlements, ObjectProvider<com.ash.drishti.identity.AuditLog> auditLog,
-            com.ash.drishti.rachana.format.Formats formats, com.ash.drishti.packs.PackRegistry packs, Environment env) {
+            com.ash.drishti.rachana.format.Formats formats, com.ash.drishti.packs.PackRegistry packs, Environment env,
+            com.ash.drishti.server.live.LiveContracts liveContracts) {
         java.time.Duration storeBudget = java.time.Duration.ofSeconds(env.getProperty("drishti.live-sets.store-timeout-seconds", Long.class, 120L));
         LiveSets.Sources sources = new LiveSets.Sources() {
             @Override
@@ -86,6 +87,11 @@ public class LiveSetConfiguration {
             @Override
             public Subscription subscribe(String kind, Consumer<EntityDocument> listener) {
                 return router.subscribeKind(kind, listener);
+            }
+
+            @Override
+            public void liveRows(String kind, Consumer<EntityDocument> sink) {
+                router.liveRows(kind, sink);
             }
 
             @Override
@@ -168,6 +174,7 @@ public class LiveSetConfiguration {
         // the launch roots are absolute by now (LaunchRoots): the modules folder and the site's config folder, never the process's folder
         Path modules = Path.of(env.getProperty("drishti.live-sets.modules-dir", env.getRequiredProperty("drishti.modules.home")));   // the one modules setting (section 18.2)
         Path site = Path.of(env.getProperty("drishti.live-sets.dir", Path.of(env.getRequiredProperty("drishti.config.dir"), "blotters").toString()));
+        sets.contracts(liveContracts::rules);                 // a declaration's key, version, who and when default to its kind's contract
         sets.load(LiveSets.folders(modules, site, on), LiveSets::moduleOf);
         fields.addSource(sets::rules);
         EditRuntime rt = edits.getIfAvailable();

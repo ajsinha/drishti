@@ -193,6 +193,11 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
         liveContracts = contracts == null ? com.ash.drishti.common.live.KindContracts.NONE : contracts;
     }
 
+    /** A kind's live rules (its contract's {@code live:} block, else the defaults): what decides which of a live row and a lake row is newer. */
+    public com.ash.drishti.common.live.LiveRules liveRules(String kind) {
+        return liveContracts.rules(kind);
+    }
+
     /** The contracts as a live connector reads them: always the registry's current ones. */
     private com.ash.drishti.common.live.KindContracts currentContracts() {
         return new com.ash.drishti.common.live.KindContracts() {

@@ -27,8 +27,6 @@ settings:
   bootstrap-servers: ${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}
   topics:
   - ${DRISHTI_ICI_TOPIC:drishti.trading.ici.trades}
-  kind: trade
-  id-field: TICKET_NO
   stale-after: ${DRISHTI_STREAM_STALE_AFTER:15m}
   source-name: trade-ici-live
   where: SOURCE_SYSTEM = 'ICI'

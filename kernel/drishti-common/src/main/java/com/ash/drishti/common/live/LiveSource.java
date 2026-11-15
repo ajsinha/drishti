@@ -163,6 +163,12 @@ public final class LiveSource implements SourcePlugin {
         return fetchQuietly(ref);
     }
 
+    /** The live state's row of {@code ref}, a delete included; empty when the feed has not seen it. */
+    public Optional<LiveState.Entry> entry(EntityRef ref) {
+        LiveState s = state;
+        return s == null ? Optional.empty() : s.entry(ref.kind(), ref.id());
+    }
+
     @Override
     public boolean documents(String kind, AsOf asOf, Consumer<EntityDocument> sink) {
         LiveFeed f = feed;

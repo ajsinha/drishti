@@ -18,6 +18,14 @@
 
 ## Unreleased
 
+- **Live feeds, step L3: the newer row wins, live sets start from the live state, blotters take their rules from the contract.** A
+  record read Live is the newer of the live row and the lake's by the kind's `live.order` (the lake's when as new or newer: the load
+  already has the change); a live delete hides an older lake row. A live set (a blotter, a FORM result, a bare mnemonic) opening is
+  handed the rows the live state already holds, so a blotter opened at 11:00 shows the 09:00 amendment. A declaration's key, version,
+  changed-by and changed-at default to its kind's contract: the trade contract has its `live:` block (order `TRADE_VERSION`,
+  `SOURCE_UPDATE_TIME`; changed-by `UPDATED_BY`; absorbed by order), and `trade.blotter.yaml` no longer repeats them. The six
+  `trade-<system>-live` templates and `pack new --source-for --live` no longer carry `kind` and `id-field`: the trade contract's key and
+  the companion's data connector say them.
 - **Live feeds, step L2: one live intake and one live state in the kernel; Kafka is a transport.** A messaging plugin now only
   connects (or waits calmly), receives and hands each message with its position to the kernel (`com.ash.drishti.api.live`); the
   kernel decodes it (`shape`: document, envelope or jsonl), applies the connector's where/set/map, checks it against the kind's contract

@@ -148,8 +148,20 @@ public record LiveSetSpec(String id, String title, String kind, String query, St
     public static final String PANEL = "edit";
 
     /** Parses a declaration; {@code where} names the file in messages. Throws {@link IllegalArgumentException} with every problem found first. */
-    @SuppressWarnings("unchecked")
     public static LiveSetSpec parse(Map<String, Object> m, String where, String module) {
+        return parse(m, where, module, null);
+    }
+
+    /**
+     * As {@link #parse(Map, String, String)}, the record's key, version, who and when defaulting to the kind's contract
+     * (LIVE_CONNECTORS_DESIGN.md section 7.2): its {@code key:} (one field), the first field of its {@code live.order}, its
+     * {@code live.changed-by} and {@code live.changed-at}. A declaration states them only to differ.
+     *
+     * @param contract the live rules of a kind (null: no defaults)
+     */
+    @SuppressWarnings("unchecked")
+    public static LiveSetSpec parse(Map<String, Object> m, String where, String module,
+            java.util.function.Function<String, com.ash.drishti.common.live.LiveRules> contract) {
         List<String> problems = new ArrayList<>();
         for (String k : m.keySet()) {
             if (!KEYS.contains(k)) {
@@ -168,6 +180,15 @@ public record LiveSetSpec(String id, String title, String kind, String query, St
         String version = field(m, "version", problems);
         String changedBy = field(m, "changed-by", problems);
         String changedAt = field(m, "changed-at", problems);
+        if (contract != null && kind != null && ID.matcher(kind).matches()) {
+            com.ash.drishti.common.live.LiveRules rules = contract.apply(kind);
+            if (rules != null) {
+                key = key != null ? key : rules.key().size() == 1 ? rules.key().get(0) : null;
+                version = version != null ? version : rules.order().isEmpty() ? null : rules.order().get(0);
+                changedBy = changedBy != null ? changedBy : rules.changedBy();
+                changedAt = changedAt != null ? changedAt : rules.changedAt();
+            }
+        }
         List<Map<String, Object>> columns = new ArrayList<>();
         if (m.get("columns") instanceof List<?> l) {
             for (Object o : l) {

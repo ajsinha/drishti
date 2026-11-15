@@ -27,8 +27,6 @@ settings:
   bootstrap-servers: ${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}
   topics:
   - ${DRISHTI_ENDUR_TOPIC:drishti.trading.endur.trades}
-  kind: trade
-  id-field: TRADE_ID
   stale-after: ${DRISHTI_STREAM_STALE_AFTER:15m}
   source-name: trade-endur-live
   set:

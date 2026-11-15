@@ -17,10 +17,8 @@ blotter: trade
 title: Trade blotter
 kind: trade
 query: "trade where TRADE_STATUS != 'CANCELLED'"   # the rows it holds, in the search grammar; a FORM search is the same without edit:
-key: TRADE_ID
-version: TRADE_VERSION                  # the guard: an edit made on an older version is refused, naming the version and when it was made
-changed-by: UPDATED_BY                  # who made a version: a field of the kind's data contract
-changed-at: SOURCE_UPDATE_TIME
+# key, version (the guard: an edit made on an older version is refused), changed-by and changed-at: the trade contract's key: and
+# live: block (TRADE_ID, TRADE_VERSION, UPDATED_BY, SOURCE_UPDATE_TIME); a declaration states them only to differ
 columns:
 - { field: TRADE_ID, label: Trade, type: id, width: 120 }
 - { field: TRADE_VERSION, label: V, type: number, width: 48 }

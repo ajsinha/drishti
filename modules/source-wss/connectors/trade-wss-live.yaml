@@ -27,8 +27,6 @@ settings:
   bootstrap-servers: ${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}
   topics:
   - ${DRISHTI_WSS_TOPIC:drishti.trading.wss.trades}
-  kind: trade
-  id-field: DEAL_REF
   stale-after: ${DRISHTI_STREAM_STALE_AFTER:15m}
   source-name: trade-wss-live
   where: SOURCE_SYSTEM = 'WSS'

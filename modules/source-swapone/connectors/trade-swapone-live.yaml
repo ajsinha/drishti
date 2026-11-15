@@ -27,8 +27,6 @@ settings:
   bootstrap-servers: ${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}
   topics:
   - ${DRISHTI_SWAPONE_TOPIC:drishti.trading.swapone.trades}
-  kind: trade
-  id-field: SWAP_ID
   stale-after: ${DRISHTI_STREAM_STALE_AFTER:15m}
   source-name: trade-swapone-live
   where: SOURCE_SYSTEM = 'SWAPONE'

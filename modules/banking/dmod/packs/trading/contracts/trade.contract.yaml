@@ -59,6 +59,16 @@ binding-hint:
   - data/testdata/trades/endur
   - data/testdata/trades/calypso
   - data/testdata/trades/murex
+live:                                    # what a live message means for a trade (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 8.1)
+  order:                                 # newer: a higher version, then a later update time
+  - TRADE_VERSION
+  - SOURCE_UPDATE_TIME
+  changed-at: SOURCE_UPDATE_TIME
+  changed-by: UPDATED_BY
+  partial: whole                         # every message is the whole trade; a cancel is an upsert with TRADE_STATUS
+  apply: overlay
+  absorb: by-order                       # the lake keeps TRADE_VERSION: each system's extract absorbs its own live rows
+  validate: strict
 fields:
 - name: SOURCE_SYSTEM
   type: text

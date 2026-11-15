@@ -162,9 +162,7 @@ blotter: trade                     # its id
 title: Trade blotter
 kind: trade
 query: "trade where TRADE_STATUS != 'CANCELLED'"   # the rows (the search grammar); absent: every record of the kind
-key: TRADE_ID                      # the record's key (absent: the entity id)
-version: TRADE_VERSION             # the version: changes merge by it, and an edit on an older one is refused
-changed-at: SOURCE_UPDATE_TIME     # said when a stale edit is refused (changed-by: names who, when the kind's contract has such a field)
+# key, version, changed-by, changed-at: from the kind's contract (below); write them only to differ
 columns: [{field: TRADE_ID, label: Trade, type: id}, {field: PRICE, type: number, format: price4}, ...]   # type: text, number, amount, date, datetime, list, status, id
 group-by: []                       # the grouping it opens with
 subtotals: [QUANTITY]              # summed per group
@@ -178,6 +176,13 @@ edit:                              # a Rachana form with save: (RACHANA_REFERENC
   fields: [{id: book, bind: PORTFOLIO, required: true, pattern: "BOOK-[A-Z0-9-]+"}, ...]
   save: {target: source, command: amend-trade, approval: none, reason: optional}
 ```
+
+**The record's key, version, who and when come from the kind's contract**
+([LIVE_CONNECTORS_DESIGN.md section 7.2](../architecture/LIVE_CONNECTORS_DESIGN.md#72-the-live-result-set-engine)): `key:` is the
+contract's key (one field; absent: the entity id), `version:` the first field of its `live.order` (changes merge by it, and an edit on an
+older one is refused), `changed-by:` and `changed-at:` its `live.changed-by` and `live.changed-at` (said when a stale edit is refused).
+The trade blotter states none of them: the trade contract's `live:` block gives `TRADE_ID`, `TRADE_VERSION`, `UPDATED_BY` and
+`SOURCE_UPDATE_TIME`. A declaration writes one only to differ; an editable declaration whose kind gives no version must name one.
 
 Every declaration is **checked at load**, beyond its own shape:
 
@@ -206,7 +211,10 @@ One engine behind every blotter and every FORM result (`com.ash.drishti.server.l
    each document) never turns the read into one of every document. The lake's records then keep the key order **after** the live rows
    that carry the field: in a newest-first order the new and changed trades come first, then every trade of the lake. Promote the field
    to a lake column (`promote:` of the pack's `lake:` table) to order the lake's own records by it too.
-2. **Live deltas**: the kind's `live:` binding, subscribed to **before** the snapshot is read; what arrives meanwhile is applied after it.
+2. **Live deltas**: the kind's live connectors, subscribed to **before** the snapshot is read; what arrives meanwhile is applied after it,
+   and so are the rows the kernel's **live state** already holds (a set opened at 11:00 shows an amendment of 09:00, and a set that
+   closes and opens again loses nothing:
+   [LIVE_CONNECTORS_DESIGN.md section 7.2](../architecture/LIVE_CONNECTORS_DESIGN.md#72-the-live-result-set-engine)).
    Every change merges **by key and version**: a newer version replaces the row, an older or equal one is dropped (no duplicates, never back
    in time), a deletion or a row that no longer holds the query leaves. Skipped versions are counted (the record is whole, so the newest is
    still right).

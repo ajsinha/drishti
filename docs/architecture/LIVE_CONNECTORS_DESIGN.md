@@ -16,8 +16,9 @@
 # Live connectors: a live companion for any data connector (design, decided; building in i5)
 
 **Status: design for release i5, decided by the product owner (section 15); steps L1 to L10 are built in i5. Built: L1 (the
-contract's `live:` block and its checks, `companion-of:` in the resolver, the reject reasons and their codes) and L2 (the transport SPI,
-the kernel's live intake and live state, Kafka on it). Nothing else in this
+contract's `live:` block and its checks, `companion-of:` in the resolver, the reject reasons and their codes) L2 (the transport SPI,
+the kernel's live intake and live state, Kafka on it) and L3 (the router's merged read, live sets seeded from the shared state, blotter
+defaults from the contract, the six trade templates). Nothing else in this
 document is built unless a section says "today".** It answers the product owner's request: *"for all data connectors there can be a
 live connector, generally speaking."*
 
@@ -407,6 +408,14 @@ Unchanged in what it shows and in its API. Two things move below it:
 
 `retention:` of a declaration keeps its meaning for the set's view; the live state's own bound is the contract's (section 7.6).
 
+Built (L3): a set subscribes to the kind's live connectors and is handed the rows their live state holds when it opens
+(`SourceRouter.liveRows`), merged after the snapshot by key and version; the declaration's key, version, who and when default to the
+contract (`LiveSetSpec.parse` with the kinds' live rules). Each set still keeps its own copy of the rows changed since it opened (its
+view of the live side, with its retention); serving a set's live side straight from the live state, so that two blotters of one kind
+hold a row once, is the performance drill's item. The router's merged read is built for one entity, Live: the live row is compared
+with the first store's row by the kind's `live.order` and the newer answers (the store's when as new or newer); a live delete hides
+the store's row unless the store's is newer; a kind ordered by arrival takes the live row.
+
 ### 7.3 Pivots and BI: snapshot by default, live by choice
 
 A pivot over 1.3 million positions should not recompute on every tick, and a signed-off report must not move. So:
@@ -634,8 +643,8 @@ No two implementations side by side: each step below deletes what it replaces in
 | `KafkaSourcePlugin`'s index, caches, listeners, `documents()` snapshot | the kernel's live state and intake; the plugin keeps connect, read, WAIT, write-back | the plugin's own index and listener code |
 | `MessageStateSource` and the RocksDB state store of `activemq` / `rabbitmq` | the same live state; durability by `apply: both` (the lake) or the state's disk cache | the state store, its settings (`state.*`), the second implementation |
 | Kafka `mode: state` / `mode: ticks` | a companion (`companion-of:`: a feed over a lake, what `ticks` was) or a connector with no lake (what `state` was) | the `mode` setting (read for one release with a message saying what replaces it) |
-| The six `trade-<system>-live.yaml` | the same files with `companion-of: trade-<system>`, without `kind`, `id-field`, `version-field`, `changed-by`, `changed-at` (the contract's) | the repeated keys; `DRISHTI_STREAM_<SYSTEM>` kept as the switch |
-| `trade.blotter.yaml` `key`, `version`, `changed-by`, `changed-at` | defaults from the contract | four lines |
+| The six `trade-<system>-live.yaml` | the same files with `companion-of: trade-<system>`, without `kind` and `id-field` (the contract's key and the companion's kinds); the write-back command's `version-field`, `changed-by`, `changed-at` stay in its `kafka:` block, which is the command's own guard (APPROVALS_GUIDE.md section 5.4) | the repeated keys; `DRISHTI_STREAM_<SYSTEM>` kept as the switch (built, L3) |
+| `trade.blotter.yaml` `key`, `version`, `changed-by`, `changed-at` | defaults from the contract | four lines (built, L3) |
 | `VarPvStreamPlugin`, `VarPvWindow`, the Kafka half of `VarPvStream`, `drishti.var.intraday.kafka.*`, the `pv-updates` connector, kind `pv-update` | `risk-store-live` (`plugin: kafka`, `shape: jsonl`) with `scenario-pv` and `pnl-vector` at `apply: land`; the lander's settings | the plugin, its window, its admin endpoints (answered from `/admin/live`), the pseudo-kind |
 | `VarIntraday` (the engine's apply) | unchanged | nothing |
 | BI `mode: live` in-memory tables; `materialize: {live: …}` | the live read path | BI's own copy of live rows; the tick and status events stay |
@@ -694,7 +703,7 @@ in; L6 to L10 use it.
 | **L0** | The owner's answers (section 15); the two mock-up choices | done | | this document |
 | **L1** (built) | Contract `live:` block (parser, load checks, generated contract docs); `companion-of:` in the resolver; reject reasons and their codes | M | `binding-hint.live` | contracts README, KERNEL_AND_MODULES 5.2 and 18.5 |
 | **L2** (built) | The live intake and the live state (kernel): decode, map, validate, order, apply; the transport SPI; Kafka on it | L | the Kafka plugin's index, caches, `mode` | Kafka README, DATA_ARCHITECTURE *Streaming sources* |
-| **L3** | The router's merged read; live sets on the shared state; blotter defaults from the contract; the six trade templates | L | per-set live side; repeated keys | LIVE_RESULTS_GUIDE sections 6 and 7 |
+| **L3** (built) | The router's merged read; live sets on the shared state; blotter defaults from the contract; the six trade templates | L | per-set live side; repeated keys | LIVE_RESULTS_GUIDE sections 6 and 7 |
 | **L4** | Business dates, the roll, reconcile at a load (three absorb rules), checkpoints, the reconcile record | L | | DATA_LAKE_GUIDE (loads), LIVE_RESULTS_GUIDE |
 | **L5** | The live lander; scenario PVs and P&L vectors on it; parity on Delta, Iceberg and files | L | `VarPvStreamPlugin`, `VarPvWindow`, `pv-updates`, `drishti.var.intraday.kafka.*` | VAR_GUIDE 8.4, CONFIGURATION (generated) |
 | **L6** | ActiveMQ and RabbitMQ on the transport SPI; `apply: both` | M | `MessageStateSource`, `state.*` | the two READMEs |

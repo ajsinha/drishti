@@ -114,7 +114,6 @@ def write_yaml(path: pathlib.Path, data, head: str = HEADER) -> None:
 
 def connector_files(a, n: dict, m: dict) -> dict[str, dict]:
     """The module's connectors: read (the table), and with --live a listener (with --write-back its writes:)."""
-    key = next((r["from"] for r in m["fields"] if r["to"] in (n["contract"].get("key") or [])[:1] and r.get("from")), None)
     read = {"plugin": "delta", "kinds": [n["kind"]], "description": f"{n['system']}'s {n['kind']}s in the lake table {n['table']}"
             + (" (shared: this system's rows by where:)" if n["shared"] else " (its own table)"),
             "settings": {"lake": a.lake_name, "lake-tables": n["table"], **({"where": f"SOURCE_SYSTEM = '{n['system']}'"} if n["shared"] else {}),
@@ -123,8 +122,8 @@ def connector_files(a, n: dict, m: dict) -> dict[str, dict]:
     if a.live:
         live = {"plugin": "kafka", "companion-of": n["name"], "enabled": f"${{DRISHTI_{n['system']}_LIVE:false}}", "kinds": [n["kind"]],
                 "description": f"{n['system']}'s {n['kind']}s as they are booked (off until the site sets the servers and the topic)",
-                "settings": {"bootstrap-servers": "${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}", "topics": [f"{n['low']}.{n['kind']}s"], "kind": n["kind"],
-                             "id-field": key or "id", "set": {"SOURCE_SYSTEM": n["system"]}, "map": n["map"]}}
+                "settings": {"bootstrap-servers": "${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}", "topics": [f"{n['low']}.{n['kind']}s"],
+                             "set": {"SOURCE_SYSTEM": n["system"]}, "map": n["map"]}}   # kind, key and order: the kind's contract
         if a.write_back:
             live["writes"] = {f"amend-{n['kind']}": {"kind": n["kind"], "kafka": {"topic": f"{n['low']}.{n['kind']}s.amend", "shape": "document",
                               "version-field": "TRADE_VERSION", "changed-by": "UPDATED_BY", "changed-at": "SOURCE_UPDATE_TIME",
