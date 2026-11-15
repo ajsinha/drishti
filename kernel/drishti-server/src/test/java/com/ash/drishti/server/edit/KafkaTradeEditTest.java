@@ -76,12 +76,23 @@ class KafkaTradeEditTest {
         p.put("value.serializer", StringSerializer.class.getName());
         PRODUCER = new KafkaProducer<>(p);
         try {
-            PRODUCER.send(new ProducerRecord<>(TOPIC, "EN-1", "{\"TRADE_ID\":\"EN-1\",\"TRADE_VERSION\":1,\"PORTFOLIO\":\"BOOK-A\",\"PRICE\":10.5,"
-                    + "\"QUANTITY\":100,\"TRADE_STATUS\":\"NEW\",\"UPDATED_BY\":\"ann\",\"SOURCE_UPDATE_TIME\":\"2026-11-14T10:00:00Z\"}"))
-                    .get(10, TimeUnit.SECONDS);
+            PRODUCER.send(new ProducerRecord<>(TOPIC, "EN-1", endurTrade())).get(10, TimeUnit.SECONDS);
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }
+    }
+
+    /**
+     * Endur's trade EN-1 as its feed carries it: a whole trade that holds to the trade contract (the live intake checks every message
+     * against it, LIVE_CONNECTORS_DESIGN.md section 3.4), from the trading pack's sample with this test's values.
+     */
+    static String endurTrade() throws Exception {
+        String sample = com.ash.drishti.common.PackSamples.document(java.nio.file.Path.of(com.ash.drishti.testroots.TestRoots.repo(), "modules", "banking",
+                "dmod", "packs", "trading", "samples"), "trade", "MX-20000001").orElseThrow();
+        com.fasterxml.jackson.databind.node.ObjectNode t = (com.fasterxml.jackson.databind.node.ObjectNode) new ObjectMapper().readTree(sample);
+        t.put("TRADE_ID", "EN-1").put("SOURCE_SYSTEM", "ENDUR").put("TRADE_VERSION", 1).put("PORTFOLIO", "BOOK-A").put("PRICE", 10.5)
+                .put("QUANTITY", 100).put("TRADE_STATUS", "NEW").put("UPDATED_BY", "ann").put("SOURCE_UPDATE_TIME", "2026-11-14T10:00:00Z");
+        return t.toString();
     }
 
     @DynamicPropertySource
