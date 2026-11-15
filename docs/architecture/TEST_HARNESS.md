@@ -630,6 +630,13 @@ setting for a test built by Maven's importer. To pin or override roots once for 
 configuration templates > JUnit > VM options: `-Ddrishti.settings.file=/home/me/drishti.ini`. `TestPathsGuardTest` (Java) and
 `tests/test_paths_guard.py` (Python) fail on a test that builds a path from the working folder.
 
+**The path guards are release-blocking and run in every gate.** The product's main code and shipped YAML: `tests/test_no_relative_paths.py`
+(static: `Path.of`/`Paths.get`/`new File` of a relative literal, `user.dir`, a `"./..."` literal, a relative placeholder default such as
+`${x:./config/y}`, a shipped value that is a bare install folder; each finding named file:line, exceptions only in its explained
+`ALLOWED`). The tests: `test_paths_guard.py` (static) and `TestPathsGuardTest`, `LakePathsGuardTest`. The launch roots: `LaunchRootsTest`.
+The gate (`tools/drill.sh --gate`, and the first stage of every drill) runs the static ones with the quick file checks and the three Java
+ones with the rule tests; a new path from the working folder fails the gate.
+
 ## 7. Measuring a run
 
 - `DRISHTI_BROWSER_PROFILE=<file.jsonl>`: every page of the render suites writes its phases (page, load, rendered, settled, read,

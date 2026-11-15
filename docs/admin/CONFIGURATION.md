@@ -168,6 +168,9 @@ drishti.data.dir=/srv/drishti/data
 - Blank lines and lines starting with `#` or `;` are comments. The first `=` splits key from value.
 - Java: `-Ddrishti.settings.file=/abs/drishti.ini` (the IDE's VM options, Maven's `-D`, surefire's `argLine`); the loader is
   `com.ash.drishti.settingsfile.SettingsFile.applyFromSystemProperty()` (module `kernel/drishti-settingsfile`, reached through `drishti-common`).
+- The server applies it first thing in `main`, before anything reads a setting; the start's `resolved paths:` block names the file as the
+  origin of each root it set. `bin/start-server --settings /abs/drishti.ini` (and `bin/start-cluster --settings`, or a cluster file's
+  `settings-file:` or a node's `settings:`) passes it.
 - Tests find the repository and their module through it too (`drishti.repo.root`, `drishti.module.root`); see
   [the test harness](../architecture/TEST_HARNESS.md#running-tests-from-an-ide).
 

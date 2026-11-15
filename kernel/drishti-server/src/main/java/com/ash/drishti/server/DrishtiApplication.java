@@ -66,6 +66,12 @@ public class DrishtiApplication {
      * the same process, so the new configuration (the pack overlay) is read as at start-up.
      */
     public static void main(String[] args) throws InterruptedException {
+        // the settings file (-Ddrishti.settings.file=/abs/drishti.ini), first of all: its entries become system properties (an explicit -D
+        // wins); LaunchRoots names the file as the origin of each root it set
+        java.util.List<String> fromFile = com.ash.drishti.settingsfile.SettingsFile.applyFromSystemProperty();
+        if (!fromFile.isEmpty()) {
+            System.setProperty(com.ash.drishti.packs.LaunchRoots.FROM_FILE, String.join(",", fromFile));
+        }
         com.ash.drishti.common.JvmTempDir.ensureExists();   // -Djava.io.tmpdir=<data>/tmp/server may name a folder a fresh clone lacks
         if (com.ash.drishti.server.cli.CliLauncher.isCli(args)) {            // `sutra lint|test|shape|design|preview <path>`: no web server
             // no server temp folder under the data folder: the command's scratch folder is made in the JVM's temp folder (or DRISHTI_TMP_DIR)

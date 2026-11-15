@@ -51,6 +51,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 BIN = ROOT / "bin"
+#: the settings file every node starts with (--settings; an absolute path), else a node's settings: or the stack's settings-file:
+SETTINGS = ""
 SECRET_NAMES = ("DRISHTI_TOKEN_SECRET", "DRISHTI_SESSION_SECRET", "DRISHTI_NET_SECRET")
 CONSOLE = "console"
 HEADER = """# Project Drishti · Any data. Any domain. One grammar.
@@ -351,6 +353,9 @@ def start_node(stack: dict, node: dict, jar: Path) -> bool:
             "--workdir", str(cwd), "--background"]
     if node_data:
         args += ["--node-data", node_data]
+    settings = SETTINGS or str(node.get("settings") or stack.get("settings-file") or "")   # --settings, else the node's or the stack's file
+    if settings:
+        args += ["--settings", settings]
     for flag in node.get("jvm", []):
         args += ["--java-opt", flag]
     for arg in [f"--drishti.sources.connectors.{c}.enabled=false" for c in node.get("off", [])] + list(node.get("args", [])):
@@ -463,8 +468,14 @@ def main(argv: list[str]) -> int:
     ap.add_argument("command", choices=("start", "stop", "status"))
     ap.add_argument("--cluster", default="", help="the cluster file (default deploy/stack/stack.yaml)")
     ap.add_argument("--data-dir", default="", help="the data folder (default DRISHTI_DATA_DIR, else <drishti>/data)")
+    ap.add_argument("--settings", default="", help="a settings file (an absolute path) every node starts with (start-server --settings)")
     ap.add_argument("names", nargs="*", help="only these nodes (or console)")
     opts = ap.parse_args(argv)
+    global SETTINGS
+    if opts.settings and not Path(opts.settings).is_absolute():
+        say(f"--settings {opts.settings}: give the settings file as an absolute path")
+        return 2
+    SETTINGS = opts.settings
     at = Layout(opts.cluster, opts.data_dir)
     return {"start": start, "stop": stop, "status": status}[opts.command](opts.names)
 

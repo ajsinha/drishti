@@ -43,7 +43,8 @@
 #    data samples, the packs' generated content, the Python API reference); the docs and help console tests; the repository rules
 #    (no hidden names); the quick file checks (every test marked static: they read files and start no server, console or browser,
 #    such as the Java launch guard, the asset names, the branding guard, the browser-test rules); and one Java 21 build of the working tree (-P api-docs: Javadoc with doclint; Spotless) that runs only the
-#    rule tests: every drishti-it test (architecture, file size, caches, locks, branding, licence, connections, schemas), the
+#    rule tests: every drishti-it test (architecture, file size, caches, locks, branding, licence, connections, schemas), the path guards
+#    (TestPathsGuardTest, LakePathsGuardTest, LaunchRootsTest; the static test_no_relative_paths and test_paths_guard run with the quick checks), the
 #    token-scope guard and the Arrow answer sample the console reads. That build makes the server jar every later stage uses.
 # 2. Everything else at once, each job with its own log under <data>/drill/:
 #    - the console suite in two lanes: "browser" (files that drive a browser or start a live stack on the scratch ports; as many
@@ -298,7 +299,7 @@ gate_java() {
   set -e
   local rules; rules=$(cd testing/drishti-it/src/test/java && find . -name '*Test.java' -printf '%f\n' | sed 's/\.java$//' | sort | paste -sd, -)
   JAVA_HOME="$JAVA21_HOME" ./mvnw -q -o clean package spotless:check -P api-docs -T "${DRILL_GATE_THREADS:-1C}" \
-    -Dtest="$rules,TokenScopeGuardTest,ArrowAnswersTest" -Dsurefire.failIfNoSpecifiedTests=false ${DRILL_MVN_ARGS:-}
+    -Dtest="$rules,TokenScopeGuardTest,ArrowAnswersTest,TestPathsGuardTest,LakePathsGuardTest,LaunchRootsTest" -Dsurefire.failIfNoSpecifiedTests=false ${DRILL_MVN_ARGS:-}
   compgen -G 'kernel/drishti-server/target/drishti-server-*-exec.jar' >/dev/null || { echo "drill: the gate's build made no server jar" >&2; return 1; }
   # a filter that matched nothing would pass in silence: every rule test must have its report
   local c missing=()

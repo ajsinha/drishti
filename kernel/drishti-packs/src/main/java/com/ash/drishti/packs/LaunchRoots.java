@@ -70,6 +70,8 @@ public final class LaunchRoots implements EnvironmentPostProcessor, Ordered {
             new Root("lakes", List.of("drishti.lakes.dir"), "config", "lakes", false),
             new Root("connectors", List.of("drishti.sources.connectors-dir"), "config", "connectors", false),
             new Root("inbox", List.of("drishti.dataload.dir"), "data", "dataload", false));
+    /** The keys the settings file set (server main, before Spring): their origin is the file. */
+    public static final String FROM_FILE = "drishti.settings.file.keys";
     /** {@code drishti.modules.home=none}: the server has no shipped module folders (a kernel-only server; the unit tests). */
     public static final String NONE = "none";
     /** The name of the shipped defaults (the server's own application.yaml): a value from there was not named by anyone. */
@@ -253,6 +255,10 @@ public final class LaunchRoots implements EnvironmentPostProcessor, Ordered {
 
     /** The source that set a key, in words (an environment variable, a system property, the command line, a configuration file). */
     private static String origin(ConfigurableEnvironment env, String key) {
+        String fromFile = System.getProperty(FROM_FILE, "");
+        if (!fromFile.isEmpty() && java.util.Arrays.asList(fromFile.split(",")).contains(key)) {
+            return "(" + System.getProperty("drishti.settings.file") + ")";
+        }
         for (PropertySource<?> ps : env.getPropertySources()) {
             if (ps.getName().equals("configurationProperties")) {        // Spring's view over every other source: name the real one
                 continue;

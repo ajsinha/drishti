@@ -431,6 +431,14 @@ with the environment above, and `drishti-console/.venv/bin/python drishti-consol
 | 17480 (console) | people's browsers | `--port` on `start-console` (`DRISHTI_CONSOLE_PORT`) |
 | gossip (cluster only) | other servers | `gossip-port` in the node's `node.yaml` ([section 10.2](#102-network-and-ports)) |
 
+**Folders and the settings file.** The server never takes a folder from the directory it starts in: the install folder
+(`DRISHTI_HOME`), the data folder (`DRISHTI_DATA_DIR`) and the modules (`DRISHTI_MODULES_HOME`) are named outright (the scripts, the
+images and the systemd unit do), and every other folder sits under them. Started by hand, set at least `DRISHTI_HOME` and
+`DRISHTI_DATA_DIR`; the server prints a `resolved paths:` block and stops with one clear message when a folder it needs is missing.
+The same settings can live in one file, given by its absolute path: `start-server --settings /srv/drishti/drishti.ini` (or
+`-Ddrishti.settings.file=/srv/drishti/drishti.ini` on the `java` line), one `key=value` a line, an explicit `-D` winning over the file
+([CONFIGURATION.md › Launch roots](admin/CONFIGURATION.md#launch-roots), [› The settings file](admin/CONFIGURATION.md#the-settings-file--ddrishtisettingsfile)).
+
 **TLS.** Put both behind the company's reverse proxy (or the servers' own TLS) before anyone else uses them, and leave
 `DRISHTI_SECURE_COOKIE` on: [OPERATIONS_GUIDE.md › TLS and the reverse proxy](guides/OPERATIONS_GUIDE.md#113-tls-and-the-reverse-proxy).
 
