@@ -44,6 +44,9 @@ from pathlib import Path
 
 import pytest
 
+from var_stack import PARKED_I6  # noqa: E402 - parked to i6
+pytestmark = [PARKED_I6]   # every test here writes to a lake: parked to i6 (owner 2026-11-15)
+
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "tools" / "drillkit"))
 import lake_cache  # noqa: E402  (the cached lakes of the drill)

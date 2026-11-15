@@ -219,19 +219,36 @@ What is marked today: in the console, `test_java_launch_guard.py`, `test_browser
 (`test_docs_*.py`, `test_help*.py`, `test_tools_guide.py`) were already in the gate's docs job, and the licence headers and the
 generated documents in its static job.
 
-### 3.12 Shared lakes
+### 3.12 The shared test lake
 
-A file over the per-file budget is first looked at for what its time is. The VaR browser files (`test_var_currency_browser.py`,
-`test_var_lens_browser.py`, `test_var_explain_browser.py`, `test_var_parts_shown_browser.py`, `test_arrow_browser.py`) each ran in
-2 to 3 minutes alone, of which their tests took under 15 s: the rest was the VaR demo lake each built for itself (about 80 s alone,
-three to four times that with several built at once in the lane) and its server's start and stop. Splitting such a file would build the
-lake once more per part. Instead `var_stack.py` builds each lake **once per test run** for every worker
-(`browser_harness.shared_once`, keyed by the tables and the business date asked; the first worker builds, the others wait for it and
-read the same folder) and starts a server per file over it, with its own VaR hot folder (`var_lake`, `var_server`). The servers only read
-the lake. A file split later asks the same lake and pays only its server's start again.
+Every console and browser test reads **one** lake (owner 2026-11-15): the full demo lake of the saved test data, every dataset, ending
+`var_stack.SHARED_AS_OF` (2026-11-06, fixed so the visual snapshots and the walk's pages are the same every day), with the committed
+exposure run. It is the cached demo lake of section 3.15, built once per hash of the test data, generators and loaders by the parallel Java
+loader and reused across runs and drills; a run looks it up once (`browser_harness.shared_once`) and every file asks it through
+`var_stack.shared_lake(tmp_path_factory, needs=...)` (`needs`: a table it reads, checked) or `var_stack.shared_folder` (the lake and the
+connector files the build wrote beside it). It is read only: no test builds a lake of its own, asks for a subset (`--only`), copies it or
+names the Python writer. A server over it writes to its own folders (`var_stack.own_folders`: the VaR hot folder and the official VaR and
+exposure roots). `tests/test_lake_builds_cached.py` (a quick file check) fails on any test that does otherwise and is not parked.
 
-The VaR files take their lake from `tools/drillkit/lake_cache.py` ("The cached demo lake", section 3.15), so it is built once per hash of its
-sources, not once per run.
+**Parked to i6: tests that write to a lake.** A test that has to write to a lake (a build, an append, maintenance, a lake of its own, a
+trade-grain variant) is parked until i6 (IMPLEMENTATION_PLAN.md): it carries `@var_stack.PARKED_I6` (or `pytestmark = [PARKED_I6]`), a skip
+with the reason "parked to i6: writes to a lake (owner 2026-11-15)", so every run and drill report shows it as skipped, never silently
+gone. The parked tests:
+
+| File | Tests | Why it writes |
+|---|---|---|
+| `test_admin_lakes.py` | the build and the table page after a build (2 of 8) | Admin → Lakes builds a lake |
+| `test_admin_lakes_browser.py` | a file becomes a lake (1 of 2) | the same from the browser |
+| `test_admin_lake_maintain.py` | all (5) | its lake is built, then compacted and vacuumed |
+| `test_admin_lake_maintain_browser.py` | all (2) | the same from the browser |
+| `test_public_sector_browser.py` | all (6) | the recorded feeds are loaded into lakes of its own |
+| `test_bi_multi_dataset_browser.py` | all (6) | the BI sample lake (`bi_report_stack.make_lake`), a lake of its own |
+| `test_bi_reports_cross_browser.py` | all (8) | the same |
+| `test_python_runtime_answers.py` | all (2) | the same |
+| `test_expression_recipes.py` | every recipe on the demo lake (1 of 2) | the same |
+| `test_release_from_other_folder.py` | all (3) | the release builds its own lake from another folder |
+| `test_var_explorer_browser.py` | the six over the trade-grain date (`trade_stack`) | a trade-grain morning written into a lake |
+| `test_var_currency_browser.py` | a trade page's currency (1 of 4) | the same |
 
 ### 3.13 A component on a page of its own
 
@@ -257,8 +274,11 @@ paint timings) are masked.
 
 `tools/drillkit/lake_cache.py` builds a demo lake once per hash of what makes it: the committed test data, its generators, the lake code and the pack
 definitions (the working tree's edits included). The lake is under `<cache>/<hash>/`, where `<cache>` is `DRISHTI_LAKE_CACHE`, else
-`<data>/tmp/lake-cache` (a drill keeps the newest three hashes). Every test stack and check reuses it across runs; a build runs under a lock held across
-processes, so workers wait for it rather than repeat it. A cached lake is read only: a test that writes to a lake (`trade_grain`) builds its own.
+`<data>/tmp/lake-cache` (a drill keeps the newest three hashes). Set `DRISHTI_LAKE_CACHE` to one absolute folder for every checkout, worktree
+and drill on a machine, so the shared test lake (section 3.12) is built and kept once; a fresh clone without it uses its own `data/tmp/lake-cache`. Every test stack and check reuses it across runs; a build runs under a lock held across
+processes, so workers wait for it rather than repeat it. The build is `lake demo`'s default writer, the parallel Java loader of the exec jar.
+
+The browser tests read one of these, the shared test lake (section 3.12).
 `python3 tools/drillkit/lake_cache.py build --only market-risk --as-of 2026-09-30` builds or finds one and prints its path.
 
 ### 3.16 Affected tests
@@ -678,9 +698,6 @@ ones with the rule tests; a new path from the working folder fails the gate.
 
 - `test_embed_elements_browser.py` and `test_mr_cube_browser.py`: their stack is built once per file; a session stack per worker
   through the pool would let their tests spread (the MR cube now reads the cached lake, section 3.25).
-- The other files that build a VaR demo lake (`test_var_explorer_browser.py`, `test_var_regulatory_browser.py`,
-  `test_stress_window_browser.py`, `test_mr_cube_browser.py`) could ask it through `var_stack.py` (section 3.12) once each is shown to
-  leave the lake as it found it.
 - The files that start the same signed-in server (`DRISHTI_SECURITY_ENABLED`, the test token secret) could ask with `shared=True` once
   each is shown to leave the server as it found it.
 

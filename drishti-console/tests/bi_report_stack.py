@@ -52,7 +52,8 @@ BOOKS = ["BOOK-FX-1", "BOOK-FI-1", "BOOK-EQ-1"]
 
 def make_lake(target: Path, days: int = 3) -> str | None:
     """A small Delta lake (a few thousand rows, never millions) made with ``tools/packgen/banking/make_data.py --lake``, which the cross-pack and the cashflow samples
-    read. ``DRISHTI_BI_DELTA_ROOT`` names one that exists; else it is made with ``uv run --with deltalake ...`` (needs uv and its cache); None when neither works."""
+    read. ``DRISHTI_BI_DELTA_ROOT`` names one that exists; else it is made with ``uv run --with deltalake ...`` (needs uv and its cache); None when neither works.
+    A lake of its own: the tests that read it are parked to i6 (var_stack.PARKED_I6); the docs' screenshots (bi_report_shots.py) still use it."""
     have = os.environ.get("DRISHTI_BI_DELTA_ROOT")
     if have:
         return have

@@ -29,38 +29,51 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import pytest
+
+from var_stack import PARKED_I6  # noqa: E402 - parked to i6
 import yaml
 
 from core.lake_maint import maintenance
 from core.lakes import Lakes, LakeSettings
 
 REPO = Path(__file__).resolve().parents[2]
-pytestmark = pytest.mark.skipif(importlib.util.find_spec("deltalake") is None, reason="needs deltalake and pyarrow")
+pytestmark = [PARKED_I6, pytest.mark.skipif(importlib.util.find_spec("deltalake") is None, reason="needs deltalake and pyarrow")]   # writes to a lake: parked to i6 (owner 2026-11-15)
 NY = ZoneInfo("America/New_York")
 
 
 def make_lake(root: Path) -> None:
-    """trading/trade built by lake build (two small builds a day for three days), risk/published written by another system."""
-    sys.path.insert(0, str(REPO / "tools" / "lake"))
-    import build
-    for d in ("2026-10-14", "2026-10-15", "2026-10-16", "2026-10-14", "2026-10-15", "2026-10-16"):
-        src = root.parent / f"trade.{d}.jsonl"                 # the business date from the name (the load rules)
-        src.write_text("\n".join(json.dumps({"TRADE_ID": f"T-{d}-{i}-{time.monotonic_ns()}", "TRADE_DATE": d, "QUANTITY": i}) for i in range(20)))
-        with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
-            assert build.main(["--from", str(src), "--lake", str(root), "--domain", "trading", "--kind", "trade", "--key", "TRADE_ID",
-                               "--engine", "deltalake", "--pack-name", "trading", "--mode", "append", "-q"]) == 0
-    import pyarrow as pa
-    from datetime import date
-    from deltalake import write_deltalake
-    write_deltalake(str(root / "risk" / "published"), pa.table({"id": ["A"], "doc": ["{}"], "business_date": pa.array([date(2026, 10, 16)], pa.date32())}),
-                    partition_by=["business_date"])
+    """trading/trade built by lake build (two small builds a day for three days, the parallel Java loader: engine auto) and risk/published
+    written by another system: built ONCE per source hash in the drill's lake cache (tools/drillkit/lake_cache.py), then copied to ``root``
+    (the maintenance compacts and vacuums its copy, never the cached lake)."""
+    import shutil
+    from var_stack import _lake_cache
+
+    def build(folder: Path) -> None:
+        sys.path.insert(0, str(REPO / "tools" / "lake"))
+        import build as lake_build
+        lake = folder / "lake"
+        for n, d in enumerate(("2026-10-14", "2026-10-15", "2026-10-16", "2026-10-14", "2026-10-15", "2026-10-16")):
+            src = folder / f"trade.{d}.{n}" / f"trade.{d}.jsonl"           # the business date from the name (the load rules)
+            src.parent.mkdir()
+            src.write_text("\n".join(json.dumps({"TRADE_ID": f"T-{d}-{i}-{n}", "TRADE_DATE": d, "QUANTITY": i}) for i in range(20)))
+            with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+                assert lake_build.main(["--from", str(src), "--lake", str(lake), "--domain", "trading", "--kind", "trade", "--key", "TRADE_ID",
+                                        "--pack-name", "trading", "--mode", "append", "-q"]) == 0
+        import pyarrow as pa
+        from datetime import date
+        from deltalake import write_deltalake                                # another system's table: the Python writer stands in for it
+        write_deltalake(str(lake / "risk" / "published"), pa.table({"id": ["A"], "doc": ["{}"], "business_date": pa.array([date(2026, 10, 16)], pa.date32())}),
+                        partition_by=["business_date"])
+
+    cached = _lake_cache().cached("admin-lake-maintain", build) / "lake"
+    shutil.copytree(cached, root)
 
 
 @pytest.fixture
 def lake(client, backend, monkeypatch, tmp_path):
     root = tmp_path / "lake"
     make_lake(root)
-    lk = Lakes(LakeSettings(roots=[root], tools_dir=REPO / "tools", engine="deltalake", data_dir=tmp_path / "data"))
+    lk = Lakes(LakeSettings(roots=[root], tools_dir=REPO / "tools", data_dir=tmp_path / "data"))
     client.app.state.lakes = lk
     sent = []
 

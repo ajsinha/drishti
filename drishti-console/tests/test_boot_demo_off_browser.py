@@ -24,13 +24,13 @@ import urllib.request
 
 import pytest
 
-from var_stack import VAR_TRADES, var_data, var_lake, var_server
+from var_stack import shared_lake, var_server
 from test_workbench_browser import browser  # noqa: F401 - the browser fixture
 
 
 @pytest.fixture(scope="module")
 def stack(tmp_path_factory):
-    lake = var_lake(tmp_path_factory, var_data(*VAR_TRADES))
+    lake = shared_lake(tmp_path_factory)
     yield from var_server(tmp_path_factory, lake, heap="3072m")   # every trade of six systems and the VaR inputs
 
 
