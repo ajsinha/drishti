@@ -246,9 +246,12 @@ The guide: [guide.md](guide.md).
 
 def load(a, n: dict, cli, say=print) -> int:
     """--load: the native records into the table with SOURCE_SYSTEM stamped (data ingest --store delta)."""
-    lake = a.lake or (pathlib.Path(os.environ["DRISHTI_DELTA_ROOT"]) if os.environ.get("DRISHTI_DELTA_ROOT") else None)
+    sys.path.insert(0, str(HERE.parent / "lake"))
+    import lakeconfig as LC   # noqa: E402  (the one place that names the demo lake's root variable)
+    env = os.environ.get(LC.DEMO_ROOT_ENV)
+    lake = a.lake or (pathlib.Path(env) if env else None)
     if lake is None:
-        raise SystemExit("--load needs --lake <the lake's Delta root> (or DRISHTI_DELTA_ROOT)")
+        raise SystemExit(f"--load needs --lake <the lake's Delta root> (or {LC.DEMO_ROOT_ENV})")
     domain, table = n["table"].split(".", 1)
     with tempfile.TemporaryDirectory(dir=os.environ.get("TMPDIR")) as tmp:
         files = []
