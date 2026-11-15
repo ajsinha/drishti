@@ -397,7 +397,8 @@ touch data/dataload/inbox/trade_endur.2026-11-06.ready          # or trade_endur
    min)*), when the server is short of memory, or when the disk is below the server's free-space floor.
 2. **The whole ready batch** (every ready, stable file at that moment, oldest first) is moved at once into `inprocess/<run>/`; files that
    become ready during the run wait for the next cycle. `max-files` and `max-gb` (off by default) bound one run when set.
-3. **Never twice**: a file whose SHA-256 the ledger shows as loaded goes straight to the outbox, *already loaded in run …*. A changed
+3. **Never twice**: a file whose SHA-256 the ledger shows as loaded, and whose rows the lake still holds, goes straight to the outbox,
+   *already loaded in run …*; when a later load replaced (or an undo removed) its date, the same file loads again. A changed
    file with the same name is loaded.
 4. **Loaded**: the files of one table go to one run of the parallel loader, one table after another, as a separate Java process with
    its own heap (`loader-heap`, 4g): a large or broken file never takes the server's memory. Each business date is one commit.
@@ -862,7 +863,7 @@ java -Xmx4g -Dloader.main=com.ash.drishti.lakeload.LakeLoad -jar drishti-server-
 |---|---|
 | The inbox | `<data>/dataload/inbox/` on the inbox's **owner** node (`drishti.dataload.dir`, default `<data>/dataload`; `<data>` is `DRISHTI_DATA_DIR`). Turn it on: Admin → Engines → **Data inbox**, or `DRISHTI_DATALOAD_ENABLED=true` (section 3.1) |
 | Which table | the `.ready` file's keys, else the first rule of `config/dataload.yaml`, else the name's table (section 5.1) |
-| Which date | the `.ready` file's `business-date:`, else the name's date, else business today (section 5.2) |
+| Which date | the `.ready` file's `business-date:`, else the name's date, else the rows' one date (section 5.2) |
 | Which lake | the `.ready` file's `lake:`, else the rule's, else `drishti.dataload.lake` (`demo`) |
 | Watch it | **Admin → Data loads → Inbox** (Waiting, Loading, Last cycles, Failures with **Retry**); `drishti.py dataload status`; `GET /api/v1/admin/dataload` |
 | Load now | **Load now** on the Inbox screen; `drishti.py dataload run`; `POST /api/v1/admin/dataload/run` |
@@ -921,7 +922,7 @@ checks use. Only **Create a new table** (which needs `drishti.dataload.new-table
 
 A refusal blocks Push; the checks run again on the server when you push.
 
-**Replacing a date that already has rows.** `mode: replace` removes **every** row of that date in that table, whichever file or source system sent it. A date can be several files, or several systems, so when the table already holds rows for the date the page says how many, per system,
+**Replacing a date that already has rows.** `mode: replace` removes **every** row of that date in that table, whichever file or source system sent it, except in a table several connectors share (`trading.trades_shared`): there a connector's load replaces only its own `SOURCE_SYSTEM` slice (section 16.2). A date can be several files, or several systems, so when the table already holds rows for the date the page says how many, per system,
 and offers the two right ways: load the date's files **together in one tar** (one replace, all or nothing), or use **append**. **Push stays off until you tick** that this file really takes the place of those rows. On the command line this is `--yes-replace`.
 
 **5. Push.** The data file is moved into `inbox/` first and its `.ready` last, each appearing whole or not at all, so the loader never sees a half-written pair; a file of the same name already waiting is refused and never overwritten. The push is audited: who, the file, its SHA-256, the `.ready` text. In a cluster
@@ -1154,13 +1155,19 @@ tool that loads it (`tools/samplegen/load_rows.py`, or the store's own loader): 
 
 ### 5.2 The business date of a file
 
-**The business date comes from outside the data, never from a row.** It is the partition, so whoever sends the file decides it. First
-match wins:
+**The business date comes from outside the data first.** It is the partition, so whoever sends the file decides it. First match wins:
 
 1. the command line's `--as-of` (`source.as-of`);
 2. the `.ready` file's `business-date:`;
-3. the name's date: `<table>[.<date>].<extension>`;
-4. the business today: today in the server's zone, and on a Saturday or Sunday the Friday before.
+3. the name's date: `<table>[.<date>][.part-<n>].<extension>`;
+4. the rows' own date field (`BUSINESS_DATE`), when none of the above gives one: every row under the date it carries. In a replace the rows
+   must carry one date: rows with none or with several refuse the file (*no business date …*, *its business date is ambiguous …*), nothing
+   written, because a replace under a guessed date could take out a loaded date;
+5. the business today (today in the server's zone, on a Saturday or Sunday the Friday before), only for a kind without a date field, or an
+   append of rows without one.
+
+A file named for a date whose rows all carry another date is refused in a replace (*its name says 2026-11-12, but none of its rows carries that
+date*): a load never replaces a date its rows do not belong to.
 
 A rule's `date-pattern` reads the date from a name that does not follow `<table>.<YYYY-MM-DD>.<ext>`: a regular expression with exactly one
 capture group around the date, read as `YYYY-MM-DD` (or `YYYYMMDD` with `date-format: YYYYMMDD`). `swapone-2026-11-03.jsonl.gz` with
@@ -1175,8 +1182,9 @@ BUSINESS_DATE; loaded under 2026-11-06*), in the report, the ledger and on the I
 
 | Name | Table | Date |
 |---|---|---|
-| `trade_endur.jsonl` | trade_endur | the business today |
+| `trade_endur.jsonl` | trade_endur | its rows' `BUSINESS_DATE` (one date; see above) |
 | `trade_endur.2026-11-06.jsonl.gz` | trade_endur | 2026-11-06 |
+| `scenario-pv.2026-11-06.part-0001.jsonl.gz` | scenario-pv | 2026-11-06 (one part of the day; the parts of a cycle are one load) |
 | `trade_endur.20261106.jsonl.zip` | trade_endur | 2026-11-06 |
 | `eod-2026-11-06.tar.gz` | from its folders | from its folders |
 | `trade_endur.final.jsonl` | refused: *"final" is neither a date (YYYY-MM-DD) nor an extension* | |
@@ -1511,7 +1519,7 @@ lake check: 4 lakes, 1 errors
 | `failed/`: *"final" is neither a date (YYYY-MM-DD) nor an extension* | a name with a word in the date's place | rename to `<table>.<YYYY-MM-DD>.jsonl.gz` |
 | `failed/`: *a tar archive names its own tables and dates* | `business-date:` or `table:` in a tar's `.ready` | remove them; fix the tar's folders |
 | `failed/`: a table *in two packs* | the table name is ambiguous | `pack:` in the `.ready`, or a rule |
-| *already loaded in run …* | the same SHA-256 was loaded before | nothing to do; `reload-duplicates: true` to force |
+| *already loaded in run …* | the same SHA-256 was loaded before and the lake still holds its rows | nothing to do; `reload-duplicates: true` to force |
 | *skipped: run … still loading* | the previous run is not finished | wait; runs never overlap |
 | the table locked (exit 3) | another load or build holds it | it is tried again next cycle |
 | *loaded into risklake, but no connector reads it* | no connector names the lake | section 6 |
@@ -2267,15 +2275,13 @@ optional; a record that disagrees with it is refused `DRS-5209`.
 
 **The layout the lake file gives it** (`config/lakes/demo.yaml`, `risk.scenario-pv`; the lake file is the truth, never a command line): partitioned by
 business date, then `SCENARIO_SET_ID` and `GRAIN` (one folder a date at position grain), files of about 256 MB (`file-size-mb`), row groups of 16 MB
-(`row-group-mb`), `zstd` for columns and vectors, `sort-by: [LEGAL_ENTITY, DIVISION, DESK, TT_BOOK, TRADE_ID]`. At position grain `TRADE_ID` is empty,
-so rows are ordered by book and then arrive in file order. **The change that adds `POSITION_ID` to `sort-by` is being made on branch `wip/i4-accept`**; once
-it is in your `config/lakes/demo.yaml`, a lookup of one position reads one row group instead of the book's. It applies to dates loaded after it, so load
-the two dates after it is in. VaR reads the whole date and is unaffected either way.
+(`row-group-mb`), `zstd` for columns and vectors, `sort-by: [LEGAL_ENTITY, DIVISION, DESK, TT_BOOK, POSITION_ID, TRADE_ID]`: rows are ordered by book,
+then by `POSITION_ID` (`TRADE_ID` is empty at position grain), so a lookup of one position reads one row group. VaR reads the whole date.
 
 #### Step by step (Linux; each command was run as written)
 
 **1. Name and cut the files.** One tar per business date, with one folder per kind and, inside it, the date's folder (section 4.4). The parts of a
-date go in the same folder under any names (`part-0001.jsonl.gz`): **a tar is the way to send one date in several files by the inbox**, and it loads
+date go in the same folder under any names (`part-0001.jsonl.gz`): **a tar sends one date in several files by the inbox**, and it loads
 all three tables or none.
 
 ```text
@@ -2297,8 +2303,9 @@ sha256sum /landing/eod-2026-11-12.tar | cut -c1-64        # Windows: (Get-FileHa
 ```
 
 **2. Drop the tar, and its `.ready` last** (section 3.1). The `.ready` is YAML, named after the tar in full. `sha256:` is checked before anything is
-written (a wrong one goes to `failed/`: *the SHA-256 in its .ready file is not the file's*); `rows:` is **not** checked for a tar (tested), so count in
-step 5. `lake: demo` is the lake holding your demo data.
+written (a wrong one goes to `failed/`: *the SHA-256 in its .ready file is not the file's*); `rows:` (optional) is the archive's documents, all its tables together: each table folder is counted
+first without writing, and another count goes to `failed/` (*its .ready file says N rows, the archive holds M documents*), nothing written.
+`lake: demo` is the lake holding your demo data.
 
 ```bash
 INBOX=<data>/dataload/inbox                               # the owner node's data folder; Admin → Data loads → Inbox shows it
@@ -2306,6 +2313,7 @@ cp /landing/eod-2026-11-12.tar $INBOX/
 cat > $INBOX/eod-2026-11-12.tar.ready <<EOF
 lake: demo
 sha256: $(sha256sum /landing/eod-2026-11-12.tar | cut -c1-64)
+rows: $(( $(zcat /landing/2026-11-12/*/2026-11-12/*.gz | wc -l) ))
 EOF
 ```
 
@@ -2313,9 +2321,13 @@ The inbox takes the pair once both are unchanged for 30 seconds (`stable-seconds
 
 ```bash
 export DRISHTI_SERVER=http://host:18480
-python3 tools/drishti.py dataload run --token-file ~/.drishti-token      # "Load now": a cycle started
-python3 tools/drishti.py dataload status --token-file ~/.drishti-token   # waiting / failed / last cycles
+python3 tools/drishti.py dataload run --wait --token-file ~/.drishti-token   # "Load now", then each file's outcome; exit 0, 2 (rejects), 1 (failed)
+python3 tools/drishti.py dataload status --token-file ~/.drishti-token       # waiting / failed / last cycles
 ```
+
+`run --wait` ends with `exit 0: every file loaded, no row rejected`. **Exit 2 is loaded with rejected rows**: the line under the file says how many
+of how many and why (*loaded with rejects: 3 of 20,000 rows rejected: DRS-5201 … (3)*), the same as a red *loaded · 3 rejected* on Admin → Data
+loads and a notice in `status`: the date answers without those rows, so fix and resend before using it.
 
 `status` ends with `done  1 loaded` when it worked (tested: 11 seconds for a 20,000-position date). The file, its marker and a report
 `eod-….tar.loaded.json` are then in `outbox/<day>/<run>/`, with the loader's log under `loads/`; a failure is in `failed/<day>/<run>/` with
@@ -2329,8 +2341,8 @@ rolled by one).
 # repeat steps 1 and 2 with 2026-11-13
 ```
 
-Sending the identical file again is skipped as *already loaded in run …*, even when the date was overwritten since (tested). To reload, change the file (a
-rebuilt tar differs) or set `drishti.dataload.reload-duplicates: true` for the run.
+Sending the identical file again is skipped as *already loaded in run …* while the lake still holds its rows; when another load replaced its date
+since (or `dataload undo` removed it), the same file loads again. `drishti.dataload.reload-duplicates: true` forces a reload of any file.
 
 **4. The CLI alternative, tuned** (no inbox: a terminal, cron, or a machine that is not the owner node). **Always the Java loader** (`--engine java`):
 readers, parsers and writers on every core, memory bounded and spilled to disk, **one Delta commit per business date and table** however many files
@@ -2359,8 +2371,8 @@ route and count without writing. **Tested** at 20,000 positions: 3.8 s wall, 24 
 
 **The inbox uses the same Java loader** (the ledger says `engine: java-loader`), one run a table: all files of the same connector or table that are ready in a
 cycle are **one load and one commit per date** (tested: two parts of an Endur date, one commit); the three tables of a tar are three loads, each one commit a date. Files
-for **different connectors** are separate loads even when the connectors read the same table (tested: WSS, SwapOne and ICI into one shared table: three
-commits, three versions). So send a date as **one tar** (this section) and tune the inbox's loader with `DRISHTI_DATALOAD_LOADER_HEAP`; the inbox does not take
+for **different connectors** are separate loads even when the connectors read the same table (WSS, SwapOne and ICI into one shared table: three
+commits, three versions), and each replaces **only its own `SOURCE_SYSTEM` slice** of the date (16.2). So send a date as **one tar** (this section) and tune the inbox's loader with `DRISHTI_DATALOAD_LOADER_HEAP`; the inbox does not take
 `--loader-set` options per drop: its settings are `drishti.dataload.*` and the lake file's layout.
 
 **5. Verify** (the output below is from the tested run; `$T` is `--token-file ~/.drishti-token`).
@@ -2407,9 +2419,13 @@ Undo a wrong load with `drishti.py dataload undo <load-id>` (a dry run; `--yes` 
 
 | You see | Why | Do |
 |---|---|---|
-| `failed/`: *'part-0001' is neither the date … nor an extension* | a plain part named `scenario-pv.2026-11-12.part-0001.jsonl` | put the parts in a tar (step 1) |
-| a file loaded but the date is **today's**, and the real data of that date is gone | **a name with no date loads under the business today, and replace mode replaces that date** (tested: `scenario-pv.jsonl` replaced a loaded date with 490 rows) | `dataload undo <load-id>`, or load the date again from its tar (changed bytes); give the routing rule `date-from: name` in `config/dataload.yaml`, or always send a tar or `<table>.<date>.jsonl.gz` |
-| *already loaded in run …* | the same SHA-256 was loaded before | change the file, or `reload-duplicates` |
+| `failed/`: *'part-x' is neither the date … nor an extension* | a part name other than `<table>.<date>.part-<n>.jsonl[.gz]` | name the parts `scenario-pv.2026-11-12.part-0001.jsonl.gz`, or put them in a tar (step 1) |
+| `failed/`: *no business date: none given …, none in its name … and none of its rows carries BUSINESS_DATE* | a name without a date (`scenario-pv.jsonl`) and rows without `BUSINESS_DATE` | name the date (`scenario-pv.2026-11-12.jsonl.gz`), or `business-date:` in the `.ready` |
+| `failed/`: *its business date is ambiguous …* | no date given or named, and the rows carry several dates (or some none) | one date a file, named |
+| `failed/`: *its name says D, but none of its rows carries that date* | the name and `BUSINESS_DATE` disagree on every row | fix the name or the rows; a replace never puts another day's rows under D |
+| `failed/`: *its .ready file says N rows, the archive holds M documents* | cut short, or a wrong `rows:` | resend, or correct the marker |
+| `run --wait` exit 2, *loaded with rejects: N of M rows rejected: …* | rows refused by the load (the reasons follow) | fix and resend the date; check 2 of step 5 |
+| *already loaded in run …* | the same SHA-256 was loaded before and the lake still holds it | nothing to do; `reload-duplicates` to force |
 | `failed/`: *the SHA-256 in its .ready file is not the file's* | cut short in transfer, or the wrong hash | resend, correct the marker, `dataload retry` |
 | `422 DRS-5210` *ENDUR sent {PV/POSITION=167, PV/TRADE=1}* | a trade-grain row in a position-grain date | remove it: one form and one grain a date |
 | `DRS-5203` *the vectors come from 2 runs (BATCH_ID …)* … *answered from <earlier date> instead* | two `BATCH_ID`s, or a `SCENARIO_SET_ID` that is not the set's | one batch a date; the page answers the earlier date meanwhile |
@@ -2425,7 +2441,8 @@ Undo a wrong load with `drishti.py dataload undo <load-id>` (a dry run; `--yes` 
 #### Do not
 
 - Do not send **trade** and **position** grain for one source system on one date, nor two forms (PV and P&L vectors); do not send a position and, alone, a trade it names.
-- Do not name a file without its date (`scenario-pv.jsonl`) or with extra words in the name: the date becomes today's.
+- Do not name a file without its date (`scenario-pv.jsonl`) or with extra words in the name: a file with no date takes its rows' `BUSINESS_DATE`,
+  and a replace refuses it when they carry none or several; name it `<table>.<date>[.part-<n>].jsonl.gz`.
 - Do not put the `.ready` before the file is complete; do not edit a file in the inbox.
 - Do not mix `BATCH_ID`s or scenario sets within a date; do not send `null` in a vector; do not restate a date under its old `BATCH_ID` (next `RESTATEMENT`, a new `BATCH_ID`, the whole date again: replace mode takes the whole date).
 - Do not leave the five default reporting currencies on for the first load of 1.3M positions.
@@ -2440,17 +2457,17 @@ FILES    [ ] every row: VALUE_TYPE PV, GRAIN POSITION, POSITION_ID, CURRENCY, SO
              SCENARIO_PV (= SCENARIO_COUNT values, no null), LEGAL_ENTITY, DIVISION, DESK, TT_BOOK, LIMIT_LETTER, BATCH_ID (one a date), COMPUTED_AT
          [ ] no TRADE_ID, no trade-grain row   [ ] scenario-set (1 row) and fx-scenario (1 row a non-USD currency) for the same date
          [ ] parts of 200-400K positions, gzip   [ ] one tar a date: scenario-set/<date>/ fx-scenario/<date>/ scenario-pv/<date>/   [ ] sha256 noted
-LOAD     [ ] the earlier date first   [ ] cp tar to the inbox   [ ] .ready LAST (lake: demo, sha256)   [ ] dataload run   [ ] status: done 1 loaded
+LOAD     [ ] the earlier date first   [ ] cp tar to the inbox   [ ] .ready LAST (lake: demo, sha256, rows)   [ ] dataload run --wait: exit 0
          [ ] then the later date
 VERIFY   [ ] var show BANK: positions = rows sent   [ ] rejected 0, no warnings, no (Blank)   [ ] var explain --from D-1 --to D: adds up
          [ ] SPV <position> opens   [ ] lake status shows both dates   [ ] disk still above the guard
-IF WRONG [ ] dataload undo <load-id> (dry run, then --yes)   [ ] never an undated name   [ ] dataload retry after fixing a failed file
+IF WRONG [ ] dataload undo <load-id> (dry run, then --yes)   [ ] dated names only   [ ] dataload retry after fixing a failed file
 ```
 
 #### What was measured (a rehearsal, not production)
 
 20,000 positions × 250 values a date, two consecutive business dates (2026-11-12, then 2026-11-13 with 400 positions fewer), four gzip parts a date,
-generated by `tools/pvgen/bulk_positions.py`; one 24-thread workstation, NVMe, Java 21, 4 GB server and loader heaps, a server built from this branch.
+generated by `tools/pvgen/bulk_positions.py`; one 24-thread workstation, NVMe, Java 21, 4 GB server and loader heaps.
 
 | Step | Measured |
 |---|---|
@@ -2504,60 +2521,19 @@ fields to get right are the key (`TRADE_ID` or the system's native key), `SOURCE
 | The source modules | on: `config/modules/source-<system>.yaml` has `enabled: true` (Admin → Modules) |
 | A token | `loads:write` |
 
-#### Where WSS, SwapOne and ICI go: give each its own table
+#### Where WSS, SwapOne and ICI go: one shared table, a slice each
 
-As shipped the three go to **one shared table** `trading.trades_shared` split by `where: SOURCE_SYSTEM = '<SYS>'`, and the inbox runs **one load a file**, each a
-replace of the date: **tested, the last file loaded wins**: three files for 2026-07-08 (207 WSS, 240 SwapOne, 230 ICI trades) left 230 rows in the table (ICI's), and the
-page showed no WSS and no SwapOne. Do not load several systems into a shared table by separate files. **Give each system its own table**, as Endur,
-Calypso and Murex have (tested: 207, 240 and 230 rows, then 221, 250 and 248 after the second date, all six systems exact):
+As shipped the three go to **one shared table** `trading.trades_shared`, partitioned by `SOURCE_SYSTEM` and read by each connector with
+`where: SOURCE_SYSTEM = '<SYS>'`. The inbox runs one load per connector, and **each load replaces only its own `SOURCE_SYSTEM` slice of the date**: the
+connector's `set: {SOURCE_SYSTEM: <SYS>}` stamps the rows and names the slice, so WSS's file never takes out SwapOne's or ICI's rows (tested,
+`SharedTableSliceTest`: the six systems loaded one by one, exact counts per system; a reload of WSS replaced only WSS's rows). A row of another system
+in a system's file is rejected (*SOURCE_SYSTEM is ICI, not this load's WSS*). A shared table that is not split by the stamped column (no
+`partition-by: [SOURCE_SYSTEM]` in Delta, no `SOURCE_SYSTEM` promoted in Iceberg) refuses a replace: *the table of connector trade-wss is shared by
+trade-ici, trade-swapone, trade-wss: a replace would take out the other connectors' rows*.
 
-```yaml
-# config/dataload.yaml (read again every cycle, no restart): the site's rules come first
-dataload:
-  rules:
-    - match: "wss-*.jsonl.gz"
-      pack: trading
-      kind: trade
-      connector: trade-wss
-      table: trade_wss                      # its own table
-      key: DEAL_REF
-      date-from: name
-      date-pattern: '-(\d{4}-\d{2}-\d{2})\.'
-    # the same for swapone-*.jsonl.gz (table trade_swapone, key SWAP_ID, connector trade-swapone)
-    # and ici-*.jsonl.gz (table trade_ici, key TICKET_NO, connector trade-ici)
-```
-
-```yaml
-# config/lakes/demo.yaml, under tables:   (the lake file is the truth; layout as the other three trade tables)
-  trading.trade_wss:
-    kind: trade
-    promote: [SOURCE_SYSTEM]
-    sort-by: [id]                # sorted by the key, with small row groups: one trade is one row group
-    file-rows: 250000
-    row-group-rows: 1000
-    id: DEAL_REF                 # SWAP_ID, TICKET_NO for the others
-    maintenance: {compaction: true, target-file-mb: 256, vacuum: 7d}
-```
-
-```yaml
-# config/connectors/trade-wss.yaml: the read side; the same for swapone and ici. It replaces the module's template (no where:, its own table).
-name: trade-wss
-plugin: delta
-kinds: [trade]
-settings:
-  lake: demo
-  lake-tables: trading.trade_wss
-  union: true
-  source-name: trade-wss
-  set: {SOURCE_SYSTEM: WSS}
-  map: mappings/wss-trade.yaml
-```
-
-Restart the server once so the connectors are read. **The table of an inbox load comes from a rule's `table:` (or the `.ready`'s `table:` for a plain file with no rule),
-never from the site's connector file**: the connector file only decides what is *read* and which constants are stamped (tested: with the lake entry and the connector file but no
-rule, the load still went to `trades_shared`). A tar cannot carry them either: a tar folder must name a table the pack knows (`trade_endur`, `trade_calypso`,
-`trade_murex`; the others are refused, *no pack, kind or table of that name*, and `trades_shared` is refused as ambiguous between three connectors, tested).
-If your site prefers the shared table, send the three systems **in one file a date** (`SOURCE_SYSTEM` on every row) and keep one load a date.
+A system can still have **its own table**, as Endur, Calypso and Murex have: a rule in `config/dataload.yaml` with `table: trade_wss` (the table of
+an inbox load comes from the rule, never from the site's connector file), the table's entry in `config/lakes/demo.yaml` (the layout of the other
+three trade tables, `id: DEAL_REF`), and `config/connectors/trade-wss.yaml` reading `lake-tables: trading.trade_wss` without `where:`; restart once.
 
 #### Step by step (Linux; each command was run as written)
 
@@ -2566,7 +2542,7 @@ one Delta commit a date** (tested: `endur-part1-2026-07-08.jsonl.gz` and `endur-
 rule's glob and carrying the date, `endur-part1-2026-07-08.jsonl.gz`. Files for different systems are different loads (one commit each).
 
 **2. Drop the files and their markers.** `.ready` last; an empty marker is enough (the lake is the inbox's `lake:` setting, `demo`). Add `sha256:`
-(`sha256sum`) when you want the file checked; for a plain file `rows:` is checked as well.
+(`sha256sum`) when you want the file checked; `rows:` is checked as well (a tar: all its tables together).
 
 ```bash
 INBOX=<data>/dataload/inbox
@@ -2574,12 +2550,13 @@ cp /landing/endur-part1-2026-07-08.jsonl.gz /landing/endur-part2-2026-07-08.json
    /landing/murex-2026-07-08.jsonl.gz /landing/wss-2026-07-08.jsonl.gz /landing/swapone-2026-07-08.jsonl.gz /landing/ici-2026-07-08.jsonl.gz $INBOX/
 for f in $INBOX/*-2026-07-08.jsonl.gz; do touch $f.ready; done                       # Windows: ni "$f.ready"
 export DRISHTI_SERVER=http://host:18480
-python3 tools/drishti.py dataload run --token-file ~/.drishti-token                   # after the 30 s of stability
+python3 tools/drishti.py dataload run --wait --token-file ~/.drishti-token            # after the 30 s of stability; exit 0, 2 (rejects), 1 (failed)
 python3 tools/drishti.py dataload status --token-file ~/.drishti-token                # done  7 loaded
 ```
 
-The three systems' tars are possible too, **for Endur, Calypso and Murex only**: `trade_endur/<date>/…`, `trade_calypso/<date>/…`, `trade_murex/<date>/…` in one tar with one
-`.ready` (a tar loads whole or not at all; tested, 605 trades).
+A tar works for every source module that is on: one folder per system named after its connector, `trade_endur/<date>/…`, `trade_calypso/<date>/…`,
+`trade_murex/<date>/…`, `trade_wss/<date>/…`, `trade_swapone/<date>/…`, `trade_ici/<date>/…`, in one tar with one `.ready` (a tar loads whole or not at
+all; the three shared systems each replace only their slice). `trades_shared/` itself is refused as ambiguous: it names no one system.
 
 **3. The second date**, the same with `2026-07-09`. **Which trades a date holds is your choice and it matters**: the trade pages, the blotter and the pivot read **one business
 date's rows**, so a trade is seen on a date only when that date's file carries it (tested: a trade of the 2026-07-08 file is not found on 2026-07-09, whose file held only the
@@ -2631,16 +2608,17 @@ whether a connector re-reads a changed map without a restart (restart, or Admin 
 | `failed/`: *no rule matches this name* | the name does not fit `<system>-*.jsonl.gz` | rename, or add a rule |
 | `failed/`: *… is neither the date … nor an extension* | a name with a word between table and date, for a file with no rule | use the rule's pattern (`endur-part1-2026-07-08.jsonl.gz`) |
 | the trades of the system are missing, the others are there | its module is off, or its connector reads a table that holds nothing | `enabled: true`; `pivot run` per system; Admin → Connectors |
-| two systems' trades vanished after loading | a shared table with one load per system (replace) | own tables (above) |
-| `refused, nothing was loaded: trade_ici: no pack, kind or table of that name` | a tar folder that is not a known table | plain files with a rule, or the three known folders |
+| *the table of connector trade-wss is shared by …: a replace would take out the other connectors' rows* | a shared table not split by `SOURCE_SYSTEM` (a site's lake entry without `partition-by: [SOURCE_SYSTEM]`) | add it to the entry (a new table), or give the system its own table |
+| rejected *SOURCE_SYSTEM is ICI, not this load's WSS* | another system's row in WSS's file | one system a file |
+| `refused, nothing was loaded: trade_xyz: no pack, kind or table of that name` | a tar folder that is no connector or table of an enabled source module | the connector's name with `_` (`trade_wss`), and the module on |
 | `404 no source holds trade/<id> … for <date>` | the id is not in that date's file | ask the date that has it; send full dates |
 | a page shows empty fields for a mapped system | the native field is not in the map | add it (above) |
 | `DRS-5034` on Admin → Connectors | a `where`, a missing or duplicate map entry | the reason names it |
 
 #### Do not
 
-- Do not load several systems into one shared table by separate files; do not name a part without the date.
-- Do not drop a file without its `.ready`, or edit it in the inbox; do not mix two systems' trades in one file for an own-table system.
+- Do not mix two systems' trades in one file: each system's file replaces only that system's rows; do not name a part without the date.
+- Do not drop a file without its `.ready`, or edit it in the inbox.
 - Do not edit the stored data to fit the map: change the map.
 - Do not expect trades to feed VaR: that is the scenario PVs (16.1).
 - **Never commit production trades**, nor a sample row with real values; rehearse on `data/testdata/trades` (synthetic).
@@ -2648,10 +2626,10 @@ whether a connector re-reads a changed map without a restart (restart, or Admin 
 #### Printable checklist
 
 ```text
-BEFORE   [ ] source modules on   [ ] own tables for WSS/SwapOne/ICI: rule (config/dataload.yaml) + lake entry + connector file, server restarted
+BEFORE   [ ] source modules on   [ ] trades_shared partitioned by SOURCE_SYSTEM (as shipped), or own tables: rule + lake entry + connector file
          [ ] inbox on, token   [ ] disk for the files twice (inbox, outbox)   [ ] loader heap as 16.1
 FILES    [ ] <system>-<date>.jsonl.gz (parts: <system>-partN-<date>.jsonl.gz)   [ ] native key present   [ ] each date a full set (or deltas knowingly)
-LOAD     [ ] cp files   [ ] touch .ready   [ ] dataload run   [ ] status: done N loaded
+LOAD     [ ] cp files   [ ] touch .ready   [ ] dataload run --wait: exit 0
 VERIFY   [ ] pivot count per SOURCE_SYSTEM = rows sent   [ ] view get trade/<id> --date D for one trade of each system   [ ] blotter filter SOURCE_SYSTEM
          [ ] mapped fields filled   [ ] switch one source off and on again
 ```
@@ -2705,7 +2683,7 @@ tar -C /rehearsal/ns -cf /rehearsal/nset-2026-07-08.tar netting-set/2026-07-08 a
 ```bash
 cp /rehearsal/nset-2026-07-08.tar $INBOX/
 printf 'lake: demo\nsha256: %s\n' $(sha256sum /rehearsal/nset-2026-07-08.tar | cut -c1-64) > $INBOX/nset-2026-07-08.tar.ready
-python3 tools/drishti.py dataload run --token-file ~/.drishti-token
+python3 tools/drishti.py dataload run --wait --token-file ~/.drishti-token
 ```
 
 **3. The second date**, the same with 2026-07-09 (both tars in one cycle load as two runs). Each tar loads three tables, **one commit a date for each** (tested: 6 loads, 6 commits for two dates).
@@ -2731,7 +2709,7 @@ and PFE are empty until `exposure-path` rows exist. **Pass `--date`**: without i
 | a netting set's page says *Under construction* for CVA, empty EPE and PFE | `cva` / `exposure-path` not loaded | load them  |
 | the CSA page does not list its sets | `NETTING_SETS` missing on the CSA | send it, or the agreement's `CSAS` |
 | `refused … no pack, kind or table of that name` | a tar folder that is not a kind of the pack | `netting-set`, `agreement`, `csa` |
-| *already loaded in run …* | same bytes sent twice | change the file |
+| *already loaded in run …* | same bytes sent twice, still in the lake | nothing to do; `reload-duplicates` to force |
 
 #### Do not
 

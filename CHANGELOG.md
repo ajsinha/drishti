@@ -18,6 +18,18 @@
 
 ## Unreleased
 
+- **Production data loads: the runbook rehearsal's findings.** Separate loads of several source systems into one shared table
+  (`trading.trades_shared`) replace only their own `SOURCE_SYSTEM` slice of a date (Delta by partition, Iceberg by the files' bounds; a row of
+  another system is rejected; a shared table that cannot be split refuses a replace; an undo restores the slice alone): before, the last
+  system loaded left the others' rows gone. A file with no date given or in its name loads under its rows' `BUSINESS_DATE`, never the
+  business today by guess; a replace refuses rows with no date or several, and a file named for a date its rows do not carry; parts named
+  `<table>.<date>.part-0001.jsonl[.gz]` are accepted. Rejected rows are loud: counts and reasons in the load's outcome, the cycle's notices,
+  Admin › Data loads (*loaded · N rejected*) and `drishti.py dataload run --wait` (exit 2). An identical file is a duplicate only while the
+  lake still holds its rows. A tar's folders may name any enabled source module's connector (`trade_wss`, `trade_swapone`, `trade_ici`), and
+  its `.ready` `rows:` is checked. The parallel loader's memory budget holds for tables of many dates (the Murex trades ran out of a 12 GB
+  heap: every parse thread kept an 8 MB arena per date; now 512 MB is enough). An optional module stream with no Kafka (`var-pv-stream`)
+  never fails its module, whatever arrives first.
+
 - **i4 acceptance: cold pages and the sweeps.** A page of records with vector columns (SPV, the owner's position-grain scenario PVs, and
   XPATH) reads each file's vectors once for the page instead of once per record (1.6 s to 0.3 s warm for SPV, 2.4 s to 0.5 s for XPATH).
   The forms home asks the server for each pack's kinds only (`GET /api/v1/forms/{pack}?kindsOnly=true`, no data read: 15.5 s to 0.5 s
