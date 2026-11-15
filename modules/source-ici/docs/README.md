@@ -22,6 +22,6 @@ can be switched on or off on its own (`config/modules/source-ici.yaml`, `enabled
 
 | Kind | Where | Native key | Canonical fields it fills |
 |---|---|---|---|
-| `trade` | the shared table trading.trades_shared, split by where: | `TICKET_NO` | `TRADE_ID`, `TRADE_VERSION`, `TRADE_STATUS`, `PRODUCT_TYPE`, `BUY_SELL_CODE`, `QUANTITY`, `PRICE`, `CURRENCY`, `COUNTERPARTY`, `LEGAL_ENTITY`, `PORTFOLIO`, `TRADER_ID`, `TRADE_DATE`, `START_DATE`, `MATURITY_DATE`, `SOURCE_UPDATE_TIME` |
+| `trade` | its own table trading.trade_ici (one table a trading system) | `TICKET_NO` | `TRADE_ID`, `TRADE_VERSION`, `TRADE_STATUS`, `PRODUCT_TYPE`, `BUY_SELL_CODE`, `QUANTITY`, `PRICE`, `CURRENCY`, `COUNTERPARTY`, `LEGAL_ENTITY`, `PORTFOLIO`, `TRADER_ID`, `TRADE_DATE`, `START_DATE`, `MATURITY_DATE`, `SOURCE_UPDATE_TIME` |
 
 The guide: [guide.md](guide.md).

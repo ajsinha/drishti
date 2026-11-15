@@ -33,7 +33,7 @@ SOURCE = ROOT / "data" / "testdata" / "trades" / "swapone"
 
 def make(out: Path, day: str) -> tuple[Path, int, str]:
     """Writes swapone-<day>.jsonl.gz into `out`; returns it, its rows and its SHA-256."""
-    src = SOURCE / f"trades_shared.{day}.jsonl.gz"
+    src = SOURCE / f"trade_swapone.{day}.jsonl.gz"
     if not src.exists():
         raise SystemExit(f"no mocked SwapOne day {day}: the days are " + ", ".join(p.name.split(".")[1] for p in sorted(SOURCE.glob("*.jsonl.gz"))))
     out.mkdir(parents=True, exist_ok=True)

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Template: copy to config/connectors/trade-ici.yaml to read ICI's trades from Iceberg (the shared table trading.trades_shared, split by where:).
+# Template: copy to config/connectors/trade-ici.yaml to read ICI's trades from Iceberg (its own table trading.trade_ici).
 # The lake (config/lakes/iceberg.yaml) is config/lakes.examples/iceberg/iceberg.yaml. Credentials are ${ENV_VAR} references.
 plugin: iceberg
 kinds:
@@ -20,10 +20,9 @@ kinds:
 description: ICI trades read from Iceberg
 settings:
   lake: iceberg
-  lake-tables: trading.trades_shared
+  lake-tables: trading.trade_ici
   union: true
   source-name: trade-ici
-  where: SOURCE_SYSTEM = 'ICI'
   set:
     SOURCE_SYSTEM: ICI
   map: mappings/ici-trade.yaml

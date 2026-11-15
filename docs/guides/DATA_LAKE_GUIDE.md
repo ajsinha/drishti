@@ -923,7 +923,7 @@ checks use. Only **Create a new table** (which needs `drishti.dataload.new-table
 
 A refusal blocks Push; the checks run again on the server when you push.
 
-**Replacing a date that already has rows.** `mode: replace` removes **every** row of that date in that table, whichever file or source system sent it, except in a table several connectors share (`trading.trades_shared`): there a connector's load replaces only its own `SOURCE_SYSTEM` slice (section 16.2). A date can be several files, or several systems, so when the table already holds rows for the date the page says how many, per system,
+**Replacing a date that already has rows.** `mode: replace` removes **every** row of that date in that table, whichever file or source system sent it: each trading system has its own table (`trading.trade_<system>`, section 16.2), so a system's file replaces that system's date only. (In a table several connectors share, which no shipped module uses, a connector's load replaces only its own `SOURCE_SYSTEM` slice.) A date can be several files, or several systems, so when the table already holds rows for the date the page says how many, per system,
 and offers the two right ways: load the date's files **together in one tar** (one replace, all or nothing), or use **append**. **Push stays off until you tick** that this file really takes the place of those rows. On the command line this is `--yes-replace`.
 
 **5. Push.** The data file is moved into `inbox/` first and its `.ready` last, each appearing whole or not at all, so the loader never sees a half-written pair; a file of the same name already waiting is refused and never overwritten. The push is audited: who, the file, its SHA-256, the `.ready` text. In a cluster
@@ -1392,7 +1392,7 @@ A connector file names no kinds (a `kinds:` line from an earlier release is igno
 ### 6.2 Several source systems: shared or separate tables
 
 Trading systems (Endur, Calypso, Murex, WSS, SwapOne, ICI) are **source modules**, each feeding the **one canonical `trade` kind**; the field
-`SOURCE_SYSTEM` says which system a record came from. A site keeps their trades in **one shared table** or **one table per system**, and tunes
+`SOURCE_SYSTEM` says which system a record came from. Each system's trades are in **its own table** (one table a trading system, always), and the site tunes
 the read in the connector file; the same keys work for `delta`, `iceberg` and `files` connectors, and for `kafka` live connectors (each message
 filtered and mapped):
 
@@ -1400,8 +1400,8 @@ filtered and mapped):
 plugin: delta            # also iceberg, files; kafka for live
 settings:
   lake: main
-  lake-tables: trading.trades          # a shared table, or trading.trade_endur
-  where: SOURCE_SYSTEM = 'ENDUR'       # optional: the rows that are this connector's
+  lake-tables: trading.trade_endur    # the system's own table
+  where: SOURCE_SYSTEM = 'ENDUR'       # optional: the rows that are this connector's (a table that holds other rows too)
   set: { SOURCE_SYSTEM: ENDUR }        # optional: constants for rows that lack the field
   map: mappings/endur-trade.yaml       # optional: native field -> canonical field
 ```
@@ -1431,8 +1431,7 @@ keep: true                                        # native fields the map does n
 
 Casts are `text`, `number`, `integer`, `boolean` and `date` (ISO, `yyyyMMdd` or `13-Nov-2026`); a value a cast cannot read stays as stored.
 
-**Shared or separate.** A shared table split by `where`: one connector per system on the same `lake-tables`, each with its own `where`; the
-binding lists them with `union: true`. Separate tables: one connector per table with `set: { SOURCE_SYSTEM: X }` (and a `map` when the
+**One table a system.** One connector per table with `set: { SOURCE_SYSTEM: X }` (and a `map` when the
 system's fields are its own). Several live connectors go in the binding's `live:` list; a message another system's connector would not serve
 is dropped by the `where` of each.
 
@@ -2200,7 +2199,9 @@ checklist to print.
 ### 16.1 Production position-level scenario PVs, for VaR, Explain and Why it moved
 
 **What this loads.** A pricing system's morning batch: one `scenario-pv` record per **position** (`GRAIN: POSITION`, `POSITION_ID` set, no
-`TRADE_ID`), about 1.3 million positions a business date, `UPPER_SNAKE` field names, JSON Lines (many large files, plain or `.gz`). With it the
+`TRADE_ID`), about 1.3 million positions a business date, `UPPER_SNAKE` field names, JSON Lines (many large files, plain or `.gz`). **The scenario PVs are always one table** (`risk.scenario-pv`) for every
+pricing system, loaded as **one complete file or tar per business date**: a day's PV file must contain **all** pricing systems' positions,
+and a partial file **replaces the whole date** (there is no per-system slice of scenario PVs; 17.4). With it the
 VaR page, Explain and **Why it moved** are fast: a date opens from one memory-mapped hot file. The kind is `scenario-pv` (command `SPV`); its contract
 is [`scenario-pv.contract.yaml`](../../modules/banking/dmod/packs/market-risk/contracts/scenario-pv.contract.yaml), published as
 [SPV](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-position-or-trade-one-pv-per-scenario-its-currency-scenario-pv). The engine's rules for
@@ -2377,8 +2378,7 @@ route and count without writing. **Tested** at 20,000 positions: 3.8 s wall, 24 
 
 **The inbox uses the same Java loader** (the ledger says `engine: java-loader`), one run a table: all files of the same connector or table that are ready in a
 cycle are **one load and one commit per date** (tested: two parts of an Endur date, one commit); the three tables of a tar are three loads, each one commit a date. Files
-for **different connectors** are separate loads even when the connectors read the same table (WSS, SwapOne and ICI into one shared table: three
-commits, three versions), and each replaces **only its own `SOURCE_SYSTEM` slice** of the date (16.2). So send a date as **one tar** (this section) and tune the inbox's loader with `DRISHTI_DATALOAD_LOADER_HEAP`; the inbox does not take
+for **different connectors** are separate loads into their own tables (one table a trading system, 16.2), each replacing only that system's date. So send a date as **one tar** (this section) and tune the inbox's loader with `DRISHTI_DATALOAD_LOADER_HEAP`; the inbox does not take
 `--loader-set` options per drop: its settings are `drishti.dataload.*` and the lake file's layout.
 
 **5. Verify** (the output below is from the tested run; `$T` is `--token-file ~/.drishti-token`).
@@ -2508,9 +2508,9 @@ contract is [`trade.contract.yaml`](../../modules/banking/dmod/packs/trading/con
 | Endur | `endur-<date>.jsonl.gz` | `TRADE_ID` | identity (Endur writes the canonical fields) | `trading.trade_endur` |
 | Calypso | `calypso-<date>.jsonl.gz` | `TRADE_ID` | identity | `trading.trade_calypso` |
 | Murex | `murex-<date>.jsonl.gz` | `TRADE_ID` | identity | `trading.trade_murex` |
-| WSS | `wss-<date>.jsonl.gz` | `DEAL_REF` | `mappings/wss-trade.yaml` (`DEAL_STATE`, `DEAL_TYPE`, `FAMILY`, `DIR` …) | `trading.trades_shared` |
-| SwapOne | `swapone-<date>.jsonl.gz` | `SWAP_ID` | `mappings/swapone-trade.yaml` (`LIFECYCLE`, `SWAP_FAMILY`, `PAY_LEG.NOTIONAL` …) | `trading.trades_shared` |
-| ICI | `ici-<date>.jsonl.gz` | `TICKET_NO` | `mappings/ici-trade.yaml` (`HEADER.STATE`, `INSTRUMENT.KIND`, `PARTIES.CPTY` …) | `trading.trades_shared` |
+| WSS | `wss-<date>.jsonl.gz` | `DEAL_REF` | `mappings/wss-trade.yaml` (`DEAL_STATE`, `DEAL_TYPE`, `FAMILY`, `DIR` …) | `trading.trade_wss` |
+| SwapOne | `swapone-<date>.jsonl.gz` | `SWAP_ID` | `mappings/swapone-trade.yaml` (`LIFECYCLE`, `SWAP_FAMILY`, `PAY_LEG.NOTIONAL` …) | `trading.trade_swapone` |
+| ICI | `ici-<date>.jsonl.gz` | `TICKET_NO` | `mappings/ici-trade.yaml` (`HEADER.STATE`, `INSTRUMENT.KIND`, `PARTIES.CPTY` …) | `trading.trade_ici` |
 
 The rule's `date-pattern` reads the date from the name (`-(\d{4}-\d{2}-\d{2})\.`): the name must carry it. The files are stored **as the system sent them**; the
 `map:` is applied when trades are **read** (Raw JSON on a trade page shows the stored native record), and `set: {SOURCE_SYSTEM: <SYS>}` stamps the system into
@@ -2528,19 +2528,15 @@ fields to get right are the key (`TRADE_ID` or the system's native key), `SOURCE
 | The source modules | on: `config/modules/source-<system>.yaml` has `enabled: true` (Admin → Modules) |
 | A token | `loads:write` |
 
-#### Where WSS, SwapOne and ICI go: one shared table, a slice each
+#### Where the trades go: one table a trading system, always
 
-As shipped the three go to **one shared table** `trading.trades_shared`, partitioned by `SOURCE_SYSTEM` and read by each connector with
-`where: SOURCE_SYSTEM = '<SYS>'`. The inbox runs one load per connector, and **each load replaces only its own `SOURCE_SYSTEM` slice of the date**: the
-connector's `set: {SOURCE_SYSTEM: <SYS>}` stamps the rows and names the slice, so WSS's file never takes out SwapOne's or ICI's rows (tested,
-`SharedTableSliceTest`: the six systems loaded one by one, exact counts per system; a reload of WSS replaced only WSS's rows). A row of another system
-in a system's file is rejected (*SOURCE_SYSTEM is ICI, not this load's WSS*). A shared table that is not split by the stamped column (no
-`partition-by: [SOURCE_SYSTEM]` in Delta, no `SOURCE_SYSTEM` promoted in Iceberg) refuses a replace: *the table of connector trade-wss is shared by
-trade-ici, trade-swapone, trade-wss: a replace would take out the other connectors' rows*.
+Every trading system has **its own table**: `trading.trade_endur`, `trade_calypso`, `trade_murex`, `trade_wss`, `trade_swapone` and
+`trade_ici`, each read by its source module's connector (`lake-tables: trading.trade_<system>`, `set: {SOURCE_SYSTEM: <SYS>}`, no `where:`),
+and the trade kind reads them as one union. A system's file replaces **that system's date in its own table and nothing else**, so one
+system's late or corrected file never touches another's rows. Do not land several systems in one table.
 
-A system can still have **its own table**, as Endur, Calypso and Murex have: a rule in `config/dataload.yaml` with `table: trade_wss` (the table of
-an inbox load comes from the rule, never from the site's connector file), the table's entry in `config/lakes/demo.yaml` (the layout of the other
-three trade tables, `id: DEAL_REF`), and `config/connectors/trade-wss.yaml` reading `lake-tables: trading.trade_wss` without `where:`; restart once.
+(The loader can still split a table several connectors share by `SOURCE_SYSTEM`, each load replacing only its own slice, for a site that
+already lands its systems together; no shipped module does.)
 
 #### Step by step (Linux; each command was run as written)
 
@@ -2563,7 +2559,7 @@ python3 tools/drishti.py dataload status --token-file ~/.drishti-token          
 
 A tar works for every source module that is on: one folder per system named after its connector, `trade_endur/<date>/…`, `trade_calypso/<date>/…`,
 `trade_murex/<date>/…`, `trade_wss/<date>/…`, `trade_swapone/<date>/…`, `trade_ici/<date>/…`, in one tar with one `.ready` (a tar loads whole or not at
-all; the three shared systems each replace only their slice). `trades_shared/` itself is refused as ambiguous: it names no one system.
+all; each folder replaces that system's date in its own table).
 
 **3. The second date**, the same with `2026-07-09`. **Which trades a date holds is your choice and it matters**: the trade pages, the blotter and the pivot read **one business
 date's rows**, so a trade is seen on a date only when that date's file carries it (tested: a trade of the 2026-07-08 file is not found on 2026-07-09, whose file held only the
@@ -2633,7 +2629,7 @@ whether a connector re-reads a changed map without a restart (restart, or Admin 
 #### Printable checklist
 
 ```text
-BEFORE   [ ] source modules on   [ ] trades_shared partitioned by SOURCE_SYSTEM (as shipped), or own tables: rule + lake entry + connector file
+BEFORE   [ ] source modules on   [ ] one table a system: trading.trade_<system> (as shipped)
          [ ] inbox on, token   [ ] disk for the files twice (inbox, outbox)   [ ] loader heap as 16.1
 FILES    [ ] <system>-<date>.jsonl.gz (parts: <system>-partN-<date>.jsonl.gz)   [ ] native key present   [ ] each date a full set (or deltas knowingly)
 LOAD     [ ] cp files   [ ] touch .ready   [ ] dataload run --wait: exit 0
@@ -2755,7 +2751,7 @@ scenarios a day and the six trade systems (synthetic; the counts are in 17.3). W
 | Feed | Sent by | File name (the date is always in the name) | Table | One date's file must be |
 |---|---|---|---|---|
 | Books, desks, legal entities, counterparties (portfolio data) | the organisation, entity and counterparty masters | `book.<date>.jsonl.gz`, `desk.<date>…`, `legal-entity.<date>…`, `counterparty.<date>…` | `reference.<kind>` | **the whole day's list** (17.5) |
-| Trades, one file per system | Endur, Calypso, Murex, WSS, SwapOne, ICI, each on its own schedule | `<system>-<date>.jsonl.gz` (the source module's rule, 16.2); parts `<system>-part1-<date>.jsonl.gz` | `trading.trade_<system>` or the shared `trading.trades_shared` | the system's full set of live trades for the date, or knowingly only its changes (16.2 step 3) |
+| Trades, one file per system | Endur, Calypso, Murex, WSS, SwapOne, ICI, each on its own schedule | `<system>-<date>.jsonl.gz` (the source module's rule, 16.2); parts `<system>-part1-<date>.jsonl.gz` | `trading.trade_<system>` (one table a trading system, always) | the system's full set of live trades for the date, or knowingly only its changes (16.2 step 3) |
 | Scenario PVs, scenario set, FX of the scenarios | the pricing systems, as one batch | one tar `eod-<date>.tar`: `scenario-set/<date>/`, `fx-scenario/<date>/`, `scenario-pv/<date>/part-NNNN.jsonl.gz` (16.1 step 1) | `risk.*` | **the whole date, one `BATCH_ID`**, all pricing systems together (17.6) |
 | Netting sets, agreements, CSAs | the xVA engine and the legal documents system | `nset-<date>.tar` (16.3) | `credit.*`, `legal.*` | the whole date; later |
 
@@ -2821,9 +2817,9 @@ Three business days loaded one after the other (reference first, trades staggere
 | `trading.trade_endur` | 4,407 | 138 | 124 | 3 |
 | `trading.trade_calypso` | 3,471 | 198 | 202 | 3 |
 | `trading.trade_murex` | 4,198 | 269 | 258 | 3 |
-| `trading.trades_shared` · WSS | 207 | 14 | 11 | 9 together: one commit per system and date |
-| · SwapOne | 240 | 10 | 19 | |
-| · ICI | 230 | 18 | 11 | |
+| `trading.trade_wss` | 207 | 14 | 11 | 3 |
+| `trading.trade_swapone` | 240 | 10 | 19 | 3 |
+| `trading.trade_ici` | 230 | 18 | 11 | 3 |
 | `risk.scenario-pv` (positions) | 5,000 | 4,900 | 4,900 | 3 |
 | `risk.scenario-set` · `fx-scenario` | 1 · 4 | 1 · 4 | 1 · 4 | 3 each |
 
@@ -2835,7 +2831,7 @@ says *the steps add up: yes* (market +18,996). Check it yourself, with no server
 python3 tools/drishti.py lake status --lake demo                     # dates, rows and last build of every table (a lake's name, or its folder)
 python3 - <<'EOF'                                                       # live rows per partition and the versions of one table, from the Delta log (a library is not needed)
 import json, glob, collections, sys
-t = sys.argv[1] if len(sys.argv) > 1 else "<data>/delta/demo/trading/trades_shared"
+t = sys.argv[1] if len(sys.argv) > 1 else "<data>/delta/demo/trading/trade_wss"
 live, hist = {}, []
 for f in sorted(glob.glob(t + "/_delta_log/*.json")):
     ops = collections.Counter(); op = "?"
@@ -2855,21 +2851,21 @@ print(hist)
 EOF
 ```
 
-### 17.4 Several systems in one table: each system's slice is its own
+### 17.4 One table a trading system: each system's date is its own
 
 **Early and late systems.** On 2026-07-09 Endur and Calypso arrived first, the pricing tar next, and Murex, WSS, SwapOne and ICI **later in another cycle**: the later cycle changed nothing of the earlier loads.
-**A resend replaces only the sender's slice of that date** (tested on both kinds of table):
+**A resend replaces only the sender's date in its own table**:
 
 | Resend | Before | After | What the log shows |
 |---|---|---|---|
 | Murex 2026-07-09 (own table `trade_murex`) with 250 rows | 269 | **250** | one commit `remove 269 add 250`; Murex 07-08 (4,198) and 07-10 (258) unchanged; Endur, Calypso untouched |
-| WSS 2026-07-09 (shared `trades_shared`) with 9 rows | 14 | **9** | `remove 14 add 9`; SwapOne's 10 and ICI's 18 of the same date, and WSS's other dates, unchanged |
+| WSS 2026-07-09 (own table `trade_wss`) with 9 rows | 14 | **9** | `remove 14 add 9`; SwapOne's 10 and ICI's 18 of the same date, and WSS's other dates, unchanged |
 | The same Murex file again | | not loaded | `duplicate: already loaded in run … (the same SHA-256)`; exit 0 |
 
 Three rules from it. (1) **A system's file for a date is that system's whole date**: rows of the date that the new file lacks are removed (the 19 rows missing from the resent Murex file are gone). (2) **Send a
-system's own rows only**: a row of another system in WSS's file is rejected (*SOURCE_SYSTEM is ICI, not this load's WSS*, 17.7). (3) **A shared table needs `partition-by: [SOURCE_SYSTEM]`**; as shipped it has it (16.2).
-**The scenario PVs do not work this way**: `risk.scenario-pv` is one table for all pricing systems and a load replaces the **whole date**, whichever system sent it (17.6, tested: a tar with only Murex's 1,633 positions
-left the date with 1,633 positions and VaR 82,176 instead of 113,266 until the full tar was loaded again).
+system's own rows only**: a row of another system in WSS's file is rejected (*SOURCE_SYSTEM is ICI, not this load's WSS*, 17.7). (3) **One table a trading system, always**: never land several systems in one table.
+**The scenario PVs do not work this way, by design**: `risk.scenario-pv` is **always one table** for all pricing systems, loaded as **one complete file or tar per business date**: a day's PV file **must contain every pricing system's positions**, and **a partial file replaces the whole date** (17.6, tested: a tar with only Murex's 1,633 positions
+left the date with 1,633 positions and VaR 82,176 instead of 113,266 until the full tar was loaded again). There is no per-system slice of scenario PVs.
 
 ### 17.5 Portfolio data: state per day, complete files, and a missing day
 
@@ -3032,7 +3028,7 @@ By hand, the same, with the numbers each check should give (`$T` = `--token-file
 | Check | Command | Expect |
 |---|---|---|
 | Rows per date per table | `drishti.py lake status --lake demo` (a lake's name, or its folder) | every table's latest date is today |
-| Per system | the Delta-log script of 17.3 for `trades_shared` and each `trade_<system>`; or `pivot run --source trade --date D --rows SOURCE_SYSTEM --values "count()" $T` (a system with no load for D is shown from its earlier date with a notice per system: 17.5) | the file's rows (`zcat file \| wc -l`) |
+| Per system | the Delta-log script of 17.3 for each `trade_<system>`; or `pivot run --source trade --date D --rows SOURCE_SYSTEM --values "count()" $T` (a system with no load for D is shown from its earlier date with a notice per system: 17.5) | the file's rows (`zcat file \| wc -l`) |
 | Rejects | `.loaded.json` of each file, `dataload status`, exit code | 0 |
 | VaR | `var show BANK --date D --json $T` | the date in the header is D; `provenance.rejected` 0; no warnings; positions = rows sent |
 | Explain | `var explain BANK --from D-1 --to D $T` | *the steps add up: yes* |

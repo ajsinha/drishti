@@ -359,9 +359,9 @@ def files() -> dict[Path, str]:
             for cname in TRADE_SYSTEMS:
                 form["connectors"].pop(cname, None)
             form["routes"].pop("trade", None)
-        if name == "trading":     # the table WSS, SwapOne and ICI share (modules/source-wss, -swapone, -ici): not a connector of the pack
-            form["lake"]["tables"]["trading.trades_shared"] = {"kind": "trade", "partition-by": ["SOURCE_SYSTEM"], "promote": ["SOURCE_SYSTEM"],
-                                                               "sort-by": ["id"]}
+        if name == "trading":     # one table a trading system, always: WSS, SwapOne and ICI (modules/source-wss, -swapone, -ici) too
+            for system in ("wss", "swapone", "ici"):
+                form["lake"]["tables"][f"trading.trade_{system}"] = {"kind": "trade", "promote": ["SOURCE_SYSTEM"], "sort-by": ["id"]}
         body = yaml.dump(form, Dumper=_Plain, sort_keys=False, allow_unicode=True,
                          width=140)
         out[pack_dir(name) / "pack.yaml"] = f"{HEADER}\n\n{GENERATED}\n# {layout.PACKS[name]['title']} pack for Drishti.\n{body}{kept(name)}"

@@ -16,10 +16,10 @@
 
     python3 tools/samplegen/source_systems.py --out DIR [--days 60] [--count N]      write the three systems' days under DIR/trades/
 
-One folder a system, one file a business date named by the table it feeds (trades_shared.<YYYY-MM-DD>.jsonl.gz: the first day's the
-snapshot, each later day's the changes), JSON Lines in the system's own native field style (src_wss.py, src_swapone.py, src_ici.py). The
-three land in ONE shared table, trading.trades_shared, split by SOURCE_SYSTEM: the demo layout of a shared table (Endur, Calypso and
-Murex keep a table each). tools/testdata/make_testdata.py calls ``datasets`` so the manifest lists them. No position, no scenario P&L and
+One folder a system, one file a business date named by the table it feeds (trade_<system>.<YYYY-MM-DD>.jsonl.gz: the first day's the
+snapshot, each later day's the changes), JSON Lines in the system's own native field style (src_wss.py, src_swapone.py, src_ici.py). Each
+system has its own table, trading.trade_wss, trade_swapone and trade_ici, as Endur, Calypso and Murex do: one table a trading system,
+always. tools/testdata/make_testdata.py calls ``datasets`` so the manifest lists them. No position, no scenario P&L and
 no valuation is made for these trades: the VaR is unchanged."""
 from __future__ import annotations
 
@@ -37,7 +37,6 @@ from samplegen.src_swapone import SwapOne  # noqa: E402
 from samplegen.src_wss import Wss  # noqa: E402
 
 SYSTEMS = (Wss, SwapOne, Ici)
-SHARED_TABLE = "trades_shared"
 
 
 def datasets(out: Path, dates: list[str], count: int | None = None) -> list[dict]:
@@ -48,9 +47,10 @@ def datasets(out: Path, dates: list[str], count: int | None = None) -> list[dict
     for cls in SYSTEMS:
         book = cls(dates, count)
         folder = f"trades/{cls.SYSTEM.lower()}"
-        hist = H.DatasetHistory(out / folder, cls.KEY, days, SHARED_TABLE).write(book.states())
+        table = f"trade_{cls.SYSTEM.lower()}"                     # its own table, as trade_endur
+        hist = H.DatasetHistory(out / folder, cls.KEY, days, table).write(book.states())
         entries.append({"folder": folder, "pack": "trading", "kind": "trade", "connector": f"trade-{cls.SYSTEM.lower()}", "key": cls.KEY,
-                        "table": SHARED_TABLE, "native": True, "partition-by": ["SOURCE_SYSTEM"], "mode": "overwrite-partitions", **hist})
+                        "table": table, "native": True, **hist})
     return entries
 
 

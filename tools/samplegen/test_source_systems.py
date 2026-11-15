@@ -49,14 +49,16 @@ class SourceSystemsTest(unittest.TestCase):
     def build(self, root: Path):
         return SS.datasets(root, DATES, 40)
 
-    def test_each_system_has_its_own_native_style_and_one_shared_table(self):
+    def test_each_system_has_its_own_native_style_and_its_own_table(self):
         with tempfile.TemporaryDirectory(dir=Path(__file__).resolve().parents[2] / "data") as t:
             entries = {e["folder"]: e for e in self.build(Path(t))}
             self.assertEqual(sorted(entries), ["trades/ici", "trades/swapone", "trades/wss"])
             keys = {}
             for folder, e in entries.items():
-                self.assertEqual((e["table"], e["partition-by"], e["mode"]), ("trades_shared", ["SOURCE_SYSTEM"], "overwrite-partitions"))
-                first = Path(t) / folder / f"trades_shared.{DATES[0]}.jsonl.gz"
+                system = folder.split("/")[1]
+                self.assertEqual(e["table"], f"trade_{system}")              # one table a trading system, always (as trade_endur)
+                self.assertNotIn("partition-by", e)
+                first = Path(t) / folder / f"trade_{system}.{DATES[0]}.jsonl.gz"
                 doc = json.loads(gzip.open(first, "rt").readline())
                 keys[folder] = (e["key"], sorted(doc)[:3])
                 self.assertIn(e["key"], doc)

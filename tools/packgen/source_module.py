@@ -17,7 +17,7 @@
 designer's second mode): a source module, not a new pack.
 
     python3 tools/drishti.py pack new data/incoming/swapone_trades.2026-11-13.jsonl --source-for trade --system SWAPONE \\
-        --shared-table trading.trades_shared --map-edits swapone-edits.json --load --deploy
+        --map-edits swapone-edits.json --load --deploy             # its own table, trading.trade_swapone (one table a trading system)
 
 1. Reads every record (tools/packgen/sourcemap.py) and proposes the field map native -> canonical, each with a confidence; the
    required canonical fields left without a native field and the native fields left without a canonical one are printed.

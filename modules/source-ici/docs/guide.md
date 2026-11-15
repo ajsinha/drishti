@@ -22,8 +22,7 @@ ICI is a generic cross-asset booking system. What it trades was not stated, so i
 plugin: delta
 settings:
   lake: main
-  lake-tables: trading.trades_shared
-  where: SOURCE_SYSTEM = 'ICI'
+  lake-tables: trading.trade_ici                # its own table: one table a trading system
   set: { SOURCE_SYSTEM: ICI }
   map: mappings/ici-trade.yaml
 ```

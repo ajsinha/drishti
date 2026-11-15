@@ -72,9 +72,8 @@ format: delta
 defaults:
   load-mode: replace
 tables:
-  trading.trades_shared:
+  trading.trade_swapone:
     kind: trade
-    partition-by: [SOURCE_SYSTEM]
     promote: [SOURCE_SYSTEM]
     sort-by: [id]
 """
@@ -135,10 +134,9 @@ def mapped(c: Ctx):
 
 @shot("03-layout.jpg")
 def layout(c: Ctx):
-    """Step 2: the shared table and the connector YAML it makes."""
+    """Step 2: the system's own table (one table a trading system) and the connector YAML it makes."""
     c.page.click("[data-go=layout]")
-    pick(c, "[data-sel-layout]", "A shared table")
-    c.page.fill("[data-s=table]", "trading.trades_shared")
+    c.page.fill("[data-s=table]", "trading.trade_swapone")
     c.page.wait_for_timeout(500)
     save(c, "03-layout.jpg")
 

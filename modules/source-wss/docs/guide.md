@@ -22,8 +22,7 @@ WSS is a treasury, FX and money-markets dealing system (mocked here: a synthetic
 plugin: delta
 settings:
   lake: main
-  lake-tables: trading.trades_shared
-  where: SOURCE_SYSTEM = 'WSS'
+  lake-tables: trading.trade_wss                # its own table: one table a trading system
   set: { SOURCE_SYSTEM: WSS }
   map: mappings/wss-trade.yaml
 ```

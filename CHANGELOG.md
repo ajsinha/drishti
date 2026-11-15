@@ -23,6 +23,11 @@
   from their templates at every start. Before, the first start read the development folder and every restart read the installed copy,
   whose packs had no templates: risk-store, var-engine, var-positions, var-system-baskets, var-results and mr-derived vanished and VaR
   answered `404 DRS-1001`. Conformance C9 accepts a pack's templates and holds their hosts and secrets to `${...}` placeholders.
+- **One table a trading system, always.** WSS, SwapOne and ICI load into their own tables, `trading.trade_wss`, `trade_swapone` and
+  `trade_ici`, as Endur, Calypso and Murex do: connector templates (no `where:`), the demo lake file, the trading pack's lake entries, the
+  test data (`trades/<system>/trade_<system>.<date>.jsonl.gz`) and its generator, the tutorial and guides. `trading.trades_shared` is gone
+  from the shipped configuration (the loader's per-system slice replace stays, generic). Scenario PVs stay one table, one complete file
+  or tar per business date: a partial file replaces the whole date (DATA_LAKE_GUIDE 16.1, 17.4).
 - **A date with no data is said, never answered silently from an older one.** VaR for a date with no scenario-P&L load answers the newest
   earlier date with `asOfNotice` (*scenario P&L for D not loaded — showing D-1*), shown under the VaR page's header; the official capture of
   such a date is skipped. Pivots (`POST /api/v1/pivot/query`) and record lists (`/api/v1/live/query`, `/api/v1/live/kinds/{word}/rows`)
