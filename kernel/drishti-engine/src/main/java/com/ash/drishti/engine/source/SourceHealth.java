@@ -24,12 +24,14 @@ import java.util.Locale;
  * the explanation of a view, so both say the same.
  */
 public enum SourceHealth {
-    UP, DEGRADED, DOWN;
+    UP, DEGRADED, DOWN,
+    /** A stream connector whose broker is absent: live updates are paused, everything else is served. Calm, never a fault. */
+    WAITING;
 
     /** The word for a plugin's health text ({@code null} means up, as the admin page reads it). */
     public static SourceHealth of(String health) {
         String h = health == null ? "UP" : health;
-        return h.startsWith("UP") ? UP : h.startsWith("DEGRADED") ? DEGRADED : DOWN;
+        return h.startsWith("UP") ? UP : h.startsWith("DEGRADED") ? DEGRADED : h.startsWith("WAITING") ? WAITING : DOWN;
     }
 
     /** The word for a plugin, down when its health check throws. */

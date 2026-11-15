@@ -41,7 +41,8 @@ class ConnectorBadgeTest {
         assertThat(ConnectorManager.shown("FAILED", null, true)).containsExactly("down", "failed, retrying");
         assertThat(ConnectorManager.shown("FAILED", null, false)).containsExactly("down", "failed");
         assertThat(ConnectorManager.shown("NOT_LOADED", null, false)).containsExactly("warn", "not started");
-        assertThat(ConnectorManager.shown("IDLE", null, false)).containsExactly("warn", "idle");
+        assertThat(ConnectorManager.shown("IDLE", null, false)).containsExactly("ok", "not configured");
+        assertThat(ConnectorManager.shown("WAITING", "WAITING: Kafka not reachable at h:9092", false)).containsExactly("ok", "waiting for broker (live updates paused)");
     }
 
     @Test
