@@ -164,6 +164,7 @@ repeat.
 | Know the shape of a command's data (fields, types, keys, links, checks) or draft the contract of a new kind | [contracts/packs/README.md](contracts/packs/README.md) and [contracts/README.md](contracts/README.md#16-contracts-of-every-command) (`drishti.py contract`) |
 | Understand live updates (SSE, frames, reconnects) | [DATA_ARCHITECTURE.md › Live updates](architecture/DATA_ARCHITECTURE.md#1-live-updates) |
 | See the design of live feeds for any kind (a live companion for every data connector: contract rules, order, business dates, the next lake load, Admin and live-mark mock-ups; decided, building in i5) | [LIVE_CONNECTORS_DESIGN.md](architecture/LIVE_CONNECTORS_DESIGN.md) |
+| See how release i5 makes a compute engine local or remote behind one lookup, and the detailed cluster design (JGroups and Apache Ratis behind a thin wrapper, placement per engine, modules in the digest, module promotion between clusters, security between nodes, tests, build plan, mock-ups; design, not built) | [ENGINES_IN_THE_CLUSTER.md](architecture/ENGINES_IN_THE_CLUSTER.md) and [CLUSTER_I5_DESIGN.md](architecture/CLUSTER_I5_DESIGN.md) |
 
 ### Run and administer it
 

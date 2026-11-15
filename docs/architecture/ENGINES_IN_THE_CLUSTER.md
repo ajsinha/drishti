@@ -7,7 +7,9 @@ engines that exist today.
 
 Related documents: [KERNEL_AND_MODULES.md](KERNEL_AND_MODULES.md) (modules, packs, placement),
 [../guides/CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md) (Drishti\*net), [LIVE_CONNECTORS_DESIGN.md](LIVE_CONNECTORS_DESIGN.md)
-(live data; its last step uses the same engine lookup), [../guides/VAR_GUIDE.md](../guides/VAR_GUIDE.md).
+(live data; its last step uses the same engine lookup), [../guides/VAR_GUIDE.md](../guides/VAR_GUIDE.md). **The detailed design of
+the cluster step** (the libraries, the lookup, placement per engine, the digest, promotion, security, tests, the build plan) is
+[CLUSTER_I5_DESIGN.md](CLUSTER_I5_DESIGN.md).
 
 ## 1. The anatomy of one engine (VaR as the example)
 
@@ -99,9 +101,14 @@ change. The goal: VaR on one node and FRTB on another, both used transparently b
 - The live connectors' last step (L10, see [LIVE_CONNECTORS_DESIGN.md](LIVE_CONNECTORS_DESIGN.md)) reaches engines through the same
   lookup.
 
-The cluster step is designed in detail before it is coded.
+The cluster step is designed in detail before it is coded: [CLUSTER_I5_DESIGN.md](CLUSTER_I5_DESIGN.md), with the proof scenario in
+its section 12.4.
 
 ## 4. Questions to settle in the detailed design
+
+Each is answered in [CLUSTER_I5_DESIGN.md](CLUSTER_I5_DESIGN.md): isolation in its section 7.4, the honest manifest by the contract
+check of 5.1, the end-of-day order in 7.3, and engines in their own modules by the manifest additions of 5.1 and placement per
+engine in 6.
 
 - Resource isolation between engines on one node: separate memory budgets and thread pools, so one heavy run cannot starve another.
 - A check that keeps each engine's manifest honest (the words, APIs and menus it claims exist, and nothing it owns is unlisted).

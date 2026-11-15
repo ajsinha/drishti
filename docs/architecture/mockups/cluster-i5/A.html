@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  A screen mock-up (cluster-i5/A.html), static, design only, self-contained: system fonts, everything inline, nothing from a
+  CDN. Dark theme by default; open it with #light for the light theme. Admin, Cluster, Engines: the engine by node matrix with a detail drawer.
+  The options and the design are in docs/architecture/mockups/cluster-i5/README.md and docs/architecture/CLUSTER_I5_DESIGN.md
+  (sections 5, 6 and 11). Illustrative figures.
+-->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin · Cluster · Engines: option A</title>
+<style>
+:root{--bg:#0e1628;--bg2:#121c33;--sf:#16213a;--sf2:#1b2744;--bd:#26345a;--ink:#e7ecf5;--mu:#93a0b8;--ac:#e8a33a;--acink:#14100a;--ln:#7fb2ff;--ok:#5fd39a;--wa:#f2c14e;--bad:#ff7a7a;--code:#0a1120;--top:#0a1120}
+:root[data-theme=light]{--bg:#f4f6fa;--bg2:#e9eef5;--sf:#ffffff;--sf2:#eef2f8;--bd:#cdd6e3;--ink:#1a2333;--mu:#5c6a80;--ac:#c47d12;--acink:#ffffff;--ln:#1f5fbf;--ok:#1e8a55;--wa:#a86f00;--bad:#c62828;--code:#f1f4f9;--top:#ffffff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.45 system-ui,"Segoe UI",Roboto,sans-serif}
+.top{display:flex;gap:10px;align-items:center;padding:10px 16px;background:var(--top);border-bottom:1px solid var(--bd);flex-wrap:wrap}
+.top b{color:var(--ac);letter-spacing:.08em}.top .cmd{flex:1;min-width:160px;background:var(--sf);border:1px solid var(--bd);border-radius:4px;padding:5px 9px;color:var(--mu);font-family:ui-monospace,monospace}
+.tabs{display:flex;gap:2px;padding:0 16px;border-bottom:1px solid var(--bd);background:var(--bg2);flex-wrap:wrap}
+.tabs span{padding:8px 12px;color:var(--mu);border-bottom:2px solid transparent}.tabs span.on{color:var(--ink);border-color:var(--ac);font-weight:600}
+main{padding:14px 16px}
+.hdr{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}.hdr h1{font-size:17px;margin:0}.crumb{color:var(--mu);font-size:12px}.sp{flex:1}
+.btn{display:inline-block;background:var(--sf2);border:1px solid var(--bd);color:var(--ink);border-radius:4px;padding:3px 9px;font-size:12px;white-space:nowrap}
+.btn.p{background:var(--ac);color:var(--acink);border-color:var(--ac);font-weight:700}
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:6px;padding:10px 12px;margin-top:10px}
+.card h3{margin:0 0 8px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--mu)}
+.tw{overflow-x:auto}table{width:100%;border-collapse:collapse}td,th{padding:6px;border-bottom:1px solid var(--bd);text-align:left;font-size:12px;white-space:nowrap;vertical-align:top}th{color:var(--mu);font-weight:600}
+.ok{color:var(--ok)}.wa{color:var(--wa)}.bad{color:var(--bad)}.mu{color:var(--mu)}.ln{color:var(--ln)}
+.kv{display:grid;grid-template-columns:96px 1fr;gap:4px 10px;font-size:12px}.kv div:nth-child(odd){color:var(--mu)}
+.chip{font-size:11px;padding:1px 8px;border-radius:10px;border:1px solid var(--bd);white-space:nowrap;display:inline-block;margin:1px}
+.chip.g{border-color:var(--ok);color:var(--ok)}.chip.a{border-color:var(--wa);color:var(--wa)}.chip.r{border-color:var(--bad);color:var(--bad)}.chip.b{border-color:var(--ln);color:var(--ln)}
+.bar{height:6px;background:var(--sf2);border-radius:3px;overflow:hidden;min-width:70px}.bar i{display:block;height:100%;background:var(--ok)}
+.eng .bar{background:var(--bg)}
+.warn{padding:7px 10px;border-left:3px solid var(--wa);background:var(--sf2);font-size:12px;margin-top:8px}
+.note{margin-top:14px;padding:10px 12px;border-left:3px solid var(--ln);background:var(--bg2);color:var(--mu);font-size:12px}.note b{color:var(--ink)}
+.mx td,.mx th{text-align:center}.mx td:first-child,.mx th:first-child,.mx td:last-child,.mx th:last-child{text-align:left}
+.nh{font-size:11px;color:var(--mu);font-weight:400;line-height:1.35}.nh b{color:var(--ink);font-size:12px}
+.c{display:inline-block;min-width:112px;padding:3px 6px;border-radius:4px;border:1px solid var(--bd);font-size:11px;font-weight:600}
+.c.g{background:color-mix(in srgb,var(--ok) 16%,transparent);border-color:var(--ok);color:var(--ok)}
+.c.r{background:color-mix(in srgb,var(--bad) 16%,transparent);border-color:var(--bad);color:var(--bad)}
+.c.a{background:color-mix(in srgb,var(--wa) 16%,transparent);border-color:var(--wa);color:var(--wa)}
+.c.n{color:var(--mu);border-style:dashed;font-weight:400}.c.sel{outline:2px solid var(--ac);outline-offset:1px}
+.lay{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:12px;align-items:start}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--mu);margin-top:8px;align-items:center}
+.grp td{background:var(--bg2);font-weight:700;text-align:left!important;color:var(--ac)}
+.nodes{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}.nodes .card{margin-top:0}
+.eng{border:1px solid var(--bd);border-radius:5px;padding:6px 8px;margin-top:6px;background:var(--sf2)}.eng b{font-size:12px}.eng .r2{display:flex;gap:8px;align-items:center;font-size:11px;color:var(--mu);margin-top:3px;flex-wrap:wrap}
+svg text{font:11px system-ui,sans-serif;fill:var(--ink)}svg .m{fill:var(--mu)}svg .bx{fill:var(--sf2);stroke:var(--bd)}svg .bx.a{stroke:var(--wa)}
+svg .need{fill:none;stroke:var(--ln);stroke-width:1.4}svg .use{fill:none;stroke:var(--wa);stroke-width:1.4;stroke-dasharray:5 4}svg .ah{fill:var(--ln)}
+@media (max-width:900px){.lay{grid-template-columns:1fr}}
+</style></head><body>
+<div class="top"><b>DRISHTI</b><div class="cmd">ADMIN CLUSTER ENGINES</div><span class="chip g">risk-prod · 4 nodes · view 37</span><span class="chip b">agreement: database · can decide</span></div>
+<div class="tabs"><span>Members</span><span class="on">Engines</span><span>Modules</span><span>Agreement</span><span>Security</span><span>Files</span></div>
+<main>
+<div class="hdr"><h1>Engines: which runs where</h1><span class="crumb">Admin › Cluster › Engines · option A</span><span class="sp"></span><span class="btn">Placement history</span><span class="btn p">Plan a change</span></div>
+<div class="lay"><div>
+<div class="card"><h3>Which engine runs where · placement version 12</h3><div class="tw"><table class="mx">
+<tr><th>Engine</th><th class="nh"><b>drishti-a</b><br>heavy · 64 GB</th><th class="nh"><b>drishti-b</b><br>heavy · 64 GB</th><th class="nh"><b>drishti-c</b><br>web · 16 GB</th><th class="nh"><b>drishti-d</b><br>heavy · 64 GB</th><th>Needs, and where they are met</th></tr>
+<tr class="grp"><td colspan="6">banking 3.0.1</td></tr>
+<tr><td><b>VaR</b></td><td><span class="c g sel">running · 9 shards</span></td><td><span class="c n">not placed</span></td><td><span class="c n">not placed</span></td><td><span class="c g">running · 9 shards</span></td><td class="mu">—</td></tr>
+<tr><td><b>Exposure</b></td><td><span class="c n">not placed</span></td><td><span class="c a">running · busy</span></td><td><span class="c n">not placed</span></td><td><span class="c n">not placed</span></td><td class="mu">—</td></tr>
+<tr><td><b>Sensitivities</b></td><td><span class="c n">not placed</span></td><td><span class="c g">running</span></td><td><span class="c n">not placed</span></td><td><span class="c n">not placed</span></td><td class="mu">—</td></tr>
+<tr><td><b>FRTB-SA</b></td><td><span class="c n">not placed</span></td><td><span class="c n">not placed</span></td><td><span class="c g">running</span></td><td><span class="c n">not placed</span></td><td>VaR → <span class="ok">drishti-a, drishti-d</span> · Sensitivities → <span class="ok">drishti-b</span></td></tr>
+<tr><td><b>SIMM</b></td><td><span class="c n">not placed</span></td><td><span class="c n">not placed</span></td><td><span class="c a">running · waiting</span></td><td><span class="c n">not placed</span></td><td>Sensitivities → <span class="ok">drishti-b</span> · uses Exposure → <span class="wa">drishti-b, busy</span></td></tr>
+<tr><td><b>MR cube</b></td><td><span class="c n">not placed</span></td><td><span class="c n">not placed</span></td><td><span class="c g">running</span></td><td><span class="c n">not placed</span></td><td>VaR → <span class="ok">drishti-a, drishti-d</span> · Pivot → <span class="ok">here</span></td></tr>
+<tr class="grp"><td colspan="6">kernel (a node's own facilities: switched per node, never placed)</td></tr>
+<tr><td>Pivot</td><td><span class="c g">on</span></td><td><span class="c g">on</span></td><td><span class="c g">on</span></td><td><span class="c g">on</span></td><td class="mu">—</td></tr>
+<tr><td>Flight</td><td><span class="c n">off</span></td><td><span class="c n">off</span></td><td><span class="c g">on</span></td><td><span class="c n">off</span></td><td class="mu">—</td></tr>
+</table></div>
+<div class="legend"><span><span class="c g">running</span> placed and running</span><span><span class="c a">waiting</span> running; a need or a use is away or busy</span><span><span class="c r">blocked</span> placed, not running (why)</span><span><span class="c n">not placed</span> healthy: this node forwards</span></div></div>
+<div class="card"><h3>Calls between nodes · last hour</h3><div class="tw"><table>
+<tr><th>From</th><th>Engine</th><th>To</th><th>Calls</th><th>p95</th><th>Busy</th><th>Failed over</th><th>Refused</th></tr>
+<tr><td>drishti-c</td><td>VaR</td><td>drishti-a</td><td>1,204</td><td>38 ms</td><td>0</td><td>0</td><td>0</td></tr>
+<tr><td>drishti-c</td><td>VaR</td><td>drishti-d</td><td>1,187</td><td>41 ms</td><td>0</td><td class="wa">3 (from drishti-a, 11:42)</td><td>0</td></tr>
+<tr><td>drishti-c</td><td>Sensitivities</td><td>drishti-b</td><td>322</td><td>12 ms</td><td>0</td><td>0</td><td>0</td></tr>
+<tr><td>drishti-c</td><td>Exposure</td><td>drishti-b</td><td>58</td><td>410 ms</td><td class="wa">7</td><td>0</td><td>0</td></tr>
+</table></div></div>
+</div>
+<div><div class="card"><h3>VaR on drishti-a</h3>
+<div class="kv"><div>State</div><div class="ok">running since 07:58</div><div>Module</div><div>banking 3.0.1 · contract 1</div><div>Memory</div><div>2,910 of 4,096 MB<div class="bar"><i style="width:71%"></i></div></div><div>Threads</div><div>16 of 16 (drishti-var-…)</div><div>In flight</div><div>3 of 32 · queued 0</div><div>Open dates</div><div>2026-11-13, 2026-11-12</div><div>Shards</div><div>9 owned, 9 ready</div><div>Needed by</div><div>FRTB-SA, MR cube (drishti-c)</div><div>Inputs</div><div>scenario-pv risk@812 · the same on drishti-d <span class="ok">✓</span></div></div>
+<div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap"><span class="btn">Move…</span><span class="btn">Add a node…</span><span class="btn">Remove from this node…</span><span class="btn">Settings</span></div>
+<div class="warn">Each action opens a <b>placement plan</b> (before and after, memory headroom, needs still met). A second administrator applies it.</div></div>
+<div class="card"><h3>Needs line</h3><div class="mu" style="font-size:12px">FRTB-SA <span class="ln">→ needs</span> VaR (a, d) · Sensitivities (b)<br>SIMM <span class="ln">→ needs</span> Sensitivities (b) <span class="ln">· uses</span> Exposure (b)<br>MR cube <span class="ln">→ needs</span> VaR (a, d) · Pivot (here)</div></div></div></div>
+<div class="note"><b>Option A: the matrix with a drawer.</b> The same shape as Admin → Cluster → Modules (node × part), so the two tabs read alike. One selected cell shows that engine on that node; the right column answers "what needs it, what does it need, is it within its budget".</div>
+</main>
+<script>if(location.hash==="#light")document.documentElement.dataset.theme="light";</script>
+</body></html>

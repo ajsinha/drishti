@@ -615,6 +615,8 @@ The answer: **the deployer decides which nodes get a module, part by part**. The
 is placed, heavy work never spreads by itself, every other node forwards, and the console never talks to a node's module, only to the
 cluster's registry, and its API proxy calls go to the kernel. Consoles are nodes with the role `console` (section 10.5). Drishti\*net itself (membership, gossip, the capability digest, routing, roles and tags) is
 [CLUSTER_GUIDE.md section 1](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet); this section adds only what modules need.
+What release i5 adds to it (placement per engine, modules and parts in the digest, leases on a standard library, promotion of a
+module between clusters) is designed in [CLUSTER_I5_DESIGN.md](CLUSTER_I5_DESIGN.md).
 
 ![Modules in a cluster: banking's API on main and b, its VaR compute on b only, feeds on main as a singleton, nothing on c; genomics alignment on one GPU node; the console through the registry and the proxy](kernel-and-modules/diagrams/cluster-modules.svg)
 
