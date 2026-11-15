@@ -140,7 +140,7 @@ None: all 1,800 rows were read, and every field any of them has is in the record
 
 ### See also
 
-- Data contract: [BOOK in the core pack's contracts](../packs/core.md#book-book-book) (`config/packs/core/core/contracts/book.contract.yaml`, the source of every meaning on this page).
+- Data contract: [BOOK in the core pack's contracts](../packs/core.md#book-book-book) (`modules/market-data/packs/core/contracts/book.contract.yaml`, the source of every meaning on this page).
 - [2. Entities and ownership](../../knowledge/data.md#2-entities-and-ownership)
 - [2. Counterparty credit risk](../../knowledge/risk.md#2-counterparty-credit-risk)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
@@ -236,7 +236,7 @@ None: all 4 rows were read, and every field any of them has is in the record abo
 
 ### See also
 
-- Data contract: [CAL in the core pack's contracts](../packs/core.md#cal-holiday-calendar-calendar) (`config/packs/core/core/contracts/calendar.contract.yaml`, the source of every meaning on this page).
+- Data contract: [CAL in the core pack's contracts](../packs/core.md#cal-holiday-calendar-calendar) (`modules/market-data/packs/core/contracts/calendar.contract.yaml`, the source of every meaning on this page).
 - [2. Entities and ownership](../../knowledge/data.md#2-entities-and-ownership)
 - [2. Counterparty credit risk](../../knowledge/risk.md#2-counterparty-credit-risk)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
@@ -311,7 +311,7 @@ None: all 5 rows were read, and every field any of them has is in the record abo
 
 ### See also
 
-- Data contract: [CCP in the core pack's contracts](../packs/core.md#ccp-central-counterparty-ccp) (`config/packs/core/core/contracts/ccp.contract.yaml`, the source of every meaning on this page).
+- Data contract: [CCP in the core pack's contracts](../packs/core.md#ccp-central-counterparty-ccp) (`modules/market-data/packs/core/contracts/ccp.contract.yaml`, the source of every meaning on this page).
 - [2. Entities and ownership](../../knowledge/data.md#2-entities-and-ownership)
 - [2. Counterparty credit risk](../../knowledge/risk.md#2-counterparty-credit-risk)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
@@ -417,7 +417,7 @@ None: all 123 rows were read, and every field any of them has is in the record a
 
 ### See also
 
-- Data contract: [CLR in the core pack's contracts](../packs/core.md#clr-clearing-account-clearing-account) (`config/packs/core/core/contracts/clearing-account.contract.yaml`, the source of every meaning on this page).
+- Data contract: [CLR in the core pack's contracts](../packs/core.md#clr-clearing-account-clearing-account) (`modules/market-data/packs/core/contracts/clearing-account.contract.yaml`, the source of every meaning on this page).
 - [2. Entities and ownership](../../knowledge/data.md#2-entities-and-ownership)
 - [2. Counterparty credit risk](../../knowledge/risk.md#2-counterparty-credit-risk)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
@@ -575,7 +575,7 @@ None: all 1,440 rows were read, and every field any of them has is in the record
 
 ### See also
 
-- Data contract: [CPTY in the core pack's contracts](../packs/core.md#cpty-counterparty-counterparty) (`config/packs/core/core/contracts/counterparty.contract.yaml`, the source of every meaning on this page).
+- Data contract: [CPTY in the core pack's contracts](../packs/core.md#cpty-counterparty-counterparty) (`modules/market-data/packs/core/contracts/counterparty.contract.yaml`, the source of every meaning on this page).
 - [2. Entities and ownership](../../knowledge/data.md#2-entities-and-ownership)
 - [2. Counterparty credit risk](../../knowledge/risk.md#2-counterparty-credit-risk)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
@@ -650,7 +650,7 @@ None: all 1,362 rows were read, and every field any of them has is in the record
 
 ### See also
 
-- Data contract: [GRP in the core pack's contracts](../packs/core.md#grp-counterparty-group-counterparty-group) (`config/packs/core/core/contracts/counterparty-group.contract.yaml`, the source of every meaning on this page).
+- Data contract: [GRP in the core pack's contracts](../packs/core.md#grp-counterparty-group-counterparty-group) (`modules/market-data/packs/core/contracts/counterparty-group.contract.yaml`, the source of every meaning on this page).
 - [2. Entities and ownership](../../knowledge/data.md#2-entities-and-ownership)
 - [2. Counterparty credit risk](../../knowledge/risk.md#2-counterparty-credit-risk)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
@@ -764,7 +764,7 @@ None: all 600 rows were read, and every field any of them has is in the record a
 
 ### See also
 
-- Data contract: [DESK in the core pack's contracts](../packs/core.md#desk-desk-desk) (`config/packs/core/core/contracts/desk.contract.yaml`, the source of every meaning on this page).
+- Data contract: [DESK in the core pack's contracts](../packs/core.md#desk-desk-desk) (`modules/market-data/packs/core/contracts/desk.contract.yaml`, the source of every meaning on this page).
 - [2. Entities and ownership](../../knowledge/data.md#2-entities-and-ownership)
 - [2. Counterparty credit risk](../../knowledge/risk.md#2-counterparty-credit-risk)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
@@ -852,7 +852,7 @@ None: all 16 rows were read, and every field any of them has is in the record ab
 
 ### See also
 
-- Data contract: [ISS in the core pack's contracts](../packs/core.md#iss-issuer-issuer) (`config/packs/core/core/contracts/issuer.contract.yaml`, the source of every meaning on this page).
+- Data contract: [ISS in the core pack's contracts](../packs/core.md#iss-issuer-issuer) (`modules/market-data/packs/core/contracts/issuer.contract.yaml`, the source of every meaning on this page).
 - [2. Entities and ownership](../../knowledge/data.md#2-entities-and-ownership)
 - [2. Counterparty credit risk](../../knowledge/risk.md#2-counterparty-credit-risk)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
@@ -956,7 +956,7 @@ None: all 240 rows were read, and every field any of them has is in the record a
 
 ### See also
 
-- Data contract: [LE in the core pack's contracts](../packs/core.md#le-bank-legal-entity-legal-entity) (`config/packs/core/core/contracts/legal-entity.contract.yaml`, the source of every meaning on this page).
+- Data contract: [LE in the core pack's contracts](../packs/core.md#le-bank-legal-entity-legal-entity) (`modules/market-data/packs/core/contracts/legal-entity.contract.yaml`, the source of every meaning on this page).
 - [2. Entities and ownership](../../knowledge/data.md#2-entities-and-ownership)
 - [2. Counterparty credit risk](../../knowledge/risk.md#2-counterparty-credit-risk)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).
@@ -1036,7 +1036,7 @@ None: all 20 rows were read, and every field any of them has is in the record ab
 
 ### See also
 
-- Data contract: [TRDR in the core pack's contracts](../packs/core.md#trdr-trader-trader) (`config/packs/core/core/contracts/trader.contract.yaml`, the source of every meaning on this page).
+- Data contract: [TRDR in the core pack's contracts](../packs/core.md#trdr-trader-trader) (`modules/market-data/packs/core/contracts/trader.contract.yaml`, the source of every meaning on this page).
 - [2. Entities and ownership](../../knowledge/data.md#2-entities-and-ownership)
 - [2. Counterparty credit risk](../../knowledge/risk.md#2-counterparty-credit-risk)
 - [The test data and the demo lakes](../../guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default) and the [index of every data sample](README.md).

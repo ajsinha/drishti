@@ -15,7 +15,7 @@
 
 """The product's packs live in the module that owns them (docs/architecture/KERNEL_AND_MODULES.md section 18.4): every pack a module's
 manifest lists is in that module's packs folder (modules/<id>/packs/<pack>, banking's in modules/banking/dmod/packs), only the listed
-packs count, config/packs holds a site's own packs and the kernel's ``core`` folder (core, gleif, compute-demo), and the one resolver
+packs count, config/packs holds a site's own packs and the kernel's ``core`` folder (gleif, compute-demo), and the one resolver
 (drishti-console/core/resolution.py; the server's twin com.ash.drishti.api.resolution) finds exactly those folders."""
 from __future__ import annotations
 
@@ -33,8 +33,8 @@ from core.resolution import duplicates, manifests, pack_dir, pack_dirs  # noqa: 
 
 pytestmark = pytest.mark.static   # a quick file check: the drill's gate runs it (TEST_HARNESS.md, "Quick file checks")
 
-#: the kernel's own reference packs: no module owns them, they stay in config/packs/core
-KERNEL_PACKS = {"core", "gleif", "compute-demo"}
+#: the kernel's own reference packs: no module owns them, they stay in config/packs/core (core moved to the market-data module)
+KERNEL_PACKS = {"gleif", "compute-demo"}
 REPO = R.repository()
 OWNED = [(m.id, m.folder / name, name) for m in REPO.modules.values() if m.folder is not None for name in m.packs]
 
@@ -53,7 +53,7 @@ def test_every_pack_a_module_lists_is_in_that_module(mid, folder, name):
     assert REPO.packs[name].label == f"module:{mid}"
 
 
-def test_the_site_holds_no_shipped_pack_and_the_kernel_holds_its_three():
+def test_the_site_holds_no_shipped_pack_and_the_kernel_holds_its_two():
     """config/packs holds a site's own packs and the kernel's core folder: no site pack of the checkout, nothing not read."""
     assert not REPO.packs.of_origin(R.SITE), [p.name for p in REPO.packs.of_origin(R.SITE)]
     assert {p.name for p in REPO.packs.of_origin(R.KERNEL)} == KERNEL_PACKS

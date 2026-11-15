@@ -33,7 +33,7 @@ import java.util.function.Function;
  *
  * @param siteDir      the site's packs ({@code drishti.packs.site-dir}, its former name {@code drishti.packs.dir}; default {@code ./config/packs})
  * @param installedDir packs an administrator deployed, part of the site ({@code drishti.packs.installed-dir}; default {@code <data>/packs/installed})
- * @param kernelDir    the kernel's packs ({@code drishti.kernel.packs-dir}; default {@code ./config/packs/core}), never read as site packs
+ * @param kernelDir    the kernel's packs ({@code drishti.kernel.packs-dir}; default {@code ./config/packs/core}: gleif, compute-demo), never read as site packs
  * @param modulesHome  the modules shipped as folders ({@code drishti.modules.home}; default {@code ./modules})
  * @param modulesPath  the store of modules installed from a {@code .dmod} ({@code drishti.modules.path}, else {@code drishti.module-deploy.dir};
  *                     default {@code <data>/modules})

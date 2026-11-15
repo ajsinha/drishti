@@ -23,7 +23,7 @@ designer's second mode): a source module, not a new pack.
    required canonical fields left without a native field and the native fields left without a canonical one are printed.
    --map-edits (JSON: {CANONICAL: null | {from} | {value} | {values}}) is the person's fixes; --dry-run stops here.
 2. Writes modules/source-<sys>/ (or --out), the shape of every source module: module.yaml (requires the kind's module), connectors/
-   (read: the lake table, its own or a shared one with where:, set: SOURCE_SYSTEM, map:; --live: a Kafka listener, off until the site
+   (read: the system's own lake table, set: SOURCE_SYSTEM, map:; --live: a Kafka listener, off until the site
    turns it on; --write-back: its writes: block), mappings/<sys>-<kind>.yaml, the inbox rule (dataload:), the section the module adds to
    the kind's page (sutras/<kind>-<sys>.v1.fragment.yaml: the native fields with no canonical one, shown when SOURCE_SYSTEM is the
    system's), data/needs.yaml and docs/ (README with front matter, a guide, help.yaml).
@@ -58,8 +58,7 @@ def add_args(p) -> None:
     g = p.add_argument_group("a source for an existing kind (a source module: the Pack designer's second mode)")
     g.add_argument("--source-for", metavar="KIND", help="the files are a new source of this existing kind (trade): a source module, not a new pack")
     g.add_argument("--system", help="--source-for: the booking system, upper case (SWAPONE); stamped as SOURCE_SYSTEM at load")
-    g.add_argument("--shared-table", metavar="DOMAIN.TABLE", help="--source-for: rows in a table several systems share, read with where: SOURCE_SYSTEM = '<SYS>'")
-    g.add_argument("--own-table", metavar="DOMAIN.TABLE", help="--source-for: the system's own table (default <domain>.<kind>_<sys>)")
+    g.add_argument("--own-table", metavar="DOMAIN.TABLE", help="--source-for: the system's own table, one per trading system (default <domain>.<kind>_<sys>)")
     g.add_argument("--lake-name", default="main", help="--source-for: the lake the connector reads (default main)")
     g.add_argument("--lake", type=pathlib.Path, help="--source-for --load: the lake's Delta root (default $DRISHTI_DELTA_ROOT)")
     g.add_argument("--map-edits", type=pathlib.Path, help="--source-for: JSON fixes to the proposed map {CANONICAL: null | {\"from\": f} | {\"value\": v} | {\"values\": {..}}}")
@@ -78,15 +77,13 @@ def names(a) -> dict:
     c = SM.contract(kind)
     pack = c.get("pack") or c["_pack"]
     domain = (c.get("binding-hint") or {}).get("lake-table", f"{pack}.x").split(".")[0] or pack
-    if a.shared_table and a.own_table:
-        raise SystemExit("--shared-table or --own-table, not both")
-    table = a.shared_table or a.own_table or f"{domain}.{kind.replace('-', '_')}_{system.lower()}"
+    table = a.own_table or f"{domain}.{kind.replace('-', '_')}_{system.lower()}"
     if not TABLE_RE.fullmatch(table):
         raise SystemExit(f"the table is <domain>.<table> in lower case ({table})")
     name = a.name or f"source-{low}"
     if not re.fullmatch(r"[a-z0-9][a-z0-9-]*", name):
         raise SystemExit("--name is lower-case letters, digits and '-'")
-    return {"system": system, "low": low, "kind": kind, "pack": pack, "table": table, "shared": bool(a.shared_table), "name": name,
+    return {"system": system, "low": low, "kind": kind, "pack": pack, "table": table, "name": name,
             "map": f"mappings/{low}-{kind}.yaml", "section": f"sutras/{kind}-{low}.v1.fragment.yaml", "title": a.title or f"{system.title()} (source)",
             "match": a.inbox_match or f"{low}-*.jsonl*", "contract": c}
 
@@ -115,9 +112,8 @@ def write_yaml(path: pathlib.Path, data, head: str = HEADER) -> None:
 def connector_files(a, n: dict, m: dict) -> dict[str, dict]:
     """The module's connectors: read (the table), and with --live a listener (with --write-back its writes:)."""
     key = next((r["from"] for r in m["fields"] if r["to"] in (n["contract"].get("key") or [])[:1] and r.get("from")), None)
-    read = {"plugin": "delta", "kinds": [n["kind"]], "description": f"{n['system']}'s {n['kind']}s in the lake table {n['table']}"
-            + (" (shared: this system's rows by where:)" if n["shared"] else " (its own table)"),
-            "settings": {"lake": a.lake_name, "lake-tables": n["table"], **({"where": f"SOURCE_SYSTEM = '{n['system']}'"} if n["shared"] else {}),
+    read = {"plugin": "delta", "kinds": [n["kind"]], "description": f"{n['system']}'s {n['kind']}s in the lake table {n['table']} (its own table)",
+            "settings": {"lake": a.lake_name, "lake-tables": n["table"],
                          "set": {"SOURCE_SYSTEM": n["system"]}, "map": n["map"], "union": True, "source-name": n["name"]}}
     out = {n["name"]: read}
     if a.live:
@@ -179,7 +175,7 @@ def write_module(a, n: dict, m: dict, mod: pathlib.Path, say=print) -> dict:
 def docs(a, n: dict, m: dict, mod: pathlib.Path, conns: dict) -> None:
     d = mod / "docs"
     d.mkdir(parents=True, exist_ok=True)
-    layout = f"the shared table `{n['table']}`, its rows by `where: SOURCE_SYSTEM = '{n['system']}'`" if n["shared"] else f"its own table `{n['table']}`"
+    layout = f"its own table `{n['table']}`"
     rows = "\n".join(f"| `{r['to']}` | {'`' + r['from'] + '`' if r.get('from') else ('`' + json.dumps(r['value']) + '` (constant)' if r.get('value') is not None else '–')} "
                      f"| {round(100 * r['confidence']) if (r.get('from') or r.get('value') is not None) else ''} |"
                      for r in m["fields"] if r.get("from") or r.get("value") is not None)
@@ -306,7 +302,7 @@ def run(a, cli, say=print) -> int:
         a.map_out.write_text(json.dumps(m, default=str), encoding="utf-8")
     mod = (a.out or ROOT / "modules" / n["name"]).resolve()
     say(f"\nmodule {n['name']} {a.version}: {mod}; the kind {n['kind']} of {n['pack']}; "
-        + (f"the shared table {n['table']} with where: SOURCE_SYSTEM = '{n['system']}'" if n["shared"] else f"its own table {n['table']}"))
+        + f"its own table {n['table']}")
     if a.dry_run:
         say(f"dry run: nothing written ({time.monotonic() - t0:.1f} s)")
         return 0

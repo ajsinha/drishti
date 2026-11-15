@@ -104,7 +104,7 @@ class DistributionsTest {
         assertThat(order.indexOf("market-data")).isLessThan(order.indexOf("banking"));
         assertThat(known.get("banking").requires()).containsExactly("market-data");
         assertThat(known.get("banking").packs()).doesNotContain("market-data");
-        assertThat(known.get("market-data").packs()).containsExactly("market-data");
+        assertThat(known.get("market-data").packs()).containsExactly("core", "market-data");
         assertThat(known.get("economy").packs()).contains("world-economy", "central-banks", "gdelt-events");
         assertThat(DIR.resolve("modules.yaml")).doesNotExist();                       // the hand mapping is gone: one source of truth
         assertThat(ModuleManifests.withRequired(List.of("banking"), known)).containsExactly("banking", "market-data");

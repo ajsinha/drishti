@@ -97,7 +97,7 @@ is useful with no finance at all. Not for the owner's demos.
 ([DEVELOPER_GUIDE.md section 1.9](../guides/DEVELOPER_GUIDE.md#19-the-genomics-sample-step-by-step)): the VCF reader is a `SourcePlugin`
 inside the module (it serves only the module's kinds and must go with it, so not the lib folder); `gene` and `cohort` are computed;
 `GENE TP53` draws the module's own visual, `genomics.lollipop`, a kind of drishti-chart's registry. Its `.dmod` passes C1 to C15. The file
-takes **none of the kernel's packs** (`kernel-packs: []`: no counterparty, book or desk) and offers one lens, **Research**
+carries **no finance pack** (no counterparty, book or desk: the `core` pack is the market-data module's, which it does not carry) and offers one lens, **Research**
 (`config/lenses/genomics/research.yaml`); the module's words are its commands. `GenomicsDistributionServerTest` boots it on the thin
 kernel with the package dropped into the modules folder; `test_genomics_walk_browser.py` walks it in a browser on the thin jar.
 
@@ -177,7 +177,7 @@ SDK keeps its manifest in `modules/<id>/src/dmod/module.yaml` (genomics), read t
 those installed in its module store are read first, by the module registry's own reader (a package's manifest wins). The console takes
 the server's list (`GET /public/modules/manifests`) and reads it again when the registry changes (`/public/about`'s `manifests`), so a
 package installed or removed while it runs joins or leaves its distribution; its own folder serves only until a server answers. A file may name the kernel's packs it takes
-(`kernel-packs:`; Genomics takes none, and a distribution of no packs loads none, not the default list).
+(`kernel-packs:`; `kernel.yaml` lists none today, the `core` pack being the market-data module's, and a distribution of no packs loads none, not the default list).
 
 **The content modules.** Three `.dmod`s, each a folder in the `.dmod` layout (`module.yaml`, `console/plugin.yaml` with a Sutra page per
 function under `/m/<id>/`, `docs/` with a README, Help section, guides and tutorial, `data/needs.yaml`) plus `content.yaml`, the

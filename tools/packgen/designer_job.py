@@ -183,7 +183,7 @@ def source(wd: pathlib.Path, st: Status) -> None:
     edits.write_text(json.dumps(req.get("mapEdits") or {}), encoding="utf-8")
     argv = [str(wd / "in"), "--source-for", req["sourceFor"], "--system", req["system"], "--name", req["name"], "--version", req.get("version") or "1.0.0",
             "--out", str(wd / "module"), "--dist", str(wd / "dist"), "--force", "--publisher", req.get("publisher") or "local", "--map-edits", str(edits)]
-    for flag, key in (("--title", "title"), ("--description", "description"), ("--shared-table", "sharedTable"), ("--own-table", "ownTable")):
+    for flag, key in (("--title", "title"), ("--description", "description"), ("--own-table", "ownTable")):
         if req.get(key):
             argv += [flag, str(req[key])]
     argv += ["--live"] * bool(req.get("live")) + ["--write-back"] * bool(req.get("live") and req.get("writeBack"))

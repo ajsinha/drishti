@@ -72,11 +72,11 @@ def test_connector_fixture(case):
 
 
 def _site(tmp_path: Path, switch: bool | None) -> R.Settings:
-    """A scratch site: a kernel pack, a module 'trading' with a pack, and a source module 'source-endur' (requires trading) with a
+    """A scratch site: a kernel pack (compute-demo), a module 'trading' with a pack, and a source module 'source-endur' (requires trading) with a
     connector template and inbox rules; ``switch``: source-endur's switch file (None: none)."""
     _tree(tmp_path, {
-        "config/packs/core/core/pack.yaml": "pack: core\n",
-        "config/dataload.yaml": "dataload:\n  rules:\n  - {match: 'site-*.jsonl', pack: core, kind: note}\n",
+        "config/packs/core/compute-demo/pack.yaml": "pack: compute-demo\n",
+        "config/dataload.yaml": "dataload:\n  rules:\n  - {match: 'site-*.jsonl', pack: compute-demo, kind: note}\n",
         "modules/trading/module.yaml": "id: trading\npacks: {folder: packs, list: [trading]}\n",
         "modules/trading/packs/trading/pack.yaml": "pack: trading\nroutes:\n  trade: trade-pages\n",
         "modules/source-endur/module.yaml": ("id: source-endur\nrequires:\n  trading: '>=1.0'\ndataload: dataload.yaml\n"
@@ -96,7 +96,7 @@ def _site(tmp_path: Path, switch: bool | None) -> R.Settings:
 def test_a_module_off_brings_nothing_on_brings_it_back(tmp_path, on):
     r = R.build(_site(tmp_path, on))
     assert r.module_on("trading") and r.module_on("source-endur") == on
-    assert r.packs.names() == ["core", "trading"]
+    assert r.packs.names() == ["compute-demo", "trading"]
     rules = [(x["match"], x["origin"]) for x in r.inbox_rules()]
     assert rules[0] == ("site-*.jsonl", "site")
     assert (("endur-*.jsonl.gz", "module:source-endur") in rules) == on
@@ -117,15 +117,15 @@ def test_a_module_off_takes_the_modules_that_need_it(tmp_path):
     r = R.build(s)
     assert not r.module_on("trading") and not r.module_on("source-endur")
     assert "needs the module 'trading'" in r.reasons["source-endur"]
-    assert r.packs.names() == ["core"] and r.packs.off == {"trading": "trading"}
+    assert r.packs.names() == ["compute-demo"] and r.packs.off == {"trading": "trading"}
     assert r.packs.find("trading").state == R.MODULE_OFF
 
 
 def test_the_servers_module_list_decides_on_a_console(tmp_path):
     s = _site(tmp_path, True)
-    assert R.build(s, modules=["trading"]).packs.names() == ["core", "trading"]
+    assert R.build(s, modules=["trading"]).packs.names() == ["compute-demo", "trading"]
     assert not R.build(s, modules=["trading"]).module_on("source-endur")
-    assert R.build(s, modules=[]).packs.names() == ["core"]
+    assert R.build(s, modules=[]).packs.names() == ["compute-demo"]
 
 
 def test_a_setting_wins_over_the_switch_file(tmp_path):
@@ -137,7 +137,8 @@ def test_a_setting_wins_over_the_switch_file(tmp_path):
 def test_the_repository_reads_every_shipped_pack_once():
     r = R.repository()
     assert not r.problems, [p.message for p in r.problems]
-    assert {"core", "gleif", "compute-demo"} <= {p.name for p in r.packs.of_origin(R.KERNEL)}
+    assert {p.name for p in r.packs.of_origin(R.KERNEL)} == {"gleif", "compute-demo"}
+    assert r.packs.find("core").label == "module:market-data"
     assert {"trading", "market-risk", "market-data"} <= set(r.packs.names())
     for p in r.packs.values():
         assert (p.folder / "pack.yaml").is_file()

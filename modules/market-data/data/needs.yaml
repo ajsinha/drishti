@@ -80,3 +80,33 @@ needs:
 - kind: equity-beta
   contract: '>=1.0 <2'
   required: false
+- kind: counterparty
+  contract: '>=1.0 <2'
+  required: false
+- kind: counterparty-group
+  contract: '>=1.0 <2'
+  required: false
+- kind: issuer
+  contract: '>=1.0 <2'
+  required: false
+- kind: ccp
+  contract: '>=1.0 <2'
+  required: false
+- kind: legal-entity
+  contract: '>=1.0 <2'
+  required: false
+- kind: book
+  contract: '>=1.0 <2'
+  required: false
+- kind: desk
+  contract: '>=1.0 <2'
+  required: false
+- kind: trader
+  contract: '>=1.0 <2'
+  required: false
+- kind: calendar
+  contract: '>=1.0 <2'
+  required: false
+- kind: clearing-account
+  contract: '>=1.0 <2'
+  required: false

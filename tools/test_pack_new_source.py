@@ -124,14 +124,14 @@ class TheModule(Fixture):
 
     def test_the_command_line_needs_no_name_and_a_dry_run_writes_nothing(self):
         import drishti as cli
-        a = self.opts("--shared-table", "trading.trades_shared", "--dry-run")
+        a = self.opts("--own-table", "trading.trade_swapone", "--dry-run")
         self.assertEqual(MJ.run(a, cli, lambda *_: None), 0)
         self.assertFalse((self.dir / "mod" / "source-swapone").exists())
 
     def test_the_module_has_the_shape_of_a_source_module(self):
         import yaml
         import source_module as SMOD
-        a = self.opts("--shared-table", "trading.trades_shared", "--live", "--write-back")
+        a = self.opts("--own-table", "trading.trade_swapone", "--live", "--write-back")
         n = SMOD.names(a)
         mod = self.dir / "mod" / n["name"]
         SMOD.write_module(a, n, self.map, mod, lambda *_: None)
@@ -141,7 +141,7 @@ class TheModule(Fixture):
         self.assertEqual(m["dataload"], "dataload.yaml")
         self.assertEqual(yaml.safe_load((mod / "dataload.yaml").read_text())["dataload"]["rules"][0], {"match": "swapone-*.jsonl*", "pack": "trading", "kind": "trade", "connector": "source-swapone", "date-from": "name"})
         read = yaml.safe_load((mod / "connectors" / "source-swapone.yaml").read_text())
-        self.assertEqual(read["settings"]["where"], "SOURCE_SYSTEM = 'SWAPONE'")
+        self.assertNotIn("where", read["settings"])          # one table per trading system, never a shared one
         self.assertEqual(read["settings"]["set"], {"SOURCE_SYSTEM": "SWAPONE"})
         self.assertEqual(read["settings"]["map"], "mappings/swapone-trade.yaml")
         live = yaml.safe_load((mod / "connectors" / "source-swapone-live.yaml").read_text())
@@ -153,12 +153,12 @@ class TheModule(Fixture):
         front = (mod / "docs" / "README.md").read_text().split("---")[1]
         self.assertIn("module: source-swapone", front)
         own = SMOD.names(self.opts())
-        self.assertEqual((own["table"], own["shared"]), ("trading.trade_swapone", False))
+        self.assertEqual(own["table"], "trading.trade_swapone")
 
     @unittest.skipUnless(TOOL.is_file() and shutil.which("java"), "needs the module tool (./mvnw -q package -DskipTests -pl :drishti-module-runtime -am)")
     def test_the_module_passes_the_fifteen_checks(self):
         out = subprocess.run([sys.executable, str(HERE / "drishti.py"), "pack", "new", str(self.file), "--source-for", "trade", "--system", "SWAPONE",
-                              "--shared-table", "trading.trades_shared", "--live", "--write-back", "--out", str(self.dir / "chk" / "source-swapone"),
+                              "--own-table", "trading.trade_swapone", "--live", "--write-back", "--out", str(self.dir / "chk" / "source-swapone"),
                               "--dist", str(self.dir / "chk-dist"), "--force", "--cycles", "1"], capture_output=True, text=True, cwd=ROOT,
                              env={**os.environ, "TMPDIR": str(self.dir)})
         self.assertEqual(out.returncode, 0, out.stdout[-3000:] + out.stderr[-2000:])
@@ -176,13 +176,13 @@ class TheLoad(Fixture):
         import source_module as SMOD
         import yaml
         lake = self.dir / "lake"
-        a = MJ.build_parser().parse_args([str(self.file), "--source-for", "trade", "--system", "SWAPONE", "--shared-table", "trading.trades_shared",
+        a = MJ.build_parser().parse_args([str(self.file), "--source-for", "trade", "--system", "SWAPONE", "--own-table", "trading.trade_swapone",
                                           "--lake", str(lake)])
         n = SMOD.names(a)
         a._map = self.map
         self.assertEqual(SMOD.load(a, n, cli, lambda *_: None), 0)
         from deltalake import DeltaTable
-        t = DeltaTable(str(lake / "trading" / "trades_shared")).to_pyarrow_table()
+        t = DeltaTable(str(lake / "trading" / "trade_swapone")).to_pyarrow_table()
         self.assertEqual(t.num_rows, 2500)
         self.assertEqual(set(t.column("SOURCE_SYSTEM").to_pylist()), {"SWAPONE"})
         col = next(c for c in ("doc", "document", "json", "_doc") if c in t.column_names)

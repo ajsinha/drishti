@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 """Build -> New pack, the second mode ("a source for an existing kind"), in a browser against a REAL scratch server: a mocked SwapOne file
 (tools/packgen/swapone_synth.py) is dropped and read; the person chooses "a source for an existing kind" (trade), the server proposes the field
-map and the page shows it as a grid; a cell is edited (a native field dropped); the shared table is chosen; the module source-swapone is made
+map and the page shows it as a grid; a cell is edited (a native field dropped); the layout shows the system's own table; the module source-swapone is made
 with its checks and its section of the trade page. Skipped when Playwright, Chromium, the built server jar or a JDK is missing."""
 import re
 import shutil
@@ -76,11 +76,11 @@ def test_a_source_for_the_trade_kind_is_mapped_edited_placed_and_made(browser, d
         page.locator(".di-option", has_text="(none)").first.click()
         page.wait_for_function("() => Object.keys(window.Drishti.PackDesigner.S.mapEdits).includes('COUNTERPARTY_UEN')", timeout=30_000)
 
-        # the layout: the shared table, read with where
+        # the layout: the system's own table (one table per trading system; there is no shared-table choice)
         page.click("[data-go=layout]")
-        pick(page, "[data-sel-layout]", "A shared table")
+        assert page.locator("[data-sel-layout]").count() == 0
         yaml = page.locator("[data-layout-yaml]").inner_text()
-        assert "lake-tables: trading.trades_shared" in yaml and "SOURCE_SYSTEM = 'SWAPONE'" in yaml
+        assert "lake-tables: trading.trade_swapone" in yaml and "where:" not in yaml
 
         # finalize: the module with its checks
         page.click("[data-go=finalize]")

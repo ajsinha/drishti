@@ -194,7 +194,7 @@ folders, 8, 9 and 10 are phase 2 (section 8).
 6. **The banking console plugin**: `git mv` the routes, templates, JavaScript, CSS, landings and their tests into
    the console's plugins/banking folder (planned); static assets served from the plugin's folder behind the entitlement check; Help's `risk`
    section and the engine catalogue entries moved into the plugin's files.
-7. **Packs by domain**: `git mv` into `config/packs/core/core|banking|economy|capitalmarkets/`; the pack loader reads one level of domain folders and each
+7. **Packs by domain**: `git mv` into `modules/market-data/packs/core|banking|economy|capitalmarkets/`; the pack loader reads one level of domain folders and each
    pack's `domain:`; Admin → Packs, Help and the Build home group by it; editions unchanged (they name pack ids).
 8. **Banking configuration**: the official lakes, the banking BI reports, models and tables (after d's tables settled), fragments and
    notebooks into the banking folders the loader reads.

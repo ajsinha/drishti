@@ -3427,7 +3427,7 @@ each value that **starts with** an old name followed by a comma (a branch keeps 
 |---|---|---|
 | `core/legal-entity` (test data, lake `reference/legal-entity`) | `NAME` | the four legal entities |
 | `market-risk/pnl-history` (test data, lake `risk/pnl-history`) | `NAME` | the bank, at the top of both trees' histories |
-| `config/packs/core/core/samples` | `legal-entity.jsonl` `NAME`, `catalog.jsonl` subtitles | the four legal entities |
+| `modules/market-data/packs/core/samples` | `legal-entity.jsonl` `NAME`, `catalog.jsonl` subtitles | the four legal entities |
 | the retired example packs (`examples/packs/climate-risk`, `liquidity-risk`, `operational-risk`; `finance`) | `legalEntityName`, `legalEntity.name` | the legal entities |
 
 So after an edit rebuild those two datasets (`--only core/legal-entity,market-risk/pnl-history`, or a full `lake demo`); the VaR trees

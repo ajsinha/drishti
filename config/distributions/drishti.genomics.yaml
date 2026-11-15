@@ -13,8 +13,8 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Drishti Genomics (docs/architecture/DISTRIBUTIONS.md section 4): the sample that proves the kernel carries no finance. The kernel and
-# the genomics module (modules/genomics: a VCF reader; kinds variant, sample, gene, cohort; VARIANT, GENE, COHORT), nothing else: none of
-# the kernel's packs (no counterparty, book or desk), the Research lens.
+# the genomics module (modules/genomics: a VCF reader; kinds variant, sample, gene, cohort; VARIANT, GENE, COHORT), nothing else: no counterparty,
+# book or desk (the core pack is the market-data module's, which it does not carry), the Research lens.
 format: 1
 distribution: drishti.genomics
 version: 1.0.0
@@ -36,8 +36,6 @@ theme: { tokens: green, mode: light, density: comfortable }
 
 modules:
   - { id: genomics }
-
-kernel-packs: []                           # none of the kernel's packs: the module serves its own kinds
 
 lenses:
   offered: [research]

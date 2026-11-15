@@ -18,7 +18,7 @@ format: 1
 id: market-data
 version: 1.0.0
 title: Market data
-about: 'Curves, volatility surfaces, FX, equities, credit, inflation, commodities, fixings and bonds: the market data both Drishti Risk and Drishti
+about: 'The core parties and organisation (counterparties, groups, issuers, CCPs, legal entities, books, desks, traders, calendars), curves, volatility surfaces, FX, equities, credit, inflation, commodities, fixings and bonds: the market data both Drishti Risk and Drishti
   Finance show'
 domain: market-data
 origin: first-party
@@ -34,6 +34,17 @@ plugin-api: '>=2.0'
 elements: '>=1.4 <2'
 provides:
   kinds:
+    core:
+    - counterparty
+    - counterparty-group
+    - issuer
+    - ccp
+    - legal-entity
+    - book
+    - desk
+    - trader
+    - calendar
+    - clearing-account
     market-data:
     - ir-curve
     - repo-curve
@@ -60,6 +71,7 @@ provides:
 packs:
   folder: packs
   list:
+  - core
   - market-data
 data:
   needs: data/needs.yaml
@@ -235,12 +247,25 @@ functions:
 - CORR
 - CORRC
 - EQB
+- CORE
+- CPTY
+- GRP
+- ISS
+- CCP
+- LE
+- BOOK
+- DESK
+- TRDR
+- CAL
+- CLR
 lenses: lenses/market.yaml
 docs:
   readme: docs/README.md
   help: docs/help.yaml
   domains: []
   guides:
+  - packs/core/guides/core.md
+  - packs/core/guides/banking-data-model.md
   - packs/market-data/guides/market-data-catalogue.md
   - packs/market-data/guides/market-data.md
   tutorials:

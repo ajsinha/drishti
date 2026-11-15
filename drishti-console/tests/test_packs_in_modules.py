@@ -40,4 +40,4 @@ def test_every_pack_of_the_modules_on_and_the_kernel_loads_in_the_console_with_i
             assert packs._load(p.name).get("forms"), f"pack {p.name} declares forms the console does not see"
     assert packs._load("market-risk").get("forms") and packs._load("trading").get("forms")
     assert Path(packs._load("market-risk")["dir"]).is_relative_to(CONSOLE.parent / "modules")
-    assert {p.name for p in r.packs.of_origin(resolution.KERNEL)} >= {"core", "gleif", "compute-demo"}
+    assert {p.name for p in r.packs.of_origin(resolution.KERNEL)} == {"gleif", "compute-demo"}

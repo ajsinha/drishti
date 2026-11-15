@@ -17,7 +17,6 @@
 # jar (drishti-packs copies this file in at build), the console from this folder; Docker and the stack pass DRISHTI_PACKS through only when
 # it is set.
 packs:
-  core: [core]                                                       # the core's packs
-  market-data: [market-data]                                        # the market-data module's (banking requires it)
+  market-data: [core, market-data]                                  # the market-data module's: the core (counterparty, book, desk ...) and the market data (banking requires it)
   banking: [trading, counterparty-risk, market-risk]                # the banking module's (loaded only while it is on)
   economy: [world-economy, news-and-markets]                         # the economy module's (loaded only while it is on)

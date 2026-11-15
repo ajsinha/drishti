@@ -32,7 +32,7 @@ The shared rules of every contract are in [README.md](README.md). Where a rule i
 provenance, entitlements, the reactive connector), this page refers to [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) and states only the difference.
 
 **Sources read for this contract (2026-10-25):** `modules/banking/dmod/packs/counterparty-risk/contracts/*.contract.yaml`, its `samples/`,
-`data/testdata/counterparty-risk/`, `config/packs/core/core/contracts/counterparty.contract.yaml` and `counterparty-group.contract.yaml`,
+`data/testdata/counterparty-risk/`, `modules/market-data/packs/core/contracts/counterparty.contract.yaml` and `counterparty-group.contract.yaml`,
 `modules/banking/dmod/packs/market-risk/contracts/trade-valuation.contract.yaml`, `modules/banking/dmod/packs/trading/contracts/trade.contract.yaml`,
 `tools/packgen/banking/data_results.py` (`credit_results`, `reference`), `tools/testdata/universe.py`, `tools/contracts.policy.yaml`.
 

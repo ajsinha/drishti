@@ -168,7 +168,7 @@ them or off the glue between them. The names below are used throughout; *the ker
 | Compute | `drishti-compute` (generic: vector store, many-set sums, sharding, the Python pool and sandbox, the scheduler), `drishti-native` (BLAS/LAPACK with Java fallbacks) |
 | Platform | `drishti-server` (REST, security, approvals, collaboration, alerts, cluster `drishti-net`, Health, audit, Admin), `drishti-ai` (LLM providers, MCP), `drishti-app` (the runnable kernel jar) |
 | Module runtime | `drishti-module-runtime`: manifest reading, verification, class loader per module, live route table, unload and absence machinery; **shared with the Drishti Console** (section 10.4) |
-| Content | the core pack (calendar and generic entities), GLEIF reference data, the compute-demo pack, the kernel's Help (generic guides and tutorials), the CIO and oversight lenses, the default theme |
+| Content | GLEIF reference data, the compute-demo pack, the kernel's Help (generic guides and tutorials), the CIO and oversight lenses, the default theme |
 
 **Not in it, because it is the Drishti Console** (a separate application, section 10): the shell, command line, Home, the Pivot, BI, Build,
 Notebook and Admin screens, the Help centre, search, embed and phone pages, and **Drishti Elements** with the vendored libraries
@@ -2212,7 +2212,7 @@ The owner accepted every recommendation on 2026-11-08; each row below is a decis
 
 | # | Question | Decision (2026-11-08) |
 |---|---|---|
-| Q1 | The core pack's finance entities (`book`, `desk`, `trader`, `counterparty`, `legal-entity`, …): kernel or banking? (was D1) | move them to a **`banking-reference` pack in the banking module**; the kernel keeps `calendar` and generic entities (organisation, person, location); GLEIF stays kernel |
+| Q1 | The core pack's finance entities (`book`, `desk`, `trader`, `counterparty`, `legal-entity`, …): kernel or banking? (was D1) | move them to a **`banking-reference` pack in the banking module**; the whole `core` pack (kept under that name) lives in the market-data module, which banking requires; GLEIF and compute-demo stay kernel |
 | Q2 | Bindings file vs connectors' `kinds:` lists | **`config/bindings.yaml` is the one home**; `kinds:` no longer read (done) |
 | Q3 | Module static files at `/m/<id>/static/<version>/` (new addresses) or today's `/static/…` | **new addresses** (versioned cache, per-module CSP, clean unload); page addresses unchanged |
 | Q4 | Per-module bindings of one kind (`for:`) | **not in i**: one binding per kind; per-person views are row rules; revisit with a real case |
@@ -2365,7 +2365,7 @@ C hides errors in a corner and is kept only for `--shots` runs.
                                                     ▼
   1 SITE     config/packs/<pack>   config/connectors/<name>.yaml   config/bindings.yaml   config/dataload.yaml
   2 MODULES  <module>/packs/<pack> <module>/connectors/<name>.yaml (kinds: in templates)  <module>/dataload.yaml
-  3 KERNEL   the kernel's packs (core, gleif, compute-demo)
+  3 KERNEL   the kernel's packs (gleif, compute-demo)
                                                     │
                                                     ▼
              ConfigResolution (one immutable snapshot, a version, a digest)
@@ -2397,7 +2397,7 @@ from the distribution file and the switch files (licence not evaluated); the con
 | `drishti.modules.home` (`DRISHTI_MODULES_HOME`) | `./modules` | the modules shipped as folders (tests and tools point it at the repository's `modules/`; no symbolic link beside a scratch `config/`) |
 | `drishti.modules.path` (`DRISHTI_MODULES_PATH`) | `<data>/modules` | the store of modules installed from a `.dmod` (section 4.1) |
 | `drishti.modules.dir` (`DRISHTI_MODULES_DIR`) | `./config/modules` | the administrator's module switches (unchanged: an existing setting keeps its meaning) |
-| `drishti.kernel.packs-dir` | `./config/packs/core` | the kernel's own packs. It is inside the site's packs folder today and is **never read as site packs**; when the folder moves, only this default changes |
+| `drishti.kernel.packs-dir` | `./config/packs/core` | the kernel's own packs (gleif, compute-demo). It is inside the site's packs folder today and is **never read as site packs**; when the folder moves, only this default changes |
 | `drishti.sources.connectors-dir` (`DRISHTI_CONNECTORS_DIR`) | `./config/connectors` | the site's connector files |
 | `drishti.bindings.file` | `./config/bindings.yaml` | the site's bindings |
 | `drishti.dataload.rules-file` | `./config/dataload.yaml` | the site's inbox rules |
@@ -2455,11 +2455,10 @@ r.packs.find(name); r.packs.loaded(); r.connectors.find(name); r.bindings.read(k
 | Two site folders hold the same name | neither site folder is read (DRS-1042); a shipped pack of that name still is |
 | Two modules that are on list the same pack name | neither is read (DRS-1042); both modules are named |
 | A deploy of a pack whose name is shipped | refused at the deploy unless the archive says `replaces:` |
-| The kernel's `core` pack is missing | the server does not start (DRS-1040), naming the setting and the folder |
 
-Only the last one stops a start. Every other case leaves the server running with the shipped pack and a red line in Health.
+None of these stops a start (a pack that extends a missing pack does: the loader names it). Every case leaves the server running with the shipped pack and a red line in Health.
 
-**Which packs load:** every pack of every module that is on, the kernel's `core`, and the kernel's other packs and the site's packs
+**Which packs load:** every pack of every module that is on (the `core` pack, the parties and organisation, is the market-data module's), and the kernel's packs and the site's packs
 when the distribution or the administrator enables them. `drishti.packs.enabled` (`DRISHTI_PACKS`) narrows that set when it names
 packs; a name whose module is off is not loaded and says so (DRS-1043). The manifests' `packs.list` is the one list of what a module
 brings.
@@ -2588,7 +2587,6 @@ Each names the thing, both places, and what to do.
 
 | Code | When | The message, by example |
 |---|---|---|
-| DRS-1040 | the kernel's packs are missing (start refused) | *The kernel's pack 'core' is not in config/packs/core (drishti.kernel.packs-dir). The server cannot start without it.* |
 | DRS-1041 | a pack is not found | *No pack 'trding'. Looked in the site's packs (config/packs, data/packs/installed), the modules that are on (banking, market-data, economy) and the kernel's packs (config/packs/core). Did you mean 'trading' (module banking)?* |
 | DRS-1042 | one name in two places | *Pack 'trading' is in config/packs/banking/trading and in module banking (modules/banking/dmod/packs/trading). The module's is read. To use yours instead, add `replaces: trading` to its pack.yaml; otherwise the folder is safe to delete.* |
 | DRS-1043 | a pack's module is off | *Pack 'market-risk' belongs to module banking, which is off (switched off in config/modules/banking.yaml). Switch it on in Admin → Modules.* |

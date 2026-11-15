@@ -138,7 +138,7 @@ No extra roles: any user assigned the pack (or a pack that extends it) can open 
 
 ## Data contracts
 
-Every kind of the pack has a data contract: a YAML file beside the pack (`config/packs/core/core/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) that says what one record is, its key, how it is stored and dated, and every field with its type, presence, unit and meaning. The contracts are published on [docs/contracts/packs/core.md](../../../../../docs/contracts/packs/core.md) and each kind's example (a real record of the test data, every field explained) on [docs/contracts/samples](../../../../../docs/contracts/samples/README.md); this guide links them and copies neither. Check them against the pack and its data with `python3 tools/contracts.py check` (or `drishti.py contract check`); show one with `python3 tools/contracts.py show <MNEMONIC>`.
+Every kind of the pack has a data contract: a YAML file beside the pack (`modules/market-data/packs/core/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) that says what one record is, its key, how it is stored and dated, and every field with its type, presence, unit and meaning. The contracts are published on [docs/contracts/packs/core.md](../../../../../docs/contracts/packs/core.md) and each kind's example (a real record of the test data, every field explained) on [docs/contracts/samples](../../../../../docs/contracts/samples/README.md); this guide links them and copies neither. Check them against the pack and its data with `python3 tools/contracts.py check` (or `drishti.py contract check`); show one with `python3 tools/contracts.py show <MNEMONIC>`.
 
 | Command | Kind | Class | Key | Grain | Contract | Example |
 |---|---|---|---|---|---|---|

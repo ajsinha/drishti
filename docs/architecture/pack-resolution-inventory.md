@@ -40,7 +40,7 @@ at `e09846297`; "connres" means the paused branch `wip/i4-connres` (`14b6a9004`,
 | File:line | What it reads | Via | Risk | Change |
 |---|---|---|---|---|
 | `kernel/drishti-api/.../api/PackFolders.java:44-176` | the rule itself: root, domain folders, `moduleRoots` only when the root is named `config/packs` | — | B | deleted; `PackResolver` in the same package replaces it |
-| `kernel/drishti-packs/.../packs/PackPaths.java:71-82` | `drishti.packs.dir`, with the `./packs` fallback | direct | A | deleted with the fallback; `ResolutionSettings.siteDir` and `kernelPacksDir` (`config/packs/core` stays where it is) |
+| `kernel/drishti-packs/.../packs/PackPaths.java:71-82` | `drishti.packs.dir`, with the `./packs` fallback | direct | A | deleted with the fallback; `ResolutionSettings.siteDir` and `kernelPacksDir` (`config/packs/core`, the kernel's gleif and compute-demo, stays where it is) |
 | `kernel/drishti-packs/.../packs/PackPaths.java:88-146` | `extraDirs`, `installedModulePacks` (installed `.dmod` packs, **not** first-party ones) through `drishti.packs.modules-dir` / `drishti.module-deploy.dir` | direct | A | deleted; `.dmod` packs are step 2 of the waterfall for every origin |
 | `kernel/drishti-packs/.../packs/PackLoader.java:65,84-105,111-128,142` | `dirs()` (installed, packs, extra), `readOne`, `folders`, `visit`: first folder holding `<name>/pack.yaml` | PF | B | `load(ResolvedPacks, names)`; no folder lists; `dirs`, `folders` deleted |
 | `kernel/drishti-packs/.../packs/PackEnvironmentPostProcessor.java:39,76-100` | the start: packs dir, enabled names, module-off filter **after** loading, connector suppression | PF + registry | B | builds one `ConfigResolution` first, loads from it; the off filter moves into the resolver |
@@ -262,7 +262,7 @@ Today **eight settings name a modules folder** and four files are found "beside"
 | Concept | Today | After |
 |---|---|---|
 | The site's packs | `drishti.packs.dir` (`DRISHTI_PACKS_DIR`, `./config/packs`) + the `./packs` fallback; `drishti.packs.extra-dirs`; console `packs.dir` | `drishti.packs.site-dir` (same variable `DRISHTI_PACKS_DIR`, same default; a list is allowed). `drishti.packs.dir` is read as its former name. The `./packs` fallback and `extra-dirs` are deleted |
-| The kernel's packs | inside the site's folder: `config/packs/core/` | `drishti.kernel.packs-dir`, default `./config/packs/core` **in this release** (the folder does not move; only its default changes when it does) |
+| The kernel's packs (gleif, compute-demo; the `core` pack is the market-data module's) | inside the site's folder: `config/packs/core/` | `drishti.kernel.packs-dir`, default `./config/packs/core` **in this release** (the folder does not move; only its default changes when it does) |
 | Packs deployed from Admin or a registry | `drishti.packs.installed-dir` (`<data>/packs/installed`) | unchanged; part of the site layer |
 | The modules' folders | `drishti.module-manifests-dir` (`./modules`); system property `drishti.modules.dir` (`PackEntry`); `drishti.live-sets.modules-dir`; console `module_manifests_dir`; "two folders above the packs folder" (`AccessRegistries`, `distribution.py`) | **`drishti.modules.dir`** (`DRISHTI_MODULES_HOME`), default `./modules`. The others are deleted |
 | The module store (`.dmod`) | `drishti.modules.path` (`<data>/modules`); `drishti.packs.modules-dir`; `drishti.module-deploy.dir`; console `builder.pack_designer_modules_dir` | `drishti.modules.path` only |

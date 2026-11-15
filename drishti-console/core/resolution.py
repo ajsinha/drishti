@@ -27,7 +27,7 @@ Three layers, read top down for packs and inbox rules, layered bottom up for con
    directly in it a template; ``examples/`` are not) and ``dataload:`` rules. A module's folder is ``<modules home>/<dir>`` (its
    ``module.yaml``, ``dmod/module.yaml`` or ``src/dmod/module.yaml``) or its installed ``.dmod`` (``<store>/installed/<id>/<version>``,
    named by ``<store>/installed/active.yaml``, which wins). A module that is off brings nothing;
-3. **the kernel**: ``drishti.kernel.packs-dir`` (``config/packs/core``: core, gleif, compute-demo).
+3. **the kernel**: ``drishti.kernel.packs-dir`` (``config/packs/core``: gleif, compute-demo).
 
 Pure: files are only read, never written.
 
@@ -434,7 +434,7 @@ def resolve(layout: Layout, active: Callable[[str], bool] | Iterable[str], enabl
         off_packs.pop(n, None)
     want = None if enabled is None else {x.strip() for x in enabled if str(x).strip()}
     if want is not None and want and "default" not in want:
-        out = {n: (p if n in want or (p.origin == KERNEL and n == "core") else replace(p, state=AVAILABLE)) for n, p in out.items()}
+        out = {n: (p if n in want else replace(p, state=AVAILABLE)) for n, p in out.items()}
     read = dict(sorted(out.items()))
     return Resolution(layout, None, found_modules, [m for m in found_modules if on(m)],
                       PackSet(read, dict(sorted(off.items())), unread, off_packs), problems)

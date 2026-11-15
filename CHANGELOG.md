@@ -18,6 +18,15 @@
 
 ## Unreleased
 
+- **The `core` pack lives in the market-data module.** Counterparty, group, issuer, CCP, legal entity, book, desk, trader, calendar and
+  clearing account moved from `config/packs/core/core` to `modules/market-data/packs/core` (the name and `domain: core` are kept). The module's
+  manifest lists the pack, its ten kinds and its eleven commands (`CORE`, `CPTY`, `GRP`, `ISS`, `CCP`, `LE`, `BOOK`, `DESK`, `TRDR`, `CAL`,
+  `CLR`); the kernel keeps `gleif` and `compute-demo`, and `kernel.yaml` lists no pack. A distribution without the market-data module
+  (Drishti Genomics) carries no counterparty, book or desk; the `kernel-packs:` line of its file is no longer needed. The kernel-core
+  start check (DRS-1040) is gone: no code used it.
+- **The Pack designer offers one table a trading system.** The "shared table + where" layout and `pack new --shared-table` are removed; a
+  source module reads its own table (`--own-table` names another). The loader's per-`SOURCE_SYSTEM` slice replace is unchanged.
+
 - **The drill starts from a clean data folder.** A server's state an earlier run left in the data folder (installed modules, identities,
   cluster membership, compute, file store, cache) is moved aside to `data/tmp/stale-<stamp>/` and listed before the drill starts, when
   no server runs from the checkout. Lake loader children get the launch roots of the process that starts them, and Iceberg's Health

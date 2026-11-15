@@ -443,7 +443,7 @@ About **786k lines of product code** and **287k lines of tests** (37% of the pro
 | Maven modules | 48 in 9 subject folders: `compute/`, `drishti-sdk/`, `kernel/`, `lake/`, `modules/`, `net/`, `packaging/`, `plugins/`, `testing/` |
 | Modules (`.dmod`) | 5: banking, capitalmarkets, economy, genomics, market-data |
 | Lenses | 11: world, markets, publicsector, cio, oversight, risk, trading, market, cro, mr-cube, ccr-cube |
-| Functions a module declares | 121 (48 banking, 12 capitalmarkets, 35 economy, 3 genomics, 23 market-data); every other command word is the kernel's |
+| Functions a module declares | 132 (48 banking, 12 capitalmarkets, 35 economy, 3 genomics, 34 market-data); every other command word is the kernel's |
 | Console routes | 667 |
 | Server REST handlers | 817 |
 | Drishti Elements | 11 libraries, 196 ES modules |

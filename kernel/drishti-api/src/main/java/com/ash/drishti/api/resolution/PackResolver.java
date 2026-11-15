@@ -37,7 +37,7 @@ import java.util.stream.Stream;
  *   <li><b>the active modules</b>: each active module's manifest {@code packs:} list ({@code folder} + {@code list}), in its development
  *   folder ({@code modules/<dir>/module.yaml} or {@code modules/<dir>/dmod/module.yaml}) or its installed {@code .dmod}
  *   ({@code <store>/installed/<id>/<version>}, named by {@code <store>/installed/active.yaml}, which wins over the development copy);</li>
- *   <li><b>the kernel</b>: {@code <site>/core/<pack>} (core, gleif, compute-demo).</li>
+ *   <li><b>the kernel</b>: {@code <site>/core/<pack>} (gleif, compute-demo).</li>
  * </ol>
  * The same name twice in one layer is an error naming both places, and neither is read. A module that is not active brings no pack (its
  * packs are listed in {@link Result#off()}). Pure: the files are only read, never written; YAML comes through the caller's reader (this
@@ -84,7 +84,7 @@ public final class PackResolver {
      * Where the layers are.
      *
      * @param site    the site's packs folder ({@code config/packs})
-     * @param kernel  the kernel's packs folder ({@code config/packs/core})
+     * @param kernel  the kernel's packs folder ({@code config/packs/core}: gleif, compute-demo)
      * @param modules   the development tree of the modules ({@code modules}; null: none)
      * @param store     the module store ({@code <data>/modules}; null: none)
      * @param installed the packs an administrator deployed, read before the site's folder (null: none)

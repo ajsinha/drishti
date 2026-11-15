@@ -207,12 +207,11 @@ class Workspaces:
             if not re.fullmatch(r"[A-Z][A-Z0-9_]{1,31}", system):
                 raise DesignerError(400, "the system is upper-case letters, digits and '_' (SWAPONE)")
             r["sourceFor"], r["system"] = kind, system
-            for k in ("sharedTable", "ownTable"):
-                v = str(body.get(k) or "").strip()
-                if v and not re.fullmatch(r"[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*", v):
-                    raise DesignerError(400, "a table is <domain>.<table> in lower case (trading.trade_swapone)")
-                if v:
-                    r[k] = v
+            v = str(body.get("ownTable") or "").strip()                               # one table per trading system, always
+            if v and not re.fullmatch(r"[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*", v):
+                raise DesignerError(400, "a table is <domain>.<table> in lower case (trading.trade_swapone)")
+            if v:
+                r["ownTable"] = v
             r["live"], r["writeBack"] = bool(body.get("live")), bool(body.get("writeBack"))
             edits = body.get("mapEdits")
             if isinstance(edits, dict):

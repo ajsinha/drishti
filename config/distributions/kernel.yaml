@@ -18,7 +18,7 @@
 format: 1
 
 kernel:                                    # in every distribution
-  packs: [core]
+  packs: []
   words: [BI, RUPAKA, FORM, FUNC, WHAT, DATAMAP, DATA, EXPORT, PIVOT]
   menus: [views, domains, create, bi, build, admin, help, me]
 

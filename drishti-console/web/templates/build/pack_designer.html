@@ -82,10 +82,9 @@
       </section>
       <section class="pd-pane" data-pane="layout" aria-labelledby="pdh-layout" hidden>
         <h2 id="pdh-layout" class="bs-h">3. Layout</h2>
-        <p class="text-muted-d">Where the system's rows live: its own lake table, or a table several systems share, read with
-          <code>where: SOURCE_SYSTEM = '&lt;SYS&gt;'</code>. Either way the connector stamps <code>set: { SOURCE_SYSTEM: &lt;SYS&gt; }</code> and reads through the map.</p>
+        <p class="text-muted-d">Where the system's rows live: its own lake table (one table per trading system). The connector stamps
+          <code>set: { SOURCE_SYSTEM: &lt;SYS&gt; }</code> and reads through the map.</p>
         <div class="pd-form">
-          <div class="pd-f"><span id="pdLayoutL">Table</span><div data-sel-layout aria-labelledby="pdLayoutL"></div></div>
           <label class="pd-f"><span>Lake table</span><input class="studio-in mono" type="text" data-s="table" autocomplete="off" placeholder="trading.trade_swapone"><small class="text-muted-d" data-table-hint></small></label>
           <label class="pd-f"><span>Module</span><input class="studio-in mono" type="text" data-s="name" autocomplete="off" placeholder="source-swapone"></label>
           <label class="pd-f"><span>Version</span><input class="studio-in mono" type="text" data-s="version" value="1.0.0" autocomplete="off"></label>

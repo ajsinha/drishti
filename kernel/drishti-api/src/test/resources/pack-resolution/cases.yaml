@@ -25,34 +25,34 @@ cases:
 - name: the three layers, first wins
   tree:
     site/acme/pack.yaml: "pack: acme"
-    site/core/core/pack.yaml: "pack: core"
+    site/core/compute-demo/pack.yaml: "pack: compute-demo"
     site/core/gleif/pack.yaml: "pack: gleif"
     modules/trading/module.yaml: "id: trading\npacks: {folder: packs, list: [trading]}"
     modules/trading/packs/trading/pack.yaml: "pack: trading"
   active: [trading]
-  packs: {acme: site, core: kernel, gleif: kernel, trading: "module:trading"}
+  packs: {acme: site, compute-demo: kernel, gleif: kernel, trading: "module:trading"}
   problems: []
 
 - name: a module that is off brings none of its packs
   tree:
-    site/core/core/pack.yaml: "pack: core"
+    site/core/compute-demo/pack.yaml: "pack: compute-demo"
     modules/trading/module.yaml: "id: trading\npacks: {folder: packs, list: [trading]}"
     modules/trading/packs/trading/pack.yaml: "pack: trading"
     modules/economy/module.yaml: "id: economy\npacks: {folder: packs, list: [world-economy]}"
     modules/economy/packs/world-economy/pack.yaml: "pack: world-economy"
   active: [economy]
-  packs: {core: kernel, world-economy: "module:economy"}
+  packs: {compute-demo: kernel, world-economy: "module:economy"}
   off: {trading: trading}
   problems: []
 
 - name: only the listed packs of a module count
   tree:
-    site/core/core/pack.yaml: "pack: core"
+    site/core/compute-demo/pack.yaml: "pack: compute-demo"
     modules/banking/dmod/module.yaml: "id: banking\npacks: {folder: packs, list: [market-risk]}"
     modules/banking/dmod/packs/market-risk/pack.yaml: "pack: market-risk"
     modules/banking/dmod/packs/scratch/pack.yaml: "pack: scratch"
   active: [banking]
-  packs: {core: kernel, market-risk: "module:banking"}
+  packs: {compute-demo: kernel, market-risk: "module:banking"}
   problems: []
 
 - name: a module's folder name is not its id
@@ -135,12 +135,12 @@ cases:
 
 - name: a module pack of a kernel pack's name is refused without replaces
   tree:
-    site/core/core/pack.yaml: "pack: core"
-    modules/a/module.yaml: "id: a\npacks: {folder: packs, list: [core]}"
-    modules/a/packs/core/pack.yaml: "pack: core"
+    site/core/compute-demo/pack.yaml: "pack: compute-demo"
+    modules/a/module.yaml: "id: a\npacks: {folder: packs, list: [compute-demo]}"
+    modules/a/packs/compute-demo/pack.yaml: "pack: compute-demo"
   active: [a]
-  packs: {core: kernel}
-  problems: ["the module a's pack 'core'"]
+  packs: {compute-demo: kernel}
+  problems: ["the module a's pack 'compute-demo'"]
 
 - name: a module's packs folder outside its home is refused
   tree:

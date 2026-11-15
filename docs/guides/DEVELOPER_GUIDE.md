@@ -3860,7 +3860,7 @@ modules:                               # module ids; or the word all (Drishti Al
   - { id: freight, required: true }    # required (default true): start refuses without its manifest; enabled: false leaves it out
   - { id: market-data, required: false }
                                        # a listed module brings the modules it requires
-kernel-packs: [core]                   # the kernel's packs it takes (default: kernel.yaml's list); [] for none
+kernel-packs: [gleif]                  # the kernel's packs it takes (default: kernel.yaml's list, empty today); [] for none
 lenses:
   offered: [trading]                   # the lenses people may open
   default: trading                     # the one they land in; "" for the full Home

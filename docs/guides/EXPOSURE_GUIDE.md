@@ -1704,14 +1704,14 @@ amounts and initial margin held.
 The core pack's counterparties: the `CPTY:` scope adds the exposures of a counterparty's netting sets per path; the name and rating
 label the explorer.
 
-- **Data contract:** [`counterparty`](../contracts/packs/core.md#cpty-counterparty-counterparty) (CPTY), key `COUNTERPARTY_ID`; 19 fields, 17 required; the file [`counterparty.contract.yaml`](../../config/packs/core/core/contracts/counterparty.contract.yaml).
+- **Data contract:** [`counterparty`](../contracts/packs/core.md#cpty-counterparty-counterparty) (CPTY), key `COUNTERPARTY_ID`; 19 fields, 17 required; the file [`counterparty.contract.yaml`](../../modules/market-data/packs/core/contracts/counterparty.contract.yaml).
 - **Example:** [a real record of the test data, every field explained](../contracts/samples/core.md#counterparty) (files `data/testdata/core/counterparty/counterparty.*.jsonl.gz`).
 
 ### 29.8 `counterparty-group`: connected groups
 
 A group of connected counterparties (a parent and its subsidiaries): the `GROUP:` scope.
 
-- **Data contract:** [`counterparty-group`](../contracts/packs/core.md#grp-counterparty-group-counterparty-group) (GRP), key `GROUP_ID`; 5 fields, 5 required; the file [`counterparty-group.contract.yaml`](../../config/packs/core/core/contracts/counterparty-group.contract.yaml).
+- **Data contract:** [`counterparty-group`](../contracts/packs/core.md#grp-counterparty-group-counterparty-group) (GRP), key `GROUP_ID`; 5 fields, 5 required; the file [`counterparty-group.contract.yaml`](../../modules/market-data/packs/core/contracts/counterparty-group.contract.yaml).
 - **Example:** [a real record of the test data, every field explained](../contracts/samples/core.md#counterparty-group) (files `data/testdata/core/counterparty-group/counterparty-group.*.jsonl.gz`).
 <!-- guide-data:end -->
 

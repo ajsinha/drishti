@@ -2375,9 +2375,8 @@ Data, **Map**, **Layout**, Finalize and Deploy.
   field that fits, with a confidence and the evidence (the names, the types, the values; a value map such as `N` to `NO` where the kind
   has an enum). The grid shows the kind's fields in rows: change a native field in its cell, remove one, or give a constant (`= value`), then
   **Propose again**. The native fields no canonical field takes are listed under the grid: the module shows them on the kind's page.
-- **Layout.** *Its own table* (`trading.trade_<system>`): one table a trading system, always, as every shipped source module does; *a shared
-  table + where* only reads a table a site already lands several systems in (`where: SOURCE_SYSTEM = '<SYS>'`); optionally a Kafka
-  listener, off until the site sets its servers.
+- **Layout.** The system's own table (`trading.trade_<system>`, change the name if you like): one table a trading system, always, as every
+  shipped source module does; optionally a Kafka listener, off until the site sets its servers.
 - **Finalize.** The module `source-<system>` is written and checked: `module.yaml`, the connector, the map (`mappings/`), the inbox rule
   (`dataload.yaml`: `<system>-*.jsonl*`, the date from the name) and the module's **section** of the kind's page (`sections:`). **Deploy** is the
   one module deploy of step 6.
@@ -2387,7 +2386,7 @@ fragment's panels are appended to every Sutra of that kind and shown when their 
 native fields with no canonical field); when the module is switched off or removed they leave the page. One implementation serves every module
 (`SutraBlocks.contribute`).
 
-The same on the command line: `drishti.py pack new --source-for trade --system SWAPONE <file>` (its own table, `trading.trade_swapone`) prints
+The same on the command line: `drishti.py pack new --source-for trade --system SWAPONE <file>` (its own table, `trading.trade_swapone`; `--own-table DOMAIN.TABLE` names another) prints
 the map, `--map-edits` fixes it, `--deploy` installs the module. The whole path, from the file to the blotter and a row rule, is
 [the source system tutorial](BUILD_GUIDE.md).
 
@@ -4073,7 +4072,7 @@ All the problems of a file are reported at once. `sutra lint` and the server log
 | `{ id: group, kind: graph, title: Group, agreements and netting sets, … }` | `DRS-2023 option 'agreements and netting sets' is not valid for 'graph' panels` (in `{ }` a comma ends the value) | quote it: `title: "Group, agreements and netting sets"` |
 | `where: "@.ID == ctl.set"` with no control `set` | `DRS-2036 'ctl.set' reads a control the Sutra does not declare (it has no controls:)` | declare the control ([22.4](#224-controls-let-the-reader-choose)) |
 | `{ use: deal-ticket@3 }` | `DRS-2048 no block deal-ticket@3 (blocks: deal-footer, deal-ticket, events, legs, flow-schedule, payments)` | a version that exists, or `use: deal-ticket` for the newest |
-| saving `counterparty@1` from the workbench | `DRS-2028 counterparty@1 is already defined in …/config/packs/core/core/sutras/…/counterparty.v1.sutra.yaml` | new name, or `version: 2` |
+| saving `counterparty@1` from the workbench | `DRS-2028 counterparty@1 is already defined in …/modules/market-data/packs/core/sutras/…/counterparty.v1.sutra.yaml` | new name, or `version: 2` |
 | no `rachana:` line | `DRS-2009 missing 'rachana: 1' (the Rachana language version) at the top` | add `rachana: 1` as the first key |
 | `rachana: 2` | `DRS-2009 'rachana: 2' is not a language version this server reads (it reads 1)` | `rachana: 1` |
 | `notes:` followed by a list | `DRS-2012 'notes' is plain text` | `notes: \|` and indented text |
@@ -4909,7 +4908,7 @@ this table is the map. Seven packs are on by default; the others are turned on b
 
 | Pack | Code | Extends | Mnemonics | Try | README |
 |---|---|---|---|---|---|
-| `core` | `CORE` | — | `CPTY` `GRP` `ISS` `CCP` `LE` `BOOK` `DESK` `TRDR` `CAL` `CLR` | `CPTY CP-NORTHBRIDGE`, `LE LE-NY` | [core](../../config/packs/core/core/README.md) |
+| `core` | `CORE` | — | `CPTY` `GRP` `ISS` `CCP` `LE` `BOOK` `DESK` `TRDR` `CAL` `CLR` | `CPTY CP-NORTHBRIDGE`, `LE LE-NY` | [core](../../modules/market-data/packs/core/README.md) |
 | `market-data` | `MKT` | `core` | `CRV` `REPO` `FX` `FXF` `FXV` `IRV` `CPV` `EQ` `EQX` `DIV` `EQV` `CDS` `INF` `INFC` `CMD` `CMDC` `CMDV` `FIX` `BND` `CORR` | `CRV CRV-USD-OIS`, `FXV FXV-EURUSD` | [market-data](../../modules/market-data/packs/market-data/README.md) |
 | `trading` | `TRDS` | `core`, `market-data` | `TRD` (three source systems) · `CTRD` `PTRD` `LTRD` `ITRD` (derived) | `TRD MX-20000001`, `TRD 1000001`, `CTRD CP-ALDERSHOT` | [trading](../../modules/banking/dmod/packs/trading/README.md) |
 | `counterparty-risk` | `CCR` | `trading` | `AGR` `CSA` `NSET` `LIM` `EXP` `CVA` `SACCR` `COLL` `MC` `SIMM` | `AGR AGR-NORTHBRIDGE-ISDA`, `NSET NS-SUMMIT-NY` | [counterparty-risk](../../modules/banking/dmod/packs/counterparty-risk/README.md) |
@@ -5287,7 +5286,7 @@ You should see every required field of the kind mapped or given a constant, the 
 
 ### Step 3 · The module the designer writes
 
-**In the UI.** **Layout**: keep **Its own table**, `trading.trade_swapone` (one table a trading system, as Endur, Calypso, Murex, WSS and
+**In the UI.** **Layout**: keep the table `trading.trade_swapone` (blank gives that name; one table a trading system, as Endur, Calypso, Murex, WSS and
 ICI). The page shows the connector it will write. **Finalize** makes the module `source-swapone` and runs the fifteen checks;
 **Deploy** installs it.
 
@@ -5437,5 +5436,5 @@ You should see, while it is off, no `SW1-…` trade in `TRD` and no **SWAPONE fi
 
 A module of content only: a connector, a field map, an inbox rule and a section of the trade page, written from your file by the Pack designer and
 deployed like any module. Another system is the same steps with its own file. The reference is
-[BUILD_GUIDE.md section 8.9](../guides/BUILD_GUIDE.md#89-a-source-for-an-existing-kind); the layouts of the shared and the own table are in the
+[BUILD_GUIDE.md section 8.9](../guides/BUILD_GUIDE.md#89-a-source-for-an-existing-kind); the system's own table is described in the
 [trading module's guide](../guides/LIVE_RESULTS_GUIDE.md).

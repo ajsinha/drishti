@@ -29,10 +29,9 @@
   var inp = function (n) { return $('[data-s="' + n + '"]'); };
   S.mapping = null;
   S.mapEdits = {};                          // canonical field -> null (drop) | {from} | {value} | {values}
-  S.layout = 'own';
   S.live = false;
   S.writeBack = false;
-  var selMode = null, selKind = null, selLayout = null, mapGrid = null, chips = null, picked = null;
+  var selMode = null, selKind = null, mapGrid = null, chips = null, picked = null;
 
   function pct(x) { return Math.round(100 * (x || 0)) + '%'; }
   function sys() { return (inp('system').value || '').trim().toUpperCase(); }
@@ -149,10 +148,6 @@
   }
 
   // ---- step 3: the layout ------------------------------------------------------------------------------------------------------
-  selLayout = new I.Select($('[data-sel-layout]'), { label: 'The table', value: 'own', options: [
-    { value: 'own', label: 'Its own table', detail: 'one lake table for this system' },
-    { value: 'shared', label: 'A shared table + where', detail: 'one lake table for several systems, read with where: SOURCE_SYSTEM = ...' }] });
-  selLayout.on('change', function (e) { S.layout = e.value; layoutText(); });
   var swLive = new I.Switch($('[data-sw-live]'), { label: 'A Kafka listener', value: false, help: 'off until the site sets the servers and the topic' });
   swLive.on('change', function (e) { S.live = e.value; layoutText(); });
   var swWb = new I.Switch($('[data-sw-wb]'), { label: 'The blotter writes back through it', value: false, help: 'an amend command on the listener (needs the listener)' });
@@ -161,17 +156,16 @@
   function table() {
     var t = inp('table').value.trim();
     if (t) { return t; }
-    return S.layout === 'shared' ? 'trading.trades_shared' : 'trading.' + (kindOf() || 'trade').replace(/-/g, '_') + '_' + sys().toLowerCase();
+    return 'trading.' + (kindOf() || 'trade').replace(/-/g, '_') + '_' + sys().toLowerCase();
   }
   function layoutText() {
     var k = kindOf() || 'trade', name = inp('name').value.trim() || 'source-' + lowSys();
-    $('[data-table-hint]').textContent = S.layout === 'shared' ? 'blank: trading.trades_shared' : 'blank: ' + table();
+    $('[data-table-hint]').textContent = 'blank: ' + table();
     var lines = ['# connectors/' + name + '.yaml', 'plugin: delta', 'kinds: [' + k + ']', 'settings:', '  lake: main', '  lake-tables: ' + table()];
-    if (S.layout === 'shared') { lines.push("  where: \"SOURCE_SYSTEM = '" + sys() + "'\""); }
     lines.push('  set: { SOURCE_SYSTEM: ' + sys() + ' }', '  map: mappings/' + lowSys() + '-' + k + '.yaml');
     if (S.live) { lines.push('# + connectors/' + name + '-live.yaml: Kafka, off until the site turns it on' + (S.writeBack ? ', with the amend-' + k + ' write-back' : '')); }
     $('[data-layout-yaml]').textContent = lines.join('\n');
-    D.sumOf('layout', (S.layout === 'shared' ? 'shared: ' : 'own: ') + table());
+    D.sumOf('layout', 'own: ' + table());
   }
 
   // ---- what finalize sends --------------------------------------------------------------------------------------------------------
@@ -179,7 +173,7 @@
     var name = inp('name').value.trim() || 'source-' + lowSys();
     var r = { mode: 'source', name: name, version: inp('version').value.trim() || '1.0.0', sourceFor: kindOf(), system: sys(), mapEdits: S.mapEdits,
       live: S.live, writeBack: S.live && S.writeBack };
-    r[S.layout === 'shared' ? 'sharedTable' : 'ownTable'] = table();
+    r.ownTable = table();
     return r;
   };
   D.on('show', function (step) {
