@@ -22,6 +22,7 @@ the drill's every option is in [BUILD_GUIDE.md section 2.6](../guides/DEVELOPER_
 7. [Measuring a run](#7-measuring-a-run)
 8. [Next candidates](#8-next-candidates)
 9. [Manual QA](#9-manual-qa)
+10. [Every module boots with no external system](#10-every-module-boots-with-no-external-system)
 
 ## 1. The problem
 
@@ -688,6 +689,18 @@ ones with the rule tests; a new path from the working folder fails the gate.
 Beside the automated harness, the manual QA of an installation (deploy, verify every part, the per-OS checklist, a cluster of three, and the
 offline rehearsal with your own trade files on a machine without internet access) has one home: [DEPLOYMENT_AND_QA_GUIDE.md](../DEPLOYMENT_AND_QA_GUIDE.md),
 with the offline rehearsal in its [section 11](../DEPLOYMENT_AND_QA_GUIDE.md#11-offline-qa-with-your-own-trade-files).
+
+## 10. Every module boots with no external system
+
+The rule: every module starts with no external system (Kafka, ActiveMQ, RabbitMQ, an AI provider, an outside HTTP API, a live feed, a cluster
+peer); the absence only switches that feature off. `ModulesBootWithoutExternalsTest` (banking-service tests) enforces it: one parameterised case
+for each shipped manifest (`modules/*/module.yaml`, the banking `dmod`, the genomics `src/dmod`, built into a `.dmod` and auto-deployed as
+in the genomics distribution test), each a real server on a random port, started and closed in turn. Only that module is on (with what its
+manifest requires), the broker and the outside URLs point at `127.0.0.1:1`, the stream switches (`DRISHTI_STREAM_*`, the PV stream) are on so
+the streams start, the demo plugin is off and the data folder is a temp folder. It asserts `/actuator/health` UP, the module loaded on
+`/api/v1/admin/modules`, its packs on `/api/v1/packs`, banking's VaR status and SIMM versions answering, every stream connector WAITING (or
+switched off) and none FAILED or DOWN, and no ERROR line in the log. It runs as a check in the gate and in every release drill; a module
+that fails here is a bug in the module, never in the test.
 
 ---
 
