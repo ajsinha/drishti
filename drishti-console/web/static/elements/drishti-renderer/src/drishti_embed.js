@@ -29,11 +29,11 @@ export const API = '/embed/v2';
 /** The page's settings (DrishtiElements.configure): the console, the token provider, auth, the live connection's waits. */
 export const cfg = { server: '', tokenProvider: null, auth: null, retryMinMs: 2000, retryMaxMs: 30000, silenceMs: 30000, closeGraceMs: 1500 };
 
+// the console's root (its base path kept): the static root less static/, or, served to other origins under /embed/v2/, less that
 /**
  * The console the elements read when no server is named: the one that serves the library.
  * @returns {string}
  */
-// the console's root (its base path kept): the static root less static/, or, served to other origins under /embed/v2/, less that
 export const serverOf = () => (cfg.server || statics('').replace(/(?:static|embed\/v2)\/$/, '')).replace(/\/$/, '');
 
 
