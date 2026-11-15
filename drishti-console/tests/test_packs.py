@@ -166,3 +166,38 @@ def test_while_the_server_is_away_the_last_answer_is_kept_for_a_while_and_never_
     assert [p["name"] for p in _run(packs.current(server, _Me()))] == ["helpdesk"], "the last answer, while the server is away"
     fresh = Packs({"ui.user_cache_seconds": 10}, files_dir=tmp_path / "other-files")
     assert _run(fresh.current(server, _Me())) == [], "no answer yet and the server away: no pack, never a folder's"
+
+
+def test_an_older_server_is_said_in_words_never_an_empty_page_in_silence(client, backend, monkeypatch):
+    """A console in front of a server older than itself (no /api/v1/me/console: 404) shows no packs and says so on every page and on
+    Admin -> Health: upgrade the servers before the consoles."""
+    from core.backend import BackendError
+    from core.server_facts import OLDER
+
+    async def older(ident=None, etag=None):
+        raise BackendError(404, "DRS-4040", "/me/console: 404")
+    monkeypatch.setattr(backend, "me_console", older)
+    client.app.state.packs.forget_all()
+    try:
+        page = client.get("/t").text
+        assert "data-server-older" in page and "older than the console" in page and "Upgrade the servers before the consoles" in page
+        assert client.app.state.packs.notice() == OLDER
+    finally:
+        monkeypatch.undo()
+        client.app.state.packs.forget_all()
+    client.get("/t")
+    assert client.app.state.packs.notice() == "", "an answer from the server clears it"
+
+
+def test_a_shipped_pack_guide_kept_in_the_console_s_folder_still_links_into_docs(client, with_packs):
+    """A pack's guide arrives from the server and is kept in the console's temp folder, not beside the pack; its links into the repository's
+    docs/ (``../../../../../docs/contracts/packs/gleif.md``, written as the guide sits in its pack) still open those documents in Help."""
+    import re
+    with_packs("core", "gleif")
+    page = client.get("/help/gleif-pack")
+    assert page.status_code == 200
+    body = page.text
+    assert 'href="/help/docs-contracts-packs-gleif' in body, "the link to the pack's data contract opens it in Help"
+    assert not re.search(r'data-unavailable="[^"]*docs/', body), "no link into docs/ is left unavailable"
+    kept = [str(g["path"]) for p in client.app.state.packs._console.values() for g in p["value"]["guides"]]
+    assert kept and not any("/config/packs/" in x for x in kept), "the guide is the console's copy, not the pack's file"

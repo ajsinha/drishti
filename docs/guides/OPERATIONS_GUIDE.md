@@ -2947,7 +2947,9 @@ Run it from cron as the `drishti` user (`30 1 * * * /opt/drishti/backup.sh`) and
 4. **Stop** both: `sudo systemctl stop drishti-console drishti-server`.
 5. **Replace** the jar, `config/packs/`, `drishti-console/` and `docs/` (keep `drishti-console/.venv` and your local files), then `uv pip install --python
    drishti-console/.venv/bin/python -r drishti-console/requirements.txt` in case the console's libraries changed.
-6. **Start** the server, then the console. Upgrade the two together: a console newer than its server cannot sign anyone in.
+6. **Start** the server, then the console. Upgrade the servers first, then the consoles: a console asks its server for what it draws (packs,
+   menus, the version shown), and in front of an older server it shows no packs and says on every page and on Admin → Health that the
+   server is older than the console.
 7. **Verify**: `curl -s localhost:18480/actuator/info` shows the new `version`, `curl -s localhost:18480/actuator/health/readiness` shows
    `{"status":"UP"}`, Admin → Health shows `OK`, and a view opens.
 

@@ -98,7 +98,6 @@ $devSecrets = @()
 if ($o['demo']) {
     $env:DRISHTI_AUTH_ENABLED = 'true'
     $env:DRISHTI_SECURE_COOKIE = 'false'
-    if (-not $env:DRISHTI_PACKS) { $env:DRISHTI_PACKS = 'core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif,funds' }
     $devSecrets += Set-DevSecret 'DRISHTI_TOKEN_SECRET' 'drishti-dev-only-token-secret-change-me-0123456789'
     $devSecrets += Set-DevSecret 'DRISHTI_SESSION_SECRET' 'drishti-dev-only-session-secret-change-me-0123456789'
 }

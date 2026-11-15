@@ -1187,8 +1187,9 @@ within a second, still signed in (Admin → Health, *Console servers*, shows the
 
 ### 10.8 Rolling upgrade and draining
 
-One node at a time: drain → `safeToStop` → stop → replace the jar → start → readiness → the next node. Consoles first, then the compute
-nodes, then the owner. `tools/rolling-upgrade.sh` (Windows: `tools\windows\rolling-upgrade.ps1`) does exactly this from an inventory
+One node at a time: drain → `safeToStop` → stop → replace the jar → start → readiness → the next node. The compute
+nodes, then the owner, then the consoles: a console asks its servers for what it draws, and an older server does not give it
+(the console then says so on every page), so servers are upgraded before consoles; this holds for the 3-node stack of `deploy/stack/` too. `tools/rolling-upgrade.sh` (Windows: `tools\windows\rolling-upgrade.ps1`) does exactly this from an inventory
 (`deploy/rolling.example.yaml`); `--dry-run` prints every step. The stop hooks of systemd and Docker drain by themselves; on Windows run
 `drishti-node.ps1 drain -Wait 240` before stopping the task. Details: [CLUSTER_GUIDE.md › Zero downtime](guides/CLUSTER_GUIDE.md#8-zero-downtime).
 

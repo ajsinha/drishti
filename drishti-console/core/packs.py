@@ -49,6 +49,7 @@ class Packs:
         self._cache: dict[str, tuple[float, list, list, float, str]] = {}   # person -> (monotonic time, packs, switcher, wall time, stamp)
         self._console: dict[tuple[str, str], dict] = {}                     # (server, pack) -> its contributions (shared: the pack's)
         self._files_dir = files_dir
+        self._older: set[str] = set()                                       # servers that do not give the person's answer
         # every worker of the console sees a change at once (core/user_stamps.py); other consoles within ``ttl`` (QA3A-02)
         self.stamps = stamps
         self.ttl = float(settings.get("ui.user_cache_seconds", 10) or 0)
@@ -71,6 +72,11 @@ class Packs:
         self._cache.clear()
         self.stamps.touch(EVERYONE)
 
+    def notice(self) -> str:
+        """The words every page shows when the request's server gives no person's answer (older than this console), else ""."""
+        from core.server_facts import OLDER
+        return OLDER if current_server() in self._older else ""
+
     async def _fetch(self, backend, ident):
         key = scoped(getattr(ident, "user", ""))
         now = time.monotonic()
@@ -81,10 +87,14 @@ class Packs:
         try:
             status, answer = await backend.me_console(ident, hit[4] if hit and self.stamps.fresh(key, hit[3]) else None)
         except Exception as e:  # noqa: BLE001 - any failure: the person's last answer for a while, else no pack (never a folder)
+            if getattr(e, "status", None) == 404:            # the server has no /me/console: it is older than this console, said in words
+                self._older.add(current_server())
+                log.warning("the server %s has no /api/v1/me/console: it is older than this console; upgrade the servers first", current_server())
             if hit and now - hit[0] < self.ttl * AWAY_FACTOR:
                 return hit[1], hit[2]
             log.info("the person's packs could not be asked (%s): none shown until the server answers", type(e).__name__)
             return [], []
+        self._older.discard(current_server())
         if status == 304 and hit:
             self._cache[key] = (now, hit[1], hit[2], began, hit[4])
             return hit[1], hit[2]

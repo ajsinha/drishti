@@ -113,7 +113,6 @@ DEV_SECRETS=""
 dev_secret() { if [ -z "$(eval "printf '%s' \"\${$1:-}\"")" ]; then export "$1=$2"; DEV_SECRETS="$DEV_SECRETS $1"; fi; }
 if $DEMO; then
   export DRISHTI_AUTH_ENABLED=true DRISHTI_SECURE_COOKIE=false
-  export DRISHTI_PACKS="${DRISHTI_PACKS:-core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif,funds}"
   dev_secret DRISHTI_TOKEN_SECRET drishti-dev-only-token-secret-change-me-0123456789
   dev_secret DRISHTI_SESSION_SECRET drishti-dev-only-session-secret-change-me-0123456789
 fi

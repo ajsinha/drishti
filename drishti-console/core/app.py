@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import re
 from pathlib import Path
 
@@ -595,16 +596,24 @@ def create_app(settings: Settings) -> FastAPI:
     # what the product says of itself (version, name, edition) is the server's: the pages read it here, never a constant of the console
     templates.env.globals["server_about"] = lambda: app.state.server_facts.about()
 
+    async def _follow_facts(s, about):
+        """The installation's answer of server ``s``: a slow or failing answer never delays or skips learning the edition."""
+        try:
+            service = app.state.auth.of(s.id).service() if hasattr(app.state.auth, "of") else app.state.auth.service()
+            await app.state.server_facts.follow(s.id, about, app.state.backend_watch.url_of(s), service.headers())
+        except Exception:  # noqa: BLE001 - the last answer stays; Admin -> Health says why
+            logging.getLogger("drishti.console.facts").exception("following the server's installation answer failed")
+
     async def _on_about(s, about):
         if not _real_backend(app):
             return
-        service = app.state.auth.of(s.id).service() if hasattr(app.state.auth, "of") else app.state.auth.service()
-        await app.state.server_facts.follow(s.id, about, app.state.backend_watch.url_of(s), service.headers())
         if s.id != catalogue.default:
+            await _follow_facts(s, about)
             return
         app.state.editions.learn(about)
         # the server's module registry changed: its module list (shipped and installed .dmod packages) and the distribution again
         await app.state.editions.follow_modules(about, lambda: app.state.backend_watch.fetch(s, "/public/modules/manifests"))
+        await _follow_facts(s, about)                    # after the edition: it is learned first whatever the bootstrap does
     app.state.backend_watch.on_about = _on_about
     from core.user_stamps import UserStamps
 
@@ -637,6 +646,8 @@ def create_app(settings: Settings) -> FastAPI:
     from core.packs import Packs
 
     app.state.packs = Packs(settings, stamps)             # asked of the server (THIN_CONSOLE_DESIGN.md 3.3, 3.4), never read from a folder
+    # an older server is said on every page and on Health, never shown as "no packs" in silence (THIN_CONSOLE_DESIGN.md 5.1)
+    templates.env.globals["server_notice"] = lambda: app.state.server_facts.notice() or app.state.packs.notice()
     app.state.docs_dir = docs_dir if docs_dir.is_absolute() else (console_dir / docs_dir).resolve()
     api_docs = Path(settings.get("help.api_docs_dir", "web/apidocs") or "web/apidocs")
     app.state.api_docs_dir = api_docs if api_docs.is_absolute() else (console_dir / api_docs).resolve()   # Help -> Developer (core/api_reference.py)

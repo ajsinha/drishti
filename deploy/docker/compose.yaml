@@ -45,7 +45,6 @@ services:
     depends_on: [server]
     environment:
       DRISHTI_BACKEND_URL: http://server:18480
-      DRISHTI_PACKS: ${DRISHTI_PACKS:-default}
       DRISHTI_AUTH_ENABLED: "true"
       DRISHTI_TOKEN_SECRET: ${DRISHTI_TOKEN_SECRET:?set DRISHTI_TOKEN_SECRET}
       DRISHTI_SESSION_SECRET: ${DRISHTI_SESSION_SECRET:?set DRISHTI_SESSION_SECRET}

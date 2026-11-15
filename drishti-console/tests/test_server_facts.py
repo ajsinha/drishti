@@ -80,7 +80,7 @@ def test_a_refused_service_identity_is_said_in_words_and_an_old_server_is_named(
     assert f.answer("default") is None and "service identity" in f.stale("default")
     old = Facts([])
     asyncio.run(old.follow("default", {"version": "2.9.11"}, "http://server:18480", {}))
-    assert "older than this console" in old.stale("default") and old.asks == []
+    assert "older than the console" in old.stale("default") and old.notice("default") and old.asks == []
 
 
 def test_a_pack_s_command_shows_in_the_menus_only_while_a_pack_that_has_it_loads():

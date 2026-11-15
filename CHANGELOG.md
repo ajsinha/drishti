@@ -26,8 +26,14 @@
   README sources from `GET /api/v1/packs/{pack}/console` and its allow-listed files: the console reads no pack folder, the packs answer
   names no folder, and with no answer it shows no pack instead of every pack it found itself. The menus take a pack's command out by
   the bootstrap's `commands`. The version the footer and About show is the server's; the console's own build is only a diagnostic on
-  Admin -> Health (console build against server build). Removed: the console setting `packs.enabled`; Build -> New pack's **Install on
-  this node** needs `builder.pack_designer_modules_dir` (an absolute path) and no longer works out the server's folder.
+  Admin -> Health (console build against server build). Removed: the console setting `packs.enabled`, and with it the `DRISHTI_PACKS`
+  that `bin/start-console` (`.sh`, `.ps1`), the compose console and the ECS console and node task definitions set for the console (the
+  server's own `DRISHTI_PACKS` is unchanged; the tools' offline resolver, `drishti-console/core/resolution.py`, still reads it until it
+  is replaced by the Java resolver's JSON). Build -> New pack's **Install on this node** needs `builder.pack_designer_modules_dir` (an
+  absolute path) and no longer works out the server's folder. A console in front of an older server (no `stamps`, no `/me/console`)
+  shows no packs and says on every page and on Admin -> Health that the server is older: **upgrade the servers before the consoles**;
+  the rolling upgrade runner (`tools/rolling.py`) now upgrades the consoles last. A pack's Help guide, kept in the console's own folder,
+  keeps its links into `docs/`.
 - **The drill starts from a clean data folder.** A server's state an earlier run left in the data folder (installed modules, identities,
   cluster membership, compute, file store, cache) is moved aside to `data/tmp/stale-<stamp>/` and listed before the drill starts, when
   no server runs from the checkout. Lake loader children get the launch roots of the process that starts them, and Iceberg's Health

@@ -34,6 +34,10 @@ import httpx
 
 LOG = logging.getLogger("drishti.console.facts")
 
+#: said on every page and on Admin -> Health when the server does not give the answers this console asks (an older server)
+OLDER = ("This server is older than the console: it does not give the answers the console draws from, so packs and menus are not shown. "
+         "Upgrade the servers before the consoles (OPERATIONS_GUIDE.md, upgrade order).")
+
 
 @dataclass(frozen=True)
 class Answer:
@@ -55,6 +59,7 @@ class _Held:
     asked: float = 0.0
     stamps: dict = field(default_factory=dict)
     about: dict = field(default_factory=dict)  # what the server says of itself: version, product, tagline, notice, edition
+    older: bool = False                        # the server gives no stamps: older than this console
 
 
 class ServerFacts:
@@ -79,8 +84,10 @@ class ServerFacts:
             held.about = {k: about.get(k) for k in self.ABOUT_KEYS if about.get(k) is not None}
         stamps = (about or {}).get("stamps") if isinstance(about, dict) else None
         if not isinstance(stamps, dict) or not stamps.get("installation"):
-            held.problem = "the server sends no stamps: it is older than this console (update the servers first)"
+            held.problem = OLDER
+            held.older = True
             return False
+        held.older = False
         held.stamps = dict(stamps)
         held.stamp = str(stamps["installation"])
         if held.answer is not None and held.answer.digest == held.stamp:
@@ -135,6 +142,11 @@ class ServerFacts:
         empty before its first answer (the pages then show no version rather than one of the console's)."""
         held = self._held.get(sid or _current())
         return dict(held.about) if held is not None else {}
+
+    def notice(self, sid: str | None = None) -> str:
+        """The words every page shows when the server is older than this console ("" otherwise)."""
+        held = self._held.get(sid or _current())
+        return OLDER if held is not None and held.older else ""
 
     def command(self, word: str, sid: str | None = None) -> dict | None:
         """What a command word needs, or None when no pack names it or no answer has arrived yet."""
