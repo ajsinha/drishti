@@ -556,24 +556,25 @@ class DemoLake:
             return self.dated_dataset(ds, path, domain, table)
         key = ds.get("key")
         worst, rows = 0, 0
-        n_days = len(self.dates)
-        for i, (day, state) in enumerate(zip(self.dates, self.states(ds)), 1):
-            stage = self.staging / f"{table}.{day}.jsonl"   # the day staged under its name: the load takes its date from it
+        # every day staged under its name into one folder, then one load of the folder: the load takes each file's date from its name and
+        # replaces each date (one commit a date), one run (one JVM with --engine java) for the table instead of one a day
+        days_dir = self.staging / f"{table}.days"
+        shutil.rmtree(days_dir, ignore_errors=True)
+        days_dir.mkdir(parents=True)
+        for day, state in zip(self.dates, self.states(ds)):
             if key is None:
                 key = next((k for k in json.loads(next(iter(state.values()))) if k.endswith("_ID")), "id") if state else "id"
-            with stage.open("w", encoding="utf-8") as fh:
+            with (days_dir / f"{table}.{day}.jsonl").open("w", encoding="utf-8") as fh:
                 for line in state.values():
                     fh.write(self.names.rewrite_line(line if "snapshot" in ds else self.redate(line)) + "\n")   # the configured names
-            argv = ["--from", str(stage), "--pack", str(pack_dir(pack, self.packs.dir)), "--kind", kind, "--connector", connector, "--key", key,
-                    "--mode", mode, "--lake", self.lake_name, "--lake-root", str(self.lake), "--engine", self.a.engine, "-q", "--no-stamp"]
-            code, summary = self.lb.run(self.lb.build_parser().parse_args(argv), say=lambda *x, **k: None)
-            if code:
-                print(f"  {domain}/{table} {day}: {summary.get('status')} {summary.get('error', '')}", file=sys.stderr)
-            worst = max(worst, code)
             rows += len(state)
-            stage.unlink(missing_ok=True)
-            if not self.a.quiet and n_days > 10 and (i % 10 == 0 or i == n_days):
-                print(f"    {domain}/{table}: committed {i}/{n_days} days, {rows:,} rows so far (through {day})", flush=True)
+        argv = ["--from", str(days_dir), "--pack", str(pack_dir(pack, self.packs.dir)), "--kind", kind, "--connector", connector, "--key", key or "id",
+                "--mode", mode, "--lake", self.lake_name, "--lake-root", str(self.lake), "--engine", self.a.engine, "-q", "--no-stamp"]
+        code, summary = self.lb.run(self.lb.build_parser().parse_args(argv), say=lambda *x, **k: None)
+        if code:
+            print(f"  {domain}/{table}: {summary.get('status')} {summary.get('error', '')}", file=sys.stderr)
+        worst = max(worst, code)
+        shutil.rmtree(days_dir, ignore_errors=True)
         self.cleared.add(path)
         self.checkpoint(path)
         if f"{domain}/{table}" not in self.tables:      # a table several datasets share is listed, and the server told, once
