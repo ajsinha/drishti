@@ -24,6 +24,9 @@
   names a moved table's folder correctly when the lake sits under a folder named `data`.
 - **No empty answer that looks true for positions and system baskets.** Right after a start (inputs loading, busy protection, no vectors
   read yet) a list, count or pivot of `position` or `system-basket` answers the refusal with its reason, never 0 rows.
+- **A site file that gives only `root` moves its template's lake.** Over a template that names a lake, a connector override with
+  `settings.root` alone (what `drishti.py lake demo --lake` writes) keeps the lake and its tables and reads them under that root; with
+  `domain`, `table.<kind>` or `layout.<kind>` it is the older form, as before. A scratch demo lake was read as no tables at all.
 
 - **Named lakes, databases and brokers.** A system has any number of each, every one a section of the settings files and referred to by
   name, with no global one: `[lake.<name>] root=`/`storage.<key>=` win over that lake file's root and storage; `[db.<name>] url= user=

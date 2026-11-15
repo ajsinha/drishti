@@ -901,7 +901,11 @@ def effective(name: str, text: str | None, template: Template | dict | None, fil
     bases = dict(tdef.base_dirs)
     # one lake form: a file in the older form (root, domain, table.*, layout.*) does not get the template's lake keys, and a file naming
     # a lake does not keep the template's older keys
-    if _legacy(k for k, v in own.items() if v is not None):
+    given = [k for k, v in own.items() if v is not None]
+    # a file that gives only root over a template naming a lake moves that lake's root (lake demo --lake): it keeps the lake, its root
+    # wins when the lake is expanded (ConnectorLake.expand)
+    moves_root = "lake" in settings and "root" in given and not any(k == "domain" or k.startswith("table.") or (k.startswith("layout.") and not k.endswith(".type-ahead")) for k in given)
+    if _legacy(given) and not moves_root:
         for k in ("lake", "lake-tables"):
             settings.pop(k, None)
             origins.pop(k, None)
