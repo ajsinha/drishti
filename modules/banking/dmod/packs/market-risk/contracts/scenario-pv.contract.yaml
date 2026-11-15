@@ -31,6 +31,9 @@ key:
 - SCENARIO_PV_ID
 id-pattern:
 - ^SPV-
+list:
+  requires: [POSITION_ID, TRADE_IDS, TT_BOOK, DESK]
+  why: 'scenario PVs are per position: give a position, trade, book or desk'
 dated-by: BUSINESS_DATE
 cadence:
   frequency: daily

@@ -30,6 +30,9 @@ key:
 - FX_SCENARIO_ID
 id-pattern:
 - ^FXS-
+list:
+  requires: [CURRENCY]
+  why: 'scenario FX rates are per currency: give a currency'
 dated-by: BUSINESS_DATE
 cadence:
   frequency: daily

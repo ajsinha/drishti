@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import asyncio
 import re
-from urllib.parse import parse_qs, quote
+from urllib.parse import parse_qs, quote, urlencode
 
 from fastapi import APIRouter, Query, Request
 from fastapi.responses import JSONResponse, RedirectResponse
@@ -284,7 +284,13 @@ async def search(request: Request, q: str = "", vs: str = "", words: str = ""):
                 data = await request.app.state.backend.search_compare(asked, vs, "", ident(request))
             elif _BARE.match(q.strip()):   # a bare mnemonic (POS <GO>): the kind's own live result set, a page at a time
                 page = _page_of(request, limit)
-                data = live_results.kind_page(await request.app.state.backend.live_kind(q.strip(), ident(request), **page))
+                try:
+                    data = live_results.kind_page(await request.app.state.backend.live_kind(q.strip(), ident(request), **page))
+                except BackendError as e:
+                    form = await _narrowing_form(request, q.strip(), e)   # a kind never listed whole (SPV): its form, with why
+                    if form:
+                        return RedirectResponse(form, status_code=303)
+                    raise
             else:      # a search's matches are a live result set (static without a live binding, ticking with one)
                 data = await live_results.run(request.app.state.backend, asked, ident(request))
         except BackendError as e:
@@ -300,6 +306,22 @@ async def search(request: Request, q: str = "", vs: str = "", words: str = ""):
 
 
 _BARE = re.compile(r"^[A-Za-z][A-Za-z0-9_-]{0,31}$")      # one word, no condition, ids or limit: the mnemonic alone
+
+
+async def _narrowing_form(request: Request, word: str, e: BackendError) -> str:
+    """The form of a kind the server never lists whole (its contract's ``list: requires``: SPV, PNLV, FXS): the server refused the bare
+    list (400, naming the fields), so the person is shown the kind's search form with the server's one line on why; "" otherwise."""
+    if e.status != 400 or " where " not in str(e.detail):
+        return ""
+    try:
+        funcs = await request.app.state.backend.functions(ident(request))
+    except BackendError:
+        return ""
+    for p in funcs.get("packs") or []:
+        for c in p.get("commands") or []:
+            if str(c.get("code", "")).upper() == word.upper():
+                return "/form/" + quote(p["name"]) + "?" + urlencode({"kind": c["kind"], "why": str(e.detail)[:300]})
+    return ""
 
 
 def _page_of(request: Request, size: int) -> dict:

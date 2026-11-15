@@ -29,6 +29,9 @@ key:
 - PATH_ROW_ID
 id-pattern:
 - ^XR-[^~]+~.+~[0-9]+$
+list:
+  requires: [TRADE_ID, NETTING_SET, COUNTERPARTY]
+  why: 'exposure paths are per trade: give a trade, netting set or counterparty'
 dated-by: BUSINESS_DATE
 cadence:
   frequency: daily

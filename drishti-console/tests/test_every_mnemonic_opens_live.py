@@ -43,6 +43,8 @@ def live_console(tmp_path_factory):
 
 #: kinds computed or kept on request, not loaded as demo data: their list may be empty on the demo (they must still open)
 MAY_BE_EMPTY = {"var-result", "var-official", "stress-scenario-pnl", "system-basket", "position"}
+#: vector-heavy inputs never listed whole (their contract's list: requires): bare, the server refuses with 400 naming the fields to narrow by
+NARROWED = {"SPV": "POSITION_ID", "PNLV": "POSITION_ID", "FXS": "CURRENCY", "XPATH": "TRADE_ID"}
 
 
 def get(url: str):
@@ -67,6 +69,10 @@ def test_a_bare_mnemonic_opens_a_list_and_a_known_id_its_record(live_console):
     failed, empty = [], []
     for w in sorted(words):
         status, body = get(f"{live_console.server}/api/v1/live/kinds/{quote(w)}/rows?limit=5")
+        if w in NARROWED:                                  # never a scan: refused in words that name a field to give
+            if status != 400 or NARROWED[w] not in body:
+                failed.append(f"{w}: listed whole, not refused naming {NARROWED[w]}: {status} {body[:160]}")
+            continue
         if status != 200 or "DRS-" in body[:200]:
             failed.append(f"{w}: {status} {body[:160]}")
             continue

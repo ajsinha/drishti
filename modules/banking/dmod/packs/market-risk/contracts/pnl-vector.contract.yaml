@@ -29,6 +29,9 @@ key:
 id-pattern:
 - ^PNL-.+-HS-[0-9]+$
 - ^PV-
+list:
+  requires: [POSITION_ID, TRADE_ID, TT_BOOK, DESK]
+  why: 'P&L vectors are per position or trade: give a position, trade, book or desk'
 dated-by: BUSINESS_DATE
 cadence:
   frequency: daily

@@ -60,6 +60,14 @@ public class LiveSetController {
     /** One open stream: whose it is, its set and its window. */
     private record Open(String user, LiveSet set, LiveSet.Window window) {}
 
+    private com.ash.drishti.server.switches.CommandCatalog catalog;
+
+    /** The commands' catalogue: a kind whose contract declares {@code list: requires} is never listed whole (see {@link #kindRows}). */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    public void setCatalog(com.ash.drishti.server.switches.CommandCatalog catalog) {
+        this.catalog = catalog;
+    }
+
     public LiveSetController(LiveSets sets, Entitlements entitlements) {
         this.sets = sets;
         this.entitlements = entitlements;
@@ -131,6 +139,12 @@ public class LiveSetController {
         String kind = sets.kindOf(word);
         entitlements.requireOpen(principal, kind);
         edition.requireKind(kind);
+        var rule = catalog == null ? java.util.Optional.<com.ash.drishti.server.switches.CommandCatalog.ListRule>empty() : catalog.listRule(kind);
+        if (rule.isPresent()) {     // never a scan of a vector-heavy input: its record by id, or a search that names one of these fields
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, (rule.get().why().isBlank() ? kind + " is not listed whole" : rule.get().why())
+                    + " (" + word.toUpperCase(java.util.Locale.ROOT) + " <id>, or " + word.toUpperCase(java.util.Locale.ROOT) + " where "
+                    + String.join(" | ", rule.get().requires()) + " = ...)");
+        }
         LiveSetSpec spec = sets.forKind(kind);
         LiveSet set = sets.open(spec, null);
         Map<String, Object> out = page(set, spec, offset, limit, sort, descending, filter, principal);

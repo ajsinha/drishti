@@ -57,6 +57,9 @@
     </div>
   </form>
 
+  {% if q.get('why') and not command %}
+    <p class="text-muted-d" data-qf-why><i class="bi bi-funnel" aria-hidden="true"></i> {{ q.get('why') }}</p>
+  {% endif %}
   {% if error %}
     <p class="asof-banner" role="alert" data-qf-error><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> <span class="mono">{{ drs_message(error.code, error.detail) }}</span></p>
   {% endif %}

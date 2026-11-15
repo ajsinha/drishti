@@ -28,6 +28,10 @@
   longer name 509 scenarios (the window is `scenario-window`, default 250); SPV's example is a position. The drill's command and API
   sweeps run on the full demo lake (every dataset of the saved test data, cached), sign in for their readiness checks, start without the
   official exposure capture, time a slow run again on its own, and list parked runs (XRUN, XPATH, XOFC, STR, SSPNL, TRACK) by name.
+- **A kind can require a narrowing before it is listed.** A data contract's `list: {requires: [fields], why}` (docs/contracts/README.md):
+  scenario PVs, P&L vectors, scenario FX and exposure paths declare it. Bare (`SPV <GO>`) opens the kind's search form with the line
+  why; `SPV <id>` opens the record with its vector; `SPV where TT_BOOK = '...'` lists from the store; `GET /api/v1/live/kinds/SPV/rows`
+  answers `400 DRS-5001` naming the fields, never a scan of a million positions' scenarios.
 - **Sweep integration.** The command sweep, its fixes and the API sweep are on one branch. Fixed at the root: `GET /api/v1/bi/model/kinds` no longer fails with DRS-9026 when a connector is disabled or not running (the kind is skipped and listed under `skipped` with the reason); `API_REFERENCE.md` documents the `/admin/loads/{pack}` aliases and the module APIs (genomics sample, archetype greeting; section 38); `ArtifactApiTest` binds its kind to its connector through the bindings (connector files no longer name kinds).
 - **Trade blotter: new trades on top, the lake's trades in the snapshot, a trade-editor role.** A blotter whose own order is newest
   first (`sort:` descending by its `changed-at` or version) puts new and changed rows on top: a paged viewer at the top of that order is

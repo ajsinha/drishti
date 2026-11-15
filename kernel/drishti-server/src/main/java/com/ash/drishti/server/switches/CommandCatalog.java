@@ -43,6 +43,13 @@ public final class CommandCatalog {
     /** One command: its mnemonic, kind, label, what it does and an example. */
     public record Command(String code, String kind, String label, String description, String example) {}
 
+    /**
+     * How a kind may be listed, from its contract's {@code list:} (docs/contracts/README.md): {@code requires}, the fields one of which must
+     * narrow a list of it, and {@code why}, the line the form and the refusal show. A vector-heavy input (scenario PVs: a million positions,
+     * each with its scenarios) is never listed whole.
+     */
+    public record ListRule(String kind, List<String> requires, String why) {}
+
     /** One pack with its commands. */
     public record PackCommands(Pack pack, List<Command> commands) {}
 
@@ -81,7 +88,16 @@ public final class CommandCatalog {
         return packs().stream().flatMap(p -> p.commands().stream()).filter(x -> x.code().equals(c)).findFirst();
     }
 
+    /** The list rule of a kind whose contract declares one (see {@link ListRule}). */
+    public java.util.Optional<ListRule> listRule(String kind) {
+        packs();
+        return java.util.Optional.ofNullable(listRules.get(kind));
+    }
+
+    private volatile Map<String, ListRule> listRules = Map.of();
+
     private List<PackCommands> build() {
+        Map<String, ListRule> rules = new java.util.HashMap<>();
         List<PackCommands> out = new ArrayList<>();
         for (Pack p : registry.packs().stream().sorted(Comparator.comparing(Pack::name)).toList()) {
             List<Command> commands = new ArrayList<>();
@@ -91,6 +107,11 @@ public final class CommandCatalog {
                     continue;
                 }
                 JsonNode contract = contract(p.dir(), kind);
+                if (contract.path("list").path("requires").isArray() && !contract.path("list").path("requires").isEmpty()) {
+                    List<String> req = new ArrayList<>();
+                    contract.path("list").path("requires").forEach(n -> req.add(n.asText()));
+                    rules.put(kind, new ListRule(kind, List.copyOf(req), contract.path("list").path("why").asText("")));
+                }
                 String label = mnemonics.of(code).map(m -> m.label()).filter(s -> s != null && !s.isBlank())
                         .orElse(contract.path("title").asText(kind));
                 commands.add(new Command(code, kind, label, oneLine(contract.path("description").asText("")), example(code, p, contract)));
@@ -98,6 +119,7 @@ public final class CommandCatalog {
             commands.sort(Comparator.comparing(Command::code));
             out.add(new PackCommands(p, List.copyOf(commands)));
         }
+        listRules = Map.copyOf(rules);
         return List.copyOf(out);
     }
 
