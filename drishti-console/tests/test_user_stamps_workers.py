@@ -54,6 +54,15 @@ class Server:
         self.calls += 1
         return [{"name": n, "active": n in self.active, "assigned": True} for n in ("core", "trading", "market-data")]
 
+    async def me_console(self, ident, etag=None):
+        """The person's answer (THIN_CONSOLE_DESIGN.md 3.3): their packs; its stamp changes with them."""
+        rows = [{**r, "console": {"digest": "d-" + r["name"]}} for r in await self.packs(ident)]
+        stamp = "p-" + ",".join(r["name"] for r in rows if r["active"])
+        return (304, None) if etag == stamp else (200, {"stamp": stamp, "packs": rows})
+
+    async def pack_console(self, name, ident, etag=None):
+        return (304, None) if etag == "d-" + name else (200, {"digest": "d-" + name, "help": {}, "files": []})
+
     async def layouts(self, ident):
         self.calls += 1
         return {"allowed": True, "enabled": True, "layouts": list(self.layout)}
@@ -103,8 +112,7 @@ def test_a_theme_changed_through_one_worker_shows_on_every_worker_and_in_a_secon
 
 def test_the_pack_switcher_follows_a_choice_made_through_another_worker(tmp_path):
     server = Server()
-    settings = Settings({"packs.dir": str(CONSOLE.parent / "config" / "packs"), "packs.enabled": "core,trading"})
-    caches = [Packs(settings, CONSOLE, s) for s in workers(tmp_path)]
+    caches = [Packs(Settings(), s) for s in workers(tmp_path)]
     names = lambda c, who=ME: [p["name"] for p in run(c.current(server, who))]  # noqa: E731
     assert [names(c) for c in caches] == [["core", "trading"]] * 4
     server.active = ["core"]

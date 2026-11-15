@@ -533,6 +533,26 @@ class BackendClient:
     async def packs(self, ident=None) -> list:
         return await self._get("/packs", ident)
 
+    async def me_console(self, ident, etag: str | None = None) -> tuple[int, dict | None]:
+        """The person's answer (``GET /api/v1/me/console``, THIN_CONSOLE_DESIGN.md 3.3): ``(200, body)``, or ``(304, None)`` while
+        ``etag`` (its ``stamp``) still holds."""
+        status, body, _ = await self._send("GET", "/me/console", ident, headers={"If-None-Match": f'"{etag}"'} if etag else {}, with_status=True)
+        return status, body if isinstance(body, dict) else None
+
+    async def pack_console(self, name: str, ident, etag: str | None = None) -> tuple[int, dict | None]:
+        """A pack's console contributions (``GET /api/v1/packs/{pack}/console``, 3.4): workspace starters, Help guides, facts, the
+        README's sources and the files it allows; ``(304, None)`` while ``etag`` (its ``digest``) holds."""
+        status, body, _ = await self._send("GET", f"/packs/{quote(name, safe='')}/console", ident,
+                                           headers={"If-None-Match": f'"{etag}"'} if etag else {}, with_status=True)
+        return status, body if isinstance(body, dict) else None
+
+    async def pack_console_file(self, name: str, path: str, ident) -> bytes:
+        """One file a pack's console answer lists (a Help guide or a picture beside it), as bytes."""
+        return await self._get_raw(f"/packs/{quote(name, safe='')}/console/files/{quote(path)}", ident)
+
+    async def _get_raw(self, path: str, ident) -> bytes:
+        return await self._send("GET", path, ident, raw=True)
+
     async def functions(self, ident=None) -> dict:
         """Every command the user can use, by pack (FUNC, /api/v1/functions): only commands that are on, of the user's packs and roles."""
         return await self._get("/functions", ident)

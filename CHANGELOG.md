@@ -18,6 +18,16 @@
 
 ## Unreleased
 
+- **The thin console, steps S0 and S1: the server decides, the console draws** ([THIN_CONSOLE_DESIGN.md](docs/architecture/THIN_CONSOLE_DESIGN.md)).
+  `/public/about` carries `stamps` (`installation`, `resolution`, `modules`, `engines`, `packs`); the console asks the new
+  `GET /api/v1/console/bootstrap` (its service identity only; distribution, modules, engines and every command word with whether a pack
+  that has it loads) only when `installation` changed, with `If-None-Match`, and keeps the last answer while the server is away, saying
+  so on Admin -> Health. A person's packs come from `GET /api/v1/me/console` and a pack's workspace starters, Help guides, facts and
+  README sources from `GET /api/v1/packs/{pack}/console` and its allow-listed files: the console reads no pack folder, the packs answer
+  names no folder, and with no answer it shows no pack instead of every pack it found itself. The menus take a pack's command out by
+  the bootstrap's `commands`. The version the footer and About show is the server's; the console's own build is only a diagnostic on
+  Admin -> Health (console build against server build). Removed: the console setting `packs.enabled`; Build -> New pack's **Install on
+  this node** needs `builder.pack_designer_modules_dir` (an absolute path) and no longer works out the server's folder.
 - **The drill starts from a clean data folder.** A server's state an earlier run left in the data folder (installed modules, identities,
   cluster membership, compute, file store, cache) is moved aside to `data/tmp/stale-<stamp>/` and listed before the drill starts, when
   no server runs from the checkout. Lake loader children get the launch roots of the process that starts them, and Iceberg's Health

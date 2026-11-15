@@ -257,7 +257,7 @@ async def _pack_readme(request: Request, name: str) -> dict:
     if found and found.group(1).strip():
         from core import readmes
         from routes.common import library
-        html_ = readmes.render(found.group(1), readmes.source_of(request.app.state.docs_dir, "pack", meta.get("pack") or name), await library(request))
+        html_ = readmes.render(found.group(1), None, await library(request), request.app.state.docs_dir)
     return {"summary": meta.get("summary") or "", "html": html_, "sources": meta.get("sources") or []} if (meta.get("summary") or html_) else {}
 
 

@@ -127,21 +127,14 @@ def _holds(request, edition: Edition, need: str, ctx: dict) -> bool:
 
 
 def _pack_command_on(request, text: str) -> bool:
-    """Whether a command that belongs to a pack (its code or one of its mnemonics, any pack the one resolver finds) has a pack that
-    loads: the US equities pack, listed by its module but not enabled (default-packs.yaml), takes its USEQ entry out of the menus, as the
-    server then answers "cannot read command". A command no pack names (a console word, a module function) holds."""
+    """Whether a command that belongs to a pack (its code or one of its mnemonics) has a pack that loads, as the server's installation
+    answer says (its ``commands``, THIN_CONSOLE_DESIGN.md 3.2): the US equities pack, listed by its module but not enabled, takes its USEQ
+    entry out of the menus, as the server then answers "cannot read command". A command no pack names (a console word, a module function)
+    holds, and so does every command before the server's first answer (nothing is guessed from files)."""
     head = str(text or "").split()[0].upper() if str(text or "").split() else ""
-    store = getattr(request.app.state, "packs", None)
-    if not head or store is None:
-        return True
-    from core import distribution as _dist
-    from core import resolution as _res
-    try:
-        owners = [p for p in store.resolution().packs.all()
-                  if p.manifest is not None and p.manifest.is_file() and head in _dist._pack_file_commands(p.manifest)]
-    except Exception:  # noqa: BLE001 - a pack folder unreadable for a moment: the menu as before, never a failed page
-        return True
-    return not owners or any(p.state == _res.LOADED for p in owners)
+    facts = getattr(request.app.state, "server_facts", None)
+    need = facts.command(head) if head and facts is not None else None
+    return need is None or bool(need.get("loaded"))
 
 
 def holds(request, need: str, ctx: dict) -> bool:

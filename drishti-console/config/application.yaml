@@ -245,7 +245,7 @@ builder:                     # Build workbench, New (/build/new); docs/guides/RA
   pack_designer_ttl_hours: 72     # Build -> New pack: hours a workspace untouched is kept before it is removed
   pack_designer_jobs_per_user: 2  # Build -> New pack: jobs (reading the files, making the module) one person may have running
   pack_designer_workers: 0        # Build -> New pack: processes reading the files in a job (0: the tool's default, a third of the cores, at most 8)
-  pack_designer_modules_dir:       # Build -> New pack: the modules folder 'Install on this node' copies the .dmod to (empty: DRISHTI_MODULES_PATH, else <data folder>/modules)
+  pack_designer_modules_dir:       # Build -> New pack: the server's modules folder 'Install on this node' copies the .dmod to, an absolute path (empty: Install is refused, Plan for the cluster works)
   pack_load_max_mb: 2048     # Admin -> Packs -> a pack -> Load data: the largest file the console streams on to the server (which has drishti.loads.upload-max-mb)
   tools_dir: ../tools        # the repository's tools/ folder (the Pack designer runs tools/packgen/designer_job.py from it); relative to drishti-console/
   studio_kind: sample        # the kind a new Design and "Open in Studio" preview a brought document as (a pasted document has no kind of its own)
@@ -290,7 +290,6 @@ packs:
   dir: ${DRISHTI_PACKS_DIR:../config/packs}   # the same packs directory the server uses (one variable sets both)
   installed_dir: ${DRISHTI_PACKS_INSTALLED:}   # packs installed from the registry or by Deploy archive (the server's drishti.packs.installed-dir); blank: <data dir>/packs/installed
   extra_dirs: ${DRISHTI_PACKS_EXTRA_DIRS:}   # further pack folders, comma-separated (examples/packs: the retired example packs), as on the server
-  enabled: ${DRISHTI_PACKS:default}   # used only when the server cannot be asked which packs are enabled; default: config/packs/default-packs.yaml
   deploy_max_mb: 50          # largest pack archive Admin → Packs → Deploy archive takes (the server's drishti.packs.deploy.max-archive-mb refuses the same way, 413)
 static:                      # the console's own static files (/static/...), served compressed
   compress: true             # answer a request that accepts br or gzip with the compressed file (Brotli when the brotli package is installed); false: bytes as they are

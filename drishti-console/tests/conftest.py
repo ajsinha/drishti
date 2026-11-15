@@ -720,6 +720,29 @@ class FakeBackend:
                  "active": n in self.enabled_packs, **({"python": self.python[n]} if n in self.python else {})}
                 for n in ["finance", "logistics"] if n in self.enabled_packs or self.enabled_packs]
 
+    async def me_console(self, ident=None, etag=None):
+        """The person's answer (GET /api/v1/me/console) around this stand-in's pack rows (``packs``, which a test may replace)."""
+        import pack_answers
+        doc = pack_answers.me_console(await self.packs(ident), getattr(ident, "user", "ash"))
+        return (304, None) if etag and etag == doc["stamp"] else (200, doc)
+
+    async def pack_console(self, name, ident=None, etag=None):
+        """A pack's console answer (GET /api/v1/packs/{pack}/console), made from the pack's folder as the server makes it."""
+        import pack_answers
+        d = pack_answers.dirs_of(await self.packs(ident)).get(name)
+        if d is None:
+            raise BackendError(404, "DRS-1001", f"no pack '{name}'")
+        doc = pack_answers.pack_console(name, d)[0]
+        return (304, None) if etag and etag == doc["digest"] else (200, doc)
+
+    async def pack_console_file(self, name, path, ident=None):
+        import pack_answers
+        d = pack_answers.dirs_of(await self.packs(ident)).get(name)
+        f = pack_answers.pack_console(name, d)[1].get(path) if d is not None else None
+        if f is None:
+            raise BackendError(404, "DRS-1001", f"no file '{path}'")
+        return f.read_bytes()
+
     calc_allowed = True
     calc_kept = {}
 

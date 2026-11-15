@@ -587,8 +587,20 @@ def create_app(settings: Settings) -> FastAPI:
     app.state.backend_watch = BackendWatch(catalogue, _seconds(settings.get("backend.check_seconds", 5)),
                                            url_of=(lambda s: pool.current() if s.id == catalogue.default else s.url) if pool.enabled else None)
     # the console learns the server's edition, lenses and branding from its about answer (docs/guides/ADMIN_GUIDE.md › The design)
+    from core.server_facts import ServerFacts
+
+    # what the server decided, kept for drawing (THIN_CONSOLE_DESIGN.md 3.2): the installation's answer per server, asked again when its
+    # stamp in /public/about changes; one per app, nothing of any person in it
+    app.state.server_facts = ServerFacts(console_build=ASSET_VERSION)
+    # what the product says of itself (version, name, edition) is the server's: the pages read it here, never a constant of the console
+    templates.env.globals["server_about"] = lambda: app.state.server_facts.about()
+
     async def _on_about(s, about):
-        if s.id != catalogue.default or not _real_backend(app):
+        if not _real_backend(app):
+            return
+        service = app.state.auth.of(s.id).service() if hasattr(app.state.auth, "of") else app.state.auth.service()
+        await app.state.server_facts.follow(s.id, about, app.state.backend_watch.url_of(s), service.headers())
+        if s.id != catalogue.default:
             return
         app.state.editions.learn(about)
         # the server's module registry changed: its module list (shipped and installed .dmod packages) and the distribution again
@@ -624,7 +636,7 @@ def create_app(settings: Settings) -> FastAPI:
     docs_dir = Path(settings.get("help.docs_dir", "../docs"))
     from core.packs import Packs
 
-    app.state.packs = Packs(settings, console_dir, stamps)
+    app.state.packs = Packs(settings, stamps)             # asked of the server (THIN_CONSOLE_DESIGN.md 3.3, 3.4), never read from a folder
     app.state.docs_dir = docs_dir if docs_dir.is_absolute() else (console_dir / docs_dir).resolve()
     api_docs = Path(settings.get("help.api_docs_dir", "web/apidocs") or "web/apidocs")
     app.state.api_docs_dir = api_docs if api_docs.is_absolute() else (console_dir / api_docs).resolve()   # Help -> Developer (core/api_reference.py)

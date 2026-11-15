@@ -213,7 +213,7 @@ async def _readme_html(request: Request, name: str, readme: dict) -> dict:
     from core import readmes
     from routes.common import library
     lib = await library(request)
-    return {"meta": readme.get("meta") or {}, "html": readmes.render(readme["markdown"], readmes.source_of(request.app.state.docs_dir, "pack", name), lib)}
+    return {"meta": readme.get("meta") or {}, "html": readmes.render(readme["markdown"], None, lib, request.app.state.docs_dir)}
 
 
 @router.get("/api/packs/{name}/readme")
@@ -802,7 +802,7 @@ async def health(request: Request, partial: int = 0):
     from core import channel_relay, external_lib, tmpdir
 
     return render(request, "admin/_health_body.html" if partial else "admin/health.html", h=data, connectors=connectors, console_tmp=tmpdir.info(), console_ext=external_lib.info(),
-                  watch=request.app.state.backend_watch.snapshot(), relay=channel_relay.stats(request.app),
+                  watch=request.app.state.backend_watch.snapshot(), relay=channel_relay.stats(request.app), server_facts=request.app.state.server_facts.health(),
                   console_cluster=(request.app.state.cluster.snapshot() if getattr(request.app.state, "cluster", None) is not None else None),
                   console_distribution=_console_distribution(request.app))
 

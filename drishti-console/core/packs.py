@@ -12,65 +12,53 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The console side of domain packs: which packs are enabled (asked of the server, the single source of truth)
-and what each contributes to the console: example commands, workspace starters and help guides, read from the pack's folder: the one
-the server's row names (``dir``), else where the one resolver finds it (core/resolution.py: the site, the modules that are on, the
-kernel). Cached per user for ``ui.user_cache_seconds`` (10 s) and read again at once on every worker after a change
-(core/user_stamps.py); falls back to the resolver's packs when the server is unreachable."""
+"""The console side of domain packs: asked of the server, never read from a folder (docs/architecture/THIN_CONSOLE_DESIGN.md 3.3, 3.4).
+
+The person's packs come from their answer, ``GET /api/v1/me/console`` (which packs are assigned and active, and what the console draws
+from each: examples, monitors, alerts, mnemonics, form counts, kinds, what Calc offers). The larger contributions of a pack (workspace
+starters, Help guides and contextual help, the facts file, the README's sources) come from ``GET /api/v1/packs/{pack}/console``, kept per
+server and pack while its digest holds (they are the pack's, not a person's), and the Help guides' files from the server into this
+console's temp folder by their SHA-256, as the modules' console parts are.
+
+A person's answer is kept per server and person (``scoped``) for ``ui.user_cache_seconds`` (10 s), revalidated with its ``stamp``, and read
+again at once on every worker after a change (core/user_stamps.py). While the server does not answer, a person's last answer is kept for
+six times that and the server-away notice says so; with none, the console shows no pack. It never falls back to a folder or to "every pack
+the installation has".
+"""
 from __future__ import annotations
 
 import copy
+import hashlib
 import logging
 import time
 from pathlib import Path
 
-import yaml
-from core import resolution
-from core.servers import scoped
+from core.servers import current as current_server, scoped
 from core.user_stamps import EVERYONE, NONE as NO_STAMPS
 
 log = logging.getLogger(__name__)
 
+#: how many times ``ui.user_cache_seconds`` a person's last answer is kept while the server does not answer
+AWAY_FACTOR = 6
+
 
 class Packs:
-    def __init__(self, settings, console_dir: Path, stamps=NO_STAMPS):
+    def __init__(self, settings, stamps=NO_STAMPS, files_dir: Path | None = None):
+        """``files_dir``: where the packs' Help files are kept by digest (default: ``pack-files`` in the console's temp folder)."""
         self.settings = settings
-        self.console_dir = console_dir
-        wanted = str(settings.get("packs.enabled", "default"))
-        self._wanted = [p.strip() for p in wanted.split(",") if p.strip() and p.strip() != "default"]
-        # a pack's files parsed once while they are unchanged: pack name -> (the files' signature, what _read made of them). Parsing
-        # every enabled pack's YAML took about a second of the event loop per page whenever the per-user cache was cold
-        self._parsed: dict[str, tuple[tuple, dict]] = {}
-        self._cache: dict[str, tuple[float, list, list, float]] = {}    # user -> (monotonic time, packs, switcher, wall time read)
+        self._cache: dict[str, tuple[float, list, list, float, str]] = {}   # person -> (monotonic time, packs, switcher, wall time, stamp)
+        self._console: dict[tuple[str, str], dict] = {}                     # (server, pack) -> its contributions (shared: the pack's)
+        self._files_dir = files_dir
         # every worker of the console sees a change at once (core/user_stamps.py); other consoles within ``ttl`` (QA3A-02)
         self.stamps = stamps
         self.ttl = float(settings.get("ui.user_cache_seconds", 10) or 0)
 
-    def resolution(self) -> resolution.Resolution:
-        """Where this console's packs are (its settings and the environment; read again when a layer's files change)."""
-        return resolution.current(self.settings, self.console_dir)
-
-    @property
-    def dir(self) -> Path:
-        """The site's packs folder."""
-        return self.resolution().layout.site
-
-    @property
-    def installed(self) -> Path | None:
-        """The site's installed packs (deployed from Admin or a registry): the site layer's first folder."""
-        return self.resolution().layout.installed
-
-    @property
-    def fallback(self) -> list[str]:
-        """The packs while no server answers: ``packs.enabled`` when it names packs, else every pack the resolver loads."""
-        return self._wanted or [p.name for p in self.resolution().packs.loaded()]
-
     async def current(self, backend, ident=None) -> list[dict]:
-        """The user's active packs."""
+        """The person's active packs."""
         return (await self._fetch(backend, ident))[0]
 
     async def assigned(self, backend, ident=None) -> list[dict]:
-        """Every pack assigned to the user, each with an ``active`` flag (for the switcher)."""
+        """Every pack assigned to the person, each with an ``active`` flag (for the switcher)."""
         return (await self._fetch(backend, ident))[1]
 
     def forget(self, ident=None) -> None:
@@ -79,7 +67,7 @@ class Packs:
         self.stamps.touch(key)
 
     def forget_all(self) -> None:
-        """An admin switched a pack on or off: every user's packs change (on every worker)."""
+        """An administrator switched a pack on or off: every person's packs change (on every worker)."""
         self._cache.clear()
         self.stamps.touch(EVERYONE)
 
@@ -91,80 +79,90 @@ class Packs:
             return hit[1], hit[2]
         began = time.time()
         try:
-            rows = await backend.packs(ident)
-            served = {r["name"]: r for r in rows}
-            active = [r["name"] for r in rows if r.get("active", True)]
-            assigned = [(r["name"], bool(r.get("active", True))) for r in rows if r.get("assigned", True)]
-            fresh = True
-        except Exception:  # noqa: BLE001 - any backend failure means "use the configured list"
-            if hit:                          # the server is away for a moment (restarting): keep what we knew
+            status, answer = await backend.me_console(ident, hit[4] if hit and self.stamps.fresh(key, hit[3]) else None)
+        except Exception as e:  # noqa: BLE001 - any failure: the person's last answer for a while, else no pack (never a folder)
+            if hit and now - hit[0] < self.ttl * AWAY_FACTOR:
                 return hit[1], hit[2]
-            active, assigned = self.fallback, [(n, True) for n in self.fallback]
-            served = {}
-            fresh = False
-        packs = [self._served(p, served) for p in (self._load(n, served.get(n)) for n in active) if p]
-        switcher = [{**p, "active": a} for p, a in ((self._load(n, served.get(n)), a) for n, a in assigned) if p]
-        if fresh:                            # a fallback is never cached, so the real list returns at the next request
-            self._cache[key] = (now, packs, switcher, began)
+            log.info("the person's packs could not be asked (%s): none shown until the server answers", type(e).__name__)
+            return [], []
+        if status == 304 and hit:
+            self._cache[key] = (now, hit[1], hit[2], began, hit[4])
+            return hit[1], hit[2]
+        rows = [r for r in (answer or {}).get("packs") or [] if isinstance(r, dict) and r.get("name")]
+        made = [await self._pack(backend, ident, r) for r in rows]
+        packs = [p for p, r in zip(made, rows) if r.get("active", True)]
+        switcher = [{**p, "active": bool(r.get("active", True))} for p, r in zip(made, rows) if r.get("assigned", True)]
+        self._cache[key] = (now, packs, switcher, began, str((answer or {}).get("stamp") or ""))
         return packs, switcher
 
-    @staticmethod
-    def _served(pack: dict, served: dict) -> dict:
-        """What the server says of a pack beside its files: the kinds it owns and what it offers Calc (``python``: enabled,
-        snippets from pack.yaml and the pack's python/ folder, read by the server's pack model)."""
-        row = served.get(pack["name"]) or {}
-        return {**pack, "kinds": row.get("kinds") or pack.get("kinds") or [],
-                "python": row.get("python") or {"enabled": False, "snippets": []}}
-
-    def _load(self, name: str, row: dict | None = None) -> dict | None:
-        """A pack's console files: from the folder the server's row names (``dir``, the server's resolution), else from where the
-        resolver finds it on this console (a module's pack is in its module's folder, never under config/packs)."""
-        given = Path(str(row["dir"])) if isinstance(row, dict) and row.get("dir") else None
-        pdir = given if given is not None and (given / "pack.yaml").is_file() else self.resolution().packs.dir(name)
-        if pdir is None:
-            return None
-        manifest = pdir / "pack.yaml"
-        if not manifest.is_file():
-            return None
-        hit = self._parsed.get(name)
-        if hit is None or hit[0] != self._signature(pdir, hit[1]):
-            value = self._read(name, pdir, manifest)
-            console = value.pop("_files")
-            hit = (self._signature(pdir, console), console, value)
-            self._parsed[name] = hit
-        return copy.deepcopy(hit[2])                     # each caller its own copy, as when every call parsed the files
-
-    @staticmethod
-    def _signature(pdir: Path, files: list[str]) -> tuple:
-        """The pack folder and the modification time and size of its pack.yaml and of the console files it names (workspaces, help):
-        a changed file reads the pack again."""
-        out = [str(pdir)]
-        for rel in ["pack.yaml", *files]:
-            try:
-                st = (pdir / rel).stat()
-                out.append((rel, st.st_mtime_ns, st.st_size))
-            except OSError:
-                out.append((rel, None))
-        return tuple(out)
-
-    @staticmethod
-    def _read(name: str, pdir: Path, manifest: Path) -> dict:
-        m = yaml.safe_load(manifest.read_text(encoding="utf-8")) or {}
-        console = m.get("console", {}) or {}
-        out = {"name": name, "title": m.get("title", name), "version": m.get("version", ""), "description": m.get("description", ""),
-               "dir": pdir, "examples": console.get("examples", []), "workspaces": {}, "guides": [], "contextual": {},
-               "monitors": console.get("monitors", {}) or {}, "alerts": m.get("alerts", []) or [], "kinds": m.get("kinds", []) or [],
-               "mnemonics": {str(code).upper(): str((d or {}).get("kind", "")) for code, d in (m.get("mnemonics") or {}).items()
-                             if isinstance(d, dict) and d.get("kind")}}
-        out["forms"] = {str(k): len(v or []) for k, v in (m.get("form") or {}).items() if isinstance(v, list)}   # kind -> declared fields (query by form)
-        if console.get("workspaces") and (pdir / console["workspaces"]).exists():
-            out["workspaces"] = (yaml.safe_load((pdir / console["workspaces"]).read_text()) or {}).get("templates", {}) or {}
-        if console.get("help") and (pdir / console["help"]).exists():
-            h = yaml.safe_load((pdir / console["help"]).read_text()) or {}
-            out["guides"] = [{**g, "path": pdir / g["file"], "pack": name} for g in h.get("guides", [])]
-            out["contextual"] = h.get("contextual", {}) or {}
-        out["_files"] = [str(console[k]) for k in ("workspaces", "help") if console.get(k)]
+    async def _pack(self, backend, ident, row: dict) -> dict:
+        """One pack as the pages use it: the person's row, and the pack's contributions (asked once per digest, shared by everyone)."""
+        name = str(row["name"])
+        out = {"name": name, "title": row.get("title") or name, "version": row.get("version") or "", "description": row.get("description") or "",
+               "examples": list(row.get("examples") or []), "monitors": dict(row.get("monitors") or {}), "alerts": list(row.get("alerts") or []),
+               "kinds": list(row.get("kinds") or []), "mnemonics": {str(k).upper(): str(v) for k, v in (row.get("mnemonics") or {}).items()},
+               "forms": {str(k): int(v) for k, v in (row.get("forms") or {}).items()},
+               "python": row.get("python") or {"enabled": False, "snippets": []},
+               "workspaces": {}, "guides": [], "contextual": {}, "facts": None, "sources": []}
+        digest = str((row.get("console") or {}).get("digest") or "")
+        contributions = await self._contributions(backend, ident, name, digest)
+        out.update(copy.deepcopy(contributions))
         return out
+
+    async def _contributions(self, backend, ident, name: str, digest: str) -> dict:
+        """The pack's workspace starters, guides (each with its file in this console's temp folder), contextual help, facts and sources."""
+        key = (current_server(), name)
+        held = self._console.get(key)
+        if held is not None and digest and held["digest"] == digest:
+            return held["value"]
+        try:
+            status, answer = await backend.pack_console(name, ident, held["digest"] if held else None)
+        except Exception as e:  # noqa: BLE001 - the last contributions stay; with none the pack shows without them
+            log.info("pack %s: its console answer could not be read (%s)", name, type(e).__name__)
+            return held["value"] if held else {}
+        if status == 304 and held is not None:
+            return held["value"]
+        if not isinstance(answer, dict):
+            return held["value"] if held else {}
+        files = await self._files(backend, ident, name, answer.get("files") or [])
+        help_ = answer.get("help") or {}
+        guides = [{**g, "path": files[str(g["file"])], "pack": name} for g in help_.get("guides") or []
+                  if isinstance(g, dict) and g.get("slug") and str(g.get("file")) in files]
+        value = {"workspaces": dict(answer.get("workspaces") or {}), "guides": guides, "contextual": dict(help_.get("contextual") or {}),
+                 "facts": answer.get("facts"), "sources": [str(s) for s in answer.get("sources") or []], "consoleDigest": str(answer.get("digest") or "")}
+        self._console[key] = {"digest": str(answer.get("digest") or digest), "value": value}
+        return value
+
+    async def _files(self, backend, ident, name: str, listed: list) -> dict[str, Path]:
+        """Each listed file kept in this console's temp folder under its SHA-256 (fetched once per content), by its path in the pack;
+        a file that does not arrive or does not match its digest is left out."""
+        out: dict[str, Path] = {}
+        for f in listed:
+            rel, sha = str((f or {}).get("path") or ""), str((f or {}).get("sha") or "")
+            if not rel or not sha or rel.startswith("/") or ".." in Path(rel).parts:
+                continue
+            target = self._root() / name / sha[:16] / rel
+            if not target.is_file():
+                try:
+                    data = await backend.pack_console_file(name, rel, ident)
+                except Exception as e:  # noqa: BLE001 - one missing file hides one guide, never the page
+                    log.info("pack %s: %s could not be fetched (%s)", name, rel, type(e).__name__)
+                    continue
+                if not isinstance(data, (bytes, bytearray)) or hashlib.sha256(data).hexdigest() != sha:
+                    log.warning("pack %s: %s did not match its digest; left out", name, rel)
+                    continue
+                target.parent.mkdir(parents=True, exist_ok=True)
+                part = target.with_name(target.name + ".part")
+                part.write_bytes(bytes(data))
+                part.replace(target)
+            out[rel] = target
+        return out
+
+    def _root(self) -> Path:
+        if self._files_dir is None:
+            from core import tmpdir
+            self._files_dir = tmpdir.sub_dir("pack-files")
+        return self._files_dir
 
 
 def samples(packs: list[dict]) -> list[dict]:

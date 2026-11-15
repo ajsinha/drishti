@@ -1945,7 +1945,7 @@ Sutra marked *edited*; a YAML the server refuses shows its problems in place of 
 (`module.yaml`, needs, console page routes, docs), `sutra lint` and `sutra test`, then `module pack` and `module check`: the **fifteen conformance
 checks** are listed as they pass. The `.dmod` can be downloaded.
 
-**6. Deploy.** **Install on this node** copies the `.dmod` to the server's modules folder, where auto-deploy checks, installs and loads it. **Plan for the cluster** uploads the `.dmod` to the module store (the server checks it once more) and shows the plan per node; **Apply the
+**6. Deploy.** **Install on this node** copies the `.dmod` to the server's modules folder named by `builder.pack_designer_modules_dir` (an absolute path; with none set it is refused and **Plan for the cluster** is the way), where auto-deploy checks, installs and loads it. **Plan for the cluster** uploads the `.dmod` to the module store (the server checks it once more) and shows the plan per node; **Apply the
 plan** installs it: the server requires a second administrator to apply a plan (four eyes, as in Admin → Modules → Deploy). **Open the screen** opens a trade of the module, `/m/<module>/<module>/<kind>/<id>`.
 
 ### 8.1.1 The same on the command line

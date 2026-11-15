@@ -801,8 +801,7 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 | `DRISHTI_LAYOUTS_ENABLED` | `layouts.enabled` | `true` | Offer layout mode. |
 | `DRISHTI_PACKS_DIR` | `packs.dir` | `../config/packs` | The packs directory (a relative path resolves from `drishti-console/`). |
 | `DRISHTI_PACKS_EXTRA_DIRS` | `packs.extra_dirs` | empty | Further pack folders, comma-separated, as on the server (relative paths resolve from `drishti-console/`, so `../examples/packs`). |
-| `DRISHTI_PACKS_INSTALLED` | `packs.installed_dir` | empty | The server's installed packs (registry and Deploy archive); empty: `<data dir>/packs/installed`. Read first as the server does, so an installed pack's guides, examples and workspaces reach the console. |
-| `DRISHTI_PACKS` | `packs.enabled` | `default` | Only used when the server cannot be asked which packs are on; `default`: `config/packs/default-packs.yaml`. |
+| `DRISHTI_PACKS_INSTALLED` | `packs.installed_dir` | empty | The server's installed packs (registry and Deploy archive); empty: `<data dir>/packs/installed`. Read only for the distribution's command words; a pack's guides, examples and workspaces come from the server's answers. |
 | `DRISHTI_LENS_DIR` | `lens.dir` | `../config/lenses` | The folder of the lens files, `config/lenses/<module>/<lens>.yaml` (relative to `drishti-console/`; only the console reads them). |
 | `DRISHTI_LAKE_ROOTS` | `lakes.roots` | empty | Admin → Data loads → Lakes ([CLI_REFERENCE.md](../guides/CLI_REFERENCE.md#7-lake-a-large-json-export-into-a-delta-lake)): the lake roots this console may write, comma-separated (relative paths resolve from `drishti-console/`); empty: `<data dir>/delta`, the server's own root. The page offers no other folder. |
 | `DRISHTI_JAR` | `lakes.jar` | empty | The drishti-server exec jar whose Java writer the page's builds use (`lakes.engine: auto`); empty: the newest `kernel/drishti-server/target/drishti-server-*-exec.jar`, else the Python `deltalake` package. |
@@ -2907,10 +2906,9 @@ read by both programs, so one set of variables configures both halves.
 
 | Key | Default | Meaning |
 |---|---|---|
-| `packs.dir` | `../config/packs` (`DRISHTI_PACKS_DIR`), relative to `drishti-console/` | Where pack content (examples, guides) is read. |
+| `packs.dir` | `../config/packs` (`DRISHTI_PACKS_DIR`), relative to `drishti-console/` | Where the console's distribution reads the packs' command words. A pack's content (examples, workspace starters, guides, facts) comes from the server's answers, never from this folder. |
 | `packs.extra_dirs` | empty (`DRISHTI_PACKS_EXTRA_DIRS`) | Further pack folders, comma-separated, read after `packs.dir` (the retired example packs: `../examples/packs`). |
 | `packs.installed_dir` | `<data dir>/packs/installed` (`DRISHTI_PACKS_INSTALLED`) | The server's `drishti.packs.installed-dir`: packs installed from the registry or by Deploy archive, read before `packs.dir` (they win a name, as on the server). Point it at the same folder as the server's. |
-| `packs.enabled` | the seven shipped packs (`DRISHTI_PACKS`) | Used only when the server cannot be asked which packs are enabled. |
 | `help.docs_dir` | `../docs` | The documents rendered in the help centre's reference section. |
 | `studio.examples_dir` | `../docs/guides/examples` | The Rachana examples (`<name>.sutra.yaml`, `<name>.json`, `<name>.md`) that the Build workbench (**Create → New screen → Examples**, the File menu) and **Help → Examples** offer. Only names of complete example sets present there are served. |
 | `ui.studio_example` | `all-panels-showcase` | The example Studio opens on when no entity or Sutra is asked for. Blank, or a name that is not there: Studio opens on the first example entity of the user's packs. |
@@ -2923,7 +2921,7 @@ read by both programs, so one set of variables configures both halves.
 | `builder.pack_designer_ttl_hours` | `72` | The Pack designer: hours a workspace (the uploaded files, the analysis, the module) is kept after its last use, then removed. |
 | `builder.pack_designer_jobs_per_user` | `2` | The Pack designer: jobs (reading every record, making the module) one person may have running at once. Over it: `429`. |
 | `builder.pack_designer_workers` | `0` | The Pack designer: processes reading the files of a job, a file each; 0 is the tool's default (a third of the cores, at most 8). Every record is read either way. |
-| `builder.pack_designer_modules_dir` | _(empty)_ | The Pack designer, Deploy step **Install on this node**: the server's modules folder the `.dmod` is copied to (auto-deploy checks, installs and loads it). Empty: `DRISHTI_MODULES_PATH`, else `<data folder>/modules`. |
+| `builder.pack_designer_modules_dir` | _(empty)_ | The Pack designer, Deploy step **Install on this node**: the server's modules folder the `.dmod` is copied to (auto-deploy checks, installs and loads it), an absolute path on the console's machine. Empty: **Install on this node** is refused with these words and **Plan for the cluster** (which sends the module to the server) works; the console works out no server folder. |
 | `builder.pack_load_max_mb` | `2048` | **Admin → Packs → a pack → Load data**: the largest data file the console streams on to the server (never held in memory); the server has its own `drishti.loads.upload-max-mb`. |
 | `builder.tools_dir` | `../tools` | The repository's `tools/` folder, relative to `drishti-console/`: the Pack designer runs its jobs from it (`tools/packgen/designer_job.py`, which uses `pack new`'s code). Without it the designer answers `501`. |
 
@@ -4834,7 +4832,7 @@ One file per module (banking, capitalmarkets, economy), `config/modules/<module>
 | `builder.pack_designer_ttl_hours` | integer | `72` |  | console | Build -&gt; New pack: hours a workspace untouched is kept before it is removed | restart |  | admin |
 | `builder.pack_designer_jobs_per_user` | integer | `2` |  | console | Build -&gt; New pack: jobs (reading the files, making the module) one person may have running | restart |  | admin |
 | `builder.pack_designer_workers` | integer | `0` |  | console | Build -&gt; New pack: processes reading the files in a job (0: the tool's default, a third of the cores, at most 8) | restart |  | expert |
-| `builder.pack_designer_modules_dir` | string | empty |  | console | Build -&gt; New pack: the modules folder 'Install on this node' copies the .dmod to (empty: DRISHTI\_MODULES\_PATH, else &lt;data folder&gt;/modules) | restart |  | admin |
+| `builder.pack_designer_modules_dir` | string | empty |  | console | Build -&gt; New pack: the server's modules folder 'Install on this node' copies the .dmod to, an absolute path (empty: Install is refused, Plan for the cluster works) | restart |  | admin |
 | `builder.pack_load_max_mb` | integer | `2048` |  | console | Admin -&gt; Packs -&gt; a pack -&gt; Load data: the largest file the console streams on to the server (which has drishti.loads.upload-max-mb) | restart |  | expert |
 | `builder.tools_dir` | string | `../tools` |  | console | the repository's tools/ folder (the Pack designer runs tools/packgen/designer\_job.py from it); relative to drishti-console/ | restart |  | admin |
 | `builder.studio_kind` | string | `sample` |  | console | the kind a new Design and "Open in Studio" preview a brought document as (a pasted document has no kind of its own) | restart |  | admin |
@@ -4902,7 +4900,6 @@ One file per module (banking, capitalmarkets, economy), `config/modules/<module>
 | `packs.dir` | string | `../config/packs` | `DRISHTI_PACKS_DIR` | console | the same packs directory the server uses (one variable sets both) | restart |  | admin |
 | `packs.installed_dir` | string | empty | `DRISHTI_PACKS_INSTALLED` | console | packs installed from the registry or by Deploy archive (the server's drishti.packs.installed-dir); blank: &lt;data dir&gt;/packs/installed | restart |  | admin |
 | `packs.extra_dirs` | string | empty | `DRISHTI_PACKS_EXTRA_DIRS` | console | further pack folders, comma-separated (examples/packs: the retired example packs), as on the server | restart |  | admin |
-| `packs.enabled` | string | `default` | `DRISHTI_PACKS` | console | used only when the server cannot be asked which packs are enabled; default: config/packs/default-packs.yaml | restart |  | admin |
 | `packs.deploy_max_mb` | integer | `50` |  | console | largest pack archive Admin → Packs → Deploy archive takes (the server's drishti.packs.deploy.max-archive-mb refuses the same way, 413) | restart |  | expert |
 
 #### `static`

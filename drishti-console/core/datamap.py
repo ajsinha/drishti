@@ -106,24 +106,10 @@ def _contract_anchor(path: Path, kind: str) -> str:
     return ""
 
 
-def _sources(pack_dir) -> list[str]:
-    """Where a pack's data comes from: the names of its README's ``sources`` (the README standard)."""
-    try:
-        text = (Path(pack_dir) / "README.md").read_text(encoding="utf-8")
-    except (OSError, TypeError):
-        return []
-    m = re.search(r"(?ms)^---\s*\n(.*?)^---\s*$", text)
-    try:
-        meta = yaml.safe_load(m.group(1)) if m else {}
-    except yaml.YAMLError:
-        meta = {}
-    return [str(s.get("name")) for s in (meta or {}).get("sources") or [] if isinstance(s, dict) and s.get("name")]
-
-
 def build(server: dict, functions: dict, config: dict, packs: list[dict], lib=None, glossary=None, knowledge: dict | None = None,
           docs_dir: Path | None = None) -> dict:
     """The page's model: domains, kinds and joins with their words, links and positions, and the findings. ``server`` is the server's
-    data map, ``functions`` its command directory for the user, ``packs`` the console's enabled packs (guides, forms, folder)."""
+    data map, ``functions`` its command directory for the user, ``packs`` the console's enabled packs (guides, forms, sources)."""
     knowledge = knowledge or {}
     computed_extra = set(config.get("computed") or [])
     low = float(config.get("low-coverage", 0.95) or 0.95)
@@ -213,7 +199,8 @@ def build(server: dict, functions: dict, config: dict, packs: list[dict], lib=No
         d["summary"] = " · ".join(f"{k['label']} {k['countText']}" for k in stored[:3]) or "computed on demand"
         d["kinds"] = [k["kind"] for k in mine]
         d["packTitles"] = [pack_title.get(n, n) for n in d["packs"]]
-        d["sources"] = list(dict.fromkeys(s for n in d["packs"] for s in _sources((console_packs.get(n) or {}).get("dir"))))
+        # where each pack's data comes from: its README's sources, as the pack's console answer names them (the README is the server's)
+        d["sources"] = list(dict.fromkeys(str(s) for n in d["packs"] for s in (console_packs.get(n) or {}).get("sources") or []))
         crosses = {}
         for j in joins:
             a, b = known[j["from"]]["domain"], known[j["to"]]["domain"]

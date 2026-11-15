@@ -6,7 +6,7 @@
 
 # The thin console: the console asks the server
 
-**Internal. Status: design, not built.** Release 2.9.11.i5. Decided by the product owner on 2026-11-15: i5 makes the Python console
+**Internal. Status: S0 and S1 built (branch `wip/i5-thin-console`), S2 onward to build.** Release 2.9.11.i5. Decided by the product owner on 2026-11-15: i5 makes the Python console
 **thin** (the "middle path"); the move of the console to Spring Boot
 ([KERNEL_AND_MODULES.md section 10](KERNEL_AND_MODULES.md#10-the-drishti-console-on-spring-boot-a-separate-ui-tier)) is decided after
 it, for i7, with the numbers this release produces (section 6). The inventory in section 2 is of `wip/i4` at `213e980d2`.
@@ -385,6 +385,13 @@ the line counts of section 2 (Python removed, Java added including tests), in bu
 
 Total: about 37 builder-days; with three builders on independent steps (S1 with S3; S2 then S4; S5 beside them from the start),
 about three weeks to Drill A and two more to Drill B.
+
+### 5.0 Where the build stands
+
+| Step | Built | Left in the step |
+|---|---|---|
+| **S0** | `stamps` on `/public/about` (`installation`, `resolution`, `modules`, `engines`, `packs`); `ConsoleAnswers` and `GET /api/v1/console/bootstrap` with `distribution` (id, about, lenses), `modules`, `engines`; the console's `ServerFacts` (`core/server_facts.py`) fed by the watch, with `If-None-Match`, the last answer kept and said while the server is away; the detached-console test (`test_detached_console_browser.py`, `detached_console.py`: a copy of `drishti-console/` alone, an audit hook in every process) walking the sitemap; the server's version, product and notice shown from `/public/about`, the console's build a diagnostic on Health | the push of the stamps (Drill B, Q8); never-backwards across cluster nodes (a cluster-wide configuration version in the bootstrap); `settings` stamp (S6); the waiting page before the first answer; the "core" browser tests run against the detached console beyond the sitemap walk; recorded `bootstrap.json` / `me-console.json` written by a Java test |
+| **S1** | `GET /api/v1/me/console` with `person` and `packs`; `GET /api/v1/packs/{pack}/console` and `/console/files/**` (allow-list: the guides and the pictures they show); `commands` in the bootstrap; `core/packs.py` asks them (no folder, no fallback, guides kept by SHA-256 in the console's temp folder); facts, README sources (DATAMAP) and README links from the answers; `menus._pack_command_on` a lookup; `Editions.default_packs`, `Packs._load`, `_read`, `_signature`, `fallback`, the `dir` of the packs answer and the console's `packs.enabled` deleted | the `core.resolution` imports of `distribution.py`, `edition.py`, `house.py`, `menus.py` (module menus) and `module_parts.py` read modules and distributions, not packs: they go with S2 (`test_thin_console_guard.py` lists them and only lets the list shrink); `lens` in the person's answer (S4 with the rest of the person's decisions); the pack designer's install folder moves with the job (S8) |
 
 ### 5.1 No dual machinery, step by step
 

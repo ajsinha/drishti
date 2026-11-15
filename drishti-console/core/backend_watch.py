@@ -49,6 +49,10 @@ class BackendWatch:
         self._url_of = url_of or (lambda s: s.url)
         self.on_about = None                    # called with (server, about) after each answer: the console learns the edition
 
+    def url_of(self, server) -> str:
+        """Where the watch reaches a server of the catalogue now (with several servers in ``backend.urls``, the one the console uses)."""
+        return self._url_of(server)
+
     async def fetch(self, server, path: str) -> dict:
         """One public answer of the server as the watch reaches it (``/public/modules/manifests``)."""
         async with httpx.AsyncClient(timeout=max(self.timeout, 5.0)) as client:

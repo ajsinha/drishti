@@ -19,7 +19,8 @@ business date: the steps fetch (``var``, ``exposure``, ``search``, ``raw``), pic
 a value (``let``); ``when`` says what makes it surprising; ``text``, ``why`` and the picture are filled from the result. No number is
 written in a fact: a fact whose condition does not hold today is not shown. Results are kept per server, user, business date and set of
 packs, computed once (concurrent asks share one computation) and never on the page's own request path (the page asks
-``/api/home/facts`` after it has drawn). ``check()`` is the config check the tests run on every shipped file.
+``/api/home/facts`` after it has drawn). The console reads no pack folder: the facts file arrives, as data, in the pack's console answer
+(``GET /api/v1/packs/{pack}/console``, ``facts``; docs/architecture/THIN_CONSOLE_DESIGN.md 3.4, open question Q6: the language stays here).
 """
 from __future__ import annotations
 
@@ -32,11 +33,8 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import quote
 
-import yaml
-
 from core import engine_figures as engine
 from core.facts_expr import FORMATS, Expr, ExprError, Template, fmt, overlap_rows
-from core.resolution import pack_dirs
 
 log = logging.getLogger(__name__)
 
@@ -254,24 +252,11 @@ def _check_names(f: Fact, where: str) -> None:
 
 
 def load_pack(pack: dict) -> tuple[list[Fact], list[str]]:
-    """The facts a pack carries (``<pack dir>/config/facts.yaml``; none when the file is absent)."""
-    path = Path(pack.get("dir") or "") / FILE
-    if not path.is_file():
+    """The facts a pack carries: its ``facts`` (the pack's ``config/facts.yaml`` as its console answer sends it); none when absent."""
+    doc = pack.get("facts")
+    if doc is None:
         return [], []
-    try:
-        doc = yaml.safe_load(path.read_text(encoding="utf-8"))
-    except yaml.YAMLError as e:
-        return [], [f"{pack.get('name')}/{FILE}: not YAML: {e}"]
     return parse(doc, str(pack.get("name")), f"{pack.get('name')}/{FILE}")
-
-
-def check(packs_dir: Path) -> dict[str, list[str]]:
-    """Every pack's facts file under ``packs_dir``, checked: ``{pack: [problems]}`` (empty lists when all is well)."""
-    out = {}
-    for name, d in pack_dirs(packs_dir).items():
-        if (d / FILE).is_file():
-            out[name] = load_pack({"name": name, "dir": d})[1]
-    return out
 
 
 # ---------------------------------------------------------------------------------------------------------------------- computing
@@ -455,24 +440,21 @@ class FactsService:
         self.ttl = float(get("ui.facts.cache_seconds", 21600) or 0)
         self.timeout = float(get("ui.facts.timeout_seconds", 90) or 90)
         self.keep = int(get("ui.facts.keep", 64) or 64)
-        self._files: dict[str, tuple[float, list, list]] = {}
+        self._files: dict[str, tuple[str, list, list]] = {}       # pack -> (its answer's digest, facts, problems)
         self._done: dict[tuple, tuple[float, list]] = {}
         self._running: dict[tuple, asyncio.Task] = {}
 
     def facts_of(self, pack: dict) -> list[Fact]:
-        """A pack's facts, read again when its file changes; problems are logged once per change."""
-        path = Path(pack.get("dir") or "") / FILE
-        try:
-            stamp = path.stat().st_mtime
-        except OSError:
-            return []
-        hit = self._files.get(str(path))
+        """A pack's facts, parsed again when its console answer changes (its digest); problems are logged once per change."""
+        key = str(pack.get("name") or "")
+        stamp = str(pack.get("consoleDigest") or "") or repr(pack.get("facts"))
+        hit = self._files.get(key)
         if hit and hit[0] == stamp:
             return hit[1]
         facts, problems = load_pack(pack)
         for p in problems:
             log.warning("fact left out: %s", p)
-        self._files[str(path)] = (stamp, facts, problems)
+        self._files[key] = (stamp, facts, problems)
         return facts
 
     def eligible(self, packs: list[dict]) -> list[Fact]:

@@ -428,11 +428,6 @@ class Editions:
         self._dist_name: str | None = None
         self._use_distribution(None)                             # Drishti All when none is named: nothing changes
 
-    def default_packs(self) -> list[str]:
-        """The default packs: every pack the one resolver loads here (the modules' manifests' ``packs.list`` and the kernel's)."""
-        from core import resolution
-        return [p.name for p in resolution.current(self.settings, self.console_dir).packs.loaded()]
-
     def mapping(self) -> dict[str, list[str]]:
         """Which console settings each feature presets: ``features:`` of kernel.yaml beside the distribution files, its ``console`` keys."""
         from core import distribution as _dist
