@@ -57,6 +57,10 @@ EXPLAINED_CODE = re.compile(r"(?:is|are) refused \( DRS-\d+ \)")
 FAULT = re.compile(r"DRS-\d+|not found|no such|has no columns|Traceback|Internal Server Error|Server error|Unhandled exception|cannot read command", re.I)
 #: a connector's failure (DRS-5034 ...) as an Admin page lists it: the connector's own state, which the config sweep owns; one message: its connector, its reason, the parenthesis that follows
 CONNECTOR_ALERT = re.compile(r"DRS-5034 connector [^:]+:[^()]*(?:\([^)]*\))?")
+#: runs the owner parked, each with its reason: reported as "parked" (listed in the report), never a FAIL and never silently skipped
+PARKED = {"XRUN XR-2026-09-30-01": "parked until the CCR engine is built (owner 2026-11-15): the example names the test data's run, a lake "
+                                   "built --as-of holds XR-<that date>-01",
+          "XPATH XR-2026-09-30-01~CLY-3000280~0": "parked until the CCR engine is built (owner 2026-11-15), with XRUN"}
 RESERVED = ["BI", "RUPAKA", "FORM", "FUNC", "WHAT", "DATAMAP", "DATA", "EXPORT", "PIVOT"]
 ADMIN_PAGES = ["users", "roles", "packs", "commands", "tokens", "access", "connectors", "artifacts", "ai", "loads", "lakes", "collab",
                "embedding", "bi", "audit", "net", "edits", "compute", "engines", "health", "caches", "capacity", "scopes", "data-out",
@@ -225,6 +229,8 @@ def check(c: Client, word: str, cmd: str, has_data: bool, expect_off: bool) -> d
     def done(result: str, msg: str = "") -> dict:
         if result != "FAIL" and r["secs"] > BUDGET:                      # a refusal that takes 30 s is no clean refusal
             result, msg = "FAIL", f"slow: {r['secs']:.1f} s over the {BUDGET:.0f} s budget ({result}: {msg[:80]})"
+        if result == "FAIL" and cmd in PARKED:
+            result, msg = "parked", PARKED[cmd] + f" (it was: {msg[:120]})"
         row["result"], row["message"] = result, msg[:240]
         return row
     if status == 0:
@@ -260,9 +266,14 @@ def check(c: Client, word: str, cmd: str, has_data: bool, expect_off: bool) -> d
             return done("FAIL", f"no VaR headline for {scope}")
         row["headline"] = head["var"]
     elif path.path == "/explain":                                       # drawn in the browser from /api/explain: checked through that
-        got = c.json("/api/explain?" + path.query + "&part=all")
-        if not got or got.get("code"):
-            return done("FAIL", "the explanation's API answered nothing")
+        api = c.get("/api/explain?" + path.query + "&part=all")
+        try:
+            got = json.loads(api["body"])
+        except ValueError:
+            got = None
+        if api["status"] != 200 or not isinstance(got, dict) or got.get("code"):
+            why = (got.get("code", "") + " " + str(got.get("detail", ""))) if isinstance(got, dict) else api["body"][:120]
+            return done("FAIL", f"the explanation's API answered HTTP {api['status']} in {api['secs']:.1f} s: {why.strip()[:160]}")
     elif len(text) < 80 and "data-spec" not in body and "data-explain-page" not in body:
         return done("FAIL", "the main area is empty")
     return done("pass")
@@ -310,9 +321,9 @@ def main(argv=None) -> int:
     lock = threading.Lock()
     with (out / f"sweep-{stamp}.jsonl").open("w", encoding="utf-8") as live, ThreadPoolExecutor(a.workers) as ex:   # the JSONL grows a run at a time
         rows = list(ex.map(one, jobs))
-    tally = {k: sum(1 for r in rows if r["result"] == k) for k in ("pass", "refused", "FAIL")}
+    tally = {k: sum(1 for r in rows if r["result"] == k) for k in ("pass", "refused", "parked", "FAIL")}
     lines = [f"# Command sweep {stamp}", "", f"{a.base}: {len(funcs)} functions, {len(rows)} runs in {time.monotonic() - t0:.0f} s "
-             f"(pass {tally['pass']}, refused {tally['refused']}, FAIL {tally['FAIL']}).", "",
+             f"(pass {tally['pass']}, refused {tally['refused']}, parked {tally['parked']}, FAIL {tally['FAIL']}).", "",
              "| function | argument | user | result | time | message |", "|---|---|---|---|---|---|"]
 
     def cell(s) -> str:
