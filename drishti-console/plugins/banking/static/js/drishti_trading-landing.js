@@ -371,7 +371,7 @@
     if (!s.kind) {
       $$("[data-tl-v]").forEach(function (v) { v.textContent = "—"; });
       $$("[data-tl-s]").forEach(function (v) { v.textContent = "pick a trader or a desk to view as"; });
-      $$("tbody").forEach(function (b) { said(b, "Pick a trader or a desk to view as", 5); });
+      $$("tbody, [data-tl-blotter]").forEach(function (b) { said(b, "Pick a trader or a desk to view as", 5); });   // the blotter is a grid host, not a table
       return;
     }
     if (landing === "desk") desk(m); else trader(m);

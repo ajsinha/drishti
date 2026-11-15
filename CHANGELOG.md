@@ -18,6 +18,10 @@
 
 ## Unreleased
 
+- **Trading Home with nobody to view as.** Today's blotter, now a records grid rather than a table, says *Pick a trader or a desk to view
+  as* like every other panel instead of staying on its loading dots.
+- **Records lists without a stream.** A records list whose set has no live stream (TRD, FUND, USEQ over a lake that does not push) said
+  *CONNECTING* for as long as it was open; it now says *STATIC* once its rows are drawn.
 - **Production data loads: the runbook rehearsal's findings.** Separate loads of several source systems into one shared table
   (`trading.trades_shared`) replace only their own `SOURCE_SYSTEM` slice of a date (Delta by partition, Iceberg by the files' bounds; a row of
   another system is rejected; a shared table that cannot be split refuses a replace; an undo restores the slice alone): before, the last
