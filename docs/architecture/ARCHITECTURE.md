@@ -1164,6 +1164,10 @@ Python 3.12, FastAPI + Jinja2: `core/` (app, settings, auth, backend client, bus
 (Bootstrap 5, Bootstrap Icons, ECharts, ECharts GL, CodeMirror, Vega and Vega-Lite, and Pyodide for Calc; vanilla JS, no build step); no CDN, no inline script
 (strict CSP); static assets are fingerprinted.
 
+**The server decides, the console draws.** What the console still works out from files that the server also reads (packs, modules,
+distributions, lenses, engines, access) is planned to move behind server answers in i5:
+[THIN_CONSOLE_DESIGN.md](THIN_CONSOLE_DESIGN.md) has the inventory, the answers and the steps.
+
 **Themes** — tokens only in `web/static/css/drishti_tokens.css` (gradient chrome in `drishti_gradients.css`); ten themes selected by
 `data-theme` on `<html>`: `terminal` (default, the navy/amber of the mockups), `light` (parchment), `wallstreet`
 (Bloomberg Terminal colours: black ground, amber data, yellow commands, green/red ticks, blue highlight — colours
