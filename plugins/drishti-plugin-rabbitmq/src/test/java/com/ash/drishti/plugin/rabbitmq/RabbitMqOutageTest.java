@@ -45,12 +45,11 @@ class RabbitMqOutageTest extends BrokerOutage {
     @Override
     protected SourcePlugin start(int port, Path state) throws Exception {
         Map<String, String> s = new HashMap<>(Map.of("kind." + MessageSourceContract.TRADES, "trade", "id-field." + MessageSourceContract.TRADES,
-                "tradeId", "state.dir", state.toString(), "source-name", "outage-test"));
+                "tradeId", "disk-cache.dir", state.toString(), "source-name", "outage-test"));
         s.put("uri", "amqp://guest:guest@localhost:" + port + "/%2f");
         s.put("recovery-interval-ms", "500");
         s.put("queues", MessageSourceContract.TRADES);
-        RabbitMqSourcePlugin p = new RabbitMqSourcePlugin();
-        p.start(DatedSourceContract.context(s));
+        com.ash.drishti.live.LiveSource p = com.ash.drishti.testkit.MessageSourceContract.live(new RabbitMqSourcePlugin(), s);
         return p;
     }
 

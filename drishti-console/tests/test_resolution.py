@@ -181,3 +181,13 @@ def test_a_live_companion_follows_its_data_connector(tmp_path, on):
 def test_every_shipped_companion_is_usable():
     """Every live companion the modules ship names a data connector in force, on a messaging plugin (DRS-1061)."""
     assert R.repository().connectors.companion_problems() == {}
+
+
+def test_a_site_binding_may_ask_an_overlay_kind_to_be_landed_too(tmp_path):
+    """live: {connectors: [...], apply: both} names the live connectors and asks for both (LIVE_CONNECTORS_DESIGN.md section 2.4, Q7)."""
+    r = R.build(_site(tmp_path, True))
+    r.bindings.site = {"trade": {"read": ["trade-endur"], "live": {"connectors": ["trade-endur-mq"], "apply": "both"}},
+                       "quote": {"live": "quote-mq"}}
+    assert r.bindings.live("trade") == ["trade-endur-mq"]
+    assert r.bindings.live_apply("trade") == "both"
+    assert r.bindings.live_apply("quote") == "overlay"

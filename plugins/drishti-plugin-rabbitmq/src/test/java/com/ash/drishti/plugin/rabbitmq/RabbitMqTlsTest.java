@@ -135,8 +135,7 @@ class RabbitMqTlsTest extends MessageSourceContract {
         s.put("uri", uri(broker.getHost(), ""));
         s.put("auth-mechanism", "external");
         s.put("queues", TRADES + "," + ENTITIES);
-        RabbitMqSourcePlugin p = new RabbitMqSourcePlugin();
-        p.start(DatedSourceContract.context(s));
+        com.ash.drishti.live.LiveSource p = com.ash.drishti.testkit.MessageSourceContract.live(new RabbitMqSourcePlugin(), s);
         return p;
     }
 
@@ -167,8 +166,7 @@ class RabbitMqTlsTest extends MessageSourceContract {
         Map<String, String> s = new HashMap<>(shared(Files.createTempDirectory(dir, "state")));
         s.putAll(settings);
         s.put("queues", TRADES);
-        RabbitMqSourcePlugin p = new RabbitMqSourcePlugin();
-        p.start(DatedSourceContract.context(s));
+        com.ash.drishti.live.LiveSource p = com.ash.drishti.testkit.MessageSourceContract.live(new RabbitMqSourcePlugin(), s);
         try {
             Set<String> seen = new LinkedHashSet<>();
             long until = System.nanoTime() + TimeUnit.SECONDS.toNanos(10);

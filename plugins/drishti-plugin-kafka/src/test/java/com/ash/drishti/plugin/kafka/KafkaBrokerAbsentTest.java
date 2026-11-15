@@ -53,7 +53,7 @@ class KafkaBrokerAbsentTest {
         Level before = root.getLevel();
         root.setLevel(Level.INFO);
         int port = closedPort();
-        com.ash.drishti.common.live.LiveSource p = KafkaSourcePluginTest.wrap();
+        com.ash.drishti.live.LiveSource p = KafkaSourcePluginTest.wrap();
         try {
             Map<String, String> s = new HashMap<>(Map.of("bootstrap-servers", "127.0.0.1:" + port, "topics", "trades", "kind", "trade"));
             s.put("state.dir", state.toString());
@@ -73,7 +73,7 @@ class KafkaBrokerAbsentTest {
 
     @Test
     void missingSettingsAreNotConfiguredNotAFailure() throws Exception {
-        com.ash.drishti.common.live.LiveSource p = KafkaSourcePluginTest.wrap();
+        com.ash.drishti.live.LiveSource p = KafkaSourcePluginTest.wrap();
         Map<String, String> s = new HashMap<>(Map.of("bootstrap-servers", "127.0.0.1:9092"));
         s.put("state.dir", state.toString());
         assertThatThrownBy(() -> p.start(DatedSourceContract.context(s))).isInstanceOf(PluginNotConfigured.class);

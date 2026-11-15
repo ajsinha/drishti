@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.common.live;
+package com.ash.drishti.live;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -343,12 +343,10 @@ class LiveFeedTest {
     }
 
     @Test
-    void anAcknowledgementRunsOnceTheMessageIsDoneAppliedOrRejected() {
+    void aMessageIsDoneWithOnceAppliedOrRejected() {
         LiveFeed f = feed(new Trades(ordered()), Map.of("kind", "trade"), null);
-        AtomicInteger acks = new AtomicInteger();
-        f.accept(new LiveMessage("MX-1", trade("MX-1", 1, "B1"), new LivePosition("q", 0, -1), Instant.now(), acks::incrementAndGet));
-        f.accept(new LiveMessage("MX-1", "{oops", new LivePosition("q", 0, -1), Instant.now(), acks::incrementAndGet));
-        assertThat(acks.get()).isEqualTo(2);
+        assertThat(f.accept(new LiveMessage("MX-1", trade("MX-1", 1, "B1"), new LivePosition("q", 0, -1), Instant.now()))).isTrue();
+        assertThat(f.accept(new LiveMessage("MX-1", "{oops", new LivePosition("q", 0, -1), Instant.now()))).as("rejected: done with").isTrue();
     }
 
     @SuppressWarnings("unchecked")

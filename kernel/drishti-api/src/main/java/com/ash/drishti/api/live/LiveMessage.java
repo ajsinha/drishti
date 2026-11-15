@@ -24,14 +24,8 @@ import java.time.Instant;
  * @param value     the payload as text (JSON, or JSONL for {@code shape: jsonl}); null for a tombstone (a delete by key)
  * @param position  where it is in the transport (topic or queue, partition, offset or delivery tag)
  * @param timestamp when the broker received it
- * @param ack       what acknowledges it at the broker once the kernel is done with it (a queue's delivery), or null (a log that needs none)
  */
-public record LiveMessage(String key, String value, LivePosition position, Instant timestamp, Runnable ack) {
-
-    /** A message that needs no acknowledgement (a Kafka record). */
-    public LiveMessage(String key, String value, LivePosition position, Instant timestamp) {
-        this(key, value, position, timestamp, null);
-    }
+public record LiveMessage(String key, String value, LivePosition position, Instant timestamp) {
 
     /** The stream (topic or queue) it came from. */
     public String stream() {

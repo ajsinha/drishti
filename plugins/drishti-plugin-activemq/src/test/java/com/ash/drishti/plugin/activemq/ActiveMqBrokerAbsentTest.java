@@ -53,10 +53,11 @@ class ActiveMqBrokerAbsentTest {
         Level before = root.getLevel();
         root.setLevel(Level.INFO);
         int port = closedPort();
-        ActiveMqSourcePlugin p = new ActiveMqSourcePlugin();
+        com.ash.drishti.live.LiveSource p = new com.ash.drishti.live.LiveSource(new ActiveMqSourcePlugin(),
+                com.ash.drishti.live.KindContracts.NONE, java.util.Set.of(), null);   // as the kernel runs it
         try {
             Map<String, String> s = new HashMap<>(Map.of("broker-url", "failover:(tcp://127.0.0.1:" + port + ")", "destinations", "queue:trades", "kind", "trade"));
-            s.put("state.dir", state.toString());
+            s.put("disk-cache.dir", state.toString());
             s.put("source-name", "waiting-test");
             p.start(DatedSourceContract.context(s));
             Thread.sleep(2_500);                                   // several looks, one line
@@ -75,7 +76,7 @@ class ActiveMqBrokerAbsentTest {
     void missingSettingsAreNotConfiguredNotAFailure() throws Exception {
         ActiveMqSourcePlugin p = new ActiveMqSourcePlugin();
         Map<String, String> s = new HashMap<>(Map.of("broker-url", "failover:(tcp://127.0.0.1:61616)"));
-        s.put("state.dir", state.toString());
+        s.put("disk-cache.dir", state.toString());
         assertThatThrownBy(() -> p.start(DatedSourceContract.context(s))).isInstanceOf(PluginNotConfigured.class);
         p.close();
     }

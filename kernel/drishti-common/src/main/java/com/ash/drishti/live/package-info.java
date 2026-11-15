@@ -14,4 +14,4 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /** Live feeds: a kind's live rules from its contract and the reasons a live message is rejected (docs/architecture/LIVE_CONNECTORS_DESIGN.md). */
-package com.ash.drishti.common.live;
+package com.ash.drishti.live;

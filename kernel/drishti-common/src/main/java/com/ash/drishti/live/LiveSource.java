@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.common.live;
+package com.ash.drishti.live;
 
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.EntityDocument;
@@ -122,7 +122,9 @@ public final class LiveSource implements SourcePlugin {
     public void start(SourceContext ctx) throws Exception {
         plugin.start(ctx);
         this.name = ctx.setting("source-name", plugin.manifest().name());
-        LiveState s = new LiveState(Long.parseLong(ctx.setting("cache-mb", "256").strip()) * 1024 * 1024, diskCache(ctx, name));
+        long cacheBytes = Long.parseLong(ctx.setting("cache-mb", "256").strip()) * 1024 * 1024;
+        LiveState s = transport.replayable() ? new LiveState(cacheBytes, diskCache(ctx, name))
+                : new LiveState(cacheBytes, durableStore(ctx, name), true);   // a queue sends nothing again: the state is kept on disk
         RejectLog rejects = new RejectLog(under("live/rejects", name), Integer.parseInt(ctx.setting("rejects.keep-days", "7").strip()), Clock.systemUTC());
         LiveFeed f = new LiveFeed(name, kinds, ctx.settings(), contracts, shape, bytes -> {
             try {
@@ -150,6 +152,9 @@ public final class LiveSource implements SourcePlugin {
                 LOG.log(System.Logger.Level.WARNING, name + ": a landing failed: " + e.getMessage());
             }
         }, 1, 1, TimeUnit.SECONDS);
+        if (!transport.replayable()) {
+            f.caughtUp();                                              // a queue replays nothing: what the durable state holds is all there is
+        }
         transport.receive(f);
     }
 
@@ -161,6 +166,23 @@ public final class LiveSource implements SourcePlugin {
         } catch (IllegalStateException e) {
             return null;
         }
+    }
+
+    /**
+     * The durable store of a transport that cannot replay (LIVE_CONNECTORS_DESIGN.md section 10: what the queue connectors' own state store
+     * was): {@code disk-cache.dir}, else {@code <data folder>/state/<connector>} (the folder an earlier release's queue connector kept its
+     * state in, read back in its old form once), {@code disk-cache.max-gb} (10), {@code disk-cache.durability} ({@code sync}: on disk
+     * before a message is acknowledged). Never cleared by a schedule. The former {@code state.*} settings are not read (said once).
+     */
+    private static com.ash.drishti.diskcache.DiskCache durableStore(SourceContext ctx, String name) throws IOException {
+        if (ctx.settings().keySet().stream().anyMatch(k -> k.startsWith("state."))) {
+            LOG.log(System.Logger.Level.INFO, name + ": the state.* settings are no longer read: the live state is kept on disk with disk-cache.dir, "
+                    + "disk-cache.max-gb and disk-cache.durability (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 10)");
+        }
+        String dir = ctx.setting("disk-cache.dir", com.ash.drishti.api.DataDir.under("state") + "/" + name);
+        return new com.ash.drishti.diskcache.DiskCache(Path.of(dir), (long) (Double.parseDouble(ctx.setting("disk-cache.max-gb", "10")) * 1024 * 1024 * 1024),
+                null, java.time.ZoneId.of(ctx.setting("disk-cache.zone", "America/New_York")), ctx.scheduler(), Clock.systemUTC(), true,
+                com.ash.drishti.diskcache.DiskCache.Durability.parse(ctx.setting("disk-cache.durability", "sync")));
     }
 
     private static com.ash.drishti.diskcache.DiskCache diskCache(SourceContext ctx, String name) throws IOException {
@@ -235,6 +257,9 @@ public final class LiveSource implements SourcePlugin {
     public String health() {
         String h = plugin.health();
         LiveFeed f = feed;
+        if (f != null && f.notKept() != null) {
+            return "DOWN: " + f.notKept() + " (messages are not acknowledged and come again)";
+        }
         if (f != null && !f.isCaughtUp() && h != null && h.startsWith("UP") && !h.contains("catching up")) {
             return "UP (catching up)";
         }

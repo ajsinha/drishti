@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.common.live;
+package com.ash.drishti.live;
 
 import com.ash.drishti.api.live.LivePosition;
 import com.fasterxml.jackson.core.type.TypeReference;

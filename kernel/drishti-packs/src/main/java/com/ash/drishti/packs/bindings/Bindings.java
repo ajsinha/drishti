@@ -72,9 +72,11 @@ public record Bindings(Map<String, Binding> byKind) {
      * @param writeTo where a correction of a record of the kind is written (KERNEL_AND_MODULES.md section 18.6): by source system
      *                ({@code write: {connectors: {ENDUR: trade-endur-live}}}), or {@value #ANY_SYSTEM} for one connector of every
      *                system ({@code write: {connector: <name>}}); empty: what is shipped and declared decides
+     * @param liveBoth true when the site asks the kind's live rows to be overlaid at once and landed by window too ({@code live:
+     *                {connectors: [...], apply: both}}; LIVE_CONNECTORS_DESIGN.md section 2.4, decision Q7): never the contract's choice
      */
     public record Binding(String kind, List<String> read, boolean union, List<String> live, String writeLake, String writeTable, boolean demo,
-            String note, Map<String, String> writeTo) {
+            String note, Map<String, String> writeTo, boolean liveBoth) {
 
         /** The {@link #writeTo} key of a connector that takes the corrections of every source system. */
         public static final String ANY_SYSTEM = "*";
@@ -84,6 +86,12 @@ public record Bindings(Map<String, Binding> byKind) {
             live = live == null ? List.of() : List.copyOf(live);
             note = note == null ? "" : note;
             writeTo = writeTo == null ? Map.of() : java.util.Collections.unmodifiableMap(new LinkedHashMap<>(writeTo));
+        }
+
+        /** A binding whose live rows are overlaid only (the contract's apply). */
+        public Binding(String kind, List<String> read, boolean union, List<String> live, String writeLake, String writeTable, boolean demo, String note,
+                Map<String, String> writeTo) {
+            this(kind, read, union, live, writeLake, writeTable, demo, note, writeTo, false);
         }
 
         /** A binding that names no write path. */
@@ -127,7 +135,9 @@ public record Bindings(Map<String, Binding> byKind) {
             if (union) {
                 m.put("union", true);
             }
-            if (live.size() == 1) {
+            if (liveBoth) {
+                m.put("live", Map.of("connectors", live, "apply", "both"));
+            } else if (live.size() == 1) {
                 m.put("live", live.get(0));                   // one connector is written as a name, several as a list
             } else if (!live.isEmpty()) {
                 m.put("live", live);
@@ -287,6 +297,20 @@ public record Bindings(Map<String, Binding> byKind) {
         }
         List<String> live = new ArrayList<>();
         Object lv = m.get("live");
+        boolean liveBoth = false;
+        if (lv instanceof Map<?, ?> lm) {                     // {connectors: [...], apply: both}: the site's choice to land an overlay kind too
+            for (Object k : lm.keySet()) {
+                if (!Set.of("connectors", "apply").contains(String.valueOf(k))) {
+                    throw new Invalid(kind + ": 'live' as a mapping has connectors and apply, not '" + k + "'");
+                }
+            }
+            String apply = lm.get("apply") == null ? "overlay" : String.valueOf(lm.get("apply")).strip().toLowerCase(Locale.ROOT);
+            if (!apply.equals("both") && !apply.equals("overlay")) {
+                throw new Invalid(kind + ": 'live: {apply}' is both or overlay (land is the contract's choice), not '" + apply + "'");
+            }
+            liveBoth = apply.equals("both");
+            lv = lm.get("connectors");
+        }
         if (lv instanceof List<?> l) {
             l.forEach(x -> live.add(String.valueOf(x).trim()));
         } else if (lv != null) {
@@ -342,6 +366,9 @@ public record Bindings(Map<String, Binding> byKind) {
             throw new Invalid(kind + ": the binding names nothing (read, live, write or demo)");
         }
         String note = m.get("note") == null ? "" : String.valueOf(m.get("note"));
-        return new Binding(kind, read, union, live, lake, table, demo, note, writeTo);
+        if (liveBoth && live.isEmpty()) {
+            throw new Invalid(kind + ": 'live: {apply: both}' names its connectors (connectors: [...])");
+        }
+        return new Binding(kind, read, union, live, lake, table, demo, note, writeTo, liveBoth);
     }
 }

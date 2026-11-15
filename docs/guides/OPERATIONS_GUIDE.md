@@ -105,7 +105,7 @@ From a clean clone the whole install takes about 15 minutes on a laptop, most of
 | uv | any recent (**recommended**) | makes the console's Python environment, also where `python3 -m venv` cannot | `uv --version` |
 | git | any | downloads the code | `git --version` |
 | Docker | optional | containers, the PostgreSQL/Kafka/Aerospike extras, some tests | `docker --version` |
-| Disk | a few GB, plus the lakes (the demo lakes: 3.4 GB), each Kafka disk cache (up to `disk-cache.max-gb`, 10 GB) and each ActiveMQ or RabbitMQ state store (`state.max-gb`, 10 GB; plan about twice that, on an SSD) | | |
+| Disk | a few GB, plus the lakes (the demo lakes: 3.4 GB), each Kafka disk cache (up to `disk-cache.max-gb`, 10 GB) and each ActiveMQ or RabbitMQ live state (`disk-cache.max-gb`, 10 GB; plan about twice the rows held, on an SSD) | | |
 | Memory | 2 GB of heap for the samples, 4 GB for the demo lakes; [section 14](#14-memory-caches-and-capacity) says what grows | | |
 
 On Ubuntu or Debian:
@@ -2087,7 +2087,7 @@ into Grafana (view p99, views a second, live p99, streams and topics, frames a s
 | Lake maintenance failed | the job exits 1, or an `"event": "failed"` line | the `error` in that line |
 | A pool exhausted | `drishti_db_pool_waiting > 0` for 2 min, or `poolsAttention` not empty | [21.6](#216-connectors) |
 | A connection held too long | `increase(drishti_db_pool_leaks[1h]) > 0`, or the log line `connection leak suspected` | the stack in that line |
-| Message state store cannot write, or full | an ActiveMQ or RabbitMQ connector's health ends `(messages are not acknowledged and come again)`, or `UP (state store over its budget: …)` | free or grow the disk under `state.root`; raise `state.max-gb` |
+| A queue connector's live state cannot write | an ActiveMQ or RabbitMQ connector's health ends `(messages are not acknowledged and come again)` | free or grow the disk under its `disk-cache.dir` (`<data dir>/state/<connector>`); it resumes by itself |
 | Outbox dead letters | `drishti_collab_outbox{state="dead"} > 0` | [12.2](#122-collaboration-email-and-the-outbox) |
 
 ### 13.5 Platform metrics and alert rules
@@ -2203,7 +2203,7 @@ server.
 | Derived connector (grouped pages) | `store: heap`: every page; `store: disk` (the trading pack's `trade-pages`): each group's totals in memory, members on disk under `<data>/derived/<connector>`, kept across restarts | `max-stream` (100,000) for heap; the disk, 16 dates, for disk |
 | A live connector (Kafka) | the kernel's live state: an entry and a type-ahead entry per key (about 0.5 GB per million entities), recent documents | `cache-mb` (256); the kind's `live.retention` (`ttl`, `max-rows`) |
 | Kafka disk cache | every live message of the day, on local disk (RocksDB, LZ4, oldest files dropped first), one folder per connector | `disk-cache.max-gb` (10), cleared every night at `disk-cache.reset-at` (02:00 New York), `disk-cache.dir` |
-| ActiveMQ / RabbitMQ connectors | recent documents; the latest document of every entity on disk (RocksDB, level compaction), synced per `state.durability` (`sync` default, `wal`, `none`); a message it cannot keep is not acknowledged and comes again | `cache-mb` (128); `state.max-gb` (10) under `state.dir` (`./data/state/<connector>`); past it `state.when-full: evict-oldest` (logged, counted in `evicted`) or `warn` |
+| ActiveMQ / RabbitMQ connectors | the kernel's live state: recent documents in memory; the newest row of every key on disk (RocksDB, level compaction), synced per `disk-cache.durability` (`sync` default, `wal`, `none`); a message it cannot keep is not acknowledged and comes again | `cache-mb` (256); `disk-cache.max-gb` (10) under `disk-cache.dir` (`./data/state/<connector>`); the kind's `live.retention` |
 | Aerospike connector | the kinds' dates, the ids, days of promoted bins | `columns-cache-mb` (1024), kept `columns-seconds` (300) |
 | PostgreSQL (JDBC table mode) | nothing: every read is a query | `pool-size` (20) |
 | Engine | layouts, shape fingerprints, compiled expressions | `drishti.engine.layout-cache-size` (10,000), `fingerprint-cache-size` (100,000), `drishti.rachana.expression-cache-size` (10,000) |
@@ -2212,8 +2212,8 @@ server.
 The heap budget is squeezed first under pressure (`drishti.memory.squeeze-at`, 0.85, halves the connectors' caches), then busy protection makes new
 heavy work wait ([14.7](#147-busy-protection-refuse-politely-never-fall-over)). Documents of entities nobody watches are not held. **Disk space**: the
 Kafka disk cache never rewrites files, so space comes back when the store passes `max-gb`, at the nightly reset or on a purge (never beyond
-`max-gb`); a message-queue state store merges overwritten values away, checks itself every `state.check-seconds` (60) and, with `evict-oldest`,
-removes the entities written longest ago down to 90% of its budget: plan about twice `state.max-gb` of disk per connector. A full disk loses no
+`max-gb`); a message-queue live state merges overwritten values away and drops rows past the kind's `live.retention`: plan about twice the
+rows held of disk per connector. A full disk loses no
 message: it is not acknowledged and comes again, and health says `DOWN: … (messages are not acknowledged and come again)` meanwhile.
 
 **Admin → Caches** lists **every** cache of the server (the engine's, the connectors', VaR's answers, open dates, hot files, views and shard books,
@@ -2418,7 +2418,7 @@ benchmark's users phase at a small heap with more users than it holds: expect re
   [BENCHMARK.md](../admin/BENCHMARK.md).
 - File watching shares one operating-system watch service per process: one inotify instance (`fs.inotify.max_user_instances`), one watch per watched
   folder (`fs.inotify.max_user_watches`; raise it when Health says `POLLING`).
-- An ActiveMQ or RabbitMQ connector applies one message at a time; with `state.durability: sync` each waits for a disk sync (thousands a second on an
+- An ActiveMQ or RabbitMQ connector applies one message at a time; with `disk-cache.durability: sync` each waits for a disk sync (thousands a second on an
   SSD). Split a heavy feed over several connectors, or use `wal` where losing the last moments before a power loss is acceptable.
 - **Database connection pools.** Every database connector, and the identity database on PostgreSQL, has a pool of up to `pool-size` (20;
   [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtidbpool--database-connection-pools)), and the database must accept all of them at once:
@@ -3433,7 +3433,7 @@ quote values with `{$.path}` so each reader sees their own.
 | Kafka `UP (catching up)` / `DOWN: … has no partitions yet` / `DOWN: no connection to the broker (reconnecting)` | wait for the replay (`indexedEntities` grows); create the topic; bring the broker back (`nc -z host port`; advertised listeners): it carries on by itself |
 | Live view ticks from samples, not Kafka | `provenance.source` is a sample: `DRISHTI_DEMO_ENABLED=false` |
 | ActiveMQ/RabbitMQ `rejected` grows; an old entity will not go | bodies must be JSON with an id (header or `id-field.<destination>`); send a delete (`deleted=true`) or clear the state store with the server stopped |
-| ActiveMQ/RabbitMQ `DOWN: … (messages are not acknowledged and come again)`; entities gone without deletes; `UP (state store over its budget …)` | free or grow the disk under `state.root` (it resumes by itself); the store passed `state.max-gb` with `evict-oldest`: raise the budget and disk, or `when-full: warn` |
+| ActiveMQ/RabbitMQ `DOWN: … (messages are not acknowledged and come again)`; entities gone without deletes | free or grow the disk under `disk-cache.dir` (it resumes by itself); rows gone without deletes: past the kind's `live.retention` (`ttl`, `max-rows`) |
 | Feed `DOWN: ConnectException` / `HttpTimeoutException` | the server's outbound internet or proxy; or `url: file://…` |
 | Type-ahead does not offer an id; *Linked entities* is empty | `rest` and `jdbc` query mode cannot search; reverse lookups need `delta`, `jdbc` table mode, `aerospike` (`reverse-index`) or `demo` |
 | Health `DOWN: no Delta tables under ./data/delta/demo/<domain>` | `ls data/delta/demo/<domain>/*/_delta_log`: build the lake or set `DRISHTI_DELTA_ROOT` |

@@ -216,7 +216,7 @@ class KafkaSecureBrokerTest {
         s.put("poll-ms", "50");
         s.put("source-name", topic);
         produce(settings, topic, "T-1", "{\"tradeId\":\"T-1\",\"mtm\":42}");
-        com.ash.drishti.common.live.LiveSource plugin = KafkaSourcePluginTest.wrap();
+        com.ash.drishti.live.LiveSource plugin = KafkaSourcePluginTest.wrap();
         plugin.start(DatedSourceContract.context(s));
         try {
             waitFor(() -> plugin.fetch(EntityRef.of("trade", "T-1")).isPresent(), 60);

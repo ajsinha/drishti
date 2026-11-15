@@ -161,7 +161,7 @@ public record LiveSetSpec(String id, String title, String kind, String query, St
      */
     @SuppressWarnings("unchecked")
     public static LiveSetSpec parse(Map<String, Object> m, String where, String module,
-            java.util.function.Function<String, com.ash.drishti.common.live.LiveRules> contract) {
+            java.util.function.Function<String, com.ash.drishti.live.LiveRules> contract) {
         List<String> problems = new ArrayList<>();
         for (String k : m.keySet()) {
             if (!KEYS.contains(k)) {
@@ -181,7 +181,7 @@ public record LiveSetSpec(String id, String title, String kind, String query, St
         String changedBy = field(m, "changed-by", problems);
         String changedAt = field(m, "changed-at", problems);
         if (contract != null && kind != null && ID.matcher(kind).matches()) {
-            com.ash.drishti.common.live.LiveRules rules = contract.apply(kind);
+            com.ash.drishti.live.LiveRules rules = contract.apply(kind);
             if (rules != null) {
                 key = key != null ? key : rules.key().size() == 1 ? rules.key().get(0) : null;
                 version = version != null ? version : rules.order().isEmpty() ? null : rules.order().get(0);

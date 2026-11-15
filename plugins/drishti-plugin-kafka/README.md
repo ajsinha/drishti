@@ -28,15 +28,15 @@ settings:
 - kind.*
 - shape
 - shape.*
+- kind-by.*
+- land.*
+- lake
+- pack
 - id-field
 - id-field.*
 - mode
 - max-message-kb
 - next-date.max-rows
-- kind-by.*
-- land.*
-- lake
-- pack
 - rejects.keep-days
 - poll-ms
 - cache-mb
@@ -132,6 +132,10 @@ number of changes, and a restart replays one message per entity.
 | `kind.*` | string |  | Kind per topic: kind.<topic> |
 | `shape` | one of document, envelope, jsonl |  | What a message is: the kind's row (document), {kind, key, op, asOf, doc} (envelope), or several rows (jsonl). Default per topic: document when the topic's kind is named, else envelope |
 | `shape.*` | string |  | Shape per topic: shape.<topic> |
+| `kind-by.*` | string |  | One topic of two kinds told apart by a field: kind-by.field names the field, kind-by.<value> the kind of each value, kind-by.default the kind when the field is absent or names none |
+| `land.*` | string |  | A landed kind's window (apply: land): land.window (5m) how long it collects, land.max-keys (500) how many keys land it earlier |
+| `lake` | string |  | A landed kind's lake: the lake its windows are written to (a name of config/lakes/) |
+| `pack` | string |  | A landed kind's pack: the pack its windows are announced for (Data loads) |
 | `id-field` | string |  | A kind whose contract has no key: the field that is its key, every topic (else the message key) |
 | `id-field.*` | string |  | Id field per topic: id-field.<topic> |
 | `mode` | string |  | No longer read (said once at start): a companion (companion-of:) is a feed over a lake, what ticks was; a live connector without one holds its rows, what state was. Remove it |

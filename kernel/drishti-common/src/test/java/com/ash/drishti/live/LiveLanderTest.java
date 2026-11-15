@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.common.live;
+package com.ash.drishti.live;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -141,6 +141,41 @@ class LiveLanderTest {
         assertThat(lake.batches).hasSize(1);
         assertThat(f.counted("rejected.landing")).isEqualTo(1);
         assertThat(log.newest()).singleElement().satisfies(n -> assertThat(n.toString()).contains("DRS-5201").contains("T-2"));
+    }
+
+    @Test
+    void anOverlayKindBoundForBothIsOverlaidAtOnceAndLandedByWindow() {
+        Map<String, Object> c = Map.of("kind", "trade", "class", "input", "key", List.of("TRADE_ID"), "fields", List.of(Map.of("name", "TRADE_ID"),
+                Map.of("name", "TRADE_VERSION"), Map.of("name", "MTM")), "live", Map.of("order", List.of("TRADE_VERSION")));
+        LiveRules.Parsed parsed = LiveRules.parse(c, null);
+        assertThat(parsed.problems()).isEmpty();
+        LiveRules both = parsed.rules().withApply(LiveRules.Apply.BOTH);          // the site's binding: live: {connectors: [...], apply: both}
+        KindContracts contracts = new KindContracts() {
+            @Override
+            public LiveRules rules(String kind) {
+                return kind.equals("trade") ? both : LiveRules.defaults(kind, List.of(), false);
+            }
+
+            @Override
+            public Map<String, Object> contract(String kind) {
+                return c;
+            }
+        };
+        Lake lake = new Lake();
+        Map<String, String> s = Map.of("shape", "jsonl", "kind", "trade");
+        LiveFeed f = new LiveFeed("trade-mq", Set.of("trade"), s, contracts, null, b -> CODEC.read(new String(b, StandardCharsets.UTF_8)),
+                new LiveState(1 << 20, null), null, LiveDates.of(() -> LocalDate.of(2026, 11, 16), d -> d.plusDays(1)), null, null);
+        f.lander(new LiveLander("trade-mq", s, lake, clock));
+        f.accept(msg("{\"TRADE_ID\":\"T-1\",\"TRADE_VERSION\":1,\"MTM\":10}"));
+        f.accept(msg("{\"TRADE_ID\":\"T-1\",\"TRADE_VERSION\":2,\"MTM\":11}"));
+        assertThat(f.state().size()).as("overlaid at once").isEqualTo(1);
+        f.lander().applyNow();
+        f.landIfDue();
+        assertThat(lake.batches).singleElement().satisfies(b -> {
+            assertThat(b.kind()).isEqualTo("trade");
+            assertThat(b.rows()).singleElement().satisfies(r -> assertThat(r.path("MTM").asInt()).isEqualTo(11));
+        });
+        assertThat(f.state().size()).as("still overlaid after it landed").isEqualTo(1);
     }
 
     @Test

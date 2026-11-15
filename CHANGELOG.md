@@ -18,6 +18,16 @@
 
 ## Unreleased
 
+- **Live feeds, step L6: ActiveMQ and RabbitMQ on the kernel's live intake, and `apply: both`.** The two queue connectors are now thin
+  transports like Kafka: they connect (or wait calmly for their broker), receive, and hand each message to the kernel's live intake,
+  which decodes it, checks it against the kind's contract and keeps the newest row per key. A queue sends nothing again, so its live
+  state is kept on local disk (`disk-cache.dir`, default `<data dir>/state/<connector>`; `disk-cache.durability`, `sync` by default),
+  each row and delete written before the message is acknowledged; a message the disk cannot keep is not acknowledged and comes again.
+  An existing state store is read once in its old form and kept in the new one. The `state.*` settings are not read any more (said
+  once at start); the contract's `live.retention` bounds the rows. A site may bind an overlay kind with `live: {connectors: [...],
+  apply: both}`: its rows are overlaid at once and landed by window too. A kind no engine lands is appended to its table of the
+  connector's `lake` by the lake loader as one batch per window and announced to the connector's `pack`. The shared
+  `MessageStateSource` is gone; the kernel's live classes moved to the package `com.ash.drishti.live`.
 - **Live feeds, step L5: landed kinds, and the PV topic on them.** A kind whose contract says `live.apply: land` collects in the kernel's
   live lander, the newest row per key (`live.land-key`), and each window (`land.window`, `land.max-keys`, or Apply now) lands as one
   batch per kind and date, its id from its transport span, through the engine that owns the kind (`KindLanding`). The PV topic is now

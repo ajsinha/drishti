@@ -45,13 +45,12 @@ class ActiveMqOutageTest extends BrokerOutage {
     @Override
     protected SourcePlugin start(int port, Path state) throws Exception {
         Map<String, String> s = new HashMap<>(Map.of("kind." + MessageSourceContract.TRADES, "trade", "id-field." + MessageSourceContract.TRADES,
-                "tradeId", "state.dir", state.toString(), "source-name", "outage-test"));
+                "tradeId", "disk-cache.dir", state.toString(), "source-name", "outage-test"));
         s.put("broker-url", "failover:(tcp://localhost:" + port + ")?initialReconnectDelay=200&maxReconnectDelay=1000");
         s.put("user", "admin");
         s.put("password", "admin");
         s.put("destinations", "queue:" + MessageSourceContract.TRADES);
-        ActiveMqSourcePlugin p = new ActiveMqSourcePlugin();
-        p.start(DatedSourceContract.context(s));
+        com.ash.drishti.live.LiveSource p = com.ash.drishti.testkit.MessageSourceContract.live(new ActiveMqSourcePlugin(), s);
         return p;
     }
 

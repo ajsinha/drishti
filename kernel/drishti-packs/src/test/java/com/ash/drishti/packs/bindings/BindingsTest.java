@@ -61,6 +61,21 @@ class BindingsTest {
     }
 
     @Test
+    void theSiteMayAskAnOverlayKindToBeLandedToo() {
+        Bindings.Binding both = Bindings.binding("trade", Map.of("read", List.of("trade-endur"),
+                "live", Map.of("connectors", List.of("trade-endur-mq"), "apply", "both")));
+        assertThat(both.live()).containsExactly("trade-endur-mq");
+        assertThat(both.liveBoth()).isTrue();
+        assertThat(both.toMap().get("live")).isEqualTo(Map.of("connectors", List.of("trade-endur-mq"), "apply", "both"));
+        assertThat(Bindings.binding("trade", both.toMap())).isEqualTo(both);
+        assertThat(Bindings.binding("trade", Map.of("live", "trade-endur-mq")).liveBoth()).isFalse();
+        assertThatThrownBy(() -> Bindings.binding("trade", Map.of("live", Map.of("connectors", List.of("x"), "apply", "land"))))
+                .hasMessageContaining("both or overlay");
+        assertThatThrownBy(() -> Bindings.binding("trade", Map.of("live", Map.of("apply", "both"))))
+                .hasMessageContaining("names its connectors");
+    }
+
+    @Test
     void refusesWithWords() {
         assertThatThrownBy(() -> Bindings.binding("trade", Map.of("read", List.of("a"), "for", Map.of())))
                 .hasMessageContaining("one binding per kind");

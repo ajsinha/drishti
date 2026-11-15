@@ -53,10 +53,11 @@ class RabbitMqBrokerAbsentTest {
         Level before = root.getLevel();
         root.setLevel(Level.INFO);
         int port = closedPort();
-        RabbitMqSourcePlugin p = new RabbitMqSourcePlugin();
+        com.ash.drishti.live.LiveSource p = new com.ash.drishti.live.LiveSource(new RabbitMqSourcePlugin(),
+                com.ash.drishti.live.KindContracts.NONE, java.util.Set.of(), null);   // as the kernel runs it
         try {
             Map<String, String> s = new HashMap<>(Map.of("uri", "amqp://guest:guest@127.0.0.1:" + port + "/%2f", "queues", "trades", "kind", "trade"));
-            s.put("state.dir", state.toString());
+            s.put("disk-cache.dir", state.toString());
             s.put("source-name", "waiting-test");
             p.start(DatedSourceContract.context(s));
             Thread.sleep(2_500);                                   // several looks, one line
@@ -75,7 +76,7 @@ class RabbitMqBrokerAbsentTest {
     void missingSettingsAreNotConfiguredNotAFailure() throws Exception {
         RabbitMqSourcePlugin p = new RabbitMqSourcePlugin();
         Map<String, String> s = new HashMap<>(Map.of("uri", "amqp://guest:guest@127.0.0.1:5672/%2f"));
-        s.put("state.dir", state.toString());
+        s.put("disk-cache.dir", state.toString());
         assertThatThrownBy(() -> p.start(DatedSourceContract.context(s))).isInstanceOf(PluginNotConfigured.class);
         p.close();
     }

@@ -546,15 +546,12 @@ plugins:
       - { name: id-field, default: id, desc: "The body's id field, every destination", group: mapping }
       - { name: "kind.*", desc: "Kind per destination: kind.<destination>", group: mapping }
       - { name: "id-field.*", desc: "Id field per kind: id-field.<kind>", group: mapping }
-      - { name: cache-mb, type: int, default: "128", desc: "Entities kept in memory", group: tuning }
-      - { name: state.dir, type: path, desc: "Folder of the received-state store; default: <state.root>/<connector name>", group: state, default: "<state.root>/<source-name>" }
-      - { name: state.root, type: path, default: "<data dir>/state", desc: "Parent of the per-connector state folder", group: state }
-      - { name: state.max-gb, default: "10", desc: "This connector's disk budget (decimal allowed); what happens past it is `state.when-full` (plugins/drishti-plugin-activemq/README.md › Durability and disk budget)", group: state }
-      - { name: state.reset-at, default: never, desc: "Clock time (HH:mm) to clear the state store each day, or never", group: state }
-      - { name: state.zone, default: America/New_York, desc: "Time zone of state.reset-at", group: state }
-      - { name: state.durability, type: "enum:none|wal|sync", default: sync, desc: "`sync` (write-ahead log synced on every write: no acknowledged message lost on a crash or a power loss), `wal` (not synced: survives a crash of the process, a power loss can lose the last moments), `none` (no log: a crash can lose up to the 32 MB write buffer) (plugins/drishti-plugin-activemq/README.md › Durability and disk budget)", group: state }
-      - { name: state.when-full, type: "enum:evict-oldest|warn", default: evict-oldest, desc: "`evict-oldest`: past the budget, remove the entities written longest ago until under 90% of it, then compact (logged, counted in `evicted`); `warn`: remove nothing, say so in health", group: state }
-      - { name: state.check-seconds, type: int, default: "60", desc: "How often the store's size is checked against the budget", group: state }
+      - { name: cache-mb, type: int, default: "256", desc: "The live state's documents held in memory, by size", group: tuning }
+      - { name: "disk-cache.*", desc: "The live state on local disk, kept across restarts (a queue sends nothing again): disk-cache.dir (default <data dir>/state/<connector>), disk-cache.max-gb (10), disk-cache.durability (sync, wal or none; default sync: on disk before a message is acknowledged)", group: state }
+      - { name: "state.*", desc: "No longer read (said once at start): the live state's disk-cache.* settings replace them", group: state }
+      - { name: shape, type: "enum:document|envelope|jsonl", desc: "What a message is (read by the kernel's live intake): the kind's row (document), {kind, key, op, asOf, doc} (envelope), or several rows (jsonl); default per destination: document when its kind is named, else envelope", group: mapping }
+      - { name: max-message-kb, type: int, default: "1024", desc: "A larger message is rejected (too-large, DRS-1072)", group: mapping }
+      - { name: "rejects.keep-days", type: int, default: "7", desc: "Days of the reject log kept (<data folder>/live/rejects/<connector>/<date>.jsonl)", group: mapping }
       - { name: max-redeliveries, type: int, desc: "Redeliveries of a message the state store could not keep before the broker dead-letters it; `-1`: without limit", group: tuning, default: "-1" }
   rabbitmq:
     tls: true
@@ -567,15 +564,12 @@ plugins:
       - { name: id-field, default: id, desc: "The body's id field, for every queue with a kind", group: mapping }
       - { name: "kind.*", desc: "Kind per queue: kind.<queue>", group: mapping }
       - { name: "id-field.*", desc: "Id field per kind: id-field.<kind>", group: mapping }
-      - { name: cache-mb, type: int, default: "128", desc: "Entities kept in memory", group: tuning }
-      - { name: state.dir, type: path, desc: "Folder of the received-state store; default: <state.root>/<connector name>", group: state, default: "<state.root>/<source-name>" }
-      - { name: state.root, type: path, default: "<data dir>/state", desc: "Parent of the per-connector state folder", group: state }
-      - { name: state.max-gb, default: "10", desc: "This connector's disk budget (decimal values accepted); what happens past it is `state.when-full`", group: state }
-      - { name: state.reset-at, default: never, desc: "Clock time (HH:mm) to clear the state store each day, or never", group: state }
-      - { name: state.zone, default: America/New_York, desc: "Time zone of state.reset-at", group: state }
-      - { name: state.durability, type: "enum:none|wal|sync", default: sync, desc: "`sync` (write-ahead log synced on every write: no acknowledged message lost on a crash or a power loss), `wal` (not synced: survives a crash of the process, a power loss can lose the last moments), `none` (no log: a crash can lose up to the 32 MB memtable) (plugins/drishti-plugin-rabbitmq/README.md › Durability and disk budget)", group: state }
-      - { name: state.when-full, type: "enum:evict-oldest|warn", default: evict-oldest, desc: "`evict-oldest`: past the budget, remove the entities written longest ago until under 90% of it, then compact (logged, counted in `evicted`); `warn`: remove nothing, say so in health (plugins/drishti-plugin-rabbitmq/README.md › Durability and disk budget)", group: state }
-      - { name: state.check-seconds, type: int, default: "60", desc: "How often the store's size is checked against the budget", group: state }
+      - { name: cache-mb, type: int, default: "256", desc: "The live state's documents held in memory, by size", group: tuning }
+      - { name: "disk-cache.*", desc: "The live state on local disk, kept across restarts (a queue sends nothing again): disk-cache.dir (default <data dir>/state/<connector>), disk-cache.max-gb (10), disk-cache.durability (sync, wal or none; default sync: on disk before a message is acknowledged)", group: state }
+      - { name: "state.*", desc: "No longer read (said once at start): the live state's disk-cache.* settings replace them", group: state }
+      - { name: shape, type: "enum:document|envelope|jsonl", desc: "What a message is (read by the kernel's live intake): the kind's row (document), {kind, key, op, asOf, doc} (envelope), or several rows (jsonl); default per destination: document when its kind is named, else envelope", group: mapping }
+      - { name: max-message-kb, type: int, default: "1024", desc: "A larger message is rejected (too-large, DRS-1072)", group: mapping }
+      - { name: "rejects.keep-days", type: int, default: "7", desc: "Days of the reject log kept (<data folder>/live/rejects/<connector>/<date>.jsonl)", group: mapping }
       - { name: declare, type: boolean, desc: "Declare each queue durable (no arguments) and bind it; `false` uses existing queues and ignores `bind.*`", group: connection, default: "true" }
       - { name: prefetch, type: int, desc: "Unacknowledged messages in flight per consumer (`basicQos`)", group: tuning, default: "100" }
       - { name: heartbeat-seconds, type: int, desc: "The requested AMQP heartbeat", group: tuning, default: "20" }

@@ -50,13 +50,10 @@ import org.junit.jupiter.api.Test;
  */
 class PluginSettingsCatalogueSyncTest {
 
-    /** The shared base class of the message-queue connectors (in drishti-common), scanned with each of them. */
-    private static final String MESSAGING = "kernel/drishti-common/src/main/java/com/ash/drishti/messaging";
-
     /** The built-in connectors (drishti-connectors), one package each. */
     private static final String BUILT_IN = "plugins/drishti-connectors/src/main/java/com/ash/drishti/plugin/";
 
-    /** The plugin source folders (relative to the repository root); a messaging connector also runs the shared base class. */
+    /** The plugin source folders (relative to the repository root). */
     private static final Map<String, List<String>> SOURCES = Map.ofEntries(
             Map.entry("jdbc", List.of("plugins/drishti-plugin-jdbc")), Map.entry("duckdb", List.of("plugins/drishti-plugin-duckdb")),
             Map.entry("delta", List.of("plugins/drishti-plugin-delta")), Map.entry("iceberg", List.of("plugins/drishti-plugin-iceberg")),
@@ -68,8 +65,8 @@ class PluginSettingsCatalogueSyncTest {
             Map.entry("news", List.of(BUILT_IN + "news")), Map.entry("yfinance", List.of(BUILT_IN + "yfinance")),
             Map.entry("rest", List.of(BUILT_IN + "rest")), Map.entry("s3", List.of("plugins/drishti-plugin-s3")),
             Map.entry("kafka", List.of("plugins/drishti-plugin-kafka")),
-            Map.entry("activemq", List.of("plugins/drishti-plugin-activemq", MESSAGING)),
-            Map.entry("rabbitmq", List.of("plugins/drishti-plugin-rabbitmq", MESSAGING)));
+            Map.entry("activemq", List.of("plugins/drishti-plugin-activemq")),
+            Map.entry("rabbitmq", List.of("plugins/drishti-plugin-rabbitmq")));
 
     /** Keys the scan meets that are not connector settings (a document field, a loader command line option). */
     private static final Set<String> NOT_SETTINGS = Set.of("name", "https", "http", "id", "doc", "keep-days");

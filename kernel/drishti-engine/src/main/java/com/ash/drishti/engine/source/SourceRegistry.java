@@ -186,33 +186,33 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
     }
 
     /** The loaded kinds' contracts the live connectors read their kinds' rules from (LIVE_CONNECTORS_DESIGN.md section 2.3). */
-    private volatile com.ash.drishti.common.live.KindContracts liveContracts = com.ash.drishti.common.live.KindContracts.NONE;
+    private volatile com.ash.drishti.live.KindContracts liveContracts = com.ash.drishti.live.KindContracts.NONE;
 
     /** The server's contracts, once its packs are loaded; a live connector started earlier reads them from then on. */
-    public void liveContracts(com.ash.drishti.common.live.KindContracts contracts) {
-        liveContracts = contracts == null ? com.ash.drishti.common.live.KindContracts.NONE : contracts;
+    public void liveContracts(com.ash.drishti.live.KindContracts contracts) {
+        liveContracts = contracts == null ? com.ash.drishti.live.KindContracts.NONE : contracts;
     }
 
     /** The live date of the live connectors (LIVE_CONNECTORS_DESIGN.md section 5): the server's business date once it is told. */
-    private volatile com.ash.drishti.common.live.LiveDates liveDates = com.ash.drishti.common.live.LiveDates.NONE;
+    private volatile com.ash.drishti.live.LiveDates liveDates = com.ash.drishti.live.LiveDates.NONE;
 
     /** The server's business dates: a live connector started earlier reads them from then on. */
-    public void liveDates(com.ash.drishti.common.live.LiveDates dates) {
-        liveDates = dates == null ? com.ash.drishti.common.live.LiveDates.NONE : dates;
+    public void liveDates(com.ash.drishti.live.LiveDates dates) {
+        liveDates = dates == null ? com.ash.drishti.live.LiveDates.NONE : dates;
     }
 
     /** Where landed kinds' windows go (LIVE_CONNECTORS_DESIGN.md section 2.4): the server's lake writer once it is told. */
-    private volatile com.ash.drishti.common.live.Landing landing = com.ash.drishti.common.live.Landing.NONE;
+    private volatile com.ash.drishti.live.Landing landing = com.ash.drishti.live.Landing.NONE;
 
     /** The server's lake writer for landed kinds. */
-    public void landing(com.ash.drishti.common.live.Landing l) {
-        landing = l == null ? com.ash.drishti.common.live.Landing.NONE : l;
+    public void landing(com.ash.drishti.live.Landing l) {
+        landing = l == null ? com.ash.drishti.live.Landing.NONE : l;
     }
 
     /** The kernel's live source of a connector (a live transport's), or empty. */
-    private Optional<com.ash.drishti.common.live.LiveSource> live(String connector) {
+    private Optional<com.ash.drishti.live.LiveSource> live(String connector) {
         return plugin(connector).map(p -> p instanceof ConnectorInstance ci ? ci.delegate() : p)
-                .filter(p -> p instanceof com.ash.drishti.common.live.LiveSource).map(com.ash.drishti.common.live.LiveSource.class::cast);
+                .filter(p -> p instanceof com.ash.drishti.live.LiveSource).map(com.ash.drishti.live.LiveSource.class::cast);
     }
 
     /**
@@ -246,15 +246,15 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
     }
 
     /** A kind's live rules (its contract's {@code live:} block, else the defaults): what decides which of a live row and a lake row is newer. */
-    public com.ash.drishti.common.live.LiveRules liveRules(String kind) {
+    public com.ash.drishti.live.LiveRules liveRules(String kind) {
         return liveContracts.rules(kind);
     }
 
     /** The contracts as a live connector reads them: always the registry's current ones. */
-    private com.ash.drishti.common.live.KindContracts currentContracts() {
-        return new com.ash.drishti.common.live.KindContracts() {
+    private com.ash.drishti.live.KindContracts currentContracts() {
+        return new com.ash.drishti.live.KindContracts() {
             @Override
-            public com.ash.drishti.common.live.LiveRules rules(String kind) {
+            public com.ash.drishti.live.LiveRules rules(String kind) {
                 return liveContracts.rules(kind);
             }
 
@@ -598,9 +598,9 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
             if (plugin instanceof com.ash.drishti.api.live.LiveTransport) {
                 // a messaging plugin is a transport: the kernel's one live intake and state answer its reads, and its rows are shaped as
                 // they arrive, before they are validated (LIVE_CONNECTORS_DESIGN.md sections 3.1 and 7)
-                com.ash.drishti.common.live.LiveSource live = new com.ash.drishti.common.live.LiveSource(plugin, currentContracts(),
+                com.ash.drishti.live.LiveSource live = new com.ash.drishti.live.LiveSource(plugin, currentContracts(),
                         new java.util.HashSet<>(c.kinds()), shape.none() ? null : shape::apply,
-                        com.ash.drishti.common.live.LiveDates.of(() -> liveDates.live(), d -> liveDates.next(d)));
+                        com.ash.drishti.live.LiveDates.of(() -> liveDates.live(), d -> liveDates.next(d)));
                 live.landing(b -> landing.land(b));                    // the server's lake writer, read when a window lands
                 plugin = live;
                 return new ConnectorInstance(name, new java.util.HashSet<>(c.kinds()), plugin, shape, systems, true);

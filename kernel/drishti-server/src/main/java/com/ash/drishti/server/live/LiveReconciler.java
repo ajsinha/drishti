@@ -16,10 +16,10 @@
 package com.ash.drishti.server.live;
 
 import com.ash.drishti.api.EntityRef;
-import com.ash.drishti.common.live.LiveDates;
-import com.ash.drishti.common.live.LiveRules;
-import com.ash.drishti.common.live.LiveSource;
-import com.ash.drishti.common.live.LiveState;
+import com.ash.drishti.live.LiveDates;
+import com.ash.drishti.live.LiveRules;
+import com.ash.drishti.live.LiveSource;
+import com.ash.drishti.live.LiveState;
 import com.ash.drishti.engine.source.SourceRegistry;
 import com.ash.drishti.engine.source.SourceRouter;
 import com.ash.drishti.engine.time.BusinessDates;
@@ -73,6 +73,9 @@ public final class LiveReconciler implements AutoCloseable {
     private void loaded(LoadRecord load) {
         if (load.kind() == null || load.businessDate() == null || router.liveSources(load.kind()).isEmpty()) {
             return;
+        }
+        if (load.source() != null && load.source().startsWith(Landings.SOURCE)) {
+            return;                 // a window the live lander wrote (apply land or both): the live rows it came from are not absorbed by it
         }
         // the load's cut-off: when the load was received, less the settle time (the extract stated by the load comes with its manifest)
         Instant cutoff = (load.receivedAt() == null ? Instant.now() : load.receivedAt()).minus(settle);

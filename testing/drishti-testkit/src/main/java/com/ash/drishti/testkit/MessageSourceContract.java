@@ -29,10 +29,11 @@ import java.util.function.BooleanSupplier;
 import org.junit.jupiter.api.Test;
 
 /**
- * What every message-queue connector must do, against a real broker: documents and envelopes become entities,
- * updates reach live views, deletes remove, the latest state survives a restart of Drishti (a queue cannot send it
- * again), messages sent while Drishti was down arrive when it returns, and search finds what arrived. A broker's test
- * extends this and supplies the plugin and a producer. Destinations: {@code drishti.trades} (documents of kind
+ * What every message-queue connector must do, against a real broker, as the kernel runs it (the plugin a live transport, the kernel's
+ * live intake and durable live state behind it: docs/architecture/LIVE_CONNECTORS_DESIGN.md section 10): documents and envelopes become
+ * entities, updates reach live views, deletes remove, the latest state survives a restart of Drishti (a queue cannot send it again),
+ * messages sent while Drishti was down arrive when it returns, and search finds what arrived. A broker's test extends this and supplies
+ * the plugin and a producer. Destinations: {@code drishti.trades} (documents of kind
  * {@code trade}, id field {@code tradeId}) and {@code drishti.entities} (envelopes).
  */
 public abstract class MessageSourceContract {
@@ -48,7 +49,15 @@ public abstract class MessageSourceContract {
 
     /** The settings every broker's plugin shares (merge in the connection settings). */
     protected static Map<String, String> shared(Path state) {
-        return Map.of("kind." + TRADES, "trade", "id-field." + TRADES, "tradeId", "state.dir", state.toString(), "source-name", "queue-test");
+        return Map.of("kind." + TRADES, "trade", "id-field." + TRADES, "tradeId", "disk-cache.dir", state.toString(), "source-name", "queue-test");
+    }
+
+    /** A transport plugin as the kernel runs it: wrapped in the kernel's live source, started with {@code settings}. */
+    public static com.ash.drishti.live.LiveSource live(SourcePlugin transport, Map<String, String> settings) throws Exception {
+        com.ash.drishti.live.LiveSource s = new com.ash.drishti.live.LiveSource(transport,
+                com.ash.drishti.live.KindContracts.NONE, java.util.Set.of(), null);
+        s.start(DatedSourceContract.context(settings));
+        return s;
     }
 
     protected static void eventually(BooleanSupplier ok, int seconds) throws InterruptedException {

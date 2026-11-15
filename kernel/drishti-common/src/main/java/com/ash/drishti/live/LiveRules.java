@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.common.live;
+package com.ash.drishti.live;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -126,6 +126,12 @@ public record LiveRules(String kind, boolean allowed, List<String> key, List<Str
     }
 
     /** The defaults of a kind with no {@code live:} block (section 2.3): the safe ones. */
+    /** These rules with {@code apply} as the site's binding asks ({@code both}: overlaid at once and landed by window too). */
+    public LiveRules withApply(Apply a) {
+        return a == apply ? this : new LiveRules(kind, allowed, key, order, changedAt, changedBy, asOf, partial, deleteWhen, a, conflate, absorb,
+                ttl, maxRows, validate, effective, closedDates, keepVersions, reorderWindow, maxMessageKb, landKey);
+    }
+
     public static LiveRules defaults(String kind, List<String> key, boolean computed) {
         return new LiveRules(kind, !computed, key, List.of(), null, null, null, Partial.WHOLE, null, Apply.OVERLAY, Duration.ZERO, Absorb.RESET,
                 DEFAULT_TTL, DEFAULT_MAX_ROWS, Validate.STRICT, Effective.AT_ONCE, ClosedDates.REJECT, 1, DEFAULT_REORDER, 0, List.of());

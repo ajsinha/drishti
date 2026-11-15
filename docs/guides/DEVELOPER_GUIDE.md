@@ -78,7 +78,7 @@ artifact id (`./mvnw -pl :drishti-server -am ...`), which works wherever its fol
 | `testing/` | `drishti-it`, `drishti-testkit`, `drishti-benchmarks` | repository-wide rules, the connector contract kit, the JMH benchmarks |
 
 **A module per subject, not per class group.** A small part is a package of its neighbour rather than a module of its own: the disk
-cache (`diskcache`) and the message-queue connectors' state store (`messaging`) live in `drishti-common`, the entity links (`graph`) in
+cache (`diskcache`) and the kernel's live intake and state behind every live transport (`live`) live in `drishti-common`, the entity links (`graph`) in
 `drishti-engine`, the lake files (`lakeconfig`) in `drishti-lakeio`, the data inbox (`dataload`) and the in-memory lake (`memlake`) in
 `drishti-lakeload`, and the light connectors in `drishti-connectors`. Where a module wall would keep two parts apart, an architecture
 rule does ([§3.4](#34-architecture-rules)): the lake files and the lake file access do not see each other, the loader sees neither the
@@ -87,7 +87,7 @@ inbox nor the in-memory lake, the disk cache sees nothing of `common`, and so on
 | Module | Package | What it owns | Key classes |
 |---|---|---|---|
 | `drishti-api` | `api` | The plugin SPI and data model. **No Spring**, no internal dependencies. | `SourcePlugin`, `PluginManifest`, `SourceCapabilities`, `SourceContext`, `EntityRef`, `EntityDocument`, `Provenance`, `AsOf`, `DataNode`, `HitIndex`, `PluginNotConfigured` |
-| `drishti-common` | `common`, `diskcache`, `messaging` | Error codes, the exception type, JSON, shape fingerprints, business calendars, branding, a pack's samples (`PackSamples`), retries and live settings; a disk-backed, size-bounded, self-clearing cache (RocksDB) for live connector state; the latest-state store and live fan-out shared by the ActiveMQ and RabbitMQ connectors. | `ErrorCode`, `DrishtiException`, `JsonCodec`, `ShapeFingerprinter`, `BusinessCalendar`, `PackSamples`, `RetryPolicy`, `RetryBoard`, `LiveSettings`, `diskcache.DiskCache`, `messaging.MessageStateSource` |
+| `drishti-common` | `common`, `diskcache`, `live` | Error codes, the exception type, JSON, shape fingerprints, business calendars, branding, a pack's samples (`PackSamples`), retries and live settings; a disk-backed, size-bounded, self-clearing cache (RocksDB) for live connector state; the live intake, live state and lander every live transport hands its messages to (Kafka, ActiveMQ, RabbitMQ). | `ErrorCode`, `DrishtiException`, `JsonCodec`, `ShapeFingerprinter`, `BusinessCalendar`, `PackSamples`, `RetryPolicy`, `RetryBoard`, `LiveSettings`, `diskcache.DiskCache`, `live.LiveSource`, `live.LiveFeed` |
 | `drishti-rachana` | `rachana` | The Rachana grammar: the Sutra model, the YAML parser (`*.sutra.yaml`, `rachana: 1`), the registry with hot reload, the JSON Schema of the language, Rachana-EL, formats and tones. | `SutraRegistry`, `SutraMatcher`, `parse.SutraParser`, `parse.SutraBuilder`, `RachanaSchema`, `model.PanelKind`, `el.ElCompiler`, `el.Functions`, `format.Formats` |
 | `drishti-inference` | `inference` | Layout inference: semantic hints, rules, the merge of a Sutra with inferred panels. | `InferenceEngine`, `Rules`, `Semantics`, `LayoutMerger`, `EffectiveLayout` |
 | `drishti-engine` | `engine`, `graph` | Sources and routing (including a **union** of connectors that serve one kind together), the view pipeline, binding, the ViewModel, commands and type-ahead, search, history, impact, business dates, live topics; entity references (which fields link to which kinds) and link badges. | `ViewPipeline`, `source.SourceRegistry`, `source.SourceRouter`, `source.ConnectorInstance`, `bind.Binder`, `view.ViewModel`, `view.PanelData`, `live.TopicHub`, `live.ViewStream`, `command.CommandParser`, `search.StructuredSearch` |
@@ -130,8 +130,8 @@ them, so they are on its class path; each starts only when enabled or used by a 
 | `drishti-plugin-iceberg-external` | `iceberg-external` | Iceberg tables other engines write, rows as documents, read-only, through drishti-iceberg | `drishti-iceberg` |
 | `drishti-plugin-duckdb` | `duckdb` | Every data domain in one embedded DuckDB file | — |
 | `drishti-plugin-kafka` | `kafka` | Compacted topics of entity documents | `drishti-common` (`diskcache`) |
-| `drishti-plugin-activemq` | `activemq` | ActiveMQ queues and topics | `drishti-common` (`messaging`) |
-| `drishti-plugin-rabbitmq` | `rabbitmq` | RabbitMQ queues | `drishti-common` (`messaging`) |
+| `drishti-plugin-activemq` | `activemq` | ActiveMQ queues and topics (a live transport) | `drishti-api` (`live`) |
+| `drishti-plugin-rabbitmq` | `rabbitmq` | RabbitMQ queues (a live transport) | `drishti-api` (`live`) |
 | `drishti-plugin-s3` | `s3` | Documents in Amazon S3 or an S3-compatible store | — |
 
 Besides these, the engine has the built-in plugin type `derived`: entities computed from other kinds (the trading
@@ -143,7 +143,7 @@ Compile-scope dependencies, from the POMs:
 
 ```text
 drishti-api                       (nothing internal; no Spring)
-└── drishti-common                 (with the packages diskcache and messaging; RocksDB)
+└── drishti-common                 (with the packages diskcache and live; RocksDB)
     ├── drishti-ai                 (api, common; Spring AI)
     ├── drishti-rachana
     │   └── drishti-inference ──── drishti-engine (with the package graph)

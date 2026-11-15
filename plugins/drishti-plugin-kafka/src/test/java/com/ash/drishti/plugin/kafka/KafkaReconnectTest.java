@@ -39,7 +39,7 @@ class KafkaReconnectTest {
         try (ServerSocket s = new ServerSocket(0)) {
             port = s.getLocalPort();
         }
-        com.ash.drishti.common.live.LiveSource plugin = KafkaSourcePluginTest.wrap();
+        com.ash.drishti.live.LiveSource plugin = KafkaSourcePluginTest.wrap();
         plugin.start(DatedSourceContract.context(Map.of("bootstrap-servers", "localhost:" + port, "topics", "trades", "kind.trades", "trade",
                 "id-field.trades", "tradeId", "source-name", "late-stream", "poll-ms", "50",
                 "client.default.api.timeout.ms", "3000", "client.reconnect.backoff.max.ms", "500")));

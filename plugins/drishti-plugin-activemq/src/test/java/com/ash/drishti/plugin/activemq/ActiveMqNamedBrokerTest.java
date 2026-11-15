@@ -79,7 +79,7 @@ class ActiveMqNamedBrokerTest {
     /** The connector's settings: only its own (destinations, kind), the rest from the named broker. */
     private Map<String, String> connector(String broker) throws Exception {
         Map<String, String> own = new HashMap<>(Map.of("broker", broker, "destinations", "queue:trades", "kind", "trade"));
-        own.put("state.dir", Files.createTempDirectory(dir, "state").toString());
+        own.put("disk-cache.dir", Files.createTempDirectory(dir, "state").toString());
         own.put("source-name", "amq-named");
         return NamedResources.connector("amq-named", "activemq", own);
     }

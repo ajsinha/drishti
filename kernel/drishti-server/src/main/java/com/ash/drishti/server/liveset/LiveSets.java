@@ -292,10 +292,10 @@ public final class LiveSets implements AutoCloseable {
      * {@code module} names the module a folder belongs to (null for the site's own).
      */
     /** The kinds' live rules: a declaration's key, version, who and when default to its kind's contract (null: no defaults). */
-    private volatile Function<String, com.ash.drishti.common.live.LiveRules> contracts;
+    private volatile Function<String, com.ash.drishti.live.LiveRules> contracts;
 
     /** Sets the kinds' live rules the declarations read their defaults from; call it before {@link #load}. */
-    public void contracts(Function<String, com.ash.drishti.common.live.LiveRules> rules) {
+    public void contracts(Function<String, com.ash.drishti.live.LiveRules> rules) {
         this.contracts = rules;
     }
 

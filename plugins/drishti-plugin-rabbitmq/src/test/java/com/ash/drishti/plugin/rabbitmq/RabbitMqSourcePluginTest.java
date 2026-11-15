@@ -48,8 +48,7 @@ class RabbitMqSourcePluginTest extends MessageSourceContract {
         Map<String, String> s = new HashMap<>(shared(state));
         s.put("uri", uri());
         s.put("queues", TRADES + "," + ENTITIES);
-        RabbitMqSourcePlugin p = new RabbitMqSourcePlugin();
-        p.start(DatedSourceContract.context(s));
+        com.ash.drishti.live.LiveSource p = com.ash.drishti.testkit.MessageSourceContract.live(new RabbitMqSourcePlugin(), s);
         return p;
     }
 

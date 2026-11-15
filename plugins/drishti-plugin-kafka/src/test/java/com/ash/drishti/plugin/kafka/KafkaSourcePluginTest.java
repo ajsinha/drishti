@@ -19,8 +19,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.EntityDocument;
 import com.ash.drishti.api.EntityRef;
-import com.ash.drishti.common.live.KindContracts;
-import com.ash.drishti.common.live.LiveSource;
+import com.ash.drishti.live.KindContracts;
+import com.ash.drishti.live.LiveSource;
 import com.ash.drishti.testkit.DatedSourceContract;
 import java.time.Duration;
 import java.util.Map;

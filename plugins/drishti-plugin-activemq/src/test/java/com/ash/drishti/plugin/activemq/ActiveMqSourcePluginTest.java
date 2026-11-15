@@ -50,8 +50,7 @@ class ActiveMqSourcePluginTest extends MessageSourceContract {
         s.put("user", "admin");
         s.put("password", "admin");
         s.put("destinations", "queue:" + TRADES + ",queue:" + ENTITIES);
-        ActiveMqSourcePlugin p = new ActiveMqSourcePlugin();
-        p.start(DatedSourceContract.context(s));
+        com.ash.drishti.live.LiveSource p = com.ash.drishti.testkit.MessageSourceContract.live(new ActiveMqSourcePlugin(), s);
         return p;
     }
 

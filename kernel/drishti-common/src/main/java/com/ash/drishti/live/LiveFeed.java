@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.common.live;
+package com.ash.drishti.live;
 
 import com.ash.drishti.api.DataNode;
 import com.ash.drishti.api.EntityDocument;
@@ -151,18 +151,29 @@ public final class LiveFeed implements LiveIntake {
     // -- the intake -----------------------------------------------------------------------------------------------------------
 
     @Override
-    public void accept(LiveMessage m) {
+    public boolean accept(LiveMessage m) {
         try {
             lastMessage = m.timestamp() == null ? Instant.now() : m.timestamp();
             roll();
             take(m);
+            notKept = null;
+            return true;
+        } catch (java.io.UncheckedIOException e) {
+            notKept = e.getMessage();                                   // the durable state could not keep it: delivered again
+            count("not-kept");
+            return false;
         } catch (RuntimeException e) {
             reject(null, LiveReject.CONTRACT, "the message could not be read: " + e.getMessage(), m);
-        } finally {
-            if (m.ack() != null) {
-                m.ack().run();
-            }
+            return true;
         }
+    }
+
+    /** Why the durable live state last failed to keep a message, until one is kept again; null when it keeps them. */
+    private volatile String notKept;
+
+    /** Why messages are not being kept (the durable state cannot be written), or null. */
+    public String notKept() {
+        return notKept;
     }
 
     @Override
@@ -389,10 +400,6 @@ public final class LiveFeed implements LiveIntake {
                 return;
             }
         }
-        if (rules.apply() == LiveRules.Apply.LAND) {
-            land(r);
-            return;
-        }
         applied(r);
     }
 
@@ -487,9 +494,13 @@ public final class LiveFeed implements LiveIntake {
     }
 
     private void applied(LiveRecord r) {
-        if (contracts.rules(r.kind()).apply() == LiveRules.Apply.LAND) {
-            land(r);                                                   // a held row of a landed kind, applied at the roll
+        LiveRules.Apply apply = contracts.rules(r.kind()).apply();
+        if (apply == LiveRules.Apply.LAND) {
+            land(r);                                                   // a landed kind's row (or a held one, at the roll)
             return;
+        }
+        if (apply == LiveRules.Apply.BOTH && r.doc() != null) {
+            land(r);                                                   // the site's binding asks for both: landed by window, and overlaid now
         }
         byte[] json = r.doc() == null ? null : bytes(r.doc());
         LiveState.Outcome o = state.apply(r, json);

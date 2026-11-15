@@ -19,7 +19,16 @@ import com.ash.drishti.api.tls.TlsContexts;
 import com.ash.drishti.api.tls.TlsException;
 import com.ash.drishti.api.tls.TlsMaterial;
 import com.ash.drishti.api.tls.TlsSettings;
-import com.ash.drishti.messaging.MessageStateSource;
+import com.ash.drishti.api.EntityDocument;
+import com.ash.drishti.api.EntityRef;
+import com.ash.drishti.api.PluginManifest;
+import com.ash.drishti.api.SourceCapabilities;
+import com.ash.drishti.api.SourceContext;
+import com.ash.drishti.api.SourcePlugin;
+import com.ash.drishti.api.live.LiveIntake;
+import com.ash.drishti.api.live.LiveMessage;
+import com.ash.drishti.api.live.LivePosition;
+import com.ash.drishti.api.live.LiveTransport;
 import jakarta.jms.BytesMessage;
 import jakarta.jms.Connection;
 import jakarta.jms.Destination;
@@ -38,13 +47,15 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ActiveMQSslConnectionFactory;
 
 /**
- * Live entities from ActiveMQ (Classic, OpenWire). Settings: {@code broker-url} (default
- * {@code failover:(tcp://localhost:61616)}, whose failover transport reconnects by itself), {@code user},
- * {@code password}, {@code destinations} ({@code queue:trades,topic:quotes}; a bare name is a queue), {@code client-id},
- * and the shared message settings ({@code kind.<destination>}, {@code id-field.<destination>}, {@code state.*},
- * {@code cache-mb}; see {@link MessageStateSource}). Topics are read through durable subscriptions, so messages sent
- * while Drishti is away are delivered when it returns; each message is acknowledged after it is stored. A supervisor
- * rebuilds the connection if the session breaks for any other reason.
+ * ActiveMQ (Classic, OpenWire) as a live transport (docs/architecture/LIVE_CONNECTORS_DESIGN.md section 2.5): it connects (or waits
+ * calmly for its broker), receives, and hands each message to the kernel's live intake, which decodes, checks and keeps it in the live
+ * state; a queue replays nothing, so the kernel keeps that state on disk ({@code disk-cache.*}) and the message is acknowledged only once
+ * it is kept (else the broker delivers it again). Settings: {@code broker-url} (default {@code failover:(tcp://localhost:61616)}, whose
+ * failover transport reconnects by itself; or the broker the connector names, {@code broker: <name>}), {@code user}, {@code password},
+ * {@code destinations} ({@code queue:trades,topic:quotes}; a bare name is a queue), {@code client-id}, {@code max-redeliveries}; what a
+ * message means ({@code kind.<destination>}, {@code shape}, {@code id-field}) is the kernel's. The message's {@code id} property is its
+ * key; a {@code deleted} property or an empty body deletes the row. Topics are read through durable subscriptions, so messages sent while
+ * Drishti is away are delivered when it returns. A supervisor rebuilds the connection if the session breaks for any other reason.
  *
  * <p><b>TLS.</b> A {@code broker-url} with {@code ssl://} (OpenWire over TLS, port 61617; also inside
  * {@code failover:(ssl://a:61617,ssl://b:61617)}) connects over TLS, with the shared {@code tls.*} settings
@@ -53,9 +64,18 @@ import org.apache.activemq.ActiveMQSslConnectionFactory;
  * and {@code tls.cipher-suites} are checked but cannot narrow them. AMQP (the {@code amqp+ssl://} scheme) is a different
  * client, not part of this connector.
  */
-public final class ActiveMqSourcePlugin extends MessageStateSource {
+public final class ActiveMqSourcePlugin implements SourcePlugin, LiveTransport {
 
     private volatile boolean running = true;
+    private SourceContext context;
+    private String sourceName;
+    private volatile LiveIntake intake;
+    private final java.util.concurrent.atomic.AtomicReference<String> health = new java.util.concurrent.atomic.AtomicReference<>("DOWN: not started");
+    private volatile TlsMaterial tls;
+    private volatile java.time.Instant lastUpdate;
+    private final java.util.Set<String> kinds = new java.util.HashSet<>();
+    /** The delivery sequence: increasing across restarts (from the clock), the order of a queue's messages when a kind has no order field. */
+    private final java.util.concurrent.atomic.AtomicLong sequence = new java.util.concurrent.atomic.AtomicLong();
     private volatile Connection connection;
     private Thread loop;
     private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(ActiveMqSourcePlugin.class);
@@ -68,19 +88,63 @@ public final class ActiveMqSourcePlugin extends MessageStateSource {
     }
 
     @Override
-    protected String plugin() {
-        return "activemq";
+    public PluginManifest manifest() {
+        return new PluginManifest(sourceName == null ? "activemq" : sourceName, "1.0", java.util.Set.copyOf(kinds), new SourceCapabilities(true, false, true, false));
     }
 
     @Override
-    protected void connect() {
+    public void start(SourceContext ctx) {
+        this.context = ctx;
+        this.sourceName = ctx.setting("source-name", "activemq");
         if (java.util.Arrays.stream(context.setting("destinations", "").split(",")).allMatch(d -> d.isBlank())) {
             throw new com.ash.drishti.api.PluginNotConfigured("activemq needs settings.destinations");   // not a fault: the connector is idle
         }
+        ctx.settings().forEach((k, v) -> {
+            if ((k.equals("kind") || k.startsWith("kind.")) && v != null && !v.isBlank()) {
+                kinds.add(v.strip());
+            }
+        });
         tls = tlsMaterial();                         // fails the start at once, with the file and the reason, when TLS is misconfigured
         watch = new com.ash.drishti.api.BrokerWaiting.Watch(sourceName, LOG::info);
         health.set(com.ash.drishti.api.BrokerWaiting.message(where()));   // until the supervisor has looked
+    }
+
+    @Override
+    public void receive(LiveIntake intake) {
+        this.intake = intake;
         loop = Thread.ofVirtual().name("drishti-activemq-" + sourceName).start(this::supervise);
+    }
+
+    /** A queue delivers each message once: nothing is replayed at start (the kernel keeps the state on disk). */
+    @Override
+    public boolean replayable() {
+        return false;
+    }
+
+    /** This plugin holds no rows: the kernel's live state answers every read. */
+    @Override
+    public java.util.Optional<EntityDocument> fetch(EntityRef ref) {
+        return java.util.Optional.empty();
+    }
+
+    @Override
+    public java.time.Instant lastUpdate() {
+        return lastUpdate;
+    }
+
+    @Override
+    public String health() {
+        return tls == null ? health.get() : tls.annotate(health.get(), java.time.Instant.now());
+    }
+
+    private static boolean pause(long millis) {
+        try {
+            Thread.sleep(millis);
+            return true;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
+        }
     }
 
     private static final Pattern SSL_ENDPOINT = Pattern.compile("(ssl://[^,)?\\s]+)(\\?[^,)\\s]*)?");
@@ -182,7 +246,7 @@ public final class ActiveMqSourcePlugin extends MessageStateSource {
     private void consume() throws JMSException {
         health.set("WAITING: connecting to " + where() + " - live updates paused");
         ActiveMQConnectionFactory cf = factory();
-        // a message the state store could not keep is redelivered until it is kept (the client's default gives up after
+        // a message the live state could not keep is redelivered until it is kept (the client's default gives up after
         // 6 and moves it to ActiveMQ.DLQ); max-redeliveries sets a limit when a dead-letter queue is wanted
         cf.getRedeliveryPolicy().setMaximumRedeliveries(Integer.parseInt(context.setting("max-redeliveries", "-1")));
         Connection c = cf.createConnection();
@@ -248,11 +312,15 @@ public final class ActiveMqSourcePlugin extends MessageStateSource {
                         m.acknowledge();
                         continue;
                     }
-                    if (accept(new Inbound(names.get(i), property(m, "id"), text, flag(m, "deleted")))) {
-                        m.acknowledge();                      // after it is kept (state.durability, sync by default)
+                    boolean delete = flag(m, "deleted") || text == null || text.isBlank();
+                    long at = m.getJMSTimestamp() > 0 ? m.getJMSTimestamp() : System.currentTimeMillis();
+                    lastUpdate = java.time.Instant.ofEpochMilli(at);
+                    long seq = sequence.updateAndGet(x -> Math.max(x + 1, System.currentTimeMillis() * 1000));
+                    if (intake.accept(new LiveMessage(property(m, "id"), delete ? null : text, new LivePosition(names.get(i), 0, seq), lastUpdate))) {
+                        m.acknowledge();                      // after the kernel kept it (disk-cache.durability, sync by default)
                     } else {
                         try {
-                            Thread.sleep(1000);               // the state store could not keep it: not acknowledged,
+                            Thread.sleep(1000);               // the live state could not keep it: not acknowledged,
                         } catch (InterruptedException e) {
                             Thread.currentThread().interrupt();
                             return;
@@ -319,6 +387,5 @@ public final class ActiveMqSourcePlugin extends MessageStateSource {
                 Thread.currentThread().interrupt();
             }
         }
-        super.close();
     }
 }

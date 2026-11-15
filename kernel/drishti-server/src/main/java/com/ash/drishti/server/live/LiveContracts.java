@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.server.live;
 
-import com.ash.drishti.common.live.LiveRules;
+import com.ash.drishti.live.LiveRules;
 import com.ash.drishti.packs.Pack;
 import com.ash.drishti.packs.PackRegistry;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -42,18 +42,21 @@ import org.springframework.stereotype.Component;
  * change ({@link PackRegistry#version()}); the first pack that holds a kind's contract is its owner, as for every other reader of contracts.
  */
 @Component
-public final class LiveContracts implements com.ash.drishti.common.live.KindContracts {
+public final class LiveContracts implements com.ash.drishti.live.KindContracts {
 
     private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
 
     private record Snapshot(long version, Map<String, LiveRules> rules, Map<String, Map<String, Object>> contracts, Map<String, List<String>> problems) {}
 
     private final PackRegistry packs;
+    private final org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.bindings.BindingService> bindings;
     private final Set<String> restateKinds;
     private volatile Snapshot snapshot = new Snapshot(-1, Map.of(), Map.of(), Map.of());
 
-    public LiveContracts(PackRegistry packs, Environment env, com.ash.drishti.engine.source.SourceRegistry registry) {
+    public LiveContracts(PackRegistry packs, Environment env, com.ash.drishti.engine.source.SourceRegistry registry,
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.bindings.BindingService> bindings) {
         this.packs = packs;
+        this.bindings = bindings;
         String listed = env.getProperty("drishti.live.restate-kinds", String.join(",", LiveRules.RESTATE_KINDS));
         this.restateKinds = Set.copyOf(Arrays.stream(listed.split(",")).map(String::strip).filter(s -> !s.isEmpty()).toList());
         registry.liveContracts(this);                                    // the live connectors read their kinds' rules from here
@@ -66,11 +69,21 @@ public final class LiveContracts implements com.ash.drishti.common.live.KindCont
         return c == null ? Map.of() : c;
     }
 
-    /** The live rules of {@code kind}: its contract's block, else the defaults (a kind with no contract: arrival order, no key). */
+    /**
+     * The live rules of {@code kind}: its contract's block, else the defaults (a kind with no contract: arrival order, no key); an overlay
+     * kind whose site binding says {@code live: {apply: both}} is landed by window too (section 2.4, decision Q7).
+     */
     @Override
     public LiveRules rules(String kind) {
         LiveRules r = current().rules().get(kind);
-        return r != null ? r : LiveRules.defaults(kind, List.of(), false);
+        r = r != null ? r : LiveRules.defaults(kind, List.of(), false);
+        return r.allowed() && r.apply() == LiveRules.Apply.OVERLAY && both(kind) ? r.withApply(LiveRules.Apply.BOTH) : r;
+    }
+
+    private boolean both(String kind) {
+        com.ash.drishti.server.bindings.BindingService b = bindings == null ? null : bindings.getIfAvailable();
+        com.ash.drishti.packs.bindings.Bindings.Binding binding = b == null ? null : b.applied().byKind().get(kind);
+        return binding != null && binding.liveBoth();
     }
 
     /** The problems of every contract's {@code live:} block, by kind; empty when every block is good. */

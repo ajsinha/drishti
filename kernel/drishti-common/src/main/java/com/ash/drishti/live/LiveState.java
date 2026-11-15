@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.common.live;
+package com.ash.drishti.live;
 
 import com.ash.drishti.api.live.LivePosition;
 import com.github.benmanes.caffeine.cache.Cache;
@@ -40,6 +40,11 @@ import java.util.stream.Stream;
  * limited by size ({@code cache-mb}) and, past it, in the connector's disk cache when it has one, else read back from the transport by
  * position ({@link #document}). Rows older than the kind's {@code retention.ttl}, and the oldest past {@code retention.max-rows}, leave
  * ({@link #expire}).
+ *
+ * <p><b>Durable</b> (a transport that cannot replay, a JMS or RabbitMQ queue: LIVE_CONNECTORS_DESIGN.md sections 7.6 and 10): every row
+ * and every delete is written to the connector's disk store, with the store's durability, before the message is acknowledged, and the
+ * state is read back from it at start, so a restart loses nothing the queue will not send again. A write that fails is an
+ * {@link java.io.UncheckedIOException}: the message is not acknowledged and the broker delivers it again.
  */
 public final class LiveState {
 
@@ -68,15 +73,102 @@ public final class LiveState {
     private final com.ash.drishti.diskcache.DiskCache disk;
     private final AtomicLong seq = new AtomicLong();
     private final AtomicReference<Function<Entry, Optional<byte[]>>> reload = new AtomicReference<>(e -> Optional.empty());
+    private final boolean durable;
+    private static final com.fasterxml.jackson.databind.ObjectMapper JSON = new com.fasterxml.jackson.databind.ObjectMapper();
 
     /**
      * @param cacheBytes the documents held in memory, by size
      * @param disk       the connector's disk cache, or null
      */
     public LiveState(long cacheBytes, com.ash.drishti.diskcache.DiskCache disk) {
+        this(cacheBytes, disk, false);
+    }
+
+    /**
+     * @param durable true: {@code disk} is the state's durable store (rows and deletes written before a message is acknowledged, read back
+     *                at start); it must then be given
+     */
+    public LiveState(long cacheBytes, com.ash.drishti.diskcache.DiskCache disk, boolean durable) {
+        if (durable && disk == null) {
+            throw new IllegalArgumentException("a durable live state needs its disk store");
+        }
         this.disk = disk;
+        this.durable = durable;
         // eviction on the writing thread: the bound holds at once, and no pool thread is borrowed
         this.docs = Caffeine.newBuilder().executor(Runnable::run).maximumWeight(Math.max(1, cacheBytes)).weigher((String k, byte[] v) -> v.length + 64).build();
+        if (durable) {
+            load();
+        }
+    }
+
+    /** True when the state is kept on disk across restarts. */
+    public boolean durable() {
+        return durable;
+    }
+
+    /**
+     * Reads the durable store back: every row and delete (entries under {@code e/}, documents under {@code d/}). A store an earlier
+     * release's queue connector left ({@code <kind>/<id>} to the document) is read as rows of no order, kept from then on in this form.
+     */
+    private void load() {
+        List<String[]> legacy = new ArrayList<>();
+        disk.forEach((k, v) -> {
+            if (k.startsWith("e/")) {
+                try {
+                    Entry e = entryOf(v);
+                    kinds.computeIfAbsent(e.kind(), x -> new ConcurrentHashMap<>()).put(e.key(), e);
+                    seq.accumulateAndGet(e.seq(), Math::max);
+                } catch (java.io.IOException | RuntimeException ignored) {
+                    // an entry that cannot be read: its row is not served (the next message of its key brings it back)
+                }
+            } else if (!k.startsWith("d/") && k.contains("/")) {
+                legacy.add(k.split("/", 2));
+            }
+        });
+        for (String[] kv : legacy) {
+            byte[] doc = disk.get(kv[0] + "/" + kv[1]);
+            if (doc == null) {
+                continue;
+            }
+            Entry e = new Entry(kv[0], kv[1], List.of(), null, null, null, null, false, Instant.now(), seq.incrementAndGet());
+            try {
+                disk.store("d/" + id(kv[0], kv[1]), doc);
+                disk.store("e/" + id(kv[0], kv[1]), entryBytes(e));
+                disk.remove(kv[0] + "/" + kv[1]);
+            } catch (java.io.IOException x) {
+                throw new java.io.UncheckedIOException("the live state's store cannot be moved to its new form: " + x.getMessage(), x);
+            }
+            kinds.computeIfAbsent(e.kind(), x -> new ConcurrentHashMap<>()).put(e.key(), e);
+        }
+    }
+
+    private static byte[] entryBytes(Entry e) throws java.io.IOException {
+        Map<String, Object> m = new java.util.LinkedHashMap<>();
+        m.put("kind", e.kind());
+        m.put("key", e.key());
+        m.put("order", e.order());
+        if (e.position() != null) {
+            m.put("stream", e.position().stream());
+            m.put("partition", e.position().partition());
+            m.put("offset", e.position().offset());
+        }
+        m.put("changedAt", e.changedAt() == null ? null : e.changedAt().toString());
+        m.put("changedBy", e.changedBy());
+        m.put("asOf", e.asOf());
+        m.put("deleted", e.deleted());
+        m.put("arrived", e.arrived().toString());
+        m.put("seq", e.seq());
+        return JSON.writeValueAsBytes(m);
+    }
+
+    private static Entry entryOf(byte[] bytes) throws java.io.IOException {
+        com.fasterxml.jackson.databind.JsonNode n = JSON.readTree(bytes);
+        List<Object> order = new ArrayList<>();
+        n.path("order").forEach(x -> order.add(x.isNull() ? null : x.isNumber() ? x.numberValue() : x.asText()));
+        LivePosition p = n.hasNonNull("stream") ? new LivePosition(n.get("stream").asText(), n.path("partition").asInt(), n.path("offset").asLong()) : null;
+        return new Entry(n.get("kind").asText(), n.get("key").asText(), order, p, n.hasNonNull("changedAt") ? Instant.parse(n.get("changedAt").asText()) : null,
+                n.hasNonNull("changedBy") ? n.get("changedBy").asText() : null, n.hasNonNull("asOf") ? n.get("asOf").asText() : null,
+                n.path("deleted").asBoolean(false), Instant.parse(n.get("arrived").asText()), n.path("seq").asLong());
     }
 
     /** How a document no longer in memory or on disk is read again (the feed reads its message back from the transport). */
@@ -110,20 +202,34 @@ public final class LiveState {
             }
             boolean delete = r.op() == LiveRecord.Op.DELETE;
             List<Object> order = delete && r.order().isEmpty() && cur != null ? cur.order() : r.order();
+            Entry next = new Entry(r.kind(), k, order, r.position(), r.changedAt(), r.changedBy(), r.asOf(), delete, Instant.now(), seq.incrementAndGet());
+            if (durable) {
+                String id = id(r.kind(), k);
+                try {                                                  // kept on disk before the message is acknowledged
+                    if (json == null) {
+                        disk.remove("d/" + id);
+                    } else {
+                        disk.store("d/" + id, json);
+                    }
+                    disk.store("e/" + id, entryBytes(next));
+                } catch (java.io.IOException x) {
+                    throw new java.io.UncheckedIOException("the live state's store could not keep " + id + ": " + x.getMessage(), x);
+                }
+            }
             out[0] = Outcome.APPLIED;
-            return new Entry(r.kind(), k, order, r.position(), r.changedAt(), r.changedBy(), r.asOf(), delete, Instant.now(), seq.incrementAndGet());
+            return next;
         });
         if (out[0] == Outcome.APPLIED) {
             String id = id(r.kind(), r.key());
             if (json == null) {
                 docs.invalidate(id);
-                if (disk != null) {
-                    disk.delete(id);
+                if (disk != null && !durable) {
+                    disk.delete("d/" + id);
                 }
             } else {
                 docs.put(id, json);
-                if (disk != null) {
-                    disk.put(id, json);
+                if (disk != null && !durable) {
+                    disk.put("d/" + id, json);
                 }
             }
         }
@@ -145,7 +251,7 @@ public final class LiveState {
         String id = id(kind, key);
         byte[] hit = docs.getIfPresent(id);
         if (hit == null && disk != null) {
-            hit = disk.get(id);
+            hit = disk.get("d/" + id);
         }
         if (hit == null) {
             hit = reload.get().apply(e.get()).orElse(null);
@@ -209,7 +315,10 @@ public final class LiveState {
         String id = id(e.kind(), e.key());
         docs.invalidate(id);
         if (disk != null) {
-            disk.delete(id);
+            disk.delete("d/" + id);
+            if (durable) {
+                disk.delete("e/" + id);
+            }
         }
         return e.deleted() ? 0 : 1;
     }
@@ -293,10 +402,13 @@ public final class LiveState {
         return new Reconcile(kind, loadDate, rule, cutoff, absorbed, carried, orphans, deletesCarried, List.copyOf(orphanRows), positions);
     }
 
-    /** Empties the documents held in memory and on disk (Admin's purge); the rows stay and are read back when asked. */
+    /**
+     * Empties the documents held in memory and, unless the state is durable, on disk (Admin's purge); the rows stay and are read back
+     * when asked. A durable state's disk is its only copy (a queue will not send it again): it is never cleared by a purge.
+     */
     public void purge() {
         docs.invalidateAll();
-        if (disk != null) {
+        if (disk != null && !durable) {
             disk.clear();
         }
     }

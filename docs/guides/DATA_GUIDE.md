@@ -2299,7 +2299,7 @@ curl -s http://localhost:18480/api/v1/admin/health | jq '.packs[] | {name, conne
 | `delta` | `UP`, `DOWN: cannot reach <root>/<domain>`, `DOWN: no Delta tables under <root>/<domain>` |
 | `aerospike` | `UP`, `DOWN: not connected to Aerospike` |
 | `kafka` | `DOWN: not started`, `UP (catching up)`, `UP`, `DOWN: no connection to the broker (reconnecting)`, `DOWN: <message> (retrying)`, `DOWN: <Exception>: <message> (reconnecting)` |
-| `activemq` | `DOWN: not started`, `DOWN: connecting to <broker-url>`, `UP`, `DOWN: connection to the broker lost (reconnecting)`, `DOWN: <message> (reconnecting)`, `DOWN: <Exception>: <message> (reconnecting)`, `DOWN: <reason> (messages are not acknowledged and come again)`, `UP (state store over its budget: X of Y GB; the oldest entities are being evicted)`, `UP (state store over its budget: X of Y GB; nothing is dropped: raise state.max-gb or add disk)` |
+| `activemq` | `DOWN: not started`, `DOWN: connecting to <broker-url>`, `UP`, `DOWN: connection to the broker lost (reconnecting)`, `DOWN: <message> (reconnecting)`, `DOWN: <Exception>: <message> (reconnecting)`, `DOWN: <reason> (messages are not acknowledged and come again)`, `UP (catching up)` |
 | `rabbitmq` | `DOWN: not started`, `DOWN: <Exception>: <message> (retrying)`, `UP`, `DOWN: connection lost (recovering)`, `DOWN: consumer cancelled on <queue>`, and the same three state-store texts as `activemq` |
 | `s3` | `UP`, `DOWN: <error> (retrying)` |
 | `news`, `yfinance` | `UP` (nothing is fetched at start), `DOWN: <reason> (tried again on the next request)` after a failed call, `UP` after the next success |
@@ -2352,20 +2352,17 @@ Purge after you correct data in place (a restated lake date) when you do not wan
 
 | Folder | Whose | Can it be deleted? |
 |---|---|---|
-| `./data/state/<connector>` (`state.root`, `state.dir`) | ActiveMQ and RabbitMQ state stores | only deliberately, server stopped: it is the only copy of what the queues delivered |
+| `./data/state/<connector>` (`disk-cache.dir` of a queue connector) | ActiveMQ and RabbitMQ live state, kept across restarts | only deliberately, server stopped: it is the only copy of what the queues delivered |
 | `./data/cache/<connector>` (`DRISHTI_CACHE_ROOT`, `disk-cache.dir`) | Kafka disk cache | yes: it starts empty on every run anyway (the topic is replayed) |
 
 Put both on local disk, not a network share, and size them; the two work differently:
 
-| | State store (ActiveMQ, RabbitMQ) | Kafka disk cache |
+| | Live state of a queue (ActiveMQ, RabbitMQ) | Kafka disk cache |
 |---|---|---|
-| What it keeps | the latest value of each entity (level compaction): size follows the entities held | every message of the day (FIFO compaction): size follows the messages |
-| Budget | `state.max-gb` (10), per connector; past it `state.when-full`: `evict-oldest` (default) removes the entities written longest ago until under 90%, logged and counted in `evicted`; `warn` keeps everything and says so in health | `disk-cache.max-gb` (10); past it the oldest files are dropped |
-| After a crash | nothing acknowledged is lost with `state.durability: sync` (default); `wal` can lose the last moments on a power loss; `none` up to the 32 MB write buffer | refilled from the topic (no write-ahead log) |
-| Disk to plan | about twice `state.max-gb` (a compaction after an eviction briefly needs room), plus the 64 MB write-ahead log | `disk-cache.max-gb` |
-
-`state.reset-at: "06:00"` clears a state store's disk daily (the memory cache and type-ahead keep what they hold), for
-state that should start empty each day.
+| What it keeps | the newest row of each key and the deletes (level compaction): size follows the rows held | the live state's documents, cleared daily: refilled from the topic |
+| Bounds | the kind's contract (`live.retention`: `ttl` 2 days, `max-rows` 2,000,000) and `disk-cache.max-gb` (10) | `disk-cache.max-gb` (10) |
+| After a crash | nothing acknowledged is lost with `disk-cache.durability: sync` (default); `wal` can lose the last moments on a power loss; `none` more | refilled from the topic (no write-ahead log) |
+| Disk to plan | about twice the rows held, plus the 64 MB write-ahead log | `disk-cache.max-gb` |
 
 #### Timeouts
 
@@ -2404,8 +2401,8 @@ it.
   the order means it is being asked for kinds or ids it does not have: give it `kinds:`.
 - **Several servers** each read every Kafka topic in full and each need their own `client-id` (ActiveMQ) and their own
   queues (both message brokers).
-- **Message-queue throughput**: with `state.durability: sync` (the default) each message waits for a disk sync, so a
-  connector applies about one message per sync, typically thousands a second on an SSD. Put `state.root` on an SSD,
+- **Message-queue throughput**: with `disk-cache.durability: sync` (the default) each message waits for a disk sync, so a
+  connector applies about one message per sync, typically thousands a second on an SSD. Put `disk-cache.dir` on an SSD,
   split a heavy feed over several connectors (each has its own store), or use `wal` where the last moments before a
   power loss may be lost.
 

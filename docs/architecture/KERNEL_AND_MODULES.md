@@ -827,7 +827,7 @@ bindings:
 |---|---|
 | `read` | connectors that serve the kind, in read order (today's `readOrder`: Redis for recent days, Delta behind it) |
 | `union` | rows from all of them (today's `union: true` on the trade connectors) |
-| `live` | a connector that pushes changes (Kafka, RabbitMQ, ActiveMQ); subscribers get them through `Kinds.subscribe` |
+| `live` | a connector that pushes changes (Kafka, RabbitMQ, ActiveMQ), or a list of them; subscribers get them through `Kinds.subscribe`. `live: {connectors: [trade-endur-mq], apply: both}` asks for the kind's live rows to be landed in its lake by window too, besides overlaid at once (the connector's `lake` and `pack`; LIVE_CONNECTORS_DESIGN.md section 2.4): the site's choice, never a contract's |
 | `write` | where a produced kind is written: a lake and table (the kernel's writer; the module never names a path) |
 | `demo` | `true` binds the demo lake's samples explicitly |
 | `for:` (exception) | a per-module override, `for: {genomics-qc: [qc-store]}`; allowed only for kinds marked `shareable: per-module` in their contract (Q4) |

@@ -1193,9 +1193,18 @@ class Bindings:
         lake). The Java twin: Companions.live."""
         b = self.site.get(kind) if isinstance(self.site.get(kind), dict) else {}
         v = b.get("live")
+        if isinstance(v, dict):                     # {connectors: [...], apply: both}: the site's choice to land an overlay kind too
+            v = v.get("connectors")
         if v:
             return [str(x) for x in (v if isinstance(v, list) else [v])]
         return live_connectors(kind, self.read(kind)["connectors"], self.r.connectors._companion_view())
+
+    def live_apply(self, kind: str) -> str:
+        """``both`` when the site binds the kind with ``live: {apply: both}`` (overlaid at once and landed by window too), else ``overlay``
+        (the contract's own apply stands). The Java twin: Bindings.Binding.liveBoth."""
+        b = self.site.get(kind) if isinstance(self.site.get(kind), dict) else {}
+        v = b.get("live")
+        return "both" if isinstance(v, dict) and str(v.get("apply") or "").strip().lower() == "both" else "overlay"
 
     def write(self, kind: str, system: str | None = None) -> str:
         """The connector a correction of ``kind`` (from ``system``) is written to; LookupError DRS-9308 (none) or DRS-9309 (several)."""

@@ -730,7 +730,7 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
      */
     private EntityDocument readFirst(EntityRef ref, List<SourcePlugin> candidates, AsOf asOf, AtomicReference<String> asking) {
         String heldBy = null;                                  // a union connector that holds the date and does not list ref
-        com.ash.drishti.common.live.LiveState.Entry tombstone = null;   // a live delete of ref, Live only
+        com.ash.drishti.live.LiveState.Entry tombstone = null;   // a live delete of ref, Live only
         String tombstoneBy = null;
         for (SourcePlugin p : candidates) {
             if (heldBy != null && !registry.union(p.manifest().name())) {
@@ -757,7 +757,7 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
             if (d.isPresent()) {
                 stats.found(name, System.nanoTime() - t0);
                 EntityDocument found = named(d.get(), name);
-                com.ash.drishti.common.live.LiveSource live = asOf.live() ? liveOf(p) : null;
+                com.ash.drishti.live.LiveSource live = asOf.live() ? liveOf(p) : null;
                 if (tombstone != null && live == null && !newerThan(ref, found, tombstone)) {
                     throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, ref + " was deleted by " + tombstoneBy + " after " + name
                             + "'s row of it");
@@ -766,8 +766,8 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
             }
             stats.notHeld(name, System.nanoTime() - t0);
             if (asOf.live() && tombstone == null) {
-                com.ash.drishti.common.live.LiveSource live = liveOf(p);
-                java.util.Optional<com.ash.drishti.common.live.LiveState.Entry> e = live == null ? java.util.Optional.empty() : live.entry(ref);
+                com.ash.drishti.live.LiveSource live = liveOf(p);
+                java.util.Optional<com.ash.drishti.live.LiveState.Entry> e = live == null ? java.util.Optional.empty() : live.entry(ref);
                 if (e.isPresent() && e.get().deleted()) {
                     tombstone = e.get();                       // the live feed deleted it: a lake row shows only if it is newer (LIVE_CONNECTORS_DESIGN.md 7.1)
                     tombstoneBy = name;
@@ -809,9 +809,9 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
     }
 
     /** The kernel's live source behind a connector (a live transport's), or null. */
-    static com.ash.drishti.common.live.LiveSource liveOf(SourcePlugin p) {
+    static com.ash.drishti.live.LiveSource liveOf(SourcePlugin p) {
         SourcePlugin q = p instanceof ConnectorInstance ci ? ci.delegate() : p;
-        return q instanceof com.ash.drishti.common.live.LiveSource ls ? ls : null;
+        return q instanceof com.ash.drishti.live.LiveSource ls ? ls : null;
     }
 
     /**
@@ -820,10 +820,10 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
      * answers. The lake's row wins when it is as new or newer (the load already has the change); a kind ordered by arrival takes the live
      * row. A store that fails here leaves the live row standing (its own read says what is wrong).
      */
-    private EntityDocument newer(EntityRef ref, EntityDocument live, com.ash.drishti.common.live.LiveSource source, List<SourcePlugin> candidates,
+    private EntityDocument newer(EntityRef ref, EntityDocument live, com.ash.drishti.live.LiveSource source, List<SourcePlugin> candidates,
             SourcePlugin asked) {
-        com.ash.drishti.common.live.LiveRules rules = registry.liveRules(ref.kind());
-        java.util.Optional<com.ash.drishti.common.live.LiveState.Entry> entry = source.entry(ref);
+        com.ash.drishti.live.LiveRules rules = registry.liveRules(ref.kind());
+        java.util.Optional<com.ash.drishti.live.LiveState.Entry> entry = source.entry(ref);
         if (rules.order().isEmpty() || entry.isEmpty()) {
             return live;
         }
@@ -845,7 +845,7 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
     }
 
     /** True when a store's row of {@code ref} is as new as the live row (or delete) {@code e}, or newer, by the kind's {@code live.order}. */
-    private boolean newerThan(EntityRef ref, EntityDocument store, com.ash.drishti.common.live.LiveState.Entry e) {
+    private boolean newerThan(EntityRef ref, EntityDocument store, com.ash.drishti.live.LiveState.Entry e) {
         List<String> fields = registry.liveRules(ref.kind()).order();
         if (fields.isEmpty() || e.order().isEmpty()) {
             return false;                                      // ordered by arrival: the live side is the newer
@@ -854,14 +854,14 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
         for (String f : fields) {
             mine.add(store.data() == null ? null : store.data().get(f).unwrap());
         }
-        return com.ash.drishti.common.live.LiveRecord.compare(mine, null, e.order(), null) >= 0;
+        return com.ash.drishti.live.LiveRecord.compare(mine, null, e.order(), null) >= 0;
     }
 
     /** The kind's live connectors (their kernel live sources), by connector name, in read order. */
-    public Map<String, com.ash.drishti.common.live.LiveSource> liveSources(String kind) {
-        Map<String, com.ash.drishti.common.live.LiveSource> out = new LinkedHashMap<>();
+    public Map<String, com.ash.drishti.live.LiveSource> liveSources(String kind) {
+        Map<String, com.ash.drishti.live.LiveSource> out = new LinkedHashMap<>();
         for (SourcePlugin p : candidates(kind)) {
-            com.ash.drishti.common.live.LiveSource l = liveOf(p);
+            com.ash.drishti.live.LiveSource l = liveOf(p);
             if (l != null) {
                 out.put(p.manifest().name(), l);
             }

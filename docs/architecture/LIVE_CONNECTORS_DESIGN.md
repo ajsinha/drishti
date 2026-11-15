@@ -19,7 +19,8 @@
 contract's `live:` block and its checks, `companion-of:` in the resolver, the reject reasons and their codes) L2 (the transport SPI,
 the kernel's live intake and live state, Kafka on it) and L3 (the router's merged read, live sets seeded from the shared state, blotter
 defaults from the contract, the six trade templates) L4 (business dates and the roll, reconcile at a load, checkpoints, the reconcile
-record) and L5 (the live lander; scenario PVs and P&L vectors on it). Nothing else in this
+record) and L5 (the live lander; scenario PVs and P&L vectors on it) and L6 (ActiveMQ and RabbitMQ as transports over a durable live
+state; `apply: both`; the lake loader's landing of a kind no engine owns). Nothing else in this
 document is built unless a section says "today".** It answers the product owner's request: *"for all data connectors there can be a
 live connector, generally speaking."*
 
@@ -157,9 +158,14 @@ A kind without a `live:` block may still be fed (the owner's "any kind"): the de
 | For | rows people watch: trades, quotes, curves, netting sets, limits, reference data | heavy inputs of an engine: scenario PVs, P&L vectors, sensitivities |
 | Today | the `kafka`, `activemq`, `rabbitmq` plugins and the live result-set engine | `var-pv-stream` |
 
-`both` overlays at once and lands by window: for a kind fed by a queue that keeps no history, where a restart must not lose the day
-(the lake replaces today's RocksDB state store as the durable copy). It is never a contract's default for an `overlay` kind: a site
-asks for it in the kind's binding (`live: {apply: both}`), decision Q7.
+`both` overlays at once and lands by window: for a kind whose day must also be in the lake as it happens (intraday history), or
+fed by a queue that keeps no history. It is never a contract's default for an `overlay` kind: a site asks for it in the kind's binding
+(`live: {connectors: [trade-endur-mq], apply: both}`), decision Q7. A window the lander writes is announced as a data-load with the source
+`live:<connector>`, and reconcile leaves such a load alone (its rows came from the live state, which keeps them until the next real load).
+
+A queue (not replayable) keeps its live state on local disk whatever its apply (`disk-cache.dir`, default `<data dir>/state/<connector>`;
+`disk-cache.durability`, `sync` by default): each row and each delete is on disk before the message is acknowledged, and a restart reads
+the state back before it connects. A replayable transport (Kafka) rebuilds its state from the topic and keeps only a cache on disk.
 
 Landing writes through the lake writer, so it is the same on Delta, Iceberg and the file store (JSONL in the dated folder). A landed
 table is append-only within a date; its current row per key is the newest by the contract's `order:`; a full load of the date replaces
@@ -182,8 +188,8 @@ handling (3.3), business dates (5) and reconcile at a load (6), conflation; they
 | Transport | Replay at start | Order it gives | Consumed by (section 7.8) | Status |
 |---|---|---|---|---|
 | Kafka | yes (from the beginning, no group) | per partition | every placed node | exists; becomes a thin transport |
-| ActiveMQ / JMS | no (queue), durable topic | per destination | one node (singleton) | exists; becomes a thin transport |
-| RabbitMQ | no (queue); yes (a stream) | per queue | one node (singleton) | exists; becomes a thin transport |
+| ActiveMQ / JMS | no (queue), durable topic | per destination | one node (singleton) | a thin transport (built, L6) |
+| RabbitMQ | no (queue); yes (a stream) | per queue | one node (singleton) | a thin transport (built, L6) |
 | Later: Solace, IBM MQ, Azure Event Hubs / AWS Kinesis, a WebSocket or SSE feed, a watched folder of JSONL | varies | varies | by `replayable:` of the plugin | not planned (decision Q9: no new transports); the transport SPI is the only work when one is wanted |
 
 ## 3. A live message and the kind's contract
@@ -304,8 +310,10 @@ Notes:
   says which order a feed has, in words.
 - **Kafka**: order is per partition, so a producer keys by the contract's key. The intake does not depend on it when the contract has
   an order field.
-- **Queues**: a message is acknowledged after it is applied (and, for `land` or `both`, after its window is written), so a crash
-  redelivers and the duplicate rule drops what was already applied.
+- **Queues**: a message is acknowledged after it is applied and kept on disk (`disk-cache.durability`), so a crash redelivers and
+  the duplicate rule drops what was already applied; a message the live state cannot keep is not acknowledged and comes again. A
+  window of a `land` or `both` kind is written from the rows the state holds; a queue's order is its arrival, numbered from the clock
+  so it holds across restarts.
 - **Counts are per feed and per kind** and are shown; `late` and `duplicate` are normal in small numbers and are not faults.
 
 ## 5. Business dates: the live date and the lake's snapshots
@@ -591,8 +599,9 @@ Built (L5): the kernel's `LiveLander` (the window, the newest row per key by `li
 provides (`com.ash.drishti.kernel.api.data`); the VaR engine's landing of `scenario-pv` and `pnl-vector` writes Delta or Iceberg as the
 risk lake's table is. `kind-by` tells one topic's two kinds apart by `VALUE_TYPE`. Deleted: `VarPvStreamPlugin`, `VarPvWindow`, the
 `pv-updates` connector, the pseudo-kind `pv-update`, `drishti.var.intraday.kafka.*` (their variables are the new template's defaults).
-Not yet: a generic landing for a kind no engine owns (written straight through the lake loader), and the file store as a landing
-target; a kind with no landing is said in the connector's reject log.
+Built (L6): a kind no engine owns is landed by the lake loader (one JSONL file per window under `<data folder>/live/landing/<connector>/`,
+appended to the kind's table of the connector's `lake` as one batch, Delta, Iceberg or the file store as the lake file says, then
+announced to the connector's `pack`); a connector that names no lake lands nothing, said in its reject log.
 
 ### 8.5 Reference and portfolio data
 
@@ -664,7 +673,7 @@ No two implementations side by side: each step below deletes what it replaces in
 | Today | Becomes | Deleted |
 |---|---|---|
 | `KafkaSourcePlugin`'s index, caches, listeners, `documents()` snapshot | the kernel's live state and intake; the plugin keeps connect, read, WAIT, write-back | the plugin's own index and listener code |
-| `MessageStateSource` and the RocksDB state store of `activemq` / `rabbitmq` | the same live state; durability by `apply: both` (the lake) or the state's disk cache | the state store, its settings (`state.*`), the second implementation |
+| `MessageStateSource` and the RocksDB state store of `activemq` / `rabbitmq` | the same live state, kept on disk for a queue (`disk-cache.*`; an old store is read once and kept in the new form); the lake too by `apply: both` (built, L6) | the state store, its settings (`state.*`, said once at start), the second implementation |
 | Kafka `mode: state` / `mode: ticks` | a companion (`companion-of:`: a feed over a lake, what `ticks` was) or a connector with no lake (what `state` was) | the `mode` setting (read for one release with a message saying what replaces it) |
 | The six `trade-<system>-live.yaml` | the same files with `companion-of: trade-<system>`, without `kind` and `id-field` (the contract's key and the companion's kinds); the write-back command's `version-field`, `changed-by`, `changed-at` stay in its `kafka:` block, which is the command's own guard (APPROVALS_GUIDE.md section 5.4) | the repeated keys; `DRISHTI_STREAM_<SYSTEM>` kept as the switch (built, L3) |
 | `trade.blotter.yaml` `key`, `version`, `changed-by`, `changed-at` | defaults from the contract | four lines (built, L3) |
@@ -729,7 +738,7 @@ in; L6 to L10 use it.
 | **L3** (built) | The router's merged read; live sets on the shared state; blotter defaults from the contract; the six trade templates | L | per-set live side; repeated keys | LIVE_RESULTS_GUIDE sections 6 and 7 |
 | **L4** (built) | Business dates, the roll, reconcile at a load (three absorb rules), checkpoints, the reconcile record | L | | DATA_LAKE_GUIDE (loads), LIVE_RESULTS_GUIDE |
 | **L5** (built) | The live lander; scenario PVs and P&L vectors on it; parity on Delta, Iceberg and files | L | `VarPvStreamPlugin`, `VarPvWindow`, `pv-updates`, `drishti.var.intraday.kafka.*` | VAR_GUIDE 8.4, CONFIGURATION (generated) |
-| **L6** | ActiveMQ and RabbitMQ on the transport SPI; `apply: both` | M | `MessageStateSource`, `state.*` | the two READMEs |
+| **L6** (built) | ActiveMQ and RabbitMQ on the transport SPI; `apply: both`; the lake loader's landing | M | `MessageStateSource`, `state.*` | the two READMEs |
 | **L7** | Admin (option B: the Live column and drawer in Data bindings; option A's grid read-only under Health), Health states and measures, alerts, the CLI, the live mark's words on every page | L | the PV stream's admin endpoints | ADMIN_GUIDE, OPERATIONS_GUIDE, CLI_REFERENCE, API_REFERENCE |
 | **L8** | Kinds: market data (20 contracts' `live:` blocks, quote-time fields, the companion, conflation), netting sets and collateral, reference data with `effective:`, derived positions at `live: overlay`; demo publishers in `tools/samplegen` | L | the live exposure table's own copy | the packs' READMEs and guides, a tutorial (feed → blotter → load → reconcile) |
 | **L9** | BI and pivot: the live read for `mode: live`, the snapshot chip, incremental additive measures | M (L with incremental) | BI's live table copy | BI guides |

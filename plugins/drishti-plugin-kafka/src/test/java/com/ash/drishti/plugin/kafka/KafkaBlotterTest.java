@@ -55,7 +55,7 @@ class KafkaBlotterTest {
 
     static EmbeddedKafkaKraftBroker broker;
     static KafkaProducer<String, String> producer;
-    static com.ash.drishti.common.live.LiveSource plugin;
+    static com.ash.drishti.live.LiveSource plugin;
 
     @BeforeAll
     static void start() throws Exception {

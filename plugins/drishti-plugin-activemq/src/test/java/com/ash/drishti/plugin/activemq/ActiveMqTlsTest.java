@@ -128,8 +128,7 @@ class ActiveMqTlsTest extends MessageSourceContract {
         s.putAll(tlsSettings);
         s.put("broker-url", "failover:(" + url(61617, broker.getHost()) + ")?initialReconnectDelay=200&maxReconnectDelay=2000");
         s.put("destinations", "queue:" + TRADES + ",queue:" + ENTITIES);
-        ActiveMqSourcePlugin p = new ActiveMqSourcePlugin();
-        p.start(DatedSourceContract.context(s));
+        com.ash.drishti.live.LiveSource p = com.ash.drishti.testkit.MessageSourceContract.live(new ActiveMqSourcePlugin(), s);
         return p;
     }
 
@@ -160,8 +159,7 @@ class ActiveMqTlsTest extends MessageSourceContract {
         s.putAll(tls);
         s.put("broker-url", url(port, host));
         s.put("destinations", "queue:" + TRADES);
-        ActiveMqSourcePlugin p = new ActiveMqSourcePlugin();
-        p.start(DatedSourceContract.context(s));
+        com.ash.drishti.live.LiveSource p = com.ash.drishti.testkit.MessageSourceContract.live(new ActiveMqSourcePlugin(), s);
         try {
             // sample for a few seconds: UP as soon as it is, otherwise every distinct reason it gave
             java.util.Set<String> seen = new java.util.LinkedHashSet<>();
