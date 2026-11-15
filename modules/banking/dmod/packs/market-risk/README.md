@@ -104,7 +104,7 @@ generated-by: tools/packgen/banking/make_docs.py
 
 Market-risk results over the trading pack's trades: stress scenarios and their results, FRTB standardised sensitivities, P&L explain and
 trade valuations (mark-to-market, P&L and sensitivities per trade), and the **VaR engine's inputs**: one P&L vector
-per live trade over 509 historical scenario days, the scenario set and the VaR limits of the hierarchies' nodes and of the system
+per live position or trade over the window's historical scenario days, the scenario set and the VaR limits of the hierarchies' nodes and of the system
 baskets (`var-limit`). The system baskets themselves (`PORT <id>`: a hierarchy node, a rule or a basket) are kept in Drishti's basket
 store, not data: the demo's are this pack's seed, `seeds/system-baskets.yaml`, imported once at a demo's first start
 ([VAR_GUIDE.md section 5.7](../../../../../docs/guides/VAR_GUIDE.md#57-system-baskets)). The hierarchies themselves are configured in this pack's `hierarchies:` block (any
@@ -349,7 +349,7 @@ Links: `PORTFOLIO_ID` → `system-basket`.
 
 **P&L vector (one P&L per scenario)** · mnemonic `PNLV` · read through connector `risk-store`.
 
-One trade's P&L under each of the 509 scenario days, in USD: the grain every VaR is summed from, with the trade's terms the server derives its position from
+One position's or trade's P&L under each scenario day of the window, in USD: the grain every VaR is summed from, with the terms the server derives its position from
 
 **Id:** pattern `^PNL-.+-HS-[0-9]+$`, `^PV-`.
 
@@ -386,7 +386,7 @@ Fields, from 2 sample documents:
 | `TRADE_CURRENCY` | string | `USD` | — |
 | `REPORTING_CCY` | string | `USD` | — |
 | `PV` | integer | `3143714` | The trade's value on the business date. (USD) |
-| `PNL` | list of integers or list of numbers |  | 509 values, oldest scenario first, stored as a list<double> column (out of the document) |
+| `PNL` | list of integers or list of numbers |  | One value per scenario, oldest first, stored as a list<double> column (out of the document) |
 | `STATUS` | string | `ok` | ok, proxied (priced by a proxy) or failed (no vector: counted, never taken as zero). |
 | `PRICER` | string | `demo-factor-model` | — |
 | `MODEL_VERSION` | string | `demo-2` | — |
@@ -479,7 +479,7 @@ Fields, from 1 sample document:
 
 **Scenario set** · mnemonic `SSET` · read through connector `risk-store`.
 
-The scenario days of a business date: HS-509, historical simulation over 509 business days
+The scenario days of a business date: HS-509, historical simulation over the window's business days
 
 **Id:** pattern `^HS-`.
 
@@ -489,7 +489,7 @@ Fields, from 1 sample document:
 |---|---|---|---|
 | `SCENARIO_SET_ID` | string | `HS-509` | — |
 | `BUSINESS_DATE` | date | `2026-09-30` | — |
-| `SCENARIO_DATES` | list of dates |  | The 509 scenario days, oldest first: index i of every vector is day i |
+| `SCENARIO_DATES` | list of dates |  | The scenario days, oldest first: index i of every vector is day i |
 | `SCENARIO_COUNT` | integer | `509` | — |
 | `WINDOW_START` | date | `2024-09-17` | The oldest scenario day. |
 | `WINDOW_END` | date | `2026-09-29` | The newest scenario day: the business day before the business date. |

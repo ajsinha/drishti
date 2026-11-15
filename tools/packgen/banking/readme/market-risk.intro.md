@@ -49,15 +49,15 @@ fields:
     DEFINITION: "NODE (a hierarchy node), RULE (a condition) or MEMBERS (positions and trades)"
     VALID_TO: "The last business date it applies to (set when it is retired); its VaR limit is a var-limit row (HIERARCHY PORTFOLIO)"
   pnl-vector:
-    _: "One trade's P&L under each of the 509 scenario days, in USD: the grain every VaR is summed from, with the trade's terms the server derives its position from"
+    _: "One position's or trade's P&L under each scenario day of the window, in USD: the grain every VaR is summed from, with the terms the server derives its position from"
     VECTOR_ID: "PNL-<trade or position>-HS-509 (PV- also read)"
     LIMIT_LETTER: "The limit letter the trade's VaR limit is granted under: the hierarchy LL, LIMIT_LETTER > DESK, is built from it"
     SECURITY_ID: "The security or exchange contract of a securities or listed trade (the demo's are synthetic)"
     TRADE_STATUS: "The trade's status: NEW, VALIDATED and AMENDED count on the date"
-    PNL: "509 values, oldest scenario first, stored as a list<double> column (out of the document)"
+    PNL: "One value per scenario, oldest first, stored as a list<double> column (out of the document)"
   scenario-set:
-    _: "The scenario days of a business date: HS-509, historical simulation over 509 business days"
-    SCENARIO_DATES: "The 509 scenario days, oldest first: index i of every vector is day i"
+    _: "The scenario days of a business date: HS-509, historical simulation over the window's business days"
+    SCENARIO_DATES: "The scenario days, oldest first: index i of every vector is day i"
   var-limit:
     _: "A node's 1-day 99% VaR limit by hierarchy and node id, in USD: the limit letters' (LL) and the MGMT and LEGAL nodes' own"
     NODE_ID: "The node, as the engine builds it: LL~LL-0003, LL~LL-0003/DESK-RATES, MGMT~DESK-RATES"
@@ -67,7 +67,7 @@ fields:
 
 Market-risk results over the trading pack's trades: stress scenarios and their results, FRTB standardised sensitivities, P&L explain and
 trade valuations (mark-to-market, P&L and sensitivities per trade), and the **VaR engine's inputs**: one P&L vector
-per live trade over 509 historical scenario days, the scenario set and the VaR limits of the hierarchies' nodes and of the system
+per live position or trade over the window's historical scenario days, the scenario set and the VaR limits of the hierarchies' nodes and of the system
 baskets (`var-limit`). The system baskets themselves (`PORT <id>`: a hierarchy node, a rule or a basket) are kept in Drishti's basket
 store, not data: the demo's are this pack's seed, `seeds/system-baskets.yaml`, imported once at a demo's first start
 ([VAR_GUIDE.md section 5.7](../../../docs/guides/VAR_GUIDE.md#57-system-baskets)). The hierarchies themselves are configured in this pack's `hierarchies:` block (any

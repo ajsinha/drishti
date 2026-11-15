@@ -590,7 +590,7 @@ Fields no record above has, found by reading all 2 rows, with how many rows fill
 
 ## Scenario PVs of a position or trade (one PV per scenario, its currency): scenario-pv (SPV)
 
-A trade's present value under each historical scenario and its base PV of the same run, in the trade's own currency: the form of a trade's scenario P&L a bank may send instead of a P&L vector (VAR_GUIDE.md section 15.9). The VaR engine turns it into the trade's USD P&L when it loads the date: P&L(s) = PV(s) x FX(s) - PV(base) x FX(base). One row per trade, business date and scenario set (BUSINESS_DATE), keyed by SCENARIO_PV_ID; a trade is in this kind or in pnl-vector, never both on one date. Read by the **market-risk** pack's connector `risk-store` (lake table `risk.scenario-pv`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-28 to 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (15,986 records on 2026-09-30), never a change on the day before. Beside the morning run, intraday updates are appended during the day (only the changed trades, `RUN_KIND` `INTRADAY`); the forms the test data lacks come from the pack's samples (`modules/banking/dmod/packs/market-risk/samples/scenario-pv.jsonl`, `modules/banking/dmod/packs/market-risk/samples/intraday/scenario-pv.2026-09-30.jsonl`).
+A position's or trade's present value under each historical scenario and its base PV of the same run, in its own currency: the form of a position's or trade's scenario P&L a bank may send instead of a P&L vector (VAR_GUIDE.md section 15.9). The VaR engine turns it into the USD P&L when it loads the date: P&L(s) = PV(s) x FX(s) - PV(base) x FX(base). One row per position (GRAIN POSITION) or trade (GRAIN TRADE), business date and scenario set (BUSINESS_DATE), keyed by SCENARIO_PV_ID; a position or trade is in this kind or in pnl-vector, never both on one date. Read by the **market-risk** pack's connector `risk-store` (lake table `risk.scenario-pv`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-28 to 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (15,986 records on 2026-09-30), never a change on the day before. Beside the morning run, intraday updates are appended during the day (only the changed trades, `RUN_KIND` `INTRADAY`); the forms the test data lacks come from the pack's samples (`modules/banking/dmod/packs/market-risk/samples/scenario-pv.jsonl`, `modules/banking/dmod/packs/market-risk/samples/intraday/scenario-pv.2026-09-30.jsonl`).
 
 ### File layout
 
@@ -723,7 +723,7 @@ Its fields beyond the shared table:
 | `SECURITY_ID` | string | optional (filled in 7% of rows) | The security or exchange contract the trade is in (securities and listed products): Drishti keys the trade's position by book and security. | — | `"XCH-EQ_OPTION_LISTED-CAD-01"` |
 | `TAGS` | string | optional (filled in 24% of rows) | The trade's tags joined by \| (for example internal, option); empty when none. | — | `"option"` |
 | `TRADE_CURRENCY` | string | optional (filled in 45% of rows) | The position's or trade's own currency when its PVs are in another one (a position of EUR trades valued in USD): what scopes, rules and Trade currency read. Without it the record's CURRENCY is its own. | seen: `JPY`, `EUR`, `GBP`, `CAD`, `CHF`, `AUD` | `"CAD"` |
-| `SCENARIO_PV` | array of numbers | optional (filled in over 99% of rows) | The trade's present value under each historical scenario day, oldest first: index i is the scenario set's day i. A scenario that failed to price is null: the trade is then not loaded (DRS-5206), never filled with zero. *509 values in the test data* | unit: the trade's currency (CURRENCY) | [509 numbers] |
+| `SCENARIO_PV` | array of numbers | optional (filled in over 99% of rows) | The trade's present value under each historical scenario day, oldest first: index i is the scenario set's day i. A scenario that failed to price is null: the trade is then not loaded (DRS-5206), never filled with zero. *one value per scenario of the date's window* | unit: the trade's currency (CURRENCY) | [509 numbers] |
 | `TRADE_IDS` | array of strings | optional (filled in over 99% of rows) | At GRAIN POSITION, the trades the position aggregates when its source system knows them: kept for navigation (the position page lists them; a trade page links its position); none of them may be sent on its own as well (DRS-5210). | links to `trade` | [6 values] |
 
 #### scenario-pv: Scenario PVs by trade, intraday update
@@ -784,7 +784,7 @@ Its fields beyond the shared table:
 | `TRADE_ID` | string | optional (filled in under 1% of rows) | Trade: the trade it refers to, at GRAIN TRADE (required then) | links to `trade` | `"1002344"` |
 | `SECURITY_ID` | string | optional (filled in 7% of rows) | The security or exchange contract the trade is in (securities and listed products): Drishti keys the trade's position by book and security. | — | `"XCH-ComFut-USD-03"` |
 | `TRADE_VERSIONS` | string | optional (filled in under 1% of rows) | The trade version the batch priced, as v<TRADE_VERSION>; kept for audit, not read by the engine. | — | `"v6"` |
-| `SCENARIO_PV` | array of numbers | optional (filled in over 99% of rows) | The trade's present value under each historical scenario day, oldest first: index i is the scenario set's day i. A scenario that failed to price is null: the trade is then not loaded (DRS-5206), never filled with zero. *509 values in the test data* | unit: the trade's currency (CURRENCY) | [509 numbers] |
+| `SCENARIO_PV` | array of numbers | optional (filled in over 99% of rows) | The trade's present value under each historical scenario day, oldest first: index i is the scenario set's day i. A scenario that failed to price is null: the trade is then not loaded (DRS-5206), never filled with zero. *one value per scenario of the date's window* | unit: the trade's currency (CURRENCY) | [509 numbers] |
 
 #### scenario-pv: Scenario PVs by trade, full run
 
@@ -844,7 +844,7 @@ Its fields beyond the shared table:
 | `TRADE_ID` | string | optional (filled in under 1% of rows) | Trade: the trade it refers to, at GRAIN TRADE (required then) | links to `trade` | `"MX-20000274"` |
 | `SECURITY_ID` | string | optional (filled in 7% of rows) | The security or exchange contract the trade is in (securities and listed products): Drishti keys the trade's position by book and security. | — | `"SEC-WARRANT-USD-01"` |
 | `TRADE_VERSIONS` | string | optional (filled in under 1% of rows) | The trade version the batch priced, as v<TRADE_VERSION>; kept for audit, not read by the engine. | — | `"v4"` |
-| `SCENARIO_PV` | array of numbers | optional (filled in over 99% of rows) | The trade's present value under each historical scenario day, oldest first: index i is the scenario set's day i. A scenario that failed to price is null: the trade is then not loaded (DRS-5206), never filled with zero. *509 values in the test data* | unit: the trade's currency (CURRENCY) | [509 numbers] |
+| `SCENARIO_PV` | array of numbers | optional (filled in over 99% of rows) | The trade's present value under each historical scenario day, oldest first: index i is the scenario set's day i. A scenario that failed to price is null: the trade is then not loaded (DRS-5206), never filled with zero. *one value per scenario of the date's window* | unit: the trade's currency (CURRENCY) | [509 numbers] |
 
 #### scenario-pv: Scenario PVs by trade, intraday update, cancel
 
@@ -988,7 +988,7 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 | `CURRENCY` | string | required | The currency the rates are for (ISO code). | seen: `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY` | `"AUD"` |
 | `QUOTE` | string | required | How the rates are quoted, in words: always USD per one unit of CURRENCY ("USD per 1 EUR"). | seen: `USD per 1 AUD`, `USD per 1 CAD`, `USD per 1 CHF`, `USD per 1 EUR`, `USD per 1 GBP`, `USD per 1 JPY` | `"USD per 1 AUD"` |
 | `RATE` | number | required | USD per one unit of the currency on the business date. | unit: USD per unit | `0.661` |
-| `RATES` | array of numbers | required | USD per one unit of the currency under each scenario, oldest first: index i is the scenario set's day i. Every cross rate goes through USD. *509 values in the test data* | unit: USD per unit | [509 numbers] |
+| `RATES` | array of numbers | required | USD per one unit of the currency under each scenario, oldest first: index i is the scenario set's day i. Every cross rate goes through USD. *one value per scenario of the date's window* | unit: USD per unit | [509 numbers] |
 | `SOURCE` | string | required | The system or model that produced the rates (the demo's synthetic factor model). | seen: `demo-factor-model`, `demo-stress-model` | `"demo-factor-model"` |
 | `BATCH_ID` | string | required | The risk batch that produced the rates, the same run as the date's scenario PVs and P&L vectors (one batch per date, DRS-5203). | — | `"B-2026-09-30-01"` |
 
@@ -1598,7 +1598,7 @@ The example is from the **P&L vector by position, full run** record.
 | `TRADE_CURRENCY` | string | optional (filled in every row) | The trade's (or position's) own currency when it is not the P&L's: what scopes, rules and the pages' Trade currency read. Absent: CURRENCY. | — | `"USD"` |
 | `REPORTING_CCY` | string | optional (filled in every row) | Deprecated: an alias of CURRENCY, the P&L values' currency; when present it must equal CURRENCY, else the row is refused (DRS-5208). | — | `"USD"` |
 | `PV` | integer | required | The trade's value on the business date. | unit: USD | `41018452` |
-| `PNL` | array of numbers | required | The trade's P&L under each historical scenario day, oldest first: index i is the scenario set's day i. *509 values in the test data* | unit: USD | [509 numbers] |
+| `PNL` | array of numbers | required | The trade's P&L under each historical scenario day, oldest first: index i is the scenario set's day i. *one value per scenario of the date's window* | unit: USD | [509 numbers] |
 | `STATUS` | string | required | ok, proxied (priced by a proxy) or failed (no vector: counted, never taken as zero). | — | `"ok"` |
 | `PRICER` | string | required | The pricer that valued the trade; kept for audit, not read by the engine. | — | `"demo-factor-model"` |
 | `MODEL_VERSION` | string | required | The pricer's model version; kept for audit, not read by the engine. | — | `"demo-2"` |

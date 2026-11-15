@@ -81,7 +81,7 @@ fields:
   unit: USD per unit
   description: 'USD per one unit of the currency under each scenario, oldest first: index i is the scenario set''s day i. Every cross rate goes
     through USD.'
-  note: 509 values in the test data
+  note: one value per scenario of the date's window
 - name: SOURCE
   type: text
   presence: required

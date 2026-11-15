@@ -201,7 +201,7 @@ Every table in the risk lake joins to the masters and to each other through thes
 
 ## 8. Vectors and other arrays
 
-A **vector** is a fixed-length list of numbers that belongs to one row, such as a trade's P&L under each of 509 historical scenarios.
+A **vector** is a fixed-length list of numbers that belongs to one row, such as a position's or trade's P&L under each scenario of the window.
 
 - **Storage:** a `list<double>` column (`PNL` for VaR) in Delta, float64. The rest of the row is ordinary columns; the vector is never
   inside a JSON document.
