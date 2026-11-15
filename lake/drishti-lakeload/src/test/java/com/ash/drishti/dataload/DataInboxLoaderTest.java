@@ -131,8 +131,8 @@ class DataInboxLoaderTest {
 
     /**
      * The business date from outside (docs/guides/DATA_LAKE_GUIDE.md): the name's date for every row of the file, the rows whose own
-     * date differs only counted (the outcome, the report, the board); a .ready business-date over the name; a name without a date under the
-     * business today; the table from the name when no rule matches. Two loader runs (one per route).
+     * date differs only counted (the outcome, the report, the board); a .ready business-date over the name; a name without a date under its rows'
+     * own date (never the business today by guess); the table from the name when no rule matches. Two loader runs (one per route).
      */
     @Test
     void theNamesDateTheReadyFilesDateOrTodayDatesEveryRowOfAFile() throws IOException {
@@ -151,7 +151,9 @@ class DataInboxLoaderTest {
         assertThat(e.versions()).containsOnlyKeys("2026-10-30");
         assertThat(e.dateNote()).isNotNull();
         String today = FileDates.businessToday().toString();
-        assertThat(f.signals).extracting(Signal.Landed::date).contains(LocalDate.parse("2026-11-02"), LocalDate.parse("2026-10-30"), LocalDate.parse(today));
+        // trade.jsonl: no date given or named, its row carries 2026-11-01: loaded under its rows' date, never today by guess
+        assertThat(f.signals).extracting(Signal.Landed::date).contains(LocalDate.parse("2026-11-02"), LocalDate.parse("2026-10-30"), LocalDate.parse("2026-11-01"))
+                .doesNotContain(LocalDate.parse(today));
 
         JsonNode report = Fixture.JSON.readTree(f.root.resolve("outbox/2026-11-03").toFile().listFiles()[0].toPath()
                 .resolve("trades-d.2026-11-02.jsonl.loaded.json").toFile());

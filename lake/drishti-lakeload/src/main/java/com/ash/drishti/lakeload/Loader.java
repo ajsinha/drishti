@@ -119,6 +119,7 @@ final class Loader {
             ParseWorker.LineCounts lines = new ParseWorker.LineCounts();
             read(io, splits, readers, spillDir, workers, read, decompress, parse, spill, lines);
             report.readSeconds = (System.nanoTime() - t0) / 1e9;
+            checkRowDates(workers);
             report.collect(workers, splits, lines);
             progress.phase("read");
             if (report.documents > 0 && report.rejected * 100.0 / report.documents > cfg.rejects().maxPct()) {
@@ -152,6 +153,74 @@ final class Loader {
                 // the hook runs anyway
             }
         }
+    }
+
+    /**
+     * The business date of a file the rows decide (DATA_LAKE_GUIDE.md section 5.2), checked after the read and before anything is written:
+     * a file with no date given ({@code as-of}, a {@code .ready} file) and none in its name loads under its rows' own date field when every
+     * row carries the same one (its date is then {@code rows}, never today); in a replace its rows must agree on one date, else nothing is
+     * written: none carrying a date would replace the business today with rows that may be another day's, and several dates are ambiguous.
+     * A file named for one date whose rows all carry other dates is refused in a replace too: a load never replaces a date its rows do not
+     * belong to. An append keeps the old rule (today for rows without a date).
+     */
+    private void checkRowDates(List<ParseWorker> workers) {
+        if (plan.date == null) {
+            return;                                  // the kind has no date field: nothing in a row can name its date (the business today)
+        }
+        boolean replace = !cfg.target().appends();
+        Map<String, Map<Integer, Long>> days = new LinkedHashMap<>();
+        Map<String, long[]> dated = new LinkedHashMap<>();
+        for (ParseWorker w : workers) {
+            w.rowDays.forEach((f, m) -> m.forEach((d, n) -> days.computeIfAbsent(f, k -> new TreeMap<>()).merge(d, n, Long::sum)));
+            w.fileDates.forEach((f, v) -> dated.putIfAbsent(f, v));
+        }
+        String field = plan.date;
+        int today = Arrays.asList(ParseWorker.SOURCES).indexOf("today");
+        int name = Arrays.asList(ParseWorker.SOURCES).indexOf("name");
+        int rows = Arrays.asList(ParseWorker.SOURCES).indexOf("rows");
+        List<String> refused = new ArrayList<>();
+        for (Map.Entry<String, long[]> e : dated.entrySet()) {
+            String f = e.getKey();
+            Map<Integer, Long> m = days.getOrDefault(f, Map.of());
+            if (m.isEmpty()) {
+                continue;
+            }
+            long none = m.getOrDefault(RowParser.NO_FILE_DAY, 0L);
+            List<Integer> own = m.keySet().stream().filter(d -> d != RowParser.NO_FILE_DAY).toList();
+            if (e.getValue()[2] == today) {
+                if (none == 0 && (own.size() == 1 || !replace)) {
+                    for (ParseWorker w : workers) {                    // every row under the date it carries: the file's date is the rows'
+                        long[] v = w.fileDates.get(f);
+                        if (v != null) {
+                            v[0] = own.get(0);
+                            v[2] = rows;
+                        }
+                    }
+                } else if (replace && own.isEmpty()) {
+                    refused.add(f + ": no business date: none given (--as-of, the .ready file's business-date), none in its name (<table>.<YYYY-MM-DD>"
+                            + ".jsonl) and none of its " + none + " rows carries " + field + "; a replace under today's date ("
+                            + LocalDate.ofEpochDay(e.getValue()[0]) + ") could take out a loaded date: give the date");
+                } else if (replace) {
+                    refused.add(f + ": its business date is ambiguous: no date given or in its name, and its rows carry " + words(m, field)
+                            + "; give the date (--as-of, the .ready file's business-date, or <table>.<YYYY-MM-DD>.jsonl)");
+                }
+            } else if (replace && e.getValue()[2] == name && !own.isEmpty() && !m.containsKey((int) e.getValue()[0])) {
+                refused.add(f + ": its name says " + LocalDate.ofEpochDay(e.getValue()[0]) + ", but none of its rows carries that date (they carry "
+                        + words(m, field) + "): a replace would put another day's rows under " + LocalDate.ofEpochDay(e.getValue()[0])
+                        + "; rename the file, or give the date (--as-of, business-date)");
+            }
+        }
+        if (!refused.isEmpty()) {
+            throw new LoadException(String.join("; ", refused) + " (nothing was written)");
+        }
+    }
+
+    /** {@code 2026-11-12 in 300 rows, 2026-11-13 in 2 rows, none in 5 rows}. */
+    private static String words(Map<Integer, Long> m, String field) {
+        List<String> out = new ArrayList<>();
+        m.forEach((d, n) -> out.add(d == RowParser.NO_FILE_DAY ? "no " + field + " in " + n + " row" + (n == 1 ? "" : "s")
+                : LocalDate.ofEpochDay(d) + " in " + n + " row" + (n == 1 ? "" : "s")));
+        return String.join(", ", out);
     }
 
     /** Typical expansion of compressed JSON Lines (gzip about 6 to 1 for documents with long number lists; zstd a little more). */

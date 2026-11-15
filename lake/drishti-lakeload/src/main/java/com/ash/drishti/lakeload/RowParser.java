@@ -105,6 +105,14 @@ final class RowParser {
     int fileDay = NO_FILE_DAY;
     static final int NO_FILE_DAY = Integer.MIN_VALUE;
     boolean otherDate;
+    /**
+     * A file whose business date is neither given nor in its name ({@code FileDates.decide}'s {@code today}): each row goes under its own
+     * date field when it has one, else under {@link #todayDay}; the load then checks that the file's rows agree on one date ({@code Loader}).
+     */
+    boolean rowsOrToday;
+    int todayDay;
+    /** The row's own date field (days since the epoch), {@link #NO_FILE_DAY} when it has none: counted per file ({@code ParseWorker}). */
+    int ownDay = NO_FILE_DAY;
     String id;
     long idHash;
     /** A second, independent hash of the id: two ids are one record's copies only when both hashes agree. */
@@ -508,10 +516,16 @@ final class RowParser {
             }
         }
         otherDate = false;
+        ownDay = NO_FILE_DAY;
         if (fileDay != NO_FILE_DAY) {                      // the file's business date (FileDates.decide): the row's own date is only counted
             epochDay = fileDay;
             LocalDate own = dateSlot < 0 ? null : day(caps[dateSlot]);
             otherDate = own != null && own.toEpochDay() != fileDay;
+            ownDay = own == null ? NO_FILE_DAY : (int) own.toEpochDay();
+        } else if (rowsOrToday) {                          // no date given or named: the row's own, else today (checked per file after the read)
+            LocalDate own = dateSlot < 0 ? null : day(caps[dateSlot]);
+            ownDay = own == null ? NO_FILE_DAY : (int) own.toEpochDay();
+            epochDay = own == null ? todayDay : ownDay;
         } else if (plan.asOf != null) {
             epochDay = (int) plan.asOf.toEpochDay();
         } else if (dateSlot < 0) {

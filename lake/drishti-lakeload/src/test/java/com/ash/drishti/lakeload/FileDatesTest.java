@@ -184,13 +184,12 @@ class FileDatesTest {
         Files.write(drop.resolve("deal.2026-11-01.jsonl"), new byte[0]);
         JsonNode s = load(drop, "lake");
         assertThat(s.path("exit").asInt()).as(s.path("said").asText() + s.path("error").asText()).isZero();
-        String today = FileDates.businessToday().toString();
-        assertThat(rows(s)).isEqualTo(new TreeMap<>(Map.of("2026-10-30", 3L, "2026-11-02", 5L, "2026-11-03", 10L, today, 2L)));
+        assertThat(rows(s)).isEqualTo(new TreeMap<>(Map.of("2026-10-30", 3L, "2026-11-02", 5L, "2026-11-03", 10L, "2026-10-29", 2L)));   // an undated name: its rows' own date, not today
         Map<String, String> byFile = new LinkedHashMap<>();
         s.path("fileDates").forEach(f -> byFile.put(f.path("file").asText(), f.path("date").asText() + "/" + f.path("source").asText() + "/"
                 + f.path("otherDateRows").asLong()));
         assertThat(byFile).containsEntry("deal.2026-11-03.jsonl", "2026-11-03/name/3").containsEntry("deal.2026-11-02.jsonl.gz", "2026-11-02/name/5")
-                .containsEntry("deal.2026-10-30.zip!/a.jsonl", "2026-10-30/name/0").containsEntry("deal.jsonl", today + "/today/2");
+                .containsEntry("deal.2026-10-30.zip!/a.jsonl", "2026-10-30/name/0").containsEntry("deal.jsonl", "2026-10-29/rows/0");
         assertThat(s.path("emptyFiles").toString()).contains("deal.2026-11-01.jsonl");
         assertThat(s.path("dateNotes").toString()).contains("3 rows of deal.2026-11-03.jsonl carried another date in TRADE_DATE; loaded under 2026-11-03");
         assertThat(s.path("said").asText()).isNotNull();

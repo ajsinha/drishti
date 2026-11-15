@@ -418,7 +418,7 @@ public final class Routes {
             throw new Unrouted("the rule " + rule.match() + " takes the business date from the name (date-from: name), but " + fileName
                     + " carries none (<table>.<YYYY-MM-DD>.jsonl.gz): rename it, or give business-date: in its .ready file");
         } else {
-            dateBy = FileDates.businessToday() + " (today: no date in the name)";
+            dateBy = "the rows' own business date (no date given or in the name: a replace refuses rows with none or several)";
         }
         String mode = n.mode() != null ? n.mode() : defaultMode;
         return new Route(pack, kind, n.connector() != null ? n.connector() : rule != null && rule.connector() != null ? rule.connector() : tableConnector,

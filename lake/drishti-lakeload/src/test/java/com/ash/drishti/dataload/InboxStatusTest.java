@@ -18,7 +18,6 @@ package com.ash.drishti.dataload;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.ash.drishti.common.FileDates;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -82,7 +81,7 @@ class InboxStatusTest {
         assertThat((String) map(byFile(waiting, "trades-b.2026-11-02.jsonl").get("rule")).get("text")).endsWith("· 2026-11-02 from the name");
         assertThat(map(byFile(waiting, "trades-c.2026-11-01.zip").get("rule"))).containsEntry("date", "2026-11-01 from the name");
         assertThat(map(byFile(waiting, "trades-d.2026-11-02.jsonl").get("rule"))).containsEntry("date", "2026-11-01 from the .ready file");
-        assertThat(map(byFile(waiting, "trades-a.jsonl").get("rule"))).containsEntry("date", FileDates.businessToday() + " (today: no date in the name)");
+        assertThat(map(byFile(waiting, "trades-a.jsonl").get("rule"))).containsEntry("date", "the rows' own business date (no date given or in the name: a replace refuses rows with none or several)");
 
         Map<String, Object> a = byFile(waiting, "trades-a.jsonl");
         assertThat(a).containsEntry("code", "ready").containsEntry("label", "ready");

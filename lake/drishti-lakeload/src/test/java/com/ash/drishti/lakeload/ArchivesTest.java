@@ -212,7 +212,7 @@ class ArchivesTest {
         JsonNode s = LakeLoadTest.load(tmp, config(lake, in + "/*", "  kind: trade\n"));
         assertThat(s.path("exit").asInt()).as(s.path("said").asText()).isZero();
         assertThat(s.path("documents").asLong()).isEqualTo(12);
-        assertThat(s.path("duplicates").toString()).contains(FileDates.businessToday().toString());   // the same ids twice: the last read kept
+        assertThat(s.path("duplicates").toString()).contains("2026-10-01");   // the same ids twice (undated names: the rows' own dates): the last read kept
     }
 
     @Test

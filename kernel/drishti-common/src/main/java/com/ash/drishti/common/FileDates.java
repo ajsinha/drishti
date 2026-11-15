@@ -41,7 +41,8 @@ import java.util.regex.Pattern;
  *
  * <p><b>The business date of a plain file</b> ({@link #decide}): given for the load ({@code as-of}, a {@code .ready} file's
  * {@code business-date}), else the name's, else the business today; {@code date-from: name} refuses a name without a date. A row's own
- * date field never decides; it is only counted when it differs.
+ * date field decides only a file with no date given or named: the Java loader then takes the one date all its rows carry, and refuses a
+ * replace when they carry none or several (never today by guess); else it is only counted when it differs.
  */
 public final class FileDates {
 
@@ -63,6 +64,8 @@ public final class FileDates {
     static final int FIRST_YEAR = 1900;
     private static final Pattern DATEISH = Pattern.compile("^(\\d{8}|\\d{4}-\\d{2}-\\d{2})$");
     private static final Pattern TABLE = Pattern.compile("^[A-Za-z0-9_-]+$");
+    /** One part of a day split into several files: {@code <table>.<date>.part-0001.jsonl}. */
+    private static final Pattern PART = Pattern.compile("^part-?\\d{1,6}$", Pattern.CASE_INSENSITIVE);
     private static final Pattern JSONL_MEMBER = Pattern.compile("\\.(jsonl|ndjson|json)(\\.gz|\\.zst)?$", Pattern.CASE_INSENSITIVE);
 
     private FileDates() {}
@@ -162,6 +165,9 @@ public final class FileDates {
             day = (LocalDate) d[0];
             i = 2;
         }
+        if (day != null && i < tokens.length && PART.matcher(tokens[i]).matches()) {
+            i++;                                           // one part of a day split into several files: <table>.<date>.part-0001.jsonl
+        }
         StringBuilder shape = new StringBuilder();
         for (; i < tokens.length; i++) {
             String t = tokens[i];
@@ -234,6 +240,7 @@ public final class FileDates {
             case "name" -> d.date() + " from the file name";
             case "folder" -> d.date() + " from the archive's folder";
             case "ready" -> d.date() + " from the .ready file";
+            case "rows" -> d.date() + " from the rows' own business date (no date given or in the name)";
             default -> d.date() + " (today: no date in the name)";
         };
     }

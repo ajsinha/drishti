@@ -52,7 +52,7 @@ class RoutesTest {
         assertThat(r.by()).isEqualTo("the rule trades-*");
         assertThat(r.mode()).as("the inbox's default-mode: append").isEqualTo("append");
         Routes.Route today = routes(f).route("trades-endur.jsonl.gz", ReadyNote.EMPTY);
-        assertThat(today.dateBy()).isEqualTo(FileDates.businessToday() + " (today: no date in the name)");
+        assertThat(today.dateBy()).isEqualTo("the rows' own business date (no date given or in the name: a replace refuses rows with none or several)");
         assertThat(today.group()).as("dated and undated names go to one load: the loader dates each file").isEqualTo(r.group());
     }
 

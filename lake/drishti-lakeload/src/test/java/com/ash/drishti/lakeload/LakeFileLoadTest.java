@@ -74,7 +74,7 @@ class LakeFileLoadTest {
     @Test
     void theTableIsWhereAndAsTheLakeFileSays() throws Exception {
         lakeFile("replace", "DESK");
-        Path in = PvData.write(tmp.resolve("in/pv.jsonl"), PvData.lines(200, 20, 2, 1));
+        Path in = PvData.byDate(tmp.resolve("in"), PvData.lines(200, 20, 2, 1)).resolve("*.jsonl");     // one file a date: a replace takes each date from its name
         JsonNode s = LakeLoadTest.load(tmp, config(in));
         assertThat(s.path("exit").asInt()).as(s.path("said").asText() + s.path("error").asText()).isZero();
         Path table = tmp.resolve("lake/risk/scenario-pv");

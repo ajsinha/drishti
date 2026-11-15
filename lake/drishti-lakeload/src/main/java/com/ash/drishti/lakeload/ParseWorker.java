@@ -98,7 +98,11 @@ final class ParseWorker implements Callable<Void> {
     /** Per file (its label): {its business date (epoch day), rows whose own date field said another, its source (0 folder, 1 given, 2 name,
      *  3 today), documents}. */
     final Map<String, long[]> fileDates = new HashMap<>();
-    static final String[] SOURCES = {"folder", "given", "name", "today", "ready"};
+    static final String[] SOURCES = {"folder", "given", "name", "today", "ready", "rows"};
+    /** Per file: its accepted rows by their own date field (days since the epoch; {@link RowParser#NO_FILE_DAY}: none). */
+    final Map<String, Map<Integer, Long>> rowDays = new HashMap<>();
+    private Map<Integer, Long> lastRowDays;
+    private boolean lastRowsOrToday;
     private final RowPlan plan;
     private final java.time.LocalDate today = FileDates.today();
     private Inputs.InputFile lastFile;
@@ -198,8 +202,13 @@ final class ParseWorker implements Callable<Void> {
             FileDates.Decided d = decide(plan, f, today);
             lastFileDate = d.date() == null ? null : fileDates.computeIfAbsent(f.name(), k -> new long[] {d.date().toEpochDay(), 0,
                     java.util.Arrays.asList(SOURCES).indexOf(d.source()), 0});
+            lastRowDays = rowDays.computeIfAbsent(f.name(), k -> new HashMap<>());
+            lastRowsOrToday = "today".equals(d.source());
         }
-        parser.fileDay = lastFileDate == null ? RowParser.NO_FILE_DAY : (int) lastFileDate[0];
+        // no date given and none in the name: each row its own date field's, else today; the load checks they agree (Loader.checkRowDates)
+        parser.rowsOrToday = lastRowsOrToday && lastFileDate != null;
+        parser.todayDay = lastFileDate == null ? 0 : (int) lastFileDate[0];
+        parser.fileDay = lastFileDate == null || parser.rowsOrToday ? RowParser.NO_FILE_DAY : (int) lastFileDate[0];
     }
 
     private void chunk(Chunk c) throws IOException {
@@ -236,6 +245,9 @@ final class ParseWorker implements Callable<Void> {
                     rows++;
                     if (parser.otherDate) {
                         lastFileDate[1]++;
+                    }
+                    if (lastRowDays != null) {
+                        lastRowDays.merge(parser.ownDay, 1L, Long::sum);
                     }
                     accept(c, line);
                 } else {

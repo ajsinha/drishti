@@ -4,6 +4,11 @@
   "names": [
     {"name": "abc.jsonl", "table": "abc", "date": null},
     {"name": "abc.2026-11-03.jsonl", "table": "abc", "date": "2026-11-03"},
+    {"name": "scenario-pv.2026-11-03.part-0001.jsonl", "table": "scenario-pv", "date": "2026-11-03"},
+    {"name": "scenario-pv.2026-11-03.PART12.jsonl.gz", "table": "scenario-pv", "date": "2026-11-03"},
+    {"name": "scenario-pv.part-0002.jsonl.gz", "error": "'part-0002' is neither the date"},
+    {"name": "abc.2026-11-03.part-x.jsonl", "error": "is neither the date"},
+    {"name": "abc.2026-11-03.part-1.part-2.jsonl", "error": "is neither the date"},
     {"name": "abc.jsonl.gz", "table": "abc", "date": null},
     {"name": "abc.jsonl.zip", "table": "abc", "date": null},
     {"name": "abc.2026-11-03.jsonl.gz", "table": "abc", "date": "2026-11-03"},

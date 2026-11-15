@@ -44,6 +44,7 @@ LITTER = ("__MACOSX", "Thumbs.db")
 FIRST_YEAR = 1900
 EXTENSIONS_TEXT = "(.jsonl, .ndjson, .json, .gz, .zip, .zst; an archive .tar, .tgz, .tar.gz, .tar.zip)"
 _DATEISH = re.compile(r"^(\d{8}|\d{4}-\d{2}-\d{2})$", re.ASCII)
+_PART = re.compile(r"^part-?\d{1,6}$", re.ASCII | re.IGNORECASE)
 _TABLE = re.compile(r"^[A-Za-z0-9_-]+$", re.ASCII)
 _JSONL_MEMBER = re.compile(r"\.(jsonl|ndjson|json)(\.gz|\.zst)?$", re.IGNORECASE)
 
@@ -126,6 +127,8 @@ def parse(name, today: date | None = None) -> Name:
         if why:
             return Name(None, None, False, f"{base}: {why}")
         rest = rest[1:]
+    if day and rest and _PART.match(rest[0]):        # one part of a day split into several files: <table>.<date>.part-0001.jsonl
+        rest = rest[1:]
     shape = ""
     for t in rest:
         lt = t.lower()
@@ -206,6 +209,8 @@ def words(d: Decided, given_by: str = "the command line") -> str:
         return f"{d.date.isoformat()} from the archive's folder"
     if d.source == "ready":
         return f"{d.date.isoformat()} from the .ready file"
+    if d.source == "rows":
+        return f"{d.date.isoformat()} from the rows' own business date (no date given or in the name)"
     return f"{d.date.isoformat()} (today: no date in the name)"
 
 
