@@ -100,7 +100,7 @@ public final class KafkaSourcePlugin implements SourcePlugin {
     private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(KafkaSourcePlugin.class);
     /** Where the broker is looked for, and the one-line transitions of waiting for it (a broker that is not there is calm, not a fault). */
     private volatile String bootstrap = "";
-    private volatile com.ash.drishti.messaging.BrokerWaiting.Watch watch;
+    private volatile com.ash.drishti.api.BrokerWaiting.Watch watch;
     /** How long the consumer may have no broker connection before health says so (short blips are not reported). */
     static final long BROKER_LOST_MS = 10_000;
     private final Map<String, String> kindOfTopic = new HashMap<>();
@@ -196,8 +196,8 @@ public final class KafkaSourcePlugin implements SourcePlugin {
         this.tls = security.tls();
         this.valueDeserializer = valueDeserializer(ctx.settings());
         this.bootstrap = String.valueOf(p.get(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG));
-        this.watch = new com.ash.drishti.messaging.BrokerWaiting.Watch(sourceName, LOG);
-        health.set(com.ash.drishti.messaging.BrokerWaiting.message(bootstrap));   // until the supervisor has looked
+        this.watch = new com.ash.drishti.api.BrokerWaiting.Watch(sourceName, LOG::info);
+        health.set(com.ash.drishti.api.BrokerWaiting.message(bootstrap));   // until the supervisor has looked
         consumerProps = p;                           // the consumer is created (and re-created) by the supervisor
         this.ticksOnly = "ticks".equals(ctx.setting("mode", "state"));
         this.searchable = !ticksOnly && Boolean.parseBoolean(ctx.setting("search", "true"));
@@ -239,15 +239,15 @@ public final class KafkaSourcePlugin implements SourcePlugin {
      */
     private void supervise(List<String> topics, long pollMs) {
         long backoff = 1_000;
-        List<String> endpoints = com.ash.drishti.messaging.BrokerWaiting.endpoints(bootstrap);
+        List<String> endpoints = com.ash.drishti.api.BrokerWaiting.endpoints(bootstrap);
         while (running) {
-            if (!com.ash.drishti.messaging.BrokerWaiting.reachable(endpoints, 1_000)) {
-                health.set(com.ash.drishti.messaging.BrokerWaiting.message(bootstrap));   // calm: the snapshot is served, live updates wait
+            if (!com.ash.drishti.api.BrokerWaiting.reachable(endpoints, 1_000)) {
+                health.set(com.ash.drishti.api.BrokerWaiting.message(bootstrap));   // calm: the snapshot is served, live updates wait
                 watch.waiting(bootstrap);
                 if (!pause(backoff)) {
                     return;
                 }
-                backoff = com.ash.drishti.messaging.BrokerWaiting.next(backoff);
+                backoff = com.ash.drishti.api.BrokerWaiting.next(backoff);
                 continue;
             }
             KafkaConsumer<String, String> c;
@@ -338,7 +338,7 @@ public final class KafkaSourcePlugin implements SourcePlugin {
             if (!connected && lostSince == 0) {
                 lostSince = System.nanoTime();
             } else if (!connected && System.nanoTime() - lostSince > java.util.concurrent.TimeUnit.MILLISECONDS.toNanos(BROKER_LOST_MS)) {
-                health.set(com.ash.drishti.messaging.BrokerWaiting.lost(bootstrap));
+                health.set(com.ash.drishti.api.BrokerWaiting.lost(bootstrap));
                 watch.waiting(bootstrap);
             } else if (connected && lostSince != 0) {
                 lostSince = 0;
