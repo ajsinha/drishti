@@ -17,7 +17,6 @@ package com.ash.drishti.server.lakes;
 
 import com.ash.drishti.lakeconfig.Lakes;
 import com.ash.drishti.lakeload.LakeRelocate;
-import java.nio.file.Path;
 import java.util.function.Function;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.env.EnvironmentPostProcessor;
