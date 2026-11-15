@@ -559,10 +559,9 @@ The Python path stages each JSON line in Python (`tools/lake/stage.py`, `jsonstr
 
 1. **Where a JVM exists** (the server's machine, the drill, AWS loaders): make `--engine java` (the parallel loader,
    [PARALLEL_LOADER.md](DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-drishti-lakeload)) the default for large inputs; the knob exists (`--java-above-mb`). No new dependency.
-2. **Where no JVM exists** (an analyst's Python environment): a Polars staging path. `pl.scan_ndjson` reads JSON Lines on every core into
-   Arrow, the reject rules of `stage.py` become Polars expressions, and `deltalake.write_deltalake` commits the Arrow table. The rules must
-   give exactly the same rows and rejects as `stage.py` (a parity test over the test data). Expected: within about 2 times of the Java
-   loader on the same machine.
+2. **Where no JVM exists** (an analyst's Python environment): a Polars engine behind the same loader contract as the Java loader,
+   Delta on local disk through `deltalake`. The contract, what Polars meets and cannot, the parity fixture, the expected speed and the
+   build plan are [POLARS_LOADER_DESIGN.md](POLARS_LOADER_DESIGN.md) (design, not built).
 
 ### 7.4 Recommendation
 

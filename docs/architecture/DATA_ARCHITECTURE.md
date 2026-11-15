@@ -3532,6 +3532,9 @@ run it: [DATA_LAKE_GUIDE.md 3.3](../guides/DATA_LAKE_GUIDE.md#33-the-parallel-lo
 positions × about 510 scenarios, about 1.2 billion doubles, 20+ GB of JSON Lines) in at most 10 minutes on a real server, into Delta or
 Iceberg, from a folder or S3, with memory bounded by configuration whatever the input's size.
 
+A Polars engine behind the same contract (Delta on local disk, for machines without Java) is designed, not built:
+[POLARS_LOADER_DESIGN.md](POLARS_LOADER_DESIGN.md), whose section 2 writes the loader's rules down as the specification every engine meets.
+
 ### 10.1 Where it lives
 
 | Needs | For | Why not elsewhere |
