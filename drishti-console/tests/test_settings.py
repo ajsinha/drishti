@@ -79,3 +79,19 @@ def test_the_theme_menu_saves_to_the_account(client, backend, monkeypatch):
     assert r.status_code == 200 and patched[-1] == {"theme": "blue"}
     assert "data-signed-in" in client.get("/static/js/drishti_app.js").text
     client.app.state.user_settings.forget("ash")
+
+
+def test_the_settings_option_reads_the_file_below_the_environment_and_the_command_line(tmp_path, monkeypatch):
+    """--settings /abs/drishti.ini: same format as the server's; the file beats the defaults, the command line beats the file; relative refused."""
+    from pathlib import Path
+    from core.config import load_settings
+    ini = tmp_path / "drishti.ini"
+    ini.write_text("# c\n[console]\nserver.port=17999\nbackend.url=http://file.example:1\n", encoding="utf-8")
+    cfg_dir = Path(__file__).resolve().parents[1] / "config"
+    s = load_settings(cfg_dir, ["--settings", str(ini), "--backend.url=http://cli.example:2"])
+    assert s.get("server.port") == 17999 and s.get("backend.url") == "http://cli.example:2"
+    import pytest
+    with pytest.raises(SystemExit, match="absolute"):
+        load_settings(cfg_dir, ["--settings", "drishti.ini"])
+    with pytest.raises(SystemExit, match="not a file"):
+        load_settings(cfg_dir, ["--settings=" + str(tmp_path / "nope.ini")])

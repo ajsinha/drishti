@@ -33,7 +33,7 @@
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/drishti-console/run_drishti_web.py" />
-    <option name="PARAMETERS" value="--server.port=17481 --backend.url=http://127.0.0.1:18480 --distribution=finance" />
+    <option name="PARAMETERS" value="--settings $USER_HOME$/drishti-envs/dev.ini --server.port=17481 --backend.url=http://127.0.0.1:18480 --distribution=finance" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
     <option name="MODULE_MODE" value="false" />
