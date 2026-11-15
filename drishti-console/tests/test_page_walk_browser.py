@@ -65,17 +65,21 @@ def stack(tmp_path_factory):
         yield st
 
 
-def _packs_ready(server: str, names: list[str], seconds: float = 300) -> None:
+def _packs_ready(server: str, names: list[str], seconds: float = 300, token_secret: str = "") -> None:
     """Every pack the walk asks for listed by the server: a module's packs come up a moment after the server answers, and a page opened
-    before (Forms, the first snapshots of a group) lists fewer packs than the same page a minute later (seen: Forms without Trading)."""
+    before (Forms, the first snapshots of a group) lists fewer packs than the same page a minute later (seen: Forms without Trading).
+    ``token_secret``: a server with sign-in on (each ask carries an administrator's token signed with it; anonymous asks answer 401)."""
     import json
     import time
     import urllib.request
 
+    from core.auth import mint_token
+
     deadline, got = time.monotonic() + seconds, set()
     while time.monotonic() < deadline:
+        headers = {"Authorization": "Bearer " + mint_token("drishti-dev-admin", ["admin"], token_secret, 300)} if token_secret else {}
         try:
-            with urllib.request.urlopen(server + "/api/v1/packs", timeout=30) as r:
+            with urllib.request.urlopen(urllib.request.Request(server + "/api/v1/packs", headers=headers), timeout=30) as r:
                 got = {p.get("name") for p in json.load(r) if p.get("active", True)}
             if set(names) <= got:
                 return

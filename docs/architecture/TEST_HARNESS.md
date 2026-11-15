@@ -481,11 +481,12 @@ does not hold `drill`, or a `DRISHTI_DRILL_COPY_DIR` whose name does not hold `d
 itself (every command of every module that is on, with its example), the top bar's module commands, the reserved words (FORM, WHAT, BI, FUNC,
 DATAMAP, DATA, EXPORT, PIVOT, ADMIN `<page>`) and VaR's sub-commands. Each is typed bare (`WORD <GO>`), with its FUNC example and with real
 ids of the saved test data (`data/testdata`, read streamed, never copied: the first id of a kind and a random one), signed in as the
-administrator and, when asked, as a role user. Only HTTP is used; what the browser draws is checked through the API it reads (VaR's headline
+administrator and, when asked, as a role user. A lake built `lake demo --as-of <date>` moves the dates in some ids (an exposure run's
+`XR-<date>-01` and its path rows); `--as-of <date>` moves the saved ids the same way, so the sweep types ids the lake holds. Only HTTP is used; what the browser draws is checked through the API it reads (VaR's headline
 number, the Explain page's `/api/explain`).
 
 ```
-python3 tools/sweep/command_sweep.py --base http://host:port --admin USER --admin-password PW [--role USER --role-password PW --report-only USER]
+python3 tools/sweep/command_sweep.py --base http://host:port --admin USER --admin-password PW [--as-of YYYY-MM-DD] [--role USER --role-password PW --report-only USER]
 ```
 
 A run fails on: no answer or a 5xx; a 4xx that is not a clean refusal; a DRS error, "not found" or a server error on the page; a list with
@@ -497,7 +498,7 @@ is not the page failing. The report is `data/sweep/sweep-<stamp>.md` and `.jsonl
 In the drill the browser lane runs it as `test_command_sweep_browser.py` on a server of its own with sign-in on over the page walk's cached lake,
 as the administrator: any FAIL fails the drill. Setting `DRISHTI_SWEEP_ROLE` also signs in as a role user the test creates; that user's FAILs
 are in the report and never block. `DRISHTI_SWEEP_BASE` (with `_ADMIN`, `_ADMIN_PASSWORD`, `_ROLE`, `_ROLE_PASSWORD`) sweeps a console that
-is already running. The drill keeps its report in its logs folder (`<data>/drill/sweep/`).
+is already running (`DRISHTI_SWEEP_AS_OF` the date its lake was built to). The drill keeps its report in its logs folder (`<data>/drill/sweep/`).
 
 ### 3.28 The API sweep
 

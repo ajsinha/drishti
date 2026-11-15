@@ -94,13 +94,14 @@ def trade_stack(tmp_path_factory):
         yield st
 
 
-def _engine_ready(base, seconds=120):
+def _engine_ready(base, seconds=120, opener=None):
     """Waits until the engine answers the bank's VaR: the Delta connector comes up a moment after the server, and until then every VaR
-    request answers "no P&L vectors", which a page would draw as its error, not as the figures the tests look for."""
+    request answers "no P&L vectors", which a page would draw as its error, not as the figures the tests look for. ``opener``: a signed-in
+    one (a console with sign-in on answers 401 to an anonymous ask)."""
     deadline = time.monotonic() + seconds
     while True:
         try:
-            with urllib.request.urlopen(base + "/api/var/scope?scope=BANK", timeout=10) as r:
+            with (opener.open if opener else urllib.request.urlopen)(base + "/api/var/scope?scope=BANK", timeout=10) as r:
                 if r.status == 200:
                     return
         except (urllib.error.URLError, OSError):

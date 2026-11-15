@@ -49,7 +49,7 @@ def signed_in_stack(tmp_path_factory):
     for st in var_server(tmp_path_factory, lake, auth=True, DRISHTI_SECURITY_ENABLED="true", DRISHTI_TOKEN_SECRET=TOKEN_SECRET,
                          DRISHTI_DATALOAD_ENABLED="true", DRISHTI_DATALOAD_DIR=str(tmp_path_factory.mktemp("sweep-dataload")),
                          DRISHTI_PACKS=WALK_PACKS, DRISHTI_LENSES="risk,world,market,trading,markets"):
-        _packs_ready(st.server, WALK_PACKS.split(","))
+        _packs_ready(st.server, WALK_PACKS.split(","), token_secret=TOKEN_SECRET)
         role = os.environ.get("DRISHTI_SWEEP_ROLE", "")        # a role user is swept only when asked for: report-only
         if role:
             _make_role_user(str(st))
@@ -74,7 +74,8 @@ def test_every_function_runs_clean(signed_in_stack, capsys):
     spec = importlib.util.spec_from_file_location("command_sweep", SWEEP)
     sweep = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(sweep)
-    args = ["--base", base, "--out", os.environ.get("DRISHTI_SWEEP_OUT") or str(sweep.ROOT / "data" / "sweep")]
+    args = ["--base", base, "--out", os.environ.get("DRISHTI_SWEEP_OUT") or str(sweep.ROOT / "data" / "sweep"),
+            "--as-of", os.environ.get("DRISHTI_SWEEP_AS_OF", "" if os.environ.get("DRISHTI_SWEEP_BASE") else SNAPSHOT_DATE)]   # the lake's last date
     for flag, value in (("--admin", admin), ("--admin-password", admin_password), ("--role", role), ("--role-password", role_password)):
         if value:
             args += [flag, value]

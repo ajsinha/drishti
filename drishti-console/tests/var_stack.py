@@ -125,5 +125,27 @@ def var_server(tmp_path_factory, lake: Path, shared: bool = False, auth: bool = 
         own = {"DRISHTI_VAR_HOT_DIR": str(tmp_path_factory.mktemp("var-hot")), "DRISHTI_VAR_OFFICIAL_ROOT": str(tmp_path_factory.mktemp("var-official"))}
     for st in _stack(tmp_path_factory, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true", "DRISHTI_VAR_SYSTEM_BASKETS_SEED": "true",
                                         **own, **env}, auth=auth, heap=heap, shared=shared):
-        _engine_ready(str(st))
+        _engine_ready(str(st), opener=signed_in(str(st)) if auth else None)
         yield st
+
+
+def signed_in(console: str, user: str = "drishti-dev-admin", password: str = "drishti-dev-admin123"):
+    """A urllib opener signed in to a console with sign-in on (the development administrator by default): its session cookie on every ask.
+    The console signs in through its server, which may still be coming up: tried until it answers, for up to two minutes."""
+    import http.cookiejar
+    import time
+    import urllib.error
+    import urllib.parse
+    import urllib.request
+
+    op = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
+    form = urllib.parse.urlencode({"user": user, "password": password}).encode()
+    deadline = time.monotonic() + 120
+    while True:
+        try:
+            op.open(urllib.request.Request(console + "/login", data=form), timeout=60).read()
+            return op
+        except (urllib.error.URLError, OSError):
+            if time.monotonic() > deadline:
+                raise
+            time.sleep(1)   # wait-ok: the server behind the console is still coming up

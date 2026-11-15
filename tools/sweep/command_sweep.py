@@ -19,8 +19,9 @@
 The functions come from the FUNC directory itself (/func as the administrator: every command of every module that is on, with its
 example), the top bar's module commands, the reserved words (FORM, WHAT, BI, FUNC, DATAMAP, DATA, EXPORT, PIVOT, ADMIN <page>) and
 VAR's sub-commands. Each is typed as <WORD> <GO> (bare), with its FUNC example, and with a real id from the saved test data
-(data/testdata/**/*.jsonl.gz, read streamed, never copied: the first id of its kind and a random one), as the administrator and as one
-role user. HTTP only (the pages are drawn by the server; what the browser draws is checked through the API it reads: VaR's headline).
+(data/testdata/**/*.jsonl.gz, read streamed, never copied: the first id of its kind and a random one; with --as-of, an id whose dates the
+demo lake moves, an exposure run's RUN_ID, is moved the same way: the lake built --as-of holds XR-<that date>-01), as the administrator
+and as one role user. HTTP only (the pages are drawn by the server; what the browser draws is checked through the API it reads: VaR's headline).
 
 Each run is checked: status and title; no DRS error, "not found" or server error unless the person legitimately is refused (a clean
 refusal is a pass, marked "refused"); content present (rows on a list, a headline number on a VaR page, a main area that is not empty);
@@ -135,13 +136,33 @@ def catalogue(c: Client) -> list[dict]:
     return sorted(out.values(), key=lambda f: f["word"])
 
 
-def samples(data_root: Path) -> dict[str, list[str]]:
-    """kind -> [first id, a random id] from the saved test data (testdata.yaml names each folder, kind and key); streamed, nothing copied."""
+def mover(spec: dict, as_of: str):
+    """How the demo lake moved an id of the saved test data when it was built ``--as-of`` (tools/lake/demo.py): the key fields it moves
+    (DemoLake.DATED_FIELDS: an exposure run's RUN_ID, a path row's PATH_ROW_ID) and the function that moves each test-data date in an id to
+    the lake's; None when the lake keeps the test data's own dates."""
+    dates = [str(d) for d in spec.get("business-dates") or []]
+    if not as_of or as_of == "data" or not dates:
+        return None
+    from datetime import date
+    sys.path.insert(0, str(ROOT / "tools"))
+    sys.path.insert(0, str(ROOT / "tools" / "lake"))
+    from demo import DemoLake
+    from samplegen.dates import Calendar
+    from samplegen.lake import business_days
+    shift = dict(zip(dates, (d.isoformat() for d in business_days(date.fromisoformat(as_of), len(dates), Calendar.of("USNY")))))
+    iso = re.compile(r"\d{4}-\d{2}-\d{2}")
+    return set(DemoLake.DATED_FIELDS), lambda v: iso.sub(lambda m: shift.get(m.group(0), m.group(0)), v)
+
+
+def samples(data_root: Path, as_of: str = "") -> dict[str, list[str]]:
+    """kind -> [first id, a random id] from the saved test data (testdata.yaml names each folder, kind and key); streamed, nothing copied.
+    ``as_of``: the last business date of the lake the server reads, when it was built --as-of (ids the lake moves are moved the same way)."""
     import yaml
     try:
         spec = yaml.safe_load((data_root / "testdata.yaml").read_text())
     except OSError:
         return {}
+    moved = mover(spec, as_of)
     out: dict[str, list[str]] = {}
     for d in spec.get("datasets") or []:
         key, folder = d.get("key"), d.get("folder")
@@ -164,6 +185,8 @@ def samples(data_root: Path) -> dict[str, list[str]]:
                         ids.append(str(v))
         except OSError:
             continue
+        if ids and moved and key in moved[0]:
+            ids = [moved[1](i) for i in ids]
         if ids:
             out.setdefault(d["kind"], [])
             out[d["kind"]] += [ids[0], rng.choice(ids)]
@@ -253,6 +276,7 @@ def main(argv=None) -> int:
     ap.add_argument("--role", default="")
     ap.add_argument("--role-password", default="")
     ap.add_argument("--testdata", default=str(ROOT / "data" / "testdata"))
+    ap.add_argument("--as-of", default="", help="the last business date of the lake the server reads, when it was built lake demo --as-of")
     ap.add_argument("--out", default=str(ROOT / "data" / "sweep"))
     ap.add_argument("--workers", type=int, default=4)
     ap.add_argument("--verbose", action="store_true", help="one line a run on stderr")
@@ -263,7 +287,7 @@ def main(argv=None) -> int:
     if a.role:
         clients.append(Client(a.base, a.role, a.role_password))
     funcs = [f for f in catalogue(clients[0]) if a.only.upper() in f["word"].upper()]
-    ids = samples(Path(a.testdata))
+    ids = samples(Path(a.testdata), a.as_of)
     runs = plan(funcs, ids)
     by_word = {f["word"]: f for f in funcs}
     t0 = time.monotonic()
