@@ -6095,7 +6095,7 @@
       row('`pagination`, `paginationPageSize`', 'unsupported', 'virtual scrolling: every row is reachable without pages'),
       row('`enableCharts` (integrated charts), `masterDetail`, `rowDragManaged`, `theme`, `rowModelType: \'viewport\'`', 'unsupported', 'drishti-chart on a range; Drishti\'s theme tokens; the rest is not covered in version 1')
     ]);
-    const AG_NOT_COVERED = 'integrated charts (use drishti-chart on a range), master-detail rows, AG Grid's sparkline option (use sparklineCell, barCell and bulletCell as a column's cellRenderer), row dragging between grids, ' +
+    const AG_NOT_COVERED = 'integrated charts (use drishti-chart on a range), master-detail rows, AG Grid\'s sparkline option (use sparklineCell, barCell and bulletCell as a column\'s cellRenderer), row dragging between grids, ' +
       'AG Grid\'s theming API and CSS classes (Drishti\'s theme applies), the viewport row model, pagination, custom cell renderers, editors and ' +
       'header components.';
     const AG_GRID_OPTIONS = Object.freeze(['columnDefs', 'defaultColDef', 'columnTypes', 'rowData', 'getRowId', 'rowSelection', 'animateRows', 'domLayout',
