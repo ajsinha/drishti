@@ -197,6 +197,8 @@ The thin console (S0–S8), the five screen fixes and Python commands phase 1 ar
 
 Lane B total: about 9 days. Lane B has no step before Drill 1.
 
+**S8b (from i5, owner 2026-11-16 08:45):** lake build from an uploaded file, lake maintenance and its schedules, and pack design run as server jobs (thin console design §3.7, Q7); after the cluster's placement so a job runs where its lake is. 5 days, Sonnet, one job test each and the page walk.
+
 ### 2.5 Lane C: live, then the cluster's base
 
 | Step | Goal | Branch | Model | Inputs | Outputs | Days | Tests that prove it | Merges at |
@@ -224,10 +226,10 @@ membership side (C6, C9, C10, C11, C13). The one shared class is `EngineRegistry
 | | Days |
 |---|---|
 | Lane A (DL 2.5, C5 5, C8 2.5) | 10 |
-| Lane B (SW 4, PY2 5) | 9 |
+| Lane B (SW 4, PY2 5, S8b 5: the thin console's three job pages as server jobs) | 14 |
 | Lane C | 39 |
 | Release preparation (README rewrite, deck refresh, CHANGELOG, RELEASE_NOTES, PDFs, benchmark document) | 3 |
-| **i7 as scoped** | **about 61** |
+| **i7 as scoped** | **about 66** |
 | Moved to i8 (C12 5, C7 2.5, Polars P3–P8 12, `drill.sh` 2, binding designer build) | about 21.5 plus the build |
 
 ---

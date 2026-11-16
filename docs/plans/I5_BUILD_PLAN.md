@@ -34,7 +34,7 @@
 - **One drill, then the release.** A second run only for the lanes a fix touched.
 - **Serial spine, parallel edges.** The thin console's spine is S0–S1 → S5 → S2 → S4 and then S6 → S7; S3, the screen fixes, the version and the run-config fix fill the other builders' time (at most three builders).
 - **Front-loaded on purpose:** S5 (the tools stop reading packs, modules, connectors, bindings and rules folders; the console's Python resolver and its tests are deleted) is the second step of the spine, so that the later releases (i6 modules, i7 cluster and live) never edit or keep that twin equal.
-- **Size.** About 37.5 builder-days of steps plus 3 of release preparation: **about 40.5**. Critical chain about 22 builder-days.
+- **Size.** About 32.5 builder-days of steps plus 3 of release preparation: **about 35.5**. Critical chain about 22 builder-days.
 - **Not in i5:** the modules re-engineering (i6), the cluster, live, trade tables, Python phase 2, drill lanes, API sweep, screenshots (i7). The console on Spring Boot and single sign-on stay in i8.
 
 ## 2. Steps, order and the graph
@@ -58,7 +58,6 @@ flowchart TD
   S6["S6 settings and limits"]
   S7["S7 AI layer"]
   S8a["S8a landing figures"]
-  S8b["S8b jobs: lake build, maintenance, pack design"]
   D{{"DRILL"}}
   R["Release"]
 
@@ -71,7 +70,6 @@ flowchart TD
   S2 --> S4
   S4 --> S6 --> S7 --> D
   S4 --> S8a --> D
-  S4 --> S8b --> D
   UI --> D
   V0 --> D
   D --> R
@@ -97,10 +95,9 @@ Fable designs only (this plan, and a design question a builder raises). **Opus**
 | **S6** | Settings and limits from the server; `core/hostrule.py` deleted | `wip/i5-thin-s6` | Sonnet | S4 | — | 3 | Help → Configuration and Admin → Configuration equal the server's | CP-E |
 | **S7** | AI layer: the console calls the server only | `wip/i5-thin-s7` | Sonnet | S6 | about 4,400 lines and six tests deleted | 2 | AI browser tests; Health line for a console-only provider file | CP-E |
 | **S8a** | Landing figures of trading and market data computed by the modules on the server | `wip/i5-thin-s8a` | Sonnet | S4 | `trading_landing.py`, `market_landing.py` deleted | 3 | figures equal before and after (recorded); server tests | CP-E |
-| **S8b** | The three job pages (lake build, lake maintenance, pack design) run as server jobs (thin console Q7, approved) | `wip/i5-thin-s8b` | Sonnet | S4 | the pages no longer need a console on the server's machine | 5 | one job test each; the page walk | CP-E |
 | | **Drill** | | | | | | | |
 
-Totals: PY1 2, FX 0.5, V0 1, S0–S1 2, S5 5, S3 2, UI 2, S2 5, S4 5, S6 3, S7 2, S8a 3, S8b 5 = **37.5 builder-days**; release preparation (README rewrite, deck refresh, CHANGELOG, RELEASE_NOTES, PDFs) 3: **about 40.5**. S8b's 5 days are the former plan's "thin console S8 jobs"; the owner's re-cut names S0–S8, so they are in.
+Totals: PY1 2, FX 0.5, V0 1, S0–S1 2, S5 5, S3 2, UI 2, S2 5, S4 5, S6 3, S7 2, S8a 3 = **32.5 builder-days**; release preparation (README rewrite, deck refresh, CHANGELOG, RELEASE_NOTES, PDFs) 3: **about 35.5**. S8's three job pages (lake build, lake maintenance, pack design as server jobs, 5 days) moved to i7 (owner 2026-11-16 08:45; thin console Q7).
 
 ---
 
@@ -129,7 +126,7 @@ A checkpoint is a merge window on develop. Each merge passes its **pre-merge gat
 | **CP-B** | S0–S1 (the Live column's `admin_routes.py` edits of the live branch are not yet merged: they rebase over this later) | Java tests of kernel, plugins, banking; the browser lane **once**, alone, with the detached console; VaR goldens |
 | **CP-C** | S5 → S3 → UI | tools tests; every generator run, outputs identical; guard on folder readers; the page walk |
 | **CP-D** | S2 → S4 | menus against enforcement; the three distributions' browser tests; session isolation; pre-drill check |
-| **CP-E** | S6 → S7 → S8a → S8b | affected tests; Help → Configuration equals the server's; recorded landing figures; **freeze** |
+| **CP-E** | S6 → S7 → S8a | affected tests; Help → Configuration equals the server's; recorded landing figures; **freeze** |
 | **Drill** | | the one drill |
 
 **The drill.** Scope: every lane in two waves (CPU-heavy lanes first, then browser, other, anywhere), including the detached console and the three distributions; the shared read-only test lake (lake-writing tests stay parked with their reason); the page walk and layout checks; two people on one console worker; a console started before the server and against an older server. A second run only for what the first one's fixes touched; a fix to a shared kernel class means a full repeat. During the drill: edits only. Between the drill and the release no change to `tools/drill.sh` or `tools/drillkit/`, and the merge worktree is never checked out or reset for a read (`git show`).
@@ -140,7 +137,7 @@ A checkpoint is a merge window on develop. Each merge passes its **pre-merge gat
 
 ## 5. Critical path and risks
 
-**Critical chain:** S0–S1 (2) → S5 (5) → S2 (5) → S4 (5) → S6 (3) → S7 (2) = **22 builder-days**; S8b (5) alone after S4 is as long. PY1, FX, V0, S3 and UI run beside the spine. Three builders are used: one on the spine, one on S3 and the screen fixes and then S8a, one on V0, FX and then S6/S8b. The calendar is not estimated here; it is set at CP-B from the measured pace of the first thin console steps.
+**Critical chain:** S0–S1 (2) → S5 (5) → S2 (5) → S4 (5) → S6 (3) → S7 (2) = **22 builder-days**. PY1, FX, V0, S3 and UI run beside the spine. Three builders are used: one on the spine, one on S3 and the screen fixes and then S8a, one on V0, FX and then S6/S8b. The calendar is not estimated here; it is set at CP-B from the measured pace of the first thin console steps.
 
 | # | Risk | Effect | Mitigation |
 |---|---|---|---|
@@ -226,7 +223,7 @@ golden tests, which must stay exactly equal.
 | Run after | one browser test each; the page walk and layout checks |
 | Cross-lane | none; the screenshots are retaken in i7 after the pages are final |
 
-**S6, S7, S8a, S8b**
+**S6, S7, S8a**
 
 | | |
 |---|---|
