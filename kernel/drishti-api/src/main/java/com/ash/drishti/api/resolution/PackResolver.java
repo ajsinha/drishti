@@ -243,7 +243,7 @@ public final class PackResolver {
                     for (Map.Entry<?, ?> e : active.entrySet()) {
                         Path home = installed.resolve(String.valueOf(e.getKey())).resolve(String.valueOf(e.getValue())).normalize();
                         if (home.startsWith(installed) && Files.isRegularFile(home.resolve("module.yaml"))) {
-                            module(home, "the module store's " + e.getKey() + " " + e.getValue(), yaml, problems, out);
+                            module(ModuleOverrides.installed(home, String.valueOf(e.getKey())), "the module store's " + e.getKey() + " " + e.getValue(), yaml, problems, out);
                         }
                     }
                 }

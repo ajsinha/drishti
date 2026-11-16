@@ -74,7 +74,7 @@ class ContentModulesTest {
 
     @Test
     void bankingIsNotACarrierOfTheMarketDataPackAnyMore() throws Exception {
-        DmodManifest banking = ModuleAssembler.manifest(MODULES.resolve("banking/dmod"));
+        DmodManifest banking = ModuleAssembler.manifest(MODULES.resolve("banking"));
         assertThat(banking.requires()).extracting(DmodManifest.Requirement::id).containsExactly("market-data");
         assertThat(banking.section("packs").toString()).doesNotContain("market-data");
         assertThat(banking.firstPartyClaim()).isTrue();

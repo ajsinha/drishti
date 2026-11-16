@@ -212,11 +212,13 @@ public final class LaunchRoots implements EnvironmentPostProcessor, Ordered {
             setting = null;
         }
         if (modules == null || NONE.equals(modules.toString()) || data == null) {
+            com.ash.drishti.api.resolution.ModuleOverrides.activate(List.of(), null);
             return;
         }
         Path home = Path.of(modules.toString());
-        var r = com.ash.drishti.api.resolution.ModuleOverrides.apply(home,
-                com.ash.drishti.api.resolution.ModuleOverrides.dirs(setting, homePath), Path.of(data.toString()).resolve("overrides").resolve("modules"));
+        List<Path> dirs = com.ash.drishti.api.resolution.ModuleOverrides.dirs(setting, homePath);
+        com.ash.drishti.api.resolution.ModuleOverrides.activate(dirs, Path.of(data.toString()));   // the same rule for the store's installs
+        var r = com.ash.drishti.api.resolution.ModuleOverrides.apply(home, dirs, Path.of(data.toString()).resolve("overrides").resolve("modules"));
         synchronized (OVERRIDES) {
             OVERRIDES.put(env, r);
         }

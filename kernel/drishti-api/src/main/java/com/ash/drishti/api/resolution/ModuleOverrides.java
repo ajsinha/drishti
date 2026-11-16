@@ -47,7 +47,8 @@ import java.util.stream.Stream;
  * <b>view</b>, {@code <data>/overrides/modules}, the modules folder copied (only what changed since the last start) with the overrides laid
  * over it, and {@code drishti.modules.home} names the view; every reader (the pack resolver, Sutras, the console part, the blotters, the
  * data needs, Help) then sees the overridden file without knowing the rule exists. The module's own folder is never written. The view's
- * {@value #LIST} names every overridden file with its source, which Admin → Health shows and the console's resolver reads.
+ * {@value #LIST} names every overridden file with its source, which Admin → Health shows and the console's resolver reads. A module the
+ * resolver reads from the module store (installed from its {@code .dmod}) gets the same rule where its folder is picked ({@link #installed}).
  */
 public final class ModuleOverrides {
 
@@ -132,7 +133,7 @@ public final class ModuleOverrides {
             return "an override sits under a module's folder (<module>/<path inside the module>), the same relative path as the module's file";
         }
         if (!Files.isRegularFile(modulesHome.resolve(parts[0]).resolve("module.yaml"))) {
-            return "there is no module '" + parts[0] + "' in " + modulesHome + ": the first folder names the module";
+            return "there is no module '" + parts[0] + "' in " + modulesHome + ": the first folder names the module (used only if a module of that id is installed from its .dmod)";
         }
         if (parts.length == 2 && parts[1].equals("module.yaml")) {
             return "a module's module.yaml is its identity and is never overridden";
@@ -179,6 +180,86 @@ public final class ModuleOverrides {
                     .append(f.replaces()).append("}\n"));
             Files.writeString(view.resolve(LIST), list.toString(), StandardCharsets.UTF_8);
             return new Result(view, modulesHome, found.dirs(), found.files(), found.refused());
+        } catch (IOException e) {
+            throw new UncheckedIOException("the module overrides' view " + view + " cannot be made: " + e.getMessage(), e);
+        }
+    }
+
+    /** The override folders and the data folder of this server's start (LaunchRoots): the rule for the module store's installs. */
+    private static volatile List<Path> activeDirs = List.of();
+    private static volatile Path activeData;
+
+    /** Sets the override folders and the data folder at a server's start ({@link #installed} reads them); empty folders: no rule. */
+    public static void activate(List<Path> dirs, Path data) {
+        activeDirs = dirs == null ? List.of() : List.copyOf(dirs);
+        activeData = data;
+    }
+
+    /**
+     * The same rule for a module installed from its {@code .dmod} ({@code <store>/installed/<id>/<version>}, which the resolver reads before
+     * the modules folder's copy): when an override folder holds files under {@code <id>/}, the folder the resolver reads is the view
+     * {@code <data>/overrides/installed/<id>/<version>}, the installed folder copied with the overrides laid over it; else the installed
+     * folder itself (and a view left from an earlier start is removed). The installed folder is never written.
+     */
+    public static Path installed(Path home, String id) {
+        LOCK.lock();
+        try {
+            return installedLocked(home, id);
+        } finally {
+            LOCK.unlock();
+        }
+    }
+
+    /** One view is brought up to date at a time (file work: a lock, never {@code synchronized}). */
+    private static final java.util.concurrent.locks.ReentrantLock LOCK = new java.util.concurrent.locks.ReentrantLock();
+
+    private static Path installedLocked(Path home, String id) {
+        List<Path> dirs = activeDirs;
+        Path data = activeData;
+        if (data == null || dirs.isEmpty() || home == null || home.getFileName() == null) {
+            return home;
+        }
+        Path view = data.resolve("overrides").resolve("installed").resolve(id).resolve(home.getFileName().toString());
+        try {
+            Map<String, File> files = new TreeMap<>();
+            for (Path dir : dirs) {
+                Path mine = dir.resolve(id);
+                if (!Files.isDirectory(mine)) {
+                    continue;
+                }
+                try (Stream<Path> s = Files.walk(mine)) {
+                    for (Path f : s.filter(Files::isRegularFile).sorted().toList()) {
+                        String rel = mine.relativize(f).toString().replace('\\', '/');
+                        String top = rel.split("/")[0];
+                        if (!rel.equals("module.yaml") && !NOT_CONTENT.contains(top) && !top.equals("connectors")) {
+                            files.put(rel, new File(id + "/" + rel, f, Files.isRegularFile(home.resolve(rel))));
+                        }
+                    }
+                }
+            }
+            if (files.isEmpty()) {
+                delete(view);
+                for (Path up = view.getParent(); up != null && !up.equals(data.resolve("overrides")) && Files.isDirectory(up); up = up.getParent()) {
+                    try (Stream<Path> in = Files.list(up)) {
+                        if (in.findAny().isPresent()) {
+                            break;
+                        }
+                    }
+                    Files.delete(up);                                  // an empty <id>/ and installed/ go with the last view
+                }
+                return home;
+            }
+            Set<Path> keep = new HashSet<>();
+            Files.createDirectories(view);
+            sync(home, view, keep);
+            for (Map.Entry<String, File> e : files.entrySet()) {
+                Path t = view.resolve(e.getKey());
+                Files.createDirectories(t.getParent());
+                Files.copy(e.getValue().source(), t, StandardCopyOption.REPLACE_EXISTING);
+                keep.add(t);
+            }
+            prune(view, keep);
+            return view;
         } catch (IOException e) {
             throw new UncheckedIOException("the module overrides' view " + view + " cannot be made: " + e.getMessage(), e);
         }

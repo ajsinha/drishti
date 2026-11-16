@@ -141,6 +141,8 @@ class Layout:
     installed: Path | None = None
     #: a test's or a tool's own folders of packs (``drishti.packs.extra-dirs``, the retired example packs): part of the site, after it
     extras: tuple = ()
+    #: the server's views of installed modules with site overrides (``<data>/overrides/installed/<id>/<version>``, KERNEL_AND_MODULES 18.10)
+    views: Path | None = None
 
     @staticmethod
     def of(site: Path | str, modules: Path | str | None = None, store: Path | str | None = None, installed: Path | str | None = None,
@@ -284,7 +286,8 @@ def modules(layout: Layout, problems: list | None = None) -> dict[str, Module]:
             for mid, ver in (active.items() if isinstance(active, dict) else []):
                 home = _norm(installed / str(mid) / str(ver))
                 if _inside(home, installed) and (home / "module.yaml").is_file():
-                    _module(home, f"the module store's {mid} {ver}", problems, out)
+                    view = layout.views / str(mid) / str(ver) if layout.views is not None else None
+                    _module(view if view is not None and (view / "module.yaml").is_file() else home, f"the module store's {mid} {ver}", problems, out)
         except (OSError, ValueError, yaml.YAMLError) as e:
             problems.append(Problem("DRS-1048", f"{installed / 'active.yaml'} cannot be read: {e}", (str(installed / "active.yaml"),)))
     return out
@@ -544,7 +547,8 @@ class Settings:
         return Settings.from_env(env={}, base=root or REPO)
 
     def layout(self) -> Layout:
-        return Layout(self.site_dir, self.kernel_dir, self.modules_home, self.modules_path, self.installed_dir, self.extra_dirs)
+        return Layout(self.site_dir, self.kernel_dir, self.modules_home, self.modules_path, self.installed_dir, self.extra_dirs,
+                      self.data_dir / "overrides" / "installed" if self.data_dir is not None else None)
 
 
 # ------------------------------------------------------------------------------------------------------------------- what is on, offline

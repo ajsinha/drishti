@@ -108,6 +108,34 @@ class ModuleOverridesTest {
     }
 
     @Test
+    void aModuleInstalledFromItsDmodIsReadFromItsViewWhileOverridden() throws Exception {
+        Path home = tmp.resolve("store/installed/banking/1.0.0");
+        write(home.resolve("module.yaml"), "id: banking\npacks: [trading]\n");
+        write(home.resolve("packs/trading/sutras/endur/endur-cash.v1.sutra.yaml"), "title: Endur cash\n");
+        write(home.resolve("java/drishti-banking.jar"), "jar");
+        Path o = tmp.resolve("over");
+        write(o.resolve("banking/packs/trading/sutras/endur/endur-cash.v1.sutra.yaml"), "title: Endur cash (site)\n");
+        write(o.resolve("banking/module.yaml"), "id: other\n");
+        try {
+            ModuleOverrides.activate(List.of(o), tmp.resolve("data"));
+            Path view = ModuleOverrides.installed(home, "banking");
+            assertThat(view).isEqualTo(tmp.resolve("data/overrides/installed/banking/1.0.0"));
+            assertThat(Files.readString(view.resolve("packs/trading/sutras/endur/endur-cash.v1.sutra.yaml"))).contains("(site)");
+            assertThat(Files.readString(view.resolve("module.yaml"))).contains("id: banking");         // the identity is never overridden
+            assertThat(view.resolve("java")).doesNotExist();
+            assertThat(ModuleOverrides.installed(home, "economy")).isEqualTo(home);                   // nothing for it: its own folder
+
+            Files.delete(o.resolve("banking/packs/trading/sutras/endur/endur-cash.v1.sutra.yaml"));
+            Files.delete(o.resolve("banking/module.yaml"));
+            assertThat(ModuleOverrides.installed(home, "banking")).isEqualTo(home);
+            assertThat(view).doesNotExist();
+            assertThat(tmp.resolve("data/overrides/installed")).doesNotExist();
+        } finally {
+            ModuleOverrides.activate(List.of(), null);
+        }
+    }
+
+    @Test
     void theSettingNamesFoldersAbsoluteOrUnderTheHome() {
         Path home = tmp.resolve("home");
         assertThat(ModuleOverrides.dirs(" /abs/a , rel/b ,, ", home)).containsExactly(Path.of("/abs/a"), home.resolve("rel/b").toAbsolutePath());
