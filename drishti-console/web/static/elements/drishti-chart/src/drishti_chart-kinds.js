@@ -368,14 +368,15 @@ export function buildBoxplot(spec, rows, env) {
  * Heatmap: a value at each (x, y) pair of categories, coloured on a sequential or diverging scale (diverging is centred on mid, 0 by
  * default), with the legend's scale under it; or coloured by a category (value.type 'category': a tone each, the legend's keys); with
  * annotation tracks on either axis (drishti_chart-tracks.js).
- * @param {Object} spec x, y, value ({field, type, tones, order}), scale {type: 'sequential'|'diverging', mid}, labels, tracks, trackSize
+ * @param {Object} spec x, y ({field, order, domain: every member in order (an empty one too), labels: false hides the axis's words}), value ({field, type, tones, order}), scale {type: 'sequential'|'diverging', mid}, labels, tracks, trackSize
  * @param {Object[]} rows
  * @param {Object} env
  * @returns {import('./drishti_chart-spec.js').BuiltChart}
  */
 export function buildHeatmap(spec, rows, env) {
   const th = env.theme, xf = fieldOf(spec.x), yf = fieldOf(spec.y), vf = fieldOf(spec.value) || fieldOf(spec.colour);
-  const xs = members(rows, xf, spec.x && spec.x.order), ys = members(rows, yf, spec.y && spec.y.order);
+  const dom = (k, f) => (spec[k] && Array.isArray(spec[k].domain) ? spec[k].domain.map(String) : members(rows, f, spec[k] && spec[k].order));   // domain: every member, with rows or not
+  const xs = dom('x', xf), ys = dom('y', yf);
   const cats = spec.value && spec.value.type === 'category' ? categoryCells(spec, rows, th) : null;
   const xi = new Map(xs.map((x, i) => [x, i])), yi = new Map(ys.map((y, i) => [y, i]));
   const data = rows.map((r, i) => {
@@ -391,6 +392,8 @@ export function buildHeatmap(spec, rows, env) {
   const option = frame(spec, env, Object.assign(xAxisOf(spec, env, 'category', xs), { splitArea: { show: false } }), Object.assign(axisOf(th, { type: 'category', data: ys, inverse: true }), { splitArea: { show: false } }), series,
     scale ? { visualMap: Object.assign(scale.visualMap, { seriesIndex: 0 }) } : {});
   option.grid.bottom = th.size.pad + (scale ? 34 : 8);
+  if (spec.x && spec.x.labels === false) { option.xAxis.axisLabel = Object.assign({}, option.xAxis.axisLabel, { show: false }); }
+  if (spec.y && spec.y.labels === false) { option.yAxis.axisLabel = Object.assign({}, option.yAxis.axisLabel, { show: false }); }
   option.tooltip = { trigger: 'item', confine: true };
   const cell = new Map();
   rows.forEach((r) => { const k = String(r[xf]) + '\u0000' + String(r[yf]); if (!cell.has(k)) { cell.set(k, cats ? r[vf] : num(r[vf])); } });

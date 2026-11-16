@@ -407,6 +407,9 @@ test('heatmap tracks and category cells: strips on either axis, aligned grids, t
   assert.ok(t.legendStatic && t.legend.some((k) => k.name === 'small'));
   const c = build({ kind: 'heatmap', data: { rows: rows.map((r) => Object.assign({}, r, { K: r.S > 0 ? 'up' : 'down' })) }, x: 'P', y: 'AA', value: { field: 'K', type: 'category', tones: { up: 'good', down: 'bad' } } });
   assert.equal(c.option.visualMap, undefined);
+  const dm = build({ kind: 'heatmap', data: { rows }, x: { field: 'P', domain: ['0', '1', '2', '3'], labels: false }, y: 'AA', value: 'S' });
+  assert.deepEqual(dm.option.xAxis.data, ['0', '1', '2', '3']);
+  assert.equal(dm.option.xAxis.axisLabel.show, false);
   assert.deepEqual(c.legend.map((k) => k.name), ['down', 'up']);
   assert.equal(c.option.series[0].data[0].itemStyle.color, C.toneColour(th, 'bad'));
   assert.equal(C.valueText({ seriesType: 'heatmap', value: [0, 0, 'up'] }, env.fmt), 'up');

@@ -388,8 +388,8 @@
           if (!was || it.value[1] > was.value[1]) { best.set(String(k), { value: it.value, name: String(k) }); }
         }));
         const top = Array.from(best.values()).sort((a, b) => b.value[1] - a.value[1]).slice(0, spec.labelTop.n || 5);
-        option.series.push({ type: 'scatter', name: '__labels', helper: true, silent: true, z: 11, symbolSize: 0, tooltip: { show: false }, data: top.map((t) => ({ value: t.value, name: t.name })),
-          label: Object.assign({ show: true, position: 'top', distance: 6, formatter: (p) => p.name }, textStyle(th, th.ink), { fontWeight: 'bold' }) });
+        option.series = option.series.concat([{ type: 'scatter', name: '__labels', helper: true, silent: true, z: 11, symbolSize: 0, tooltip: { show: false }, data: top.map((t) => ({ value: t.value, name: t.name })),
+          label: Object.assign({ show: true, position: 'top', distance: 6, formatter: (p) => p.name }, textStyle(th, th.ink), { fontWeight: 'bold' }) }]);
       }
       const sf = spec.surface;
       if (sf && Array.isArray(sf.rows) && sf.rows.length) {
@@ -398,12 +398,12 @@
         let lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
         if (div) { const m = Math.max(Math.abs(lo - mid), Math.abs(hi - mid)) || 1; lo = mid - m; hi = mid + m; }
         const ramp = div ? th.diverging : th.sequential, op = sf.opacity || 0.55;
-        option.series.unshift({ type: 'custom', name: '__surface', helper: true, silent: true, z: 0, tooltip: { show: false },
+        option.series = [{ type: 'custom', name: '__surface', helper: true, silent: true, z: 0, tooltip: { show: false },
           data: sf.rows.map((r) => [num(r[xf]), num(r[yf]), num(r[vf])]).filter((d) => d[0] !== null && d[1] !== null && d[2] !== null),
           renderItem: (params, api) => {
             const x = api.value(0), y = api.value(1), a = api.coord([x - cell[0] / 2, y + cell[1] / 2]), b = api.coord([x + cell[0] / 2, y - cell[1] / 2]);
             return { type: 'rect', shape: { x: a[0], y: a[1], width: b[0] - a[0] + 0.5, height: b[1] - a[1] + 0.5 }, style: { fill: alpha(rampColour(ramp, api.value(2), lo, hi === lo ? lo + 1 : hi), op) } };
-          } });
+          } }].concat(option.series);
       }
       return [];
     }
@@ -676,7 +676,8 @@
     }
     function buildHeatmap(spec, rows, env) {
       const th = env.theme, xf = fieldOf(spec.x), yf = fieldOf(spec.y), vf = fieldOf(spec.value) || fieldOf(spec.colour);
-      const xs = members(rows, xf, spec.x && spec.x.order), ys = members(rows, yf, spec.y && spec.y.order);
+      const dom = (k, f) => (spec[k] && Array.isArray(spec[k].domain) ? spec[k].domain.map(String) : members(rows, f, spec[k] && spec[k].order));   // domain: every member, with rows or not
+      const xs = dom('x', xf), ys = dom('y', yf);
       const cats = spec.value && spec.value.type === 'category' ? categoryCells(spec, rows, th) : null;
       const xi = new Map(xs.map((x, i) => [x, i])), yi = new Map(ys.map((y, i) => [y, i]));
       const data = rows.map((r, i) => {
@@ -692,6 +693,8 @@
       const option = frame(spec, env, Object.assign(xAxisOf(spec, env, 'category', xs), { splitArea: { show: false } }), Object.assign(axisOf(th, { type: 'category', data: ys, inverse: true }), { splitArea: { show: false } }), series,
         scale ? { visualMap: Object.assign(scale.visualMap, { seriesIndex: 0 }) } : {});
       option.grid.bottom = th.size.pad + (scale ? 34 : 8);
+      if (spec.x && spec.x.labels === false) { option.xAxis.axisLabel = Object.assign({}, option.xAxis.axisLabel, { show: false }); }
+      if (spec.y && spec.y.labels === false) { option.yAxis.axisLabel = Object.assign({}, option.yAxis.axisLabel, { show: false }); }
       option.tooltip = { trigger: 'item', confine: true };
       const cell = new Map();
       rows.forEach((r) => { const k = String(r[xf]) + '\u0000' + String(r[yf]); if (!cell.has(k)) { cell.set(k, cats ? r[vf] : num(r[vf])); } });
@@ -2243,7 +2246,9 @@
       const c = spec.colour || {}, f = fieldOf(c);
       if (!f) { return null; }
       const t = trackColour({ type: c.type, tones: c.tones, order: c.order || c.domain, scale: c.scale, mid: c.mid, min: c.min, max: c.max }, rows.map((r) => r[f]), th);
-      return Object.assign(t, { field: f, title: c.title || f });
+      const keys = t.category ? t.keys : Array.isArray(c.legend) && c.legend.length ? c.legend.map((k) => ({ name: String(k.name), colour: t.colour(k.value), style: 'dot' }))
+        : [{ name: (c.title || f) + ': low to high', colour: th.sequential[2], style: 'box' }];
+      return Object.assign(t, { field: f, title: c.title || f, legendKeys: keys });
     }
     function buildLollipop(spec, rows, env) {
       const th = env.theme, xf = fieldOf(spec.x) || 'x', yf = fieldOf(spec.y) || 'y', cs = colourScale(spec, rows, th);
@@ -2256,7 +2261,7 @@
       heads.symbolSize = th.size.symbol + 4;
       if (cs) {
         heads.data.forEach((it) => { const c = cs.colour(rows[it.r[0]][cs.field]); if (c) { it.itemStyle = { color: c }; } });
-        built.legend = cs.category ? cs.keys : [{ name: cs.title + ': low to high', colour: th.sequential[2], style: 'box' }];
+        built.legend = cs.legendKeys;
         built.legendStatic = true;
         built.table.columns.push({ header: cs.title });
         built.table.rows.forEach((r, i) => r.push(rows[i][cs.field]));
@@ -2291,7 +2296,7 @@
       const gl = spec.gl !== undefined ? !!spec.gl : canDraw3d();
       const table = { columns: [{ header: of || 'point' }, { header: xf }, { header: yf }, { header: zf }].concat(cs ? [{ header: cs.title }] : []),
         rows: pts.map((p) => [of ? p.r[of] : p.i, p.r[xf], p.r[yf], p.r[zf]].concat(cs ? [p.r[cs.field]] : [])) };
-      const legend = cs ? (cs.category ? cs.keys : [{ name: cs.title + ': low to high', colour: th.sequential[2], style: 'box' }]) : [];
+      const legend = cs ? cs.legendKeys : [];
       const name = (spec.colour && spec.colour.title) || (cs && cs.field) || 'points';
       const item = (p, v) => { const id = rowId(spec, p.r, p.i), on = sel.has(id); return { value: v, r: [p.i], ids: [id], name: of ? String(p.r[of]) : id, symbolSize: on ? th.size.symbol + 8 : th.size.symbol + 1,
         itemStyle: { color: on ? th.tokens.accent : colourOf(p), borderColor: on ? th.ink : undefined, borderWidth: on ? 1 : 0 } }; };
