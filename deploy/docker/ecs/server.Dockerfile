@@ -22,7 +22,8 @@ FROM ${BASE_IMAGE}
 RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/* \
  && useradd --system --uid 10001 drishti
 WORKDIR /opt/drishti
-COPY kernel/drishti-server/target/drishti-server-*-exec.jar app.jar
+# the install layout (docs/DEPLOYMENT_AND_QA_GUIDE.md section 1.4): the one server jar in <home>/lib, where every tool finds it
+COPY kernel/drishti-server/target/drishti-server-*-exec.jar lib/
 # shipped packs live outside the EFS paths, so a mount never hides them; installed packs go to data/packs/installed (EFS)
 COPY config/packs/ shipped/packs/
 COPY config/lenses/ /opt/drishti/config/lenses/
@@ -35,8 +36,10 @@ COPY bin/drishti-node.sh bin/drishti-node.sh
 # the mount points, owned by the user the EFS access points enforce (uid/gid 10001)
 RUN chmod 0555 bin/entrypoint.sh bin/drishti-node.sh && mkdir -p data config sutras && chown drishti:drishti data config sutras
 USER drishti
+# the root file system is read-only: the site's jars (drishti.lib.path) live on the data volume (EFS), not in <home>/lib/ext
 ENV DRISHTI_HOME=/opt/drishti \
     DRISHTI_DATA_DIR=/opt/drishti/data \
+    DRISHTI_LIB_PATH=/opt/drishti/data/lib \
     DRISHTI_MODULES_HOME=/opt/drishti/shipped/modules \
     DRISHTI_DISTRIBUTIONS_DIR=/opt/drishti/shipped/distributions \
     DRISHTI_PACKS_DIR=/opt/drishti/shipped/packs \

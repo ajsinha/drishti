@@ -92,6 +92,25 @@ def test_server_images_set_the_launch_root():
             f"{f.relative_to(ROOT)} does not set DRISHTI_HOME to an absolute container path"
 
 
+def test_every_image_is_an_install_with_the_jar_in_lib():
+    """Every image is laid out as an install (DEPLOYMENT_AND_QA_GUIDE.md 1.4): the server jar in <home>/lib, where every tool finds it, never a
+    retired DRISHTI_JAR; an image that runs the server keeps the site's jars on the data volume (the image is immutable)."""
+    images = [f for f in _tracked("Dockerfile") if f.name.endswith("Dockerfile")]
+    assert images, "no Dockerfile found"
+    for f in images:
+        text = f.read_text(encoding="utf-8")
+        rel = f.relative_to(ROOT)
+        assert "DRISHTI_JAR" not in text, f"{rel} sets the retired DRISHTI_JAR: the tools find the jar in <home>/lib only"
+        if "-exec.jar" in text:
+            assert re.search(r"^COPY \S+drishti-server-\*-exec\.jar lib/$", text, re.M), f"{rel}: the server jar goes into lib/ (<home>/lib)"
+            assert re.search(r"DRISHTI_HOME=/opt/drishti\b", text), f"{rel}: DRISHTI_HOME=/opt/drishti, the install folder"
+        if f.name.startswith("server"):
+            assert "DRISHTI_LIB_PATH=/opt/drishti/data/lib" in text, f"{rel}: the site's jars live on the data volume in a container"
+    for rel in ("deploy/systemd/drishti-server.service", "deploy/docker/ecs/server-entrypoint.sh"):
+        text = (ROOT / rel).read_text(encoding="utf-8")
+        assert "/lib/drishti-server-*-exec.jar" in text and "app.jar" not in text, f"{rel} runs the jar of <home>/lib"
+
+
 def test_systemd_unit_sets_the_launch_roots():
     units = list((ROOT / "deploy" / "systemd").glob("*.service"))
     assert units, "no systemd unit found"

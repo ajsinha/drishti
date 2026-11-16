@@ -27,6 +27,7 @@
         { "name": "DRISHTI_NODE_ID", "value": "${NODE}" },
         { "name": "DRISHTI_NET_SEEDS", "value": "${NET_SEEDS}" },
         { "name": "DRISHTI_HEAP", "value": "${SERVER_HEAP}" },
+        { "name": "DRISHTI_LIB_PATH", "value": "/opt/drishti/data/lib" },
         { "name": "DRISHTI_SECURITY_ENABLED", "value": "true" },
         { "name": "DRISHTI_SEED_ADMIN", "value": "true" },
         { "name": "DRISHTI_PACKS", "value": "${DRISHTI_PACKS}" },

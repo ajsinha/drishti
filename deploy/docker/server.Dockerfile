@@ -5,7 +5,8 @@ ARG BASE_IMAGE=eclipse-temurin:21-jre
 FROM ${BASE_IMAGE}
 RUN useradd --system --uid 10001 drishti
 WORKDIR /opt/drishti
-COPY kernel/drishti-server/target/drishti-server-*-exec.jar app.jar
+# the install layout (docs/DEPLOYMENT_AND_QA_GUIDE.md section 1.4): the one server jar in <home>/lib, where every tool finds it
+COPY kernel/drishti-server/target/drishti-server-*-exec.jar lib/
 COPY config/packs/ config/packs/
 COPY config/lenses/ /opt/drishti/config/lenses/
 COPY config/ui-kit/ config/ui-kit/
@@ -27,9 +28,11 @@ EXPOSE 18480
 # line moves it); the server removes stale copies from its temp base at start, so a killed container leaves nothing in /tmp
 # native memory (PERFORMANCE.md, Resident memory): two glibc malloc arenas, direct buffers capped, the JDK's per-thread temporary direct
 # buffers cached up to 256 KB only, freed native memory given back, native memory tracked; a heap dump on OutOfMemoryError in data/dumps
+# the image is immutable and its install folder root-owned: the site's jars (drishti.lib.path) live on the data volume, not in <home>/lib/ext
 ENV DRISHTI_HOME=/opt/drishti \
     DRISHTI_DATA_DIR=/opt/drishti/data \
     DRISHTI_MODULES_HOME=/opt/drishti/modules \
+    DRISHTI_LIB_PATH=/opt/drishti/data/lib \
     JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -XX:+UseZGC -XX:MaxDirectMemorySize=256m -XX:TrimNativeHeapInterval=60000 -Djdk.nio.maxCachedBufferSize=262144 -XX:NativeMemoryTracking=summary -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/opt/drishti/data/dumps -Djava.io.tmpdir=/opt/drishti/data/tmp/server" \
     MALLOC_ARENA_MAX=2 \
     DRISHTI_VAR_KEEP_HOT_FILES=true \
@@ -43,4 +46,4 @@ HEALTHCHECK --interval=15s --timeout=3s CMD wget -qO- http://localhost:18480/act
 # drishti-node.sh run is the stop hook (CD2): on docker stop the node drains first (give it time: docker stop -t 120), then Java stops.
 # The in-memory lake (docs/architecture/DATA_ARCHITECTURE.md section 3a): with memory stores, set DRISHTI_LAKE_MEMORY_MB to their max-mb added up: the
 # command line then raises the direct-memory limit to 256 MB plus that (it wins over JAVA_TOOL_OPTIONS); Health turns red when short
-ENTRYPOINT ["sh", "-c", "mkdir -p /opt/drishti/data/logs /opt/drishti/data/dumps; v=$(java -XshowSettings:properties -version 2>&1 | sed -n 's/.*java.specification.version = //p'); if [ \"$v\" -ge 25 ]; then set -- -XX:+UseCompactObjectHeaders; else set -- -XX:+ZGenerational; fi; if [ \"${DRISHTI_LAKE_MEMORY_MB:-0}\" -gt 0 ] 2>/dev/null; then set -- \"$@\" -XX:MaxDirectMemorySize=$((256 + DRISHTI_LAKE_MEMORY_MB))m; fi; exec /opt/drishti/bin/drishti-node.sh run java \"$@\" -Xlog:gc*:file=/opt/drishti/data/logs/gc-%p.log:time,uptime:filecount=5,filesize=20m -jar app.jar"]
+ENTRYPOINT ["sh", "-c", "mkdir -p /opt/drishti/data/logs /opt/drishti/data/dumps; v=$(java -XshowSettings:properties -version 2>&1 | sed -n 's/.*java.specification.version = //p'); if [ \"$v\" -ge 25 ]; then set -- -XX:+UseCompactObjectHeaders; else set -- -XX:+ZGenerational; fi; if [ \"${DRISHTI_LAKE_MEMORY_MB:-0}\" -gt 0 ] 2>/dev/null; then set -- \"$@\" -XX:MaxDirectMemorySize=$((256 + DRISHTI_LAKE_MEMORY_MB))m; fi; exec /opt/drishti/bin/drishti-node.sh run java \"$@\" -Xlog:gc*:file=/opt/drishti/data/logs/gc-%p.log:time,uptime:filecount=5,filesize=20m -jar /opt/drishti/lib/drishti-server-*-exec.jar"]

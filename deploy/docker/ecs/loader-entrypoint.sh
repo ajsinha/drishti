@@ -28,5 +28,5 @@ if [ "${DRISHTI_REQUIRE_EFS:-true}" = true ]; then
 fi
 mkdir -p "$TMPDIR" "$HOME"
 [ "$#" -gt 0 ] || fail "no command: give the script to run (deploy/aws/delta-lake/load-day.sh ...)"
-cd "$D/app"
+cd "$D"
 exec "$@"

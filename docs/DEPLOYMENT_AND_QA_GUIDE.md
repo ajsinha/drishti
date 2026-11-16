@@ -143,6 +143,10 @@ Every jar lives under the install folder, in two places that never mix:
 A jar found in the data folder's old `lib/` is moved into `lib/ext` once, at the first start that finds it, listed in the moved list, and
 **Admin → Health** says so ([ADMIN_GUIDE.md › Module packages and the shared lib folder](guides/ADMIN_GUIDE.md#221-module-packages-auto-deploy-and-the-shared-lib-folder)).
 
+**In a container** the image is immutable (its install folder is root-owned; on ECS the root file system is read-only), so the site's jars
+cannot go into `<drishti>/lib/ext`: every Drishti image and the ECS task definition set `DRISHTI_LIB_PATH=/opt/drishti/data/lib`, a folder
+on the data volume. The images keep the same install layout as a machine: `DRISHTI_HOME=/opt/drishti` with the server jar in `/opt/drishti/lib/`.
+
 ### 1.5 Environment variables
 
 None is required on a developer machine: the install folder is where `tools/drishti.py` is, and the data folder defaults to
@@ -1064,8 +1068,8 @@ py tools\drishti.py status
 
 ## 8. Run them as services
 
-**Linux (systemd).** The shipped unit is `deploy/systemd/drishti-server.service`: the layout `/opt/drishti` with the jar copied to
-`/opt/drishti/drishti-server.jar` (point its `ExecStart` at the jar in `/opt/drishti/lib/` instead, or link it there), the user `drishti`, `DRISHTI_HOME=/opt/drishti`, `DRISHTI_DATA_DIR=/opt/drishti/data`,
+**Linux (systemd).** The shipped unit is `deploy/systemd/drishti-server.service`: the layout `/opt/drishti` with the one server jar in
+`/opt/drishti/lib/` (the unit runs `lib/drishti-server-*-exec.jar`, so an upgrade only replaces that jar), the user `drishti`, `DRISHTI_HOME=/opt/drishti`, `DRISHTI_DATA_DIR=/opt/drishti/data`,
 `DRISHTI_MODULES_HOME=/opt/drishti/modules`, secrets from `/etc/drishti/drishti.env`, and `bin/drishti-node.sh drain` before every stop.
 Only the server's unit ships; the console's unit, the layout and the environment file are in
 [OPERATIONS_GUIDE.md › Running as services](guides/OPERATIONS_GUIDE.md#53-running-as-services-systemd). A settings file goes in as

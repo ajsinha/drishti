@@ -14,7 +14,9 @@
 
 # The lake loader and maintenance image for Amazon ECS (docs/architecture/AWS_DELTA_LAKE.md): the scripts of deploy/aws/delta-lake
 # with what they run, and nothing else: Java 21 and the server's exec jar (Drishti's Delta writer, `lake build`), Python with
-# deltalake, pyarrow and pyyaml (`lake publish`, `lake maintain`), the AWS CLI v2, the tools and the shipped packs (layouts, ingest keys).
+# deltalake, pyarrow and pyyaml (`lake publish`, `lake maintain`), the AWS CLI v2, the tools and the shipped modules' packs (layouts,
+# ingest keys). The install layout of every Drishti image and install (docs/DEPLOYMENT_AND_QA_GUIDE.md section 1.4): the install folder
+# /opt/drishti (DRISHTI_HOME, read only), its tools/, modules/ and lib/ with the one server jar, where every tool finds it.
 # Build from the repository root after ./mvnw -q package -DskipTests:
 #   docker build -f deploy/docker/ecs/loader.Dockerfile -t drishti-loader-ecs:2.9.11.g .
 # The task mounts one EFS access point at /opt/drishti/data (scratch lakes, locks, temp, home); the root file system is read-only.
@@ -28,10 +30,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends python3 python3
  && python3 -m venv /opt/drishti/venv \
  && /opt/drishti/venv/bin/pip install --no-cache-dir "deltalake==1.6.6" "pyarrow==26.0.0" "pyyaml>=6,<7" \
  && useradd --system --uid 10001 drishti
-WORKDIR /opt/drishti/app
-COPY kernel/drishti-server/target/drishti-server-*-exec.jar /opt/drishti/app.jar
+WORKDIR /opt/drishti
+COPY kernel/drishti-server/target/drishti-server-*-exec.jar lib/
 COPY tools/ tools/
 COPY config/packs/ config/packs/
+COPY modules/ modules/
 COPY deploy/aws/ deploy/aws/
 COPY deploy/docker/ecs/loader-entrypoint.sh /opt/drishti/bin/entrypoint.sh
 # compiled once here, so the read-only root never needs __pycache__ written at run time
@@ -40,10 +43,11 @@ RUN /opt/drishti/venv/bin/python -m compileall -q tools \
  && mkdir -p /opt/drishti/data && chown drishti:drishti /opt/drishti/data
 USER drishti
 ENV PATH=/opt/drishti/venv/bin:$PATH \
-    DRISHTI_JAR=/opt/drishti/app.jar \
+    DRISHTI_HOME=/opt/drishti \
     DRISHTI_DATA_DIR=/opt/drishti/data \
+    DRISHTI_MODULES_HOME=/opt/drishti/modules \
     DRISHTI_PYTHON=/opt/drishti/venv/bin/python \
-    DRISHTI_REPO=/opt/drishti/app \
+    DRISHTI_REPO=/opt/drishti \
     TMPDIR=/opt/drishti/data/tmp/loader \
     HOME=/opt/drishti/data/home/loader \
     PYTHONDONTWRITEBYTECODE=1 \

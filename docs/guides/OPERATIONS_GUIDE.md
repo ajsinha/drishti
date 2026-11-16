@@ -553,8 +553,8 @@ This installs both processes under `/opt/drishti` on a Linux host; adjust the pa
 ```bash
 ./mvnw -q clean package -DskipTests                       # from a checkout; `python tools/drishti.py build jar` copies the exec jar into lib/
 sudo useradd --system --home /opt/drishti drishti
-sudo mkdir -p /opt/drishti/data /opt/drishti/sutras
-sudo cp lib/drishti-server-<version>-exec.jar /opt/drishti/drishti-server.jar
+sudo mkdir -p /opt/drishti/data /opt/drishti/sutras /opt/drishti/lib
+sudo cp lib/drishti-server-<version>-exec.jar /opt/drishti/lib/   # the one server jar: every tool and the unit find it in <home>/lib
 sudo cp -r bin modules config drishti-console docs tools /opt/drishti/
 sudo cp LICENSE CHANGELOG.md RELEASE_NOTES.md THIRD-PARTY-NOTICES.md /opt/drishti/   # the help centre shows them
 sudo chown -R drishti:drishti /opt/drishti
@@ -565,7 +565,7 @@ sudo -u drishti /opt/drishti/drishti-console/.venv/bin/python -m pip install -r 
 
 ```
 /opt/drishti/
-├── drishti-server.jar           the server
+├── lib/                         the server jar (drishti-server-<version>-exec.jar, replaced on an upgrade); lib/ext: your jars
 ├── bin/                         the drain and stop hook (drishti-node.sh)
 ├── tools/                       drishti.py: setup, start, stop, status and the rest of the command line
 ├── modules/                     the modules: their packs, connector templates, Sutras (DRISHTI_MODULES_HOME)
@@ -656,7 +656,7 @@ Environment=DRISHTI_DATA_DIR=/opt/drishti/data
 Environment=DRISHTI_MODULES_HOME=/opt/drishti/modules
 Environment=DRISHTI_DRAIN_WAIT=240
 ExecStartPre=/usr/bin/mkdir -p /opt/drishti/data/logs /opt/drishti/data/dumps
-ExecStart=/usr/lib/jvm/java-21-openjdk-amd64/bin/java -Djava.io.tmpdir=/opt/drishti/data/tmp/server -Xlog:gc*:file=/opt/drishti/data/logs/gc-%p.log:time,uptime:filecount=5,filesize=20m -jar /opt/drishti/drishti-server.jar
+ExecStart=/bin/sh -c 'exec /usr/lib/jvm/java-21-openjdk-amd64/bin/java -Djava.io.tmpdir=/opt/drishti/data/tmp/server -Xlog:gc*:file=/opt/drishti/data/logs/gc-%%p.log:time,uptime:filecount=5,filesize=20m -jar /opt/drishti/lib/drishti-server-*-exec.jar'
 ExecStop=-/opt/drishti/bin/drishti-node.sh drain
 SuccessExitStatus=143
 TimeoutStopSec=300
@@ -724,8 +724,11 @@ docker build -f deploy/docker/server.Dockerfile  -t drishti-server:<version> .  
 docker build -f deploy/docker/console.Dockerfile -t drishti-console:<version> .
 ```
 
-The server image holds the jar, `modules/`, `bin/drishti-node.sh` and the configuration it reads (`config/packs`, `lenses`, `ui-kit`,
-`alerts`, `distributions`, `engines`, `lakes`, `modules`, `store`), with `DRISHTI_HOME=/opt/drishti`; the console image the console, `docs/`, `config/packs/` and the licence and release
+The server image holds the server jar in `lib/` (the install layout: every tool finds the jar in `<home>/lib`), `modules/`,
+`bin/drishti-node.sh` and the configuration it reads (`config/packs`, `lenses`, `ui-kit`, `alerts`, `distributions`, `engines`, `lakes`,
+`modules`, `store`), with `DRISHTI_HOME=/opt/drishti`. **In a container the image is immutable** (root-owned; on ECS a read-only root file
+system): the site's jars (JDBC drivers, connector plugins) live on the data volume, `DRISHTI_LIB_PATH=/opt/drishti/data/lib`, which every
+image and the ECS task definition set; put a driver there, not in `<home>/lib/ext`, and restart. The console image the console, `docs/`, `config/packs/` and the licence and release
 files, so the help centre works offline. The compose file refuses to start without two secrets and the first administrator; it has no
 default password and never creates the development admin. Put them in `deploy/.env` (never commit it), `chmod 600`:
 

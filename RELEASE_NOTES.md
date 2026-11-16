@@ -69,11 +69,18 @@ release itself is tag `v2.9.11.i_5`; the next release, i6, takes the version fro
 `python tools/drishti.py stop cluster` (or `stop all`), which reads the same pid files. 5. Start with the new commands. Your own changes made inside `modules/banking/dmod/` or `modules/genomics/src/dmod/` move to the
 new places (or, better, into an overrides folder).
 
+## Containers and services
+
+- Every image is laid out as an install: `DRISHTI_HOME=/opt/drishti`, the server jar in `/opt/drishti/lib/` (the loader image's
+  `/opt/drishti/app.jar` and `DRISHTI_JAR` are gone; its settings file is now `/opt/drishti/deploy/aws/env`). The systemd unit runs
+  `/opt/drishti/lib/drishti-server-*-exec.jar`: put the jar there on an upgrade.
+- In a container the image is immutable, so the site's jars (JDBC drivers, plugins) live on the data volume: the images and the ECS task
+  definition set `DRISHTI_LIB_PATH=/opt/drishti/data/lib`.
+
 ## Known limits
 
 - `data load --store <postgres|redis|...>` still runs a bash script (Git Bash on Windows) until the Python second phase.
 - `start cluster` keeps a running copy of the jar at `<data>/stack/server.jar` (test convenience; a real install runs from `<home>/lib`).
-- Container images and systemd are unchanged (`bin/drishti-node.sh` is kept).
 
 # Drishti 2.9.11.i4 — release notes
 

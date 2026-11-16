@@ -751,7 +751,7 @@ previous-secret: ${DRISHTI_NET_PREVIOUS_SECRET}
 # /etc/systemd/system/drishti-server.service (excerpt; the full unit is in the operations guide)
 Environment=MALLOC_ARENA_MAX=2
 ExecStart=/usr/bin/java -Xmx36g -XX:+UseZGC -XX:+ZGenerational -XX:MaxDirectMemorySize=256m \
-  -Djdk.nio.maxCachedBufferSize=262144 -XX:TrimNativeHeapInterval=60000 -jar /opt/drishti/drishti-server.jar
+  -Djdk.nio.maxCachedBufferSize=262144 -XX:TrimNativeHeapInterval=60000 -jar /opt/drishti/lib/drishti-server-<version>-exec.jar
 Environment=DRISHTI_DRAIN_WAIT=840
 ExecStop=-/opt/drishti/bin/drishti-node.sh drain   # drain, wait for safeToStop (at most DRISHTI_DRAIN_WAIT), then SIGTERM
 TimeoutStopSec=900
@@ -1248,11 +1248,12 @@ On EFS each node's paths sit under `/drishti/<environment>/<node>`; below that p
 | `/opt/drishti/data/tmp/{server,console}`, `/opt/drishti/data/home/{server,console}` | both | temp folders (`java.io.tmpdir`, unpacked native libraries, Python's `TMPDIR`) and `HOME` |
 | `/opt/drishti/config/connectors`, `net`, `ai`, `mcp`, `bi` | server (and console for AI, MCP) | connector files, `node.yaml` and `peers/`, AI providers, MCP servers, Rūpaka files |
 | `/opt/drishti/sutras` | server | site Sutras |
-| `/opt/drishti/app.jar`, `/opt/drishti/shipped/packs`, `/opt/drishti/console`, `/opt/drishti/docs`, `/opt/drishti/bin` | image | read-only, never written |
+| `/opt/drishti/lib` (the server jar), `/opt/drishti/shipped/packs`, `/opt/drishti/console`, `/opt/drishti/docs`, `/opt/drishti/bin` | image | read-only, never written |
 
 Both images set `DRISHTI_DATA_DIR=/opt/drishti/data`, `DRISHTI_CONNECTORS_DIR`, `DRISHTI_NET_DIR`, `DRISHTI_AI_DIR`, `DRISHTI_MCP_DIR`,
 `DRISHTI_BI_DIR`, `DRISHTI_SUTRAS`, `DRISHTI_PACKS_DIR=/opt/drishti/shipped/packs` (outside the EFS mounts, so a mount never hides them),
-`DRISHTI_CONSOLE_DATA_DIR`, `DRISHTI_CONSOLE_TMP_DIR`, `TMPDIR` and `HOME`, so nothing depends on a working directory. Installed packs (Admin →
+`DRISHTI_CONSOLE_DATA_DIR`, `DRISHTI_CONSOLE_TMP_DIR`, `TMPDIR` and `HOME`, so nothing depends on a working directory. The server image sets
+`DRISHTI_LIB_PATH=/opt/drishti/data/lib` (and `node-task.json` repeats it): the image is immutable, so the site's jars live on the EFS data volume. Installed packs (Admin →
 Packs, `pack deploy`) go to `data/packs/installed` and are searched first. A folder added later is under one of the three roots by
 construction (every path setting defaults to the data folder or `./config`).
 
@@ -1618,7 +1619,7 @@ on fs-…` for three nodes; running it again returns the same ids.
 again to create the services`), then again for one service per node.
 
 **Step 8 · the images** (section 12.4). The loader image copies `deploy/aws/` with your `env` (no secret), so its tasks read the same
-settings (`DRISHTI_AWS_ENV=/opt/drishti/app/deploy/aws/env`); rebuild it when the settings change.
+settings (`DRISHTI_AWS_ENV=/opt/drishti/deploy/aws/env`; the image's install folder is `/opt/drishti`, `DRISHTI_HOME`, with the server jar in `lib/`); rebuild it when the settings change.
 
 **Step 9 · task definitions, services and schedules.** `deploy/aws/ecs/register.sh` (`--nodes --lake-jobs`; `--consoles 4` for a console
 service of its own). **You should see** a task definition and a service per node, the `loader`, `maintenance` and `report` task definitions

@@ -90,10 +90,13 @@ DIRECT="-XX:MaxDirectMemorySize=256m"
 if [ "$((${DRISHTI_LAKE_MEMORY_MB:-0} + ARROW_MB))" -gt 0 ] 2>/dev/null; then
   DIRECT="$DIRECT -XX:MaxDirectMemorySize=$((256 + ${DRISHTI_LAKE_MEMORY_MB:-0} + ARROW_MB))m -Ddrishti.arrow.max-bytes=$((ARROW_MB * 1048576))"
 fi
+# the one server jar of the install (<home>/lib), as every tool finds it
+JAR=$(ls "$D"/lib/drishti-server-*-exec.jar 2>/dev/null | head -1)
+[ -n "$JAR" ] || fail "no drishti-server-*-exec.jar in $D/lib (the image is built after the jar: see deploy/docker/ecs/server.Dockerfile)"
 # shellcheck disable=SC2086
 exec "$D/bin/drishti-node.sh" run java "$@" -Xmx"${DRISHTI_HEAP:-8g}" -XX:+UseZGC -XX:-UsePerfData $DIRECT -XX:TrimNativeHeapInterval=60000 \
   -Djdk.nio.maxCachedBufferSize=262144 -XX:NativeMemoryTracking=summary \
   -Djava.io.tmpdir="$TMPDIR" -Duser.home="$HOME" \
   -XX:ErrorFile="$D/data/logs/hs_err_pid%p.log" -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath="$D/data/dumps" \
   -Xlog:gc*:file="$D/data/logs/gc-%p.log":time,uptime:filecount=5,filesize=20m \
-  -jar "$D/app.jar"
+  -jar "$JAR"

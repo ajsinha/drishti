@@ -45,6 +45,14 @@
   (the module folders are never written); Admin → Health and `GET /api/v1/admin/health` (`moduleOverrides`) list every overridden file
   with its source (KERNEL_AND_MODULES.md section 18.10; DEPLOYMENT_AND_QA_GUIDE.md section 5.1; `config/settings.examples/dev.ini`).
 
+- **Every image has the install layout, and the site's jars live on the data volume in a container.** The loader image for ECS copied the
+  jar to `/opt/drishti/app.jar` and set the retired `DRISHTI_JAR`, so its tools found no jar: it now is an install like every other
+  (`DRISHTI_HOME=/opt/drishti`, the jar in `/opt/drishti/lib/`, `tools/`, `modules/` with the packs its tables name), and so are the server
+  images (`lib/drishti-server-*-exec.jar`) and the systemd unit (`ExecStart` runs the jar of `/opt/drishti/lib/`; the GC log's `%p` is
+  escaped for systemd). The images are immutable and their install folder root-owned, so `<home>/lib/ext` cannot take a driver there and
+  the jar move at start failed: `server.Dockerfile`, `ecs/server.Dockerfile` and `node-task.json` set `DRISHTI_LIB_PATH=/opt/drishti/data/lib`
+  (DEPLOYMENT_AND_QA_GUIDE.md 1.4, OPERATIONS_GUIDE.md 5.1 and 5.4, CLUSTER_GUIDE.md).
+
 The Python commands release. The build still reports its version as 2.9.11.g (the version from one place is the next release); the release is tag `v2.9.11.i_5`.
 
 - **Python commands instead of shell scripts: one way to set up, build, start and stop on Linux, macOS and Windows.** `python
@@ -71,7 +79,7 @@ The Python commands release. The build still reports its version as 2.9.11.g (th
   checklist are in it too; the run configurations `Build demo lakes --engine java` and `Build server jar` are added.
 - **Known limits.** `data load --store <postgres|redis|...>` still runs a bash script (Git Bash on Windows) until the Python second phase;
   `start cluster` keeps a running copy of the jar at `<data>/stack/server.jar` (a convenience for tests; a real install runs from
-  `<home>/lib`); container images and systemd are unchanged (`bin/drishti-node.sh` is kept).
+  `<home>/lib`); `bin/drishti-node.sh` is kept for the images and the systemd unit.
 - **Drill fixes.** The browser tests' server is ready when its modules are installed and recorded; the exposure explorer's test server
   gets the VaR files' heap; the shell-twins test reads what git holds in `bin/`.
 
