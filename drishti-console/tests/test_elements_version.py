@@ -77,10 +77,18 @@ def _texts():
                     continue
 
 
+def test_the_retired_renderer_path_redirects_and_says_so():
+    from core import render_dist as rd
+    assert rd.RETIRED == ("2.0.0",) and VERSION not in rd.RETIRED and "after i6" in rd.DEPRECATION
+
+
 def test_nothing_names_another_elements_version():
     bad = []
     for rel, text in _texts():
-        bad += [f"{rel}: {m.group()}" for m in NAMED.finditer(text) if m.group(1) != VERSION]
-        bad += [f"{rel}: render/{m.group(1)}/" for m in RENDER_PATH.finditer(text) if m.group(1) not in FROZEN | {VERSION}
-                and not rel.startswith("drishti-console/tests/")]
+        for line in text.splitlines():
+            if "after i6" in line:             # the one exception: the retired renderer path that redirects for one release (and the words that say so)
+                continue
+            bad += [f"{rel}: {m.group()}" for m in NAMED.finditer(line) if m.group(1) != VERSION]
+            bad += [f"{rel}: render/{m.group(1)}/" for m in RENDER_PATH.finditer(line) if m.group(1) not in FROZEN | {VERSION}
+                    and not rel.startswith("drishti-console/tests/")]
     assert not bad, "Elements has one version (" + VERSION + "); these name another:\n" + "\n".join(bad[:30])

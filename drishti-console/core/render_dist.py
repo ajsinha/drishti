@@ -35,6 +35,8 @@ WEB = Path(__file__).resolve().parent.parent / "web"
 STATIC = WEB / "static"
 ROOT = STATIC / "render"
 VERSION = json.loads((STATIC / "elements" / "drishti_elements.json").read_text(encoding="utf-8"))["elements"]   # the current renderer: the one version of Drishti Elements (drishti_elements.json); 1.2.0 stays served, frozen, for existing embedders
+RETIRED = ("2.0.0",)                # the renderer of the Elements before the one version (2.4.0): its paths redirect to the current folder for ONE release (removed in the release after i6)
+DEPRECATION = "the Drishti Render {old} paths are removed in the release after i6: use {new}"
 FROZEN = ("1.2.0",)                 # served unchanged; 0.1.0 to 1.1.0 were retired (one page renderer, Jinja)
 LIBRARY = STATIC / "elements" / "drishti-renderer" / "src"   # the current version's modules: the version folder holds the public entries, the sheet and the types
 FOLDER = ROOT / VERSION

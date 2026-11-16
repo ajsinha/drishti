@@ -73,7 +73,7 @@ catalogue, this README. `tests/test_elements_version.py` fails the build on any 
 The number is semver. A removed or changed public name, option, event or CSS custom property is a major; a new capability a minor; a fix a
 patch. The first uniform version is **2.4.0**, the next release after the highest version in use before it (the Elements 2.x embed at
 2.3.0 and the renderer at 2.0.0). Each release is a new renderer folder (a released folder never changes); the previous renderer's
-folder is retired, except 1.2.0, which stays frozen for the embedders that pinned it. A domain library's compatibility with the console is
+folder is retired, except 1.2.0, which stays frozen for the embedders that pinned it. For one release the retired paths redirect: `render/2.0.0/…` (and `/embed/v2/elements/2.3.0/…`) answer `308` to the current folder with `Deprecation: true` and a `Drishti-Deprecated` header: the retired paths are removed in the release after i6. A domain library's compatibility with the console is
 the `elements:` range in its module's `module.yaml`.
 
 ## Roadmap: Drishti Elements as its own project

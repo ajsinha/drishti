@@ -957,6 +957,8 @@ Three contracts, all semantic versions:
 A version this console does not serve answers `410 DRS-8006`, and the answer names the one it serves: after a console upgrade, a page
 pinned to an old version tells you to move the pin.
 
+**Renderer 2.0.0 paths.** `/static/render/2.0.0/…`, `/embed/v2/render/2.0.0/…` and `/embed/v2/elements/2.3.0/drishti-elements.js` answer `308` to the current folder with a `Deprecation: true` header and a `Drishti-Deprecated` note: they are removed in the release after i6, so change the pinned version to 2.4.0 now.
+
 **Moving from renderer 1.2.0 to 2.4.0.** Change the version in the import (`/static/render/2.4.0/drishti-render.js`, or
 `/embed/v2/render/2.4.0/…`); the API, the options, the events, the Elements attributes and the ViewModel contract are the same. What
 you may see: the nested pivot in `behaviours: 'console'` is drishti-grid's tree grid (its own headings, keyboard and density, the grand

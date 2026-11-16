@@ -118,9 +118,14 @@ def test_one_renderer_version_is_served_and_the_retired_ones_say_so(backend, cli
     lib = embed.get("/embed/v2/elements/drishti-renderer/src/drishti_index.js")
     assert lib.status_code == 200 and "drishti-renderer" in lib.text
     assert embed.get("/embed/v2/elements/drishti-renderer/src/../../../js/drishti_app.js").status_code == 404
-    for old in ("2.1", "2.0.0", "2.3.0"):
+    for old in ("2.1", "2.0.0"):
         r = embed.get(f"/embed/v2/elements/{old}/drishti-elements.js", follow_redirects=False)
         assert r.status_code in (404, 410) and r.json()["code"] == "DRS-8006", old
+    for url, to in (("/embed/v2/render/2.0.0/drishti-render.js", f"/embed/v2/render/{V}/drishti-render.js"), ("/embed/v2/elements/2.3.0/drishti-elements.js", f"/embed/v2/render/{V}/drishti-elements.js")):
+        r = embed.get(url, follow_redirects=False)            # one release: a retired path redirects (308) with the deprecation said
+        assert r.status_code == 308 and r.headers["location"] == to and r.headers["deprecation"] == "true" and "after i6" in r.headers["drishti-deprecated"], url
+    old_static = client.get("/static/render/2.0.0/drishti-render.js", follow_redirects=False)
+    assert old_static.status_code == 308 and old_static.headers["location"] == f"/static/render/{V}/drishti-render.js"
     gone = embed.get("/embed/v2/render/1.1.0/drishti-render.js", follow_redirects=False)
     assert gone.status_code == 410 and gone.json()["code"] == "DRS-8006" and V in gone.json()["detail"]
     assert "ELEMENTS_VERSION = '2.2.0'" in (rd.ROOT / "1.2.0" / "m" / "elements.js").read_text(encoding="utf-8")
