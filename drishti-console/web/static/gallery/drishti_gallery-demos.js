@@ -402,6 +402,30 @@
   }));
 
   demos.push(fnDemo({
+    id: 'tour', title: 'Tour', about: 'drishti_tour.js', types: ['TourOptions'],
+    summary: 'A page walked in steps: the parts marked for a step shown (data-tour-steps, data-tour-say), Back, Next and the step in words; the guided mode of a board.',
+    values: {}, examples: [{ title: 'Three steps over three cards', values: {} }],
+    mount: function (host, values, ctx) {
+      const doc = host.ownerDocument, h = ctx.h;
+      const el = h(doc, 'div', { cls: 'gx-fn' }, [
+        h(doc, 'p', { text: '“First, the desks and their limits.”', attrs: { 'data-tour-say': '1' } }),
+        h(doc, 'p', { text: '“Then the desk that breached, and why.”', attrs: { 'data-tour-say': '2' } }),
+        h(doc, 'p', { text: '“Finally, what we do about it.”', attrs: { 'data-tour-say': '3' } }),
+        h(doc, 'div', { cls: 'gx-note', text: 'Card A: shown at steps 1 and 2', attrs: { 'data-tour-steps': '1 2' } }),
+        h(doc, 'div', { cls: 'gx-note', text: 'Card B: shown at steps 2 and 3', attrs: { 'data-tour-steps': '2 3' } }),
+        h(doc, 'div', { cls: 'gx-demo-bar' }, [h(doc, 'button', { cls: 'gx-btn', text: '← Back', attrs: { type: 'button', 'data-tour': 'back' } }), h(doc, 'span', { attrs: { 'data-tour': 'at' } }),
+          h(doc, 'button', { cls: 'gx-btn', text: 'Next →', attrs: { type: 'button', 'data-tour': 'next' } })])]);
+      host.appendChild(el);
+      const tour = new ctx.E.core.Tour(el, { onStep: (n) => ctx.log('step', { at: n }) });
+      const m = done(el);
+      m.tour = tour;
+      m.destroy = () => { tour.destroy(); el.remove(); };
+      return m;
+    },
+    code: () => ({ js: "import { Tour } from '/static/elements/drishti-core/src/drishti_index.js';\n\n// mark the parts: data-tour-say=\"1\", data-tour-steps=\"2 3\", and the controls data-tour=\"back\", \"at\", \"next\"\nconst tour = new Tour(document.querySelector('#board'), { steps: 4, onStep: (n) => console.log('step', n) });" })
+  }));
+
+  demos.push(fnDemo({
     id: 'overlays', title: 'Dialogs, drawers and toasts', about: 'drishti_overlay.js', types: ['ToastOptions'],
     summary: 'A modal dialog that gives focus back, a drawer that keeps Tab inside and closes on Escape, and toasts in one shared tray.',
     values: { text: 'Saved: the view is in your layouts', timeout: 4000 },

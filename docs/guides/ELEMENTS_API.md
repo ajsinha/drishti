@@ -1539,6 +1539,47 @@ Draws an Explain state into its place: 'drawer' and 'card' one column, 'split' t
 
 Returns `void`.
 
+### drishti_tour.js
+
+#### class `Tour`
+
+A page walked in steps: the parts marked for a step shown, the others hidden, Back and Next and the step in words.
+
+##### `new Tour(root, o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `root` | `Element` | the part of the page the tour walks |
+| `[o]` | `TourOptions` |  |
+
+##### `Tour.go(n)`
+
+Shows a step (clamped to the steps there are).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `n` | `number` |  |
+
+Returns `number`: the step shown.
+
+##### `Tour.next()`
+
+The next step.
+
+Returns `number`.
+
+##### `Tour.back()`
+
+The step before.
+
+Returns `number`.
+
+##### `Tour.destroy()`
+
+Stops the tour: every part shown again, the controls let go.
+
+Returns `void`.
+
 ### drishti_visual.js
 
 #### `DENSITIES`
@@ -1795,6 +1836,17 @@ A table to export.
 | `[start]` | `function(PointerEvent): (boolean\|void)` | the press became a drag; false cancels it |
 | `move` | `function(PointerEvent): void` |  |
 | `end` | `function(PointerEvent, boolean, boolean): void` | (event, committed, moved): committed is false after Escape or a cancel |
+
+#### `TourOptions` : `Object`
+
+The options of a tour.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[steps]` | `number` | how many steps (default: the highest step the marks name) |
+| `[at=1]` | `number` | the step shown first |
+| `[onStep]` | `function(number): void` | told each step shown (after its parts are shown: a chart there may resize) |
+| `[words]` | `function(number, number): string` | the step in words (default "Step 2 of 4") |
 
 #### `VisualTheme` : `Object`
 
@@ -14769,11 +14821,24 @@ Heatmap: a value at each (x, y) pair of categories, coloured on a sequential or 
 
 | Parameter | Type | Meaning |
 |---|---|---|
-| `spec` | `Object` | x, y, value ({field, type, tones, order}), scale {type: 'sequential'\|'diverging', mid}, labels, tracks, trackSize |
+| `spec` | `Object` | x, y ({field, order, domain: every member in order (an empty one too), labels: false hides the axis's words}), value ({field, type, tones, order}), scale {type: 'sequential'\|'diverging', mid}, labels, tracks, trackSize |
 | `rows` | `Object[]` |  |
 | `env` | `Object` |  |
 
 Returns `import('./drishti_chart-spec.js').BuiltChart`.
+
+#### `overviewStrip(option, spec, xs, th)`
+
+A heatmap's overview strip: a window over its columns (the heatmap and every x track move together) with a slider under it, for a wide matrix on a narrow screen. spec.zoom: true, or {window: [first, last]} (column indexes).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `option` | `Object` | changed in place |
+| `spec` | `Object` |  |
+| `xs` | `string[]` | the columns |
+| `th` | `Object` |  |
+
+Returns `void`.
 
 #### `buildCandlestick(spec, rows, env)`
 
@@ -16103,6 +16168,7 @@ A chart's frames.
 | `[interval=900]` | `number` | milliseconds between frames while playing |
 | `[mode='only']` | `('only'\|'upto')` | only: the rows of the frame; upto: the rows of every frame up to it |
 | `[label]` | `string` | the word before the frame's value ("Round") |
+| `[playText='Play']` | `string` | the Play button's words ("Play the rounds") |
 
 #### `RegionGeo` : `Object`
 

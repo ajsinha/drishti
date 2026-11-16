@@ -151,20 +151,9 @@
     if (mode === 'guided') { guided(); }
   }
 
+  /* the guided mode (genomics C): drishti-core's Tour walks the board's own cards, four steps with the presenter's sentence */
   function guided() {
-    let step = 1;
-    const show = () => {
-      root.dataset.step = String(step);
-      root.querySelectorAll('[data-say]').forEach((p) => { p.hidden = p.dataset.say !== String(step); });
-      root.querySelectorAll('[data-steps]').forEach((c) => { c.hidden = c.dataset.steps.split(' ').indexOf(String(step)) < 0; });
-      $('[data-guide-at]').textContent = 'Step ' + step + ' of 4';
-      $('[data-guide="back"]').disabled = step === 1;
-      $('[data-guide="next"]').disabled = step === 4;
-      Object.keys(charts).forEach((k) => { if (charts[k].engine) { charts[k].engine.resize(); } });
-    };
-    $('[data-guide="back"]').addEventListener('click', () => { step = Math.max(1, step - 1); show(); });
-    $('[data-guide="next"]').addEventListener('click', () => { step = Math.min(4, step + 1); show(); });
-    show();
+    new E.core.Tour(root, { steps: 4, onStep: () => Object.keys(charts).forEach((k) => { if (charts[k].engine) { charts[k].engine.resize(); } }) });
   }
 
   // ---------------------------------------------------------------- the workbench (protein A)
@@ -180,7 +169,7 @@
         st.assay = d.assay;
         assays(d.assays);
         const c = chart('dms', { kind: 'protein.dms', title: 'Deep mutational scan · ' + d.assay.toLowerCase(), subtitle: 'every position × every change · orange hurts, blue helps · 0 is the natural protein',
-          data: { rows: d.rows }, residues: d.residues, aas: d.aas, assay: d.assay, onClick: 'select' },
+          data: { rows: d.rows }, residues: d.residues, aas: d.aas, assay: d.assay, onClick: 'select', window: window.innerWidth < 700 ? [0, 59] : undefined },
         { height: 380, explain: explainer((ctx) => (ctx.rows && ctx.rows[0] ? ['explain/cell/' + enc(ctx.rows[0].POS + ':' + ctx.rows[0].AA), { protein: id }] : null)) });
         if (!c.wired) { c.wired = true; c.events.on('markClicked', (ctx) => { const r = ctx.rows && ctx.rows[0]; if (r && r.POS) { pickResidue(r.POS, r.AA); } }); }
         words();
@@ -261,9 +250,26 @@
       .then(() => { root.dataset.state = 'ready'; if (root.dataset.genomicsRoute === 'designs' && charts.landscape) { charts.landscape.el.scrollIntoView({ block: 'center' }); } }).catch(said);
   }
 
+  /* the data first: with a kind missing the page says which, in words, and asks nothing else (the packs are not loaded here) */
+  function missing(st) {
+    const need = (st.missing || []).filter((k) => (mode === 'bench' ? ['protein', 'residue', 'dms_score', 'design', 'design_mutation', 'design_round'] : ['gene', 'sample', 'variant', 'variant_call', 'association']).indexOf(k) >= 0);
+    if (!need.length) { return false; }
+    root.querySelectorAll('.drishti-showcase-grid, .drishti-showcase-figures, .drishti-showcase-guide, .drishti-showcase-bar').forEach((el) => { el.hidden = true; });
+    const p = document.createElement('p');
+    p.className = 'drishti-notice';
+    p.dataset.tone = 'warn';
+    p.setAttribute('role', 'status');
+    p.dataset.showcaseMissing = need.join(',');
+    p.textContent = 'This showcase needs the packs genomics and protein; this server has no rows of ' + need.join(', ') + '. Load them (drishti.py lake demo) and open the page again.';
+    root.insertBefore(p, root.children[1] || null);
+    root.dataset.state = 'needs-data';
+    return true;
+  }
+
   root.dataset.state = 'loading';
-  Promise.all([E.visuals && E.visuals.genomics ? E.visuals.genomics.ready : E.load('drishti-chart'), E.load('drishti-grid')]).then(([chartLib]) => {
+  Promise.all([E.visuals && E.visuals.genomics ? E.visuals.genomics.ready : E.load('drishti-chart'), E.load('drishti-grid'), get('showcase/status')]).then(([chartLib, , status]) => {
     C = chartLib;
+    if (missing(status)) { return; }
     if (mode === 'bench') { bench(); } else { board(); }
   }).catch(said);
 }());

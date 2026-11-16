@@ -410,6 +410,10 @@ test('heatmap tracks and category cells: strips on either axis, aligned grids, t
   const dm = build({ kind: 'heatmap', data: { rows }, x: { field: 'P', domain: ['0', '1', '2', '3'], labels: false }, y: 'AA', value: 'S' });
   assert.deepEqual(dm.option.xAxis.data, ['0', '1', '2', '3']);
   assert.equal(dm.option.xAxis.axisLabel.show, false);
+  const z = build({ kind: 'heatmap', data: { rows }, x: 'P', y: 'AA', value: 'S', zoom: { window: [0, 1] }, tracks: [{ axis: 'x', title: 'T', values: { 1: 1 } }, { axis: 'y', title: 'Y', values: { A: 1 } }] });
+  assert.deepEqual(z.option.dataZoom[0].xAxisIndex, [0, 2]);                 // the heatmap and its x track move together; the y track does not
+  assert.deepEqual([z.option.dataZoom[0].startValue, z.option.dataZoom[0].endValue], [0, 1]);
+  assert.equal(z.option.grid[0].bottom, z.option.grid[1].bottom);
   assert.deepEqual(c.legend.map((k) => k.name), ['down', 'up']);
   assert.equal(c.option.series[0].data[0].itemStyle.color, C.toneColour(th, 'bad'));
   assert.equal(C.valueText({ seriesType: 'heatmap', value: [0, 0, 'up'] }, env.fmt), 'up');

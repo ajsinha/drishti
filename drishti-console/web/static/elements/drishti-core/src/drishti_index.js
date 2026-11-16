@@ -46,6 +46,7 @@ export { h, placeAt, placeUnder, attrAllowed, safeUrl } from './drishti_dom.js';
 export { parseNumberText, numberEditText } from './drishti_parse.js';
 export { toCsv, download } from './drishti_files.js';
 export { sparkline, renderExplain } from './drishti_explain.js';
+export { Tour } from './drishti_tour.js';
 export { DENSITIES, blend, alpha, visualTheme, toneColour, rampColour, formatterFor } from './drishti_visual.js';
 
 /**

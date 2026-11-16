@@ -66,10 +66,6 @@
 .drishti-showcase-card {
     min-width: 0;
 }
-.drishti-showcase-card[hidden],
-.drishti-showcase-say[hidden] {
-    display: none;
-}
 .drishti-showcase-wide {
     grid-column: 1 / -1;
 }
@@ -101,4 +97,8 @@
 /* the guided mode is the phone's way through the board: one step's cards at a time, full width */
 .drishti-showcase[data-showcase="guided"] .drishti-showcase-grid {
     grid-template-columns: minmax(0, 1fr);
+}
+/* hidden means hidden, whatever the layout above says (a step of the guided mode, a page that waits for its data) */
+.drishti-showcase [hidden] {
+    display: none !important;
 }

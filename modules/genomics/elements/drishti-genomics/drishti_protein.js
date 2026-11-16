@@ -44,7 +44,7 @@
     return { kind: 'protein.dms', title: 'Every change at every position (synthetic)', data: { rows: rows }, residues: residues };
   }
 
-  /** The scan. spec: rows {ID, POS, AA, SCORE}, residues [{POS, SECONDARY, BURIAL, ACTIVE_SITE}], aas (the order of the changes), assay (its word). */
+  /** The scan. spec: rows {ID, POS, AA, SCORE}, residues [{POS, SECONDARY, BURIAL, ACTIVE_SITE}], aas (the order of the changes), assay (its word), window [first, last] (the overview strip's columns; past 150 positions the strip is on). */
   function dms(C, spec, rows, env) {
     const res = spec.residues || [], val = (f) => { const o = {}; res.forEach((r) => { if (r[f] !== null && r[f] !== undefined) { o[String(r.POS)] = r[f]; } }); return o; };
     const site = {};
@@ -54,7 +54,7 @@
       x: { field: 'POS', domain: positions, title: 'Position' }, y: { field: 'AA', domain: spec.aas || AAS, title: 'Change to' },
       value: { field: 'SCORE', title: spec.assay ? 'Effect on ' + spec.assay : 'Effect', format: 'number' }, scale: { type: 'diverging', mid: 0 },
       tracks: [{ title: 'Fold', values: val('SECONDARY'), type: 'category', tones: FOLD_TONES }, { title: 'Burial', values: val('BURIAL') }, { title: 'Active site', values: site, type: 'category', tones: { 'active site': 'bad' } }],
-      trackSize: 8 });
+      trackSize: 8, zoom: spec.window ? { window: spec.window } : positions && positions.length > 150 ? true : undefined });
     const b = C.buildHeatmap(s, rows, env);
     b.summary = 'Deep mutational scan' + (spec.title ? ' of ' + spec.title : '') + ': ' + (positions ? positions.length : '') + ' positions by ' + (spec.aas || AAS).length + ' changes, ' + rows.length + ' measurements';
     return b;

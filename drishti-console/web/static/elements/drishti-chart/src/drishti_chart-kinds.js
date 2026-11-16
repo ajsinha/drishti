@@ -400,10 +400,32 @@ export function buildHeatmap(spec, rows, env) {
   const table = { columns: [{ header: yf }].concat(xs.map((x) => ({ header: x, format: !cats && spec.value && spec.value.format }))),
     rows: ys.map((y) => [y].concat(xs.map((x) => { const v = cell.get(x + '\u0000' + y); return v === undefined ? null : v; }))) };
   const keys = (cats ? cats.keys : []).concat(addTracks(option, spec, rows, { xs: xs, ys: ys, xf: xf, yf: yf }, env, table));
+  if (spec.zoom) { overviewStrip(option, spec, xs, th); }
   const lo = scale ? scale.lo : null, hi = scale ? scale.hi : null;
   return { option: option, legend: keys, legendStatic: keys.length > 0, table: table,
     summary: 'Heatmap' + (spec.title ? ' of ' + spec.title : '') + ', ' + ys.length + ' rows by ' + xs.length + ' columns'
       + (scale ? ', from ' + env.fmt(lo) + ' to ' + env.fmt(hi) : ', ' + keys.length + ' categories') + ((spec.tracks || []).length ? ', ' + spec.tracks.length + ' tracks' : '') };
+}
+
+/**
+ * A heatmap's overview strip: a window over its columns (the heatmap and every x track move together) with a slider under it, for a
+ * wide matrix on a narrow screen. spec.zoom: true, or {window: [first, last]} (column indexes).
+ * @param {Object} option changed in place
+ * @param {Object} spec
+ * @param {string[]} xs the columns
+ * @param {Object} th
+ * @returns {void}
+ */
+export function overviewStrip(option, spec, xs, th) {
+  const axes = (Array.isArray(option.xAxis) ? option.xAxis : [option.xAxis]).map((a, i) => ((a.data || []).length === xs.length ? i : -1)).filter((i) => i >= 0);
+  const w = spec.zoom && spec.zoom.window, win = Array.isArray(w) && w.length === 2 ? { startValue: Math.max(0, w[0]), endValue: Math.min(xs.length - 1, w[1]) } : {};
+  option.dataZoom = [Object.assign({ type: 'slider', xAxisIndex: axes, height: 18, bottom: 4, filterMode: 'none', borderColor: th.border, backgroundColor: th.surface2,
+    fillerColor: alpha(th.tokens.accent, 0.16), handleStyle: { color: th.tokens.accent, borderColor: th.tokens.accent }, textStyle: textStyle(th), brushSelect: false, showDetail: false }, win),
+  Object.assign({ type: 'inside', xAxisIndex: axes, filterMode: 'none', zoomOnMouseWheel: true, moveOnMouseMove: false }, win)];
+  const grids = Array.isArray(option.grid) ? option.grid : [option.grid];
+  const was = grids[0].bottom;
+  grids.forEach((g) => { if (g.bottom === was) { g.bottom = (was || 10) + 26; } });
+  if (option.visualMap) { option.visualMap.bottom = 28; }
 }
 
 /**
