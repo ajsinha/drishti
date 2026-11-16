@@ -56,31 +56,39 @@ class ModuleSwitchFollowsTest {
         }
     }
 
-    private static boolean rulesOf(String module) {
-        return ConfigResolution.current().rules().stream().anyMatch(r -> module.equals(r.module()));
+    /**
+     * This server's own resolution (PackPaths: each Spring context keeps its own; the process-wide current one follows only the first server
+     * of the JVM, so in a test fork holding other servers it is never this one's).
+     */
+    private ConfigResolution resolution() {
+        return packs.resolution();
+    }
+
+    private boolean rulesOf(String module) {
+        return resolution().rules().stream().anyMatch(r -> module.equals(r.module()));
     }
 
     @Test
     void aModuleSwitchedOffIsGoneEverywhereAndSwitchedOnComesBack() throws Exception {
         assertThat(names()).contains("trading", "world-economy");
-        assertThat(ConfigResolution.current().templates()).containsKey("trade-endur");
+        assertThat(resolution().templates()).containsKey("trade-endur");
         assertThat(rulesOf("source-endur")).isTrue();
 
         access.setEnabled("economy", false, "test");
-        // the packs unload from the new resolution, which is published as current a moment apart: wait for both
+        // the packs unload from the server's new resolution, which is held a moment apart: wait for both
         until("world-economy to unload", () -> !names().contains("world-economy")
-                && ConfigResolution.current().packs().off().containsKey("world-economy"));
+                && resolution().packs().off().containsKey("world-economy"));
         assertThat(names()).contains("trading");                                              // nothing else moves
 
         access.setEnabled("source-endur", false, "test");
-        until("source-endur's template and rules to leave", () -> !ConfigResolution.current().templates().containsKey("trade-endur")
+        until("source-endur's template and rules to leave", () -> !resolution().templates().containsKey("trade-endur")
                 && !rulesOf("source-endur"));
-        assertThat(ConfigResolution.current().templates()).containsKey("trade-murex");          // the other systems stay
+        assertThat(resolution().templates()).containsKey("trade-murex");          // the other systems stay
 
         access.setEnabled("economy", true, "test");
         access.setEnabled("source-endur", true, "test");
         until("world-economy back", () -> names().contains("world-economy"));
-        until("source-endur back", () -> ConfigResolution.current().templates().containsKey("trade-endur") && rulesOf("source-endur"));
+        until("source-endur back", () -> resolution().templates().containsKey("trade-endur") && rulesOf("source-endur"));
         assertThat(follower.followed()).isPositive();
     }
 }
