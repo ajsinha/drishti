@@ -53,13 +53,6 @@ class BackendWatch:
         """Where the watch reaches a server of the catalogue now (with several servers in ``backend.urls``, the one the console uses)."""
         return self._url_of(server)
 
-    async def fetch(self, server, path: str) -> dict:
-        """One public answer of the server as the watch reaches it (``/public/modules/manifests``)."""
-        async with httpx.AsyncClient(timeout=max(self.timeout, 5.0)) as client:
-            r = await client.get(f"{self._url_of(server)}{path}")
-            r.raise_for_status()
-            return r.json()
-
     @property
     def enabled(self) -> bool:
         return self.seconds > 0

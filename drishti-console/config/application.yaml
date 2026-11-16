@@ -220,9 +220,8 @@ live:                        # live updates (docs/architecture/DATA_ARCHITECTURE
 under_construction:          # the under-construction registry (docs/admin/UNDER_CONSTRUCTION.md): menu items and help pages that depend on unbuilt work
   file: ${DRISHTI_UNDER_CONSTRUCTION_FILE:../config/under-construction.yaml}   # the same file the server reads; absent: nothing registered
 lens:                        # the lenses (LENSES.md): workspaces a person opens ("Open Drishti Risk"); each arranges, none hides anything
-  dir: ${DRISHTI_LENS_DIR:../config/lenses}   # the lens files: config/lenses/<module>/<lens>.yaml (only the console reads them)
   roles: {}                  # hook for role-based access later ({role: {link: true, start: risk}}): read, not wired
-features:                    # the console's own switches; a distribution presets them (config/distributions/kernel.yaml features:)
+features:                    # the console's own switches; a distribution presets them (the server sends the presets in its installation answer)
   build: true                # Build: new screens, new packs, designs, reviews and changes (/build, /review)
   forms: true                # query by form (FORM, /forms)
   datamap: true              # the data map (DATAMAP, /datamap)
@@ -282,8 +281,6 @@ help:
 # Blank: the server's (learned from its about answer), else Drishti All, exactly as before distributions. bin/start-console.sh
 # --distribution <name> sets it; a stack file's consoles: list gives each console its own (Risk on 17480, Finance on 17481).
 distribution: ${DRISHTI_DISTRIBUTION:}
-distributions_dir: ${DRISHTI_DISTRIBUTIONS_DIR:../config/distributions}   # the distribution files, drishti.<name>.yaml, and kernel.yaml
-module_manifests_dir: ${DRISHTI_MODULE_MANIFESTS_DIR:../modules}   # the modules' own manifests (modules/<id>/module.yaml): what a distribution's modules hold, and the console parts of the modules the product ships (hosted while the server lists them loaded)
 modules:
   parts_refresh_seconds: 5     # how often the console asks the server which modules are deployed (their console parts hosted under /m/<id>/, KERNEL_AND_MODULES.md 4.7); an applied change in this console is seen at once
 packs:

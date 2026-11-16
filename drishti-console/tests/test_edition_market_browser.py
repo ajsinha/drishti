@@ -16,6 +16,7 @@
 with known stale, gap, forward and surface problems (market_fake.py; port 17976). Each landing fills its panels from those answers, fits a
 phone without sideways scrolling, passes the page-width audit, and draws in every theme with its violet accent; the Quality landing lists
 each known problem by severity and opens its command; skipped when Playwright or its Chromium is missing."""
+import server_answers
 import threading
 import time
 
@@ -47,7 +48,7 @@ def market_console():
     app.state.backend = MarketBackend()
     # a lens is a workspace the person works in (docs/admin/LENSES.md), never the server's edition: the server offers it,
     # and the person's settings name it
-    app.state.editions.learn({"product": "Drishti Market", "edition": None, "lenses": ["market"]})
+    server_answers.follow(app, {"product": "Drishti Market", "edition": None, "lenses": ["market"]})
     async def _in_market(ident=None):
         return {"lens": "market"}
     app.state.backend.settings = _in_market

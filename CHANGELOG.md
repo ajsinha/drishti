@@ -18,6 +18,17 @@
 
 ## Unreleased
 
+- **The thin console, step S2: distributions, lenses and modules come from the server.** The server compiles the running distribution
+  and sends it in the installation's answer (`GET /api/v1/console/bootstrap`: the filter, the brand, the settings layers it presets, the
+  feature keys, each offered lens's arrangement, and every module with its title and its menus in the sitemap's form); the console draws
+  it and reads no distribution, `kernel.yaml`, lens or module manifest file (`drishti-console/core/distribution.py` is deleted). A
+  console that names its own distribution (`--distribution`) asks the server to compile it (`?distribution=finance`; `409` for a name
+  the server does not have). Admin -> White label reads the new `GET /api/v1/admin/distributions`. The modules the product ships as
+  folders with a console part (trading, genomics) are listed by `GET /public/modules/console` while loaded and handed over like a
+  deployed module's part, so the console reads no modules folder. Removed console settings: `distributions_dir`
+  (`DRISHTI_DISTRIBUTIONS_DIR` on the console), `module_manifests_dir` (`DRISHTI_MODULE_MANIFESTS_DIR` on the console) and `lens.dir`
+  (`DRISHTI_LENS_DIR`); the server reads the lens files from `drishti.lenses-dir` (default `<config>/lenses`). The console's unit tests
+  read recorded answers (`drishti-console/tests/answers/`) that the server's own code writes (`ConsoleAnswersRecordTest`).
 - **The thin console, steps S0 and S1: the server decides, the console draws** ([THIN_CONSOLE_DESIGN.md](docs/architecture/THIN_CONSOLE_DESIGN.md)).
   `/public/about` carries `stamps` (`installation`, `resolution`, `modules`, `engines`, `packs`); the console asks the new
   `GET /api/v1/console/bootstrap` (its service identity only; distribution, modules, engines and every command word with whether a pack

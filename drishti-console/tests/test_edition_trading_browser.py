@@ -16,6 +16,7 @@
 (port 17980), the person mapped to A. Shah's books. Each landing fills its panels from those answers, fits a phone without sideways
 scrolling, passes the page-width audit, asks no host but the console (every library is vendored), and draws in every theme with its green
 accent; the new-trade check answers end to end; skipped when Playwright or its Chromium is missing."""
+import server_answers
 import threading
 import time
 
@@ -48,7 +49,7 @@ def trading_console():
     trading_landing.forget()
     app = create_app(load_settings(CONSOLE / "config"))
     app.state.backend = TradingBackend()
-    app.state.editions.learn({"product": "Drishti", "edition": None, "lenses": ["risk", "world", "market", "trading"]})   # trading is a lens of the full product
+    server_answers.follow(app, {"product": "Drishti", "edition": None, "lenses": ["risk", "world", "market", "trading"]})   # trading is a lens of the full product
     user = app.state.auth.default.user
     store = {user: {"lens": "trading"}}                      # the person's settings: they work in the trading lens
 

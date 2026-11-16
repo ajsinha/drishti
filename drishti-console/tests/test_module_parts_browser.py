@@ -21,6 +21,7 @@ stand-in of the server's module registry (tests/module_parts_fake.py: the SDK ar
 - the economy module's World page (the World lens's Home) is drawn from the module's own folder, its lists on the Elements grid.
 
 Skipped when Playwright or its Chromium is missing."""
+import server_answers
 import socket
 import threading
 import time
@@ -48,7 +49,7 @@ def console(tmp_path_factory):
     reg = Registry()
     reg.install(app.state.backend, None)
     old = app.state.module_parts
-    app.state.module_parts = app.state.editions.modules.parts = ModuleParts(tmp_path_factory.mktemp("parts"), old.web, old.shipped, 0.0)
+    app.state.module_parts = app.state.editions.modules.parts = ModuleParts(tmp_path_factory.mktemp("parts"), old.web, 0.0)
     with socket.socket() as s:
         s.bind(("127.0.0.1", 0))
         port = s.getsockname()[1]
@@ -122,7 +123,7 @@ def test_install_remove_and_reinstall_in_the_browser(browser, console):
 def test_the_world_page_comes_from_the_economy_module(browser, console):
     url, _, app = console
     from test_edition import FULL_ABOUT
-    app.state.editions.learn(FULL_ABOUT)                                                    # the World lens of the full product: its Home is the module's page
+    server_answers.follow(app, FULL_ABOUT)                                                    # the World lens of the full product: its Home is the module's page
     store = {app.state.auth.default.user: {"lens": "world"}}                                 # the person works in the World lens
 
     async def settings(ident=None):

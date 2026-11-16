@@ -802,7 +802,6 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 | `DRISHTI_PACKS_DIR` | `packs.dir` | `../config/packs` | The packs directory (a relative path resolves from `drishti-console/`). |
 | `DRISHTI_PACKS_EXTRA_DIRS` | `packs.extra_dirs` | empty | Further pack folders, comma-separated, as on the server (relative paths resolve from `drishti-console/`, so `../examples/packs`). |
 | `DRISHTI_PACKS_INSTALLED` | `packs.installed_dir` | empty | The server's installed packs (registry and Deploy archive); empty: `<data dir>/packs/installed`. Read only for the distribution's command words; a pack's guides, examples and workspaces come from the server's answers. |
-| `DRISHTI_LENS_DIR` | `lens.dir` | `../config/lenses` | The folder of the lens files, `config/lenses/<module>/<lens>.yaml` (relative to `drishti-console/`; only the console reads them). |
 | `DRISHTI_LAKE_ROOTS` | `lakes.roots` | empty | Admin → Data loads → Lakes ([CLI_REFERENCE.md](../guides/CLI_REFERENCE.md#7-lake-a-large-json-export-into-a-delta-lake)): the lake roots this console may write, comma-separated (relative paths resolve from `drishti-console/`); empty: `<data dir>/delta`, the server's own root. The page offers no other folder. |
 | `DRISHTI_JAR` | `lakes.jar` | empty | The drishti-server exec jar whose Java writer the page's builds use (`lakes.engine: auto`); empty: the newest `kernel/drishti-server/target/drishti-server-*-exec.jar`, else the Python `deltalake` package. |
 | `DRISHTI_DATA_DIR` | `lakes.data_dir` | `../data` | Admin → Lakes → Maintain ([OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#16-lake-maintenance-and-scheduling)): the data folder whose `lakes/lake-maintenance.yaml` (the file `lake maintain` reads by default) and `lakes/maintenance-history.jsonl` the page uses (relative paths resolve from `drishti-console/`). |
@@ -1313,7 +1312,7 @@ menus' order and the placeholder and never hides anything.
 | `drishti.edition-spec.*` | the distribution's filter keys | The site's overrides of the distribution's filter, key by key: `drishti.edition-spec.commands.also-allow[0]=FRTB` adds a command, `drishti.edition-spec.packs.allow-only=false` lets other packs load, a list (`bi.datasets`) replaces the file's. |
 | `drishti.lenses` | `risk,world,market,trading` (`DRISHTI_LENSES`; empty turns lenses off) | The lenses a person may open ("Open Drishti Risk", "Open Drishti World", "Open Drishti Market", "Open Drishti Trading"), comma list; a person inside one switches to another. A distribution's `lenses.default` is everyone's starting workspace. |
 
-The console's side: `lens.dir` (`DRISHTI_LENS_DIR`, default `../config/lenses`), the lens files `config/lenses/<module>/<lens>.yaml` (a
+The lens files: the server's `drishti.lenses-dir` (default `<config>/lenses`), `config/lenses/<module>/<lens>.yaml`, sent to the console in its installation answer (a
 lens's Home landings are its `home.landings`, drawn by its `home.template` with its `home.titles`: Drishti Risk's `desk`, `command`, `map`,
 Drishti World's `desk`, `explorer`, `map`, Drishti Market's `desk`, `explorer`, `quality`, Drishti Trading's `trader`, `desk`, `explorer`;
 Drishti Market's `quality.stale-days`, default 2, is the Quality landing's stale threshold in business days); Drishti Trading's `trading:`

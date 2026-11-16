@@ -17,10 +17,10 @@ A module's console part is the ``console/`` folder of its ``.dmod`` (``plugin.ya
 menus, words, Home cards, AI tool descriptions), its ``docs/`` (Help) and its ``elements/<lib>/`` (a domain Elements library). The console
 reads them and runs nothing of them: no module Python is imported, no route is registered by a module. Two sources, one way:
 
-* the server's module registry (``GET /public/modules/console``): every module deployed on the cluster, active, off or removed; an active
-  version's part arrives as a zip (``/public/modules/console/<id>/<version>``) and is kept under ``<cache>/<id>/<version>/``;
-* the modules the product ships beside the console (``module_manifests_dir``, ``modules/<id>/``), each hosted while the server lists it
-  loaded and no deployed version replaces it.
+* the server's module registry (``GET /public/modules/console``): every module deployed on the cluster, active, off or removed, and the
+  modules the product ships as folders while the server has them loaded; an active version's part arrives as a zip
+  (``/public/modules/console/<id>/<version>``) and is kept under ``<cache>/<id>/<version>/``. The console reads no modules folder
+  (THIN_CONSOLE_DESIGN.md, step S2).
 
 What a snapshot holds is swapped whole (copy-on-write, no lock on the request path) and holds nothing of any person (session isolation):
 the parts that are active, the modules that are gone (off or removed, with the names they owned, so saved work says *needs module X*),
@@ -190,8 +190,8 @@ def _help(module: str, title: str, folder: Path, manifest: dict) -> dict:
 class ModuleParts:
     """The console's hosted module parts: refreshed from the server (at most every ``ttl`` seconds, or at once when asked), swapped whole."""
 
-    def __init__(self, cache: Path, web: Path, shipped: Path | None = None, ttl: float = 5.0):
-        self.cache, self.web, self.shipped, self.ttl = Path(cache), Path(web), shipped, float(ttl)
+    def __init__(self, cache: Path, web: Path, ttl: float = 5.0):
+        self.cache, self.web, self.ttl = Path(cache), Path(web), float(ttl)
         self.snapshot: Snapshot = EMPTY
         self._checked = 0.0
         self._lock = asyncio.Lock()
@@ -202,7 +202,7 @@ class ModuleParts:
     # ---- refresh -----------------------------------------------------------------------------------------------------------------
     async def refresh(self, backend, loaded=None, force: bool = False) -> bool:
         """Asks the server what is deployed and swaps the snapshot when anything changed; True when it did. ``loaded``: the modules the
-        server's about lists (its registry's), for the parts the product ships. A server that cannot say keeps the snapshot."""
+        server's about lists (kept in the fingerprint: a module loaded or unloaded asks again). A server that cannot say keeps the snapshot."""
         if not force and time.monotonic() - self._checked < self.ttl:
             return False
         async with self._lock:
@@ -236,28 +236,10 @@ class ModuleParts:
                         LOG.warning("module parts: %s %s not fetched (%s)", mid, ver, e)
                         continue
                 self._read(mid, folder, "server", parts, refused)
-            shipped = self._shipped()                   # the product's own modules, while the server has them loaded and nothing replaced them
-            content = {m for m, f in shipped.items() if f.name != "dmod"}   # a module project (src/dmod: genomics) only when the server says it is loaded
-            for mid in sorted(content if loaded is None else set(loaded) & set(shipped)):
-                if mid not in parts and mid not in gone:
-                    self._read(mid, shipped[mid], "shipped", parts, refused)
             self.snapshot = Snapshot(parts, gone, refused, key)
             self._envs = {k: v for k, v in self._envs.items() if k[0] in parts and parts[k[0]].version == k[1]}
             LOG.warning("module parts: hosted %s; gone %s; refused %s", sorted(parts), sorted(gone), sorted(refused))
             return True
-
-    def _shipped(self) -> dict[str, Path]:
-        """The product's own modules with a console part (``modules/<folder>/module.yaml``), by id, as the one resolver finds them: a
-        content module's folder or a module project's src/dmod (the SDK's layout); a module with code's ``dmod/`` comes from the server."""
-        from core import resolution
-        out = {}
-        found = resolution.module_list(self.shipped).values() if self.shipped and self.shipped.is_dir() else []
-        for m in found:
-            if m.home.name == "dmod" and m.home.parent.name != "src":
-                continue
-            if (m.home / "console" / "plugin.yaml").is_file():
-                out[m.id] = m.home
-        return out
 
     async def _fetch(self, backend, mid: str, ver: str, folder: Path) -> None:
         data = await backend.public(f"/public/modules/console/{quote(mid, safe='')}/{quote(ver, safe='')}", raw=True, timeout=60.0)

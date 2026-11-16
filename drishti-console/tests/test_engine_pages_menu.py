@@ -20,6 +20,7 @@ every running engine's pages to anyone who can open Help and leaves out an engin
 The browser side: test_engine_pages_browser.py."""
 from __future__ import annotations
 
+import server_answers
 import re
 
 
@@ -187,7 +188,7 @@ def test_an_engine_running_nowhere_leaves_the_menus_and_an_administrator_sees_it
 def test_the_risk_edition_draws_one_risk_menu_in_place_of_engines(backend, monkeypatch):
     engines.reset()
     app = _app(backend, monkeypatch)
-    app.state.editions.learn(RISK_ABOUT)
+    server_answers.follow(app, RISK_ABOUT)
     page = _client(app).get("/t").text
     assert _top(page) == ["Views", "Risk", "Create", "Admin", "Help"]               # one domain: Domains is named Risk
     assert {"var", "exposure"} <= _linked(page)

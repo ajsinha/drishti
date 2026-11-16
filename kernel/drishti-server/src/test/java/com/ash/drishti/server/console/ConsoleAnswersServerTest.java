@@ -41,7 +41,8 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 @SpringBootTest(properties = {"drishti.packs.enabled=core,gleif", "drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.enabled=false",
         "drishti.var.official.enabled=false", "drishti.var.official.on-start=false", "drishti.ccr.exposure.official.enabled=false",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
-        "drishti.bi.dir=../../config/bi", "drishti.tables.root=../../config/tables",
+        "drishti.bi.dir=../../config/bi", "drishti.tables.root=../../config/tables", "drishti.distributions-dir=../../config/distributions",
+        "drishti.lenses-dir=../../config/lenses", "drishti.modules.home=../../modules",
         "drishti.bi.query.store-dir=${drishti.test.dir}/console-answers-bi-store/${random.uuid}",
         "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/console-answers-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
@@ -166,6 +167,44 @@ class ConsoleAnswersServerTest {
         String digest = a.path("digest").asText();
         assertThat(call(get("/api/v1/packs/gleif/console").header("Authorization", who).header("If-None-Match", "\"" + digest + "\""))
                 .getResponse().getStatus()).isEqualTo(304);
+    }
+
+    @Test
+    void theBootstrapCarriesTheCompiledDistributionTheLensesAndTheModulesMenus() throws Exception {
+        JsonNode doc = ok(get("/api/v1/console/bootstrap").header("Authorization", service()));
+        JsonNode d = doc.path("distribution");
+        assertThat(d.path("settings").path("layer").isObject()).isTrue();
+        assertThat(d.path("lenses").path("offered").isArray()).isTrue();
+        assertThat(d.has("file")).as("no file path").isFalse();
+        boolean menus = false;
+        for (JsonNode m : doc.path("modules")) {
+            menus |= m.path("console-menus").size() > 0;
+        }
+        assertThat(menus).as("a module's menus in the sitemap's form").isTrue();
+    }
+
+    @Test
+    void aConsoleNamesItsOwnDistributionAndTheServerCompilesIt() throws Exception {
+        String installation = ok(get("/public/about")).path("stamps").path("installation").asText();
+        JsonNode finance = ok(get("/api/v1/console/bootstrap?distribution=finance").header("Authorization", service()));
+        assertThat(finance.path("distribution").path("id").asText()).isEqualTo("drishti.finance");
+        assertThat(finance.path("distribution").path("own").asBoolean()).isTrue();
+        assertThat(finance.path("distribution").path("filter").path("commands").path("allow").size()).isGreaterThan(0);
+        assertThat(finance.path("installation").asText()).as("it follows the server's stamp").isEqualTo(installation);
+        assertThat(call(get("/api/v1/console/bootstrap?distribution=../secret").header("Authorization", service())).getResponse().getStatus())
+                .isEqualTo(409);
+        assertThat(call(get("/api/v1/console/bootstrap?distribution=nosuch").header("Authorization", service())).getResponse().getStatus())
+                .isEqualTo(409);
+    }
+
+    @Test
+    void administratorsSeeEveryDistributionCompiled() throws Exception {
+        assertThat(call(get("/api/v1/admin/distributions").header("Authorization", person("dee"))).getResponse().getStatus()).isEqualTo(403);
+        String admin = "Bearer " + tokens.mint("root", List.of("admin"), 60);
+        JsonNode all = ok(get("/api/v1/admin/distributions").header("Authorization", admin));
+        List<String> ids = new ArrayList<>();
+        all.path("distributions").forEach(r -> ids.add(r.path("id").asText()));
+        assertThat(ids).contains("drishti.all", "drishti.finance", "drishti.risk", "drishti.genomics");
     }
 
     @Test

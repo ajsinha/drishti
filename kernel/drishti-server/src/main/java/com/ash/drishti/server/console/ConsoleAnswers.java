@@ -91,6 +91,7 @@ public class ConsoleAnswers {
     private final Environment env;
     private final ObjectMapper json = new ObjectMapper();
     private volatile Built bootstrap;
+    private final Map<String, Built> namedAnswers = new ConcurrentHashMap<>();
     private final Map<String, BuiltPack> packAnswers = new ConcurrentHashMap<>();
 
     public ConsoleAnswers(PackRegistry packs, EditionContext edition, ObjectProvider<EngineCluster> engines,
@@ -155,29 +156,131 @@ public class ConsoleAnswers {
     }
 
     private Map<String, Object> buildBootstrap() {
+        return buildBootstrap(null);
+    }
+
+    /** The installation's answer, its distribution the server's own ({@code named} null) or the one a console names (Q3). */
+    private Map<String, Object> buildBootstrap(String named) {
         Map<String, Object> doc = new LinkedHashMap<>();
         doc.put("schema", SCHEMA);
         Map<String, Object> dist = new LinkedHashMap<>();
         Map<String, Object> about = edition.instance().about();       // null: Drishti All
-        dist.put("id", about == null ? "all" : String.valueOf(about.get("name")));
-        dist.put("about", about);
-        dist.put("lenses", edition.lensNames());
+        Map<String, com.ash.drishti.packs.distribution.ModuleManifests.Entry> known = known();
+        com.ash.drishti.packs.distribution.Distribution d = distribution(named, known);
+        dist.putAll(ConsoleDistribution.of(d, lensesDir(), edition.lensNames(),
+                com.ash.drishti.packs.edition.EditionEnvironmentPostProcessor.featureMapping(
+                        com.ash.drishti.packs.distribution.Distributions.dir(env), "console")));
+        dist.put("about", named == null ? about : null);
+        dist.put("own", named != null);
         doc.put("distribution", dist);
-        doc.put("modules", modules());
+        doc.put("modules", modules(known));
         EngineCluster c = engines.getIfAvailable();
         doc.put("engines", c == null ? List.of() : c.about());
         doc.put("commands", commands());
         return doc;
     }
 
-    /** Every module the registry knows with what a distribution takes from it, in id order: its state here and its words, packs and menus. */
-    private List<Map<String, Object>> modules() {
-        Map<String, com.ash.drishti.packs.distribution.ModuleManifests.Entry> known;
-        try {
-            known = com.ash.drishti.packs.distribution.Distributions.known(env);
-        } catch (RuntimeException e) {                              // a manifest that does not read: the registry's half still answers
-            known = Map.of();
+    /**
+     * The installation's answer for a distribution a console names itself (THIN_CONSOLE_DESIGN.md Q3: a Finance console over a Drishti All
+     * server): compiled here from the server's files, with {@code installation} the server's own digest (the console follows that stamp).
+     * Refused ({@link IllegalArgumentException}) for a name that is not a distribution of this installation or lists a module it does not hold.
+     */
+    public Answer bootstrap(String named) {
+        if (named == null || named.isBlank()) {
+            return bootstrap();
         }
+        String n = named.strip();
+        if (n.contains("/") || n.contains("\\") || n.endsWith(".yaml")) {
+            throw new IllegalArgumentException("a console names a distribution by name (risk, finance, genomics, all), never by a path");
+        }
+        String key = inputs() + "|" + n;
+        Built b = namedAnswers.get(n);
+        if (b != null && b.key().equals(key)) {
+            return b.answer();
+        }
+        Map<String, Object> doc = buildBootstrap(n);
+        doc.put("installation", bootstrap().digest());
+        Built made = new Built(key, seal(doc));
+        namedAnswers.put(n, made);
+        return made.answer();
+    }
+
+    private com.ash.drishti.packs.distribution.Distribution distribution(String named,
+            Map<String, com.ash.drishti.packs.distribution.ModuleManifests.Entry> known) {
+        java.nio.file.Path dir = com.ash.drishti.packs.distribution.Distributions.dir(env);
+        if (named == null) {
+            try {
+                return com.ash.drishti.packs.distribution.Distributions.of(env);
+            } catch (RuntimeException e) {                          // the server started with it: a file changed since says so on Health
+                return com.ash.drishti.packs.distribution.Distributions.builtInAll();
+            }
+        }
+        java.nio.file.Path f;
+        try {
+            f = com.ash.drishti.packs.distribution.Distributions.file(dir, named);
+        } catch (IllegalStateException e) {
+            throw new IllegalArgumentException(e.getMessage());
+        }
+        if (!Files.isRegularFile(f)) {
+            throw new IllegalArgumentException("this installation has no distribution '" + named + "'");
+        }
+        try {
+            return com.ash.drishti.packs.distribution.Distributions.read(f, dir.resolve(com.ash.drishti.packs.distribution.Distributions.KERNEL),
+                    com.ash.drishti.packs.distribution.Distributions.modulesHome(env),
+                    Path.of(env.getProperty("drishti.packs.dir", com.ash.drishti.api.Roots.config("packs"))),
+                    com.ash.drishti.packs.distribution.Distributions.packages(env));
+        } catch (IllegalStateException e) {
+            throw new IllegalArgumentException(e.getMessage());
+        }
+    }
+
+    /**
+     * Every distribution file of this installation compiled as the console draws it, with the files that do not compile (Admin -> White
+     * label: the distributions side by side). For administrators: a problem names the file, never its folder.
+     */
+    public Map<String, Object> distributions() {
+        java.nio.file.Path dir = com.ash.drishti.packs.distribution.Distributions.dir(env);
+        List<Map<String, Object>> rows = new ArrayList<>();
+        List<String> problems = new ArrayList<>();
+        List<java.nio.file.Path> files = new ArrayList<>();
+        if (Files.isDirectory(dir)) {
+            try (java.util.stream.Stream<java.nio.file.Path> s = Files.list(dir)) {
+                s.filter(f -> f.getFileName().toString().matches("drishti\\.[a-z0-9-]+\\.yaml")).sorted().forEach(files::add);
+            } catch (IOException e) {
+                problems.add("the distribution files cannot be listed: " + e.getMessage());
+            }
+        }
+        String running = edition.instance().active() ? edition.instance().name() : "drishti.all";
+        for (java.nio.file.Path f : files) {
+            String name = f.getFileName().toString().replaceAll("^drishti\\.|\\.yaml$", "");
+            try {
+                com.ash.drishti.packs.distribution.Distribution dist = distribution(name, known());
+                Map<String, Object> d = new LinkedHashMap<>(ConsoleDistribution.of(dist, lensesDir(), dist.lenses(), Map.of()));
+                d.put("running", running.equals(d.get("id")));
+                d.put("start", name);
+                rows.add(d);
+            } catch (IllegalArgumentException e) {
+                problems.add(f.getFileName() + ": " + e.getMessage());
+            }
+        }
+        return Map.of("distributions", rows, "problems", problems);
+    }
+
+    /** The folder of the lens files ({@code drishti.lenses-dir}, else {@code config/lenses}). */
+    private java.nio.file.Path lensesDir() {
+        return com.ash.drishti.api.Roots.anchored(env.getProperty("drishti.lenses-dir", com.ash.drishti.api.Roots.config("lenses")));
+    }
+
+    private Map<String, com.ash.drishti.packs.distribution.ModuleManifests.Entry> known() {
+        try {
+            return com.ash.drishti.packs.distribution.Distributions.known(env);
+        } catch (RuntimeException e) {                              // a manifest that does not read: the registry's half still answers
+            return Map.of();
+        }
+    }
+
+    /** Every module the registry knows with what a distribution takes from it, in requirement order: its state here and its words, packs and menus. */
+    private List<Map<String, Object>> modules(Map<String, com.ash.drishti.packs.distribution.ModuleManifests.Entry> known) {
         ModuleConfiguration.Started s = started.getIfAvailable();
         Map<String, Boolean> loaded = s == null ? Map.of() : s.loaded();
         Map<String, ModuleNode.Entry> registry = new TreeMap<>();
@@ -185,29 +288,41 @@ public class ConsoleAnswers {
         if (n != null) {
             n.entries().forEach(e -> registry.put(e.id(), e));
         }
-        Set<String> ids = new java.util.TreeSet<>();
-        ids.addAll(known.keySet());
-        ids.addAll(registry.keySet());
-        ids.addAll(loaded.keySet());
+        Set<String> ids = new LinkedHashSet<>(known.keySet());       // requirement order: a required module before those that need it
+        new java.util.TreeSet<>(registry.keySet()).forEach(ids::add);
+        new java.util.TreeSet<>(loaded.keySet()).forEach(ids::add);
         List<Map<String, Object>> out = new ArrayList<>();
         for (String id : ids) {
-            Map<String, Object> m = new LinkedHashMap<>();
             ModuleNode.Entry e = registry.get(id);
-            com.ash.drishti.packs.distribution.ModuleManifests.Entry k = known.get(id);
-            m.put("id", id);
-            m.put("title", e == null ? id : e.title());
-            m.put("version", e == null ? null : e.version());
-            m.put("state", e == null ? null : e.state().name().toLowerCase(Locale.ROOT));
-            m.put("loaded", Boolean.TRUE.equals(loaded.get(id)));
-            m.put("domain", k == null ? null : k.domain());
-            m.put("packs", k == null ? List.of() : k.packs());
-            m.put("words", k == null ? List.of() : k.words());
-            m.put("features", k == null ? List.of() : k.features());
-            m.put("menus", k == null ? List.of() : k.menus());
-            m.put("requires", k == null ? List.of() : k.requires());
-            out.add(m);
+            out.add(moduleRow(id, known.get(id), e == null ? null : e.title(), e == null ? null : e.version(),
+                    e == null ? null : e.state().name().toLowerCase(Locale.ROOT), Boolean.TRUE.equals(loaded.get(id))));
         }
         return out;
+    }
+
+    /**
+     * One module of the installation's answer: the registry's title, version and state (null when the registry does not hold it), whether it
+     * is loaded here, and what its manifest gives the console (its domain, packs, words, engines, menu ids and menus in the sitemap's form,
+     * the Domains label, the modules it requires).
+     */
+    static Map<String, Object> moduleRow(String id, com.ash.drishti.packs.distribution.ModuleManifests.Entry k, String title, String version,
+            String state, boolean loaded) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("id", id);
+        m.put("title", title != null ? title : k != null && !k.title().isBlank() ? k.title() : id);
+        m.put("version", version);
+        m.put("state", state);
+        m.put("loaded", loaded);
+        m.put("domain", k == null ? null : k.domain());
+        m.put("packs", k == null ? List.of() : k.packs());
+        m.put("words", k == null ? List.of() : k.words());
+        m.put("features", k == null ? List.of() : k.features());
+        m.put("menus", k == null ? List.of() : k.menus());
+        m.put("docs", k == null ? List.of() : k.docs());
+        m.put("requires", k == null ? List.of() : k.requires());
+        m.put("console-menus", k == null ? List.of() : k.consoleMenus());   // its top menus in the sitemap's form
+        m.put("domain-label", k == null ? "" : k.domainLabel());
+        return m;
     }
 
     /**

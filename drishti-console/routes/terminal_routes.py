@@ -29,7 +29,6 @@ from core.csrf import BodyError, json_body
 from routes import api_routes, designer_routes, history_routes, phone_routes
 from core.edition import ADMIN_PAGES, mnemonics, words as reserved_words
 from routes.common import ident, packs, render
-from core import distribution as _dist
 from core import modules as _modules
 from core import plugins as _plugins
 from routes.pivot_routes import redirect_for as pivot_redirect
@@ -124,7 +123,7 @@ async def go(request: Request, q: str = ""):
         return RedirectResponse(f"/t?error={quote(_menus.refusal_for_role(closed))}", status_code=303)
     eds = request.app.state.editions
     if getattr(ed, "distribution", False) and head and not ed.typed_shown(typed) and (
-            head in reserved_words() or head in _dist.known_commands(eds.packs_dir, eds.modules_dir, eds.server_modules)):
+            head in reserved_words() or head in eds.known_commands()):
         title = ed.outer.title if getattr(ed, "outer", None) is not None and not ed.outer.typed_shown(typed) else ed.title
         return RedirectResponse(f"/t?error={quote(f'DRS-4023 {head} is not in {title}: FUNC lists what you can use')}", status_code=303)
     if head in reserved_words() and head not in mnemonics() and not ed.word_on(head):    # a word the edition (or lens) switches off: said, not run (EXP is also a mnemonic)

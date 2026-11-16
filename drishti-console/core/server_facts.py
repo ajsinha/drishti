@@ -29,6 +29,7 @@ from __future__ import annotations
 import logging
 import time
 from dataclasses import dataclass, field
+from urllib.parse import quote
 
 import httpx
 
@@ -45,6 +46,12 @@ class Answer:
     digest: str
     doc: dict
     at: float                                  # wall time it was read
+
+    @property
+    def follows(self) -> str:
+        """The server stamp this answer follows: its own digest, or for a distribution the console names itself, the server's
+        installation digest it was made under (``installation``)."""
+        return str(self.doc.get("installation") or self.digest)
 
     def command(self, word: str) -> dict | None:
         """What a command word needs (``{pack, module, loaded}``), or None when no pack names it."""
@@ -70,8 +77,12 @@ class ServerFacts:
     #: what of /public/about the pages may show (the server's words about itself)
     ABOUT_KEYS = ("product", "version", "tagline", "notice", "edition")
 
-    def __init__(self, timeout: float = 10.0, console_build: str = ""):
+    def __init__(self, timeout: float = 10.0, console_build: str = "", distribution: str = "", on_answer=None):
+        """``distribution``: the one this console names itself (``--distribution``; the server compiles it, Q3), blank for the server's
+        own. ``on_answer(sid, doc)``: called when a new answer is taken (the editions follow it)."""
         self.timeout = float(timeout)
+        self.distribution = str(distribution or "")
+        self.on_answer = on_answer
         self.console_build = str(console_build or "")   # diagnostic only (Admin -> Health), never shown as the product's version
         self._held: dict[str, _Held] = {}
 
@@ -90,10 +101,13 @@ class ServerFacts:
         held.older = False
         held.stamps = dict(stamps)
         held.stamp = str(stamps["installation"])
-        if held.answer is not None and held.answer.digest == held.stamp:
+        if held.answer is not None and held.answer.follows == held.stamp:
             held.problem = ""
             return False
-        return await self._fetch(held, base_url, headers)
+        took = await self._fetch(held, base_url, headers)
+        if took and self.on_answer is not None:
+            self.on_answer(sid, held.answer.doc)
+        return took
 
     async def _fetch(self, held: _Held, base_url: str, headers: dict) -> bool:
         ask = dict(headers or {})
@@ -101,7 +115,8 @@ class ServerFacts:
             ask["If-None-Match"] = f'"{held.answer.digest}"'
         held.asked = time.time()
         try:
-            status, body = await self.get(base_url.rstrip("/") + self.PATH, ask)
+            query = f"?distribution={quote(self.distribution, safe='')}" if self.distribution else ""
+            status, body = await self.get(base_url.rstrip("/") + self.PATH + query, ask)
         except Exception as e:  # noqa: BLE001 - the server away for a moment: the last answer stays, with the notice
             held.problem = f"the installation's answer could not be read: {type(e).__name__}"
             return False
@@ -113,11 +128,16 @@ class ServerFacts:
                             "(auth.token_secret must be the server's drishti.security.secret)")
             LOG.warning(held.problem)
             return False
+        if status == 409:
+            held.problem = (f"the server does not compile this console's distribution '{self.distribution}' (--distribution): "
+                            "name one of its distributions, or none to follow the server's")
+            LOG.warning(held.problem)
+            return False
         if status != 200 or not isinstance(body, dict) or not body.get("digest"):
             held.problem = f"the installation's answer did not read (HTTP {status})"
             return False
         held.answer = Answer(str(body["digest"]), body, time.time())
-        held.problem = "" if held.answer.digest == held.stamp else "the answer is older than the server's stamp; asked again at the next check"
+        held.problem = "" if held.answer.follows == held.stamp else "the answer is older than the server's stamp; asked again at the next check"
         return True
 
     async def get(self, url: str, headers: dict) -> tuple[int, dict | None]:
@@ -158,7 +178,7 @@ class ServerFacts:
         held = self._held.get(sid or _current())
         if held is None or held.answer is None:
             return held.problem if held is not None else ""
-        if held.answer.digest != held.stamp:
+        if held.answer.follows != held.stamp:
             return held.problem or "the installation's answer is older than the server's stamp"
         return held.problem
 

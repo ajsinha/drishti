@@ -1,0 +1,1124 @@
+{
+  "schema" : 1,
+  "distribution" : {
+    "id" : "drishti.risk",
+    "name" : "risk",
+    "title" : "Drishti Risk",
+    "all" : false,
+    "modules" : [ "banking", "market-data", "trading", "source-endur", "source-calypso", "source-murex", "source-wss", "source-swapone", "source-ici" ],
+    "domains" : {
+      "source-endur" : "trading",
+      "trading" : "trading",
+      "banking" : "banking",
+      "market-data" : "market-data",
+      "source-calypso" : "trading",
+      "source-murex" : "trading",
+      "source-wss" : "trading",
+      "source-ici" : "trading",
+      "source-swapone" : "trading"
+    },
+    "packs" : [ "core", "market-data", "trading", "market-risk", "counterparty-risk" ],
+    "brand" : {
+      "product" : "Drishti Risk",
+      "product_native" : "दृष्टि",
+      "tagline" : "VaR, exposure and limits from your own pricing data",
+      "owner" : "Ashutosh Sinha",
+      "copyright" : "Copyright © 2026 Ashutosh Sinha. All rights reserved. Proprietary and confidential.",
+      "notice" : "Unauthorised copying, use or distribution is prohibited."
+    },
+    "theme" : {
+      "tokens" : "terminal-blue",
+      "density" : "compact",
+      "mode" : "dark"
+    },
+    "help-title" : "Drishti Risk Help",
+    "filter" : {
+      "edition" : "drishti.risk",
+      "title" : "Drishti Risk",
+      "distribution" : true,
+      "packs" : {
+        "enabled" : [ "core", "market-data", "trading", "market-risk", "counterparty-risk" ]
+      },
+      "commands" : {
+        "allow" : [ "CORE", "CPTY", "GRP", "ISS", "CCP", "LE", "BOOK", "DESK", "TRDR", "CAL", "CLR", "VAR", "PVAR", "SMAT", "SWIN", "PREDEAL", "EXP", "FRSA", "SIMM", "MCUBE", "SENS", "RFAC", "PLAY", "CCUBE", "TRD", "CTRD", "PTRD", "LTRD", "ITRD", "SCN", "STR", "FRTB", "PNL", "TVAL", "POS", "PORT", "PNLV", "SPV", "FXS", "SSET", "VLIM", "DPNL", "PNLH", "VRES", "VOFF", "SSPNL", "AGR", "CSA", "NSET", "LIM", "CVA", "SACCR", "COLL", "MC", "XRUN", "XPATH", "XOFC", "NSMTM", "CPMTM", "MKT", "CRV", "REPO", "FX", "FXF", "FXV", "IRV", "CPV", "EQ", "EQX", "DIV", "EQV", "CDS", "INF", "INFC", "CMD", "CMDC", "CMDV", "FIX", "BND", "CORR", "CORRC", "EQB" ],
+        "words" : {
+          "USEQS" : "off",
+          "USEQ" : "off",
+          "IDX" : "off",
+          "SIC" : "off",
+          "EDGAR" : "off",
+          "FILING" : "off",
+          "FACT" : "off",
+          "PXH" : "off",
+          "FUNDS" : "off",
+          "FUND" : "off",
+          "HELD" : "off",
+          "TRACK" : "off",
+          "WRLD" : "off",
+          "ECON" : "off",
+          "MACRO" : "off",
+          "FCST" : "off",
+          "LABR" : "off",
+          "FISC" : "off",
+          "ECG" : "off",
+          "REGE" : "off",
+          "JUR" : "off",
+          "PARTY" : "off",
+          "OFFC" : "off",
+          "ELEC" : "off",
+          "REGN" : "off",
+          "SOCI" : "off",
+          "NWMK" : "off",
+          "TOPIC" : "off",
+          "NEWS" : "off",
+          "CO" : "off",
+          "QUOTE" : "off",
+          "WDEV" : "off",
+          "WDI" : "off",
+          "WDIS" : "off",
+          "CBNK" : "off",
+          "CBANK" : "off",
+          "CBSER" : "off",
+          "STCAN" : "off",
+          "NSTAT" : "off",
+          "OECDP" : "off",
+          "OECD" : "off",
+          "OECDS" : "off",
+          "ONEWS" : "off",
+          "PRESS" : "off",
+          "PREL" : "off",
+          "GDLT" : "off",
+          "GDELT" : "off",
+          "VARIANT" : "off",
+          "GENE" : "off",
+          "COHORT" : "off"
+        }
+      },
+      "features" : { },
+      "menus" : {
+        "top" : [ "views", "domains", "create", "admin", "help" ],
+        "placeholder" : "VAR BANK, VRES DESK:RATES, EXP CPTY:CP-ALDERSHOT, CRV USD-SOFR …  then <GO>"
+      },
+      "home" : {
+        "cards" : [ "VAR BANK", "VAR DESK RATES", "VRES DESK:RATES", "EXP CPTY:CP-ALDERSHOT" ]
+      },
+      "help" : {
+        "knowledge" : [ "core", "market-data", "trading", "market-risk", "counterparty-risk" ],
+        "domains" : [ "banking" ],
+        "title" : "Drishti Risk Help"
+      },
+      "branding" : {
+        "product" : "Drishti Risk",
+        "tagline" : "VaR, exposure and limits from your own pricing data"
+      }
+    },
+    "lenses" : {
+      "default" : "risk",
+      "offered" : [ "market", "markets", "research", "risk", "trading", "world" ],
+      "specs" : {
+        "market" : {
+          "edition" : "market",
+          "title" : "Drishti Market",
+          "description" : "Curves, surfaces, fixings and prices, the market data that feeds risk and valuations, in one place",
+          "menus" : {
+            "top" : [ "views", "markets", "bi", "admin", "help" ],
+            "views" : [ "terminal", "search", "forms", "functions", "datamap", "data", "reports", "workspaces", "monitors", "alerts" ],
+            "help" : [ "help-centre", "knowledge", "install", "about" ],
+            "footer" : [ "help", "about", "release-notes" ],
+            "placeholder" : "CRV CRV-USD-OIS, FXV FXV-EURUSD, IRV IRV-USD, CDS where SPREAD_5Y > 100 …  then <GO>"
+          },
+          "home" : {
+            "landing" : "desk",
+            "landings" : [ "desk", "explorer", "quality" ],
+            "template" : "home/market_landing.html",
+            "titles" : {
+              "desk" : "Market desk",
+              "explorer" : "Explorer",
+              "quality" : "Quality"
+            },
+            "landing-by-role" : { },
+            "sections" : {
+              "stats" : false,
+              "grammar" : false,
+              "pipeline" : false,
+              "capabilities" : false,
+              "views" : false
+            }
+          },
+          "quality" : {
+            "stale-days" : 2
+          }
+        },
+        "markets" : {
+          "edition" : "markets",
+          "title" : "Drishti Markets",
+          "description" : "Companies, funds and ETFs, indices and the market data around them, in one place",
+          "menus" : {
+            "top" : [ "views", "markets", "companies", "bi", "admin", "help" ],
+            "views" : [ "terminal", "search", "forms", "functions", "datamap", "data", "reports", "workspaces", "monitors", "alerts" ],
+            "help" : [ "help-centre", "knowledge", "install", "about" ],
+            "footer" : [ "help", "about", "release-notes" ],
+            "placeholder" : "USEQ AAPL, FUND SPY, IDX SP500, CRV CRV-USD-OIS, FXV FXV-EURUSD …  then <GO>"
+          }
+        },
+        "research" : {
+          "edition" : "research",
+          "title" : "Research",
+          "description" : "Variants, genes, samples and cohorts from VCF files, with BI on top",
+          "menus" : {
+            "top" : [ "genomics", "views", "bi", "admin", "help" ],
+            "views" : [ "terminal", "search", "forms", "functions", "datamap", "data", "reports", "workspaces", "monitors", "alerts" ],
+            "help" : [ "help-centre", "install", "about" ],
+            "footer" : [ "help", "about", "release-notes" ],
+            "placeholder" : "GENE TP53, COHORT COH-A, VARIANT HX-A001 …  then <GO>"
+          }
+        },
+        "risk" : {
+          "edition" : "risk",
+          "title" : "Drishti Risk",
+          "description" : "VaR and counterparty exposure, from your own pricing data, in one place",
+          "phone" : {
+            "rules" : [ {
+              "title" : "*contribution*",
+              "tier" : "more"
+            } ],
+            "pages" : { }
+          },
+          "menus" : {
+            "top" : [ "views", "risk", "counterparties", "bi", "admin", "help" ],
+            "views" : [ "terminal", "search", "functions", "datamap", "data", "reports", "workspaces", "monitors", "alerts" ],
+            "risk" : [ "my-var", "vlim", "pnlv", "var-explorer", "var-explain", "play-var", "smat", "var-reports", "backtesting", "stress-window", "var-results", "var-official", "exp-explorer", "exp-cpty", "exp-nset" ],
+            "counterparties" : [ "cpty", "nset", "lim", "predeal", "exp" ],
+            "help" : [ "help-centre", "knowledge", "install", "about" ],
+            "footer" : [ "help", "about", "release-notes" ],
+            "placeholder" : "VAR BANK, VAR DESK RATES, EXP CPTY:CP-ALDERSHOT, VRES DESK:RATES …  then <GO>"
+          },
+          "home" : {
+            "landing" : "desk",
+            "landings" : [ "desk", "command", "map" ],
+            "template" : "home/risk_landing.html",
+            "titles" : {
+              "desk" : "Risk desk",
+              "command" : "Command first",
+              "map" : "Risk map"
+            },
+            "landing-by-role" : { },
+            "hierarchies" : [ "MGMT" ],
+            "sections" : {
+              "stats" : false,
+              "grammar" : false,
+              "pipeline" : false,
+              "capabilities" : false,
+              "views" : false
+            }
+          }
+        },
+        "trading" : {
+          "edition" : "trading",
+          "title" : "Drishti Trading",
+          "description" : "Your books, P&L, VaR and limits, today's trades and your counterparties, for traders and desk heads",
+          "menus" : {
+            "top" : [ "views", "markets", "blotter", "positions", "risk", "counterparties", "help" ],
+            "markets" : [ "crv", "repo", "fix", "irv", "cpv", "fxv", "fx-spot", "fxf", "cds", "bnd", "eq", "eqx", "cmd", "cmdc" ],
+            "views" : [ "terminal", "search", "functions", "data", "reports", "workspaces", "monitors", "alerts" ],
+            "risk" : [ "my-var", "vlim", "tval", "pnlv", "dpnl", "pnl", "sens", "var-explorer", "var-explain", "play-var", "smat", "var-reports", "backtesting", "stress-window", "var-results", "exp-explorer", "exp-cpty", "exp-nset", "frsa", "play-frtb", "simm", "play-simm" ],
+            "help" : [ "help-centre", "knowledge", "install", "about" ],
+            "footer" : [ "help", "about", "release-notes" ],
+            "placeholder" : "TRD 1000001, BOOK BOOK-RATES-1, VAR BOOK BOOK-RATES-1, EXP CPTY:CP-ALDERSHOT, CTRD CP-ALDERSHOT …  then <GO>"
+          },
+          "home" : {
+            "landing" : "trader",
+            "landings" : [ "trader", "desk", "explorer" ],
+            "template" : "home/trading_landing.html",
+            "titles" : {
+              "trader" : "Trader desk",
+              "desk" : "Desk head",
+              "explorer" : "Explorer"
+            },
+            "landing-by-role" : { },
+            "sections" : {
+              "stats" : false,
+              "grammar" : false,
+              "pipeline" : false,
+              "capabilities" : false,
+              "views" : false
+            }
+          },
+          "trading" : {
+            "people" : {
+              "drishti-dev-admin" : {
+                "trader" : "TRDR-ASHAH"
+              }
+            },
+            "match-records" : true,
+            "landing-by-role" : {
+              "desk-head" : "desk",
+              "trader" : "trader"
+            },
+            "live-statuses" : [ "NEW", "VALIDATED", "AMENDED" ],
+            "limit-days" : 5,
+            "pnl-var-days" : 60,
+            "max-rows" : 20000
+          }
+        },
+        "world" : {
+          "edition" : "world",
+          "title" : "Drishti World",
+          "description" : "Economies, markets, companies, legal entities and funds, from public data, in one place",
+          "menus" : {
+            "top" : [ "views", "economies", "markets", "companies", "bi", "admin", "help" ],
+            "markets" : [ "news", "quote", "idx" ],
+            "views" : [ "terminal", "search", "forms", "functions", "datamap", "data", "reports", "workspaces", "monitors", "alerts" ],
+            "help" : [ "help-centre", "knowledge", "install", "about" ],
+            "footer" : [ "help", "about", "release-notes" ],
+            "placeholder" : "ECON CAN, NEWS rates, USEQ AAPL, LEIC US, FUND SPY …  then <GO>"
+          },
+          "home" : {
+            "landing" : "desk",
+            "landings" : [ "desk", "explorer", "map" ],
+            "template" : "economy:world_landing.html",
+            "titles" : {
+              "desk" : "World desk",
+              "explorer" : "Explorer",
+              "map" : "World map"
+            },
+            "landing-by-role" : { },
+            "topics" : [ "TOPIC-RATES", "TOPIC-INFLATION", "TOPIC-OIL", "TOPIC-FED", "TOPIC-ECB", "TOPIC-AI" ],
+            "sections" : {
+              "stats" : false,
+              "grammar" : false,
+              "pipeline" : false,
+              "capabilities" : false,
+              "views" : false
+            }
+          }
+        }
+      }
+    },
+    "settings" : {
+      "layer" : {
+        "ui" : {
+          "product_native" : "दृष्टि",
+          "default_theme" : "terminal-blue",
+          "default_density" : "compact",
+          "default_mode" : "dark",
+          "help_title" : "Drishti Risk Help"
+        }
+      },
+      "pinned" : {
+        "ui" : {
+          "product" : "Drishti Risk",
+          "tagline" : "VaR, exposure and limits from your own pricing data",
+          "owner" : "Ashutosh Sinha",
+          "copyright" : "Copyright © 2026 Ashutosh Sinha. All rights reserved. Proprietary and confidential.",
+          "notice" : "Unauthorised copying, use or distribution is prohibited."
+        }
+      },
+      "presets" : {
+        "ui" : {
+          "product" : "Drishti Risk",
+          "tagline" : "VaR, exposure and limits from your own pricing data",
+          "home_cards" : [ "VAR BANK", "VAR DESK RATES", "VRES DESK:RATES", "EXP CPTY:CP-ALDERSHOT" ],
+          "placeholder" : "VAR BANK, VRES DESK:RATES, EXP CPTY:CP-ALDERSHOT, CRV USD-SOFR …  then <GO>"
+        }
+      }
+    }
+  },
+  "modules" : [ {
+    "id" : "market-data",
+    "title" : "Market data",
+    "version" : null,
+    "state" : null,
+    "loaded" : true,
+    "domain" : "market-data",
+    "packs" : [ "market-data" ],
+    "words" : [ "MKT", "CRV", "REPO", "FX", "FXF", "FXV", "IRV", "CPV", "EQ", "EQX", "DIV", "EQV", "CDS", "INF", "INFC", "CMD", "CMDC", "CMDV", "FIX", "BND", "CORR", "CORRC", "EQB" ],
+    "features" : [ ],
+    "menus" : [ "curves", "volatility", "fx", "credit", "markets" ],
+    "docs" : [ ],
+    "requires" : [ ],
+    "console-menus" : [ {
+      "id" : "curves",
+      "domain" : "banking",
+      "label" : "Curves",
+      "icon" : "graph-up-arrow",
+      "subject" : true,
+      "columns" : [ {
+        "title" : "Rates",
+        "items" : [ {
+          "id" : "crv",
+          "cmd" : "CRV",
+          "icon" : "graph-up-arrow",
+          "label" : "Curves",
+          "desc" : "Yield and discount curves, point by point",
+          "requires" : [ "cmd:CRV" ]
+        }, {
+          "id" : "repo",
+          "cmd" : "REPO",
+          "icon" : "arrow-left-right",
+          "label" : "Repo",
+          "desc" : "Repo rates by collateral and term",
+          "requires" : [ "cmd:REPO" ]
+        }, {
+          "id" : "fix",
+          "cmd" : "FIX",
+          "icon" : "pin-angle",
+          "label" : "Fixings",
+          "desc" : "The published fixings of each index",
+          "requires" : [ "cmd:FIX" ]
+        }, {
+          "id" : "inf",
+          "cmd" : "INF",
+          "icon" : "thermometer-half",
+          "label" : "Inflation",
+          "desc" : "Inflation indexes and their curves",
+          "requires" : [ "cmd:INF" ]
+        } ]
+      } ]
+    }, {
+      "id" : "volatility",
+      "domain" : "banking",
+      "label" : "Volatility",
+      "icon" : "activity",
+      "subject" : true,
+      "columns" : [ {
+        "title" : "Volatility surfaces",
+        "items" : [ {
+          "id" : "irv",
+          "cmd" : "IRV",
+          "icon" : "activity",
+          "label" : "Swaption volatility",
+          "desc" : "Swaption volatility cubes",
+          "requires" : [ "cmd:IRV" ]
+        }, {
+          "id" : "cpv",
+          "cmd" : "CPV",
+          "icon" : "activity",
+          "label" : "Cap volatility",
+          "desc" : "Cap and floor volatilities",
+          "requires" : [ "cmd:CPV" ]
+        }, {
+          "id" : "fxv",
+          "cmd" : "FXV",
+          "icon" : "activity",
+          "label" : "FX volatility",
+          "desc" : "FX volatility surfaces by pair",
+          "requires" : [ "cmd:FXV" ]
+        }, {
+          "id" : "eqv",
+          "cmd" : "EQV",
+          "icon" : "activity",
+          "label" : "Equity volatility",
+          "desc" : "Equity volatility surfaces",
+          "requires" : [ "cmd:EQV" ]
+        }, {
+          "id" : "cmdv",
+          "cmd" : "CMDV",
+          "icon" : "activity",
+          "label" : "Commodity volatility",
+          "desc" : "Commodity volatility surfaces",
+          "requires" : [ "cmd:CMDV" ]
+        } ]
+      } ]
+    }, {
+      "id" : "fx",
+      "domain" : "banking",
+      "label" : "FX",
+      "icon" : "currency-exchange",
+      "subject" : true,
+      "columns" : [ {
+        "title" : "Foreign exchange",
+        "items" : [ {
+          "id" : "fx-spot",
+          "cmd" : "FX",
+          "icon" : "currency-exchange",
+          "label" : "Spot",
+          "desc" : "FX spot rates by pair",
+          "requires" : [ "cmd:FX" ]
+        }, {
+          "id" : "fxf",
+          "cmd" : "FXF",
+          "icon" : "calendar-event",
+          "label" : "Forwards",
+          "desc" : "FX forward points by pair and tenor",
+          "requires" : [ "cmd:FXF" ]
+        } ]
+      } ]
+    }, {
+      "id" : "credit",
+      "domain" : "banking",
+      "label" : "Credit",
+      "icon" : "bank",
+      "subject" : true,
+      "columns" : [ {
+        "title" : "Credit",
+        "items" : [ {
+          "id" : "cds",
+          "cmd" : "CDS",
+          "icon" : "graph-down",
+          "label" : "CDS curves",
+          "desc" : "Credit default swap spreads by issuer and tenor",
+          "requires" : [ "cmd:CDS" ]
+        }, {
+          "id" : "bnd",
+          "cmd" : "BND",
+          "icon" : "bank",
+          "label" : "Bonds",
+          "desc" : "Bonds, their prices and yields",
+          "requires" : [ "cmd:BND" ]
+        } ]
+      } ]
+    }, {
+      "id" : "markets",
+      "domain" : "banking",
+      "label" : "Markets",
+      "icon" : "graph-up-arrow",
+      "subject" : true,
+      "gather" : [ "curves", "volatility", "fx", "credit" ],
+      "columns" : [ {
+        "title" : "Equities and commodities",
+        "items" : [ {
+          "id" : "eq",
+          "cmd" : "EQ",
+          "icon" : "building",
+          "label" : "Equities",
+          "desc" : "Listed equities, their prices and dividends",
+          "requires" : [ "cmd:EQ" ]
+        }, {
+          "id" : "eqx",
+          "cmd" : "EQX",
+          "icon" : "list-ol",
+          "label" : "Equity indices",
+          "desc" : "Equity indices and their levels",
+          "requires" : [ "cmd:EQX" ]
+        }, {
+          "id" : "cmd",
+          "cmd" : "CMD",
+          "icon" : "droplet",
+          "label" : "Commodities",
+          "desc" : "Commodities and their spot prices",
+          "requires" : [ "cmd:CMD" ]
+        }, {
+          "id" : "cmdc",
+          "cmd" : "CMDC",
+          "icon" : "graph-up",
+          "label" : "Commodity curves",
+          "desc" : "Commodity forward curves",
+          "requires" : [ "cmd:CMDC" ]
+        } ]
+      } ]
+    } ],
+    "domain-label" : ""
+  }, {
+    "id" : "banking",
+    "title" : "Banking and risk",
+    "version" : null,
+    "state" : null,
+    "loaded" : true,
+    "domain" : "banking",
+    "packs" : [ "trading", "market-risk", "counterparty-risk" ],
+    "words" : [ "VAR", "PVAR", "SMAT", "SWIN", "PREDEAL", "EXP", "FRSA", "SIMM", "MCUBE", "SENS", "RFAC", "PLAY", "CCUBE", "TRD", "CTRD", "PTRD", "LTRD", "ITRD", "SCN", "STR", "FRTB", "PNL", "TVAL", "POS", "PORT", "PNLV", "SPV", "FXS", "SSET", "VLIM", "DPNL", "PNLH", "VRES", "VOFF", "SSPNL", "AGR", "CSA", "NSET", "LIM", "CVA", "SACCR", "COLL", "MC", "XRUN", "XPATH", "XOFC", "NSMTM", "CPMTM" ],
+    "features" : [ "var", "exposure", "sensitivities", "frtb-sa", "simm", "mr-cube" ],
+    "menus" : [ "blotter", "positions", "risk", "counterparties" ],
+    "docs" : [ "banking" ],
+    "requires" : [ "market-data" ],
+    "console-menus" : [ {
+      "id" : "blotter",
+      "domain" : "banking",
+      "label" : "Blotter",
+      "icon" : "journal-text",
+      "subject" : true,
+      "columns" : [ {
+        "title" : "Trades",
+        "items" : [ {
+          "id" : "trd",
+          "cmd" : "TRD",
+          "icon" : "journal-text",
+          "label" : "Trades",
+          "desc" : "Every trade: pick one or filter",
+          "requires" : [ "cmd:TRD" ]
+        }, {
+          "id" : "ctrd",
+          "cmd" : "CTRD",
+          "icon" : "building",
+          "label" : "By counterparty",
+          "desc" : "The trades of a counterparty",
+          "requires" : [ "cmd:CTRD" ]
+        }, {
+          "id" : "ptrd",
+          "cmd" : "PTRD",
+          "icon" : "folder2",
+          "label" : "By portfolio",
+          "desc" : "The trades of a portfolio",
+          "requires" : [ "cmd:PTRD" ]
+        }, {
+          "id" : "ltrd",
+          "cmd" : "LTRD",
+          "icon" : "bank",
+          "label" : "By legal entity",
+          "desc" : "The trades of a legal entity",
+          "requires" : [ "cmd:LTRD" ]
+        } ]
+      } ]
+    }, {
+      "id" : "positions",
+      "domain" : "banking",
+      "label" : "Positions",
+      "icon" : "stack",
+      "subject" : true,
+      "columns" : [ {
+        "title" : "Books and positions",
+        "items" : [ {
+          "id" : "book",
+          "cmd" : "BOOK",
+          "icon" : "book",
+          "label" : "Books",
+          "desc" : "Every book, its trades and risk",
+          "requires" : [ "cmd:BOOK" ]
+        }, {
+          "id" : "desk",
+          "cmd" : "DESK",
+          "icon" : "people",
+          "label" : "Desks",
+          "desc" : "Every desk and its books",
+          "requires" : [ "cmd:DESK" ]
+        }, {
+          "id" : "trdr",
+          "cmd" : "TRDR",
+          "icon" : "person-badge",
+          "label" : "Traders",
+          "desc" : "Every trader and their books",
+          "requires" : [ "cmd:TRDR" ]
+        }, {
+          "id" : "pos",
+          "cmd" : "POS",
+          "icon" : "stack",
+          "label" : "Positions",
+          "desc" : "The positions of a book",
+          "requires" : [ "cmd:POS" ]
+        } ]
+      } ]
+    }, {
+      "id" : "risk",
+      "domain" : "banking",
+      "label" : "Risk",
+      "icon" : "shield-check",
+      "subject" : true,
+      "without-lens" : true,
+      "columns" : [ {
+        "title" : "Risk on my book",
+        "items" : [ {
+          "id" : "my-var",
+          "cmd" : "VAR",
+          "icon" : "shield-check",
+          "label" : "My VaR",
+          "desc" : "The VaR of the books you trade",
+          "match" : "/var",
+          "requires" : [ "word:VAR" ]
+        }, {
+          "id" : "vlim",
+          "cmd" : "VLIM",
+          "icon" : "speedometer2",
+          "label" : "VaR limits",
+          "desc" : "Each limit and how much of it is used",
+          "requires" : [ "cmd:VLIM" ]
+        }, {
+          "id" : "tval",
+          "cmd" : "TVAL",
+          "icon" : "currency-exchange",
+          "label" : "Trade valuations",
+          "desc" : "Each trade's value and its sensitivities",
+          "requires" : [ "cmd:TVAL" ]
+        }, {
+          "id" : "pnlv",
+          "cmd" : "PNLV",
+          "icon" : "bar-chart",
+          "label" : "P&L vectors",
+          "desc" : "Each position's P&L under every scenario",
+          "requires" : [ "cmd:PNLV" ]
+        }, {
+          "id" : "dpnl",
+          "cmd" : "DPNL",
+          "icon" : "cash-coin",
+          "label" : "Desk P&L",
+          "desc" : "Each desk's actual and hypothetical P&L, day by day",
+          "requires" : [ "cmd:DPNL" ]
+        }, {
+          "id" : "pnl",
+          "cmd" : "PNL",
+          "icon" : "bar-chart-steps",
+          "label" : "P&L explain",
+          "desc" : "A day's P&L by risk factor, new trades and residual",
+          "requires" : [ "cmd:PNL" ]
+        }, {
+          "id" : "sens",
+          "cmd" : "SENS",
+          "icon" : "speedometer",
+          "label" : "Sensitivities",
+          "desc" : "Delta, vega and curvature of each position by risk factor",
+          "requires" : [ "cmd:SENS" ]
+        } ]
+      }, {
+        "title" : "VaR",
+        "items" : [ {
+          "id" : "var-explorer",
+          "href" : "/var",
+          "cmd" : "VAR BANK",
+          "icon" : "shield-check",
+          "label" : "VaR explorer",
+          "desc" : "The bank's VaR, then any desk, book or set of trades",
+          "match" : "/var",
+          "requires" : [ "engine:var", "word:VAR" ]
+        }, {
+          "id" : "var-explain",
+          "cmd" : "VAR BANK EXPLAIN",
+          "icon" : "arrow-left-right",
+          "label" : "Why it moved",
+          "desc" : "Day on day: the trades, factors and scenarios that moved it",
+          "requires" : [ "engine:var", "word:VAR" ]
+        }, {
+          "id" : "play-var",
+          "cmd" : "PLAY VAR",
+          "icon" : "calculator",
+          "label" : "VaR Playground",
+          "desc" : "Every figure worked in a grid and a workbook of formulas",
+          "match" : "/play",
+          "requires" : [ "engine:var", "word:VAR", "word:PLAY", "route:/play" ]
+        }, {
+          "id" : "smat",
+          "cmd" : "SMAT",
+          "href" : "/smat",
+          "icon" : "grid-3x3",
+          "label" : "Scenario matrix",
+          "desc" : "Each scenario's P&L of a trade, position or scope",
+          "match" : "/smat",
+          "requires" : [ "engine:var", "word:SMAT" ]
+        }, {
+          "id" : "var-reports",
+          "cmd" : "VAR REPORTS",
+          "href" : "/var/reports",
+          "icon" : "bank",
+          "label" : "Regulatory reports",
+          "desc" : "Canada and the US, to the cell, signed runs",
+          "match" : "/var/reports",
+          "requires" : [ "engine:var", "word:VAR", "route:/var/reports" ]
+        }, {
+          "id" : "backtesting",
+          "cmd" : "VAR BANK BACKTEST",
+          "icon" : "activity",
+          "label" : "Backtesting",
+          "desc" : "VaR against the P&L, with the traffic light",
+          "match" : "/var/backtesting",
+          "requires" : [ "engine:var", "word:VAR", "route:/var/backtesting" ]
+        }, {
+          "id" : "stress-window",
+          "cmd" : "SWIN BANK",
+          "icon" : "calendar-range",
+          "label" : "Stress window",
+          "desc" : "The most stressful year of history for stressed VaR",
+          "match" : "/var/stress-window",
+          "requires" : [ "engine:var", "word:VAR" ]
+        }, {
+          "id" : "var-results",
+          "cmd" : "VRES",
+          "icon" : "table",
+          "label" : "VaR results",
+          "desc" : "The stored results of every hierarchy node",
+          "requires" : [ "engine:var", "cmd:VRES" ]
+        }, {
+          "id" : "mcube",
+          "cmd" : "MCUBE",
+          "href" : "/pivot?preset=mr",
+          "icon" : "grid-3x3-gap",
+          "label" : "Market-risk cube",
+          "desc" : "The Pivot's market-risk preset: desks by risk class with the right totals, the tail, why it moved, the DV01 ladder and a what-if · also MCUBE <GO>",
+          "requires" : [ "engine:var", "word:VAR", "word:PIVOT", "word:MCUBE" ]
+        }, {
+          "id" : "var-official",
+          "cmd" : "VOFF",
+          "icon" : "patch-check",
+          "label" : "Official records",
+          "desc" : "The signed-off VaR of each business date",
+          "requires" : [ "engine:var", "cmd:VOFF" ]
+        } ]
+      }, {
+        "title" : "Exposure",
+        "items" : [ {
+          "id" : "exp-explorer",
+          "href" : "/exposure",
+          "cmd" : "EXP",
+          "icon" : "graph-up",
+          "label" : "Exposure explorer",
+          "desc" : "EE, PFE and EPE of the bank, then any counterparty",
+          "match" : "/exposure",
+          "requires" : [ "engine:exposure", "word:EXP" ]
+        }, {
+          "id" : "exp-cpty",
+          "fill" : "EXP CPTY",
+          "icon" : "building",
+          "label" : "A counterparty",
+          "desc" : "Type the counterparty's id after the words",
+          "requires" : [ "engine:exposure", "word:EXP" ]
+        }, {
+          "id" : "exp-nset",
+          "fill" : "EXP NSET",
+          "icon" : "diagram-2",
+          "label" : "A netting set",
+          "desc" : "Type the netting set's id after the words",
+          "requires" : [ "engine:exposure", "word:EXP" ]
+        } ]
+      }, {
+        "title" : "Capital and margin",
+        "items" : [ {
+          "id" : "frsa",
+          "cmd" : "FRSA BANK",
+          "icon" : "bank2",
+          "label" : "FRTB-SA capital",
+          "desc" : "Standardised market-risk capital for any scope",
+          "match" : "/frtb",
+          "requires" : [ "engine:frtb-sa", "word:VAR", "route:/frtb" ]
+        }, {
+          "id" : "play-frtb",
+          "cmd" : "PLAY FRTB EXAMPLE",
+          "icon" : "calculator",
+          "label" : "FRTB-SA Playground",
+          "desc" : "Every method choice a switch, compared",
+          "match" : "/play/frtb",
+          "requires" : [ "engine:frtb-sa", "word:VAR", "word:PLAY", "route:/play/frtb" ]
+        }, {
+          "id" : "simm",
+          "cmd" : "SIMM",
+          "icon" : "shield-lock",
+          "label" : "SIMM by netting set",
+          "desc" : "Initial margin per netting set, collect and post",
+          "match" : "/simm",
+          "requires" : [ "engine:simm", "word:SIMM", "route:/simm" ]
+        }, {
+          "id" : "play-simm",
+          "cmd" : "PLAY SIMM EXAMPLE",
+          "icon" : "calculator",
+          "label" : "SIMM Playground",
+          "desc" : "Every SIMM figure worked in a grid and a workbook of formulas",
+          "match" : "/play/simm",
+          "requires" : [ "engine:simm", "word:PLAY", "route:/play/simm" ]
+        } ]
+      } ]
+    }, {
+      "id" : "counterparties",
+      "domain" : "banking",
+      "label" : "Counterparties",
+      "icon" : "building",
+      "subject" : true,
+      "columns" : [ {
+        "title" : "Counterparties",
+        "items" : [ {
+          "id" : "cpty",
+          "cmd" : "CPTY",
+          "icon" : "building",
+          "label" : "Counterparties",
+          "desc" : "Every counterparty, its trades and exposure",
+          "requires" : [ "cmd:CPTY" ]
+        }, {
+          "id" : "nset",
+          "cmd" : "NSET",
+          "icon" : "diagram-2",
+          "label" : "Netting sets",
+          "desc" : "Every netting set and its agreement",
+          "requires" : [ "cmd:NSET" ]
+        }, {
+          "id" : "lim",
+          "cmd" : "LIM",
+          "icon" : "speedometer2",
+          "label" : "Credit limits",
+          "desc" : "Each credit limit and how much of it is used",
+          "requires" : [ "cmd:LIM" ]
+        }, {
+          "id" : "predeal",
+          "cmd" : "PREDEAL",
+          "href" : "/predeal",
+          "icon" : "sliders",
+          "label" : "Pre-deal check",
+          "desc" : "Does a new trade fit the counterparty's credit limit? within, near or over it per limit and bucket; approve, refer or decline · PREDEAL <counterparty> LIKE <trade> <notional>",
+          "match" : "/predeal",
+          "requires" : [ "word:EXP" ]
+        }, {
+          "id" : "exp",
+          "cmd" : "EXP",
+          "icon" : "graph-up",
+          "label" : "Exposure",
+          "desc" : "EE, PFE and EPE of a counterparty or netting set",
+          "match" : "/exposure",
+          "requires" : [ "word:EXP" ]
+        }, {
+          "id" : "ccr-cube",
+          "cmd" : "CCUBE",
+          "href" : "/pivot?preset=ccr",
+          "icon" : "grid-3x3-gap",
+          "label" : "Counterparty-risk cube",
+          "desc" : "The Pivot's counterparty preset: exposure by counterparty and tenor against limits, with the right totals · also CCUBE <GO>",
+          "requires" : [ "word:EXP", "word:PIVOT" ]
+        } ]
+      } ]
+    } ],
+    "domain-label" : "Risk"
+  }, {
+    "id" : "capitalmarkets",
+    "title" : "Capital markets",
+    "version" : null,
+    "state" : null,
+    "loaded" : true,
+    "domain" : "capitalmarkets",
+    "packs" : [ "us-equities", "funds" ],
+    "words" : [ "USEQS", "USEQ", "IDX", "SIC", "EDGAR", "FILING", "FACT", "PXH", "FUNDS", "FUND", "HELD", "TRACK" ],
+    "features" : [ ],
+    "menus" : [ "markets", "companies" ],
+    "docs" : [ "capitalmarkets" ],
+    "requires" : [ ],
+    "console-menus" : [ {
+      "id" : "markets",
+      "columns" : [ {
+        "title" : "News and quotes",
+        "items" : [ {
+          "id" : "idx",
+          "cmd" : "IDX",
+          "icon" : "list-ol",
+          "label" : "Indices",
+          "desc" : "Index membership",
+          "requires" : [ "cmd:IDX" ]
+        } ]
+      } ]
+    }, {
+      "id" : "companies",
+      "domain" : "banking",
+      "label" : "Companies",
+      "icon" : "building",
+      "subject" : true,
+      "columns" : [ {
+        "title" : "Companies",
+        "items" : [ {
+          "id" : "useq",
+          "cmd" : "USEQ",
+          "icon" : "building",
+          "label" : "US equities",
+          "desc" : "US listed companies, their sector and figures",
+          "requires" : [ "cmd:USEQ" ]
+        }, {
+          "id" : "edgar",
+          "cmd" : "EDGAR",
+          "icon" : "file-earmark-text",
+          "label" : "Filings",
+          "desc" : "The filings feed of US companies",
+          "requires" : [ "cmd:EDGAR" ]
+        }, {
+          "id" : "leic",
+          "cmd" : "LEIC",
+          "icon" : "globe",
+          "label" : "Legal entities",
+          "desc" : "Legal entities by country (LEI)",
+          "requires" : [ "cmd:LEIC" ]
+        }, {
+          "id" : "fund",
+          "cmd" : "FUND",
+          "icon" : "pie-chart",
+          "label" : "Funds and ETFs",
+          "desc" : "Funds and ETFs and what they hold",
+          "requires" : [ "cmd:FUND" ]
+        } ]
+      } ]
+    } ],
+    "domain-label" : ""
+  }, {
+    "id" : "economy",
+    "title" : "Economy and public sector",
+    "version" : null,
+    "state" : null,
+    "loaded" : true,
+    "domain" : "economy",
+    "packs" : [ "world-economy", "news-and-markets", "world-development", "central-banks", "national-statistics", "oecd", "official-news", "gdelt-events" ],
+    "words" : [ "WRLD", "ECON", "MACRO", "FCST", "LABR", "FISC", "ECG", "REGE", "JUR", "PARTY", "OFFC", "ELEC", "REGN", "SOCI", "NWMK", "TOPIC", "NEWS", "CO", "QUOTE", "WDEV", "WDI", "WDIS", "CBNK", "CBANK", "CBSER", "STCAN", "NSTAT", "OECDP", "OECD", "OECDS", "ONEWS", "PRESS", "PREL", "GDLT", "GDELT" ],
+    "features" : [ ],
+    "menus" : [ "markets", "economies" ],
+    "docs" : [ "economy" ],
+    "requires" : [ ],
+    "console-menus" : [ {
+      "id" : "markets",
+      "columns" : [ {
+        "title" : "News and quotes",
+        "items" : [ {
+          "id" : "news",
+          "cmd" : "NEWS",
+          "icon" : "newspaper",
+          "label" : "News",
+          "desc" : "The news by topic",
+          "requires" : [ "cmd:NEWS" ]
+        }, {
+          "id" : "quote",
+          "cmd" : "QUOTE",
+          "icon" : "currency-dollar",
+          "label" : "Quotes",
+          "desc" : "Quotes of listed companies and indices",
+          "requires" : [ "cmd:QUOTE" ]
+        } ]
+      } ]
+    }, {
+      "id" : "economies",
+      "domain" : "economy",
+      "label" : "Economies",
+      "icon" : "globe2",
+      "subject" : true,
+      "columns" : [ {
+        "title" : "Economies",
+        "items" : [ {
+          "id" : "econ",
+          "fill" : "ECON",
+          "icon" : "flag",
+          "label" : "A country",
+          "desc" : "Type the country's code after the word (ECON CAN)",
+          "requires" : [ "cmd:ECON" ]
+        }, {
+          "id" : "macro",
+          "cmd" : "MACRO",
+          "icon" : "graph-up",
+          "label" : "Indicators",
+          "desc" : "Every indicator of every economy",
+          "requires" : [ "cmd:MACRO" ]
+        }, {
+          "id" : "fcst",
+          "cmd" : "FCST",
+          "icon" : "binoculars",
+          "label" : "IMF forecasts",
+          "desc" : "The IMF's forecasts by economy",
+          "requires" : [ "cmd:FCST" ]
+        }, {
+          "id" : "rege",
+          "cmd" : "REGE",
+          "icon" : "map",
+          "label" : "Regions",
+          "desc" : "Sub-national regions and their figures",
+          "requires" : [ "cmd:REGE" ]
+        } ]
+      } ]
+    } ],
+    "domain-label" : ""
+  }, {
+    "id" : "genomics",
+    "title" : "Genomics",
+    "version" : null,
+    "state" : null,
+    "loaded" : true,
+    "domain" : "genomics",
+    "packs" : [ ],
+    "words" : [ "VARIANT", "GENE", "COHORT" ],
+    "features" : [ ],
+    "menus" : [ "genomics" ],
+    "docs" : [ "genomics" ],
+    "requires" : [ ],
+    "console-menus" : [ ],
+    "domain-label" : ""
+  }, {
+    "id" : "trading",
+    "title" : "Trading",
+    "version" : null,
+    "state" : null,
+    "loaded" : true,
+    "domain" : "trading",
+    "packs" : [ ],
+    "words" : [ ],
+    "features" : [ ],
+    "menus" : [ ],
+    "docs" : [ ],
+    "requires" : [ ],
+    "console-menus" : [ ],
+    "domain-label" : ""
+  }, {
+    "id" : "source-calypso",
+    "title" : "Source Calypso",
+    "version" : null,
+    "state" : null,
+    "loaded" : true,
+    "domain" : "trading",
+    "packs" : [ ],
+    "words" : [ ],
+    "features" : [ ],
+    "menus" : [ ],
+    "docs" : [ ],
+    "requires" : [ "trading" ],
+    "console-menus" : [ ],
+    "domain-label" : ""
+  }, {
+    "id" : "source-endur",
+    "title" : "Source Endur",
+    "version" : null,
+    "state" : null,
+    "loaded" : true,
+    "domain" : "trading",
+    "packs" : [ ],
+    "words" : [ ],
+    "features" : [ ],
+    "menus" : [ ],
+    "docs" : [ ],
+    "requires" : [ "trading" ],
+    "console-menus" : [ ],
+    "domain-label" : ""
+  }, {
+    "id" : "source-ici",
+    "title" : "Source ICI",
+    "version" : null,
+    "state" : null,
+    "loaded" : true,
+    "domain" : "trading",
+    "packs" : [ ],
+    "words" : [ ],
+    "features" : [ ],
+    "menus" : [ ],
+    "docs" : [ ],
+    "requires" : [ "trading" ],
+    "console-menus" : [ ],
+    "domain-label" : ""
+  }, {
+    "id" : "source-murex",
+    "title" : "Source Murex",
+    "version" : null,
+    "state" : null,
+    "loaded" : true,
+    "domain" : "trading",
+    "packs" : [ ],
+    "words" : [ ],
+    "features" : [ ],
+    "menus" : [ ],
+    "docs" : [ ],
+    "requires" : [ "trading" ],
+    "console-menus" : [ ],
+    "domain-label" : ""
+  }, {
+    "id" : "source-swapone",
+    "title" : "Source SwapOne",
+    "version" : null,
+    "state" : null,
+    "loaded" : true,
+    "domain" : "trading",
+    "packs" : [ ],
+    "words" : [ ],
+    "features" : [ ],
+    "menus" : [ ],
+    "docs" : [ ],
+    "requires" : [ "trading" ],
+    "console-menus" : [ ],
+    "domain-label" : ""
+  }, {
+    "id" : "source-wss",
+    "title" : "Source WSS",
+    "version" : null,
+    "state" : null,
+    "loaded" : true,
+    "domain" : "trading",
+    "packs" : [ ],
+    "words" : [ ],
+    "features" : [ ],
+    "menus" : [ ],
+    "docs" : [ ],
+    "requires" : [ "trading" ],
+    "console-menus" : [ ],
+    "domain-label" : ""
+  } ]
+}

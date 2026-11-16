@@ -74,7 +74,7 @@ def test_genomics_shows_its_one_domain_by_name(backend, monkeypatch):
     tmp = Path(__file__).resolve().parents[2] / "data" / "tmp"
     tmp.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(dir=tmp) as d:
-        parts = ModuleParts(Path(d) / "parts", old.web, old.shipped, 0.0)
+        parts = ModuleParts(Path(d) / "parts", old.web, 0.0)
         monkeypatch.setattr(app.state, "module_parts", parts)
         monkeypatch.setattr(app.state.editions.modules, "parts", parts)
         reg.state = "off"

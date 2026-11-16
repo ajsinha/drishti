@@ -592,7 +592,12 @@ def create_app(settings: Settings) -> FastAPI:
 
     # what the server decided, kept for drawing (THIN_CONSOLE_DESIGN.md 3.2): the installation's answer per server, asked again when its
     # stamp in /public/about changes; one per app, nothing of any person in it
-    app.state.server_facts = ServerFacts(console_build=ASSET_VERSION)
+    def _answer_taken(sid, doc):
+        if sid == catalogue.default:                    # the console's own server: the distribution, lenses and modules follow its answer
+            app.state.editions.follow(doc)
+    app.state.server_facts = ServerFacts(console_build=ASSET_VERSION,
+                                         distribution=app.state.editions.own_name if app.state.editions.own_distribution else "",
+                                         on_answer=_answer_taken)
     # what the product says of itself (version, name, edition) is the server's: the pages read it here, never a constant of the console
     templates.env.globals["server_about"] = lambda: app.state.server_facts.about()
 
@@ -610,10 +615,8 @@ def create_app(settings: Settings) -> FastAPI:
         if s.id != catalogue.default:
             await _follow_facts(s, about)
             return
-        app.state.editions.learn(about)
-        # the server's module registry changed: its module list (shipped and installed .dmod packages) and the distribution again
-        await app.state.editions.follow_modules(about, lambda: app.state.backend_watch.fetch(s, "/public/modules/manifests"))
-        await _follow_facts(s, about)                    # after the edition: it is learned first whatever the bootstrap does
+        app.state.editions.learn(about)                  # what runs and what is loaded; the distribution follows the installation answer
+        await _follow_facts(s, about)
     app.state.backend_watch.on_about = _on_about
     from core.user_stamps import UserStamps
 
@@ -637,7 +640,7 @@ def create_app(settings: Settings) -> FastAPI:
     from core.module_parts import ModuleParts
 
     # the modules' console parts, hosted declaratively under /m/<id>/ (KERNEL_AND_MODULES.md 4.7, 14.2.1): this app's, never shared
-    app.state.module_parts = ModuleParts(_console_data_dir(settings) / "module-parts", WEB, app.state.editions.modules_dir,
+    app.state.module_parts = ModuleParts(_console_data_dir(settings) / "module-parts", WEB,
                                          float(settings.get("modules.parts_refresh_seconds", 5) or 5))
     app.state.editions.modules.parts = app.state.module_parts
     app.state.bi_on = str(settings.get("bi.enabled", True)).lower() in ("true", "1", "yes", "on")      # false: no BI menu, no /bi pages

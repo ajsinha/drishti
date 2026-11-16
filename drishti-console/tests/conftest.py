@@ -69,6 +69,20 @@ select_helpers.install_playwright_shim()          # select_option and input_valu
 from core.app import create_app  # noqa: E402
 from core.backend import BackendError  # noqa: E402
 from core.config import load_settings  # noqa: E402
+from core import edition as _edition  # noqa: E402
+import server_answers  # noqa: E402
+
+_editions_init = _edition.Editions.__init__
+
+
+def _answered_editions(self, *a, **kw):
+    """A console built in a test starts as one whose server has answered: the recorded installation answer of Drishti All (the server's
+    own, tests/answers; THIN_CONSOLE_DESIGN.md 5.2). A test of another distribution follows its answer (server_answers.follow)."""
+    _editions_init(self, *a, **kw)
+    self.follow(server_answers.bootstrap("all"))
+
+
+_edition.Editions.__init__ = _answered_editions
 
 
 def live_page(answer: dict, live_kinds=()) -> dict:
@@ -612,6 +626,12 @@ class FakeBackend:
             return {"name": path.rsplit("/", 1)[1], **body}
         if path == "/role-definitions/admin" and method == "DELETE":
             raise BackendError(400, "DRS-5001", "'admin' is a built-in role")
+        if path == "/distributions":                         # the server's compiled distributions (recorded, tests/answers)
+            rows = []
+            for name in ("all", "finance", "genomics", "risk"):
+                d = dict(server_answers.bootstrap(name)["distribution"])
+                rows.append({**d, "start": name, "running": d["id"] == "drishti.all"})
+            return {"distributions": rows, "problems": []}
         if path == "/status":
             return {"defaultAdminPasswordInUse": True, "users": 1, "forceChangeOnCreate": False}
         if path == "/caches":

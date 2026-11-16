@@ -56,10 +56,13 @@ public class ModuleDeployController {
     private final ModuleNode node;
     private final Entitlements entitlements;
     private final org.springframework.core.env.Environment env;
+    private final org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.modules.ModuleConfiguration.Started> started;
 
     public ModuleDeployController(ModuleDeployService deploy, ModuleNode node, Entitlements entitlements,
-            org.springframework.core.env.Environment env) {
+            org.springframework.core.env.Environment env,
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.modules.ModuleConfiguration.Started> started) {
         this.env = env;
+        this.started = started;
         this.deploy = deploy;
         this.node = node;
         this.entitlements = entitlements;
@@ -186,7 +189,60 @@ public class ModuleDeployController {
             m.put("claims", e.claims());
             out.add(m);
         }
-        return Map.of("modules", out, "fingerprint", node.fingerprint());
+        java.util.Set<String> listed = new java.util.HashSet<>(node.entries().stream().map(ModuleNode.Entry::id).toList());
+        shipped().forEach((id, at) -> {                       // the product's own modules shipped as folders, while loaded here
+            if (!listed.contains(id)) {
+                Map<String, Object> m = new LinkedHashMap<>();
+                m.put("id", id);
+                m.put("version", at.version());
+                m.put("state", "active");
+                m.put("title", at.title());
+                m.put("console", true);
+                m.put("claims", List.of());
+                out.add(m);
+            }
+        });
+        return Map.of("modules", out, "fingerprint", node.fingerprint() + "|" + shipped().keySet());
+    }
+
+    /** A module the product ships as a folder with a console part ({@code console/plugin.yaml}): where it is, its version and title. */
+    private record Shipped(java.nio.file.Path folder, String version, String title) {
+    }
+
+    /**
+     * The product's own modules shipped as folders (a content module's {@code modules/<id>/module.yaml}, a module project's
+     * {@code src/dmod/}) that have a console part and are loaded on this server: the console hosts them from this server's answer like a
+     * deployed module's, and reads no modules folder itself (THIN_CONSOLE_DESIGN.md, step S2). A module with code's {@code dmod/} comes
+     * from the registry.
+     */
+    private Map<String, Shipped> shipped() {
+        Map<String, Shipped> out = new java.util.TreeMap<>();
+        com.ash.drishti.server.modules.ModuleConfiguration.Started s = started.getIfAvailable();
+        Map<String, Boolean> loaded = s == null ? Map.of() : s.loaded();
+        Map<String, com.ash.drishti.packs.distribution.ModuleManifests.Entry> known;
+        try {
+            known = com.ash.drishti.packs.distribution.Distributions.known(env);
+        } catch (RuntimeException e) {
+            return out;
+        }
+        known.forEach((id, e) -> {
+            java.nio.file.Path home = e.source() == null ? null : e.source().getParent();
+            if (home == null || !Boolean.TRUE.equals(loaded.get(id)) || !java.nio.file.Files.isRegularFile(home.resolve("console").resolve("plugin.yaml"))) {
+                return;
+            }
+            if (home.getFileName().toString().equals("dmod") && (home.getParent() == null || !home.getParent().getFileName().toString().equals("src"))) {
+                return;
+            }
+            String version = "0";
+            try {
+                Object v = com.ash.drishti.api.resolution.ResolutionSettings.yaml(e.source()).get("version");
+                version = v == null ? "0" : String.valueOf(v);
+            } catch (RuntimeException ex) {
+                // a manifest that does not read keeps version 0
+            }
+            out.put(id, new Shipped(home, version, e.title().isBlank() ? id : e.title()));
+        });
+        return out;
     }
 
     /**
@@ -221,6 +277,10 @@ public class ModuleDeployController {
     public org.springframework.http.ResponseEntity<byte[]> consolePart(@PathVariable String id, @PathVariable String version) {
         ModuleNode.Entry e = node.entry(id).orElse(null);
         java.nio.file.Path dir = e == null ? null : deploy.consoleFolder(id, version);
+        if (e == null) {
+            Shipped at = shipped().get(id);
+            dir = at != null && at.version().equals(version) ? at.folder() : null;
+        }
         if (dir == null) {
             int status = e != null && e.state() == ModuleNode.State.REMOVED ? 410 : 404;
             return org.springframework.http.ResponseEntity.status(status).build();

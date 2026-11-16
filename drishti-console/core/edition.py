@@ -14,9 +14,9 @@
 
 """The distribution's filter and the lenses, the console side (docs/guides/ADMIN_GUIDE.md, the three layers of switches).
 
-What exists is the *distribution's* (``config/distributions/drishti.<name>.yaml``, core/distribution.py): its filter is the instance's
-:class:`Edition`, and its feature presets are a layer under the site's own configuration (:meth:`core.config.Settings.layer`), so the site
-still wins key by key. A *lens* (``config/lenses/<module>/<lens>.yaml``, "Open Drishti Risk") is a workspace one person works in, kept in
+What exists is the *distribution's*, compiled by the server and sent in its installation answer (THIN_CONSOLE_DESIGN.md 3.2): its filter
+is the instance's :class:`Edition`, and its feature presets are a layer under the site's own configuration (:meth:`core.config.Settings.layer`),
+so the site still wins key by key. A *lens* ("Open Drishti Risk", its arrangement in the same answer) is a workspace one person works in, kept in
 their settings (``lens``): it arranges (the starting Home, menu emphasis, default screens) and never hides anything; every "is this
 shown?" question inside a lens is the distribution's answer.
 
@@ -25,14 +25,12 @@ shown?" question inside a lens is the distribution's answer.
 from __future__ import annotations
 
 import contextvars
-import copy
 import logging
 import os
 import re
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
-
-import yaml
 
 from core import engines as _engines
 from core import modules as _modules
@@ -143,15 +141,6 @@ def _on(v: Any) -> bool | None:
         return v
     t = str(v).strip().lower()
     return t not in ("off", "false", "no", "0")
-
-
-def _merge(base: dict, over: dict) -> dict:
-    for k, v in over.items():
-        if isinstance(v, dict) and isinstance(base.get(k), dict):
-            _merge(base[k], v)
-        else:
-            base[k] = v
-    return base
 
 
 class Edition:
@@ -358,33 +347,6 @@ class Edition:
     def about(self) -> dict | None:
         return {"name": self.name, "title": self.title, "lens": self.lens} if self.active else None
 
-    def presets(self, mapping: dict[str, list[str]]) -> dict:
-        """The console settings the distribution presets (a layer under the site's configuration): each named feature's console keys
-        (``mapping``: kernel.yaml's ``features:``), ``ui.product`` and ``ui.tagline`` from its branding, Home's quick cards, and the raw
-        ``console:`` block. A lens presets nothing."""
-        out: dict = {}
-
-        def put(dotted: str, value: Any) -> None:
-            node = out
-            parts = dotted.split(".")
-            for p in parts[:-1]:
-                node = node.setdefault(p, {})
-            node[parts[-1]] = value
-
-        for feature, value in (self._get("features") or {}).items():
-            on = _on(value)
-            for key in mapping.get(str(feature), []):
-                put(key, bool(on))
-        for k, to in (("product", "ui.product"), ("tagline", "ui.tagline")):
-            if self.branding(k):
-                put(to, self.branding(k))
-        if self.home_cards is not None:
-            put("ui.home_cards", self.home_cards)
-        if self.placeholder:
-            put("ui.placeholder", self.placeholder)
-        _merge(out, copy.deepcopy(self._get("console") or {}))
-        return out
-
 
 Edition.NONE = Edition()
 
@@ -400,18 +362,104 @@ def by_module(packs) -> list[str]:
     return out
 
 
+@dataclass(frozen=True)
+class Distribution:
+    """The running distribution as the server compiled it (the ``distribution`` of its installation answer, THIN_CONSOLE_DESIGN.md 3.2): a
+    view for drawing, nothing worked out here."""
+    doc: dict
+
+    @property
+    def id(self) -> str:
+        return str(self.doc.get("id") or "drishti.all")
+
+    @property
+    def name(self) -> str:
+        return str(self.doc.get("name") or (self.id[len("drishti."):] if self.id.startswith("drishti.") else self.id))
+
+    @property
+    def title(self) -> str:
+        return str(self.doc.get("title") or "")
+
+    @property
+    def all(self) -> bool:
+        return bool(self.doc.get("all", True))
+
+    @property
+    def modules(self) -> list[str]:
+        return [str(m) for m in self.doc.get("modules") or []]
+
+    @property
+    def domains(self) -> dict[str, str]:
+        return {str(k): str(v) for k, v in (self.doc.get("domains") or {}).items()}
+
+    @property
+    def packs(self) -> list[str]:
+        return [str(p) for p in self.doc.get("packs") or []]
+
+    @property
+    def brand(self) -> dict:
+        return dict(self.doc.get("brand") or {})
+
+    @property
+    def theme(self) -> dict:
+        return dict(self.doc.get("theme") or {})
+
+    @property
+    def lenses(self) -> list[str]:
+        return [str(x) for x in (self.doc.get("lenses") or {}).get("offered") or []]
+
+    @property
+    def default_lens(self) -> str:
+        return str((self.doc.get("lenses") or {}).get("default") or "")
+
+    @property
+    def help_title(self) -> str:
+        return str(self.doc.get("help-title") or "")
+
+    @property
+    def filter(self) -> dict | None:
+        f = self.doc.get("filter")
+        return f if isinstance(f, dict) else None
+
+    @property
+    def home_cards(self) -> list:
+        return list(((self.filter or {}).get("home") or {}).get("cards") or [])
+
+    def about(self) -> dict:
+        return {"id": self.id, "name": self.name, "title": self.title, "all": self.all, "modules": ["all"] if self.all else self.modules,
+                "theme": self.theme.get("tokens", ""), "density": self.theme.get("density", ""), "mode": self.theme.get("mode", ""),
+                "lenses": self.lenses, "help": self.help_title}
+
+
+Distribution.ALL = Distribution({"id": "drishti.all", "name": "all", "title": "", "all": True})
+
+
+def selected(settings) -> tuple[str, bool]:
+    """The console's own choice of distribution (``--distribution=``, ``distribution:``, DRISHTI_DISTRIBUTION; a start-up setting) and
+    whether one was named at all. The server compiles it (``GET /api/v1/console/bootstrap?distribution=``, Q3); this console reads no file."""
+    v = str(settings.get("distribution", "") or "").strip() or os.environ.get("DRISHTI_DISTRIBUTION", "").strip()
+    return (v or "all"), bool(v)
+
+
+def deprecated(settings) -> list[str]:
+    """The old keys the site still sets on this console (Health names each one): the product's name and notices are not read from them."""
+    out = []
+    for key in ("ui.product", "ui.tagline", "ui.copyright", "ui.owner", "ui.notice"):
+        if settings.site(key) not in (None, "", {}):
+            out.append(f"{key} is no longer read: set brand: in the distribution file")
+    if settings.site("edition") not in (None, "", {}):
+        out.append("edition is read for one release: name a distribution instead (--distribution, DRISHTI_DISTRIBUTION)")
+    return out
+
+
 class Editions:
-    """The console's editions: the instance's (learned from the server) and the lenses the site offers (``drishti.lenses`` on the server,
-    learned the same way). One per console process; :meth:`for_request` says which one a request is seen through."""
+    """The console's editions: the instance's filter and the lenses offered, as the server's installation answer says them
+    (THIN_CONSOLE_DESIGN.md 3.2, step S2: the server compiles the distribution and reads the lens files; this console reads none). One per
+    console process; :meth:`for_request` says which one a request is seen through. Before the first answer: Drishti All, no lens."""
 
     def __init__(self, settings, console_dir: Path, on_change=None):
-        d = Path(str(settings.get("lens.dir", "../config/lenses") or "../config/lenses"))   # config/lenses/<module>/<lens>.yaml
-        self.dir = d if d.is_absolute() else (console_dir / d).resolve()
-        from core import resolution
-        where = resolution.Settings.from_env(settings, console_dir)       # the one resolver's settings (KERNEL_AND_MODULES.md 18.2)
-        self.packs_dir = where.site_dir
-        self.modules_dir = where.modules_home
         self.settings = settings
+        self.console_dir = console_dir
         self.instance: Edition = Edition.NONE
         self.lenses: dict[str, Edition] = {}
         self.on_change = on_change
@@ -419,101 +467,61 @@ class Editions:
         self.engines = _engines.new_state()                      # what runs, learned from this app's server as the edition is: its own,
                                                                  # never another app's of the same process (core/engines.py State)
         self.modules = _modules.new_state()                      # the modules loaded on the server, the same way (core/modules.py State)
-        from core import distribution as _dist
-        self.console_dir = console_dir
-        self.own_distribution = _dist.selected(settings)[1]     # --distribution on this console: it decides, whatever the server runs
-        self.distribution = _dist.builtin_all()
-        self.server_modules = None                               # the server's module list (/public/modules/manifests); None: not yet
-        self._manifests = None                                   # its fingerprint, from /public/about
-        self._dist_name: str | None = None
-        self._use_distribution(None)                             # Drishti All when none is named: nothing changes
+        self.own_name, self.own_distribution = selected(settings)   # --distribution on this console: the server compiles it (Q3)
+        self.distribution = Distribution.ALL
+        self.server_modules: dict[str, dict] | None = None       # the installation's modules (id -> its row), in requirement order; None: not yet
+        self.answer: dict | None = None                          # the installation's answer this view was made from
+        self._digest: str | None = None
 
     def mapping(self) -> dict[str, list[str]]:
-        """Which console settings each feature presets: ``features:`` of kernel.yaml beside the distribution files, its ``console`` keys."""
-        from core import distribution as _dist
-        d = Path(str(self.settings.get("distributions_dir", "../config/distributions") or "../config/distributions"))
-        f = (d if d.is_absolute() else (self.console_dir / d).resolve()) / _dist.KERNEL
-        try:
-            raw = (yaml.safe_load(f.read_text(encoding="utf-8")) or {}).get("features") or {}
-        except (OSError, yaml.YAMLError):
-            return {}
-        return {str(k): [str(x) for x in (v or {}).get("console") or []] for k, v in raw.items()}
+        """Which console settings each feature presets (``feature-keys`` of the installation's answer, from the server's feature mapping)."""
+        keys = self.distribution.doc.get("feature-keys") or {}
+        return {str(k): [str(x) for x in v or []] for k, v in keys.items()} if isinstance(keys, dict) else {}
 
-    def load(self, name: str) -> Edition:
-        """A lens's file (``config/lenses/<module>/<lens>.yaml``), as a workspace: it arranges and never hides."""
-        if not name or not name.replace("-", "").isalnum() or name != name.lower():
-            return Edition.NONE
-        f = self.dir / f"{name}.yaml"                        # a lens of no module, else in its module's folder (config/lenses/<module>/)
-        if not f.is_file():
-            f = next((d / f"{name}.yaml" for d in sorted(self.dir.iterdir()) if d.is_dir() and (d / f"{name}.yaml").is_file()), f) \
-                if self.dir.is_dir() else f
-        try:
-            spec = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
-        except (OSError, yaml.YAMLError) as e:
-            LOG.warning("lens %s: cannot read %s (%s); it is not offered", name, f, e)
-            return Edition.NONE
-        return Edition(name, spec, lens=True)
+    def known_commands(self) -> frozenset:
+        """Every command and word any module or pack of the installation has (the answer's ``commands`` and each module's ``words``): what a
+        distribution may leave out, so a command typed in one that lacks it answers "not in Drishti Finance" instead of becoming a search."""
+        if not self.answer:
+            return frozenset()
+        words = {str(w).upper() for m in self.answer.get("modules") or [] if isinstance(m, dict) for w in m.get("words") or []}
+        return frozenset(str(c).upper() for c in (self.answer.get("commands") or {})) | frozenset(words)
 
     def learn(self, about: dict) -> bool:
-        """What the server's about answer says: its edition, the lenses it offers, its product name and tagline (one branding source).
-        True when anything changed (the settings layer and the pages follow at once)."""
+        """What the server's about answer says beside the installation's answer: the engines running, the modules loaded, its product name
+        and tagline (one branding source). True when anything changed (the settings layer and the pages follow at once)."""
         if not isinstance(about, dict):
             return False
-        engines_changed = _engines.learn(about.get("engines"), self.engines)   # the engines running in the cluster (ADMIN_GUIDE.md 5.2)
-        engines_changed = _modules.learn(about.get("modules"), self.modules) or engines_changed   # the modules loaded (ACCESS_MODEL.md)
-        if self.own_distribution:                                   # this console's own --distribution: the server's edition and brand
-            if engines_changed and self.on_change is not None:      # do not change it (a Finance console over a Drishti All cluster)
-                self.on_change()
-            return engines_changed
-        name = str((about.get("edition") or {}).get("name") or "")
-        if not name.startswith("drishti."):                         # only a distribution says what exists; a lens never filters
-            name = ""
-        lenses = [str(n) for n in about.get("lenses") or []]
-        brand = {k: about.get(k) for k in ("product", "tagline") if about.get(k)}
-        changed = name != self.instance.name or sorted(lenses) != sorted(self.lenses) or brand != self._server_brand
-        if not changed:
-            if engines_changed and self.on_change is not None:
-                self.on_change()
-            return engines_changed
+        changed = _engines.learn(about.get("engines"), self.engines)       # the engines running in the cluster (ADMIN_GUIDE.md 5.2)
+        changed = _modules.learn(about.get("modules"), self.modules) or changed   # the modules loaded (ACCESS_MODEL.md)
+        brand = {} if self.own_distribution else {k: about.get(k) for k in ("product", "tagline") if about.get(k)}
+        if brand != self._server_brand:
+            self._server_brand = brand
+            self.settings.pin("server", {"ui": dict(brand)} if brand else None)
+            changed = True
+        if changed and self.on_change is not None:
+            self.on_change()
+        return changed
+
+    def follow(self, answer: dict | None) -> bool:
+        """The server's installation answer (``GET /api/v1/console/bootstrap``): the compiled distribution, its settings layers, the lenses
+        offered with their arrangement, the modules. Swapped whole; True when it changed (the pages follow at once)."""
+        if not isinstance(answer, dict) or answer.get("digest") == self._digest:
+            return False
+        d = Distribution(dict(answer.get("distribution") or {}))
+        self.answer, self._digest = answer, answer.get("digest")
+        self.distribution = d
+        self.server_modules = {str(m["id"]): m for m in answer.get("modules") or [] if isinstance(m, dict) and m.get("id")}
+        name = d.id if not d.all and d.filter is not None else ""
         if name != self.instance.name:
             LOG.warning("the server runs %s: the console follows it", name or "(none: the full Drishti)")
-        if name:                                                    # the server's distribution: the same file, read here
-            self._use_distribution(name)
-        else:
-            self.instance = Edition.NONE
+        self.instance = Edition(name, d.filter) if name else Edition.NONE
         outer = self.instance if self.instance.distribution else None
-        self.lenses = {n: e for n, e in ((n, self._lens(n, outer)) for n in lenses) if e.active}
-        self._server_brand = brand
-        server_layer: dict = {}
-        if brand:                                                   # the server's branding (from its distribution file)
-            server_layer = {"ui": {k: v for k, v in brand.items()}}
-        self.settings.pin("server", server_layer or None)
-        self.settings.layer("edition", self.instance.presets(self.mapping()) if self.instance.active else None)
-        if self.on_change is not None:
-            self.on_change()
-        return True
-
-    async def follow_modules(self, about: dict, fetch) -> bool:
-        """When the server's module registry changed (``about["manifests"]``), reads its module list (``await fetch()``: the answer of
-        ``/public/modules/manifests``) and the distribution again: a ``.dmod`` installed after the start joins it, a removed one leaves.
-        True when the distribution was read again; a list that does not read, or a distribution it refuses, keeps the last one."""
-        fp = about.get("manifests") if isinstance(about, dict) else None
-        if not fp or fp == self._manifests:
-            return False
-        from core import distribution as _dist
-        try:
-            known = _dist.entries(await fetch())
-        except Exception as e:  # noqa: BLE001 - the server's list is asked again at its next change
-            LOG.warning("the server's module list did not read (%s); the distribution stays as it is", e)
-            return False
-        self._manifests, before = fp, self.server_modules
-        self.server_modules = known
-        try:
-            self._use_distribution(self._dist_name)
-        except ValueError as e:
-            LOG.warning("the distribution stays as it was: %s", e)
-            self.server_modules = before
-            return False
+        specs = (d.doc.get("lenses") or {}).get("specs") or {}
+        self.lenses = {n: Edition(n, specs[n], lens=True, outer=outer) for n in d.lenses if isinstance(specs.get(n), dict)}
+        settings = d.doc.get("settings") or {}
+        self.settings.layer("distribution", settings.get("layer") or None)
+        self.settings.pin("distribution", settings.get("pinned") or None)   # the names and notices: the distribution file only
+        self.settings.layer("edition", settings.get("presets") or None)
         if self.on_change is not None:
             self.on_change()
         return True
@@ -528,25 +536,3 @@ class Editions:
         """The person's lens when the site offers it, else the distribution's starting one (a workspace inside the distribution: it
         arranges, never hides), else the distribution's filter itself."""
         return self.lenses.get(lens or self.default_lens, self.instance)
-
-    # -- distributions (docs/architecture/DISTRIBUTIONS.md) --------------------------------------------------------------
-    def _lens(self, name: str, outer: Edition | None) -> Edition:
-        e = self.load(name)
-        if e.active and outer is not None:
-            e.outer = outer
-        return e
-
-    def _use_distribution(self, name: str | None) -> None:
-        """Reads the distribution (``name``, else the console's own choice) and puts its brand layer and visibility filter in place."""
-        from core import distribution as _dist
-        # a listed module neither the server nor the folder knows (not installed yet, or removed) is left out with a warning
-        d = _dist.load(self.settings, self.console_dir, name, self.server_modules, strict=False)
-        self._dist_name = name
-        self.distribution = d
-        self.settings.layer("distribution", d.settings_layer())
-        self.settings.pin("distribution", d.brand_layer())            # the names and notices: this file only
-        self.instance = Edition(d.id, d.edition_spec) if not d.all else Edition.NONE
-        if not d.all:
-            outer = self.instance
-            self.lenses = {n: e for n, e in ((n, self._lens(n, outer)) for n in d.lenses) if e.active}
-        self.settings.layer("edition", self.instance.presets(self.mapping()) if self.instance.active else None)

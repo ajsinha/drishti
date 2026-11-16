@@ -65,9 +65,26 @@ public class ConsoleController {
      */
     @GetMapping("/api/v1/console/bootstrap")
     public ResponseEntity<Map<String, Object>> bootstrap(@RequestAttribute(Principal.ATTRIBUTE) Principal p,
-            @RequestHeader(name = "If-None-Match", required = false) String ifNoneMatch) {
+            @RequestHeader(name = "If-None-Match", required = false) String ifNoneMatch,
+            @org.springframework.web.bind.annotation.RequestParam(name = "distribution", required = false) String distribution) {
         entitlements.requireService(p);
-        return answer(answers.bootstrap(), ifNoneMatch, CacheControl.noCache().cachePrivate());
+        ConsoleAnswers.Answer a;
+        try {
+            a = answers.bootstrap(distribution);                     // a console's own distribution (Q3): compiled here, never by the console
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", String.valueOf(e.getMessage())));
+        }
+        return answer(a, ifNoneMatch, CacheControl.noCache().cachePrivate());
+    }
+
+    /**
+     * Every distribution file of the installation compiled as the console draws it, with the files that do not compile (Admin -> White
+     * label, step S2). Administrators only.
+     */
+    @GetMapping("/api/v1/admin/distributions")
+    public Map<String, Object> distributions(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        entitlements.requireAdmin(p);
+        return answers.distributions();
     }
 
     /**

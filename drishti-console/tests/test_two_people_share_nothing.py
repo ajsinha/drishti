@@ -19,6 +19,7 @@ two servers. Before 2.9.11.b the Describe table was one process-wide copy of the
 without the roles or the server."""
 from __future__ import annotations
 
+import server_answers
 import asyncio
 
 import httpx
@@ -101,7 +102,7 @@ def test_describe_reads_each_persons_own_mnemonics_at_the_same_time():
 def _trading_app(backend):
     app = create_app(load_settings(CONSOLE / "config"))
     app.state.backend = backend
-    app.state.editions.learn(FULL_ABOUT)
+    server_answers.follow(app, FULL_ABOUT)
     app.state.editions.lenses["trading"].spec["trading"]["people"]["t.brennan"] = {"desk": "DESK-RATES", "role": "desk-head"}
     _people(app)
 

@@ -18,6 +18,8 @@
   deletes (``REMAINING``, each with its step); the list only shrinks.
 - The console's pack store reads no pack folder (no ``pack.yaml``, no ``dir``), the packs answer is not asked for a folder, and the
   setting that chose packs when the server was away (``packs.enabled``) is gone.
+- No console file reads a distribution, kernel, lens or module manifest file (step S2): the distribution compiler (``core/distribution.py``)
+  is gone and nothing names ``config/distributions``, ``config/lenses`` or a ``module.yaml`` outside the module parts' own cache.
 - The version the pages show is the server's: no template shows the console's own build (``ASSET_V``) as text.
 """
 import re
@@ -29,11 +31,8 @@ pytestmark = pytest.mark.static
 
 CONSOLE = Path(__file__).resolve().parents[1]
 
-#: console files that still import the resolver, each with the step that deletes the import (S2: distribution, lenses, modules)
-REMAINING = {
-    "core/distribution.py": "S2", "core/edition.py": "S2", "core/house.py": "S2", "core/menus.py": "S2", "core/module_parts.py": "S2",
-    "core/resolution.py": "S5",
-}
+#: console files that still import the resolver, each with the step that deletes the import
+REMAINING = {"core/resolution.py": "S5"}
 IMPORT = re.compile(r"^\s*(?:from core import resolution|from core\.resolution import|import core\.resolution|from core import resolution as)", re.M)
 
 
@@ -68,3 +67,14 @@ def test_no_page_shows_the_console_s_own_build_as_the_version():
                 if not cache_busting:
                     shown.append(f"{t.relative_to(CONSOLE)}:{n}")
     assert not shown, f"the console's own build shown as text (show the server's version, server_about().version): {shown}"
+
+
+def test_no_console_file_reads_a_distribution_lens_or_manifest_file():
+    assert not (CONSOLE / "core" / "distribution.py").exists(), "the distribution compile is the server's (GET /api/v1/console/bootstrap)"
+    found = []
+    for p in _sources():
+        text = p.read_text(encoding="utf-8")
+        for word in ("config/distributions", "../config/lenses", "distributions_dir", "lens.dir", "module_manifests_dir", "kernel.yaml"):
+            if word in text:
+                found.append(f"{p.relative_to(CONSOLE).as_posix()}: {word}")
+    assert not found, f"the console reads the server's distribution, lens or manifest files again: {found}"

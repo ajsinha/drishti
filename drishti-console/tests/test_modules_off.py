@@ -20,6 +20,7 @@ administrator", and the module's static assets are not served (nor to a person w
 drishti-banking's BankingModuleOffTest and BankingModuleOnTest."""
 from __future__ import annotations
 
+import server_answers
 import re
 from urllib.parse import unquote
 
@@ -51,7 +52,7 @@ def _console(backend, monkeypatch, about, answer):
     async def mine(ident):
         return answer
     monkeypatch.setattr(backend, "modules", mine, raising=False)
-    app.state.editions.learn(about)
+    server_answers.follow(app, about)
     return app
 
 

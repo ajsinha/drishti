@@ -20,6 +20,7 @@ one) or the selected row across the dates, in Line, Dots, Area or Bars (remember
 matches; one date open says so; the selected row stays visible; the details give the cell's rank, PV, FX, days in the tail and source; PV, the change and Only tail scenarios redraw; By trade asks for the trades; the CSV and Arrow exports download.
 Every theme draws the heat and the outline; a phone gets the glance form without sideways scrolling; no request leaves the console's host.
 Skipped when Playwright or its Chromium is missing."""
+import server_answers
 import random
 import socket
 import threading
@@ -128,7 +129,7 @@ def smat_console():
 
     app = create_app(load_settings(CONSOLE / "config"))
     app.state.backend = SmatBackend()
-    app.state.editions.learn({"product": "Drishti Risk", "edition": {"name": "risk", "title": "Drishti Risk"}})
+    server_answers.follow(app, {"product": "Drishti Risk", "edition": {"name": "risk", "title": "Drishti Risk"}})
     port = _free_port()
     server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=port, log_level="warning", timeout_graceful_shutdown=2))
     thread = threading.Thread(target=server.run, daemon=True)

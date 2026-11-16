@@ -31,11 +31,6 @@ from wb_live import _stack
 
 #: the console files that still read outside the console's folder, each with the step that ends it (THIN_CONSOLE_DESIGN.md section 5)
 KNOWN_READERS = {
-    "core/distribution.py": "S2: the distribution files and module manifests (the bootstrap's compiled filter)",
-    "core/edition.py": "S2: lens files and kernel.yaml (the bootstrap's lenses and console-settings)",
-    "core/house.py": "S2: the modules' manifests for Home's house",
-    "core/menus.py": "S2: the modules' menus from their manifests",
-    "core/module_parts.py": "S2: the console parts shipped beside the console",
     "core/resolution.py": "S5: the resolver itself (its readers above)",
     "core/under_construction.py": "S3: config/under-construction.yaml",
     "core/engines.py": "S3: the engine catalogue copy",

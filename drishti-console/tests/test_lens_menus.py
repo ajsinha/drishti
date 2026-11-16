@@ -18,6 +18,7 @@ Drishti keeps Views, Risk, BI, Build, Admin and Help. The modules' menus come fr
 when the distribution keeps its command."""
 from __future__ import annotations
 
+import server_answers
 import re
 from urllib.parse import unquote
 
@@ -66,7 +67,7 @@ def _commands(panel: str) -> list[str]:
 def test_a_full_drishti_keeps_views_domains_create_admin_and_help(backend, monkeypatch):
     """The top bar (owner 2026-11-14, mock-up docs/lenses/mockups/navigation A): the modules' menus are columns of Domains, BI and Build are Create."""
     app = _app(backend, monkeypatch)
-    app.state.editions.learn({"product": "Drishti", "edition": None, "lenses": []})
+    server_answers.follow(app, {"product": "Drishti", "edition": None, "lenses": []})
     page = _client(app).get("/t").text
     assert _menus(page) == ["Views", "Domains", "Create", "Admin", "Help"]
 
@@ -75,7 +76,7 @@ def test_drishti_risk_has_one_risk_menu_with_the_engines_pages(backend, monkeypa
     """One domain active: Domains is named Risk. Its columns hold the VaR and exposure engines' pages, each with its command; Build is
     in Create, not a menu of its own."""
     app = _app(backend, monkeypatch)
-    app.state.editions.learn(RISK_ABOUT)
+    server_answers.follow(app, RISK_ABOUT)
     page = _client(app).get("/t").text
     assert _menus(page) == ["Views", "Risk", "Create", "Admin", "Help"]
     risk = _panel(page, "Risk")
@@ -92,7 +93,7 @@ def test_an_item_for_a_page_this_build_lacks_is_not_drawn(backend, monkeypatch):
     from core.menus import _route_paths
 
     app = _app(backend, monkeypatch)
-    app.state.editions.learn(RISK_ABOUT)
+    server_answers.follow(app, RISK_ABOUT)
     paths = _route_paths(app.routes)
     assert "/var" in paths and "/t" in paths                       # every included router is walked (FastAPI 0.142 keeps them whole)
     eng = _panel(_client(app).get("/t").text, "Risk")
@@ -106,7 +107,7 @@ def test_a_lens_puts_its_columns_first_for_that_person_only_and_keeps_the_rest(b
     monkeypatch.setenv("DRISHTI_PACKS", "core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,"
                                         "us-equities,funds,gleif")
     app = _app(backend, monkeypatch)
-    app.state.editions.learn({"product": "Drishti", "edition": None, "lenses": ["risk", "world", "market", "trading"]})
+    server_answers.follow(app, {"product": "Drishti", "edition": None, "lenses": ["risk", "world", "market", "trading"]})
     alice, bob = _client(app), _client(app, "bob")
     plain = _column_titles(bob.get("/t").text, "Domains")
     expected = {"world": ["Economies", "Markets · Rates", "Companies"],
@@ -135,7 +136,7 @@ def test_the_trading_lens_has_one_markets_menu_and_hides_nothing(backend, monkey
     """Product panel A19 (2026-11-06): the Trading lens is configuration. Markets gathers the market-data screens (Curves, Volatility, FX
     and Credit's columns, then equities and commodities) as columns of Domains; Admin stays (a lens never hides)."""
     app = _app(backend, monkeypatch)
-    app.state.editions.learn({"product": "Drishti", "edition": None, "lenses": ["trading"]})
+    server_answers.follow(app, {"product": "Drishti", "edition": None, "lenses": ["trading"]})
     alice = _client(app)
     alice.post("/lens/trading")
     page = alice.get("/t").text
