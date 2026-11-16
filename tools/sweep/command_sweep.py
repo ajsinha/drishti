@@ -58,7 +58,9 @@ FAULT = re.compile(r"DRS-\d+|not found|no such|has no columns|Traceback|Internal
 #: a connector's failure (DRS-5034 ...) as an Admin page lists it: the connector's own state, which the config sweep owns; one message: its connector, its reason, the parenthesis that follows
 CONNECTOR_ALERT = re.compile(r"DRS-5034 connector [^:]+:[^()]*(?:\([^)]*\))?")
 #: a connector whose lake tables are not there yet (an official results lake before its first capture) as an Admin page lists it: its state
-LAKE_STATE = re.compile(r"lake [\w.-]+, tables [^:]+: no such folder(?:\. Check \S+, load the pack's data, or see Admin > Connectors(?: \([^)]*\))?)?")   # (the page may cut it short)
+#: (the page may cut it short anywhere: a retry's "last error" is clipped at a fixed length, so where the cut lands depends on the lake's path,
+#: and "...: no such" with nothing after it is the same state)
+LAKE_STATE = re.compile(r"lake [\w.-]+, tables [^:]+: no such(?: folder(?:\. Check \S+, load the pack's data, or see Admin > Connectors(?: \([^)]*\))?)?)?")
 #: runs the owner parked, each with its reason: reported as "parked" (listed in the report), never a FAIL and never silently skipped
 PARKED = {"XRUN XR-2026-09-30-01": "parked until the CCR engine is built (owner 2026-11-15): the example names the test data's run, a lake "
                                    "built --as-of holds XR-<that date>-01",

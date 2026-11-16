@@ -15,7 +15,8 @@
 """The command sweep as a drill step (tools/sweep/command_sweep.py; TEST_HARNESS.md, "The command sweep"): every function of the FUNC directory,
 bare, with its example and with real ids of the saved test data, on a server of its own (sign-in on) over the full demo lake (every dataset of the
 saved test data, built once and cached: :func:`sweep_lake`; owner 2026-11-15: never the page walk's thin lake); any FAIL fails the drill.
-The report (Markdown and JSONL) is kept in DRISHTI_SWEEP_OUT (the drill's logs folder), else data/sweep/.
+The report (Markdown and JSONL) is kept in DRISHTI_SWEEP_OUT (the drill's logs folder), else in the test's own scratch folder (never
+under data/: the drill's re-run sets no DRISHTI_SWEEP_OUT, drill of 2026-11-16).
 
 DRISHTI_SWEEP_BASE=<console URL> sweeps a console that is already running; DRISHTI_SWEEP_ADMIN / _ADMIN_PASSWORD / _ROLE / _ROLE_PASSWORD sign in to
 it. Otherwise the test starts its own server with sign-in on over the full demo lake (the walk's own stack is open, with no sign-in, so it
@@ -82,14 +83,14 @@ def _make_role_user(base: str) -> None:
     assert op.open(req, timeout=60).status == 201
 
 
-def test_every_function_runs_clean(signed_in_stack, capsys):
+def test_every_function_runs_clean(signed_in_stack, capsys, tmp_path):
     """Signed in as the administrator: any FAIL fails the drill. A role user (DRISHTI_SWEEP_ROLE set) is swept too, report-only: its FAILs are
     printed and kept in the report, never blocking (owner 2026-11-14: testing is done as the administrator)."""
     base, admin, admin_password, role, role_password = signed_in_stack
     spec = importlib.util.spec_from_file_location("command_sweep", SWEEP)
     sweep = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(sweep)
-    args = ["--base", base, "--out", os.environ.get("DRISHTI_SWEEP_OUT") or str(sweep.ROOT / "data" / "sweep"),
+    args = ["--base", base, "--out", os.environ.get("DRISHTI_SWEEP_OUT") or str(tmp_path / "sweep-out"),
             "--as-of", os.environ.get("DRISHTI_SWEEP_AS_OF", "" if os.environ.get("DRISHTI_SWEEP_BASE") else SNAPSHOT_DATE)]   # the lake's last date
     for flag, value in (("--admin", admin), ("--admin-password", admin_password), ("--role", role), ("--role-password", role_password)):
         if value:

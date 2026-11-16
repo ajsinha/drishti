@@ -533,7 +533,9 @@ def test_python_table_template_notebook_contract_and_the_sample_run(pg):
     wait(pg, "!!document.querySelector('[data-dialog][open] [data-save-go]')")
     pg.click("[data-save-go]")
     wait(pg, "/Saved as a draft/.test(document.querySelector('[data-msg]').textContent)")
-    assert pg.locator("[data-group='python'] [data-object='mine.headroom']").count() == 1
+    # the message comes with the save's answer; the object list is fetched again after it (drishti_editors.js save -> loadObjects), which
+    # on a loaded machine lands later (drill of 2026-11-16: counted 0 right after the message)
+    wait(pg, "document.querySelectorAll(\"[data-group='python'] [data-object='mine.headroom']\").length === 1")
 
 
 # ---- themes, phones, keyboard -------------------------------------------------------------------------------------------------------
