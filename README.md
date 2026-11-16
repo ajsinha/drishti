@@ -95,13 +95,15 @@ loaded.
   (*Exposure needs data: exposure-path is not bound*, with links to Admin → Data bindings and Help); its API answers `409 DRS-1035` with
   the need and the command line says the same words.
 
-**The modules that ship**: four first-party modules installed by default, each packed into a `.dmod` by the normal build (`packaging/dist`) and passing C1–C15:
+**The modules that ship**: first-party modules installed by default, each packed into a `.dmod` by the normal build (`packaging/dist`) and passing C1–C15:
 
 | Module | Folder | Brings | Lenses |
 |---|---|---|---|
 | **banking** (the one with an allowance) | `modules/banking/` | VaR and ES (historical and parametric, backtests, the market-risk cube), counterparty exposure and the pre-deal check, sensitivities, FRTB-SA, SIMM, official results; the trading, market-risk and counterparty-risk packs; the drishti-risk library; requires market-data | Risk, Trading, CRO, the two risk cubes |
 | **market-data** | `modules/market-data/` | prices, curves, volatilities and FX, and their functions; on whenever banking or capital markets is | Market |
 | **capital-markets** | `modules/capital-markets/` | US equities (SEC EDGAR filings and facts, indices), funds and ETFs | Markets |
+| **trading** | `modules/trading/` | the live trade blotter: trades ticking from the bank's messaging, edits written back through the bindings with a version per trade, four eyes where the site asks, full audit; not an order or execution system | Trading |
+| **source-endur, source-calypso, source-murex, source-wss, source-swapone, source-ici** | `modules/source-<system>/` | one module per trading system, each feeding the one canonical `trade` kind (its connector templates, field map and inbox routing); each switches on or off on its own | Trading |
 | **economy** | `modules/economy/` | economies, forecasts, governments and news; the public sector: World Bank indicators, central banks, Statistics Canada, the OECD, official press releases, GDELT world events; the World page | World, Public sector |
 | **genomics** (a sample third party's module, not installed by default) | `modules/genomics/` | a VCF reader inside the module, the kinds `variant`, `sample`, `gene`, `cohort`, the functions `VARIANT`, `GENE`, `COHORT`, synthetic cohorts, its own visual | Research |
 
@@ -308,6 +310,14 @@ report sign-offs go through one Approvals queue with four eyes. Anything that de
   [tutorial 21](docs/tutorials/21-run-it-in-production.md)).
 - **People and access**: passwords or OpenID Connect, roles per kind, field masks, API tokens, an access log and an audit trail; off by
   default for a developer machine, on for any shared one ([ADMIN_GUIDE.md](docs/guides/ADMIN_GUIDE.md)).
+- **Settings files and paths**: a site's settings live in `.ini` files named by absolute path (`-Ddrishti.settings.file=/etc/drishti/prod.ini,/etc/drishti/secrets.ini`)
+  with named lakes, databases and brokers (`[lake.<name>]`, `[db.<name>]`, `[broker.<name>]`, `[connector.<name>]`) and `${...}` placeholders;
+  every folder and file is an absolute path or anchored to a named root, and Admin → Configuration → Resolved paths shows each one with where
+  it came from ([CONFIGURATION.md](docs/admin/CONFIGURATION.md)).
+- **Brokers are optional**: a Kafka, ActiveMQ or RabbitMQ connector whose broker is not there says *waiting for broker*, keeps the server
+  healthy and serves the lake snapshot until the broker appears; every TLS and SASL form is a setting of its broker section.
+- **Read-only connectors**: the server only reads a connector's template, a site's override and its secrets, merged in memory; it never
+  writes or retires a connector file.
 - **Configuration**: every setting in three tiers with its value in effect and where it came from; a change is a proposal a second
   administrator approves ([CONFIGURATION.md](docs/admin/CONFIGURATION.md)).
 - **Clusters** (Drishti\*net, off as shipped): servers join by gossip on a port of their own, any member answers any request, and VaR
@@ -421,39 +431,39 @@ the modules they may use. The map of every document is [docs/README.md](docs/REA
 
 <!-- code-volume:begin -->
 
-*Measured 2026-11-11 from the files the repository tracks (`python3 tools/docs/code_volume.py`; sample data and vendored libraries not counted).*
+*Measured 2026-11-15 from the files the repository tracks (`python3 tools/docs/code_volume.py`; sample data and vendored libraries not counted).*
 
 | Language | Lines | Files |
 |---|---|---|
-| Java, product | 450k | 2,263 |
-| Java, tests | 173k | 1,079 |
-| Python, product (console, tools, loaders, feeds) | 147k | 745 |
-| Python, tests | 110k | 631 |
-| JavaScript, product (console and Elements) | 131k | 505 |
-| JavaScript, tests | 5k | 24 |
-| CSS | 19k | 119 |
-| HTML (templates and pages) | 40k | 367 |
-| YAML: configuration, Sutras, data contracts | 114k | 1,465 |
-| Markdown: guides, tutorials, design | 227k | 325 |
+| Java, product | 463k | 2,304 |
+| Java, tests | 182k | 1,143 |
+| Python, product (console, tools, loaders, feeds) | 155k | 776 |
+| Python, tests | 116k | 677 |
+| JavaScript, product (console and Elements) | 133k | 512 |
+| JavaScript, tests | 5k | 25 |
+| CSS | 20k | 123 |
+| HTML (templates and pages) | 41k | 379 |
+| YAML: configuration, Sutras, data contracts | 117k | 1,536 |
+| Markdown: guides, tutorials, design | 232k | 335 |
 
-About **786k lines of product code** and **287k lines of tests** (37% of the product code), with **227k lines of documentation**.
+About **812k lines of product code** and **303k lines of tests** (37% of the product code), with **232k lines of documentation**.
 
 | What | Count |
 |---|---|
-| Maven modules | 48 in 9 subject folders: `compute/`, `drishti-sdk/`, `kernel/`, `lake/`, `modules/`, `net/`, `packaging/`, `plugins/`, `testing/` |
-| Modules (`.dmod`) | 5: banking, capitalmarkets, economy, genomics, market-data |
+| Maven modules | 50 in 10 subject folders: `compute/`, `drishti-sdk/`, `examples/`, `kernel/`, `lake/`, `modules/`, `net/`, `packaging/`, `plugins/`, `testing/` |
+| Modules (`.dmod`) | 12: banking, capitalmarkets, economy, genomics, market-data, source-calypso, source-endur, source-ici, source-murex, source-swapone, source-wss, trading |
 | Lenses | 11: world, markets, publicsector, cio, oversight, risk, trading, market, cro, mr-cube, ccr-cube |
 | Functions a module declares | 121 (48 banking, 12 capitalmarkets, 35 economy, 3 genomics, 23 market-data); every other command word is the kernel's |
-| Console routes | 667 |
-| Server REST handlers | 817 |
-| Drishti Elements | 11 libraries, 196 ES modules |
-| Domain packs | 17: banking 4, capitalmarkets 2, core 3, economy 8 |
+| Console routes | 678 |
+| Server REST handlers | 824 |
+| Drishti Elements | 11 libraries, 202 ES modules |
+| Domain packs | 17: banking 3, capital-markets 2, core 3, economy 8, market-data 1 |
 | Sutras in the shipped packs | 248 |
 | Connectors | 13 plugins (a driver or native library each) and 9 built-in types |
 | Feeds | 13 |
 | Lake files | 9 |
-| Test files | 1,579: Java 985, console 259, browser 184, tools 127, JavaScript 24 |
-| Documents under docs/ | 191 (32 guides, 22 tutorials) |
+| Test files | 1,687: Java 1049, console 284, browser 193, tools 136, JavaScript 25 |
+| Documents under docs/ | 187 (25 guides, 11 tutorials) |
 
 <!-- code-volume:end -->
 
