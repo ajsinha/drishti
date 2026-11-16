@@ -20,6 +20,9 @@ when data is missing or still loading; the VaR page with Explain and Why it move
 testing.** This release carries the work planned as 2.9.11.i1, i1b, i2, i3 and i4, shipped as one tag. The console on Spring Boot is not
 part of it.
 
+The build of this release still reports its version as 2.9.11.g (the server's About answer, the console footer and the image tags). The
+release itself is tag `v2.9.11.i_4`; the next release takes the version from one place so the two always agree.
+
 ## What changes for risk users
 
 - **The VaR page** shows only the scope you chose (the whole bank, a node and below with a breadcrumb up, or a basket's own positions by the
