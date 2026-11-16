@@ -81,6 +81,9 @@
   everything Drishti writes under the data folder).
 - **Known limit, written down:** the Python data tools that open module files themselves (`lake build --pack modules/...`,
   `build_demo_lakes.py`, the pack generators, `varcli`) do not read the overrides view yet; RELEASE_NOTES says so with the workaround.
+- **The Windows workflow runs the Python commands** (`.github/workflows/windows.yml`): `build jar` puts the jar into `lib/` (no copy by
+  hand), `setup` then `setup --check` must pass, `start server --background` serves the lake for the view, search and past-date checks,
+  then `status` and `stop server`, which must stop the server by itself (the HTTP stop), remove the pid file and leave no process.
 
 The Python commands release. The build still reports its version as 2.9.11.g (the version from one place is the next release); the release is tag `v2.9.11.i_5`.
 

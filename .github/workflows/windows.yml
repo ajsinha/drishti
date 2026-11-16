@@ -14,8 +14,9 @@
 
 name: windows
 # Drishti on Windows with the native Delta engine (no Hadoop, no winutils.exe): build, the Delta engine's, the Delta
-# connector's and the server's tests, then a server started on a generated lake and asked for a view, a search and a
-# past business date. Testcontainers tests skip themselves (no Docker on Windows runners).
+# connector's and the server's tests, then the Python commands an administrator runs (build jar, setup, setup --check,
+# start server, status, stop server) with the server on a generated lake asked for a view, a search and a past business
+# date. Testcontainers tests skip themselves (no Docker on Windows runners).
 on:
   push: { branches: [develop, main] }
   pull_request:
@@ -47,26 +48,25 @@ jobs:
           python tools/packgen/banking/make_data.py --lake data/delta/demo --rows data/build/lake-rows --no-load
           python tools/samplegen/load_rows.py --root data/delta/demo --rows data/build/lake-rows/banking-history.jsonl --restated data/build/lake-rows/banking-restated.jsonl
           if (-not (Test-Path data/delta/demo/trading/trade_endur/_delta_log)) { throw 'no trade table was written' }
-      - name: The server on the lake, asked for a view, a search and a past date
+      # the Python commands, as an administrator runs them on Windows (docs/DEPLOYMENT_AND_QA_GUIDE.md section 7): the jar into lib/ by
+      # build jar (never copied by hand), the machine prepared and checked, the server started, asked, shown in status and stopped
+      - name: Build the server jar into lib/ (python tools/drishti.py build jar)
+        run: python tools/drishti.py build jar --offline
+      - name: Prepare and check this machine (setup, then setup --check)
+        run: |
+          python tools/drishti.py setup --skip-venv
+          python tools/drishti.py setup --check --skip-venv
+          if ($LASTEXITCODE -ne 0) { throw 'setup --check found something to do' }
+      - name: The server on the lake (start server), asked for a view, a search and a past date; status; stop server
         env:
           DRISHTI_PACKS: market-risk
         run: |
-          New-Item -ItemType Directory -Force -Path lib | Out-Null
-          Copy-Item (Get-ChildItem kernel/drishti-server/target/drishti-server-*-exec.jar | Select-Object -First 1).FullName lib/
-          $jar = (Get-ChildItem lib/drishti-server-*-exec.jar | Select-Object -First 1).FullName
-          New-Item -ItemType Directory -Force -Path data/logs, data/tmp/server | Out-Null
-          $tmp = (Resolve-Path data/tmp/server).Path
-          $server = Start-Process -FilePath java -ArgumentList "-Djava.io.tmpdir=$tmp", '-XX:+UseCompactObjectHeaders', '-Xmx1g', '-jar', $jar -PassThru `
-            -RedirectStandardOutput data/logs/server.log -RedirectStandardError data/logs/server.err.log
+          python tools/drishti.py start server --background --heap 1g --wait 240
+          if ($LASTEXITCODE -ne 0) { throw "start server failed ($LASTEXITCODE)" }
+          $pidFile = 'data/run/server.pid'
+          $serverPid = [int](Get-Content $pidFile -TotalCount 1)
           try {
             $b = 'http://localhost:18480'
-            $up = $false
-            for ($i = 0; $i -lt 90 -and -not $up; $i++) {
-              Start-Sleep -Seconds 2
-              if ($server.HasExited) { throw 'the server stopped' }
-              try { $up = (Invoke-RestMethod "$b/actuator/health" -TimeoutSec 2).status -eq 'UP' } catch { }
-            }
-            if (-not $up) { throw 'the server did not come up' }
             Start-Sleep -Seconds 5                                   # the lake's first index
             $health = Invoke-RestMethod "$b/api/v1/admin/health"
             $lake = $health.sources | Where-Object { $_.name -eq 'trading-store' }
@@ -82,9 +82,17 @@ jobs:
             $past = Invoke-RestMethod "$b/api/v1/entities/trade/MX-20000001/raw" -Headers @{ 'X-Drishti-As-Of' = '2026-09-29' }
             Write-Host "past: $($past.provenance | ConvertTo-Json -Compress)"
             if ($past.provenance.businessDate -ne '2026-09-29') { throw "the past date read $($past.provenance.businessDate), not 2026-09-29" }
+            python tools/drishti.py status
           } finally {
-            Stop-Process -Id $server.Id -ErrorAction SilentlyContinue
+            $stopped = (python tools/drishti.py stop server --timeout 60 | Out-String)
+            Write-Host $stopped
           }
+          # the launcher's stop asked the server over HTTP: it is gone, its pid file removed, the port free
+          if (Test-Path $pidFile) { throw 'stop server left the pid file' }
+          if (Get-Process -Id $serverPid -ErrorAction SilentlyContinue) { throw "the server (pid $serverPid) still runs after stop server" }
+          if ($stopped -match 'stopped by force') { throw "the server did not stop by itself: $stopped" }
       - name: Server log
         if: always()
-        run: if (Test-Path data/logs/server.log) { Get-Content data/logs/server.log -Tail 200 }
+        run: |
+          if (Test-Path data/logs/server.log) { Get-Content data/logs/server.log -Tail 200 }
+          if (Test-Path data/logs/server.out) { Get-Content data/logs/server.out -Tail 50 }
