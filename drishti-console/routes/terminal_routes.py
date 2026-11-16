@@ -446,7 +446,7 @@ async def view_panels(request: Request, kind: str, id_: str, panels: str = ""):
     """Some panels of a view as ready HTML, built with the controls' values (``?panels=cashflows,legs&ctl.leg=L2``): what the page asks
     for when a control changes, so only the panels that read it move. Also the strip and the controls (their options and values may
     have moved: a cascading child). ``panels=-`` builds none. The server builds only the named panels."""
-    ctl = controls.from_query(request.query_params)
+    ctl = controls.of(request)
     ids = [p for p in panels.split(",") if p and p != "-"] if panels else None
     try:
         chosen = request.query_params.get("sutra")
@@ -510,7 +510,7 @@ async def view_event(request: Request, kind: str, id_: str):
         return JSONResponse({"code": "DRS-5001", "detail": "a click names its row"}, status_code=400)
     click = {"panel": str(body.get("panel") or ""), "event": str(body.get("event") or ""), "row": row, "selections": sels}
     try:
-        r = await request.app.state.backend.view_event(kind, id_, ident(request), click, controls=controls.from_query(request.query_params),
+        r = await request.app.state.backend.view_event(kind, id_, ident(request), click, controls=controls.of(request),
                                                        sutra=request.query_params.get("sutra") or None,
                                                        **(await designer_routes.design_kw(request, kind)))
     except BackendError as e:
@@ -527,7 +527,7 @@ async def view_children(request: Request, kind: str, id_: str, panel: str):
     sels = request.query_params.getlist("sel")[:32]
     try:
         groups = await request.app.state.backend.view_children(kind, id_, ident(request), panel, sels,
-                                                               controls=controls.from_query(request.query_params),
+                                                               controls=controls.of(request),
                                                                sutra=request.query_params.get("sutra") or None,
                                                                **(await designer_routes.design_kw(request, kind)))
     except BackendError as e:
@@ -544,7 +544,7 @@ async def view(request: Request, kind: str, id_: str, embed: int = 0, gen: int =
         return RedirectResponse(hist, status_code=303)
     sid = collab_core.set_share(share)              # a view opened through a share's link tells the server so (its access log)
     pin = None                                      # how a pinned link (?asOf=&knownAt=&gen=) was honoured, for the banner
-    ctl = controls.from_query(request.query_params)  # ?ctl.leg=L2: the controls' values, so a link reproduces what was seen
+    ctl = controls.of(request)  # ?ctl.leg=L2: the controls' values, so a link reproduces what was seen
     more = {"controls": ctl} if ctl else {}
     chosen = (request.query_params.get("sutra") or "").strip()     # ?sutra=book-desk: another Sutra of the kind draws the view
     if chosen:

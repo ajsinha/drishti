@@ -153,7 +153,7 @@ async def raw(request: Request, kind: str, id_: str):
 @router.get("/view/{kind}/{id_:path}")
 async def view(request: Request, kind: str, id_: str):
     try:
-        ctl = controls.from_query(request.query_params)
+        ctl = controls.of(request)
         return await request.app.state.backend.view(kind, id_, ident(request), **({"controls": ctl} if ctl else {}))
     except BackendError as e:
         return view_problem(request, e, kind)
@@ -204,7 +204,7 @@ async def stream(request: Request, kind: str, id_: str):
 
     async def events():
         try:
-            ctl = controls.from_query(request.query_params)
+            ctl = controls.of(request)
             upstream = backend.stream(kind, id_, ident(request), **({"controls": ctl} if ctl else {}))
             try:
                 async for event, data in upstream:

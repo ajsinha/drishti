@@ -362,7 +362,7 @@ async def panels_fragment(request: Request, kind: str, id_: str, panels: str = "
         me, _claims = await identity(request)
     except EmbedError as e:
         return await refuse(request, e.status, e.code, e.detail, e.retry_after)
-    ctl = controls.from_query(request.query_params)
+    ctl = controls.of(request)
     ids = [p for p in panels.split(",") if p and p != "-"] if panels else None
     try:
         vm = await request.app.state.backend.view(kind, id_, me, controls=ctl, panels=ids)
@@ -382,7 +382,7 @@ async def view(request: Request, kind: str, id_: str):
         me, _claims = await identity(request)
     except EmbedError as e:
         return await refuse(request, e.status, e.code, e.detail, e.retry_after)
-    ctl = controls.from_query(request.query_params)
+    ctl = controls.of(request)
     try:
         vm = await request.app.state.backend.view(kind, id_, me, **({"controls": ctl} if ctl else {}))
     except BackendError as e:

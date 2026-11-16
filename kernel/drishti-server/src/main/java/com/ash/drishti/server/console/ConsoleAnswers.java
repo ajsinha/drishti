@@ -245,7 +245,8 @@ public class ConsoleAnswers {
     /**
      * The numbers the console pre-checks with before it sends anything on (THIN_CONSOLE_DESIGN.md 3.2, step S6): the builder's upload
      * limits ({@code drishti.builder.max-samples}, {@code max-file-mb}, {@code max-total-mb}), which the server enforces the same way
-     * (413 DRS-5005). The console keeps no copy of the numbers.
+     * (413 DRS-5005); the bounds of a request's {@code ctl.} parameters ({@code ControlValues}); FORM's largest row count
+     * ({@code FormCompiler.MAX_ROWS}). The console keeps no copy of the numbers.
      */
     private Map<String, Object> limits() {
         Map<String, Object> out = new LinkedHashMap<>();
@@ -257,6 +258,12 @@ public class ConsoleAnswers {
             b.put("maxTotalMb", s.limits().maxTotalMb());
             out.put("builder", b);
         }
+        Map<String, Object> ctl = new LinkedHashMap<>();                     // the ctl.<id>=value parameters a request carries (ControlValues)
+        ctl.put("maxControls", com.ash.drishti.engine.control.ControlValues.MAX_CONTROLS);
+        ctl.put("maxKey", com.ash.drishti.engine.control.ControlValues.MAX_KEY);
+        ctl.put("maxValue", com.ash.drishti.engine.control.ControlValues.MAX_VALUE);
+        out.put("controls", ctl);
+        out.put("form", Map.of("maxRows", com.ash.drishti.engine.search.form.FormCompiler.MAX_ROWS));   // FORM's row choices stop here
         return out;
     }
 

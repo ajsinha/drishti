@@ -86,3 +86,16 @@ def test_the_console_keeps_no_engine_catalogue_or_under_construction_file():
     for f in ("core/engines.py", "core/under_construction.py"):
         text = (CONSOLE / f).read_text(encoding="utf-8")
         assert "yaml" not in text and "read_text" not in text, f"{f} reads a file: the server's answer holds it (step S3)"
+
+
+def test_the_console_keeps_no_copy_of_the_server_s_limits_host_rule_or_secret_rule():
+    """Step S6: the limits come in the installation answer's ``limits``; the host-address rule is the server's (its member list) and the
+    tools' (tools/hostaddr.py); which settings are secrets is the server's rule (``/admin/settings/secret-keys``)."""
+    assert not (CONSOLE / "core" / "hostrule.py").exists(), "the host-address rule is the server's HostAddress (and tools/hostaddr.py)"
+    text = (CONSOLE / "core" / "controls.py").read_text(encoding="utf-8")
+    assert not re.search(r"MAX_\w+\s*=\s*\d", text), "core/controls.py holds a number of its own: the bounds are the server's (limits.controls)"
+    assert "LIMITS" not in (CONSOLE / "core" / "forms.py").read_text(encoding="utf-8"), "FORM's largest row count is the server's (limits.form)"
+    for f in ("core/settings_page.py", "core/config_editor.py"):
+        assert "def is_secret" not in (CONSOLE / f).read_text(encoding="utf-8"), f"{f}: the secret rule is the server's"
+    found = [p.relative_to(CONSOLE).as_posix() for p in _sources() if "hostrule" in p.read_text(encoding="utf-8")]
+    assert not found, f"the console checks host addresses with a copy of the server's rule again: {found}"

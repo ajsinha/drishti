@@ -25,7 +25,7 @@ from fastapi.responses import JSONResponse
 from core import config_editor
 from core.backend import BackendError
 from core.csrf import BodyError, json_body
-from core.settings_page import console_effective, server_effective
+from core.settings_page import console_effective, console_keys, server_effective
 from routes.common import ident, library, render
 
 router = APIRouter(prefix="/admin", include_in_schema=False)
@@ -57,7 +57,12 @@ async def page(request: Request, q: str = "", tier: str = "everyday", area: str 
         server = server_effective(await request.app.state.backend.admin("GET", "/settings", me))
     except BackendError as e:
         server, server_error = {}, e
-    console = console_effective(request.app.state.settings, CONSOLE_DIR / "config")
+    try:   # which of this console's own keys are secrets: the server's rule (keys only, never a value)
+        secrets = set((await request.app.state.backend.admin("POST", "/settings/secret-keys", me,
+                                                             {"keys": console_keys(CONSOLE_DIR / "config")})).get("secret") or [])
+    except BackendError as e:
+        secrets, server_error = set(console_keys(CONSOLE_DIR / "config")), server_error or e   # not known: nothing of the console's is shown
+    console = console_effective(request.app.state.settings, CONSOLE_DIR / "config", secrets=secrets)
     try:   # the server's launch roots and every other path setting, absolute, each with where it came from ("Resolved paths")
         paths = await request.app.state.backend.admin("GET", "/settings/paths", me)
     except BackendError as e:
@@ -87,8 +92,8 @@ async def propose(request: Request):
         body = await json_body(request, limit=16384)
     except BodyError as e:
         return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.status)
-    if not isinstance(body, dict) or config_editor.is_secret(str(body.get("key") or "")):
-        return JSONResponse({"code": "DRS-5001", "detail": "a secret is never proposed here"}, status_code=400)
+    if not isinstance(body, dict):
+        return JSONResponse({"code": "DRS-5001", "detail": "a JSON object is expected"}, status_code=400)   # a secret: the server refuses it
     sent = {k: str(body.get(k) or "") for k in ("key", "area", "value", "was", "reason")}
     try:
         return await request.app.state.backend.admin("POST", "/settings/proposals", ident(request), sent)

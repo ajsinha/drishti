@@ -354,7 +354,7 @@ async def preview_panels(request: Request, id_: str, sample: str = "", panels: s
     """Some panels of the Design's preview as ready HTML, built with the controls' values (``?panels=schedule&ctl.legs=1``): what the
     Controls tab's small preview asks for when a control changes, and the controls themselves (options and values as the server resolved
     them). The same answer as the page's ``/v/<kind>/<id>/panels``, for a Design's sample."""
-    ctl = controls.from_query(request.query_params)
+    ctl = controls.of(request)
     params = {"sample": sample or None, **({"panels": ",".join(p for p in panels.split(",") if p) or "-"} if panels else {}), **ctl}
     try:
         vm = await request.app.state.backend.designs("GET", f"/{id_}/preview", ident(request), **params)
@@ -370,7 +370,7 @@ async def preview_panels(request: Request, id_: str, sample: str = "", panels: s
 @router.get("/designs/{id_}/preview")
 async def preview(request: Request, id_: str, sample: str = ""):
     """The Design's Sutra against one of its samples, as Studio draws it. A stored entity the user may not open is a 403 'no access'."""
-    ctl = controls.from_query(request.query_params)
+    ctl = controls.of(request)
     try:
         vm = await request.app.state.backend.designs("GET", f"/{id_}/preview", ident(request), sample=sample or None, **ctl)
     except BackendError as e:

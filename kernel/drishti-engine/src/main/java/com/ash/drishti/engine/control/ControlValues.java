@@ -37,6 +37,8 @@ public record ControlValues(Map<String, String> raw, Set<String> only) {
     public static final int MAX_VALUE = 2_000;
     /** The most controls a request carries values for. */
     public static final int MAX_CONTROLS = 32;
+    /** The longest parameter name ({@code ctl.} and the control's id) a request may carry. */
+    public static final int MAX_KEY = 40;
 
     public ControlValues {
         raw = Map.copyOf(raw);
@@ -51,7 +53,7 @@ public record ControlValues(Map<String, String> raw, Set<String> only) {
             if (v == null || v.length == 0 || raw.size() >= MAX_CONTROLS) {
                 return;
             }
-            if (k.startsWith(PREFIX) && k.length() > PREFIX.length() && k.length() <= 40) {
+            if (k.startsWith(PREFIX) && k.length() > PREFIX.length() && k.length() <= MAX_KEY) {
                 String joined = String.join(",", v);
                 raw.put(k.substring(PREFIX.length()), joined.length() > MAX_VALUE ? joined.substring(0, MAX_VALUE) : joined);
             } else if ("panels".equals(k)) {

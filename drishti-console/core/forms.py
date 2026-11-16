@@ -22,9 +22,20 @@ from typing import Iterable
 from urllib.parse import urlencode
 
 RESERVED = "FORM"          # a reserved command word, like RUPAKA: no pack may define a mnemonic with this name
-LIMITS = (25, 50, 100, 250, 500, 1000)
+CHOICES = (25, 50, 100, 250, 500, 1000, 2500, 5000)   # the row counts offered, up to the server's largest (limits.form.maxRows)
 PRESETS = ["today", "yesterday", "last 5 business days", "last 10 business days", "next 5 business days", "last 7 days", "last 30 days",
            "this week", "this month", "month to date", "last month", "year to date"]
+
+
+def limits(app) -> tuple[int, ...]:
+    """The row counts a form offers: the choices up to the server's largest (its installation answer's ``limits.form.maxRows``,
+    THIN_CONSOLE_DESIGN.md step S6); the console keeps no copy of the number. Before the server's first answer: the smallest choices."""
+    answer = getattr(getattr(getattr(app, "state", None), "editions", None), "answer", None) or {}
+    try:
+        top = int(((answer.get("limits") or {}).get("form") or {}).get("maxRows") or 0)
+    except (TypeError, ValueError):
+        top = 0
+    return tuple(n for n in CHOICES if n <= top) or CHOICES[:1]
 
 
 def criteria_from(params: Iterable[tuple[str, str]], fields: list[dict]) -> list[dict]:

@@ -221,7 +221,7 @@ async def panels(request: Request, kind: str, id_: str, panels: str = ""):
         return await refuse(request, e.status, e.code, e.detail, e.retry_after)
     ids = [p for p in panels.split(",") if p and p != "-"] if panels else None
     try:
-        vm = await request.app.state.backend.view(kind, id_, me, controls=controls.from_query(request.query_params), panels=ids)
+        vm = await request.app.state.backend.view(kind, id_, me, controls=controls.of(request), panels=ids)
     except BackendError as e:
         return await refuse(request, e.page_status, e.code, e.detail, e.retry_after)
     return await reply(request, {"panels": [{"id": p["id"], "kind": p["kind"], "title": p.get("title") or "", "panel": p} for p in vm.get("panels") or []],
@@ -235,7 +235,7 @@ async def view(request: Request, kind: str, id_: str):
         me, _claims = await identity(request)
     except EmbedError as e:
         return await refuse(request, e.status, e.code, e.detail, e.retry_after)
-    ctl = controls.from_query(request.query_params)
+    ctl = controls.of(request)
     try:
         vm = await request.app.state.backend.view(kind, id_, me, **({"controls": ctl} if ctl else {}))
     except BackendError as e:

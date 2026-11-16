@@ -18,9 +18,15 @@
 
 ## Unreleased
 
-- **The thin console, step S6: the builder's limits come from the server.** The installation answer carries `limits.builder`
-  (`drishti.builder.max-samples`, `max-file-mb`, `max-total-mb`); the console pre-checks an upload with the server's numbers and names
-  the server's keys in its refusal. Removed console settings: `builder.max_samples`, `builder.max_file_mb`, `builder.max_total_mb`.
+- **The thin console, step S6: limits, the secret rule and the host rule are the server's.** The installation answer carries
+  `limits.builder` (`drishti.builder.max-samples`, `max-file-mb`, `max-total-mb`), `limits.controls` (how many `ctl.` parameters a
+  request carries, how long a name and a value) and `limits.form` (FORM's largest row count, `maxRows`); the console checks with the
+  server's numbers and names the server's keys in its refusal. Removed console settings: `builder.max_samples`, `builder.max_file_mb`,
+  `builder.max_total_mb`. Admin -> Configuration shows the server's values as the server masked them and asks the server which of the
+  console's own keys are secrets (`POST /api/v1/admin/settings/secret-keys`, keys only); a secret proposal is refused by the server.
+  The console's copy of the host-address rule (`core/hostrule.py`) is deleted: discovered servers come from the server's member list,
+  which the server's `HostAddress` already checks, and the rule's Python home is `tools/hostaddr.py` (the tools'). The live-channel
+  relay's advertised address is refused only when the address itself is loopback, wildcard or link-local.
 - **The thin console, step S7: the console calls the server's AI layer only.** The console's own AI layer is deleted
   (`drishti-console/core/ai/`: its providers, registry, policy, masking, limits, MCP client, TLS and proxy rules; `core/retry.py`), with
   its settings `ai.*`, `mcp.*` and `retry.*` on the console (`DRISHTI_AI_ENABLED`, `DRISHTI_AI_DIR`, `DRISHTI_AI_DEFAULT_MODEL`,

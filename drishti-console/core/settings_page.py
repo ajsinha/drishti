@@ -20,8 +20,9 @@ meaning) and an area (``?area=``) hide the rows that do not match, server-side a
 (``web/static/js/drishti_configuration.js``). On a phone each row becomes a card (``drishti_help-config.css``): no sideways scroll.
 
 The values in effect and where each came from are Admin → Configuration's (core/config_editor.py), which reads them with
-:func:`server_effective` and :func:`console_effective` below. Secrets never show: a key with a word secret, password, token, key or
-credential in it (and the known secret settings) shows ``••••``.
+:func:`server_effective` (the server's answer as it is: the server has masked its secrets) and :func:`console_effective` (this console's
+own keys). Which of the console's own keys are secrets is the server's rule too (``POST /api/v1/admin/settings/secret-keys``, keys only,
+THIN_CONSOLE_DESIGN.md step S6): a secret shows ``••••``; the console keeps no copy of the rule.
 """
 from __future__ import annotations
 
@@ -34,8 +35,6 @@ from typing import Any
 import yaml
 
 MASK = "••••"
-_SECRET_WORDS = {"secret", "secrets", "password", "passwd", "passphrase", "token", "key", "credential", "credentials", "apikey"}
-_KNOWN_SECRETS = {"auth.session_secret", "auth.token_secret", "auth.oidc.client_secret", "bi.python.runner_token"}
 _USERINFO = re.compile(r"(//[^/@:\s]+:)[^/@\s]+@")
 _PIECE = re.compile(r"(<h3 id=\"[^\"]*\">.*?</h3>|<div class=\"tbl-wrap\"><table class=\"tbl help-tbl\">.*?</table></div>)", re.S)
 _ROW = re.compile(r"<tr>(.*?)</tr>", re.S)
@@ -46,21 +45,14 @@ BEGIN = "<!-- generated: settings begin"
 END = "<!-- generated: settings end -->"
 
 
-def is_secret(key: str) -> bool:
-    """The same rule as the server's EffectiveSettingsController: a word of the key (split at . - _ [ ]) is a secret word."""
-    if key in _KNOWN_SECRETS:
-        return True
-    return any(w in _SECRET_WORDS for w in re.split(r"[.\-_\[\]]+", key.lower()))
-
-
-def shown(key: str, value: Any) -> str:
-    """A value as the page shows it: secrets masked (empty stays empty), a URL's password masked, lists joined."""
+def shown(value: Any, secret: bool = False) -> str:
+    """A value as the page shows it: a secret masked (empty stays empty), a password in an address masked, lists joined."""
     if isinstance(value, list):
         value = ", ".join(str(v) for v in value)
     elif isinstance(value, dict):
         value = "{…}" if value else "{}"
     text = "" if value is None else str(value)
-    if is_secret(key):
+    if secret:
         return MASK if text else ""
     return _USERINFO.sub(lambda m: m.group(1) + MASK + "@", text)
 
@@ -84,8 +76,15 @@ def _read(path: Path) -> dict:
         return {}
 
 
-def console_effective(settings, config_dir: Path, environ: dict | None = None) -> dict[str, dict]:
-    """Every key of the console's application.yaml, as this process has it: ``{key: {value, origin, source}}``. The origin is the
+def console_keys(config_dir: Path) -> list[str]:
+    """Every key of the console's application.yaml (what Admin → Configuration asks the server to classify: keys, never values)."""
+    return list(_flat(_read(config_dir / "application.yaml")))
+
+
+def console_effective(settings, config_dir: Path, environ: dict | None = None, secrets: frozenset[str] | set[str] = frozenset()
+                      ) -> dict[str, dict]:
+    """Every key of the console's application.yaml, as this process has it: ``{key: {value, origin, source, secret}}``; ``secrets`` are
+    the keys the server's rule calls secret (their values are masked). The origin is the
     layer that set it: ``env`` (``DRISHTI_CONSOLE__…`` or the placeholder's variable), ``file`` (application.local.yaml), ``argument``,
     ``edition`` (the edition's presets) or ``default`` (application.yaml as shipped)."""
     environ = os.environ if environ is None else environ
@@ -107,7 +106,8 @@ def console_effective(settings, config_dir: Path, environ: dict | None = None) -
         else:
             hit = next((m.group(1) for m in _PLACEHOLDER.finditer(str(bundled or "")) if m.group(1) in environ), None)
             origin, source = ("env", hit) if hit else ("default", "application.yaml")
-        out[key] = {"value": shown(key, value), "origin": origin, "source": source, "secret": is_secret(key)}
+        secret = key in secrets
+        out[key] = {"value": shown(value, secret), "origin": origin, "source": source, "secret": secret}
     return out
 
 
@@ -119,13 +119,13 @@ _Missing = _MissingType()
 
 
 def server_effective(answer: dict | None) -> dict[str, dict]:
-    """``GET /api/v1/admin/settings`` by key (the server has already masked its secrets; masked again here, to be sure)."""
+    """``GET /api/v1/admin/settings`` by key, as the server says it (its secrets are masked by the server)."""
     out = {}
     for row in (answer or {}).get("settings") or []:
         key = str(row.get("key", ""))
-        value = row.get("value")
-        out[key] = {"value": MASK if is_secret(key) and value else shown(key, value), "origin": row.get("origin", ""),
-                    "source": row.get("source", ""), "secret": bool(row.get("secret")) or is_secret(key)}
+        secret = bool(row.get("secret"))
+        out[key] = {"value": shown(row.get("value"), secret), "origin": row.get("origin", ""), "source": row.get("source", ""),
+                    "secret": secret}
     return out
 
 

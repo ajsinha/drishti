@@ -53,7 +53,7 @@ async def phone_panel(request: Request, kind: str, id_: str, panel: str):
     """One panel of the page as ready HTML: whole (``full=1``: a *More* row or *Show all*), or in its compact form (``compact=1``: a live
     tick of a glance panel). Bound as the viewer, with the page's controls and Sutra; a panel the viewer may not see is not found."""
     more = {}
-    ctl = controls.from_query(request.query_params)
+    ctl = controls.of(request)
     if ctl:
         more["controls"] = ctl
     chosen = (request.query_params.get("sutra") or "").strip()
