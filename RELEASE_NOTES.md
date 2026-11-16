@@ -16,7 +16,7 @@
 # Drishti 2.9.11.i5 — release notes
 
 *Released 2026-11-16.* **Setting up, building, starting and stopping Drishti is one Python command on Linux, macOS and Windows; the 41
-shell scripts are gone; one Java lookup, one install root, one place for the jars.** This release carries the Python commands only.
+shell scripts are gone; one Java lookup, one install root, one place for the jars.** This release carries the Python commands, one folder layout for every module, and site overrides of any module file.
 
 The build of this release still reports its version as 2.9.11.g (the server's About answer, the console footer and the image tags). The
 release itself is tag `v2.9.11.i_5`; the next release, i6, takes the version from one place so the two always agree.
@@ -40,10 +40,28 @@ release itself is tag `v2.9.11.i_5`; the next release, i6, takes the version fro
 - The Deployment and QA guide starts with *Prepare your environment*, the short way and a manual installation, the demo lake with the
   parallel Java loader and an IDE first-open checklist.
 
+## One folder layout for every module
+
+- Every `modules/<module>/` holds its `.dmod` content at the top (`module.yaml`, `packs/`, `console/`, `data/`, `docs/`, `connectors/`,
+  `mappings/`, `blotters/`) and, only when it has Java, its Maven projects under `java/<project>/` with an aggregating `pom.xml`. There
+  is no `dmod/` or `src/dmod/` folder any more: banking's `dmod/*` moved to `modules/banking/`, `banking-compute` and `banking-service` to
+  `modules/banking/java/`; genomics' `src/dmod/*` to `modules/genomics/` and its project to `modules/genomics/java/genomics/`. The packed
+  `.dmod` files are unchanged. The kernel's own core pack stays in `config/packs/core`.
+
+## Overriding any module file from outside
+
+- Name one or more folders in the settings file (`drishti.overrides.dir`, or `-D`, or `DRISHTI_OVERRIDES_DIR`; comma-separated, the
+  right-most wins). A file there at the same relative path as inside a module replaces the module's file: a Sutra, a pack's YAML,
+  `console/plugin.yaml`, `data/needs.yaml`, mappings, blotters, Help. Example: edit a copy of
+  `banking/packs/trading/sutras/endur/endur-cash.v1.sutra.yaml` in your overrides folder, restart, and the server serves it; delete it and
+  the module's own is back. `module.yaml`, connector templates and `java/` cannot be overridden. Admin → Health lists every overridden
+  file and its source. A change to an override file takes effect at the next restart.
+
 ## Upgrading an install of i4
 
 1. Pull. 2. `python tools/drishti.py setup`. 3. `python tools/drishti.py build jar`. 4. Stop the old stack: the old scripts are gone, so
-`python tools/drishti.py stop cluster` (or `stop all`), which reads the same pid files. 5. Start with the new commands.
+`python tools/drishti.py stop cluster` (or `stop all`), which reads the same pid files. 5. Start with the new commands. Your own changes made inside `modules/banking/dmod/` or `modules/genomics/src/dmod/` move to the
+new places (or, better, into an overrides folder).
 
 ## Known limits
 

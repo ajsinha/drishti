@@ -18,6 +18,8 @@
 
 ## Unreleased
 
+## 2.9.11.i5 (2026-11-16)
+
 - **One folder layout for every module.** Each `modules/<module>/` holds its `.dmod` content at the top, as inside the package
   (`module.yaml`, `content.yaml`, `packs/`, `console/`, `data/`, `docs/`, `connectors/`, `mappings/`, `blotters/`, `elements/`) and, only
   when it has Java, its Maven projects under `java/<project>/` with an aggregating `pom.xml` beside them: `modules/banking/dmod/*` moved to
@@ -35,8 +37,6 @@
   `java/` are refused in words. The server applies the rule once at start, reading its modules from the view `<data>/overrides/modules`
   (the module folders are never written); Admin → Health and `GET /api/v1/admin/health` (`moduleOverrides`) list every overridden file
   with its source (KERNEL_AND_MODULES.md section 18.10; DEPLOYMENT_AND_QA_GUIDE.md section 5.1; `config/settings.examples/dev.ini`).
-
-## 2.9.11.i5 (2026-11-16)
 
 The Python commands release. The build still reports its version as 2.9.11.g (the version from one place is the next release); the release is tag `v2.9.11.i_5`.
 
