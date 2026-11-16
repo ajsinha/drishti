@@ -18,6 +18,8 @@
 
 ## Unreleased
 
+## 2.9.11.i4.1 (2026-11-15)
+
 - **A record's panel shows nested values.** Tapping a row of a list (NEWS on a phone: Items, By source, Pipeline) showed
   `[object Object], [object Object] …` in the Record tab. A list of plain values is joined; a record or a list of records is the Raw JSON
   tab's tree, closed, opening to each record's fields. A live list's list column and a chart of a list's rows write nested values the
