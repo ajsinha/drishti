@@ -265,7 +265,8 @@ def test_build_jar_is_clean_package_never_install():
 
 def test_the_shell_twins_are_gone():
     """No dual machinery: bin/ keeps only the containers' and systemd's POSIX stop hook (no Python in the images)."""
-    assert sorted(p.name for p in (ROOT / "bin").iterdir()) == ["README.md", "drishti-node.sh"]
+    tracked = subprocess.run(["git", "ls-files", "bin"], cwd=ROOT, capture_output=True, text=True, check=True).stdout.split()
+    assert sorted(tracked) == ["bin/README.md", "bin/drishti-node.sh"]   # what git holds: a leftover __pycache__ is not a shell twin
     assert not (ROOT / "tools" / "windows").exists() and not (ROOT / "tools" / "rolling-upgrade.sh").exists()
 
 

@@ -30,6 +30,8 @@ from procs import LaunchError, say, warn
 
 TOOLS = procs.TOOLS
 import javacmd  # noqa: E402 - tools/ is on the path through procs
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lake"))
+import lakeconfig  # noqa: E402 - the one name of the demo lake's root variable
 
 DEMO_PACKS = "core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif,funds"
 DEV = {"DRISHTI_SEED_PASSWORD": "drishti-dev-admin123",
@@ -182,7 +184,7 @@ def start(a, env: dict | None = None) -> int:
     if a.engine:
         env["DRISHTI_DELTA_ENGINE"] = a.engine
     if a.lake_root:
-        env["DRISHTI_DELTA_ROOT"] = a.lake_root
+        env[lakeconfig.DEMO_ROOT_ENV] = a.lake_root
     if a.iceberg:
         env["DRISHTI_ICEBERG_ENGINE"] = "native"
         env["DRISHTI_ICEBERG_ROOT"] = a.iceberg_root or env.get("DRISHTI_ICEBERG_ROOT") or str(home / "data" / "iceberg")

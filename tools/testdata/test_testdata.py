@@ -107,7 +107,7 @@ class TestData(unittest.TestCase):
         want = len({(d["pack"], d["kind"], d.get("table") or d.get("connector")) for d in self.m["datasets"]})     # one table each, a shared one (trades_shared) once
         said = re.compile(r"(?m)(?:Demo lake ready: [^\n]*?: |the same |each of the |`gleif` \(|`funds` \(|`civic` \(|minutes\), |\(943 s\): |^\s+)(\d+) (?:Delta )?tables")
         wrong = []
-        for rel in ("data/testdata/README.md", "docs/guides/OPERATIONS_GUIDE.md", "docs/guides/BUILD_GUIDE.md",
+        for rel in ("data/testdata/README.md", "docs/DEPLOYMENT_AND_QA_GUIDE.md", "docs/guides/BUILD_GUIDE.md",
                     "docs/guides/DATA_GUIDE.md", "docs/tutorials/01-first-15-minutes.md"):
             text = (ROOT / rel).read_text(encoding="utf-8")
             found = [int(n) for n in said.findall(text)]
