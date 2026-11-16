@@ -115,4 +115,5 @@ def test_the_server_run_configurations_carry_the_domain_modules():
     for f in servers:
         assert '<module name="drishti-app" />' in f.read_text(encoding="utf-8"), f.name
     build = (folder / "Drishti build server jar.run.xml").read_text(encoding="utf-8")
-    assert '<option value=":drishti-app" />' in build and '<option value=":drishti-server" />' not in build
+    # one way to build: `drishti.py build jar` (Maven clean package of drishti-app, then the jar into <home>/lib), so lib/ never goes stale
+    assert '$PROJECT_DIR$/tools/drishti.py' in build and 'build jar"' in build and "MavenRunConfiguration" not in build

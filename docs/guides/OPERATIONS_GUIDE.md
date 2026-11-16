@@ -389,7 +389,7 @@ exist: make it once from `config/settings.examples/dev.ini`
 | **Drishti server (demo lakes)** | the same with `DRISHTI_DEMO_ENABLED=false`, `DRISHTI_VAR_SYSTEM_BASKETS_SEED=true` (the system baskets) and `-Xmx4g` | 18480 |
 | **Drishti server (QA profile)** | its own data folder and port as `-Ddrishti.data.dir=$PROJECT_DIR$/data/qa/data -Dserver.port=18580` (a `-D` beats the settings file), so QA never touches your data | 18580 |
 | **Drishti server (debug-friendly)** | the QA profile with sign-in **off**, DEBUG logging for `com.ash.drishti`, `-Xmx1g` (pair it with a console whose sign-in is off) | 18580 |
-| **Drishti build server jar** | Maven `clean package -DskipTests -pl :drishti-app -am` | |
+| **Drishti build server jar** | `tools/drishti.py --settings … build jar`: Maven `clean package -DskipTests -pl :drishti-app -am`, then the jar into `lib/` | |
 | **Build demo lakes** (PyCharm) | `drishti.py lake demo` (2.4) | |
 | **QA pack make**, **QA lake build**, **QA server smoke**, **QA doctor** (PyCharm) | the command-line tools against the QA server; edit *Parameters* | 18580 |
 

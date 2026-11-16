@@ -73,6 +73,8 @@
   (`-Ddrishti.data.dir=` with the pid file's data folder; `run_drishti_web.py`), read on Windows with PowerShell's `Get-CimInstance`
   (else `wmic`) instead of the image name, so a reused pid never stops another JVM (API_REFERENCE.md 2.25, DEPLOYMENT_AND_QA_GUIDE.md 7;
   `tools/test_launch.py` with Windows mocked, `LauncherStopControllerTest`, `test_launcher_stop.py`).
+- **The IntelliJ run configuration *Drishti build server jar* runs `tools/drishti.py --settings … build jar`** (it was a Maven
+  configuration that built into `target/` only and left `lib/` stale): one way to build, the jar always copied into `<home>/lib`.
 
 The Python commands release. The build still reports its version as 2.9.11.g (the version from one place is the next release); the release is tag `v2.9.11.i_5`.
 

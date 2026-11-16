@@ -1041,9 +1041,9 @@ stops the start with *names …dev.ini, which is not a file*.
 
 Then open `http://localhost:17480` and sign in as `drishti-dev-admin` / `drishti-dev-admin123` (section 9.3).
 
-**Drishti build server jar** (`run-configs/`, a Maven configuration) runs the same Maven goals inside IntelliJ's Maven runner but does not
-copy the jar into `lib/`: the server configurations run from the IDE's classes and do not need it, but `lake demo --engine java` does, so
-use **Build server jar (into lib)** before step b. The other configurations: **Drishti server** (the packs' samples, demo on), **Drishti
+**Drishti build server jar** (`run-configs/`) runs `tools/drishti.py --settings … build jar`, the same as **Build server jar (into lib)**
+of PyCharm: Maven's `clean package` of `drishti-app`, then the jar into `lib/`, so `lib/` never holds a stale jar (`lake demo --engine
+java`, `start` and every tool read it there). The other configurations: **Drishti server** (the packs' samples, demo on), **Drishti
 server (QA profile)** and **(debug-friendly)** (port 18580 and their own data folder `data/qa/data`, given as `-D`, so they never touch
 your data; debug-friendly has sign-in off), **Drishti console (QA profile)** (17580), the distributions of
 [7.7](#77-starting-a-white-labelled-instance), and the tools: **QA doctor**, **QA server smoke**, **QA pack make (from JSON)**, **QA lake
