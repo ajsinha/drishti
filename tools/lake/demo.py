@@ -887,11 +887,11 @@ class DemoLake:
             print("  " + n)
         env = "" if self.lake == self.resolve(DEFAULT_ROOT) else f"{lakeconfig.DEMO_ROOT_ENV}={self.lake} "
         win = os.name == "nt"
-        start = "bin\\start-all.cmd --demo" if win else "bin/start-all.sh --demo"
+        start = "py tools\\drishti.py start all --demo" if win else "python tools/drishti.py start all --demo"
         print("\nNext:\n"
               "  1. Start the server and the console on the lakes (samples off, offline, sign-in on, the development secrets: never for production):\n"
-              f"     {start}   (from {ROOT}; docs/DEPLOYMENT_AND_QA_GUIDE.md section 6)\n"
-              + (f"     this lake is not the default one: start the server with --lake-root {self.lake} (bin/start-server)\n" if env else "")
+              f"     {start}   (from {ROOT}; docs/DEPLOYMENT_AND_QA_GUIDE.md section 7)\n"
+              + (f"     this lake is not the default one: start the server with --lake-root {self.lake} (drishti.py start server)\n" if env else "")
               +
               "     or the IDE run configurations 'Drishti server (demo lakes)' and 'Drishti console'\n"
               "  2. Sign in as drishti-dev-admin / drishti-dev-admin123\n"
@@ -919,8 +919,8 @@ def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
                    "when the server's exec jar is found, else Drishti's Java writer, else the Python deltalake package; a table the Java loader fails on is loaded again by Drishti's writer)")
     p.add_argument("--jobs", type=int, metavar="N", help="datasets loaded at the same time (default: a quarter of the cores, at most 6)")
     p.add_argument("--memory-mb", type=int, metavar="MB", help="the loaders' heaps together, shared by the jobs (default: 4 GB a job)")
-    p.add_argument("--jar", help="the drishti-server exec jar for the Java loader (default: DRISHTI_JAR, then kernel/drishti-server/target)")
-    p.add_argument("--java", help="the java executable (default: JAVA_HOME, then the PATH)")
+    p.add_argument("--jar", help="the drishti-server exec jar for the Java loader (default: the newest in <home>/lib, made by drishti.py build jar)")
+    p.add_argument("--java", help="the java executable (default: DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH; Java 21+)")
     p.add_argument("--with-real", metavar="FILE[,FILE]", help="LOCAL ONLY: real trade extracts (JSON) whose counterparties, agreements and "
                    "netting sets are added to the local lake, never to data/testdata")
     p.add_argument("--only", metavar="PREFIX[,PREFIX]", help="only these datasets: a folder prefix (trades/, core/counterparty) or a pack name")

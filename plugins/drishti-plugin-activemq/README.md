@@ -206,7 +206,7 @@ headers into message properties), or from the web console (`http://localhost:816
 
 ```bash
 docker run -d --name amq -p 61616:61616 -p 61613:61613 -p 8161:8161 apache/activemq-classic
-DRISHTI_LIMITS_MQ=true java -jar kernel/drishti-server/target/drishti-server-*-exec.jar
+DRISHTI_LIMITS_MQ=true java -jar lib/drishti-server-*-exec.jar
 ```
 
 ```python

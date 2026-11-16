@@ -396,7 +396,7 @@ def build_parser(add_help: bool = True) -> argparse.ArgumentParser:
     p.add_argument("--store", choices=("delta", "iceberg", "files"), default="delta",
                    help="delta (default), iceberg (the same rows in Iceberg tables; needs the server's exec jar) or the File connector's layout")
     p.add_argument("--iceberg-set", action="append", metavar="KEY=VALUE", help="--store iceberg: a setting of the Iceberg loader (s3.region=..., catalog=rest, uri=...)")
-    p.add_argument("--jar", help="--store iceberg: the drishti-server exec jar (default: DRISHTI_JAR, then kernel/drishti-server/target)")
+    p.add_argument("--jar", help="--store iceberg: the drishti-server exec jar (default: the newest in <home>/lib)")
     p.add_argument("--java", help="--store iceberg: the java binary")
     p.add_argument("--root", type=pathlib.Path, help="the files root (DRISHTI_FILES_ROOT) for --store files")
     p.add_argument("--mode", choices=MODES, help="append (the default: the documents are added), overwrite-dates (each business date of the "

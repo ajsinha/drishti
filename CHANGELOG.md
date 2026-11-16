@@ -18,6 +18,28 @@
 
 ## Unreleased
 
+- **Python commands instead of shell scripts: one way to set up, build, start and stop on Linux, macOS and Windows.** `python
+  tools/drishti.py setup` prepares a machine (checks Python and Java 21 and says which java and why, shows the install folder, the data
+  folder and the modules folder with where each came from, makes the data folder's layout and `~/drishti-envs` (Windows
+  `%USERPROFILE%\drishti-envs`) with a copy of `dev.ini` whose paths are filled in, never overwriting one, makes or checks
+  `drishti-console/.venv`, lists the environment it sees and prints the next steps; idempotent, `--check` only reports). `build jar`
+  runs Maven (`clean package -DskipTests -pl :drishti-app -am`, never `install`) with the Java of the one lookup and copies the exec jar
+  into `<home>/lib` (`--no-copy`). `start server|console|all|cluster`, `stop ...` and `status` take the options of the old `bin/`
+  scripts (`--settings`, `--data-dir`, `--port`, `--iceberg`, `--java-home`, cluster nodes, `deploy/stack/stack.yaml`); processes are
+  tracked by pid files under the data folder and stopped only through them (never by name; Windows: its own process group, no window,
+  `taskkill /PID` then `/F`). The shell and PowerShell twins are deleted: `bin/*.sh`, `*.ps1`, `*.cmd`, `bin/lib`, `tools/windows/*`,
+  `tools/rolling-upgrade.sh` (`python tools/rolling.py`); the Windows feed schedule runs the console's Python directly. `bin/` keeps only
+  `drishti-node.sh`, the POSIX stop hook of the server images and the systemd unit.
+- **One Java lookup, one install root, one place for the jars.** Every tool finds Java in one order: `--java`/`--java-home`,
+  `DRISHTI_JAVA_HOME`, `JAVA_HOME`, the PATH; older than 21 is refused in words (`lake demo` now honours `DRISHTI_JAVA_HOME`). The
+  install root is `--home`, else `DRISHTI_HOME`, else `drishti.home` of the settings file, else the folder the tools are in; a home that
+  is not the tools' own folder is refused. Drishti's own jar is found only in `<home>/lib` (`DRISHTI_JAR` and the
+  `kernel/drishti-server/target` fallback are gone; `--jar` stays for a one-off run); two server jars there are refused; the site's jars
+  (JDBC drivers, plugins) are in `<home>/lib/ext` (`drishti.lib.path` default), kept on an upgrade: jars found in the old default
+  `<data>/lib` are moved there once at start (listed in the moved list, Health says so), and a server jar in `lib/ext` is skipped.
+- **The deployment guide starts with "Prepare your environment"** (Windows and Linux side by side), then the short way and a manual
+  installation step by step; every command in it is a Python command.
+
 - **One settings file for every launcher, and the deployment guides checked against the code.** Every IntelliJ and PyCharm run
   configuration passes `$USER_HOME$/drishti-envs/dev.ini`; `tools/drishti.py --settings` reads the same files as the server (several,
   comma-separated, the right-most winning; a dotted `[section]` a namespace), puts the launch roots they name into the tools'

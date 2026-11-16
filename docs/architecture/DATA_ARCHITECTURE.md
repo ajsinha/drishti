@@ -831,7 +831,7 @@ connectors:
 2. Start the server with the connector on:
 
    ```bash
-   DRISHTI_STREAM_TRADING=true BROKER_DEFAULT_BOOTSTRAP_SERVERS=localhost:9092 java -jar kernel/drishti-server/target/drishti-server-*-exec.jar
+   DRISHTI_STREAM_TRADING=true BROKER_DEFAULT_BOOTSTRAP_SERVERS=localhost:9092 java -jar lib/drishti-server-*-exec.jar
    ```
 
    `curl -s http://localhost:18480/api/v1/sources` should now list `trading-stream` with `"live":true` and

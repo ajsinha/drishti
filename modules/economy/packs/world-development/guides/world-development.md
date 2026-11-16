@@ -67,7 +67,7 @@ python3 tools/drishti.py feed run world-development --load inbox        # the sa
 python3 tools/drishti.py feed run world-development --since 2026-01-01  # pull again although the World Bank has not changed (after editing the indicators)
 ```
 
-The same through the wrappers: `tools/feeds/feed.sh run world-development` on Linux and macOS, `.\tools\windows\feed.ps1 run world-development` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](../../../../../docs/guides/WORLD_DATA_GUIDE.md)).
+The same through the wrapper `tools/feeds/feed.sh run world-development` on Linux and macOS, and on Windows with the console's Python: `drishti-console\.venv\Scripts\python.exe tools\drishti.py feed run world-development` (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](../../../../../docs/guides/WORLD_DATA_GUIDE.md)).
 
 ### Into the lake, checking, offline
 

@@ -170,7 +170,7 @@ def table(store: str, system: str, lake: pathlib.Path, ice: pathlib.Path) -> pat
 
 def loader_command(data: pathlib.Path, jar: str | None = None, java: str | None = None, main: str = LOADER) -> list[str]:
     """How to start IcebergLoader (or another class of the plugin, ``main``: IcebergMaintenance): DRISHTI_ICEBERG_CLASSPATH (development:
-    ``-cp CP``), else the server's exec jar (``jar``, DRISHTI_JAR, else the newest kernel/drishti-server/target/drishti-server-*-exec.jar), whose
+    ``-cp CP``), else the server's exec jar (``jar``, else the newest in <home>/lib), whose
     launcher starts the loader instead of the server (``-Dloader.main``)."""
     for p in (str(HERE), str(ROOT / "tools")):
         if p not in sys.path:
@@ -179,7 +179,7 @@ def loader_command(data: pathlib.Path, jar: str | None = None, java: str | None 
     from javacmd import java_cmd
     java = writers.find_java(java)
     if not java:
-        raise SystemExit("stores: no java (Java 21 or newer: JAVA_HOME or java on the PATH)")
+        raise SystemExit("stores: no java (Java 21 or newer: DRISHTI_JAVA_HOME, JAVA_HOME or java on the PATH)")
     heap = "-Xmx" + os.environ.get("DRISHTI_LOADER_HEAP", "2g")
     cp = os.environ.get("DRISHTI_ICEBERG_CLASSPATH")
     if cp:
@@ -187,8 +187,8 @@ def loader_command(data: pathlib.Path, jar: str | None = None, java: str | None 
     else:
         jar = writers.find_jar(jar)
         if not jar:
-            raise SystemExit("stores: Iceberg is written by the server's exec jar: build it first (./mvnw -q package -DskipTests; Windows: "
-                             ".\\mvnw.cmd -q package -DskipTests) or name it with DRISHTI_JAR")
+            raise SystemExit("stores: Iceberg is written by the server's exec jar: none in <home>/lib: run "
+                             "python tools/drishti.py build jar (or pass --jar)")
         args = [heap, f"-Dloader.main={main}", "-jar", jar]
     return java_cmd(java, args, tmp=data / "tmp" / "server")
 

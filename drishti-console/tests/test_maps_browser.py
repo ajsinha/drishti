@@ -40,7 +40,7 @@ from playwright.sync_api import sync_playwright  # noqa: E402
 ROOT = Path(__file__).resolve().parents[2]
 CONSOLE = ROOT / "drishti-console"
 from scratch_ports import worker_ports  # noqa: E402
-from java_launch import java_cmd
+from java_launch import java_cmd, server_jars
 
 SERVER_PORT, CONSOLE_PORT = worker_ports(18941, 17941)
 BASE = f"http://127.0.0.1:{CONSOLE_PORT}"
@@ -80,7 +80,7 @@ def wait(url: str, seconds: int = 150) -> None:
 
 @pytest.fixture(scope="module")
 def stack(tmp_path_factory):
-    jars = sorted(glob.glob(str(ROOT / "kernel/drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)
+    jars = server_jars()
     if not jars or not Path(JAVA).exists():
         pytest.skip("needs the built server: ./mvnw -o -q package -DskipTests -pl :drishti-app -am")
     for port in (SERVER_PORT, CONSOLE_PORT):

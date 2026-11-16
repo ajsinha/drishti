@@ -205,11 +205,11 @@ class Running(unittest.TestCase):
         self.assertEqual(rolling.Runner("", g.call, g.run, g.sleep, g.clock, said.append, poll=5).run(rolling.plan(inv, "2.9.7")), 1)
         self.assertTrue(any("not ready after 120 s" in s for s in said), said)
 
-    def test_the_shell_wrapper_runs_the_runner(self):
+    def test_the_python_command_runs_the_runner(self):
         with tempfile.TemporaryDirectory() as d:
             inv = Path(d, "c.json")
             inv.write_text(json.dumps(DOC), encoding="utf-8")
-            r = subprocess.run(["bash", "-n", str(ROOT / "tools" / "rolling-upgrade.sh")], capture_output=True, text=True, check=False)
+            r = subprocess.run([sys.executable, str(ROOT / "tools" / "rolling.py"), "--help"], capture_output=True, text=True, check=False)
             self.assertEqual(r.returncode, 0, r.stderr)
             r = subprocess.run([sys.executable, str(ROOT / "tools" / "rolling.py"), "--inventory", str(inv), "--dry-run"],
                                capture_output=True, text=True, check=False)

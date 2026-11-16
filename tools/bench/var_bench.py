@@ -52,6 +52,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "tools"))
 sys.path.insert(0, str(ROOT / "tools" / "bench"))
 import hostaddr  # noqa: E402
+import javacmd  # noqa: E402
 from javacmd import java_cmd  # noqa: E402
 
 FORBIDDEN = {18480, 18791, 18792, 17480}                 # the product owner's own stack: never touched
@@ -179,9 +180,9 @@ class Bench:
             (self.work / d).mkdir(exist_ok=True)
         self.java = JAVAS[a.java]
         self.host = hostaddr.primary_ipv4()
-        jars = sorted(ROOT.glob("kernel/drishti-server/target/drishti-server-*-exec.jar"), key=os.path.getmtime, reverse=True)
+        jars = sorted(javacmd.lib_dir(ROOT).glob(javacmd.JAR_GLOB), key=os.path.getmtime, reverse=True)
         if not jars:
-            raise SystemExit("needs the built server jar")
+            raise SystemExit("needs the server jar in <home>/lib: python tools/drishti.py build jar")
         self.jar = str(jars[0])
         self.secret, self.net_key = secrets.token_urlsafe(48), secrets.token_urlsafe(48)
         self.tok = token(self.secret)

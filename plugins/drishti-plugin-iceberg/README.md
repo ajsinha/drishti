@@ -85,7 +85,7 @@ settings:
 - proxy.*
 auth: Local files need none; S3 takes s3.access-key and s3.secret-key (${ENV} or file:), the AWS chain or credentials a REST catalog vends; a REST catalog takes credential (OAuth2 id:secret) or a token, or SigV4 through catalog.rest.*; a private CA through tls.*; an outbound proxy through proxy.*.
 licence: Drishti's own native Iceberg engine (drishti-iceberg) with Apache Iceberg Java, Apache Parquet, Apache Hadoop client and AWS SDK for Java v2 (all Apache-2.0), bundled.
-windows: Works on Windows (local folders with drive letters, and S3), so it is not for the Windows QA machine. Loader tools\windows\load-iceberg.ps1; bin\start-server.cmd --iceberg copies the example files in.
+windows: Works on Windows (local folders with drive letters, and S3), so it is not for the Windows QA machine. Loader: `python tools/drishti.py data load --store iceberg` (runs `tools/load-iceberg.sh`, so on Windows it needs bash: Git Bash or WSL); `python tools/drishti.py start server --iceberg` copies the example files in.
 doc: plugins/drishti-plugin-iceberg/README.md
 ---
 # The iceberg connector
@@ -307,7 +307,7 @@ requests; the live run is `deploy/aws/iceberg/check-glue.sh --s3-tables <ARN>`.
 
 ## Loading
 
-`tools/load-iceberg.sh` (Windows: `tools\windows\load-iceberg.ps1`) loads the packs' samples and, optionally, a generated book through
+`tools/load-iceberg.sh` (`python tools/drishti.py data load --store iceberg`) loads the packs' samples and, optionally, a generated book through
 `IcebergLoader`:
 
 Run these from the Drishti folder (the repository root, or the install folder of a release).
@@ -430,7 +430,7 @@ plus parsed manifests and delete files (`drishti.iceberg.delete-cache-rows`); th
 engine reads the footer on every single read. On the 10,000-trade test lake the native engine started in 637 ms against 1,848 ms and read
 a past date's trade in 94 ms against 353 ms. A purge of the connector empties every cache.
 
-**Windows**: `bin\start-server.cmd --iceberg` starts the server with the Iceberg connector files and the native engine
+**Windows**: `py tools\drishti.py start server --iceberg` starts the server with the Iceberg connector files and the native engine
 ([OPERATIONS_GUIDE.md](../../docs/guides/OPERATIONS_GUIDE.md#4-drishti-on-windows)).
 
 ## Parity with Delta: vectors and disk caches

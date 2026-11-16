@@ -14,24 +14,24 @@
 
 """A Drishti*net cluster on one machine, driven by a cluster file (deploy/stack/stack.yaml is the format and the default).
 
-    bin/start-cluster [--cluster FILE] [--data-dir DIR] [node ...]    start what is not running (every node, then the console; or only those named, or "console")
-    bin/stop-cluster  [--cluster FILE] [--data-dir DIR] [node ...]    stop by the pid files (never by name), the console first
-    bin/status --cluster FILE [--data-dir DIR]                        the processes, the ports, the members each node sees, the console's servers
+    drishti.py start cluster [--cluster FILE] [--data-dir DIR] [node ...]   start what is not running (every node, then the console; or only those named, or "console")
+    drishti.py stop cluster  [--cluster FILE] [--data-dir DIR] [node ...]   stop by the pid files (never by name), the console first
+    drishti.py status --cluster FILE [--data-dir DIR]                       the processes, the ports, the members each node sees, the console's servers
 
-The processes are started and stopped by bin/start-server, bin/start-console, bin/stop-server and bin/stop-console (bin/README.md;
-docs/DEPLOYMENT_AND_QA_GUIDE.md section 6). This file adds what belongs to a cluster: the cluster file, the secrets, the jar copy, the
+The processes are started and stopped by ``drishti.py start server``, ``start console``, ``stop server`` and ``stop console``
+(tools/launch/serverstart.py and consolestart.py; docs/DEPLOYMENT_AND_QA_GUIDE.md section 7). This file adds what belongs to a cluster: the cluster file, the secrets, the jar copy, the
 synthetic lakes and each node's settings. The folder of the cluster file is configuration only: the file, nodes/<node>/net and secrets.env.
 
 Secrets live in secrets.env beside the cluster file (git-ignored, mode 600): DRISHTI_TOKEN_SECRET, DRISHTI_SESSION_SECRET and
 DRISHTI_NET_SECRET, each made on the first start when missing and kept. They reach the processes through their environment only; nothing
-here prints them. The servers run a copy of the newest built jar, <data>/stack/server.jar, so a rebuild never replaces the jar under a
-running server. Process ids and logs are where bin/ keeps them (<data>/run/server-<node>.pid, <data>/run/console.pid, <data>/logs/); node
+here prints them. The servers run a copy of the newest jar of <home>/lib, <data>/stack/server.jar, so a rebuild never replaces the jar under a
+running server. Process ids and logs are where ``drishti.py start`` keeps them (<data>/run/server-<node>.pid, <data>/run/console.pid, <data>/logs/); node
 data and the synthetic lakes in <data>/stack/.
 
 Consoles: the cluster file's ``console:`` block is one console; a ``consoles:`` list (each {name, port, distribution}, the console block
 its defaults) runs several over the same cluster, each with its own distribution (docs/architecture/DISTRIBUTIONS.md section 7): Drishti
-Risk on 17480 and Drishti Finance on 17481. A named console is the process console-<name> (run/console-<name>.pid); bin/status shows each
-one's distribution."""
+Risk on 17480 and Drishti Finance on 17481. A named console is the process console-<name> (run/console-<name>.pid); ``drishti.py status``
+shows each one's distribution."""
 from __future__ import annotations
 
 import argparse
@@ -50,7 +50,6 @@ import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-BIN = ROOT / "bin"
 #: the settings file every node starts with (--settings; an absolute path), else a node's settings: or the stack's settings-file:
 SETTINGS = ""
 SECRET_NAMES = ("DRISHTI_TOKEN_SECRET", "DRISHTI_SESSION_SECRET", "DRISHTI_NET_SECRET")
@@ -71,7 +70,10 @@ HEADER = """# Project Drishti · Any data. Any domain. One grammar.
 """
 
 sys.path.insert(0, str(ROOT / "tools"))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 import hostaddr  # noqa: E402
+import javacmd  # noqa: E402
+import procs  # noqa: E402
 
 
 STACK = ROOT / "deploy" / "stack"        # the default cluster: stack.yaml, nodes/ and the git-ignored secrets.env
@@ -114,7 +116,7 @@ def load_stack() -> dict:
     try:
         import yaml
     except ImportError:
-        sys.exit("needs PyYAML: run with the console's Python (drishti-console/.venv), as bin/start-cluster does")
+        sys.exit("needs PyYAML: run with the console's Python (drishti-console/.venv; python tools/drishti.py setup makes it)")
     if not at.file.exists():
         sys.exit(f"no cluster file at {at.file} (--cluster FILE; deploy/stack/stack.yaml is the format)")
     return yaml.safe_load(at.file.read_text(encoding="utf-8"))
@@ -129,11 +131,6 @@ def python() -> str:
     return sys.executable
 
 
-def java(stack: dict) -> str:
-    home = os.environ.get("JAVA_HOME")
-    return str(Path(home) / "bin" / "java") if home else stack.get("java", "java")
-
-
 def read_env(path: Path) -> dict:
     out = {}
     if path.exists():
@@ -146,19 +143,16 @@ def read_env(path: Path) -> dict:
 
 
 def secrets() -> dict:
-    """secrets.env, with any missing secret made (openssl rand -hex 32) and kept; mode 600. The values are never printed."""
+    """secrets.env, with any missing secret made (32 random bytes, hex) and kept; mode 600. The values are never printed."""
     have = read_env(at.secrets)
     missing = [n for n in SECRET_NAMES if not have.get(n)]
     if missing:
+        import secrets as rnd
         for n in missing:
-            try:
-                have[n] = subprocess.run(["openssl", "rand", "-hex", "32"], capture_output=True, text=True, check=True).stdout.strip()
-            except (OSError, subprocess.CalledProcessError):
-                import secrets as rnd
-                have[n] = rnd.token_hex(32)
+            have[n] = rnd.token_hex(32)
         old = os.umask(0o077)
         try:
-            lines = ["# The cluster's secrets (bin/README.md). Git-ignored: never commit this file.", ""]
+            lines = ["# The cluster's secrets (deploy/stack/README.md). Git-ignored: never commit this file.", ""]
             lines += [f"{k}={v}" for k, v in have.items()]
             at.secrets.write_text("\n".join(lines) + "\n", encoding="utf-8")
         finally:
@@ -170,17 +164,21 @@ def secrets() -> dict:
 
 # -- the jar -----------------------------------------------------------------------------------------------------------------------
 def server_jar() -> Path:
-    """<data>/stack/server.jar: a copy of the newest kernel/drishti-server/target/drishti-server-*-exec.jar, refreshed when a newer build exists."""
-    built = sorted((ROOT / "kernel/drishti-server" / "target").glob("drishti-server-*-exec.jar"), key=lambda p: p.stat().st_mtime, reverse=True)
+    """<data>/stack/server.jar: a copy of the newest jar of <home>/lib (javacmd.server_jar), refreshed when a newer one is there, so a
+    rebuild never replaces the jar under a running server."""
+    try:
+        built = javacmd.server_jar()
+    except javacmd.JarError as e:
+        if not at.jar.exists():
+            sys.exit(str(e))
+        built = None
     JAR = at.jar
-    if built and (not JAR.exists() or built[0].stat().st_mtime > JAR.stat().st_mtime):
+    if built and (not JAR.exists() or built.stat().st_mtime > JAR.stat().st_mtime):
         JAR.parent.mkdir(parents=True, exist_ok=True)
         part = JAR.with_name("server-copying.jar")
-        shutil.copy2(built[0], part)
+        shutil.copy2(built, part)
         os.replace(part, JAR)                    # a server still running keeps the jar it opened
-        say(f"server jar: {built[0].name} copied to {JAR}")
-    if not JAR.exists():
-        sys.exit("no server jar: build it first (./mvnw -o -q package -DskipTests -pl :drishti-app -am), then run bin/start-cluster again")
+        say(f"server jar: {built.name} copied to {JAR}")
     return JAR
 
 
@@ -208,22 +206,7 @@ def running(name: str) -> int | None:
         pid = int(pid_file(name).read_text(encoding="utf-8").splitlines()[0].strip())
     except (OSError, ValueError, IndexError):
         return None
-    return pid if ours(pid) else None
-
-
-def ours(pid: int) -> bool:
-    """The process is alive and is a Drishti server or console, so a reused id is never stopped."""
-    if os.name == "nt":
-        out = subprocess.run(["tasklist", "/FI", f"PID eq {pid}", "/NH"], capture_output=True, text=True).stdout.lower()
-        return "java" in out or "python" in out
-    try:
-        cmd = Path(f"/proc/{pid}/cmdline").read_bytes().replace(b"\0", b" ").decode("utf-8", "replace")
-    except OSError:
-        try:
-            cmd = subprocess.run(["ps", "-p", str(pid), "-o", "command="], capture_output=True, text=True).stdout
-        except OSError:
-            return False
-    return " -jar " in cmd or "run_drishti_web.py" in cmd
+    return pid if procs.alive(pid, procs.CONSOLE_MARK if name.startswith(CONSOLE) else procs.SERVER_MARK) else None
 
 
 def listening(port: int) -> bool:
@@ -253,7 +236,7 @@ def node_net(stack: dict, node: dict) -> Path:
     if not (net / "node.yaml").exists():
         (net / "node.yaml").write_text(HEADER + f"# {node['name']} of the cluster (its cluster file). The key comes from the environment only.\n"
                                        f"enabled: true\nnode-id: {node['name']}\n"
-                                       f"advertise-url: http://${{DRISHTI_STACK_HOST}}:{node['port']}     # this machine's real address (bin/start-cluster sets it)\n"
+                                       f"advertise-url: http://${{DRISHTI_STACK_HOST}}:{node['port']}     # this machine's real address (drishti.py start cluster sets it)\n"
                                        "secret: ${DRISHTI_NET_SECRET}\n", encoding="utf-8")
     if not (net / "gossip.yaml").exists():
         g = stack.get("gossip") or {}
@@ -262,7 +245,7 @@ def node_net(stack: dict, node: dict) -> Path:
     seed = next((n for n in stack["nodes"] if n["name"] == stack.get("seed")), None)
     if seed and seed["name"] != node["name"] and not any((net / "peers").glob("*.yaml")):
         (net / "peers" / f"{seed['name']}.yaml").write_text(HEADER + f"# The seed: where {node['name']} knocks when it joins.\n"
-                                                           f"url: http://${{DRISHTI_STACK_HOST}}:{seed['port']}     # the seed's real address (bin/start-cluster sets it)\n", encoding="utf-8")
+                                                           f"url: http://${{DRISHTI_STACK_HOST}}:{seed['port']}     # the seed's real address (drishti.py start cluster sets it)\n", encoding="utf-8")
     return net
 
 
@@ -324,14 +307,31 @@ def node_env(stack: dict, node: dict, keys: dict) -> tuple[dict, Path]:
     return env, home
 
 
-def bin_run(script: str, args: list[str], env: dict | None = None) -> int:
-    """Runs bin/<script> (.sh, or .ps1 on Windows), its output as it comes."""
-    cmd = ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(BIN / f"{script}.ps1")] if os.name == "nt" else ["bash", str(BIN / f"{script}.sh")]
-    return subprocess.run([*cmd, *args], env=env or {**os.environ, "DRISHTI_PYTHON": python()}).returncode
+def run_command(module: str, verb: str, args: list[str], env: dict | None = None) -> int:
+    """``drishti.py start|stop server|console`` in this process (tools/launch), with its own environment; its exit code."""
+    import argparse as _ap
+    import launchcli
+    p = _ap.ArgumentParser(prog=f"{verb} {module}")
+    launchcli.add_options(p, verb, module)
+    before = javacmd.settings()
+    if "--settings" in args:                       # this node's settings files: what the launcher hands to its JVM
+        i = args.index("--settings")
+        path, args = args[i + 1], args[:i] + args[i + 2:]
+        import settingsfile
+        javacmd.set_settings(path, settingsfile.read_all(path))
+    a = p.parse_args(args)
+    mod = __import__({"server": "serverstart", "console": "consolestart"}[module])
+    try:
+        return getattr(mod, verb)(a, env or {**os.environ, "DRISHTI_PYTHON": python()})
+    except (procs.LaunchError, javacmd.JavaError, javacmd.JarError, javacmd.HomeError) as e:
+        print(f"drishti: {e}", file=sys.stderr, flush=True)
+        return getattr(e, "code", 1)
+    finally:
+        javacmd.set_settings(before[0] or None, before[1])
 
 
 def start_node(stack: dict, node: dict, jar: Path) -> bool:
-    """One node through bin/start-server.sh: its Drishti*net folder, its own data folder (a node with a home of its own), the stack's
+    """One node through ``drishti.py start server``: its Drishti*net folder, its own data folder (a node with a home of its own), the stack's
     settings and secrets, in the background; pid, log and temp folder in the data folder (<data>/run/server-<node>.pid)."""
     name, port = node["name"], node["port"]
     pid = running(name)
@@ -347,7 +347,8 @@ def start_node(stack: dict, node: dict, jar: Path) -> bool:
     node_data = env.pop("DRISHTI_NODE_DATA", "")
     env.pop("DRISHTI_DATA_DIR", None)
     env["DRISHTI_PYTHON"] = python()
-    env["JAVA_HOME"] = env.get("JAVA_HOME") or str(Path(java(stack)).parent.parent)
+    if stack.get("java") and not (env.get("DRISHTI_JAVA_HOME") or env.get("JAVA_HOME")):
+        env["DRISHTI_JAVA_HOME"] = javacmd.java_home_of(stack["java"])   # the cluster file's java:, when nothing names a JDK
     args = ["--node", name, "--node-dir", env.pop("DRISHTI_NET_DIR"), "--port", str(port), "--heap", str(node.get("heap", "1536m")),
             "--jar", str(jar), "--data-dir", str(at.data), "--env-file", str(at.secrets), "--advertise", stack_host(stack),
             "--workdir", str(cwd), "--background"]
@@ -360,11 +361,11 @@ def start_node(stack: dict, node: dict, jar: Path) -> bool:
         args += ["--java-opt", flag]
     for arg in [f"--drishti.sources.connectors.{c}.enabled=false" for c in node.get("off", [])] + list(node.get("args", [])):
         args += ["--server-arg", arg]
-    return bin_run("start-server", args, env) == 0
+    return run_command("server", "start", args, env) == 0
 
 
 def start_console(stack: dict, c: dict) -> bool:
-    """A console through bin/start-console.sh, given the servers of stack.yaml (its servers) at this machine's real address, so its
+    """A console through ``drishti.py start console``, given the servers of stack.yaml (its servers) at this machine's real address, so its
     list matches what the cluster advertises; it learns the other members from the cluster. Its distribution: ``distribution:``."""
     port = c["port"]
     proc = c.get("process", CONSOLE)
@@ -386,7 +387,7 @@ def start_console(stack: dict, c: dict) -> bool:
         args += ["--distribution", str(c["distribution"])]              # risk, finance, genomics, all, or a file (DISTRIBUTIONS.md)
     if proc != CONSOLE:
         args += ["--name", proc[len(CONSOLE) + 1:]]
-    return bin_run("start-console", args, env) == 0
+    return run_command("console", "start", args, env) == 0
 
 
 def _console_named(c: dict, names: list[str]) -> bool:
@@ -409,14 +410,14 @@ def start(names: list[str]) -> int:
 
 
 def stop(names: list[str]) -> int:
-    """The consoles first, then the nodes, each through bin/stop-console.sh or bin/stop-server.sh (by its pid file, never by name)."""
+    """The consoles first, then the nodes, each through ``drishti.py stop console`` or ``stop server`` (by its pid file, never by name)."""
     stack = load_stack()
     for c in consoles(stack):
         if _console_named(c, names):
-            bin_run("stop-console", ["--data-dir", str(at.data)] + (["--name", c["process"][len(CONSOLE) + 1:]] if c["process"] != CONSOLE else []))
+            run_command("console", "stop", ["--data-dir", str(at.data)] + (["--name", c["process"][len(CONSOLE) + 1:]] if c["process"] != CONSOLE else []))
     for node in stack["nodes"]:
         if not names or node["name"] in names:
-            bin_run("stop-server", ["--node", node["name"], "--data-dir", str(at.data)])
+            run_command("server", "stop", ["--node", node["name"], "--data-dir", str(at.data)])
     return 0
 
 
@@ -444,7 +445,8 @@ def status(_names: list[str]) -> int:
     stack = load_stack()
     keys = read_env(at.secrets)
     auth = {"Authorization": "Bearer " + token(stack.get("admin", "drishti-dev-admin"), keys["DRISHTI_TOKEN_SECRET"])} if keys.get("DRISHTI_TOKEN_SECRET") else {}
-    bin_run("status", ["--data-dir", str(at.data)])
+    import launchcli
+    launchcli.status_table([at.data])
     for node in stack["nodes"]:
         m = get_json(f"http://127.0.0.1:{node['port']}/api/v1/net/members", auth)
         if m and m.get("members"):
@@ -464,7 +466,7 @@ def status(_names: list[str]) -> int:
 
 def main(argv: list[str]) -> int:
     global at
-    ap = argparse.ArgumentParser(prog="cluster", description="Start, stop or show a cluster from its cluster file.")
+    ap = argparse.ArgumentParser(prog="drishti.py start|stop|status cluster", description="Start, stop or show a cluster from its cluster file.")
     ap.add_argument("command", choices=("start", "stop", "status"))
     ap.add_argument("--cluster", default="", help="the cluster file (default deploy/stack/stack.yaml)")
     ap.add_argument("--data-dir", default="", help="the data folder (default DRISHTI_DATA_DIR, else <drishti>/data)")

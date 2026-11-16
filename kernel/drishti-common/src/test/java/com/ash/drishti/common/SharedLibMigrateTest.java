@@ -62,4 +62,54 @@ class SharedLibMigrateTest {
         }
         assertThat(SharedLib.migrate(lib, old, Map.of())).as("a second start moves nothing new").hasSize(1);
     }
+
+    @Test
+    void thePreviousDefaultDataLibMovesOnceIntoHomeLibExtButNeverTheServerJar() throws Exception {
+        Path home = Files.createDirectories(tmp.resolve("home"));
+        Path data = Files.createDirectories(tmp.resolve("data"));
+        Path previous = Files.createDirectories(data.resolve("lib"));
+        Files.writeString(previous.resolve("postgresql.jar"), "driver");
+        Files.writeString(previous.resolve("drishti-server-2.9.11-exec.jar"), "server");
+        Path ext = home.resolve("lib/ext");
+
+        Map<String, Path> old = SharedLib.previousDefault(ext, home, data);
+        assertThat(old).containsValue(previous.toAbsolutePath().normalize());
+        List<String> notes = SharedLib.migrate(ext, old, Map.of());
+        assertThat(ext.resolve("postgresql.jar")).hasContent("driver");
+        assertThat(previous.resolve("postgresql.jar")).doesNotExist();
+        assertThat(ext.resolve("drishti-server-2.9.11-exec.jar")).as("Drishti's jar never goes in the site's folder").doesNotExist();
+        assertThat(previous.resolve("drishti-server-2.9.11-exec.jar")).exists();
+        assertThat(notes).singleElement().asString().contains("previous default", "1 jar(s) moved", "drishti-server-2.9.11-exec.jar");
+        try (var s = Files.list(ext)) {
+            assertThat(s.map(p -> p.getFileName().toString())).anyMatch(n -> n.startsWith("moved-") && n.endsWith(".bak"));
+        }
+    }
+
+    @Test
+    void aLibPathTheSiteNamedMovesNothingFromDataLib() throws Exception {
+        Path home = Files.createDirectories(tmp.resolve("home"));
+        Path data = Files.createDirectories(tmp.resolve("data"));
+        Path previous = Files.createDirectories(data.resolve("lib"));
+        Files.writeString(previous.resolve("postgresql.jar"), "driver");
+
+        assertThat(SharedLib.previousDefault(previous, home, data)).as("drishti.lib.path set to <data>/lib: the site chose it").isEmpty();
+        assertThat(SharedLib.previousDefault(tmp.resolve("site-jars"), home, data)).as("another folder named: <data>/lib was never read").isEmpty();
+        assertThat(SharedLib.migrate(previous, SharedLib.previousDefault(previous, home, data), Map.of())).isEmpty();
+        assertThat(previous.resolve("postgresql.jar")).exists();
+    }
+
+    @Test
+    void aDrishtiServerJarInTheLibFolderIsSkipped() throws Exception {
+        Path ext = Files.createDirectories(tmp.resolve("home/lib/ext"));
+        for (String name : List.of("drishti-server-2.9.11-exec.jar", "acme.jar")) {
+            try (var out = new java.util.jar.JarOutputStream(Files.newOutputStream(ext.resolve(name)))) {
+                out.putNextEntry(new java.util.jar.JarEntry("readme.txt"));
+                out.write(name.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            }
+        }
+        SharedLib lib = SharedLib.open(ext);
+        assertThat(lib.jars()).extracting(SharedLib.Jar::name).containsExactly("acme.jar");
+        assertThat(SharedLib.isDrishtiServerJar("drishti-server-2.9.11.i4-exec.jar")).isTrue();
+        assertThat(SharedLib.isDrishtiServerJar("drishti-common-2.9.11.jar")).isFalse();
+    }
 }

@@ -36,12 +36,10 @@ sutra name, the description, the match line and the title id. The result is lint
 from __future__ import annotations
 
 import argparse
-import glob
 import json
 import os
 import pathlib
 import re
-import shutil
 import subprocess
 import sys
 import tempfile
@@ -378,21 +376,21 @@ def build_groups(kinds: dict[str, list[dict]], opts) -> list[Group]:
 # ---------------------------------------------------------------------------------------------------- the JVM
 
 def find_jar(explicit: str | None) -> str:
-    if explicit:
-        return explicit
-    jars = sorted(glob.glob(str(ROOT / "kernel/drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime)
-    if not jars:
-        raise SystemExit("sutragen: no drishti-server-*-exec.jar under kernel/drishti-server/target; build it or pass --jar")
-    return jars[-1]
+    """--jar, else the newest in <home>/lib (tools/javacmd.py ``server_jar``, the one place)."""
+    import javacmd
+    try:
+        return str(javacmd.server_jar(explicit))
+    except javacmd.JarError as e:
+        raise SystemExit(f"sutragen: {e}") from None
 
 
 def find_java(explicit: str | None) -> str:
-    if explicit:
-        return explicit
-    for home in (os.environ.get("JAVA_HOME"), "/usr/lib/jvm/java-21-openjdk-amd64"):
-        if home and os.path.exists(os.path.join(home, "bin", "java")):
-            return os.path.join(home, "bin", "java")
-    return shutil.which("java") or "java"
+    """The one order of every Drishti tool (tools/javacmd.py ``find_java``): --java, DRISHTI_JAVA_HOME, JAVA_HOME, the PATH; Java 21+."""
+    import javacmd
+    try:
+        return javacmd.find_java(explicit)
+    except javacmd.JavaError as e:
+        raise SystemExit(f"sutragen: {e}") from None
 
 
 def sutra_cli(opts, *args: str) -> subprocess.CompletedProcess:
@@ -503,8 +501,8 @@ def add_arguments(p: argparse.ArgumentParser) -> None:
     p.add_argument("--priority", type=int, default=10, help="priority of a match-field Sutra (default 10)")
     p.add_argument("--fallback", action="store_true", help="also write <kind>-default (no where, priority 1)")
     p.add_argument("--name-prefix", default="", help="prefix of every Sutra name")
-    p.add_argument("--jar", help="the drishti-server exec jar (default: newest under kernel/drishti-server/target)")
-    p.add_argument("--java", help="java binary (default: JAVA_HOME, then JDK 21, then java)")
+    p.add_argument("--jar", help="the drishti-server exec jar (default: the newest in <home>/lib, made by drishti.py build jar)")
+    p.add_argument("--java", help="java binary (default: DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH; Java 21+)")
     p.add_argument("-r", "--recursive", action="store_true", help="read *.jsonl in subfolders too")
 
 

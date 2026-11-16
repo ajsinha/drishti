@@ -580,16 +580,15 @@ server reads. It is not in the gate (three server starts take minutes).
 - **The lake**: the ONE shared test lake (section 3.12), read only, its absolute path in the lake cache (`DRISHTI_LAKE_CACHE`) given to
   `--lake-root`; the install builds no lake. The server's state (its VaR hot folder, the official VaR and exposure roots) is in its own
   scratch data folder.
-- **The server**: the install's `bin/start-server.sh --background`, its process folder and `--workdir` both a different scratch folder, the demo
+- **The server**: the install's `python tools/drishti.py start server --background`, its process folder and `--workdir` both a different scratch folder, the demo
   off, no `DRISHTI_*` setting inherited from the drill. VAR BANK has a non-zero headline, VAR EXPLAIN BANK answers 200 with no error code, POS and
   TRD have rows and FORMS answers; the server is then stopped and started twice more, and VAR BANK is the same figure every time.
 - **The paths**: the `resolved paths:` block the server logs at start (`LaunchRoots`) is parsed on every start: each path absolute, each under the
   install, the data folder or the shared lake's folder, none under the working folder, and the working folder is left empty.
 - **Negative cases**: a required root that is missing (`DRISHTI_MODULES_HOME` naming no folder) and a relative `DRISHTI_HOME` each stop the start
   within seconds with the message that names the setting and the folder.
-- **Windows**: `test_ps1_roots` (marked `static`, so the gate runs it) reads `bin/lib/common.ps1` and `bin/start-server.ps1`: the install folder
-  comes from the script's own folder, `DRISHTI_HOME` and `DRISHTI_MODULES_HOME` are passed absolute, and the working folder anchors nothing but
-  a relative path the person typed.
+- **Windows**: the same Python command starts the server there; the install folder comes from the folder `tools/drishti.py` lives in,
+  `DRISHTI_HOME` and `DRISHTI_MODULES_HOME` are passed absolute, and the working folder anchors nothing but a relative path the person typed.
 
 ```bash
 drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_release_from_other_folder.py   # needs the server jar (./mvnw -q clean package -DskipTests)
@@ -709,7 +708,7 @@ ones with the rule tests; a new path from the working folder fails the gate.
 
 Beside the automated harness, the manual QA of an installation (deploy, verify every part, the per-OS checklist, a cluster of three, and the
 offline rehearsal with your own trade files on a machine without internet access) has one home: [DEPLOYMENT_AND_QA_GUIDE.md](../DEPLOYMENT_AND_QA_GUIDE.md),
-with the offline rehearsal in its [section 11](../DEPLOYMENT_AND_QA_GUIDE.md#11-offline-qa-with-your-own-trade-files).
+with the offline rehearsal in its [section 12](../DEPLOYMENT_AND_QA_GUIDE.md#12-offline-qa-with-your-own-trade-files).
 
 ---
 

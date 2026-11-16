@@ -126,7 +126,7 @@ class Tools(unittest.TestCase):
     def test_a_missing_jar_is_a_usage_error_with_the_fix(self):
         code, _, err = run("sutra", "lint", self.pack, "--jar", self.tmp / "none.jar", "--java", self.java, env=self.env)
         self.assertEqual(2, code)
-        self.assertIn("jar not found", err)
+        self.assertIn("no such file", err)
 
     def test_pack_check_runs_lint_and_test_and_reports_json(self):
         code, out, _ = run("pack", "check", self.pack, "--strict", "--junit", self.tmp / "rep", "--json", *self.jvm(), env={**self.env, "FAKE_OUT": "ok x"})

@@ -65,7 +65,7 @@ def read(table, version: int | None = None, date: str | None = None, columns: li
     jv = writers.find_java(java)
     if not j or not jv:
         raise ReadError("Delta tables are read by Delta Kernel, the server's reader: build the server's exec jar "
-                        "(./mvnw -q package -DskipTests) or name it with DRISHTI_JAR, and Java 21")
+                        "(python tools/drishti.py build jar puts it in <home>/lib), and Java 21")
     args = [f"-Xmx{os.environ.get('DRISHTI_LOADER_HEAP', '2g')}", f"-Dloader.main={MAIN}", "-jar", j, str(table)]
     if version is not None:
         args += ["--version", str(version)]

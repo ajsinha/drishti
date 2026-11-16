@@ -201,12 +201,12 @@ def test_admin_white_label_shows_the_distributions_side_by_side(backend, monkeyp
     for d in ("drishti.all", "drishti.risk", "drishti.finance", "drishti.genomics"):
         assert f'data-distribution="{d}"' in t, d
     assert t.index('data-distribution="drishti.finance"') < t.index('data-distribution="drishti.risk"')   # the running one first
-    assert "data-white-label-running" in t and "Drishti Finance Help" in t and "bin/start-all.sh --distribution finance" in t
+    assert "data-white-label-running" in t and "Drishti Finance Help" in t and "python tools/drishti.py start all --distribution finance" in t
 
 
 def test_a_stack_file_runs_a_risk_and_a_finance_console_over_one_cluster():
     import importlib.util
-    spec = importlib.util.spec_from_file_location("drishti_cluster", CONSOLE.parent / "bin" / "lib" / "cluster.py")
+    spec = importlib.util.spec_from_file_location("drishti_cluster", CONSOLE.parent / "tools" / "launch" / "clusterctl.py")
     cluster = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(cluster)
     stack = {"nodes": [{"name": "n1", "port": 18480}], "console": {"port": 17480, "servers": ["n1"], "settings": {"A": "1"}},

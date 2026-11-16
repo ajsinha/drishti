@@ -140,7 +140,7 @@ run refuses to start, and stops between steps, when the machine has less memory 
 | `iceberg` | none (path-based tables) | `iceberg`, `DRISHTI_ICEBERG_ROOT` at the scratch folder |
 
 The server runs `DRISHTI_PACKS=market-risk,counterparty-risk` (with the packs they extend), `java -Xmx2g -XX:+UseCompactObjectHeaders -jar
-kernel/drishti-server/target/drishti-server-*-exec.jar`, its identity database, governance and report folders in the scratch folder, the access log
+lib/drishti-server-*-exec.jar`, its identity database, governance and report folders in the scratch folder, the access log
 and the report scheduler off. Each result line:
 
 ```json
@@ -1949,7 +1949,7 @@ JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -XX:+UseZGC -XX:+ZGenerational -XX:Na
   -Xlog:gc*:file=gc.log:time,uptime,level,tags:filecount=5,filesize=20m \
   -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=./dumps \
   -XX:StartFlightRecording=name=soak,settings=profile,maxage=6h,disk=true,filename=./dumps/soak.jfr" \
-  java -jar kernel/drishti-server/target/drishti-server-*-exec.jar
+  java -jar lib/drishti-server-*-exec.jar
 jcmd <pid> GC.run && jcmd <pid> GC.heap_info                         # is something growing? (cheap, any time)
 jcmd <pid> GC.class_histogram | head -40 > histo-$(date +%H%M).txt    # at the start, after 1 h and 6 h; diff them
 jcmd <pid> VM.native_memory summary

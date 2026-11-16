@@ -30,12 +30,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 FLAGS = ("-XX:MaxDirectMemorySize=256m", "-XX:TrimNativeHeapInterval=60000", "-Djdk.nio.maxCachedBufferSize=262144", "-XX:NativeMemoryTracking=summary")
 DIAGNOSTICS = ("HeapDumpOnOutOfMemoryError", "HeapDumpPath=", "-Xlog:gc*:file=", "filecount=5,filesize=20m")
-PRODUCTION = ("bin/start-server.sh", "bin/start-server.ps1", "deploy/docker/ecs/server-entrypoint.sh", "deploy/docker/server.Dockerfile")
-LAUNCHERS = {  # file: whether it sets MALLOC_ARENA_MAX too
-    "bin/start-server.sh": True,
+PRODUCTION = ("tools/launch/serverstart.py", "deploy/docker/ecs/server-entrypoint.sh", "deploy/docker/server.Dockerfile")
+LAUNCHERS = {  # file: whether it sets MALLOC_ARENA_MAX too (drishti.py start server sets it everywhere: Windows ignores it)
+    "tools/launch/serverstart.py": True,
     "deploy/docker/ecs/server-entrypoint.sh": True,
     "deploy/docker/server.Dockerfile": True,
-    "bin/start-server.ps1": False,
     "run-configs/Drishti server.run.xml": True,
     "run-configs/Drishti server (demo lakes).run.xml": True,
     "run-configs/Drishti server (debug-friendly).run.xml": True,
@@ -68,8 +67,7 @@ class LauncherMemory(unittest.TestCase):
 
     def test_every_lake_loader_caps_the_cached_buffers(self):
         loaders = [p for p in sorted((ROOT / "tools").glob("load-*.sh")) if "bin/java" in p.read_text(encoding="utf-8")]
-        loaders += [ROOT / "tools/windows/load-iceberg.ps1", ROOT / "tools/windows/load-cassandra.ps1", ROOT / "deploy/aws/ecs/templates/lake-task.json",
-                    ROOT / "tools/javacmd.py"]
+        loaders += [ROOT / "deploy/aws/ecs/templates/lake-task.json", ROOT / "tools/javacmd.py"]
         self.assertGreater(len(loaders), 6)
         for p in loaders:
             text = p.read_text(encoding="utf-8")
@@ -79,11 +77,11 @@ class LauncherMemory(unittest.TestCase):
                     self.assertEqual(text.count("bin/java\" -D"), text.count("-Djdk.nio.maxCachedBufferSize=262144"), "every java line")
 
     def test_the_stack_starts_each_server_with_them(self):
-        """bin/start-cluster starts every node through bin/start-server.sh, which sets them (one launcher, not two)."""
-        text = (ROOT / "bin/lib/cluster.py").read_text(encoding="utf-8")
-        self.assertIn('bin_run("start-server"', text)
+        """drishti.py start cluster starts every node through drishti.py start server, which sets them (one launcher, not two)."""
+        text = (ROOT / "tools/launch/clusterctl.py").read_text(encoding="utf-8")
+        self.assertIn('run_command("server", "start"', text)
         self.assertNotIn("-XX:MaxDirectMemorySize", text)
-        self.assertIn('MALLOC_ARENA_MAX="${MALLOC_ARENA_MAX:-2}"', (ROOT / "bin/start-server.sh").read_text(encoding="utf-8"))
+        self.assertIn('env.setdefault("MALLOC_ARENA_MAX", "2")', (ROOT / "tools/launch/serverstart.py").read_text(encoding="utf-8"))
 
     def test_compact_headers_on_25_and_generational_zgc_on_21(self):
         """2.9.7 (D5, PO-8): every launcher through javacmd adds -XX:+UseCompactObjectHeaders when the JVM is 25+, never on 21; the

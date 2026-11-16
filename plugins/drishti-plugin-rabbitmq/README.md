@@ -217,7 +217,7 @@ its messages round robin, so bind one queue per server to the same `topic` or `f
 docker run -d --name rabbit -p 5672:5672 -p 15672:15672 rabbitmq:management
 curl -u guest:guest -X PUT -H 'content-type: application/json' \
   http://localhost:15672/api/exchanges/%2f/collateral -d '{"type":"topic","durable":true}'
-DRISHTI_MARGIN_MQ=true java -jar kernel/drishti-server/target/drishti-server-*-exec.jar     # declares and binds the queue
+DRISHTI_MARGIN_MQ=true java -jar lib/drishti-server-*-exec.jar     # declares and binds the queue
 curl -u guest:guest -H 'content-type: application/json' -X POST \
   http://localhost:15672/api/exchanges/%2f/collateral/publish \
   -d '{"routing_key":"margin.call.new","properties":{"headers":{"id":"MC-ALDERSHOT-FRA-2"}},"payload_encoding":"string",

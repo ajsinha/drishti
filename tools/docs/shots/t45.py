@@ -37,7 +37,7 @@ import time
 from pathlib import Path
 
 from _tut import OUT, command, light
-from shotlib import CONSOLE_PORT, PACKS, ROOT, SERVER_PORT, Ctx, java_cmd, listening, out_dir, register
+from shotlib import CONSOLE_PORT, PACKS, ROOT, SERVER_PORT, Ctx, java_cmd, listening, out_dir, register, server_jars
 
 SERVER_ENV = {"DRISHTI_SECURITY_ENABLED": "false", "DRISHTI_DATALOAD_ENABLED": "true"}   # runs on its own (--guide t45)
 shot = register("t45", OUT / "t45")
@@ -140,7 +140,7 @@ def cli(*args: str) -> str:
 
 
 def _server():
-    jar = sorted((ROOT / "kernel/drishti-server" / "target").glob("drishti-server-*-exec.jar"))[-1]
+    jar = server_jars()[-1]
     java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"
     w = work()
     e = {**os.environ, "DRISHTI_PORT": str(SERVER_PORT), "DRISHTI_PACKS": PACKS, "DRISHTI_SUTRAS": str(w / "sutras"),

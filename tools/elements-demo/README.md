@@ -44,7 +44,7 @@ mkdir -p /tmp/drishti-elements && cd /tmp/drishti-elements
 DRISHTI_PACKS=trading,counterparty-risk,market-risk DRISHTI_PACKS_DIR=<repo>/config/packs DRISHTI_SECURITY_ENABLED=true \
 DRISHTI_TOKEN_SECRET=poc-scratch-secret-0123456789abcdef0123 DRISHTI_EMBED_ENABLED=true \
 DRISHTI_PUBLIC_URL=http://127.0.0.1:18969 DRISHTI_CONSOLE_URL=http://127.0.0.1:17969 \
-  java -jar <repo>/drishti-server/target/drishti-server-*-exec.jar --server.port=18969 --drishti.security.registered-users-only=false &
+  java -jar <repo>/lib/drishti-server-*-exec.jar --server.port=18969 --drishti.security.registered-users-only=false &
 
 # 2. register the demo users and the host application as an administrator (the admin token is made with the same secret):
 #    see register_host() in drishti-console/tests/test_embed_elements_browser.py for the exact calls; the answer of

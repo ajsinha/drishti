@@ -37,7 +37,7 @@ import urllib.request
 from pathlib import Path
 
 from bi_stack import FORBIDDEN, listening, wait
-from java_launch import java_cmd
+from java_launch import java_cmd, server_jars
 from scratch_ports import worker_port, worker_ports
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -85,7 +85,7 @@ class NetStack:
         self._lock = None
 
     def _jar(self) -> tuple[str, str]:
-        jars = sorted(glob.glob(str(ROOT / "kernel/drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)
+        jars = server_jars()
         java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"
         if not jars or not Path(java).exists():
             raise FileNotFoundError("needs the built server: ./mvnw -o -q package -DskipTests -pl :drishti-app -am")

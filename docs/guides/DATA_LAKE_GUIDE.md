@@ -519,7 +519,7 @@ report: {summary: runs/scenario-pv.summary.json}
 ```
 
 ```bash
-java -Xmx2g -Dloader.main=com.ash.drishti.lakeload.LakeLoad -jar kernel/drishti-server/target/drishti-server-<version>-exec.jar \
+java -Xmx2g -Dloader.main=com.ash.drishti.lakeload.LakeLoad -jar lib/drishti-server-<version>-exec.jar \
     --config load-scenario-pv.yaml
 ```
 
@@ -1885,7 +1885,7 @@ scheduled report. Only a download by you may leave the server."*
 ### 13.7 Memory, the JVM and the host
 
 - **Direct memory.** The stores live in direct buffers. The JVM's limit must be 256 MB (the server's own I/O) plus the stores' caps.
-  `bin/start-server` (`.sh` and `.ps1`) computes it from the configuration (`tools/lake/memory_caps.py`); the Docker image and the ECS
+  `tools/drishti.py start server` computes it from the configuration (`tools/lake/memory_caps.py`); the Docker image and the ECS
   entrypoint take `DRISHTI_LAKE_MEMORY_MB` (the caps added up); a systemd unit or a run configuration adds
   `-XX:MaxDirectMemorySize=<256 + caps>m` after the existing flag (the later one wins). Admin → Health turns **red** when the running
   limit is below it.
@@ -2230,7 +2230,7 @@ forms and grains are [VAR_GUIDE.md section 15.13](VAR_GUIDE.md#1513-inputs-any-f
 | Check | Value | Where |
 |---|---|---|
 | Java | 21 or newer | `java -version` |
-| Server heap | **8 to 10 GB** for 1.3M positions and two to three open dates | `bin/start-server.sh --heap 10g` (Windows: `bin\start-server.ps1 -Heap 10g`). The measured book is about 0.77 GB of heap at 1M positions ([VAR_GUIDE.md 27.1](VAR_GUIDE.md#271-bytes-per-date)), so about 1 GB at 1.3M, and a date kept open about 1.5 GB of `-Xmx`; `-Xmx6g` served 1M positions with two dates |
+| Server heap | **8 to 10 GB** for 1.3M positions and two to three open dates | `python tools/drishti.py start server --heap 10g` (Windows: `py tools\drishti.py start server --heap 10g`). The measured book is about 0.77 GB of heap at 1M positions ([VAR_GUIDE.md 27.1](VAR_GUIDE.md#271-bytes-per-date)), so about 1 GB at 1.3M, and a date kept open about 1.5 GB of `-Xmx`; `-Xmx6g` served 1M positions with two dates |
 | Loader heap | `16g` | `DRISHTI_DATALOAD_LOADER_HEAP=16g` for the inbox (default `4g`; the loader's budget is half of it): a separate process, memory bounded, the rest spilled to disk; for the CLI, `DRISHTI_LAKE_LOADER_HEAP` |
 | Reporting currencies | `DRISHTI_VAR_CURRENCIES=USD` **for the first load** | the default builds EUR, CAD, JPY and GBP books ahead, each about 77% of the USD book's disk; add them when you need them |
 | Open dates | `DRISHTI_VAR_HOT_DATES=3` | the default 10 keeps up to ten dates open |
@@ -2247,7 +2247,7 @@ DRISHTI_VAR_CURRENCIES=USD
 DRISHTI_VAR_HOT_DATES=3
 DRISHTI_DATALOAD_LOADER_HEAP=16g
 EOF
-bin/start-server.sh --env-file server.env --heap 10g --background      # Windows: bin\start-server.ps1 -EnvFile server.env -Heap 10g -Background
+python tools/drishti.py start server --env-file server.env --heap 10g --background      # Windows: py tools\drishti.py ...
 ```
 
 **Disk**, 1.3M positions, 250 values a vector, two dates, **estimated** from the measured 20,000-position run (below; 509 values roughly doubles the lake and
@@ -2449,7 +2449,7 @@ Undo a wrong load with `drishti.py dataload undo <load-id>` (a dry run; `--yes` 
 | rejected `DRS-5207` *its PVs are in CHF and the date has no CHF scenario FX* | no `fx-scenario` row for the currency | send it for the date |
 | `DRS-5211`, a **(Blank)** node | a level column empty on some rows | fill it |
 | `503 DRS-5204`, `DRS-5218` | the heap budget or the disk guard | free disk or raise the heap; open dates keep answering |
-| `404` on `/api/v1/risk/var/scope` just after a start | the banking module is still installing | wait; `bin/status.sh` |
+| `404` on `/api/v1/risk/var/scope` just after a start | the banking module is still installing | wait; `python tools/drishti.py status` |
 
 #### Do not
 

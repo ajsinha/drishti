@@ -13,8 +13,8 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """``drishti.py feed schedule --cron | --systemd | --windows``: ready-to-use DAILY entries, one per enabled feed at the time its feed
-file's ``schedule`` gives (docs/guides/WORLD_DATA_GUIDE.md section "Run it every day"). Every entry runs the one wrapper of its system,
-tools/feeds/feed.sh (Linux, macOS) or tools\\windows\\feed.ps1 (Windows), so the Python it uses is the console's."""
+file's ``schedule`` gives (docs/guides/WORLD_DATA_GUIDE.md section "Run it every day"). Every entry runs the one command of its system:
+tools/feeds/feed.sh (Linux, macOS) or the console's own Python running tools\\drishti.py feed run (Windows), so the Python it uses is the console's."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -66,14 +66,14 @@ def systemd(specs: list[FB.FeedSpec], root: Path = ROOT, user_unit: bool = True)
 
 
 def windows(specs: list[FB.FeedSpec], root: Path = ROOT) -> str:
-    """schtasks commands (cmd or PowerShell), one per feed: the task runs tools\\windows\\feed.ps1 run <feed> daily."""
+    """schtasks commands (cmd or PowerShell), one per feed: the task runs the console's Python on tools\\drishti.py feed run <feed> daily."""
     win_root = str(root).replace("/", "\\")
     out = ["REM Drishti data feeds: Windows Task Scheduler. Run these in a command prompt (or PowerShell) as the user the feeds run as;",
            "REM schtasks /Query /TN \"Drishti feed <feed>\" /V shows the last result (0 ok, 1 failed, 2 refused, 3 locked, 4 partial)."]
     for s in specs:
         h, m = _hm(s)
         sched = "/SC WEEKLY /D MON,TUE,WED,THU,FRI" if s.schedule_days == "weekdays" else "/SC DAILY"
-        ps = (f"powershell.exe -NoProfile -ExecutionPolicy Bypass -File \\\"{win_root}\\tools\\windows\\feed.ps1\\\" run {s.name} --trigger schedule")
+        ps = (f"\\\"{win_root}\\drishti-console\\.venv\\Scripts\\python.exe\\\" \\\"{win_root}\\tools\\drishti.py\\\" feed run {s.name} --trigger schedule")
         line = f"schtasks /Create /F /TN \"Drishti feed {s.name}\" {sched} /ST {h:02d}:{m:02d} /TR \"{ps}\""
         out.append(("REM (disabled) " if not s.enabled else "") + line)
     return "\r\n".join(out) + "\r\n"

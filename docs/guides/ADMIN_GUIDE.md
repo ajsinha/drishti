@@ -562,7 +562,7 @@ Run these from the Drishti folder (the repository root, or the install folder of
 docker compose -f deploy/docker/compose.data.yaml up -d postgres
 docker compose -f deploy/docker/compose.data.yaml exec postgres psql -U drishti -c 'CREATE DATABASE drishti_identity'
 DRISHTI_IDENTITY_DB_URL=jdbc:postgresql://localhost:5432/drishti_identity DRISHTI_IDENTITY_DB_USER=drishti \
-DRISHTI_IDENTITY_DB_PASSWORD=drishti java -jar kernel/drishti-server/target/drishti-server-*.jar
+DRISHTI_IDENTITY_DB_PASSWORD=drishti java -jar lib/drishti-server-*.jar
 ```
 
 ### 9.3 SQLite: what to know
@@ -752,7 +752,7 @@ installed, loaded and on; they go and come back at the next page when that chang
 
 ## 13. Run a whole instance as Drishti Risk or Drishti Finance
 
-Name a **distribution** ([section 24](#24-white-label-distributions)): `bin/start-all.sh --distribution risk`, `DRISHTI_DISTRIBUTION=risk` or
+Name a **distribution** ([section 24](#24-white-label-distributions)): `python tools/drishti.py start all --distribution risk`, `DRISHTI_DISTRIBUTION=risk` or
 `drishti.distribution: risk`; the console follows the server. Drishti Risk has the banking and market-data modules, so economy and
 capital-markets commands, menus and Help do not exist there; its starting workspace is the Risk lens. A lens file is never an instance's
 filter: the old setting `drishti.edition` (`DRISHTI_EDITION`) is no longer read, and Health names it when a site still sets it.
@@ -1448,13 +1448,15 @@ to the console are in [OPERATIONS_GUIDE.md, Modules on or off](OPERATIONS_GUIDE.
 
 ### 22.1 Module packages, auto-deploy and the shared lib folder
 
-Besides the modules built into the server, the kernel loads **module packages** (`.dmod`), each in its own class loader. Two folders
-under the data folder, as in Tomcat:
+Besides the modules built into the server, the kernel loads **module packages** (`.dmod`), each in its own class loader. Two folders,
+as in Tomcat: the module folder under the data folder, the shared lib folder under the install folder (every jar sits under the install
+folder, every piece of data under the data folder):
 
 | Folder | Setting | What it holds | When a change counts |
 |---|---|---|---|
 | `<data folder>/modules/` | `drishti.modules.path` (`DRISHTI_MODULES_PATH`, commas for several) | `.dmod` packages to deploy; the server keeps its own `installed/`, `store/`, `staging/` and `tombstones/` beside them | at once (auto-deploy) |
-| `<data folder>/lib/` | `drishti.lib.path` (`DRISHTI_LIB_PATH`) | jars every connector and module may use: JDBC drivers, connector plugins, a company's own libraries | at the next restart |
+| `<home>/lib/ext/` | `drishti.lib.path` (`DRISHTI_LIB_PATH`) | the site's jars every connector and module may use: JDBC drivers, connector plugins, a company's own libraries; kept on an upgrade | at the next restart |
+| `<home>/lib/` | none | Drishti's own server jar, shipped with a release | replaced on an upgrade |
 
 **Auto-deploy.** A `.dmod` put into the module folder is deployed within `drishti.modules.autodeploy-seconds` (5) through the module
 deployment, exactly as an administrator's upload would be: its hash list verified, the fifteen conformance checks, installed under
@@ -1467,11 +1469,17 @@ development mode that loads a module's exploded build folder (`drishti.modules.d
 and under the `prod` or `production` profile, and marks each such module *development (unverified)* in Health
 ([DEVELOPER_GUIDE.md section 1.6](DEVELOPER_GUIDE.md#16-the-module-sdk)).
 
-**The shared lib folder.** Every jar in `<data folder>/lib/` is read once, at start, into one *lib* class loader under the kernel's.
+**The shared lib folder.** Every jar in `<home>/lib/ext/` (`drishti.lib.path`) is read once, at start, into one *lib* class loader under the kernel's.
 Connectors and modules see its classes, a JDBC driver in it is registered (a connector's `jdbc:` URL finds it), and a connector plugin
 in it (its `META-INF/services` entry) is offered like a built-in one. It never replaces a kernel class: the kernel is asked first. Health
 (`lib`) and Admin → Modules list each jar with its size and SHA-256, marked **lib**: code the site added beside the product. A module's own
-third-party jars belong in its package (`java.lib`), not here.
+third-party jars belong in its package (`java.lib`), not here. A Drishti server jar (`drishti-server-*-exec.jar`) found there is skipped
+with a warning: it belongs in `<home>/lib`.
+
+**Upgrades.** An upgrade replaces the Drishti jar in `<home>/lib` only and keeps `<home>/lib/ext`; the start refuses when `<home>/lib`
+holds more than one Drishti server jar. Jars in `<data folder>/lib/` (the previous default) are moved once into `<home>/lib/ext/` at the
+first start that finds them, listed in `moved-<date-time>.bak` there, and Health says so; when `drishti.lib.path` names `<data folder>/lib`
+itself, that is the site's choice and nothing moves.
 
 ## 23. Data bindings
 
@@ -1567,10 +1575,10 @@ dark), **Drishti Finance** (capital markets, economy and market data; no VaR or 
 sample). What a distribution leaves out does not exist in it: its commands, words, menus, Home cards, Help pages and the catalogue the
 AI reads; a command typed anyway answers *DRS-4023 VRES is not in Drishti Finance*.
 
-**Choose one** at start: `bin/start-all.sh --distribution finance` (Windows `bin\start-all.cmd --distribution finance`), or
+**Choose one** at start: `python tools/drishti.py start all --distribution finance` (Windows `py tools\drishti.py start all --distribution finance`), or
 `DRISHTI_DISTRIBUTION=finance`, or `drishti.distribution: finance` (server) and `distribution: finance` (console). A path instead of a
 name loads a site's own file. A console started with its own `--distribution` keeps it whatever the server runs, so one cluster can serve
-a Drishti Risk console and a Drishti Finance console ([DEPLOYMENT_AND_QA_GUIDE.md 6.7](../DEPLOYMENT_AND_QA_GUIDE.md#67-starting-a-white-labelled-instance)).
+a Drishti Risk console and a Drishti Finance console ([DEPLOYMENT_AND_QA_GUIDE.md 6.7](../DEPLOYMENT_AND_QA_GUIDE.md#77-starting-a-white-labelled-instance)).
 
 **Your own brand.** Copy a shipped file to a new `drishti.acme.yaml` beside it in config/distributions, change `distribution: drishti.acme` and its
 `brand:` (`product`, `tagline`, `headline`, `headline_second` and `headline_second_accent` (the landing page's second line, blank for none), `owner`, `copyright`, `notice`, `logo`, `favicon`, `about`, `support`), `theme:` (`tokens`: one of the

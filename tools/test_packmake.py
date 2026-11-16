@@ -18,7 +18,7 @@
     python3 -m unittest -q tools/test_packmake.py
 
 The folder-layout tests run the whole command (files store, so no deltalake needed) and need the server jar for lint and test:
-they are skipped when there is none (DRISHTI_JAR, or kernel/drishti-server/target/*-exec.jar).
+they are skipped when there is none (<home>/lib, made by python tools/drishti.py build jar).
 """
 import contextlib
 import glob
@@ -35,7 +35,18 @@ import drishti as D  # noqa: E402
 import packmake as PM  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-HAVE_JAR = bool(os.environ.get("DRISHTI_JAR") or glob.glob(str(ROOT / "kernel/drishti-server/target/drishti-server-*-exec.jar")))
+
+
+def _have_jar() -> bool:
+    import javacmd
+    try:
+        javacmd.server_jar()
+        return True
+    except javacmd.JarError:
+        return False
+
+
+HAVE_JAR = _have_jar()
 
 
 def trades(n=12):
@@ -114,7 +125,7 @@ class Detect(unittest.TestCase):
         self.assertIn("no dated store", why)
 
 
-@unittest.skipUnless(HAVE_JAR, "needs the drishti-server exec jar (DRISHTI_JAR) for sutra lint and test")
+@unittest.skipUnless(HAVE_JAR, "needs the drishti-server exec jar (<home>/lib) for sutra lint and test")
 class Make(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

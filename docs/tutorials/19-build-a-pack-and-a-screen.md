@@ -244,7 +244,7 @@ verified
 
 pack make: build/desk-quotes
   2 Sutra group(s) for 6 desk-quote document(s), 1 date(s) in data/delta; pack check passed, pack verify passed
-next: read build/desk-quotes/README.txt; for a new server  DRISHTI_JAR=<exec jar> DRISHTI_PORT=18480 build/desk-quotes/run-server.sh; on a running one, copy build/desk-quotes/pack/desk-quotes into its ...
+next: read build/desk-quotes/README.txt; for a new server  DRISHTI_HOME=<install> DRISHTI_PORT=18480 build/desk-quotes/run-server.sh; on a running one, copy build/desk-quotes/pack/desk-quotes into its ...
 ```
 
 You should see it choose the key and the date and say why, one Sutra for each venue (Reuters has one of its own, plus a catch-all), then run `pack check` and `pack verify` and finish with
@@ -911,7 +911,7 @@ write-back event that recomputes what a screen shows. Each step shows the UI, th
 ```bash
 DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,compute-demo \
 DRISHTI_COMPUTE_ENABLED=true DRISHTI_PYTHON=$PWD/drishti-console/.venv/bin/python \
-  java -jar kernel/drishti-server/target/drishti-server-*-exec.jar
+  java -jar lib/drishti-server-*-exec.jar
 ```
 
 **You should see** in the server's log:

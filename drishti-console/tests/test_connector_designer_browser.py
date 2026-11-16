@@ -42,7 +42,7 @@ _FULL_JAR = wb_live.jar
 
 
 def _server_jar():
-    """The server jar: the full one when built (kernel/drishti-server/target), else the thin kernel's (packaging/drishti-kernel-app/target): a connector and its bindings need no pack."""
+    """The server jar: the full one when built (<home>/lib), else the thin kernel's (packaging/drishti-kernel-app/target): a connector and its bindings need no pack."""
     found = _FULL_JAR()
     if found is not None:
         return found

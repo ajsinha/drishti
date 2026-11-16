@@ -81,6 +81,7 @@ sys.path.insert(0, str(ROOT / "tools" / "bench"))
 if str(ROOT / "drishti-console") not in sys.path:
     sys.path.insert(0, str(ROOT / "drishti-console"))
 from core.resolution import pack_dir  # noqa: E402  (where a pack is: the one resolver, KERNEL_AND_MODULES.md 18)
+import javacmd  # noqa: E402
 from javacmd import java_cmd  # noqa: E402
 import hostaddr  # noqa: E402
 import soak_check  # noqa: E402
@@ -238,12 +239,12 @@ class Soak:
         self.samples: list[dict] = []                      # resources, a sample per process every --sample-every seconds
         self.events: list[dict] = []
         self.t0 = time.time()
-        jars = sorted(ROOT.glob("kernel/drishti-server/target/drishti-server-*-exec.jar"), key=os.path.getmtime, reverse=True)
+        jars = sorted(javacmd.lib_dir(ROOT).glob(javacmd.JAR_GLOB), key=os.path.getmtime, reverse=True)
         self.java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"
         if not HOST:
             raise SystemExit("this machine has no address but loopback: a Drishti*net member never advertises one")
         if not jars or not Path(self.java).exists():
-            raise SystemExit("needs the built server: ./mvnw -o -q package -DskipTests -pl :drishti-app -am")
+            raise SystemExit("needs the server jar in <home>/lib: python tools/drishti.py build jar")
         self.jar = str(jars[0])
         self.dates = a.dates.split(",")
         if a.days:                                         # the N business days to the last --dates (trades.py's calendar)

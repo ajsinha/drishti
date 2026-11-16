@@ -43,7 +43,7 @@ public final class Roots {
     public static Path home() {
         String h = setting(HOME, HOME_ENV);
         if (h == null) {
-            throw new IllegalStateException(HOME + " (" + HOME_ENV + ") is not set: name the install folder (bin/start-server and the images do), or"
+            throw new IllegalStateException(HOME + " (" + HOME_ENV + ") is not set: name the install folder (drishti.py start server and the images do), or"
                     + " set the folder's own setting; a default folder is never taken from the process's working folder");
         }
         Path p = Path.of(h);

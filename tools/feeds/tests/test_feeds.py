@@ -337,16 +337,16 @@ def test_schedule_entries_for_cron_systemd_and_windows(spec):
     assert "Persistent=true" in unit and "Type=oneshot" in unit
     win = S.windows([spec], Path("C:/drishti"))
     assert 'schtasks /Create /F /TN "Drishti feed sample-mapping" /SC WEEKLY /D MON,TUE,WED,THU,FRI /ST 07:15' in win
-    assert "C:\\drishti\\tools\\windows\\feed.ps1" in win
+    assert "C:\\drishti\\drishti-console\\.venv\\Scripts\\python.exe" in win and "C:\\drishti\\tools\\drishti.py" in win
+    assert "feed run sample-mapping --trigger schedule" in win and "powershell" not in win and ".ps1" not in win
     p = cli("schedule", "--cron", "--config", str(FX))
     assert p.returncode == 0 and "sample-mapping" in p.stdout
 
 
-def test_the_wrappers_exist_and_run_the_feed_command():
+def test_the_wrapper_exists_and_runs_the_feed_command():
     sh = (ROOT / "tools" / "feeds" / "feed.sh").read_text()
-    ps = (ROOT / "tools" / "windows" / "feed.ps1").read_text()
     assert "tools/drishti.py feed" in sh and "drishti-console/.venv" in sh
-    assert "tools\\drishti.py" in ps and "feed" in ps and "exit $LASTEXITCODE" in ps
+    assert not list((ROOT / "tools" / "windows").glob("*.ps1")), "Windows runs the Python commands, no PowerShell twins"
     assert not list((ROOT / "tools").glob("publicdata")), "tools/publicdata folded into tools/feeds"
 
 

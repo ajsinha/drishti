@@ -103,10 +103,6 @@ class LoadScripts(unittest.TestCase):
             self.assertEqual(r.stderr.strip().splitlines(), ["iceberg: the bucket 'warehouse' does not exist at http://localhost:9000",
                                                               "load-iceberg: the load did not finish: see the line above"])
             self.assertFalse((tmp / "data" / "build" / "loader-rows").exists())
-        ps1 = (ROOT / "tools" / "windows" / "load-iceberg.ps1").read_text()
-        after = ps1[ps1.index("& $java @jvm"):]
-        self.assertNotIn("throw", after.split("Write-Host")[0], "a failed load is the loader's line, not a PowerShell error record")
-        self.assertIn("exit $code", after)
 
     def test_iceberg_loads_the_samples_and_the_book_once(self):
         self.assertEqual(self.run_script("load-iceberg.sh", ["--trades", "3", "--days", "1"]), ["loader 5"])
@@ -116,16 +112,6 @@ class LoadScripts(unittest.TestCase):
 
     def test_cassandra_loads_the_samples_and_the_book_once(self):
         self.assertEqual(self.run_script("load-cassandra.sh", ["localhost:9042", "dc1", "--trades", "3", "--days", "1"]), ["loader 5"])
-
-    def test_the_powershell_twins_call_their_loader_once_on_the_folder_of_both_tars(self):
-        for script, loader in (("load-iceberg.ps1", "IcebergLoader"), ("load-cassandra.ps1", "CassandraLoader")):
-            text = (ROOT / "tools" / "windows" / script).read_text()
-            code = "\n".join(line for line in text.splitlines() if not line.lstrip().startswith("#"))
-            self.assertEqual(len(re.findall(r"^\s*& \$java\b", code, re.M)), 1, f"{script}: one loader call")
-            self.assertIn(loader, code)
-            self.assertNotIn("Add-Content", code, f"{script}: no file of several tables (the load rules: a tar each)")
-            self.assertIn("'bulk-trades.tar'", code)
-            self.assertLess(code.index("'bulk-trades.tar'"), code.index("& $java"), f"{script}: the book's tar is written before the load")
 
     def test_every_loader_heap_is_drishti_loader_heap_and_its_input_is_under_the_data_folder(self):
         """QA2-21: no loader has a fixed -Xmx (or none at all: a quarter of the machine); none writes its rows in the repository's

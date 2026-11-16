@@ -294,7 +294,7 @@ def readme_text(v: dict) -> str:
     w("\n2. DEPLOY")
     w("-" * 72)
     w("  Quickest, on this machine (nothing is copied):")
-    w("      DRISHTI_JAR=/path/to/drishti-server-X.Y.Z-exec.jar DRISHTI_PORT=18480 ./run-server.sh        (Windows: .\\run-server.ps1)")
+    w("      DRISHTI_HOME=/path/to/drishti DRISHTI_PORT=18480 ./run-server.sh        (Windows: .\\run-server.ps1)")
     w("  On an existing server, any one of:")
     w(f"      Admin -> Packs -> Deploy archive: choose bundle/{v['name']}-{v['version']}.tar.gz (the page shows the checks and what changes, then you confirm);")
     w(f"      python3 tools/drishti.py pack deploy bundle/{v['name']}-{v['version']}.tar.gz --to /opt/drishti/packs;")
@@ -390,7 +390,7 @@ def make(a, cli) -> int:
     print(f"\npack make: {out}")
     print(f"  {len(items)} Sutra(s) for {len(plan.kinds)} kind(s)" + (f" ({len(built.synthetic)} tested on synthetic samples only)" if built.synthetic else "")
           + f"; pack check {'passed' if chk == 0 else 'FAILED'}, pack verify {'passed' if ver == 0 else 'FAILED'}")
-    print(f"next: read {out / 'README.txt'}, then  DRISHTI_JAR=<exec jar> DRISHTI_PORT=18480 {out / 'run-server.sh'}")
+    print(f"next: read {out / 'README.txt'}, then  DRISHTI_HOME=<install> DRISHTI_PORT=18480 {out / 'run-server.sh'}")
     return 1 if (chk or ver) else 0
 
 

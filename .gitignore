@@ -71,6 +71,12 @@ external_lib/python/*
 /*/drishti-*/data/
 /plugins/*/data/
 
+# Drishti's own jars: <home>/lib holds the server jar, made by python tools/drishti.py build jar; the jar is never committed (lib/README.md is)
+/lib/*.jar
+# the site's jars: <home>/lib/ext (drishti.lib.path), kept on an upgrade; never committed (lib/ext/README.md is)
+/lib/ext/*
+!/lib/ext/README.md
+
 # deploy/stack/ (the local Drishti*net cluster, deploy/stack/README.md): the repository is public, so its secrets (the token, session and
 # cluster keys; any net-key file) and its run folder (the copy of the server jar, process ids, logs) are never committed; its node data and
 # lakes are under data/stack/ (data/ above). tools/test_no_hidden_names.py fails if one is tracked anyway. The folder was drishti-stack/

@@ -40,16 +40,29 @@ import java.util.logging.Logger;
 import java.util.stream.Stream;
 
 /**
- * The shared library folder, as Tomcat's {@code lib/} (docs/admin/CONFIGURATION.md, {@code drishti.lib.path}; default
- * {@code <data folder>/lib}): every jar in it is loaded once, at start, into one "lib" class loader under the kernel's. Connectors (source
+ * The site's shared library folder, as Tomcat's {@code lib/} (docs/admin/CONFIGURATION.md, {@code drishti.lib.path}; default
+ * {@code <home>/lib/ext}): every jar in it is loaded once, at start, into one "lib" class loader under the kernel's. Connectors (source
  * plugins found by the {@link ServiceLoader}), JDBC drivers and modules see its classes; it never replaces a kernel class (the kernel's
  * loader is asked first). A change to the folder takes effect at the next start. Health and Admin → Modules list each jar with its SHA-256,
- * marked {@code lib}: code the site added beside the product.
+ * marked {@code lib}: code the site added beside the product. All jars sit under the install folder: {@code <home>/lib} holds Drishti's own
+ * jar (replaced on an upgrade), {@code <home>/lib/ext} the site's (kept on an upgrade); a Drishti server jar found in the site's folder is
+ * never loaded from it.
  */
 public final class SharedLib {
 
+    /** The default folder, under the install folder ({@code drishti.home}). */
+    public static final String DEFAULT = "lib/ext";
+
+    /** The previous default, under the data folder: its jars are moved once into the default folder. */
+    public static final String PREVIOUS_DEFAULT = "lib";
+
     /** One jar of the folder. */
     public record Jar(String name, long bytes, String sha256) {
+    }
+
+    /** True for Drishti's own server jar ({@code drishti-server-<version>-exec.jar}): it belongs in {@code <home>/lib}, never the site's folder. */
+    public static boolean isDrishtiServerJar(String name) {
+        return name.startsWith("drishti-server-") && name.endsWith("-exec.jar");
     }
 
     private static final java.util.logging.Logger JUL = java.util.logging.Logger.getLogger(SharedLib.class.getName());
@@ -67,6 +80,11 @@ public final class SharedLib {
         if (Files.isDirectory(folder)) {
             try (Stream<Path> s = Files.list(folder)) {
                 for (Path f : s.filter(p -> p.getFileName().toString().endsWith(".jar") && Files.isRegularFile(p)).sorted().toList()) {
+                    if (isDrishtiServerJar(f.getFileName().toString())) {
+                        JUL.warning("the lib folder " + folder + " holds " + f.getFileName() + ", a Drishti server jar: skipped (Drishti's own jar"
+                                + " goes in <home>/lib, the site's jars in the lib folder); remove it from there");
+                        continue;
+                    }
                     found.add(new Jar(f.getFileName().toString(), Files.size(f), sha256(f)));
                     urls.add(f.toUri().toURL());
                 }
@@ -81,16 +99,33 @@ public final class SharedLib {
         }
     }
 
-    /** The folder of the settings: {@code drishti.lib.path} (system property or {@code DRISHTI_LIB_PATH}), else {@code <data folder>/lib}. */
+    /** The folder of the settings: {@code drishti.lib.path} (system property or {@code DRISHTI_LIB_PATH}), else {@code <home>/lib/ext}. */
     public static Path folder() {
         String p = System.getProperty("drishti.lib.path");
         if (p == null || p.isBlank()) {
             p = System.getenv("DRISHTI_LIB_PATH");
         }
         if (p == null || p.isBlank()) {
-            return Path.of(com.ash.drishti.api.Roots.data("lib"));   // the data folder's, absolute
+            return Path.of(com.ash.drishti.api.Roots.home(DEFAULT));   // the install folder's lib/ext, absolute
         }
         return com.ash.drishti.api.Roots.anchored(p.strip());         // a relative value: under the install folder, never the working folder
+    }
+
+    /**
+     * The previous default folder ({@code <data>/lib}) as one more older folder to move once, when the lib folder in use is the default
+     * ({@code <home>/lib/ext}); none when the site named another folder (a {@code drishti.lib.path} of {@code <data>/lib} included: the site
+     * chose it, nothing moves).
+     *
+     * @param lib  the lib folder in use
+     * @param home the install folder
+     * @param data the data folder
+     */
+    public static Map<String, Path> previousDefault(Path lib, Path home, Path data) {
+        if (lib == null || home == null || data == null
+                || !lib.toAbsolutePath().normalize().equals(home.toAbsolutePath().normalize().resolve(DEFAULT).normalize())) {
+            return Map.of();
+        }
+        return Map.of("<data>/lib (the previous default)", data.toAbsolutePath().normalize().resolve(PREVIOUS_DEFAULT));
     }
 
     /** The one lib of this process, read at first use from {@link #folder()}. */
@@ -127,13 +162,14 @@ public final class SharedLib {
     private static volatile List<String> moved = List.of();
 
     /**
-     * The one-time move of the two older ways into the lib folder (no dual machinery): the jars of each old folder ({@code external_lib/java},
-     * once on the launcher's class path; {@code drishti.sources.plugin-dir}, connector jars in their own class loaders) are moved into
-     * {@code lib}, and {@code lib/moved-<date-time>.bak} lists what moved from where. Called at start before the lib is opened; a folder
-     * that does not exist or holds no jar moves nothing. Returns (and keeps for Health) one note per folder that moved something and one
-     * per old setting still named. A jar of the same name already in {@code lib} is left where it was and named in the note.
+     * The one-time move of the older ways into the lib folder (no dual machinery): the jars of each old folder ({@code external_lib/java},
+     * once on the launcher's class path; {@code drishti.sources.plugin-dir}, connector jars in their own class loaders; {@code <data>/lib},
+     * the previous default, see {@link #previousDefault}) are moved into {@code lib}, and {@code lib/moved-<date-time>.bak} lists what moved
+     * from where. Called at start before the lib is opened; a folder that does not exist or holds no jar moves nothing. Returns (and keeps for
+     * Health) one note per folder that moved something and one per old setting still named. A jar of the same name already in {@code lib} is
+     * left where it was and named in the note; a Drishti server jar is never moved (it belongs in {@code <home>/lib}).
      *
-     * @param old each old folder by what it was ({@code "external_lib/java"}, {@code "drishti.sources.plugin-dir"})
+     * @param old each old folder by what it was ({@code "external_lib/java"}, {@code "drishti.sources.plugin-dir"}, the previous default)
      * @param deprecated the old settings still set, by name to the note Health shows
      */
     public static List<String> migrate(Path lib, Map<String, Path> old, Map<String, String> deprecated) {
@@ -150,7 +186,7 @@ public final class SharedLib {
             try (Stream<Path> s = Files.list(from)) {
                 for (Path f : s.filter(p -> p.getFileName().toString().endsWith(".jar") && Files.isRegularFile(p)).sorted().toList()) {
                     Path to = target.resolve(f.getFileName().toString());
-                    if (Files.exists(to)) {
+                    if (Files.exists(to) || isDrishtiServerJar(f.getFileName().toString())) {
                         left.add(f.getFileName().toString());
                         continue;
                     }
@@ -165,7 +201,8 @@ public final class SharedLib {
             }
             if (!done.isEmpty() || !left.isEmpty()) {
                 notes.add(e.getKey() + " (" + from + "): " + done.size() + " jar(s) moved into " + target + (left.isEmpty() ? ""
-                        : "; left there, a jar of that name is in lib already: " + left) + ". The folder is no longer read: delete it.");
+                        : "; left there (a jar of that name is in lib already, or a Drishti server jar, which belongs in <home>/lib): " + left)
+                        + ". The folder is no longer read: delete it.");
             }
         }
         if (!listing.isEmpty()) {
@@ -227,7 +264,7 @@ public final class SharedLib {
         }
         out.put("jars", list);
         out.put("note", "loaded at start; a change takes effect at the next restart");
-        out.put("moved", moved);                     // the one-time move of external_lib/java and drishti.sources.plugin-dir, and old settings
+        out.put("moved", moved);                     // the one-time move of external_lib/java, drishti.sources.plugin-dir and <data>/lib, and old settings
         return out;
     }
 

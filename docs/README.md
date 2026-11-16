@@ -83,7 +83,7 @@ repeat.
 | Ship packs, Sutras and data to servers by copying: bundle, verify, deploy, promote, roll back | [OPERATIONS_GUIDE.md](guides/OPERATIONS_GUIDE.md#8-deploy-promote-and-roll-back-by-copying) |
 | Install and run it on Windows (PowerShell, no Hadoop) | [OPERATIONS_GUIDE.md: Windows](guides/OPERATIONS_GUIDE.md#4-drishti-on-windows) |
 | Run and debug the server in IntelliJ IDEA and the console in PyCharm | [OPERATIONS_GUIDE.md (IDE)](guides/OPERATIONS_GUIDE.md#3-other-ways-to-build-and-run-maven-intellij-idea-and-pycharm) |
-| Demo or QA on Windows with your own ENDUR files, offline | [DEPLOYMENT_AND_QA_GUIDE.md › Offline QA](DEPLOYMENT_AND_QA_GUIDE.md#11-offline-qa-with-your-own-trade-files) (a QA script) |
+| Demo or QA on Windows with your own ENDUR files, offline | [DEPLOYMENT_AND_QA_GUIDE.md › Offline QA](DEPLOYMENT_AND_QA_GUIDE.md#12-offline-qa-with-your-own-trade-files) (a QA script) |
 | Build a pack from JSON Lines, check it in CI, load data and drive the Screen Designer's review from a terminal | [CLI_REFERENCE.md](guides/CLI_REFERENCE.md) |
 | Find the right tool (command, script or page) for a job, load a large JSON export into a Delta lake, schedule loads and maintenance | [CLI_REFERENCE.md](guides/CLI_REFERENCE.md) |
 | Find your way around the top bar and its menus | [USER_GUIDE.md › The top bar](guides/USER_GUIDE.md#the-top-bar) |
@@ -242,7 +242,7 @@ Every file under `docs/`, by folder. Documents marked *moved* are short pointers
 |---|---|
 | [OPERATIONS_GUIDE.md](guides/OPERATIONS_GUIDE.md) | you install, configure, deploy, secure, monitor, back up or upgrade Drishti: install and run on one machine with each step explained, Maven and the IDEs, Windows, installing for other people, deploy, promote and roll back, the runbooks, troubleshooting and the error codes |
 | [OPERATIONS_GUIDE.md (IDE)](guides/OPERATIONS_GUIDE.md#3-other-ways-to-build-and-run-maven-intellij-idea-and-pycharm) | you run the server from IntelliJ IDEA and the console from PyCharm: JDK and interpreter setup, run configurations, debugging, reloading changes, tests in the IDE |
-| [DEPLOYMENT_AND_QA_GUIDE.md › Offline QA](DEPLOYMENT_AND_QA_GUIDE.md#11-offline-qa-with-your-own-trade-files) (a QA script) | you demo or QA on a Windows machine without internet, with your own ENDUR JSONL files replacing the synthetic ENDUR trades: setup, data, start, checks, a ten-page demo script |
+| [DEPLOYMENT_AND_QA_GUIDE.md › Offline QA](DEPLOYMENT_AND_QA_GUIDE.md#12-offline-qa-with-your-own-trade-files) (a QA script) | you demo or QA on a Windows machine without internet, with your own ENDUR JSONL files replacing the synthetic ENDUR trades: setup, data, start, checks, a ten-page demo script |
 | [OPERATIONS_GUIDE.md: Windows](guides/OPERATIONS_GUIDE.md#4-drishti-on-windows) | you run Drishti on Windows: a JDK 21 or newer (production runs 21) and Python, building or copying the jar, the native Delta engine (no Hadoop, no `winutils.exe`), the PowerShell scripts, what does not work there, troubleshooting |
 | [USER_GUIDE.md](guides/USER_GUIDE.md) | you use the console: top bar, command line, pick lists, tables, views, dates, search, export, monitors, alerts, workspaces, settings, the Build workbench, administration |
 | [OPERATIONS_GUIDE.md](guides/OPERATIONS_GUIDE.md#21-troubleshooting) | something is not working: each problem has what you see, how to check and the fix |
@@ -494,7 +494,7 @@ scripts are in the repository's history. The Windows QA script is a live procedu
 | Document | What it holds |
 |---|---|
 | [qa/QA_HISTORY.md](../CHANGELOG.md) | every QA round, soak and documentation verification (2026-10-01 to 2026-10-21): when, on what, what it found and what was fixed, with the commits; the round reports are in git |
-| [DEPLOYMENT_AND_QA_GUIDE.md › Offline QA](DEPLOYMENT_AND_QA_GUIDE.md#11-offline-qa-with-your-own-trade-files) | the QA and demo script for an offline Windows machine with your own ENDUR files |
+| [DEPLOYMENT_AND_QA_GUIDE.md › Offline QA](DEPLOYMENT_AND_QA_GUIDE.md#12-offline-qa-with-your-own-trade-files) | the QA and demo script for an offline Windows machine with your own ENDUR files |
 
 ### Records
 

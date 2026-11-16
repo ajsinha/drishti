@@ -72,7 +72,7 @@ python3 tools/drishti.py feed run official-news               # pull today's dat
 python3 tools/drishti.py feed run official-news --load inbox  # the same through the data inbox: the server loads it
 ```
 
-The same through the wrappers: `tools/feeds/feed.sh run official-news` on Linux and macOS, `.\tools\windows\feed.ps1 run official-news` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](../../../../../docs/guides/WORLD_DATA_GUIDE.md)).
+The same through the wrapper `tools/feeds/feed.sh run official-news` on Linux and macOS, and on Windows with the console's Python: `drishti-console\.venv\Scripts\python.exe tools\drishti.py feed run official-news` (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](../../../../../docs/guides/WORLD_DATA_GUIDE.md)).
 
 ### Into the lake, checking, offline
 

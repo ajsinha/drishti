@@ -28,7 +28,7 @@ same product (modules/banking/dmod/packs/trading/sutras/<system>/<product>.v1.su
   keys      the function key that opens the counterparty
 
 The score is the share of those items the generated screen has; the bar is BAR. The generated pack must also pass `sutra lint`
-and `sutra test`. Needs the server jar (kernel/drishti-server/target/drishti-server-*-exec.jar).
+and `sutra test`. Needs the server jar (<home>/lib: python tools/drishti.py build jar).
 
     python3 tools/test_sutragen_quality.py         # the score, product by product, with what is missing
     python3 -m pytest tools/test_sutragen_quality.py -q
@@ -315,10 +315,11 @@ def report(rows, share: float, say=print) -> None:
 
 
 def _jar() -> bool:
-    return bool(glob.glob(str(ROOT / "kernel/drishti-server/target/drishti-server-*-exec.jar")))
+    import javacmd
+    return bool(list(javacmd.lib_dir().glob(javacmd.JAR_GLOB)))
 
 
-@unittest.skipUnless(_jar(), "needs the server jar (kernel/drishti-server/target/drishti-server-*-exec.jar)")
+@unittest.skipUnless(_jar(), "needs the server jar (<home>/lib: python tools/drishti.py build jar)")
 class GeneratedSutraQuality(unittest.TestCase):
     """One generation for the class: the fixtures, the pack, its lint and test, then the score."""
 

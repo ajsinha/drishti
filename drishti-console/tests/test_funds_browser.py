@@ -31,7 +31,7 @@ pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install
 from playwright.sync_api import expect, sync_playwright  # noqa: E402
 
 import news_stack as NS  # noqa: E402  (listening, wait)
-from java_launch import java_cmd  # noqa: E402
+from java_launch import java_cmd, server_jars  # noqa: E402
 from scratch_ports import worker_ports  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -44,7 +44,7 @@ def stack(tmp_path_factory):
     for port in (SERVER_PORT, CONSOLE_PORT):
         if NS.listening(port):
             pytest.skip(f"port {port} is in use: stop whatever listens there")
-    jars = sorted(glob.glob(str(ROOT / "kernel/drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)
+    jars = server_jars()
     java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"
     if not jars or not Path(java).exists():
         pytest.skip("needs the built server: ./mvnw -o -q package -DskipTests -pl :drishti-app -am")

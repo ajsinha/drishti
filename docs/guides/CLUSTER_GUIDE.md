@@ -443,13 +443,13 @@ A module (`.dmod`) is deployed once for the whole cluster, from Admin → Module
 
 ### 2.0 Starting the nodes
 
-Each node is a server started with `bin/start-server --node <name>` (`.sh` on Linux and macOS, `.ps1`/`.cmd` on Windows): `--node-dir`
+Each node is a server started with `python tools/drishti.py start server --node <name>` (Windows: `py tools\drishti.py`): `--node-dir`
 names its Drishti\*net folder (made when missing), `--seed <host:port>` the member it joins through, `--advertise` the address it
 advertises (by default the machine's real LAN address, never a loopback one), `--node-data` its own data folder when several nodes share a
-machine; the cluster key comes from an `--env-file`. The console is started with `bin/start-console --server <the entry node>` (or several,
+machine; the cluster key comes from an `--env-file`. The console is started with `python tools/drishti.py start console --server <the entry node>` (or several,
 comma-separated) and learns the other members from the cluster. The commands for three nodes on one machine and on three machines, and
-every option: [DEPLOYMENT_AND_QA_GUIDE.md › section 10.6](../DEPLOYMENT_AND_QA_GUIDE.md#106-start-order-and-joining) and
-[section 6.1](../DEPLOYMENT_AND_QA_GUIDE.md#61-the-start-and-stop-scripts-bin).
+every option: [DEPLOYMENT_AND_QA_GUIDE.md › section 11.6](../DEPLOYMENT_AND_QA_GUIDE.md#116-start-order-and-joining) and
+[section 7.1](../DEPLOYMENT_AND_QA_GUIDE.md#71-the-start-and-stop-commands).
 
 ### 2.1 The ready-made local cluster: deploy/stack
 
@@ -457,12 +457,12 @@ For a cluster on one machine without the steps below, the repository's `deploy/s
 `stack.yaml` ([deploy/stack/README.md](../../deploy/stack/README.md)):
 
 ```bash
-bin/start-cluster.sh       # start what is not running: the three servers, then the console
-bin/status.sh --cluster deploy/stack/stack.yaml      # the processes and ports, the members, the console's servers
-bin/stop-cluster.sh        # stop everything the cluster file started (by process id, never by name)
+python tools/drishti.py start cluster       # start what is not running: the three servers, then the console
+python tools/drishti.py status --cluster deploy/stack/stack.yaml      # the processes and ports, the members, the console's servers
+python tools/drishti.py stop cluster        # stop everything the cluster file started (by process id, never by name)
 ```
 
-It starts each node and the console through the scripts of `bin/` (2.0), so their pid files and logs are in `data/run/` and `data/logs/`.
+It starts each node and the console through `tools/drishti.py start` (2.0), so their pid files and logs are in `data/run/` and `data/logs/`.
 
 `drishti-main` (18480) serves the seven default packs, the demo lakes and live news; `drishti-b` (18791) synthetic ENDUR and CALYPSO
 trades; `drishti-c` (18792) synthetic MUREX trades with `counterparty-risk` and `market-risk`; the console (17480) is given `drishti-main`
@@ -1035,7 +1035,7 @@ the drain:**
 | systemd (`deploy/systemd/drishti-server.service`) | `ExecStop=-/opt/drishti/bin/drishti-node.sh drain` | `DRISHTI_DRAIN_WAIT` (240 s), within `TimeoutStopSec` (300 s) |
 | Docker (`deploy/docker/server.Dockerfile`) | the entry point `drishti-node.sh run java …`, on `docker stop` | 90 s; `stop_grace_period: 120s` in `compose.yaml` (or `docker stop -t 120`) |
 | ECS (`deploy/docker/ecs/`) | the same entry point, on the task's SIGTERM | 90 s within `stopTimeout` of **120 s, Fargate's most**: a shard rebuild can take longer, so drain before the stop (the rolling runner does) |
-| Windows | `bin\drishti-node.ps1 drain -Wait 240`, before stopping the process | `-Wait` |
+| Windows | the REST call `bin/drishti-node.sh` makes, before stopping the process: `POST /api/v1/admin/node/drain` with `{"on":true}` (an administrator's token with the `node:drain` scope, as `Authorization: Bearer`), then `GET /api/v1/admin/node` until it says `safeToStop` | your own wait |
 
 The token: `DRISHTI_DRAIN_TOKEN` (or `DRISHTI_DRAIN_TOKEN_FILE`); with sign-in off none is needed. A drain that is refused, or not safe in
 time, never holds the stop: the replicas answer and the next owners build the shards, as after a crash. On ECS with EC2 capacity raise the
@@ -1048,14 +1048,14 @@ For good: `enabled: false` in its node.yaml (it leaves cleanly), then **Remove**
 One node at a time, in this order: **BI and data-serving**, then **coordinators**, then **owners one zone at a time**, then the
 **consoles** last (a console newer than its servers cannot sign anyone in, so every server is on the new release first).
 For each: drain (a console: deregister from the LB and wait for connections to close) → `safeToStop` → stop → upgrade → start → readiness →
-next. **The rolling upgrade runner**, `tools/rolling-upgrade.sh` (Windows: `tools/windows/rolling-upgrade.ps1`), does exactly this from an
+next. **The rolling upgrade runner**, `python tools/rolling.py`, does exactly this from an
 inventory (`deploy/rolling.example.yaml`):
 
 ```bash
 export DRISHTI_DRAIN_TOKEN=drk_...                    # an administrator's personal API token with the node:drain scope
-tools/rolling-upgrade.sh --inventory my-cluster.yaml --version <version> --dry-run    # every step printed, nothing called
-tools/rolling-upgrade.sh --inventory my-cluster.yaml --version <version>              # the upgrade
-tools/rolling-upgrade.sh --inventory my-cluster.yaml --version <version> --from var-3 # resume after a stop
+python tools/rolling.py --inventory my-cluster.yaml --version <version> --dry-run    # every step printed, nothing called
+python tools/rolling.py --inventory my-cluster.yaml --version <version>              # the upgrade
+python tools/rolling.py --inventory my-cluster.yaml --version <version> --from var-3 # resume after a stop
 ```
 
 - **Order:** `bi` and `data`, then `coordinator`, then `owner` nodes zone by zone (`zones:` gives the order; owners without a zone after
@@ -1142,7 +1142,7 @@ Timing (estimate): the loader's 2.3M load 1 to 5 minutes; shard books in paralle
 2. Seeds (two or three members named in every node's `peers/`), then the other owners, then coordinators, BI, data-serving.
 3. Consoles last (they wait for `/readyz`).
 
-Each with `bin/start-server --node …` and `bin/start-console --server …` ([2.0](#20-starting-the-nodes)).
+Each with `drishti.py start server --node …` and `drishti.py start console --server …` ([2.0](#20-starting-the-nodes)).
 
 A cold start of the whole cluster: owners build the open dates' shard books (or map kept hot files); coordinators put dates together once
 skeletons are available. A whole-cluster stop: in reverse.
@@ -1399,11 +1399,11 @@ instance's NVMe (`register.sh --cache nvme` on EC2 mounts the host's `/mnt/nvme/
 
 **A new version**, one node at a time in the rolling order of section 8.2: register task definition revisions with the new image tags
 (`register.sh`), then for each node drain and wait for `safeToStop`, update its service (ECS stops the old task, starts the new on the same EFS
-folders), wait for readiness. `tools/rolling-upgrade.sh --inventory <file> --version <v>` with `platform: ecs` runs these steps:
+folders), wait for readiness. `python tools/rolling.py --inventory <file> --version <v>` with `platform: ecs` runs these steps:
 
 ```bash
-tools/rolling-upgrade.sh --inventory prod-ecs.yaml --version <version> --dry-run
-tools/rolling-upgrade.sh --inventory prod-ecs.yaml --version <version>
+python tools/rolling.py --inventory prod-ecs.yaml --version <version> --dry-run
+python tools/rolling.py --inventory prod-ecs.yaml --version <version>
 # one owner by hand, the same steps
 DRISHTI_NODE_URL=http://var-3.drishti.local:18480 DRISHTI_DRAIN_WAIT=1800 bin/drishti-node.sh drain
 aws ecs update-service --cluster "$ECS_CLUSTER" --service var-3 --task-definition "drishti-$ENV-var-3:$REV" --force-new-deployment
@@ -2269,7 +2269,7 @@ JAVA_TOOL_OPTIONS="-Xmx2g -XX:MaxDirectMemorySize=256m -XX:TrimNativeHeapInterva
 `-XX:MaxDirectMemorySize` caps direct buffers (the default cap is the heap size); `-XX:TrimNativeHeapInterval` (Java 21.0.1 and later)
 returns freed native memory every minute; `-Djdk.nio.maxCachedBufferSize=262144` stops Java keeping a large temporary direct buffer cached on
 every thread. Every launcher Drishti ships sets them (`deploy/stack`, the Docker and ECS server images and `compose.yaml`, the IntelliJ run
-configurations, `bin/start-server.sh` and `bin/start-server.ps1`, which on Windows sets the JVM flags only: Windows' allocator has no arenas); the production
+configurations, `tools/drishti.py start server`, which on Windows sets the JVM flags only: Windows' allocator has no arenas); the production
 launchers also keep a heap dump on OutOfMemoryError, a rotated GC log and native memory tracking. To look at a running server: start it with
 `-XX:NativeMemoryTracking=summary`, take `jcmd <pid> VM.native_memory baseline`, later `jcmd <pid> VM.native_memory summary.diff scale=MB`,
 and compare with `VmRSS` in `/proc/<pid>/status`: a category that keeps rising after the heap is fully committed is a leak; RSS that NMT does

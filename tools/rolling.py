@@ -43,7 +43,7 @@ The inventory (YAML or JSON; ``deploy/rolling.example.yaml`` is a commented exam
       - {name: var-1, role: owner, zone: az-a, url: "http://10.0.3.11:18480", host: 10.0.3.11}
 
 The token (an administrator's personal API token with the ``node:drain`` scope) comes from ``--token-file``, else ``DRISHTI_DRAIN_TOKEN``,
-else ``DRISHTI_TOKEN``; it is never printed. ``tools/rolling-upgrade.sh`` and ``tools/windows/rolling-upgrade.ps1`` run this file.
+else ``DRISHTI_TOKEN``; it is never printed. Run it as ``python tools/rolling.py --inventory my-cluster.yaml --version <version> [--dry-run]`` on any OS.
 """
 from __future__ import annotations
 

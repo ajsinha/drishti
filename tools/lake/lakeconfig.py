@@ -107,7 +107,7 @@ def command(jar: str | None = None, java: str | None = None) -> list[str]:
         return _java_cmd(java_bin, args, tmp=os.environ.get("DRISHTI_TMP_DIR") or tempfile.gettempdir())
     java_bin = writers.find_java(java)
     if not java_bin:
-        raise LakeConfigError("no java found to read the lake files (JAVA_HOME, or java on the PATH)")
+        raise LakeConfigError("no java found to read the lake files (DRISHTI_JAVA_HOME, JAVA_HOME, or java on the PATH)")
     cp = os.environ.get("DRISHTI_LAKE_CLASSPATH")
     if cp and not jar:
         return java_cmd(java_bin, ["-cp", cp, MAIN])
@@ -117,7 +117,7 @@ def command(jar: str | None = None, java: str | None = None) -> list[str]:
     cp = _maven_classpath()
     if cp:
         return java_cmd(java_bin, ["-cp", cp, MAIN])
-    raise LakeConfigError("cannot read the lake files: no server exec jar (DRISHTI_JAR, kernel/drishti-server/target) and no compiled "
+    raise LakeConfigError("cannot read the lake files: no server exec jar in <home>/lib (python tools/drishti.py build jar) and no compiled "
                           "drishti-lakeio (mvn -pl :drishti-lakeio compile); DRISHTI_LAKE_CLASSPATH names one")
 
 

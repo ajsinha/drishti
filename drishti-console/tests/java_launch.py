@@ -29,3 +29,13 @@ _spec.loader.exec_module(_mod)
 FLAG = _mod.FLAG
 java_cmd = _mod.java_cmd
 server_tmp = _mod.server_tmp
+server_jar = _mod.server_jar
+JarError = _mod.JarError
+
+
+def server_jars() -> list:
+    """The server's exec jar as a one-item list (``[str]``), found in <home>/lib by tools/javacmd.py ``server_jar``; empty when there is none."""
+    try:
+        return [str(_mod.server_jar())]
+    except _mod.JarError:
+        return []

@@ -140,7 +140,7 @@ one implementation, reached **three ways**:
 
 - **Two folders, as in Tomcat**, under the data folder ([ADMIN_GUIDE.md section 22.1](docs/guides/ADMIN_GUIDE.md#221-module-packages-auto-deploy-and-the-shared-lib-folder)):
   `modules/` (`drishti.modules.path`) takes `.dmod` packages and **auto-deploys** them within seconds (verified, checked, installed,
-  loaded; taking the file out removes the module), on for a single node and off in a cluster; `lib/` (`drishti.lib.path`) takes jars every
+  loaded; taking the file out removes the module), on for a single node and off in a cluster; `lib/ext/` (`drishti.lib.path`) takes jars every
   connector and module may use (JDBC drivers, connector plugins, a company's libraries), read once at start into one class loader under the
   kernel's and listed with their SHA-256 in Health. **Development mode** (`drishti.modules.dev`) loads a module's exploded build folder
   and reloads it on every rebuild; it is refused in a cluster and under the production profile, which loads only verified packages.
@@ -169,21 +169,21 @@ words, menus, Home cards, Help pages and the catalogue the AI reads (*DRS-4023 V
 
 | Distribution | For | Modules | Lenses | Start |
 |---|---|---|---|---|
-| **Drishti Risk** | traders, risk analysts and managers, middle office, model validation | banking, market-data | Risk (default), Trading, Market | `bin/start-all.sh --distribution risk` |
-| **Drishti Finance** | investment and research analysts, economists, fund analysts; no VaR or any risk number | capital-markets, economy, market-data | Markets (default), World | `bin/start-all.sh --distribution finance` |
-| **Drishti Genomics** | the sample that proves the kernel carries no finance | genomics (dropped into `modules/`) | Research | `bin/start-all.sh --distribution genomics` |
-| **Drishti All** | developers, QA, demos; the default when none is named | every module | every lens | `bin/start-all.sh` |
+| **Drishti Risk** | traders, risk analysts and managers, middle office, model validation | banking, market-data | Risk (default), Trading, Market | `python tools/drishti.py start all --distribution risk` |
+| **Drishti Finance** | investment and research analysts, economists, fund analysts; no VaR or any risk number | capital-markets, economy, market-data | Markets (default), World | `python tools/drishti.py start all --distribution finance` |
+| **Drishti Genomics** | the sample that proves the kernel carries no finance | genomics (dropped into `modules/`) | Research | `python tools/drishti.py start all --distribution genomics` |
+| **Drishti All** | developers, QA, demos; the default when none is named | every module | every lens | `python tools/drishti.py start all` |
 
-- **Any start**: `--distribution <name|path>` on `bin/start-all`, `start-server` and `start-console` (`.sh`, `.ps1`, `.cmd`), or
+- **Any start**: `--distribution <name|path>` on `tools/drishti.py start all`, `start server` and `start console`, or
   `DRISHTI_DISTRIBUTION`, or `drishti.distribution`; a path loads a site's own file (its own brand), beside the shipped ones.
 - **Two consoles over one cluster**: a console started with its own distribution keeps it whatever the servers run, so a stack file's
   `consoles:` list (`{ name: risk, port: 17480, distribution: risk }`, `{ name: finance, port: 17481, distribution: finance }`) gives
-  Drishti Risk and Drishti Finance side by side; `bin/status.sh` shows each process's distribution.
+  Drishti Risk and Drishti Finance side by side; `tools/drishti.py status` shows each process's distribution.
 - **The IDEs**: the IntelliJ run configurations in `run-configs/` include `Drishti server (Risk)`, `(Finance)`, `(All)` and `Drishti
   console (Risk)`, `(All)`.
 - **Admin → White label** shows every distribution side by side; Health shows the running one and which of its modules loaded.
   Step by step for each, on Linux, macOS and Windows:
-  [DEPLOYMENT_AND_QA_GUIDE.md section 6.7](docs/DEPLOYMENT_AND_QA_GUIDE.md#67-starting-a-white-labelled-instance).
+  [DEPLOYMENT_AND_QA_GUIDE.md section 7.7](docs/DEPLOYMENT_AND_QA_GUIDE.md#77-starting-a-white-labelled-instance).
 
 ## Risk
 
@@ -334,35 +334,35 @@ repository root ([OPERATIONS_GUIDE.md section 2](docs/guides/OPERATIONS_GUIDE.md
 Run these from the Drishti folder (the repository root, or the install folder of a release).
 
 ```bash
-# 1. Build the runnable server (the kernel, with the first-party modules it installs at the first start)
-./mvnw -q package -DskipTests -pl :drishti-app -am
+# 1. Prepare the machine: checks Python 3.11+ and Java 21+, makes the data folder, ~/drishti-envs/dev.ini and drishti-console/.venv
+python tools/drishti.py setup
 
-# 2. The console's Python environment (it also runs tools/drishti.py)
-uv venv --python 3.13 drishti-console/.venv
-uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requirements.txt
+# 2. Build the runnable server (the kernel, with the first-party modules it installs at the first start); the jar goes to ./lib
+python tools/drishti.py build jar
 
 # 3. The demo lake, from the committed test data in data/testdata
-drishti-console/.venv/bin/python tools/drishti.py lake demo
+python tools/drishti.py --settings ~/drishti-envs/dev.ini lake demo --engine java
 
 # 4. The server on :18480 and the console on :17480, in the background, with the demo's settings
-bin/start-all.sh --demo          # Windows: bin\start-all.cmd --demo; add --distribution risk|finance|genomics for one product
-bin/status.sh                    # both UP, with the addresses to open
-bin/stop-all.sh                  # when you are done
+python tools/drishti.py --settings ~/drishti-envs/dev.ini start all --demo    # add --distribution risk|finance|genomics for one product
+python tools/drishti.py status                                                # both UP, with the addresses to open
+python tools/drishti.py stop all                                              # when you are done
 ```
 
-Open the console's address that `start-all` prints, sign in as `drishti-dev-admin` (password `drishti-dev-admin123`: the demo's
+On Windows the same commands run as `py tools\drishti.py ...` with backslash paths.
+
+Open the console's address that `start all` prints, sign in as `drishti-dev-admin` (password `drishti-dev-admin123`: the demo's
 development account, never for a shared machine) and try `TRD MX-20000001`, `VAR BANK`, `EXP BANK`, `PREDEAL` and `PIVOT`
 ([DEPLOYMENT_AND_QA_GUIDE.md](docs/DEPLOYMENT_AND_QA_GUIDE.md) walks it on Windows, Linux and macOS, with what you should see).
 
-- **Starting and stopping**: the scripts of [bin/](bin/README.md) (`start-server`, `start-console`, `stop-server`, `stop-console`,
-  `status`, `start-all`, `stop-all`, `start-cluster`, `stop-cluster`), each as `.sh` (Linux, macOS), `.ps1` and `.cmd` (Windows); every
-  option, a cluster node by node with `--node`, the console pointed at a cluster's entry node with `--server`, a distribution with
+- **Starting and stopping**: `tools/drishti.py start`, `stop` and `status` ([CLI_REFERENCE.md](docs/guides/CLI_REFERENCE.md#setup-build-jar-start-stop-and-status-install-build-run-and-stop-drishti)),
+  the same on Linux, macOS and Windows; every option, a cluster node by node with `--node`, the console pointed at a cluster's entry node with `--server`, a distribution with
   `--distribution` and a second console in one data folder with `--name`:
-  [DEPLOYMENT_AND_QA_GUIDE.md section 6](docs/DEPLOYMENT_AND_QA_GUIDE.md#6-start-the-server-and-the-console).
+  [DEPLOYMENT_AND_QA_GUIDE.md section 7](docs/DEPLOYMENT_AND_QA_GUIDE.md#7-start-the-server-and-the-console).
 
 - **The command line** is `tools/drishti.py`, run with the console's Python: lakes and loads, feeds, Elements, approvals, VaR, exposure
   and more ([CLI_REFERENCE.md](docs/guides/CLI_REFERENCE.md), [COMMAND_CATALOG.md](docs/guides/COMMAND_CATALOG.md)).
-- **A local cluster of three** with its consoles, from one file: `bin/start-cluster.sh` with [deploy/stack/stack.yaml](deploy/stack/README.md)
+- **A local cluster of three** with its consoles, from one file: `tools/drishti.py start cluster` with [deploy/stack/stack.yaml](deploy/stack/README.md)
   (its `consoles:` list may start a Drishti Risk and a Drishti Finance console over the same cluster).
 - **Other ways**: [Windows](docs/guides/OPERATIONS_GUIDE.md#4-drishti-on-windows) (Java and Python only),
   [Docker Compose](docs/guides/OPERATIONS_GUIDE.md#54-docker-compose) and the

@@ -58,7 +58,7 @@
         {% for m in r.modules %}<tr data-module="{{ m.id }}"><td class="mono">{{ m.id }}</td><td><span class="st {{ 'st-ok' if m.state == 'loaded' else 'st-warn' }}">{{ m.state }}</span></td></tr>{% endfor %}
         </tbody>
       </table></div>
-      <p class="wl-start"><span class="text-muted-d">Start:</span> <code>bin/start-all.sh --distribution {{ r.start }}</code></p>
+      <p class="wl-start"><span class="text-muted-d">Start:</span> <code>python tools/drishti.py start all --distribution {{ r.start }}</code></p>
     </section>
   {% endfor %}
   </div>

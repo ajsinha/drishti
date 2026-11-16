@@ -31,7 +31,13 @@ sys.path.insert(0, str(ROOT / "tools" / "lake"))
 from lakeconfig import DEMO_ROOT_ENV  # noqa: E402  (the variable that names the demo lake's root: lakeconfig.py)
 if str(ROOT / "tools") not in sys.path:
     sys.path.append(str(ROOT / "tools"))
+import javacmd  # noqa: E402
 from javacmd import java_cmd  # noqa: E402  (re-exported for the shots: -Djava.io.tmpdir=<work>/data/tmp/server)
+
+
+def server_jars() -> list:
+    """The server's exec jars in <home>/lib, oldest first (the newest is last): where every tool finds them."""
+    return sorted(javacmd.lib_dir(ROOT).glob(javacmd.JAR_GLOB), key=lambda p: p.stat().st_mtime)
 EXAMPLES = ROOT / "docs" / "guides" / "examples"
 PACKS = "core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets"
 SERVER_PORT = int(os.environ.get("DRISHTI_SHOTS_SERVER_PORT", 18997))      # the scratch ports; override when another run holds them
@@ -182,9 +188,9 @@ def listening(port: int) -> bool:
 
 def start_servers(work: Path, extra_env: dict | None = None) -> list:
     """Starts the scratch server and console; `extra_env` (a guide's SERVER_ENV) is added to the environment of both."""
-    jars = sorted((ROOT / "kernel/drishti-server" / "target").glob("drishti-server-*-exec.jar"))
+    jars = server_jars()
     if not jars:
-        sys.exit("build the server first: ./mvnw -o package -DskipTests -pl :drishti-app -am")
+        sys.exit("build the server first: python tools/drishti.py build jar")
     java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"
     for name in ("config", "modules", "lib"):      # the server reads its config and its module folders beside where it runs
         if not (work / name).exists() and (ROOT / name).exists():
@@ -211,9 +217,9 @@ def start_servers(work: Path, extra_env: dict | None = None) -> list:
 
 def start_pack_servers(work: Path, packs: str, server_port: int, console_port: int, data_dir: Path | None = None) -> list:
     """A scratch server and console with the packs on, for a pack's guide picture: the two processes, once both listen."""
-    jars = sorted((ROOT / "kernel/drishti-server" / "target").glob("drishti-server-*-exec.jar"))
+    jars = server_jars()
     if not jars:
-        sys.exit("build the server first: ./mvnw -o package -DskipTests -pl :drishti-app -am")
+        sys.exit("build the server first: python tools/drishti.py build jar")
     if not (work / "config").exists():
         (work / "config").symlink_to(ROOT / "config")
     java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"

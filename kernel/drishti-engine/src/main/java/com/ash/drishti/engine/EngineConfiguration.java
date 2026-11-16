@@ -89,10 +89,18 @@ public class EngineConfiguration {
                 return null;
             }
         }, EngineConfiguration.class.getClassLoader());
-        // the shared lib folder (Tomcat's lib/): read once, at start, before any plugin is looked for
-        java.nio.file.Path lib = java.nio.file.Path.of(env.getProperty("drishti.lib.path",
-                java.nio.file.Path.of(env.getProperty("drishti.data.dir", com.ash.drishti.api.Roots.data()), "lib").toString()));
-        com.ash.drishti.common.SharedLib.migrate(lib, oldLibFolders(env, props), oldLibSettings(env, props));   // one way: lib/ (no dual machinery)
+        // the site's shared lib folder (Tomcat's lib/; default <home>/lib/ext): read once, at start, before any plugin is looked for
+        String homeSetting = env.getProperty(com.ash.drishti.api.Roots.HOME);
+        java.nio.file.Path home = homeSetting == null || homeSetting.isBlank() ? com.ash.drishti.api.Roots.home() : java.nio.file.Path.of(homeSetting.strip());
+        String libSetting = env.getProperty("drishti.lib.path");
+        java.nio.file.Path lib = libSetting == null || libSetting.isBlank() ? home.resolve(com.ash.drishti.common.SharedLib.DEFAULT)
+                : (java.nio.file.Path.of(libSetting.strip()).isAbsolute() ? java.nio.file.Path.of(libSetting.strip()) : home.resolve(libSetting.strip()));
+        lib = lib.toAbsolutePath().normalize();
+        java.util.Map<String, java.nio.file.Path> old = new java.util.LinkedHashMap<>(oldLibFolders(env, props));
+        String dataSetting = env.getProperty("drishti.data.dir");
+        old.putAll(com.ash.drishti.common.SharedLib.previousDefault(lib, home, dataSetting == null || dataSetting.isBlank()
+                ? java.nio.file.Path.of(com.ash.drishti.api.Roots.data()) : java.nio.file.Path.of(dataSetting.strip())));
+        com.ash.drishti.common.SharedLib.migrate(lib, old, oldLibSettings(env, props));   // one way: the lib folder (no dual machinery)
         com.ash.drishti.common.SharedLib.open(lib);
         java.util.List<com.ash.drishti.api.SourcePlugin> plugins = new PluginDiscovery().discover().stream()
                 .filter(pl -> access.classOn((pl instanceof com.ash.drishti.engine.source.ComputedKindSource c ? c.provider() : pl).getClass().getName())).toList();
@@ -103,7 +111,8 @@ public class EngineConfiguration {
     /**
      * The two older ways jars reached the server, folded into the lib folder (drishti.lib.path) and read once more only to move their jars:
      * the launcher's external_lib/java (DRISHTI_EXTERNAL_LIB, drishti.external-lib; the console keeps external_lib/python) and
-     * drishti.sources.plugin-dir (DRISHTI_PLUGIN_DIR).
+     * drishti.sources.plugin-dir (DRISHTI_PLUGIN_DIR). The previous default, &lt;data&gt;/lib, is added by the caller
+     * ({@link com.ash.drishti.common.SharedLib#previousDefault}) when the lib folder is the default &lt;home&gt;/lib/ext.
      */
     static java.util.Map<String, java.nio.file.Path> oldLibFolders(org.springframework.core.env.Environment env, SourcesProperties props) {
         java.util.Map<String, java.nio.file.Path> old = new java.util.LinkedHashMap<>();
