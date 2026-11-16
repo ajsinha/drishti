@@ -35,6 +35,8 @@ export { rowId, seriesDefs, annotationMarks, buildSeriesChart, buildScatter, bui
 export { buildPie, buildGauge, buildTreemap, buildSankey, registerOtherKinds } from './drishti_chart-kinds2.js';
 export { equalEarth, albers, plateCarree, projectGeometry, bounds, coreExtent, countryProjection, US_INSETS, prepareRegions, prepareWorld, findPlace,
   createGeoLoader, holdAntimeridian, fitView } from './drishti_chart-geo.js';
+export { WORLD_REGIONS } from './drishti_world-regions.js';
+export { REGION_START_LEVELS, isRegionLevel, regionOf, regionName, prepareRegionLevel } from './drishti_chart-regions.js';
 export { mapMetrics, placeValues, mapScale, ranking, buildMap, registerMapKind } from './drishti_chart-map.js';
 export { colourTone, d3Format, fromVegaLite, vegaLiteAlternative, vegaLiteRefusal, vegaLiteIn } from './drishti_chart-vega.js';
 export { valueText, tooltipElement, dataTable, legendElement, markSelection, addZoom, dragBrush, rangeBrush, svgOf } from './drishti_chart-parts.js';

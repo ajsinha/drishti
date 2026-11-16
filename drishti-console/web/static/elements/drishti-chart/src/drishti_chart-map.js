@@ -127,7 +127,7 @@ export function buildMap(spec, rows, geo, env) {
     const c = sc.colourOf(p.v), cls = sc.classOf(p.v), dim = hl !== null && cls !== hl;
     const r = { name: p.code, itemStyle: { areaColor: c || env.hatch || th.nodata, opacity: dim ? 0.28 : 1 } };
     if (sel.has(p.code)) { Object.assign(r.itemStyle, { borderColor: th.tokens.accent, borderWidth: 2 }); }
-    if (geo.level !== 'world') {
+    if (geo.level !== 'world' && !geo.regionKind) {
       const b = bounds([].concat.apply([], (shapeByCode.get(p.code).geometry.type === 'Polygon' ? [shapeByCode.get(p.code).geometry.coordinates] : shapeByCode.get(p.code).geometry.coordinates).map((q) => q[0])));
       if ((b[2] - b[0]) > W * 0.055 && (b[3] - b[1]) > W * 0.025) { r.label = { show: true, formatter: p.code.split('-').pop(), color: th.ink, fontFamily: th.font, fontSize: th.size.font - 1 }; }
     }

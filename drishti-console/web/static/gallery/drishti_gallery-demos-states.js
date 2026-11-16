@@ -219,4 +219,27 @@
     },
     code: () => ({ js: "const q = new Drishti.elements.inputs.QueryBuilder(host, { fields: [{ id: 'desk', type: 'enum' }, { id: 'var', type: 'number' }] });\nq.on('change', ({ value, text }) => grid.setFilterModel(toFilter(value)));\nq.setValue('desk = Rates AND var > 100');", element: '<!-- any host element -->' })
   }));
+
+  demos.push(fn({
+    id: 'map-world-regions', library: 'drishti-chart', title: 'Map: world regions', about: 'drishti_chart-regions.js', types: [],
+    summary: 'The world by continent, then a continent\'s sub-regions, then a sub-region\'s countries, then a country\'s first-level regions: double-click (or the Drill button) to go down, the breadcrumb to go up. One grouping (world-regions.yaml) is read by the map and by the server, so a figure by region is the server\'s; the map only draws it. The Data table is the alternative.',
+    values: {}, examples: [{ title: 'Exposure by continent', values: {} }],
+    mount: function (host, values, ctx) {
+      const C = ctx.E.chart, R = C.WORLD_REGIONS, doc = host.ownerDocument;
+      const val = (code) => { let h = 7; for (let i = 0; i < code.length; i++) { h = (h * 31 + code.charCodeAt(i)) % 997; } return 100 + h; };
+      const rowsFor = (level) => {
+        if (level === 'continents') { return Object.keys(R.continents).map((code) => ({ code, ead: R.subregions && Object.keys(R.subregions).filter((s) => R.subregions[s].continent === code).reduce((n, s) => n + R.subregions[s].countries.length * val(s), 0) })); }
+        if (/^CT-/.test(level)) { return Object.keys(R.subregions).filter((s) => R.subregions[s].continent === level).map((code) => ({ code, ead: R.subregions[code].countries.length * val(code) })); }
+        if (/^SR-/.test(level)) { return R.subregions[level].countries.map((code) => ({ code, ead: val(code) * 3 })); }
+        return [];
+      };
+      const el = doc.createElement('drishti-chart');
+      host.appendChild(el);
+      el.spec = { kind: 'map', title: 'Exposure (EAD) by region', level: 'continents', data: { rows: rowsFor('continents') }, place: 'code', id: 'code',
+        metrics: [{ field: 'ead', title: 'Exposure (EAD)', format: 'money' }], scale: { type: 'quantile', classes: 4 }, drill: 'regions', disclaimer: true };
+      el.options = { mapsBase: ctx.mapsBase, placeData: (level) => Promise.resolve(rowsFor(level)), height: 440 };
+      return { target: el, element: el, ready: Promise.resolve(), destroy: () => { if (el.chart) { el.chart.destroy(); } el.remove(); } };
+    },
+    code: () => ({ js: "const spec = { kind: 'map', level: 'continents', place: 'code', data: { rows: byContinent },   // rows from the server, grouped by the same world-regions.yaml\n  metrics: [{ field: 'ead', format: 'money' }] };\nchart.spec = spec;\nchart.options = { placeData: (level) => fetch('/api/exposure?by=' + level).then((r) => r.json()) };", element: '<drishti-chart id="chart"></drishti-chart>' })
+  }));
 }(typeof window !== 'undefined' ? window : null));

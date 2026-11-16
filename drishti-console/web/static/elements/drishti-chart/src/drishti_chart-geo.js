@@ -21,6 +21,7 @@
    grows downwards, as on a screen; the engine draws the shapes with an identity projection. No tiles, no map service: nothing leaves
    the network. Pure functions and a loader with an injected fetch, so Node tests read the same files. */
 import { url as drishtiUrl } from '../../drishti-core/src/drishti_index.js';
+import { prepareRegionLevel } from './drishti_chart-regions.js';
 
 const RAD = Math.PI / 180;
 
@@ -273,13 +274,13 @@ export function findPlace(geo, code) {
  * load is forgotten, so it can be asked again).
  * @param {{base: string, fetchJson: function(string): Promise<Object>}} o base: the maps folder ("/static/vendor/echarts/maps/");
  *   fetchJson: how to read a file (default: fetch, same origin)
- * @returns {{world: function(): Promise<RegionGeo>, regions: function(string): Promise<RegionGeo>, hasRegions: function(string): boolean, loads: string[]}}
+ * @returns {{world: function(): Promise<RegionGeo>, regions: function(string): Promise<RegionGeo>, regionLevel: function(string): Promise<RegionGeo>, hasRegions: function(string): boolean, loads: string[]}}
  */
 export function createGeoLoader(o) {
   o = o || {};
   const base = (o.base || drishtiUrl('/static/vendor/echarts/maps/')).replace(/\/?$/, '/');
   const get = o.fetchJson || ((url) => fetch(drishtiUrl(url), { credentials: 'same-origin' }).then((r) => { if (!r.ok) { throw new Error('map ' + url + ': ' + r.status); } return r.json(); }));
-  const cache = { world: null, regions: {} }, loads = [];
+  const cache = { world: null, regions: {}, levels: {} }, loads = [];
   const fetched = (file) => { loads.push(file); return Promise.resolve().then(() => get(base + file)); };
   return {
     loads: loads,
@@ -298,6 +299,14 @@ export function createGeoLoader(o) {
         cache.regions[k].catch(() => { delete cache.regions[k]; });
       }
       return cache.regions[k];
+    },
+    regionLevel(level) {
+      const k = String(level);
+      if (!cache.levels[k]) {
+        cache.levels[k] = this.world().then((w) => prepareRegionLevel(w, k));
+        cache.levels[k].catch(() => { delete cache.levels[k]; });
+      }
+      return cache.levels[k];
     },
     hasRegions(iso3) { return !!cache.regions[String(iso3).toUpperCase()]; }
   };

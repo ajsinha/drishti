@@ -111,8 +111,7 @@ breaking change in any library's public API is a major version of the project. D
 a public CDN build for other users (jsDelivr and unpkg serve the npm package; the bundles carry Subresource Integrity hashes in a
 published manifest). The CDN is for other users only.
 
-**Licence.** The owner decides (today: proprietary). The choice settles what the package and the CDN may carry and which vendored engines
-(ECharts: Apache-2.0) can ship with it.
+**Licence.** See *Licences and notices* below (decided: Apache-2.0 at the split).
 
 **API stability and deprecation.** The public API is what a library's entry exports and ELEMENTS_API.md lists. Additions are minor;
 a rename or removal is a major and is deprecated for one minor release first (the old name still works, warns once in the console and is
@@ -143,3 +142,14 @@ bundle, catalogue or reference, and a bundle over its byte budget.
 3. CI, guards, the byte budget and the docs site (1 to 2 weeks).
 4. The npm package, the type declarations, the CDN build and the licence file once the owner decides (1 week).
 5. First public release, then a deprecation policy review after two minors (ongoing).
+
+## Licences and notices
+
+Decided by the owner for the split; until then nothing changes and every file keeps the current proprietary header.
+
+- **Elements' own licence is Apache-2.0** (with a `NOTICE` file and the patent grant) from the split on. **"Drishti" and "Drishti Elements" stay the owner's trademarks**: the licence grants no trademark right, and the project's trademark policy says so.
+- **Contributions** from outside need a sign-off (the Developer Certificate of Origin, `Signed-off-by:` on each commit); no copyright assignment.
+- **File headers** change from the proprietary header to the Apache-2.0 header for Elements' files only, at the split, in one commit (the licence-header tool does it; Drishti's own files keep theirs).
+- **A lawyer reviews** the licence, the notices and the trademark policy before the first public release.
+- **Third-party notices.** The published bundle ships a `THIRD-PARTY-NOTICES` file generated from `static/vendor/VENDOR.md` (every vendored library: name, version, licence, its licence text, and Apache-2.0 NOTICE files where upstream has them). Only permissive licences are vendored (MIT, Apache-2.0, BSD-2/3, ISC, SIL OFL 1.1, MPL-2.0 unmodified, public domain or CC0, PSF); `tests/test_vendor_licences.py` refuses anything else (GPL, AGPL, LGPL, SSPL, CC-BY-NC/ND, the Commons Clause, BUSL, an unknown licence), a folder without its row, or a licence file or NOTICE that went missing. Elements' own sources were scanned for copied code: none. The two published methods used (the Equal Earth coefficients, the CRC-32 table) are credited in `VENDOR.md`.
+- **Map data and boundaries.** Natural Earth is public domain, and it draws *de facto* boundaries: disputed areas appear as it draws them. That is a reputational point, not a licence one. A map spec can say `disclaimer: true` (or give its own words) to show a one-line statement beside the map ("Boundaries are Natural Earth's (de facto); disputed areas are drawn as it draws them, and no position is taken."). The world-regions grouping is derived from Natural Earth's own fields, not from the UN's M49 list, whose reuse terms are not plainly public domain.

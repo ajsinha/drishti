@@ -19,6 +19,7 @@
    (g3): 'ranking' (A, the default: a side column with the legend, the top ten with bars and the selected place with Explain and the
    drill) and 'table' (B: a floating legend, a world inset once drilled, the selected place in a floating card, a sortable table under
    the map). A click selects a place (its rows go to a linked grid) and explains it. */
+import { isRegionLevel, regionName } from './drishti_chart-regions.js';
 import { h, showState, ToastTray, url as drishtiUrl } from '../../drishti-core/src/drishti_index.js';
 import { createGeoLoader, fitView } from './drishti_chart-geo.js';
 import { buildMap } from './drishti_chart-map.js';
@@ -84,7 +85,7 @@ export class MapView {
     c.el.setAttribute('data-map-mode', this.mode);
     c.side.hidden = this.mode !== 'ranking';
     c.engine && c.engine.off && c.engine.off('dblclick');
-    if (c.engine) { c.engine.on('dblclick', (p) => { const code = p && p.name; if (this.geo && this.geo.level === 'world' && code && code.indexOf('__') !== 0) { this.drill(code); } }); }
+    if (c.engine) { c.engine.on('dblclick', (p) => { const code = p && p.name; if (this.geo && code && code.indexOf('__') !== 0) { this.activate(code); } }); }
     return this;
   }
 
@@ -109,15 +110,15 @@ export class MapView {
     const s = this.c.spec, d = s.data || {};
     const rows = d.source ? Promise.resolve((this.c.o.fetch || ((u) => this.c.win.fetch(drishtiUrl(u), { credentials: 'same-origin' }).then((r) => r.json())))(d.source)).then(rowsOf)
       : Promise.resolve(rowsOf(Array.isArray(this.c.rawSpec.data) ? this.c.rawSpec.data : d));
-    return rows.then((r) => { this.c.rows = r; this.levelRows = {}; return this.go(s.level && s.level !== 'world' ? String(s.level).toUpperCase() : 'world'); }, (e) => this.c.fail(e));
+    return rows.then((r) => { this.c.rows = r; this.levelRows = {}; return this.go(s.level && s.level !== 'world' ? (/^continents$/i.test(s.level) ? 'continents' : String(s.level).toUpperCase()) : 'world'); }, (e) => this.c.fail(e));
   }
 
   /** @private loads a level's shapes (and its rows when the page gives them per level) and draws */
   go(level) {
     const c = this.c;
     c.loadingEl.hidden = false;
-    showState(c.loadingEl, 'loading', { text: level === 'world' ? 'Loading the world…' : 'Loading regions/' + level + '.json…', overlay: true });
-    const shapes = level === 'world' ? this.loader.world() : this.loader.regions(level);
+    showState(c.loadingEl, 'loading', { text: level === 'world' ? 'Loading the world…' : isRegionLevel(level) ? 'Loading ' + (level === 'continents' ? 'the continents' : regionName(level)) + '…' : 'Loading regions/' + level + '.json…', overlay: true });
+    const shapes = level === 'world' ? this.loader.world() : isRegionLevel(level) ? this.loader.regionLevel(level) : this.loader.regions(level);
     const rows = level !== 'world' && c.o.placeData && !this.levelRows[level] ? Promise.resolve(c.o.placeData(level)).then((r) => { this.levelRows[level] = rowsOf(r); }) : Promise.resolve();
     const names = level === 'world' ? null : this.loader.world().then((w) => { this.worldGeo = w; }, () => null);   // a country's name and the inset need the world
     return Promise.all([shapes, rows, names]).then((got) => {
@@ -126,6 +127,10 @@ export class MapView {
         const frames = geo.frames.map((f) => ({ type: 'Feature', properties: { name: '__frame_' + f.code }, geometry: { type: 'Polygon', coordinates: [[[f.box[0], f.box[1]], [f.box[2], f.box[1]], [f.box[2], f.box[3]], [f.box[0], f.box[3]], [f.box[0], f.box[1]]]] } }));
         c.E.registerMap(name, { type: 'FeatureCollection', features: frames.concat(geo.shapes) });
         geo.registered = name;
+      }
+      if (!geo.regionKind && geo.level !== 'world') {          // a country's first-level regions: the trail is the path that led here (a sub-region's countries) or the world
+        const up = this.geo && this.geo.regionKind === 'countries' ? this.geo : null;
+        geo.trail = up ? up.trail.concat([{ level: up.level, label: up.title }]) : [{ level: 'world', label: 'World' }];
       }
       this.geo = geo;
       this.sel = null;
@@ -169,14 +174,38 @@ export class MapView {
    * Back to the world.
    * @returns {Promise<void>}
    */
-  back() { return this.go('world'); }
+  back() { return this.go(this.c.spec.level && /^continents$/i.test(this.c.spec.level) ? 'continents' : 'world'); }
+
+  /**
+   * Opens a place one level down: a continent its sub-regions, a sub-region its countries, a country its first-level regions.
+   * @param {string} code the place's code
+   * @returns {?Promise<void>}
+   */
+  activate(code) {
+    const k = this.geo && this.geo.regionKind;
+    if (k === 'continents' || k === 'subregions') { return this.go(String(code).toUpperCase()); }
+    if (this.geo && (this.geo.level === 'world' || k === 'countries')) { return this.drill(code); }
+    return null;
+  }
+
+  /** @private whether a place of this level opens a level below it */
+  canDrill() { const k = this.geo.regionKind; return this.geo.level === 'world' || k === 'continents' || k === 'subregions' || k === 'countries'; }
+
+  /** @private what a place of this level opens ("sub-regions", "countries", "regions") */
+  below1() { const k = this.geo.regionKind; return k === 'continents' ? 'sub-regions' : k === 'subregions' ? 'countries' : 'regions'; }
+
+  /** @private the word for a place of the level shown */
+  noun() {
+    const g = this.geo, k = g && g.regionKind;
+    return k === 'continents' ? 'continent' : k === 'subregions' ? 'sub-region' : (g && g.level === 'world') || k === 'countries' ? 'country' : 'region';
+  }
 
   /** @private a place's name: a country's from the world, else the level's */
   placeName(code, country) {
     const w = this.worldGeo || (this.geo && this.geo.level === 'world' ? this.geo : null);
     if (country) { const p = w && w.by.code[String(code).toUpperCase()]; return p ? p.name : code; }
     const p = this.geo && (this.geo.by.code[String(code).toUpperCase()]);
-    return p ? p.name : code;
+    return p ? p.name : regionName(code);
   }
 
   /** @private the rows of the level shown */
@@ -219,12 +248,12 @@ export class MapView {
       formatter: (p) => {
         const pl = byCode.get(p.name), el = tooltipElement(c.doc, Object.assign({}, p, { seriesName: built.metric.title || built.metric.field, value: pl ? pl.v : null, seriesType: 'map' }), { fmt: fmt, xfmt: fmt, names: () => (pl ? pl.name + ' · ' + pl.code : p.name) });
         if (pl && pl.v !== null && tot) { el.appendChild(h(c.doc, 'div', { cls: 'dc-tip-r' }, [h(c.doc, 'span', { text: 'share' }), h(c.doc, 'b', { text: (100 * pl.v / tot).toFixed(1) + '%' })])); }
-        if (this.geo.level === 'world' && pl && !pl.point) { el.appendChild(h(c.doc, 'div', { cls: 'dc-tip-h', text: 'double-click for its regions' })); }
+        if (pl && !pl.point && this.canDrill()) { el.appendChild(h(c.doc, 'div', { cls: 'dc-tip-h', text: 'double-click for its ' + this.below1() })); }
         return el;
       } });
     c.built = { option: built.option, table: built.table, legend: [], summary: built.summary };
     c.engine.setOption(built.option, true);
-    c.titleEl.textContent = c.spec.title || ((built.metric.title || built.metric.field) + ' by ' + (this.geo.level === 'world' ? 'country' : 'region'));
+    c.titleEl.textContent = c.spec.title || ((built.metric.title || built.metric.field) + ' by ' + this.noun());
     c.kindEl.textContent = 'map';
     c.canvas.setAttribute('aria-label', built.summary);
     c.badgeEl.hidden = true;
@@ -237,9 +266,9 @@ export class MapView {
   chrome(built, fmt) {
     const c = this.c, doc = c.doc, lvl = this.geo.level;
     this.crumb.textContent = '';
-    if (lvl === 'world') { this.crumb.appendChild(h(doc, 'b', { text: 'World' })); } else {
-      this.crumb.append(h(doc, 'button', { cls: 'dc-link', text: 'World', attrs: { type: 'button', 'data-go': 'world' }, on: { click: () => this.back() } }), ' › ', h(doc, 'b', { text: this.placeName(lvl, true) }));
-    }
+    const trail = this.geo.trail || (lvl === 'world' ? [] : [{ level: 'world', label: 'World' }]);
+    trail.forEach((t) => { this.crumb.append(h(doc, 'button', { cls: 'dc-link', text: t.label, attrs: { type: 'button', 'data-go': t.level }, on: { click: () => this.go(t.level) } }), ' › '); });
+    this.crumb.appendChild(h(doc, 'b', { text: this.geo.title || (lvl === 'world' ? 'World' : this.placeName(lvl, true)) }));
     const ms = this.metrics();
     const pick = this.picker.component;
     if (pick.options.length !== ms.length) { pick.setOptions(ms.map((m, i) => ({ value: String(i), label: m.title || m.field }))); }
@@ -252,21 +281,23 @@ export class MapView {
     c.side.hidden = this.mode !== 'ranking';
     if (this.mode === 'ranking') {
       c.side.append(h(doc, 'h4', { cls: 'dc-h', text: 'Legend · ' + (built.scale.type === 'quantile' ? 'quantiles' : 'continuous') }), legend, h(doc, 'h4', { cls: 'dc-h', text: 'Top 10' }), this.rankEl(built, fmt),
-        h(doc, 'h4', { cls: 'dc-h', text: 'Selected' }), detail || h(doc, 'p', { cls: 'dc-hint', text: 'Click a ' + (lvl === 'world' ? 'country' : 'region') + ' for its figure and how it was made.' }));
+        h(doc, 'h4', { cls: 'dc-h', text: 'Selected' }), detail || h(doc, 'p', { cls: 'dc-hint', text: 'Click a ' + this.noun() + ' for its figure and how it was made.' }));
     } else {
       this.float.append(h(doc, 'div', { cls: 'dc-float-legend' }, [h(doc, 'div', { text: built.metric.title || built.metric.field }), legend]));
       if (lvl !== 'world' && this.worldGeo) {
-        this.float.appendChild(h(doc, 'button', { cls: 'dc-inset', text: '‹ World · ' + this.placeName(lvl, true), attrs: { type: 'button', 'data-go': 'world', title: 'Back to the world' }, on: { click: () => this.back() } }));
+        const up = trail.length ? trail[trail.length - 1] : { level: 'world', label: 'World' };
+        this.float.appendChild(h(doc, 'button', { cls: 'dc-inset', text: '‹ ' + up.label + ' · ' + (this.geo.title || this.placeName(lvl, true)), attrs: { type: 'button', 'data-go': up.level, title: 'Back to ' + up.label }, on: { click: () => this.go(up.level) } }));
       }
       if (detail) { detail.classList.add('dc-float-card'); this.float.appendChild(detail); }
       if (!c.tableOpen) { this.below.appendChild(this.tableEl(built, fmt, 'dc-sortable')); }
     }
     const nd = built.places.filter((p) => p.v === null).length;
     c.status.textContent = '';
-    [h(doc, 'b', { text: lvl === 'world' ? 'world-countries.json' : 'regions/' + lvl + '.json' }), h(doc, 'span', { text: 'Natural Earth ' + (lvl === 'world' ? '1:110m' : '1:10m admin-1') + ' · ' + this.geo.projection }),
-      h(doc, 'span', { cls: 'dc-rows', text: built.places.length + (lvl === 'world' ? ' countries' : ' regions') }), h(doc, 'span', { text: nd + ' without data' }),
+    [h(doc, 'b', { text: lvl === 'world' ? 'world-countries.json' : this.geo.regionKind ? 'world-regions.yaml' : 'regions/' + lvl + '.json' }), h(doc, 'span', { text: 'Natural Earth ' + (lvl === 'world' || this.geo.regionKind ? '1:110m' : '1:10m admin-1') + ' · ' + this.geo.projection }),
+      h(doc, 'span', { cls: 'dc-rows', text: built.places.length + ' ' + (built.places.length === 1 ? this.noun() : this.noun() === 'country' ? 'countries' : this.noun() + 's') }), h(doc, 'span', { text: nd + ' without data' }),
       built.unmatched ? h(doc, 'span', { text: built.unmatched + ' rows match no place' }) : null,
-      h(doc, 'span', { cls: 'dc-hint', text: lvl === 'world' ? 'double-click a country to open its regions' : 'loaded on demand, cached for the session' })].forEach((x) => { if (x) { c.status.appendChild(x); } });
+      c.spec.disclaimer ? h(doc, 'span', { cls: 'dc-hint dc-disclaimer', text: typeof c.spec.disclaimer === 'string' ? c.spec.disclaimer : 'Boundaries are Natural Earth\'s (de facto); disputed areas are drawn as it draws them, and no position is taken.' }) : null,
+      h(doc, 'span', { cls: 'dc-hint', text: this.canDrill() ? 'double-click a ' + this.noun() + ' to open its ' + this.below1() : 'loaded on demand, cached for the session' })].forEach((x) => { if (x) { c.status.appendChild(x); } });
   }
 
   /** @private the legend: quantile classes with counts (a click keeps one class bright) or the continuous ramp; no data hatched */
@@ -303,7 +334,7 @@ export class MapView {
     if (!p) { return null; }
     const withV = built.places.filter((x) => x.v !== null), tot = withV.reduce((s, x) => s + x.v, 0), rank = withV.filter((x) => x.v > (p.v || 0)).length + 1;
     const links = [h(doc, 'button', { cls: 'dc-btn', text: 'Explain', attrs: { type: 'button', 'data-act': 'explain' }, on: { click: () => this.c.explain(this.context(p, built)) } })];
-    if (this.geo.level === 'world' && !p.point) { links.unshift(h(doc, 'button', { cls: 'dc-btn dc-go', text: 'Drill into regions ›', attrs: { type: 'button', 'data-drill': p.code }, on: { click: () => this.drill(p.code) } })); }
+    if (this.canDrill() && !p.point) { links.unshift(h(doc, 'button', { cls: 'dc-btn dc-go', text: 'Drill into ' + this.below1() + ' ›', attrs: { type: 'button', 'data-drill': p.code }, on: { click: () => this.activate(p.code) } })); }
     return h(doc, 'div', { cls: 'dc-detail', attrs: { 'data-place': p.code } }, [h(doc, 'div', { cls: 'dc-detail-k', text: (built.metric.title || built.metric.field) + ' · ' + p.name }),
       h(doc, 'div', { cls: 'dc-detail-v', text: fmt(p.v) }),
       h(doc, 'div', { cls: 'dc-detail-k', text: p.v === null ? 'No figure here' : 'rank ' + rank + ' of ' + withV.length + ' · ' + (tot ? (100 * p.v / tot).toFixed(1) : '0') + '% of the total' }),
@@ -318,7 +349,7 @@ export class MapView {
     const head = (key, text) => h(doc, 'th', { attrs: { scope: 'col', 'aria-sort': k === key ? (d < 0 ? 'descending' : 'ascending') : 'none' } }, [h(doc, 'button', { cls: 'dc-sort', text: text + (k === key ? (d < 0 ? ' ▼' : ' ▲') : ''),
       attrs: { type: 'button', 'data-sort': key }, on: { click: () => { this.sort = { k: key, d: this.sort.k === key ? -this.sort.d : -1 }; this.draw(); } } })]);
     return h(doc, 'table', { cls: cls }, [h(doc, 'caption', { text: built.summary }),
-      h(doc, 'thead', {}, [h(doc, 'tr', {}, [head('c', 'Code'), head('n', this.geo.level === 'world' ? 'Country' : 'Region'), head('v', built.metric.title || built.metric.field), h(doc, 'th', { text: 'Share', attrs: { scope: 'col' } })])]),
+      h(doc, 'thead', {}, [h(doc, 'tr', {}, [head('c', 'Code'), head('n', this.noun().charAt(0).toUpperCase() + this.noun().slice(1)), head('v', built.metric.title || built.metric.field), h(doc, 'th', { text: 'Share', attrs: { scope: 'col' } })])]),
       h(doc, 'tbody', {}, rows.map((p) => {
         const bar = h(doc, 'span', { cls: 'dc-cellbar' });
         bar.style.setProperty('width', Math.round(60 * Math.abs(p.v || 0) / mx) + 'px');

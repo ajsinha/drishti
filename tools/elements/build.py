@@ -26,7 +26,8 @@ The build also writes the generated modules of drishti-core, each from its one h
 
 * ``src/drishti_manifest.js``      the manifest (libraries, versions, files, requirements) the loader reads;
 * ``src/drishti_formats-table.js`` the server's named formats (``compute/drishti-rachana/src/main/resources/formats.yaml``);
-* ``src/drishti_theme-table.js``   the themes and their colour tokens (``static/css/drishti_tokens.css``).
+* ``src/drishti_theme-table.js``   the themes and their colour tokens (``static/css/drishti_tokens.css``);
+* drishti-chart's ``src/drishti_world-regions.js``  the world's regions (``compute/drishti-rachana/src/main/resources/world-regions.yaml``, which the server reads too).
 
 The module grammar the bundler accepts (anything else is refused with the file and line):
 
@@ -49,6 +50,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[2]
 ELEMENTS = ROOT / "drishti-console" / "web" / "static" / "elements"
 MANIFEST = ELEMENTS / "drishti_elements.json"
+WORLD_REGIONS_YAML = ROOT / "compute/drishti-rachana" / "src" / "main" / "resources" / "world-regions.yaml"
 FORMATS_YAML = ROOT / "compute/drishti-rachana" / "src" / "main" / "resources" / "formats.yaml"
 TOKENS_CSS = ROOT / "drishti-console" / "web" / "static" / "css" / "drishti_tokens.css"
 HEADER = "/*\n" + "".join(f" * {line}".rstrip() + "\n" for line in (ROOT / "config" / "license-header.txt").read_text(encoding="utf-8").strip().splitlines()) + " */\n"
@@ -308,6 +310,17 @@ def gen_manifest(m: dict) -> str:
             f"export const MANIFEST = Object.freeze({body});\n")
 
 
+def gen_world_regions() -> str:
+    raw = yaml.safe_load(WORLD_REGIONS_YAML.read_text(encoding="utf-8"))
+    subs = {k: {"name": v["name"], "continent": v["continent"], "countries": list(v["countries"])} for k, v in raw["subregions"].items()}
+    by_country = {c: k for k, v in subs.items() for c in v["countries"]}
+    body = json.dumps({"continents": raw["continents"], "subregions": subs, "byCountry": by_country}, indent=2, ensure_ascii=False)
+    return (gen_header("The world's regions: continents, sub-regions and the countries in each", "compute/drishti-rachana/src/main/resources/world-regions.yaml (the server reads the same file)")
+            + "\n/** The one grouping of countries (ISO alpha-3) into sub-regions and continents, from Natural Earth (public domain): codes CT-<ABC> and SR-<NAME>.\n"
+            " *  @type {{continents: Object<string, string>, subregions: Object<string, {name: string, continent: string, countries: string[]}>, byCountry: Object<string, string>}} */\n"
+            f"export const WORLD_REGIONS = Object.freeze({body});\n")
+
+
 def gen_formats() -> str:
     raw = yaml.safe_load(FORMATS_YAML.read_text(encoding="utf-8"))["formats"]
     table = {}
@@ -365,6 +378,7 @@ def outputs() -> dict[Path, str]:
     m = manifest()
     core = ELEMENTS / "drishti-core" / "src"
     out = {core / "drishti_manifest.js": gen_manifest(m), core / "drishti_formats-table.js": gen_formats(), core / "drishti_theme-table.js": gen_themes()}
+    out[ELEMENTS / "drishti-chart" / "src" / "drishti_world-regions.js"] = gen_world_regions()
     for name, spec in m["libraries"].items():
         out[ELEMENTS / name / bundle_name(name)] = None  # rendered after the generated modules are in place
     return out

@@ -15904,7 +15904,7 @@ A loader of the shapes: the world once, each country's regions the first time th
 |---|---|---|
 | `o` | `{base: string, fetchJson: function(string): Promise&lt;Object&gt;}` | base: the maps folder ("/static/vendor/echarts/maps/"); fetchJson: how to read a file (default: fetch, same origin) |
 
-Returns `{world: function(): Promise&lt;RegionGeo&gt;, regions: function(string): Promise&lt;RegionGeo&gt;, hasRegions: function(string): boolean, loads: string[]}`.
+Returns `{world: function(): Promise&lt;RegionGeo&gt;, regions: function(string): Promise&lt;RegionGeo&gt;, regionLevel: function(string): Promise&lt;RegionGeo&gt;, hasRegions: function(string): boolean, loads: string[]}`.
 
 #### `holdAntimeridian(g)`
 
@@ -15927,6 +15927,59 @@ The view that shows a level's fit box in a drawing of a size: the centre and zoo
 | `[height=1]` | `number` | the drawing's height |
 
 Returns `{center: number[], zoom: number}`.
+
+### drishti_world-regions.js
+
+#### `WORLD_REGIONS` : `{continents: Object&lt;string, string&gt;, subregions: Object&lt;string, {name: string, continent: string, countries: string[]}&gt;, byCountry: Object&lt;string, string&gt;}`
+
+The one grouping of countries (ISO alpha-3) into sub-regions and continents, from Natural Earth (public domain): codes CT-&lt;ABC&gt; and SR-&lt;NAME&gt;.
+
+### drishti_chart-regions.js
+
+#### `REGION_START_LEVELS`
+
+The level names the map starts at: the world's countries, or its continents.
+
+#### `isRegionLevel(level)`
+
+Whether a level string is one of the region levels (continents, a continent's code CT-…, a sub-region's code SR-…).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `level` | `string` |  |
+
+Returns `boolean`.
+
+#### `regionOf(iso3)`
+
+A country's region: its sub-region and continent (code and name), or null when the table does not list it.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `iso3` | `string` |  |
+
+Returns `?{subregion: {code: string, name: string}, continent: {code: string, name: string}}`.
+
+#### `regionName(code)`
+
+The name of a region by its code (a continent's or a sub-region's), else the code.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `code` | `string` |  |
+
+Returns `string`.
+
+#### `prepareRegionLevel(world, level)`
+
+The geography of a region level from the projected world: 'continents' (every continent as one place), 'CT-…' (that continent's sub-regions as places), 'SR-…' (that sub-region's countries, drawn as the world draws them).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `world` | `import('./drishti_chart-geo.js').RegionGeo` | prepareWorld's answer |
+| `level` | `string` |  |
+
+Returns `import('./drishti_chart-geo.js').RegionGeo`: with regionKind ('continents'\|'subregions'\|'countries'), title and trail (the levels above, to go back to).
 
 ### drishti_chart-map.js
 
@@ -16244,6 +16297,16 @@ Returns `void`.
 Back to the world.
 
 Returns `Promise&lt;void&gt;`.
+
+##### `MapView.activate(code)`
+
+Opens a place one level down: a continent its sub-regions, a sub-region its countries, a country its first-level regions.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `code` | `string` | the place's code |
+
+Returns `?Promise&lt;void&gt;`.
 
 ##### `MapView.draw()`
 

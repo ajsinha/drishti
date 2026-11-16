@@ -837,9 +837,737 @@
     }
     return { "valueText": valueText, "tooltipElement": tooltipElement, "dataTable": dataTable, "legendElement": legendElement, "markSelection": markSelection, "addZoom": addZoom, "svgOf": svgOf, "rangeBrush": rangeBrush, "dragBrush": dragBrush };
   })();
+  /* ---- src/drishti_world-regions.js ---- */
+  __m["src/drishti_world-regions.js"] = (function () {
+    const WORLD_REGIONS = Object.freeze({
+      "continents": {
+        "CT-AFR": "Africa",
+        "CT-AME": "Americas",
+        "CT-ASI": "Asia",
+        "CT-EUR": "Europe",
+        "CT-OCE": "Oceania",
+        "CT-ANT": "Antarctica"
+      },
+      "subregions": {
+        "SR-EASTERN-AFRICA": {
+          "name": "Eastern Africa",
+          "continent": "CT-AFR",
+          "countries": [
+            "ATF",
+            "BDI",
+            "COM",
+            "DJI",
+            "ERI",
+            "ETH",
+            "IOT",
+            "KEN",
+            "MDG",
+            "MOZ",
+            "MUS",
+            "MWI",
+            "RWA",
+            "SDS",
+            "SOL",
+            "SOM",
+            "SSD",
+            "SYC",
+            "TZA",
+            "UGA",
+            "ZMB",
+            "ZWE"
+          ]
+        },
+        "SR-MIDDLE-AFRICA": {
+          "name": "Middle Africa",
+          "continent": "CT-AFR",
+          "countries": [
+            "AGO",
+            "CAF",
+            "CMR",
+            "COD",
+            "COG",
+            "GAB",
+            "GNQ",
+            "STP",
+            "TCD"
+          ]
+        },
+        "SR-NORTHERN-AFRICA": {
+          "name": "Northern Africa",
+          "continent": "CT-AFR",
+          "countries": [
+            "DZA",
+            "EGY",
+            "ESH",
+            "LBY",
+            "MAR",
+            "SAH",
+            "SDN",
+            "TUN"
+          ]
+        },
+        "SR-SOUTHERN-AFRICA": {
+          "name": "Southern Africa",
+          "continent": "CT-AFR",
+          "countries": [
+            "BWA",
+            "LSO",
+            "NAM",
+            "SWZ",
+            "ZAF"
+          ]
+        },
+        "SR-WESTERN-AFRICA": {
+          "name": "Western Africa",
+          "continent": "CT-AFR",
+          "countries": [
+            "BEN",
+            "BFA",
+            "CIV",
+            "CPV",
+            "GHA",
+            "GIN",
+            "GMB",
+            "GNB",
+            "LBR",
+            "MLI",
+            "MRT",
+            "NER",
+            "NGA",
+            "SEN",
+            "SHN",
+            "SLE",
+            "TGO"
+          ]
+        },
+        "SR-CARIBBEAN": {
+          "name": "Caribbean",
+          "continent": "CT-AME",
+          "countries": [
+            "ABW",
+            "AIA",
+            "ATG",
+            "BHS",
+            "BLM",
+            "BRB",
+            "CUB",
+            "CUW",
+            "CYM",
+            "DMA",
+            "DOM",
+            "GRD",
+            "HTI",
+            "JAM",
+            "KNA",
+            "LCA",
+            "MAF",
+            "MSR",
+            "PRI",
+            "SXM",
+            "TCA",
+            "TTO",
+            "USG",
+            "VCT",
+            "VGB",
+            "VIR"
+          ]
+        },
+        "SR-CENTRAL-AMERICA": {
+          "name": "Central America",
+          "continent": "CT-AME",
+          "countries": [
+            "BLZ",
+            "CLP",
+            "CRI",
+            "GTM",
+            "HND",
+            "MEX",
+            "NIC",
+            "PAN",
+            "SLV"
+          ]
+        },
+        "SR-NORTHERN-AMERICA": {
+          "name": "Northern America",
+          "continent": "CT-AME",
+          "countries": [
+            "BMU",
+            "CAN",
+            "GRL",
+            "SPM",
+            "UMI",
+            "USA"
+          ]
+        },
+        "SR-SOUTH-AMERICA": {
+          "name": "South America",
+          "continent": "CT-AME",
+          "countries": [
+            "ARG",
+            "BOL",
+            "BRA",
+            "CHL",
+            "COL",
+            "ECU",
+            "FLK",
+            "GUY",
+            "PER",
+            "PRY",
+            "SGS",
+            "SUR",
+            "URY",
+            "VEN"
+          ]
+        },
+        "SR-ANTARCTICA": {
+          "name": "Antarctica",
+          "continent": "CT-ANT",
+          "countries": [
+            "ATA"
+          ]
+        },
+        "SR-CENTRAL-ASIA": {
+          "name": "Central Asia",
+          "continent": "CT-ASI",
+          "countries": [
+            "KAB",
+            "KAZ",
+            "KGZ",
+            "TJK",
+            "TKM",
+            "UZB"
+          ]
+        },
+        "SR-EASTERN-ASIA": {
+          "name": "Eastern Asia",
+          "continent": "CT-ASI",
+          "countries": [
+            "CHN",
+            "HKG",
+            "JPN",
+            "KOR",
+            "MAC",
+            "MNG",
+            "PRK",
+            "TWN"
+          ]
+        },
+        "SR-SOUTH-EASTERN-ASIA": {
+          "name": "South-Eastern Asia",
+          "continent": "CT-ASI",
+          "countries": [
+            "BRN",
+            "IDN",
+            "IOA",
+            "KHM",
+            "LAO",
+            "MMR",
+            "MYS",
+            "PGA",
+            "PHL",
+            "SGP",
+            "THA",
+            "TLS",
+            "VNM"
+          ]
+        },
+        "SR-SOUTHERN-ASIA": {
+          "name": "Southern Asia",
+          "continent": "CT-ASI",
+          "countries": [
+            "AFG",
+            "BGD",
+            "BTN",
+            "IND",
+            "IRN",
+            "KAS",
+            "LKA",
+            "MDV",
+            "NPL",
+            "PAK"
+          ]
+        },
+        "SR-WESTERN-ASIA": {
+          "name": "Western Asia",
+          "continent": "CT-ASI",
+          "countries": [
+            "ARE",
+            "ARM",
+            "AZE",
+            "BHR",
+            "CYN",
+            "CYP",
+            "ESB",
+            "GEO",
+            "IRQ",
+            "ISR",
+            "JOR",
+            "KWT",
+            "LBN",
+            "OMN",
+            "PSE",
+            "PSX",
+            "QAT",
+            "SAU",
+            "SYR",
+            "TUR",
+            "WSB",
+            "YEM"
+          ]
+        },
+        "SR-EASTERN-EUROPE": {
+          "name": "Eastern Europe",
+          "continent": "CT-EUR",
+          "countries": [
+            "BGR",
+            "BLR",
+            "CZE",
+            "HUN",
+            "MDA",
+            "POL",
+            "ROU",
+            "RUS",
+            "SVK",
+            "UKR"
+          ]
+        },
+        "SR-NORTHERN-EUROPE": {
+          "name": "Northern Europe",
+          "continent": "CT-EUR",
+          "countries": [
+            "ALD",
+            "DNK",
+            "EST",
+            "FIN",
+            "FRO",
+            "GBR",
+            "GGY",
+            "IMN",
+            "IRL",
+            "ISL",
+            "JEY",
+            "LTU",
+            "LVA",
+            "NOR",
+            "SWE"
+          ]
+        },
+        "SR-SOUTHERN-EUROPE": {
+          "name": "Southern Europe",
+          "continent": "CT-EUR",
+          "countries": [
+            "ALB",
+            "AND",
+            "BIH",
+            "ESP",
+            "GIB",
+            "GRC",
+            "HRV",
+            "ITA",
+            "KOS",
+            "MKD",
+            "MLT",
+            "MNE",
+            "PRT",
+            "SMR",
+            "SRB",
+            "SVN",
+            "VAT"
+          ]
+        },
+        "SR-WESTERN-EUROPE": {
+          "name": "Western Europe",
+          "continent": "CT-EUR",
+          "countries": [
+            "AUT",
+            "BEL",
+            "CHE",
+            "DEU",
+            "FRA",
+            "LIE",
+            "LUX",
+            "MCO",
+            "NLD"
+          ]
+        },
+        "SR-AUSTRALIA-AND-NEW-ZEALAND": {
+          "name": "Australia and New Zealand",
+          "continent": "CT-OCE",
+          "countries": [
+            "ATC",
+            "AUS",
+            "CSI",
+            "HMD",
+            "NFK",
+            "NZL"
+          ]
+        },
+        "SR-MELANESIA": {
+          "name": "Melanesia",
+          "continent": "CT-OCE",
+          "countries": [
+            "FJI",
+            "NCL",
+            "PNG",
+            "SLB",
+            "VUT"
+          ]
+        },
+        "SR-MICRONESIA": {
+          "name": "Micronesia",
+          "continent": "CT-OCE",
+          "countries": [
+            "FSM",
+            "GUM",
+            "KIR",
+            "MHL",
+            "MNP",
+            "NRU",
+            "PLW"
+          ]
+        },
+        "SR-POLYNESIA": {
+          "name": "Polynesia",
+          "continent": "CT-OCE",
+          "countries": [
+            "ASM",
+            "COK",
+            "NIU",
+            "PCN",
+            "PYF",
+            "TON",
+            "TUV",
+            "WLF",
+            "WSM"
+          ]
+        }
+      },
+      "byCountry": {
+        "ATF": "SR-EASTERN-AFRICA",
+        "BDI": "SR-EASTERN-AFRICA",
+        "COM": "SR-EASTERN-AFRICA",
+        "DJI": "SR-EASTERN-AFRICA",
+        "ERI": "SR-EASTERN-AFRICA",
+        "ETH": "SR-EASTERN-AFRICA",
+        "IOT": "SR-EASTERN-AFRICA",
+        "KEN": "SR-EASTERN-AFRICA",
+        "MDG": "SR-EASTERN-AFRICA",
+        "MOZ": "SR-EASTERN-AFRICA",
+        "MUS": "SR-EASTERN-AFRICA",
+        "MWI": "SR-EASTERN-AFRICA",
+        "RWA": "SR-EASTERN-AFRICA",
+        "SDS": "SR-EASTERN-AFRICA",
+        "SOL": "SR-EASTERN-AFRICA",
+        "SOM": "SR-EASTERN-AFRICA",
+        "SSD": "SR-EASTERN-AFRICA",
+        "SYC": "SR-EASTERN-AFRICA",
+        "TZA": "SR-EASTERN-AFRICA",
+        "UGA": "SR-EASTERN-AFRICA",
+        "ZMB": "SR-EASTERN-AFRICA",
+        "ZWE": "SR-EASTERN-AFRICA",
+        "AGO": "SR-MIDDLE-AFRICA",
+        "CAF": "SR-MIDDLE-AFRICA",
+        "CMR": "SR-MIDDLE-AFRICA",
+        "COD": "SR-MIDDLE-AFRICA",
+        "COG": "SR-MIDDLE-AFRICA",
+        "GAB": "SR-MIDDLE-AFRICA",
+        "GNQ": "SR-MIDDLE-AFRICA",
+        "STP": "SR-MIDDLE-AFRICA",
+        "TCD": "SR-MIDDLE-AFRICA",
+        "DZA": "SR-NORTHERN-AFRICA",
+        "EGY": "SR-NORTHERN-AFRICA",
+        "ESH": "SR-NORTHERN-AFRICA",
+        "LBY": "SR-NORTHERN-AFRICA",
+        "MAR": "SR-NORTHERN-AFRICA",
+        "SAH": "SR-NORTHERN-AFRICA",
+        "SDN": "SR-NORTHERN-AFRICA",
+        "TUN": "SR-NORTHERN-AFRICA",
+        "BWA": "SR-SOUTHERN-AFRICA",
+        "LSO": "SR-SOUTHERN-AFRICA",
+        "NAM": "SR-SOUTHERN-AFRICA",
+        "SWZ": "SR-SOUTHERN-AFRICA",
+        "ZAF": "SR-SOUTHERN-AFRICA",
+        "BEN": "SR-WESTERN-AFRICA",
+        "BFA": "SR-WESTERN-AFRICA",
+        "CIV": "SR-WESTERN-AFRICA",
+        "CPV": "SR-WESTERN-AFRICA",
+        "GHA": "SR-WESTERN-AFRICA",
+        "GIN": "SR-WESTERN-AFRICA",
+        "GMB": "SR-WESTERN-AFRICA",
+        "GNB": "SR-WESTERN-AFRICA",
+        "LBR": "SR-WESTERN-AFRICA",
+        "MLI": "SR-WESTERN-AFRICA",
+        "MRT": "SR-WESTERN-AFRICA",
+        "NER": "SR-WESTERN-AFRICA",
+        "NGA": "SR-WESTERN-AFRICA",
+        "SEN": "SR-WESTERN-AFRICA",
+        "SHN": "SR-WESTERN-AFRICA",
+        "SLE": "SR-WESTERN-AFRICA",
+        "TGO": "SR-WESTERN-AFRICA",
+        "ABW": "SR-CARIBBEAN",
+        "AIA": "SR-CARIBBEAN",
+        "ATG": "SR-CARIBBEAN",
+        "BHS": "SR-CARIBBEAN",
+        "BLM": "SR-CARIBBEAN",
+        "BRB": "SR-CARIBBEAN",
+        "CUB": "SR-CARIBBEAN",
+        "CUW": "SR-CARIBBEAN",
+        "CYM": "SR-CARIBBEAN",
+        "DMA": "SR-CARIBBEAN",
+        "DOM": "SR-CARIBBEAN",
+        "GRD": "SR-CARIBBEAN",
+        "HTI": "SR-CARIBBEAN",
+        "JAM": "SR-CARIBBEAN",
+        "KNA": "SR-CARIBBEAN",
+        "LCA": "SR-CARIBBEAN",
+        "MAF": "SR-CARIBBEAN",
+        "MSR": "SR-CARIBBEAN",
+        "PRI": "SR-CARIBBEAN",
+        "SXM": "SR-CARIBBEAN",
+        "TCA": "SR-CARIBBEAN",
+        "TTO": "SR-CARIBBEAN",
+        "USG": "SR-CARIBBEAN",
+        "VCT": "SR-CARIBBEAN",
+        "VGB": "SR-CARIBBEAN",
+        "VIR": "SR-CARIBBEAN",
+        "BLZ": "SR-CENTRAL-AMERICA",
+        "CLP": "SR-CENTRAL-AMERICA",
+        "CRI": "SR-CENTRAL-AMERICA",
+        "GTM": "SR-CENTRAL-AMERICA",
+        "HND": "SR-CENTRAL-AMERICA",
+        "MEX": "SR-CENTRAL-AMERICA",
+        "NIC": "SR-CENTRAL-AMERICA",
+        "PAN": "SR-CENTRAL-AMERICA",
+        "SLV": "SR-CENTRAL-AMERICA",
+        "BMU": "SR-NORTHERN-AMERICA",
+        "CAN": "SR-NORTHERN-AMERICA",
+        "GRL": "SR-NORTHERN-AMERICA",
+        "SPM": "SR-NORTHERN-AMERICA",
+        "UMI": "SR-NORTHERN-AMERICA",
+        "USA": "SR-NORTHERN-AMERICA",
+        "ARG": "SR-SOUTH-AMERICA",
+        "BOL": "SR-SOUTH-AMERICA",
+        "BRA": "SR-SOUTH-AMERICA",
+        "CHL": "SR-SOUTH-AMERICA",
+        "COL": "SR-SOUTH-AMERICA",
+        "ECU": "SR-SOUTH-AMERICA",
+        "FLK": "SR-SOUTH-AMERICA",
+        "GUY": "SR-SOUTH-AMERICA",
+        "PER": "SR-SOUTH-AMERICA",
+        "PRY": "SR-SOUTH-AMERICA",
+        "SGS": "SR-SOUTH-AMERICA",
+        "SUR": "SR-SOUTH-AMERICA",
+        "URY": "SR-SOUTH-AMERICA",
+        "VEN": "SR-SOUTH-AMERICA",
+        "ATA": "SR-ANTARCTICA",
+        "KAB": "SR-CENTRAL-ASIA",
+        "KAZ": "SR-CENTRAL-ASIA",
+        "KGZ": "SR-CENTRAL-ASIA",
+        "TJK": "SR-CENTRAL-ASIA",
+        "TKM": "SR-CENTRAL-ASIA",
+        "UZB": "SR-CENTRAL-ASIA",
+        "CHN": "SR-EASTERN-ASIA",
+        "HKG": "SR-EASTERN-ASIA",
+        "JPN": "SR-EASTERN-ASIA",
+        "KOR": "SR-EASTERN-ASIA",
+        "MAC": "SR-EASTERN-ASIA",
+        "MNG": "SR-EASTERN-ASIA",
+        "PRK": "SR-EASTERN-ASIA",
+        "TWN": "SR-EASTERN-ASIA",
+        "BRN": "SR-SOUTH-EASTERN-ASIA",
+        "IDN": "SR-SOUTH-EASTERN-ASIA",
+        "IOA": "SR-SOUTH-EASTERN-ASIA",
+        "KHM": "SR-SOUTH-EASTERN-ASIA",
+        "LAO": "SR-SOUTH-EASTERN-ASIA",
+        "MMR": "SR-SOUTH-EASTERN-ASIA",
+        "MYS": "SR-SOUTH-EASTERN-ASIA",
+        "PGA": "SR-SOUTH-EASTERN-ASIA",
+        "PHL": "SR-SOUTH-EASTERN-ASIA",
+        "SGP": "SR-SOUTH-EASTERN-ASIA",
+        "THA": "SR-SOUTH-EASTERN-ASIA",
+        "TLS": "SR-SOUTH-EASTERN-ASIA",
+        "VNM": "SR-SOUTH-EASTERN-ASIA",
+        "AFG": "SR-SOUTHERN-ASIA",
+        "BGD": "SR-SOUTHERN-ASIA",
+        "BTN": "SR-SOUTHERN-ASIA",
+        "IND": "SR-SOUTHERN-ASIA",
+        "IRN": "SR-SOUTHERN-ASIA",
+        "KAS": "SR-SOUTHERN-ASIA",
+        "LKA": "SR-SOUTHERN-ASIA",
+        "MDV": "SR-SOUTHERN-ASIA",
+        "NPL": "SR-SOUTHERN-ASIA",
+        "PAK": "SR-SOUTHERN-ASIA",
+        "ARE": "SR-WESTERN-ASIA",
+        "ARM": "SR-WESTERN-ASIA",
+        "AZE": "SR-WESTERN-ASIA",
+        "BHR": "SR-WESTERN-ASIA",
+        "CYN": "SR-WESTERN-ASIA",
+        "CYP": "SR-WESTERN-ASIA",
+        "ESB": "SR-WESTERN-ASIA",
+        "GEO": "SR-WESTERN-ASIA",
+        "IRQ": "SR-WESTERN-ASIA",
+        "ISR": "SR-WESTERN-ASIA",
+        "JOR": "SR-WESTERN-ASIA",
+        "KWT": "SR-WESTERN-ASIA",
+        "LBN": "SR-WESTERN-ASIA",
+        "OMN": "SR-WESTERN-ASIA",
+        "PSE": "SR-WESTERN-ASIA",
+        "PSX": "SR-WESTERN-ASIA",
+        "QAT": "SR-WESTERN-ASIA",
+        "SAU": "SR-WESTERN-ASIA",
+        "SYR": "SR-WESTERN-ASIA",
+        "TUR": "SR-WESTERN-ASIA",
+        "WSB": "SR-WESTERN-ASIA",
+        "YEM": "SR-WESTERN-ASIA",
+        "BGR": "SR-EASTERN-EUROPE",
+        "BLR": "SR-EASTERN-EUROPE",
+        "CZE": "SR-EASTERN-EUROPE",
+        "HUN": "SR-EASTERN-EUROPE",
+        "MDA": "SR-EASTERN-EUROPE",
+        "POL": "SR-EASTERN-EUROPE",
+        "ROU": "SR-EASTERN-EUROPE",
+        "RUS": "SR-EASTERN-EUROPE",
+        "SVK": "SR-EASTERN-EUROPE",
+        "UKR": "SR-EASTERN-EUROPE",
+        "ALD": "SR-NORTHERN-EUROPE",
+        "DNK": "SR-NORTHERN-EUROPE",
+        "EST": "SR-NORTHERN-EUROPE",
+        "FIN": "SR-NORTHERN-EUROPE",
+        "FRO": "SR-NORTHERN-EUROPE",
+        "GBR": "SR-NORTHERN-EUROPE",
+        "GGY": "SR-NORTHERN-EUROPE",
+        "IMN": "SR-NORTHERN-EUROPE",
+        "IRL": "SR-NORTHERN-EUROPE",
+        "ISL": "SR-NORTHERN-EUROPE",
+        "JEY": "SR-NORTHERN-EUROPE",
+        "LTU": "SR-NORTHERN-EUROPE",
+        "LVA": "SR-NORTHERN-EUROPE",
+        "NOR": "SR-NORTHERN-EUROPE",
+        "SWE": "SR-NORTHERN-EUROPE",
+        "ALB": "SR-SOUTHERN-EUROPE",
+        "AND": "SR-SOUTHERN-EUROPE",
+        "BIH": "SR-SOUTHERN-EUROPE",
+        "ESP": "SR-SOUTHERN-EUROPE",
+        "GIB": "SR-SOUTHERN-EUROPE",
+        "GRC": "SR-SOUTHERN-EUROPE",
+        "HRV": "SR-SOUTHERN-EUROPE",
+        "ITA": "SR-SOUTHERN-EUROPE",
+        "KOS": "SR-SOUTHERN-EUROPE",
+        "MKD": "SR-SOUTHERN-EUROPE",
+        "MLT": "SR-SOUTHERN-EUROPE",
+        "MNE": "SR-SOUTHERN-EUROPE",
+        "PRT": "SR-SOUTHERN-EUROPE",
+        "SMR": "SR-SOUTHERN-EUROPE",
+        "SRB": "SR-SOUTHERN-EUROPE",
+        "SVN": "SR-SOUTHERN-EUROPE",
+        "VAT": "SR-SOUTHERN-EUROPE",
+        "AUT": "SR-WESTERN-EUROPE",
+        "BEL": "SR-WESTERN-EUROPE",
+        "CHE": "SR-WESTERN-EUROPE",
+        "DEU": "SR-WESTERN-EUROPE",
+        "FRA": "SR-WESTERN-EUROPE",
+        "LIE": "SR-WESTERN-EUROPE",
+        "LUX": "SR-WESTERN-EUROPE",
+        "MCO": "SR-WESTERN-EUROPE",
+        "NLD": "SR-WESTERN-EUROPE",
+        "ATC": "SR-AUSTRALIA-AND-NEW-ZEALAND",
+        "AUS": "SR-AUSTRALIA-AND-NEW-ZEALAND",
+        "CSI": "SR-AUSTRALIA-AND-NEW-ZEALAND",
+        "HMD": "SR-AUSTRALIA-AND-NEW-ZEALAND",
+        "NFK": "SR-AUSTRALIA-AND-NEW-ZEALAND",
+        "NZL": "SR-AUSTRALIA-AND-NEW-ZEALAND",
+        "FJI": "SR-MELANESIA",
+        "NCL": "SR-MELANESIA",
+        "PNG": "SR-MELANESIA",
+        "SLB": "SR-MELANESIA",
+        "VUT": "SR-MELANESIA",
+        "FSM": "SR-MICRONESIA",
+        "GUM": "SR-MICRONESIA",
+        "KIR": "SR-MICRONESIA",
+        "MHL": "SR-MICRONESIA",
+        "MNP": "SR-MICRONESIA",
+        "NRU": "SR-MICRONESIA",
+        "PLW": "SR-MICRONESIA",
+        "ASM": "SR-POLYNESIA",
+        "COK": "SR-POLYNESIA",
+        "NIU": "SR-POLYNESIA",
+        "PCN": "SR-POLYNESIA",
+        "PYF": "SR-POLYNESIA",
+        "TON": "SR-POLYNESIA",
+        "TUV": "SR-POLYNESIA",
+        "WLF": "SR-POLYNESIA",
+        "WSM": "SR-POLYNESIA"
+      }
+    });
+    return { "WORLD_REGIONS": WORLD_REGIONS };
+  })();
+  /* ---- src/drishti_chart-regions.js ---- */
+  __m["src/drishti_chart-regions.js"] = (function () {
+    var WORLD_REGIONS = __m["src/drishti_world-regions.js"].WORLD_REGIONS;
+    const REGION_START_LEVELS = Object.freeze(['world', 'continents']);
+    function isRegionLevel(level) { return level === 'continents' || /^(CT|SR)-[A-Z-]+$/.test(String(level)); }
+    function regionOf(iso3) {
+      const sr = WORLD_REGIONS.byCountry[String(iso3).toUpperCase()];
+      if (!sr) { return null; }
+      const s = WORLD_REGIONS.subregions[sr];
+      return { subregion: { code: sr, name: s.name }, continent: { code: s.continent, name: WORLD_REGIONS.continents[s.continent] } };
+    }
+    function regionName(code) {
+      const k = String(code).toUpperCase();
+      return WORLD_REGIONS.continents[k] || (WORLD_REGIONS.subregions[k] && WORLD_REGIONS.subregions[k].name) || String(code);
+    }
+    function bounds(pts) {
+      const b = [Infinity, Infinity, -Infinity, -Infinity];
+      pts.forEach((p) => { b[0] = Math.min(b[0], p[0]); b[1] = Math.min(b[1], p[1]); b[2] = Math.max(b[2], p[0]); b[3] = Math.max(b[3], p[1]); });
+      return b;
+    }
+    function pointsOf(g) { return [].concat.apply([], (g.type === 'Polygon' ? [g.coordinates] : g.coordinates).map((p) => [].concat.apply([], p))); }
+    function together(geoms) {
+      const polys = [];
+      geoms.forEach((g) => { if (g.type === 'Polygon') { polys.push(g.coordinates); } else if (g.type === 'MultiPolygon') { g.coordinates.forEach((p) => polys.push(p)); } });
+      return { type: 'MultiPolygon', coordinates: polys };
+    }
+    function prepareRegionLevel(world, level) {
+      const R = WORLD_REGIONS, byShape = new Map(world.shapes.map((s) => [s.properties.name, s]));
+      const by = { code: {}, name: {}, short: {} }, list = [], shapes = [], points = [];
+      const place = (code, name, countries) => {
+        const have = countries.filter((c) => byShape.has(c));
+        const item = { code: code, name: name, point: false, countries: countries.length };
+        list.push(item);
+        by.code[code.toUpperCase()] = item; by.name[name.toLowerCase()] = item;
+        if (have.length) { shapes.push({ type: 'Feature', properties: { name: code, fullName: name }, geometry: together(have.map((c) => byShape.get(c).geometry)) }); }
+        return item;
+      };
+      let kind, title, trail;
+      if (level === 'continents') {
+        kind = 'continents'; title = 'World regions'; trail = [];
+        Object.keys(R.continents).forEach((ct) => place(ct, R.continents[ct], [].concat.apply([], Object.keys(R.subregions).filter((s) => R.subregions[s].continent === ct).map((s) => R.subregions[s].countries))));
+      } else if (/^CT-/.test(level)) {
+        if (!R.continents[level]) { throw new Error('no continent ' + level); }
+        kind = 'subregions'; title = R.continents[level]; trail = [{ level: 'continents', label: 'World regions' }];
+        Object.keys(R.subregions).filter((s) => R.subregions[s].continent === level).forEach((s) => place(s, R.subregions[s].name, R.subregions[s].countries));
+      } else if (/^SR-/.test(level)) {
+        const sr = R.subregions[level];
+        if (!sr) { throw new Error('no sub-region ' + level); }
+        kind = 'countries'; title = sr.name; trail = [{ level: 'continents', label: 'World regions' }, { level: sr.continent, label: R.continents[sr.continent] }];
+        sr.countries.forEach((c) => {
+          const item = world.by.code[c];
+          if (!item) { return; }
+          list.push(item); by.code[c] = item; by.name[item.name.toLowerCase()] = item; if (item.iso2) { by.short[item.iso2.toUpperCase()] = item; }
+          if (item.point) { points.push(item); } else if (byShape.has(c)) { shapes.push(byShape.get(c)); }
+        });
+      } else { throw new Error('no region level ' + level); }
+      const fit = bounds([].concat.apply([], shapes.map((s) => pointsOf(s.geometry))).concat(points.map((p) => p.xy)));
+      const box = isFinite(fit[0]) ? fit : [-1, -1, 1, 1];
+      return { level: level, iso3: null, projection: world.projection, project: world.project, shapes: shapes, points: points, by: by, list: list, fit: box, frames: [], all: box,
+        regionKind: kind, title: title, trail: trail };
+    }
+    return { "REGION_START_LEVELS": REGION_START_LEVELS, "isRegionLevel": isRegionLevel, "regionOf": regionOf, "regionName": regionName, "prepareRegionLevel": prepareRegionLevel };
+  })();
   /* ---- src/drishti_chart-geo.js ---- */
   __m["src/drishti_chart-geo.js"] = (function () {
     var drishtiUrl = __lib("drishti-core").url;
+    var prepareRegionLevel = __m["src/drishti_chart-regions.js"].prepareRegionLevel;
     const RAD = Math.PI / 180;
     function equalEarth(lon, lat) {
       const A1 = 1.340264, A2 = -0.081106, A3 = 0.000893, A4 = 0.003796, M = Math.sqrt(3) / 2;
@@ -975,7 +1703,7 @@
       o = o || {};
       const base = (o.base || drishtiUrl('/static/vendor/echarts/maps/')).replace(/\/?$/, '/');
       const get = o.fetchJson || ((url) => fetch(drishtiUrl(url), { credentials: 'same-origin' }).then((r) => { if (!r.ok) { throw new Error('map ' + url + ': ' + r.status); } return r.json(); }));
-      const cache = { world: null, regions: {} }, loads = [];
+      const cache = { world: null, regions: {}, levels: {} }, loads = [];
       const fetched = (file) => { loads.push(file); return Promise.resolve().then(() => get(base + file)); };
       return {
         loads: loads,
@@ -994,6 +1722,14 @@
             cache.regions[k].catch(() => { delete cache.regions[k]; });
           }
           return cache.regions[k];
+        },
+        regionLevel(level) {
+          const k = String(level);
+          if (!cache.levels[k]) {
+            cache.levels[k] = this.world().then((w) => prepareRegionLevel(w, k));
+            cache.levels[k].catch(() => { delete cache.levels[k]; });
+          }
+          return cache.levels[k];
         },
         hasRegions(iso3) { return !!cache.regions[String(iso3).toUpperCase()]; }
       };
@@ -1062,7 +1798,7 @@
         const c = sc.colourOf(p.v), cls = sc.classOf(p.v), dim = hl !== null && cls !== hl;
         const r = { name: p.code, itemStyle: { areaColor: c || env.hatch || th.nodata, opacity: dim ? 0.28 : 1 } };
         if (sel.has(p.code)) { Object.assign(r.itemStyle, { borderColor: th.tokens.accent, borderWidth: 2 }); }
-        if (geo.level !== 'world') {
+        if (geo.level !== 'world' && !geo.regionKind) {
           const b = bounds([].concat.apply([], (shapeByCode.get(p.code).geometry.type === 'Polygon' ? [shapeByCode.get(p.code).geometry.coordinates] : shapeByCode.get(p.code).geometry.coordinates).map((q) => q[0])));
           if ((b[2] - b[0]) > W * 0.055 && (b[3] - b[1]) > W * 0.025) { r.label = { show: true, formatter: p.code.split('-').pop(), color: th.ink, fontFamily: th.font, fontSize: th.size.font - 1 }; }
         }
@@ -1119,6 +1855,7 @@
   })();
   /* ---- src/drishti_map-view.js ---- */
   __m["src/drishti_map-view.js"] = (function () {
+    var isRegionLevel = __m["src/drishti_chart-regions.js"].isRegionLevel, regionName = __m["src/drishti_chart-regions.js"].regionName;
     var h = __lib("drishti-core").h, showState = __lib("drishti-core").showState, ToastTray = __lib("drishti-core").ToastTray, drishtiUrl = __lib("drishti-core").url;
     var createGeoLoader = __m["src/drishti_chart-geo.js"].createGeoLoader, fitView = __m["src/drishti_chart-geo.js"].fitView;
     var buildMap = __m["src/drishti_chart-map.js"].buildMap;
@@ -1162,7 +1899,7 @@
         c.el.setAttribute('data-map-mode', this.mode);
         c.side.hidden = this.mode !== 'ranking';
         c.engine && c.engine.off && c.engine.off('dblclick');
-        if (c.engine) { c.engine.on('dblclick', (p) => { const code = p && p.name; if (this.geo && this.geo.level === 'world' && code && code.indexOf('__') !== 0) { this.drill(code); } }); }
+        if (c.engine) { c.engine.on('dblclick', (p) => { const code = p && p.name; if (this.geo && code && code.indexOf('__') !== 0) { this.activate(code); } }); }
         return this;
       }
       metric() { const ms = this.metrics(); return ms[Math.min(this.metricIndex, ms.length - 1)] || null; }
@@ -1175,13 +1912,13 @@
         const s = this.c.spec, d = s.data || {};
         const rows = d.source ? Promise.resolve((this.c.o.fetch || ((u) => this.c.win.fetch(drishtiUrl(u), { credentials: 'same-origin' }).then((r) => r.json())))(d.source)).then(rowsOf)
           : Promise.resolve(rowsOf(Array.isArray(this.c.rawSpec.data) ? this.c.rawSpec.data : d));
-        return rows.then((r) => { this.c.rows = r; this.levelRows = {}; return this.go(s.level && s.level !== 'world' ? String(s.level).toUpperCase() : 'world'); }, (e) => this.c.fail(e));
+        return rows.then((r) => { this.c.rows = r; this.levelRows = {}; return this.go(s.level && s.level !== 'world' ? (/^continents$/i.test(s.level) ? 'continents' : String(s.level).toUpperCase()) : 'world'); }, (e) => this.c.fail(e));
       }
       go(level) {
         const c = this.c;
         c.loadingEl.hidden = false;
-        showState(c.loadingEl, 'loading', { text: level === 'world' ? 'Loading the world…' : 'Loading regions/' + level + '.json…', overlay: true });
-        const shapes = level === 'world' ? this.loader.world() : this.loader.regions(level);
+        showState(c.loadingEl, 'loading', { text: level === 'world' ? 'Loading the world…' : isRegionLevel(level) ? 'Loading ' + (level === 'continents' ? 'the continents' : regionName(level)) + '…' : 'Loading regions/' + level + '.json…', overlay: true });
+        const shapes = level === 'world' ? this.loader.world() : isRegionLevel(level) ? this.loader.regionLevel(level) : this.loader.regions(level);
         const rows = level !== 'world' && c.o.placeData && !this.levelRows[level] ? Promise.resolve(c.o.placeData(level)).then((r) => { this.levelRows[level] = rowsOf(r); }) : Promise.resolve();
         const names = level === 'world' ? null : this.loader.world().then((w) => { this.worldGeo = w; }, () => null);   // a country's name and the inset need the world
         return Promise.all([shapes, rows, names]).then((got) => {
@@ -1190,6 +1927,10 @@
             const frames = geo.frames.map((f) => ({ type: 'Feature', properties: { name: '__frame_' + f.code }, geometry: { type: 'Polygon', coordinates: [[[f.box[0], f.box[1]], [f.box[2], f.box[1]], [f.box[2], f.box[3]], [f.box[0], f.box[3]], [f.box[0], f.box[1]]]] } }));
             c.E.registerMap(name, { type: 'FeatureCollection', features: frames.concat(geo.shapes) });
             geo.registered = name;
+          }
+          if (!geo.regionKind && geo.level !== 'world') {          // a country's first-level regions: the trail is the path that led here (a sub-region's countries) or the world
+            const up = this.geo && this.geo.regionKind === 'countries' ? this.geo : null;
+            geo.trail = up ? up.trail.concat([{ level: up.level, label: up.title }]) : [{ level: 'world', label: 'World' }];
           }
           this.geo = geo;
           this.sel = null;
@@ -1216,12 +1957,24 @@
         if (!this.tray || !this.tray.tray.isConnected) { this.tray = new ToastTray({ parent: this.c.card, className: 'dc-toasts', max: 2, timeout: 3500, single: true }); }
         this.tray.show({ text: text, className: 'dc-toast' });
       }
-      back() { return this.go('world'); }
+      back() { return this.go(this.c.spec.level && /^continents$/i.test(this.c.spec.level) ? 'continents' : 'world'); }
+      activate(code) {
+        const k = this.geo && this.geo.regionKind;
+        if (k === 'continents' || k === 'subregions') { return this.go(String(code).toUpperCase()); }
+        if (this.geo && (this.geo.level === 'world' || k === 'countries')) { return this.drill(code); }
+        return null;
+      }
+      canDrill() { const k = this.geo.regionKind; return this.geo.level === 'world' || k === 'continents' || k === 'subregions' || k === 'countries'; }
+      below1() { const k = this.geo.regionKind; return k === 'continents' ? 'sub-regions' : k === 'subregions' ? 'countries' : 'regions'; }
+      noun() {
+        const g = this.geo, k = g && g.regionKind;
+        return k === 'continents' ? 'continent' : k === 'subregions' ? 'sub-region' : (g && g.level === 'world') || k === 'countries' ? 'country' : 'region';
+      }
       placeName(code, country) {
         const w = this.worldGeo || (this.geo && this.geo.level === 'world' ? this.geo : null);
         if (country) { const p = w && w.by.code[String(code).toUpperCase()]; return p ? p.name : code; }
         const p = this.geo && (this.geo.by.code[String(code).toUpperCase()]);
-        return p ? p.name : code;
+        return p ? p.name : regionName(code);
       }
       rows() { return this.geo && this.geo.level !== 'world' && this.levelRows[this.geo.level] ? this.levelRows[this.geo.level] : this.c.rows; }
       hatch(th) {
@@ -1255,12 +2008,12 @@
           formatter: (p) => {
             const pl = byCode.get(p.name), el = tooltipElement(c.doc, Object.assign({}, p, { seriesName: built.metric.title || built.metric.field, value: pl ? pl.v : null, seriesType: 'map' }), { fmt: fmt, xfmt: fmt, names: () => (pl ? pl.name + ' · ' + pl.code : p.name) });
             if (pl && pl.v !== null && tot) { el.appendChild(h(c.doc, 'div', { cls: 'dc-tip-r' }, [h(c.doc, 'span', { text: 'share' }), h(c.doc, 'b', { text: (100 * pl.v / tot).toFixed(1) + '%' })])); }
-            if (this.geo.level === 'world' && pl && !pl.point) { el.appendChild(h(c.doc, 'div', { cls: 'dc-tip-h', text: 'double-click for its regions' })); }
+            if (pl && !pl.point && this.canDrill()) { el.appendChild(h(c.doc, 'div', { cls: 'dc-tip-h', text: 'double-click for its ' + this.below1() })); }
             return el;
           } });
         c.built = { option: built.option, table: built.table, legend: [], summary: built.summary };
         c.engine.setOption(built.option, true);
-        c.titleEl.textContent = c.spec.title || ((built.metric.title || built.metric.field) + ' by ' + (this.geo.level === 'world' ? 'country' : 'region'));
+        c.titleEl.textContent = c.spec.title || ((built.metric.title || built.metric.field) + ' by ' + this.noun());
         c.kindEl.textContent = 'map';
         c.canvas.setAttribute('aria-label', built.summary);
         c.badgeEl.hidden = true;
@@ -1271,9 +2024,9 @@
       chrome(built, fmt) {
         const c = this.c, doc = c.doc, lvl = this.geo.level;
         this.crumb.textContent = '';
-        if (lvl === 'world') { this.crumb.appendChild(h(doc, 'b', { text: 'World' })); } else {
-          this.crumb.append(h(doc, 'button', { cls: 'dc-link', text: 'World', attrs: { type: 'button', 'data-go': 'world' }, on: { click: () => this.back() } }), ' › ', h(doc, 'b', { text: this.placeName(lvl, true) }));
-        }
+        const trail = this.geo.trail || (lvl === 'world' ? [] : [{ level: 'world', label: 'World' }]);
+        trail.forEach((t) => { this.crumb.append(h(doc, 'button', { cls: 'dc-link', text: t.label, attrs: { type: 'button', 'data-go': t.level }, on: { click: () => this.go(t.level) } }), ' › '); });
+        this.crumb.appendChild(h(doc, 'b', { text: this.geo.title || (lvl === 'world' ? 'World' : this.placeName(lvl, true)) }));
         const ms = this.metrics();
         const pick = this.picker.component;
         if (pick.options.length !== ms.length) { pick.setOptions(ms.map((m, i) => ({ value: String(i), label: m.title || m.field }))); }
@@ -1286,21 +2039,23 @@
         c.side.hidden = this.mode !== 'ranking';
         if (this.mode === 'ranking') {
           c.side.append(h(doc, 'h4', { cls: 'dc-h', text: 'Legend · ' + (built.scale.type === 'quantile' ? 'quantiles' : 'continuous') }), legend, h(doc, 'h4', { cls: 'dc-h', text: 'Top 10' }), this.rankEl(built, fmt),
-            h(doc, 'h4', { cls: 'dc-h', text: 'Selected' }), detail || h(doc, 'p', { cls: 'dc-hint', text: 'Click a ' + (lvl === 'world' ? 'country' : 'region') + ' for its figure and how it was made.' }));
+            h(doc, 'h4', { cls: 'dc-h', text: 'Selected' }), detail || h(doc, 'p', { cls: 'dc-hint', text: 'Click a ' + this.noun() + ' for its figure and how it was made.' }));
         } else {
           this.float.append(h(doc, 'div', { cls: 'dc-float-legend' }, [h(doc, 'div', { text: built.metric.title || built.metric.field }), legend]));
           if (lvl !== 'world' && this.worldGeo) {
-            this.float.appendChild(h(doc, 'button', { cls: 'dc-inset', text: '‹ World · ' + this.placeName(lvl, true), attrs: { type: 'button', 'data-go': 'world', title: 'Back to the world' }, on: { click: () => this.back() } }));
+            const up = trail.length ? trail[trail.length - 1] : { level: 'world', label: 'World' };
+            this.float.appendChild(h(doc, 'button', { cls: 'dc-inset', text: '‹ ' + up.label + ' · ' + (this.geo.title || this.placeName(lvl, true)), attrs: { type: 'button', 'data-go': up.level, title: 'Back to ' + up.label }, on: { click: () => this.go(up.level) } }));
           }
           if (detail) { detail.classList.add('dc-float-card'); this.float.appendChild(detail); }
           if (!c.tableOpen) { this.below.appendChild(this.tableEl(built, fmt, 'dc-sortable')); }
         }
         const nd = built.places.filter((p) => p.v === null).length;
         c.status.textContent = '';
-        [h(doc, 'b', { text: lvl === 'world' ? 'world-countries.json' : 'regions/' + lvl + '.json' }), h(doc, 'span', { text: 'Natural Earth ' + (lvl === 'world' ? '1:110m' : '1:10m admin-1') + ' · ' + this.geo.projection }),
-          h(doc, 'span', { cls: 'dc-rows', text: built.places.length + (lvl === 'world' ? ' countries' : ' regions') }), h(doc, 'span', { text: nd + ' without data' }),
+        [h(doc, 'b', { text: lvl === 'world' ? 'world-countries.json' : this.geo.regionKind ? 'world-regions.yaml' : 'regions/' + lvl + '.json' }), h(doc, 'span', { text: 'Natural Earth ' + (lvl === 'world' || this.geo.regionKind ? '1:110m' : '1:10m admin-1') + ' · ' + this.geo.projection }),
+          h(doc, 'span', { cls: 'dc-rows', text: built.places.length + ' ' + (built.places.length === 1 ? this.noun() : this.noun() === 'country' ? 'countries' : this.noun() + 's') }), h(doc, 'span', { text: nd + ' without data' }),
           built.unmatched ? h(doc, 'span', { text: built.unmatched + ' rows match no place' }) : null,
-          h(doc, 'span', { cls: 'dc-hint', text: lvl === 'world' ? 'double-click a country to open its regions' : 'loaded on demand, cached for the session' })].forEach((x) => { if (x) { c.status.appendChild(x); } });
+          c.spec.disclaimer ? h(doc, 'span', { cls: 'dc-hint dc-disclaimer', text: typeof c.spec.disclaimer === 'string' ? c.spec.disclaimer : 'Boundaries are Natural Earth\'s (de facto); disputed areas are drawn as it draws them, and no position is taken.' }) : null,
+          h(doc, 'span', { cls: 'dc-hint', text: this.canDrill() ? 'double-click a ' + this.noun() + ' to open its ' + this.below1() : 'loaded on demand, cached for the session' })].forEach((x) => { if (x) { c.status.appendChild(x); } });
       }
       legendEl(built, fmt) {
         const doc = this.c.doc, sc = built.scale;
@@ -1331,7 +2086,7 @@
         if (!p) { return null; }
         const withV = built.places.filter((x) => x.v !== null), tot = withV.reduce((s, x) => s + x.v, 0), rank = withV.filter((x) => x.v > (p.v || 0)).length + 1;
         const links = [h(doc, 'button', { cls: 'dc-btn', text: 'Explain', attrs: { type: 'button', 'data-act': 'explain' }, on: { click: () => this.c.explain(this.context(p, built)) } })];
-        if (this.geo.level === 'world' && !p.point) { links.unshift(h(doc, 'button', { cls: 'dc-btn dc-go', text: 'Drill into regions ›', attrs: { type: 'button', 'data-drill': p.code }, on: { click: () => this.drill(p.code) } })); }
+        if (this.canDrill() && !p.point) { links.unshift(h(doc, 'button', { cls: 'dc-btn dc-go', text: 'Drill into ' + this.below1() + ' ›', attrs: { type: 'button', 'data-drill': p.code }, on: { click: () => this.activate(p.code) } })); }
         return h(doc, 'div', { cls: 'dc-detail', attrs: { 'data-place': p.code } }, [h(doc, 'div', { cls: 'dc-detail-k', text: (built.metric.title || built.metric.field) + ' · ' + p.name }),
           h(doc, 'div', { cls: 'dc-detail-v', text: fmt(p.v) }),
           h(doc, 'div', { cls: 'dc-detail-k', text: p.v === null ? 'No figure here' : 'rank ' + rank + ' of ' + withV.length + ' · ' + (tot ? (100 * p.v / tot).toFixed(1) : '0') + '% of the total' }),
@@ -1344,7 +2099,7 @@
         const head = (key, text) => h(doc, 'th', { attrs: { scope: 'col', 'aria-sort': k === key ? (d < 0 ? 'descending' : 'ascending') : 'none' } }, [h(doc, 'button', { cls: 'dc-sort', text: text + (k === key ? (d < 0 ? ' ▼' : ' ▲') : ''),
           attrs: { type: 'button', 'data-sort': key }, on: { click: () => { this.sort = { k: key, d: this.sort.k === key ? -this.sort.d : -1 }; this.draw(); } } })]);
         return h(doc, 'table', { cls: cls }, [h(doc, 'caption', { text: built.summary }),
-          h(doc, 'thead', {}, [h(doc, 'tr', {}, [head('c', 'Code'), head('n', this.geo.level === 'world' ? 'Country' : 'Region'), head('v', built.metric.title || built.metric.field), h(doc, 'th', { text: 'Share', attrs: { scope: 'col' } })])]),
+          h(doc, 'thead', {}, [h(doc, 'tr', {}, [head('c', 'Code'), head('n', this.noun().charAt(0).toUpperCase() + this.noun().slice(1)), head('v', built.metric.title || built.metric.field), h(doc, 'th', { text: 'Share', attrs: { scope: 'col' } })])]),
           h(doc, 'tbody', {}, rows.map((p) => {
             const bar = h(doc, 'span', { cls: 'dc-cellbar' });
             bar.style.setProperty('width', Math.round(60 * Math.abs(p.v || 0) / mx) + 'px');
@@ -2838,7 +3593,7 @@
     registerKind('calendar', { build: buildCalendar, label: 'calendar heatmap', cartesian: false });
     registerKind('layer', { label: 'layers', cartesian: true, build: (spec, rows, env) => buildLayers(spec, rows, env, kindOf, (l) => rowsOf(l.data)) });
     function install(root) { if (root && root.document && root.customElements) { defineChartElement(root.customElements, root); } }
-    return { "install": install, "registerKind": __m["src/drishti_chart-spec.js"].registerKind, "kindOf": __m["src/drishti_chart-spec.js"].kindOf, "kindList": __m["src/drishti_chart-spec.js"].kindList, "KIND_ALIASES": __m["src/drishti_chart-spec.js"].KIND_ALIASES, "checkSpec": __m["src/drishti_chart-spec.js"].checkSpec, "normalizeSpec": __m["src/drishti_chart-spec.js"].normalizeSpec, "specText": __m["src/drishti_chart-spec.js"].specText, "rowsOf": __m["src/drishti_chart-data.js"].rowsOf, "fieldOf": __m["src/drishti_chart-data.js"].fieldOf, "num": __m["src/drishti_chart-data.js"].num, "members": __m["src/drishti_chart-data.js"].members, "sumBy": __m["src/drishti_chart-data.js"].sumBy, "bin": __m["src/drishti_chart-data.js"].bin, "quantile": __m["src/drishti_chart-data.js"].quantile, "boxStats": __m["src/drishti_chart-data.js"].boxStats, "quantileBreaks": __m["src/drishti_chart-data.js"].quantileBreaks, "classOf": __m["src/drishti_chart-data.js"].classOf, "compileCondition": __m["src/drishti_chart-data.js"].compileCondition, "conditionFields": __m["src/drishti_chart-data.js"].conditionFields, "CHART_DENSITIES": __m["src/drishti_chart-theme.js"].CHART_DENSITIES, "blend": __m["src/drishti_chart-theme.js"].blend, "alpha": __m["src/drishti_chart-theme.js"].alpha, "chartTheme": __m["src/drishti_chart-theme.js"].chartTheme, "toneColour": __m["src/drishti_chart-theme.js"].toneColour, "rampColour": __m["src/drishti_chart-theme.js"].rampColour, "formatterFor": __m["src/drishti_chart-theme.js"].formatterFor, "textStyle": __m["src/drishti_chart-theme.js"].textStyle, "axisOf": __m["src/drishti_chart-theme.js"].axisOf, "rowId": __m["src/drishti_chart-kinds.js"].rowId, "seriesDefs": __m["src/drishti_chart-kinds.js"].seriesDefs, "annotationMarks": __m["src/drishti_chart-kinds.js"].annotationMarks, "buildSeriesChart": __m["src/drishti_chart-kinds.js"].buildSeriesChart, "buildScatter": __m["src/drishti_chart-kinds.js"].buildScatter, "buildHistogram": __m["src/drishti_chart-kinds.js"].buildHistogram, "buildWaterfall": __m["src/drishti_chart-kinds.js"].buildWaterfall, "buildBoxplot": __m["src/drishti_chart-kinds.js"].buildBoxplot, "buildHeatmap": __m["src/drishti_chart-kinds.js"].buildHeatmap, "buildCandlestick": __m["src/drishti_chart-kinds.js"].buildCandlestick, "buildLayers": __m["src/drishti_chart-kinds.js"].buildLayers, "registerAxisKinds": __m["src/drishti_chart-kinds.js"].registerAxisKinds, "buildPie": __m["src/drishti_chart-kinds2.js"].buildPie, "buildGauge": __m["src/drishti_chart-kinds2.js"].buildGauge, "buildTreemap": __m["src/drishti_chart-kinds2.js"].buildTreemap, "buildSankey": __m["src/drishti_chart-kinds2.js"].buildSankey, "registerOtherKinds": __m["src/drishti_chart-kinds2.js"].registerOtherKinds, "equalEarth": __m["src/drishti_chart-geo.js"].equalEarth, "albers": __m["src/drishti_chart-geo.js"].albers, "plateCarree": __m["src/drishti_chart-geo.js"].plateCarree, "projectGeometry": __m["src/drishti_chart-geo.js"].projectGeometry, "bounds": __m["src/drishti_chart-geo.js"].bounds, "coreExtent": __m["src/drishti_chart-geo.js"].coreExtent, "countryProjection": __m["src/drishti_chart-geo.js"].countryProjection, "US_INSETS": __m["src/drishti_chart-geo.js"].US_INSETS, "prepareRegions": __m["src/drishti_chart-geo.js"].prepareRegions, "prepareWorld": __m["src/drishti_chart-geo.js"].prepareWorld, "findPlace": __m["src/drishti_chart-geo.js"].findPlace, "createGeoLoader": __m["src/drishti_chart-geo.js"].createGeoLoader, "holdAntimeridian": __m["src/drishti_chart-geo.js"].holdAntimeridian, "fitView": __m["src/drishti_chart-geo.js"].fitView, "mapMetrics": __m["src/drishti_chart-map.js"].mapMetrics, "placeValues": __m["src/drishti_chart-map.js"].placeValues, "mapScale": __m["src/drishti_chart-map.js"].mapScale, "ranking": __m["src/drishti_chart-map.js"].ranking, "buildMap": __m["src/drishti_chart-map.js"].buildMap, "registerMapKind": __m["src/drishti_chart-map.js"].registerMapKind, "colourTone": __m["src/drishti_chart-vega.js"].colourTone, "d3Format": __m["src/drishti_chart-vega.js"].d3Format, "fromVegaLite": __m["src/drishti_chart-vega.js"].fromVegaLite, "vegaLiteAlternative": __m["src/drishti_chart-vega.js"].vegaLiteAlternative, "vegaLiteRefusal": __m["src/drishti_chart-vega.js"].vegaLiteRefusal, "vegaLiteIn": __m["src/drishti_chart-vega.js"].vegaLiteIn, "valueText": __m["src/drishti_chart-parts.js"].valueText, "tooltipElement": __m["src/drishti_chart-parts.js"].tooltipElement, "dataTable": __m["src/drishti_chart-parts.js"].dataTable, "legendElement": __m["src/drishti_chart-parts.js"].legendElement, "markSelection": __m["src/drishti_chart-parts.js"].markSelection, "addZoom": __m["src/drishti_chart-parts.js"].addZoom, "dragBrush": __m["src/drishti_chart-parts.js"].dragBrush, "rangeBrush": __m["src/drishti_chart-parts.js"].rangeBrush, "svgOf": __m["src/drishti_chart-parts.js"].svgOf, "MAP_MODES": __m["src/drishti_map-view.js"].MAP_MODES, "geoLoader": __m["src/drishti_map-view.js"].geoLoader, "MapView": __m["src/drishti_map-view.js"].MapView, "Studio": __m["src/drishti_chart-studio.js"].Studio, "CHART_EVENTS": __m["src/drishti_chart-view.js"].CHART_EVENTS, "CHART_MODES": __m["src/drishti_chart-view.js"].CHART_MODES, "Chart": __m["src/drishti_chart-view.js"].Chart, "ChartIO": __m["src/drishti_chart-io.js"].ChartIO, "buildCalendar": __m["src/drishti_chart-calendar.js"].buildCalendar, "bullet": __m["src/drishti_bullet.js"].bullet, "bulletScale": __m["src/drishti_bullet.js"].bulletScale, "bulletSummary": __m["src/drishti_bullet.js"].bulletSummary, "kernelDensity": __m["src/drishti_chart-kinds3.js"].kernelDensity, "tenorDays": __m["src/drishti_chart-kinds3.js"].tenorDays, "buildRadar": __m["src/drishti_chart-kinds3.js"].buildRadar, "buildViolin": __m["src/drishti_chart-kinds3.js"].buildViolin, "buildRidgeline": __m["src/drishti_chart-kinds3.js"].buildRidgeline, "buildCurve": __m["src/drishti_chart-kinds3.js"].buildCurve, "buildDensity": __m["src/drishti_chart-kinds3.js"].buildDensity, "registerDistributionKinds": __m["src/drishti_chart-kinds3.js"].registerDistributionKinds, "colourScale": __m["src/drishti_chart-scale.js"].colourScale, "linkCrosshair": __m["src/drishti_chart-multiples.js"].linkCrosshair, "facets": __m["src/drishti_chart-multiples.js"].facets, "SELECTION_EVENT": __lib("drishti-core").SELECTION_EVENT, "linkGrid": __lib("drishti-core").linkGrid, "publishSelection": __lib("drishti-core").publishSelection, "PANEL_KINDS": __m["src/drishti_chart-panels.js"].PANEL_KINDS, "escapeTip": __m["src/drishti_chart-panels.js"].escapeTip, "panelCompact": __m["src/drishti_chart-panels.js"].panelCompact, "panelLineCompact": __m["src/drishti_chart-panels.js"].panelLineCompact, "panelTokens": __m["src/drishti_chart-panels.js"].panelTokens, "labelFit": __m["src/drishti_chart-panels.js"].labelFit, "panelOption": __m["src/drishti_chart-panels.js"].panelOption, "drawMap": __m["src/drishti_chart-panel-draw.js"].drawMap, "PanelCharts": __m["src/drishti_chart-panel-draw.js"].PanelCharts, "CHART_ELEMENT": __m["src/drishti_chart-element.js"].CHART_ELEMENT, "defineChartElement": __m["src/drishti_chart-element.js"].defineChartElement, "chartIn": __m["src/drishti_chart-element.js"].chartIn };
+    return { "install": install, "registerKind": __m["src/drishti_chart-spec.js"].registerKind, "kindOf": __m["src/drishti_chart-spec.js"].kindOf, "kindList": __m["src/drishti_chart-spec.js"].kindList, "KIND_ALIASES": __m["src/drishti_chart-spec.js"].KIND_ALIASES, "checkSpec": __m["src/drishti_chart-spec.js"].checkSpec, "normalizeSpec": __m["src/drishti_chart-spec.js"].normalizeSpec, "specText": __m["src/drishti_chart-spec.js"].specText, "rowsOf": __m["src/drishti_chart-data.js"].rowsOf, "fieldOf": __m["src/drishti_chart-data.js"].fieldOf, "num": __m["src/drishti_chart-data.js"].num, "members": __m["src/drishti_chart-data.js"].members, "sumBy": __m["src/drishti_chart-data.js"].sumBy, "bin": __m["src/drishti_chart-data.js"].bin, "quantile": __m["src/drishti_chart-data.js"].quantile, "boxStats": __m["src/drishti_chart-data.js"].boxStats, "quantileBreaks": __m["src/drishti_chart-data.js"].quantileBreaks, "classOf": __m["src/drishti_chart-data.js"].classOf, "compileCondition": __m["src/drishti_chart-data.js"].compileCondition, "conditionFields": __m["src/drishti_chart-data.js"].conditionFields, "CHART_DENSITIES": __m["src/drishti_chart-theme.js"].CHART_DENSITIES, "blend": __m["src/drishti_chart-theme.js"].blend, "alpha": __m["src/drishti_chart-theme.js"].alpha, "chartTheme": __m["src/drishti_chart-theme.js"].chartTheme, "toneColour": __m["src/drishti_chart-theme.js"].toneColour, "rampColour": __m["src/drishti_chart-theme.js"].rampColour, "formatterFor": __m["src/drishti_chart-theme.js"].formatterFor, "textStyle": __m["src/drishti_chart-theme.js"].textStyle, "axisOf": __m["src/drishti_chart-theme.js"].axisOf, "rowId": __m["src/drishti_chart-kinds.js"].rowId, "seriesDefs": __m["src/drishti_chart-kinds.js"].seriesDefs, "annotationMarks": __m["src/drishti_chart-kinds.js"].annotationMarks, "buildSeriesChart": __m["src/drishti_chart-kinds.js"].buildSeriesChart, "buildScatter": __m["src/drishti_chart-kinds.js"].buildScatter, "buildHistogram": __m["src/drishti_chart-kinds.js"].buildHistogram, "buildWaterfall": __m["src/drishti_chart-kinds.js"].buildWaterfall, "buildBoxplot": __m["src/drishti_chart-kinds.js"].buildBoxplot, "buildHeatmap": __m["src/drishti_chart-kinds.js"].buildHeatmap, "buildCandlestick": __m["src/drishti_chart-kinds.js"].buildCandlestick, "buildLayers": __m["src/drishti_chart-kinds.js"].buildLayers, "registerAxisKinds": __m["src/drishti_chart-kinds.js"].registerAxisKinds, "buildPie": __m["src/drishti_chart-kinds2.js"].buildPie, "buildGauge": __m["src/drishti_chart-kinds2.js"].buildGauge, "buildTreemap": __m["src/drishti_chart-kinds2.js"].buildTreemap, "buildSankey": __m["src/drishti_chart-kinds2.js"].buildSankey, "registerOtherKinds": __m["src/drishti_chart-kinds2.js"].registerOtherKinds, "equalEarth": __m["src/drishti_chart-geo.js"].equalEarth, "albers": __m["src/drishti_chart-geo.js"].albers, "plateCarree": __m["src/drishti_chart-geo.js"].plateCarree, "projectGeometry": __m["src/drishti_chart-geo.js"].projectGeometry, "bounds": __m["src/drishti_chart-geo.js"].bounds, "coreExtent": __m["src/drishti_chart-geo.js"].coreExtent, "countryProjection": __m["src/drishti_chart-geo.js"].countryProjection, "US_INSETS": __m["src/drishti_chart-geo.js"].US_INSETS, "prepareRegions": __m["src/drishti_chart-geo.js"].prepareRegions, "prepareWorld": __m["src/drishti_chart-geo.js"].prepareWorld, "findPlace": __m["src/drishti_chart-geo.js"].findPlace, "createGeoLoader": __m["src/drishti_chart-geo.js"].createGeoLoader, "holdAntimeridian": __m["src/drishti_chart-geo.js"].holdAntimeridian, "fitView": __m["src/drishti_chart-geo.js"].fitView, "WORLD_REGIONS": __m["src/drishti_world-regions.js"].WORLD_REGIONS, "REGION_START_LEVELS": __m["src/drishti_chart-regions.js"].REGION_START_LEVELS, "isRegionLevel": __m["src/drishti_chart-regions.js"].isRegionLevel, "regionOf": __m["src/drishti_chart-regions.js"].regionOf, "regionName": __m["src/drishti_chart-regions.js"].regionName, "prepareRegionLevel": __m["src/drishti_chart-regions.js"].prepareRegionLevel, "mapMetrics": __m["src/drishti_chart-map.js"].mapMetrics, "placeValues": __m["src/drishti_chart-map.js"].placeValues, "mapScale": __m["src/drishti_chart-map.js"].mapScale, "ranking": __m["src/drishti_chart-map.js"].ranking, "buildMap": __m["src/drishti_chart-map.js"].buildMap, "registerMapKind": __m["src/drishti_chart-map.js"].registerMapKind, "colourTone": __m["src/drishti_chart-vega.js"].colourTone, "d3Format": __m["src/drishti_chart-vega.js"].d3Format, "fromVegaLite": __m["src/drishti_chart-vega.js"].fromVegaLite, "vegaLiteAlternative": __m["src/drishti_chart-vega.js"].vegaLiteAlternative, "vegaLiteRefusal": __m["src/drishti_chart-vega.js"].vegaLiteRefusal, "vegaLiteIn": __m["src/drishti_chart-vega.js"].vegaLiteIn, "valueText": __m["src/drishti_chart-parts.js"].valueText, "tooltipElement": __m["src/drishti_chart-parts.js"].tooltipElement, "dataTable": __m["src/drishti_chart-parts.js"].dataTable, "legendElement": __m["src/drishti_chart-parts.js"].legendElement, "markSelection": __m["src/drishti_chart-parts.js"].markSelection, "addZoom": __m["src/drishti_chart-parts.js"].addZoom, "dragBrush": __m["src/drishti_chart-parts.js"].dragBrush, "rangeBrush": __m["src/drishti_chart-parts.js"].rangeBrush, "svgOf": __m["src/drishti_chart-parts.js"].svgOf, "MAP_MODES": __m["src/drishti_map-view.js"].MAP_MODES, "geoLoader": __m["src/drishti_map-view.js"].geoLoader, "MapView": __m["src/drishti_map-view.js"].MapView, "Studio": __m["src/drishti_chart-studio.js"].Studio, "CHART_EVENTS": __m["src/drishti_chart-view.js"].CHART_EVENTS, "CHART_MODES": __m["src/drishti_chart-view.js"].CHART_MODES, "Chart": __m["src/drishti_chart-view.js"].Chart, "ChartIO": __m["src/drishti_chart-io.js"].ChartIO, "buildCalendar": __m["src/drishti_chart-calendar.js"].buildCalendar, "bullet": __m["src/drishti_bullet.js"].bullet, "bulletScale": __m["src/drishti_bullet.js"].bulletScale, "bulletSummary": __m["src/drishti_bullet.js"].bulletSummary, "kernelDensity": __m["src/drishti_chart-kinds3.js"].kernelDensity, "tenorDays": __m["src/drishti_chart-kinds3.js"].tenorDays, "buildRadar": __m["src/drishti_chart-kinds3.js"].buildRadar, "buildViolin": __m["src/drishti_chart-kinds3.js"].buildViolin, "buildRidgeline": __m["src/drishti_chart-kinds3.js"].buildRidgeline, "buildCurve": __m["src/drishti_chart-kinds3.js"].buildCurve, "buildDensity": __m["src/drishti_chart-kinds3.js"].buildDensity, "registerDistributionKinds": __m["src/drishti_chart-kinds3.js"].registerDistributionKinds, "colourScale": __m["src/drishti_chart-scale.js"].colourScale, "linkCrosshair": __m["src/drishti_chart-multiples.js"].linkCrosshair, "facets": __m["src/drishti_chart-multiples.js"].facets, "SELECTION_EVENT": __lib("drishti-core").SELECTION_EVENT, "linkGrid": __lib("drishti-core").linkGrid, "publishSelection": __lib("drishti-core").publishSelection, "PANEL_KINDS": __m["src/drishti_chart-panels.js"].PANEL_KINDS, "escapeTip": __m["src/drishti_chart-panels.js"].escapeTip, "panelCompact": __m["src/drishti_chart-panels.js"].panelCompact, "panelLineCompact": __m["src/drishti_chart-panels.js"].panelLineCompact, "panelTokens": __m["src/drishti_chart-panels.js"].panelTokens, "labelFit": __m["src/drishti_chart-panels.js"].labelFit, "panelOption": __m["src/drishti_chart-panels.js"].panelOption, "drawMap": __m["src/drishti_chart-panel-draw.js"].drawMap, "PanelCharts": __m["src/drishti_chart-panel-draw.js"].PanelCharts, "CHART_ELEMENT": __m["src/drishti_chart-element.js"].CHART_ELEMENT, "defineChartElement": __m["src/drishti_chart-element.js"].defineChartElement, "chartIn": __m["src/drishti_chart-element.js"].chartIn };
   })();
   return Object.freeze(Object.assign({ library: "drishti-chart", version: "2.4.0" }, __m["src/drishti_index.js"]));
 });
