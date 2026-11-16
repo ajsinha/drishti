@@ -117,7 +117,7 @@ export const MANIFEST = Object.freeze({
       "module": "core"
     },
     "drishti-chart": {
-      "version": "0.2.0",
+      "version": "0.3.0",
       "title": "The chart: one engine-neutral spec over the vendored ECharts (the general kinds, the maps from world to every country's first-level regions, the card and studio modes, the map's ranking and table modes), Explain on any mark, the data table, export, linked selection and live updates; Vega-Lite translated into the spec",
       "bundle": "drishti-chart/drishti_chart.js",
       "entry": "drishti-chart/src/drishti_index.js",

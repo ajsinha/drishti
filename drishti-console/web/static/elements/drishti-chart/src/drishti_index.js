@@ -15,12 +15,14 @@
  */
 /* drishti-chart: one engine-neutral chart spec over the vendored ECharts (Apache-2.0): the spec and its checks, the kinds (line, area,
    bar, scatter, bubble, histogram, waterfall, box plot, heatmap, candlestick, pie, donut, gauge, treemap, sankey, layers, and the map
-   from the world to every country's first-level regions), the theme and formats of drishti-core, Explain on any mark (the grid's hook),
+   from the world to every country's first-level regions; lollipop and the 3D trace), heatmap tracks and category cells, a scatter's
+   segments, top labels and surface, the rectangle brush and frames (a field stepped by a slider and Play), the theme and formats of drishti-core, Explain on any mark (the grid's hook),
    the data table, export, linked selection with drishti-grid and live updates; the card and studio modes (g2) and the map's ranking
    and table modes (g3); Vega-Lite translated into the spec (Vega is retired). A domain library registers its kinds (registerKind):
    drishti-risk's for the banking module. */
 import { registerAxisKinds, buildLayers } from './drishti_chart-kinds.js';
 import { registerOtherKinds } from './drishti_chart-kinds2.js';
+import { registerSequenceKinds } from './drishti_chart-kinds3.js';
 import { registerMapKind } from './drishti_chart-map.js';
 import { registerKind, kindOf } from './drishti_chart-spec.js';
 import { rowsOf } from './drishti_chart-data.js';
@@ -32,11 +34,15 @@ export { CHART_DENSITIES, blend, alpha, chartTheme, toneColour, rampColour, form
 export { rowId, seriesDefs, annotationMarks, buildSeriesChart, buildScatter, buildHistogram, buildWaterfall, buildBoxplot, buildHeatmap, buildCandlestick, buildLayers,
   registerAxisKinds } from './drishti_chart-kinds.js';
 export { buildPie, buildGauge, buildTreemap, buildSankey, registerOtherKinds } from './drishti_chart-kinds2.js';
+export { buildLollipop, buildTrace3d, canDraw3d, ensure3d, registerSequenceKinds } from './drishti_chart-kinds3.js';
+export { trackValues, trackColour, categoryCells, addTracks } from './drishti_chart-tracks.js';
+export { segmentOf, scatterOverlays } from './drishti_chart-overlays.js';
+export { frameValues, frameRows, reducedMotion, FrameBar } from './drishti_chart-frames.js';
 export { equalEarth, albers, plateCarree, projectGeometry, bounds, coreExtent, countryProjection, US_INSETS, prepareRegions, prepareWorld, findPlace,
   createGeoLoader, holdAntimeridian, fitView } from './drishti_chart-geo.js';
 export { mapMetrics, placeValues, mapScale, ranking, buildMap, registerMapKind } from './drishti_chart-map.js';
 export { colourTone, d3Format, fromVegaLite, vegaLiteAlternative, vegaLiteRefusal, vegaLiteIn } from './drishti_chart-vega.js';
-export { valueText, tooltipElement, dataTable, legendElement, markSelection, addZoom, dragBrush, rangeBrush, svgOf } from './drishti_chart-parts.js';
+export { valueText, tooltipElement, dataTable, legendElement, markSelection, addZoom, dragBrush, rangeBrush, rectBrush, idsInBox, svgOf } from './drishti_chart-parts.js';
 export { MAP_MODES, geoLoader, MapView } from './drishti_map-view.js';
 export { Studio } from './drishti_chart-studio.js';
 export { CHART_EVENTS, CHART_MODES, Chart } from './drishti_chart-view.js';
@@ -50,6 +56,7 @@ export { CHART_ELEMENT, defineChartElement, chartIn } from './drishti_chart-elem
 
 registerAxisKinds();
 registerOtherKinds();
+registerSequenceKinds();
 registerMapKind();
 registerKind('calendar', { build: buildCalendar, label: 'calendar heatmap', cartesian: false });
 registerKind('layer', { label: 'layers', cartesian: true, build: (spec, rows, env) => buildLayers(spec, rows, env, kindOf, (l) => rowsOf(l.data)) });
