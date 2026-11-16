@@ -160,9 +160,15 @@ def landing_rule(fn: Callable[..., str | None]) -> None:
     _once(_landing_rules, fn)
 
 
-def landing_by_rules(request, ed, offered: list[str], me, mine: dict) -> str | None:
+async def landing_by_rules(request, ed, offered: list[str], me, mine: dict) -> str | None:
+    """The first rule's landing that is offered; a rule may be a coroutine (one that asks the server, Drishti Trading's role)."""
+    import inspect
+
     for fn in _landing_rules:
-        if (to := fn(request, ed, offered, me, mine)) in offered:
+        to = fn(request, ed, offered, me, mine)
+        if inspect.isawaitable(to):
+            to = await to
+        if to in offered:
             return to
     return None
 

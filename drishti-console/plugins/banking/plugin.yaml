@@ -28,7 +28,7 @@ routers: [plugins.banking.routes.trading_routes, plugins.banking.routes.var_regu
 # files that fill the core's hooks on import (core/plugins.py): the Build home's types, the landings' figures
 registers: [plugins.banking.build_types, plugins.banking.routes.trading_routes, plugins.banking.console_hooks]
 # its other Python modules (the core imports none of them: tests/test_module_boundaries.py)
-code: [plugins.banking.console_hooks, plugins.banking.trading_landing, plugins.banking.market_landing, plugins.banking.risk_api]
+code: [plugins.banking.console_hooks, plugins.banking.risk_api]
 
 # its compute engines: their words, console pages, menus, Help pages, tiles and lenses are the server's engine catalogue (its installation answer)
 help: help.yaml

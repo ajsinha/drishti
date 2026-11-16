@@ -38,12 +38,8 @@ VIOLETS = ("rgb(167, 139, 250)", "rgb(109, 40, 217)")      # the accent on dark 
 @pytest.fixture(scope="module")
 def market_console():
     import uvicorn
-
-    from plugins.banking import market_landing
     from core.app import create_app
     from core.config import load_settings
-
-    market_landing.forget()
     app = create_app(load_settings(CONSOLE / "config"))
     app.state.backend = MarketBackend()
     # a lens is a workspace the person works in (docs/admin/LENSES.md), never the server's edition: the server offers it,
@@ -62,9 +58,6 @@ def market_console():
     yield f"http://127.0.0.1:{PORT}"
     server.should_exit = True
     thread.join(10)
-    market_landing.forget()
-
-
 @pytest.mark.parametrize("landing", ["desk", "explorer", "quality"])
 @pytest.mark.parametrize("width", [390, 1280])
 def test_each_market_landing_fills_from_the_pack_and_fits(browser, market_console, landing, width):

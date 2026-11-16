@@ -335,11 +335,8 @@ def test_a_landing_template_must_be_a_home_landing_page():
 
 @pytest.fixture
 def market():
-    from plugins.banking import market_landing
     from market_fake import MarketBackend
-    market_landing.forget()
     yield MarketBackend()
-    market_landing.forget()
 
 
 def test_market_home_offers_desk_explorer_and_quality_and_remembers_the_choice(market, monkeypatch):
@@ -460,11 +457,8 @@ def test_inside_a_lens_the_sutra_keeps_its_design_link(backend, monkeypatch):
 
 @pytest.fixture
 def trading():
-    from plugins.banking import trading_landing
     from trading_fake import TradingBackend
-    trading_landing.forget()
     yield TradingBackend()
-    trading_landing.forget()
 
 
 def _people(app, monkeypatch, roles: dict):

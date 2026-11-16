@@ -1003,6 +1003,8 @@ drishti:
       actor: system                  # the name the history, the item's events and the audit log give the start-up run
   layouts:                           # layout mode: each user's arrangement of a Sutra's panels (USER_GUIDE.md, Layout mode)
     enabled: ${DRISHTI_LAYOUTS_ENABLED:true}   # also needs a role with layout (every role but viewer, unless configured)
+  trading:                           # the Trading landings' figures (the trading module's server part, /api/v1/trading/landing; LENSES.md › The design)
+    people: {}                       # user: {trader: TRDR-…} or {desk: DESK-…, role: desk-head}: "my" scope, over the lens's trading.people (a name in both: this)
   explain:                           # About this page (docs/guides/RACHANA_REFERENCE.md): GET /api/v1/views/{kind}/{id}/explain
     cache-size: 2000                 # answers kept; per user, page, business date and generation (masks and rights are per user)
     cache-ttl: 60s                   # how long an answer is served before it is derived again

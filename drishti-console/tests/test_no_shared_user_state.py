@@ -56,9 +56,6 @@ ALLOWED = {
                                       "what a relay holds is per app (app.state.relay)",
     "routes/embed_routes.py:_cache": "the embed loader's script text by version: static assets, the same for everyone",
     "routes/designer_routes.py:_LOCKS": "one asyncio.Lock per draft id (a person's own draft; a lock holds no data)",
-    "plugins/banking/trading_landing.py:_FLIGHT": "reads running now, by core.user_cache.user_key (server, user, roles, as-of): never served across people",
-    "plugins/banking/trading_landing.py:_CACHE": "an LRU keyed by core.user_cache.user_key (server, user, roles, as-of and known-at, lens)",
-    "plugins/banking/market_landing.py:_CACHE": "an LRU keyed by core.user_cache.cache_key (made by routes/edition_routes.py) or user_key",
 }
 
 

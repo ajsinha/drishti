@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The market-data module's manifest (docs/architecture/KERNEL_AND_MODULES.md section 4; DISTRIBUTIONS.md): content only, no code.
+# The market-data module's manifest (docs/architecture/KERNEL_AND_MODULES.md section 4; DISTRIBUTIONS.md): its content, and a server part (java/market-data-service: the Market landings' figures).
 # The distribution files list it by id, and their visibility filter reads this file: its packs, functions, menus and Help.
 format: 1
 id: market-data
@@ -63,6 +63,14 @@ packs:
   - market-data
 data:
   needs: data/needs.yaml
+java:                                  # the server part (java/market-data-service): the landings' figures, read as the person (THIN_CONSOLE_DESIGN.md S8a)
+  jars:
+  - drishti-market-data.jar
+  lib: []
+  spring:
+  - com.ash.drishti.marketdata.MarketDataAutoConfiguration
+api:
+  prefix: market-data
 console:
   plugin: console/plugin.yaml
   # the module's own top menus, in the console sitemap's form (drishti-console/config/sitemap.yaml); a menu of another module's

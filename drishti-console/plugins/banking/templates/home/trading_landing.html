@@ -17,7 +17,7 @@
    limit use, DV01, today's trades; Check a new trade; today's blotter; top positions; quick commands), B "desk" (desk P&L, desk VaR and
    limit use, breaches, books near their limit, the largest counterparty; limit use by book over the last business dates; by trader; P&L
    against VaR; overnight movers) and C "explorer" (a big command line, chips, the commands by group, recents). A shell: whose figures they
-   are ("my" scope) and every figure come from /api/home/trading/* (core/trading_landing.py, the servers' answers read as the person), drawn
+   are ("my" scope) and every figure come from /api/home/trading/* (the trading module (/api/v1/trading/landing, on the server), the servers' answers read as the person), drawn
    by drishti_trading-landing.js; a figure the data cannot give is left out or says why. The terminal look with a green accent. #}
 {% extends "base.html" %}
 {% block title %}{{ PRODUCT }}{% if TAGLINE %} — {{ TAGLINE }}{% endif %}{% endblock %}

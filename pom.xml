@@ -80,6 +80,8 @@
     <module>examples/connector</module>
     <module>kernel/drishti-server</module>
     <module>modules/banking</module>
+    <module>modules/trading</module>
+    <module>modules/market-data</module>
     <module>packaging/dist</module>
     <module>packaging/drishti-app</module>
     <module>packaging/drishti-kernel-app</module>
@@ -198,6 +200,8 @@
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-server</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-server</artifactId><version>${project.version}</version><type>test-jar</type><scope>test</scope></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-banking</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-trading</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-market-data</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-compute-banking</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-modules</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-testkit</artifactId><version>${project.version}</version></dependency>

@@ -58,7 +58,7 @@ async def landing(request: Request):
         parts = request.app.state.module_parts
         cards += [{"title": str(c["title"]), "cmd": str(c.get("cmd") or c["title"]), "href": parts.href(c), "icon": str(c.get("icon") or "puzzle"),
                    "module": c["module"]} for c in parts.cards(ed.name if ed.lens else None) if _modules.module_on(c["module"])]
-    if me is not None and ed.active and (landing := edition_routes.landing_for(request, ed)) is not None:
+    if me is not None and ed.active and (landing := await edition_routes.landing_for(request, ed)) is not None:
         return await edition_routes.render_landing(request, ed, landing, cards)        # the edition's landing (home.landing, the person's choice)
     from core import house as _house                                   # the house: the kernel and this distribution's loaded modules
     house = _house.picture(_house.rooms(request.app.state.editions))

@@ -15,7 +15,7 @@
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Drishti Trading's Home (home/trading_landing.html; LENSES.md › The design): paints the landing from the console's answers, which
-   core/trading_landing.py works out from the servers' own, read as the person: /api/home/trading/me (whose figures: the trader or desk,
+   the trading module (/api/v1/trading/landing, on the server) works out from the servers' own, read as the person: /api/home/trading/me (whose figures: the trader or desk,
    their books, and the View as picker when they may pick), then valuations (P&L today, by book and trader, movers, DV01, the largest
    counterparty), blotter (today's trades), risk (VaR, limits, positions), limits (limit use by book over the last business dates),
    pnl-var (the desk's P&L against VaR) and traders (by trader); the new-trade check posts to /api/home/trading/check. Each panel is painted

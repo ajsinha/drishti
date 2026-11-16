@@ -866,14 +866,15 @@ out.
 | **Desk head** (desk heads) | `desk` | desk P&L today, desk VaR and its limit use, breaches, books near their limit, the largest counterparty's share of the desk's positive MtM; limit use by book over the last 5 business dates; by trader (P&L, VaR, trades); P&L against VaR over 60 days (official history only); overnight movers |
 | **Explorer** | `explorer` | a big command line, the chips, the commands grouped (blotter, books and positions, risk on my book, counterparties, market data), the person's recent Trading commands |
 
-The figures are worked out by the console's banking plugin and served read-only by `/api/home/trading/{me,valuations,blotter,risk,limits,pnl-var,traders}`
+The figures are worked out on the server by the trading module (`GET /api/v1/trading/landing/{role,me,valuations,blotter,risk,limits,pnl-var,traders}`,
+`POST /api/v1/trading/landing/check`, as the person; [API_REFERENCE.md](API_REFERENCE.md)); the console passes them on, read-only, as `/api/home/trading/{part}`
 and `POST /api/home/trading/check` (`404 DRS-4023` unless the person's lens shows `TRD`; the check also needs the words `VAR` and `EXP`),
 cached two minutes per person, date and scope.
 
 **"My": who a person is.** The landings open on **the person's own** books or desk. Who that is, in order:
 
-1. **Configuration.** `trading.people` in the lens file, with the console's own `trading.people` (`application.local.yaml`) added on top (a
-   name in both: the console's). User names are compared ignoring case.
+1. **Configuration.** `trading.people` in the lens file, with the server's own `drishti.trading.people` (its `application.local.yaml`)
+   added on top (a name in both: the server's). User names are compared ignoring case.
 
    ```yaml
    trading:
@@ -949,8 +950,9 @@ market-data pack, with the core pack it extends). No trades and no VaR. The mark
 | **Commands** | the pack's: `CRV`, `REPO`, `IRV`, `CPV`, `FIX`, `INF`, `INFC`; `FX`, `FXF`, `FXV`; `CDS`, `BND`; `EQ`, `EQX`, `DIV`, `EQV`, `CMD`, `CMDC`, `CMDV`; `CORR`, `CORRC`, `EQB`; the words `BI`, `FORM`, `FUNC`, `WHAT`, `DATAMAP`, `DATA` | `VAR`, `EXP`, `SMAT`, `PLAY` and every risk and trade command; core's own (`CPTY`, `BOOK`, `CAL`, `ISS` …); `RUPAKA` |
 | **Menus** | Views (Terminal, Search, Forms, Functions, Data map, Export data, Reports, Workspaces, Monitors, Alerts), Curves, Volatility, FX, Credit, BI, Admin, Help | Build, the risk engines |
 
-The landings (violet accent) are worked out in the console from the pack's own answers, read as the person, cached two minutes per person,
-and served by `/api/home/market/desk`, `/moves` and `/quality` (`404 DRS-4023` unless the person's lens shows `CRV`).
+The landings (violet accent) are worked out on the server by the market-data module from the pack's own answers, read as the person,
+cached two minutes per person (`GET /api/v1/market-data/landing/{desk,moves,quality}`), and passed on by the console as
+`/api/home/market/desk`, `/moves` and `/quality` (`404 DRS-4023` unless the person's lens shows `CRV`).
 
 | Landing | Id | What leads |
 |---|---|---|

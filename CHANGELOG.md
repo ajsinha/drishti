@@ -18,6 +18,14 @@
 
 ## Unreleased
 
+- **The thin console, step S8a: the Trading and Market landings' figures are computed by their modules on the server.** The trading
+  and market-data modules have a server part now (`modules/trading/java/trading-service`, `modules/market-data/java/market-data-service`,
+  packed into their `.dmod`s): `GET /api/v1/trading/landing/{role,me,valuations,blotter,risk,limits,pnl-var,traders}`,
+  `POST /api/v1/trading/landing/check` and `GET /api/v1/market-data/landing/{desk,moves,quality}`, each worked out as the person from the
+  kernel's and the other modules' API (the new `KernelCalls` of drishti-kernel-api, served by the kernel's `LoopbackKernelCalls`; with
+  `InlineFigures`, `Answers` and `PersonCache`), every total the pivot engine's. The console only passes the answers on (and draws the
+  blotter's grid); `plugins/banking/trading_landing.py` and `market_landing.py` are deleted with their tests. The console's
+  `trading.people` setting moves to the server: `drishti.trading.people`.
 - **AI is not in this release: hidden in the console and off on the server (owner, 2026-11-16).** The console has no AI page, menu item
   or button: Admin -> AI, its Test connection and overview, the console's `POST /api/ai/chat` and `/api/ai/module-tools`, *Ask about
   this page* (the About drawer's box and `POST /v/{kind}/{id}/ask`), the BI hooks (*Describe a report*, *Ask the data*, *Explain this

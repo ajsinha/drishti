@@ -12,40 +12,41 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Drishti Trading's landings (docs/guides/ADMIN_GUIDE.md › The design): the read-only figures of the Trader desk and Desk head, worked out
-by plugins/banking/trading_landing.py from the servers' own answers as the person, and their "View as" choice.
+"""Drishti Trading's and Drishti Market's landings (docs/guides/ADMIN_GUIDE.md › The design): the console draws, the modules compute
+(THIN_CONSOLE_DESIGN.md step S8a). The figures are worked out on the server by the trading module (``/api/v1/trading/landing``) and the
+market-data module (``/api/v1/market-data/landing``), as the person; these routes pass the person's call on and give back the answer.
 
-``GET /api/home/trading/{part}``: ``me`` (who "my" is, and the picker's choices when the person may pick), ``valuations`` (P&L today, by
-book and trader, movers, DV01, the largest counterparty share), ``blotter`` (today's trades), ``risk`` (VaR, limits, positions),
-``limits`` (limit use by book over the last business dates), ``pnl-var`` (the desk's P&L against VaR) and ``traders`` (by trader); with
-``?for=desk`` a trader's figures are their desk's (the Desk head landing);
-``POST /api/home/trading/check`` (the new-trade check). Each for a signed-in person whose edition or lens shows the trades (``TRD``; the
-check also the words ``VAR`` and ``EXP``, whose engines answer the VaR and exposure what-ifs); else ``404 DRS-4023``. ``GET /home/trading/view-as?as=trader:<id>|desk:<id>`` keeps the person's
-choice in their settings (``tradingView``) when they may pick (no mapping, or an administrator); ``as=`` empty forgets it.
+``GET /api/home/trading/{part}``: ``me`` (who "my" is, the picker's choices when the person may pick; ``check`` added here: whether the
+person's edition shows the VaR and exposure words the new-trade check needs), ``valuations``, ``blotter`` (the grid's declaration is made
+here from the live result set the server answered with: presentation), ``risk``, ``limits``, ``pnl-var`` and ``traders``; ``?for=desk`` a
+trader's desk. ``POST /api/home/trading/check``. Each for a signed-in person whose edition or lens shows the trades (``TRD``; the check also
+``VAR`` and ``EXP``); else ``404 DRS-4023``. ``GET /home/trading/view-as?as=trader:<id>|desk:<id>`` keeps the person's choice in their settings
+(``tradingView``) when the server says they may pick; ``as=`` empty forgets it.
 
-Drishti Market's figures (``GET /api/home/market/{desk,moves,quality}``, plugins/banking/market_landing.py) are served here too: the banking module's
-landings, never the core's. The trading role's landing rule is registered with the core (core/plugins.py, DOMAIN_MODULES.md C6)."""
+``GET /api/home/market/{desk,moves,quality}``: Drishti Market's figures, for a person whose edition shows the curves (``CRV``). The trading
+role's landing rule asks the server for the person's trading role (core/plugins.py, DOMAIN_MODULES.md C6)."""
 from __future__ import annotations
 
+import re
 from urllib.parse import quote
 
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
-from core import asof
-from plugins.banking import market_landing
+from core import live_results
 from core import plugins as _plugins
-from plugins.banking import trading_landing as tl
-from core.user_cache import cache_key
 from core.backend import BackendError
 from core.csrf import json_body
 from routes.common import ident
-from routes.edition_routes import _patch, edition_of, stale_days
+from routes.edition_routes import _patch, edition_of
 
 router = APIRouter(include_in_schema=False)
 
-PARTS = {"valuations": tl.valuations, "blotter": tl.blotter, "risk": tl.risk, "limits": tl.limits, "pnl-var": tl.pnl_vs_var,
-         "traders": tl.traders}
+TRADING = "/trading/landing"
+MARKET = "/market-data/landing"
+PARTS = ("me", "valuations", "blotter", "risk", "limits", "pnl-var", "traders")
+VIEW = re.compile(r"^(trader|desk):[A-Za-z0-9][A-Za-z0-9._~-]{0,79}$")
+NO_STORE = {"Cache-Control": "no-store"}
 
 
 def _refused(request, needs: tuple[str, ...], words: tuple[str, ...] = ()) -> JSONResponse | None:
@@ -58,49 +59,48 @@ def _refused(request, needs: tuple[str, ...], words: tuple[str, ...] = ()) -> JS
     return None
 
 
-async def mine(request) -> dict:
-    """The person's settings (their View as choice): a page has them already; an /api/ request reads them (cached per worker)."""
-    s = getattr(request.state, "settings", None)
-    if s is None:
-        from core.settings import changed_at
-        try:
-            s = await request.app.state.user_settings.get(request.app.state.backend, request.state.identity, changed_at(request))
-        except Exception:  # noqa: BLE001 - no settings: no choice
-            s = {}
-    return s or {}
+def _problem(e: BackendError) -> dict:
+    return {"available": False, "reason": f"{e.code or e.status} {e.detail}"}
 
 
-async def _scope(request):
-    ed = edition_of(request)
-    cfg = tl.config(ed, request.app.state.settings)
-    scope = await tl.resolve(request.app.state.backend, ident(request), ed, request.app.state.settings, await mine(request))
-    return ed, cfg, scope
+def event_spec(spec: dict, business: str) -> dict:
+    """The blotter's grid declaration with what the old table showed: an Event pill (cancelled by status, new by action or booked on the
+    day, else amended: the server's rule, as the grid's ``cases``) after the trade, and the valuations' Notional last."""
+    cols = list(spec["columns"])
+    event = {"field": "EVENT", "label": "Event", "type": "status", "width": 96, "otherwise": "amended",
+             "cases": [{"when": {"TRADE_STATUS": "CANCELLED"}, "text": "cancelled"}, {"when": {"TRADE_ACTION": "NEW"}, "text": "new"},
+                       {"when": {"TRADE_DATE": business + "*"}, "text": "new"}]}
+    return {**spec, "columns": cols[:1] + [event] + cols[1:] + [{"field": "NOTIONAL", "label": "Notional", "type": "number", "format": "amount0"}]}
+
+
+def _blotter(out: dict) -> dict:
+    """The server's blotter answer with the grid's declaration drawn from its live result set (``page``, not sent on)."""
+    page = out.pop("page", None)
+    if page is not None and out.get("available"):
+        values = {e["trade"]: e.get("notional") for e in out.get("rows") or [] if e.get("notional") is not None}
+        spec = event_spec(live_results.grid_spec(live_results.as_search(page)), str(out.get("businessDate") or ""))
+        out["spec"] = {**spec, "columns": [dict(c, lookup={"key": "__id", "values": values}) if c["field"] == "NOTIONAL" else c
+                                           for c in spec["columns"]]}
+    return out
 
 
 @router.get("/api/home/trading/{part}")
 async def trading_part(request: Request, part: str):
     if (no := _refused(request, ("TRD",))) is not None:
         return no
-    if part != "me" and part not in PARTS:
-        return JSONResponse({"code": "DRS-4004", "detail": f"no trading figures {part}: me, {', '.join(PARTS)}"}, status_code=404)
-    ed, cfg, scope = await _scope(request)
-    backend, me = request.app.state.backend, ident(request)
-    if request.query_params.get("for") == "desk":               # the Desk head landing of a trader: their desk
-        scope = await tl.desk_of(backend, me, scope)
-    if part == "me":
-        out = {"scope": scope.as_dict(), "admin": bool(me.is_admin),
-               "check": ed.word_on("VAR") and ed.word_on("EXP")}
-        if scope.can_pick:
-            out["options"] = await tl.options(backend, me)
-        return JSONResponse(out, headers={"Cache-Control": "no-store"})
-    if not scope.kind:
-        return JSONResponse({"available": False, "reason": "pick a trader or a desk to view as", "scope": scope.as_dict()},
-                            headers={"Cache-Control": "no-store"})
+    if part not in PARTS:
+        return JSONResponse({"code": "DRS-4004", "detail": f"no trading figures {part}: {', '.join(PARTS)}"}, status_code=404)
+    backend, me, ed = request.app.state.backend, ident(request), edition_of(request)
+    params = {"for": "desk"} if request.query_params.get("for") == "desk" else {}
     try:
-        out = tl.public(await PARTS[part](backend, me, scope, cfg))
+        out = await backend.engine("GET", f"{TRADING}/{part}", me, **params)
     except BackendError as e:
-        out = {"available": False, "reason": f"{e.code or e.status} {e.detail}"}
-    return JSONResponse(out, headers={"Cache-Control": "no-store"})
+        return JSONResponse(_problem(e), headers=NO_STORE)
+    if part == "me":
+        out["check"] = ed.word_on("VAR") and ed.word_on("EXP")
+    elif part == "blotter":
+        out = _blotter(out)
+    return JSONResponse(out, headers=NO_STORE)
 
 
 @router.post("/api/home/trading/check")
@@ -110,26 +110,28 @@ async def trading_check(request: Request):
     body = await json_body(request, limit=8192)              # a body that is not JSON: 400 or 415 (core/csrf.py)
     if not isinstance(body, dict):
         return JSONResponse({"ok": False, "reason": "a check is {product, notional, counterparty, side, book}"}, status_code=400)
-    _ed, cfg, scope = await _scope(request)
-    if not scope.kind:
-        return JSONResponse({"ok": False, "reason": "pick a trader or a desk to view as first"})
-    return JSONResponse(await tl.check(request.app.state.backend, ident(request), scope, cfg, body), headers={"Cache-Control": "no-store"})
+    try:
+        out = await request.app.state.backend.engine("POST", f"{TRADING}/check", ident(request), body=body)
+    except BackendError as e:
+        out = {"ok": False, "reason": f"{e.code or e.status} {e.detail}"}
+    return JSONResponse(out, headers=NO_STORE)
 
 
 @router.get("/home/trading/view-as")
 async def view_as(request: Request):
-    """Keeps the person's View as choice (their settings, ``tradingView``), only when they may pick; then Home."""
+    """Keeps the person's View as choice (their settings, ``tradingView``), only when the server says they may pick; then Home."""
     as_ = str(request.query_params.get("as") or "").strip()
     if getattr(request.state, "identity", None) is None:
         return RedirectResponse(f"/login?next={quote('/')}", status_code=303)
     if (no := _refused(request, ("TRD",))) is not None:
         return no
-    ed, _cfg, scope = await _scope(request)
-    me = ident(request)
-    mapped = tl.config(ed, request.app.state.settings)["people"].get(str(me.user).lower())
-    if not me.is_admin and (mapped or scope.source == "record"):
+    try:
+        me = await request.app.state.backend.engine("GET", f"{TRADING}/me", ident(request))
+    except BackendError as e:
+        return RedirectResponse(f"/t?error={quote(f'{e.code or e.status} {e.detail}')}", status_code=303)
+    if not (me.get("scope") or {}).get("canPick"):
         return RedirectResponse(f"/t?error={quote('DRS-4023 your scope is set by your administrator (trading.people)')}", status_code=303)
-    if as_ and tl.parse_view(as_) is None:
+    if as_ and not VIEW.match(as_):
         return RedirectResponse(f"/t?error={quote('DRS-4004 View as is trader:<id> or desk:<id>')}", status_code=303)
     await _patch(request, {"tradingView": as_ or None})
     return RedirectResponse("/", status_code=303)
@@ -137,9 +139,8 @@ async def view_as(request: Request):
 
 @router.get("/api/home/market/{part}")
 async def market_figures(request: Request, part: str):
-    """Drishti Market's landings: ``desk`` (A's tiles and USD curves), ``moves`` (A's biggest moves) and ``quality`` (C's checks), worked
-    out from the market-data pack's own answers with this person's identity, lens and date box, read-only and cached briefly
-    (plugins/banking/market_landing.py). For a signed-in person whose edition (or lens) shows the curves (CRV); else 404 DRS-4023."""
+    """Drishti Market's landings: ``desk``, ``moves`` and ``quality``, the market-data module's answers as the person. For a signed-in
+    person whose edition (or lens) shows the curves (CRV); else 404 DRS-4023."""
     ed = edition_of(request)
     if getattr(request.state, "identity", None) is None:
         return JSONResponse({"detail": "sign in first"}, status_code=401)
@@ -148,21 +149,22 @@ async def market_figures(request: Request, part: str):
     if not ed.active or not ed.command_shown("CRV"):
         return JSONResponse({"code": "DRS-4023", "detail": f"market data is not part of {ed.title if ed.active else 'a landing'}"},
                             status_code=404)
-    me = ident(request)
-    key = cache_key(request, "market", asof.current())             # server, user, roles, as-of and known-at, lens
-    backend = request.app.state.backend
-    if part == "desk":
-        out = await market_landing.desk(backend, me, key)
-    elif part == "moves":
-        out = await market_landing.moves(backend, me, key)
-    else:
-        out = await market_landing.quality(backend, me, stale_days(ed), key)
-    return JSONResponse(out, headers={"Cache-Control": "no-store"})
+    try:
+        out = await request.app.state.backend.engine("GET", f"{MARKET}/{part}", ident(request))
+    except BackendError as e:
+        out = {"problems": [f"{e.code or e.status} {e.detail}"]}
+    return JSONResponse(out, headers=NO_STORE)
 
 
-def _trading_landing(request, ed, offered: list[str], me, mine: dict) -> str | None:
-    """Drishti Trading: the person's trading role (desk-head, trader) picks the first landing, below their own choice (LENSES.md section 6)."""
-    role = tl.trading_role(ed, request.app.state.settings, me, mine) if ed._get("trading") else ""
+async def _trading_landing(request, ed, offered: list[str], me, mine: dict) -> str | None:
+    """Drishti Trading: the person's trading role (desk-head, trader; the server's answer) picks the first landing, below their own choice
+    (LENSES.md section 6)."""
+    if not ed._get("trading"):
+        return None
+    try:
+        role = str((await request.app.state.backend.engine("GET", f"{TRADING}/role", ident(request))).get("role") or "")
+    except BackendError:
+        return None
     return ed.landing_by_role("trading.landing-by-role").get(role) if role else None
 
 

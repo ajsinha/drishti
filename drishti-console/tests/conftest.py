@@ -1313,9 +1313,6 @@ def forget_backend_answers(app) -> None:
     for name in ("designer_aliases", "designer_migrated"):
         if getattr(st, name, None) is not None:
             getattr(st, name).clear()
-    from plugins.banking import market_landing, trading_landing
-    trading_landing.forget()
-    market_landing.forget()
 
 
 @pytest.fixture(scope="session")

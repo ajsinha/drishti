@@ -15,7 +15,7 @@
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Drishti Market's Home (home/market_landing.html; LENSES.md › The design): paints the landing's panels from the console's answers, which
-   core/market_landing.py works out from the market-data pack's own data: /api/home/market/desk (the tiles and the USD curves),
+   the market-data module (/api/v1/market-data/landing, on the server) works out from the market-data pack's own data: /api/home/market/desk (the tiles and the USD curves),
    /api/home/market/moves (the biggest moves, in sigma of each item's own history, or the largest moves, or none) and
    /api/home/market/quality (the checks); the Explorer's counts are the server's search through /api/home/search. Each panel is painted
    when its answer arrives; one refused or empty says so in place and the others carry on. A change is shown only when the answer has one
