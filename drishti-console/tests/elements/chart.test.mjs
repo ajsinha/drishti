@@ -463,3 +463,26 @@ test('frames: the values in order, the rows of a frame or up to it, the checks',
   assert.deepEqual(C.checkSpec({ kind: 'scatter', brush: 'lasso', frames: { field: 'R', mode: 'all' } }).map((p) => p.path), ['$.brush', '$.frames.mode']);
   assert.ok(C.CHART_EVENTS.includes('brushed') && C.CHART_EVENTS.includes('frameChanged'));
 });
+
+test('the segmented scatter and the matrix: thresholds and segments; category cells in the given order with every column kept', () => {
+  const rows = [{ ID: 'a', X: 1, Y: 2, G: 'p' }, { ID: 'b', X: 15, Y: 12, G: 'q' }, { ID: 'c', X: 16, Y: 7, G: 'q' }];
+  const s = build({ kind: 'segmented', id: 'ID', data: { rows }, x: 'X', y: 'Y', segments: [{ name: 'Asia', from: 0, to: 10 }, { name: 'Europe', from: 10, to: 20 }],
+    thresholds: [{ value: 10, label: 'alert', tone: 'bad' }, { value: 6, label: 'watch', tone: 'warn' }], labelTop: { field: 'G', n: 1 } });
+  const pts = s.option.series.find((x) => x.type === 'scatter' && !x.helper);
+  assert.equal(pts.markArea.data.length, 2);
+  assert.deepEqual(pts.markLine.data.map((l) => l.yAxis), [10, 6]);
+  assert.equal(pts.data.find((d) => d.ids[0] === 'b').itemStyle.color, C.toneColour(th, 'bad'));
+  assert.deepEqual(s.legend.map((k) => k.name), ['alert', 'watch']);
+  assert.match(s.summary, /2 segments, 1 at or past alert/);
+  const m = build({ kind: 'matrix', data: { rows: [{ D: 'Rates', T: '02', S: 'breach' }] }, x: { field: 'T', domain: ['01', '02', '03'] }, y: { field: 'D', domain: ['Rates', 'FX'] },
+    value: { field: 'S', tones: { breach: 'bad' } }, tracks: [{ title: 'Month end', values: { '03': 'yes' } }] });
+  assert.deepEqual(m.option.xAxis[0].data, ['01', '02', '03']);
+  assert.deepEqual(m.option.yAxis[0].data, ['Rates', 'FX']);
+  assert.equal(m.option.series[0].data[0].itemStyle.color, C.toneColour(th, 'bad'));
+  assert.equal(m.option.series.filter((x) => x.track).length, 1);
+  assert.match(m.summary, /2 rows by 3 columns, 1 cells filled/);
+  const wide = build({ kind: 'matrix', data: { rows: [] }, x: { field: 'T', domain: Array.from({ length: 200 }, (_, i) => String(i)) }, y: { field: 'D', domain: ['A'] }, value: { field: 'S' } });
+  assert.ok(wide.option.dataZoom && wide.option.xAxis.axisLabel.show === false);
+  const t = build({ kind: 'trace3d', data: { rows: [{ X: 0, Y: 0, Z: 0 }] }, x: 'X', y: 'Y', z: 'Z', fallback: 'table' });
+  assert.ok(t.flat && t.preferTable);
+});

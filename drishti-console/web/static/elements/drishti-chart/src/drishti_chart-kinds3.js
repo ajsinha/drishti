@@ -13,7 +13,14 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Two general kinds for things laid along a line or through space:
+/* Four general kinds for things laid along a line, over segments, in a matrix or through space:
+
+     segmented a scatter over one long axis made of named segments (sessions of a day, books on one axis, chromosomes of a genome), with
+               threshold lines and the points past the first threshold in its tone, the tallest named one per member
+               { kind: 'segmented', x: 'X', y: 'Y', segments: [{ name, from, to }], thresholds: [{ value, label, tone }], labelTop: { field, n } }
+     matrix    a matrix of category cells (a status per desk and day, an alteration per row and column) in the server's order, every
+               column kept (an empty one too), annotation tracks over either axis, the overview strip past many columns
+               { kind: 'matrix', x: { field, domain }, y: { field, domain }, value: { field, tones, order }, tracks: [...] }
 
      lollipop  a stem and a head at each position of one long axis (events along a timeline, breaches along a curve, changes along a
                sequence): the head's height a figure, its colour a category (a tone each) or a number (a ramp, diverging around a middle),
@@ -28,7 +35,7 @@
 import { fieldOf, num } from './drishti_chart-data.js';
 import { toneColour, alpha, textStyle } from './drishti_chart-theme.js';
 import { registerKind } from './drishti_chart-spec.js';
-import { rowId, buildScatter } from './drishti_chart-kinds.js';
+import { rowId, buildScatter, buildHeatmap } from './drishti_chart-kinds.js';
 import { trackColour } from './drishti_chart-tracks.js';
 import { loadScript, staticUrl } from '../../drishti-core/src/drishti_index.js';
 
@@ -100,7 +107,8 @@ export function ensure3d() {
 
 /**
  * A 3D trace: points joined in order, coloured by a figure; flat (x against y) where three dimensions cannot be drawn.
- * @param {Object} spec x, y, z, order (the field the points are joined by), colour, id, turn, selected (ids drawn larger; the card's
+ * @param {Object} spec x, y, z, order (the field the points are joined by), colour, id, turn, fallback ('flat', the default: x against y;
+ *   'table': the data table shown where three dimensions cannot be drawn), selected (ids drawn larger; the card's
  *   selection does it too), gl (true or false forces the drawing; default canDraw3d)
  * @param {Object[]} rows
  * @param {Object} env {theme, fmt, still: reduced motion}
@@ -133,15 +141,56 @@ export function buildTrace3d(spec, rows, env) {
       series: [{ type: 'line', name: '__chain', helper: true, silent: true, symbol: 'none', data: pts.map((p) => [num(p.r[xf]), num(p.r[yf])]), lineStyle: { width: 1.5, color: alpha(th.faint, 0.8) } },
         { type: 'scatter', name: name, field: cs ? cs.field : null, data: pts.map((p) => item(p, [num(p.r[xf]), num(p.r[yf])])) }] };
   }
-  return { option: option, table: table, legend: legend, legendStatic: true, flat: !gl,
+  return { option: option, table: table, legend: legend, legendStatic: true, flat: !gl, preferTable: !gl && spec.fallback === 'table',
     summary: (gl ? '3D trace' : 'Trace, drawn flat (x against y: three dimensions are not available here)') + (spec.title ? ' of ' + spec.title : '') + ', ' + pts.length + ' points' + (sel.size ? ', ' + sel.size + ' selected' : '') };
 }
 
 /**
- * Registers lollipop and trace3d.
+ * Segmented scatter: one long axis of named segments, threshold lines, the points past the first threshold in its tone, top labels.
+ * @param {Object} spec x, y, segments ([{name, from, to}] or {values, tones}), thresholds ([{value, label, tone}]: the first colours the
+ *   points at or above it), labelTop ({field, n})
+ * @param {Object[]} rows
+ * @param {Object} env
+ * @returns {import('./drishti_chart-spec.js').BuiltChart}
+ */
+export function buildSegmented(spec, rows, env) {
+  const segs = Array.isArray(spec.segments) ? { values: spec.segments } : spec.segments, th = spec.thresholds || [], yf = fieldOf(spec.y) || 'y';
+  const first = th.length ? num(th[0].value) : null;
+  const s = Object.assign({}, spec, { kind: 'scatter', segments: segs,
+    colourWhen: (spec.colourWhen || []).concat(first !== null && !/[^\w]/.test(yf) ? [{ when: yf + ' >= ' + first, tone: th[0].tone || 'bad' }] : []),
+    annotations: (spec.annotations || []).concat(th.map((t) => ({ type: 'line', axis: 'y', value: num(t.value), label: t.label, tone: t.tone || 'muted', showValue: !t.label }))) });
+  const b = buildScatter(s, rows, env);
+  b.legend = th.filter((t) => t.label).map((t) => ({ name: t.label, colour: toneColour(env.theme, t.tone || 'muted'), style: 'dash' }));
+  b.legendStatic = true;
+  b.summary = 'Segmented scatter' + (spec.title ? ' of ' + spec.title : '') + ': ' + rows.length + ' points over ' + ((segs && segs.values) || []).length + ' segments'
+    + (first !== null ? ', ' + rows.filter((r) => num(r[yf]) >= first).length + ' at or past ' + (th[0].label || first) : '');
+  return b;
+}
+
+/**
+ * Matrix: category cells in the given order of rows and columns, every column kept, tracks, the overview strip past 150 columns.
+ * @param {Object} spec x ({field, domain, labels}), y ({field, domain}), value ({field, tones, order, title}), tracks, zoom
+ * @param {Object[]} rows the non-empty cells
+ * @param {Object} env
+ * @returns {import('./drishti_chart-spec.js').BuiltChart}
+ */
+export function buildMatrix(spec, rows, env) {
+  const cols = spec.x && Array.isArray(spec.x.domain) ? spec.x.domain.length : 0;
+  const s = Object.assign({ gap: 0, trackSize: 9 }, spec, { kind: 'heatmap', value: Object.assign({ type: 'category' }, spec.value),
+    x: Object.assign({ labels: cols <= 60 }, spec.x), zoom: spec.zoom !== undefined ? spec.zoom : cols > 150 || undefined,
+    tracks: (spec.tracks || []).map((t) => Object.assign({ axis: 'x', type: 'category' }, t)) });
+  const b = buildHeatmap(s, rows, env);
+  b.summary = 'Matrix' + (spec.title ? ' of ' + spec.title : '') + ': ' + ((spec.y && spec.y.domain) || []).length + ' rows by ' + cols + ' columns, ' + rows.length + ' cells filled';
+  return b;
+}
+
+/**
+ * Registers lollipop, trace3d, segmented and matrix.
  * @returns {void}
  */
 export function registerSequenceKinds() {
   registerKind('lollipop', { build: buildLollipop, label: 'lollipop', cartesian: true });
   registerKind('trace3d', { build: buildTrace3d, label: '3D trace', cartesian: false, prepare: ensure3d });
+  registerKind('segmented', { build: buildSegmented, label: 'segmented scatter', cartesian: true });
+  registerKind('matrix', { build: buildMatrix, label: 'category matrix', cartesian: false });
 }

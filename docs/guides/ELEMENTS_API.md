@@ -14948,9 +14948,33 @@ A 3D trace: points joined in order, coloured by a figure; flat (x against y) whe
 
 | Parameter | Type | Meaning |
 |---|---|---|
-| `spec` | `Object` | x, y, z, order (the field the points are joined by), colour, id, turn, selected (ids drawn larger; the card's selection does it too), gl (true or false forces the drawing; default canDraw3d) |
+| `spec` | `Object` | x, y, z, order (the field the points are joined by), colour, id, turn, fallback ('flat', the default: x against y; 'table': the data table shown where three dimensions cannot be drawn), selected (ids drawn larger; the card's selection does it too), gl (true or false forces the drawing; default canDraw3d) |
 | `rows` | `Object[]` |  |
 | `env` | `Object` | {theme, fmt, still: reduced motion} |
+
+Returns `import('./drishti_chart-spec.js').BuiltChart`.
+
+#### `buildSegmented(spec, rows, env)`
+
+Segmented scatter: one long axis of named segments, threshold lines, the points past the first threshold in its tone, top labels.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `spec` | `Object` | x, y, segments ([{name, from, to}] or {values, tones}), thresholds ([{value, label, tone}]: the first colours the points at or above it), labelTop ({field, n}) |
+| `rows` | `Object[]` |  |
+| `env` | `Object` |  |
+
+Returns `import('./drishti_chart-spec.js').BuiltChart`.
+
+#### `buildMatrix(spec, rows, env)`
+
+Matrix: category cells in the given order of rows and columns, every column kept, tracks, the overview strip past 150 columns.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `spec` | `Object` | x ({field, domain, labels}), y ({field, domain}), value ({field, tones, order, title}), tracks, zoom |
+| `rows` | `Object[]` | the non-empty cells |
+| `env` | `Object` |  |
 
 Returns `import('./drishti_chart-spec.js').BuiltChart`.
 
@@ -14972,7 +14996,7 @@ Returns `Promise&lt;boolean&gt;`: whether three dimensions can be drawn.
 
 #### `registerSequenceKinds()`
 
-Registers lollipop and trace3d.
+Registers lollipop, trace3d, segmented and matrix.
 
 Returns `void`.
 

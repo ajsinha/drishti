@@ -21,11 +21,10 @@
    rule: every drawing capability lives in the generic libraries; ELEMENTS.md section 7.4), so the card, theme, tooltips, Explain, the
    data table, export, the keyboard and linked selection come with them, and nothing is drawn here.
 
-     genomics.manhattan   the association plot: scatter with the chromosomes as segments (drishti-chart segments), the genome-wide and
-                          suggestive lines (annotations), the tallest peaks named by their gene (labelTop), sites past the line in the
-                          bad tone (colourWhen)
-     genomics.oncoprint   the cohort matrix: a heatmap with category cells (the alteration of each gene in each sample, in the server's
-                          order) and clinical tracks over the samples (heatmap tracks)
+     genomics.manhattan   the association plot: drishti-chart's segmented scatter (the chromosomes as segments, the genome-wide and
+                          suggestive thresholds, the tallest peaks named by their gene)
+     genomics.oncoprint   the cohort matrix: drishti-chart's matrix (the alteration of each gene in each sample, in the server's order,
+                          with clinical tracks over the samples)
      genomics.lollipop    a protein's variants: drishti-chart's lollipop, the head's colour the impact or, given the scan (EFFECT), what
                           that exact change does in the laboratory; the protein's domains as bands
 
@@ -57,15 +56,13 @@
 
   /** The association plot. spec: rows {VARIANT_ID, X (the genome offset), NEG_LOG10_P, GENE}, chromosomes [{CHROM, FROM, TO}], threshold, suggestive, peaks (how many named). */
   function manhattan(C, spec, rows, env) {
-    const t = C.num(spec.threshold) || 7.3, segs = (spec.chromosomes || []).map((c) => ({ name: String(c.CHROM), from: C.num(c.FROM), to: C.num(c.TO) }));
-    const s = Object.assign({}, spec, { kind: 'scatter', id: spec.id || 'VARIANT_ID', x: Object.assign({ field: 'X', title: 'Chromosome' }, spec.x), y: Object.assign({ field: 'NEG_LOG10_P', title: '−log₁₀ p', min: 0 }, spec.y),
-      segments: segs.length ? { values: segs, tones: ['link', 'muted'] } : undefined, labelTop: { field: 'GENE', n: spec.peaks || 4 },
-      colourWhen: [{ when: 'NEG_LOG10_P >= ' + t, tone: 'bad' }],
-      annotations: (spec.annotations || []).concat([{ type: 'line', axis: 'y', value: t, label: 'genome-wide', tone: 'bad', showValue: false }])
-        .concat(spec.suggestive ? [{ type: 'line', axis: 'y', value: C.num(spec.suggestive), label: 'suggestive', tone: 'muted', showValue: false }] : []) });
-    const b = C.buildScatter(s, rows, env);
-    b.summary = 'Association plot' + (spec.title ? ' of ' + spec.title : '') + ': ' + rows.length + ' sites drawn on ' + segs.length + ' chromosomes, ' + rows.filter((r) => C.num(r.NEG_LOG10_P) >= t).length + ' past the genome-wide line';
-    b.legend = [];
+    const t = C.num(spec.threshold) || 7.3;
+    const s = Object.assign({}, spec, { kind: 'segmented', id: spec.id || 'VARIANT_ID', x: Object.assign({ field: 'X', title: 'Chromosome' }, spec.x), y: Object.assign({ field: 'NEG_LOG10_P', title: '−log₁₀ p', min: 0 }, spec.y),
+      segments: { values: (spec.chromosomes || []).map((c) => ({ name: String(c.CHROM), from: C.num(c.FROM), to: C.num(c.TO) })), tones: ['link', 'muted'] },
+      thresholds: [{ value: t, label: 'genome-wide', tone: 'bad' }].concat(spec.suggestive ? [{ value: C.num(spec.suggestive), label: 'suggestive', tone: 'muted' }] : []),
+      labelTop: { field: 'GENE', n: spec.peaks || 4 } });
+    const b = C.buildSegmented(s, rows, env);
+    b.summary = 'Association plot' + (spec.title ? ' of ' + spec.title : '') + ': ' + rows.length + ' sites drawn on ' + (spec.chromosomes || []).length + ' chromosomes, ' + rows.filter((r) => C.num(r.NEG_LOG10_P) >= t).length + ' past the genome-wide line';
     return b;
   }
 
@@ -84,12 +81,11 @@
 
   /** The cohort matrix. spec: rows {SAMPLE_ID, GENE, ALTERATION} (the non-empty cells), genes and samples (the server's order), tracks [{title, values: {sample: value}}]. */
   function oncoprint(C, spec, rows, env) {
-    const s = Object.assign({}, spec, { kind: 'heatmap', id: spec.id || 'CELL_ID', gap: 0,
+    const s = Object.assign({}, spec, { kind: 'matrix', id: spec.id || 'CELL_ID',
       x: { field: 'SAMPLE_ID', domain: spec.samples, labels: false, title: 'Samples' }, y: { field: 'GENE', domain: spec.genes },
-      value: { field: 'ALTERATION', type: 'category', order: ALTERATION_ORDER, tones: ALTERATION_TONES, title: 'Alteration' },
-      tracks: (spec.tracks || []).map((t) => Object.assign({ axis: 'x', type: 'category', tones: { responder: 'good', 'non-responder': 'muted' } }, t)), trackSize: 9 });
-    const keyed = rows.map((r) => Object.assign({ CELL_ID: r.SAMPLE_ID + ':' + r.GENE }, r));
-    const b = C.buildHeatmap(s, keyed, env);
+      value: { field: 'ALTERATION', order: ALTERATION_ORDER, tones: ALTERATION_TONES, title: 'Alteration' },
+      tracks: (spec.tracks || []).map((t) => Object.assign({ tones: { responder: 'good', 'non-responder': 'muted' } }, t)) });
+    const b = C.buildMatrix(s, rows.map((r) => Object.assign({ CELL_ID: r.SAMPLE_ID + ':' + r.GENE }, r)), env);
     b.summary = 'Cohort matrix' + (spec.title ? ' of ' + spec.title : '') + ': ' + (spec.genes || []).length + ' genes over ' + (spec.samples || []).length + ' samples, ' + rows.length + ' alterations';
     return b;
   }

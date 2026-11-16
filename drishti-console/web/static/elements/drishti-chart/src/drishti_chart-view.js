@@ -220,6 +220,7 @@ export class Chart extends ChartIO {
     this.stepping = false;
     this.zooms = !!zooms;
     this.chrome(built, Date.now() - t0);
+    if (built.preferTable && !this.tableOpen && !this.tableChosen) { this.tableChosen = true; this.toggleTable(true); }   // a kind that cannot be drawn here: its table instead
     this.emit('rendered', { kind: s.kind, ms: Date.now() - t0 });
   }
 

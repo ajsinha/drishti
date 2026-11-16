@@ -34,7 +34,7 @@ export { CHART_DENSITIES, blend, alpha, chartTheme, toneColour, rampColour, form
 export { rowId, seriesDefs, annotationMarks, buildSeriesChart, buildScatter, buildHistogram, buildWaterfall, buildBoxplot, buildHeatmap, overviewStrip, buildCandlestick, buildLayers,
   registerAxisKinds } from './drishti_chart-kinds.js';
 export { buildPie, buildGauge, buildTreemap, buildSankey, registerOtherKinds } from './drishti_chart-kinds2.js';
-export { buildLollipop, buildTrace3d, canDraw3d, ensure3d, registerSequenceKinds } from './drishti_chart-kinds3.js';
+export { buildLollipop, buildTrace3d, buildSegmented, buildMatrix, canDraw3d, ensure3d, registerSequenceKinds } from './drishti_chart-kinds3.js';
 export { trackValues, trackColour, categoryCells, addTracks } from './drishti_chart-tracks.js';
 export { segmentOf, scatterOverlays } from './drishti_chart-overlays.js';
 export { frameValues, frameRows, reducedMotion, FrameBar } from './drishti_chart-frames.js';

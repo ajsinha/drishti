@@ -73,7 +73,7 @@
   /** The structure. spec: rows {POS, X, Y, Z, MEAN_ACTIVITY, ACTIVE_SITE}, selected (positions marked besides the active site), turn. */
   function backbone(C, spec, rows, env) {
     const marked = rows.filter((r) => r.ACTIVE_SITE === true || r.ACTIVE_SITE === 'true' || r.ACTIVE_SITE === 1).map((r) => String(r.POS)).concat((spec.selected || []).map(String));
-    const s = Object.assign({}, spec, { kind: 'trace3d', id: 'POS', x: 'X', y: 'Y', z: 'Z', order: 'POS', turn: spec.turn !== false, selected: marked,
+    const s = Object.assign({}, spec, { kind: 'trace3d', id: 'POS', x: 'X', y: 'Y', z: 'Z', order: 'POS', turn: spec.turn !== false, selected: marked, fallback: spec.fallback || 'flat',
       colour: { field: spec.colourField || 'MEAN_ACTIVITY', scale: 'diverging', mid: 0, title: 'Mean effect', legend: [{ name: 'hurts', value: -1 }, { name: 'neutral', value: 0 }, { name: 'helps', value: 1 }] } });
     const b = C.buildTrace3d(s, rows, env);
     b.summary = (b.flat ? 'Structure, drawn flat' : 'Structure, a 3D backbone trace') + (spec.title ? ' of ' + spec.title : '') + ': ' + rows.length + ' residues, ' + marked.length + ' marked';

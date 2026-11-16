@@ -296,23 +296,30 @@
         { axis: 'y', title: 'Region', values: { Rates: 'EMEA', FX: 'APAC', Credit: 'EMEA', Equity: 'AMER', Commodities: 'AMER', Funding: 'EMEA' } }] }),
     cells: (M) => ({ kind: 'heatmap', title: 'Limit status by desk and day (category cells)', id: 'id', data: { rows: M.status }, x: { field: 'DAY', title: 'Day' }, y: 'DESK',
       value: { field: 'STATUS', type: 'category', order: ['within', 'warning', 'breach'], tones: { within: 'good', warning: 'warn', breach: 'bad' } }, gap: 0 }),
-    segments: (M) => ({ kind: 'scatter', title: 'FX moves through the day, by session (segments and top labels)', id: 'id', data: { rows: M.ticks }, x: { field: 'MINUTE', title: 'Minute of the day' }, y: { field: 'MOVE', title: 'Move (pips)' },
-      segments: { values: M.sessions }, labelTop: { field: 'PAIR', n: 3 }, annotations: [{ type: 'line', axis: 'y', value: 10, label: 'alert', tone: 'bad' }] }),
+    matrix: (M) => ({ kind: 'matrix', title: 'Limit breaches: desks by day (the matrix kind)', id: 'id', data: { rows: M.status.filter((r) => r.STATUS !== 'within') },
+      x: { field: 'DAY', domain: M.days, title: 'Day' }, y: { field: 'DESK', domain: M.desks }, value: { field: 'STATUS', order: ['warning', 'breach'], tones: { warning: 'warn', breach: 'bad' } },
+      tracks: [{ title: 'Month end', values: { 29: 'yes', 30: 'yes' }, tones: { yes: 'accent' } }] }),
+    segments: (M) => ({ kind: 'segmented', title: 'FX moves through the day, by session (the segmented scatter)', id: 'id', data: { rows: M.ticks }, x: { field: 'MINUTE', title: 'Minute of the day' }, y: { field: 'MOVE', title: 'Move (pips)' },
+      segments: M.sessions, thresholds: [{ value: 10, label: 'alert', tone: 'bad' }, { value: 6, label: 'watch', tone: 'warn' }], labelTop: { field: 'PAIR', n: 3 } }),
+    surface: (M) => ({ kind: 'scatter', title: 'Clients over a score surface', id: 'ID', data: { rows: M.points }, x: { field: 'X', min: -3, max: 3 }, y: { field: 'Y', min: -3, max: 3 }, colour: 'GROUP', surface: { rows: M.field, cell: [0.5, 0.5] } }),
     brush: (M) => ({ kind: 'scatter', title: 'Clients: drag a rectangle to pick a group', subtitle: 'the brush selects the points inside; the grid follows', id: 'ID', data: { rows: M.points }, x: 'X', y: 'Y', colour: 'GROUP', brush: 'rect' }),
     frames: (M) => ({ kind: 'scatter', title: 'Six steps of a search over a surface (frames)', subtitle: 'press Play, or move the slider', id: 'ID', data: { rows: M.steps }, x: { field: 'X', min: -3, max: 3 }, y: { field: 'Y', min: -3, max: 3 },
       size: 'SCORE', frames: { field: 'STEP', label: 'Step', interval: 900 }, surface: { rows: M.field, cell: [0.5, 0.5] } }),
     lollipop: (M) => ({ kind: 'lollipop', title: 'Events along a year, coloured by their effect', id: 'ID', data: { rows: M.events }, x: { field: 'AT', title: 'Day of the year' }, y: { field: 'COUNT', title: 'Count' }, length: 366,
       colour: { field: 'EFFECT', scale: 'diverging', title: 'Effect', legend: [{ name: 'hurts', value: -1 }, { name: 'neutral', value: 0 }, { name: 'helps', value: 1 }] }, bands: [{ name: 'Q1 close', from: 80, to: 92 }, { name: 'Q3 close', from: 262, to: 274 }] }),
     trace3d: (M) => ({ kind: 'trace3d', title: 'A path through space, coloured by load', subtitle: 'drag to turn; flat where WebGL is off', id: 'STEP', data: { rows: M.path }, x: 'X', y: 'Y', z: 'Z', order: 'STEP',
-      colour: { field: 'LOAD', scale: 'diverging', title: 'Load' }, turn: true, selected: ['40', '80'] })
+      colour: { field: 'LOAD', scale: 'diverging', title: 'Load' }, turn: true, selected: ['40', '80'] }),
+    'trace3d-table': (M) => Object.assign(SPECS3.trace3d(M), { title: 'The same path, its table where WebGL is off', fallback: 'table' }),
+    overview: (M) => ({ kind: 'heatmap', title: 'A wide matrix with its overview strip', id: 'id', data: { rows: M.usage }, x: { field: 'DAY', title: 'Day' }, y: 'DESK', value: { field: 'USED', format: 'percent' }, zoom: { window: [0, 9] } })
   };
   [['chart-tracks', 'Heatmap tracks', 'drishti_chart-tracks.js', 'Strips of cells aligned to a heatmap\'s columns (above) or rows (at the right): a category by its tones, a number on a ramp; category cells colour the heatmap itself by a category. Click a cell or a track.',
-    ['tracks', 'cells'], ['HeatTrack']],
-  ['chart-segments', 'Segments and surface', 'drishti_chart-overlays.js', 'A value axis made of named segments with alternating bands and tones, the tallest points named one per member, and a surface of values under the points.', ['segments'], []],
+    ['tracks', 'cells', 'overview'], ['HeatTrack']],
+  ['chart-matrix', 'Matrix', 'drishti_chart-kinds3.js', 'Category cells in the server\'s order of rows and columns, every column kept, tracks over either axis, the overview strip past 150 columns: a limit-status matrix, a who-has-what matrix.', ['matrix'], []],
+  ['chart-segments', 'Segmented scatter and surface', 'drishti_chart-overlays.js', 'The segmented kind: a value axis made of named segments with alternating bands and tones, threshold lines with the points past the first in its tone, the tallest named one per member; and a surface of values under a scatter.', ['segments', 'surface'], []],
   ['chart-brush', 'Rectangle brush', 'drishti_chart-parts.js', 'brush: \'rect\' on a scatter: a drag draws a rectangle, the points inside are selected and told to the link\'s channel (the grid selects their rows), and the chart emits brushed with the box and the ids.', ['brush'], []],
   ['chart-frames', 'Frames', 'drishti_chart-frames.js', 'frames: {field} steps one field of the rows with a slider and Play (no Play when reduced motion is asked for); the marks move from frame to frame; frameChanged tells the page.', ['frames'], ['ChartFrames']],
   ['chart-lollipop', 'Lollipop', 'drishti_chart-kinds3.js', 'A stem and a head at each position of one long axis; the head\'s colour a category or a number on a diverging ramp, with the legend\'s words; stretches of the axis as bands.', ['lollipop'], []],
-  ['chart-trace3d', '3D trace', 'drishti_chart-kinds3.js', 'Points in three dimensions joined in order, coloured by a figure, turned by a drag on the vendored ECharts GL (loaded the first time); the selection drawn larger; flat where WebGL is off.', ['trace3d'], []]
+  ['chart-trace3d', '3D trace', 'drishti_chart-kinds3.js', 'Points in three dimensions joined in order, coloured by a figure, turned by a drag on the vendored ECharts GL (loaded the first time); the selection drawn larger; flat where WebGL is off.', ['trace3d', 'trace3d-table'], []]
   ].forEach((d) => {
     const demo = {
       id: d[0], title: d[1], about: d[2], summary: d[3], types: ['ChartOptions'].concat(d[5]),

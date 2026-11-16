@@ -489,8 +489,10 @@ tests; a domain library builds on them and draws nothing itself:
 | **Rectangle brush** | `brush: 'rect'`: the points inside are selected, told to the link's channel; event `brushed` {box, ids} | picking trades on a risk scatter |
 | **Frames** | `frames: {field, play, interval, mode: 'only'\|'upto', at, label, playText}`: a slider and Play (none with reduced motion); `setFrame`, `frame`, `play`, `pause`; event `frameChanged` | stepping dates of a history |
 | Box plot from the server's figures | `boxes: {low, q1, median, q3, high, n}` (field names; nothing computed in the page) | VaR by desk from the server's quantiles |
+| `segmented` kind | `x`, `y`, `segments: [{name, from, to}]`, `thresholds: [{value, label, tone}]` (the first colours the points past it), `labelTop` | moves through a trading day by session; the genomics association plot |
+| `matrix` kind | `x: {field, domain}`, `y: {field, domain}`, `value: {field, tones, order}`, `tracks`: category cells in the server's order, every column kept, the overview strip past 150 columns | a limit-status matrix by desk and day; the genomics cohort matrix |
 | `lollipop` kind | `x`, `y`, `colour` (a category's tones or a number's ramp with `legend` words), `length`, `bands` | events along a year |
-| `trace3d` kind | `x`, `y`, `z`, `order`, `colour`, `selected`, `turn`: points joined in order on the vendored ECharts GL, loaded on first use; flat where WebGL is off | a path or a trajectory |
+| `trace3d` kind | `x`, `y`, `z`, `order`, `colour`, `selected`, `turn` (none with reduced motion), `fallback: 'flat'\|'table'`: points joined in order on the vendored ECharts GL, loaded on first use; where WebGL is off, drawn flat or its table shown | a path or a trajectory |
 | drishti-core **`Tour`** | marks `data-tour-say`, `data-tour-steps`, controls `data-tour="back\|at\|next"`; `go`, `next`, `back`, `destroy` | a guided first visit of any board |
 
 **Vega-Lite.** A BI visual of `type: vega-lite` and a Python visual's Vega-Lite output are translated into the spec (`fromVegaLite`)

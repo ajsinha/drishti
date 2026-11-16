@@ -33,8 +33,9 @@
 - **drishti-chart: tracks, brush, frames and two kinds.** Generic, each with its gallery page and Node tests: heatmap annotation tracks
   on either axis, category cells, `domain` and hidden axis words, the overview strip; a scatter's segments, top labels and surface; the
   rectangle brush (`brush: 'rect'`, event `brushed`, the selection told to the link's channel); frames (`frames: {field}` with a slider and
-  Play, none with reduced motion; event `frameChanged`); box plots from the server's figures (`boxes`); the `lollipop` kind and the
-  `trace3d` kind on the vendored ECharts GL (loaded on first use, flat without WebGL). **drishti-core: `Tour`**, a page walked in steps.
+  Play, none with reduced motion; event `frameChanged`); box plots from the server's figures (`boxes`); the `lollipop`, `segmented` (segments
+  and thresholds) and `matrix` (category cells in a given order) kinds, and the `trace3d` kind on the vendored ECharts GL (loaded on first
+  use; flat or its table without WebGL). **drishti-core: `Tour`**, a page walked in steps.
   ELEMENTS_API and the gallery's catalogue regenerated.
 
 ## 2.9.11.i5 (2026-11-16)
