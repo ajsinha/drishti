@@ -45,9 +45,17 @@ def test_all_has_domains_and_create_and_every_domains_column_is_from_a_manifest(
     page = _bar(backend, monkeypatch)
     assert _menus(page) == ["Views", "Domains", "Create", "Admin", "Help"]
     cols = _titles(page, "Domains")
-    for c in ("Blotter", "Positions", "Counterparties", "Companies", "Economies", "Markets · Rates", "Risk · VaR"):
+    for c in ("Blotter", "Positions", "Counterparties", "Economies", "Markets · Rates", "Risk · VaR"):
         assert c in cols, c
     assert len(cols) == len(set(cols))                                         # a menu two modules add to is one column
+    assert "Companies" not in cols          # its packs (US equities, funds, GLEIF) are not in the default list: their entries follow the packs
+
+
+def test_companies_appear_in_domains_when_their_packs_are_enabled(backend, monkeypatch):
+    monkeypatch.setenv("DRISHTI_PACKS", "core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,"
+                                        "us-equities,funds,gleif")
+    cols = _titles(_bar(backend, monkeypatch), "Domains")
+    assert "Companies" in cols, cols
 
 
 def test_risk_with_one_domain_shows_its_name_and_not_domains(backend, monkeypatch):

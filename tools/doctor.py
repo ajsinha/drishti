@@ -58,7 +58,7 @@ def java_check(java: str) -> dict:
     try:
         r = subprocess.run([java, "-XshowSettings:properties", "-version"], text=True, capture_output=True, timeout=30)
     except (OSError, subprocess.SubprocessError) as e:
-        return item("fail", "java", f"cannot run {java}: {e}", f"install a JDK {MIN_JAVA}+ and set JAVA_HOME (or pass --java)")
+        return item("fail", "java", f"cannot run {java}: {e}", f"install a JDK {MIN_JAVA}+ and set DRISHTI_JAVA_HOME (or pass --java)")
     text = r.stderr + r.stdout
     m = re.search(r'version "(\d+)(?:\.(\d+))?', text)
     if not m:
@@ -67,7 +67,7 @@ def java_check(java: str) -> dict:
     vendor = re.search(r"java\.vendor = (.+)", text)
     detail = f"{java}: Java {m.group(0)[9:]} ({vendor.group(1).strip() if vendor else 'vendor unknown'})"
     if major < MIN_JAVA:
-        return item("fail", "java", detail, f"Drishti needs Java {MIN_JAVA} or newer: install a JDK {MIN_JAVA} and set JAVA_HOME")
+        return item("fail", "java", detail, f"Drishti needs Java {MIN_JAVA} or newer: install a JDK {MIN_JAVA} and set DRISHTI_JAVA_HOME")
     return item("ok", "java", detail)
 
 
@@ -75,7 +75,7 @@ def jar_check(find_jar) -> dict:
     try:
         jar = find_jar(None)
     except Exception as e:                       # noqa: BLE001
-        return item("fail", "server jar", str(e), "./mvnw -q -DskipTests package   (or set DRISHTI_JAR)")
+        return item("fail", "server jar", str(e), "python tools/drishti.py build jar   (or pass --jar)")
     m = re.search(r"drishti-server-(.+?)-exec\.jar", os.path.basename(jar))
     return item("ok", "server jar", f"{jar} (version {m.group(1) if m else 'unknown'})")
 
@@ -199,7 +199,11 @@ def server_check(api) -> list[dict]:
 
 
 def run(env, root: pathlib.Path, find_jar, find_java, api=None, java: str | None = None) -> list[dict]:
-    out = [java_check(find_java(java)), jar_check(find_jar)]
+    try:
+        found = java_check(find_java(java))
+    except Exception as e:                       # noqa: BLE001 - no Java, or one older than 21: said in words
+        found = item("fail", "java", str(e), f"install a JDK {MIN_JAVA} and set DRISHTI_JAVA_HOME (or pass --java)")
+    out = [found, jar_check(find_jar)]
     out += python_check() + layout_check(root) + dir_check(env) + port_check()
     if api is not None:
         out += server_check(api)

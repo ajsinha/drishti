@@ -78,9 +78,11 @@ class DistributionFinanceServerTest {
     @Autowired com.ash.drishti.server.engines.EngineRegistry engines;
 
     @Test
-    void theEnginesOfTheModulesItLeavesOutAreOffAndHealthSaysSo() throws Exception {
-        assertThat(engines.state("var")).isEqualTo(com.ash.drishti.server.engines.EngineRegistry.State.OFF);
-        assertThat(engines.state("exposure")).isEqualTo(com.ash.drishti.server.engines.EngineRegistry.State.OFF);
+    void theEnginesOfTheModulesItLeavesOutAreNotInstalledAndHealthSaysSo() throws Exception {
+        // a module the distribution leaves out does not exist there: its engines are never registered, so they show *not installed*
+        // (ADMIN_GUIDE section 22; OFF is an engine that exists and is switched off)
+        assertThat(engines.state("var")).isEqualTo(com.ash.drishti.server.engines.EngineRegistry.State.NOT_INSTALLED);
+        assertThat(engines.state("exposure")).isEqualTo(com.ash.drishti.server.engines.EngineRegistry.State.NOT_INSTALLED);
         JsonNode d = getJson("/api/v1/admin/health").path("distribution");
         assertThat(d.path("id").asText()).isEqualTo("drishti.finance");
         assertThat(d.path("modules").path("economy").asText()).isEqualTo("loaded");

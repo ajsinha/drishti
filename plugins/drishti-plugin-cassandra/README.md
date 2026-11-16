@@ -53,7 +53,7 @@ settings:
 - tls.*
 auth: Password log-in (username + password as ${ENV} or file:), mutual TLS (tls.*), DataStax Astra (secure-connect-bundle + token), Amazon Keyspaces SigV4 (sigv4, plug-in jar not shipped).
 licence: Apache Cassandra Java driver 4 (Apache-2.0), bundled; no native library.
-windows: Works the same on Windows (pure Java driver); the loader has tools\windows\load-cassandra.ps1.
+windows: Works the same on Windows (pure Java driver); the loader is `python tools/drishti.py data load --store cassandra`, which runs `tools/load-cassandra.sh` (on Windows it needs bash, Git Bash or WSL).
 doc: plugins/drishti-plugin-cassandra/README.md
 ---
 # The cassandra connector
@@ -248,7 +248,7 @@ scans a table: no `ALLOW FILTERING`, no token range.
 
 ## Loading
 
-`tools/load-cassandra.sh` (Windows: `tools\windows\load-cassandra.ps1`; `drishti.py data load --store cassandra` runs it) loads the
+`tools/load-cassandra.sh` (`python tools/drishti.py data load --store cassandra` runs it) loads the
 packs' sample data and optionally a generated book through `CassandraLoader` (in the plugin):
 
 Run these from the Drishti folder (the repository root, or the install folder of a release).

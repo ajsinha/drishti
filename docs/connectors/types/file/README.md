@@ -227,7 +227,7 @@ Run these from the Drishti folder (the repository root, or the install folder of
 tools/load-files.sh                              # the samples: 1,791 documents x 10 business days, into data/files
 tools/load-files.sh --trades 10000               # and a book of 10,000 trades a day for 3 days
 tools/load-files.sh /tmp/files --trades 50000    # somewhere else, a larger book
-SPRING_PROFILES_ACTIVE=files DRISHTI_PACKS=market-risk,counterparty-risk java -jar kernel/drishti-server/target/drishti-server-*-exec.jar
+SPRING_PROFILES_ACTIVE=files DRISHTI_PACKS=market-risk,counterparty-risk java -jar lib/drishti-server-*-exec.jar
 ```
 
 `JsonlLoader` (in the plugin; `JsonlLoader FILE|- <root> [--future-days N] [--zone Z]`, run by `tools/load-files.sh [root] [--trades N]

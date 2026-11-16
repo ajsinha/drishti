@@ -35,7 +35,7 @@ import org.springframework.core.env.PropertySource;
 
 /**
  * The server's launch-time roots, each an absolute path from an explicit setting or from the one anchor, {@code drishti.home}
- * ({@code DRISHTI_HOME}: the install folder, which bin/start-server, the image and the test launchers pass explicitly), never from the
+ * ({@code DRISHTI_HOME}: the install folder, which drishti.py start server, the image and the test launchers pass explicitly), never from the
  * folder the process happens to start in (docs/admin/CONFIGURATION.md, "Launch roots").
  *
  * <p>Right after the configuration files are read, every root is resolved: its setting when given (a relative one is taken under
@@ -326,7 +326,7 @@ public final class LaunchRoots implements EnvironmentPostProcessor, Ordered {
                 if (parent == null) {
                     if (root.required()) {
                         problems.add(root.name() + ": nothing names its folder: set " + root.keys().get(0) + " (" + env(root.keys().get(0))
-                                + ") or " + HOME + " (DRISHTI_HOME), the install folder bin/start-server passes");
+                                + ") or " + HOME + " (DRISHTI_HOME), the install folder drishti.py start server passes");
                     }
                     rows.add(new Resolved(root.name(), null, "not set", false));
                     continue;

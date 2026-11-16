@@ -120,7 +120,7 @@ Admin → Connectors show the new `origin` and `layer` fields; `drishti_admin-co
 
 | File:line | What | Risk | Change |
 |---|---|---|---|
-| `bin/start-server.sh:166` (+ `.ps1`) | warns when `config/packs` is missing | A (a site with no own packs is normal) | warn only when the kernel packs or the modules folder are missing |
+| `tools/launch/serverstart.py` (`start server`) | warns when `config/packs` is missing | A (a site with no own packs is normal) | warn only when the kernel packs or the modules folder are missing |
 | `kernel/drishti-packs/pom.xml:41-43` | copies `config/packs/default-packs.yaml` into the jar | A | removed with the file (step 3 of section 9) |
 | `kernel/drishti-server/pom.xml:130` | tests' `drishti.packs.dir` = the repository's `config/packs` | B | the settings of design 18.2, each to the repository's folder |
 | `kernel/drishti-server/src/main/resources/application.yaml:144,204,1180,1206` | `module-manifests-dir`, `modules.dir` (switches), `packs.dir`, `packs.enabled` | — | section 6 |
@@ -189,13 +189,13 @@ the lake loader (`PackEntry.manifest`) and `tools/packlake.py with_modules` merg
 | `tools/packgen/module_from_jsonl.py:76-80,251-267`, `source_module.py:112-172` | write a new module's `connectors/`, `dataload.yaml`, `data/needs.yaml`, and a site binding | kept (authoring is a write the user asked for); a source module's template names its `kinds:` and `writes:` (they are read again, design 18.6) |
 | `tools/connector_upgrade_fixture.py:134-156` | builds old-release connector files from a git revision | kept; gains `v2.9.11.i_2_3` (section 8.3) |
 | `tools/connector_readmes.py:43`, `tools/settings_catalogue.py:115` | `config/connectors.examples/` | kept |
-| `bin/lib/cluster.py:315-316,356`, `tools/bench/*`, `tools/drillkit/lake_cache.py:94` | a private connectors folder per node or run | unchanged |
+| `tools/launch/clusterctl.py` (`start cluster`), `tools/bench/*`, `tools/drillkit/lake_cache.py:94` | a private connectors folder per node or run | unchanged |
 
 ### 3.3 Scripts
 
 | File:line | What | Change |
 |---|---|---|
-| `bin/start-server.sh:39,189-194` (+ `.ps1:37,178`) | `--iceberg` copies `config/connectors.examples/iceberg/*.yaml` into `config/connectors` | a script the administrator runs may write; it writes the **partial override** (`plugin: iceberg`), not a whole file |
+| `tools/launch/serverstart.py` (`start server --iceberg`) | `--iceberg` copies `config/connectors.examples/iceberg/*.yaml` into `config/connectors` | a script the administrator runs may write; it writes the **partial override** (`plugin: iceberg`), not a whole file |
 | `deploy/docker/ecs/server.Dockerfile:38`, `deploy/stack/stack.yaml:48-58` | `DRISHTI_CONNECTORS_DIR` | still read (section 6) |
 | `kernel/drishti-server/pom.xml:141`, `modules/banking/banking-service/pom.xml:100` | a connectors folder per test fork | unchanged |
 
@@ -328,7 +328,7 @@ Every row marked **A** in sections 2 to 5. The ones most likely to be the next b
 | 4 | `readmes.py:71` | the literal `root / "config" / "packs"`: Help's pack README works only through the name trick, and never for an installed `.dmod` |
 | 5 | `ArtifactPaths.packFolders` (88-100) | calls the two-argument `PackLoader.dirs`: Admin → Artifacts never lists a site's installed content module's packs, so their **impact analysis is empty** |
 | 6 | `PackReloader.roots` (189-195) | watches the packs folder and the installed-packs folder: an edit inside `modules/installed/<id>/<version>/packs` or a module switch **does not reload** |
-| 7 | `BindingsFile.besideConnectors` (64-67), `PlacementConfiguration:67` | a node whose connectors folder is not named `connectors` reads `<name>-bindings.yaml`; `bin/lib/cluster.py:315` gives each node its own `home/connectors`, so **each node of a local cluster reads its own `home/bindings.yaml`** |
+| 7 | `BindingsFile.besideConnectors` (64-67), `PlacementConfiguration:67` | a node whose connectors folder is not named `connectors` reads `<name>-bindings.yaml`; `tools/launch/clusterctl.py` gives each node its own `home/connectors`, so **each node of a local cluster reads its own `home/bindings.yaml`** |
 | 8 | `UiKitDir`, `RachanaConfiguration:69-78`, `AccessRegistries:74-78`, `distribution.py:233` | "beside the packs folder" and "two folders above it": any site that sets `DRISHTI_PACKS_DIR` to a folder of its own loses the UI kit, the under-construction list and the module manifests |
 | 9 | `PackDatasets:85`, banking `Hierarchies:66`, `VarConfiguration:303` | read `pack.manifest().connectors.<name>`: they see neither the site's override (a renamed table) nor a module's template: **VaR hierarchies and BI datasets on the template's table, the data on the site's** |
 | 10 | `SourceRouter.picked` versus `BindingResolver` versus `Routes` versus `connectorOf` | four answers to "which connector serves this kind": Admin can show BOUND to one connector while the read uses another and the inbox loads a third |
@@ -336,7 +336,7 @@ Every row marked **A** in sections 2 to 5. The ones most likely to be the next b
 | 12 | `config/demo/bindings.yaml` copied into the site (`tools/lake/demo.py:654-659`) | six source systems frozen in a site file: a seventh source module is installed, on, and **silently not read** |
 | 13 | `DataLoadConfiguration.moduleRules` (127-160) | an unreadable module rules file gives no rules and no message: its files sit in the inbox as unmatched |
 | 14 | `tools/drill.sh:251`, `tools/bench/pinning.sh:80` | hand-kept globs of pack layouts; the second already points at a layout three moves old |
-| 15 | `tools/lake/stores.py`, `tools/lake/demo.py`, `bin/start-server --iceberg`, `core/lakes.py bind` | write **whole** connector files: with layers, a whole file freezes today's template into the site and hides every later template change |
+| 15 | `tools/lake/stores.py`, `tools/lake/demo.py`, `start server --iceberg`, `core/lakes.py bind` | write **whole** connector files: with layers, a whole file freezes today's template into the site and hides every later template change |
 | 16 | `SourceSystemsWiring:109` | a source system's module guessed from the name `source-<system>`: a site's source module of another name is never switched off with its module |
 
 ## 8. The test plan
@@ -380,7 +380,8 @@ The aim: a reader that goes its own way, or a release whose layout differs, **ca
 
 `tools/connector_upgrade_fixture.py` grows into `tools/upgrade_fixture.py --from v2.9.11.i_2_3`: it builds, from that tag's own files
 (`git archive`), what a site of that release holds: `config/packs/{core,banking,economy,capitalmarkets}/...` (one pack edited, the
-rest untouched), the generated `config/connectors/*.yaml` with their stamps and markers (one edited, one with its marker lost),
+rest untouched), the generated `config/connectors/*.yaml` with their stamps and markers, one per connector template of the packs that release loads
+by default (its `default-packs.yaml`: a pack shipped but off, as us-equities and funds, generated no file) (one edited, one with its marker lost),
 `config/bindings.yaml` (the demo copy), `config/modules/*.yaml`, a pack deployed into `<data>/packs/installed`, the old `.history`
 folder. `UpgradeFromI23Test` starts this release on it and asserts:
 

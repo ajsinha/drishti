@@ -45,8 +45,8 @@ def json_parent() -> argparse.ArgumentParser:
 def jvm_parent() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(add_help=False)
     g = p.add_argument_group("the Java tool")
-    g.add_argument("--jar", help="the drishti-server exec jar (default: DRISHTI_JAR, then the newest kernel/drishti-server/target/drishti-server-*-exec.jar)")
-    g.add_argument("--java", help="the java binary (default: JAVA_HOME, then JDK 21, then java on the PATH)")
+    g.add_argument("--jar", help="the drishti-server exec jar (default: the newest drishti-server-*-exec.jar in <home>/lib, made by drishti.py build jar)")
+    g.add_argument("--java", help="the java binary (default: DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH; Java 21+)")
     return p
 
 
@@ -117,7 +117,7 @@ def build_parser(h) -> argparse.ArgumentParser:
         mp.set_defaults(module_cmd=name)
         mp.add_argument("path", help="a module folder (module.yaml at its root) or, for check and inspect, a .dmod")
         mp.add_argument("--tool", help="the module tool's jar (default: DRISHTI_MODULE_TOOL, then kernel/drishti-module-runtime/target/drishti-module-tool.jar)")
-        mp.add_argument("--java", help="the java binary (default: JAVA_HOME, then JDK 21, then java on the PATH)")
+        mp.add_argument("--java", help="the java binary (default: DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH; Java 21+)")
         if name in ("pack", "check"):
             mp.add_argument("--jar", dest="module_jar", help="the module's jar, copied to java/ under the name module.yaml gives")
         if name == "pack":
@@ -342,7 +342,7 @@ def build_parser(h) -> argparse.ArgumentParser:
     dr = groups.add_parser("doctor", help="doctor: is this machine ready (Java, jar, Python, directories, ports, and with --server the token)",
                            description="Green/yellow/red lines with a fix for each; exit 1 on any red. Nothing is changed or stopped.",
                            parents=[srv], formatter_class=argparse.RawDescriptionHelpFormatter, epilog="examples:\n  drishti.py doctor\n  drishti.py doctor --server http://localhost:18480 --token-file ~/.drishti-token")
-    dr.add_argument("--java", help="the java binary to check (default: JAVA_HOME, then JDK 21, then the PATH)")
+    dr.add_argument("--java", help="the java binary to check (default: DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH; Java 21+)")
     dr.set_defaults(func=h.cmd_doctor, cmd=None)
     # bi (Rupaka phase 1) ------------------------------------------------------------------------------------
     bi = group("bi", "Business intelligence (Rupaka) over REST: workspaces and the catalogue, as the token's user sees them (a write needs the bi:write scope)")
@@ -404,6 +404,7 @@ def build_parser(h) -> argparse.ArgumentParser:
             p.add_argument("--panel", help="explain one panel only")
         else:
             p.add_argument("--table", action="store_true", help="text tables (the default; --json gives the raw view)")
+    load_module("launchcli", "launch/launchcli.py").register(groups, add)   # setup, build jar, start|stop server|console|all|cluster, status (i5)
     load_module("lakecli", "lake/cli.py").register(groups, add, srv, {"Api": Api, "CliError": CliError, "say_json": say_json})   # lake build|publish|scan|status|demo|maintain|memory
     td = group("testdata", "The committed test data (data/testdata): capture the news-and-markets pack's real market snapshot for offline demos")
     CM = load_module("capture_market", "testdata/capture_market.py")

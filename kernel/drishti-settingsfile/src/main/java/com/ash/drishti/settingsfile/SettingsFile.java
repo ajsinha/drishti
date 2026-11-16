@@ -29,7 +29,7 @@ import java.util.regex.Pattern;
 
 /**
  * The optional settings files: {@code -Ddrishti.settings.file=/abs/base.ini[,/abs/secrets.ini,...]} on the command line (an IDE's VM
- * options, a JUnit run template, Maven's {@code -D}, surefire's argLine, {@code bin/start-server --settings}). The paths are never
+ * options, a JUnit run template, Maven's {@code -D}, surefire's argLine, {@code drishti.py --settings FILE start server}). The paths are never
  * discovered: no environment search, no home folder, no working folder. A relative path is refused and a missing file is an error.
  *
  * <p>Format (docs/admin/CONFIGURATION.md, "The settings file"): one {@code key=value} per line; blank lines and lines starting with

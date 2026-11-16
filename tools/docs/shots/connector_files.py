@@ -30,7 +30,7 @@ import time
 from pathlib import Path
 
 from shotlib import DEMO_ROOT_ENV
-from shotlib import CONSOLE_PORT, ROOT, SERVER_PORT, Ctx, java_cmd, listening, register
+from shotlib import CONSOLE_PORT, ROOT, SERVER_PORT, Ctx, java_cmd, listening, register, server_jars
 if str(ROOT / "drishti-console") not in sys.path:
     sys.path.insert(0, str(ROOT / "drishti-console"))
 from core.resolution import pack_dir  # noqa: E402  (where a pack is: the one resolver, KERNEL_AND_MODULES.md 18)
@@ -45,9 +45,9 @@ def start_servers(work: Path) -> list:
         if listening(port):
             sys.exit(f":{port} already answers: stop it, or pass --base to use it as it is")
     given = os.environ.get("DRISHTI_SHOTS_SERVER_JAR", "")
-    jar = Path(given) if given else (sorted((ROOT / "kernel/drishti-server" / "target").glob("drishti-server-*-exec.jar")) or [None])[-1]
+    jar = Path(given) if given else (server_jars() or [None])[-1]
     if jar is None or not jar.exists():
-        sys.exit("build the server first: ./mvnw -o package -DskipTests -pl :drishti-app -am")
+        sys.exit("build the server first: python tools/drishti.py build jar")
     packs = work / "packs"
     packs.mkdir()
     for name in ("core", "market-data", "trading"):

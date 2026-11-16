@@ -67,7 +67,7 @@
 #      health, the VaR golden through the API, four console pages), and every Testcontainers test after the browser lane when the diff
 #      since the last release touches the Dockerfiles, the JDK, native code or a module with container tests.
 #    - the anywhere lane, a release blocker (tests/test_release_from_other_folder.py): the release unpacked into a scratch install folder and
-#      started with its bin/start-server.sh from another working folder over a small Java-loaded lake; VaR, explain, POS, TRD and FORMS answer
+#      started with its tools/drishti.py start server from another working folder over a small Java-loaded lake; VaR, explain, POS, TRD and FORMS answer
 #      across two restarts, every resolved path absolute under the install or data folder, a missing required root stops the start at once.
 #    Each lane that passes is recorded (<data>/drill/lanes-state.json) for the fix drill (--fix).
 #    A console test that fails is run once more on its own (file by file, every file, under a time limit of twice the file's
@@ -304,6 +304,8 @@ gate_java() {
   JAVA_HOME="$JAVA21_HOME" ./mvnw -q -o clean package spotless:check -P api-docs -T "${DRILL_GATE_THREADS:-1C}" \
     -Dtest="$rules,TokenScopeGuardTest,ArrowAnswersTest,TestPathsGuardTest,LakePathsGuardTest,LaunchRootsTest" -Dsurefire.failIfNoSpecifiedTests=false ${DRILL_MVN_ARGS:-}
   compgen -G 'kernel/drishti-server/target/drishti-server-*-exec.jar' >/dev/null || { echo "drill: the gate's build made no server jar" >&2; return 1; }
+  # <home>/lib is the one place every tool finds the server jar: the newest exec jar is copied there
+  mkdir -p lib && cp -f "$(ls -t kernel/drishti-server/target/drishti-server-*-exec.jar | head -1)" lib/ || { echo "drill: could not copy the server jar into lib/" >&2; return 1; }
   # a filter that matched nothing would pass in silence: every rule test must have its report
   local c missing=()
   for c in ${rules//,/ } TokenScopeGuardTest ArrowAnswersTest; do
@@ -469,12 +471,12 @@ java21_docker() {   # every Testcontainers test: the copy is built at once, its 
   COPY_THEN_WAIT="$wait" copy_verify java21-docker "$JAVA21_HOME" 21783,21784,21785 none -Dtest="$classes" -Dsurefire.failIfNoSpecifiedTests=false
 }
 # The anywhere lane (TEST_HARNESS.md, "The release from another folder"): a release blocker. The gate's server jar and a git archive of HEAD
-# unpacked as an install folder, started with bin/start-server.sh from a different working folder over a small Java-loaded lake: VaR, explain,
+# unpacked as an install folder, started with tools/drishti.py start server from a different working folder over a small Java-loaded lake: VaR, explain,
 # POS, TRD and FORMS answer, three starts in a row, every "resolved paths:" entry absolute and under the install or data folder, and a
 # missing required root stops the start at once with its message. About 5 minutes (the lake: cached per hash of its sources).
 ANYWHERE_TEST=drishti-console/tests/test_release_from_other_folder.py
 release_anywhere() {
-  timeout --kill-after=60 1500 "$PY" -m pytest -q -rfE -p no:cacheprovider "$ANYWHERE_TEST"
+  timeout --kill-after=60 2400 "$PY" -m pytest -q -rfE -p no:cacheprovider "$ANYWHERE_TEST"   # three server starts of 100-140 s each beside the other lanes, the checks and a lake load
 }
 
 # The containers lane (TEST_HARNESS.md, "The container smoke test"): the images as shipped, built and booted on the host's network beside

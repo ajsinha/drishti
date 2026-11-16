@@ -14,7 +14,8 @@
 
 """The API sweep as a drill step (tools/sweep/api_sweep.py; TEST_HARNESS.md, "The API sweep"): every GET endpoint of the server and of the console,
 called with real values of the saved test data, on a server of its own over the full demo lake the command sweep reads (built once and cached;
-owner 2026-11-15: never the page walk's thin lake); any FAIL fails the drill. HTTP only, eight calls at a time. The report (Markdown and JSONL) is kept in DRISHTI_SWEEP_OUT (the drill's logs folder), else data/sweep/.
+owner 2026-11-15: never the page walk's thin lake); any FAIL fails the drill. HTTP only, eight calls at a time. The report (Markdown and JSONL) is kept in DRISHTI_SWEEP_OUT (the drill's logs folder), else in the test's own scratch folder (never
+under data/: the drill's re-run sets no DRISHTI_SWEEP_OUT, drill of 2026-11-15).
 
 DRISHTI_PAGEWALK_BASE=<console URL> with DRISHTI_SWEEP_SERVER=<server URL> sweeps a stack that is already running; DRISHTI_SWEEP_ADMIN /
 _ADMIN_PASSWORD sign in to its console. The drill's stack is open (no sign-in), so it runs as its one user."""
@@ -48,13 +49,13 @@ def stack(tmp_path_factory):
         yield st
 
 
-def test_every_get_endpoint_answers_clean(stack, capsys):
+def test_every_get_endpoint_answers_clean(stack, capsys, tmp_path_factory):
     spec = importlib.util.spec_from_file_location("api_sweep", SWEEP)
     sweep = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(sweep)
     server = os.environ.get("DRISHTI_SWEEP_SERVER") or getattr(stack, "server", "")
     assert server, "no server URL: the fixture has none and DRISHTI_SWEEP_SERVER is not set"
-    args = ["--console", str(stack), "--server", str(server), "--out", os.environ.get("DRISHTI_SWEEP_OUT") or str(sweep.ROOT / "data" / "sweep")]
+    args = ["--console", str(stack), "--server", str(server), "--out", os.environ.get("DRISHTI_SWEEP_OUT") or str(tmp_path_factory.mktemp("api-sweep-out"))]
     base = bool(os.environ.get("DRISHTI_PAGEWALK_BASE"))       # a stack of one's own: its credentials from the environment, if any
     for flag, env, default in (("--admin", "ADMIN", ADMIN), ("--admin-password", "ADMIN_PASSWORD", ADMIN_PASSWORD)):
         value = os.environ.get("DRISHTI_SWEEP_" + env) or ("" if base else default)

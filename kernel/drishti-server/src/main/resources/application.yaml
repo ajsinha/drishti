@@ -80,7 +80,7 @@ spring:
 
 logging:
   # CLUSTER_GUIDE.md 6.4: with drishti.logging.file set the server writes its own log, rotated by size and day and kept
-  # within a total (compressed); unset (containers), standard output only, as before. bin/start-server sets it with --background (<data>/logs/server[-<node>].log).
+  # within a total (compressed); unset (containers), standard output only, as before. drishti.py start server sets it with --background (<data>/logs/server[-<node>].log).
   file:
     name: ${drishti.logging.file:}  # the log file, from drishti.logging.file (empty: standard output only)
   logback:
@@ -138,7 +138,7 @@ management:
 drishti:
   # The distribution (docs/architecture/DISTRIBUTIONS.md): risk, finance, genomics or all, or the path of a site's own file; it names
   # config/distributions/drishti.<name>.yaml (brand, theme, modules, lenses, Home, Help) and is the one way to make the product. Blank:
-  # Drishti All, exactly as before. Also --distribution=<name> on the command line (bin/start-server.sh --distribution <name>).
+  # Drishti All, exactly as before. Also --distribution=<name> on the command line (drishti.py start server --distribution <name>).
   distribution: ${DRISHTI_DISTRIBUTION:}
   distributions-dir: ${DRISHTI_DISTRIBUTIONS_DIR:${drishti.config.dir}/distributions}   # the distribution files and kernel.yaml (the kernel's packs and words)
   module-manifests-dir: ${DRISHTI_MODULE_MANIFESTS_DIR:${drishti.home}/modules}   # the modules' own manifests (modules/<id>/module.yaml): what a distribution's modules hold, and the one source of what a content module is (the access registry; a folder that is not there: the modules folder beside the packs' config folder)
@@ -150,7 +150,7 @@ drishti:
     # pack overlay and settings, governance, the sample feeds). Each path's own setting still overrides its default.
     dir: ${DRISHTI_DATA_DIR:${drishti.home}/data}
   logging:                           # CLUSTER_GUIDE.md 6.4: the server's own log file, read by logging: above
-    file: ${DRISHTI_LOG_FILE:}       # empty: standard output only (containers); bin/start-server sets <data>/logs/server[-<node>].log
+    file: ${DRISHTI_LOG_FILE:}       # empty: standard output only (containers); drishti.py start server sets <data>/logs/server[-<node>].log
     max-file-mb: 100                 # one file's size before it rolls (also daily); rolled files compressed
     max-total-mb: 1024               # every rolled file together; the oldest go beyond
     max-files: 30                    # rolled days kept at most
@@ -209,7 +209,7 @@ drishti:
     shipped: ${DRISHTI_MODULES_SHIPPED:true}   # install the distribution's first-party modules (drishti/modules/*.dmod in the full jar: banking, market-data, capital-markets, economy) at start when not installed or rebuilt; one an administrator removed or switched off stays so
     dev: ${DRISHTI_MODULES_DEV:false}   # development mode: exploded module folders of drishti.modules.path load without a .dmod, unverified, reloaded on change; refused in a cluster and under the prod or production profile
   lib:                               # the shared lib folder, as Tomcat's lib/ (docs/guides/ADMIN_GUIDE.md): every jar in it is loaded at start into one lib class loader under the kernel's
-    path: ${DRISHTI_LIB_PATH:${drishti.data.dir}/lib}   # JDBC drivers, connector plugins, a company's own libraries; seen by connectors and modules, never replacing a kernel class; a change needs a restart
+    path: ${DRISHTI_LIB_PATH:${drishti.home}/lib/ext}   # the SITE's jars (JDBC drivers, connector plugins, a company's own libraries), kept on an upgrade; <home>/lib itself holds Drishti's own jar; seen by connectors and modules, never replacing a kernel class; a change needs a restart; jars in <data>/lib (the previous default) are moved here once
   access:                            # the access model's files (docs/architecture/ACCESS_MODEL.md): the access registry reads them, nothing else does
     dir: ${DRISHTI_ACCESS_DIR:${drishti.config.dir}/access}     # licence.yaml (none: the development licence, every module), lenses.yaml, roles.yaml, assignments.yaml; none is needed
   metrics:                           # the platform metrics and alerts (docs/guides/OPERATIONS_GUIDE.md section 13.6; CLUSTER_GUIDE.md 8.3, 8.5)

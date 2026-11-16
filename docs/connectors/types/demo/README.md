@@ -120,8 +120,8 @@ one start, or for good:
 Run these from the Drishti folder (the repository root, or the install folder of a release).
 
 ```bash
-DRISHTI_DEMO_ENABLED=false java -jar kernel/drishti-server/target/drishti-server-*-exec.jar
-java -jar kernel/drishti-server/target/drishti-server-*-exec.jar --drishti.sources.plugins.demo.enabled=false
+DRISHTI_DEMO_ENABLED=false java -jar lib/drishti-server-*-exec.jar
+java -jar lib/drishti-server-*-exec.jar --drishti.sources.plugins.demo.enabled=false
 ```
 
 The run configuration **Drishti server (demo lakes)** starts with the demo off, so every page reads the lakes `drishti.py lake demo`

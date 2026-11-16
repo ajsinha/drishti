@@ -47,7 +47,14 @@ import java.util.stream.Stream;
 public final class PackResolver {
 
     /** The layer a pack came from. */
-    public enum Layer { SITE, MODULE, KERNEL }
+    public enum Layer {
+        /** The site's own packs folder ({@code drishti.packs.site-dir}): first, and a shipped pack's name only with {@code replaces:}. */
+        SITE,
+        /** An active module's packs ({@code packs:} in its manifest), from its development folder or its installed {@code .dmod}. */
+        MODULE,
+        /** The kernel's own packs under {@code <site>/core/} (core, gleif, compute-demo): last, read whatever modules are on. */
+        KERNEL
+    }
 
     /**
      * One pack, found.

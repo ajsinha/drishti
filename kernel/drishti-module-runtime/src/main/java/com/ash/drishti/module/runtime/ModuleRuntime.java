@@ -90,7 +90,7 @@ public final class ModuleRuntime implements AutoCloseable {
         return this;
     }
 
-    /** The site's shared lib loader ({@code drishti.lib.path}): every module sees its jars after its own (null: none). */
+    /** The site's shared lib loader ({@code drishti.lib.path}, default {@code <home>/lib/ext}): every module sees its jars after its own (null: none). */
     public ModuleRuntime libraries(ClassLoader lib) {
         this.libraries = lib;
         return this;

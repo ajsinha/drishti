@@ -17,7 +17,8 @@
 
     python3 tools/drishti.py <group> <command> [options]          (or: uv run --with pyyaml python tools/drishti.py ...)
 
-Groups: sutra (the Java `sutra` tool, plus `sutra gen`), module (pack, check, inspect a .dmod with the module tool; deploy, plan, apply, list, remove, disable, enable, upgrade, run), pack (make, new, regenerate, diff, catalogue, i18n, check, about-check, bundle, verify, deploy, rollback,
+Groups: setup (prepare this machine), build (jar: the server jar into <home>/lib), start, stop and status (server, console, all, cluster;
+every OS, by pid files), sutra (the Java `sutra` tool, plus `sutra gen`), module (pack, check, inspect a .dmod with the module tool; deploy, plan, apply, list, remove, disable, enable, upgrade, run), pack (make, new, regenerate, diff, catalogue, i18n, check, about-check, bundle, verify, deploy, rollback,
 publish, keygen, install), data (profile and ingest your own JSON Lines or watch a drop folder, load the demo data), server (health, packs, smoke),
 lake (build a Delta lake from a large JSON export, scan, status, maintain), feed (pull external data into the lakes: list, run, status, schedule), testdata (capture-market: a real offline snapshot), view (get, explain), history (an entity over business days), doctor, completion, design (the Screen Designer's designs over
 REST: create, save, check, propose, approve, export, import, bind) and docs (screenshots).
@@ -32,13 +33,11 @@ from __future__ import annotations
 
 import argparse
 import datetime
-import glob
 import importlib.util
 import json
 import os
 import pathlib
 import re
-import shutil
 import subprocess
 import sys
 import time
@@ -48,6 +47,8 @@ import urllib.request
 
 import drishti_parser
 from drishti_parser import DEFAULT_SERVER
+import javacmd
+import settingsfile
 from javacmd import cli_tmp, java_cmd
 
 TOOLS = pathlib.Path(__file__).resolve().parent
@@ -104,26 +105,20 @@ def say_json(obj) -> None:
 
 
 def find_jar(explicit: str | None = None) -> str:
-    """The server's exec jar: ``explicit``, else ``DRISHTI_JAR``, else the newest ``kernel/drishti-server/target/drishti-server-*-exec.jar``."""
-    jar = explicit or os.environ.get("DRISHTI_JAR")
-    if jar:
-        if not os.path.isfile(jar):
-            raise CliError(f"jar not found: {jar}")
-        return jar
-    jars = sorted(glob.glob(str(ROOT / "kernel/drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime)
-    if not jars:
-        raise CliError("no drishti-server-*-exec.jar under kernel/drishti-server/target: build it (./mvnw -q -DskipTests package) or pass --jar / DRISHTI_JAR")
-    return jars[-1]
+    """The server's exec jar: ``explicit`` (--jar, a one-off run), else the newest in <home>/lib (``javacmd.server_jar``, the one place)."""
+    try:
+        return str(javacmd.server_jar(explicit))
+    except (javacmd.JarError, javacmd.HomeError) as e:
+        raise CliError(str(e)) from None
 
 
 def find_java(explicit: str | None = None) -> str:
-    """The ``java`` to run: ``explicit``, else ``$JAVA_HOME/bin/java``, else a JDK 21 at its usual place, else ``java`` on the PATH."""
-    if explicit:
-        return explicit
-    for home in (os.environ.get("JAVA_HOME"), "/usr/lib/jvm/java-21-openjdk-amd64"):
-        if home and os.path.exists(os.path.join(home, "bin", "java")):
-            return os.path.join(home, "bin", "java")
-    return shutil.which("java") or "java"
+    """The ``java`` to run, in the one order of every Drishti tool (``javacmd.find_java``): ``explicit`` (--java), ``DRISHTI_JAVA_HOME``,
+    ``JAVA_HOME``, then ``java`` on the PATH; Java 21 or newer, else a CliError in words."""
+    try:
+        return javacmd.find_java(explicit)
+    except javacmd.JavaError as e:
+        raise CliError(str(e)) from None
 
 
 def run_java(a: argparse.Namespace, args: list[str], capture: bool = False) -> subprocess.CompletedProcess:
@@ -134,7 +129,7 @@ def run_java(a: argparse.Namespace, args: list[str], capture: bool = False) -> s
         try:
             return subprocess.run(cmd, cwd=ROOT, text=True, capture_output=capture)
         except FileNotFoundError as e:
-            raise CliError(f"cannot run {cmd[0]}: {e.strerror}; pass --java or set JAVA_HOME") from None
+            raise CliError(f"cannot run {cmd[0]}: {e.strerror}; pass --java or set DRISHTI_JAVA_HOME") from None
 
 
 def find_module_tool(explicit: str | None = None) -> str:
@@ -160,7 +155,7 @@ def cmd_module(a, extra) -> int:
         try:
             return subprocess.run(cmd, cwd=ROOT).returncode
         except FileNotFoundError as e:
-            raise CliError(f"cannot run {cmd[0]}: {e.strerror}; pass --java or set JAVA_HOME") from None
+            raise CliError(f"cannot run {cmd[0]}: {e.strerror}; pass --java or set DRISHTI_JAVA_HOME") from None
 
 
 NOISE = re.compile(r"^(Standard Commons Logging|\d{4}-\d\d-\d\dT\S+\s+(WARN|INFO|DEBUG|TRACE)\s)")
@@ -1136,15 +1131,23 @@ def use_tmp_dir() -> None:
 def main(argv: list[str] | None = None) -> int:
     """Runs one command (``argv``, else the process's arguments); the exit code: 0 ok, 1 problems found, 2 usage."""
     try:
+        # --settings /absolute/drishti.ini: the optional settings file (tools/settingsfile.py), handed on to every java this command starts
+        argv, settings = settingsfile.pop_option(list(sys.argv[1:] if argv is None else argv))
+        entries = settingsfile.read_all(settings) if settings else {}
+        settingsfile.apply_roots(entries)       # the Python side reads the roots the files name, as the JVMs do
+        javacmd.set_settings(settings, entries)
         ap = build_parser()
         a, extra = ap.parse_known_args(argv)
-        a._argv = list(sys.argv[1:] if argv is None else argv)
-        passthrough = (a.group == "sutra" and a.cmd != "gen") or (a.group == "data" and a.cmd == "load") or (a.group == "lake" and a.cmd == "maintain") or (a.group == "feed" and a.cmd == "run")
+        a._argv = list(argv)
+        passthrough = (a.group == "sutra" and a.cmd != "gen") or (a.group == "data" and a.cmd == "load") or (a.group == "lake" and a.cmd == "maintain") or (a.group == "feed" and a.cmd == "run") or (a.group == "start" and a.cmd == "server")
         if extra and not passthrough:
             ap.error("unrecognized arguments: " + " ".join(extra))
         if extra and extra[0] == "--":
             extra = extra[1:]
         return a.func(a, extra) or 0
+    except (settingsfile.SettingsError, javacmd.JavaError, javacmd.HomeError) as e:
+        print(f"drishti: {e}", file=sys.stderr)
+        return 2
     except CliError as e:
         print(f"drishti: {e}", file=sys.stderr)
         return e.code

@@ -40,7 +40,7 @@ MEMORY = {
 
 @pytest.fixture
 def lakes(client, tmp_path):
-    lk = Lakes(LakeSettings(roots=[tmp_path / "lake"], tools_dir=REPO / "tools", engine="deltalake"))
+    lk = Lakes(LakeSettings(roots=[tmp_path / "lake"], tools_dir=REPO / "tools"))      # nothing is built here: the default engine
     client.app.state.lakes = lk
     yield lk
     del client.app.state.lakes

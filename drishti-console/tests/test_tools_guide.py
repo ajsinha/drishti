@@ -55,7 +55,7 @@ def commands() -> list[str]:
 def scripts() -> list[str]:
     """The tools a person runs (or a command loads): tools/*.py|*.sh and the scripts of tools' subfolders, tests and packages aside."""
     found = list(TOOLS.glob("*.py")) + list(TOOLS.glob("*.sh")) + list(TOOLS.glob("lake/*.py")) + list(TOOLS.glob("packgen/*.py")) \
-        + list(TOOLS.glob("packgen/*/make*.py")) + list(TOOLS.glob("windows/*.ps1")) + list(TOOLS.glob("bench/*.sh")) \
+        + list(TOOLS.glob("packgen/*/make*.py")) + list(TOOLS.glob("bench/*.sh")) \
         + [TOOLS / p for p in ("samplegen/bulk_trades.py", "docs/screenshots.py", "realdata/realdata.py", "packreg/packreg.py",
                                 "rachana/md_to_yaml.py", "maps/build_regions.py")]
     return sorted(str(f.relative_to(ROOT)) for f in found if f.is_file() and not f.name.startswith("test_") and f.name != "__init__.py")

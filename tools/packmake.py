@@ -137,14 +137,13 @@ def write_scripts(out: pathlib.Path, name: str, store: str) -> None:
     sub = "delta" if store == "delta" else "files"
     sh = f"""#!/usr/bin/env bash
 # Starts the Drishti server on this folder alone: the pack from ./pack, the data from ./data/{sub}.
-# Needs JDK 21+ and the server jar:  DRISHTI_JAR=/path/to/drishti-server-X.Y.Z-exec.jar ./run-server.sh
+# Needs JDK 21+ and the server jar: the newest in $DRISHTI_HOME/lib (the install; python tools/drishti.py build jar makes it), else one beside this script.
 # Optional: DRISHTI_PORT (default 18480), {root_var} (default ./data/{sub}), DRISHTI_TMP_DIR (default ./data/tmp/server), JAVA_HOME.
 set -euo pipefail
 HERE="$(cd "$(dirname "${{BASH_SOURCE[0]}}")" && pwd)"
 JAVA="${{JAVA_HOME:+$JAVA_HOME/bin/}}java"
-JAR="${{DRISHTI_JAR:-}}"
-if [ -z "$JAR" ]; then JAR="$(ls -t "$HERE"/drishti-server-*-exec.jar 2>/dev/null | head -1 || true)"; fi
-if [ -z "$JAR" ] || [ ! -f "$JAR" ]; then echo "set DRISHTI_JAR to the drishti-server-*-exec.jar (see README.txt)" >&2; exit 2; fi
+JAR="$(ls -t "${{DRISHTI_HOME:-$HERE/../../..}}"/lib/drishti-server-*-exec.jar "$HERE"/drishti-server-*-exec.jar 2>/dev/null | head -1 || true)"
+if [ -z "$JAR" ] || [ ! -f "$JAR" ]; then echo "no server jar: set DRISHTI_HOME to the Drishti install whose lib/ holds drishti-server-*-exec.jar (python tools/drishti.py build jar makes it), or copy the jar beside this script (see README.txt)" >&2; exit 2; fi
 export DRISHTI_PACKS="{name}"
 export DRISHTI_PACKS_DIR="$HERE/pack"
 export {root_var}="${{{root_var}:-$HERE/data/{sub}}}"
@@ -156,14 +155,14 @@ cd "$HERE"
 exec "$JAVA" -Djava.io.tmpdir="$TMP_DIR" -jar "$JAR" "$@"
 """
     ps = f"""# Starts the Drishti server on this folder alone: the pack from .\\pack, the data from .\\data\\{sub}.
-# Needs JDK 21+ and the server jar:  $env:DRISHTI_JAR = 'C:\\path\\drishti-server-X.Y.Z-exec.jar'; .\\run-server.ps1
+# Needs JDK 21+ and the server jar: the newest in $env:DRISHTI_HOME\\lib (the install; python tools/drishti.py build jar makes it), else one beside this script.
 # Optional: DRISHTI_PORT (default 18480), {root_var}, DRISHTI_TMP_DIR (default .\\data\\tmp\\server), JAVA_HOME.
 $ErrorActionPreference = 'Stop'
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 $java = if ($env:JAVA_HOME) {{ Join-Path $env:JAVA_HOME 'bin\\java.exe' }} else {{ 'java' }}
-$jar = $env:DRISHTI_JAR
-if (-not $jar) {{ $jar = (Get-ChildItem -Path $here -Filter 'drishti-server-*-exec.jar' -ErrorAction SilentlyContinue | Sort-Object LastWriteTime | Select-Object -Last 1).FullName }}
-if (-not $jar -or -not (Test-Path $jar)) {{ Write-Error 'set DRISHTI_JAR to the drishti-server-*-exec.jar (see README.txt)'; exit 2 }}
+$home_ = if ($env:DRISHTI_HOME) {{ $env:DRISHTI_HOME }} else {{ Join-Path $here '..\\..\\..' }}
+$jar = (Get-ChildItem -Path (Join-Path $home_ 'lib'), $here -Filter 'drishti-server-*-exec.jar' -ErrorAction SilentlyContinue | Sort-Object LastWriteTime | Select-Object -Last 1).FullName
+if (-not $jar -or -not (Test-Path $jar)) {{ Write-Error 'no server jar: set DRISHTI_HOME to the Drishti install whose lib folder holds drishti-server-*-exec.jar (python tools/drishti.py build jar makes it), or copy the jar beside this script (see README.txt)'; exit 2 }}
 $env:DRISHTI_PACKS = '{name}'
 $env:DRISHTI_PACKS_DIR = Join-Path $here 'pack'
 if (-not $env:{root_var}) {{ $env:{root_var} = Join-Path $here 'data\\{sub}' }}
@@ -238,7 +237,7 @@ def readme_text(v: dict) -> str:
     w("3. DEPLOY")
     w("-" * 72)
     w("  Quickest, on this machine (nothing is copied):")
-    w("      DRISHTI_JAR=/path/to/drishti-server-X.Y.Z-exec.jar DRISHTI_PORT=18480 ./run-server.sh        (Windows: .\\run-server.ps1)")
+    w("      DRISHTI_HOME=/path/to/drishti DRISHTI_PORT=18480 ./run-server.sh        (Windows: .\\run-server.ps1)")
     w("  On an existing server:")
     w(f"    a. The pack. Copy pack/{n}/ into the server's packs folder (the one DRISHTI_PACKS_DIR / drishti.packs.dir names), e.g.")
     w(f"           cp -r pack/{n} /opt/drishti/packs/")
@@ -311,7 +310,7 @@ def readme_text(v: dict) -> str:
     if dated:
         w(f"  * The view shows a sample but not your id: the data root is wrong. Check {root_var} and that <root>/{n}/ exists; Health shows the connector DOWN with the path it tried.")
         w("  * Another date shows nothing: that date has no document for the id; the connector reads the newest date at or before asOf.")
-    w("  * 'no drishti-server-*-exec.jar': set DRISHTI_JAR (or build it with ./mvnw -q -DskipTests package).")
+    w("  * 'no drishti-server-*-exec.jar': set DRISHTI_HOME to an install whose lib/ holds it (python tools/drishti.py build jar makes it).")
     w("  * 'port already in use': set DRISHTI_PORT to a free port.")
     w(f"  * pack check reports help warnings (DRS-2045..2047): fill the TODO texts in pack/{n}/config/about.yaml (`pack about-check` lists them).")
     w("  * Delta on Windows without winutils: keep DRISHTI_DELTA_ENGINE=native (the default there).")
@@ -336,8 +335,8 @@ def add_arguments(p: argparse.ArgumentParser) -> None:
     p.add_argument("--no-fallback", dest="fallback", action="store_false", help="no catch-all Sutra")
     p.add_argument("--force", action="store_true", help="replace --out when it exists")
     p.add_argument("--samples", type=int, default=5, help="samples per group (default 5)")
-    p.add_argument("--jar", help="the drishti-server exec jar (default: DRISHTI_JAR, then kernel/drishti-server/target)")
-    p.add_argument("--java", help="java binary (default: JAVA_HOME, then JDK 21, then java)")
+    p.add_argument("--jar", help="the drishti-server exec jar (default: the newest in <home>/lib)")
+    p.add_argument("--java", help="java binary (default: DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH; Java 21+)")
     p.add_argument("-r", "--recursive", action="store_true", help="read *.jsonl in subfolders too")
     _schemapack().add_schema_arguments(p)
     p.add_argument("--code", help="with --schema: the pack code typed alone to open the pack (default: initials of the name)")
@@ -433,6 +432,6 @@ def make(a, cli) -> int:
     print(f"\npack make: {out}")
     print(f"  {len(groups)} Sutra group(s) for {len(docs)} {a.kind} document(s)" + (f", {len(by_date)} date(s) in data/{data_dir.name}" if date else ", no dated store")
           + f"; pack check {'passed' if chk == 0 else 'FAILED'}, pack verify {'passed' if ver == 0 else 'FAILED'}")
-    print(f"next: read {out / 'README.txt'}; for a new server  DRISHTI_JAR=<exec jar> DRISHTI_PORT=18480 {out / 'run-server.sh'}; "
+    print(f"next: read {out / 'README.txt'}; for a new server  DRISHTI_HOME=<install> DRISHTI_PORT=18480 {out / 'run-server.sh'}; "
           f"on a running one, copy {out / 'pack' / a.name} into its packs folder and the server checks it and loads it by itself (no restart)")
     return 1 if (chk or ver) else 0

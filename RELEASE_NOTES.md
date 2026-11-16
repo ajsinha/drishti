@@ -13,6 +13,114 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 2.9.11.i5 — release notes
+
+*Released 2026-11-16.* **Setting up, building, starting and stopping Drishti is one Python command on Linux, macOS and Windows; the 41
+shell scripts are gone; one Java lookup, one install root, one place for the jars.** This release carries the Python commands only.
+
+The build of this release still reports its version as 2.9.11.g (the server's About answer, the console footer and the image tags). The
+release itself is tag `v2.9.11.i_5`; the next release, i6, takes the version from one place so the two always agree.
+
+## What changes for administrators
+
+- **The commands**: `python tools/drishti.py setup`, `build jar`, `start server|console|all|cluster`, `stop ...` and `status` (on Windows
+  `py tools\drishti.py ...`). Processes are tracked by pid files under the data folder and stopped only through them.
+- **Removed**: every `bin/*.sh`, `*.ps1` and `*.cmd` except `bin/drishti-node.sh`, `tools/windows` and `tools/rolling-upgrade.sh`
+  (use `python tools/rolling.py`).
+- **One install root**: `--home`, else `DRISHTI_HOME`, else `drishti.home` of the settings file, else the folder the tools are in. Another
+  install, or a relative path, is refused in words.
+- **One place for the jars**: the server jar is in `<home>/lib` (`DRISHTI_JAR` and the `target/` fallback are retired; `--jar` stays for a
+  one-off run); two server jars are refused. The site's jars (JDBC drivers, plugins) are in `<home>/lib/ext` (`DRISHTI_LIB_PATH` default,
+  moved from `<data>/lib`); jars in the old place are moved there once at start and Health says so.
+- **One Java lookup**: `--java`, `DRISHTI_JAVA_HOME`, `JAVA_HOME`, the PATH; older than 21 is refused. `lake demo` now honours
+  `DRISHTI_JAVA_HOME`.
+
+## What changes for readers
+
+- The Deployment and QA guide starts with *Prepare your environment*, the short way and a manual installation, the demo lake with the
+  parallel Java loader and an IDE first-open checklist.
+
+## Upgrading an install of i4
+
+1. Pull. 2. `python tools/drishti.py setup`. 3. `python tools/drishti.py build jar`. 4. Stop the old stack: the old scripts are gone, so
+`python tools/drishti.py stop cluster` (or `stop all`), which reads the same pid files. 5. Start with the new commands.
+
+## Known limits
+
+- `data load --store <postgres|redis|...>` still runs a bash script (Git Bash on Windows) until the Python second phase.
+- `start cluster` keeps a running copy of the jar at `<data>/stack/server.jar` (test convenience; a real install runs from `<home>/lib`).
+- Container images and systemd are unchanged (`bin/drishti-node.sh` is kept).
+
+# Drishti 2.9.11.i4 — release notes
+
+*Released 2026-11-15.* **Every path explicit and every setting in files you name; brokers optional; connectors read-only; honest answers
+when data is missing or still loading; the VaR page with Explain and Why it moved; one module per trading system; faster, more reliable
+testing.** This release carries the work planned as 2.9.11.i1, i1b, i2, i3 and i4, shipped as one tag. The console on Spring Boot is not
+part of it.
+
+The build of this release still reports its version as 2.9.11.g (the server's About answer, the console footer and the image tags). The
+release itself is tag `v2.9.11.i_4`; the next release takes the version from one place so the two always agree.
+
+## What changes for risk users
+
+- **The VaR page** shows only the scope you chose (the whole bank, a node and below with a breadcrumb up, or a basket's own positions by the
+  hierarchy you pick), with VaR, ES, contribution and use of limit for each node. A switch beside Explain includes matured items; Explain
+  says how many records were left out as matured.
+- **Explain wherever VaR or ES is shown**: one control opens the formula, the inputs and lineage, *Why it moved* and the workbook. Why it
+  moved compares two dates in steps that add up, and answers in about a second. When the machine is busy, the explanation still answers
+  and only *Why it moved* says it waits, with a countdown, and asks again by itself.
+- **A date with no data is said, never answered silently from an older one.** VaR for a date with no scenario P&L load shows the newest
+  earlier date with a notice (*scenario P&L for D not loaded, showing D-1*) under the page's header; pivots and record lists show one notice
+  for each source system that shows an earlier date.
+- **Positions and system baskets never answer an empty list that looks true.** While their inputs are still loading, or the server is
+  protecting itself from overload, you get the refusal with its reason, not 0 rows. A refusal in words (a code and a reason) reaches you as it
+  is.
+- **A BI table over a connector of documents only** reads the newest data it holds and says its date, never 0 rows for a day nothing was
+  loaded on.
+- **Trading systems each have their own table and module.** Endur, Calypso, Murex, WSS, SwapOne and ICI each load into a table of their own
+  and feed the one `trade` kind; each is switched on or off on its own. The trade blotter shows new trades on top and the lake's trades at
+  once, and a *trade editor* role may edit.
+
+## What changes for administrators
+
+- **Every path is explicit.** The server works out its install, data, configuration, packs, modules, lakes, connectors and inbox folders at
+  start, from your settings or under the install folder, and lists them in one block of the log. It refuses to start, naming the setting,
+  when a folder is missing, unnamed or relative with no install folder. **Admin → Configuration → Resolved paths** shows every folder and file
+  setting with where its value came from. A relative path is taken under the install folder, never the folder the server was started from.
+- **Settings files you name**: `-Ddrishti.settings.file=/etc/drishti/prod.ini,/etc/drishti/secrets.ini`. The files hold roots, named lakes,
+  databases and brokers (`[lake.<name>]`, `[db.<name>]`, `[broker.<name>]`), per-pack and per-connector overrides, and `${...}` placeholders.
+  Examples ship in `config/settings.examples/` (dev, test, prod, secrets); see [CONFIGURATION.md](docs/admin/CONFIGURATION.md).
+- **Brokers are optional.** A Kafka, ActiveMQ or RabbitMQ connector whose broker is not there says *waiting for broker*, not down. The server
+  stays healthy, a blotter serves the lake snapshot with a *live updates paused* banner, the log has one line when waiting starts and one
+  when it connects, and a broker that appears later is found without a restart. Every TLS and SASL form (PLAIN, SCRAM, OAUTHBEARER, GSSAPI,
+  Confluent) is a setting of the broker's section.
+- **Connectors are read-only to the server.** A connector is a shipped template, your override and your secrets, merged in memory; the server
+  never writes, rewrites or retires a connector file. A relative field map is read from the connector's own folder and a missing map names
+  the places tried.
+- **Packs are found in one order**: your site, then each module that is on, then the kernel. Admin → Packs shows where each pack comes from.
+- **The console can sit at a URL sub-path** behind a reverse proxy (`server.base_path`), for example `https://host/drishti/`.
+- **The local cluster's folder is `deploy/stack/`** (it was `drishti-stack/`). Move your `secrets.env` there; the old folder is read for this
+  release only.
+- **Data inbox**: a rejected row is named in the load's answer, `dataload undo` refreshes the pages at once, and a daily-loads runbook is in
+  [DATA_LAKE_GUIDE.md](docs/guides/DATA_LAKE_GUIDE.md) section 17.
+
+## What changes for builders
+
+- **Modules**: banking and the other first-party packages are `.dmod` modules the kernel loads, places on chosen nodes and unloads without
+  a restart; a Module SDK, a custom-visual SDK and the genomics sample show how to write your own. Distributions (Drishti Risk, Finance,
+  Genomics, All) bring the right modules, words and menus.
+- **BI depth**: many-to-many relationships through a bridge, list columns with chips and `has`, `any-of`, `all-of` filters, linked brushing,
+  and measures with filter context.
+- **Blotters and live results** run on one engine for the trade blotter, search results and record lists; every list of records uses the
+  same grid.
+
+## Quality, measured
+
+- **Tests run on one shared, read-only lake** built once and kept in a cache folder, so no test builds its own. Drill waves run only the
+  lanes a fix reaches (`tools/drill.sh --fix`); the release drill stays the full run.
+- **Every first start is checked against the old release**: the release starts on an empty site and on a site of the previous release.
+- **Visual snapshots** of the key pages are kept in four files by page group, drawn on the page's own signal rather than on a timer.
+
 # Drishti 2.9.11.g — release notes
 
 *Released 2026-11-08.* **Industries as modules, opened through lenses; the public sector, the first new domain, filled every day by

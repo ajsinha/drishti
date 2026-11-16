@@ -219,19 +219,35 @@ What is marked today: in the console, `test_java_launch_guard.py`, `test_browser
 (`test_docs_*.py`, `test_help*.py`, `test_tools_guide.py`) were already in the gate's docs job, and the licence headers and the
 generated documents in its static job.
 
-### 3.12 Shared lakes
+### 3.12 The shared test lake
 
-A file over the per-file budget is first looked at for what its time is. The VaR browser files (`test_var_currency_browser.py`,
-`test_var_lens_browser.py`, `test_var_explain_browser.py`, `test_var_parts_shown_browser.py`, `test_arrow_browser.py`) each ran in
-2 to 3 minutes alone, of which their tests took under 15 s: the rest was the VaR demo lake each built for itself (about 80 s alone,
-three to four times that with several built at once in the lane) and its server's start and stop. Splitting such a file would build the
-lake once more per part. Instead `var_stack.py` builds each lake **once per test run** for every worker
-(`browser_harness.shared_once`, keyed by the tables and the business date asked; the first worker builds, the others wait for it and
-read the same folder) and starts a server per file over it, with its own VaR hot folder (`var_lake`, `var_server`). The servers only read
-the lake. A file split later asks the same lake and pays only its server's start again.
+Every console and browser test reads **one** lake (owner 2026-11-15): the full demo lake of the saved test data, every dataset, ending
+`var_stack.SHARED_AS_OF` (2026-11-06, fixed so the visual snapshots and the walk's pages are the same every day), with the committed
+exposure run. It is the cached demo lake of section 3.15, built once per hash of the test data, generators and loaders by the parallel Java
+loader and reused across runs and drills; a run looks it up once (`browser_harness.shared_once`) and every file asks it through
+`var_stack.shared_lake(tmp_path_factory, needs=...)` (`needs`: a table it reads, checked) or `var_stack.shared_folder` (the lake and the
+connector files the build wrote beside it). It is read only: no test builds a lake of its own, asks for a subset (`--only`), copies it or
+names the Python writer. A server over it writes to its own folders (`var_stack.own_folders`: the VaR hot folder and the official VaR and
+exposure roots). `tests/test_lake_builds_cached.py` (a quick file check) fails on any test that does otherwise and is not parked.
 
-The VaR files take their lake from `tools/drillkit/lake_cache.py` ("The cached demo lake", section 3.15), so it is built once per hash of its
-sources, not once per run.
+**Parked to i6: tests that write to a lake.** A test that has to write to a lake (a build, an append, maintenance, a lake of its own, a
+trade-grain variant) is parked until i6 (IMPLEMENTATION_PLAN.md): it carries `@var_stack.PARKED_I6` (or `pytestmark = [PARKED_I6]`), a skip
+with the reason "parked to i6: writes to a lake (owner 2026-11-15)", so every run and drill report shows it as skipped, never silently
+gone. The parked tests:
+
+| File | Tests | Why it writes |
+|---|---|---|
+| `test_admin_lakes.py` | the build and the table page after a build (2 of 8) | Admin → Lakes builds a lake |
+| `test_admin_lakes_browser.py` | a file becomes a lake (1 of 2) | the same from the browser |
+| `test_admin_lake_maintain.py` | all (5) | its lake is built, then compacted and vacuumed |
+| `test_admin_lake_maintain_browser.py` | all (2) | the same from the browser |
+| `test_public_sector_browser.py` | all (6) | the recorded feeds are loaded into lakes of its own |
+| `test_bi_multi_dataset_browser.py` | all (6) | the BI sample lake (`bi_report_stack.make_lake`), a lake of its own |
+| `test_bi_reports_cross_browser.py` | all (8) | the same |
+| `test_python_runtime_answers.py` | all (2) | the same |
+| `test_expression_recipes.py` | every recipe on the demo lake (1 of 2) | the same |
+| `test_var_explorer_browser.py` | the six over the trade-grain date (`trade_stack`) | a trade-grain morning written into a lake |
+| `test_var_currency_browser.py` | a trade page's currency (1 of 4) | the same |
 
 ### 3.13 A component on a page of its own
 
@@ -257,8 +273,11 @@ paint timings) are masked.
 
 `tools/drillkit/lake_cache.py` builds a demo lake once per hash of what makes it: the committed test data, its generators, the lake code and the pack
 definitions (the working tree's edits included). The lake is under `<cache>/<hash>/`, where `<cache>` is `DRISHTI_LAKE_CACHE`, else
-`<data>/tmp/lake-cache` (a drill keeps the newest three hashes). Every test stack and check reuses it across runs; a build runs under a lock held across
-processes, so workers wait for it rather than repeat it. A cached lake is read only: a test that writes to a lake (`trade_grain`) builds its own.
+`<data>/tmp/lake-cache` (a drill keeps the newest three hashes). Set `DRISHTI_LAKE_CACHE` to one absolute folder for every checkout, worktree
+and drill on a machine, so the shared test lake (section 3.12) is built and kept once; a fresh clone without it uses its own `data/tmp/lake-cache`. Every test stack and check reuses it across runs; a build runs under a lock held across
+processes, so workers wait for it rather than repeat it. The build is `lake demo`'s default writer, the parallel Java loader of the exec jar.
+
+The browser tests read one of these, the shared test lake (section 3.12).
 `python3 tools/drillkit/lake_cache.py build --only market-risk --as-of 2026-09-30` builds or finds one and prints its path.
 
 ### 3.16 Affected tests
@@ -335,7 +354,7 @@ file check) holds the split honest: every key page in exactly one group, every g
   half filled is never read.
 - **Deterministic.** The walk's lake ends on a fixed business date (`SNAPSHOT_DATE`), so figures and dates never move; its server has opened
   nothing before (no recent pages, no workspaces); animations and transitions are off, the caret hidden, fonts (vendored) loaded, the scroll at
-  the top; the business date is picked (`/asof`), pages that draw late are waited on (`idle`, `wait`); the live clock, the date box, Home's fact of the day, the VaR timings and data versions (a hash of the lake build), a search's time taken, the inbox's facts and anything marked `data-snapshot-mask` are covered, timings replaced by a dot, the checkout's folder, the test's scratch folders and the real day's date and time (local or UTC) by fixed words (`snapshots.MASK`, `snapshots.QUIET`, and per page `mask` in `KEY_SNAPSHOTS`).
+  the top; the business date is picked (`/asof`), pages that draw late are waited on (`wait`, their own drawn state; never network idle, which a page's open live channel never reaches), and the captures start once every connector of the server is past its start (none starting or retrying, the list unchanged on three asks: `test_page_walk_browser._connectors_settled`); the live clock, the date box, Home's fact of the day, the VaR timings and data versions (a hash of the lake build), a search's time taken, the inbox's facts and anything marked `data-snapshot-mask` are covered, timings replaced by a dot, the checkout's folder, the test's scratch folders and the real day's date and time (local or UTC) by fixed words (`snapshots.MASK`, `snapshots.QUIET`, and per page `mask` in `KEY_SNAPSHOTS`).
 - **Small goldens.** Each golden is the viewport at half size in at most 128 colours (PNG): a quarter of the pixels and a palette keep the
   whole set (128 images: 32 pages; Admin → Engines is left out because its native-maths notice depends on a timed probe) at about 4 MB, while a moved panel, a lost border, a wrong theme colour or a missing chart still shows. A full-size capture
   would be about ten times that; a perceptual hash alone would not draw what changed. The capture is mapped onto the golden's own palette,
@@ -415,13 +434,17 @@ A VaR file that only reads asks `var_server(..., shared=True)`: its hot folder a
 scratch folder (relative paths), so the settings are the same for every such file, and the worker's pool (section 3.7) hands the server to
 the next file on that worker asking for the same lake and settings, without a start or the engine's warm-up. The files that share today:
 `test_var_family_figures_browser.py`, `test_var_currency_browser.py` (its first server), `test_explain_browser.py`, and, with every
-scenario window, `test_var_lens_browser.py` and `test_var_page_scope_browser.py`. Files that change data (save a basket, upload, change a
-setting, enter a lens on the server) keep a server of their own.
+scenario window, `test_var_page_scope_browser.py`. Files that change data (save a basket, upload, change a setting, enter a lens on the
+server, keep a person's VaR lens in their settings as `test_var_lens_browser.py` does) keep a server of their own.
 
 **The guard.** The pool fingerprints a shared server's scratch folder (every file's size and time, the server's log, temporary, cache and
 VaR hot folders, and what a server writes while serving reads (the official capture and its sequence in the file store, the audit of
 the reads, the derived trade pages, a person's first BI workspace) left out: `wb_live.DERIVED`) when a file gets the server and again when the file is done; a file that wrote anything there
 fails in its teardown with the files it wrote, and the server is stopped instead of handed on, so no file ever sees another file's data.
+A server's own start-up work is done before its folder is first fingerprinted (`_stack(ready=...)`: the VaR engine answers, and the
+official exposure capture of the newest date the server makes at start is in: `var_stack._start_captures_done`), and a platform alert the
+server raised while a file ran (an inbox notice of type `alert`, kind `platform`, such as the memory budget squeezed) is left out
+(`wb_live.without_platform_alerts`); any other notice is still a write.
 The browser-rules test (`test_browser_rules.py`, rule 4) is unchanged: every server still comes from the pool.
 
 ### 3.24 Faster server starts
@@ -542,30 +565,30 @@ answered (`--since-ready`: after each check's first 200).
 python3 tools/sweep/api_sweep.py --console http://host:27480 --server http://host:28480 --admin USER --admin-password PW
 ```
 
-The report is `data/sweep/api-sweep-<stamp>.md` and `.jsonl` (not committed).
+The report is `data/sweep/api-sweep-<stamp>.md` and `.jsonl` (not committed) when run by hand; the drill step writes it to `DRISHTI_SWEEP_OUT`
+(the drill's logs folder) or, unset, to the test's own scratch folder, never under `data/`.
 
 ### 3.29 The release from another folder (a release blocker)
 
 Relative paths hurt more than once, so every full drill proves the release works from anywhere: the drill's **`anywhere`** lane
 (`tools/drill.sh`, `release_anywhere`; `--lanes anywhere` runs it alone) runs `drishti-console/tests/test_release_from_other_folder.py`. It is a
 release blocker: a failure fails the drill, and `--fix` runs it again whenever the commits touch `bin/`, the tools, the kernel or anything the
-server reads. It is not in the gate (a lake load takes minutes).
+server reads. It is not in the gate (three server starts take minutes).
 
 - **The install**: `git archive HEAD` unpacked into a scratch folder on the disk (`data/tmp/anywhere-*`, never `/tmp`, which is memory on a
   build machine) plus the gate's server jar, as the deployment guide makes the release ZIP.
-- **The lake**: the VaR kinds, the desk/book/entity references and the Murex and Endur trades, loaded with the **Java loader** by the install's
-  own `tools/drishti.py lake demo --engine java`, run from the other folder; cached per hash of the sources like the drill's other lakes
-  (about 5 minutes the first time, seconds after).
-- **The server**: the install's `bin/start-server.sh --background`, its process folder and `--workdir` both a different scratch folder, the demo
+- **The lake**: the ONE shared test lake (section 3.12), read only, its absolute path in the lake cache (`DRISHTI_LAKE_CACHE`) given to
+  `--lake-root`; the install builds no lake. The server's state (its VaR hot folder, the official VaR and exposure roots) is in its own
+  scratch data folder.
+- **The server**: the install's `python tools/drishti.py start server --background`, its process folder and `--workdir` both a different scratch folder, the demo
   off, no `DRISHTI_*` setting inherited from the drill. VAR BANK has a non-zero headline, VAR EXPLAIN BANK answers 200 with no error code, POS and
   TRD have rows and FORMS answers; the server is then stopped and started twice more, and VAR BANK is the same figure every time.
 - **The paths**: the `resolved paths:` block the server logs at start (`LaunchRoots`) is parsed on every start: each path absolute, each under the
-  install or the data folder, none under the working folder, and the working folder is left empty.
+  install, the data folder or the shared lake's folder, none under the working folder, and the working folder is left empty.
 - **Negative cases**: a required root that is missing (`DRISHTI_MODULES_HOME` naming no folder) and a relative `DRISHTI_HOME` each stop the start
   within seconds with the message that names the setting and the folder.
-- **Windows**: `test_ps1_roots` (marked `static`, so the gate runs it) reads `bin/lib/common.ps1` and `bin/start-server.ps1`: the install folder
-  comes from the script's own folder, `DRISHTI_HOME` and `DRISHTI_MODULES_HOME` are passed absolute, and the working folder anchors nothing but
-  a relative path the person typed.
+- **Windows**: the same Python command starts the server there; the install folder comes from the folder `tools/drishti.py` lives in,
+  `DRISHTI_HOME` and `DRISHTI_MODULES_HOME` are passed absolute, and the working folder anchors nothing but a relative path the person typed.
 
 ```bash
 drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_release_from_other_folder.py   # needs the server jar (./mvnw -q clean package -DskipTests)
@@ -656,7 +679,7 @@ both absolute (`testing/drishti-testroots`, a test dependency every module inher
 `-Ddrishti.settings.file=/absolute/path/drishti.ini` ([the format](../admin/CONFIGURATION.md)), then the test class's own code location
 (its `target/test-classes` up to the nearest `pom.xml`, and from there to the folder holding `.mvn/`); never the working folder. Nothing needs
 setting for a test built by Maven's importer. To pin or override roots once for all tests in IntelliJ: Run > Edit Configurations > Edit
-configuration templates > JUnit > VM options: `-Ddrishti.settings.file=/home/me/drishti.ini`. `TestPathsGuardTest` (Java) and
+configuration templates > JUnit > VM options: `-Ddrishti.settings.file=/home/me/drishti.ini`. One file per setup works well; `config/settings.examples/test.ini` is a commented starting point. `TestPathsGuardTest` (Java) and
 `tests/test_paths_guard.py` (Python) fail on a test that builds a path from the working folder.
 
 **The path guards are release-blocking and run in every gate.** The product's main code and shipped YAML: `tests/test_no_relative_paths.py`
@@ -678,9 +701,6 @@ ones with the rule tests; a new path from the working folder fails the gate.
 
 - `test_embed_elements_browser.py` and `test_mr_cube_browser.py`: their stack is built once per file; a session stack per worker
   through the pool would let their tests spread (the MR cube now reads the cached lake, section 3.25).
-- The other files that build a VaR demo lake (`test_var_explorer_browser.py`, `test_var_regulatory_browser.py`,
-  `test_stress_window_browser.py`, `test_mr_cube_browser.py`) could ask it through `var_stack.py` (section 3.12) once each is shown to
-  leave the lake as it found it.
 - The files that start the same signed-in server (`DRISHTI_SECURITY_ENABLED`, the test token secret) could ask with `shared=True` once
   each is shown to leave the server as it found it.
 
@@ -688,7 +708,7 @@ ones with the rule tests; a new path from the working folder fails the gate.
 
 Beside the automated harness, the manual QA of an installation (deploy, verify every part, the per-OS checklist, a cluster of three, and the
 offline rehearsal with your own trade files on a machine without internet access) has one home: [DEPLOYMENT_AND_QA_GUIDE.md](../DEPLOYMENT_AND_QA_GUIDE.md),
-with the offline rehearsal in its [section 11](../DEPLOYMENT_AND_QA_GUIDE.md#11-offline-qa-with-your-own-trade-files).
+with the offline rehearsal in its [section 12](../DEPLOYMENT_AND_QA_GUIDE.md#12-offline-qa-with-your-own-trade-files).
 
 ---
 

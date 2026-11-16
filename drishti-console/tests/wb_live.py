@@ -16,7 +16,7 @@
 operations; the real one is what makes "the YAML changes and the comments stay" a true statement).
 
 Not collected as tests (the name does not start with ``test_``); ``test_workbench_browser.py`` imports the fixtures. The server is
-the repackaged jar under ``kernel/drishti-server/target`` run on a free port (or DRISHTI_WB_SERVER_PORT / DRISHTI_WB_CONSOLE_PORT) in a scratch directory; when the jar or a JDK is missing the
+the server jar in ``<home>/lib`` (``python tools/drishti.py build jar`` puts it there) run on a free port (or DRISHTI_WB_SERVER_PORT / DRISHTI_WB_CONSOLE_PORT) in a scratch directory; when the jar or a JDK is missing the
 tests that need it are skipped, never failed."""
 import atexit
 import json
@@ -33,7 +33,7 @@ import urllib.request
 import pytest
 
 from conftest import CONSOLE
-from java_launch import java_cmd
+from java_launch import java_cmd, server_jars
 
 ROOT = CONSOLE.parent
 # The site's own configuration (git-ignored, written by a running server and Admin): a checkout someone runs a server from has them,
@@ -103,8 +103,8 @@ def free_port(env: str = "") -> int:
 
 
 def jar() -> Path | None:
-    found = sorted((ROOT / "kernel/drishti-server" / "target").glob("drishti-server-*-exec.jar"), key=lambda p: p.stat().st_mtime)
-    return found[-1] if found else None
+    found = server_jars()
+    return Path(found[0]) if found else None
 
 
 @pytest.fixture(scope="session")          # one server and console for every browser file that needs no special set-up
@@ -156,6 +156,28 @@ def written(before: dict, after: dict) -> list[str]:
     return sorted(k for k in set(before) | set(after) if before.get(k) != after.get(k))
 
 
+INBOX = "data/fstore/items/collab/inbox/"
+INBOX_COUNTERS = ("data/fstore/items/collab/counters/inbox", "data/fstore/items/collab/inbox-seq/")
+
+
+def without_platform_alerts(work: Path, wrote: list[str]) -> list[str]:
+    """``wrote`` less the server's own platform alerts: an alert rule that fired while the file ran (the memory budget squeezed, a slow
+    disk) writes a notice to the administrator's inbox, as a server does whatever is asked of it (drill of 2026-11-15). Only when every
+    row of every inbox file written is such an alert are the inbox files and its counters left out; a share, a comment or any other
+    notice a test made is still a write."""
+    boxes = [k for k in wrote if k.startswith(INBOX)]
+    if not boxes:
+        return wrote
+    for k in boxes:
+        try:
+            rows = json.loads((work / k).read_text(encoding="utf-8")).get("rows") or []
+        except (OSError, ValueError):
+            return wrote
+        if not rows or any(r.get("type") != "alert" or r.get("kind") != "platform" for r in rows):
+            return wrote
+    return [k for k in wrote if not k.startswith(INBOX) and not k.startswith(INBOX_COUNTERS)]
+
+
 class StackPool:
     """This worker's real servers (docs/architecture/TEST_HARNESS.md, "The server pool"). Every server a browser test starts through
     ``_stack`` passes here: the pool counts and times the starts (DRISHTI_BROWSER_PROFILE), and keeps at most one idle server, so servers
@@ -186,9 +208,10 @@ def _stop_pool():
 atexit.register(_stop_pool)
 
 
-def _stack(tmp_path_factory, extra_env, work=None, auth=False, heap="768m", shared=False):
+def _stack(tmp_path_factory, extra_env, work=None, auth=False, heap="768m", shared=False, ready=None):
     """A real server and a console in front of it, from this worker's pool (StackPool): yields the Stack, stops it (or keeps it idle for the
-    next file asking the same, when ``shared``) when the caller's fixture ends."""
+    next file asking the same, when ``shared``) when the caller's fixture ends. ``ready(stack)``: run once after a start, before a shared
+    server's folder is fingerprinted (what the server does by itself at start is never counted against the file)."""
     key = (tuple(sorted(extra_env.items())), auth, heap)
     if shared and work is None and key in POOL.idle:
         gen, st = POOL.idle.pop(key)
@@ -199,6 +222,8 @@ def _stack(tmp_path_factory, extra_env, work=None, auth=False, heap="768m", shar
         ph = Phases("server-start")
         gen = _start_stack(tmp_path_factory, extra_env, work, auth, heap)
         st = next(gen)
+        if ready:
+            ready(st)
         ph.mark("ready")
         ph.done()
         POOL.starts += 1
@@ -207,7 +232,7 @@ def _stack(tmp_path_factory, extra_env, work=None, auth=False, heap="768m", shar
     try:
         yield st
     finally:
-        wrote = written(before, fingerprint(Path(st.work))) if keep else []
+        wrote = without_platform_alerts(Path(st.work), written(before, fingerprint(Path(st.work)))) if keep else []
         if wrote:
             next(gen, None)          # never handed on: the next file would see this one's data
             pytest.fail("this file shares its server (shared=True) but wrote to it; a file that changes data starts its own server:\n  "
@@ -220,7 +245,7 @@ def _stack(tmp_path_factory, extra_env, work=None, auth=False, heap="768m", shar
 
 def _start_stack(tmp_path_factory, extra_env, work=None, auth=False, heap="768m"):
     if jar() is None or not JAVA.exists():
-        pytest.skip("needs the built server jar (./mvnw -o package -DskipTests -pl :drishti-app -am) and JDK 25")
+        pytest.skip("needs the server jar (python tools/drishti.py build jar) and JDK 25")
     import uvicorn
 
     from core.app import create_app
@@ -244,16 +269,21 @@ def _start_stack(tmp_path_factory, extra_env, work=None, auth=False, heap="768m"
     proc = subprocess.Popen(java_cmd(str(JAVA), [f"-Xmx{heap}", *launch()], tmp=work / "jvm-tmp", cwd=work, env=env), cwd=work, env=env, stdout=(work / "server.log").open("w"), stderr=subprocess.STDOUT)
     try:
         # a server that is still starting is waited for (on a loaded machine a cold start takes minutes): only one that exited is skipped, and one
-        # that never answers fails rather than skipping every test of the file in silence
+        # that never answers fails rather than skipping every test of the file in silence. Ready is Spring's own readiness state, which turns
+        # UP only after the start's last step (the distribution's modules installed and recorded in data/modules/registry.json): the web
+        # layer answers seconds earlier, and a shared server fingerprinted then saw its own start's registry write as the file's (drill of
+        # 2026-11-16), and a page of a module still loading (EXP of banking) had no console part yet (as bi_stack.wait_ready).
         deadline = time.monotonic() + 600
         while time.monotonic() < deadline:
             if proc.poll() is not None:
                 pytest.skip("the server did not start: " + (work / "server.log").read_text()[-400:])
             try:
-                urllib.request.urlopen(f"http://127.0.0.1:{port}/api/v1/rachana/schema", timeout=2).read(10)
+                urllib.request.urlopen(f"http://127.0.0.1:{port}/actuator/health/readiness", timeout=2).read(10)
                 break
-            except urllib.error.HTTPError:           # sign-in on: a 401 is the server answering
-                break
+            except urllib.error.HTTPError as e:      # 503: listening, still starting
+                if e.code != 503:
+                    break                            # sign-in on (401): the server answering
+                time.sleep(0.5)   # wait-ok: polling a server that is still starting
             except OSError:
                 time.sleep(0.5)   # wait-ok: polling a server that is still starting
         else:

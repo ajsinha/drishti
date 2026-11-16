@@ -13,14 +13,14 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # The local Drishti*net cluster of deploy/stack/ (README.md): every node, its port, packs, lake and the connectors it switches off, and
-# the console. bin/start-cluster reads this file; adding a node is one entry under nodes (its net folder is made from it on the first start).
-# No secret here: the keys are in secrets.env (git-ignored), made by bin/start-cluster on the first start.
+# the console. drishti.py start cluster reads this file; adding a node is one entry under nodes (its net folder is made from it on the first start).
+# No secret here: the keys are in secrets.env (git-ignored), made by drishti.py start cluster on the first start.
 
 # host: 192.168.1.20              # the address every node advertises and the console is given; empty: this machine's primary IPv4
                                    # (the default route's interface, never a docker bridge). Members never advertise 127.0.0.1.
 seed: drishti-main                 # the node every other node knows first (its peers/<seed>.yaml); it learns the rest by gossip
 java: /usr/lib/jvm/java-21-openjdk-amd64/bin/java     # JAVA_HOME/bin/java wins when JAVA_HOME is set
-admin: drishti-dev-admin           # the administrator bin/status asks /api/v1/net/members as (a token signed with DRISHTI_TOKEN_SECRET)
+admin: drishti-dev-admin           # the administrator drishti.py status asks /api/v1/net/members as (a token signed with DRISHTI_TOKEN_SECRET)
 
 gossip:                            # nodes/<node>/net/gossip.yaml of a new node
   interval: 1s
@@ -45,8 +45,8 @@ lakes:                             # synthetic trades (tools/bench/trades.py), b
   murex:  { systems: murex, per-day: 1500, days: 60, counterparties: 300 }
 
 nodes:
-  # your own stack: the repository is its working folder, so its data is the repository's data/ (the demo lakes) and its connectors
-  # config/connectors/, exactly as when you start the server from the IDE
+  # your own stack: home: repo, so its data is the repository's data/ (the demo lake), exactly as when you start the server from
+  # the IDE; its connectors are the modules' templates (with any override of yours in config/connectors/)
   - name: drishti-main
     port: 18480
     home: repo

@@ -38,9 +38,9 @@ About 45 minutes.
 The outputs of the command line below were captured on this version; paths are shortened to `~/drishti`.
 
 **The ready-made local cluster: `deploy/stack/`.** This tutorial builds a cluster by hand so that you see each file. To have one running
-without the steps, use `deploy/stack/` at the repository's root: `bin/start-cluster.sh` starts three servers (your own stack on 18480 with
+without the steps, use `deploy/stack/` at the repository's root: `python tools/drishti.py start cluster` starts three servers (your own stack on 18480 with
 the demo lakes, and two more on 18791 and 18792 with synthetic ENDUR, CALYPSO and MUREX trades) and a console on 17480 given the first
-alone; `bin/status --cluster` shows the members and `bin/stop-cluster` stops them by process id. The secrets are made on the first start and stay out of git.
+alone; `drishti.py status --cluster deploy/stack/stack.yaml` shows the members and `drishti.py stop cluster` stops them by process id. The secrets are made on the first start and stay out of git.
 See [deploy/stack/README.md](../../deploy/stack/README.md).
 
 ## What you will learn
@@ -154,18 +154,18 @@ exits 1 and names `node.yaml:3`.
 
 ## Step 3 · Start the three and watch them meet
 
-Start each server with `bin/start-server.sh --node`, its own data folder and its own `config/net/` folder, and the key in an env-file
-(`cluster.env`, a line `DRISHTI_NET_SECRET=<the key>`; the script never prints it):
+Start each server with `drishti.py start server --node`, its own data folder and its own `config/net/` folder, and the key in an env-file
+(`cluster.env`, a line `DRISHTI_NET_SECRET=<the key>`; the command never prints it):
 
 ```bash
-bin/start-server.sh --node drishti-a --port 18783 --node-dir ~/drishti/a/net --node-data ~/drishti/a/data --env-file cluster.env --background
-bin/start-server.sh --node drishti-b --port 18784 --node-dir ~/drishti/b/net --node-data ~/drishti/b/data --env-file cluster.env --background
-bin/start-server.sh --node drishti-c --port 18785 --node-dir ~/drishti/c/net --node-data ~/drishti/c/data --env-file cluster.env --background
-bin/status.sh                                   # the three running and UP, each with the address it advertises
+python tools/drishti.py start server --node drishti-a --port 18783 --node-dir ~/drishti/a/net --node-data ~/drishti/a/data --env-file cluster.env --background
+python tools/drishti.py start server --node drishti-b --port 18784 --node-dir ~/drishti/b/net --node-data ~/drishti/b/data --env-file cluster.env --background
+python tools/drishti.py start server --node drishti-c --port 18785 --node-dir ~/drishti/c/net --node-data ~/drishti/c/data --env-file cluster.env --background
+python tools/drishti.py status                  # the three running and UP, each with the address it advertises
 ```
 
-On Windows the same with `bin\start-server.cmd`. Each node advertises this machine's real address (`--advertise` names another); every
-option, and the layout on three machines: [DEPLOYMENT_AND_QA_GUIDE.md › section 10.6](../DEPLOYMENT_AND_QA_GUIDE.md#106-start-order-and-joining).
+On Windows the same with `py tools\drishti.py`. Each node advertises this machine's real address (`--advertise` names another); every
+option, and the layout on three machines: [DEPLOYMENT_AND_QA_GUIDE.md › section 11.6](../DEPLOYMENT_AND_QA_GUIDE.md#116-start-order-and-joining).
 
 Each logs its join and each member it learns. Node b's log, as captured:
 
@@ -311,7 +311,7 @@ drishti:
 ```
 
 The servers' Docker and ECS images and the systemd unit run this drain by themselves on a stop; a whole cluster is upgraded one node at a
-time with `tools/rolling-upgrade.sh` ([OPERATIONS_GUIDE.md, upgrades](../guides/OPERATIONS_GUIDE.md#18-upgrades-and-rollback)).
+time with `python tools/rolling.py` ([OPERATIONS_GUIDE.md, upgrades](../guides/OPERATIONS_GUIDE.md#18-upgrades-and-rollback)).
 
 Now stop node a, the one the console was given. Within `fail_after` failed requests or health checks the console sets a aside and moves your
 session to another server: a read that failed is retried once there, a write is never repeated (it fails with an error naming the server, and you check and make it again). The

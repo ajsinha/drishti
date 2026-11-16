@@ -37,11 +37,12 @@ sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE / "packgen"))
 import childkinds as CK  # noqa: E402
 import ingest_jsonl as IJ  # noqa: E402
+import javacmd  # noqa: E402
 import module_from_jsonl as MJ  # noqa: E402
 
 PFJ = MJ.PFJ
 FIXTURE = ROOT / "kernel" / "drishti-server" / "src" / "test" / "resources" / "childtables"
-JARS = sorted(glob.glob(str(ROOT / "kernel/drishti-server/target/drishti-server-*-exec.jar")))
+JARS = [str(p) for p in sorted(javacmd.lib_dir().glob(javacmd.JAR_GLOB), key=lambda p: p.stat().st_mtime)]
 
 
 def book(n: int = 40) -> list[dict]:
@@ -215,7 +216,7 @@ class ChildKinds(unittest.TestCase):
             self.assertEqual((FIXTURE / rel).read_text(encoding="utf-8"), text, rel)
         self.assertEqual({}, CK.bi_files("x", "1.0.0", an.prof.kinds, an.keys, {}, {}))
 
-    @unittest.skipUnless(JARS, "needs the built server jar (kernel/drishti-server/target/drishti-server-*-exec.jar)")
+    @unittest.skipUnless(JARS, "needs the server jar (<home>/lib: python tools/drishti.py build jar)")
     def test_the_pack_its_sutras_and_the_bi_files_pass_their_checks(self):
         a = opts([self.src], out=self.dir / "deals", force=True, jar=None, java=None)
         a.jar, a.java = PFJ.SG.find_jar(None), PFJ.SG.find_java(None)

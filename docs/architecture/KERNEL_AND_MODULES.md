@@ -447,7 +447,7 @@ Representative stub files with real-looking content:
 | `drishti.modules.active` | `config/modules/active.yaml` | which version of each installed module is active (written by install, upgrade, rollback; four eyes) |
 | `drishti.modules.trust` | `config/trust/publishers/` | publisher certificates the site trusts |
 | `drishti.modules.<id>.enabled` | `true` | the existing switch ([ACCESS_MODEL.md section 8](ACCESS_MODEL.md#8-as-built-the-backend-phase-1-of-the-split)) |
-| `drishti.lib.path` | `${drishti.data.dir}/lib` | **the site's shared jars, Tomcat `lib/` style**: every jar there is loaded at start into one shared *lib* class loader (section 4.4); restart to pick up changes |
+| `drishti.lib.path` | `${drishti.home}/lib/ext` | **the site's shared jars, Tomcat `lib/` style** (kept on an upgrade; `<home>/lib` holds Drishti's own jar): every jar there is loaded at start into one shared *lib* class loader (section 4.4); restart to pick up changes |
 | `drishti.modules.autodeploy` | `true` on a single node, `false` in a cluster | **Tomcat `webapps/` style**: a `.dmod` dropped into the modules folder is verified, exploded and loaded; deleting it unloads the module. In a cluster, deploy is plan → four-eyes apply (section 10), so one node never changes behind the others |
 | `drishti.modules.dev` | `false` | **development only**: a module's unpacked build folder loads without packing and reloads on change; Health marks it *development (unverified)*; refused in a cluster and in a production distribution |
 

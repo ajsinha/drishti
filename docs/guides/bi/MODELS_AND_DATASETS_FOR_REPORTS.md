@@ -314,7 +314,7 @@ Run these from the Drishti folder (the repository root, or the install folder of
 drishti-console/.venv/bin/python tools/drishti.py lake demo
 DRISHTI_DEMO_ENABLED=false DRISHTI_SECURITY_ENABLED=true DRISHTI_TOKEN_SECRET=drishti-dev-only-token-secret-change-me-0123456789 \
   DRISHTI_SEED_ADMIN=true DRISHTI_SEED_USERNAME=drishti-dev-admin DRISHTI_SEED_PASSWORD=drishti-dev-admin123 \
-  java -Xmx4g -jar kernel/drishti-server/target/drishti-server-*-exec.jar
+  java -Xmx4g -jar lib/drishti-server-*-exec.jar
 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py --server.port=17480 --backend.url=http://127.0.0.1:18480
 ```
 

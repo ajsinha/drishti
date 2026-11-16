@@ -51,7 +51,9 @@ jobs:
         env:
           DRISHTI_PACKS: market-risk
         run: |
-          $jar = (Get-ChildItem kernel/drishti-server/target/drishti-server-*-exec.jar | Select-Object -First 1).FullName
+          New-Item -ItemType Directory -Force -Path lib | Out-Null
+          Copy-Item (Get-ChildItem kernel/drishti-server/target/drishti-server-*-exec.jar | Select-Object -First 1).FullName lib/
+          $jar = (Get-ChildItem lib/drishti-server-*-exec.jar | Select-Object -First 1).FullName
           New-Item -ItemType Directory -Force -Path data/logs, data/tmp/server | Out-Null
           $tmp = (Resolve-Path data/tmp/server).Path
           $server = Start-Process -FilePath java -ArgumentList "-Djava.io.tmpdir=$tmp", '-XX:+UseCompactObjectHeaders', '-Xmx1g', '-jar', $jar -PassThru `

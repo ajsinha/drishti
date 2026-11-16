@@ -126,11 +126,11 @@ def migrate_folder(bi_dir: Path, tmp: Path | None = None) -> None:
     import glob
     import os
     import subprocess
-    from java_launch import java_cmd
+    from java_launch import java_cmd, server_jars
     bi_dir = Path(bi_dir)
     if not any((bi_dir / d).is_dir() and any((bi_dir / d).glob("*.yaml")) for d in ("datasets", "models")):
         return
-    jars = sorted(glob.glob(str(ROOT / "kernel/drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)
+    jars = server_jars()
     if not jars:
         raise FileNotFoundError("needs the built server: ./mvnw -o -q package -DskipTests -pl :drishti-app -am")
     java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"

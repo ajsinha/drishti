@@ -173,13 +173,9 @@ def _hashes(folder: Path) -> dict[str, str]:
 
 
 @pytest.fixture(scope="module")
-def lake():
-    sys.path.insert(0, str(ROOT / "tools" / "drillkit"))
-    import lake_cache
-    try:
-        return lake_cache.demo_lake(ONLY, "today") / "delta"
-    except RuntimeError as e:
-        pytest.skip("could not build the demo lake: " + str(e))
+def lake(tmp_path_factory):
+    import var_stack
+    return var_stack.shared_lake(tmp_path_factory)      # the ONE shared read-only lake (TEST_HARNESS.md, "The shared test lake")
 
 
 @pytest.fixture(scope="module")

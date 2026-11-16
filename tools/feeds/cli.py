@@ -26,7 +26,7 @@
     python3 tools/drishti.py feed schedule --cron                         daily crontab lines (--systemd, --windows)
 
     tools/feeds/feed.sh <the same arguments>                              Linux and macOS (the console's Python)
-    .\\tools\\windows\\feed.ps1 <the same arguments>                         Windows (PowerShell)
+    drishti-console\\.venv\\Scripts\\python.exe tools\\drishti.py feed <the same arguments>    Windows (the console's Python)
 
 Exit codes (for schedulers): 0 ok, 1 failed, 2 refused or a usage error (a bad feed file, a key not set, an unknown feed), 3 another
 run of the feed holds its lock, 4 partial (some feeds of --all failed, or the load rejected rows). Every run prints one log line and
@@ -207,8 +207,8 @@ def register(groups, add=None) -> argparse.ArgumentParser:
     p.add_argument("--set", action="append", metavar="NAME=VALUE", help="override an option of the feed file (JSON values allowed)")
     p.add_argument("--inbox", metavar="DIR", help="--load inbox: the inbox folder (default <data>/dataload/inbox)")
     p.add_argument("--lake-root", metavar="DIR", help="java/python: write the lake's layout under this folder instead (a scratch copy)")
-    p.add_argument("--jar", help="the server's exec jar (default DRISHTI_JAR, then kernel/drishti-server/target)")
-    p.add_argument("--java", help="the java binary (default JAVA_HOME, then java on the PATH)")
+    p.add_argument("--jar", help="the server's exec jar (default: the newest in <home>/lib)")
+    p.add_argument("--java", help="the java binary (default: DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH; Java 21+)")
     p.add_argument("--signal", metavar="URL", help="java/python: tell this server the data landed (a token with loads:write)")
     p.add_argument("--token-file", help="the API token for --signal (default DRISHTI_TOKEN)")
     p.add_argument("--trigger", default="cli", choices=("cli", "schedule", "admin"), help=argparse.SUPPRESS)

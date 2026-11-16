@@ -140,7 +140,7 @@ run refuses to start, and stops between steps, when the machine has less memory 
 | `iceberg` | none (path-based tables) | `iceberg`, `DRISHTI_ICEBERG_ROOT` at the scratch folder |
 
 The server runs `DRISHTI_PACKS=market-risk,counterparty-risk` (with the packs they extend), `java -Xmx2g -XX:+UseCompactObjectHeaders -jar
-kernel/drishti-server/target/drishti-server-*-exec.jar`, its identity database, governance and report folders in the scratch folder, the access log
+lib/drishti-server-*-exec.jar`, its identity database, governance and report folders in the scratch folder, the access log
 and the report scheduler off. Each result line:
 
 ```json
@@ -1685,35 +1685,35 @@ load (many workers and the Java builds beside them), so they are an upper bound 
 `DRISHTI_PAGEWALK_BUDGET`).
 
 <!-- pageloads:begin (tools/drillkit/pageloads.py --write; the last drill's browser lane) -->
-Measured 2026-11-11: 3,063 page loads of 397 pages; the 25 slowest by p95 (slow from 2 s).
+Measured 2026-11-16: 3,005 page loads of 380 pages; the 25 slowest by p95 (slow from 2 s).
 
 | Page | Loads | p95 | Median |
 |---|---:|---:|---:|
-| `/v/trade/1000101` (slow) | 2 | 10.60 s | 6.08 s |
-| `/admin/white-label` (slow) | 14 | 9.09 s | 0.44 s |
-| `/v/system-basket/PF-RATES-DESK` (slow) | 1 | 8.90 s | 8.90 s |
-| `/func` (slow) | 9 | 8.12 s | 0.32 s |
-| `/admin/bindings` (slow) | 12 | 7.89 s | 0.42 s |
-| `/admin/loads` (slow) | 16 | 6.91 s | 0.47 s |
-| `/admin/connectors` (slow) | 32 | 6.63 s | 0.51 s |
-| `/page.html` (slow) | 5 | 6.24 s | 3.99 s |
-| `/v/listed-company/CO-AAPL` (slow) | 4 | 6.16 s | 4.50 s |
-| `/lens/risk` (slow) | 6 | 5.84 s | 0.22 s |
-| `/forms` (slow) | 24 | 5.71 s | 0.32 s |
-| `/var` (slow) | 106 | 5.67 s | 0.73 s |
-| `/admin/net` (slow) | 31 | 5.25 s | 0.60 s |
-| `/bi/r/file:report:python-desk-risk/vega` (slow) | 1 | 5.19 s | 5.19 s |
-| `/lens/leave` (slow) | 22 | 5.12 s | 0.07 s |
-| `/v/development-profile/WDI-CAN` (slow) | 1 | 4.99 s | 4.99 s |
-| `/v/trade/MX-20000001` (slow) | 17 | 4.62 s | 1.29 s |
-| `/v/jurisdiction/JUR-AUS` (slow) | 2 | 4.59 s | 3.69 s |
-| `/admin/modules/deploy` (slow) | 9 | 4.55 s | 0.29 s |
-| `/v/fund/QQQ` (slow) | 1 | 4.50 s | 4.50 s |
-| `/v/central-bank/CBANK-BOC` (slow) | 1 | 4.34 s | 4.34 s |
-| `/var/reports` (slow) | 3 | 4.34 s | 0.42 s |
-| `/bi/r/file:report:counterparty-risk` (slow) | 10 | 4.22 s | 0.45 s |
-| `/datamap` (slow) | 10 | 3.94 s | 0.48 s |
-| `/admin/engines` (slow) | 16 | 3.90 s | 0.36 s |
+| `/v/listed-company/CO-AAPL` (slow) | 4 | 12.02 s | 7.84 s |
+| `/v/news-topic/TOPIC-FED` (slow) | 3 | 11.00 s | 1.83 s |
+| `/page.html` (slow) | 5 | 10.36 s | 4.34 s |
+| `/bi/design/bi-25d42db12e` (slow) | 1 | 8.44 s | 8.44 s |
+| `/exposure` (slow) | 17 | 8.19 s | 0.55 s |
+| `/v/fund/QQQ` (slow) | 1 | 8.07 s | 8.07 s |
+| `/v/us-company/AAPL` (slow) | 1 | 7.68 s | 7.68 s |
+| `/v/trade/MX-00003` (slow) | 1 | 7.56 s | 7.56 s |
+| `/v/jurisdiction/JUR-AUS` (slow) | 2 | 7.51 s | 4.54 s |
+| `/admin/artifacts` (slow) | 18 | 7.35 s | 1.66 s |
+| `/v/fund/VTI` (slow) | 1 | 7.32 s | 7.32 s |
+| `/v/economy/ECON-AUS` (slow) | 1 | 7.03 s | 7.03 s |
+| `/bi/datasets` (slow) | 11 | 6.68 s | 1.00 s |
+| `/v/jurisdiction/JUR-NZL` (slow) | 1 | 6.59 s | 6.59 s |
+| `/reports/subscribe` (slow) | 5 | 6.43 s | 1.86 s |
+| `/bi/r/file:report:trades-overview` (slow) | 20 | 6.42 s | 0.77 s |
+| `/bi/r/file:report:nv-demo` (slow) | 6 | 6.22 s | 1.17 s |
+| `/bi/i/bi-9e450d505b` (slow) | 1 | 5.84 s | 5.84 s |
+| `/v/quote/QUOTE-MSFT` (slow) | 1 | 5.77 s | 5.77 s |
+| `/bi/r/file:report:world-economics` (slow) | 2 | 5.64 s | 3.22 s |
+| `/admin/engines` (slow) | 14 | 5.63 s | 1.00 s |
+| `/v/trade/MX-20000001` (slow) | 17 | 5.58 s | 3.01 s |
+| `/bi/design/bi-801ceb708c` (slow) | 1 | 5.46 s | 5.46 s |
+| `/bi/design/bi-5b7fd959e5` (slow) | 1 | 5.30 s | 5.30 s |
+| `/v/trade/1000001` (slow) | 33 | 5.20 s | 2.37 s |
 <!-- pageloads:end -->
 
 ## 19. The BI scale gate
@@ -1949,7 +1949,7 @@ JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -XX:+UseZGC -XX:+ZGenerational -XX:Na
   -Xlog:gc*:file=gc.log:time,uptime,level,tags:filecount=5,filesize=20m \
   -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=./dumps \
   -XX:StartFlightRecording=name=soak,settings=profile,maxage=6h,disk=true,filename=./dumps/soak.jfr" \
-  java -jar kernel/drishti-server/target/drishti-server-*-exec.jar
+  java -jar lib/drishti-server-*-exec.jar
 jcmd <pid> GC.run && jcmd <pid> GC.heap_info                         # is something growing? (cheap, any time)
 jcmd <pid> GC.class_histogram | head -40 > histo-$(date +%H%M).txt    # at the start, after 1 h and 6 h; diff them
 jcmd <pid> VM.native_memory summary

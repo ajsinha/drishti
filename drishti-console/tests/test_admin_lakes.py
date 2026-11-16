@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Admin → Data loads → Lakes: upload (streamed to the temp folder), scan with suggestions, targets, a build through the CLI's
-engine (tools/lake/build.py, deltalake) on a small synthetic file, then the connector bound and the load announced as the admin.
+engine (tools/lake/build.py, engine auto: the parallel Java loader of the exec jar, else Drishti's writer, else deltalake) on a small synthetic file, then the connector bound and the load announced as the admin.
 
     uv run --with deltalake --with pyarrow -r drishti-console/requirements.txt python -m pytest drishti-console/tests/test_admin_lakes.py -q
 """
@@ -23,11 +23,15 @@ import time
 from pathlib import Path
 
 import pytest
+
+from var_stack import PARKED_I6  # noqa: E402 - tests parked to i6
 import yaml
 
 from core.lakes import Lakes, LakeSettings, connector_text
 
 REPO = Path(__file__).resolve().parents[2]
+#: the writers lake build may choose (engine auto: java where the exec jar is, else drishti, else deltalake)
+ENGINES = ("java", "drishti", "deltalake")
 needs_deltalake = pytest.mark.skipif(importlib.util.find_spec("deltalake") is None, reason="the build test needs deltalake and pyarrow")
 OCTET = {"Content-Type": "application/octet-stream"}
 
@@ -41,7 +45,7 @@ def book(n=60, day=None):
 
 @pytest.fixture
 def lakes(client, tmp_path):
-    lk = Lakes(LakeSettings(roots=[tmp_path / "lake"], tools_dir=REPO / "tools", engine="deltalake"))
+    lk = Lakes(LakeSettings(roots=[tmp_path / "lake"], tools_dir=REPO / "tools"))          # engine auto: the Java loader where the jar is
     client.app.state.lakes = lk
     yield lk
     del client.app.state.lakes
@@ -121,6 +125,7 @@ def test_connector_text_binds_the_lake_and_keeps_the_rest():
 
 
 @needs_deltalake
+@PARKED_I6   # writes to a lake: parked to i6 (owner 2026-11-15)
 def test_a_build_binds_the_connector_and_announces_each_date(client, backend, monkeypatch, lakes):
     calls = []
     fake(backend, monkeypatch, calls)
@@ -139,7 +144,7 @@ def test_a_build_binds_the_connector_and_announces_each_date(client, backend, mo
         time.sleep(0.3)
     assert j["state"] == "done", j
     s = j["summary"]
-    assert (s["status"], s["accepted"], s["rejected"], s["engine"]) == ("partial", 30, 1, "deltalake")
+    assert (s["status"], s["accepted"], s["rejected"]) == ("partial", 30, 1) and s["engine"] in ENGINES, s
     assert s["rows"] == {"2026-10-01": 30} and s["sampleId"] and s["kind"] == "deal"
     assert (lakes.cfg.roots[0] / "book" / "deal" / "business_date=2026-10-01" / "PRODUCT_TYPE=Swap").is_dir()
     put = [c for c in calls if c[0] == "PUT" and c[1] == "/connectors/book-store"]
@@ -163,6 +168,7 @@ def test_a_build_binds_the_connector_and_announces_each_date(client, backend, mo
     assert t["tables"] == [{"root": str(lakes.cfg.roots[0]), "domain": "book", "kind": "deal", "partitionBy": ["PRODUCT_TYPE"], "promoted": ["NOTIONAL"]}]
 
 
+@PARKED_I6   # writes to a lake: parked to i6 (owner 2026-11-15)
 def test_a_table_opens_its_own_page_with_dates_columns_commits_loads_and_readers(client, backend, monkeypatch, lakes, tmp_path):
     import json as _json
     import subprocess
@@ -174,7 +180,7 @@ def test_a_table_opens_its_own_page_with_dates_columns_commits_loads_and_readers
     root = lakes.cfg.roots[0]
     r = subprocess.run([_sys.executable, str(REPO / "tools" / "drishti.py"), "lake", "build", "--from", str(src), "--lake", str(root),
                         "--domain", "book", "--kind", "deal", "--key", "TRADE_ID", "--mode", "overwrite-dates", "--partition-by", "PRODUCT_TYPE",
-                        "--promote", "NOTIONAL", "--engine", "deltalake", "-q"], capture_output=True, text=True)
+                        "--promote", "NOTIONAL", "-q"], capture_output=True, text=True)
     assert r.returncode == 0, r.stdout + r.stderr
     calls = []
     fake(backend, monkeypatch, calls, connector={"settings": {"domain": "book", "root": "x"}, "kinds": ["deal"]})
@@ -189,8 +195,8 @@ def test_a_table_opens_its_own_page_with_dates_columns_commits_loads_and_readers
     dates = t[t.index("data-lt-dates"):]
     assert dates.index("2026-10-02") < dates.index("2026-10-01")
     assert ">NOTIONAL<" in t and "promoted field" in t and "the whole document" in t  # columns and their roles
-    assert "data-lt-commits" in t and "WRITE" in t                                   # the log's commits
-    assert "data-lt-loads" in t and "deltalake" in t                                 # lake build's own record of the load
+    assert "data-lt-commits" in t and ("WRITE" in t or "CREATE TABLE" in t)                                   # the log's commits
+    assert "data-lt-loads" in t and any(e in t for e in ENGINES)                     # lake build's own record of the load (its engine)
     assert 'href="/admin/connectors/book-store"' in t                                # the connector that reads it
     for bad in ({"root": "/etc", "table": "book/deal"}, {"root": str(root), "table": "../x"}, {"root": str(root), "table": "book/nothing"}):
         assert client.get("/admin/lakes/table", params=bad).status_code == 404

@@ -15,7 +15,7 @@
 -->
 # Genomics: the tutorial
 
-1. **Start Drishti Genomics.** `bin/start-all.sh --distribution genomics` (Windows: `bin\start-all.ps1 -Distribution genomics`). The
+1. **Start Drishti Genomics.** `python tools/drishti.py start all --distribution genomics` (Windows: `py tools\drishti.py start all --distribution genomics`). The
    kernel starts with this module alone: the Research lens, no finance anywhere.
 2. **Open a gene.** Type `GENE TP53` and press Enter. The page shows TP53's variants along the protein: each stem at an amino acid
    position, the head as high as the samples carrying it, coloured by impact; the protein's domains are the bands. The grid under it

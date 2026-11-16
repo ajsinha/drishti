@@ -56,7 +56,7 @@ LANE_RULES: tuple[tuple[str, frozenset[str]], ...] = (
     (r"^drishti-console/tests/", frozenset({"browser", "other"})),
     (r"^drishti-console/(?!tests/)", ALL),
     (r"^deploy/docker/|(^|/)\.dockerignore$|^bin/drishti-node\.sh$", frozenset({"containers"})),
-    (r"^bin/", frozenset({"anywhere", "tools-a", "tools-b"})),                                   # the launch scripts and their tests
+    (r"^(bin|tools/launch)/", frozenset({"anywhere", "tools-a", "tools-b"})),                                   # the launch scripts and their tests
     (r"^deploy/", frozenset({"tools-b"})),                                                         # deploy/aws's tool tests
     (r"^compute/drishti-compute/src/test/python/", frozenset({"tools-b"})),
     (r"^tools/", frozenset({"tools-a", "tools-b", "browser", "other", "anywhere"})),                          # the lake builders the browser files use

@@ -54,9 +54,12 @@ class VarPvStreamBrokerAbsentTest {
             root.detachAppender(log);
             root.setLevel(before);
         }
-        assertThat(log.list).noneMatch(e -> e.getLevel().isGreaterOrEqual(Level.WARN) && e.getLoggerName().startsWith("com.ash.drishti"))
-                .noneMatch(e -> e.getThrowableProxy() != null && e.getLoggerName().startsWith("com.ash.drishti"));
-        assertThat(log.list.stream().filter(e -> e.getFormattedMessage().contains("pv-waiting-test: broker not reachable")).count()).isEqualTo(1);
+        // the PV feed's own lines only: the root logger also hears the other test servers this fork keeps (Spring's context cache), whose
+        // connectors over a lake without those tables say DOWN with the folder they looked in (drill of 2026-11-15: trade-wss, risk-store)
+        java.util.List<ILoggingEvent> mine = log.list.stream().filter(e -> e.getLoggerName().startsWith(VarPvStreamPlugin.class.getPackageName() + ".VarPvStream")
+                || e.getFormattedMessage().contains("pv-waiting-test")).toList();
+        assertThat(mine).noneMatch(e -> e.getLevel().isGreaterOrEqual(Level.WARN)).noneMatch(e -> e.getThrowableProxy() != null);
+        assertThat(mine.stream().filter(e -> e.getFormattedMessage().contains("pv-waiting-test: broker not reachable")).count()).isEqualTo(1);
     }
 
     @Test

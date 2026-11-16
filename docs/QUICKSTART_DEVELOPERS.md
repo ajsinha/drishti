@@ -60,6 +60,12 @@ On Windows the environment's Python is `drishti-console\.venv\Scripts\python.exe
 `drishti-console\.venv\Scripts\python.exe -m pip install -r drishti-console\requirements-test.txt`).
 
 **You should see** `doctor` end with `doctor: all clear` (the Java, the Python and its libraries, the ports 18480 and 17480 free).
+
+**Your settings file**, once: every IntelliJ and PyCharm run configuration passes `$USER_HOME$/drishti-envs/dev.ini`, and a missing file
+stops it at once. Copy `config/settings.examples/dev.ini` there and replace its `/path/to/drishti` with your clone's full path
+(`mkdir -p ~/drishti-envs && cp config/settings.examples/dev.ini ~/drishti-envs/dev.ini`; Windows `C:\Users\you\drishti-envs\dev.ini`).
+`python tools/drishti.py setup` makes it for you (it never overwrites one), and `tools/drishti.py` takes it with `--settings` ([DEVELOPER_GUIDE.md › Your settings file](guides/DEVELOPER_GUIDE.md#your-settings-file-for-the-ide-launchers),
+[DEPLOYMENT_AND_QA_GUIDE.md › The settings file](DEPLOYMENT_AND_QA_GUIDE.md#51-the-settings-file)).
 `requirements-test.txt` is `requirements.txt` plus pytest, pytest-xdist and Playwright: a developer needs both. The IDE setup (IntelliJ
 IDEA on the root, PyCharm on `drishti-console/`, never one folder for both) is
 [OPERATIONS_GUIDE.md › Maven, IntelliJ IDEA and PyCharm](guides/OPERATIONS_GUIDE.md#3-other-ways-to-build-and-run-maven-intellij-idea-and-pycharm).
@@ -67,40 +73,30 @@ IDEA on the root, PyCharm on `drishti-console/`, never one folder for both) is
 ## 2. Build the server
 
 ```bash
-./mvnw -q clean package -DskipTests -pl :drishti-app -am
-ls kernel/drishti-server/target/*-exec.jar
+python tools/drishti.py build jar        # Windows: py tools\drishti.py build jar
+ls lib/*-exec.jar
 ```
 
-**You should see** nothing from Maven (`-q`), then `kernel/drishti-server/target/drishti-server-2.9.11.g-exec.jar`. The first build downloads
+**You should see** Maven's progress, then `lib/drishti-server-2.9.11.g-exec.jar`: `build jar` runs `mvnw clean package` for the server and
+copies the exec jar into `lib/`, where every start finds it (`--offline` builds without the network). The first build downloads
 its libraries (several minutes); later ones take about a minute. `-pl :drishti-app -am` builds the jar that runs (the core server with
 the banking module and the plugins) and only what it needs; `clean` keeps exactly one exec jar in `target/`. Every Maven command and
-what it builds: [DEVELOPER_GUIDE.md › Maven commands](guides/DEVELOPER_GUIDE.md#22-maven-commands). On Windows: `.\mvnw.cmd -q clean
-package -DskipTests -pl :drishti-app -am`.
+what it builds: [DEVELOPER_GUIDE.md › Maven commands](guides/DEVELOPER_GUIDE.md#22-maven-commands).
 
 ## 3. Run the server and the console on the demo lake
 
-Build the demo lake once (86 tables, sixty business days ending today, about 15 minutes and 3.4 GB under `data/delta/demo/`), then start
-both programs with the scripts in `bin/`:
+Build the demo lake once (about ninety tables, sixty business days ending today, about 15 minutes and 3.4 GB under `data/delta/demo/`;
+with the jar built, Drishti's Java loader writes it), then start both programs with `tools/drishti.py`:
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py lake demo
+python tools/drishti.py --settings ~/drishti-envs/dev.ini lake demo --engine java
+python tools/drishti.py --settings ~/drishti-envs/dev.ini start all --demo   # the server on :18480, then the console on :17480, in the background
+python tools/drishti.py status                                               # both running and UP, with the addresses to open
+python tools/drishti.py stop all                                             # the console, then the server (by their pid files)
 ```
 
-**Linux and macOS**
-
-```bash
-bin/start-all.sh --demo          # the server on :18480, then the console on :17480, in the background
-bin/status.sh                    # both running and UP, with the addresses to open
-bin/stop-all.sh                  # the console, then the server (by their pid files)
-```
-
-**Windows** (`cmd` or PowerShell; Java and Python only)
-
-```powershell
-bin\start-all.cmd --demo
-bin\status.cmd
-bin\stop-all.cmd
-```
+On Windows (`cmd` or PowerShell; Java and Python only) the same commands run as `py tools\drishti.py ...`, with the settings file
+`%USERPROFILE%\drishti-envs\dev.ini`.
 
 **You should see** `server: up on http://<this machine's address>:18480` and `console: up on http://<this machine's address>:17480`, with a
 warning that the demo's **development** secrets are in use (fine on your machine, never on a shared one). Open the console's address,
@@ -108,12 +104,14 @@ sign in as `drishti-dev-admin` (password `drishti-dev-admin123`), type `TRD 1000
 legs and cash flows. `VAR BANK` answers the bank's value at risk.
 
 To watch a program's output, start each in the foreground in its own terminal instead (`Ctrl+C` stops it):
-`bin/start-server.sh --demo`, then `bin/start-console.sh --demo` (Windows: `bin\start-server.cmd --demo`, `bin\start-console.cmd --demo`).
-Logs are in `data/logs/` (`server.log`, `console.log`), process ids in `data/run/`. Every option of the scripts (ports, heap, an
+`python tools/drishti.py start server --demo`, then `python tools/drishti.py start console --demo` (no `--background`).
+Logs are in `data/logs/` (`server.log`, `console.log`), process ids in `data/run/`. Every option of the commands (ports, heap, an
 env-file for your own secrets, a cluster of several servers with `--node`, the console's `--server`), where the files go, the exit codes
-and what to do when a script stops with an error: [DEPLOYMENT_AND_QA_GUIDE.md › section 6](DEPLOYMENT_AND_QA_GUIDE.md#6-start-the-server-and-the-console).
-A cluster of three servers and a console on this machine, from one file: `bin/start-cluster.sh` (Windows `bin\start-cluster.cmd`), `bin/status.sh --cluster deploy/stack/stack.yaml`, `bin/stop-cluster.sh`
-([bin/README.md](../bin/README.md)). The IntelliJ run configurations **Drishti server (demo lakes)** (module `drishti-app`) and **Drishti console** set the same demo settings for debugging; why each
+and what to do when a command stops with an error: [DEPLOYMENT_AND_QA_GUIDE.md › section 7](DEPLOYMENT_AND_QA_GUIDE.md#7-start-the-server-and-the-console)
+and [CLI_REFERENCE.md](guides/CLI_REFERENCE.md#setup-build-jar-start-stop-and-status-install-build-run-and-stop-drishti).
+A cluster of three servers and a console on this machine, from one file: `python tools/drishti.py start cluster`, `python tools/drishti.py status --cluster deploy/stack/stack.yaml`, `python tools/drishti.py stop cluster`
+([deploy/stack/README.md](../deploy/stack/README.md)). The IntelliJ run configurations **Drishti server (demo lakes)** (module `drishti-app`) and **Drishti console** set the same demo settings for debugging, with
+your settings file ([DEPLOYMENT_AND_QA_GUIDE.md › From IntelliJ IDEA](DEPLOYMENT_AND_QA_GUIDE.md#78-from-intellij-idea-or-pycharm)); why each
 setting: [OPERATIONS_GUIDE.md › Start the server](guides/OPERATIONS_GUIDE.md#25-start-the-server) and
 [› Start the console](guides/OPERATIONS_GUIDE.md#26-start-the-console).
 
@@ -126,14 +124,14 @@ The same build starts as **Drishti Risk**, **Drishti Finance**, **Drishti Genomi
 (`config/distributions/drishti.<name>.yaml`; [DISTRIBUTIONS.md](architecture/DISTRIBUTIONS.md)). Without it you run Drishti All, every
 module: what the drill, the page walk and the tutorials use.
 
-| Distribution | Linux and macOS | Windows | You should see |
-|---|---|---|---|
-| Drishti Risk | `bin/start-all.sh --demo --distribution risk` | `bin\start-all.cmd --demo --distribution risk` | **Drishti Risk**, navy dark; Risk, Counterparties and Markets menus; `VAR BANK` works, `ECON CAN` answers *not in Drishti Risk*; Help titled *Drishti Risk Help* |
-| Drishti Finance | `bin/start-all.sh --demo --distribution finance` | `bin\start-all.cmd --demo --distribution finance` | **Drishti Finance**, light; Economies, Markets and Companies menus, no Risk menu; `CRV` works, `VAR BANK` answers *not in Drishti Finance*; Help titled *Drishti Finance Help* with no VaR guide |
-| Drishti Genomics | `bin/start-all.sh --demo --distribution genomics` | `bin\start-all.cmd --demo --distribution genomics` | **Drishti Genomics**, green; the kernel's menus only; Admin → Health: module `genomics` *not installed* (the sample ships later) |
-| Drishti All | `bin/start-all.sh --demo` | `bin\start-all.cmd --demo` | **Drishti**, exactly as above |
+| Distribution | Start (Windows: `py tools\drishti.py ...`) | You should see |
+|---|---|---|
+| Drishti Risk | `python tools/drishti.py start all --demo --distribution risk` | **Drishti Risk**, navy dark; Risk, Counterparties and Markets menus; `VAR BANK` works, `ECON CAN` answers *not in Drishti Risk*; Help titled *Drishti Risk Help* |
+| Drishti Finance | `python tools/drishti.py start all --demo --distribution finance` | **Drishti Finance**, light; Economies, Markets and Companies menus, no Risk menu; `CRV` works, `VAR BANK` answers *not in Drishti Finance*; Help titled *Drishti Finance Help* with no VaR guide |
+| Drishti Genomics | `python tools/drishti.py start all --demo --distribution genomics` | **Drishti Genomics**, green; the kernel's menus only; Admin → Health: module `genomics` *not installed* (the sample ships later) |
+| Drishti All | `python tools/drishti.py start all --demo` | **Drishti**, exactly as above |
 
-`bin/status.sh` (Windows `bin\status.cmd`) shows each process's distribution; Admin → White label shows them all side by side. The
+`python tools/drishti.py status` shows each process's distribution; Admin → White label shows them all side by side. The
 setting behind the argument is `DRISHTI_DISTRIBUTION` (both programs read it).
 
 **In the IDEs.** IntelliJ IDEA lists, under *Drishti*, `Drishti server (Risk)`, `(Finance)` and `(All)` (each sets the environment
@@ -143,13 +141,13 @@ variable `DRISHTI_DISTRIBUTION`) and the Python configurations `Drishti console 
 against one server:** run `Drishti server (All)`, then `Drishti console (Risk)` and `Drishti console (Finance)`; Drishti Risk opens on
 `http://localhost:17480` and Drishti Finance on `http://127.0.0.1:17481` (use a different host name, or another browser profile, for the
 second: browsers share sign-in cookies across ports of one host). Every step, Linux, macOS and Windows:
-[DEPLOYMENT_AND_QA_GUIDE.md › 6.7](DEPLOYMENT_AND_QA_GUIDE.md#67-starting-a-white-labelled-instance).
+[DEPLOYMENT_AND_QA_GUIDE.md › 7.7](DEPLOYMENT_AND_QA_GUIDE.md#77-starting-a-white-labelled-instance).
 
 ## 4. The repository map
 
 Two programs: the **server** (Java 21, Spring Boot, a Maven reactor) computes every number and lays out every screen; the **console**
 (Python, FastAPI and Jinja2) renders what the server sends, and the browser draws it. Domains are **modules**: the core plus banking,
-capitalmarkets and economy. The modules sit in subject folders (`kernel/`, `compute/`, `lake/`, `net/`, `plugins/`, `modules/`, `packaging/`, `testing/`, `drishti-sdk/`); the full map, module by module: [DEVELOPER_GUIDE.md › The repository](guides/DEVELOPER_GUIDE.md#1-the-repository).
+capitalmarkets, economy, market-data, trading and one module per trading system (`source-endur`, `source-calypso`, …). The modules sit in subject folders (`kernel/`, `compute/`, `lake/`, `net/`, `plugins/`, `modules/`, `packaging/`, `testing/`, `drishti-sdk/`); the full map, module by module: [DEVELOPER_GUIDE.md › The repository](guides/DEVELOPER_GUIDE.md#1-the-repository).
 
 | Where | What |
 |---|---|
@@ -159,15 +157,15 @@ capitalmarkets and economy. The modules sit in subject folders (`kernel/`, `comp
 | `drishti-banking`, `drishti-compute-banking` | the banking module: VaR and ES, exposure, FRTB-SA, SIMM, sensitivities, the MR cube; its compute kernels |
 | `drishti-lakeio`, `drishti-deltalake`, `drishti-iceberg`, `drishti-lakeload` | the lakes: the lake core (their files and file access), Delta, Iceberg, and loading (the parallel loader, the data inbox, the in-memory lake) |
 | `drishti-identity`, `drishti-net`, `drishti-compute`, `drishti-bicompute`, `drishti-tables`, `drishti-flight`, `drishti-ai` | users and tokens; Drishti\*net (clusters); compute workers; the pivot and BI engine; tables and models; Arrow Flight; the AI layer |
-| `drishti-server` | the Spring Boot application: controllers, the core's configuration, the exec jar (`kernel/drishti-server/target/*-exec.jar`) |
+| `drishti-server` | the Spring Boot application: controllers, the core's configuration, the exec jar (`lib/*-exec.jar`) |
 | `drishti-app` | the assembly the release ships: the server with the banking module and the plugins (`-pl :drishti-app -am`) |
 | `plugins/drishti-connectors`, `plugins/drishti-plugin-*` | the connectors: the built-in light ones (file, rest, feed, news, demo, yfinance) in one module, and a plugin each for delta, iceberg, jdbc, kafka, s3 and more ([DATA_GUIDE.md](guides/DATA_GUIDE.md)) |
 | `drishti-elements`, `drishti-console/web/static/elements/` | Drishti Elements, the JavaScript libraries every screen is made of (core, inputs, grid, chart, data, insight, renderer, risk, graph, tree, designer), and their WebJar ([ELEMENTS_API.md](guides/ELEMENTS_API.md)) |
 | `drishti-console/` | `run_drishti_web.py`, `core/` (one module per feature), `routes/`, `web/templates/`, `plugins/<module>/` (a module's console pages, help and static files: `banking`, `economy`), `config/` (`application.yaml`, `help.yaml`), `tests/` |
-| `modules/<module>/packs/<pack>/` | the packs (content, not code): `core/`, `banking/`, `capitalmarkets/`, `economy/` ([BUILD_GUIDE.md](guides/BUILD_GUIDE.md)) |
+| `modules/<module>/packs/<pack>/` (banking's in `modules/banking/dmod/packs/`), `config/packs/core/` | the packs (content, not code): the modules' and the kernel's `core` ([BUILD_GUIDE.md](guides/BUILD_GUIDE.md)); a source module's connector templates in `modules/source-<system>/connectors/` |
 | `config/` (the rest) | `modules/`, `lenses/<module>/`, `lakes/`, `engines/`, `tables/`, `bi/`, `feeds/`: the site's switches and files ([CONFIGURATION.md](admin/CONFIGURATION.md)) |
-| `bin/` | the start and stop scripts of the server, its cluster nodes and the console (`.sh` for Linux and macOS, `.ps1` and `.cmd` for Windows; [bin/README.md](../bin/README.md)) |
-| `tools/` | `drishti.py` (the command line), `lake/`, `docs/` (screenshots, the PDFs), `drill.sh` (the release drill), `windows/` (PowerShell loaders and feeds) |
+| `bin/` | `drishti-node.sh`, the drain and stop hook of the server images and the systemd unit ([CLUSTER_GUIDE.md](guides/CLUSTER_GUIDE.md)) |
+| `tools/` | `drishti.py` (the command line: `setup`, `build jar`, `start`, `stop`, `status` and the rest), `lake/`, `docs/` (screenshots, the PDFs), `drill.sh` (the release drill), `windows/` (PowerShell loaders and feeds) |
 | `docs/` | `guides/`, `tutorials/`, `admin/`, `architecture/`, `contracts/`; the index is [docs/README.md](README.md) |
 | `drishti-it`, `drishti-benchmarks` | the architecture and repository rule tests; the JMH benchmarks |
 
@@ -217,7 +215,7 @@ a test, a guide and a screenshot together.
 1. **Branch** from `develop`: `git switch -c my-first-change origin/develop`.
 2. **Find the one home.** Search before writing: `git grep -n "the thing you change"` across `drishti-console/`, `config/` and `docs/`.
    A screen is made of Elements: change the library (`drishti-console/web/static/elements/<library>/`) or the page's template, never a
-   one-off widget ([ELEMENTS_API.md](guides/ELEMENTS_API.md)). A pack change is YAML under `config/packs/` ([BUILD_GUIDE.md](guides/BUILD_GUIDE.md)).
+   one-off widget ([ELEMENTS_API.md](guides/ELEMENTS_API.md)). A pack change is YAML in its module's pack folder (`modules/<module>/packs/<pack>/`; `config/packs/core/` for the kernel's) ([BUILD_GUIDE.md](guides/BUILD_GUIDE.md)).
    A Java change follows the recipes of [DEVELOPER_GUIDE.md › Recipes](guides/DEVELOPER_GUIDE.md#5-recipes) (a REST endpoint, a
    configuration property, a console page, a source plugin).
 3. **Write the test first** beside its neighbours: a `drishti-console/tests/test_<area>.py` for the console (a `*_browser.py` when it needs

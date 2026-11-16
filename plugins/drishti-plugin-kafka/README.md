@@ -284,7 +284,7 @@ docker compose -f deploy/docker/compose.data.yaml up -d kafka            # apach
 uv run --with kafka-python python tools/samplegen/stream.py \
     --bootstrap localhost:9092 --topic drishti.trading.trades --samples modules/banking/dmod/packs/trading/samples --rate 5 --seconds 0
 DRISHTI_PACKS=trading DRISHTI_STREAM_TRADING=true DRISHTI_DEMO_ENABLED=false \
-  java -jar kernel/drishti-server/target/drishti-server-*-exec.jar
+  java -jar lib/drishti-server-*-exec.jar
 ```
 
 `stream.py` publishes every trade of the pack's `samples/trade.jsonl` keyed by `TRADE_ID` (`published 765 trades to
@@ -546,7 +546,7 @@ system's **PV topic** the same way (every partition from the beginning, no consu
 - **Sizing:** a record is 4–8 KB; 10,000 updates a day are 40–80 MB on the topic.
 - **Settings:** `broker` (`default`: the `[broker.default]` section of the settings file, a Kafka at localhost:9092 when none), `topic` (`${DRISHTI_VAR_PV_TOPIC:drishti.risk.pv-updates}`),
   `lake` (`${DRISHTI_DELTA_ROOT:./data/delta/demo}`, tables `<lake>/risk/scenario-pv` and `<lake>/risk/pnl-vector`), `poll-ms` (`200`).
-- **The publisher:** `tools/pvgen/publish-kafka.sh` (`tools\windows\pvgen-publish-kafka.ps1`) sends amended, new and cancelled trades of
+- **The publisher:** `tools/pvgen/publish-kafka.sh` (`tools/pvgen/publish_kafka.py` with the console's Python on any system) sends amended, new and cancelled trades of
   the demo's date (`--per-message`, `--rate`, `--seconds`, `--seed`, `--pv-systems`, `--pnl-systems`, `--all-vectors`, `--dry-run`);
   `--save` writes the rows for `tools/pvgen/check.sh`, which recomputes the answer and compares it with the server's
   ([VAR_GUIDE.md, Producing P&L vectors](../../docs/guides/VAR_GUIDE.md#1512-producing-pl-vectors-and-scenario-pvs)).

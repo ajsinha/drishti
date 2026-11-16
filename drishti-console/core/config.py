@@ -27,6 +27,8 @@ from typing import Any
 
 import yaml
 
+from core import settings_ini
+
 _PLACEHOLDER = re.compile(r"\$\{([A-Za-z0-9_]+)(?::([^}]*))?\}")
 _ENV_PREFIX = "DRISHTI_CONSOLE__"
 
@@ -131,12 +133,30 @@ def _merge(base: dict[str, Any], over: dict[str, Any]) -> dict[str, Any]:
     return base
 
 
+def _read_settings_file(named: str) -> dict[str, str]:
+    """The console's entries of the optional settings files (core/settings_ini.py, the server's format). The same files serve the server,
+    so the console takes only the keys under ``console.`` and drops that prefix (``[console.server]`` ``port=17480`` is the console's
+    ``server.port``); every other key is the server's and is ignored here."""
+    try:
+        entries = settings_ini.read_all(named)
+    except settings_ini.SettingsError as e:
+        raise SystemExit(f"--settings: {e}") from None
+    return {k[len("console."):]: v for k, v in entries.items() if k.startswith("console.")}
+
+
 def load_settings(config_dir: Path, argv: list[str] | None = None) -> Settings:
     files: list[dict[str, Any]] = []
     for name in ("application.yaml", "application.local.yaml"):
         path = config_dir / name
         files.append(_interpolate(yaml.safe_load(path.read_text(encoding="utf-8")) or {}) if path.exists() else {})
     base, over = files
+    try:
+        argv, settings_path = settings_ini.pop_option(list(argv or []))
+    except settings_ini.SettingsError as e:
+        raise SystemExit(str(e)) from None
+    if settings_path:                       # --settings /abs/drishti.ini: the file's keys sit below the environment and the command line
+        for k, v in _read_settings_file(settings_path).items():
+            _set(over, k, _coerce(v))
     for key, value in os.environ.items():
         if key.startswith(_ENV_PREFIX):
             _set(over, key[len(_ENV_PREFIX):].lower().replace("__", "."), _coerce(value))

@@ -84,11 +84,17 @@ async def editor_api(request: Request, path: str):
     return JSONResponse(got, headers=NO_STORE)
 
 
+#: the BI workspace roles that may add items (BiAccess.ROLES from contributor up; drishti_bi-lib.js B.writable asks the same)
+WRITERS = ("contributor", "member", "admin")
+
+
 @router.get("/build/tables/workspaces")
 async def workspaces(request: Request):
-    """The workspaces a draft may be saved in (BI's: the person's own first)."""
+    """The workspaces a draft may be saved in: BI's where the person may add items (contributor and above; never the read-only shipped
+    folder, which every person views), the person's own first."""
     try:
         got = await request.app.state.backend.bi("GET", "/workspaces", ident(request))
     except BackendError as e:
         return _problem(e)
+    got = [w for w in got or [] if not w.get("shipped") and w.get("role") in WRITERS]
     return JSONResponse(got, headers=NO_STORE)

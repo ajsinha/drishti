@@ -16,8 +16,8 @@
 downtime, on VMs (systemd, any shell commands) or on ECS (one service per node).
 
 The order is fixed: **BI and data-serving** members, then **coordinators**, then **shard owners one zone at a time** (so a shard's other
-replica, in another zone, answers while its zone is upgraded), then **consoles** last: a console draws what its servers decide and asks
-answers an older server does not give (docs/architecture/THIN_CONSOLE_DESIGN.md), so the servers are upgraded before the consoles. For each node: drain (a server: ``POST
+replica, in another zone, answers while its zone is upgraded), then the **consoles** last: a console newer than its servers cannot sign
+anyone in, so every server is on the new release before a console is. For each node: drain (a server: ``POST
 /api/v1/admin/node/drain``; a console: the ``deregister`` command and ``console-drain`` seconds for its connections to close), wait until
 it is safe to stop, stop, upgrade, start, wait until it is ready (a server: ``/actuator/health/readiness``; a console: ``/readyz``), then
 the next node. On ECS stop, upgrade and start are one ``aws ecs update-service`` (the services stop the old task before starting the new).
@@ -43,7 +43,7 @@ The inventory (YAML or JSON; ``deploy/rolling.example.yaml`` is a commented exam
       - {name: var-1, role: owner, zone: az-a, url: "http://10.0.3.11:18480", host: 10.0.3.11}
 
 The token (an administrator's personal API token with the ``node:drain`` scope) comes from ``--token-file``, else ``DRISHTI_DRAIN_TOKEN``,
-else ``DRISHTI_TOKEN``; it is never printed. ``tools/rolling-upgrade.sh`` and ``tools/windows/rolling-upgrade.ps1`` run this file.
+else ``DRISHTI_TOKEN``; it is never printed. Run it as ``python tools/rolling.py --inventory my-cluster.yaml --version <version> [--dry-run]`` on any OS.
 """
 from __future__ import annotations
 
@@ -168,7 +168,7 @@ def order(inv: Inventory) -> list[tuple[str, list[Node]]]:
         groups.append(("owners without a zone", rest))
     consoles = [n for n in inv.nodes if n.role == "console"]
     if consoles:
-        groups.append(("consoles", consoles))              # last: a console needs servers at least as new as itself
+        groups.append(("consoles", consoles))
     return groups
 
 

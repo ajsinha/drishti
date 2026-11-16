@@ -48,7 +48,7 @@ from playwright.sync_api import expect, sync_playwright  # noqa: E402
 
 from conftest import CONSOLE  # noqa: E402
 from scratch_ports import worker_ports  # noqa: E402
-from java_launch import java_cmd
+from java_launch import java_cmd, server_jars
 from wb_live import should_reload  # noqa: E402 - one reload, for a changed network only
 
 ROOT = CONSOLE.parent
@@ -171,7 +171,7 @@ def stack(request, tmp_path_factory):
     tmp = tmp_path_factory.mktemp("elements")
     s = Stack(tmp)
     if not _listening(SERVER_PORT):
-        jars = sorted(glob.glob(str(ROOT / "kernel/drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)  # newest build first: target may hold older versions
+        jars = server_jars()
         java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"
         if not jars or not Path(java).exists():
             pytest.skip("needs the built server: ./mvnw -o -q package -DskipTests -pl :drishti-app -am")

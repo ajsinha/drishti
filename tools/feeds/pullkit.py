@@ -354,7 +354,7 @@ def examples(description: str, prog: str) -> str:
     feed = FEEDS.get(prog)
     if feed:
         lines += ["", f"    tools/feeds/feed.sh run {feed} <the same options>                 Linux and macOS",
-                  f"    .\\tools\\windows\\feed.ps1 run {feed} <the same options>          Windows (PowerShell)"]
+                  f"    drishti-console\\.venv\\Scripts\\python.exe tools\\drishti.py feed run {feed} <the same options>    Windows"]
     return ("examples:\n" + "\n".join(lines) + "\n\nguide: docs/guides/WORLD_DATA_GUIDE.md (Help → Data → External data feeds)") if lines else ""
 
 

@@ -34,7 +34,7 @@ from bi_stack import FORBIDDEN, listening, wait  # noqa: E402
 ROOT = Path(__file__).resolve().parents[2]
 CONSOLE = ROOT / "drishti-console"
 from scratch_ports import worker_ports  # noqa: E402
-from java_launch import java_cmd
+from java_launch import java_cmd, server_jars
 
 SERVER_PORT, CONSOLE_PORT = worker_ports(18963, 17963)
 SERVER, CONSOLE_URL = f"http://127.0.0.1:{SERVER_PORT}", f"http://127.0.0.1:{CONSOLE_PORT}"
@@ -44,7 +44,7 @@ def find_jar() -> str | None:
     """The built server: in this checkout, else in the main checkout this worktree hangs off."""
     roots = [ROOT, *([ROOT.parents[2]] if ROOT.parent.name == "worktrees" else [])]
     for r in roots:
-        jars = sorted(glob.glob(str(r / "kernel/drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)
+        jars = server_jars()
         if jars:
             return jars[0]
     return None

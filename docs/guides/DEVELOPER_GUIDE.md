@@ -102,7 +102,7 @@ inbox nor the in-memory lake, the disk cache sees nothing of `common`, and so on
 | `drishti-module-runtime` | `module.runtime` | The module runtime ([§1.5](#15-the-module-runtime)): the `.dmod` package and its hash list, the manifest, verification V1–V8, discovery, the dependency resolver, a class loader and a child Spring context per module, the live route table, the registry of contributions and the unload sequence with its leak check; and the module tool ([§1.6](#16-the-module-sdk): `module.tool`, the one packer and the conformance checks, `target/drishti-module-tool.jar`). Spring and Jackson only; one implementation for the kernel and, from i4, the console. | `ModuleRuntime`, `tool.ModuleTool`, `tool.ModuleConformance`, `DmodManifest`, `Dmod`, `ModuleVerifier`, `DependencyResolver`, `ModuleClassLoader`, `RouteTable`, `Contributions`, `LeakCheck` |
 | `drishti-sdk/drishti-module-maven-plugin`, `-archetype`, `-parent` | `sdk` | The Module SDK ([§1.6](#16-the-module-sdk)): the archetype of a module project, the parent it inherits, and the plugin that validates, packs the `.dmod` and runs the conformance checks C1–C15. | `ValidateMojo`, `AssembleMojo`, `ConformanceMojo` (over `module.tool`) |
 | `modules/banking/banking-compute`, `banking-service` | `banking` | The banking module's sources, built on their own (`./mvnw -f modules/banking/pom.xml`; artifacts `drishti-compute-banking`, `drishti-banking`): the maths, then the services, storage, Spring wiring and API. The kernel internals it still reaches are listed in `modules/banking/kernel-internals.txt` (`BankingReachTest`: the list only shrinks). | `BankingModule`, `var.*`, `exposure.*`, `compute.var.*` |
-| `drishti-app`, `drishti-kernel-app` | (none) | The runnable jars, no code: `drishti-app` the full jar (the kernel with banking, the default, `kernel/drishti-server/target/drishti-server-<v>-exec.jar`); `drishti-kernel-app` the thin jar (the kernel alone, `packaging/drishti-kernel-app/target/drishti-kernel-<v>-exec.jar`, Health: *no modules: the kernel runs alone*). | |
+| `drishti-app`, `drishti-kernel-app` | (none) | The runnable jars, no code: `drishti-app` the full jar (the kernel with banking, the default, `lib/drishti-server-<v>-exec.jar`); `drishti-kernel-app` the thin jar (the kernel alone, `packaging/drishti-kernel-app/target/drishti-kernel-<v>-exec.jar`, Health: *no modules: the kernel runs alone*). | |
 | `drishti-server` | `server` | The Spring Boot application: REST and SSE controllers, security, alerts, Sutra governance, and one sub-package per feature area (`admin`, `ai`, `alerts`, `bi`, `calc`, `cli`, `collab`, `connectors`, `deploy`, `design`, `dist`, `embed`, `explain`, `governance`, `layout`, `loads`, `notify`, `pivot`, `registry`, `reports`). `bi` is the BI engine (section 4.4). | `DrishtiApplication`, `api.*Controller`, `security.Entitlements`, `security.TokenFilter`, `alerts.AlertEngine`, `governance.SutraGovernance`, `bi.mq.MqService`, `bi.engine.QueryService` |
 | `drishti-it` | `it` | Repository-wide rules, as tests only. | `ArchitectureRulesTest`, `LicenseHeaderTest`, `SourceFileSizeTest`, `NoBlockingUnderSynchronizedTest` |
 | `drishti-benchmarks` | `benchmarks` | JMH benchmarks of the hot paths (fingerprint, Rachana-EL, formats, cold inference). | `HotPathBenchmark` |
@@ -184,7 +184,7 @@ server nor Spring, and the lake engines and connectors never see `memlake` (they
 | `tools/load-*.sh` | Load the samples (and a generated book) into PostgreSQL, Iceberg, DuckDB, MongoDB, Redis, Aerospike, Cassandra, JSON-lines files or Delta ([DATA_GUIDE.md section 11](DATA_GUIDE.md#11-the-demo-data)) |
 | `tools/bench/` | The scale benchmark: `scale.sh <store> <trades-a-day>`, `measure.py`, `report.py`; `results/` keeps each run's raw JSON lines; see [BENCHMARK.md](../admin/BENCHMARK.md) |
 | `tools/packgen/pack_from_jsonl.py`, `tools/packmake.py`, `tools/schemapack.py`, `tools/packbundle.py`, `tools/packform.py`, `tools/packdiff.py`, `tools/packi18n.py`, `tools/packregen.py`, `tools/sutragen.py`, `tools/authoring.py` | Pack authoring: a pack from JSON lines or from schemas, regeneration of unedited generated files, bundles, the `form:` section, `pack diff`, `pack i18n`; the `tools/drishti.py` commands call them (see [BUILD_GUIDE.md](BUILD_GUIDE.md) and [CLI_REFERENCE.md](CLI_REFERENCE.md)) |
-| `tools/realdata/`, `tools/docs/`, `tools/elements-demo/`, `tools/windows/`, `tools/maps/` | The real-data builds of the world-economy pack ([DATA_GUIDE.md (world-economy)](WORLD_DATA_GUIDE.md#the-world-economy-data-in-detail)); the documentation screenshots (`tools/docs/screenshots.py`, `shots/`, one module per guide and tutorial); a sample host page for Drishti Elements; the PowerShell starters ([OPERATIONS_GUIDE.md (Windows)](OPERATIONS_GUIDE.md#4-drishti-on-windows)); the map region builder |
+| `tools/realdata/`, `tools/docs/`, `tools/elements-demo/`, `tools/maps/` | The real-data builds of the world-economy pack ([DATA_GUIDE.md (world-economy)](WORLD_DATA_GUIDE.md#the-world-economy-data-in-detail)); the documentation screenshots (`tools/docs/screenshots.py`, `shots/`, one module per guide and tutorial); a sample host page for Drishti Elements; the map region builder |
 | `tools/packreg/` | `packreg.py`: signing keys, publishing packs to a signed registry, verifying one (ADR-018); `test_packreg.py` |
 | `tools/` (files) | `drill.sh` (verify and publish), `fetch-pyodide.sh` (installs Calc's Python runtime, pinned and verified, into `drishti-console/web/static/vendor/pyodide/`), `elements_sheet.py` (regenerates the Elements stylesheet), `make_icons.py` (favicon and app icons), `ingest_jsonl.py` and `ingest_watch.py` (`data ingest`), `serverpacks.py`, `serverconnectors.py`, `doctor.py`, `completion.py`, `viewcmd.py`, `dataprofile.py`, `license_headers.py` (check or insert the copyright header), `test_no_hidden_names.py` (no hidden names, section 8), `rachana/md_to_yaml.py` (converts Markdown Sutras to `*.sutra.yaml`) |
 | `deploy/` | `server.Dockerfile`, `console.Dockerfile`, `compose.yaml`, `compose.data.yaml`, `lake-maintenance.yaml`, `grafana/` |
@@ -282,7 +282,7 @@ reload it whenever it changes, as Tomcat runs an unpacked web application. The s
 
 ```bash
 # once: a development server (single node, never the prod or production profile) pointed at the module's exploded build output
-DRISHTI_MODULES_DEV=true DRISHTI_MODULES_PATH=$PWD/target/dmod-stage/greet bin/start-server.sh
+DRISHTI_MODULES_DEV=true DRISHTI_MODULES_PATH=$PWD/target/dmod-stage/greet python tools/drishti.py start server
 # the loop: edit, rebuild, and the kernel reloads it within drishti.modules.autodeploy-seconds (unload, leak check, load)
 mvn -q package -DskipTests      # the server log says "development mode: greet changed: unloaded (leak-free)", then "loaded"
 ```
@@ -303,7 +303,7 @@ java: {jars: [genomics-service.jar, genomics-compute.jar], lib: [commons-math3-3
 ```
 
 A library every module and connector of the site shares (a JDBC driver, a company's own jar) goes into the shared lib folder instead
-(`drishti.lib.path`, default `<data folder>/lib`; [ADMIN_GUIDE.md](ADMIN_GUIDE.md)): a module sees it after its own jars.
+(`drishti.lib.path`, default `<home>/lib/ext`; [ADMIN_GUIDE.md](ADMIN_GUIDE.md)): a module sees it after its own jars.
 
 ### 1.7 What a module can contribute
 
@@ -534,7 +534,7 @@ What the flags mean:
 - `-Dtest=…` selects tests; `-Dsurefire.failIfNoSpecifiedTests=false` stops the upstream modules that `-am` pulls in from failing
   because they hold no such test.
 
-The server jar is `kernel/drishti-server/target/drishti-server-<version>-exec.jar` (the `exec` classifier is set on the
+The server jar is `lib/drishti-server-<version>-exec.jar` (the `exec` classifier is set on the
 `spring-boot-maven-plugin` in `kernel/drishti-server/pom.xml`). The plain `drishti-server-<version>.jar` beside it is the library jar, not the
 application.
 
@@ -608,7 +608,7 @@ directory):
 ```bash
 ./mvnw -q package -DskipTests -pl :drishti-app -am
 DRISHTI_DEMO_ENABLED=false DRISHTI_STUDIO_SAVE=true \
-  java -jar kernel/drishti-server/target/drishti-server-*-exec.jar
+  java -jar lib/drishti-server-*-exec.jar
 ```
 
 Server settings follow the same precedence as the console: `kernel/drishti-server/src/main/resources/application.yaml`, then
@@ -731,6 +731,20 @@ measured lanes before and after the faster-drills work, and the projected full a
 The drill removes its own temporary files on exit. The console suite needs `pytest-xdist` 3.7 or newer (in `requirements-test.txt`).
 The inotify watch limit of a loaded desktop (`fs.inotify.max_user_watches`) can make the Sutra hot-reload tests fail in any mode:
 that is the machine, not the drill.
+
+### Your settings file for the IDE launchers
+
+Every shared IntelliJ and PyCharm run configuration passes one per-developer settings file, `$USER_HOME$/drishti-envs/dev.ini` (the IDE expands
+`$USER_HOME$` to your full home path, so it never depends on the working folder): a Java configuration as the VM option
+`-Ddrishti.settings.file=...`, a Python one as `--settings ...`. Create it once from the example:
+
+```
+mkdir -p ~/drishti-envs && cp config/settings.examples/dev.ini ~/drishti-envs/dev.ini    # then edit the /path/to/... placeholders
+```
+
+The file must exist (a missing file is a clear error at start). Keep one ini per environment (`dev.ini`, `test.ini`, `prod.ini` examples are in
+`config/settings.examples/`); a `-D` or command-line argument always beats the file. The format and rules are in
+[Configuration](../admin/CONFIGURATION.md); passwords and tokens go in a second file (`secrets.ini`, given last), never in `dev.ini`.
 
 ## 3. Project rules
 
@@ -1788,7 +1802,7 @@ while it was stopped (`The lake was rebuilt while the server was stopped …`), 
 level for Drishti's packages with Spring's usual environment form:
 
 ```bash
-LOGGING_LEVEL_COM_ASH_DRISHTI=DEBUG java -jar kernel/drishti-server/target/drishti-server-*-exec.jar
+LOGGING_LEVEL_COM_ASH_DRISHTI=DEBUG java -jar lib/drishti-server-*-exec.jar
 ```
 
 The console runs Uvicorn with access logs off (`access_log=False` in `run_drishti_web.py`). The run configuration **Drishti server
@@ -2273,7 +2287,7 @@ Routes (`kind -> connector`) are the pack's `routes:`; the server's own settings
 **4. Start the server**, then the console in a second terminal:
 
 ```bash
-java -jar kernel/drishti-server/target/drishti-server-*-exec.jar
+java -jar lib/drishti-server-*-exec.jar
 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
 ```
 
@@ -2652,7 +2666,7 @@ Drishti finds plugins with the JDK's `ServiceLoader` (`PluginDiscovery` in `dris
    ```
 
    The class needs a public no-argument constructor.
-2. Make the jar visible: put it in the server's **lib folder** (`drishti.lib.path`, default `<data folder>/lib`). Every jar there
+2. Make the jar visible: put it in the server's **lib folder** (`drishti.lib.path`, default `<home>/lib/ext`). Every jar there
    is loaded at start into one lib class loader under the kernel's (it never replaces a kernel class); a jar added needs no rebuild,
    only a restart. A shipped plugin is a Maven dependency of `drishti-server` instead. A connector that only one module's kinds use
    ships **inside that module** (the genomics module's VCF reader, section 1.8): it goes with the module.
@@ -2671,9 +2685,8 @@ each, which the server writes to the file at the first start ([DATA_GUIDE.md sec
 ```yaml
 # application.local.yaml: the server's own settings
 drishti:
-  sources:
-    lib:
-      path: ./data/lib                          # extra jars (connectors, JDBC drivers), in one lib class loader
+  lib:
+    path: lib/ext                               # the site's jars (connectors, JDBC drivers), in one lib class loader; under the install folder (the default)
 ```
 
 ```yaml
@@ -3701,7 +3714,7 @@ python3 tools/drishti.py module inspect build/dmod/freight-0.1.0.dmod           
 
 | Where | How | What you see |
 |---|---|---|
-| your own machine, while you edit | a development server on the build folder: `DRISHTI_MODULES_DEV=true DRISHTI_MODULES_PATH=$PWD/target/dmod-stage/freight bin/start-server.sh`; every rebuild reloads it ([section 1.6](#16-the-module-sdk)) | the log's *development mode: freight changed: unloaded (leak-free)*, then *loaded*; Health marks it *development (unverified)* |
+| your own machine, while you edit | a development server on the build folder: `DRISHTI_MODULES_DEV=true DRISHTI_MODULES_PATH=$PWD/target/dmod-stage/freight python tools/drishti.py start server`; every rebuild reloads it ([section 1.6](#16-the-module-sdk)) | the log's *development mode: freight changed: unloaded (leak-free)*, then *loaded*; Health marks it *development (unverified)* |
 | your own machine, the package alone | `python3 tools/drishti.py module run build/dmod/freight-0.1.0.dmod`: the kernel's thin jar with this module only, on a free port, every part placed on it | the address of its API; Ctrl-C stops and removes the run |
 | one server | drop the `.dmod` into `<data folder>/modules/` (`drishti.modules.path`); auto-deploy checks, installs and loads it | Admin → Modules: *LOADED* |
 | a cluster | place its parts (section 12.5), then Admin → Modules → Deploy, or `drishti.py module deploy <file> --reason … --out plan.json`; a **second** administrator applies: `drishti.py module apply plan.json` ([CLUSTER_GUIDE.md section 1.10](CLUSTER_GUIDE.md#110-deploying-a-module)) | the plan per node, then *applied* on every placed node |
@@ -3749,7 +3762,7 @@ broker), then add the failure tests ([section 10.12](#1012-testing-with-drishti-
 
 **5. Package it**, one of two ways:
 
-- **A jar in `lib/`** (the one place for jars: `drishti.lib.path`, default `<data folder>/lib`). Every jar there is loaded at start into one
+- **A jar in `lib/ext/`** (the one place for the site's jars: `drishti.lib.path`, default `<home>/lib/ext`). Every jar there is loaded at start into one
   class loader under the kernel's and found by the `ServiceLoader`; adding one needs a restart, not a rebuild. Admin → Health lists each
   jar of the lib folder with its SHA-256.
 - **Inside a module**: the class in the module's jar with the same `META-INF/services` line (or a bean of its configuration). It starts
@@ -3895,20 +3908,20 @@ with `required: false` and no manifest anywhere adds none. The console reads no 
 sends it with every module in its installation answer (`GET /api/v1/console/bootstrap`), asked again whenever `/public/about`'s
 `stamps.installation` changes, so a package installed after the start joins a running console's distribution and a removed one leaves it.
 
-**3. Start it**: `bin/start-all.sh --distribution freight` (`bin\start-all.ps1 -Distribution freight`), or `bin/start-server.sh` and
-`bin/start-console.sh` each with `--distribution freight`, or `DRISHTI_DISTRIBUTION=freight`, or `drishti.distribution: freight`; a path
+**3. Start it**: `python tools/drishti.py start all --distribution freight` (Windows `py tools\drishti.py ...`), or `start server` and
+`start console` each with `--distribution freight`, or `DRISHTI_DISTRIBUTION=freight`, or `drishti.distribution: freight`; a path
 instead of a name loads a file elsewhere. What it leaves out does not exist in it: a word typed anyway answers *DRS-4023 … is not in
 Acme Freight*.
 
 **4. Two consoles over one cluster.** A console keeps its own distribution whatever the servers run:
 
 ```bash
-bin/start-console.sh --server http://<server>:18480 --port 17480 --distribution risk
-bin/start-console.sh --server http://<server>:18480 --port 17481 --distribution freight
+python tools/drishti.py start console --server http://<server>:18480 --port 17480 --distribution risk
+python tools/drishti.py start console --server http://<server>:18480 --port 17481 --distribution freight --name freight
 ```
 
 In a stack file, a `consoles:` list does the same (`{ name: freight, port: 17481, distribution: freight }`, the `console:` block
-their defaults; `bin/start-cluster.sh` starts each).
+their defaults; `drishti.py start cluster` starts each).
 
 **5. Check it.** **Admin → White label** shows every distribution file side by side, the running one first: brand, theme, modules (and
 whether each is loaded), lenses, menus, Home cards, Help title and the command that starts it. **Admin → Health** shows the console's and
@@ -4174,7 +4187,7 @@ Admin → Modules shows *LOADED* on `drishti-main` and `drishti-b`; Admin → En
 
 **Step 10 · Its own distribution.** `drishti.freight.yaml` from section 12.4 beside the shipped files in `config/distributions/`,
 naming `freight` (`required: true`; the distribution finds the project's `src/dmod/module.yaml` in the modules folder). *CLI*: a second console over the same
-cluster, `bin/start-console.sh --server http://<server>:18480 --port 17481 --distribution freight`. *UI*: on port 17481 the top bar says
+cluster, `python tools/drishti.py start console --server http://<server>:18480 --port 17481 --distribution freight --name freight`. *UI*: on port 17481 the top bar says
 *Acme Freight* with the `freight` menu, Home shows the card *London to Rotterdam*; typing the word opens `/m/freight/lane/LON-RTM`, its
 figures read from the depot's files through `shipments-days`, and the page's lane-flow chart is drawn by the module's visual.
 Admin → White label shows *Acme Freight* beside the shipped distributions.

@@ -88,7 +88,7 @@ export DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,worl
 python3 tools/drishti.py lake demo                    # every table; or: python3 tools/build_demo_lakes.py --only funds
 ```
 
-On Windows, `bin\start-server.cmd --demo` loads the public-data packs including `funds`, and
+On Windows, `py tools\drishti.py start server --demo` loads the public-data packs including `funds`, and
 `python tools\build_demo_lakes.py --only funds` builds its three tables. The demo cluster (`deploy/stack/stack.yaml`) loads it on
 every node. Type `FUNDS` and press Enter: the pack's overview lists its three commands with their counts (200 funds, 586 companies
 held, 3 indexes tracked).
@@ -349,7 +349,7 @@ private-credit funds without a ticker are skipped. `--scope FUNDS:<n>` takes mor
 
 ### 15. The refresh script
 
-`drishti.py feed run funds` (with `tools/feeds/feed.sh run funds` and `tools\windows\publicdata-funds.ps1`) takes the same commands and
+`drishti.py feed run funds` (with `tools/feeds/feed.sh run funds` on Linux and macOS) takes the same commands and
 options as every public-data script: `status`, `refresh --dry-run`, `refresh [SOURCE ...]`, with `--since YEAR`, `--years N`,
 `--scope FUNDS:<n>,HOLDINGS:<n>`, `--offline`, `--cache DIR`, `--max-age HOURS` (a week by default), `--pause`, `--no-check`,
 `--into-pack`.
@@ -378,12 +378,12 @@ rr       Public domain (U.S. Government work); SEC fair a  committable  2026-10-
 gleif    CC0 1.0                                           committable  2026-10-26T19:37:15  23.4 MB
 ```
 
-On Windows (PowerShell, from the repository folder; Python only, nothing to install):
+On Windows (from the repository folder; the console's Python, nothing else to install):
 
 ```powershell
-.\tools\windows\publicdata-funds.ps1 status
-.\tools\windows\publicdata-funds.ps1 refresh --dry-run
-.\tools\windows\publicdata-funds.ps1 refresh
+drishti-console\.venv\Scripts\python.exe tools\drishti.py feed status funds
+drishti-console\.venv\Scripts\python.exe tools\drishti.py feed run funds --dry-run
+drishti-console\.venv\Scripts\python.exe tools\drishti.py feed run funds
 python tools\build_demo_lakes.py --only funds
 ```
 
@@ -521,7 +521,7 @@ which runs the parallel loader in the server's jar, or drops files into the data
 | the command line | `tools/feeds/cli.py` | `drishti.py feed list|run|status|schedule` |
 | the polite HTTP client and download cache | `tools/feeds/pullkit.py` | User-Agent, pause, retries with back-off, `Retry-After`, the cache |
 | each source's pull | `tools/feeds/sources/<module>.py` | one module per source (a feed file's `class:`) |
-| the wrappers | `tools/feeds/feed.sh`, `tools/windows/feed.ps1` | what cron, systemd and Task Scheduler run |
+| the wrapper and the command | `tools/feeds/feed.sh` (Linux, macOS), `drishti-console\.venv\Scripts\python.exe tools\drishti.py feed run` (Windows) | what cron, systemd and Task Scheduler run |
 
 Every external source of the packs is pulled this way: each pack's source module in `tools/feeds/sources/` (gleif, us-equities, funds,
 world-economy, news-and-markets, market-data) is a feed's pull, and the same module refreshes its pack's committed demo snapshot with
@@ -578,8 +578,8 @@ fetch golden
 2026-11-07T06:30:41-05:00 feed ok exit=0 feed=gleif date=2026-11-07 files=3 rows=4,377 load=java loaded=4,377 seconds=41.2
 ```
 
-The last line is the run's **one log line**: what a scheduler's mail or the journal shows. The same in PowerShell:
-`.\tools\windows\feed.ps1 run gleif`.
+The last line is the run's **one log line**: what a scheduler's mail or the journal shows. On Windows:
+`drishti-console\.venv\Scripts\python.exe tools\drishti.py feed run gleif`.
 
 | Option | Means |
 |---|---|
@@ -649,7 +649,7 @@ loads.
 
 | Route | What runs | Needs | Use it when |
 |---|---|---|---|
-| `java` (default) | `drishti.py lake build --engine java`: the parallel loader `com.ash.drishti.lakeload.LakeLoad` from the server's exec jar (`-Dloader.main`), under the lake's lock, one commit per business date | Java 21 and the jar (`DRISHTI_JAR` or `kernel/drishti-server/target`) | always, unless one of the others fits better |
+| `java` (default) | `drishti.py lake build --engine java`: the parallel loader `com.ash.drishti.lakeload.LakeLoad` from the server's exec jar (`-Dloader.main`), under the lake's lock, one commit per business date | Java 21 and the jar (`<home>/lib`) | always, unless one of the others fits better |
 | `python` | `drishti.py lake build` with its default writer | the console's Python and the jar | a machine where the parallel loader is not wanted |
 | `inbox` | the files dropped into the data inbox with their `.ready` files; the server loads them at its next cycle | the server running with the inbox on | the server should load (one place for every load, its Admin → Data loads screen) |
 
@@ -755,10 +755,10 @@ python3 tools/drishti.py feed schedule --windows --root 'C:\drishti'
 ```
 
 ```text
-schtasks /Create /F /TN "Drishti feed gleif" /SC DAILY /ST 05:30 /TR "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"C:\drishti\tools\windows\feed.ps1\" run gleif --trigger schedule"
+schtasks /Create /F /TN "Drishti feed gleif" /SC DAILY /ST 05:30 /TR "\"C:\drishti\drishti-console\.venv\Scripts\python.exe\" \"C:\drishti\tools\drishti.py\" feed run gleif --trigger schedule"
 ```
 
-Task Scheduler's *Last Run Result* is the exit code (section 3.1). One task for every feed instead: `feed.ps1 run --all` (the feeds run
+Task Scheduler's *Last Run Result* is the exit code (section 3.1). One task for every feed instead: `drishti.py feed run --all` (the feeds run
 one after another in the order of their schedule times). `--trigger schedule` only marks the run in the ledger as the schedule's.
 
 ### 6. Monitor: status, the ledger, Admin → Feeds, alerts
@@ -1052,7 +1052,7 @@ python3 tools/drishti.py feed run us-equities --offline -- sec           # the S
 python3 tools/drishti.py feed run gleif --snapshot -- mapping            # the BIC, ISIN, MIC and OpenCorporates files into the committed pack
 ```
 
-On Windows the same through `.\tools\windows\feed.ps1` (`.\tools\windows\feed.ps1 run gleif --dry-run`); nothing but Python and
+On Windows the same through `drishti-console\.venv\Scripts\python.exe tools\drishti.py feed run gleif --dry-run`; nothing but Python and
 Java is needed.
 
 ### 14. How external data reaches the server
@@ -1616,7 +1616,7 @@ python3 tools/drishti.py feed run funds --snapshot -- --scope FUNDS:300,HOLDINGS
                                                                    # the 300 largest, 1,000 holdings a fund, in <data>/datafeeds/sources/funds
 ```
 
-On Windows the same through `.\tools\windows\feed.ps1` (`.\tools\windows\feed.ps1 run funds --dry-run`); on Linux and macOS
+On Windows the same through `drishti-console\.venv\Scripts\python.exe tools\drishti.py feed run funds --dry-run`; on Linux and macOS
 `tools/feeds/feed.sh run funds` takes the same arguments.
 
 - **The 200.** Every fund's newest N-PORT report in the quarter (amendments win over the report they amend), ranked by net assets;
@@ -1652,7 +1652,7 @@ committed but a few sample documents (from the feeds' recorded fixtures). The gu
 python3 tools/drishti.py feed run world-development --dry-run    # what it would ask; nothing changes
 python3 tools/drishti.py feed run world-development              # pull what is new, load into worldlake
 python3 tools/drishti.py feed run official-news --load inbox     # through the data inbox
-.\tools\windows\feed.ps1 run oecd                                 # Windows (PowerShell)
+drishti-console\.venv\Scripts\python.exe tools\drishti.py feed run oecd    # Windows
 ```
 
 Each feed file (`config/feeds/<pack>.yaml`) records every source's licence and terms in `options.sources`; the Bank of England, OSFI and
@@ -1728,7 +1728,7 @@ public-sector packs load when the server's pack list names them:
 
 ```bash
 DRISHTI_PACKS=core,world-economy,world-development,central-banks,national-statistics,oecd,official-news,gdelt-events \
-  java -jar kernel/drishti-server/target/drishti-server-*-exec.jar
+  java -jar lib/drishti-server-*-exec.jar
 ```
 
 and a person opens the Public sector lens from Views (`drishti.lenses: risk,world,publicsector`).
@@ -1810,7 +1810,7 @@ python3 tools/drishti.py feed status gdelt-events                # its last runs
 python3 tools/drishti.py feed schedule --cron world-development central-banks national-statistics oecd official-news gdelt-events
 ```
 
-The wrappers are `tools/feeds/feed.sh` (Linux, macOS) and `.\tools\windows\feed.ps1` (Windows); Admin → Data loads → Feeds shows each
+The wrapper is `tools/feeds/feed.sh` (Linux, macOS) and on Windows the command is `drishti-console\.venv\Scripts\python.exe tools\drishti.py feed run <feed>`; Admin → Data loads → Feeds shows each
 run and offers Run now. Exit codes: 0 ok, 1 failed, 2 refused, 3 locked, 4 partial.
 
 **Keys.** Only FRED needs one: a free key from https://fred.stlouisfed.org/docs/api/api_key.html in `DRISHTI_FRED_API_KEY` where the feed
@@ -2506,7 +2506,7 @@ Further in the guide: [section 7](../guides/WORLD_DATA_GUIDE.md#7-commands-searc
 
 **In the UI.** Nothing to click: the data is refreshed by a script, then the lake is rebuilt and the server reads it.
 
-**From the command line.** On Linux and macOS (on Windows, `.\tools\windows\publicdata-funds.ps1` takes the same arguments):
+**From the command line.** On Linux and macOS (on Windows `drishti-console\.venv\Scripts\python.exe tools\drishti.py feed run funds` takes the same arguments):
 
 ```bash
 tools/feeds/feed.sh run funds --dry-run      # what would be fetched; changes nothing
@@ -2697,7 +2697,7 @@ among them), its functions and the World and Public sector lenses. Start the ser
 
 ```bash
 DRISHTI_PACKS=core,world-economy,world-development,central-banks,national-statistics,oecd,official-news,gdelt-events \
-  java -jar kernel/drishti-server/target/drishti-server-*-exec.jar
+  java -jar lib/drishti-server-*-exec.jar
 ```
 
 **Command line.**

@@ -14,9 +14,9 @@
 
 """The public-sector module's screens in Chromium over the real server and console (ports 18971 and 17971): the six feeds run on their
 recorded fixtures (tools/feeds/tests/fixtures/publicsector, never the network) and load into a scratch worldlake and newslake through
-drishti-feeds' python route, the demo source off, then each function's screen is drawn from the lakes: WDI (indicators, the world map),
+drishti-feeds. Java route (once per source hash, tools/drillkit/lake_cache.py; each run a copy), the demo source off, then each function's screen is drawn from the lakes: WDI (indicators, the world map),
 CBANK (policy rate, series linked), NSTAT, OECD (the members' map), PRESS (the releases with their original links, internal only said)
-and GDELT (categories, the map, the stories). PRESS is in the World lens too. Skipped when Playwright, Chromium, deltalake or the built
+and GDELT (categories, the map, the stories). PRESS is in the World lens too. Skipped when Playwright, Chromium or the built
 server jar is missing, or a scratch port is in use. Never run with pytest -n."""
 from __future__ import annotations
 
@@ -29,12 +29,14 @@ from pathlib import Path
 
 import pytest
 
+from var_stack import PARKED_I6  # noqa: E402 - parked to i6
+pytestmark = [PARKED_I6]   # every test here writes to a lake: parked to i6 (owner 2026-11-15)
+
 pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install playwright)")
-pytest.importorskip("deltalake", reason="the python load route needs deltalake and pyarrow")
 from playwright.sync_api import expect, sync_playwright  # noqa: E402
 
 import news_stack as NS  # noqa: E402  (listening, wait)
-from java_launch import java_cmd  # noqa: E402
+from java_launch import java_cmd, server_jars  # noqa: E402
 from scratch_ports import worker_ports  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -54,7 +56,7 @@ import feedbase as FB, feedrunner as R, publicsector as PS
 fix = root / "tools/feeds/tests/fixtures/publicsector"
 sel = yaml.safe_load((fix / "selection.yaml").read_text())
 for f in feeds:
-    rc, entry = R.run_feed(FB.load_spec(f), R.RunOptions(business_date=date(2026, 11, 6), load="python", sets=sel.get(f) or {}),
+    rc, entry = R.run_feed(FB.load_spec(f), R.RunOptions(business_date=date(2026, 11, 6), load="java", sets=sel.get(f) or {}),
                            opener=PS.Fixtures(fix / f), sleep=lambda s: None)
     print(f, rc, entry.get("status"), entry.get("rows"), entry.get("error") or "")
     if rc:
@@ -67,16 +69,24 @@ def stack(tmp_path_factory):
     for port in (SERVER_PORT, CONSOLE_PORT):
         if NS.listening(port):
             pytest.skip(f"port {port} is in use: stop whatever listens there")
-    jars = sorted(glob.glob(str(ROOT / "kernel/drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)
+    jars = server_jars()
     java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"
     if not jars or not Path(java).exists():
         pytest.skip("needs the built server: ./mvnw -o -q package -DskipTests -pl :drishti-app -am")
     tmp = tmp_path_factory.mktemp("publicsector")
     work, data = tmp / "server", tmp / "data"
     work.mkdir()
-    env = dict(os.environ, DRISHTI_DATA_DIR=str(data), DRISHTI_FRED_API_KEY="recorded", DRISHTI_JAR=jars[0])
-    loaded = subprocess.run([sys.executable, "-c", LOADER, str(ROOT), ",".join(FEEDS)], env=env, capture_output=True, text=True, timeout=900)
-    assert loaded.returncode == 0, loaded.stdout[-3000:] + loaded.stderr[-3000:]
+    import shutil
+    from var_stack import _lake_cache
+
+    def build(folder):                      # the recorded feeds loaded by the Java route, once per source hash (lake_cache)
+        env = dict(os.environ, DRISHTI_DATA_DIR=str(folder / "data"), DRISHTI_FRED_API_KEY="recorded")
+        loaded = subprocess.run([sys.executable, "-c", LOADER, str(ROOT), ",".join(FEEDS)], env=env, capture_output=True, text=True, timeout=900)
+        if loaded.returncode != 0:
+            raise RuntimeError(loaded.stdout[-3000:] + loaded.stderr[-3000:])
+
+    cached = _lake_cache().cached("publicsector-feeds|" + ",".join(FEEDS), build)
+    shutil.copytree(cached / "data", data)  # the server writes its own state in its data folder: a copy (small: the recorded fixtures)
     senv = dict(os.environ, DRISHTI_PACKS=PACKS, DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_DEMO_ENABLED="false",
                 DRISHTI_SECURITY_ENABLED="false", DRISHTI_DATA_DIR=str(data), DRISHTI_LAKES_DIR=str(ROOT / "config" / "lakes"),
                 DRISHTI_OFFLINE="true", DRISHTI_LENSES="world,publicsector")

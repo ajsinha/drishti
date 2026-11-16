@@ -33,7 +33,7 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from shotlib import Ctx, java_cmd, listening, out_dir, register  # noqa: E402
+from shotlib import Ctx, java_cmd, listening, out_dir, register, server_jars  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[3]
 if str(ROOT / "drishti-console") not in sys.path:
@@ -141,10 +141,9 @@ def serve(work: Path) -> list:
     for port in (SERVER_PORT, CONSOLE_PORT):
         if listening(port):
             sys.exit(f":{port} already answers: stop it, or pass --base to use it as it is")
-    jars = sorted((ROOT / "kernel/drishti-server" / "target").glob("drishti-server-*-exec.jar")) or sorted(
-        Path(os.environ.get("DRISHTI_JAR_DIR", ROOT.parent / "kernel/drishti-server" / "target")).glob("drishti-server-*-exec.jar"))
+    jars = server_jars()
     if not jars:
-        sys.exit("no drishti-server-*-exec.jar: run ./mvnw -q -o -DskipTests package")
+        sys.exit("no drishti-server-*-exec.jar in <home>/lib: run python tools/drishti.py build jar")
     packs = work / "packs"
     packs.mkdir()
     for name in QUICKSTART:

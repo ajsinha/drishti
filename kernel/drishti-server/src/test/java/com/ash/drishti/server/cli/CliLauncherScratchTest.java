@@ -86,7 +86,8 @@ class CliLauncherScratchTest {
         ProcessBuilder pb = new ProcessBuilder(cmd).directory(work.toFile()).redirectErrorStream(true);
         pb.environment().keySet().removeIf(k -> k.startsWith("DRISHTI_"));
         pb.environment().putAll(Map.of("DRISHTI_PACKS_DIR", REPO.resolve("config/packs").toString(), "DRISHTI_MODULES_HOME", REPO.resolve("modules").toString(),
-                "DRISHTI_PACKS", "trading"));   // the shipped modules where the repository keeps them (KERNEL_AND_MODULES.md 18.2)
+                "DRISHTI_PACKS", "trading",     // the shipped modules where the repository keeps them (KERNEL_AND_MODULES.md 18.2)
+                "DRISHTI_HOME", REPO.toString()));   // the install folder, as every launcher names it (never the working folder)
         Path log = jvmTmp.resolve("run.log");
         pb.redirectOutput(log.toFile());
         Process proc = pb.start();

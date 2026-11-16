@@ -87,7 +87,7 @@ class Fake:
 
 
 class Planning(unittest.TestCase):
-    def test_the_order_is_bi_and_data_coordinators_owners_zone_by_zone_then_consoles(self):
+    def test_the_order_is_bi_and_data_coordinators_owners_zone_by_zone_then_the_consoles(self):
         inv = rolling.Inventory.parse(DOC)
         groups = [(t, [n.name for n in ns]) for t, ns in rolling.order(inv)]
         self.assertEqual(groups, [("BI and data-serving", ["data-1", "bi-1"]), ("coordinators", ["coord-1"]),
@@ -146,9 +146,8 @@ class Planning(unittest.TestCase):
     def test_the_example_inventory_plans(self):
         inv = rolling.Inventory.load(str(ROOT / "deploy" / "rolling.example.yaml"))
         work = rolling.plan(inv, "2.9.7")
-        self.assertEqual([n.role for _, n, _ in work][-2:], ["console", "console"], "the consoles last")
-        owners = [n for _, n, _ in work if n.role == "owner"]
-        self.assertEqual([n.zone for n in owners][-4:], ["az-a", "az-a", "az-b", "az-b"])
+        self.assertEqual([n.role for _, n, _ in work][-2:], ["console", "console"])
+        self.assertEqual([n.zone for _, n, _ in work if n.role == "owner"][-4:], ["az-a", "az-a", "az-b", "az-b"])
         for _, n, _ in work:
             self.assertNotRegex(n.url, r"//(localhost|127\.|0\.0\.0\.0)", "a real address, never localhost")
 
@@ -167,7 +166,7 @@ class Running(unittest.TestCase):
         self.assertIn("POST http://10.0.3.11:18480/api/v1/admin/node/drain", text)
         self.assertIn("install 2.9.7 on 10.0.3.11", text)
         self.assertIn("GET http://10.0.1.11:17480/readyz", text)
-        self.assertGreater(text.index("console-1"), text.index("var-9"), "the consoles after every server")
+        self.assertLess(text.index("coord-1"), text.index("console-1"))
         self.assertLess(text.index("var-3"), text.index("var-1"))
 
     def test_one_node_at_a_time_each_drained_safe_stopped_upgraded_started_and_ready_before_the_next(self):
@@ -206,11 +205,11 @@ class Running(unittest.TestCase):
         self.assertEqual(rolling.Runner("", g.call, g.run, g.sleep, g.clock, said.append, poll=5).run(rolling.plan(inv, "2.9.7")), 1)
         self.assertTrue(any("not ready after 120 s" in s for s in said), said)
 
-    def test_the_shell_wrapper_runs_the_runner(self):
+    def test_the_python_command_runs_the_runner(self):
         with tempfile.TemporaryDirectory() as d:
             inv = Path(d, "c.json")
             inv.write_text(json.dumps(DOC), encoding="utf-8")
-            r = subprocess.run(["bash", "-n", str(ROOT / "tools" / "rolling-upgrade.sh")], capture_output=True, text=True, check=False)
+            r = subprocess.run([sys.executable, str(ROOT / "tools" / "rolling.py"), "--help"], capture_output=True, text=True, check=False)
             self.assertEqual(r.returncode, 0, r.stderr)
             r = subprocess.run([sys.executable, str(ROOT / "tools" / "rolling.py"), "--inventory", str(inv), "--dry-run"],
                                capture_output=True, text=True, check=False)

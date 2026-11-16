@@ -183,7 +183,7 @@ Now ask the machine whether it is ready. `doctor` prints green, yellow and red l
 ```text
 $ drishti-console/.venv/bin/python tools/drishti.py doctor
 GREEN  java                    /usr/lib/jvm/java-21-openjdk-amd64/bin/java: Java 21.0 (Ubuntu)
-GREEN  server jar              ~/drishti/kernel/drishti-server/target/drishti-server-2.9.11.b-exec.jar (version 2.5.0)
+GREEN  server jar              ~/drishti/lib/drishti-server-2.9.11.b-exec.jar (version 2.5.0)
 GREEN  python                  ~/drishti/drishti-console/.venv/bin/python: Python 3.13.15
 GREEN  python pyyaml           installed
 GREEN  python deltalake        installed
@@ -206,18 +206,18 @@ You should see no red line (the exit is 0). The two `port` lines say what is on 
 **In the UI.** Run **Drishti server (demo lakes)**, then **Drishti console**. The first reads the lakes with the samples off (`DRISHTI_DEMO_ENABLED=false`), with
 security on and a development administrator; the second signs people in with the same token secret.
 
-**From the command line.** In the repository root, the scripts of `bin/` start both with the same settings as the run configurations
+**From the command line.** In the repository root, `tools/drishti.py` starts both with the same settings as the run configurations
 (`--demo`: the lakes with the samples off, security on, a development administrator, the same token secret for the two):
 
 ```bash
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
-bin/start-server.sh --demo --background           # Windows: bin\start-server.cmd --demo --background
-bin/start-console.sh --demo --background          # Windows: bin\start-console.cmd --demo --background
-bin/status.sh
+python tools/drishti.py start server --demo --background     # Windows: py tools\drishti.py start server --demo --background
+python tools/drishti.py start console --demo --background    # Windows: py tools\drishti.py start console --demo --background
+python tools/drishti.py status
 ```
 
-The secrets `--demo` uses are the development ones of the run configurations, and the script says so: fine on your own machine, never on
-a shared one ([tutorial 21](21-run-it-in-production.md)). Every option: [DEPLOYMENT_AND_QA_GUIDE.md › section 6](../DEPLOYMENT_AND_QA_GUIDE.md#6-start-the-server-and-the-console).
+The secrets `--demo` uses are the development ones of the run configurations, and the command says so: fine on your own machine, never on
+a shared one ([tutorial 21](21-run-it-in-production.md)). Every option: [DEPLOYMENT_AND_QA_GUIDE.md › section 7](../DEPLOYMENT_AND_QA_GUIDE.md#7-start-the-server-and-the-console).
 
 You should see `server: up on http://<this machine's address>:18480` and `console: up on http://<this machine's address>:17480`, then
 `status` listing both `running` and `UP`. In the server's log, `data/logs/server.log`, `Started DrishtiApplication`, and before it the line
@@ -228,7 +228,7 @@ server from the command line too:
 curl -s localhost:18480/actuator/health
 ```
 
-You should see `{"status":"UP","groups":["liveness","readiness"]}`. `bin/stop-all.sh` stops both when you are done.
+You should see `{"status":"UP","groups":["liveness","readiness"]}`. `python tools/drishti.py stop all` stops both when you are done.
 
 (`DRISHTI_STUDIO_SAVE=true` lets the Build pages of tutorial 19 save work. Tutorials 1 and 8 need two people, so all the tutorials run with sign-in on.)
 

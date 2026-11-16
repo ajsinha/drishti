@@ -45,6 +45,7 @@ afterwards.
 6. [`data`: profile, ingest and load](#6-data-profile-ingest-and-load)
 7. [`lake`: a large JSON export into a Delta lake](#7-lake-a-large-json-export-into-a-delta-lake)
 8. [`server`: health and packs](#8-server-health-and-packs)
+   - [`setup`, `build jar`, `start`, `stop` and `status`](#setup-build-jar-start-stop-and-status-install-build-run-and-stop-drishti)
 9. [`connector` and `net`](#9-connector-and-net)
 10. [`view`, `history` and `convert`](#10-view-history-and-convert)
 11. [`design`: the Screen Designer over REST](#11-design-the-screen-designer-over-rest)
@@ -167,7 +168,7 @@ data/build/my-bank-1.0.0/
 ├── data/delta/my-bank/trade/   the documents, one Delta table, partitioned by business_date=YYYY-MM-DD   (data/files/ with --store files)
 ├── bundle/                     my-bank-1.0.0.tar.gz  +  .sha256     (the pack alone, for `pack deploy`)
 ├── config/drishti-site.yaml    a server configuration overlay (packs on; the data root explained)
-├── run-server.sh               start a server on this folder alone: DRISHTI_JAR=... DRISHTI_PORT=18480 ./run-server.sh
+├── run-server.sh               start a server on this folder alone: DRISHTI_HOME=<install> DRISHTI_PORT=18480 ./run-server.sh
 ├── run-server.ps1              the same for Windows
 └── MANIFEST.json               counts per date, the chosen key and date, tool versions, checksums
 ```
@@ -275,7 +276,7 @@ http://localhost:18480) and the token from DRISHTI_TOKEN or --token-file; the to
 | PyYAML | `pack`, `data ingest`, `design create --from-sutra` | `python3 -c "import yaml"` |
 | `deltalake` and `pyarrow` | `data ingest --store delta`, `pack new --lake` | only when you write a Delta lake |
 | JDK 21 or newer | `sutra`, `pack new`, `pack check`, `pack about-check` | `java -version` (the tool prefers `JAVA_HOME`, then `/usr/lib/jvm/java-21-openjdk-amd64`, then `java`) |
-| the exec jar `kernel/drishti-server/target/drishti-server-<version>-exec.jar` | the same | `./mvnw -q -DskipTests package`, or pass `--jar` / set `DRISHTI_JAR` |
+| the exec jar `lib/drishti-server-<version>-exec.jar` | the same | `python tools/drishti.py build jar` (builds with Maven, copies the jar into `<home>/lib`), or pass `--jar` for a one-off run |
 | `openssl` | `pack keygen` | `openssl version` |
 | Playwright | `docs shots` | see [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench) |
 
@@ -301,17 +302,15 @@ drishti-console/.venv/bin/python tools/drishti.py --help
 Run the program from the repository root, or from anywhere with its path, with the console's interpreter
 (`drishti-console/.venv/bin/python`, which the quick start of [data/testdata/README.md](../../data/testdata/README.md) installs with
 PyYAML, deltalake and pyarrow). Many examples write `python3 tools/drishti.py`: any Python 3.10+ with PyYAML runs every command that
-does not write a Delta lake; `drishti.py` in the output is the same program. The shell tools under `tools/` are bash, with PowerShell
-twins under `tools/windows/`.
+does not write a Delta lake; `drishti.py` in the output is the same program. The shell tools under `tools/` are bash; the Python commands (`tools/drishti.py`, `tools/rolling.py`, `tools/pvgen/*.py`) run on every system.
 
 The Java commands (`sutra`, `pack check`, `tables` and Drishti's own lake writer) run from the server's exec jar, found as `--jar`,
-then `DRISHTI_JAR`, then the newest `kernel/drishti-server/target/drishti-server-*-exec.jar` (build it with `./mvnw -q -DskipTests package`).
+then the newest `lib/drishti-server-*-exec.jar` of the install (`<home>/lib`; make it with `python tools/drishti.py build jar`).
 
 **Environment variables** the program reads:
 
 | Variable | Meaning | Default |
 |---|---|---|
-| `DRISHTI_JAR` | the exec jar the Java commands run | the newest `kernel/drishti-server/target/drishti-server-*-exec.jar` |
 | `JAVA_HOME` | the JDK that runs it | `/usr/lib/jvm/java-21-openjdk-amd64`, then `java` on the `PATH` |
 | `DRISHTI_SERVER` | the server's base URL | `http://localhost:18480` |
 | `DRISHTI_TOKEN` | the bearer token (never printed) | none |
@@ -593,7 +592,7 @@ extractor, auto-design and the view pipeline) without a browser and without a we
 
 ```
 drishti-console/.venv/bin/python tools/drishti.py sutra <command> <path>... [options]
-java -jar kernel/drishti-server/target/drishti-server-<version>-exec.jar sutra <command> <path>... [options]
+java -jar lib/drishti-server-<version>-exec.jar sutra <command> <path>... [options]
 ```
 
 | Command | Takes | Does |
@@ -787,7 +786,7 @@ verified
 
 pack make: data/build/my-bank-1.0.0
   6 Sutra group(s) for 4407 trade document(s), 24 date(s) in data/delta; pack check passed, pack verify passed
-next: read data/build/my-bank-1.0.0/README.txt; for a new server  DRISHTI_JAR=<exec jar> ...
+next: read data/build/my-bank-1.0.0/README.txt; for a new server  DRISHTI_HOME=<install> ...
 ```
 
 Read the `date:` line. The test data's trades carry no business-date field (a file is one business day), so `pack make` took the date
@@ -795,7 +794,7 @@ field with the fewest distinct values, `START_DATE`, and stored each trade under
 dates. For such snapshots, build the lake with [`lake build --as-of`](#7-lake-a-large-json-export-into-a-delta-lake) (or the demo lakes, `drishti.py lake demo`) and use
 `pack make` for the pack alone; for documents that carry their business date, pass `--date` with that field.
 
-Try it without touching anything of yours: `DRISHTI_JAR=... DRISHTI_PORT=18974 data/build/my-bank-1.0.0/run-server.sh`, then
+Try it without touching anything of yours: `DRISHTI_HOME=<install> DRISHTI_PORT=18974 data/build/my-bank-1.0.0/run-server.sh`, then
 `curl 'http://localhost:18974/api/v1/views/trade/<an id>?asOf=<a date>'`. Documents of another day are added with `data ingest`
 (default mode `overwrite-dates`) into the same `data/delta`. Exit codes: 0 made and both checks passed, 1 made but a check failed
 (the folder is still written), 2 usage (no unique key, a missing field, `--out` exists without `--force`).
@@ -2203,7 +2202,7 @@ folder: `-Ddrishti.lakes.dir` or `DRISHTI_LAKES_DIR`); a key of the load file th
 
 ```bash
 java -Xmx40g -Djava.io.tmpdir=/mnt/nvme/tmp -Dloader.main=com.ash.drishti.lakeload.LakeLoad \
-    -jar kernel/drishti-server/target/drishti-server-<version>-exec.jar --config /etc/drishti/load-pv.yaml
+    -jar lib/drishti-server-<version>-exec.jar --config /etc/drishti/load-pv.yaml
 # development: java -cp <the module's class path> com.ash.drishti.lakeload.LakeLoad --config load.yaml
 ```
 
@@ -2564,7 +2563,7 @@ and whether the token is accepted, with the exact id, scopes and expiry of the t
 ```
 $ python3 tools/drishti.py doctor --server http://localhost:18971
 GREEN  java                    /usr/lib/jvm/java-21-openjdk-amd64/bin/java: Java 21.0 (Ubuntu)
-GREEN  server jar              ~/drishti/kernel/drishti-server/target/drishti-server-<version>-exec.jar (version <version>)
+GREEN  server jar              ~/drishti/lib/drishti-server-<version>-exec.jar (version <version>)
 GREEN  python                  /usr/bin/python3: Python 3.14.4
 GREEN  python pyyaml           installed
 YELLOW python deltalake        not installed (needed for data ingest --store delta)
@@ -2658,6 +2657,84 @@ connectors of desk-demo   [files in /srv/drishti/config/connectors; change them 
   desk-archive  not configured          quote-archive         nothing defines it  connector desk-archive is not configured
   desk-archive is not configured: create it with `drishti.py connector apply desk-archive.yaml` or in Admin -> Connectors
 [exit 1]
+```
+
+### `setup`, `build jar`, `start`, `stop` and `status`: install, build, run and stop Drishti
+
+One command, `tools/drishti.py`, prepares the machine, builds the server jar, and starts, stops and shows the server, the console and a
+cluster. It is the same on Linux, macOS and Windows; on Windows write `py tools\drishti.py ...` (or `python`) and backslash paths. The
+settings file goes **before** the command: `python tools/drishti.py --settings ~/drishti-envs/dev.ini start all --demo`.
+
+**The roots.** The install folder (`DRISHTI_HOME`) is `--home`, else `DRISHTI_HOME`, else `drishti.home` of the settings file, else the
+folder `tools/drishti.py` lives in; a named one must be an absolute path (a relative one is refused as relative) and that same folder. The data folder is `--data-dir`, else `drishti.data.dir` of the settings file, else `DRISHTI_DATA_DIR`, else
+`<home>/data`; its `run/` (pid files), `logs/` and `tmp/` hold what a started process leaves. Drishti's own server jar (exactly one; `start` refuses two) is in
+`<home>/lib`; the site's jars (JDBC drivers, connector plugins) are in `<home>/lib/ext` (`drishti.lib.path`, `DRISHTI_LIB_PATH`), kept on an upgrade. **Java** is found in one order:
+`--java-home`, `DRISHTI_JAVA_HOME`, `JAVA_HOME`, `java` on the `PATH`; a Java older than 21 is refused.
+
+**`drishti.py setup`** prepares the machine and is safe to repeat: it checks Python 3.11+ and Java 21+, makes the data folder's layout
+(`run/ logs/ tmp/ dumps/ modules/ delta/`), copies `config/settings.examples/dev.ini` to `~/drishti-envs/dev.ini` with its paths
+filled in (an existing file is never overwritten), makes `drishti-console/.venv`, and prints the next steps.
+
+| Option | Meaning |
+|---|---|
+| `--check` | only report, change nothing; exit 1 when something needs doing |
+| `--home HOME`, `--data-dir DIR` | the install and data folders to use |
+| `--envs-dir DIR` | the settings folder (default `~/drishti-envs`; Windows `%USERPROFILE%\drishti-envs`) |
+| `--java-home DIR` | the JDK to check |
+| `--python FILE` | the Python that makes `drishti-console/.venv` (default the one running) |
+| `--skip-venv` | leave `drishti-console/.venv` alone |
+| `--reinstall` | remake `drishti-console/.venv` and install `drishti-console/requirements.txt` |
+
+**`build jar`** runs Maven (`clean package`, never `install`) with the install's Maven wrapper and copies the server's exec jar into
+`<home>/lib`, where every start finds it (the newest jar there). Options: `--java-home DIR`, `--offline` (Maven `-o`), `--no-copy` (leave
+the jar in `kernel/drishti-server/target`), `--dry-run` (print the Maven command, build nothing).
+
+**`start server|console|all|cluster`** and **`stop server|console|all|cluster`**:
+
+| Command | What it does |
+|---|---|
+| `start server` | the server, alone or as a cluster node: temp folder, memory settings and logs under the data folder, waits for health, prints the LAN address |
+| `start console` | the console in `drishti-console/.venv` (made on first use), pointed at `--server`; waits for `/healthz` |
+| `start all` | one server and one console on this machine, in the background |
+| `start cluster` | a cluster on one machine from a cluster file (`--cluster FILE`, default `deploy/stack/stack.yaml`): the nodes, then the console; or only the nodes named (`console` names the console) |
+| `stop server`, `stop console`, `stop all`, `stop cluster` | stop by the pid file only, never by name: graceful first, forced after `--timeout` |
+
+Options of `start server`, `start console` and `start all`:
+
+| Option | Meaning |
+|---|---|
+| `--home`, `--data-dir`, `--java-home` | the roots and the JDK, as above (`start console` has no `--java-home`) |
+| `--env-file FILE` | `KEY=VALUE` lines put into the process's environment; secrets stay off the command line and are never printed |
+| `--demo` | the offline demo on the lakes, with development secrets and the `drishti-dev-admin` account: not for production |
+| `--distribution NAME` | `risk`, `finance`, `genomics`, `all` or a file path (`DRISHTI_DISTRIBUTION`; [DISTRIBUTIONS.md](../architecture/DISTRIBUTIONS.md)) |
+| `--background` | detach: log and pid file under `logs/` and `run/` |
+| `--port PORT` | the server's port (default `DRISHTI_PORT`, else 18480); the console's (default `DRISHTI_CONSOLE_PORT`, else 17480). `start all` has `--server-port` and `--console-port` |
+| `--heap SIZE` | the server's `-Xmx` (default 2g; 4g with `--demo`) |
+| `--jar FILE` | a server jar for one run (default the newest in `<home>/lib`) |
+| `--packs LIST`, `--engine ENGINE`, `--lake-root DIR` | the packs to load (`DRISHTI_PACKS`), the Delta engine `native`, `hadoop` or `auto`, the Delta root |
+| `--iceberg`, `--iceberg-root DIR` | serve the stores from Iceberg tables: copies `config/connectors.examples/iceberg/*.yaml` into `config/connectors` |
+| `--java-opt FLAG`, `--server-arg ARG`, `--workdir DIR` | one more JVM flag, one more server argument (both repeatable); the server's working folder |
+| `--wait SECONDS` | how long to wait for the health answer (server 300, console 90) |
+| `--node NODE`, `--node-dir DIR`, `--node-data DIR`, `--seed HOST:PORT`, `--advertise IP` | a cluster node: its id (pid, log and temp folder are named after it), its Drishti\*net folder, its own data folder, a member to join through, the address it advertises (default this machine's real address, never a loopback one) |
+| `--server URLS` | `start console`: the server, or a cluster's entry nodes, comma-separated (default `DRISHTI_SERVER_URL`) |
+| `--name NAME`, `--python FILE`, `--reinstall` | `start console`: a name when several consoles run from one data folder (`run/console-<name>.pid`); the Python for the `.venv`; remake the `.venv` |
+
+`stop` takes `--data-dir`, `--env-file` and `--timeout SECONDS`; `stop server` takes `--node NODE` and `--all-nodes` (every server pid
+file of the data folder), `stop console` takes `--name NAME`, `stop all` takes `--all-nodes`, `stop cluster` takes `--cluster FILE` and node
+names. Exit codes of `start`: 0 ok, 1 failed, 2 a wrong option, 3 already running or the port in use.
+
+**`drishti.py status`** shows pid, state, port, health answer, distribution and LAN address of every process started from the data
+folder; `--cluster FILE` adds the members each node sees and the console's servers. Options: `--home`, `--data-dir` (repeatable),
+`--env-file`, `--cluster`. Exit 0 when every process found runs and answers (or none was started), 1 when one is not running or not
+answering.
+
+```
+python tools/drishti.py setup                                                        # once per machine
+python tools/drishti.py build jar                                                    # the server jar into <home>/lib
+python tools/drishti.py --settings ~/drishti-envs/dev.ini start all --demo           # server, then console
+python tools/drishti.py status
+python tools/drishti.py stop all
+python tools/drishti.py start cluster --cluster deploy/stack/stack.yaml drishti-b console
 ```
 
 ## 9. `connector` and `net`
@@ -3810,7 +3887,7 @@ python3 tools/drishti.py elements dist
 
 drishti-feeds, the data feeds that pull external data and load it into the lakes (`tools/feeds/`, one file a feed in `config/feeds/`;
 the guide [WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md)). The pull is Python; the load is `lake build` (the parallel loader by default) or the data
-inbox. The wrappers `tools/feeds/feed.sh` and `tools/windows/feed.ps1` run the same with the console's Python.
+inbox. `python tools/drishti.py feed run <feed>` runs it on every system (on Windows with the console's Python: `drishti-console\.venv\Scripts\python.exe tools\drishti.py feed run <feed>`); `tools/feeds/feed.sh` is the Linux and macOS wrapper.
 
 - `feed list [--json]`: every feed: its lake, load route, schedule, licence (internal only or not) and datasets.
 - `feed run <feed>|--all [--date D | --since D] [--load java|python|inbox|none] [--lake L] [--dry-run] [--snapshot [--internal-ok]]
@@ -3838,15 +3915,15 @@ generated trade book) into one store, **in the layout that store's connector rea
 
 | Script | Store and layout | Retention |
 |---|---|---|
-| `tools/load-delta.sh` | Delta Lake under `data/delta/demo` (the demo lake), the pack's layout (`tools/windows/load-delta.ps1` on Windows) | `drishti.py lake maintain` |
+| `tools/load-delta.sh` | Delta Lake under `data/delta/demo` (the demo lake), the pack's layout (on Windows: `python tools/drishti.py lake demo --engine java`) | `drishti.py lake maintain` |
 | `tools/load-files.sh` | the File connector's JSON Lines, `<root>/<domain>/<yyyy-MM-dd>/<kind>.jsonl`, each file replaced whole | delete old day folders |
 | `tools/load-postgres.sh` | PostgreSQL, `<domain>.entities` partitioned by month, promoted columns | `--keep-months N` |
 | `tools/load-duckdb.sh` | one DuckDB file, written beside and renamed over the old one | `--keep-days N` |
 | `tools/load-mongodb.sh` | MongoDB, a collection per domain, zstd, the `day_ids` index | `--keep-days N` or `--ttl-days N` |
 | `tools/load-redis.sh` | Redis, a compressed document per entity per day, each day replaced atomically | `--ttl-days N` |
 | `tools/load-aerospike.sh` | Aerospike, a set per domain, promoted fields as bins | `--ttl-days N` |
-| `tools/load-cassandra.sh` | Apache Cassandra or ScyllaDB, a keyspace per domain, a partition per day per bucket, each day under a new generation (appears whole); `--create` makes the tables (`tools/windows/load-cassandra.ps1` on Windows) | `--ttl-days N` or `--keep-days N` |
-| `tools/load-iceberg.sh` | Apache Iceberg tables (a folder or a REST catalog), sorted by id, external sort with `--spill-dir`; `--engine native` writes with drishti-iceberg, no Hadoop (`tools/windows/load-iceberg.ps1` on Windows, native by default) | `--keep-days N` |
+| `tools/load-cassandra.sh` | Apache Cassandra or ScyllaDB, a keyspace per domain, a partition per day per bucket, each day under a new generation (appears whole); `--create` makes the tables (`python tools/drishti.py data load --store cassandra`) | `--ttl-days N` or `--keep-days N` |
+| `tools/load-iceberg.sh` | Apache Iceberg tables (a folder or a REST catalog), sorted by id, external sort with `--spill-dir`; `--engine native` writes with drishti-iceberg, no Hadoop (`python tools/drishti.py data load --store iceberg`) | `--keep-days N` |
 
 ```bash
 tools/load-duckdb.sh /tmp/demo.duckdb --trades 10000 --days 3
@@ -3889,7 +3966,7 @@ guides are listed in [DATA_GUIDE.md section 8](../guides/DATA_GUIDE.md#8-connect
 | `tools/packgen/trades/make_trades.py` | **The trading pack's trades of three source systems** in the common schema (upper-snake, `LEGS` → `CASH_FLOWS` → `RESETS`, `EVENTS`): `--trades N` per system (ENDUR, CALYPSO, MUREX), `--days D` business days with about 6% amended each day, one `<out>/<system>/trade_<system>.<date>.jsonl.gz` a day; with `--lake <root>` each goes through `lake build --connector trade-<system>` into that system's table (`trade_endur`, `trade_calypso`, `trade_murex`). Deterministic; 10,000 trades or fewer on a laptop. `drishti-console/.venv/bin/python tools/packgen/trades/make_trades.py --trades 50 --days 2 --out data/build/trades` prints `ENDUR: 50 trades x 2 days -> data/build/trades/endur` and the same for CALYPSO and MUREX. |
 | `tools/packgen/var/make_var_data.py` | **The VaR engine's inputs** ([VAR_GUIDE.md Part II](VAR_GUIDE.md#14-the-contract-at-a-glance)) from the committed trades and desks, as an upstream risk batch delivers them: per position by default, each record a position's 509 scenario PVs (7,993 records of 9,572 live trades; `--position-systems ""` and `--pv-systems` give trade grain and P&L vectors) with the terms the server derives positions from (a synthetic `SECURITY_ID` shared by several trades for securities and listed products, by the market-risk pack's `positions:` rules), the scenario set and the limits (of the nodes and the system baskets), written to `data/testdata/market-risk/<kind>/` with their `testdata.yaml` entries, the pack's samples and Sutra tests, and the demo's 28 system baskets (a desk's, a legal entity's, rules and baskets, overlapping) as the pack's seed, `seeds/system-baskets.yaml` (not data: imported once into the basket store, [VAR_GUIDE.md section 5.7](VAR_GUIDE.md#57-system-baskets)). No position, VaR or node history is written: the server derives and computes them. `--budget N` values at most N trades per book (default 0: every live trade), `--out` writes elsewhere, and `--check` fails when the committed files differ. The form is a choice per system: `--pv-systems ENDUR` (the default: Endur's trades as scenario PVs in their own currency, with the scenario FX), `--pnl-systems` (as P&L vectors), `--all-vectors` (every trade a P&L vector: the bank 112,035,906 / 160,132,107). `--position-systems MUREX` sends those systems per position (`GRAIN: POSITION`, naming their trades in `TRADE_IDS`); `--inputs-config` prints the `drishti.var.inputs` pins matching the data. Deterministic; `tools/packgen/var/test_var_data.py` checks the data. |
 | `tools/packgen/sensitivity/make_sensitivity_data.py` | **The demo position sensitivities and the factor dictionary** (the planned kinds [`position-sensitivity`](../contracts/samples/market-risk.md#position-sensitivity) ([contract](../contracts/packs/market-risk.md#sens-position-sensitivities-position-sensitivity)) and [`risk-factor`](../contracts/samples/market-risk.md#risk-factor) ([contract](../contracts/packs/market-risk.md#rfac-risk-factor-dictionary-risk-factor)), [SENSITIVITIES_AND_FRTB_SA.md](FRTB_SA_GUIDE.md)) from the VaR factor model, into `data/testdata/market-risk/`; run by `tools/testdata/make_testdata.py` |
-| `tools/pvgen/morning.py`, `intraday.py`, `publish_kafka.py`, `check.py` (each with a `.sh` beside it and a PowerShell form: `pvgen-morning.ps1`, `pvgen-intraday.ps1`, `pvgen-publish-kafka.ps1`, `pvgen-check.ps1` in `tools/windows`) | **A stand-in pricing system** ([VAR_GUIDE.md section 15.12](VAR_GUIDE.md#1512-producing-pl-vectors-and-scenario-pvs)): JSONL only, every line one row of its kind's contract. Every record leads with what it is (`VALUE_TYPE`, `GRAIN`, its id, `CURRENCY`, `SOURCE_SYSTEM`); `--grain position` (or `--position-systems SYS`) sends per position instead of per trade. `morning.py` writes a full day's [`scenario-pv`](../contracts/samples/market-risk.md#scenario-pv) ([contract](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-position-or-trade-one-pv-per-scenario-its-currency-scenario-pv)), [`pnl-vector`](../contracts/samples/market-risk.md#pnl-vector) ([contract](../contracts/packs/market-risk.md#pnlv-pl-vector-one-pl-per-scenario-pnl-vector)) and [`fx-scenario`](../contracts/samples/market-risk.md#fx-scenario) ([contract](../contracts/packs/market-risk.md#fxs-scenario-fx-of-a-currency-one-rate-per-scenario-fx-scenario)) (per-system forms as above, `--date`, `--lake`, `--server`); `intraday.py` N small batches of amended, new and cancelled trades (`--batches 20 --trades-per-batch 15`, `--seed`, `--first` for a second run, `--lake`, `--server`, `--every 30s`); `publish_kafka.py` the same to the PV topic, each message JSONL text of `--per-message` records, a cancel a cancel line (`--rate`, `--seconds`; kafka-python); `check.py` recomputes the bank's and the desks' VaR and ES from the files and compares them with the server. Each has `--help` and `--dry-run`; `tools/pvgen/test_pvgen.py` checks them. `drishti-console/.venv/bin/python tools/pvgen/morning.py --dry-run` prints `morning run of 2026-09-30: 1,339 trades as scenario PVs (ENDUR), 8,233 as P&L vectors, scenario FX for 6 currencies; computed at 2026-09-30T06:00:00Z`. |
+| `tools/pvgen/morning.py`, `intraday.py`, `publish_kafka.py`, `check.py` (each with a `.sh` beside it; the Python files run on every system with the console's Python) | **A stand-in pricing system** ([VAR_GUIDE.md section 15.12](VAR_GUIDE.md#1512-producing-pl-vectors-and-scenario-pvs)): JSONL only, every line one row of its kind's contract. Every record leads with what it is (`VALUE_TYPE`, `GRAIN`, its id, `CURRENCY`, `SOURCE_SYSTEM`); `--grain position` (or `--position-systems SYS`) sends per position instead of per trade. `morning.py` writes a full day's [`scenario-pv`](../contracts/samples/market-risk.md#scenario-pv) ([contract](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-position-or-trade-one-pv-per-scenario-its-currency-scenario-pv)), [`pnl-vector`](../contracts/samples/market-risk.md#pnl-vector) ([contract](../contracts/packs/market-risk.md#pnlv-pl-vector-one-pl-per-scenario-pnl-vector)) and [`fx-scenario`](../contracts/samples/market-risk.md#fx-scenario) ([contract](../contracts/packs/market-risk.md#fxs-scenario-fx-of-a-currency-one-rate-per-scenario-fx-scenario)) (per-system forms as above, `--date`, `--lake`, `--server`); `intraday.py` N small batches of amended, new and cancelled trades (`--batches 20 --trades-per-batch 15`, `--seed`, `--first` for a second run, `--lake`, `--server`, `--every 30s`); `publish_kafka.py` the same to the PV topic, each message JSONL text of `--per-message` records, a cancel a cancel line (`--rate`, `--seconds`; kafka-python); `check.py` recomputes the bank's and the desks' VaR and ES from the files and compares them with the server. Each has `--help` and `--dry-run`; `tools/pvgen/test_pvgen.py` checks them. `drishti-console/.venv/bin/python tools/pvgen/morning.py --dry-run` prints `morning run of 2026-09-30: 1,339 trades as scenario PVs (ENDUR), 8,233 as P&L vectors, scenario FX for 6 currencies; computed at 2026-09-30T06:00:00Z`. |
 | `tools/packgen/ccr/make_ccr_data.py` | **The exposure engine's inputs** ([EXPOSURE_GUIDE.md](EXPOSURE_GUIDE.md)) from the committed netting sets, as an upstream exposure simulator delivers them: a simulation run ([`simulation-run`](../contracts/samples/counterparty-risk.md#simulation-run) ([contract](../contracts/packs/counterparty-risk.md#xrun-exposure-simulation-run-simulation-run)): 200 paths, 13 primary dates 1W .. 10Y and their 10-business-day look-back dates) and every live member trade's MtM on every path at every grid date up to its maturity ([`exposure-path`](../contracts/samples/counterparty-risk.md#exposure-path) ([contract](../contracts/packs/counterparty-risk.md#xpath-exposure-path-a-trades-mtm-on-every-path-at-a-grid-date-exposure-path))) for eight netting sets, written to `data/testdata/counterparty-risk/<kind>/` with their `testdata.yaml` entries, the pack's samples and `drishti-compute`'s parity reference (`ccrmath.py`'s figures). No exposure figure is written. `--check` fails when the committed files differ, `--full --out DIR` writes every netting set that fits in 10,000 trades with 500 paths (local benchmarks), `--demo --out DIR` writes the demo lake's run (whole counterparties within 9,500 trades, 200 paths: 74 netting sets, 8,022 live trades on the data's date; what `lake demo --exposure demo` loads), `--reconcile I/N --stored DIR` compares stored profiles with the computed ones. Deterministic; `tools/packgen/ccr/test_ccr_data.py` checks the data. |
 | `tools/testdata/sample_docs.py` | **The data samples** ([docs/contracts/samples/README.md](../contracts/samples/README.md)): one page per data type of `data/testdata` (and per kind a bank or a public source produces that has only pack samples), each with a real record pretty-printed as JSON, long arrays folded, one record per sub-type (a trade's product type, a P&L or PV form, a curve type), every field explained from the kind's data contract, the fields only other rows have, and a checklist for the production query; the index groups them by what the bank produces and lists the kinds Drishti computes. Reads every row of the test data (four worker processes, about 25 s). `--check` fails when a page is stale; `audit` compares every contract with all its committed rows (fields missing from the contract, required fields null, types and enums that differ). `tools/test_sample_docs.py` runs both. |
 | `tools/samplegen/bulk_trades.py` | a large trade book for scale tests, N trades over D business days: one JSONL file a day under `data/build/bulk/<system>/`, then each through `lake build` into the system's trade table (`load-delta.sh --trades`; `--no-lake` writes the JSONL only, `--jsonl FILE.tar` loader rows for the other stores: a tar of `trade/<YYYY-MM-DD>/` folders; a plain file or `-` only with `--days 1`) |
@@ -3945,13 +4022,13 @@ of Parquet.
 | `tools/bench/charts.py` | the charts of [BENCHMARK.md](../admin/BENCHMARK.md#4-the-200000-position-var-and-cluster-run), drawn from the VaR run's results files (`var_bench.py`'s JSON lines) as plain SVG into `docs/admin/images/benchmark/` (`--to` another folder): requests a second by users, p99 by request type, a first open by stage, heap against the sizing formulas, GC pauses, the hottest CPU frames, disk and load time; transparent background, readable on light and dark pages; only measured cells are drawn; standard library only, rerun after every run |
 | `tools/bench/net_soak.py` (with `tools/bench/soak_check.py`) | the Drishti\*net soak on real processes: three servers (each with only the packs and connectors its lake holds, the others off by connector file), a console, `users.py` load, a shard and the seed killed and restarted, every answer (views, searches, about 140 distinct histories with ten ranges as administrator and as viewer, whose `PRICE` or `NAME` must read masked on every row and in every diff) checked against one server holding all the data; samples memory, heap, open files and threads every minute (the console with all its worker processes, summed and one by one) and ends with a verdict (no wrong answers: each one kept with its time, request and the rule that failed, the first 200 with `partial`, `problems` and a compact diff; errors only in kill windows, p95/p99 per action, memory flat after warm-up: the slope in the steady spans outside the kill windows and `--settle` seconds after each, the whole-run slope reported beside it), exit `0` only when it passes ([CLUSTER_GUIDE.md › Drishti*net: many servers, one Drishti, section 17.1](../admin/BENCHMARK.md#215-drishtinet)) |
 | `tools/bench/scale.sh`, `tools/bench/pinning.sh` | the scale benchmark per store and size, and the virtual-thread pinning comparison (Java 21 / 25); they start and stop their own servers by process id |
-| `bin/start-server`, `bin/start-console`, `bin/stop-server`, `bin/stop-console`, `bin/status`, `bin/start-all`, `bin/stop-all` (`.sh`, `.ps1`, `.cmd`) | starting and stopping the server, its cluster nodes and the console on Windows, Linux and macOS ([DEPLOYMENT_AND_QA_GUIDE.md › section 6](../DEPLOYMENT_AND_QA_GUIDE.md#6-start-the-server-and-the-console)) |
-| `tools/windows/load-delta.ps1` | loading the demo lake on Windows |
-| `tools/rolling-upgrade.sh` (`tools/rolling.py`; Windows `tools/windows/rolling-upgrade.ps1`) | the rolling upgrade runner (CD3): a cluster upgraded one node at a time from an inventory (`deploy/rolling.example.yaml`), BI and data-serving, coordinators, owners zone by zone, then consoles; each drained, waited for until safe to stop, stopped, upgraded, started and waited for until ready, on VMs or ECS; `--dry-run`, `--from`, `--only` ([CLUSTER_GUIDE.md section 10.1](CLUSTER_GUIDE.md#82-rolling-upgrades)) |
-| `bin/drishti-node.sh` (`bin/drishti-node.ps1`) | one server's drain before a stop and its readiness (CD1, CD2): `drain [--wait S]`, `undrain`, `status`, `wait-ready`, and `run COMMAND` (the server images' entry: drains on SIGTERM, then passes it on); the systemd unit's `ExecStop` ([OPERATIONS_GUIDE.md section 7.2](OPERATIONS_GUIDE.md#53-running-as-services-systemd)) |
-| `tools/feeds/feed.sh`, `tools/windows/feed.ps1` | the one wrapper of every data feed on Linux and macOS, and on Windows: `drishti.py feed ...` with the console's Python (what cron, systemd and Task Scheduler run; [WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md)) |
+| `tools/drishti.py setup`, `build jar`, `start`, `stop`, `status` | preparing the machine, building the server jar, and starting, stopping and showing the server, its cluster nodes and the console on Windows, Linux and macOS ([above](#setup-build-jar-start-stop-and-status-install-build-run-and-stop-drishti); [DEPLOYMENT_AND_QA_GUIDE.md › section 7](../DEPLOYMENT_AND_QA_GUIDE.md#7-start-the-server-and-the-console)) |
+| `tools/rolling.py` (`python tools/rolling.py --inventory my-cluster.yaml --version X [--dry-run]`, any system; needs PyYAML, which the console's environment has) | the rolling upgrade runner (CD3): a cluster upgraded one node at a time from an inventory (`deploy/rolling.example.yaml`), BI and data-serving, coordinators, owners zone by zone, then the consoles; each drained, waited for until safe to stop, stopped, upgraded, started and waited for until ready, on VMs or ECS; `--dry-run`, `--from`, `--only` ([CLUSTER_GUIDE.md section 10.1](CLUSTER_GUIDE.md#82-rolling-upgrades)) |
+| `bin/drishti-node.sh` | one server's drain before a stop and its readiness (CD1, CD2): `drain [--wait S]`, `undrain`, `status`, `wait-ready`, and `run COMMAND` (the server images' entry: drains on SIGTERM, then passes it on); the systemd unit's `ExecStop` ([OPERATIONS_GUIDE.md section 7.2](OPERATIONS_GUIDE.md#53-running-as-services-systemd)) |
+| `tools/feeds/feed.sh` | the wrapper of every data feed on Linux and macOS: `drishti.py feed ...` with the console's Python (on Windows Task Scheduler runs `drishti-console\.venv\Scripts\python.exe tools\drishti.py feed run <feed>` directly; cron and systemd run the wrapper; [WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md)) |
 | `tools/smoke.py` | the engine of `drishti.py server smoke` |
 | `tools/javacmd.py` | `java_cmd()`: the one helper every Python launcher of a JVM uses, so each java it starts gets `-Djava.io.tmpdir=` (native libraries unpack in Drishti's own temp folder, not `/tmp`); a guard test fails on a tool that starts java without it ([CONFIGURATION.md](../admin/CONFIGURATION.md)) |
+| `tools/settingsfile.py` | `--settings /abs/a.ini[,/abs/b.ini]` before a `drishti.py` command: the settings files read with the server's rules (the format itself in `drishti-console/core/settings_ini.py`, shared with the console), the launch roots they name put into the tools' environment, and the files passed to every JVM the command starts as `-Ddrishti.settings.file` ([DEPLOYMENT_AND_QA_GUIDE.md › The settings file](../DEPLOYMENT_AND_QA_GUIDE.md#51-the-settings-file)) |
 | `tools/clitable.py` | `money()` and `table()`: how `drishti.py var` and `drishti.py exposure` print a figure and a table. |
 | `tools/settings_catalogue.py`, `tools/settings_sources.py` | the one configuration document: `settings_catalogue.py` writes every setting of every kind into [CONFIGURATION.md](../admin/CONFIGURATION.md) (and the console's Help → Configuration) from the files themselves, with `tools/settings_schemas.yaml` for the content files; `--check` (in the drill) fails when the document is not current or a key has no meaning; `settings_sources.py` holds its readers (a commented YAML's keys and comments, the connector settings catalogue, the shared `tls.*` and `proxy.*` specs) |
 | `tools/under_construction.py` | the under-construction registry's document: writes [UNDER_CONSTRUCTION.md](../admin/UNDER_CONSTRUCTION.md) from `config/under-construction.yaml` (what depends on unbuilt work, where it shows, the release that builds it, hidden or *Under construction*, the screenshots to retake); `--check` fails when the document is stale or a place it names does not exist |
@@ -4054,10 +4131,10 @@ empty PyCharm to a run configuration for each common task.
 | **Script path** (not *Module name*; switch the toggle on the left of the field) | `<repo>/tools/drishti.py` |
 | **Python interpreter** | the `drishti-console/.venv` interpreter made above |
 | **Working directory** | **the repository root**: relative paths in *Parameters* resolve from here |
-| **Environment variables** | `JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64;DRISHTI_JAR=<repo>/kernel/drishti-server/target/drishti-server-<version>-exec.jar;PYTHONUNBUFFERED=1`, and for server commands `DRISHTI_SERVER=http://localhost:18480;DRISHTI_TOKEN=drk_...` |
+| **Environment variables** | `JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64;PYTHONUNBUFFERED=1`, and for server commands `DRISHTI_SERVER=http://localhost:18480;DRISHTI_TOKEN=drk_...` |
 
-Click the folder icon next to **Environment variables** to edit them as a table (one row per variable). `JAVA_HOME` and
-`DRISHTI_JAR` may be left out: the tool then looks for JDK 21 and for the newest `kernel/drishti-server/target/*-exec.jar` itself.
+Click the folder icon next to **Environment variables** to edit them as a table (one row per variable). `JAVA_HOME` may be
+left out: the tool then looks for JDK 21, and for the newest `lib/*-exec.jar` of the repository itself.
 
 | Name | **Parameters** |
 |---|---|
@@ -4073,7 +4150,7 @@ Click the folder icon next to **Environment variables** to edit them as a table 
 
 Press **Run** (Shift+F10): the output is in the Run window, and a non-zero exit code shows as a failed run (exit 1 = a check
 failed, 2 = usage; see [Exit codes](#exit-codes)). If the Run window says `no drishti-server-*-exec.jar`, build it once
-(`./mvnw -q -DskipTests package`) or set `DRISHTI_JAR`.
+(`python tools/drishti.py build jar`).
 
 **Templates.** **Run → Edit Configurations → Edit configuration templates... → Python** sets the defaults for every *new* Python
 configuration: put the interpreter, the working directory (`$PROJECT_DIR$/..`, the repository root), and the environment variables there once, and each new
@@ -4148,7 +4225,7 @@ Paths in the arguments are relative to the working directory here, unlike in `dr
 
 **Run → Edit Configurations → + → Python tests → Unittest**: *Target* `Script path`, the file `tools/test_packmake.py` (or
 `test_drishti_cli.py`, `test_sutragen.py`, `test_ingest_jsonl.py`, `test_pack_bundle.py`), working directory the repository root,
-environment `DRISHTI_JAR=...` (the tests that run `sutra lint` are skipped without a jar).
+(the tests that run `sutra lint` are skipped until `python tools/drishti.py build jar` has put the jar in `lib/`).
 
 #### Where next
 
@@ -4381,8 +4458,8 @@ Some commands add codes of their own, each named in its section:
 
 | You see | Why | Do |
 |---|---|---|
-| `drishti: no drishti-server-*-exec.jar under kernel/drishti-server/target: build it ... or pass --jar / DRISHTI_JAR` | the Java commands need the exec jar | `./mvnw -q -DskipTests package`, or `export DRISHTI_JAR=/path/to/drishti-server-<version>-exec.jar` |
-| `drishti: jar not found: ...` | `--jar` / `DRISHTI_JAR` names a missing file | fix the path |
+| `no server jar in <home>/lib: run python tools/drishti.py build jar` | the Java commands need the exec jar | `python tools/drishti.py build jar` |
+| `drishti: jar not found: ...` | `--jar` names a missing file | fix the path |
 | `drishti: cannot run java: ...; pass --java or set JAVA_HOME` | no JDK found | set `JAVA_HOME` to a JDK 21+ |
 | `drishti: PyYAML is not installed: run with uv run --with pyyaml ...` | the system Python has no PyYAML | use `uv run --with pyyaml`, or a venv |
 | `drishti: deltalake is not installed; run uv run --with pyyaml --with deltalake --with pyarrow ...` | a Delta write needs them | use that `uv run` line, or `--store files` |
@@ -4435,10 +4512,10 @@ empty PyCharm to a run configuration for each common task.
 | **Script path** (not *Module name*; switch the toggle on the left of the field) | `<repo>/tools/drishti.py` |
 | **Python interpreter** | the `drishti-console/.venv` interpreter from 14.1 |
 | **Working directory** | **the repository root**: relative paths in *Parameters* resolve from here |
-| **Environment variables** | `JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64;DRISHTI_JAR=<repo>/kernel/drishti-server/target/drishti-server-2.9.11.g-exec.jar;PYTHONUNBUFFERED=1`, and for server commands `DRISHTI_SERVER=http://localhost:18480;DRISHTI_TOKEN=drk_...` |
+| **Environment variables** | `JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64;PYTHONUNBUFFERED=1`, and for server commands `DRISHTI_SERVER=http://localhost:18480;DRISHTI_TOKEN=drk_...` |
 
-Click the folder icon next to **Environment variables** to edit them as a table (one row per variable). `JAVA_HOME` and
-`DRISHTI_JAR` may be left out: the tool then looks for JDK 21 and for the newest `kernel/drishti-server/target/*-exec.jar` itself.
+Click the folder icon next to **Environment variables** to edit them as a table (one row per variable). `JAVA_HOME` may be
+left out: the tool then looks for JDK 21, and for the newest `lib/*-exec.jar` of the repository itself.
 
 | Name | **Parameters** |
 |---|---|
@@ -4454,7 +4531,7 @@ Click the folder icon next to **Environment variables** to edit them as a table 
 
 Press **Run** (Shift+F10): the output is in the Run window, and a non-zero exit code shows as a failed run (exit 1 = a check
 failed, 2 = usage; see [Exit codes](#exit-codes)). If the Run window says `no drishti-server-*-exec.jar`, build it once
-(`./mvnw -q -DskipTests package`) or set `DRISHTI_JAR`.
+(`python tools/drishti.py build jar`).
 
 **Templates.** **Run → Edit Configurations → Edit configuration templates... → Python** sets the defaults for every *new* Python
 configuration: put the interpreter, the working directory (`$PROJECT_DIR$/..`, the repository root), and the environment variables there once, and each new
@@ -4529,7 +4606,7 @@ Paths in the arguments are relative to the working directory here, unlike in `dr
 
 **Run → Edit Configurations → + → Python tests → Unittest**: *Target* `Script path`, the file `tools/test_packmake.py` (or
 `test_drishti_cli.py`, `test_sutragen.py`, `test_ingest_jsonl.py`, `test_pack_bundle.py`), working directory the repository root,
-environment `DRISHTI_JAR=...` (the tests that run `sutra lint` are skipped without a jar).
+(the tests that run `sutra lint` are skipped until `python tools/drishti.py build jar` has put the jar in `lib/`).
 
 ### 14.7 Where next
 

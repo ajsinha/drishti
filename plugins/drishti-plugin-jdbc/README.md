@@ -510,7 +510,7 @@ settings:
 docker compose -f deploy/docker/compose.data.yaml up -d postgres          # user, password and database: drishti
 docker compose -f deploy/docker/compose.data.yaml exec -T postgres psql -U drishti -d drishti < desk.sql
 DESK_DB_URL=jdbc:postgresql://localhost:5432/drishti DESK_DB_USER=drishti DESK_DB_PASSWORD=drishti \
-  java -jar kernel/drishti-server/target/drishti-server-*-exec.jar
+  java -jar lib/drishti-server-*-exec.jar
 curl -s "http://localhost:18480/api/v1/entities/trade/MX-21770001/raw?asOf=2026-09-30" | jq -c '{provenance, data}'
 ```
 

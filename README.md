@@ -95,13 +95,15 @@ loaded.
   (*Exposure needs data: exposure-path is not bound*, with links to Admin → Data bindings and Help); its API answers `409 DRS-1035` with
   the need and the command line says the same words.
 
-**The modules that ship**: four first-party modules installed by default, each packed into a `.dmod` by the normal build (`packaging/dist`) and passing C1–C15:
+**The modules that ship**: first-party modules installed by default, each packed into a `.dmod` by the normal build (`packaging/dist`) and passing C1–C15:
 
 | Module | Folder | Brings | Lenses |
 |---|---|---|---|
 | **banking** (the one with an allowance) | `modules/banking/` | VaR and ES (historical and parametric, backtests, the market-risk cube), counterparty exposure and the pre-deal check, sensitivities, FRTB-SA, SIMM, official results; the trading, market-risk and counterparty-risk packs; the drishti-risk library; requires market-data | Risk, Trading, CRO, the two risk cubes |
 | **market-data** | `modules/market-data/` | prices, curves, volatilities and FX, and their functions; on whenever banking or capital markets is | Market |
 | **capital-markets** | `modules/capital-markets/` | US equities (SEC EDGAR filings and facts, indices), funds and ETFs | Markets |
+| **trading** | `modules/trading/` | the live trade blotter: trades ticking from the bank's messaging, edits written back through the bindings with a version per trade, four eyes where the site asks, full audit; not an order or execution system | Trading |
+| **source-endur, source-calypso, source-murex, source-wss, source-swapone, source-ici** | `modules/source-<system>/` | one module per trading system, each feeding the one canonical `trade` kind (its connector templates, field map and inbox routing); each switches on or off on its own | Trading |
 | **economy** | `modules/economy/` | economies, forecasts, governments and news; the public sector: World Bank indicators, central banks, Statistics Canada, the OECD, official press releases, GDELT world events; the World page | World, Public sector |
 | **genomics** (a sample third party's module, not installed by default) | `modules/genomics/` | a VCF reader inside the module, the kinds `variant`, `sample`, `gene`, `cohort`, the functions `VARIANT`, `GENE`, `COHORT`, synthetic cohorts, its own visual | Research |
 
@@ -138,7 +140,7 @@ one implementation, reached **three ways**:
 
 - **Two folders, as in Tomcat**, under the data folder ([ADMIN_GUIDE.md section 22.1](docs/guides/ADMIN_GUIDE.md#221-module-packages-auto-deploy-and-the-shared-lib-folder)):
   `modules/` (`drishti.modules.path`) takes `.dmod` packages and **auto-deploys** them within seconds (verified, checked, installed,
-  loaded; taking the file out removes the module), on for a single node and off in a cluster; `lib/` (`drishti.lib.path`) takes jars every
+  loaded; taking the file out removes the module), on for a single node and off in a cluster; `lib/ext/` (`drishti.lib.path`) takes jars every
   connector and module may use (JDBC drivers, connector plugins, a company's libraries), read once at start into one class loader under the
   kernel's and listed with their SHA-256 in Health. **Development mode** (`drishti.modules.dev`) loads a module's exploded build folder
   and reloads it on every rebuild; it is refused in a cluster and under the production profile, which loads only verified packages.
@@ -167,21 +169,21 @@ words, menus, Home cards, Help pages and the catalogue the AI reads (*DRS-4023 V
 
 | Distribution | For | Modules | Lenses | Start |
 |---|---|---|---|---|
-| **Drishti Risk** | traders, risk analysts and managers, middle office, model validation | banking, market-data | Risk (default), Trading, Market | `bin/start-all.sh --distribution risk` |
-| **Drishti Finance** | investment and research analysts, economists, fund analysts; no VaR or any risk number | capital-markets, economy, market-data | Markets (default), World | `bin/start-all.sh --distribution finance` |
-| **Drishti Genomics** | the sample that proves the kernel carries no finance | genomics (dropped into `modules/`) | Research | `bin/start-all.sh --distribution genomics` |
-| **Drishti All** | developers, QA, demos; the default when none is named | every module | every lens | `bin/start-all.sh` |
+| **Drishti Risk** | traders, risk analysts and managers, middle office, model validation | banking, market-data | Risk (default), Trading, Market | `python tools/drishti.py start all --distribution risk` |
+| **Drishti Finance** | investment and research analysts, economists, fund analysts; no VaR or any risk number | capital-markets, economy, market-data | Markets (default), World | `python tools/drishti.py start all --distribution finance` |
+| **Drishti Genomics** | the sample that proves the kernel carries no finance | genomics (dropped into `modules/`) | Research | `python tools/drishti.py start all --distribution genomics` |
+| **Drishti All** | developers, QA, demos; the default when none is named | every module | every lens | `python tools/drishti.py start all` |
 
-- **Any start**: `--distribution <name|path>` on `bin/start-all`, `start-server` and `start-console` (`.sh`, `.ps1`, `.cmd`), or
+- **Any start**: `--distribution <name|path>` on `tools/drishti.py start all`, `start server` and `start console`, or
   `DRISHTI_DISTRIBUTION`, or `drishti.distribution`; a path loads a site's own file (its own brand), beside the shipped ones.
 - **Two consoles over one cluster**: a console started with its own distribution keeps it whatever the servers run, so a stack file's
   `consoles:` list (`{ name: risk, port: 17480, distribution: risk }`, `{ name: finance, port: 17481, distribution: finance }`) gives
-  Drishti Risk and Drishti Finance side by side; `bin/status.sh` shows each process's distribution.
+  Drishti Risk and Drishti Finance side by side; `tools/drishti.py status` shows each process's distribution.
 - **The IDEs**: the IntelliJ run configurations in `run-configs/` include `Drishti server (Risk)`, `(Finance)`, `(All)` and `Drishti
   console (Risk)`, `(All)`.
 - **Admin → White label** shows every distribution side by side; Health shows the running one and which of its modules loaded.
   Step by step for each, on Linux, macOS and Windows:
-  [DEPLOYMENT_AND_QA_GUIDE.md section 6.7](docs/DEPLOYMENT_AND_QA_GUIDE.md#67-starting-a-white-labelled-instance).
+  [DEPLOYMENT_AND_QA_GUIDE.md section 7.7](docs/DEPLOYMENT_AND_QA_GUIDE.md#77-starting-a-white-labelled-instance).
 
 ## Risk
 
@@ -308,6 +310,14 @@ report sign-offs go through one Approvals queue with four eyes. Anything that de
   [tutorial 21](docs/tutorials/21-run-it-in-production.md)).
 - **People and access**: passwords or OpenID Connect, roles per kind, field masks, API tokens, an access log and an audit trail; off by
   default for a developer machine, on for any shared one ([ADMIN_GUIDE.md](docs/guides/ADMIN_GUIDE.md)).
+- **Settings files and paths**: a site's settings live in `.ini` files named by absolute path (`-Ddrishti.settings.file=/etc/drishti/prod.ini,/etc/drishti/secrets.ini`)
+  with named lakes, databases and brokers (`[lake.<name>]`, `[db.<name>]`, `[broker.<name>]`, `[connector.<name>]`) and `${...}` placeholders;
+  every folder and file is an absolute path or anchored to a named root, and Admin → Configuration → Resolved paths shows each one with where
+  it came from ([CONFIGURATION.md](docs/admin/CONFIGURATION.md)).
+- **Brokers are optional**: a Kafka, ActiveMQ or RabbitMQ connector whose broker is not there says *waiting for broker*, keeps the server
+  healthy and serves the lake snapshot until the broker appears; every TLS and SASL form is a setting of its broker section.
+- **Read-only connectors**: the server only reads a connector's template, a site's override and its secrets, merged in memory; it never
+  writes or retires a connector file.
 - **Configuration**: every setting in three tiers with its value in effect and where it came from; a change is a proposal a second
   administrator approves ([CONFIGURATION.md](docs/admin/CONFIGURATION.md)).
 - **Clusters** (Drishti\*net, off as shipped): servers join by gossip on a port of their own, any member answers any request, and VaR
@@ -324,35 +334,39 @@ repository root ([OPERATIONS_GUIDE.md section 2](docs/guides/OPERATIONS_GUIDE.md
 Run these from the Drishti folder (the repository root, or the install folder of a release).
 
 ```bash
-# 1. Build the runnable server (the kernel, with the first-party modules it installs at the first start)
-./mvnw -q package -DskipTests -pl :drishti-app -am
+# 1. Prepare the machine: checks Python 3.11+ and Java 21+, makes the data folder, ~/drishti-envs/dev.ini and drishti-console/.venv
+python tools/drishti.py setup
 
-# 2. The console's Python environment (it also runs tools/drishti.py)
-uv venv --python 3.13 drishti-console/.venv
-uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requirements.txt
+# 2. Build the runnable server (the kernel, with the first-party modules it installs at the first start); the jar goes to ./lib
+python tools/drishti.py build jar
 
 # 3. The demo lake, from the committed test data in data/testdata
-drishti-console/.venv/bin/python tools/drishti.py lake demo
+python tools/drishti.py --settings ~/drishti-envs/dev.ini lake demo --engine java
 
 # 4. The server on :18480 and the console on :17480, in the background, with the demo's settings
-bin/start-all.sh --demo          # Windows: bin\start-all.cmd --demo; add --distribution risk|finance|genomics for one product
-bin/status.sh                    # both UP, with the addresses to open
-bin/stop-all.sh                  # when you are done
+python tools/drishti.py --settings ~/drishti-envs/dev.ini start all --demo    # add --distribution risk|finance|genomics for one product
+python tools/drishti.py status                                                # both UP, with the addresses to open
+python tools/drishti.py stop all                                              # when you are done
 ```
 
-Open the console's address that `start-all` prints, sign in as `drishti-dev-admin` (password `drishti-dev-admin123`: the demo's
+On Windows the same commands run as `py tools\drishti.py ...` with backslash paths.
+
+Open the console's address that `start all` prints, sign in as `drishti-dev-admin` (password `drishti-dev-admin123`: the demo's
 development account, never for a shared machine) and try `TRD MX-20000001`, `VAR BANK`, `EXP BANK`, `PREDEAL` and `PIVOT`
 ([DEPLOYMENT_AND_QA_GUIDE.md](docs/DEPLOYMENT_AND_QA_GUIDE.md) walks it on Windows, Linux and macOS, with what you should see).
 
-- **Starting and stopping**: the scripts of [bin/](bin/README.md) (`start-server`, `start-console`, `stop-server`, `stop-console`,
-  `status`, `start-all`, `stop-all`, `start-cluster`, `stop-cluster`), each as `.sh` (Linux, macOS), `.ps1` and `.cmd` (Windows); every
-  option, a cluster node by node with `--node`, the console pointed at a cluster's entry node with `--server`, a distribution with
+- **Install folder and jars**: the install root is `--home`, else `DRISHTI_HOME`, else the folder the tools are in; the server jar is in `<home>/lib`,
+  the site's jars in `<home>/lib/ext`; one Java lookup (`--java`, `DRISHTI_JAVA_HOME`, `JAVA_HOME`, the PATH; 21 or newer). The shell scripts of
+  earlier releases are gone.
+
+- **Starting and stopping**: `tools/drishti.py start`, `stop` and `status` ([CLI_REFERENCE.md](docs/guides/CLI_REFERENCE.md#setup-build-jar-start-stop-and-status-install-build-run-and-stop-drishti)),
+  the same on Linux, macOS and Windows; every option, a cluster node by node with `--node`, the console pointed at a cluster's entry node with `--server`, a distribution with
   `--distribution` and a second console in one data folder with `--name`:
-  [DEPLOYMENT_AND_QA_GUIDE.md section 6](docs/DEPLOYMENT_AND_QA_GUIDE.md#6-start-the-server-and-the-console).
+  [DEPLOYMENT_AND_QA_GUIDE.md section 7](docs/DEPLOYMENT_AND_QA_GUIDE.md#7-start-the-server-and-the-console).
 
 - **The command line** is `tools/drishti.py`, run with the console's Python: lakes and loads, feeds, Elements, approvals, VaR, exposure
   and more ([CLI_REFERENCE.md](docs/guides/CLI_REFERENCE.md), [COMMAND_CATALOG.md](docs/guides/COMMAND_CATALOG.md)).
-- **A local cluster of three** with its consoles, from one file: `bin/start-cluster.sh` with [deploy/stack/stack.yaml](deploy/stack/README.md)
+- **A local cluster of three** with its consoles, from one file: `tools/drishti.py start cluster` with [deploy/stack/stack.yaml](deploy/stack/README.md)
   (its `consoles:` list may start a Drishti Risk and a Drishti Finance console over the same cluster).
 - **Other ways**: [Windows](docs/guides/OPERATIONS_GUIDE.md#4-drishti-on-windows) (Java and Python only),
   [Docker Compose](docs/guides/OPERATIONS_GUIDE.md#54-docker-compose) and the
@@ -421,39 +435,39 @@ the modules they may use. The map of every document is [docs/README.md](docs/REA
 
 <!-- code-volume:begin -->
 
-*Measured 2026-11-11 from the files the repository tracks (`python3 tools/docs/code_volume.py`; sample data and vendored libraries not counted).*
+*Measured 2026-11-15 from the files the repository tracks (`python3 tools/docs/code_volume.py`; sample data and vendored libraries not counted).*
 
 | Language | Lines | Files |
 |---|---|---|
-| Java, product | 450k | 2,263 |
-| Java, tests | 173k | 1,079 |
-| Python, product (console, tools, loaders, feeds) | 147k | 745 |
-| Python, tests | 110k | 631 |
-| JavaScript, product (console and Elements) | 131k | 505 |
-| JavaScript, tests | 5k | 24 |
-| CSS | 19k | 119 |
-| HTML (templates and pages) | 40k | 367 |
-| YAML: configuration, Sutras, data contracts | 114k | 1,465 |
-| Markdown: guides, tutorials, design | 227k | 325 |
+| Java, product | 463k | 2,304 |
+| Java, tests | 182k | 1,143 |
+| Python, product (console, tools, loaders, feeds) | 155k | 776 |
+| Python, tests | 116k | 677 |
+| JavaScript, product (console and Elements) | 133k | 512 |
+| JavaScript, tests | 5k | 25 |
+| CSS | 20k | 123 |
+| HTML (templates and pages) | 41k | 379 |
+| YAML: configuration, Sutras, data contracts | 117k | 1,536 |
+| Markdown: guides, tutorials, design | 232k | 335 |
 
-About **786k lines of product code** and **287k lines of tests** (37% of the product code), with **227k lines of documentation**.
+About **812k lines of product code** and **303k lines of tests** (37% of the product code), with **232k lines of documentation**.
 
 | What | Count |
 |---|---|
-| Maven modules | 48 in 9 subject folders: `compute/`, `drishti-sdk/`, `kernel/`, `lake/`, `modules/`, `net/`, `packaging/`, `plugins/`, `testing/` |
-| Modules (`.dmod`) | 5: banking, capitalmarkets, economy, genomics, market-data |
+| Maven modules | 50 in 10 subject folders: `compute/`, `drishti-sdk/`, `examples/`, `kernel/`, `lake/`, `modules/`, `net/`, `packaging/`, `plugins/`, `testing/` |
+| Modules (`.dmod`) | 12: banking, capitalmarkets, economy, genomics, market-data, source-calypso, source-endur, source-ici, source-murex, source-swapone, source-wss, trading |
 | Lenses | 11: world, markets, publicsector, cio, oversight, risk, trading, market, cro, mr-cube, ccr-cube |
 | Functions a module declares | 121 (48 banking, 12 capitalmarkets, 35 economy, 3 genomics, 23 market-data); every other command word is the kernel's |
-| Console routes | 667 |
-| Server REST handlers | 817 |
-| Drishti Elements | 11 libraries, 196 ES modules |
-| Domain packs | 17: banking 4, capitalmarkets 2, core 3, economy 8 |
+| Console routes | 678 |
+| Server REST handlers | 824 |
+| Drishti Elements | 11 libraries, 202 ES modules |
+| Domain packs | 17: banking 3, capital-markets 2, core 3, economy 8, market-data 1 |
 | Sutras in the shipped packs | 248 |
 | Connectors | 13 plugins (a driver or native library each) and 9 built-in types |
 | Feeds | 13 |
 | Lake files | 9 |
-| Test files | 1,579: Java 985, console 259, browser 184, tools 127, JavaScript 24 |
-| Documents under docs/ | 191 (32 guides, 22 tutorials) |
+| Test files | 1,687: Java 1049, console 284, browser 193, tools 136, JavaScript 25 |
+| Documents under docs/ | 187 (25 guides, 11 tutorials) |
 
 <!-- code-volume:end -->
 

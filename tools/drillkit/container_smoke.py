@@ -201,9 +201,9 @@ def pages(console: str) -> list[str]:
 
 def boot_and_check(record: bool, keep: bool) -> int:
     t0 = time.monotonic()
-    jars = sorted((ROOT / "kernel" / "drishti-server" / "target").glob("drishti-server-*-exec.jar"))
+    jars = sorted((ROOT / "lib").glob("drishti-server-*-exec.jar"))
     if not jars:
-        raise SystemExit("smoke: FAILED: no server jar (the gate's build makes it: ./mvnw -o package -DskipTests)")
+        raise SystemExit("smoke: FAILED: no server jar (the gate's build copies it to lib/: python tools/drishti.py build jar)")
     for kind in ("server", "console"):
         sh("docker", "build", "-q", "--network", "host", "--label", LABEL, "-f", f"deploy/docker/{kind}.Dockerfile",
            "-t", f"drishti-{kind}:{TAG}", ".", stdout=subprocess.DEVNULL)

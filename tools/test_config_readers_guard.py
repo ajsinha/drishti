@@ -43,12 +43,13 @@ ALLOWED = {
     "tools/packgen/pack_from_jsonl.py": "authoring: writes a new pack the user asked for",
     "tools/packs_to_modules.py": "the one-off move of the shipped packs into their modules (history; it only writes)",
     "tools/connector_upgrade_fixture.py": "builds the old releases' connector files from git for the upgrade test (writes a scratch site)",
+    "tools/upgrade_fixture.py": "reads an old release's default packs and manifests from git (git show at a tag), not the site's folders",
     "tools/settings_catalogue.py": "the settings document names the site's rules file and connector examples (docs, no reading of packs)",
     "tools/packdiff.py": "compares two pack archives the user names (their own pack.yaml files, not the site's)",
 }
 #: Harnesses and tests build scratch sites (a tree of their own, never the checkout's files) and start servers with settings: they may
 #: join below a configuration folder of the scratch site, but never list manifests.
-SCRATCH = ("drishti-console/tests/", "tools/docs/shots/", "tools/drillkit/", "tools/bench/", "tools/dev/", "bin/lib/")
+SCRATCH = ("drishti-console/tests/", "tools/docs/shots/", "tools/drillkit/", "tools/bench/", "tools/dev/", "tools/launch/")
 SKIP_DIRS = {".venv", "node_modules", "target", "data", ".git", ".claude", "build", "dist", "__pycache__"}
 NAMES = {"packs", "connectors", "dataload.yaml"}
 TEXTS = ("config/packs", "config/connectors", "config/dataload.yaml")

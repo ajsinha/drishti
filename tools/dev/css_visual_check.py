@@ -57,7 +57,8 @@ import lakeconfig  # noqa: E402  (the demo lake root's variable)
 WORK = ROOT / "data" / "tmp" / "cssvis"
 MAIN = Path("/home/ashutosh/IdeaProjects/drishti")
 VENV_PY = Path(os.environ.get("CSSVIS_PYTHON", str(MAIN / "drishti-console" / ".venv" / "bin" / "python")))
-JAR = Path(os.environ.get("CSSVIS_JAR", str(MAIN / "kernel/drishti-server" / "target" / "drishti-server-2.9.11.g-exec.jar")))
+_JARS = sorted((MAIN / "lib").glob("drishti-server-*-exec.jar"), key=lambda p: p.stat().st_mtime)
+JAR = Path(os.environ.get("CSSVIS_JAR", str(_JARS[-1] if _JARS else MAIN / "lib" / "drishti-server-exec.jar")))   # the main checkout's <home>/lib
 JAVA = Path(os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64")) / "bin" / "java"
 SERVER_PORT = int(os.environ.get("CSSVIS_SERVER_PORT", 18991))
 CONSOLE_PORTS = (int(os.environ.get("CSSVIS_CONSOLE_PORT_A", 17991)), int(os.environ.get("CSSVIS_CONSOLE_PORT_B", 17992)))
@@ -121,7 +122,7 @@ def lake() -> Path:
     print("building the VaR lake (once) ...", flush=True)
     r = subprocess.run([str(VENV_PY), str(ROOT / "tools" / "drishti.py"), "lake", "demo", "--lake", str(out), "--data-dir", str(WORK / "lake" / "data"),
                         "--connectors-dir", str(WORK / "lake" / "connectors"), "--as-of", "data", "--only", VAR_DATA, "--no-signal", "-q",
-                        "--engine", "deltalake"], capture_output=True, text=True, cwd=ROOT, env=_env({"DRISHTI_JAR": str(JAR)}), timeout=1800)
+                        "--engine", "deltalake"], capture_output=True, text=True, cwd=ROOT, env=_env({}), timeout=1800)
     if r.returncode != 0 or not (out / "risk" / "pnl-vector").is_dir():
         sys.exit("could not build the VaR lake: " + (r.stderr or r.stdout)[-800:])
     (WORK / "lake" / "built").write_text(time.strftime("%Y-%m-%dT%H:%M:%S"))

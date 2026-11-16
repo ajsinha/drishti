@@ -33,7 +33,7 @@ import time
 from pathlib import Path
 
 from bi_stack import FORBIDDEN, call, listening, wait, wait_ready  # noqa: F401  (call is re-created below for this stack's port)
-from java_launch import java_cmd
+from java_launch import java_cmd, server_jars
 from scratch_ports import worker_port
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -52,7 +52,8 @@ BOOKS = ["BOOK-FX-1", "BOOK-FI-1", "BOOK-EQ-1"]
 
 def make_lake(target: Path, days: int = 3) -> str | None:
     """A small Delta lake (a few thousand rows, never millions) made with ``tools/packgen/banking/make_data.py --lake``, which the cross-pack and the cashflow samples
-    read. ``DRISHTI_BI_DELTA_ROOT`` names one that exists; else it is made with ``uv run --with deltalake ...`` (needs uv and its cache); None when neither works."""
+    read. ``DRISHTI_BI_DELTA_ROOT`` names one that exists; else it is made with ``uv run --with deltalake ...`` (needs uv and its cache); None when neither works.
+    A lake of its own: the tests that read it are parked to i6 (var_stack.PARKED_I6); the docs' screenshots (bi_report_shots.py) still use it."""
     have = os.environ.get("DRISHTI_BI_DELTA_ROOT")
     if have:
         return have
@@ -176,7 +177,7 @@ class ReportStack:
     def _start(self) -> "ReportStack":
         for port in (SERVER_PORT, CONSOLE_PORT):
             assert port not in FORBIDDEN and not listening(port), f"port {port} is in use: stop whatever listens there"
-        jars = sorted(glob.glob(str(ROOT / "kernel/drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)  # newest build first: target may hold older versions
+        jars = server_jars()
         java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"
         if not jars or not Path(java).exists():
             raise FileNotFoundError("needs the built server: ./mvnw -o -q package -DskipTests -pl :drishti-app -am")

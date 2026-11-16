@@ -86,8 +86,11 @@ class NoLitterInTheRepoRoot(unittest.TestCase):
         def status():
             return subprocess.run(["git", "status", "--porcelain", "--ignored"], cwd=ROOT, capture_output=True, text=True, check=True).stdout
 
-        if not os.environ.get("DRISHTI_JAR") and not list((ROOT / "kernel/drishti-server" / "target").glob("drishti-server-*-exec.jar")):
-            self.skipTest("pack make needs the server jar (DRISHTI_JAR or ./mvnw -q -DskipTests package)")
+        import javacmd
+        try:
+            javacmd.server_jar()
+        except javacmd.JarError as e:
+            self.skipTest(f"pack make needs the server jar: {e}")
         before = status()
         with tempfile.TemporaryDirectory(prefix="drishti-nohidden-") as t:
             data = pathlib.Path(t) / "data"

@@ -33,7 +33,7 @@ import pytest
 from test_var_explorer_browser import shot
 from risk_elements import chart, chart_ready, grid_ready, grid_rows
 from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and helpers
-from var_stack import var_data, var_lake, var_server
+from var_stack import shared_lake, var_data, var_server
 
 #: the market-risk pack's VaR tables and the Murex trades: the cached lake (tools/drillkit/lake_cache.py), built once per run and source hash
 VAR_DATA = var_data("trades/murex")
@@ -42,7 +42,7 @@ VAR_DATA = var_data("trades/murex")
 @pytest.fixture(scope="module")
 def stack(tmp_path_factory):
     """A server of this file's own (the MR cube on, the compute engine off) over the cached lake, which it only reads."""
-    lake = var_lake(tmp_path_factory, VAR_DATA)
+    lake = shared_lake(tmp_path_factory)
     yield from var_server(tmp_path_factory, lake, DRISHTI_COMPUTE_ENABLED="false", DRISHTI_MR_CUBE_ENABLED="true")
 
 

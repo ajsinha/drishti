@@ -88,7 +88,7 @@ pack.yaml contributions  <  application.yaml  <  application.local.yaml  <  envi
 The longest a source read may take is `drishti.sources.fetch-timeout`, `10s` in the bundled file: the first read of a date on a large table loads its id index first, and a panel's own source (another pack's data) is read within the same limit.
 
 1. Create `application.local.yaml` in the directory you start the server from (the repository root when
-   you run `java -Djava.io.tmpdir=data/tmp/server -jar kernel/drishti-server/target/drishti-server-2.9.11.g-exec.jar`):
+   you run `java -Djava.io.tmpdir=data/tmp/server -jar lib/drishti-server-2.9.11.g-exec.jar`):
 
    ```yaml
    drishti:
@@ -101,7 +101,7 @@ The longest a source read may take is `drishti.sources.fetch-timeout`, `10s` in 
 2. Start the server with an environment variable as well:
 
    ```bash
-   DRISHTI_SOURCES_FETCHTIMEOUT=4s java -Djava.io.tmpdir=data/tmp/server -jar kernel/drishti-server/target/drishti-server-2.9.11.g-exec.jar
+   DRISHTI_SOURCES_FETCHTIMEOUT=4s java -Djava.io.tmpdir=data/tmp/server -jar lib/drishti-server-2.9.11.g-exec.jar
    ```
 
    The effective value is `4s`: the environment beats the local file.
@@ -109,7 +109,7 @@ The longest a source read may take is `drishti.sources.fetch-timeout`, `10s` in 
 3. Add an argument:
 
    ```bash
-   DRISHTI_SOURCES_FETCHTIMEOUT=4s java -Djava.io.tmpdir=data/tmp/server -jar kernel/drishti-server/target/drishti-server-2.9.11.g-exec.jar \
+   DRISHTI_SOURCES_FETCHTIMEOUT=4s java -Djava.io.tmpdir=data/tmp/server -jar lib/drishti-server-2.9.11.g-exec.jar \
        --drishti.sources.fetch-timeout=5s
    ```
 
@@ -194,11 +194,17 @@ tls.ca-file=/etc/drishti/tls/bank-ca.pem
   the origin of each root and path setting it set, and Admin → Configuration → Resolved paths shows each with where it came from.
 - Java: `-Ddrishti.settings.file=/abs/a.ini[,/abs/b.ini]` (the IDE's VM options, Maven's `-D`, surefire's `argLine`); the loader is
   `com.ash.drishti.settingsfile.SettingsFile.applyFromSystemProperty()` (module `kernel/drishti-settingsfile`, reached through `drishti-common`).
-- The server applies them first thing in `main`, before anything reads a setting. `bin/start-server --settings /abs/drishti.ini` (and
-  `bin/start-cluster --settings`, or a cluster file's `settings-file:` or a node's `settings:`) passes them.
+- The server applies them first thing in `main`, before anything reads a setting. `python tools/drishti.py --settings /abs/drishti.ini start server` (and
+  `start cluster` the same way, or a cluster file's `settings-file:` or a node's `settings:`) passes them.
+- Python tools: `python tools/drishti.py --settings /abs/drishti.ini[,/abs/secrets.ini] ...` reads the same files (`tools/settingsfile.py`)
+  and passes `-Ddrishti.settings.file=<the same paths>` to every JVM it starts; a launch root the files name is not overridden by the tool's
+  default. The console takes `--settings` too, and reads only the keys under `console.` from the same files (`[console.server]`
+  `port=17480` is its `server.port`), so one file serves both.
+- IDE launchers: every shared IntelliJ and PyCharm run configuration passes `$USER_HOME$/drishti-envs/dev.ini`
+  ([Developer Guide](../guides/DEVELOPER_GUIDE.md#your-settings-file-for-the-ide-launchers)).
 - Examples: `config/settings.examples/{dev,test,prod,secrets}.ini`. Nothing reads that folder automatically: copy a file out, edit it,
   and name it with the property.
-- **`secrets.env`** (`deploy/stack/secrets.env.example`, sourced by `bin/start-*` and the stack's scripts) is an environment file: what it
+- **`secrets.env`** (`deploy/stack/secrets.env.example`, read by `drishti.py start` and the stack's commands) is an environment file: what it
   sets are environment variables, so every placeholder still reads them, at step 3 of the resolver's order. It keeps working; the settings
   files are the way forward (a `secrets.ini` given last holds the same secrets, masked and with their origin known).
 - Tests find the repository and their module through it too (`drishti.repo.root`, `drishti.module.root`); see
@@ -221,7 +227,7 @@ its secrets are read), whichever file or template it came from.
 
 - **A lake** keeps its tables in its lake file (`config/lakes/<name>.yaml`); its section says where it is: `lake.<name>.root` and
   `lake.<name>.storage.<key>` win over the file's `root:` and `storage:`. Without a section the file decides, as before. `DRISHTI_DELTA_ROOT`
-  (set by `bin/start-server --lake-root` and the tools) still names the demo lake's root when nothing sets `lake.demo.root`: it is the
+  (set by `drishti.py start server --lake-root` and the tools) still names the demo lake's root when nothing sets `lake.demo.root`: it is the
   default inside `config/lakes/demo.yaml`'s root, not a second mechanism.
 - **A database**: `drishti.identity.database-url` is `${db.identity.url:${DRISHTI_IDENTITY_DB_URL:jdbc:sqlite:<data>/identity/drishti.db}}`
   (user and password alike), so `[db.identity] url=` moves the identity database; the variables still work under it.
@@ -407,7 +413,7 @@ in the default (`${lake.risk.root:${DRISHTI_DELTA_ROOT:/srv/lake}}`), inside a l
 1. an explicit `-D` system property;
 2. the settings files (`-Ddrishti.settings.file`: their entries are system properties; a `-D` still wins, a later file beats an earlier one);
 3. the environment: the key as written, then its variable form (`lake.risk.root` is `LAKE_RISK_ROOT`; `.` and `-` become `_`) — what
-   `secrets.env` and `bin/start-*` export lands here;
+   `secrets.env` and what `drishti.py start` exports lands here;
 4. the default; with none, the reference is an error naming the key and the three ways to give it (a lake file, a data load, a TLS or proxy
    secret), empty (a network file) or kept as written (where a later step resolves it).
 
@@ -432,7 +438,7 @@ from its own setting or from one anchor, the install folder:
 
 | Root | Setting (variable) | When not set |
 |---|---|---|
-| install folder (the anchor) | `drishti.home` (`DRISHTI_HOME`) | none: `bin/start-server`, `bin/start-cluster`, the images and the systemd unit pass it |
+| install folder (the anchor) | `drishti.home` (`DRISHTI_HOME`) | none: `drishti.py start server` and `start cluster`, the images and the systemd unit pass it |
 | data | `drishti.data.dir` (`DRISHTI_DATA_DIR`) | `<home>/data`, and only if it already holds an identity database (a new data folder is made only when it is named) |
 | configuration | `drishti.config.dir` (`DRISHTI_CONFIG_DIR`) | `<home>/config` |
 | site packs, kernel packs | `drishti.packs.site-dir`/`drishti.packs.dir` (`DRISHTI_PACKS_DIR`), `drishti.kernel.packs-dir` | `<config>/packs`, `<packs>/core` |
@@ -524,7 +530,7 @@ end it there): the folders are listed. The server's leftovers are still only lis
 
 | Key | Default | Meaning |
 |---|---|---|
-| `drishti.logging.file` | empty (`DRISHTI_LOG_FILE`) | The server writes its log to this file itself, rotated; empty: standard output only (containers). `bin/start-server` sets `<data>/logs/server[-<node>].log` when started with `--background` (`deploy/stack` too, through it). |
+| `drishti.logging.file` | empty (`DRISHTI_LOG_FILE`) | The server writes its log to this file itself, rotated; empty: standard output only (containers). `drishti.py start server` sets `<data>/logs/server[-<node>].log` when started with `--background` (`deploy/stack` too, through it). |
 | `drishti.logging.max-file-mb` | `100` | One log file's size before it rolls (also daily); rolled files are compressed (`.gz`). |
 | `drishti.logging.max-total-mb` | `1024` | Every rolled file together; the oldest go beyond. |
 | `drishti.logging.max-files` | `30` | Rolled days kept at most. |
@@ -543,10 +549,10 @@ Setting `java.io.tmpdir` inside a running JVM does not move `Files.createTempFil
 
 ```bash
 mkdir -p data/tmp/server        # once: the server makes it too, but the JVM warns on a first start when it does not exist yet
-java -Djava.io.tmpdir=data/tmp/server -jar kernel/drishti-server/target/drishti-server-2.9.11.g-exec.jar
+java -Djava.io.tmpdir=data/tmp/server -jar lib/drishti-server-2.9.11.g-exec.jar
 ```
 
-or, where editing the command is awkward (a service manager, a container, a wrapper script), through the environment: `JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=/opt/drishti/data/tmp/server` (Java prints `Picked up JAVA_TOOL_OPTIONS` once). With another data folder or `DRISHTI_TMP_DIR`, use that base: `<data dir>/tmp/server`. Everything Drishti ships passes it already: `bin/start-server` (`<data>/tmp/server[-<node>]`), the IntelliJ run configurations, `deploy/docker/server.Dockerfile` (in `JAVA_TOOL_OPTIONS`), the `run-server.sh`/`.ps1` that `tools/packmake.py` writes, the loaders `tools/load-*.sh`, and every java the tests and tools start (`tools/javacmd.py`; a guard test fails on one that does not). `./mvnw` gives Maven's own JVM `<repository>/data/tmp/maven` (`DRISHTI_MAVEN_TMP` names another), and the test JVMs get `<module>/target/tmp`, which `mvn clean` removes.
+or, where editing the command is awkward (a service manager, a container, a wrapper script), through the environment: `JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=/opt/drishti/data/tmp/server` (Java prints `Picked up JAVA_TOOL_OPTIONS` once). With another data folder or `DRISHTI_TMP_DIR`, use that base: `<data dir>/tmp/server`. Everything Drishti ships passes it already: `drishti.py start server` (`<data>/tmp/server[-<node>]`), the IntelliJ run configurations, `deploy/docker/server.Dockerfile` (in `JAVA_TOOL_OPTIONS`), the `run-server.sh`/`.ps1` that `tools/packmake.py` writes, the loaders `tools/load-*.sh`, and every java the tests and tools start (`tools/javacmd.py`; a guard test fails on one that does not). `./mvnw` gives Maven's own JVM `<repository>/data/tmp/maven` (`DRISHTI_MAVEN_TMP` names another), and the test JVMs get `<module>/target/tmp`, which `mvn clean` removes.
 
 At start the server
 
@@ -579,14 +585,20 @@ Kafka connectors fetch at most 4 MB a poll and 1 MB a partition; `client.fetch.m
 
 | Folder | What goes in it | Loaded by |
 |---|---|---|
-| `drishti.lib.path` (`DRISHTI_LIB_PATH`, default `<data folder>/lib`) | jars: JDBC drivers, connector plugins, libraries a connector or a module needs | the **server**: every jar at start, into one lib class loader under the kernel's; connectors (found by the `ServiceLoader`), JDBC drivers and modules see it; it never replaces a kernel class |
+| `drishti.lib.path` (`DRISHTI_LIB_PATH`, default `<home>/lib/ext`) | the site's jars: JDBC drivers, connector plugins, libraries a connector or a module needs | the **server**: every jar at start, into one lib class loader under the kernel's; connectors (found by the `ServiceLoader`), JDBC drivers and modules see it; it never replaces a kernel class |
 | `<external_lib>/python` (`external_lib`, `DRISHTI_EXTERNAL_LIB`, default `external_lib` in the repository root) | modules, packages, pure-Python `.whl` / `.zip` / `.egg` files | the **console**: on `sys.path` at start, after the console's own folder (Python items run on the server's compute pool, whose libraries are pinned in `config/compute/locks/python.lock`) |
 
-The lib folder is **the one way** to add a jar. The two older ways are gone: the launcher's `external_lib/java` (once on the class path)
-and `drishti.sources.plugin-dir` (`DRISHTI_PLUGIN_DIR`, a class loader per jar). At the first start that finds jars in either, the
-server **moves them into the lib folder**, writes `lib/moved-<date-time>.bak` listing what moved from where, and Admin → Health says so
-(a jar of the same name already in lib is left where it was and named); `drishti.sources.plugin-dir` is read for that one release only,
-and Health marks it deprecated while it is set.
+Every jar sits under the install folder, every piece of data under the data folder: `<home>/lib` holds Drishti's own server jar
+(shipped, replaced on an upgrade), `<home>/lib/ext` holds the site's jars (kept on an upgrade). An upgrade replaces the Drishti jar in
+`<home>/lib` only; the start refuses when `<home>/lib` holds more than one Drishti server jar. A Drishti server jar found in the site's
+folder is skipped with a warning.
+
+The lib folder is **the one way** to add a jar. The older places are gone: the launcher's `external_lib/java` (once on the class path),
+`drishti.sources.plugin-dir` (`DRISHTI_PLUGIN_DIR`, a class loader per jar) and `<data>/lib` (the previous default). At the first start
+that finds jars in any of them, the server **moves them into the lib folder**, writes `moved-<date-time>.bak` there listing what moved
+from where, and Admin → Health says so (a jar of the same name already in the lib folder is left where it was and named). `<data>/lib` is
+moved only while the lib folder is the default; a `drishti.lib.path` that names `<data>/lib` is the site's choice and nothing moves.
+`drishti.sources.plugin-dir` is read for that one release only, and Health marks it deprecated while it is set.
 
 Restart a process after adding or removing a library. Admin, Health lists the jars and the Python items each process
 found. Only administrators should be able to write to the folder: what is in it runs inside the server and the console.
@@ -803,7 +815,6 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 | `DRISHTI_PACKS_EXTRA_DIRS` | `packs.extra_dirs` | empty | Further pack folders, comma-separated, as on the server (relative paths resolve from `drishti-console/`, so `../examples/packs`). |
 | `DRISHTI_PACKS_INSTALLED` | `packs.installed_dir` | empty | The server's installed packs (registry and Deploy archive); empty: `<data dir>/packs/installed`. Read only for the distribution's command words; a pack's guides, examples and workspaces come from the server's answers. |
 | `DRISHTI_LAKE_ROOTS` | `lakes.roots` | empty | Admin → Data loads → Lakes ([CLI_REFERENCE.md](../guides/CLI_REFERENCE.md#7-lake-a-large-json-export-into-a-delta-lake)): the lake roots this console may write, comma-separated (relative paths resolve from `drishti-console/`); empty: `<data dir>/delta`, the server's own root. The page offers no other folder. |
-| `DRISHTI_JAR` | `lakes.jar` | empty | The drishti-server exec jar whose Java writer the page's builds use (`lakes.engine: auto`); empty: the newest `kernel/drishti-server/target/drishti-server-*-exec.jar`, else the Python `deltalake` package. |
 | `DRISHTI_DATA_DIR` | `lakes.data_dir` | `../data` | Admin → Lakes → Maintain ([OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#16-lake-maintenance-and-scheduling)): the data folder whose `lakes/lake-maintenance.yaml` (the file `lake maintain` reads by default) and `lakes/maintenance-history.jsonl` the page uses (relative paths resolve from `drishti-console/`). |
 | `DRISHTI_LAKE_MAINTENANCE_SCHEDULES` | `lakes.maintenance_schedules` | `true` | Run the lake-maintenance schedules in this console; `false` when `lake maintain --daemon` runs them instead (run them in one place). |
 
@@ -1017,7 +1028,7 @@ and [AI_GUIDE.md](../guides/AI_GUIDE.md#2-the-mcp-client-other-servers-tools-beh
 ### Change the port
 
 ```bash
-DRISHTI_PORT=18490 java -Djava.io.tmpdir=data/tmp/server -jar kernel/drishti-server/target/drishti-server-2.9.11.g-exec.jar
+DRISHTI_PORT=18490 java -Djava.io.tmpdir=data/tmp/server -jar lib/drishti-server-2.9.11.g-exec.jar
 ```
 
 You should see `Tomcat started on port 18490` in the log. Point the console at it with
@@ -1026,7 +1037,7 @@ You should see `Tomcat started on port 18490` in the log. Point the console at i
 ### Load more packs
 
 ```bash
-DRISHTI_PACKS=market-risk,world-economy java -Djava.io.tmpdir=data/tmp/server -jar kernel/drishti-server/target/drishti-server-2.9.11.g-exec.jar
+DRISHTI_PACKS=market-risk,world-economy java -Djava.io.tmpdir=data/tmp/server -jar lib/drishti-server-2.9.11.g-exec.jar
 ```
 
 Packs a listed pack `extends:` (or the older `requires:`) are loaded too, dependencies first. Then
@@ -1039,7 +1050,7 @@ set `DRISHTI_PACKS_DIR` to an absolute path so both programs find the same folde
 export DRISHTI_SECURITY_ENABLED=true
 export DRISHTI_TOKEN_SECRET="$(openssl rand -base64 48)"   # at least 32 bytes; give the console the same value
 export DRISHTI_SEED_ADMIN=false
-java -Djava.io.tmpdir=data/tmp/server -jar kernel/drishti-server/target/drishti-server-2.9.11.g-exec.jar
+java -Djava.io.tmpdir=data/tmp/server -jar lib/drishti-server-2.9.11.g-exec.jar
 ```
 
 The console needs `DRISHTI_AUTH_ENABLED=true`, the same `DRISHTI_TOKEN_SECRET`, and its own
@@ -1082,7 +1093,7 @@ No restart: the folder is watched, so within a few seconds `curl -s localhost:18
 ### Use a different holiday calendar
 
 ```bash
-DRISHTI_CALENDAR=USNY+GBLO java -Djava.io.tmpdir=data/tmp/server -jar kernel/drishti-server/target/drishti-server-2.9.11.g-exec.jar
+DRISHTI_CALENDAR=USNY+GBLO java -Djava.io.tmpdir=data/tmp/server -jar lib/drishti-server-2.9.11.g-exec.jar
 ```
 
 `curl -s localhost:18480/api/v1/business-date` then shows `"calendar":"USNY+GBLO"`.
@@ -1301,7 +1312,7 @@ message writes the name in code, and `BrandingLiteralTest` (drishti-it) fails on
 
 Switches come in three layers ([ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md#12-what-a-lens-is), [DISTRIBUTIONS.md](../architecture/DISTRIBUTIONS.md)):
 the **distribution** says what exists, a **module switch** whether a module is on at this site, an **engine switch** whether a compute
-runs on this server. A distribution presets an engine off (its module is not in it), never on. The distribution file is a layer under
+runs on this server. A distribution presets an engine off (its module is not in it), never on; such an engine does not exist there and shows *not installed*. The distribution file is a layer under
 the site's configuration: every key below it can still be set by the site. A **lens** is a workspace: it arranges the starting Home, the
 menus' order and the placeholder and never hides anything.
 
@@ -2713,7 +2724,7 @@ Example: the trading pack with its live Kafka stream.
 
 ```bash
 DRISHTI_PACKS=trading DRISHTI_STREAM_TRADING=true BROKER_DEFAULT_BOOTSTRAP_SERVERS=kafka:9092 \
-  java -Djava.io.tmpdir=data/tmp/server -jar kernel/drishti-server/target/drishti-server-2.9.11.g-exec.jar
+  java -Djava.io.tmpdir=data/tmp/server -jar lib/drishti-server-2.9.11.g-exec.jar
 ```
 
 `curl -s localhost:18480/api/v1/sources` should then list `trading-stream`.
@@ -2739,7 +2750,7 @@ the lake. The packs still decide kinds, routes and modes.
 
 ```bash
 SPRING_PROFILES_ACTIVE=postgres DRISHTI_PG_URL=jdbc:postgresql://db:5432/drishti \
-  DRISHTI_PG_PASSWORD="$PG_PASSWORD" java -Djava.io.tmpdir=data/tmp/server -jar kernel/drishti-server/target/drishti-server-2.9.11.g-exec.jar
+  DRISHTI_PG_PASSWORD="$PG_PASSWORD" java -Djava.io.tmpdir=data/tmp/server -jar lib/drishti-server-2.9.11.g-exec.jar
 ```
 
 ---
@@ -3004,7 +3015,7 @@ compose files in `deploy/` show these variables in use; see [OPERATIONS_GUIDE.md
 
 ## Every setting
 
-Every key of every kind: 2,191 settings in 20 areas, and 349 environment variables. Each row has the same shape: the key, its type, its default (*none*: no default, the setting is off or unset until given; *empty*: an empty value), the environment variable that sets it, what it applies to, its meaning, whether a change needs a restart or is picked up live, and the release that added it (blank: before 2.6). Generated by `tools/settings_catalogue.py` from the files themselves, each meaning the file's own comment; `--check` fails the drill when a key has no meaning or the page is out of date. The console shows this page searchable at Help → Configuration (`/help/configuration`), with the values in effect for an administrator.
+Every key of every kind: 2,191 settings in 20 areas, and 350 environment variables. Each row has the same shape: the key, its type, its default (*none*: no default, the setting is off or unset until given; *empty*: an empty value), the environment variable that sets it, what it applies to, its meaning, whether a change needs a restart or is picked up live, and the release that added it (blank: before 2.6). Generated by `tools/settings_catalogue.py` from the files themselves, each meaning the file's own comment; `--check` fails the drill when a key has no meaning or the page is out of date. The console shows this page searchable at Help → Configuration (`/help/configuration`), with the values in effect for an administrator.
 
 Every setting has a **tier** (the last column; Admin → Configuration shows them by tier): **everyday** 18, **admin** 1,765, **expert** 408. *Everyday* is what a business lead changes (the lenses, the VaR and exposure confidences, the scenario window, the feature switches); *admin* is what an operator sets; *expert* is performance and internals. The tiers are kept in `tools/settings_schemas.yaml` (`tiers`), one place.
 
@@ -3030,7 +3041,7 @@ Every setting has a **tier** (the last column; Admin → Configuration shows the
 | [The data inbox's routing rules: `config/dataload.yaml`](#the-data-inboxs-routing-rules-configdataloadyaml) | 2 |
 | [The UI kit: `config/ui-kit/brand.yaml`](#the-ui-kit-configui-kitbrandyaml) | 19 |
 | [AI providers and MCP servers: `config/ai/`, `config/mcp/`](#ai-providers-and-mcp-servers-configai-configmcp) | 37 |
-| [Environment variable index](#environment-variable-index) | 349 |
+| [Environment variable index](#environment-variable-index) | 350 |
 
 Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.governance.*` and `drishti.ui-kit.*`, the console's `views.refresh_min_seconds`) are rows of the server and console tables below; the Sutra grammar itself is [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md).
 
@@ -3089,7 +3100,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
-| `drishti.distribution` | string | empty | `DRISHTI_DISTRIBUTION` | server | The distribution (docs/architecture/DISTRIBUTIONS.md): risk, finance, genomics or all, or the path of a site's own file; it names config/distributions/drishti.&lt;name&gt;.yaml (brand, theme, modules, lenses, Home, Help) and is the one way to make the product. Blank: Drishti All, exactly as before. Also --distribution=&lt;name&gt; on the command line (bin/start-server.sh --distribution &lt;name&gt;). | restart |  | admin |
+| `drishti.distribution` | string | empty | `DRISHTI_DISTRIBUTION` | server | The distribution (docs/architecture/DISTRIBUTIONS.md): risk, finance, genomics or all, or the path of a site's own file; it names config/distributions/drishti.&lt;name&gt;.yaml (brand, theme, modules, lenses, Home, Help) and is the one way to make the product. Blank: Drishti All, exactly as before. Also --distribution=&lt;name&gt; on the command line (drishti.py start server --distribution &lt;name&gt;). | restart |  | admin |
 | `drishti.distributions-dir` | string | `<config>/distributions` | `DRISHTI_DISTRIBUTIONS_DIR` | server | the distribution files and kernel.yaml (the kernel's packs and words) | restart |  | admin |
 | `drishti.module-manifests-dir` | string | `<home>/modules` | `DRISHTI_MODULE_MANIFESTS_DIR` | server | the modules' own manifests (modules/&lt;id&gt;/module.yaml): what a distribution's modules hold, and the one source of what a content module is (the access registry; a folder that is not there: the modules folder beside the packs' config folder) | restart |  | admin |
 | `drishti.lenses` | string | `risk,world,market,trading` | `DRISHTI_LENSES` | server | Lenses (LENSES.md): workspaces a person may open ("Open Drishti Risk"), for their own session: each arranges Home and the menus for a role and never hides anything (what exists is the distribution's). The four lenses by default; DRISHTI\_LENSES= (empty) offers none. | restart |  | everyday |
@@ -3104,7 +3115,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
-| `drishti.logging.file` | string | empty | `DRISHTI_LOG_FILE` | server | empty: standard output only (containers); bin/start-server sets &lt;data&gt;/logs/server\[-&lt;node&gt;].log | restart |  | admin |
+| `drishti.logging.file` | string | empty | `DRISHTI_LOG_FILE` | server | empty: standard output only (containers); drishti.py start server sets &lt;data&gt;/logs/server\[-&lt;node&gt;].log | restart |  | admin |
 | `drishti.logging.max-file-mb` | integer | `100` |  | server | one file's size before it rolls (also daily); rolled files compressed | restart |  | expert |
 | `drishti.logging.max-total-mb` | integer | `1024` |  | server | every rolled file together; the oldest go beyond | restart |  | expert |
 | `drishti.logging.max-files` | integer | `30` |  | server | rolled days kept at most | restart |  | admin |
@@ -3188,7 +3199,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
-| `drishti.lib.path` | string | `<data>/lib` | `DRISHTI_LIB_PATH` | server | JDBC drivers, connector plugins, a company's own libraries; seen by connectors and modules, never replacing a kernel class; a change needs a restart | restart |  | admin |
+| `drishti.lib.path` | string | `<home>/lib/ext` | `DRISHTI_LIB_PATH` | server | the SITE's jars (JDBC drivers, connector plugins, a company's own libraries), kept on an upgrade; &lt;home&gt;/lib itself holds Drishti's own jar; seen by connectors and modules, never replacing a kernel class; a change needs a restart; jars in &lt;data&gt;/lib (the previous default) are moved here once | restart |  | admin |
 
 #### `drishti.access`
 
@@ -4632,7 +4643,7 @@ One file per module (banking, capitalmarkets, economy), `config/modules/<module>
 |---|---|---|---|---|---|---|---|---|
 | `tmp_dir` | string | empty | `DRISHTI_CONSOLE_TMP_DIR` | console | base of the console's temp folder drishti-console-&lt;pid&gt; (blank: DRISHTI\_TMP\_DIR, then &lt;data dir&gt;/tmp/console when started by run\_drishti\_web.py); removed on exit; left-over ones are listed on Health, never deleted automatically | restart |  | admin |
 | `external_lib` | string | empty | `DRISHTI_EXTERNAL_LIB` | console | base of the external library folder (blank: external\_lib in the repository root); &lt;base&gt;/python is importable, &lt;base&gt;/java is the server's | restart |  | admin |
-| `distribution` | string | empty | `DRISHTI_DISTRIBUTION` | console | The distribution this console shows (docs/architecture/DISTRIBUTIONS.md): risk, finance, genomics, all, or a path to a site's own file. Blank: the server's (learned from its about answer), else Drishti All, exactly as before distributions. bin/start-console.sh --distribution &lt;name&gt; sets it; a stack file's consoles: list gives each console its own (Risk on 17480, Finance on 17481). | restart |  | admin |
+| `distribution` | string | empty | `DRISHTI_DISTRIBUTION` | console | The distribution this console shows (docs/architecture/DISTRIBUTIONS.md): risk, finance, genomics, all, or a path to a site's own file. Blank: the server's (learned from its about answer), else Drishti All, exactly as before distributions. drishti.py start console --distribution &lt;name&gt; sets it; a stack file's consoles: list gives each console its own (Risk on 17480, Finance on 17481). | restart |  | admin |
 
 #### `backend`
 
@@ -4806,7 +4817,7 @@ One file per module (banking, capitalmarkets, economy), `config/modules/<module>
 | `lakes.max_upload_mb` | integer | `4096` |  | console | largest file uploaded (streamed to the console's temporary folder, never held in memory) | restart |  | expert |
 | `lakes.scan_docs` | integer | `20000` |  | console | documents read to suggest the id, date and classifiers (the build reads them all) | restart |  | admin |
 | `lakes.engine` | string | `auto` |  | console | auto (Drishti's Java writer when lakes.jar or the server jar is found, else deltalake), drishti, deltalake | restart |  | admin |
-| `lakes.jar` | string | empty | `DRISHTI_JAR` | console | the drishti-server exec jar that carries the writer (default: kernel/drishti-server/target) | restart |  | admin |
+| `lakes.jar` | string | `""` |  | console | a drishti-server exec jar for the writer, for a one-off (--jar); empty: the newest one in &lt;home&gt;/lib (python tools/drishti.py build jar) | restart |  | admin |
 | `lakes.python` | string | `""` |  | console | the Python that runs tools/lake/build.py (default: the console's own) | restart |  | admin |
 | `lakes.keep_min` | integer | `240` |  | console | minutes an upload and a finished build are kept | restart |  | admin |
 | `lakes.jobs` | integer | `2` |  | console | builds running at once on this console | restart |  | admin |
@@ -6532,7 +6543,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_DELTA_ENGINE` | `engine` (connector), delta engine | `native` | connector, packs | Reader engine: native (Delta Kernel without Hadoop; Windows), hadoop (also abfs://, gs://) or auto (native on Windows); not set: DRISHTI\_DELTA\_ENGINE, else native |
 | `DRISHTI_DELTA_ROOT` | `drishti.var.official.root` (engine), `drishti.ccr.exposure.official.root` (engine), the demo lake's root (config/lakes/demo.yaml) | `<data>/delta` | engine, packs | a folder or s3://bucket/prefix |
 | `DRISHTI_DEMO_ENABLED` | `drishti.sources.plugins.demo.enabled`, `drishti.var.system-baskets.seed` (engine) | `true` | engine, server | run the demo source (the packs' sample data) |
-| `DRISHTI_DISTRIBUTION` | `drishti.distribution`, `distribution` | empty | console, server | The distribution (docs/architecture/DISTRIBUTIONS.md): risk, finance, genomics or all, or the path of a site's own file; it names config/distributions/drishti.&lt;name&gt;.yaml (brand, theme, modules, lenses, Home, Help) and is the one way to make the product. Blank: Drishti All, exactly as before. Also --distribution=&lt;name&gt; on the command line (bin/start-server.sh --distribution &lt;name&gt;). |
+| `DRISHTI_DISTRIBUTION` | `drishti.distribution`, `distribution` | empty | console, server | The distribution (docs/architecture/DISTRIBUTIONS.md): risk, finance, genomics or all, or the path of a site's own file; it names config/distributions/drishti.&lt;name&gt;.yaml (brand, theme, modules, lenses, Home, Help) and is the one way to make the product. Blank: Drishti All, exactly as before. Also --distribution=&lt;name&gt; on the command line (drishti.py start server --distribution &lt;name&gt;). |
 | `DRISHTI_DISTRIBUTIONS_DIR` | `drishti.distributions-dir` | `<config>/distributions` | server | the distribution files and kernel.yaml (the kernel's packs and words) |
 | `DRISHTI_DOCTOR_PORTS` | drishti.py doctor | none | tools | The ports doctor checks |
 | `DRISHTI_DRAIN_TOKEN` | rolling.py, bin/drishti-node.sh | none | tools | An administrator's personal API token with the node:drain scope: the stop hooks and the rolling upgrade runner drain a server with it (secret; else DRISHTI\_DRAIN\_TOKEN\_FILE, else DRISHTI\_TOKEN) |
@@ -6587,6 +6598,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_GOVERNANCE_DIR` | `drishti.governance.dir` | `<data>/governance` | server | where proposals are kept with store: file; with content (the default) the folder is imported once and left in place |
 | `DRISHTI_HAMMER_TOKEN` | the Explain hammer's bearer token | `(none)` | tools | The token tools/drillkit/explain\_hammer.py sends to a server with sign-in on (else its --token) |
 | `DRISHTI_HEARTBEAT_SECONDS` | build\_demo\_lakes.py | `30` | tools | How often a long lake build prints that it is alive |
+| `DRISHTI_HOME` | the install folder (drishti.home) | `the folder holding tools/drishti.py` | tools | THE install root of drishti.py setup, build, start, stop and status (read only; Drishti's own jars in &lt;home&gt;/lib): --home, else DRISHTI\_HOME, else drishti.home of --settings, else the tools' own folder; a value that is not the folder the tools come from is refused (tools/javacmd.py find\_home) |
 | `DRISHTI_HOME_FACTS` | `ui.facts.enabled` | `true` | console | Home's Did you know tile, the fact of the day for a signed-in user; false: no tile |
 | `DRISHTI_HTTP2` | `server.http2.enabled` | `true` | server | HTTP/2 on the server's port: Drishti\*net peers multiplex their forwarded reads over one connection (h2c by the upgrade on plain HTTP, ALPN on TLS); browsers over TLS get it too. false: HTTP/1.1 only (peers then fall back to it on the same call). |
 | `DRISHTI_HTTP_PROXY_PASSWORD` | `drishti.http.proxy.password` | empty | server | only a ${ENV} placeholder (a literal in this file is refused at start) |
@@ -6602,8 +6614,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_IDENTITY_DB_URL` | `drishti.identity.database-url` | `jdbc:sqlite:<data>/identity/drishti.db` | server | Users, roles defined in Admin → Roles, saved workspaces/monitors/settings and the audit trail live in one database (JPA). SQLite by default: a single file, nothing to install. For PostgreSQL: DRISHTI\_IDENTITY\_DB\_URL=jdbc:postgresql://db:5432/drishti DRISHTI\_IDENTITY\_DB\_USER=drishti DRISHTI\_IDENTITY\_DB\_PASSWORD=... The schema (drishti-identity: db/schema-sqlite.sql, db/schema-postgres.sql) is applied at start; no migrations. |
 | `DRISHTI_IDENTITY_DB_USER` | `drishti.identity.database-user` | empty | server | the identity database's user (PostgreSQL) |
 | `DRISHTI_INDEX_DIR` | `drishti.index.dir` | empty | server | Where the connectors' multi-day type-ahead index keeps closed days as block-compressed segment files (one subfolder per connector). Blank: &lt;data dir&gt;/index. Size is capped per connector by its index.max-disk; a day that rolls out of the window, is evicted by the cap or is rebuilt gives its disk back at once. |
-| `DRISHTI_JAR` | `lakes.jar` | empty | console | the drishti-server exec jar that carries the writer (default: kernel/drishti-server/target) |
-| `DRISHTI_JAR_DIR` | screenshot tools | `kernel/drishti-server/target` | tools | Where the screenshot tools find the server jar |
+| `DRISHTI_JAVA_HOME` | the JDK every tool runs | `(none)` | tools | The JDK folder every Drishti tool and launcher runs Java from, before JAVA\_HOME and the PATH (--java/--java-home first); older than 21 is refused (tools/javacmd.py find\_java) |
 | `DRISHTI_JDBC_ENABLED` | `drishti.sources.plugins.jdbc.enabled` | `false` | server | run the jdbc source as itself (one instance) |
 | `DRISHTI_JDBC_PASSWORD` | `drishti.sources.plugins.jdbc.settings.password` | empty | server | its database password (from the environment) |
 | `DRISHTI_JDBC_URL` | `drishti.sources.plugins.jdbc.settings.url` | empty | server | the JDBC URL of that instance |
@@ -6612,7 +6623,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_LABS_CALC` | `drishti.calc.enabled`, `labs.calc` | `false` | console, server | Labs: off as shipped; on also needs a role with calc, and a pack that enables it for the view's kind |
 | `DRISHTI_LAKES_DIR` | drishti.lakes.dir | `<config>/lakes` | server | The lake folder: one config/lakes/&lt;lake&gt;.yaml per lake, read by the server, the loader, the data inbox and the tools (docs/guides/DATA\_LAKE\_GUIDE.md) |
 | `DRISHTI_LAKES_RELOCATE_ON_START` | drishti.lakes.relocate-on-start | `true` | server | At start, move a demo lake built in the older layout (&lt;data&gt;/delta/&lt;domain&gt;) into &lt;data&gt;/delta/demo once, safely (verified, moved back on any error, never a delete); false: only by drishti.py lake relocate demo (docs/guides/OPERATIONS\_GUIDE.md) |
-| `DRISHTI_LAKE_CACHE` | the cached demo lakes' folder | `<data>/tmp/lake-cache` | tools | Where tools/drillkit/lake\_cache.py keeps the demo lakes the test stacks and checks reuse, one per hash of the test data, generators and lake code |
+| `DRISHTI_LAKE_CACHE` | the cached demo lakes' folder | `<data>/tmp/lake-cache` | tools | Where tools/drillkit/lake\_cache.py keeps the demo lakes the test stacks and checks reuse, one per hash of the test data, generators and lake code; an absolute folder shared by every checkout, worktree and drill keeps ONE copy of the shared test lake (the drill honours it when set) |
 | `DRISHTI_LAKE_CLASSPATH` | lake load | none | tools | The class path of the Java lake loader |
 | `DRISHTI_LAKE_ENABLED` | the packs' data connectors | `true` | packs | false switches every pack's data connector off (the demo samples still answer) |
 | `DRISHTI_LAKE_HEAP` | lake build | none | tools | The Java lake writer's heap |
@@ -6624,11 +6635,11 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_LAKE_ROW_GROUP_MB` | lake writer | none | tools | Row-group size of the Java lake writer, in MB |
 | `DRISHTI_LAYOUTS_ENABLED` | `drishti.layouts.enabled`, `layouts.enabled` | `true` | console, server | also needs a role with layout (every role but viewer, unless configured) |
 | `DRISHTI_LENSES` | `drishti.lenses` | `risk,world,market,trading` | server | Lenses (LENSES.md): workspaces a person may open ("Open Drishti Risk"), for their own session: each arranges Home and the menus for a role and never hides anything (what exists is the distribution's). The four lenses by default; DRISHTI\_LENSES= (empty) offers none. |
-| `DRISHTI_LIB_PATH` | `drishti.lib.path` | `<data>/lib` | server | JDBC drivers, connector plugins, a company's own libraries; seen by connectors and modules, never replacing a kernel class; a change needs a restart |
+| `DRISHTI_LIB_PATH` | `drishti.lib.path` | `<home>/lib/ext` | server | the SITE's jars (JDBC drivers, connector plugins, a company's own libraries), kept on an upgrade; &lt;home&gt;/lib itself holds Drishti's own jar; seen by connectors and modules, never replacing a kernel class; a change needs a restart; jars in &lt;data&gt;/lib (the previous default) are moved here once |
 | `DRISHTI_LIVE_MAX_SUBSCRIPTIONS` | `live.max_subscriptions` | `32` | console | Subscriptions one browser's channel carries at most (views across all its tabs and workspace panes, the alerts bell, monitors; a view open in several tabs counts once). Each holds one stream to the server from the backend pool (backend.pool\_size). Beyond it a view says it is not live, and why, instead of silently not ticking. |
 | `DRISHTI_LOADER_HEAP` | store loaders | none | tools | The heap of the Java store loaders (Iceberg, ...) |
 | `DRISHTI_LOADS_DIR` | `drishti.loads.dir` | `<data>/loads` | server | history per pack, and the administrators' expectation overrides (config/&lt;pack&gt;.yaml) |
-| `DRISHTI_LOG_FILE` | `drishti.logging.file` | empty | server | empty: standard output only (containers); bin/start-server sets &lt;data&gt;/logs/server\[-&lt;node&gt;].log |
+| `DRISHTI_LOG_FILE` | `drishti.logging.file` | empty | server | empty: standard output only (containers); drishti.py start server sets &lt;data&gt;/logs/server\[-&lt;node&gt;].log |
 | `DRISHTI_MAIL_FROM` | `drishti.collab.email.from` | `drishti@localhost` | server | the From address of collaboration email |
 | `DRISHTI_MASK_COPIES` | `drishti.security.mask-copies` | `false` | server | Opt-in: also replace exact copies of a masked field's value found in the OTHER text of the same document (best effort: exact, case-sensitive; text of at least min-length characters, numbers of 4+ digits). Documents over max-nodes are not scanned. |
 | `DRISHTI_MAX_SWALLOW` | `server.tomcat.max-swallow-size` | `64MB` | server | After a 413 for an oversized body, Tomcat drains up to this much of the rest so the client reads the answer, not a reset. |
@@ -6707,6 +6718,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_SEED_USERNAME` | `drishti.identity.seed-username` | `drishti-dev-admin` | server | With DRISHTI\_SEED\_USERNAME / DRISHTI\_SEED\_PASSWORD set (deploy/docker/compose.yaml requires both) it is the first administrator you chose, not the development admin. |
 | `DRISHTI_SENSITIVITIES_ENABLED` | `drishti.engines.sensitivities.enabled` (engine) | `true` | engine | run position sensitivities on this node: /api/v1/sensitivities, /api/v1/risk-factors; FRTB-SA and SIMM need it (live) |
 | `DRISHTI_SERVER` | drishti.py | none | tools | The server the command line talks to |
+| `DRISHTI_SERVER_URL` | the console's servers | `this machine's LAN address :18480` | tools | The server, or a cluster's entry nodes comma-separated, drishti.py start console points the console at when --server is not given |
 | `DRISHTI_SESSION_RECHECK_SECONDS` | `auth.recheck_seconds` | `10` | console | How long the console reuses the server's answer to "does this session still stand, and who is the user now?" (enabled, roles, password change due). Disabling, demoting or signing out takes effect within this time (at once on the console an administrator used). 0 asks the server on every request. |
 | `DRISHTI_SESSION_SECRET` | `auth.session_secret` | empty | console | &gt;= 32 characters; from the environment only |
 | `DRISHTI_SHOTS_CONSOLE_PORT` | screenshot tools | none | tools | The port of the console they start |

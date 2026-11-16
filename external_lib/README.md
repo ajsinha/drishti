@@ -20,8 +20,9 @@ with `__init__.py`), or pure-Python `.whl` / `.zip` / `.egg` files. Python items
 allow-list `bi.python.packages`. Restart the console after a change.
 
 **Jars do not go here.** JDBC drivers, connector plugins and any library a connector or a module needs go in the server's **lib
-folder** (`drishti.lib.path`, `DRISHTI_LIB_PATH`, default `<data folder>/lib`), the one place for them. A server that finds jars in the
-old `external_lib/java` folder moves them into lib once, at start, lists them in `lib/moved-<date-time>.bak` and says so in Admin → Health.
+folder** (`drishti.lib.path`, `DRISHTI_LIB_PATH`, default `<home>/lib/ext`), the one place for them. `external_lib/java` is an older
+folder: a server that finds jars there moves them once into `<home>/lib/ext`, at start, lists them in `<home>/lib/ext/moved-<date-time>.bak`
+and says so in Admin → Health.
 
 The folder is configurable: `DRISHTI_EXTERNAL_LIB=/opt/drishti/external_lib`, or the console setting `external_lib`. Default:
 `external_lib` in the repository root. Only administrators should be able to write here: what is in it runs inside the console.

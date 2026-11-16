@@ -95,6 +95,88 @@
   shows no packs and says on every page and on Admin -> Health that the server is older: **upgrade the servers before the consoles**;
   the rolling upgrade runner (`tools/rolling.py`) now upgrades the consoles last. A pack's Help guide, kept in the console's own folder,
   keeps its links into `docs/`.
+## 2.9.11.i5 (2026-11-16)
+
+The Python commands release. The build still reports its version as 2.9.11.g (the version from one place is the next release); the release is tag `v2.9.11.i_5`.
+
+- **Python commands instead of shell scripts: one way to set up, build, start and stop on Linux, macOS and Windows.** `python
+  tools/drishti.py setup` prepares a machine (checks Python and Java 21 and says which java and why, shows the install folder, the data
+  folder and the modules folder with where each came from, makes the data folder's layout and `~/drishti-envs` (Windows
+  `%USERPROFILE%\drishti-envs`) with a copy of `dev.ini` whose paths are filled in, never overwriting one, makes or checks
+  `drishti-console/.venv`, lists the environment it sees and prints the next steps; idempotent, `--check` only reports). `build jar`
+  runs Maven (`clean package -DskipTests -pl :drishti-app -am`, never `install`) with the Java of the one lookup and copies the exec jar
+  into `<home>/lib` (`--no-copy`). `start server|console|all|cluster`, `stop ...` and `status` take the options of the old `bin/`
+  scripts (`--settings`, `--data-dir`, `--port`, `--iceberg`, `--java-home`, cluster nodes, `deploy/stack/stack.yaml`); processes are
+  tracked by pid files under the data folder and stopped only through them (never by name; Windows: its own process group, no window,
+  `taskkill /PID` then `/F`). The shell and PowerShell twins are deleted: `bin/*.sh`, `*.ps1`, `*.cmd`, `bin/lib`, `tools/windows/*`,
+  `tools/rolling-upgrade.sh` (`python tools/rolling.py`); the Windows feed schedule runs the console's Python directly. `bin/` keeps only
+  `drishti-node.sh`, the POSIX stop hook of the server images and the systemd unit.
+- **One Java lookup, one install root, one place for the jars.** Every tool finds Java in one order: `--java`/`--java-home`,
+  `DRISHTI_JAVA_HOME`, `JAVA_HOME`, the PATH; older than 21 is refused in words (`lake demo` now honours `DRISHTI_JAVA_HOME`). The
+  install root is `--home`, else `DRISHTI_HOME`, else `drishti.home` of the settings file, else the folder the tools are in; a home that
+  is not the tools' own folder is refused. Drishti's own jar is found only in `<home>/lib` (`DRISHTI_JAR` and the
+  `kernel/drishti-server/target` fallback are gone; `--jar` stays for a one-off run); two server jars there are refused; the site's jars
+  (JDBC drivers, plugins) are in `<home>/lib/ext` (`drishti.lib.path` default), kept on an upgrade: jars found in the old default
+  `<data>/lib` are moved there once at start (listed in the moved list, Health says so), and a server jar in `lib/ext` is skipped.
+- **The deployment guide starts with "Prepare your environment"** (Windows and Linux side by side), then the short way and a manual
+  installation step by step; every command in it is a Python command. The demo lake with the parallel Java loader and an IDE first-open
+  checklist are in it too; the run configurations `Build demo lakes --engine java` and `Build server jar` are added.
+- **Known limits.** `data load --store <postgres|redis|...>` still runs a bash script (Git Bash on Windows) until the Python second phase;
+  `start cluster` keeps a running copy of the jar at `<data>/stack/server.jar` (a convenience for tests; a real install runs from
+  `<home>/lib`); container images and systemd are unchanged (`bin/drishti-node.sh` is kept).
+- **Drill fixes.** The browser tests' server is ready when its modules are installed and recorded; the exposure explorer's test server
+  gets the VaR files' heap; the shell-twins test reads what git holds in `bin/`.
+
+- **One settings file for every launcher, and the deployment guides checked against the code.** Every IntelliJ and PyCharm run
+  configuration passes `$USER_HOME$/drishti-envs/dev.ini`; `tools/drishti.py --settings` reads the same files as the server (several,
+  comma-separated, the right-most winning; a dotted `[section]` a namespace), puts the launch roots they name into the tools'
+  environment and hands the files to every JVM it starts; the console's `--settings` reads only the `console.` keys, so one file serves
+  both. `bin/start-server`, `start-console` and `start-all` take `--settings` with several files; `start-server` takes its data folder
+  from the files when `--data-dir` is not given and passes it as `-Ddrishti.data.dir`, so the script's pid, logs and temporary files and
+  the server's data are always one folder. The QA-profile run configurations give their data folder and port as `-D`. The example
+  `dev.ini` works as copied (brokers, a second lake and the port are commented options). The rolling upgrade runner upgrades the
+  servers first and the consoles last. `lake demo` ends by naming `bin/start-all --demo`. DEPLOYMENT_AND_QA_GUIDE: the settings file,
+  IntelliJ IDEA on Windows and Linux step by step, the Java loader for the demo lake, the demo on and off on a clean data folder,
+  upgrading an older install (what to move aside), read-only connectors, no broker needed; OPERATIONS_GUIDE's install, start, IDE,
+  Windows, services, settings, connectors and upgrade sections, QUICKSTART_DEVELOPERS and deploy/stack/README.md follow the code; the
+  PDFs regenerated.
+
+## 2.9.11.i4.1 (2026-11-15)
+
+- **A record's panel shows nested values.** Tapping a row of a list (NEWS on a phone: Items, By source, Pipeline) showed
+  `[object Object], [object Object] …` in the Record tab. A list of plain values is joined; a record or a list of records is the Raw JSON
+  tab's tree, closed, opening to each record's fields. A live list's list column and a chart of a list's rows write nested values the
+  grid's way (plain values joined, records counted).
+
+## 2.9.11.i4 (2026-11-15)
+
+- **A refusal in words reaches the caller.** A source that refuses a whole-kind read with a reason (positions and system baskets on a
+  server with no VaR inputs: `DRS-1001 no P&L vectors in any connector`; busy protection's 503 with Retry-After) is passed on with its
+  own code and words, no longer as `502 DRS-1003 ... failed reading every position` with the reason lost.
+- **Grids show nested values.** A cell holding a list or a record (a curve's points, a trade's legs) shows the plain values joined, the
+  number of records (`28 items`) or the record as JSON, never `[object Object]`.
+- **A draft is saved only where it may be.** Build › Tables & models offers the workspaces the person may add to (contributor and above),
+  never the read-only shipped BI folder, which was the first shared choice once the modules shipped BI content (DRS-9002 on save).
+- **The open report's pack row says its own period.** A VaR report opened for an earlier period (FY2026 once FY2027 has begun) shows that
+  period's run and state in the pack, and its Generate button generates the period it names.
+- **Tests:** the shared test lake's connector files read the lake where it is (they named the cache's build folder); the API sweep step
+  writes its report to its own scratch folder; the upgrade fixture renders only the old release's default packs; a shared read-only
+  server waits for its start-up captures before it is watched for writes, and a platform alert it raises is not counted as a test's
+  write; the visual snapshots no longer wait for network idle (a page's live channel never let it come: 10 s a page, the var group's
+  535 s down to about 150 s) and start once every connector of their server is past its start; the goldens of frtb, curves, trades,
+  bi-report, world, home-market and admin-connectors retaken over the full shared lake.
+
+- **One shared test lake.** Every console and browser test reads one lake, read only: the full demo lake of the saved test data
+  (ending 2026-11-06, the committed exposure run), built once per hash of the test data, generators and loaders by the parallel Java
+  loader and kept in one cache folder (`DRISHTI_LAKE_CACHE`, one absolute folder for every checkout and drill). No test builds, copies
+  or subsets a lake; the tests that write to a lake are parked to i6 with a visible skip (TEST_HARNESS section 3.12 lists them), and a
+  quick file check fails on any other.
+- **Menus follow the packs that load.** With `drishti.packs.enabled` unset the console loads the same default packs as the server
+  (`config/packs/default-packs.yaml`); a menu entry of a pack's command (USEQ, EDGAR, LEIC, FUND) is drawn only while a pack that has
+  it loads, so no menu opens "cannot read command".
+- **A BI table over a documents-only connector reads its newest data, not an empty today.** A table of no named connector whose
+  connector cannot scan as columns reads the newest date its connectors hold (stated in the answer's `dataAsOf`), never 0 rows for a
+  business date nothing was loaded on.
 - **The drill starts from a clean data folder.** A server's state an earlier run left in the data folder (installed modules, identities,
   cluster membership, compute, file store, cache) is moved aside to `data/tmp/stale-<stamp>/` and listed before the drill starts, when
   no server runs from the checkout. Lake loader children get the launch roots of the process that starts them, and Iceberg's Health

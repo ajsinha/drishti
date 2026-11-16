@@ -26,6 +26,9 @@ from pathlib import Path
 
 import pytest
 
+from var_stack import PARKED_I6  # noqa: E402 - parked to i6
+pytestmark = [PARKED_I6]   # every test here writes to a lake: parked to i6 (owner 2026-11-15)
+
 pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install playwright)")
 if importlib.util.find_spec("deltalake") is None:
     pytest.skip("the lake needs deltalake and pyarrow", allow_module_level=True)
@@ -62,7 +65,7 @@ def maint_console(tmp_path_factory):
     make_lake(root)
     app = create_app(load_settings(CONSOLE / "config"))
     app.state.backend = SignalBackend()
-    app.state.lakes = Lakes(LakeSettings(roots=[root], tools_dir=REPO / "tools", engine="deltalake", data_dir=work / "data", schedules=False))
+    app.state.lakes = Lakes(LakeSettings(roots=[root], tools_dir=REPO / "tools", data_dir=work / "data", schedules=False))
     port = _free_port()
     server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=port, log_level="warning", timeout_graceful_shutdown=2))
     thread = threading.Thread(target=server.run, daemon=True)

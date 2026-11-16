@@ -85,3 +85,20 @@ def test_the_python_run_follows_the_servers_runtime_and_the_menu_and_rail_link_h
     assert run.status_code == 200 and backend.sent[-1][1] == "/tables/editor/python/run"
     assert 'href="/build/tables"' in client.get("/bi/catalogue").text
     assert under_construction.Registry([{"id": "x"}]).marked("x") and not under_construction.Registry([]).marked("x")
+
+
+def test_a_draft_is_offered_only_the_workspaces_the_person_may_add_to():
+    """The save dialog's workspaces: the read-only shipped folder (every person a viewer) and a workspace the person only views are left out,
+    so the first shared choice is never one whose save answers DRS-9002 (drill of 2026-11-15: the modules ship BI content, so the shipped
+    folder is listed)."""
+    client, backend = make()
+    listed = [{"id": "u-ash-0000", "name": "My workspace", "personal": True, "shipped": False, "role": "admin"},
+              {"id": "ws-view", "name": "Desk (viewer)", "personal": False, "shipped": False, "role": "viewer"},
+              {"id": "ws-rates", "name": "Rates", "personal": False, "shipped": False, "role": "contributor"},
+              {"id": "shipped", "name": "Shipped content", "personal": False, "shipped": True, "role": "viewer"}]
+
+    async def bi(method, path, ident, body=None, **params):
+        return listed
+    backend.bi = bi
+    r = client.get("/build/tables/workspaces")
+    assert r.status_code == 200 and [w["id"] for w in r.json()] == ["u-ash-0000", "ws-rates"]

@@ -128,13 +128,13 @@ The distribution is chosen **at start, by one argument or one setting**; nothing
 
 | How | Command |
 |---|---|
-| One node, Linux and macOS | `bin/start-all.sh --distribution risk` (or `finance`, `genomics`, `all`) |
-| One node, Windows | `bin\start-all.ps1 -Distribution risk` (or `bin\start-all.cmd --distribution risk`) |
-| A cluster | `bin/start-cluster.sh --cluster deploy/stack/stack.yaml` with `distribution: risk` in the stack file (per console, so one cluster can serve a Risk console and a Finance console) |
+| One node, Linux and macOS | `python tools/drishti.py start all --distribution risk` (or `finance`, `genomics`, `all`) |
+| One node, Windows | `py tools\drishti.py start all --distribution risk` |
+| A cluster | `python tools/drishti.py start cluster --cluster deploy/stack/stack.yaml` with `distribution: risk` in the stack file (per console, so one cluster can serve a Risk console and a Finance console) |
 | Any start, by setting | `DRISHTI_DISTRIBUTION=risk` or `drishti.distribution: risk` in `config/drishti.yaml`; a path instead of a name loads a custom distribution file |
 | IntelliJ / PyCharm | the run configurations gain `Drishti server (Risk)`, `(Finance)`, `(All)` and the console's `--distribution` |
 
-`bin/status.sh` and Admin → White label show the running distribution; Health says which modules it asked for and which loaded. A short
+`python tools/drishti.py status` and Admin → White label show the running distribution; Health says which modules it asked for and which loaded. A short
 name maps to `config/distributions/drishti.<name>.yaml`; a site may add its own file there (its own brand) without touching the shipped ones.
 
 **The owner's stack (recommended):** one 3-node cluster with every finance module placed; two consoles from one stack file:
@@ -145,7 +145,7 @@ consoles:
   - { name: finance, port: 17481, distribution: finance }
 ```
 
-`bin/start-cluster.sh --cluster deploy/stack/stack.yaml` then starts both: Drishti Risk on http://<host>:17480 and Drishti Finance on
+`python tools/drishti.py start cluster --cluster deploy/stack/stack.yaml` then starts both: Drishti Risk on http://<host>:17480 and Drishti Finance on
 http://<host>:17481. The Deployment and QA guide gets a step-by-step section for each, Linux, macOS and Windows, with what you should see.
 
 ## 8. Build plan inside 2.9.11.i2 + i3
@@ -209,7 +209,7 @@ files, and refuses (`409`) a name that is not one of its distributions; the cons
 |---|---|---|
 | `brand` | `drishti.branding.*` (the About answer, messages) | `ui.product`, `ui.tagline`, `ui.copyright`, `ui.owner`, `ui.notice`, `ui.logo`, `ui.favicon` |
 | `theme` | | the default theme (`tokens`), mode and density; each person's own choice still wins |
-| `modules` | the packs to load (kernel's and its modules'), the engines of the modules it leaves out off | the visibility filter below |
+| `modules` | the packs to load (kernel's and its modules'); the engines of the modules it leaves out are *not installed* | the visibility filter below |
 | `lenses` | `drishti.lenses` (the lenses a person may open; a lens changes nothing the server answers) | the same; `lenses.default` is everyone's starting workspace; a lens arranges, never hides |
 | `features` | each feature's server keys, through `kernel.yaml`'s `features:` (an engine: off only) | each feature's console keys, the same way |
 | `menus`, `home` | | the top menus, the command line's placeholder, Home's cards |
@@ -218,7 +218,7 @@ files, and refuses (`409`) a name that is not one of its distributions; the cons
 **The three layers of switches.** The distribution says what exists; a module's switch whether it is on at this site
 (`config/modules/<module>.yaml`, Admin → Modules); an engine's switch whether its compute runs on this server (`config/engines/<id>.yaml`).
 A distribution's `features:` presets the settings `kernel.yaml`'s `features:` maps (the one list: the feature, its server keys, its
-console keys); it presets an engine off when its module is not in it, never on. A **lens** (`config/lenses/<module>/<lens>.yaml`) is a
+console keys); it presets an engine off when its module is not in it, never on (that engine does not exist there: it shows *not installed*). A **lens** (`config/lenses/<module>/<lens>.yaml`) is a
 workspace: it arranges Home and the menus for a role and never hides anything.
 
 **The visibility filter.** A distribution other than All is a filter: the commands of the kernel's packs (each pack's mnemonics and
@@ -246,9 +246,9 @@ decides). Health names each one a site still sets.
 lenses, menus, Home cards, Help title and how to start it, the running one first. It is read only: a distribution changes in its file
 and takes effect at the next start.
 
-**Starting.** `bin/start-all.sh --distribution risk` (`.ps1`, `.cmd` the same), `bin/start-server.sh --distribution finance`,
-`bin/start-console.sh --distribution finance --port 17481 --name finance`; a stack file's `consoles:` list (section 7) starts one
-console per entry, each `console-<name>` with its own pid file, log and temp folder; `bin/status.sh` shows each process's distribution.
+**Starting.** `python tools/drishti.py start all --distribution risk`, `start server --distribution finance`,
+`start console --distribution finance --port 17481 --name finance` (the same on Windows with `py tools\drishti.py`); a stack file's `consoles:` list (section 7) starts one
+console per entry, each `console-<name>` with its own pid file, log and temp folder; `drishti.py status` shows each process's distribution.
 IntelliJ: `Drishti server (Risk)`, `(Finance)`, `(All)` and `Drishti console (Risk)` (17480), `(Finance)` (17481), `(All)`. The
 Deployment and QA guide has the step-by-step for each on Linux, macOS and Windows.
 
