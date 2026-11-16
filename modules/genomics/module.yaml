@@ -27,7 +27,7 @@ kernel: ">=0.2 <1.0"
 rachana: ">=1.0"
 contracts: ">=1.0"
 plugin-api: ">=2.0"
-elements: ">=1.4 <2"
+elements: ">=2.4 <3"
 provides: {kinds: {genomics: [variant, sample, gene, cohort]}}
 api: {prefix: genomics}
 java: {jars: [genomics.jar], lib: [], entry: org.helixlab.genomics.GenomicsModule, spring: [org.helixlab.genomics.ModuleConfig]}

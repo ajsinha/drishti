@@ -3655,7 +3655,7 @@ kernel: ">=0.2 <1.0"                        # required, all five: the API ranges
 rachana: ">=1.0"
 contracts: ">=1.0"
 plugin-api: ">=2.0"
-elements: ">=1.4 <2"
+elements: ">=2.4 <3"
 provides: {kinds: {freight: [shipment, lane-cost]}}     # pack name -> the kinds whose contracts it ships (C8)
 api: {prefix: freight}                      # its REST namespace: /api/v1/freight/...
 java: {jars: [freight.jar], lib: [], entry: com.example.freight.FreightModule, spring: [com.example.freight.ModuleConfig]}

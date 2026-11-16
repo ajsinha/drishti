@@ -31,7 +31,7 @@ kernel: '>=0.2 <1.0'
 rachana: '>=1.0'
 contracts: '>=1.0'
 plugin-api: '>=2.0'
-elements: '>=1.4 <2'
+elements: '>=2.4 <3'
 provides:
   kinds:
     market-data:

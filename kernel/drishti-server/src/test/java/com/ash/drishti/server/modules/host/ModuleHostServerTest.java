@@ -350,7 +350,7 @@ class ModuleHostServerTest {
                 rachana: ">=1.0"
                 contracts: ">=1.0"
                 plugin-api: ">=2.0"
-                elements: ">=1.4 <2"
+                elements: ">=2.4 <3"
                 provides: {kinds: {demo-pack: [demo-widget]}}
                 api: {prefix: demo}
                 console: {plugin: console/plugin.yaml}

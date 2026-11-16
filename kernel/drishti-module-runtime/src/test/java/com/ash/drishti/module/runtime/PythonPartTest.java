@@ -107,7 +107,7 @@ class PythonPartTest {
                 rachana: ">=1.0"
                 contracts: ">=1.0"
                 plugin-api: ">=2.0"
-                elements: ">=1.4 <2"
+                elements: ">=2.4 <3"
                 python:
                   version: "3.11"
                   engines: [calc.engine:Square]

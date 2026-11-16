@@ -92,3 +92,17 @@ def test_nothing_names_another_elements_version():
             bad += [f"{rel}: render/{m.group(1)}/" for m in RENDER_PATH.finditer(line) if m.group(1) not in FROZEN | {VERSION}
                     and not rel.startswith("drishti-console/tests/")]
     assert not bad, "Elements has one version (" + VERSION + "); these name another:\n" + "\n".join(bad[:30])
+
+
+def test_every_module_range_follows_the_one_version():
+    """A module is built for the Elements of its major and minor: ``>=<major>.<minor> <<major+1>`` of the one version (the generators write it
+    through tools/packgen/elements_range.py; the static module.yaml files and the SDK archetype are held to it here)."""
+    major, minor = VERSION.split(".")[:2]
+    want = f">={major}.{minor} <{int(major) + 1}"
+    files = sorted((ROOT / "modules").glob("*/module.yaml")) + [ROOT / "drishti-sdk/drishti-module-archetype/src/main/resources/archetype-resources/module.yaml"]
+    bad = []
+    for f in files:
+        m = re.search(r"^elements:\s*['\"]?([^'\"\n#]+?)['\"]?\s*(?:#.*)?$", f.read_text(encoding="utf-8"), re.M)
+        if not m or m.group(1) != want:
+            bad.append(f"{f.relative_to(ROOT)}: {m.group(1) if m else 'no elements range'}")
+    assert not bad, f"module.yaml elements range must be {want!r}:\n" + "\n".join(bad)
