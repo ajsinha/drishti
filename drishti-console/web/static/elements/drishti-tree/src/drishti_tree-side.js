@@ -18,7 +18,7 @@
    children's count), its actions (Explain, expand or collapse, expand everything below, zoom in on a partition, and in the edit mode
    "Move to" for the keyboard), the Explain sheet's place, the edit mode's proposal (its moves, Submit for review, Undo last, Discard),
    the legend of a bar's statuses, and the status line. Built with drishti-core's element maker; nothing inline. */
-import { h, toneColour } from '../../drishti-core/src/drishti_index.js';
+import { h, stateBlock, toneColour } from '../../drishti-core/src/drishti_index.js';
 import { selectElement } from '../../drishti-inputs/src/drishti_index.js';
 
 /**
@@ -31,7 +31,7 @@ export function sideContent(t) {
   if (t.editing) { out.push(proposalBox(t)); }
   const n = t.selected ? m.node(t.selected) : null;
   if (!n) {
-    out.push(h(doc, 'p', { cls: 'dt-empty', text: t.o.emptyText || 'Select a node to see its figures, its place in the tree and Explain.' }));
+    out.push(stateBlock(doc, 'empty', { text: t.o.emptyText || 'Select a node to see its figures, its place in the tree and Explain.' }));
     out.push(legend(t));
     return out.filter(Boolean);
   }

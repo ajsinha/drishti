@@ -19,7 +19,7 @@
    (total, ◆ non-additive total, pending server figure, loading block), the range, the focus, conditional formats and the flash of a
    live change. Pointer work: click and Shift+click, drag a range, the context menu, header sort, the column menu, a group's toggle,
    resize and autosize by the handle, the row checkboxes. */
-import { h, chipList, isListValue } from '../../drishti-core/src/drishti_index.js';
+import { h, stateBlock, showState, chipList, isListValue } from '../../drishti-core/src/drishti_index.js';
 import { GridPointer } from './drishti_grid-pointer.js';
 import { DENSITIES } from './drishti_grid-model-base.js';
 import { getValue, formatValue } from './drishti_columns.js';
@@ -51,7 +51,8 @@ export class GridBody extends GridPointer {
     this.head = h(doc, 'div', { cls: 'dg-head', attrs: { role: 'rowgroup' } });
     this.area = h(doc, 'div', { cls: 'dg-area', attrs: { role: 'presentation' } });
     this.rows = h(doc, 'div', { cls: 'dg-rows', attrs: { role: 'rowgroup' } });
-    this.empty = h(doc, 'div', { cls: 'dg-empty', attrs: { hidden: true } });
+    this.empty = stateBlock(doc, 'empty', { overlay: true });
+    this.empty.hidden = true;
     this.area.appendChild(this.rows);
     this.canvas.append(this.head, this.area);
     this.scroller.append(this.canvas, this.empty);
@@ -256,7 +257,7 @@ export class GridBody extends GridPointer {
     if (fid && doc.getElementById(fid)) { s.setAttribute('aria-activedescendant', fid); } else { s.removeAttribute('aria-activedescendant'); }
     const why = v.emptyText();
     this.empty.hidden = !why;
-    this.empty.textContent = why || '';
+    if (why) { showState(this.empty, 'empty', { text: why, overlay: true }); }
     if (v.editor) { v.editor.place(); }
   }
 

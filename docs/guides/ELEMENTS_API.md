@@ -22,13 +22,13 @@ one bundled file next to them; a page loads drishti-core and then `Drishti.eleme
 
 | Library | Version | What it is |
 |---|---|---|
-| [drishti-core](#drishti-core) | 1.2.0 | Formats, theme, API client, events, accessibility, resize, keys, dialogs, drawers and toasts, the filter model every library shares, the element maker and placements, Explain's drawing, chips for list attributes, the CSV writer, reading typed numbers, loading vendored engines |
+| [drishti-core](#drishti-core) | 1.3.0 | Formats, theme, API client, events, accessibility, resize, keys, dialogs, drawers and toasts, the filter model every library shares, the element maker and placements, Explain's drawing, chips for list attributes, the CSV writer, reading typed numbers, loading vendored engines |
 | [drishti-inputs](#drishti-inputs) | 0.3.1 | Inputs: business-date and range pickers with holiday calendars, the on/off switch, the tree picker, the multi-select, the combobox with server type-ahead (on its own field or a page's), forms from a schema (live or embedded, steps, named fields, hooks, custom widgets, time, date-and-time and money) with four eyes, the time and date-and-time pickers, the filter bar, the code editor over CodeMirror, and a page's own date fields and checkbox lists upgraded in place |
-| [drishti-grid](#drishti-grid) | 0.5.0 | The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and &lt;drishti-grid&gt; in three layouts and three densities), cell editing with undo, paste, write-back and four eyes, and the AG Grid-style adapter (createGridFromAgOptions) |
+| [drishti-grid](#drishti-grid) | 0.6.0 | The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and &lt;drishti-grid&gt; in three layouts and three densities), cell editing with undo, paste, write-back and four eyes, and the AG Grid-style adapter (createGridFromAgOptions) |
 | [drishti-tree](#drishti-tree) | 0.2.0 | The tree: hierarchies as an org chart, an indented tree with measures (on drishti-grid's tree data), a sunburst and an icicle; expand and collapse, search with breadcrumbs, measures on nodes with non-additive ones (◆) asked of the server and never summed, Explain, re-parenting in an edit mode that proposes the move for four eyes, the outline of an authoring screen (marks, a hiding filter, a designer's selection followed both ways, moves by drag or Alt+arrows), export, keyboard and ARIA |
 | [drishti-designer](#drishti-designer) | 0.2.0 | The designer kit: the layout canvas over a layout model (grid or flow: place, move, resize with snap, multi-select, align, distribute, z-order, groups, copy and paste, a phone's order, the keys, undo and redo on one command stack), the palette, the inspector (a form from a schema), the outline (drishti-tree's, drag to re-order or re-parent), the YAML pane kept in step with the model both ways (completion and lint from a JSON Schema) and the designer shell (three panes, Visual / YAML / Both, versions, Validate, Preview, History, Impact, Propose for review) |
 | [drishti-data](#drishti-data) | 0.1.0 | Data: one data-source contract (in memory, REST pages, server-side rows, Arrow, live), the live client over SSE and WebSocket with reconnect, heartbeat, resume and backpressure, and the Arrow client |
-| [drishti-chart](#drishti-chart) | 0.2.0 | The chart: one engine-neutral spec over the vendored ECharts (the general kinds, the maps from world to every country's first-level regions, the card and studio modes, the map's ranking and table modes), Explain on any mark, the data table, export, linked selection and live updates; Vega-Lite translated into the spec |
+| [drishti-chart](#drishti-chart) | 0.3.0 | The chart: one engine-neutral spec over the vendored ECharts (the general kinds, the maps from world to every country's first-level regions, the card and studio modes, the map's ranking and table modes), Explain on any mark, the data table, export, linked selection and live updates; Vega-Lite translated into the spec |
 | [drishti-graph](#drishti-graph) | 0.1.0 | The graph: networks cyclic or acyclic on a canvas for thousands of nodes; force (seeded), layered (DAG), radial, circular and grouped layouts; zoom, pan, minimap and fit; neighbours expanded on demand; the shortest path; groups collapsed by an attribute and filters by type; size and colour by a measure with a legend; pin, multi-select and lasso; a selection panel with Explain; linked selection; export (PNG, SVG, data); keyboard and an adjacency table; live updates; the lineage preset; the view's graph panel |
 | [drishti-insight](#drishti-insight) | 0.1.0 | Insight on a Drishti server: the one Explain (preview, drawer, full page, keys), the one search box (command line, Help, Alt+K), the one Approvals queue and the workbook export |
 | [drishti-risk](#drishti-risk) | 0.2.0 | The banking module's library (licensed with the module): chart kinds on drishti-chart (the P&L distribution with VaR and ES from the server's bins, the fitted normal, the backtest with its traffic light, the exposure profile with EE, PFE, EEPE and the limit, what moved VaR) and the risk grid preset on drishti-grid (terminal layout, figures never summed in the browser), and the presets for drishti-graph and drishti-tree (the counterparty structure graph; the VaR hierarchy tree): options only, so a page loads the graph or the tree library itself |
@@ -36,7 +36,7 @@ one bundled file next to them; a page loads drishti-core and then `Drishti.eleme
 
 ## drishti-core
 
-Version 1.2.0. Bundle `static/elements/drishti-core/drishti_core.js`, global `Drishti.elements.core`.
+Version 1.3.0. Bundle `static/elements/drishti-core/drishti_core.js`, global `Drishti.elements.core`.
 
 ### drishti_format.js
 
@@ -1108,6 +1108,156 @@ Returns `function(KeyboardEvent): *`.
 const act = keymap({'Mod+A': 'selectAll'}); act({key: 'a', ctrlKey: true})   // 'selectAll'
 ```
 
+### drishti_states.js
+
+#### `STATES`
+
+The four states, in the order a component moves through them.
+
+#### `skeleton(doc, lines)`
+
+A skeleton: grey bars that shimmer in the place of content to come (a still block under reduced motion).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `doc` | `Document` |  |
+| `[lines=3]` | `number` |  |
+
+Returns `HTMLElement`.
+
+#### `showState(el, kind, o)`
+
+Fills a block in place with one of the states (the element is kept, so a component's reference and its hidden flag stay).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `el` | `HTMLElement` |  |
+| `kind` | `('empty'\|'loading'\|'error'\|'stale')` |  |
+| `[o]` | `StateOptions` |  |
+
+Returns `HTMLElement`.
+
+#### `stateBlock(doc, kind, o)`
+
+A new block in one of the states.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `doc` | `Document` |  |
+| `kind` | `('empty'\|'loading'\|'error'\|'stale')` |  |
+| `[o]` | `StateOptions` |  |
+
+Returns `HTMLElement`.
+
+#### `clearState(el)`
+
+Takes the state off a block (it keeps its element, empty).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `el` | `HTMLElement` |  |
+
+Returns `void`.
+
+### drishti_command-palette.js
+
+#### `fuzzyScore(query, text)`
+
+How well a query's letters follow a text, or -1 when they do not occur in order. Runs of letters and letters at the start of a word score higher, an earlier match scores higher.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `query` | `string` |  |
+| `text` | `string` |  |
+
+Returns `number`.
+
+#### `rankCommands(commands, query, limit)`
+
+The commands that match a query, best first (title, then synonyms and the detail count less); every command when the query is empty.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `commands` | `PaletteCommand[]` |  |
+| `query` | `string` |  |
+| `[limit=50]` | `number` |  |
+
+Returns `PaletteCommand[]`.
+
+#### `keymapCommands(registry, doc)`
+
+The commands of the console's keymap registry (Drishti.keys: register/list): each registered key with a description, run by firing its chord at the document, so the registry's own scope and conditions apply.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `registry` | `{list: function(): Array&lt;{id: string, keys: string[], description: string, group: string}&gt;}` |  |
+| `doc` | `Document` |  |
+
+Returns `PaletteCommand[]`.
+
+#### class `CommandPalette`
+
+The palette: a dialog with a search box and a list, over a page's registered commands.
+
+##### `new CommandPalette(doc, o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `doc` | `Document` |  |
+| `[o]` | `{placeholder: string, label: string, empty: string, limit: number, source: function(): PaletteCommand[], onRun: function(PaletteCommand): void}` | source: more commands asked for each time it opens (the page's current state) |
+
+##### `CommandPalette.register(commands)`
+
+Registers commands; the function returned takes them off.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `commands` | `(PaletteCommand\|PaletteCommand[])` |  |
+
+Returns `function(): void`.
+
+##### `CommandPalette.isOpen()`
+
+Whether it is open.
+
+Returns `boolean`.
+
+##### `CommandPalette.open()`
+
+Opens it with an empty search (what had the focus gets it back on close).
+
+Returns `void`.
+
+##### `CommandPalette.close()`
+
+Closes it; focus goes back to what had it.
+
+Returns `void`.
+
+##### `CommandPalette.toggle()`
+
+Opens it when closed, closes it when open.
+
+Returns `void`.
+
+##### `CommandPalette.destroy()`
+
+Closes it and takes it out of the page.
+
+Returns `void`.
+
+#### `bindPaletteKey(win, palette, registry)`
+
+Binds Ctrl+K and Cmd+K to a palette: through the console's keymap registry when it is given (so the "?" list shows it and a clash is found), else a keydown on the window. Returns a function that takes the binding off.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `win` | `Window` |  |
+| `palette` | `CommandPalette` |  |
+| `[registry]` | `{register: function(Object): function(): void}` |  |
+
+Returns `function(): void`.
+
 ### drishti_overlay.js
 
 #### `openDialog(dialog, o)`
@@ -1673,6 +1823,19 @@ Returns `void`.
 | `[expanded]` | `boolean` | start expanded |
 | `[label]` | `string` | what the list is, for screen readers ("Tags") |
 
+#### `PaletteCommand` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `title` | `string` | what the list shows and the search reads ("Go to the VaR page") |
+| `[group='Commands']` | `string` | Commands, Pages, Words or the page's own |
+| `[detail]` | `string` | a quieter second line |
+| `[words]` | `string[]` | more words that find it (synonyms) |
+| `[keys]` | `string[]` | the key chords to show beside it ("Ctrl+S") |
+| `[href]` | `string` | a page: opened with the address (a safe one only) when there is no run |
+| `[run]` | `function(PaletteCommand): void` | what it does |
+
 #### `BusinessDate` : `Object`
 
 A business date: year, month (1 to 12) and day.
@@ -1795,6 +1958,19 @@ A table to export.
 | `[start]` | `function(PointerEvent): (boolean\|void)` | the press became a drag; false cancels it |
 | `move` | `function(PointerEvent): void` |  |
 | `end` | `function(PointerEvent, boolean, boolean): void` | (event, committed, moved): committed is false after Escape or a cancel |
+
+#### `StateOptions` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[text]` | `string` | the words ("Nothing matches", "This chart could not be drawn: ...") |
+| `[detail]` | `string` | a second, quieter line (a code, the cause) |
+| `[fix]` | `{label: string, run: function(): void, href: string}` | error and stale: the action ("Retry", "Refresh"); a run function or a link |
+| `[compact]` | `boolean` | a row in a list or a cell, not a panel |
+| `[overlay]` | `boolean` | laid over its host's content (absolute, the host is positioned): a grid's empty message, a chart's loading |
+| `[lines=3]` | `number` | loading: the skeleton's bars |
+| `[role]` | `string` | the ARIA role (default: alert for an error, status otherwise; "presentation" inside a listbox) |
+| `[since]` | `string` | stale: when the figures were fresh, as the page shows it ("12:04", "3 min ago") |
 
 #### `VisualTheme` : `Object`
 
@@ -4763,7 +4939,7 @@ A visible row of the tree.
 
 ## drishti-grid
 
-Version 0.5.0. Bundle `static/elements/drishti-grid/drishti_grid.js`, global `Drishti.elements.grid`; requires drishti-core, drishti-inputs.
+Version 0.6.0. Bundle `static/elements/drishti-grid/drishti_grid.js`, global `Drishti.elements.grid`; requires drishti-core, drishti-inputs, drishti-chart.
 
 ### drishti_columns.js
 
@@ -8164,6 +8340,38 @@ Draws an Explain state into its place: 'drawer' and 'card' one column, 'split' t
 
 Returns `void`.
 
+### drishti_cells.js
+
+#### `sparklineCell(o)`
+
+A cell renderer drawing the cell's series (an array of numbers: the value, or the row's field) as a sparkline.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[o]` | `CellDrawOptions & {values: (string\|function(Object): number[]), limit: (number\|string\|function(Object): number)}` | values: the row's field or a function (default: the cell's own value) |
+
+Returns `function({value: *, text: string, row: Object, doc: Document}): ?Node`.
+
+#### `bulletCell(o)`
+
+A cell renderer drawing the cell's figure as a bullet against a limit and bands (drishti-chart's bullet).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[o]` | `CellDrawOptions & {limit: (number\|string\|function(Object): number), bands: Array&lt;{to: number, tone: string}&gt;, min: number, max: number, orientation: string}` | limit: a number, the row's field or a function |
+
+Returns `function({value: *, text: string, row: Object, doc: Document}): ?Node`.
+
+#### `barCell(o)`
+
+A cell renderer drawing the cell's figure as a bar from the scale's start to its end (the bullet without a limit).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[o]` | `CellDrawOptions & {min: number, max: (number\|string\|function(Object): number)}` | max: a number, the row's field or a function (default: the figure's own scale) |
+
+Returns `function({value: *, text: string, row: Object, doc: Document}): ?Node`.
+
 ### drishti_grid-actions.js
 
 #### `localDrill(v, ctx)`
@@ -9710,6 +9918,12 @@ Returns `void`.
 | `merge` | `function(*, *): *` | two states as one |
 | `result` | `function(*): *` | the figure |
 | `numeric` | `boolean` | whether the values are numbers |
+
+#### `CellDrawOptions` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[showValue=false]` | `boolean` | the formatted figure beside the drawing |
 
 #### `DisplayRow` : `Object`
 
@@ -14369,7 +14583,7 @@ A data source.
 
 ## drishti-chart
 
-Version 0.2.0. Bundle `static/elements/drishti-chart/drishti_chart.js`, global `Drishti.elements.chart`; requires drishti-core, drishti-inputs.
+Version 0.3.0. Bundle `static/elements/drishti-chart/drishti_chart.js`, global `Drishti.elements.chart`; requires drishti-core, drishti-inputs.
 
 ### drishti_chart-spec.js
 
@@ -15604,6 +15818,43 @@ Calendar: a value per date.
 
 Returns `import('./drishti_chart-spec.js').BuiltChart`.
 
+### drishti_bullet.js
+
+#### `bullet(doc, o)`
+
+A bullet bar as SVG.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `doc` | `Document` |  |
+| `o` | `BulletOptions` |  |
+
+Returns `SVGElement`.
+
+```js
+bullet(document, {value: 82, limit: 100, bands: [{to: 70, tone: 'ok'}, {to: 90, tone: 'warn'}, {to: 120, tone: 'bad'}]})
+```
+
+#### `bulletScale(o)`
+
+The scale a bullet is drawn on: its start, its end, and a function from a figure to a place 0..100 along the bar.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `o` | `BulletOptions` |  |
+
+Returns `{min: number, max: number, at: function(number): number}`.
+
+#### `bulletSummary(o)`
+
+The words of a bullet for a screen reader and the title ("VaR 99% 1d: 82 of a limit of 100, 82% used").
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `o` | `BulletOptions` |  |
+
+Returns `string`.
+
 ### drishti_link.js
 
 #### `SELECTION_EVENT`
@@ -15823,6 +16074,20 @@ Starts drishti-chart in a page (the bundle calls it when it loads; nothing happe
 Returns `void`.
 
 ### Types of drishti-chart
+
+#### `BulletOptions` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `value` | `number` | the figure |
+| `[limit]` | `number` | the limit, drawn as a marker; a figure above it is drawn over-limit |
+| `[min=0]` | `number` | the scale's start |
+| `[max]` | `number` | the scale's end (default: the largest of the figure, the limit and the last band, with room) |
+| `[bands]` | `Array&lt;{to: number, tone: string}&gt;` | ranges behind the bar, by their upper end, in order (tone: ok, warn, bad, or none) |
+| `[orientation='horizontal']` | `('horizontal'\|'vertical')` |  |
+| `[label]` | `string` | what it measures ("VaR 99% 1d"), for the reader |
+| `[format]` | `function(number): string` | how a figure is written in the label (default: String) |
+| `[prefix='dc-bullet']` | `string` | the class prefix, to give a host its own look |
 
 #### `RegionGeo` : `Object`
 

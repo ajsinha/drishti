@@ -50,6 +50,7 @@ export { VIEW_EVENTS, PHONE_WIDTH, FUNCTION_KEYS, CF_TYPES, headerSpans, pivotCo
   parseCondition, conditionText, statusItems, cellLook, FlashTracker } from './drishti_grid-ui.js';
 export { Menu, Notes } from './drishti_grid-dom.js';
 export { sparkline, renderExplain } from './drishti_grid-explain.js';
+export { sparklineCell, bulletCell, barCell } from './drishti_cells.js';
 export { localDrill } from './drishti_grid-actions.js';
 export { GridBase } from './drishti_grid-base.js';
 export { Grid } from './drishti_grid-view.js';

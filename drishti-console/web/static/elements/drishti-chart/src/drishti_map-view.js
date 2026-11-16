@@ -19,7 +19,7 @@
    (g3): 'ranking' (A, the default: a side column with the legend, the top ten with bars and the selected place with Explain and the
    drill) and 'table' (B: a floating legend, a world inset once drilled, the selected place in a floating card, a sortable table under
    the map). A click selects a place (its rows go to a linked grid) and explains it. */
-import { h, ToastTray, url as drishtiUrl } from '../../drishti-core/src/drishti_index.js';
+import { h, showState, ToastTray, url as drishtiUrl } from '../../drishti-core/src/drishti_index.js';
 import { createGeoLoader, fitView } from './drishti_chart-geo.js';
 import { buildMap } from './drishti_chart-map.js';
 import { rowsOf } from './drishti_chart-data.js';
@@ -116,8 +116,7 @@ export class MapView {
   go(level) {
     const c = this.c;
     c.loadingEl.hidden = false;
-    c.loadingEl.classList.remove('dc-error');
-    c.loadingEl.textContent = level === 'world' ? 'Loading the world…' : 'Loading regions/' + level + '.json…';
+    showState(c.loadingEl, 'loading', { text: level === 'world' ? 'Loading the world…' : 'Loading regions/' + level + '.json…', overlay: true });
     const shapes = level === 'world' ? this.loader.world() : this.loader.regions(level);
     const rows = level !== 'world' && c.o.placeData && !this.levelRows[level] ? Promise.resolve(c.o.placeData(level)).then((r) => { this.levelRows[level] = rowsOf(r); }) : Promise.resolve();
     const names = level === 'world' ? null : this.loader.world().then((w) => { this.worldGeo = w; }, () => null);   // a country's name and the inset need the world

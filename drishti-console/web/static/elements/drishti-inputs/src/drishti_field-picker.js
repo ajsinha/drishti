@@ -19,7 +19,7 @@
    stays in the search field and the active item follows the keys (aria-activedescendant): Up and Down move, Right opens, Left closes,
    Space checks, Enter uses (and closes), Escape closes, a letter types into the search. The picker draws; the host says what an item is
    and what a pick does (drishti-grid's pivot field pickers). */
-import { announce, h } from '../../drishti-core/src/drishti_index.js';
+import { announce, h, stateBlock } from '../../drishti-core/src/drishti_index.js';
 import { Popover, uid } from './drishti_inputs-dom.js';
 
 /**
@@ -159,7 +159,7 @@ export class FieldPicker {
       });
       this.list.appendChild(box);
     });
-    if (!shown && !this.rows.length) { this.list.appendChild(h2(doc, 'div', { cls: 'di-empty', text: 'No field matches "' + this.query + '"' })); }
+    if (!shown && !this.rows.length) { this.list.appendChild(stateBlock(doc, 'empty', { text: 'No field matches "' + this.query + '"', compact: true })); }
     if (this.active === null || !this.rows.some((r) => r.key === this.active)) { const first = this.rows.find((r) => !r.disabled); this.active = first ? first.key : null; }
     this.mark();
   }

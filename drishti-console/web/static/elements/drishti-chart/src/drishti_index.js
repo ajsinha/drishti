@@ -42,6 +42,7 @@ export { Studio } from './drishti_chart-studio.js';
 export { CHART_EVENTS, CHART_MODES, Chart } from './drishti_chart-view.js';
 export { ChartIO } from './drishti_chart-io.js';
 export { buildCalendar } from './drishti_chart-calendar.js';
+export { bullet, bulletScale, bulletSummary } from './drishti_bullet.js';
 import { buildCalendar } from './drishti_chart-calendar.js';
 export { SELECTION_EVENT, linkGrid, publishSelection } from '../../drishti-core/src/drishti_index.js';
 export { PANEL_KINDS, escapeTip, panelCompact, panelLineCompact, panelTokens, labelFit, panelOption } from './drishti_chart-panels.js';

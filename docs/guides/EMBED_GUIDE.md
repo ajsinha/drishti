@@ -1474,7 +1474,7 @@ drishti-grid's way), **no-op** (nothing to set: drishti-grid does it always).
 | `pagination`, `paginationPageSize` | unsupported | virtual scrolling: every row is reachable without pages |
 | `enableCharts` (integrated charts), `masterDetail`, `rowDragManaged`, `theme`, `rowModelType: 'viewport'` | unsupported | drishti-chart on a range; Drishti's theme tokens; the rest is not covered in version 1 |
 
-Not covered in version 1: integrated charts (use drishti-chart on a range), master-detail rows, sparkline cell renderers, row dragging between grids, AG Grid's theming API and CSS classes (Drishti's theme applies), the viewport row model, pagination, custom cell renderers, editors and header components.
+Not covered in version 1: integrated charts (use drishti-chart on a range), master-detail rows, AG Grids cellRenderer), row dragging between grids, AG Grid's theming API and CSS classes (Drishti's theme applies), the viewport row model, pagination, custom cell renderers, editors and header components.
 
 <!-- /ag-mapping -->
 

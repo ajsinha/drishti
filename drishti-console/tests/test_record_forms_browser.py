@@ -335,8 +335,8 @@ def test_an_entity_field_searches_the_server_as_people_type(stack, browser):
     assert pg.locator(".di-combo-pop [role='option']").count() >= 1
     with pg.expect_response(lambda r: "/api/forms/lookup" in r.url):
         pg.fill(ent, "zzqx-nothing")
-    wait(pg, "document.querySelector('.di-combo-pop .di-empty')")
-    assert pg.locator(".di-combo-pop .di-empty").inner_text() == 'Nothing matches "zzqx-nothing"'
+    wait(pg, "document.querySelector('.di-combo-pop .drishti-state-empty')")
+    assert pg.locator(".di-combo-pop .drishti-state-empty").inner_text() == 'Nothing matches "zzqx-nothing"'
     pg.route("**/api/forms/lookup**", lambda route: route.abort())  # offline: the choices the page brought still answer
     pg.fill(ent, "europe")
     wait(pg, "document.querySelector('.di-combo-pop [role=option]') && !/Searching/.test(document.querySelector('.di-combo-pop .di-combo-status').textContent)")

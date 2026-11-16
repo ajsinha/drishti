@@ -18,6 +18,13 @@
 
 ## Unreleased
 
+- **Drishti Elements: four reusable capabilities.** drishti-core 1.3.0: the **state kit** (`stateBlock`, `showState`, `skeleton`: empty,
+  loading skeleton, error with a fix, stale; `css/drishti_states.css`), which replaces the per-component empty, loading and error variants
+  of the grid, chart, tree, graph and inputs, and the **command palette** (`CommandPalette`, `bindPaletteKey`, `keymapCommands`: Ctrl+K and
+  Cmd+K, fuzzy search, ARIA combobox, phone sheet; `css/drishti_command-palette.css`). drishti-chart 0.3.0: the **bullet (limit) bar**
+  (`bullet`). drishti-grid 0.6.0: **sparkline, bar and bullet cells** (`sparklineCell`, `barCell`, `bulletCell`; the grid now requires
+  drishti-chart). Gallery examples, ELEMENTS.md section 4, ELEMENTS_API and the catalogue regenerated.
+
 ## 2.9.11.i5 (2026-11-16)
 
 - **One folder layout for every module.** Each `modules/<module>/` holds its `.dmod` content at the top, as inside the package

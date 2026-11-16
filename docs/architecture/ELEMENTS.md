@@ -196,6 +196,33 @@ has *Contains…*, *Any of…* and *All of…* in its column menu (values separa
 allOf, values}` is the one shared by the grid, the filter bar (a field of `type: 'list'`) and `filterRows`. **Pivot notes:** the pivot's header
 shows the answer's notes (the double-count note of an exploded list field) in a strip above the grid.
 
+#### State kit: empty, loading, error, stale (drishti-core 1.3.0)
+
+One way to show a component without its content. `stateBlock(document, kind, options)` makes a block and `showState(element, kind, options)`
+fills one in place (a component keeps its element and its `hidden` flag); `kind` is `empty` (nothing to show, and why), `loading` (a
+skeleton of bars that shimmers, never a bare word), `error` (what failed, with a **fix**: `fix: {label, run}` or `{label, href}`) or
+`stale` (the figures are shown but old: `since`, and a refresh as the fix). Options: `text`, `detail`, `compact` (a row in a list or a
+cell), `overlay` (over a positioned host: a grid's empty message, a chart's loading), `lines`, `role`. An error is `role="alert"`; the
+others `role="status"`; a loading block is `aria-busy` and its words are read, not shown. The look is `css/drishti_states.css` (tokens only;
+`prefers-reduced-motion` stills the shimmer; `--drishti-skeleton-bg` and `drishti-shimmer` are shared with the grid's loading cell).
+**Replaced, not kept beside:** the grid's `dg-empty` and `dg-shimmer`, the chart's `dc-loading` and `dc-error`, the tree's `dt-empty` and
+`dt-error`, the graph's `dn-empty`, the inputs' `di-empty`, `di-loading-row` and `di-error-row` are this kit's blocks now. The renderer's
+page-level `dv-error` banner (also drawn by the server's templates) is not an Elements component and stays. Live example: gallery,
+"States". Test: `tests/elements/states-palette.test.mjs`.
+
+#### Command palette (drishti-core 1.3.0)
+
+`new CommandPalette(document, options)`, `palette.register({id, title, group, detail, words, keys, run | href})` (returns the function that
+takes them off), `palette.open()`, `close()`, `toggle()`. Ctrl+K and Cmd+K open it: `bindPaletteKey(window, palette, Drishti.keys)` registers
+the chord in the console's keymap registry (so the "?" list shows it and a clash is found), or listens on the window without a registry.
+`keymapCommands(Drishti.keys, document)` turns every registered key with a description into a command (run by firing its chord, so the
+registry's own scopes and conditions apply); `options.source()` adds the commands of the page's state each time it opens. Search is fuzzy
+(`fuzzyScore`, `rankCommands`: the letters in order, word starts and runs score higher, synonyms in `words` find a command). Keyboard: Up,
+Down, PageUp, PageDown, Ctrl+Home, Ctrl+End, Enter runs, Escape closes and focus returns. A native `<dialog>` (the page behind is inert)
+holding a search box with `role="combobox"` that owns a `role="listbox"`, `aria-activedescendant` on the active option, and the result
+count announced. On a phone it is a full-width sheet with 44 px rows. Look: `css/drishti_command-palette.css` (tokens only). The workbench's
+own palette (`js/build/drishti_commands.js`, `WB.menu`) is the first to migrate onto it; until then it is the only second one.
+
 ### 4.2 drishti-inputs
 
 `<drishti-select>` (one value from a list: keyboard, type-ahead, search on a long list), `<drishti-multiselect>`, `<drishti-date>` (date,
@@ -216,6 +243,13 @@ Section 5. Takes over: `drishti_tables.js`, `drishti_colfilter.js`, `drishti_tre
 `drishti_designer-grid.js`, `drishti_var-basket-sheet.js`, `drishti_var-playground.js`, `drishti_raw-viewer.js`,
 `drishti_editor-table.js` and the renderer's `m/behave.js`.
 
+**Cell drawings (drishti-grid 0.6.0).** A column's `cellRenderer` can be `sparklineCell({values, limit, showValue})` (a row's series; the
+drawing is drishti-core's `sparkline`, the one in the library), `barCell({min, max, showValue})` or `bulletCell({limit, bands, min, max,
+orientation, showValue})`; `values`, `limit` and `max` are a number, the row's field or a function of the row. The bar and the bullet are
+drishti-chart's `bullet` (the grid now requires drishti-chart, and loads its style sheet). The cell's text stays the formatted figure, so
+copy, export and sort are unchanged; the drawing's label gives the figure, the limit and the use for a screen reader. Gallery:
+"Grid cells". The AG adapter lists AG Grid's own sparkline option under *Not covered*; this is its Drishti way.
+
 ### 4.4 drishti-chart
 
 Section 7. Takes over: `drishti_charts.js`, `drishti_geomap.js`, the BI Vega script (retired: Vega-Lite is translated), `drishti_bi-multiples.js`,
@@ -223,6 +257,12 @@ Section 7. Takes over: `drishti_charts.js`, `drishti_geomap.js`, the BI Vega scr
 `drishti_bi-visuals-format.js`, `drishti_table-chart.js`, `drishti_table-chart-sources.js`, `drishti_view.js`, `drishti_history.js`,
 `drishti_history-page.js`, `drishti_bi-python.js`, `drishti_bi-ai.js`, `drishti_calc.js`, `drishti_zoom.js`, the BI designer's canvas
 and panes, `drishti_bi-extras.js`, `drishti_bi-notebook-cells.js`.
+
+**Bullet (limit) bar (drishti-chart 0.3.0).** `bullet(document, {value, limit, bands: [{to, tone: ok|warn|bad}], min, max, orientation:
+'horizontal'|'vertical', label, format})` draws a figure against its limit and the bands behind it as a small SVG (over the limit the bar
+turns the bad tone); `bulletScale` and `bulletSummary` give the scale and the words (also the SVG's label and title). Used on its own, in
+a card or a line of text, and by the grid's bar and bullet cells: one drawing. Tokens only; forced-colors and reduced motion are kept (it
+has none). Gallery: "Bullet (limit) bar".
 
 ### 4.5 drishti-data
 
@@ -437,7 +477,7 @@ by `reportUnsupported()`; the adapter never fails silently.
   (`?mode=pivot|server|tree|server-tree`), a grid configured purely with AG-shaped options (`test_elements_grid_browser.py`).
 
 **Not covered in version 1** (named in the console when used): integrated charts (use drishti-chart on a range), master-detail rows,
-sparkline cell renderers, row dragging between grids, AG Grid's theming API and CSS classes (Drishti's theme applies), the viewport row
+AG Grid's sparkline option (a column's `cellRenderer` takes `sparklineCell`, `barCell` and `bulletCell`, section 4.3), row dragging between grids, AG Grid's theming API and CSS classes (Drishti's theme applies), the viewport row
 model, pagination, custom cell renderers, editors and header components. The migration guide lists each with its
 Drishti way.
 
@@ -1658,6 +1698,9 @@ allow-list is empty and its cap 0. The Build workbench's menus (Add panel, Bind
 field, File, Ship, the command palette, a dropped field's kinds) are drishti-inputs' `Listbox` under a search ranked by `searchOptions`
 (`build/drishti_menus.js` 132 → 119 lines; the hand-made listbox and its CSS deleted); `Listbox` gained `followActive` (the active option
 is the selected one), and `searchOptions` ranks a label that is the word first.
+
+The roadmap for Drishti Elements as its own project (repository, versioning, npm and a public CDN build, licence, stability, docs site,
+theming contract, CI and what to untangle first) is in [the Elements README](../../drishti-console/web/static/elements/README.md).
 
 ## 13. Risks
 

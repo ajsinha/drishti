@@ -66,7 +66,7 @@
 .di-option-group { padding: 6px 8px 2px; color: var(--d-faint); font-size: 0.82em; text-transform: uppercase; letter-spacing: 0.08em; }
 .di-option-detail { margin-left: auto; color: var(--d-faint); font-size: 0.88em; }
 .di-tick { color: var(--d-accent); }
-.di-empty, .di-more { padding: 6px 8px; color: var(--d-faint); }
+.di-more { padding: 6px 8px; color: var(--d-faint); }
 .di-ms-head { display: flex; align-items: center; gap: 6px; }
 .di-search { width: 100%; }
 
@@ -110,8 +110,6 @@
 .di-twist { width: 14px; color: var(--d-faint); text-align: center; flex: none; }
 .di-check { color: var(--d-accent); flex: none; }
 .di-check.di-unchecked { color: var(--d-faint); }
-.di-loading-row, .di-error-row { color: var(--d-faint); cursor: default; padding-left: 40px; }
-.di-error-row { color: var(--d-bad); }
 .di-tree-foot { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
 .di-inline .di-tree-box { border: 1px solid var(--d-border); border-radius: 8px; padding: 8px; background: var(--d-surface); }
 

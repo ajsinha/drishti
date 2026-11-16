@@ -18,7 +18,7 @@
    aria-checked true, mixed or false); or, with inline, the tree sits in the page. Children come from the server the first time a node
    opens (a loading row, an error row with Retry). The keys are the tree view's: Up and Down move, Right opens or goes in, Left closes or
    goes up, Home and End, Space checks, Enter checks (or, single, picks and closes), a letter jumps to the next node starting with it. */
-import { announce } from '../../drishti-core/src/drishti_index.js';
+import { announce, stateBlock } from '../../drishti-core/src/drishti_index.js';
 import { TreeModel } from './drishti_tree.js';
 import { InputBase, Popover, debounce, uid } from './drishti_inputs-dom.js';
 
@@ -115,13 +115,14 @@ export class TreePicker extends InputBase {
       item.appendChild(this.el('span', { cls: 'di-node-label', text: n.label }));
       if (n.detail) { item.appendChild(this.el('span', { cls: 'di-option-detail', text: n.detail })); }
       t.appendChild(item);
-      if (r.status === 'loading') { t.appendChild(this.el('div', { cls: 'di-node di-loading-row', text: 'Loading…', attrs: { role: 'presentation' } })); }
+      if (r.status === 'loading') { t.appendChild(stateBlock(this.doc, 'loading', { compact: true, role: 'presentation' })); }
       else if (r.status) {
-        t.appendChild(this.el('div', { cls: 'di-node di-error-row', attrs: { role: 'presentation' } }, [r.status + ' ',
-          this.el('button', { cls: 'di-btn', text: 'Retry', attrs: { type: 'button' }, data: { retry: n.id } })]));
+        const bad = stateBlock(this.doc, 'error', { text: r.status, compact: true, role: 'presentation', fix: { label: 'Retry', run: () => {} } });
+        bad.querySelector('button').setAttribute('data-retry', n.id);
+        t.appendChild(bad);
       }
     });
-    if (!rows.length) { t.appendChild(this.el('div', { cls: 'di-empty', text: this.model.query ? 'Nothing matches "' + this.model.query + '"' : 'Nothing to choose from' })); }
+    if (!rows.length) { t.appendChild(stateBlock(this.doc, 'empty', { text: this.model.query ? 'Nothing matches "' + this.model.query + '"' : 'Nothing to choose from', compact: true })); }
     const ai = rows.findIndex((r) => r.node.id === this.active);
     if (ai >= 0) { t.setAttribute('aria-activedescendant', this.id + '-n' + ai); } else { t.removeAttribute('aria-activedescendant'); }
     const n = this.model.getValue().length;

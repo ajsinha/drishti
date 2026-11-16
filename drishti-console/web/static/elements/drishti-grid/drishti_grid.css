@@ -161,9 +161,8 @@
 @media (pointer: coarse) { .dg-tw:not(.dg-tw-none) { width: 44px; align-self: stretch; display: inline-flex; align-items: center; justify-content: center; } }
 .dg-check { margin: 0 6px 0 0; accent-color: var(--d-accent); flex: none; }
 .dg-pending .dg-text, .dg-loading::after { color: transparent; display: inline-block; min-width: 46px; height: 0.9em; border-radius: 3px;
-  background: linear-gradient(90deg, var(--d-bg-2), var(--d-highlight), var(--d-bg-2)); background-size: 200% 100%; animation: dg-shimmer 1.2s linear infinite; }
+  background: var(--drishti-skeleton-bg); background-size: 200% 100%; animation: drishti-shimmer 1.2s linear infinite; }
 .dg-loading::after { content: ""; width: 70%; }
-@keyframes dg-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
 .dg-flash-up { animation: dg-flash-up 1s ease-out both; }
 .dg-flash-down { animation: dg-flash-down 1s ease-out both; }
 @keyframes dg-flash-up { from { background-color: color-mix(in srgb, var(--d-ok) 45%, var(--d-surface)); } to { background-color: var(--d-surface); } }
@@ -173,8 +172,7 @@
   .dg-flash-up { box-shadow: inset 3px 0 0 var(--d-ok); }
   .dg-flash-down { box-shadow: inset 3px 0 0 var(--d-bad); }
 }
-.dg-empty { position: absolute; left: 0; right: 0; top: 72px; text-align: center; color: var(--d-faint); pointer-events: none; }
-.dg-empty[hidden] { display: none; }
+.dg-scroll > .drishti-state-overlay { inset: 72px 0 auto 0; background: none; }
 
 /* status bar */
 .dg-status { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; padding: 5px 10px; border-top: 1px solid var(--d-border); background: var(--d-surface-2);
@@ -401,3 +399,12 @@
 
 /* a source system switched off: the live set's banner */
 .dg-live-banner { padding: 4px 8px; margin: 2px 0; border-left: 3px solid var(--dg-warn, #b7791f); background: var(--dg-warn-bg, rgba(183, 121, 31, .08)); font-size: 12px; }
+
+/* cell drawings (drishti_cells.js): sparkline, bar, bullet */
+.dg-cell-draw { display: inline-flex; align-items: center; gap: var(--d-sp-4); width: 100%; min-width: 0; }
+.dg-cell-draw > svg { flex: 1 1 auto; min-width: 40px; }
+.dg-cell-fig { flex: none; font-variant-numeric: tabular-nums; }
+.dg-cell-spark { height: 1.6em; }
+.dg-cell-spark-line { fill: none; stroke: var(--d-accent); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.dg-cell-spark-limit { stroke: var(--d-bad); stroke-dasharray: 4 3; vector-effect: non-scaling-stroke; }
+@media (forced-colors: active) { .dg-cell-spark-line { stroke: CanvasText; } }

@@ -781,14 +781,14 @@
   })();
   /* ---- src/drishti_tree-side.js ---- */
   __m["src/drishti_tree-side.js"] = (function () {
-    var h = __lib("drishti-core").h, toneColour = __lib("drishti-core").toneColour;
+    var h = __lib("drishti-core").h, stateBlock = __lib("drishti-core").stateBlock, toneColour = __lib("drishti-core").toneColour;
     var selectElement = __lib("drishti-inputs").selectElement;
     function sideContent(t) {
       const doc = t.doc, m = t.model, out = [];
       if (t.editing) { out.push(proposalBox(t)); }
       const n = t.selected ? m.node(t.selected) : null;
       if (!n) {
-        out.push(h(doc, 'p', { cls: 'dt-empty', text: t.o.emptyText || 'Select a node to see its figures, its place in the tree and Explain.' }));
+        out.push(stateBlock(doc, 'empty', { text: t.o.emptyText || 'Select a node to see its figures, its place in the tree and Explain.' }));
         out.push(legend(t));
         return out.filter(Boolean);
       }
@@ -961,7 +961,7 @@
   })();
   /* ---- src/drishti_tree-view.js ---- */
   __m["src/drishti_tree-view.js"] = (function () {
-    var h = __lib("drishti-core").h, EventBus = __lib("drishti-core").EventBus, sharedBus = __lib("drishti-core").bus, SELECTION_EVENT = __lib("drishti-core").SELECTION_EVENT, visualTheme = __lib("drishti-core").visualTheme, formatterFor = __lib("drishti-core").formatterFor, renderExplain = __lib("drishti-core").renderExplain, announce = __lib("drishti-core").announce, DENSITIES = __lib("drishti-core").DENSITIES;
+    var h = __lib("drishti-core").h, stateBlock = __lib("drishti-core").stateBlock, EventBus = __lib("drishti-core").EventBus, sharedBus = __lib("drishti-core").bus, SELECTION_EVENT = __lib("drishti-core").SELECTION_EVENT, visualTheme = __lib("drishti-core").visualTheme, formatterFor = __lib("drishti-core").formatterFor, renderExplain = __lib("drishti-core").renderExplain, announce = __lib("drishti-core").announce, DENSITIES = __lib("drishti-core").DENSITIES;
     var HierarchyModel = __m["src/drishti_tree-model.js"].HierarchyModel;
     var drawOrg = __m["src/drishti_tree-draw.js"].drawOrg, drawPartition = __m["src/drishti_tree-draw.js"].drawPartition, partitionTable = __m["src/drishti_tree-draw.js"].partitionTable;
     var TreeGrid = __m["src/drishti_tree-grid.js"].TreeGrid;
@@ -1105,7 +1105,7 @@
           if (at) { at.setAttribute('tabindex', '0'); }
         } catch (e) {
           this.drawn = null;
-          this.view.appendChild(h(doc, 'p', { cls: 'dt-error', text: String(e && e.message ? e.message : e) }));
+          this.view.appendChild(stateBlock(doc, 'error', { text: String(e && e.message ? e.message : e) }));
         }
       }
       drawSide() {

@@ -927,7 +927,7 @@
   })();
   /* ---- src/drishti_graph-chrome.js ---- */
   __m["src/drishti_graph-chrome.js"] = (function () {
-    var h = __lib("drishti-core").h, formatNumber = __lib("drishti-core").formatNumber;
+    var h = __lib("drishti-core").h, stateBlock = __lib("drishti-core").stateBlock, formatNumber = __lib("drishti-core").formatNumber;
     var FUNCTION_KEYS = __m["src/drishti_graph-terminal.js"].FUNCTION_KEYS;
     var selectElement = __lib("drishti-inputs").selectElement;
     const GRAPH_MODES = Object.freeze(['inspector', 'table', 'terminal']);
@@ -1037,7 +1037,7 @@
     }
     function inspectorContent(G) {
       const doc = G.doc, sel = G.selection().map((id) => G.nodeOrGroup(id)).filter(Boolean);
-      if (!sel.length) { return h(doc, 'div', { cls: 'dn-empty', text: 'Click a node to see its details, its neighbours and Explain. Shift+click adds to the selection; drag round nodes with Alt held (or the lasso) to select many.' }); }
+      if (!sel.length) { return stateBlock(doc, 'empty', { text: 'Click a node to see its details, its neighbours and Explain. Shift+click adds to the selection; drag round nodes with Alt held (or the lasso) to select many.' }); }
       const act = (id, text, fn, pri) => h(doc, 'button', { cls: 'dn-btn' + (pri ? ' dn-pri' : ''), text, attrs: { type: 'button', 'data-act': id }, on: { click: fn } });
       if (sel.length > 1) {
         const rows = [];

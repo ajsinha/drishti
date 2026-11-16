@@ -61,12 +61,10 @@
 .dt-canvas { min-height: 100%; }
 .dt-svg { display: block; }
 .dt-side { border-left: 1px solid var(--d-border); background: var(--d-surface-2); overflow: auto; max-height: var(--dt-height, 560px); }
-.dt-error { color: var(--d-bad); padding: 20px; }
 .dt-zoom { position: absolute; right: 10px; top: 10px; display: flex; flex-direction: column; gap: 4px; }
 .dt-zoom .dt-btn { background: var(--d-surface); padding: 2px 8px; }
 
 /* the side panel */
-.dt-empty { padding: 14px 12px; color: var(--d-faint); line-height: 1.5; margin: 0; }
 .dt-ttl { padding: 10px 12px 2px; font-size: 1.15em; font-weight: 700; }
 .dt-subt { padding: 0 12px 6px; color: var(--d-faint); font-size: 0.92em; }
 .dt-kv { display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; padding: 4px 12px 8px; }

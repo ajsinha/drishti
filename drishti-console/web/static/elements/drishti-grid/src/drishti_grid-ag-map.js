@@ -69,7 +69,7 @@ export const AG_MAPPING = Object.freeze([
 ]);
 
 /** What version 1 leaves out, in words (ELEMENTS.md section 6, the migration guide). */
-export const AG_NOT_COVERED = 'integrated charts (use drishti-chart on a range), master-detail rows, sparkline cell renderers, row dragging between grids, ' +
+export const AG_NOT_COVERED = 'integrated charts (use drishti-chart on a range), master-detail rows, AG Grid's sparkline option (use sparklineCell, barCell and bulletCell as a column's cellRenderer), row dragging between grids, ' +
   'AG Grid\'s theming API and CSS classes (Drishti\'s theme applies), the viewport row model, pagination, custom cell renderers, editors and ' +
   'header components.';
 

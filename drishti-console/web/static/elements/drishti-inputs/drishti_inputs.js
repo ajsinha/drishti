@@ -452,7 +452,7 @@
   })();
   /* ---- src/drishti_inputs-dom.js ---- */
   __m["src/drishti_inputs-dom.js"] = (function () {
-    var EventBus = __lib("drishti-core").EventBus, h = __lib("drishti-core").h, placeUnder = __lib("drishti-core").placeUnder;
+    var EventBus = __lib("drishti-core").EventBus, h = __lib("drishti-core").h, placeUnder = __lib("drishti-core").placeUnder, stateBlock = __lib("drishti-core").stateBlock;
     let seq = 0;
     function uid(prefix) { return 'di-' + prefix + '-' + (++seq); }
     function debounce(fn, ms) {
@@ -557,7 +557,7 @@
           el.appendChild(opt);
         });
         const more = (o.more || 0) + Math.max(0, items.length - this.items.length);
-        if (!items.length) { el.appendChild(h(this.doc, 'div', { cls: 'di-empty', text: o.empty || 'Nothing matches', attrs: { role: 'presentation' } })); }
+        if (!items.length) { el.appendChild(stateBlock(this.doc, 'empty', { text: o.empty || 'Nothing matches', compact: true, role: 'presentation' })); }
         if (more > 0) { el.appendChild(h(this.doc, 'div', { cls: 'di-more', text: more + ' more: refine the search', attrs: { role: 'presentation' } })); }
         if (this.active >= this.items.length) { this.active = this.items.length - 1; }
       }
@@ -1395,7 +1395,7 @@
   })();
   /* ---- src/drishti_field-picker.js ---- */
   __m["src/drishti_field-picker.js"] = (function () {
-    var announce = __lib("drishti-core").announce, h = __lib("drishti-core").h;
+    var announce = __lib("drishti-core").announce, h = __lib("drishti-core").h, stateBlock = __lib("drishti-core").stateBlock;
     var Popover = __m["src/drishti_inputs-dom.js"].Popover, uid = __m["src/drishti_inputs-dom.js"].uid;
     class FieldPicker {
       constructor(doc, o) {
@@ -1475,7 +1475,7 @@
           });
           this.list.appendChild(box);
         });
-        if (!shown && !this.rows.length) { this.list.appendChild(h2(doc, 'div', { cls: 'di-empty', text: 'No field matches "' + this.query + '"' })); }
+        if (!shown && !this.rows.length) { this.list.appendChild(stateBlock(doc, 'empty', { text: 'No field matches "' + this.query + '"', compact: true })); }
         if (this.active === null || !this.rows.some((r) => r.key === this.active)) { const first = this.rows.find((r) => !r.disabled); this.active = first ? first.key : null; }
         this.mark();
       }
@@ -2684,7 +2684,7 @@
   })();
   /* ---- src/drishti_tree-picker.js ---- */
   __m["src/drishti_tree-picker.js"] = (function () {
-    var announce = __lib("drishti-core").announce;
+    var announce = __lib("drishti-core").announce, stateBlock = __lib("drishti-core").stateBlock;
     var TreeModel = __m["src/drishti_tree.js"].TreeModel;
     var InputBase = __m["src/drishti_inputs-dom.js"].InputBase, Popover = __m["src/drishti_inputs-dom.js"].Popover, debounce = __m["src/drishti_inputs-dom.js"].debounce, uid = __m["src/drishti_inputs-dom.js"].uid;
     class TreePicker extends InputBase {
@@ -2746,13 +2746,14 @@
           item.appendChild(this.el('span', { cls: 'di-node-label', text: n.label }));
           if (n.detail) { item.appendChild(this.el('span', { cls: 'di-option-detail', text: n.detail })); }
           t.appendChild(item);
-          if (r.status === 'loading') { t.appendChild(this.el('div', { cls: 'di-node di-loading-row', text: 'Loading…', attrs: { role: 'presentation' } })); }
+          if (r.status === 'loading') { t.appendChild(stateBlock(this.doc, 'loading', { compact: true, role: 'presentation' })); }
           else if (r.status) {
-            t.appendChild(this.el('div', { cls: 'di-node di-error-row', attrs: { role: 'presentation' } }, [r.status + ' ',
-              this.el('button', { cls: 'di-btn', text: 'Retry', attrs: { type: 'button' }, data: { retry: n.id } })]));
+            const bad = stateBlock(this.doc, 'error', { text: r.status, compact: true, role: 'presentation', fix: { label: 'Retry', run: () => {} } });
+            bad.querySelector('button').setAttribute('data-retry', n.id);
+            t.appendChild(bad);
           }
         });
-        if (!rows.length) { t.appendChild(this.el('div', { cls: 'di-empty', text: this.model.query ? 'Nothing matches "' + this.model.query + '"' : 'Nothing to choose from' })); }
+        if (!rows.length) { t.appendChild(stateBlock(this.doc, 'empty', { text: this.model.query ? 'Nothing matches "' + this.model.query + '"' : 'Nothing to choose from', compact: true })); }
         const ai = rows.findIndex((r) => r.node.id === this.active);
         if (ai >= 0) { t.setAttribute('aria-activedescendant', this.id + '-n' + ai); } else { t.removeAttribute('aria-activedescendant'); }
         const n = this.model.getValue().length;

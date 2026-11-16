@@ -20,7 +20,7 @@
    line. A non-additive figure is asked of the host (serverMeasures, debounced) and never summed; a selection is shared on drishti-core's
    bus (link); the edit mode collects moves into one proposal the host submits for four eyes (proposal, then applyProposal or
    discardProposal). Every event is on the tree's bus and a DOM event on the host (drishti:selection-changed ...). */
-import { h, EventBus, bus as sharedBus, SELECTION_EVENT, visualTheme, formatterFor, renderExplain, announce, DENSITIES } from '../../drishti-core/src/drishti_index.js';
+import { h, stateBlock, EventBus, bus as sharedBus, SELECTION_EVENT, visualTheme, formatterFor, renderExplain, announce, DENSITIES } from '../../drishti-core/src/drishti_index.js';
 import { HierarchyModel } from './drishti_tree-model.js';
 import { drawOrg, drawPartition, partitionTable } from './drishti_tree-draw.js';
 import { TreeGrid } from './drishti_tree-grid.js';
@@ -227,7 +227,7 @@ export class Tree {
       if (at) { at.setAttribute('tabindex', '0'); }
     } catch (e) {
       this.drawn = null;
-      this.view.appendChild(h(doc, 'p', { cls: 'dt-error', text: String(e && e.message ? e.message : e) }));
+      this.view.appendChild(stateBlock(doc, 'error', { text: String(e && e.message ? e.message : e) }));
     }
   }
 

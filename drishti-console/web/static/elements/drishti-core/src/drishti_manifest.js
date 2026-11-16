@@ -23,7 +23,7 @@ export const MANIFEST = Object.freeze({
   "elements": "1.0.0",
   "libraries": {
     "drishti-core": {
-      "version": "1.2.0",
+      "version": "1.3.0",
       "title": "Formats, theme, API client, events, accessibility, resize, keys, dialogs, drawers and toasts, the filter model every library shares, the element maker and placements, Explain's drawing, chips for list attributes, the CSV writer, reading typed numbers, loading vendored engines",
       "bundle": "drishti-core/drishti_core.js",
       "entry": "drishti-core/src/drishti_index.js",
@@ -32,7 +32,9 @@ export const MANIFEST = Object.freeze({
       "css": [
         "css/drishti_tokens.css",
         "css/drishti_resize.css",
-        "css/drishti_chips.css"
+        "css/drishti_chips.css",
+        "css/drishti_states.css",
+        "css/drishti_command-palette.css"
       ],
       "scripts": [],
       "module": "core"
@@ -53,17 +55,19 @@ export const MANIFEST = Object.freeze({
       "module": "core"
     },
     "drishti-grid": {
-      "version": "0.5.0",
+      "version": "0.6.0",
       "title": "The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and <drishti-grid> in three layouts and three densities), cell editing with undo, paste, write-back and four eyes, and the AG Grid-style adapter (createGridFromAgOptions)",
       "bundle": "drishti-grid/drishti_grid.js",
       "entry": "drishti-grid/src/drishti_index.js",
       "global": "grid",
       "requires": [
         "drishti-core",
-        "drishti-inputs"
+        "drishti-inputs",
+        "drishti-chart"
       ],
       "css": [
-        "elements/drishti-grid/drishti_grid.css"
+        "elements/drishti-grid/drishti_grid.css",
+        "elements/drishti-chart/drishti_chart.css"
       ],
       "scripts": [],
       "module": "core"
@@ -117,7 +121,7 @@ export const MANIFEST = Object.freeze({
       "module": "core"
     },
     "drishti-chart": {
-      "version": "0.2.0",
+      "version": "0.3.0",
       "title": "The chart: one engine-neutral spec over the vendored ECharts (the general kinds, the maps from world to every country's first-level regions, the card and studio modes, the map's ranking and table modes), Explain on any mark, the data table, export, linked selection and live updates; Vega-Lite translated into the spec",
       "bundle": "drishti-chart/drishti_chart.js",
       "entry": "drishti-chart/src/drishti_index.js",
