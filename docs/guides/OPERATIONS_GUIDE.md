@@ -2962,8 +2962,8 @@ the older layout (tables directly under `data/delta/<domain>/`) is moved into `d
 renames the demo lake's own folders on the same file system (no file is copied, rewritten or deleted), measures every table before and after (version,
 files, rows) and moves everything back on any difference; it **refuses**, saying why and moving nothing, when `data/delta/demo` exists, when something in
 `data/delta` belongs to no lake file, when a folder is on another file system, when a table is Iceberg or does not open, or while a build holds the lock.
-It records itself in `data/delta/demo/_drishti-lake/relocated.json` and rewrites connector files that read the old default root to `lake: demo` (each
-earlier file kept as `<name>.yaml.before-lake-<time>.bak`). By hand, with the server stopped:
+It records itself in `data/delta/demo/_drishti-lake/relocated.json`; it writes no connector file (the server reads connector files and never
+writes them: the packs' templates read the demo lake by name, `lake: demo`). By hand, with the server stopped:
 
 ```bash
 python3 tools/drishti.py lake relocate demo --dry-run     # the folders it would move and every table measured; nothing moves
