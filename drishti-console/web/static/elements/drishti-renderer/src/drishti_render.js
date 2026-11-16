@@ -19,7 +19,7 @@
    with drishti-core, live streams with drishti-data's live client. One import, one call:
 
      <script type="module">
-       import { render } from 'https://drishti.bank.example/static/render/2.0.0/drishti-render.js';
+       import { render } from 'https://drishti.bank.example/static/render/<version>/drishti-render.js';
        render(document.getElementById('risk'), { kind: 'trade', id: 'IRS-48213' });
      </script>
 
@@ -27,12 +27,13 @@
 import { Screen } from './drishti_screen.js';
 import { KINDS } from './drishti_kinds.js';
 import { problem } from './drishti_net.js';
+import { ELEMENTS_VERSION } from '../../drishti-core/src/drishti_index.js';
 import { trustedTypesActive } from './drishti_assets.js';
 import { strip } from './drishti_view.js';
 import { aboutBody } from './drishti_about.js';
 
-/** The renderer's version (Elements library drishti-renderer). */
-export const VERSION = '2.0.0';
+/** The renderer's version: the one version of Drishti Elements. */
+export const VERSION = ELEMENTS_VERSION;
 /** The ViewModel contract majors this renderer draws (VIEWMODEL.md section 8: a ViewModel without a contract is 1). */
 export const CONTRACTS = Object.freeze([1]);
 

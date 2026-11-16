@@ -46,10 +46,12 @@ export { pageInfo, enhanceDocTables } from './drishti_doc-behave.js';
 export { consoleTables } from './drishti_doc-console.js';
 export { rowSelection } from './drishti_doc-select.js';
 export { VIEW_EVENTS, PHONE_WIDTH, FUNCTION_KEYS, CF_TYPES, headerSpans, pivotColumnLabels, markGroups, isTotalCell, nonAdditiveNote, colourScaleAlpha,
-  dataBarWidth, cfBackground, figureRange, ruleFor, phoneColumns, pivotMeasures, columnMenuItems, cellMenuItems, commandText, parseCommand,
+  dataBarWidth, cfBackground, thresholdHit, figureRange, ruleFor, phoneColumns, pivotMeasures, columnMenuItems, cellMenuItems, commandText, parseCommand,
   parseCondition, conditionText, statusItems, cellLook, FlashTracker } from './drishti_grid-ui.js';
 export { Menu, Notes } from './drishti_grid-dom.js';
 export { sparkline, renderExplain } from './drishti_grid-explain.js';
+export { sparklineCell, bulletCell, barCell } from './drishti_cells.js';
+export { ruleText, ruleProblems, ruleFormSchema, openRuleBuilder, encodeView, decodeView, shareLink, readSharedView, heatPivotPreset } from './drishti_grid-rules.js';
 export { localDrill } from './drishti_grid-actions.js';
 export { GridBase } from './drishti_grid-base.js';
 export { Grid } from './drishti_grid-view.js';

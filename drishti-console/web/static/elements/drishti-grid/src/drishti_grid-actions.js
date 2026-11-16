@@ -60,6 +60,7 @@ export function onKey(v, e) {
     case 'copy': copied(v, res.copy, false); break;
     case 'explain': v.explainFocused(); break;
     case 'open': if (f) { m.toggleRow(f.row); v.announceRow(f.row); } break;
+    case 'detail-open': case 'detail-close': if (f) { v.body.setDetail(f.row, res.action === 'detail-open'); } break;
     case 'expand': case 'collapse': if (f) { v.announceRow(f.row); } break;
     case 'expand-all': runAction(v, 'expand-all'); break;
     case 'collapse-all': runAction(v, 'collapse-all'); break;

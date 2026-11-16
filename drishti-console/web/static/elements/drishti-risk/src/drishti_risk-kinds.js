@@ -23,6 +23,7 @@
 
    The figures are the server's: VaR, ES and EEPE come in the spec or the rows (var, es, eepe: a number or a field). Only a page with no
    server (the gallery, a standalone app) leaves them out, and then they are computed from the rows given and the card says so. */
+import { buildLimitLadder, buildVarAttribution, buildScenarioMatrix } from './drishti_risk-kinds2.js';
 import { buildHistogram, buildSeriesChart, buildWaterfall, quantile, num, fieldOf, registerKind, kindOf, toneColour } from '../../drishti-chart/src/drishti_index.js';
 
 /** The Basel backtest zones over 250 days: exceptions to the zone, and the plus factor of each count. */
@@ -217,5 +218,8 @@ export function registerRiskKinds() {
   add('risk.backtest', buildBacktest, 'backtest', true, ['zoom']);
   add('risk.exposure-profile', buildExposureProfile, 'exposure profile', true, ['log']);
   add('risk.var-change', buildVarChange, 'VaR change', true);
+  add('risk.limit-ladder', buildLimitLadder, 'limit ladder', true);
+  add('risk.var-attribution', buildVarAttribution, 'VaR attribution', true);
+  add('risk.scenario-matrix', buildScenarioMatrix, 'scenario matrix', false);
   return out;
 }

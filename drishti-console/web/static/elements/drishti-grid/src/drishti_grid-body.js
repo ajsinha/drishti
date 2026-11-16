@@ -19,7 +19,7 @@
    (total, ◆ non-additive total, pending server figure, loading block), the range, the focus, conditional formats and the flash of a
    live change. Pointer work: click and Shift+click, drag a range, the context menu, header sort, the column menu, a group's toggle,
    resize and autosize by the handle, the row checkboxes. */
-import { h, chipList, isListValue } from '../../drishti-core/src/drishti_index.js';
+import { h, stateBlock, showState, chipList, isListValue } from '../../drishti-core/src/drishti_index.js';
 import { GridPointer } from './drishti_grid-pointer.js';
 import { DENSITIES } from './drishti_grid-model-base.js';
 import { getValue, formatValue } from './drishti_columns.js';
@@ -51,11 +51,13 @@ export class GridBody extends GridPointer {
     this.head = h(doc, 'div', { cls: 'dg-head', attrs: { role: 'rowgroup' } });
     this.area = h(doc, 'div', { cls: 'dg-area', attrs: { role: 'presentation' } });
     this.rows = h(doc, 'div', { cls: 'dg-rows', attrs: { role: 'rowgroup' } });
-    this.empty = h(doc, 'div', { cls: 'dg-empty', attrs: { hidden: true } });
+    this.empty = stateBlock(doc, 'empty', { overlay: true });
+    this.empty.hidden = true;
     this.area.appendChild(this.rows);
     this.canvas.append(this.head, this.area);
     this.scroller.append(this.canvas, this.empty);
     this.cfCache = new Map();
+    this.openDetails = new Set();    // row indexes whose detail panel is open (closed with the lists when the rows change)
     this.openLists = new Map();      // 'r:c' of each list cell expanded in place, to the px its row needs
     this.version = 0;
     this.drag = null;
@@ -120,6 +122,26 @@ export class GridBody extends GridPointer {
     if (again) { again.focus(); }
   }
 
+  /** @private the detail options when the grid has master-detail rows, else null */
+  detailOpts() { const d = this.view.o.detail; return d && typeof d.render === 'function' ? d : null; }
+
+  /**
+   * Opens or closes a leaf row's detail panel (the row grows by the panel's height, the rows below move down).
+   * @param {number} r the row
+   * @param {boolean} [open] default: toggle
+   * @returns {void}
+   */
+  setDetail(r, open) {
+    const d = this.detailOpts(), x = this.model.rowAt(r);
+    if (!d || !x || !x.row || !(x.kind === 'leaf' || x.tree) || (d.isMaster && !d.isMaster(x.row))) { return; }
+    const now = open === undefined ? !this.openDetails.has(r) : open;
+    if (now) { this.openDetails.add(r); } else { this.openDetails.delete(r); }
+    this.model.viewport.setExtra(r, now ? (d.height || 160) : 0);
+    this.render();
+    const again = this.rows.querySelector('.dg-dt[data-r="' + r + '"]');
+    if (again && this.doc.activeElement !== this.scroller) { again.focus(); }
+  }
+
   /** @private the row's extra height: the tallest expanded list cell in it needs, less the usual height */
   syncRowHeights(r) {
     let need = 0;
@@ -133,6 +155,7 @@ export class GridBody extends GridPointer {
    */
   collapseLists() {
     if (this.openLists.size) { this.openLists.clear(); }
+    this.openDetails.clear();
     this.model.viewport.clearExtras();
   }
 
@@ -256,7 +279,7 @@ export class GridBody extends GridPointer {
     if (fid && doc.getElementById(fid)) { s.setAttribute('aria-activedescendant', fid); } else { s.removeAttribute('aria-activedescendant'); }
     const why = v.emptyText();
     this.empty.hidden = !why;
-    this.empty.textContent = why || '';
+    if (why) { showState(this.empty, 'empty', { text: why, overlay: true }); }
     if (v.editor) { v.editor.place(); }
   }
 
@@ -369,6 +392,14 @@ export class GridBody extends GridPointer {
     centerShown.forEach(add);
     if (trail > 0) { row.appendChild(h(doc, 'div', { cls: 'dg-gap', attrs: { role: 'presentation' }, style: { width: trail + 'px' } })); }
     disp.right.forEach(add);
+    const dt = this.detailOpts();
+    if (dt && this.openDetails.has(r) && x.row) {
+      row.classList.add('dg-has-detail');
+      const panel = h(doc, 'div', { cls: 'dg-detail', attrs: { role: 'region', 'aria-label': 'Details of the row' }, style: { top: m.viewport.rowHeight + 'px', height: (dt.height || 160) + 'px' } });
+      const body = dt.render(x.row, doc);
+      if (typeof body === 'string') { panel.textContent = body; } else if (body && body.nodeType) { panel.appendChild(body); }
+      row.appendChild(panel);
+    }
     return row;
   }
 
@@ -440,6 +471,13 @@ export class GridBody extends GridPointer {
         const box = h(doc, 'input', { cls: 'dg-check', attrs: { type: 'checkbox', tabindex: '-1', 'aria-label': 'Select row' }, data: { r: String(r) } });
         box.checked = !!k.selected;
         cell.appendChild(box);
+      }
+      const dt = k.first && this.detailOpts();
+      if (dt && x.row && (x.kind === 'leaf' || x.tree) && !(dt.isMaster && !dt.isMaster(x.row))) {
+        const open = this.openDetails.has(r);
+        cell.appendChild(h(doc, 'button', { cls: 'dg-dt', text: open ? '▾' : '▸', data: { r: String(r) },
+          attrs: { type: 'button', tabindex: '-1', 'aria-expanded': String(open), 'aria-label': (open ? 'Close' : 'Open') + ' the details of this row' },
+          on: { click: (ev) => { ev.stopPropagation(); this.setDetail(r); } } }));
       }
       if (k.expandable) { cell.appendChild(h(doc, 'span', { cls: 'dg-tw', text: k.expanded ? '−' : '+', attrs: { 'aria-hidden': 'true' }, data: { r: String(r) } })); }
       else if (m.pivotMode || (m.rowModel.groupBy && m.rowModel.groupBy.length) || m.rowModel.treeData) { cell.appendChild(h(doc, 'span', { cls: 'dg-tw dg-tw-none', attrs: { 'aria-hidden': 'true' } })); }

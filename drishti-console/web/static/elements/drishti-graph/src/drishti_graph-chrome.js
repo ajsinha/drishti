@@ -19,7 +19,7 @@
    right; table (B) floats the controls on the canvas and puts a card at the node, with the Nodes, Edges and Path tables under it;
    terminal (C) puts the GRAPH> line above and the answers and function keys below. Built with drishti-core's h (no markup strings, a
    strict CSP holds); the drawing of the parts that change (rail, legend, inspector, status, answers) is here too. */
-import { h, formatNumber } from '../../drishti-core/src/drishti_index.js';
+import { h, stateBlock, formatNumber } from '../../drishti-core/src/drishti_index.js';
 import { FUNCTION_KEYS } from './drishti_graph-terminal.js';
 import { selectElement } from '../../drishti-inputs/src/drishti_index.js';
 
@@ -157,7 +157,7 @@ export function legendEl(G, leg) {
  */
 export function inspectorContent(G) {
   const doc = G.doc, sel = G.selection().map((id) => G.nodeOrGroup(id)).filter(Boolean);
-  if (!sel.length) { return h(doc, 'div', { cls: 'dn-empty', text: 'Click a node to see its details, its neighbours and Explain. Shift+click adds to the selection; drag round nodes with Alt held (or the lasso) to select many.' }); }
+  if (!sel.length) { return stateBlock(doc, 'empty', { text: 'Click a node to see its details, its neighbours and Explain. Shift+click adds to the selection; drag round nodes with Alt held (or the lasso) to select many.' }); }
   const act = (id, text, fn, pri) => h(doc, 'button', { cls: 'dn-btn' + (pri ? ' dn-pri' : ''), text, attrs: { type: 'button', 'data-act': id }, on: { click: fn } });
   if (sel.length > 1) {
     const rows = [];

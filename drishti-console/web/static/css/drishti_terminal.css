@@ -769,3 +769,11 @@ table.tbl tr.tbl-filter th::after { content: none; }
 .cmp-sbs caption { caption-side: top; text-align: left; font-weight: 700; color: var(--d-muted); padding: var(--d-sp-6_4) 0 var(--d-sp-3_2); }
 .cmp-sbs tr.cmp-row-changed td, .cmp-sbs tr.cmp-row-added td, .cmp-sbs tr.cmp-row-removed td { background: color-mix(in srgb, var(--d-warn) 14%, transparent); }
 .cmp-sbs tr.cmp-row-changed th, .cmp-sbs tr.cmp-row-added th, .cmp-sbs tr.cmp-row-removed th { border-left: 3px solid var(--d-warn); }
+
+/* facets (the renderer's small-multiples panel): one chart per member, the columns by data-cols, one column on a phone */
+.facets { display: grid; grid-template-columns: repeat(var(--facet-cols, 2), minmax(0, 1fr)); gap: var(--d-sp-10); }
+.facets[data-cols="1"] { --facet-cols: 1; } .facets[data-cols="2"] { --facet-cols: 2; } .facets[data-cols="3"] { --facet-cols: 3; } .facets[data-cols="4"] { --facet-cols: 4; }
+.facet { margin: 0; min-width: 0; }
+.facet figcaption { color: var(--d-muted); font-size: var(--d-fs-12); }
+.facet .chart.xchart { height: 160px; }
+@media (max-width: 640px) { .facets { grid-template-columns: minmax(0, 1fr); } }

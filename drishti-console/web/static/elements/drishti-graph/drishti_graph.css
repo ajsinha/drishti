@@ -99,7 +99,6 @@
 .dn-sizes { display: flex; align-items: flex-end; gap: 10px; margin-top: 4px; }
 .dn-sizes span { display: inline-flex; flex-direction: column; align-items: center; gap: 2px; font-family: var(--d-font-mono); font-size: 0.82em; color: var(--d-faint); }
 .dn-sizes i { display: block; border: 1px solid var(--d-muted); border-radius: 50%; }
-.dn-empty { padding: 16px 12px; color: var(--d-faint); line-height: 1.5; }
 .dn-ttl { padding: 10px 12px 2px; font-size: 1.15em; font-weight: 700; display: flex; gap: 8px; align-items: center; }
 .dn-ty { font-size: 0.75em; font-weight: 500; padding: 1px 7px; border-radius: 9px; border: 1px solid var(--d-border); color: var(--d-muted); }
 .dn-sub { padding: 0 12px 6px; color: var(--d-faint); font-family: var(--d-font-mono); font-size: 0.88em; }
@@ -170,3 +169,6 @@
   .dn-rail, .dn-insp { border: 0; border-top: 1px solid var(--d-border); max-height: none; }
   .dn-find, .dn-end { width: 100px; }
 }
+
+/* print and PDF: the drawing whole on a page, without its toolbar */
+@media print { .dn-tools, .dn-insp { display: none; } .dn-canvas { break-inside: avoid; } }

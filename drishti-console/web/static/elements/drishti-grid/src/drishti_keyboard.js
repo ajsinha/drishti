@@ -24,6 +24,7 @@
      Right / Left on a group row's first cell: open / close it (PIVOT_ENGINE.md section 11: Shift+Right opens everything below)
      Enter or F2           edit (an editable cell) or open (a group, a link, Explain)
      Ctrl+C                copy (the range, else the cell)          Escape   clear the range, or leave editing
+     Alt+Down / Alt+Up     open / close the row's detail panel (master-detail rows, GridOptions.detail)
      E                     Explain this figure (when the grid has an Explain hook)
 
    Pure: give it the grid's size and the event, it gives the new focus and an action. Runs under Node. */
@@ -86,6 +87,9 @@ export class GridNavigator {
       if (k === 'ArrowRight' && !open) { return { focus: null, action: 'expand', handled: true }; }
       if (k === 'ArrowLeft' && open) { return { focus: null, action: 'collapse', handled: true }; }
     }
+    if (e.altKey && !mod && (k === 'ArrowDown' || k === 'ArrowUp') && this.grid.detailEnabled && this.grid.detailEnabled()) {
+      return { focus: null, action: k === 'ArrowDown' ? 'detail-open' : 'detail-close', handled: true };
+    }
     const ext = e.shiftKey && !mod ? 'extend-range' : null;
     switch (k) {
       case 'ArrowUp': return move(mod ? 0 : f.row - 1, f.col, ext);
@@ -121,7 +125,7 @@ export class GridNavigator {
       { keys: 'Arrows', does: 'move' }, { keys: 'Shift+Arrows', does: 'select a range' }, { keys: 'Ctrl+C', does: 'copy' },
       { keys: 'Space', does: 'select the row, or open a group' }, { keys: 'Right / Left', does: 'open / close a group' },
       { keys: 'Shift+Right / Left', does: 'open / close everything below' }, { keys: 'Enter', does: 'open or edit' }, { keys: 'E', does: 'Explain the figure' },
-      { keys: 'Ctrl+A', does: 'select all' }, { keys: 'Escape', does: 'clear' }
+      { keys: 'Alt+Down / Up', does: 'open / close a row\'s detail' }, { keys: 'Ctrl+A', does: 'select all' }, { keys: 'Escape', does: 'clear' }
     ];
   }
 }

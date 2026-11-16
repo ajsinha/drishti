@@ -43,7 +43,7 @@ def test_excluded_paths(path: str) -> None:
 
 @pytest.mark.parametrize("path", [
     "kernel/drishti-engine/src/main/java/A.java", "drishti-console/core/x.py", "tools/varcli.py", "drishti-console/web/static/js/drishti_x.js",
-    "drishti-console/web/static/elements/drishti-grid/src/a.js", "drishti-console/web/static/render/2.0.0/a.js", "drishti-console/plugins/banking/static/js/a.js",
+    "drishti-console/web/static/elements/drishti-grid/src/a.js", "drishti-console/web/static/render/2.4.0/a.js", "drishti-console/plugins/banking/static/js/a.js",
 ])
 def test_counted_paths(path: str) -> None:
     assert d.counted(path, "// ordinary head")

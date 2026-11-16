@@ -101,7 +101,7 @@ def test_every_mode_draws_in_both_themes_and_three_densities(browsers):
             assert await pg.locator(f"#g-{mode}.dn[data-mode='{mode}'] canvas.dn-canvas").count() == 1
             if mode == "inspector":
                 assert await pg.locator(".dn-rail .dn-chip").count() == 5
-                assert await pg.locator(".dn-insp .dn-empty").count() == 1
+                assert await pg.locator(".dn-insp .drishti-state-empty").count() == 1
                 assert await pg.locator(".dn-legend .dn-sizes span").count() == 3
             if mode == "table":
                 assert await pg.locator(".dn-float .dn-seg-b").count() >= 4

@@ -2738,8 +2738,8 @@ The renderer's own modules (`static/elements/drishti-renderer/src/`, each under 
 each kind mapped onto the libraries), `drishti_cells.js`, `drishti_behave.js`, `drishti_net.js`, `drishti_assets.js`,
 `drishti_console.js`, `drishti_nested.js`, `drishti_about.js`, `drishti_signin.js`, `drishti_embed.js`, `drishti_elements.js`,
 `drishti_dom.js`. `tools/elements/build.py` bundles them as `drishti_renderer.js` for classic pages; hosts import the public entry
-`static/render/2.0.0/drishti-render.js`, which finds the libraries, the console's static files and the sheet from its own address, so
-the same files work under `/embed/v2/render/2.0.0/`. Size: 168 KB, 63 KB gzip of its own; ECharts (330 KB gzip) only when a screen has
+`static/render/<version>/drishti-render.js`, which finds the libraries, the console's static files and the sheet from its own address, so
+the same files work under `/embed/v2/render/<version>/`. Size: 168 KB, 63 KB gzip of its own; ECharts (330 KB gzip) only when a screen has
 a chart, once per page.
 
 **One paint and one patch path for three sources.** A static ViewModel, a live one and a streamed one go through the same code: a

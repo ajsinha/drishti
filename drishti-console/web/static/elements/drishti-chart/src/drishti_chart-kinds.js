@@ -103,8 +103,8 @@ export function annotationMarks(spec, rows, th, o) {
   return out;
 }
 
-/** @private the shared frame of a cartesian kind */
-function frame(spec, env, xAxis, yAxis, series, extra) {
+/** @private the shared frame of a cartesian kind (exported for the kinds of drishti_chart-kinds3.js, not for pages) */
+export function frame(spec, env, xAxis, yAxis, series, extra) {
   const th = env.theme;
   return Object.assign({
     animationDuration: 260, textStyle: textStyle(th), color: th.palette,
@@ -117,13 +117,13 @@ function frame(spec, env, xAxis, yAxis, series, extra) {
 }
 
 /** @private value axis for y (format, title, min and max, log) */
-function yAxisOf(spec, env, extra) {
+export function yAxisOf(spec, env, extra) {
   const y = spec.y || {};
   return axisOf(env.theme, Object.assign({ type: y.scale === 'log' ? 'log' : 'value', name: y.title || '', nameLocation: 'middle', nameGap: 52, min: y.min, max: y.max, scale: y.zero === false }, extra || {}), env.fmt);
 }
 
 /** @private an x axis of the spec's type: categories, time or values */
-function xAxisOf(spec, env, type, cats) {
+export function xAxisOf(spec, env, type, cats) {
   const x = spec.x || {};
   const base = { type: type, name: x.title || '', nameLocation: 'middle' };
   if (type === 'category') { base.data = cats; base.boundaryGap = spec.kind !== 'line' && spec.kind !== 'area'; }

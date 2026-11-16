@@ -46,7 +46,7 @@ def test_a_version_is_one_folder_and_its_record_matches_every_file():
 
 
 def test_the_frozen_versions_are_served_unchanged():
-    """1.2.0 stays served, byte for byte, for the embedders that pinned it (drishti-renderer 2.0.0 is beside it)."""
+    """1.2.0 stays served, byte for byte, for the embedders that pinned it (the current renderer is beside it)."""
     for v in rd.FROZEN:
         have = json.loads((rd.ROOT / v / rd.RECORD).read_text(encoding="utf-8"))
         assert have == rd.record(v), f"static/render/{v} is frozen: a released version never changes"

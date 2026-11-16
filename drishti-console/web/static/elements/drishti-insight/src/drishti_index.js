@@ -21,11 +21,13 @@
 import { installExplain } from './drishti_insight-explain.js';
 import { installSearch } from './drishti_insight-search.js';
 import { startApprovals } from './drishti_insight-approvals.js';
+import { SnapshotStore } from './drishti_insight-snapshot.js';
 
 export { installExplain } from './drishti_insight-explain.js';
 export { installSearch } from './drishti_insight-search.js';
 export { startApprovals } from './drishti_insight-approvals.js';
 export { workbookLinks, exportWorkbook } from './drishti_insight-workbook.js';
+export { SnapshotStore } from './drishti_insight-snapshot.js';
 
 /**
  * Installs the components in a page (the bundle calls it when it loads): search always, Explain unless the script tag says
@@ -41,6 +43,7 @@ export function install(root) {
   root.Drishti.insightInstalled = true;
   const tag = doc.currentScript;
   installSearch(root);
+  root.Drishti.snapshots = root.Drishti.snapshots || new SnapshotStore();     // Drishti.snapshots.take(chart, {note}): shown under Explain's Workbook part
   if (!(tag && tag.getAttribute('data-explain') === 'off')) { installExplain(root); }
   if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', () => startApprovals(root)); } else { startApprovals(root); }
 }

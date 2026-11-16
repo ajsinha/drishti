@@ -495,6 +495,13 @@
   --d-radius-18: 18px; --d-radius-22: 22px; --d-radius-26: 26px;
   --d-radius-pill: 999px;
 
+  /* motion: the durations and the curve of every transition and animation of the Elements; prefers-reduced-motion turns them to 0 below */
+  --d-dur-fast: 120ms; --d-dur-base: 200ms; --d-dur-slow: 320ms; --d-dur-shimmer: 1200ms;
+  --d-ease: cubic-bezier(.2, 0, 0, 1);
+
+  /* semantic spacing: named steps of --d-sp-* for a component's gaps and padding (xs 4, sm 6, md 10, lg 16, xl 24) */
+  --d-space-xs: var(--d-sp-4); --d-space-sm: var(--d-sp-6); --d-space-md: var(--d-sp-10); --d-space-lg: var(--d-sp-16); --d-space-xl: var(--d-sp-24);
+
   /* layers: the stacking order of everything that floats over the page (Bootstrap's sticky bar is 1030, its modal 1055);
      a z-index under 100 orders things inside one component and stays a plain number */
   --d-z-bar: 1030;
@@ -537,6 +544,9 @@
     color-scheme: light;
   }
 }
+
+/* reduced motion: every duration is 0, so a transition or an animation written with the motion tokens is still */
+@media (prefers-reduced-motion: reduce) { :root { --d-dur-fast: 0ms; --d-dur-base: 0ms; --d-dur-slow: 0ms; --d-dur-shimmer: 0ms; } }
 
 /* Print and "save as PDF": the view on paper, light whatever the theme. Last in the file and as specific as the theme blocks
    (and the light fallback), so it wins by order, with no !important. */

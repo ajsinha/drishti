@@ -20,10 +20,10 @@
 import { LiveClient } from '../../drishti-data/src/drishti_index.js';
 import { signInFor } from './drishti_signin.js';
 import { statics } from './drishti_assets.js';
-import { url as drishtiUrl } from '../../drishti-core/src/drishti_index.js';
+import { url as drishtiUrl, ELEMENTS_VERSION as ONE_VERSION } from '../../drishti-core/src/drishti_index.js';
 
-/** The Elements version this renderer carries. */
-export const ELEMENTS_VERSION = '2.3.0';
+/** The Elements version this renderer carries: the one version of Drishti Elements. */
+export const ELEMENTS_VERSION = ONE_VERSION;
 /** The embed API the elements read. */
 export const API = '/embed/v2';
 /** The page's settings (DrishtiElements.configure): the console, the token provider, auth, the live connection's waits. */

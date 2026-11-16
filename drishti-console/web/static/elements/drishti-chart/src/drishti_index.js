@@ -21,6 +21,7 @@
    drishti-risk's for the banking module. */
 import { registerAxisKinds, buildLayers } from './drishti_chart-kinds.js';
 import { registerOtherKinds } from './drishti_chart-kinds2.js';
+import { registerDistributionKinds } from './drishti_chart-kinds3.js';
 import { registerMapKind } from './drishti_chart-map.js';
 import { registerKind, kindOf } from './drishti_chart-spec.js';
 import { rowsOf } from './drishti_chart-data.js';
@@ -34,6 +35,8 @@ export { rowId, seriesDefs, annotationMarks, buildSeriesChart, buildScatter, bui
 export { buildPie, buildGauge, buildTreemap, buildSankey, registerOtherKinds } from './drishti_chart-kinds2.js';
 export { equalEarth, albers, plateCarree, projectGeometry, bounds, coreExtent, countryProjection, US_INSETS, prepareRegions, prepareWorld, findPlace,
   createGeoLoader, holdAntimeridian, fitView } from './drishti_chart-geo.js';
+export { WORLD_REGIONS } from './drishti_world-regions.js';
+export { REGION_START_LEVELS, isRegionLevel, regionOf, regionName, prepareRegionLevel } from './drishti_chart-regions.js';
 export { mapMetrics, placeValues, mapScale, ranking, buildMap, registerMapKind } from './drishti_chart-map.js';
 export { colourTone, d3Format, fromVegaLite, vegaLiteAlternative, vegaLiteRefusal, vegaLiteIn } from './drishti_chart-vega.js';
 export { valueText, tooltipElement, dataTable, legendElement, markSelection, addZoom, dragBrush, rangeBrush, svgOf } from './drishti_chart-parts.js';
@@ -42,6 +45,10 @@ export { Studio } from './drishti_chart-studio.js';
 export { CHART_EVENTS, CHART_MODES, Chart } from './drishti_chart-view.js';
 export { ChartIO } from './drishti_chart-io.js';
 export { buildCalendar } from './drishti_chart-calendar.js';
+export { bullet, bulletScale, bulletSummary } from './drishti_bullet.js';
+export { kernelDensity, tenorDays, buildRadar, buildViolin, buildRidgeline, buildCurve, buildDensity, registerDistributionKinds } from './drishti_chart-kinds3.js';
+export { colourScale } from './drishti_chart-scale.js';
+export { linkCrosshair, facets } from './drishti_chart-multiples.js';
 import { buildCalendar } from './drishti_chart-calendar.js';
 export { SELECTION_EVENT, linkGrid, publishSelection } from '../../drishti-core/src/drishti_index.js';
 export { PANEL_KINDS, escapeTip, panelCompact, panelLineCompact, panelTokens, labelFit, panelOption } from './drishti_chart-panels.js';
@@ -50,6 +57,7 @@ export { CHART_ELEMENT, defineChartElement, chartIn } from './drishti_chart-elem
 
 registerAxisKinds();
 registerOtherKinds();
+registerDistributionKinds();
 registerMapKind();
 registerKind('calendar', { build: buildCalendar, label: 'calendar heatmap', cartesian: false });
 registerKind('layer', { label: 'layers', cartesian: true, build: (spec, rows, env) => buildLayers(spec, rows, env, kindOf, (l) => rowsOf(l.data)) });

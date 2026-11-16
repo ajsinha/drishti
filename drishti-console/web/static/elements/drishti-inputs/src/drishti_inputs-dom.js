@@ -18,7 +18,7 @@
    close it, focus goes back), and the listbox (options with role option, the active one by aria-activedescendant, the arrows, Home, End,
    the page keys, Enter and Space, a cap on how many are drawn with "refine the search" past it). Nothing inline: elements are made with
    the DOM and styled through classes, so a page with a strict CSP draws them. */
-import { EventBus, h, placeUnder } from '../../drishti-core/src/drishti_index.js';
+import { EventBus, h, placeUnder, stateBlock } from '../../drishti-core/src/drishti_index.js';
 
 let seq = 0;
 
@@ -227,7 +227,7 @@ export class Listbox {
       el.appendChild(opt);
     });
     const more = (o.more || 0) + Math.max(0, items.length - this.items.length);
-    if (!items.length) { el.appendChild(h(this.doc, 'div', { cls: 'di-empty', text: o.empty || 'Nothing matches', attrs: { role: 'presentation' } })); }
+    if (!items.length) { el.appendChild(stateBlock(this.doc, 'empty', { text: o.empty || 'Nothing matches', compact: true, role: 'presentation' })); }
     if (more > 0) { el.appendChild(h(this.doc, 'div', { cls: 'di-more', text: more + ' more: refine the search', attrs: { role: 'presentation' } })); }
     if (this.active >= this.items.length) { this.active = this.items.length - 1; }
   }

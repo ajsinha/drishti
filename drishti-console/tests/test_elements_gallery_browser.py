@@ -41,7 +41,7 @@ HEADERS = {"content-security-policy": "default-src 'self'; script-src 'self'; st
 TYPES = {".html": "text/html; charset=utf-8", ".css": "text/css", ".js": "application/javascript", ".json": "application/json"}
 FRAME_HEADERS = {"content-security-policy": "default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval'; style-src 'unsafe-inline'; img-src data:; font-src data:; frame-ancestors 'self'"}
 SHOTS = os.environ.get("DRISHTI_GALLERY_SHOTS")
-READY = "() => window.__gallery && document.querySelector('.gx-stage') && !document.querySelector('.dc-loading:not([hidden])')"
+READY = "() => window.__gallery && document.querySelector('.gx-stage') && !document.querySelector('.drishti-state-loading:not([hidden])')"
 
 
 def router(fetched):

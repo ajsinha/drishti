@@ -20,6 +20,7 @@ import { registerRiskKinds } from './drishti_risk-kinds.js';
 
 export { TRAFFIC_LIGHT, trafficLight, tailFigures, tenorText, eepeOf, buildPnlDistribution, buildBacktest, buildExposureProfile, buildVarChange,
   registerRiskKinds } from './drishti_risk-kinds.js';
+export { LIMIT_ZONES, limitZone, buildLimitLadder, buildVarAttribution, buildScenarioMatrix } from './drishti_risk-kinds2.js';
 export { RISK_GRID_DEFAULTS, TONES, figureColumn, riskGrid } from './drishti_risk-grid.js';
 export { riskChart } from './drishti_risk-chart.js';
 export { LIMIT_STATUS_TONES, VAR_TREE_MEASURES, limitUseText, varHierarchyTree, limitBreaches } from './drishti_risk-tree.js';
@@ -28,7 +29,7 @@ export { textColumn, moneyColumn } from './drishti_risk-columns.js';
 export { riskMoney, riskSigned, riskInt, riskPct } from './drishti_risk-format.js';
 
 /** The kinds this library adds to drishti-chart. */
-export const RISK_KINDS = Object.freeze(['risk.pnl-distribution', 'risk.backtest', 'risk.exposure-profile', 'risk.var-change']);
+export const RISK_KINDS = Object.freeze(['risk.pnl-distribution', 'risk.backtest', 'risk.exposure-profile', 'risk.var-change', 'risk.limit-ladder', 'risk.var-attribution', 'risk.scenario-matrix']);
 
 registerRiskKinds();
 

@@ -240,7 +240,7 @@ embedded webview), the page goes to the sign-in and comes back.
 <!-- the renderer: one call (the library from the console's embed path; your page needs no server) -->
 <div id="risk"></div>
 <script type="module">
-  import { render } from 'https://drishti.bank.example/embed/v2/render/2.0.0/drishti-render.js';
+  import { render } from 'https://drishti.bank.example/embed/v2/render/2.4.0/drishti-render.js';
   const view = render(document.getElementById('risk'), { kind: 'trade', id: '1000008' },
                       { auth: 'popup', server: 'https://drishti.bank.example' });
   const el = view.container;
@@ -616,7 +616,7 @@ Shadow DOM, follows live updates, and navigates **in place** with its own back s
 ```html
 <div id="risk"></div>
 <script type="module">
-  import { render } from 'https://drishti.bank.example/static/render/2.0.0/drishti-render.js';
+  import { render } from 'https://drishti.bank.example/static/render/2.4.0/drishti-render.js';
   const view = render(document.getElementById('risk'), { kind: 'trade', id: 'IRS-48213' }, { behaviours: 'console', about: true });
   view.container.addEventListener('drishti:navigate', (e) => console.log('opened', e.detail.kind, e.detail.id));
 </script>
@@ -624,7 +624,7 @@ Shadow DOM, follows live updates, and navigates **in place** with its own back s
 
 or the tag `<drishti-screen kind="trade" entity="IRS-48213" theme="crimson-dark"></drishti-screen>` after the same import. On the
 console's own origin (or a same-origin proxy) this runs as the person signed in to the console. **Another origin** imports
-`/embed/v2/render/2.0.0/drishti-render.js` and gives a `token` provider ([4.1](#41-the-token-exchange)) or `auth: 'popup'`
+`/embed/v2/render/2.4.0/drishti-render.js` and gives a `token` provider ([4.1](#41-the-token-exchange)) or `auth: 'popup'`
 ([4.2](#42-a-page-without-a-backend-the-sign-in-window)).
 
 **Defaults for everything.** A call with no options draws in a Shadow DOM with the library's own sheet, in the theme your custom
@@ -784,7 +784,7 @@ The library is a function and custom elements, so every framework uses it as it 
 
 ```jsx
 // React
-import { render } from 'https://drishti.bank.example/static/render/2.0.0/drishti-render.js';
+import { render } from 'https://drishti.bank.example/static/render/2.4.0/drishti-render.js';
 export function Trade({ id }) {
   const ref = useRef(null);
   useEffect(() => { const h = render(ref.current, { kind: 'trade', id }); return () => h.dispose(); }, [id]);
@@ -796,13 +796,13 @@ export function Trade({ id }) {
 // Angular (CUSTOM_ELEMENTS_SCHEMA in the component)
 @Component({ selector: 'app-trade', template: '<drishti-screen kind="trade" [attr.entity]="id"></drishti-screen>', schemas: [CUSTOM_ELEMENTS_SCHEMA] })
 export class TradeComponent { @Input() id = 'IRS-48213'; }
-// main.ts: import 'https://drishti.bank.example/static/render/2.0.0/drishti-render.js';
+// main.ts: import 'https://drishti.bank.example/static/render/2.4.0/drishti-render.js';
 ```
 
 ```vue
 <!-- Vue (compilerOptions.isCustomElement: (t) => t.startsWith('drishti-')) -->
 <template><drishti-screen kind="trade" :entity="id" /></template>
-<script setup>import 'https://drishti.bank.example/static/render/2.0.0/drishti-render.js'; defineProps(['id']);</script>
+<script setup>import 'https://drishti.bank.example/static/render/2.4.0/drishti-render.js'; defineProps(['id']);</script>
 ```
 
 A bundler that refuses URL imports copies the version's folder as it is ([10.4](#104-the-npm-package-layout)).
@@ -917,13 +917,13 @@ anyway. Load the library by an exact version with its integrity hash (chapter 10
 |---|---|---|
 | `/static/render/<version>/…` | Drishti Render on the console's own origin (the console's pages, same-origin hosts) | as `/static/` |
 | `/embed/v2/render/<version>/…` | the same files for other origins, with CORS for the registered origins; a partial version (`2`, `2.0`) answers `302` to the exact one | `immutable`, one year |
-| `/embed/v2/elements/<2, 2.3, 2.3.0, 2.2, 2.2.0>/drishti-elements.js` | Elements 2.x by its own version: a `302` to the renderer that carries it (Elements 2.3.0 is carried by renderer 2.0.0, 2.2.0 by renderer 1.2.0; `2` answers the newest) | 60 s |
-| `/embed/v2/elements/<library>/…` | the Elements libraries renderer 2.0.0 imports (drishti-core, -grid, -chart, -data, -renderer), allow-listed | revalidated |
+| `/embed/v2/elements/<2, 2.4, 2.4.0, 2.2, 2.2.0>/drishti-elements.js` | Elements 2.x by its own version: a `302` to the renderer that carries it (the renderer's version is the Elements version, 2.4.0; 2.2.0 is carried by the frozen renderer 1.2.0; `2` answers the newest) | 60 s |
+| `/embed/v2/elements/<library>/…` | the Elements libraries the current renderer imports (drishti-core, -grid, -chart, -data, -renderer), allow-listed | revalidated |
 | `/embed/v1/elements/1.4.5/drishti-elements.js` | Elements 1.x at its exact version (it imports `./m/<name>.js`, served beside it) | `immutable`, one year |
 | `/embed/v1/elements/1/…`, `/embed/v1/elements/1.4/…` | `302` to the exact version, for a host that accepts updates | 60 s |
 | `/embed/v1/drishti-elements.js` | Elements 1.x as the console serves it now, revalidated on each load (a host that follows the console) | revalidated |
 
-Served renderer versions: **2.0.0** (the current one, carrying Elements 2.3) and **1.2.0** (frozen, byte for byte, for pages that pinned
+Served renderer versions: **2.4.0** (the current one: the renderer, like every Elements library, carries the one Elements version) and **1.2.0** (frozen, byte for byte, for pages that pinned
 it; Elements 2.2). The data routes the library calls (the ViewModel, About, panels, a pivot's rows, the live channel, resolve, search,
 reports) are listed in [API_REFERENCE.md](API_REFERENCE.md).
 
@@ -935,7 +935,7 @@ holds `integrity.json`, the SHA-384 (subresource integrity) of every distributed
 at `/embed/v1/elements/1.4.5/integrity.json`. Put the entry's `integrity` on the script line (SRI needs the exact version, not an alias):
 
 ```html
-<script type="module" src="https://drishti.bank.example/embed/v2/render/2.0.0/drishti-render.js" integrity="sha384-…" crossorigin="anonymous"></script>
+<script type="module" src="https://drishti.bank.example/embed/v2/render/2.4.0/drishti-render.js" integrity="sha384-…" crossorigin="anonymous"></script>
 ```
 
 Because a module's own imports are not covered by the script's `integrity`, pin the rest with an import map's `integrity` (Chrome 127 and
@@ -957,8 +957,10 @@ Three contracts, all semantic versions:
 A version this console does not serve answers `410 DRS-8006`, and the answer names the one it serves: after a console upgrade, a page
 pinned to an old version tells you to move the pin.
 
-**Moving from renderer 1.2.0 to 2.0.0.** Change the version in the import (`/static/render/2.0.0/drishti-render.js`, or
-`/embed/v2/render/2.0.0/…`); the API, the options, the events, the Elements attributes and the ViewModel contract are the same. What
+**Renderer 2.0.0 paths.** `/static/render/2.0.0/…`, `/embed/v2/render/2.0.0/…` and `/embed/v2/elements/2.3.0/drishti-elements.js` answer `308` to the current folder with a `Deprecation: true` header and a `Drishti-Deprecated` note: they are removed in the release after i6, so change the pinned version to 2.4.0 now.
+
+**Moving from renderer 1.2.0 to 2.4.0.** Change the version in the import (`/static/render/2.4.0/drishti-render.js`, or
+`/embed/v2/render/2.4.0/…`); the API, the options, the events, the Elements attributes and the ViewModel contract are the same. What
 you may see: the nested pivot in `behaviours: 'console'` is drishti-grid's tree grid (its own headings, keyboard and density, the grand
 total as a last row), a tree table keeps drishti-grid's own filter box, a figure exactly on a half rounds up, tooltips escape every
 value, and the option `insight` is new. A host that bundled 1.2.0's `m/` files bundles
@@ -1159,7 +1161,7 @@ Run these from the Drishti folder (the repository root, or the install folder of
 
 ```bash
 python3 tools/drishti.py elements pack --libs grid,chart --theme dark --out web/vendor/drishti
-# packed: drishti-core 1.1.0, drishti-grid 0.4.0, drishti-chart 0.1.0; theme terminal; engines vendor/echarts/echarts.min.js
+# packed: drishti-core, drishti-grid, drishti-chart; theme terminal; engines vendor/echarts/echarts.min.js
 ```
 
 The first comment of each packed file and `drishti-elements-pack.json` name every library and version inside. `--no-engines` leaves
@@ -1474,7 +1476,7 @@ drishti-grid's way), **no-op** (nothing to set: drishti-grid does it always).
 | `pagination`, `paginationPageSize` | unsupported | virtual scrolling: every row is reachable without pages |
 | `enableCharts` (integrated charts), `masterDetail`, `rowDragManaged`, `theme`, `rowModelType: 'viewport'` | unsupported | drishti-chart on a range; Drishti's theme tokens; the rest is not covered in version 1 |
 
-Not covered in version 1: integrated charts (use drishti-chart on a range), master-detail rows, sparkline cell renderers, row dragging between grids, AG Grid's theming API and CSS classes (Drishti's theme applies), the viewport row model, pagination, custom cell renderers, editors and header components.
+Not covered in version 1: integrated charts (use drishti-chart on a range), AG Grid's master-detail options (use the grid's detail option), AG Grid's sparkline option (use sparklineCell, barCell and bulletCell as a column's cellRenderer), row dragging between grids, AG Grid's theming API and CSS classes (Drishti's theme applies), the viewport row model, pagination, custom cell renderers, editors and header components.
 
 <!-- /ag-mapping -->
 

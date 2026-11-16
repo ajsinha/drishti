@@ -57,7 +57,7 @@ def router(fetched):
     return route
 
 
-READY = "() => window.__harness && window.__harness.ready && !document.querySelector('.dc-loading:not([hidden])')"
+READY = "() => window.__harness && window.__harness.ready && !document.querySelector('.drishti-state-loading:not([hidden])')"
 
 
 async def ev(pg, name):
@@ -102,7 +102,7 @@ def test_the_board_draws_every_kind_in_both_themes_and_three_densities(browsers)
             assert k in kinds, k
         n = len(kinds)
         assert await pg.locator("drishti-chart .dc-canvas:has(canvas)").count() == n
-        assert await pg.locator(".dc-error").count() == 0
+        assert await pg.locator(".drishti-state-error").count() == 0
         labels = await pg.eval_on_selector_all(".dc-canvas", "els => els.map((e) => e.getAttribute('aria-label'))")
         assert all(labels) and len(set(labels)) == n                                  # every chart described for a screen reader
         assert re.search(r"(green|amber|red) · \d+ exceptions · plus \d\.\d\d", await pg.text_content("#c-risk-backtest .dc-badge"))

@@ -369,7 +369,7 @@ the registry (other kernel parts ask the registry). Every field:
 | `publisher` | yes | `{name, id, contact}`; must match the signing certificate's subject |
 | `licence.feature` | yes | the licence feature that unlocks it (`banking`); `licence.limits` it understands (`positions`, `nodes`) |
 | `kernel` | yes | the kernel API range (`">=1.0 <2.0"`) |
-| `rachana`, `contracts`, `plugin-api`, `elements` | yes | grammar, contract-format, console API and **Elements API** ranges it was built for (`elements: ">=1.4 <2"`, checked by the console: section 11.3) |
+| `rachana`, `contracts`, `plugin-api`, `elements` | yes | grammar, contract-format, console API and **Elements API** ranges it was built for (`elements: ">=2.4 <3"`, checked by the console: section 11.3) |
 | `requires` | no | other modules with ranges, and `optional:` ones it uses when present (`capitalmarkets` optional for banking) |
 | `conflicts` | no | modules it cannot run beside |
 | `provides.kinds` | no | kinds it owns (defined in its packs), by pack |
@@ -1912,7 +1912,7 @@ and may not ship, and how that is enforced.
 
 ### 11.3 Version ranges
 
-- A module declares the **Elements API range** it was built for in its manifest: `elements: ">=1.4 <2"` (section 3.3). The range is checked
+- A module declares the **Elements API range** it was built for in its manifest: `elements: ">=2.4 <3"` (section 3.3). The range is checked
   against the console's Elements train version.
 - **The console refuses a mismatch with a reason**, like the kernel's `vermagic` check: *genomics 0.1.0 refused on console-research: needs
   Elements >=1.4 <2, this console serves 2.0.0*. A refused console part means the module's pages are absent on that console (section 4.9),

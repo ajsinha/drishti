@@ -38,7 +38,8 @@ test('the catalogue holds every library of the manifest, in its order, with its 
   assert.equal(cat.elements, manifest.elements);
   cat.libraries.forEach((l) => {
     const m = manifest.libraries[l.name];
-    assert.equal(l.version, m.version);
+    assert.equal(l.version, undefined, l.name + ' has no version of its own');
+    assert.ok(m);
     assert.equal(l.server, m.module ? 'licence' : 'none', l.name);
     assert.ok(l.bundle.bytes > 1000 && l.bundle.lines > 10, l.name + ' bundle');
     assert.ok(l.modules.length > 0 && l.modules.every((x) => x.file.startsWith('drishti_')), l.name + ' modules');

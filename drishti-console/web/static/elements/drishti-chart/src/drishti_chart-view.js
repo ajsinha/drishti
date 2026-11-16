@@ -21,7 +21,7 @@
    and the card's chrome and status line. Two modes of one component (g2): 'card' (A, the default) and 'studio' (B: the kinds in a rail,
    the chart with its table, the spec beside it with options that change both). A map (kind: 'map') is drawn by its view
    (drishti_map-view.js) inside the same card. */
-import { h, renderExplain, EventBus, bus as sharedBus, announce, SELECTION_EVENT, url as drishtiUrl } from '../../drishti-core/src/drishti_index.js';
+import { h, stateBlock, showState, renderExplain, EventBus, bus as sharedBus, announce, SELECTION_EVENT, url as drishtiUrl } from '../../drishti-core/src/drishti_index.js';
 import { normalizeSpec, kindOf } from './drishti_chart-spec.js';
 import { rowsOf } from './drishti_chart-data.js';
 import { chartTheme, formatterFor } from './drishti_chart-theme.js';
@@ -117,7 +117,8 @@ export class Chart extends ChartIO {
     this.subEl = h(doc, 'div', { cls: 'dc-sub' });
     this.canvas = h(doc, 'div', { cls: 'dc-canvas', attrs: { role: 'img', tabindex: '0' }, on: { keydown: (e) => this.key(e) } });
     this.tableEl = h(doc, 'div', { cls: 'dc-table', attrs: { hidden: true } });
-    this.loadingEl = h(doc, 'div', { cls: 'dc-loading', text: 'Loading…', attrs: { hidden: true, 'aria-live': 'polite' } });
+    this.loadingEl = stateBlock(doc, 'loading', { overlay: true });
+    this.loadingEl.hidden = true;
     this.body = h(doc, 'div', { cls: 'dc-body' }, [this.canvas, this.tableEl, this.loadingEl]);
     this.side = h(doc, 'div', { cls: 'dc-side', attrs: { hidden: true } });
     this.main = h(doc, 'div', { cls: 'dc-main' }, [this.body, this.side]);
@@ -244,8 +245,7 @@ export class Chart extends ChartIO {
   /** @private a failure, in words, in the card */
   fail(e) {
     this.loadingEl.hidden = false;
-    this.loadingEl.textContent = 'This chart could not be drawn: ' + (e && e.message ? e.message : e);
-    this.loadingEl.classList.add('dc-error');
+    showState(this.loadingEl, 'error', { text: 'This chart could not be drawn: ' + (e && e.message ? e.message : e), overlay: true });
     this.emit('error', { error: e });
   }
 

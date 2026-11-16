@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* drishti-genomics 0.1.0: the genomics module's domain library on Drishti Elements (KERNEL_AND_MODULES.md section 11.4; the custom-visual
+/* drishti-genomics (at the one Drishti Elements version): the genomics module's domain library on Drishti Elements (KERNEL_AND_MODULES.md section 11.4; the custom-visual
    SDK, DEVELOPER_GUIDE "A module's own visual"). It ships inside the module's .dmod (elements/drishti-genomics/), is served by the
    console at /m/genomics/elements/drishti-genomics/<module version>/ while the module is on, and goes with it.
 

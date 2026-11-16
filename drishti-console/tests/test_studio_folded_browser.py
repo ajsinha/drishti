@@ -32,7 +32,7 @@ pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install
 def palette(page, text):
     """Opens the palette with Ctrl+K and types ``text``."""
     page.keyboard.press("Control+k")
-    page.locator(".wb-menu input[role=combobox]").wait_for()
+    page.locator(".drishti-palette[open] input[role=combobox]").wait_for()
     page.keyboard.type(text)
 
 
@@ -55,17 +55,17 @@ def test_the_command_palette_works_by_keyboard_and_is_labelled(live_console, pag
     open_design(page, live_console, "palette", sutra=showcase_sutra(), files={"showcase.json": showcase_json()})
     page.locator("[data-preview] [data-panel]").first.focus()
     palette(page, "")
-    box = page.locator(".wb-menu")
+    box = page.locator(".drishti-palette[open]")
     assert box.get_attribute("role") == "dialog" and box.get_attribute("aria-label") == "Command palette"
-    field = page.locator(".wb-menu input[role=combobox]")
-    listbox = page.locator(".wb-menu [role=listbox]")
+    field = page.locator(".drishti-palette[open] input[role=combobox]")
+    listbox = page.locator(".drishti-palette[open] [role=listbox]")
     assert field.get_attribute("aria-controls") == listbox.get_attribute("id") and field.get_attribute("aria-expanded") == "true"
-    assert page.locator(".wb-menu [role=option]").count() > 30, (page.errors, page.locator(".wb-menu").inner_text()[:300])                  # add x20, go to panel x20, tabs, undo, save, ...
+    assert page.locator(".drishti-palette[open] [role=option]").count() > 30, (page.errors, page.locator(".drishti-palette[open]").inner_text()[:300])                  # add x20, go to panel x20, tabs, undo, save, ...
     page.keyboard.press("ArrowDown")
     active = field.get_attribute("aria-activedescendant")
     assert active and page.locator(f"#{active}").get_attribute("aria-selected") == "true"
     page.keyboard.press("Escape")
-    assert page.locator(".wb-menu").count() == 0
+    assert page.locator(".drishti-palette[open]").count() == 0
     assert page.evaluate("document.activeElement.hasAttribute('data-panel') || !!document.activeElement.closest('[data-preview]')")   # focus is back
 
     # add a panel: filter, Enter
@@ -101,16 +101,16 @@ def test_the_command_palette_works_by_keyboard_and_is_labelled(live_console, pag
     wait(page, "document.querySelector('[data-result]').textContent.includes('/')")
     # Ctrl+K again closes it; a nonsense filter says so instead of leaving an empty box
     palette(page, "zzzzzz")
-    assert "No command matches" in page.locator(".wb-menu").inner_text()
+    assert "No command matches" in page.locator(".drishti-palette[open]").inner_text()
     page.keyboard.press("Control+k")
-    assert page.locator(".wb-menu").count() == 0
+    assert page.locator(".drishti-palette[open]").count() == 0
     assert not page.errors
 
 
 def test_palette_proposes_and_opens_the_guide(live_console, page):
     open_design(page, live_console, "palette 2", sutra=showcase_sutra(), files={"showcase.json": showcase_json()})
     palette(page, "save")
-    assert "Needs the author right" in page.locator(".wb-menu").inner_text() or "Not allowed here" in page.locator(".wb-menu").inner_text()
+    assert "Needs the author right" in page.locator(".drishti-palette[open]").inner_text() or "Not allowed here" in page.locator(".drishti-palette[open]").inner_text()
     page.keyboard.press("Escape")
     palette(page, "guide")
     page.keyboard.press("Enter")

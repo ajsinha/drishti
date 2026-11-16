@@ -23,7 +23,7 @@ host applications the server registered, the console's own channel for live fram
 * ``/embed/v2/channel``: the live channel; a ``vm:`` subscription sends panel patches as panels (JSON), with no HTML;
 * ``/embed/v2/render/<version>/...``: the renderer's files (``drishti-render.js``, ``drishti-elements.js`` for Elements 2.0, the sheet, ``m/``),
   immutable, a partial version (``1``, ``1.0``) answering ``302`` to the exact one, ``410 DRS-8006`` for one this console no longer serves;
-* ``/embed/v2/elements/<version>/drishti-elements.js``: Elements 2.x by its own version (``2``, ``2.1``, ``2.1.0``, ``2.0.0``), a ``302`` to the
+* ``/embed/v2/elements/<version>/drishti-elements.js``: Elements 2.x by its own version (``2``, ``2.4``, ``2.4.0``), a ``302`` to the
   renderer that carries it;
 * ``/embed/v2/js/``, ``/vendor/``, ``/css/``: the console's behaviour scripts, ECharts, the map shapes, the icon font and the chart dialog's
   sheet the renderer loads from beside itself, allow-listed.
@@ -51,8 +51,9 @@ WEB = Path(__file__).resolve().parent.parent / "web"
 STATIC = WEB / "static"
 API = "2.0"
 BASE = "/embed/v2"
-ELEMENTS = {"2.2.0": "1.2.0", "2.3.0": "2.0.0"}   # Elements 2.x by its own version -> the renderer version that carries its drishti-elements.js (2.0.0 and 2.1.0 retired with renderers 1.0.0 and 1.1.0)
-# The Elements libraries renderer 2.0.0 imports from beside the console's static root (/embed/v2/elements/<library>/src/<module>.js)
+RETIRED_ELEMENTS = ("2.3.0",)   # the Elements embed before the one version: redirected for one release
+ELEMENTS = {"2.2.0": "1.2.0", rd.VERSION: rd.VERSION}   # Elements 2.x by its own version -> the renderer version that carries its drishti-elements.js (2.2.0 is the frozen 1.2.0; the current Elements version is the current renderer's; earlier ones are retired: 410)
+# The Elements libraries the current renderer imports from beside the console's static root (/embed/v2/elements/<library>/src/<module>.js)
 LIBRARY_FILE = re.compile(r"drishti-(core|grid|chart|data|graph|tree|inputs|renderer)/(src/drishti_[a-z0-9-]+\.js|drishti_[a-z]+\.(css|js))")
 # What the renderer loads from beside itself (its folder is /embed/v2/render/<v>/, so /embed/v2/ stands for the console's /static/)
 SCRIPTS = {"pivot-engine", "pivot-grid", "colfilter", "tables", "tree-rows", "drill", "zoom", "multiselect", "controls", "geomap",
@@ -139,9 +140,16 @@ def resolve(spec: str, have: list[str]) -> str | None:
     return max(found, key=lambda v: tuple(int(x) for x in v.split("."))) if found else None
 
 
+def deprecated(old: str, new: str) -> dict[str, str]:
+    """The headers of a redirect from a retired version's path: ``Deprecation`` and the words (removed in the release after i6)."""
+    return {"Deprecation": "true", "Drishti-Deprecated": rd.DEPRECATION.format(old=old, new=new), "Link": f'<{BASE}/{new}>; rel="successor-version"'}
+
+
 @router.get("/render/{version}/{rest:path}")
 async def renderer(request: Request, version: str, rest: str):
     have = rd.versions()
+    if version in rd.RETIRED:                      # one release: a retired renderer's path redirects to the current one, the deprecation said
+        return await cors(request, RedirectResponse(f"{BASE}/render/{rd.VERSION}/{rest}", status_code=308, headers=deprecated(version, f"render/{rd.VERSION}/")))
     exact = resolve(version, have)
     if exact is None:
         if dist.SEMVER.fullmatch(version):
@@ -158,6 +166,8 @@ async def renderer(request: Request, version: str, rest: str):
 
 @router.get("/elements/{version}/drishti-elements.js")
 async def elements(request: Request, version: str):
+    if version in RETIRED_ELEMENTS:                # one release: the Elements 2.3 embed redirects to the current one
+        return await cors(request, RedirectResponse(f"{BASE}/render/{rd.VERSION}/drishti-elements.js", status_code=308, headers=deprecated(f"elements/{version}", f"render/{rd.VERSION}/drishti-elements.js")))
     exact = resolve(version, sorted(ELEMENTS))
     if exact is None or ELEMENTS[exact] not in rd.versions():
         return await refuse(request, 410 if dist.SEMVER.fullmatch(version) else 404, "DRS-8006", f"this console serves Elements {', '.join(sorted(ELEMENTS))} at {BASE}/elements/, not {version}")
@@ -166,7 +176,7 @@ async def elements(request: Request, version: str):
 
 @router.get("/elements/{library}/{rest:path}")
 async def library(request: Request, library: str, rest: str):
-    """A module of the Elements libraries renderer 2.0.0 is drawn with (revalidated: the libraries are not per-version folders yet)."""
+    """A module of the Elements libraries the current renderer is drawn with (revalidated: the libraries are not per-version folders yet)."""
     rel = f"{library}/{rest}"
     if not LIBRARY_FILE.fullmatch(rel) or not (STATIC / "elements" / rel).is_file():
         return await refuse(request, 404, "DRS-9404", f"no such file: {rel}")

@@ -707,6 +707,16 @@ def create_app(settings: Settings) -> FastAPI:
     for d in _plugin_dirs.static_dirs():                     # each module's static files, at the same /static/... paths (gated by module)
         static.all_directories.append(d)
     app.state.static = static
+    from core import render_dist as _rd
+
+    def _retired_render(old: str):                           # one release: a retired renderer's path answers 308 to the current folder, with the deprecation said
+        async def go(rest: str):
+            return RedirectResponse(f"/static/render/{_rd.VERSION}/{rest}", status_code=308, headers={
+                "Deprecation": "true", "Drishti-Deprecated": _rd.DEPRECATION.format(old=old, new=f"render/{_rd.VERSION}/"),
+                "Link": f'</static/render/{_rd.VERSION}/>; rel="successor-version"'})
+        return go
+    for _old in _rd.RETIRED:
+        app.add_api_route(f"/static/render/{_old}/{{rest:path}}", _retired_render(_old), methods=["GET", "HEAD"], include_in_schema=False)
     app.mount("/static", static, name="static")
     from core.calc import Calc
 

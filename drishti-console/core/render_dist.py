@@ -34,9 +34,11 @@ from core import element_sheet as es
 WEB = Path(__file__).resolve().parent.parent / "web"
 STATIC = WEB / "static"
 ROOT = STATIC / "render"
-VERSION = "2.0.0"                   # the current renderer (drishti-renderer, drawn with the Elements libraries); 1.2.0 stays served, frozen, for existing embedders
+VERSION = json.loads((STATIC / "elements" / "drishti_elements.json").read_text(encoding="utf-8"))["elements"]   # the current renderer: the one version of Drishti Elements (drishti_elements.json); 1.2.0 stays served, frozen, for existing embedders
+RETIRED = ("2.0.0",)                # the renderer of the Elements before the one version (2.4.0): its paths redirect to the current folder for ONE release (removed in the release after i6)
+DEPRECATION = "the Drishti Render {old} paths are removed in the release after i6: use {new}"
 FROZEN = ("1.2.0",)                 # served unchanged; 0.1.0 to 1.1.0 were retired (one page renderer, Jinja)
-LIBRARY = STATIC / "elements" / "drishti-renderer" / "src"   # 2.0.0's modules: the version folder holds the public entries, the sheet and the types
+LIBRARY = STATIC / "elements" / "drishti-renderer" / "src"   # the current version's modules: the version folder holds the public entries, the sheet and the types
 FOLDER = ROOT / VERSION
 SHEET = "drishti-render.css"
 ENTRY = "drishti-render.js"
@@ -44,7 +46,7 @@ RECORD = "integrity.json"
 DEMO = ("demo.html", "demo.js", "demo.css")      # the playground: served with the library, not part of a host's integrity list
 # the console's sheets the view page loads, in its order, plus the panel sheets of terminal/view.html and the grid's
 SHEETS = es.SHEETS + ("css/drishti_drill.css", "css/drishti_wire.css", "css/drishti_refresh.css", "css/drishti_compute.css", "css/drishti_screen-grid.css",
-                      "elements/drishti-grid/drishti_grid.css")   # 2.0.0: the nested pivot is drishti-grid's grid
+                      "elements/drishti-grid/drishti_grid.css")   # the nested pivot is drishti-grid's grid
 ICON_SOURCES = tuple(f"static/elements/drishti-renderer/src/drishti_{m}.js" for m in ("kinds", "layout", "screen", "view", "about", "signin"))
 
 ADDENDUM = """\
@@ -126,7 +128,7 @@ def files(version: str = VERSION) -> dict[str, Path]:
         rel = p.relative_to(folder).as_posix()
         if p.is_file() and rel != RECORD and rel not in DEMO:
             out[rel] = p
-    if version == VERSION and LIBRARY.is_dir():      # 2.0.0 and later: the renderer's own modules, by their path from the version folder
+    if version == VERSION and LIBRARY.is_dir():      # the current version: the renderer's own modules, by their path from the version folder
         for p in sorted(LIBRARY.glob("*.js")):
             out["../../elements/drishti-renderer/src/" + p.name] = p
     return out
