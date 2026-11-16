@@ -134,7 +134,8 @@ def test_the_rows_behind_a_cell_are_the_records_grid_in_its_static_mode(browser,
     pg.locator('[data-pv-grid] .dg-cell[data-cell^="DESK=Rates"]').first.click()
     pg.wait_for_selector("[data-pv-pop] [data-pop-rows]")
     pg.click("[data-pv-pop] [data-pop-rows]")
-    pg.wait_for_selector("[data-pv-pop] .rc-host[data-records-ready] .dg-row[data-key]")
-    assert pg.locator("[data-pv-pop] .rc-host .dg-row[data-key]").count() >= 3 and pg.locator("[data-pv-pop] table").count() == 0
+    # the grid may explain the cell once more as it settles: the popover is drawn again and its rows follow (drishti_pivot.js rowsOpen)
+    pg.wait_for_function("() => document.querySelectorAll('[data-pv-pop] .rc-host[data-records-ready] .dg-row[data-key]').length >= 3")
+    assert pg.locator("[data-pv-pop] table").count() == 0
     assert pg.locator("[data-pv-pop] .dg-live-chip").inner_text().startswith("STATIC")
     assert not pg.errors, pg.errors

@@ -90,6 +90,10 @@
   `module_on` alone, so Drishti Finance linked the genomics pages whose files its Markets lens does not serve (404). The hosted surfaces
   now follow the product's own module-menu rule (`menus.hosted_shown` = `module_active`: in the running distribution, listed by the
   server, on). In Drishti All, which has every module, genomics' Home cards and Help now appear: the home and Help goldens are refreshed.
+- **A pivot cell's popover is drawn once.** A click explained the cell and, 120 ms later, the grid's focus explained the same cell again,
+  so the popover was drawn twice: the rows asked for or a comment being typed in the first one were lost (the flaky *rows behind a cell*
+  and *comment on a cell* browser tests). The grid no longer re-explains the cell already explained, and the pivot keeps the rows open
+  in a popover drawn again for the same cell.
 
 The Python commands release. The build still reports its version as 2.9.11.g (the version from one place is the next release); the release is tag `v2.9.11.i_5`.
 

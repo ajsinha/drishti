@@ -392,6 +392,8 @@
         + (ref ? ' <button type="button" class="pv-btn" data-pop-copy>Copy reference</button>' : "") + '</div><div data-pop-rowsbox></div>';
       if (sw()) { sw().popover(pop, key, m, cell); }   // the cell's comments, and how the answer was computed
       pop.querySelector("[data-pop-rows]").onclick = function () { rows(key, pop.querySelector("[data-pop-rowsbox]")); };
+      // the same cell explained again (the grid asks once more as it settles): the rows asked for stay open in the new popover
+      if (state.rowsOpen === key) { rows(key, pop.querySelector("[data-pop-rowsbox]")); } else { state.rowsOpen = null; }
       var cp = pop.querySelector("[data-pop-copy]");
       if (cp) { cp.onclick = function () { if (navigator.clipboard) { navigator.clipboard.writeText(ref); } cp.textContent = "Copied"; }; }
       return pop;
@@ -403,7 +405,12 @@
   }
 
   function rows(key, box) {
+    state.rowsOpen = key;
     rowsOf(key).then(function (r) {
+      if (box && !box.isConnected) {   // the popover was drawn again while the rows came (a comment list, a newer answer): its current box
+        var now = Array.prototype.filter.call(document.querySelectorAll("[data-pv-pop]"), function (p) { return p.getAttribute("data-cell") === key; })[0];
+        box = now ? now.querySelector("[data-pop-rowsbox]") : null;
+      }
       if (!box) { return; }
       box.innerHTML = '<p class="pv-sub">' + r.rows.length + " of " + r.total + " rows" + (r.note ? " · " + esc(r.note) : "") + '</p><div data-pv-rows></div>';
       var names = r.columns.map(function (c, i) { return r.columns.indexOf(c) === i ? c : c + " (" + (i + 1) + ")"; });
