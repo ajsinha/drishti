@@ -154,4 +154,69 @@
     },
     code: () => ({ js: "const G = Drishti.elements.grid;\ngrid.options = Object.assign({ rows, columns }, G.heatPivotPreset(['var99', 'mtm']));\nG.openRuleBuilder(grid.grid);\nconst link = G.shareLink(location.href, grid.grid.getState());\nconst view = G.readSharedView(location.href);", element: '<drishti-grid id="grid"></drishti-grid>' })
   }));
+
+  demos.push(fn({
+    id: 'dock', title: 'Dock layout', about: 'drishti_dock.js', types: ['DockOptions', 'DockNode'],
+    summary: 'Panels in tab groups and splits, kept as a workspace: Split right and down, Pop out, Close, the splitters by pointer or arrows, Alt+Shift+arrows on a tab. The layout is data (DockModel.toJSON) and a saved one still opens when panels change.',
+    values: {}, examples: [{ title: 'Three panels', values: {} }],
+    mount: function (host, values, ctx) {
+      const C = ctx.E.core, doc = host.ownerDocument, box = ctx.h(doc, 'div', { cls: 'gx-fn' });
+      box.style.height = '320px';
+      host.appendChild(box);
+      const model = C.DockModel.of(['Positions', 'Limits', 'Notes']);
+      model.split('Notes', 'row');
+      const dock = new C.Dock(box, { model, title: (id) => id, popOut: false, render: (id) => ctx.h(doc, 'p', { text: id + ': the panel\'s own content.', style: { margin: '8px' } }) });
+      model.onChange(() => ctx.log('layout', JSON.stringify(model.toJSON()).length + ' characters'));
+      return { target: box, element: box, ready: Promise.resolve(), destroy: () => { dock.destroy(); box.remove(); } };
+    },
+    code: () => ({ js: "const E = Drishti.elements.core;\nconst model = E.DockModel.of(['Positions', 'Limits', 'Notes']);\nnew E.Dock(host, { model, title: (id) => id, render: (id) => panelFor(id) });\nconst keep = E.workspaceStore('risk-desk');\nmodel.onChange(() => keep.save(model));\n// next time: keep.load(['Positions', 'Limits', 'Notes']) || model", element: '<!-- any host element -->' })
+  }));
+
+  demos.push(fn({
+    id: 'selection-chip', title: 'Selection chip and history', about: 'drishti_selection-chip.js', types: ['ChipOptions'],
+    summary: 'What is selected across the cards of a page as one chip with a Clear, and a history to go back to an earlier selection. It follows the shared selection channel the grid, chart and tree publish on.',
+    values: {}, examples: [{ title: 'Pick three selections', values: {} }],
+    mount: function (host, values, ctx) {
+      const C = ctx.E.core, doc = host.ownerDocument, box = ctx.h(doc, 'div', { cls: 'gx-fn' });
+      host.appendChild(box);
+      const chip = new C.SelectionChip(box, { channel: 'gallery-chip', describe: (ids) => ids.length + ' trades: ' + ids.slice(0, 2).join(', ') + (ids.length > 2 ? '…' : '') });
+      [['IRS-1', 'IRS-2', 'FX-9'], ['BND-4'], ['IRS-7', 'IRS-8']].forEach((ids, i) => box.appendChild(ctx.h(doc, 'button', { cls: 'gx-btn', text: 'Select set ' + (i + 1), attrs: { type: 'button' }, on: { click: () => C.publishSelection('gallery-chip', ids) } })));
+      return { target: box, element: box, ready: Promise.resolve(), destroy: () => { chip.destroy(); box.remove(); } };
+    },
+    code: () => ({ js: "const chip = new Drishti.elements.core.SelectionChip(host, { channel: 'trades' });\n// grids, charts and trees linked to 'trades' publish; chip.clear() clears for every card", element: '<!-- any host element -->' })
+  }));
+
+  demos.push(fn({
+    id: 'what-if', library: 'drishti-inputs', title: 'What-if controls', about: 'drishti_what-if.js', types: ['WhatIfOptions'],
+    summary: 'A slider, a stepper or a range for an assumption: the value is asked of the server once it rests (debounced), an answer to an older value is dropped, and a failure shows a Retry.',
+    extra: [{ name: 'mode', control: { kind: 'select', values: ['slider', 'stepper', 'range'] }, desc: 'The control.' }],
+    values: { mode: 'slider' },
+    examples: [{ title: 'Slider', values: {} }, { title: 'Stepper', values: { mode: 'stepper' } }, { title: 'Range', values: { mode: 'range' } }],
+    mount: function (host, values, ctx) {
+      const I = ctx.E.inputs, doc = host.ownerDocument, box = ctx.h(doc, 'div', { cls: 'gx-fn' });
+      host.appendChild(box);
+      const range = values.mode === 'range';
+      const w = new I.WhatIf(box, { mode: values.mode, label: range ? 'Shock range' : 'Parallel shock', min: -100, max: 100, step: 5, value: range ? [-25, 25] : 25, debounce: 250,
+        format: (v) => (v > 0 ? '+' : '') + v + ' bp', call: (v) => new Promise((ok) => setTimeout(() => ok(Array.isArray(v) ? v[1] - v[0] : v), 150)),
+        describe: (r) => 'VaR 99% 1d at this shock: ' + (12 + Math.abs(r) * 0.05).toFixed(1) + 'm (the gallery\'s stand-in server)' });
+      ['input', 'change', 'result'].forEach((n) => w.on(n, (d) => ctx.log(n, JSON.stringify(d.value))));
+      return { target: box, element: box, ready: Promise.resolve(), destroy: () => { w.destroy(); box.remove(); } };
+    },
+    code: () => ({ js: "new Drishti.elements.inputs.WhatIf(host, {\n  mode: 'slider', label: 'Parallel shock', min: -100, max: 100, step: 5, value: 25,\n  format: (v) => v + ' bp',\n  call: (v) => fetch('/api/var?shock=' + v).then((r) => r.json()),\n  describe: (r) => 'VaR: ' + r.var\n});", element: '<!-- any host element -->' })
+  }));
+
+  demos.push(fn({
+    id: 'query-builder', library: 'drishti-inputs', title: 'Query builder', about: 'drishti_query-builder.js', types: ['QueryBuilderOptions', 'QueryField', 'QueryCondition'],
+    summary: 'Conditions as chips joined by AND: pick a field, an operator and a value (Enter adds), remove with x or Backspace in the empty value. The same query is text that can be typed or pasted.',
+    values: {}, examples: [{ title: 'Desk and VaR', values: {} }],
+    mount: function (host, values, ctx) {
+      const I = ctx.E.inputs, doc = host.ownerDocument, box = ctx.h(doc, 'div', { cls: 'gx-fn' });
+      host.appendChild(box);
+      const q = new I.QueryBuilder(box, { label: 'Filter trades', fields: [{ id: 'desk', label: 'Desk', type: 'enum', values: ['Rates', 'Credit', 'FX'] }, { id: 'var', label: 'VaR', type: 'number' }, { id: 'name', label: 'Name' }],
+        value: [{ field: 'desk', op: 'in', value: ['Rates', 'FX'] }, { field: 'var', op: 'ge', value: 100 }] });
+      q.on('change', (d) => ctx.log('change', d.text));
+      return { target: box, element: box, ready: Promise.resolve(), destroy: () => { q.destroy(); box.remove(); } };
+    },
+    code: () => ({ js: "const q = new Drishti.elements.inputs.QueryBuilder(host, { fields: [{ id: 'desk', type: 'enum' }, { id: 'var', type: 'number' }] });\nq.on('change', ({ value, text }) => grid.setFilterModel(toFilter(value)));\nq.setValue('desk = Rates AND var > 100');", element: '<!-- any host element -->' })
+  }));
 }(typeof window !== 'undefined' ? window : null));
