@@ -60,6 +60,12 @@ On Windows the environment's Python is `drishti-console\.venv\Scripts\python.exe
 `drishti-console\.venv\Scripts\python.exe -m pip install -r drishti-console\requirements-test.txt`).
 
 **You should see** `doctor` end with `doctor: all clear` (the Java, the Python and its libraries, the ports 18480 and 17480 free).
+
+**Your settings file**, once: every IntelliJ and PyCharm run configuration passes `$USER_HOME$/drishti-envs/dev.ini`, and a missing file
+stops it at once. Copy `config/settings.examples/dev.ini` there and replace its `/path/to/drishti` with your clone's full path
+(`mkdir -p ~/drishti-envs && cp config/settings.examples/dev.ini ~/drishti-envs/dev.ini`; Windows `C:\Users\you\drishti-envs\dev.ini`).
+The scripts and `tools/drishti.py` take the same file with `--settings` ([DEVELOPER_GUIDE.md › Your settings file](guides/DEVELOPER_GUIDE.md#your-settings-file-for-the-ide-launchers),
+[DEPLOYMENT_AND_QA_GUIDE.md › The settings file](DEPLOYMENT_AND_QA_GUIDE.md#41-the-settings-file)).
 `requirements-test.txt` is `requirements.txt` plus pytest, pytest-xdist and Playwright: a developer needs both. The IDE setup (IntelliJ
 IDEA on the root, PyCharm on `drishti-console/`, never one folder for both) is
 [OPERATIONS_GUIDE.md › Maven, IntelliJ IDEA and PyCharm](guides/OPERATIONS_GUIDE.md#3-other-ways-to-build-and-run-maven-intellij-idea-and-pycharm).
@@ -79,11 +85,11 @@ package -DskipTests -pl :drishti-app -am`.
 
 ## 3. Run the server and the console on the demo lake
 
-Build the demo lake once (86 tables, sixty business days ending today, about 15 minutes and 3.4 GB under `data/delta/demo/`), then start
-both programs with the scripts in `bin/`:
+Build the demo lake once (about ninety tables, sixty business days ending today, about 15 minutes and 3.4 GB under `data/delta/demo/`;
+with the jar built, Drishti's Java loader writes it), then start both programs with the scripts in `bin/`:
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py lake demo
+drishti-console/.venv/bin/python tools/drishti.py lake demo --engine java
 ```
 
 **Linux and macOS**
@@ -113,7 +119,8 @@ Logs are in `data/logs/` (`server.log`, `console.log`), process ids in `data/run
 env-file for your own secrets, a cluster of several servers with `--node`, the console's `--server`), where the files go, the exit codes
 and what to do when a script stops with an error: [DEPLOYMENT_AND_QA_GUIDE.md › section 6](DEPLOYMENT_AND_QA_GUIDE.md#6-start-the-server-and-the-console).
 A cluster of three servers and a console on this machine, from one file: `bin/start-cluster.sh` (Windows `bin\start-cluster.cmd`), `bin/status.sh --cluster deploy/stack/stack.yaml`, `bin/stop-cluster.sh`
-([bin/README.md](../bin/README.md)). The IntelliJ run configurations **Drishti server (demo lakes)** (module `drishti-app`) and **Drishti console** set the same demo settings for debugging; why each
+([bin/README.md](../bin/README.md)). The IntelliJ run configurations **Drishti server (demo lakes)** (module `drishti-app`) and **Drishti console** set the same demo settings for debugging, with
+your settings file ([DEPLOYMENT_AND_QA_GUIDE.md › From IntelliJ IDEA](DEPLOYMENT_AND_QA_GUIDE.md#68-from-intellij-idea-the-windows-qa-machine-or-linux)); why each
 setting: [OPERATIONS_GUIDE.md › Start the server](guides/OPERATIONS_GUIDE.md#25-start-the-server) and
 [› Start the console](guides/OPERATIONS_GUIDE.md#26-start-the-console).
 
@@ -149,7 +156,7 @@ second: browsers share sign-in cookies across ports of one host). Every step, Li
 
 Two programs: the **server** (Java 21, Spring Boot, a Maven reactor) computes every number and lays out every screen; the **console**
 (Python, FastAPI and Jinja2) renders what the server sends, and the browser draws it. Domains are **modules**: the core plus banking,
-capitalmarkets and economy. The modules sit in subject folders (`kernel/`, `compute/`, `lake/`, `net/`, `plugins/`, `modules/`, `packaging/`, `testing/`, `drishti-sdk/`); the full map, module by module: [DEVELOPER_GUIDE.md › The repository](guides/DEVELOPER_GUIDE.md#1-the-repository).
+capitalmarkets, economy, market-data, trading and one module per trading system (`source-endur`, `source-calypso`, …). The modules sit in subject folders (`kernel/`, `compute/`, `lake/`, `net/`, `plugins/`, `modules/`, `packaging/`, `testing/`, `drishti-sdk/`); the full map, module by module: [DEVELOPER_GUIDE.md › The repository](guides/DEVELOPER_GUIDE.md#1-the-repository).
 
 | Where | What |
 |---|---|
@@ -164,7 +171,7 @@ capitalmarkets and economy. The modules sit in subject folders (`kernel/`, `comp
 | `plugins/drishti-connectors`, `plugins/drishti-plugin-*` | the connectors: the built-in light ones (file, rest, feed, news, demo, yfinance) in one module, and a plugin each for delta, iceberg, jdbc, kafka, s3 and more ([DATA_GUIDE.md](guides/DATA_GUIDE.md)) |
 | `drishti-elements`, `drishti-console/web/static/elements/` | Drishti Elements, the JavaScript libraries every screen is made of (core, inputs, grid, chart, data, insight, renderer, risk, graph, tree, designer), and their WebJar ([ELEMENTS_API.md](guides/ELEMENTS_API.md)) |
 | `drishti-console/` | `run_drishti_web.py`, `core/` (one module per feature), `routes/`, `web/templates/`, `plugins/<module>/` (a module's console pages, help and static files: `banking`, `economy`), `config/` (`application.yaml`, `help.yaml`), `tests/` |
-| `modules/<module>/packs/<pack>/` | the packs (content, not code): `core/`, `banking/`, `capitalmarkets/`, `economy/` ([BUILD_GUIDE.md](guides/BUILD_GUIDE.md)) |
+| `modules/<module>/packs/<pack>/` (banking's in `modules/banking/dmod/packs/`), `config/packs/core/` | the packs (content, not code): the modules' and the kernel's `core` ([BUILD_GUIDE.md](guides/BUILD_GUIDE.md)); a source module's connector templates in `modules/source-<system>/connectors/` |
 | `config/` (the rest) | `modules/`, `lenses/<module>/`, `lakes/`, `engines/`, `tables/`, `bi/`, `feeds/`: the site's switches and files ([CONFIGURATION.md](admin/CONFIGURATION.md)) |
 | `bin/` | the start and stop scripts of the server, its cluster nodes and the console (`.sh` for Linux and macOS, `.ps1` and `.cmd` for Windows; [bin/README.md](../bin/README.md)) |
 | `tools/` | `drishti.py` (the command line), `lake/`, `docs/` (screenshots, the PDFs), `drill.sh` (the release drill), `windows/` (PowerShell loaders and feeds) |
@@ -217,7 +224,7 @@ a test, a guide and a screenshot together.
 1. **Branch** from `develop`: `git switch -c my-first-change origin/develop`.
 2. **Find the one home.** Search before writing: `git grep -n "the thing you change"` across `drishti-console/`, `config/` and `docs/`.
    A screen is made of Elements: change the library (`drishti-console/web/static/elements/<library>/`) or the page's template, never a
-   one-off widget ([ELEMENTS_API.md](guides/ELEMENTS_API.md)). A pack change is YAML under `config/packs/` ([BUILD_GUIDE.md](guides/BUILD_GUIDE.md)).
+   one-off widget ([ELEMENTS_API.md](guides/ELEMENTS_API.md)). A pack change is YAML in its module's pack folder (`modules/<module>/packs/<pack>/`; `config/packs/core/` for the kernel's) ([BUILD_GUIDE.md](guides/BUILD_GUIDE.md)).
    A Java change follows the recipes of [DEVELOPER_GUIDE.md › Recipes](guides/DEVELOPER_GUIDE.md#5-recipes) (a REST endpoint, a
    configuration property, a console page, a source plugin).
 3. **Write the test first** beside its neighbours: a `drishti-console/tests/test_<area>.py` for the console (a `*_browser.py` when it needs

@@ -18,6 +18,20 @@
 
 ## Unreleased
 
+- **One settings file for every launcher, and the deployment guides checked against the code.** Every IntelliJ and PyCharm run
+  configuration passes `$USER_HOME$/drishti-envs/dev.ini`; `tools/drishti.py --settings` reads the same files as the server (several,
+  comma-separated, the right-most winning; a dotted `[section]` a namespace), puts the launch roots they name into the tools'
+  environment and hands the files to every JVM it starts; the console's `--settings` reads only the `console.` keys, so one file serves
+  both. `bin/start-server`, `start-console` and `start-all` take `--settings` with several files; `start-server` takes its data folder
+  from the files when `--data-dir` is not given and passes it as `-Ddrishti.data.dir`, so the script's pid, logs and temporary files and
+  the server's data are always one folder. The QA-profile run configurations give their data folder and port as `-D`. The example
+  `dev.ini` works as copied (brokers, a second lake and the port are commented options). The rolling upgrade runner upgrades the
+  servers first and the consoles last. `lake demo` ends by naming `bin/start-all --demo`. DEPLOYMENT_AND_QA_GUIDE: the settings file,
+  IntelliJ IDEA on Windows and Linux step by step, the Java loader for the demo lake, the demo on and off on a clean data folder,
+  upgrading an older install (what to move aside), read-only connectors, no broker needed; OPERATIONS_GUIDE's install, start, IDE,
+  Windows, services, settings, connectors and upgrade sections, QUICKSTART_DEVELOPERS and deploy/stack/README.md follow the code; the
+  PDFs regenerated.
+
 ## 2.9.11.i4.1 (2026-11-15)
 
 - **A record's panel shows nested values.** Tapping a row of a list (NEWS on a phone: Items, By source, Pipeline) showed

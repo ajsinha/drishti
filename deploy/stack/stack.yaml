@@ -45,8 +45,8 @@ lakes:                             # synthetic trades (tools/bench/trades.py), b
   murex:  { systems: murex, per-day: 1500, days: 60, counterparties: 300 }
 
 nodes:
-  # your own stack: the repository is its working folder, so its data is the repository's data/ (the demo lakes) and its connectors
-  # config/connectors/, exactly as when you start the server from the IDE
+  # your own stack: home: repo, so its data is the repository's data/ (the demo lake), exactly as when you start the server from
+  # the IDE; its connectors are the modules' templates (with any override of yours in config/connectors/)
   - name: drishti-main
     port: 18480
     home: repo

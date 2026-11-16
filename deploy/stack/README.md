@@ -15,7 +15,7 @@
 -->
 # deploy/stack: a ready-made local Drishti*net cluster
 
-Three Drishti servers on one machine acting as one cluster ([OPERATIONS_GUIDE.md](../../docs/guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet)), and a console that is given the first
+Three Drishti servers on one machine acting as one cluster ([CLUSTER_GUIDE.md](../../docs/guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet)), and a console that is given the first
 server alone and learns the other two from the cluster. One command starts it, one stops it, and one shows how it is doing.
 
 Run these from the Drishti folder (the repository root, or the install folder of a release).
@@ -26,9 +26,16 @@ bin/status.sh --cluster deploy/stack/stack.yaml      # the processes and ports, 
 bin/stop-cluster.sh        # stop everything bin/start-cluster started (by process id, never by name)
 ```
 
-**Moved from `drishti-stack/`** (2.9.11.i4). Git moves the tracked files; move your own `secrets.env` (and any `net-key`) from
-`drishti-stack/` to this folder. Until you do, and for one release only, `bin/start-cluster` and the other cluster commands read
-`drishti-stack/secrets.env` (or a `drishti-stack/stack.yaml` left there) and print a notice.
+Windows: `bin\start-cluster.cmd`, `bin\status.cmd --cluster deploy\stack\stack.yaml`, `bin\stop-cluster.cmd` (Java and Python only;
+set `JAVA_HOME` to your JDK 21: `stack.yaml`'s `java:` is a Linux path, and `JAVA_HOME` wins over it).
+
+**A settings file** for every node: `bin/start-cluster.sh --settings /home/you/drishti-envs/dev.ini`, or `settings-file:` in `stack.yaml`
+(a node's own `settings:` wins over it). Each node still gets its own data folder as `-Ddrishti.data.dir`, which beats the file's
+([docs/DEPLOYMENT_AND_QA_GUIDE.md › The settings file](../../docs/DEPLOYMENT_AND_QA_GUIDE.md#41-the-settings-file)).
+
+**An older `drishti-stack/` folder** beside the repository: move your own `secrets.env` (and any `net-key`) from it to this folder.
+Until you do, `bin/start-cluster` and the other cluster commands read `drishti-stack/secrets.env` (or a `drishti-stack/stack.yaml`
+left there) and print a notice.
 
 This folder is configuration only (`stack.yaml`, `nodes/`, `secrets.env`); the commands are in [bin/](../../bin/README.md). `--cluster FILE` runs any other file of this format; the default is this one. Each node is started by `bin/start-server`, the console by `bin/start-console`, with the settings of `stack.yaml`.
 
@@ -38,13 +45,13 @@ Open the console at `http://<this machine's address>:17480` (`bin/start-cluster`
 
 | Process | Address | What it serves | Its data |
 |---|---|---|---|
-| `drishti-main` | `http://<this machine's address>:18480` (`bin/start-cluster` prints it) | your own stack: the seven default packs, the demo lakes, live news | the repository's `data/` and `config/connectors/` (it runs in the repository, as from the IDE) |
+| `drishti-main` | `http://<this machine's address>:18480` (`bin/start-cluster` prints it) | your own stack: the ten demo packs, the demo lake, live news | the repository's `data/` (as from the IDE); its connectors are the modules' templates, with any override of yours in `config/connectors/` |
 | `drishti-b` | `http://<this machine's address>:18791` (`bin/start-cluster` prints it) | synthetic ENDUR and CALYPSO trades (ids `10000000`+, `CLY-30000000`+), pack `trading` | `data/stack/nodes/drishti-b/`, lake `data/stack/lakes/shared/` |
 | `drishti-c` | `http://<this machine's address>:18792` (`bin/start-cluster` prints it) | synthetic MUREX trades (`MX-50000000`+), packs `trading`, `counterparty-risk`, `market-risk` | `data/stack/nodes/drishti-c/`, lake `data/stack/lakes/murex/` |
 | console | `http://<this machine's address>:17480` (`bin/start-cluster` prints it) | the console, given `drishti-main` alone; it learns `drishti-b` and `drishti-c` and fails over to them | the repository's `data/console/` |
 
 **The nodes advertise this machine's real address, never 127.0.0.1** (members never advertise localhost, a loopback or a wildcard address:
-[OPERATIONS_GUIDE.md](../../docs/guides/CLUSTER_GUIDE.md#2-a-cluster-of-three)). `bin/start-cluster` finds it (the default route's interface, never a docker bridge) and gives
+[CLUSTER_GUIDE.md](../../docs/guides/CLUSTER_GUIDE.md#2-a-cluster-of-three)). `bin/start-cluster` finds it (the default route's interface, never a docker bridge) and gives
 it to every node as `DRISHTI_STACK_HOST`, which the checked-in `node.yaml` and seed files name (`advertise-url: http://${DRISHTI_STACK_HOST}:18480`),
 so the files stay the same on every machine; the console is given `drishti-main` at that address too, so its discovered list matches what the
 cluster advertises. On a machine with several interfaces, set `host:` in `stack.yaml`. `status.sh` shows each member's advertised address.
@@ -66,7 +73,8 @@ Open `/v/trade/10000001` on the console: the trade is held by `drishti-b` only, 
 
 On the first start `bin/start-cluster` makes what is missing: the secrets, `data/stack/server.jar` (a copy of the newest
 `kernel/drishti-server/target/drishti-server-*-exec.jar`; it tells you to build when there is none), a node's net folder, and the two synthetic
-lakes (`tools/bench/trades.py`: 1,500 trades a day per system for two business days, 300 counterparties). The servers run the copy, so a
+lakes (`tools/bench/trades.py`, as `lakes:` in `stack.yaml` says: 1,500 trades a day per system for sixty business days, 300
+counterparties). The servers run the copy, so a
 rebuild never replaces the jar under a running server: the next `bin/start-cluster` copies a newer build, and a restarted node runs it.
 
 The synthetic lakes are laid out as the demo lake's file says (`config/lakes/demo.yaml`, [DATA_LAKE_GUIDE.md](../../docs/guides/DATA_LAKE_GUIDE.md)):
@@ -87,7 +95,7 @@ The repository is public, so no secret is ever in it. `secrets.env` holds three:
 `bin/start-cluster` makes any that is missing with `openssl rand -hex 32` and keeps it, so sessions and tokens survive restarts. They reach the
 processes through their environment only; no command prints them. To use your own, copy `secrets.env.example` to `secrets.env` and fill
 it. Changing one signs everyone out (token, session) or splits the cluster until every node has the new key (net secret: rotate it as
-[OPERATIONS_GUIDE.md › Drishti*net: running several servers as one, section 6](../../docs/guides/CLUSTER_GUIDE.md#16-security-the-key-mutual-tls-nodes-per-role), *Rotating the key with no downtime*, describes). `.gitignore` keeps `secrets.env`, any `net-key` file and `run/` out, and
+[CLUSTER_GUIDE.md › Security](../../docs/guides/CLUSTER_GUIDE.md#16-security-the-key-mutual-tls-nodes-per-role), *Rotating the key with no downtime*, describes). `.gitignore` keeps `secrets.env`, any `net-key` file and `run/` out, and
 `tools/test_no_hidden_names.py` fails if one of them, or any jar, is tracked.
 
 ## Restart one node

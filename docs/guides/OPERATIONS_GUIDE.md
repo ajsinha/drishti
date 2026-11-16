@@ -65,8 +65,8 @@ processes, and users only ever talk to the console:
 
 | Process | Default port | Health check | Metrics | Started by |
 |---|---|---|---|---|
-| **server** (`drishti-server`, Spring Boot, Java 21 or newer; production runs 21): reads the sources, lays out each screen, answers BI, pushes live updates | 18480 | `/actuator/health/liveness`, `/actuator/health/readiness` | `/actuator/prometheus` | `java -Djava.io.tmpdir=data/tmp/server -jar drishti-server-<version>-exec.jar` |
-| **console** (FastAPI on uvicorn, Python): the web pages; it computes nothing itself | 17480 | `/healthz`, `/readyz` | none | `python drishti-console/run_drishti_web.py` |
+| **server** (`drishti-server`, Spring Boot, Java 21 or newer; production runs 21): reads the sources, lays out each screen, answers BI, pushes live updates | 18480 | `/actuator/health/liveness`, `/actuator/health/readiness` | `/actuator/prometheus` | `bin/start-server` (Windows `bin\start-server.cmd`), a service unit, or an IDE run configuration |
+| **console** (FastAPI on uvicorn, Python): the web pages; it computes nothing itself | 17480 | `/healthz`, `/readyz` | none | `bin/start-console`, or `drishti-console/run_drishti_web.py` |
 
 Industries come as **packs**. Seven ship and load by default: `core` (counterparties, legal entities, books, calendars),
 `market-data` (curves, surfaces, FX, fixings), `trading` (`TRD`: trades from ENDUR, CALYPSO and MUREX), `counterparty-risk`,
@@ -79,22 +79,26 @@ Things worth knowing before you plan an installation:
 - **Neither process keeps session state in memory that matters.** The console's session is a signed cookie naming a session the
   server keeps, so any console serves any user. Several of each can run behind a load balancer when the servers share their `data/`
   folders and Sutra folders ([CLUSTER_GUIDE.md](CLUSTER_GUIDE.md)).
-- **The server's working directory matters.** Every relative path in its configuration (`./config/packs`, `./sutras`, `./data/...`,
-  `./application.local.yaml`) is resolved from the folder you start it in. Start it there, or make the paths absolute.
-- **The console finds its files relative to itself**: `drishti-console/config/application.yaml`, and its `packs.dir`
-  (`../config/packs`) and `help.docs_dir` (`../docs`) are relative to `drishti-console/`.
+- **The server never takes a folder from the directory it starts in.** Three launch roots are named outright: the install folder
+  (`drishti.home`, `DRISHTI_HOME`), the data folder (`drishti.data.dir`, `DRISHTI_DATA_DIR`) and the modules (`drishti.modules.home`,
+  `DRISHTI_MODULES_HOME`, else `<home>/modules`); every other folder sits under them. `bin/start-server`, the service unit, the images
+  and the IDE run configurations name them, or the settings file does ([DEPLOYMENT_AND_QA_GUIDE.md › The settings file](../DEPLOYMENT_AND_QA_GUIDE.md#41-the-settings-file)).
+  A missing or unnamed root stops the start with one message naming the setting ([CONFIGURATION.md › Launch roots](../admin/CONFIGURATION.md#launch-roots)).
+- **The console finds its files from its own folder**: `drishti-console/config/application.yaml`, and its `packs.dir` and
+  `help.docs_dir` under the Drishti folder above it.
 - **With security off (the development default) the server trusts every caller**: anyone who reaches port 18480 is an administrator.
   In a shared installation turn security on ([section 11](#11-security-checklist)) and never expose 18480 to users.
 
-Two ways to run it on your own machine give the same result: **IntelliJ IDEA and PyCharm with no terminal** (the ready-made run
-configurations hold exactly the settings below; [section 3](#3-other-ways-to-build-and-run-maven-intellij-idea-and-pycharm)), or **a
-terminal** ([section 2](#2-install-and-run-on-one-machine)). The short form of section 2 is
-[data/testdata/README.md](../../data/testdata/README.md) ("Quick start: five steps").
+Two ways to run it on your own machine give the same result: **IntelliJ IDEA (and PyCharm) with no terminal** (the ready-made run
+configurations; [section 3](#3-other-ways-to-build-and-run-maven-intellij-idea-and-pycharm)), or **the scripts of `bin/`**
+([section 2](#2-install-and-run-on-one-machine)).
 
 ## 2. Install and run on one machine
 
-From a clean clone the whole install takes about 15 minutes on a laptop, most of it the first build. On Windows follow
-[section 4](#4-drishti-on-windows), which covers the same steps in PowerShell.
+**The step-by-step install, on Windows, Linux and macOS, with what you should see at each step, has one home:
+[DEPLOYMENT_AND_QA_GUIDE.md](../DEPLOYMENT_AND_QA_GUIDE.md)** (prerequisites, the release, the settings file, the demo lake, the start and
+stop scripts with every option, the IDE, upgrading an older install, verification). This section keeps what an operator needs beyond it.
+From a clean clone the whole install takes about 15 minutes on a laptop, most of it the first build.
 
 ### 2.1 Prerequisites
 
@@ -102,7 +106,7 @@ From a clean clone the whole install takes about 15 minutes on a laptop, most of
 |---|---|---|---|
 | OpenJDK | **21** or newer, 64-bit, a JDK (not only a JRE); production runs 21, 25 is also tested | builds and runs the server | `java -version`, `javac -version` |
 | Python | **3.13** (what CI tests and the images run); the floor is **3.10** (`drishti.py doctor` fails below it; 3.10 to 3.12 are not tested). This row is the one statement of the Python version | the console and the command-line tools | `python3 --version` |
-| uv | any recent (**recommended**) | makes the console's Python environment, also where `python3 -m venv` cannot | `uv --version` |
+| uv | any recent (optional; not on a Windows machine where no `.exe` may be added: Python's own `venv` does the same) | makes the console's Python environment, also where `python3 -m venv` cannot | `uv --version` |
 | git | any | downloads the code | `git --version` |
 | Docker | optional | containers, the PostgreSQL/Kafka/Aerospike extras, some tests | `docker --version` |
 | Disk | a few GB, plus the lakes (the demo lakes: 3.4 GB), each Kafka disk cache (up to `disk-cache.max-gb`, 10 GB) and each ActiveMQ or RabbitMQ state store (`state.max-gb`, 10 GB; plan about twice that, on an SSD) | | |
@@ -124,22 +128,20 @@ the repository has its own (`./mvnw`, Maven 3.9.12).
 ### 2.2 Download and build the server
 
 ```bash
-git clone https://github.com/ajsinha/drishti.git
-cd drishti
-./mvnw -q package -DskipTests -pl :drishti-app -am
+git clone https://github.com/ajsinha/drishti.git /home/you/drishti
+cd /home/you/drishti
+./mvnw -q clean package -DskipTests -pl :drishti-app -am
 ls kernel/drishti-server/target/*-exec.jar
 ```
 
-Every command in this guide runs **from this `drishti` folder**: the server finds `./config/packs` and its data folder (`./data`, or
-`DRISHTI_DATA_DIR`) relative to it. The clone already holds the test data the demo lakes are built from, `data/testdata/` (about
-23 MB of `.jsonl.gz`, the one committed folder under `data/`).
+The clone already holds the test data the demo lakes are built from, `data/testdata/` (about 140 MB of `.jsonl.gz`, the one committed
+folder under `data/`), and the modules (`modules/`), which the server needs.
 
 The first build downloads its libraries and takes several minutes; later builds about a minute. `-q` keeps it quiet, so success prints
-nothing; `-pl :drishti-app -am` builds the server and what it needs (`./mvnw -q package -DskipTests` builds every module, slower, the same
-server; `./mvnw -q verify` also runs every test). You should see `kernel/drishti-server/target/drishti-server-<version>-exec.jar`. Before a
-release build use `./mvnw -q clean package -DskipTests`: without `clean`, `target/` keeps older jars, `java -jar
-drishti-server-*-exec.jar` then runs the first (the oldest) and the server Dockerfile's `COPY` refuses several files. If the build stops
-with `Drishti needs Java 21 or newer … Maven is running on Java …`, `JAVA_HOME` is older than 21: go back to 2.1.
+nothing; `-pl :drishti-app -am` builds the server and what it needs (`./mvnw -q clean package -DskipTests` builds every module, slower, the
+same server; `./mvnw -q clean verify` also runs every test). You should see `kernel/drishti-server/target/drishti-server-<version>-exec.jar`.
+Always build with `clean`: without it `target/` keeps older jars, and the server Dockerfile's `COPY` refuses several files. If the build
+stops with `Drishti needs Java 21 or newer … Maven is running on Java …`, `JAVA_HOME` is older than 21: go back to 2.1.
 
 ### 2.3 The console's Python
 
@@ -172,23 +174,12 @@ Ubuntu that stops with *ensurepip is not available … apt install python3.X-ven
 
 ### 2.4 Build the demo lakes
 
-The demo lakes are what the seven packs read: one Delta table per dataset, sixty business days, from the committed test data:
+The demo lakes are what the packs read: one Delta table per dataset, sixty business days, from the committed test data. The command,
+its Windows form, the Java loader (`--engine java`) and the output to expect:
+[DEPLOYMENT_AND_QA_GUIDE.md › Build the demo lake](../DEPLOYMENT_AND_QA_GUIDE.md#5-build-the-demo-lake):
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py lake demo
-```
-
-You should see one line per table, then the summary (the folder is your clone's):
-
-```text
-  trading/trade_endur: … rows over 60 days
-  …
-Demo lake ready: …/drishti/data/delta/demo: 89 tables, 60 business days 2026-07-08 to 2026-09-30, built in 943 s
-Feeds: …/drishti/data/feeds/fixing.jsonl (the file connector's sample feed)
-Server: no server at http://localhost:18480: left …/drishti/data/bi-store/lake-rebuilt.json, so a server clears its stored BI columns and rollups at its next start
-Connector files:
-  trade-endur: generated by the server at its first start (reads …/drishti/data/delta/demo)
-  …
+drishti-console/.venv/bin/python tools/drishti.py --settings /home/you/drishti-envs/dev.ini lake demo --engine java
 ```
 
 Measured: about 15 minutes and 3.4 GB for sixty days. What it does:
@@ -202,40 +193,33 @@ Measured: about 15 minutes and 3.4 GB for sixty days. What it does:
   then `http://localhost:18480`; with sign-in on, a token with the `loads:write` scope in `--token-file` or `DRISHTI_TOKEN`). With no
   server it leaves `data/bi-store/lake-rebuilt.json`, and the next start clears the BI store's columns and rollups. `--no-signal` skips
   both. Running it again later is safe either way.
-- **Checks the connector files**: the packs' Delta connectors read `${DRISHTI_DELTA_ROOT:<data>/delta}`; with the default lake the
-  server writes the files at its first start ([DATA_GUIDE.md section 9](DATA_GUIDE.md#9-connector-files-and-admin--connectors)).
+- **Checks the connectors**: the modules' templates read the demo lake's root, `${DRISHTI_DELTA_ROOT:<data>/delta/demo}`; with the
+  default lake every connector says *already reads … (its template)* and nothing is written.
 
-`--lake DIR` builds elsewhere (the connector files are then pointed there, their earlier text kept in `data/connectors/history/`),
+`--lake DIR` builds elsewhere (then it writes, for each connector that reads the demo lake, a small override in `config/connectors/`
+naming its template and only `settings.root`; with `DRISHTI_DELTA_ROOT=DIR` set for `lake demo` and the server's
+`--lake-root DIR` instead, nothing is written to `config/`),
 `--only trades/,core/counterparty` builds some datasets, `--with-real FILE` adds a local real extract to your local lake only (never to
 `data/testdata`); every option: `drishti.py lake demo --help`. **Skip it** and the server still starts: the packs' samples answer for
 today, and a past date says *No data held for <date>*.
 
 ### 2.5 Start the server
 
-**A. On the demo lakes, with sign-in** (the run configuration **Drishti server (demo lakes)**):
+**On the demo lakes, with sign-in** (what the run configuration **Drishti server (demo lakes)** sets):
 
 ```bash
-export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
-export DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets
-export DRISHTI_STUDIO_SAVE=true
-export DRISHTI_SECURITY_ENABLED=true
-export DRISHTI_TOKEN_SECRET=drishti-dev-only-token-secret-change-me-0123456789
-export DRISHTI_SEED_ADMIN=true DRISHTI_SEED_USERNAME=drishti-dev-admin DRISHTI_SEED_PASSWORD=drishti-dev-admin123
-export DRISHTI_EXTERNAL_LIB=$PWD/external_lib   # the console's Python libraries; jars go in the lib folder (DRISHTI_LIB_PATH)
-export DRISHTI_DEMO_ENABLED=false
-mkdir -p data/tmp/server
-java -Djava.io.tmpdir=data/tmp/server -Xmx4g -jar kernel/drishti-server/target/drishti-server-<version>-exec.jar
+cd /home/you/drishti
+bin/start-server.sh --demo --settings /home/you/drishti-envs/dev.ini        # Windows: bin\start-server.cmd --demo --settings C:\Users\you\drishti-envs\dev.ini
 ```
 
-**B. The smallest start** (sign-in off, the packs' samples ticking live):
-
-```bash
-java -Djava.io.tmpdir=data/tmp/server -jar kernel/drishti-server/target/drishti-server-<version>-exec.jar
-```
+`--demo` sets the variables below with the development secrets; without it, set them yourself (or in an `--env-file`). Every option of
+the script, where its pid, log and temporary files go and its errors:
+[DEPLOYMENT_AND_QA_GUIDE.md › section 6](../DEPLOYMENT_AND_QA_GUIDE.md#6-start-the-server-and-the-console). The plain `java -jar` line,
+for a service manager, is in [5.3](#53-running-as-services-systemd): it needs `DRISHTI_HOME`, `DRISHTI_DATA_DIR` and the modules named.
 
 | Setting | Meaning |
 |---|---|
-| `-Djava.io.tmpdir=data/tmp/server` (and the `mkdir`) | Java's temporary folder: DuckDB, RocksDB and CatBoost unpack their native libraries there (DuckDB 60 MB a start), not in `/tmp`, and the server removes stale copies at start. Only the command line moves it (or `JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=…`); without it the server warns in its log and on Admin → Health |
+| `-Djava.io.tmpdir=<data>/tmp/server` (the script sets it) | Java's temporary folder: DuckDB, RocksDB and CatBoost unpack their native libraries there (DuckDB 60 MB a start), not in `/tmp`, and the server removes stale copies at start. Only the command line moves it (or `JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=…`); without it the server warns in its log and on Admin → Health |
 | `DRISHTI_PACKS` | the packs to load, comma-separated; a pack's parents load with it (`market-risk` brings `core`, `market-data`, `trading`). Unset: the seven |
 | `DRISHTI_STUDIO_SAVE=true` | lets the Build workbench save Sutras (the view layouts); only in authoring environments |
 | `DRISHTI_SECURITY_ENABLED=true` | sign-in on: every call needs a token. Off by default |
@@ -245,35 +229,36 @@ java -Djava.io.tmpdir=data/tmp/server -jar kernel/drishti-server/target/drishti-
 | `DRISHTI_EXTERNAL_LIB` | the console's extra Python modules (`external_lib/python`) |
 | `DRISHTI_DEMO_ENABLED=false` | the demo source (the packs' samples, ticking) off, so every page reads the lakes; on (the default) a sample answers before the lake for an id both hold, and [the reports tutorial, Part F](../tutorials/README.md)'s live tiles need it |
 
-On Java 25 you may add `-XX:+UseCompactObjectHeaders` (about 10% less heap); Java 21 refuses to start with it. Leave the terminal
-open: the server logs there. After a few seconds you should see `Started DrishtiApplication in … seconds` (after a `lake demo` with no
+On Java 25 the script adds `-XX:+UseCompactObjectHeaders` (about 10% less heap); Java 21 refuses to start with it. In the foreground the
+server logs to the terminal (`--background`: `<data>/logs/server.log`). After a few seconds you should see `Started DrishtiApplication in … seconds` (after a `lake demo` with no
 server running, first a line saying the BI store's columns and rollups were cleared). Check from a second terminal (the health address
 is open even with sign-in on):
 
 ```bash
 curl -s localhost:18480/actuator/health
-curl -s localhost:18480/api/v1/packs | python3 -c 'import json,sys; print([p["name"] for p in json.load(sys.stdin)])'   # start B only
+curl -s localhost:18480/api/v1/modules | python3 -c 'import json,sys; print([m["id"] for m in json.load(sys.stdin)["modules"]])'
 ```
 
-You should see `{"status":"UP","groups":["liveness","readiness"]}`, then the seven pack names. With sign-in on the second call answers
-`401 DRS-5010 missing bearer token` until you send a token ([2.8](#28-a-personal-api-token-for-the-command-line)). At its first start the
-server writes one **connector file** per connector the packs suggest into `config/connectors/` (`trade-endur.yaml`, `market-store.yaml`,
-…) and a marker for each under `data/connectors/generated/`; edit a file to point a connector elsewhere ([6.6](#66-connectors-where-a-pack-reads-its-data)).
+You should see `{"status":"UP","groups":["liveness","readiness"]}`, then the modules loaded (with sign-in on the second call answers
+`401 DRS-5010 missing bearer token` until you send a token, [2.8](#28-a-personal-api-token-for-the-command-line)). The server reads every
+connector from the modules' templates and **writes no connector file**; a site points one elsewhere with an override
+([6.6](#66-connectors-where-a-pack-reads-its-data)).
 
 ### 2.6 Start the console
 
-In another terminal in the `drishti` folder. With start A (sign-in on), the console needs the same token secret (the run configuration
-**Drishti console**):
+`bin/start-console.sh --demo --server http://<this machine's address>:18480` (Windows `bin\start-console.cmd …`; the run configuration
+**Drishti console**). With sign-in on, the console needs the server's token secret; `--demo` gives both the same development secrets, an
+`--env-file` gives your own:
 
 ```bash
-export DRISHTI_TOKEN_SECRET=drishti-dev-only-token-secret-change-me-0123456789
-export DRISHTI_AUTH_ENABLED=true
-export DRISHTI_SESSION_SECRET=drishti-dev-only-session-secret-change-me-0123456789
-export DRISHTI_SECURE_COOKIE=false        # only for plain http on your own machine
-drishti-console/.venv/bin/python drishti-console/run_drishti_web.py --server.port=17480 --backend.url=http://127.0.0.1:18480
+# what --demo sets for the console (never on a shared machine)
+DRISHTI_TOKEN_SECRET=drishti-dev-only-token-secret-change-me-0123456789
+DRISHTI_AUTH_ENABLED=true
+DRISHTI_SESSION_SECRET=drishti-dev-only-session-secret-change-me-0123456789
+DRISHTI_SECURE_COOKIE=false        # only for plain http on your own machine
 ```
 
-With start B none of the `export` lines is needed: `drishti-console/.venv/bin/python drishti-console/run_drishti_web.py`. You should see
+You should see
 `INFO:     Uvicorn running on http://0.0.0.0:17480`, then a line for each of the console's four worker processes
 ([5.6](#56-the-consoles-worker-processes)). **The two must match**: a console without `DRISHTI_TOKEN_SECRET` against a server with sign-in on
 reads nothing (its log says `business date unavailable: DRS-5010 missing bearer token`). Open **http://localhost:17480** and click
@@ -326,23 +311,26 @@ read`); a token with a write scope must expire (at most `writeMaxDays`, 90). Rev
 
 ### 2.9 Stopping and starting again
 
-`Ctrl+C` in each terminal (or the red square in the IDE) stops it; repeat 2.5 and 2.6 with the same `export` lines to start again (no
-rebuild unless the code changed; monitors, alerts, workspaces and settings are kept under `./data`). New demo data: run 2.4 again, with
+`bin/stop-all.sh` (Windows `bin\stop-all.cmd`), `Ctrl+C` in a foreground terminal, or the red square in the IDE stops it; start again as
+in 2.5 and 2.6 (no rebuild unless the code changed; monitors, alerts, workspaces and settings are kept in the data folder). New demo data: run 2.4 again, with
 the server running or not. The start order does not matter ([5.2](#52-first-start-by-hand-and-check-it-works)). Three servers as one
 cluster with a console, on this machine: `bin/start-cluster.sh` ([deploy/stack/README.md](../../deploy/stack/README.md),
 [CLUSTER_GUIDE.md](CLUSTER_GUIDE.md)).
 
 ### 2.10 Where Drishti keeps things
 
-Nothing Drishti writes is hidden (no dot-folders of its own), and everything it writes at run time is under **one data folder**, `./data`
-(`DRISHTI_DATA_DIR` moves it). What to back up is in [section 17](#17-backups-and-restore).
+Nothing Drishti writes is hidden (no dot-folders of its own), and everything it writes at run time is under **one data folder**,
+`<drishti>/data` unless `drishti.data.dir` (the settings file, `--data-dir`, `DRISHTI_DATA_DIR`) names another. What to back up is in [section 17](#17-backups-and-restore).
 
 | Folder | What is in it |
 |---|---|
 | `data/testdata/` | the committed test data of the demo lakes (the only committed folder) |
 | `data/delta/` | the lakes, each in its own folder: `demo/` (`DRISHTI_DELTA_ROOT` moves it), `<lake>/` any other, `risk-results/` the published official results; a lake's `_drishti-lake/` holds its build log, lock and build records |
 | `data/bi-store/` | the BI store: Parquet columns and rollups read from the lakes (`DRISHTI_BI_STORE`) |
-| `data/connectors/` | `generated/` (which connector files came from a pack's template) and `history/` (every earlier text of a connector file) |
+| `data/connectors/` | `history/`: every earlier text of a site's connector override file, for Restore (the templates themselves are never written) |
+| `data/modules/` | modules installed from a `.dmod` (`installed/`) |
+| `data/nodes/` | a cluster node's Drishti\*net folder and data when started with `bin/start-server --node` |
+| `data/run/`, `data/logs/`, `data/dumps/` | the scripts' pid files, the logs, heap dumps |
 | `data/identity/` | users, roles, tokens and the audit log (`drishti.db`, SQLite) |
 | `data/fstore/` | the content store: designs, collaboration, audit, embed apps, pack switches, proposals, load history, BI items |
 | `data/packs/` | `added.yaml` (packs loaded or switched off at run time), `installed/` (deployed archives), `deploy-history.jsonl` |
@@ -353,8 +341,9 @@ Nothing Drishti writes is hidden (no dot-folders of its own), and everything it 
 | `data/dataload/`, `data/lakes/`, `data/compute/`, `data/uninstalled/` | the data inbox, lake maintenance's file and history, the compute workers' environments and scratch, uninstalled artifacts |
 | `data/qa/`, `data/build/`, `data/drill/` | the QA profile's own data, tool output, the drill's logs |
 
-The repository itself holds code and configuration: `config/` (packs, connector files, lakes, BI files, engines), `run-configs/` and
-`drishti-console/run-configs/` (the IDE run configurations), `docs/`, `tools/`, `external_lib/`.
+The repository itself holds code and configuration: `modules/` (each module's packs, connector templates, Sutras, help), `config/` (the
+kernel's packs, lakes, module switches, lenses, engines, BI files, the example settings files; `config/connectors/` only for a site's own
+overrides), `bin/`, `run-configs/` and `drishti-console/run-configs/` (the IDE run configurations), `docs/`, `tools/`, `external_lib/`.
 
 ## 3. Other ways to build and run: Maven, IntelliJ IDEA and PyCharm
 
@@ -365,9 +354,9 @@ The poms enforce only the Java version (`[21,)`); the wrapper pins **Maven 3.9.1
 
 ```bash
 mvn -v                                  # "Apache Maven 3.9.…" and "Java version: 21.…"
-mvn -q package -DskipTests              # build (add -o to work offline once ~/.m2 is filled)
-mvn -q verify                           # build, every test and every rule
-mvn -q -pl :drishti-app -am package -DskipTests    # the server and what it needs
+mvn -q clean package -DskipTests        # build (add -o to work offline once ~/.m2 is filled)
+mvn -q clean verify                     # build, every test and every rule
+mvn -q clean package -DskipTests -pl :drishti-app -am    # the server and what it needs
 ```
 
 ### 3.2 IntelliJ IDEA: open, build, run and debug the server
@@ -386,15 +375,20 @@ delete the root's `.idea/` (IDE settings only) and reopen. One IntelliJ IDEA Ult
    run configuration **Drishti build server jar**. After pulling a change of the Java bytecode level, **Build → Rebuild Project** once.
 
 The run configurations are in the repository (`run-configs/` for IntelliJ, `drishti-console/run-configs/` for PyCharm), in the drop-down as
-soon as the project is open. They use `$PROJECT_DIR$`, the project's JDK and no path of yours:
+soon as the project is open. They use `$PROJECT_DIR$`, `$USER_HOME$` and the project's JDK, and **every one passes your settings file,
+`$USER_HOME$/drishti-envs/dev.ini`** (`-Ddrishti.settings.file=…` for the Java ones, `--settings …` for the Python ones), which must
+exist: make it once from `config/settings.examples/dev.ini`
+([DEPLOYMENT_AND_QA_GUIDE.md › The settings file](../DEPLOYMENT_AND_QA_GUIDE.md#41-the-settings-file),
+[DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md#your-settings-file-for-the-ide-launchers)). The order to run them on a new machine:
+[DEPLOYMENT_AND_QA_GUIDE.md › From IntelliJ IDEA](../DEPLOYMENT_AND_QA_GUIDE.md#68-from-intellij-idea-the-windows-qa-machine-or-linux).
 
 | Run configuration | What it does | Ports |
 |---|---|---|
-| **Drishti server** | `DrishtiApplication` on the class path of module `drishti-app` (the core with the domain modules this build ships), working directory the repository root, the seven packs, sign-in on with the development administrator, `DRISHTI_EXTERNAL_LIB`, `-Xmx2g`; data in `./data` | 18480 |
+| **Drishti server** | `DrishtiApplication` on the class path of module `drishti-app` (the core with the domain modules this build ships), `-Ddrishti.home=$PROJECT_DIR$`, the settings file, the seven packs, sign-in on with the development administrator, `-Xmx2g`; data in the settings file's `drishti.data.dir` | 18480 |
 | **Drishti server (demo lakes)** | the same with `DRISHTI_DEMO_ENABLED=false`, `DRISHTI_VAR_SYSTEM_BASKETS_SEED=true` (the system baskets) and `-Xmx4g` | 18480 |
-| **Drishti server (QA profile)** | its own data folder `data/qa/data`, so QA never touches `./data` | 18580 |
+| **Drishti server (QA profile)** | its own data folder and port as `-Ddrishti.data.dir=$PROJECT_DIR$/data/qa/data -Dserver.port=18580` (a `-D` beats the settings file), so QA never touches your data | 18580 |
 | **Drishti server (debug-friendly)** | the QA profile with sign-in **off**, DEBUG logging for `com.ash.drishti`, `-Xmx1g` (pair it with a console whose sign-in is off) | 18580 |
-| **Drishti build server jar** | Maven `package -DskipTests -pl :drishti-app -am` | |
+| **Drishti build server jar** | Maven `clean package -DskipTests -pl :drishti-app -am` | |
 | **Build demo lakes** (PyCharm) | `drishti.py lake demo` (2.4) | |
 | **QA pack make**, **QA lake build**, **QA server smoke**, **QA doctor** (PyCharm) | the command-line tools against the QA server; edit *Parameters* | 18580 |
 
@@ -404,7 +398,7 @@ installed*. Each passes its class path through an argument file (**Shorten comma
 `.run.xml`), so Windows' command-line length limit raises no warning. Change one for yourself with **Copy Configuration** (Ctrl+D; the copy
 lives in the git-ignored `.idea/`). By hand: **Run → Edit Configurations → + → Application**, main class
 `com.ash.drishti.server.DrishtiApplication`, classpath of module `drishti-app`, **Shorten command line** *@argfile*, JRE 21 or newer,
-**working directory the repository root** (the default, the module's folder, finds no packs), and the environment above.
+VM options `-Ddrishti.home=$PROJECT_DIR$ -Ddrishti.settings.file=$USER_HOME$/drishti-envs/dev.ini`, and the environment above.
 
 **Run** (Shift+F10) ends its log with `Started DrishtiApplication`; `curl -s localhost:18480/actuator/info` gives the version, and the
 OpenAPI page is `http://127.0.0.1:18480/api/docs`. **Debug** (Shift+F9): good breakpoints are `com.ash.drishti.engine.ViewPipeline` (a view
@@ -412,7 +406,7 @@ being built), `com.ash.drishti.rachana.SutraRegistry` (which Sutra was chosen), 
 under `com.ash.drishti.server` ([ARCHITECTURE.md section 5](../architecture/ARCHITECTURE.md#5-walk-through-one-request) follows one
 request). While it runs: Java method bodies reload with **Run → Debugging Actions → Reload Changed Classes** (signatures, fields and new
 classes need a restart); Sutras, packs and connector files reload by themselves; `application.yaml` and the environment need a restart. A
-second server needs `DRISHTI_PORT=18481`, its own working directory if it must not share `./data`, and a console with
+second server needs `-Dserver.port=18481`, its own data folder (`-Ddrishti.data.dir=…`) so it never shares one, and a console with
 `DRISHTI_BACKEND_URL=http://127.0.0.1:18481`.
 
 ### 3.3 PyCharm: run and debug the console
@@ -425,8 +419,8 @@ repository's `tools/` marked **Sources** (for reading; the run configurations wo
 
 | Run configuration | Parameters | Talks to |
 |---|---|---|
-| **Drishti console** | `--server.port=17480 --backend.url=http://127.0.0.1:18480`, `DRISHTI_AUTH_ENABLED=true`, the development `DRISHTI_TOKEN_SECRET` and `DRISHTI_SESSION_SECRET`, `DRISHTI_SECURE_COOKIE=false` | the default server |
-| **Drishti console (QA profile)** | `--server.port=17580 --backend.url=http://127.0.0.1:18580`, `DRISHTI_LAKE_ROOTS=$PROJECT_DIR$/../data/qa/delta` and the same sign-in settings | the QA server |
+| **Drishti console** | `--settings $USER_HOME$/drishti-envs/dev.ini --server.port=17480 --backend.url=http://127.0.0.1:18480`, `DRISHTI_AUTH_ENABLED=true`, the development `DRISHTI_TOKEN_SECRET` and `DRISHTI_SESSION_SECRET`, `DRISHTI_SECURE_COOKIE=false` | the default server |
+| **Drishti console (QA profile)** | the settings file, `--server.port=17580 --backend.url=http://127.0.0.1:18580`, `DRISHTI_LAKE_ROOTS=$PROJECT_DIR$/../data/qa/delta` and the same sign-in settings | the QA server |
 
 Each runs from the repository root with the **project interpreter** and stores no interpreter path, so it works as it is on Linux, macOS
 and Windows. **Run** shows `Uvicorn running on http://0.0.0.0:17480`. For **Debug** add `DRISHTI_CONSOLE_WORKERS=1` so every request reaches
@@ -483,7 +477,7 @@ server on `windows-latest`. No `.exe` beyond Java and Python is needed.
 |---|---|---|
 | JDK 21 or newer (Temurin or any OpenJDK) | `winget install EclipseAdoptium.Temurin.21.JDK`, or the MSI from adoptium.net | `java -version` |
 | Python 3.13 | `winget install Python.Python.3.13`, or python.org (tick *Add python.exe to PATH*) | `python --version` |
-| uv (recommended) | `winget install astral-sh.uv` | `uv --version` |
+| uv (optional; never on a machine where no `.exe` may be added: `py -3.13 -m venv` does the same) | `winget install astral-sh.uv` | `uv --version` |
 | git (to build from source) | `winget install Git.Git` | `git --version` |
 
 The Java Drishti runs with need not be the default one: the scripts take its folder as `-JavaHome`, or from `DRISHTI_JAVA_HOME`. If
@@ -500,39 +494,36 @@ Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 git clone https://github.com/ajsinha/drishti.git
 cd drishti
 $env:JAVA_HOME = $env:DRISHTI_JAVA_HOME
-.\mvnw.cmd -q package -DskipTests -pl :drishti-app -am
+.\mvnw.cmd -q clean package -DskipTests -pl :drishti-app -am
 dir kernel\drishti-server\target\*-exec.jar
 ```
 
 The Delta engine's and connector's tests: `.\mvnw.cmd -q verify -pl :drishti-deltalake,plugins/drishti-plugin-delta -am`; the Iceberg ones:
 `.\mvnw.cmd -q verify -pl :drishti-iceberg,plugins/drishti-plugin-iceberg,plugins/drishti-plugin-iceberg-external -am` (Docker tests skip).
 
-**Or copy** a server built elsewhere (Java bytecode is the same everywhere) into a folder such as `C:\drishti`: the
-`drishti-server-<version>-exec.jar` (every library is inside), `config\packs\` (and `config\connectors\`, `config\bi\` if you use them),
-`drishti-console\` (only to run the console there), `tools\` and `data\testdata\` (to build the demo lakes there), an existing `data\` if any
-(lakes, users, feeds; created when absent) and your `application.local.yaml`. Without a clone copy `bin\` to `C:\drishti\bin\`:
-the scripts work from the folder above themselves and look for the jar in `kernel\drishti-server\target\`, then in that folder.
+**Or copy** a release built elsewhere (Java bytecode is the same everywhere) into a folder such as `C:\drishti`: what goes in it is listed
+in [DEPLOYMENT_AND_QA_GUIDE.md › Get the release](../DEPLOYMENT_AND_QA_GUIDE.md#3-get-the-release) (the jar, `bin\`, `modules\`, `config\`,
+`drishti-console\`, `tools\`, `data\testdata\`). The scripts work from the folder above themselves and look for the jar in
+`kernel\drishti-server\target\`, then in that folder.
 
 ### 4.3 The demo lakes, the server and the console
 
 ```powershell
-drishti-console\.venv\Scripts\python.exe tools\drishti.py lake demo      # after the console's Python exists (below)
+drishti-console\.venv\Scripts\python.exe tools\drishti.py --settings C:\Users\you\drishti-envs\dev.ini lake demo --engine java   # after the console's Python exists (below)
 bin\start-server.cmd --packs market-risk --background
 bin\start-console.cmd --background                                       # makes drishti-console\.venv on its first run
 bin\status.cmd                                                            # both running, UP, with their LAN addresses
 bin\stop-all.cmd
 ```
 
-`lake demo` writes the same 89 tables as on Linux. The scripts of `bin\` are the same on Windows, Linux and macOS (`.cmd` and `.ps1` here,
+`lake demo` writes the same tables as on Linux, with Drishti's Java loader (no Hadoop, no `.exe`). The scripts of `bin\` are the same on Windows, Linux and macOS (`.cmd` and `.ps1` here,
 `.sh` there): `start-server` checks that Java is 21 or newer, sets `DRISHTI_DELTA_ENGINE=native` on Windows ([`delta` in CONFIGURATION.md](../admin/CONFIGURATION.md#delta--delta-lake)), adds
 `-XX:+UseCompactObjectHeaders` only on Java 25, and `--demo` sets the demo's settings with its development secrets; `start-console` makes
 the console's environment on its first run (with uv when present, else `python -m venv` and pip). Every option, where the pid, log and
 temporary files go, the exit codes and the errors: [DEPLOYMENT_AND_QA_GUIDE.md › section 6](../DEPLOYMENT_AND_QA_GUIDE.md#6-start-the-server-and-the-console).
-Admin → Health then lists each lake connector as `UP (engine: native)`. By hand: `uv venv --python 3.13 drishti-console\.venv`,
-`uv pip install --python drishti-console\.venv\Scripts\python.exe -r drishti-console\requirements.txt`, then
-`drishti-console\.venv\Scripts\python.exe drishti-console\run_drishti_web.py` (the console's own settings: `DRISHTI_CONSOLE_PORT`,
-`DRISHTI_BACKEND_URL`). The jar by hand: `$env:DRISHTI_PACKS = 'market-risk'` then
-`& "$env:DRISHTI_JAVA_HOME\bin\java.exe" -Xmx2g -jar kernel\drishti-server\target\drishti-server-<version>-exec.jar`.
+Admin → Health then lists each lake connector as `UP (engine: native)`. The console's environment by hand: `py -3.13 -m venv
+drishti-console\.venv`, `drishti-console\.venv\Scripts\python.exe -m pip install -r drishti-console\requirements.txt`. From IntelliJ IDEA
+instead of the scripts: [DEPLOYMENT_AND_QA_GUIDE.md › From IntelliJ IDEA](../DEPLOYMENT_AND_QA_GUIDE.md#68-from-intellij-idea-the-windows-qa-machine-or-linux).
 
 **Iceberg tables on Windows** run on the native engine too: `.\tools\windows\load-iceberg.ps1` (the samples, ten business days;
 `-Trades 10000 -Days 3` adds a book; the sort spills under `data\tmp\iceberg`, `-SpillDir` to move it), then
@@ -545,7 +536,7 @@ Admin → Health then lists each lake connector as `UP (engine: native)`. By han
 | A Delta connector's `engine: hadoop` (or `auto` on Linux) | Hadoop's local file system needs `winutils.exe` | `engine: native` (the default; `auto` is native on Windows); `hadoop` only for Azure (`abfs://`) or Google Cloud Storage (`gs://`), which the native engine does not read. Iceberg's `engine: library` likewise |
 | Local paths | | `C:\lakes\drishti`, `\\fileserver\lakes`, `file:/C:/lakes`, paths with spaces all work; S3 with the connector's `s3.*` settings |
 | Replacing a DuckDB file while the server reads it | Windows cannot rename over an open file | load a new file and switch the connector's `path`, or stop the server first |
-| `tools\*.sh` (`load-postgres.sh`, `drill.sh`, …) | they need bash | `tools\windows\*.ps1` for the server and console, `tools\drishti.py` for lakes and packs; the Python tools run as they are; or Git Bash or WSL |
+| `tools\*.sh` (`load-postgres.sh`, `drill.sh`, …) | they need bash | `bin\*.cmd` for the server and console, `tools\windows\*.ps1` for the loads and feeds, `tools\drishti.py` for lakes and packs; the Python tools run as they are; or Git Bash or WSL |
 | `docker compose` (`deploy\`) | Linux containers | Docker Desktop runs them; the jar runs natively |
 | Python in BI, compute in fork mode | the strict sandbox needs Linux | stays off on Windows, with that reason ([section 15](#15-compute-workers)) |
 
@@ -564,21 +555,22 @@ This installs both processes under `/opt/drishti` on a Linux host; adjust the pa
 sudo useradd --system --home /opt/drishti drishti
 sudo mkdir -p /opt/drishti/data /opt/drishti/sutras
 sudo cp kernel/drishti-server/target/drishti-server-<version>-exec.jar /opt/drishti/drishti-server.jar
-sudo cp -r config drishti-console docs /opt/drishti/
+sudo cp -r bin modules config drishti-console docs tools /opt/drishti/
 sudo cp LICENSE CHANGELOG.md RELEASE_NOTES.md THIRD-PARTY-NOTICES.md /opt/drishti/   # the help centre shows them
 sudo chown -R drishti:drishti /opt/drishti
 cd /opt/drishti
-sudo -u drishti uv venv drishti-console/.venv
-sudo -u drishti uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requirements.txt
+sudo -u drishti python3.13 -m venv /opt/drishti/drishti-console/.venv
+sudo -u drishti /opt/drishti/drishti-console/.venv/bin/python -m pip install -r /opt/drishti/drishti-console/requirements.txt
 ```
 
 ```
 /opt/drishti/
 ├── drishti-server.jar           the server
-├── application.local.yaml       your site settings (optional; section 6.1)
+├── bin/                         start, stop, status and the drain script (drishti-node.sh)
+├── modules/                     the modules: their packs, connector templates, Sutras (DRISHTI_MODULES_HOME)
 ├── config/
-│   ├── packs/                   domain packs (the server reads ./config/packs, the console ../config/packs)
-│   ├── connectors/              one file per connector (DRISHTI_CONNECTORS_DIR)
+│   ├── packs/                   the kernel's packs (core); the domain packs are in modules/
+│   ├── connectors/              only your own overrides of a template, when any (DRISHTI_CONNECTORS_DIR)
 │   ├── engines/                 one file per compute engine (DRISHTI_ENGINES_DIR)
 │   └── bi/                      BI files: reports/, python/, notebooks/ (DRISHTI_BI_DIR); tables and models in config/tables/
 ├── sutras/                      your own Sutras (drishti.rachana.dirs, default ./sutras)
@@ -594,11 +586,9 @@ sudo -u drishti uv pip install --python drishti-console/.venv/bin/python -r dris
 
 ```bash
 cd /opt/drishti
-sudo -u drishti mkdir -p data/tmp/server
-sudo -u drishti env DRISHTI_PACKS=market-risk,counterparty-risk \
-  /usr/lib/jvm/java-21-openjdk-amd64/bin/java -Djava.io.tmpdir=/opt/drishti/data/tmp/server -jar drishti-server.jar
+sudo -u drishti env DRISHTI_PACKS=market-risk,counterparty-risk /opt/drishti/bin/start-server.sh --data-dir /opt/drishti/data
 # a second terminal
-sudo -u drishti drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
+sudo -u drishti /opt/drishti/bin/start-console.sh --server http://<this machine's address>:18480
 ```
 
 On the very first start the server warns `Created development admin 'drishti-dev-admin' with the default password. Change it before any
@@ -611,7 +601,7 @@ curl -s localhost:17480/healthz              # {"status":"UP"}
 ```
 
 Open `http://localhost:17480`, type `TRD 1000001` and press Enter: the deal ticket with its legs, cash flows and resets appears (from the
-demo lakes of [2.4](#24-build-the-demo-lakes)). The console's `/healthz` says only that the console answers (liveness); `/readyz` also asks the
+demo lake of [2.4](#24-build-the-demo-lakes), built into `/opt/drishti/data/delta/demo`). The console's `/healthz` says only that the console answers (liveness); `/readyz` also asks the
 server: `{"status":"UP","server":"reachable"}`, or `503` with `"server":"unreachable"`. Point a load balancer's readiness check at
 `/readyz` and a restart policy at `/healthz`.
 
@@ -645,8 +635,8 @@ EOF
 sudo chmod 600 /etc/drishti/drishti.env
 ```
 
-`/etc/systemd/system/drishti-server.service` (also `deploy/systemd/drishti-server.service`; copy `bin/drishti-node.sh` to
-`/opt/drishti/bin/` beside it):
+`/etc/systemd/system/drishti-server.service` (a copy of `deploy/systemd/drishti-server.service`; `bin/drishti-node.sh` is in
+`/opt/drishti/bin/` from 5.1):
 
 ```ini
 [Unit]
@@ -660,6 +650,9 @@ WorkingDirectory=/opt/drishti
 EnvironmentFile=/etc/drishti/drishti.env
 Environment=JAVA_TOOL_OPTIONS=-Xmx4g -XX:+UseZGC -XX:+ZGenerational -XX:MaxDirectMemorySize=256m -XX:TrimNativeHeapInterval=60000 -Djdk.nio.maxCachedBufferSize=262144 -XX:NativeMemoryTracking=summary -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/opt/drishti/data/dumps
 Environment=MALLOC_ARENA_MAX=2
+Environment=DRISHTI_HOME=/opt/drishti
+Environment=DRISHTI_DATA_DIR=/opt/drishti/data
+Environment=DRISHTI_MODULES_HOME=/opt/drishti/modules
 Environment=DRISHTI_DRAIN_WAIT=240
 ExecStartPre=/usr/bin/mkdir -p /opt/drishti/data/logs /opt/drishti/data/dumps
 ExecStart=/usr/lib/jvm/java-21-openjdk-amd64/bin/java -Djava.io.tmpdir=/opt/drishti/data/tmp/server -Xlog:gc*:file=/opt/drishti/data/logs/gc-%p.log:time,uptime:filecount=5,filesize=20m -jar /opt/drishti/drishti-server.jar
@@ -695,7 +688,7 @@ Wants=drishti-server.service
 
 [Service]
 User=drishti
-WorkingDirectory=/opt/drishti/console
+WorkingDirectory=/opt/drishti
 EnvironmentFile=/etc/drishti/drishti.env
 ExecStart=/opt/drishti/drishti-console/.venv/bin/python /opt/drishti/drishti-console/run_drishti_web.py
 Restart=on-failure
@@ -730,7 +723,8 @@ docker build -f deploy/docker/server.Dockerfile  -t drishti-server:<version> .  
 docker build -f deploy/docker/console.Dockerfile -t drishti-console:<version> .
 ```
 
-The server image holds the jar and `config/packs/`; the console image the console, `docs/`, `config/packs/` and the licence and release
+The server image holds the jar, `modules/`, `bin/drishti-node.sh` and the configuration it reads (`config/packs`, `lenses`, `ui-kit`,
+`alerts`, `distributions`, `engines`, `lakes`, `modules`, `store`), with `DRISHTI_HOME=/opt/drishti`; the console image the console, `docs/`, `config/packs/` and the licence and release
 files, so the help centre works offline. The compose file refuses to start without two secrets and the first administrator; it has no
 default password and never creates the development admin. Put them in `deploy/.env` (never commit it), `chmod 600`:
 
@@ -825,9 +819,13 @@ from and how to change them safely.
 ### 6.1 Where settings come from
 
 **The server** reads `application.yaml` inside the jar, then the compute engines' files (`config/engines/<engine>.yaml`, the jar's copy then
-yours), then `./application.local.yaml`, then the packs overlay `<data>/packs/added.yaml` (written by the server; do not edit it). A value
-written `${NAME:default}` is the variable `NAME` if set, else the default ([CONFIGURATION.md](../admin/CONFIGURATION.md#placeholders-namedefault)).
-Environment variables and `--key=value` arguments win over every file. Variables are read at start: change one and restart. Any setting
+yours), then `<drishti.home>/application.local.yaml`, then the packs overlay `<data>/packs/added.yaml` (written by the server; do not edit it). A
+value written `${NAME:default}` is the variable `NAME` if set, else the default ([CONFIGURATION.md](../admin/CONFIGURATION.md#placeholders-namedefault)).
+Environment variables and `--key=value` arguments win over every file. **The settings files** (`-Ddrishti.settings.file=/abs/a.ini[,/abs/b.ini]`,
+`bin/start-server --settings`) become system properties at the very start, so they beat the environment and the YAML, and an explicit
+`-D` or argument beats them; their format, sections and examples are in
+[DEPLOYMENT_AND_QA_GUIDE.md › The settings file](../DEPLOYMENT_AND_QA_GUIDE.md#41-the-settings-file) and
+[CONFIGURATION.md](../admin/CONFIGURATION.md#the-settings-file--ddrishtisettingsfile). Variables are read at start: change one and restart. Any setting
 without a variable of its own can be set from the environment with Spring's relaxed names (upper case; dots and dashes become underscores;
 dashes inside a word dropped):
 
@@ -863,10 +861,12 @@ drishti:
     studio-save: true
 ```
 
-Connectors are not configured here: each is a file in `config/connectors/` ([6.6](#66-connectors-where-a-pack-reads-its-data)).
+Connectors are not configured here: each comes from its module's template, and a site changes one with an override file or a
+`[connector.<name>]` section of the settings file ([6.6](#66-connectors-where-a-pack-reads-its-data)).
 
-**The console** has no flag that points at another file: it reads `drishti-console/config/application.yaml`, then
-`drishti-console/config/application.local.yaml` (git-ignored), then the environment, then arguments; later wins:
+**The console** reads `drishti-console/config/application.yaml`, then `drishti-console/config/application.local.yaml` (git-ignored), then
+the `console.` keys of the settings files given with `--settings` (`[console.backend]` `url=` is its `backend.url`; it reads no other
+key of them, so the server's and the console's settings share one file), then the environment, then arguments; later wins:
 
 ```bash
 # 1. a local file: the same keys as application.yaml, only what you change
@@ -985,22 +985,25 @@ and secrets and embedded applications declared in configuration; Python and Java
 ### 6.6 Connectors: where a pack reads its data
 
 A pack does not carry connection settings: it **names** the connectors it reads through (`connectors:` in `pack.yaml`) and says which answers
-each kind (`routes:`). A **connector** is a site resource: one YAML file in `config/connectors/` (`DRISHTI_CONNECTORS_DIR`) whose file name is
-its name, holding the plugin (a Delta lake, JSON Lines files, a database…), the kinds it serves and its settings. The reference, with an
+each kind (`routes:`). A **connector** is a **template** shipped by a module (a file of a source module's `connectors/` folder, such as
+`modules/source-endur/connectors/`, or an entry of a pack's `connectors:` section: the plugin, a Delta lake, JSON Lines files, a database…,
+and its settings), read where it is, with a site's **override** over it when there is one: a
+file in `config/connectors/` (`DRISHTI_CONNECTORS_DIR`) named after the connector that holds only the keys it changes, or a
+`[connector.<name>]` section of the settings file. The reference, with an
 example for every store, is [DATA_GUIDE.md section 9](DATA_GUIDE.md#9-connector-files-and-admin--connectors).
 
 ```
-pack.yaml (trading)               config/connectors/trade-endur.yaml           the system behind it
-kinds: [trade, ...]               plugin: delta
-connectors: {trade-endur: ...,    kinds: [trade]                         ──►   a Delta lake, a database,
-  trade-calypso, trade-murex} ──► settings: { root: ..., domain: trading,      a Kafka topic, ...
-routes: {trade: trade-endur}        table.trade: trade_endur, union: "true" }
+pack.yaml (trading)               the template trade-endur (module source-endur)   the system behind it
+kinds: [trade, ...]               plugin: delta, lake: demo, its settings
+connectors: {trade-endur: ...,          +                                  ──►   a Delta lake, a database,
+  trade-calypso, trade-murex} ──► config/connectors/trade-endur.yaml (optional):    a Kafka topic, ...
+routes: {trade: trade-endur}        template: trade-endur, settings: {root: /srv/lakes/trading}
 ```
 
-- **Who writes the file.** A pack may carry a **template**. At the first start the server writes `config/connectors/<name>.yaml` from it for
-  every connector a pack names that has no file, and **never overwrites** a file afterwards: from then on the file is yours, and it replaces the
-  template wholesale. Environment variables and `drishti.sources.connectors.*` in the server's configuration (deprecated) still override a file
-  setting by setting. The server's log says `connectors: connector file trade-endur.yaml generated from the template of pack 'trading'`.
+- **Nobody but you writes a file.** The server reads the templates where they are and writes no connector file at start, reload or
+  deploy: `config/connectors/` stays empty until a site needs an override. An override inherits every key of its template and changes
+  only those it names (a key set to `null` removes the inherited one). `drishti.sources.connectors.<name>.<key>` (for example
+  `--drishti.sources.connectors.trade-murex.enabled=false`) still changes one setting from the server's configuration.
 - **Changing it, live.** Edit the file, use **Admin → Connectors** or the terminal; the server applies it to that connector only (reads in
   flight get `connectors-drain`, 3 s; a new file starts a connector, a deleted one stops it). Every earlier text is kept in
   `data/connectors/history/` and can be restored from the page. A variable a file refers to still needs a restart.
@@ -2887,7 +2890,7 @@ on `2` read the summary before re-running.
 
 ## 17. Backups and restore
 
-The server writes state in a few folders; the console writes nothing that needs keeping. Paths are relative to the server's working directory.
+The server writes state in a few folders; the console writes nothing that needs keeping. `data/` below is the data folder (`drishti.data.dir`), wherever it is.
 
 | Path | Holds | Back up? | How |
 |---|---|---|---|
@@ -2943,21 +2946,25 @@ Run it from cron as the `drishti` user (`30 1 * * * /opt/drishti/backup.sh`) and
 
 1. **Read the release notes** (`RELEASE_NOTES.md`, `CHANGELOG.md`) for changes to configuration or storage.
 2. **Back up** ([17.1](#171-a-nightly-backup)) and keep the old jar: `cp drishti-server.jar drishti-server-$(date +%F).jar`.
-3. **Build or fetch** the release: `./mvnw -q clean package -DskipTests`.
-4. **Stop** both: `sudo systemctl stop drishti-console drishti-server`.
-5. **Replace** the jar, `config/packs/`, `drishti-console/` and `docs/` (keep `drishti-console/.venv` and your local files), then `uv pip install --python
-   drishti-console/.venv/bin/python -r drishti-console/requirements.txt` in case the console's libraries changed.
-6. **Start** the server, then the console. Upgrade the two together: a console newer than its server cannot sign anyone in.
+3. **Build or fetch** the release: `./mvnw -q clean package -DskipTests -pl :drishti-app -am`.
+4. **Stop** both: `sudo systemctl stop drishti-console drishti-server` (or `bin/stop-all.sh`; Windows `bin\stop-all.cmd`).
+5. **Replace** the jar, `bin/`, `modules/`, `config/` (keep your own files in it: overrides in `config/connectors/`, module switches you
+   changed), `drishti-console/`, `tools/` and `docs/` (keep `drishti-console/.venv`, your settings files and your local files), then
+   `drishti-console/.venv/bin/python -m pip install -r drishti-console/requirements.txt` in case the console's libraries changed.
+   **Coming from a release that generated connector files or installed modules into the data folder**, move that state aside first: the
+   list and the commands are in [DEPLOYMENT_AND_QA_GUIDE.md › Upgrading an older install](../DEPLOYMENT_AND_QA_GUIDE.md#34-upgrading-an-older-install-start-from-clean-state).
+6. **Start** the server, then the console: servers before consoles, always (a console newer than its server cannot sign anyone in).
 7. **Verify**: `curl -s localhost:18480/actuator/info` shows the new `version`, `curl -s localhost:18480/actuator/health/readiness` shows
    `{"status":"UP"}`, Admin → Health shows `OK`, and a view opens.
 
 With Docker: build the images with the new tag, change the `image:` tags and run `docker compose --env-file deploy/.env -f deploy/docker/compose.yaml up
 -d` (named volumes are kept). **Rollback**: stop, put the old jar (or image tag) back, restore the backup if the new version changed stored data, start.
-A cluster is upgraded one node at a time with the rolling upgrade runner, `tools/rolling-upgrade.sh` ([CLUSTER_GUIDE.md](CLUSTER_GUIDE.md)).
+A cluster is upgraded one node at a time with the rolling upgrade runner, `tools/rolling-upgrade.sh`, servers first and the consoles last
+([CLUSTER_GUIDE.md › Rolling upgrades](CLUSTER_GUIDE.md#82-rolling-upgrades)).
 
-**What a start does after an upgrade, by itself**: connector files generated from a pack's template are brought up to the new template ([6.6](#66-connectors-where-a-pack-reads-its-data));
-data-source overrides saved in older versions (`data/packs/settings/<pack>.yaml`) are moved into the connector file of the same name, the original kept
-in `data/packs/settings/migrated/` and audited `connector-migrated`; stored BI items are moved into the table layer ([21.10](#2110-bi-after-an-upgrade)); and a demo lake built in
+**What a start does after an upgrade, by itself**: it writes no connector file. A connector file an older release generated is
+superseded by its template and listed in Admin → Health as *safe to delete* (one whose template is gone is not used, `DRS-1046`); an
+older release's edits kept in the content store are listed in Health and not applied ([6.6](#66-connectors-where-a-pack-reads-its-data)). Stored BI items are moved into the table layer ([21.10](#2110-bi-after-an-upgrade)); and a demo lake built in
 the older layout (tables directly under `data/delta/<domain>/`) is moved into `data/delta/demo/` once, before any connector opens a table. That move
 renames the demo lake's own folders on the same file system (no file is copied, rewritten or deleted), measures every table before and after (version,
 files, rows) and moves everything back on any difference; it **refuses**, saying why and moving nothing, when `data/delta/demo` exists, when something in
@@ -2970,17 +2977,20 @@ python3 tools/drishti.py lake relocate demo --dry-run     # the folders it would
 python3 tools/drishti.py lake relocate demo               # exit 0 moved (or nothing to move), 1 refused or moved back
 ```
 
-`DRISHTI_LAKES_RELOCATE_ON_START=false` leaves it to the command. Afterwards scheduled jobs that name `data/delta` for the demo lake name `data/delta/demo`
+`drishti.lakes.relocate-on-start=false` (`DRISHTI_LAKES_RELOCATE_ON_START=false`) leaves it to the command. Afterwards scheduled jobs that name `data/delta` for the demo lake name `data/delta/demo`
 (`lake build --lake`, `lake maintain`, `deploy/lake-maintenance.yaml`).
 
 ## 19. Several servers
 
 **Drishti\*net** makes several Drishti servers act as one: each server (a **node**) tells the others by gossip over HTTP which packs, kinds and data it
 serves; a request one node cannot answer is answered by another, and a person connected to any node sees the same pages. It is off by default (a server
-with no `config/net/node.yaml` saying `enabled: true` is a single server). Nodes advertise a real address (never `localhost` or `0.0.0.0`), share one
+whose Drishti\*net folder, `DRISHTI_NET_DIR`, has no `node.yaml` saying `enabled: true` is a single server; `bin/start-server --node`
+makes one under `<data>/nodes/<node>/net`). Nodes advertise a real address (never `localhost` or `0.0.0.0`), share one
 key (`DRISHTI_NET_SECRET`), keep their clocks in step, and are watched on **Admin → Cluster**. Setting one up, its files, security, routing, draining, rolling
 upgrades, VaR sharding, the console with several servers, sizing and performance tuning, and Drishti on AWS are all in
-[CLUSTER_GUIDE.md](CLUSTER_GUIDE.md); a cluster of three on one machine is `bin/start-cluster.sh` and [tutorial 22](../tutorials/22-a-cluster-of-three.md).
+[CLUSTER_GUIDE.md](CLUSTER_GUIDE.md); the deployment steps, on one machine or three, with the QA checklist, are in
+[DEPLOYMENT_AND_QA_GUIDE.md › A cluster of three](../DEPLOYMENT_AND_QA_GUIDE.md#10-a-cluster-of-three); the repository's own three on one
+machine are `bin/start-cluster.sh` ([deploy/stack/README.md](../../deploy/stack/README.md)) and [tutorial 22](../tutorials/22-a-cluster-of-three.md).
 
 ## 20. Runbooks
 
@@ -3285,10 +3295,11 @@ Both programs log to standard output (`docker compose -f deploy/docker/compose.y
 | `ensurepip is not available` | Debian/Ubuntu's Python lacks `python3.X-venv` | use uv, or `sudo apt install python3.X-venv` |
 | `lake demo`: `No module named 'deltalake'` (or `yaml`) | run with the wrong Python | `drishti-console/.venv/bin/python` (Windows: `drishti-console\.venv\Scripts\python.exe`), set up in [2.3](#23-the-consoles-python) |
 | `Web server failed to start. Port 18480 was already in use.` | another server runs (`ss -ltnp \| grep 18480`) | stop it, or `DRISHTI_PORT=18481` and the console with `DRISHTI_BACKEND_URL=http://127.0.0.1:18481` (and `lake demo --server http://localhost:18481`); the console's own `[Errno 98] address already in use`: `DRISHTI_CONSOLE_PORT=17481`. The QA profile's port is 18580 |
-| `pack '…' not found at …/pack.yaml` at start | a typo in `DRISHTI_PACKS`, or started from another folder | use the folder names exactly; start from the installation root or give `DRISHTI_PACKS_DIR` as an absolute path. Other loader messages: `declares pack 'x', expected 'y'` (the folder and `pack:` differ), `packs require each other in a cycle`, `… is defined by both pack 'a' and pack 'b'` |
+| `pack '…' not found at …/pack.yaml` at start | a typo in `DRISHTI_PACKS`, or its module is off or not in the modules folder | use the pack names exactly; check `DRISHTI_MODULES_HOME` (the `resolved paths:` block) and the module's switch. Other loader messages: `declares pack 'x', expected 'y'` (the folder and `pack:` differ), `packs require each other in a cycle`, `… is defined by both pack 'a' and pack 'b'` |
 | A pack you expected is missing | `DRISHTI_PACKS` lists others, or it is a retired example `DRISHTI_PACKS_EXTRA_DIRS` does not name | restart with the list you want, or **Load** in Admin → Packs |
 | An old version runs | `target/` holds several jars and `*-exec.jar` runs the oldest | name the jar exactly, or build with `clean`; `/api/v1/about` shows the `version` |
-| The server starts but every view is empty, packs missing (IDE) | the run configuration's working directory is `kernel/drishti-server/` | the repository root ([3.2](#32-intellij-idea-open-build-run-and-debug-the-server)) |
+| `the server cannot start: … nothing names its folder`, `… is '…', a relative path`, `… holds no identity database` | a launch root not named, or named relative, or a data folder nobody named | name the roots absolutely: `bin/start-server` does, the run configurations pass `-Ddrishti.home` and the settings file; a new data folder must be named ([CONFIGURATION.md › Launch roots](../admin/CONFIGURATION.md#launch-roots)) |
+| A run configuration stops at once: `drishti.settings.file names …dev.ini, which is not a file` | the per-developer settings file is missing | make `$USER_HOME$/drishti-envs/dev.ini` from `config/settings.examples/dev.ini` ([3.2](#32-intellij-idea-open-build-run-and-debug-the-server)) |
 | A run configuration is missing or shows `<no module>` | the project is not the root `pom.xml`, or the Python plugin is missing | open the root and let the Maven import finish; Python configurations need PyCharm |
 | Tests pass in a terminal but fail in IntelliJ | `DRISHTI_*` set in the test configuration | clear them in the JUnit template |
 | `ModuleNotFoundError: No module named 'fastapi'` | the console started with another Python | the console's `.venv` ([2.3](#23-the-consoles-python)); in PyCharm choose it as interpreter |
@@ -3305,9 +3316,9 @@ Both programs log to standard output (`docker compose -f deploy/docker/compose.y
 | You see | Do |
 |---|---|
 | `Drishti runs on Java 21 or newer …; … says: … version "17…` | pass `-JavaHome` or set `DRISHTI_JAVA_HOME` to a JDK 21 or newer folder |
-| `running scripts is disabled on this system` | `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` |
+| `running scripts is disabled on this system` | run the `.cmd` (`bin\start-server.cmd`), which runs the script with `-ExecutionPolicy Bypass`; or `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` |
 | `HADOOP_HOME and hadoop.home.dir are unset`, `Could not locate executable winutils.exe` | a Delta connector on `engine: hadoop`: remove it and unset `DRISHTI_DELTA_ENGINE` (or `native`); Health then shows `UP (engine: native)` |
-| Health `DOWN: cannot reach C:\…\data\delta\trading (engine: native)` | no lake there: `tools\drishti.py lake demo`, or `-LakeRoot` |
+| Health `DOWN: cannot reach C:\…\data\delta\demo (engine: native)` | no lake there: `tools\drishti.py --settings … lake demo --engine java`, or `--lake-root` |
 | Health `DOWN: no Delta tables under …` | the folder has no `<kind>\_delta_log`: check the root and the connector's `domain` |
 | `the native Delta engine reads local disk and S3 …, not abfs://…` | an Azure or GCS lake: that connector's `engine: hadoop` (with `winutils.exe`) |
 | Windows Defender slows the first start | it scans the native libraries as they unpack; later starts are faster |

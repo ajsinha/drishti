@@ -1045,7 +1045,8 @@ For good: `enabled: false` in its node.yaml (it leaves cleanly), then **Remove**
 
 ### 8.2 Rolling upgrades
 
-One node at a time, in this order: **consoles**, then **BI and data-serving**, then **coordinators**, then **owners one zone at a time**.
+One node at a time, in this order: **BI and data-serving**, then **coordinators**, then **owners one zone at a time**, then the
+**consoles** last (a console newer than its servers cannot sign anyone in, so every server is on the new release first).
 For each: drain (a console: deregister from the LB and wait for connections to close) → `safeToStop` → stop → upgrade → start → readiness →
 next. **The rolling upgrade runner**, `tools/rolling-upgrade.sh` (Windows: `tools/windows/rolling-upgrade.ps1`), does exactly this from an
 inventory (`deploy/rolling.example.yaml`):
@@ -1057,8 +1058,8 @@ tools/rolling-upgrade.sh --inventory my-cluster.yaml --version <version>        
 tools/rolling-upgrade.sh --inventory my-cluster.yaml --version <version> --from var-3 # resume after a stop
 ```
 
-- **Order:** `console` nodes, then `bi` and `data`, then `coordinator`, then `owner` nodes zone by zone (`zones:` gives the order; owners
-  without a zone last).
+- **Order:** `bi` and `data`, then `coordinator`, then `owner` nodes zone by zone (`zones:` gives the order; owners without a zone after
+  them), then the `console` nodes.
 - **A server:** drain → `GET /api/v1/admin/node` until `safeToStop` (`waits.drain`, 600 s) → `stop` → `upgrade` → `start` → readiness 200
   (`waits.ready`, 1800 s). **A console:** `deregister` (optional) → `waits.console-drain` (30 s) → `console-stop`, `console-upgrade`,
   `console-start` → `/readyz` 200 → `register`.
