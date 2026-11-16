@@ -90,6 +90,7 @@ public class ConsoleAnswers {
     private final ObjectProvider<ModuleNode> node;
     private final Environment env;
     private final ObjectProvider<com.ash.drishti.rachana.UnderConstruction> underConstruction;
+    private final ObjectProvider<com.ash.drishti.engine.shape.ShapeService> shapes;
     private final ObjectMapper json = new ObjectMapper();
     private volatile Built bootstrap;
     private final Map<String, Built> namedAnswers = new ConcurrentHashMap<>();
@@ -97,8 +98,10 @@ public class ConsoleAnswers {
 
     public ConsoleAnswers(PackRegistry packs, EditionContext edition, ObjectProvider<EngineCluster> engines,
             ObjectProvider<ModuleConfiguration.Started> started, ObjectProvider<ModuleNode> node, Environment env,
-            ObjectProvider<com.ash.drishti.rachana.UnderConstruction> underConstruction) {
+            ObjectProvider<com.ash.drishti.rachana.UnderConstruction> underConstruction,
+            ObjectProvider<com.ash.drishti.engine.shape.ShapeService> shapes) {
         this.underConstruction = underConstruction;
+        this.shapes = shapes;
         this.packs = packs;
         this.edition = edition;
         this.engines = engines;
@@ -180,6 +183,7 @@ public class ConsoleAnswers {
         EngineCluster c = engines.getIfAvailable();
         doc.put("engines", c == null ? List.of() : c.console());   // the catalogue with what runs: the console keeps no copy (S3)
         doc.put("under-construction", underConstruction());
+        doc.put("limits", limits());
         doc.put("commands", commands());
         return doc;
     }
@@ -236,6 +240,24 @@ public class ConsoleAnswers {
         } catch (IllegalStateException e) {
             throw new IllegalArgumentException(e.getMessage());
         }
+    }
+
+    /**
+     * The numbers the console pre-checks with before it sends anything on (THIN_CONSOLE_DESIGN.md 3.2, step S6): the builder's upload
+     * limits ({@code drishti.builder.max-samples}, {@code max-file-mb}, {@code max-total-mb}), which the server enforces the same way
+     * (413 DRS-5005). The console keeps no copy of the numbers.
+     */
+    private Map<String, Object> limits() {
+        Map<String, Object> out = new LinkedHashMap<>();
+        com.ash.drishti.engine.shape.ShapeService s = shapes.getIfAvailable();
+        if (s != null) {
+            Map<String, Object> b = new LinkedHashMap<>();
+            b.put("maxSamples", s.limits().maxSamples());
+            b.put("maxFileMb", s.limits().maxFileMb());
+            b.put("maxTotalMb", s.limits().maxTotalMb());
+            out.put("builder", b);
+        }
+        return out;
     }
 
     /**

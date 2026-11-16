@@ -672,9 +672,8 @@ def create_app(settings: Settings) -> FastAPI:
     examples_dir = Path(settings.get("studio.examples_dir", "../docs/guides/examples"))
     app.state.examples = Examples(examples_dir if examples_dir.is_absolute() else (console_dir / examples_dir).resolve(),
                                   str(settings.get("ui.studio_example", "") or ""))
-    from core import builder as screen_builder
 
-    app.state.builder_limits = screen_builder.Limits.from_settings(settings)
+    # the builder's upload limits: the server's (its installation answer, step S6), read per request (core/builder.py Limits.of)
     app.state.pack_upload_limit = int(settings.get("packs.deploy_max_mb", 50)) * 1048576       # Admin → Packs → Deploy archive; the server refuses the same way
     from core.asof import BusinessDates
 

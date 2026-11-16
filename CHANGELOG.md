@@ -18,6 +18,9 @@
 
 ## Unreleased
 
+- **The thin console, step S6: the builder's limits come from the server.** The installation answer carries `limits.builder`
+  (`drishti.builder.max-samples`, `max-file-mb`, `max-total-mb`); the console pre-checks an upload with the server's numbers and names
+  the server's keys in its refusal. Removed console settings: `builder.max_samples`, `builder.max_file_mb`, `builder.max_total_mb`.
 - **The thin console, step S7: the console calls the server's AI layer only.** The console's own AI layer is deleted
   (`drishti-console/core/ai/`: its providers, registry, policy, masking, limits, MCP client, TLS and proxy rules; `core/retry.py`), with
   its settings `ai.*`, `mcp.*` and `retry.*` on the console (`DRISHTI_AI_ENABLED`, `DRISHTI_AI_DIR`, `DRISHTI_AI_DEFAULT_MODEL`,

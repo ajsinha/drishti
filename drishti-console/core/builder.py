@@ -52,10 +52,15 @@ class Limits:
     max_total_bytes: int = 25 * _MB
 
     @classmethod
-    def from_settings(cls, settings) -> "Limits":
-        return cls(max(1, int(settings.get("builder.max_samples", 50))),
-                   int(float(settings.get("builder.max_file_mb", 5)) * _MB),
-                   int(float(settings.get("builder.max_total_mb", 25)) * _MB))
+    def of(cls, app) -> "Limits":
+        """The server's builder limits (its installation answer's ``limits.builder``, THIN_CONSOLE_DESIGN.md step S6), checked here
+        before anything is sent on; the server refuses the same way (413 DRS-5005). The console keeps no copy of the numbers: before
+        the server's first answer, the shipped defaults of the server's ``drishti.builder`` until it says."""
+        answer = getattr(getattr(getattr(app, "state", None), "editions", None), "answer", None) or {}
+        b = (answer.get("limits") or {}).get("builder") or {}
+        if not b:
+            return cls()
+        return cls(max(1, int(b.get("maxSamples") or 50)), int(float(b.get("maxFileMb") or 5) * _MB), int(float(b.get("maxTotalMb") or 25) * _MB))
 
     def as_dict(self) -> dict:
         return {"maxSamples": self.max_samples, "maxFileMb": self.max_file_bytes / _MB, "maxTotalMb": self.max_total_bytes / _MB}
@@ -67,7 +72,7 @@ def read_files(files: Any, limits: Limits) -> tuple[list[dict], list[dict]]:
     if not isinstance(files, list) or not files:
         raise ValueError("'files' is required: a list of {name, text}")
     if len(files) > limits.max_samples:
-        raise TooBig(f"{len(files)} files, over the limit of {limits.max_samples} (builder.max_samples)")
+        raise TooBig(f"{len(files)} files, over the limit of {limits.max_samples} (drishti.builder.max-samples)")
     total = 0
     samples: list[dict] = []
     report: list[dict] = []
@@ -80,22 +85,22 @@ def read_files(files: Any, limits: Limits) -> tuple[list[dict], list[dict]]:
             claimed = f.get("size") if isinstance(f, dict) else None        # a browser leaves a file over the limit unsent
             if isinstance(claimed, (int, float)) and claimed > limits.max_file_bytes:
                 entry["size"] = int(claimed)
-                entry["problems"].append(too_large(claimed, limits.max_file_bytes) + " (builder.max_file_mb)")
+                entry["problems"].append(too_large(claimed, limits.max_file_bytes) + " (drishti.builder.max-file-mb)")
             else:
                 entry["problems"].append("no text: the file could not be read")
             continue
         entry["size"] = size = len(text.encode("utf-8"))
         total += size
         if total > limits.max_total_bytes:
-            raise TooBig(f"the files total over the limit of {limits.max_total_bytes / _MB:g} MB (builder.max_total_mb)")
+            raise TooBig(f"the files total over the limit of {limits.max_total_bytes / _MB:g} MB (drishti.builder.max-total-mb)")
         if size > limits.max_file_bytes:
-            entry["problems"].append(too_large(size, limits.max_file_bytes) + " (builder.max_file_mb)")
+            entry["problems"].append(too_large(size, limits.max_file_bytes) + " (drishti.builder.max-file-mb)")
             continue
         found = _documents(name, text, entry["problems"])
         entry["samples"] = len(found)
         samples.extend(found)
         if len(samples) > limits.max_samples:
-            raise TooBig(f"more than {limits.max_samples} samples (builder.max_samples; each line of a .jsonl file is one)")
+            raise TooBig(f"more than {limits.max_samples} samples (drishti.builder.max-samples; each line of a .jsonl file is one)")
     return samples, report
 
 

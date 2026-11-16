@@ -6,7 +6,7 @@
 
 # The thin console: the console asks the server
 
-**Internal. Status: S0 to S4 and S7 built (branch `wip/i5-thin-console`); S5, S6 and S8 to build.** Release 2.9.11.i5. Decided by the product owner on 2026-11-15: i5 makes the Python console
+**Internal. Status: S0 to S4, S6 (in part) and S7 built (branch `wip/i5-thin-console`); S5 and S8 to build.** Release 2.9.11.i5. Decided by the product owner on 2026-11-15: i5 makes the Python console
 **thin** (the "middle path"); the move of the console to Spring Boot
 ([KERNEL_AND_MODULES.md section 10](KERNEL_AND_MODULES.md#10-the-drishti-console-on-spring-boot-a-separate-ui-tier)) is decided after
 it, for i7, with the numbers this release produces (section 6). The inventory in section 2 is of `wip/i4` at `213e980d2`.
@@ -396,6 +396,7 @@ about three weeks to Drill A and two more to Drill B.
 | **S3** | the bootstrap's `engines` with the catalogue's screen lists and `opens` (`EngineCluster.console`), its `under-construction` items; `core/engines.py` and `core/under_construction.py` read them from the answer; both console catalogue copies, the byte-equality checks and `under_construction.file` deleted | the `engines:` list of the console's `plugin.yaml` stays (which engines the console's own banking code serves) |
 | **S4** | `me/console` with `engines-opened`, `grants` and the person's `modules` (folded in); the session answer's `admin`; `Identity.is_admin` is the server's decision; `menus.engine_opened` a lookup; `menus._person_opens` and `core/modules.py` `Me` deleted | `admin-pages` is not served: every Admin page opens by the server's `admin` today, so the list would say nothing more; the menus-against-enforcement test (5.2) is not written; `lens` in the person's answer stays the console's per-person setting |
 | **S7** | `core/ai/` and `core/retry.py` deleted whole (the `server` provider too: `POST /api/ai/chat` passes the call to the server directly); Admin -> AI shows the server's layer, Test connection and Retry now ask the server; the console's `ai.*`, `mcp.*`, `retry.*` settings and the six Python test files deleted | the Health line naming a console provider file a site still keeps (Q4's "said on Health") |
+| **S6** (part) | `limits.builder` in the bootstrap; `core/builder.py` `Limits.of` reads it; the console's `builder.max_*` settings deleted. Help -> Configuration and Admin -> Configuration already read the server's half from its effective-settings answer | `core/hostrule.py` stays: besides the discovered servers' filter in `core/cluster.py` it checks the console's own advertised address for the live-channel relay, and `tools/hostaddr.py` loads it (it moves with S5's tools work); the controls' and FORM's limit lists are choice lists, not server numbers |
 
 ### 5.1 No dual machinery, step by step
 

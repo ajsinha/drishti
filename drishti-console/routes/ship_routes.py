@@ -28,6 +28,7 @@ from fastapi.responses import JSONResponse, Response
 
 from core.backend import BackendError
 from core.csrf import BodyError, json_body, limited_body
+from core.builder import Limits as _Limits
 from routes.common import ident, render
 
 router = APIRouter(prefix="/build", include_in_schema=False)
@@ -42,7 +43,7 @@ def _error(e: BackendError, **more) -> JSONResponse:
 
 
 async def _body(request: Request) -> dict:
-    body = await json_body(request, limit=request.app.state.builder_limits.max_total_bytes * 2 + 65536)
+    body = await json_body(request, limit=_Limits.of(request.app).max_total_bytes * 2 + 65536)
     if not isinstance(body, dict):
         raise BodyError(400, "send a JSON object")
     return body
@@ -94,7 +95,7 @@ async def import_fragment(request: Request):
     """Import a pack folder or zip as Designs, one per Sutra, with the samples found beside it. Send a zip (``application/zip``)
     or a folder as JSON ``{files: [{path, text}]}``. Answers the designs made and what was skipped."""
     kind = (request.headers.get("content-type") or "").split(";")[0].strip().lower()
-    limit = request.app.state.builder_limits.max_total_bytes
+    limit = _Limits.of(request.app).max_total_bytes
     if kind == "application/zip":
         data = await limited_body(request, limit, "the zip")
     elif kind == "application/json":

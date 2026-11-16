@@ -209,11 +209,7 @@ features:                    # the console's own switches; a distribution preset
   collaboration: true        # Admin -> Collaboration
   examples_dir: ../docs/guides/examples   # the Rachana examples Studio and the help centre offer (docs/guides/examples/README.md)
 builder:                     # Build workbench, New (/build/new); docs/guides/RACHANA_REFERENCE.md
-  # The upload limits, checked here before anything is sent on. Keep them at or under the server's drishti.builder limits,
-  # which refuse the same way (413 DRS-5005).
-  max_samples: 50            # files in one upload, and samples (a .jsonl line is one) in all
-  max_file_mb: 5             # largest single file
-  max_total_mb: 25           # all files together
+  # The upload limits are the server's (drishti.builder.max-samples, max-file-mb, max-total-mb), sent in its installation answer.
   pack_designer_max_mb: 4096      # Build -> New pack (the Pack designer): the most uploaded MB in one workspace
   pack_designer_max_files: 500    # Build -> New pack: files in one workspace
   pack_designer_ttl_hours: 72     # Build -> New pack: hours a workspace untouched is kept before it is removed
