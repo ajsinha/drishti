@@ -62,7 +62,41 @@ def stack(tmp_path_factory):
                          DRISHTI_PACKS=WALK_PACKS, DRISHTI_LENSES="risk,world,market,trading,markets"):
         _packs_ready(st.server, WALK_PACKS.split(","))
         _why_ready(str(st))
+        _connectors_settled(st.server)
         yield st
+
+
+def _connectors_settled(server: str, seconds: float = 240) -> None:
+    """Every connector past its start: none starting or retrying (the official results' connectors retry about a minute, until the start's
+    capture has written their tables), and the list (name, state, label, the health's first word and engine)
+    the same on three asks two seconds apart. Right after a start the connectors come up one by one (a lake connector says UP with its
+    engine once it has opened its tables; the official results' connectors retry until the start's capture is written), so the first
+    snapshots of Admin -> Connectors and Data bindings drew a moment of that and the later ones another (drill of 2026-11-15). Waits at
+    most ``seconds``; then the pages are drawn as they are."""
+    import json
+    import time
+    import urllib.request
+
+    def state():
+        with urllib.request.urlopen(server + "/api/v1/admin/connectors", timeout=30) as r:
+            got = json.load(r)
+        rows = got.get("connectors", got) if isinstance(got, dict) else got
+        return tuple(sorted((c.get("name"), c.get("state"), c.get("label"), str(c.get("health") or "").split(":", 1)[0],
+                             "engine:" in str(c.get("health") or ""), bool(c.get("retry"))) for c in rows))
+
+    deadline, seen = time.monotonic() + seconds, []
+    while time.monotonic() < deadline:
+        try:
+            now = state()
+        except OSError:
+            now = None
+        busy = now is None or any(r[1] == "STARTING" or r[5] for r in now)
+        seen = [] if busy or (seen and seen[-1] != now) else seen
+        if not busy:
+            seen.append(now)
+            if len(seen) >= 3:
+                return
+        time.sleep(2)   # wait-ok: polling the connectors of a server that is still coming up
 
 
 def _packs_ready(server: str, names: list[str], seconds: float = 300, token_secret: str = "") -> None:

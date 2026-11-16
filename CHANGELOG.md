@@ -18,6 +18,22 @@
 
 ## Unreleased
 
+- **A refusal in words reaches the caller.** A source that refuses a whole-kind read with a reason (positions and system baskets on a
+  server with no VaR inputs: `DRS-1001 no P&L vectors in any connector`; busy protection's 503 with Retry-After) is passed on with its
+  own code and words, no longer as `502 DRS-1003 ... failed reading every position` with the reason lost.
+- **Grids show nested values.** A cell holding a list or a record (a curve's points, a trade's legs) shows the plain values joined, the
+  number of records (`28 items`) or the record as JSON, never `[object Object]`.
+- **A draft is saved only where it may be.** Build › Tables & models offers the workspaces the person may add to (contributor and above),
+  never the read-only shipped BI folder, which was the first shared choice once the modules shipped BI content (DRS-9002 on save).
+- **The open report's pack row says its own period.** A VaR report opened for an earlier period (FY2026 once FY2027 has begun) shows that
+  period's run and state in the pack, and its Generate button generates the period it names.
+- **Tests:** the shared test lake's connector files read the lake where it is (they named the cache's build folder); the API sweep step
+  writes its report to its own scratch folder; the upgrade fixture renders only the old release's default packs; a shared read-only
+  server waits for its start-up captures before it is watched for writes, and a platform alert it raises is not counted as a test's
+  write; the visual snapshots no longer wait for network idle (a page's live channel never let it come: 10 s a page, the var group's
+  535 s down to about 150 s) and start once every connector of their server is past its start; the goldens of frtb, curves, trades,
+  bi-report, world, home-market and admin-connectors retaken over the full shared lake.
+
 - **One shared test lake.** Every console and browser test reads one lake, read only: the full demo lake of the saved test data
   (ending 2026-11-06, the committed exposure run), built once per hash of the test data, generators and loaders by the parallel Java
   loader and kept in one cache folder (`DRISHTI_LAKE_CACHE`, one absolute folder for every checkout and drill). No test builds, copies

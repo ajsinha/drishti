@@ -34,7 +34,7 @@ import pytest
 import snapshots
 from page_walk import go, new_page, open_page
 
-#: the visual snapshots: name -> (address, {tolerance, mask: more selectors covered, idle: wait for the network to go quiet, wait: a
+#: the visual snapshots: name -> (address, {tolerance, mask: more selectors covered, wait: a
 #: script true once the page has drawn, scroll: capture this part of the page alone instead of the viewport});
 #: a lens's Home is captured after entering the lens (its page asks to confirm: a POST), then the lens is left the same way
 KEY_SNAPSHOTS: dict[str, tuple[str, dict]] = {
@@ -45,24 +45,24 @@ KEY_SNAPSHOTS: dict[str, tuple[str, dict]] = {
     "home-markets": ("/lens/markets", {}),
     "world": ("/lens/world", {}),
     # the VaR page marks itself painted (data-painted) once its headline and its tab have drawn
-    "var-bank": ("/var?scope=BANK", {"idle": True, "wait": "!!document.querySelector('[data-var][data-painted]')"}),
-    "var-desk": ("/var?scope=DESK:DESK-RATES", {"idle": True, "wait": "!!document.querySelector('[data-var][data-painted]')"}),
-    "var-basket": ("/var?scope=BASKET:PF-ASHA-UNWIND", {"idle": True, "wait": "!!document.querySelector('[data-var][data-painted]')"}),
+    "var-bank": ("/var?scope=BANK", {"wait": "!!document.querySelector('[data-var][data-painted]')"}),
+    "var-desk": ("/var?scope=DESK:DESK-RATES", {"wait": "!!document.querySelector('[data-var][data-painted]')"}),
+    "var-basket": ("/var?scope=BASKET:PF-ASHA-UNWIND", {"wait": "!!document.querySelector('[data-var][data-painted]')"}),
     # Why it moved as a page (layout A: the compare line, four figures, the waterfall wide with the step's contributors beside it);
     # its ready state: data-state turns ready once the waterfall and the side are drawn, or failed with the server's words
-    "why-it-moved": (go("VAR BANK EXPLAIN"), {"idle": True, "wait": "(() => { const p = document.querySelector('[data-explain-page]');"
+    "why-it-moved": (go("VAR BANK EXPLAIN"), {"wait": "(() => { const p = document.querySelector('[data-explain-page]');"
                                                        " return !!(p && p.dataset.state === 'ready' && p.querySelector('[data-dx-why-waterfall] [data-dx-waterfall] svg, [data-dx-why-waterfall] [data-dx-waterfall] canvas')); })()",
                                                        "failed": "(() => { const p = document.querySelector('[data-explain-page]'); if (!p || p.dataset.state === 'loading') return null;"
                                                        " if (p.dataset.state === 'failed') return 'the page failed: ' + p.innerText.slice(0, 300);"
                                                        " return p.querySelector('[data-dx-why-waterfall]') ? null : 'ready without the waterfall: ' + p.innerText.slice(0, 300); })()"}),
     # the cube's columns are sized as its rows arrive: a figure is cut short on one run and whole on another (2%)
-    "mr-cube": ("/pivot?preset=mr", {"idle": True, "tolerance": 0.02, "wait": "!/Computing the grid/i.test(document.querySelector('#main').innerText)"}),
+    "mr-cube": ("/pivot?preset=mr", {"tolerance": 0.02, "wait": "!/Computing the grid/i.test(document.querySelector('#main').innerText)"}),
     "pivot": ("/pivot", {}),
     # a live board: its trend's time axis moves with the clock (1%)
-    "bi-report": ("/bi/r/file:report:desk-wall", {"idle": True, "tolerance": 0.01, "wait": "/Net MTM/.test(document.querySelector('#main').innerText)"}),
-    "frtb": (go("FRSA BANK"), {"idle": True, "wait": "!/loading/i.test(document.querySelector('#main').innerText)"}),
-    "simm": (go("SIMM"), {"idle": True, "wait": "!/Loading/i.test(document.querySelector('#main').innerText)"}),
-    "exposure": (go("EXP"), {"idle": True}),
+    "bi-report": ("/bi/r/file:report:desk-wall", {"tolerance": 0.01, "wait": "/Net MTM/.test(document.querySelector('#main').innerText)"}),
+    "frtb": (go("FRSA BANK"), {"wait": "!/loading/i.test(document.querySelector('#main').innerText)"}),
+    "simm": (go("SIMM"), {"wait": "!/Loading/i.test(document.querySelector('#main').innerText)"}),
+    "exposure": (go("EXP"), {}),
     "form": ("/forms", {}),
     "trades": (go("TRD"), {}),
     "curves": (go("CRV"), {}),
@@ -71,7 +71,7 @@ KEY_SNAPSHOTS: dict[str, tuple[str, dict]] = {
     # the memory each engine holds now and the server's folder (a temporary one per run) move: covered
     # Admin -> Engines is left out: its native-maths notice depends on whether the server's BLAS probe answered within the page's budget,
     # so the table moves between runs; the page is covered by test_engines_browser and test_admin_engines_budget
-    "admin-connectors": ("/admin/connectors", {"idle": True, "tolerance": 0.02}),   # live connector states settle at their own pace
+    "admin-connectors": ("/admin/connectors", {"tolerance": 0.02}),   # live connector states settle at their own pace
     "admin-loads": ("/admin/loads", {}),
     "admin-upload": ("/admin/loads/upload", {}),
     "admin-bindings": ("/admin/bindings", {}),
@@ -174,11 +174,8 @@ def run_group(group: str, stack, browser, request, tmp_path) -> None:
                     r = open_page(pg, base, href)
                     if href.startswith("/lens/"):
                         _confirm(pg, base)
-                    if opts.get("idle"):   # the page's last calls answered (a header's figures, a grid's rows), images too
-                        try:
-                            pg.wait_for_load_state("networkidle", timeout=10_000)
-                        except Exception:  # noqa: BLE001 - a call still open: its own wait decides
-                            pass
+                    # no wait for the network to go idle: a page's live channel stays open, so it never did and cost its 10 s limit on every
+                    # page that asked (drill of 2026-11-15: the var group's 535 s); the drawn signal counts the page's own unanswered fetches
                     if opts.get("wait"):
                         try:
                             _until(pg, opts["wait"], failed=opts.get("failed"))
