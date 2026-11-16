@@ -33,6 +33,8 @@ data/testdata/
   news-and-markets/news/        a REAL snapshot of the companies' and topics' headlines, Google News
   us-equities/<kind>/           REAL public data: the index companies, their filings and financial facts (SEC EDGAR, Wikidata, GLEIF)
   gleif/<kind>/                 REAL public data: LEI records, ownership groups, relationships, countries, identifiers (GLEIF, CC0)
+  genomics-showcase/<kind>/     SYNTHETIC: the genomics module's showcase, a cohort of 1,500 invented patients (100,000 rows, seeded)
+  protein-engineering/<kind>/   SYNTHETIC: an invented protein, its scan and a design campaign (100,000 rows, seeded)
 ```
 
 Written by `tools/testdata/make_testdata.py` (deterministic; `--check` says whether the files are current), guarded by
