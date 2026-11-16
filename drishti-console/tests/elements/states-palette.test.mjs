@@ -86,3 +86,25 @@ test('a kernel density peaks at 1 near the data, tenors sort by length, a diverg
   assert.equal(sc.colour(5), 'rgb(128,128,128)');
   assert.throws(() => K.colourScale({ domain: [0, 1] }), /ramp/);
 });
+
+test('grid: threshold and top rules colour the right figures, a view survives a share link, the heat preset formats every measure', async () => {
+  const G = await import('../../web/static/elements/drishti-grid/src/drishti_index.js');
+  const range = { min: 0, max: 100, maxAbs: 100 };
+  assert.ok(G.cfBackground({ type: 'threshold', op: 'gt', value: 50, tone: 'bad' }, 60, range));
+  assert.equal(G.cfBackground({ type: 'threshold', op: 'gt', value: 50 }, 40, range), null);
+  assert.ok(G.cfBackground({ type: 'threshold', op: 'between', value: 10, value2: 20, tone: 'good' }, 15, range));
+  assert.ok(G.cfBackground({ type: 'top', percent: 10 }, 95, range));
+  assert.equal(G.cfBackground({ type: 'top', percent: 10 }, 50, range), null);
+  assert.deepEqual(G.ruleProblems({ type: 'threshold', column: 'mtm', op: 'gt', value: 5 }), []);
+  assert.ok(G.ruleProblems({ type: 'threshold', column: 'mtm', op: 'between', value: 5 }).length === 1);
+  assert.match(G.ruleText({ type: 'threshold', column: 'MTM', op: 'gt', value: 100, tone: 'bad' }), /MTM is more than 100: bad/);
+  const state = { layout: 'wells', view: { hidden: ['x'], formats: [{ type: 'dataBar', column: 'a' }] }, note: 'é→' };
+  const link = G.shareLink('https://h/p?x=1#old', state);
+  assert.ok(link.startsWith('https://h/p?x=1#grid-view='));
+  assert.deepEqual(G.readSharedView(link), state);
+  assert.equal(G.readSharedView('https://h/p'), null);
+  assert.throws(() => G.decodeView('###'), /does not carry/);
+  const p = G.heatPivotPreset(['var', 'mtm']);
+  assert.equal(p.conditionalFormats.length, 2);
+  assert.ok(p.grandColumn && p.columnGroupTotals);
+});

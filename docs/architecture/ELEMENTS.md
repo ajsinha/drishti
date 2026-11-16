@@ -259,6 +259,14 @@ drishti-chart's `bullet` (the grid now requires drishti-chart, and loads its sty
 copy, export and sort are unchanged; the drawing's label gives the figure, the limit and the use for a screen reader. Gallery:
 "Grid cells". The AG adapter lists AG Grid's own sparkline option under *Not covered*; this is its Drishti way.
 
+**Rules, shared views and the heat pivot (drishti-grid 0.6.0).** Conditional formats gain `threshold` (`op` gt, ge, lt, le, eq, between,
+`value`, `value2`, `tone`) and `top` (`percent`, `tone`) beside the colour scale and the data bars. `openRuleBuilder(grid)` is the rule
+builder: a drishti-inputs form made from `ruleFormSchema(columns)` in a dialog; Add rule appends to the grid's conditional formats
+(`ruleText` and `ruleProblems` give the words). `shareLink(href, grid.getState())` is a link that carries a saved view in its fragment (the
+server never sees it) and `readSharedView(href)` gives it back; the host lays it out with `setState`. `heatPivotPreset(measures)` is the
+heat-cell pivot: every measure on a colour scale with the grand column, the column-group totals and the grand row. Master-detail rows are
+not built yet.
+
 ### 4.4 drishti-chart
 
 Section 7. Takes over: `drishti_charts.js`, `drishti_geomap.js`, the BI Vega script (retired: Vega-Lite is translated), `drishti_bi-multiples.js`,

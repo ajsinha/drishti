@@ -8037,6 +8037,17 @@ The background of a conditionally formatted cell (a CSS background-image; the co
 
 Returns `?string`.
 
+#### `thresholdHit(rule, v)`
+
+Whether a figure meets a threshold rule (op gt, ge, lt, le, eq, between).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `rule` | `ConditionalFormat` |  |
+| `v` | `number` |  |
+
+Returns `boolean`.
+
 #### `figureRange(values)`
 
 The least, most and largest magnitude of figures (non-numbers left out); null when there are none.
@@ -8371,6 +8382,103 @@ A cell renderer drawing the cell's figure as a bar from the scale's start to its
 | `[o]` | `CellDrawOptions & {min: number, max: (number\|string\|function(Object): number)}` | max: a number, the row's field or a function (default: the figure's own scale) |
 
 Returns `function({value: *, text: string, row: Object, doc: Document}): ?Node`.
+
+### drishti_grid-rules.js
+
+#### `ruleText(r)`
+
+The words of a rule ("MTM is more than 1,000,000: bad").
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `r` | `import('./drishti_grid-ui.js').ConditionalFormat` |  |
+
+Returns `string`.
+
+#### `ruleProblems(r)`
+
+The problems of a rule, in words (none: an empty list).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `r` | `import('./drishti_grid-ui.js').ConditionalFormat` |  |
+
+Returns `string[]`.
+
+#### `ruleFormSchema(columns)`
+
+The schema of the rule form (drishti-inputs' Form) for the columns of a grid.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `columns` | `Array&lt;{id: string, header: string}&gt;` |  |
+
+Returns `Object`.
+
+#### `openRuleBuilder(grid, o)`
+
+Opens the rule builder over a grid: the form in a dialog; Save adds the rule to the grid's conditional formats.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `grid` | `Object` | a Grid (drishti-grid): its model's columns and setConditionalFormats |
+| `[o]` | `{onAdded: function(Object): void}` |  |
+
+Returns `{dialog: HTMLDialogElement, form: Form, close: function(): void}`.
+
+#### `encodeView(state)`
+
+A grid's state as text safe in an address (base64url of its JSON, versioned).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `state` | `Object` | a Grid's getState() |
+
+Returns `string`.
+
+#### `decodeView(text)`
+
+The state an address's text carries; throws in words when it is not one of ours.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `text` | `string` |  |
+
+Returns `Object`.
+
+#### `shareLink(href, state, key)`
+
+The link that opens a page with a view laid out: the address with the view in its fragment (#grid-view=...), so a server never sees it.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `href` | `string` | the page's address |
+| `state` | `Object` | a Grid's getState() |
+| `[key='grid-view']` | `string` | the fragment's name (one per grid on a page) |
+
+Returns `string`.
+
+#### `readSharedView(href, key)`
+
+The view an address carries, or null when it has none.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `href` | `string` |  |
+| `[key='grid-view']` | `string` |  |
+
+Returns `?Object`.
+
+#### `heatPivotPreset(measures, o)`
+
+The heat-cell pivot: every value column coloured by its figure on a scale, with the marginal totals (the grand column and the column group totals) and the grand row. Spread into the grid's options: new Grid(el, Object.assign({columns, rows}, heatPivotPreset(['mtm', 'var'])))
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `measures` | `string[]` | the value columns (ids or pivot value labels) |
+| `[o]` | `{colour: string, pinTotals: boolean}` | colour: a theme token (default --d-accent) |
+
+Returns `Object`: grid options.
 
 ### drishti_grid-actions.js
 
@@ -10081,8 +10189,13 @@ A row's update as the grid tells it: the row's id and each changed cell's old an
 |---|---|---|
 | `[column]` | `string` | the column's id (or a pivot value's source column) |
 | `[measure]` | `string` | a pivot value's label |
-| `type` | `('colourScale'\|'dataBar')` |  |
+| `type` | `('colourScale'\|'dataBar'\|'threshold'\|'top')` | threshold: a figure compared with value (op gt, ge, lt, le, eq, between with value2); top: the figures in the top percent of the column's range |
 | `[colour]` | `string` | a theme token for the scale or the bar (default --d-accent for scales, --d-pos and --d-neg for bars) |
+| `[op]` | `string` | threshold: gt, ge, lt, le, eq or between |
+| `[value]` | `number` | threshold: the figure compared with |
+| `[value2]` | `number` | threshold between: the upper figure |
+| `[percent]` | `number` | top: the share of the range, 1 to 100 |
+| `[tone]` | `('good'\|'warn'\|'bad')` | threshold and top: the tone drawn (default bad) |
 
 #### `MenuItem` : `Object`
 

@@ -34,7 +34,7 @@ export const FUNCTION_KEYS = Object.freeze([
   { key: 'F9', action: 'drill', label: 'Rows' }, { key: 'F10', action: 'save-view', label: 'Save view' }]);
 
 /** The conditional formats a column may take. */
-export const CF_TYPES = Object.freeze(['colourScale', 'dataBar']);
+export const CF_TYPES = Object.freeze(['colourScale', 'dataBar', 'threshold', 'top']);
 
 /**
  * @typedef {Object} HeaderSpan
@@ -125,8 +125,14 @@ export function nonAdditiveNote(header, text) {
  * @typedef {Object} ConditionalFormat
  * @property {string} [column] the column's id (or a pivot value's source column)
  * @property {string} [measure] a pivot value's label
- * @property {('colourScale'|'dataBar')} type
+ * @property {('colourScale'|'dataBar'|'threshold'|'top')} type threshold: a figure compared with value (op gt, ge, lt, le, eq, between with value2);
+ *   top: the figures in the top percent of the column's range
  * @property {string} [colour] a theme token for the scale or the bar (default --d-accent for scales, --d-pos and --d-neg for bars)
+ * @property {string} [op] threshold: gt, ge, lt, le, eq or between
+ * @property {number} [value] threshold: the figure compared with
+ * @property {number} [value2] threshold between: the upper figure
+ * @property {number} [percent] top: the share of the range, 1 to 100
+ * @property {('good'|'warn'|'bad')} [tone] threshold and top: the tone drawn (default bad)
  */
 
 /**
@@ -171,7 +177,32 @@ export function cfBackground(rule, v, range) {
     const w = dataBarWidth(v, range.maxAbs), tok = v < 0 ? '--d-neg' : (rule.colour || '--d-pos');
     return 'linear-gradient(to left, color-mix(in srgb, var(' + tok + ') 26%, transparent) ' + w + '%, transparent ' + w + '%)';
   }
+  if (rule.type === 'threshold' || rule.type === 'top') {
+    const hit = rule.type === 'top' ? (range.max > range.min && (v - range.min) / (range.max - range.min) >= 1 - (Number(rule.percent) || 10) / 100) : thresholdHit(rule, v);
+    if (!hit) { return null; }
+    const c = 'color-mix(in srgb, var(' + ({ good: '--d-ok', warn: '--d-warn', bad: '--d-bad' }[rule.tone] || '--d-bad') + ') 32%, transparent)';
+    return 'linear-gradient(' + c + ', ' + c + ')';
+  }
   return null;
+}
+
+/**
+ * Whether a figure meets a threshold rule (op gt, ge, lt, le, eq, between).
+ * @param {ConditionalFormat} rule
+ * @param {number} v
+ * @returns {boolean}
+ */
+export function thresholdHit(rule, v) {
+  const a = Number(rule.value), b = Number(rule.value2);
+  switch (rule.op) {
+    case 'gt': return v > a;
+    case 'ge': return v >= a;
+    case 'lt': return v < a;
+    case 'le': return v <= a;
+    case 'eq': return v === a;
+    case 'between': return v >= Math.min(a, b) && v <= Math.max(a, b);
+    default: return false;
+  }
 }
 
 /**

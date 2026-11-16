@@ -134,4 +134,24 @@
     },
     code: () => ({ js: "Drishti.elements.chart.facets(host, { kind: 'line', x: { field: 'day' }, y: { field: 'var' }, data: { rows } }, 'desk', { columns: 2 });", element: '<!-- any host element -->' })
   }));
+
+  demos.push(fn({
+    id: 'grid-rules', library: 'drishti-grid', title: 'Grid: rule builder, share link, heat pivot', about: 'drishti_grid-rules.js', types: [],
+    summary: 'The conditional-format rule builder (a form from a schema: compare with a figure, top share, scale, bars), a link that carries a saved view in its fragment, and the heat-cell pivot preset with its marginal totals.',
+    values: {}, examples: [{ title: 'Heat pivot of VaR', values: {} }],
+    mount: function (host, values, ctx) {
+      const G = ctx.E.grid, doc = host.ownerDocument;
+      const rows = [];
+      ['Rates', 'Credit', 'FX', 'Equities'].forEach((d, i) => ['EMEA', 'APAC', 'Americas'].forEach((r, k) => rows.push({ desk: d, region: r, var99: 20 + ((i * 13 + k * 7) % 41), mtm: ((i + 1) * (k + 2) * 37) % 300 - 120 })));
+      const bar = ctx.h(doc, 'div', { cls: 'gx-fn' }, [ctx.h(doc, 'button', { cls: 'gx-btn', text: 'Add a rule…', attrs: { type: 'button' }, on: { click: () => G.openRuleBuilder(el.grid) } }),
+        ctx.h(doc, 'button', { cls: 'gx-btn', text: 'Copy a link to this view', attrs: { type: 'button' }, on: { click: () => { const l = G.shareLink(doc.defaultView.location.href, el.grid.getState()); ctx.log('shareLink', l.length + ' characters'); } } })]);
+      const el = doc.createElement('drishti-grid');
+      host.appendChild(bar);
+      host.appendChild(el);
+      el.options = Object.assign({ rows, getRowId: (r) => r.desk + r.region, columns: [{ field: 'desk', header: 'Desk' }, { field: 'region', header: 'Region' },
+        { field: 'var99', header: 'VaR 99% 1d', type: 'number' }, { field: 'mtm', header: 'MTM', type: 'number' }] }, G.heatPivotPreset(['var99', 'mtm']));
+      return { target: el, element: el, ready: Promise.resolve(), destroy: () => { if (el.grid) { el.grid.destroy(); } bar.remove(); el.remove(); } };
+    },
+    code: () => ({ js: "const G = Drishti.elements.grid;\ngrid.options = Object.assign({ rows, columns }, G.heatPivotPreset(['var99', 'mtm']));\nG.openRuleBuilder(grid.grid);\nconst link = G.shareLink(location.href, grid.grid.getState());\nconst view = G.readSharedView(location.href);", element: '<drishti-grid id="grid"></drishti-grid>' })
+  }));
 }(typeof window !== 'undefined' ? window : null));
