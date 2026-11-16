@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  A screen mock-up (genomics-showcase/genomics-B.html), self-contained: system fonts, everything inline, nothing from a CDN, no network.
+  Dark theme by default; open it with #light for the light theme (or use the Theme button). Its design and build checklist are in
+  docs/architecture/GENOMICS_SHOWCASE.md. Option B (an alternative): the genome browser.
+  Every figure is synthetic and seeded; gene and protein names are invented. The mock-up draws on a canvas by hand; the product
+  draws every card with Drishti Elements and the server computes every figure.
+  The product name in the bar comes from configuration (the drishti.genomics distribution); the mock-up shows its default.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Genomics showcase: option B, the genome browser</title>
+<script>if(location.hash==='#light')document.documentElement.classList.add('light');</script>
+<style>
+:root{
+  --bg:#0e1628; --bg2:#121c33; --panel:#16213a; --panel2:#1b2744; --line:#26345a; --line2:#1f2b49;
+  --ink:#e7ecf5; --muted:#93a0b8; --faint:#5f6d8c; --amber:#e8a33a; --amber2:#f2b453; --amber-t:rgba(232,163,58,.14);
+  --link:#7fb2ff; --pos:#7fb2ff; --neg:#f2955a; --ok:#5fd39a; --warn:#f2c14e; --bad:#ff7a7a; --violet:#b48cff;
+  --hl:rgba(127,178,255,.10); --onacc:#14100a; --ok-t:rgba(95,211,154,.14); --bad-t:rgba(255,122,122,.15);
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  color-scheme:dark;
+}
+html.light{
+  --bg:#f7f5f0; --bg2:#efebe3; --panel:#ffffff; --panel2:#f3f0e9; --line:#e2dcd0; --line2:#ece7dd;
+  --ink:#172440; --muted:#55607a; --faint:#a3a9b8; --amber:#985b0a; --amber2:#7c4805; --amber-t:rgba(184,110,12,.12);
+  --link:#1f5fc4; --pos:#1f5fc4; --neg:#b4491a; --ok:#1b784c; --warn:#8a6100; --bad:#b42323; --violet:#6a3fc0;
+  --hl:rgba(31,95,196,.07); --onacc:#ffffff; --ok-t:rgba(27,120,76,.10); --bad-t:rgba(180,35,35,.09);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px}
+a{color:var(--link);text-decoration:none} a:hover{text-decoration:underline}
+.page{max-width:1568px;margin:0 auto;padding:16px 16px 28px;display:flex;flex-direction:column;gap:12px}
+.intro h1{font-size:19px;margin:0 0 4px}
+.intro p{margin:0;color:var(--muted);max-width:130ch;line-height:1.5;font-size:13px}
+.intro .nav{margin-top:6px;font-size:12.5px;display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center}
+.rec{display:inline-block;margin-left:10px;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;background:var(--ok-t);color:var(--ok);border:1px solid var(--ok);vertical-align:middle}
+.alt{display:inline-block;margin-left:10px;padding:2px 10px;border-radius:12px;font-size:12px;color:var(--muted);border:1px solid var(--line);vertical-align:middle}
+.bar{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;padding:8px 14px;border:1px solid var(--line);border-radius:8px;background:var(--bg2)}
+.brand{font-weight:700;letter-spacing:.12em;color:var(--amber)} .brand i{font-style:normal;letter-spacing:.02em;margin-left:6px;color:var(--violet)}
+.cmd{flex:1 1 260px;max-width:680px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:32px;line-height:30px;padding:0 14px;border:1px solid var(--amber);border-radius:16px;font-family:var(--mono);color:var(--amber);font-size:13px}
+.menus{display:flex;flex-wrap:wrap;gap:4px;margin-left:auto;font-size:13px}
+.menus a,.menus span{padding:5px 10px;border-radius:6px;color:var(--muted)} .menus .on{background:var(--panel2);color:var(--ink)}
+.btn{font:inherit;font-size:12.5px;padding:5px 12px;border:1px solid var(--line);border-radius:6px;color:var(--ink);background:var(--panel2);white-space:nowrap;display:inline-block;cursor:pointer}
+.btn.p{background:var(--amber);border-color:var(--amber);color:var(--onacc);font-weight:600}
+.btn:hover{border-color:var(--amber);text-decoration:none}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:14px;overflow:hidden;vertical-align:middle}
+.seg span{padding:3px 11px;font-size:12px;color:var(--muted);cursor:pointer} .seg span.on{background:var(--panel2);color:var(--ink);font-weight:600}
+.row{display:grid;gap:12px;align-items:start}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;min-width:0}
+.card h3{margin:0 0 8px;font-size:13.5px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center}
+.card h3 small{color:var(--muted);font-weight:400;font-size:12px}
+.card h3 .tools{margin-left:auto;display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-weight:400}
+.tool{font-size:11.5px;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:2px 8px;cursor:pointer;background:none;font-family:inherit}
+.tool:hover{color:var(--amber);border-color:var(--amber)}
+.view canvas{display:block;width:100%;touch-action:pan-y}
+.status{margin-top:6px;font-size:11.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 14px}
+.status b{color:var(--ink);font-weight:600}
+.lg{display:inline-flex;align-items:center;gap:5px} .lg i{width:9px;height:9px;border-radius:2px;display:inline-block}
+.scroll{overflow-x:auto}
+table{border-collapse:separate;border-spacing:0;font-size:12.5px;font-variant-numeric:tabular-nums;width:100%}
+th,td{padding:4px 8px;white-space:nowrap;text-align:right;border-bottom:1px solid var(--line2)}
+td{font-family:var(--mono)} th{background:var(--panel2);color:var(--muted);font-weight:500;font-size:12px}
+th.l,td.l{text-align:left} td.s{font-family:var(--sans)}
+tr.pick{cursor:pointer} tr.pick:hover td{background:var(--hl)} tr.sel td{background:var(--amber-t)}
+.neg{color:var(--neg)} .posv{color:var(--pos)} .muted{color:var(--muted)} .ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)} .amb{color:var(--amber)}
+.pill{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11.5px;font-family:var(--sans);font-weight:600}
+.pill.g{background:var(--ok-t);color:var(--ok)} .pill.r{background:var(--bad-t);color:var(--bad)} .pill.n{background:var(--panel2);color:var(--muted)} .pill.a{background:var(--amber-t);color:var(--amber)}
+.kpis{display:flex;flex-wrap:wrap;gap:10px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 14px;min-width:132px;flex:1 1 132px}
+.kpi .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.kpi .v{font-size:19px;font-weight:650;font-variant-numeric:tabular-nums;margin-top:2px}
+.kpi .d{font-size:11.5px;color:var(--muted);margin-top:1px}
+.kpi.syn{border-style:dashed;border-color:var(--amber)} .kpi.syn .v{font-size:14px;color:var(--amber);margin-top:5px}
+.chip{display:inline-flex;gap:6px;align-items:center;padding:2px 10px;border-radius:12px;border:1px solid var(--amber);color:var(--amber);font-size:12px}
+.chip b{cursor:pointer}
+.meter{height:8px;border-radius:4px;background:var(--line2);overflow:hidden;margin:3px 0 8px} .meter i{display:block;height:100%}
+.facts{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:12.5px;margin:0} .facts dt{color:var(--muted)} .facts dd{margin:0}
+.ctl{display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:12.5px}
+.ctl input[type=range]{accent-color:var(--amber);flex:1 1 160px;min-width:120px}
+.big{font-size:22px;font-weight:650} .big small{font-size:12.5px;color:var(--muted);font-weight:400;margin-left:8px}
+#tip{position:fixed;z-index:30;pointer-events:none;max-width:300px;padding:6px 9px;border-radius:6px;background:var(--bg2);border:1px solid var(--line);font-size:12px;line-height:1.45;box-shadow:0 6px 18px rgba(0,0,0,.35);display:none}
+#ex{position:fixed;z-index:40;top:0;right:0;bottom:0;width:min(440px,100%);background:var(--bg2);border-left:1px solid var(--amber);padding:16px;overflow:auto;transform:translateX(102%);transition:transform .18s}
+#ex.open{transform:none}
+#ex h2{margin:0 0 2px;font-size:16px} #ex h4{margin:14px 0 4px;font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+#ex p,#ex li{font-size:13px;line-height:1.5;margin:0 0 6px} #ex ol{padding-left:18px;margin:0}
+#ex code{font-family:var(--mono);font-size:12px;color:var(--amber)}
+#ex .x{float:right}
+.steps{display:flex;flex-wrap:wrap;gap:8px}
+.steps .st{flex:1 1 150px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);cursor:pointer}
+.steps .st b{display:block;font-size:13px} .steps .st span{font-size:11.5px;color:var(--muted)}
+.steps .st.on{border-color:var(--amber);background:var(--amber-t)} .steps .st.on b{color:var(--amber)}
+.step{display:none;flex-direction:column;gap:12px} .step.on{display:flex}
+.say{border-left:3px solid var(--amber);padding:6px 12px;color:var(--ink);font-size:14px;line-height:1.5;background:var(--amber-t);border-radius:0 6px 6px 0}
+.say small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+@media(max-width:900px){.row{grid-template-columns:1fr!important}.menus{margin-left:0}.page{padding:10px 16px 24px}}
+@media(prefers-reduced-motion:reduce){#ex{transition:none}}
+
+</style>
+</head>
+<body>
+<div class="page">
+<div class="intro"><h1>Genomics showcase · option B: The genome browser <span class="alt">alternative</span></h1><p>Tracks stacked on one genome axis (association, copy number, the locus), with the gene and its cohort in a side panel. Closest to what a geneticist already knows; less of a first-minute impact than option A. Try: click a peak on either track, then a cluster name on the map.</p><div class="nav"><a href="index.html">All mock-ups</a><span class="muted">|</span> <a href="genomics-A.html">Option A</a> <a href="genomics-B.html" style="font-weight:700">Option B</a> <a href="genomics-C.html">Option C</a> <span class="muted">|</span> <a href="protein-A.html">The protein engineering screen →</a><button class="btn" data-act="theme" style="margin-left:auto">Theme: dark / light</button></div></div><div class="bar"><span class="brand">DRISHTI<i>Genomics</i></span><div class="cmd" data-panel="cmd"></div><div class="menus"><a class="on" href="genomics-A.html">Cohorts</a><a href="protein-A.html">Proteins</a><span>Data</span><span>Help</span></div></div><div class="kpis" data-panel="kpis"></div><div class="row" style="grid-template-columns:2.1fr 1fr"><div style="display:flex;flex-direction:column;gap:12px;min-width:0"><section class="card"><h3><span>Genome-wide association</span> <small>response to therapy · 12,000 sites, 5,384 drawn</small><span class="tools"><button class="tool" data-act="explain" data-arg="manhattan">Explain</button></span></h3><div data-view="manhattan" data-h="236"></div><div class="status"><span class="lg"><i style="background:var(--amber)"></i>passes the genome-wide line</span><span class="lg"><i style="background:var(--link)"></i>odd</span><span class="lg"><i style="background:var(--faint)"></i>even chromosomes</span><span>Click a peak or a gene: every card follows</span></div></section><section class="card"><h3><span>Copy-number frequency</span> <small>share of samples, 4 Mb bins, same axis</small><span class="tools"><button class="tool" data-act="explain" data-arg="cnv">Explain</button></span></h3><div data-view="cnv" data-h="104"></div></section><section class="card"><h3><span>Locus zoom</span> <small>4 Mb around the gene</small><span class="tools"><button class="tool" data-act="explain" data-arg="locus">Explain</button></span></h3><div data-view="locus" data-h="244"></div><div class="status"><span class="lg"><i style="background:var(--violet)"></i>lead</span><span class="lg"><i style="background:var(--bad)"></i>r² above 0.8</span><span class="lg"><i style="background:var(--amber)"></i>0.6</span><span class="lg"><i style="background:var(--ok)"></i>0.4</span><span class="lg"><i style="background:var(--link)"></i>0.2</span><span class="lg"><i style="background:var(--faint)"></i>below</span></div></section></div><div style="display:flex;flex-direction:column;gap:12px;min-width:0"><section class="card"><h3><span>Gene</span> <small>what the cohort says</small><span class="tools"></span></h3><div data-panel="genecard"></div></section><section class="card"><h3><span><span data-panel="title-gene"></span>: variants along the protein</span> <small>height = carriers in the selection</small><span class="tools"><button class="tool" data-act="explain" data-arg="lollipop">Explain</button></span></h3><div data-view="lollipop" data-h="204"></div><div class="status"><span class="lg"><i style="background:var(--bad)"></i>damaging</span><span class="lg"><i style="background:var(--warn)"></i>intermediate</span><span class="lg"><i style="background:var(--muted)"></i>tolerated</span><span>colour = the deep mutational scan of the protein screen</span></div></section><section class="card"><h3><span>Map of samples</span> <small>expression embedding, precomputed</small><span class="tools"><span data-panel="colour"></span><button class="tool" data-act="explain" data-arg="embed">Explain</button></span></h3><div data-view="embed" data-h="206"></div><div class="status"><span data-panel="selchip"></span></div></section></div></div><section class="card"><h3><span>Cohort: who carries what</span> <small>one column a sample, sorted by the server</small><span class="tools"><button class="tool" data-act="explain" data-arg="oncoprint">Explain</button></span></h3><div data-view="oncoprint" data-h="300" data-rows="12"></div><div class="status"><span class="lg"><i style="background:var(--ok)"></i>missense</span><span class="lg"><i style="background:var(--ink)"></i>truncating</span><span class="lg"><i style="background:var(--bad)"></i>amplification</span><span class="lg"><i style="background:var(--link)"></i>deep deletion</span><span>tracks: response, tumour type, cluster</span></div></section><section class="card"><h3><span>Records: variants of <span data-panel="title-gene"></span></span> <small>click a row to explain it</small><span class="tools"><span class="tool">Columns</span><span class="tool">Export</span></span></h3><div data-panel="records" data-rows="6"></div></section></div>
+<div id="tip"></div>
+<aside id="ex" aria-label="Explain"></aside>
+<script>
+/* The mock-up's own small kit (canvas cards, hit regions, tooltip, Explain drawer). The product draws none of this by hand:
+   every card is a Drishti Elements component (drishti-chart kinds, drishti-grid, drishti-insight's Explain). */
+const D=document,$=(s,r)=>(r||D).querySelector(s),$$=(s,r)=>[...(r||D).querySelectorAll(s)];
+function rng(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function gauss(R){return Math.sqrt(-2*Math.log(R()+1e-9))*Math.cos(6.2832*R())}
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),pad=(n,w)=>String(n).padStart(w,'0'),fmt=n=>Number(n).toLocaleString('en-US');
+let TK={};function tok(n){return TK[n]||(TK[n]=getComputedStyle(D.documentElement).getPropertyValue('--'+n).trim())}
+function rgb(h){h=h.replace('#','');return[0,2,4].map(i=>parseInt(h.substr(i,2),16))}
+function mix(a,b,t){const x=rgb(a),y=rgb(b);return'rgb('+x.map((v,i)=>Math.round(v+(y[i]-v)*clamp(t,0,1))).join(',')+')'}
+function dv(v,lo,hi){return v<0?mix(tok('panel2'),tok('neg'),v/lo):mix(tok('panel2'),tok('pos'),v/hi)}
+function T(g,s,x,y,c,al,f){g.fillStyle=c||tok('muted');g.textAlign=al||'left';g.font=(f||'11px')+' system-ui,sans-serif';g.fillText(s,x,y)}
+const views=[],panels=[],ACT={};
+function tip(html,e){const t=$('#tip');if(!html){t.style.display='none';return}t.innerHTML=html;t.style.display='block';
+  const w=t.offsetWidth,h=t.offsetHeight;t.style.left=clamp(e.clientX+14,4,innerWidth-w-4)+'px';t.style.top=clamp(e.clientY+14,4,innerHeight-h-4)+'px'}
+function mount(name,fn){$$('[data-view="'+name+'"]').forEach(host=>{
+  host.classList.add('view');const c=D.createElement('canvas');host.appendChild(c);const v={host,c,name,hits:[]};
+  v.draw=()=>{const w=host.clientWidth,h=+host.dataset.h||240;if(!w)return;const r=window.devicePixelRatio||1;
+    c.width=Math.round(w*r);c.height=Math.round(h*r);c.style.height=h+'px';const g=c.getContext('2d');g.setTransform(r,0,0,r,0,0);
+    g.textBaseline='middle';g.lineWidth=1;v.hits=[];fn(g,w,h,v)};
+  const xy=e=>{const b=c.getBoundingClientRect();return[e.clientX-b.left,e.clientY-b.top]};
+  const hit=(x,y)=>{for(let i=v.hits.length-1;i>=0;i--){const k=v.hits[i];if(x>=k.x&&x<=k.x+k.w&&y>=k.y&&y<=k.y+k.h)return k}return null};
+  c.addEventListener('pointerdown',e=>{v.dn=xy(e);v.last=v.dn;v.mv=false});
+  c.addEventListener('pointermove',e=>{const[x,y]=xy(e);
+    if(v.dn&&v.onDrag&&e.pointerType==='mouse'&&(v.mv||Math.hypot(x-v.dn[0],y-v.dn[1])>4)){v.mv=true;v.onDrag(v.dn[0],v.dn[1],x,y,false,x-v.last[0]);v.last=[x,y];tip();return}
+    const k=hit(x,y);c.style.cursor=k&&k.click?'pointer':(v.onDrag?'crosshair':'');tip(k&&k.tip&&(typeof k.tip==='function'?k.tip(x,y):k.tip),e)});
+  c.addEventListener('pointerleave',()=>tip());
+  window.addEventListener('pointerup',e=>{if(v.dn&&v.mv&&v.onDrag){const[x,y]=xy(e);v.onDrag(v.dn[0],v.dn[1],x,y,true,0);render()}v.dn=null});
+  c.addEventListener('click',e=>{if(v.mv){v.mv=false;return}const[x,y]=xy(e),k=hit(x,y);if(k&&k.click){k.click(x,y);render()}});
+  views.push(v)})}
+function panel(name,fn){$$('[data-panel="'+name+'"]').forEach(el=>panels.push(()=>{const s=fn(el);if(s!==el._s){el._s=s;el.innerHTML=s}}))}
+function render(){views.forEach(v=>v.draw());panels.forEach(p=>p());const lt=D.documentElement.classList.contains('light');
+  $$('a[href*=".html"]').forEach(a=>{a.setAttribute('href',a.getAttribute('href').replace(/#light$/,'')+(lt?'#light':''))})}
+function redraw(name){views.forEach(v=>{if(v.name===name)v.draw()})}
+function explain(title,sub,body){$('#ex').innerHTML='<button class="btn x" data-act="closeEx">Close</button><h2>'+title+'</h2><div class="muted" style="font-size:12.5px">'+sub+'</div>'+body;$('#ex').classList.add('open')}
+function tbl(head,rows,cls){return'<div class="scroll"><table><tr>'+head.map(h=>'<th'+(h[0]==='<'?' class="l"':'')+'>'+h.replace(/^</,'')+'</th>').join('')+'</tr>'+rows.map(r=>'<tr'+(r.attr||'')+'>'+r.map((c,i)=>'<td'+(head[i][0]==='<'?' class="l"':'')+'>'+c+'</td>').join('')+'</tr>').join('')+'</table></div>'}
+ACT.closeEx=()=>$('#ex').classList.remove('open');
+ACT.theme=()=>{D.documentElement.classList.toggle('light');TK={}};
+D.addEventListener('click',e=>{const a=e.target.closest('[data-act]');if(a&&ACT[a.dataset.act]){ACT[a.dataset.act](a.dataset.arg,a);render()}});
+D.addEventListener('input',e=>{const a=e.target.closest('[data-in]');if(a&&ACT[a.dataset.in]){ACT[a.dataset.in](a.value,a);render()}});
+D.addEventListener('keydown',e=>{if(e.key==='Escape')ACT.closeEx()});
+let RZ;window.addEventListener('resize',()=>{clearTimeout(RZ);RZ=setTimeout(render,80)});
+
+/* Inline synthetic data (seeded). In the product every array below is a server answer: the generator precomputes the embedding and
+   the clusters, the server bins, samples, sorts and counts; the browser only draws. Gene symbols are invented (HLX...). */
+const R=rng(20261116);
+const CH=[248,242,198,190,182,171,159,145,138,134,135,133,114,107,102,90,83,80,59,64,47,51,156],CN=CH.map((_,i)=>i<22?''+(i+1):'X');
+const OFF=[];let TOT=0;CH.forEach(l=>{OFF.push(TOT);TOT+=l});
+const GN='HLXK7 HLXT17 HLXR3 HLXM12 HLXP1 HLXB13 HLXA5 HLXC9 HLXN2 HLXS19 HLXD10 HLXE4 HLXF11 HLXG6 HLXH8 HLXJ14 HLXL16 HLXQ20 HLXU22 HLXV15 HLXW18 HLXY21 HLXZX HLXO1'.split(' ');
+const ROLE=['kinase (drug target)','tumour suppressor','receptor','GTPase','transcription factor','DNA repair','chromatin remodeller','phosphatase'];
+const GENES=GN.map((g,i)=>{const m=g.match(/(\d+|X)$/)[1],c=m==='X'?22:+m-1;
+  return{g,i,c,pos:+(8+R()*(CH[c]-16)).toFixed(2),len:i?Math.round(220+R()*520):312,f:.40*Math.pow(.87,i)+.02,peak:[23.4,14.1,10.6,8.7][i]||0,role:ROLE[i%8]}});
+const PTS=[];for(let n=0;n<5200;n++){let u=R()*TOT,c=0;while(c<22&&u>OFF[c]+CH[c])c++;PTS.push({c,pos:u-OFF[c],y:Math.min(6.4,-Math.log10(R()+1e-7))})}
+GENES.filter(q=>q.peak).forEach(q=>{for(let n=0;n<120;n++){const d=n?gauss(R)*.7:0;
+  PTS.push({c:q.c,pos:q.pos+d,y:n?Math.max(.3,q.peak*Math.exp(-d*d/.9)*(.25+.75*R())):q.peak,g:q,lead:!n,d})}});
+const NS=1500,CL=['C1 luminal-like','C2 basal-like','C3 immune-hot','C4 stromal','C5 proliferative'],TT=['Breast','Lung','Colorectal','Ovarian'];
+const CC=[[.24,.3],[.72,.24],[.5,.6],[.2,.76],[.8,.74]],KT=['link','violet','amber','ok','bad'];
+const ALT=[null,['ok','Missense'],['ink','Truncating'],['bad','Amplification'],['link','Deep deletion']];
+const SAM=[];for(let s=0;s<NS;s++){const k=Math.min(4,Math.floor(R()*5)),a=GENES.map(q=>{if(R()>q.f*((q.i%5)===k?1.9:.75))return 0;const u=R();return u<.55?1:u<.78?2:u<.92?3:4});
+  SAM.push({id:'S'+pad(s+1,4),k,a,t:TT[(k+(R()<.7?0:1+Math.floor(R()*3)))%4],resp:R()<(.52-(a[0]?.36:0)+(k===2?.2:0)),x:clamp(CC[k][0]+gauss(R)*.075,.02,.98),y:clamp(CC[k][1]+gauss(R)*.075,.02,.98)})}
+const BINS=[];{const Q=rng(77);CH.forEach((len,c)=>{for(let p=0;p<len;p+=4){let ga=.03+Q()*.05,lo=.03+Q()*.05;
+  GENES.forEach(k=>{if(k.c===c){const d=k.pos-p-2,b=k.f*.9*Math.exp(-d*d/60);if(k.i%2)lo+=b;else ga+=b}});BINS.push({c,p,ga,lo})}})}
+
+const S={gene:0,sel:null,selName:'',selV:0,colour:'k',step:1};
+const cur=()=>S.sel?SAM.filter(s=>S.sel.has(s)):SAM;
+const pval=y=>{const e=Math.floor(-y);return Math.pow(10,-y-e).toFixed(1)+'e'+e};
+const rate=l=>l.length?Math.round(100*l.filter(s=>s.resp).length/l.length):0;
+let OC={};function sorted(){if(OC.key!==S.selV)OC={key:S.selV,list:cur().slice().sort((p,q)=>{for(let i=0;i<24;i++){const d=(q.a[i]>0)-(p.a[i]>0);if(d)return d}return 0})};return OC.list}
+function pick(set,name){S.sel=set;S.selName=name;S.selV++}
+const VC={};function vars(i){if(VC[i])return VC[i];const Q=rng(1000+i),q=GENES[i],A='ARNDCEQGHILKMFSTWYV',B='ACGT',out=[];
+  const d1=Math.round(q.len*(.12+Q()*.08)),d2=Math.round(q.len*(.56+Q()*.08));
+  q.dom=[['N-lobe',d1,d1+Math.round(q.len*.28)],['C-lobe',d2,d2+Math.round(q.len*.3)]];
+  for(let n=0;n<26;n++){const hot=n<3,dm=q.dom[n%2],pos=hot?dm[1]+Math.round(Q()*(dm[2]-dm[1])):1+Math.floor(Q()*(q.len-1));
+    const stop=!hot&&Q()<.12,ref=A[Math.floor(Q()*19)],alt=stop?'*':A[Math.floor(Q()*19)],b=Math.floor(Q()*4);
+    out.push({id:'HX-'+q.g.slice(3)+'-'+pad(pos,3),pos,ref,alt,chg:'p.'+ref+pos+alt,cs:stop?'stop_gained':'missense_variant',hot,
+      dms:stop?-3:hot?-(1.8+Q()*1.2):.3*Q()-Q()*Q()*2.6,wt:hot?.46-n*.11:.015+Q()*Q()*.1,gpos:Math.round(q.pos*1e6+pos*37),REF:B[b],ALT:B[(b+1+Math.floor(Q()*3))%4]})}
+  return VC[i]=out.sort((a,b)=>a.pos-b.pos)}
+const cls=d=>d<-1.5?['bad','Damaging']:d<-.6?['warn','Intermediate']:['muted','Tolerated'];
+function carriers(i){const n=cur().filter(s=>s.a[i]===1||s.a[i]===2).length;return vars(i).map(v=>Math.max(n?1:0,Math.round(n*v.wt)))}
+
+mount('manhattan',(g,w,h,v)=>{const l=38,r=8,t=18,b=20,pw=w-l-r,ph=h-t-b,YM=26,X=(c,p)=>l+(OFF[c]+p)/TOT*pw,Y=y=>t+ph-y/YM*ph,q=GENES[S.gene];
+  CH.forEach((len,c)=>{const x0=X(c,0),x1=X(c,len);if(c%2){g.fillStyle=tok('bg2');g.fillRect(x0,t,x1-x0,ph)}if(x1-x0>13)T(g,CN[c],(x0+x1)/2,h-9,tok('muted'),'center')});
+  for(let y=0;y<=25;y+=5){g.strokeStyle=tok('line2');g.beginPath();g.moveTo(l,Y(y));g.lineTo(w-r,Y(y));g.stroke();T(g,y,l-6,Y(y),tok('muted'),'right')}
+  T(g,'−log10 p',2,8,tok('muted'),'left','10.5px');
+  const sx=X(q.c,q.pos);g.fillStyle=tok('amber-t');g.fillRect(sx-8,t,16,ph);
+  PTS.forEach(p=>{const hi=p.y>=7.3;g.fillStyle=hi?tok('amber'):tok(p.c%2?'faint':'link');g.globalAlpha=hi?1:.75;const s=p.lead?5:2.2;g.fillRect(X(p.c,p.pos)-s/2,Y(p.y)-s/2,s,s)});g.globalAlpha=1;
+  g.setLineDash([5,4]);g.strokeStyle=tok('bad');g.beginPath();g.moveTo(l,Y(7.3));g.lineTo(w-r,Y(7.3));g.stroke();g.setLineDash([]);
+  T(g,'genome-wide, p = 5e-8',w-r-2,Y(7.3)-8,tok('bad'),'right','10.5px');
+  GENES.forEach(k=>{const x=X(k.c,k.pos);if(k.peak)T(g,k.g,clamp(x,l+22,w-r-22),Y(k.peak)-10,k===q?tok('amber'):tok('ink'),'center','600 11px');else if(k===q)T(g,k.g,clamp(x,l+22,w-r-22),t+7,tok('amber'),'center','600 11px');
+    v.hits[k.peak?'push':'unshift']({x:x-8,y:t,w:16,h:ph,tip:'<b>'+k.g+'</b> · chr'+CN[k.c]+':'+k.pos.toFixed(2)+' Mb<br>'+(k.peak?'lead association p = '+pval(k.peak):'no genome-wide signal')+'<br><span class="muted">click: every view follows this gene</span>',click:()=>{S.gene=k.i}})})});
+
+mount('locus',(g,w,h,v)=>{const q=GENES[S.gene],l=38,r=8,t=10,b=48,pw=w-l-r,ph=h-t-b,x0=q.pos-2,X=p=>l+(p-x0)/4*pw,Q=rng(500+q.i);
+  const pts=PTS.filter(p=>p.g===q&&Math.abs(p.d)<2).map(p=>({pos:p.pos,y:p.y,lead:p.lead,r2:Math.exp(-p.d*p.d/.5)}));
+  for(let n=0;n<70;n++)pts.push({pos:x0+Q()*4,y:Math.min(4.5,-Math.log10(Q()+1e-5)),r2:Q()*.18});
+  const YM=Math.max(8,Math.ceil((q.peak+3)/5)*5),Y=y=>t+ph-y/YM*ph;
+  for(let y=0;y<=YM;y+=YM>10?5:2){g.strokeStyle=tok('line2');g.beginPath();g.moveTo(l,Y(y));g.lineTo(w-r,Y(y));g.stroke();T(g,y,l-6,Y(y),tok('muted'),'right')}
+  if(YM>7.3){g.setLineDash([5,4]);g.strokeStyle=tok('bad');g.beginPath();g.moveTo(l,Y(7.3));g.lineTo(w-r,Y(7.3));g.stroke();g.setLineDash([])}
+  pts.sort((a,b)=>a.r2-b.r2).forEach(p=>{g.fillStyle=tok(p.lead?'violet':p.r2>.8?'bad':p.r2>.6?'amber':p.r2>.4?'ok':p.r2>.2?'link':'faint');g.beginPath();g.arc(X(p.pos),Y(p.y),p.lead?5:3,0,7);g.fill();
+    if(p.lead)T(g,'lead variant',X(p.pos)+8,Y(p.y),tok('violet'),'left','600 11px')});
+  const gy=h-b+10;g.strokeStyle=tok('line');g.beginPath();g.moveTo(l,gy+6);g.lineTo(w-r,gy+6);g.stroke();
+  [[-1.7,.3],[-1,.22],[.75,.36],[1.4,.2]].forEach(o=>{const a=q.pos+o[0]+Q()*.2;g.fillStyle=tok('panel2');g.strokeStyle=tok('line');g.fillRect(X(a),gy,o[1]/4*pw,12);g.strokeRect(X(a),gy,o[1]/4*pw,12);
+    T(g,'LOC'+(1000+Math.floor(Q()*9000)),X(a+o[1]/2),gy+22,tok('muted'),'center','10px')});
+  g.fillStyle=tok('amber');g.fillRect(X(q.pos-.14),gy,.28/4*pw,12);T(g,q.g,X(q.pos),gy+22,tok('amber'),'center','600 11px');
+  T(g,'chr'+CN[q.c]+':'+x0.toFixed(1)+' Mb',l,h-6,tok('muted'),'left','10.5px');T(g,(x0+4).toFixed(1)+' Mb',w-r,h-6,tok('muted'),'right','10.5px');
+  if(!q.peak)T(g,'No genome-wide signal at this locus',l+pw/2,t+12,tok('muted'),'center')});
+
+mount('oncoprint',(g,w,h,v)=>{const N=+v.host.dataset.rows||16,list=sorted(),n=list.length,l=w<520?86:112,r=6,t=36,pw=w-l-r,cw=pw/n,rh=(h-t-2)/N;
+  [['Response',s=>s.resp?'ok':'bad'],['Tumour',s=>KT[TT.indexOf(s.t)]],['Cluster',s=>KT[s.k]]].forEach((k,j)=>{T(g,k[0],l-8,5+j*10,tok('muted'),'right','10px');
+    list.forEach((s,i)=>{g.fillStyle=tok(k[1](s));g.fillRect(l+i*cw,1+j*10,Math.max(cw,.7),8)})});
+  for(let j=0;j<N;j++){const q=GENES[j],y=t+j*rh;let cnt=0;g.fillStyle=tok('line2');g.fillRect(l,y+1,pw,rh-2);
+    list.forEach((s,i)=>{const a=s.a[j];if(!a)return;cnt++;g.fillStyle=tok(ALT[a][0]);const bw=Math.max(cw-(cw>3?1:0),.7);if(a>2)g.fillRect(l+i*cw,y+1,bw,rh-2);else g.fillRect(l+i*cw,y+rh*.24,bw,rh*.52)});
+    const pct=n?Math.round(100*cnt/n):0,on=j===S.gene;T(g,q.g,6,y+rh/2,on?tok('amber'):tok('ink'),'left',on?'600 11.5px':'11.5px');T(g,pct+'%',l-8,y+rh/2,tok('muted'),'right');
+    if(on){g.strokeStyle=tok('amber');g.strokeRect(l-.5,y+.5,pw+1,rh-1)}
+    v.hits.push({x:0,y,w,h:rh,click:()=>{S.gene=j},tip:mx=>{const s=list[Math.floor((mx-l)/cw)];return mx<l||!s?'<b>'+q.g+'</b> altered in '+pct+'% ('+fmt(cnt)+' of '+fmt(n)+')':'<b>'+s.id+'</b> · '+s.t+' · '+CL[s.k]+'<br>'+q.g+': '+(s.a[j]?ALT[s.a[j]][1]:'no alteration')+'<br>'+(s.resp?'Responder':'Non-responder')}})}});
+
+mount('embed',(g,w,h,v)=>{const X=x=>10+x*(w-20),Y=y=>14+y*(h-24);
+  SAM.forEach(s=>{const on=!S.sel||S.sel.has(s);g.globalAlpha=on?.85:.12;g.fillStyle=tok(S.colour==='k'?KT[s.k]:S.colour==='r'?(s.resp?'ok':'bad'):(s.a[S.gene]?'amber':'faint'));g.beginPath();g.arc(X(s.x),Y(s.y),on&&S.sel?2.6:2,0,7);g.fill()});g.globalAlpha=1;
+  CC.forEach((c,k)=>{const tx=X(c[0]),ty=clamp(Y(c[1]-.2),9,h-9),on=S.selName===CL[k];T(g,CL[k],tx,ty,on?tok('amber'):tok('ink'),'center','600 11px');
+    v.hits.push({x:tx-52,y:ty-9,w:104,h:18,tip:'Click: select '+CL[k]+' (click again to clear)',click:()=>{on?pick(null,''):pick(new Set(SAM.filter(s=>s.k===k)),CL[k])}})});
+  if(v.rect){g.fillStyle=tok('amber-t');g.strokeStyle=tok('amber');g.setLineDash([4,3]);g.fillRect(...v.rect);g.strokeRect(...v.rect);g.setLineDash([])}
+  v.onDrag=(x0,y0,x,y,end)=>{const a=Math.min(x0,x),b=Math.min(y0,y),c=Math.abs(x-x0),d=Math.abs(y-y0);
+    if(end){v.rect=null;const set=new Set(SAM.filter(s=>X(s.x)>=a&&X(s.x)<=a+c&&Y(s.y)>=b&&Y(s.y)<=b+d));if(set.size)pick(set,'Brushed')}else{v.rect=[a,b,c,d];v.draw()}}});
+
+mount('lollipop',(g,w,h,v)=>{const q=GENES[S.gene],vs=vars(S.gene),cs=carriers(S.gene),l=34,r=12,t=16,b=34,pw=w-l-r,by=h-b,X=p=>l+p/q.len*pw,ym=Math.max(4,Math.max(...cs)*1.18),Y=c=>by-c/ym*(by-t);
+  q.dom.forEach(d=>{g.fillStyle=tok('amber-t');g.fillRect(X(d[1]),t,X(d[2])-X(d[1]),by-t)});
+  [0,.5,1].forEach(f=>{const y=Y(ym*f/1.18);g.strokeStyle=tok('line2');g.beginPath();g.moveTo(l,y);g.lineTo(w-r,y);g.stroke();T(g,Math.round(ym*f/1.18),l-6,y,tok('muted'),'right')});
+  g.fillStyle=tok('panel2');g.strokeStyle=tok('line');g.fillRect(l,by+6,pw,9);g.strokeRect(l,by+6,pw,9);
+  q.dom.forEach(d=>{g.fillStyle=tok('violet');g.globalAlpha=.55;g.fillRect(X(d[1]),by+6,X(d[2])-X(d[1]),9);g.globalAlpha=1;T(g,d[0],(X(d[1])+X(d[2]))/2,by+25,tok('muted'),'center','10.5px')});
+  T(g,'1',l,by+25,tok('muted'),'left','10px');T(g,q.len+' aa',w-r,by+25,tok('muted'),'right','10px');T(g,'carriers',2,7,tok('muted'),'left','10.5px');
+  vs.forEach((x,i)=>{const c=cs[i],px=X(x.pos),py=Y(c),k=cls(x.dms)[0];g.strokeStyle=tok('faint');g.beginPath();g.moveTo(px,by+6);g.lineTo(px,py);g.stroke();
+    g.fillStyle=tok(k);g.beginPath();g.arc(px,py,x.hot?5.5:4,0,7);g.fill();if(S.vr===x){g.strokeStyle=tok('ink');g.lineWidth=2;g.beginPath();g.arc(px,py,8,0,7);g.stroke();g.lineWidth=1}
+    if(x.hot)T(g,x.chg,clamp(px,l+26,w-r-26),py-12,tok('ink'),'center','600 11px');
+    v.hits.push({x:px-6,y:py-6,w:12,h:12,tip:'<b>'+q.g+' '+x.chg+'</b> · '+x.cs+'<br>'+c+' carriers in '+fmt(cur().length)+' samples<br>DMS score '+x.dms.toFixed(2)+' · <span class="'+cls(x.dms)[0]+'">'+cls(x.dms)[1]+'</span><br><span class="muted">click: Explain with the records</span>',click:()=>{S.vr=x;exVariant(x,c)}})})});
+
+mount('cnv',(g,w,h,v)=>{const l=38,r=8,pw=w-l-r,m=h/2,X=(c,p)=>l+(OFF[c]+p)/TOT*pw,bw=Math.max(1,4/TOT*pw-.3),q=GENES[S.gene];
+  CH.forEach((len,c)=>{if(c%2){g.fillStyle=tok('bg2');g.fillRect(X(c,0),0,X(c,len)-X(c,0),h)}});
+  g.fillStyle=tok('amber-t');g.fillRect(X(q.c,q.pos)-8,0,16,h);
+  BINS.forEach(k=>{g.fillStyle=tok('bad');g.fillRect(X(k.c,k.p),m-k.ga*(m-4)/.5,bw,k.ga*(m-4)/.5);g.fillStyle=tok('link');g.fillRect(X(k.c,k.p),m,bw,k.lo*(m-4)/.5)});
+  g.strokeStyle=tok('line');g.beginPath();g.moveTo(l,m);g.lineTo(w-r,m);g.stroke();T(g,'gain',l-6,m-12,tok('bad'),'right','10.5px');T(g,'loss',l-6,m+12,tok('link'),'right','10.5px');
+  GENES.forEach(k=>v.hits.push({x:X(k.c,k.pos)-8,y:0,w:16,h,tip:'<b>'+k.g+'</b> · copy-number '+(k.i%2?'loss':'gain')+' peak',click:()=>{S.gene=k.i}}))});
+
+function geneStats(){const q=GENES[S.gene],c=cur(),alt=c.filter(s=>s.a[S.gene]),wt=c.filter(s=>!s.a[S.gene]);return{q,c,alt,wt,ra:rate(alt),rw:rate(wt)}}
+panel('kpis',()=>{const k=geneStats();return[
+  ['Samples',fmt(k.c.length),S.sel?'of 1,500 · '+S.selName:'cohort ONC-1, all'],
+  ['Response rate',rate(k.c)+'%','responders in the selection'],
+  [k.q.g+' altered',(k.c.length?Math.round(100*k.alt.length/k.c.length):0)+'%',fmt(k.alt.length)+' samples'],
+  ['Response if altered',k.ra+'%','<span class="'+(k.ra<k.rw?'bad':'ok')+'">'+(k.ra-k.rw>0?'+':'')+(k.ra-k.rw)+' pts</span> against wild type '+k.rw+'%'],
+  ['Lead association',k.q.peak?'p = '+pval(k.q.peak):'none','trait: response to therapy'],
+  ['Rows in the lake','100,000','genomics · 7 tables · Delta']].map(a=>'<div class="kpi"><div class="k">'+a[0]+'</div><div class="v">'+a[1]+'</div><div class="d">'+a[2]+'</div></div>').join('')+
+  '<div class="kpi syn"><div class="k">Data</div><div class="v">Synthetic · seed 20261116</div><div class="d">no patient, no organism</div></div>'});
+panel('cmd',()=>'GENE '+GENES[S.gene].g+' &nbsp;·&nbsp; COHORT ONC-1'+(S.sel?' where '+(S.selName==='Brushed'?'SAMPLE in brush ('+S.sel.size+')':"CLUSTER = '"+S.selName.slice(0,2)+"'"):'')+' &nbsp;·&nbsp; GWAS RESPONSE');
+panel('selchip',()=>S.sel?'<span class="chip">'+S.selName+' · '+fmt(S.sel.size)+' samples <b data-act="clear" title="Clear the selection">×</b></span>':'<span class="muted" style="font-size:12px">No selection: drag on the map of samples, or click a cluster name</span>');
+panel('colour',()=>'<span class="seg">'+[['k','Cluster'],['r','Response'],['g',GENES[S.gene].g]].map(o=>'<span data-act="colour" data-arg="'+o[0]+'"'+(S.colour===o[0]?' class="on"':'')+'>'+o[1]+'</span>').join('')+'</span>');
+panel('title-gene',()=>GENES[S.gene].g);
+panel('records',el=>{const q=GENES[S.gene],cs=carriers(S.gene),n=cur().length||1;
+  return tbl(['<VARIANT_ID','<Locus','REF>ALT','<Protein','<Consequence','Carriers','AF','DMS','<Class'],vars(S.gene).map((x,i)=>[x,cs[i]]).sort((a,b)=>b[1]-a[1]).slice(0,+(el.dataset.rows||8)).map(a=>{const x=a[0],k=cls(x.dms);
+    const r=[x.id,'chr'+CN[q.c]+':'+fmt(x.gpos),x.REF+'>'+x.ALT,x.chg,x.cs,a[1],(a[1]/n/2).toFixed(4),x.dms.toFixed(2),'<span class="pill '+(k[0]==='bad'?'r':k[0]==='warn'?'a':'n')+'">'+k[1]+'</span>'];
+    r.attr=' class="pick'+(S.vr===x?' sel':'')+'" data-act="variant" data-arg="'+x.id+'"';return r}))});
+panel('genecard',()=>{const k=geneStats(),q=k.q;return'<dl class="facts"><dt>Gene</dt><dd><b class="amb">'+q.g+'</b> · '+q.role+'</dd><dt>Locus</dt><dd>chr'+CN[q.c]+':'+q.pos.toFixed(2)+' Mb (synthetic build)</dd><dt>Protein</dt><dd>'+q.len+' aa</dd><dt>Association</dt><dd>'+(q.peak?'p = '+pval(q.peak)+' with response':'no genome-wide signal')+'</dd></dl>'+
+  '<div style="margin-top:10px;font-size:12.5px">Responders, '+q.g+' altered <b class="'+(k.ra<k.rw?'bad':'ok')+'">'+k.ra+'%</b> ('+fmt(k.alt.length)+')<div class="meter"><i style="width:'+k.ra+'%;background:var(--bad)"></i></div>Responders, wild type <b>'+k.rw+'%</b> ('+fmt(k.wt.length)+')<div class="meter"><i style="width:'+k.rw+'%;background:var(--ok)"></i></div></div>'+
+  '<a class="btn p" href="protein-A.html">Open '+q.g+' in the protein workbench →</a>'});
+panel('steps',()=>[['Signal','Where in the genome?'],['Cohort','Who carries it?'],['Gene','Which changes matter?'],['Protein','What can we build?']].map((s,i)=>'<div class="st'+(S.step===i+1?' on':'')+'" data-act="step" data-arg="'+(i+1)+'"><b>'+(i+1)+' · '+s[0]+'</b><span>'+s[1]+'</span></div>').join(''));
+
+const EX={
+ manhattan:['Genome-wide association','ASSOC where TRAIT = RESPONSE','<h4>What it shows</h4><p>One point per tested site: its position on the genome and the strength of its association with response to therapy. Four loci pass the genome-wide line; the tallest sits on <b>HLXK7</b>.</p><h4>How the server answered</h4><ol><li>Read 12,000 of the 36,000 <code>association</code> rows (one trait, partition pruned).</li><li>Kept every site with p below 1e-4, and a density-preserving sample of the rest: 5,384 points.</li><li>Sent them as one Arrow batch (61 KB); the browser draws, it computes nothing.</li></ol><h4>Linked</h4><p>A click on a peak sets the gene for every card on the page (channel <code>genomics.gene</code>).</p>'],
+ oncoprint:['Cohort alteration matrix','ONCOPRINT ONC-1','<h4>What it shows</h4><p>One column per sample, one row per gene; a tall mark is a copy-number change, a short mark a mutation. The tracks above give response, tumour type and cluster.</p><h4>How the server answered</h4><ol><li>Pivoted 45,000 <code>variant_call</code> rows and 3,000 <code>cnv_segment</code> rows by gene and sample.</li><li>Ordered genes by frequency and samples by the alteration order (the usual mutual-exclusivity sort).</li><li>Sent the non-empty cells only.</li></ol><h4>Linked</h4><p>A selection of samples (channel <code>genomics.samples</code>) narrows the columns; a click on a row sets the gene.</p>'],
+ embed:['Map of samples','SAMPLES ONC-1 by EMBEDDING','<h4>What it shows</h4><p>Each sample placed by its expression profile; samples close together are alike. Five clusters.</p><h4>Where the numbers come from</h4><p>The two coordinates and the cluster are <b>columns of the sample table</b>, written by the generator (a seeded projection). Neither the server nor the browser runs a projection at view time.</p><h4>Linked</h4><p>Drag a rectangle or click a cluster: the matrix, the lollipop, the figures and the records follow.</p>'],
+ lollipop:['Variants along the protein','GENE (lollipop)','<h4>What it shows</h4><p>Each variant at its amino acid position; the height is the carriers in the current selection; the colour is the <b>measured effect of that exact substitution</b> in the deep mutational scan of the protein workbench. A variant of uncertain significance gets a functional reading at once.</p><h4>How the server answered</h4><ol><li>Counted carriers per variant in the selected samples.</li><li>Joined each variant to <code>dms_score</code> on protein, position and amino acid.</li></ol><h4>Element</h4><p><code>genomics.lollipop</code> (exists in drishti-genomics 0.1.0), with the new colour-by-measure option.</p>'],
+ locus:['Locus zoom','ASSOC near GENE','<h4>What it shows</h4><p>The 4 Mb around the gene: each site by its association, coloured by its linkage with the lead variant (a column of the association table), over the gene track.</p><h4>Element</h4><p><code>genomics.locus</code>: a scatter over a gene track, new in drishti-genomics.</p>'],
+ cnv:['Copy-number frequency','CNV ONC-1','<h4>What it shows</h4><p>The share of samples with a gain (up) or a loss (down) in each 4 Mb bin, on the same genome axis as the association plot above it.</p><h4>How the server answered</h4><p>Binned 3,000 <code>cnv_segment</code> rows into about 770 bins; the selection of samples is a filter of that query.</p>']};
+function exVariant(x,c){const q=GENES[S.gene],Q=rng(x.pos),rows=cur().filter(s=>s.a[S.gene]===1||s.a[S.gene]===2).slice(0,Math.min(c,8)).map(s=>[s.id,s.t,CL[s.k].slice(0,2),s.resp?'<span class="ok">Responder</span>':'<span class="bad">Non-resp.</span>',(.18+Q()*.3).toFixed(2)]);
+  explain(q.g+' '+x.chg,x.id+' · chr'+CN[q.c]+':'+fmt(x.gpos)+' '+x.REF+'>'+x.ALT+' · '+x.cs,
+   '<h4>In one sentence</h4><p>'+c+' of '+fmt(cur().length)+' selected samples carry it; the deep mutational scan measured this exact substitution at <b>'+x.dms.toFixed(2)+'</b> (<span class="'+cls(x.dms)[0]+'">'+cls(x.dms)[1].toLowerCase()+'</span>).</p><h4>How it was worked out</h4><ol><li><code>variant_call</code> where VARIANT_ID = '+x.id+' and SAMPLE in the selection: '+c+' rows.</li><li><code>dms_score</code> where PROTEIN = '+q.g+', POS = '+x.pos+', AA = '+x.alt+', ASSAY = activity: 1 row, 3 replicates.</li></ol><h4>Records ('+rows.length+' of '+c+')</h4>'+tbl(['<Sample','<Tumour','<Cluster','<Response','VAF'],rows)+
+   '<p style="margin-top:12px"><a class="btn p" href="protein-A.html">See residue '+x.pos+' in the protein workbench →</a></p>')}
+ACT.explain=k=>explain(EX[k][0],'Command: <code>'+EX[k][1]+'</code>',EX[k][2]);
+ACT.clear=()=>pick(null,'');ACT.colour=c=>{S.colour=c};
+ACT.variant=id=>{const i=vars(S.gene).findIndex(x=>x.id===id);S.vr=vars(S.gene)[i];exVariant(S.vr,carriers(S.gene)[i])};
+ACT.step=n=>{S.step=+n;$$('.step').forEach(el=>el.classList.toggle('on',+el.dataset.step===S.step))};
+render();
+
+</script>
+</body>
+</html>

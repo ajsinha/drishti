@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  A screen mock-up (genomics-showcase/index.html), self-contained: system fonts, everything inline, nothing from a CDN, no network.
+  Dark theme by default; open it with #light for the light theme (or use the Theme button). Its design and build checklist are in
+  docs/architecture/GENOMICS_SHOWCASE.md. The index of the six options.
+  Every figure is synthetic and seeded; gene and protein names are invented. The mock-up draws on a canvas by hand; the product
+  draws every card with Drishti Elements and the server computes every figure.
+  The product name in the bar comes from configuration (the drishti.genomics distribution); the mock-up shows its default.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Genomics showcase: the mock-ups</title>
+<script>if(location.hash==='#light')document.documentElement.classList.add('light');</script>
+<style>
+:root{
+  --bg:#0e1628; --bg2:#121c33; --panel:#16213a; --panel2:#1b2744; --line:#26345a; --line2:#1f2b49;
+  --ink:#e7ecf5; --muted:#93a0b8; --faint:#5f6d8c; --amber:#e8a33a; --amber2:#f2b453; --amber-t:rgba(232,163,58,.14);
+  --link:#7fb2ff; --pos:#7fb2ff; --neg:#f2955a; --ok:#5fd39a; --warn:#f2c14e; --bad:#ff7a7a; --violet:#b48cff;
+  --hl:rgba(127,178,255,.10); --onacc:#14100a; --ok-t:rgba(95,211,154,.14); --bad-t:rgba(255,122,122,.15);
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  color-scheme:dark;
+}
+html.light{
+  --bg:#f7f5f0; --bg2:#efebe3; --panel:#ffffff; --panel2:#f3f0e9; --line:#e2dcd0; --line2:#ece7dd;
+  --ink:#172440; --muted:#55607a; --faint:#a3a9b8; --amber:#985b0a; --amber2:#7c4805; --amber-t:rgba(184,110,12,.12);
+  --link:#1f5fc4; --pos:#1f5fc4; --neg:#b4491a; --ok:#1b784c; --warn:#8a6100; --bad:#b42323; --violet:#6a3fc0;
+  --hl:rgba(31,95,196,.07); --onacc:#ffffff; --ok-t:rgba(27,120,76,.10); --bad-t:rgba(180,35,35,.09);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px}
+a{color:var(--link);text-decoration:none} a:hover{text-decoration:underline}
+.page{max-width:1568px;margin:0 auto;padding:16px 16px 28px;display:flex;flex-direction:column;gap:12px}
+.intro h1{font-size:19px;margin:0 0 4px}
+.intro p{margin:0;color:var(--muted);max-width:130ch;line-height:1.5;font-size:13px}
+.intro .nav{margin-top:6px;font-size:12.5px;display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center}
+.rec{display:inline-block;margin-left:10px;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;background:var(--ok-t);color:var(--ok);border:1px solid var(--ok);vertical-align:middle}
+.alt{display:inline-block;margin-left:10px;padding:2px 10px;border-radius:12px;font-size:12px;color:var(--muted);border:1px solid var(--line);vertical-align:middle}
+.bar{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;padding:8px 14px;border:1px solid var(--line);border-radius:8px;background:var(--bg2)}
+.brand{font-weight:700;letter-spacing:.12em;color:var(--amber)} .brand i{font-style:normal;letter-spacing:.02em;margin-left:6px;color:var(--violet)}
+.cmd{flex:1 1 260px;max-width:680px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:32px;line-height:30px;padding:0 14px;border:1px solid var(--amber);border-radius:16px;font-family:var(--mono);color:var(--amber);font-size:13px}
+.menus{display:flex;flex-wrap:wrap;gap:4px;margin-left:auto;font-size:13px}
+.menus a,.menus span{padding:5px 10px;border-radius:6px;color:var(--muted)} .menus .on{background:var(--panel2);color:var(--ink)}
+.btn{font:inherit;font-size:12.5px;padding:5px 12px;border:1px solid var(--line);border-radius:6px;color:var(--ink);background:var(--panel2);white-space:nowrap;display:inline-block;cursor:pointer}
+.btn.p{background:var(--amber);border-color:var(--amber);color:var(--onacc);font-weight:600}
+.btn:hover{border-color:var(--amber);text-decoration:none}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:14px;overflow:hidden;vertical-align:middle}
+.seg span{padding:3px 11px;font-size:12px;color:var(--muted);cursor:pointer} .seg span.on{background:var(--panel2);color:var(--ink);font-weight:600}
+.row{display:grid;gap:12px;align-items:start}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;min-width:0}
+.card h3{margin:0 0 8px;font-size:13.5px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center}
+.card h3 small{color:var(--muted);font-weight:400;font-size:12px}
+.card h3 .tools{margin-left:auto;display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-weight:400}
+.tool{font-size:11.5px;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:2px 8px;cursor:pointer;background:none;font-family:inherit}
+.tool:hover{color:var(--amber);border-color:var(--amber)}
+.view canvas{display:block;width:100%;touch-action:pan-y}
+.status{margin-top:6px;font-size:11.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 14px}
+.status b{color:var(--ink);font-weight:600}
+.lg{display:inline-flex;align-items:center;gap:5px} .lg i{width:9px;height:9px;border-radius:2px;display:inline-block}
+.scroll{overflow-x:auto}
+table{border-collapse:separate;border-spacing:0;font-size:12.5px;font-variant-numeric:tabular-nums;width:100%}
+th,td{padding:4px 8px;white-space:nowrap;text-align:right;border-bottom:1px solid var(--line2)}
+td{font-family:var(--mono)} th{background:var(--panel2);color:var(--muted);font-weight:500;font-size:12px}
+th.l,td.l{text-align:left} td.s{font-family:var(--sans)}
+tr.pick{cursor:pointer} tr.pick:hover td{background:var(--hl)} tr.sel td{background:var(--amber-t)}
+.neg{color:var(--neg)} .posv{color:var(--pos)} .muted{color:var(--muted)} .ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)} .amb{color:var(--amber)}
+.pill{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11.5px;font-family:var(--sans);font-weight:600}
+.pill.g{background:var(--ok-t);color:var(--ok)} .pill.r{background:var(--bad-t);color:var(--bad)} .pill.n{background:var(--panel2);color:var(--muted)} .pill.a{background:var(--amber-t);color:var(--amber)}
+.kpis{display:flex;flex-wrap:wrap;gap:10px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 14px;min-width:132px;flex:1 1 132px}
+.kpi .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.kpi .v{font-size:19px;font-weight:650;font-variant-numeric:tabular-nums;margin-top:2px}
+.kpi .d{font-size:11.5px;color:var(--muted);margin-top:1px}
+.kpi.syn{border-style:dashed;border-color:var(--amber)} .kpi.syn .v{font-size:14px;color:var(--amber);margin-top:5px}
+.chip{display:inline-flex;gap:6px;align-items:center;padding:2px 10px;border-radius:12px;border:1px solid var(--amber);color:var(--amber);font-size:12px}
+.chip b{cursor:pointer}
+.meter{height:8px;border-radius:4px;background:var(--line2);overflow:hidden;margin:3px 0 8px} .meter i{display:block;height:100%}
+.facts{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:12.5px;margin:0} .facts dt{color:var(--muted)} .facts dd{margin:0}
+.ctl{display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:12.5px}
+.ctl input[type=range]{accent-color:var(--amber);flex:1 1 160px;min-width:120px}
+.big{font-size:22px;font-weight:650} .big small{font-size:12.5px;color:var(--muted);font-weight:400;margin-left:8px}
+#tip{position:fixed;z-index:30;pointer-events:none;max-width:300px;padding:6px 9px;border-radius:6px;background:var(--bg2);border:1px solid var(--line);font-size:12px;line-height:1.45;box-shadow:0 6px 18px rgba(0,0,0,.35);display:none}
+#ex{position:fixed;z-index:40;top:0;right:0;bottom:0;width:min(440px,100%);background:var(--bg2);border-left:1px solid var(--amber);padding:16px;overflow:auto;transform:translateX(102%);transition:transform .18s}
+#ex.open{transform:none}
+#ex h2{margin:0 0 2px;font-size:16px} #ex h4{margin:14px 0 4px;font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+#ex p,#ex li{font-size:13px;line-height:1.5;margin:0 0 6px} #ex ol{padding-left:18px;margin:0}
+#ex code{font-family:var(--mono);font-size:12px;color:var(--amber)}
+#ex .x{float:right}
+.steps{display:flex;flex-wrap:wrap;gap:8px}
+.steps .st{flex:1 1 150px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);cursor:pointer}
+.steps .st b{display:block;font-size:13px} .steps .st span{font-size:11.5px;color:var(--muted)}
+.steps .st.on{border-color:var(--amber);background:var(--amber-t)} .steps .st.on b{color:var(--amber)}
+.step{display:none;flex-direction:column;gap:12px} .step.on{display:flex}
+.say{border-left:3px solid var(--amber);padding:6px 12px;color:var(--ink);font-size:14px;line-height:1.5;background:var(--amber-t);border-radius:0 6px 6px 0}
+.say small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+@media(max-width:900px){.row{grid-template-columns:1fr!important}.menus{margin-left:0}.page{padding:10px 16px 24px}}
+@media(prefers-reduced-motion:reduce){#ex{transition:none}}
+
+</style>
+</head>
+<body>
+<div class="page">
+<div class="intro"><h1>Genomics showcase: the mock-ups</h1><p>Two hero screens, three layouts each, for the product owner's choice. One story joins them: a cohort points at a gene (genomics), the gene's protein is measured change by change and then redesigned (protein engineering). About 200,000 synthetic rows in all. The design is in docs/architecture/GENOMICS_SHOWCASE.md.</p><div class="nav"><button class="btn" data-act="theme">Theme: dark / light</button></div></div><div class="row" style="grid-template-columns:repeat(3,1fr)"><section class="card"><h3><a href="genomics-A.html">Genomics · option A: The linked board</a> <span class="rec" style="margin-left:0">recommended</span></h3><p class="muted" style="margin:0;font-size:13px;line-height:1.5">One page, five cards, one selection. The association plot finds the locus; the cohort matrix shows who carries what; the map of samples lets you brush a group; the lollipop places the variants on the protein, coloured by the measured effect of each one. Try: click the HLXT17 peak; click the cluster name "C3 immune-hot"; drag a rectangle on the map; click a lollipop head.</p></section><section class="card"><h3><a href="genomics-B.html">Genomics · option B: The genome browser</a> </h3><p class="muted" style="margin:0;font-size:13px;line-height:1.5">Tracks stacked on one genome axis (association, copy number, the locus), with the gene and its cohort in a side panel. Closest to what a geneticist already knows; less of a first-minute impact than option A. Try: click a peak on either track, then a cluster name on the map.</p></section><section class="card"><h3><a href="genomics-C.html">Genomics · option C: The guided story</a> </h3><p class="muted" style="margin:0;font-size:13px;line-height:1.5">Four steps, one large visual each, with the sentence the presenter says. Best on a phone and for a first-time presenter; less room to explore. The steps use the same cards as option A, so this can ship as a "guided" mode of A.</p></section><section class="card"><h3><a href="protein-A.html">Protein engineering · option A: The workbench</a> <span class="rec" style="margin-left:0">recommended</span></h3><p class="muted" style="margin:0;font-size:13px;line-height:1.5">The scan on top (what every change does), the structure and the design campaign below (where it is and what we built), the leaderboard at the bottom. One selection runs through all of them. Try: Play the rounds; click a blue cell of the heatmap; click a design in the leaderboard; switch 3D trace to Contact map.</p></section><section class="card"><h3><a href="protein-B.html">Protein engineering · option B: Structure first</a> </h3><p class="muted" style="margin:0;font-size:13px;line-height:1.5">The molecule is the hero: a large 3D trace on the left, the residue and the scan beside it. The most striking still image; the design campaign moves below the fold. Try: drag the molecule, click a residue, then a bar.</p></section><section class="card"><h3><a href="protein-C.html">Protein engineering · option C: The design race</a> </h3><p class="muted" style="margin:0;font-size:13px;line-height:1.5">The campaign is the hero: press Play and watch eight rounds climb the landscape while the winning changes spread. The easiest to narrate to a non-specialist; the scan becomes supporting evidence. Try: Play, then click a row of "Which changes won".</p></section></div></div>
+<div id="tip"></div>
+<aside id="ex" aria-label="Explain"></aside>
+<script>
+/* The mock-up's own small kit (canvas cards, hit regions, tooltip, Explain drawer). The product draws none of this by hand:
+   every card is a Drishti Elements component (drishti-chart kinds, drishti-grid, drishti-insight's Explain). */
+const D=document,$=(s,r)=>(r||D).querySelector(s),$$=(s,r)=>[...(r||D).querySelectorAll(s)];
+function rng(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function gauss(R){return Math.sqrt(-2*Math.log(R()+1e-9))*Math.cos(6.2832*R())}
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),pad=(n,w)=>String(n).padStart(w,'0'),fmt=n=>Number(n).toLocaleString('en-US');
+let TK={};function tok(n){return TK[n]||(TK[n]=getComputedStyle(D.documentElement).getPropertyValue('--'+n).trim())}
+function rgb(h){h=h.replace('#','');return[0,2,4].map(i=>parseInt(h.substr(i,2),16))}
+function mix(a,b,t){const x=rgb(a),y=rgb(b);return'rgb('+x.map((v,i)=>Math.round(v+(y[i]-v)*clamp(t,0,1))).join(',')+')'}
+function dv(v,lo,hi){return v<0?mix(tok('panel2'),tok('neg'),v/lo):mix(tok('panel2'),tok('pos'),v/hi)}
+function T(g,s,x,y,c,al,f){g.fillStyle=c||tok('muted');g.textAlign=al||'left';g.font=(f||'11px')+' system-ui,sans-serif';g.fillText(s,x,y)}
+const views=[],panels=[],ACT={};
+function tip(html,e){const t=$('#tip');if(!html){t.style.display='none';return}t.innerHTML=html;t.style.display='block';
+  const w=t.offsetWidth,h=t.offsetHeight;t.style.left=clamp(e.clientX+14,4,innerWidth-w-4)+'px';t.style.top=clamp(e.clientY+14,4,innerHeight-h-4)+'px'}
+function mount(name,fn){$$('[data-view="'+name+'"]').forEach(host=>{
+  host.classList.add('view');const c=D.createElement('canvas');host.appendChild(c);const v={host,c,name,hits:[]};
+  v.draw=()=>{const w=host.clientWidth,h=+host.dataset.h||240;if(!w)return;const r=window.devicePixelRatio||1;
+    c.width=Math.round(w*r);c.height=Math.round(h*r);c.style.height=h+'px';const g=c.getContext('2d');g.setTransform(r,0,0,r,0,0);
+    g.textBaseline='middle';g.lineWidth=1;v.hits=[];fn(g,w,h,v)};
+  const xy=e=>{const b=c.getBoundingClientRect();return[e.clientX-b.left,e.clientY-b.top]};
+  const hit=(x,y)=>{for(let i=v.hits.length-1;i>=0;i--){const k=v.hits[i];if(x>=k.x&&x<=k.x+k.w&&y>=k.y&&y<=k.y+k.h)return k}return null};
+  c.addEventListener('pointerdown',e=>{v.dn=xy(e);v.last=v.dn;v.mv=false});
+  c.addEventListener('pointermove',e=>{const[x,y]=xy(e);
+    if(v.dn&&v.onDrag&&e.pointerType==='mouse'&&(v.mv||Math.hypot(x-v.dn[0],y-v.dn[1])>4)){v.mv=true;v.onDrag(v.dn[0],v.dn[1],x,y,false,x-v.last[0]);v.last=[x,y];tip();return}
+    const k=hit(x,y);c.style.cursor=k&&k.click?'pointer':(v.onDrag?'crosshair':'');tip(k&&k.tip&&(typeof k.tip==='function'?k.tip(x,y):k.tip),e)});
+  c.addEventListener('pointerleave',()=>tip());
+  window.addEventListener('pointerup',e=>{if(v.dn&&v.mv&&v.onDrag){const[x,y]=xy(e);v.onDrag(v.dn[0],v.dn[1],x,y,true,0);render()}v.dn=null});
+  c.addEventListener('click',e=>{if(v.mv){v.mv=false;return}const[x,y]=xy(e),k=hit(x,y);if(k&&k.click){k.click(x,y);render()}});
+  views.push(v)})}
+function panel(name,fn){$$('[data-panel="'+name+'"]').forEach(el=>panels.push(()=>{const s=fn(el);if(s!==el._s){el._s=s;el.innerHTML=s}}))}
+function render(){views.forEach(v=>v.draw());panels.forEach(p=>p());const lt=D.documentElement.classList.contains('light');
+  $$('a[href*=".html"]').forEach(a=>{a.setAttribute('href',a.getAttribute('href').replace(/#light$/,'')+(lt?'#light':''))})}
+function redraw(name){views.forEach(v=>{if(v.name===name)v.draw()})}
+function explain(title,sub,body){$('#ex').innerHTML='<button class="btn x" data-act="closeEx">Close</button><h2>'+title+'</h2><div class="muted" style="font-size:12.5px">'+sub+'</div>'+body;$('#ex').classList.add('open')}
+function tbl(head,rows,cls){return'<div class="scroll"><table><tr>'+head.map(h=>'<th'+(h[0]==='<'?' class="l"':'')+'>'+h.replace(/^</,'')+'</th>').join('')+'</tr>'+rows.map(r=>'<tr'+(r.attr||'')+'>'+r.map((c,i)=>'<td'+(head[i][0]==='<'?' class="l"':'')+'>'+c+'</td>').join('')+'</tr>').join('')+'</table></div>'}
+ACT.closeEx=()=>$('#ex').classList.remove('open');
+ACT.theme=()=>{D.documentElement.classList.toggle('light');TK={}};
+D.addEventListener('click',e=>{const a=e.target.closest('[data-act]');if(a&&ACT[a.dataset.act]){ACT[a.dataset.act](a.dataset.arg,a);render()}});
+D.addEventListener('input',e=>{const a=e.target.closest('[data-in]');if(a&&ACT[a.dataset.in]){ACT[a.dataset.in](a.value,a);render()}});
+D.addEventListener('keydown',e=>{if(e.key==='Escape')ACT.closeEx()});
+let RZ;window.addEventListener('resize',()=>{clearTimeout(RZ);RZ=setTimeout(render,80)});
+
+
+</script>
+</body>
+</html>
