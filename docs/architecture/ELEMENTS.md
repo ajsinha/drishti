@@ -221,7 +221,7 @@ registry's own scopes and conditions apply); `options.source()` adds the command
 Down, PageUp, PageDown, Ctrl+Home, Ctrl+End, Enter runs, Escape closes and focus returns. A native `<dialog>` (the page behind is inert)
 holding a search box with `role="combobox"` that owns a `role="listbox"`, `aria-activedescendant` on the active option, and the result
 count announced. On a phone it is a full-width sheet with 44 px rows. Look: `css/drishti_command-palette.css` (tokens only). The workbench's
-own palette (`js/build/drishti_commands.js`, `WB.menu`) is the first to migrate onto it; until then it is the only second one.
+Ctrl+K list (`js/build/drishti_commands.js`) is this palette (its commands come from `source`); there is no second one.
 
 ### 4.2 drishti-inputs
 

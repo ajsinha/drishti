@@ -16,7 +16,7 @@
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* The command palette (Ctrl+K, or the Commands button): one filterable list of everything the workbench can do without the mouse:
  * add a panel (any kind), go to a panel, next and previous sample, run the check, switch a tab, undo and redo, preview, save or
- * propose, compare with the base, open a file, open the guide. It is the same listbox as "Add panel..." (WB.menu): the filter box
+ * propose, compare with the base, open a file, open the guide. It is drishti-core's CommandPalette (Drishti.elements.core): the search box
  * is a combobox, Up and Down move through the options (aria-activedescendant), Enter runs, Escape closes and puts the focus back.
  * The commands are built when it opens, so the panel list and the state of undo are current.
  *
@@ -73,15 +73,23 @@
     }
 
     function goCanvas() { ctx.centre.show('design'); var c = ctx.canvas(); if (c.selected() && c.focus) { c.focus(); } else { var p = document.querySelector('[data-preview] .pnl[data-panel]'); if (p) { c.select({ type: 'panel', id: p.getAttribute('data-panel') }); c.focus(); } } }
-    function open() {
-      var list = items();
-      WB.menu.open({ title: 'Command palette', filter: true, at: { x: Math.max(8, (window.innerWidth - 380) / 2), y: 60 }, items: list, empty: 'No command matches. Try "add", "go to", "sample", "check", "undo" or "save".',
-        onPick: function (it) { ctx.yaml.flush(); it.run(); say(it.label + '.'); } });
+    var pal = null;
+    function palette() {
+      if (pal) { return pal; }
+      pal = new window.Drishti.elements.core.CommandPalette(document, {
+        label: 'Command palette', empty: 'No command matches. Try "add", "go to", "sample", "check", "undo" or "save".',
+        source: function () {
+          return items().map(function (it, i) {
+            return { id: 'wb.' + i, title: it.label, detail: it.detail, group: it.badge || 'Commands', run: function () { ctx.yaml.flush(); it.run(); say(it.label + '.'); } };
+          });
+        } });
+      return pal;
     }
+    function open() { palette().open(); }
 
     var K = window.Drishti.keys;
     K.register({ id: 'build.palette', keys: ['Ctrl+K', 'Meta+K'], scope: 'screen', area: 'build-design', group: 'Workbench', capture: true, typing: true,
-      description: 'The command palette', run: function (e) { e.stopPropagation(); if (WB.menu.isOpen()) { WB.menu.close(); } else { open(); } } });
+      description: 'The command palette', run: function (e) { e.stopPropagation(); palette().toggle(); } });
     // G then C: to the canvas, unless you are typing (a CodeMirror editor counts as typing)
     var chord = 0;
     function notInEditor(e) { return !(e.target.closest && e.target.closest('.CodeMirror')); }

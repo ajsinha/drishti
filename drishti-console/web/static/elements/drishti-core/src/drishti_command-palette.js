@@ -112,7 +112,7 @@ export class CommandPalette {
       'aria-autocomplete': 'list', 'aria-label': this.o.label, placeholder: this.o.placeholder, autocomplete: 'off', spellcheck: 'false', enterkeyhint: 'go' },
       on: { input: () => this.render(), keydown: (e) => this.key(e) } });
     this.list = h(doc, 'ul', { cls: 'drishti-palette-list', attrs: { role: 'listbox', id: this.id + '-list', 'aria-label': this.o.label + ' results' } });
-    this.dialog = h(doc, 'dialog', { cls: 'drishti-palette', attrs: { 'aria-label': this.o.label },
+    this.dialog = h(doc, 'dialog', { cls: 'drishti-palette', attrs: { role: 'dialog', 'aria-label': this.o.label },
       on: { close: () => { if (this.before && this.before.focus) { this.before.focus(); } }, click: (e) => { if (e.target === this.dialog) { this.close(); } } } },
       [this.input, this.list]);
     doc.body.appendChild(this.dialog);
