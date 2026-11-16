@@ -19,6 +19,14 @@
      aggregates. java/genomics's `mvn verify` builds the jar, packs this folder into target/dmod/genomics-0.1.0.dmod and runs C1-C15. -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
+  <!-- the SDK's parent for its pluginManagement only (nothing runs on a pom): the kernel's build runs spotless:check on every project
+       of its reactor, this aggregator included -->
+  <parent>
+    <groupId>com.ash.drishti</groupId>
+    <artifactId>drishti-module-parent</artifactId>
+    <version>2.9.11.g</version>
+    <relativePath>../../drishti-sdk/drishti-module-parent/pom.xml</relativePath>
+  </parent>
   <groupId>org.helixlab</groupId>
   <artifactId>genomics-module</artifactId>
   <version>0.1.0</version>

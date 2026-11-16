@@ -18,7 +18,7 @@ Java, its Maven projects under java/<project>/ with the aggregating pom.xml besi
 from __future__ import annotations
 
 import re
-import subprocess
+import struct
 import sys
 from pathlib import Path
 
@@ -28,8 +28,49 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 import module_layout  # noqa: E402
 
+
+
+def _git_dir(root: Path) -> Path:
+    """The checkout's git folder: .git itself, or the folder a worktree's .git file names (gitdir: ...)."""
+    dot = root / ".git"
+    if dot.is_file():
+        return Path(dot.read_text(encoding="utf-8").split("gitdir:", 1)[1].strip())
+    return dot
+
+
+def tracked(root: Path, prefix: str) -> list[str]:
+    """The paths git tracks under ``prefix``, read from the checkout's index file (format versions 2, 3 and 4): what
+    ``git ls-files <prefix>`` prints, without starting git (a static test starts nothing: TEST_HARNESS.md, rule 11)."""
+    data = (_git_dir(root) / "index").read_bytes()
+    sig, version, count = struct.unpack(">4sII", data[:12])
+    assert sig == b"DIRC" and version in (2, 3, 4), f"{root}: a git index of version {version} is not read here"
+    out, pos, last = [], 12, b""
+    for _ in range(count):
+        start = pos
+        flags = struct.unpack(">H", data[pos + 60:pos + 62])[0]
+        pos += 62 + (2 if version >= 3 and flags & 0x4000 else 0)
+        if version == 4:                                     # prefix compression: drop N bytes of the last path, add the rest
+            c = data[pos]
+            pos += 1
+            strip = c & 0x7F
+            while c & 0x80:
+                c = data[pos]
+                pos += 1
+                strip = ((strip + 1) << 7) | (c & 0x7F)
+            end = data.index(b"\0", pos)
+            last = last[:len(last) - strip] + data[pos:end]
+            pos = end + 1
+        else:
+            end = data.index(b"\0", pos)
+            last = data[pos:end]
+            pos = start + ((end - start) // 8 + 1) * 8           # NUL padding to a multiple of 8
+        out.append(last.decode("utf-8"))
+    head = prefix.rstrip("/") + "/"
+    return [f for f in out if f.startswith(head)]
+
+
 #: what git tracks under modules/: an older checkout keeps git-ignored leftovers (old build folders) that are no part of the layout
-TRACKED = subprocess.run(["git", "ls-files", "modules"], cwd=ROOT, capture_output=True, text=True, check=True).stdout.split()
+TRACKED = tracked(ROOT, "modules")
 #: each module's tracked names at its top
 TOPS: dict[str, set] = {}
 for _f in TRACKED:
