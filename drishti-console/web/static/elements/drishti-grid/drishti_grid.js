@@ -119,7 +119,15 @@
       if (f && typeof f === 'object') { return formatNumber(v, f); }
       if (col.type === 'number' && typeof v === 'number') { return formatNumber(v, { decimals: 0, maxDecimals: Number.isInteger(v) ? 0 : 2 }); }
       if (col.type === 'date') { return formatDate(v, typeof f === 'string' ? f : 'yyyy-MM-dd'); }
+      if (typeof v === 'object' && !(v instanceof Date)) { return nested(v); }
       return String(v);
+    }
+    function nested(v) {
+      if (Array.isArray(v)) {
+        if (v.every((x) => x === null || typeof x !== 'object')) { return v.map((x) => (x === null || x === undefined ? '' : String(x))).join(', '); }
+        return v.length + (v.length === 1 ? ' item' : ' items');
+      }
+      try { return JSON.stringify(v); } catch (e) { return String(v); }
     }
     class ColumnModel {
       constructor(defs) {
