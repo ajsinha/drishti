@@ -49,11 +49,12 @@ PAINT_S = 120                                 # a first answer on a loaded machi
 @pytest.fixture(scope="module")
 def stack(tmp_path_factory):
     """The cached exposure lake of the test data's own dates with the committed run (built once per source hash by the Java loader;
-    read-only, the server writes its own folders)."""
+    read-only, the server writes its own folders). The VaR files' heap: at the default 768 MB the server's heap stayed above 85% from the
+    first page on and ran out under the explorer's reads (2026-11-16, with the released jar as with the new one), so the page never loaded."""
     import var_stack
     lake = var_stack.shared_lake(tmp_path_factory, needs="risk/exposure-path")
     for st in _stack(tmp_path_factory, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true",
-                                        **var_stack.own_folders(tmp_path_factory)}):
+                                        **var_stack.own_folders(tmp_path_factory)}, heap=var_stack.VAR_HEAP):
         _engine_ready(str(st))
         yield st
 

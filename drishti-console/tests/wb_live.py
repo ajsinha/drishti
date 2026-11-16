@@ -269,16 +269,21 @@ def _start_stack(tmp_path_factory, extra_env, work=None, auth=False, heap="768m"
     proc = subprocess.Popen(java_cmd(str(JAVA), [f"-Xmx{heap}", *launch()], tmp=work / "jvm-tmp", cwd=work, env=env), cwd=work, env=env, stdout=(work / "server.log").open("w"), stderr=subprocess.STDOUT)
     try:
         # a server that is still starting is waited for (on a loaded machine a cold start takes minutes): only one that exited is skipped, and one
-        # that never answers fails rather than skipping every test of the file in silence
+        # that never answers fails rather than skipping every test of the file in silence. Ready is Spring's own readiness state, which turns
+        # UP only after the start's last step (the distribution's modules installed and recorded in data/modules/registry.json): the web
+        # layer answers seconds earlier, and a shared server fingerprinted then saw its own start's registry write as the file's (drill of
+        # 2026-11-16), and a page of a module still loading (EXP of banking) had no console part yet (as bi_stack.wait_ready).
         deadline = time.monotonic() + 600
         while time.monotonic() < deadline:
             if proc.poll() is not None:
                 pytest.skip("the server did not start: " + (work / "server.log").read_text()[-400:])
             try:
-                urllib.request.urlopen(f"http://127.0.0.1:{port}/api/v1/rachana/schema", timeout=2).read(10)
+                urllib.request.urlopen(f"http://127.0.0.1:{port}/actuator/health/readiness", timeout=2).read(10)
                 break
-            except urllib.error.HTTPError:           # sign-in on: a 401 is the server answering
-                break
+            except urllib.error.HTTPError as e:      # 503: listening, still starting
+                if e.code != 503:
+                    break                            # sign-in on (401): the server answering
+                time.sleep(0.5)   # wait-ok: polling a server that is still starting
             except OSError:
                 time.sleep(0.5)   # wait-ok: polling a server that is still starting
         else:
