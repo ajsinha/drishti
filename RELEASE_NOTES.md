@@ -68,6 +68,10 @@ release itself is tag `v2.9.11.i_5`; the next release, i6, takes the version fro
 2. `python tools/drishti.py setup`. 3. `python tools/drishti.py build jar`. 4. Stop the old stack: the old scripts are gone, so
 `python tools/drishti.py stop cluster` (or `stop all`), which reads the same pid files. 5. Start with the new commands. Your own changes made inside `modules/banking/dmod/` or `modules/genomics/src/dmod/` move to the
 new places (or, better, into an overrides folder).
+6. Delete `<data>/stack/server.jar` once (`start cluster` makes it again from `<home>/lib`, and from now on refreshes it whenever the jar
+in `lib/` changes). Move `drishti-stack/secrets.env` to `deploy/stack/` if you still have one: the old folder is no longer read.
+7. IntelliJ: **reload the Maven projects** (the module projects moved under `modules/<module>/java/`). 8. `git clean -fdX modules/` (step 1)
+once more after the reload if IntelliJ recreated a `target/` in an old place.
 
 ## Containers and services
 
@@ -80,7 +84,8 @@ new places (or, better, into an overrides folder).
 ## Known limits
 
 - `data load --store <postgres|redis|...>` still runs a bash script (Git Bash on Windows) until the Python second phase.
-- `start cluster` keeps a running copy of the jar at `<data>/stack/server.jar` (test convenience; a real install runs from `<home>/lib`).
+- `start cluster` keeps a running copy of the jar at `<data>/stack/server.jar` (test convenience; a real install runs from `<home>/lib`),
+  refreshed from `<home>/lib` at every start when it differs.
 
 # Drishti 2.9.11.i4 — release notes
 

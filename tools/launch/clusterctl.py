@@ -77,25 +77,17 @@ import procs  # noqa: E402
 
 
 STACK = ROOT / "deploy" / "stack"        # the default cluster: stack.yaml, nodes/ and the git-ignored secrets.env
-OLD_STACK = ROOT / "drishti-stack"       # its folder before 2.9.11.i4, read for one release only (then this fallback goes)
 
 
 class Layout:
-    """Where one cluster's files are: its configuration beside the cluster file, everything it writes under the data folder."""
+    """Where one cluster's files are: its configuration beside the cluster file, everything it writes under the data folder (the one
+    launch-roots lookup: --data-dir, else drishti.data.dir of the settings file, else DRISHTI_DATA_DIR, else <home>/data)."""
 
-    def __init__(self, cluster_file: str, data_dir: str) -> None:
-        old = not cluster_file and (OLD_STACK / "stack.yaml").is_file() and not (STACK / "stack.yaml").is_file()
-        if old:
-            notice(f"the cluster file is read from {OLD_STACK / 'stack.yaml'}: the default stack moved to {STACK} (2.9.11.i4); "
-                   "move your files there (this fallback is for one release)")
-        self.file = Path(cluster_file or (OLD_STACK if old else STACK) / "stack.yaml").resolve()
+    def __init__(self, cluster_file: str, data_dir: str, keys: dict | None = None) -> None:
+        self.file = Path(cluster_file or STACK / "stack.yaml").resolve()
         self.home = self.file.parent
         self.secrets = self.home / "secrets.env"
-        if not cluster_file and not self.secrets.is_file() and (OLD_STACK / "secrets.env").is_file():
-            notice(f"the secrets are read from {OLD_STACK / 'secrets.env'}: move the file to {self.secrets} "
-                   "(the default stack moved to deploy/stack/ in 2.9.11.i4; this fallback is for one release)")
-            self.secrets = OLD_STACK / "secrets.env"
-        self.data = Path(data_dir or os.environ.get("DRISHTI_DATA_DIR") or ROOT / "data").resolve()
+        self.data = javacmd.launch_roots(None, data_dir or None, os.environ, javacmd.settings()[1] if keys is None else keys)["data"][0]
         self.stack_data = self.data / "stack"
         self.jar = self.stack_data / "server.jar"
 
@@ -163,21 +155,39 @@ def secrets() -> dict:
 
 
 # -- the jar -----------------------------------------------------------------------------------------------------------------------
+#: beside the running copy: the name, size and SHA-256 of the <home>/lib jar it was copied from
+JAR_SOURCE = "server-jar.source"
+
+
+def _sha256(path: Path) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for block in iter(lambda: f.read(1 << 20), b""):
+            h.update(block)
+    return h.hexdigest()
+
+
 def server_jar() -> Path:
-    """<data>/stack/server.jar: a copy of the newest jar of <home>/lib (javacmd.server_jar), refreshed when a newer one is there, so a
-    rebuild never replaces the jar under a running server."""
+    """<data>/stack/server.jar: the running copy of THE jar of <home>/lib (javacmd.server_jar), so a rebuild never replaces the jar under a
+    running server. Refreshed at every start whenever <home>/lib's jar differs from the one it was copied from (by name, size and
+    SHA-256, never by time); no jar in <home>/lib stops the start with the command that makes one, whatever copy is left."""
     try:
         built = javacmd.server_jar()
     except javacmd.JarError as e:
-        if not at.jar.exists():
-            sys.exit(str(e))
-        built = None
+        sys.exit(str(e))
     JAR = at.jar
-    if built and (not JAR.exists() or built.stat().st_mtime > JAR.stat().st_mtime):
+    source = JAR.with_name(JAR_SOURCE)
+    want = f"{built.name} {built.stat().st_size} {_sha256(built)}"
+    try:
+        have = source.read_text(encoding="utf-8").strip() if JAR.is_file() else ""
+    except OSError:
+        have = ""
+    if have != want:
         JAR.parent.mkdir(parents=True, exist_ok=True)
         part = JAR.with_name("server-copying.jar")
         shutil.copy2(built, part)
         os.replace(part, JAR)                    # a server still running keeps the jar it opened
+        source.write_text(want + "\n", encoding="utf-8")
         say(f"server jar: {built.name} copied to {JAR}")
     return JAR
 
@@ -473,7 +483,7 @@ def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(prog="drishti.py start|stop|status cluster", description="Start, stop or show a cluster from its cluster file.")
     ap.add_argument("command", choices=("start", "stop", "status"))
     ap.add_argument("--cluster", default="", help="the cluster file (default deploy/stack/stack.yaml)")
-    ap.add_argument("--data-dir", default="", help="the data folder (default DRISHTI_DATA_DIR, else <drishti>/data)")
+    ap.add_argument("--data-dir", default="", help="the data folder (default drishti.data.dir of the settings file, else DRISHTI_DATA_DIR, else <drishti>/data)")
     ap.add_argument("--settings", default="", help="a settings file (an absolute path) every node starts with (start-server --settings)")
     ap.add_argument("names", nargs="*", help="only these nodes (or console)")
     opts = ap.parse_args(argv)
@@ -482,7 +492,15 @@ def main(argv: list[str]) -> int:
         say(f"--settings {opts.settings}: give the settings file as an absolute path")
         return 2
     SETTINGS = opts.settings
-    at = Layout(opts.cluster, opts.data_dir)
+    keys = None
+    if opts.settings:                              # the nodes' settings file names the data folder the same way it does for them
+        import settingsfile
+        keys = {**javacmd.settings()[1], **settingsfile.read_all(opts.settings)}
+    try:
+        at = Layout(opts.cluster, opts.data_dir, keys)
+    except javacmd.HomeError as e:
+        say(f"drishti: {e}")
+        return 2
     return {"start": start, "stop": stop, "status": status}[opts.command](opts.names)
 
 

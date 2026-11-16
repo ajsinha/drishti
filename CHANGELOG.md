@@ -52,6 +52,12 @@
   escaped for systemd). The images are immutable and their install folder root-owned, so `<home>/lib/ext` cannot take a driver there and
   the jar move at start failed: `server.Dockerfile`, `ecs/server.Dockerfile` and `node-task.json` set `DRISHTI_LIB_PATH=/opt/drishti/data/lib`
   (DEPLOYMENT_AND_QA_GUIDE.md 1.4, OPERATIONS_GUIDE.md 5.1 and 5.4, CLUSTER_GUIDE.md).
+- **The cluster's running jar always follows `<home>/lib`.** `start cluster` kept running a stale `<data>/stack/server.jar` when
+  `<home>/lib` had no jar, and refreshed it only when the build was newer by time. Now no jar in `<home>/lib` stops the start with *run
+  python tools/drishti.py build jar*, and the copy is refreshed whenever its source differs by name, size or SHA-256
+  (`<data>/stack/server-jar.source`). The cluster commands take their data folder from the one launch-roots lookup (`--data-dir`, the
+  settings file's `drishti.data.dir`, `DRISHTI_DATA_DIR`, `<home>/data`), and the `drishti-stack/` fallback of i4 is gone
+  (deploy/stack/README.md).
 
 The Python commands release. The build still reports its version as 2.9.11.g (the version from one place is the next release); the release is tag `v2.9.11.i_5`.
 

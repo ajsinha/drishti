@@ -287,3 +287,47 @@ def test_a_cluster_files_jvm_flags_and_server_args_reach_the_server_options():
     assert a.java_opt == ["-XX:G1PeriodicGCInterval=60000"] and a.server_arg == ["--drishti.security.registered-users-only=false"]
     text = (TOOLS / "launch" / "clusterctl.py").read_text(encoding="utf-8")
     assert 'f"--java-opt={flag}"' in text and 'f"--server-arg={arg}"' in text
+
+
+# ---- the cluster's running jar and data folder ------------------------------------------------------------------------------------------
+def _cluster_at(tmp_path, home: Path):
+    import clusterctl
+    at = clusterctl.Layout(str(tmp_path / "stack.yaml"), str(tmp_path / "data"))
+    return clusterctl, at
+
+
+def test_the_clusters_running_jar_follows_home_lib_by_content_never_by_time(tmp_path):
+    """No jar in <home>/lib stops the start, whatever copy is left; a different jar there (name, size or content) replaces the copy even when
+    it is OLDER by time; the same jar is not copied again."""
+    home = tmp_path / "home"
+    (home / "lib").mkdir(parents=True)
+    clusterctl, at = _cluster_at(tmp_path, home)
+    real = javacmd.server_jar
+    with mock.patch.object(clusterctl, "at", at), mock.patch.object(javacmd, "server_jar", lambda *a, **k: real(None, home)):
+        at.jar.parent.mkdir(parents=True)
+        at.jar.write_bytes(b"a stale copy")
+        with pytest.raises(SystemExit) as e:
+            clusterctl.server_jar()
+        assert "drishti.py build jar" in str(e.value)
+        built = home / "lib" / "drishti-server-1-exec.jar"
+        built.write_bytes(b"one")
+        os.utime(built, (1, 1))                                      # older than the copy by time: copied all the same
+        assert clusterctl.server_jar() == at.jar and at.jar.read_bytes() == b"one"
+        assert (at.jar.parent / clusterctl.JAR_SOURCE).read_text(encoding="utf-8").startswith("drishti-server-1-exec.jar 3 ")
+        at.jar.write_bytes(b"ONE")                                    # the copy is not looked at by time either: same source, kept
+        clusterctl.server_jar()
+        assert at.jar.read_bytes() == b"ONE"
+        built.write_bytes(b"two")                                     # same name, same size, other content: copied
+        os.utime(built, (1, 1))
+        clusterctl.server_jar()
+        assert at.jar.read_bytes() == b"two"
+
+
+def test_the_clusters_data_folder_is_the_one_launch_roots_lookup(tmp_path):
+    import clusterctl
+    with mock.patch.dict(os.environ, {"DRISHTI_DATA_DIR": str(tmp_path / "env")}):
+        assert clusterctl.Layout("", "", {"drishti.data.dir": str(tmp_path / "ini")}).data == (tmp_path / "ini").resolve()
+        assert clusterctl.Layout("", "", {}).data == (tmp_path / "env").resolve()
+        assert clusterctl.Layout("", str(tmp_path / "given"), {"drishti.data.dir": str(tmp_path / "ini")}).data == (tmp_path / "given").resolve()
+    assert clusterctl.Layout("", "", {}).file == clusterctl.STACK / "stack.yaml"
+    assert not hasattr(clusterctl, "OLD_STACK"), "the drishti-stack/ fallback of i4 is gone"

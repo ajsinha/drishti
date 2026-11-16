@@ -33,9 +33,11 @@ set `JAVA_HOME` to your JDK 21: `stack.yaml`'s `java:` is a Linux path, and `JAV
 (a node's own `settings:` wins over it). Each node still gets its own data folder as `-Ddrishti.data.dir`, which beats the file's
 ([docs/DEPLOYMENT_AND_QA_GUIDE.md › The settings file](../../docs/DEPLOYMENT_AND_QA_GUIDE.md#51-the-settings-file)).
 
-**An older `drishti-stack/` folder** beside the repository: move your own `secrets.env` (and any `net-key`) from it to this folder.
-Until you do, `drishti.py start cluster` and the other cluster commands read `drishti-stack/secrets.env` (or a `drishti-stack/stack.yaml`
-left there) and print a notice.
+**An older `drishti-stack/` folder** beside the repository is not read: move your own `secrets.env` (and any `net-key`) from it to this
+folder before the first `start cluster`, or new secrets are made here (and the sessions signed with the old ones end).
+
+**The data folder** of every cluster command is the one launch-roots lookup: `--data-dir`, else `drishti.data.dir` of the settings file,
+else `DRISHTI_DATA_DIR`, else `<drishti>/data`.
 
 This folder is configuration only (`stack.yaml`, `nodes/`, `secrets.env`); the commands are in [bin/](../../bin/README.md). `--cluster FILE` runs any other file of this format; the default is this one. Each node is started by `drishti.py start server`, the console by `drishti.py start console`, with the settings of `stack.yaml`.
 
@@ -71,11 +73,13 @@ Open `/v/trade/10000001` on the console: the trade is held by `drishti-b` only, 
 | `../../data/run/`, `../../data/logs/` | **no** (`data/` is git-ignored) | the process ids (`server-<node>.pid`, `console.pid`) and the logs (`server-<node>.log`, `console.log`), where `drishti.py` keeps them |
 | `../../data/stack/` | **no** (`data/` is git-ignored) | `server.jar` (the copy the servers run), the nodes' data and connector folders, the synthetic lakes |
 
-On the first start `start cluster` makes what is missing: the secrets, `data/stack/server.jar` (a copy of the newest
-`lib/drishti-server-*-exec.jar`; it tells you to build when there is none), a node's net folder, and the two synthetic
+On the first start `start cluster` makes what is missing: the secrets, `data/stack/server.jar` (a copy of THE
+`lib/drishti-server-*-exec.jar`; with no jar in `lib/` the start stops and tells you to run `python tools/drishti.py build jar`, whatever
+copy is left), a node's net folder, and the two synthetic
 lakes (`tools/bench/trades.py`, as `lakes:` in `stack.yaml` says: 1,500 trades a day per system for sixty business days, 300
 counterparties). The servers run the copy, so a
-rebuild never replaces the jar under a running server: the next `start cluster` copies a newer build, and a restarted node runs it.
+rebuild never replaces the jar under a running server: every `start cluster` compares the copy with `lib/`'s jar by name, size and
+SHA-256 (`data/stack/server-jar.source`), never by time, and copies it when they differ; a restarted node runs it.
 
 The synthetic lakes are laid out as the demo lake's file says (`config/lakes/demo.yaml`, [DATA_LAKE_GUIDE.md](../../docs/guides/DATA_LAKE_GUIDE.md)):
 `trades.py` writes through it (`lake build --lake demo --lake-root data/stack/lakes/<name>`), and a node with `lake:` reads the same file
