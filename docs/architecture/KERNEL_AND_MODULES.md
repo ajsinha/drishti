@@ -2412,11 +2412,12 @@ name of `drishti.packs.site-dir` and is still read; setting both to different fo
 
 ### 18.3 The resolver
 
-Plain Java in drishti-api (`com.ash.drishti.api.resolution`: the server, the loader process and the command line share it) and its
-Python twin `drishti-console/core/resolution.py` (the console and the tools). Both are held to one fixture of file trees and expected
-answers. **No other code lists or joins a pack, module, connector, bindings or rules folder**; a guard test enforces it.
-The Python twin is planned to go in i5: the console asks the server and the tools read the Java resolver's answer
-([THIN_CONSOLE_DESIGN.md](THIN_CONSOLE_DESIGN.md)).
+Plain Java in drishti-api (`com.ash.drishti.api.resolution`: the server, the loader process and the command line share it), held to
+its fixture of file trees and expected answers. There is no second implementation: the console asks the server, and the Python tools
+read the Java resolver's answer through the kernel jar (`java -jar <home>/lib/drishti-server-*-exec.jar resolve --json [--root DIR |
+--site DIR] [--connectors DIR]`, read by `tools/resolved.py`, kept under the data folder by its inputs' modification times;
+[THIN_CONSOLE_DESIGN.md](THIN_CONSOLE_DESIGN.md) step S5). **No other code lists or joins a pack, module, connector, bindings or rules
+folder**; a guard test enforces it.
 
 ```java
 ResolutionSettings s = ResolutionSettings.of(property);                    // section 18.2, nothing else
@@ -2437,9 +2438,10 @@ r.version()  r.digest()  r.watchRoots()
 ```
 
 ```python
-from core.resolution import Settings, build, repository
-r = build(Settings.from_env(), modules=server_modules)   # the console; repository() = the checkout with every module on (tools)
-r.packs.find(name); r.packs.loaded(); r.connectors.find(name); r.bindings.read(kind); r.inbox_rules(); r.problems; r.why("pack", name)
+import resolved                                          # tools/resolved.py: the Java resolver's answer, no rule of its own
+r = resolved.repository()                               # the checkout with every module on; current() = this process's settings
+r.packs.find(name); r.packs.dir(name); r.modules; r.connectors.find(name); r.connectors.templates; r.rules; r.problems
+resolved.pack_dir(name); resolved.pack_dirs(); resolved.manifests()
 ```
 
 `Origin` is `SITE`, `MODULE` or `KERNEL`. A pack's `state` is `LOADED`, `AVAILABLE` (found, not enabled), `MODULE_OFF` or `NOT_READ`.

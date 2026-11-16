@@ -23,7 +23,7 @@ import yaml
 
 from core.facts import FactsService, Fetcher, compute, links, load_pack, parse, rotate
 from core.facts_expr import Expr, ExprError, Template, fmt
-from core.resolution import pack_dir, pack_dirs
+from resolved import pack_dir, pack_dirs
 import engine_fakes  # noqa: E402
 
 PACKS = Path(__file__).resolve().parents[2] / "config" / "packs"

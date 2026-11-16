@@ -35,9 +35,9 @@ from pathlib import Path
 import yaml
 
 ROOT = Path(__file__).resolve().parents[3]
-if str(ROOT / "drishti-console") not in sys.path:
-    sys.path.insert(0, str(ROOT / "drishti-console"))
-from core.resolution import pack_dir as _pack_dir  # noqa: E402  (where a pack is: the one resolver, KERNEL_AND_MODULES.md 18)
+if str(ROOT / "tools") not in sys.path:
+    sys.path.insert(0, str(ROOT / "tools"))
+from resolved import pack_dir as _pack_dir  # noqa: E402  (where a pack is: the Java resolver's answer, tools/resolved.py)
 FEEDS = ROOT / "tools" / "feeds"
 FIXTURES = FEEDS / "tests" / "fixtures" / "publicsector"
 AS_OF = date(2026, 11, 6)                  # the business date the fixtures were recorded for

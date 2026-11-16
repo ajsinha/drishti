@@ -52,9 +52,9 @@ ROOT = HERE.parents[2]
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(ROOT / "tools" / "packgen" / "var"))
 sys.path.insert(0, str(ROOT / "tools" / "lake"))
-if str(ROOT / "drishti-console") not in sys.path:
-    sys.path.insert(0, str(ROOT / "drishti-console"))
-from core.resolution import pack_dir  # noqa: E402  (where a pack is: the one resolver, KERNEL_AND_MODULES.md 18)
+if str(ROOT / "tools") not in sys.path:
+    sys.path.insert(0, str(ROOT / "tools"))
+from resolved import pack_dir  # noqa: E402  (where a pack is: the Java resolver's answer, tools/resolved.py)
 import feedfiles as FF  # noqa: E402  (tools/lake/feedfiles.py: our dated feed files)
 import factor_dictionary as D  # noqa: E402
 import factors as F  # noqa: E402

@@ -12,10 +12,11 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""No Python reader goes its own way to configuration (docs/architecture/KERNEL_AND_MODULES.md section 18.3): only
-drishti-console/core/resolution.py joins a path to the site's packs folder (config/packs), lists module or pack manifests
-(``*/module.yaml``, ``*/pack.yaml``), or reads the site's connector files (config/connectors) or inbox rules (config/dataload.yaml).
-Everything else asks the resolver (``from core.resolution import ...``). The checks read the code, not its comments or docstrings: a
+"""No Python reader goes its own way to configuration (docs/architecture/KERNEL_AND_MODULES.md section 18.3; THIN_CONSOLE_DESIGN.md step
+S5): the one resolver is the Java one, and the Python tools read its answer through tools/resolved.py (which only stamps the folders to
+know when to ask again). No Python file joins a path to the site's packs folder (config/packs), lists module or pack manifests
+(``*/module.yaml``, ``*/pack.yaml``), or reads the site's connector files (config/connectors) or inbox rules (config/dataload.yaml);
+everything asks ``from resolved import ...``, and no Python resolver comes back (``core.resolution``). The checks read the code, not its comments or docstrings: a
 path joined below ``"config" / "packs"`` or ``"config" / "connectors"`` (a pack's or a connector's file by hand) or to
 ``"config" / "dataload.yaml"``, a path text below those folders, and a ``glob``/``rglob`` of a manifest pattern. Naming the folder
 itself is a setting (the folder handed to the resolver's helpers or to a process a harness starts), not a read. The allowlists below name
@@ -28,12 +29,12 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-RESOLVER = "drishti-console/core/resolution.py"
+RESOLVER = "tools/resolved.py"
 
 #: The files that may do it anyway, each with its reason. Authoring tools write a NEW pack or module the user asked for into a folder
 #: the user names; a test builds a scratch site (a tree of its own, never the checkout's files) to hand to the resolver.
 ALLOWED = {
-    RESOLVER: "the one resolver",
+    RESOLVER: "the Java resolver's answer: it only stamps the folders to know when to ask the jar again",
     "tools/test_config_readers_guard.py": "this guard names the patterns it looks for",
     "drishti-console/core/schemakit/build.py": "authoring: writes a new pack into its work folder",
     "drishti-console/core/packdesigner.py": "authoring: the pack designer writes the pack the user designs",
@@ -126,10 +127,22 @@ def test_only_the_resolver_reads_the_configuration_folders():
         v = violations(f, _scratch(rel))
         if v:
             found[rel] = v
-    assert not found, "read through drishti-console/core/resolution.py (KERNEL_AND_MODULES.md 18.3):\n" + "\n".join(
+    assert not found, "read through tools/resolved.py, the Java resolver's answer (KERNEL_AND_MODULES.md 18.3):\n" + "\n".join(
         f"  {k}: {'; '.join(v)}" for k, v in found.items())
 
 
 @pytest.mark.static
 def test_the_allowlist_names_files_that_exist():
     assert not [f for f in ALLOWED if not (ROOT / f).is_file()]
+
+
+@pytest.mark.static
+def test_no_python_resolver_comes_back():
+    """Step S5: the Python twin of the resolver is deleted; nothing imports it and no file of its name is made again."""
+    assert not (ROOT / "drishti-console" / "core" / "resolution.py").exists()
+    found = []
+    for f in _files():
+        text = f.read_text(encoding="utf-8", errors="replace")
+        if "from core.resolution import" in text or "from core import resolution" in text or "import core.resolution" in text:
+            found.append(f.relative_to(ROOT).as_posix())
+    assert not [x for x in found if x != "tools/test_config_readers_guard.py"], found

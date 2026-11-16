@@ -18,6 +18,14 @@
 
 ## Unreleased
 
+- **The thin console, step S5: the tools read the Java resolver's answer; the Python resolver is deleted.** The kernel jar answers
+  `resolve --json [--root DIR | --site DIR] [--connectors DIR]` with no server running (every pack's folder and layer, the modules, the
+  connectors as the server merges each template under the site's file, the templates, the inbox rules and every problem; secrets stay
+  references). `tools/resolved.py` runs it, keeps the answer under `<data>/tmp/resolved/` until an input changes, and gives the tools
+  `pack_dir`, `pack_dirs`, `manifests`, `repository()`, `current()` and `site()` with no rule of its own. The 50 tools and tests that
+  imported `drishti-console/core/resolution.py` read it now; `core/resolution.py` and its test are deleted, and the fixtures
+  `pack-resolution/cases.yaml` and `connector-layers/cases.yaml` are the Java resolver's own. **Every Python tool and generator needs a
+  built jar** (`python tools/drishti.py build jar`; an unbuilt checkout says so in one line).
 - **The thin console, smaller leftovers.** The person's answer (`GET /api/v1/me/console`) carries `admin-pages`, the Admin pages their
   roles open, from the server's one list; the console's `ADMIN_PAGES` copy is deleted (the `ADMIN` command and the page gate read the
   answer). Which module a command word or an engine belongs to comes from the installation answer's modules (their manifests' words and

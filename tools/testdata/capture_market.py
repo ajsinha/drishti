@@ -60,9 +60,9 @@ from datetime import datetime, timezone
 
 HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
-if str(ROOT / "drishti-console") not in sys.path:
-    sys.path.insert(0, str(ROOT / "drishti-console"))
-from core.resolution import pack_dir as _pack_dir  # noqa: E402  (where a pack is: the one resolver, KERNEL_AND_MODULES.md 18)
+if str(ROOT / "tools") not in sys.path:
+    sys.path.insert(0, str(ROOT / "tools"))
+from resolved import pack_dir as _pack_dir  # noqa: E402  (where a pack is: the Java resolver's answer, tools/resolved.py)
 if str(ROOT / "tools") not in sys.path:
     sys.path.append(str(ROOT / "tools"))
 from javacmd import JarError, java_cmd, server_jar  # noqa: E402

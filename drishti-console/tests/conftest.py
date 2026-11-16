@@ -25,6 +25,7 @@ from fastapi.testclient import TestClient
 CONSOLE = Path(__file__).resolve().parent.parent
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
 sys.path.insert(0, str(CONSOLE))
+sys.path.append(str(CONSOLE.parent / "tools"))   # tools/resolved.py: where the packs are (the Java resolver's answer, through the jar)
 # the stand-in server serves the retired example packs finance and logistics (examples/packs), as the server's tests do
 os.environ.setdefault("DRISHTI_PACKS_EXTRA_DIRS", str(CONSOLE.parent / "examples" / "packs"))
 # the servers the tests start keep their scratch in /tmp, a RAM disk: a free-space guard of 1 GB and 1%, not the site's 20 GB and 10%

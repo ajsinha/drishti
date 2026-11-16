@@ -33,9 +33,9 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT / "drishti-console") not in sys.path:
-    sys.path.insert(0, str(ROOT / "drishti-console"))
-from core.resolution import pack_dirs  # noqa: E402  (where a pack is: the one resolver, KERNEL_AND_MODULES.md 18)
+if str(ROOT / "tools") not in sys.path:
+    sys.path.insert(0, str(ROOT / "tools"))
+from resolved import pack_dirs  # noqa: E402  (where a pack is: the Java resolver's answer, tools/resolved.py)
 
 UV = """#!/usr/bin/env bash
 # stands in for uv: make_data.py --jsonl FILE.tar writes two sample lines; bulk_trades.py --jsonl FILE.tar three book lines (the

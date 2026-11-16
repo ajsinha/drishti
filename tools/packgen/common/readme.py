@@ -41,9 +41,9 @@ from pathlib import Path
 import yaml
 
 ROOT = Path(__file__).resolve().parents[3]
-if str(ROOT / "drishti-console") not in sys.path:
-    sys.path.insert(0, str(ROOT / "drishti-console"))
-from core import resolution as PP  # noqa: E402  (where a pack is: the one resolver, KERNEL_AND_MODULES.md 18)
+if str(ROOT / "tools") not in sys.path:
+    sys.path.insert(0, str(ROOT / "tools"))
+import resolved as PP  # noqa: E402  (where a pack is: the Java resolver's answer, tools/resolved.py)
 
 PACKGEN = ROOT / "tools" / "packgen"
 

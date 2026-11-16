@@ -101,7 +101,7 @@ def test_example_sources_parse():
 def _contract_fields(kind):
     """The fields of a kind's data contract (modules/<module>/packs/<pack>/contracts/<kind>.contract.yaml): what a Flight read of the kind may ask for."""
     import yaml
-    from core.resolution import pack_dirs
+    from resolved import pack_dirs
     for p in sorted(f for d in pack_dirs(REPO / "config" / "packs").values() for f in d.glob(f"contracts/{kind}.contract.yaml")):
         doc = yaml.safe_load(p.read_text(encoding="utf-8")) or {}
         if doc.get("kind") == kind:

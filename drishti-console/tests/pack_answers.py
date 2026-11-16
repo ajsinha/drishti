@@ -33,7 +33,7 @@ def folder(name: str, row: dict | None = None) -> Path | None:
     if row and row.get("dir"):
         d = Path(str(row["dir"]))
         return d if (d / "pack.yaml").is_file() else None
-    from core import resolution
+    import resolved as resolution
     d = resolution.current().packs.dir(name)
     return d if d is not None and (d / "pack.yaml").is_file() else None
 

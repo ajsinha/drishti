@@ -36,9 +36,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from shotlib import Ctx, java_cmd, listening, out_dir, register, server_jars  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[3]
-if str(ROOT / "drishti-console") not in sys.path:
-    sys.path.insert(0, str(ROOT / "drishti-console"))
-from core.resolution import pack_dir  # noqa: E402  (where a pack is: the one resolver, KERNEL_AND_MODULES.md 18)
+if str(ROOT / "tools") not in sys.path:
+    sys.path.insert(0, str(ROOT / "tools"))
+from resolved import pack_dir  # noqa: E402  (where a pack is: the Java resolver's answer, tools/resolved.py)
 PACK = ROOT / "docs" / "guides" / "examples" / "pack" / "helpdesk"
 QUICKSTART = ["core", "market-data", "trading", "market-risk", "counterparty-risk", "world-economy", "news-and-markets"]
 LISTED = "core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets"

@@ -32,7 +32,7 @@ pytestmark = pytest.mark.static
 CONSOLE = Path(__file__).resolve().parents[1]
 
 #: console files that still import the resolver, each with the step that deletes the import
-REMAINING = {"core/resolution.py": "S5"}
+REMAINING: dict[str, str] = {}                         # S5 done: the resolver is the Java one (tools/resolved.py reads its answer)
 IMPORT = re.compile(r"^\s*(?:from core import resolution|from core\.resolution import|import core\.resolution|from core import resolution as)", re.M)
 
 
