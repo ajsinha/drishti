@@ -1685,35 +1685,35 @@ load (many workers and the Java builds beside them), so they are an upper bound 
 `DRISHTI_PAGEWALK_BUDGET`).
 
 <!-- pageloads:begin (tools/drillkit/pageloads.py --write; the last drill's browser lane) -->
-Measured 2026-11-16: 3,245 page loads of 380 pages; the 25 slowest by p95 (slow from 2 s).
+Measured 2026-11-16: 3,010 page loads of 380 pages; the 25 slowest by p95 (slow from 2 s).
 
 | Page | Loads | p95 | Median |
 |---|---:|---:|---:|
-| `/v/news-topic/TOPIC-FED` (slow) | 3 | 12.37 s | 2.78 s |
-| `/v/trade/MX-00003` (slow) | 1 | 10.01 s | 10.01 s |
-| `/v/fund/QQQ` (slow) | 1 | 9.71 s | 9.71 s |
-| `/v/listed-company/CO-AAPL` (slow) | 4 | 8.63 s | 7.19 s |
-| `/exposure` (slow) | 17 | 7.83 s | 0.58 s |
-| `/page.html` (slow) | 5 | 7.53 s | 4.29 s |
-| `/v/jurisdiction/JUR-AUS` (slow) | 2 | 7.48 s | 5.16 s |
-| `/bi/r/file:report:trades-overview` (slow) | 20 | 7.40 s | 0.84 s |
-| `/bi/r/file:report:live-trading-desk` (slow) | 11 | 7.39 s | 0.82 s |
-| `/bi/r/file:report:py-server` (slow) | 1 | 7.29 s | 7.29 s |
-| `/v/desk/NOPE` (slow) | 2 | 7.12 s | 4.87 s |
-| `/admin/artifacts` (slow) | 19 | 7.09 s | 1.67 s |
-| `/bi/r/file:report:nv-demo` (slow) | 6 | 7.00 s | 1.35 s |
-| `/var/stress-window` (slow) | 6 | 6.38 s | 0.42 s |
-| `/help/configuration` (slow) | 12 | 6.28 s | 1.49 s |
-| `/v/fund-holder/AAPL` (slow) | 1 | 6.09 s | 6.09 s |
-| `/bi/ds/pack.trading.trade` (slow) | 2 | 6.01 s | 5.13 s |
-| `/bi/design/bi-219ee3c16d` (slow) | 2 | 5.97 s | 4.24 s |
-| `/v/fund/VTI` (slow) | 1 | 5.80 s | 5.80 s |
-| `/bi/models` (slow) | 21 | 5.65 s | 1.63 s |
-| `/bi/designer` (slow) | 28 | 5.56 s | 0.53 s |
-| `/bi/r/file:report:world-economics` (slow) | 2 | 5.38 s | 3.27 s |
-| `/bi/i/bi-21ba2f6dd8` (slow) | 6 | 5.29 s | 0.41 s |
-| `/help/docs-guides-var-guide` (slow) | 1 | 5.29 s | 5.29 s |
-| `/v/news-topic/TOPIC-TOYOTA` (slow) | 1 | 5.21 s | 5.21 s |
+| `/v/listed-company/CO-AAPL` (slow) | 4 | 13.32 s | 5.24 s |
+| `/v/fund/QQQ` (slow) | 1 | 10.66 s | 10.66 s |
+| `/v/news-topic/TOPIC-FED` (slow) | 3 | 10.04 s | 6.47 s |
+| `/v/netting-set/NS-NORTH-01` (slow) | 10 | 9.31 s | 1.59 s |
+| `/v/us-company/AAPL` (slow) | 1 | 9.29 s | 9.29 s |
+| `/admin/artifacts` (slow) | 18 | 8.39 s | 1.19 s |
+| `/bi/r/file:report:py-server` (slow) | 1 | 7.74 s | 7.74 s |
+| `/bi/r/file:report:python-desk-risk/vega` (slow) | 1 | 7.57 s | 7.57 s |
+| `/exposure` (slow) | 17 | 7.55 s | 0.73 s |
+| `/page.html` (slow) | 6 | 6.91 s | 2.18 s |
+| `/v/economy/ECON-AUS` (slow) | 1 | 6.76 s | 6.76 s |
+| `/bi/i/bi-e2d26cbdc6` (slow) | 6 | 6.45 s | 0.59 s |
+| `/bi/datasets` (slow) | 11 | 6.38 s | 0.54 s |
+| `/bi/r/file:report:nv-demo` (slow) | 6 | 6.35 s | 1.14 s |
+| `/bi/ds/pack.trading.trade` (slow) | 2 | 6.33 s | 3.69 s |
+| `/bi/r/file:report:world-economics` (slow) | 2 | 6.13 s | 3.63 s |
+| `/bi/r/file:report:trades-overview` (slow) | 20 | 5.51 s | 0.81 s |
+| `/admin/net` (slow) | 27 | 5.39 s | 0.81 s |
+| `/bi/ds/file:table:bi.wa_demo_trade` (slow) | 4 | 5.32 s | 1.83 s |
+| `/bi/models` (slow) | 20 | 5.05 s | 1.60 s |
+| `/bi/i/bi-1a925502a3` (slow) | 1 | 4.98 s | 4.98 s |
+| `/v/desk/NOPE` (slow) | 2 | 4.95 s | 3.59 s |
+| `/v/jurisdiction/JUR-AUS` (slow) | 2 | 4.91 s | 3.28 s |
+| `/v/trade/MX-20000001` (slow) | 17 | 4.78 s | 2.12 s |
+| `/v/trade/FXS-20931` (slow) | 9 | 4.76 s | 2.18 s |
 <!-- pageloads:end -->
 
 ## 19. The BI scale gate
