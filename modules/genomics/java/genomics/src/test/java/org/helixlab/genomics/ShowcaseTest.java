@@ -183,6 +183,46 @@ class ShowcaseTest {
         assertThat(ProteinBench.q(new double[] {1, 2, 3, 4}, 0.5)).isEqualTo(2.5);
     }
 
+    /**
+     * The answers the browser test of the screens draws (drishti-console/tests/test_genomics_walk_browser.py intercepts the module's API
+     * with them): the committed src/test/resources/showcase/answers.json must equal what this server answers over the fixture. Write it
+     * again with -Dshowcase.answers=write after a change to an answer.
+     */
+    @Test
+    void theBrowserFixtureIsTheServersAnswers() throws Exception {
+        Selection all = all();
+        List<Map<String, Object>> loll = (List<Map<String, Object>>) board.lollipop("HLXK7", all, null).get("rows");
+        Map<String, Object> answers = new java.util.TreeMap<>();
+        answers.put("showcase/status", board.status());
+        answers.put("associations", board.associations(null));
+        answers.put("cohorts/ONC-1/summary", board.summary(all, "HLXK7"));
+        answers.put("cohorts/ONC-1/oncoprint", board.oncoprint(all, 24, "HLXK7"));
+        answers.put("cohorts/ONC-1/samples/map", board.sampleMap(all));
+        answers.put("genes/HLXK7/lollipop", board.lollipop("HLXK7", all, null));
+        answers.put("explain/variant/", board.explainVariant((String) loll.get(0).get("VARIANT_ID"), all, null));
+        answers.put("explain/site/", board.explainSite((String) loll.get(0).get("VARIANT_ID")));
+        answers.put("explain/cluster/", board.explainCluster("C3 immune-hot", "ONC-1"));
+        answers.put("proteins/HLXK7/dms", bench.dms("HLXK7", null));
+        answers.put("proteins/HLXK7/structure", bench.structure("HLXK7"));
+        answers.put("proteins/HLXK7/residues/", bench.residue("HLXK7", 7));
+        answers.put("proteins/HLXK7/designs", bench.campaign("HLXK7", null, null));
+        answers.put("proteins/HLXK7/rounds", bench.rounds("HLXK7"));
+        answers.put("proteins/HLXK7/leaderboard", bench.leaderboard("HLXK7", null, 20));
+        String best = (String) ((List<Map<String, Object>>) bench.leaderboard("HLXK7", null, 1).get("rows")).get(0).get("DESIGN_ID");
+        answers.put("proteins/HLXK7/designs/", bench.design("HLXK7", best));
+        answers.put("explain/cell/", bench.explainCell("HLXK7", 7, "K"));
+        answers.put("explain/design/", bench.design("HLXK7", best).get("explain"));
+        answers.put("explain/residue/", bench.residue("HLXK7", 7).get("explain"));
+        ObjectMapper json = new ObjectMapper();
+        com.fasterxml.jackson.databind.JsonNode made = json.readTree(json.writeValueAsString(answers));
+        java.nio.file.Path file = java.nio.file.Path.of(com.ash.drishti.testroots.TestRoots.module(), "src", "test", "resources", "showcase", "answers.json");
+        if ("write".equals(System.getProperty("showcase.answers"))) {
+            json.writerWithDefaultPrettyPrinter().writeValue(file.toFile(), made);
+        }
+        assertThat(java.nio.file.Files.exists(file)).as("write it: -Dshowcase.answers=write").isTrue();
+        assertThat(json.readTree(file.toFile())).isEqualTo(made);
+    }
+
     @Test
     void missingDataIsSaidInWords() {
         ShowcaseData empty = new ShowcaseData();
