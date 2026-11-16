@@ -263,33 +263,15 @@ def _lens_desc(lens) -> str:
     return f"{about}: your own view; nothing is secured by it" if about else "Focus your own view on this edition; nothing is secured by it"
 
 
-_SIGNED_IN = object()                  # the person of the request (request.state.identity)
 
 
-def _person_opens(request, rules: list, ident=_SIGNED_IN) -> bool:
-    """Whether the person opens an engine whose column says ``opens: rules``: an administrator always; no rules, everyone signed in;
-    else any rule holds: ``role:<name>`` (they hold the role) or ``pack:<name>`` (the pack is assigned to them, shown or not). Nobody
-    signed in opens none."""
-    me = getattr(request.state, "identity", None) if ident is _SIGNED_IN else ident
-    if me is None:
+def engine_opened(request, engine_id: str) -> bool:
+    """Whether the server opens the engine for this person (their answer's ``engines-opened``: the catalogue's ``opens:`` evaluated on the
+    server, THIN_CONSOLE_DESIGN.md step S4): the one rule of the engine's pages in the menus (``requires: engine:<id>``) and of its
+    command words (:func:`engine_refused`). Nobody signed in, or no answer yet: none opened."""
+    if getattr(request.state, "identity", None) is None:
         return False
-    if me.is_admin or not rules:
-        return True
-    roles = set(getattr(me, "roles", ()) or ())
-    assigned = {str(p.get("name")) for p in getattr(request.state, "pack_switcher", None) or []}
-    for rule in rules:
-        kind, _, value = str(rule).partition(":")
-        if (kind == "role" and value in roles) or (kind == "pack" and value in assigned):
-            return True
-    return False
-
-
-def engine_opened(request, engine_id: str, ident=_SIGNED_IN) -> bool:
-    """Whether this person's role opens the engine (its catalogue entry's ``opens:``, plugins/<module>/engines.yaml): the one rule of the
-    engine's pages in the menus (``requires: engine:<id>``) and of its command words (:func:`engine_refused`). An engine without
-    ``opens:`` opens for everyone signed in. ``ident``: the person asked about (default: the request's)."""
-    e = engines.entry(engine_id)
-    return _person_opens(request, list((e or {}).get("opens") or []), ident)
+    return engine_id in ((getattr(request.state, "person", None) or {}).get("engines-opened") or ())
 
 
 def engine_refused(request, text: str) -> dict | None:

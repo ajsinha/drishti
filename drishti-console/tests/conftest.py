@@ -85,6 +85,11 @@ def _answered_editions(self, *a, **kw):
 _edition.Editions.__init__ = _answered_editions
 
 
+def _stand_in_admin(user: dict) -> bool:
+    """The stand-in server's decision of who is an administrator (the real one asks its role definitions)."""
+    return bool({"*", "admin"} & set((user or {}).get("roles") or []))
+
+
 def live_page(answer: dict, live_kinds=()) -> dict:
     """A search's answer as the server's live set gives it (LiveSetController /query): rows ``{id, version, seq, doc}`` with the values at
     the columns' fields (``$.counterparty.name`` is ``{counterparty: {name}}``) and the title as ``_title``; the summary as ``search``."""
@@ -585,7 +590,8 @@ class FakeBackend:
         assert service.roles == ("service",)
         sid = f"sess{len(self.sessions) + 1:04d}" + "x" * 24
         self.sessions[sid] = username
-        return {"id": sid, "expiresAt": "2026-10-02T20:00:00Z", "user": self.users.get(username, {"username": username})}
+        user = self.users.get(username, {"username": username})
+        return {"id": sid, "expiresAt": "2026-10-02T20:00:00Z", "user": user, "admin": _stand_in_admin(user)}
 
     async def session(self, sid, service):
         assert service.roles == ("service",)
@@ -593,7 +599,7 @@ class FakeBackend:
         user = self.users.get(self.sessions.get(sid, ""))
         if user is None or not user.get("enabled", True):
             raise BackendError(401, "DRS-5010", "session ended")
-        return {"id": sid, "expiresAt": "2026-10-02T20:00:00Z", "user": user}
+        return {"id": sid, "expiresAt": "2026-10-02T20:00:00Z", "user": user, "admin": _stand_in_admin(user)}
 
     async def end_session(self, sid, service):
         assert service.roles == ("service",)
@@ -743,7 +749,14 @@ class FakeBackend:
     async def me_console(self, ident=None, etag=None):
         """The person's answer (GET /api/v1/me/console) around this stand-in's pack rows (``packs``, which a test may replace)."""
         import pack_answers
-        doc = pack_answers.me_console(await self.packs(ident), getattr(ident, "user", "ash"))
+        doc = pack_answers.me_console(await self.packs(ident), getattr(ident, "user", "ash"), getattr(ident, "roles", ()),
+                                      getattr(ident, "admin", None))
+        try:                                                  # the person's modules answer, folded in as the server folds it (step S4)
+            mods = await self.modules(ident)
+        except BackendError:
+            mods = None
+        doc = {**doc, "modules": mods if isinstance(mods, dict) else None}
+        doc["stamp"] = doc["stamp"] + "-" + pack_answers._digest(doc["modules"])
         return (304, None) if etag and etag == doc["stamp"] else (200, doc)
 
     async def pack_console(self, name, ident=None, etag=None):

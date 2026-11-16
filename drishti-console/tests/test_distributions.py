@@ -44,7 +44,7 @@ def _app(backend, monkeypatch, *argv):
         eds.follow(own)
 
     async def current(cookie, _backend):
-        return Identity(user="alice", display="Alice", desk="Risk", roles=("*",))
+        return Identity(user="alice", display="Alice", desk="Risk", roles=("*",), admin=True)
 
     monkeypatch.setattr(app.state.auth, "current", current)
     return app

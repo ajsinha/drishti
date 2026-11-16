@@ -18,6 +18,13 @@
 
 ## Unreleased
 
+- **The thin console, step S4: the person's decisions come from the server.** `GET /api/v1/me/console` adds `engines-opened` (each
+  engine's `opens:` evaluated on the server), `grants` (admin, edit, layout, calc, compliance, approve, as the server enforces them) and
+  `modules` (the person's modules, lenses and functions, as `GET /api/v1/modules`), so the console asks one answer per person instead
+  of two. The session answer (`GET /api/v1/auth/sessions/{id}`, and the one that opens a session) carries `admin`, the server's
+  decision from its role definitions: a role defined `admin: true` under another name now opens the Admin pages on the console too,
+  where the console used to look for the role names `admin` and `*`. Deleted in the console: the evaluation of `opens:`
+  (`menus._person_opens`) and the separate per-person modules call (`core/modules.py` `Me`).
 - **The thin console, step S3: the engine catalogue and the under-construction registry come from the server.** The installation answer
   carries each engine with its catalogue lists (words, menus, Help pages, landings, tiles, lenses, playgrounds, console paths and
   `opens:`) and the under-construction registry's items (treatment, menu items, Help pages). The console's copies are deleted

@@ -61,9 +61,9 @@ def _pages(views: list[str] | None = None) -> list[str]:
     catalogue = yaml.safe_load((CONSOLE / "config" / "help.yaml").read_text())
     # an engine off as shipped (config/engines/<engine>.yaml, e.g. the in-memory lake) takes its Help pages away (404): not read here
     off = set()
-    from core import engines as engine_catalogue
-    for e in engine_catalogue.entries():                      # the core's and every module's
-        f = CONSOLE.parent / "config" / "engines" / str(e.get("file", ""))
+    import server_answers
+    for e in server_answers.bootstrap("all")["engines"]:     # the core's and every module's (the server's answer, recorded)
+        f = CONSOLE.parent / "config" / "engines" / f"{e.get('id')}.yaml"
         if f.is_file() and re.search(r"enabled:\s*\$\{[A-Z_]+:false\}", f.read_text()):
             off.update(e.get("help") or [])
             off.add("engine:" + str(e.get("id")))

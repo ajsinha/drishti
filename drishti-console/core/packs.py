@@ -48,6 +48,7 @@ class Packs:
         self.settings = settings
         self._cache: dict[str, tuple[float, list, list, float, str]] = {}   # person -> (monotonic time, packs, switcher, wall time, stamp)
         self._console: dict[tuple[str, str], dict] = {}                     # (server, pack) -> its contributions (shared: the pack's)
+        self._decisions: dict[str, dict] = {}                               # person -> the server's decisions about them (step S4)
         self._files_dir = files_dir
         self._older: set[str] = set()                                       # servers that do not give the person's answer
         # every worker of the console sees a change at once (core/user_stamps.py); other consoles within ``ttl`` (QA3A-02)
@@ -62,14 +63,23 @@ class Packs:
         """Every pack assigned to the person, each with an ``active`` flag (for the switcher)."""
         return (await self._fetch(backend, ident))[1]
 
+    async def decisions(self, backend, ident=None) -> dict:
+        """The server's decisions about the person (their answer's ``engines-opened``, ``grants`` and ``modules``: the modules loaded and
+        not, the lenses open to them, the functions they may not use; THIN_CONSOLE_DESIGN.md 3.3, step S4):
+        what the console draws by, never works out. Empty while the server has not answered (nothing is opened in its place)."""
+        await self._fetch(backend, ident)
+        return dict(self._decisions.get(scoped(getattr(ident, "user", "")), {}))
+
     def forget(self, ident=None) -> None:
         key = scoped(getattr(ident, "user", ""))
         self._cache.pop(key, None)
+        self._decisions.pop(key, None)
         self.stamps.touch(key)
 
     def forget_all(self) -> None:
         """An administrator switched a pack on or off: every person's packs change (on every worker)."""
         self._cache.clear()
+        self._decisions.clear()
         self.stamps.touch(EVERYONE)
 
     def notice(self) -> str:
@@ -98,6 +108,10 @@ class Packs:
         if status == 304 and hit:
             self._cache[key] = (now, hit[1], hit[2], began, hit[4])
             return hit[1], hit[2]
+        mods = (answer or {}).get("modules")
+        self._decisions[key] = {"engines-opened": [str(x) for x in (answer or {}).get("engines-opened") or []],
+                                "grants": [str(x) for x in (answer or {}).get("grants") or []],
+                                "modules": mods if isinstance(mods, dict) else None}
         rows = [r for r in (answer or {}).get("packs") or [] if isinstance(r, dict) and r.get("name")]
         made = [await self._pack(backend, ident, r) for r in rows]
         packs = [p for p, r in zip(made, rows) if r.get("active", True)]

@@ -19,6 +19,7 @@ to the edition (word_on, typed_shown, so FUNC, type-ahead, Home cards and chips 
 back (the about answer says so) brings everything back. The console keeps no copy of the catalogue: it comes in the server's installation answer (step S3)."""
 from __future__ import annotations
 
+import server_answers
 from urllib.parse import unquote
 
 import pytest
@@ -31,7 +32,7 @@ from core.app import create_app
 from core.auth import Identity
 from core.config import load_settings
 
-CATALOGUE = engines.entries()
+CATALOGUE = server_answers.bootstrap("all")["engines"]     # the server's catalogue (recorded)
 MENUS = yaml.safe_load((CONSOLE / "config" / "sitemap.yaml").read_text(encoding="utf-8"))
 LABELS = {str(it.get("id")): str(it.get("label")) for m in MENUS["menus"] for c in m.get("columns") or [] for it in c.get("items") or []}
 SHOWN = [e for e in CATALOGUE if e.get("installed") and (e.get("words") or e.get("console"))]
@@ -48,7 +49,7 @@ def _app(monkeypatch, off: set[str]):
     app.state.editions.learn(about(off))
 
     async def current(cookie, _backend):
-        return Identity(user=cookie or "alice", display="Alice", desk="Risk", roles=("*", "admin"))
+        return Identity(user=cookie or "alice", display="Alice", desk="Risk", roles=("*", "admin"), admin=True)
 
     monkeypatch.setattr(app.state.auth, "current", current)
     c = TestClient(app)

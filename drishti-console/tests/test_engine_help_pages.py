@@ -45,8 +45,8 @@ def _guides():
 
 def test_an_engine_hides_only_its_own_pages():
     guides = _guides()
-    from core import engines as catalogue
-    engines = catalogue.entries()                      # the core's and every module's (the server's answer)
+    import server_answers
+    engines = server_answers.bootstrap("all")["engines"]   # the core's and every module's (the server's answer, recorded)
     shared = {"operations", "configuration", "user-guide", "api-guide", "cli-guide", "troubleshooting", "getting-started"}
     for e in engines:
         for slug in e.get("help") or []:

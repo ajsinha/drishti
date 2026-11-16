@@ -25,6 +25,7 @@ import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.kernel.api.security.Principal;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -49,8 +50,12 @@ public class SessionController {
     /** @param username the user just verified @param seconds how long the session lasts (the console's cookie lifetime) */
     public record NewSession(String username, Long seconds) {}
 
-    /** @param id the session id (in this answer to open only) @param expiresAt when it ends @param user the user now */
-    public record SessionView(String id, Instant expiresAt, UserView user) {}
+    /**
+     * @param id the session id (in this answer to open only) @param expiresAt when it ends @param user the user now
+     * @param admin whether the user's roles make them an administrator, as this server decides it (a role defined {@code admin: true}, or
+     *     {@code *}): the console draws its Admin pages by this, never by a role name of its own (THIN_CONSOLE_DESIGN.md step S4)
+     */
+    public record SessionView(String id, Instant expiresAt, UserView user, boolean admin) {}
 
     private final SessionStore sessions;
     private final UserService users;
@@ -71,7 +76,7 @@ public class SessionController {
             throw new DrishtiException(ErrorCode.FORBIDDEN, "the account '" + u.username() + "' is disabled");
         }
         SessionStore.Session s = sessions.open(u.username(), Duration.ofSeconds(req.seconds() == null ? 36_000 : req.seconds()));
-        return new SessionView(s.id(), s.expiresAt(), UserView.of(u, Instant.now()));
+        return new SessionView(s.id(), s.expiresAt(), UserView.of(u, Instant.now()), admin(u));
     }
 
     /** The session and its user as they are now; 401 when it has ended, expired, or its user is disabled or deleted. */
@@ -80,7 +85,7 @@ public class SessionController {
         entitlements.requireService(p);
         SessionStore.Session s = sessions.find(id).orElseThrow(SessionController::ended);
         User u = users.find(s.user()).filter(User::enabled).orElseThrow(SessionController::ended);
-        return new SessionView(null, s.expiresAt(), UserView.of(u, Instant.now()));
+        return new SessionView(null, s.expiresAt(), UserView.of(u, Instant.now()), admin(u));
     }
 
     @DeleteMapping("/{id}")
@@ -88,6 +93,10 @@ public class SessionController {
     public void end(@PathVariable String id, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireService(p);
         sessions.end(id);
+    }
+
+    private boolean admin(User u) {
+        return entitlements.isAdmin(new Principal(u.username(), List.copyOf(u.roles())));
     }
 
     private static DrishtiException ended() {

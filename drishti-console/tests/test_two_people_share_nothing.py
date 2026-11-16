@@ -45,7 +45,8 @@ def _people(app):
     """A person per cookie ``user|role,role`` (roles ("*",) when none)."""
     async def current(cookie, _backend):
         user, _, roles = (cookie or "ann").partition("|")
-        return Identity(user=user, display=user.title(), desk="", roles=tuple(roles.split(",")) if roles else ("*",))
+        return Identity(user=user, display=user.title(), desk="", roles=tuple(roles.split(",")) if roles else ("*",),
+                        admin=not roles or bool({"*", "admin"} & set(roles.split(","))))
 
     app.state.auth.current = current
 
@@ -154,7 +155,7 @@ def test_the_same_person_on_two_servers_is_two_people():
     async def on(server: str, backend):
         token = servers.CURRENT.set(server)
         try:
-            me = Identity(user="t.brennan", display="T", desk="", roles=("*",))
+            me = Identity(user="t.brennan", display="T", desk="", roles=("*",), admin=True)
             scope = trading_landing.Scope(kind="desk", id="DESK-RATES", books=["BOOK-RATES-1", "BOOK-RATES-2", "BOOK-RATES-3"])
             return trading_landing.public(await trading_landing.valuations(backend, me, scope, {}))
         finally:

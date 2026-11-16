@@ -99,10 +99,22 @@ def me_row(row: dict) -> dict:
     return out
 
 
-def me_console(rows: list[dict], user: str = "ash") -> dict:
-    """The person's answer around the stand-in server's pack rows."""
+def me_console(rows: list[dict], user: str = "ash", roles=(), admin: bool | None = None) -> dict:
+    """The person's answer around the stand-in server's pack rows, with the stand-in's decisions about the person (the engines their
+    roles or assigned packs open, by the recorded catalogue's ``opens:``; an administrator opens every engine)."""
+    import server_answers
     packs = [me_row(r) for r in rows if folder(str(r["name"]), r) is not None]
-    doc = {"person": {"user": user, "roles": [], "admin": False}, "packs": packs, "installation": "test"}
+    roles = set(roles or ())
+    admin = bool({"*", "admin"} & roles) if admin is None else admin
+    assigned = {str(r["name"]) for r in rows if r.get("assigned", True)}
+    opened = []
+    for e in server_answers.bootstrap("all").get("engines") or []:
+        rules = e.get("opens") or []
+        if admin or not rules or any((k == "role" and v in roles) or (k == "pack" and v in assigned)
+                                     for k, _, v in (str(x).partition(":") for x in rules)):
+            opened.append(e["id"])
+    doc = {"person": {"user": user, "roles": sorted(roles), "admin": admin}, "packs": packs, "installation": "test",
+           "engines-opened": opened, "grants": ["admin"] if admin else []}
     return {"stamp": "p-" + _digest(doc), **doc}
 
 

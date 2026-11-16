@@ -87,7 +87,8 @@ def _app(backend, monkeypatch, people: dict | None = None):
 
     async def current(cookie, _backend):
         who = cookie or "alice"
-        return Identity(user=who, display=who.title(), desk="Risk", roles=tuple(people.get(who, ("viewer",))))
+        return Identity(user=who, display=who.title(), desk="Risk", roles=tuple(people.get(who, ("viewer",))),
+                        admin=bool({"*", "admin"} & set(people.get(who, ()))))
 
     monkeypatch.setattr(app.state.auth, "current", current)
     return app

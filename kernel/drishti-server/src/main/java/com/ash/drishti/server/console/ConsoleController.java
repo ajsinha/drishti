@@ -51,8 +51,14 @@ public class ConsoleController {
     private final Entitlements entitlements;
     private final PackAccess access;
     private final CatalogController catalog;
+    private final org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.engines.EngineRegistry> engines;
+    private final org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.modules.ModuleAdminController> modules;
 
-    public ConsoleController(ConsoleAnswers answers, Entitlements entitlements, PackAccess access, CatalogController catalog) {
+    public ConsoleController(ConsoleAnswers answers, Entitlements entitlements, PackAccess access, CatalogController catalog,
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.engines.EngineRegistry> engines,
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.modules.ModuleAdminController> modules) {
+        this.engines = engines;
+        this.modules = modules;
         this.answers = answers;
         this.entitlements = entitlements;
         this.access = access;
@@ -121,6 +127,12 @@ public class ConsoleController {
             rows.add(r);
         }
         doc.put("packs", rows);
+        java.util.Set<String> assigned = new java.util.TreeSet<>();
+        catalog.packs(p).stream().filter(r -> !Boolean.FALSE.equals(r.get("assigned"))).forEach(r -> assigned.add(String.valueOf(r.get("name"))));
+        doc.put("engines-opened", enginesOpened(p, assigned));
+        doc.put("grants", grants(p));
+        com.ash.drishti.server.modules.ModuleAdminController m = modules.getIfAvailable();
+        doc.put("modules", m == null ? null : m.mine(p));        // the modules, lenses and functions the person may see (GET /api/v1/modules)
         ResponseEntity<Map<String, Object>> out = answer(answers.person(doc), ifNoneMatch, CacheControl.noStore().cachePrivate());
         return ResponseEntity.status(out.getStatusCode()).headers(out.getHeaders()).header("Vary", "Authorization, X-Drishti-Lens").body(out.getBody());
     }
@@ -163,6 +175,59 @@ public class ConsoleController {
         return ResponseEntity.ok().eTag(etag).cacheControl(cache).contentType(type(rel)).header("X-Content-Type-Options", "nosniff")
                 .header("Content-Security-Policy", "default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; sandbox")
                 .body(new FileSystemResource(f.file()));
+    }
+
+    /**
+     * The engines this person opens (THIN_CONSOLE_DESIGN.md 3.3, step S4): each catalogue engine's {@code opens:} evaluated here, the one
+     * place it is: an administrator opens every engine; an engine without {@code opens:} opens for everyone signed in; else any rule holds:
+     * {@code role:<name>} (they hold the role) or {@code pack:<name>} (the pack is assigned to them). The console draws an engine's pages,
+     * words and type-ahead suggestions by this list.
+     */
+    List<String> enginesOpened(Principal p, java.util.Set<String> assigned) {
+        com.ash.drishti.server.engines.EngineRegistry r = engines.getIfAvailable();
+        List<String> out = new ArrayList<>();
+        if (r == null) {
+            return out;
+        }
+        boolean admin = entitlements.isAdmin(p);
+        java.util.Set<String> roles = new java.util.HashSet<>(p.roles());
+        for (com.ash.drishti.server.engines.EngineCatalogue.Entry e : r.entries()) {
+            List<String> rules = e.list("opens");
+            boolean opens = admin || rules.isEmpty() || rules.stream().anyMatch(rule -> {
+                int at = rule.indexOf(':');
+                String kind = at < 0 ? rule : rule.substring(0, at);
+                String value = at < 0 ? "" : rule.substring(at + 1);
+                return "role".equals(kind) && roles.contains(value) || "pack".equals(kind) && assigned.contains(value);
+            });
+            if (opens) {
+                out.add(e.id());
+            }
+        }
+        return out;
+    }
+
+    /** What the pages ask as "may this person ...": the powers the server enforces, as decisions (step S4). */
+    List<String> grants(Principal p) {
+        List<String> out = new ArrayList<>();
+        if (entitlements.isAdmin(p)) {
+            out.add("admin");
+        }
+        if (entitlements.mayEdit(p)) {
+            out.add("edit");
+        }
+        if (entitlements.mayLayout(p)) {
+            out.add("layout");
+        }
+        if (entitlements.mayCalc(p)) {
+            out.add("calc");
+        }
+        if (entitlements.mayCompliance(p)) {
+            out.add("compliance");
+        }
+        if (entitlements.mayApprove(p)) {
+            out.add("approve");
+        }
+        return out;
     }
 
     /** The loaded pack of that name assigned to the caller (enabled, not hidden, a sample only where samples show), or null. */

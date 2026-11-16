@@ -160,7 +160,7 @@ async def _module_asset_refused(request, rel: str) -> str | None:
     auth = request.app.state.auth
     who = await auth.current(request.cookies.get(auth.cookie), request.app.state.backend)
     if who is not None:
-        modules.use_person(await request.app.state.modules_me.get(request.app.state.backend, who))
+        modules.use_person((await request.app.state.packs.decisions(request.app.state.backend, who)).get("modules"))
     return modules.asset_refusal(rel, lens)
 
 
@@ -197,7 +197,7 @@ class AuthGate(BaseHTTPMiddleware):
         if request.state.identity is not None and not path.startswith(("/static/", PYODIDE, EMBED, "/healthz", "/readyz")):
             # the person's answer (core/modules.py): the modules not on, their lenses, the functions they may not use; every door asks it
             from core import modules as _modules
-            request.state.modules = await request.app.state.modules_me.get(request.app.state.backend, request.state.identity)
+            request.state.modules = (await request.app.state.packs.decisions(request.app.state.backend, request.state.identity)).get("modules")
             _modules.use_person(request.state.modules)
         request.state.pack_switcher = []
         from core import asof
@@ -224,6 +224,12 @@ class AuthGate(BaseHTTPMiddleware):
             request.state.business_date = info
         request.state.settings = None
         request.state.bi_me = None
+        request.state.person = None
+        if request.state.identity is not None and not path.startswith(("/static/", PYODIDE, EMBED, "/healthz", "/readyz")):
+            try:                                   # the server's decisions about the person (engines opened, grants; step S4)
+                request.state.person = await request.app.state.packs.decisions(request.app.state.backend, request.state.identity)
+            except Exception:  # noqa: BLE001 - no answer: nothing opened in its place
+                request.state.person = {}
         if request.state.identity is not None and not path.startswith(("/static/", PYODIDE, EMBED, "/api/", "/healthz", "/readyz")):
             from core.settings import changed_at
             request.state.settings = await request.app.state.user_settings.get(request.app.state.backend, request.state.identity,
@@ -632,9 +638,7 @@ def create_app(settings: Settings) -> FastAPI:
     from core.bi import BiMe
 
     app.state.bi_me = BiMe(user_ttl, stamps)
-    from core.modules import Me as ModulesMe
 
-    app.state.modules_me = ModulesMe(user_ttl, stamps)          # the person's modules, lenses and functions (core/modules.py)
     from core.module_parts import ModuleParts
 
     # the modules' console parts, hosted declaratively under /m/<id>/ (KERNEL_AND_MODULES.md 4.7, 14.2.1): this app's, never shared

@@ -84,7 +84,7 @@ def _app(backend, monkeypatch, about=None, roles=("*",)):
         assert app.state.editions.learn(about)
 
     async def current(cookie, _backend):
-        return Identity(user=cookie or "alice", display="Alice", desk="Risk", roles=roles)
+        return Identity(user=cookie or "alice", display="Alice", desk="Risk", roles=roles, admin=bool({"*", "admin"} & set(roles)))
 
     monkeypatch.setattr(app.state.auth, "current", current)
     c = TestClient(app)

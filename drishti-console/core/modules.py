@@ -35,7 +35,6 @@ from __future__ import annotations
 
 import fnmatch
 import logging
-import time
 from contextvars import ContextVar
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -239,42 +238,6 @@ def lens_cards(lens: str | None) -> list | None:
         return None
     got = (p.get("cards") or {}).get(lens)
     return list(got) if got else None
-
-
-class Me:
-    """The person's answer, cached per person (session isolation: keyed by the person, never shared), dropped on a change seen by any
-    worker (core/user_stamps.py). A server that cannot say (an older one, a test's stand-in) gives None: nothing hidden for the person."""
-
-    def __init__(self, ttl: float = 10.0, stamps=None):
-        from core.user_stamps import NONE
-
-        self.ttl = float(ttl)
-        self.stamps = stamps or NONE
-        self._cache: dict[str, tuple[float, dict | None, float]] = {}
-
-    async def get(self, backend, ident) -> dict | None:
-        if ident is None:
-            return None
-        from core.servers import scoped
-
-        key = scoped(ident.user)
-        hit = self._cache.get(key)
-        if hit and time.monotonic() - hit[0] < self.ttl and self.stamps.fresh(key, hit[2]):
-            return hit[1]
-        began = time.time()
-        ask = getattr(backend, "modules", None)
-        try:
-            answer = await ask(ident) if ask is not None else None
-        except Exception:  # noqa: BLE001 - the person's answer narrows what is drawn; a page never fails for it
-            answer = None
-        answer = answer if isinstance(answer, dict) else None
-        if len(self._cache) > 4096:
-            self._cache.clear()
-        self._cache[key] = (time.monotonic(), answer, began)
-        return answer
-
-    def forget_all(self) -> None:
-        self._cache.clear()
 
 
 # ---- the questions every door asks -------------------------------------------------------------------------------------------------

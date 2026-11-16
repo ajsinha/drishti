@@ -31,7 +31,8 @@ ROLES = {"alice": ("*",), "mira": ("market-risk",), "bea": ("bi-analyst",)}
 def _people(app, monkeypatch):
     async def current(cookie, _backend):
         user = cookie or "alice"
-        return Identity(user=user, display=user.title(), desk="Risk", roles=ROLES.get(user, ("viewer",)))
+        return Identity(user=user, display=user.title(), desk="Risk", roles=ROLES.get(user, ("viewer",)),
+                        admin=bool({"*", "admin"} & set(ROLES.get(user, ()))))
     monkeypatch.setattr(app.state.auth, "current", current)
 
 

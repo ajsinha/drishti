@@ -88,6 +88,7 @@ async def _open(request: Request, profile: dict) -> str:
     """Opens the server's session for a user it has just verified; its id goes into the cookie."""
     auth = request.app.state.auth
     opened = await request.app.state.backend.open_session(profile["username"], auth.session_ttl, auth.service())
+    profile["admin"] = bool(opened.get("admin"))         # the server's decision (THIN_CONSOLE_DESIGN.md step S4), kept in the cookie
     return opened["id"]
 
 

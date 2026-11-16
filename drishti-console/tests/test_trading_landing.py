@@ -42,7 +42,7 @@ class Site:
 
 
 def who(user, roles=("viewer",), display=None):
-    return Identity(user=user, display=display or user, desk="", roles=roles)
+    return Identity(user=user, display=display or user, desk="", roles=roles, admin=bool({"*", "admin"} & set(roles or ())))
 
 
 def run(coro):

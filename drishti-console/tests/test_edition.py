@@ -69,7 +69,7 @@ def _app(backend, monkeypatch, users: dict | None = None):
     monkeypatch.setattr(backend, "patch_settings", patch_settings, raising=False)
 
     async def current(cookie, _backend):
-        return Identity(user=cookie or "alice", display=(cookie or "alice").title(), desk="Risk", roles=("*",))
+        return Identity(user=cookie or "alice", display=(cookie or "alice").title(), desk="Risk", roles=("*",), admin=True)
 
     monkeypatch.setattr(app.state.auth, "current", current)
     app.state.store = store
@@ -471,7 +471,8 @@ def _people(app, monkeypatch, roles: dict):
     """Each person's access roles (a viewer unless named): the stand-in server masks TRADER_ID for a role without raw."""
     async def current(cookie, _backend):
         user = cookie or "alice"
-        return Identity(user=user, display={"kim": "K. Moreau"}.get(user, user.title()), desk="", roles=roles.get(user, ("viewer",)))
+        return Identity(user=user, display={"kim": "K. Moreau"}.get(user, user.title()), desk="", roles=roles.get(user, ("viewer",)),
+                        admin=bool({"*", "admin"} & set(roles.get(user, ()))))
 
     monkeypatch.setattr(app.state.auth, "current", current)
 

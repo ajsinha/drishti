@@ -79,7 +79,7 @@ def editor(backend, monkeypatch, tmp_path):
 
     async def current(cookie, _backend):
         who = cookie or "alice"
-        return Identity(user=who, display=who.title(), desk="Ops", roles=("viewer",) if who == "vic" else ("admin",))
+        return Identity(user=who, display=who.title(), desk="Ops", roles=("viewer",) if who == "vic" else ("admin",), admin=who != "vic")
 
     monkeypatch.setattr(app.state.auth, "current", current)
     app.state.kept = kept
