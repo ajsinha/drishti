@@ -94,6 +94,9 @@
   so the popover was drawn twice: the rows asked for or a comment being typed in the first one were lost (the flaky *rows behind a cell*
   and *comment on a cell* browser tests). The grid no longer re-explains the cell already explained, and the pivot keeps the rows open
   in a popover drawn again for the same cell.
+- **The PDFs follow their Markdown.** `docs/architecture/DISTRIBUTIONS.pdf` still showed the retired `bin/start-*.sh` commands and the
+  `drishti-stack/` folder: it is generated from DISTRIBUTIONS.md again and joins the PDFs `tools/docs/md_to_pdf.py --check` keeps current;
+  KERNEL_AND_MODULES, DEPLOYMENT_AND_QA_GUIDE and CLUSTER_GUIDE PDFs regenerated with this release's changes.
 
 The Python commands release. The build still reports its version as 2.9.11.g (the version from one place is the next release); the release is tag `v2.9.11.i_5`.
 
