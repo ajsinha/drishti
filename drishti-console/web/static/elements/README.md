@@ -78,7 +78,27 @@ the `elements:` range in its module's `module.yaml`.
 
 ## Roadmap: Drishti Elements as its own project
 
-Design only; nothing here is built. The aim is that other teams use Elements without Drishti, while Drishti keeps using it unchanged.
+Design only; nothing here is built.
+
+**The end state.** Drishti Elements becomes a standalone project that hosts its own components, gallery, docs and published builds (npm and
+a public CDN, like any CDN library). Drishti then no longer hosts Elements' sources, docs or gallery: it consumes Elements as a vendored,
+pinned copy under `static/vendor/` (with its `VENDOR.md` entry, the same as ECharts), updated by a version bump. After the split the docs
+live in the Elements project and Drishti links to them (one home per fact).
+
+**What moves out of the Drishti repository at the split**
+- the sources: `static/elements/` (every library's `src/`, bundles, style sheets, harnesses), the shared tokens and component sheets in `static/css/` that the libraries load, and the build (`tools/elements/`, `tools/docs/elements_*.py`, the sheet generators);
+- the gallery (`static/gallery/`) and its catalogue;
+- the documents: `ELEMENTS.md`, `ELEMENTS_API.md`, the Elements parts of `EMBED_GUIDE.md`, this README;
+- the Elements tests (`tests/elements/*.test.mjs`, the `test_elements_*` browser and static guards);
+- the renderer's hosting: `static/render/<version>/` and the `/embed/v2/render` and `/elements` routes' files become the vendored copy served by Drishti (the folders are built in the Elements project).
+
+**What stays in Drishti**
+- the vendored, pinned copy of a released Elements build (`static/vendor/drishti-elements/<version>/`, `VENDOR.md`: version, source, licence, how to update);
+- Drishti's own pages, templates and page scripts that call the libraries, and the console's routes (embed API, `render_dist`, the visuals API);
+- domain glue that is not reusable (the banking module's risk screens and kinds, the genomics module's library) and each module's `elements:` range;
+- the server contracts the adapters call (Explain, pivot, live), which Elements documents as interfaces.
+
+The aim is that other teams use Elements without Drishti, while Drishti keeps using it unchanged.
 
 **Repository and build.** A separate repository holding the libraries, the tokens, the gallery, the build (`tools/elements/`), the API
 generator (`tools/docs/elements_api.py`) and the Node tests. Drishti takes a pinned copy of a released build into
