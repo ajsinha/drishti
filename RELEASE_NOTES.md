@@ -85,6 +85,11 @@ once more after the reload if IntelliJ recreated a `target/` in an old place.
 ## Known limits
 
 - `data load --store <postgres|redis|...>` still runs a bash script (Git Bash on Windows) until the Python second phase.
+- **Overrides reach the server and the console, not the Python data tools yet.** The server reads its modules through the overrides view
+  and the console's resolver reads the same view, but the Python loaders and generators that open module files themselves (`lake build`
+  with `--pack modules/...`, `tools/build_demo_lakes.py`, the pack generators, `varcli`) read `modules/` as shipped. An overridden pack
+  layout or ingest key therefore applies to what the server serves, not to what these tools load: to load with an overridden file, pass
+  its path (`--pack <your overrides folder>/<module id>/packs/<pack>`). One resolver for the Python tools is planned.
 - `start cluster` keeps a running copy of the jar at `<data>/stack/server.jar` (test convenience; a real install runs from `<home>/lib`),
   refreshed from `<home>/lib` at every start when it differs.
 

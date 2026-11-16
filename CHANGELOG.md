@@ -79,6 +79,8 @@
   in `<home>/data/iceberg`; now it passes settings only: `DRISHTI_CONNECTORS_DIR=config/connectors.examples/iceberg` (the bindings and
   placement files named where they are), `DRISHTI_ICEBERG_ROOT=<data>/iceberg` unless `--iceberg-root` names one (connectors read-only;
   everything Drishti writes under the data folder).
+- **Known limit, written down:** the Python data tools that open module files themselves (`lake build --pack modules/...`,
+  `build_demo_lakes.py`, the pack generators, `varcli`) do not read the overrides view yet; RELEASE_NOTES says so with the workaround.
 
 The Python commands release. The build still reports its version as 2.9.11.g (the version from one place is the next release); the release is tag `v2.9.11.i_5`.
 
