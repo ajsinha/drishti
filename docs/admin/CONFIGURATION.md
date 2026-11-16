@@ -3202,7 +3202,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
-| `drishti.overrides.dir` | string | empty | `DRISHTI_OVERRIDES_DIR` | server | the override folders (commas; the right-most wins; absolute): any module file but module.yaml, java/ and the connector templates (a Sutra, a pack's YAML, console/plugin.yaml...); read at start into the view &lt;data&gt;/overrides/modules, listed in Admin -&gt; Health; empty: none | restart |  | admin |
+| `drishti.overrides.dir` | string | empty | `DRISHTI_OVERRIDES_DIR` | server | the override folders (commas; the right-most wins; absolute): any module file but module.yaml, the connector templates and code (java/, lib/, python/, engines/, .jar/.py/.class/.so/.dll and scripts, links); the first folder is the module's id; read at start into the view &lt;data&gt;/overrides/modules, listed in Admin -&gt; Health; empty: none | restart |  | admin |
 
 #### `drishti.lib`
 
@@ -6728,7 +6728,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_OIDC_REDIRECT_URI` | `auth.oidc.redirect_uri` | empty | console | default: &lt;console&gt;/auth/oidc/callback |
 | `DRISHTI_OPENAPI_URL` | `help.openapi_url` | empty | console | the address of the server's OpenAPI UI as a browser reaches it (blank: the page names /api/docs/ui on the server) |
 | `DRISHTI_OPENBLAS_ENABLED` | `drishti.engines.openblas.enabled` (engine) | `false` | engine | off as shipped (the Java kernels, the same figures); on: linear algebra on the bundled OpenBLAS on this node (live, no restart) for faster many-scope sums |
-| `DRISHTI_OVERRIDES_DIR` | `drishti.overrides.dir` | empty | server | the override folders (commas; the right-most wins; absolute): any module file but module.yaml, java/ and the connector templates (a Sutra, a pack's YAML, console/plugin.yaml...); read at start into the view &lt;data&gt;/overrides/modules, listed in Admin -&gt; Health; empty: none |
+| `DRISHTI_OVERRIDES_DIR` | `drishti.overrides.dir` | empty | server | the override folders (commas; the right-most wins; absolute): any module file but module.yaml, the connector templates and code (java/, lib/, python/, engines/, .jar/.py/.class/.so/.dll and scripts, links); the first folder is the module's id; read at start into the view &lt;data&gt;/overrides/modules, listed in Admin -&gt; Health; empty: none |
 | `DRISHTI_PACKS` | `drishti.packs.enabled`, `packs.enabled` | `default` | console, server | default: the distribution's packs (drishti.distribution), else config/packs/default-packs.yaml |
 | `DRISHTI_PACKS_DEPLOY_HISTORY` | `drishti.packs.deploy.history-file` | `<data>/packs/deploy-history.jsonl` | server | the history of archive deployments and rollbacks |
 | `DRISHTI_PACKS_DIR` | `drishti.packs.dir`, `packs.dir` | `<config>/packs` | console, server | Domain packs (modules/&lt;module&gt;/packs/&lt;name&gt;/pack.yaml): Sutras, mnemonics, links, badges, roles, vocabulary, samples. Site settings below always override what a pack contributes. |

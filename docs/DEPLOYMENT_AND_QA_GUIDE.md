@@ -547,10 +547,12 @@ The examples, each with comments: `config/settings.examples/dev.ini` (a develope
 [› Named lakes, databases and brokers](admin/CONFIGURATION.md#named-lakes-databases-and-brokers).
 
 **Try a changed module file from outside the module** (a developer's or a QA machine's): name an override folder in the same file and
-put your copy of any module file there at the same relative path it has under `modules/`. The server lays the folder over the modules
-at start and reads every file from there; the module itself is never touched. Any module file may be overridden (a Sutra, a pack's YAML,
-a page's `console/plugin.yaml`, `data/needs.yaml`, a mapping, a blotter, Help) except `module.yaml`, the connector templates (change a
-connector in `config/connectors/<name>.yaml`) and the module's Java. To change the Endur cash Sutra of the trading pack:
+put your copy of any module file there under the module's **id** (`id:` of its `module.yaml`) at the same relative path it has inside the
+module: `banking/...` for `modules/banking/`, `capitalmarkets/...` for `modules/capital-markets/`. The server lays the folder over the
+modules at start and reads every file from there; the module itself is never touched. Any module file may be overridden (a Sutra, a pack's
+YAML, a page's `console/plugin.yaml`, `data/needs.yaml`, a mapping, a blotter, Help) except `module.yaml`, the connector templates (change
+a connector in `config/connectors/<name>.yaml`) and the module's code (`java/`, `lib/`, `python/`, `engines/`, any `.jar`, `.py`,
+`.class`, `.so`, `.dll` or script file, and symbolic links). To change the Endur cash Sutra of the trading pack:
 
 ```ini
 [roots]

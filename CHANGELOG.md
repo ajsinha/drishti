@@ -58,6 +58,13 @@
   (`<data>/stack/server-jar.source`). The cluster commands take their data folder from the one launch-roots lookup (`--data-dir`, the
   settings file's `drishti.data.dir`, `DRISHTI_DATA_DIR`, `<home>/data`), and the `drishti-stack/` fallback of i4 is gone
   (deploy/stack/README.md).
+- **Overrides: one key, and never code.** An override path's first folder is the module's id (`module.yaml`'s `id:`), for the modules
+  folder's view and an installed module's view alike: the view used the folder name and the store the id, so `capitalmarkets/...` worked
+  for one and was refused by the other. A folder name that is not the id is refused naming the id; an id with no module in the folder is
+  *waiting* until one is installed. Health shows one report: every applied file with the file it is applied to (`applied`), whichever view,
+  the refused and the waiting ones. An override can no longer inject code: `lib/`, `python/`, `engines/` (with `java/`), any `.jar`,
+  `.class`, `.py`, `.pyc`, `.pyd`, `.so`, `.dll`, `.dylib`, `.exe`, `.sh`, `.bat`, `.cmd`, `.ps1` file and every symbolic link are refused in
+  words (KERNEL_AND_MODULES.md 18.10; `ModuleOverridesTest`).
 
 The Python commands release. The build still reports its version as 2.9.11.g (the version from one place is the next release); the release is tag `v2.9.11.i_5`.
 

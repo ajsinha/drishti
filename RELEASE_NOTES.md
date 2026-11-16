@@ -57,8 +57,9 @@ release itself is tag `v2.9.11.i_5`; the next release, i6, takes the version fro
   right-most wins). A file there at the same relative path as inside a module replaces the module's file: a Sutra, a pack's YAML,
   `console/plugin.yaml`, `data/needs.yaml`, mappings, blotters, Help. Example: edit a copy of
   `banking/packs/trading/sutras/endur/endur-cash.v1.sutra.yaml` in your overrides folder, restart, and the server serves it; delete it and
-  the module's own is back. `module.yaml`, connector templates and `java/` cannot be overridden. Admin → Health lists every overridden
-  file and its source. A change to an override file takes effect at the next restart.
+  the module's own is back. The first folder is the module's id (`capitalmarkets/...` for `modules/capital-markets/`). `module.yaml`,
+  connector templates and the module's code (`java/`, `lib/`, `python/`, `engines/`, any `.jar`, `.py`, `.class`, `.so`, `.dll` or script,
+  and symbolic links) cannot be overridden. Admin → Health lists every overridden file, its source and where it is applied. A change to an override file takes effect at the next restart.
 
 ## Upgrading an install of i4
 

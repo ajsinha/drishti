@@ -458,9 +458,18 @@ public class HealthController {
         out.put("dirs", r == null ? List.of() : r.dirs().stream().map(Object::toString).toList());
         out.put("view", r == null || r.view() == null ? null : r.view().toString());
         out.put("modulesHome", r == null ? null : r.modulesHome().toString());
-        out.put("files", r == null ? List.of() : r.files().stream().map(f -> Map.of("path", f.path(), "source", f.source().toString(),
-                "replaces", f.replaces())).toList());
-        out.put("refused", r == null ? List.of() : r.refused());
+        // one report, keyed by the module's id: what the start applied to the modules folder's view, then what is applied now to the
+        // views of modules installed from their .dmod; a file waiting for a module of its id is listed until one is installed
+        List<com.ash.drishti.api.resolution.ModuleOverrides.File> files = new ArrayList<>(r == null ? List.of() : r.files());
+        files.addAll(com.ash.drishti.api.resolution.ModuleOverrides.installedFiles());
+        java.util.Set<String> installedIds = new java.util.HashSet<>();
+        com.ash.drishti.api.resolution.ModuleOverrides.installedFiles().forEach(f -> installedIds.add(f.path().split("/", 2)[0]));
+        out.put("files", files.stream().map(f -> Map.of("path", f.path(), "source", f.source().toString(), "replaces", f.replaces(),
+                "applied", f.applied() == null ? "" : f.applied().toString())).toList());
+        List<String> refused = new ArrayList<>(r == null ? List.of() : r.refused());
+        refused.addAll(com.ash.drishti.api.resolution.ModuleOverrides.installedRefused());
+        out.put("refused", refused);
+        out.put("waiting", r == null ? List.of() : r.waiting().stream().filter(w -> !installedIds.contains(w.split("/", 2)[0])).toList());
         return out;
     }
 }

@@ -217,10 +217,11 @@
   <ul class="mono cmp-path">{% for o in h.overrides %}<li>{{ o }}</li>{% endfor %}</ul></details>
 {% endif %}
 {% set mo = h.moduleOverrides or {} %}
-{% if mo.files or mo.refused %}
-<details class="hl-over" data-module-overrides><summary>{{ mo.files | length }} module file{{ 's' if (mo.files | length) != 1 }} overridden by the site{% if mo.refused %}; {{ mo.refused | length }} refused{% endif %}</summary>
-  <ul class="mono cmp-path">{% for f in mo.files %}<li>{{ f.path }} &larr; {{ f.source }}{% if not f.replaces %} (added){% endif %}</li>{% endfor %}
-  {% for r in mo.refused %}<li>refused: {{ r }}</li>{% endfor %}</ul></details>
+{% if mo.files or mo.refused or mo.waiting %}
+<details class="hl-over" data-module-overrides><summary>{{ mo.files | length }} module file{{ 's' if (mo.files | length) != 1 }} overridden by the site{% if mo.refused %}; {{ mo.refused | length }} refused{% endif %}{% if mo.waiting %}; {{ mo.waiting | length }} waiting for a module{% endif %}</summary>
+  <ul class="mono cmp-path">{% for f in mo.files %}<li>{{ f.path }} &larr; {{ f.source }}{% if not f.replaces %} (added){% endif %}{% if f.applied %} &rarr; {{ f.applied }}{% endif %}</li>{% endfor %}
+  {% for r in mo.refused %}<li>refused: {{ r }}</li>{% endfor %}
+  {% for w in mo.waiting %}<li>waiting: {{ w }}</li>{% endfor %}</ul></details>
 {% endif %}
 
 {% if h.pages %}

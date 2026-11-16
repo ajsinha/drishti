@@ -104,7 +104,87 @@ class ModuleOverridesTest {
         assertThat(r.view()).isNull();
         assertThat(r.files()).isEmpty();
         assertThat(String.join("\n", r.refused())).contains("module.yaml is its identity", "config/connectors/<name>.yaml",
-                "java only builds the module", "no module 'nosuch'", "the same relative path", "is not a folder");
+                "java/ holds the module's code", "the same relative path", "is not a folder");
+        assertThat(r.waiting()).singleElement().asString().contains("nosuch/packs/x/pack.yaml", "no module 'nosuch'", "installed from its .dmod");
+    }
+
+    @Test
+    void anOverrideCanNeverInjectCodeNorFollowALink() throws Exception {
+        Path modules = modules();
+        write(modules.resolve("banking/python/var/model.py"), "x = 1\n");
+        Path o = tmp.resolve("over");
+        write(o.resolve("banking/lib/evil.jar"), "jar");
+        write(o.resolve("banking/python/var/model.py"), "import os\n");
+        write(o.resolve("banking/engines/var.yaml"), "class: x\n");
+        write(o.resolve("banking/packs/trading/hook.py"), "import os\n");
+        write(o.resolve("banking/packs/trading/Hook.class"), "cafebabe");
+        write(o.resolve("banking/packs/trading/native.so"), "elf");
+        write(o.resolve("banking/docs/native.DLL"), "mz");
+        write(o.resolve("banking/packs/trading/plugin.JAR"), "jar");
+        write(o.resolve("banking/packs/trading/sutras/endur/endur-cash.v1.sutra.yaml"), "title: Endur cash (site)\n");   // a Sutra: kept
+        write(o.resolve("economy/docs/help.yaml"), "pages: []\n");                                                  // Help: kept
+        Path outside = tmp.resolve("outside");
+        write(outside.resolve("pack.yaml"), "pack: hijacked\n");
+        write(outside.resolve("dir/pack.yaml"), "pack: hijacked\n");
+        Files.createDirectories(o.resolve("banking/packs/x"));
+        Files.createSymbolicLink(o.resolve("banking/packs/x/pack.yaml"), outside.resolve("pack.yaml"));
+        Files.createSymbolicLink(o.resolve("banking/packs/linked"), outside.resolve("dir"));
+        Path view = tmp.resolve("data/overrides/modules");
+
+        ModuleOverrides.Result r = ModuleOverrides.apply(modules, List.of(o), view);
+
+        assertThat(r.files()).extracting(ModuleOverrides.File::path)
+                .containsExactly("banking/packs/trading/sutras/endur/endur-cash.v1.sutra.yaml", "economy/docs/help.yaml");
+        String refused = String.join("\n", r.refused());
+        assertThat(refused).contains("lib/ holds the module's code", "python/ holds the module's code", "engines/ holds the module's code",
+                "a .py file is code", "a .class file is code", "a .so file is code", "a .dll file is code", "a .jar file is code",
+                "banking/packs/x/pack.yaml: a symbolic link is never followed", "banking/packs/linked: a symbolic link is never followed");
+        assertThat(r.refused()).hasSize(10);
+        assertThat(Files.readString(view.resolve("banking/python/var/model.py"))).isEqualTo("x = 1\n");      // the module's own code, as shipped
+        assertThat(view.resolve("banking/lib")).doesNotExist();
+        assertThat(view.resolve("banking/packs/x")).doesNotExist();
+        assertThat(view.resolve("banking/packs/linked")).doesNotExist();
+    }
+
+    @Test
+    void theModuleIdIsTheOneKeyForTheModulesFolderAndTheStoreAlike() throws Exception {
+        Path modules = modules();
+        write(modules.resolve("capital-markets/module.yaml"), "id: capitalmarkets\npacks: [us-equities]\n");
+        write(modules.resolve("capital-markets/packs/us-equities/pack.yaml"), "pack: us-equities\n");
+        Path o = tmp.resolve("over");
+        write(o.resolve("capitalmarkets/packs/us-equities/pack.yaml"), "pack: us-equities (site)\n");
+        write(o.resolve("capital-markets/packs/us-equities/pack.yaml"), "pack: us-equities (by folder)\n");
+        Path view = tmp.resolve("data/overrides/modules");
+
+        ModuleOverrides.Result r = ModuleOverrides.apply(modules, List.of(o), view);
+
+        assertThat(r.files()).singleElement().satisfies(f -> {
+            assertThat(f.path()).isEqualTo("capitalmarkets/packs/us-equities/pack.yaml");                   // the report: by id
+            assertThat(f.replaces()).isTrue();
+            assertThat(f.applied()).isEqualTo(view.resolve("capital-markets/packs/us-equities/pack.yaml"));  // the view: the module's folder
+        });
+        assertThat(Files.readString(view.resolve("capital-markets/packs/us-equities/pack.yaml"))).contains("(site)");
+        assertThat(view.resolve("capitalmarkets")).doesNotExist();
+        assertThat(r.refused()).singleElement().asString().contains("'capital-markets' is the folder of the module 'capitalmarkets'",
+                "capitalmarkets/packs/us-equities/pack.yaml");
+        assertThat(r.waiting()).isEmpty();
+        assertThat(Files.readString(view.resolve(ModuleOverrides.LIST))).contains("path: 'capitalmarkets/packs/us-equities/pack.yaml'",
+                "applied: '" + view.resolve("capital-markets/packs/us-equities/pack.yaml") + "'");
+
+        Path home = tmp.resolve("store/installed/capitalmarkets/2.0.0");                                    // the same key for the store
+        write(home.resolve("module.yaml"), "id: capitalmarkets\n");
+        write(home.resolve("packs/us-equities/pack.yaml"), "pack: us-equities\n");
+        try {
+            ModuleOverrides.activate(List.of(o), tmp.resolve("data"));
+            Path iv = ModuleOverrides.installed(home, "capitalmarkets");
+            assertThat(Files.readString(iv.resolve("packs/us-equities/pack.yaml"))).contains("(site)");
+            assertThat(ModuleOverrides.installedFiles()).extracting(ModuleOverrides.File::path)
+                    .containsExactly("capitalmarkets/packs/us-equities/pack.yaml");
+            assertThat(ModuleOverrides.installedFiles().get(0).applied()).isEqualTo(iv.resolve("packs/us-equities/pack.yaml"));
+        } finally {
+            ModuleOverrides.activate(List.of(), null);
+        }
+        assertThat(ModuleOverrides.installedFiles()).isEmpty();
     }
 
     @Test
@@ -116,9 +196,14 @@ class ModuleOverridesTest {
         Path o = tmp.resolve("over");
         write(o.resolve("banking/packs/trading/sutras/endur/endur-cash.v1.sutra.yaml"), "title: Endur cash (site)\n");
         write(o.resolve("banking/module.yaml"), "id: other\n");
+        write(o.resolve("banking/java/drishti-banking.jar"), "evil");
+        write(o.resolve("banking/packs/trading/run.sh"), "rm -rf /\n");
         try {
             ModuleOverrides.activate(List.of(o), tmp.resolve("data"));
             Path view = ModuleOverrides.installed(home, "banking");
+            assertThat(ModuleOverrides.installedRefused()).hasSize(3).anySatisfy(x -> assertThat(x).contains("java/ holds the module's code"))
+                    .anySatisfy(x -> assertThat(x).contains("a .sh file is code"));
+            assertThat(view.resolve("packs/trading/run.sh")).doesNotExist();
             assertThat(view).isEqualTo(tmp.resolve("data/overrides/installed/banking/1.0.0"));
             assertThat(Files.readString(view.resolve("packs/trading/sutras/endur/endur-cash.v1.sutra.yaml"))).contains("(site)");
             assertThat(Files.readString(view.resolve("module.yaml"))).contains("id: banking");         // the identity is never overridden
@@ -127,6 +212,8 @@ class ModuleOverridesTest {
 
             Files.delete(o.resolve("banking/packs/trading/sutras/endur/endur-cash.v1.sutra.yaml"));
             Files.delete(o.resolve("banking/module.yaml"));
+            Files.delete(o.resolve("banking/java/drishti-banking.jar"));
+            Files.delete(o.resolve("banking/packs/trading/run.sh"));
             assertThat(ModuleOverrides.installed(home, "banking")).isEqualTo(home);
             assertThat(view).doesNotExist();
             assertThat(tmp.resolve("data/overrides/installed")).doesNotExist();
