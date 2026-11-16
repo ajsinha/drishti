@@ -22,57 +22,18 @@ label whose keys are full names. A later file beats an earlier one; an explicit 
 defaults. Standard library only."""
 from __future__ import annotations
 
+import importlib.util
 from pathlib import Path
 
-PROPERTY = "drishti.settings.file"
+# the format itself, one reader for the console and the tools: drishti-console/core/settings_ini.py (standard library only)
+_SPEC = importlib.util.spec_from_file_location("drishti_settings_ini", Path(__file__).resolve().parents[1] / "drishti-console" / "core" / "settings_ini.py")
+_INI = importlib.util.module_from_spec(_SPEC)
+_SPEC.loader.exec_module(_INI)
+
+PROPERTY = _INI.PROPERTY
 FLAG = "-D" + PROPERTY + "="
-
-
-class SettingsError(ValueError):
-    """The settings file is relative, missing, unreadable or malformed; the message says which and where."""
-
-
-def files(named) -> list[Path]:
-    """The files named by a value of the option (one absolute path, or several joined by commas), each checked."""
-    return [check(part.strip()) for part in str(named).split(",") if part.strip()]
-
-
-def check(path) -> Path:
-    """The file as an absolute path that exists; ``SettingsError`` otherwise."""
-    p = Path(str(path))
-    if not p.is_absolute():
-        raise SettingsError(f"{PROPERTY} must be a full absolute path, got \"{path}\" (it is never searched for and never relative to the working folder)")
-    if not p.is_file():
-        raise SettingsError(f"{PROPERTY} names {p}, which is not a file")
-    return p
-
-
-def read(path) -> dict[str, str]:
-    """One file's entries in file order (a later duplicate key wins); sections as in the module text."""
-    p = check(path)
-    out: dict[str, str] = {}
-    prefix = ""
-    for n, raw in enumerate(p.read_text(encoding="utf-8").splitlines(), 1):
-        line = raw.strip()
-        if not line or line.startswith(("#", ";")):
-            continue
-        if line.startswith("[") and line.endswith("]"):
-            section = line[1:-1].strip()
-            prefix = section + "." if "." in section else ""     # [lake.demo] is a namespace; [roots] a label
-            continue
-        key, eq, value = line.partition("=")
-        if not eq or not key.strip():
-            raise SettingsError(f"{p}:{n}: expected key=value, got \"{line}\"")
-        out[prefix + key.strip()] = value.strip()
-    return out
-
-
-def read_all(named) -> dict[str, str]:
-    """The entries of every file named (comma-separated), a later file beating an earlier one."""
-    out: dict[str, str] = {}
-    for f in files(named):
-        out.update(read(f))
-    return out
+SettingsError = _INI.SettingsError
+check, files, read, read_all = _INI.check, _INI.files, _INI.read, _INI.read_all
 
 
 def resolve(named, explicit: dict[str, str] | None = None) -> dict[str, str]:
@@ -110,19 +71,8 @@ def apply_roots(entries: dict[str, str], environ=None) -> list[str]:
 
 
 def pop_option(argv: list[str]) -> tuple[list[str], str | None]:
-    """``argv`` without ``--settings <path>`` / ``--settings=<path>`` and the path (None when absent); the path is validated."""
-    rest: list[str] = []
-    path = None
-    it = iter(argv)
-    for a in it:
-        if a == "--settings":
-            path = next(it, None)
-            if path is None:
-                raise SettingsError("--settings needs the absolute path of the settings file")
-        elif a.startswith("--settings="):
-            path = a.split("=", 1)[1]
-        else:
-            rest.append(a)
+    """``argv`` without ``--settings <path>`` / ``--settings=<path>`` and the path (None when absent); the paths are validated."""
+    rest, path = _INI.pop_option(argv)
     if path is not None:
         files(path)
     return rest, path
