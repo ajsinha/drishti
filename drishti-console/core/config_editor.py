@@ -16,7 +16,7 @@
 docs/admin/CONFIGURATION.md in three tiers (everyday, admin, expert; the tier is the document's Tier column, kept in
 tools/settings_schemas.yaml), searchable, each with its value in effect and where it came from (the server's ``GET /admin/settings`` and
 this console's own, core/settings_page.py), and a change **proposed**, never written live: a second administrator approves it (the
-server's four-eyes proposals). The server's and the engines' keys are written by the server on approval; a console key is written here,
+server's four-eyes proposals, which refuse a secret). The server's and the engines' keys are written by the server on approval; a console key is written here,
 into this console's ``config/application.local.yaml``, by the console the approver uses. Secrets are never shown and never proposed.
 """
 from __future__ import annotations
@@ -27,7 +27,7 @@ from pathlib import Path
 
 import yaml
 
-from core.settings_page import BEGIN, END, _CELL, _PIECE, _ROW, is_secret, shown
+from core.settings_page import BEGIN, END, _CELL, _PIECE, _ROW
 
 TIERS = (("everyday", "Everyday"), ("admin", "Admin"), ("expert", "Expert"))
 PAGE_ROWS = 200
@@ -97,7 +97,7 @@ def pick(every: list[dict], q: str = "", tier: str = "", area: str = "") -> list
 def with_effect(r: dict, server: dict, console: dict) -> dict:
     """The row with its value in effect and where it came from (secrets masked), and whether a change may be proposed here."""
     eff = (console if r["edit"] == "console" else server if r["edit"] in ("server", "engines") else {}).get(r["key"])
-    secret = is_secret(r["key"]) or bool(eff and eff.get("secret"))
+    secret = bool(eff and eff.get("secret"))                       # the server's rule (its answer, and its secret-keys answer)
     return {**r, "value": eff.get("value", "") if eff else "", "origin": eff.get("origin", "") if eff else "",
             "source": eff.get("source", "") if eff else "", "secret": secret, "proposable": bool(r["edit"]) and not secret
             and "<" not in r["key"] and "[]" not in r["key"]}
@@ -113,9 +113,8 @@ def _parse(value: str):
 
 
 def write_console_key(path: Path, key: str, value: str, note: str) -> None:
-    """An approved console key into the console's application.local.yaml (the dotted key as nested maps), every other key kept."""
-    if is_secret(key):
-        raise ValueError("a secret is never written from Admin → Configuration")
+    """An approved console key into the console's application.local.yaml (the dotted key as nested maps), every other key kept. A secret
+    never reaches here: the server refuses to file a proposal for one."""
     data = (yaml.safe_load(path.read_text(encoding="utf-8")) or {}) if path.is_file() else {}
     node = data
     parts = key.split(".")
@@ -130,7 +129,3 @@ def write_console_key(path: Path, key: str, value: str, note: str) -> None:
     tmp = path.with_name(path.name + ".writing")
     tmp.write_text(head + yaml.safe_dump(data, sort_keys=False, allow_unicode=True), encoding="utf-8")
     tmp.replace(path)
-
-
-def shown_value(key: str, value) -> str:
-    return shown(key, value)

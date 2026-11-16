@@ -27,9 +27,9 @@ from core.settings import changed_at
 from core.backend import BackendError
 from core.csrf import BodyError, json_body
 from routes import api_routes, designer_routes, history_routes, phone_routes
-from core.edition import ADMIN_PAGES, mnemonics, words as reserved_words
+from core.edition import mnemonics, words as reserved_words
+from core.packs import admin_pages
 from routes.common import ident, packs, render
-from core import distribution as _dist
 from core import modules as _modules
 from core import plugins as _plugins
 from routes.pivot_routes import redirect_for as pivot_redirect
@@ -124,7 +124,7 @@ async def go(request: Request, q: str = ""):
         return RedirectResponse(f"/t?error={quote(_menus.refusal_for_role(closed))}", status_code=303)
     eds = request.app.state.editions
     if getattr(ed, "distribution", False) and head and not ed.typed_shown(typed) and (
-            head in reserved_words() or head in _dist.known_commands(eds.packs_dir, eds.modules_dir, eds.server_modules)):
+            head in reserved_words() or head in eds.known_commands()):
         title = ed.outer.title if getattr(ed, "outer", None) is not None and not ed.outer.typed_shown(typed) else ed.title
         return RedirectResponse(f"/t?error={quote(f'DRS-4023 {head} is not in {title}: FUNC lists what you can use')}", status_code=303)
     if head in reserved_words() and head not in mnemonics() and not ed.word_on(head):    # a word the edition (or lens) switches off: said, not run (EXP is also a mnemonic)
@@ -188,7 +188,7 @@ def admin_redirect(request: Request, ed, rest: list[str]):
     me = getattr(request.state, "identity", None)
     if me is None or not me.is_admin:
         return RedirectResponse(f"/t?error={quote('ADMIN is for administrators')}", status_code=303)
-    kept = [p for p in ADMIN_PAGES if ed.admin_page_shown(p) and _engines.path_engine("/admin/" + p) is None]   # a page of an engine that runs nowhere is not offered
+    kept = [p for p in admin_pages(request) if ed.admin_page_shown(p) and _engines.path_engine("/admin/" + p) is None]   # a page of an engine that runs nowhere is not offered
     page = rest[0].lower() if rest else (kept[0] if kept else "")
     if (off := _engines.path_engine("/admin/" + page)) is not None:        # ADMIN DATA-OUT with Arrow Flight off: said in the server's words, not a 404 page
         return RedirectResponse(f"/t?error={quote(_engines.refusal(off))}", status_code=303)
@@ -257,7 +257,7 @@ async def _pack_readme(request: Request, name: str) -> dict:
     if found and found.group(1).strip():
         from core import readmes
         from routes.common import library
-        html_ = readmes.render(found.group(1), readmes.source_of(request.app.state.docs_dir, "pack", meta.get("pack") or name), await library(request))
+        html_ = readmes.render(found.group(1), None, await library(request), request.app.state.docs_dir)
     return {"summary": meta.get("summary") or "", "html": html_, "sources": meta.get("sources") or []} if (meta.get("summary") or html_) else {}
 
 
@@ -426,28 +426,12 @@ async def about(request: Request, kind: str, id_: str, generation: int = 0, form
     return render(request, "terminal/_about.html", ex=ex, error=None, kind=kind, id=id_, index=about_index.build(ex))
 
 
-@router.post("/v/{kind}/{id_:path}/ask")
-async def ask(request: Request, kind: str, id_: str):
-    """Ask about this page: a thin proxy to the server, which holds the credentials and builds the prompt. JSON in and out; a problem
-    keeps the server's code (DRS-4007/4008/4009) so the drawer can say what happened. The page's own explanation never depends on it."""
-    try:
-        body = await json_body(request, limit=4096)
-    except BodyError as e:
-        return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.status)
-    try:
-        out = await request.app.state.backend.ask(kind, id_, ident(request), str(body.get("question", "")), request.query_params.get("locale"),
-                                                  request.headers.get("accept-language"))
-    except BackendError as e:
-        return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.page_status)
-    return JSONResponse({"answer": out.get("answer", ""), "sources": out.get("sources", [])})
-
-
 @router.get("/v/{kind}/{id_:path}/panels")
 async def view_panels(request: Request, kind: str, id_: str, panels: str = ""):
     """Some panels of a view as ready HTML, built with the controls' values (``?panels=cashflows,legs&ctl.leg=L2``): what the page asks
     for when a control changes, so only the panels that read it move. Also the strip and the controls (their options and values may
     have moved: a cascading child). ``panels=-`` builds none. The server builds only the named panels."""
-    ctl = controls.from_query(request.query_params)
+    ctl = controls.of(request)
     ids = [p for p in panels.split(",") if p and p != "-"] if panels else None
     try:
         chosen = request.query_params.get("sutra")
@@ -511,7 +495,7 @@ async def view_event(request: Request, kind: str, id_: str):
         return JSONResponse({"code": "DRS-5001", "detail": "a click names its row"}, status_code=400)
     click = {"panel": str(body.get("panel") or ""), "event": str(body.get("event") or ""), "row": row, "selections": sels}
     try:
-        r = await request.app.state.backend.view_event(kind, id_, ident(request), click, controls=controls.from_query(request.query_params),
+        r = await request.app.state.backend.view_event(kind, id_, ident(request), click, controls=controls.of(request),
                                                        sutra=request.query_params.get("sutra") or None,
                                                        **(await designer_routes.design_kw(request, kind)))
     except BackendError as e:
@@ -528,7 +512,7 @@ async def view_children(request: Request, kind: str, id_: str, panel: str):
     sels = request.query_params.getlist("sel")[:32]
     try:
         groups = await request.app.state.backend.view_children(kind, id_, ident(request), panel, sels,
-                                                               controls=controls.from_query(request.query_params),
+                                                               controls=controls.of(request),
                                                                sutra=request.query_params.get("sutra") or None,
                                                                **(await designer_routes.design_kw(request, kind)))
     except BackendError as e:
@@ -545,7 +529,7 @@ async def view(request: Request, kind: str, id_: str, embed: int = 0, gen: int =
         return RedirectResponse(hist, status_code=303)
     sid = collab_core.set_share(share)              # a view opened through a share's link tells the server so (its access log)
     pin = None                                      # how a pinned link (?asOf=&knownAt=&gen=) was honoured, for the banner
-    ctl = controls.from_query(request.query_params)  # ?ctl.leg=L2: the controls' values, so a link reproduces what was seen
+    ctl = controls.of(request)  # ?ctl.leg=L2: the controls' values, so a link reproduces what was seen
     more = {"controls": ctl} if ctl else {}
     chosen = (request.query_params.get("sutra") or "").strip()     # ?sutra=book-desk: another Sutra of the kind draws the view
     if chosen:

@@ -375,9 +375,13 @@ async def deploy(request: Request, wid: str, action: str):
             f = ws.dmod(d)
             if f is None:
                 return _problem(409, "make the module first (step 5)")
-            from core import resolution
-            target = Path(str(request.app.state.settings.get("builder.pack_designer_modules_dir", "") or "")) \
-                if request.app.state.settings.get("builder.pack_designer_modules_dir", "") else resolution.Settings.from_env().modules_path
+            # the server's modules folder, named in this console's settings (an absolute path): the console works out no server folder
+            # (THIN_CONSOLE_DESIGN.md 2.1; the job moves to the server with the pack design job, step S8)
+            setting = str(request.app.state.settings.get("builder.pack_designer_modules_dir", "") or "").strip()
+            if not setting or not Path(setting).is_absolute():
+                return _problem(409, "Install on this node needs builder.pack_designer_modules_dir: the server's modules folder as an "
+                                     "absolute path, on this machine. Or use Plan for the cluster, which sends the module to the server")
+            target = Path(setting)
             target.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(f, target / f.name)
             return {"installed": str(target / f.name), "binding": await _propose_binding(b, me, d, str(body.get("reason") or ""))}

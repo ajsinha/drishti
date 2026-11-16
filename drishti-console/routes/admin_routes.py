@@ -213,12 +213,12 @@ async def _readme_html(request: Request, name: str, readme: dict) -> dict:
     from core import readmes
     from routes.common import library
     lib = await library(request)
-    return {"meta": readme.get("meta") or {}, "html": readmes.render(readme["markdown"], readmes.source_of(request.app.state.docs_dir, "pack", name), lib)}
+    return {"meta": readme.get("meta") or {}, "html": readmes.render(readme["markdown"], None, lib, request.app.state.docs_dir)}
 
 
 @router.get("/api/packs/{name}/readme")
 async def pack_readme(request: Request, name: str):
-    """A pack's README as the server gives it (front matter and markdown): what Admin -> Packs shows, for tools and AI."""
+    """A pack's README as the server gives it (front matter and markdown): what Admin -> Packs shows, and for tools."""
     try:
         return await request.app.state.backend.pack_readme(name, ident(request))
     except BackendError as e:
@@ -802,16 +802,16 @@ async def health(request: Request, partial: int = 0):
     from core import channel_relay, external_lib, tmpdir
 
     return render(request, "admin/_health_body.html" if partial else "admin/health.html", h=data, connectors=connectors, console_tmp=tmpdir.info(), console_ext=external_lib.info(),
-                  watch=request.app.state.backend_watch.snapshot(), relay=channel_relay.stats(request.app),
+                  watch=request.app.state.backend_watch.snapshot(), relay=channel_relay.stats(request.app), server_facts=request.app.state.server_facts.health(),
                   console_cluster=(request.app.state.cluster.snapshot() if getattr(request.app.state, "cluster", None) is not None else None),
                   console_distribution=_console_distribution(request.app))
 
 
 def _console_distribution(app) -> dict:
     """This console's distribution for Health (docs/architecture/DISTRIBUTIONS.md) and the old keys it still reads."""
-    from core import distribution as _dist
+    from core.edition import deprecated
     d = app.state.editions.distribution
-    return {**d.about(), "own": app.state.editions.own_distribution, "deprecated": _dist.deprecated(app.state.settings)}
+    return {**d.about(), "own": app.state.editions.own_distribution, "deprecated": deprecated(app.state.settings)}
 
 
 @router.get("/caches")
@@ -952,37 +952,30 @@ async def act(request: Request, username: str, action: str):
 
 @router.get("/white-label")
 async def white_label_page(request: Request):
-    """The distributions side by side (mock-up A): each shipped or site file in config/distributions with its brand, theme, modules (and
+    """The distributions side by side (mock-up A): each distribution file of the server, compiled by the server, with its brand, theme, modules (and
     whether each is loaded here), lenses, menus, Home cards and Help title; the running one marked, with how to start each. Read only: a
     distribution is a file, changed in the file and taken at the next start (KERNEL_AND_MODULES.md section 6)."""
     me = ident(request)
     if not me.is_admin:
         return _forbidden(request)
-    from core import distribution as _dist
     from core import modules as _mods
+    from core.edition import Distribution, deprecated
     eds = request.app.state.editions
-    directory = _white_label_dir(request.app)
-    rows, problems = [], []
-    for f in sorted(directory.glob("drishti.*.yaml")):
-        try:
-            d = _dist.read(f, directory / _dist.KERNEL, eds.modules_dir, eds.packs_dir)
-        except (ValueError, OSError) as e:
-            problems.append(f"{f.name}: {e}")
-            continue
-        spec = d.edition_spec or {}
-        rows.append({"d": d, "running": d.id == eds.distribution.id, "start": d.name,
+    try:                                             # compiled by the server, never read here (THIN_CONSOLE_DESIGN.md, step S2)
+        answer = await request.app.state.backend.admin("GET", "/distributions", me)
+    except BackendError as e:
+        return render(request, "admin/forbidden.html", status_code=e.status, error=e)
+    rows, problems = [], [str(p) for p in (answer or {}).get("problems") or []]
+    for doc in (answer or {}).get("distributions") or []:
+        d = Distribution(doc)
+        spec = d.filter or {}
+        rows.append({"d": d, "running": d.id == eds.distribution.id, "start": str(doc.get("start") or d.name),
                      "modules": [{"id": m, "state": "loaded" if _mods.module_on(d.domains.get(m, m)) else "not loaded"} for m in d.modules],
-                     "menus": (spec.get("menus") or {}).get("top") or [], "cards": ((d.spec.get("home") or {}).get("cards") or []),
+                     "menus": (spec.get("menus") or {}).get("top") or [], "cards": d.home_cards,
                      "commands": len((spec.get("commands") or {}).get("allow") or [])})
     rows.sort(key=lambda r: (not r["running"], r["d"].id != "drishti.all", r["d"].id))
-    return render(request, "admin/white_label.html", rows=rows, problems=problems, directory=str(directory), me=me,
-                  own=eds.own_distribution, deprecated=_dist.deprecated(request.app.state.settings), status=await _status(request))
-
-
-def _white_label_dir(app):
-    from pathlib import Path
-    d = Path(str(app.state.settings.get("distributions_dir", "../config/distributions") or "../config/distributions"))
-    return d if d.is_absolute() else (app.state.editions.console_dir / d).resolve()
+    return render(request, "admin/white_label.html", rows=rows, problems=problems, directory="the server's distribution folder", me=me,
+                  own=eds.own_distribution, deprecated=deprecated(request.app.state.settings), status=await _status(request))
 
 
 # -- Admin → Data bindings (docs/guides/ADMIN_GUIDE.md, "Data bindings"; KERNEL_AND_MODULES.md section 5, mock-up A) ------------------------
@@ -1038,3 +1031,21 @@ async def bindings_action(request: Request, action: str):
     except BackendError as e:
         return _problem(e)
     return JSONResponse({"code": "DRS-5001", "detail": "unknown action"}, status_code=400)
+
+
+@router.post("/api/retry/{area}")
+async def retry_now(request: Request, area: str):
+    """Admin "Retry now" (administrators; audited by the server). ``area``: packs, connectors or all; the server tries again."""
+    me = ident(request)
+    if not me.is_admin:
+        return JSONResponse({"code": "DRS-5002", "detail": "administrators only"}, status_code=403)
+    body = await json_body(request)
+    if area not in ("packs", "connectors", "all"):
+        return JSONResponse({"code": "DRS-5001", "detail": "area must be packs, connectors or all"}, status_code=400)
+    out: dict = {"area": area}
+    try:
+        params = {"name": body["name"]} if body.get("name") else {}
+        out["server"] = await request.app.state.backend.admin("POST", f"/retry/{area}", me, **params)
+    except BackendError as e:
+        out["serverError"] = e.detail
+    return out

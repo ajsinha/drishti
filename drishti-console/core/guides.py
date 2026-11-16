@@ -278,7 +278,7 @@ class Library:
     def _picture(self, source: Path, m: re.Match) -> str:
         """``<img src="img/x.png">`` in a guide under docs/: the file beside the guide, shown through ``/help/files/``. One that is not there is left
         alone with ``data-unavailable``, so the help-centre crawl and the screenshots test see it."""
-        target = (source.parent / html.unescape(m.group(2))).resolve()
+        target = self._resolve(source, html.unescape(m.group(2)))
         try:
             rel = target.relative_to(self.docs_dir.resolve())
         except ValueError:
@@ -286,6 +286,17 @@ class Library:
         if not target.is_file():
             return f'{m.group(1)}data-unavailable="{m.group(2)}" src="{m.group(2)}"'
         return f'{m.group(1)}src="/help/files/{html.escape(rel.as_posix())}"'
+
+    def _resolve(self, source: Path, target: str) -> Path:
+        """A relative link or picture of a guide: beside the guide; a target into ``docs/`` that is not there (a pack's guide, which the
+        console keeps by its digest in its own temp folder, links ``../../../../docs/guides/X.md`` as it sits in its pack) is the document of
+        that name among the documents this console ships (``docs_dir``), as a pack README's links are (core/readmes.py)."""
+        path = (source.parent / target).resolve()
+        if not path.exists() and "docs/" in target:
+            shipped = (self.docs_dir / target.rsplit("docs/", 1)[1]).resolve()
+            if shipped.exists():
+                return shipped
+        return path
 
     def fragment(self, path: Path) -> str:
         """One markdown note (an example's) as help HTML, its links resolved like any guide's."""
@@ -304,7 +315,7 @@ class Library:
         if target.startswith("/help/reference/"):
             return m.group(0)                        # the built API references (Help -> Developer, core/api_reference.py): not a document
         anchor = f"#{anchor}" if anchor else ""
-        path = (source.parent / target).resolve()
+        path = self._resolve(source, target)
         if path.is_dir() and (path / "README.md").exists():
             path = path / "README.md"
         slug = self.by_file.get(path)

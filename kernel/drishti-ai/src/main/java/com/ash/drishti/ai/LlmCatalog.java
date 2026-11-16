@@ -30,8 +30,7 @@ import java.util.function.Function;
 
 /**
  * The curated model catalogue and the presets of the providers added after {@code openai} and {@code anthropic}
- * ({@code sajha/ai/llm/catalog.py}), read from {@code ai/llm_catalog.json} (an identical copy is in the console,
- * {@code core/ai/providers/catalog.py}). A preset is a base URL, the environment variables a key may be read from and a model
+ * ({@code sajha/ai/llm/catalog.py}), read from {@code ai/llm_catalog.json} (the one copy: the console calls this layer only). A preset is a base URL, the environment variables a key may be read from and a model
  * list; {@link #applyDefaults} fills a parsed provider block from it. Prices in the file are USD per million tokens, the layer's own
  * unit is per 1,000 tokens.
  */

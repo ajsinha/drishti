@@ -72,7 +72,7 @@ sections:
               { slug: bi-report-models, doc: guides/bi/MODELS_AND_DATASETS_FOR_REPORTS.md, title: "Models and datasets for reports", icon: diagram-3, summary: "What a report reads: the Models page, fields, perspectives and the contract, relationships and how a question joins, measures, row rules and masks, layers and refresh, live tables, expected values and worked examples; several facts in one report, with the tutorial." },
               { slug: bi-live, doc: guides/bi/LIVE_REPORTS_AND_BOARDS.md, title: "Live reports, boards and background runs", icon: lightning-charge, summary: "Live reports and standing queries, boards of live tiles for a wall, kiosk mode, and background runs for long questions; with the live-BI tutorial." },
               { slug: bi-distribution, doc: guides/bi/DISTRIBUTION_AND_ALERTS.md, title: "Distribution, subscriptions and alerts", icon: send, summary: "The Reports page and scheduled searches, export (PDF, PNG, Excel, CSV), subscriptions, webhooks and text messages, alerts on numbers, and embedding a report; with the tutorials for BI that runs itself and for scheduled searches." },
-              { slug: bi-govern-ai, doc: guides/bi/GOVERNANCE_AND_AI.md, title: "Governing BI and AI in BI", icon: shield-check, summary: "AI in BI (report from words, ask the data, explain this number) and publishing and governance (versions, review, certification, lineage, impact, environments); with the governance tutorial." },
+              { slug: bi-govern-ai, doc: guides/bi/GOVERNANCE_AND_AI.md, title: "Governing BI", icon: shield-check, summary: "Publishing and governance (versions, review, certification, lineage, impact, environments); with the governance tutorial." },
               { slug: bi-python-notebook, doc: guides/bi/NOTEBOOK_AND_PYTHON.md, title: "The Notebook and Python", icon: journal-code, summary: "Where code runs; the Notebook (SQL and Python cells, extract, save, promote, profile); Python measures and visuals; Transforms and the Transform editor; the command line, the sandbox, limits and how an administrator turns Python on; with the tutorial." },
               { slug: bi-groupings, doc: guides/bi/GROUPINGS_AND_ANALYTICS.md, title: "Groupings and analytics", icon: diagram-2, summary: "The groupings and analytics computed instead of stored: LEIG, LEIC, SIC, ECG, CORR, EQB, PXH and the USEQ ratios, their data contract and how they are computed; with the tutorial." },
           ] }
@@ -117,8 +117,6 @@ sections:
         guides:
           - { slug: configuration, domain: core, doc: admin/CONFIGURATION.md, title: Configuration, icon: sliders, summary: "The one configuration document: every setting of every kind (server, console, connectors, packs, editions, stores, BI runs, write-back, {product}*net, AI) with its default, environment variable and meaning, searchable by key, variable or words; administrators see the value in effect and where it came from." }
           - { slug: admin, domain: core, doc: guides/ADMIN_GUIDE.md, title: "Administration: people, access and lenses", icon: people, summary: "Signing in, your first ten minutes (add a person), roles and their powers (BI, Calc, layouts, pivots, discussion), packs per user, single sign-on (OpenID Connect), API tokens, embedding host applications, the access log, the identity database (SQLite or PostgreSQL) and the rules {product} enforces; what a lens is, running a whole instance as one lens or offering lenses to people, Home landings, the Risk, Trading, Market, World and Public sector lenses, customising and white-labelling, your own lens; Functions (FUNC): every command and turning one on or off; compute engines on or off (Admin → Engines); modules; troubleshooting." }
-          - { slug: ai, domain: core, pair: docs-tutorials-10-ai-assistant, doc: guides/AI_GUIDE.md, title: "AI: model providers and MCP servers", icon: stars, summary: "Model providers (seventeen vendor types), one file each, off by default; TLS and Test connection; the admin page and API.; the MCP client (tools, resources, prompts, SAJHA); the designs of AI management and the quant service." }
-          - { slug: docs-tutorials-10-ai-assistant, doc: tutorials/10-ai-assistant.md, title: "AI tutorial: Ask, tools and model providers", icon: mortarboard, kind: tutorial, domain: core, summary: "Hands-on steps, each in the UI, on the command line and in YAML: a model provider file, Test connection, Ask about this page, BI from words, an MCP server's tools behind the policy, masking and the audit." }
       - title: "Run"
         guides:
           - { slug: deployment-qa, domain: core, doc: DEPLOYMENT_AND_QA_GUIDE.md, title: "Deployment and QA guide", icon: clipboard-check, summary: "Step by step on Windows, Linux and macOS: prerequisites (Windows with nothing but Java and Python), the release, configuration (data folder, lakes, modules, lenses, secrets), the demo lake, starting the server and the console and running them as services (systemd, a scheduled task, launchd), verifying every part with what you should see (health, modules, sign-in, the Home of each lens, VaR, exposure, BI, the MR cube, the Elements gallery, the data inbox and feeds, modules off and on, the phone, logs and metrics), the QA checklist, a cluster of three end to end, offline QA with your own trade files, troubleshooting. Also as a PDF." }
@@ -354,12 +352,10 @@ moved:
   runbook-live-latency: operations#203-live-latency-high-or-live-views-stop-ticking
   runbook-sign-in: operations#204-users-cannot-sign-in
   elements: docs-architecture-architecture#30-the-client-renderer-and-drishti-elements
-  mcp-client: ai#2-the-mcp-client-other-servers-tools-behind-drishtis-policy
   rupaka: docs-architecture-architecture#28-business-intelligence-on-the-table-layer
   about-this-page-design: rachana-reference#about-this-page-the-design-of-context-help
   collaboration: docs-architecture-architecture#31-collaboration-write-back-and-approvals
   architecture: docs-architecture-architecture
-  quant-service: ai#4-server-side-pricing-the-quant-service-proposed
   decisions: docs-architecture-adr-readme
   plan: docs-architecture-implementation-plan
   docs-architecture-rupaka-poc: docs-architecture-architecture#28-business-intelligence-on-the-table-layer            # RUPAKA_POC.md deleted (2.9.6): the design it tested is RUPAKA
@@ -391,8 +387,6 @@ moved:
   boards: bi-live#2-boards-report-pages-of-live-tiles   # docs/guides/BOARDS.md merged into bi/LIVE_REPORTS_AND_BOARDS.md › Reports: the YAML, the visuals and how they behave, section 23
   docs-guides-boards: bi-live#2-boards-report-pages-of-live-tiles   # docs/guides/BOARDS.md
   docs-guides-statements: bi-report-file#4-statements-paginated-reports-page-exact-one-per-reader   # docs/guides/STATEMENTS.md merged into bi/REPORT_FILE_FORMAT_STATEMENTS.md › Reports: the YAML, the visuals and how they behave, section 24
-  bi-ai: bi-govern-ai#1-ai-in-bi-report-from-words-ask-the-data-explain-this-number   # docs/guides/BI_AI.md merged into bi/GOVERNANCE_AND_AI.md section 29
-  docs-guides-bi-ai: bi-govern-ai#1-ai-in-bi-report-from-words-ask-the-data-explain-this-number   # docs/guides/BI_AI.md
   docs-guides-bi-runs-guide: bi-live#3-background-runs-long-bi-questions   # docs/guides/BI_RUNS_GUIDE.md merged into bi/README.md section 28
   docs-guides-nested-documents: build-guide#6-sutras-over-deep-documents   # docs/guides/NESTED_DOCUMENTS.md
   docs-guides-sutra-testing-guide: cli-guide#testing-sutras-expectyaml-the-tests-convention-and-ci   # docs/guides/SUTRA_TESTING_GUIDE.md, beside the sutra command
@@ -418,10 +412,6 @@ moved:
   analyse: bi-python-notebook#2-the-notebook   # guides/ANALYSE.md, later Analyse: now the Notebook
   python-calc: user-guide#calc-python-on-any-view   # guides/PYTHON_CALC.md merged into guides/USER_GUIDE.md (2.9.7)
   query-by-form: user-guide#query-by-form   # guides/QUERY_BY_FORM.md merged into guides/USER_GUIDE.md (2.9.7)
-  ai-providers: ai#1-model-providers   # architecture/AI_PROVIDERS.md merged into guides/AI_GUIDE.md (2.9.7)
-  docs-architecture-ai-management: ai#3-ai-management-design-not-built   # architecture/AI_MANAGEMENT.md merged into guides/AI_GUIDE.md (2.9.7)
-  docs-architecture-mcp-client: ai#2-the-mcp-client-other-servers-tools-behind-drishtis-policy   # architecture/MCP_CLIENT.md merged into guides/AI_GUIDE.md (2.9.7)
-  docs-architecture-quant-service: ai#4-server-side-pricing-the-quant-service-proposed   # architecture/QUANT_SERVICE.md merged into guides/AI_GUIDE.md (2.9.7)
   docs-admin-compute: operations#15-compute-workers   # admin/COMPUTE.md merged into guides/OPERATIONS_GUIDE.md (2.9.7)
   docs-admin-lake-maintenance: operations#16-lake-maintenance-and-scheduling   # admin/LAKE_MAINTENANCE.md merged into guides/OPERATIONS_GUIDE.md (2.9.7)
   docs-admin-net: cluster#1-several-servers-as-one-drishtinet   # admin/NET.md merged into guides/OPERATIONS_GUIDE.md (2.9.7)
@@ -498,7 +488,6 @@ moved:
   docs-tutorials-12-live-bi-and-boards: bi-live#part-f--live-bi-and-boards
   docs-tutorials-13-govern-bi: bi-govern-ai#part-g--govern-bi
   docs-tutorials-14-python-and-analyse: bi-python-notebook#tutorial-the-notebook-and-python
-  docs-tutorials-15-ai-in-drishti: docs-tutorials-10-ai-assistant
   docs-tutorials-16-embed-drishti: docs-tutorials-20-embed-drishti
   docs-tutorials-17-run-it-in-production: docs-tutorials-21-run-it-in-production
   docs-tutorials-18-several-datasets-in-one-report: bi-report-models#part-b--several-datasets-in-one-report
@@ -542,8 +531,6 @@ moved:
   connector-files: data-guide#9-connector-files-and-admin--connectors   # docs/connectors/CONNECTOR_FILES.md folded into DATA_GUIDE.md section 9
   connector-tls: data-guide#10-tls-and-the-outbound-proxy   # docs/connectors/TLS.md folded into DATA_GUIDE.md section 10
   docs-connectors-demo-data: data-guide#11-the-demo-data   # docs/connectors/DEMO_DATA.md folded into DATA_GUIDE.md section 11
-  # 2.9.11.h docs rewrite, docs/admin/AI.md moved to the guides:
-  docs-admin-ai: ai
   # 2.9.11.h docs rewrite, operate guides (OPERATIONS, CLUSTER, ADMIN, CLI reference):
   install-and-run: operations#2-install-and-run-on-one-machine   # guides/OPERATIONS_GUIDE.md folded into guides/OPERATIONS_GUIDE.md (part 1)
   docs-guides-getting-started: operations#2-install-and-run-on-one-machine   # the same

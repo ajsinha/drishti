@@ -83,6 +83,9 @@ public class DrishtiApplication {
             // no server temp folder under the data folder: the command's scratch folder is made in the JVM's temp folder (or DRISHTI_TMP_DIR)
             System.exit(com.ash.drishti.server.cli.CliLauncher.launch(args, System.out, System.err));
         }
+        if (com.ash.drishti.server.cli.ResolveCli.isCli(args)) {         // `resolve --json [--root DIR]` (tools/resolved.py): no Spring, no web server
+            System.exit(com.ash.drishti.server.cli.ResolveCli.run(args, System.out, System.err));
+        }
         if (args.length > 0 && "tables".equals(args[0])) {                    // `tables list|check|preview|lineage|migrate` (drishti-tables): no Spring
             System.exit(new com.ash.drishti.tables.cli.TablesCli(System.out, System.err, com.ash.drishti.api.Roots.home(),   // the install folder, never the working folder
                     new com.ash.drishti.server.bi.expr.DelTablesTranslator())

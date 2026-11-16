@@ -44,9 +44,9 @@ import corr_kinds as CK  # CORR computed from price history in the market-data p
 import ccr_kinds as XK  # the exposure engine's kinds in the counterparty-risk pack (the simulation run, the paths, exposure-result)
 
 ROOT = Path(__file__).resolve().parents[3]
-if str(ROOT / "drishti-console") not in sys.path:
-    sys.path.insert(0, str(ROOT / "drishti-console"))
-from core.resolution import pack_dir  # noqa: E402  (where a pack is: the one resolver, KERNEL_AND_MODULES.md 18)
+if str(ROOT / "tools") not in sys.path:
+    sys.path.insert(0, str(ROOT / "tools"))
+from resolved import pack_dir  # noqa: E402  (where a pack is: the Java resolver's answer, tools/resolved.py)
 sys.path.insert(0, str(ROOT / "tools"))
 import packform as PF  # noqa: E402  (the form: section: query by form, FORM <pack>)
 HEADER = "\n".join("#" + (" " + line if line.strip() else "") for line in

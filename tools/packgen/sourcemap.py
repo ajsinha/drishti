@@ -241,9 +241,9 @@ def scan(inputs, progress=None) -> dict:
 
 def contracts() -> dict[str, pathlib.Path]:
     """kind -> its contract file, from every pack the one resolver reads (the site's, the modules', the kernel's)."""
-    if str(ROOT / "drishti-console") not in sys.path:
-        sys.path.insert(0, str(ROOT / "drishti-console"))
-    from core.resolution import pack_dirs
+    if str(ROOT / "tools") not in sys.path:
+        sys.path.insert(0, str(ROOT / "tools"))
+    from resolved import pack_dirs
     out: dict[str, pathlib.Path] = {}
     for f in sorted(f for d in pack_dirs().values() for f in d.glob("contracts/*.contract.yaml")):
         out.setdefault(f.name[: -len(".contract.yaml")], f)

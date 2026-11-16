@@ -272,15 +272,10 @@ def test_a_broken_live_stream_counts_against_its_server_so_the_reconnect_goes_el
     assert stand.calls[-1][0] == B
 
 
-def test_a_loopback_advertisement_is_never_kept_and_a_member_that_moved_replaces_its_old_address(tmp_path, monkeypatch):
-    (tmp_path / "net").mkdir()
-    (tmp_path / "net" / "servers.json").write_text(json.dumps({"servers": [
-        {"url": "http://127.0.0.1:18784", "origin": "discovered", "node_id": "n-b"},
-        {"url": "http://0.0.0.0:18785", "origin": "discovered", "node_id": "n-c"}]}))
+def test_a_member_that_moved_replaces_its_old_address(tmp_path, monkeypatch):
+    """The member list is the server's (its HostAddress rule refuses a loopback advertisement; the console keeps no copy of the rule)."""
     stand, p = Stand(), pool(tmp_path, A)
-    assert [e.url for e in p.ordered()] == [A]                           # a saved loopback or wildcard address is not read back
-    stand.members = [{"nodeId": "n-a", "url": A, "state": "alive"}, {"nodeId": "n-b", "url": "http://localhost:18784", "state": "alive"},
-                     {"nodeId": "n-c", "url": C, "state": "alive"}]
+    stand.members = [{"nodeId": "n-a", "url": A, "state": "alive"}, {"nodeId": "n-c", "url": C, "state": "alive"}]
     real = httpx.AsyncClient
 
     def fake_client(*a, **kw):
@@ -292,27 +287,6 @@ def test_a_loopback_advertisement_is_never_kept_and_a_member_that_moved_replaces
     stand.members = [{"nodeId": "n-a", "url": A, "state": "alive"}, {"nodeId": "n-c", "url": B, "state": "alive"}]
     run(p.discover_once({}))
     assert [e.url for e in p.ordered()] == [A, B]                        # n-c now advertised at B: C goes
-    saved = json.loads((tmp_path / "net" / "servers.json").read_text())
-    assert not any(cluster.loopback_url(s["url"]) for s in saved["servers"])
-    assert cluster.loopback_url("http://[::1]:1") and cluster.loopback_url("http://127.3.2.1:1") and not cluster.loopback_url("http://192.168.2.77:1")
-
-
-def test_a_discovered_member_on_any_spelling_of_this_machine_is_refused():
-    """The server's rule (HostAddress, tools/hostaddr.py; QA1-09): 0, 127.x, 2130706433, 0x7f000001, localhost., ip6-localhost, link-local
-    addresses, and a host name that resolves to a loopback address (this machine's own name is 127.0.1.1 on Debian and Ubuntu)."""
-    import socket
-    for url in ("http://0:18611", "http://127.0.1.1:1", "http://2130706433:1", "http://0x7f000001:1", "http://127.1:1", "http://localhost.:1",
-                "http://ip6-localhost:1", "http://foo.localhost:1", "http://169.254.10.1:1", "http://[fe80::1]:1", "http://[::]:1", "http://0.0.0.0:1"):
-        assert cluster.loopback_url(url), url
-    for url in ("http://192.168.2.77:1", "http://10.1.2.3:18480", "http://no-such-host.invalid:1"):
-        assert not cluster.loopback_url(url), url
-    name = socket.gethostname()
-    try:
-        resolved = {i[4][0] for i in socket.getaddrinfo(name, None)}
-    except OSError:
-        resolved = set()
-    if resolved and all(a.startswith("127.") or a == "::1" for a in resolved):
-        assert cluster.loopback_url(f"http://{name}:1")
 
 
 def _drain(c):

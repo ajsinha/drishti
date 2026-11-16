@@ -35,15 +35,26 @@ import java.util.TreeMap;
  * {@code modules/<id>/module.yaml} (the {@code .dmod} manifest), a module with code's {@code META-INF/drishti/module.yaml} in its
  * sources ({@code modules/<id>/java/<part>/src/main/resources/...}), and the packaged modules the registry reads with the same reader
  * ({@link com.ash.drishti.registry.ModulePackages}: the shipped first-party {@code .dmod} packages and those installed in the module store),
- * whose manifest wins over a folder's copy. The console reads the same files the same way
- * (drishti-console/core/distribution.py). Each comes to its packs, its function words, the engines it owns, its top menus, the Help
+ * whose manifest wins over a folder's copy. The console reads none of them: it draws from the server's
+ * installation answer (THIN_CONSOLE_DESIGN.md 3.2). Each comes to its packs, its function words, the engines it owns, its top menus, the Help
  * domains it owns and the modules it requires; the list is in requirement order (a required module before the modules that need it).
  */
 public final class ModuleManifests {
 
-    /** One module as a distribution sees it ({@code source}: its manifest file; null for a package). */
+    /**
+     * One module as a distribution sees it ({@code source}: its manifest file; null for a package). {@code title} is its manifest's title
+     * (blank: none), {@code consoleMenus} its top menus in the sitemap's form ({@code console.menus}, each a map) and {@code domainLabel} the
+     * name the console's Domains menu takes when this is the one active domain ({@code console.domain-label}): what the console draws from
+     * the module's manifest, served in the installation's answer (THIN_CONSOLE_DESIGN.md 3.2).
+     */
     public record Entry(String id, String domain, List<String> packs, List<String> words, List<String> features, List<String> menus,
-            List<String> docs, List<String> requires, Path source) {
+            List<String> docs, List<String> requires, Path source, String title, List<Object> consoleMenus, String domainLabel) {
+
+        /** As before the console's fields: no title, no menus in the sitemap's form, no domain label. */
+        public Entry(String id, String domain, List<String> packs, List<String> words, List<String> features, List<String> menus,
+                List<String> docs, List<String> requires, Path source) {
+            this(id, domain, packs, words, features, menus, docs, requires, source, "", List.of(), "");
+        }
     }
 
     private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
@@ -132,8 +143,15 @@ public final class ModuleManifests {
         m.path("requires").fieldNames().forEachRemaining(k -> { if (!"optional".equals(k)) { requires.add(k); } });
         List<String> engines = new ArrayList<>();
         m.path("compute").path("engines").forEach(x -> engines.add(x.path("id").asText()));
+        List<Object> consoleMenus = new ArrayList<>();
+        m.path("console").path("menus").forEach(x -> {
+            if (x.isObject() && !x.path("id").asText("").isBlank()) {
+                consoleMenus.add(YAML.convertValue(x, Map.class));
+            }
+        });
         return new Entry(id, m.path("domain").asText(id), texts(m.path("packs").path("list")), words(m.path("functions")), engines,
-                menuIds(m.path("console").path("menus")), texts(m.path("docs").path("domains")), requires, source);
+                menuIds(m.path("console").path("menus")), texts(m.path("docs").path("domains")), requires, source,
+                m.path("title").asText("").strip(), List.copyOf(consoleMenus), m.path("console").path("domain-label").asText("").strip());
     }
 
     /** A module jar's manifest ({@code module:} or a {@code modules:} list): contributes.packs, functions, engines, menus, help. */

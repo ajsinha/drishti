@@ -138,10 +138,11 @@ class HttpProvidersContractTest {
     }
 
     @org.junit.jupiter.api.Test
-    void theTwoCatalogueCopiesAreIdentical() throws Exception {
-        java.nio.file.Path console = java.nio.file.Path.of(TestRoots.repo(), "drishti-console", "core", "ai", "providers", "llm_catalog.json");
+    void theCatalogueHasOneCopyTheConsoleKeepsNone() throws Exception {
+        java.nio.file.Path console = java.nio.file.Path.of(TestRoots.repo(), "drishti-console", "core", "ai");
+        assertThat(console).as("the console calls the server's AI layer only (THIN_CONSOLE_DESIGN.md step S7)").doesNotExist();
         try (InputStream in = getClass().getResourceAsStream("/ai/llm_catalog.json")) {
-            assertThat(new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8)).isEqualTo(java.nio.file.Files.readString(console));
+            assertThat(in).isNotNull();
         }
     }
 }

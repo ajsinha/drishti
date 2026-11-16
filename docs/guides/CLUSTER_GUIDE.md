@@ -1389,7 +1389,7 @@ rotating the token secret signs everyone out.
 |---|---|
 | task | `family: drishti-prod-drishti-a`, `networkMode: awsvpc`, `FARGATE` or `EC2`, 6 vCPU and 16 GB; three EFS volumes (`data`, `config`, `sutras`) through their access points with IAM and transit encryption |
 | `server` container | 4 vCPU, 12 GB (8 GB heap; RocksDB, DuckDB, Arrow and ZGC off the heap), `readonlyRootFilesystem`, `stopTimeout: 120`, port 18480, the three mounts; environment `DRISHTI_NODE_ID`, `DRISHTI_NET_SEEDS`, `DRISHTI_SECURITY_ENABLED=true`, `DRISHTI_SEED_ADMIN=true`, `DRISHTI_PACKS`; secrets token, net, admin, drain; health `curl …/actuator/health/liveness` (15 s, 5 s, 4 retries, start period 180 s); `awslogs` |
-| `console` container | 2 vCPU, 4 GB, `readonlyRootFilesystem`, `stopTimeout: 30`, `dependsOn` the server `HEALTHY`, port 17480, the three mounts; `DRISHTI_AUTH_ENABLED=true`, `DRISHTI_CONSOLE__PACKS__ENABLED`; secrets token, session; health `/healthz` |
+| `console` container | 2 vCPU, 4 GB, `readonlyRootFilesystem`, `stopTimeout: 30`, `dependsOn` the server `HEALTHY`, port 17480, the three mounts; `DRISHTI_AUTH_ENABLED=true` (the console asks the server which packs a person has); secrets token, session; health `/healthz` |
 | service | `desiredCount: 1`, `maximumPercent: 100`, `minimumHealthyPercent: 0` (never two tasks on one node's folders), the deployment circuit breaker with rollback, private subnets, no public IP, the consoles' target group, the node's Cloud Map registry, `healthCheckGracePeriodSeconds: 240`, `enableExecuteCommand: false` (no shell into production: logs, metrics and Admin) |
 
 For a VaR owner add `DRISHTI_HEAP` (`36g`), `DRISHTI_VAR_HOT_DIR=/opt/drishti/nvme/var/hot`, `DRISHTI_VAR_MAX_DISK_GB` and

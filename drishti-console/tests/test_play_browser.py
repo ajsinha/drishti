@@ -18,6 +18,7 @@ scrolling, the VaR scenario is selected first with its formula in the bar and th
 cell moves both; the arrow keys move the selection; the export's choices state their size, time and applications, a refused one
 disabled; a picker asks again with the lens in the address. At 1280 px the grid and the panel side by side; at 390 px the glance form (the
 headline and the explanation), no sideways scroll. No request leaves the console's host. Skipped without Playwright or its Chromium."""
+import server_answers
 import random
 import socket
 import threading
@@ -121,7 +122,7 @@ def play_console():
 
     app = create_app(load_settings(CONSOLE / "config"))
     app.state.backend = PlayBackend()
-    app.state.editions.learn({"product": "Drishti Risk", "edition": {"name": "risk", "title": "Drishti Risk"}})
+    server_answers.follow(app, {"product": "Drishti Risk", "edition": {"name": "risk", "title": "Drishti Risk"}})
     port = _free_port()
     server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=port, log_level="warning", timeout_graceful_shutdown=2))
     thread = threading.Thread(target=server.run, daemon=True)

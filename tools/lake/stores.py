@@ -43,10 +43,10 @@ HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 sys.path.insert(0, str(HERE))
 import lakeconfig  # noqa: E402  (where the lakes are: config/lakes/<lake>.yaml)
-if str(ROOT / "drishti-console") not in sys.path:
-    sys.path.insert(0, str(ROOT / "drishti-console"))
-from core import resolution as R  # noqa: E402  (configuration: the one resolver)
-from core.resolution import pack_dir  # noqa: E402  (where a pack is: the one resolver, KERNEL_AND_MODULES.md 18)
+if str(ROOT / "tools") not in sys.path:
+    sys.path.insert(0, str(ROOT / "tools"))
+import resolved as R  # noqa: E402  (configuration: the Java resolver's answer, tools/resolved.py)
+from resolved import pack_dir  # noqa: E402  (where a pack is: the Java resolver's answer, tools/resolved.py)
 
 SYSTEMS = ("endur", "calypso", "murex")
 STORES = ("delta", "iceberg")
@@ -74,16 +74,13 @@ def parse(values: list[str] | None) -> dict[str, str]:
 
 def connectors_dir(given) -> pathlib.Path:
     """The site's connector files' folder: --connectors-dir, else the resolver's (DRISHTI_CONNECTORS_DIR, else config/connectors)."""
-    return pathlib.Path(given).expanduser().resolve() if given else R.Settings.from_env().connectors_dir
+    return pathlib.Path(given).expanduser().resolve() if given else R.current().connectors_dir
 
 
 def plugin_of(folder: pathlib.Path, name: str) -> str:
     """The plugin connector ``name`` reads with now: its effective definition (template, then the site's override in ``folder``)."""
-    f = folder / f"{name}.yaml"
-    try:
-        return R.effective(name, f.read_text(encoding="utf-8") if f.is_file() else None, R.repository().connectors.templates.get(name), f).plugin
-    except R.Unusable:
-        return "delta"
+    e = R.repository(connectors=folder).connectors.find(name)       # the template under the folder's file, as the Java resolver merges them
+    return e.plugin if e is not None else "delta"
 
 
 def current(folder: pathlib.Path) -> dict[str, str]:
@@ -98,9 +95,9 @@ def override_of(name: str, store: str, settings: dict) -> dict | None:
     t = R.repository().connectors.templates.get(name)
     if t is None:
         return None
-    base = {k: R._text(v) for k, v in R.flatten(t.definition.get("settings")).items()}
+    base = {k: R.text_of(v) for k, v in R.flatten(t.definition.get("settings")).items()}
     want = {k: v for k, v in R.flatten(settings).items()}
-    changed = {k: v for k, v in want.items() if R._text(v) != base.get(k)}
+    changed = {k: v for k, v in want.items() if R.text_of(v) != base.get(k)}
     changed.update({k: None for k in base if k not in want})
     body: dict = {"template": t.owner}
     if store != str(t.definition.get("plugin") or "delta"):

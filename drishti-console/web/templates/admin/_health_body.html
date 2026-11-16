@@ -27,7 +27,8 @@
   {% if h.summary.failedToStart %}<span class="t-neg"><b>{{ h.summary.failedToStart }}</b> failed to start</span>{% endif %}
   <span><b>{{ h.summary.packs - h.summary.packsWithProblems }}</b> of {{ h.summary.packs }} packs healthy</span>
   <span class="text-muted-d mono">v{{ h.server.version }} · up {{ (h.server.uptimeSeconds // 3600) }}h {{ (h.server.uptimeSeconds % 3600) // 60 }}m ·
-    heap {{ h.server.heapUsedMb }}/{{ h.server.heapMaxMb }} MB · {{ h.server.threads }} threads · Java {{ h.server.java }}</span>
+    heap {{ h.server.heapUsedMb }}/{{ h.server.heapMaxMb }} MB · {{ h.server.threads }} threads · Java {{ h.server.java }} ·
+    <span data-ai-state title="The server's one AI switch (drishti.ai.enabled, off as shipped); this release's console shows no AI page">AI: {{ h.ai or 'off' }}</span></span>
 </div>
 
 {% set sd = h.distribution or {} %}{% set cd = console_distribution or {} %}
@@ -61,6 +62,8 @@
   <span><b>Console watch</b></span>
   {% for w in (watch or []) %}<span class="mono" data-watch-server="{{ w.id }}" title="The console asks each server every backend.check_seconds (DRISHTI_CONSOLE_BACKEND_CHECK_SECONDS)">{{ w.name }}: {% if w.reachable is none %}not checked yet{% elif w.reachable %}reachable{% if w.version %} · v{{ w.version }}{% endif %}{% else %}<span class="t-neg">unreachable</span> · {{ w.lastError }}{% endif %}</span>{% endfor %}
   {% if relay and relay.port %}<span class="mono" data-console-relay title="The live-channel relay of the worker that drew this page (live.relay, CLUSTER_DEPLOYMENT section 9.4): calls passed to the worker or console holding a channel, calls answered for others, messages refused (not signed with the relay key, too old or replayed), calls no worker answered">relay {{ relay.host ~ ':' if relay.host }}{{ relay.port }}{{ ' (across hosts)' if relay.acrossHosts else ' (this host)' }} · {{ relay.forwarded }} passed on · {{ relay.answered }} answered · {% if relay.refused %}<span class="t-warn">{{ relay.refused }} refused</span>{% else %}0 refused{% endif %} · {{ relay.failed }} unanswered</span>{% endif %}
+  {% if server_notice() %}<span class="t-warn" data-server-older>{{ server_notice() }}</span>{% endif %}
+  {% for f in (server_facts or []) %}<span class="mono" data-server-facts="{{ f.server }}" title="What the server decided, kept for drawing (its installation's answer, asked again when /public/about's stamp changes). The console's own build is a diagnostic: the version shown to people is the server's">{{ f.server }}: answer {{ f.digest or 'not yet' }}{% if f.ageSeconds is not none %} · {{ f.ageSeconds }} s old{% endif %}{% if f.problem %} · <span class="t-warn">{{ f.problem }}</span>{% endif %} · server build {{ f.serverBuild or '?' }} · console build {{ f.consoleBuild or '?' }}{% if f.buildsDiffer %} · <span class="t-warn" data-builds-differ>builds differ</span>{% endif %}</span>{% endfor %}
 </div>
 {% if console_cluster and console_cluster.enabled %}
 <div class="hl-sum" data-console-servers aria-label="The console's servers">
@@ -127,9 +130,9 @@
 {% endif %}
 
 {% from "_macros/retry.html" import retry_note, retry_button %}
-{% set failing = ((h.retry or {}).get('packs', {}) | length) + ((h.retry or {}).get('connectors', {}) | length) + ((h.retry or {}).get('ai', {}) | length) + ((h.retry or {}).get('mcp', {}) | length) %}
+{% set failing = ((h.retry or {}).get('packs', {}) | length) + ((h.retry or {}).get('connectors', {}) | length) %}
 {% if failing %}<section class="pnl" aria-label="Retries" data-retries><div class="pnl-b"><p><b>{{ failing }}</b> thing{{ 's' if failing > 1 }} failed and will be tried again by themselves
-  (packs {{ (h.retry.packs | length) }}, connectors {{ (h.retry.connectors | length) }}, AI providers {{ (h.retry.ai | length) }}, MCP servers {{ (h.retry.mcp | length) }}).
+  (packs {{ (h.retry.packs | length) }}, connectors {{ (h.retry.connectors | length) }}).
   {{ retry_button('all', 'Retry all now') }}</p></div></section>{% endif %}
 {% if h.activity %}{% set act = h.activity %}{% set maxr = (act | map(attribute='requests') | max) or 1 %}{% set maxms = (act | map(attribute='avgMs') | max) or 1 %}{% set n = act | length %}{% set bw = 600 / n %}
 <h2 class="ws-h">Activity, last 30 minutes</h2>

@@ -32,9 +32,9 @@ from _var import open_var, painted
 from shotlib import DEMO_ROOT_ENV
 from shotlib import CONSOLE_PORT, ROOT, Ctx, register
 from shotlib import start_servers as _start
-if str(ROOT / "drishti-console") not in sys.path:
-    sys.path.insert(0, str(ROOT / "drishti-console"))
-from core.resolution import pack_dirs  # noqa: E402  (where a pack is: the one resolver, KERNEL_AND_MODULES.md 18)
+if str(ROOT / "tools") not in sys.path:
+    sys.path.insert(0, str(ROOT / "tools"))
+from resolved import pack_dirs  # noqa: E402  (where a pack is: the Java resolver's answer, tools/resolved.py)
 
 shot = register("varskip")
 SERVER_ENV = {"DRISHTI_SECURITY_ENABLED": "false"}   # marks the guide as one that runs on its own (--guide varskip)

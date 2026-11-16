@@ -19,35 +19,15 @@ its hue in every distribution of the site."""
 from __future__ import annotations
 
 import math
-from functools import lru_cache
-from pathlib import Path
 
-
-from core import distribution as _dist
 from core import modules as _modules
 
 HUES = 6                                   # .house-h0 … .house-h5 (drishti_theme.css): the theme's link, accent, violet, ok, teal, neg
 
 
 def universe(editions) -> list[str]:
-    """Every module this site knows, in the server's (requirement) order: the server's list, else the manifests folder."""
-    known = editions.server_modules
-    if known is None:
-        known = _manifests(str(editions.modules_dir))
-    return [m for m in known if m != _modules.CORE]
-
-
-@lru_cache(maxsize=4)
-def _manifests(folder: str) -> dict:
-    return _dist.module_manifests(Path(folder))
-
-
-@lru_cache(maxsize=64)
-def _manifest_title(folder: str, mid: str) -> str:
-    """A module's ``title`` from its manifest under the manifests folder ('' when there is none), as the one resolver finds it."""
-    from core import resolution
-    m = resolution.module_list(Path(folder)).get(mid) if Path(folder).is_dir() else None
-    return m.title if m else ""
+    """Every module this site knows, in the server's (requirement) order, as its installation answer lists them; none before it answers."""
+    return [m for m in (editions.server_modules or {}) if m != _modules.CORE]
 
 
 def rooms(editions) -> list[dict]:
@@ -67,7 +47,8 @@ def rooms(editions) -> list[dict]:
         if m == _modules.CORE or not _modules.module_on(m):
             continue
         title = str(titles.get(m) or "") if titles.get(m) not in (None, "", m) else ""
-        title = title or _manifest_title(str(editions.modules_dir), m) or m.replace("-", " ")
+        served = str(((editions.server_modules or {}).get(m) or {}).get("title") or "")
+        title = title or (served if served != m else "") or m.replace("-", " ")
         out.append({"id": m, "title": title, "hue": (everyone.index(m) if m in everyone else len(out)) % HUES})
     return out
 

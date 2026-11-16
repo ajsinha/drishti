@@ -43,6 +43,7 @@ import contextlib
 import hashlib
 import hmac
 import inspect
+import ipaddress
 import json
 import logging
 import os
@@ -160,16 +161,25 @@ def primary_ipv4() -> str | None:
             ip = s.getsockname()[0]
     except OSError:
         return None
-    from core.hostrule import why
+    return ip if ip and _literal_problem(ip) is None else None
 
-    return ip if ip and why(ip) is None else None
+
+def _literal_problem(host: str) -> str | None:
+    """What the address itself says against calling it from another machine (Python's own address classes: loopback, wildcard,
+    link-local), or None. A name is taken as written: the operator chose it (``live.relay.advertise``), and the consoles that call it say
+    so when they cannot reach it."""
+    if host.lower().rstrip(".") in ("localhost", "ip6-localhost", "ip6-loopback") or host.lower().endswith(".localhost"):
+        return "loopback"
+    try:
+        a = ipaddress.ip_address(host.strip("[]").split("%")[0])
+    except ValueError:
+        return None
+    return "loopback" if a.is_loopback else "wildcard" if a.is_unspecified else "link-local" if a.is_link_local else None
 
 
 def _advertised(asked: str) -> str | None:
-    from core.hostrule import why
-
     if asked:
-        bad = why(asked)
+        bad = _literal_problem(asked)
         if bad is None and _HOST.match(asked):
             return asked
         LOG.warning("live.relay.advertise %s is no address another console can call (%s); using this machine's own address", asked,

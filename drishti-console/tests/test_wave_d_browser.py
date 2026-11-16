@@ -12,14 +12,13 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Wave D in Chromium, over the real server and console (tests/dist_stack.py: security on, a masked dataset, a local fake SMTP) with the MOCK provider and two fake HTTP
+"""Wave D in Chromium, over the real server and console (tests/dist_stack.py: security on, a masked dataset, a local fake SMTP) with two fake HTTP
 servers, one for a webhook and one for a text-message gateway. Set the ports with DRISHTI_BI_REPORT_SERVER_PORT and DRISHTI_BI_REPORT_CONSOLE_PORT (18949 and 17949 here);
 never run with pytest -n.
 
-wes subscribes rita, hana and ann with a written summary, a webhook and texts; Run now: the fake SMTP holds each person's own mail (the summary on top for the two whom the
-AI policy opens ``subscription-narrative`` to, none for hana, and the history says why), the webhook server holds ONE signed post that holds no figure, the text gateway
-holds a text for the people who gave a number and none holds a figure. The Excel export has native charts for a person who sees every column, and none for a column that is
-masked. In the designer Suggest visuals proposes checked visuals, Add puts one on the page (and Undo takes it back), and Explain in plain words explains the Check panel.
+wes subscribes rita, hana and ann with a webhook and texts (no AI summary: AI is not in this release's console); Run now: the fake SMTP holds
+each person's own mail, the webhook server holds ONE signed post that holds no figure, the text gateway holds a text for the people who gave a number and none holds a
+figure. The Excel export has native charts for a person who sees every column, and none for a column that is masked.
 With DRISHTI_SHOTS set the documentation pictures are written.
 
 Skipped when Playwright, Chromium or the built server jar is missing, or a scratch port is in use."""
@@ -52,33 +51,6 @@ from dist_stack import REPORT, DistStack  # noqa: E402
 from fake_smtp import FakeSmtp  # noqa: E402
 
 SECRET = "wave-d-hook-secret"
-SUMMARY = "Notional is spread across the three desks and looks steady today."
-MOCK = """type: mock
-models:
-  - name: m
-mock:
-  rules:
-    - match: "TASK: summarise\\nREPORT"
-      reply: "%s"
-    - match: "TASK: suggest-visuals"
-      reply: |
-        rachana: 1
-        report: suggestions
-        version: 1
-        title: Suggestions
-        model: trades-basic@1
-        pages:
-          - id: main
-            title: Main
-            visuals:
-              - { id: by-desk, type: bar, title: Notional by desk, at: { x: 0, y: 0, w: 6, h: 4 }, wells: { axis: [trade.DESK], values: [Notional] }, alt: Which desks carry the notional }
-              - { id: desk-filter, type: slicer, title: Desk, at: { x: 6, y: 0, w: 3, h: 4 }, wells: { field: [trade.DESK] }, alt: Filter the whole page to one desk }
-              - { id: total-card, type: card, title: Total notional, at: { x: 9, y: 0, w: 3, h: 2 }, wells: { values: [Notional] }, alt: The total at a glance }
-    - match: "TASK: explain-checks"
-      reply: '{"items":[{"n":1,"explain":"The bar chart is asked to plot a field the dataset does not have, so it cannot draw.","fix":"Use a field of the dataset such as trade.DESK."},{"n":2,"explain":"A measure named here is not in the dataset.","fix":"Pick one of Notional, MTM, Trades or Average MTM per trade."}]}'
-    - match: "TASK: dataset-helper"
-      reply: '{"relationships":[{"from":"trade.DESK","to":"trade.PORTFOLIO","why":"same table"}],"measures":[{"name":"Average notional","expr":"avg(trade.NOTIONAL)","description":"Mean notional of one trade"},{"name":"Broken","expr":"sum(trade.NOTHING)","description":"x"}],"columns":[{"field":"trade.PORTFOLIO","description":"The book the trade sits in"},{"field":"trade.CURRENCY","description":"The currency the trade is in"},{"field":"trade.GHOST","description":"not a column"}]}'
-""" % SUMMARY
 
 
 class Receiver:
@@ -127,13 +99,8 @@ def stack(tmp_path_factory, smtp, receiver):
         if bi_report_stack.listening(port):
             pytest.skip(f"port {port} is in use: stop whatever listens there")
     tmp = tmp_path_factory.mktemp("waved")
-    (tmp / "ai").mkdir()
-    (tmp / "ai" / "mock.yaml").write_text(MOCK)
     s = DistStack(tmp, smtp.port)       # no 2.1 dataset beside it: migrated, it was a second trades-basic without the rules and the mask
-    s.server_args += ["--drishti.ai.enabled=true", f"--drishti.ai.dir={tmp / 'ai'}", "--drishti.ai.default-model=mock/m", "--drishti.ai.watch=off",
-                      "--drishti.bi.ai.values=aggregates",
-                      "--drishti.ai.policy.features.[subscription-narrative].roles[0]=risk", "--drishti.ai.policy.features.[subscription-narrative].roles[1]=analyst",
-                      "--drishti.notify.webhook.allowed-hosts=127.0.0.1", "--drishti.notify.webhook.allow-http=true",
+    s.server_args += ["--drishti.notify.webhook.allowed-hosts=127.0.0.1", "--drishti.notify.webhook.allow-http=true",
                       f"--drishti.notify.webhooks.ops.url=http://127.0.0.1:{receiver.port}/hook", f"--drishti.notify.webhooks.ops.secret=${{WAVE_D_HOOK_SECRET:{SECRET}}}",
                       f"--drishti.notify.sms.url=http://127.0.0.1:{receiver.port}/sms", "--drishti.notify.sms.sender=Drishti"]
     try:
@@ -164,16 +131,15 @@ def shot(page, folder, name, **kw):
         page.screenshot(path=str(target / name), **kw)
 
 
-def test_a_subscription_with_a_summary_a_webhook_and_texts(stack, browser, smtp, receiver):
+def test_a_subscription_with_a_webhook_and_texts(stack, browser, smtp, receiver):
     status, _ = api("PUT", "/me/phone", "rita", ["risk"], {"phone": "+44 20 7946 0001"})
     assert status == 200
     page = sign_in(browser, "wes")
     page.goto(CONSOLE_URL + "/reports/subscribe?type=report&id=" + REPORT + "&page=overview&title=Morning+desk+pack")
-    expect(page.locator("[data-narrative]")).to_be_visible()
+    expect(page.locator("[data-narrative]")).to_have_count(0)                       # no AI summary: AI is not in this release's console
     expect(page.locator("[data-webhooks]")).to_contain_text("ops")
     expect(page.locator("[data-sms]")).to_be_visible()
     page.fill('input[name="recipients"]', "rita, hana, ann")
-    page.locator("[data-narrative]").check()
     page.locator('input[name="webhooks"][value="ops"]').check()
     page.locator('input[name="sms"]').check()
     page.fill('input[name="phone"]', "+44 20 7946 0000")
@@ -188,15 +154,11 @@ def test_a_subscription_with_a_summary_a_webhook_and_texts(stack, browser, smtp,
         time.sleep(0.2)
 
     rita, hana, ann = [FakeSmtp.html(smtp.to(f"{u}@desk.test")[0]) for u in ("rita", "hana", "ann")]
-    assert SUMMARY in rita and "written by an AI model" in rita, "the policy opens subscription-narrative to risk"
-    assert SUMMARY in ann
-    assert SUMMARY not in hana and "written by an AI model" not in hana, "the policy does not list desk-head: her mail goes without it"
+    assert all("written by an AI model" not in m for m in (rita, hana, ann))
     assert "DESK-FX" in hana and "DESK-FI" not in hana                               # still her own render
     page.reload()
     page.locator('tr[data-row-name="Morning desk pack"] summary').click()
     runs = page.locator('tr[data-row-name="Morning desk pack"] .dist-runs')
-    expect(runs).to_contain_text("summary: written")
-    expect(runs).to_contain_text("summary: skipped")
     expect(runs).to_contain_text("webhook:ops · sent")
 
     hooks = receiver.on("/hook")
@@ -256,51 +218,3 @@ def test_the_excel_export_has_native_charts_and_a_masked_column_is_never_plotted
             target.mkdir(parents=True, exist_ok=True)
             subprocess.run(["convert", *map(str, pages), "+append", "-trim", "-bordercolor", "white", "-border", "14", "-quality", "85", str(target / "export-excel-chart.jpg")],
                            check=True, timeout=60)
-
-
-def test_the_designer_copilot_suggests_checks_and_adds_on_accept(stack, browser):
-    page = sign_in(browser, "wes", "/bi/design/" + REPORT)
-    page.wait_for_selector("[data-ready=yes]", timeout=30000)
-    page.click("[data-save-copy]")                                      # the sample report is shipped, read-only: work on a draft copy of it
-    page.click("[data-ask-go]")                                         # the copy asks which workspace first
-    page.wait_for_url(lambda u: "/bi/design/" in u and REPORT not in u, timeout=30000)
-    page.wait_for_selector("[data-ready=yes]", timeout=30000)
-    expect(page.locator("[data-ai-suggest]")).to_be_visible(timeout=15000)
-    before = page.evaluate("window.drishtiBi.design.page().visuals.length")
-    page.click("[data-ai-suggest]")
-    page.fill("[data-ai-goal]", "where the notional sits, and a way to filter by desk")
-    page.click("[data-ai-suggest-go]")
-    cards = page.locator("[data-ai-suggestion]")
-    expect(cards).to_have_count(3, timeout=30000)
-    expect(cards.nth(0)).to_contain_text("Notional by desk")
-    assert cards.nth(1).get_attribute("data-ai-suggestion") == "filter"
-    assert "- id: by-desk" in cards.nth(0).inner_text() or "id: by-desk" in cards.nth(0).inner_text()
-    page.wait_for_timeout(500)
-    shot(page, "guides/img/bi-ai", "designer-suggest.jpg", type="jpeg", quality=85)
-    assert page.evaluate("window.drishtiBi.design.page().visuals.length") == before, "nothing is added until Add is pressed"
-    page.locator('[data-ai-add="total-card"]').click()
-    assert page.evaluate("window.drishtiBi.design.page().visuals.length") == before + 1
-    assert page.evaluate("window.drishtiBi.design.page().visuals.some(v => v.type === 'card' && v.title === 'Total notional')")
-    page.click("[data-undo]")
-    assert page.evaluate("window.drishtiBi.design.page().visuals.length") == before, "Add is one undoable edit"
-
-    # a broken YAML is checked and explained in plain words (nothing changes); a fresh page, so the YAML tab holds what is typed
-    page.reload()
-    page.wait_for_selector("[data-ready=yes]", timeout=30000)
-    expect(page.locator("[data-ai-suggest]")).to_be_visible(timeout=15000)
-    page.evaluate("""() => { const D = window.drishtiBi.design; D.loadYaml('rachana: 1\\nreport: broken\\nversion: 1\\ntitle: Broken\\ndataset: trades-basic\\npages:\\n  - id: p\\n    title: P\\n    visuals:\\n'
-      + '      - { id: v, type: bar, title: V, at: { x: 0, y: 0, w: 4, h: 3 }, wells: { axis: [trade.nope], values: [Nothing] } }\\n'); }""")
-    page.wait_for_timeout(900)
-    page.click("[data-check]")
-    expect(page.locator("[data-check-box]")).to_be_visible()
-    page.click("[data-ai-explain-checks]")
-    expect(page.locator("[data-ai-checks-msg]")).not_to_have_text("Asking…", timeout=30000)
-    msg = page.locator("[data-ai-checks-msg]").inner_text()
-    assert "Explained by an AI model" in msg, msg
-    expect(page.locator("[data-ai-checks] li").first).to_contain_text("does not have", timeout=30000)
-    expect(page.locator("[data-ai-checks] li").first).to_contain_text("To fix")
-    page.wait_for_timeout(400)
-    shot(page, "guides/img/bi-ai", "check-explained.jpg", type="jpeg", quality=85)
-    assert page.evaluate("window.__csp") == [] and page.errors == []
-    page.context.close()
-

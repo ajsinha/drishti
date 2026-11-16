@@ -42,8 +42,9 @@ public class AskConfiguration {
     }
 
     @Bean
-    AskService askService(ExplainService explain, AskProperties cfg, LlmGateway gateway, AskRateLimiter limiter, PackGuides guides,
-            ObjectProvider<AccessLog> accessLog) {
-        return new AskService(explain, cfg, gateway, limiter, guides, accessLog);
+    AskService askService(ExplainService explain, AskProperties cfg, com.ash.drishti.server.ai.AiProperties ai, LlmGateway gateway,
+            AskRateLimiter limiter, PackGuides guides, ObjectProvider<AccessLog> accessLog) {
+        // Ask runs on the AI layer: off with it (one switch, drishti.ai.enabled), whatever drishti.explain.ask.enabled says
+        return new AskService(explain, ai.enabled() ? cfg : cfg.off(), gateway, limiter, guides, accessLog);
     }
 }

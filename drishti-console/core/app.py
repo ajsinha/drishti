@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import re
 from pathlib import Path
 
@@ -160,7 +161,7 @@ async def _module_asset_refused(request, rel: str) -> str | None:
     auth = request.app.state.auth
     who = await auth.current(request.cookies.get(auth.cookie), request.app.state.backend)
     if who is not None:
-        modules.use_person(await request.app.state.modules_me.get(request.app.state.backend, who))
+        modules.use_person((await request.app.state.packs.decisions(request.app.state.backend, who)).get("modules"))
     return modules.asset_refusal(rel, lens)
 
 
@@ -197,7 +198,7 @@ class AuthGate(BaseHTTPMiddleware):
         if request.state.identity is not None and not path.startswith(("/static/", PYODIDE, EMBED, "/healthz", "/readyz")):
             # the person's answer (core/modules.py): the modules not on, their lenses, the functions they may not use; every door asks it
             from core import modules as _modules
-            request.state.modules = await request.app.state.modules_me.get(request.app.state.backend, request.state.identity)
+            request.state.modules = (await request.app.state.packs.decisions(request.app.state.backend, request.state.identity)).get("modules")
             _modules.use_person(request.state.modules)
         request.state.pack_switcher = []
         from core import asof
@@ -224,6 +225,12 @@ class AuthGate(BaseHTTPMiddleware):
             request.state.business_date = info
         request.state.settings = None
         request.state.bi_me = None
+        request.state.person = None
+        if request.state.identity is not None and not path.startswith(("/static/", PYODIDE, EMBED, "/healthz", "/readyz")):
+            try:                                   # the server's decisions about the person (engines opened, grants; step S4)
+                request.state.person = await request.app.state.packs.decisions(request.app.state.backend, request.state.identity)
+            except Exception:  # noqa: BLE001 - no answer: nothing opened in its place
+                request.state.person = {}
         if request.state.identity is not None and not path.startswith(("/static/", PYODIDE, EMBED, "/api/", "/healthz", "/readyz")):
             from core.settings import changed_at
             request.state.settings = await request.app.state.user_settings.get(request.app.state.backend, request.state.identity,
@@ -347,8 +354,7 @@ def create_app(settings: Settings) -> FastAPI:
     catalogue = Servers(settings)
     from routes import (admin_routes, alert_routes, api_routes, asof_routes, auth_routes, build_routes, pack_routes, connector_designer_routes, calc_routes, export_routes, help_routes, home_routes,
                         designer_routes, designer_grid_routes, dist_routes, layout_routes, monitor_routes, pivot_routes, report_routes, approval_routes, server_routes, ship_routes, studio_routes, terminal_routes,
-                        workspace_routes, collab_routes, thread_routes, collab_admin_routes, embed_admin_routes, connector_routes, form_routes,
-                        ai_routes)
+                        workspace_routes, collab_routes, thread_routes, collab_admin_routes, embed_admin_routes, connector_routes, form_routes)
 
     from routes import edition_routes
     from routes import data_out_routes
@@ -401,8 +407,6 @@ def create_app(settings: Settings) -> FastAPI:
                 except RuntimeError:
                     pass
             pool.on_failover = _on_failover
-        ai = getattr(app.state, "ai", None)
-        watcher = asyncio.create_task(ai.supervise()) if ai is not None and (ai.enabled or ai.mcp_enabled) else None
         try:                                                 # the edition before the first page (the watch keeps it fresh after a restart)
             default = app.state.servers.get(app.state.servers.default)
             if default is not None and _real_backend(app):
@@ -428,8 +432,6 @@ def create_app(settings: Settings) -> FastAPI:
             from core import tmpdir
 
             tmpdir.clean_up()
-        if watcher is not None:
-            watcher.cancel()
         for client in (app.state.backend.each() if isinstance(app.state.backend, Switch) else [app.state.backend]):
             close = getattr(client, "aclose", None)
             if close:
@@ -525,8 +527,6 @@ def create_app(settings: Settings) -> FastAPI:
         templates.env.globals["DEFAULT_THEME"] = settings.get("ui.default_theme", "terminal") or "terminal"   # the distribution's theme
 
     app.state.editions = Editions(settings, WEB.parent, on_change=_branding_changed)
-    from core import under_construction as _uc
-    app.state.under_construction = _uc.load(settings, WEB.parent)      # docs/admin/UNDER_CONSTRUCTION.md: menus and help pages
     _branding_changed()                                  # the logo, favicon and touch icon from configuration (blank: the eye)
     templates.env.globals["edition_of"] = lambda request: getattr(request.state, "edition", None) or app.state.editions.instance
 
@@ -588,12 +588,35 @@ def create_app(settings: Settings) -> FastAPI:
     app.state.backend_watch = BackendWatch(catalogue, _seconds(settings.get("backend.check_seconds", 5)),
                                            url_of=(lambda s: pool.current() if s.id == catalogue.default else s.url) if pool.enabled else None)
     # the console learns the server's edition, lenses and branding from its about answer (docs/guides/ADMIN_GUIDE.md › The design)
+    from core.server_facts import ServerFacts
+
+    # what the server decided, kept for drawing (THIN_CONSOLE_DESIGN.md 3.2): the installation's answer per server, asked again when its
+    # stamp in /public/about changes; one per app, nothing of any person in it
+    def _answer_taken(sid, doc):
+        if sid == catalogue.default:                    # the console's own server: the distribution, lenses and modules follow its answer
+            app.state.editions.follow(doc)
+    app.state.server_facts = ServerFacts(console_build=ASSET_VERSION,
+                                         distribution=app.state.editions.own_name if app.state.editions.own_distribution else "",
+                                         on_answer=_answer_taken)
+    # what the product says of itself (version, name, edition) is the server's: the pages read it here, never a constant of the console
+    templates.env.globals["server_about"] = lambda: app.state.server_facts.about()
+
+    async def _follow_facts(s, about):
+        """The installation's answer of server ``s``: a slow or failing answer never delays or skips learning the edition."""
+        try:
+            service = app.state.auth.of(s.id).service() if hasattr(app.state.auth, "of") else app.state.auth.service()
+            await app.state.server_facts.follow(s.id, about, app.state.backend_watch.url_of(s), service.headers())
+        except Exception:  # noqa: BLE001 - the last answer stays; Admin -> Health says why
+            logging.getLogger("drishti.console.facts").exception("following the server's installation answer failed")
+
     async def _on_about(s, about):
-        if s.id != catalogue.default or not _real_backend(app):
+        if not _real_backend(app):
             return
-        app.state.editions.learn(about)
-        # the server's module registry changed: its module list (shipped and installed .dmod packages) and the distribution again
-        await app.state.editions.follow_modules(about, lambda: app.state.backend_watch.fetch(s, "/public/modules/manifests"))
+        if s.id != catalogue.default:
+            await _follow_facts(s, about)
+            return
+        app.state.editions.learn(about)                  # what runs and what is loaded; the distribution follows the installation answer
+        await _follow_facts(s, about)
     app.state.backend_watch.on_about = _on_about
     from core.user_stamps import UserStamps
 
@@ -611,13 +634,11 @@ def create_app(settings: Settings) -> FastAPI:
     from core.bi import BiMe
 
     app.state.bi_me = BiMe(user_ttl, stamps)
-    from core.modules import Me as ModulesMe
 
-    app.state.modules_me = ModulesMe(user_ttl, stamps)          # the person's modules, lenses and functions (core/modules.py)
     from core.module_parts import ModuleParts
 
     # the modules' console parts, hosted declaratively under /m/<id>/ (KERNEL_AND_MODULES.md 4.7, 14.2.1): this app's, never shared
-    app.state.module_parts = ModuleParts(_console_data_dir(settings) / "module-parts", WEB, app.state.editions.modules_dir,
+    app.state.module_parts = ModuleParts(_console_data_dir(settings) / "module-parts", WEB,
                                          float(settings.get("modules.parts_refresh_seconds", 5) or 5))
     app.state.editions.modules.parts = app.state.module_parts
     app.state.bi_on = str(settings.get("bi.enabled", True)).lower() in ("true", "1", "yes", "on")      # false: no BI menu, no /bi pages
@@ -625,7 +646,9 @@ def create_app(settings: Settings) -> FastAPI:
     docs_dir = Path(settings.get("help.docs_dir", "../docs"))
     from core.packs import Packs
 
-    app.state.packs = Packs(settings, console_dir, stamps)
+    app.state.packs = Packs(settings, stamps)             # asked of the server (THIN_CONSOLE_DESIGN.md 3.3, 3.4), never read from a folder
+    # an older server is said on every page and on Health, never shown as "no packs" in silence (THIN_CONSOLE_DESIGN.md 5.1)
+    templates.env.globals["server_notice"] = lambda: app.state.server_facts.notice() or app.state.packs.notice()
     app.state.docs_dir = docs_dir if docs_dir.is_absolute() else (console_dir / docs_dir).resolve()
     api_docs = Path(settings.get("help.api_docs_dir", "web/apidocs") or "web/apidocs")
     app.state.api_docs_dir = api_docs if api_docs.is_absolute() else (console_dir / api_docs).resolve()   # Help -> Developer (core/api_reference.py)
@@ -649,9 +672,8 @@ def create_app(settings: Settings) -> FastAPI:
     examples_dir = Path(settings.get("studio.examples_dir", "../docs/guides/examples"))
     app.state.examples = Examples(examples_dir if examples_dir.is_absolute() else (console_dir / examples_dir).resolve(),
                                   str(settings.get("ui.studio_example", "") or ""))
-    from core import builder as screen_builder
 
-    app.state.builder_limits = screen_builder.Limits.from_settings(settings)
+    # the builder's upload limits: the server's (its installation answer, step S6), read per request (core/builder.py Limits.of)
     app.state.pack_upload_limit = int(settings.get("packs.deploy_max_mb", 50)) * 1048576       # Admin → Packs → Deploy archive; the server refuses the same way
     from core.asof import BusinessDates
 
@@ -754,7 +776,6 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(explain_routes.router)          # Explain: one for every number, the preview, the drawer and the page (SHARED_SCREENS.md 3)
     app.include_router(lake_maint_routes.router)
     app.include_router(form_routes.router)
-    app.include_router(ai_routes.router)
     if app.state.bi_on:
         from core.notebook import Limits
         from routes import bi_routes, model_routes, notebook_routes, python_routes, tables_editor_routes, transform_routes
@@ -766,9 +787,6 @@ def create_app(settings: Settings) -> FastAPI:
         app.include_router(python_routes.router)
         app.include_router(notebook_routes.router)         # the Notebook (/bi/notebook): SQL on the server, Python on its compute pool
         app.include_router(transform_routes.router)        # wave C: the Transform editor (/bi/transform), step by step
-    from core.ai import AiRuntime
-
-    app.state.ai = AiRuntime(settings, backend=lambda: app.state.backend)       # off by default: no file is read, no model or MCP server is called
     from core.embed import EmbedHosts
 
     app.state.embed = EmbedHosts(settings)

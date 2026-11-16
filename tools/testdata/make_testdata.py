@@ -42,9 +42,9 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 sys.path.insert(0, str(HERE))
-if str(ROOT / "drishti-console") not in sys.path:
-    sys.path.insert(0, str(ROOT / "drishti-console"))
-from core.resolution import pack_dir  # noqa: E402  (where a pack is: the one resolver, KERNEL_AND_MODULES.md 18)
+if str(ROOT / "tools") not in sys.path:
+    sys.path.insert(0, str(ROOT / "tools"))
+from resolved import pack_dir  # noqa: E402  (where a pack is: the Java resolver's answer, tools/resolved.py)
 import capture_market as CM  # noqa: E402
 import history as H  # noqa: E402
 import marketdays as MK  # noqa: E402

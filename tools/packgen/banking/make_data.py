@@ -58,9 +58,9 @@ import schema as TSCHEMA  # noqa: E402
 import tests as TT  # noqa: E402  (the trading pack's Sutra tests, one sample per deal Sutra)
 
 ROOT = Path(__file__).resolve().parents[3]
-if str(ROOT / "drishti-console") not in sys.path:
-    sys.path.insert(0, str(ROOT / "drishti-console"))
-from core.resolution import pack_dir  # noqa: E402  (where a pack is: the one resolver, KERNEL_AND_MODULES.md 18)
+if str(ROOT / "tools") not in sys.path:
+    sys.path.insert(0, str(ROOT / "tools"))
+from resolved import pack_dir  # noqa: E402  (where a pack is: the Java resolver's answer, tools/resolved.py)
 sys.path.insert(0, str(ROOT / "tools"))
 sys.path.insert(0, str(ROOT / "tools" / "packgen" / "common"))
 import packsamples as SAMPLES  # noqa: E402  (samples/<kind>.jsonl, one document a line)

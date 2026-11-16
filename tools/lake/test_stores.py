@@ -20,7 +20,7 @@ import yaml
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import stores  # noqa: E402
-R = stores.R                                                         # the one resolver (drishti-console/core/resolution.py)
+R = stores.R                                                         # the Java resolver's answer (tools/resolved.py)
 
 
 def test_store_values_all_first_then_each_system():
@@ -55,8 +55,7 @@ def test_switching_a_system_writes_a_partial_override_and_back_to_delta_removes_
     doc = yaml.safe_load((folder / "trade-calypso.yaml").read_text(encoding="utf-8"))
     # a partial override (KERNEL_AND_MODULES.md 18.5): only the keys that differ from the source module's template, which it names
     assert doc == {"template": "module source-calypso", "plugin": "iceberg", "settings": {"lake": stores.ICEBERG_LAKE, "engine": "native"}}
-    s = R.effective("trade-calypso", (folder / "trade-calypso.yaml").read_text(encoding="utf-8"),
-                    R.repository().connectors.templates["trade-calypso"]).settings
+    s = R.repository(connectors=folder).connectors.find("trade-calypso").settings     # as the Java resolver merges them
     # the lake form (docs/guides/DATA_LAKE_GUIDE.md): the connector names the lake demo-iceberg; its file, beside the connector folder, holds
     # the table (the pack's entry, the partition field kept as a promoted column) and the root
     assert s["engine"] == "native" and s["lake"] == stores.ICEBERG_LAKE and s["lake-tables"] == "trading.trade_calypso"

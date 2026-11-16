@@ -25,6 +25,7 @@ from fastapi.testclient import TestClient
 CONSOLE = Path(__file__).resolve().parent.parent
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
 sys.path.insert(0, str(CONSOLE))
+sys.path.append(str(CONSOLE.parent / "tools"))   # tools/resolved.py: where the packs are (the Java resolver's answer, through the jar)
 # the stand-in server serves the retired example packs finance and logistics (examples/packs), as the server's tests do
 os.environ.setdefault("DRISHTI_PACKS_EXTRA_DIRS", str(CONSOLE.parent / "examples" / "packs"))
 # the servers the tests start keep their scratch in /tmp, a RAM disk: a free-space guard of 1 GB and 1%, not the site's 20 GB and 10%
@@ -69,6 +70,25 @@ select_helpers.install_playwright_shim()          # select_option and input_valu
 from core.app import create_app  # noqa: E402
 from core.backend import BackendError  # noqa: E402
 from core.config import load_settings  # noqa: E402
+from core import edition as _edition  # noqa: E402
+import server_answers  # noqa: E402
+
+_editions_init = _edition.Editions.__init__
+
+
+def _answered_editions(self, *a, **kw):
+    """A console built in a test starts as one whose server has answered: the recorded installation answer of Drishti All (the server's
+    own, tests/answers; THIN_CONSOLE_DESIGN.md 5.2). A test of another distribution follows its answer (server_answers.follow)."""
+    _editions_init(self, *a, **kw)
+    self.follow(server_answers.bootstrap("all"))
+
+
+_edition.Editions.__init__ = _answered_editions
+
+
+def _stand_in_admin(user: dict) -> bool:
+    """The stand-in server's decision of who is an administrator (the real one asks its role definitions)."""
+    return bool({"*", "admin"} & set((user or {}).get("roles") or []))
 
 
 def live_page(answer: dict, live_kinds=()) -> dict:
@@ -571,7 +591,8 @@ class FakeBackend:
         assert service.roles == ("service",)
         sid = f"sess{len(self.sessions) + 1:04d}" + "x" * 24
         self.sessions[sid] = username
-        return {"id": sid, "expiresAt": "2026-10-02T20:00:00Z", "user": self.users.get(username, {"username": username})}
+        user = self.users.get(username, {"username": username})
+        return {"id": sid, "expiresAt": "2026-10-02T20:00:00Z", "user": user, "admin": _stand_in_admin(user)}
 
     async def session(self, sid, service):
         assert service.roles == ("service",)
@@ -579,7 +600,7 @@ class FakeBackend:
         user = self.users.get(self.sessions.get(sid, ""))
         if user is None or not user.get("enabled", True):
             raise BackendError(401, "DRS-5010", "session ended")
-        return {"id": sid, "expiresAt": "2026-10-02T20:00:00Z", "user": user}
+        return {"id": sid, "expiresAt": "2026-10-02T20:00:00Z", "user": user, "admin": _stand_in_admin(user)}
 
     async def end_session(self, sid, service):
         assert service.roles == ("service",)
@@ -612,6 +633,12 @@ class FakeBackend:
             return {"name": path.rsplit("/", 1)[1], **body}
         if path == "/role-definitions/admin" and method == "DELETE":
             raise BackendError(400, "DRS-5001", "'admin' is a built-in role")
+        if path == "/distributions":                         # the server's compiled distributions (recorded, tests/answers)
+            rows = []
+            for name in ("all", "finance", "genomics", "risk"):
+                d = dict(server_answers.bootstrap(name)["distribution"])
+                rows.append({**d, "start": name, "running": d["id"] == "drishti.all"})
+            return {"distributions": rows, "problems": []}
         if path == "/status":
             return {"defaultAdminPasswordInUse": True, "users": 1, "forceChangeOnCreate": False}
         if path == "/caches":
@@ -719,6 +746,36 @@ class FakeBackend:
                  "dir": str(CONSOLE.parent / "examples" / "packs" / n), "origin": "site",
                  "active": n in self.enabled_packs, **({"python": self.python[n]} if n in self.python else {})}
                 for n in ["finance", "logistics"] if n in self.enabled_packs or self.enabled_packs]
+
+    async def me_console(self, ident=None, etag=None):
+        """The person's answer (GET /api/v1/me/console) around this stand-in's pack rows (``packs``, which a test may replace)."""
+        import pack_answers
+        doc = pack_answers.me_console(await self.packs(ident), getattr(ident, "user", "ash"), getattr(ident, "roles", ()),
+                                      getattr(ident, "admin", None))
+        try:                                                  # the person's modules answer, folded in as the server folds it (step S4)
+            mods = await self.modules(ident)
+        except BackendError:
+            mods = None
+        doc = {**doc, "modules": mods if isinstance(mods, dict) else None}
+        doc["stamp"] = doc["stamp"] + "-" + pack_answers._digest(doc["modules"])
+        return (304, None) if etag and etag == doc["stamp"] else (200, doc)
+
+    async def pack_console(self, name, ident=None, etag=None):
+        """A pack's console answer (GET /api/v1/packs/{pack}/console), made from the pack's folder as the server makes it."""
+        import pack_answers
+        d = pack_answers.dirs_of(await self.packs(ident)).get(name)
+        if d is None:
+            raise BackendError(404, "DRS-1001", f"no pack '{name}'")
+        doc = pack_answers.pack_console(name, d)[0]
+        return (304, None) if etag and etag == doc["digest"] else (200, doc)
+
+    async def pack_console_file(self, name, path, ident=None):
+        import pack_answers
+        d = pack_answers.dirs_of(await self.packs(ident)).get(name)
+        f = pack_answers.pack_console(name, d)[1].get(path) if d is not None else None
+        if f is None:
+            raise BackendError(404, "DRS-1001", f"no file '{path}'")
+        return f.read_bytes()
 
     calc_allowed = True
     calc_kept = {}
@@ -1257,9 +1314,6 @@ def forget_backend_answers(app) -> None:
     for name in ("designer_aliases", "designer_migrated"):
         if getattr(st, name, None) is not None:
             getattr(st, name).clear()
-    from plugins.banking import market_landing, trading_landing
-    trading_landing.forget()
-    market_landing.forget()
 
 
 @pytest.fixture(scope="session")

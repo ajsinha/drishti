@@ -93,7 +93,6 @@ def start(a, env: dict | None = None) -> int:
     dev = []
     if a.demo:
         env.update(DRISHTI_AUTH_ENABLED="true", DRISHTI_SECURE_COOKIE="false")
-        env.setdefault("DRISHTI_PACKS", serverstart.DEMO_PACKS)
         dev = serverstart.dev_secrets(env, ["DRISHTI_TOKEN_SECRET", "DRISHTI_SESSION_SECRET"])
 
     host = procs.lan_ip() or "localhost"

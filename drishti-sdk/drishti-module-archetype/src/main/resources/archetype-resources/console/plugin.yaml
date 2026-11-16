@@ -8,6 +8,3 @@ menus:                       # an entry of a top-bar menu (menu: a menu of the p
 home:
   cards:                     # Home's quick cards
     - {title: "Say hello", route: hello, params: {name: world}, cmd: "${artifactId.toUpperCase()} world"}
-ai:
-  tools:                     # what the assistant may offer (a description; the console calls nothing of the module)
-    - {name: ${artifactId}_greet, description: "Greets a person by name (the ${artifactId} module)", route: hello, params: {name: world}}

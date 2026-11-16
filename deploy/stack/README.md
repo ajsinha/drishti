@@ -112,6 +112,13 @@ python tools/drishti.py start cluster drishti-b
 The others see it `suspect` after 3 s and `dead` after 10 s (`gossip.yaml`), and `alive` again a second after it is back. A request for its
 trades meanwhile answers "the node that holds it is down", never "not found". `console` is a name too: `drishti.py stop cluster console`, `drishti.py start cluster console`.
 
+## Upgrade
+
+The three nodes first, one at a time (`bin/stop-cluster.sh drishti-main`, update, `bin/start-cluster.sh drishti-main`, then `drishti-b`,
+then `drishti-c`), the console last. A console asks its servers for what it draws (packs, menus, the version shown); in front of an older
+server it shows no packs and says on every page and on Admin → Health that the server is older than the console
+([OPERATIONS_GUIDE.md section 18](../../docs/guides/OPERATIONS_GUIDE.md#18-upgrades-and-rollback)).
+
 ## Add a node
 
 Add one entry under `nodes:` in `stack.yaml`, for example:

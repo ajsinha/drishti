@@ -27,7 +27,7 @@ from conftest import CONSOLE
 from core.app import create_app
 from core import designs
 from core.builder import plain_schema
-from core.config import Settings, load_settings
+from core.config import load_settings
 
 EXAMPLES = CONSOLE.parent / "docs" / "guides" / "examples"
 
@@ -41,10 +41,16 @@ def _doc(i=1):
 
 
 def _console(backend, **builder):
-    data = load_settings(CONSOLE / "config").as_dict()
-    data.setdefault("builder", {}).update(builder)
-    app = create_app(Settings(data))
+    """A console whose server says these builder limits (its installation answer's ``limits.builder``)."""
+    app = create_app(load_settings(CONSOLE / "config"))
     app.state.backend = backend
+    if builder:
+        import server_answers
+        doc = server_answers.bootstrap("all")
+        names = {"max_samples": "maxSamples", "max_file_mb": "maxFileMb", "max_total_mb": "maxTotalMb"}
+        doc["limits"] = {"builder": {"maxSamples": 50, "maxFileMb": 5, "maxTotalMb": 25, **{names[k]: v for k, v in builder.items()}}}
+        doc["digest"] = doc["digest"] + "-limits"
+        app.state.editions.follow(doc)
     return TestClient(app)
 
 
@@ -207,14 +213,14 @@ def test_a_file_over_the_size_limit_is_left_out(app_client):
                                                                            {"name": "huge.json", "size": 9_000_000}]})
     body = r.json()
     assert r.status_code == 200 and len(body["samples"]) == 1
-    assert "builder.max_file_mb" in body["files"][0]["problems"][0] and "too large" in body["files"][2]["problems"][0]
+    assert "drishti.builder.max-file-mb" in body["files"][0]["problems"][0] and "too large" in body["files"][2]["problems"][0]
 
 
 @pytest.mark.parametrize("app_client", [{"max_samples": 3}], indirect=True)
 def test_too_many_files_or_samples_are_refused_whole(app_client):
     d = _new(app_client)
     r = app_client.post(f"/build/designs/{d['id']}/files", json=_files(*[(f"{i}.json", _doc(i)) for i in range(4)]))
-    assert r.status_code == 413 and r.json()["code"] == "DRS-5005" and "builder.max_samples" in r.json()["detail"]
+    assert r.status_code == 413 and r.json()["code"] == "DRS-5005" and "drishti.builder.max-samples" in r.json()["detail"]
     r = app_client.post(f"/build/designs/{d['id']}/files", json=_files(("rows.jsonl", "\n".join(_doc(i) for i in range(4)))))
     assert r.status_code == 413 and "more than 3 samples" in r.json()["detail"]
     assert app_client.get(f"/build/d/{d['id']}").text.count("data-sample=") == 0
@@ -225,7 +231,7 @@ def test_a_total_over_the_limit_is_refused_whole(app_client):
     d = _new(app_client)
     pad = json.dumps({"tradeId": "x" * 900})
     r = app_client.post(f"/build/designs/{d['id']}/files", json=_files(("a.json", pad), ("b.json", pad), ("c.json", pad)))
-    assert r.status_code == 413 and r.json()["code"] == "DRS-5005" and "builder.max_total_mb" in r.json()["detail"]
+    assert r.status_code == 413 and r.json()["code"] == "DRS-5005" and "drishti.builder.max-total-mb" in r.json()["detail"]
 
 
 def test_the_servers_limits_answer_with_their_code(app_client, backend):

@@ -236,8 +236,8 @@ report sign-offs go through one Approvals queue with four eyes. Anything that de
   ([README.md](docs/guides/bi/README.md), [the reports tutorial](docs/guides/bi/README.md)).
 - **The Notebook**: SQL on the server and Python on its one sandboxed Python runtime ([NOTEBOOK_AND_PYTHON.md](docs/guides/bi/NOTEBOOK_AND_PYTHON.md),
   [the Notebook tutorial](docs/guides/bi/NOTEBOOK_AND_PYTHON.md)).
-- **AI**, off as shipped: Ask about a page and BI from words on any of the supported provider types, MCP servers' tools behind Drishti's
-  policy, masking and audit of every call ([AI_GUIDE.md](docs/guides/AI_GUIDE.md), [tutorial 10](docs/tutorials/10-ai-assistant.md)).
+- **AI** is not in this release: the console shows no AI page and the server's AI layer is off (one switch, `drishti.ai.enabled`;
+  [AI_GUIDE.md](docs/guides/AI_GUIDE.md) describes the layer kept for a later release).
 - **Corrections and approvals**: correct a record in a form, approve it in the one queue, the edit log and the audit trail
   ([APPROVALS_GUIDE.md](docs/guides/APPROVALS_GUIDE.md), [tutorial 11](docs/tutorials/11-correct-and-approve.md)).
 - **One grammar**: Rachana paths and expressions in Sutras, search, the Pivot, reports and custom functions; every function in one
@@ -395,7 +395,7 @@ the modules they may use. The map of every document is [docs/README.md](docs/REA
 
 | You want to… | Guides | Tutorials |
 |---|---|---|
-| find anything, pivot, report, analyse | [USER_GUIDE](docs/guides/USER_GUIDE.md), [PIVOT_GUIDE](docs/guides/bi/PIVOT.md), [REPORTS_GUIDE](docs/guides/bi/PIVOT.md), [NOTEBOOK_GUIDE](docs/guides/bi/NOTEBOOK_AND_PYTHON.md), [AI_GUIDE](docs/guides/AI_GUIDE.md), [APPROVALS_GUIDE](docs/guides/APPROVALS_GUIDE.md) | [1](docs/tutorials/01-first-15-minutes.md), [7](docs/guides/bi/README.md), [8](docs/guides/bi/README.md), [9](docs/guides/bi/README.md), [10](docs/tutorials/10-ai-assistant.md), [11](docs/tutorials/11-correct-and-approve.md) |
+| find anything, pivot, report, analyse | [USER_GUIDE](docs/guides/USER_GUIDE.md), [PIVOT_GUIDE](docs/guides/bi/PIVOT.md), [REPORTS_GUIDE](docs/guides/bi/PIVOT.md), [NOTEBOOK_GUIDE](docs/guides/bi/NOTEBOOK_AND_PYTHON.md), [APPROVALS_GUIDE](docs/guides/APPROVALS_GUIDE.md) | [1](docs/tutorials/01-first-15-minutes.md), [7](docs/guides/bi/README.md), [8](docs/guides/bi/README.md), [9](docs/guides/bi/README.md), [11](docs/tutorials/11-correct-and-approve.md) |
 | measure risk | [VAR_GUIDE](docs/guides/VAR_GUIDE.md), [REGULATORY_VAR_REPORTING](docs/guides/REGULATORY_VAR_REPORTING.md), [EXPOSURE_GUIDE](docs/guides/EXPOSURE_GUIDE.md), [FRTB_SA_GUIDE](docs/guides/FRTB_SA_GUIDE.md), [SIMM_GUIDE](docs/guides/SIMM_GUIDE.md), [GROUPINGS_ANALYTICS_GUIDE](docs/guides/bi/GROUPINGS_AND_ANALYTICS.md) | [2](docs/guides/VAR_GUIDE.md), [3](docs/guides/EXPOSURE_GUIDE.md), [4](docs/guides/FRTB_SA_GUIDE.md), [5](docs/guides/SIMM_GUIDE.md), [6](docs/guides/bi/README.md) |
 | work with bank, world and public data | [FUNDS_GUIDE](docs/guides/WORLD_DATA_GUIDE.md), [PUBLIC_SECTOR_GUIDE](docs/guides/WORLD_DATA_GUIDE.md), [EXTERNAL_DATA](docs/guides/WORLD_DATA_GUIDE.md) | [12](docs/tutorials/12-a-day-of-bank-data.md), [13](docs/guides/WORLD_DATA_GUIDE.md), [14](docs/guides/WORLD_DATA_GUIDE.md) |
 | bring data in and take it out | [DATA_GUIDE](docs/guides/DATA_GUIDE.md), [DATA_LAKE_GUIDE](docs/guides/DATA_LAKE_GUIDE.md), [FLIGHT_GUIDE](docs/guides/FLIGHT_GUIDE.md) | [15](docs/tutorials/15-connect-your-data.md), [16](docs/tutorials/16-load-your-own-data-into-a-new-lake.md), [17](docs/tutorials/17-data-out-with-arrow-flight.md) |

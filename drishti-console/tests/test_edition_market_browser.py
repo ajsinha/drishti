@@ -16,6 +16,7 @@
 with known stale, gap, forward and surface problems (market_fake.py; port 17976). Each landing fills its panels from those answers, fits a
 phone without sideways scrolling, passes the page-width audit, and draws in every theme with its violet accent; the Quality landing lists
 each known problem by severity and opens its command; skipped when Playwright or its Chromium is missing."""
+import server_answers
 import threading
 import time
 
@@ -37,17 +38,13 @@ VIOLETS = ("rgb(167, 139, 250)", "rgb(109, 40, 217)")      # the accent on dark 
 @pytest.fixture(scope="module")
 def market_console():
     import uvicorn
-
-    from plugins.banking import market_landing
     from core.app import create_app
     from core.config import load_settings
-
-    market_landing.forget()
     app = create_app(load_settings(CONSOLE / "config"))
     app.state.backend = MarketBackend()
     # a lens is a workspace the person works in (docs/admin/LENSES.md), never the server's edition: the server offers it,
     # and the person's settings name it
-    app.state.editions.learn({"product": "Drishti Market", "edition": None, "lenses": ["market"]})
+    server_answers.follow(app, {"product": "Drishti Market", "edition": None, "lenses": ["market"]})
     async def _in_market(ident=None):
         return {"lens": "market"}
     app.state.backend.settings = _in_market
@@ -61,9 +58,6 @@ def market_console():
     yield f"http://127.0.0.1:{PORT}"
     server.should_exit = True
     thread.join(10)
-    market_landing.forget()
-
-
 @pytest.mark.parametrize("landing", ["desk", "explorer", "quality"])
 @pytest.mark.parametrize("width", [390, 1280])
 def test_each_market_landing_fills_from_the_pack_and_fits(browser, market_console, landing, width):

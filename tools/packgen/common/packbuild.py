@@ -108,9 +108,9 @@ def pack_dir(spec: PackSpec) -> Path:
     if spec.retired and not os.environ.get("DRISHTI_PACKS_OUT"):
         return EXAMPLES / spec.name
     if not os.environ.get("DRISHTI_PACKS_OUT"):
-        if str(ROOT / "drishti-console") not in sys.path:
-            sys.path.insert(0, str(ROOT / "drishti-console"))
-        from core.resolution import pack_dirs
+        if str(ROOT / "tools") not in sys.path:
+            sys.path.insert(0, str(ROOT / "tools"))
+        from resolved import pack_dirs
         home = pack_dirs(PACKS).get(spec.name)
         if home is not None:
             return home

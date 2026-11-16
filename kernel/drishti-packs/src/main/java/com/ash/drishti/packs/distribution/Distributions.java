@@ -37,7 +37,7 @@ import org.springframework.core.env.Environment;
 /**
  * Reads distribution files (docs/architecture/DISTRIBUTIONS.md): {@code config/distributions/drishti.<name>.yaml}, chosen by
  * {@code --distribution <name|path>} ({@code distribution}), {@code DRISHTI_DISTRIBUTION} or {@code drishti.distribution}. Nothing named:
- * Drishti All, so behaviour is unchanged. The console reads the same files the same way (drishti-console/core/distribution.py).
+ * Drishti All, so behaviour is unchanged. The console reads none of them: it draws from the compiled answer the server sends (THIN_CONSOLE_DESIGN.md 3.2).
  *
  * <p>The modules a file lists are read from their own manifests ({@link ModuleManifests}: {@code modules/<id>/module.yaml}, a module
  * jar's {@code META-INF/drishti/module.yaml}, and the shipped and installed {@code .dmod} packages, read as the registry reads them), the kernel's own packs, words and menus from {@code kernel.yaml} beside the files; a

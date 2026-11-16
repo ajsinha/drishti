@@ -35,10 +35,10 @@ import sys
 from dataclasses import dataclass
 from datetime import date
 
-_CONSOLE = pathlib.Path(__file__).resolve().parents[2] / "drishti-console"
-if str(_CONSOLE) not in sys.path:
-    sys.path.insert(0, str(_CONSOLE))
-from core.resolution import pack_dirs  # noqa: E402  (where a pack is: the one resolver, KERNEL_AND_MODULES.md 18)
+_TOOLS = pathlib.Path(__file__).resolve().parents[1]
+if str(_TOOLS) not in sys.path:
+    sys.path.insert(0, str(_TOOLS))
+from resolved import pack_dirs  # noqa: E402  (where a pack is: the Java resolver's answer, tools/resolved.py)
 
 READY = ".ready"
 #: the keys of a .ready file, in the documentation's order: the same list as the inbox's (drishti-lakeload ReadyNote.KEYS; a test compares them)

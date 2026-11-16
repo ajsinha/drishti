@@ -14,12 +14,13 @@
 
 """The engines' pages in their task's menu, without a browser (the Engines menu removed, owner 2026-11-09): VaR, Why it moved, exposure,
 FRTB-SA, SIMM and their playgrounds are under Risk (config/sitemap.yaml, ``requires: engine:<id>``), drawn when the engine runs in the
-cluster and the person's role opens it (the catalogue's ``opens:``, plugins/banking/engines.yaml; administrators open all); the same rule
+cluster and the person's role opens it (the catalogue's ``opens:``, the banking jar's engines.yaml sent in the server's installation answer; administrators open all); the same rule
 refuses an engine's command words in words and drops them from the type-ahead; switches and status are Admin -> Engines only. Help shows
 every running engine's pages to anyone who can open Help and leaves out an engine that runs nowhere (an administrator sees those greyed).
 The browser side: test_engine_pages_browser.py."""
 from __future__ import annotations
 
+import server_answers
 import re
 
 
@@ -29,7 +30,7 @@ from core.auth import Identity
 from core.menus import spec_of
 from test_edition import RISK_ABOUT, _app, _client
 
-CATALOGUE = engines.entries()
+CATALOGUE = server_answers.bootstrap("all")["engines"]     # the server's catalogue (recorded)
 ROLES = {"alice": ("*",), "mira": ("market-risk",), "cole": ("credit-risk",), "bea": ("bi-analyst",)}
 PAGES = {"var": "VAR BANK", "exposure": "/exposure", "frtb-sa": "FRSA BANK", "simm": "SIMM"}     # one page of each engine, as linked
 
@@ -37,7 +38,8 @@ PAGES = {"var": "VAR BANK", "exposure": "/exposure", "frtb-sa": "FRSA BANK", "si
 def _people(app, monkeypatch):
     async def current(cookie, _backend):
         user = cookie or "alice"
-        return Identity(user=user, display=user.title(), desk="Risk", roles=ROLES.get(user, ("viewer",)))
+        return Identity(user=user, display=user.title(), desk="Risk", roles=ROLES.get(user, ("viewer",)),
+                        admin=bool({"*", "admin"} & set(ROLES.get(user, ()))))
     monkeypatch.setattr(app.state.auth, "current", current)
 
 
@@ -162,7 +164,8 @@ def test_an_engines_commands_follow_the_same_rule_as_its_pages_in_the_menus(back
     assert "not opened for your role" not in unquote(r.headers.get("location", ""))
 
     class _Req:                                                                         # the suggestions filter: one rule, by word
-        state = type("S", (), {"identity": Identity("mira", "Mira", "", ("market-risk",)), "pack_switcher": []})()
+        state = type("S", (), {"identity": Identity("mira", "Mira", "", ("market-risk",)), "pack_switcher": [],
+                               "person": {"engines-opened": ["var", "frtb-sa", "simm", "sensitivities", "mr-cube"]}})()   # the server's decisions
         app = None
     _Req.app = app
     kept = menus.suggestions_opened(_Req(), [{"mnemonic": "EXP", "complete": "EXP "}, {"mnemonic": "VAR", "complete": "VAR "},
@@ -187,7 +190,7 @@ def test_an_engine_running_nowhere_leaves_the_menus_and_an_administrator_sees_it
 def test_the_risk_edition_draws_one_risk_menu_in_place_of_engines(backend, monkeypatch):
     engines.reset()
     app = _app(backend, monkeypatch)
-    app.state.editions.learn(RISK_ABOUT)
+    server_answers.follow(app, RISK_ABOUT)
     page = _client(app).get("/t").text
     assert _top(page) == ["Views", "Risk", "Create", "Admin", "Help"]               # one domain: Domains is named Risk
     assert {"var", "exposure"} <= _linked(page)

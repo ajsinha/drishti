@@ -31,6 +31,8 @@ import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.EnumerablePropertySource;
 import org.springframework.core.env.PropertySource;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -72,6 +74,26 @@ public class EffectiveSettingsController {
     public Map<String, Object> effective(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireAdmin(p);
         return snapshot(env, System::getenv);
+    }
+
+    /**
+     * Which of the given keys are secrets, by this server's rule ({@code {keys: [...]}} answers {@code {secret: [...]}}). Admin →
+     * Configuration asks it for the console's own keys (THIN_CONSOLE_DESIGN.md step S6), so the rule that masks a value has one home; the
+     * console sends keys only, never a value.
+     */
+    @PostMapping("/secret-keys")
+    public Map<String, Object> secretKeys(@RequestAttribute(Principal.ATTRIBUTE) Principal p, @RequestBody(required = false) Map<String, Object> body) {
+        entitlements.requireAdmin(p);
+        List<String> out = new ArrayList<>();
+        Object keys = body == null ? null : body.get("keys");
+        if (keys instanceof List<?> list) {
+            for (Object k : list.subList(0, Math.min(list.size(), 2_000))) {
+                if (k != null && isSecret(k.toString())) {
+                    out.add(k.toString());
+                }
+            }
+        }
+        return Map.of("secret", out);
     }
 
     /**

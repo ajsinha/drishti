@@ -170,13 +170,14 @@ http://<host>:17481. The Deployment and QA guide gets a step-by-step section for
 `config/distributions/kernel.yaml`, the kernel's own packs, words and menus. A site adds its own file beside them (or anywhere, named by
 path). What each module holds is read from **its own manifest**, never from a hand list: every module's `modules/<id>/module.yaml`
 (one layout for all, [KERNEL_AND_MODULES.md section 8.10](KERNEL_AND_MODULES.md#810-the-one-module-layout)), the `.dmod` manifest (`packs.list`, `functions`,
-`compute.engines`, `console.menus`, `docs.domains`, `requires`). The folder is `drishti.module-manifests-dir` (`module_manifests_dir` on the console,
-`DRISHTI_MODULE_MANIFESTS_DIR` for both; default `./modules`). A listed module brings the modules it requires (banking brings
-market-data); a listed module with no manifest stops the start unless the file says `required: false`. A module with code (banking, genomics)
-keeps its manifest at the same place, its Maven projects under `modules/<id>/java/`. The `.dmod` packages the server ships and
-those installed in its module store are read first, by the module registry's own reader (a package's manifest wins). The console takes
-the server's list (`GET /public/modules/manifests`) and reads it again when the registry changes (`/public/about`'s `manifests`), so a
-package installed or removed while it runs joins or leaves its distribution; its own folder serves only until a server answers. A file may name the kernel's packs it takes
+`compute.engines`, `console.menus`, `docs.domains`, `requires`). The folder is the server's `drishti.module-manifests-dir`
+(`DRISHTI_MODULE_MANIFESTS_DIR`; default `./modules`). A listed module brings the modules it requires (banking brings
+market-data); a listed module with no manifest stops the start unless the file says `required: false`. A module with code (banking,
+genomics, trading, market-data) keeps its manifest at the same place, its Maven projects under `modules/<id>/java/`. The `.dmod` packages the server ships and
+those installed in its module store are read first, by the module registry's own reader (a package's manifest wins). The console reads
+none of these files: it draws the server's installation answer (`GET /api/v1/console/bootstrap`, the compiled distribution and every
+module with its menus), asked again when `/public/about`'s `stamps.installation` changes, so a package installed or removed while it runs
+joins or leaves its distribution. A file may name the kernel's packs it takes
 (`kernel-packs:`; Genomics takes none, and a distribution of no packs loads none, not the default list).
 
 **The content modules.** Three `.dmod`s, each a folder in the `.dmod` layout (`module.yaml`, `console/plugin.yaml` with a Sutra page per
@@ -196,11 +197,13 @@ grid before the page can ship in the economy `.dmod` (conformance C2).
 
 **Choosing one.** `--distribution <name|path>` (the server's `--distribution=` argument, the console's `--distribution=` setting, every
 `bin/` start script), else `DRISHTI_DISTRIBUTION`, else `drishti.distribution` in the server's configuration (`distribution:` in the
-console's). Nothing named: Drishti All, and a server or console with no `config/distributions` folder behaves as Drishti All too. A named
-file that does not exist stops the start with the list of names.
+console's). Nothing named: Drishti All, and a server with no `config/distributions` folder behaves as Drishti All too. A named
+file that does not exist stops the start with the list of names. A console that names its own distribution (a Finance console over a
+Drishti All cluster) asks the server for it (`GET /api/v1/console/bootstrap?distribution=finance`): the server compiles it from its own
+files, and refuses (`409`) a name that is not one of its distributions; the console reads no distribution file.
 
-**One reader, two sides.** The kernel (drishti-packs `Distributions`) and the console (`core/distribution.py`) read the same file the same
-way and come to the same thing:
+**One reader.** The kernel (drishti-packs `Distributions`) reads the file and compiles it; the console draws what the server compiled
+(the `distribution` of the installation's answer: the filter, the brand, the settings layers, each offered lens's arrangement):
 
 | From the file | On the kernel | On the console |
 |---|---|---|

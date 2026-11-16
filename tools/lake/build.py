@@ -72,15 +72,15 @@ import jsonstream  # noqa: E402
 import stage  # noqa: E402
 import writers  # noqa: E402
 
-if str(HERE.parents[1] / "drishti-console") not in sys.path:
-    sys.path.insert(0, str(HERE.parents[1] / "drishti-console"))
-from core import resolution as R  # noqa: E402  (configuration: the one resolver)
-from core.resolution import pack_dir  # noqa: E402  (where a pack is: the one resolver, KERNEL_AND_MODULES.md 18)
+if str(HERE.parents[1] / "tools") not in sys.path:
+    sys.path.insert(0, str(HERE.parents[1] / "tools"))
+import resolved as R  # noqa: E402  (configuration: the Java resolver's answer, tools/resolved.py)
+from resolved import pack_dir  # noqa: E402  (where a pack is: the Java resolver's answer, tools/resolved.py)
 
 EXIT_OK, EXIT_FAILED, EXIT_PARTIAL, EXIT_LOCKED = 0, 1, 2, 3
 MODES = ("overwrite-dates", "overwrite-partitions", "append")
 STATE = "_drishti-lake"
-PACKS_ROOT = R.Settings.from_env().site_dir                       # the site's packs (the modules' and the kernel's: the resolver)
+PACKS_ROOT = R.current().site_dir                       # the site's packs (the modules' and the kernel's: the resolver)
 RESERVED = {"id", "doc", "business_date"}
 
 
@@ -176,9 +176,9 @@ def now_iso() -> str:
 
 def site_set(connector: str, template_settings: dict) -> dict:
     """The constants the connector's ``set:`` stamps into stored rows: its effective settings (the template, the site's override merged
-    over it: drishti-console/core/resolution.py), else ``template_settings`` when no layer has the connector."""
+    over it, as the Java resolver merged them: tools/resolved.py), else ``template_settings`` when no layer has the connector."""
     e = R.current().connectors.find(connector)
-    st = e.settings if e is not None else {k: R._text(v) for k, v in R.flatten(template_settings or {}).items()}
+    st = e.settings if e is not None else {k: R.text_of(v) for k, v in R.flatten(template_settings or {}).items()}
     return {k[4:]: str(v) for k, v in st.items() if isinstance(k, str) and k.startswith("set.") and len(k) > 4}
 
 

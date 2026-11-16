@@ -78,10 +78,10 @@ HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 sys.path.insert(0, str(HERE))
 import lakeconfig  # noqa: E402  (where the lakes are: config/lakes/<lake>.yaml)
-if str(ROOT / "drishti-console") not in sys.path:
-    sys.path.insert(0, str(ROOT / "drishti-console"))
-from core import resolution as R  # noqa: E402  (configuration: the one resolver, KERNEL_AND_MODULES.md 18)
-from core.resolution import pack_dir, pack_dirs  # noqa: E402  (where a pack is: the one resolver, KERNEL_AND_MODULES.md 18)
+if str(ROOT / "tools") not in sys.path:
+    sys.path.insert(0, str(ROOT / "tools"))
+import resolved as R  # noqa: E402  (configuration: the Java resolver's answer, tools/resolved.py)
+from resolved import pack_dir, pack_dirs  # noqa: E402  (where a pack is: the Java resolver's answer, tools/resolved.py)
 
 DEFAULT_ROOT = lakeconfig.DEMO_ROOT_REF   # config/lakes/demo.yaml: the demo lake's own folder
 DEFAULT_SERVER = "http://localhost:18480"
@@ -806,13 +806,14 @@ class DemoLake:
         return (p if p.is_absolute() else ROOT / p).resolve()
 
     def connector_files(self) -> list[str]:
-        """The connectors that read the demo lake, through their layers (drishti-console/core/resolution.py): a template that reads the
+        """The connectors that read the demo lake, through their layers (the Java resolver's answer, tools/resolved.py): a template that reads the
         lake already needs no file; another lake folder is a partial override of the site (``template:`` and ``settings.root``), never a
         whole connector; a site file of another plugin is left as it is. No bindings are written: the trade kind reads what the source
         modules that are on declare (KERNEL_AND_MODULES.md 18.6)."""
         import yaml
-        folder = pathlib.Path(self.a.connectors_dir) if self.a.connectors_dir else R.Settings.from_env().connectors_dir
-        templates = R.repository().connectors.templates
+        folder = pathlib.Path(self.a.connectors_dir) if self.a.connectors_dir else R.current().connectors_dir
+        layered = R.repository(connectors=folder).connectors           # each connector as the Java resolver merges it over the folder's files
+        templates = layered.templates
         default = self.lake == self.resolve(DEFAULT_ROOT)
         notes = []
         packs = sorted({ds["pack"] for ds in self.manifest.datasets if self.wanted(ds)})
@@ -823,10 +824,9 @@ class DemoLake:
                 notes.append(self.results_reader(name, f))
                 continue
             text = f.read_text(encoding="utf-8") if f.is_file() else None
-            try:
-                e = R.effective(name, text, templates.get(name), f)
-            except R.Unusable as x:
-                notes.append(f"{name}: {x}")
+            e = layered.find(name)
+            if e is None:
+                notes.append(f"{name}: {layered.unused.get(name) or 'no template and no file'}")
                 continue
             if e.plugin != "delta":                              # a system stored elsewhere (build_demo_lakes.py --store calypso=iceberg)
                 notes.append(f"{name}: reads {e.plugin}, left as it is ({f})")

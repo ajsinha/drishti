@@ -342,7 +342,7 @@ def test_an_admin_only_page_is_shown_to_administrators_and_hidden_from_everyone_
     assert "/help/competitive-analysis" in client.get("/help/search", params={"q": "competitive analysis"}).text
 
     def as_(*roles):
-        monkeypatch.setattr(hr, "_me", lambda request: Identity("vic", "Vic", "Rates", roles))
+        monkeypatch.setattr(hr, "_me", lambda request: Identity("vic", "Vic", "Rates", roles, admin=bool({"*", "admin"} & set(roles))))
 
     as_("viewer")
     assert client.get("/help/competitive-analysis").status_code == 404
@@ -366,7 +366,7 @@ def test_a_guide_without_roles_permits_everyone_and_with_roles_only_those(tmp_pa
 
     open_ = Guide("a", "A", "", "i", "reference", "operate", tmp_path / "a.md")
     closed = Guide("b", "B", "", "i", "reference", "operate", tmp_path / "b.md", roles=("admin", "risk-head"))
-    viewer, head, admin = (Identity("u", "U", "", r) for r in (("viewer",), ("risk-head",), ("*",)))
+    viewer, head, admin = (Identity("u", "U", "", r, admin="*" in r) for r in (("viewer",), ("risk-head",), ("*",)))
     assert open_.permits(None) and open_.permits(viewer)
     assert not closed.permits(None) and not closed.permits(viewer) and closed.permits(head) and closed.permits(admin)
 

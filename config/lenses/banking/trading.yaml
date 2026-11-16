@@ -42,7 +42,7 @@ home:
 
 trading:                                 # the Trading landings (LENSES.md › The design); read-only, as the person, with their roles and masks
   # "my" scope: who is who. A person named here sees their trader's books (trader) or their desk (desk); role: desk-head opens the
-  # Desk head landing first. The console's own trading.people (application.local.yaml) adds people and wins for a name in both.
+  # Desk head landing first. The server's drishti.trading.people (its application.local.yaml) adds people and wins for a name in both.
   # A person not named: a trader record whose TRADER_ID or NAME is theirs (match-records), else the "View as" picker, remembered in their
   # settings (tradingView). An administrator may always pick. Scoping only chooses what the landing shows: it never widens access.
   people:

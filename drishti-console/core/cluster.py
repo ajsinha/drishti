@@ -59,14 +59,6 @@ SESSION: contextvars.ContextVar[str] = contextvars.ContextVar("drishti_cluster_s
 RECOVER_SECONDS = 60.0
 
 
-def loopback_url(url: str) -> bool:
-    """True when a URL's host is no address another machine can call, so never a member's advertisement: localhost in any spelling, a
-    loopback, wildcard or link-local address in any notation (0, 127.x, 2130706433, 0x7f000001), a container bridge, or a host name that
-    resolves here to one of those. The server's rule (HostAddress, tools/hostaddr.py), in core/hostrule.py."""
-    from core.hostrule import unreachable_url
-
-    return unreachable_url(url)
-
 HOUR = 3600.0
 
 
@@ -142,7 +134,7 @@ class ServerPool:
             return
         for s in saved.get("servers", []):
             url = str(s.get("url") or "").rstrip("/")
-            if url and url not in self.entries and not loopback_url(url):
+            if url and url not in self.entries:
                 self.entries[url] = Entry(url, "discovered", str(s.get("node_id") or ""))
 
     def save(self) -> None:
@@ -325,8 +317,8 @@ class ServerPool:
         changed = False
         for m in body.get("members") or []:
             murl = str(m.get("url") or "").rstrip("/")
-            if not murl or loopback_url(murl):
-                continue                                  # a member never advertises a loopback address: not kept
+            if not murl:
+                continue                                  # the server's member list: its HostAddress rule refused a loopback advertisement
             gone = m.get("state") in ("dead", "left")
             node = str(m.get("nodeId") or "")
             if node and not gone:                         # the member moved: its old address goes

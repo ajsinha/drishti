@@ -15,6 +15,9 @@
 -->
 # Tutorial 10 · The AI assistant
 
+> **Not in this release.** The console of this release shows no AI page or button and the server's AI layer is off
+> (`drishti.ai.enabled`). This tutorial is kept for the release that brings AI back to the console; it is not listed in Help.
+
 Drishti can put a language model beside BI in three places and no more: **describe a report** in words, **ask the data** a question, **explain this number**. It is **off by default**, it can only do what a person could do by hand (**it writes a draft or a query; Drishti checks it, runs it as the reader and shows it**),
 and by default the model is never sent a row of data, only names. In this tutorial you turn it on with the **mock provider**, a deterministic stand-in with no network and no key, so you can see everything it does and everything it is stopped from doing, then you meet the AI **policy**, **Test connection** and the real providers.
 

@@ -51,6 +51,7 @@ class Identity:
     token: str | None = None
     must_change: bool = False
     session: str | None = None
+    admin: bool = False                # the server's decision (its session answer's ``admin``): never worked out here from a role name
 
     def headers(self) -> dict:
         h = {"X-Drishti-User": self.user}
@@ -60,7 +61,9 @@ class Identity:
 
     @property
     def is_admin(self) -> bool:
-        return "*" in self.roles or "admin" in self.roles
+        """Whether the server says this person is an administrator (a role it defines ``admin: true``, or ``*``; THIN_CONSOLE_DESIGN.md
+        step S4): the console draws its Admin pages by the server's answer, the server enforces it on every call."""
+        return self.admin
 
 
 def _b64(data: bytes) -> str:
@@ -101,7 +104,7 @@ class Auth:
         self._checked: dict[str, tuple[float, dict | None, float]] = {}   # session -> (valid until, profile, wall time asked)
         self._inflight: dict[str, asyncio.Future] = {}
         self.default = Identity(settings.get("ui.user", "ash"), settings.get("ui.user_display", "Ash"),
-                                settings.get("ui.desk", "Rates desk"))
+                                settings.get("ui.desk", "Rates desk"), admin=True)   # sign-in off: every power, as on the server
         if self.enabled and len(self.session_secret) < 32:
             raise RuntimeError("auth.session_secret must be at least 32 characters when auth is enabled")
 
@@ -116,7 +119,7 @@ class Auth:
     def session_for(self, user: dict, session: str | None = None) -> str:
         """A signed cookie value for a user the server has just verified, naming the server's session for them."""
         body = {"u": user["username"], "d": user.get("displayName") or user["username"], "k": user.get("desk") or "",
-                "r": sorted(user.get("roles") or []), "m": bool(user.get("mustChangePassword")),
+                "r": sorted(user.get("roles") or []), "m": bool(user.get("mustChangePassword")), "a": bool(user.get("admin")),
                 "x": int(time.time()) + self.session_ttl, "s": self.server, "j": session}
         payload = _b64(json.dumps(body, separators=(",", ":")).encode())
         return f"{payload}.{self._sign(payload)}"
@@ -137,13 +140,13 @@ class Auth:
         if int(body.get("x", 0)) < time.time() or body.get("s", "default") != self.server:
             return None                                  # expired, or a session for another server
         return self._with_token(Identity(body["u"], body["d"], body["k"], tuple(body["r"]), must_change=bool(body.get("m")),
-                                         session=body.get("j") or None))
+                                         session=body.get("j") or None, admin=bool(body.get("a"))))
 
     def identity_for(self, profile: dict, session: str | None = None) -> Identity:
         """The identity of a user as the server describes them now."""
         return self._with_token(Identity(profile["username"], profile.get("displayName") or profile["username"], profile.get("desk") or "",
                                          tuple(sorted(profile.get("roles") or [])), must_change=bool(profile.get("mustChangePassword")),
-                                         session=session))
+                                         session=session, admin=bool(profile.get("admin"))))
 
     async def current(self, cookie: str | None, backend) -> Identity | None:
         """The signed-in user as the server knows them now: None when the cookie is not genuine, carries no session,
@@ -181,6 +184,8 @@ class Auth:
         try:
             answer = await backend.session(session, self.service())
             profile = (answer or {}).get("user")
+            if isinstance(profile, dict):
+                profile = {**profile, "admin": bool((answer or {}).get("admin"))}   # the server's decision, kept with the person
         except BackendError as e:
             if e.status >= 500:
                 return _UNREACHABLE
@@ -218,4 +223,4 @@ class Auth:
         if not self.token_secret:
             return ident
         return Identity(ident.user, ident.display, ident.desk, ident.roles,
-                        mint_token(ident.user, ident.roles, self.token_secret, self.token_ttl), ident.must_change, ident.session)
+                        mint_token(ident.user, ident.roles, self.token_secret, self.token_ttl), ident.must_change, ident.session, ident.admin)

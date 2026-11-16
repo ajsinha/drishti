@@ -16,6 +16,7 @@
 (port 17980), the person mapped to A. Shah's books. Each landing fills its panels from those answers, fits a phone without sideways
 scrolling, passes the page-width audit, asks no host but the console (every library is vendored), and draws in every theme with its green
 accent; the new-trade check answers end to end; skipped when Playwright or its Chromium is missing."""
+import server_answers
 import threading
 import time
 
@@ -40,15 +41,11 @@ _APP: dict = {}   # the module's console app and its default user, for a test th
 @pytest.fixture(scope="module")
 def trading_console():
     import uvicorn
-
-    from plugins.banking import trading_landing
     from core.app import create_app
     from core.config import load_settings
-
-    trading_landing.forget()
     app = create_app(load_settings(CONSOLE / "config"))
     app.state.backend = TradingBackend()
-    app.state.editions.learn({"product": "Drishti", "edition": None, "lenses": ["risk", "world", "market", "trading"]})   # trading is a lens of the full product
+    server_answers.follow(app, {"product": "Drishti", "edition": None, "lenses": ["risk", "world", "market", "trading"]})   # trading is a lens of the full product
     user = app.state.auth.default.user
     store = {user: {"lens": "trading"}}                      # the person's settings: they work in the trading lens
 
@@ -73,9 +70,6 @@ def trading_console():
     yield f"http://127.0.0.1:{PORT}"
     server.should_exit = True
     thread.join(10)
-    trading_landing.forget()
-
-
 def _page(ctx):
     page = ctx.new_page()
     page.outside = []
@@ -146,12 +140,9 @@ def test_each_trading_landing_fills_from_the_servers_answers_and_fits(browser, t
 
 def test_nobody_yet_says_so_in_every_panel_the_blotter_too(browser, trading_console):
     """A person mapped to no trader or desk: every panel says to pick one, the blotter (a grid host, not a table) too, never a lasting '…'."""
-    from plugins.banking import trading_landing
-
     block = _APP["app"].state.editions.lenses["trading"].spec["trading"]
     mapping, matching = block["people"].pop(_APP["user"]), block.get("match-records")
     block["match-records"] = False
-    trading_landing.forget()
     ctx = browser.new_context(viewport={"width": 1280, "height": 900})
     page = _page(ctx)
     try:
@@ -166,9 +157,6 @@ def test_nobody_yet_says_so_in_every_panel_the_blotter_too(browser, trading_cons
             block.pop("match-records", None)
         else:
             block["match-records"] = matching
-        trading_landing.forget()
-
-
 def test_the_check_box_answers_end_to_end(browser, trading_console):
     ctx = browser.new_context(viewport={"width": 1280, "height": 900})
     page = _page(ctx)

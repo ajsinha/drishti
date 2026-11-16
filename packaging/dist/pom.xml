@@ -43,6 +43,8 @@
     <!-- banking's jars go into its package, never on the kernel's class path -->
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-banking</artifactId><scope>provided</scope></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-compute-banking</artifactId><scope>provided</scope></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-trading</artifactId><scope>provided</scope></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-market-data</artifactId><scope>provided</scope></dependency>
   </dependencies>
   <build>
     <plugins>
@@ -60,6 +62,8 @@
               <artifactItems>
                 <artifactItem><groupId>com.ash.drishti</groupId><artifactId>drishti-banking</artifactId><version>${project.version}</version></artifactItem>
                 <artifactItem><groupId>com.ash.drishti</groupId><artifactId>drishti-compute-banking</artifactId><version>${project.version}</version></artifactItem>
+                <artifactItem><groupId>com.ash.drishti</groupId><artifactId>drishti-trading</artifactId><version>${project.version}</version></artifactItem>
+                <artifactItem><groupId>com.ash.drishti</groupId><artifactId>drishti-market-data</artifactId><version>${project.version}</version></artifactItem>
               </artifactItems>
             </configuration>
           </execution>
@@ -93,7 +97,15 @@
             <phase>process-classes</phase>
             <goals><goal>java</goal></goals>
             <configuration>
-              <arguments><argument>pack</argument><argument>${project.basedir}/../../modules/market-data</argument><argument>--out</argument><argument>${drishti.dmods}</argument></arguments>
+              <arguments><argument>pack</argument><argument>${project.basedir}/../../modules/market-data</argument><argument>--jar</argument><argument>${drishti.jars}/drishti-market-data.jar</argument><argument>--out</argument><argument>${drishti.dmods}</argument></arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>pack-trading</id>
+            <phase>process-classes</phase>
+            <goals><goal>java</goal></goals>
+            <configuration>
+              <arguments><argument>pack</argument><argument>${project.basedir}/../../modules/trading</argument><argument>--jar</argument><argument>${drishti.jars}/drishti-trading.jar</argument><argument>--out</argument><argument>${drishti.dmods}</argument></arguments>
             </configuration>
           </execution>
           <execution>

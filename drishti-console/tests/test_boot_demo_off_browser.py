@@ -35,13 +35,19 @@ def stack(tmp_path_factory):
 
 
 def _packs_with_form() -> set[str]:
-    """The packs of the code module (banking's .dmod folder) with a form, found through the one pack resolution (core/resolution.py)."""
+    """The packs of the code module (a module with a java: block: banking) with a form, found through the Java resolver's answer (tools/resolved.py)."""
     import yaml
-    from core import resolution as R
+    import resolved as R
     out = set()
-    packs = R.build(R.Settings.from_env(env={})).packs
+    res = R.repository()
+    packs = res.packs
+
+    def code(mid):                               # a module with code: its manifest has a java: block
+        m = res.modules.get(mid) if mid else None
+        return m is not None and bool((yaml.safe_load((m.home / "module.yaml").read_text(encoding="utf-8")) or {}).get("java"))
+
     for p in (packs[n] for n in packs):
-        if p.folder is None or p.origin != "MODULE" or not (p.folder.parents[1] / "java").is_dir():   # a module with code's packs (banking)
+        if p.folder is None or p.layer != R.MODULE or not code(p.module):   # a module with code's packs (banking)
             continue
         m = yaml.safe_load((p.folder / "pack.yaml").read_text(encoding="utf-8")) or {}
         if isinstance(m.get("form"), dict) and m["form"]:

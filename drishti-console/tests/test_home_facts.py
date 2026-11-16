@@ -21,20 +21,31 @@ from pathlib import Path
 import pytest
 import yaml
 
-from core.facts import FactsService, Fetcher, check, compute, links, load_pack, parse, rotate
+from core.facts import FactsService, Fetcher, compute, links, load_pack, parse, rotate
 from core.facts_expr import Expr, ExprError, Template, fmt
-from core.resolution import pack_dir
+from resolved import pack_dir, pack_dirs
 import engine_fakes  # noqa: E402
 
 PACKS = Path(__file__).resolve().parents[2] / "config" / "packs"
 
 
+def _pack(name: str) -> dict:
+    """A pack as the console holds it: its facts file as data, as the pack's console answer sends it (the console reads no folder)."""
+    f = pack_dir(name, PACKS) / "config" / "facts.yaml"
+    return {"name": name, "facts": yaml.safe_load(f.read_text(encoding="utf-8")) if f.is_file() else None}
+
+
+def check() -> dict[str, list[str]]:
+    """Every shipped pack's facts file, checked: ``{pack: [problems]}`` (the files are the repository's; the test reads them)."""
+    return {name: load_pack(_pack(name))[1] for name, d in pack_dirs(PACKS).items() if (d / "config" / "facts.yaml").is_file()}
+
+
 # ---------------------------------------------------------------------------------------------------------------------- the config
 
 def test_every_shipped_facts_file_is_clean_and_there_are_at_least_six_facts_across_three_domains():
-    problems = check(PACKS)
+    problems = check()
     assert problems and all(v == [] for v in problems.values()), problems
-    facts = [f for name in problems for f in load_pack({"name": name, "dir": pack_dir(name, PACKS)})[0]]
+    facts = [f for name in problems for f in load_pack(_pack(name))[0]]
     assert len(facts) >= 6
     assert {f.pack for f in facts} >= {"market-risk", "counterparty-risk", "funds"}
     assert len({f.id for f in facts}) == len(facts)
@@ -45,7 +56,7 @@ def test_every_shipped_facts_file_is_clean_and_there_are_at_least_six_facts_acro
 def test_no_number_is_written_into_a_shipped_fact_sentence():
     """The sentences are templates: every figure comes from {expressions}, never from the file."""
     import re
-    for name in check(PACKS):
+    for name in check():
         doc = yaml.safe_load((pack_dir(name, PACKS) / "config" / "facts.yaml").read_text())
         for item in doc["items"]:
             for key in ("text", "why"):
@@ -148,7 +159,7 @@ def _tree(book_use, desk_use):
 
 
 def _book_fact():
-    facts, _ = load_pack({"name": "market-risk", "dir": pack_dir("market-risk", PACKS)})
+    facts, _ = load_pack(_pack("market-risk"))
     return next(f for f in facts if f.id == "book-over-limit-desk-within")
 
 
@@ -198,8 +209,7 @@ def test_links_rotation_and_the_fetcher_date():
 
 def test_a_fact_whose_pack_is_off_is_not_eligible():
     svc = FactsService()
-    ccr = {"name": "counterparty-risk", "dir": pack_dir("counterparty-risk", PACKS)}
-    mr = {"name": "market-risk", "dir": pack_dir("market-risk", PACKS)}
+    ccr, mr = _pack("counterparty-risk"), _pack("market-risk")
     alone = {f.id for f in svc.eligible([ccr])}
     assert "collateral-raises-exposure" in alone and "var-versus-peak-pfe" not in alone     # it needs market-risk too
     assert "var-versus-peak-pfe" in {f.id for f in svc.eligible([ccr, mr])}

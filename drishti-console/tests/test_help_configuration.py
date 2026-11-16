@@ -24,7 +24,7 @@ import pytest
 
 from core.auth import Identity
 from core.config import Settings
-from core.settings_page import MASK, console_effective, is_secret, searchable, server_effective, shown
+from core.settings_page import MASK, console_effective, console_keys, searchable, server_effective, shown
 
 ROOT = Path(__file__).resolve().parents[2]
 SERVER = {"settings": [
@@ -104,15 +104,12 @@ def test_the_reference_shows_no_values_and_points_administrators_to_the_editor(c
     assert "data-cfg-admin" not in client.get("/help/configuration").text
 
 
-def test_secrets_are_masked_in_the_console_and_on_the_server(tmp_path):
-    for key in ("auth.session_secret", "auth.token_secret", "auth.oidc.client_secret", "drishti.security.secret",
-                "drishti.http.proxy.password", "drishti.embed.signing-key", "ai.api-key", "drishti.security.metrics-token"):
-        assert is_secret(key), key
-    for key in ("bi.ai.max-tokens", "drishti.var.keep-on-shutdown", "server.port", "ui.desk"):
-        assert not is_secret(key), key
-    assert shown("auth.session_secret", "s3cr3t-value") == MASK and shown("auth.session_secret", "") == ""
-    assert shown("backend.url", "https://ash:pw@drishti:8480") == f"https://ash:{MASK}@drishti:8480"
-    assert server_effective({"settings": [{"key": "drishti.security.secret", "value": "leaked", "origin": "env"}]})[
+def test_secrets_are_masked_by_the_servers_rule(tmp_path):
+    """Which keys are secrets is the server's rule (its answer's ``secret``; ``/admin/settings/secret-keys`` for the console's own keys):
+    the console keeps no copy of it (THIN_CONSOLE_DESIGN.md step S6)."""
+    assert shown("s3cr3t-value", True) == MASK and shown("", True) == ""
+    assert shown("https://ash:pw@drishti:8480") == f"https://ash:{MASK}@drishti:8480"
+    assert server_effective({"settings": [{"key": "drishti.security.secret", "value": "leaked", "origin": "env", "secret": True}]})[
         "drishti.security.secret"]["value"] == MASK
 
     (tmp_path / "application.yaml").write_text("auth:\n  session_secret: ${MY_SESSION:}\nserver:\n  port: ${MY_PORT:17480}\n"
@@ -121,7 +118,9 @@ def test_secrets_are_masked_in_the_console_and_on_the_server(tmp_path):
     base = {"auth": {"session_secret": "x" * 40}, "server": {"port": 17999}, "backend": {"timeout_seconds": 9}, "ui": {"desk": "Credit"}}
     over = {"backend": {"timeout_seconds": 9}, "ui": {"desk": "Credit"}}
     s = Settings(base, base, over)
-    eff = console_effective(s, tmp_path, {"MY_SESSION": "x" * 40, "MY_PORT": "17999", "DRISHTI_CONSOLE__BACKEND__TIMEOUT_SECONDS": "9"})
+    assert set(console_keys(tmp_path)) == {"auth.session_secret", "server.port", "backend.timeout_seconds", "ui.desk"}
+    eff = console_effective(s, tmp_path, {"MY_SESSION": "x" * 40, "MY_PORT": "17999", "DRISHTI_CONSOLE__BACKEND__TIMEOUT_SECONDS": "9"},
+                            secrets={"auth.session_secret"})
     assert eff["auth.session_secret"] == {"value": MASK, "origin": "env", "source": "MY_SESSION", "secret": True}
     assert eff["server.port"]["origin"] == "env" and eff["server.port"]["value"] == "17999"
     assert eff["backend.timeout_seconds"]["origin"] == "env" and eff["backend.timeout_seconds"]["source"] == "DRISHTI_CONSOLE__BACKEND__TIMEOUT_SECONDS"

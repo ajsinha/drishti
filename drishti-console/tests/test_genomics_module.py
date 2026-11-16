@@ -20,33 +20,31 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from core import distribution as dist
+import server_answers
 
 CONSOLE = Path(__file__).resolve().parents[1]
-DIR = CONSOLE.parent / "config" / "distributions"
-MODULES = CONSOLE.parent / "modules"
+MODULE = CONSOLE.parent / "modules" / "genomics" / "src" / "dmod"     # the module project's .dmod folder, as the server hands it over
+SHIPPED = {"modules": [{"id": "genomics", "version": "0.1.0", "state": "active", "title": "Genomics", "console": True, "claims": []}],
+           "fingerprint": "shipped"}
 
 
 def _fresh(client, tmp_path, monkeypatch, listed: dict | None):
     from core.module_parts import ModuleParts
 
     old = client.app.state.module_parts
-    parts = ModuleParts(tmp_path / "parts", old.web, MODULES, 0.0)
+    parts = ModuleParts(tmp_path / "parts", old.web, 0.0)
     monkeypatch.setattr(client.app.state, "module_parts", parts)
     monkeypatch.setattr(client.app.state.editions.modules, "parts", parts)
     backend = client.app.state.backend
 
-    async def public(path, raw=False, timeout=30.0):
-        if path == "/public/modules/console" and listed is not None:
-            return listed
+    async def public(path, raw=False, timeout=30.0):        # the server lists the shipped module while it is loaded, and hands it over
+        if path == "/public/modules/console":
+            return listed if listed is not None else SHIPPED
+        if path == "/public/modules/console/genomics/0.1.0" and listed is None:
+            return server_answers.module_zip(MODULE)
         from core.backend import BackendError
         raise BackendError(404, "DRS-4040", path)
     monkeypatch.setattr(backend, "public", public, raising=False)
-    plain = parts.refresh
-
-    async def refresh(backend, loaded=None, force=False):     # the server says genomics is loaded (a module project is hosted only then)
-        return await plain(backend, (set(loaded) if loaded is not None else set(parts._shipped())) | {"genomics"}, force)
-    monkeypatch.setattr(parts, "refresh", refresh)
     return parts
 
 
@@ -54,7 +52,7 @@ def test_the_module_is_hosted_its_pages_use_elements_only_and_read_its_api(clien
     _fresh(client, tmp_path, monkeypatch, None)
     client.get("/t")
     p = client.app.state.module_parts.part("genomics")
-    assert p is not None and p.source == "shipped" and p.folder.name == "genomics"
+    assert p is not None and p.source == "server" and p.folder.name == "0.1.0"
     page = client.get("/m/genomics/genes/TP53")
     assert page.status_code == 200, page.text[:400]
     t = page.text
@@ -93,10 +91,10 @@ def test_its_visual_is_in_the_gallery_while_hosted_and_gone_when_removed(client,
     assert client.get("/m/genomics/genes/TP53").status_code in (404, 410)          # the server's route table says which
 
 
-def test_drishti_genomics_compiles_to_the_research_lens_with_no_finance():
-    d = dist.read(dist.file_of(DIR, "genomics"), DIR / dist.KERNEL, MODULES, CONSOLE.parent / "config" / "packs")
-    assert d.title == "Drishti Genomics" and d.modules == ["genomics"]
-    ed = d.edition_spec
+def test_drishti_genomics_is_the_research_lens_with_no_finance():
+    d = server_answers.bootstrap("genomics")["distribution"]          # compiled by the server (recorded by ConsoleAnswersRecordTest)
+    assert d["title"] == "Drishti Genomics" and d["modules"] == ["genomics"]
+    ed = d["filter"]
     assert ed["packs"] == {"none": True}
     allow = set(ed["commands"]["allow"])
     assert {"VARIANT", "GENE", "COHORT"} <= allow and not allow & {"CPTY", "BOOK", "DESK", "CRV", "VRES", "TRD"}

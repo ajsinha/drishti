@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""An engine switched off hides its help pages (config/engines.yaml help:): only pages about that engine alone, never a guide many
+"""An engine switched off hides its help pages (the catalogue's help:, from the server's installation answer): only pages about that engine alone, never a guide many
 subjects share. The OpenBLAS switch once listed the whole Operations guide, so switching it off hid deployment, capacity and the runbooks."""
 
 from pathlib import Path
@@ -45,8 +45,8 @@ def _guides():
 
 def test_an_engine_hides_only_its_own_pages():
     guides = _guides()
-    from core import engines as catalogue
-    engines = catalogue.entries()                      # the core's and every module's (plugins/<module>/engines.yaml)
+    import server_answers
+    engines = server_answers.bootstrap("all")["engines"]   # the core's and every module's (the server's answer, recorded)
     shared = {"operations", "configuration", "user-guide", "api-guide", "cli-guide", "troubleshooting", "getting-started"}
     for e in engines:
         for slug in e.get("help") or []:

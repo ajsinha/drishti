@@ -15,6 +15,7 @@
 """The phone display (docs/guides/BUILD_GUIDE.md): the tiers resolved over the layers with the site and edition caps, the
 compact forms cut on the console, a phone getting only must and glance panels, a *More* panel loaded on its own, a tablet keeping its
 layout less the desk panels, the desktop unchanged, and the lens menus folded into one on a phone (LX1 option C)."""
+import server_answers
 import copy
 import json
 import re
@@ -216,7 +217,7 @@ def test_the_site_and_the_edition_set_and_cap_a_pages_parts(client, monkeypatch)
 def test_the_risk_landing_on_a_phone(backend, monkeypatch):
     from test_edition import RISK_ABOUT, _app, _client
     app = _app(backend, monkeypatch)
-    app.state.editions.learn(RISK_ABOUT)
+    server_answers.follow(app, RISK_ABOUT)
     c = _client(app)
     c.cookies.set("drishti-device", "phone")
     html = c.get("/").text

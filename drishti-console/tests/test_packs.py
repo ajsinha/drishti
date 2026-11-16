@@ -58,64 +58,146 @@ def test_pack_switcher_chooses_active_packs(client, backend):
         client.app.state.packs._cache = {}
 
 
-def test_a_pack_installed_by_the_server_brings_its_guide_examples_and_workspaces(tmp_path):
-    """Packs installed from the registry or by Deploy archive land in the server's installed-dir; the console reads it first, as the
-    server does, so the help centre finds the pack's guide (the screenshot run: 'There is no guide called helpdesk-pack', 2026-10-27)."""
+
+# ---------------------------------------------------------------------------------------------------------------------- the thin console
+# The console asks the server for a person's packs and a pack's contributions; it reads no pack folder (THIN_CONSOLE_DESIGN.md 3.3, 3.4).
+
+class _Server:
+    """A stand-in server that counts what the console asks: the person's answer and each pack's console answer and files."""
+
+    def __init__(self, pack_dir):
+        import pack_answers
+        self.answers = pack_answers
+        self.dir = pack_dir
+        self.rows = [{"name": "helpdesk", "title": "Helpdesk", "active": True, "assigned": True, "dir": str(pack_dir)}]
+        self.asked = {"me": 0, "pack": 0, "file": 0}
+        self.away = False
+
+    async def packs(self, ident=None):
+        return self.rows
+
+    async def me_console(self, ident, etag=None):
+        self.asked["me"] += 1
+        if self.away:
+            from core.backend import BackendError
+            raise BackendError(503, "DRS-5003", "backend unreachable")
+        doc = self.answers.me_console(self.rows)
+        return (304, None) if etag == doc["stamp"] else (200, doc)
+
+    async def pack_console(self, name, ident, etag=None):
+        self.asked["pack"] += 1
+        doc = self.answers.pack_console(name, self.dir)[0]
+        return (304, None) if etag == doc["digest"] else (200, doc)
+
+    async def pack_console_file(self, name, path, ident):
+        self.asked["file"] += 1
+        return self.answers.pack_console(name, self.dir)[1][path].read_bytes()
+
+
+class _Me:
+    user = "ana"
+
+
+def _run(coro):
+    import asyncio
+    return asyncio.run(coro)
+
+
+def test_a_pack_s_guides_examples_and_workspaces_come_from_the_server_s_answers_not_a_folder(tmp_path):
+    """A pack the console has never seen on its disk (installed on the server only, the screenshot run's 'There is no guide called
+    helpdesk-pack', 2026-10-27) brings its guide, examples, workspace starters and contextual help through the server's answers; the guide's
+    file is kept in the console's own folder, under its digest."""
     import shutil
     from pathlib import Path
     from core.packs import Packs
     console = Path(__file__).resolve().parent.parent
-    example = console.parent / "docs" / "guides" / "examples" / "pack" / "helpdesk"
-    installed = tmp_path / "packs" / "installed"
-    settings = {"packs.dir": str(console.parent / "config" / "packs"), "packs.installed_dir": str(installed)}
-    packs = Packs(settings, console)
-    assert packs._load("helpdesk") is None                          # nothing installed yet: the folder need not exist
-    shutil.copytree(example, installed / "helpdesk")
-    p = packs._load("helpdesk")
-    assert p is not None and p["dir"] == (installed / "helpdesk").resolve()
-    assert [g["slug"] for g in p["guides"]] == ["helpdesk-pack"] and p["guides"][0]["path"].exists()
-    assert p["contextual"] == {"terminal": "helpdesk-pack"} and p["examples"]
-    default = Packs({"packs.dir": settings["packs.dir"], "lakes.data_dir": str(tmp_path)}, console)
-    assert default.installed == installed.resolve() and default._load("helpdesk")["dir"] == (installed / "helpdesk").resolve()
+    server_side = tmp_path / "server" / "helpdesk"
+    shutil.copytree(console.parent / "docs" / "guides" / "examples" / "pack" / "helpdesk", server_side)
+    server = _Server(server_side)
+    packs = Packs({"ui.user_cache_seconds": 10}, files_dir=tmp_path / "console-files")
+    [p] = _run(packs.current(server, _Me()))
+    assert [g["slug"] for g in p["guides"]] == ["helpdesk-pack"]
+    guide = p["guides"][0]["path"]
+    assert guide.is_file() and guide.is_relative_to(tmp_path / "console-files"), "the guide is the console's copy, not the server's file"
+    assert guide.read_bytes() == (server_side / p["guides"][0]["file"]).read_bytes()
+    assert p["contextual"] == {"terminal": "helpdesk-pack"} and p["examples"] and "dir" not in p
+    assert p["workspaces"], "the workspace starters, from the pack's answer"
 
 
-def test_a_server_row_names_the_pack_s_folder_and_a_module_s_pack_loads_from_its_module(tmp_path):
-    """The server's pack row carries ``dir`` (its resolution): the console reads that folder; with no row, the resolver finds a
-    module's pack in its module's folder (FORMS listed only core and gleif while the console looked under config/packs only)."""
+def test_a_pack_s_answer_is_asked_once_per_digest_and_its_files_once_per_content(tmp_path):
+    """The person's answer is revalidated (304) after the cache window; the pack's console answer and its files are asked again only when
+    their digests change. Each caller gets its own copy."""
     import shutil
     from pathlib import Path
     from core.packs import Packs
     console = Path(__file__).resolve().parent.parent
-    shutil.copytree(console.parent / "docs" / "guides" / "examples" / "pack" / "helpdesk", tmp_path / "elsewhere" / "helpdesk")
-    packs = Packs({}, console)
-    assert packs._load("helpdesk") is None
-    assert packs._load("helpdesk", {"name": "helpdesk", "dir": str(tmp_path / "elsewhere" / "helpdesk")})["dir"] == tmp_path / "elsewhere" / "helpdesk"
-    mr = packs._load("market-risk")
-    assert mr["forms"] and Path(mr["dir"]).is_relative_to(console.parent / "modules")
+    server_side = tmp_path / "server" / "helpdesk"
+    shutil.copytree(console.parent / "docs" / "guides" / "examples" / "pack" / "helpdesk", server_side)
+    server = _Server(server_side)
+    packs = Packs({"ui.user_cache_seconds": 0}, files_dir=tmp_path / "console-files")      # no window: every call asks the server
+    first = _run(packs.current(server, _Me()))
+    asked = dict(server.asked)
+    first[0]["examples"].append("changed by a caller")
+    second = _run(packs.current(server, _Me()))
+    assert server.asked["me"] == asked["me"] + 1, "the person's answer is asked again (a 304)"
+    assert server.asked["pack"] == asked["pack"] and server.asked["file"] == asked["file"], "an unchanged pack is not asked again"
+    assert "changed by a caller" not in second[0]["examples"], "each caller its own copy"
+    help_file = next(server_side.rglob("help.yaml"))
+    help_file.write_text(help_file.read_text() + "\n# touched\n")                         # the pack changes on the server
+    _run(packs.current(server, _Me()))
+    assert server.asked["pack"] == asked["pack"] + 1, "a changed pack (its digest) is asked again"
+    assert server.asked["file"] == asked["file"], "a guide whose content did not change is not fetched again"
 
 
-def test_a_pack_s_files_are_parsed_once_while_unchanged_and_again_when_one_changes(tmp_path):
-    """The console parsed every enabled pack's YAML on each page whose per-user cache was cold (about a second of its event loop):
-    it keeps what it made of a pack while its pack.yaml and the console files it names are unchanged, and reads them again when one
-    changes. Each caller gets its own copy."""
-    import os
+def test_while_the_server_is_away_the_last_answer_is_kept_for_a_while_and_never_a_folder(tmp_path):
+    """Away is said, never guessed (THIN_CONSOLE_DESIGN.md 3, rule 5): the person's last answer is kept for six cache windows; with none,
+    the console shows no pack (the old fallback drew every pack its own resolver found)."""
     import shutil
     from pathlib import Path
-    from unittest import mock
-    from core import packs as P
+    from core.packs import Packs
     console = Path(__file__).resolve().parent.parent
-    shutil.copytree(console.parent / "docs" / "guides" / "examples" / "pack" / "helpdesk", tmp_path / "packs" / "helpdesk")
-    packs = P.Packs({"packs.dir": str(tmp_path / "packs"), "lakes.data_dir": str(tmp_path)}, console)
-    with mock.patch.object(P.yaml, "safe_load", wraps=P.yaml.safe_load) as parse:
-        first = packs._load("helpdesk")
-        n = parse.call_count
-        first["examples"].append("changed by a caller")
-        second = packs._load("helpdesk")
-        assert parse.call_count == n, "unchanged files are not parsed again"
-        assert "changed by a caller" not in second["examples"], "each caller its own copy"
-        help_file = next((tmp_path / "packs" / "helpdesk").rglob("help.yaml"))
-        st = help_file.stat()
-        help_file.write_text(help_file.read_text() + "\n# touched\n")
-        os.utime(help_file, ns=(st.st_atime_ns, st.st_mtime_ns + 10**9))
-        packs._load("helpdesk")
-        assert parse.call_count > n, "a changed help file reads the pack again"
+    server_side = tmp_path / "server" / "helpdesk"
+    shutil.copytree(console.parent / "docs" / "guides" / "examples" / "pack" / "helpdesk", server_side)
+    server = _Server(server_side)
+    packs = Packs({"ui.user_cache_seconds": 10}, files_dir=tmp_path / "console-files")
+    assert [p["name"] for p in _run(packs.current(server, _Me()))] == ["helpdesk"]
+    server.away = True
+    packs.stamps = type("Changed", (), {"fresh": staticmethod(lambda key, at: False), "touch": staticmethod(lambda key: 0)})()
+    assert [p["name"] for p in _run(packs.current(server, _Me()))] == ["helpdesk"], "the last answer, while the server is away"
+    fresh = Packs({"ui.user_cache_seconds": 10}, files_dir=tmp_path / "other-files")
+    assert _run(fresh.current(server, _Me())) == [], "no answer yet and the server away: no pack, never a folder's"
+
+
+def test_an_older_server_is_said_in_words_never_an_empty_page_in_silence(client, backend, monkeypatch):
+    """A console in front of a server older than itself (no /api/v1/me/console: 404) shows no packs and says so on every page and on
+    Admin -> Health: upgrade the servers before the consoles."""
+    from core.backend import BackendError
+    from core.server_facts import OLDER
+
+    async def older(ident=None, etag=None):
+        raise BackendError(404, "DRS-4040", "/me/console: 404")
+    monkeypatch.setattr(backend, "me_console", older)
+    client.app.state.packs.forget_all()
+    try:
+        page = client.get("/t").text
+        assert "data-server-older" in page and "older than the console" in page and "Upgrade the servers before the consoles" in page
+        assert client.app.state.packs.notice() == OLDER
+    finally:
+        monkeypatch.undo()
+        client.app.state.packs.forget_all()
+    client.get("/t")
+    assert client.app.state.packs.notice() == "", "an answer from the server clears it"
+
+
+def test_a_shipped_pack_guide_kept_in_the_console_s_folder_still_links_into_docs(client, with_packs):
+    """A pack's guide arrives from the server and is kept in the console's temp folder, not beside the pack; its links into the repository's
+    docs/ (``../../../../../docs/contracts/packs/gleif.md``, written as the guide sits in its pack) still open those documents in Help."""
+    import re
+    with_packs("core", "gleif")
+    page = client.get("/help/gleif-pack")
+    assert page.status_code == 200
+    body = page.text
+    assert 'href="/help/docs-contracts-packs-gleif' in body, "the link to the pack's data contract opens it in Help"
+    assert not re.search(r'data-unavailable="[^"]*docs/', body), "no link into docs/ is left unavailable"
+    kept = [str(g["path"]) for p in client.app.state.packs._console.values() for g in p["value"]["guides"]]
+    assert kept and not any("/config/packs/" in x for x in kept), "the guide is the console's copy, not the pack's file"

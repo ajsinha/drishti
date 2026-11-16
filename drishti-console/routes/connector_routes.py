@@ -110,7 +110,7 @@ async def _type_readme_html(request: Request, plugin) -> dict:
 
 @router.get("/api/types/{type_}/readme")
 async def api_type_readme(request: Request, type_: str):
-    """A connector type's README as the server gives it (front matter and markdown), for tools and AI. Administrators only."""
+    """A connector type's README as the server gives it (front matter and markdown), for tools. Administrators only."""
     try:
         return await _server(request, "GET", f"/types/{quote(type_)}/readme")
     except BackendError as e:

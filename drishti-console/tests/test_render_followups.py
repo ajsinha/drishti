@@ -16,6 +16,7 @@
 server's edition) hides its kind says so plainly, naming the lens, on the console's page, in /api/view (the renderer's fix) and in the embed
 API v2; the playground opens on an entity the server holds and the person may open, in their lens, or says why there is none; and the
 renderer's one version (1.2.0; 0.1.0 to 1.1.0 retired, and Elements 2.0 and 2.1 with them)."""
+import server_answers
 import json
 
 from core import render_dist as rd
@@ -36,7 +37,7 @@ def _hidden(monkeypatch, backend):
 
 def test_a_view_the_lens_hides_names_the_lens_never_the_id(backend, monkeypatch):
     app = _app(backend, monkeypatch)
-    app.state.editions.learn({"product": "Drishti", "edition": None, "lenses": ["world"]})
+    server_answers.follow(app, {"product": "Drishti", "edition": None, "lenses": ["world"]})
     alice = _client(app)
     alice.post("/lens/world")
     _hidden(monkeypatch, backend)
@@ -68,7 +69,7 @@ def test_the_embed_api_says_it_too(backend, monkeypatch):
 
 def test_the_playground_opens_on_an_entity_the_server_holds_in_the_lens(backend, monkeypatch):
     app = _app(backend, monkeypatch)
-    app.state.editions.learn({"product": "Drishti", "edition": None, "lenses": ["world"]})
+    server_answers.follow(app, {"product": "Drishti", "edition": None, "lenses": ["world"]})
     alice = _client(app)
     asked = []
 

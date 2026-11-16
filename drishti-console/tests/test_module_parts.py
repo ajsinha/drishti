@@ -36,7 +36,7 @@ def _fresh(client, tmp_path, monkeypatch):
     from core.module_parts import ModuleParts
 
     old = client.app.state.module_parts
-    parts = ModuleParts(tmp_path / "parts", old.web, old.shipped, 0.0)
+    parts = ModuleParts(tmp_path / "parts", old.web, 0.0)
     monkeypatch.setattr(client.app.state, "module_parts", parts)
     monkeypatch.setattr(client.app.state.editions.modules, "parts", parts)
     return parts
@@ -67,8 +67,6 @@ def test_install_remove_and_reinstall_take_every_surface_with_them(client, backe
     assert "Hello, asha" in page.text and 'name="drishti-module-page" content="greeter"' in page.text
     assert "/m/greeter/hello/world" in _menu_links(c.get("/t").text)                   # its menu entry
     assert 'data-home-card="GREETER world"' in c.get("/").text                         # its Home card
-    assert "greeter_greet" in c.get("/api/ai/module-tools").text                       # its AI tool
-    assert "greeter_greet" in c.get("/admin/ai").text
     assert "/help/section/module-greeter" in c.get("/help").text                       # its Help: a section
     assert "greeter: the guide" in c.get("/help/section/module-greeter").text
     go = c.get("/go?q=GREETER%20asha%20%3CGO%3E", follow_redirects=False)
@@ -83,7 +81,6 @@ def test_install_remove_and_reinstall_take_every_surface_with_them(client, backe
     assert c.get("/m/greeter/static/1.0.0/drishti_module.css").status_code == 410
     assert "/m/greeter/hello/world" not in c.get("/t").text
     assert 'data-home-card="GREETER world"' not in c.get("/").text
-    assert "greeter_greet" not in c.get("/api/ai/module-tools").text
     assert "/help/section/module-greeter" not in c.get("/help").text
     said = c.get("/go?q=GREETER%20asha%20%3CGO%3E", follow_redirects=False).headers["location"]
     assert "needs%20module%20greeter" in said or "needs+module+greeter" in said

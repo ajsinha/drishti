@@ -25,7 +25,7 @@
   {% if HEADLINE %}<p class="about-headline">{{ HEADLINE }}</p>{% endif %}
   <p class="about-tag">{{ TAGLINE }}</p>
   <p>A live, keyboard-driven terminal, risk engine and BI workbench: any record from any system as a dense, linked, ticking view, risk computed for any set of trades when you ask, and every figure explained down to the data it came from.</p>
-  <p><span class="ab-ver mono" data-version>Version {{ (info.version if info and info.version else ASSET_V) }}</span></p>
+  {% set sv_version = (info.version if info and info.version else server_about().version) %}{% if sv_version %}<p><span class="ab-ver mono" data-version>Version {{ sv_version }}</span></p>{% endif %}
   <div class="ab-cta">
     {% if AUTH_ENABLED and not me %}<a class="btn-pill btn-accent" href="{{ BASE }}/login"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i> Sign in</a>
     {% else %}<a class="btn-pill btn-accent" href="{{ BASE }}/t"><i class="bi bi-terminal" aria-hidden="true"></i> Open the terminal</a>{% endif %}
@@ -60,7 +60,7 @@
     <article class="ab-card"><i class="bi bi-filetype-py" aria-hidden="true"></i><h3>Python, where it belongs</h3><p>Python measures, visuals and Transforms, sandboxed; risk engines on warm compute pools; your own Python in the browser on a masked extract.</p></article>
     <article class="ab-card"><i class="bi bi-calendar-check" aria-hidden="true"></i><h3>Reports, alerts and the inbox</h3><p>Scheduled reports and statements, page-exact in PDF and Excel, one per recipient with their own masks; rules that raise alerts; share and discuss a finding.</p></article>
     <article class="ab-card"><i class="bi bi-diagram-3" aria-hidden="true"></i><h3>{{ PRODUCT }}*net</h3><p>Several servers act as one: any of them answers any request with the caller's masks, and the console moves to another server when one stops, with no new sign-in.</p></article>
-    <article class="ab-card"><i class="bi bi-window-stack" aria-hidden="true"></i><h3>{{ PRODUCT }} Elements and AI</h3><p>Embed a view, report or panel in another page with one tag. The AI layer is off by default and, when on, sees only what the person may see.</p></article>
+    <article class="ab-card"><i class="bi bi-window-stack" aria-hidden="true"></i><h3>{{ PRODUCT }} Elements</h3><p>Embed a view, report or panel in another page with one tag, under the person's own rights and masks.</p></article>
     <article class="ab-card"><i class="bi bi-palette" aria-hidden="true"></i><h3>Ten themes</h3><p>Terminal, Parchment, Wall Street, Blue, Green, Crimson and Crimson dark, and the Terminal look in green, crimson or blue; every text colour checked at 4.5:1.</p></article>
   </div></section>
   <section class="ab-sec" id="performance"><h2>Measured performance</h2>

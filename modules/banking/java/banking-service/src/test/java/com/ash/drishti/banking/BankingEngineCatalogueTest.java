@@ -63,7 +63,7 @@ class BankingEngineCatalogueTest {
             assertThat(doc.path("drishti").path("engines").path(id).path("enabled").asText()).as(id)
                     .isEqualTo("${" + n.path("env").asText() + ":" + n.path("shipped").asBoolean() + "}");
         }
-        assertThat(Files.readAllBytes(REPO.resolve("drishti-console/plugins/banking/engines.yaml")))
-                .isEqualTo(Files.readAllBytes(jar.resolve(EngineCatalogue.MODULE_RESOURCE)));
+        assertThat(REPO.resolve("drishti-console/plugins/banking/engines.yaml")).as("the console keeps no copy: the catalogue comes in its installation answer")
+                .doesNotExist();
     }
 }

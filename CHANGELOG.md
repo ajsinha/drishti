@@ -34,6 +34,91 @@
   and About names that business date (WORLD_DATA_GUIDE, External data feeds, section 4). `GET /` on the server answers what it is (product,
   version, the API's about and health addresses, where the UI is) instead of a bare 404. A desk-wall tile's title wraps in two lines and a
   big number shrinks to the tile instead of being cut.
+- **The thin console, step S5: the tools read the Java resolver's answer; the Python resolver is deleted.** The kernel jar answers
+  `resolve --json [--root DIR | --site DIR] [--connectors DIR]` with no server running (every pack's folder and layer, the modules, the
+  connectors as the server merges each template under the site's file, the templates, the inbox rules and every problem; secrets stay
+  references). `tools/resolved.py` runs it, keeps the answer under `<data>/tmp/resolved/` until an input changes, and gives the tools
+  `pack_dir`, `pack_dirs`, `manifests`, `repository()`, `current()` and `site()` with no rule of its own. The 50 tools and tests that
+  imported `drishti-console/core/resolution.py` read it now; `core/resolution.py` and its test are deleted, and the fixtures
+  `pack-resolution/cases.yaml` and `connector-layers/cases.yaml` are the Java resolver's own. **Every Python tool and generator needs a
+  built jar** (`python tools/drishti.py build jar`; an unbuilt checkout says so in one line).
+- **The thin console, smaller leftovers.** The person's answer (`GET /api/v1/me/console`) carries `admin-pages`, the Admin pages their
+  roles open, from the server's one list; the console's `ADMIN_PAGES` copy is deleted (the `ADMIN` command and the page gate read the
+  answer). Which module a command word or an engine belongs to comes from the installation answer's modules (their manifests' words and
+  engines): the `engines:` and `words:` lists of the console's `plugins/banking/plugin.yaml` are deleted.
+- **The thin console, step S8a: the Trading and Market landings' figures are computed by their modules on the server.** The trading
+  and market-data modules have a server part now (`modules/trading/java/trading-service`, `modules/market-data/java/market-data-service`,
+  packed into their `.dmod`s): `GET /api/v1/trading/landing/{role,me,valuations,blotter,risk,limits,pnl-var,traders}`,
+  `POST /api/v1/trading/landing/check` and `GET /api/v1/market-data/landing/{desk,moves,quality}`, each worked out as the person from the
+  kernel's and the other modules' API (the new `KernelCalls` of drishti-kernel-api, served by the kernel's `LoopbackKernelCalls`; with
+  `InlineFigures`, `Answers` and `PersonCache`), every total the pivot engine's. The console only passes the answers on (and draws the
+  blotter's grid); `plugins/banking/trading_landing.py` and `market_landing.py` are deleted with their tests. The console's
+  `trading.people` setting moves to the server: `drishti.trading.people`.
+- **AI is not in this release: hidden in the console and off on the server (owner, 2026-11-16).** The console has no AI page, menu item
+  or button: Admin -> AI, its Test connection and overview, the console's `POST /api/ai/chat` and `/api/ai/module-tools`, *Ask about
+  this page* (the About drawer's box and `POST /v/{kind}/{id}/ask`), the BI hooks (*Describe a report*, *Ask the data*, *Explain this
+  number*, *Suggest visuals*, *Explain in plain words*; `drishti_bi-ai.js`, `drishti_bi-design-copilot.js`, `drishti_bi-ai.css`) and the
+  subscription's written summary are deleted, with the `ai: tools:` of a module's `plugin.yaml`, the AI guide and tutorial in Help and
+  their tests. Admin -> Retry now covers packs and connectors. On the server one switch turns all AI on, `drishti.ai.enabled` (off as
+  shipped): the MCP client and *Ask about this page* now need it besides their own switches; while it is off no provider or MCP file is
+  read, no key is asked for and no model is called. Admin -> Health (`/api/v1/admin/health`: `ai`) says **AI: off**. The Java AI layer
+  (`kernel/drishti-ai`) stays for a later release; AI_GUIDE.md and tutorial 10 say they are not in this release.
+- **The thin console, step S6: limits, the secret rule and the host rule are the server's.** The installation answer carries
+  `limits.builder` (`drishti.builder.max-samples`, `max-file-mb`, `max-total-mb`), `limits.controls` (how many `ctl.` parameters a
+  request carries, how long a name and a value) and `limits.form` (FORM's largest row count, `maxRows`); the console checks with the
+  server's numbers and names the server's keys in its refusal. Removed console settings: `builder.max_samples`, `builder.max_file_mb`,
+  `builder.max_total_mb`. Admin -> Configuration shows the server's values as the server masked them and asks the server which of the
+  console's own keys are secrets (`POST /api/v1/admin/settings/secret-keys`, keys only); a secret proposal is refused by the server.
+  The console's copy of the host-address rule (`core/hostrule.py`) is deleted: discovered servers come from the server's member list,
+  which the server's `HostAddress` already checks, and the rule's Python home is `tools/hostaddr.py` (the tools'). The live-channel
+  relay's advertised address is refused only when the address itself is loopback, wildcard or link-local.
+- **The thin console, step S7: the console calls the server's AI layer only.** The console's own AI layer is deleted
+  (`drishti-console/core/ai/`: its providers, registry, policy, masking, limits, MCP client, TLS and proxy rules; `core/retry.py`), with
+  its settings `ai.*`, `mcp.*` and `retry.*` on the console (`DRISHTI_AI_ENABLED`, `DRISHTI_AI_DIR`, `DRISHTI_AI_DEFAULT_MODEL`,
+  `DRISHTI_MCP_ENABLED`, `DRISHTI_MCP_DIR`, `DRISHTI_RETRY_*` on the console) and its tests. The console's `POST /api/ai/chat` passes
+  the call to the server's `POST /api/v1/ai/chat` as the person; Admin -> AI shows the server's layer, its Test connection calls the
+  server's `POST /api/v1/admin/ai/test`. **A site that configured a provider or an MCP server only on the console moves the file to the
+  server's `config/ai` or `config/mcp`** (the same format).
+- **The thin console, step S4: the person's decisions come from the server.** `GET /api/v1/me/console` adds `engines-opened` (each
+  engine's `opens:` evaluated on the server), `grants` (admin, edit, layout, calc, compliance, approve, as the server enforces them) and
+  `modules` (the person's modules, lenses and functions, as `GET /api/v1/modules`), so the console asks one answer per person instead
+  of two. The session answer (`GET /api/v1/auth/sessions/{id}`, and the one that opens a session) carries `admin`, the server's
+  decision from its role definitions: a role defined `admin: true` under another name now opens the Admin pages on the console too,
+  where the console used to look for the role names `admin` and `*`. Deleted in the console: the evaluation of `opens:`
+  (`menus._person_opens`) and the separate per-person modules call (`core/modules.py` `Me`).
+- **The thin console, step S3: the engine catalogue and the under-construction registry come from the server.** The installation answer
+  carries each engine with its catalogue lists (words, menus, Help pages, landings, tiles, lenses, playgrounds, console paths and
+  `opens:`) and the under-construction registry's items (treatment, menu items, Help pages). The console's copies are deleted
+  (`drishti-console/config/engines.yaml`, `drishti-console/plugins/banking/engines.yaml`, with the tests that held them byte-equal to
+  the server's), and so is the console setting `under_construction.file` (`DRISHTI_UNDER_CONSTRUCTION_FILE` on the console). An engine's
+  `opens:` is changed in the module jar's `META-INF/drishti/engines.yaml` only.
+- **The thin console, step S2: distributions, lenses and modules come from the server.** The server compiles the running distribution
+  and sends it in the installation's answer (`GET /api/v1/console/bootstrap`: the filter, the brand, the settings layers it presets, the
+  feature keys, each offered lens's arrangement, and every module with its title and its menus in the sitemap's form); the console draws
+  it and reads no distribution, `kernel.yaml`, lens or module manifest file (`drishti-console/core/distribution.py` is deleted). A
+  console that names its own distribution (`--distribution`) asks the server to compile it (`?distribution=finance`; `409` for a name
+  the server does not have). Admin -> White label reads the new `GET /api/v1/admin/distributions`. The modules the product ships as
+  folders with a console part (trading, genomics) are listed by `GET /public/modules/console` while loaded and handed over like a
+  deployed module's part, so the console reads no modules folder. Removed console settings: `distributions_dir`
+  (`DRISHTI_DISTRIBUTIONS_DIR` on the console), `module_manifests_dir` (`DRISHTI_MODULE_MANIFESTS_DIR` on the console) and `lens.dir`
+  (`DRISHTI_LENS_DIR`); the server reads the lens files from `drishti.lenses-dir` (default `<config>/lenses`). The console's unit tests
+  read recorded answers (`drishti-console/tests/answers/`) that the server's own code writes (`ConsoleAnswersRecordTest`).
+- **The thin console, steps S0 and S1: the server decides, the console draws** ([THIN_CONSOLE_DESIGN.md](docs/architecture/THIN_CONSOLE_DESIGN.md)).
+  `/public/about` carries `stamps` (`installation`, `resolution`, `modules`, `engines`, `packs`); the console asks the new
+  `GET /api/v1/console/bootstrap` (its service identity only; distribution, modules, engines and every command word with whether a pack
+  that has it loads) only when `installation` changed, with `If-None-Match`, and keeps the last answer while the server is away, saying
+  so on Admin -> Health. A person's packs come from `GET /api/v1/me/console` and a pack's workspace starters, Help guides, facts and
+  README sources from `GET /api/v1/packs/{pack}/console` and its allow-listed files: the console reads no pack folder, the packs answer
+  names no folder, and with no answer it shows no pack instead of every pack it found itself. The menus take a pack's command out by
+  the bootstrap's `commands`. The version the footer and About show is the server's; the console's own build is only a diagnostic on
+  Admin -> Health (console build against server build). Removed: the console setting `packs.enabled`, and with it the `DRISHTI_PACKS`
+  that `bin/start-console` (`.sh`, `.ps1`), the compose console and the ECS console and node task definitions set for the console (the
+  server's own `DRISHTI_PACKS` is unchanged; the tools' offline resolver, `drishti-console/core/resolution.py`, still reads it until it
+  is replaced by the Java resolver's JSON). Build -> New pack's **Install on this node** needs `builder.pack_designer_modules_dir` (an
+  absolute path) and no longer works out the server's folder. A console in front of an older server (no `stamps`, no `/me/console`)
+  shows no packs and says on every page and on Admin -> Health that the server is older: **upgrade the servers before the consoles**;
+  the rolling upgrade runner (`tools/rolling.py`) now upgrades the consoles last. A pack's Help guide, kept in the console's own folder,
+  keeps its links into `docs/`.
 ## 2.9.11.i5 (2026-11-16)
 
 - **One folder layout for every module.** Each `modules/<module>/` holds its `.dmod` content at the top, as inside the package

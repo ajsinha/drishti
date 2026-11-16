@@ -15,6 +15,7 @@
 """Drishti Risk's three Home landings in a browser (LENSES.md › The design): the console with the stand-in server answering the engines'
 VaR and exposure calls as the engines shape them (port 17962). Each landing fills its panels from those answers, fits a phone without
 sideways scrolling, and draws in every theme; skipped when Playwright or its Chromium is missing."""
+import server_answers
 import threading
 import time
 
@@ -66,7 +67,7 @@ def risk_console():
     app.state.backend = RiskBackend()
     # a lens is a workspace the person works in (docs/admin/LENSES.md), never the server's edition: the server offers it,
     # and the person's settings name it
-    app.state.editions.learn({"product": "Drishti Risk", "edition": None, "lenses": ["risk"]})
+    server_answers.follow(app, {"product": "Drishti Risk", "edition": None, "lenses": ["risk"]})
     async def _in_risk(ident=None):
         return {"lens": "risk"}
     app.state.backend.settings = _in_risk

@@ -74,7 +74,7 @@ PARKED_FUNCTIONS = {"STR": "parked: FRTB/stress out of i4 scope (owner 2026-11-1
                     "FRTB": "parked: FRTB/stress out of i4 scope (owner 2026-11-15)",
                     "XOFC": "parked until the CCR engine is built (owner 2026-11-15): test stacks start with the official exposure capture off"}
 RESERVED = ["BI", "RUPAKA", "FORM", "FUNC", "WHAT", "DATAMAP", "DATA", "EXPORT", "PIVOT"]
-ADMIN_PAGES = ["users", "roles", "packs", "commands", "tokens", "access", "connectors", "artifacts", "ai", "loads", "lakes", "collab",
+ADMIN_PAGES = ["users", "roles", "packs", "commands", "tokens", "access", "connectors", "artifacts", "loads", "lakes", "collab",
                "embedding", "bi", "audit", "net", "edits", "compute", "engines", "health", "caches", "capacity", "scopes", "data-out",
                "configuration", "bindings", "white-label"]
 VAR_SUB = ["VAR BANK", "VAR BANK EXPLAIN", "VAR BANK BACKTEST", "VAR REPORTS", "VAR DESK", "PLAY VAR", "SMAT", "SWIN BANK", "FRSA BANK",

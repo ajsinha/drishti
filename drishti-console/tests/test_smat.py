@@ -18,6 +18,7 @@ entity pages and the VaR page offered only where the word is (Drishti Risk; not 
 type-ahead. The server's own logic (the values against the stored vectors, PV to P&L, ranks, gaps, masks) is VarMatrixApiTest's."""
 from __future__ import annotations
 
+import server_answers
 import csv
 import io
 
@@ -83,7 +84,7 @@ def _app(backend, monkeypatch, about=None, roles=("*",)):
         assert app.state.editions.learn(about)
 
     async def current(cookie, _backend):
-        return Identity(user=cookie or "alice", display="Alice", desk="Risk", roles=roles)
+        return Identity(user=cookie or "alice", display="Alice", desk="Risk", roles=roles, admin=bool({"*", "admin"} & set(roles)))
 
     monkeypatch.setattr(app.state.auth, "current", current)
     c = TestClient(app)
@@ -191,7 +192,7 @@ def test_a_lens_hides_no_scenario_matrix(backend, monkeypatch):
     from test_edition import _app as edition_app, _client as edition_client
 
     app = edition_app(backend, monkeypatch)
-    app.state.editions.learn({"product": "Drishti", "edition": None, "lenses": ["risk", "market", "world"]})
+    server_answers.follow(app, {"product": "Drishti", "edition": None, "lenses": ["risk", "market", "world"]})
     alice = edition_client(app, "alice")
     for lens in ("market", "world", "risk"):
         assert alice.post(f"/lens/{lens}", follow_redirects=False).status_code == 303

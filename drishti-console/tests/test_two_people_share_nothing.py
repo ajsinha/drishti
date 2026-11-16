@@ -19,6 +19,7 @@ two servers. Before 2.9.11.b the Describe table was one process-wide copy of the
 without the roles or the server."""
 from __future__ import annotations
 
+import server_answers
 import asyncio
 
 import httpx
@@ -26,11 +27,9 @@ import pytest
 
 from conftest import CONSOLE, FakeBackend
 from core import servers
-from plugins.banking import trading_landing
 from core.app import create_app
 from core.auth import Identity
 from core.config import load_settings
-from trading_fake import TradingBackend
 
 FULL_ABOUT = {"product": "Drishti", "edition": None, "lenses": ["trading"]}   # a full instance offering the Trading workspace
 
@@ -44,7 +43,8 @@ def _people(app):
     """A person per cookie ``user|role,role`` (roles ("*",) when none)."""
     async def current(cookie, _backend):
         user, _, roles = (cookie or "ann").partition("|")
-        return Identity(user=user, display=user.title(), desk="", roles=tuple(roles.split(",")) if roles else ("*",))
+        return Identity(user=user, display=user.title(), desk="", roles=tuple(roles.split(",")) if roles else ("*",),
+                        admin=not roles or bool({"*", "admin"} & set(roles.split(","))))
 
     app.state.auth.current = current
 
@@ -98,77 +98,3 @@ def test_describe_reads_each_persons_own_mnemonics_at_the_same_time():
     asyncio.run(run())
 
 
-def _trading_app(backend):
-    app = create_app(load_settings(CONSOLE / "config"))
-    app.state.backend = backend
-    app.state.editions.learn(FULL_ABOUT)
-    app.state.editions.lenses["trading"].spec["trading"]["people"]["t.brennan"] = {"desk": "DESK-RATES", "role": "desk-head"}
-    _people(app)
-
-    async def settings(ident=None):
-        return {"lens": "trading"}                                   # everyone works in the Trading workspace
-
-    backend.settings = settings
-    return app
-
-
-async def _trading(app, cookie: str, part: str) -> dict:
-    async with _client(app, cookie) as c:
-        r = await c.get(f"/api/home/trading/{part}")
-        assert r.status_code == 200, r.text
-        return r.json()
-
-
-@pytest.mark.parametrize("part", ["valuations", "traders"])
-def test_trading_figures_follow_the_persons_roles_at_the_same_time(part):
-    people = ("t.brennan|viewer", "t.brennan|author")                 # the same person, a role with raw and one without
-    async def run():
-        alone = {}
-        for who in people:
-            trading_landing.forget()
-            alone[who] = await _trading(_trading_app(TradingBackend()), who, part)
-            assert alone[who].get("available"), alone[who]
-        assert alone[people[0]] != alone[people[1]], "a role without raw must see less for this test to mean anything"
-        trading_landing.forget()
-        app = _trading_app(TradingBackend())
-        got = await asyncio.gather(*[_trading(app, who, part) for _ in range(4) for who in people])
-        for i, answer in enumerate(got):
-            assert answer == alone[people[i % 2]], (i, people[i % 2])
-        trading_landing.forget()
-    asyncio.run(run())
-
-
-def test_the_same_person_on_two_servers_is_two_people():
-    """The keys carry the server: what one server answered is never served for another (core.servers.CURRENT is the request's)."""
-    class TwoServers(TradingBackend):
-        async def search(self, q, ident=None):
-            out = await super().search(q, ident)
-            if servers.current() == "other" and q.split()[0].upper() == "TVAL":
-                for r in out.get("rows") or []:
-                    v = r.get("values") or {}
-                    if "$.MTM" in v:
-                        v["$.MTM"] = v["$.MTM"] * 2                           # the other server's figures differ
-            return out
-
-    async def on(server: str, backend):
-        token = servers.CURRENT.set(server)
-        try:
-            me = Identity(user="t.brennan", display="T", desk="", roles=("*",))
-            scope = trading_landing.Scope(kind="desk", id="DESK-RATES", books=["BOOK-RATES-1", "BOOK-RATES-2", "BOOK-RATES-3"])
-            return trading_landing.public(await trading_landing.valuations(backend, me, scope, {}))
-        finally:
-            servers.CURRENT.reset(token)
-
-    async def run():
-        alone = {}
-        for s in ("default", "other"):
-            trading_landing.forget()
-            alone[s] = await on(s, TwoServers())
-        assert alone["default"] != alone["other"]
-        trading_landing.forget()
-        backend = TwoServers()
-        got = await asyncio.gather(*[on(s, backend) for _ in range(3) for s in ("default", "other")])
-        for i, answer in enumerate(got):
-            assert answer == alone["default" if i % 2 == 0 else "other"], i
-        trading_landing.forget()
-    asyncio.run(run())

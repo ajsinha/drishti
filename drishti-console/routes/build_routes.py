@@ -27,6 +27,7 @@ from fastapi.responses import JSONResponse, RedirectResponse, Response
 from core import builder, controls, designs, partial, sutra_diff
 from core.backend import BackendError
 from core.csrf import BodyError, json_body
+from core.builder import Limits as _Limits
 from routes.common import ident, render
 
 router = APIRouter(prefix="/build", include_in_schema=False)
@@ -46,7 +47,7 @@ def _studio_kind(request: Request) -> str:
 
 
 async def _body(request: Request) -> dict:
-    body = await json_body(request, limit=request.app.state.builder_limits.max_total_bytes * 2 + 65536)
+    body = await json_body(request, limit=_Limits.of(request.app).max_total_bytes * 2 + 65536)
     if not isinstance(body, dict):
         raise BodyError(400, "send a JSON object")
     return body
@@ -121,7 +122,7 @@ async def new_page(request: Request):
         sutras = await request.app.state.backend.sutras(me)
     except BackendError:
         sutras = []
-    return render(request, "build/new.html", limits=request.app.state.builder_limits.as_dict(), examples=cards, sutras=sutras,
+    return render(request, "build/new.html", limits=_Limits.of(request.app).as_dict(), examples=cards, sutras=sutras,
                   studio_kind=_studio_kind(request), screen="build")
 
 
@@ -143,7 +144,7 @@ async def design_page(request: Request, id_: str, tab: str = "", sample: str = "
         design = await request.app.state.backend.designs("GET", f"/{id_}", ident(request))
     except BackendError as e:
         return render(request, "build/design.html", status_code=e.status, design=None, error=e, screen="build",
-                      limits=request.app.state.builder_limits.as_dict())
+                      limits=_Limits.of(request.app).as_dict())
     if design.get("base") and not design.get("samples"):
         # a Design of a pack's Sutra with nothing to draw on: the first record of the pack's samples its match holds for (Samples says so)
         try:
@@ -161,7 +162,7 @@ async def design_page(request: Request, id_: str, tab: str = "", sample: str = "
             "status": design.get("status", "draft"),
             "tab": tab if tab in ("design", "yaml", "summary", "notes", "split") else "", "sample": sample, "canSave": bool(settings.get("save")), "review": review,
             "notice": notice[:300], "base": design.get("base") or "", "notes": design.get("notes") or "", "about": design.get("about") or "", "form": design.get("form") or ""}
-    return render(request, "build/design.html", design=design, init=init, error=None, screen="build", limits=request.app.state.builder_limits.as_dict(),
+    return render(request, "build/design.html", design=design, init=init, error=None, screen="build", limits=_Limits.of(request.app).as_dict(),
                   examples=request.app.state.examples.names())
 
 
@@ -254,7 +255,7 @@ async def open_example(request: Request, name: str):
 async def add_files(request: Request, id_: str):
     """Body ``{files: [{name, text}]}`` (.json: one document; .jsonl: one per line). 413 DRS-5005 over a whole-request limit; a
     file that cannot be used is listed with its problems and the rest are kept."""
-    limits = request.app.state.builder_limits
+    limits = _Limits.of(request.app)
     body = await json_body(request, limit=limits.max_total_bytes * 2 + 65536)      # JSON escaping can double text; chunked bodies too
     try:
         samples, report = builder.read_files(body.get("files") if isinstance(body, dict) else None, limits)
@@ -353,7 +354,7 @@ async def preview_panels(request: Request, id_: str, sample: str = "", panels: s
     """Some panels of the Design's preview as ready HTML, built with the controls' values (``?panels=schedule&ctl.legs=1``): what the
     Controls tab's small preview asks for when a control changes, and the controls themselves (options and values as the server resolved
     them). The same answer as the page's ``/v/<kind>/<id>/panels``, for a Design's sample."""
-    ctl = controls.from_query(request.query_params)
+    ctl = controls.of(request)
     params = {"sample": sample or None, **({"panels": ",".join(p for p in panels.split(",") if p) or "-"} if panels else {}), **ctl}
     try:
         vm = await request.app.state.backend.designs("GET", f"/{id_}/preview", ident(request), **params)
@@ -369,7 +370,7 @@ async def preview_panels(request: Request, id_: str, sample: str = "", panels: s
 @router.get("/designs/{id_}/preview")
 async def preview(request: Request, id_: str, sample: str = ""):
     """The Design's Sutra against one of its samples, as Studio draws it. A stored entity the user may not open is a 403 'no access'."""
-    ctl = controls.from_query(request.query_params)
+    ctl = controls.of(request)
     try:
         vm = await request.app.state.backend.designs("GET", f"/{id_}/preview", ident(request), sample=sample or None, **ctl)
     except BackendError as e:

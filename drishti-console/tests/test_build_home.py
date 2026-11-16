@@ -17,6 +17,7 @@ counts, the lists with lineage (uses, used by), the first-visit tiles, one searc
 and two people with different roles and lenses seeing different menus and kinds (session isolation)."""
 from __future__ import annotations
 
+import server_answers
 import re
 
 import pytest
@@ -86,7 +87,8 @@ def _app(backend, monkeypatch, people: dict | None = None):
 
     async def current(cookie, _backend):
         who = cookie or "alice"
-        return Identity(user=who, display=who.title(), desk="Risk", roles=tuple(people.get(who, ("viewer",))))
+        return Identity(user=who, display=who.title(), desk="Risk", roles=tuple(people.get(who, ("viewer",))),
+                        admin=bool({"*", "admin"} & set(people.get(who, ()))))
 
     monkeypatch.setattr(app.state.auth, "current", current)
     return app
@@ -186,7 +188,7 @@ def test_old_homes_redirect_here(backend, monkeypatch):
 def test_two_people_with_different_roles_and_lenses_see_different_menus_and_kinds(backend, monkeypatch):
     """Session isolation: nothing of one person's menus, lens or Build home leaks to another, request after request, either order."""
     app = _app(backend, monkeypatch, {"alice": ("admin",), "bob": ("viewer",)})
-    app.state.editions.learn({"product": "Drishti", "edition": None, "lenses": ["risk", "world", "market", "trading"]})
+    server_answers.follow(app, {"product": "Drishti", "edition": None, "lenses": ["risk", "world", "market", "trading"]})
     alice, bob = _client(app, "alice"), _client(app, "bob")
     for _ in range(2):                                                                               # the full product: the role decides
         ha, hb = alice.get("/build").text, bob.get("/build").text

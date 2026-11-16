@@ -21,6 +21,7 @@ from pathlib import Path
 
 import yaml
 
+import server_answers
 from core import menus
 from test_modules_off import ALL_ON, BANKING_OFF, _answer, _console
 from test_edition import _client
@@ -33,7 +34,10 @@ CONSOLE = Path(__file__).resolve().parent.parent
 def test_the_sitemap_keeps_the_kernels_pages_and_the_modules_bring_their_menus():
     kernel = {m["id"] for m in yaml.safe_load((CONSOLE / "config" / "sitemap.yaml").read_text(encoding="utf-8"))["menus"]}
     assert kernel == {"views", "domains", "create", "bi", "build", "admin", "help", "me"}
-    merged = {m["id"]: m for m in menus.spec_of(CONSOLE)["menus"]}
+    from types import SimpleNamespace
+    answer = server_answers.bootstrap("all")                                  # the modules' menus come with the server's answer
+    eds = SimpleNamespace(server_modules={m["id"]: m for m in answer["modules"]}, _digest=answer["digest"])
+    merged = {m["id"]: m for m in menus._spec(CONSOLE, eds)["menus"]}
     assert merged["risk"]["_module"] == "banking" and merged["companies"]["_module"] == "capitalmarkets"
     assert merged["markets"]["_module"] == "market-data"                       # the one Markets menu, with the columns others add
     assert {c.get("_module") for c in merged["markets"]["columns"]} >= {"market-data", "economy", "capitalmarkets"}
@@ -47,10 +51,10 @@ def test_risk_is_in_the_bar_only_while_banking_is_active(backend, monkeypatch):
     assert RISK not in off.get("/t").text                                       # switched off at this site: absent, not greyed
     # removed (the server's module list no longer has it), then installed again: live, at the next page
     eds = app.state.editions
-    known = dict(eds.server_modules or {"banking": object(), "market-data": object(), "economy": object(), "capitalmarkets": object()})
-    eds.server_modules = {k: v for k, v in known.items() if k != "banking"}
+    whole = eds.answer
+    eds.follow(server_answers.with_modules(whole, lambda m: m != "banking"))
     assert RISK not in c.get("/t").text
-    eds.server_modules = known
+    eds.follow(whole)
     assert RISK in c.get("/t").text
     # unloaded on the server (its about answer stops listing it), then loaded again
     app.state.editions.learn({**ALL_ON, "modules": ["core", "economy", "capitalmarkets", "market-data"]})

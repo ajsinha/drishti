@@ -16,7 +16,7 @@
 """The product's packs live in the module that owns them (docs/architecture/KERNEL_AND_MODULES.md section 18.4): every pack a module's
 manifest lists is in that module's packs folder (modules/<id>/packs/<pack>, banking's in modules/banking/packs), only the listed
 packs count, config/packs holds a site's own packs and the kernel's ``core`` folder (core, gleif, compute-demo), and the one resolver
-(drishti-console/core/resolution.py; the server's twin com.ash.drishti.api.resolution) finds exactly those folders."""
+(the Java resolver, com.ash.drishti.api.resolution, read through tools/resolved.py) finds exactly those folders."""
 from __future__ import annotations
 
 import sys
@@ -26,10 +26,10 @@ import pytest
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT / "drishti-console") not in sys.path:
-    sys.path.insert(0, str(ROOT / "drishti-console"))
-from core import resolution as R  # noqa: E402
-from core.resolution import duplicates, manifests, pack_dir, pack_dirs  # noqa: E402
+if str(ROOT / "tools") not in sys.path:
+    sys.path.insert(0, str(ROOT / "tools"))
+import resolved as R  # noqa: E402
+from resolved import duplicates, manifests, pack_dir, pack_dirs  # noqa: E402
 
 pytestmark = pytest.mark.static   # a quick file check: the drill's gate runs it (TEST_HARNESS.md, "Quick file checks")
 
@@ -50,14 +50,14 @@ def test_every_pack_a_module_lists_is_in_that_module(mid, folder, name):
     m = yaml.safe_load(manifest.read_text(encoding="utf-8")) or {}
     assert m.get("pack") in (None, name), f"{manifest.relative_to(ROOT)}: pack {m.get('pack')} in folder {name}"
     assert (folder / "README.md").is_file(), f"{folder.relative_to(ROOT)}: no README.md (the README standard)"
-    assert REPO.packs[name].label == f"module:{mid}"
+    assert REPO.packs[name].origin == f"module:{mid}"
 
 
 def test_the_site_holds_no_shipped_pack_and_the_kernel_holds_its_three():
     """config/packs holds a site's own packs and the kernel's core folder: no site pack of the checkout, nothing not read."""
     assert not REPO.packs.of_origin(R.SITE), [p.name for p in REPO.packs.of_origin(R.SITE)]
     assert {p.name for p in REPO.packs.of_origin(R.KERNEL)} == KERNEL_PACKS
-    assert not REPO.packs.unread and not REPO.problems, [p.message for p in REPO.problems]
+    assert not REPO.problems, REPO.problems
 
 
 def test_the_resolver_finds_exactly_the_modules_packs_and_the_kernels():

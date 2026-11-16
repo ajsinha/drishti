@@ -1216,19 +1216,9 @@ A layer with nothing to say is not shown. If you see **What each number means** 
 by one: term, unit and sign), your pack has a glossary; it comes with the next stage of the feature, so older servers
 do not show it.
 
-### Ask about this page (when your administrator has turned it on)
+### AI
 
-At the end of the drawer, a box **Ask about this page** answers a question in your own words ("is this number a loss?", "why is the
-curve panel empty?"). It is not on unless your administrator switched it on for your pack; if you do not see it, it is off. The
-answer comes from a language model that is given only this page's explanation (labels, definitions, the pack's guide), not the
-document's values unless the administrator chose that, and never a field hidden from your role. It can be wrong: the layers above
-are the reference. If it cannot be reached the box says "Ask is unavailable"; everything else in the drawer works. `Alt+?` jumps to the box.
-
-### Ask the data, explain a number, describe a report (BI, when your administrator has turned AI on)
-
-In BI ([GOVERNANCE_AND_AI.md section 29](bi/GOVERNANCE_AND_AI.md#1-ai-in-bi-report-from-words-ask-the-data-explain-this-number)), a report page shows a box **Ask the data**: type "notional by desk" and you get a table, a chart that suits it and the query that was asked, answered from
-what *you* may see (the same rows and masks as the report). The light bulb in a visual's header **explains** its number: where it comes from and what it is made of. In the designer,
-**Describe a report** drafts a report from your words; you read it, use it and save it, or not. These are off unless your administrator switched them on; if you do not see the box and the bulb, they are off.
+AI is not in this release: no page, menu item or button of the console calls a model.
 
 ### The keys
 

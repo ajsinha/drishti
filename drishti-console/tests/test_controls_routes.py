@@ -52,9 +52,12 @@ def test_the_request_parameters_are_read_with_limits():
         def getlist(self, k):
             return [self[k]]
 
-    got = controls.from_query(Q({"ctl.leg": "L2", "ctl.when": "2026-10-01..2026-12-31", "q": "x", "ctl.": "bad", "ctl." + "x" * 60: "long"}))
+    got = controls.from_query(Q({"ctl.leg": "L2", "ctl.when": "2026-10-01..2026-12-31", "q": "x", "ctl.": "bad", "ctl." + "x" * 60: "long"}),
+                              controls.Limits(32, 40, 2000))
     assert got == {"ctl.leg": "L2", "ctl.when": "2026-10-01..2026-12-31"}
-    assert controls.from_query(Q({"ctl.a": "v" * 5000}))["ctl.a"] == "v" * controls.MAX_VALUE
+    bounds = controls.Limits(max_controls=32, max_key=40, max_value=2000)     # the server's (limits.controls of its installation answer)
+    assert controls.from_query(Q({"ctl.a": "v" * 5000}), bounds)["ctl.a"] == "v" * 2000
+    assert controls.from_query(Q({"ctl.a": "v" * 5000}))["ctl.a"] == "v" * 5000           # before the server's answer: the server bounds
     assert controls.to_query({"ctl.leg": "L2", "ctl.when": "2026-10-01..2026-12-31"}) == "ctl.leg=L2&ctl.when=2026-10-01..2026-12-31"
 
 

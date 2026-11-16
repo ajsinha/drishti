@@ -33,12 +33,6 @@ from core.edition_gate import feature_on
 _cache: dict[str, tuple[tuple, dict]] = {}
 
 
-def modules_dir(console_dir: Path) -> Path:
-    """The modules' folder (``drishti.modules.home``, ``DRISHTI_MODULES_HOME``; the one resolver's setting)."""
-    from core import resolution
-    return resolution.Settings.from_env(console_dir=console_dir).modules_home
-
-
 def _merged(kernel: list, extra: list) -> list:
     """The kernel's menus with the modules' (their manifests' ``console.menus``) after Views: a module's menu of a new id joins; one of
     an id already there adds its columns to it (the one Markets menu: market-data's, with capital-markets' and economy's columns)."""
@@ -80,23 +74,35 @@ def _active(request, tagged: dict) -> bool:
     return module_active(request, tagged.get("_module"), tagged.get("_domain"))
 
 
-def _spec(console_dir: Path) -> dict:
-    """The sitemap: the kernel's own pages (config/sitemap.yaml) and the modules' menus from their manifests; read again on a change."""
-    from core import distribution as _dist
+def module_menus(editions) -> list[dict]:
+    """The modules' own top menus, in the sitemap's form, as the server's installation answer gives them (each module's ``console-menus``,
+    from its manifest's ``console.menus``): each tagged with its module (``_module``), its domain (``_domain``) and the name Domains takes
+    when it is the one active domain (``_domain_label``). Drawn beside the kernel's sitemap, each only while its module is active."""
+    out: list[dict] = []
+    for mid, m in sorted(((editions.server_modules or {}) if editions is not None else {}).items()):
+        tag = {"_module": mid, "_domain": str(m.get("domain") or mid)}
+        if m.get("domain-label"):
+            tag["_domain_label"] = str(m["domain-label"])
+        out += [{**x, **tag, "columns": [{**c, **tag} for c in x.get("columns") or [] if isinstance(c, dict)]}
+                for x in m.get("console-menus") or [] if isinstance(x, dict) and x.get("id")]
+    return out
+
+
+def _spec(console_dir: Path, editions=None) -> dict:
+    """The sitemap: the kernel's own pages (config/sitemap.yaml) and the modules' menus from the server's installation answer; read again
+    when the file or the answer changes."""
     f = console_dir / "config" / "sitemap.yaml"
-    mods = modules_dir(console_dir)
-    from core import resolution
-    manifests = [m.home / "module.yaml" for m in resolution.module_list(mods).values()] if mods and mods.is_dir() else []
     try:
-        stamp = (f.stat().st_mtime_ns, tuple((str(p), p.stat().st_mtime_ns) for p in manifests))
+        stamp = (f.stat().st_mtime_ns, getattr(editions, "_digest", None))
     except OSError:
         return {}
-    hit = _cache.get(str(f))
+    key = f"{f}|{id(editions)}"
+    hit = _cache.get(key)
     if hit and hit[0] == stamp:
         return hit[1]
     data = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
-    data["menus"] = _merged(data.get("menus") or [], _dist.module_menus(mods))
-    _cache[str(f)] = (stamp, data)
+    data["menus"] = _merged(data.get("menus") or [], module_menus(editions))
+    _cache[key] = (stamp, data)
     return data
 
 
@@ -134,21 +140,14 @@ def _holds(request, edition: Edition, need: str, ctx: dict) -> bool:
 
 
 def _pack_command_on(request, text: str) -> bool:
-    """Whether a command that belongs to a pack (its code or one of its mnemonics, any pack the one resolver finds) has a pack that
-    loads: the US equities pack, listed by its module but not enabled (default-packs.yaml), takes its USEQ entry out of the menus, as the
-    server then answers "cannot read command". A command no pack names (a console word, a module function) holds."""
+    """Whether a command that belongs to a pack (its code or one of its mnemonics) has a pack that loads, as the server's installation
+    answer says (its ``commands``, THIN_CONSOLE_DESIGN.md 3.2): the US equities pack, listed by its module but not enabled, takes its USEQ
+    entry out of the menus, as the server then answers "cannot read command". A command no pack names (a console word, a module function)
+    holds, and so does every command before the server's first answer (nothing is guessed from files)."""
     head = str(text or "").split()[0].upper() if str(text or "").split() else ""
-    store = getattr(request.app.state, "packs", None)
-    if not head or store is None:
-        return True
-    from core import distribution as _dist
-    from core import resolution as _res
-    try:
-        owners = [p for p in store.resolution().packs.all()
-                  if p.manifest is not None and p.manifest.is_file() and head in _dist._pack_file_commands(p.manifest)]
-    except Exception:  # noqa: BLE001 - a pack folder unreadable for a moment: the menu as before, never a failed page
-        return True
-    return not owners or any(p.state == _res.LOADED for p in owners)
+    facts = getattr(request.app.state, "server_facts", None)
+    need = facts.command(head) if head and facts is not None else None
+    return need is None or bool(need.get("loaded"))
 
 
 def holds(request, need: str, ctx: dict) -> bool:
@@ -271,33 +270,15 @@ def _lens_desc(lens) -> str:
     return f"{about}: your own view; nothing is secured by it" if about else "Focus your own view on this edition; nothing is secured by it"
 
 
-_SIGNED_IN = object()                  # the person of the request (request.state.identity)
 
 
-def _person_opens(request, rules: list, ident=_SIGNED_IN) -> bool:
-    """Whether the person opens an engine whose column says ``opens: rules``: an administrator always; no rules, everyone signed in;
-    else any rule holds: ``role:<name>`` (they hold the role) or ``pack:<name>`` (the pack is assigned to them, shown or not). Nobody
-    signed in opens none."""
-    me = getattr(request.state, "identity", None) if ident is _SIGNED_IN else ident
-    if me is None:
+def engine_opened(request, engine_id: str) -> bool:
+    """Whether the server opens the engine for this person (their answer's ``engines-opened``: the catalogue's ``opens:`` evaluated on the
+    server, THIN_CONSOLE_DESIGN.md step S4): the one rule of the engine's pages in the menus (``requires: engine:<id>``) and of its
+    command words (:func:`engine_refused`). Nobody signed in, or no answer yet: none opened."""
+    if getattr(request.state, "identity", None) is None:
         return False
-    if me.is_admin or not rules:
-        return True
-    roles = set(getattr(me, "roles", ()) or ())
-    assigned = {str(p.get("name")) for p in getattr(request.state, "pack_switcher", None) or []}
-    for rule in rules:
-        kind, _, value = str(rule).partition(":")
-        if (kind == "role" and value in roles) or (kind == "pack" and value in assigned):
-            return True
-    return False
-
-
-def engine_opened(request, engine_id: str, ident=_SIGNED_IN) -> bool:
-    """Whether this person's role opens the engine (its catalogue entry's ``opens:``, plugins/<module>/engines.yaml): the one rule of the
-    engine's pages in the menus (``requires: engine:<id>``) and of its command words (:func:`engine_refused`). An engine without
-    ``opens:`` opens for everyone signed in. ``ident``: the person asked about (default: the request's)."""
-    e = engines.entry(engine_id)
-    return _person_opens(request, list((e or {}).get("opens") or []), ident)
+    return engine_id in ((getattr(request.state, "person", None) or {}).get("engines-opened") or ())
 
 
 def engine_refused(request, text: str) -> dict | None:
@@ -355,7 +336,7 @@ def top_bar(request, ctx: dict) -> list:
     g = request.app.state.templates.env.globals
     fill = {"product": ctx.get("PRODUCT") or g.get("PRODUCT", ""), "tutorials": g.get("TUTORIALS_WORD", "")}
     out = []
-    every = _spec(_console_dir(request)).get("menus") or []
+    every = _spec(_console_dir(request), request.app.state.editions).get("menus") or []
     hosted = _hosted_menus(request)                             # the hosted modules' entries (plugin.yaml menus:), by menu
     for menu in _menu_order(edition, every):
         mid = str(menu.get("id") or "")
@@ -446,7 +427,7 @@ def _hosted_menus(request) -> dict[str, list]:
 def footer(request) -> list[dict]:
     """The footer's links: each names an item of the menus (``item:``), drawn with that item's address and icon and its own shorter label."""
     edition = _edition(request)
-    spec = _spec(_console_dir(request))
+    spec = _spec(_console_dir(request), request.app.state.editions)
     every = item_index(spec)
     out = []
     for f in spec.get("footer") or []:
@@ -466,7 +447,7 @@ def item_index(spec: dict) -> dict[str, dict]:
 def _strip(request, ctx: dict, menu_id: str, rail_only: bool) -> list[dict]:
     """A menu drawn as a strip (the Admin tabs, the BI rail): its items in order, then its ``also:`` items, each as the top bar would
     filter it (requires, the edition's lists, the under-construction registry, engines off). ``[{id, tab, href, icon, label, desc}]``."""
-    spec = _spec(_console_dir(request))
+    spec = _spec(_console_dir(request), request.app.state.editions)
     menu = next((m for m in spec.get("menus") or [] if m.get("id") == menu_id), None)
     if menu is None:
         return []
@@ -511,7 +492,7 @@ def placeholder(request) -> str:
     if edition.lens and edition.placeholder:
         text = edition.placeholder
     else:
-        text = str(request.app.state.settings.get("ui.placeholder") or _spec(_console_dir(request)).get("placeholder") or "")
+        text = str(request.app.state.settings.get("ui.placeholder") or _spec(_console_dir(request), request.app.state.editions).get("placeholder") or "")
     return shown_examples(text, edition.typed_shown)
 
 

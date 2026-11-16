@@ -54,9 +54,6 @@
         <input name="recipients" class="studio-in mono" value="{{ form.recipients or '' }}" required placeholder="alice, role:risk"></label>
       <label class="wide bi-people">Find people or roles to add
         <input class="studio-in" data-find-people autocomplete="off" placeholder="type a name or a role to search"></label>
-      {% if opts.ai %}<label class="wide"><input type="checkbox" name="narrative" data-narrative{% if form.narrative %} checked{% endif %}> Open the email with a short written summary
-        <span class="text-muted-d">Written by an AI model from <b>each recipient's own</b> figures (what they may see, masked values left out), through your administrator's AI policy.
-        {% if opts.mode != 'aggregates' %}The policy here lets the model see labels only, so the summary is left out of every email until an administrator sets <code>drishti.bi.ai.values: aggregates</code>.{% endif %}</span></label>{% endif %}
       {% if opts.webhooks %}<fieldset class="wide dist-channels" data-webhooks><legend>Also post to a webhook</legend>
         {% for w in opts.webhooks %}<label><input type="checkbox" name="webhooks" value="{{ w }}"{% if w in (form.webhooks or []) %} checked{% endif %}> {{ w }}</label> {% endfor %}
         <span class="text-muted-d">One signed post per run: the title and a link to it, never a figure.</span></fieldset>{% endif %}

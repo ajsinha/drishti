@@ -12,34 +12,39 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Distributions on the console (docs/architecture/DISTRIBUTIONS.md): each boots from its file alone; Finance has no VaR command, menu,
-Help page or AI tool; Risk has no economy command; market data is in both; All matches today; the old keys still work; two consoles over
-one server show two distributions."""
+"""Distributions on the console (docs/architecture/DISTRIBUTIONS.md): the server compiles each distribution and the console draws its
+installation answer (THIN_CONSOLE_DESIGN.md 3.2, step S2; the answers recorded by the server's own code in tests/answers): Finance has no
+VaR command, menu, Help page or AI tool; Risk has no economy command; market data is in both; All matches today; the old keys still work;
+two consoles over one server show two distributions. The compile itself is the server's (DistributionsTest, ConsoleAnswersServerTest)."""
 from __future__ import annotations
 
 import re
-from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
 
+import server_answers
 from conftest import CONSOLE, help_pages
-from core import distribution as dist
 from core.app import create_app
+from core.edition import deprecated
 from core.auth import Identity
 from core.config import load_settings
 
-DIR = CONSOLE.parent / "config" / "distributions"
-MODULES = CONSOLE.parent / "modules"   # the modules' own manifests: what a distribution's modules hold
 ALL_ABOUT = {"product": "Drishti", "tagline": "Any data. Any domain. One grammar.", "edition": None, "lenses": ["risk", "world", "market", "trading"]}
 
 
 def _app(backend, monkeypatch, *argv):
+    """A console; one that names its own distribution (``--distribution=finance``) follows the server's answer for it (Q3)."""
     app = create_app(load_settings(CONSOLE / "config", list(argv)))
     app.state.backend = backend
+    eds = app.state.editions
+    if eds.own_distribution:
+        own = server_answers.bootstrap(eds.own_name)
+        own["distribution"]["own"] = True
+        eds.follow(own)
 
     async def current(cookie, _backend):
-        return Identity(user="alice", display="Alice", desk="Risk", roles=("*",))
+        return Identity(user="alice", display="Alice", desk="Risk", roles=("*",), admin=True)
 
     monkeypatch.setattr(app.state.auth, "current", current)
     return app
@@ -62,13 +67,12 @@ def _commands(client, q: str) -> list[str]:
 
 @pytest.mark.parametrize("name,product", [("all", "Drishti"), ("risk", "Drishti Risk"), ("finance", "Drishti Finance"),
                                           ("genomics", "Drishti Genomics")])
-def test_each_distribution_boots_from_its_file_alone(name, product):
-    d = dist.read(dist.file_of(DIR, name), DIR / dist.KERNEL, MODULES, CONSOLE.parent / "config" / "packs")
-    assert d.id == f"drishti.{name}" and d.title == product
-    assert d.brand_layer()["ui"]["product"] == product
-    assert d.all is (name == "all")
-    with pytest.raises(ValueError):
-        dist.read(dist.file_of(DIR, "nosuch"), DIR / dist.KERNEL, MODULES, CONSOLE.parent / "config" / "packs")
+def test_each_distribution_is_drawn_from_the_servers_answer_alone(backend, monkeypatch, name, product):
+    app = _app(backend, monkeypatch)
+    app.state.editions.follow(server_answers.bootstrap(name))
+    d = app.state.editions.distribution
+    assert d.id == f"drishti.{name}" and d.title == product and d.all is (name == "all")
+    assert app.state.settings.get("ui.product") == product                # the pinned names and notices come with the answer
 
 
 def test_finance_has_no_var_commands_menus_help_or_ai_tools(backend, monkeypatch):
@@ -108,22 +112,9 @@ def test_finance_has_the_markets_lens_and_market_data_and_no_risk_number(backend
         assert not markets.typed_shown(typed) and not eds.instance.typed_shown(typed), typed
     d = eds.distribution
     assert {"capitalmarkets", "economy", "market-data"} <= set(d.modules) and "banking" not in d.modules
-    assert {"var", "exposure", "frtb-sa", "simm", "sensitivities", "mr-cube"} <= set(d.features_off)
+    off = {k for k, v in (d.filter or {}).get("features", {}).items() if str(v) == "off"}
+    assert {"var", "exposure", "frtb-sa", "simm", "sensitivities", "mr-cube"} <= off
     assert "market-data" in d.packs and "market-risk" not in d.packs
-
-
-def test_the_modules_manifests_drive_the_filter():
-    known = dist.module_manifests(MODULES)
-    assert {"banking", "market-data", "capitalmarkets", "economy"} <= set(known)
-    order = list(known)
-    assert order.index("market-data") < order.index("banking")                     # a required module first
-    assert known["banking"].requires == ["market-data"] and "market-data" not in known["banking"].packs
-    assert dist.with_required(["banking"], known) == ["banking", "market-data"]
-    assert not (DIR / "modules.yaml").exists()                                        # the hand mapping is gone: one source of truth
-    risk = dist.read(DIR / "drishti.risk.yaml", DIR / dist.KERNEL, MODULES, CONSOLE.parent / "config" / "packs")
-    assert "market-data" in risk.packs and "world-economy" not in risk.packs and "ECON" in risk.words_off
-    with pytest.raises(ValueError, match="has no manifest"):
-        dist.read(DIR / "drishti.risk.yaml", DIR / dist.KERNEL, CONSOLE.parent / "no-such", CONSOLE.parent / "config" / "packs")
 
 
 def test_risk_has_no_economy_commands_and_market_data_is_in_both(backend, monkeypatch):
@@ -159,15 +150,12 @@ def test_all_matches_today(backend, monkeypatch):
 def test_the_old_brand_keys_are_not_read_and_health_names_them(backend, monkeypatch):
     app = _app(backend, monkeypatch, "--distribution=risk", "--ui.product=Acme Risk")
     assert app.state.settings.get("ui.product") == "Drishti Risk"        # the distribution file is the one home of the name
-    assert any(n.startswith("ui.product") and "no longer read" in n for n in dist.deprecated(app.state.settings))
-    legacy = _app(backend, monkeypatch)                                  # a server still saying a lens's name as its edition
-    legacy.state.editions.learn({"product": "Drishti Risk", "edition": {"name": "risk", "title": "Drishti Risk"}})
-    assert not legacy.state.editions.instance.active                     # is no filter: only a distribution says what exists
+    assert any(n.startswith("ui.product") and "no longer read" in n for n in deprecated(app.state.settings))
 
 
 def test_a_console_without_its_own_distribution_follows_the_servers(backend, monkeypatch):
     app = _app(backend, monkeypatch)
-    app.state.editions.learn({"product": "Drishti Finance", "edition": {"name": "drishti.finance", "title": "Drishti Finance"}, "lenses": ["world"]})
+    server_answers.follow(app, {"product": "Drishti Finance", "edition": {"name": "drishti.finance", "title": "Drishti Finance"}, "lenses": ["world"]})
     e = app.state.editions.instance
     assert e.distribution and not e.command_shown("VRES") and set(app.state.editions.lenses) == {"world"}
 
@@ -218,39 +206,13 @@ def test_a_stack_file_runs_a_risk_and_a_finance_console_over_one_cluster():
     assert [c["process"] for c in cluster.consoles({"nodes": [], "console": {"port": 17480}})] == ["console"]   # the one console, as before
 
 
-def test_a_path_names_a_sites_own_file(tmp_path: Path):
-    own = tmp_path / "acme.yaml"
-    own.write_text((DIR / "drishti.finance.yaml").read_text(encoding="utf-8").replace("Drishti Finance", "Acme Markets")
-                   .replace("drishti.finance", "drishti.acme"), encoding="utf-8")
-    d = dist.read(dist.file_of(DIR, str(own)), DIR / dist.KERNEL, MODULES, CONSOLE.parent / "config" / "packs")
-    assert d.title == "Acme Markets" and d.help_title == "Acme Markets Help"
-
-
-def test_a_dmod_installed_after_the_start_joins_a_custom_distribution_and_its_removal_hides_it(backend, monkeypatch, tmp_path: Path):
-    """The console's distribution reads the server's module list (GET /public/modules/manifests: shipped and installed .dmod packages,
-    then the manifests folder), again whenever /public/about's ``manifests`` changes; before any answer, the manifests folder."""
-    import asyncio
-    own = tmp_path / "drishti.freight.yaml"
-    own.write_text("format: 1\ndistribution: drishti.freight\nbrand: {product: Acme Freight}\nmodules:\n  - { id: freight }\n"
-                   "kernel-packs: []\nlenses: {offered: [research], default: research}\n", encoding="utf-8")
-    app = _app(backend, monkeypatch, f"--distribution={own}")
+def test_a_module_the_server_installs_after_the_start_joins_and_its_removal_hides_it(backend, monkeypatch):
+    """The server's answer changes when a .dmod is installed or removed: the console follows it whole and works nothing out itself."""
+    app = _app(backend, monkeypatch)
     eds = app.state.editions
-    assert "freight" not in eds.distribution.domains and "SHIP" not in eds.instance.commands()   # not in the folder, not installed yet
-    freight = {"id": "freight", "domain": "logistics", "packs": [], "words": ["SHIP"], "features": [], "menus": ["freight"], "docs": [],
-               "requires": []}
-    lists = {"f1": {"modules": [freight]}, "f2": {"modules": []}}
-    asked = []
-
-    async def follow(fp):
-        async def fetch():
-            asked.append(fp)
-            return lists[fp]
-        return await eds.follow_modules({"manifests": fp}, fetch)
-
-    assert asyncio.run(follow("f1"))                                   # installed: the server lists it
-    assert eds.distribution.domains == {"freight": "logistics"} and "SHIP" in eds.instance.commands()
-    assert "Acme Freight" in _client(app).get("/t").text
-    assert not asyncio.run(follow("f1")) and asked == ["f1"]           # the same registry: nothing asked again
-    assert asyncio.run(follow("f2"))                                   # removed: hidden
-    assert "freight" not in eds.distribution.domains and "SHIP" not in eds.instance.commands()
-    assert dist.entries({"modules": [freight]})["freight"].words == ["SHIP"]
+    whole = server_answers.bootstrap("all")
+    assert eds.follow(server_answers.with_modules(whole, lambda m: m != "economy"))
+    assert "economy" not in eds.server_modules and "ECON" not in eds.known_commands()
+    assert eds.follow(whole)
+    assert "economy" in eds.server_modules and "ECON" in eds.known_commands()
+    assert not eds.follow(whole)                                         # the same answer: nothing changes

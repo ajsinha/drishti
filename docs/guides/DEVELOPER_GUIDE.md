@@ -390,7 +390,6 @@ console. Everything is declared in `console/plugin.yaml` (`format: 2`):
 | `routes:` | pages under `/m/<id>/…`: `page:` a template of the module (tier 2), `sutra:` a Sutra, opened as the kernel's page of its `function:` (tier 1); the word opens the route (`GREET asha` → `/m/greet/hello/asha`) | `{id: hello, path: "/hello/{name}", page: hello.html, function: GREET}` |
 | `menus:` | top-bar entries: `menu:` a menu of the product (`help`, `views`, `economies` …) or a new one of the module; `route:` + `params:`, `href:` or `cmd:` | `{menu: help, label: Say hello, route: hello, params: {name: world}}` |
 | `home: cards:` | Home's quick cards (`lens:` to show one in one lens only) | `{title: Say hello, route: hello, params: {name: world}, cmd: GREET world}` |
-| `ai: tools:` | the tools the assistant may offer (a name, a description, the route or word it opens; Admin → AI lists them) | `{name: greet_greet, description: Greets a person, route: hello}` |
 
 Help comes from `docs/help.yaml` (`sections:` with `pages:` of `file:` relative to it; one Help section each, `/help/section/module-<id>`).
 
@@ -3898,10 +3897,9 @@ the `.dmod` packages the server ships and those installed in the module store (`
 manifest winning), then the manifests folder (`drishti.module-manifests-dir`, default `./modules`): `modules/<id>/module.yaml`, an SDK
 project's `modules/<id>/module.yaml` (every module's one layout). So a third-party `.dmod` installed once (dropped in,
 or deployed) is listed by its id with nothing copied into `modules/`. That is where its words, menus, packs and Help come from; a module
-with `required: false` and no manifest anywhere adds none. The console's distribution reads the same list from the server
-(`GET /public/modules/manifests`) and reads it again whenever the module registry changes (`/public/about`'s `manifests`), so a package
-installed after the start joins a running console's distribution and a removed one leaves it; only while no server has answered does
-the console read its own manifests folder (`module_manifests_dir`).
+with `required: false` and no manifest anywhere adds none. The console reads no manifest: the server compiles the distribution and
+sends it with every module in its installation answer (`GET /api/v1/console/bootstrap`), asked again whenever `/public/about`'s
+`stamps.installation` changes, so a package installed after the start joins a running console's distribution and a removed one leaves it.
 
 **3. Start it**: `python tools/drishti.py start all --distribution freight` (Windows `py tools\drishti.py ...`), or `start server` and
 `start console` each with `--distribution freight`, or `DRISHTI_DISTRIBUTION=freight`, or `drishti.distribution: freight`; a path

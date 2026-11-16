@@ -16,6 +16,7 @@
 searches and raw reads as the server shapes them (the search grammar's rows of ``$.FIELD`` values, a raw entity's provenance and data;
 port 17972). Each landing fills its panels from those answers, fits a phone without sideways scrolling, and draws in every theme with
 its teal accent; skipped when Playwright or its Chromium is missing."""
+import server_answers
 import threading
 import time
 
@@ -125,7 +126,7 @@ def world_console():
     app.state.backend = WorldBackend()
     # a lens is a workspace the person works in (docs/admin/LENSES.md), never the server's edition: the server offers it,
     # and the person's settings name it
-    app.state.editions.learn({"product": "Drishti World", "edition": None, "lenses": ["world"]})
+    server_answers.follow(app, {"product": "Drishti World", "edition": None, "lenses": ["world"]})
     async def _in_world(ident=None):
         return {"lens": "world"}
     app.state.backend.settings = _in_world

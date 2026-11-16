@@ -1532,6 +1532,11 @@ to stand in front of several kernels. The move is **its own release, i5** (owner
 console serves modules' declarative console parts (section 14.2.1), so that no module changes when i5 re-hosts them in Java. This section is the design; sections 9 (module UI) and 12
 (unload) are written for the Java console.
 
+**Decided by the owner on 2026-11-15:** i5 first makes the Python console **thin**: it asks the server for everything the server also
+decides and reads no folder but its own ([THIN_CONSOLE_DESIGN.md](THIN_CONSOLE_DESIGN.md)). The move to Spring Boot described in this
+section is decided after that, for i7, with i5's measurements; where this section says i5 for the Java console, read i7. The server
+answers the thin console adds are the ones a Java console would ask too.
+
 ### 10.1 Why
 
 **Why Java:**
@@ -2441,9 +2446,12 @@ name of `drishti.packs.site-dir` and is still read; setting both to different fo
 
 ### 18.3 The resolver
 
-Plain Java in drishti-api (`com.ash.drishti.api.resolution`: the server, the loader process and the command line share it) and its
-Python twin `drishti-console/core/resolution.py` (the console and the tools). Both are held to one fixture of file trees and expected
-answers. **No other code lists or joins a pack, module, connector, bindings or rules folder**; a guard test enforces it.
+Plain Java in drishti-api (`com.ash.drishti.api.resolution`: the server, the loader process and the command line share it), held to
+its fixture of file trees and expected answers. There is no second implementation: the console asks the server, and the Python tools
+read the Java resolver's answer through the kernel jar (`java -jar <home>/lib/drishti-server-*-exec.jar resolve --json [--root DIR |
+--site DIR] [--connectors DIR]`, read by `tools/resolved.py`, kept under the data folder by its inputs' modification times;
+[THIN_CONSOLE_DESIGN.md](THIN_CONSOLE_DESIGN.md) step S5). **No other code lists or joins a pack, module, connector, bindings or rules
+folder**; a guard test enforces it.
 
 ```java
 ResolutionSettings s = ResolutionSettings.of(property);                    // section 18.2, nothing else
@@ -2464,9 +2472,10 @@ r.version()  r.digest()  r.watchRoots()
 ```
 
 ```python
-from core.resolution import Settings, build, repository
-r = build(Settings.from_env(), modules=server_modules)   # the console; repository() = the checkout with every module on (tools)
-r.packs.find(name); r.packs.loaded(); r.connectors.find(name); r.bindings.read(kind); r.inbox_rules(); r.problems; r.why("pack", name)
+import resolved                                          # tools/resolved.py: the Java resolver's answer, no rule of its own
+r = resolved.repository()                               # the checkout with every module on; current() = this process's settings
+r.packs.find(name); r.packs.dir(name); r.modules; r.connectors.find(name); r.connectors.templates; r.rules; r.problems
+resolved.pack_dir(name); resolved.pack_dirs(); resolved.manifests()
 ```
 
 `Origin` is `SITE`, `MODULE` or `KERNEL`. A pack's `state` is `LOADED`, `AVAILABLE` (found, not enabled), `MODULE_OFF` or `NOT_READ`.

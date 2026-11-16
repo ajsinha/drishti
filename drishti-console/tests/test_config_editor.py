@@ -54,9 +54,13 @@ def editor(backend, monkeypatch, tmp_path):
             return SERVER
         if path == "/settings/paths":
             return PATHS
+        if path == "/settings/secret-keys":             # the server's rule, for the console's own keys (keys only)
+            return {"secret": [k for k in body["keys"] if "secret" in k or "token" in k]}
         if path == "/settings/proposals" and method == "GET":
             return {"proposals": list(reversed(kept))}
         if path == "/settings/proposals" and method == "POST":
+            if "secret" in body["key"]:                  # the server refuses a secret
+                raise BackendError(400, "DRS-5001", "a secret is never proposed here")
             if any(p["key"] == body["key"] and p["state"] == "proposed" for p in kept):
                 raise BackendError(409, "DRS-2006", "already waiting")
             kept.append({**body, "id": f"SP-{len(kept) + 1}", "proposedBy": ident.user, "state": "proposed", "applied": False})
@@ -79,7 +83,7 @@ def editor(backend, monkeypatch, tmp_path):
 
     async def current(cookie, _backend):
         who = cookie or "alice"
-        return Identity(user=who, display=who.title(), desk="Ops", roles=("viewer",) if who == "vic" else ("admin",))
+        return Identity(user=who, display=who.title(), desk="Ops", roles=("viewer",) if who == "vic" else ("admin",), admin=who != "vic")
 
     monkeypatch.setattr(app.state.auth, "current", current)
     app.state.kept = kept
@@ -169,5 +173,3 @@ def test_the_console_file_keeps_its_other_keys(tmp_path):
     config_editor.write_console_key(f, "ui.placeholder", "TRD", "note")
     data = yaml.safe_load(f.read_text())
     assert data == {"ui": {"desk": "Credit", "placeholder": "TRD"}, "backend": {"url": "http://x"}}
-    with pytest.raises(ValueError):
-        config_editor.write_console_key(f, "auth.session_secret", "x", "note")

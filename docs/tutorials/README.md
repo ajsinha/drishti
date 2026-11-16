@@ -55,7 +55,7 @@ The AI assistant and corrections with four eyes. The pivot engine, tables and mo
 
 | # | Tutorial | You will | Time | Status |
 |---|---|---|---|---|
-| 10 | [The AI assistant](10-ai-assistant.md) | the mock provider turned on safely, Test connection, the AI policy, report from words, ask the data and explain a number, the policy saying no, the providers, suggestions and the dataset helper | 30 min | written |
+| 10 | [The AI assistant](10-ai-assistant.md) | not in this release: the console shows no AI page and the server's AI layer is off | — | parked |
 | 11 | [Correct a trade and approve it: write-back](11-correct-and-approve.md) | editing switched on, a form that submits, a notional corrected and reviewed, four eyes in the Approvals queue, the change applied everywhere, a stale change conflicted, `drishti.py change` | 20 min | written |
 
 ### Data in and out

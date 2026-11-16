@@ -112,7 +112,6 @@
     const group = VGROUP[spec.type];
     if (group === 'static' || group === 'entity' || group === 'board' || spec.type === 'slicer') { return out; }
     if (group === 'python') { return out; }                                        // a Python result is drawn from rows Python was handed: no alert, drill or marks
-    if (B.ai && group !== 'python') { out.push(B.ai.explainButton(spec, mk)); }                                  // Explain this number: hidden unless the server's AI layer is on
     const known = frames.get(spec.id);
     if (!known || known.mq !== null) { out.push(mk('bi-plan', 'diagram-3', 'How this was answered: tiers, layers, times', () => { const e = frames.get(spec.id); if (e) { B.consume.explain(e.frame, askedMq(e)); } }, { 'data-act': 'explain-plan' })); }          // a visual with no model query (a 2.1 dataset's) has no plan to explain
     out.push(alertButton(spec, mk));                                               // Alert me: every visual that shows numbers, live ones too (a live source can alert on change)

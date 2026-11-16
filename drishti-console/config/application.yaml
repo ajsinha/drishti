@@ -36,29 +36,6 @@ backend:
   check_every: 5s                            # how often each listed server's health is looked at
   fail_after: 2                              # failed requests (or health checks) in a row before a server is set aside
   data_dir: ${DRISHTI_CONSOLE_DATA_DIR:}     # what the console keeps between runs (net/servers.json); blank: <data dir>/console
-ai:                                  # LLM provider layer (docs/guides/AI_GUIDE.md): OFF by default; no file is read and no model is called while off
-  enabled: ${DRISHTI_AI_ENABLED:false}  # turn on the console's own LLM provider layer
-  dir: ${DRISHTI_AI_DIR:../config/ai}          # one YAML per provider; the recommended console provider is type: server (keys stay on the server)
-  default_model: ${DRISHTI_AI_DEFAULT_MODEL:} # provider/model, or a model name only one provider has
-  poll_seconds: 5                    # how often config/ai and config/mcp are looked at: a changed file is picked up with no restart
-  redact: []                         # field names masked in every prompt (the same names as the server's drishti.security.redact)
-  # the console's AI policy, as the server's drishti.ai.policy: mask_redacted, audit, per-user and cost limits, mask_patterns, per-feature
-  # roles
-  policy: {mask_redacted: true, audit: true, per_user_per_minute: 0, per_user_per_day: 0, cost_per_user_per_day: 0, mask_patterns: [], features: {}}
-mcp:                                 # MCP client (docs/guides/AI_GUIDE.md): OFF by default
-  enabled: ${DRISHTI_MCP_ENABLED:false}  # turn on the console's MCP client
-  dir: ${DRISHTI_MCP_DIR:../config/mcp}  # the folder of MCP server files (one YAML per server)
-  server_roles: {}                   # server -> roles allowed
-  tool_roles: {}                     # "server/tool" -> roles allowed
-  server_features: {}                # server -> features allowed
-retry:                               # what failed is tried again by itself (docs/guides/OPERATIONS_GUIDE.md, "Retries"): the console's AI providers and MCP servers
-  enabled: ${DRISHTI_RETRY_ENABLED:true}  # retry what failed (the console's AI providers and MCP servers); false turns the retries off
-  initial: ${DRISHTI_RETRY_INITIAL:5s}      # wait before the first retry
-  factor: 2.0                        # each further wait is this many times the one before
-  max: ${DRISHTI_RETRY_MAX:5m}              # no wait is longer than this
-  jitter: 0.2                        # each wait varies by up to this fraction either way
-  permanent_after: 3                 # a failure waiting cannot fix (refused credentials, bad settings) seen this often in a row is retried only every max
-  # ai: {initial: 2s}  and  mcp: {max: 1m}  override any of these for one area
 collab:
   # Admin > Collaboration, bridge Test: how long the console waits for the server, which waits for the bridge's own timeout
   # (drishti.collab.bridges.timeout, default 10 s). Keep it longer than that.
@@ -217,12 +194,9 @@ live:                        # live updates (docs/architecture/DATA_ARCHITECTURE
     port: ${DRISHTI_CONSOLE_RELAY_PORT:17490}  # across hosts, worker n listens on port + n (port .. port + server.workers - 1): open these between the consoles; 0 = any free port
     timeout_seconds: 3  # how long a worker waits for the holder of a channel to answer
     window_seconds: 30  # a relay message is accepted this long after it was signed (allow for the hosts' clock difference); each only once
-under_construction:          # the under-construction registry (docs/admin/UNDER_CONSTRUCTION.md): menu items and help pages that depend on unbuilt work
-  file: ${DRISHTI_UNDER_CONSTRUCTION_FILE:../config/under-construction.yaml}   # the same file the server reads; absent: nothing registered
 lens:                        # the lenses (LENSES.md): workspaces a person opens ("Open Drishti Risk"); each arranges, none hides anything
-  dir: ${DRISHTI_LENS_DIR:../config/lenses}   # the lens files: config/lenses/<module>/<lens>.yaml (only the console reads them)
   roles: {}                  # hook for role-based access later ({role: {link: true, start: risk}}): read, not wired
-features:                    # the console's own switches; a distribution presets them (config/distributions/kernel.yaml features:)
+features:                    # the console's own switches; a distribution presets them (the server sends the presets in its installation answer)
   build: true                # Build: new screens, new packs, designs, reviews and changes (/build, /review)
   forms: true                # query by form (FORM, /forms)
   datamap: true              # the data map (DATAMAP, /datamap)
@@ -235,17 +209,13 @@ features:                    # the console's own switches; a distribution preset
   collaboration: true        # Admin -> Collaboration
   examples_dir: ../docs/guides/examples   # the Rachana examples Studio and the help centre offer (docs/guides/examples/README.md)
 builder:                     # Build workbench, New (/build/new); docs/guides/RACHANA_REFERENCE.md
-  # The upload limits, checked here before anything is sent on. Keep them at or under the server's drishti.builder limits,
-  # which refuse the same way (413 DRS-5005).
-  max_samples: 50            # files in one upload, and samples (a .jsonl line is one) in all
-  max_file_mb: 5             # largest single file
-  max_total_mb: 25           # all files together
+  # The upload limits are the server's (drishti.builder.max-samples, max-file-mb, max-total-mb), sent in its installation answer.
   pack_designer_max_mb: 4096      # Build -> New pack (the Pack designer): the most uploaded MB in one workspace
   pack_designer_max_files: 500    # Build -> New pack: files in one workspace
   pack_designer_ttl_hours: 72     # Build -> New pack: hours a workspace untouched is kept before it is removed
   pack_designer_jobs_per_user: 2  # Build -> New pack: jobs (reading the files, making the module) one person may have running
   pack_designer_workers: 0        # Build -> New pack: processes reading the files in a job (0: the tool's default, a third of the cores, at most 8)
-  pack_designer_modules_dir:       # Build -> New pack: the modules folder 'Install on this node' copies the .dmod to (empty: DRISHTI_MODULES_PATH, else <data folder>/modules)
+  pack_designer_modules_dir:       # Build -> New pack: the server's modules folder 'Install on this node' copies the .dmod to, an absolute path (empty: Install is refused, Plan for the cluster works)
   pack_load_max_mb: 2048     # Admin -> Packs -> a pack -> Load data: the largest file the console streams on to the server (which has drishti.loads.upload-max-mb)
   tools_dir: ../tools        # the repository's tools/ folder (the Pack designer runs tools/packgen/designer_job.py from it); relative to drishti-console/
   studio_kind: sample        # the kind a new Design and "Open in Studio" preview a brought document as (a pasted document has no kind of its own)
@@ -282,15 +252,12 @@ help:
 # Blank: the server's (learned from its about answer), else Drishti All, exactly as before distributions. drishti.py start console
 # --distribution <name> sets it; a stack file's consoles: list gives each console its own (Risk on 17480, Finance on 17481).
 distribution: ${DRISHTI_DISTRIBUTION:}
-distributions_dir: ${DRISHTI_DISTRIBUTIONS_DIR:../config/distributions}   # the distribution files, drishti.<name>.yaml, and kernel.yaml
-module_manifests_dir: ${DRISHTI_MODULE_MANIFESTS_DIR:../modules}   # the modules' own manifests (modules/<id>/module.yaml): what a distribution's modules hold, and the console parts of the modules the product ships (hosted while the server lists them loaded)
 modules:
   parts_refresh_seconds: 5     # how often the console asks the server which modules are deployed (their console parts hosted under /m/<id>/, KERNEL_AND_MODULES.md 4.7); an applied change in this console is seen at once
 packs:
   dir: ${DRISHTI_PACKS_DIR:../config/packs}   # the same packs directory the server uses (one variable sets both)
   installed_dir: ${DRISHTI_PACKS_INSTALLED:}   # packs installed from the registry or by Deploy archive (the server's drishti.packs.installed-dir); blank: <data dir>/packs/installed
   extra_dirs: ${DRISHTI_PACKS_EXTRA_DIRS:}   # further pack folders, comma-separated (examples/packs: the retired example packs), as on the server
-  enabled: ${DRISHTI_PACKS:default}   # used only when the server cannot be asked which packs are enabled; default: config/packs/default-packs.yaml
   deploy_max_mb: 50          # largest pack archive Admin → Packs → Deploy archive takes (the server's drishti.packs.deploy.max-archive-mb refuses the same way, 413)
 static:                      # the console's own static files (/static/...), served compressed
   compress: true             # answer a request that accepts br or gzip with the compressed file (Brotli when the brotli package is installed); false: bytes as they are

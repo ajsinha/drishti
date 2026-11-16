@@ -76,8 +76,8 @@ class EngineCatalogueTest {
             assertThat(listed.map(f -> f.getFileName().toString()).sorted().toList()).as("a file without an engine")
                     .containsExactlyInAnyOrderElementsOf(files);
         }
-        assertThat(Files.readAllBytes(REPO.resolve("drishti-console/config/engines.yaml")))
-                .isEqualTo(Files.readAllBytes(jar.resolve("catalogue.yaml")));
+        assertThat(REPO.resolve("drishti-console/config/engines.yaml")).as("the console keeps no copy: the catalogue comes in its installation answer")
+                .doesNotExist();
     }
 
     static EngineCatalogue.Entry entry(String id, String... needs) {

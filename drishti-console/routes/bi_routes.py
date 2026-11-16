@@ -34,7 +34,7 @@ from routes.common import ident, render
 router = APIRouter(include_in_schema=False)
 
 # the server paths the page script may reach: nothing else is passed on
-_ALLOWED = ("me", "home", "catalogue", "settings", "workspaces", "items", "datasets", "model", "engine", "reports", "bundle", "boards", "python", "ai", "imports", "mq", "models", "pack-datasets", "expr", "sql", "layer-datasets", "lineage", "themes", "runs")
+_ALLOWED = ("me", "home", "catalogue", "settings", "workspaces", "items", "datasets", "model", "engine", "reports", "bundle", "boards", "python", "imports", "mq", "models", "pack-datasets", "expr", "sql", "layer-datasets", "lineage", "themes", "runs")
 _NO_BODY = {"GET", "DELETE"}
 # A query (a visual's, a model query, SQL) may run on the server up to drishti.bi.query.timeout (30 s): the console waits that long and a little
 # more, not its usual 5 s, so a query a loaded server answers in 6 s is drawn, not refused with DRS-1004 while the server still works on it.

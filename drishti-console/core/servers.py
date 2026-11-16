@@ -131,3 +131,7 @@ class Switch:
 
     def each(self):
         return list(self._by_server.values())
+
+    def of(self, sid: str):
+        """The object of server ``sid`` (the default server's when the catalogue does not list it)."""
+        return self._by_server.get(sid) or self._by_server[self._fallback]

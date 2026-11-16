@@ -20,6 +20,7 @@ administrator", and the module's static assets are not served (nor to a person w
 drishti-banking's BankingModuleOffTest and BankingModuleOnTest."""
 from __future__ import annotations
 
+import server_answers
 import re
 from urllib.parse import unquote
 
@@ -51,7 +52,7 @@ def _console(backend, monkeypatch, about, answer):
     async def mine(ident):
         return answer
     monkeypatch.setattr(backend, "modules", mine, raising=False)
-    app.state.editions.learn(about)
+    server_answers.follow(app, about)
     return app
 
 
@@ -208,7 +209,7 @@ def test_the_registrations_are_the_modules_and_the_core_names_none():
     """C1 to C6 (DOMAIN_MODULES.md section 5): the banking module's console code fills the core's hooks; plugin.yaml lists its routers."""
     plugins.load()
     banking = modules.plugin("banking")
-    assert banking is not None and "plugins.banking.routes.var_routes" in banking.routers and "var" in banking.engines
+    assert banking is not None and "plugins.banking.routes.var_routes" in banking.routers
     assert plugins.preset_parser("mr") is not None and plugins.retired_link("var", "VAR-COMM") is not None
     assert modules.asset_module("elements/drishti-risk/drishti_risk.js").id == "banking"
     assert modules.asset_module("js/drishti_keys.js") is None

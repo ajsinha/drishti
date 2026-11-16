@@ -34,8 +34,8 @@ ROOT = Path(__file__).resolve().parents[3]
 PACKS = "core,us-equities,gleif"
 SERVER_PORT = int(os.environ.get("DRISHTI_SHOTS_SERVER_PORT", 18760))
 CONSOLE_PORT = int(os.environ.get("DRISHTI_SHOTS_CONSOLE_PORT", 18761))
-sys.path.insert(0, str(ROOT / "drishti-console"))
-from core.resolution import pack_dir  # noqa: E402  (where a pack is: the one resolver)
+sys.path.insert(0, str(ROOT / "tools"))
+from resolved import pack_dir  # noqa: E402  (where a pack is: the Java resolver's answer, tools/resolved.py)
 OUT = pack_dir("gleif") / "guides" / "images"
 JPM = "8I5DZWZKVSZI1NUHU748"
 

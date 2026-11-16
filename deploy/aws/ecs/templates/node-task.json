@@ -53,8 +53,7 @@
         { "sourceVolume": "config", "containerPath": "/opt/drishti/config" },
         { "sourceVolume": "sutras", "containerPath": "/opt/drishti/sutras" } ],
       "environment": [
-        { "name": "DRISHTI_AUTH_ENABLED", "value": "true" },
-        { "name": "DRISHTI_CONSOLE__PACKS__ENABLED", "value": "${DRISHTI_PACKS}" } ],
+        { "name": "DRISHTI_AUTH_ENABLED", "value": "true" } ],
       "secrets": [
         { "name": "DRISHTI_TOKEN_SECRET", "valueFrom": "arn:aws:secretsmanager:${AWS_REGION}:${AWS_ACCOUNT_ID}:secret:${SECRET_TOKEN}" },
         { "name": "DRISHTI_SESSION_SECRET", "valueFrom": "arn:aws:secretsmanager:${AWS_REGION}:${AWS_ACCOUNT_ID}:secret:${SECRET_SESSION}" } ],

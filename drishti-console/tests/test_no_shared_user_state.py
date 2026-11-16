@@ -48,20 +48,12 @@ ALLOWED = {
     "core/plugins.py:_connector_actions": "the modules' connector buttons, registered at import (code, not data: C8)",
     "core/plugins.py:_landing_rules": "the modules' landing rules, registered at import (code, not data: C6)",
     "core/menus.py:_cache": "the parsed sitemap.yaml by file stamp: configuration, the same for everyone",
-    "core/resolution.py:_CACHE": "the configuration resolution by settings and the layers' file stamps: product and site files, the same for everyone",
-    "core/resolution.py:_ROOTS": "a packs folder's resolution by folder (bounded): product files, nothing of a person's",
-    "core/resolution.py:_NOTED": "the modules-tree folders without a module.yaml already noted in the log, once each (folders on disk, nothing of a person's)",
     "core/guides.py:_RENDERED": "Help's pages rendered by file and mtime: the same documents for everyone (who may read a page is checked per request)",
     "core/external_lib.py:_paths": "folders added to sys.path for the console's own libraries: configuration",
     "core/channel_relay.py:HANDLERS": "relay operation to its handler function, registered at import by the routes (code, not data); "
                                       "what a relay holds is per app (app.state.relay)",
     "routes/embed_routes.py:_cache": "the embed loader's script text by version: static assets, the same for everyone",
     "routes/designer_routes.py:_LOCKS": "one asyncio.Lock per draft id (a person's own draft; a lock holds no data)",
-    "plugins/banking/trading_landing.py:_FLIGHT": "reads running now, by core.user_cache.user_key (server, user, roles, as-of): never served across people",
-    "plugins/banking/trading_landing.py:_CACHE": "an LRU keyed by core.user_cache.user_key (server, user, roles, as-of and known-at, lens)",
-    "plugins/banking/market_landing.py:_CACHE": "an LRU keyed by core.user_cache.cache_key (made by routes/edition_routes.py) or user_key",
-    "core/ai/llm/registry.py:_PROVIDERS": "the provider classes registered at import (code, not data)",
-    "core/ai/providers/__init__.py:FACTORIES": "the provider factories registered at import (code, not data)",
 }
 
 

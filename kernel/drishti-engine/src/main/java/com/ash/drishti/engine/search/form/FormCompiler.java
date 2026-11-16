@@ -34,6 +34,9 @@ import java.util.regex.Pattern;
  */
 public final class FormCompiler {
 
+    /** The most rows a submitted form asks for (the console offers no larger choice: it reads this from the installation answer). */
+    public static final int MAX_ROWS = 1000;
+
     private static final Pattern AMOUNT = Pattern.compile("(?i)-?\\d[\\d_]*(\\.\\d+)?(k|m|mm|mn|b|bn|t|tn)?");
     private static final Pattern WORDS = Pattern.compile("[\\s,;]+");
 
@@ -88,7 +91,7 @@ public final class FormCompiler {
             out.append(" order by ").append(path).append(descending ? " desc" : "");
         }
         if (limit > 0) {
-            out.append(" limit ").append(Math.min(limit, 1000));
+            out.append(" limit ").append(Math.min(limit, MAX_ROWS));
         }
         return out.toString();
     }

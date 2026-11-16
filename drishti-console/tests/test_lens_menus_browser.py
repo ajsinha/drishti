@@ -15,6 +15,7 @@
 """The lens menus in a real browser (docs/architecture/LENSES.md section 1.4.4, mock-up docs/lenses/mockups/menus/A): with an edition's subject menus the top bar's controls
 never overlap at desktop widths and the page never scrolls sideways; an item to finish (Risk -> Exposure -> A counterparty) puts its words in
 the command line, the menu closed, instead of opening a page. Skipped when Playwright or Chromium is missing."""
+import server_answers
 import threading
 import time
 
@@ -41,7 +42,7 @@ def consoles():
     for name in EDITIONS:
         app = create_app(load_settings(CONSOLE / "config"))
         app.state.backend = TickingBackend()
-        app.state.editions.learn({"product": f"Drishti {name.title()}", "edition": {"name": name, "title": f"Drishti {name.title()}"}})
+        server_answers.follow(app, {"product": f"Drishti {name.title()}", "edition": {"name": name, "title": f"Drishti {name.title()}"}})
         port = _free_port()
         server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=port, log_level="warning", timeout_graceful_shutdown=2))
         threading.Thread(target=server.run, daemon=True).start()

@@ -14,13 +14,13 @@
 """The modules' console parts, hosted declaratively (docs/architecture/KERNEL_AND_MODULES.md sections 4.7, 9, 12 and 14.2.1).
 
 A module's console part is the ``console/`` folder of its ``.dmod`` (``plugin.yaml`` format 2, templates, ``drishti_<module>-*`` statics,
-menus, words, Home cards, AI tool descriptions), its ``docs/`` (Help) and its ``elements/<lib>/`` (a domain Elements library). The console
+menus, words, Home cards), its ``docs/`` (Help) and its ``elements/<lib>/`` (a domain Elements library). The console
 reads them and runs nothing of them: no module Python is imported, no route is registered by a module. Two sources, one way:
 
-* the server's module registry (``GET /public/modules/console``): every module deployed on the cluster, active, off or removed; an active
-  version's part arrives as a zip (``/public/modules/console/<id>/<version>``) and is kept under ``<cache>/<id>/<version>/``;
-* the modules the product ships beside the console (``module_manifests_dir``, ``modules/<id>/``), each hosted while the server lists it
-  loaded and no deployed version replaces it.
+* the server's module registry (``GET /public/modules/console``): every module deployed on the cluster, active, off or removed, and the
+  modules the product ships as folders while the server has them loaded; an active version's part arrives as a zip
+  (``/public/modules/console/<id>/<version>``) and is kept under ``<cache>/<id>/<version>/``. The console reads no modules folder
+  (THIN_CONSOLE_DESIGN.md, step S2).
 
 What a snapshot holds is swapped whole (copy-on-write, no lock on the request path) and holds nothing of any person (session isolation):
 the parts that are active, the modules that are gone (off or removed, with the names they owned, so saved work says *needs module X*),
@@ -79,7 +79,6 @@ class Part:
     routes: tuple = ()
     menus: tuple = ()
     cards: tuple = ()
-    tools: tuple = ()
     lenses: tuple = ()
     help: dict = field(default_factory=dict, hash=False, compare=False)
     source: str = "server"
@@ -190,8 +189,8 @@ def _help(module: str, title: str, folder: Path, manifest: dict) -> dict:
 class ModuleParts:
     """The console's hosted module parts: refreshed from the server (at most every ``ttl`` seconds, or at once when asked), swapped whole."""
 
-    def __init__(self, cache: Path, web: Path, shipped: Path | None = None, ttl: float = 5.0):
-        self.cache, self.web, self.shipped, self.ttl = Path(cache), Path(web), shipped, float(ttl)
+    def __init__(self, cache: Path, web: Path, ttl: float = 5.0):
+        self.cache, self.web, self.ttl = Path(cache), Path(web), float(ttl)
         self.snapshot: Snapshot = EMPTY
         self._checked = 0.0
         self._lock = asyncio.Lock()
@@ -202,7 +201,7 @@ class ModuleParts:
     # ---- refresh -----------------------------------------------------------------------------------------------------------------
     async def refresh(self, backend, loaded=None, force: bool = False) -> bool:
         """Asks the server what is deployed and swaps the snapshot when anything changed; True when it did. ``loaded``: the modules the
-        server's about lists (its registry's), for the parts the product ships. A server that cannot say keeps the snapshot."""
+        server's about lists (kept in the fingerprint: a module loaded or unloaded asks again). A server that cannot say keeps the snapshot."""
         if not force and time.monotonic() - self._checked < self.ttl:
             return False
         async with self._lock:
@@ -236,26 +235,10 @@ class ModuleParts:
                         LOG.warning("module parts: %s %s not fetched (%s)", mid, ver, e)
                         continue
                 self._read(mid, folder, "server", parts, refused)
-            shipped = self._shipped()                   # the product's own modules, while the server has them loaded and nothing replaced them
-            content = {m for m, (_, code) in shipped.items() if not code}   # a module with code (java/: banking, genomics) only when the server says it is loaded
-            for mid in sorted(content if loaded is None else set(loaded) & set(shipped)):
-                if mid not in parts and mid not in gone:
-                    self._read(mid, shipped[mid][0], "shipped", parts, refused)
             self.snapshot = Snapshot(parts, gone, refused, key)
             self._envs = {k: v for k, v in self._envs.items() if k[0] in parts and parts[k[0]].version == k[1]}
             LOG.warning("module parts: hosted %s; gone %s; refused %s", sorted(parts), sorted(gone), sorted(refused))
             return True
-
-    def _shipped(self) -> dict[str, tuple[Path, bool]]:
-        """The product's own modules with a console part (``modules/<folder>/module.yaml``, the one module layout), by id, as the one
-        resolver finds them, each with whether it has code (a ``java:`` block in its manifest)."""
-        from core import resolution
-        out = {}
-        found = resolution.module_list(self.shipped).values() if self.shipped and self.shipped.is_dir() else []
-        for m in found:
-            if (m.home / "console" / "plugin.yaml").is_file():
-                out[m.id] = (m.home, bool(m.manifest.get("java")))
-        return out
 
     async def _fetch(self, backend, mid: str, ver: str, folder: Path) -> None:
         data = await backend.public(f"/public/modules/console/{quote(mid, safe='')}/{quote(ver, safe='')}", raw=True, timeout=60.0)
@@ -285,12 +268,11 @@ class ModuleParts:
         title = str(manifest.get("title") or plugin.get("title") or mid)
         menus = tuple(dict(x, module=mid) for x in plugin.get("menus") or [] if isinstance(x, dict) and x.get("label"))
         cards = tuple(dict(x, module=mid) for x in (plugin.get("home") or {}).get("cards") or [] if isinstance(x, dict) and x.get("title"))
-        tools = tuple(dict(x, module=mid) for x in (plugin.get("ai") or {}).get("tools") or [] if isinstance(x, dict) and x.get("name"))
         lenses = tuple(str(x) for x in plugin.get("lenses") or [])
         visuals = tuple({k: str(x.get(k) or "") for k in ("kind", "library", "file", "title", "summary")}
                         for x in plugin.get("visuals") or [] if isinstance(x, dict) and x.get("kind") and x.get("library") and x.get("file")
                         and (folder / "elements" / str(x["library"]) / str(x["file"])).is_file())
-        parts[mid] = Part(mid, str(manifest.get("version") or ""), title, folder, _routes(mid, plugin.get("routes")), menus, cards, tools, lenses,
+        parts[mid] = Part(mid, str(manifest.get("version") or ""), title, folder, _routes(mid, plugin.get("routes")), menus, cards, lenses,
                           _help(mid, title, folder, manifest), source, visuals=visuals)
 
     # ---- the checks (section 11: Elements are the console's; section 14.2.1: declarative only) ------------------------------------
@@ -362,9 +344,6 @@ class ModuleParts:
 
     def cards(self, lens: str | None = None) -> list[dict]:
         return [c for p in self.snapshot.parts.values() for c in p.cards if not c.get("lens") or c.get("lens") == lens]
-
-    def tools(self) -> list[dict]:
-        return [t for p in self.snapshot.parts.values() for t in p.tools]
 
     def visuals(self) -> list[dict]:
         """Every hosted module's own visuals (the Elements gallery shows them while the module is on, and only then)."""

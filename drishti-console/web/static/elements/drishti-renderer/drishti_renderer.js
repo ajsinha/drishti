@@ -541,18 +541,6 @@
       items.push(h('li', null, link(R, '/help/context/view', 'The full guide to this screen'), ' ', h('span', { class: 'about-note' }, '(F1 again)')));
       return layer('next', 5, false, 'Where next', h('ul', { class: 'about-list' }, items));
     }
-    function ask(R, ex) {
-      if (!(ex.ask && ex.ask.enabled)) { return null; }
-      const ref = ex.ref || {};
-      return h('section', { class: 'about-ask', 'data-about-ask': true, 'data-ask-url': (R.server || basePath()) + '/v/' + pyQuote(ref.kind) + '/' + pyQuote(ref.id) + '/ask', 'aria-labelledby': 'about-ask-h' },
-        h('h3', { id: 'about-ask-h' }, 'Ask about this page'),
-        h('form', { class: 'about-ask-form', 'data-ask-form': true },
-          h('label', { class: 'visually-hidden', for: 'about-ask-q' }, 'Your question about this page'),
-          h('input', { id: 'about-ask-q', type: 'text', name: 'question', maxlength: '500', autocomplete: 'off', placeholder: 'What does this page mean?', 'data-ask-input': true }),
-          h('button', { type: 'submit', class: 'btn btn-sm btn-primary', 'data-ask-send': true }, 'Ask')),
-        h('p', { class: 'about-ask-answer', 'data-ask-answer': true, role: 'status', 'aria-live': 'polite', hidden: true }),
-        h('p', { class: 'about-note about-ask-note' }, 'An AI assistant answers from this page\'s explanation only. It can be wrong; the layers above are the reference.'));
-    }
     function aboutBody(R, got) {
       got = got || {};
       if (got.error || !got.explain) {
@@ -563,7 +551,7 @@
       return h('div', { class: 'about-card', 'data-about-generation': str(ex.generation), 'data-about-index': JSON.stringify(got.index || { terms: [], panels: {} }) },
         ex.newer ? h('p', { class: 'about-newer', role: 'status' }, 'This page is behind: the data is now at generation ' + ex.generation + '. ',
           h('a', { href: '#', 'data-about-refresh': true }, 'Refresh the page')) : null,
-        about(R, ex), glossary(R, ex), data(R, ex, !(ex.glossary || []).length), layout(R, ex), next(R, ex), ask(R, ex));
+        about(R, ex), glossary(R, ex), data(R, ex, !(ex.glossary || []).length), layout(R, ex), next(R, ex));
     }
     function aboutUrl(o, ref, generation) {
       if (typeof o.aboutUrl === 'function') { return o.aboutUrl(ref, generation); }

@@ -18,6 +18,7 @@ it arranges (Home and its landings, the menus it names first, the placeholder) a
 is everyone's starting workspace. Without a distribution the console is exactly the full product."""
 from __future__ import annotations
 
+import server_answers
 import html
 import re
 
@@ -41,7 +42,7 @@ FULL_ABOUT = {"product": "Drishti", "edition": None, "lenses": ["risk", "world",
 
 def _workspace(app, lens: str, *people: str):
     """A full instance offering the four lenses, with these people (alice by default) working in ``lens`` (their settings)."""
-    app.state.editions.learn(FULL_ABOUT)
+    server_answers.follow(app, FULL_ABOUT)
     for who in people or ("alice",):
         app.state.store.setdefault(who, {})["lens"] = lens
 
@@ -68,7 +69,7 @@ def _app(backend, monkeypatch, users: dict | None = None):
     monkeypatch.setattr(backend, "patch_settings", patch_settings, raising=False)
 
     async def current(cookie, _backend):
-        return Identity(user=cookie or "alice", display=(cookie or "alice").title(), desk="Risk", roles=("*",))
+        return Identity(user=cookie or "alice", display=(cookie or "alice").title(), desk="Risk", roles=("*",), admin=True)
 
     monkeypatch.setattr(app.state.auth, "current", current)
     app.state.store = store
@@ -88,7 +89,7 @@ def _menu_links(html: str) -> list[str]:
 
 def test_without_an_edition_the_console_is_the_full_product(backend, monkeypatch):
     app = _app(backend, monkeypatch)
-    app.state.editions.learn({"product": "Drishti", "tagline": "Any data. Any domain. One grammar.", "edition": None, "lenses": []})
+    server_answers.follow(app, {"product": "Drishti", "tagline": "Any data. Any domain. One grammar.", "edition": None, "lenses": []})
     c = _client(app)
     t = c.get("/t").text
     links = _menu_links(t)
@@ -99,7 +100,7 @@ def test_without_an_edition_the_console_is_the_full_product(backend, monkeypatch
     views = t[t.index('<span class="tbar-menu-l">Views</span>'):t.index('<span class="tbar-menu-l">Domains</span>')]
     assert 'href="/var"' not in views and 'href="/exposure"' not in views             # not in Views: one place each
     assert 'placeholder="TRD MX-20000001, CPTY north, TRD PRODUCT_TYPE=FX_QUANTO …  then &lt;GO&gt;"' in t
-    assert c.get("/admin/ai").status_code == 200 and c.get("/admin/compute").status_code == 200
+    assert c.get("/admin/compute").status_code == 200
     home = c.get("/").text
     assert 'id="grammar"' in home and 'id="pipeline"' in home and "data-risk-landing" not in home
     assert app.state.settings.get("ui.product") == "Drishti"
@@ -109,14 +110,14 @@ def test_without_an_edition_the_console_is_the_full_product(backend, monkeypatch
 
 def test_drishti_risk_starts_everyone_in_the_risk_workspace_which_hides_nothing_it_has(backend, monkeypatch):
     app = _app(backend, monkeypatch)
-    assert app.state.editions.learn(RISK_ABOUT)
+    assert server_answers.follow(app, RISK_ABOUT)
     c = _client(app)
     t = c.get("/t").text
     links = _menu_links(t)
     assert "/var" in links and "/exposure" in links and "/func" in links and "/datamap" in links and "/forms" in links
     assert "Drishti Risk" in t and "VAR BANK, VAR DESK RATES" in t                     # the brand; the lens's placeholder
     assert 'data-risk-landing="desk"' in c.get("/").text                                # the default lens: the Risk desk first
-    for path in ("/admin/ai", "/admin/compute", "/admin/users", "/admin/packs", "/smat"):
+    for path in ("/admin/compute", "/admin/users", "/admin/packs", "/smat"):
         assert c.get(path).status_code == 200, path                                     # the lens hides nothing
     r = c.get("/go", params={"q": "SMAT DESK RATES 30 <GO>"}, follow_redirects=False)
     assert r.status_code == 303 and r.headers["location"] == "/smat?id=DESK%3ARATES&days=30"
@@ -129,7 +130,7 @@ def test_drishti_risk_starts_everyone_in_the_risk_workspace_which_hides_nothing_
 
 def test_home_offers_the_three_landings_and_remembers_the_choice(backend, monkeypatch):
     app = _app(backend, monkeypatch)
-    app.state.editions.learn(RISK_ABOUT)
+    server_answers.follow(app, RISK_ABOUT)
     c = _client(app)
     home = c.get("/").text
     assert 'data-risk-landing="desk"' in home                                          # A, the default
@@ -147,7 +148,7 @@ def test_home_offers_the_three_landings_and_remembers_the_choice(backend, monkey
 
 def test_a_role_mapping_wins_over_the_remembered_choice_only_when_configured(backend, monkeypatch):
     app = _app(backend, monkeypatch)
-    app.state.editions.learn(RISK_ABOUT)
+    server_answers.follow(app, RISK_ABOUT)
     app.state.editions.lenses["risk"].spec["home"]["landing-by-role"] = {"*": "command"}
     c = _client(app)
     c.post("/home/landing/map")
@@ -156,7 +157,7 @@ def test_a_role_mapping_wins_over_the_remembered_choice_only_when_configured(bac
 
 def test_a_lens_arranges_one_persons_workspace_and_hides_nothing(backend, monkeypatch):
     app = _app(backend, monkeypatch)
-    app.state.editions.learn({"product": "Drishti", "edition": None, "lenses": ["risk"]})
+    server_answers.follow(app, {"product": "Drishti", "edition": None, "lenses": ["risk"]})
     alice, bob = _client(app, "alice"), _client(app, "bob")
     before = alice.get("/t").text
     assert "/lens/risk" in _menu_links(before)                                         # the link, in Views
@@ -165,7 +166,7 @@ def test_a_lens_arranges_one_persons_workspace_and_hides_nothing(backend, monkey
     page = alice.get("/t").text                                                         # every page keeps it (a refresh too)
     assert "/lens/leave" in _menu_links(page)
     assert set(_menu_links(before)) - {"/lens/risk"} <= set(_menu_links(page))         # nothing left out
-    assert alice.get("/admin/ai").status_code == 200 and alice.get("/admin/compute").status_code == 200
+    assert alice.get("/admin/compute").status_code == 200
     assert 'data-risk-landing="desk"' in alice.get("/").text and "data-risk-landing" not in bob.get("/").text
     said = [alice.get("/api/search", params={"in": "command", "q": "FO"}).json()["items"] for alice in (alice, bob)]
     assert said[0] == said[1]                                                            # the same commands offered
@@ -175,7 +176,7 @@ def test_a_lens_arranges_one_persons_workspace_and_hides_nothing(backend, monkey
 
 def test_a_distribution_offers_its_lenses_and_leaving_one_returns_to_its_default(backend, monkeypatch):
     app = _app(backend, monkeypatch)
-    app.state.editions.learn(RISK_ABOUT)
+    server_answers.follow(app, RISK_ABOUT)
     c = _client(app)
     links = _menu_links(c.get("/t").text)
     assert "/lens/trading" in links and "/lens/market" in links and "/lens/leave" not in links   # the default lens: nothing to leave
@@ -215,7 +216,7 @@ def test_each_lens_arranges_and_hides_nothing(backend, monkeypatch, lens):
     alice, bob = _client(app, "alice"), _client(app, "bob")
     mine, theirs = alice.get("/t").text, bob.get("/t").text
     assert {h for h in _menu_links(theirs) if not h.startswith("/lens/")} <= set(_menu_links(mine)), lens
-    for path in ("/var", "/exposure", "/datamap", "/build/new", "/admin/ai", "/admin/compute", "/admin/users", "/smat"):
+    for path in ("/var", "/exposure", "/datamap", "/build/new", "/admin/compute", "/admin/users", "/smat"):
         assert alice.get(path).status_code == bob.get(path).status_code, (lens, path)
     for typed in ("VAR BANK <GO>", "RUPAKA <GO>", "FORM trading <GO>", "ECON CAN <GO>", "DATAMAP <GO>"):
         a = alice.get("/go", params={"q": typed}, follow_redirects=False).headers.get("location", "")
@@ -266,7 +267,7 @@ def test_world_home_offers_its_three_landings_and_remembers_the_choice(backend, 
 
 def test_the_landings_read_through_the_search_inside_a_workspace(backend, monkeypatch):
     app = _app(backend, monkeypatch)
-    app.state.editions.learn({"product": "Drishti", "edition": None, "lenses": ["risk", "world"]})
+    server_answers.follow(app, {"product": "Drishti", "edition": None, "lenses": ["risk", "world"]})
     sent: list = []
     _world_searches(backend, monkeypatch, sent)
     c = _client(app)
@@ -285,7 +286,7 @@ def test_the_landings_read_through_the_search_inside_a_workspace(backend, monkey
 
 def test_two_lenses_each_person_opens_either_and_switches_between_them(backend, monkeypatch):
     app = _app(backend, monkeypatch)
-    app.state.editions.learn({"product": "Drishti", "edition": None, "lenses": ["risk", "world"]})
+    server_answers.follow(app, {"product": "Drishti", "edition": None, "lenses": ["risk", "world"]})
     alice, bob = _client(app, "alice"), _client(app, "bob")
     page = alice.get("/t").text
     links = _menu_links(page)
@@ -334,11 +335,8 @@ def test_a_landing_template_must_be_a_home_landing_page():
 
 @pytest.fixture
 def market():
-    from plugins.banking import market_landing
     from market_fake import MarketBackend
-    market_landing.forget()
     yield MarketBackend()
-    market_landing.forget()
 
 
 def test_market_home_offers_desk_explorer_and_quality_and_remembers_the_choice(market, monkeypatch):
@@ -373,7 +371,7 @@ def test_market_home_offers_desk_explorer_and_quality_and_remembers_the_choice(m
 
 def test_the_market_figures_are_read_inside_a_workspace(market, monkeypatch):
     app = _app(market, monkeypatch)
-    app.state.editions.learn({"product": "Drishti", "edition": None, "lenses": ["risk", "world", "market"]})
+    server_answers.follow(app, {"product": "Drishti", "edition": None, "lenses": ["risk", "world", "market"]})
     c = _client(app)
     for part in ("desk", "moves", "quality"):                                          # no lens: not a landing's
         r = c.get(f"/api/home/market/{part}")
@@ -399,7 +397,7 @@ def test_the_stale_threshold_comes_from_the_edition_file(market, monkeypatch):
 
 def test_three_lenses_each_person_opens_any_and_switches_between_them(market, monkeypatch):
     app = _app(market, monkeypatch)
-    app.state.editions.learn({"product": "Drishti", "edition": None, "lenses": ["risk", "world", "market"]})
+    server_answers.follow(app, {"product": "Drishti", "edition": None, "lenses": ["risk", "world", "market"]})
     alice = _client(app, "alice")
     page = alice.get("/t").text
     links = _menu_links(page)
@@ -444,7 +442,7 @@ def _provenance_html(app, lens):
 
 def test_inside_a_lens_the_sutra_keeps_its_design_link(backend, monkeypatch):
     app = _app(backend, monkeypatch)
-    app.state.editions.learn(FULL_ABOUT)
+    server_answers.follow(app, FULL_ABOUT)
     full = _provenance_html(app, None)
     assert "data-prov-sutra" in full and "/studio?sutra=irs-vanilla%403" in full                  # the full product: the designer link
     for lens in ("risk", "world", "market", "trading"):
@@ -459,18 +457,16 @@ def test_inside_a_lens_the_sutra_keeps_its_design_link(backend, monkeypatch):
 
 @pytest.fixture
 def trading():
-    from plugins.banking import trading_landing
     from trading_fake import TradingBackend
-    trading_landing.forget()
     yield TradingBackend()
-    trading_landing.forget()
 
 
 def _people(app, monkeypatch, roles: dict):
     """Each person's access roles (a viewer unless named): the stand-in server masks TRADER_ID for a role without raw."""
     async def current(cookie, _backend):
         user = cookie or "alice"
-        return Identity(user=user, display={"kim": "K. Moreau"}.get(user, user.title()), desk="", roles=roles.get(user, ("viewer",)))
+        return Identity(user=user, display={"kim": "K. Moreau"}.get(user, user.title()), desk="", roles=roles.get(user, ("viewer",)),
+                        admin=bool({"*", "admin"} & set(roles.get(user, ()))))
 
     monkeypatch.setattr(app.state.auth, "current", current)
 
@@ -580,7 +576,7 @@ def test_the_check_answers_once_from_both_engines(trading, monkeypatch):
 
 def test_the_trading_routes_answer_inside_a_workspace(trading, monkeypatch):
     app = _app(trading, monkeypatch)
-    app.state.editions.learn(FULL_ABOUT)
+    server_answers.follow(app, FULL_ABOUT)
     c = _client(app, "drishti-dev-admin")
     body = {"product": "IR_SWAP", "notional": "1m", "counterparty": "CP-ALDERSHOT"}
     for path in ("/api/home/trading/me", "/api/home/trading/valuations"):                # no lens: not a landing's
@@ -597,7 +593,7 @@ def test_the_trading_routes_answer_inside_a_workspace(trading, monkeypatch):
 
 def test_four_lenses_each_person_opens_any_and_switches_between_them(trading, monkeypatch):
     app = _app(trading, monkeypatch)
-    app.state.editions.learn({"product": "Drishti", "edition": None, "lenses": ["risk", "world", "market", "trading"]})
+    server_answers.follow(app, {"product": "Drishti", "edition": None, "lenses": ["risk", "world", "market", "trading"]})
     alice = _client(app, "alice")
     page = alice.get("/t").text
     for name in ("Risk", "World", "Market", "Trading"):

@@ -152,15 +152,15 @@ def settings_view(manifest: dict, connector: dict) -> dict:
 
 def with_modules(manifest: dict | None) -> dict:
     """The pack's manifest with the connector templates of every module that requires it (a source module's ``connectors/`` folder, as
-    the one resolver reads it: drishti-console/core/resolution.py) added where the pack does not declare that name itself. A source
+    the Java resolver reads it: tools/resolved.py) added where the pack does not declare that name itself. A source
     system is a module of its own."""
     m = dict(manifest or {})
     if not m.get("pack") or not isinstance(m.get("connectors"), dict):
         return m
     root = pathlib.Path(__file__).resolve().parents[1]
-    if str(root / "drishti-console") not in sys.path:
-        sys.path.insert(0, str(root / "drishti-console"))
-    from core import resolution
+    if str(root / "tools") not in sys.path:
+        sys.path.insert(0, str(root / "tools"))
+    import resolved as resolution
     r = resolution.repository()
     needs = {mid for mid, mod in r.modules.items() if m["pack"] in mod.requires}
     conns = dict(m["connectors"])

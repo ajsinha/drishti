@@ -21,8 +21,8 @@ picks one from the links on Home and the choice is kept in their settings (``hom
 ``home.landing-by-role`` ({role: landing}) is read and, when configured, wins over the person's choice: the hook for role-based access
 later; Drishti Trading's ``trading.landing-by-role`` (the same shape, for the person's trading role) picks the first landing below their
 choice. ``/api/home/search`` is the landings' one read: the server's search grammar, for a command the edition shows; Drishti Market's
-figures and Drishti Trading's are the banking module's (plugins/banking/market_landing.py and
-plugins/banking/trading_landing.py, served by plugins/banking/routes/trading_routes.py, with its landing rule registered in core/plugins.py).
+figures and Drishti Trading's are the market-data and trading modules' (worked out on the server, /api/v1/market-data/landing and
+/api/v1/trading/landing; passed on by plugins/banking/routes/trading_routes.py, with its landing rule registered in core/plugins.py).
 
 The lens: ``/lens/<name>`` opens an edition the server offers as a lens (``drishti.lenses``, one or more) for this person; opening another
 while in one switches; ``/lens/leave`` closes it. Kept in the person's settings (``lens``), so every server of a cluster and every console
@@ -48,7 +48,7 @@ def edition_of(request) -> Edition:
     return getattr(request.state, "edition", None) or request.app.state.editions.instance
 
 
-def landing_for(request, ed: Edition) -> str | None:
+async def landing_for(request, ed: Edition) -> str | None:
     """The landing this person sees, or None for the product's Home (no landings, or ``home.landing: today``)."""
     offered = ed.landings()
     if not offered or ed.landing == "today":
@@ -68,7 +68,7 @@ def landing_for(request, ed: Edition) -> str | None:
     if chosen in offered:
         return chosen
     # a module's rule, below the person's own choice (Drishti Trading: the trading role picks the first landing; LENSES.md section 6)
-    if (by_rule := plugins.landing_by_rules(request, ed, offered, me, mine)) is not None:
+    if (by_rule := await plugins.landing_by_rules(request, ed, offered, me, mine)) is not None:
         return by_rule
     return ed.landing if ed.landing in offered else offered[0]
 

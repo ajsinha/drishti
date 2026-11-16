@@ -13,25 +13,51 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Controls of a Sutra on the console side: the ``ctl.<id>=value`` request parameters (the address ``?ctl.leg=L2&ctl.when=...``), read
-with the same limits as the server's, and handed to the backend untouched; the server decides what is a valid value (options,
-defaults, masks). Nothing here evaluates anything."""
+with the server's bounds and handed to the backend untouched; the server decides what is a valid value (options, defaults, masks) and
+bounds them again. Nothing here evaluates anything. The bounds are the server's (``ControlValues``), sent in its installation answer's
+``limits.controls`` (THIN_CONSOLE_DESIGN.md step S6): the console keeps no copy of the numbers."""
 from __future__ import annotations
 
-MAX_CONTROLS = 32
-MAX_KEY = 40
-MAX_VALUE = 2000
+from dataclasses import dataclass
+
 PREFIX = "ctl."
 
 
-def from_query(params) -> dict[str, str]:
-    """The ``ctl.*`` parameters of a request (a starlette QueryParams or a mapping), bounded."""
+@dataclass(frozen=True)
+class Limits:
+    """How many ``ctl.`` parameters a request carries, how long a name and a value may be; ``0`` = not bounded here (the server bounds)."""
+    max_controls: int = 0
+    max_key: int = 0
+    max_value: int = 0
+
+
+def limits(app) -> Limits:
+    """The server's bounds from its installation answer; before its first answer nothing is bounded here (the server bounds anyway)."""
+    answer = getattr(getattr(getattr(app, "state", None), "editions", None), "answer", None) or {}
+    c = (answer.get("limits") or {}).get("controls") or {}
+    try:
+        return Limits(int(c.get("maxControls") or 0), int(c.get("maxKey") or 0), int(c.get("maxValue") or 0))
+    except (TypeError, ValueError):
+        return Limits()
+
+
+def from_query(params, bounds: Limits = Limits()) -> dict[str, str]:
+    """The ``ctl.*`` parameters of a request (a starlette QueryParams or a mapping), within the server's bounds."""
     out: dict[str, str] = {}
     for key in params.keys():
-        if not key.startswith(PREFIX) or len(key) <= len(PREFIX) or len(key) > MAX_KEY or len(out) >= MAX_CONTROLS:
+        if not key.startswith(PREFIX) or len(key) <= len(PREFIX):
+            continue
+        if (bounds.max_key and len(key) > bounds.max_key) or (bounds.max_controls and len(out) >= bounds.max_controls):
             continue
         values = params.getlist(key) if hasattr(params, "getlist") else [params[key]]
-        out[key] = ",".join(values)[:MAX_VALUE]
+        joined = ",".join(values)
+        out[key] = joined[:bounds.max_value] if bounds.max_value else joined
     return out
+
+
+def of(request) -> dict[str, str]:
+    """The ``ctl.*`` parameters of a request, within the bounds of the server this console follows."""
+    return from_query(request.query_params, limits(request.app))
 
 
 def to_query(values: dict[str, str]) -> str:
@@ -42,11 +68,12 @@ def to_query(values: dict[str, str]) -> str:
 
 
 def split_subscription(sub: str) -> tuple[str, dict[str, str]]:
-    """``view:trade/T1?ctl.leg=L2`` -> (``view:trade/T1``, {"ctl.leg": "L2"}): a live subscription may carry the view's control values."""
+    """``view:trade/T1?ctl.leg=L2`` -> (``view:trade/T1``, {"ctl.leg": "L2"}): a live subscription may carry the view's control values
+    (the channel's request body is bounded; the server bounds the values of the stream it opens)."""
     from urllib.parse import parse_qs
 
     head, sep, tail = sub.rpartition("?ctl.")
     if not sep:
         return sub, {}
     parsed = parse_qs("ctl." + tail, keep_blank_values=True)
-    return head, {k: ",".join(v)[:MAX_VALUE] for k, v in list(parsed.items())[:MAX_CONTROLS] if k.startswith(PREFIX)}
+    return head, {k: ",".join(v) for k, v in parsed.items() if k.startswith(PREFIX)}
