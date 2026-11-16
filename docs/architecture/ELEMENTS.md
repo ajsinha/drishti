@@ -287,8 +287,10 @@ copy, export and sort are unchanged; the drawing's label gives the figure, the l
 builder: a drishti-inputs form made from `ruleFormSchema(columns)` in a dialog; Add rule appends to the grid's conditional formats
 (`ruleText` and `ruleProblems` give the words). `shareLink(href, grid.getState())` is a link that carries a saved view in its fragment (the
 server never sees it) and `readSharedView(href)` gives it back; the host lays it out with `setState`. `heatPivotPreset(measures)` is the
-heat-cell pivot: every measure on a colour scale with the grand column, the column-group totals and the grand row. Master-detail rows are
-not built yet.
+heat-cell pivot: every measure on a colour scale with the grand column, the column-group totals and the grand row. **Master-detail rows:**
+`detail: {render(row, document), height, isMaster(row)}` opens a panel under a leaf row (the twisty in the first cell, **Alt+Down** opens and
+**Alt+Up** closes the focused row's; the row grows by `height` through the viewport's variable row height, so virtual scrolling stays exact; a
+sort, a filter or a new answer closes the panels).
 
 ### 4.4 drishti-chart
 

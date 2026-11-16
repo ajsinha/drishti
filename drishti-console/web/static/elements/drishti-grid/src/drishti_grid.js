@@ -58,6 +58,9 @@ import { cycleSort, FILTER_CHANNEL } from '../../drishti-core/src/drishti_index.
  *   pivot offers those its server knows)
  * @property {function(Object): ?(string|Object|function(*, Object): string)} [pivotFormat] a pivot measure's format, given the answer's
  *   measure ({label, id, kind, unit, showAs}); default: its value column's
+ * @property {{render: function(Object, Document): (Node|string), height: number, isMaster: function(Object): boolean}} [detail] master-detail rows: a leaf row opens
+ *   a detail panel under it (render: the row and the document to the panel's content; height in pixels, default 160; isMaster: which rows have one,
+ *   default all); the twisty in the first cell, Alt+Down opens and Alt+Up closes the focused row's; a sort, a filter or a new answer closes them
  * @property {function(Object): ?{cls: string, title: string, style: Object<string, string>, before: Node, content: Node, after: (string|Node)}} [decorateCell]
  *   a host's marks on a cell, given its context (cellContext with value and text): classes (a comment, a change since a date), a hover
  *   note, colours (color, background-color, font-weight, font-style: a conditional format), a node before the figure (an icon), a node
@@ -106,7 +109,7 @@ export class GridModel extends GridModelBase {
       pageSize: () => Math.max(1, Math.floor(this.viewport.height / this.viewport.rowHeight) - 1),
       isGroup: (r) => { const x = this.rowAt(r); return !!x && (x.kind === 'group' || (x.kind === 'pivot' && x.entry.expandable)); },
       isExpanded: (r) => { const x = this.rowAt(r); return !!x && (x.kind === 'group' ? x.expanded : x.kind === 'pivot' ? !!x.entry.expanded : false); },
-      explain: !!o.explain
+      explain: !!o.explain, detailEnabled: () => this.detailEnabled()
     });
     /** @type {GridLive} the typed events and the live data */
     this.live = new GridLive(this, o.live);
@@ -333,6 +336,18 @@ export class GridModel extends GridModelBase {
 
   /**
    * A key press on the grid: moves the focus, changes the selection and runs the action the layout needs no part in; returns what the
+   * layout does (copy text to the clipboard, start an edit, show an Explain).
+   * @param {KeyboardEvent} e
+   * @returns {{handled: boolean, action: ?string, focus: ?Object, copy: ?string}}
+   */
+  /**
+   * Whether the grid has master-detail rows (GridOptions.detail).
+   * @returns {boolean}
+   */
+  detailEnabled() { return !!(this.o && this.o.detail && typeof this.o.detail.render === 'function'); }
+
+  /**
+   * A key press on the grid: moves the focus, changes the selection and runs the action the layout needs no part in
    * layout does (copy text to the clipboard, start an edit, show an Explain).
    * @param {KeyboardEvent} e
    * @returns {{handled: boolean, action: ?string, focus: ?Object, copy: ?string}}

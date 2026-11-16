@@ -181,3 +181,16 @@ test('data: bins are counted once (page or worker), a worker-less page still ans
   m.receive({ seq: 8 });
   assert.equal(seen[seen.length - 1], 'fresh');
 });
+
+test('grid master-detail: Alt+Down opens the focused row\'s detail and Alt+Up closes it, only when the grid has a detail', async () => {
+  const G = await import('../../web/static/elements/drishti-grid/src/drishti_index.js');
+  const mk = (on) => new G.GridNavigator({ rowCount: () => 5, columnCount: () => 3, detailEnabled: () => on });
+  const key = (k) => ({ key: k, altKey: true, ctrlKey: false, metaKey: false, shiftKey: false });
+  const n = mk(true);
+  n.setFocus(1, 0);
+  assert.equal(n.handleKey(key('ArrowDown')).action, 'detail-open');
+  assert.equal(n.handleKey(key('ArrowUp')).action, 'detail-close');
+  const off = mk(false);
+  off.setFocus(1, 0);
+  assert.equal(off.handleKey(key('ArrowDown')).action === 'detail-open', false);
+});

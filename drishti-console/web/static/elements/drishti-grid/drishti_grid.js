@@ -3036,6 +3036,7 @@
         case 'copy': copied(v, res.copy, false); break;
         case 'explain': v.explainFocused(); break;
         case 'open': if (f) { m.toggleRow(f.row); v.announceRow(f.row); } break;
+        case 'detail-open': case 'detail-close': if (f) { v.body.setDetail(f.row, res.action === 'detail-open'); } break;
         case 'expand': case 'collapse': if (f) { v.announceRow(f.row); } break;
         case 'expand-all': runAction(v, 'expand-all'); break;
         case 'collapse-all': runAction(v, 'collapse-all'); break;
@@ -3560,6 +3561,9 @@
           if (k === 'ArrowRight' && !open) { return { focus: null, action: 'expand', handled: true }; }
           if (k === 'ArrowLeft' && open) { return { focus: null, action: 'collapse', handled: true }; }
         }
+        if (e.altKey && !mod && (k === 'ArrowDown' || k === 'ArrowUp') && this.grid.detailEnabled && this.grid.detailEnabled()) {
+          return { focus: null, action: k === 'ArrowDown' ? 'detail-open' : 'detail-close', handled: true };
+        }
         const ext = e.shiftKey && !mod ? 'extend-range' : null;
         switch (k) {
           case 'ArrowUp': return move(mod ? 0 : f.row - 1, f.col, ext);
@@ -3590,7 +3594,7 @@
           { keys: 'Arrows', does: 'move' }, { keys: 'Shift+Arrows', does: 'select a range' }, { keys: 'Ctrl+C', does: 'copy' },
           { keys: 'Space', does: 'select the row, or open a group' }, { keys: 'Right / Left', does: 'open / close a group' },
           { keys: 'Shift+Right / Left', does: 'open / close everything below' }, { keys: 'Enter', does: 'open or edit' }, { keys: 'E', does: 'Explain the figure' },
-          { keys: 'Ctrl+A', does: 'select all' }, { keys: 'Escape', does: 'clear' }
+          { keys: 'Alt+Down / Up', does: 'open / close a row\'s detail' }, { keys: 'Ctrl+A', does: 'select all' }, { keys: 'Escape', does: 'clear' }
         ];
       }
     }
@@ -3758,7 +3762,7 @@
           pageSize: () => Math.max(1, Math.floor(this.viewport.height / this.viewport.rowHeight) - 1),
           isGroup: (r) => { const x = this.rowAt(r); return !!x && (x.kind === 'group' || (x.kind === 'pivot' && x.entry.expandable)); },
           isExpanded: (r) => { const x = this.rowAt(r); return !!x && (x.kind === 'group' ? x.expanded : x.kind === 'pivot' ? !!x.entry.expanded : false); },
-          explain: !!o.explain
+          explain: !!o.explain, detailEnabled: () => this.detailEnabled()
         });
         this.live = new GridLive(this, o.live);
         this.editing = new GridEditing(this, Object.assign({ locale: o.locale }, o.editing));
@@ -3888,6 +3892,7 @@
         return Promise.resolve();
       }
       idAt(r) { const x = this.rowAt(r); return !x ? null : x.kind === 'leaf' ? x.id : x.kind === 'pivot' && x.entry.kind !== 'header' ? x.id : null; }
+      detailEnabled() { return !!(this.o && this.o.detail && typeof this.o.detail.render === 'function'); }
       key(e) {
         const before = this.navigator.focus ? Object.assign({}, this.navigator.focus) : null;
         const k = this.navigator.handleKey(e), f = this.navigator.focus;
@@ -4085,6 +4090,7 @@
         this.canvas.append(this.head, this.area);
         this.scroller.append(this.canvas, this.empty);
         this.cfCache = new Map();
+        this.openDetails = new Set();    // row indexes whose detail panel is open (closed with the lists when the rows change)
         this.openLists = new Map();      // 'r:c' of each list cell expanded in place, to the px its row needs
         this.version = 0;
         this.drag = null;
@@ -4127,6 +4133,17 @@
         const again = this.rows.querySelector('.dg-cell[data-r="' + r + '"][data-c="' + cell.dataset.c + '"] .drishti-chips-toggle');
         if (again) { again.focus(); }
       }
+      detailOpts() { const d = this.view.o.detail; return d && typeof d.render === 'function' ? d : null; }
+      setDetail(r, open) {
+        const d = this.detailOpts(), x = this.model.rowAt(r);
+        if (!d || !x || !x.row || !(x.kind === 'leaf' || x.tree) || (d.isMaster && !d.isMaster(x.row))) { return; }
+        const now = open === undefined ? !this.openDetails.has(r) : open;
+        if (now) { this.openDetails.add(r); } else { this.openDetails.delete(r); }
+        this.model.viewport.setExtra(r, now ? (d.height || 160) : 0);
+        this.render();
+        const again = this.rows.querySelector('.dg-dt[data-r="' + r + '"]');
+        if (again && this.doc.activeElement !== this.scroller) { again.focus(); }
+      }
       syncRowHeights(r) {
         let need = 0;
         this.openLists.forEach((px, key) => { if (+key.split(':')[0] === r) { need = Math.max(need, px); } });
@@ -4134,6 +4151,7 @@
       }
       collapseLists() {
         if (this.openLists.size) { this.openLists.clear(); }
+        this.openDetails.clear();
         this.model.viewport.clearExtras();
       }
       cellOf(e) {
@@ -4338,6 +4356,14 @@
         centerShown.forEach(add);
         if (trail > 0) { row.appendChild(h(doc, 'div', { cls: 'dg-gap', attrs: { role: 'presentation' }, style: { width: trail + 'px' } })); }
         disp.right.forEach(add);
+        const dt = this.detailOpts();
+        if (dt && this.openDetails.has(r) && x.row) {
+          row.classList.add('dg-has-detail');
+          const panel = h(doc, 'div', { cls: 'dg-detail', attrs: { role: 'region', 'aria-label': 'Details of the row' }, style: { top: m.viewport.rowHeight + 'px', height: (dt.height || 160) + 'px' } });
+          const body = dt.render(x.row, doc);
+          if (typeof body === 'string') { panel.textContent = body; } else if (body && body.nodeType) { panel.appendChild(body); }
+          row.appendChild(panel);
+        }
         return row;
       }
       cellEl(r, x, d, k, disp) {
@@ -4407,6 +4433,13 @@
             const box = h(doc, 'input', { cls: 'dg-check', attrs: { type: 'checkbox', tabindex: '-1', 'aria-label': 'Select row' }, data: { r: String(r) } });
             box.checked = !!k.selected;
             cell.appendChild(box);
+          }
+          const dt = k.first && this.detailOpts();
+          if (dt && x.row && (x.kind === 'leaf' || x.tree) && !(dt.isMaster && !dt.isMaster(x.row))) {
+            const open = this.openDetails.has(r);
+            cell.appendChild(h(doc, 'button', { cls: 'dg-dt', text: open ? '▾' : '▸', data: { r: String(r) },
+              attrs: { type: 'button', tabindex: '-1', 'aria-expanded': String(open), 'aria-label': (open ? 'Close' : 'Open') + ' the details of this row' },
+              on: { click: (ev) => { ev.stopPropagation(); this.setDetail(r); } } }));
           }
           if (k.expandable) { cell.appendChild(h(doc, 'span', { cls: 'dg-tw', text: k.expanded ? '−' : '+', attrs: { 'aria-hidden': 'true' }, data: { r: String(r) } })); }
           else if (m.pivotMode || (m.rowModel.groupBy && m.rowModel.groupBy.length) || m.rowModel.treeData) { cell.appendChild(h(doc, 'span', { cls: 'dg-tw dg-tw-none', attrs: { 'aria-hidden': 'true' } })); }
@@ -6113,7 +6146,7 @@
       row('`pagination`, `paginationPageSize`', 'unsupported', 'virtual scrolling: every row is reachable without pages'),
       row('`enableCharts` (integrated charts), `masterDetail`, `rowDragManaged`, `theme`, `rowModelType: \'viewport\'`', 'unsupported', 'drishti-chart on a range; Drishti\'s theme tokens; the rest is not covered in version 1')
     ]);
-    const AG_NOT_COVERED = 'integrated charts (use drishti-chart on a range), master-detail rows, AG Grid\'s sparkline option (use sparklineCell, barCell and bulletCell as a column\'s cellRenderer), row dragging between grids, ' +
+    const AG_NOT_COVERED = 'integrated charts (use drishti-chart on a range), AG Grid\'s master-detail options (use the grid\'s detail option), AG Grid\'s sparkline option (use sparklineCell, barCell and bulletCell as a column\'s cellRenderer), row dragging between grids, ' +
       'AG Grid\'s theming API and CSS classes (Drishti\'s theme applies), the viewport row model, pagination, custom cell renderers, editors and ' +
       'header components.';
     const AG_GRID_OPTIONS = Object.freeze(['columnDefs', 'defaultColDef', 'columnTypes', 'rowData', 'getRowId', 'rowSelection', 'animateRows', 'domLayout',

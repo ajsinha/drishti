@@ -7114,9 +7114,15 @@ The id of a display row: a leaf's id, a pivot row's (pivot:&lt;kind&gt;:&lt;key&
 
 Returns `?string`.
 
+##### `GridModel.detailEnabled()`
+
+Whether the grid has master-detail rows (GridOptions.detail).
+
+Returns `boolean`.
+
 ##### `GridModel.key(e)`
 
-A key press on the grid: moves the focus, changes the selection and runs the action the layout needs no part in; returns what the layout does (copy text to the clipboard, start an edit, show an Explain).
+A key press on the grid: moves the focus, changes the selection and runs the action the layout needs no part in layout does (copy text to the clipboard, start an edit, show an Explain).
 
 | Parameter | Type | Meaning |
 |---|---|---|
@@ -10736,6 +10742,7 @@ Everything GridModel takes (columns, rows or datasource, serverPivot, explain, c
 | `[serverFuncs]` | `Array&lt;(string\|{name: string, label: string})&gt;` | aggregations only the server computes (median, var_samp, stddev_samp), offered in the wells and menus beside the browser's; a value with one is always asked of the server |
 | `[valueFuncs]` | `string[]` | the browser's aggregations offered in the wells and menus (default: every one of VALUE_FUNCS; a server pivot offers those its server knows) |
 | `[pivotFormat]` | `function(Object): ?(string\|Object\|function(*, Object): string)` | a pivot measure's format, given the answer's measure ({label, id, kind, unit, showAs}); default: its value column's |
+| `[detail]` | `{render: function(Object, Document): (Node\|string), height: number, isMaster: function(Object): boolean}` | master-detail rows: a leaf row opens a detail panel under it (render: the row and the document to the panel's content; height in pixels, default 160; isMaster: which rows have one, default all); the twisty in the first cell, Alt+Down opens and Alt+Up closes the focused row's; a sort, a filter or a new answer closes them |
 | `[decorateCell]` | `function(Object): ?{cls: string, title: string, style: Object&lt;string, string&gt;, before: Node, content: Node, after: (string\|Node)}` | a host's marks on a cell, given its context (cellContext with value and text): classes (a comment, a change since a date), a hover note, colours (color, background-color, font-weight, font-style: a conditional format), a node before the figure (an icon), a node in its place (a link holding the same text), and a node or words after it (a sparkline, a delta); it shows, it never changes a figure |
 | `[treeData=false]` | `boolean` | the rows make a tree by their paths (getDataPath): nodes open and close, a node no row names carries its figures as a group (the server's when clientAggregation is false); the first shown column holds the node's key. With a datasource, the server answers the tree a level at a time (isServerSideGroup, getServerSideGroupKey) |
 | `[getDataPath]` | `function(Object): string[]` | a row's path from the top (tree data) |

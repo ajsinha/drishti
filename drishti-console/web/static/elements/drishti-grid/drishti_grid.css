@@ -8,3 +8,10 @@
 }
 /* forced colours: selection and focus in the system colours */
 @media (forced-colors: active) { .dg-in-range { outline: 1px solid Highlight; } .dg-cell:focus-visible, .dg-scroll:focus-visible { outline: 2px solid Highlight; } }
+
+/* master-detail rows (GridOptions.detail): the twisty and the panel under the row */
+.dg-has-detail { position: relative; }
+.dg-dt { border: 0; background: transparent; color: var(--d-link); font: inherit; cursor: pointer; padding: 0 var(--d-sp-4); min-width: 22px; }
+.dg-dt:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 1px; }
+.dg-detail { position: absolute; left: 0; right: 0; overflow: auto; box-sizing: border-box; padding: var(--d-sp-8) var(--d-sp-12); background: var(--d-surface-2); border-top: 1px solid var(--d-border); border-bottom: 1px solid var(--d-border); color: var(--d-ink); }
+@media print { .dg-dt { display: none; } }
