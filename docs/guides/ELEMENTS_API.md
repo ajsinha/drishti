@@ -28,7 +28,7 @@ one bundled file next to them; a page loads drishti-core and then `Drishti.eleme
 | [drishti-tree](#drishti-tree) | 0.2.0 | The tree: hierarchies as an org chart, an indented tree with measures (on drishti-grid's tree data), a sunburst and an icicle; expand and collapse, search with breadcrumbs, measures on nodes with non-additive ones (◆) asked of the server and never summed, Explain, re-parenting in an edit mode that proposes the move for four eyes, the outline of an authoring screen (marks, a hiding filter, a designer's selection followed both ways, moves by drag or Alt+arrows), export, keyboard and ARIA |
 | [drishti-designer](#drishti-designer) | 0.2.0 | The designer kit: the layout canvas over a layout model (grid or flow: place, move, resize with snap, multi-select, align, distribute, z-order, groups, copy and paste, a phone's order, the keys, undo and redo on one command stack), the palette, the inspector (a form from a schema), the outline (drishti-tree's, drag to re-order or re-parent), the YAML pane kept in step with the model both ways (completion and lint from a JSON Schema) and the designer shell (three panes, Visual / YAML / Both, versions, Validate, Preview, History, Impact, Propose for review) |
 | [drishti-data](#drishti-data) | 0.1.0 | Data: one data-source contract (in memory, REST pages, server-side rows, Arrow, live), the live client over SSE and WebSocket with reconnect, heartbeat, resume and backpressure, and the Arrow client |
-| [drishti-chart](#drishti-chart) | 0.2.0 | The chart: one engine-neutral spec over the vendored ECharts (the general kinds, the maps from world to every country's first-level regions, the card and studio modes, the map's ranking and table modes), Explain on any mark, the data table, export, linked selection and live updates; Vega-Lite translated into the spec |
+| [drishti-chart](#drishti-chart) | 0.3.0 | The chart: one engine-neutral spec over the vendored ECharts (the general kinds, the maps from world to every country's first-level regions, the card and studio modes, the map's ranking and table modes), Explain on any mark, the data table, export, linked selection and live updates; Vega-Lite translated into the spec |
 | [drishti-graph](#drishti-graph) | 0.1.0 | The graph: networks cyclic or acyclic on a canvas for thousands of nodes; force (seeded), layered (DAG), radial, circular and grouped layouts; zoom, pan, minimap and fit; neighbours expanded on demand; the shortest path; groups collapsed by an attribute and filters by type; size and colour by a measure with a legend; pin, multi-select and lasso; a selection panel with Explain; linked selection; export (PNG, SVG, data); keyboard and an adjacency table; live updates; the lineage preset; the view's graph panel |
 | [drishti-insight](#drishti-insight) | 0.1.0 | Insight on a Drishti server: the one Explain (preview, drawer, full page, keys), the one search box (command line, Help, Alt+K), the one Approvals queue and the workbook export |
 | [drishti-risk](#drishti-risk) | 0.2.0 | The banking module's library (licensed with the module): chart kinds on drishti-chart (the P&L distribution with VaR and ES from the server's bins, the fitted normal, the backtest with its traffic light, the exposure profile with EE, PFE, EEPE and the limit, what moved VaR) and the risk grid preset on drishti-grid (terminal layout, figures never summed in the browser), and the presets for drishti-graph and drishti-tree (the counterparty structure graph; the VaR hierarchy tree): options only, so a page loads the graph or the tree library itself |
@@ -14369,7 +14369,7 @@ A data source.
 
 ## drishti-chart
 
-Version 0.2.0. Bundle `static/elements/drishti-chart/drishti_chart.js`, global `Drishti.elements.chart`; requires drishti-core, drishti-inputs.
+Version 0.3.0. Bundle `static/elements/drishti-chart/drishti_chart.js`, global `Drishti.elements.chart`; requires drishti-core, drishti-inputs.
 
 ### drishti_chart-spec.js
 
@@ -14753,11 +14753,11 @@ Returns `import('./drishti_chart-spec.js').BuiltChart`.
 
 #### `buildBoxplot(spec, rows, env)`
 
-Box plot: the five figures of a field's values per category (whiskers at 1.5 IQR) and the values beyond them as points.
+Box plot: the five figures of a field's values per category (whiskers at 1.5 IQR) and the values beyond them as points. Or the server's figures as they are (spec.boxes names the fields of low, q1, median, q3, high and n in one row per category).
 
 | Parameter | Type | Meaning |
 |---|---|---|
-| `spec` | `Object` | category, value |
+| `spec` | `Object` | category, value, boxes ({low, q1, median, q3, high, n}: field names) |
 | `rows` | `Object[]` |  |
 | `env` | `Object` |  |
 
@@ -14765,11 +14765,11 @@ Returns `import('./drishti_chart-spec.js').BuiltChart`.
 
 #### `buildHeatmap(spec, rows, env)`
 
-Heatmap: a value at each (x, y) pair of categories, coloured on a sequential or diverging scale (diverging is centred on mid, 0 by default), with the legend's scale under it.
+Heatmap: a value at each (x, y) pair of categories, coloured on a sequential or diverging scale (diverging is centred on mid, 0 by default), with the legend's scale under it; or coloured by a category (value.type 'category': a tone each, the legend's keys); with annotation tracks on either axis (drishti_chart-tracks.js).
 
 | Parameter | Type | Meaning |
 |---|---|---|
-| `spec` | `Object` | x, y, value, scale {type: 'sequential'\|'diverging', mid}, labels |
+| `spec` | `Object` | x, y, value ({field, type, tones, order}), scale {type: 'sequential'\|'diverging', mid}, labels, tracks, trackSize |
 | `rows` | `Object[]` |  |
 | `env` | `Object` |  |
 
@@ -14860,6 +14860,214 @@ Returns `import('./drishti_chart-spec.js').BuiltChart`.
 #### `registerOtherKinds()`
 
 Registers the kinds of this module (the library's entry calls it once).
+
+Returns `void`.
+
+### drishti_chart-kinds3.js
+
+#### `buildLollipop(spec, rows, env)`
+
+Lollipop: a stem and a head at each position; the head's colour a category or a number.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `spec` | `Object` | x (position), y (height), colour ({field, tones} or {field, scale, mid, legend: [{name, value}]: the keys of a number}), length (the axis's end), bands [{name, from, to}] |
+| `rows` | `Object[]` |  |
+| `env` | `Object` |  |
+
+Returns `import('./drishti_chart-spec.js').BuiltChart`.
+
+#### `buildTrace3d(spec, rows, env)`
+
+A 3D trace: points joined in order, coloured by a figure; flat (x against y) where three dimensions cannot be drawn.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `spec` | `Object` | x, y, z, order (the field the points are joined by), colour, id, turn, selected (ids drawn larger; the card's selection does it too), gl (true or false forces the drawing; default canDraw3d) |
+| `rows` | `Object[]` |  |
+| `env` | `Object` | {theme, fmt, still: reduced motion} |
+
+Returns `import('./drishti_chart-spec.js').BuiltChart`.
+
+#### `canDraw3d(root)`
+
+Whether three dimensions can be drawn here: ECharts GL loaded and WebGL on.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[root]` | `Object` | the window |
+
+Returns `boolean`.
+
+#### `ensure3d()`
+
+Loads the vendored ECharts GL once (vendor/echarts-gl/); resolves either way (a trace3d is drawn flat without it).
+
+Returns `Promise&lt;boolean&gt;`: whether three dimensions can be drawn.
+
+#### `registerSequenceKinds()`
+
+Registers lollipop and trace3d.
+
+Returns `void`.
+
+### drishti_chart-tracks.js
+
+#### `trackValues(t, rows, keyField, keys)`
+
+The values of a track by member: its values, or its field read from the first row of each member.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `t` | `HeatTrack` |  |
+| `rows` | `Object[]` | the heatmap's rows |
+| `keyField` | `string` | the field of the track's axis (x or y) |
+| `keys` | `string[]` | the axis's members, in order |
+
+Returns `Array&lt;*&gt;`: one value per member (null where none).
+
+#### `trackColour(t, vals, th)`
+
+How a track's (or category cells') values are coloured: a function of a value to its colour, and the legend's keys for a category.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `t` | `HeatTrack` |  |
+| `vals` | `Array&lt;*&gt;` |  |
+| `th` | `Object` | the chart theme |
+
+Returns `{colour: function(*): ?string, category: boolean, keys: Array&lt;{name: string, colour: string, style: string}&gt;}`.
+
+#### `categoryCells(spec, rows, th)`
+
+Category cells: the heatmap's cells coloured by a category (spec.value.type 'category') rather than a scale.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `spec` | `Object` | the heatmap's spec (value: {field, type: 'category', tones, order}) |
+| `rows` | `Object[]` |  |
+| `th` | `Object` |  |
+
+Returns `{colour: function(*): ?string, keys: Array&lt;{name: string, colour: string, style: string}&gt;, codes: string[]}`: codes: the categories in order (a cell's number is its index).
+
+#### `addTracks(option, spec, rows, axes, env, table)`
+
+Adds a heatmap's tracks to its option: the heatmap's grid keeps index 0 (its axes too, so a selection's outline lands on it), and each track is a grid of its own on the same members, sharing the heatmap's left and right edges (x) or top and bottom (y). The heatmap's grid is laid out with room for them; the data table gains a column (x: a row) per track. Changes option and table in place.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `option` | `Object` | the heatmap's option (one grid, one x and one y axis) |
+| `spec` | `Object` | its spec (tracks, trackSize: a strip's thickness in pixels, default 10) |
+| `rows` | `Object[]` |  |
+| `axes` | `{xs: string[], ys: string[], xf: string, yf: string}` | the heatmap's members and fields |
+| `env` | `Object` | {theme, fmt} |
+| `table` | `{columns: Array, rows: Array}` | the data table (rows by y member) |
+
+Returns `Array&lt;{name: string, colour: string, style: string}&gt;`: the legend's keys of the category tracks.
+
+### drishti_chart-overlays.js
+
+#### `segmentOf(segs, v)`
+
+The segment a value falls in (by from and to, the segments in order), or -1.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `segs` | `Array&lt;{from: number, to: number}&gt;` |  |
+| `v` | `number` |  |
+
+Returns `number`.
+
+#### `scatterOverlays(option, spec, rows, env)`
+
+Adds a scatter's segments, top labels and surface to its option (in place); the first series carries the bands.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `option` | `Object` | the scatter's option |
+| `spec` | `Object` | segments, labelTop, surface (above) |
+| `rows` | `Object[]` |  |
+| `env` | `Object` | {theme, fmt} |
+
+Returns `Array&lt;{name: string, colour: string, style: string}&gt;`: legend keys it adds (none today).
+
+### drishti_chart-frames.js
+
+#### `frameValues(rows, frames)`
+
+The frames of a field: the values given, or the field's distinct values (numbers ascending, else text order).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `rows` | `Object[]` |  |
+| `frames` | `ChartFrames` |  |
+
+Returns `Array&lt;*&gt;`.
+
+#### `frameRows(rows, frames, values, index)`
+
+The rows drawn at a frame: the frame's own (mode only) or every frame's up to it (mode upto).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `rows` | `Object[]` |  |
+| `frames` | `ChartFrames` |  |
+| `values` | `Array&lt;*&gt;` | the frames in order |
+| `index` | `number` | the frame's index |
+
+Returns `Object[]`.
+
+#### `reducedMotion(win)`
+
+Whether the person asked for reduced motion (Play is then not offered).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[win]` | `Window` |  |
+
+Returns `boolean`.
+
+#### class `FrameBar`
+
+The frames' bar in a chart's card: Play (or Pause), the slider and the frame's words. It tells its owner the index chosen.
+
+##### `new FrameBar(doc, onFrame)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `doc` | `Document` |  |
+| `onFrame` | `function(number, {playing: boolean}): void` | called with the index chosen (by the slider, a key or Play) |
+
+##### `FrameBar.set(frames, values)`
+
+Sets the frames (a new spec or new rows); keeps the frame shown when it is still there.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `frames` | `ChartFrames` |  |
+| `values` | `Array&lt;*&gt;` |  |
+
+Returns `number`: the index shown.
+
+##### `FrameBar.go(i)`
+
+Shows a frame by its index (clamped).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `i` | `number` |  |
+
+Returns `void`.
+
+##### `FrameBar.play()`
+
+Plays the frames from the one shown (from the first when the last is shown), one each interval, and stops at the last.
+
+Returns `boolean`: false when Play is not offered (reduced motion, or no frames).
+
+##### `FrameBar.stop()`
+
+Stops playing.
 
 Returns `void`.
 
@@ -15240,6 +15448,30 @@ A drag on the grid that picks a range of the axis (linked brushing): a band whil
 
 Returns `function(): void`: clears the band.
 
+#### `rectBrush(engine, active, look, onBrush)`
+
+The rectangle brush: a drag on a plot draws a rectangle and, when the mouse is let go, gives the values of both axes at its corners, lower first (a click, with no drag, stays a click on a mark). The rectangle stays until the next drag or the clear function.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `engine` | `Object` | the chart's engine instance |
+| `active` | `function(): boolean` | whether the chart brushes now |
+| `look` | `{fill: string, stroke: string}` | the rectangle's fill and edge |
+| `onBrush` | `function({x: Array&lt;number&gt;, y: Array&lt;number&gt;}): void` | given {x: [low, high], y: [low, high]} in the axes' values |
+
+Returns `function(): void`: clears the rectangle.
+
+#### `idsInBox(option, box)`
+
+The marks of an option inside a rectangle of axis values: the row ids of every point of the first grid whose x and y fall in it.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `option` | `Object` | the engine's option (its series' items carry ids) |
+| `box` | `{x: Array&lt;number&gt;, y: Array&lt;number&gt;}` |  |
+
+Returns `string[]`.
+
 #### `svgOf(E, option, width, height)`
 
 The chart as SVG text, drawn off screen by the engine's server-side renderer at the card's size (the export's SVG).
@@ -15438,6 +15670,40 @@ Emits an event on chart.events and as a DOM event drishti:&lt;kebab-name&gt; on 
 |---|---|---|
 | `name` | `string` | one of CHART_EVENTS |
 | `[detail]` | `Object` |  |
+
+Returns `void`.
+
+##### `Chart.clearBrush()`
+
+Clears the rectangle brush's rectangle and the selection it made.
+
+Returns `void`.
+
+##### `Chart.setFrame(v)`
+
+Shows a frame: by its value (a round, a date) or, given a number that is no frame's value, by its index.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` |  |
+
+Returns `boolean`: whether there is such a frame.
+
+##### `Chart.frame()`
+
+The frame shown: its value and index (null when the spec has no frames).
+
+Returns `?{value: *, index: number, of: number}`.
+
+##### `Chart.play()`
+
+Plays the frames (Play's own action): false when the spec has none or the person asked for reduced motion.
+
+Returns `boolean`.
+
+##### `Chart.pause()`
+
+Stops playing the frames.
 
 Returns `void`.
 
@@ -15824,6 +16090,20 @@ Returns `void`.
 
 ### Types of drishti-chart
 
+#### `ChartFrames` : `Object`
+
+A chart's frames.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `field` | `string` | the field each row's frame is read from |
+| `[values]` | `Array&lt;*&gt;` | the frames in order (default: the field's values, numbers ascending, else text order) |
+| `[at]` | `*` | the frame shown first (default: the first) |
+| `[play=true]` | `boolean` | offer Play |
+| `[interval=900]` | `number` | milliseconds between frames while playing |
+| `[mode='only']` | `('only'\|'upto')` | only: the rows of the frame; upto: the rows of every frame up to it |
+| `[label]` | `string` | the word before the frame's value ("Round") |
+
 #### `RegionGeo` : `Object`
 
 | Name | Type | Meaning |
@@ -15895,6 +16175,23 @@ The chart's theme: a VisualTheme (drishti-core) with the chart's sizes.
 | `sequential` | `string[]` | five colours from faint to strong |
 | `diverging` | `string[]` | five colours, negative to positive through the ground |
 | `nodata` | `string` |  |
+
+#### `HeatTrack` : `Object`
+
+A track of a heatmap: a strip of cells on one axis's members.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[axis='x']` | `('x'\|'y')` | x: a strip above the heatmap per column; y: a strip at its right per row |
+| `title` | `string` | the track's name (its label and its column in the data table) |
+| `[values]` | `Object&lt;string, *&gt;` | the value of each member (the member as text) |
+| `[field]` | `string` | else the value of a member is this field of the first row of that member |
+| `[type]` | `('category'\|'value')` | default: value when every value is a number |
+| `[tones]` | `Object&lt;string, string&gt;` | a category's tone (good, bad, warn, accent, link, muted ...) or colour |
+| `[scale='sequential']` | `('sequential'\|'diverging')` | a number's ramp |
+| `[mid=0]` | `number` | the middle of a diverging ramp |
+| `[min]` | `number` | the ramp's low end (default: the smallest value) |
+| `[max]` | `number` | the ramp's high end (default: the largest value) |
 
 #### `ChartOptions` : `Object`
 
