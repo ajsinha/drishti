@@ -326,6 +326,14 @@ it the same way. Takes over: `drishti_channel.js`, `drishti_live-hub.js`, `drish
 `drishti_pivot-engine.js`; the freshness of `drishti_refresh.js`, the live part of `drishti_bi-live.js`, the file streaming of
 `drishti_pack-read.js` and `drishti_pack-profile.js`.
 
+**The data worker and the feed monitor (drishti-data 0.2.0).** `DataWorker` decodes Arrow IPC and counts bins off the page's thread: a
+module worker (`drishti_data-worker.js`) running the same `readColumn` and `binCounts` the page runs without a worker (`new DataWorker({worker:
+false})`, or a browser without workers, never a second implementation). `decode(buffer)` gives a `DataFrame` (the bytes are transferred),
+`bin(Float64Array, {bins, extent})` the counts; a worker that fails hands the work back to the page. `FeedMonitor` reads a feed's sequence
+numbers: a **gap** (the numbers missed), an out-of-order message, a repeat, and **stale** when nothing has come for `staleMs`;
+`monitor.attach(liveClient)` feeds it, `feedBadge(element, monitor, {refresh})` draws it with the state kit ("Live", "Missed 3 updates",
+"No updates as of 12:04 · Refresh").
+
 ### 4.6 drishti-insight
 
 `<drishti-explain>` (the one Explain: a cell, a mark, a figure, a change between two dates), `<drishti-search>` (the one search),

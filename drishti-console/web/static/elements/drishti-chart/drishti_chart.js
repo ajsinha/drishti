@@ -1088,6 +1088,15 @@
         series.push({ type: 'scatter', name: bub.title || bf, field: bf, coordinateSystem: 'geo', z: 6, itemStyle: { color: alpha(th.tokens.accent, 0.55), borderColor: th.tokens.accent, borderWidth: 1 },
           data: pts.filter((p) => p.xy).map((p) => ({ name: String(p.name), value: p.xy.concat([p.v]), symbolSize: 4 + 30 * Math.sqrt(Math.abs(p.v || 0) / mx), r: p.r, ids: p.ids })) });
       }
+      const fl = spec.flows;
+      if (fl && Array.isArray(fl.rows || rows)) {
+        const ff = fieldOf(fl.from) || 'from', tf = fieldOf(fl.to) || 'to', vf = fieldOf(fl.value) || 'value';
+        const at = (code) => { const sh = shapeByCode.get(String(code)), g = geo.points.find((x) => x.code === String(code)); return sh ? centreOf(sh) : g ? g.xy : null; };
+        const lines = (fl.rows || rows).map((r, i) => ({ a: at(r[ff]), b: at(r[tf]), v: num(r[vf]) || 0, from: r[ff], to: r[tf], i: i })).filter((l) => l.a && l.b);
+        const fm = Math.max.apply(null, lines.map((l) => Math.abs(l.v)).concat([1e-9]));
+        series.push({ type: 'lines', name: fl.title || vf, coordinateSystem: 'geo', z: 4, silent: false, effect: { show: false }, lineStyle: { color: th.tokens.accent, opacity: 0.55, curveness: 0.25 },
+          data: lines.map((l) => ({ name: l.from + ' to ' + l.to, coords: [l.a, l.b], value: l.v, lineStyle: { width: 0.8 + 5 * Math.abs(l.v) / fm }, r: [l.i], ids: [] })) });
+      }
       const option = {
         animation: false, textStyle: textStyle(th),
         tooltip: { trigger: 'item', confine: true },

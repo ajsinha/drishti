@@ -27,7 +27,7 @@ one bundled file next to them; a page loads drishti-core and then `Drishti.eleme
 | [drishti-grid](#drishti-grid) | 0.6.0 | The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and &lt;drishti-grid&gt; in three layouts and three densities), cell editing with undo, paste, write-back and four eyes, and the AG Grid-style adapter (createGridFromAgOptions) |
 | [drishti-tree](#drishti-tree) | 0.2.0 | The tree: hierarchies as an org chart, an indented tree with measures (on drishti-grid's tree data), a sunburst and an icicle; expand and collapse, search with breadcrumbs, measures on nodes with non-additive ones (◆) asked of the server and never summed, Explain, re-parenting in an edit mode that proposes the move for four eyes, the outline of an authoring screen (marks, a hiding filter, a designer's selection followed both ways, moves by drag or Alt+arrows), export, keyboard and ARIA |
 | [drishti-designer](#drishti-designer) | 0.2.0 | The designer kit: the layout canvas over a layout model (grid or flow: place, move, resize with snap, multi-select, align, distribute, z-order, groups, copy and paste, a phone's order, the keys, undo and redo on one command stack), the palette, the inspector (a form from a schema), the outline (drishti-tree's, drag to re-order or re-parent), the YAML pane kept in step with the model both ways (completion and lint from a JSON Schema) and the designer shell (three panes, Visual / YAML / Both, versions, Validate, Preview, History, Impact, Propose for review) |
-| [drishti-data](#drishti-data) | 0.1.0 | Data: one data-source contract (in memory, REST pages, server-side rows, Arrow, live), the live client over SSE and WebSocket with reconnect, heartbeat, resume and backpressure, and the Arrow client |
+| [drishti-data](#drishti-data) | 0.2.0 | Data: one data-source contract (in memory, REST pages, server-side rows, Arrow, live), the live client over SSE and WebSocket with reconnect, heartbeat, resume and backpressure, and the Arrow client |
 | [drishti-chart](#drishti-chart) | 0.3.0 | The chart: one engine-neutral spec over the vendored ECharts (the general kinds, the maps from world to every country's first-level regions, the card and studio modes, the map's ranking and table modes), Explain on any mark, the data table, export, linked selection and live updates; Vega-Lite translated into the spec |
 | [drishti-graph](#drishti-graph) | 0.1.0 | The graph: networks cyclic or acyclic on a canvas for thousands of nodes; force (seeded), layered (DAG), radial, circular and grouped layouts; zoom, pan, minimap and fit; neighbours expanded on demand; the shortest path; groups collapsed by an attribute and filters by type; size and colour by a measure with a legend; pin, multi-select and lasso; a selection panel with Explain; linked selection; export (PNG, SVG, data); keyboard and an adjacency table; live updates; the lineage preset; the view's graph panel |
 | [drishti-insight](#drishti-insight) | 0.1.0 | Insight on a Drishti server: the one Explain (preview, drawer, full page, keys), the one search box (command line, Help, Alt+K), the one Approvals queue and the workbook export |
@@ -14655,7 +14655,7 @@ One of the header's actions.
 
 ## drishti-data
 
-Version 0.1.0. Bundle `static/elements/drishti-data/drishti_data.js`, global `Drishti.elements.data`; requires drishti-core.
+Version 0.2.0. Bundle `static/elements/drishti-data/drishti_data.js`, global `Drishti.elements.data`; requires drishti-core.
 
 ### drishti_backoff.js
 
@@ -14988,6 +14988,144 @@ Reads a request: {ticket} through Flight over HTTP when offered, else {url} (and
 
 Returns `Promise&lt;DataFrame & {via: string}&gt;`.
 
+### drishti_data-compute.js
+
+#### `binCounts(values, o)`
+
+Counts numbers into equal-width bins over their range (or the extent given); NaN and values outside the extent are left out.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `values` | `(Float64Array\|number[])` |  |
+| `[o]` | `{bins: number, extent: number[]}` | bins default 20 |
+
+Returns `{x0: number, width: number, counts: Uint32Array, n: number}`.
+
+### drishti_data-worker-client.js
+
+#### `DATA_WORKER`
+
+The worker's file, relative to the static root.
+
+#### `frameFromWorker(p)`
+
+A DataFrame from what the worker decoded.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `p` | `{names: string[], length: number, columns: Array&lt;{name: string, type: string, data: *}&gt;, meta: Object, bytes: number}` |  |
+
+Returns `DataFrame`.
+
+#### class `DataWorker`
+
+Decoding and binning off the page's thread.
+
+##### `new DataWorker(o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[o]` | `{url: string, Worker: function, arrow: Object, worker: boolean}` | url: the worker's address (default: the static one); worker: false forces the page's thread (a test, a page whose policy forbids workers) |
+
+##### `DataWorker.usesWorker()`
+
+Whether a worker is doing the work.
+
+Returns `boolean`.
+
+##### `DataWorker.decode(buffer)`
+
+Arrow IPC bytes as a DataFrame (the bytes are transferred to the worker: do not use them after).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `buffer` | `ArrayBuffer` |  |
+
+Returns `Promise&lt;DataFrame&gt;`.
+
+##### `DataWorker.bin(values, options)`
+
+Counts numbers into equal-width bins (a Float64Array is transferred to the worker: do not use it after).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `values` | `Float64Array` |  |
+| `[options]` | `{bins: number, extent: number[]}` |  |
+
+Returns `Promise&lt;{x0: number, width: number, counts: Uint32Array, n: number}&gt;`.
+
+##### `DataWorker.destroy()`
+
+Ends the worker.
+
+Returns `void`.
+
+### drishti_feed-monitor.js
+
+#### class `FeedMonitor`
+
+Counts what a feed delivered and what it missed. Events through on(): gap {from, to, missed}, stale {since}, fresh, order, repeat.
+
+##### `new FeedMonitor(o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[o]` | `FeedMonitorOptions` |  |
+
+##### `FeedMonitor.on(fn)`
+
+Listens to the monitor's events.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `fn` | `function(string, Object): void` |  |
+
+Returns `function(): void`: stops listening.
+
+##### `FeedMonitor.receive(message)`
+
+Takes one message (call it for every message of the feed).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `message` | `Object` |  |
+
+Returns `void`.
+
+##### `FeedMonitor.check()`
+
+Checks the clock: call it on a timer (the badge does); says stale once when the quiet is too long.
+
+Returns `boolean`: whether the feed is stale now.
+
+##### `FeedMonitor.reset()`
+
+Starts again (a new connection with a new numbering).
+
+Returns `void`.
+
+##### `FeedMonitor.attach(client)`
+
+Feeds the monitor from a live client (drishti-data's LiveClient).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `client` | `{subscribe: function(function(Object): void): function(): void}` |  |
+
+Returns `function(): void`: stops.
+
+#### `feedBadge(el, monitor, o)`
+
+A small badge for a monitor: "Live", "Stale: nothing for 20 s" with a Refresh, or "Missed 3 updates" (until acknowledged). The badge is a live region.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `el` | `HTMLElement` |  |
+| `monitor` | `FeedMonitor` |  |
+| `[o]` | `{refresh: function(): void, tickMs: number}` | refresh: what Refresh does (resync); tickMs: how often the clock is checked (default 2000) |
+
+Returns `function(): void`: stops.
+
 ### drishti_sources.js
 
 #### `rowRequest(r)`
@@ -15080,6 +15218,14 @@ A live client (new LiveClient(o)).
 Returns `import('./drishti_live-client.js').LiveClient`.
 
 ### Types of drishti-data
+
+#### `FeedMonitorOptions` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[seqOf]` | `function(Object): ?number` | the sequence number of a message (default: message.seq) |
+| `[staleMs=15000]` | `number` | quiet for this long is stale (0: never) |
+| `[now]` | `function(): number` | the clock (default Date.now) |
 
 #### `LiveClientOptions` : `Object`
 

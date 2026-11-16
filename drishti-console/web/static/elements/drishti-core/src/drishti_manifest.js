@@ -109,7 +109,7 @@ export const MANIFEST = Object.freeze({
       "module": "core"
     },
     "drishti-data": {
-      "version": "0.1.0",
+      "version": "0.2.0",
       "title": "Data: one data-source contract (in memory, REST pages, server-side rows, Arrow, live), the live client over SSE and WebSocket with reconnect, heartbeat, resume and backpressure, and the Arrow client",
       "bundle": "drishti-data/drishti_data.js",
       "entry": "drishti-data/src/drishti_index.js",
