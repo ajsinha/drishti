@@ -242,15 +242,3 @@ def test_a_console_channel_ends_when_its_session_recheck_fails(two):  # noqa: F8
 
     alive, ended, out = contextvars.Context().run(asyncio.run, go())
     assert alive and ended and any(e == "gone" and "DRS-5010" in d for _, e, d in out)
-
-
-def test_ai_limits_count_per_server_and_user():
-    from core.ai.policy import DefaultPolicy, PolicySettings
-    from core.ai.types import CallContext, ChatRequest, LlmError, ModelInfo
-
-    p = DefaultPolicy(PolicySettings(per_user_per_day=1))
-    model = ModelInfo("m", "p", "m")
-    p.before(CallContext("ann", frozenset(), "chat", None, "open"), model, ChatRequest.of("x"))
-    p.before(CallContext("ann", frozenset(), "chat", None, "desk"), model, ChatRequest.of("x"))     # another person: their own limit
-    with pytest.raises(LlmError):
-        p.before(CallContext("ann", frozenset(), "chat", None, "desk"), model, ChatRequest.of("x"))

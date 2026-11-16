@@ -86,7 +86,7 @@ the settings are in [CONFIGURATION.md](../admin/CONFIGURATION.md).
 Drishti talks to language models through its **own** interfaces. Which vendor, library or endpoint answers is a file in
 `config/ai/`, not a decision in a feature. Spring AI (`spring-ai-starter-model-openai`) is an implementation detail behind the
 `openai` provider type; no feature sees it. The layer is **off by default** (`drishti.ai.enabled=false`): while off, no
-provider file is read and no model is called. The same shape exists in the console (`drishti-console/core/ai/`, section 8).
+provider file is read and no model is called. The console calls this layer only (section 8).
 MCP servers (tools a model or a feature can call) have a sibling layer: [section 2](#2-the-mcp-client-other-servers-tools-behind-drishtis-policy). Beyond `openai`, `anthropic` and `mock`, seventeen more provider types (Groq, Together, Fireworks, DeepSeek, xAI, OpenRouter, Perplexity, Hugging Face, vLLM, LM Studio, Mistral, any OpenAI-compatible server, Azure OpenAI, Gemini, Cohere, Ollama, AWS Bedrock) come from sajhamcpserver: [section 11](#11-more-providers-the-way-sajhamcpserver-has-them).
 
 ### 1. The pieces (server, module `drishti-ai`)
@@ -159,7 +159,7 @@ sets the site default once: `drishti.http.proxy.*` on the server, `DRISHTI_HTTP_
 `http://` and `https://` endpoints both go through an `http://` proxy; an https endpoint is tunnelled with `CONNECT`, so `tls.*` (a private CA, a client certificate) still applies to the
 endpoint itself. OpenAI-compatible and Anthropic providers use it on the server (the JDK HTTP client) and in the console (`httpx`). A literal `proxy.password` refuses the file without
 repeating it; a wrong proxy login is reported as a failure of the call without the password. Everything is in [DATA_GUIDE.md, the outbound proxy](DATA_GUIDE.md#proxy-9-the-console-ai-and-mcp-clients). Tested in
-`AiProxyTest` (Java) and `tests/test_ai_proxy.py` (console) against a fake proxy on loopback. Admin -> AI does not display the proxy yet.
+`AiProxyTest` against a fake proxy on loopback. Admin -> AI does not display the proxy yet.
 
 #### A provider that cannot be set up is retried
 
@@ -222,8 +222,7 @@ enforcer rule `maxJdkVersion 21` still passes and production runs on JDK 21.
    network) and the `mock` provider for everything that sits above you. Then Admin -> AI shows your provider and
    `POST /api/v1/admin/ai/test` sends one real call.
 
-Console: write the same class shape in Python (`BaseProvider` in `core/ai/providers/base.py`), then
-`core.ai.providers.register("acme", factory)` or add it to `FACTORIES`.
+The console needs nothing: it calls the server's layer only.
 
 ### 4. Policy
 
@@ -281,45 +280,34 @@ never a row. Point them at a model with `drishti.bi.ai.model`. Details, settings
 
 ### 8. The console
 
-`drishti-console/core/ai/` mirrors the server with `typing.Protocol`s in `protocols.py` (`LlmProvider`, `ChatModel`, `EmbeddingModel`,
-`Registry`, `Policy`), httpx (already a dependency) and no vendor SDK:
-
-| Server | Console |
-|---|---|
-| `openai`, `anthropic`, `mock` | the same three types, same file format and keys (`tls.ca-file`, `tls.cert-file`, `tls.key-file` for TLS) |
-| - | **`server`**: delegates to the server's `POST /api/v1/ai/chat` with the signed-in identity; keys, policy, masking, limits and audit stay on the server. **The recommended console provider.** The model `id` is the server's `provider/model`; omit it for the server's default. |
-
-The console's layer follows its folders too, with no restart: a supervisor looks at `ai.dir` and `mcp.dir` every `ai.poll_seconds` (5), reloads
-when a file changed, and retries what failed with `retry.*` / `retry.ai.*` / `retry.mcp.*` (the console's equivalents of `drishti.retry.*`; same schedule, same
-rules). Admin -> AI shows the *failed - next retry in Ns (attempt k)* line for the console's providers and servers as it does for the server's, and its Retry now
-button tries both layers at once.
-
-Settings (`drishti-console/config/application.yaml`): `ai.enabled` (`DRISHTI_AI_ENABLED`, false), `ai.dir` (`DRISHTI_AI_DIR`),
-`ai.default_model`, `ai.redact` (the field names to mask), `ai.policy.*` (same meaning as above). Console code calls
-`request.app.state.ai.gateway.chat(CallContext(...), ChatRequest.of(...))`; the ready-made route is `POST /api/ai/chat` (JSON only,
-signed in, feature `console:<name>`). **Admin -> AI** is a read-only page for both layers: on or off, providers with health and
-models, MCP servers and (one server at a time, by link) their tools. Each console provider has a **Test connection** button: it calls the provider's `probe()` (one cheap live call such as a model list) and `live_models()` once, on request, and shows the answer inline (`POST /admin/ai/api/test/<name>`: administrators only, a JSON body, at most 15 seconds, one test per provider every two seconds, the key never in the answer). `health()` still never calls the network. Every test is an `ai-audit` line in the console's log (who, provider, outcome, milliseconds). The console's Ask stays a thin proxy to the server's Ask.
+The console calls no model and no MCP server itself ([THIN_CONSOLE_DESIGN.md](../architecture/THIN_CONSOLE_DESIGN.md), step S7): keys,
+policy, masking, limits and audit have one home, the server. Console features call the console's `POST /api/ai/chat` (JSON only, signed
+in, feature `console:<name>`), which passes the call to the server's `POST /api/v1/ai/chat` as the person. **Admin -> AI** is a read-only
+page of the server's layer: on or off, providers with health and models, MCP servers and (one server at a time, by link) their tools,
+and the AI tools the hosted modules describe. **Test connection** beside a provider makes one live call to its first model on the server
+(`POST /api/v1/admin/ai/test`, audited there); **Retry now** asks the server to try again what failed. A site that configured a provider
+only on the console moves the file to the server's `config/ai` (the same format).
 
 ### 9. Tests
 
 `drishti-ai`: `AiProxyTest` (the proxy: credentials from the environment, the site default, `proxy: none`, no-proxy, a literal password refused), `LlmLayerTest` (mock, files, registry and reload, a stub OpenAI-compatible server incl. headers, cost and error
 handling, a stub Anthropic server, policy), `McpLayerTest`. `drishti-server`: `AiApiTest` (REST end to end with the mock),
-`AskEndToEndTest` and friends (Ask on the layer, incl. the legacy settings), `AskOffByDefaultTest`. Console:
-`tests/test_ai_layer.py`. None touches a network beyond loopback. The providers of section 11 have their own tests ([11.10](#1110-tests)).
+`AskEndToEndTest` and friends (Ask on the layer, incl. the legacy settings), `AskOffByDefaultTest`. None touches a network beyond
+loopback. The providers of section 11 have their own tests ([11.10](#1110-tests)).
 
 ### 10. One design in two languages: the sajhamcpserver abstractions
 
-The AI layer exposes the **same abstractions as the user's other project, sajhamcpserver** (`sajha/ai/llm/`), in Python (console, `core/ai/llm/`) and Java (`drishti-ai`, package
-`com.ash.drishti.ai.llm`), so that code written against one reads like code written against the other. sajhamcpserver is the model; nothing is imported from it. Two things differ on purpose: the
+The AI layer exposes the **same abstractions as the user's other project, sajhamcpserver** (`sajha/ai/llm/`), in Java (`drishti-ai`, package
+`com.ash.drishti.ai.llm`; the console's Python copy was removed with the thin console, step S7), so that code written against one reads like code written against the other. sajhamcpserver is the model; nothing is imported from it. Two things differ on purpose: the
 extension field of a request and a response is **`drishti`** (sajhamcpserver's is `sajha`), and the Java names are the Python names in camelCase.
 
 **Layers.** Under the abstractions the *wire* providers are unchanged (`openai` through Spring AI, `anthropic`, `mock`, and in the console `server`): they speak the small request and response types of the
 earlier layers (`ChatRequest`, `ChatResponse`) and carry the HTTP, TLS and proxy code. `ProviderBase` implements `LLMProvider` over a wire provider and translates in one place
-(`Convert` in Java, `to_wire` / `from_wire` in `core/ai/llm/provider.py`). The provider file format (`config/ai/<name>.yaml`) is **unchanged**; `from_settings` takes the same block as a map.
+(`Convert`). The provider file format (`config/ai/<name>.yaml`) is **unchanged**; `from_settings` takes the same block as a map.
 The policy (masks, audit, limits, feature roles: section 4) is applied by `GovernedModel`, which `LLMFactory.model()` hands out; so both the old `LlmGateway.chat` and the new `LLMModel`
 calls pass the same policy and count in the same health.
 
-| Python (`core.ai.llm`) | Java (`com.ash.drishti.ai.llm`) | Role |
+| sajhamcpserver (Python) | Java (`com.ash.drishti.ai.llm`) | Role |
 |---|---|---|
 | `LLMModel` | `LLMModel` | one model: `info`, `chat_completions_create` / `chatCompletionsCreate`, `achat_completions_create` / `achatCompletionsCreate`, `chat_completions_stream` / `chatCompletionsStream`, `achat_completions_stream` / `achatCompletionsStream`, `embeddings_create` / `embeddingsCreate`, `aembeddings_create` / `aembeddingsCreate` |
 | `LLMProvider` | `LLMProvider` | `from_settings`, `active`, `models`, `model(name, kind)`, `chat_model(model_id, **options)`, `embedding_model`, `health`, `describe_config`, `close` (camelCase in Java; `from_settings` is `LLMProviderFactory.fromSettings`, found by type in `LLMProviders.fromSettings`, because a Java interface cannot require a static) |
@@ -333,7 +321,7 @@ calls pass the same policy and count in the same health.
 | `register_provider`, `registered_providers`, `provider_class`, `load_class` | `LLMProviders.register`, `.registered`, `.fromSettings` | the provider-type registry (the shipped types are registered at start) |
 | `LLMFactory.model(name, *, kind, context)` -> `GovernedModel`, `.provider(name)`, `.provider_names()`, `.provider_types()` and the six passthrough calls | `LLMFactory.model(name, kind, context)`, `.provider`, `.providerNames`, `.providerTypes` and the passthroughs | the one door application code uses; policy applied |
 | `LLMError` and `RateLimited`, `ProviderUnavailable`, `AuthenticationFailed`, `ContextTooLong`, `ContentFiltered`, `UnsupportedFeature`, `ModelFailed`, `InvalidRequest`, `PolicyDenied`, `BudgetExceeded`, `NoModelAvailable`, `ConfigurationError` | `LlmException` with `Kind` | each Python class has a `kind` equal to the Java `Kind`: `FAILED`, `UNSUPPORTED`, `NOT_FOUND`, `POLICY`, `RATE_LIMITED`, `TIMEOUT`, `CONFIG` |
-| `BaseMCPTool` (`core/ai/mcp_tool.py`) | `BaseMcpTool` | the tool base class: `execute`, `get_input_schema`, `get_output_schema` (abstract), `validate_arguments`, `execute_with_tracking`, `get_metrics`, `to_mcp_format`, `load_from_config`, `enable` / `disable` ([section 2](#2-the-mcp-client-other-servers-tools-behind-drishtis-policy) section 7) |
+| `BaseMCPTool` | `BaseMcpTool` | the tool base class: `execute`, `get_input_schema`, `get_output_schema` (abstract), `validate_arguments`, `execute_with_tracking`, `get_metrics`, `to_mcp_format`, `load_from_config`, `enable` / `disable` ([section 2](#2-the-mcp-client-other-servers-tools-behind-drishtis-policy) section 7) |
 
 ```python
 factory = request.app.state.ai.llm                                   # an LLMFactory over the console's gateway and policy
@@ -354,23 +342,23 @@ and ignored; the fallback, cache, budget and breaker layers of sajhamcpserver's 
 environment overrides (`SAJHA_AI_*`) are Drishti's own `DRISHTI_AI_*` and the provider files.
 
 **Tests.** One shared scenario file, `kernel/drishti-ai/src/test/resources/contract/llm_contract.json` (catalogue, chat, tool call, a scripted failure, a stream, embeddings, refusals), is run against the mock
-by `LLMContractTest` (Java) and `tests/test_llm_contract.py` (Python); `BaseMcpToolTest` and the last test of the Python file cover the tool base.
+by `LLMContractTest`; `BaseMcpToolTest` covers the tool base.
 
 ### 11. More providers, the way sajhamcpserver has them
 
 Seventeen provider types joined `openai`, `anthropic`, `server` and `mock`, mirroring `sajha/ai/llm/providers/*.py` of sajhamcpserver: the type names, the settings (sajha's `snake_case` fields are
 `kebab-case` keys of the provider file), the model catalogue and the presets. They sit on the same abstractions (section 10), in **both** languages, behind the same policy (masks, audit,
 limits, roles, labels-only: section 4). **Every one is off until you copy its example from `config/ai/<type>.yaml.example` to `config/ai/<name>.yaml`, set `enabled: true`** and
-`drishti.ai.enabled=true`. A provider file is the same in the server and the console.
+`drishti.ai.enabled=true`.
 
-| `type:` | Vendor and API | Server (Java, `com.ash.drishti.ai`) | Console (Python, `core/ai/providers`) |
-|---|---|---|---|
+| `type:` | Vendor and API | Server (Java, `com.ash.drishti.ai`) |
+|---|---|---|
 | `groq`, `together`, `fireworks`, `deepseek`, `xai`, `openrouter`, `perplexity`, `huggingface`, `vllm`, `lmstudio`, `mistral`, `openai_compatible` | OpenAI Chat Completions | `OpenAiCompatProvider` | `openai_compat.py` |
-| `azure_openai` | Azure OpenAI: api key, bearer or Microsoft Entra ID | `AzureOpenAiProvider`, `EntraTokenSource` | `azure.py`, `cloud_auth.py` |
-| `gemini` | Google Gemini API (AI Studio) | `GeminiProvider` | `gemini.py` |
-| `cohere` | Cohere v2 | `CohereProvider` | `cohere.py` |
-| `ollama` | a local Ollama server, no key | `OllamaProvider` | `ollama.py` |
-| `bedrock` | Amazon Bedrock: Converse, InvokeModel, ListFoundationModels | `BedrockProvider` (AWS SDK v2) | `bedrock.py` (boto3) |
+| `azure_openai` | Azure OpenAI: api key, bearer or Microsoft Entra ID | `AzureOpenAiProvider`, `EntraTokenSource` |
+| `gemini` | Google Gemini API (AI Studio) | `GeminiProvider` |
+| `cohere` | Cohere v2 | `CohereProvider` |
+| `ollama` | a local Ollama server, no key | `OllamaProvider` |
+| `bedrock` | Amazon Bedrock: Converse, InvokeModel, ListFoundationModels | `BedrockProvider` (AWS SDK v2) |
 
 **What every one of them does.**
 
@@ -378,7 +366,7 @@ limits, roles, labels-only: section 4). **Every one is off until you copy its ex
   (OpenAI-compatible, Azure, Gemini, Cohere, Ollama, Bedrock); the cost of a call from the catalogue prices.
 * **Streaming** is the layer's emulation (section 10): the signature is final, the wire call is one request.
 * **Model listing.** `models()` is the catalogue (`ai/llm_catalog.json`, mirrored from sajha's `catalog.py`, prices per million tokens) plus the file's `models:`; a file model with the same name wins, and
-  `catalogue: false` keeps only the file's. `live_models()` (Python) / `liveModels()` (Java) asks the endpoint what it serves now and returns the ones not already listed, with source `live`: `GET /models`
+  `catalogue: false` keeps only the file's. `liveModels()` asks the endpoint what it serves now and returns the ones not already listed, with source `live`: `GET /models`
   for the keyless OpenAI-compatible servers (`vllm`, `lmstudio`, `openai_compatible`; `live-models: true` turns it on for others), `/api/tags` for Ollama, `/v1beta/models` for Gemini, `/v1/models` for Cohere,
   `ListFoundationModels` for Bedrock. A vendor's new model id is a line in `models:`, never a code change. A logical name is the id with characters outside `A-Za-z0-9._-` replaced by `_`
   (`openai/gpt-oss-20b` is `openai_gpt-oss-20b`); `groq/llama-3.3-70b-versatile` addresses a model as `<provider>/<logical name>`.
@@ -568,20 +556,19 @@ No test touches a network beyond loopback.
 
 * Per provider, in both languages, against a fake server that speaks that API (`kernel/drishti-ai/src/test/java/com/ash/drishti/ai/FakeLlmServer.java`, `drishti-console/tests/llm_fakes.py`; the same rules: the last user text is
   echoed, `weather` asks for the tool, `boom` is 500, `limit` is 429, `slow` sleeps): the request (path, auth header, body fields), a reply with usage and cost, a tool call, embeddings, the model list, 401, 429,
-  500 (the body never appears in the message), a timeout, retries, health, masking, the proxy, Azure's three auth modes and both address styles, Bedrock's SigV4 header and session token. `HttpProvidersTest` and
-  `test_llm_providers.py`.
+  500 (the body never appears in the message), a timeout, retries, health, masking, the proxy, Azure's three auth modes and both address styles, Bedrock's SigV4 header and session token. `HttpProvidersTest`.
 * The **shared contract** `llm_contract_http.json` (catalogue, chat, tool call, system turn, 500, 429, stream, embeddings, refusals) runs against an OpenAI-compatible preset, Ollama, Gemini, Cohere and Bedrock in
-  `HttpProvidersContractTest` and `test_llm_providers.py`; the older `llm_contract.json` still runs against the mock.
-* **TLS** with a test CA (`TestPki` in Java, `cryptography` in Python): the private CA is trusted only when configured, mutual TLS is refused without the client certificate and accepted with it (PEM, encrypted
-  key, PKCS12, JKS), the expiry note, the plain-address error, a CONNECT proxy tunnel, every provider type and Bedrock: `ProviderTlsTest`, `test_ai_tls.py`.
-* The catalogue file is the same in `kernel/drishti-ai/src/main/resources/ai/` and `drishti-console/core/ai/providers/`; both languages' tests fail if the copies differ.
+  `HttpProvidersContractTest`; the older `llm_contract.json` still runs against the mock.
+* **TLS** with a test CA (`TestPki`): the private CA is trusted only when configured, mutual TLS is refused without the client certificate and accepted with it (PEM, encrypted
+  key, PKCS12, JKS), the expiry note, the plain-address error, a CONNECT proxy tunnel, every provider type and Bedrock: `ProviderTlsTest`.
+* The catalogue file is `kernel/drishti-ai/src/main/resources/ai/llm_catalog.json` (one copy).
 
 ## 2. The MCP client: other servers' tools, behind Drishti's policy
 
 Drishti can act as a client of **MCP (Model Context Protocol)** servers: list their tools, resources and prompts, call a tool, read a
 resource. Like the LLM layer ([section 1](#1-model-providers)) it is interface-driven, configured by one file per server,
-**off by default** (`drishti.mcp.enabled=false`), and exists on both layers: the server (`drishti-ai`, package `com.ash.drishti.ai`)
-and the console (`drishti-console/core/ai/mcp.py`).
+**off by default** (`drishti.mcp.enabled=false`), and lives on the server (`drishti-ai`, package `com.ash.drishti.ai`); the console calls
+no MCP server itself.
 
 ### 1. Interfaces
 
@@ -671,10 +658,6 @@ $ DRISHTI_SAJHA_MCP_URL=http://127.0.0.1:18991/mcp DRISHTI_SAJHA_MCP_KEY=<test k
 SAJHA tools: 501, e.g. [av_ad_line, av_adx, av_aroon, av_atr, av_balance_sheet]
 calc_percentage_change -> { "old_value": 80, "new_value": 100, "percentage_change": 25.0 }
 [INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0
-
->>> console client (core/ai/mcp.py StreamableHttpClient, same server)
-501 tools; first: ['av_ad_line', 'av_adx', 'av_aroon', 'av_atr', 'av_balance_sheet', 'av_bbands', 'av_cash_flow', 'av_cci']
-call: Result(text='{\n  "old_value": 80,\n  "new_value": 100,\n  "percentage_change": 25.0\n}', error=False)
 ```
 
 To repeat it by hand: copy the SAJHA project to a scratch folder (it writes `data/` and `logs/` next to itself), create a virtualenv,
@@ -684,12 +667,12 @@ copy), seed SAJHA's own config/apikeys.json from its config/apikeys.json.example
 
 ### 6. Tests
 
-`AiProxyTest` and `tests/test_ai_proxy.py` (the MCP client through a fake proxy, plain and `CONNECT` to a TLS server with its own CA), `McpLayerTest` (mock under policy: roles, masking, `allowed-tools`, credential headers; the Streamable HTTP client against a loopback
-stub: handshake, session id, JSON and event-stream answers, DELETE on close), `AiApiTest` (REST), `tests/test_ai_layer.py` (console).
+`AiProxyTest` (the MCP client through a fake proxy, plain and `CONNECT` to a TLS server with its own CA), `McpLayerTest` (mock under policy: roles, masking, `allowed-tools`, credential headers; the Streamable HTTP client against a loopback
+stub: handshake, session id, JSON and event-stream answers, DELETE on close), `AiApiTest` (REST).
 
 ### 7. The tool base class
 
-A tool (something an MCP server serves, or a locally defined one) is written against `BaseMCPTool` (Python, `core/ai/mcp_tool.py`) or `BaseMcpTool` (Java, `com.ash.drishti.ai.llm`), whose abstract methods and signatures
+A tool (something an MCP server serves, or a locally defined one) is written against `BaseMcpTool` (Java, `com.ash.drishti.ai.llm`), whose abstract methods and signatures
 are those of sajhamcpserver's `sajha/tools/base_mcp_tool.py`: `execute(arguments)`, `get_input_schema()` and `get_output_schema()` (Java: `execute`, `getInputSchema`, `getOutputSchema`). A tool is configured by a map
 (`name`, `description`, `version`, `enabled`), or `load_from_config(path)`; `validate_arguments` checks the required and (with `additionalProperties: false`) the known names; `execute_with_tracking` validates, runs
 and counts (`get_metrics`: calls, errors, last call, last error); `to_mcp_format()` is the `tools/list` entry. The client side (calling a remote server's tools, section 1) is unchanged. The mapping table of the whole

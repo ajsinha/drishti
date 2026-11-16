@@ -59,8 +59,6 @@ ALLOWED = {
     "plugins/banking/trading_landing.py:_FLIGHT": "reads running now, by core.user_cache.user_key (server, user, roles, as-of): never served across people",
     "plugins/banking/trading_landing.py:_CACHE": "an LRU keyed by core.user_cache.user_key (server, user, roles, as-of and known-at, lens)",
     "plugins/banking/market_landing.py:_CACHE": "an LRU keyed by core.user_cache.cache_key (made by routes/edition_routes.py) or user_key",
-    "core/ai/llm/registry.py:_PROVIDERS": "the provider classes registered at import (code, not data)",
-    "core/ai/providers/__init__.py:FACTORIES": "the provider factories registered at import (code, not data)",
 }
 
 

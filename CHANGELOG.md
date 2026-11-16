@@ -18,6 +18,13 @@
 
 ## Unreleased
 
+- **The thin console, step S7: the console calls the server's AI layer only.** The console's own AI layer is deleted
+  (`drishti-console/core/ai/`: its providers, registry, policy, masking, limits, MCP client, TLS and proxy rules; `core/retry.py`), with
+  its settings `ai.*`, `mcp.*` and `retry.*` on the console (`DRISHTI_AI_ENABLED`, `DRISHTI_AI_DIR`, `DRISHTI_AI_DEFAULT_MODEL`,
+  `DRISHTI_MCP_ENABLED`, `DRISHTI_MCP_DIR`, `DRISHTI_RETRY_*` on the console) and its tests. The console's `POST /api/ai/chat` passes
+  the call to the server's `POST /api/v1/ai/chat` as the person; Admin -> AI shows the server's layer, its Test connection calls the
+  server's `POST /api/v1/admin/ai/test`. **A site that configured a provider or an MCP server only on the console moves the file to the
+  server's `config/ai` or `config/mcp`** (the same format).
 - **The thin console, step S4: the person's decisions come from the server.** `GET /api/v1/me/console` adds `engines-opened` (each
   engine's `opens:` evaluated on the server), `grants` (admin, edit, layout, calc, compliance, approve, as the server enforces them) and
   `modules` (the person's modules, lenses and functions, as `GET /api/v1/modules`), so the console asks one answer per person instead

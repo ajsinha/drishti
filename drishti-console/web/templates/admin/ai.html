@@ -33,8 +33,8 @@
       <td class="mono">{{ p.name }}</td><td>{{ p.type }}</td><td><b>{{ p.health.status }}</b></td>
       <td class="mono">{% for m in p.models %}<div>{{ m.ref }} <span class="text-muted-d">({{ m.capabilities | join(', ') }})</span></div>{% else %}—{% endfor %}</td>
       <td>{{ retry_note(p.retry) }}{{ p.health.detail }}{% if p.baseUrl %} · <span class="mono">{{ p.baseUrl }}</span>{% endif %}{% if p.keySet %} · key set{% endif %}
-        {% if where == 'console' %}<div class="ai-test"><button type="button" class="fk" data-ai-test="{{ p.name }}" title="Make one live call to this provider (its model list) and show the answer here">Test connection</button>
-          <div class="t-note" data-ai-test-result="{{ p.name }}" role="status" aria-live="polite"></div></div>{% endif %}</td></tr>
+        {% if p.models %}<div class="ai-test"><button type="button" class="fk" data-ai-test="{{ p.models[0].ref }}" title="Make one live call to this provider's first model, on the server, and show the answer here">Test connection</button>
+          <div class="t-note" data-ai-test-result="{{ p.models[0].ref }}" role="status" aria-live="polite"></div></div>{% endif %}</td></tr>
     {% else %}<tr><td colspan="5">No providers.{% if not d.enabled %} The layer is off (<span class="mono">enabled: false</span>).{% endif %}</td></tr>{% endfor %}</tbody>
   </table></div>
   {% for f, why in (d.fileErrors or {}).items() %}<p class="adm-warn" role="alert"><span class="mono">{{ f }}</span>: {{ why }}</p>{% endfor %}
@@ -44,7 +44,7 @@
     <tbody>{% for s in d.mcpServers %}<tr data-mcp="{{ s.name }}">
       <td class="mono">{{ s.name }}</td><td>{{ s.transport }}</td><td><b>{{ s.health.status }}</b> <span class="text-muted-d">{{ s.health.detail }}</span>{{ retry_note(s.retry) }}</td>
       <td class="mono">{{ s.url or '—' }}</td>
-      <td>{% if s.enabled %}<a href="{{ BASE }}/admin/ai?tools={{ s.name | urlencode }}&where={{ where }}">Show tools</a>{% endif %}{% if s.allowedTools %} · only {{ s.allowedTools | join(', ') }}{% endif %}</td></tr>
+      <td>{% if s.enabled %}<a href="{{ BASE }}/admin/ai?tools={{ s.name | urlencode }}">Show tools</a>{% endif %}{% if s.allowedTools %} · only {{ s.allowedTools | join(', ') }}{% endif %}</td></tr>
     {% else %}<tr><td colspan="5">No MCP servers.</td></tr>{% endfor %}</tbody>
   </table></div>
   {% for f, why in (d.mcpFileErrors or {}).items() %}<p class="adm-warn" role="alert"><span class="mono">{{ f }}</span>: {{ why }}</p>{% endfor %}
@@ -54,13 +54,12 @@
   <h1>AI</h1>
   <p>{{ retry_button('ai', 'Retry now') }}</p>
   {% with tab='ai' %}{% include "admin/_nav.html" %}{% endwith %}
-  <p class="text-muted-d">Read-only. Providers, models and MCP servers are files in <span class="mono">config/ai</span> and <span class="mono">config/mcp</span>;
-    both layers are off until <span class="mono">ai.enabled</span> / <span class="mono">mcp.enabled</span> (console) and <span class="mono">drishti.ai.enabled</span> /
-    <span class="mono">drishti.mcp.enabled</span> (server) are set. The recommended console provider is <span class="mono">type: server</span>: keys stay on the server.</p>
-  {{ layer('Console', local, 'console') }}
+  <p class="text-muted-d">Read-only. The server calls every model and MCP server: providers, models and MCP servers are files in the server's
+    <span class="mono">config/ai</span> and <span class="mono">config/mcp</span>, off until <span class="mono">drishti.ai.enabled</span> /
+    <span class="mono">drishti.mcp.enabled</span> are set. The console calls none itself: keys, policy, masking, limits and audit are the server's.</p>
   {% if remote %}{{ layer('Server', remote, 'server') }}{% else %}<section class="adm-sec"><h2>Server</h2><p class="adm-warn" role="alert">The server's AI layer could not be read{% if remote_error %}: {{ remote_error.detail }}{% endif %}.</p></section>{% endif %}
   {% if tools_of %}<section class="adm-sec" data-ai-tools>
-    <h2>Tools of {{ tools_of }} ({{ tools_where }})</h2>
+    <h2>Tools of {{ tools_of }}</h2>
     {% if tool_error %}<p class="adm-warn" role="alert">{{ tool_error }}</p>
     {% else %}<ul>{% for t in tool_list or [] %}<li><span class="mono">{{ t.name }}</span> {{ t.description }}</li>{% else %}<li>No tools.</li>{% endfor %}</ul>{% endif %}
   </section>{% endif %}

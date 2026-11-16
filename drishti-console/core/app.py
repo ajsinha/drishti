@@ -407,8 +407,6 @@ def create_app(settings: Settings) -> FastAPI:
                 except RuntimeError:
                     pass
             pool.on_failover = _on_failover
-        ai = getattr(app.state, "ai", None)
-        watcher = asyncio.create_task(ai.supervise()) if ai is not None and (ai.enabled or ai.mcp_enabled) else None
         try:                                                 # the edition before the first page (the watch keeps it fresh after a restart)
             default = app.state.servers.get(app.state.servers.default)
             if default is not None and _real_backend(app):
@@ -434,8 +432,6 @@ def create_app(settings: Settings) -> FastAPI:
             from core import tmpdir
 
             tmpdir.clean_up()
-        if watcher is not None:
-            watcher.cancel()
         for client in (app.state.backend.each() if isinstance(app.state.backend, Switch) else [app.state.backend]):
             close = getattr(client, "aclose", None)
             if close:
@@ -790,9 +786,6 @@ def create_app(settings: Settings) -> FastAPI:
         app.include_router(python_routes.router)
         app.include_router(notebook_routes.router)         # the Notebook (/bi/notebook): SQL on the server, Python on its compute pool
         app.include_router(transform_routes.router)        # wave C: the Transform editor (/bi/transform), step by step
-    from core.ai import AiRuntime
-
-    app.state.ai = AiRuntime(settings, backend=lambda: app.state.backend)       # off by default: no file is read, no model or MCP server is called
     from core.embed import EmbedHosts
 
     app.state.embed = EmbedHosts(settings)
