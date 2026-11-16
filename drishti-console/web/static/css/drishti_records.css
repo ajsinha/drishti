@@ -16,7 +16,8 @@
 /* Records everywhere: the host of a table of records (js/drishti_records.js). The grid's look is drishti-grid's; only the frame is sized here. */
 .rc-host { height: min(68vh, 640px); min-height: 280px; border: 1px solid var(--d-border); border-radius: var(--d-radius, 10px); overflow: hidden; background: var(--d-surface); }
 .rc-host.rc-small { height: min(44vh, 360px); min-height: 200px; }
-@media (max-width: 900px) { .rc-host { height: auto; min-height: 0; overflow: visible; } }
+/* On a phone the table scrolls inside its own frame (the id stays pinned); the page itself never scrolls sideways. */
+@media (max-width: 900px) { .rc-host { height: auto; min-height: 0; max-width: 100%; min-width: 0; overflow-x: auto; overflow-y: visible; } }
 /* A list of records spans the content width (the page's column is for text, not for a table); its form and help stay a readable width. The host's height is set
    by drishti_records.js to what is left of the window. */
 .adm:has(.rc-host[data-records-fill]) { max-width: none; }

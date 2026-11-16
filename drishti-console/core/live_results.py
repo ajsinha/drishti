@@ -120,6 +120,8 @@ def grid_spec(data: dict | None, titled: bool = False) -> dict:
         seen = [r["values"].get(path) for r in first if r["values"].get(path) is not None]
         if first and len(seen) == len(first) and all(str(r["values"].get(path)) == str(r["ref"]["id"]) for r in first):
             continue                                    # a column that only repeats the key: the key is shown once
+        if first and not seen:
+            continue                                    # a column nothing on this page holds (a snapshot note of a live document) is not shown
         numeric = bool(seen) and all(number(v) for v in seen)
         cols.append({"field": path[2:] if path.startswith("$.") else path, "label": labels.get(path, path), "type": "number" if numeric else "text"})
     live = d.get("live") or {}

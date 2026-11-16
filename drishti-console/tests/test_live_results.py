@@ -116,3 +116,9 @@ def test_a_column_that_only_repeats_the_key_is_not_drawn_twice_and_the_set_names
     spec = live_results.grid_spec({"kind": "trade", "mnemonic": "TRD", "columns": ["TRADE_ID", "NOTIONAL"], "labels": {}, "rows": rows})
     assert [c["field"] for c in spec["columns"]] == ["__id", "NOTIONAL"] and spec["noun"] == "trades"
     assert live_results.grid_spec({"kind": "counterparty", "columns": [], "rows": []})["noun"] == "counterparties"
+
+
+def test_a_column_nothing_on_the_page_holds_is_not_drawn():
+    rows = [{"ref": {"kind": "news", "id": f"NEWS-{i}"}, "title": f"NEWS-{i}", "values": {"ENTITY": "rates", "SNAPSHOT": None}} for i in range(3)]
+    spec = live_results.grid_spec({"kind": "news", "mnemonic": "NEWS", "columns": ["ENTITY", "SNAPSHOT"], "labels": {}, "rows": rows})
+    assert [c["field"] for c in spec["columns"]] == ["__id", "ENTITY"]
