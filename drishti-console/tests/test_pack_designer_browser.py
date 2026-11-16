@@ -117,7 +117,7 @@ def test_files_in_combinations_a_live_screen_that_follows_the_yaml_a_module_depl
         assert "sutra:" in yaml
         page.evaluate("""() => { const cm = document.querySelector('.CodeMirror').CodeMirror; cm.setValue(cm.getValue().replace('title: "Details"', 'title: "Edited by the designer"')); }""")
         page.wait_for_function("() => document.querySelector('[data-live-screen]').innerText.includes('Edited by the designer')", timeout=LONG)
-        assert page.locator("[data-sutras-grid]").inner_text().count("edited") >= 1
+        page.wait_for_function("() => document.querySelector('[data-sutras-grid]').innerText.includes('edited')", timeout=LONG)
 
         # 5 Finalize: the module and its fifteen checks
         page.click("[data-go=finalize]")

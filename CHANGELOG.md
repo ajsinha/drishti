@@ -98,6 +98,10 @@
   then Ctrl+C, then Escape) closed the drawer and the pending follow opened it again (the flaky *keyboard roles and announcements*
   browser test). Closing Explain cancels the pending follow, and a follow never opens a closed Explain; the test now checks Escape
   straight after a move.
+- **The Pack Designer marks a Sutra edited as it is edited.** The Design list showed *edited* only when the edited Sutra's check came back,
+  so on a busy server the live screen was redrawn from the new YAML while the list still showed the Sutra unedited (the failing *files in,
+  combinations, a live screen* browser test asserted it at once). The list is redrawn the moment a Sutra's edited state changes; the test
+  waits for the mark.
 - **The PDFs follow their Markdown.** `docs/architecture/DISTRIBUTIONS.pdf` still showed the retired `bin/start-*.sh` commands and the
   `drishti-stack/` folder: it is generated from DISTRIBUTIONS.md again and joins the PDFs `tools/docs/md_to_pdf.py --check` keeps current;
   KERNEL_AND_MODULES, DEPLOYMENT_AND_QA_GUIDE and CLUSTER_GUIDE PDFs regenerated with this release's changes.

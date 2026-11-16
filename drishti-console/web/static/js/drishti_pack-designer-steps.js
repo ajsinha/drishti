@@ -103,7 +103,9 @@
       editor.on('change', function () {
         if (silent || !current) { return; }
         var s = sutraOf(current), text = editor.getValue();
+        var was = !!S.edits[current];
         if (text === s.yaml) { delete S.edits[current]; } else { S.edits[current] = text; }
+        if (grid && was !== !!S.edits[current]) { grid.setRows(rowsOf()); }   // the list marks the Sutra edited as it is edited, not when its check returns
         window.clearTimeout(timer);
         timer = window.setTimeout(function () { render(); checkOne(current); }, DEBOUNCE);
       });
