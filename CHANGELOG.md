@@ -18,6 +18,17 @@
 
 ## Unreleased
 
+- **The genomics showcase's data: two packs, 200,000 invented rows.** The genomics module carries two new packs, `genomics-showcase` (a cohort
+  of 1,500 patients, 2,000 genes, 12,000 variant sites, 45,000 calls, 36,000 association tests of three traits, copy-number segments and
+  pathways) and `protein-engineering` (four proteins with coordinates, burial and contacts, a deep mutational scan of 47,840 scores, and an
+  eight-round design campaign of 12,000 designs and 33,000 changes). Everything is invented (gene `HLXK7`, enzyme Helixase-7) and seeded:
+  `python3 tools/packgen/genomics_showcase/make.py` writes `data/testdata/genomics-showcase/` and `data/testdata/protein-engineering/`
+  byte for byte the same for one seed, with the packs' contracts, Sutras, samples, README and guide (`--check` fails on a difference).
+  The association tests are computed from the generated calls and traits, never painted; embeddings, clusters, coordinates, burial and
+  contacts are columns the generator writes. `drishti.py lake demo` builds them into the demo lake and the packs' Delta connectors serve
+  them. New words: `GWAS`, `PROTEIN`, `DESIGNS` (and `SGENE`, `SSAMPLE`, `SVARIANT`, `VCALL`, `CNV`, `PATHWAY`, `RESIDUE`, `DMS`, `CONTACT`,
+  `DMUT`, `DROUND`), each a plain record page that works on its own. The showcase's screens are a separate item.
+
 ## 2.9.11.i5 (2026-11-16)
 
 - **One folder layout for every module.** Each `modules/<module>/` holds its `.dmod` content at the top, as inside the package

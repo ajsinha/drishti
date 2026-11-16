@@ -39,3 +39,22 @@ card, theme, tooltips, Explain, the data table and export of every chart. The El
 
 **How it is built.** `mvn verify` compiles the code, runs its tests, packs `target/dmod/genomics-0.1.0.dmod` and runs the conformance
 checks C1 to C15. See the [tutorial](tutorial.md).
+
+**The showcase: two packs of invented data.** Besides the VCF reader the module carries two packs, `genomics-showcase` and
+`protein-engineering`, that show Drishti outside finance: a cohort of 1,500 patients read against one invented gene (`HLXK7`), and the
+eight-round design campaign of the gene's enzyme (Helixase-7, 312 amino acids). 200,000 rows in 14 kinds, every one seeded and
+invented (no real gene, patient, organism or structure), written by `python3 tools/packgen/genomics_showcase/make.py`: the same seed
+gives byte-identical files in `data/testdata/genomics-showcase/` and `data/testdata/protein-engineering/`, which
+`drishti.py lake demo --only genomics-showcase,protein-engineering` builds into the demo lake and the packs' own Delta connectors
+(`genomics-showcase-store`, `protein-engineering-store`) serve. Like every pack they are data and contracts; the words are
+`GWAS` (a variant tested against a trait), `PROTEIN` (a protein) and `DESIGNS` (a design of the campaign), with `SGENE`, `SSAMPLE`,
+`SVARIANT`, `VCALL`, `CNV`, `PATHWAY`, `RESIDUE`, `DMS`, `CONTACT`, `DMUT` and `DROUND` for the other kinds. Each word opens a plain
+record page, so it works on its own; the showcase's screens are drawn from the same kinds.
+
+What is computed and what is written. The association tests (a Wald test of the log odds ratio of the generated calls against the
+generated traits) are computed by the generator from the calls, so the peak on the association plot, the figures and the records
+behind them agree by construction. The map of samples, the map of designs, the residues' coordinates, burial and contacts and the
+scan's per-position means are columns the generator writes: nothing is projected or measured at view time. The join between the two
+packs is one key: a variant's gene, protein position and amino acid after the change (`study-variant`) are a scan score's protein,
+position and amino acid (`dms-score`). Each pack's README lists every kind's fields; the pack guides (`genomics-showcase`,
+`protein-engineering`, under Help) say what is in them and how to make the data again.

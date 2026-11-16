@@ -58,6 +58,17 @@ PACKS: dict[str, dict] = {
     "funds": {"connector": "funds-store",
               "source": "SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (drishti.py feed run funds)",
               "keys": {"fund": "TICKER", "fund-holder": "TICKER", "index-funds": "INDEX"}, "part-bytes": 1_200_000},
+    # the genomics module's showcase (docs/architecture/GENOMICS_SHOWCASE.md): synthetic, seeded, so the date is the generator's own
+    "genomics-showcase": {"connector": "genomics-showcase-store", "captured": "2026-11-16",
+                          "source": "the seeded synthetic generator (python3 tools/packgen/genomics_showcase/make.py)",
+                          "keys": {"study-gene": "GENE", "study-sample": "SAMPLE_ID", "study-variant": "VARIANT_ID",
+                                   "variant-call": "CALL_ID", "association": "ASSOC_ID", "cnv-segment": "SEGMENT_ID",
+                                   "pathway-gene": "PATHWAY_GENE_ID"}},
+    "protein-engineering": {"connector": "protein-engineering-store", "captured": "2026-11-16",
+                            "source": "the seeded synthetic generator (python3 tools/packgen/genomics_showcase/make.py)",
+                            "keys": {"protein": "PROTEIN", "residue": "RESIDUE_ID", "residue-contact": "CONTACT_ID",
+                                     "dms-score": "SCORE_ID", "design": "DESIGN_ID", "design-mutation": "DESIGN_MUTATION_ID",
+                                     "design-round": "ROUND_ID"}},
 }
 #: a pack with "part-bytes" has each kind's snapshot cut into parts of about that many compressed bytes, so no member is large; a kind
 #: in several parts is a tar of <kind>/<date>/snapshot.part-NN.jsonl.gz (<kind>.tar), one part the plain <kind>.<date>.jsonl.gz
@@ -131,7 +142,7 @@ def _parts(kind_docs: dict[str, dict], part_bytes: int | None) -> list[str]:
 def files(pack: str, docs: dict[str, dict[str, dict]]) -> dict[str, bytes]:
     """{"<pack>/<kind>/<kind>.<date>.jsonl.gz": bytes} for every kind the pack keeps in the test data; a large kind in parts, as a tar
     "<pack>/<kind>/<kind>.tar" of <kind>/<date>/snapshot.part-01.jsonl.gz, part-02 ..."""
-    when = captured(docs)
+    when = PACKS[pack].get("captured") or captured(docs)     # a synthetic pack names its own date
     out = {}
     for kind in PACKS[pack]["keys"]:
         parts = _parts(docs.get(kind, {}), PACKS[pack].get("part-bytes"))
