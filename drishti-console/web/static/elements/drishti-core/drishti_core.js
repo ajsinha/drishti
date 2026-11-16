@@ -655,6 +655,457 @@
     }
     return { "parseDate": parseDate, "daysInMonth": daysInMonth, "isoDate": isoDate, "today": today, "formatDate": formatDate, "formatDateRange": formatDateRange, "isBusinessDay": isBusinessDay, "addBusinessDays": addBusinessDays, "previousBusinessDay": previousBusinessDay, "businessDaysBetween": businessDaysBetween };
   })();
+  /* ---- src/drishti_resize.js ---- */
+  __m["src/drishti_resize.js"] = (function () {
+    let live = null;
+    function installResize(window) {
+      if (live) { return live; }
+      const document = window.document;
+      const requestAnimationFrame = window.requestAnimationFrame.bind(window);
+      const getComputedStyle = window.getComputedStyle.bind(window);
+      var NS = 'drishti.resize.', PHONE = '(max-width: 639.98px)', STEP = 16;
+      var mq = window.matchMedia ? window.matchMedia(PHONE) : null;
+      function phone() { return !!(mq && mq.matches); }
+      function num(v, d) { var n = parseFloat(v); return isFinite(n) ? n : d; }
+      function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+      function modeOf(el) { var m = el.closest && el.closest('[data-resize-mode]'); return m ? m.getAttribute('data-resize-mode') : ''; }
+      function slot(key, el) { var m = modeOf(el); return NS + key + (m ? '@' + m : ''); }
+      function load(key, el) {
+        if (!key) { return null; }
+        try { var s = window.localStorage.getItem(slot(key, el)); return s ? JSON.parse(s) : null; } catch (e) { return null; }
+      }
+      function store(key, el, v) {
+        if (!key) { return; }
+        try { if (v === null) { window.localStorage.removeItem(slot(key, el)); } else { window.localStorage.setItem(slot(key, el), JSON.stringify(v)); } } catch (e) { /* private mode, quota: not kept */ }
+      }
+      function forget(key) {
+        try {
+          var ls = window.localStorage, gone = [];
+          for (var i = 0; i < ls.length; i++) { var k = ls.key(i); if (k === NS + key || k.indexOf(NS + key + '@') === 0) { gone.push(k); } }
+          gone.forEach(function (k) { ls.removeItem(k); });
+        } catch (e) { /* nothing kept */ }
+      }
+      function aria(el, o) {
+        if (!o.value) { return; }
+        var v = o.value();
+        if (!v) { return; }
+        el.setAttribute('aria-valuenow', String(Math.round(v.now)));
+        if (v.min != null) { el.setAttribute('aria-valuemin', String(Math.round(v.min))); }
+        if (v.max != null) { el.setAttribute('aria-valuemax', String(Math.round(v.max))); }
+      }
+      function handle(el, o) {
+        if (el.__rz) { el.__rz = o; aria(el, o); return el; }
+        el.__rz = o;
+        var y = o.axis === 'y';
+        el.classList.add('rz-handle');
+        if (y) { el.classList.add('rz-y'); }
+        el.setAttribute('role', 'separator');
+        el.setAttribute('aria-orientation', y ? 'horizontal' : 'vertical');
+        if (!el.hasAttribute('tabindex') && el.tagName !== 'BUTTON') { el.tabIndex = 0; }
+        if (o.label && !el.hasAttribute('aria-label')) { el.setAttribute('aria-label', o.label); }
+        if (!el.title) { el.title = 'Drag to resize, or use the arrow keys; double-click or Home resets'; }
+        aria(el, o);
+        el.addEventListener('pointerdown', function (e) {
+          var h = el.__rz;
+          if (phone() || (e.pointerType === 'mouse' && e.button !== 0)) { return; }
+          e.preventDefault(); e.stopPropagation();
+          try { el.setPointerCapture(e.pointerId); } catch (x) { /* synthetic events */ }
+          var x0 = e.clientX, y0 = e.clientY, ctx = h.start ? h.start(e) : null, id = e.pointerId;
+          el.classList.add('rz-dragging');
+          document.documentElement.setAttribute('data-rz-dragging', y ? 'y' : 'x');
+          function move(ev) { if (ev.pointerId === id && h.move) { h.move(ctx, ev.clientX - x0, ev.clientY - y0, ev); aria(el, h); } }
+          function up(ev) {
+            if (ev.pointerId !== id) { return; }
+            el.removeEventListener('pointermove', move); el.removeEventListener('pointerup', up); el.removeEventListener('pointercancel', up);
+            el.classList.remove('rz-dragging');
+            document.documentElement.removeAttribute('data-rz-dragging');
+            if (h.end) { h.end(ctx); }
+            aria(el, h);
+          }
+          el.addEventListener('pointermove', move); el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
+        });
+        el.addEventListener('keydown', function (e) {
+          var h = el.__rz, less = y ? 'ArrowUp' : 'ArrowLeft', more = y ? 'ArrowDown' : 'ArrowRight';
+          if (phone()) { return; }
+          if (e.key === 'Home') {
+            if (h.reset) { e.preventDefault(); e.stopPropagation(); h.reset(); aria(el, h); }
+            return;
+          }
+          if (e.key !== less && e.key !== more) { return; }
+          var step = (e.key === more ? 1 : -1) * (e.shiftKey ? 4 : 1);
+          if (h.key && h.key(step, e) !== false) { e.preventDefault(); e.stopPropagation(); aria(el, h); }
+        });
+        el.addEventListener('dblclick', function (e) {
+          var h = el.__rz;
+          if (phone() || !h.reset) { return; }
+          e.preventDefault(); e.stopPropagation(); h.reset(); aria(el, h);
+        });
+        el.addEventListener('click', function (e) { e.stopPropagation(); });     // a handle inside a sortable header does not sort
+        return el;
+      }
+      function bindPanel(hd) {
+        var panel = hd.getAttribute('data-resize-target') ? document.querySelector(hd.getAttribute('data-resize-target')) : hd.parentElement;
+        if (!panel) { return; }
+        var host = panel.parentElement, cssVar = hd.getAttribute('data-resize-var'), key = hd.getAttribute('data-resize-key');
+        var left = hd.getAttribute('data-resize-edge') === 'left';
+        var min = num(hd.getAttribute('data-resize-min'), 160), max = num(hd.getAttribute('data-resize-max'), 720);
+        hd.classList.add('rz-panel');
+        if (left) { hd.classList.add('rz-left'); }
+        if (host && hd.parentElement !== host) { host.appendChild(hd); }    // out of the panel's scrolling: on the gutter, the host's full height
+        if (host) { host.classList.add('rz-host'); }
+        function place() {                                                  // the gutter's middle, beside the panel's edge
+          if (!host) { return; }
+          var hb = host.getBoundingClientRect(), pb = panel.getBoundingClientRect(), cs = getComputedStyle(host), gap = num(cs.columnGap, 0) || 0;
+          var at = left ? pb.left - hb.left - gap / 2 : pb.right - hb.left + gap / 2;
+          var inner = host.clientWidth - num(cs.paddingLeft, 0) - num(cs.paddingRight, 0);
+          hd.style.left = Math.round(at - 5 + host.scrollLeft) + 'px';
+          hd.hidden = panel.hidden || pb.width === 0 || pb.width >= inner - 2;   // stacked (the panel the whole width): nothing beside it
+        }
+        if (window.ResizeObserver) { var ro = new ResizeObserver(place); ro.observe(host); ro.observe(panel); }
+        function maxNow() { return host ? Math.max(min, Math.min(max, host.getBoundingClientRect().width - 240)) : max; }
+        function apply(w) {
+          if (w == null) {
+            if (cssVar) { host.style.removeProperty(cssVar); } else { panel.style.removeProperty('width'); panel.style.removeProperty('flex-basis'); }
+            place();
+            return;
+          }
+          w = clamp(w, min, maxNow()) + 'px';
+          if (cssVar) { host.style.setProperty(cssVar, w); } else { panel.style.width = w; panel.style.flexBasis = w; }
+          place();
+        }
+        function width() { return panel.getBoundingClientRect().width; }
+        function set(w) { w = Math.round(clamp(w, min, maxNow())); apply(w); store(key, hd, w); }
+        hd.__rzApply = function () { apply(phone() ? null : load(key, hd)); };
+        handle(hd, {
+          axis: 'x', label: 'Resize this panel',
+          start: function () { return width(); },
+          move: function (w0, dx) { apply(w0 + (left ? -dx : dx)); },
+          end: function () { set(width()); },
+          key: function (step) { set(width() + (left ? -step : step) * STEP); },
+          reset: function () { store(key, hd, null); apply(null); },
+          value: function () { return { now: width(), min: min, max: maxNow() }; }
+        });
+        hd.__rzApply();
+      }
+      function tableOf(h) { return h.tagName === 'TABLE' ? h : (h.tagName === 'THEAD' || h.tagName === 'TR') ? h.closest('table') : null; }
+      function tableColumns(t) {
+        var rows = t.tHead ? [].slice.call(t.tHead.rows) : (t.rows[0] ? [t.rows[0]] : []), taken = [], leaf = [], n = 0;
+        rows.forEach(function (r, ri) {
+          var c = 0;
+          [].slice.call(r.cells).forEach(function (cell) {
+            while (taken[ri] && taken[ri][c]) { c++; }
+            var cs = cell.colSpan || 1, rs = cell.rowSpan || 1;
+            for (var i = 0; i < rs; i++) { taken[ri + i] = taken[ri + i] || []; for (var j = 0; j < cs; j++) { taken[ri + i][c + j] = true; } }
+            if (cs === 1 && (cell.tagName === 'TH' || !leaf[c])) { leaf[c] = cell; }      // a header cell, not a filter row's box
+            c += cs; n = Math.max(n, c);
+          });
+        });
+        return { n: n, leaf: leaf };
+      }
+      function headCells(h) {
+        var t = tableOf(h);
+        if (t) { var m = tableColumns(t), out = []; m.leaf.forEach(function (c) { if (c) { out.push(c); } }); return out; }
+        return [].slice.call(h.children).filter(function (c) { return !c.classList.contains('rz-handle'); });
+      }
+      function bindColumns(h) {
+        var table = tableOf(h);
+        var key = h.getAttribute('data-resize-key'), min = num(h.getAttribute('data-resize-min'), 40);
+        var flex = h.hasAttribute('data-resize-flex') ? num(h.getAttribute('data-resize-flex'), -1) : -1;
+        var scopeSel = h.getAttribute('data-resize-scope'), cssVar = h.getAttribute('data-resize-var') || '--rz-cols';
+        function scope() { return (scopeSel && h.closest(scopeSel)) || h.parentElement; }
+        function count() { return table ? tableColumns(table).n : headCells(h).length; }
+        function widths() {                                     // every column's width now, in px
+          if (!table) { return headCells(h).map(function (c) { return Math.round(c.getBoundingClientRect().width); }); }
+          var m = tableColumns(table), body = table.tBodies[0] && table.tBodies[0].rows[0], out = [];
+          for (var i = 0; i < m.n; i++) {
+            var c = m.leaf[i] || (body && body.cells.length === m.n ? body.cells[i] : null);
+            out.push(c ? Math.round(c.getBoundingClientRect().width) : 80);
+          }
+          return out;
+        }
+        function cols() {                                       // the table's <colgroup> the widths go to (ours, or its own of the right size)
+          var g = table.querySelector(':scope > colgroup'), n = count();
+          if (g && !g.hasAttribute('data-rz') && g.children.length !== n) { return null; }
+          if (!g) {
+            g = document.createElement('colgroup'); g.setAttribute('data-rz', '');
+            for (var i = 0; i < n; i++) { g.appendChild(document.createElement('col')); }
+            table.insertBefore(g, table.tHead || table.tBodies[0] || null);
+          }
+          return g;
+        }
+        function apply(ws) {
+          if (table) {
+            var n = count();
+            if (!ws || ws.length !== n) {
+              table.classList.remove('rz-fixed'); table.style.removeProperty('width');
+              var g0 = table.querySelector(':scope > colgroup');
+              if (g0) { if (g0.hasAttribute('data-rz')) { g0.remove(); } else { [].forEach.call(g0.children, function (c) { c.style.removeProperty('width'); }); } }
+              return;
+            }
+            var g = cols();
+            if (!g) { return; }
+            [].forEach.call(g.children, function (c, i) { c.style.width = Math.max(min, ws[i]) + 'px'; });
+            table.classList.add('rz-fixed');
+            table.style.width = ws.reduce(function (a, b) { return a + Math.max(min, b); }, 0) + 'px';
+            return;
+          }
+          var s = scope();
+          if (!s) { return; }
+          if (!ws || ws.length !== count()) { s.style.removeProperty(cssVar); return; }
+          s.style.setProperty(cssVar, ws.map(function (w, i) { w = Math.max(min, w); return i === flex ? 'minmax(' + w + 'px, 1fr)' : w + 'px'; }).join(' '));
+        }
+        function resized(ws0, i, dx) {
+          var ws = ws0.slice(), give = flex < 0 ? -1 : i === flex ? (i + 1 < ws.length ? i + 1 : i - 1) : flex;
+          ws[i] = Math.max(min, ws0[i] + dx);
+          if (give >= 0 && give !== i) {
+            var room = ws0[give] - min, d = ws[i] - ws0[i];
+            if (d > room) { d = room; ws[i] = ws0[i] + d; }
+            ws[give] = ws0[give] - d;
+          }
+          return ws;
+        }
+        function saved() { return phone() ? null : load(key, h); }
+        function keep(ws) { store(key, h, ws); }
+        h.__rzApply = function () { apply(saved()); };
+        var leafIndex = [];
+        if (table) { tableColumns(table).leaf.forEach(function (c, i) { if (c) { leafIndex.push(i); } }); }
+        headCells(h).forEach(function (c, k) {
+          var i = table ? leafIndex[k] : k;
+          if (c.querySelector(':scope > .rz-col')) { return; }
+          var hd = document.createElement('span');
+          hd.className = 'rz-col';
+          hd.setAttribute('data-rz-col', String(i));
+          c.classList.add('rz-cell');
+          c.appendChild(hd);
+          var name = (c.textContent || '').trim() || ('column ' + (i + 1));
+          handle(hd, {
+            axis: 'x', label: 'Resize the ' + name + ' column',
+            start: function () { return widths(); },
+            move: function (ws0, dx) { apply(resized(ws0, i, dx)); },
+            end: function () { keep(widths()); },
+            key: function (step) { apply(resized(widths(), i, step * STEP)); keep(widths()); },
+            reset: function () { keep(null); apply(null); },
+            value: function () { var w = widths()[i] || 0; return { now: w, min: min, max: null }; }
+          });
+        });
+        h.__rzApply();
+      }
+      function bind(el) {
+        var kind = el.getAttribute('data-resize');
+        if (kind === 'panel') { if (!el.__rz) { bindPanel(el); } }
+        else if (kind === 'columns') {
+          var cs = headCells(el);
+          if (cs.length && cs.some(function (c) { return !c.querySelector(':scope > .rz-col'); })) { bindColumns(el); }
+        }
+      }
+      function scan(root) {
+        root = root || document;
+        if (root.nodeType === 1 && root.hasAttribute('data-resize')) { bind(root); }
+        if (root.querySelectorAll) { root.querySelectorAll('[data-resize]').forEach(bind); }
+      }
+      function reapply() { document.querySelectorAll('[data-resize]').forEach(function (el) { if (el.__rzApply) { el.__rzApply(); } }); }
+      function reset(key) {
+        forget(key);
+        document.querySelectorAll('[data-resize-key="' + key + '"]').forEach(function (el) { if (el.__rzApply) { el.__rzApply(); } });
+      }
+      var queued = false;
+      function soon() { if (queued) { return; } queued = true; requestAnimationFrame(function () { queued = false; scan(document); }); }
+      function start() {
+        scan(document);
+        if (window.MutationObserver) {
+          new MutationObserver(function (ms) {
+            for (var i = 0; i < ms.length; i++) {
+              var m = ms[i];
+              if (m.type === 'attributes') { if (m.attributeName === 'data-resize-mode') { reapply(); } continue; }
+              var t = m.target;
+              if (t.nodeType === 1 && t.closest('[data-resize="columns"]') && [].some.call(m.addedNodes, function (n) { return !(n.classList && n.classList.contains('rz-col')); })) { soon(); return; }
+              for (var j = 0; j < m.addedNodes.length; j++) {
+                var n = m.addedNodes[j];
+                if (n.nodeType === 1 && !n.classList.contains('rz-col') && (n.hasAttribute('data-resize') || n.querySelector('[data-resize]') || n.closest('[data-resize="columns"]'))) { soon(); return; }
+              }
+            }
+          }).observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-resize-mode'] });
+        }
+        if (mq) { (mq.addEventListener ? mq.addEventListener.bind(mq, 'change') : mq.addListener.bind(mq))(reapply); }
+      }
+      live = { scan: scan, handle: handle, reset: reset, phone: phone };
+      (window.Drishti = window.Drishti || {}).resize = live;
+      if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', start); } else { start(); }
+      return live;
+    }
+    function need() {
+      if (!live) { throw new Error('resize: not installed in a page (installResize(window))'); }
+      return live;
+    }
+    function scanResize(root) { need().scan(root); }
+    function resizeHandle(el, opts) { return need().handle(el, opts); }
+    function resetResize(key) { need().reset(key); }
+    return { "installResize": installResize, "scanResize": scanResize, "resizeHandle": resizeHandle, "resetResize": resetResize };
+  })();
+  /* ---- src/drishti_dock.js ---- */
+  __m["src/drishti_dock.js"] = (function () {
+    var h = __m["src/drishti_dom.js"].h;
+    var rovingTabindex = __m["src/drishti_a11y.js"].rovingTabindex, announce = __m["src/drishti_a11y.js"].announce;
+    var resizeHandle = __m["src/drishti_resize.js"].resizeHandle;
+    const clamp = (v) => Math.max(0.1, Math.min(0.9, v));
+    class DockModel {
+      constructor(root) { this.root = root || { type: 'tabs', panels: [], active: null }; this.listeners = []; }
+      static of(ids) { return new DockModel({ type: 'tabs', panels: ids.slice(), active: ids[0] || null }); }
+      onChange(fn) { this.listeners.push(fn); return () => { this.listeners = this.listeners.filter((f) => f !== fn); }; }
+      changed() { this.listeners.forEach((f) => f(this)); }
+      panels() { const out = []; (function walk(n) { if (n.type === 'tabs') { out.push(...n.panels); } else { walk(n.a); walk(n.b); } }(this.root)); return out; }
+      groupOf(id) { let f = null; (function walk(n) { if (n.type === 'tabs') { if (n.panels.indexOf(id) >= 0) { f = n; } } else { walk(n.a); walk(n.b); } }(this.root)); return f; }
+      replace(old, node) {
+        if (this.root === old) { this.root = node; return; }
+        (function walk(n) { if (n.type === 'split') { if (n.a === old) { n.a = node; } else if (n.b === old) { n.b = node; } else { walk(n.a); walk(n.b); } } }(this.root));
+      }
+      add(id, besideId) {
+        if (this.panels().indexOf(id) >= 0) { throw new Error('dock: the panel ' + id + ' is in the layout already'); }
+        let g = besideId ? this.groupOf(besideId) : null;
+        if (!g) { g = (function first(n) { return n.type === 'tabs' ? n : first(n.a); }(this.root)); }
+        g.panels.push(id);
+        g.active = id;
+        this.changed();
+      }
+      activate(id) { const g = this.groupOf(id); if (g && g.active !== id) { g.active = id; this.changed(); } }
+      close(id) {
+        const g = this.groupOf(id);
+        if (!g) { return; }
+        g.panels = g.panels.filter((p) => p !== id);
+        if (g.active === id) { g.active = g.panels[0] || null; }
+        if (!g.panels.length && this.root !== g) {
+          const parent = (function find(n) { if (n.type === 'split') { if (n.a === g || n.b === g) { return n; } return find(n.a) || find(n.b); } return null; }(this.root));
+          this.replace(parent, parent.a === g ? parent.b : parent.a);
+        }
+        this.changed();
+      }
+      split(id, dir, besideId, before) {
+        const target = this.groupOf(besideId || id), from = this.groupOf(id);
+        if (!target) { throw new Error('dock: no panel ' + (besideId || id)); }
+        if (from === target && target.panels.length < 2) { return; }
+        if (from) { from.panels = from.panels.filter((p) => p !== id); if (from.active === id) { from.active = from.panels[0] || null; } }
+        const fresh = { type: 'tabs', panels: [id], active: id };
+        const node = { type: 'split', dir: dir, ratio: 0.5, a: before ? fresh : target, b: before ? target : fresh };
+        this.replace(target, node);
+        if (from && !from.panels.length && from !== target) { this.prune(); }
+        this.changed();
+      }
+      moveToGroupOf(id, intoId) {
+        const to = this.groupOf(intoId), from = this.groupOf(id);
+        if (!to || !from || to === from) { return; }
+        from.panels = from.panels.filter((p) => p !== id);
+        if (from.active === id) { from.active = from.panels[0] || null; }
+        to.panels.push(id);
+        to.active = id;
+        this.prune();
+        this.changed();
+      }
+      prune() {
+        const walk = (n) => {
+          if (n.type === 'tabs') { return n.panels.length ? n : null; }
+          const a = walk(n.a), b = walk(n.b);
+          return a && b ? Object.assign(n, { a: a, b: b }) : (a || b);
+        };
+        this.root = walk(this.root) || { type: 'tabs', panels: [], active: null };
+      }
+      setRatio(node, ratio) { node.ratio = clamp(ratio); this.changed(); }
+      toJSON() { return JSON.parse(JSON.stringify(this.root)); }
+      static fromJSON(saved, known) {
+        const m = new DockModel(JSON.parse(JSON.stringify(saved)));
+        (function walk(n) { if (n.type === 'tabs') { n.panels = n.panels.filter((p) => known.indexOf(p) >= 0); if (n.panels.indexOf(n.active) < 0) { n.active = n.panels[0] || null; } } else { walk(n.a); walk(n.b); } }(m.root));
+        m.prune();
+        known.filter((k) => m.panels().indexOf(k) < 0).forEach((k) => m.add(k));
+        return m;
+      }
+    }
+    function workspaceStore(key, storage) {
+      const st = () => { try { return storage || (typeof localStorage !== 'undefined' ? localStorage : null); } catch (e) { return null; } };
+      return {
+        save: (m) => { try { st().setItem('drishti.dock.' + key, JSON.stringify(m.toJSON())); } catch (e) { /* not kept */ } },
+        load: (known) => { try { const s = st().getItem('drishti.dock.' + key); return s ? DockModel.fromJSON(JSON.parse(s), known) : null; } catch (e) { return null; } },
+        clear: () => { try { st().removeItem('drishti.dock.' + key); } catch (e) { /* nothing */ } }
+      };
+    }
+    class Dock {
+      constructor(host, o) {
+        this.host = host;
+        this.doc = host.ownerDocument;
+        this.o = Object.assign({ title: (id) => id, popOut: true }, o);
+        this.model = o.model;
+        this.els = new Map();
+        this.windows = new Map();
+        this.root = h(this.doc, 'div', { cls: 'drishti-dock', attrs: { role: 'group', 'aria-label': 'Workspace' } });
+        host.appendChild(this.root);
+        this.off = this.model.onChange(() => this.draw());
+        this.draw();
+      }
+      panelEl(id) { if (!this.els.has(id)) { this.els.set(id, this.o.render(id)); } return this.els.get(id); }
+      draw() {
+        while (this.root.firstChild) { this.root.removeChild(this.root.firstChild); }
+        this.root.appendChild(this.node(this.model.root));
+      }
+      node(n) {
+        return n.type === 'tabs' ? this.group(n) : this.splitEl(n);
+      }
+      splitEl(n) {
+        const row = n.dir === 'row', doc = this.doc;
+        const a = this.node(n.a), b = this.node(n.b), box = h(doc, 'div', { cls: 'drishti-dock-split drishti-dock-' + n.dir });
+        a.classList.add('drishti-dock-a'); b.classList.add('drishti-dock-b');
+        a.style.flexBasis = (n.ratio * 100) + '%'; b.style.flexBasis = ((1 - n.ratio) * 100) + '%';
+        const handle = h(doc, 'div', { cls: 'drishti-dock-handle' });
+        box.append(a, handle, b);
+        let size = 1, start = n.ratio;
+        try {
+          resizeHandle(handle, { axis: row ? 'x' : 'y', label: 'Resize the panels',
+            start: () => { size = (row ? box.clientWidth : box.clientHeight) || 1; start = n.ratio; return null; },
+            move: (c, dx, dy) => { n.ratio = clamp(start + (row ? dx : dy) / size); a.style.flexBasis = (n.ratio * 100) + '%'; b.style.flexBasis = ((1 - n.ratio) * 100) + '%'; },
+            end: () => this.model.changed(), reset: () => this.model.setRatio(n, 0.5),
+            key: (step) => { this.model.setRatio(n, n.ratio + step * 0.02); return true; }, value: () => ({ now: Math.round(n.ratio * 100), min: 10, max: 90 }) });
+        } catch (e) { /* resize not installed (a test page): the ratio is set by the model */ }
+        return box;
+      }
+      group(n) {
+        const doc = this.doc, box = h(doc, 'section', { cls: 'drishti-dock-group' });
+        const tabs = h(doc, 'div', { cls: 'drishti-dock-tabs', attrs: { role: 'tablist', 'aria-label': 'Panels' } });
+        n.panels.forEach((id) => {
+          tabs.appendChild(h(doc, 'button', { cls: 'drishti-dock-tab', text: this.o.title(id), attrs: { type: 'button', role: 'tab', 'aria-selected': String(id === n.active), id: 'dock-tab-' + id, 'aria-controls': 'dock-panel-' + id },
+            data: { panel: id }, on: { click: () => this.model.activate(id), keydown: (e) => this.tabKey(e, id) } }));
+        });
+        const act = (label, fn) => h(doc, 'button', { cls: 'drishti-dock-act', text: label, attrs: { type: 'button', 'aria-label': label + ': ' + this.o.title(n.active || '') }, on: { click: fn } });
+        const tools = n.active ? h(doc, 'span', { cls: 'drishti-dock-tools' }, [
+          act('Split right', () => { this.model.split(n.active, 'row'); announce('Split right', { document: doc }); }),
+          act('Split down', () => { this.model.split(n.active, 'column'); announce('Split down', { document: doc }); }),
+          this.o.popOut ? act('Pop out', () => this.popOut(n.active)) : null,
+          act('Close', () => this.model.close(n.active))]) : null;
+        const body = h(doc, 'div', { cls: 'drishti-dock-body', attrs: { role: 'tabpanel', id: n.active ? 'dock-panel-' + n.active : null, 'aria-labelledby': n.active ? 'dock-tab-' + n.active : null } });
+        if (n.active) { body.appendChild(this.panelEl(n.active)); } else { body.appendChild(h(doc, 'p', { cls: 'drishti-dock-empty', text: 'No panels' })); }
+        box.append(h(doc, 'div', { cls: 'drishti-dock-head' }, [tabs, tools]), body);
+        if (tabs.children.length) { rovingTabindex(tabs, { selector: '[role=tab]', orientation: 'horizontal', onMove: (el) => this.model.activate(el.dataset.panel) }); }
+        return box;
+      }
+      tabKey(e, id) {
+        if (!(e.altKey && e.shiftKey)) { return; }
+        const m = { ArrowRight: ['row', false], ArrowLeft: ['row', true], ArrowDown: ['column', false], ArrowUp: ['column', true] }[e.key];
+        if (m) { e.preventDefault(); this.model.split(id, m[0], id, m[1]); }
+      }
+      popOut(id) {
+        const win = this.doc.defaultView.open('', 'drishti-dock-' + id, 'popup,width=720,height=520');
+        if (!win) { return null; }
+        const el = this.panelEl(id), g = this.model.groupOf(id), title = this.o.title(id);
+        win.document.title = title;
+        Array.from(this.doc.styleSheets).forEach((s) => { if (s.href) { const l = win.document.createElement('link'); l.rel = 'stylesheet'; l.href = s.href; win.document.head.appendChild(l); } });
+        win.document.documentElement.setAttribute('data-theme', this.doc.documentElement.getAttribute('data-theme') || '');
+        win.document.body.appendChild(el);
+        this.windows.set(id, win);
+        const back = () => { this.windows.delete(id); if (!this.model.groupOf(id)) { this.model.add(id); } };
+        win.addEventListener('pagehide', back, { once: true });
+        if (g) { this.model.close(id); }
+        return win;
+      }
+      destroy() { this.off(); this.windows.forEach((w) => { try { w.close(); } catch (e) { /* gone */ } }); this.root.remove(); }
+    }
+    return { "DockModel": DockModel, "workspaceStore": workspaceStore, "Dock": Dock };
+  })();
   /* ---- src/drishti_events.js ---- */
   __m["src/drishti_events.js"] = (function () {
     class EventBus {
@@ -1259,293 +1710,6 @@
     }
     return { "isBlank": isBlank, "compareValues": compareValues, "compareRows": compareRows, "cycleSort": cycleSort, "passes": passes, "rowFilter": rowFilter, "filterWords": filterWords, "FILTER_CHANNEL": FILTER_CHANNEL, "filterRows": filterRows, "textSortKey": textSortKey, "compareTextKeys": compareTextKeys };
   })();
-  /* ---- src/drishti_resize.js ---- */
-  __m["src/drishti_resize.js"] = (function () {
-    let live = null;
-    function installResize(window) {
-      if (live) { return live; }
-      const document = window.document;
-      const requestAnimationFrame = window.requestAnimationFrame.bind(window);
-      const getComputedStyle = window.getComputedStyle.bind(window);
-      var NS = 'drishti.resize.', PHONE = '(max-width: 639.98px)', STEP = 16;
-      var mq = window.matchMedia ? window.matchMedia(PHONE) : null;
-      function phone() { return !!(mq && mq.matches); }
-      function num(v, d) { var n = parseFloat(v); return isFinite(n) ? n : d; }
-      function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
-      function modeOf(el) { var m = el.closest && el.closest('[data-resize-mode]'); return m ? m.getAttribute('data-resize-mode') : ''; }
-      function slot(key, el) { var m = modeOf(el); return NS + key + (m ? '@' + m : ''); }
-      function load(key, el) {
-        if (!key) { return null; }
-        try { var s = window.localStorage.getItem(slot(key, el)); return s ? JSON.parse(s) : null; } catch (e) { return null; }
-      }
-      function store(key, el, v) {
-        if (!key) { return; }
-        try { if (v === null) { window.localStorage.removeItem(slot(key, el)); } else { window.localStorage.setItem(slot(key, el), JSON.stringify(v)); } } catch (e) { /* private mode, quota: not kept */ }
-      }
-      function forget(key) {
-        try {
-          var ls = window.localStorage, gone = [];
-          for (var i = 0; i < ls.length; i++) { var k = ls.key(i); if (k === NS + key || k.indexOf(NS + key + '@') === 0) { gone.push(k); } }
-          gone.forEach(function (k) { ls.removeItem(k); });
-        } catch (e) { /* nothing kept */ }
-      }
-      function aria(el, o) {
-        if (!o.value) { return; }
-        var v = o.value();
-        if (!v) { return; }
-        el.setAttribute('aria-valuenow', String(Math.round(v.now)));
-        if (v.min != null) { el.setAttribute('aria-valuemin', String(Math.round(v.min))); }
-        if (v.max != null) { el.setAttribute('aria-valuemax', String(Math.round(v.max))); }
-      }
-      function handle(el, o) {
-        if (el.__rz) { el.__rz = o; aria(el, o); return el; }
-        el.__rz = o;
-        var y = o.axis === 'y';
-        el.classList.add('rz-handle');
-        if (y) { el.classList.add('rz-y'); }
-        el.setAttribute('role', 'separator');
-        el.setAttribute('aria-orientation', y ? 'horizontal' : 'vertical');
-        if (!el.hasAttribute('tabindex') && el.tagName !== 'BUTTON') { el.tabIndex = 0; }
-        if (o.label && !el.hasAttribute('aria-label')) { el.setAttribute('aria-label', o.label); }
-        if (!el.title) { el.title = 'Drag to resize, or use the arrow keys; double-click or Home resets'; }
-        aria(el, o);
-        el.addEventListener('pointerdown', function (e) {
-          var h = el.__rz;
-          if (phone() || (e.pointerType === 'mouse' && e.button !== 0)) { return; }
-          e.preventDefault(); e.stopPropagation();
-          try { el.setPointerCapture(e.pointerId); } catch (x) { /* synthetic events */ }
-          var x0 = e.clientX, y0 = e.clientY, ctx = h.start ? h.start(e) : null, id = e.pointerId;
-          el.classList.add('rz-dragging');
-          document.documentElement.setAttribute('data-rz-dragging', y ? 'y' : 'x');
-          function move(ev) { if (ev.pointerId === id && h.move) { h.move(ctx, ev.clientX - x0, ev.clientY - y0, ev); aria(el, h); } }
-          function up(ev) {
-            if (ev.pointerId !== id) { return; }
-            el.removeEventListener('pointermove', move); el.removeEventListener('pointerup', up); el.removeEventListener('pointercancel', up);
-            el.classList.remove('rz-dragging');
-            document.documentElement.removeAttribute('data-rz-dragging');
-            if (h.end) { h.end(ctx); }
-            aria(el, h);
-          }
-          el.addEventListener('pointermove', move); el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
-        });
-        el.addEventListener('keydown', function (e) {
-          var h = el.__rz, less = y ? 'ArrowUp' : 'ArrowLeft', more = y ? 'ArrowDown' : 'ArrowRight';
-          if (phone()) { return; }
-          if (e.key === 'Home') {
-            if (h.reset) { e.preventDefault(); e.stopPropagation(); h.reset(); aria(el, h); }
-            return;
-          }
-          if (e.key !== less && e.key !== more) { return; }
-          var step = (e.key === more ? 1 : -1) * (e.shiftKey ? 4 : 1);
-          if (h.key && h.key(step, e) !== false) { e.preventDefault(); e.stopPropagation(); aria(el, h); }
-        });
-        el.addEventListener('dblclick', function (e) {
-          var h = el.__rz;
-          if (phone() || !h.reset) { return; }
-          e.preventDefault(); e.stopPropagation(); h.reset(); aria(el, h);
-        });
-        el.addEventListener('click', function (e) { e.stopPropagation(); });     // a handle inside a sortable header does not sort
-        return el;
-      }
-      function bindPanel(hd) {
-        var panel = hd.getAttribute('data-resize-target') ? document.querySelector(hd.getAttribute('data-resize-target')) : hd.parentElement;
-        if (!panel) { return; }
-        var host = panel.parentElement, cssVar = hd.getAttribute('data-resize-var'), key = hd.getAttribute('data-resize-key');
-        var left = hd.getAttribute('data-resize-edge') === 'left';
-        var min = num(hd.getAttribute('data-resize-min'), 160), max = num(hd.getAttribute('data-resize-max'), 720);
-        hd.classList.add('rz-panel');
-        if (left) { hd.classList.add('rz-left'); }
-        if (host && hd.parentElement !== host) { host.appendChild(hd); }    // out of the panel's scrolling: on the gutter, the host's full height
-        if (host) { host.classList.add('rz-host'); }
-        function place() {                                                  // the gutter's middle, beside the panel's edge
-          if (!host) { return; }
-          var hb = host.getBoundingClientRect(), pb = panel.getBoundingClientRect(), cs = getComputedStyle(host), gap = num(cs.columnGap, 0) || 0;
-          var at = left ? pb.left - hb.left - gap / 2 : pb.right - hb.left + gap / 2;
-          var inner = host.clientWidth - num(cs.paddingLeft, 0) - num(cs.paddingRight, 0);
-          hd.style.left = Math.round(at - 5 + host.scrollLeft) + 'px';
-          hd.hidden = panel.hidden || pb.width === 0 || pb.width >= inner - 2;   // stacked (the panel the whole width): nothing beside it
-        }
-        if (window.ResizeObserver) { var ro = new ResizeObserver(place); ro.observe(host); ro.observe(panel); }
-        function maxNow() { return host ? Math.max(min, Math.min(max, host.getBoundingClientRect().width - 240)) : max; }
-        function apply(w) {
-          if (w == null) {
-            if (cssVar) { host.style.removeProperty(cssVar); } else { panel.style.removeProperty('width'); panel.style.removeProperty('flex-basis'); }
-            place();
-            return;
-          }
-          w = clamp(w, min, maxNow()) + 'px';
-          if (cssVar) { host.style.setProperty(cssVar, w); } else { panel.style.width = w; panel.style.flexBasis = w; }
-          place();
-        }
-        function width() { return panel.getBoundingClientRect().width; }
-        function set(w) { w = Math.round(clamp(w, min, maxNow())); apply(w); store(key, hd, w); }
-        hd.__rzApply = function () { apply(phone() ? null : load(key, hd)); };
-        handle(hd, {
-          axis: 'x', label: 'Resize this panel',
-          start: function () { return width(); },
-          move: function (w0, dx) { apply(w0 + (left ? -dx : dx)); },
-          end: function () { set(width()); },
-          key: function (step) { set(width() + (left ? -step : step) * STEP); },
-          reset: function () { store(key, hd, null); apply(null); },
-          value: function () { return { now: width(), min: min, max: maxNow() }; }
-        });
-        hd.__rzApply();
-      }
-      function tableOf(h) { return h.tagName === 'TABLE' ? h : (h.tagName === 'THEAD' || h.tagName === 'TR') ? h.closest('table') : null; }
-      function tableColumns(t) {
-        var rows = t.tHead ? [].slice.call(t.tHead.rows) : (t.rows[0] ? [t.rows[0]] : []), taken = [], leaf = [], n = 0;
-        rows.forEach(function (r, ri) {
-          var c = 0;
-          [].slice.call(r.cells).forEach(function (cell) {
-            while (taken[ri] && taken[ri][c]) { c++; }
-            var cs = cell.colSpan || 1, rs = cell.rowSpan || 1;
-            for (var i = 0; i < rs; i++) { taken[ri + i] = taken[ri + i] || []; for (var j = 0; j < cs; j++) { taken[ri + i][c + j] = true; } }
-            if (cs === 1 && (cell.tagName === 'TH' || !leaf[c])) { leaf[c] = cell; }      // a header cell, not a filter row's box
-            c += cs; n = Math.max(n, c);
-          });
-        });
-        return { n: n, leaf: leaf };
-      }
-      function headCells(h) {
-        var t = tableOf(h);
-        if (t) { var m = tableColumns(t), out = []; m.leaf.forEach(function (c) { if (c) { out.push(c); } }); return out; }
-        return [].slice.call(h.children).filter(function (c) { return !c.classList.contains('rz-handle'); });
-      }
-      function bindColumns(h) {
-        var table = tableOf(h);
-        var key = h.getAttribute('data-resize-key'), min = num(h.getAttribute('data-resize-min'), 40);
-        var flex = h.hasAttribute('data-resize-flex') ? num(h.getAttribute('data-resize-flex'), -1) : -1;
-        var scopeSel = h.getAttribute('data-resize-scope'), cssVar = h.getAttribute('data-resize-var') || '--rz-cols';
-        function scope() { return (scopeSel && h.closest(scopeSel)) || h.parentElement; }
-        function count() { return table ? tableColumns(table).n : headCells(h).length; }
-        function widths() {                                     // every column's width now, in px
-          if (!table) { return headCells(h).map(function (c) { return Math.round(c.getBoundingClientRect().width); }); }
-          var m = tableColumns(table), body = table.tBodies[0] && table.tBodies[0].rows[0], out = [];
-          for (var i = 0; i < m.n; i++) {
-            var c = m.leaf[i] || (body && body.cells.length === m.n ? body.cells[i] : null);
-            out.push(c ? Math.round(c.getBoundingClientRect().width) : 80);
-          }
-          return out;
-        }
-        function cols() {                                       // the table's <colgroup> the widths go to (ours, or its own of the right size)
-          var g = table.querySelector(':scope > colgroup'), n = count();
-          if (g && !g.hasAttribute('data-rz') && g.children.length !== n) { return null; }
-          if (!g) {
-            g = document.createElement('colgroup'); g.setAttribute('data-rz', '');
-            for (var i = 0; i < n; i++) { g.appendChild(document.createElement('col')); }
-            table.insertBefore(g, table.tHead || table.tBodies[0] || null);
-          }
-          return g;
-        }
-        function apply(ws) {
-          if (table) {
-            var n = count();
-            if (!ws || ws.length !== n) {
-              table.classList.remove('rz-fixed'); table.style.removeProperty('width');
-              var g0 = table.querySelector(':scope > colgroup');
-              if (g0) { if (g0.hasAttribute('data-rz')) { g0.remove(); } else { [].forEach.call(g0.children, function (c) { c.style.removeProperty('width'); }); } }
-              return;
-            }
-            var g = cols();
-            if (!g) { return; }
-            [].forEach.call(g.children, function (c, i) { c.style.width = Math.max(min, ws[i]) + 'px'; });
-            table.classList.add('rz-fixed');
-            table.style.width = ws.reduce(function (a, b) { return a + Math.max(min, b); }, 0) + 'px';
-            return;
-          }
-          var s = scope();
-          if (!s) { return; }
-          if (!ws || ws.length !== count()) { s.style.removeProperty(cssVar); return; }
-          s.style.setProperty(cssVar, ws.map(function (w, i) { w = Math.max(min, w); return i === flex ? 'minmax(' + w + 'px, 1fr)' : w + 'px'; }).join(' '));
-        }
-        function resized(ws0, i, dx) {
-          var ws = ws0.slice(), give = flex < 0 ? -1 : i === flex ? (i + 1 < ws.length ? i + 1 : i - 1) : flex;
-          ws[i] = Math.max(min, ws0[i] + dx);
-          if (give >= 0 && give !== i) {
-            var room = ws0[give] - min, d = ws[i] - ws0[i];
-            if (d > room) { d = room; ws[i] = ws0[i] + d; }
-            ws[give] = ws0[give] - d;
-          }
-          return ws;
-        }
-        function saved() { return phone() ? null : load(key, h); }
-        function keep(ws) { store(key, h, ws); }
-        h.__rzApply = function () { apply(saved()); };
-        var leafIndex = [];
-        if (table) { tableColumns(table).leaf.forEach(function (c, i) { if (c) { leafIndex.push(i); } }); }
-        headCells(h).forEach(function (c, k) {
-          var i = table ? leafIndex[k] : k;
-          if (c.querySelector(':scope > .rz-col')) { return; }
-          var hd = document.createElement('span');
-          hd.className = 'rz-col';
-          hd.setAttribute('data-rz-col', String(i));
-          c.classList.add('rz-cell');
-          c.appendChild(hd);
-          var name = (c.textContent || '').trim() || ('column ' + (i + 1));
-          handle(hd, {
-            axis: 'x', label: 'Resize the ' + name + ' column',
-            start: function () { return widths(); },
-            move: function (ws0, dx) { apply(resized(ws0, i, dx)); },
-            end: function () { keep(widths()); },
-            key: function (step) { apply(resized(widths(), i, step * STEP)); keep(widths()); },
-            reset: function () { keep(null); apply(null); },
-            value: function () { var w = widths()[i] || 0; return { now: w, min: min, max: null }; }
-          });
-        });
-        h.__rzApply();
-      }
-      function bind(el) {
-        var kind = el.getAttribute('data-resize');
-        if (kind === 'panel') { if (!el.__rz) { bindPanel(el); } }
-        else if (kind === 'columns') {
-          var cs = headCells(el);
-          if (cs.length && cs.some(function (c) { return !c.querySelector(':scope > .rz-col'); })) { bindColumns(el); }
-        }
-      }
-      function scan(root) {
-        root = root || document;
-        if (root.nodeType === 1 && root.hasAttribute('data-resize')) { bind(root); }
-        if (root.querySelectorAll) { root.querySelectorAll('[data-resize]').forEach(bind); }
-      }
-      function reapply() { document.querySelectorAll('[data-resize]').forEach(function (el) { if (el.__rzApply) { el.__rzApply(); } }); }
-      function reset(key) {
-        forget(key);
-        document.querySelectorAll('[data-resize-key="' + key + '"]').forEach(function (el) { if (el.__rzApply) { el.__rzApply(); } });
-      }
-      var queued = false;
-      function soon() { if (queued) { return; } queued = true; requestAnimationFrame(function () { queued = false; scan(document); }); }
-      function start() {
-        scan(document);
-        if (window.MutationObserver) {
-          new MutationObserver(function (ms) {
-            for (var i = 0; i < ms.length; i++) {
-              var m = ms[i];
-              if (m.type === 'attributes') { if (m.attributeName === 'data-resize-mode') { reapply(); } continue; }
-              var t = m.target;
-              if (t.nodeType === 1 && t.closest('[data-resize="columns"]') && [].some.call(m.addedNodes, function (n) { return !(n.classList && n.classList.contains('rz-col')); })) { soon(); return; }
-              for (var j = 0; j < m.addedNodes.length; j++) {
-                var n = m.addedNodes[j];
-                if (n.nodeType === 1 && !n.classList.contains('rz-col') && (n.hasAttribute('data-resize') || n.querySelector('[data-resize]') || n.closest('[data-resize="columns"]'))) { soon(); return; }
-              }
-            }
-          }).observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-resize-mode'] });
-        }
-        if (mq) { (mq.addEventListener ? mq.addEventListener.bind(mq, 'change') : mq.addListener.bind(mq))(reapply); }
-      }
-      live = { scan: scan, handle: handle, reset: reset, phone: phone };
-      (window.Drishti = window.Drishti || {}).resize = live;
-      if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', start); } else { start(); }
-      return live;
-    }
-    function need() {
-      if (!live) { throw new Error('resize: not installed in a page (installResize(window))'); }
-      return live;
-    }
-    function scanResize(root) { need().scan(root); }
-    function resizeHandle(el, opts) { return need().handle(el, opts); }
-    function resetResize(key) { need().reset(key); }
-    return { "installResize": installResize, "scanResize": scanResize, "resizeHandle": resizeHandle, "resetResize": resetResize };
-  })();
   /* ---- src/drishti_keys.js ---- */
   __m["src/drishti_keys.js"] = (function () {
     const WORKBENCH = 'workbench';
@@ -1634,7 +1798,8 @@
             "css/drishti_resize.css",
             "css/drishti_chips.css",
             "css/drishti_states.css",
-            "css/drishti_command-palette.css"
+            "css/drishti_command-palette.css",
+            "css/drishti_dock.css"
           ],
           "scripts": [],
           "module": "core"
@@ -2550,6 +2715,55 @@
     }
     return { "STATES": STATES, "skeleton": skeleton, "showState": showState, "stateBlock": stateBlock, "clearState": clearState };
   })();
+  /* ---- src/drishti_selection-chip.js ---- */
+  __m["src/drishti_selection-chip.js"] = (function () {
+    var h = __m["src/drishti_dom.js"].h;
+    var SELECTION_EVENT = __m["src/drishti_link.js"].SELECTION_EVENT, publishSelection = __m["src/drishti_link.js"].publishSelection;
+    var sharedBus = __m["src/drishti_events.js"].bus;
+    class SelectionHistory {
+      constructor(limit) { this.limit = limit || 10; this.items = []; }
+      push(channel, ids, label) {
+        if (!ids || !ids.length) { return; }
+        const key = channel + '|' + ids.slice().sort().join(',');
+        this.items = [{ key: key, channel: channel, ids: ids.slice(), label: label || ids.length + ' selected', at: Date.now() }].concat(this.items.filter((x) => x.key !== key)).slice(0, this.limit);
+      }
+      list() { return this.items.slice(); }
+    }
+    class SelectionChip {
+      constructor(host, o) {
+        this.o = o;
+        this.doc = host.ownerDocument;
+        this.bus = o.bus || sharedBus;
+        this.history = new SelectionHistory(o.history);
+        this.ids = [];
+        this.el = h(this.doc, 'span', { cls: 'drishti-selchip', attrs: { role: 'status', 'aria-live': 'polite' } });
+        host.appendChild(this.el);
+        this.off = this.bus.on(SELECTION_EVENT, (p) => { if (p && p.channel === o.channel) { this.set(p.ids || []); } });
+        this.draw();
+      }
+      set(ids) { this.ids = ids.slice(); this.history.push(this.o.channel, this.ids, this.words(this.ids)); this.draw(); }
+      words(ids) { return this.o.describe ? this.o.describe(ids) : ids.length + (ids.length === 1 ? ' selected' : ' selected'); }
+      clear() { publishSelection(this.o.channel, [], { bus: this.bus, source: this }); }
+      restore(index) { const it = this.history.list()[index]; if (it) { publishSelection(this.o.channel, it.ids, { bus: this.bus, source: this }); } }
+      draw() {
+        const doc = this.doc;
+        while (this.el.firstChild) { this.el.removeChild(this.el.firstChild); }
+        this.el.hidden = !this.ids.length && !this.history.list().length;
+        if (this.ids.length) {
+          this.el.appendChild(h(doc, 'span', { cls: 'drishti-selchip-text', text: this.words(this.ids) }));
+          this.el.appendChild(h(doc, 'button', { cls: 'drishti-selchip-clear', text: '×', attrs: { type: 'button', 'aria-label': 'Clear the selection' }, on: { click: () => this.clear() } }));
+        } else { this.el.appendChild(h(doc, 'span', { cls: 'drishti-selchip-text', text: 'Nothing selected' })); }
+        const past = this.history.list();
+        if (past.length) {
+          const sel = h(doc, 'select', { cls: 'drishti-selchip-history', attrs: { 'aria-label': 'Earlier selections' }, on: { change: (e) => { if (e.target.value !== '') { this.restore(Number(e.target.value)); e.target.value = ''; } } } },
+            [h(doc, 'option', { text: 'History', attrs: { value: '' } })].concat(past.map((x, i) => h(doc, 'option', { text: x.label, attrs: { value: String(i) } }))));
+          this.el.appendChild(sel);
+        }
+      }
+      destroy() { this.off(); this.el.remove(); }
+    }
+    return { "SelectionHistory": SelectionHistory, "SelectionChip": SelectionChip };
+  })();
   /* ---- src/drishti_overlay.js ---- */
   __m["src/drishti_overlay.js"] = (function () {
     var trapFocus = __m["src/drishti_a11y.js"].trapFocus;
@@ -2770,7 +2984,7 @@
       D.elements.load = load;
       if (root.document && root.requestAnimationFrame) { installResize(root); }
     }
-    return { "install": install, "MINUS": __m["src/drishti_format.js"].MINUS, "EMPTY": __m["src/drishti_format.js"].EMPTY, "MASK": __m["src/drishti_format.js"].MASK, "COMPACT_UNITS": __m["src/drishti_format.js"].COMPACT_UNITS, "plainDigits": __m["src/drishti_format.js"].plainDigits, "roundHalfUp": __m["src/drishti_format.js"].roundHalfUp, "group": __m["src/drishti_format.js"].group, "formatNumber": __m["src/drishti_format.js"].formatNumber, "formatPercent": __m["src/drishti_format.js"].formatPercent, "formatBasisPoints": __m["src/drishti_format.js"].formatBasisPoints, "formatCurrency": __m["src/drishti_format.js"].formatCurrency, "formatCompact": __m["src/drishti_format.js"].formatCompact, "defineFormats": __m["src/drishti_format.js"].defineFormats, "hasFormat": __m["src/drishti_format.js"].hasFormat, "namedFormat": __m["src/drishti_format.js"].namedFormat, "formatNames": __m["src/drishti_format.js"].formatNames, "formatSpec": __m["src/drishti_format.js"].formatSpec, "formatNamed": __m["src/drishti_format.js"].formatNamed, "formatter": __m["src/drishti_format.js"].formatter, "formatPythonFloat": __m["src/drishti_format.js"].formatPythonFloat, "BYTE_UNITS": __m["src/drishti_format.js"].BYTE_UNITS, "formatBytes": __m["src/drishti_format.js"].formatBytes, "formatDuration": __m["src/drishti_format.js"].formatDuration, "columnScale": __m["src/drishti_format.js"].columnScale, "formatScaled": __m["src/drishti_format.js"].formatScaled, "parseDate": __m["src/drishti_dates.js"].parseDate, "daysInMonth": __m["src/drishti_dates.js"].daysInMonth, "isoDate": __m["src/drishti_dates.js"].isoDate, "today": __m["src/drishti_dates.js"].today, "formatDate": __m["src/drishti_dates.js"].formatDate, "formatDateRange": __m["src/drishti_dates.js"].formatDateRange, "isBusinessDay": __m["src/drishti_dates.js"].isBusinessDay, "addBusinessDays": __m["src/drishti_dates.js"].addBusinessDays, "previousBusinessDay": __m["src/drishti_dates.js"].previousBusinessDay, "businessDaysBetween": __m["src/drishti_dates.js"].businessDaysBetween, "DEFAULT_THEME": __m["src/drishti_theme.js"].DEFAULT_THEME, "THEME_STORAGE_KEY": __m["src/drishti_theme.js"].THEME_STORAGE_KEY, "TEXT_TOKENS": __m["src/drishti_theme.js"].TEXT_TOKENS, "GROUND_TOKENS": __m["src/drishti_theme.js"].GROUND_TOKENS, "themes": __m["src/drishti_theme.js"].themes, "scheme": __m["src/drishti_theme.js"].scheme, "currentTheme": __m["src/drishti_theme.js"].currentTheme, "setTheme": __m["src/drishti_theme.js"].setTheme, "token": __m["src/drishti_theme.js"].token, "tokens": __m["src/drishti_theme.js"].tokens, "parseColor": __m["src/drishti_theme.js"].parseColor, "luminance": __m["src/drishti_theme.js"].luminance, "contrastRatio": __m["src/drishti_theme.js"].contrastRatio, "readableOn": __m["src/drishti_theme.js"].readableOn, "contrastProblems": __m["src/drishti_theme.js"].contrastProblems, "basePath": __m["src/drishti_base.js"].basePath, "setBase": __m["src/drishti_base.js"].setBase, "url": __m["src/drishti_base.js"].url, "routePath": __m["src/drishti_base.js"].routePath, "installBase": __m["src/drishti_base.js"].installBase, "AS_OF_HEADER": __m["src/drishti_api.js"].AS_OF_HEADER, "ApiError": __m["src/drishti_api.js"].ApiError, "errorWords": __m["src/drishti_api.js"].errorWords, "ApiClient": __m["src/drishti_api.js"].ApiClient, "createClient": __m["src/drishti_api.js"].createClient, "api": __m["src/drishti_api.js"].api, "call": __m["src/drishti_api.js"].call, "EventBus": __m["src/drishti_events.js"].EventBus, "createBus": __m["src/drishti_events.js"].createBus, "bus": __m["src/drishti_events.js"].bus, "SELECTION_EVENT": __m["src/drishti_link.js"].SELECTION_EVENT, "linkGrid": __m["src/drishti_link.js"].linkGrid, "publishSelection": __m["src/drishti_link.js"].publishSelection, "FOCUSABLE": __m["src/drishti_a11y.js"].FOCUSABLE, "focusable": __m["src/drishti_a11y.js"].focusable, "trapFocus": __m["src/drishti_a11y.js"].trapFocus, "announce": __m["src/drishti_a11y.js"].announce, "rovingIndex": __m["src/drishti_a11y.js"].rovingIndex, "rovingTabindex": __m["src/drishti_a11y.js"].rovingTabindex, "installResize": __m["src/drishti_resize.js"].installResize, "scanResize": __m["src/drishti_resize.js"].scanResize, "resizeHandle": __m["src/drishti_resize.js"].resizeHandle, "resetResize": __m["src/drishti_resize.js"].resetResize, "trackPointer": __m["src/drishti_pointer.js"].trackPointer, "Chips": __m["src/drishti_chips.js"].Chips, "chipList": __m["src/drishti_chips.js"].chipList, "listValues": __m["src/drishti_chips.js"].listValues, "isListValue": __m["src/drishti_chips.js"].isListValue, "upgradeChips": __m["src/drishti_chips.js"].upgradeChips, "WORKBENCH": __m["src/drishti_keys.js"].WORKBENCH, "LAYOUT": __m["src/drishti_keys.js"].LAYOUT, "interpretPanelKey": __m["src/drishti_keys.js"].interpretPanelKey, "GridKeys": __m["src/drishti_keys.js"].GridKeys, "keyName": __m["src/drishti_keys.js"].keyName, "normalizeKey": __m["src/drishti_keys.js"].normalizeKey, "keymap": __m["src/drishti_keys.js"].keymap, "STATES": __m["src/drishti_states.js"].STATES, "skeleton": __m["src/drishti_states.js"].skeleton, "showState": __m["src/drishti_states.js"].showState, "stateBlock": __m["src/drishti_states.js"].stateBlock, "clearState": __m["src/drishti_states.js"].clearState, "fuzzyScore": __m["src/drishti_command-palette.js"].fuzzyScore, "rankCommands": __m["src/drishti_command-palette.js"].rankCommands, "keymapCommands": __m["src/drishti_command-palette.js"].keymapCommands, "CommandPalette": __m["src/drishti_command-palette.js"].CommandPalette, "bindPaletteKey": __m["src/drishti_command-palette.js"].bindPaletteKey, "openDialog": __m["src/drishti_overlay.js"].openDialog, "closeDialog": __m["src/drishti_overlay.js"].closeDialog, "openDrawer": __m["src/drishti_overlay.js"].openDrawer, "ToastTray": __m["src/drishti_overlay.js"].ToastTray, "toast": __m["src/drishti_overlay.js"].toast, "configure": __m["src/drishti_loader.js"].configure, "manifest": __m["src/drishti_loader.js"].manifest, "libraryVersion": __m["src/drishti_loader.js"].libraryVersion, "requirements": __m["src/drishti_loader.js"].requirements, "loaded": __m["src/drishti_loader.js"].loaded, "load": __m["src/drishti_loader.js"].load, "refused": __m["src/drishti_loader.js"].refused, "staticUrl": __m["src/drishti_loader.js"].staticUrl, "loadScript": __m["src/drishti_loader.js"].loadScript, "loadStyle": __m["src/drishti_loader.js"].loadStyle, "isBlank": __m["src/drishti_filters.js"].isBlank, "compareValues": __m["src/drishti_filters.js"].compareValues, "compareRows": __m["src/drishti_filters.js"].compareRows, "cycleSort": __m["src/drishti_filters.js"].cycleSort, "passes": __m["src/drishti_filters.js"].passes, "rowFilter": __m["src/drishti_filters.js"].rowFilter, "filterWords": __m["src/drishti_filters.js"].filterWords, "FILTER_CHANNEL": __m["src/drishti_filters.js"].FILTER_CHANNEL, "filterRows": __m["src/drishti_filters.js"].filterRows, "textSortKey": __m["src/drishti_filters.js"].textSortKey, "compareTextKeys": __m["src/drishti_filters.js"].compareTextKeys, "h": __m["src/drishti_dom.js"].h, "placeAt": __m["src/drishti_dom.js"].placeAt, "placeUnder": __m["src/drishti_dom.js"].placeUnder, "attrAllowed": __m["src/drishti_dom.js"].attrAllowed, "safeUrl": __m["src/drishti_dom.js"].safeUrl, "parseNumberText": __m["src/drishti_parse.js"].parseNumberText, "numberEditText": __m["src/drishti_parse.js"].numberEditText, "toCsv": __m["src/drishti_files.js"].toCsv, "download": __m["src/drishti_files.js"].download, "sparkline": __m["src/drishti_explain.js"].sparkline, "renderExplain": __m["src/drishti_explain.js"].renderExplain, "DENSITIES": __m["src/drishti_visual.js"].DENSITIES, "blend": __m["src/drishti_visual.js"].blend, "alpha": __m["src/drishti_visual.js"].alpha, "visualTheme": __m["src/drishti_visual.js"].visualTheme, "toneColour": __m["src/drishti_visual.js"].toneColour, "rampColour": __m["src/drishti_visual.js"].rampColour, "formatterFor": __m["src/drishti_visual.js"].formatterFor };
+    return { "install": install, "MINUS": __m["src/drishti_format.js"].MINUS, "EMPTY": __m["src/drishti_format.js"].EMPTY, "MASK": __m["src/drishti_format.js"].MASK, "COMPACT_UNITS": __m["src/drishti_format.js"].COMPACT_UNITS, "plainDigits": __m["src/drishti_format.js"].plainDigits, "roundHalfUp": __m["src/drishti_format.js"].roundHalfUp, "group": __m["src/drishti_format.js"].group, "formatNumber": __m["src/drishti_format.js"].formatNumber, "formatPercent": __m["src/drishti_format.js"].formatPercent, "formatBasisPoints": __m["src/drishti_format.js"].formatBasisPoints, "formatCurrency": __m["src/drishti_format.js"].formatCurrency, "formatCompact": __m["src/drishti_format.js"].formatCompact, "defineFormats": __m["src/drishti_format.js"].defineFormats, "hasFormat": __m["src/drishti_format.js"].hasFormat, "namedFormat": __m["src/drishti_format.js"].namedFormat, "formatNames": __m["src/drishti_format.js"].formatNames, "formatSpec": __m["src/drishti_format.js"].formatSpec, "formatNamed": __m["src/drishti_format.js"].formatNamed, "formatter": __m["src/drishti_format.js"].formatter, "formatPythonFloat": __m["src/drishti_format.js"].formatPythonFloat, "BYTE_UNITS": __m["src/drishti_format.js"].BYTE_UNITS, "formatBytes": __m["src/drishti_format.js"].formatBytes, "formatDuration": __m["src/drishti_format.js"].formatDuration, "columnScale": __m["src/drishti_format.js"].columnScale, "formatScaled": __m["src/drishti_format.js"].formatScaled, "parseDate": __m["src/drishti_dates.js"].parseDate, "daysInMonth": __m["src/drishti_dates.js"].daysInMonth, "isoDate": __m["src/drishti_dates.js"].isoDate, "today": __m["src/drishti_dates.js"].today, "formatDate": __m["src/drishti_dates.js"].formatDate, "formatDateRange": __m["src/drishti_dates.js"].formatDateRange, "isBusinessDay": __m["src/drishti_dates.js"].isBusinessDay, "addBusinessDays": __m["src/drishti_dates.js"].addBusinessDays, "previousBusinessDay": __m["src/drishti_dates.js"].previousBusinessDay, "businessDaysBetween": __m["src/drishti_dates.js"].businessDaysBetween, "DEFAULT_THEME": __m["src/drishti_theme.js"].DEFAULT_THEME, "THEME_STORAGE_KEY": __m["src/drishti_theme.js"].THEME_STORAGE_KEY, "TEXT_TOKENS": __m["src/drishti_theme.js"].TEXT_TOKENS, "GROUND_TOKENS": __m["src/drishti_theme.js"].GROUND_TOKENS, "themes": __m["src/drishti_theme.js"].themes, "scheme": __m["src/drishti_theme.js"].scheme, "currentTheme": __m["src/drishti_theme.js"].currentTheme, "setTheme": __m["src/drishti_theme.js"].setTheme, "token": __m["src/drishti_theme.js"].token, "tokens": __m["src/drishti_theme.js"].tokens, "parseColor": __m["src/drishti_theme.js"].parseColor, "luminance": __m["src/drishti_theme.js"].luminance, "contrastRatio": __m["src/drishti_theme.js"].contrastRatio, "readableOn": __m["src/drishti_theme.js"].readableOn, "contrastProblems": __m["src/drishti_theme.js"].contrastProblems, "basePath": __m["src/drishti_base.js"].basePath, "setBase": __m["src/drishti_base.js"].setBase, "url": __m["src/drishti_base.js"].url, "routePath": __m["src/drishti_base.js"].routePath, "installBase": __m["src/drishti_base.js"].installBase, "AS_OF_HEADER": __m["src/drishti_api.js"].AS_OF_HEADER, "ApiError": __m["src/drishti_api.js"].ApiError, "errorWords": __m["src/drishti_api.js"].errorWords, "ApiClient": __m["src/drishti_api.js"].ApiClient, "createClient": __m["src/drishti_api.js"].createClient, "api": __m["src/drishti_api.js"].api, "call": __m["src/drishti_api.js"].call, "EventBus": __m["src/drishti_events.js"].EventBus, "createBus": __m["src/drishti_events.js"].createBus, "bus": __m["src/drishti_events.js"].bus, "SELECTION_EVENT": __m["src/drishti_link.js"].SELECTION_EVENT, "linkGrid": __m["src/drishti_link.js"].linkGrid, "publishSelection": __m["src/drishti_link.js"].publishSelection, "FOCUSABLE": __m["src/drishti_a11y.js"].FOCUSABLE, "focusable": __m["src/drishti_a11y.js"].focusable, "trapFocus": __m["src/drishti_a11y.js"].trapFocus, "announce": __m["src/drishti_a11y.js"].announce, "rovingIndex": __m["src/drishti_a11y.js"].rovingIndex, "rovingTabindex": __m["src/drishti_a11y.js"].rovingTabindex, "installResize": __m["src/drishti_resize.js"].installResize, "scanResize": __m["src/drishti_resize.js"].scanResize, "resizeHandle": __m["src/drishti_resize.js"].resizeHandle, "resetResize": __m["src/drishti_resize.js"].resetResize, "trackPointer": __m["src/drishti_pointer.js"].trackPointer, "Chips": __m["src/drishti_chips.js"].Chips, "chipList": __m["src/drishti_chips.js"].chipList, "listValues": __m["src/drishti_chips.js"].listValues, "isListValue": __m["src/drishti_chips.js"].isListValue, "upgradeChips": __m["src/drishti_chips.js"].upgradeChips, "WORKBENCH": __m["src/drishti_keys.js"].WORKBENCH, "LAYOUT": __m["src/drishti_keys.js"].LAYOUT, "interpretPanelKey": __m["src/drishti_keys.js"].interpretPanelKey, "GridKeys": __m["src/drishti_keys.js"].GridKeys, "keyName": __m["src/drishti_keys.js"].keyName, "normalizeKey": __m["src/drishti_keys.js"].normalizeKey, "keymap": __m["src/drishti_keys.js"].keymap, "STATES": __m["src/drishti_states.js"].STATES, "skeleton": __m["src/drishti_states.js"].skeleton, "showState": __m["src/drishti_states.js"].showState, "stateBlock": __m["src/drishti_states.js"].stateBlock, "clearState": __m["src/drishti_states.js"].clearState, "fuzzyScore": __m["src/drishti_command-palette.js"].fuzzyScore, "rankCommands": __m["src/drishti_command-palette.js"].rankCommands, "keymapCommands": __m["src/drishti_command-palette.js"].keymapCommands, "CommandPalette": __m["src/drishti_command-palette.js"].CommandPalette, "bindPaletteKey": __m["src/drishti_command-palette.js"].bindPaletteKey, "DockModel": __m["src/drishti_dock.js"].DockModel, "Dock": __m["src/drishti_dock.js"].Dock, "workspaceStore": __m["src/drishti_dock.js"].workspaceStore, "SelectionHistory": __m["src/drishti_selection-chip.js"].SelectionHistory, "SelectionChip": __m["src/drishti_selection-chip.js"].SelectionChip, "openDialog": __m["src/drishti_overlay.js"].openDialog, "closeDialog": __m["src/drishti_overlay.js"].closeDialog, "openDrawer": __m["src/drishti_overlay.js"].openDrawer, "ToastTray": __m["src/drishti_overlay.js"].ToastTray, "toast": __m["src/drishti_overlay.js"].toast, "configure": __m["src/drishti_loader.js"].configure, "manifest": __m["src/drishti_loader.js"].manifest, "libraryVersion": __m["src/drishti_loader.js"].libraryVersion, "requirements": __m["src/drishti_loader.js"].requirements, "loaded": __m["src/drishti_loader.js"].loaded, "load": __m["src/drishti_loader.js"].load, "refused": __m["src/drishti_loader.js"].refused, "staticUrl": __m["src/drishti_loader.js"].staticUrl, "loadScript": __m["src/drishti_loader.js"].loadScript, "loadStyle": __m["src/drishti_loader.js"].loadStyle, "isBlank": __m["src/drishti_filters.js"].isBlank, "compareValues": __m["src/drishti_filters.js"].compareValues, "compareRows": __m["src/drishti_filters.js"].compareRows, "cycleSort": __m["src/drishti_filters.js"].cycleSort, "passes": __m["src/drishti_filters.js"].passes, "rowFilter": __m["src/drishti_filters.js"].rowFilter, "filterWords": __m["src/drishti_filters.js"].filterWords, "FILTER_CHANNEL": __m["src/drishti_filters.js"].FILTER_CHANNEL, "filterRows": __m["src/drishti_filters.js"].filterRows, "textSortKey": __m["src/drishti_filters.js"].textSortKey, "compareTextKeys": __m["src/drishti_filters.js"].compareTextKeys, "h": __m["src/drishti_dom.js"].h, "placeAt": __m["src/drishti_dom.js"].placeAt, "placeUnder": __m["src/drishti_dom.js"].placeUnder, "attrAllowed": __m["src/drishti_dom.js"].attrAllowed, "safeUrl": __m["src/drishti_dom.js"].safeUrl, "parseNumberText": __m["src/drishti_parse.js"].parseNumberText, "numberEditText": __m["src/drishti_parse.js"].numberEditText, "toCsv": __m["src/drishti_files.js"].toCsv, "download": __m["src/drishti_files.js"].download, "sparkline": __m["src/drishti_explain.js"].sparkline, "renderExplain": __m["src/drishti_explain.js"].renderExplain, "DENSITIES": __m["src/drishti_visual.js"].DENSITIES, "blend": __m["src/drishti_visual.js"].blend, "alpha": __m["src/drishti_visual.js"].alpha, "visualTheme": __m["src/drishti_visual.js"].visualTheme, "toneColour": __m["src/drishti_visual.js"].toneColour, "rampColour": __m["src/drishti_visual.js"].rampColour, "formatterFor": __m["src/drishti_visual.js"].formatterFor };
   })();
   return Object.freeze(Object.assign({ library: "drishti-core", version: "1.3.0" }, __m["src/drishti_index.js"]));
 });

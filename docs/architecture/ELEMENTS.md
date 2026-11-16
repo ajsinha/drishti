@@ -232,6 +232,19 @@ holding a search box with `role="combobox"` that owns a `role="listbox"`, `aria-
 count announced. On a phone it is a full-width sheet with 44 px rows. Look: `css/drishti_command-palette.css` (tokens only). The workbench's
 Ctrl+K list (`js/build/drishti_commands.js`) is this palette (its commands come from `source`); there is no second one.
 
+#### Dock layout and the selection chip (drishti-core 1.3.0)
+
+`DockModel` is a workspace as data: tab groups (`panels`, `active`) in binary splits (`dir` row or column, `ratio`), with `add`, `activate`,
+`split(id, dir, besideId, before)`, `moveToGroupOf`, `close` (an emptied group goes and its sibling takes its place), `toJSON` and
+`DockModel.fromJSON(saved, knownIds)` (a workspace saved before a panel existed or was removed still opens). `Dock(host, {model, render,
+title})` draws it: the splitters are `resizeHandle`s (arrows, Home, double-click), the tabs a roving-tabindex tablist, and every
+operation has a button in the group's header (Split right, Split down, Pop out, Close) plus Alt+Shift+arrows on a tab. **Pop out** moves
+the panel's element into a window of its own (the style sheets and theme copied) and back into the layout when that window closes.
+`workspaceStore(key)` keeps a workspace in this browser (never on the server). On a phone the splits stack. `SelectionChip(host,
+{channel})` follows the shared selection channel of `drishti-link`: "12 selected ×" (Clear publishes an empty selection to every card)
+and a History list (`SelectionHistory`, the last ten selections, each once) that republishes an earlier selection. Look:
+`css/drishti_dock.css`.
+
 ### 4.2 drishti-inputs
 
 `<drishti-select>` (one value from a list: keyboard, type-ahead, search on a long list), `<drishti-multiselect>`, `<drishti-date>` (date,

@@ -108,3 +108,36 @@ test('grid: threshold and top rules colour the right figures, a view survives a 
   assert.equal(p.conditionalFormats.length, 2);
   assert.ok(p.grandColumn && p.columnGroupTotals);
 });
+
+test('dock: split, tab, close and a saved workspace that survives a panel added or removed', () => {
+  const m = C.DockModel.of(['a', 'b', 'c']);
+  assert.deepEqual(m.panels(), ['a', 'b', 'c']);
+  m.split('c', 'row');
+  assert.equal(m.root.type, 'split');
+  assert.deepEqual(m.groupOf('c').panels, ['c']);
+  assert.deepEqual(m.groupOf('a').panels, ['a', 'b']);
+  m.moveToGroupOf('c', 'a');
+  assert.equal(m.root.type, 'tabs');
+  assert.deepEqual(m.root.panels, ['a', 'b', 'c']);
+  m.split('b', 'column', 'a', true);
+  assert.equal(m.root.dir, 'column');
+  assert.equal(m.root.a.panels[0], 'b');
+  m.close('b');
+  assert.equal(m.root.type, 'tabs');
+  assert.throws(() => m.add('a'), /already/);
+  m.add('d');
+  assert.equal(m.groupOf('d').active, 'd');
+  const saved = m.toJSON();
+  const next = C.DockModel.fromJSON(saved, ['a', 'c', 'e']);
+  assert.deepEqual(next.panels().sort(), ['a', 'c', 'e']);
+  let seen = 0;
+  next.onChange(() => { seen++; });
+  next.activate('a');
+  assert.equal(seen, 1);
+});
+
+test('the selection history keeps each set once, newest first, and never an empty one', () => {
+  const hs = new C.SelectionHistory(3);
+  hs.push('t', ['1', '2']); hs.push('t', []); hs.push('t', ['3']); hs.push('t', ['2', '1']); hs.push('t', ['4']); hs.push('t', ['5']);
+  assert.deepEqual(hs.list().map((x) => x.ids.join()), ['5', '4', '2,1']);
+});

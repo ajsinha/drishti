@@ -1258,6 +1258,250 @@ Binds Ctrl+K and Cmd+K to a palette: through the console's keymap registry when 
 
 Returns `function(): void`.
 
+### drishti_dock.js
+
+#### class `DockModel`
+
+The dock's layout as data.
+
+##### `new DockModel(root)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[root]` | `DockNode` | the layout (default: empty) |
+
+##### `static DockModel.of(ids)`
+
+A model with the panels in one group.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `ids` | `string[]` |  |
+
+Returns `DockModel`.
+
+##### `DockModel.onChange(fn)`
+
+Listens to changes.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `fn` | `function(DockModel): void` |  |
+
+Returns `function(): void`: stops listening.
+
+##### `DockModel.panels()`
+
+Every panel id, in layout order.
+
+Returns `string[]`.
+
+##### `DockModel.groupOf(id)`
+
+The tab group holding a panel.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `?DockNode`.
+
+##### `DockModel.add(id, besideId)`
+
+Adds a panel as a tab of the group of another (or of the first group).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `[besideId]` | `string` |  |
+
+Returns `void`.
+
+##### `DockModel.activate(id)`
+
+Makes a panel the shown one of its group.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `void`.
+
+##### `DockModel.close(id)`
+
+Takes a panel out (an emptied group goes, its sibling takes its place).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `void`.
+
+##### `DockModel.split(id, dir, besideId, before)`
+
+Splits the group of a panel and puts the panel in the new half (after: right or below; before: left or above).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` | the panel to move into the new half |
+| `dir` | `('row'\|'column')` |  |
+| `[besideId]` | `string` | the panel whose group is split (default: the panel's own group) |
+| `[before=false]` | `boolean` |  |
+
+Returns `void`.
+
+##### `DockModel.moveToGroupOf(id, intoId)`
+
+Moves a panel into the group of another as a tab.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `intoId` | `string` | a panel of the target group |
+
+Returns `void`.
+
+##### `DockModel.setRatio(node, ratio)`
+
+Sets the share of a split (the node as found in root).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `node` | `DockNode` |  |
+| `ratio` | `number` |  |
+
+Returns `void`.
+
+##### `DockModel.toJSON()`
+
+The workspace as data, to keep (JSON).
+
+Returns `DockNode`.
+
+##### `static DockModel.fromJSON(saved, known)`
+
+A model from a saved workspace; panels not in `known` are dropped and `known` panels it lacks are added to the first group, so a workspace saved before a panel existed still opens.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `saved` | `DockNode` |  |
+| `known` | `string[]` |  |
+
+Returns `DockModel`.
+
+#### class `Dock`
+
+The dock drawn: groups with tabs, splits with handles, a keyboard path for every move.
+
+##### `new Dock(host, o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` |  |
+| `o` | `DockOptions` |  |
+
+##### `Dock.draw()`
+
+Draws the layout again (the model calls it on every change).
+
+Returns `void`.
+
+##### `Dock.popOut(id)`
+
+Moves a panel into a window of its own; closing that window brings it back as a tab.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `?Window`.
+
+##### `Dock.destroy()`
+
+Stops listening and takes the dock out (pop-out windows are closed).
+
+Returns `void`.
+
+#### `workspaceStore(key, storage)`
+
+Keeps a workspace in the browser under a key (this person's, this browser's; a failure to store is silent).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `key` | `string` |  |
+| `[storage]` | `Storage` | default localStorage |
+
+Returns `{save: function(DockModel): void, load: function(string[]): ?DockModel, clear: function(): void}`.
+
+### drishti_selection-chip.js
+
+#### class `SelectionHistory`
+
+The last selections of a channel, newest first, each once.
+
+##### `new SelectionHistory(limit)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[limit=10]` | `number` |  |
+
+##### `SelectionHistory.push(channel, ids, label)`
+
+Remembers a selection (an empty one is not kept; the same set again moves to the front).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `channel` | `string` |  |
+| `ids` | `string[]` |  |
+| `[label]` | `string` | words for it ("12 rows") |
+
+Returns `void`.
+
+##### `SelectionHistory.list()`
+
+The history, newest first.
+
+Returns `Array&lt;{channel: string, ids: string[], label: string, at: number}&gt;`.
+
+#### class `SelectionChip`
+
+The chip: the selection now, a Clear, and a History menu that brings an earlier selection back (published on the channel).
+
+##### `new SelectionChip(host, o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` |  |
+| `o` | `ChipOptions` |  |
+
+##### `SelectionChip.clear()`
+
+Clears the selection of the channel (every card hears it).
+
+Returns `void`.
+
+##### `SelectionChip.restore(index)`
+
+Brings an earlier selection back.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `index` | `number` | its place in the history (0: the newest) |
+
+Returns `void`.
+
+##### `SelectionChip.draw()`
+
+Draws the chip again.
+
+Returns `void`.
+
+##### `SelectionChip.destroy()`
+
+Stops listening and takes the chip out.
+
+Returns `void`.
+
 ### drishti_overlay.js
 
 #### `openDialog(dialog, o)`
@@ -1846,6 +2090,27 @@ A business date: year, month (1 to 12) and day.
 | `m` | `number` | 1 to 12 |
 | `d` | `number` | 1 to 31 |
 
+#### `DockNode` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `type` | `('tabs'\|'split')` |  |
+| `[panels]` | `string[]` | tabs: the panel ids, in tab order |
+| `[active]` | `string` | tabs: the shown panel |
+| `[dir]` | `('row'\|'column')` | split: row puts a left of b, column puts a above b |
+| `[ratio]` | `number` | split: a's share, 0.1 to 0.9 |
+| `[a]` | `DockNode` |  |
+| `[b]` | `DockNode` |  |
+
+#### `DockOptions` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `model` | `DockModel` |  |
+| `render` | `function(string): HTMLElement` | the element of a panel (made once; moved between groups, never rebuilt) |
+| `[title]` | `function(string): string` | a panel's tab text (default: its id) |
+| `[popOut=true]` | `boolean` | the Pop out button |
+
 #### `Listener`
 
 A listener: the event's payload and its name.
@@ -1958,6 +2223,15 @@ A table to export.
 | `[start]` | `function(PointerEvent): (boolean\|void)` | the press became a drag; false cancels it |
 | `move` | `function(PointerEvent): void` |  |
 | `end` | `function(PointerEvent, boolean, boolean): void` | (event, committed, moved): committed is false after Escape or a cancel |
+
+#### `ChipOptions` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `channel` | `string` | the channel to follow (the one the cards share) |
+| `[bus]` | `Object` | default drishti-core's |
+| `[describe]` | `function(string[]): string` | the words for a selection ("Desk Rates, Credit") |
+| `[history=10]` | `number` |  |
 
 #### `StateOptions` : `Object`
 

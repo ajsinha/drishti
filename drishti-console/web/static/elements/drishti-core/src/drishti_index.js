@@ -40,6 +40,8 @@ export { Chips, chipList, listValues, isListValue, upgradeChips } from './drisht
 export { WORKBENCH, LAYOUT, interpretPanelKey, GridKeys, keyName, normalizeKey, keymap } from './drishti_keys.js';
 export { STATES, skeleton, showState, stateBlock, clearState } from './drishti_states.js';
 export { fuzzyScore, rankCommands, keymapCommands, CommandPalette, bindPaletteKey } from './drishti_command-palette.js';
+export { DockModel, Dock, workspaceStore } from './drishti_dock.js';
+export { SelectionHistory, SelectionChip } from './drishti_selection-chip.js';
 export { openDialog, closeDialog, openDrawer, ToastTray, toast } from './drishti_overlay.js';
 export { configure, manifest, libraryVersion, requirements, loaded, load, refused, staticUrl, loadScript, loadStyle } from './drishti_loader.js';
 export { isBlank, compareValues, compareRows, cycleSort, passes, rowFilter, filterWords, FILTER_CHANNEL, filterRows, textSortKey,

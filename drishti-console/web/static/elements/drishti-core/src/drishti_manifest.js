@@ -34,7 +34,8 @@ export const MANIFEST = Object.freeze({
         "css/drishti_resize.css",
         "css/drishti_chips.css",
         "css/drishti_states.css",
-        "css/drishti_command-palette.css"
+        "css/drishti_command-palette.css",
+        "css/drishti_dock.css"
       ],
       "scripts": [],
       "module": "core"
