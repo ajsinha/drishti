@@ -419,3 +419,21 @@ def test_the_clusters_data_folder_is_the_one_launch_roots_lookup(tmp_path):
         assert clusterctl.Layout("", str(tmp_path / "given"), {"drishti.data.dir": str(tmp_path / "ini")}).data == (tmp_path / "given").resolve()
     assert clusterctl.Layout("", "", {}).file == clusterctl.STACK / "stack.yaml"
     assert not hasattr(clusterctl, "OLD_STACK"), "the drishti-stack/ fallback of i4 is gone"
+
+
+def test_start_server_iceberg_passes_settings_and_writes_nothing(tmp_path):
+    """--iceberg: connectors read-only and the install never written; the location is given as settings, the warehouse under the data folder."""
+    import argparse
+    import serverstart
+    home, data = tmp_path / "home", tmp_path / "data"
+    roots = {"home": (home, ""), "data": (data, ""), "config": (home / "config", "")}
+    env = {}
+    serverstart.iceberg_settings(argparse.Namespace(iceberg_root=None), env, roots)
+    assert env["DRISHTI_CONNECTORS_DIR"] == str(home / "config" / "connectors.examples" / "iceberg")
+    assert env["DRISHTI_ICEBERG_ROOT"] == str(data / "iceberg") and env["DRISHTI_ICEBERG_ENGINE"] == "native"
+    assert env["DRISHTI_BINDINGS_FILE"] == str(home / "config" / "bindings.yaml")
+    assert not tmp_path.joinpath("home").exists() and not data.exists(), "nothing is written"
+    env = {"DRISHTI_CONNECTORS_DIR": "/site/connectors"}
+    serverstart.iceberg_settings(argparse.Namespace(iceberg_root="/wh"), env, roots)
+    assert env["DRISHTI_CONNECTORS_DIR"] == "/site/connectors" and env["DRISHTI_ICEBERG_ROOT"] == "/wh"
+    assert "connectors.examples" not in (TOOLS / "launch" / "serverstart.py").read_text(encoding="utf-8").split("def iceberg_settings")[0]

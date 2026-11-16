@@ -527,7 +527,8 @@ instead of the command: [DEPLOYMENT_AND_QA_GUIDE.md › From IntelliJ IDEA](../D
 
 **Iceberg tables on Windows** run on the native engine too. The loader `tools/load-iceberg.sh` needs bash there (Git Bash or WSL):
 `python tools/drishti.py data load --store iceberg` runs it (the samples, ten business days; `--trades 10000 --days 3` adds a book), then
-`py tools\drishti.py start server --iceberg`. On Linux the same is `tools/load-iceberg.sh ./data/iceberg --engine native`.
+`py tools\drishti.py start server --iceberg` (settings only: the connectors folder is `config/connectors.examples/iceberg` and the
+warehouse `<data>/iceberg`; nothing is copied into `config/`). On Linux the same is `tools/load-iceberg.sh ./data/iceberg --engine native`.
 
 ### 4.4 What works differently on Windows
 

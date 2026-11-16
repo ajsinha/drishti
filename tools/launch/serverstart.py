@@ -112,6 +112,24 @@ def memory_flags(workdir: Path, env: dict) -> list:
     return out
 
 
+def iceberg_settings(a, env: dict, roots: dict) -> None:
+    """``--iceberg``: the banking domains read from Iceberg, given to the server as settings only; nothing is written (connector files are
+    read-only, the install folder is never written): the connectors folder is the shipped Iceberg templates,
+    ``config/connectors.examples/iceberg`` (the modules' own connector templates stay as they are), the bindings and placement files stay
+    where they are without it, and the warehouse is under the data folder (``<data>/iceberg``) unless --iceberg-root or
+    ``DRISHTI_ICEBERG_ROOT`` names one."""
+    config, data = roots["config"][0], roots["data"][0]
+    env["DRISHTI_ICEBERG_ENGINE"] = "native"
+    env["DRISHTI_ICEBERG_ROOT"] = a.iceberg_root or env.get("DRISHTI_ICEBERG_ROOT") or str(data / "iceberg")
+    if (env.get("DRISHTI_CONNECTORS_DIR") or "").strip():
+        say(f"--iceberg: DRISHTI_CONNECTORS_DIR is set ({env['DRISHTI_CONNECTORS_DIR']}): kept; put the Iceberg connector files there yourself")
+    else:
+        env["DRISHTI_CONNECTORS_DIR"] = str(config / "connectors.examples" / "iceberg")
+        env.setdefault("DRISHTI_BINDINGS_FILE", str(config / "bindings.yaml"))      # where they are without --iceberg (beside config/connectors)
+        env.setdefault("DRISHTI_PLACEMENT_FILE", str(config / "placement.yaml"))
+    say(f"--iceberg: connectors {env['DRISHTI_CONNECTORS_DIR']}, warehouse {env['DRISHTI_ICEBERG_ROOT']} (settings only; nothing written)")
+
+
 def find_jar(given: str | None, home: Path) -> Path:
     """--jar (a one-off run), else the newest server jar in <home>/lib, the one place (javacmd.server_jar)."""
     try:
@@ -186,14 +204,7 @@ def start(a, env: dict | None = None) -> int:
     if a.lake_root:
         env[lakeconfig.DEMO_ROOT_ENV] = a.lake_root
     if a.iceberg:
-        env["DRISHTI_ICEBERG_ENGINE"] = "native"
-        env["DRISHTI_ICEBERG_ROOT"] = a.iceberg_root or env.get("DRISHTI_ICEBERG_ROOT") or str(home / "data" / "iceberg")
-        conn = home / "config" / "connectors"
-        conn.mkdir(parents=True, exist_ok=True)
-        for f in sorted((home / "config" / "connectors.examples" / "iceberg").glob("*.yaml")):
-            if not (conn / f.name).exists():
-                (conn / f.name).write_bytes(f.read_bytes())
-                say(f"connector file {f.name} copied into config/connectors")
+        iceberg_settings(a, env, roots)
     env["DRISHTI_PORT"] = str(port)
 
     url_host = procs.lan_ip()

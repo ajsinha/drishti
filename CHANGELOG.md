@@ -75,6 +75,10 @@
   `tools/test_launch.py` with Windows mocked, `LauncherStopControllerTest`, `test_launcher_stop.py`).
 - **The IntelliJ run configuration *Drishti build server jar* runs `tools/drishti.py --settings … build jar`** (it was a Maven
   configuration that built into `target/` only and left `lib/` stale): one way to build, the jar always copied into `<home>/lib`.
+- **`start server --iceberg` writes nothing.** It copied the Iceberg connector files into `<home>/config/connectors` and put the warehouse
+  in `<home>/data/iceberg`; now it passes settings only: `DRISHTI_CONNECTORS_DIR=config/connectors.examples/iceberg` (the bindings and
+  placement files named where they are), `DRISHTI_ICEBERG_ROOT=<data>/iceberg` unless `--iceberg-root` names one (connectors read-only;
+  everything Drishti writes under the data folder).
 
 The Python commands release. The build still reports its version as 2.9.11.g (the version from one place is the next release); the release is tag `v2.9.11.i_5`.
 
