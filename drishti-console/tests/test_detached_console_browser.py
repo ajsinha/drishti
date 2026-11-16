@@ -32,8 +32,6 @@ from wb_live import _stack
 #: the console files that still read outside the console's folder, each with the step that ends it (THIN_CONSOLE_DESIGN.md section 5)
 KNOWN_READERS = {
     "core/resolution.py": "S5: the resolver itself (its readers above)",
-    "core/under_construction.py": "S3: config/under-construction.yaml",
-    "core/engines.py": "S3: the engine catalogue copy",
     "core/settings_page.py": "S6: docs/admin/CONFIGURATION.md and the server's YAML for Help -> Configuration",
     "core/config_editor.py": "S6: the settings documents for Admin -> Configuration",
     "core/lakes.py": "S8: the lake build on the console's machine",

@@ -30,7 +30,7 @@ registers: [plugins.banking.build_types, plugins.banking.routes.trading_routes, 
 # its other Python modules (the core imports none of them: tests/test_module_boundaries.py)
 code: [plugins.banking.console_hooks, plugins.banking.trading_landing, plugins.banking.market_landing, plugins.banking.risk_api]
 
-# its compute engines: their words, console pages, menus, Help pages, tiles and lenses are the engine catalogue's (config/engines.yaml)
+# its compute engines: their words, console pages, menus, Help pages, tiles and lenses are the server's engine catalogue (its installation answer)
 help: help.yaml
 engines: [var, exposure, sensitivities, frtb-sa, simm, mr-cube]
 # its own command words beyond the engines' (the playgrounds, the counterparty cube)

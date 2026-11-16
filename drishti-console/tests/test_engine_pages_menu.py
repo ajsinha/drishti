@@ -14,7 +14,7 @@
 
 """The engines' pages in their task's menu, without a browser (the Engines menu removed, owner 2026-11-09): VaR, Why it moved, exposure,
 FRTB-SA, SIMM and their playgrounds are under Risk (config/sitemap.yaml, ``requires: engine:<id>``), drawn when the engine runs in the
-cluster and the person's role opens it (the catalogue's ``opens:``, plugins/banking/engines.yaml; administrators open all); the same rule
+cluster and the person's role opens it (the catalogue's ``opens:``, the banking jar's engines.yaml sent in the server's installation answer; administrators open all); the same rule
 refuses an engine's command words in words and drops them from the type-ahead; switches and status are Admin -> Engines only. Help shows
 every running engine's pages to anyone who can open Help and leaves out an engine that runs nowhere (an administrator sees those greyed).
 The browser side: test_engine_pages_browser.py."""

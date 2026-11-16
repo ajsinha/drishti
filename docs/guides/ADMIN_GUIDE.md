@@ -1322,7 +1322,8 @@ playgrounds (404); its BI datasets and the reports on them; its `drishti.py` com
 `/actuator/health` lists each engine's state under `engines`; an engine that is off is `off`, never down.
 
 **Who opens a running engine.** The engine's catalogue entry names the roles that see its pages (`opens:` in
-`drishti-console/plugins/banking/engines.yaml`, byte-equal to the banking jar's: `role:<name>`, `pack:<name>`; administrators always;
+the banking jar's `META-INF/drishti/engines.yaml`, which the server sends to the console in its installation answer: `role:<name>`,
+`pack:<name>`; administrators always;
 none: everyone). A role it does not open does not see its pages under Risk, is not offered its words in the
 type-ahead and is told "<title> is not opened for your role; ask an administrator." when it types one. Help is documentation and stays
 listed. The server's own entitlements still decide the data.
@@ -1661,4 +1662,4 @@ lists what the console hosts, what is gone and what it refused, with the reasons
 | The page says a change is written but another setting still decides | the switch is set in the environment, `application.local.yaml` or by another name (`DRS-1024` in the log) | remove that setting, or change it there |
 | An engine stays *restart needed* | `memory-lake` and `flight` start only at a server start | restart the server |
 | An engine shows *not installed* | its module is off | switch the module on ([section 22](#22-modules-on-or-off)) |
-| An engine's pages are missing from the Risk menu for some people | the engine's `opens:` does not name their role | add the role to its `opens:` in `plugins/banking/engines.yaml` (and the banking jar's copy) |
+| An engine's pages are missing from the Risk menu for some people | the engine's `opens:` does not name their role | add the role to its `opens:` in the banking jar's `META-INF/drishti/engines.yaml` (the console keeps no copy) |

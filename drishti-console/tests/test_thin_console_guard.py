@@ -78,3 +78,11 @@ def test_no_console_file_reads_a_distribution_lens_or_manifest_file():
             if word in text:
                 found.append(f"{p.relative_to(CONSOLE).as_posix()}: {word}")
     assert not found, f"the console reads the server's distribution, lens or manifest files again: {found}"
+
+
+def test_the_console_keeps_no_engine_catalogue_or_under_construction_file():
+    for f in ("config/engines.yaml", "plugins/banking/engines.yaml"):
+        assert not (CONSOLE / f).exists(), f"{f}: the engine catalogue comes in the server's installation answer (step S3)"
+    for f in ("core/engines.py", "core/under_construction.py"):
+        text = (CONSOLE / f).read_text(encoding="utf-8")
+        assert "yaml" not in text and "read_text" not in text, f"{f} reads a file: the server's answer holds it (step S3)"

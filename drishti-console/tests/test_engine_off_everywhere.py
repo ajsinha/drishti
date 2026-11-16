@@ -16,7 +16,7 @@
 test_engine_off_everywhere.py): generated from the engine catalogue, for every installed engine with words or pages: its words are unknown
 to the edition (word_on, typed_shown, so FUNC, type-ahead, Home cards and chips drop them), the command line says the server's words
 (DRS-1020), its pages and playgrounds answer 404, its menu items are not drawn, its Help pages are not listed or reached. The engine coming
-back (the about answer says so) brings everything back. The catalogue's console copy is the server's byte for byte (EngineCatalogueTest)."""
+back (the about answer says so) brings everything back. The console keeps no copy of the catalogue: it comes in the server's installation answer (step S3)."""
 from __future__ import annotations
 
 from urllib.parse import unquote

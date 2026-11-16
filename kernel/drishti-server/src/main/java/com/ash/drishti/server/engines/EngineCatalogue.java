@@ -60,7 +60,7 @@ public final class EngineCatalogue {
      * @param shipped the switch as shipped
      * @param installed whether this build holds the engine (false: known to the switch framework, built later)
      * @param liveOn whether turning it on takes effect without a restart
-     * @param lists every other list of the entry by its key: prefixes, needs, uses, api, console, words, menus, help, landings, tiles,
+     * @param lists every other list of the entry by its key: prefixes, needs, uses, api, console, opens, words, menus, help, landings, tiles,
      *     lenses, bi, cli, playgrounds, connectors, kinds, inputs, ai-tools
      */
     public record Entry(String id, String title, String about, String file, String switchKey, String env, List<String> aliases, boolean shipped,
@@ -97,7 +97,7 @@ public final class EngineCatalogue {
     /** The lists that say what an engine brings to the screen (what turning it off hides). */
     public static final List<String> HIDES = List.of("words", "menus", "help", "landings", "tiles", "lenses", "bi", "cli", "playgrounds",
             "connectors", "kinds", "ai-tools");
-    private static final List<String> LISTS = List.of("prefixes", "needs", "uses", "api", "console", "words", "menus", "help", "landings", "tiles",
+    private static final List<String> LISTS = List.of("prefixes", "needs", "uses", "api", "console", "opens", "words", "menus", "help", "landings", "tiles",
             "lenses", "bi", "cli", "playgrounds", "connectors", "kinds", "inputs", "ai-tools");
 
     private final Map<String, Entry> entries;

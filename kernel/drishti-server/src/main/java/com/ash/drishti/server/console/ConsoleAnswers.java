@@ -89,13 +89,16 @@ public class ConsoleAnswers {
     private final ObjectProvider<ModuleConfiguration.Started> started;
     private final ObjectProvider<ModuleNode> node;
     private final Environment env;
+    private final ObjectProvider<com.ash.drishti.rachana.UnderConstruction> underConstruction;
     private final ObjectMapper json = new ObjectMapper();
     private volatile Built bootstrap;
     private final Map<String, Built> namedAnswers = new ConcurrentHashMap<>();
     private final Map<String, BuiltPack> packAnswers = new ConcurrentHashMap<>();
 
     public ConsoleAnswers(PackRegistry packs, EditionContext edition, ObjectProvider<EngineCluster> engines,
-            ObjectProvider<ModuleConfiguration.Started> started, ObjectProvider<ModuleNode> node, Environment env) {
+            ObjectProvider<ModuleConfiguration.Started> started, ObjectProvider<ModuleNode> node, Environment env,
+            ObjectProvider<com.ash.drishti.rachana.UnderConstruction> underConstruction) {
+        this.underConstruction = underConstruction;
         this.packs = packs;
         this.edition = edition;
         this.engines = engines;
@@ -175,7 +178,8 @@ public class ConsoleAnswers {
         doc.put("distribution", dist);
         doc.put("modules", modules(known));
         EngineCluster c = engines.getIfAvailable();
-        doc.put("engines", c == null ? List.of() : c.about());
+        doc.put("engines", c == null ? List.of() : c.console());   // the catalogue with what runs: the console keeps no copy (S3)
+        doc.put("under-construction", underConstruction());
         doc.put("commands", commands());
         return doc;
     }
@@ -232,6 +236,26 @@ public class ConsoleAnswers {
         } catch (IllegalStateException e) {
             throw new IllegalArgumentException(e.getMessage());
         }
+    }
+
+    /**
+     * The under-construction registry as the console draws it (docs/admin/UNDER_CONSTRUCTION.md; step S3): each item's id, its treatment
+     * ({@code hidden} or {@code under-construction}) and the menu items and Help pages it covers. The console reads no registry file.
+     */
+    private List<Map<String, Object>> underConstruction() {
+        com.ash.drishti.rachana.UnderConstruction uc = underConstruction.getIfAvailable();
+        List<Map<String, Object>> out = new ArrayList<>();
+        if (uc != null) {
+            for (com.ash.drishti.rachana.UnderConstruction.Item i : uc.items()) {
+                Map<String, Object> m = new LinkedHashMap<>();
+                m.put("id", i.id());
+                m.put("treatment", i.treatment());
+                m.put("menus", i.menus() == null ? List.of() : i.menus());
+                m.put("help", i.help() == null ? List.of() : i.help());
+                out.add(m);
+            }
+        }
+        return out;
     }
 
     /**

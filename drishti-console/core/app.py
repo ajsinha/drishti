@@ -525,8 +525,6 @@ def create_app(settings: Settings) -> FastAPI:
         templates.env.globals["DEFAULT_THEME"] = settings.get("ui.default_theme", "terminal") or "terminal"   # the distribution's theme
 
     app.state.editions = Editions(settings, WEB.parent, on_change=_branding_changed)
-    from core import under_construction as _uc
-    app.state.under_construction = _uc.load(settings, WEB.parent)      # docs/admin/UNDER_CONSTRUCTION.md: menus and help pages
     _branding_changed()                                  # the logo, favicon and touch icon from configuration (blank: the eye)
     templates.env.globals["edition_of"] = lambda request: getattr(request.state, "edition", None) or app.state.editions.instance
 

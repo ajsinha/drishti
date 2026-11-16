@@ -148,6 +148,36 @@ public final class EngineCluster implements EngineGateFilter.Peers {
         return out;
     }
 
+    /** What a console draws of each engine (THIN_CONSOLE_DESIGN.md 3.2, step S3): {@link #about()} and its screen lists. */
+    public static final List<String> CONSOLE_LISTS = List.of("words", "menus", "help", "landings", "tiles", "lenses", "playgrounds", "console",
+            "opens");
+
+    /**
+     * The engines for the console's installation answer: each with {@code id, title, here, cluster} as {@link #about()} and the catalogue's
+     * lists of what it brings to the screen (its command words, menu items, Help pages, Home tiles, lenses, console paths, and who opens
+     * it), so the console keeps no copy of the catalogue.
+     */
+    public List<Map<String, Object>> console() {
+        List<Map<String, Object>> out = new java.util.ArrayList<>();
+        for (EngineCatalogue.Entry e : registry.entries()) {
+            out.add(consoleRow(e, registry.running(e.id()), available(e.id())));
+        }
+        return out;
+    }
+
+    /** One engine as the console draws it: {@code id, title, here, cluster} and the catalogue's screen lists ({@link #CONSOLE_LISTS}). */
+    public static Map<String, Object> consoleRow(EngineCatalogue.Entry e, boolean here, boolean cluster) {
+        Map<String, Object> x = new LinkedHashMap<>();
+        x.put("id", e.id());
+        x.put("title", e.title());
+        x.put("here", here);
+        x.put("cluster", cluster);
+        for (String k : CONSOLE_LISTS) {
+            x.put(k, e.list(k));
+        }
+        return x;
+    }
+
     /** The node's own id (blank outside a cluster). */
     public String self() {
         RunCluster c = cluster.get();

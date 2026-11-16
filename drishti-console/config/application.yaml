@@ -217,8 +217,6 @@ live:                        # live updates (docs/architecture/DATA_ARCHITECTURE
     port: ${DRISHTI_CONSOLE_RELAY_PORT:17490}  # across hosts, worker n listens on port + n (port .. port + server.workers - 1): open these between the consoles; 0 = any free port
     timeout_seconds: 3  # how long a worker waits for the holder of a channel to answer
     window_seconds: 30  # a relay message is accepted this long after it was signed (allow for the hosts' clock difference); each only once
-under_construction:          # the under-construction registry (docs/admin/UNDER_CONSTRUCTION.md): menu items and help pages that depend on unbuilt work
-  file: ${DRISHTI_UNDER_CONSTRUCTION_FILE:../config/under-construction.yaml}   # the same file the server reads; absent: nothing registered
 lens:                        # the lenses (LENSES.md): workspaces a person opens ("Open Drishti Risk"); each arranges, none hides anything
   roles: {}                  # hook for role-based access later ({role: {link: true, start: risk}}): read, not wired
 features:                    # the console's own switches; a distribution presets them (the server sends the presets in its installation answer)

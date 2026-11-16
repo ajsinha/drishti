@@ -471,6 +471,8 @@ class Editions:
         self.distribution = Distribution.ALL
         self.server_modules: dict[str, dict] | None = None       # the installation's modules (id -> its row), in requirement order; None: not yet
         self.answer: dict | None = None                          # the installation's answer this view was made from
+        from core import under_construction as _uc
+        self.under_construction = _uc.Registry([])               # the server's under-construction registry (S3); none before it answers
         self._digest: str | None = None
 
     def mapping(self) -> dict[str, list[str]]:
@@ -511,6 +513,9 @@ class Editions:
         self.answer, self._digest = answer, answer.get("digest")
         self.distribution = d
         self.server_modules = {str(m["id"]): m for m in answer.get("modules") or [] if isinstance(m, dict) and m.get("id")}
+        _engines.take(answer.get("engines"), self.engines)       # the engine catalogue: the console keeps no copy (S3)
+        from core import under_construction as _uc
+        self.under_construction = _uc.Registry([i for i in answer.get("under-construction") or [] if isinstance(i, dict)])
         name = d.id if not d.all and d.filter is not None else ""
         if name != self.instance.name:
             LOG.warning("the server runs %s: the console follows it", name or "(none: the full Drishti)")

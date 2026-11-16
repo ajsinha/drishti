@@ -18,6 +18,12 @@
 
 ## Unreleased
 
+- **The thin console, step S3: the engine catalogue and the under-construction registry come from the server.** The installation answer
+  carries each engine with its catalogue lists (words, menus, Help pages, landings, tiles, lenses, playgrounds, console paths and
+  `opens:`) and the under-construction registry's items (treatment, menu items, Help pages). The console's copies are deleted
+  (`drishti-console/config/engines.yaml`, `drishti-console/plugins/banking/engines.yaml`, with the tests that held them byte-equal to
+  the server's), and so is the console setting `under_construction.file` (`DRISHTI_UNDER_CONSTRUCTION_FILE` on the console). An engine's
+  `opens:` is changed in the module jar's `META-INF/drishti/engines.yaml` only.
 - **The thin console, step S2: distributions, lenses and modules come from the server.** The server compiles the running distribution
   and sends it in the installation's answer (`GET /api/v1/console/bootstrap`: the filter, the brand, the settings layers it presets, the
   feature keys, each offered lens's arrangement, and every module with its title and its menus in the sitemap's form); the console draws

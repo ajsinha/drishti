@@ -12,15 +12,12 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The under-construction registry in the console (docs/admin/UNDER_CONSTRUCTION.md; ``config/under-construction.yaml``, the file the server
-reads): the menu items and help pages that depend on unbuilt work are left out (``hidden``) or shown with the "Under construction" chip
+"""The under-construction registry in the console (docs/admin/UNDER_CONSTRUCTION.md): the server reads ``config/under-construction.yaml``
+and sends each item in its installation answer (``under-construction``, THIN_CONSOLE_DESIGN.md step S3); the console reads no file. The menu items and help pages that depend on unbuilt work are left out (``hidden``) or shown with the "Under construction" chip
 (``under-construction``). A figure on a page is the server's: it rewrites the Sutra, and the page draws its tone ``uc`` as the same chip
 (``drishti_under-construction.css``). One file, one chip, no per-screen code."""
 from __future__ import annotations
 
-from pathlib import Path
-
-import yaml
 from markupsafe import Markup, escape
 
 TEXT = "Under construction"
@@ -60,17 +57,10 @@ class Registry:
         return any(str(i.get("id")) == item_id for i in self.items)
 
 
-def load(settings, console_dir: Path) -> Registry:
-    """``under_construction.file`` (default: the repository's ``config/under-construction.yaml``); none when the file is absent."""
-    f = Path(str(settings.get("under_construction.file", "../config/under-construction.yaml") or "../config/under-construction.yaml"))
-    path = f if f.is_absolute() else (console_dir / f).resolve()
-    if not path.is_file():
-        return Registry([])
-    data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-    return Registry([i for i in data.get("items") or [] if isinstance(i, dict)])
-
-
 def of(request_or_app) -> Registry:
+    """The registry this app draws with: the server's (its editions' answer), or one a test put on ``app.state.under_construction``."""
     app = getattr(request_or_app, "app", request_or_app)
     reg = getattr(app.state, "under_construction", None)
+    if reg is None:
+        reg = getattr(getattr(app.state, "editions", None), "under_construction", None)
     return reg if reg is not None else Registry([])

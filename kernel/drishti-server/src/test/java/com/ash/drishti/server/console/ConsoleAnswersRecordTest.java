@@ -69,6 +69,8 @@ class ConsoleAnswersRecordTest {
                 List<Map<String, Object>> modules = new ArrayList<>();
                 known.forEach((id, k) -> modules.add(ConsoleAnswers.moduleRow(id, k, null, null, null, true)));
                 doc.put("modules", modules);
+                doc.put("engines", engines());
+                doc.put("under-construction", underConstruction());
                 String text = json.writeValueAsString(doc).replace("\r\n", "\n") + "\n";
                 assertThat(text).as("no folder of the repository").doesNotContain(REPO.toString());
                 Path out = OUT.resolve("bootstrap-" + d.shortName() + ".json");
@@ -81,6 +83,37 @@ class ConsoleAnswersRecordTest {
             }
         }
         assertThat(stale).as("recorded answers older than the server's: run this test with -Ddrishti.record=true").isEmpty();
+    }
+
+    /** The product's engine catalogue and each module's (banking's jar resource), every engine running. */
+    static List<Map<String, Object>> engines() throws Exception {
+        List<Map<String, Object>> out = new ArrayList<>();
+        Map<String, com.ash.drishti.server.engines.EngineCatalogue.Entry> all = new LinkedHashMap<>();
+        try (Stream<Path> s = Files.walk(REPO.resolve("modules"), 8)) {
+            for (Path f : s.filter(p -> p.toString().replace('\\', '/').endsWith("src/main/resources/" + com.ash.drishti.server.engines.EngineCatalogue.MODULE_RESOURCE))
+                    .sorted().toList()) {
+                try (java.io.InputStream in = Files.newInputStream(f)) {
+                    all.putAll(com.ash.drishti.server.engines.EngineCatalogue.moduleEntries(in));
+                }
+            }
+        }
+        com.ash.drishti.server.engines.EngineCatalogue.load().all().forEach(e -> all.putIfAbsent(e.id(), e));
+        all.values().forEach(e -> out.add(com.ash.drishti.server.engines.EngineCluster.consoleRow(e, true, true)));
+        return out;
+    }
+
+    /** The shipped under-construction registry as the console draws it. */
+    static List<Map<String, Object>> underConstruction() {
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (com.ash.drishti.rachana.UnderConstruction.Item i : com.ash.drishti.rachana.UnderConstruction.load(REPO.resolve("config/under-construction.yaml")).items()) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("id", i.id());
+            m.put("treatment", i.treatment());
+            m.put("menus", i.menus() == null ? List.of() : i.menus());
+            m.put("help", i.help() == null ? List.of() : i.help());
+            out.add(m);
+        }
+        return out;
     }
 
     static List<String> lensNames(Path dir) throws Exception {

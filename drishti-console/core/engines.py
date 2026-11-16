@@ -15,22 +15,16 @@
 """Compute engines in the console (docs/guides/ADMIN_GUIDE.md section 5.2): an engine that runs on no server of the cluster
 disappears everywhere: its command words, menu items, Help pages, Home cards, pages and playgrounds. What runs is learned from the server's
 about answer (``engines``: ``[{id, title, here, cluster}]``, polled by core/backend_watch.py with the edition); what each engine brings to
-the screen is the engine catalogue (config/engines.yaml, the server's engines/catalogue.yaml byte for byte, and each module's
-plugins/<module>/engines.yaml, its jar's META-INF/drishti/engines.yaml). Until the server has said
-(an older server, no answer yet) nothing is hidden. One helper, :func:`engine_available`, answers for every place; the others are built on it.
+the screen is the server's engine catalogue, sent in its installation answer (``engines`` of ``GET /api/v1/console/bootstrap``: each
+engine's words, menus, Help pages, tiles, lenses, console paths and who opens it; THIN_CONSOLE_DESIGN.md step S3): the console keeps no
+copy. Until the server has said (an older server, no answer yet) nothing is hidden. One helper, :func:`engine_available`, answers for every place; the others are built on it.
 """
 from __future__ import annotations
 
 import logging
 from contextvars import ContextVar
-from pathlib import Path
-
-import yaml
 
 LOG = logging.getLogger("drishti.console.engines")
-CATALOGUE = Path(__file__).resolve().parent.parent / "config" / "engines.yaml"
-
-_entries: list[dict] | None = None
 
 
 class State:
@@ -38,11 +32,12 @@ class State:
     learned, nothing hidden) and -> runs on this server (``here``). One per app (its :class:`core.edition.Editions`), never shared: a
     process that holds several apps (the browser tests: a real stack's console beside stand-in ones) keeps each app's own answer."""
 
-    __slots__ = ("available", "here")
+    __slots__ = ("available", "here", "catalogue")
 
     def __init__(self) -> None:
         self.available: dict[str, bool] | None = None
         self.here: dict[str, bool] = {}
+        self.catalogue: list[dict] = []              # the server's catalogue (its installation answer's engines); empty: not yet
 
 
 _default = State()                                  # the newest app's: what code outside a request reads (one app per process in production)
@@ -73,22 +68,14 @@ def state() -> State:
 
 
 def entries() -> list[dict]:
-    """The catalogue's engines, in its order (read once): each module's own (``plugins/<module>/engines.yaml``, its jar's
-    META-INF/drishti/engines.yaml byte for byte) first, then the core's (config/engines.yaml)."""
-    global _entries
-    if _entries is None:
-        from core import modules
+    """The server's engine catalogue, in its order (the installation answer's ``engines``); empty before the server's first answer."""
+    return state().catalogue
 
-        out: list[dict] = []
-        for f in [modules.PLUGINS / p.id / "engines.yaml" for p in modules.plugins()] + [CATALOGUE]:
-            if not f.is_file():
-                continue
-            try:
-                out += list((yaml.safe_load(f.read_text(encoding="utf-8")) or {}).get("engines") or [])
-            except (OSError, yaml.YAMLError) as e:
-                LOG.warning("engines: cannot read %s (%s); its engines are not hidden", f, e)
-        _entries = out
-    return _entries
+
+def take(engines, into: State | None = None) -> None:
+    """The installation answer's ``engines`` (each with its catalogue lists) into an app's state, swapped whole."""
+    s = into if into is not None else state()
+    s.catalogue = [dict(e) for e in engines or [] if isinstance(e, dict) and e.get("id")]
 
 
 def entry(engine_id: str) -> dict | None:
