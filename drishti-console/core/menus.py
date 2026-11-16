@@ -69,6 +69,13 @@ def module_active(request, module_id: str | None, domain: str | None = None) -> 
     return modules.module_on(domain or module_id)
 
 
+def hosted_shown(request, module_id: str) -> bool:
+    """Whether a hosted module's own surfaces (its menu, Home cards, gallery visuals) are drawn for this request: the one rule of the
+    product's own module menus, :func:`module_active` (in the running distribution, listed by the server, on), so a console of a
+    distribution without the module (Drishti Finance and genomics) never links pages of it. A lens arranges, never hides."""
+    return module_active(request, module_id)
+
+
 def _active(request, tagged: dict) -> bool:
     return module_active(request, tagged.get("_module"), tagged.get("_domain"))
 
@@ -421,11 +428,11 @@ def _domains(request, edition: Edition, menu: dict, every: list, hosted: dict, c
 def _hosted_menus(request) -> dict[str, list]:
     """The hosted modules' menu entries (core/module_parts.py; ``menus:`` of a plugin.yaml format 2), each module a column of the menu its
     entries name (``menu:``; a menu the product lacks is the module's own): ``{menu id: [(title, [item...])]}``. Only modules on are listed,
-    so a module that goes takes its entries with it."""
+    so a module that goes takes its entries with it, and only modules of the running distribution (:func:`hosted_shown`)."""
     parts = getattr(request.app.state, "module_parts", None)
     out: dict[str, list] = {}
     for p in parts.snapshot.parts.values() if parts is not None else []:
-        if not p.menus or not modules.module_on(p.id):
+        if not p.menus or not hosted_shown(request, p.id):
             continue
         by_menu: dict[tuple[str, str], list] = {}
         for m in p.menus:                                       # ``column:`` names the column of the menu (else the module's title)

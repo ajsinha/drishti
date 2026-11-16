@@ -85,6 +85,11 @@
 - **The Windows workflow runs the Python commands** (`.github/workflows/windows.yml`): `build jar` puts the jar into `lib/` (no copy by
   hand), `setup` then `setup --check` must pass, `start server --background` serves the lake for the view, search and past-date checks,
   then `status` and `stop server`, which must stop the server by itself (the HTTP stop), remove the pid file and leave no process.
+- **A hosted module shows only in the distributions that have it.** With the one layout the genomics module is known like every other
+  (its manifest at `modules/genomics/module.yaml`), and the console drew a hosted module's own menu, Home cards and gallery visuals by
+  `module_on` alone, so Drishti Finance linked the genomics pages whose files its Markets lens does not serve (404). The hosted surfaces
+  now follow the product's own module-menu rule (`menus.hosted_shown` = `module_active`: in the running distribution, listed by the
+  server, on). In Drishti All, which has every module, genomics' Home cards and Help now appear: the home and Help goldens are refreshed.
 
 The Python commands release. The build still reports its version as 2.9.11.g (the version from one place is the next release); the release is tag `v2.9.11.i_5`.
 

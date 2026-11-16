@@ -38,7 +38,8 @@ async def module_visuals(request: Request) -> JSONResponse:
     library file that registers it in drishti-chart's registry. The gallery loads them and shows a page per kind; a module that is off
     or removed (or off for this person) brings none. Nothing of any person is kept."""
     from core import modules as _modules
+    from core.menus import hosted_shown
 
     parts = request.app.state.module_parts
-    return JSONResponse({"visuals": [v for v in parts.visuals() if _modules.module_on(v["module"])],
+    return JSONResponse({"visuals": [v for v in parts.visuals() if hosted_shown(request, v["module"])],
                          "modules": _modules.modules_for_page(None)}, headers={"Cache-Control": "no-store"})
