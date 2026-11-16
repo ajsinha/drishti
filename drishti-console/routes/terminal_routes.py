@@ -27,7 +27,8 @@ from core.settings import changed_at
 from core.backend import BackendError
 from core.csrf import BodyError, json_body
 from routes import api_routes, designer_routes, history_routes, phone_routes
-from core.edition import ADMIN_PAGES, mnemonics, words as reserved_words
+from core.edition import mnemonics, words as reserved_words
+from core.packs import admin_pages
 from routes.common import ident, packs, render
 from core import modules as _modules
 from core import plugins as _plugins
@@ -187,7 +188,7 @@ def admin_redirect(request: Request, ed, rest: list[str]):
     me = getattr(request.state, "identity", None)
     if me is None or not me.is_admin:
         return RedirectResponse(f"/t?error={quote('ADMIN is for administrators')}", status_code=303)
-    kept = [p for p in ADMIN_PAGES if ed.admin_page_shown(p) and _engines.path_engine("/admin/" + p) is None]   # a page of an engine that runs nowhere is not offered
+    kept = [p for p in admin_pages(request) if ed.admin_page_shown(p) and _engines.path_engine("/admin/" + p) is None]   # a page of an engine that runs nowhere is not offered
     page = rest[0].lower() if rest else (kept[0] if kept else "")
     if (off := _engines.path_engine("/admin/" + page)) is not None:        # ADMIN DATA-OUT with Arrow Flight off: said in the server's words, not a 404 page
         return RedirectResponse(f"/t?error={quote(_engines.refusal(off))}", status_code=303)

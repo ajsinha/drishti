@@ -55,8 +55,6 @@ class Plugin:
     routers: tuple[str, ...] = ()
     registers: tuple[str, ...] = ()
     code: tuple[str, ...] = ()
-    engines: tuple[str, ...] = ()
-    words: tuple[str, ...] = ()
     paths: tuple[str, ...] = ()
     assets: tuple[str, ...] = ()
     templates: tuple[str, ...] = ()
@@ -127,7 +125,7 @@ def plugins() -> list[Plugin]:
                 continue
             mid = str(raw.get("module") or f.parent.name)
             out.append(Plugin(mid, str(raw.get("title") or mid), _tuple(raw.get("routers")), _tuple(raw.get("registers")),
-                              _tuple(raw.get("code")), _tuple(raw.get("engines")), tuple(w.upper() for w in _tuple(raw.get("words"))), _tuple(raw.get("paths")),
+                              _tuple(raw.get("code")), _tuple(raw.get("paths")),
                               _tuple(raw.get("assets")), _tuple(raw.get("templates")),
                               dict(raw.get("screens") or {}), _help(f.parent, raw.get("help"))))
         _plugins = out
@@ -142,10 +140,11 @@ def plugin(module_id: str) -> Plugin | None:
 class State:
     """What one console app has learned from its server: the modules loaded (None: not learned, nothing hidden)."""
 
-    __slots__ = ("loaded", "parts")
+    __slots__ = ("loaded", "parts", "owns")
 
     def __init__(self) -> None:
         self.loaded: frozenset[str] | None = None
+        self.owns: dict[str, dict] = {}            # module id -> {words, engines}: the installation answer's (the manifests', server-side)
         self.parts = None                          # the hosted modules' console parts (core/module_parts.py ModuleParts), this app's
 
 
@@ -185,6 +184,20 @@ def learn(modules, into: State | None = None) -> bool:
         LOG.warning("modules: loaded on the server %s", sorted(now) if now is not None else "(not said)")
     s.loaded = now
     return True
+
+
+def take(modules, into: State | None = None) -> None:
+    """The installation answer's ``modules``: each module's command words (its manifest's functions) and engines (``features``), which
+    tell the console which module a word, an engine or an engine's page belongs to. Swapped whole."""
+    s = into if into is not None else state()
+    s.owns = {str(m["id"]): {"words": frozenset(str(w).upper() for w in m.get("words") or []),
+                             "engines": tuple(str(e) for e in m.get("features") or [])}
+              for m in modules or [] if isinstance(m, dict) and m.get("id")}
+
+
+def engines_of(module_id: str) -> tuple[str, ...]:
+    """The engines a module owns, as the server's answer says (none before it answers)."""
+    return (state().owns.get(module_id) or {}).get("engines") or ()
 
 
 # ---- the person's answer, per request ----------------------------------------------------------------------------------------------
@@ -266,21 +279,24 @@ def why_off(module_id: str) -> str:
 
 
 def module_of_engine(engine_id: str) -> str | None:
-    return next((p.id for p in plugins() if engine_id in p.engines), None)
+    return next((mid for mid, o in state().owns.items() if engine_id in o["engines"]), None)
 
 
-def _engine_words(p: Plugin) -> list[str]:
+def _engine_words(module_id: str) -> set[str]:
     from core import engines
 
-    return [str(w).upper() for e in p.engines for w in ((engines.entry(e) or {}).get("words") or [])]
+    return {str(w).upper() for e in engines_of(module_id) for w in ((engines.entry(e) or {}).get("words") or [])}
 
 
 def module_of_word(word: str) -> str | None:
-    """The module a command word (VAR, ``PLAY VAR``) belongs to by the console's own manifests (its words and its engines' words)."""
+    """The module a command word (VAR, ``PLAY VAR``) belongs to, by the server's answer: its manifest's words (a two-word command by its
+    first word, ``PLAY FRTB`` is PLAY's) and its engines' words."""
     w = " ".join(str(word or "").upper().split())
-    for p in plugins():
-        if w in p.words or w in _engine_words(p):
-            return p.id
+    head = w.split(" ")[0] if w else ""
+    for mid, o in state().owns.items():
+        engine_words = _engine_words(mid)
+        if w in o["words"] or w in engine_words or (head != w and head in o["words"]):
+            return mid
     return None
 
 
@@ -341,7 +357,7 @@ def path_module(path: str) -> Plugin | None:
 
     best, length = None, -1
     for p in plugins():
-        prefixes = list(p.paths) + [str(x) for e in p.engines for x in ((engines.entry(e) or {}).get("console") or [])]
+        prefixes = list(p.paths) + [str(x) for e in engines_of(p.id) for x in ((engines.entry(e) or {}).get("console") or [])]
         for prefix in prefixes:
             if _under(path, prefix) and len(prefix.lstrip("=")) > length:
                 best, length = p, len(prefix.lstrip("="))

@@ -111,6 +111,7 @@ class Packs:
         mods = (answer or {}).get("modules")
         self._decisions[key] = {"engines-opened": [str(x) for x in (answer or {}).get("engines-opened") or []],
                                 "grants": [str(x) for x in (answer or {}).get("grants") or []],
+                                "admin-pages": [str(x) for x in (answer or {}).get("admin-pages") or []],
                                 "modules": mods if isinstance(mods, dict) else None}
         rows = [r for r in (answer or {}).get("packs") or [] if isinstance(r, dict) and r.get("name")]
         made = [await self._pack(backend, ident, r) for r in rows]
@@ -207,3 +208,9 @@ def samples(packs: list[dict]) -> list[dict]:
                 out.append({"cmd": str(ex[0]), "what": str(ex[1]) if len(ex) > 1 else "", "kind": kinds[parts[0].upper()],
                             "id": parts[1], "pack": p.get("title", p.get("name", ""))})
     return out
+
+
+def admin_pages(request) -> list[str]:
+    """The Admin pages this person's roles open, in the server's order (their answer's ``admin-pages``; none before it answers)."""
+    person = getattr(getattr(request, "state", None), "person", None) or {}
+    return list(person.get("admin-pages") or [])

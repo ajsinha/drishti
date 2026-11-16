@@ -18,6 +18,10 @@
 
 ## Unreleased
 
+- **The thin console, smaller leftovers.** The person's answer (`GET /api/v1/me/console`) carries `admin-pages`, the Admin pages their
+  roles open, from the server's one list; the console's `ADMIN_PAGES` copy is deleted (the `ADMIN` command and the page gate read the
+  answer). Which module a command word or an engine belongs to comes from the installation answer's modules (their manifests' words and
+  engines): the `engines:` and `words:` lists of the console's `plugins/banking/plugin.yaml` are deleted.
 - **The thin console, step S8a: the Trading and Market landings' figures are computed by their modules on the server.** The trading
   and market-data modules have a server part now (`modules/trading/java/trading-service`, `modules/market-data/java/market-data-service`,
   packed into their `.dmod`s): `GET /api/v1/trading/landing/{role,me,valuations,blotter,risk,limits,pnl-var,traders}`,

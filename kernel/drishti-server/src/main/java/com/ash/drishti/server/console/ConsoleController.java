@@ -131,6 +131,7 @@ public class ConsoleController {
         catalog.packs(p).stream().filter(r -> !Boolean.FALSE.equals(r.get("assigned"))).forEach(r -> assigned.add(String.valueOf(r.get("name"))));
         doc.put("engines-opened", enginesOpened(p, assigned));
         doc.put("grants", grants(p));
+        doc.put("admin-pages", entitlements.isAdmin(p) ? ADMIN_PAGES : List.of());   // the Admin pages this person's roles open (step S4)
         com.ash.drishti.server.modules.ModuleAdminController m = modules.getIfAvailable();
         doc.put("modules", m == null ? null : m.mine(p));        // the modules, lenses and functions the person may see (GET /api/v1/modules)
         ResponseEntity<Map<String, Object>> out = answer(answers.person(doc), ifNoneMatch, CacheControl.noStore().cachePrivate());
@@ -205,6 +206,14 @@ public class ConsoleController {
         }
         return out;
     }
+
+    /**
+     * The Admin pages by id, in the order the {@code ADMIN} command offers them (the one list: the console keeps no copy). A distribution's
+     * {@code admin.pages} keeps some of them (its compiled filter, in the installation answer); every page checks the person again.
+     */
+    static final List<String> ADMIN_PAGES = List.of("users", "roles", "packs", "commands", "tokens", "access", "connectors", "artifacts", "loads",
+            "lakes", "collab", "embedding", "bi", "audit", "net", "edits", "compute", "engines", "health", "caches", "capacity", "scopes", "data-out",
+            "configuration", "bindings", "white-label");
 
     /** What the pages ask as "may this person ...": the powers the server enforces, as decisions (step S4). */
     List<String> grants(Principal p) {

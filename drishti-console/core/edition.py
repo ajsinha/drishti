@@ -51,10 +51,8 @@ FEATURE_PATHS = {"bi": ("/bi", "/admin/bi"), "forms": ("/forms", "/form/"), "dat
                  "reports": ("/reports",), "lakes": ("/admin/lakes", "/admin/api/lakes"),
                  "collaboration": ("/admin/collab",)}
 # (Admin -> Embedding stays reachable with its feature off, as before: it is where it is switched on.)
-# Admin pages by id (a filter's admin.pages, a site's edition.admin.pages); the path prefix each owns
-ADMIN_PAGES = ("users", "roles", "packs", "commands", "tokens", "access", "connectors", "artifacts", "loads", "lakes", "collab",
-               "embedding", "bi", "audit", "net", "edits", "compute", "engines", "health", "caches", "capacity", "scopes", "data-out",
-               "configuration", "bindings", "white-label")
+# The Admin pages by id are the server's: the person's answer carries the ones their roles open (``admin-pages``, core/packs.py
+# admin_pages); a filter's admin.pages keeps some of them.
 
 
 # The landings' page (LENSES.md › The design): each edition names its own (home.template, home.titles); a file that names none keeps
@@ -513,6 +511,7 @@ class Editions:
         self.answer, self._digest = answer, answer.get("digest")
         self.distribution = d
         self.server_modules = {str(m["id"]): m for m in answer.get("modules") or [] if isinstance(m, dict) and m.get("id")}
+        _modules.take(answer.get("modules"), self.modules)       # each module's words and engines: the plugin.yaml keeps no copy
         _engines.take(answer.get("engines"), self.engines)       # the engine catalogue: the console keeps no copy (S3)
         from core import under_construction as _uc
         self.under_construction = _uc.Registry([i for i in answer.get("under-construction") or [] if isinstance(i, dict)])

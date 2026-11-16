@@ -20,7 +20,8 @@ with every switch on (the defaults) nothing is refused: the full Drishti, as bef
 from __future__ import annotations
 
 from core import engines, modules
-from core.edition import ADMIN_PAGES, FEATURE_PATHS, Edition, word_paths
+from core.edition import FEATURE_PATHS, Edition, word_paths
+from core.packs import admin_pages
 
 
 #: the console's own switches (features.*): a page of one switched off answers 404 with or
@@ -74,6 +75,6 @@ def hidden(request, edition: Edition, path: str) -> str | None:
     if path.startswith("/admin/"):
         page = path.split("/")[2] if len(path.split("/")) > 2 else ""
         page = {"api": path.split("/")[3] if len(path.split("/")) > 3 else ""}.get(page, page)
-        if page in ADMIN_PAGES and not edition.admin_page_shown(page):
+        if page in admin_pages(request) and not edition.admin_page_shown(page):
             return f"the Admin page {page} is not part of {edition.title}"
     return None

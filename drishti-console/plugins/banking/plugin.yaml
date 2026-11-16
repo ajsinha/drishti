@@ -30,12 +30,10 @@ registers: [plugins.banking.build_types, plugins.banking.routes.trading_routes, 
 # its other Python modules (the core imports none of them: tests/test_module_boundaries.py)
 code: [plugins.banking.console_hooks, plugins.banking.risk_api]
 
-# its compute engines: their words, console pages, menus, Help pages, tiles and lenses are the server's engine catalogue (its installation answer)
+# its engines and command words are the module's manifest's, in the server's installation answer (modules[].features and words; the
+# engines' words, pages, menus, Help, tiles and lenses are the engine catalogue's): this file keeps no copy
 help: help.yaml
-engines: [var, exposure, sensitivities, frtb-sa, simm, mr-cube]
-# its own command words beyond the engines' (the playgrounds, the counterparty cube)
-words: [PLAY, "PLAY FRTB", "PLAY SIMM", CCUBE, FRSA, SIMM, MCUBE, SENS, RFAC]
-# its console pages and APIs beyond the engines' console paths
+# the console pages and APIs this console code serves beyond the engines' console paths
 paths: [/frtb, /api/frtb/, /play/frtb, /simm, /api/simm/, /play/simm, /play, /api/play/, /mcube, /api/pivot/mr/, /var/backtesting,
         /var/statistics, /var/reports, /api/var/, /var/stress-window, /api/home/trading/, /home/trading/, /api/home/market/, /admin/scopes]
 # its static files, globs under the static root: this folder's static/, and its Elements library under web/static/elements
