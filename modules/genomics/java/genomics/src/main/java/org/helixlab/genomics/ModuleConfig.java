@@ -45,6 +45,29 @@ public class ModuleConfig {
         return new GenomicsFunctions();
     }
 
+    /** The showcase's tables (the packs genomics and protein, read through the kernel's bindings once the module has started). */
+    @Bean
+    public ShowcaseData showcaseData() {
+        return new ShowcaseData();
+    }
+
+    /** The genomics board's answers and the protein workbench's. */
+    @Bean
+    public GenomicsBoard genomicsBoard(ShowcaseData data) {
+        return new GenomicsBoard(data);
+    }
+
+    @Bean
+    public ProteinBench proteinBench(ShowcaseData data, GenomicsBoard board) {
+        return new ProteinBench(data, board);
+    }
+
+    /** The showcase's REST API, under /api/v1/genomics/. */
+    @Bean
+    public ShowcaseController showcaseController(ShowcaseData data, GenomicsBoard board, ProteinBench bench) {
+        return new ShowcaseController(data, board, bench);
+    }
+
     /** Its REST API, under /api/v1/genomics/. */
     @Bean
     public GenomicsController genomicsController(GenomicsData data) {
