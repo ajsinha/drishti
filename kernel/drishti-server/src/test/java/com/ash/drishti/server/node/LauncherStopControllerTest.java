@@ -35,10 +35,11 @@ class LauncherStopControllerTest {
     }
 
     @Test
-    void withoutAKeyTheEndpointDoesNotExist() {
+    void withoutAKeyNothingStopsTheServer() {
         CountDownLatch stopped = new CountDownLatch(1);
         LauncherStopController c = new LauncherStopController("", stopped::countDown);
-        assertThat(c.stop(from("127.0.0.1"), "anything").getStatusCode().value()).isEqualTo(404);
+        assertThat(c.stop(from("127.0.0.1"), "anything").getStatusCode().value()).isEqualTo(403);
+        assertThat(c.stop(from("127.0.0.1"), "").getStatusCode().value()).isEqualTo(403);
         assertThat(stopped.getCount()).isEqualTo(1);
     }
 
@@ -49,6 +50,11 @@ class LauncherStopControllerTest {
         assertThat(c.stop(from("127.0.0.1"), "wrong").getStatusCode().value()).isEqualTo(403);
         assertThat(c.stop(from("127.0.0.1"), null).getStatusCode().value()).isEqualTo(403);
         assertThat(c.stop(from("10.0.0.7"), "k3y-of-the-pid-file").getStatusCode().value()).isEqualTo(403);
+        for (String h : LauncherStopController.FORWARDING) {                       // relayed by a proxy on this machine: never
+            MockHttpServletRequest r = from("127.0.0.1");
+            r.addHeader(h, "127.0.0.1");
+            assertThat(c.stop(r, "k3y-of-the-pid-file").getStatusCode().value()).as(h).isEqualTo(403);
+        }
         assertThat(stopped.getCount()).isEqualTo(1);
     }
 

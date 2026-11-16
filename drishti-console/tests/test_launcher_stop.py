@@ -28,7 +28,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from core import launcher_stop  # noqa: E402
 
 
-def _call(mw, path="/launcher/stop", method="POST", key=b"k3y", client="127.0.0.1"):
+def _call(mw, path="/launcher/stop", method="POST", key=b"k3y", client="127.0.0.1", extra=()):
     sent = []
 
     async def receive():
@@ -36,7 +36,7 @@ def _call(mw, path="/launcher/stop", method="POST", key=b"k3y", client="127.0.0.
 
     async def send(m):
         sent.append(m)
-    headers = [(b"x-drishti-stop-key", key)] if key is not None else []
+    headers = ([(b"x-drishti-stop-key", key)] if key is not None else []) + list(extra)
     asyncio.run(mw({"type": "http", "path": path, "method": method, "headers": headers, "client": (client, 5555)}, receive, send))
     status = next((m["status"] for m in sent if m["type"] == "http.response.start"), None)
     body = b"".join(m.get("body", b"") for m in sent if m["type"] == "http.response.body")
@@ -51,10 +51,10 @@ def _app(calls):
     return app
 
 
-def test_without_a_key_the_path_is_an_ordinary_page():
+def test_without_a_key_nothing_stops_the_console():
     calls, stops = [], []
     mw = launcher_stop.LauncherStop(_app(calls), key="", stop=lambda: stops.append(1))
-    assert _call(mw)[0] == 200 and calls == ["/launcher/stop"] and not stops
+    assert _call(mw)[0] == 403 and _call(mw, key=b"")[0] == 403 and not calls and not stops
 
 
 def test_a_wrong_key_another_machine_or_method_never_stops():
@@ -63,6 +63,9 @@ def test_a_wrong_key_another_machine_or_method_never_stops():
     assert _call(mw, key=b"wrong")[0] == 403
     assert _call(mw, key=None)[0] == 403
     assert _call(mw, client="10.0.0.7")[0] == 403
+    assert _call(mw, key=b"")[0] == 403
+    for h in launcher_stop.FORWARDING:                                   # relayed by a proxy on this machine: never
+        assert _call(mw, extra=[(h, b"127.0.0.1")])[0] == 403, h
     assert _call(mw, method="GET")[0] == 405
     assert _call(mw, path="/healthz")[0] == 200 and calls == ["/healthz"]
     assert not stops

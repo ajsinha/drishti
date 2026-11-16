@@ -437,3 +437,10 @@ def test_start_server_iceberg_passes_settings_and_writes_nothing(tmp_path):
     serverstart.iceberg_settings(argparse.Namespace(iceberg_root="/wh"), env, roots)
     assert env["DRISHTI_CONNECTORS_DIR"] == "/site/connectors" and env["DRISHTI_ICEBERG_ROOT"] == "/wh"
     assert "connectors.examples" not in (TOOLS / "launch" / "serverstart.py").read_text(encoding="utf-8").split("def iceberg_settings")[0]
+
+
+def test_on_windows_the_pid_file_is_this_users_alone(tmp_path):
+    with mock.patch.object(procs, "windows", lambda: True), mock.patch.dict(os.environ, {"USERNAME": "me"}), \
+            mock.patch.object(procs.subprocess, "run", return_value=_cp("")) as run:
+        procs.write_pid(tmp_path / "server.pid", 1, stop="k")
+    assert run.call_args[0][0] == ["icacls", str(tmp_path / "server.pid"), "/inheritance:r", "/grant:r", "me:F"]

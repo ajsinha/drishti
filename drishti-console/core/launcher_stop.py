@@ -17,8 +17,10 @@ console it started to stop itself, the same graceful stop on every operating sys
 no console a plain ``taskkill`` could reach).
 
 ``POST /launcher/stop`` with the header ``X-Drishti-Stop-Key``: answered only when the launcher started this console with a key
-(``DRISHTI_STOP_KEY``, kept in its pid file under the data folder, mode 600), only from this machine (a loopback address), the key
-compared in constant time. No key: the path is an ordinary unknown page; a wrong key or another machine: 403. Taken: 202, then the main
+(``DRISHTI_STOP_KEY``, kept in its pid file under the data folder, owner-only), only straight from this machine: the socket's own peer
+is loopback (uvicorn's proxy-header rewrite is not trusted: the raw peer of the ASGI scope is checked, and any forwarding header refuses
+the call), the key compared in constant time. Anything else, with or without a key set: 403. The key is never logged. Not part of the
+public API. Taken: 202, then the main
 process is signalled as a terminal's stop would (uvicorn's own handlers: requests in flight finish). It sits outside every other
 middleware: it needs no session, no server and no module state."""
 from __future__ import annotations
@@ -30,6 +32,8 @@ import signal
 
 PATH = "/launcher/stop"
 HEADER = b"x-drishti-stop-key"
+#: the headers a proxy adds: a request carrying any of them did not come straight from this machine's launcher
+FORWARDING = (b"forwarded", b"x-forwarded-for", b"x-forwarded-host", b"x-forwarded-proto", b"x-real-ip")
 KEY_ENV = "DRISHTI_STOP_KEY"
 #: the console's main process (run_drishti_web.py sets it before uvicorn starts; with several workers, the supervisor)
 MAIN_PID_ENV = "DRISHTI_CONSOLE_MAIN_PID"
@@ -37,7 +41,7 @@ MAIN_PID_ENV = "DRISHTI_CONSOLE_MAIN_PID"
 
 def loopback(host: str | None) -> bool:
     h = (host or "").strip("[]")
-    return h.startswith("127.") or h in ("::1", "0:0:0:0:0:0:0:1", "localhost")
+    return h.startswith("127.") or h in ("::1", "0:0:0:0:0:0:0:1")
 
 
 def stop_console() -> None:
@@ -61,13 +65,15 @@ class LauncherStop:
         self.stop = stop
 
     async def __call__(self, scope, receive, send):
-        if scope.get("type") != "http" or scope.get("path") != PATH or not self.key:
+        if scope.get("type") != "http" or scope.get("path") != PATH:
             return await self.app(scope, receive, send)
         if scope.get("method") != "POST":
             return await _answer(send, 405, {"detail": "POST only"})
-        given = dict(scope.get("headers") or []).get(HEADER, b"").strip()
+        headers = dict(scope.get("headers") or [])
+        given = headers.get(HEADER, b"").strip()
         client = (scope.get("client") or (None, None))[0]
-        if not loopback(client) or not hmac.compare_digest(given, self.key):
+        direct = loopback(client) and not any(h in headers for h in FORWARDING)
+        if not self.key or not direct or not given or not hmac.compare_digest(given, self.key):
             return await _answer(send, 403, {"detail": "the launcher's stop takes the key of the pid file, from this machine only"})
         await _answer(send, 202, {"stopping": True})
         self.stop()

@@ -3214,7 +3214,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
-| `drishti.launcher.stop-key` | string | empty | `DRISHTI_STOP_KEY` | server | the key `drishti.py start server` makes and keeps in the pid file; `stop server` sends it from this machine to stop gracefully on every OS; empty: no such endpoint (404) (secret) | restart |  | admin |
+| `drishti.launcher.stop-key` | string | empty | `DRISHTI_STOP_KEY` | server | the key `drishti.py start server` makes and keeps in the pid file; `stop server` sends it straight from this machine (loopback, no proxy header) to stop gracefully on every OS; empty: every call refused (403); never logged (secret) | restart |  | admin |
 
 #### `drishti.access`
 
@@ -6792,7 +6792,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_SHOTS_WORK` | screenshot tools | none | tools | The screenshot tools' working folder |
 | `DRISHTI_SIMM_ENABLED` | `drishti.engines.simm.enabled` (engine) | `true` | engine | run SIMM on this node: /api/v1/simm, SIMM, PLAY SIMM; needs sensitivities (live) |
 | `DRISHTI_SIMM_PARAMETERS` | `drishti.simm.parameters-dir` (engine) | `<config>/simm` | engine | the bank's licensed parameter files, one YAML a SIMM version (none ships: ISDA's numbers are licensed) |
-| `DRISHTI_STOP_KEY` | `drishti.launcher.stop-key` | empty | server | the key `drishti.py start server` makes and keeps in the pid file; `stop server` sends it from this machine to stop gracefully on every OS; empty: no such endpoint (404) |
+| `DRISHTI_STOP_KEY` | `drishti.launcher.stop-key` | empty | server | the key `drishti.py start server` makes and keeps in the pid file; `stop server` sends it straight from this machine (loopback, no proxy header) to stop gracefully on every OS; empty: every call refused (403); never logged |
 | `DRISHTI_STORE_ACCESS_KEY` | `s3.access-key` (store) | empty | store | empty: the AWS default credentials chain |
 | `DRISHTI_STORE_FILE` | `drishti.store.file` | `<config>/store/store.yaml` | server | The content store (docs/architecture/DATA\_ARCHITECTURE.md): user content every node of a cluster can reach. Its settings are in their own file. |
 | `DRISHTI_STORE_PASSWORD` | `postgres.password` (store) | empty | store | its password, from the environment only |

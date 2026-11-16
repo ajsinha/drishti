@@ -166,7 +166,7 @@ def read_pid(file) -> tuple:
 
 
 def write_pid(file, pid: int, **fields) -> None:
-    """The pid file, readable by its owner only (it holds the stop key)."""
+    """The pid file, readable by its owner only (it holds the stop key): mode 600; on Windows an ACL of this user alone."""
     p = Path(file)
     p.parent.mkdir(parents=True, exist_ok=True)
     old = os.umask(0o077)
@@ -178,6 +178,10 @@ def write_pid(file, pid: int, **fields) -> None:
         p.chmod(0o600)
     except OSError:
         pass
+    if windows():                                    # chmod is not an ACL there: this user only, nothing inherited (icacls ships with Windows)
+        user = os.environ.get("USERNAME") or ""
+        if user:
+            subprocess.run(["icacls", str(p), "/inheritance:r", "/grant:r", f"{user}:F"], capture_output=True, check=False)
 
 
 def stop_key(env: dict) -> str:

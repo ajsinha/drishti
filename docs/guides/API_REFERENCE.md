@@ -1283,14 +1283,6 @@ curl -s -X POST -H "Authorization: Bearer $DRISHTI_DRAIN_TOKEN" -H 'Content-Type
 until curl -s -H "Authorization: Bearer $DRISHTI_DRAIN_TOKEN" $B/admin/node | jq -e .safeToStop >/dev/null; do sleep 5; done
 ```
 
-**The launcher's stop.** Outside `/api/v1` and its tokens: `python tools/drishti.py stop server` asks the server it started to stop
-itself, the same graceful shutdown as SIGTERM on every operating system ([DEPLOYMENT_AND_QA_GUIDE.md section 7.1](../DEPLOYMENT_AND_QA_GUIDE.md#71-the-start-and-stop-commands)).
-The console answers the same path on its own port.
-
-| Method | Path | Notes |
-|---|---|---|
-| `POST` | `/launcher/stop` | header `X-Drishti-Stop-Key`: the key the launcher made at start (`DRISHTI_STOP_KEY`, `drishti.launcher.stop-key`) and keeps in the pid file (mode 600); from a loopback address only, compared in constant time. `202 {"stopping": true}`, then a graceful shutdown; `403` for a wrong key or another machine; `404` when the server was not started with a key |
-
 ### 2.26 Administration: health and caches
 
 | Method | Path | Notes |

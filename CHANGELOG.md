@@ -71,7 +71,8 @@
   middleware) with a graceful shutdown; forced after the timeout (SIGKILL; Windows `taskkill /F`). On Windows a background process has no
   window, so the old `taskkill /PID` without `/F` never reached it. A process is ours only when its full command line holds the mark
   (`-Ddrishti.data.dir=` with the pid file's data folder; `run_drishti_web.py`), read on Windows with PowerShell's `Get-CimInstance`
-  (else `wmic`) instead of the image name, so a reused pid never stops another JVM (API_REFERENCE.md 2.25, DEPLOYMENT_AND_QA_GUIDE.md 7;
+  (else `wmic`) instead of the image name, so a reused pid never stops another JVM (only straight from this machine: the socket's peer loopback and no forwarding header; any other call 403; the key never logged and
+  the endpoint not in the public API reference; the pid file's ACL is this user only on Windows; DEPLOYMENT_AND_QA_GUIDE.md 7;
   `tools/test_launch.py` with Windows mocked, `LauncherStopControllerTest`, `test_launcher_stop.py`).
 - **The IntelliJ run configuration *Drishti build server jar* runs `tools/drishti.py --settings … build jar`** (it was a Maven
   configuration that built into `target/` only and left `lib/` stale): one way to build, the jar always copied into `<home>/lib`.

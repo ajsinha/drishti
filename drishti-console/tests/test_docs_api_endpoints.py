@@ -28,8 +28,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 GUIDE = (ROOT / "docs" / "guides" / "API_REFERENCE.md").read_text(encoding="utf-8")
 ANNOTATION = re.compile(r"@(?:[\w.]*\.)?(Get|Post|Put|Delete|Patch)Mapping(?:\(([^)]*)\))?")
-# Not under /api/v1 and not a controller of the product's API: nothing to list.
-NOT_DOCUMENTED = set()
+# Not under /api/v1 and not a controller of the product's API: nothing to list. POST /launcher/stop is the launcher's own stop (the key
+# of the pid file, loopback only; DEPLOYMENT_AND_QA_GUIDE.md 7.1), kept out of the public API reference on purpose.
+NOT_DOCUMENTED = {"POST /launcher/stop"}
 
 
 def _endpoints() -> set[tuple[str, str]]:

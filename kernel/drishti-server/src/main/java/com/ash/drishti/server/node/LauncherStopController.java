@@ -35,8 +35,10 @@ import org.springframework.web.bind.annotation.RestController;
  *
  * <p>Answered only when the server was started by the launcher: it hands a fresh random key in {@code DRISHTI_STOP_KEY}
  * ({@code drishti.launcher.stop-key}) and keeps it in the pid file under the data folder, so only who may read that file (who could kill the
- * process anyway) can stop it. The key must come in the {@value #HEADER} header, compared in constant time, and the call from this machine
- * (a loopback address). No key set: {@code 404}, the endpoint does not exist; a wrong key or another machine: {@code 403}.
+ * process anyway) can stop it. The key must come in the {@value #HEADER} header, compared in constant time, and the call straight from this
+ * machine: the socket's own peer address is loopback and the request carries no forwarding header ({@code Forwarded},
+ * {@code X-Forwarded-*}, {@code X-Real-IP}), so a proxy on this machine can never relay it. Anything else is {@code 403}, the same answer
+ * whether the server has a key or not; the key is never logged. Not part of the public API (it is the launcher's, not a user's).
  *
  * <pre>
  *   POST /launcher/stop     X-Drishti-Stop-Key: &lt;the key&gt;  ->  202 {"stopping": true}, then the server shuts down gracefully
@@ -63,10 +65,8 @@ public class LauncherStopController {
 
     @PostMapping("/launcher/stop")
     public ResponseEntity<Map<String, Object>> stop(HttpServletRequest request, @RequestHeader(value = HEADER, required = false) String given) {
-        if (key == null) {
-            return ResponseEntity.notFound().build();
-        }
-        if (!loopback(request.getRemoteAddr()) || given == null || !MessageDigest.isEqual(key, given.strip().getBytes(StandardCharsets.UTF_8))) {
+        boolean ok = key != null && direct(request) && given != null && MessageDigest.isEqual(key, given.strip().getBytes(StandardCharsets.UTF_8));
+        if (!ok) {
             return ResponseEntity.status(403).body(Map.of("title", "forbidden", "status", 403,
                     "detail", "the launcher's stop takes the key of the pid file, from this machine only"));
         }
@@ -74,6 +74,15 @@ public class LauncherStopController {
         t.setDaemon(false);
         t.start();
         return ResponseEntity.accepted().body(Map.of("stopping", true));
+    }
+
+    /** The headers a proxy adds: a request carrying any of them did not come straight from this machine's launcher. */
+    static final java.util.List<String> FORWARDING = java.util.List.of("Forwarded", "X-Forwarded-For", "X-Forwarded-Host", "X-Forwarded-Proto",
+            "X-Real-IP");
+
+    /** Straight from this machine: the socket's peer is loopback (never a forwarded address) and no proxy header is present. */
+    static boolean direct(HttpServletRequest request) {
+        return loopback(request.getRemoteAddr()) && FORWARDING.stream().noneMatch(h -> request.getHeader(h) != null);
     }
 
     static boolean loopback(String address) {
