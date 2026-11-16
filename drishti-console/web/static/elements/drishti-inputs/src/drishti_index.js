@@ -35,6 +35,8 @@ export { words, pathParts, getPath, setPath, conditionHolds, fieldsOf, defaults,
 export { FileDrop, acceptedName } from './drishti_file-drop.js';
 export { Switch } from './drishti_switch.js';
 export { Form } from './drishti_form.js';
+export { WhatIf } from './drishti_what-if.js';
+export { QUERY_OPS, queryText, parseQuery, QueryBuilder } from './drishti_query-builder.js';
 export { FORM_HOST_SELECTOR, formOf, upgradeForms } from './drishti_form-host.js';
 export { defineWidget, defaultWidget, applyHook } from './drishti_form-fields.js';
 export { FilterModelBar, FilterBar } from './drishti_filter-bar.js';

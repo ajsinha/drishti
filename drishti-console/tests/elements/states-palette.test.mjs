@@ -141,3 +141,16 @@ test('the selection history keeps each set once, newest first, and never an empt
   hs.push('t', ['1', '2']); hs.push('t', []); hs.push('t', ['3']); hs.push('t', ['2', '1']); hs.push('t', ['4']); hs.push('t', ['5']);
   assert.deepEqual(hs.list().map((x) => x.ids.join()), ['5', '4', '2,1']);
 });
+
+test('query builder text: conditions round-trip, quoted values, lists, and the errors say what is wrong', async () => {
+  const I = await import('../../web/static/elements/drishti-inputs/src/drishti_index.js');
+  const fields = [{ id: 'desk', type: 'enum', values: ['Rates', 'FX'] }, { id: 'var', type: 'number' }, { id: 'name' }];
+  const q = I.parseQuery('desk in (Rates, FX) AND var >= 100 AND name = "Big Fund"', fields);
+  assert.deepEqual(q, [{ field: 'desk', op: 'in', value: ['Rates', 'FX'] }, { field: 'var', op: 'ge', value: 100 }, { field: 'name', op: 'eq', value: 'Big Fund' }]);
+  assert.equal(I.queryText(q), 'desk in (Rates, FX) AND var >= 100 AND name = "Big Fund"');
+  assert.deepEqual(I.parseQuery('', fields), []);
+  assert.throws(() => I.parseQuery('nope = 1', fields), /no field nope/);
+  assert.throws(() => I.parseQuery('var > abc', fields), /is a number/);
+  assert.throws(() => I.parseQuery('desk > 1', fields), /cannot be compared/);
+  assert.throws(() => I.parseQuery('just words', fields), /field operator value/);
+});

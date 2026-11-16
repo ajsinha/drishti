@@ -23,7 +23,7 @@ one bundled file next to them; a page loads drishti-core and then `Drishti.eleme
 | Library | Version | What it is |
 |---|---|---|
 | [drishti-core](#drishti-core) | 1.3.0 | Formats, theme, API client, events, accessibility, resize, keys, dialogs, drawers and toasts, the filter model every library shares, the element maker and placements, Explain's drawing, chips for list attributes, the CSV writer, reading typed numbers, loading vendored engines |
-| [drishti-inputs](#drishti-inputs) | 0.3.1 | Inputs: business-date and range pickers with holiday calendars, the on/off switch, the tree picker, the multi-select, the combobox with server type-ahead (on its own field or a page's), forms from a schema (live or embedded, steps, named fields, hooks, custom widgets, time, date-and-time and money) with four eyes, the time and date-and-time pickers, the filter bar, the code editor over CodeMirror, and a page's own date fields and checkbox lists upgraded in place |
+| [drishti-inputs](#drishti-inputs) | 0.4.0 | Inputs: business-date and range pickers with holiday calendars, the on/off switch, the tree picker, the multi-select, the combobox with server type-ahead (on its own field or a page's), forms from a schema (live or embedded, steps, named fields, hooks, custom widgets, time, date-and-time and money) with four eyes, the time and date-and-time pickers, the filter bar, the code editor over CodeMirror, and a page's own date fields and checkbox lists upgraded in place |
 | [drishti-grid](#drishti-grid) | 0.6.0 | The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and &lt;drishti-grid&gt; in three layouts and three densities), cell editing with undo, paste, write-back and four eyes, and the AG Grid-style adapter (createGridFromAgOptions) |
 | [drishti-tree](#drishti-tree) | 0.2.0 | The tree: hierarchies as an org chart, an indented tree with measures (on drishti-grid's tree data), a sunburst and an icicle; expand and collapse, search with breadcrumbs, measures on nodes with non-additive ones (◆) asked of the server and never summed, Explain, re-parenting in an edit mode that proposes the move for four eyes, the outline of an authoring screen (marks, a hiding filter, a designer's selection followed both ways, moves by drag or Alt+arrows), export, keyboard and ARIA |
 | [drishti-designer](#drishti-designer) | 0.2.0 | The designer kit: the layout canvas over a layout model (grid or flow: place, move, resize with snap, multi-select, align, distribute, z-order, groups, copy and paste, a phone's order, the keys, undo and redo on one command stack), the palette, the inspector (a form from a schema), the outline (drishti-tree's, drag to re-order or re-parent), the YAML pane kept in step with the model both ways (completion and lint from a JSON Schema) and the designer shell (three panes, Visual / YAML / Both, versions, Validate, Preview, History, Impact, Propose for review) |
@@ -2261,7 +2261,7 @@ A table to export.
 
 ## drishti-inputs
 
-Version 0.3.1. Bundle `static/elements/drishti-inputs/drishti_inputs.js`, global `Drishti.elements.inputs`; requires drishti-core.
+Version 0.4.0. Bundle `static/elements/drishti-inputs/drishti_inputs.js`, global `Drishti.elements.inputs`; requires drishti-core.
 
 ### drishti_calendar.js
 
@@ -4122,6 +4122,128 @@ Problems from elsewhere shown at once, without marking every field tried (a live
 
 Returns `void`.
 
+### drishti_what-if.js
+
+#### class `WhatIf`
+
+A slider, stepper or range whose value is asked of the server once it rests. Events: input {value}, change {value}, result {value, result}, error {error}.
+
+##### `new WhatIf(host, options)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` |  |
+| `options` | `WhatIfOptions` |  |
+
+##### `WhatIf.set(v, ask)`
+
+Sets the value (kept within min and max, to a step); with ask, the server is asked once it rests.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `(number\|number[])` |  |
+| `[ask=false]` | `boolean` | a person's change: the debounced call and the events |
+
+Returns `void`.
+
+##### `WhatIf.ask()`
+
+Asks the server about the value now (an answer to an older value that arrives later is dropped).
+
+Returns `Promise&lt;void&gt;`.
+
+##### `WhatIf.getValue()`
+
+The value (a number, or [low, high] for a range).
+
+Returns `(number\|number[])`.
+
+##### `WhatIf.setValue(v)`
+
+Sets the value without asking the server or an event.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `(number\|number[])` |  |
+
+Returns `void`.
+
+##### `WhatIf.destroy()`
+
+Stops a pending call and takes the control out.
+
+Returns `void`.
+
+### drishti_query-builder.js
+
+#### `QUERY_OPS`
+
+The operators by field type, with their words.
+
+#### `queryText(conds)`
+
+A query as text ("desk = Rates AND var &gt; 100"; a value with a space is quoted; in takes a list: desk in (Rates, FX)).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `conds` | `QueryCondition[]` |  |
+
+Returns `string`.
+
+#### `parseQuery(text, fields)`
+
+The conditions of a query text; throws in words at the first thing it cannot read.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `text` | `string` |  |
+| `[fields]` | `QueryField[]` | when given, a field must be one of them and a number must be a number |
+
+Returns `QueryCondition[]`.
+
+#### class `QueryBuilder`
+
+The chips and the add row. Events: change {value, text}.
+
+##### `new QueryBuilder(host, options)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` |  |
+| `options` | `QueryBuilderOptions` |  |
+
+##### `QueryBuilder.remove(i)`
+
+Takes condition i out.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `i` | `number` |  |
+
+Returns `void`.
+
+##### `QueryBuilder.getValue()`
+
+The conditions.
+
+Returns `QueryCondition[]`.
+
+##### `QueryBuilder.getText()`
+
+The query as text.
+
+Returns `string`.
+
+##### `QueryBuilder.setValue(v)`
+
+Sets the conditions (a list, or a query text), without an event.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `(QueryCondition[]\|string)` |  |
+
+Returns `void`.
+
 ### drishti_form-host.js
 
 #### `FORM_HOST_SELECTOR`
@@ -5070,6 +5192,31 @@ A custom widget: draws a field's control. Returns its element and, as it can, se
 | `[maxChips]` | `number` |  |
 | `[placeholder]` | `string` |  |
 
+#### `QueryField` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `[label]` | `string` |  |
+| `[type='text']` | `('text'\|'number'\|'enum'\|'date')` |  |
+| `[values]` | `string[]` | enum: the values offered |
+
+#### `QueryCondition` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `field` | `string` |  |
+| `op` | `string` | a key of QUERY_OPS |
+| `value` | `(string\|number\|string[])` |  |
+
+#### `QueryBuilderOptions` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `fields` | `QueryField[]` |  |
+| `[value]` | `QueryCondition[]` | the starting conditions |
+| `[label='Filter']` | `string` |  |
+
 #### `FieldSchema` : `Object`
 
 A field of a form schema.
@@ -5210,6 +5357,21 @@ A visible row of the tree.
 | `state` | `('checked'\|'mixed'\|'unchecked')` |  |
 | `status` | `?string` | 'loading' or the error's words while its children are asked for |
 | `match` | `boolean` | whether it matched the search |
+
+#### `WhatIfOptions` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[mode='slider']` | `('slider'\|'stepper'\|'range')` | one value by a slider, one by minus and plus, or a low and a high |
+| `[label]` | `string` | what is assumed ("Parallel shock") |
+| `[min=0]` | `number` |  |
+| `[max=100]` | `number` |  |
+| `[step=1]` | `number` |  |
+| `[value]` | `(number\|number[])` | the starting value (range: [low, high]) |
+| `[format]` | `function(number): string` | how a figure is written ("+25 bp") |
+| `[call]` | `function((number\|number[])): Promise&lt;*&gt;` | the question to the server for a value: its answer is shown by describe |
+| `[describe]` | `function(*): string` | the answer in words ("VaR 99% 1d: 12.4m, +1.1m") |
+| `[debounce=300]` | `number` | milliseconds of rest before the call |
 
 ## drishti-grid
 

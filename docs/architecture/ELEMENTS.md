@@ -258,6 +258,16 @@ Takes over: `drishti_multiselect.js`, `drishti_people.js`, `drishti_controls.js`
 `build/drishti_forms.js`; the inputs of `drishti_form.js`, `drishti_bi-format-pane.js`, `drishti_subscribe-when.js`,
 `drishti_discussion-compose.js`.
 
+#### What-if controls and the query builder (drishti-inputs 0.4.0)
+
+`WhatIf(host, {mode: 'slider'|'stepper'|'range', label, min, max, step, value, format, call, describe, debounce})` is an assumption the
+server is asked about: the control is native (range inputs or minus and plus: arrows, Home, End, PageUp and PageDown work), the
+`call(value)` runs once the value rests (`debounce`, 300 ms), an answer to an older value that arrives late is dropped, `describe`
+writes the answer in a live region, and a failure is the state kit's error with a Retry. Events: `input`, `change`, `result`, `error`.
+`QueryBuilder(host, {fields})` holds conditions as chips (`desk = Rates`, `var >= 100`, joined by AND): add with a field, an operator
+and a value (Enter adds), remove with × or Backspace in the empty value; `parseQuery(text, fields)` and `queryText(conditions)` are the
+same query as text (a paste works), with errors in words. It produces data, never evaluates it. Look: `drishti_inputs.css`.
+
 ### 4.3 drishti-grid
 
 Section 5. Takes over: `drishti_tables.js`, `drishti_colfilter.js`, `drishti_tree-rows.js`, `drishti_drill.js`, `drishti_pivot-grid.js`,
