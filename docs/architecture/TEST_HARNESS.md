@@ -354,7 +354,7 @@ file check) holds the split honest: every key page in exactly one group, every g
   half filled is never read.
 - **Deterministic.** The walk's lake ends on a fixed business date (`SNAPSHOT_DATE`), so figures and dates never move; its server has opened
   nothing before (no recent pages, no workspaces); animations and transitions are off, the caret hidden, fonts (vendored) loaded, the scroll at
-  the top; the business date is picked (`/asof`), pages that draw late are waited on (`idle`, `wait`); the live clock, the date box, Home's fact of the day, the VaR timings and data versions (a hash of the lake build), a search's time taken, the inbox's facts and anything marked `data-snapshot-mask` are covered, timings replaced by a dot, the checkout's folder, the test's scratch folders and the real day's date and time (local or UTC) by fixed words (`snapshots.MASK`, `snapshots.QUIET`, and per page `mask` in `KEY_SNAPSHOTS`).
+  the top; the business date is picked (`/asof`), pages that draw late are waited on (`wait`, their own drawn state; never network idle, which a page's open live channel never reaches); the live clock, the date box, Home's fact of the day, the VaR timings and data versions (a hash of the lake build), a search's time taken, the inbox's facts and anything marked `data-snapshot-mask` are covered, timings replaced by a dot, the checkout's folder, the test's scratch folders and the real day's date and time (local or UTC) by fixed words (`snapshots.MASK`, `snapshots.QUIET`, and per page `mask` in `KEY_SNAPSHOTS`).
 - **Small goldens.** Each golden is the viewport at half size in at most 128 colours (PNG): a quarter of the pixels and a palette keep the
   whole set (128 images: 32 pages; Admin → Engines is left out because its native-maths notice depends on a timed probe) at about 4 MB, while a moved panel, a lost border, a wrong theme colour or a missing chart still shows. A full-size capture
   would be about ten times that; a perceptual hash alone would not draw what changed. The capture is mapped onto the golden's own palette,
@@ -561,7 +561,8 @@ answered (`--since-ready`: after each check's first 200).
 python3 tools/sweep/api_sweep.py --console http://host:27480 --server http://host:28480 --admin USER --admin-password PW
 ```
 
-The report is `data/sweep/api-sweep-<stamp>.md` and `.jsonl` (not committed).
+The report is `data/sweep/api-sweep-<stamp>.md` and `.jsonl` (not committed) when run by hand; the drill step writes it to `DRISHTI_SWEEP_OUT`
+(the drill's logs folder) or, unset, to the test's own scratch folder, never under `data/`.
 
 ### 3.29 The release from another folder (a release blocker)
 
