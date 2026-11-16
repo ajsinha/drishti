@@ -2666,7 +2666,7 @@ cluster. It is the same on Linux, macOS and Windows; on Windows write `py tools\
 settings file goes **before** the command: `python tools/drishti.py --settings ~/drishti-envs/dev.ini start all --demo`.
 
 **The roots.** The install folder (`DRISHTI_HOME`) is `--home`, else `DRISHTI_HOME`, else `drishti.home` of the settings file, else the
-folder `tools/drishti.py` lives in. The data folder is `--data-dir`, else `drishti.data.dir` of the settings file, else `DRISHTI_DATA_DIR`, else
+folder `tools/drishti.py` lives in; a named one must be an absolute path (a relative one is refused as relative) and that same folder. The data folder is `--data-dir`, else `drishti.data.dir` of the settings file, else `DRISHTI_DATA_DIR`, else
 `<home>/data`; its `run/` (pid files), `logs/` and `tmp/` hold what a started process leaves. Drishti's own server jar (exactly one; `start` refuses two) is in
 `<home>/lib`; the site's jars (JDBC drivers, connector plugins) are in `<home>/lib/ext` (`drishti.lib.path`, `DRISHTI_LIB_PATH`), kept on an upgrade. **Java** is found in one order:
 `--java-home`, `DRISHTI_JAVA_HOME`, `JAVA_HOME`, `java` on the `PATH`; a Java older than 21 is refused.

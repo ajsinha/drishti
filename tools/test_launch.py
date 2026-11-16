@@ -124,6 +124,15 @@ def test_the_home_is_the_tools_own_folder_and_another_is_refused(tmp_path):
         javacmd.find_home(None, env_of(), {"drishti.home": str(tmp_path)})
 
 
+def test_a_relative_home_is_refused_as_relative_before_any_comparison():
+    """Explicit paths: a relative home is refused for being relative (never resolved under the working folder first)."""
+    for named in ({"DRISHTI_HOME": "drishti"}, {}):
+        with pytest.raises(javacmd.HomeError, match="a relative path: name the install folder as an absolute path"):
+            javacmd.find_home(None if named else "drishti", env_of(**named), {})
+    with pytest.raises(javacmd.HomeError, match="relative path"):
+        javacmd.find_home(None, env_of(), {"drishti.home": "drishti"})
+
+
 def test_the_roots_and_where_each_came_from(tmp_path):
     r = javacmd.launch_roots(None, None, env_of(), {})
     assert r["data"] == (ROOT.resolve() / "data", "<home>/data") and r["modules"][0] == ROOT.resolve() / "modules"

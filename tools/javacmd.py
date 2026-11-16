@@ -202,6 +202,9 @@ def find_home(explicit=None, env=None, keys=None) -> tuple:
     for name, value in (("--home", explicit), ("DRISHTI_HOME", (env.get("DRISHTI_HOME") or "").strip()),
                         ("drishti.home in the settings file", (keys.get("drishti.home") or "").strip())):
         if value:
+            if not Path(value).expanduser().is_absolute():   # explicit paths: never taken under the working folder
+                raise HomeError(f"{name} is {value}, a relative path: name the install folder as an absolute path (or unset "
+                                f"{name.split(' ')[0]}; the default is the folder tools/drishti.py lives in)")
             home = Path(value).expanduser().resolve()
             if home != REPO.resolve():
                 raise HomeError(f"{name} is {home}, but these tools come from {REPO}: run {home / 'tools' / 'drishti.py'} for that install, "
