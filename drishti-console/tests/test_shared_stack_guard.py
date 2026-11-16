@@ -34,3 +34,23 @@ def test_a_write_to_the_servers_data_is_caught(tmp_path):
     (tmp_path / "config" / "connectors").mkdir(parents=True)
     (tmp_path / "config" / "connectors" / "new.yaml").write_text("a: 1")               # a connector file the server wrote
     assert wb_live.written(before, wb_live.fingerprint(tmp_path)) == ["config/connectors/new.yaml", "data/baskets/mine.json", "data/identity/users.db"]
+
+
+def _notice(tmp_path, rows):
+    import json
+    box = tmp_path / "data/fstore/items/collab/inbox/f0.json"
+    box.parent.mkdir(parents=True, exist_ok=True)
+    box.write_text(json.dumps({"username": "drishti-dev-admin", "rows": rows}))
+    for p in ("data/fstore/items/collab/counters/inbox", "data/fstore/items/collab/inbox-seq/0000000000000000001"):
+        (tmp_path / p).parent.mkdir(parents=True, exist_ok=True)
+        (tmp_path / p).write_text("1")
+
+
+def test_a_platform_alert_the_server_raised_is_left_out_and_any_other_notice_is_caught(tmp_path):
+    before = wb_live.fingerprint(tmp_path)
+    alert = {"seq": 1, "type": "alert", "kind": "platform", "entityId": "/admin/health#alerts", "panelId": "[warn] the memory budget was squeezed"}
+    _notice(tmp_path, [alert])
+    assert wb_live.without_platform_alerts(tmp_path, wb_live.written(before, wb_live.fingerprint(tmp_path))) == []
+    _notice(tmp_path, [alert, {"seq": 2, "type": "share", "kind": "var", "entityId": "BANK"}])            # a test shared something
+    assert wb_live.without_platform_alerts(tmp_path, wb_live.written(before, wb_live.fingerprint(tmp_path))) == [
+        "data/fstore/items/collab/counters/inbox", "data/fstore/items/collab/inbox-seq/0000000000000000001", "data/fstore/items/collab/inbox/f0.json"]

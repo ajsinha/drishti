@@ -156,6 +156,28 @@ def written(before: dict, after: dict) -> list[str]:
     return sorted(k for k in set(before) | set(after) if before.get(k) != after.get(k))
 
 
+INBOX = "data/fstore/items/collab/inbox/"
+INBOX_COUNTERS = ("data/fstore/items/collab/counters/inbox", "data/fstore/items/collab/inbox-seq/")
+
+
+def without_platform_alerts(work: Path, wrote: list[str]) -> list[str]:
+    """``wrote`` less the server's own platform alerts: an alert rule that fired while the file ran (the memory budget squeezed, a slow
+    disk) writes a notice to the administrator's inbox, as a server does whatever is asked of it (drill of 2026-11-15). Only when every
+    row of every inbox file written is such an alert are the inbox files and its counters left out; a share, a comment or any other
+    notice a test made is still a write."""
+    boxes = [k for k in wrote if k.startswith(INBOX)]
+    if not boxes:
+        return wrote
+    for k in boxes:
+        try:
+            rows = json.loads((work / k).read_text(encoding="utf-8")).get("rows") or []
+        except (OSError, ValueError):
+            return wrote
+        if not rows or any(r.get("type") != "alert" or r.get("kind") != "platform" for r in rows):
+            return wrote
+    return [k for k in wrote if not k.startswith(INBOX) and not k.startswith(INBOX_COUNTERS)]
+
+
 class StackPool:
     """This worker's real servers (docs/architecture/TEST_HARNESS.md, "The server pool"). Every server a browser test starts through
     ``_stack`` passes here: the pool counts and times the starts (DRISHTI_BROWSER_PROFILE), and keeps at most one idle server, so servers
@@ -186,9 +208,10 @@ def _stop_pool():
 atexit.register(_stop_pool)
 
 
-def _stack(tmp_path_factory, extra_env, work=None, auth=False, heap="768m", shared=False):
+def _stack(tmp_path_factory, extra_env, work=None, auth=False, heap="768m", shared=False, ready=None):
     """A real server and a console in front of it, from this worker's pool (StackPool): yields the Stack, stops it (or keeps it idle for the
-    next file asking the same, when ``shared``) when the caller's fixture ends."""
+    next file asking the same, when ``shared``) when the caller's fixture ends. ``ready(stack)``: run once after a start, before a shared
+    server's folder is fingerprinted (what the server does by itself at start is never counted against the file)."""
     key = (tuple(sorted(extra_env.items())), auth, heap)
     if shared and work is None and key in POOL.idle:
         gen, st = POOL.idle.pop(key)
@@ -199,6 +222,8 @@ def _stack(tmp_path_factory, extra_env, work=None, auth=False, heap="768m", shar
         ph = Phases("server-start")
         gen = _start_stack(tmp_path_factory, extra_env, work, auth, heap)
         st = next(gen)
+        if ready:
+            ready(st)
         ph.mark("ready")
         ph.done()
         POOL.starts += 1
@@ -207,7 +232,7 @@ def _stack(tmp_path_factory, extra_env, work=None, auth=False, heap="768m", shar
     try:
         yield st
     finally:
-        wrote = written(before, fingerprint(Path(st.work))) if keep else []
+        wrote = without_platform_alerts(Path(st.work), written(before, fingerprint(Path(st.work)))) if keep else []
         if wrote:
             next(gen, None)          # never handed on: the next file would see this one's data
             pytest.fail("this file shares its server (shared=True) but wrote to it; a file that changes data starts its own server:\n  "

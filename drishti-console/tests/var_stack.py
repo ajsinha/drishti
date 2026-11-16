@@ -135,10 +135,39 @@ def var_server(tmp_path_factory, lake: Path, shared: bool = False, auth: bool = 
     from wb_live import _stack
 
     own = own_folders(tmp_path_factory, shared)
-    for st in _stack(tmp_path_factory, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true", "DRISHTI_VAR_SYSTEM_BASKETS_SEED": "true",
-                                        **own, **env}, auth=auth, heap=heap, shared=shared):
+
+    def ready(st):   # once per start: the engine answers, and what the server does by itself at start is done (_start_captures_done)
         _engine_ready(str(st), opener=signed_in(str(st)) if auth else None)
+        _start_captures_done(st.server)
+
+    for st in _stack(tmp_path_factory, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true", "DRISHTI_VAR_SYSTEM_BASKETS_SEED": "true",
+                                        **own, **env}, auth=auth, heap=heap, shared=shared, ready=ready):
         yield st
+
+
+def _start_captures_done(server: str, seconds: float = 180) -> None:
+    """Waits for the official exposure capture a server makes of the newest date at start (EXPOSURE_GUIDE section 20; in the background,
+    a few seconds after the engine answers): its files and its transaction are then in the folder before a shared server is watched for
+    writes, never counted against the first file that shares it (drill of 2026-11-15). Returns at once when the exposure engine is not
+    there to capture, or with sign-in on (any answer but "no official exposure record")."""
+    import time
+    import urllib.error
+    import urllib.request
+
+    deadline = time.monotonic() + seconds
+    while True:
+        try:
+            with urllib.request.urlopen(server + "/api/v1/risk/exposure/official", timeout=30) as r:
+                if r.status == 200:
+                    return
+        except urllib.error.HTTPError as e:
+            if e.code != 404 or b"no official exposure record" not in e.read():
+                return
+        except (urllib.error.URLError, OSError):
+            return
+        if time.monotonic() > deadline:
+            return                                        # not captured in time: the pool's guard names what it then writes
+        time.sleep(1)   # wait-ok: polling the server's background capture at start
 
 
 def signed_in(console: str, user: str = "drishti-dev-admin", password: str = "drishti-dev-admin123"):

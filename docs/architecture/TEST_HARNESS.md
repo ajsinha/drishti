@@ -434,13 +434,17 @@ A VaR file that only reads asks `var_server(..., shared=True)`: its hot folder a
 scratch folder (relative paths), so the settings are the same for every such file, and the worker's pool (section 3.7) hands the server to
 the next file on that worker asking for the same lake and settings, without a start or the engine's warm-up. The files that share today:
 `test_var_family_figures_browser.py`, `test_var_currency_browser.py` (its first server), `test_explain_browser.py`, and, with every
-scenario window, `test_var_lens_browser.py` and `test_var_page_scope_browser.py`. Files that change data (save a basket, upload, change a
-setting, enter a lens on the server) keep a server of their own.
+scenario window, `test_var_page_scope_browser.py`. Files that change data (save a basket, upload, change a setting, enter a lens on the
+server, keep a person's VaR lens in their settings as `test_var_lens_browser.py` does) keep a server of their own.
 
 **The guard.** The pool fingerprints a shared server's scratch folder (every file's size and time, the server's log, temporary, cache and
 VaR hot folders, and what a server writes while serving reads (the official capture and its sequence in the file store, the audit of
 the reads, the derived trade pages, a person's first BI workspace) left out: `wb_live.DERIVED`) when a file gets the server and again when the file is done; a file that wrote anything there
 fails in its teardown with the files it wrote, and the server is stopped instead of handed on, so no file ever sees another file's data.
+A server's own start-up work is done before its folder is first fingerprinted (`_stack(ready=...)`: the VaR engine answers, and the
+official exposure capture of the newest date the server makes at start is in: `var_stack._start_captures_done`), and a platform alert the
+server raised while a file ran (an inbox notice of type `alert`, kind `platform`, such as the memory budget squeezed) is left out
+(`wb_live.without_platform_alerts`); any other notice is still a write.
 The browser-rules test (`test_browser_rules.py`, rule 4) is unchanged: every server still comes from the pool.
 
 ### 3.24 Faster server starts
