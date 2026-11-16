@@ -114,8 +114,9 @@ def inventory(files: list[str], pom: str) -> dict:
     lib_modules = sum(1 for f in files if f.startswith(ELEMENTS) and "/src/" in f and f.endswith(".js"))
     console = [f for f in files if f.startswith("drishti-console/") and f.endswith(".py") and "/tests/" not in f]
     server = [f for f in files if f.endswith(".java") and "/src/main/" in f]
-    packs = Counter(p.parent.name if p.parent.name != "packs" else "core" for p in pack_dirs().values())
-    pack_root = "config/packs/"
+    # a pack's domain is the module whose folder holds it (modules/<id>/...), the kernel's otherwise (config/packs)
+    pack_where = [p.relative_to(ROOT).as_posix() for p in pack_dirs().values()]
+    packs = Counter(w.split("/")[1] if w.startswith("modules/") else "core" for w in pack_where)
     tests = Counter()
     for f in files:
         base = os.path.basename(f)
@@ -134,7 +135,7 @@ def inventory(files: list[str], pom: str) -> dict:
         "routes": sum(len(ROUTE.findall(_read(f))) for f in console),
         "handlers": sum(len(HANDLER.findall(_read(f))) for f in server),
         "libraries": libs, "lib_modules": lib_modules, "packs": dict(sorted(packs.items())),
-        "sutras": sum(1 for f in files if f.startswith(pack_root) and "/sutras/" in f and f.endswith((".yaml", ".yml"))),
+        "sutras": sum(1 for f in files if any(f.startswith(w + "/") for w in pack_where) and "/sutras/" in f and f.endswith((".yaml", ".yml"))),
         "feeds": sum(1 for f in files if re.fullmatch(r"config/feeds/[^/]+\.yaml", f)),
         "lakes": sum(1 for f in files if f.startswith("config/lakes/") and f.endswith(".yaml")),
         "tests": dict(tests), "docs": len(docs), "guides": sum(1 for f in docs if f.startswith("docs/guides/") and f.count("/") == 2),
@@ -150,7 +151,7 @@ def render(m: dict) -> str:
     product = sum(L[x] for x in PRODUCT)
     tests = sum(L[x] for x in TESTS)
     t = inv["tests"]
-    fn = ", ".join(f"{n} {d}" for d, n in sorted(inv["functions"].items()))
+    fn = ", ".join(f"{n} {d}" for d, n in sorted(inv["functions"].items()) if n)
     rows = [("Maven modules", f"{inv['maven']} in {len(inv['folders'])} subject folders: " + ", ".join(f"`{d}/`" for d in inv["folders"])),
             ("Modules (`.dmod`)", f"{len(inv['domains'])}: {', '.join(inv['domains'])}"),
             ("Lenses", f"{len(inv['lenses'])}: {', '.join(inv['lenses'])}"),

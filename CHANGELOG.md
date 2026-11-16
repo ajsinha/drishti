@@ -18,6 +18,8 @@
 
 ## Unreleased
 
+## 2.9.11.i4 (2026-11-15)
+
 - **A refusal in words reaches the caller.** A source that refuses a whole-kind read with a reason (positions and system baskets on a
   server with no VaR inputs: `DRS-1001 no P&L vectors in any connector`; busy protection's 503 with Retry-After) is passed on with its
   own code and words, no longer as `502 DRS-1003 ... failed reading every position` with the reason lost.
