@@ -34,3 +34,4 @@
 @media (max-width: 640px) { .drishti-palette { top: 0; width: 100vw; max-height: 100dvh; border-radius: 0; border-inline: 0; }
   .drishti-palette-item { min-height: 44px; align-items: center; } .drishti-palette-detail { display: none; } }
 @media (forced-colors: active) { .drishti-palette-item[aria-selected="true"] { outline: 2px solid Highlight; } }
+@media print { .drishti-palette { display: none; } }

@@ -62,3 +62,14 @@ test('the grid draws sparkline, bar and bullet cells through one chart bullet', 
   assert.ok(G.sparklineCell({ values: 'trend' })({ value: 1, text: '1', row: { trend: [1, 2, 3] }, doc }));
   assert.ok(calls.indexOf('rect') >= 0 && calls.indexOf('polyline') >= 0);
 });
+
+test('no two capabilities share a name: the chart kinds, their aliases and the risk kinds are one registry', async () => {
+  await import('../../web/static/elements/drishti-risk/src/drishti_index.js');
+  const names = K.kindList().map((k) => k.name);
+  assert.equal(new Set(names).size, names.length, 'a kind name is registered twice');
+  Object.keys(K.KIND_ALIASES).forEach((a) => {
+    assert.ok(names.indexOf(a) < 0, 'the alias ' + a + ' is also a kind');
+    assert.ok(names.indexOf(K.KIND_ALIASES[a]) >= 0, 'the alias ' + a + ' names no kind');
+  });
+  assert.throws(() => K.registerKind(names[0], { build: () => ({}) }), /already|taken/i);
+});

@@ -35,7 +35,9 @@
 .drishti-skeleton { display: flex; flex-direction: column; gap: var(--d-sp-6); width: min(320px, 90%); }
 .drishti-state-compact .drishti-skeleton { width: 120px; }
 .drishti-skeleton-bar { display: block; height: 0.9em; border-radius: 3px; background: var(--drishti-skeleton-bg); background-size: 200% 100%;
-  animation: drishti-shimmer 1.2s linear infinite; }
+  animation: drishti-shimmer var(--d-dur-shimmer) linear infinite; }
 .drishti-skeleton-short { width: 60%; }
 .drishti-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 @media (prefers-reduced-motion: reduce) { .drishti-skeleton-bar { animation: none; background: var(--d-bg-2); } }
+@media (forced-colors: active) { .drishti-skeleton-bar { background: GrayText; } .drishti-state-error { border: 1px solid Mark; } .drishti-state-fix { border-color: LinkText; color: LinkText; } }
+@media print { .drishti-skeleton-bar { animation: none; } .drishti-state-fix { display: none; } }

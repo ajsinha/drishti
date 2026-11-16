@@ -196,3 +196,8 @@ div.dc-lgq { cursor: default; }
 .dc-bullet-over { fill: var(--d-bad); }
 .dc-bullet-limit { stroke: var(--d-ink); stroke-width: 2; vector-effect: non-scaling-stroke; }
 @media (forced-colors: active) { .dc-bullet-value { fill: CanvasText; } .dc-bullet-band-none, .dc-bullet-band-ok, .dc-bullet-band-warn, .dc-bullet-band-bad { fill: Canvas; stroke: GrayText; } .dc-bullet-limit { stroke: Highlight; } }
+
+/* print and PDF: a chart is kept whole on its page, its tools and studio left off */
+@media print { .dc-tools, .dc-side, .dc-status { display: none; } .dc-head, .dc-body { break-inside: avoid; } .dc-table[hidden] { display: block; } }
+/* forced colours: a bullet's bands are told apart by hatching (the fills become the page's colour) */
+@media (forced-colors: active) { .dc-bullet-band-warn { stroke-dasharray: 3 2; } .dc-bullet-band-bad { stroke-dasharray: 1 1; } }

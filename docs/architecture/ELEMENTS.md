@@ -177,6 +177,15 @@ Takes over: `drishti_app.js`, `drishti_theme-init.js`, `drishti_resize.js`, `dri
 the formats and JSON calls of `drishti_bi-lib.js`, and the dialogs of `drishti_busy.js`, `drishti_scope-delete.js`,
 `drishti_artifact-uninstall.js`, `drishti_server-watch.js`, `build/drishti_grid-keys.js`.
 
+#### Tokens: motion, semantic spacing, print, forced colours, budgets
+
+`drishti_tokens.css` also holds the **motion tokens** (`--d-dur-fast|base|slow|shimmer`, `--d-ease`; `prefers-reduced-motion` sets every
+duration to 0) and the **semantic spacing** steps (`--d-space-xs|sm|md|lg|xl`, over `--d-sp-*`; the type scale is `--d-fs-*`). Components
+that draw something carry a `@media print` block (grid, chart, graph, inputs, the state kit, the palette: tools and popups left off, rows
+and charts kept whole) and a `@media (forced-colors: active)` block (system colours for focus, selection and fills; a bullet's bands are
+hatched differently). Guards: `tests/test_elements_budget.py` (each bundle and component sheet under its byte budget) and, in
+`tests/elements/states-palette.test.mjs`, one registry with no capability name twice (chart kinds, aliases, risk kinds).
+
 #### Chips: list attributes (drishti-core 1.2.0)
 
 `chipList(document, values, {max, compact, label})` (or `new Chips(host, options)`) draws a list attribute: the first `max` chips (3) and
