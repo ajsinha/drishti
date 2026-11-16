@@ -210,6 +210,8 @@ export class Grid extends GridBase {
     this.statusSoon();
     const f = this.model.navigator.focus;
     if (f && this.exOpen && this.o.explain && this.model.layout !== 'panel') {
+      // the cell already explained (a click explains it and focuses it): never drawn again, so what the reader does in it stays
+      if (this.ex && !this.ex.error && this.ex.row === f.row && this.ex.col === f.col) { return; }
       const win = this.doc.defaultView;
       win.clearTimeout(this.exTimer);
       this.exTimer = win.setTimeout(() => this.explain(f.row, f.col), 120);
