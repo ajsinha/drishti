@@ -278,7 +278,7 @@ Run these from the Drishti folder (the repository root, or the install folder of
 ```text
 $ python3 tools/drishti.py doctor --server http://localhost:18480
 GREEN  java                    /usr/lib/jvm/java-21-openjdk-amd64/bin/java: Java 21.0 (Ubuntu)
-GREEN  server jar              ~/drishti/kernel/drishti-server/target/drishti-server-2.9.11.b-exec.jar (version 2.5.0)
+GREEN  server jar              ~/drishti/kernel/drishti-server/target/drishti-server-<version>-exec.jar (version <version>)
 GREEN  python                  /usr/bin/python3: Python 3.14.4
 GREEN  python pyyaml           installed
 YELLOW python deltalake        not installed (needed for data ingest --store delta)

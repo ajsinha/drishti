@@ -603,7 +603,7 @@ python3 tools/drishti.py lake build --from data/testdata/trades/endur/trade_endu
 ```
 
 ```text
-engine: drishti (Drishti's Java writer in drishti-server-2.9.11.b-exec.jar)
+engine: drishti (Drishti's Java writer in drishti-server-<version>-exec.jar)
 business date  PRODUCT_TYPE           rows
 2026-07-08     CallNot                  50
 2026-07-08     Cash                    723

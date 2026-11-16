@@ -77,7 +77,7 @@ IDEA on the root, PyCharm on `drishti-console/`, never one folder for both) is
 ls kernel/drishti-server/target/*-exec.jar
 ```
 
-**You should see** nothing from Maven (`-q`), then `kernel/drishti-server/target/drishti-server-2.9.11.g-exec.jar`. The first build downloads
+**You should see** nothing from Maven (`-q`), then `kernel/drishti-server/target/drishti-server-*-exec.jar`. The first build downloads
 its libraries (several minutes); later ones take about a minute. `-pl :drishti-app -am` builds the jar that runs (the core server with
 the banking module and the plugins) and only what it needs; `clean` keeps exactly one exec jar in `target/`. Every Maven command and
 what it builds: [DEVELOPER_GUIDE.md › Maven commands](guides/DEVELOPER_GUIDE.md#22-maven-commands). On Windows: `.\mvnw.cmd -q clean

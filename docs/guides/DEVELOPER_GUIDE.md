@@ -263,7 +263,7 @@ For Maven the SDK is three more artifacts of this repository, `com.ash.drishti:*
 ```bash
 ./mvnw -q install -pl .,drishti-sdk/drishti-module-maven-plugin,drishti-sdk/drishti-module-archetype,drishti-sdk/drishti-module-parent -am -DskipTests
 mvn -B archetype:generate -DarchetypeGroupId=com.ash.drishti -DarchetypeArtifactId=drishti-module-archetype \
-    -DarchetypeVersion=2.9.11.g -DgroupId=com.example.greet -DartifactId=greet -Dpackage=com.example.greet
+    -DarchetypeVersion=$(python3 tools/version.py) -DgroupId=com.example.greet -DartifactId=greet -Dpackage=com.example.greet
 cd greet && mvn verify          # the test, target/dmod/greet-0.1.0.dmod, then "C1 No kernel internals: passed" ... C15
 cp target/dmod/greet-0.1.0.dmod <data folder>/modules/    # auto-deploy (a single node): stored, checked, installed and loaded
 curl -s localhost:18480/api/v1/greet/greeting/Asha         # the module's REST API, mounted by the kernel
@@ -1907,21 +1907,12 @@ Releases are numbered `MAJOR.MINOR.PATCH` and tagged `vX.Y.Z` on `main` (`git ta
 (`git show`) shows every file a bump touches.
 
 1. **Start clean on `develop`** with everything for the release merged and drilled.
-2. **Bump the version** everywhere it is written. Find the old version first:
-
-   ```bash
-   git grep -n -F '<the old version>' -- '*pom.xml' drishti-console/core/app.py deploy README.md docs
-   ```
-
-   | File | What changes |
-   |---|---|
-   | `pom.xml` and every module's `pom.xml` (including `plugins/*/pom.xml`) | the project `<version>` and each module's `<parent><version>` |
-   | `drishti-console/core/app.py` | `ASSET_VERSION`, so browsers fetch the new scripts |
-   | `deploy/docker/compose.yaml`, `deploy/docker/server.Dockerfile`, `deploy/docker/console.Dockerfile` | image tags `drishti-server:<version>`, `drishti-console:<version>` |
-   | `deploy/docker/ecs/*.Dockerfile`, `deploy/aws/env.example` (`DRISHTI_VERSION`) | the ECS image tags `drishti-server-ecs`, `drishti-console-ecs`, `drishti-loader-ecs` |
-   | `README.md`, `docs/*.md` | the jar name `drishti-server-<version>-exec.jar` and versions in examples |
-
-   Leave historical entries (old changelog sections) alone.
+2. **Bump the version in one place.** The product version lives in `.mvn/maven.config` (one line, `-Drevision=<version>`) and nowhere else. Every pom takes it as `${revision}` (the flatten plugin writes the real number into an
+   installed pom), the console's asset version, the tools, the image tags (`export DRISHTI_VERSION=$(python3 tools/version.py)`) and the
+   release check read it, and the UI asks the server (`/api/v1/about`). `python3 tools/version.py` prints it, `--tag` prints the tag
+   (an increment such as `i5` is tagged with an underscore, `.i_5`). The guard test `drishti-console/tests/test_one_version.py` fails when any other file carries a
+   product version (a jar name, an image tag, a pom version). Documents write `<version>`. Leave historical entries (old changelog
+   sections) alone.
 3. **Write the release text.** Add a section at the top of `CHANGELOG.md` (`## X.Y.Z — <headline> (<date>)`, then what changed,
    grouped, with the settings and endpoints involved) and of `RELEASE_NOTES.md` (`# Drishti X.Y.Z — release notes`, a short, user-facing
    summary; the previous release's heading becomes `# Previous release: Drishti …`). Add upgrade notes when the identity schema,
@@ -1935,12 +1926,14 @@ Releases are numbered `MAJOR.MINOR.PATCH` and tagged `vX.Y.Z` on `main` (`git ta
 7. **Tag `main`** with an annotated tag and push it:
 
    ```bash
-   git tag -a vX.Y.Z -m "Drishti X.Y.Z: <headline>" main
-   git push origin vX.Y.Z
+   TAG=$(python3 tools/version.py --tag)          # for example v2.9.11.i_5
+   git tag -a "$TAG" -m "Drishti <version>: <headline>" main
+   python3 tools/version.py --check "$TAG"        # fails when the tag is not the version file's
+   git push origin "$TAG"
    ```
 
-8. **Images (optional):** `docker build -f deploy/docker/server.Dockerfile -t drishti-server:X.Y.Z .` and
-   `docker build -f deploy/docker/console.Dockerfile -t drishti-console:X.Y.Z .` from the repository root, after building the jar.
+8. **Images (optional):** `docker build -f deploy/docker/server.Dockerfile -t drishti-server:$(python3 tools/version.py) .` and
+   `docker build -f deploy/docker/console.Dockerfile -t drishti-console:$(python3 tools/version.py) .` from the repository root, after building the jar.
    [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md) covers deployment and upgrades.
 
 ## 10. Connectors: choosing, combining and writing one

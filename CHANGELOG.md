@@ -18,6 +18,15 @@
 
 ## Unreleased
 
+- **One version, from one place.** `.mvn/maven.config` (`-Drevision=2.9.11.i5`) is the product version; every pom takes `${revision}`
+  (the flatten plugin writes the real number into an installed pom, `target/drishti-flattened-pom.xml`, never a hidden file), and the
+  console's asset version, `tools/api_docs.py`, the image tags (`export DRISHTI_VERSION=$(python3 tools/version.py)` for compose and the
+  ECS `env.example`) and the release check read it too. `python3 tools/version.py` prints it, `--tag` prints the release tag
+  (`2.9.11.i5` is `v2.9.11.i_5`), `--check <tag>` fails when a tag is not the version file's. The UI shows the server's version; the
+  console build's own is diagnostic. Guard: `drishti-console/tests/test_one_version.py` (no pom with its own version, no other file with the
+  product version or a jar or image name carrying one). The documents write `<version>`; the DEVELOPER_GUIDE release steps follow.
+  The IntelliJ server run configurations no longer give `-XX:MaxDirectMemorySize` twice (256m then 768m); 768m stays.
+
 - **One settings file for every launcher, and the deployment guides checked against the code.** Every IntelliJ and PyCharm run
   configuration passes `$USER_HOME$/drishti-envs/dev.ini`; `tools/drishti.py --settings` reads the same files as the server (several,
   comma-separated, the right-most winning; a dotted `[section]` a namespace), puts the launch roots they name into the tools'

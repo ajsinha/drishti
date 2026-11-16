@@ -17,12 +17,12 @@
 <!-- The parent every module project inherits (docs/architecture/KERNEL_AND_MODULES.md section 8.1). It stands alone (it does not
      inherit the kernel's build): Java 21, the kernel API and Spring as `provided` (the kernel supplies them at run time; never inside a
      .dmod), JUnit for the module's tests, and the module plugin bound to the lifecycle: validate (manifest), package (assemble the .dmod),
-     verify (the conformance checks C1-C15). Its version is the kernel's: a module built against 2.9.11.g runs on kernel API 0.2. -->
+     verify (the conformance checks C1-C15). Its version is the kernel's: a module built against this kernel version runs on kernel API 0.2. -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.ash.drishti</groupId>
   <artifactId>drishti-module-parent</artifactId>
-  <version>2.9.11.g</version>
+  <version>${revision}</version>
   <packaging>pom</packaging>
   <name>drishti-module-parent</name>
   <description>The parent pom of a Drishti module project (the Module SDK)</description>
@@ -30,7 +30,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.release>21</maven.compiler.release>
-    <drishti.sdk.version>2.9.11.g</drishti.sdk.version>
+    <drishti.sdk.version>${project.version}</drishti.sdk.version>
     <spring-framework.version>6.2.19</spring-framework.version>
     <junit-jupiter.version>5.12.2</junit-jupiter.version>
     <assertj.version>3.27.7</assertj.version>
@@ -55,6 +55,24 @@
   </dependencies>
 
   <build>
+    <plugins>
+      <!-- ${revision} (the one version, .mvn/maven.config) becomes the real number in the pom that is installed or deployed -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>flatten-maven-plugin</artifactId>
+        <version>1.6.0</version>
+        <configuration>
+          <updatePomFile>true</updatePomFile>
+          <flattenMode>resolveCiFriendliesOnly</flattenMode>
+          <outputDirectory>${project.build.directory}</outputDirectory>
+          <flattenedPomFilename>drishti-flattened-pom.xml</flattenedPomFilename>
+        </configuration>
+        <executions>
+          <execution><id>flatten</id><phase>process-resources</phase><goals><goal>flatten</goal></goals></execution>
+          <execution><id>flatten-clean</id><phase>clean</phase><goals><goal>clean</goal></goals></execution>
+        </executions>
+      </plugin>
+    </plugins>
     <pluginManagement>
       <plugins>
         <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-compiler-plugin</artifactId><version>3.14.1</version></plugin>

@@ -69,12 +69,15 @@ def module_dir(name: str) -> Path:
 
 
 def version() -> str:
-    """The product version, from the parent pom (the release the reference belongs to)."""
-    pom = (ROOT / "pom.xml").read_text(encoding="utf-8")
-    m = re.search(r"<artifactId>drishti-parent</artifactId>\s*<version>([^<]+)</version>", pom)
-    if not m:
-        raise SystemExit("api_docs: no version in pom.xml")
-    return m.group(1).strip()
+    """The product version, from its one home (.mvn/maven.config; the release the reference belongs to)."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("drishti_product_version", ROOT / "drishti-console" / "core" / "product_version.py")
+    pv = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(pv)
+    found = pv.current(ROOT / "tools" / "api_docs.py", default="")
+    if not found:
+        raise SystemExit("api_docs: no version in .mvn/maven.config")
+    return found
 
 
 # ---- Java: every public or protected type and member has a comment ------------------------------------------------------------------

@@ -52,7 +52,7 @@ The pictures show a server and console started as this guide says, on the demo l
 
 | Process | What it does | Port | Health | Runs on |
 |---|---|---|---|---|
-| **server** | one Java program, `drishti-server-<version>-exec.jar` (`drishti-server-2.9.11.g-exec.jar` for this release; the version is `pom.xml`'s): reads the lakes and sources, computes every number (VaR, exposure, BI), lays out every screen | **18480** | `/actuator/health` | Java 21 |
+| **server** | one Java program, `drishti-server-<version>-exec.jar` (the version is the one in `.mvn/maven.config`: `python3 tools/version.py` prints it): reads the lakes and sources, computes every number (VaR, exposure, BI), lays out every screen | **18480** | `/actuator/health` | Java 21 |
 | **console** | the web pages people open, a Python program, `drishti-console/run_drishti_web.py`: renders what the server sends | **17480** | `/healthz`, `/readyz` | Python 3.13 in its own environment |
 
 Both read from **one release folder** and write everything under **one data folder** (`<drishti>/data` unless the settings file,
@@ -104,7 +104,7 @@ keeps an older jar beside the new one.
 git clone https://github.com/ajsinha/drishti.git /home/you/drishti
 cd /home/you/drishti
 ./mvnw -q clean package -DskipTests -pl :drishti-app -am
-ls kernel/drishti-server/target/*-exec.jar          # kernel/drishti-server/target/drishti-server-2.9.11.g-exec.jar
+ls kernel/drishti-server/target/*-exec.jar          # kernel/drishti-server/target/drishti-server-<version>-exec.jar
 ```
 
 ```powershell
@@ -122,7 +122,7 @@ dir kernel\drishti-server\target\*-exec.jar
 
 | Path | What |
 |---|---|
-| `kernel/drishti-server/target/drishti-server-2.9.11.g-exec.jar` (or a `drishti-server*.jar` at the top) | the server, every library inside |
+| `kernel/drishti-server/target/drishti-server-<version>-exec.jar` (or a `drishti-server*.jar` at the top) | the server, every library inside |
 | `bin/` | the start, stop and status scripts (`.sh`, `.ps1`, `.cmd`) and the node drain script `drishti-node` |
 | `modules/` | the modules (banking, capital markets, economy, market data, trading and one per trading system): their packs, connector templates, Sutras and help. The server refuses to start without this folder |
 | `config/` | the kernel's packs, the lakes, the module switches, lenses, engines, tables, BI files and the example settings files (`config/settings.examples/`): the site's configuration |
@@ -137,15 +137,15 @@ To make that folder as a ZIP from a built clone (the jar goes at the top of the 
 ```bash
 mkdir -p /home/you/drishti-release
 git archive --format=tar --prefix=drishti/ HEAD | tar -x -C /home/you/drishti-release
-cp kernel/drishti-server/target/drishti-server-2.9.11.g-exec.jar /home/you/drishti-release/drishti/
-(cd /home/you/drishti-release && zip -qr drishti-2.9.11.g.zip drishti)
+cp kernel/drishti-server/target/drishti-server-<version>-exec.jar /home/you/drishti-release/drishti/
+(cd /home/you/drishti-release && zip -qr drishti-<version>.zip drishti)
 ```
 
 ```powershell
 git archive --format=zip --prefix=drishti/ -o C:\Users\you\drishti-release\source.zip HEAD
 Expand-Archive C:\Users\you\drishti-release\source.zip C:\Users\you\drishti-release
-Copy-Item kernel\drishti-server\target\drishti-server-2.9.11.g-exec.jar C:\Users\you\drishti-release\drishti\
-Compress-Archive C:\Users\you\drishti-release\drishti C:\Users\you\drishti-release\drishti-2.9.11.g.zip
+Copy-Item kernel\drishti-server\target\drishti-server-<version>-exec.jar C:\Users\you\drishti-release\drishti\
+Compress-Archive C:\Users\you\drishti-release\drishti C:\Users\you\drishti-release\drishti-<version>.zip
 ```
 
 Unpack it anywhere (`C:\drishti`, `/opt/drishti`, `/home/you/drishti`); every command below runs from that folder, and every script
@@ -516,7 +516,7 @@ bin/start-console.sh --demo --server http://<host>:18480     # terminal 2 (Windo
 **You should see** (the warning names the development secrets in use):
 
 ```text
-Drishti server: drishti-server-2.9.11.g-exec.jar on Java 21, port 18480, heap 4g, packs core,market-data,…, data <drishti>/data
+Drishti server: drishti-server-<version>-exec.jar on Java 21, port 18480, heap 4g, packs core,market-data,…, data <drishti>/data
 warning: DEVELOPMENT secrets in use (NOT FOR PRODUCTION): DRISHTI_SEED_PASSWORD DRISHTI_TOKEN_SECRET DRISHTI_SESSION_SECRET. Put your own in an --env-file for anything shared.
 server: started (pid 1974114); log <drishti>/data/logs/server.log; waiting up to 300 s for http://127.0.0.1:18480/actuator/health
 server: up on http://192.168.2.77:18480
@@ -529,7 +529,7 @@ Open the console's address (the last line) in a browser and sign in as `drishti-
 server's log, within a minute:
 
 ```text
-INFO  … DrishtiApplication : Starting DrishtiApplication v2.9.11.g using Java 21.0.12.1 …
+INFO  … DrishtiApplication : Starting DrishtiApplication v<version> using Java 21.0.12.1 …
 INFO  … IdentityDatabase  : identity database ready: jdbc:sqlite:<drishti>/data/identity/drishti.db …
 WARN  … UserService       : Created development admin 'drishti-dev-admin' with the default password. Change it before any shared use.
 INFO  … DrishtiApplication : Started DrishtiApplication in 14.108 seconds (process running for 14.888)
@@ -817,7 +817,7 @@ Do the same for the console with `run-console.ps1` (`bin\start-console.ps1`). Be
   <key>WorkingDirectory</key><string>/Users/you/drishti</string>
   <key>ProgramArguments</key><array>
     <string>/opt/homebrew/opt/openjdk@21/bin/java</string><string>-Djava.io.tmpdir=/Users/you/drishti/data/tmp/server</string>
-    <string>-Xmx4g</string><string>-jar</string><string>/Users/you/drishti/kernel/drishti-server/target/drishti-server-2.9.11.g-exec.jar</string>
+    <string>-Xmx4g</string><string>-jar</string><string>/Users/you/drishti/kernel/drishti-server/target/drishti-server-<version>-exec.jar</string>
   </array>
   <key>EnvironmentVariables</key><dict>
     <key>DRISHTI_HOME</key><string>/Users/you/drishti</string>
@@ -870,7 +870,7 @@ $ curl -s http://<host>:17480/readyz
 On Windows: `Invoke-RestMethod http://<host>:18480/actuator/health`.
 
 **In the UI**, after signing in (8.3): **Admin → Health**: every line green or grey (not used), the server's version
-`2.9.11.g`, the lake connectors `UP`, the temporary folder under `data`.
+the version (`python3 tools/version.py`), the lake connectors `UP`, the temporary folder under `data`.
 
 ![Admin → Health: the server, its connectors, the lake, memory and disk](img/deploy/04-admin-health.jpg)
 
@@ -909,10 +909,10 @@ once) into `~/drishti-token`.
 ```text
 $ drishti-console/.venv/bin/python tools/drishti.py doctor --server http://<host>:18480 --token-file ~/drishti-token
 GREEN  java                    …/bin/java: Java 21.0
-GREEN  server jar              <drishti>/kernel/drishti-server/target/drishti-server-2.9.11.g-exec.jar (version 2.9.11.g)
+GREEN  server jar              <drishti>/kernel/drishti-server/target/drishti-server-<version>-exec.jar (version <version>)
 GREEN  python                  <drishti>/drishti-console/.venv/bin/python: Python 3.13.15
 …
-GREEN  server                  http://<host>:18480: version 2.9.11.g, java 21.0.12.1, status UP
+GREEN  server                  http://<host>:18480: version <version>, java 21.0.12.1, status UP
 GREEN  token                   accepted; this token '…' acts as drishti-dev-admin: scopes read
 doctor: 0 red, 0 yellow
 ```
@@ -1352,9 +1352,9 @@ hash ring is green.
 $ drishti-console/.venv/bin/python tools/drishti.py net members --server http://<host-a>:18480 --token-file ~/drishti-token
 3 member(s); this node drishti-a
   node                   state  address                    version   tags  latency  incarnation
-  drishti-a (this node)  alive  http://<host-a>:18480      2.9.11.g        -        1
-  drishti-b              alive  http://<host-b>:18480      2.9.11.g        4.0 ms   1
-  drishti-c              alive  http://<host-c>:18480      2.9.11.g        4.1 ms   1
+  drishti-a (this node)  alive  http://<host-a>:18480      <version>       -        1
+  drishti-b              alive  http://<host-b>:18480      <version>       4.0 ms   1
+  drishti-c              alive  http://<host-c>:18480      <version>       4.1 ms   1
 ```
 
 **2 · Gossip health.** **Admin → Health** on each node: the Drishti\*net line (members alive and suspect, requests forwarded and failed,

@@ -36,12 +36,13 @@ from core.edition import hidden_hint as _hidden_hint
 from core.config import Settings
 from core.nextpath import to_login
 from core import base_path as _base_path
+from core import product_version as _product_version
 
 WEB = Path(__file__).resolve().parent.parent / "web"
 _PAGE_KINDS = ("", "share", "datamap", "data", "form", "functions", "pack")      # missing.html for a console page, not an entity
 
 
-ASSET_VERSION = "2.9.11.g"
+ASSET_VERSION = _product_version.current()   # this console build's own version (diagnostic; the UI shows the server's)
 
 
 def _bounded(value, low: int, high: int, default: int) -> int:
