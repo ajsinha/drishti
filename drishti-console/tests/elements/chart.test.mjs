@@ -198,7 +198,7 @@ test('risk: the traffic light, the tail figures, the backtest badge, the exposur
   assert.equal(d.badge, undefined);
   const vc = build({ kind: 'risk.var-change', data: { rows: [{ step: 'a', change: 10 }, { step: 'b', change: 2 }, { step: 'c', change: 12 }] } });
   assert.equal(vc.option.series[1].data[1].itemStyle.color, th.tokens.bad);
-  assert.deepEqual(R.RISK_KINDS.map((k) => C.kindOf(k).family), ['risk', 'risk', 'risk', 'risk']);
+  assert.deepEqual(R.RISK_KINDS.map((k) => C.kindOf(k).family), ['risk', 'risk', 'risk', 'risk', 'risk', 'risk', 'risk']);
 });
 
 test('risk: the server\'s bins drawn as given, its VaR and ES and fitted normal; the grid preset\'s columns never summed', () => {
