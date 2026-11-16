@@ -13,6 +13,44 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 2.9.11.i5 — release notes
+
+*Released 2026-11-16.* **Setting up, building, starting and stopping Drishti is one Python command on Linux, macOS and Windows; the 41
+shell scripts are gone; one Java lookup, one install root, one place for the jars.** This release carries the Python commands only.
+
+The build of this release still reports its version as 2.9.11.g (the server's About answer, the console footer and the image tags). The
+release itself is tag `v2.9.11.i_5`; the next release, i6, takes the version from one place so the two always agree.
+
+## What changes for administrators
+
+- **The commands**: `python tools/drishti.py setup`, `build jar`, `start server|console|all|cluster`, `stop ...` and `status` (on Windows
+  `py tools\drishti.py ...`). Processes are tracked by pid files under the data folder and stopped only through them.
+- **Removed**: every `bin/*.sh`, `*.ps1` and `*.cmd` except `bin/drishti-node.sh`, `tools/windows` and `tools/rolling-upgrade.sh`
+  (use `python tools/rolling.py`).
+- **One install root**: `--home`, else `DRISHTI_HOME`, else `drishti.home` of the settings file, else the folder the tools are in. Another
+  install, or a relative path, is refused in words.
+- **One place for the jars**: the server jar is in `<home>/lib` (`DRISHTI_JAR` and the `target/` fallback are retired; `--jar` stays for a
+  one-off run); two server jars are refused. The site's jars (JDBC drivers, plugins) are in `<home>/lib/ext` (`DRISHTI_LIB_PATH` default,
+  moved from `<data>/lib`); jars in the old place are moved there once at start and Health says so.
+- **One Java lookup**: `--java`, `DRISHTI_JAVA_HOME`, `JAVA_HOME`, the PATH; older than 21 is refused. `lake demo` now honours
+  `DRISHTI_JAVA_HOME`.
+
+## What changes for readers
+
+- The Deployment and QA guide starts with *Prepare your environment*, the short way and a manual installation, the demo lake with the
+  parallel Java loader and an IDE first-open checklist.
+
+## Upgrading an install of i4
+
+1. Pull. 2. `python tools/drishti.py setup`. 3. `python tools/drishti.py build jar`. 4. Stop the old stack: the old scripts are gone, so
+`python tools/drishti.py stop cluster` (or `stop all`), which reads the same pid files. 5. Start with the new commands.
+
+## Known limits
+
+- `data load --store <postgres|redis|...>` still runs a bash script (Git Bash on Windows) until the Python second phase.
+- `start cluster` keeps a running copy of the jar at `<data>/stack/server.jar` (test convenience; a real install runs from `<home>/lib`).
+- Container images and systemd are unchanged (`bin/drishti-node.sh` is kept).
+
 # Drishti 2.9.11.i4 — release notes
 
 *Released 2026-11-15.* **Every path explicit and every setting in files you name; brokers optional; connectors read-only; honest answers

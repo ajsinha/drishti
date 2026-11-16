@@ -355,6 +355,10 @@ Open the console's address that `start all` prints, sign in as `drishti-dev-admi
 development account, never for a shared machine) and try `TRD MX-20000001`, `VAR BANK`, `EXP BANK`, `PREDEAL` and `PIVOT`
 ([DEPLOYMENT_AND_QA_GUIDE.md](docs/DEPLOYMENT_AND_QA_GUIDE.md) walks it on Windows, Linux and macOS, with what you should see).
 
+- **Install folder and jars**: the install root is `--home`, else `DRISHTI_HOME`, else the folder the tools are in; the server jar is in `<home>/lib`,
+  the site's jars in `<home>/lib/ext`; one Java lookup (`--java`, `DRISHTI_JAVA_HOME`, `JAVA_HOME`, the PATH; 21 or newer). The shell scripts of
+  earlier releases are gone.
+
 - **Starting and stopping**: `tools/drishti.py start`, `stop` and `status` ([CLI_REFERENCE.md](docs/guides/CLI_REFERENCE.md#setup-build-jar-start-stop-and-status-install-build-run-and-stop-drishti)),
   the same on Linux, macOS and Windows; every option, a cluster node by node with `--node`, the console pointed at a cluster's entry node with `--server`, a distribution with
   `--distribution` and a second console in one data folder with `--name`:

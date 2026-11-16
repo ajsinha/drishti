@@ -18,6 +18,10 @@
 
 ## Unreleased
 
+## 2.9.11.i5 (2026-11-16)
+
+The Python commands release. The build still reports its version as 2.9.11.g (the version from one place is the next release); the release is tag `v2.9.11.i_5`.
+
 - **Python commands instead of shell scripts: one way to set up, build, start and stop on Linux, macOS and Windows.** `python
   tools/drishti.py setup` prepares a machine (checks Python and Java 21 and says which java and why, shows the install folder, the data
   folder and the modules folder with where each came from, makes the data folder's layout and `~/drishti-envs` (Windows
@@ -38,7 +42,13 @@
   (JDBC drivers, plugins) are in `<home>/lib/ext` (`drishti.lib.path` default), kept on an upgrade: jars found in the old default
   `<data>/lib` are moved there once at start (listed in the moved list, Health says so), and a server jar in `lib/ext` is skipped.
 - **The deployment guide starts with "Prepare your environment"** (Windows and Linux side by side), then the short way and a manual
-  installation step by step; every command in it is a Python command.
+  installation step by step; every command in it is a Python command. The demo lake with the parallel Java loader and an IDE first-open
+  checklist are in it too; the run configurations `Build demo lakes --engine java` and `Build server jar` are added.
+- **Known limits.** `data load --store <postgres|redis|...>` still runs a bash script (Git Bash on Windows) until the Python second phase;
+  `start cluster` keeps a running copy of the jar at `<data>/stack/server.jar` (a convenience for tests; a real install runs from
+  `<home>/lib`); container images and systemd are unchanged (`bin/drishti-node.sh` is kept).
+- **Drill fixes.** The browser tests' server is ready when its modules are installed and recorded; the exposure explorer's test server
+  gets the VaR files' heap; the shell-twins test reads what git holds in `bin/`.
 
 - **One settings file for every launcher, and the deployment guides checked against the code.** Every IntelliJ and PyCharm run
   configuration passes `$USER_HOME$/drishti-envs/dev.ini`; `tools/drishti.py --settings` reads the same files as the server (several,
