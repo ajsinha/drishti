@@ -389,6 +389,16 @@ def test_the_keyboard_roles_and_announcements(browsers):
         await pg.keyboard.press("Escape")
         await settle(pg)
         assert await pg.locator(".dg-drawer").is_hidden()
+        # Escape right after a move: the drawer's pending follow (120 ms) must not open it again
+        await pg.click(cell(1, 1))
+        await pg.keyboard.press("e")
+        await pg.wait_for_selector(".dg-drawer .dg-ex-value")
+        reopened = await pg.evaluate("""() => {
+            const s = document.querySelector('.dg-scroll'), key = (k) => s.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }));
+            key('ArrowDown'); key('Escape');
+            return new Promise((r) => setTimeout(() => r(!document.querySelector('.dg-drawer').hidden || window.__harness.grid.exOpen), 400));
+        }""")
+        assert reopened is False
         await pg.keyboard.press("Shift+F10")
         await pg.wait_for_selector(".dg-menu[role='menu'] [role='menuitem']")
         await pg.keyboard.press("Escape")

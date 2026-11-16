@@ -94,6 +94,10 @@
   so the popover was drawn twice: the rows asked for or a comment being typed in the first one were lost (the flaky *rows behind a cell*
   and *comment on a cell* browser tests). The grid no longer re-explains the cell already explained, and the pivot keeps the rows open
   in a popover drawn again for the same cell.
+- **Escape closes Explain whatever came before.** Explain follows the focus 120 ms after a move; Escape right after a move (Shift+Arrow,
+  then Ctrl+C, then Escape) closed the drawer and the pending follow opened it again (the flaky *keyboard roles and announcements*
+  browser test). Closing Explain cancels the pending follow, and a follow never opens a closed Explain; the test now checks Escape
+  straight after a move.
 - **The PDFs follow their Markdown.** `docs/architecture/DISTRIBUTIONS.pdf` still showed the retired `bin/start-*.sh` commands and the
   `drishti-stack/` folder: it is generated from DISTRIBUTIONS.md again and joins the PDFs `tools/docs/md_to_pdf.py --check` keeps current;
   KERNEL_AND_MODULES, DEPLOYMENT_AND_QA_GUIDE and CLUSTER_GUIDE PDFs regenerated with this release's changes.

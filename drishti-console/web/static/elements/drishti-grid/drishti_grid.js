@@ -5897,7 +5897,7 @@
           if (this.ex && !this.ex.error && this.ex.row === f.row && this.ex.col === f.col) { return; }
           const win = this.doc.defaultView;
           win.clearTimeout(this.exTimer);
-          this.exTimer = win.setTimeout(() => this.explain(f.row, f.col), 120);
+          this.exTimer = win.setTimeout(() => { this.exTimer = 0; if (this.exOpen) { this.explain(f.row, f.col); } }, 120);
         } else if (this.exOpen && this.model.layout === 'panel') { this.closeExplain(); }
       }
       afterRange() { this.body.schedule(); renderStatus(this); }
@@ -5924,7 +5924,12 @@
         }, (err) => { if (this.ex === ex) { ex.loading = false; ex.error = err; renderExplainArea(this); } return null; });
       }
       explainFocused() { const f = this.model.navigator.focus; return f ? this.explain(f.row, f.col) : Promise.resolve(null); }
-      closeExplain() { this.ex = null; this.exOpen = false; renderExplainArea(this); }
+      closeExplain() {
+        if (this.exTimer) { this.doc.defaultView.clearTimeout(this.exTimer); this.exTimer = 0; }   // a pending follow never opens it again
+        this.ex = null;
+        this.exOpen = false;
+        renderExplainArea(this);
+      }
       say(text) { this.notes.say(text); }
       openColumnMenu(c, anchor) { openColumnMenu(this, c, anchor); }
       openCellMenu(r, c, at) { openCellMenu(this, r, c, at); }

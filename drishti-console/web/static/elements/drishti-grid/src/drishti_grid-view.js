@@ -214,7 +214,8 @@ export class Grid extends GridBase {
       if (this.ex && !this.ex.error && this.ex.row === f.row && this.ex.col === f.col) { return; }
       const win = this.doc.defaultView;
       win.clearTimeout(this.exTimer);
-      this.exTimer = win.setTimeout(() => this.explain(f.row, f.col), 120);
+      // the follow is dropped when Explain closed meanwhile (Escape right after a move): a closed drawer stays closed
+      this.exTimer = win.setTimeout(() => { this.exTimer = 0; if (this.exOpen) { this.explain(f.row, f.col); } }, 120);
     } else if (this.exOpen && this.model.layout === 'panel') { this.closeExplain(); }
   }
 
@@ -269,7 +270,12 @@ export class Grid extends GridBase {
    * Closes Explain.
    * @returns {void}
    */
-  closeExplain() { this.ex = null; this.exOpen = false; renderExplainArea(this); }
+  closeExplain() {
+    if (this.exTimer) { this.doc.defaultView.clearTimeout(this.exTimer); this.exTimer = 0; }   // a pending follow never opens it again
+    this.ex = null;
+    this.exOpen = false;
+    renderExplainArea(this);
+  }
 
   /**
    * Says something at the grid's foot (a live region).
