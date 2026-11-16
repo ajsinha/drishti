@@ -88,6 +88,9 @@ def test_genomics_shows_its_one_domain_by_name(backend, monkeypatch):
         reg.state = "off"
         assert _menus(_client(app).get("/t").text) == ["Views", "Create", "Admin", "Help"]  # no module hosted: no Domains
         reg.state = "active"
+        assert _menus(_client(app).get("/t").text) == ["Views", "Create", "Admin", "Help"]  # hosted, not of this distribution: not drawn
+        dist = app.state.editions.distribution         # a distribution draws only its own modules' menus (DISTRIBUTIONS.md, menus.hosted_shown)
+        monkeypatch.setattr(dist, "modules", [*dist.modules, "greeter"])           # the stand-in as a module of this distribution
         page = _client(app).get("/t").text
     assert _menus(page) == ["Views", "greeter", "Create", "Admin", "Help"]                   # the one hosted domain, by its own name
 
