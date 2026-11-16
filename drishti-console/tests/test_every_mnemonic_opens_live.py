@@ -43,6 +43,9 @@ def live_console(tmp_path_factory):
 
 #: kinds computed or kept on request, not loaded as demo data: their list may be empty on the demo (they must still open)
 MAY_BE_EMPTY = {"var-result", "var-official", "stress-scenario-pnl", "system-basket", "position"}
+#: kinds the VaR engine computes from its inputs: on a server with no VaR inputs (no demo lake) they refuse in words (DRS-1001, 404) rather
+#: answer an empty list that looks true (VAR_GUIDE; the source router passes the refusal on): the words each refusal says
+NO_INPUTS = {"POS": "no P&L vectors", "PORT": "no P&L vectors or scenario PVs"}
 #: vector-heavy inputs never listed whole (their contract's list: requires): bare, the server refuses with 400 naming the fields to narrow by
 NARROWED = {"SPV": "POSITION_ID", "PNLV": "POSITION_ID", "FXS": "CURRENCY", "XPATH": "TRADE_ID"}
 
@@ -73,6 +76,8 @@ def test_a_bare_mnemonic_opens_a_list_and_a_known_id_its_record(live_console):
             if status != 400 or NARROWED[w] not in body:
                 failed.append(f"{w}: listed whole, not refused naming {NARROWED[w]}: {status} {body[:160]}")
             continue
+        if w in NO_INPUTS and not os.environ.get("DRISHTI_DEMO_LAKE") and status == 404 and "DRS-1001" in body and NO_INPUTS[w] in body:
+            continue                                       # no VaR inputs on this server: refused, saying why
         if status != 200 or "DRS-" in body[:200]:
             failed.append(f"{w}: {status} {body[:160]}")
             continue

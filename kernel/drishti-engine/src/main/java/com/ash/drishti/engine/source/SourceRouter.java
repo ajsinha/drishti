@@ -1163,6 +1163,11 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
                 if (callers[0] != null) {
                     throw callers[0];
                 }
+                if (e instanceof DrishtiException refusal && !(e instanceof SourceFailure)) {
+                    // the source refused in words (a computed kind with no inputs yet, busy protection's 503 with Retry-After): passed on as
+                    // it is, never "failed reading every" with its reason lost (drill of 2026-11-15: bare POS and PORT on a server with no VaR data)
+                    throw refusal;
+                }
                 throw new SourceFailure(ErrorCode.SOURCE_FAILED, name, SourceFailure.reason(e, props.fetchTimeout()),
                         name + " failed reading every " + kind + detailOf(e), e);
             }
