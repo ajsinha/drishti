@@ -51,11 +51,9 @@ def stack(tmp_path_factory):
     tmp = tmp_path_factory.mktemp("fundsstack")
     work = tmp / "server"
     work.mkdir()
-    import shutil
-    from var_stack import shared_folder
-    folder = shared_folder(tmp_path_factory)                                        # the ONE shared read-only lake and its connector files
-    lake = folder / "delta"
-    shutil.copytree(folder / "connectors", work / "connectors")
+    from var_stack import shared_connectors, shared_folder, shared_lake
+    lake = shared_lake(tmp_path_factory, needs="funds/fund")                        # the ONE shared read-only lake and its connector files
+    shared_connectors(shared_folder(tmp_path_factory), work / "connectors")
     env = dict(os.environ, DRISHTI_PACKS="us-equities,funds", DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_DEMO_ENABLED="false",
                DRISHTI_SECURITY_ENABLED="false", DRISHTI_CONNECTORS_DIR=str(work / "connectors"), DRISHTI_DELTA_ROOT=str(lake),
                DRISHTI_DATA_DIR=str(work / "data"), DRISHTI_OFFLINE="true")

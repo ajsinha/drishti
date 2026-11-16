@@ -135,10 +135,10 @@ class Stack:
                    DRISHTI_NEWS_ENABLED=on, DRISHTI_NEWS_URL=base + "/rss/search", DRISHTI_YFINANCE_ENABLED=on, DRISHTI_YFINANCE_URL=base + "/v8/finance/chart",
                    DRISHTI_CONNECTORS_DIR=str(work / "connectors"), DRISHTI_GRAPH_LINK_BUDGET="3s")
         if self.lake:
-            import shutil
+            from var_stack import shared_connectors
             folder = Path(self.shared)                                                      # the ONE shared read-only lake (var_stack.shared_folder)
             lake = folder / "delta"
-            shutil.copytree(folder / "connectors", work / "connectors", dirs_exist_ok=True)
+            shared_connectors(folder, work / "connectors")
             env.update(DRISHTI_DELTA_ROOT=str(lake), DRISHTI_DATA_DIR=str(work / "data"))
             if self.offline:
                 env["DRISHTI_OFFLINE"] = "true"

@@ -94,6 +94,17 @@ def shared_folder(tmp_path_factory) -> Path:
     return Path(got["folder"])
 
 
+def shared_connectors(folder: Path, dest: Path) -> Path:
+    """The connector files of the shared lake's cache folder ``folder`` (:func:`shared_folder`) written to ``dest`` (a server's own
+    connectors folder; the cache is never written), each reading the shared lake where it is now (lake_cache.point_connectors: a lake
+    cached before that fix names the folder it was built in)."""
+    dest.mkdir(parents=True, exist_ok=True)
+    for f in sorted((folder / "connectors").glob("*.yaml")):
+        (dest / f.name).write_bytes(f.read_bytes())
+    _lake_cache().point_connectors(dest, folder / "delta")
+    return dest
+
+
 def shared_lake(tmp_path_factory, needs: str = "risk/scenario-pv") -> Path:
     """The ONE shared lake (``delta/``), read only; fails when it lacks ``needs`` (a table folder a file reads)."""
     lake = shared_folder(tmp_path_factory) / "delta"
