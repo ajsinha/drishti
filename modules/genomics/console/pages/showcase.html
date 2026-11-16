@@ -1,0 +1,79 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+{#- The showcase (docs/architecture/GENOMICS_SHOWCASE.md, the owner's choices: genomics A, the linked board; protein A, the workbench;
+    genomics C, the guided mode of A). Hosts only: each card is a drishti-chart or drishti-grid the page script fills from the module's API
+    (the server computes every figure, every selection is a filter of its next call); the visuals are the generic Elements kinds through
+    the module's library (elements/drishti-genomics). No table, canvas or svg of its own (conformance C2), no colour (C3). -#}
+{% extends "kernel/page.html" %}
+{% block assets %}<link rel="stylesheet" href="{{ (asset('css/drishti_genomics.css')) | u }}">{% endblock %}
+{% block page %}
+{% set board = route.id in ('board', 'gwas', 'guided') %}
+<div class="drishti-genomics drishti-showcase" data-showcase="{{ 'guided' if route.id == 'guided' else ('board' if board else 'bench') }}"
+     data-genomics-route="{{ route.id }}" data-genomics-id="{{ params.id or '' }}" data-genomics-api="{{ api('') }}"
+     data-genomics-base="{{ url_for('variants')|replace('/variants', '') }}" data-cohort="ONC-1"{% if route.id == 'guided' %} data-step="1"{% endif %}>
+{% if board %}
+{{ elements.header(("Guided: " if route.id == 'guided' else "") ~ "The cohort and its genes", "Fifteen hundred patients, every site tested against response; one selection runs through every card") }}
+<div class="drishti-showcase-bar" role="region" aria-label="The selection and its figures">
+  <span class="drishti-showcase-chip" data-showcase-selection aria-live="polite">Loading…</span>
+  <span class="drishti-showcase-clusters" data-showcase-clusters role="group" aria-label="Pick a cluster"></span>
+  <button type="button" class="btn-pill btn-ghost" data-showcase-clear hidden>Clear the selection</button>
+  <a class="btn-pill btn-accent" data-showcase-protein href="#" hidden>Open the protein workbench</a>
+  {% if route.id != 'guided' %}<a class="btn-pill btn-ghost" href="{{ url_for('guided') }}">Guided mode</a>{% else %}<a class="btn-pill btn-ghost" href="{{ url_for('board') }}">The whole board</a>{% endif %}
+</div>
+<dl class="drishti-showcase-figures" data-showcase-figures aria-live="polite">
+  <div><dt>Samples</dt><dd data-figure="samples">…</dd></div>
+  <div><dt>Respond</dt><dd data-figure="responseRate">…</dd></div>
+  <div><dt data-figure-label="altered">Gene altered</dt><dd data-figure="alteredRate">…</dd></div>
+  <div><dt>Response if altered</dt><dd data-figure="responseIfAltered">…</dd></div>
+  <div><dt>Response if not</dt><dd data-figure="responseIfNot">…</dd></div>
+</dl>
+{% if route.id == 'guided' %}
+<div class="drishti-showcase-guide" role="region" aria-label="The guided story">
+  <p class="drishti-showcase-say" data-say="1">“Twelve thousand sites tested against response to therapy. A few loci stand out; the tallest is on HLXK7.” <span class="ib-muted">Click the peak, then Next.</span></p>
+  <p class="drishti-showcase-say" data-say="2">“Who carries it? One column per patient. Pick the immune-hot cluster: the matrix narrows to those patients.” <span class="ib-muted">Click a cluster name, or drag a rectangle on the map.</span></p>
+  <p class="drishti-showcase-say" data-say="3">“Which changes matter? Each variant sits on the protein, coloured by what that exact change does in the laboratory.” <span class="ib-muted">Click a lollipop head for the records.</span></p>
+  <p class="drishti-showcase-say" data-say="4">“The same protein, the other direction: not reading nature's changes but writing our own.” <span class="ib-muted">Open the protein workbench.</span></p>
+  <span class="drishti-showcase-steps"><button type="button" class="btn-pill btn-ghost" data-guide="back">← Back</button><span data-guide-at aria-live="polite">Step 1 of 4</span><button type="button" class="btn-pill btn-accent" data-guide="next">Next →</button></span>
+</div>
+{% endif %}
+<div class="drishti-showcase-grid">
+  <section class="drishti-showcase-card drishti-showcase-wide" data-card="manhattan" data-steps="1"><div data-chart="manhattan" role="region" aria-label="The association plot"></div></section>
+  <section class="drishti-showcase-card drishti-showcase-wide" data-card="oncoprint" data-steps="2"><div data-chart="oncoprint" role="region" aria-label="The cohort matrix"></div></section>
+  <section class="drishti-showcase-card" data-card="map" data-steps="2"><div data-chart="map" role="region" aria-label="The map of samples"></div></section>
+  <section class="drishti-showcase-card" data-card="lollipop" data-steps="3 4"><div data-chart="lollipop" role="region" aria-label="The variants along the protein"></div></section>
+  <section class="drishti-showcase-card drishti-showcase-wide" data-card="records" data-steps="3">{{ elements.grid("records", "The records behind the last mark clicked") }}</section>
+</div>
+{% else %}
+{{ elements.header("Protein workbench: " ~ (params.id or ''), "Every position, every change, measured; then eight rounds of design climbing to the best protein") }}
+<div class="drishti-showcase-bar" role="region" aria-label="The selection">
+  <span class="drishti-showcase-chip" data-showcase-selection aria-live="polite">Loading…</span>
+  <span class="drishti-showcase-clusters" data-showcase-assays role="group" aria-label="The assay"></span>
+  <a class="btn-pill btn-ghost" data-showcase-cohort href="{{ url_for('board') }}">The cohort board</a>
+</div>
+<p class="drishti-showcase-note" data-showcase-note aria-live="polite"></p>
+<div class="drishti-showcase-grid">
+  <section class="drishti-showcase-card drishti-showcase-wide" data-card="dms"><div data-chart="dms" role="region" aria-label="The deep mutational scan"></div></section>
+  <section class="drishti-showcase-card" data-card="backbone"><div data-chart="backbone" role="region" aria-label="The structure"></div></section>
+  <section class="drishti-showcase-card" data-card="residue"><div data-chart="residue" role="region" aria-label="One residue's changes"></div></section>
+  <section class="drishti-showcase-card" data-card="landscape"><div data-chart="landscape" role="region" aria-label="The design campaign"></div></section>
+  <section class="drishti-showcase-card" data-card="rounds"><div data-chart="rounds" role="region" aria-label="Activity by round"></div></section>
+  <section class="drishti-showcase-card drishti-showcase-wide" data-card="leaderboard">{{ elements.grid("leaderboard", "The best designs up to the round shown") }}</section>
+  <section class="drishti-showcase-card drishti-showcase-wide" data-card="records">{{ elements.grid("records", "The records behind the last mark clicked") }}</section>
+</div>
+{% endif %}
+{{ elements.notice("Synthetic data (seed 20261116): every patient, gene, protein and design here is invented.", tone="info") }}
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/m/{{ module.id }}/elements/drishti-genomics/{{ module.version }}/drishti_genomics.js"></script><script src="{{ BASE }}/m/{{ module.id }}/elements/drishti-genomics/{{ module.version }}/drishti_protein.js"></script><script src="{{ asset('js/drishti_genomics-showcase.js') }}"></script>{% endblock %}

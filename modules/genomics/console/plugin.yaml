@@ -23,22 +23,60 @@ routes:
   - {id: gene, path: "/genes/{id}", page: explorer.html, function: GENE, title: "Gene"}
   - {id: cohorts, path: /cohorts, page: explorer.html, title: "Cohorts"}
   - {id: cohort, path: "/cohorts/{id}", page: explorer.html, function: COHORT, title: "Cohort"}
+  # the showcase (docs/architecture/GENOMICS_SHOWCASE.md): the linked board, its guided mode, the protein workbench
+  - {id: board, path: /showcase, page: showcase.html, title: "Cohort showcase"}
+  - {id: guided, path: /showcase/guided, page: showcase.html, title: "Cohort showcase, guided"}
+  - {id: gwas, path: "/gwas/{id}", page: showcase.html, function: GWAS, title: "Association"}
+  - {id: protein, path: "/proteins/{id}", page: showcase.html, function: PROTEIN, title: "Protein workbench"}
+  - {id: designs, path: "/designs/{id}", page: showcase.html, function: DESIGNS, title: "Design campaign"}
 menus:                       # the module's own top menu (Genomics)
   - {label: "Variants", route: variants, icon: list-ul, desc: "Every variant read from the VCF files"}
   - {label: "Genes", route: genes, icon: diagram-2, desc: "Genes and their variants along the protein"}
   - {label: "Cohorts", route: cohorts, icon: people, desc: "Cohorts, their samples and what they carry"}
+  - {label: "Cohort showcase", route: board, icon: grid-1x2, desc: "The linked board: association, who carries what, the map of samples, the variants on the protein"}
+  - {label: "Protein workbench", route: protein, params: {id: HLXK7}, icon: bezier2, desc: "The scan of every change, the structure, eight design rounds and the leaderboard"}
 home:
   cards:                     # Home's quick cards
+    - {title: "The cohort showcase: one selection through every card", route: board, cmd: "GWAS RESPONSE"}
+    - {title: "The protein workbench: read and rewrite HLXK7", route: protein, params: {id: HLXK7}, cmd: "PROTEIN HLXK7"}
     - {title: "A gene: its variants along the protein", route: gene, params: {id: TP53}, cmd: "GENE TP53"}
     - {title: "A cohort: samples and variants", route: cohort, params: {id: COH-A}, cmd: "COHORT COH-A"}
     - {title: "A variant and its carriers", route: variant, params: {id: HX-A001}, cmd: "VARIANT HX-A001"}
 visuals:                     # the module's own visual types (the custom-visual SDK): kinds of drishti-chart's registry, from its library
-                             # elements/<library>/<file>, served at /m/genomics/elements/<library>/<module version>/<file>
+                             # elements/<library>/<file>, served at /m/genomics/elements/<library>/<module version>/<file>; each is glue over a
+                             # generic drishti-chart kind (the drawing is the generic library's)
   - kind: genomics.lollipop
     library: drishti-genomics
     file: drishti_genomics.js
     title: Variant lollipop
-    summary: "A protein's variants: a stem and head at each amino acid position, the head's height the carriers, its colour the impact, the protein's domains as bands"
+    summary: "A protein's variants on drishti-chart's lollipop: the head's height the carriers, its colour the impact or the scan's measured effect, the protein's domains as bands"
+  - kind: genomics.manhattan
+    library: drishti-genomics
+    file: drishti_genomics.js
+    title: Association plot
+    summary: "Sites against −log10 p on a scatter with the chromosomes as segments, the genome-wide line and the tallest peaks named by gene"
+  - kind: genomics.oncoprint
+    library: drishti-genomics
+    file: drishti_genomics.js
+    title: Cohort matrix
+    summary: "Who carries what: a heatmap of category cells (the alteration of each gene in each sample, in the server's order) with clinical tracks"
+  - kind: protein.dms
+    library: drishti-genomics
+    file: drishti_protein.js
+    title: Mutational scan
+    summary: "Every position by every change: a diverging heatmap with the fold, burial and active-site tracks"
+  - kind: protein.backbone
+    library: drishti-genomics
+    file: drishti_protein.js
+    title: Backbone trace
+    summary: "The structure as drishti-chart's 3D trace, coloured by the mean effect, the active site and the selection drawn larger; flat without WebGL"
+  - kind: protein.landscape
+    library: drishti-genomics
+    file: drishti_protein.js
+    title: Design landscape
+    summary: "Designs over the fitness surface, round by round with Play (drishti-chart frames), the natural protein marked"
 ai:
   tools:                     # what the assistant may offer (a description; the console calls nothing of the module)
     - {name: genomics_gene, description: "Opens a gene's variants along its protein (the genomics module)", route: gene, params: {id: TP53}}
+    - {name: genomics_showcase, description: "Opens the cohort showcase: association, cohort matrix, map of samples, variants on the protein", route: board}
+    - {name: genomics_protein, description: "Opens the protein workbench of a gene's protein: scan, structure, design rounds", route: protein, params: {id: HLXK7}}

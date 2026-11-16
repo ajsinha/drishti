@@ -93,7 +93,7 @@
     const wt = spec.wildType;
     const s = Object.assign({}, spec, { kind: 'scatter', id: spec.id || 'DESIGN_ID', x: { field: 'EMB_X', title: 'Design map (precomputed)' }, y: { field: 'EMB_Y', title: '' },
       size: { field: 'ACTIVITY', title: 'Activity (× natural)' }, tone: 'link', opacity: 0.8,
-      frames: { field: 'ROUND', label: 'Round', mode: spec.trail === false ? 'only' : 'upto', interval: spec.interval || 900, at: spec.round, play: true },
+      frames: { field: 'ROUND', label: 'Round', mode: spec.trail === false ? 'only' : 'upto', interval: spec.interval || 900, at: spec.round, play: true, playText: 'Play the rounds' },
       surface: spec.field && spec.field.rows ? { rows: spec.field.rows, cell: spec.field.cell || [1, 1], opacity: 0.45 } : undefined,
       annotations: (spec.annotations || []).concat(wt ? [{ type: 'point', x: C.num(wt.EMB_X), y: C.num(wt.EMB_Y), label: 'natural', tone: 'warn' }] : []) });
     const b = C.buildScatter(s, rows, env);

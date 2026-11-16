@@ -33,7 +33,7 @@ api: {prefix: genomics}
 java: {jars: [genomics.jar], lib: [], entry: org.helixlab.genomics.GenomicsModule, spring: [org.helixlab.genomics.ModuleConfig]}
 console: {plugin: console/plugin.yaml, menus: [genomics]}
 data: {needs: data/needs.yaml}
-functions: [{word: VARIANT}, {word: GENE}, {word: COHORT}]
+functions: [{word: VARIANT}, {word: GENE}, {word: COHORT}, {word: GWAS}, {word: PROTEIN}, {word: DESIGNS}]
 docs:
   readme: docs/README.md
   help: docs/help.yaml

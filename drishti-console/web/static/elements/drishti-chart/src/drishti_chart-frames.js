@@ -31,6 +31,7 @@ import { num } from './drishti_chart-data.js';
  * @property {number} [interval=900] milliseconds between frames while playing
  * @property {('only'|'upto')} [mode='only'] only: the rows of the frame; upto: the rows of every frame up to it
  * @property {string} [label] the word before the frame's value ("Round")
+ * @property {string} [playText='Play'] the Play button's words ("Play the rounds")
  */
 
 /**
@@ -108,6 +109,7 @@ export class FrameBar {
     this.index = Math.max(0, i);
     const still = reducedMotion(this.win);
     this.playBtn.hidden = frames.play === false;
+    this.playBtn.textContent = '▶ ' + (frames.playText || 'Play');
     this.playBtn.disabled = still;
     this.playBtn.title = still ? 'Play is off: this system asks for reduced motion (the slider steps the frames)' : 'Play the frames in order';
     this.slider.max = String(values.length - 1);
@@ -156,7 +158,7 @@ export class FrameBar {
    */
   stop() {
     if (this.timer) { this.win.clearInterval(this.timer); this.timer = 0; }
-    this.playBtn.textContent = '▶ Play';
+    this.playBtn.textContent = '▶ ' + ((this.frames && this.frames.playText) || 'Play');
     this.playBtn.setAttribute('aria-pressed', 'false');
   }
 }

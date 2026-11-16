@@ -1008,6 +1008,7 @@
         this.index = Math.max(0, i);
         const still = reducedMotion(this.win);
         this.playBtn.hidden = frames.play === false;
+        this.playBtn.textContent = '▶ ' + (frames.playText || 'Play');
         this.playBtn.disabled = still;
         this.playBtn.title = still ? 'Play is off: this system asks for reduced motion (the slider steps the frames)' : 'Play the frames in order';
         this.slider.max = String(values.length - 1);
@@ -1038,7 +1039,7 @@
       }
       stop() {
         if (this.timer) { this.win.clearInterval(this.timer); this.timer = 0; }
-        this.playBtn.textContent = '▶ Play';
+        this.playBtn.textContent = '▶ ' + ((this.frames && this.frames.playText) || 'Play');
         this.playBtn.setAttribute('aria-pressed', 'false');
       }
     }

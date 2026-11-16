@@ -17,8 +17,88 @@
 .drishti-genomics {
     display: flex;
     flex-direction: column;
-    gap: var(--drishti-space-3);
+    gap: var(--drishti-space-3, 12px);
 }
 .drishti-genomics-chart {
     min-height: 340px;
+}
+/* The showcase (showcase.html): the board's and the workbench's cards in two columns, one on a phone; spacing and the theme's tokens only. */
+.drishti-showcase-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--drishti-space-2, 8px);
+}
+.drishti-showcase-clusters {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: var(--drishti-space-1, 4px);
+}
+.drishti-showcase-chip {
+    font-weight: 600;
+}
+.drishti-showcase-figures {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: var(--drishti-space-2, 8px);
+    margin: 0;
+}
+.drishti-showcase-figures > div {
+    border: 1px solid var(--d-border);
+    border-radius: var(--d-radius, 10px);
+    padding: var(--drishti-space-2, 8px) var(--drishti-space-3, 12px);
+    background: var(--d-surface);
+}
+.drishti-showcase-figures dt {
+    color: var(--d-muted);
+    font-weight: 400;
+}
+.drishti-showcase-figures dd {
+    margin: 0;
+    font-size: 1.5em;
+    font-variant-numeric: tabular-nums;
+}
+.drishti-showcase-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--drishti-space-3, 12px);
+}
+.drishti-showcase-card {
+    min-width: 0;
+}
+.drishti-showcase-card[hidden],
+.drishti-showcase-say[hidden] {
+    display: none;
+}
+.drishti-showcase-wide {
+    grid-column: 1 / -1;
+}
+.drishti-showcase-guide {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--drishti-space-2, 8px);
+}
+.drishti-showcase-say {
+    margin: 0;
+    font-size: 1.15em;
+    max-width: 70ch;
+}
+.drishti-showcase-steps {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--drishti-space-2, 8px);
+}
+.drishti-showcase-note:empty {
+    display: none;
+}
+@media (max-width: 900px) {
+    .drishti-showcase-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+/* the guided mode is the phone's way through the board: one step's cards at a time, full width */
+.drishti-showcase[data-showcase="guided"] .drishti-showcase-grid {
+    grid-template-columns: minmax(0, 1fr);
 }
