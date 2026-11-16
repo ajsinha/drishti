@@ -30,6 +30,11 @@ public final class KindListeners {
     private final Map<EntityRef, List<Consumer<EntityDocument>>> byEntity = new ConcurrentHashMap<>();
     private final Map<String, List<Consumer<EntityDocument>>> byKind = new ConcurrentHashMap<>();
 
+    /** No listeners yet: a pushing source makes one and hands entities to it as they arrive. */
+    public KindListeners() {
+        // the two maps start empty; entity and kind add to them
+    }
+
     /** Listens to one entity; the entry goes with its last listener. */
     public Subscription entity(EntityRef ref, Consumer<EntityDocument> listener) {
         return add(byEntity, ref, listener);
