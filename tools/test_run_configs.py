@@ -57,6 +57,9 @@ class RunConfigs(unittest.TestCase):
             if f in PYTHON:                                  # PyCharm's project, drishti-console/: the repository root is $PROJECT_DIR$/..
                 self.assertEqual(o.get("WORKING_DIRECTORY"), "$PROJECT_DIR$/..", f"{f.name}: runs from the repository root")
                 self.assertNotIn("$PROJECT_DIR$/tools", f.read_text(encoding="utf-8"), f"{f.name}: PyCharm's $PROJECT_DIR$ is drishti-console")
+            elif f.name == "Drishti build server jar.run.xml":  # IntelliJ's build: the one way, drishti.py build jar (the jar into lib/)
+                self.assertEqual(o.get("WORKING_DIRECTORY"), "$PROJECT_DIR$", f.name)
+                self.assertEqual(o.get("SCRIPT_NAME"), "$PROJECT_DIR$/tools/drishti.py", f.name)
             else:                                            # the distributions' consoles beside the servers (run-configs/, the repository root)
                 self.assertTrue(f.name.startswith("Drishti console ("), f"{f.name}: a Python configuration belongs in drishti-console/run-configs")
                 self.assertEqual(o.get("WORKING_DIRECTORY"), "$PROJECT_DIR$", f.name)
