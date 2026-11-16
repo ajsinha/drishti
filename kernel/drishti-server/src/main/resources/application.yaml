@@ -212,6 +212,8 @@ drishti:
     dir: ${DRISHTI_OVERRIDES_DIR:}   # the override folders (commas; the right-most wins; absolute): any module file but module.yaml, the connector templates and code (java/, lib/, python/, engines/, .jar/.py/.class/.so/.dll and scripts, links); the first folder is the module's id; read at start into the view <data>/overrides/modules, listed in Admin -> Health; empty: none
   lib:                               # the shared lib folder, as Tomcat's lib/ (docs/guides/ADMIN_GUIDE.md): every jar in it is loaded at start into one lib class loader under the kernel's
     path: ${DRISHTI_LIB_PATH:${drishti.home}/lib/ext}   # the SITE's jars (JDBC drivers, connector plugins, a company's own libraries), kept on an upgrade; <home>/lib itself holds Drishti's own jar; seen by connectors and modules, never replacing a kernel class; a change needs a restart; jars in <data>/lib (the previous default) are moved here once
+  launcher:                          # the Python launcher's stop (docs/DEPLOYMENT_AND_QA_GUIDE.md section 7.1; POST /launcher/stop)
+    stop-key: ${DRISHTI_STOP_KEY:}   # the key `drishti.py start server` makes and keeps in the pid file; `stop server` sends it from this machine to stop gracefully on every OS; empty: no such endpoint (404)
   access:                            # the access model's files (docs/architecture/ACCESS_MODEL.md): the access registry reads them, nothing else does
     dir: ${DRISHTI_ACCESS_DIR:${drishti.config.dir}/access}     # licence.yaml (none: the development licence, every module), lenses.yaml, roles.yaml, assignments.yaml; none is needed
   metrics:                           # the platform metrics and alerts (docs/guides/OPERATIONS_GUIDE.md section 13.6; CLUSTER_GUIDE.md 8.3, 8.5)

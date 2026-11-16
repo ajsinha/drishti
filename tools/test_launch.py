@@ -180,7 +180,7 @@ def test_a_stale_pid_file_is_removed_and_nothing_is_killed(tmp_path):
 
 
 def test_a_process_that_is_not_drishtis_is_never_stopped(tmp_path):
-    """Our own pid with a server's pid file: alive, but its command line has no -jar, so it is not ours."""
+    """Our own pid with a server's pid file: alive, but its command line has no -Ddrishti.data.dir=, so it is not ours."""
     f = tmp_path / "server.pid"
     procs.write_pid(f, os.getpid())
     with mock.patch.object(procs, "terminate") as kill:
@@ -188,19 +188,40 @@ def test_a_process_that_is_not_drishtis_is_never_stopped(tmp_path):
     kill.assert_not_called()
 
 
-def test_windows_alive_terminate_and_spawn(tmp_path):
-    out = '"java.exe","4242","Console","1","123,456 K"\n'
-    with mock.patch.object(procs, "windows", lambda: True), mock.patch.object(procs.subprocess, "run",
-                                                                      return_value=subprocess.CompletedProcess([], 0, out, "")) as run:
-        assert procs.alive(4242, procs.SERVER_MARK) and not procs.alive(4242, procs.CONSOLE_MARK)
-        assert run.call_args[0][0][:3] == ["tasklist", "/FI", "PID eq 4242"]
-        procs.terminate(4242)
-        assert run.call_args[0][0] == ["taskkill", "/PID", "4242"]
-        procs.terminate(4242, force=True)
+def _cp(out: str, code: int = 0) -> subprocess.CompletedProcess:
+    return subprocess.CompletedProcess([], code, out, "")
+
+
+def test_windows_identity_is_the_full_command_line_never_the_image_name(tmp_path):
+    """Windows: a process is ours only when its command line (Get-CimInstance through PowerShell, else wmic) holds the mark and the pid file's
+    data folder: another JVM that took the same process id is never taken for ours."""
+    ours = r'"C:\jdk\bin\java.exe" -Ddrishti.data.dir=C:\d\data -jar C:\d\lib\drishti-server-1-exec.jar'
+    other = r'"C:\jdk\bin\java.exe" -jar C:\tools\jenkins.jar'
+    with mock.patch.object(procs, "windows", lambda: True), mock.patch.object(procs.subprocess, "run", return_value=_cp(ours + "\r\n")) as run:
+        assert procs.alive(4242, procs.SERVER_MARK, procs.SERVER_MARK + r"C:\d\data")
+        assert run.call_args[0][0][0] == "powershell" and "ProcessId=4242" in run.call_args[0][0][-1]
+        assert not procs.alive(4242, procs.SERVER_MARK, procs.SERVER_MARK + r"C:\other\data")      # our JVM, another data folder
+        assert not procs.alive(4242, procs.CONSOLE_MARK)
+    with mock.patch.object(procs, "windows", lambda: True), mock.patch.object(procs.subprocess, "run", return_value=_cp(other)):
+        assert not procs.alive(4242, procs.SERVER_MARK)                                              # a reused pid: another JVM
+    with mock.patch.object(procs, "windows", lambda: True), mock.patch.object(procs.subprocess, "run", return_value=_cp("")):
+        assert not procs.alive(4242, procs.SERVER_MARK)                                              # no such process
+    calls = []
+
+    def no_powershell(cmd, **kw):
+        calls.append(cmd[0])
+        if cmd[0] == "powershell":
+            raise FileNotFoundError("powershell")
+        return _cp("\r\n\r\nCommandLine=" + ours + "\r\n\r\n")
+    with mock.patch.object(procs, "windows", lambda: True), mock.patch.object(procs.subprocess, "run", side_effect=no_powershell):
+        assert procs.alive(4242, procs.SERVER_MARK) and calls == ["powershell", "wmic"]
+
+
+def test_windows_terminate_only_forces_and_spawn_detaches(tmp_path):
+    with mock.patch.object(procs, "windows", lambda: True), mock.patch.object(procs.subprocess, "run", return_value=_cp("")) as run:
+        assert procs.terminate(4242) is False and not run.called                 # no plain taskkill: it cannot reach a windowless process
+        assert procs.terminate(4242, force=True) is True
         assert run.call_args[0][0] == ["taskkill", "/F", "/PID", "4242"]
-    with mock.patch.object(procs, "windows", lambda: True), mock.patch.object(procs.subprocess, "run",
-                                                                      return_value=subprocess.CompletedProcess([], 0, "INFO: No tasks", "")):
-        assert not procs.alive(4242, procs.SERVER_MARK)
     with mock.patch.object(procs, "windows", lambda: True), mock.patch.object(procs.subprocess, "Popen") as popen:
         procs.spawn(["a-server", "--port=1"], tmp_path, {}, log=tmp_path / "logs" / "s.out")
         kw = popen.call_args.kwargs
@@ -210,6 +231,73 @@ def test_windows_alive_terminate_and_spawn(tmp_path):
         if os.name != "nt":
             procs.spawn(["a-server"], tmp_path, {}, log=tmp_path / "s.out")
             assert popen.call_args.kwargs["start_new_session"] is True
+
+
+def test_windows_stop_asks_over_http_first_then_forces_after_the_timeout(tmp_path):
+    f = tmp_path / "run" / "server.pid"
+    procs.write_pid(f, 4242, port=18999, data=r"C:\d\data", stop="k3y")
+    if os.name != "nt":
+        assert (f.stat().st_mode & 0o777) == 0o600                               # it holds the stop key
+    events = []
+    with mock.patch.object(procs, "windows", lambda: True), \
+            mock.patch.object(procs, "alive", lambda pid, mark, also="": events.append(("alive", also)) or True), \
+            mock.patch.object(procs, "ask_to_stop", lambda fields: events.append(("ask", fields["stop"], fields["port"])) or True), \
+            mock.patch.object(procs, "running", side_effect=[True, True, False, False]), \
+            mock.patch.object(procs, "terminate") as kill, mock.patch.object(procs.time, "sleep"):
+        procs.stop_pid_file(f, "server", procs.SERVER_MARK, 5)
+    assert events == [("alive", procs.SERVER_MARK + r"C:\d\data"), ("ask", "k3y", "18999")]
+    kill.assert_not_called()                                                         # it stopped by itself
+    assert not f.exists()
+    procs.write_pid(f, 4242, port=18999, data="d", stop="k3y")
+    with mock.patch.object(procs, "windows", lambda: True), mock.patch.object(procs, "alive", return_value=True), \
+            mock.patch.object(procs, "ask_to_stop", return_value=True), mock.patch.object(procs, "running", return_value=True), \
+            mock.patch.object(procs.subprocess, "run", return_value=_cp("")) as run, mock.patch.object(procs.time, "sleep"), \
+            mock.patch.object(procs.time, "monotonic", side_effect=[0.0, 0.0, 99.0]):
+        procs.stop_pid_file(f, "server", procs.SERVER_MARK, 5)
+    assert run.call_args[0][0] == ["taskkill", "/F", "/PID", "4242"]                # forced after the timeout
+    procs.write_pid(f, 4242, port=18999, data="d")                                  # no key (an older launcher): forced at once on Windows
+    with mock.patch.object(procs, "windows", lambda: True), mock.patch.object(procs, "alive", return_value=True), \
+            mock.patch.object(procs, "running", return_value=True), mock.patch.object(procs.subprocess, "run", return_value=_cp("")) as run, \
+            mock.patch.object(procs.time, "sleep"), mock.patch.object(procs.urllib.request, "urlopen") as http:
+        procs.stop_pid_file(f, "server", procs.SERVER_MARK, 5)
+    http.assert_not_called()
+    assert run.call_args[0][0] == ["taskkill", "/F", "/PID", "4242"]
+
+
+def test_the_stop_request_carries_the_pid_files_key_to_this_machine_only(tmp_path):
+    seen = {}
+
+    class Answer:
+        status = 202
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+    def urlopen(req, timeout):
+        seen.update(url=req.full_url, method=req.get_method(), key=req.get_header(procs.STOP_HEADER.capitalize()))
+        return Answer()
+    with mock.patch.object(procs.urllib.request, "urlopen", urlopen):
+        assert procs.ask_to_stop({"port": "18480", "stop": "k3y"})
+    assert seen == {"url": "http://127.0.0.1:18480/launcher/stop", "method": "POST", "key": "k3y"}
+    assert not procs.ask_to_stop({"port": "18480"}) and not procs.ask_to_stop({"stop": "k"})
+    env = {}
+    key = procs.stop_key(env)
+    assert env[procs.STOP_ENV] == key and len(key) >= 40 and procs.stop_key({}) != key
+
+
+def test_a_reused_pid_on_linux_is_never_stopped(tmp_path):
+    """POSIX: the identity is /proc/<pid>/cmdline; our own test process holds no -Ddrishti.data.dir=, so its pid in a server's pid file is
+    not a Drishti server and nothing is signalled or asked."""
+    f = tmp_path / "server.pid"
+    procs.write_pid(f, os.getpid(), port=1, data=str(tmp_path), stop="k")
+    with mock.patch.object(procs, "terminate") as kill, mock.patch.object(procs, "ask_to_stop") as ask:
+        procs.stop_pid_file(f, "server", procs.SERVER_MARK, 1)
+    kill.assert_not_called()
+    ask.assert_not_called()
+    assert not f.exists()
 
 
 def test_windows_builds_with_mvnw_cmd_through_cmd(tmp_path):

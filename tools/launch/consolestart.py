@@ -123,7 +123,8 @@ def start(a, env: dict | None = None) -> int:
         warn(f"DEVELOPMENT secrets in use (NOT FOR PRODUCTION): {' '.join(dev)}. Put your own in an --env-file for anything shared.")
     (data / "run").mkdir(parents=True, exist_ok=True)
     cmd = [py, str(home / "drishti-console" / "run_drishti_web.py"), *(["--settings", settings] if settings else []), f"--server.port={port}"]
-    fields = dict(port=port, url=url, health=health, distribution=dist or "from-server")
+    # the launcher's stop key: the console answers POST /launcher/stop with it (core/launcher_stop.py), the same stop on every OS
+    fields = dict(port=port, url=url, health=health, distribution=dist or "from-server", **{procs.STOP_FIELD: procs.stop_key(env)})
     if a.background:
         proc = procs.spawn(cmd, home, env, log=log)
         procs.write_pid(pid_file, proc.pid, **fields)

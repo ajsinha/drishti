@@ -698,7 +698,7 @@ environment. This section is the one place for the full list of options; `--help
 |---|---|
 | `start server` | finds Java 21 or newer ([the one order](#15-environment-variables)) and the server jar in `<drishti>/lib`, sets the temporary folder, the memory settings and the logs under the data folder, starts the server (in the foreground, or in the background with `--background`), waits for `/actuator/health` and prints the address other machines open. With `--node` it starts a node of a cluster |
 | `start console` | finds the console's Python (`DRISHTI_PYTHON`, else `drishti-console/.venv`, made on first use), points the console at the server (or a cluster's entry nodes), waits for `/healthz` and prints the address people open |
-| `stop server` | stops the server (or one node, or every node) **by its pid file only**, never by name: a graceful stop first (SIGTERM; on Windows `taskkill /PID`), forced after a timeout (`taskkill /F /PID`); removes the pid file |
+| `stop server` | stops the server (or one node, or every node) **by its pid file only**, never by name, and only when the process with that id is ours (its full command line holds `-Ddrishti.data.dir=` with the pid file's data folder; on Windows read with PowerShell's `Get-CimInstance`, else `wmic`), so a reused process id never stops another JVM: the server is asked to stop itself over HTTP (`POST /launcher/stop` from this machine with the key of the pid file, the same graceful stop on every OS), forced after a timeout (SIGKILL; Windows `taskkill /F /PID`); removes the pid file. `stop console` is the same |
 | `stop console` | the same for the console |
 | `status` | the resolved install, data and modules folders and Java, each with where it came from; then every process this machine started with `drishti.py start`: pid, running or a stale pid, port, whether its health URL answers, its distribution and LAN address |
 | `start all` | one server and one console on this machine, in the background (the server, then the console) |
@@ -864,6 +864,8 @@ server: stopped (pid 1974114)
 
 A start of something already running says so and exits `3`; a stop of something not running says so and exits `0`; a pid file whose
 process is gone (after a reboot, a crash) is a **stale pid**: `status` shows it, and the next stop or start removes it and says so.
+Each pid file (mode 600) holds the stop key the launcher made for that process (`stop=`); a process started by an older launcher has
+none: on Linux and macOS it gets SIGTERM, on Windows (where a background process has no window or console to signal) it is forced at once.
 
 ### 7.4 The secrets in an env-file
 

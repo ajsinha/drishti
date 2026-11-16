@@ -15,15 +15,21 @@
 """What ``drishti.py start``, ``stop`` and ``status`` share: the env-file, this machine's real address, pid files, health, starting a
 process in the background and stopping one by its pid file. Standard library only; Linux, macOS and Windows alike.
 
-Processes are tracked by pid files under the data folder (``<data>/run/server[-<node>].pid``, ``<data>/run/console[-<name>].pid``): the
-first line the process id, then ``key=value`` lines (port, url, health, data, distribution). A process is stopped ONLY through its pid file
-and only when the process with that id is still Drishti's (its command line holds the mark: ``-jar`` for a server, ``run_drishti_web.py``
-for a console; on Windows its image is java or python): never by name or pattern. Windows: no fork, a background process gets its own
-process group (``CREATE_NEW_PROCESS_GROUP``) and no window; a stop asks with ``taskkill /PID`` and forces with ``taskkill /F /PID`` after
-the timeout (both programs ship with Windows)."""
+Processes are tracked by pid files under the data folder (``<data>/run/server[-<node>].pid``, ``<data>/run/console[-<name>].pid``, mode
+600): the first line the process id, then ``key=value`` lines (port, url, health, data, distribution, stop). A process is stopped ONLY
+through its pid file and only when the process with that id is still OURS: its full command line (``/proc/<pid>/cmdline`` or ``ps``; on
+Windows ``Get-CimInstance Win32_Process`` through PowerShell, else ``wmic``) holds the mark (``-Ddrishti.data.dir=`` for a server, with
+the pid file's data folder; ``run_drishti_web.py`` for a console), so a reused process id never stops another JVM; never by name or pattern.
+
+The stop is the same on every operating system: the process is asked over HTTP, ``POST http://127.0.0.1:<port>/launcher/stop`` with the
+key the launcher made at start (``DRISHTI_STOP_KEY``, kept in the pid file as ``stop=``), and shuts down gracefully by itself; after the
+timeout it is forced (SIGKILL; Windows ``taskkill /F /PID``). On POSIX a process the key does not reach (started before the key existed) is
+sent SIGTERM; on Windows, where a background process has no console and no window (``CREATE_NEW_PROCESS_GROUP``, ``CREATE_NO_WINDOW``)
+and ``taskkill`` without ``/F`` cannot reach it, such a process is forced at once."""
 from __future__ import annotations
 
 import os
+import secrets
 import signal
 import socket
 import subprocess
@@ -40,8 +46,13 @@ import hostaddr  # noqa: E402
 
 DEFAULT_SERVER_PORT = 18480
 DEFAULT_CONSOLE_PORT = 17480
-SERVER_MARK = "-jar"
+SERVER_MARK = "-Ddrishti.data.dir="          # every server the launcher starts names its data folder on its command line
 CONSOLE_MARK = "run_drishti_web.py"
+#: the launcher's stop (docs/DEPLOYMENT_AND_QA_GUIDE.md section 7.1): the key's variable, the pid file's field, the path and the header
+STOP_ENV = "DRISHTI_STOP_KEY"
+STOP_FIELD = "stop"
+STOP_PATH = "/launcher/stop"
+STOP_HEADER = "X-Drishti-Stop-Key"
 #: Windows process creation flags (subprocess has them only on Windows)
 CREATE_NEW_PROCESS_GROUP = 0x00000200
 CREATE_NO_WINDOW = 0x08000000
@@ -155,21 +166,65 @@ def read_pid(file) -> tuple:
 
 
 def write_pid(file, pid: int, **fields) -> None:
+    """The pid file, readable by its owner only (it holds the stop key)."""
     p = Path(file)
     p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(f"{pid}\n" + "".join(f"{k}={v}\n" for k, v in fields.items()), encoding="utf-8")
+    old = os.umask(0o077)
+    try:
+        p.write_text(f"{pid}\n" + "".join(f"{k}={v}\n" for k, v in fields.items()), encoding="utf-8")
+    finally:
+        os.umask(old)
+    try:
+        p.chmod(0o600)
+    except OSError:
+        pass
+
+
+def stop_key(env: dict) -> str:
+    """A fresh key for the launcher's stop, put into the process's environment (``DRISHTI_STOP_KEY``); the caller keeps it in the pid file."""
+    key = secrets.token_urlsafe(32)
+    env[STOP_ENV] = key
+    return key
+
+
+def ask_to_stop(fields: dict) -> bool:
+    """Asks the process of a pid file to stop itself over HTTP (``POST /launcher/stop`` on 127.0.0.1 with the key of the pid file); True when
+    it took the request (202)."""
+    key, port = fields.get(STOP_FIELD), fields.get("port")
+    if not key or not port:
+        return False
+    req = urllib.request.Request(f"http://127.0.0.1:{int(port)}{STOP_PATH}", data=b"", method="POST", headers={STOP_HEADER: key})
+    try:
+        with urllib.request.urlopen(req, timeout=10) as r:
+            return r.status == 202
+    except Exception:  # noqa: BLE001 - refused, not answering, gone: not asked
+        return False
+
+
+def _windows_command_line(pid: int) -> str | None:
+    """The full command line of a Windows process (PowerShell's Get-CimInstance, else wmic; both ship with Windows), or None when there is
+    no such process or it cannot be read (then it is never taken for ours)."""
+    queries = (["powershell", "-NoProfile", "-NonInteractive", "-Command",
+                f"(Get-CimInstance Win32_Process -Filter 'ProcessId={int(pid)}').CommandLine"],
+               ["wmic", "process", "where", f"ProcessId={int(pid)}", "get", "CommandLine", "/value"])
+    for q in queries:
+        try:
+            r = subprocess.run(q, capture_output=True, text=True, timeout=30)
+        except (OSError, subprocess.SubprocessError):
+            continue                                     # not on this machine: the next way
+        if r.returncode != 0:
+            continue
+        out = r.stdout.strip()
+        if q[0] == "wmic":
+            out = out.partition("CommandLine=")[2].strip() if "CommandLine=" in out else ""
+        return out or None
+    return None
 
 
 def _command_line(pid: int) -> str | None:
-    """The process's command line (POSIX), its image name (Windows), or None when no such process runs."""
+    """The process's full command line, or None when no such process runs (or it cannot be read)."""
     if windows():
-        try:
-            out = subprocess.run(["tasklist", "/FI", f"PID eq {pid}", "/FO", "CSV", "/NH"], capture_output=True, text=True, timeout=15).stdout
-        except (OSError, subprocess.SubprocessError):
-            return None
-        line = next((x for x in out.splitlines() if x.startswith('"')), "")
-        parts = [c.strip('"') for c in line.split('","')]
-        return parts[0] if len(parts) > 1 and parts[1].strip('"') == str(pid) else None
+        return _windows_command_line(pid)
     try:
         os.kill(pid, 0)
     except ProcessLookupError:
@@ -186,49 +241,70 @@ def _command_line(pid: int) -> str | None:
             return None
 
 
-def alive(pid, mark: str) -> bool:
-    """The process runs and is Drishti's: its command line holds ``mark`` (Windows: its image is java for a server, python for a console),
-    so a reused process id is never taken for ours."""
+def running(pid) -> bool:
+    """Whether a process of that id exists at all (cheap: POSIX signal 0, Windows tasklist); identity is :func:`alive`'s job."""
+    if not pid:
+        return False
+    if windows():
+        try:
+            out = subprocess.run(["tasklist", "/FI", f"PID eq {int(pid)}", "/FO", "CSV", "/NH"], capture_output=True, text=True, timeout=15).stdout
+        except (OSError, subprocess.SubprocessError):
+            return False
+        return any(f'"{int(pid)}"' in line for line in out.splitlines())
+    try:
+        os.kill(int(pid), 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    return True
+
+
+def alive(pid, mark: str, also: str = "") -> bool:
+    """The process runs and is OURS: its full command line holds ``mark`` (and ``also``, e.g. the pid file's data folder), on every operating
+    system, so a reused process id (another JVM, another Python) is never taken for ours."""
     if not pid:
         return False
     cmd = _command_line(int(pid))
-    if cmd is None:
-        return False
-    if windows():
-        return ("java" if mark == SERVER_MARK else "python") in cmd.lower()
-    return mark in cmd
+    return cmd is not None and mark in cmd and (not also or also in cmd)
 
 
-def terminate(pid: int, force: bool = False) -> None:
-    """Asks the one process to stop (SIGTERM; Windows ``taskkill /PID``), or forces it (SIGKILL; ``taskkill /F /PID``)."""
+def terminate(pid: int, force: bool = False) -> bool:
+    """Signals the one process: SIGTERM, or SIGKILL with ``force``; on Windows only the forced stop exists (``taskkill /F /PID``: a background
+    process has no console or window a plain ``taskkill`` could reach; it is asked over HTTP instead, :func:`ask_to_stop`). Whether a
+    signal was sent."""
     if windows():
-        subprocess.run(["taskkill", *(["/F"] if force else []), "/PID", str(pid)], capture_output=True, check=False)
-        return
+        if force:
+            subprocess.run(["taskkill", "/F", "/PID", str(pid)], capture_output=True, check=False)
+        return force
     try:
         os.kill(pid, signal.SIGKILL if force else signal.SIGTERM)
     except ProcessLookupError:
         pass
+    return True
 
 
 def stop_pid_file(file, name: str, mark: str, seconds: int) -> None:
-    """Stops the one process of a pid file: asked first, forced after ``seconds``; then the pid file is removed. Never by name."""
+    """Stops the one process of a pid file, when it is ours: asked over HTTP first (every operating system; POSIX: SIGTERM when the key does
+    not reach it), forced after ``seconds``; then the pid file is removed. Never by name."""
     file = Path(file)
     if not file.is_file():
         say(f"{name}: not running (no {file})")
         return
-    pid, _ = read_pid(file)
-    if not alive(pid, mark):
+    pid, fields = read_pid(file)
+    also = f"{SERVER_MARK}{fields['data']}" if mark == SERVER_MARK and fields.get("data") else ""
+    if not alive(pid, mark, also):
         file.unlink(missing_ok=True)
         say(f"{name}: not running (pid {pid or '?'} is gone or is not Drishti's); stale {file} removed")
         return
-    terminate(pid)
-    deadline = time.monotonic() + seconds
-    while time.monotonic() < deadline and alive(pid, mark):
+    asked = ask_to_stop(fields) or terminate(pid)
+    deadline = time.monotonic() + (seconds if asked else 0)
+    while time.monotonic() < deadline and running(pid):
         time.sleep(0.5)  # wait-ok: the process drains and closes
-    if alive(pid, mark):
+    if running(pid):
         terminate(pid, force=True)
         time.sleep(1)  # wait-ok: the forced stop lands
-        say(f"{name}: stopped by force after {seconds} s (pid {pid})")
+        say(f"{name}: stopped by force {'after ' + str(seconds) + ' s' if asked else '(it has no stop key: started by an older launcher)'} (pid {pid})")
     else:
         say(f"{name}: stopped (pid {pid})")
     file.unlink(missing_ok=True)
@@ -272,7 +348,8 @@ def run_foreground(proc: subprocess.Popen, pid_file: Path, on_up=None) -> int:
             on_up()
         return proc.wait()
     except KeyboardInterrupt:
-        terminate(proc.pid)
+        if not windows():                # Windows: the process shares this console and had the Ctrl+C itself
+            terminate(proc.pid)
         try:
             return proc.wait()
         except KeyboardInterrupt:

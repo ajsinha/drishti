@@ -70,6 +70,8 @@ def log_config() -> dict:
 
 def main() -> None:
     settings = load_settings(HERE / "config", sys.argv[1:])
+    from core.launcher_stop import MAIN_PID_ENV
+    os.environ[MAIN_PID_ENV] = str(os.getpid())   # the launcher's stop signals this process, whichever worker takes the request (core/launcher_stop.py)
     temp_under_data(settings)
     workers = max(1, int(settings.get("server.workers") or 1))
     # a stop closes the live streams after this long: a worker waits for its open connections, and a live page's stream never ends by itself

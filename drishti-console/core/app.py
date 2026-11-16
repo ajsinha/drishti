@@ -667,7 +667,10 @@ def create_app(settings: Settings) -> FastAPI:
     app.add_middleware(SameOrigin, allowed=settings.get("auth.allowed_origins") or ())    # before any session work
     app.add_middleware(SecurityHeaders)
     app.add_middleware(AppEngines)                       # every request reads its own app's engines
-    app.add_middleware(_base_path.BasePath, base=base)   # outermost: the URL sub-path off what comes in, onto Location and cookie paths
+    app.add_middleware(_base_path.BasePath, base=base)   # the URL sub-path off what comes in, onto Location and cookie paths
+    from core.launcher_stop import LauncherStop
+
+    app.add_middleware(LauncherStop)                     # outermost: the launcher's stop (POST /launcher/stop with the pid file's key) needs nothing else
     app.add_exception_handler(BodyError, problem)
     app.add_exception_handler(ClientDisconnect, gone)
     from core.notfound import not_found

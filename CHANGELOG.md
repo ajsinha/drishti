@@ -65,6 +65,14 @@
   the refused and the waiting ones. An override can no longer inject code: `lib/`, `python/`, `engines/` (with `java/`), any `.jar`,
   `.class`, `.py`, `.pyc`, `.pyd`, `.so`, `.dll`, `.dylib`, `.exe`, `.sh`, `.bat`, `.cmd`, `.ps1` file and every symbolic link are refused in
   words (KERNEL_AND_MODULES.md 18.10; `ModuleOverridesTest`).
+- **One stop on every operating system, and never another process.** `stop server|console` asks the process over HTTP: `POST
+  /launcher/stop` from this machine with the key the launcher made at start (`DRISHTI_STOP_KEY`, `drishti.launcher.stop-key`, kept in the
+  pid file, now mode 600), answered by the server (`LauncherStopController`) and the console (`core/launcher_stop.py`, outside every other
+  middleware) with a graceful shutdown; forced after the timeout (SIGKILL; Windows `taskkill /F`). On Windows a background process has no
+  window, so the old `taskkill /PID` without `/F` never reached it. A process is ours only when its full command line holds the mark
+  (`-Ddrishti.data.dir=` with the pid file's data folder; `run_drishti_web.py`), read on Windows with PowerShell's `Get-CimInstance`
+  (else `wmic`) instead of the image name, so a reused pid never stops another JVM (API_REFERENCE.md 2.25, DEPLOYMENT_AND_QA_GUIDE.md 7;
+  `tools/test_launch.py` with Windows mocked, `LauncherStopControllerTest`, `test_launcher_stop.py`).
 
 The Python commands release. The build still reports its version as 2.9.11.g (the version from one place is the next release); the release is tag `v2.9.11.i_5`.
 
@@ -76,8 +84,8 @@ The Python commands release. The build still reports its version as 2.9.11.g (th
   runs Maven (`clean package -DskipTests -pl :drishti-app -am`, never `install`) with the Java of the one lookup and copies the exec jar
   into `<home>/lib` (`--no-copy`). `start server|console|all|cluster`, `stop ...` and `status` take the options of the old `bin/`
   scripts (`--settings`, `--data-dir`, `--port`, `--iceberg`, `--java-home`, cluster nodes, `deploy/stack/stack.yaml`); processes are
-  tracked by pid files under the data folder and stopped only through them (never by name; Windows: its own process group, no window,
-  `taskkill /PID` then `/F`). The shell and PowerShell twins are deleted: `bin/*.sh`, `*.ps1`, `*.cmd`, `bin/lib`, `tools/windows/*`,
+  tracked by pid files under the data folder and stopped only through them (never by name; Windows: its own process group, no window;
+  the stop is below). The shell and PowerShell twins are deleted: `bin/*.sh`, `*.ps1`, `*.cmd`, `bin/lib`, `tools/windows/*`,
   `tools/rolling-upgrade.sh` (`python tools/rolling.py`); the Windows feed schedule runs the console's Python directly. `bin/` keeps only
   `drishti-node.sh`, the POSIX stop hook of the server images and the systemd unit.
 - **One Java lookup, one install root, one place for the jars.** Every tool finds Java in one order: `--java`/`--java-home`,

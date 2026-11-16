@@ -235,7 +235,9 @@ def start(a, env: dict | None = None) -> int:
 
     # the one way a Drishti tool starts a JVM (tools/javacmd.py): the flags above win; it adds compact object headers on Java 25+
     cmd = javacmd.java_cmd(java, [*flags, "-jar", str(jar), *args], cwd=workdir, env=env)
-    fields = dict(port=port, url=url, health=health, data=server_data, distribution=env.get("DRISHTI_DISTRIBUTION") or "all")
+    # the launcher's stop key: the server answers POST /launcher/stop with it (procs.stop_pid_file), the same stop on every OS
+    fields = dict(port=port, url=url, health=health, data=server_data, distribution=env.get("DRISHTI_DISTRIBUTION") or "all",
+                  **{procs.STOP_FIELD: procs.stop_key(env)})
     if a.background:
         proc = procs.spawn(cmd, workdir, env, log=data / "logs" / f"{stem}.out")
         procs.write_pid(pid_file, proc.pid, **fields)
@@ -259,7 +261,7 @@ def start(a, env: dict | None = None) -> int:
 
 
 def stop(a, env: dict | None = None) -> int:
-    """``drishti.py stop server``: by the pid file only (never by name); graceful first, forced after --timeout."""
+    """``drishti.py stop server``: by the pid file only (never by name); asked over HTTP first (POST /launcher/stop), forced after --timeout."""
     env = dict(os.environ if env is None else env)
     if a.node and a.all_nodes:
         raise LaunchError("--node and --all-nodes: one or the other", 2)
