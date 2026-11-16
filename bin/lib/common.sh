@@ -180,3 +180,12 @@ python_for_tools() {
 
 SERVER_MARK="-jar"
 CONSOLE_MARK="run_drishti_web.py"
+
+# check_settings FILES: each comma-separated settings file is an absolute path that exists (never searched for); exit 2 otherwise
+check_settings() {
+  local IFS=, f
+  for f in $1; do
+    case "$f" in /*) ;; *) die "--settings $f: give each settings file as an absolute path" 2 ;; esac
+    [ -f "$f" ] || die "--settings $f: no such file" 2
+  done
+}

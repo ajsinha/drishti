@@ -32,6 +32,8 @@ prints the address people open.
   --data-dir DIR      the data folder (default DRISHTI_DATA_DIR, else <drishti>/data): run/console.pid, logs/console.log
   --env-file FILE     KEY=VALUE lines put into the console's environment (the token and session secrets; values never printed)
   --demo              the demo's settings with DEVELOPMENT secrets (the same as bin/start-server.sh --demo): NOT FOR PRODUCTION
+  --settings FILES    the settings files (absolute paths, comma-separated), the same as the server's: the console reads only the keys
+                      under console. ([console.server] port=17480); docs/admin/CONFIGURATION.md, "The settings file"
   --python FILE       the Python 3.11+ to make the environment with (default python3)
   --reinstall         remake drishti-console/.venv (after drishti-console/requirements.txt changed)
   --background        detach: log in <data>/logs/console.log, pid in <data>/run/console.pid
@@ -53,11 +55,12 @@ examples:
 EOF
 }
 
-SERVERS="" PORT="" DATA="" ENV_FILE="" DEMO=false BASE_PY="python3" REINSTALL=false BACKGROUND=false WAIT=90 DIST="" CNAME=""
+SETTINGS="" SERVERS="" PORT="" DATA="" ENV_FILE="" DEMO=false BASE_PY="python3" REINSTALL=false BACKGROUND=false WAIT=90 DIST="" CNAME=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --server) need "${2:-}" "$1"; SERVERS="${SERVERS:+$SERVERS,}$2"; shift 2 ;;
     --port) need "${2:-}" "$1"; PORT="$2"; shift 2 ;;
+    --settings) need "${2:-}" "$1"; SETTINGS="$2"; shift 2 ;;
     --data-dir) need "${2:-}" "$1"; DATA="$2"; shift 2 ;;
     --env-file) need "${2:-}" "$1"; ENV_FILE="$2"; shift 2 ;;
     --demo) DEMO=true; shift ;;
@@ -78,6 +81,7 @@ export DRISHTI_DATA_DIR="$DATA"
 PORT="${PORT:-${DRISHTI_CONSOLE_PORT:-$DEFAULT_CONSOLE_PORT}}"
 PID_FILE="$DATA/run/console${CNAME:+-$CNAME}.pid"
 LOG="$DATA/logs/console${CNAME:+-$CNAME}.log"
+[ -z "$SETTINGS" ] || check_settings "$SETTINGS"
 [ -z "$DIST" ] || export DRISHTI_DISTRIBUTION="$DIST"
 DIST="${DRISHTI_DISTRIBUTION:-}"
 [ -z "$CNAME" ] || export DRISHTI_CONSOLE_TMP_DIR="${DRISHTI_CONSOLE_TMP_DIR:-$DATA/tmp/console-$CNAME}"   # its own temp folder beside the others
@@ -149,7 +153,7 @@ mkdir -p "$DATA/run" "$DATA/logs"
 write_pid() { printf '%s\nport=%s\nurl=%s\nhealth=%s\ndistribution=%s\n' "$1" "$PORT" "$URL" "$HEALTH" "${DIST:-from-server}" > "$PID_FILE"; }
 cd "$DRISHTI_ROOT"
 if $BACKGROUND; then
-  nohup "$PY" "$DRISHTI_ROOT/drishti-console/run_drishti_web.py" "--server.port=$PORT" >> "$LOG" 2>&1 < /dev/null &
+  nohup "$PY" "$DRISHTI_ROOT/drishti-console/run_drishti_web.py" ${SETTINGS:+--settings "$SETTINGS"} "--server.port=$PORT" >> "$LOG" 2>&1 < /dev/null &
   pid=$!
   write_pid "$pid"
   say "console: started (pid $pid); log $LOG; waiting up to $WAIT s for $HEALTH"
@@ -161,7 +165,7 @@ if $BACKGROUND; then
   say "console: did not answer in $WAIT s: see $LOG"
   exit 1
 fi
-"$PY" "$DRISHTI_ROOT/drishti-console/run_drishti_web.py" "--server.port=$PORT" &
+"$PY" "$DRISHTI_ROOT/drishti-console/run_drishti_web.py" ${SETTINGS:+--settings "$SETTINGS"} "--server.port=$PORT" &
 pid=$!
 write_pid "$pid"
 trap 'kill -TERM "$pid" 2>/dev/null || true' INT TERM

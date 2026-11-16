@@ -733,6 +733,20 @@ The drill removes its own temporary files on exit. The console suite needs `pyte
 The inotify watch limit of a loaded desktop (`fs.inotify.max_user_watches`) can make the Sutra hot-reload tests fail in any mode:
 that is the machine, not the drill.
 
+### Your settings file for the IDE launchers
+
+Every shared IntelliJ and PyCharm run configuration passes one per-developer settings file, `$USER_HOME$/drishti-envs/dev.ini` (the IDE expands
+`$USER_HOME$` to your full home path, so it never depends on the working folder): a Java configuration as the VM option
+`-Ddrishti.settings.file=...`, a Python one as `--settings ...`. Create it once from the example:
+
+```
+mkdir -p ~/drishti-envs && cp config/settings.examples/dev.ini ~/drishti-envs/dev.ini    # then edit the /path/to/... placeholders
+```
+
+The file must exist (a missing file is a clear error at start). Keep one ini per environment (`dev.ini`, `test.ini`, `prod.ini` examples are in
+`config/settings.examples/`); a `-D` or command-line argument always beats the file. The format and rules are in
+[Configuration](../admin/CONFIGURATION.md); passwords and tokens go in a second file (`secrets.ini`, given last), never in `dev.ini`.
+
 ## 3. Project rules
 
 Some rules are enforced by tests, so a plain `./mvnw verify` fails when they are broken. Others are conventions that reviews hold to.

@@ -48,6 +48,8 @@ import urllib.request
 
 import drishti_parser
 from drishti_parser import DEFAULT_SERVER
+import javacmd
+import settingsfile
 from javacmd import cli_tmp, java_cmd
 
 TOOLS = pathlib.Path(__file__).resolve().parent
@@ -1136,15 +1138,23 @@ def use_tmp_dir() -> None:
 def main(argv: list[str] | None = None) -> int:
     """Runs one command (``argv``, else the process's arguments); the exit code: 0 ok, 1 problems found, 2 usage."""
     try:
+        # --settings /absolute/drishti.ini: the optional settings file (tools/settingsfile.py), handed on to every java this command starts
+        argv, settings = settingsfile.pop_option(list(sys.argv[1:] if argv is None else argv))
+        entries = settingsfile.read_all(settings) if settings else {}
+        settingsfile.apply_roots(entries)       # the Python side reads the roots the files name, as the JVMs do
+        javacmd.set_settings(settings, entries)
         ap = build_parser()
         a, extra = ap.parse_known_args(argv)
-        a._argv = list(sys.argv[1:] if argv is None else argv)
+        a._argv = list(argv)
         passthrough = (a.group == "sutra" and a.cmd != "gen") or (a.group == "data" and a.cmd == "load") or (a.group == "lake" and a.cmd == "maintain") or (a.group == "feed" and a.cmd == "run")
         if extra and not passthrough:
             ap.error("unrecognized arguments: " + " ".join(extra))
         if extra and extra[0] == "--":
             extra = extra[1:]
         return a.func(a, extra) or 0
+    except settingsfile.SettingsError as e:
+        print(f"drishti: {e}", file=sys.stderr)
+        return 2
     except CliError as e:
         print(f"drishti: {e}", file=sys.stderr)
         return e.code

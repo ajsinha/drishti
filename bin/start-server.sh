@@ -27,8 +27,8 @@ and the logs under the data folder, waits for /actuator/health and prints the ad
 
   --port N            the server's port (default DRISHTI_PORT, else 18480)
   --heap SIZE         the heap limit, -Xmx (default 2g; 4g with --demo)
-  --settings FILE     a settings file (key=value lines, an absolute path): each entry a system property unless set otherwise
-                      (passed as -Ddrishti.settings.file; docs/admin/CONFIGURATION.md, "The settings file")
+  --settings FILES    the settings files (key=value lines; absolute paths, comma-separated, a later one winning): each entry a system
+                      property unless set otherwise (passed as -Ddrishti.settings.file; docs/admin/CONFIGURATION.md, "The settings file")
   --jar FILE          the server jar (default the newest kernel/drishti-server/target/drishti-server-*-exec.jar, then drishti-server*.jar here)
   --java-home DIR     the JDK (default DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH, then /usr/libexec/java_home -v 21 on macOS)
   --packs LIST        the packs to load (DRISHTI_PACKS; default the server's own, or the demo's ten with --demo)
@@ -244,9 +244,8 @@ export MALLOC_ARENA_MAX="${MALLOC_ARENA_MAX:-2}"          # glibc: two malloc ar
 FLAGS=("-Djava.io.tmpdir=$TMP" "-Xmx$HEAP" "-XX:MaxDirectMemorySize=256m" "-XX:TrimNativeHeapInterval=60000" "-Djdk.nio.maxCachedBufferSize=262144"
        "-XX:NativeMemoryTracking=summary" "-XX:+HeapDumpOnOutOfMemoryError" "-XX:HeapDumpPath=$DATA/dumps/$LABEL"
        "-Xlog:gc*:file=$DATA/logs/gc-$STEM-%p.log:time,uptime:filecount=5,filesize=20m")
-if [ -n "$SETTINGS" ]; then                 # the settings file: an absolute path that exists, never searched for
-  case "$SETTINGS" in /*) ;; *) die "--settings $SETTINGS: give the settings file as an absolute path" 2 ;; esac
-  [ -f "$SETTINGS" ] || die "--settings $SETTINGS: no such file" 2
+if [ -n "$SETTINGS" ]; then                 # the settings files: absolute paths that exist, never searched for
+  check_settings "$SETTINGS"
   FLAGS+=("-Ddrishti.settings.file=$SETTINGS")
 fi
 [ "$MAJOR" -lt 25 ] || FLAGS=("-XX:+UseCompactObjectHeaders" "${FLAGS[@]}")

@@ -233,3 +233,13 @@ function Set-DevSecret([string]$Name, [string]$Value) {
     }
     return $null
 }
+
+# Test-SettingsFiles FILES: each comma-separated settings file is an absolute path that exists (never searched for); exit 2 otherwise
+function Test-SettingsFiles([string]$Files) {
+    foreach ($f in ($Files -split ',')) {
+        $f = $f.Trim()
+        if (-not $f) { continue }
+        if (-not [System.IO.Path]::IsPathRooted($f)) { Fail "--settings ${f}: give each settings file as an absolute path" 2 }
+        if (-not (Test-Path -LiteralPath $f -PathType Leaf)) { Fail "--settings ${f}: no such file" 2 }
+    }
+}

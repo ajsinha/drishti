@@ -37,6 +37,22 @@ from pathlib import Path
 
 FLAG = "-Djava.io.tmpdir="
 
+# The optional settings file (tools/settingsfile.py, --settings): when a tool was given one, every JVM it starts gets
+# -Ddrishti.settings.file=<the same absolute path>, unless the arguments already carry one.
+SETTINGS_FLAG = "-Ddrishti.settings.file="
+_SETTINGS: list = []
+#: the keys the settings files set (tools/settingsfile.py ``read_all``): a launch root they name is not added as a -D, which would beat them
+_SETTINGS_KEYS: dict = {}
+
+
+def set_settings(path, keys=None) -> None:
+    """Remembers the settings files (``path``: one absolute path or several joined by commas, already checked) and the keys they set, for
+    every ``java_cmd`` of this process; None clears them."""
+    _SETTINGS[:] = [str(path)] if path else []
+    _SETTINGS_KEYS.clear()
+    if path and keys:
+        _SETTINGS_KEYS.update(keys)
+
 
 def server_tmp(cwd=None, env=None) -> Path:
     """The server's temp base for a server started in ``cwd`` with ``env``: DRISHTI_TMP_DIR, else <data dir>/tmp/server."""
@@ -46,7 +62,7 @@ def server_tmp(cwd=None, env=None) -> Path:
     if given:
         p = Path(given)
     else:
-        p = Path((env.get("DRISHTI_DATA_DIR") or "").strip() or "data") / "tmp" / "server"
+        p = Path((env.get("DRISHTI_DATA_DIR") or "").strip() or _SETTINGS_KEYS.get("drishti.data.dir", "").strip() or "data") / "tmp" / "server"
     return (p if p.is_absolute() else base / p).resolve()
 
 
@@ -96,7 +112,8 @@ REPO = Path(__file__).resolve().parent.parent
 def _named(key: str, envs: tuple, args: list, env) -> bool:
     """Whether a setting is given: as a -D or --flag in the arguments, or as one of its environment variables."""
     env = os.environ if env is None else env
-    return any(a.startswith(f"-D{key}=") or a.startswith(f"--{key}=") for a in args) or any((env.get(e) or "").strip() for e in envs)
+    return any(a.startswith(f"-D{key}=") or a.startswith(f"--{key}=") for a in args) or any((env.get(e) or "").strip() for e in envs) \
+        or (key in _SETTINGS_KEYS and not any(a.startswith(SETTINGS_FLAG) for a in args))
 
 
 def root_flags(args: list, cwd=None, env=None) -> list:
@@ -128,9 +145,10 @@ def java_cmd(java, args, tmp=None, cwd=None, env=None) -> list:
     cache = [] if any(a.startswith(CACHE_FLAG) for a in args) else [CACHE_LIMIT]
     compact = version_flags(java, args)
     roots = root_flags(args, cwd, env)
+    settings = [SETTINGS_FLAG + _SETTINGS[0]] if _SETTINGS and not any(a.startswith(SETTINGS_FLAG) for a in args) else []
     if any(a.startswith(FLAG) for a in args):
-        return [str(java), *compact, *cache, *roots, *args]
-    return [str(java), tmp_flag(tmp, cwd, env), *compact, *cache, *roots, *args]
+        return [str(java), *settings, *compact, *cache, *roots, *args]
+    return [str(java), tmp_flag(tmp, cwd, env), *settings, *compact, *cache, *roots, *args]
 
 
 @contextlib.contextmanager

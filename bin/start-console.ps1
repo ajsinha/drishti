@@ -29,6 +29,8 @@ prints the address people open.
   --data-dir DIR      the data folder (default DRISHTI_DATA_DIR, else <drishti>\data): run\console.pid, logs\console.log
   --env-file FILE     KEY=VALUE lines put into the console's environment (the token and session secrets; values never printed)
   --demo              the demo's settings with DEVELOPMENT secrets (the same as bin\start-server.ps1 --demo): NOT FOR PRODUCTION
+  --settings FILES    the settings files (absolute paths, comma-separated), the same as the server's: the console reads only the keys
+                      under console. ([console.server] port=17480); docs\admin\CONFIGURATION.md, "The settings file"
   --python FILE       the Python 3.11+ to make the environment with when uv is not installed (default python)
   --reinstall         remake drishti-console\.venv (after drishti-console\requirements.txt changed)
   --background        detach: log in <data>\logs\console.log, pid in <data>\run\console.pid
@@ -47,7 +49,7 @@ examples:
   bin\start-console.ps1 -Server http://192.168.1.20:18480 -EnvFile C:\drishti\console.env -Background
 '@
 
-$o = Read-Options $args @{ server = 'list'; backend = 'list'; port = 'value'; datadir = 'value'; envfile = 'value'; demo = 'switch'
+$o = Read-Options $args @{ server = 'list'; backend = 'list'; port = 'value'; settings = 'value'; datadir = 'value'; envfile = 'value'; demo = 'switch'
     python = 'value'; reinstall = 'switch'; background = 'switch'; wait = 'value'; distribution = 'value'; name = 'value' }
 if ($o['help']) { Write-Host $usage; exit 0 }
 if ($o['envfile']) { Import-EnvFile $o['envfile'] }
@@ -56,6 +58,8 @@ $env:DRISHTI_DATA_DIR = $data
 $port = [int](Opt $o 'port' $(if ($env:DRISHTI_CONSOLE_PORT) { $env:DRISHTI_CONSOLE_PORT } else { $script:DefaultConsolePort }))
 $cname = Opt $o 'name' ''
 $suffix = $(if ($cname) { "-$cname" } else { '' })
+$settingsFiles = Opt $o 'settings' ''
+if ($settingsFiles) { Test-SettingsFiles $settingsFiles }   # the server's settings files: the console reads only their console. keys
 if ($o['distribution']) { $env:DRISHTI_DISTRIBUTION = $o['distribution'] }   # risk, finance, genomics, all or a file (DISTRIBUTIONS.md)
 if ($cname -and -not $env:DRISHTI_CONSOLE_TMP_DIR) { $env:DRISHTI_CONSOLE_TMP_DIR = Join-Path $data "tmp\console$suffix" }
 $pidFile = Join-Path $data "run\console$suffix.pid"
@@ -139,7 +143,9 @@ Write-Host "Drishti console on port $port, given $($env:DRISHTI_BACKEND_URLS) (u
 if ($devSecrets.Count -gt 0) { Warn "DEVELOPMENT secrets in use (NOT FOR PRODUCTION): $($devSecrets -join ' '). Put your own in an --env-file for anything shared." }
 New-Item -ItemType Directory -Force -Path (Join-Path $data 'run'), (Join-Path $data 'logs') | Out-Null
 $fields = @{ port = $port; url = $url; health = $health; data = $data; distribution = $(if ($env:DRISHTI_DISTRIBUTION) { $env:DRISHTI_DISTRIBUTION } else { 'from-server' }) }
-$runArgs = Join-ProcessArgs @((Join-Path $script:DrishtiRoot 'drishti-console\run_drishti_web.py'), "--server.port=$port")
+$runList = @((Join-Path $script:DrishtiRoot 'drishti-console\run_drishti_web.py'))
+if ($settingsFiles) { $runList += @('--settings', $settingsFiles) }
+$runArgs = Join-ProcessArgs ($runList + @("--server.port=$port"))
 
 if ($o['background']) {
     $p = Start-Process -FilePath $py -ArgumentList $runArgs -WorkingDirectory $script:DrishtiRoot -PassThru -WindowStyle Hidden `

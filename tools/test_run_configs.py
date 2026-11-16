@@ -83,6 +83,26 @@ class RunConfigs(unittest.TestCase):
             self.assertIn(f"-Djava.io.tmpdir={data}/tmp/server", options(conf).get("VM_PARAMETERS", ""), f.name)
 
 
+    def test_every_launcher_passes_the_settings_file_by_an_absolute_macro_path(self):
+        """The one per-developer settings file, $USER_HOME$/drishti-envs/dev.ini (created from config/settings.examples/dev.ini; see the
+        Developer Guide): a Java configuration passes -Ddrishti.settings.file=<it> as a VM option, a Python one --settings <it>. A Maven
+        build starts no Drishti process, so it carries neither."""
+        ini = "$USER_HOME$/drishti-envs/dev.ini"
+        checked = 0
+        for f in CONFIGS:
+            conf = ET.parse(f).getroot().find("configuration")
+            o = options(conf)
+            if conf.get("type") == "Application":
+                self.assertIn("-Ddrishti.settings.file=" + ini, o.get("VM_PARAMETERS", ""), f.name)
+            elif conf.get("type") == "PythonConfigurationType":
+                self.assertTrue(o.get("PARAMETERS", "").startswith("--settings " + ini + " "), f"{f.name}: --settings {ini} first")
+            else:
+                self.assertEqual(conf.get("type"), "MavenRunConfiguration", f.name)
+                continue
+            checked += 1
+        self.assertGreaterEqual(checked, 25)
+
+
 if __name__ == "__main__":
     unittest.main()
 

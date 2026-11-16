@@ -131,12 +131,67 @@ def _merge(base: dict[str, Any], over: dict[str, Any]) -> dict[str, Any]:
     return base
 
 
+def _pop_settings_option(argv: list[str]) -> tuple[list[str], str | None]:
+    """``argv`` without ``--settings <path>`` / ``--settings=<path>``, and the path (the same option as tools/drishti.py)."""
+    rest: list[str] = []
+    path = None
+    it = iter(argv)
+    for a in it:
+        if a == "--settings":
+            path = next(it, None)
+            if path is None:
+                raise SystemExit("--settings needs the absolute path of the settings file")
+        elif a.startswith("--settings="):
+            path = a.split("=", 1)[1]
+        else:
+            rest.append(a)
+    return rest, path
+
+
+def _read_settings_file(named: str) -> dict[str, str]:
+    """The console's entries of the optional settings files (the format of kernel/drishti-settingsfile and tools/settingsfile.py): one
+    absolute path or several joined by commas (a later file wins), ``key=value`` lines, ``#``/``;`` comments, a dotted ``[section]`` a
+    namespace that prefixes its keys, an undotted one a label. The same files serve the server, so the console takes only the keys under
+    ``console.`` and drops that prefix (``[console.server]`` ``port=17480`` is the console's ``server.port``); every other key is the
+    server's and is ignored here."""
+    out: dict[str, str] = {}
+    for part in str(named).split(","):
+        path = part.strip()
+        if not path:
+            continue
+        p = Path(path)
+        if not p.is_absolute():
+            raise SystemExit(f"--settings must name full absolute paths, got \"{path}\" (never searched for, never relative to the working folder)")
+        if not p.is_file():
+            raise SystemExit(f"--settings names {p}, which is not a file")
+        prefix = ""
+        for n, raw in enumerate(p.read_text(encoding="utf-8").splitlines(), 1):
+            line = raw.strip()
+            if not line or line.startswith(("#", ";")):
+                continue
+            if line.startswith("[") and line.endswith("]"):
+                section = line[1:-1].strip()
+                prefix = section + "." if "." in section else ""
+                continue
+            key, eq, value = line.partition("=")
+            if not eq or not key.strip():
+                raise SystemExit(f"{p}:{n}: expected key=value, got \"{line}\"")
+            key = prefix + key.strip()
+            if key.startswith("console."):
+                out[key[len("console."):]] = value.strip()
+    return out
+
+
 def load_settings(config_dir: Path, argv: list[str] | None = None) -> Settings:
     files: list[dict[str, Any]] = []
     for name in ("application.yaml", "application.local.yaml"):
         path = config_dir / name
         files.append(_interpolate(yaml.safe_load(path.read_text(encoding="utf-8")) or {}) if path.exists() else {})
     base, over = files
+    argv, settings_path = _pop_settings_option(list(argv or []))
+    if settings_path:                       # --settings /abs/drishti.ini: the file's keys sit below the environment and the command line
+        for k, v in _read_settings_file(settings_path).items():
+            _set(over, k, _coerce(v))
     for key, value in os.environ.items():
         if key.startswith(_ENV_PREFIX):
             _set(over, key[len(_ENV_PREFIX):].lower().replace("__", "."), _coerce(value))

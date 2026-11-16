@@ -25,7 +25,8 @@ the native memory settings and the logs under the data folder, waits for /actuat
 
   --port N            the server's port (default DRISHTI_PORT, else 18480)
   --heap SIZE         the heap limit, -Xmx (default 2g; 4g with --demo)
-  --settings FILE     a settings file (key=value lines, an absolute path), passed as -Ddrishti.settings.file
+  --settings FILES    the settings files (key=value lines; absolute paths, comma-separated, a later one winning), passed as
+                      -Ddrishti.settings.file (docs/admin/CONFIGURATION.md, "The settings file")
   --jar FILE          the server jar (default the newest kernel\drishti-server\target\drishti-server-*-exec.jar, then drishti-server*.jar here)
   --java-home DIR     the JDK (default DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH)
   --packs LIST        the packs to load (DRISHTI_PACKS; default the server's own, or the demo's ten with --demo)
@@ -134,10 +135,7 @@ if ($major -lt 21) { Fail "Drishti runs on Java 21 or newer; $java says: $versio
 
 # the jar
 $settingsFile = Opt $o 'settings'
-if ($settingsFile) {                         # the settings file: an absolute path that exists, never searched for
-    if (-not [System.IO.Path]::IsPathRooted($settingsFile)) { Fail "-Settings ${settingsFile}: give the settings file as an absolute path" 2 }
-    if (-not (Test-Path -LiteralPath $settingsFile -PathType Leaf)) { Fail "-Settings ${settingsFile}: no such file" 2 }
-}
+if ($settingsFile) { Test-SettingsFiles $settingsFile }   # the settings files: absolute paths that exist, never searched for
 $jar = Opt $o 'jar'
 if (-not $jar) {
     $candidates = @(Get-ChildItem -Path (Join-Path $script:DrishtiRoot 'kernel\drishti-server\target') -Filter 'drishti-server-*-exec.jar' -ErrorAction SilentlyContinue) +

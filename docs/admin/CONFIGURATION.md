@@ -196,6 +196,12 @@ tls.ca-file=/etc/drishti/tls/bank-ca.pem
   `com.ash.drishti.settingsfile.SettingsFile.applyFromSystemProperty()` (module `kernel/drishti-settingsfile`, reached through `drishti-common`).
 - The server applies them first thing in `main`, before anything reads a setting. `bin/start-server --settings /abs/drishti.ini` (and
   `bin/start-cluster --settings`, or a cluster file's `settings-file:` or a node's `settings:`) passes them.
+- Python tools: `python tools/drishti.py --settings /abs/drishti.ini[,/abs/secrets.ini] ...` reads the same files (`tools/settingsfile.py`)
+  and passes `-Ddrishti.settings.file=<the same paths>` to every JVM it starts; a launch root the files name is not overridden by the tool's
+  default. The console takes `--settings` too, and reads only the keys under `console.` from the same files (`[console.server]`
+  `port=17480` is its `server.port`), so one file serves both.
+- IDE launchers: every shared IntelliJ and PyCharm run configuration passes `$USER_HOME$/drishti-envs/dev.ini`
+  ([Developer Guide](../guides/DEVELOPER_GUIDE.md#your-settings-file-for-the-ide-launchers)).
 - Examples: `config/settings.examples/{dev,test,prod,secrets}.ini`. Nothing reads that folder automatically: copy a file out, edit it,
   and name it with the property.
 - **`secrets.env`** (`deploy/stack/secrets.env.example`, sourced by `bin/start-*` and the stack's scripts) is an environment file: what it
