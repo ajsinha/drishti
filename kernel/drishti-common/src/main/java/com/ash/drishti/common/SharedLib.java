@@ -81,7 +81,7 @@ public final class SharedLib {
             try (Stream<Path> s = Files.list(folder)) {
                 for (Path f : s.filter(p -> p.getFileName().toString().endsWith(".jar") && Files.isRegularFile(p)).sorted().toList()) {
                     if (isDrishtiServerJar(f.getFileName().toString())) {
-                        JUL.warning("the lib folder " + folder + " holds " + f.getFileName() + ", a Drishti server jar: skipped (Drishti's own jar"
+                        JUL.warning("the lib folder " + folder + " holds " + f.getFileName() + ", the server's exec jar: skipped (the product's own jar"
                                 + " goes in <home>/lib, the site's jars in the lib folder); remove it from there");
                         continue;
                     }
@@ -201,7 +201,7 @@ public final class SharedLib {
             }
             if (!done.isEmpty() || !left.isEmpty()) {
                 notes.add(e.getKey() + " (" + from + "): " + done.size() + " jar(s) moved into " + target + (left.isEmpty() ? ""
-                        : "; left there (a jar of that name is in lib already, or a Drishti server jar, which belongs in <home>/lib): " + left)
+                        : "; left there (a jar of that name is in lib already, or the server's exec jar, which belongs in <home>/lib): " + left)
                         + ". The folder is no longer read: delete it.");
             }
         }
