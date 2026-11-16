@@ -79,7 +79,7 @@ settings:
 - proxy.*
 auth: Local files need none; S3 takes s3.access-key and s3.secret-key (${ENV} or file:) or the AWS credential chain; a private CA or client certificate through tls.* (native engine only); an outbound proxy through proxy.*.
 licence: Drishti's own native Delta engine (drishti-deltalake) with Delta Kernel, Apache Hadoop client and AWS SDK for Java v2 (all Apache-2.0), bundled.
-windows: Works on Windows with engine native (the default), local folders and S3 alike; engine hadoop needs winutils.exe, so it is not for the Windows QA machine. Loader: `python tools/drishti.py lake demo --engine java`.
+windows: Works on Windows with engine native (the default), local folders and S3 alike; engine hadoop needs winutils.exe, so it is not for the Windows QA machine. Loader `python tools/drishti.py lake demo --engine java`.
 doc: plugins/drishti-plugin-delta/README.md
 ---
 # The delta connector

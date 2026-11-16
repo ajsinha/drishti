@@ -85,7 +85,7 @@ settings:
 - proxy.*
 auth: Local files need none; S3 takes s3.access-key and s3.secret-key (${ENV} or file:), the AWS chain or credentials a REST catalog vends; a REST catalog takes credential (OAuth2 id:secret) or a token, or SigV4 through catalog.rest.*; a private CA through tls.*; an outbound proxy through proxy.*.
 licence: Drishti's own native Iceberg engine (drishti-iceberg) with Apache Iceberg Java, Apache Parquet, Apache Hadoop client and AWS SDK for Java v2 (all Apache-2.0), bundled.
-windows: Works on Windows (local folders with drive letters, and S3), so it is not for the Windows QA machine. Loader: `python tools/drishti.py data load --store iceberg` (runs `tools/load-iceberg.sh`, so on Windows it needs bash: Git Bash or WSL); `python tools/drishti.py start server --iceberg` copies the example files in.
+windows: Works on Windows (local folders with drive letters, and S3), so it is not for the Windows QA machine. Loader `python tools/drishti.py data load --store iceberg` (runs `tools/load-iceberg.sh`, so on Windows it needs bash, Git Bash or WSL); `python tools/drishti.py start server --iceberg` copies the example files in.
 doc: plugins/drishti-plugin-iceberg/README.md
 ---
 # The iceberg connector
