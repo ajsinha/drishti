@@ -189,3 +189,19 @@ check_settings() {
     [ -f "$f" ] || die "--settings $f: no such file" 2
   done
 }
+
+# settings_value FILES KEY: KEY's value in the comma-separated settings files (a later file wins; a dotted [section] prefixes its keys,
+# as the server reads them), empty when none names it
+settings_value() {
+  local IFS=, f r v=""
+  for f in $1; do
+    r="$(awk -v key="$2" '
+      /^[ \t]*[#;]/ { next }
+      /^[ \t]*\[.*\][ \t]*$/ { s = $0; gsub(/^[ \t]*\[[ \t]*|[ \t]*\][ \t]*$/, "", s); p = (index(s, ".") ? s "." : ""); next }
+      { i = index($0, "="); if (!i) next; k = substr($0, 1, i - 1); gsub(/^[ \t]+|[ \t]+$/, "", k)
+        if (p k == key) { v = substr($0, i + 1); gsub(/^[ \t]+|[ \t]+$/, "", v); val = v; seen = 1 } }
+      END { if (seen) print val }' "$f")"
+    [ -z "$r" ] || v="$r"
+  done
+  printf '%s' "$v"
+}

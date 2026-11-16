@@ -15,8 +15,9 @@
 """The rolling upgrade runner (CD3, docs/guides/CLUSTER_GUIDE.md section 10.1): a cluster upgraded one node at a time with no
 downtime, on VMs (systemd, any shell commands) or on ECS (one service per node).
 
-The order is fixed: **consoles**, then **BI and data-serving** members, then **coordinators**, then **shard owners one zone at a time**
-(so a shard's other replica, in another zone, answers while its zone is upgraded). For each node: drain (a server: ``POST
+The order is fixed: **BI and data-serving** members, then **coordinators**, then **shard owners one zone at a time** (so a shard's other
+replica, in another zone, answers while its zone is upgraded), then the **consoles** last: a console newer than its servers cannot sign
+anyone in, so every server is on the new release before a console is. For each node: drain (a server: ``POST
 /api/v1/admin/node/drain``; a console: the ``deregister`` command and ``console-drain`` seconds for its connections to close), wait until
 it is safe to stop, stop, upgrade, start, wait until it is ready (a server: ``/actuator/health/readiness``; a console: ``/readyz``), then
 the next node. On ECS stop, upgrade and start are one ``aws ecs update-service`` (the services stop the old task before starting the new).
@@ -60,7 +61,7 @@ from pathlib import Path
 from typing import Callable
 
 ROLES = ("console", "bi", "data", "coordinator", "owner")
-PHASES = (("consoles", ("console",)), ("BI and data-serving", ("bi", "data")), ("coordinators", ("coordinator",)), ("owners", ("owner",)))
+PHASES = (("BI and data-serving", ("bi", "data")), ("coordinators", ("coordinator",)), ("owners", ("owner",)), ("consoles", ("console",)))
 WAITS = {"drain": 600, "ready": 1800, "console-drain": 30}
 SERVER_STEPS = ("stop", "upgrade", "start")
 
@@ -149,10 +150,10 @@ class Inventory:
 
 
 def order(inv: Inventory) -> list[tuple[str, list[Node]]]:
-    """The groups in upgrade order: consoles, BI and data, coordinators, then the owners zone by zone (the inventory's ``zones:`` order,
-    else by name; owners without a zone last). Within a group, the inventory's order."""
+    """The groups in upgrade order: BI and data, coordinators, the owners zone by zone (the inventory's ``zones:`` order, else by name;
+    owners without a zone after them), then the consoles. Within a group, the inventory's order."""
     groups: list[tuple[str, list[Node]]] = []
-    for title, roles in PHASES[:3]:
+    for title, roles in PHASES[:2]:
         members = [n for n in inv.nodes if n.role in roles]
         if members:
             groups.append((title, members))
@@ -165,6 +166,9 @@ def order(inv: Inventory) -> list[tuple[str, list[Node]]]:
     rest = [n for n in owners if not n.zone or n.zone not in zones]
     if rest:
         groups.append(("owners without a zone", rest))
+    consoles = [n for n in inv.nodes if n.role == "console"]
+    if consoles:
+        groups.append(("consoles", consoles))
     return groups
 
 

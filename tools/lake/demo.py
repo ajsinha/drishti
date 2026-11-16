@@ -886,16 +886,15 @@ class DemoLake:
         for n in notes:
             print("  " + n)
         env = "" if self.lake == self.resolve(DEFAULT_ROOT) else f"{lakeconfig.DEMO_ROOT_ENV}={self.lake} "
+        win = os.name == "nt"
+        start = "bin\\start-all.cmd --demo" if win else "bin/start-all.sh --demo"
         print("\nNext:\n"
-              "  1. Start the server on the lakes: IDE run configuration 'Drishti server (demo lakes)' (the samples off, so every page reads\n"
-              "     the lakes; offline mode on, so quotes and headlines come from the captured snapshot and nothing reaches the internet), or\n"
-              f"     {env}DRISHTI_DEMO_ENABLED=false DRISHTI_OFFLINE=true DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif,funds "
-              "java -Djava.io.tmpdir=data/tmp/server -jar kernel/drishti-server/target/drishti-server-*-exec.jar\n"
-              "  2. Start the console: run configuration 'Drishti console' (sign in as drishti-dev-admin / drishti-dev-admin123), or\n"
-              "     drishti-console/.venv/bin/python drishti-console/run_drishti_web.py --server.port=17480 --backend.url=http://127.0.0.1:18480\n"
-              "     (these two commands run with sign-in off on both; the run configurations turn it on, with the same secrets on both:\n"
-              "     the server's DRISHTI_SECURITY_ENABLED and DRISHTI_TOKEN_SECRET, the console's DRISHTI_AUTH_ENABLED, DRISHTI_TOKEN_SECRET,\n"
-              "     DRISHTI_SESSION_SECRET; docs/guides/OPERATIONS_GUIDE.md)\n"
+              "  1. Start the server and the console on the lakes (samples off, offline, sign-in on, the development secrets: never for production):\n"
+              f"     {start}   (from {ROOT}; docs/DEPLOYMENT_AND_QA_GUIDE.md section 6)\n"
+              + (f"     this lake is not the default one: start the server with --lake-root {self.lake} (bin/start-server)\n" if env else "")
+              +
+              "     or the IDE run configurations 'Drishti server (demo lakes)' and 'Drishti console'\n"
+              "  2. Sign in as drishti-dev-admin / drishti-dev-admin123\n"
               "  3. Open (console port 17480 by default):\n"
               "     /v/trade/1000001             an ENDUR ComSwap (legs side by side, cash flows and resets)\n"
               "     /v/trade/CLY-3000157         a CALYPSO government bond;   /v/trade/MX-20000001   a MUREX swap\n"

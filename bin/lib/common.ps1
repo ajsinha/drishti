@@ -243,3 +243,27 @@ function Test-SettingsFiles([string]$Files) {
         if (-not (Test-Path -LiteralPath $f -PathType Leaf)) { Fail "--settings ${f}: no such file" 2 }
     }
 }
+
+# Get-SettingsValue FILES KEY: KEY's value in the comma-separated settings files (a later file wins; a dotted [section] prefixes its keys,
+# as the server reads them), empty when none names it
+function Get-SettingsValue([string]$Files, [string]$Key) {
+    $value = ''
+    foreach ($f in ($Files -split ',')) {
+        $f = $f.Trim()
+        if (-not $f) { continue }
+        $prefix = ''
+        foreach ($raw in (Get-Content -LiteralPath $f -Encoding UTF8)) {
+            $line = $raw.Trim()
+            if (-not $line -or $line.StartsWith('#') -or $line.StartsWith(';')) { continue }
+            if ($line.StartsWith('[') -and $line.EndsWith(']')) {
+                $section = $line.Substring(1, $line.Length - 2).Trim()
+                $prefix = $(if ($section.Contains('.')) { "$section." } else { '' })
+                continue
+            }
+            $i = $line.IndexOf('=')
+            if ($i -le 0) { continue }
+            if (($prefix + $line.Substring(0, $i).Trim()) -eq $Key) { $value = $line.Substring($i + 1).Trim() }
+        }
+    }
+    return $value
+}

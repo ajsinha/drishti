@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The rolling upgrade runner (CD3, tools/rolling.py): the order (consoles, BI and data, coordinators, owners zone by zone), each node's
+"""The rolling upgrade runner (CD3, tools/rolling.py): the order (BI and data, coordinators, owners zone by zone, consoles last), each node's
 steps on VMs and on ECS, resuming and choosing nodes, the dry run (every step printed, nothing called), and a run against fake nodes:
 one node at a time, each drained, waited for, stopped, upgraded, started and waited for until ready; a failure stops the run.
 
@@ -87,17 +87,17 @@ class Fake:
 
 
 class Planning(unittest.TestCase):
-    def test_the_order_is_consoles_bi_and_data_coordinators_then_owners_zone_by_zone(self):
+    def test_the_order_is_bi_and_data_coordinators_owners_zone_by_zone_then_the_consoles(self):
         inv = rolling.Inventory.parse(DOC)
         groups = [(t, [n.name for n in ns]) for t, ns in rolling.order(inv)]
-        self.assertEqual(groups, [("consoles", ["console-1"]), ("BI and data-serving", ["data-1", "bi-1"]), ("coordinators", ["coord-1"]),
+        self.assertEqual(groups, [("BI and data-serving", ["data-1", "bi-1"]), ("coordinators", ["coord-1"]),
                                   ("owners in zone az-b", ["var-3"]), ("owners in zone az-a", ["var-1", "var-2"]),
-                                  ("owners without a zone", ["var-9"])])
+                                  ("owners without a zone", ["var-9"]), ("consoles", ["console-1"])])
 
     def test_zones_not_listed_follow_by_name(self):
         doc = {**DOC, "zones": []}
         titles = [t for t, _ in rolling.order(rolling.Inventory.parse(doc))]
-        self.assertEqual(titles[3:], ["owners in zone az-a", "owners in zone az-b", "owners without a zone"])
+        self.assertEqual(titles[2:], ["owners in zone az-a", "owners in zone az-b", "owners without a zone", "consoles"])
 
     def test_a_server_is_drained_waited_for_stopped_upgraded_started_and_waited_for(self):
         inv = rolling.Inventory.parse(DOC)
@@ -128,8 +128,8 @@ class Planning(unittest.TestCase):
 
     def test_resume_and_only_keep_the_order(self):
         inv = rolling.Inventory.parse(DOC)
-        self.assertEqual([n.name for _, n, _ in rolling.plan(inv, "v", start="coord-1")], ["coord-1", "var-3", "var-1", "var-2", "var-9"])
-        self.assertEqual([n.name for _, n, _ in rolling.plan(inv, "v", only={"var-2", "console-1"})], ["console-1", "var-2"])
+        self.assertEqual([n.name for _, n, _ in rolling.plan(inv, "v", start="coord-1")], ["coord-1", "var-3", "var-1", "var-2", "var-9", "console-1"])
+        self.assertEqual([n.name for _, n, _ in rolling.plan(inv, "v", only={"var-2", "console-1"})], ["var-2", "console-1"])
         with self.assertRaises(rolling.PlanError):
             rolling.plan(inv, "v", start="nope")
 
@@ -146,8 +146,8 @@ class Planning(unittest.TestCase):
     def test_the_example_inventory_plans(self):
         inv = rolling.Inventory.load(str(ROOT / "deploy" / "rolling.example.yaml"))
         work = rolling.plan(inv, "2.9.7")
-        self.assertEqual([n.role for _, n, _ in work][:2], ["console", "console"])
-        self.assertEqual([n.zone for _, n, _ in work][-4:], ["az-a", "az-a", "az-b", "az-b"])
+        self.assertEqual([n.role for _, n, _ in work][-2:], ["console", "console"])
+        self.assertEqual([n.zone for _, n, _ in work if n.role == "owner"][-4:], ["az-a", "az-a", "az-b", "az-b"])
         for _, n, _ in work:
             self.assertNotRegex(n.url, r"//(localhost|127\.|0\.0\.0\.0)", "a real address, never localhost")
 
@@ -166,7 +166,7 @@ class Running(unittest.TestCase):
         self.assertIn("POST http://10.0.3.11:18480/api/v1/admin/node/drain", text)
         self.assertIn("install 2.9.7 on 10.0.3.11", text)
         self.assertIn("GET http://10.0.1.11:17480/readyz", text)
-        self.assertLess(text.index("console-1"), text.index("coord-1"))
+        self.assertLess(text.index("coord-1"), text.index("console-1"))
         self.assertLess(text.index("var-3"), text.index("var-1"))
 
     def test_one_node_at_a_time_each_drained_safe_stopped_upgraded_started_and_ready_before_the_next(self):

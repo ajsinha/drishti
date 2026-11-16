@@ -32,7 +32,8 @@ and the logs under the data folder, waits for /actuator/health and prints the ad
   --jar FILE          the server jar (default the newest kernel/drishti-server/target/drishti-server-*-exec.jar, then drishti-server*.jar here)
   --java-home DIR     the JDK (default DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH, then /usr/libexec/java_home -v 21 on macOS)
   --packs LIST        the packs to load (DRISHTI_PACKS; default the server's own, or the demo's ten with --demo)
-  --data-dir DIR      the data folder (default DRISHTI_DATA_DIR, else <drishti>/data): run/, logs/, tmp/ and dumps/ are under it
+  --data-dir DIR      the data folder (default the settings files' drishti.data.dir, else DRISHTI_DATA_DIR, else <drishti>/data):
+                      run/, logs/, tmp/ and dumps/ are under it; given to the server as -Ddrishti.data.dir
   --env-file FILE     KEY=VALUE lines put into the server's environment (secrets stay off the command line; values never printed)
   --demo              the offline demo on the lakes, with DEVELOPMENT secrets and the drishti-dev-admin account: NOT FOR PRODUCTION
   --stop              the same as bin/stop-server.sh (with --node and --data-dir)
@@ -121,6 +122,10 @@ fi
 
 [ -z "$ENV_FILE" ] || load_env_file "$ENV_FILE"
 [ -z "$DIST" ] || export DRISHTI_DISTRIBUTION="$DIST"   # the server reads it as drishti.distribution
+if [ -n "$SETTINGS" ]; then                 # the settings files: absolute paths that exist, never searched for
+  check_settings "$SETTINGS"
+  [ -n "$DATA" ] || DATA="$(settings_value "$SETTINGS" drishti.data.dir)"   # --data-dir, else the files' data folder, else DRISHTI_DATA_DIR
+fi
 DATA="$(data_dir "$DATA")"
 SERVER_DATA="$(data_dir "${NODE_DATA:-$DATA}")"
 export DRISHTI_DATA_DIR="$SERVER_DATA"
@@ -244,10 +249,10 @@ export MALLOC_ARENA_MAX="${MALLOC_ARENA_MAX:-2}"          # glibc: two malloc ar
 FLAGS=("-Djava.io.tmpdir=$TMP" "-Xmx$HEAP" "-XX:MaxDirectMemorySize=256m" "-XX:TrimNativeHeapInterval=60000" "-Djdk.nio.maxCachedBufferSize=262144"
        "-XX:NativeMemoryTracking=summary" "-XX:+HeapDumpOnOutOfMemoryError" "-XX:HeapDumpPath=$DATA/dumps/$LABEL"
        "-Xlog:gc*:file=$DATA/logs/gc-$STEM-%p.log:time,uptime:filecount=5,filesize=20m")
-if [ -n "$SETTINGS" ]; then                 # the settings files: absolute paths that exist, never searched for
-  check_settings "$SETTINGS"
-  FLAGS+=("-Ddrishti.settings.file=$SETTINGS")
-fi
+# the data folder as a -D: the script's pid, log and temporary files and the server's data are always the same folder (a -D beats the
+# settings files, which beat the environment)
+FLAGS+=("-Ddrishti.data.dir=$SERVER_DATA")
+[ -z "$SETTINGS" ] || FLAGS+=("-Ddrishti.settings.file=$SETTINGS")
 [ "$MAJOR" -lt 25 ] || FLAGS=("-XX:+UseCompactObjectHeaders" "${FLAGS[@]}")
 # direct memory beyond 256 MB: the in-memory lake's stores and Arrow's budget, from the one place that sizes them (a later flag wins)
 PY="$(python_for_tools)"

@@ -30,7 +30,8 @@ the native memory settings and the logs under the data folder, waits for /actuat
   --jar FILE          the server jar (default the newest kernel\drishti-server\target\drishti-server-*-exec.jar, then drishti-server*.jar here)
   --java-home DIR     the JDK (default DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH)
   --packs LIST        the packs to load (DRISHTI_PACKS; default the server's own, or the demo's ten with --demo)
-  --data-dir DIR      the data folder (default DRISHTI_DATA_DIR, else <drishti>\data): run\, logs\, tmp\ and dumps\ are under it
+  --data-dir DIR      the data folder (default the settings files' drishti.data.dir, else DRISHTI_DATA_DIR, else <drishti>\data):
+                      run\, logs\, tmp\ and dumps\ are under it; given to the server as -Ddrishti.data.dir
   --env-file FILE     KEY=VALUE lines put into the server's environment (secrets stay off the command line; values never printed)
   --demo              the offline demo on the lakes, with DEVELOPMENT secrets and the drishti-dev-admin account: NOT FOR PRODUCTION
                       (-DemoLakes, the old name, is the same)
@@ -91,7 +92,11 @@ if (-not $node -and ($o['nodedir'] -or $o['nodedata'] -or $o['seed'] -or $o['adv
 
 if ($o['envfile']) { Import-EnvFile $o['envfile'] }
 if ($o['distribution']) { $env:DRISHTI_DISTRIBUTION = $o['distribution'] }   # the server reads it as drishti.distribution
-$data = Get-DataDir (Opt $o 'datadir')
+$settingsFile = Opt $o 'settings'
+if ($settingsFile) { Test-SettingsFiles $settingsFile }   # the settings files: absolute paths that exist, never searched for
+$dataGiven = Opt $o 'datadir'                              # --data-dir, else the settings files' data folder, else DRISHTI_DATA_DIR
+if (-not $dataGiven -and $settingsFile) { $dataGiven = Get-SettingsValue $settingsFile 'drishti.data.dir' }
+$data = Get-DataDir $dataGiven
 $serverData = Get-DataDir (Opt $o 'nodedata' $data)
 $env:DRISHTI_DATA_DIR = $serverData
 # the launch roots, absolute (docs/admin/CONFIGURATION.md, "Launch roots"): the install folder this script is in, and its modules; the server
@@ -134,8 +139,6 @@ $major = if ($version -match 'version "(\d+)') { [int]$Matches[1] } else { 0 }
 if ($major -lt 21) { Fail "Drishti runs on Java 21 or newer; $java says: $version" }
 
 # the jar
-$settingsFile = Opt $o 'settings'
-if ($settingsFile) { Test-SettingsFiles $settingsFile }   # the settings files: absolute paths that exist, never searched for
 $jar = Opt $o 'jar'
 if (-not $jar) {
     $candidates = @(Get-ChildItem -Path (Join-Path $script:DrishtiRoot 'kernel\drishti-server\target') -Filter 'drishti-server-*-exec.jar' -ErrorAction SilentlyContinue) +
@@ -250,7 +253,10 @@ if ($py) {
     } catch { } finally { Pop-Location }
 }
 $javaArgs += @($o['javaopt'] | Where-Object { $_ })
-if ($settingsFile) { $javaArgs += "-Ddrishti.settings.file=$settingsFile" }   # the settings file (docs/admin/CONFIGURATION.md)
+# the data folder as a -D: the script's pid, log and temporary files and the server's data are always the same folder (a -D beats the
+# settings files, which beat the environment)
+$javaArgs += "-Ddrishti.data.dir=$serverData"
+if ($settingsFile) { $javaArgs += "-Ddrishti.settings.file=$settingsFile" }   # the settings files (docs/admin/CONFIGURATION.md)
 $javaArgs += @('-jar', $jar, "--server.port=$port")
 if ($o['background']) { $javaArgs += @("--drishti.logging.file=$log", '--logging.threshold.console=OFF') }
 $javaArgs += @($o['serverarg'] | Where-Object { $_ }) + @($o['--'] | Where-Object { $_ })
