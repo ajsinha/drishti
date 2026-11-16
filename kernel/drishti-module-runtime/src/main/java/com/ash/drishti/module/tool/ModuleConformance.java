@@ -570,8 +570,15 @@ public final class ModuleConformance {
             }
         }
         if (project != null) {
-            for (String src : List.of("src/main/java", "src/test/java")) {
-                Path root = project.resolve(src);
+            List<Path> roots = new ArrayList<>(List.of(project.resolve("src/main/java"), project.resolve("src/test/java")));   // a Maven project
+            if (Files.isDirectory(project.resolve("java"))) {        // a module's folder: each of its Maven projects under java/
+                try (Stream<Path> s = Files.list(project.resolve("java"))) {
+                    s.filter(Files::isDirectory).sorted().forEach(d -> roots.addAll(List.of(d.resolve("src/main/java"), d.resolve("src/test/java"))));
+                } catch (IOException e) {
+                    throw new UncheckedIOException(e);
+                }
+            }
+            for (Path root : roots) {
                 if (!Files.isDirectory(root)) {
                     continue;
                 }

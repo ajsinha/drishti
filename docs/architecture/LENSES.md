@@ -478,7 +478,7 @@ STR, SSPNL) and collateral operations (COLL, MC), left out by the lens file. **D
 | VaR limit use per book and desk; limit use by book over 5 official dates; breaches and near limit | **Built** (`var-limit`; the server's `limitStatus` with `drishti.risk.limit-near` 0.8) | [VAR_GUIDE section 15.15](../guides/VAR_GUIDE.md#1515-var-limit-the-nodes-var-limits) |
 | P&L against VaR: hypothetical P&L against the VaR before it, 60 days, exceptions circled | **Partly built**: Drishti's derived hypothetical P&L only (TL3); left out without official history | [VAR_GUIDE section 7](../guides/VAR_GUIDE.md#7-history-and-backtesting) |
 | DV01 of my books | **Partly built**: Σ live trades' `DV01`; no bucketed sensitivities (TL7) | [IMPLEMENTATION_PLAN.md "Computed and derived attributes: open steps"](IMPLEMENTATION_PLAN.md#computed-and-derived-attributes-open-steps) |
-| Trades today (new, amended, cancelled), today's blotter, trade pages and history | **Built** ("new" reads 0 on the demo: TL1) | [trading pack README](../../modules/banking/dmod/packs/trading/README.md), [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time) |
+| Trades today (new, amended, cancelled), today's blotter, trade pages and history | **Built** ("new" reads 0 on the demo: TL1) | [trading pack README](../../modules/banking/packs/trading/README.md), [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time) |
 | Counterparties: `CTRD`, `NSET`, `NSMTM`, `CPMTM`; pre-deal PFE against the credit limit | **Built** | [EXPOSURE_GUIDE section 7](../guides/EXPOSURE_GUIDE.md#7-pre-deal-what-if) |
 | The desk's largest counterparty | **Partly built**: by share of positive MtM, not exposure (TL2) | [EXPOSURE_GUIDE section 4](../guides/EXPOSURE_GUIDE.md#4-scopes) |
 | Alerts on numbers and monitors | **Built**, each person sets their own (one-click watch: TL10) | [USER_GUIDE.md, Alerts on numbers](../guides/USER_GUIDE.md#alerts-on-numbers) |
@@ -807,7 +807,7 @@ licensing shapes what may be shown.
 | Late loads by expectation | **Built** for loads (per id: ML8) | [DATA_GUIDE.md section 8](../guides/DATA_GUIDE.md#8-expectations-and-late-data) |
 | Monitors and alerts on numbers | **Built** (`market.yaml` `features`) | [USER_GUIDE.md](../guides/USER_GUIDE.md#alerts-on-numbers) |
 | Proxy status of each P&L vector (`ok`, `proxied`, `failed`) | **Partly built**: in the Risk packs, not in Market (ML9) | [VAR_GUIDE section 15.2](../guides/VAR_GUIDE.md#152-pnl-vector-one-pl-vector-per-trade) |
-| Who uses each item; VaR and valuations at stake | **Not built**: trades carry `LEGS[].INDEX` (a benchmark name) and `DISCOUNT_INDEX`, not market-data ids (ML1) | [trading pack README](../../modules/banking/dmod/packs/trading/README.md) |
+| Who uses each item; VaR and valuations at stake | **Not built**: trades carry `LEGS[].INDEX` (a benchmark name) and `DISCOUNT_INDEX`, not market-data ids (ML1) | [trading pack README](../../modules/banking/packs/trading/README.md) |
 | Two sources and IPV; kept quality records; market-data BI | **Not built** (ML3, ML7, ML6); the lens keeps BI to `market-data-*` names so it never offers VaR or exposure | — |
 | The market-data line of a data-trust card | **Proposed** as RO13 ([section 5.3](#53-gaps-and-proposals)), reusing the Quality checks | — |
 
@@ -3127,7 +3127,7 @@ risk-neutral run, a stressed run and credit paths.
 
 #### 7.6.3 Contracts the CCR cube adds
 
-Proposed contract YAMLs in `modules/banking/dmod/packs/counterparty-risk/contracts/` (mnemonics placeholders): `saccr-trade` (SACT),
+Proposed contract YAMLs in `modules/banking/packs/counterparty-risk/contracts/` (mnemonics placeholders): `saccr-trade` (SACT),
 `collateral-holding` (CHLD), `im-history` (IMH), `credit-path` (XCRP), `wwr-flag` (WWRF), `cva-proxy-map` (CPXY), `cva-sensitivity` (CVAS),
 `exposure-allocation` (XALC, computed), `saccr-result` (SACR, computed, replacing the stored `sa-ccr`), `cva-result` (CVAR, computed,
 replacing the stored `cva`); `simm-result` (SIMR) is the SIMM engine's planned official capture.
@@ -3245,7 +3245,7 @@ inputs above; retention (0.4 to 2 TB a date) and entitlements by counterparty, g
 ## 8. CRO lens
 
 **Status: proposed (design, not built).** The lens id `cro` has a registry entry in the banking module
-(`modules/banking/banking-service/src/main/resources/META-INF/drishti/lenses.yaml`); there is no lens file, landing or pack yet. Purpose: the
+(`modules/banking/java/banking-service/src/main/resources/META-INF/drishti/lenses.yaml`); there is no lens file, landing or pack yet. Purpose: the
 executive, cross-risk-type view that answers *"Is the bank within its risk appetite, what changed overnight, and what do I need to act
 on or tell the board?"* It summarises and owns no engine; every figure opens the lens that computed it (MCUBE, CCUBE, Oversight,
 Market, World). Its rows are the plan's candidates CRO1 to CRO13

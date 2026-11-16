@@ -143,3 +143,19 @@ def test_the_repository_reads_every_shipped_pack_once():
         assert (p.folder / "pack.yaml").is_file()
     assert r.connectors.find("trade-endur").template_from == "module source-endur"
     assert not [x.message for x in r.connectors.problems]
+
+
+def test_the_console_reads_the_servers_view_of_the_site_overrides(tmp_path):
+    """KERNEL_AND_MODULES.md 18.10: the server lays the override folders over the modules in <data>/overrides/modules and lists them in
+    its overrides.yaml; the twin reads that view when it is of its own modules folder, and the modules folder itself when there is none
+    (or the view is of another one). Nothing is written here."""
+    modules, data = tmp_path / "modules", tmp_path / "data"
+    _tree(tmp_path, {"modules/banking/module.yaml": "id: banking\n"})
+    env = {"DRISHTI_MODULES_HOME": str(modules), "DRISHTI_DATA_DIR": str(data)}
+    assert R.Settings.from_env(env=env, base=tmp_path).modules_home == modules
+    view = data / "overrides" / "modules"
+    _tree(tmp_path, {"data/overrides/modules/banking/module.yaml": "id: banking\n",
+                     "data/overrides/modules/overrides.yaml": f"modules-home: '{modules}'\nfiles: []\n"})
+    assert R.Settings.from_env(env=env, base=tmp_path).modules_home == view
+    (view / "overrides.yaml").write_text(f"modules-home: '{tmp_path / 'elsewhere'}'\n", encoding="utf-8")
+    assert R.Settings.from_env(env=env, base=tmp_path).modules_home == modules

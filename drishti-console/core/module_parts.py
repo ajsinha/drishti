@@ -237,26 +237,24 @@ class ModuleParts:
                         continue
                 self._read(mid, folder, "server", parts, refused)
             shipped = self._shipped()                   # the product's own modules, while the server has them loaded and nothing replaced them
-            content = {m for m, f in shipped.items() if f.name != "dmod"}   # a module project (src/dmod: genomics) only when the server says it is loaded
+            content = {m for m, (_, code) in shipped.items() if not code}   # a module with code (java/: banking, genomics) only when the server says it is loaded
             for mid in sorted(content if loaded is None else set(loaded) & set(shipped)):
                 if mid not in parts and mid not in gone:
-                    self._read(mid, shipped[mid], "shipped", parts, refused)
+                    self._read(mid, shipped[mid][0], "shipped", parts, refused)
             self.snapshot = Snapshot(parts, gone, refused, key)
             self._envs = {k: v for k, v in self._envs.items() if k[0] in parts and parts[k[0]].version == k[1]}
             LOG.warning("module parts: hosted %s; gone %s; refused %s", sorted(parts), sorted(gone), sorted(refused))
             return True
 
-    def _shipped(self) -> dict[str, Path]:
-        """The product's own modules with a console part (``modules/<folder>/module.yaml``), by id, as the one resolver finds them: a
-        content module's folder or a module project's src/dmod (the SDK's layout); a module with code's ``dmod/`` comes from the server."""
+    def _shipped(self) -> dict[str, tuple[Path, bool]]:
+        """The product's own modules with a console part (``modules/<folder>/module.yaml``, the one module layout), by id, as the one
+        resolver finds them, each with whether it has code (a ``java:`` block in its manifest)."""
         from core import resolution
         out = {}
         found = resolution.module_list(self.shipped).values() if self.shipped and self.shipped.is_dir() else []
         for m in found:
-            if m.home.name == "dmod" and m.home.parent.name != "src":
-                continue
             if (m.home / "console" / "plugin.yaml").is_file():
-                out[m.id] = m.home
+                out[m.id] = (m.home, bool(m.manifest.get("java")))
         return out
 
     async def _fetch(self, backend, mid: str, ver: str, folder: Path) -> None:

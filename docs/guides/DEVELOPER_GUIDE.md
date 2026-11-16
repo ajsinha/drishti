@@ -101,7 +101,7 @@ inbox nor the in-memory lake, the disk cache sees nothing of `common`, and so on
 | `drishti-testkit` | `testkit` | Contract tests every source plugin of a kind must pass. | `DatedSourceContract`, `MessageSourceContract`, `BrokerOutage` |
 | `drishti-module-runtime` | `module.runtime` | The module runtime ([§1.5](#15-the-module-runtime)): the `.dmod` package and its hash list, the manifest, verification V1–V8, discovery, the dependency resolver, a class loader and a child Spring context per module, the live route table, the registry of contributions and the unload sequence with its leak check; and the module tool ([§1.6](#16-the-module-sdk): `module.tool`, the one packer and the conformance checks, `target/drishti-module-tool.jar`). Spring and Jackson only; one implementation for the kernel and, from i4, the console. | `ModuleRuntime`, `tool.ModuleTool`, `tool.ModuleConformance`, `DmodManifest`, `Dmod`, `ModuleVerifier`, `DependencyResolver`, `ModuleClassLoader`, `RouteTable`, `Contributions`, `LeakCheck` |
 | `drishti-sdk/drishti-module-maven-plugin`, `-archetype`, `-parent` | `sdk` | The Module SDK ([§1.6](#16-the-module-sdk)): the archetype of a module project, the parent it inherits, and the plugin that validates, packs the `.dmod` and runs the conformance checks C1–C15. | `ValidateMojo`, `AssembleMojo`, `ConformanceMojo` (over `module.tool`) |
-| `modules/banking/banking-compute`, `banking-service` | `banking` | The banking module's sources, built on their own (`./mvnw -f modules/banking/pom.xml`; artifacts `drishti-compute-banking`, `drishti-banking`): the maths, then the services, storage, Spring wiring and API. The kernel internals it still reaches are listed in `modules/banking/kernel-internals.txt` (`BankingReachTest`: the list only shrinks). | `BankingModule`, `var.*`, `exposure.*`, `compute.var.*` |
+| `modules/banking/java/banking-compute`, `banking-service` | `banking` | The banking module's sources, built on their own (`./mvnw -f modules/banking/pom.xml`; artifacts `drishti-compute-banking`, `drishti-banking`): the maths, then the services, storage, Spring wiring and API. The kernel internals it still reaches are listed in `modules/banking/java/kernel-internals.txt` (`BankingReachTest`: the list only shrinks). | `BankingModule`, `var.*`, `exposure.*`, `compute.var.*` |
 | `drishti-app`, `drishti-kernel-app` | (none) | The runnable jars, no code: `drishti-app` the full jar (the kernel with banking, the default, `lib/drishti-server-<v>-exec.jar`); `drishti-kernel-app` the thin jar (the kernel alone, `packaging/drishti-kernel-app/target/drishti-kernel-<v>-exec.jar`, Health: *no modules: the kernel runs alone*). | |
 | `drishti-server` | `server` | The Spring Boot application: REST and SSE controllers, security, alerts, Sutra governance, and one sub-package per feature area (`admin`, `ai`, `alerts`, `bi`, `calc`, `cli`, `collab`, `connectors`, `deploy`, `design`, `dist`, `embed`, `explain`, `governance`, `layout`, `loads`, `notify`, `pivot`, `registry`, `reports`). `bi` is the BI engine (section 4.4). | `DrishtiApplication`, `api.*Controller`, `security.Entitlements`, `security.TokenFilter`, `alerts.AlertEngine`, `governance.SutraGovernance`, `bi.mq.MqService`, `bi.engine.QueryService` |
 | `drishti-it` | `it` | Repository-wide rules, as tests only. | `ArchitectureRulesTest`, `LicenseHeaderTest`, `SourceFileSizeTest`, `NoBlockingUnderSynchronizedTest` |
@@ -242,21 +242,21 @@ The tool is built with the runtime: `kernel/drishti-module-runtime/target/drisht
 `DRISHTI_MODULE_TOOL` points the command line at another copy). `pack` takes a folder in the `.dmod` layout (`module.yaml` at its root);
 the jar named in `module.yaml`'s `java.jars` is either already under `java/` or given with `--jar`. `check` takes a `.dmod` or a folder
 (packed first) and `--project <dir>` (the sources C10 reads) and `--cycles <n>` (C15); exit 0 when every check passed, 1 when one failed or
-the module was refused, 2 for usage. `inspect` prints the manifest, the parts and the hash list's verdict. A Gradle build, for example. Run these from your module project's folder (the one with `src/dmod/`).
+the module was refused, 2 for usage. `inspect` prints the manifest, the parts and the hash list's verdict. A Gradle build, for example. Run these from your module project's folder (the one with `module.yaml` at its top; the code is the Maven or Gradle project under `java/<id>/`).
 
 ```bash
 gradle jar                                          # build/libs/greet.jar, compiled against drishti-kernel-api (compileOnly)
-java -jar drishti-module-tool.jar pack src/dmod --jar build/libs/greet.jar --out build/dmod
-java -jar drishti-module-tool.jar check build/dmod/greet-0.1.0.dmod --project .
+java -jar drishti-module-tool.jar pack . --jar java/greet/build/libs/greet.jar --out java/greet/build/dmod
+java -jar drishti-module-tool.jar check java/greet/build/dmod/greet-0.1.0.dmod --project .
 ```
 
 For Maven the SDK is three more artifacts of this repository, `com.ash.drishti:*` at the product's version:
 
 | Artifact | What it is |
 |---|---|
-| `drishti-module-archetype` | makes a module project that builds green on its first `mvn verify`: `src/dmod/module.yaml`, a function (`Greeting`, a bean of the module's Spring configuration) with its route and page (`console/plugin.yaml` format 2, `console/pages/hello.html`), a style on the theme tokens, a kind with its data contract and the data needs, `docs/` (README with front matter, Help, a guide, a tutorial) and a JUnit test |
+| `drishti-module-archetype` | makes a module in the one module layout that builds green on its first `mvn verify`: the `.dmod` content at the folder's top (`module.yaml`, `packs/`, `console/`, `data/`, `docs/`), the code as the Maven project `java/<artifactId>/` with the aggregating `pom.xml` beside `java/`; a function (`Greeting`, a bean of the module's Spring configuration) with its route and page (`console/plugin.yaml` format 2, `console/pages/hello.html`), a style on the theme tokens, a kind with its data contract and the data needs, `docs/` (README with front matter, Help, a guide, a tutorial) and a JUnit test |
 | `drishti-module-parent` | the parent the project inherits: Java 21; the kernel API and Spring as `provided` (the kernel supplies them; never inside a `.dmod`); JUnit and AssertJ; the plugin's executions |
-| `drishti-module-maven-plugin` | a thin wrapper over the tool's classes: `drishti:validate` (validate phase: the manifest reads, its id and version are the pom's), `drishti:assemble` (package: `src/dmod/` plus the project's jar under `java/`, packed by the module runtime's packer into `target/dmod/<id>-<version>.dmod` with its hash list and `.sha256`), `drishti:conformance` (verify: the checks C1–C15) |
+| `drishti-module-maven-plugin` | a thin wrapper over the tool's classes: `drishti:validate` (validate phase: the manifest reads, its id and version are the pom's), `drishti:assemble` (package: the module folder's content plus the project's jar under `java/`, packed by the module runtime's packer into `target/dmod/<id>-<version>.dmod` with its hash list and `.sha256`), `drishti:conformance` (verify: the checks C1–C15) |
 
 **Quickstart with Maven: archetype → build → load.** Run these from the Drishti folder (the repository root, or the install folder of a release).
 
@@ -264,8 +264,8 @@ For Maven the SDK is three more artifacts of this repository, `com.ash.drishti:*
 ./mvnw -q install -pl .,drishti-sdk/drishti-module-maven-plugin,drishti-sdk/drishti-module-archetype,drishti-sdk/drishti-module-parent -am -DskipTests
 mvn -B archetype:generate -DarchetypeGroupId=com.ash.drishti -DarchetypeArtifactId=drishti-module-archetype \
     -DarchetypeVersion=2.9.11.g -DgroupId=com.example.greet -DartifactId=greet -Dpackage=com.example.greet
-cd greet && mvn verify          # the test, target/dmod/greet-0.1.0.dmod, then "C1 No kernel internals: passed" ... C15
-cp target/dmod/greet-0.1.0.dmod <data folder>/modules/    # auto-deploy (a single node): stored, checked, installed and loaded
+cd greet && mvn verify          # the test, java/greet/target/dmod/greet-0.1.0.dmod, then "C1 No kernel internals: passed" ... C15
+cp java/greet/target/dmod/greet-0.1.0.dmod <data folder>/modules/    # auto-deploy (a single node): stored, checked, installed and loaded
 curl -s localhost:18480/api/v1/greet/greeting/Asha         # the module's REST API, mounted by the kernel
 rm <data folder>/modules/greet-0.1.0.dmod                  # removed the same way: its paths answer 410, its tombstone is kept
 ```
@@ -278,16 +278,16 @@ does not name is placed on it, and Health notes *single node: placed here*). Aut
 deployed by plan → apply ([CLUSTER_GUIDE.md](CLUSTER_GUIDE.md)). **Production loads only verified `.dmod` packages.**
 
 **Edit → reload, in development mode.** While you work on a module, the kernel can load its build output without packing a `.dmod` and
-reload it whenever it changes, as Tomcat runs an unpacked web application. The server line runs from the Drishti folder; the `mvn` line runs from your module project's folder (the one with `src/dmod/`).
+reload it whenever it changes, as Tomcat runs an unpacked web application. The server line runs from the Drishti folder; the `mvn` line runs from your module project's folder (the one with `module.yaml` at its top; the code is the Maven or Gradle project under `java/<id>/`).
 
 ```bash
 # once: a development server (single node, never the prod or production profile) pointed at the module's exploded build output
-DRISHTI_MODULES_DEV=true DRISHTI_MODULES_PATH=$PWD/target/dmod-stage/greet python tools/drishti.py start server
+DRISHTI_MODULES_DEV=true DRISHTI_MODULES_PATH=$PWD/java/greet/target/dmod-stage/greet python tools/drishti.py start server
 # the loop: edit, rebuild, and the kernel reloads it within drishti.modules.autodeploy-seconds (unload, leak check, load)
 mvn -q package -DskipTests      # the server log says "development mode: greet changed: unloaded (leak-free)", then "loaded"
 ```
 
-`target/dmod-stage/<id>/` is the folder `drishti:assemble` packs (module.yaml at its root, the jars under `java/`). A folder of
+`java/<id>/target/dmod-stage/<id>/` is the folder `drishti:assemble` packs (module.yaml at its root, the jars under `java/`). A folder of
 `<id>/<version>/` folders works too. Development mode loads it **unverified** (no hash list, no checks), and Health and Admin → Modules mark
 the module *development (unverified)*. `drishti.modules.dev` is refused in a cluster and under the `prod` or `production` profile: the
 server logs the refusal and loads only verified packages. Run `mvn verify` (the fifteen checks) before you ship.
@@ -470,7 +470,7 @@ kernel with it alone ([DISTRIBUTIONS.md section 4](../architecture/DISTRIBUTIONS
 5. **One page folder**, `console/pages/explorer.html`, for the six routes (`VARIANT`, `GENE`, `COHORT` and their lists), drawn with the
    Elements macros and `drishti_genomics-pages.js`; the gene's page draws `genomics.lollipop` (section 1.8).
 6. **Synthetic data**: `tools/make_samples.py` (seeded) writes two cohorts of twelve samples and 120 variants over eight genes.
-7. **Built in the kernel's reactor**: `./mvnw -o package -pl modules/genomics -am` packs `target/dmod/genomics-0.1.0.dmod` and runs the
+7. **Built in the kernel's reactor**: `./mvnw -o package -pl modules/genomics/java/genomics -am` packs `java/genomics/target/dmod/genomics-0.1.0.dmod` and runs the
    fifteen checks at `package`. `GenomicsDistributionServerTest` boots Drishti Genomics with the package dropped in;
    `test_genomics_walk_browser.py` walks it in a browser on the thin jar.
 
@@ -3682,12 +3682,12 @@ is in [section 1.7](#17-what-a-module-can-contribute).
 | a page | `console/plugin.yaml` (`format: 2`, `routes:`, `menus:`, `home:`, `ai:`) and a template extending `kernel/page.html`: [section 1.7, the console part](#17-a-modules-console-part) | `console/pages/hello.html` |
 | Help | `docs/README.md` with front matter (`title`, `domain`, `summary`), `docs/help.yaml` (`sections:` of `pages:` with `file:`), a guide and a tutorial (C7); shown as `/help/section/module-<id>` | `docs/` |
 
-**4. Build it, one of three ways** (one packer, one set of checks; [section 1.6](#16-the-module-sdk)). Run these from your module project's folder (the one with `src/dmod/`); the Python line needs the path to the Drishti folder's `tools/drishti.py`.
+**4. Build it, one of three ways** (one packer, one set of checks; [section 1.6](#16-the-module-sdk)). Run these from your module project's folder (the one with `module.yaml` at its top; the code is the Maven or Gradle project under `java/<id>/`); the Python line needs the path to the Drishti folder's `tools/drishti.py`.
 
 ```bash
-mvn verify                                                              # Maven: target/dmod/freight-0.1.0.dmod, then C1 ... C15
-java -jar drishti-module-tool.jar pack src/dmod --jar build/libs/freight.jar --out build/dmod      # any build
-python3 tools/drishti.py module pack src/dmod --jar build/libs/freight.jar --out build/dmod      # Java and Python only
+mvn verify                                                              # Maven: java/freight/target/dmod/freight-0.1.0.dmod, then C1 ... C15
+java -jar drishti-module-tool.jar pack . --jar java/freight/build/libs/freight.jar --out java/freight/build/dmod      # any build
+python3 tools/drishti.py module pack . --jar java/freight/build/libs/freight.jar --out java/freight/build/dmod      # Java and Python only
 ```
 
 **5. Check it.** `module check` (or `drishti:conformance` in `mvn verify`) runs the fifteen checks of
@@ -3695,8 +3695,8 @@ python3 tools/drishti.py module pack src/dmod --jar build/libs/freight.jar --out
 `all 15 conformance checks passed` or `<n> of 15 checks failed`. Exit 0 passed, 1 a check failed or the module was refused, 2 usage.
 
 ```bash
-python3 tools/drishti.py module check build/dmod/freight-0.1.0.dmod --project .     # --project: the sources C10 reads
-python3 tools/drishti.py module inspect build/dmod/freight-0.1.0.dmod                # the manifest, its origin, the hash list's verdict
+python3 tools/drishti.py module check java/freight/build/dmod/freight-0.1.0.dmod --project .     # --project: the sources C10 reads
+python3 tools/drishti.py module inspect java/freight/build/dmod/freight-0.1.0.dmod                # the manifest, its origin, the hash list's verdict
 ```
 
 | A failure of | Usually means | The fix |
@@ -3715,8 +3715,8 @@ python3 tools/drishti.py module inspect build/dmod/freight-0.1.0.dmod           
 
 | Where | How | What you see |
 |---|---|---|
-| your own machine, while you edit | a development server on the build folder: `DRISHTI_MODULES_DEV=true DRISHTI_MODULES_PATH=$PWD/target/dmod-stage/freight python tools/drishti.py start server`; every rebuild reloads it ([section 1.6](#16-the-module-sdk)) | the log's *development mode: freight changed: unloaded (leak-free)*, then *loaded*; Health marks it *development (unverified)* |
-| your own machine, the package alone | `python3 tools/drishti.py module run build/dmod/freight-0.1.0.dmod`: the kernel's thin jar with this module only, on a free port, every part placed on it | the address of its API; Ctrl-C stops and removes the run |
+| your own machine, while you edit | a development server on the build folder: `DRISHTI_MODULES_DEV=true DRISHTI_MODULES_PATH=$PWD/java/freight/target/dmod-stage/freight python tools/drishti.py start server`; every rebuild reloads it ([section 1.6](#16-the-module-sdk)) | the log's *development mode: freight changed: unloaded (leak-free)*, then *loaded*; Health marks it *development (unverified)* |
+| your own machine, the package alone | `python3 tools/drishti.py module run java/freight/build/dmod/freight-0.1.0.dmod`: the kernel's thin jar with this module only, on a free port, every part placed on it | the address of its API; Ctrl-C stops and removes the run |
 | one server | drop the `.dmod` into `<data folder>/modules/` (`drishti.modules.path`); auto-deploy checks, installs and loads it | Admin → Modules: *LOADED* |
 | a cluster | place its parts (section 12.5), then Admin → Modules → Deploy, or `drishti.py module deploy <file> --reason … --out plan.json`; a **second** administrator applies: `drishti.py module apply plan.json` ([CLUSTER_GUIDE.md section 1.10](CLUSTER_GUIDE.md#110-deploying-a-module)) | the plan per node, then *applied* on every placed node |
 
@@ -3903,7 +3903,7 @@ pages, so any format a browser draws (SVG best, PNG, WebP); the favicon is the p
 **2. Make its modules known.** A distribution reads each module's own manifest, with the same package reader as the module registry:
 the `.dmod` packages the server ships and those installed in the module store (`<data folder>/modules/installed/`, the package's
 manifest winning), then the manifests folder (`drishti.module-manifests-dir`, default `./modules`): `modules/<id>/module.yaml`, an SDK
-project's `modules/<id>/src/dmod/module.yaml`, or `modules/<id>/dmod/module.yaml`. So a third-party `.dmod` installed once (dropped in,
+project's `modules/<id>/module.yaml` (every module's one layout). So a third-party `.dmod` installed once (dropped in,
 or deployed) is listed by its id with nothing copied into `modules/`. That is where its words, menus, packs and Help come from; a module
 with `required: false` and no manifest anywhere adds none. The console's distribution reads the same list from the server
 (`GET /public/modules/manifests`) and reads it again whenever the module registry changes (`/public/about`'s `manifests`), so a package
@@ -4046,7 +4046,7 @@ visual; its data read through a plugin's connector, placed on two nodes, offered
 says the file, then what you see in the console (UI), from a terminal (CLI) and in the file (YAML).
 
 **Step 1 · The project.** Generate it with the archetype (section 12.1, step 1) inside the repository's `modules/` folder, beside `genomics/`, so a
-distribution can read its manifest; write `src/dmod/module.yaml` as in section 12.1, step 2, with these two blocks added:
+distribution can read its manifest; write `module.yaml` as in section 12.1, step 2, with these two blocks added:
 
 ```yaml
 parts:
@@ -4057,7 +4057,7 @@ compute: {engines: [{id: lane-costing}]}
 
 *UI*: nothing yet. *CLI*: `mvn verify` builds the archetype's first package.
 
-**Step 2 · The kinds and their contracts.** `src/dmod/packs/freight/contracts/shipment.yaml` and `lane-cost.yaml`:
+**Step 2 · The kinds and their contracts.** `packs/freight/contracts/shipment.yaml` and `lane-cost.yaml`:
 
 ```yaml
 contract-format: 1
@@ -4081,7 +4081,7 @@ fields:
   - {name: COST_PER_KG, type: number}
 ```
 
-and the needs, `src/dmod/data/needs.yaml`:
+and the needs, `data/needs.yaml`:
 
 ```yaml
 needs:
@@ -4111,7 +4111,7 @@ public boolean documents(String kind, AsOf asOf, Consumer<EntityDocument> sink) 
 }
 ```
 
-**Step 4 · The page and the visual.** `src/dmod/console/plugin.yaml`:
+**Step 4 · The page and the visual.** `console/plugin.yaml`:
 
 ```yaml
 format: 2
@@ -4129,7 +4129,7 @@ home:
 `docs/README.md`, `docs/help.yaml`, `docs/guide.md`, `docs/tutorial.md`.
 
 **Step 5 · Build and check.** *CLI*: `mvn verify`, which ends with `all 15 conformance checks passed` and
-`target/dmod/freight-0.1.0.dmod`; `python3 tools/drishti.py module inspect target/dmod/freight-0.1.0.dmod` shows the manifest and
+`java/freight/target/dmod/freight-0.1.0.dmod`; `python3 tools/drishti.py module inspect java/freight/target/dmod/freight-0.1.0.dmod` shows the manifest and
 `hashes: every file matches META-INF/DMOD.MF`. A failure names the check and the file (section 12.1, step 5).
 
 **Step 6 · The plugin and its connector.** The depot's shipments are day files, `<root>/shipment/<yyyy-MM-dd>.jsonl`, one shipment per
@@ -4179,7 +4179,7 @@ on the heavy one. *CLI*: `POST /api/v1/admin/cluster/placement/plans` `{placemen
 second administrator *Applies*: staged on both placed nodes, then activated together. *CLI*:
 
 ```bash
-python3 tools/drishti.py module deploy target/dmod/freight-0.1.0.dmod --reason "first install" --out plan.json
+python3 tools/drishti.py module deploy java/freight/target/dmod/freight-0.1.0.dmod --reason "first install" --out plan.json
 python3 tools/drishti.py module apply plan.json          # another administrator
 python3 tools/drishti.py module list
 ```
@@ -4188,7 +4188,7 @@ Admin → Modules shows *LOADED* on `drishti-main` and `drishti-b`; Admin → En
 *Freight*.
 
 **Step 10 · Its own distribution.** `drishti.freight.yaml` from section 12.4 beside the shipped files in `config/distributions/`,
-naming `freight` (`required: true`; the distribution finds the project's `src/dmod/module.yaml` in the modules folder). *CLI*: a second console over the same
+naming `freight` (`required: true`; the distribution finds the project's `module.yaml` in the modules folder). *CLI*: a second console over the same
 cluster, `python tools/drishti.py start console --server http://<server>:18480 --port 17481 --distribution freight --name freight`. *UI*: on port 17481 the top bar says
 *Acme Freight* with the `freight` menu, Home shows the card *London to Rotterdam*; typing the word opens `/m/freight/lane/LON-RTM`, its
 figures read from the depot's files through `shipments-days`, and the page's lane-flow chart is drawn by the module's visual.

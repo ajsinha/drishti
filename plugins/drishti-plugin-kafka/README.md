@@ -231,7 +231,7 @@ PEM) and `kafka-confluent-cloud.yaml` (Confluent Cloud with Schema Registry). `t
 trading samples for a try-out. A connector file is applied within seconds without a restart, and edited in any editor, in
 **Admin → Connectors** or with `drishti.py connector apply` ([../../docs/guides/DATA_GUIDE.md section 9](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors)).
 
-The trading pack suggests `trading-stream` in `modules/banking/dmod/packs/trading/pack.yaml`, off until `DRISHTI_STREAM_TRADING=true`; the
+The trading pack suggests `trading-stream` in `modules/banking/packs/trading/pack.yaml`, off until `DRISHTI_STREAM_TRADING=true`; the
 server writes it to `config/connectors/trading-stream.yaml` at the first start, and the file is then the site's:
 
 ```yaml
@@ -282,7 +282,7 @@ Run these from the Drishti folder (the repository root, or the install folder of
 ```bash
 docker compose -f deploy/docker/compose.data.yaml up -d kafka            # apache/kafka 3.9.1, single-node KRaft, compacted
 uv run --with kafka-python python tools/samplegen/stream.py \
-    --bootstrap localhost:9092 --topic drishti.trading.trades --samples modules/banking/dmod/packs/trading/samples --rate 5 --seconds 0
+    --bootstrap localhost:9092 --topic drishti.trading.trades --samples modules/banking/packs/trading/samples --rate 5 --seconds 0
 DRISHTI_PACKS=trading DRISHTI_STREAM_TRADING=true DRISHTI_DEMO_ENABLED=false \
   java -jar lib/drishti-server-*-exec.jar
 ```

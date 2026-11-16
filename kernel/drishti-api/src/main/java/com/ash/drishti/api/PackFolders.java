@@ -28,7 +28,7 @@ import java.util.stream.Stream;
  * Where a pack's folder is: the one rule every Java reader follows (docs/architecture/DOMAIN_MODULES.md section 8). A packs root
  * ({@code config/packs}, the installed packs, {@code examples/packs}) holds packs directly ({@code <root>/<pack>/pack.yaml}) or one level
  * down in <b>domain folders</b> ({@code <root>/<domain>/<pack>/pack.yaml}): a folder of the root with no {@code pack.yaml} of its own.
- * The product's packs live in the module that owns them ({@code modules/banking/dmod/packs/trading}, found by
+ * The product's packs live in the module that owns them ({@code modules/banking/packs/trading}, found by
  * {@link com.ash.drishti.api.resolution.ConfigResolution}); the packs folder itself holds a site's own packs (and the kernel's {@code core} ones). The console's and the tools' Python twin is
  * {@code drishti-console/core/pack_paths.py}; tests hold both to the layout.
  */

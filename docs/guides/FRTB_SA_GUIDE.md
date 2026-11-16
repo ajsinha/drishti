@@ -72,7 +72,7 @@ All money is in the reporting currency (USD unless asked); every sensitivity is 
 ## 3. The inputs and their data contract
 
 The full data contract (every field, its unit, the checks, the record layouts and the samples) is [FRTB.md](../contracts/FRTB.md); the
-YAML contracts are in `modules/banking/dmod/packs/market-risk/contracts/`. In short:
+YAML contracts are in `modules/banking/packs/market-risk/contracts/`. In short:
 
 | Kind (command) | What | Grain | Required |
 |---|---|---|---|
@@ -271,7 +271,7 @@ the engine's own figure for that alternative. The formulas use only functions Ex
 recalculates the workbook in headless LibreOffice and compares it with the engine to the cent, with the defaults and with each switch
 flipped. **Hand-built cases workbook** (`/api/frtb/template.xlsx`) is the same workbook on the cases of section 10.
 
-**The Explain tab's words** come from `modules/banking/banking-service/src/main/resources/playground/frtb-sa/template/explain.txt` (a line `## <title>`,
+**The Explain tab's words** come from `modules/banking/java/banking-service/src/main/resources/playground/frtb-sa/template/explain.txt` (a line `## <title>`,
 then its text; `#` lines are comments), read by the playground frame's `PlaygroundTemplate.explain()`: in plain words what FRTB-SA
 answers, why a bank must hold it, the tabs, signs and units, the regime and its parameters; 18 steps from the delivered sensitivity to the
 total and the contributions, each worked with the hand-built cases (cases 1 to 5 with the published table: GIRR delta 110,555.42, the
@@ -338,7 +338,7 @@ revaluations are used as delivered.
 
 ## 12. Parameters as configuration
 
-The parameters are two files of the market-risk pack, `modules/banking/dmod/packs/market-risk/capital/frtb-sa-sbm.yaml` (MAR21: risk weights, the
+The parameters are two files of the market-risk pack, `modules/banking/packs/market-risk/capital/frtb-sa-sbm.yaml` (MAR21: risk weights, the
 published GIRR table, correlations, the scenario multipliers, curvature shocks) and `frtb-sa-drc-rrao.yaml` (MAR22 and MAR23: LGDs,
 seniority order, maturity scaling, DRC risk weights, RRAO weights and the product-type mapping). Each names its `regime`, `version` and
 `effective-from` and the paragraph of every value. The engine reads them at start and checks every value and range (a symmetric unit-
@@ -368,7 +368,7 @@ One record per position (or trade), date and batch with a sparse `SENSITIVITIES[
 `IMPLIED_VOL`; curvature up and down with `SHOCK_SIZE`. Each element names its factor by the standard name the factor dictionary
 defines.
 
-- **Data contract:** [`position-sensitivity`](../contracts/packs/market-risk.md#sens-position-sensitivities-position-sensitivity) (SENS), key `SENSITIVITY_ID`; 28 fields, 19 required; the file [`position-sensitivity.contract.yaml`](../../modules/banking/dmod/packs/market-risk/contracts/position-sensitivity.contract.yaml).
+- **Data contract:** [`position-sensitivity`](../contracts/packs/market-risk.md#sens-position-sensitivities-position-sensitivity) (SENS), key `SENSITIVITY_ID`; 28 fields, 19 required; the file [`position-sensitivity.contract.yaml`](../../modules/banking/packs/market-risk/contracts/position-sensitivity.contract.yaml).
 - **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#position-sensitivity) (files `data/testdata/market-risk/position-sensitivity/position-sensitivity.*.jsonl.gz`).
 
 ### 13.3 `risk-factor`: the factor dictionary
@@ -376,7 +376,7 @@ defines.
 One row per factor and date: the standard name, risk class, factor type, qualifier, curve and tenor, the FRTB and SIMM buckets,
 seniority and liquidity horizon, and `SOURCE_NAMES` mapping each system's own name to it.
 
-- **Data contract:** [`risk-factor`](../contracts/packs/market-risk.md#rfac-risk-factor-dictionary-risk-factor) (RFAC), key `RISK_FACTOR`; 27 fields, 12 required; the file [`risk-factor.contract.yaml`](../../modules/banking/dmod/packs/market-risk/contracts/risk-factor.contract.yaml).
+- **Data contract:** [`risk-factor`](../contracts/packs/market-risk.md#rfac-risk-factor-dictionary-risk-factor) (RFAC), key `RISK_FACTOR`; 27 fields, 12 required; the file [`risk-factor.contract.yaml`](../../modules/banking/packs/market-risk/contracts/risk-factor.contract.yaml).
 - **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#risk-factor) (files `data/testdata/market-risk/risk-factor/risk-factor.*.jsonl.gz`).
 
 ### 13.4 `default-risk`: the DRC inputs
@@ -384,7 +384,7 @@ seniority and liquidity horizon, and `SOURCE_NAMES` mapping each system's own na
 The default risk charge's inputs per position and obligor. Without them the answer says *DRC not computed: no default-risk inputs*,
 never 0.
 
-- **Data contract:** [`default-risk`](../contracts/packs/market-risk.md#drci-default-risk-inputs-the-drc-per-position-and-obligor-default-risk) (DRCI), key `DEFAULT_RISK_ID`; 15 fields, 10 required; the file [`default-risk.contract.yaml`](../../modules/banking/dmod/packs/market-risk/contracts/default-risk.contract.yaml).
+- **Data contract:** [`default-risk`](../contracts/packs/market-risk.md#drci-default-risk-inputs-the-drc-per-position-and-obligor-default-risk) (DRCI), key `DEFAULT_RISK_ID`; 15 fields, 10 required; the file [`default-risk.contract.yaml`](../../modules/banking/packs/market-risk/contracts/default-risk.contract.yaml).
 - **Example:** no sample in the demo data.
 
 ### 13.5 `residual-risk`: the RRAO inputs
@@ -392,7 +392,7 @@ never 0.
 The residual risk add-on's class (exotic, other, none) and gross notional per trade. Without them the engine derives the class from
 each position's `PRODUCT_TYPE` and its notional from the VaR book.
 
-- **Data contract:** [`residual-risk`](../contracts/packs/market-risk.md#rrai-residual-risk-inputs-the-rrao-per-trade-residual-risk) (RRAI), key `RESIDUAL_RISK_ID`; 12 fields, 7 required; the file [`residual-risk.contract.yaml`](../../modules/banking/dmod/packs/market-risk/contracts/residual-risk.contract.yaml).
+- **Data contract:** [`residual-risk`](../contracts/packs/market-risk.md#rrai-residual-risk-inputs-the-rrao-per-trade-residual-risk) (RRAI), key `RESIDUAL_RISK_ID`; 12 fields, 7 required; the file [`residual-risk.contract.yaml`](../../modules/banking/packs/market-risk/contracts/residual-risk.contract.yaml).
 - **Example:** no sample in the demo data.
 <!-- guide-data:end -->
 
@@ -704,7 +704,7 @@ GIRR AUD                                         VEGA                       235,
 ```yaml
 drishti:
   frtb:
-    sensitivity-kind: position-sensitivity   # served by risk-store (modules/banking/dmod/packs/market-risk/pack.yaml)
+    sensitivity-kind: position-sensitivity   # served by risk-store (modules/banking/packs/market-risk/pack.yaml)
     factor-kind: risk-factor
     default-risk-kind: default-risk          # none served: "DRC not computed", never 0
     rrao-from-positions: true

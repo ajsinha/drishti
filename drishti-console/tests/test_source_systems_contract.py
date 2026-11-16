@@ -28,7 +28,7 @@ import yaml
 pytestmark = pytest.mark.static
 
 ROOT = Path(__file__).resolve().parents[2]
-CONTRACT = ROOT / "modules" / "banking" / "dmod" / "packs" / "trading" / "contracts" / "trade.contract.yaml"
+CONTRACT = ROOT / "modules" / "banking" / "packs" / "trading" / "contracts" / "trade.contract.yaml"
 
 
 def _allowed() -> list[str]:
@@ -62,7 +62,7 @@ def test_every_source_modules_system_is_allowed_by_the_trade_contract():
 
 def test_every_trade_grain_contract_allows_every_source_system():
     allowed = set(_allowed())
-    for f in sorted((ROOT / "modules").glob("*/dmod/packs/*/contracts/*.contract.yaml")):
+    for f in sorted((ROOT / "modules").glob("*/packs/*/contracts/*.contract.yaml")):
         c = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
         for field in c.get("fields") or []:
             if field.get("name") == "SOURCE_SYSTEM" and field.get("enum"):

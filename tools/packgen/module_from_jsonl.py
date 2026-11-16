@@ -93,10 +93,10 @@ def build_parser(add_help: bool = True) -> argparse.ArgumentParser:
 
 
 def claimed_kinds() -> dict[str, str]:
-    """kind -> the product module that provides it (modules/*/{dmod,src/dmod}/module.yaml `provides: kinds:`)."""
+    """kind -> the product module that provides it (modules/*/module.yaml `provides: kinds:`)."""
     import yaml
     out: dict[str, str] = {}
-    for f in sorted(ROOT.glob("modules/*/dmod/module.yaml")) + sorted(ROOT.glob("modules/*/src/dmod/module.yaml")):
+    for f in sorted(ROOT.glob("modules/*/module.yaml")):
         try:
             m = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
         except (OSError, yaml.YAMLError):

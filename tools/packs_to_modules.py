@@ -28,7 +28,7 @@ import sys
 
 #: old "<domain>/<pack>" under config/packs -> the packs folder of the module that owns it
 MAP = {
-    **{f"banking/{p}": "modules/banking/dmod/packs" for p in ("trading", "market-risk", "counterparty-risk")},
+    **{f"banking/{p}": "modules/banking/packs" for p in ("trading", "market-risk", "counterparty-risk")},
     "banking/market-data": "modules/market-data/packs",
     **{f"capitalmarkets/{p}": "modules/capital-markets/packs" for p in ("us-equities", "funds")},
     **{f"economy/{p}": "modules/economy/packs" for p in (

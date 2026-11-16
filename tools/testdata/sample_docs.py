@@ -93,9 +93,9 @@ SUBTYPES = {
 
 #: rows beyond the committed test data that show a form the test data does not hold (the pack's samples), by folder
 EXTRA_SOURCES = {
-    "market-risk/pnl-vector": ["modules/banking/dmod/packs/market-risk/samples/pnl-vector.jsonl"],
-    "market-risk/scenario-pv": ["modules/banking/dmod/packs/market-risk/samples/scenario-pv.jsonl",
-                                "modules/banking/dmod/packs/market-risk/samples/intraday/scenario-pv.2026-09-30.jsonl"],
+    "market-risk/pnl-vector": ["modules/banking/packs/market-risk/samples/pnl-vector.jsonl"],
+    "market-risk/scenario-pv": ["modules/banking/packs/market-risk/samples/scenario-pv.jsonl",
+                                "modules/banking/packs/market-risk/samples/intraday/scenario-pv.2026-09-30.jsonl"],
     # a trade edited on the blotter carries UPDATED_BY (who last changed it): Drishti writes it, the booking systems never send it
     **{f"trades/{s}": [f"tools/testdata/edited/trade-{s}.jsonl"] for s in ("endur", "calypso", "murex")},
 }

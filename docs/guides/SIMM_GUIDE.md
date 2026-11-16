@@ -135,7 +135,7 @@ thresholds in millions: multiply by 1,000,000.
 
 **Licence.** The parameter values appear only in the bank's own answers, exports and recipes, never in a shared template, a sample or the
 repository; the playground's export says it is confidential. The repository's tests use a **toy** file
-(`modules/banking/banking-compute/src/test/resources/simm/simm-toy.yaml`, round illustrative numbers, not ISDA's): it proves the formulas, never the
+(`modules/banking/java/banking-compute/src/test/resources/simm/simm-toy.yaml`, round illustrative numbers, not ISDA's): it proves the formulas, never the
 licensed values.
 
 ## 5. The method
@@ -354,14 +354,14 @@ The SIMM version's risk weights, correlations, concentration thresholds and the 
 The same records FRTB-SA reads: SIMM takes the elements with measures `DV01`, `IE01`, `CS01`, `DELTA`, `VEGA` and `BASE_CORR`;
 curvature revaluations and gammas are FRTB's and left out, counted.
 
-- **Data contract:** [`position-sensitivity`](../contracts/packs/market-risk.md#sens-position-sensitivities-position-sensitivity) (SENS), key `SENSITIVITY_ID`; 28 fields, 19 required; the file [`position-sensitivity.contract.yaml`](../../modules/banking/dmod/packs/market-risk/contracts/position-sensitivity.contract.yaml).
+- **Data contract:** [`position-sensitivity`](../contracts/packs/market-risk.md#sens-position-sensitivities-position-sensitivity) (SENS), key `SENSITIVITY_ID`; 28 fields, 19 required; the file [`position-sensitivity.contract.yaml`](../../modules/banking/packs/market-risk/contracts/position-sensitivity.contract.yaml).
 - **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#position-sensitivity) (files `data/testdata/market-risk/position-sensitivity/position-sensitivity.*.jsonl.gz`).
 
 ### 13.4 `risk-factor`: the factor dictionary
 
 Each factor's `SIMM_RISK_CLASS`, `FACTOR_TYPE`, `SIMM_BUCKET`, `QUALIFIER`, `SIMM_LABEL1`, `SIMM_LABEL2` and `SENIORITY`.
 
-- **Data contract:** [`risk-factor`](../contracts/packs/market-risk.md#rfac-risk-factor-dictionary-risk-factor) (RFAC), key `RISK_FACTOR`; 27 fields, 12 required; the file [`risk-factor.contract.yaml`](../../modules/banking/dmod/packs/market-risk/contracts/risk-factor.contract.yaml).
+- **Data contract:** [`risk-factor`](../contracts/packs/market-risk.md#rfac-risk-factor-dictionary-risk-factor) (RFAC), key `RISK_FACTOR`; 27 fields, 12 required; the file [`risk-factor.contract.yaml`](../../modules/banking/packs/market-risk/contracts/risk-factor.contract.yaml).
 - **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#risk-factor) (files `data/testdata/market-risk/risk-factor/risk-factor.*.jsonl.gz`).
 
 ### 13.5 `netting-set`: the netting sets and their trades
@@ -369,7 +369,7 @@ Each factor's `SIMM_RISK_CLASS`, `FACTOR_TYPE`, `SIMM_BUCKET`, `QUALIFIER`, `SIM
 A sensitivity record belongs to the netting set its trades lie in: `NETTING_SET_ID`, `TRADE_IDS` (else `TRADES[].TRADE_ID`),
 `COUNTERPARTY` and `CSA`.
 
-- **Data contract:** [`netting-set`](../contracts/packs/counterparty-risk.md#nset-netting-set-netting-set) (NSET), key `NETTING_SET_ID`; 19 fields, 18 required; the file [`netting-set.contract.yaml`](../../modules/banking/dmod/packs/counterparty-risk/contracts/netting-set.contract.yaml).
+- **Data contract:** [`netting-set`](../contracts/packs/counterparty-risk.md#nset-netting-set-netting-set) (NSET), key `NETTING_SET_ID`; 19 fields, 18 required; the file [`netting-set.contract.yaml`](../../modules/banking/packs/counterparty-risk/contracts/netting-set.contract.yaml).
 - **Example:** [a real record of the test data, every field explained](../contracts/samples/counterparty-risk.md#netting-set) (files `data/testdata/counterparty-risk/netting-set/netting-set.*.jsonl.gz`).
 
 ### 13.6 `csa`: the SIMM terms
@@ -377,7 +377,7 @@ A sensitivity record belongs to the netting set its trades lie in: `NETTING_SET_
 The CSA's SIMM terms when present: `SIMM_VERSION`, `IM_COLLECT_REGIMES`, `IM_POST_REGIMES`, `IM_CALCULATION_CURRENCY` (else
 `CSA_CURRENCY`), `IM_MODEL`, the add-ons and the dispute tolerance.
 
-- **Data contract:** [`csa`](../contracts/packs/counterparty-risk.md#csa-credit-support-annex-csa) (CSA), key `CSA_ID`; 18 fields, 18 required; the file [`csa.contract.yaml`](../../modules/banking/dmod/packs/counterparty-risk/contracts/csa.contract.yaml).
+- **Data contract:** [`csa`](../contracts/packs/counterparty-risk.md#csa-credit-support-annex-csa) (CSA), key `CSA_ID`; 18 fields, 18 required; the file [`csa.contract.yaml`](../../modules/banking/packs/counterparty-risk/contracts/csa.contract.yaml).
 - **Example:** [a real record of the test data, every field explained](../contracts/samples/counterparty-risk.md#csa) (files `data/testdata/counterparty-risk/csa/csa.*.jsonl.gz`).
 
 ### 13.7 `simm-addon`: the notional add-on lines
@@ -398,7 +398,7 @@ The CSA's SIMM terms when present: `SIMM_VERSION`, `IM_COLLECT_REGIMES`, `IM_POS
 
 A netting set's initial margin as a source stored it: shown labelled *stored, not computed* where the netting set has no sensitivities.
 
-- **Data contract:** [`simm`](../contracts/packs/counterparty-risk.md#simm-isda-simm-initial-margin-simm) (SIMM), key `CALC_ID`; 8 fields, 8 required; the file [`simm.contract.yaml`](../../modules/banking/dmod/packs/counterparty-risk/contracts/simm.contract.yaml).
+- **Data contract:** [`simm`](../contracts/packs/counterparty-risk.md#simm-isda-simm-initial-margin-simm) (SIMM), key `CALC_ID`; 8 fields, 8 required; the file [`simm.contract.yaml`](../../modules/banking/packs/counterparty-risk/contracts/simm.contract.yaml).
 - **Example:** [a real record of the test data, every field explained](../contracts/samples/counterparty-risk.md#simm) (files `data/testdata/counterparty-risk/simm/simm.*.jsonl.gz`).
 
 ### 13.10 `fx-spot`: the date's FX
@@ -452,7 +452,7 @@ Run these from the Drishti folder (the repository root, or the install folder of
 
 ```bash
 mkdir -p config/simm
-cp modules/banking/banking-compute/src/test/resources/simm/simm-toy.yaml config/simm/
+cp modules/banking/java/banking-compute/src/test/resources/simm/simm-toy.yaml config/simm/
 python3 tools/drishti.py simm versions
 ```
 
@@ -623,7 +623,7 @@ python3 tools/drishti.py play simm NS-ALDERSHOT-LDN --side post --xlsx aldershot
 ```
 
 **The YAML.** The template the workbook is built from is a setting (blank: the built-in one); its explanation is
-`modules/banking/banking-service/src/main/resources/playground/simm/template/explain.txt`:
+`modules/banking/java/banking-service/src/main/resources/playground/simm/template/explain.txt`:
 
 ```yaml
 drishti:

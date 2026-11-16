@@ -27,13 +27,14 @@
   <artifactId>drishti-banking-module</artifactId>
   <packaging>pom</packaging>
   <name>drishti-banking-module</name>
-  <description>The banking module's sources, laid out to build on their own (docs/architecture/KERNEL_AND_MODULES.md section 8.10):
-    banking-compute (the maths: VaR, exposure, FRTB-SA, SIMM, sensitivities) and banking-service (the services, storage, Spring wiring and
+  <description>The banking module in the one module layout (docs/architecture/KERNEL_AND_MODULES.md section 8.10): its .dmod content
+    at this folder's top (module.yaml, packs/, console/, data/, docs/) and its code as two Maven projects under java/, which this pom
+    aggregates: banking-compute (the maths: VaR, exposure, FRTB-SA, SIMM, sensitivities) and banking-service (the services, storage, Spring wiring and
     API). Built alone with `./mvnw -f modules/banking/pom.xml` against installed kernel artefacts. The kernel internals banking still
-    reaches are listed in kernel-internals.txt (BankingReachTest keeps the list true and only shrinking). Banking still loads in-process
+    reaches are listed in java/kernel-internals.txt (BankingReachTest keeps the list true and only shrinking). Banking still loads in-process
     from the fat jar (drishti-app); it becomes a .dmod in wave 2.</description>
   <modules>
-    <module>banking-compute</module>
-    <module>banking-service</module>
+    <module>java/banking-compute</module>
+    <module>java/banking-service</module>
   </modules>
 </project>

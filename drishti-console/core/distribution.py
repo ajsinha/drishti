@@ -125,8 +125,7 @@ def _words(functions) -> list[str]:
 
 
 def module_manifests(directory: Path | None) -> dict[str, ModuleEntry]:
-    """Every module under ``directory`` (the one resolver's modules: ``<dir>/module.yaml``, ``dmod/module.yaml`` or
-    ``src/dmod/module.yaml``), by id, in requirement order (a required module before the ones that need it). The kernel reads the same
+    """Every module under ``directory`` (the one resolver's modules: ``<dir>/module.yaml``, the one module layout), by id, in requirement order (a required module before the ones that need it). The kernel reads the same
     files the same way (drishti-packs ``ModuleManifests``)."""
     by_id: dict[str, ModuleEntry] = {}
     if directory is None or not directory.is_dir():

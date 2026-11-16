@@ -90,7 +90,7 @@ class ControlsApiTest {
     }
 
     private JsonNode schedule() throws Exception {
-        return json.readTree(com.ash.drishti.common.PackSamples.document(Path.of(TestRoots.repo(), "modules", "banking", "dmod", "packs", "trading", "samples"), "trade", "MX-20000001").orElseThrow()).path("EVENTS");
+        return json.readTree(com.ash.drishti.common.PackSamples.document(Path.of(TestRoots.repo(), "modules", "banking", "packs", "trading", "samples"), "trade", "MX-20000001").orElseThrow()).path("EVENTS");
     }
 
     @Test

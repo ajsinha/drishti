@@ -80,8 +80,8 @@ samples) reads `Pack` objects from `PackRegistry` (`PR`): correct as soon as the
 | `drishti-console/core/edition.py:410-413,432-434,455` | `packs.dir`, `module_manifests_dir`, `default-packs.yaml` | direct | A | `resolution.settings`; no default-packs file |
 | `drishti-console/core/distribution.py:88,131-160,196-198,230-238,315-345,397-406` | module manifests (lists `modules/*`, `*/dmod`, parts); kernel packs' commands; `modules_dir or packs_dir.parent.parent / "modules"` | PF + direct | **A** (the parent-parent guess; lists module folders itself) | `→ R` `modules.all()`, `packs.of_origin("kernel")` |
 | `drishti-console/core/house.py:37-50,79` | module manifests and titles | direct | B | `→ R` `modules.all()` |
-| `drishti-console/core/menus.py:37,81-82` | `modules/*/module.yaml`, `*/dmod/module.yaml`, `*/src/dmod/module.yaml` | direct | **A** (installed `.dmod` modules have no menu) | `→ R` `modules.on()` |
-| `drishti-console/core/module_parts.py:252` | `shipped.glob("*/module.yaml")` + `*/src/dmod/module.yaml` (no `*/dmod`) | direct | **A** (a third list of module folders, different from the other two) | `→ R` |
+| `drishti-console/core/menus.py:37,81-82` | `modules/*/module.yaml` (the one module layout since i5) | direct | **A** (installed `.dmod` modules have no menu) | `→ R` `modules.on()` |
+| `drishti-console/core/module_parts.py:252` | `shipped.glob("*/module.yaml")` | direct | **A** (a third list of module folders, different from the other two) | `→ R` |
 | `drishti-console/core/facts.py:268-271` | every pack's facts file | PF | B | `→ R` `packs.all()` |
 | `drishti-console/core/readmes.py:71` | `pack_dir(name, root / "config" / "packs") / "README.md"` | PF with a literal | **A** (Help's pack README: works only by the name trick) | `→ R` `packs.find(name).folder` |
 | `drishti-console/routes/terminal_routes.py:127`, `routes/admin_routes.py:966-974` | known commands; the distributions page | PF via `distribution` | B | follow `distribution.py` |
@@ -125,7 +125,7 @@ Admin → Connectors show the new `origin` and `layer` fields; `drishti_admin-co
 | `kernel/drishti-server/pom.xml:130` | tests' `drishti.packs.dir` = the repository's `config/packs` | B | the settings of design 18.2, each to the repository's folder |
 | `kernel/drishti-server/src/main/resources/application.yaml:144,204,1180,1206` | `module-manifests-dir`, `modules.dir` (switches), `packs.dir`, `packs.enabled` | — | section 6 |
 | `drishti-console/config/application.yaml:285,289,292` | the console's twins | — | section 6 |
-| `tools/drill.sh:251` | globs `config/packs/*/*/tools/make_*.py modules/*/packs/... modules/banking/dmod/packs/...` | **A** (a hand-kept list of layouts) | asks `tools/drishti.py pack list --folders` (the resolver) |
+| `tools/drill.sh:251` | globs `config/packs/*/*/tools/make_*.py modules/*/packs/... modules/banking/packs/...` | **A** (a hand-kept list of layouts) | asks `tools/drishti.py pack list --folders` (the resolver) |
 | `tools/bench/pinning.sh:80` | `DRISHTI_PACKS_DIR="$REPO/packs"` (the layout of three releases ago) | **A** (already dead) | `DRISHTI_PACKS_DIR="$REPO/config/packs"` |
 | `packaging/dist/pom.xml:84-112` | packs each module folder into a `.dmod` | C | none |
 
@@ -197,7 +197,7 @@ the lake loader (`PackEntry.manifest`) and `tools/packlake.py with_modules` merg
 |---|---|---|
 | `tools/launch/serverstart.py` (`start server --iceberg`) | `--iceberg` copies `config/connectors.examples/iceberg/*.yaml` into `config/connectors` | a script the administrator runs may write; it writes the **partial override** (`plugin: iceberg`), not a whole file |
 | `deploy/docker/ecs/server.Dockerfile:38`, `deploy/stack/stack.yaml:48-58` | `DRISHTI_CONNECTORS_DIR` | still read (section 6) |
-| `kernel/drishti-server/pom.xml:141`, `modules/banking/banking-service/pom.xml:100` | a connectors folder per test fork | unchanged |
+| `kernel/drishti-server/pom.xml:141`, `modules/banking/java/banking-service/pom.xml:100` | a connectors folder per test fork | unchanged |
 
 ### 3.4 Tests
 
@@ -287,7 +287,7 @@ otherwise change.
 
 `drishti-console/core/packs.py:122-130` (`_load`) asks `pack_dir(name, root)` and keeps the answer only when
 `str(pdir).startswith(str(root))`. That containment check was true by construction while every pack lived under `config/packs`.
-`pack_paths.module_roots` now returns `modules/banking/dmod/packs/trading`, which is not under `config/packs`, so the loop falls
+`pack_paths.module_roots` now returns `modules/banking/packs/trading`, which is not under `config/packs`, so the loop falls
 through and the pack is dropped: every module's pack, on every console page that uses `Packs` (FORMS, the switcher, Calc snippets,
 the designer's kinds). The server was right (its loader flattens the roots and has no such check), so the two halves disagreed and
 nothing compared them.

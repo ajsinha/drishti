@@ -30,7 +30,7 @@ import org.springframework.core.env.StandardEnvironment;
 /** Banking's settings are described by its manifest and read as {@code drishti.module.banking.*}; the old keys are read for one release. */
 class ModuleSettingsTest {
 
-    private static final Path BANKING = Path.of(TestRoots.repo(), "modules", "banking", "dmod", "module.yaml");
+    private static final Path BANKING = Path.of(TestRoots.repo(), "modules", "banking", "module.yaml");
 
     private static JsonNode manifest() throws Exception {
         return new ObjectMapper(new YAMLFactory()).readTree(BANKING.toFile());

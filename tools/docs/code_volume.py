@@ -105,8 +105,8 @@ def _manifests(files: list[str], name: str) -> list[dict]:
 def inventory(files: list[str], pom: str) -> dict:
     """What the product holds, each figure counted from the files (never typed in)."""
     poms = re.findall(r"<module>([^<]+)</module>", pom)
-    # a module's package manifest: modules/<id>/module.yaml, modules/<id>/dmod/module.yaml or a module project's src/dmod/module.yaml
-    package = re.compile(r"modules/[^/]+/(?:dmod/|src/dmod/)?module\.yaml")
+    # a module's package manifest: modules/<id>/module.yaml (the one module layout)
+    package = re.compile(r"modules/[^/]+/module\.yaml")
     modules = [doc for doc in (yaml.safe_load(_read(f)) or {} for f in files if package.fullmatch(f)) if doc.get("id")]
     functions = {m["id"]: len((m.get("contributes") or m).get("functions") or []) for m in modules}
     lenses = [lens["id"] for doc in _manifests(files, "lenses.yaml") for lens in doc.get("lenses") or []]

@@ -341,7 +341,7 @@ has an id (an LEI, an ISIN, a ticker, a booking system's trade id). A computed k
 are fundamental, **8** engine inputs (`PNLV`, `SSET`, `VLIM`, `PORT`, `XRUN`, `XPATH` and the compute demo's two), **1** is Drishti's own
 (`POS`, the derived positions) and **18** are computed (among them `VRES`, `EXP`, `LEIG`, `LEIC`, `SIC`, `ECG`, `CORRC`, `EQB`, `CTRD`).
 
-**One contract, read.** `drishti.py contract show NSET` (the netting-set kind, `modules/banking/dmod/packs/counterparty-risk/contracts/netting-set.contract.yaml`):
+**One contract, read.** `drishti.py contract show NSET` (the netting-set kind, `modules/banking/packs/counterparty-risk/contracts/netting-set.contract.yaml`):
 
 ```text
 kind: netting-set   mnemonic: NSET   pack: counterparty-risk   class: fundamental   source: xva-engine

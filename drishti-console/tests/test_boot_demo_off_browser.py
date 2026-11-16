@@ -41,7 +41,7 @@ def _packs_with_form() -> set[str]:
     out = set()
     packs = R.build(R.Settings.from_env(env={})).packs
     for p in (packs[n] for n in packs):
-        if p.folder is None or p.origin != "MODULE" or "dmod" not in p.folder.parts:
+        if p.folder is None or p.origin != "MODULE" or not (p.folder.parents[1] / "java").is_dir():   # a module with code's packs (banking)
             continue
         m = yaml.safe_load((p.folder / "pack.yaml").read_text(encoding="utf-8")) or {}
         if isinstance(m.get("form"), dict) and m["form"]:

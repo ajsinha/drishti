@@ -122,6 +122,8 @@ public class HealthController {
     private final ObjectProvider<com.zaxxer.hikari.HikariDataSource> identityDataSource;
     private final com.ash.drishti.identity.IdentityProperties identity;
     private final com.ash.drishti.server.security.MaskCoverage masks;
+    /** What the module overrides rule did at this server's start (LaunchRoots), read once. */
+    private final com.ash.drishti.api.resolution.ModuleOverrides.Result moduleOverrides;
 
     /** The modules' engines' figures (a module's beans); none in a test that makes the controller itself. */
     private java.util.List<HealthFigures> moduleFigures = java.util.List.of();
@@ -147,6 +149,7 @@ public class HealthController {
             com.ash.drishti.server.security.MaskCoverage masks, com.ash.drishti.server.design.HistoryDefinitions history) {
         this.history = history;
         this.masks = masks;
+        this.moduleOverrides = env instanceof org.springframework.core.env.ConfigurableEnvironment c ? com.ash.drishti.packs.LaunchRoots.overrides(c) : null;
         this.identityDataSource = identityDataSource;
         this.identity = identity;
         this.biFolder = biFolder;
@@ -283,6 +286,7 @@ public class HealthController {
         out.put("dataLate", dataLate.stream().map(d -> Map.of("pack", d.pack(), "kind", d.kind(), "businessDate", d.businessDate().toString(), "state", d.state(),
                 "by", d.by() + " " + d.zone(), "line", d.line())).toList());
         out.put("overrides", overrides);
+        out.put("moduleOverrides", moduleOverrides());                  // the site's overrides of module files (KERNEL_AND_MODULES.md 18.10)
         out.put("connectors", connectors.healthSummary());
         if (pageTimes != null) {
             out.put("pages", pageTimes.summary());             // per kind: views, p50, p95, p99 over ten minutes
@@ -444,6 +448,19 @@ public class HealthController {
                 : code.size() + (code.size() == 1 ? " module: " : " modules: ") + String.join(", ", code.stream().map(r -> (String) r.get("id")).toList()));
         out.put("code", code);
         out.put("content", content);
+        return out;
+    }
+
+    /** The module files the site's override folders replace or add, each with its source, and the refused ones in words. */
+    private Map<String, Object> moduleOverrides() {
+        var r = moduleOverrides;
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("dirs", r == null ? List.of() : r.dirs().stream().map(Object::toString).toList());
+        out.put("view", r == null || r.view() == null ? null : r.view().toString());
+        out.put("modulesHome", r == null ? null : r.modulesHome().toString());
+        out.put("files", r == null ? List.of() : r.files().stream().map(f -> Map.of("path", f.path(), "source", f.source().toString(),
+                "replaces", f.replaces())).toList());
+        out.put("refused", r == null ? List.of() : r.refused());
         return out;
     }
 }

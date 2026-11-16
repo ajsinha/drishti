@@ -552,7 +552,7 @@ every table partitioned by `business_date` first; the three trade tables also by
 **The YAML.** The trading pack's connector `trade-endur` names the lake and its entry; nothing of the table is written here.
 
 ```yaml
-# modules/banking/dmod/packs/trading/pack.yaml (the template written to config/connectors/trade-endur.yaml)
+# modules/banking/packs/trading/pack.yaml (the template written to config/connectors/trade-endur.yaml)
 trade-endur:
   plugin: delta
   kinds: [trade]                          # the distribution's default binding of trade; the written file names no kinds
@@ -599,7 +599,7 @@ describes that no writer has made yet; it is not an error.
 
 ```bash
 python3 tools/drishti.py lake build --from data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz --as-of 2026-07-08 \
-    --pack modules/banking/dmod/packs/trading --connector trade-endur --lake demo --lake-root $SCRATCH/lake
+    --pack modules/banking/packs/trading --connector trade-endur --lake demo --lake-root $SCRATCH/lake
 ```
 
 ```text
@@ -620,7 +620,7 @@ Now ask for another partition:
 
 ```bash
 python3 tools/drishti.py lake build --from data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz --as-of 2026-07-08 \
-    --pack modules/banking/dmod/packs/trading --connector trade-endur --lake demo --lake-root $SCRATCH/lake --partition-by DESK
+    --pack modules/banking/packs/trading --connector trade-endur --lake demo --lake-root $SCRATCH/lake --partition-by DESK
 ```
 
 ```text
@@ -660,9 +660,9 @@ export DRISHTI_LAKES_DIR=$SCRATCH/lakes
 **The command line.** The parallel loader appends and records the batch; the Python path refuses an append (it does not record batches):
 
 ```bash
-python3 tools/drishti.py lake build --engine java --from data/testdata/market-risk/scenario-pv --pack modules/banking/dmod/packs/market-risk \
+python3 tools/drishti.py lake build --engine java --from data/testdata/market-risk/scenario-pv --pack modules/banking/packs/market-risk \
     --kind scenario-pv --lake intraday --batch-id intraday-0915
-python3 tools/drishti.py lake build --engine java --from data/testdata/market-risk/scenario-pv --pack modules/banking/dmod/packs/market-risk \
+python3 tools/drishti.py lake build --engine java --from data/testdata/market-risk/scenario-pv --pack modules/banking/packs/market-risk \
     --kind scenario-pv --lake intraday --batch-id intraday-0915      # the same batch again
 ```
 

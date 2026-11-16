@@ -810,7 +810,7 @@ Drafts here; at build they become files of the counterparty-risk pack's configur
 every answer's provenance. One file per regulation; a jurisdiction's variant is its own file. After BCBS the next file is OSFI CAR
 chapter 4 (`saccr-osfi.yaml`, as the FRTB order); the US final rule and EU CRR2 follow when a client asks (decision 4).
 
-### 11.1 SA-CCR (`modules/banking/dmod/packs/counterparty-risk/capital-parameters/saccr-bcbs.yaml`, draft, not loaded)
+### 11.1 SA-CCR (`modules/banking/packs/counterparty-risk/capital-parameters/saccr-bcbs.yaml`, draft, not loaded)
 
 ```yaml
 regulation: BCBS
@@ -907,9 +907,9 @@ its text; `#` lines are comments), so `PlaygroundTemplate.explain()` reads them:
 
 | File | Covers |
 |---|---|
-| [`playground/saccr/template/explain.txt`](../../modules/banking/banking-service/src/main/resources/playground/saccr/template/explain.txt) | in plain words: what SA-CCR answers, why a bank must hold it, the tabs, signs and units, the regulation and its parameters; the steps from the classification row to EAD after the cap, each with a worked number from cases S1 to S7; every term of Main, Config, Data, Trades, Hedging sets and Provenance with its CRE52 paragraph |
-| [`playground/exposure/template/explain.txt`](../../modules/banking/banking-service/src/main/resources/playground/exposure/template/explain.txt) | in plain words: what exposure answers, why paths, the tabs, signs and units; the steps from the paths to EE, PFE, EPE, EEPE and the contributions, worked with case X1 and X2; every term of Main, Config, Data, Netting, Collateral, Exposure, Stats, Contributions and Provenance |
-| [`playground/fva/template/explain.txt`](../../modules/banking/banking-service/src/main/resources/playground/fva/template/explain.txt) | in plain words: what FVA answers, why funding costs money, the tabs, signs and units; the steps from the profile to FCA, FBA and FVA, worked with case F1 (a) to (d); every term of Main, Config, Data, Terms and Provenance |
+| [`playground/saccr/template/explain.txt`](../../modules/banking/java/banking-service/src/main/resources/playground/saccr/template/explain.txt) | in plain words: what SA-CCR answers, why a bank must hold it, the tabs, signs and units, the regulation and its parameters; the steps from the classification row to EAD after the cap, each with a worked number from cases S1 to S7; every term of Main, Config, Data, Trades, Hedging sets and Provenance with its CRE52 paragraph |
+| [`playground/exposure/template/explain.txt`](../../modules/banking/java/banking-service/src/main/resources/playground/exposure/template/explain.txt) | in plain words: what exposure answers, why paths, the tabs, signs and units; the steps from the paths to EE, PFE, EPE, EEPE and the contributions, worked with case X1 and X2; every term of Main, Config, Data, Netting, Collateral, Exposure, Stats, Contributions and Provenance |
+| [`playground/fva/template/explain.txt`](../../modules/banking/java/banking-service/src/main/resources/playground/fva/template/explain.txt) | in plain words: what FVA answers, why funding costs money, the tabs, signs and units; the steps from the profile to FCA, FBA and FVA, worked with case F1 (a) to (d); every term of Main, Config, Data, Terms and Provenance |
 
 The cell references (`{Name}`, `{Name:v}`) are added when each generator names its Main cells.
 

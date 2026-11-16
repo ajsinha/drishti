@@ -4,9 +4,10 @@ $ python3 tools/drishti.py module new genomics --domain genomics --template full
 Module SDK 1.0.0 · kernel API 1.0 · template full
 
   created  modules/genomics/module.yaml                      id genomics 0.1.0, kernel ">=1.0 <2.0", licence feature genomics
-  created  modules/genomics/pom.xml                          parent drishti-module-parent 1.0.0 (kernel API as provided)
-  created  modules/genomics/java/src/main/java/com/example/genomics/GenomicsModule.java      implements DrishtiModule
-  created  modules/genomics/java/src/test/java/com/example/genomics/GenomicsModuleTest.java  KernelHarness + conformance suite
+  created  modules/genomics/pom.xml                          aggregates java/genomics (the one module layout, section 8.10)
+  created  modules/genomics/java/genomics/pom.xml            parent drishti-module-parent 1.0.0 (kernel API as provided)
+  created  modules/genomics/java/genomics/src/main/java/com/example/genomics/GenomicsModule.java      implements DrishtiModule
+  created  modules/genomics/java/genomics/src/test/java/com/example/genomics/GenomicsModuleTest.java  KernelHarness + conformance suite
   created  modules/genomics/python/drishti_genomics/__init__.py
   created  modules/genomics/data/needs.yaml                  one need: kind sample (owned by this module)
   created  modules/genomics/packs/genomics/pack.yaml         kinds: sample, cohort, variant-call
@@ -22,4 +23,4 @@ Module SDK 1.0.0 · kernel API 1.0 · template full
 Next:
   cd modules/genomics
   python3 ../../tools/drishti.py module build --sign-with dev     # builds, tests against the kernel harness, packages
-  python3 ../../tools/drishti.py module verify target/dmod/genomics-0.1.0.dmod
+  python3 ../../tools/drishti.py module verify java/genomics/target/dmod/genomics-0.1.0.dmod

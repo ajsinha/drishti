@@ -25,7 +25,7 @@ Three layers, read top down for packs and inbox rules, layered bottom up for con
    down), ``config/connectors/<name>.yaml`` (only the keys the site changes), ``config/bindings.yaml``, ``config/dataload.yaml``;
 2. **the modules that are on**: each manifest's ``packs: {folder, list}`` (only listed packs count), ``connectors: {folder}`` (each file
    directly in it a template; ``examples/`` are not) and ``dataload:`` rules. A module's folder is ``<modules home>/<dir>`` (its
-   ``module.yaml``, ``dmod/module.yaml`` or ``src/dmod/module.yaml``) or its installed ``.dmod`` (``<store>/installed/<id>/<version>``,
+   ``module.yaml``: every module's one layout) or its installed ``.dmod`` (``<store>/installed/<id>/<version>``,
    named by ``<store>/installed/active.yaml``, which wins). A module that is off brings nothing;
 3. **the kernel**: ``drishti.kernel.packs-dir`` (``config/packs/core``: core, gleif, compute-demo).
 
@@ -269,15 +269,14 @@ class PackSet(Mapping):
 
 
 def modules(layout: Layout, problems: list | None = None) -> dict[str, Module]:
-    """Every module on disk, by id: the development tree's (``<modules>/<dir>/module.yaml``, else ``dmod/module.yaml``, else
-    ``src/dmod/module.yaml``), then the module store's active installs, which win an id."""
+    """Every module on disk, by id: the development tree's (``<modules>/<dir>/module.yaml``: every module's one layout), then the
+    module store's active installs, which win an id."""
     problems = [] if problems is None else problems
     out: dict[str, Module] = {}
     if layout.modules is not None and layout.modules.is_dir():
         for d in _dirs(layout.modules):
-            home = next((h for h in (d, d / "dmod", d / "src" / "dmod") if (h / "module.yaml").is_file()), None)
-            if home is not None:
-                _module(home, d.relative_to(layout.modules).as_posix(), problems, out)
+            if (d / "module.yaml").is_file():
+                _module(d, d.relative_to(layout.modules).as_posix(), problems, out)
     installed = layout.store / "installed" if layout.store is not None else None
     if installed is not None and (installed / "active.yaml").is_file():
         try:
@@ -450,6 +449,22 @@ def _env(env: Mapping, *names: str) -> str:
     return ""
 
 
+def _overridden(modules_home: Path, data: Path | None) -> Path:
+    """The site's overrides of module files (KERNEL_AND_MODULES.md 18.10): the server lays them over the modules folder in the view
+    ``<data>/overrides/modules`` and names it in its ``overrides.yaml``; this side reads that view when it is of this modules folder (the
+    rule itself is applied once, by the server: nothing is written here)."""
+    if data is None:
+        return modules_home
+    listing = data / "overrides" / "modules" / "overrides.yaml"
+    if not listing.is_file():
+        return modules_home
+    try:
+        y = yaml.safe_load(listing.read_text(encoding="utf-8")) or {}
+    except (OSError, yaml.YAMLError):
+        return modules_home
+    return listing.parent if y.get("modules-home") and _norm(y["modules-home"]) == modules_home else modules_home
+
+
 @dataclass(frozen=True)
 class Settings:
     """One setting per concept (KERNEL_AND_MODULES.md 18.2), every path absolute."""
@@ -499,6 +514,7 @@ class Settings:
 
         data = pick(("DRISHTI_DATA_DIR",), "lakes.data_dir", root / "data")
         site = pick(("DRISHTI_PACKS_SITE_DIR", "DRISHTI_PACKS_DIR"), "packs.dir", root / "config" / "packs")
+        modules_home = _overridden(pick(("DRISHTI_MODULES_HOME", "DRISHTI_MODULE_MANIFESTS_DIR"), "module_manifests_dir", root / "modules"), data)
         overrides = []
         for k, v in env.items():
             m = re.fullmatch(r"DRISHTI_MODULES_(.+)_ENABLED", k)
@@ -508,7 +524,7 @@ class Settings:
             site_dir=site,
             kernel_dir=pick(("DRISHTI_KERNEL_PACKS_DIR",), None, root / "config" / "packs" / "core"),
             installed_dir=pick(("DRISHTI_PACKS_INSTALLED_DIR",), "packs.installed_dir", data / "packs" / "installed"),
-            modules_home=pick(("DRISHTI_MODULES_HOME", "DRISHTI_MODULE_MANIFESTS_DIR"), "module_manifests_dir", root / "modules"),
+            modules_home=modules_home,
             modules_path=pick(("DRISHTI_MODULES_PATH", "DRISHTI_MODULE_DEPLOY_DIR"), None, data / "modules"),
             switches_dir=pick(("DRISHTI_MODULES_DIR",), None, root / "config" / "modules"),
             connectors_dir=pick(("DRISHTI_CONNECTORS_DIR",), None, root / "config" / "connectors"),
@@ -1168,7 +1184,7 @@ def _stamp(s: Settings) -> tuple:
     paths = [s.site_dir, s.kernel_dir, s.modules_home, s.switches_dir, s.connectors_dir, s.bindings_file, s.rules_file, s.installed_dir,
              (s.modules_path / "installed" / "active.yaml") if s.modules_path else None, s.distributions_dir]
     if s.modules_home is not None and s.modules_home.is_dir():
-        paths += [d / f for d in _dirs(s.modules_home) for f in ("module.yaml", "dmod/module.yaml", "src/dmod/module.yaml")]
+        paths += [d / f for d in _dirs(s.modules_home) for f in ("module.yaml",)]
     if s.switches_dir.is_dir():
         paths += sorted(s.switches_dir.glob("*.yaml"))
     for p in paths:

@@ -230,7 +230,7 @@ def _packs_with_form(install: Path) -> set[str]:
     out = set()
     packs = R.build(R.Settings.from_env(env={}, base=install)).packs
     for p in (packs[n] for n in packs):
-        if p.folder is None or (p.origin == "MODULE" and "dmod" not in p.folder.parts):
+        if p.folder is None or (p.origin == "MODULE" and not (p.folder.parents[1] / "java").is_dir()):
             continue
         m = yaml.safe_load((p.folder / "pack.yaml").read_text(encoding="utf-8")) or {}
         if isinstance(m.get("form"), dict) and m["form"]:

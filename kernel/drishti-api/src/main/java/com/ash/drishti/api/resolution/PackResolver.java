@@ -35,7 +35,7 @@ import java.util.stream.Stream;
  *   {@code config/packs}. A site pack of a shipped pack's name replaces it only when its {@code pack.yaml} says {@code replaces: <pack>};
  *   otherwise the clash is refused (a problem naming both) and the shipped pack is read;</li>
  *   <li><b>the active modules</b>: each active module's manifest {@code packs:} list ({@code folder} + {@code list}), in its development
- *   folder ({@code modules/<dir>/module.yaml} or {@code modules/<dir>/dmod/module.yaml}) or its installed {@code .dmod}
+ *   folder ({@code modules/<dir>/module.yaml}) or its installed {@code .dmod}
  *   ({@code <store>/installed/<id>/<version>}, named by {@code <store>/installed/active.yaml}, which wins over the development copy);</li>
  *   <li><b>the kernel</b>: {@code <site>/core/<pack>} (core, gleif, compute-demo).</li>
  * </ol>
@@ -224,18 +224,15 @@ public final class PackResolver {
     }
 
     /**
-     * Every module on disk, by id: the development tree's ({@code <modules>/<dir>/module.yaml}, else {@code <modules>/<dir>/dmod/module.yaml}),
+     * Every module on disk, by id: the development tree's ({@code <modules>/<dir>/module.yaml}: every module's one layout),
      * then the module store's active installs, which win an id.
      */
     public static Map<String, Module> modules(Layout layout, Function<Path, Map<String, Object>> yaml, List<String> problems) {
         Map<String, Module> out = new TreeMap<>();
         if (layout.modules() != null && Files.isDirectory(layout.modules())) {
             for (Path dir : dirs(layout.modules())) {
-                Path home = Files.isRegularFile(dir.resolve("module.yaml")) ? dir
-                        : Files.isRegularFile(dir.resolve("dmod").resolve("module.yaml")) ? dir.resolve("dmod")
-                        : Files.isRegularFile(dir.resolve("src").resolve("dmod").resolve("module.yaml")) ? dir.resolve("src").resolve("dmod") : null;
-                if (home != null) {
-                    module(home, layout.modules().relativize(dir).toString().replace('\\', '/'), yaml, problems, out);
+                if (Files.isRegularFile(dir.resolve("module.yaml"))) {        // one layout: the module's files at its folder's top
+                    module(dir, layout.modules().relativize(dir).toString().replace('\\', '/'), yaml, problems, out);
                 }
             }
         }

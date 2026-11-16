@@ -64,7 +64,7 @@ class ModuleToolTest {
     void aModuleFromTheArchetypeBuildsPassesConformanceAndLoadsRoutesAndUnloads() throws Exception {
         Path project = generate("hello");
         Path jar = build(project, "hello");
-        Path source = project.resolve("src/dmod");
+        Path source = project;
         assertThat(ModuleAssembler.validate(source, "hello", "0.1.0")).isEmpty();
         assertThat(ModuleAssembler.validate(source, "hello", "0.2.0")).containsExactly(
                 "module.yaml says version 0.1.0 but the project is 0.2.0: make them the same");
@@ -73,6 +73,18 @@ class ModuleToolTest {
         assertThat(dmod.getFileName()).hasToString("hello-0.1.0.dmod");
         assertThat(dmod.resolveSibling("hello-0.1.0.dmod.sha256")).isRegularFile();
         assertThat(source.resolve("META-INF")).doesNotExist();                         // nothing written into the sources
+        // the one module layout: the .dmod content at the folder's top, the code under java/hello/ with pom.xml beside java/; the package
+        // carries the content and the compiled jar only, never the Maven projects' sources or a pom.xml
+        assertThat(project.resolve("module.yaml")).isRegularFile();
+        assertThat(project.resolve("java/hello/pom.xml")).isRegularFile();
+        assertThat(project.resolve("pom.xml")).isRegularFile();
+        Path unpacked = unpackedOf(dmod);
+        try (java.util.stream.Stream<Path> s = Files.walk(unpacked)) {
+            List<String> entries = s.filter(Files::isRegularFile).map(f -> unpacked.relativize(f).toString().replace('\\', '/')).sorted().toList();
+            assertThat(entries).contains("module.yaml", "java/hello.jar", "console/plugin.yaml", "data/needs.yaml")
+                    .noneMatch(e -> e.endsWith(".java") || e.endsWith("pom.xml") || e.startsWith("java/hello/") || e.startsWith("target/"));
+            assertThat(entries.stream().filter(e -> e.startsWith("java/"))).containsExactly("java/hello.jar");
+        }
 
         List<ModuleConformance.Check> checks = ModuleConformance.run(dmod, project, tmp.resolve("conformance"), 3);
         assertThat(checks).extracting(ModuleConformance.Check::id).containsExactly("C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9",
@@ -100,7 +112,7 @@ class ModuleToolTest {
     void theVisualTemplateAddsAKindAsAnElementsExtensionAndThePackageStillPasses() throws Exception {
         Path project = generate("tracks");
         Path jar = build(project, "tracks");
-        Path source = project.resolve("src/dmod");
+        Path source = project;
         assertThat(VisualTemplate.add(source, "tracks", "gene-track", "Gene track")).extracting(p -> source.relativize(p).toString().replace('\\', '/'))
                 .containsExactly("elements/drishti-tracks/drishti_tracks.js", "console/plugin.yaml");
         String js = Files.readString(source.resolve("elements/drishti-tracks/drishti_tracks.js"));
@@ -121,7 +133,7 @@ class ModuleToolTest {
         Path jar = build(project, "plain");
         // any build: the module's files in the .dmod layout, its jar under java/ by the name module.yaml gives
         Path folder = tmp.resolve("plain-module");
-        ModuleAssembler.copyTree(project.resolve("src/dmod"), folder);
+        ModuleAssembler.copyTree(project, folder);
         Files.createDirectories(folder.resolve("java"));
         Files.copy(jar, folder.resolve("java/plain.jar"));
 
@@ -158,7 +170,7 @@ class ModuleToolTest {
     @Test
     void aModuleThatBreaksTheRulesFailsTheChecksInPlainWords() throws Exception {
         Path project = generate("rogue");
-        Path java = project.resolve("src/main/java/com/example/rogue");
+        Path java = project.resolve("java/rogue/src/main/java/com/example/rogue");
         Files.writeString(java.resolve("Leaky.java"), """
                 /*
                  * Copyright (c) the publisher of rogue. All rights reserved.
@@ -169,7 +181,7 @@ class ModuleToolTest {
                     public String internals() { return com.ash.drishti.module.runtime.Dmod.fileName("a", "b"); }
                 }
                 """);
-        Path src = project.resolve("src/dmod");
+        Path src = project;
         Files.writeString(src.resolve("console/pages/hello.html"), "<table><tr><td onclick=\"go()\">x</td></tr></table><script>go()</script>\n");
         Files.writeString(src.resolve("console/static/drishti_module.css"), "/* Copyright x */\n.a { color: #ff0000; }\n");
         Files.writeString(src.resolve("console/static/rogue.js"), "import x from 'https://cdn.example.com/lib.js';\n");
@@ -208,7 +220,7 @@ class ModuleToolTest {
     @Test
     void anAllowanceIsHonouredOnlyForAVerifiedFirstPartyModuleOnItsOwnKernelBuild() throws Exception {
         Path project = generate("insider");
-        Path java = project.resolve("src/main/java/com/example/insider");
+        Path java = project.resolve("java/insider/src/main/java/com/example/insider");
         Files.writeString(java.resolve("Inside.java"), """
                 /*
                  * Copyright (c) the publisher of insider. All rights reserved.
@@ -218,7 +230,7 @@ class ModuleToolTest {
                     public String name() { return com.ash.drishti.module.runtime.Dmod.fileName("a", "1.0.0"); }
                 }
                 """);
-        Path src = project.resolve("src/dmod");
+        Path src = project;
         Files.writeString(src.resolve("kernel-internals.txt"), "# the kernel packages insider reaches\ncom.ash.drishti.module.runtime\n");
         String manifest = Files.readString(src.resolve("module.yaml"));
         Files.writeString(src.resolve("module.yaml"), manifest + "origin: first-party\nkernel-internals: kernel-internals.txt\n");
@@ -337,10 +349,15 @@ class ModuleToolTest {
             Element set = (Element) sets.item(i);
             String dir = set.getElementsByTagName("directory").item(0).getTextContent();
             boolean packaged = "true".equals(set.getAttribute("packaged"));
+            java.util.List<java.nio.file.PathMatcher> includes = new java.util.ArrayList<>();      // the set's <include> globs
+            NodeList inc = set.getElementsByTagName("include");
+            for (int k = 0; k < inc.getLength(); k++) {
+                includes.add(java.nio.file.FileSystems.getDefault().getPathMatcher("glob:" + inc.item(k).getTextContent().replace("**/", "{**/,}")));
+            }
             try (Stream<Path> s = Files.walk(templates.resolve(dir))) {
-                for (Path f : s.filter(Files::isRegularFile).toList()) {
+                for (Path f : s.filter(Files::isRegularFile).filter(x -> includes.isEmpty() || includes.stream().anyMatch(g -> g.matches(templates.resolve(dir).relativize(x)))).toList()) {
                     String rel = templates.resolve(dir).relativize(f).toString();
-                    String to = dir + "/" + (packaged ? props.get("package").replace('.', '/') + "/" : "") + rel;
+                    String to = (dir.isEmpty() ? "" : dir + "/") + (packaged ? props.get("package").replace('.', '/') + "/" : "") + rel;
                     for (Map.Entry<String, String> p : props.entrySet()) {
                         to = to.replace("__" + p.getKey() + "__", p.getValue());
                     }
@@ -377,8 +394,8 @@ class ModuleToolTest {
 
     private Path build(Path project, String artifactId) throws IOException {
         Path classes = project.resolve("target/classes");
-        compile(project.resolve("src/main/java"), classes, classPath());
-        compile(project.resolve("src/test/java"), project.resolve("target/test-classes"), classPath() + File.pathSeparator + classes);
+        compile(project.resolve("java/" + artifactId + "/src/main/java"), classes, classPath());
+        compile(project.resolve("java/" + artifactId + "/src/test/java"), project.resolve("target/test-classes"), classPath() + File.pathSeparator + classes);
         Path jar = project.resolve("target/" + artifactId + "-0.1.0.jar");
         try (JarOutputStream out = new JarOutputStream(Files.newOutputStream(jar)); Stream<Path> s = Files.walk(classes)) {
             for (Path p : s.filter(Files::isRegularFile).sorted().toList()) {

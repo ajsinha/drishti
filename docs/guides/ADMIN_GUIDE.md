@@ -713,7 +713,7 @@ licence  →  modules on  →  lenses offered  →  functions this person may us
 
 | Where | What it holds |
 |---|---|
-| **The registry** (`META-INF/drishti/lenses.yaml` in each module's jar: [the banking module's](../../modules/banking/banking-service/src/main/resources/META-INF/drishti/lenses.yaml), [the core server's](../../kernel/drishti-server/src/main/resources/META-INF/drishti/lenses.yaml)) | the lens's id and title, the modules it needs, the functions it bundles, its Home template, its Home **cards** (`cards:`) and **chips** (`chips:`), and for a lens with no file its menus and Help pages; a site's `config/access/lenses.yaml` adds a lens or replaces one by its id |
+| **The registry** (`META-INF/drishti/lenses.yaml` in each module's jar: [the banking module's](../../modules/banking/java/banking-service/src/main/resources/META-INF/drishti/lenses.yaml), [the core server's](../../kernel/drishti-server/src/main/resources/META-INF/drishti/lenses.yaml)) | the lens's id and title, the modules it needs, the functions it bundles, its Home template, its Home **cards** (`cards:`) and **chips** (`chips:`), and for a lens with no file its menus and Help pages; a site's `config/access/lenses.yaml` adds a lens or replaces one by its id |
 | **The lens file** (`config/lenses/<module>/<lens>.yaml`) | the arrangement: its title and description, the menus it puts first (`menus:`), Home (`home:`), the phone display (`phone:`) and its landings' own settings (`trading:`, `quality:`) |
 
 The shipped lenses:
@@ -1281,7 +1281,7 @@ drishti:
       enabled: ${DRISHTI_FRTB_ENABLED:true}   # run FRTB-SA on this node (live: on and off without a restart)
       changed: { by: "", at: "", reason: "" } # the last change made from Admin -> Engines or drishti.py (written by the server)
   frtb:
-    parameters-dir: ${DRISHTI_FRTB_PARAMETERS:./modules/banking/dmod/packs/market-risk/capital}
+    parameters-dir: ${DRISHTI_FRTB_PARAMETERS:./modules/banking/packs/market-risk/capital}
     max-factors: 2000
     # ... the engine's other settings
 ```

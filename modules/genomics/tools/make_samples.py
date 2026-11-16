@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The genomics module's synthetic samples (src/dmod/data/samples/): two VCF files (cohorts COH-A and COH-B, 24 samples) and gene.jsonl
+"""The genomics module's synthetic samples (data/samples/): two VCF files (cohorts COH-A and COH-B, 24 samples) and gene.jsonl
 (eight genes with their protein domains). Seeded, so a run writes the same bytes: python3 modules/genomics/tools/make_samples.py.
 Every variant is made up: positions, alleles and genotypes are random within each gene's span; nothing is a real person's data."""
 from __future__ import annotations
@@ -21,7 +21,7 @@ import json
 import random
 from pathlib import Path
 
-OUT = Path(__file__).resolve().parent.parent / "src" / "dmod" / "data" / "samples"
+OUT = Path(__file__).resolve().parent.parent / "data" / "samples"
 # gene, chromosome, start, protein length, domains (name, from, to): public reference facts, rounded
 GENES = [
     ("BRCA1", "17", 43044295, 1863, [("RING", 24, 64), ("BRCT1", 1642, 1736), ("BRCT2", 1756, 1855)]),

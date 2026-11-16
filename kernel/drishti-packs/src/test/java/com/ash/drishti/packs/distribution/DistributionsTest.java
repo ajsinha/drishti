@@ -214,7 +214,7 @@ class DistributionsTest {
         Distribution g = read("genomics");
         assertThat(g.packs()).as("none of the kernel's packs: no counterparty, book or desk").isEmpty();
         assertThat(g.wordsOff()).contains("VAR", "EXP");
-        assertThat(g.modules()).containsExactly("genomics");                            // its manifest: modules/genomics/src/dmod (the SDK's layout)
+        assertThat(g.modules()).containsExactly("genomics");                            // its manifest: modules/genomics (the SDK's layout)
         assertThat(g.domains()).containsEntry("genomics", "genomics");
         assertThat(g.lenses()).containsExactly("research");
         StandardEnvironment env = boot("drishti.distribution", "genomics");

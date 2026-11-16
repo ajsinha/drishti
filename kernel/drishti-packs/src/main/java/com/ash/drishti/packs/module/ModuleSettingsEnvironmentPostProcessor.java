@@ -84,11 +84,9 @@ public final class ModuleSettingsEnvironmentPostProcessor implements Environment
         if (Files.isDirectory(dir)) {
             try (DirectoryStream<Path> modules = Files.newDirectoryStream(dir, Files::isDirectory)) {
                 for (Path m : modules) {
-                    for (Path f : List.of(m.resolve("module.yaml"), m.resolve("src/dmod/module.yaml"), m.resolve("dmod").resolve("module.yaml"))) {
-                        if (Files.isRegularFile(f)) {
-                            add(out, YAML.readTree(f.toFile()));
-                            break;
-                        }
+                    Path f = m.resolve("module.yaml");
+                    if (Files.isRegularFile(f)) {
+                        add(out, YAML.readTree(f.toFile()));
                     }
                 }
             } catch (IOException e) {

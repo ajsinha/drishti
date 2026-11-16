@@ -733,7 +733,7 @@ options win over it):
 
 ```bash
 python3 tools/drishti.py lake build --from trade_endur.2026-11-05.jsonl.gz --lake risklake \
-    --pack modules/banking/dmod/packs/trading --connector trade-endur --key TRADE_ID --mode overwrite-dates
+    --pack modules/banking/packs/trading --connector trade-endur --key TRADE_ID --mode overwrite-dates
 ```
 
 ```text
@@ -853,7 +853,7 @@ without `id:` takes it, else the kind's key), or the loader alone from the serve
 
 ```bash
 python3 tools/drishti.py lake build --from trade_endur.2026-11-05.jsonl.gz --lake demo \
-    --pack modules/banking/dmod/packs/trading --connector trade-endur --mode overwrite-dates --engine java
+    --pack modules/banking/packs/trading --connector trade-endur --mode overwrite-dates --engine java
 ```
 
 ```text
@@ -2209,7 +2209,7 @@ checklist to print.
 pricing system, loaded as **one complete file or tar per business date**: a day's PV file must contain **all** pricing systems' positions,
 and a partial file **replaces the whole date** (there is no per-system slice of scenario PVs; 17.4). With it the
 VaR page, Explain and **Why it moved** are fast: a date opens from one memory-mapped hot file. The kind is `scenario-pv` (command `SPV`); its contract
-is [`scenario-pv.contract.yaml`](../../modules/banking/dmod/packs/market-risk/contracts/scenario-pv.contract.yaml), published as
+is [`scenario-pv.contract.yaml`](../../modules/banking/packs/market-risk/contracts/scenario-pv.contract.yaml), published as
 [SPV](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-position-or-trade-one-pv-per-scenario-its-currency-scenario-pv). The engine's rules for
 forms and grains are [VAR_GUIDE.md section 15.13](VAR_GUIDE.md#1513-inputs-any-form-any-grain); this section is the procedure.
 
@@ -2368,10 +2368,10 @@ export DRISHTI_LAKE_LOADER_HEAP=24g                       # the loader's -Xmx (d
 mkdir -p /fast/spill                                      # local NVMe, 15 to 30 GB free; removed when the load ends
 for k in scenario-set fx-scenario; do
   python3 tools/drishti.py lake build --engine java --from /landing/2026-11-12/$k/2026-11-12 --as-of 2026-11-12 --lake demo --kind $k \
-     --pack modules/banking/dmod/packs/market-risk --signal $DRISHTI_SERVER --token-file ~/.drishti-token
+     --pack modules/banking/packs/market-risk --signal $DRISHTI_SERVER --token-file ~/.drishti-token
 done
 python3 tools/drishti.py lake build --engine java --from /landing/2026-11-12/scenario-pv/2026-11-12 --as-of 2026-11-12 --lake demo --kind scenario-pv \
-   --pack modules/banking/dmod/packs/market-risk --signal $DRISHTI_SERVER --token-file ~/.drishti-token \
+   --pack modules/banking/packs/market-risk --signal $DRISHTI_SERVER --token-file ~/.drishti-token \
    --loader-set parallel.writers=16 --loader-set memory.budget-mb=20480 --loader-set memory.spill-dir=/fast/spill
 ```
 
@@ -2503,7 +2503,7 @@ the official capture. With 509 values a vector the gzip, the lake and the hot fi
 **What this loads.** The trades of Endur, Calypso, Murex, WSS, SwapOne and ICI, as JSON Lines in each system's own field names (`UPPER_SNAKE`, as
 Endur names them), into the one canonical `trade` kind (`TRD`). A source system is a **module** (`modules/source-<system>/`) that brings a
 connector template, a field map (`mappings/<system>-trade.yaml`), a routing rule for the inbox (`dataload.yaml`) and its own on/off switch. The trade's
-contract is [`trade.contract.yaml`](../../modules/banking/dmod/packs/trading/contracts/trade.contract.yaml), published as
+contract is [`trade.contract.yaml`](../../modules/banking/packs/trading/contracts/trade.contract.yaml), published as
 [TRD](../contracts/packs/trading.md#trd-trade-trade). **Trades reach VaR only at trade grain, which is not used now**: VaR is fed by position-level scenario PVs
 (16.1) and is unchanged by anything in this section, including switching a source off.
 
@@ -2574,7 +2574,7 @@ day's changes: *no source holds trade/1000001 … for 2026-07-09*). Send each da
 **4. The CLI alternative** (`--engine java`, never the Python writer; one run over a system's files, one commit a date):
 
 ```bash
-python3 tools/drishti.py lake build --engine java --from /landing/endur-2026-07-08 --as-of 2026-07-08 --lake demo --pack modules/banking/dmod/packs/trading \
+python3 tools/drishti.py lake build --engine java --from /landing/endur-2026-07-08 --as-of 2026-07-08 --lake demo --pack modules/banking/packs/trading \
    --kind trade --connector trade-endur --key TRADE_ID --signal $DRISHTI_SERVER --token-file ~/.drishti-token \
    --loader-set parallel.writers=16 --loader-set memory.budget-mb=20480 --loader-set memory.spill-dir=/fast/spill        # DRISHTI_LAKE_LOADER_HEAP=24g
 ```
@@ -2654,9 +2654,9 @@ Endur partitioned by `PRODUCT_TYPE`, Calypso and Murex by `PRODUCT_GROUP`, the o
 
 **What this loads.** The counterparty-risk pack's `netting-set` (`NSET`), with the `agreement` (`AGR`) and `csa` (`CSA`) it points at, from the xVA engine and the legal
 documents system: one JSON object per netting set and business date, its member trades inside it (`TRADES`). The contracts are
-[`netting-set`](../../modules/banking/dmod/packs/counterparty-risk/contracts/netting-set.contract.yaml),
-[`agreement`](../../modules/banking/dmod/packs/counterparty-risk/contracts/agreement.contract.yaml) and
-[`csa`](../../modules/banking/dmod/packs/counterparty-risk/contracts/csa.contract.yaml), published with the pack ([contracts](../contracts/packs/counterparty-risk.md)).
+[`netting-set`](../../modules/banking/packs/counterparty-risk/contracts/netting-set.contract.yaml),
+[`agreement`](../../modules/banking/packs/counterparty-risk/contracts/agreement.contract.yaml) and
+[`csa`](../../modules/banking/packs/counterparty-risk/contracts/csa.contract.yaml), published with the pack ([contracts](../contracts/packs/counterparty-risk.md)).
 
 **Related inputs, and how they link.**
 

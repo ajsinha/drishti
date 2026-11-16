@@ -17,7 +17,7 @@
 Its Home, every top-bar link, the Research lens, the module's pages (the gene's lollipop drawn) and Help open clean (the page walk's
 rules: no 4xx/5xx, no console error, nothing empty, within the budget); no finance is linked anywhere; the Elements gallery shows the
 module's visual. Skipped without the thin jar (./mvnw -o package -pl :drishti-kernel-app -am -DskipTests) or the module's package
-(./mvnw -o package -pl modules/genomics -am)."""
+(./mvnw -o package -pl modules/genomics/java/genomics -am)."""
 from __future__ import annotations
 
 import json
@@ -42,7 +42,7 @@ def _thin_jar():
 def genomics(tmp_path_factory):
     import wb_live
 
-    jar, dmod = _thin_jar(), ROOT / "modules" / "genomics" / "target" / "dmod" / "genomics-0.1.0.dmod"
+    jar, dmod = _thin_jar(), ROOT / "modules" / "genomics" / "java" / "genomics" / "target" / "dmod" / "genomics-0.1.0.dmod"
     if jar is None or not dmod.is_file():
         pytest.skip("needs the thin kernel jar and the genomics package (see the module docstring)")
     work = tmp_path_factory.mktemp("genomics-server")

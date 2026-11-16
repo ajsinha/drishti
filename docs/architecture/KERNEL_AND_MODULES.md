@@ -16,7 +16,7 @@
 
 # The kernel and its modules
 
-**Status: design, not built** (except P1's kernel API, section 2.3, the module runtime, section 10.4, deployment, sections 4.11.4, 4.11.8, 7.6 and 12 (the module store, plans per node following the placement, four-eyes apply, two-phase activation with rollback, rolling upgrade, remove with 410 and saved work marked *needs module X*, `drishti.py module deploy|plan|apply|list|…|run`, Admin → Modules and Deploy), placement, section 4.11 (`config/placement.yaml` per part by node or role, the singleton election behind one interface, the heavy-work guard and the node × part matrix in Admin → Cluster → Modules), and from wave 1 of 2.9.11.i2 + i3 the Module SDK of section 8 (the archetype, the parent pom and the Maven plugin with the conformance checks C1-C15), banking's sources under `modules/banking/` building on their own with the kernel internals they still reach listed in `modules/banking/kernel-internals.txt`, and the thin jar `drishti-kernel-app`, which boots with no modules; the kernel loading `.dmod` modules (the registration bridge of section 12.3 for the kernel API's provider types, multi-jar packages with `java.lib`, auto-deploy from `drishti.modules.path`, development mode for exploded folders, and the shared lib folder `drishti.lib.path`); first-party modules with the kernel-internals allowance and the exact kernel build (section 3.3: `origin:` verified against the shipped `first-party.yaml`, conformance check C1, the module class loader, `module inspect` and `module list`), and banking as `banking-1.0.0.dmod`, loaded as a module by the full distribution with market-data, capital-markets and economy installed by default and placed on every node; and the console part of section 4.7 hosted declaratively by today's console (section 14.2.1): `plugin.yaml` format 2's routes, menus, words, Home cards, Help and AI tools under `/m/<id>/`, a Jinja environment per module over `kernel/page.html` and `kernel/elements.html`, statics with the version in the path, Elements copies, code and private templates refused, every surface withdrawn on switch-off or removal with saved work marked *needs module X* (section 12), the economy module's World page among them; content modules read by the access registry from their own manifests; the module's Python compute of section 4.6 (installed into the kernel's worker pool on load, withdrawn on unload, placed with its `compute` part, 2.9.11.i5); the rest of P2 and P3 is being built in 2.9.11.i2 + i3). Written for 2.9.11.i, now split into **i1, i2, i3 and i5** (section 14.2), on the product owner's request of 2026-11-08: Drishti
+**Status: design, not built** (except P1's kernel API, section 2.3, the module runtime, section 10.4, deployment, sections 4.11.4, 4.11.8, 7.6 and 12 (the module store, plans per node following the placement, four-eyes apply, two-phase activation with rollback, rolling upgrade, remove with 410 and saved work marked *needs module X*, `drishti.py module deploy|plan|apply|list|…|run`, Admin → Modules and Deploy), placement, section 4.11 (`config/placement.yaml` per part by node or role, the singleton election behind one interface, the heavy-work guard and the node × part matrix in Admin → Cluster → Modules), and from wave 1 of 2.9.11.i2 + i3 the Module SDK of section 8 (the archetype, the parent pom and the Maven plugin with the conformance checks C1-C15), banking's sources under `modules/banking/` building on their own with the kernel internals they still reach listed in `modules/banking/java/kernel-internals.txt`, and the thin jar `drishti-kernel-app`, which boots with no modules; the kernel loading `.dmod` modules (the registration bridge of section 12.3 for the kernel API's provider types, multi-jar packages with `java.lib`, auto-deploy from `drishti.modules.path`, development mode for exploded folders, and the shared lib folder `drishti.lib.path`); first-party modules with the kernel-internals allowance and the exact kernel build (section 3.3: `origin:` verified against the shipped `first-party.yaml`, conformance check C1, the module class loader, `module inspect` and `module list`), and banking as `banking-1.0.0.dmod`, loaded as a module by the full distribution with market-data, capital-markets and economy installed by default and placed on every node; and the console part of section 4.7 hosted declaratively by today's console (section 14.2.1): `plugin.yaml` format 2's routes, menus, words, Home cards, Help and AI tools under `/m/<id>/`, a Jinja environment per module over `kernel/page.html` and `kernel/elements.html`, statics with the version in the path, Elements copies, code and private templates refused, every surface withdrawn on switch-off or removal with saved work marked *needs module X* (section 12), the economy module's World page among them; content modules read by the access registry from their own manifests; the module's Python compute of section 4.6 (installed into the kernel's worker pool on load, withdrawn on unload, placed with its `compute` part, 2.9.11.i5); the rest of P2 and P3 is being built in 2.9.11.i2 + i3). Written for 2.9.11.i, now split into **i1, i2, i3 and i5** (section 14.2), on the product owner's request of 2026-11-08: Drishti
 becomes a domain-free **kernel** for BI and aggregation; capabilities arrive as separately built, signed **modules** loaded from
 folders; connectors stay the kernel's; a **distribution file** white-labels the product. Banking is the first module and the worked example
 throughout. The same day the owner decided the three building blocks (section 1.1): the **Drishti Kernel**, the **Drishti Console**, now a
@@ -410,7 +410,7 @@ one build and release train builds banking with each kernel, so the two always s
 **As built (2.9.11.i2 + i3, wave 2).** One implementation, `FirstParty` in the module runtime, answers for the module tool and the kernel.
 The build (`packaging/dist`) packs the product's modules with `java -jar drishti-module-tool.jar pack` and writes
 `META-INF/drishti/first-party.yaml` (id, version, SHA-256 of each `DMOD.MF`) from the packed files; both server jars carry it. A manifest
-whose `kernel-internals:` names a file (banking's `../kernel-internals.txt`) gets the list written in by the packer, and the packer stamps
+whose `kernel-internals:` names a file (banking's `java/kernel-internals.txt`) gets the list written in by the packer, and the packer stamps
 `kernel-build:` with the kernel on its class path (`<version>+<build time>` from the server's `build-info.properties`, or `--kernel-build`).
 Verification adds `origin: first-party (verified ...)` or `origin: third-party (why)` as the first Health note; an allowance on a module
 that does not verify is refused (C1), one built for another kernel is refused (V3, the words above); the module's class loader asks the
@@ -1139,7 +1139,13 @@ All of it is published to the site's (or Drishti's partner) Maven repository; no
 
 ### 8.2 The module as a Maven project
 
-One **multi-module Maven project** per module. The parent pom inherits `drishti-module-parent`, depends on `drishti-kernel-api` with scope
+**As built (i5): the one module layout of section 8.10.** The `.dmod` content is not a Maven sub-module: it sits at the module folder's
+top, as inside the package, and only the code is Maven, one project per jar under `java/<project>/` (the archetype makes one,
+`java/<artifactId>/`, whose parent is `drishti-module-parent`), aggregated by the `pom.xml` beside `java/`. The design below, one
+sub-module per part, is kept for the parts not built yet (Python, the harness suites); its content sub-modules (`-packs`, `-console`,
+`-docs`) are the top-level folders of section 8.10.
+
+The design: one **multi-module Maven project** per module. The parent pom inherits `drishti-module-parent`, depends on `drishti-kernel-api` with scope
 `provided`, lists the sub-modules and runs the `drishti-module-maven-plugin` once, after them. Each sub-module maps to one part of the
 `.dmod` (section 3.2):
 
@@ -1270,22 +1276,46 @@ The files, all in `examples/genomics/` (laid out as inside the `.dmod`; the proj
 
 | File | Shows |
 |---|---|
-| [project-tree.txt](kernel-and-modules/examples/genomics/project-tree.txt) | the Maven project and where each folder lands in the `.dmod` |
+| [project-tree.txt](kernel-and-modules/examples/genomics/project-tree.txt) | the module's folder as built (section 8.10) and where each folder lands in the `.dmod` |
 | [pom.xml](kernel-and-modules/examples/genomics/pom.xml) | the parent pom: `provided` kernel API, seven sub-modules, the plugin's goals, the release profile |
 | [module.yaml](kernel-and-modules/examples/genomics/module.yaml) | the manifest of a partner-published module with Java, Python, a computed kind and pages |
 | [console/plugin.yaml](kernel-and-modules/examples/genomics/console/plugin.yaml) | format 2: routes, API proxy, words, menus, Home cards, slots, settings, search |
 | [console/templates/variant_explorer.html](kernel-and-modules/examples/genomics/console/templates/variant_explorer.html) | a composed page (section 9.11) |
 | [packs/genomics/sutras/variant-call.v1.sutra.yaml](kernel-and-modules/examples/genomics/packs/genomics/sutras/variant-call.v1.sutra.yaml) | a Sutra (tier 1) |
 
-### 8.10 Banking's equivalent
+### 8.10 The one module layout
 
-Banking becomes the same shape at `modules/banking/` in this repository (Q9): `banking-compute` ← `drishti-compute-banking`,
-`banking-service` ← `drishti-banking`, `banking-python` ← `drishti_banking` and the packs' Python, `banking-packs` ← `modules/banking/dmod/packs/`
-(+ its lenses, BI and lake forms), `banking-console` ← `drishti-console/plugins/banking/` (plugin.yaml format 1 → 2, the nine route files
-reduced to context builders, the ~35 API pass-throughs replaced by the kernel's proxy), `banking-docs` ← the seven banking guides and nine
-tutorials, `banking-test` ← the banking tests, the VaR exact check and `BankingAbsenceTest`. The file-by-file mapping:
-[banking/project-mapping.txt](kernel-and-modules/examples/banking/project-mapping.txt); the format-2 plugin file:
-[banking/console/plugin.yaml](kernel-and-modules/examples/banking/console/plugin.yaml).
+Every module in this repository, and every module the archetype makes, has **one folder layout** (i5). Its `.dmod` content sits at the
+top of its folder, exactly as inside the package; its code, only when it has any, is one or more Maven projects under `java/`, with the
+`pom.xml` beside `java/` aggregating them. There is no `dmod/` or `src/dmod/` folder anywhere.
+
+```
+modules/<module>/
+├── module.yaml                     the manifest (section 3.3): always, at the top
+├── content.yaml                    what the packer brings in from elsewhere in the repository (never packed itself), if any
+├── dataload.yaml                   its inbox rules (a source-system module), if any
+├── packs/ console/ data/ docs/     the .dmod content, as in the package (section 3.2) ...
+├── connectors/ mappings/ blotters/ elements/
+├── tools/                          its own generators (never packed), if any
+├── java/<project>/                 ONLY when it has Java: each a Maven project (pom.xml, src/main/java, src/test/java)
+└── pom.xml                         ONLY when it has Java: aggregates java/* (built by the root pom)
+```
+
+| Module | Its code |
+|---|---|
+| `banking` | `java/banking-compute` (the maths: VaR, exposure, FRTB-SA, SIMM, sensitivities), `java/banking-service` (services, storage, Spring wiring, API); `java/kernel-internals.txt`, the kernel packages it still reaches (`BankingReachTest`) |
+| `genomics` | `java/genomics`, the SDK's sample project (its parent is `drishti-module-parent`; its `drishti:assemble` packs the module folder, two up) |
+| the content and source-system modules | none: no `java/`, no `pom.xml` |
+
+The packer (`ModuleAssembler`, one for the Maven plugin, the module tool and `packaging/dist`) stages the module's folder as it is and
+leaves out what only builds it: `pom.xml`, `target/`, `tools/` and `java/`'s projects (only jars already in `java/` are kept); the
+module's own jar goes into the package's `java/` by the name its manifest gives. The resolver and every reader (the kernel's
+`PackResolver` and `ModuleManifests`, the console's `core/resolution.py` and `module_parts.py`, the tools) find a module by
+`<modules>/<dir>/module.yaml` and nothing else. `tools/test_module_layout.py` keeps every `modules/<module>` to this layout: only the
+names above at the top, `java/` and `pom.xml` together or neither, the `pom.xml` listing exactly `java/*`, no `dmod/` folder.
+
+Banking's tree and its former places: [banking/project-mapping.txt](kernel-and-modules/examples/banking/project-mapping.txt); the
+format-2 plugin file: [banking/console/plugin.yaml](kernel-and-modules/examples/banking/console/plugin.yaml).
 
 ### 8.11 The developer guide (outline)
 
@@ -2135,7 +2165,7 @@ module id and version in the audit line.
 | Java split: `drishti-banking`, `drishti-compute-banking`; cycles J1–J6 broken through SPIs; `ArchitectureRulesTest` | **39 kernel files with 77 banking strings** on the rule-4 allow list (`tools/domain_strings_allowed.yaml`): bicompute (Explain, functions, what-if, scale), the console's `core/edition.py` (14), `core/facts.py`, `drishti_pivot.js`, `EngineCatalogue`, `ModuleManifest`, `EmbeddedAccessRegistry`, `ErrorCode` |
 | Manifests (`META-INF/drishti/module.yaml`, `lenses.yaml`, `engines.yaml`, `token-scopes.yaml`) in the jar; the registry decides | **The thin jar is built but not the default** (`drishti-kernel-app`, no modules; Health says so): banking is on the full jar's class path; "installed" = in the fat jar |
 | `@ConditionalOnModule`, module switch, `DRS-1025` / `1026`; module off = gone everywhere (tests) | **Console plugins live inside the repo's console** (`drishti-console/plugins/{banking,economy}`), imported as `plugins.<id>` |
-| Console plugin hooks C1–C7; static assets by module and lens; Elements loader refuses a module's library | **Modules depend on `drishti-server` internals** (banking: 44 packages listed in `modules/banking/kernel-internals.txt`, a list that only shrinks) |
+| Console plugin hooks C1–C7; static assets by module and lens; Elements loader refuses a module's library | **Modules depend on `drishti-server` internals** (banking: 44 packages listed in `modules/banking/java/kernel-internals.txt`, a list that only shrinks) |
 | Packs, lakes, BI, tables, reports, lenses in module folders (`config/*/banking/`) | **Banking ships connector plugins** (`var-positions`, `var-pv-stream`) and reactive connectors; contracts name connectors (`storage.connector`) |
 | **Editions folded into lenses: done** (`config/lenses/<module>/`) | **No signing, no module path, no distribution file**; branding split across `ui.*`, `drishti.branding.*` and lens titles |
 | Packs name their domain; Help by module (`plugins/banking/help.yaml`) | Banking Python CLIs (`varcli.py`, …) and the guides/tutorials live in the repo's shared folders |
@@ -2355,7 +2385,7 @@ C hides errors in a corner and is kept only for `--shots` runs.
 
 1. Drishti reads configuration from three places, always in this order: **your site** (`config/`), **the modules that are on**, **the kernel**.
 2. A module that is off contributes nothing, anywhere. A module that is on contributes everything its manifest lists, from wherever it is installed.
-3. Your site adds to what is shipped, and changes it only where it says so: a pack by `replaces:`, a connector by an override file of the same name, a binding by an entry for the kind.
+3. Your site adds to what is shipped, and changes it only where it says so: a pack by `replaces:`, a connector by an override file of the same name, a binding by an entry for the kind, and any other module file (a Sutra, a pack's YAML, a page's `plugin.yaml`) by a file at the same path in its override folder (section 18.10).
 4. The server only reads. It never writes, moves, upgrades or retires a configuration file; only an administrator's own save does.
 5. One resolver answers every reader (server, loader, console, tools), and Admin shows for each pack, connector, binding and inbox rule where it came from and why.
 
@@ -2383,7 +2413,7 @@ paper beside this section ([pack-resolution-inventory.md](pack-resolution-invent
 The access registry ([ACCESS_MODEL.md](ACCESS_MODEL.md)) decides each module's state from the distribution, the licence, the
 administrator's switch and the modules it requires. The resolver asks it and nothing else: no reader looks at a switch file, the
 distribution or `drishti.packs.enabled` to decide whether a module's content counts. For each module the registry gives its id,
-version, state, the reason when off, and **its folder**: `<drishti.modules.home>/<id>/` (or `<id>/dmod/`, a module built with code),
+version, state, the reason when off, and **its folder**: `<drishti.modules.home>/<id>/` (every module's one layout, section 8.10; the view of section 18.10 when the site overrides a file),
 else the active version in the store, `<drishti.modules.path>/installed/<id>/<version>/`. A module found in both with different
 versions is read from the folder and reported (DRS-1044). The command line and the tools, which have no server, compute the same
 from the distribution file and the switch files (licence not evaluated); the console takes the list from the server.
@@ -2578,7 +2608,8 @@ its own files; the digest is shown per node in Health and a difference is a prob
 - **Admin → Data bindings**: each kind's origin (site, declared by `<module or pack>`, demo), read, live and write, and connectors
   that offer the kind but are not in the site's binding.
 - **Admin → Data inbox**: each rule's origin, and a rule an earlier one always shadows.
-- **Health**: every problem of the resolution, and the digest per node.
+- **Health**: every problem of the resolution, and the digest per node; the module files the site overrides, each with its source, and the
+  refused ones (section 18.10).
 - `GET /api/v1/admin/resolution` answers all of it; `drishti.py resolution show` and `resolution why <pack|connector|kind> <name>`
   print it without a server.
 
@@ -2590,7 +2621,7 @@ Each names the thing, both places, and what to do.
 |---|---|---|
 | DRS-1040 | the kernel's packs are missing (start refused) | *The kernel's pack 'core' is not in config/packs/core (drishti.kernel.packs-dir). The server cannot start without it.* |
 | DRS-1041 | a pack is not found | *No pack 'trding'. Looked in the site's packs (config/packs, data/packs/installed), the modules that are on (banking, market-data, economy) and the kernel's packs (config/packs/core). Did you mean 'trading' (module banking)?* |
-| DRS-1042 | one name in two places | *Pack 'trading' is in config/packs/banking/trading and in module banking (modules/banking/dmod/packs/trading). The module's is read. To use yours instead, add `replaces: trading` to its pack.yaml; otherwise the folder is safe to delete.* |
+| DRS-1042 | one name in two places | *Pack 'trading' is in config/packs/banking/trading and in module banking (modules/banking/packs/trading). The module's is read. To use yours instead, add `replaces: trading` to its pack.yaml; otherwise the folder is safe to delete.* |
 | DRS-1043 | a pack's module is off | *Pack 'market-risk' belongs to module banking, which is off (switched off in config/modules/banking.yaml). Switch it on in Admin → Modules.* |
 | DRS-1044 | a module in two places | *Module market-data is in modules/market-data (1.0.0) and installed as data/modules/installed/market-data/1.1.0. The folder is read. Remove one.* |
 | DRS-1045 | two templates of one name | *Connector 'trade-endur' is declared by pack trading and by module source-endur. Neither is used. Remove one declaration.* |
@@ -2600,3 +2631,35 @@ Each names the thing, both places, and what to do.
 | DRS-1049 | two answers differ | *This console resolves pack 'trading' 2.9.10 from /opt/console/modules/…; the server serves 2.9.11 from /opt/drishti/modules/…* |
 | DRS-9308 | no write path | *Kind 'trade' (source ENDUR) has no write path: no connector that serves it offers writes. Module source-endur has an example, connectors/examples/kafka.yaml; or bind one in Admin → Data bindings (write).* |
 | DRS-9309 | more than one write path | *Kind 'trade' has two write paths, trade-endur-kafka and trade-murex-kafka, and the record names no source system. Name one in Admin → Data bindings (write).* |
+
+### 18.10 Site overrides of module files
+
+A site changes any file a module ships, without touching the module, by putting its own copy at **the same relative path** in an
+**override folder**: `<override folder>/<module>/<path inside the module>`. One rule, applied once by the server at start
+(`ModuleOverrides`, called by `LaunchRoots` before any reader):
+
+| | |
+|---|---|
+| **Where** | `drishti.overrides.dir` in the settings file (`drishti.overrides.dir=/abs/overrides` under a label section such as `[roots]`), `-Ddrishti.overrides.dir`, or `DRISHTI_OVERRIDES_DIR`. A comma-separated list is allowed: the right-most folder wins a path. Paths are absolute (a relative one is taken under `drishti.home`, never the process folder) |
+| **What** | any module file: every YAML (a pack's `pack.yaml`, contracts, `console/plugin.yaml`, `data/needs.yaml`, mappings, blotters, `docs/help.yaml`), every Sutra (`*.sutra.yaml`, `*.block.yaml`), pages and docs. A file the module does not ship is added |
+| **Never** | `<module>/module.yaml` (the module's identity); `<module>/connectors/` (a connector is changed in `config/connectors/<name>.yaml`, merged over the template, section 18.5; connectors stay read-only); `java/`, `pom.xml`, `target/`, `tools/` (they only build the module). Each is refused in words, in the log and in Health, and not used |
+| **How** | when at least one file overrides, the server brings the **view** `<data>/overrides/modules` up to date (the modules folder copied, only what changed since the last start, then the overrides laid over it) and `drishti.modules.home` names the view; the module's own folder is never written. Every reader (the pack resolver, Sutras, pages, blotters, data needs, Help) sees the overridden file and needs no rule of its own. With no override the view is removed and the modules folder is read as it is |
+| **Shown** | the log's `module overrides:` block; **Admin → Health**, *module files overridden by the site* (each path, its source, *added* when the module has no such file; the refused ones); `GET /api/v1/admin/health` → `moduleOverrides` (`dirs`, `view`, `modulesHome`, `files`, `refused`); the view's own list, `overrides.yaml`, which the console's resolver reads to use the same view |
+| **When** | at start: change an override, restart the server (and the console). Removing the file and restarting restores the module's |
+
+**Example: change one Sutra and try it from outside.** The trading pack's Endur cash Sutra ships at
+`modules/banking/packs/trading/sutras/endur/endur-cash.v1.sutra.yaml`. To try a change without touching the module:
+
+```bash
+mkdir -p /home/me/drishti-overrides/banking/packs/trading/sutras/endur
+cp modules/banking/packs/trading/sutras/endur/endur-cash.v1.sutra.yaml /home/me/drishti-overrides/banking/packs/trading/sutras/endur/
+# edit the copy (a title, a section, a field), then name the folder in your settings file:
+#   drishti.overrides.dir=/home/me/drishti-overrides
+python tools/drishti.py --settings /home/me/dev.ini stop server
+python tools/drishti.py --settings /home/me/dev.ini start server
+```
+
+The start's log says `module overrides: 1 file(s) over /…/modules, read from the view /…/data/overrides/modules` with the line
+`banking/packs/trading/sutras/endur/endur-cash.v1.sutra.yaml <- /home/me/drishti-overrides/…`; an Endur cash trade's page now shows
+the edited Sutra, and Admin → Health lists the file. Delete the copy (or the setting) and restart: the module's Sutra is back and the
+view is gone.

@@ -216,6 +216,12 @@
 <details class="hl-over"><summary>{{ h.overrides | length }} inherited definition{{ 's' if h.overrides | length > 1 }} overridden by a more specific pack</summary>
   <ul class="mono cmp-path">{% for o in h.overrides %}<li>{{ o }}</li>{% endfor %}</ul></details>
 {% endif %}
+{% set mo = h.moduleOverrides or {} %}
+{% if mo.files or mo.refused %}
+<details class="hl-over" data-module-overrides><summary>{{ mo.files | length }} module file{{ 's' if (mo.files | length) != 1 }} overridden by the site{% if mo.refused %}; {{ mo.refused | length }} refused{% endif %}</summary>
+  <ul class="mono cmp-path">{% for f in mo.files %}<li>{{ f.path }} &larr; {{ f.source }}{% if not f.replaces %} (added){% endif %}</li>{% endfor %}
+  {% for r in mo.refused %}<li>refused: {{ r }}</li>{% endfor %}</ul></details>
+{% endif %}
 
 {% if h.pages %}
 <h2 class="ws-h">Pages</h2>

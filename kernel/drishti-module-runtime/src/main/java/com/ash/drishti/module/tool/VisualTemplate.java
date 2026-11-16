@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
 
 /**
  * The custom-visual SDK's template (docs/guides/DEVELOPER_GUIDE.md, "A module's own visual"; {@code mvn drishti:visual -Dname=<name>}):
- * adds to a module project's {@code src/dmod} a visual type as a Drishti Elements extension. It writes the module's library
+ * adds to a module's folder (its {@code .dmod} content at the top) a visual type as a Drishti Elements extension. It writes the module's library
  * {@code elements/drishti-<module>/drishti_<module>.js} (once; a second visual is added to it by hand) with a kind {@code <module>.<name>}
  * registered in drishti-chart's registry and built from drishti-chart's own primitives, and declares it under {@code visuals:} of
  * {@code console/plugin.yaml}, so the Elements gallery shows it while the module is loaded. Nothing is drawn by hand and no colour named.

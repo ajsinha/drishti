@@ -27,8 +27,8 @@ abstract class ModuleMojo extends AbstractMojo {
     @Parameter(defaultValue = "${project}", readonly = true, required = true)
     MavenProject project;
 
-    /** The module's files in the {@code .dmod} layout (module.yaml first). */
-    @Parameter(property = "drishti.dmod.source", defaultValue = "${project.basedir}/src/dmod")
+    /** The module's folder, its {@code .dmod} content at the top (module.yaml first): a module project is {@code <module>/java/<project>}. */
+    @Parameter(property = "drishti.dmod.source", defaultValue = "${project.basedir}/../..")
     File source;
 
     /** The module's id; its manifest must say the same. */

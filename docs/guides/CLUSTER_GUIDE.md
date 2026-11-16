@@ -813,7 +813,7 @@ answer fails the scope with `503 DRS-5215` naming it.
   (`409 DRS-5216`). The settings are read at start: a change is a rolling restart.
 
 ```yaml
-# modules/banking/dmod/packs/market-risk/pack.yaml (or drishti.var.sharding.* in application.yaml, which wins)
+# modules/banking/packs/market-risk/pack.yaml (or drishti.var.sharding.* in application.yaml, which wins)
 sharding:
   enabled: true
   key: [LEGAL_ENTITY, DESK]
@@ -1588,7 +1588,7 @@ deploy/aws/env`. The tables file has one line per table: folder, kind, pack, the
 business date), the business-date field (`-` for the day being loaded) and the partition column:
 
 ```text
-trading/trade_endur      trade   modules/banking/dmod/packs/trading   trade-endur     {date}/endur/           -      PRODUCT_TYPE
+trading/trade_endur      trade   modules/banking/packs/trading   trade-endur     {date}/endur/           -      PRODUCT_TYPE
 ```
 
 **Step 2 · the buckets.** `deploy/aws/delta-lake/setup-buckets.sh --dry-run`, then without. **You should see** each call, ending
@@ -1699,7 +1699,7 @@ mixture.
    for each table of LAKE_TABLES_FILE:
      flock  /opt/drishti/data/lake-locks/<domain>--<table>.lock     (another load, backfill or maintenance: exit 3)
      aws s3 sync   s3://landing/<date>/<source>/  →  scratch/in/<table>/
-     drishti.py lake build   --from scratch/in/<table> -r --kind trade --pack modules/banking/dmod/packs/trading --connector trade-endur
+     drishti.py lake build   --from scratch/in/<table> -r --kind trade --pack modules/banking/packs/trading --connector trade-endur
                              --lake scratch/lake --domain trading --table trade_endur --mode overwrite-dates
                              --batch-rows 250000 --as-of <date> --partition-by PRODUCT_TYPE --no-stamp --summary …
      aws s3 sync   scratch/lake/trading/trade_endur/  →  s3://lake/lake/trading/trade_endur/   --exclude "_delta_log/*"

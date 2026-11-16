@@ -16,8 +16,8 @@
 # (com.ash.drishti.api.PackResolver, PackResolverFixtureTest) and its Python twin (drishti-console/core/resolution.py,
 # drishti-console/tests/test_resolution.py) read every case and must give the same answer.
 #
-# A case: `tree` (files under a scratch root: a pack is `<folder>/<name>/pack.yaml`, a module `modules/<dir>/module.yaml` or
-# `modules/<dir>/dmod/module.yaml`, an installed .dmod `store/installed/<id>/<version>/module.yaml` named by `store/installed/active.yaml`),
+# A case: `tree` (files under a scratch root: a pack is `<folder>/<name>/pack.yaml`, a module `modules/<dir>/module.yaml` (the one
+# module layout), an installed .dmod `store/installed/<id>/<version>/module.yaml` named by `store/installed/active.yaml`),
 # `active` (the active module ids), and the expected `packs` (name -> origin: `site`, `module:<id>`, `kernel`), `off` (a pack of a module
 # that is not active -> that module), `dirs` (name -> folder, where it matters) and `problems` (each a fragment one problem must contain;
 # no other problem allowed). Every case's layout: site = site/, kernel = site/core/, the modules tree = modules/, the module store = store/.
@@ -48,9 +48,9 @@ cases:
 - name: only the listed packs of a module count
   tree:
     site/core/core/pack.yaml: "pack: core"
-    modules/banking/dmod/module.yaml: "id: banking\npacks: {folder: packs, list: [market-risk]}"
-    modules/banking/dmod/packs/market-risk/pack.yaml: "pack: market-risk"
-    modules/banking/dmod/packs/scratch/pack.yaml: "pack: scratch"
+    modules/banking/module.yaml: "id: banking\npacks: {folder: packs, list: [market-risk]}"
+    modules/banking/packs/market-risk/pack.yaml: "pack: market-risk"
+    modules/banking/packs/scratch/pack.yaml: "pack: scratch"
   active: [banking]
   packs: {core: kernel, market-risk: "module:banking"}
   problems: []
@@ -150,10 +150,11 @@ cases:
   packs: {acme: site}
   problems: ["the module a: its packs folder"]
 
-- name: a module project from the SDK keeps its manifest in src/dmod
+- name: a module with code keeps its manifest at its top, its Maven projects under java/ are not read
   tree:
-    modules/genomics/src/dmod/module.yaml: "id: genomics\npacks: {folder: packs, list: [genes]}"
-    modules/genomics/src/dmod/packs/genes/pack.yaml: "pack: genes"
+    modules/genomics/module.yaml: "id: genomics\npacks: {folder: packs, list: [genes]}"
+    modules/genomics/packs/genes/pack.yaml: "pack: genes"
+    modules/genomics/java/genomics/pom.xml: "<project/>"
   active: [genomics]
   packs: {genes: "module:genomics"}
   problems: []

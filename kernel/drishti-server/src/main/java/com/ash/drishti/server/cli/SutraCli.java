@@ -621,7 +621,7 @@ public final class SutraCli {
 
     /**
      * The shared panel blocks the Sutras being checked may use: those of the {@code sutras} folder each path is in (or holds), so
-     * {@code sutra test modules/banking/dmod/packs/trading} and a single file of it both see {@code sutras/common/*.block.yaml}.
+     * {@code sutra test modules/banking/packs/trading} and a single file of it both see {@code sutras/common/*.block.yaml}.
      */
     private void loadBlocks(List<Path> paths) {
         java.util.Set<Path> dirs = new java.util.LinkedHashSet<>();
@@ -655,7 +655,7 @@ public final class SutraCli {
 
     /**
      * The Drishti UI kit folder: {@code drishti.ui-kit.dir} or {@code DRISHTI_UI_KIT_DIR} when set, else {@code ./config/ui-kit}, else the
-     * {@code config/ui-kit} (or {@code ui-kit}) beside an ancestor of a path being checked ({@code modules/banking/dmod/packs/trading} finds
+     * {@code config/ui-kit} (or {@code ui-kit}) beside an ancestor of a path being checked ({@code modules/banking/packs/trading} finds
      * {@code config/ui-kit}); null when there is none.
      */
     static Path uiKit(java.util.Collection<Path> dirs) {

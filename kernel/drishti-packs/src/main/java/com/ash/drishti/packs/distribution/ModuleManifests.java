@@ -33,7 +33,7 @@ import java.util.TreeMap;
 /**
  * The modules a distribution may list, read from their own manifests (docs/architecture/DISTRIBUTIONS.md section 10): a content module's
  * {@code modules/<id>/module.yaml} (the {@code .dmod} manifest), a module with code's {@code META-INF/drishti/module.yaml} in its
- * sources ({@code modules/<id>/<part>/src/main/resources/...}), and the packaged modules the registry reads with the same reader
+ * sources ({@code modules/<id>/java/<part>/src/main/resources/...}), and the packaged modules the registry reads with the same reader
  * ({@link com.ash.drishti.registry.ModulePackages}: the shipped first-party {@code .dmod} packages and those installed in the module store),
  * whose manifest wins over a folder's copy. The console reads the same files the same way
  * (drishti-console/core/distribution.py). Each comes to its packs, its function words, the engines it owns, its top menus, the Help
@@ -48,8 +48,8 @@ public final class ModuleManifests {
 
     private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
     private static final String IN_JAR = "src/main/resources/META-INF/drishti/module.yaml";
-    /** A module project made from the SDK's archetype keeps its {@code .dmod} manifest in {@code src/dmod/} (genomics). */
-    private static final String SDK_PROJECT = "src/dmod/module.yaml";
+    /** A module's Maven projects, each a part ({@code modules/<id>/java/<part>}); the module's own files are at its folder's top. */
+    private static final String JAVA = "java";
 
     private ModuleManifests() {
     }
@@ -79,14 +79,15 @@ public final class ModuleManifests {
     private static void folder(Path dir, Map<String, Entry> byId) {
         try (DirectoryStream<Path> modules = Files.newDirectoryStream(dir, Files::isDirectory)) {
             for (Path m : modules) {
-                for (Path dmod : List.of(m.resolve("module.yaml"), m.resolve(SDK_PROJECT), m.resolve("dmod").resolve("module.yaml"))) {
-                    if (Files.isRegularFile(dmod)) {        // a content module's; an SDK project's src/dmod; banking's dmod/
-                        Entry e = ofDmod(tree(dmod), dmod);
-                        byId.put(e.id(), e);
-                        break;
-                    }
+                Path dmod = m.resolve("module.yaml");               // every module's manifest at its folder's top (one layout)
+                if (Files.isRegularFile(dmod)) {
+                    Entry e = ofDmod(tree(dmod), dmod);
+                    byId.put(e.id(), e);
                 }
-                try (DirectoryStream<Path> parts = Files.newDirectoryStream(m, Files::isDirectory)) {
+                if (!Files.isDirectory(m.resolve(JAVA))) {
+                    continue;
+                }
+                try (DirectoryStream<Path> parts = Files.newDirectoryStream(m.resolve(JAVA), Files::isDirectory)) {
                     for (Path part : parts) {
                         Path jar = part.resolve(IN_JAR);
                         if (Files.isRegularFile(jar)) {

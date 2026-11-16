@@ -81,8 +81,8 @@ class OneTablePerSystemTest {
     void everySystemLoadsIntoItsOwnTableAndTheTradeKindListsAllSixExactly() throws Exception {
         Path root = repo();
         YAMLMapper yaml = new YAMLMapper();
-        Path pack = Files.createDirectories(tmp.resolve("modules/banking/dmod/packs/trading"));
-        Files.copy(root.resolve("modules/banking/dmod/packs/trading/pack.yaml"), pack.resolve("pack.yaml"));
+        Path pack = Files.createDirectories(tmp.resolve("modules/banking/packs/trading"));
+        Files.copy(root.resolve("modules/banking/packs/trading/pack.yaml"), pack.resolve("pack.yaml"));
         // what the committed test data says each system holds on the day
         Map<String, Long> expected = new TreeMap<>();
         for (JsonNode d : yaml.readTree(root.resolve("data/testdata/testdata.yaml").toFile()).path("datasets")) {

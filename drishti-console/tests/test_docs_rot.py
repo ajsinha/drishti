@@ -233,7 +233,7 @@ def _pack_roots(rel: str) -> list[str]:
 def pack_roots_all() -> tuple[str, ...]:
     """Every pack folder: a folder holding a pack.yaml under config/packs (in its domain folder, core.resolution) or examples/packs."""
     return tuple(sorted({p[: -len("/pack.yaml")] for p in tracked()
-                         if re.match(r"(?:(?:config|examples)/packs/(?:[^/]+/)?|modules/[^/]+/(?:dmod/)?packs/)[^/]+/pack\.yaml$", p)}))
+                         if re.match(r"(?:(?:config|examples)/packs/(?:[^/]+/)?|modules/[^/]+/packs/)[^/]+/pack\.yaml$", p)}))
 
 
 def ignored(paths: list[str]) -> set[str]:
@@ -576,7 +576,7 @@ RESERVED_WORDS = {"BI", "RUPAKA", "FORM", "FUNC", "VAR", "WHAT", "DATAMAP", "DAT
 def packs() -> list[dict]:
     out = []
     for p in tracked():
-        if re.match(r"((config/|examples/|docs/guides/examples/)packs?/(?:[^/]+/)?|modules/[^/]+/(dmod/)?packs/)[^/]+/pack\.yaml$", p) or re.match(r"(?:[a-z]+/)?drishti-[a-z-]+/src/test/resources/.*packs/[^/]+/pack\.yaml$", p):
+        if re.match(r"((config/|examples/|docs/guides/examples/)packs?/(?:[^/]+/)?|modules/[^/]+/packs/)[^/]+/pack\.yaml$", p) or re.match(r"(?:[a-z]+/)?drishti-[a-z-]+/src/test/resources/.*packs/[^/]+/pack\.yaml$", p):
             try:
                 out.append(yaml.safe_load(read(p)) or {})
             except yaml.YAMLError:

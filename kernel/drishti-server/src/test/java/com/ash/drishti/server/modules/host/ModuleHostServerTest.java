@@ -212,8 +212,8 @@ class ModuleHostServerTest {
 
     private static Path archetypeModule(Path work, String id) {
         Path project = ModuleFixtures.generate(Path.of(System.getProperty("drishti.sdk.archetype")), id, work.resolve(id));
-        Path jar = ModuleFixtures.jarOf(project.resolve("src/main/java"), null, work.resolve(id + "-build"), work.resolve(id + "-build/" + id + "-0.1.0.jar"));
-        return ModuleAssembler.assemble(project.resolve("src/dmod"), jar, work.resolve("stage"), work.resolve("dist-" + id));
+        Path jar = ModuleFixtures.jarOf(project.resolve("java/" + id + "/src/main/java"), null, work.resolve(id + "-build"), work.resolve(id + "-build/" + id + "-0.1.0.jar"));
+        return ModuleAssembler.assemble(project, jar, work.resolve("stage"), work.resolve("dist-" + id));
     }
 
     /** The shared lib folder: one jar with a class modules use, a JDBC driver, and a kernel class's name it must never replace. */

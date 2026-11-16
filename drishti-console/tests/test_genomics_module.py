@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The genomics sample module's console part (DISTRIBUTIONS.md section 4; modules/genomics, the SDK's layout): hosted from its src/dmod
+"""The genomics sample module's console part (DISTRIBUTIONS.md section 4; modules/genomics, the SDK's layout): hosted from its folder
 folder, its one page folder drawn with the Elements macros only, its pages reading the module's API through the console, and its own
 visual type, genomics.lollipop (the custom-visual SDK): listed for the Elements gallery while the module is hosted, gone when it is
 removed. Drishti Genomics' file compiles to the Research lens with no finance command."""
@@ -54,7 +54,7 @@ def test_the_module_is_hosted_its_pages_use_elements_only_and_read_its_api(clien
     _fresh(client, tmp_path, monkeypatch, None)
     client.get("/t")
     p = client.app.state.module_parts.part("genomics")
-    assert p is not None and p.source == "shipped" and p.folder.name == "dmod"
+    assert p is not None and p.source == "shipped" and p.folder.name == "genomics"
     page = client.get("/m/genomics/genes/TP53")
     assert page.status_code == 200, page.text[:400]
     t = page.text

@@ -143,6 +143,7 @@ public final class LaunchRoots implements EnvironmentPostProcessor, Ordered {
         Map<String, Object> values = new LinkedHashMap<>(r.values());
         Object home = values.get(HOME);
         Path homePath = home == null ? null : Path.of(home.toString());
+        overrides(env, values, homePath);
         java.util.Set<String> roots = java.util.Set.copyOf(values.keySet());
         env.getPropertySources().addFirst(new MapPropertySource(SOURCE, values));   // first, so the other settings' placeholders see the absolute roots
         List<String> anchoredProblems = new ArrayList<>();
@@ -180,12 +181,55 @@ public final class LaunchRoots implements EnvironmentPostProcessor, Ordered {
             SNAPSHOTS.put(env, new Snapshot(r.roots(), List.copyOf(shown)));
         }
         for (String k : List.of(HOME, "drishti.modules.home", "drishti.config.dir")) {   // for code with no Spring environment (a record's default)
-            Object v = r.values().get(k);
+            Object v = values.get(k);
             if (v != null && System.getProperty(k) == null) {
                 System.setProperty(k, v.toString());
             }
         }
         log.info(r.report() + (anchored.isEmpty() ? "" : anchoredReport(anchored)));
+    }
+
+    private static final Map<ConfigurableEnvironment, com.ash.drishti.api.resolution.ModuleOverrides.Result> OVERRIDES = new java.util.WeakHashMap<>();
+
+    /** What the module overrides rule did at this server's start (KERNEL_AND_MODULES.md section 18.10); null when it did not run. */
+    public static com.ash.drishti.api.resolution.ModuleOverrides.Result overrides(ConfigurableEnvironment env) {
+        synchronized (OVERRIDES) {
+            return OVERRIDES.get(env);
+        }
+    }
+
+    /**
+     * The one rule of site overrides of module files: the override folders ({@code drishti.overrides.dir}, {@code DRISHTI_OVERRIDES_DIR})
+     * laid over the modules folder in the view {@code <data>/overrides/modules}, which then is the modules folder every reader sees.
+     */
+    private void overrides(ConfigurableEnvironment env, Map<String, Object> values, Path homePath) {
+        Object modules = values.get("drishti.modules.home");
+        Object data = values.get("drishti.data.dir");
+        String setting;
+        try {
+            setting = env.getProperty(com.ash.drishti.api.resolution.ModuleOverrides.SETTING);
+        } catch (IllegalArgumentException e) {
+            setting = null;
+        }
+        if (modules == null || NONE.equals(modules.toString()) || data == null) {
+            return;
+        }
+        Path home = Path.of(modules.toString());
+        var r = com.ash.drishti.api.resolution.ModuleOverrides.apply(home,
+                com.ash.drishti.api.resolution.ModuleOverrides.dirs(setting, homePath), Path.of(data.toString()).resolve("overrides").resolve("modules"));
+        synchronized (OVERRIDES) {
+            OVERRIDES.put(env, r);
+        }
+        if (r.view() != null) {
+            values.put("drishti.modules.home", r.view().toString());
+            if (values.containsKey("drishti.module-manifests-dir")) {
+                values.put("drishti.module-manifests-dir", r.view().toString());
+            }
+            values.put(com.ash.drishti.api.resolution.ModuleOverrides.SOURCE_HOME, home.toString());
+        }
+        if (r.view() != null || !r.refused().isEmpty()) {
+            log.info(r.report());
+        }
     }
 
     /**

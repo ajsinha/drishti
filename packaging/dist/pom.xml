@@ -81,7 +81,7 @@
             <goals><goal>java</goal></goals>
             <configuration>
               <arguments>
-                <argument>pack</argument><argument>${project.basedir}/../../modules/banking/dmod</argument>
+                <argument>pack</argument><argument>${project.basedir}/../../modules/banking</argument>
                 <argument>--jar</argument><argument>${drishti.jars}/drishti-banking.jar</argument>
                 <argument>--more</argument><argument>${drishti.jars}/drishti-compute-banking.jar</argument>
                 <argument>--out</argument><argument>${drishti.dmods}</argument>

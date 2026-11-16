@@ -542,6 +542,27 @@ The examples, each with comments: `config/settings.examples/dev.ini` (a develope
 [CONFIGURATION.md › The settings file](admin/CONFIGURATION.md#the-settings-file--ddrishtisettingsfile) and
 [› Named lakes, databases and brokers](admin/CONFIGURATION.md#named-lakes-databases-and-brokers).
 
+**Try a changed module file from outside the module** (a developer's or a QA machine's): name an override folder in the same file and
+put your copy of any module file there at the same relative path it has under `modules/`. The server lays the folder over the modules
+at start and reads every file from there; the module itself is never touched. Any module file may be overridden (a Sutra, a pack's YAML,
+a page's `console/plugin.yaml`, `data/needs.yaml`, a mapping, a blotter, Help) except `module.yaml`, the connector templates (change a
+connector in `config/connectors/<name>.yaml`) and the module's Java. To change the Endur cash Sutra of the trading pack:
+
+```ini
+[roots]
+# Linux: /home/you/drishti-overrides; several folders: comma-separated, the right-most wins
+drishti.overrides.dir=C:/Users/you/drishti-overrides
+```
+
+```text
+C:/Users/you/drishti-overrides/banking/packs/trading/sutras/endur/endur-cash.v1.sutra.yaml     (your edited copy of
+modules/banking/packs/trading/sutras/endur/endur-cash.v1.sutra.yaml)
+```
+
+Restart the server (`stop server`, then `start server`; the console too). The log names each overridden file with its source, and
+**Admin → Health** lists them under *module files overridden by the site*. Delete the copy and restart to go back to the module's file.
+The rule in full: [KERNEL_AND_MODULES.md section 18.10](architecture/KERNEL_AND_MODULES.md#1810-site-overrides-of-module-files).
+
 **Check it** without starting anything: `tools/drishti.py --settings <the file> lake check` reads the lakes where the file puts them and
 prints each table's folder under your `drishti.data.dir`:
 
@@ -940,8 +961,8 @@ guide; `VAR BANK <GO>` answers *DRS-4023 VAR is not in Drishti Finance*; `CRV <G
 
 **Drishti Genomics (the sample).** `python3 tools/drishti.py start all --demo --distribution genomics`. **You should see** **Drishti
 Genomics** on the green theme with only the kernel's menus (Views, BI, Admin, Help) and no finance anywhere; Admin → Health says the
-`genomics` module was asked for and is *not installed*. **Install the sample module:** build it (`./mvnw -q package -pl modules/genomics
--am`; Windows `.\mvnw.cmd …`) and copy `modules/genomics/target/dmod/genomics-0.1.0.dmod` into the data folder's `modules/`. **You should
+`genomics` module was asked for and is *not installed*. **Install the sample module:** build it (`./mvnw -q package -pl modules/genomics/java/genomics
+-am`; Windows `.\mvnw.cmd …`) and copy `modules/genomics/java/genomics/target/dmod/genomics-0.1.0.dmod` into the data folder's `modules/`. **You should
 see** it install itself within seconds (auto-deploy on a single node): the Research lens with VARIANT, GENE and COHORT, and the lollipop
 visual in Create → Elements gallery.
 

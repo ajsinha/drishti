@@ -130,6 +130,11 @@ economy (markets and news).
 | `config/packs/*/pack.yaml` | each pack names its `domain:` (core, banking, economy); ids and folders unchanged | |
 | `docs/tutorials`, `docs/guides` | stay where they are; Help groups them by module in phase 2 | |
 
+**Where the domain modules' files are now:** every module has the one folder layout of
+[KERNEL_AND_MODULES.md section 8.10](KERNEL_AND_MODULES.md#810-the-one-module-layout): `modules/<module>/` holds its `.dmod` content at the
+top (`module.yaml`, `packs/`, `console/`, `data/`, `docs/` ...) and, only with code, its Maven projects under `java/` (banking's
+`java/banking-compute` is `drishti-compute-banking` above, `java/banking-service` is `drishti-banking`) with the aggregating `pom.xml`.
+
 The old API prefixes (`/api/v1/var`, `/exposure`, `/frtb`, `/simm`, `/sensitivities`, `/risk-factors`, `/pivot/mr`) are **answered as the new
 ones for this release** (`ApiAlias` beans of the module, applied by the core's `ApiAliasFilter` before every other filter: the request is the
 same request under the new path, answered with `Deprecation: true` and `Link: <new path>; rel="successor-version"`), then removed. A

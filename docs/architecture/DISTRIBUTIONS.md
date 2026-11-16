@@ -152,7 +152,7 @@ http://<host>:17481. The Deployment and QA guide gets a step-by-step section for
 
 | Wave | Item |
 |---|---|
-| 2 | `banking` as a `.dmod` (built: `modules/banking/dmod`, first-party with its kernel-internals allowance, loaded as a module by the full distribution); **`market-data` split out of banking as its own module** (built: banking requires it); **`capital-markets` and `economy` packaged as modules** (built: `modules/<id>/`, each `.dmod` passing the fifteen checks) |
+| 2 | `banking` as a `.dmod` (built: `modules/banking`, first-party with its kernel-internals allowance, loaded as a module by the full distribution); **`market-data` split out of banking as its own module** (built: banking requires it); **`capital-markets` and `economy` packaged as modules** (built: `modules/<id>/`, each `.dmod` passing the fifteen checks) |
 | 3 | the distribution file reader (kernel and console), `drishti.risk.yaml`, `drishti.finance.yaml`, `drishti.genomics.yaml`, `drishti.all.yaml` (the default); `--distribution` on every bin/ script and stack file consoles; Home, menus, Help and AI filtered by distribution; themes; Admin → White label (option A); the old product keys read once |
 | 4 | proofs: each distribution boots from its file alone; the owner's stack runs Risk on 17480 and Finance on 17481 over one cluster; genomics boots with no finance |
 
@@ -168,12 +168,12 @@ http://<host>:17481. The Deployment and QA guide gets a step-by-step section for
 
 **The files.** `config/distributions/drishti.all.yaml`, `drishti.risk.yaml`, `drishti.finance.yaml` and `drishti.genomics.yaml`, and
 `config/distributions/kernel.yaml`, the kernel's own packs, words and menus. A site adds its own file beside them (or anywhere, named by
-path). What each module holds is read from **its own manifest**, never from a hand list: a content module's `modules/<id>/module.yaml`
-and a module with code's `modules/<id>/dmod/module.yaml` (banking's), both the `.dmod` manifest (`packs.list`, `functions`,
+path). What each module holds is read from **its own manifest**, never from a hand list: every module's `modules/<id>/module.yaml`
+(one layout for all, [KERNEL_AND_MODULES.md section 8.10](KERNEL_AND_MODULES.md#810-the-one-module-layout)), the `.dmod` manifest (`packs.list`, `functions`,
 `compute.engines`, `console.menus`, `docs.domains`, `requires`). The folder is `drishti.module-manifests-dir` (`module_manifests_dir` on the console,
 `DRISHTI_MODULE_MANIFESTS_DIR` for both; default `./modules`). A listed module brings the modules it requires (banking brings
-market-data); a listed module with no manifest stops the start unless the file says `required: false`. A module project made from the
-SDK keeps its manifest in `modules/<id>/src/dmod/module.yaml` (genomics), read the same way. The `.dmod` packages the server ships and
+market-data); a listed module with no manifest stops the start unless the file says `required: false`. A module with code (banking, genomics)
+keeps its manifest at the same place, its Maven projects under `modules/<id>/java/`. The `.dmod` packages the server ships and
 those installed in its module store are read first, by the module registry's own reader (a package's manifest wins). The console takes
 the server's list (`GET /public/modules/manifests`) and reads it again when the registry changes (`/public/about`'s `manifests`), so a
 package installed or removed while it runs joins or leaves its distribution; its own folder serves only until a server answers. A file may name the kernel's packs it takes

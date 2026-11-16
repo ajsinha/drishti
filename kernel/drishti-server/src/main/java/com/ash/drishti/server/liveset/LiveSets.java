@@ -736,10 +736,8 @@ public final class LiveSets implements AutoCloseable {
             try (Stream<Path> ms = Files.list(modulesRoot)) {
                 ms.sorted().forEach(m -> {
                     if (moduleOn.test(m.getFileName().toString())) {
-                        for (Path b : List.of(m.resolve("blotters"), m.resolve("src/dmod/blotters"))) {
-                            if (Files.isDirectory(b)) {
-                                out.add(b);
-                            }
+                        if (Files.isDirectory(m.resolve("blotters"))) {
+                            out.add(m.resolve("blotters"));
                         }
                     }
                 });
@@ -756,9 +754,6 @@ public final class LiveSets implements AutoCloseable {
     /** The module a declarations folder belongs to: {@code modules/<id>/blotters} → {@code id}. */
     public static String moduleOf(Path dir) {
         Path p = dir.getFileName() != null && dir.getFileName().toString().equals("blotters") ? dir.getParent() : null;
-        if (p != null && p.getFileName() != null && p.getFileName().toString().equals("dmod")) {
-            p = p.getParent() == null ? null : p.getParent().getParent();
-        }
         return p == null || p.getParent() == null || !"modules".equals(String.valueOf(p.getParent().getFileName())) ? null
                 : p.getFileName().toString();
     }

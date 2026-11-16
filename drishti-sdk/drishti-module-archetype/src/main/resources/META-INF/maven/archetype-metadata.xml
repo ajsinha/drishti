@@ -25,17 +25,38 @@
     <requiredProperty key="drishtiVersion"><defaultValue>@project.version@</defaultValue></requiredProperty>
   </requiredProperties>
   <fileSets>
-    <fileSet filtered="true" packaged="true" encoding="UTF-8">
-      <directory>src/main/java</directory>
-      <includes><include>**/*.java</include></includes>
-    </fileSet>
-    <fileSet filtered="true" packaged="true" encoding="UTF-8">
-      <directory>src/test/java</directory>
-      <includes><include>**/*.java</include></includes>
+    <!-- the one module layout: the .dmod content at the top, the code as a Maven project under java/<artifactId>/ -->
+    <fileSet filtered="true" encoding="UTF-8">
+      <directory></directory>
+      <includes><include>module.yaml</include></includes>
     </fileSet>
     <fileSet filtered="true" encoding="UTF-8">
-      <directory>src/dmod</directory>
+      <directory>console</directory>
       <includes><include>**/*</include></includes>
+    </fileSet>
+    <fileSet filtered="true" encoding="UTF-8">
+      <directory>data</directory>
+      <includes><include>**/*</include></includes>
+    </fileSet>
+    <fileSet filtered="true" encoding="UTF-8">
+      <directory>docs</directory>
+      <includes><include>**/*</include></includes>
+    </fileSet>
+    <fileSet filtered="true" encoding="UTF-8">
+      <directory>packs</directory>
+      <includes><include>**/*</include></includes>
+    </fileSet>
+    <fileSet filtered="true" encoding="UTF-8">
+      <directory>java/__artifactId__</directory>
+      <includes><include>pom.xml</include></includes>
+    </fileSet>
+    <fileSet filtered="true" packaged="true" encoding="UTF-8">
+      <directory>java/__artifactId__/src/main/java</directory>
+      <includes><include>**/*.java</include></includes>
+    </fileSet>
+    <fileSet filtered="true" packaged="true" encoding="UTF-8">
+      <directory>java/__artifactId__/src/test/java</directory>
+      <includes><include>**/*.java</include></includes>
     </fileSet>
   </fileSets>
 </archetype-descriptor>

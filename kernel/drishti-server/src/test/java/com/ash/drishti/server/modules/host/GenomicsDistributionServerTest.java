@@ -93,11 +93,11 @@ class GenomicsDistributionServerTest {
         r.add("drishti.bindings.file", () -> work.resolve("bindings.yaml").toString());
     }
 
-    /** The module as its own build makes it: its sources compiled against the kernel API, src/dmod packed. */
+    /** The module as its own build makes it: its sources (java/genomics) compiled against the kernel API, its folder packed. */
     static Path genomics(Path work) {
         Path project = Path.of(TestRoots.repo(), "modules", "genomics").toAbsolutePath().normalize();
-        Path jar = ModuleFixtures.jarOf(project.resolve("src/main/java"), null, work.resolve("build"), work.resolve("build/genomics.jar"));
-        return ModuleAssembler.assemble(project.resolve("src/dmod"), jar, work.resolve("stage"), work.resolve("dist"));
+        Path jar = ModuleFixtures.jarOf(project.resolve("java/genomics/src/main/java"), null, work.resolve("build"), work.resolve("build/genomics.jar"));
+        return ModuleAssembler.assemble(project, jar, work.resolve("stage"), work.resolve("dist"));
     }
 
     JsonNode getJson(String path) throws Exception {

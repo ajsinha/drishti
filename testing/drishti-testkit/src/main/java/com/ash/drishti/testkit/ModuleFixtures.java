@@ -77,10 +77,15 @@ public final class ModuleFixtures {
                 Element set = (Element) sets.item(i);
                 String dir = set.getElementsByTagName("directory").item(0).getTextContent();
                 boolean packaged = "true".equals(set.getAttribute("packaged"));
+                java.util.List<java.nio.file.PathMatcher> includes = new java.util.ArrayList<>();      // the set's <include> globs
+                NodeList inc = set.getElementsByTagName("include");
+                for (int k = 0; k < inc.getLength(); k++) {
+                    includes.add(java.nio.file.FileSystems.getDefault().getPathMatcher("glob:" + inc.item(k).getTextContent().replace("**/", "{**/,}")));
+                }
                 try (Stream<Path> s = Files.walk(templates.resolve(dir))) {
-                    for (Path f : s.filter(Files::isRegularFile).toList()) {
+                    for (Path f : s.filter(Files::isRegularFile).filter(x -> includes.isEmpty() || includes.stream().anyMatch(g -> g.matches(templates.resolve(dir).relativize(x)))).toList()) {
                         String rel = templates.resolve(dir).relativize(f).toString().replace(File.separatorChar, '/');
-                        String to = dir + "/" + (packaged ? props.get("package").replace('.', '/') + "/" : "") + rel;
+                        String to = (dir.isEmpty() ? "" : dir + "/") + (packaged ? props.get("package").replace('.', '/') + "/" : "") + rel;
                         for (Map.Entry<String, String> p : props.entrySet()) {
                             to = to.replace("__" + p.getKey() + "__", p.getValue());
                         }

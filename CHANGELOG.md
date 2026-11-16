@@ -18,6 +18,24 @@
 
 ## Unreleased
 
+- **One folder layout for every module.** Each `modules/<module>/` holds its `.dmod` content at the top, as inside the package
+  (`module.yaml`, `content.yaml`, `packs/`, `console/`, `data/`, `docs/`, `connectors/`, `mappings/`, `blotters/`, `elements/`) and, only
+  when it has Java, its Maven projects under `java/<project>/` with an aggregating `pom.xml` beside them: `modules/banking/dmod/*` moved to
+  `modules/banking/`, `banking-compute` and `banking-service` to `modules/banking/java/`, `kernel-internals.txt` to `java/`;
+  `modules/genomics/src/dmod/*` to `modules/genomics/`, its project to `modules/genomics/java/genomics/` (all `git mv`). No `dmod/` or
+  `src/dmod/` folder is read anywhere: the kernel's resolver, `ModuleManifests`, the settings schemas, the access store, the live sets,
+  the console's resolver twin and module parts, and the tools find a module by `<modules>/<dir>/module.yaml` only. The packer leaves out
+  what only builds a module (`pom.xml`, `target/`, `tools/`, `java/`'s projects); the packed `.dmod` files are unchanged. The SDK's
+  archetype makes the same layout (`java/<artifactId>/`), and its Maven plugin packs the module folder two up. `tools/test_module_layout.py`
+  keeps every module to it (KERNEL_AND_MODULES.md section 8.10).
+- **A site overrides any module file from outside the module.** `drishti.overrides.dir` (the settings file, `-D` or
+  `DRISHTI_OVERRIDES_DIR`; several folders comma-separated, the right-most wins) names folders whose files replace a module's file at the
+  same relative path (`banking/packs/trading/sutras/endur/endur-cash.v1.sutra.yaml`): a Sutra, a pack's YAML, `console/plugin.yaml`,
+  `data/needs.yaml`, mappings, blotters, Help. `module.yaml`, the connector templates (changed in `config/connectors/` as before) and
+  `java/` are refused in words. The server applies the rule once at start, reading its modules from the view `<data>/overrides/modules`
+  (the module folders are never written); Admin → Health and `GET /api/v1/admin/health` (`moduleOverrides`) list every overridden file
+  with its source (KERNEL_AND_MODULES.md section 18.10; DEPLOYMENT_AND_QA_GUIDE.md section 5.1; `config/settings.examples/dev.ini`).
+
 ## 2.9.11.i5 (2026-11-16)
 
 The Python commands release. The build still reports its version as 2.9.11.g (the version from one place is the next release); the release is tag `v2.9.11.i_5`.

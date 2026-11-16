@@ -387,7 +387,7 @@ def engine_rows() -> tuple[list[Row], list[str]]:
     rows: list[Row] = []
     problems: list[str] = []
     catalogue = []                                         # each module's engines (its jar's META-INF/drishti/engines.yaml) first, then the core's
-    for module_jar in sorted([*ROOT.glob("*/drishti-*/src/main/resources/META-INF/drishti/engines.yaml"), *ROOT.glob("modules/*/*/src/main/resources/META-INF/drishti/engines.yaml")]):
+    for module_jar in sorted([*ROOT.glob("*/drishti-*/src/main/resources/META-INF/drishti/engines.yaml"), *ROOT.glob("modules/*/java/*/src/main/resources/META-INF/drishti/engines.yaml")]):
         for e in yaml.safe_load(module_jar.read_text(encoding="utf-8")).get("engines") or []:
             catalogue.append({**e, "_jar": module_jar.parents[2] / "engines"})
     catalogue += yaml.safe_load((ENGINES_JAR / "catalogue.yaml").read_text(encoding="utf-8")).get("engines") or []
@@ -398,8 +398,8 @@ def engine_rows() -> tuple[list[Row], list[str]]:
     lakes = ROOT / "config" / "lakes"                                               # the shipped lake files and their jar copies (Lakes):
     for lake in sorted([*lakes.glob("*.yaml"), *lakes.glob("*/*.yaml")]):            # a domain folder's in its module's jar
         module = ROOT / ("lake/drishti-lakeio" if lake.parent == lakes else f"drishti-{lake.parent.name}")
-        if not (module / "src").is_dir():                                          # a domain module laid out on its own: modules/<domain>/ (a folder left with only an old build's target/ is not a module)
-            module = next((m for m in sorted((ROOT / "modules" / lake.parent.name).glob("*")) if (m / "src/main/resources/drishti/lakes" / lake.name).is_file()), module)
+        if not (module / "src").is_dir():                                          # a domain module's Maven projects: modules/<domain>/java/<project>/ (a folder left with only an old build's target/ is not a module)
+            module = next((m for m in sorted((ROOT / "modules" / lake.parent.name / "java").glob("*")) if (m / "src/main/resources/drishti/lakes" / lake.name).is_file()), module)
         jar = module / "src/main/resources/drishti/lakes" / lake.name
         if not jar.is_file() or lake.read_bytes() != jar.read_bytes():
             problems.append(f"{lake.relative_to(ROOT)} differs from its jar copy {jar.relative_to(ROOT)}")

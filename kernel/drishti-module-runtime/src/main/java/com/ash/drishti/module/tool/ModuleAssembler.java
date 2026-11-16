@@ -30,9 +30,12 @@ import java.util.List;
 import java.util.stream.Stream;
 
 /**
- * Lays a module project's files into the {@code .dmod} layout and packs them with the module runtime's packer (section 8.2): everything
- * under {@code src/dmod/} as it is (module.yaml, console/, data/, packs/, docs/ ...) plus the module's jar under {@code java/} by the name
- * its manifest gives. Nothing is written into the sources: the files are staged under {@code target/dmod-stage/<id>/}.
+ * Lays a module's files into the {@code .dmod} layout and packs them with the module runtime's packer (section 8.2). Every module has one
+ * layout (KERNEL_AND_MODULES.md section 8.10): its {@code .dmod} content at its folder's top (module.yaml, console/, data/, packs/, docs/
+ * ...) and, only when it has code, its Maven projects under {@code java/<project>/} with the aggregating {@code pom.xml}. Everything at the
+ * top is staged as it is except what only builds the module ({@link #SOURCE_ONLY}, and {@code java/}'s project folders and other files:
+ * only jars already in {@code java/} are kept), plus the module's jar under {@code java/} by the name its manifest gives. Nothing is
+ * written into the sources: the files are staged under {@code target/dmod-stage/<id>/}.
  *
  * <p>A module folder may also hold {@value #CONTENT}: content the packer brings in from elsewhere in the same repository, so a pack, a
  * lens or a page that the running product still reads from its old place has one home and is never copied by hand. Each entry copies
@@ -47,13 +50,16 @@ public final class ModuleAssembler {
     /** The module folder's list of repository content to bring in (not packed). */
     public static final String CONTENT = "content.yaml";
 
+    /** The names at a module folder's top that only build it and are never packed: its Maven aggregator, build output and tools. */
+    public static final java.util.Set<String> SOURCE_ONLY = java.util.Set.of("pom.xml", "target", "tools");
+
     private static final com.fasterxml.jackson.databind.ObjectMapper YAML =
             new com.fasterxml.jackson.databind.ObjectMapper(new com.fasterxml.jackson.dataformat.yaml.YAMLFactory());
 
     private ModuleAssembler() {
     }
 
-    /** Reads {@code module.yaml} of a module's {@code src/dmod} folder (or of an unpacked module). */
+    /** Reads {@code module.yaml} of a module's folder (or of an unpacked module). */
     public static DmodManifest manifest(Path folder) {
         Path file = folder.resolve(DmodManifest.FILE);
         if (!Files.isRegularFile(file)) {
@@ -132,7 +138,7 @@ public final class ModuleAssembler {
         Path stage = work.resolve(m.id());
         try {
             delete(stage);
-            copyTree(source, stage);
+            stageTree(source, stage);
             bringContent(source, stage);
             stampAllowance(source, stage, kernelBuild);
             if (m.java() != null) {
@@ -256,6 +262,37 @@ public final class ModuleAssembler {
                 }
             }
         }
+    }
+
+    /**
+     * Copies a module folder into the stage, leaving out {@link #SOURCE_ONLY} at its top and, in {@code java/}, everything but the jars
+     * directly in it (the Maven projects and their files build the jar; a folder from any build may already hold its jars there).
+     */
+    static void stageTree(Path from, Path to) throws IOException {
+        Files.walkFileTree(from, new java.nio.file.SimpleFileVisitor<>() {
+            @Override
+            public java.nio.file.FileVisitResult preVisitDirectory(Path d, java.nio.file.attribute.BasicFileAttributes a) throws IOException {
+                Path rel = from.relativize(d);
+                if (!rel.toString().isEmpty() && (SOURCE_ONLY.contains(rel.getName(0).toString())
+                        || rel.getName(0).toString().equals("java") && rel.getNameCount() > 1)) {
+                    return java.nio.file.FileVisitResult.SKIP_SUBTREE;          // a Maven project under java/, the build output, the tools
+                }
+                Files.createDirectories(to.resolve(rel.toString()));
+                return java.nio.file.FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public java.nio.file.FileVisitResult visitFile(Path f, java.nio.file.attribute.BasicFileAttributes a) throws IOException {
+                Path rel = from.relativize(f);
+                String top = rel.getName(0).toString();
+                boolean keep = !SOURCE_ONLY.contains(top) && (!top.equals("java") || rel.getNameCount() == 2
+                        && rel.getName(1).toString().endsWith(".jar"));
+                if (keep) {
+                    Files.copy(f, to.resolve(rel.toString()));
+                }
+                return java.nio.file.FileVisitResult.CONTINUE;
+            }
+        });
     }
 
     static void copyTree(Path from, Path to) throws IOException {

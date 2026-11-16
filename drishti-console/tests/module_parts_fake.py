@@ -22,7 +22,7 @@ import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-ARCHETYPE = ROOT / "drishti-sdk" / "drishti-module-archetype" / "src" / "main" / "resources" / "archetype-resources" / "src" / "dmod"
+ARCHETYPE = ROOT / "drishti-sdk" / "drishti-module-archetype" / "src" / "main" / "resources" / "archetype-resources"
 FILL = {"${artifactId.toUpperCase()}": "GREETER", "${artifactId}": "greeter", "${version}": "1.0.0", "${groupId}": "com.example",
         "${domain}": "testing", "${package}": "com.example.greeter"}
 

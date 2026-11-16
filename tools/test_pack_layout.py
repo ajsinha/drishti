@@ -14,7 +14,7 @@
 
 
 """The product's packs live in the module that owns them (docs/architecture/KERNEL_AND_MODULES.md section 18.4): every pack a module's
-manifest lists is in that module's packs folder (modules/<id>/packs/<pack>, banking's in modules/banking/dmod/packs), only the listed
+manifest lists is in that module's packs folder (modules/<id>/packs/<pack>, banking's in modules/banking/packs), only the listed
 packs count, config/packs holds a site's own packs and the kernel's ``core`` folder (core, gleif, compute-demo), and the one resolver
 (drishti-console/core/resolution.py; the server's twin com.ash.drishti.api.resolution) finds exactly those folders."""
 from __future__ import annotations

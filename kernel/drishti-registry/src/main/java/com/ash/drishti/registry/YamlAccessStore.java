@@ -128,7 +128,7 @@ public final class YamlAccessStore implements AccessStore {
         packagedIds.removeAll(before);
         if (manifestsDir != null && Files.isDirectory(manifestsDir)) {      // the content modules' own manifests: one source of truth
             try (Stream<Path> dirs = Files.list(manifestsDir)) {
-                for (Path f : dirs.map(d -> Files.isRegularFile(d.resolve("module.yaml")) ? d.resolve("module.yaml") : d.resolve("dmod").resolve("module.yaml"))
+                for (Path f : dirs.map(d -> d.resolve("module.yaml"))
                         .filter(Files::isRegularFile).sorted().toList()) {
                     String where = manifestsDir.relativize(f).toString().replace('\\', '/');
                     where = "modules/" + where;

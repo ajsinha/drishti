@@ -37,7 +37,7 @@ class Reach(unittest.TestCase):
             self.assertEqual(L.lanes_for(p), L.ALL, p)
 
     def test_java_reaches_everything_that_runs_the_jar(self):
-        for p in ("kernel/drishti-server/src/main/java/A.java", "modules/banking/banking-service/src/main/java/B.java", "pom.xml",
+        for p in ("kernel/drishti-server/src/main/java/A.java", "modules/banking/java/banking-service/src/main/java/B.java", "pom.xml",
                   "plugins/drishti-plugin-kafka/src/test/java/KTest.java", "kernel/drishti-engine/src/main/resources/x.yaml", ".java-version"):
             got = L.lanes_for(p)
             self.assertTrue({"java21", "java25", "browser", "tools-a", "tools-b", "containers"} <= got, (p, got))

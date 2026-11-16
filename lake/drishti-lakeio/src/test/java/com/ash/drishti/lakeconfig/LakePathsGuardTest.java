@@ -52,8 +52,8 @@ class LakePathsGuardTest {
         Path root = repo();
         List<Path> out = new ArrayList<>();
         List<String> tops = new ArrayList<>(List.of("kernel", "compute", "lake", "net", "packaging", "testing", "plugins"));   // the subject folders
-        try (Stream<Path> domains = Files.list(root.resolve("modules"))) {         // modules/<domain>/<part>: the domain modules' sources
-            domains.filter(Files::isDirectory).forEach(d -> tops.add(root.relativize(d).toString()));
+        try (Stream<Path> domains = Files.list(root.resolve("modules"))) {         // modules/<domain>/java/<part>: the domain modules' sources
+            domains.filter(d -> Files.isDirectory(d.resolve("java"))).forEach(d -> tops.add(root.relativize(d.resolve("java")).toString()));
         }
         for (String top : tops) {
             try (Stream<Path> mods = Files.list(root.resolve(top))) {

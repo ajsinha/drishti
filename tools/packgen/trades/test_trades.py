@@ -89,7 +89,7 @@ class CommonSchemaTest(unittest.TestCase):
         self.assertGreater(changed, 20)
 
     def test_the_packs_trade_samples_have_the_common_schema(self):
-        samples = ROOT / "modules" / "banking" / "dmod" / "packs" / "trading" / "samples"
+        samples = ROOT / "modules" / "banking" / "packs" / "trading" / "samples"
         systems = set()
         docs = [(f.name, json.loads(f.read_text(encoding="utf-8"))) for f in (samples / "trade").glob("*.json")]        # one file per deal (before 2.3)
         docs += [(f"trade.jsonl:{n}", json.loads(line)) for f in samples.glob("trade*.jsonl")                          # samples/<kind>.jsonl (2.3)
@@ -104,7 +104,7 @@ class CommonSchemaTest(unittest.TestCase):
         """Each (source system, product type) the generators book is matched by one Sutra file of the pack, and each Endur sub type
         shows its own panel (when:) inside its product's one Sutra: no inferred trade, no catch-all, no two Sutras for one."""
         import re
-        sutras = ROOT / "modules" / "banking" / "dmod" / "packs" / "trading" / "sutras"
+        sutras = ROOT / "modules" / "banking" / "packs" / "trading" / "sutras"
         matches: dict[tuple[str, str], list[str]] = {}
         whens: dict[str, set[str]] = {}
         for f in sutras.rglob("*.sutra.yaml"):
@@ -131,7 +131,7 @@ class CommonSchemaTest(unittest.TestCase):
         saw one system): the manifest spells it out for each. The trade connectors live in their source modules (one table per
         system, modules/source-<system>/connectors/trade-<system>.yaml); the layout stays in the trading pack's lake: entries."""
         import yaml
-        text = (ROOT / "modules" / "banking" / "dmod" / "packs" / "trading" / "pack.yaml").read_text(encoding="utf-8")
+        text = (ROOT / "modules" / "banking" / "packs" / "trading" / "pack.yaml").read_text(encoding="utf-8")
         self.assertNotRegex(text, r"[&*]id\d")
         tables = yaml.safe_load(text)["lake"]["tables"]        # the layout lives in the pack's lake: entries (DATA_LAKE_GUIDE.md)
         files = sorted((ROOT / "modules").glob("source-*/connectors/trade-*.yaml"))
