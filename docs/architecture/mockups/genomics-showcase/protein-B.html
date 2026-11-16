@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  A screen mock-up (genomics-showcase/protein-B.html), self-contained: system fonts, everything inline, nothing from a CDN, no network.
+  Dark theme by default; open it with #light for the light theme (or use the Theme button). Its design and build checklist are in
+  docs/architecture/GENOMICS_SHOWCASE.md. Option B (an alternative): structure first.
+  Every figure is synthetic and seeded; gene and protein names are invented. The mock-up draws on a canvas by hand; the product
+  draws every card with Drishti Elements and the server computes every figure.
+  The product name in the bar comes from configuration (the drishti.genomics distribution); the mock-up shows its default.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Protein engineering showcase: option B, structure first</title>
+<script>if(location.hash==='#light')document.documentElement.classList.add('light');</script>
+<style>
+:root{
+  --bg:#0e1628; --bg2:#121c33; --panel:#16213a; --panel2:#1b2744; --line:#26345a; --line2:#1f2b49;
+  --ink:#e7ecf5; --muted:#93a0b8; --faint:#5f6d8c; --amber:#e8a33a; --amber2:#f2b453; --amber-t:rgba(232,163,58,.14);
+  --link:#7fb2ff; --pos:#7fb2ff; --neg:#f2955a; --ok:#5fd39a; --warn:#f2c14e; --bad:#ff7a7a; --violet:#b48cff;
+  --hl:rgba(127,178,255,.10); --onacc:#14100a; --ok-t:rgba(95,211,154,.14); --bad-t:rgba(255,122,122,.15);
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  color-scheme:dark;
+}
+html.light{
+  --bg:#f7f5f0; --bg2:#efebe3; --panel:#ffffff; --panel2:#f3f0e9; --line:#e2dcd0; --line2:#ece7dd;
+  --ink:#172440; --muted:#55607a; --faint:#a3a9b8; --amber:#985b0a; --amber2:#7c4805; --amber-t:rgba(184,110,12,.12);
+  --link:#1f5fc4; --pos:#1f5fc4; --neg:#b4491a; --ok:#1b784c; --warn:#8a6100; --bad:#b42323; --violet:#6a3fc0;
+  --hl:rgba(31,95,196,.07); --onacc:#ffffff; --ok-t:rgba(27,120,76,.10); --bad-t:rgba(180,35,35,.09);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px}
+a{color:var(--link);text-decoration:none} a:hover{text-decoration:underline}
+.page{max-width:1568px;margin:0 auto;padding:16px 16px 28px;display:flex;flex-direction:column;gap:12px}
+.intro h1{font-size:19px;margin:0 0 4px}
+.intro p{margin:0;color:var(--muted);max-width:130ch;line-height:1.5;font-size:13px}
+.intro .nav{margin-top:6px;font-size:12.5px;display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center}
+.rec{display:inline-block;margin-left:10px;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;background:var(--ok-t);color:var(--ok);border:1px solid var(--ok);vertical-align:middle}
+.alt{display:inline-block;margin-left:10px;padding:2px 10px;border-radius:12px;font-size:12px;color:var(--muted);border:1px solid var(--line);vertical-align:middle}
+.bar{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;padding:8px 14px;border:1px solid var(--line);border-radius:8px;background:var(--bg2)}
+.brand{font-weight:700;letter-spacing:.12em;color:var(--amber)} .brand i{font-style:normal;letter-spacing:.02em;margin-left:6px;color:var(--violet)}
+.cmd{flex:1 1 260px;max-width:680px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:32px;line-height:30px;padding:0 14px;border:1px solid var(--amber);border-radius:16px;font-family:var(--mono);color:var(--amber);font-size:13px}
+.menus{display:flex;flex-wrap:wrap;gap:4px;margin-left:auto;font-size:13px}
+.menus a,.menus span{padding:5px 10px;border-radius:6px;color:var(--muted)} .menus .on{background:var(--panel2);color:var(--ink)}
+.btn{font:inherit;font-size:12.5px;padding:5px 12px;border:1px solid var(--line);border-radius:6px;color:var(--ink);background:var(--panel2);white-space:nowrap;display:inline-block;cursor:pointer}
+.btn.p{background:var(--amber);border-color:var(--amber);color:var(--onacc);font-weight:600}
+.btn:hover{border-color:var(--amber);text-decoration:none}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:14px;overflow:hidden;vertical-align:middle}
+.seg span{padding:3px 11px;font-size:12px;color:var(--muted);cursor:pointer} .seg span.on{background:var(--panel2);color:var(--ink);font-weight:600}
+.row{display:grid;gap:12px;align-items:start}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;min-width:0}
+.card h3{margin:0 0 8px;font-size:13.5px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center}
+.card h3 small{color:var(--muted);font-weight:400;font-size:12px}
+.card h3 .tools{margin-left:auto;display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-weight:400}
+.tool{font-size:11.5px;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:2px 8px;cursor:pointer;background:none;font-family:inherit}
+.tool:hover{color:var(--amber);border-color:var(--amber)}
+.view canvas{display:block;width:100%;touch-action:pan-y}
+.status{margin-top:6px;font-size:11.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 14px}
+.status b{color:var(--ink);font-weight:600}
+.lg{display:inline-flex;align-items:center;gap:5px} .lg i{width:9px;height:9px;border-radius:2px;display:inline-block}
+.scroll{overflow-x:auto}
+table{border-collapse:separate;border-spacing:0;font-size:12.5px;font-variant-numeric:tabular-nums;width:100%}
+th,td{padding:4px 8px;white-space:nowrap;text-align:right;border-bottom:1px solid var(--line2)}
+td{font-family:var(--mono)} th{background:var(--panel2);color:var(--muted);font-weight:500;font-size:12px}
+th.l,td.l{text-align:left} td.s{font-family:var(--sans)}
+tr.pick{cursor:pointer} tr.pick:hover td{background:var(--hl)} tr.sel td{background:var(--amber-t)}
+.neg{color:var(--neg)} .posv{color:var(--pos)} .muted{color:var(--muted)} .ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)} .amb{color:var(--amber)}
+.pill{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11.5px;font-family:var(--sans);font-weight:600}
+.pill.g{background:var(--ok-t);color:var(--ok)} .pill.r{background:var(--bad-t);color:var(--bad)} .pill.n{background:var(--panel2);color:var(--muted)} .pill.a{background:var(--amber-t);color:var(--amber)}
+.kpis{display:flex;flex-wrap:wrap;gap:10px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 14px;min-width:132px;flex:1 1 132px}
+.kpi .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.kpi .v{font-size:19px;font-weight:650;font-variant-numeric:tabular-nums;margin-top:2px}
+.kpi .d{font-size:11.5px;color:var(--muted);margin-top:1px}
+.kpi.syn{border-style:dashed;border-color:var(--amber)} .kpi.syn .v{font-size:14px;color:var(--amber);margin-top:5px}
+.chip{display:inline-flex;gap:6px;align-items:center;padding:2px 10px;border-radius:12px;border:1px solid var(--amber);color:var(--amber);font-size:12px}
+.chip b{cursor:pointer}
+.meter{height:8px;border-radius:4px;background:var(--line2);overflow:hidden;margin:3px 0 8px} .meter i{display:block;height:100%}
+.facts{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:12.5px;margin:0} .facts dt{color:var(--muted)} .facts dd{margin:0}
+.ctl{display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:12.5px}
+.ctl input[type=range]{accent-color:var(--amber);flex:1 1 160px;min-width:120px}
+.big{font-size:22px;font-weight:650} .big small{font-size:12.5px;color:var(--muted);font-weight:400;margin-left:8px}
+#tip{position:fixed;z-index:30;pointer-events:none;max-width:300px;padding:6px 9px;border-radius:6px;background:var(--bg2);border:1px solid var(--line);font-size:12px;line-height:1.45;box-shadow:0 6px 18px rgba(0,0,0,.35);display:none}
+#ex{position:fixed;z-index:40;top:0;right:0;bottom:0;width:min(440px,100%);background:var(--bg2);border-left:1px solid var(--amber);padding:16px;overflow:auto;transform:translateX(102%);transition:transform .18s}
+#ex.open{transform:none}
+#ex h2{margin:0 0 2px;font-size:16px} #ex h4{margin:14px 0 4px;font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+#ex p,#ex li{font-size:13px;line-height:1.5;margin:0 0 6px} #ex ol{padding-left:18px;margin:0}
+#ex code{font-family:var(--mono);font-size:12px;color:var(--amber)}
+#ex .x{float:right}
+.steps{display:flex;flex-wrap:wrap;gap:8px}
+.steps .st{flex:1 1 150px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);cursor:pointer}
+.steps .st b{display:block;font-size:13px} .steps .st span{font-size:11.5px;color:var(--muted)}
+.steps .st.on{border-color:var(--amber);background:var(--amber-t)} .steps .st.on b{color:var(--amber)}
+.step{display:none;flex-direction:column;gap:12px} .step.on{display:flex}
+.say{border-left:3px solid var(--amber);padding:6px 12px;color:var(--ink);font-size:14px;line-height:1.5;background:var(--amber-t);border-radius:0 6px 6px 0}
+.say small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+@media(max-width:900px){.row{grid-template-columns:1fr!important}.menus{margin-left:0}.page{padding:10px 16px 24px}}
+@media(prefers-reduced-motion:reduce){#ex{transition:none}}
+
+</style>
+</head>
+<body>
+<div class="page">
+<div class="intro"><h1>Protein engineering showcase · option B: Structure first <span class="alt">alternative</span></h1><p>The molecule is the hero: a large 3D trace on the left, the residue and the scan beside it. The most striking still image; the design campaign moves below the fold. Try: drag the molecule, click a residue, then a bar.</p><div class="nav"><a href="index.html">All mock-ups</a><span class="muted">|</span> <a href="protein-A.html">Option A</a> <a href="protein-B.html" style="font-weight:700">Option B</a> <a href="protein-C.html">Option C</a> <span class="muted">|</span> <a href="genomics-A.html">The genomics screen →</a><button class="btn" data-act="theme" style="margin-left:auto">Theme: dark / light</button></div></div><div class="bar"><span class="brand">DRISHTI<i>Genomics</i></span><div class="cmd" data-panel="cmd"></div><div class="menus"><a href="genomics-A.html">Cohorts</a><a class="on" href="protein-A.html">Proteins</a><span>Data</span><span>Help</span></div></div><div class="kpis" data-panel="kpis"></div><div class="row" style="grid-template-columns:1.1fr 1fr"><section class="card"><h3><span>Structure</span> <small>coloured by mean effect</small><span class="tools"><span data-panel="mode"></span><button class="tool" data-act="explain" data-arg="structure">Explain</button></span></h3><div data-view="structure" data-h="560"></div><div class="status"><span class="lg"><i style="background:var(--amber)"></i>active site and selection</span><span class="lg"><i style="background:var(--violet)"></i>the design's changes</span><span>drag to turn · click a residue</span></div></section><div style="display:flex;flex-direction:column;gap:12px;min-width:0"><section class="card"><h3><span>Residue <span data-panel="title-res"></span></span> <small>its 20 options</small><span class="tools"><button class="tool" data-act="explain" data-arg="resbars">Explain</button></span></h3><div data-panel="rescard" style="margin-bottom:8px"></div><div data-view="resbars" data-h="170"></div></section><section class="card"><h3><span>Deep mutational scan</span> <small>every position × every amino acid</small><span class="tools"><span data-panel="metric"></span><button class="tool" data-act="explain" data-arg="dms">Explain</button></span></h3><div data-view="dms" data-h="330"></div><div class="status"><span class="lg"><i style="background:var(--neg)"></i>hurts</span><span class="lg"><i style="background:var(--pos)"></i>helps</span><span class="lg"><i style="background:var(--violet)"></i>helix</span><span class="lg"><i style="background:var(--link)"></i>strand</span><span class="lg"><i style="background:var(--amber)"></i>active site</span><span>grey bar = burial · dot = wild type · violet frame = the chosen design</span></div></section></div></div><div class="row" style="grid-template-columns:1.3fr 1fr"><section class="card"><h3><span>Design campaign</span> <small>12,000 designs, 8 rounds; 1,440 drawn</small><span class="tools"><button class="tool" data-act="explain" data-arg="landscape">Explain</button></span></h3><div data-panel="roundlab" style="margin-bottom:6px"></div><div class="ctl" style="margin-bottom:8px"><span data-panel="play"></span><input type="range" min="1" max="8" step="1" value="8" data-in="round" aria-label="Design round"></div><div data-view="landscape" data-h="280"></div><div class="status"><span class="lg"><i style="background:var(--amber)"></i>this round</span><span class="lg"><i style="background:var(--ink)"></i>earlier rounds</span><span>R1 to R8 = each round's best</span></div></section><div style="display:flex;flex-direction:column;gap:12px;min-width:0"><section class="card"><h3><span>Activity by round</span> <small>against wild type; click a round</small><span class="tools"><button class="tool" data-act="explain" data-arg="rounds">Explain</button></span></h3><div data-view="rounds" data-h="190"></div></section><section class="card"><h3><span>Leaderboard</span> <small>best designs up to this round; click one to see its changes everywhere</small><span class="tools"><span class="tool">Export</span></span></h3><div data-panel="designs" data-rows="5"></div></section></div></div></div>
+<div id="tip"></div>
+<aside id="ex" aria-label="Explain"></aside>
+<script>
+/* The mock-up's own small kit (canvas cards, hit regions, tooltip, Explain drawer). The product draws none of this by hand:
+   every card is a Drishti Elements component (drishti-chart kinds, drishti-grid, drishti-insight's Explain). */
+const D=document,$=(s,r)=>(r||D).querySelector(s),$$=(s,r)=>[...(r||D).querySelectorAll(s)];
+function rng(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function gauss(R){return Math.sqrt(-2*Math.log(R()+1e-9))*Math.cos(6.2832*R())}
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),pad=(n,w)=>String(n).padStart(w,'0'),fmt=n=>Number(n).toLocaleString('en-US');
+let TK={};function tok(n){return TK[n]||(TK[n]=getComputedStyle(D.documentElement).getPropertyValue('--'+n).trim())}
+function rgb(h){h=h.replace('#','');return[0,2,4].map(i=>parseInt(h.substr(i,2),16))}
+function mix(a,b,t){const x=rgb(a),y=rgb(b);return'rgb('+x.map((v,i)=>Math.round(v+(y[i]-v)*clamp(t,0,1))).join(',')+')'}
+function dv(v,lo,hi){return v<0?mix(tok('panel2'),tok('neg'),v/lo):mix(tok('panel2'),tok('pos'),v/hi)}
+function T(g,s,x,y,c,al,f){g.fillStyle=c||tok('muted');g.textAlign=al||'left';g.font=(f||'11px')+' system-ui,sans-serif';g.fillText(s,x,y)}
+const views=[],panels=[],ACT={};
+function tip(html,e){const t=$('#tip');if(!html){t.style.display='none';return}t.innerHTML=html;t.style.display='block';
+  const w=t.offsetWidth,h=t.offsetHeight;t.style.left=clamp(e.clientX+14,4,innerWidth-w-4)+'px';t.style.top=clamp(e.clientY+14,4,innerHeight-h-4)+'px'}
+function mount(name,fn){$$('[data-view="'+name+'"]').forEach(host=>{
+  host.classList.add('view');const c=D.createElement('canvas');host.appendChild(c);const v={host,c,name,hits:[]};
+  v.draw=()=>{const w=host.clientWidth,h=+host.dataset.h||240;if(!w)return;const r=window.devicePixelRatio||1;
+    c.width=Math.round(w*r);c.height=Math.round(h*r);c.style.height=h+'px';const g=c.getContext('2d');g.setTransform(r,0,0,r,0,0);
+    g.textBaseline='middle';g.lineWidth=1;v.hits=[];fn(g,w,h,v)};
+  const xy=e=>{const b=c.getBoundingClientRect();return[e.clientX-b.left,e.clientY-b.top]};
+  const hit=(x,y)=>{for(let i=v.hits.length-1;i>=0;i--){const k=v.hits[i];if(x>=k.x&&x<=k.x+k.w&&y>=k.y&&y<=k.y+k.h)return k}return null};
+  c.addEventListener('pointerdown',e=>{v.dn=xy(e);v.last=v.dn;v.mv=false});
+  c.addEventListener('pointermove',e=>{const[x,y]=xy(e);
+    if(v.dn&&v.onDrag&&e.pointerType==='mouse'&&(v.mv||Math.hypot(x-v.dn[0],y-v.dn[1])>4)){v.mv=true;v.onDrag(v.dn[0],v.dn[1],x,y,false,x-v.last[0]);v.last=[x,y];tip();return}
+    const k=hit(x,y);c.style.cursor=k&&k.click?'pointer':(v.onDrag?'crosshair':'');tip(k&&k.tip&&(typeof k.tip==='function'?k.tip(x,y):k.tip),e)});
+  c.addEventListener('pointerleave',()=>tip());
+  window.addEventListener('pointerup',e=>{if(v.dn&&v.mv&&v.onDrag){const[x,y]=xy(e);v.onDrag(v.dn[0],v.dn[1],x,y,true,0);render()}v.dn=null});
+  c.addEventListener('click',e=>{if(v.mv){v.mv=false;return}const[x,y]=xy(e),k=hit(x,y);if(k&&k.click){k.click(x,y);render()}});
+  views.push(v)})}
+function panel(name,fn){$$('[data-panel="'+name+'"]').forEach(el=>panels.push(()=>{const s=fn(el);if(s!==el._s){el._s=s;el.innerHTML=s}}))}
+function render(){views.forEach(v=>v.draw());panels.forEach(p=>p());const lt=D.documentElement.classList.contains('light');
+  $$('a[href*=".html"]').forEach(a=>{a.setAttribute('href',a.getAttribute('href').replace(/#light$/,'')+(lt?'#light':''))})}
+function redraw(name){views.forEach(v=>{if(v.name===name)v.draw()})}
+function explain(title,sub,body){$('#ex').innerHTML='<button class="btn x" data-act="closeEx">Close</button><h2>'+title+'</h2><div class="muted" style="font-size:12.5px">'+sub+'</div>'+body;$('#ex').classList.add('open')}
+function tbl(head,rows,cls){return'<div class="scroll"><table><tr>'+head.map(h=>'<th'+(h[0]==='<'?' class="l"':'')+'>'+h.replace(/^</,'')+'</th>').join('')+'</tr>'+rows.map(r=>'<tr'+(r.attr||'')+'>'+r.map((c,i)=>'<td'+(head[i][0]==='<'?' class="l"':'')+'>'+c+'</td>').join('')+'</tr>').join('')+'</table></div>'}
+ACT.closeEx=()=>$('#ex').classList.remove('open');
+ACT.theme=()=>{D.documentElement.classList.toggle('light');TK={}};
+D.addEventListener('click',e=>{const a=e.target.closest('[data-act]');if(a&&ACT[a.dataset.act]){ACT[a.dataset.act](a.dataset.arg,a);render()}});
+D.addEventListener('input',e=>{const a=e.target.closest('[data-in]');if(a&&ACT[a.dataset.in]){ACT[a.dataset.in](a.value,a);render()}});
+D.addEventListener('keydown',e=>{if(e.key==='Escape')ACT.closeEx()});
+let RZ;window.addEventListener('resize',()=>{clearTimeout(RZ);RZ=setTimeout(render,80)});
+
+/* Inline synthetic data (seeded): one invented enzyme, Helixase-7 (gene HLXK7), 312 residues. In the product the residue
+   coordinates, the contacts, the burial, the design embedding and the fitness field are columns written by the generator, and the
+   quartiles, shares and rankings are server answers; the browser only draws. */
+const R=rng(7312),L=312,AA='AVILMFWYGPSTCNQDEKRH*'.split('');
+const GRP=a=>{const i=AA.indexOf(a);return i<8?0:i<10?1:i<15?2:i<17?3:i<20?4:5};
+const SS=[];(function(){let i=0,k=0;while(i<L){let n=3+Math.floor(R()*5);for(let j=0;j<n&&i<L;j++,i++)SS.push({t:'L'});if(i>=L)break;
+  const hel=R()<.6;n=Math.min(L-i,hel?9+Math.floor(R()*9):5+Math.floor(R()*4));for(let j=0;j<n;j++,i++)SS.push({t:hel?'H':'E',k,j,n});k++}})();
+const XYZ=new Array(L);(function(){let i=0;
+  while(i<L){const s=SS[i];if(s.t==='L'){i++;continue}const k=s.k,n=s.n,gr=Math.floor(k/5),gc=gr%2?4-k%5:k%5,bx=gc*10+(gr%2?2:-2),by=gr*9.5,dir=k%2?-1:1,rise=s.t==='H'?1.5:3.2,len=(n-1)*rise;
+    for(let j=0;j<n;j++,i++){const z=dir*(-len/2+j*rise);XYZ[i]=s.t==='H'?[bx+2.3*Math.cos(j*1.745),by+2.3*Math.sin(j*1.745),z]:[bx+(j%2?.9:-.9),by,z]}}
+  i=0;while(i<L){if(XYZ[i]){i++;continue}const a=i;while(i<L&&!XYZ[i])i++;const b=i,P=a>0?XYZ[a-1]:null,Q=b<L?XYZ[b]:null,n=b-a;
+    for(let j=a;j<b;j++){const t=(j-a+1)/(n+1);
+      if(P&&Q){const mx=(P[0]+Q[0])/2,my=(P[1]+Q[1])/2,ml=Math.hypot(mx,my)||1,bu=Math.sin(Math.PI*t)*(3+n*.6),zs=Math.sign(P[2])||1;
+        XYZ[j]=[P[0]+(Q[0]-P[0])*t+mx/ml*bu*.6,P[1]+(Q[1]-P[1])*t+my/ml*bu*.6,P[2]+(Q[2]-P[2])*t+zs*bu]}
+      else{const E=P||Q,s=P?j-a+1:b-j,zs=Math.sign(E[2])||1;XYZ[j]=[E[0]+s*1.4,E[1]+s*1.1,E[2]+s*2*zs]}}}
+  const c=[0,1,2].map(d=>XYZ.reduce((s,p)=>s+p[d],0)/L);XYZ.forEach(p=>{p[0]-=c[0];p[1]-=c[1];p[2]-=c[2]})})();
+const RMAX=Math.max(...XYZ.map(p=>Math.hypot(p[0],p[1],p[2])));
+const dist=(i,j)=>Math.hypot(XYZ[i][0]-XYZ[j][0],XYZ[i][1]-XYZ[j][1],XYZ[i][2]-XYZ[j][2]);
+const NB=XYZ.map(()=>[]),BUR=new Array(L).fill(0),CON=[];
+for(let i=0;i<L;i++)for(let j=i+1;j<L;j++){const d=dist(i,j);if(d<11){BUR[i]++;BUR[j]++}if(d<8&&j-i>2){NB[i].push(j);NB[j].push(i);CON.push([i,j])}}
+{const o=BUR.map((b,i)=>[b+i*1e-4,i]).sort((a,b)=>a[0]-b[0]);o.forEach((a,k)=>{BUR[a[1]]=k/(L-1)})}
+const ACTV=new Set();{let c0=0;XYZ.forEach((p,i)=>{if(Math.hypot(...p)<Math.hypot(...XYZ[c0]))c0=i});ACTV.add(c0);
+  XYZ.map((p,i)=>[dist(i,c0),i]).filter(a=>Math.abs(a[1]-c0)>3).sort((a,b)=>a[0]-b[0]).slice(0,5).forEach(a=>ACTV.add(a[1]))}
+const WT=SS.map((s,i)=>{const set=BUR[i]>.55?'AVILMF':s.t==='L'?'SGTNQDEKRAHP':'STNQDEKRAH';return set[Math.floor(R()*set.length)]});
+const HOT=[];{let n=0;while(HOT.length<14&&n++<9000){const i=6+Math.floor(R()*(L-12));if(BUR[i]>.6||ACTV.has(i)||HOT.some(h=>Math.abs(h.i-i)<6))continue;
+  let a;do{a=Math.floor(R()*20)}while(AA[a]===WT[i]||AA[a]==='P');HOT.push({i,a,gain:.5+R()*1.2})}HOT.sort((a,b)=>b.gain-a.gain)}
+function mk(seed,sc){const Q=rng(seed);return Array.from({length:L},(_,i)=>AA.map((x,a)=>{if(x===WT[i])return 0;let v;
+  if(x==='*')v=i>L-9?-.6:-3;else{v=-(.12+2*Math.pow(BUR[i],1.6))*(GRP(x)===GRP(WT[i])?.35:1);if(x==='P'&&SS[i].t!=='L')v-=1.3;if(ACTV.has(i))v-=2.2}
+  v+=(Q()-.5)*.5;const h=HOT.find(h=>h.i===i&&h.a===a);if(h)v=h.gain*sc+(Q()-.5)*.2;else if(x!=='*'&&HOT.some(h=>h.i===i))v=Math.max(v,-.4)+.1;return clamp(v,-3.2,1.8)}))}
+const SC=[mk(11,1),mk(12,.65)],MEAN=SC.map(m=>m.map((row,i)=>{let s=0,n=0;row.forEach((v,a)=>{if(AA[a]!==WT[i]&&a<20){s+=v;n++}});return s/n}));
+const lab=(i,a)=>WT[i]+(i+1)+AA[a],ssn=t=>t==='H'?'helix':t==='E'?'strand':'loop';
+const fld=(x,y)=>Math.exp(-((x-.74)**2+(y-.32)**2)/.03)+.34*Math.exp(-((x-.3)**2+(y-.74)**2)/.02)+.18*Math.exp(-((x-.5)**2+(y-.5)**2)/.12);
+const NR=8,PER=180,DES=[];
+for(let r=1;r<=NR;r++){const t=(r-1)/(NR-1),cx=.2+.54*t,cy=.56-.24*t+.1*Math.sin(t*3.1),sd=.125-.07*t;
+  for(let n=0;n<PER;n++){const trap=r>=3&&r<=6&&R()<.2,x=clamp((trap?.3:cx)+gauss(R)*(trap?.045:sd),.02,.98),y=clamp((trap?.74:cy)+gauss(R)*(trap?.045:sd),.03,.97);
+    const fit=Math.max(.2,.5+12.5*fld(x,y)*(.86+.28*R())+gauss(R)*.2),nm=1+Math.floor(R()*(1+r*.7)),muts=[];
+    for(let m=0;m<nm;m++){let u;if(R()<Math.min(.92,.1+.09*r+(fit>6?.25:0))){const h=HOT[Math.floor(R()*R()*HOT.length)];u={i:h.i,a:h.a}}else{const i=4+Math.floor(R()*(L-8));let a;do{a=Math.floor(R()*20)}while(AA[a]===WT[i]);u={i,a}}
+      if(!muts.some(q=>q.i===u.i))muts.push(u)}
+    muts.sort((a,b)=>a.i-b.i);DES.push({id:'HX7-R'+r+'-'+pad(n*8+1+Math.floor(R()*7),4),r,x,y,fit,muts,tm:muts.reduce((s,u)=>s+SC[1][u.i][u.a]*2.4,0)+gauss(R)*.5,pred:fit*(.78+.44*R())})}}
+const BEST=[];for(let r=1;r<=NR;r++)BEST.push(DES.filter(d=>d.r===r).reduce((a,b)=>b.fit>a.fit?b:a));
+const QT=[];for(let r=1;r<=NR;r++){const f=DES.filter(d=>d.r===r).map(d=>d.fit).sort((a,b)=>a-b),q=p=>f[Math.floor(p*(f.length-1))];QT.push([q(.05),q(.25),q(.5),q(.75),q(.95),f[f.length-1]])}
+const mstr=d=>d.muts.map(u=>lab(u.i,u.a)).join(' · ');
+
+const P={res:HOT[5].i,aa:HOT[5].a,des:null,round:8,m:0,win:null,rot:.7,spin:!matchMedia('(prefers-reduced-motion: reduce)').matches,mode:'3d',timer:null};
+const upto=()=>DES.filter(d=>d.r<=P.round),champ=()=>BEST.slice(0,P.round).reduce((a,b)=>b.fit>a.fit?b:a);
+const has=(d,i,a)=>d.muts.some(u=>u.i===i&&(a==null||u.a===a));
+function selRes(i,a){P.res=i;if(a!=null)P.aa=a}
+
+mount('dms',(g,w,h,v)=>{const l=24,r=6,pw=w-l-r,M=SC[P.m],W=clamp(Math.floor(pw/13),14,96),cw=pw/W;
+  let ws=P.win==null?P.res-W/2:P.win;if(P.res<ws||P.res>=ws+W)ws=P.res-W/2;ws=P.win=clamp(Math.round(ws),0,L-W);
+  for(let i=0;i<L;i++){g.fillStyle=dv(MEAN[P.m][i],-1.8,.4);g.fillRect(l+i/L*pw,4,pw/L+.4,18);g.fillStyle=tok(SS[i].t==='H'?'violet':SS[i].t==='E'?'link':'line');g.fillRect(l+i/L*pw,24,pw/L+.4,3)}
+  ACTV.forEach(i=>{g.fillStyle=tok('amber');g.fillRect(l+i/L*pw-.5,1,2,3)});
+  g.strokeStyle=tok('amber');g.lineWidth=1.5;g.strokeRect(l+ws/L*pw,2.5,W/L*pw,26);g.lineWidth=1;
+  v.hits.push({x:l,y:0,w:pw,h:30,tip:mx=>'Overview of all 312 positions (mean effect). Click to move the window; now '+(ws+1)+' to '+(ws+W),click:mx=>{P.win=clamp(Math.round((mx-l)/pw*L-W/2),0,L-W);P.res=clamp(Math.round((mx-l)/pw*L),P.win,P.win+W-1)}});
+  const t=62,rh=(h-t-16)/21;
+  for(let c=0;c<W;c++){const i=ws+c,x=l+c*cw;g.fillStyle=tok(SS[i].t==='H'?'violet':SS[i].t==='E'?'link':'line');g.fillRect(x,36,cw+.4,4);
+    g.fillStyle=mix(tok('panel2'),tok('ink'),BUR[i]*.75);g.fillRect(x,42,cw-.5,4);
+    if(cw>=10)T(g,WT[i],x+cw/2,54,i===P.res?tok('amber'):ACTV.has(i)?tok('amber2'):tok('muted'),'center',(i===P.res?'700 ':'')+'10.5px');
+    if(ACTV.has(i)){g.fillStyle=tok('amber');g.beginPath();g.moveTo(x+cw/2-3,31);g.lineTo(x+cw/2+3,31);g.lineTo(x+cw/2,35);g.fill()}
+    for(let a=0;a<21;a++){const y=t+a*rh;if(AA[a]===WT[i]){g.fillStyle=tok('panel');g.fillRect(x,y,cw-.6,rh-.6);g.fillStyle=tok('muted');g.fillRect(x+cw/2-1,y+rh/2-1,2,2)}else{g.fillStyle=dv(M[i][a],-3,1.5);g.fillRect(x,y,cw-.6,rh-.6)}}
+    if((i+1)%(cw>=10?5:10)===0)T(g,i+1,x+cw/2,h-7,tok('muted'),'center','10px')}
+  AA.forEach((x,a)=>T(g,x,l-7,t+a*rh+rh/2,a===P.aa?tok('amber'):tok('muted'),'right',(a===P.aa?'700 ':'')+'10.5px'));
+  [8,10,15,17,20].forEach(a=>{g.fillStyle=tok('panel');g.fillRect(l,t+a*rh-1,pw,1.4)});
+  if(P.des)P.des.muts.forEach(u=>{if(u.i>=ws&&u.i<ws+W){g.strokeStyle=tok('violet');g.lineWidth=2;g.strokeRect(l+(u.i-ws)*cw-.5,t+u.a*rh-.5,cw+.4,rh+.4);g.lineWidth=1}});
+  const sx=l+(P.res-ws)*cw;g.strokeStyle=tok('amber');g.strokeRect(sx-.5,t-1.5,cw+.4,21*rh+2);if(P.aa!=null){g.lineWidth=2;g.strokeStyle=tok('ink');g.strokeRect(sx-.5,t+P.aa*rh-.5,cw+.4,rh+.4);g.lineWidth=1}
+  v.hits.push({x:l,y:t,w:pw-1,h:21*rh-1,click:(mx,my)=>selRes(ws+Math.floor((mx-l)/cw),Math.floor((my-t)/rh)),tip:(mx,my)=>{const i=ws+Math.floor((mx-l)/cw),a=Math.floor((my-t)/rh);if(i>=L||a>20||a<0)return'';
+    const n=upto().filter(d=>has(d,i,a)).length;return AA[a]===WT[i]?'<b>'+WT[i]+(i+1)+'</b> wild type':'<b>'+lab(i,a)+'</b> · '+(P.m?'stability':'activity')+' <b class="'+(M[i][a]<0?'neg':'posv')+'">'+(M[i][a]>0?'+':'')+M[i][a].toFixed(2)+'</b><br>'+ssn(SS[i].t)+' · burial '+BUR[i].toFixed(2)+(ACTV.has(i)?' · <span class="amb">active site</span>':'')+'<br>'+n+' designs carry it'}})});
+
+function proj(){const c=Math.cos(P.rot),s=Math.sin(P.rot),ct=Math.cos(.42),st=Math.sin(.42);return p=>{const x=p[0]*c+p[2]*s,z=-p[0]*s+p[2]*c;return[x,p[1]*ct-z*st,p[1]*st+z*ct]}}
+mount('structure',(g,w,h,v)=>{if(P.mode==='map')return cmap(g,w,h,v);
+  const pr=proj(),sc=Math.min(w,h)/2/RMAX*.94,Q=XYZ.map(p=>{const q=pr(p);return[w/2+q[0]*sc,h/2-q[1]*sc,q[2]]}),dn=z=>.35+.65*clamp((z+RMAX)/(2*RMAX),0,1);
+  const seg=[];for(let i=0;i<L-1;i++)seg.push(i);seg.sort((a,b)=>Q[a][2]+Q[a+1][2]-Q[b][2]-Q[b+1][2]);
+  const focus=NB[P.res],near=new Set(focus);near.add(P.res);g.lineCap='round';
+  seg.forEach(i=>{g.globalAlpha=dn((Q[i][2]+Q[i+1][2])/2);g.strokeStyle=MEAN[P.m][i]<0?mix(tok("muted"),tok("neg"),MEAN[P.m][i]/-1.6):mix(tok("muted"),tok("pos"),MEAN[P.m][i]/.4);g.lineWidth=SS[i].t==='H'?4.4:SS[i].t==='E'?3.4:1.7;g.beginPath();g.moveTo(Q[i][0],Q[i][1]);g.lineTo(Q[i+1][0],Q[i+1][1]);g.stroke()});
+  g.lineWidth=1;g.globalAlpha=.8;focus.forEach(j=>{g.strokeStyle=tok('amber');g.setLineDash([2,3]);g.beginPath();g.moveTo(Q[P.res][0],Q[P.res][1]);g.lineTo(Q[j][0],Q[j][1]);g.stroke();g.setLineDash([]);g.fillStyle=tok('ink');g.beginPath();g.arc(Q[j][0],Q[j][1],2.4,0,7);g.fill()});
+  g.globalAlpha=1;ACTV.forEach(i=>{g.fillStyle=tok('amber');g.beginPath();g.arc(Q[i][0],Q[i][1],3.4,0,7);g.fill()});
+  if(P.des)P.des.muts.forEach(u=>{g.fillStyle=tok('violet');g.strokeStyle=tok('ink');g.beginPath();g.arc(Q[u.i][0],Q[u.i][1],5.5,0,7);g.fill();g.stroke();T(g,lab(u.i,u.a),Q[u.i][0]+9,Q[u.i][1],tok('violet'),'left','600 11px')});
+  const s=Q[P.res];g.strokeStyle=tok('amber');g.lineWidth=2.4;g.beginPath();g.arc(s[0],s[1],8,0,7);g.stroke();g.lineWidth=1;T(g,WT[P.res]+(P.res+1),s[0]+12,s[1]-10,tok('amber'),'left','700 12px');
+  T(g,'N',Q[0][0]-9,Q[0][1],tok('muted'),'center','10px');T(g,'C',Q[L-1][0]+9,Q[L-1][1],tok('muted'),'center','10px');
+  Q.map((q,i)=>[q[2],i]).sort((a,b)=>a[0]-b[0]).forEach(a=>{const i=a[1];v.hits.push({x:Q[i][0]-5,y:Q[i][1]-5,w:10,h:10,click:()=>selRes(i),tip:'<b>'+WT[i]+(i+1)+'</b> · '+ssn(SS[i].t)+' · burial '+BUR[i].toFixed(2)+'<br>mean effect '+MEAN[P.m][i].toFixed(2)+' · '+NB[i].length+' contacts'+(ACTV.has(i)?'<br><span class="amb">active site</span>':'')})});
+  v.onDrag=(x0,y0,x,y,end,dx)=>{P.spin=false;P.rot+=dx*.012;if(!end)v.draw()}});
+function cmap(g,w,h,v){v.onDrag=null;const s=Math.min(w-34,h-18),x0=(w-s)/2+10,y0=12,px=s/L;g.fillStyle=tok('bg2');g.fillRect(x0,y0,s,s);
+  for(let i=0;i<L;i++){g.fillStyle=tok(SS[i].t==='H'?'violet':SS[i].t==='E'?'link':'line');g.fillRect(x0+i*px,y0-6,px+.3,4);g.fillRect(x0-6,y0+i*px,4,px+.3)}
+  const d=Math.max(1.6,px*1.5);CON.forEach(c=>{const on=c[0]===P.res||c[1]===P.res;g.fillStyle=on?tok('amber'):tok('link');const k=on?d+2:d;g.fillRect(x0+c[0]*px,y0+c[1]*px,k,k);g.fillRect(x0+c[1]*px,y0+c[0]*px,k,k)});
+  g.strokeStyle=tok('line');g.beginPath();g.moveTo(x0,y0);g.lineTo(x0+s,y0+s);g.stroke();g.fillStyle=tok('amber-t');g.fillRect(x0+P.res*px-2,y0,4,s);g.fillRect(x0,y0+P.res*px-2,s,4);
+  T(g,WT[P.res]+(P.res+1),clamp(x0+P.res*px,x0+16,x0+s-16),y0+s+8,tok('amber'),'center','600 11px');T(g,'1',x0-10,y0+4,tok('muted'),'right','10px');T(g,L,x0-10,y0+s-4,tok('muted'),'right','10px');
+  v.hits.push({x:x0,y:y0,w:s,h:s,click:mx=>selRes(clamp(Math.floor((mx-x0)/px),0,L-1)),tip:(mx,my)=>{const i=clamp(Math.floor((mx-x0)/px),0,L-1),j=clamp(Math.floor((my-y0)/px),0,L-1);return'<b>'+WT[i]+(i+1)+'</b> × <b>'+WT[j]+(j+1)+'</b> · '+dist(i,j).toFixed(1)+' Å'+(dist(i,j)<8?' · in contact':'')}})}
+
+mount('landscape',(g,w,h,v)=>{const l=8,t=8,pw=w-16,ph=h-28,X=x=>l+x*pw,Y=y=>t+y*ph,nx=48,ny=28;
+  for(let a=0;a<nx;a++)for(let b=0;b<ny;b++){g.fillStyle=mix(tok('bg2'),tok('pos'),Math.pow(fld((a+.5)/nx,(b+.5)/ny),.7)*.5);g.fillRect(X(a/nx),Y(b/ny),pw/nx+.6,ph/ny+.6)}
+  const hot=d=>P.aa!=null&&has(d,P.res,P.aa);
+  DES.forEach(d=>{if(d.r>P.round)return;const now=d.r===P.round;g.globalAlpha=now?.95:.25;g.fillStyle=now?tok('amber'):tok('ink');g.beginPath();g.arc(X(d.x),Y(d.y),now?2.8:1.7,0,7);g.fill();
+    if(hot(d)){g.globalAlpha=now?.9:.45;g.strokeStyle=tok('violet');g.lineWidth=.9;g.beginPath();g.arc(X(d.x),Y(d.y),4.2,0,7);g.stroke();g.lineWidth=1}
+    v.hits[now?'push':'unshift']({x:X(d.x)-4,y:Y(d.y)-4,w:8,h:8,click:()=>{P.des=d;selRes(d.muts[0].i,d.muts[0].a)},tip:'<b>'+d.id+'</b> · round '+d.r+'<br>activity <b>'+d.fit.toFixed(1)+'×</b> wild type · ΔTm '+(d.tm>0?'+':'')+d.tm.toFixed(1)+' °C<br>'+mstr(d)})});
+  g.globalAlpha=1;g.strokeStyle=tok('ink');g.lineWidth=1.6;g.setLineDash([5,4]);g.beginPath();BEST.slice(0,P.round).forEach((d,i)=>g[i?'lineTo':'moveTo'](X(d.x),Y(d.y)));g.stroke();g.setLineDash([]);g.lineWidth=1;
+  BEST.slice(0,P.round).forEach(d=>{g.fillStyle=tok('bg');g.strokeStyle=tok('ink');g.beginPath();g.arc(X(d.x),Y(d.y),8,0,7);g.fill();g.stroke();T(g,'R'+d.r,X(d.x),Y(d.y)+.5,tok('ink'),'center','600 9.5px')});
+  if(P.des&&P.des.r<=P.round){g.strokeStyle=tok('violet');g.lineWidth=2.4;g.beginPath();g.arc(X(P.des.x),Y(P.des.y),10,0,7);g.stroke();g.lineWidth=1;T(g,P.des.id,clamp(X(P.des.x),60,w-60),Y(P.des.y)-17,tok('violet'),'center','600 11px')}
+  T(g,'wild type',X(.2),Y(.56)+22,tok('muted'),'center','10.5px');T(g,'global peak',X(.74),Y(.32)-34,tok('ink'),'center','600 11px');T(g,'local peak (a trap)',X(.3),Y(.74)+26,tok('muted'),'center','10.5px');
+  T(g,'sequence space, 2 components (coordinates from the generator) · shade = modelled fitness · violet ring = carries '+(P.aa!=null?lab(P.res,P.aa):'the selected change'),l,h-9,tok('muted'),'left','10.5px')});
+
+mount('rounds',(g,w,h,v)=>{const l=34,r=8,t=10,b=22,pw=w-l-r,ph=h-t-b,YM=18,Y=y=>t+ph-y/YM*ph,bw=pw/NR;
+  for(let y=0;y<=15;y+=5){g.strokeStyle=tok('line2');g.beginPath();g.moveTo(l,Y(y));g.lineTo(w-r,Y(y));g.stroke();T(g,y+'×',l-6,Y(y),tok('muted'),'right')}
+  g.strokeStyle=tok('muted');g.setLineDash([3,3]);g.beginPath();g.moveTo(l,Y(1));g.lineTo(w-r,Y(1));g.stroke();g.setLineDash([]);
+  QT.forEach((q,i)=>{const x=l+i*bw+bw/2,on=i+1===P.round,vis=i+1<=P.round,c=tok(on?'amber':vis?'link':'faint');g.globalAlpha=vis?1:.35;g.strokeStyle=c;g.fillStyle=c;
+    g.beginPath();g.moveTo(x,Y(q[0]));g.lineTo(x,Y(q[4]));g.stroke();g.globalAlpha=vis?.35:.15;g.fillRect(x-bw*.28,Y(q[3]),bw*.56,Y(q[1])-Y(q[3]));g.globalAlpha=vis?1:.35;g.strokeRect(x-bw*.28,Y(q[3]),bw*.56,Y(q[1])-Y(q[3]));
+    g.beginPath();g.moveTo(x-bw*.28,Y(q[2]));g.lineTo(x+bw*.28,Y(q[2]));g.stroke();g.beginPath();g.arc(x,Y(q[5]),3,0,7);g.fill();g.globalAlpha=1;
+    T(g,'R'+(i+1),x,h-9,on?tok('amber'):tok('muted'),'center',on?'700 11px':'11px');
+    v.hits.push({x:l+i*bw,y:t,w:bw,h:ph+b,click:()=>setRound(i+1),tip:'<b>Round '+(i+1)+'</b> · 1,500 designs<br>median '+q[2].toFixed(1)+'× · best '+q[5].toFixed(1)+'×<br>quartiles '+q[1].toFixed(1)+' to '+q[3].toFixed(1)})})});
+
+mount('resbars',(g,w,h,v)=>{const l=30,r=6,t=8,b=20,pw=w-l-r,ph=h-t-b,M=SC[P.m][P.res],Y=y=>t+(1.8-y)/5*ph,bw=pw/21;
+  [-3,-2,-1,0,1].forEach(y=>{g.strokeStyle=tok(y?'line2':'muted');g.beginPath();g.moveTo(l,Y(y));g.lineTo(w-r,Y(y));g.stroke();T(g,y,l-6,Y(y),tok('muted'),'right')});
+  AA.forEach((x,a)=>{const wt=x===WT[P.res],xx=l+a*bw;if(wt){T(g,'wt',xx+bw/2,Y(0)-8,tok('muted'),'center','9.5px')}else{g.fillStyle=dv(M[a],-3,1.5);g.fillRect(xx+1.5,Math.min(Y(0),Y(M[a])),bw-3,Math.abs(Y(M[a])-Y(0))||1)}
+    if(a===P.aa){g.strokeStyle=tok('amber');g.strokeRect(xx+.5,t,bw-1,ph)}T(g,x,xx+bw/2,h-9,a===P.aa?tok('amber'):tok('muted'),'center',a===P.aa?'700 11px':'11px');
+    v.hits.push({x:xx,y:t,w:bw,h:ph+b,click:()=>{P.aa=a},tip:wt?'wild type':'<b>'+lab(P.res,a)+'</b> '+(M[a]>0?'+':'')+M[a].toFixed(2)})})});
+
+mount('enrich',(g,w,h,v)=>{const l=64,r=6,t=20,pw=w-l-r,rows=HOT.slice(0,10),rh=(h-t-2)/rows.length,cw=pw/NR;
+  for(let c=0;c<NR;c++){T(g,'R'+(c+1),l+c*cw+cw/2,9,c+1===P.round?tok('amber'):tok('muted'),'center',c+1===P.round?'700 11px':'11px');v.hits.push({x:l+c*cw,y:0,w:cw,h:t,click:()=>setRound(c+1),tip:'Go to round '+(c+1)})}
+  rows.forEach((k,j)=>{const y=t+j*rh,on=k.i===P.res&&k.a===P.aa;T(g,lab(k.i,k.a),l-8,y+rh/2,on?tok('amber'):tok('ink'),'right',on?'700 11.5px':'11.5px');
+    for(let c=0;c<NR;c++){const share=DES.filter(d=>d.r===c+1&&has(d,k.i,k.a)).length/PER;g.globalAlpha=c+1<=P.round?1:.3;g.fillStyle=mix(tok('panel2'),tok('pos'),share*1.6);g.fillRect(l+c*cw,y+.5,cw-1,rh-1);
+      if(cw>30)T(g,Math.round(share*100)+'%',l+c*cw+cw/2,y+rh/2,share>.33?tok('bg'):tok('muted'),'center','10.5px')}g.globalAlpha=1;
+    if(on){g.strokeStyle=tok('amber');g.strokeRect(l-.5,y,pw,rh)}
+    v.hits.push({x:0,y,w,h:rh,click:()=>selRes(k.i,k.a),tip:'<b>'+lab(k.i,k.a)+'</b> · measured '+(k.gain>0?'+':'')+SC[0][k.i][k.a].toFixed(2)+' alone<br>share of each round\'s designs that carry it (a server pivot of design_mutation)'})})});
+
+function setRound(r){P.round=clamp(+r,1,NR);$$('[data-in="round"]').forEach(el=>{el.value=P.round});if(P.des&&P.des.r>P.round)P.des=null}
+panel('kpis',()=>{const c=champ(),q=QT[P.round-1];return[
+  ['Protein','Helixase-7','gene HLXK7 · 312 residues'],
+  ['Substitutions measured','6,240','every position × 20 · 2 assays'],
+  ['Designs so far',fmt(P.round*1500),'round '+P.round+' of 8 · 1,500 a round'],
+  ['Best design',c.fit.toFixed(1)+'×','activity against wild type · '+c.id],
+  ['Median, round '+P.round,q[2].toFixed(1)+'×','<span class="ok">'+(q[2]/QT[0][2]).toFixed(1)+'×</span> the first round'],
+  ['Rows in the lake','100,000','protein · 7 tables · Delta']].map(a=>'<div class="kpi"><div class="k">'+a[0]+'</div><div class="v">'+a[1]+'</div><div class="d">'+a[2]+'</div></div>').join('')+
+  '<div class="kpi syn"><div class="k">Data</div><div class="v">Synthetic · seed 7312</div><div class="d">an invented enzyme</div></div>'});
+panel('cmd',()=>'PROTEIN HLXK7 &nbsp;·&nbsp; DMS '+(P.m?'STABILITY':'ACTIVITY')+' at '+WT[P.res]+(P.res+1)+' &nbsp;·&nbsp; DESIGNS round <= '+P.round+(P.des?' &nbsp;·&nbsp; DESIGN '+P.des.id:''));
+panel('roundlab',()=>{const c=champ();return'<span class="big">Round '+P.round+' <small>of 8 · best so far '+c.fit.toFixed(1)+'× wild type · '+mstr(c)+'</small></span>'});
+panel('play',()=>'<button class="btn p" data-act="play">'+(P.timer?'❚❚ Pause':'▶ Play the rounds')+'</button>');
+panel('metric',()=>'<span class="seg">'+['Activity','Stability'].map((o,i)=>'<span data-act="metric" data-arg="'+i+'"'+(P.m===i?' class="on"':'')+'>'+o+'</span>').join('')+'</span>');
+panel('mode',()=>'<span class="seg">'+[['3d','3D trace'],['map','Contact map']].map(o=>'<span data-act="mode" data-arg="'+o[0]+'"'+(P.mode===o[0]?' class="on"':'')+'>'+o[1]+'</span>').join('')+'</span>'+(P.mode==='3d'?' <button class="tool" data-act="spin">'+(P.spin?'Stop turning':'Turn')+'</button>':''));
+panel('rescard',()=>{const i=P.res,M=SC[P.m][i];let b=0;M.forEach((x,a)=>{if(a<20&&x>M[b])b=a});const n=P.aa!=null?upto().filter(d=>has(d,i,P.aa)).length:0;
+  return'<dl class="facts"><dt>Residue</dt><dd><b class="amb">'+WT[i]+(i+1)+'</b> · '+ssn(SS[i].t)+(ACTV.has(i)?' · <span class="amb">active site</span>':'')+'</dd><dt>Burial</dt><dd>'+BUR[i].toFixed(2)+' · '+NB[i].length+' contacts within 8 Å</dd><dt>Mean effect</dt><dd class="'+(MEAN[P.m][i]<0?'neg':'posv')+'">'+MEAN[P.m][i].toFixed(2)+'</dd><dt>Best change</dt><dd>'+(M[b]>0?'<b class="posv">'+lab(i,b)+' +'+M[b].toFixed(2)+'</b>':'none improves it')+'</dd>'+
+  (P.aa!=null&&AA[P.aa]!==WT[i]?'<dt>Selected</dt><dd><b>'+lab(i,P.aa)+'</b> '+(M[P.aa]>0?'+':'')+M[P.aa].toFixed(2)+' · in '+n+' designs</dd>':'')+'</dl>'});
+panel('title-res',()=>WT[P.res]+(P.res+1));
+panel('designs',el=>{const n=+(el.dataset.rows||8),c=champ();return tbl(['<Design','Round','<Changes','Activity','ΔTm °C','Model','<Status'],upto().sort((a,b)=>b.fit-a.fit).slice(0,n).map((d,i)=>{
+  const r=[d.id,d.r,'<span class="s">'+mstr(d)+'</span>','<b>'+d.fit.toFixed(1)+'×</b>','<span class="'+(d.tm<0?'neg':'posv')+'">'+(d.tm>0?'+':'')+d.tm.toFixed(1)+'</span>',d.pred.toFixed(1)+'×','<span class="pill '+(d===c?'g':i<3?'a':'n')+'">'+(d===c?'Lead':i<3?'Validate':'Measured')+'</span>'];
+  r.attr=' class="pick'+(P.des===d?' sel':'')+'" data-act="design" data-arg="'+d.id+'"';return r}))});
+
+const EX={
+ dms:['Deep mutational scan','DMS HLXK7','<h4>What it shows</h4><p>Every position of the protein (across) against every amino acid it could become (down): orange hurts, blue helps, a dot is the wild type. The strip on top is the whole protein; the tracks give the fold (helix, strand, loop) and how buried each position is; triangles mark the active site.</p><h4>How the server answered</h4><ol><li>Read 6,240 <code>dms_score</code> rows of one protein and one assay (of 47,840).</li><li>Sent the matrix as one Arrow batch with the residue tracks; the per-position mean is a column of <code>residue</code>.</li></ol><h4>Linked</h4><p>A click sets the residue (channel <code>protein.residue</code>): the structure turns to it, the designs that carry the change are ringed, the bar chart shows its 20 options.</p><h4>Element</h4><p><code>protein.dms</code>: drishti-chart heatmap (diverging) with an overview brush and annotation tracks.</p>'],
+ structure:['Structure','PROTEIN HLXK7 (structure)','<h4>What it shows</h4><p>The backbone as a 3D trace, one point per residue, coloured by the mean effect of changing it; the selected residue with its neighbours within 8 Å; the active site in amber; a design\'s changes in violet. The contact map is the same fold flattened: a mark where two residues touch.</p><h4>Where the numbers come from</h4><p>Coordinates, burial and contacts are <b>columns written by the generator</b> (<code>residue</code>, <code>residue_contact</code>); nothing is folded or measured in the browser.</p><h4>Element</h4><p><code>protein.backbone</code> on the vendored ECharts GL (line3D and scatter3D), and <code>protein.contacts</code> on the heatmap. No new vendored library.</p>'],
+ landscape:['Design campaign','DESIGNS HLXK7','<h4>What it shows</h4><p>Every design as a point in sequence space; the shade is the modelled fitness. Round after round the population leaves the wild type, part of it is caught on a local peak, and the campaign reaches the global one. The dashed line joins each round\'s best design.</p><h4>How the server answered</h4><ol><li>Read <code>design</code> where ROUND is at most the chosen round.</li><li>Sent each round\'s top 50 and a stratified sample of the rest (1,440 of 12,000 points).</li><li>The two coordinates are columns of the design table, written by the generator.</li></ol><h4>Linked</h4><p>A click on a design marks its changes on the heatmap and the structure (channel <code>protein.design</code>).</p>'],
+ rounds:['Activity by round','DESIGNS HLXK7 by ROUND','<h4>What it shows</h4><p>For each round: the middle half of its designs (box), the 5th to 95th percentile (line), the median and the best (dot).</p><h4>How the server answered</h4><p>Quantiles of ACTIVITY grouped by ROUND over 12,000 <code>design</code> rows: 8 rows returned.</p><h4>Element</h4><p>drishti-chart box plot (exists).</p>'],
+ enrich:['Which changes won','DESIGN_MUTATION pivot','<h4>What it shows</h4><p>The share of each round\'s designs that carry a change. The winning changes spread through the population round after round.</p><h4>How the server answered</h4><p>A pivot of 33,000 <code>design_mutation</code> rows: MUTATION by ROUND, count over the round\'s designs. This is the product\'s ordinary pivot engine.</p><h4>Element</h4><p>drishti-grid pivot with heat cells (exists).</p>'],
+ resbars:['One residue, twenty options','DMS HLXK7 at residue','<h4>What it shows</h4><p>The measured effect of each possible amino acid at the selected position.</p><h4>Element</h4><p>drishti-chart bar (exists), 21 rows of <code>dms_score</code>.</p>']};
+ACT.explain=k=>explain(EX[k][0],'Command: <code>'+EX[k][1]+'</code>',EX[k][2]);
+ACT.metric=m=>{P.m=+m};ACT.mode=m=>{P.mode=m};ACT.spin=()=>{P.spin=!P.spin};ACT.round=r=>setRound(r);
+ACT.design=id=>{const d=DES.find(x=>x.id===id);P.des=P.des===d?null:d;if(P.des)selRes(d.muts[0].i,d.muts[0].a)};
+ACT.play=()=>{if(P.timer){clearInterval(P.timer);P.timer=null;return}if(P.round>=NR)setRound(1);P.timer=setInterval(()=>{setRound(P.round+1);if(P.round>=NR){clearInterval(P.timer);P.timer=null}render()},1100)};
+setRound(8);render();
+(function turn(){if(P.spin&&P.mode==='3d'&&!D.hidden&&!$('[data-view="structure"]:hover')){P.rot+=.007;redraw('structure')}requestAnimationFrame(turn)})();
+
+</script>
+</body>
+</html>
