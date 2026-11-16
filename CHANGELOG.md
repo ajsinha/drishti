@@ -126,7 +126,8 @@ The Python commands release. The build still reports its version as 2.9.11.g (th
   `start cluster` keeps a running copy of the jar at `<data>/stack/server.jar` (a convenience for tests; a real install runs from
   `<home>/lib`); `bin/drishti-node.sh` is kept for the images and the systemd unit.
 - **Drill fixes.** The browser tests' server is ready when its modules are installed and recorded; the exposure explorer's test server
-  gets the VaR files' heap; the shell-twins test reads what git holds in `bin/`.
+  gets the VaR files' heap, and so does the stress window's (both ran out at 768 MB on the shared lake; `test_lake_builds_cached` now fails
+  any shared-lake server given less than `var_stack.VAR_HEAP`); the shell-twins test reads what git holds in `bin/`.
 
 - **One settings file for every launcher, and the deployment guides checked against the code.** Every IntelliJ and PyCharm run
   configuration passes `$USER_HOME$/drishti-envs/dev.ini`; `tools/drishti.py --settings` reads the same files as the server (several,

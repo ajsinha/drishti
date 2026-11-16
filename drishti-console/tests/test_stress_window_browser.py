@@ -24,16 +24,15 @@ from select_helpers import choose, value, values  # <drishti-select>: drishti-in
 from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and helpers
 
 pytestmark = pytest.mark.browser
-DATA = ",".join([f"market-risk/{k}" for k in ("scenario-pv", "fx-scenario", "scenario-set",
-                                             "var-limit", "pnl-history")] + ["core/desk", "core/book", "core/legal-entity"] + ["trades/murex"])
 
 
 @pytest.fixture(scope="module")
 def stack(tmp_path_factory):
     """The cached VaR demo lake with its P&L history, ending the last weekday (built once per source hash by the Java loader; read-only,
-    the server writes its own folders)."""
+    the server writes its own folders). The VaR files' heap (var_stack's default): the shared lake holds both trade sets, so at 768 MB the
+    server's start (P&L vectors, the official capture of the newest date) ran out of heap and the page never loaded (2026-11-16)."""
     import var_stack
-    yield from var_stack.var_server(tmp_path_factory, var_stack.shared_lake(tmp_path_factory, needs="risk/pnl-history"), heap="768m")
+    yield from var_stack.var_server(tmp_path_factory, var_stack.shared_lake(tmp_path_factory, needs="risk/pnl-history"))
 
 
 def test_the_page_draws_its_chart_and_tables_across_the_page(stack, browser):

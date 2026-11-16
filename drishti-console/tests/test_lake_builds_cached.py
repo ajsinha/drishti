@@ -76,3 +76,23 @@ def test_the_parked_tests_say_why():
     parked = sorted(p.name for p in _files() if p.name != "var_stack.py" and p.name not in ALLOWED and _parked(p.read_text(encoding="utf-8")))
     missing = [n for n in parked if n not in listed]
     assert not missing, "parked to i6 but not in TEST_HARNESS.md's parked list: " + ", ".join(missing)
+
+
+def test_a_shared_lake_server_asks_for_no_less_than_the_var_heap():
+    """The shared lake holds every trade set: a server on it given less than var_stack.VAR_HEAP ran out of heap at start and its pages
+    never loaded (test_exposure_explorer_browser and test_stress_window_browser at 768 MB, 2026-11-16)."""
+    from var_stack import VAR_HEAP
+
+    def mb(h: str) -> int:
+        return int(h[:-1]) * (1024 if h[-1].lower() == "g" else 1)
+
+    bad = []
+    for p in _files():
+        text = p.read_text(encoding="utf-8")
+        if p.name == "var_stack.py" or not re.search(r"shared_(lake|folder)\(", text):
+            continue
+        for n, line in enumerate(text.splitlines(), 1):
+            for h in re.findall(r"""\bheap\s*=\s*["'](\d+[mMgG])["']""", line):
+                if mb(h) < mb(VAR_HEAP):
+                    bad.append(f"{p.name}:{n}: heap={h}")
+    assert not bad, f"a server on the shared lake gets at least var_stack.VAR_HEAP ({VAR_HEAP}):\n  " + "\n  ".join(bad)

@@ -228,7 +228,9 @@ loader and reused across runs and drills; a run looks it up once (`browser_harne
 `var_stack.shared_lake(tmp_path_factory, needs=...)` (`needs`: a table it reads, checked) or `var_stack.shared_folder` (the lake and the
 connector files the build wrote beside it). It is read only: no test builds a lake of its own, asks for a subset (`--only`), copies it or
 names the Python writer. A server over it writes to its own folders (`var_stack.own_folders`: the VaR hot folder and the official VaR and
-exposure roots). `tests/test_lake_builds_cached.py` (a quick file check) fails on any test that does otherwise and is not parked.
+exposure roots). A server over it that names its heap asks for at least `var_stack.VAR_HEAP` (1536 MB, `var_server`'s default): the lake
+holds every trade set, and at 768 MB a server ran out of heap at start and its pages never loaded. `tests/test_lake_builds_cached.py` (a
+quick file check) fails on any test that does otherwise and is not parked.
 
 **Parked to i6: tests that write to a lake.** A test that has to write to a lake (a build, an append, maintenance, a lake of its own, a
 trade-grain variant) is parked until i6 (IMPLEMENTATION_PLAN.md): it carries `@var_stack.PARKED_I6` (or `pytestmark = [PARKED_I6]`), a skip
