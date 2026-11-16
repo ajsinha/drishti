@@ -31,7 +31,7 @@ export function valueText(p, fmt) {
   if (t === 'boxplot' && Array.isArray(v)) { const b = v.slice(-5); return 'low ' + fmt(b[0]) + ' · Q1 ' + fmt(b[1]) + ' · median ' + fmt(b[2]) + ' · Q3 ' + fmt(b[3]) + ' · high ' + fmt(b[4]); }
   if (t === 'candlestick' && Array.isArray(v)) { const b = v.slice(-4); return 'open ' + fmt(b[0]) + ' · close ' + fmt(b[1]) + ' · low ' + fmt(b[2]) + ' · high ' + fmt(b[3]); }
   if (t === 'custom' && Array.isArray(v)) { return fmt(v[0]) + ' to ' + fmt(v[1]) + ': ' + v[2]; }
-  if (t === 'heatmap' && Array.isArray(v)) { return fmt(v[2]); }
+  if (t === 'heatmap' && Array.isArray(v)) { return typeof v[2] === 'string' && isNaN(Number(v[2])) ? v[2] : fmt(v[2]); }
   if (t === 'pie') { return fmt(v) + (p.percent !== undefined ? ' · ' + p.percent + '%' : ''); }
   if (t === 'sankey') { return fmt(p.data && p.data.value !== undefined ? p.data.value : v); }
   if (Array.isArray(v)) { return t === 'scatter' && v.length === 3 ? fmt(v[2]) : fmt(v[1]); }
@@ -122,8 +122,9 @@ export function markSelection(option, ids, th) {
   const hits = [], has = (it) => it && it.ids && it.ids.some((x) => ids.has(x));
   let n = 0;
   option.series.forEach((s) => {
-    if (s.helper || s.name === '__selected') { return; }
+    if (s.helper || s.track || s.name === '__selected') { return; }
     if (s.type === 'pie') { (s.data || []).forEach((it) => { if (has(it)) { it.selected = true; n++; } }); return; }
+    if (s.type === 'scatter3D') { (s.data || []).forEach((it) => { if (has(it)) { it.symbolSize = th.size.symbol + 8; it.itemStyle = { color: th.tokens.accent, borderColor: th.ink, borderWidth: 1 }; n++; } }); return; }
     if (['line', 'bar', 'scatter', 'heatmap', 'custom', 'boxplot', 'candlestick'].indexOf(s.type) < 0 || s.coordinateSystem === 'geo') { return; }
     (s.data || []).forEach((it, i) => { if (has(it) && it.value !== null && it.value !== undefined) { hits.push(placeOf(s, it, i, option)); n++; } });
   });
@@ -204,6 +205,55 @@ export function rangeBrush(engine, active, colour, onBrush, axis) {
     onBrush(engine.convertFromPixel(finder, Math.min(a, b)), engine.convertFromPixel(finder, Math.max(a, b)));
   });
   return () => engine.setOption({ graphic: [{ id: 'dc-range', $action: 'remove' }] });
+}
+
+/**
+ * The rectangle brush: a drag on a plot draws a rectangle and, when the mouse is let go, gives the values of both axes at its corners,
+ * lower first (a click, with no drag, stays a click on a mark). The rectangle stays until the next drag or the clear function.
+ * @param {Object} engine the chart's engine instance
+ * @param {function(): boolean} active whether the chart brushes now
+ * @param {{fill: string, stroke: string}} look the rectangle's fill and edge
+ * @param {function({x: Array<number>, y: Array<number>}): void} onBrush given {x: [low, high], y: [low, high]} in the axes' values
+ * @returns {function(): void} clears the rectangle
+ */
+export function rectBrush(engine, active, look, onBrush) {
+  const zr = engine.getZr();
+  let from = null, moved = false;
+  const rect = (a, b) => engine.setOption({ graphic: [{ id: 'dc-rect', type: 'rect', silent: true, z: 100,
+    shape: { x: Math.min(a[0], b[0]), y: Math.min(a[1], b[1]), width: Math.abs(b[0] - a[0]), height: Math.abs(b[1] - a[1]) },
+    style: { fill: look.fill, stroke: look.stroke, lineWidth: 1, lineDash: [4, 3] } }] });
+  zr.on('mousedown', (e) => { from = active() && engine.containPixel('grid', [e.offsetX, e.offsetY]) ? [e.offsetX, e.offsetY] : null; moved = false; });
+  zr.on('mousemove', (e) => { if (from && (Math.abs(e.offsetX - from[0]) > 4 || Math.abs(e.offsetY - from[1]) > 4)) { moved = true; rect(from, [e.offsetX, e.offsetY]); } });
+  zr.on('mouseup', (e) => {
+    if (!from) { return; }
+    const a = from, b = [e.offsetX, e.offsetY];
+    from = null;
+    if (!moved) { return; }
+    const p = engine.convertFromPixel({ gridIndex: 0 }, a), q = engine.convertFromPixel({ gridIndex: 0 }, b);
+    if (!p || !q) { return; }
+    onBrush({ x: [Math.min(p[0], q[0]), Math.max(p[0], q[0])], y: [Math.min(p[1], q[1]), Math.max(p[1], q[1])] });
+  });
+  return () => engine.setOption({ graphic: [{ id: 'dc-rect', $action: 'remove' }] });
+}
+
+/**
+ * The marks of an option inside a rectangle of axis values: the row ids of every point of the first grid whose x and y fall in it.
+ * @param {Object} option the engine's option (its series' items carry ids)
+ * @param {{x: Array<number>, y: Array<number>}} box
+ * @returns {string[]}
+ */
+export function idsInBox(option, box) {
+  const out = [];
+  (option.series || []).forEach((s) => {
+    if (s.helper || s.track || s.silent || (s.type !== 'scatter' && s.type !== 'effectScatter') || (s.xAxisIndex || 0) !== 0) { return; }
+    (s.data || []).forEach((it) => {
+      const v = it && it.value;
+      if (Array.isArray(v) && typeof v[0] === 'number' && typeof v[1] === 'number' && v[0] >= box.x[0] && v[0] <= box.x[1] && v[1] >= box.y[0] && v[1] <= box.y[1]) {
+        (it.ids || []).forEach((id) => out.push(id));
+      }
+    });
+  });
+  return out;
 }
 
 /**

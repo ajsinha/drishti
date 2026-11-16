@@ -391,3 +391,98 @@ test('panel charts: tokens are read from the view, and the manager draws, links,
   await pc2.draw();
   assert.equal(none.textContent, 'Charts are not available');
 });
+
+test('heatmap tracks and category cells: strips on either axis, aligned grids, the legend\'s keys and the table\'s rows', () => {
+  const rows = [];
+  ['1', '2', '3'].forEach((p) => ['A', 'C'].forEach((a) => rows.push({ id: p + a, P: p, AA: a, S: Number(p) - 2 })));
+  const t = build({ kind: 'heatmap', id: 'id', data: { rows }, x: 'P', y: 'AA', value: 'S', scale: { type: 'diverging' },
+    tracks: [{ axis: 'x', title: 'Burial', values: { 1: 0.1, 2: 0.9 } }, { axis: 'x', title: 'Fold', field: 'P', tones: { 1: 'accent' }, type: 'category' }, { axis: 'y', title: 'Group', values: { A: 'small' } }] });
+  assert.equal(t.option.grid.length, 4);
+  assert.equal(t.option.series[0].type, 'heatmap');
+  assert.deepEqual(t.option.visualMap.seriesIndex, 0);
+  assert.ok(t.option.series.slice(1).every((s) => s.track && s.type === 'heatmap'));
+  assert.ok(t.option.grid.filter((g) => g.height).every((g) => g.left === t.option.grid[0].left && g.right === t.option.grid[0].right));
+  assert.deepEqual(t.table.rows.map((r) => r[0]), ['A', 'C', 'Burial', 'Fold']);
+  assert.equal(t.table.columns[t.table.columns.length - 1].header, 'Group');
+  assert.ok(t.legendStatic && t.legend.some((k) => k.name === 'small'));
+  const c = build({ kind: 'heatmap', data: { rows: rows.map((r) => Object.assign({}, r, { K: r.S > 0 ? 'up' : 'down' })) }, x: 'P', y: 'AA', value: { field: 'K', type: 'category', tones: { up: 'good', down: 'bad' } } });
+  assert.equal(c.option.visualMap, undefined);
+  const dm = build({ kind: 'heatmap', data: { rows }, x: { field: 'P', domain: ['0', '1', '2', '3'], labels: false }, y: 'AA', value: 'S' });
+  assert.deepEqual(dm.option.xAxis.data, ['0', '1', '2', '3']);
+  assert.equal(dm.option.xAxis.axisLabel.show, false);
+  const z = build({ kind: 'heatmap', data: { rows }, x: 'P', y: 'AA', value: 'S', zoom: { window: [0, 1] }, tracks: [{ axis: 'x', title: 'T', values: { 1: 1 } }, { axis: 'y', title: 'Y', values: { A: 1 } }] });
+  assert.deepEqual(z.option.dataZoom[0].xAxisIndex, [0, 2]);                 // the heatmap and its x track move together; the y track does not
+  assert.deepEqual([z.option.dataZoom[0].startValue, z.option.dataZoom[0].endValue], [0, 1]);
+  assert.equal(z.option.grid[0].bottom, z.option.grid[1].bottom);
+  assert.deepEqual(c.legend.map((k) => k.name), ['down', 'up']);
+  assert.equal(c.option.series[0].data[0].itemStyle.color, C.toneColour(th, 'bad'));
+  assert.equal(C.valueText({ seriesType: 'heatmap', value: [0, 0, 'up'] }, env.fmt), 'up');
+  assert.deepEqual(C.checkSpec({ kind: 'heatmap', tracks: [{ axis: 'z' }] }).map((p) => p.path), ['$.tracks[0].axis', '$.tracks[0]']);
+});
+
+test('a scatter\'s segments, top labels and surface; the rectangle brush\'s ids; precomputed boxes', () => {
+  const rows = [{ ID: 'a', X: 1, Y: 2, G: 'g1' }, { ID: 'b', X: 15, Y: 9, G: 'g2' }, { ID: 'c', X: 16, Y: 3, G: 'g2' }];
+  const s = build({ kind: 'scatter', id: 'ID', data: { rows }, x: 'X', y: 'Y', segments: { values: [{ name: 'one', from: 0, to: 10 }, { name: 'two', from: 10, to: 20 }] },
+    labelTop: { field: 'G', n: 1 }, surface: { rows: [{ x: 1, y: 1, value: 2 }, { x: 3, y: 1, value: 4 }], cell: [2, 2] } });
+  assert.deepEqual(s.option.series.map((x) => x.name), ['__surface', 'Y', '__labels']);
+  assert.deepEqual(s.option.series[2].data.map((d) => d.name), ['g2']);
+  assert.equal(s.option.series[1].markArea.data.length, 2);
+  assert.equal(s.option.xAxis.axisLabel.show, false);
+  assert.notEqual(s.option.series[1].data[0].itemStyle.color, s.option.series[1].data[1].itemStyle.color);
+  assert.equal(C.segmentOf([{ from: 0, to: 10 }, { from: 10, to: 20 }], 15), 1);
+  assert.deepEqual(C.idsInBox(s.option, { x: [10, 20], y: [0, 5] }), ['c']);
+  const b = build({ kind: 'boxplot', data: { rows: [{ R: '1', lo: 1, q1: 2, md: 3, q3: 4, hi: 5, n: 10 }] }, category: 'R', value: 'md', boxes: { low: 'lo', q1: 'q1', median: 'md', q3: 'q3', high: 'hi', n: 'n' } });
+  assert.deepEqual(b.option.series[0].data[0].value, [1, 2, 3, 4, 5]);
+  assert.deepEqual(b.table.rows[0], ['1', 1, 2, 3, 4, 5, 10]);
+});
+
+test('lollipop and the 3D trace: stems and heads coloured by a number, points in order, flat where three dimensions are not available', () => {
+  const l = build({ kind: 'lollipop', data: { rows: [{ P: 5, N: 2, S: -1 }, { P: 50, N: 4, S: 1 }] }, x: 'P', y: 'N', length: 100,
+    colour: { field: 'S', scale: 'diverging', legend: [{ name: 'hurts', value: -1 }, { name: 'helps', value: 1 }] }, bands: [{ name: 'domain', from: 1, to: 20 }] });
+  assert.deepEqual(l.option.series.map((x) => x.type), ['bar', 'scatter']);
+  assert.deepEqual(l.legend.map((k) => k.name), ['hurts', 'helps']);
+  assert.equal(l.option.series[1].data[0].itemStyle.color, l.legend[0].colour);
+  const rows = [{ P: 2, X: 1, Y: 1, Z: 1, M: -1 }, { P: 1, X: 0, Y: 0, Z: 0, M: 1 }];
+  const g = build({ kind: 'trace3d', data: { rows }, x: 'X', y: 'Y', z: 'Z', order: 'P', id: 'P', colour: { field: 'M', scale: 'diverging' }, gl: true, selected: ['2'] });
+  assert.ok(g.option.grid3D && g.option.series[0].type === 'line3D' && g.option.series[1].type === 'scatter3D');
+  assert.deepEqual(g.option.series[0].data, [[0, 0, 0], [1, 1, 1]]);
+  assert.ok(g.option.series[1].data[1].symbolSize > g.option.series[1].data[0].symbolSize);
+  const flat = build({ kind: 'trace3d', data: { rows }, x: 'X', y: 'Y', z: 'Z' });
+  assert.ok(flat.flat && flat.option.series[1].type === 'scatter' && /drawn flat/.test(flat.summary));
+  assert.equal(C.canDraw3d(null), false);
+});
+
+test('frames: the values in order, the rows of a frame or up to it, the checks', () => {
+  const rows = [{ R: 2 }, { R: 10 }, { R: 1 }, { R: 2 }];
+  assert.deepEqual(C.frameValues(rows, { field: 'R' }), [1, 2, 10]);
+  assert.deepEqual(C.frameValues(rows, { field: 'R', values: [10, 2] }), [10, 2]);
+  assert.deepEqual(C.frameRows(rows, { field: 'R' }, [1, 2, 10], 1), [{ R: 2 }, { R: 2 }]);
+  assert.equal(C.frameRows(rows, { field: 'R', mode: 'upto' }, [1, 2, 10], 1).length, 3);
+  assert.equal(C.frameRows(rows, null, [], 0), rows);
+  assert.equal(C.reducedMotion(null), false);
+  assert.deepEqual(C.checkSpec({ kind: 'scatter', brush: 'lasso', frames: { field: 'R', mode: 'all' } }).map((p) => p.path), ['$.brush', '$.frames.mode']);
+  assert.ok(C.CHART_EVENTS.includes('brushed') && C.CHART_EVENTS.includes('frameChanged'));
+});
+
+test('the segmented scatter and the matrix: thresholds and segments; category cells in the given order with every column kept', () => {
+  const rows = [{ ID: 'a', X: 1, Y: 2, G: 'p' }, { ID: 'b', X: 15, Y: 12, G: 'q' }, { ID: 'c', X: 16, Y: 7, G: 'q' }];
+  const s = build({ kind: 'segmented', id: 'ID', data: { rows }, x: 'X', y: 'Y', segments: [{ name: 'Asia', from: 0, to: 10 }, { name: 'Europe', from: 10, to: 20 }],
+    thresholds: [{ value: 10, label: 'alert', tone: 'bad' }, { value: 6, label: 'watch', tone: 'warn' }], labelTop: { field: 'G', n: 1 } });
+  const pts = s.option.series.find((x) => x.type === 'scatter' && !x.helper);
+  assert.equal(pts.markArea.data.length, 2);
+  assert.deepEqual(pts.markLine.data.map((l) => l.yAxis), [10, 6]);
+  assert.equal(pts.data.find((d) => d.ids[0] === 'b').itemStyle.color, C.toneColour(th, 'bad'));
+  assert.deepEqual(s.legend.map((k) => k.name), ['alert', 'watch']);
+  assert.match(s.summary, /2 segments, 1 at or past alert/);
+  const m = build({ kind: 'matrix', data: { rows: [{ D: 'Rates', T: '02', S: 'breach' }] }, x: { field: 'T', domain: ['01', '02', '03'] }, y: { field: 'D', domain: ['Rates', 'FX'] },
+    value: { field: 'S', tones: { breach: 'bad' } }, tracks: [{ title: 'Month end', values: { '03': 'yes' } }] });
+  assert.deepEqual(m.option.xAxis[0].data, ['01', '02', '03']);
+  assert.deepEqual(m.option.yAxis[0].data, ['Rates', 'FX']);
+  assert.equal(m.option.series[0].data[0].itemStyle.color, C.toneColour(th, 'bad'));
+  assert.equal(m.option.series.filter((x) => x.track).length, 1);
+  assert.match(m.summary, /2 rows by 3 columns, 1 cells filled/);
+  const wide = build({ kind: 'matrix', data: { rows: [] }, x: { field: 'T', domain: Array.from({ length: 200 }, (_, i) => String(i)) }, y: { field: 'D', domain: ['A'] }, value: { field: 'S' } });
+  assert.ok(wide.option.dataZoom && wide.option.xAxis.axisLabel.show === false);
+  const t = build({ kind: 'trace3d', data: { rows: [{ X: 0, Y: 0, Z: 0 }] }, x: 'X', y: 'Y', z: 'Z', fallback: 'table' });
+  assert.ok(t.flat && t.preferTable);
+});

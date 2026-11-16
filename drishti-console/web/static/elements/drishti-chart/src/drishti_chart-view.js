@@ -25,7 +25,8 @@ import { h, stateBlock, showState, renderExplain, EventBus, bus as sharedBus, an
 import { normalizeSpec, kindOf } from './drishti_chart-spec.js';
 import { rowsOf } from './drishti_chart-data.js';
 import { chartTheme, formatterFor } from './drishti_chart-theme.js';
-import { tooltipElement, dataTable, legendElement, markSelection, addZoom, dragBrush, valueText } from './drishti_chart-parts.js';
+import { tooltipElement, dataTable, legendElement, markSelection, addZoom, dragBrush, rectBrush, idsInBox, valueText } from './drishti_chart-parts.js';
+import { FrameBar, frameValues, frameRows, reducedMotion } from './drishti_chart-frames.js';
 import { MapView } from './drishti_map-view.js';
 import { Studio } from './drishti_chart-studio.js';
 import { ChartIO } from './drishti_chart-io.js';
@@ -33,7 +34,7 @@ import { ChartIO } from './drishti_chart-io.js';
 /** Every event a chart emits (on chart.events and as DOM events drishti:<kebab-name> on its element). */
 export const CHART_EVENTS = Object.freeze(['rendered', 'markClicked', 'selectionChanged', 'legendToggled', 'zoomChanged', 'explainOpened', 'explainShown', 'exported',
   'tableToggled', 'dataUpdated', 'modeChanged', 'densityChanged', 'kindChanged', 'levelChanged', 'metricChanged', 'placeSelected', 'pointerMoved',
-  'error']);
+  'brushed', 'frameChanged', 'error']);
 
 /** The modes of a chart: card (g2 A, the default) and studio (g2 B). */
 export const CHART_MODES = Object.freeze(['card', 'studio']);
@@ -125,20 +126,24 @@ export class Chart extends ChartIO {
     this.legendHost = h(doc, 'div', { cls: 'dc-legend-host' });
     this.status = h(doc, 'div', { cls: 'dc-status' });
     this.sheet = h(doc, 'aside', { cls: 'dc-explain', attrs: { hidden: true, 'aria-label': 'Explain' } });
-    this.card = h(doc, 'div', { cls: 'dc-card' }, [this.head, this.subEl, this.main, this.legendHost, this.status, this.sheet]);
+    if (this.frameBar) { this.frameBar.stop(); }
+    this.frameBar = new FrameBar(doc, (i, o) => this.onFrame(i, o));
+    this.frameKey = null;
+    this.card = h(doc, 'div', { cls: 'dc-card' }, [this.head, this.subEl, this.frameBar.el, this.main, this.legendHost, this.status, this.sheet]);
     if (this.mode === 'studio') { this.studio = new Studio(this); } else { this.el.appendChild(this.card); }
     const height = this.o.height || this.spec.height || (this.spec.kind === 'map' ? 440 : 300);
     this.canvas.style.setProperty('height', height + 'px');
     this.engine = this.E.init(this.canvas, null, { renderer: this.o.renderer || 'canvas' });
     this.engine.on('click', (p) => this.onMark(p));
-    this.engine.getZr().on('click', (e) => { if (!e.target && this.selected.size && !this.map) { this.setSelection([]); } });
+    this.engine.getZr().on('click', (e) => { if (!e.target && this.selected.size && !this.map && !this.brushJust) { this.setSelection([]); this.clearRect(); } this.brushJust = false; });
     this.engine.on('datazoom', () => { const z = this.engine.getOption().dataZoom; const d = z && z[0]; this.zoomReset.hidden = !d || (d.start <= 0 && d.end >= 100); this.emit('zoomChanged', d ? { start: d.start, end: d.end } : {}); });
-    dragBrush(this.engine, () => this.zooms && !this.map, 'rgba(127, 127, 127, 0.18)');
+    dragBrush(this.engine, () => this.zooms && !this.map && !this.brushes(), 'rgba(127, 127, 127, 0.18)');
+    this.clearRect = rectBrush(this.engine, () => this.brushes() && !this.map, { fill: 'rgba(127, 127, 127, 0.14)', stroke: 'rgba(127, 127, 127, 0.8)' }, (box) => this.onRect(box));
     // the crosshair: a page follows it (pointerMoved: the category's index and its rows) and puts it back after a resize (pointAt)
     this.engine.on('updateAxisPointer', (ev) => {
       let i = ev.dataIndex;
       if ((i === null || i === undefined) && ev.axesInfo && ev.axesInfo.length) { i = ev.axesInfo[0].value; }
-      if (i !== null && i !== undefined && i !== this.pointed) { this.pointed = i; this.emit('pointerMoved', { index: i, row: this.rows[i] }); }
+      if (i !== null && i !== undefined && i !== this.pointed) { this.pointed = i; this.emit('pointerMoved', { index: i, row: (this.drawn || this.rows)[i] }); }
     });
     this.ro = new this.win.ResizeObserver(() => {
       if (!this.engine) { return; }
@@ -185,7 +190,7 @@ export class Chart extends ChartIO {
   /** @private the theme and formats of a drawing */
   env() {
     const s = this.spec, th = chartTheme({ element: this.el, density: this.density });
-    return { theme: th, fmt: formatterFor(s.format || (s.y && s.y.format) || (s.value && s.value.format)), xfmt: formatterFor(s.x && s.x.format) };
+    return { theme: th, fmt: formatterFor(s.format || (s.y && s.y.format) || (s.value && s.value.format)), xfmt: formatterFor(s.x && s.x.format), still: reducedMotion(this.win) };
   }
 
   /**
@@ -195,9 +200,15 @@ export class Chart extends ChartIO {
   draw() {
     if (!this.engine) { return; }
     if (this.map) { this.map.draw(); return; }
-    const t0 = Date.now(), s = this.spec, kind = kindOf(s.kind), env = this.envNow = this.env();
+    const t0 = Date.now(), s = this.spec, kind = kindOf(s.kind);
+    if (kind && kind.prepare && !kind.prepared) {            // a kind with an engine of its own to load first (trace3d: ECharts GL)
+      kind.prepared = Promise.resolve().then(() => kind.prepare()).catch(() => null).then(() => { kind.ready = true; });
+    }
+    if (kind && kind.prepare && !kind.ready) { kind.prepared.then(() => this.draw()); return; }
+    const env = this.envNow = this.env();
     let built;
-    try { built = kind.build(s, this.rows, env); } catch (e) { this.fail(e); return; }
+    const rows = this.drawn = this.framed();
+    try { built = kind.build(s, rows, env); } catch (e) { this.fail(e); return; }
     this.built = built;
     const option = built.option;
     option.backgroundColor = 'transparent';
@@ -205,9 +216,12 @@ export class Chart extends ChartIO {
     const zooms = kind.cartesian && addZoom(option, s, built, env.theme);
     markSelection(option, this.selected, env.theme);
     if (option.legend && this.hidden.size) { option.legend.selected = {}; this.hidden.forEach((n) => { option.legend.selected[n] = false; }); }
-    this.engine.setOption(option, true);
+    if (reducedMotion(this.win)) { option.animation = false; }
+    if (this.stepping) { option.animationDurationUpdate = Math.min(700, Math.max(200, (s.frames.interval || 900) * 0.7)); this.engine.setOption(option, { replaceMerge: ['series'] }); } else { this.engine.setOption(option, true); }
+    this.stepping = false;
     this.zooms = !!zooms;
     this.chrome(built, Date.now() - t0);
+    if (built.preferTable && !this.tableOpen && !this.tableChosen) { this.tableChosen = true; this.toggleTable(true); }   // a kind that cannot be drawn here: its table instead
     this.emit('rendered', { kind: s.kind, ms: Date.now() - t0 });
   }
 
@@ -262,7 +276,74 @@ export class Chart extends ChartIO {
 
   // ---- marks: Explain and selection -------------------------------------------------------------------------------------------------
   /** @private the rows a series' items index (a layer's own) */
-  seriesRows(s) { return this.built && this.built.layers && s && s.layer !== undefined ? this.built.layers[s.layer] : this.rows; }
+  seriesRows(s) { return this.built && this.built.layers && s && s.layer !== undefined ? this.built.layers[s.layer] : (this.drawn || this.rows); }
+
+  // ---- the brush and the frames -----------------------------------------------------------------------------------------------------
+  /** @private whether a drag draws the rectangle brush (spec.brush 'rect' or {type: 'rect'}) rather than zooming */
+  brushes() { const b = this.spec && this.spec.brush; return b === 'rect' || !!(b && b.type === 'rect'); }
+
+  /** @private a rectangle drawn: the points in it selected (and told to the link's channel), then 'brushed' */
+  onRect(box) {
+    const ids = this.built ? Array.from(new Set(idsInBox(this.built.option, box))) : [];
+    this.brushJust = true;
+    this.setSelection(ids);
+    this.emit('brushed', { box: box, ids: ids });
+  }
+
+  /**
+   * Clears the rectangle brush's rectangle and the selection it made.
+   * @returns {void}
+   */
+  clearBrush() { if (this.clearRect) { this.clearRect(); } this.setSelection([]); }
+
+  /** @private the rows of the frame shown (all of them when the spec has no frames); the bar follows new frames */
+  framed() {
+    const f = this.spec.frames;
+    if (!f || !f.field) { if (this.frameKey !== null) { this.frameBar.set(null, []); this.frameKey = null; } return this.rows; }
+    const values = frameValues(this.rows, f), key = JSON.stringify([f.field, f.mode, f.label, values]);
+    if (key !== this.frameKey) { this.frameKey = key; this.frameBar.set(f, values); }
+    return frameRows(this.rows, f, values, this.frameBar.index);
+  }
+
+  /** @private the bar chose a frame */
+  onFrame(i, o) {
+    this.stepping = true;
+    this.draw();
+    this.emit('frameChanged', { index: i, value: this.frameBar.values[i], playing: !!(o && o.playing) });
+  }
+
+  /**
+   * Shows a frame: by its value (a round, a date) or, given a number that is no frame's value, by its index.
+   * @param {*} v
+   * @returns {boolean} whether there is such a frame
+   */
+  setFrame(v) {
+    const vals = this.frameBar.values;
+    let i = vals.findIndex((x) => String(x) === String(v));
+    if (i < 0 && typeof v === 'number' && v >= 0 && v < vals.length) { i = v; }
+    if (i < 0) { return false; }
+    this.frameBar.stop();
+    this.frameBar.go(i);
+    return true;
+  }
+
+  /**
+   * The frame shown: its value and index (null when the spec has no frames).
+   * @returns {?{value: *, index: number, of: number}}
+   */
+  frame() { const b = this.frameBar; return b && b.values.length ? { value: b.values[b.index], index: b.index, of: b.values.length } : null; }
+
+  /**
+   * Plays the frames (Play's own action): false when the spec has none or the person asked for reduced motion.
+   * @returns {boolean}
+   */
+  play() { return this.frameBar ? this.frameBar.play() : false; }
+
+  /**
+   * Stops playing the frames.
+   * @returns {void}
+   */
+  pause() { if (this.frameBar) { this.frameBar.stop(); } }
 
   /**
    * The context of a mark, as the Explain hook gets it.
@@ -434,6 +515,7 @@ export class Chart extends ChartIO {
     if (this.watch) { this.watch.disconnect(); }
     if (this.ro) { this.ro.disconnect(); }
     if (this.timer) { this.win.clearTimeout(this.timer); }
+    if (this.frameBar) { this.frameBar.stop(); }
     if (this.engine) { this.engine.dispose(); this.engine = null; }
     this.el.textContent = '';
   }

@@ -14,75 +14,126 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /* drishti-genomics (at the one Drishti Elements version): the genomics module's domain library on Drishti Elements (KERNEL_AND_MODULES.md section 11.4; the custom-visual
-   SDK, DEVELOPER_GUIDE "A module's own visual"). It ships inside the module's .dmod (elements/drishti-genomics/), is served by the
-   console at /m/genomics/elements/drishti-genomics/<module version>/ while the module is on, and goes with it.
+   SDK, DEVELOPER_GUIDE "A module's own visual"). It ships inside the module (elements/drishti-genomics/), is served by the console at
+   /m/genomics/elements/drishti-genomics/<module version>/ while the module is on, and goes with it.
 
-   One visual, registered in the Elements' visual registry (drishti-chart's kinds: registerKind) and built from drishti-chart's own
-   primitives, so it gets the card, theme, tooltips, Explain, the data table, export and the keyboard like every kind:
+   Domain glue only: each kind maps the genomics module's answers and words onto drishti-chart's generic kinds and options (the owner's
+   rule: every drawing capability lives in the generic libraries; ELEMENTS.md section 7.4), so the card, theme, tooltips, Explain, the
+   data table, export, the keyboard and linked selection come with them, and nothing is drawn here.
 
-     genomics.lollipop   a protein's variants: one stem and head per variant at its amino acid position (PROTEIN_POS), the head's
-                         height the carriers (CARRIERS), its colour the impact (HIGH, MODERATE, LOW), the protein's domains as bands
+     genomics.manhattan   the association plot: drishti-chart's segmented scatter (the chromosomes as segments, the genome-wide and
+                          suggestive thresholds, the tallest peaks named by their gene)
+     genomics.oncoprint   the cohort matrix: drishti-chart's matrix (the alteration of each gene in each sample, in the server's order,
+                          with clinical tracks over the samples)
+     genomics.lollipop    a protein's variants: drishti-chart's lollipop, the head's colour the impact or, given the scan (EFFECT), what
+                          that exact change does in the laboratory; the protein's domains as bands
 
-   Nothing is drawn by hand (no canvas, svg or table of its own) and no colour is named: tones come from the theme. */
+   The protein kinds (protein.dms, protein.backbone, protein.landscape) are in drishti_protein.js. No colour is named: tones come from the
+   theme. */
 (function (root) {
   'use strict';
   const NS = (root.Drishti = root.Drishti || {});
   const E = (NS.elements = NS.elements || {});
-  const KIND = 'genomics.lollipop';
+  const VERSION = '0.1.0';
+  const KINDS = ['genomics.manhattan', 'genomics.oncoprint', 'genomics.lollipop'];
+  /** The words of the module: a variant's impact, an alteration, a measured effect, each to a theme tone. */
   const IMPACT_TONES = { HIGH: 'bad', MODERATE: 'warn', LOW: 'muted' };
+  const ALTERATION_TONES = { missense: 'link', truncating: 'bad', inframe: 'accent', splice: 'warn', amplification: 'pos', 'deep deletion': 'neg' };
+  const ALTERATION_ORDER = ['missense', 'truncating', 'inframe', 'splice', 'amplification', 'deep deletion'];
+  const EFFECT_TONES = { damaging: 'bad', intermediate: 'warn', tolerated: 'good', 'not measured': 'muted' };
+
+  /** A small chromosome set and sites for the gallery: three chromosomes, a peak on the second. */
+  function sampleManhattan() {
+    const rows = [], chroms = [{ CHROM: '1', FROM: 0, TO: 1000 }, { CHROM: '2', FROM: 1000, TO: 1800 }, { CHROM: '3', FROM: 1800, TO: 2400 }];
+    let s = 7;
+    const rnd = () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
+    for (let i = 0; i < 400; i++) {
+      const x = Math.floor(rnd() * 2400), peak = Math.abs(x - 1300) < 40 ? 9 * (1 - Math.abs(x - 1300) / 40) : 0;
+      rows.push({ VARIANT_ID: 'HX-' + i, X: x, NEG_LOG10_P: Math.round((-Math.log10(rnd()) * 0.8 + peak) * 100) / 100, GENE: peak > 4 ? 'HLXK7' : 'G' + (i % 40) });
+    }
+    return { kind: 'genomics.manhattan', title: 'Association with response (synthetic)', data: { rows: rows }, chromosomes: chroms, threshold: 7.3, suggestive: 5 };
+  }
+
+  /** The association plot. spec: rows {VARIANT_ID, X (the genome offset), NEG_LOG10_P, GENE}, chromosomes [{CHROM, FROM, TO}], threshold, suggestive, peaks (how many named). */
+  function manhattan(C, spec, rows, env) {
+    const t = C.num(spec.threshold) || 7.3;
+    const s = Object.assign({}, spec, { kind: 'segmented', id: spec.id || 'VARIANT_ID', x: Object.assign({ field: 'X', title: 'Chromosome' }, spec.x), y: Object.assign({ field: 'NEG_LOG10_P', title: '−log₁₀ p', min: 0 }, spec.y),
+      segments: { values: (spec.chromosomes || []).map((c) => ({ name: String(c.CHROM), from: C.num(c.FROM), to: C.num(c.TO) })), tones: ['link', 'muted'] },
+      thresholds: [{ value: t, label: 'genome-wide', tone: 'bad' }].concat(spec.suggestive ? [{ value: C.num(spec.suggestive), label: 'suggestive', tone: 'muted' }] : []),
+      labelTop: { field: 'GENE', n: spec.peaks || 4 } });
+    const b = C.buildSegmented(s, rows, env);
+    b.summary = 'Association plot' + (spec.title ? ' of ' + spec.title : '') + ': ' + rows.length + ' sites drawn on ' + (spec.chromosomes || []).length + ' chromosomes, ' + rows.filter((r) => C.num(r.NEG_LOG10_P) >= t).length + ' past the genome-wide line';
+    return b;
+  }
+
+  /** A small cohort for the gallery: four genes over 40 samples with two tracks. */
+  function sampleOncoprint() {
+    const genes = ['HLXK7', 'TRP2', 'KRX1', 'MYB4'], samples = [], rows = [], resp = {}, cluster = {};
+    for (let i = 0; i < 40; i++) { samples.push('S' + String(i + 1).padStart(2, '0')); }
+    samples.forEach((sid, i) => {
+      resp[sid] = i % 3 === 0 ? 'responder' : 'non-responder';
+      cluster[sid] = 'C' + (1 + (i % 4));
+      genes.forEach((g, j) => { if ((i * (j + 3)) % (5 + j) === 0) { rows.push({ SAMPLE_ID: sid, GENE: g, ALTERATION: ALTERATION_ORDER[(i + j) % 4] }); } });
+    });
+    return { kind: 'genomics.oncoprint', title: 'Who carries what (synthetic)', data: { rows: rows }, genes: genes, samples: samples,
+      tracks: [{ title: 'Response', values: resp }, { title: 'Cluster', values: cluster }] };
+  }
+
+  /** The cohort matrix. spec: rows {SAMPLE_ID, GENE, ALTERATION} (the non-empty cells), genes and samples (the server's order), tracks [{title, values: {sample: value}}]. */
+  function oncoprint(C, spec, rows, env) {
+    const s = Object.assign({}, spec, { kind: 'matrix', id: spec.id || 'CELL_ID',
+      x: { field: 'SAMPLE_ID', domain: spec.samples, labels: false, title: 'Samples' }, y: { field: 'GENE', domain: spec.genes },
+      value: { field: 'ALTERATION', order: ALTERATION_ORDER, tones: ALTERATION_TONES, title: 'Alteration' },
+      tracks: (spec.tracks || []).map((t) => Object.assign({ tones: { responder: 'good', 'non-responder': 'muted' } }, t)) });
+    const b = C.buildMatrix(s, rows.map((r) => Object.assign({ CELL_ID: r.SAMPLE_ID + ':' + r.GENE }, r)), env);
+    b.summary = 'Cohort matrix' + (spec.title ? ' of ' + spec.title : '') + ': ' + (spec.genes || []).length + ' genes over ' + (spec.samples || []).length + ' samples, ' + rows.length + ' alterations';
+    return b;
+  }
 
   /** A sample with data, for the gallery and the studio: synthetic variants along a 400 amino acid protein with two domains. */
-  function sample() {
-    const rows = [[24, 3, 'HIGH'], [61, 1, 'LOW'], [118, 5, 'MODERATE'], [175, 9, 'HIGH'], [176, 2, 'MODERATE'], [245, 7, 'HIGH'],
-      [248, 4, 'MODERATE'], [273, 6, 'HIGH'], [306, 1, 'LOW'], [337, 2, 'MODERATE']]
-      .map((r, i) => ({ VARIANT_ID: 'HX-S' + (i + 1), PROTEIN_POS: r[0], CARRIERS: r[1], IMPACT: r[2] }));
-    return { kind: KIND, title: 'Variants along TP53 (synthetic)', data: { rows: rows }, id: 'VARIANT_ID', length: 393,
-      domains: [{ NAME: 'DNA binding', FROM: 102, TO: 292 }, { NAME: 'Tetramerisation', FROM: 325, TO: 356 }] };
+  function sampleLollipop() {
+    const rows = [[24, 3, 'HIGH', 'damaging'], [61, 1, 'LOW', 'tolerated'], [118, 5, 'MODERATE', 'intermediate'], [175, 9, 'HIGH', 'damaging'], [176, 2, 'MODERATE', 'tolerated'],
+      [245, 7, 'HIGH', 'damaging'], [248, 4, 'MODERATE', 'intermediate'], [273, 6, 'HIGH', 'damaging'], [306, 1, 'LOW', 'not measured'], [337, 2, 'MODERATE', 'tolerated']]
+      .map((r, i) => ({ VARIANT_ID: 'HX-S' + (i + 1), PROTEIN_POS: r[0], CARRIERS: r[1], IMPACT: r[2], EFFECT: r[3] }));
+    return { kind: 'genomics.lollipop', title: 'Variants along HLXK7 (synthetic)', data: { rows: rows }, id: 'VARIANT_ID', length: 393, colourBy: 'scan',
+      domains: [{ NAME: 'Kinase', FROM: 102, TO: 292 }, { NAME: 'Tail', FROM: 325, TO: 356 }] };
   }
 
-  /**
-   * Builds the lollipop from drishti-chart's scatter (the heads, by impact), its annotation bands (the domains) and a thin bar series
-   * (the stems): spec x (default PROTEIN_POS), y (CARRIERS), colour (IMPACT), length (the protein's), domains [{NAME, FROM, TO}].
-   */
-  function buildLollipop(C, spec, rows, env) {
-    const xf = C.fieldOf(spec.x) || 'PROTEIN_POS', yf = C.fieldOf(spec.y) || 'CARRIERS', by = (spec.colour && spec.colour.field) || 'IMPACT';
-    const order = ['HIGH', 'MODERATE', 'LOW'].filter((k) => rows.some((r) => String(r[by]) === k));
-    const rest = C.members(rows, by).filter((k) => order.indexOf(k) < 0);
-    const bands = (spec.domains || []).map((d) => ({ type: 'band', axis: 'x', from: C.num(d.FROM), to: C.num(d.TO), label: d.NAME, tone: 'accent' }));
-    const s = Object.assign({}, spec, {
-      kind: 'scatter',
-      x: Object.assign({ field: xf, title: 'Protein position (aa)', min: 0, max: C.num(spec.length) || undefined }, typeof spec.x === 'object' ? spec.x : {}),
-      y: Object.assign({ field: yf, title: 'Carriers', min: 0 }, typeof spec.y === 'object' ? spec.y : {}),
-      colour: { field: by, domain: order.concat(rest) },
-      colourWhen: order.map((k) => ({ when: by + " == '" + k + "'", tone: IMPACT_TONES[k] })),
-      annotations: (spec.annotations || []).concat(bands)
-    });
-    const built = C.buildScatter(s, rows, env);
-    built.option.series.forEach((x) => {                     // each impact's heads and legend entry in its tone (HIGH bad, MODERATE warn, LOW muted)
-      if (IMPACT_TONES[x.name]) { x.itemStyle = Object.assign({}, x.itemStyle, { color: C.toneColour(env.theme, IMPACT_TONES[x.name]) }); }
-    });
-    built.legend = built.legend.map((l) => (IMPACT_TONES[l.name] ? Object.assign({}, l, { colour: C.toneColour(env.theme, IMPACT_TONES[l.name]) }) : l))
-      .sort((a, b) => (order.indexOf(a.name) < 0 ? 99 : order.indexOf(a.name)) - (order.indexOf(b.name) < 0 ? 99 : order.indexOf(b.name)));
-    const stems = { type: 'bar', name: 'stems', barWidth: 1, silent: true, z: 1, tooltip: { show: false },
-      itemStyle: { color: C.toneColour(env.theme, 'muted') },
-      data: rows.filter((r) => C.num(r[xf]) !== null && C.num(r[yf]) !== null).map((r) => [C.num(r[xf]), C.num(r[yf])]) };
-    built.option.series = [stems].concat(built.option.series);
-    built.summary = 'Lollipop chart' + (spec.title ? ' of ' + spec.title : '') + ': ' + rows.length + ' variants along a protein'
-      + (spec.length ? ' of ' + spec.length + ' amino acids' : '') + ', ' + (spec.domains || []).length + ' domains';
-    return built;
+  /** The lollipop. spec: rows {PROTEIN_POS, CARRIERS, IMPACT, EFFECT}, length, domains [{NAME, FROM, TO}], colourBy 'impact' (default) or 'scan' (EFFECT). */
+  function lollipop(C, spec, rows, env) {
+    const scan = spec.colourBy === 'scan';
+    const s = Object.assign({}, spec, { kind: 'lollipop', id: spec.id || 'VARIANT_ID',
+      x: Object.assign({ field: 'PROTEIN_POS', title: 'Protein position (aa)' }, typeof spec.x === 'object' ? spec.x : {}),
+      y: Object.assign({ field: 'CARRIERS', title: 'Carriers' }, typeof spec.y === 'object' ? spec.y : {}),
+      colour: scan ? { field: 'EFFECT', type: 'category', tones: EFFECT_TONES, order: ['damaging', 'intermediate', 'tolerated', 'not measured'], title: 'Measured effect' }
+        : { field: 'IMPACT', type: 'category', tones: IMPACT_TONES, order: ['HIGH', 'MODERATE', 'LOW'], title: 'Impact' },
+      bands: (spec.domains || []).map((d) => ({ name: d.NAME, from: d.FROM, to: d.TO })) });
+    const b = C.buildLollipop(s, rows, env);
+    b.summary = 'Lollipop chart' + (spec.title ? ' of ' + spec.title : '') + ': ' + rows.length + ' variants along a protein' + (spec.length ? ' of ' + spec.length + ' amino acids' : '')
+      + ', ' + (spec.domains || []).length + ' domains, coloured by ' + (scan ? 'the measured effect' : 'the impact');
+    return b;
   }
 
-  /** Registers the kind in drishti-chart's registry (once; a later call is a no-op). Returns the kinds registered now. */
+  /** Registers the kinds in drishti-chart's registry (once; a later call is a no-op). Returns the kinds registered now. */
   function install(C) {
-    if (C.kindOf(KIND)) { return []; }
-    C.registerKind(KIND, { build: (spec, rows, env) => buildLollipop(C, spec, rows, env), label: 'variant lollipop', family: 'genomics',
-      cartesian: true, sample: sample, studio: ['zoom'] });
-    return [KIND];
+    const defs = {
+      'genomics.manhattan': { build: (s, r, e) => manhattan(C, s, r, e), label: 'association plot', sample: sampleManhattan },
+      'genomics.oncoprint': { build: (s, r, e) => oncoprint(C, s, r, e), label: 'cohort matrix', sample: sampleOncoprint },
+      'genomics.lollipop': { build: (s, r, e) => lollipop(C, s, r, e), label: 'variant lollipop', sample: sampleLollipop }
+    };
+    return KINDS.filter((k) => {
+      if (C.kindOf(k)) { return false; }
+      C.registerKind(k, Object.assign({ family: 'genomics', cartesian: k !== 'genomics.oncoprint', studio: ['zoom'] }, defs[k]));
+      return true;
+    });
   }
 
   const ready = E.load ? E.load('drishti-chart').then((C) => { install(C); return C; }) : Promise.reject(new Error('drishti-core is not loaded'));
   E.visuals = E.visuals || {};
-  E.visuals.genomics = { module: 'genomics', library: 'drishti-genomics', version: '0.1.0', kinds: [KIND], sample: sample, ready: ready };
+  const was = E.visuals.genomics;
+  E.visuals.genomics = { module: 'genomics', library: 'drishti-genomics', version: VERSION, kinds: (was ? was.kinds : []).filter((k) => KINDS.indexOf(k) < 0).concat(KINDS),
+    sample: sampleLollipop, ready: was ? Promise.all([was.ready, ready]).then(() => ready) : ready };
   E.libs = E.libs || {};
-  E.libs['drishti-genomics'] = Object.freeze({ library: 'drishti-genomics', version: '0.1.0', KIND: KIND, sample: sample, install: install, buildLollipop: buildLollipop });
+  E.libs['drishti-genomics'] = Object.freeze(Object.assign({}, E.libs['drishti-genomics'], { library: 'drishti-genomics', version: VERSION, KINDS: KINDS, install: install,
+    sample: sampleLollipop, sampleManhattan: sampleManhattan, sampleOncoprint: sampleOncoprint, tones: { IMPACT_TONES, ALTERATION_TONES, EFFECT_TONES } }));
 }(typeof window !== 'undefined' ? window : globalThis));

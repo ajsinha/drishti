@@ -15,11 +15,24 @@
  */
 package org.helixlab.genomics;
 
+import com.ash.drishti.api.AsOf;
 import com.ash.drishti.kernel.api.module.DrishtiModule;
 import com.ash.drishti.kernel.api.module.ModuleContext;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
-/** The module's entry point: the kernel starts and stops it; everything it needs comes through the kernel API. */
+/**
+ * The module's entry point: the kernel starts and stops it; everything it needs comes through the kernel API. Started, it gives the
+ * showcase its source: the kinds of the packs genomics and protein as rows through the kernel's bindings (never a connection).
+ */
 public class GenomicsModule implements DrishtiModule {
+
+    private final ShowcaseData showcase;
+
+    /** The kernel registers the entry in the module's Spring context, which gives it the showcase's tables (ModuleConfig). */
+    public GenomicsModule(ShowcaseData showcase) {
+        this.showcase = showcase;
+    }
 
     @Override
     public String id() {
@@ -29,5 +42,21 @@ public class GenomicsModule implements DrishtiModule {
     @Override
     public void start(ModuleContext context) {
         context.audit("genomics.started", java.util.Map.of("data", context.dataDir().toString()));
+        if (showcase != null) {
+            showcase.attach((kind, sink) -> context.kinds().documents(kind, AsOf.LATEST, d -> {
+                if (!d.deleted() && d.data() != null && d.data().unwrap() instanceof Map<?, ?> m) {
+                    Map<String, Object> row = new LinkedHashMap<>();
+                    m.forEach((k, v) -> row.put(String.valueOf(k), v));
+                    sink.accept(row);
+                }
+            }));
+        }
+    }
+
+    @Override
+    public void stop() {
+        if (showcase != null) {
+            showcase.clear();
+        }
     }
 }

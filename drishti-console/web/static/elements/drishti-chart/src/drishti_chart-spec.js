@@ -114,6 +114,14 @@ export function checkSpec(spec) {
     try { compileCondition(m.when); } catch (e) { bad('$.marks[' + i + '].when', e.message); }
   });
   if (spec.zoom && spec.zoom.window && (!Array.isArray(spec.zoom.window) || spec.zoom.window.length !== 2)) { bad('$.zoom.window', 'a zoom window is [start, end] (indexes or values)'); }
+  (Array.isArray(spec.tracks) ? spec.tracks : spec.tracks === undefined ? [] : [null]).forEach((t, i) => {
+    if (!t || typeof t !== 'object') { bad('$.tracks' + (Array.isArray(spec.tracks) ? '[' + i + ']' : ''), 'tracks are a list of {axis, title, values or field}'); return; }
+    if (t.axis !== undefined && t.axis !== 'x' && t.axis !== 'y') { bad('$.tracks[' + i + '].axis', 'a track is on axis x or y'); }
+    if (!t.values && !t.field) { bad('$.tracks[' + i + ']', 'a track has values (by member) or a field'); }
+  });
+  if (spec.brush !== undefined && spec.brush !== 'rect' && !(spec.brush && spec.brush.type === 'rect')) { bad('$.brush', "the brush is 'rect' (a rectangle on a scatter)"); }
+  if (spec.frames !== undefined && !(spec.frames && typeof spec.frames.field === 'string')) { bad('$.frames', 'frames name their field: {field, play, interval, mode}'); }
+  if (spec.frames && spec.frames.mode !== undefined && ['only', 'upto'].indexOf(spec.frames.mode) < 0) { bad('$.frames.mode', 'a frame mode is only or upto'); }
   return out;
 }
 

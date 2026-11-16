@@ -80,7 +80,10 @@ def test_its_visual_is_in_the_gallery_while_hosted_and_gone_when_removed(client,
     v = next(x for x in listed if x["kind"] == "genomics.lollipop")
     assert v["module"] == "genomics" and v["library"] == "drishti-genomics" and v["title"] == "Variant lollipop"
     js = client.get(v["script"])
-    assert js.status_code == 200 and "registerKind" in js.text and "buildScatter" in js.text
+    assert js.status_code == 200 and "registerKind" in js.text and "buildLollipop" in js.text      # glue over drishti-chart's generic lollipop
+    mine = {x["kind"]: x for x in listed if x["module"] == "genomics"}
+    assert set(mine) == {"genomics.lollipop", "genomics.manhattan", "genomics.oncoprint", "protein.dms", "protein.backbone", "protein.landscape"}
+    assert mine["protein.dms"]["script"].endswith("/drishti_protein.js") and client.get(mine["protein.dms"]["script"]).status_code == 200
 
     removed = {"modules": [{"id": "genomics", "version": "0.1.0", "state": "removed", "title": "Genomics", "console": False,
                             "claims": ["function GENE", "function VARIANT", "function COHORT"]}], "fingerprint": "removed"}
@@ -100,3 +103,29 @@ def test_drishti_genomics_is_the_research_lens_with_no_finance():
     assert {"VARIANT", "GENE", "COHORT"} <= allow and not allow & {"CPTY", "BOOK", "DESK", "CRV", "VRES", "TRD"}
     assert ed["commands"]["words"].get("VAR") == "off" and ed["commands"]["words"].get("EXP") == "off"
     assert "domains" in ed["menus"]["top"]
+
+
+def test_the_showcase_pages_host_elements_only_and_read_the_module_api(client, tmp_path, monkeypatch):
+    """The showcase (GENOMICS_SHOWCASE.md): the board, its guided mode and the protein workbench are hosts for drishti-chart and drishti-grid
+    filled by drishti_genomics-showcase.js from the module's API; the words GWAS, PROTEIN and DESIGNS open them; nothing is drawn by hand."""
+    _fresh(client, tmp_path, monkeypatch, None)
+    client.get("/t")
+    p = client.app.state.module_parts.part("genomics")
+    for path, mode, cards in (("/m/genomics/showcase", "board", ("manhattan", "oncoprint", "map", "lollipop")),
+                              ("/m/genomics/showcase/guided", "guided", ("manhattan", "lollipop")),
+                              ("/m/genomics/gwas/RESPONSE", "board", ("manhattan",)),
+                              ("/m/genomics/proteins/HLXK7", "bench", ("dms", "backbone", "landscape", "rounds")),
+                              ("/m/genomics/designs/HLXK7", "bench", ("landscape",))):
+        page = client.get(path)
+        assert page.status_code == 200, (path, page.text[:300])
+        t = page.text
+        assert f'data-showcase="{mode}"' in t and 'data-genomics-api="/m/genomics/api/"' in t, path
+        assert all(f'data-chart="{c}"' in t for c in cards), path
+        assert "/m/genomics/elements/drishti-genomics/0.1.0/drishti_protein.js" in t and "drishti_genomics-showcase.js" in t
+    html = (p.folder / "console" / "pages" / "showcase.html").read_text(encoding="utf-8")
+    assert "<table" not in html and "<canvas" not in html and "<svg" not in html
+    for word, where in (("GWAS%20RESPONSE", "/m/genomics/gwas/RESPONSE"), ("PROTEIN%20HLXK7", "/m/genomics/proteins/HLXK7"), ("DESIGNS%20HLXK7", "/m/genomics/designs/HLXK7")):
+        go = client.get(f"/go?q={word}%20%3CGO%3E", follow_redirects=False)
+        assert go.headers["location"] == where, word
+    script = (p.folder / "console" / "static" / "js" / "drishti_genomics-showcase.js").read_text(encoding="utf-8")
+    assert "echarts" not in script and ".toFixed" not in script and "createElementNS" not in script

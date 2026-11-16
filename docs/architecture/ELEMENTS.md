@@ -594,6 +594,26 @@ gap left hollow); `sunburst` and `icicle` are modes of drishti-tree, usable as r
 level by level, every figure given by the host's `load`, never added); `rangeBrush` (drishti-chart, the drag that picks a range of an axis, for
 linked brushing). Every one has a **Playground page** in the gallery.
 
+**Added for the genomics showcase (drishti-chart and drishti-core's `Tour`)**, each generic and each with its gallery page and Node
+tests; a domain library builds on them and draws nothing itself:
+
+| Capability | Spec | Use beyond genomics |
+|---|---|---|
+| Heatmap **tracks** | `tracks: [{axis: 'x'\|'y', title, values \| field, type, tones, scale}]`, `trackSize` | a limit's status over desks, a book's region beside its rows |
+| Heatmap **category cells** | `value: {field, type: 'category', tones, order}`; `x.domain` (every column, an empty one too), `x.labels: false` | a status matrix (within, warning, breach) |
+| Heatmap **overview strip** | `zoom: true` or `{window: [first, last]}`: a window over the columns, the tracks move with it | a wide date-by-desk matrix on a phone |
+| Scatter **segments** | `segments: {values: [{name, from, to}], tones}`: one value axis of named segments, alternate bands and tones | sessions of a trading day, books along one axis |
+| Scatter **top labels** | `labelTop: {field, n}`: the tallest point of the top members named | the largest moves of the day by currency pair |
+| Scatter **surface** | `surface: {rows: [{x, y, value}], cell, scale}`: the server's grid of values under the points | a cost or risk surface under positions |
+| **Rectangle brush** | `brush: 'rect'`: the points inside are selected, told to the link's channel; event `brushed` {box, ids} | picking trades on a risk scatter |
+| **Frames** | `frames: {field, play, interval, mode: 'only'\|'upto', at, label, playText}`: a slider and Play (none with reduced motion); `setFrame`, `frame`, `play`, `pause`; event `frameChanged` | stepping dates of a history |
+| Box plot from the server's figures | `boxes: {low, q1, median, q3, high, n}` (field names; nothing computed in the page) | VaR by desk from the server's quantiles |
+| `segmented` kind | `x`, `y`, `segments: [{name, from, to}]`, `thresholds: [{value, label, tone}]` (the first colours the points past it), `labelTop` | moves through a trading day by session; the genomics association plot |
+| `matrix` kind | `x: {field, domain}`, `y: {field, domain}`, `value: {field, tones, order}`, `tracks`: category cells in the server's order, every column kept, the overview strip past 150 columns | a limit-status matrix by desk and day; the genomics cohort matrix |
+| `lollipop` kind | `x`, `y`, `colour` (a category's tones or a number's ramp with `legend` words), `length`, `bands` | events along a year |
+| `trace3d` kind | `x`, `y`, `z`, `order`, `colour`, `selected`, `turn` (none with reduced motion), `fallback: 'flat'\|'table'`: points joined in order on the vendored ECharts GL, loaded on first use; where WebGL is off, drawn flat or its table shown | a path or a trajectory |
+| drishti-core **`Tour`** | marks `data-tour-say`, `data-tour-steps`, controls `data-tour="back\|at\|next"`; `go`, `next`, `back`, `destroy` | a guided first visit of any board |
+
 **Vega-Lite.** A BI visual of `type: vega-lite` and a Python visual's Vega-Lite output are translated into the spec (`fromVegaLite`)
 and drawn by drishti-chart; Vega itself is not in the product (decision O1, section 14: two engines is dual machinery). A Python visual
 may return a drishti-chart spec directly (`output: drishti-chart`), the preferred form.
@@ -625,8 +645,10 @@ chart Drishti does not have ships a kind in its domain library (`elements/drisht
 and nothing is drawn by hand (conformance C2, C3). The library registers its kinds once and exposes `Drishti.elements.visuals.<module>`
 (`kinds`, `sample`, `ready`). The module declares them in `console/plugin.yaml` (`visuals:` with `kind`, `library`, `file`, `title`,
 `summary`); the console lists the hosted modules' visuals at `GET /api/elements/visuals` (a module off or removed, or off for the person,
-brings none), and **the gallery** loads each library and gives each kind a page from its `sample()`, under its library. The first such
-kind is the genomics module's `genomics.lollipop` (a protein's variants: stems and heads by impact tone, its domains as bands). The SDK's
+brings none), and **the gallery** loads each library and gives each kind a page from its `sample()`, under its library. The genomics
+module's library has six such kinds (`genomics.lollipop`, `genomics.manhattan`, `genomics.oncoprint`, `protein.dms`, `protein.backbone`,
+`protein.landscape`), each only glue: it maps the module's answers and words onto the generic kinds and options of section 7.2 (the
+owner's rule, 2026-11-16: any drawing capability a domain needs goes to the generic library first, documented and tested there). The SDK's
 template, `mvn drishti:visual -Dname=<name>`, writes a starting library and its `visuals:` entry ([DEVELOPER_GUIDE.md section
 1.8](../guides/DEVELOPER_GUIDE.md#18-a-modules-own-visual-the-custom-visual-sdk)).
 

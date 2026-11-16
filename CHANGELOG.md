@@ -137,6 +137,25 @@
   contacts are columns the generator writes. `drishti.py lake demo` builds them into the demo lake and the packs' Delta connectors serve
   them. New words: `GWAS`, `PROTEIN`, `DESIGNS` (and `SGENE`, `SSAMPLE`, `SVARIANT`, `VCALL`, `CNV`, `PATHWAY`, `RESIDUE`, `DMS`, `CONTACT`,
   `DMUT`, `DROUND`), each a plain record page that works on its own. The showcase's screens are a separate item.
+- **The genomics showcase, the screens (i6).** Two hero screens of the genomics module over the synthetic packs `genomics` and
+  `protein`: **the linked board** (`/m/genomics/showcase`, `GWAS RESPONSE`): the association plot, the figures, the cohort matrix with its
+  clinical tracks, the map of samples with a rectangle brush and cluster picks, the lollipop coloured by the laboratory scan and the
+  records; its **guided mode** (`/m/genomics/showcase/guided`), four steps with the presenter's sentence, the phone's way in; and **the
+  protein workbench** (`/m/genomics/proteins/HLXK7`, `PROTEIN HLXK7`, `DESIGNS HLXK7`): the deep mutational scan with fold, burial and
+  active-site tracks, the 3D backbone, one residue's changes, the design campaign over its fitness surface with *Play the rounds*,
+  activity by round and the leaderboard. One selection runs through every card and is a filter of the server's next call; every mark
+  opens the server's Explain with its records. The server computes everything (`GenomicsBoard`, `ProteinBench`, `ShowcaseController`:
+  twelve calls under `/api/v1/genomics/`, each with its Explain block), reading the fourteen kinds through the kernel's bindings; a
+  server without the packs says which kinds have no rows. The module's library `drishti-genomics` holds six kinds, each glue over
+  the generic Elements (`genomics.manhattan`, `genomics.oncoprint`, `genomics.lollipop`, `protein.dms`, `protein.backbone`,
+  `protein.landscape`). The genomics guide and tutorial (the three-minute demo, UI and CLI at each step) are updated.
+- **drishti-chart: tracks, brush, frames and two kinds.** Generic, each with its gallery page and Node tests: heatmap annotation tracks
+  on either axis, category cells, `domain` and hidden axis words, the overview strip; a scatter's segments, top labels and surface; the
+  rectangle brush (`brush: 'rect'`, event `brushed`, the selection told to the link's channel); frames (`frames: {field}` with a slider and
+  Play, none with reduced motion; event `frameChanged`); box plots from the server's figures (`boxes`); the `lollipop`, `segmented` (segments
+  and thresholds) and `matrix` (category cells in a given order) kinds, and the `trace3d` kind on the vendored ECharts GL (loaded on first
+  use; flat or its table without WebGL). **drishti-core: `Tour`**, a page walked in steps.
+  ELEMENTS_API and the gallery's catalogue regenerated.
 
 ## 2.9.11.i5 (2026-11-16)
 

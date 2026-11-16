@@ -276,6 +276,14 @@
         try { compileCondition(m.when); } catch (e) { bad('$.marks[' + i + '].when', e.message); }
       });
       if (spec.zoom && spec.zoom.window && (!Array.isArray(spec.zoom.window) || spec.zoom.window.length !== 2)) { bad('$.zoom.window', 'a zoom window is [start, end] (indexes or values)'); }
+      (Array.isArray(spec.tracks) ? spec.tracks : spec.tracks === undefined ? [] : [null]).forEach((t, i) => {
+        if (!t || typeof t !== 'object') { bad('$.tracks' + (Array.isArray(spec.tracks) ? '[' + i + ']' : ''), 'tracks are a list of {axis, title, values or field}'); return; }
+        if (t.axis !== undefined && t.axis !== 'x' && t.axis !== 'y') { bad('$.tracks[' + i + '].axis', 'a track is on axis x or y'); }
+        if (!t.values && !t.field) { bad('$.tracks[' + i + ']', 'a track has values (by member) or a field'); }
+      });
+      if (spec.brush !== undefined && spec.brush !== 'rect' && !(spec.brush && spec.brush.type === 'rect')) { bad('$.brush', "the brush is 'rect' (a rectangle on a scatter)"); }
+      if (spec.frames !== undefined && !(spec.frames && typeof spec.frames.field === 'string')) { bad('$.frames', 'frames name their field: {field, play, interval, mode}'); }
+      if (spec.frames && spec.frames.mode !== undefined && ['only', 'upto'].indexOf(spec.frames.mode) < 0) { bad('$.frames.mode', 'a frame mode is only or upto'); }
       return out;
     }
     function normalizeSpec(spec) {
@@ -337,11 +345,138 @@
     }
     return { "CHART_DENSITIES": CHART_DENSITIES, "chartTheme": chartTheme, "textStyle": textStyle, "axisOf": axisOf, "blend": __lib("drishti-core").blend, "alpha": __lib("drishti-core").alpha, "toneColour": __lib("drishti-core").toneColour, "rampColour": __lib("drishti-core").rampColour, "formatterFor": __lib("drishti-core").formatterFor };
   })();
+  /* ---- src/drishti_chart-tracks.js ---- */
+  __m["src/drishti_chart-tracks.js"] = (function () {
+    var fieldOf = __m["src/drishti_chart-data.js"].fieldOf, num = __m["src/drishti_chart-data.js"].num, members = __m["src/drishti_chart-data.js"].members;
+    var toneColour = __m["src/drishti_chart-theme.js"].toneColour, rampColour = __m["src/drishti_chart-theme.js"].rampColour, axisOf = __m["src/drishti_chart-theme.js"].axisOf, textStyle = __m["src/drishti_chart-theme.js"].textStyle;
+    function trackValues(t, rows, keyField, keys) {
+      if (t.values && typeof t.values === 'object') { return keys.map((k) => (t.values[k] === undefined ? null : t.values[k])); }
+      if (!t.field) { return keys.map(() => null); }
+      const first = new Map();
+      rows.forEach((r) => { const k = String(r[keyField]); if (!first.has(k)) { first.set(k, r[t.field]); } });
+      return keys.map((k) => (first.has(k) ? first.get(k) : null));
+    }
+    function trackColour(t, vals, th) {
+      const present = vals.filter((v) => v !== null && v !== undefined && v !== '');
+      const category = t.type ? t.type === 'category' : present.some((v) => num(v) === null);
+      if (category) {
+        const order = (t.order || []).map(String).concat(Array.from(new Set(present.map(String))).filter((v) => (t.order || []).map(String).indexOf(v) < 0).sort());
+        const tones = t.tones || {}, colourOf = (v) => toneColour(th, tones[v], order.indexOf(v));
+        return { category: true, colour: (v) => (v === null || v === undefined || v === '' ? null : colourOf(String(v))),
+          keys: order.filter((v) => present.some((p) => String(p) === v)).map((v) => ({ name: v, colour: colourOf(v), style: 'box' })) };
+      }
+      const nums = present.map(num).filter((v) => v !== null), div = t.scale === 'diverging', mid = t.mid || 0;
+      let lo = t.min !== undefined ? t.min : (nums.length ? Math.min.apply(null, nums) : 0), hi = t.max !== undefined ? t.max : (nums.length ? Math.max.apply(null, nums) : 1);
+      if (div) { const m = Math.max(Math.abs(lo - mid), Math.abs(hi - mid)) || 1; lo = mid - m; hi = mid + m; }
+      const ramp = div ? th.diverging : th.sequential;
+      return { category: false, keys: [], colour: (v) => (num(v) === null ? null : rampColour(ramp, num(v), lo, hi === lo ? lo + 1 : hi)) };
+    }
+    function categoryCells(spec, rows, th) {
+      const vf = fieldOf(spec.value) || fieldOf(spec.colour), v = spec.value || {};
+      const c = trackColour({ type: 'category', tones: v.tones, order: v.order }, rows.map((r) => r[vf]), th);
+      return { colour: c.colour, keys: c.keys, codes: c.keys.map((k) => k.name) };
+    }
+    function addTracks(option, spec, rows, axes, env, table) {
+      const tracks = (spec.tracks || []).filter((t) => t && (t.values || t.field));
+      if (!tracks.length) { return []; }
+      const th = env.theme, size = spec.trackSize || 10, gap = 2, pad = th.size.pad;
+      const xt = tracks.filter((t) => (t.axis || 'x') === 'x'), yt = tracks.filter((t) => t.axis === 'y');
+      const labelChars = Math.max.apply(null, axes.ys.map((y) => String(y).length).concat(xt.map((t) => String(t.title || '').length)).concat([2]));
+      const left = pad + 8 + Math.min(180, Math.round(labelChars * th.size.font * 0.62)), right = pad + 6 + yt.length * (size + gap) + (yt.length ? 4 : 0);
+      const top = pad + 6 + xt.length * (size + gap) + (xt.length ? 4 : 0), bottom = option.grid.bottom;
+      option.grid = [{ left: left, right: right, top: top, bottom: bottom, containLabel: false }];
+      option.xAxis = [Object.assign(option.xAxis, { gridIndex: 0 })];
+      option.yAxis = [Object.assign(option.yAxis, { gridIndex: 0 })];
+      const keys = [];
+      const hidden = (base) => axisOf(th, Object.assign({ axisLine: { show: false }, axisTick: { show: false }, splitLine: { show: false }, splitArea: { show: false } }, base));
+      const strip = (t, i, onX) => {
+        const members = onX ? axes.xs : axes.ys, vals = trackValues(t, rows, onX ? axes.xf : axes.yf, members), c = trackColour(t, vals, th), g = option.grid.length;
+        c.keys.forEach((k) => { if (!keys.some((x) => x.name === k.name)) { keys.push(k); } });
+        option.grid.push(onX ? { left: left, right: right, top: pad + 6 + i * (size + gap), height: size, containLabel: false }
+          : { top: top, bottom: bottom, right: pad + 6 + (yt.length - 1 - i) * (size + gap), width: size, containLabel: false });
+        const lab = { type: 'category', data: [t.title || ''], gridIndex: g };
+        option.xAxis.push(onX ? hidden({ type: 'category', data: members, gridIndex: g, axisLabel: { show: false } }) : hidden(Object.assign(lab, { position: 'top', axisLabel: { show: false } })));
+        option.yAxis.push(onX ? hidden(Object.assign(lab, { axisLabel: Object.assign(textStyle(th), { fontSize: Math.max(8, th.size.font - 1.5) }) })) : hidden({ type: 'category', data: members, inverse: true, gridIndex: g, axisLabel: { show: false } }));
+        option.series.push({ type: 'heatmap', name: t.title || '', field: t.field || null, track: true, xAxisIndex: g, yAxisIndex: g, itemStyle: { borderWidth: 0 },
+          emphasis: { itemStyle: { borderColor: th.ink, borderWidth: 1 } },
+          data: vals.map((v, j) => (v === null || v === undefined || v === '' ? null : { value: onX ? [j, 0, v] : [0, j, v], name: members[j], r: [], ids: [members[j]], itemStyle: { color: c.colour(v) } })).filter(Boolean) });
+        if (onX) { table.rows.push([t.title || ''].concat(vals).concat(yt.map(() => null))); } else { table.columns.push({ header: t.title || '' }); table.rows.forEach((r, j) => r.push(vals[j])); }
+      };
+      yt.forEach((t, i) => strip(t, i, false));
+      xt.forEach((t, i) => strip(t, i, true));
+      return keys;
+    }
+    return { "trackValues": trackValues, "trackColour": trackColour, "categoryCells": categoryCells, "addTracks": addTracks };
+  })();
+  /* ---- src/drishti_chart-overlays.js ---- */
+  __m["src/drishti_chart-overlays.js"] = (function () {
+    var num = __m["src/drishti_chart-data.js"].num, fieldOf = __m["src/drishti_chart-data.js"].fieldOf;
+    var toneColour = __m["src/drishti_chart-theme.js"].toneColour, rampColour = __m["src/drishti_chart-theme.js"].rampColour, alpha = __m["src/drishti_chart-theme.js"].alpha, textStyle = __m["src/drishti_chart-theme.js"].textStyle;
+    function segmentOf(segs, v) {
+      let lo = 0, hi = segs.length - 1;
+      while (lo <= hi) {
+        const m = (lo + hi) >> 1, s = segs[m];
+        if (v < num(s.from)) { hi = m - 1; } else if (v > num(s.to)) { lo = m + 1; } else { return m; }
+      }
+      return -1;
+    }
+    function scatterOverlays(option, spec, rows, env) {
+      const th = env.theme, points = option.series.filter((s) => s.type === 'scatter' && !s.helper);
+      const seg = spec.segments && Array.isArray(spec.segments.values) ? spec.segments : null;
+      if (seg && points.length) {
+        const segs = seg.values.slice().sort((a, b) => num(a.from) - num(b.from)), tones = seg.tones || ['link', 'muted'];
+        const colourOf = (i) => toneColour(th, tones[i % tones.length], i % tones.length);
+        if (!(spec.colour && spec.colour.field)) {
+          points.forEach((s) => s.data.forEach((it) => { const i = segmentOf(segs, it.value[0]); if (i >= 0 && !it.itemStyle) { it.itemStyle = { color: colourOf(i) }; } }));
+        }
+        const areas = segs.map((s, i) => [{ xAxis: num(s.from), itemStyle: { color: i % 2 ? alpha(th.faint, 0.07) : 'transparent' },
+          label: { show: seg.labels !== false, formatter: String(s.name), position: 'insideBottom', distance: -16, color: th.faint, fontFamily: th.font, fontSize: Math.max(8, th.size.font - 1.5) } }, { xAxis: num(s.to) }]);
+        const first = points[0];
+        first.markArea = { silent: true, data: (first.markArea ? first.markArea.data : []).concat(areas) };
+        const x = Array.isArray(option.xAxis) ? option.xAxis[0] : option.xAxis;
+        x.axisLabel = Object.assign({}, x.axisLabel, { show: false });
+        x.splitLine = { show: false };
+        x.min = num(segs[0].from);
+        x.max = num(segs[segs.length - 1].to);
+        option.grid.bottom = (option.grid.bottom || 10) + 14;
+      }
+      if (spec.labelTop && spec.labelTop.field) {
+        const lf = spec.labelTop.field, best = new Map();
+        points.forEach((s) => s.data.forEach((it) => {
+          const r = rows[it.r[0]], k = r && r[lf];
+          if (k === null || k === undefined || k === '') { return; }
+          const was = best.get(String(k));
+          if (!was || it.value[1] > was.value[1]) { best.set(String(k), { value: it.value, name: String(k) }); }
+        }));
+        const top = Array.from(best.values()).sort((a, b) => b.value[1] - a.value[1]).slice(0, spec.labelTop.n || 5);
+        option.series = option.series.concat([{ type: 'scatter', name: '__labels', helper: true, silent: true, z: 11, symbolSize: 0, tooltip: { show: false }, data: top.map((t) => ({ value: t.value, name: t.name })),
+          label: Object.assign({ show: true, position: 'top', distance: 6, formatter: (p) => p.name }, textStyle(th, th.ink), { fontWeight: 'bold' }) }]);
+      }
+      const sf = spec.surface;
+      if (sf && Array.isArray(sf.rows) && sf.rows.length) {
+        const xf = fieldOf(sf.x) || 'x', yf = fieldOf(sf.y) || 'y', vf = fieldOf(sf.value) || 'value', cell = sf.cell || [1, 1];
+        const vals = sf.rows.map((r) => num(r[vf])).filter((v) => v !== null), div = sf.scale === 'diverging', mid = sf.mid || 0;
+        let lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
+        if (div) { const m = Math.max(Math.abs(lo - mid), Math.abs(hi - mid)) || 1; lo = mid - m; hi = mid + m; }
+        const ramp = div ? th.diverging : th.sequential, op = sf.opacity || 0.55;
+        option.series = [{ type: 'custom', name: '__surface', helper: true, silent: true, z: 0, tooltip: { show: false },
+          data: sf.rows.map((r) => [num(r[xf]), num(r[yf]), num(r[vf])]).filter((d) => d[0] !== null && d[1] !== null && d[2] !== null),
+          renderItem: (params, api) => {
+            const x = api.value(0), y = api.value(1), a = api.coord([x - cell[0] / 2, y + cell[1] / 2]), b = api.coord([x + cell[0] / 2, y - cell[1] / 2]);
+            return { type: 'rect', shape: { x: a[0], y: a[1], width: b[0] - a[0] + 0.5, height: b[1] - a[1] + 0.5 }, style: { fill: alpha(rampColour(ramp, api.value(2), lo, hi === lo ? lo + 1 : hi), op) } };
+          } }].concat(option.series);
+      }
+      return [];
+    }
+    return { "segmentOf": segmentOf, "scatterOverlays": scatterOverlays };
+  })();
   /* ---- src/drishti_chart-kinds.js ---- */
   __m["src/drishti_chart-kinds.js"] = (function () {
     var registerKind = __m["src/drishti_chart-spec.js"].registerKind;
     var fieldOf = __m["src/drishti_chart-data.js"].fieldOf, num = __m["src/drishti_chart-data.js"].num, members = __m["src/drishti_chart-data.js"].members, bin = __m["src/drishti_chart-data.js"].bin, boxStats = __m["src/drishti_chart-data.js"].boxStats, compileCondition = __m["src/drishti_chart-data.js"].compileCondition;
     var toneColour = __m["src/drishti_chart-theme.js"].toneColour, axisOf = __m["src/drishti_chart-theme.js"].axisOf, textStyle = __m["src/drishti_chart-theme.js"].textStyle, alpha = __m["src/drishti_chart-theme.js"].alpha, formatterFor = __m["src/drishti_chart-theme.js"].formatterFor;
+    var addTracks = __m["src/drishti_chart-tracks.js"].addTracks, categoryCells = __m["src/drishti_chart-tracks.js"].categoryCells;
+    var scatterOverlays = __m["src/drishti_chart-overlays.js"].scatterOverlays;
     function rowId(spec, row, i) { const f = spec.id || (spec.live && spec.live.key); return f && row[f] !== undefined && row[f] !== null ? String(row[f]) : String(i); }
     function seriesDefs(spec, rows) {
       const yField = fieldOf(spec.y) || fieldOf(spec.value);
@@ -524,6 +659,7 @@
       const yAxis = yt === 'category' ? axisOf(th, { type: 'category', data: dom('y', yf), name: (spec.y && spec.y.title) || '', nameLocation: 'middle', nameGap: 60, inverse: true, splitLine: { show: true, lineStyle: { color: th.grid } } }) : yAxisOf(spec, env);
       const option = frame(spec, env, xAxis, yAxis, series);
       option.tooltip.trigger = 'item';
+      scatterOverlays(option, spec, rows, env);
       const cols = [{ header: (spec.x && spec.x.title) || xf, format: spec.x && spec.x.format }, { header: (spec.y && spec.y.title) || yf, format: spec.y && spec.y.format }]
         .concat(sf ? [{ header: (spec.size && spec.size.title) || sf }] : []).concat(by ? [{ header: by }] : []);
       const table = { columns: cols, rows: rows.map((r) => [r[xf], r[yf]].concat(sf ? [r[sf]] : []).concat(by ? [r[by]] : [])) };
@@ -581,8 +717,12 @@
         summary: 'Waterfall' + (spec.title ? ' of ' + spec.title : '') + ', ' + rows.length + ' steps from ' + (cats[0] || '') + ' to ' + (cats[cats.length - 1] || ''), legendStatic: true };
     }
     function buildBoxplot(spec, rows, env) {
-      const th = env.theme, cf = fieldOf(spec.category) || fieldOf(spec.x), vf = fieldOf(spec.value) || fieldOf(spec.y), cats = members(rows, cf);
-      const stats = cats.map((c) => { const idx = rows.map((r, i) => i).filter((i) => String(rows[i][cf]) === c); return { idx: idx, s: boxStats(idx.map((i) => rows[i][vf])) }; });
+      const th = env.theme, cf = fieldOf(spec.category) || fieldOf(spec.x), vf = fieldOf(spec.value) || fieldOf(spec.y), cats = members(rows, cf, spec.category && spec.category.order);
+      const bx = spec.boxes;          // the server's figures, one row per category: {low, q1, median, q3, high, n} name their fields
+      const stats = bx ? cats.map((c) => { const i = rows.findIndex((r) => String(r[cf]) === c), r = rows[i] || {};
+        const box = [bx.low, bx.q1, bx.median, bx.q3, bx.high].map((f) => num(r[f]));
+        return { idx: i < 0 ? [] : [i], s: box.some((v) => v === null) ? null : { box: box, outliers: [], n: bx.n ? num(r[bx.n]) : null } }; })
+        : cats.map((c) => { const idx = rows.map((r, i) => i).filter((i) => String(rows[i][cf]) === c); return { idx: idx, s: boxStats(idx.map((i) => rows[i][vf])) }; });
       const colour = toneColour(th, spec.tone || 'link');
       const series = [Object.assign({ type: 'boxplot', name: (spec.value && spec.value.title) || vf, field: vf, itemStyle: { color: alpha(colour, 0.18), borderColor: colour },
         data: stats.map((x) => ({ value: x.s ? x.s.box : [], r: x.idx, ids: x.idx.map((i) => rowId(spec, rows[i], i)) })) }, annotationMarks(spec, rows, th, { fmt: env.fmt, xfmt: env.xfmt })),
@@ -597,19 +737,47 @@
     }
     function buildHeatmap(spec, rows, env) {
       const th = env.theme, xf = fieldOf(spec.x), yf = fieldOf(spec.y), vf = fieldOf(spec.value) || fieldOf(spec.colour);
-      const xs = members(rows, xf, spec.x && spec.x.order), ys = members(rows, yf, spec.y && spec.y.order);
-      const data = rows.map((r, i) => ({ value: [xs.indexOf(String(r[xf])), ys.indexOf(String(r[yf])), num(r[vf])], r: [i], ids: [rowId(spec, r, i)] })).filter((d) => d.value[2] !== null);
-      const { lo, hi, visualMap } = heatScale(spec, data.map((d) => d.value[2]), env);
+      const dom = (k, f) => (spec[k] && Array.isArray(spec[k].domain) ? spec[k].domain.map(String) : members(rows, f, spec[k] && spec[k].order));   // domain: every member, with rows or not
+      const xs = dom('x', xf), ys = dom('y', yf);
+      const cats = spec.value && spec.value.type === 'category' ? categoryCells(spec, rows, th) : null;
+      const xi = new Map(xs.map((x, i) => [x, i])), yi = new Map(ys.map((y, i) => [y, i]));
+      const data = rows.map((r, i) => {
+        const v = cats ? (r[vf] === null || r[vf] === undefined || r[vf] === '' ? null : String(r[vf])) : num(r[vf]);
+        const item = { value: [xi.get(String(r[xf])), yi.get(String(r[yf])), v], r: [i], ids: [rowId(spec, r, i)] };
+        if (cats && v !== null) { item.itemStyle = { color: cats.colour(v) }; }
+        return item;
+      }).filter((d) => d.value[2] !== null && d.value[0] !== undefined && d.value[1] !== undefined);
+      const scale = cats ? null : heatScale(spec, data.map((d) => d.value[2]), env);
       const series = [{ type: 'heatmap', name: (spec.value && spec.value.title) || vf, field: vf, data: data, selectedMode: 'multiple', select: { itemStyle: { borderColor: th.tokens.accent, borderWidth: 2 } },
-        itemStyle: { borderColor: th.surface, borderWidth: 1 }, emphasis: { itemStyle: { borderColor: th.ink, borderWidth: 1 } },
-        label: { show: !!spec.labels, color: th.ink, fontFamily: th.font, fontSize: th.size.font - 1, formatter: (p) => env.fmt(p.value[2]) } }];
-      const option = frame(spec, env, Object.assign(xAxisOf(spec, env, 'category', xs), { splitArea: { show: false } }), Object.assign(axisOf(th, { type: 'category', data: ys, inverse: true }), { splitArea: { show: false } }), series, {
-        visualMap: visualMap });
-      option.grid.bottom = th.size.pad + 34;
+        itemStyle: { borderColor: th.surface, borderWidth: spec.gap === 0 ? 0 : 1 }, emphasis: { itemStyle: { borderColor: th.ink, borderWidth: 1 } }, progressive: 0,
+        label: { show: !!spec.labels, color: th.ink, fontFamily: th.font, fontSize: th.size.font - 1, formatter: (p) => (cats ? String(p.value[2]) : env.fmt(p.value[2])) } }];
+      const option = frame(spec, env, Object.assign(xAxisOf(spec, env, 'category', xs), { splitArea: { show: false } }), Object.assign(axisOf(th, { type: 'category', data: ys, inverse: true }), { splitArea: { show: false } }), series,
+        scale ? { visualMap: Object.assign(scale.visualMap, { seriesIndex: 0 }) } : {});
+      option.grid.bottom = th.size.pad + (scale ? 34 : 8);
+      if (spec.x && spec.x.labels === false) { option.xAxis.axisLabel = Object.assign({}, option.xAxis.axisLabel, { show: false }); }
+      if (spec.y && spec.y.labels === false) { option.yAxis.axisLabel = Object.assign({}, option.yAxis.axisLabel, { show: false }); }
       option.tooltip = { trigger: 'item', confine: true };
-      return { option: option, legend: [], table: { columns: [{ header: yf }].concat(xs.map((x) => ({ header: x, format: spec.value && spec.value.format }))),
-        rows: ys.map((y) => [y].concat(xs.map((x) => { const r = rows.find((q) => String(q[xf]) === x && String(q[yf]) === y); return r ? num(r[vf]) : null; }))) },
-      summary: 'Heatmap' + (spec.title ? ' of ' + spec.title : '') + ', ' + ys.length + ' rows by ' + xs.length + ' columns, from ' + env.fmt(lo) + ' to ' + env.fmt(hi) };
+      const cell = new Map();
+      rows.forEach((r) => { const k = String(r[xf]) + '\u0000' + String(r[yf]); if (!cell.has(k)) { cell.set(k, cats ? r[vf] : num(r[vf])); } });
+      const table = { columns: [{ header: yf }].concat(xs.map((x) => ({ header: x, format: !cats && spec.value && spec.value.format }))),
+        rows: ys.map((y) => [y].concat(xs.map((x) => { const v = cell.get(x + '\u0000' + y); return v === undefined ? null : v; }))) };
+      const keys = (cats ? cats.keys : []).concat(addTracks(option, spec, rows, { xs: xs, ys: ys, xf: xf, yf: yf }, env, table));
+      if (spec.zoom) { overviewStrip(option, spec, xs, th); }
+      const lo = scale ? scale.lo : null, hi = scale ? scale.hi : null;
+      return { option: option, legend: keys, legendStatic: keys.length > 0, table: table,
+        summary: 'Heatmap' + (spec.title ? ' of ' + spec.title : '') + ', ' + ys.length + ' rows by ' + xs.length + ' columns'
+          + (scale ? ', from ' + env.fmt(lo) + ' to ' + env.fmt(hi) : ', ' + keys.length + ' categories') + ((spec.tracks || []).length ? ', ' + spec.tracks.length + ' tracks' : '') };
+    }
+    function overviewStrip(option, spec, xs, th) {
+      const axes = (Array.isArray(option.xAxis) ? option.xAxis : [option.xAxis]).map((a, i) => ((a.data || []).length === xs.length ? i : -1)).filter((i) => i >= 0);
+      const w = spec.zoom && spec.zoom.window, win = Array.isArray(w) && w.length === 2 ? { startValue: Math.max(0, w[0]), endValue: Math.min(xs.length - 1, w[1]) } : {};
+      option.dataZoom = [Object.assign({ type: 'slider', xAxisIndex: axes, height: 18, bottom: 4, filterMode: 'none', borderColor: th.border, backgroundColor: th.surface2,
+        fillerColor: alpha(th.tokens.accent, 0.16), handleStyle: { color: th.tokens.accent, borderColor: th.tokens.accent }, textStyle: textStyle(th), brushSelect: false, showDetail: false }, win),
+      Object.assign({ type: 'inside', xAxisIndex: axes, filterMode: 'none', zoomOnMouseWheel: true, moveOnMouseMove: false }, win)];
+      const grids = Array.isArray(option.grid) ? option.grid : [option.grid];
+      const was = grids[0].bottom;
+      grids.forEach((g) => { if (g.bottom === was) { g.bottom = (was || 10) + 26; } });
+      if (option.visualMap) { option.visualMap.bottom = 28; }
     }
     function heatScale(spec, vals, env) {
       const th = env.theme, div = spec.scale && spec.scale.type === 'diverging', mid = div ? (spec.scale.mid || 0) : 0;
@@ -669,7 +837,7 @@
       registerKind('heatmap', { build: buildHeatmap, label: 'heatmap', cartesian: false });
       registerKind('candlestick', { build: buildCandlestick, label: 'candlestick', cartesian: true });
     }
-    return { "rowId": rowId, "seriesDefs": seriesDefs, "annotationMarks": annotationMarks, "frame": frame, "yAxisOf": yAxisOf, "xAxisOf": xAxisOf, "buildSeriesChart": buildSeriesChart, "buildScatter": buildScatter, "buildHistogram": buildHistogram, "buildWaterfall": buildWaterfall, "buildBoxplot": buildBoxplot, "buildHeatmap": buildHeatmap, "heatScale": heatScale, "buildCandlestick": buildCandlestick, "buildLayers": buildLayers, "registerAxisKinds": registerAxisKinds };
+    return { "rowId": rowId, "seriesDefs": seriesDefs, "annotationMarks": annotationMarks, "frame": frame, "yAxisOf": yAxisOf, "xAxisOf": xAxisOf, "buildSeriesChart": buildSeriesChart, "buildScatter": buildScatter, "buildHistogram": buildHistogram, "buildWaterfall": buildWaterfall, "buildBoxplot": buildBoxplot, "buildHeatmap": buildHeatmap, "overviewStrip": overviewStrip, "heatScale": heatScale, "buildCandlestick": buildCandlestick, "buildLayers": buildLayers, "registerAxisKinds": registerAxisKinds };
   })();
   /* ---- src/drishti_chart-calendar.js ---- */
   __m["src/drishti_chart-calendar.js"] = (function () {
@@ -711,7 +879,7 @@
       if (t === 'boxplot' && Array.isArray(v)) { const b = v.slice(-5); return 'low ' + fmt(b[0]) + ' · Q1 ' + fmt(b[1]) + ' · median ' + fmt(b[2]) + ' · Q3 ' + fmt(b[3]) + ' · high ' + fmt(b[4]); }
       if (t === 'candlestick' && Array.isArray(v)) { const b = v.slice(-4); return 'open ' + fmt(b[0]) + ' · close ' + fmt(b[1]) + ' · low ' + fmt(b[2]) + ' · high ' + fmt(b[3]); }
       if (t === 'custom' && Array.isArray(v)) { return fmt(v[0]) + ' to ' + fmt(v[1]) + ': ' + v[2]; }
-      if (t === 'heatmap' && Array.isArray(v)) { return fmt(v[2]); }
+      if (t === 'heatmap' && Array.isArray(v)) { return typeof v[2] === 'string' && isNaN(Number(v[2])) ? v[2] : fmt(v[2]); }
       if (t === 'pie') { return fmt(v) + (p.percent !== undefined ? ' · ' + p.percent + '%' : ''); }
       if (t === 'sankey') { return fmt(p.data && p.data.value !== undefined ? p.data.value : v); }
       if (Array.isArray(v)) { return t === 'scatter' && v.length === 3 ? fmt(v[2]) : fmt(v[1]); }
@@ -766,8 +934,9 @@
       const hits = [], has = (it) => it && it.ids && it.ids.some((x) => ids.has(x));
       let n = 0;
       option.series.forEach((s) => {
-        if (s.helper || s.name === '__selected') { return; }
+        if (s.helper || s.track || s.name === '__selected') { return; }
         if (s.type === 'pie') { (s.data || []).forEach((it) => { if (has(it)) { it.selected = true; n++; } }); return; }
+        if (s.type === 'scatter3D') { (s.data || []).forEach((it) => { if (has(it)) { it.symbolSize = th.size.symbol + 8; it.itemStyle = { color: th.tokens.accent, borderColor: th.ink, borderWidth: 1 }; n++; } }); return; }
         if (['line', 'bar', 'scatter', 'heatmap', 'custom', 'boxplot', 'candlestick'].indexOf(s.type) < 0 || s.coordinateSystem === 'geo') { return; }
         (s.data || []).forEach((it, i) => { if (has(it) && it.value !== null && it.value !== undefined) { hits.push(placeOf(s, it, i, option)); n++; } });
       });
@@ -819,6 +988,38 @@
       });
       return () => engine.setOption({ graphic: [{ id: 'dc-range', $action: 'remove' }] });
     }
+    function rectBrush(engine, active, look, onBrush) {
+      const zr = engine.getZr();
+      let from = null, moved = false;
+      const rect = (a, b) => engine.setOption({ graphic: [{ id: 'dc-rect', type: 'rect', silent: true, z: 100,
+        shape: { x: Math.min(a[0], b[0]), y: Math.min(a[1], b[1]), width: Math.abs(b[0] - a[0]), height: Math.abs(b[1] - a[1]) },
+        style: { fill: look.fill, stroke: look.stroke, lineWidth: 1, lineDash: [4, 3] } }] });
+      zr.on('mousedown', (e) => { from = active() && engine.containPixel('grid', [e.offsetX, e.offsetY]) ? [e.offsetX, e.offsetY] : null; moved = false; });
+      zr.on('mousemove', (e) => { if (from && (Math.abs(e.offsetX - from[0]) > 4 || Math.abs(e.offsetY - from[1]) > 4)) { moved = true; rect(from, [e.offsetX, e.offsetY]); } });
+      zr.on('mouseup', (e) => {
+        if (!from) { return; }
+        const a = from, b = [e.offsetX, e.offsetY];
+        from = null;
+        if (!moved) { return; }
+        const p = engine.convertFromPixel({ gridIndex: 0 }, a), q = engine.convertFromPixel({ gridIndex: 0 }, b);
+        if (!p || !q) { return; }
+        onBrush({ x: [Math.min(p[0], q[0]), Math.max(p[0], q[0])], y: [Math.min(p[1], q[1]), Math.max(p[1], q[1])] });
+      });
+      return () => engine.setOption({ graphic: [{ id: 'dc-rect', $action: 'remove' }] });
+    }
+    function idsInBox(option, box) {
+      const out = [];
+      (option.series || []).forEach((s) => {
+        if (s.helper || s.track || s.silent || (s.type !== 'scatter' && s.type !== 'effectScatter') || (s.xAxisIndex || 0) !== 0) { return; }
+        (s.data || []).forEach((it) => {
+          const v = it && it.value;
+          if (Array.isArray(v) && typeof v[0] === 'number' && typeof v[1] === 'number' && v[0] >= box.x[0] && v[0] <= box.x[1] && v[1] >= box.y[0] && v[1] <= box.y[1]) {
+            (it.ids || []).forEach((id) => out.push(id));
+          }
+        });
+      });
+      return out;
+    }
     function dragBrush(engine, active, colour) {
       const zr = engine.getZr();
       let from = null;
@@ -835,7 +1036,87 @@
         engine.dispatchAction({ type: 'dataZoom', dataZoomIndex: 0, startValue: a, endValue: b });
       });
     }
-    return { "valueText": valueText, "tooltipElement": tooltipElement, "dataTable": dataTable, "legendElement": legendElement, "markSelection": markSelection, "addZoom": addZoom, "svgOf": svgOf, "rangeBrush": rangeBrush, "dragBrush": dragBrush };
+    return { "valueText": valueText, "tooltipElement": tooltipElement, "dataTable": dataTable, "legendElement": legendElement, "markSelection": markSelection, "addZoom": addZoom, "svgOf": svgOf, "rangeBrush": rangeBrush, "rectBrush": rectBrush, "idsInBox": idsInBox, "dragBrush": dragBrush };
+  })();
+  /* ---- src/drishti_chart-frames.js ---- */
+  __m["src/drishti_chart-frames.js"] = (function () {
+    var h = __lib("drishti-core").h;
+    var num = __m["src/drishti_chart-data.js"].num;
+    function frameValues(rows, frames) {
+      if (!frames || !frames.field) { return []; }
+      if (Array.isArray(frames.values) && frames.values.length) { return frames.values.slice(); }
+      const seen = new Map();
+      rows.forEach((r) => { const v = r[frames.field]; if (v !== null && v !== undefined && !seen.has(String(v))) { seen.set(String(v), v); } });
+      const vals = Array.from(seen.values()), nums = vals.every((v) => num(v) !== null);
+      return vals.sort((a, b) => (nums ? num(a) - num(b) : String(a) < String(b) ? -1 : String(a) > String(b) ? 1 : 0));
+    }
+    function frameRows(rows, frames, values, index) {
+      if (!frames || !frames.field || !values.length) { return rows; }
+      const i = Math.max(0, Math.min(values.length - 1, index)), keep = new Set((frames.mode === 'upto' ? values.slice(0, i + 1) : [values[i]]).map(String));
+      return rows.filter((r) => keep.has(String(r[frames.field])));
+    }
+    function reducedMotion(win) { return !!(win && win.matchMedia && win.matchMedia('(prefers-reduced-motion: reduce)').matches); }
+    class FrameBar {
+      constructor(doc, onFrame) {
+        this.doc = doc;
+        this.win = doc.defaultView;
+        this.onFrame = onFrame;
+        this.values = [];
+        this.index = 0;
+        this.timer = 0;
+        this.playBtn = h(doc, 'button', { cls: 'dc-tool dc-play', text: '▶ Play', attrs: { type: 'button', 'data-tool': 'play', 'aria-pressed': 'false' }, on: { click: () => (this.timer ? this.stop() : this.play()) } });
+        this.slider = h(doc, 'input', { cls: 'dc-frame-slider', attrs: { type: 'range', min: '0', max: '0', step: '1', value: '0', 'aria-label': 'Frame' },
+          on: { input: (e) => { this.stop(); this.go(Number(e.currentTarget.value)); } } });
+        this.labelEl = h(doc, 'span', { cls: 'dc-frame-label', attrs: { 'aria-live': 'polite' } });
+        this.el = h(doc, 'div', { cls: 'dc-frames', attrs: { hidden: true, role: 'group', 'aria-label': 'Frames' } }, [this.playBtn, this.slider, this.labelEl]);
+      }
+      set(frames, values) {
+        const was = this.values[this.index];
+        this.frames = frames;
+        this.values = values;
+        this.el.hidden = !frames || !values.length;
+        if (this.el.hidden) { this.stop(); return 0; }
+        let i = values.findIndex((v) => String(v) === String(was));
+        if (i < 0 && frames.at !== undefined) { i = values.findIndex((v) => String(v) === String(frames.at)); }
+        this.index = Math.max(0, i);
+        const still = reducedMotion(this.win);
+        this.playBtn.hidden = frames.play === false;
+        this.playBtn.textContent = '▶ ' + (frames.playText || 'Play');
+        this.playBtn.disabled = still;
+        this.playBtn.title = still ? 'Play is off: this system asks for reduced motion (the slider steps the frames)' : 'Play the frames in order';
+        this.slider.max = String(values.length - 1);
+        this.show();
+        return this.index;
+      }
+      show() {
+        const v = this.values[this.index], words = (this.frames.label ? this.frames.label + ' ' : '') + (v === undefined ? '' : String(v));
+        this.slider.value = String(this.index);
+        this.slider.setAttribute('aria-valuetext', words);
+        this.labelEl.textContent = words + ' (' + (this.index + 1) + ' of ' + this.values.length + ')';
+      }
+      go(i) {
+        this.index = Math.max(0, Math.min(this.values.length - 1, i));
+        this.show();
+        this.onFrame(this.index, { playing: !!this.timer });
+      }
+      play() {
+        if (!this.values.length || reducedMotion(this.win) || this.timer) { return false; }
+        if (this.index >= this.values.length - 1) { this.go(0); }
+        this.playBtn.textContent = '❚❚ Pause';
+        this.playBtn.setAttribute('aria-pressed', 'true');
+        this.timer = this.win.setInterval(() => {
+          if (this.index >= this.values.length - 1) { this.stop(); return; }
+          this.go(this.index + 1);
+        }, Math.max(120, this.frames.interval || 900));
+        return true;
+      }
+      stop() {
+        if (this.timer) { this.win.clearInterval(this.timer); this.timer = 0; }
+        this.playBtn.textContent = '▶ ' + ((this.frames && this.frames.playText) || 'Play');
+        this.playBtn.setAttribute('aria-pressed', 'false');
+      }
+    }
+    return { "frameValues": frameValues, "frameRows": frameRows, "reducedMotion": reducedMotion, "FrameBar": FrameBar };
   })();
   /* ---- src/drishti_world-regions.js ---- */
   __m["src/drishti_world-regions.js"] = (function () {
@@ -2308,13 +2589,14 @@
     var normalizeSpec = __m["src/drishti_chart-spec.js"].normalizeSpec, kindOf = __m["src/drishti_chart-spec.js"].kindOf;
     var rowsOf = __m["src/drishti_chart-data.js"].rowsOf;
     var chartTheme = __m["src/drishti_chart-theme.js"].chartTheme, formatterFor = __m["src/drishti_chart-theme.js"].formatterFor;
-    var tooltipElement = __m["src/drishti_chart-parts.js"].tooltipElement, dataTable = __m["src/drishti_chart-parts.js"].dataTable, legendElement = __m["src/drishti_chart-parts.js"].legendElement, markSelection = __m["src/drishti_chart-parts.js"].markSelection, addZoom = __m["src/drishti_chart-parts.js"].addZoom, dragBrush = __m["src/drishti_chart-parts.js"].dragBrush, valueText = __m["src/drishti_chart-parts.js"].valueText;
+    var tooltipElement = __m["src/drishti_chart-parts.js"].tooltipElement, dataTable = __m["src/drishti_chart-parts.js"].dataTable, legendElement = __m["src/drishti_chart-parts.js"].legendElement, markSelection = __m["src/drishti_chart-parts.js"].markSelection, addZoom = __m["src/drishti_chart-parts.js"].addZoom, dragBrush = __m["src/drishti_chart-parts.js"].dragBrush, rectBrush = __m["src/drishti_chart-parts.js"].rectBrush, idsInBox = __m["src/drishti_chart-parts.js"].idsInBox, valueText = __m["src/drishti_chart-parts.js"].valueText;
+    var FrameBar = __m["src/drishti_chart-frames.js"].FrameBar, frameValues = __m["src/drishti_chart-frames.js"].frameValues, frameRows = __m["src/drishti_chart-frames.js"].frameRows, reducedMotion = __m["src/drishti_chart-frames.js"].reducedMotion;
     var MapView = __m["src/drishti_map-view.js"].MapView;
     var Studio = __m["src/drishti_chart-studio.js"].Studio;
     var ChartIO = __m["src/drishti_chart-io.js"].ChartIO;
     const CHART_EVENTS = Object.freeze(['rendered', 'markClicked', 'selectionChanged', 'legendToggled', 'zoomChanged', 'explainOpened', 'explainShown', 'exported',
       'tableToggled', 'dataUpdated', 'modeChanged', 'densityChanged', 'kindChanged', 'levelChanged', 'metricChanged', 'placeSelected', 'pointerMoved',
-      'error']);
+      'brushed', 'frameChanged', 'error']);
     const CHART_MODES = Object.freeze(['card', 'studio']);
     class Chart extends ChartIO {
       constructor(el, spec, o) {
@@ -2373,19 +2655,23 @@
         this.legendHost = h(doc, 'div', { cls: 'dc-legend-host' });
         this.status = h(doc, 'div', { cls: 'dc-status' });
         this.sheet = h(doc, 'aside', { cls: 'dc-explain', attrs: { hidden: true, 'aria-label': 'Explain' } });
-        this.card = h(doc, 'div', { cls: 'dc-card' }, [this.head, this.subEl, this.main, this.legendHost, this.status, this.sheet]);
+        if (this.frameBar) { this.frameBar.stop(); }
+        this.frameBar = new FrameBar(doc, (i, o) => this.onFrame(i, o));
+        this.frameKey = null;
+        this.card = h(doc, 'div', { cls: 'dc-card' }, [this.head, this.subEl, this.frameBar.el, this.main, this.legendHost, this.status, this.sheet]);
         if (this.mode === 'studio') { this.studio = new Studio(this); } else { this.el.appendChild(this.card); }
         const height = this.o.height || this.spec.height || (this.spec.kind === 'map' ? 440 : 300);
         this.canvas.style.setProperty('height', height + 'px');
         this.engine = this.E.init(this.canvas, null, { renderer: this.o.renderer || 'canvas' });
         this.engine.on('click', (p) => this.onMark(p));
-        this.engine.getZr().on('click', (e) => { if (!e.target && this.selected.size && !this.map) { this.setSelection([]); } });
+        this.engine.getZr().on('click', (e) => { if (!e.target && this.selected.size && !this.map && !this.brushJust) { this.setSelection([]); this.clearRect(); } this.brushJust = false; });
         this.engine.on('datazoom', () => { const z = this.engine.getOption().dataZoom; const d = z && z[0]; this.zoomReset.hidden = !d || (d.start <= 0 && d.end >= 100); this.emit('zoomChanged', d ? { start: d.start, end: d.end } : {}); });
-        dragBrush(this.engine, () => this.zooms && !this.map, 'rgba(127, 127, 127, 0.18)');
+        dragBrush(this.engine, () => this.zooms && !this.map && !this.brushes(), 'rgba(127, 127, 127, 0.18)');
+        this.clearRect = rectBrush(this.engine, () => this.brushes() && !this.map, { fill: 'rgba(127, 127, 127, 0.14)', stroke: 'rgba(127, 127, 127, 0.8)' }, (box) => this.onRect(box));
         this.engine.on('updateAxisPointer', (ev) => {
           let i = ev.dataIndex;
           if ((i === null || i === undefined) && ev.axesInfo && ev.axesInfo.length) { i = ev.axesInfo[0].value; }
-          if (i !== null && i !== undefined && i !== this.pointed) { this.pointed = i; this.emit('pointerMoved', { index: i, row: this.rows[i] }); }
+          if (i !== null && i !== undefined && i !== this.pointed) { this.pointed = i; this.emit('pointerMoved', { index: i, row: (this.drawn || this.rows)[i] }); }
         });
         this.ro = new this.win.ResizeObserver(() => {
           if (!this.engine) { return; }
@@ -2421,14 +2707,20 @@
       }
       env() {
         const s = this.spec, th = chartTheme({ element: this.el, density: this.density });
-        return { theme: th, fmt: formatterFor(s.format || (s.y && s.y.format) || (s.value && s.value.format)), xfmt: formatterFor(s.x && s.x.format) };
+        return { theme: th, fmt: formatterFor(s.format || (s.y && s.y.format) || (s.value && s.value.format)), xfmt: formatterFor(s.x && s.x.format), still: reducedMotion(this.win) };
       }
       draw() {
         if (!this.engine) { return; }
         if (this.map) { this.map.draw(); return; }
-        const t0 = Date.now(), s = this.spec, kind = kindOf(s.kind), env = this.envNow = this.env();
+        const t0 = Date.now(), s = this.spec, kind = kindOf(s.kind);
+        if (kind && kind.prepare && !kind.prepared) {            // a kind with an engine of its own to load first (trace3d: ECharts GL)
+          kind.prepared = Promise.resolve().then(() => kind.prepare()).catch(() => null).then(() => { kind.ready = true; });
+        }
+        if (kind && kind.prepare && !kind.ready) { kind.prepared.then(() => this.draw()); return; }
+        const env = this.envNow = this.env();
         let built;
-        try { built = kind.build(s, this.rows, env); } catch (e) { this.fail(e); return; }
+        const rows = this.drawn = this.framed();
+        try { built = kind.build(s, rows, env); } catch (e) { this.fail(e); return; }
         this.built = built;
         const option = built.option;
         option.backgroundColor = 'transparent';
@@ -2436,9 +2728,12 @@
         const zooms = kind.cartesian && addZoom(option, s, built, env.theme);
         markSelection(option, this.selected, env.theme);
         if (option.legend && this.hidden.size) { option.legend.selected = {}; this.hidden.forEach((n) => { option.legend.selected[n] = false; }); }
-        this.engine.setOption(option, true);
+        if (reducedMotion(this.win)) { option.animation = false; }
+        if (this.stepping) { option.animationDurationUpdate = Math.min(700, Math.max(200, (s.frames.interval || 900) * 0.7)); this.engine.setOption(option, { replaceMerge: ['series'] }); } else { this.engine.setOption(option, true); }
+        this.stepping = false;
         this.zooms = !!zooms;
         this.chrome(built, Date.now() - t0);
+        if (built.preferTable && !this.tableOpen && !this.tableChosen) { this.tableChosen = true; this.toggleTable(true); }   // a kind that cannot be drawn here: its table instead
         this.emit('rendered', { kind: s.kind, ms: Date.now() - t0 });
       }
       tooltipStyle(env) {
@@ -2477,7 +2772,39 @@
         this.events.emit(name, detail || {});
         if (this.el && this.win.CustomEvent) { this.el.dispatchEvent(new this.win.CustomEvent('drishti:' + name.replace(/[A-Z]/g, (c) => '-' + c.toLowerCase()), { detail: detail || {}, bubbles: true })); }
       }
-      seriesRows(s) { return this.built && this.built.layers && s && s.layer !== undefined ? this.built.layers[s.layer] : this.rows; }
+      seriesRows(s) { return this.built && this.built.layers && s && s.layer !== undefined ? this.built.layers[s.layer] : (this.drawn || this.rows); }
+      brushes() { const b = this.spec && this.spec.brush; return b === 'rect' || !!(b && b.type === 'rect'); }
+      onRect(box) {
+        const ids = this.built ? Array.from(new Set(idsInBox(this.built.option, box))) : [];
+        this.brushJust = true;
+        this.setSelection(ids);
+        this.emit('brushed', { box: box, ids: ids });
+      }
+      clearBrush() { if (this.clearRect) { this.clearRect(); } this.setSelection([]); }
+      framed() {
+        const f = this.spec.frames;
+        if (!f || !f.field) { if (this.frameKey !== null) { this.frameBar.set(null, []); this.frameKey = null; } return this.rows; }
+        const values = frameValues(this.rows, f), key = JSON.stringify([f.field, f.mode, f.label, values]);
+        if (key !== this.frameKey) { this.frameKey = key; this.frameBar.set(f, values); }
+        return frameRows(this.rows, f, values, this.frameBar.index);
+      }
+      onFrame(i, o) {
+        this.stepping = true;
+        this.draw();
+        this.emit('frameChanged', { index: i, value: this.frameBar.values[i], playing: !!(o && o.playing) });
+      }
+      setFrame(v) {
+        const vals = this.frameBar.values;
+        let i = vals.findIndex((x) => String(x) === String(v));
+        if (i < 0 && typeof v === 'number' && v >= 0 && v < vals.length) { i = v; }
+        if (i < 0) { return false; }
+        this.frameBar.stop();
+        this.frameBar.go(i);
+        return true;
+      }
+      frame() { const b = this.frameBar; return b && b.values.length ? { value: b.values[b.index], index: b.index, of: b.values.length } : null; }
+      play() { return this.frameBar ? this.frameBar.play() : false; }
+      pause() { if (this.frameBar) { this.frameBar.stop(); } }
       markContext(p) {
         const opt = this.built ? this.built.option : {}, s = (opt.series || [])[p.seriesIndex] || {}, item = p.data || {}, rows = this.seriesRows(s);
         const env = this.envNow || this.env();
@@ -2581,6 +2908,7 @@
         if (this.watch) { this.watch.disconnect(); }
         if (this.ro) { this.ro.disconnect(); }
         if (this.timer) { this.win.clearTimeout(this.timer); }
+        if (this.frameBar) { this.frameBar.stop(); }
         if (this.engine) { this.engine.dispose(); this.engine = null; }
         this.el.textContent = '';
       }
@@ -2876,6 +3204,119 @@
       registerKind('density', { build: buildDensity, label: 'density (square or hex bins)', cartesian: true });
     }
     return { "kernelDensity": kernelDensity, "tenorDays": tenorDays, "buildRadar": buildRadar, "buildViolin": buildViolin, "buildRidgeline": buildRidgeline, "buildCurve": buildCurve, "buildDensity": buildDensity, "registerDistributionKinds": registerDistributionKinds };
+  })();
+  /* ---- src/drishti_chart-kinds4.js ---- */
+  __m["src/drishti_chart-kinds4.js"] = (function () {
+    var fieldOf = __m["src/drishti_chart-data.js"].fieldOf, num = __m["src/drishti_chart-data.js"].num;
+    var toneColour = __m["src/drishti_chart-theme.js"].toneColour, alpha = __m["src/drishti_chart-theme.js"].alpha, textStyle = __m["src/drishti_chart-theme.js"].textStyle;
+    var registerKind = __m["src/drishti_chart-spec.js"].registerKind;
+    var rowId = __m["src/drishti_chart-kinds.js"].rowId, buildScatter = __m["src/drishti_chart-kinds.js"].buildScatter, buildHeatmap = __m["src/drishti_chart-kinds.js"].buildHeatmap;
+    var trackColour = __m["src/drishti_chart-tracks.js"].trackColour;
+    var loadScript = __lib("drishti-core").loadScript, staticUrl = __lib("drishti-core").staticUrl;
+    function colourScale(spec, rows, th) {
+      const c = spec.colour || {}, f = fieldOf(c);
+      if (!f) { return null; }
+      const t = trackColour({ type: c.type, tones: c.tones, order: c.order || c.domain, scale: c.scale, mid: c.mid, min: c.min, max: c.max }, rows.map((r) => r[f]), th);
+      const keys = t.category ? t.keys : Array.isArray(c.legend) && c.legend.length ? c.legend.map((k) => ({ name: String(k.name), colour: t.colour(k.value), style: 'dot' }))
+        : [{ name: (c.title || f) + ': low to high', colour: th.sequential[2], style: 'box' }];
+      return Object.assign(t, { field: f, title: c.title || f, legendKeys: keys });
+    }
+    function buildLollipop(spec, rows, env) {
+      const th = env.theme, xf = fieldOf(spec.x) || 'x', yf = fieldOf(spec.y) || 'y', cs = colourScale(spec, rows, th);
+      const bands = (spec.bands || []).map((b) => ({ type: 'band', axis: 'x', from: num(b.from), to: num(b.to), label: b.name, tone: b.tone || 'accent' }));
+      const s = Object.assign({}, spec, { kind: 'scatter', colour: undefined, colourWhen: undefined,
+        x: Object.assign({ field: xf, min: 0, max: num(spec.length) || undefined }, typeof spec.x === 'object' ? spec.x : {}),
+        y: Object.assign({ field: yf, min: 0 }, typeof spec.y === 'object' ? spec.y : {}), annotations: (spec.annotations || []).concat(bands) });
+      const built = buildScatter(s, rows, env), heads = built.option.series[0];
+      heads.name = (spec.y && spec.y.title) || yf;
+      heads.symbolSize = th.size.symbol + 4;
+      if (cs) {
+        heads.data.forEach((it) => { const c = cs.colour(rows[it.r[0]][cs.field]); if (c) { it.itemStyle = { color: c }; } });
+        built.legend = cs.legendKeys;
+        built.legendStatic = true;
+        built.table.columns.push({ header: cs.title });
+        built.table.rows.forEach((r, i) => r.push(rows[i][cs.field]));
+      }
+      const stems = { type: 'bar', name: '__stems', helper: true, barWidth: 1, silent: true, z: 1, tooltip: { show: false }, itemStyle: { color: toneColour(th, 'muted') },
+        data: rows.filter((r) => num(r[xf]) !== null && num(r[yf]) !== null).map((r) => [num(r[xf]), num(r[yf])]) };
+      built.option.series = [stems].concat(built.option.series);
+      built.summary = 'Lollipop chart' + (spec.title ? ' of ' + spec.title : '') + ': ' + rows.length + ' marks along an axis' + (spec.length ? ' of ' + spec.length : '') + (bands.length ? ', ' + bands.length + ' bands' : '');
+      return built;
+    }
+    function canDraw3d(root) {
+      const w = root || (typeof window !== 'undefined' ? window : null);
+      if (!w || !w.echarts || !w.echarts.graphicGL || !w.document) { return false; }
+      if (w.__drishtiWebGL === undefined) {
+        try { const c = w.document.createElement('canvas'); w.__drishtiWebGL = !!(c.getContext('webgl') || c.getContext('experimental-webgl')); } catch (e) { w.__drishtiWebGL = false; }
+      }
+      return w.__drishtiWebGL;
+    }
+    let gl3d = null;
+    function ensure3d() {
+      if (typeof window === 'undefined') { return Promise.resolve(false); }
+      if (window.echarts && window.echarts.graphicGL) { return Promise.resolve(canDraw3d(window)); }
+      gl3d = gl3d || loadScript(staticUrl('vendor/echarts-gl/echarts-gl.min.js')).then(() => canDraw3d(window), () => false);
+      return gl3d;
+    }
+    function buildTrace3d(spec, rows, env) {
+      const th = env.theme, xf = fieldOf(spec.x) || 'x', yf = fieldOf(spec.y) || 'y', zf = fieldOf(spec.z) || 'z', of = fieldOf(spec.order);
+      const pts = rows.map((r, i) => ({ r: r, i: i })).filter((p) => num(p.r[xf]) !== null && num(p.r[yf]) !== null && num(p.r[zf]) !== null);
+      if (of) { pts.sort((a, b) => (num(a.r[of]) || 0) - (num(b.r[of]) || 0)); }
+      const cs = colourScale(spec, rows, th), base = toneColour(th, spec.tone || 'link'), sel = new Set((spec.selected || []).map(String));
+      const colourOf = (p) => (cs ? cs.colour(p.r[cs.field]) || th.nodata : base);
+      const gl = spec.gl !== undefined ? !!spec.gl : canDraw3d();
+      const table = { columns: [{ header: of || 'point' }, { header: xf }, { header: yf }, { header: zf }].concat(cs ? [{ header: cs.title }] : []),
+        rows: pts.map((p) => [of ? p.r[of] : p.i, p.r[xf], p.r[yf], p.r[zf]].concat(cs ? [p.r[cs.field]] : [])) };
+      const legend = cs ? cs.legendKeys : [];
+      const name = (spec.colour && spec.colour.title) || (cs && cs.field) || 'points';
+      const item = (p, v) => { const id = rowId(spec, p.r, p.i), on = sel.has(id); return { value: v, r: [p.i], ids: [id], name: of ? String(p.r[of]) : id, symbolSize: on ? th.size.symbol + 8 : th.size.symbol + 1,
+        itemStyle: { color: on ? th.tokens.accent : colourOf(p), borderColor: on ? th.ink : undefined, borderWidth: on ? 1 : 0 } }; };
+      let option;
+      if (gl) {
+        const ax = { type: 'value', show: false, axisLine: { show: false }, splitLine: { show: false }, axisLabel: { show: false } };
+        option = { textStyle: textStyle(th), tooltip: { trigger: 'item', confine: true }, xAxis3D: Object.assign({}, ax), yAxis3D: Object.assign({}, ax), zAxis3D: Object.assign({}, ax),
+          grid3D: { show: false, boxWidth: 100, boxHeight: 100, boxDepth: 100, environment: 'none', light: { main: { intensity: 1.2 }, ambient: { intensity: 0.4 } },
+            viewControl: { autoRotate: !!spec.turn && !env.still, autoRotateSpeed: 6, distance: 220, rotateSensitivity: 1.2, zoomSensitivity: 0.6, animation: !env.still } },
+          series: [{ type: 'line3D', name: '__chain', helper: true, silent: true, data: pts.map((p) => [num(p.r[xf]), num(p.r[yf]), num(p.r[zf])]), lineStyle: { width: 2, color: alpha(th.faint, 0.8) } },
+            { type: 'scatter3D', name: name, field: cs ? cs.field : null, data: pts.map((p) => item(p, [num(p.r[xf]), num(p.r[yf]), num(p.r[zf])])) }] };
+      } else {
+        option = { textStyle: textStyle(th), tooltip: { trigger: 'item', confine: true }, grid: { left: 8, right: 8, top: 8, bottom: 8, containLabel: false },
+          xAxis: { type: 'value', show: false, scale: true }, yAxis: { type: 'value', show: false, scale: true },
+          series: [{ type: 'line', name: '__chain', helper: true, silent: true, symbol: 'none', data: pts.map((p) => [num(p.r[xf]), num(p.r[yf])]), lineStyle: { width: 1.5, color: alpha(th.faint, 0.8) } },
+            { type: 'scatter', name: name, field: cs ? cs.field : null, data: pts.map((p) => item(p, [num(p.r[xf]), num(p.r[yf])])) }] };
+      }
+      return { option: option, table: table, legend: legend, legendStatic: true, flat: !gl, preferTable: !gl && spec.fallback === 'table',
+        summary: (gl ? '3D trace' : 'Trace, drawn flat (x against y: three dimensions are not available here)') + (spec.title ? ' of ' + spec.title : '') + ', ' + pts.length + ' points' + (sel.size ? ', ' + sel.size + ' selected' : '') };
+    }
+    function buildSegmented(spec, rows, env) {
+      const segs = Array.isArray(spec.segments) ? { values: spec.segments } : spec.segments, th = spec.thresholds || [], yf = fieldOf(spec.y) || 'y';
+      const first = th.length ? num(th[0].value) : null;
+      const s = Object.assign({}, spec, { kind: 'scatter', segments: segs,
+        colourWhen: (spec.colourWhen || []).concat(first !== null && !/[^\w]/.test(yf) ? [{ when: yf + ' >= ' + first, tone: th[0].tone || 'bad' }] : []),
+        annotations: (spec.annotations || []).concat(th.map((t) => ({ type: 'line', axis: 'y', value: num(t.value), label: t.label, tone: t.tone || 'muted', showValue: !t.label }))) });
+      const b = buildScatter(s, rows, env);
+      b.legend = th.filter((t) => t.label).map((t) => ({ name: t.label, colour: toneColour(env.theme, t.tone || 'muted'), style: 'dash' }));
+      b.legendStatic = true;
+      b.summary = 'Segmented scatter' + (spec.title ? ' of ' + spec.title : '') + ': ' + rows.length + ' points over ' + ((segs && segs.values) || []).length + ' segments'
+        + (first !== null ? ', ' + rows.filter((r) => num(r[yf]) >= first).length + ' at or past ' + (th[0].label || first) : '');
+      return b;
+    }
+    function buildMatrix(spec, rows, env) {
+      const cols = spec.x && Array.isArray(spec.x.domain) ? spec.x.domain.length : 0;
+      const s = Object.assign({ gap: 0, trackSize: 9 }, spec, { kind: 'heatmap', value: Object.assign({ type: 'category' }, spec.value),
+        x: Object.assign({ labels: cols <= 60 }, spec.x), zoom: spec.zoom !== undefined ? spec.zoom : cols > 150 || undefined,
+        tracks: (spec.tracks || []).map((t) => Object.assign({ axis: 'x', type: 'category' }, t)) });
+      const b = buildHeatmap(s, rows, env);
+      b.summary = 'Matrix' + (spec.title ? ' of ' + spec.title : '') + ': ' + ((spec.y && spec.y.domain) || []).length + ' rows by ' + cols + ' columns, ' + rows.length + ' cells filled';
+      return b;
+    }
+    function registerSequenceKinds() {
+      registerKind('lollipop', { build: buildLollipop, label: 'lollipop', cartesian: true });
+      registerKind('trace3d', { build: buildTrace3d, label: '3D trace', cartesian: false, prepare: ensure3d });
+      registerKind('segmented', { build: buildSegmented, label: 'segmented scatter', cartesian: true });
+      registerKind('matrix', { build: buildMatrix, label: 'category matrix', cartesian: false });
+    }
+    return { "buildLollipop": buildLollipop, "canDraw3d": canDraw3d, "ensure3d": ensure3d, "buildTrace3d": buildTrace3d, "buildSegmented": buildSegmented, "buildMatrix": buildMatrix, "registerSequenceKinds": registerSequenceKinds };
   })();
   /* ---- src/drishti_chart-multiples.js ---- */
   __m["src/drishti_chart-multiples.js"] = (function () {
@@ -3581,6 +4022,7 @@
     var registerAxisKinds = __m["src/drishti_chart-kinds.js"].registerAxisKinds, buildLayers = __m["src/drishti_chart-kinds.js"].buildLayers;
     var registerOtherKinds = __m["src/drishti_chart-kinds2.js"].registerOtherKinds;
     var registerDistributionKinds = __m["src/drishti_chart-kinds3.js"].registerDistributionKinds;
+    var registerSequenceKinds = __m["src/drishti_chart-kinds4.js"].registerSequenceKinds;
     var registerMapKind = __m["src/drishti_chart-map.js"].registerMapKind;
     var registerKind = __m["src/drishti_chart-spec.js"].registerKind, kindOf = __m["src/drishti_chart-spec.js"].kindOf;
     var rowsOf = __m["src/drishti_chart-data.js"].rowsOf;
@@ -3589,11 +4031,12 @@
     registerAxisKinds();
     registerOtherKinds();
     registerDistributionKinds();
+    registerSequenceKinds();
     registerMapKind();
     registerKind('calendar', { build: buildCalendar, label: 'calendar heatmap', cartesian: false });
     registerKind('layer', { label: 'layers', cartesian: true, build: (spec, rows, env) => buildLayers(spec, rows, env, kindOf, (l) => rowsOf(l.data)) });
     function install(root) { if (root && root.document && root.customElements) { defineChartElement(root.customElements, root); } }
-    return { "install": install, "registerKind": __m["src/drishti_chart-spec.js"].registerKind, "kindOf": __m["src/drishti_chart-spec.js"].kindOf, "kindList": __m["src/drishti_chart-spec.js"].kindList, "KIND_ALIASES": __m["src/drishti_chart-spec.js"].KIND_ALIASES, "checkSpec": __m["src/drishti_chart-spec.js"].checkSpec, "normalizeSpec": __m["src/drishti_chart-spec.js"].normalizeSpec, "specText": __m["src/drishti_chart-spec.js"].specText, "rowsOf": __m["src/drishti_chart-data.js"].rowsOf, "fieldOf": __m["src/drishti_chart-data.js"].fieldOf, "num": __m["src/drishti_chart-data.js"].num, "members": __m["src/drishti_chart-data.js"].members, "sumBy": __m["src/drishti_chart-data.js"].sumBy, "bin": __m["src/drishti_chart-data.js"].bin, "quantile": __m["src/drishti_chart-data.js"].quantile, "boxStats": __m["src/drishti_chart-data.js"].boxStats, "quantileBreaks": __m["src/drishti_chart-data.js"].quantileBreaks, "classOf": __m["src/drishti_chart-data.js"].classOf, "compileCondition": __m["src/drishti_chart-data.js"].compileCondition, "conditionFields": __m["src/drishti_chart-data.js"].conditionFields, "CHART_DENSITIES": __m["src/drishti_chart-theme.js"].CHART_DENSITIES, "blend": __m["src/drishti_chart-theme.js"].blend, "alpha": __m["src/drishti_chart-theme.js"].alpha, "chartTheme": __m["src/drishti_chart-theme.js"].chartTheme, "toneColour": __m["src/drishti_chart-theme.js"].toneColour, "rampColour": __m["src/drishti_chart-theme.js"].rampColour, "formatterFor": __m["src/drishti_chart-theme.js"].formatterFor, "textStyle": __m["src/drishti_chart-theme.js"].textStyle, "axisOf": __m["src/drishti_chart-theme.js"].axisOf, "rowId": __m["src/drishti_chart-kinds.js"].rowId, "seriesDefs": __m["src/drishti_chart-kinds.js"].seriesDefs, "annotationMarks": __m["src/drishti_chart-kinds.js"].annotationMarks, "buildSeriesChart": __m["src/drishti_chart-kinds.js"].buildSeriesChart, "buildScatter": __m["src/drishti_chart-kinds.js"].buildScatter, "buildHistogram": __m["src/drishti_chart-kinds.js"].buildHistogram, "buildWaterfall": __m["src/drishti_chart-kinds.js"].buildWaterfall, "buildBoxplot": __m["src/drishti_chart-kinds.js"].buildBoxplot, "buildHeatmap": __m["src/drishti_chart-kinds.js"].buildHeatmap, "buildCandlestick": __m["src/drishti_chart-kinds.js"].buildCandlestick, "buildLayers": __m["src/drishti_chart-kinds.js"].buildLayers, "registerAxisKinds": __m["src/drishti_chart-kinds.js"].registerAxisKinds, "buildPie": __m["src/drishti_chart-kinds2.js"].buildPie, "buildGauge": __m["src/drishti_chart-kinds2.js"].buildGauge, "buildTreemap": __m["src/drishti_chart-kinds2.js"].buildTreemap, "buildSankey": __m["src/drishti_chart-kinds2.js"].buildSankey, "registerOtherKinds": __m["src/drishti_chart-kinds2.js"].registerOtherKinds, "equalEarth": __m["src/drishti_chart-geo.js"].equalEarth, "albers": __m["src/drishti_chart-geo.js"].albers, "plateCarree": __m["src/drishti_chart-geo.js"].plateCarree, "projectGeometry": __m["src/drishti_chart-geo.js"].projectGeometry, "bounds": __m["src/drishti_chart-geo.js"].bounds, "coreExtent": __m["src/drishti_chart-geo.js"].coreExtent, "countryProjection": __m["src/drishti_chart-geo.js"].countryProjection, "US_INSETS": __m["src/drishti_chart-geo.js"].US_INSETS, "prepareRegions": __m["src/drishti_chart-geo.js"].prepareRegions, "prepareWorld": __m["src/drishti_chart-geo.js"].prepareWorld, "findPlace": __m["src/drishti_chart-geo.js"].findPlace, "createGeoLoader": __m["src/drishti_chart-geo.js"].createGeoLoader, "holdAntimeridian": __m["src/drishti_chart-geo.js"].holdAntimeridian, "fitView": __m["src/drishti_chart-geo.js"].fitView, "WORLD_REGIONS": __m["src/drishti_world-regions.js"].WORLD_REGIONS, "REGION_START_LEVELS": __m["src/drishti_chart-regions.js"].REGION_START_LEVELS, "isRegionLevel": __m["src/drishti_chart-regions.js"].isRegionLevel, "regionOf": __m["src/drishti_chart-regions.js"].regionOf, "regionName": __m["src/drishti_chart-regions.js"].regionName, "prepareRegionLevel": __m["src/drishti_chart-regions.js"].prepareRegionLevel, "mapMetrics": __m["src/drishti_chart-map.js"].mapMetrics, "placeValues": __m["src/drishti_chart-map.js"].placeValues, "mapScale": __m["src/drishti_chart-map.js"].mapScale, "ranking": __m["src/drishti_chart-map.js"].ranking, "buildMap": __m["src/drishti_chart-map.js"].buildMap, "registerMapKind": __m["src/drishti_chart-map.js"].registerMapKind, "colourTone": __m["src/drishti_chart-vega.js"].colourTone, "d3Format": __m["src/drishti_chart-vega.js"].d3Format, "fromVegaLite": __m["src/drishti_chart-vega.js"].fromVegaLite, "vegaLiteAlternative": __m["src/drishti_chart-vega.js"].vegaLiteAlternative, "vegaLiteRefusal": __m["src/drishti_chart-vega.js"].vegaLiteRefusal, "vegaLiteIn": __m["src/drishti_chart-vega.js"].vegaLiteIn, "valueText": __m["src/drishti_chart-parts.js"].valueText, "tooltipElement": __m["src/drishti_chart-parts.js"].tooltipElement, "dataTable": __m["src/drishti_chart-parts.js"].dataTable, "legendElement": __m["src/drishti_chart-parts.js"].legendElement, "markSelection": __m["src/drishti_chart-parts.js"].markSelection, "addZoom": __m["src/drishti_chart-parts.js"].addZoom, "dragBrush": __m["src/drishti_chart-parts.js"].dragBrush, "rangeBrush": __m["src/drishti_chart-parts.js"].rangeBrush, "svgOf": __m["src/drishti_chart-parts.js"].svgOf, "MAP_MODES": __m["src/drishti_map-view.js"].MAP_MODES, "geoLoader": __m["src/drishti_map-view.js"].geoLoader, "MapView": __m["src/drishti_map-view.js"].MapView, "Studio": __m["src/drishti_chart-studio.js"].Studio, "CHART_EVENTS": __m["src/drishti_chart-view.js"].CHART_EVENTS, "CHART_MODES": __m["src/drishti_chart-view.js"].CHART_MODES, "Chart": __m["src/drishti_chart-view.js"].Chart, "ChartIO": __m["src/drishti_chart-io.js"].ChartIO, "buildCalendar": __m["src/drishti_chart-calendar.js"].buildCalendar, "bullet": __m["src/drishti_bullet.js"].bullet, "bulletScale": __m["src/drishti_bullet.js"].bulletScale, "bulletSummary": __m["src/drishti_bullet.js"].bulletSummary, "kernelDensity": __m["src/drishti_chart-kinds3.js"].kernelDensity, "tenorDays": __m["src/drishti_chart-kinds3.js"].tenorDays, "buildRadar": __m["src/drishti_chart-kinds3.js"].buildRadar, "buildViolin": __m["src/drishti_chart-kinds3.js"].buildViolin, "buildRidgeline": __m["src/drishti_chart-kinds3.js"].buildRidgeline, "buildCurve": __m["src/drishti_chart-kinds3.js"].buildCurve, "buildDensity": __m["src/drishti_chart-kinds3.js"].buildDensity, "registerDistributionKinds": __m["src/drishti_chart-kinds3.js"].registerDistributionKinds, "colourScale": __m["src/drishti_chart-scale.js"].colourScale, "linkCrosshair": __m["src/drishti_chart-multiples.js"].linkCrosshair, "facets": __m["src/drishti_chart-multiples.js"].facets, "SELECTION_EVENT": __lib("drishti-core").SELECTION_EVENT, "linkGrid": __lib("drishti-core").linkGrid, "publishSelection": __lib("drishti-core").publishSelection, "PANEL_KINDS": __m["src/drishti_chart-panels.js"].PANEL_KINDS, "escapeTip": __m["src/drishti_chart-panels.js"].escapeTip, "panelCompact": __m["src/drishti_chart-panels.js"].panelCompact, "panelLineCompact": __m["src/drishti_chart-panels.js"].panelLineCompact, "panelTokens": __m["src/drishti_chart-panels.js"].panelTokens, "labelFit": __m["src/drishti_chart-panels.js"].labelFit, "panelOption": __m["src/drishti_chart-panels.js"].panelOption, "drawMap": __m["src/drishti_chart-panel-draw.js"].drawMap, "PanelCharts": __m["src/drishti_chart-panel-draw.js"].PanelCharts, "CHART_ELEMENT": __m["src/drishti_chart-element.js"].CHART_ELEMENT, "defineChartElement": __m["src/drishti_chart-element.js"].defineChartElement, "chartIn": __m["src/drishti_chart-element.js"].chartIn };
+    return { "install": install, "registerKind": __m["src/drishti_chart-spec.js"].registerKind, "kindOf": __m["src/drishti_chart-spec.js"].kindOf, "kindList": __m["src/drishti_chart-spec.js"].kindList, "KIND_ALIASES": __m["src/drishti_chart-spec.js"].KIND_ALIASES, "checkSpec": __m["src/drishti_chart-spec.js"].checkSpec, "normalizeSpec": __m["src/drishti_chart-spec.js"].normalizeSpec, "specText": __m["src/drishti_chart-spec.js"].specText, "rowsOf": __m["src/drishti_chart-data.js"].rowsOf, "fieldOf": __m["src/drishti_chart-data.js"].fieldOf, "num": __m["src/drishti_chart-data.js"].num, "members": __m["src/drishti_chart-data.js"].members, "sumBy": __m["src/drishti_chart-data.js"].sumBy, "bin": __m["src/drishti_chart-data.js"].bin, "quantile": __m["src/drishti_chart-data.js"].quantile, "boxStats": __m["src/drishti_chart-data.js"].boxStats, "quantileBreaks": __m["src/drishti_chart-data.js"].quantileBreaks, "classOf": __m["src/drishti_chart-data.js"].classOf, "compileCondition": __m["src/drishti_chart-data.js"].compileCondition, "conditionFields": __m["src/drishti_chart-data.js"].conditionFields, "CHART_DENSITIES": __m["src/drishti_chart-theme.js"].CHART_DENSITIES, "blend": __m["src/drishti_chart-theme.js"].blend, "alpha": __m["src/drishti_chart-theme.js"].alpha, "chartTheme": __m["src/drishti_chart-theme.js"].chartTheme, "toneColour": __m["src/drishti_chart-theme.js"].toneColour, "rampColour": __m["src/drishti_chart-theme.js"].rampColour, "formatterFor": __m["src/drishti_chart-theme.js"].formatterFor, "textStyle": __m["src/drishti_chart-theme.js"].textStyle, "axisOf": __m["src/drishti_chart-theme.js"].axisOf, "rowId": __m["src/drishti_chart-kinds.js"].rowId, "seriesDefs": __m["src/drishti_chart-kinds.js"].seriesDefs, "annotationMarks": __m["src/drishti_chart-kinds.js"].annotationMarks, "buildSeriesChart": __m["src/drishti_chart-kinds.js"].buildSeriesChart, "buildScatter": __m["src/drishti_chart-kinds.js"].buildScatter, "buildHistogram": __m["src/drishti_chart-kinds.js"].buildHistogram, "buildWaterfall": __m["src/drishti_chart-kinds.js"].buildWaterfall, "buildBoxplot": __m["src/drishti_chart-kinds.js"].buildBoxplot, "buildHeatmap": __m["src/drishti_chart-kinds.js"].buildHeatmap, "overviewStrip": __m["src/drishti_chart-kinds.js"].overviewStrip, "buildCandlestick": __m["src/drishti_chart-kinds.js"].buildCandlestick, "buildLayers": __m["src/drishti_chart-kinds.js"].buildLayers, "registerAxisKinds": __m["src/drishti_chart-kinds.js"].registerAxisKinds, "buildPie": __m["src/drishti_chart-kinds2.js"].buildPie, "buildGauge": __m["src/drishti_chart-kinds2.js"].buildGauge, "buildTreemap": __m["src/drishti_chart-kinds2.js"].buildTreemap, "buildSankey": __m["src/drishti_chart-kinds2.js"].buildSankey, "registerOtherKinds": __m["src/drishti_chart-kinds2.js"].registerOtherKinds, "buildLollipop": __m["src/drishti_chart-kinds4.js"].buildLollipop, "buildTrace3d": __m["src/drishti_chart-kinds4.js"].buildTrace3d, "buildSegmented": __m["src/drishti_chart-kinds4.js"].buildSegmented, "buildMatrix": __m["src/drishti_chart-kinds4.js"].buildMatrix, "canDraw3d": __m["src/drishti_chart-kinds4.js"].canDraw3d, "ensure3d": __m["src/drishti_chart-kinds4.js"].ensure3d, "registerSequenceKinds": __m["src/drishti_chart-kinds4.js"].registerSequenceKinds, "trackValues": __m["src/drishti_chart-tracks.js"].trackValues, "trackColour": __m["src/drishti_chart-tracks.js"].trackColour, "categoryCells": __m["src/drishti_chart-tracks.js"].categoryCells, "addTracks": __m["src/drishti_chart-tracks.js"].addTracks, "segmentOf": __m["src/drishti_chart-overlays.js"].segmentOf, "scatterOverlays": __m["src/drishti_chart-overlays.js"].scatterOverlays, "frameValues": __m["src/drishti_chart-frames.js"].frameValues, "frameRows": __m["src/drishti_chart-frames.js"].frameRows, "reducedMotion": __m["src/drishti_chart-frames.js"].reducedMotion, "FrameBar": __m["src/drishti_chart-frames.js"].FrameBar, "equalEarth": __m["src/drishti_chart-geo.js"].equalEarth, "albers": __m["src/drishti_chart-geo.js"].albers, "plateCarree": __m["src/drishti_chart-geo.js"].plateCarree, "projectGeometry": __m["src/drishti_chart-geo.js"].projectGeometry, "bounds": __m["src/drishti_chart-geo.js"].bounds, "coreExtent": __m["src/drishti_chart-geo.js"].coreExtent, "countryProjection": __m["src/drishti_chart-geo.js"].countryProjection, "US_INSETS": __m["src/drishti_chart-geo.js"].US_INSETS, "prepareRegions": __m["src/drishti_chart-geo.js"].prepareRegions, "prepareWorld": __m["src/drishti_chart-geo.js"].prepareWorld, "findPlace": __m["src/drishti_chart-geo.js"].findPlace, "createGeoLoader": __m["src/drishti_chart-geo.js"].createGeoLoader, "holdAntimeridian": __m["src/drishti_chart-geo.js"].holdAntimeridian, "fitView": __m["src/drishti_chart-geo.js"].fitView, "WORLD_REGIONS": __m["src/drishti_world-regions.js"].WORLD_REGIONS, "REGION_START_LEVELS": __m["src/drishti_chart-regions.js"].REGION_START_LEVELS, "isRegionLevel": __m["src/drishti_chart-regions.js"].isRegionLevel, "regionOf": __m["src/drishti_chart-regions.js"].regionOf, "regionName": __m["src/drishti_chart-regions.js"].regionName, "prepareRegionLevel": __m["src/drishti_chart-regions.js"].prepareRegionLevel, "mapMetrics": __m["src/drishti_chart-map.js"].mapMetrics, "placeValues": __m["src/drishti_chart-map.js"].placeValues, "mapScale": __m["src/drishti_chart-map.js"].mapScale, "ranking": __m["src/drishti_chart-map.js"].ranking, "buildMap": __m["src/drishti_chart-map.js"].buildMap, "registerMapKind": __m["src/drishti_chart-map.js"].registerMapKind, "colourTone": __m["src/drishti_chart-vega.js"].colourTone, "d3Format": __m["src/drishti_chart-vega.js"].d3Format, "fromVegaLite": __m["src/drishti_chart-vega.js"].fromVegaLite, "vegaLiteAlternative": __m["src/drishti_chart-vega.js"].vegaLiteAlternative, "vegaLiteRefusal": __m["src/drishti_chart-vega.js"].vegaLiteRefusal, "vegaLiteIn": __m["src/drishti_chart-vega.js"].vegaLiteIn, "valueText": __m["src/drishti_chart-parts.js"].valueText, "tooltipElement": __m["src/drishti_chart-parts.js"].tooltipElement, "dataTable": __m["src/drishti_chart-parts.js"].dataTable, "legendElement": __m["src/drishti_chart-parts.js"].legendElement, "markSelection": __m["src/drishti_chart-parts.js"].markSelection, "addZoom": __m["src/drishti_chart-parts.js"].addZoom, "dragBrush": __m["src/drishti_chart-parts.js"].dragBrush, "rangeBrush": __m["src/drishti_chart-parts.js"].rangeBrush, "rectBrush": __m["src/drishti_chart-parts.js"].rectBrush, "idsInBox": __m["src/drishti_chart-parts.js"].idsInBox, "svgOf": __m["src/drishti_chart-parts.js"].svgOf, "MAP_MODES": __m["src/drishti_map-view.js"].MAP_MODES, "geoLoader": __m["src/drishti_map-view.js"].geoLoader, "MapView": __m["src/drishti_map-view.js"].MapView, "Studio": __m["src/drishti_chart-studio.js"].Studio, "CHART_EVENTS": __m["src/drishti_chart-view.js"].CHART_EVENTS, "CHART_MODES": __m["src/drishti_chart-view.js"].CHART_MODES, "Chart": __m["src/drishti_chart-view.js"].Chart, "ChartIO": __m["src/drishti_chart-io.js"].ChartIO, "buildCalendar": __m["src/drishti_chart-calendar.js"].buildCalendar, "bullet": __m["src/drishti_bullet.js"].bullet, "bulletScale": __m["src/drishti_bullet.js"].bulletScale, "bulletSummary": __m["src/drishti_bullet.js"].bulletSummary, "kernelDensity": __m["src/drishti_chart-kinds3.js"].kernelDensity, "tenorDays": __m["src/drishti_chart-kinds3.js"].tenorDays, "buildRadar": __m["src/drishti_chart-kinds3.js"].buildRadar, "buildViolin": __m["src/drishti_chart-kinds3.js"].buildViolin, "buildRidgeline": __m["src/drishti_chart-kinds3.js"].buildRidgeline, "buildCurve": __m["src/drishti_chart-kinds3.js"].buildCurve, "buildDensity": __m["src/drishti_chart-kinds3.js"].buildDensity, "registerDistributionKinds": __m["src/drishti_chart-kinds3.js"].registerDistributionKinds, "colourScale": __m["src/drishti_chart-scale.js"].colourScale, "linkCrosshair": __m["src/drishti_chart-multiples.js"].linkCrosshair, "facets": __m["src/drishti_chart-multiples.js"].facets, "SELECTION_EVENT": __lib("drishti-core").SELECTION_EVENT, "linkGrid": __lib("drishti-core").linkGrid, "publishSelection": __lib("drishti-core").publishSelection, "PANEL_KINDS": __m["src/drishti_chart-panels.js"].PANEL_KINDS, "escapeTip": __m["src/drishti_chart-panels.js"].escapeTip, "panelCompact": __m["src/drishti_chart-panels.js"].panelCompact, "panelLineCompact": __m["src/drishti_chart-panels.js"].panelLineCompact, "panelTokens": __m["src/drishti_chart-panels.js"].panelTokens, "labelFit": __m["src/drishti_chart-panels.js"].labelFit, "panelOption": __m["src/drishti_chart-panels.js"].panelOption, "drawMap": __m["src/drishti_chart-panel-draw.js"].drawMap, "PanelCharts": __m["src/drishti_chart-panel-draw.js"].PanelCharts, "CHART_ELEMENT": __m["src/drishti_chart-element.js"].CHART_ELEMENT, "defineChartElement": __m["src/drishti_chart-element.js"].defineChartElement, "chartIn": __m["src/drishti_chart-element.js"].chartIn };
   })();
   return Object.freeze(Object.assign({ library: "drishti-chart", version: "2.4.0" }, __m["src/drishti_index.js"]));
 });

@@ -115,3 +115,86 @@ def test_the_gallery_shows_the_modules_visual(genomics, browser):
         assert pg.evaluate("() => window.__gallery.id") == "genomics.lollipop"
     finally:
         pg.context.close()
+
+
+ANSWERS = ROOT / "modules" / "genomics" / "java" / "genomics" / "src" / "test" / "resources" / "showcase" / "answers.json"
+
+
+def _showcase_api(pg, asked):
+    """The module's API answered from the server's own answers over its test fixture (ShowcaseTest keeps answers.json equal to them):
+    the thin server here has no showcase packs, so the screens are drawn from those answers; every call is recorded."""
+    answers = json.loads(ANSWERS.read_text(encoding="utf-8"))
+
+    def handle(route):
+        url = route.request.url
+        path = url.split("/m/genomics/api/", 1)[1]
+        asked.append(path)
+        key = path.split("?", 1)[0]
+        body = answers.get(key)
+        if body is None:                                # a call with an id: its kind's answer (explain/variant/<id> -> explain/variant/)
+            parts = key.split("/")
+            for n in range(len(parts) - 1, 0, -1):
+                body = answers.get("/".join(parts[:n]) + "/")
+                if body is not None:
+                    break
+        if body is None:
+            route.fulfill(status=404, content_type="application/json", body=json.dumps({"detail": "not in the fixture: " + key}))
+        else:
+            route.fulfill(status=200, content_type="application/json", body=json.dumps(body))
+    pg.route("**/m/genomics/api/**", handle)
+
+
+def test_the_showcase_screens_draw_link_and_explain(genomics, browser):
+    """The board, its guided mode and the workbench (GENOMICS_SHOWCASE.md): every card drawn by Elements, a cluster and a rectangle sent
+    as the next calls' selection, a lollipop head's Explain filling the records, Play the rounds and the leaderboard following the round,
+    a missing pack said in words."""
+    base = str(genomics)
+    pg = new_page(browser)
+    asked: list[str] = []
+    try:
+        errors: list[str] = []
+        pg.on("console", lambda m: errors.append(m.text) if m.type == "error" else None)
+        pg.goto(base + "/m/genomics/showcase")                    # the real server first: no showcase packs, said in words
+        pg.wait_for_selector("[data-showcase-missing]", timeout=20000)
+        assert "association" in pg.get_attribute("[data-showcase-missing]", "data-showcase-missing")
+        _showcase_api(pg, asked)
+        pg.goto(base + "/m/genomics/showcase")
+        pg.wait_for_selector("[data-showcase][data-state=ready]", timeout=30000)
+        for c in ("manhattan", "oncoprint", "map", "lollipop"):
+            pg.wait_for_selector(f'[data-chart="{c}"] canvas', timeout=20000)
+        assert pg.text_content('[data-figure="samples"]').strip() == "60"
+        pg.click("[data-showcase-clusters] button:has-text('C3 immune-hot')")
+        pg.wait_for_function("() => document.querySelector('[data-showcase]').dataset.state === 'ready'")
+        assert any(a.startswith("cohorts/ONC-1/oncoprint") and "cluster=C3%20immune-hot" in a for a in asked), asked
+        box = pg.locator('[data-chart="map"] canvas').bounding_box()
+        pg.mouse.move(box["x"] + box["width"] * 0.3, box["y"] + box["height"] * 0.3)
+        pg.mouse.down()
+        pg.mouse.move(box["x"] + box["width"] * 0.7, box["y"] + box["height"] * 0.7, steps=6)
+        pg.mouse.up()
+        pg.wait_for_function("() => document.querySelector('[data-showcase]').dataset.state === 'ready'")
+        assert any("box=" in a for a in asked), asked
+        pg.click('[data-chart="lollipop"] [data-tool="explain"]')
+        pg.wait_for_selector('[data-grid="records"] [role="row"]', timeout=20000)
+        assert any(a.startswith("explain/variant/") for a in asked), asked
+
+        pg.goto(base + "/m/genomics/showcase/guided")
+        pg.wait_for_selector("[data-showcase][data-state=ready]", timeout=30000)
+        assert pg.is_visible('[data-card="manhattan"]') and not pg.is_visible('[data-card="map"]')
+        pg.click('[data-tour="next"]')
+        assert pg.is_visible('[data-card="map"]') and not pg.is_visible('[data-card="manhattan"]')
+        assert pg.text_content('[data-tour="at"]') == "Step 2 of 4"
+
+        asked.clear()
+        pg.goto(base + "/m/genomics/proteins/HLXK7")
+        pg.wait_for_selector("[data-showcase][data-state=ready]", timeout=30000)
+        for c in ("dms", "backbone", "landscape", "rounds"):
+            pg.wait_for_selector(f'[data-chart="{c}"] canvas', timeout=20000)
+        play = pg.locator('[data-chart="landscape"] [data-tool="play"]')
+        assert "Play the rounds" in play.text_content()
+        pg.eval_on_selector('[data-chart="landscape"] .dc-frame-slider', "(el) => { el.value = '0'; el.dispatchEvent(new Event('input', { bubbles: true })); }")
+        pg.wait_for_function("() => document.querySelector('.dc-frame-label').textContent.startsWith('Round 1')")
+        pg.wait_for_selector('[data-grid="leaderboard"] [role="row"]', timeout=20000)
+        assert any(a.startswith("proteins/HLXK7/leaderboard") and "round=1" in a for a in asked), asked
+        assert not [e for e in errors if "favicon" not in e], errors
+    finally:
+        pg.context.close()

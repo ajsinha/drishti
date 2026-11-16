@@ -199,3 +199,25 @@ test('the bundle is the modules: the same names, the version from the manifest, 
   assert.equal(globalThis.Drishti.elements.core, b);
   assert.equal(b.formatNamed('pct2', 0.5), '50.00%');
 });
+
+test('a tour: one step\'s parts shown at a time, Back and Next clamped, the step in words, everything shown again when it stops', () => {
+  const el = (attrs) => ({ attrs: Object.assign({}, attrs), hidden: false, disabled: false, textContent: '', listeners: {},
+    getAttribute(k) { return k in this.attrs ? this.attrs[k] : null; }, setAttribute(k, v) { this.attrs[k] = String(v); }, removeAttribute(k) { delete this.attrs[k]; },
+    addEventListener(n, f) { this.listeners[n] = f; }, removeEventListener(n) { delete this.listeners[n]; } });
+  const say1 = el({ 'data-tour-say': '1' }), say2 = el({ 'data-tour-say': '2' }), card = el({ 'data-tour-steps': '2 3' }), back = el({ 'data-tour': 'back' }), next = el({ 'data-tour': 'next' }), at = el({ 'data-tour': 'at' });
+  const all = [say1, say2, card, back, next, at];
+  const pick = (sel) => all.filter((e) => sel.split(',').some((s) => { const m = /\[([\w-]+)(?:="([^"]*)")?\]/.exec(s.trim()); return m && m[1] in e.attrs && (m[2] === undefined || e.attrs[m[1]] === m[2]); }));
+  const root = Object.assign(el({}), { querySelectorAll: pick, ownerDocument: null });
+  const seen = [];
+  const t = new C.Tour(root, { onStep: (n) => seen.push(n) });
+  assert.equal(t.steps, 3);
+  assert.deepEqual([say1.hidden, say2.hidden, card.hidden, back.disabled, at.textContent], [false, true, true, true, 'Step 1 of 3']);
+  next.listeners.click();
+  assert.deepEqual([say1.hidden, say2.hidden, card.hidden, root.attrs['data-tour-at']], [true, false, false, '2']);
+  assert.equal(t.go(9), 3);
+  assert.equal(next.disabled, true);
+  assert.equal(t.back(), 2);
+  assert.deepEqual(seen, [1, 2, 3, 2]);
+  t.destroy();
+  assert.ok(!say1.hidden && !say2.hidden && !card.hidden && !next.listeners.click);
+});

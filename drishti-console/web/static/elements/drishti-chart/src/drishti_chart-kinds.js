@@ -21,6 +21,8 @@
 import { registerKind } from './drishti_chart-spec.js';
 import { fieldOf, num, members, bin, boxStats, compileCondition } from './drishti_chart-data.js';
 import { toneColour, axisOf, textStyle, alpha, formatterFor } from './drishti_chart-theme.js';
+import { addTracks, categoryCells } from './drishti_chart-tracks.js';
+import { scatterOverlays } from './drishti_chart-overlays.js';
 
 /**
  * The id of a row (the spec's id field, else its index).
@@ -256,6 +258,7 @@ export function buildScatter(spec, rows, env) {
   const yAxis = yt === 'category' ? axisOf(th, { type: 'category', data: dom('y', yf), name: (spec.y && spec.y.title) || '', nameLocation: 'middle', nameGap: 60, inverse: true, splitLine: { show: true, lineStyle: { color: th.grid } } }) : yAxisOf(spec, env);
   const option = frame(spec, env, xAxis, yAxis, series);
   option.tooltip.trigger = 'item';
+  scatterOverlays(option, spec, rows, env);
   const cols = [{ header: (spec.x && spec.x.title) || xf, format: spec.x && spec.x.format }, { header: (spec.y && spec.y.title) || yf, format: spec.y && spec.y.format }]
     .concat(sf ? [{ header: (spec.size && spec.size.title) || sf }] : []).concat(by ? [{ header: by }] : []);
   const table = { columns: cols, rows: rows.map((r) => [r[xf], r[yf]].concat(sf ? [r[sf]] : []).concat(by ? [r[by]] : [])) };
@@ -335,14 +338,19 @@ export function buildWaterfall(spec, rows, env) {
 
 /**
  * Box plot: the five figures of a field's values per category (whiskers at 1.5 IQR) and the values beyond them as points.
- * @param {Object} spec category, value
+ * Or the server's figures as they are (spec.boxes names the fields of low, q1, median, q3, high and n in one row per category).
+ * @param {Object} spec category, value, boxes ({low, q1, median, q3, high, n}: field names)
  * @param {Object[]} rows
  * @param {Object} env
  * @returns {import('./drishti_chart-spec.js').BuiltChart}
  */
 export function buildBoxplot(spec, rows, env) {
-  const th = env.theme, cf = fieldOf(spec.category) || fieldOf(spec.x), vf = fieldOf(spec.value) || fieldOf(spec.y), cats = members(rows, cf);
-  const stats = cats.map((c) => { const idx = rows.map((r, i) => i).filter((i) => String(rows[i][cf]) === c); return { idx: idx, s: boxStats(idx.map((i) => rows[i][vf])) }; });
+  const th = env.theme, cf = fieldOf(spec.category) || fieldOf(spec.x), vf = fieldOf(spec.value) || fieldOf(spec.y), cats = members(rows, cf, spec.category && spec.category.order);
+  const bx = spec.boxes;          // the server's figures, one row per category: {low, q1, median, q3, high, n} name their fields
+  const stats = bx ? cats.map((c) => { const i = rows.findIndex((r) => String(r[cf]) === c), r = rows[i] || {};
+    const box = [bx.low, bx.q1, bx.median, bx.q3, bx.high].map((f) => num(r[f]));
+    return { idx: i < 0 ? [] : [i], s: box.some((v) => v === null) ? null : { box: box, outliers: [], n: bx.n ? num(r[bx.n]) : null } }; })
+    : cats.map((c) => { const idx = rows.map((r, i) => i).filter((i) => String(rows[i][cf]) === c); return { idx: idx, s: boxStats(idx.map((i) => rows[i][vf])) }; });
   const colour = toneColour(th, spec.tone || 'link');
   const series = [Object.assign({ type: 'boxplot', name: (spec.value && spec.value.title) || vf, field: vf, itemStyle: { color: alpha(colour, 0.18), borderColor: colour },
     data: stats.map((x) => ({ value: x.s ? x.s.box : [], r: x.idx, ids: x.idx.map((i) => rowId(spec, rows[i], i)) })) }, annotationMarks(spec, rows, th, { fmt: env.fmt, xfmt: env.xfmt })),
@@ -358,27 +366,66 @@ export function buildBoxplot(spec, rows, env) {
 
 /**
  * Heatmap: a value at each (x, y) pair of categories, coloured on a sequential or diverging scale (diverging is centred on mid, 0 by
- * default), with the legend's scale under it.
- * @param {Object} spec x, y, value, scale {type: 'sequential'|'diverging', mid}, labels
+ * default), with the legend's scale under it; or coloured by a category (value.type 'category': a tone each, the legend's keys); with
+ * annotation tracks on either axis (drishti_chart-tracks.js).
+ * @param {Object} spec x, y ({field, order, domain: every member in order (an empty one too), labels: false hides the axis's words}), value ({field, type, tones, order}), scale {type: 'sequential'|'diverging', mid}, labels, tracks, trackSize
  * @param {Object[]} rows
  * @param {Object} env
  * @returns {import('./drishti_chart-spec.js').BuiltChart}
  */
 export function buildHeatmap(spec, rows, env) {
   const th = env.theme, xf = fieldOf(spec.x), yf = fieldOf(spec.y), vf = fieldOf(spec.value) || fieldOf(spec.colour);
-  const xs = members(rows, xf, spec.x && spec.x.order), ys = members(rows, yf, spec.y && spec.y.order);
-  const data = rows.map((r, i) => ({ value: [xs.indexOf(String(r[xf])), ys.indexOf(String(r[yf])), num(r[vf])], r: [i], ids: [rowId(spec, r, i)] })).filter((d) => d.value[2] !== null);
-  const { lo, hi, visualMap } = heatScale(spec, data.map((d) => d.value[2]), env);
+  const dom = (k, f) => (spec[k] && Array.isArray(spec[k].domain) ? spec[k].domain.map(String) : members(rows, f, spec[k] && spec[k].order));   // domain: every member, with rows or not
+  const xs = dom('x', xf), ys = dom('y', yf);
+  const cats = spec.value && spec.value.type === 'category' ? categoryCells(spec, rows, th) : null;
+  const xi = new Map(xs.map((x, i) => [x, i])), yi = new Map(ys.map((y, i) => [y, i]));
+  const data = rows.map((r, i) => {
+    const v = cats ? (r[vf] === null || r[vf] === undefined || r[vf] === '' ? null : String(r[vf])) : num(r[vf]);
+    const item = { value: [xi.get(String(r[xf])), yi.get(String(r[yf])), v], r: [i], ids: [rowId(spec, r, i)] };
+    if (cats && v !== null) { item.itemStyle = { color: cats.colour(v) }; }
+    return item;
+  }).filter((d) => d.value[2] !== null && d.value[0] !== undefined && d.value[1] !== undefined);
+  const scale = cats ? null : heatScale(spec, data.map((d) => d.value[2]), env);
   const series = [{ type: 'heatmap', name: (spec.value && spec.value.title) || vf, field: vf, data: data, selectedMode: 'multiple', select: { itemStyle: { borderColor: th.tokens.accent, borderWidth: 2 } },
-    itemStyle: { borderColor: th.surface, borderWidth: 1 }, emphasis: { itemStyle: { borderColor: th.ink, borderWidth: 1 } },
-    label: { show: !!spec.labels, color: th.ink, fontFamily: th.font, fontSize: th.size.font - 1, formatter: (p) => env.fmt(p.value[2]) } }];
-  const option = frame(spec, env, Object.assign(xAxisOf(spec, env, 'category', xs), { splitArea: { show: false } }), Object.assign(axisOf(th, { type: 'category', data: ys, inverse: true }), { splitArea: { show: false } }), series, {
-    visualMap: visualMap });
-  option.grid.bottom = th.size.pad + 34;
+    itemStyle: { borderColor: th.surface, borderWidth: spec.gap === 0 ? 0 : 1 }, emphasis: { itemStyle: { borderColor: th.ink, borderWidth: 1 } }, progressive: 0,
+    label: { show: !!spec.labels, color: th.ink, fontFamily: th.font, fontSize: th.size.font - 1, formatter: (p) => (cats ? String(p.value[2]) : env.fmt(p.value[2])) } }];
+  const option = frame(spec, env, Object.assign(xAxisOf(spec, env, 'category', xs), { splitArea: { show: false } }), Object.assign(axisOf(th, { type: 'category', data: ys, inverse: true }), { splitArea: { show: false } }), series,
+    scale ? { visualMap: Object.assign(scale.visualMap, { seriesIndex: 0 }) } : {});
+  option.grid.bottom = th.size.pad + (scale ? 34 : 8);
+  if (spec.x && spec.x.labels === false) { option.xAxis.axisLabel = Object.assign({}, option.xAxis.axisLabel, { show: false }); }
+  if (spec.y && spec.y.labels === false) { option.yAxis.axisLabel = Object.assign({}, option.yAxis.axisLabel, { show: false }); }
   option.tooltip = { trigger: 'item', confine: true };
-  return { option: option, legend: [], table: { columns: [{ header: yf }].concat(xs.map((x) => ({ header: x, format: spec.value && spec.value.format }))),
-    rows: ys.map((y) => [y].concat(xs.map((x) => { const r = rows.find((q) => String(q[xf]) === x && String(q[yf]) === y); return r ? num(r[vf]) : null; }))) },
-  summary: 'Heatmap' + (spec.title ? ' of ' + spec.title : '') + ', ' + ys.length + ' rows by ' + xs.length + ' columns, from ' + env.fmt(lo) + ' to ' + env.fmt(hi) };
+  const cell = new Map();
+  rows.forEach((r) => { const k = String(r[xf]) + '\u0000' + String(r[yf]); if (!cell.has(k)) { cell.set(k, cats ? r[vf] : num(r[vf])); } });
+  const table = { columns: [{ header: yf }].concat(xs.map((x) => ({ header: x, format: !cats && spec.value && spec.value.format }))),
+    rows: ys.map((y) => [y].concat(xs.map((x) => { const v = cell.get(x + '\u0000' + y); return v === undefined ? null : v; }))) };
+  const keys = (cats ? cats.keys : []).concat(addTracks(option, spec, rows, { xs: xs, ys: ys, xf: xf, yf: yf }, env, table));
+  if (spec.zoom) { overviewStrip(option, spec, xs, th); }
+  const lo = scale ? scale.lo : null, hi = scale ? scale.hi : null;
+  return { option: option, legend: keys, legendStatic: keys.length > 0, table: table,
+    summary: 'Heatmap' + (spec.title ? ' of ' + spec.title : '') + ', ' + ys.length + ' rows by ' + xs.length + ' columns'
+      + (scale ? ', from ' + env.fmt(lo) + ' to ' + env.fmt(hi) : ', ' + keys.length + ' categories') + ((spec.tracks || []).length ? ', ' + spec.tracks.length + ' tracks' : '') };
+}
+
+/**
+ * A heatmap's overview strip: a window over its columns (the heatmap and every x track move together) with a slider under it, for a
+ * wide matrix on a narrow screen. spec.zoom: true, or {window: [first, last]} (column indexes).
+ * @param {Object} option changed in place
+ * @param {Object} spec
+ * @param {string[]} xs the columns
+ * @param {Object} th
+ * @returns {void}
+ */
+export function overviewStrip(option, spec, xs, th) {
+  const axes = (Array.isArray(option.xAxis) ? option.xAxis : [option.xAxis]).map((a, i) => ((a.data || []).length === xs.length ? i : -1)).filter((i) => i >= 0);
+  const w = spec.zoom && spec.zoom.window, win = Array.isArray(w) && w.length === 2 ? { startValue: Math.max(0, w[0]), endValue: Math.min(xs.length - 1, w[1]) } : {};
+  option.dataZoom = [Object.assign({ type: 'slider', xAxisIndex: axes, height: 18, bottom: 4, filterMode: 'none', borderColor: th.border, backgroundColor: th.surface2,
+    fillerColor: alpha(th.tokens.accent, 0.16), handleStyle: { color: th.tokens.accent, borderColor: th.tokens.accent }, textStyle: textStyle(th), brushSelect: false, showDetail: false }, win),
+  Object.assign({ type: 'inside', xAxisIndex: axes, filterMode: 'none', zoomOnMouseWheel: true, moveOnMouseMove: false }, win)];
+  const grids = Array.isArray(option.grid) ? option.grid : [option.grid];
+  const was = grids[0].bottom;
+  grids.forEach((g) => { if (g.bottom === was) { g.bottom = (was || 10) + 26; } });
+  if (option.visualMap) { option.visualMap.bottom = 28; }
 }
 
 /**
