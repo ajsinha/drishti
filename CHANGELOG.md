@@ -30,6 +30,13 @@
   what only builds a module (`pom.xml`, `target/`, `tools/`, `java/`'s projects); the packed `.dmod` files are unchanged. The SDK's
   archetype makes the same layout (`java/<artifactId>/`), and its Maven plugin packs the module folder two up. `tools/test_module_layout.py`
   keeps every module to it (KERNEL_AND_MODULES.md section 8.10).
+- **Leftovers of an older checkout are no part of a module.** The names a module's top may hold are ONE list,
+  `kernel/drishti-api/.../resolution/module-layout.yaml` (`ModuleLayout`, `tools/module_layout.py`), read by the packer, the overrides
+  view, `drishti.py setup` and `tools/test_module_layout.py`. The packer packs only those names and names anything else in words
+  (`modules/banking/banking-compute: not part of the module layout, left out (an old build folder? delete it)`), so the old
+  `banking-service/target` a `git pull` keeps no longer fails C9; the resolver (kernel and console) skips a folder under `modules/` without
+  a `module.yaml` (`modules/dist`) with a one-line note; the layout check reads what git tracks (`git ls-files modules`); `setup` lists
+  the leftovers (never deletes them). RELEASE_NOTES upgrade step 1: `git clean -fdX modules/`.
 - **A site overrides any module file from outside the module.** `drishti.overrides.dir` (the settings file, `-D` or
   `DRISHTI_OVERRIDES_DIR`; several folders comma-separated, the right-most wins) names folders whose files replace a module's file at the
   same relative path (`banking/packs/trading/sutras/endur/endur-cash.v1.sutra.yaml`): a Sutra, a pack's YAML, `console/plugin.yaml`,

@@ -39,6 +39,7 @@ from __future__ import annotations
 
 import fnmatch
 import hashlib
+import logging
 import os
 import re
 import threading
@@ -270,6 +271,10 @@ class PackSet(Mapping):
         return [p.folder / "pack.yaml" for p in self._read.values()]
 
 
+#: the folders under the modules tree without a module.yaml already noted (once each)
+_NOTED: set[Path] = set()
+
+
 def modules(layout: Layout, problems: list | None = None) -> dict[str, Module]:
     """Every module on disk, by id: the development tree's (``<modules>/<dir>/module.yaml``: every module's one layout), then the
     module store's active installs, which win an id."""
@@ -279,6 +284,9 @@ def modules(layout: Layout, problems: list | None = None) -> dict[str, Module]:
         for d in _dirs(layout.modules):
             if (d / "module.yaml").is_file():
                 _module(d, d.relative_to(layout.modules).as_posix(), problems, out)
+            elif d not in _NOTED:                                    # an old build folder (modules/dist): a note, not a failure
+                _NOTED.add(d)
+                logging.getLogger(__name__).info("%s: no module.yaml, not a module, skipped (an old build folder? delete it)", d)
     installed = layout.store / "installed" if layout.store is not None else None
     if installed is not None and (installed / "active.yaml").is_file():
         try:

@@ -33,8 +33,9 @@ import java.util.stream.Stream;
  * Lays a module's files into the {@code .dmod} layout and packs them with the module runtime's packer (section 8.2). Every module has one
  * layout (KERNEL_AND_MODULES.md section 8.10): its {@code .dmod} content at its folder's top (module.yaml, console/, data/, packs/, docs/
  * ...) and, only when it has code, its Maven projects under {@code java/<project>/} with the aggregating {@code pom.xml}. Everything at the
- * top is staged as it is except what only builds the module ({@link #SOURCE_ONLY}, and {@code java/}'s project folders and other files:
- * only jars already in {@code java/} are kept), plus the module's jar under {@code java/} by the name its manifest gives. Nothing is
+ * top that is {@code .dmod} content by the one list ({@code ModuleLayout}, {@code module-layout.yaml}) is staged as it is, except
+ * {@code java/}'s project folders and other files (only jars already in {@code java/} are kept); what only builds the module is left out,
+ * and anything else at the top (an old build folder) is left out with a note naming it, plus the module's jar under {@code java/} by the name its manifest gives. Nothing is
  * written into the sources: the files are staged under {@code target/dmod-stage/<id>/}.
  *
  * <p>A module folder may also hold {@value #CONTENT}: content the packer brings in from elsewhere in the same repository, so a pack, a
@@ -50,8 +51,7 @@ public final class ModuleAssembler {
     /** The module folder's list of repository content to bring in (not packed). */
     public static final String CONTENT = "content.yaml";
 
-    /** The names at a module folder's top that only build it and are never packed: its Maven aggregator, build output and tools. */
-    public static final java.util.Set<String> SOURCE_ONLY = java.util.Set.of("pom.xml", "target", "tools");
+    private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(ModuleAssembler.class);
 
     private static final com.fasterxml.jackson.databind.ObjectMapper YAML =
             new com.fasterxml.jackson.databind.ObjectMapper(new com.fasterxml.jackson.dataformat.yaml.YAMLFactory());
@@ -138,6 +138,9 @@ public final class ModuleAssembler {
         Path stage = work.resolve(m.id());
         try {
             delete(stage);
+            for (String note : com.ash.drishti.api.resolution.ModuleLayout.strays(source, label(source))) {
+                LOG.warn(note);                                     // a leftover of an older checkout: never packed, said in words
+            }
             stageTree(source, stage);
             bringContent(source, stage);
             stampAllowance(source, stage, kernelBuild);
@@ -264,16 +267,30 @@ public final class ModuleAssembler {
         }
     }
 
+    /** How a module folder is named in a note: {@code modules/banking} when it sits under a {@code modules} folder, else its path. */
+    static String label(Path source) {
+        Path abs = source.toAbsolutePath().normalize();
+        Path parent = abs.getParent();
+        return parent != null && parent.getFileName() != null && parent.getFileName().toString().equals("modules")
+                ? "modules/" + abs.getFileName() : abs.toString();
+    }
+
+    /** Whether a name at a module folder's top is packed: the {@code .dmod} content of the one layout ({@code ModuleLayout}). */
+    private static boolean packed(String top) {
+        return com.ash.drishti.api.resolution.ModuleLayout.content(top);
+    }
+
     /**
-     * Copies a module folder into the stage, leaving out {@link #SOURCE_ONLY} at its top and, in {@code java/}, everything but the jars
-     * directly in it (the Maven projects and their files build the jar; a folder from any build may already hold its jars there).
+     * Copies a module folder into the stage: only the {@code .dmod} content names of the one layout at its top ({@code ModuleLayout};
+     * what only builds it and anything else is left out) and, in {@code java/}, only the jars directly in it (the Maven projects and their
+     * files build the jar; a folder from any build may already hold its jars there).
      */
     static void stageTree(Path from, Path to) throws IOException {
         Files.walkFileTree(from, new java.nio.file.SimpleFileVisitor<>() {
             @Override
             public java.nio.file.FileVisitResult preVisitDirectory(Path d, java.nio.file.attribute.BasicFileAttributes a) throws IOException {
                 Path rel = from.relativize(d);
-                if (!rel.toString().isEmpty() && (SOURCE_ONLY.contains(rel.getName(0).toString())
+                if (!rel.toString().isEmpty() && (!packed(rel.getName(0).toString())
                         || rel.getName(0).toString().equals("java") && rel.getNameCount() > 1)) {
                     return java.nio.file.FileVisitResult.SKIP_SUBTREE;          // a Maven project under java/, the build output, the tools
                 }
@@ -285,7 +302,7 @@ public final class ModuleAssembler {
             public java.nio.file.FileVisitResult visitFile(Path f, java.nio.file.attribute.BasicFileAttributes a) throws IOException {
                 Path rel = from.relativize(f);
                 String top = rel.getName(0).toString();
-                boolean keep = !SOURCE_ONLY.contains(top) && (!top.equals("java") || rel.getNameCount() == 2
+                boolean keep = packed(top) && (!top.equals("java") || rel.getNameCount() == 2
                         && rel.getName(1).toString().endsWith(".jar"));
                 if (keep) {
                     Files.copy(f, to.resolve(rel.toString()));

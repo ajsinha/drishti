@@ -46,6 +46,9 @@ import java.util.stream.Stream;
  */
 public final class PackResolver {
 
+    /** The folders under the modules tree without a module.yaml already noted (once each). */
+    private static final java.util.Set<Path> NOTED = java.util.concurrent.ConcurrentHashMap.newKeySet();
+
     /** The layer a pack came from. */
     public enum Layer {
         /** The site's own packs folder ({@code drishti.packs.site-dir}): first, and a shipped pack's name only with {@code replaces:}. */
@@ -233,6 +236,9 @@ public final class PackResolver {
             for (Path dir : dirs(layout.modules())) {
                 if (Files.isRegularFile(dir.resolve("module.yaml"))) {        // one layout: the module's files at its folder's top
                     module(dir, layout.modules().relativize(dir).toString().replace('\\', '/'), yaml, problems, out);
+                } else if (NOTED.add(dir)) {                                   // an old build folder (modules/dist): a note, not a failure
+                    System.getLogger(PackResolver.class.getName()).log(System.Logger.Level.INFO, dir + ": no module.yaml, not a module, "
+                            + "skipped (an old build folder? delete it)");
                 }
             }
         }

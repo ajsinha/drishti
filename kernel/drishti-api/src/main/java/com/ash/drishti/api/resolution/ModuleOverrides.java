@@ -58,8 +58,13 @@ public final class ModuleOverrides {
     public static final String SOURCE_HOME = "drishti.modules.source-home";
     /** The view's list of the overridden files, written last. */
     public static final String LIST = "overrides.yaml";
-    /** The names at a module's top that are never overridden or copied into the view. */
-    static final Set<String> NOT_CONTENT = Set.of("java", "pom.xml", "target", "tools");
+    /**
+     * Whether a name at a module's top is overridden and copied into the view: the {@code .dmod} content of the one layout
+     * ({@link ModuleLayout}) but its jars ({@code java/}); what only builds the module and anything else (an old build folder) never is.
+     */
+    static boolean viewed(String top) {
+        return ModuleLayout.content(top) && !top.equals("java");
+    }
 
     /** One overridden (or added) file: its path under the modules folder, the override file used, and whether it replaced a shipped file. */
     public record File(String path, Path source, boolean replaces) {
@@ -138,8 +143,9 @@ public final class ModuleOverrides {
         if (parts.length == 2 && parts[1].equals("module.yaml")) {
             return "a module's module.yaml is its identity and is never overridden";
         }
-        if (NOT_CONTENT.contains(parts[1])) {
-            return parts[1] + " only builds the module and is never overridden";
+        if (!viewed(parts[1])) {
+            return parts[1] + (ModuleLayout.content(parts[1]) || ModuleLayout.BUILD.contains(parts[1]) ? " only builds the module"
+                    : " is not part of the module layout") + " and is never overridden";
         }
         if (parts[1].equals("connectors")) {
             return "a module's connector templates are changed in the site's config/connectors/<name>.yaml (merged over the template), not here";
@@ -231,7 +237,7 @@ public final class ModuleOverrides {
                     for (Path f : s.filter(Files::isRegularFile).sorted().toList()) {
                         String rel = mine.relativize(f).toString().replace('\\', '/');
                         String top = rel.split("/")[0];
-                        if (!rel.equals("module.yaml") && !NOT_CONTENT.contains(top) && !top.equals("connectors")) {
+                        if (!rel.equals("module.yaml") && viewed(top) && !top.equals("connectors")) {
                             files.put(rel, new File(id + "/" + rel, f, Files.isRegularFile(home.resolve(rel))));
                         }
                     }
@@ -265,13 +271,13 @@ public final class ModuleOverrides {
         }
     }
 
-    /** Copies a module's content (not {@link #NOT_CONTENT}) into the view where it changed, noting every file the view keeps. */
+    /** Copies a module's content (only what {@link #viewed} names at its top) into the view where it changed, noting every file the view keeps. */
     private static void sync(Path module, Path to, Set<Path> keep) throws IOException {
         Files.walkFileTree(module, new SimpleFileVisitor<>() {
             @Override
             public FileVisitResult preVisitDirectory(Path d, BasicFileAttributes a) throws IOException {
                 Path rel = module.relativize(d);
-                if (!rel.toString().isEmpty() && NOT_CONTENT.contains(rel.getName(0).toString())) {
+                if (!rel.toString().isEmpty() && !viewed(rel.getName(0).toString())) {
                     return FileVisitResult.SKIP_SUBTREE;
                 }
                 Files.createDirectories(to.resolve(rel.toString()));
@@ -281,7 +287,7 @@ public final class ModuleOverrides {
             @Override
             public FileVisitResult visitFile(Path f, BasicFileAttributes a) throws IOException {
                 Path rel = module.relativize(f);
-                if (rel.getNameCount() == 1 && NOT_CONTENT.contains(rel.toString())) {
+                if (rel.getNameCount() == 1 && !viewed(rel.toString())) {
                     return FileVisitResult.CONTINUE;
                 }
                 Path t = to.resolve(rel.toString());

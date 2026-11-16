@@ -98,6 +98,11 @@ def setup(a, env: dict | None = None) -> int:
     else:
         line("ok", "data (DRISHTI_DATA_DIR)", f"{data}  ({roots['data'][1]}; writable)")
     line("ok" if modules.is_dir() else "todo", "modules", f"{modules}  ({roots['modules'][1]})")
+    # leftovers of an older checkout under the modules folder (old build folders a `git pull` keeps): reported, never deleted
+    import module_layout
+    for note in module_layout.leftovers(modules):
+        line("todo", "modules leftover", note)
+        todo.append(f"delete {note.split(':')[0]} (git clean -fdX modules/ removes every ignored file under modules/)")
     # every jar under the home: Drishti's own in <home>/lib, the site's in <home>/lib/ext (drishti.lib.path)
     jar = roots["jar"][0]
     line("ok" if jar else "todo", "server jar (<home>/lib)", str(jar) if jar else roots["jar"][1])

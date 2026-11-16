@@ -47,6 +47,9 @@ release itself is tag `v2.9.11.i_5`; the next release, i6, takes the version fro
   is no `dmod/` or `src/dmod/` folder any more: banking's `dmod/*` moved to `modules/banking/`, `banking-compute` and `banking-service` to
   `modules/banking/java/`; genomics' `src/dmod/*` to `modules/genomics/` and its project to `modules/genomics/java/genomics/`. The packed
   `.dmod` files are unchanged. The kernel's own core pack stays in `config/packs/core`.
+- One list of the names a module's top may hold serves the packer, the overrides, `drishti.py setup` and the layout check alike. Anything
+  else at a module's top (an old build folder) is left out of the package with a note naming it; a folder under `modules/` without a
+  `module.yaml` is skipped with a one-line note, never a failure.
 
 ## Overriding any module file from outside
 
@@ -59,7 +62,10 @@ release itself is tag `v2.9.11.i_5`; the next release, i6, takes the version fro
 
 ## Upgrading an install of i4
 
-1. Pull. 2. `python tools/drishti.py setup`. 3. `python tools/drishti.py build jar`. 4. Stop the old stack: the old scripts are gone, so
+1. Pull, then delete the old build folders git does not track and so leaves behind: `modules/banking/banking-compute`,
+`modules/banking/banking-service`, `modules/banking/target`, `modules/dist` (`git clean -fdX modules/` removes every ignored file under
+`modules/`). Left there, they are no part of any module: the packer leaves them out and names them, and `setup` lists them.
+2. `python tools/drishti.py setup`. 3. `python tools/drishti.py build jar`. 4. Stop the old stack: the old scripts are gone, so
 `python tools/drishti.py stop cluster` (or `stop all`), which reads the same pid files. 5. Start with the new commands. Your own changes made inside `modules/banking/dmod/` or `modules/genomics/src/dmod/` move to the
 new places (or, better, into an overrides folder).
 

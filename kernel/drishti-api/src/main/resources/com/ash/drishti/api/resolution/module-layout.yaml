@@ -1,0 +1,25 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The one module layout (docs/architecture/KERNEL_AND_MODULES.md sections 3.2 and 8.10): the names a module folder's top may hold.
+# The ONE list: the packer (ModuleAssembler), the overrides view (ModuleOverrides), tools/test_module_layout.py and
+# `drishti.py setup` all read this file. Anything else at a module's top is not part of the module: the packer leaves it out and says so.
+
+# the .dmod content, packed as it is (java/: only the jars directly in it)
+content: [module.yaml, dataload.yaml, README.md, functions.yaml,
+          packs, console, data, docs, connectors, mappings, blotters, elements, lenses,
+          java, lib, python, engines, lakes, bi, feeds, settings, tokens, i18n, tests, NOTICES]
+
+# what only builds the module: allowed at its top, never packed (content.yaml is read by the packer, then dropped)
+build: [content.yaml, pom.xml, tools, target]
