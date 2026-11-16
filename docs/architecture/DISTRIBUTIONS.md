@@ -206,7 +206,7 @@ way and come to the same thing:
 |---|---|---|
 | `brand` | `drishti.branding.*` (the About answer, messages) | `ui.product`, `ui.tagline`, `ui.copyright`, `ui.owner`, `ui.notice`, `ui.logo`, `ui.favicon` |
 | `theme` | | the default theme (`tokens`), mode and density; each person's own choice still wins |
-| `modules` | the packs to load (kernel's and its modules'), the engines of the modules it leaves out off | the visibility filter below |
+| `modules` | the packs to load (kernel's and its modules'); the engines of the modules it leaves out are *not installed* | the visibility filter below |
 | `lenses` | `drishti.lenses` (the lenses a person may open; a lens changes nothing the server answers) | the same; `lenses.default` is everyone's starting workspace; a lens arranges, never hides |
 | `features` | each feature's server keys, through `kernel.yaml`'s `features:` (an engine: off only) | each feature's console keys, the same way |
 | `menus`, `home` | | the top menus, the command line's placeholder, Home's cards |
@@ -215,7 +215,7 @@ way and come to the same thing:
 **The three layers of switches.** The distribution says what exists; a module's switch whether it is on at this site
 (`config/modules/<module>.yaml`, Admin → Modules); an engine's switch whether its compute runs on this server (`config/engines/<id>.yaml`).
 A distribution's `features:` presets the settings `kernel.yaml`'s `features:` maps (the one list: the feature, its server keys, its
-console keys); it presets an engine off when its module is not in it, never on. A **lens** (`config/lenses/<module>/<lens>.yaml`) is a
+console keys); it presets an engine off when its module is not in it, never on (that engine does not exist there: it shows *not installed*). A **lens** (`config/lenses/<module>/<lens>.yaml`) is a
 workspace: it arranges Home and the menus for a role and never hides anything.
 
 **The visibility filter.** A distribution other than All is a filter: the commands of the kernel's packs (each pack's mnemonics and

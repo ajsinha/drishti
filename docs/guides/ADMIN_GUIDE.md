@@ -744,8 +744,8 @@ Each switch has one job and one home:
 | **Module switch** | whether a module the distribution has is on at this site | `config/modules/<module>.yaml`, `DRISHTI_MODULES_<MODULE>_ENABLED`, Admin → Modules ([section 22](#22-modules-on-or-off)) | an administrator |
 | **Engine switch** | whether a compute engine (VaR, exposure, FRTB-SA, SIMM ...) runs on this server | `config/engines/<id>.yaml`, Admin → Engines ([section 21](#21-compute-engines-on-or-off)) | an administrator, per server |
 
-A distribution presets an engine **off** when the module that owns it is not in it (it does not exist there), never **on**: where an
-engine runs is its own switch. On top, an administrator's function switch (Functions, [section 20](#20-functions-func-every-command-and-turning-one-on-or-off))
+An engine whose module the distribution leaves out does not exist there: it shows *not installed* (Admin → Engines, Health), never
+**off** or **on**, and its switch is not read. Where an engine of a module the distribution holds runs is its own switch. On top, an administrator's function switch (Functions, [section 20](#20-functions-func-every-command-and-turning-one-on-or-off))
 turns one command off for everyone. A command word is shown when its module exists and is on, its engine runs somewhere in the cluster
 and its function is on. A module's menus (its manifest's `console.menus`) are in the top bar only while the module is in the distribution,
 installed, loaded and on; they go and come back at the next page when that changes. A lens changes none of this.

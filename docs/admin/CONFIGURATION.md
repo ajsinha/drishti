@@ -1303,7 +1303,7 @@ message writes the name in code, and `BrandingLiteralTest` (drishti-it) fails on
 
 Switches come in three layers ([ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md#12-what-a-lens-is), [DISTRIBUTIONS.md](../architecture/DISTRIBUTIONS.md)):
 the **distribution** says what exists, a **module switch** whether a module is on at this site, an **engine switch** whether a compute
-runs on this server. A distribution presets an engine off (its module is not in it), never on. The distribution file is a layer under
+runs on this server. A distribution presets an engine off (its module is not in it), never on; such an engine does not exist there and shows *not installed*. The distribution file is a layer under
 the site's configuration: every key below it can still be set by the site. A **lens** is a workspace: it arranges the starting Home, the
 menus' order and the placeholder and never hides anything.
 
