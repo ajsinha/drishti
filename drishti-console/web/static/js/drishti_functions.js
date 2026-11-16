@@ -121,7 +121,7 @@
 
   // ---- the side panel: what each change blocks, the reason, apply ---------------------------------------------------------
   var BLOCKS = ['Typed command <span class="mono">{code} …</span>', 'Its pages by link or URL <span class="mono">/v/{kind}/…</span>',
-    'Its API, CLI, exports and AI tools', 'Search and type-ahead suggestions', 'Links and panels about it on other pages'];
+    'Its API, CLI and exports', 'Search and type-ahead suggestions', 'Links and panels about it on other pages'];
   var impacts = {};
   function title(n) {
     if (n.length === 1) { return 'Turn ' + n[0].name + (n[0].on ? ' on' : ' off'); }

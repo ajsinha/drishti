@@ -38,8 +38,8 @@ features:
   frtb-sa:       { server: [drishti.engines.frtb-sa.enabled] }
   simm:          { server: [drishti.engines.simm.enabled] }
   governance:    { server: [drishti.governance.enabled] }
-  ai:            { server: [drishti.ai.enabled], console: [ai.enabled] }
-  mcp:           { server: [drishti.mcp.enabled], console: [mcp.enabled] }
+  ai:            { server: [drishti.ai.enabled] }                 # the one AI switch; the console of this release shows no AI page
+  mcp:           { server: [drishti.mcp.enabled] }
   embed:         { server: [drishti.embed.enabled], console: [embed.enabled] }
   python:        { server: [drishti.bi.transform.enabled] }
   designer:      { console: [ui.designer] }

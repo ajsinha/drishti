@@ -73,4 +73,10 @@ public record AskProperties(Boolean enabled, String model, List<String> packs, S
     public boolean valuesShown() {
         return "shown".equals(values);
     }
+
+    /** These settings with Ask switched off (the AI layer is off: {@code drishti.ai.enabled}). */
+    public AskProperties off() {
+        return new AskProperties(false, model, packs, values, maxQuestionChars, maxPromptKb, maxGuideChars, maxAnswerTokens, maxAnswerChars,
+                timeout, perUserPerMinute, perUserPerDay, logQuestions, logAnswers);
+    }
 }

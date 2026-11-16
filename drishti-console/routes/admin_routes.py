@@ -218,7 +218,7 @@ async def _readme_html(request: Request, name: str, readme: dict) -> dict:
 
 @router.get("/api/packs/{name}/readme")
 async def pack_readme(request: Request, name: str):
-    """A pack's README as the server gives it (front matter and markdown): what Admin -> Packs shows, for tools and AI."""
+    """A pack's README as the server gives it (front matter and markdown): what Admin -> Packs shows, and for tools."""
     try:
         return await request.app.state.backend.pack_readme(name, ident(request))
     except BackendError as e:
@@ -1031,3 +1031,21 @@ async def bindings_action(request: Request, action: str):
     except BackendError as e:
         return _problem(e)
     return JSONResponse({"code": "DRS-5001", "detail": "unknown action"}, status_code=400)
+
+
+@router.post("/api/retry/{area}")
+async def retry_now(request: Request, area: str):
+    """Admin "Retry now" (administrators; audited by the server). ``area``: packs, connectors or all; the server tries again."""
+    me = ident(request)
+    if not me.is_admin:
+        return JSONResponse({"code": "DRS-5002", "detail": "administrators only"}, status_code=403)
+    body = await json_body(request)
+    if area not in ("packs", "connectors", "all"):
+        return JSONResponse({"code": "DRS-5001", "detail": "area must be packs, connectors or all"}, status_code=400)
+    out: dict = {"area": area}
+    try:
+        params = {"name": body["name"]} if body.get("name") else {}
+        out["server"] = await request.app.state.backend.admin("POST", f"/retry/{area}", me, **params)
+    except BackendError as e:
+        out["serverError"] = e.detail
+    return out

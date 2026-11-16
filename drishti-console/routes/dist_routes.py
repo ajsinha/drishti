@@ -107,14 +107,9 @@ def _describe(target: dict, title: str = "") -> str:
 
 
 async def _options(request: Request) -> dict:
-    """What the form may offer besides mail: AI narrative (the BI AI hooks are on), the administrator's webhooks, a text-message gateway. A server without them offers none."""
-    out = {"ai": False, "mode": "labels-only", "webhooks": [], "sms": False, "phone": ""}
+    """What the form may offer besides mail: the administrator's webhooks, a text-message gateway. A server without them offers none."""
+    out = {"webhooks": [], "sms": False, "phone": ""}
     backend, me = request.app.state.backend, ident(request)
-    try:
-        s = await backend.bi("GET", "/ai/status", me)
-        out["ai"], out["mode"] = bool(s.get("enabled")), s.get("values", "labels-only")
-    except BackendError:
-        pass
     try:
         n = await backend.notify_options(me)
         out["webhooks"], out["sms"], out["phone"] = list(n.get("webhooks") or []), bool((n.get("sms") or {}).get("configured")), (n.get("sms") or {}).get("phone", "")
@@ -164,10 +159,10 @@ async def subscribe_save(request: Request):
     name = f.get("name", "").strip()
     hooks = [x for x in parsed.get("webhooks", []) if x]
     form = {"name": name, "title": f.get("title", ""), "target": target, "schedule": f.get("schedule", ""), "format": f.get("format", "html"), "date": f.get("date", "today"),
-            "recipients": ", ".join(recipients), "narrative": f.get("narrative") == "on", "webhooks": hooks, "sms": f.get("sms") == "on",
+            "recipients": ", ".join(recipients), "webhooks": hooks, "sms": f.get("sms") == "on",
             "enabled": f.get("enabled") == "on"}
     body = {"title": form["title"], "target": target, "schedule": form["schedule"], "format": form["format"], "date": form["date"], "recipients": recipients,
-            "enabled": form["enabled"], "narrative": form["narrative"], "webhooks": hooks, "sms": form["sms"]}
+            "enabled": form["enabled"], "webhooks": hooks, "sms": form["sms"]}
     try:
         if f.get("phone", "").strip():                               # a number typed here is the person's own: kept for texts (blank leaves the one on file)
             await request.app.state.backend.set_phone(f["phone"].strip(), ident(request))

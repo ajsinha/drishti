@@ -50,9 +50,9 @@ FEATURE_PATHS = {"bi": ("/bi", "/admin/bi"), "forms": ("/forms", "/form/"), "dat
                  "monitors": ("/m",), "alerts": ("/alerts",), "build": ("/build", "/review/", "/studio", "/elements"), "calc": ("/calc",),
                  "reports": ("/reports",), "lakes": ("/admin/lakes", "/admin/api/lakes"),
                  "collaboration": ("/admin/collab",)}
-# (Admin -> AI and Admin -> Embedding stay reachable with their feature off, as before: they are where it is switched on.)
+# (Admin -> Embedding stays reachable with its feature off, as before: it is where it is switched on.)
 # Admin pages by id (a filter's admin.pages, a site's edition.admin.pages); the path prefix each owns
-ADMIN_PAGES = ("users", "roles", "packs", "commands", "tokens", "access", "connectors", "artifacts", "ai", "loads", "lakes", "collab",
+ADMIN_PAGES = ("users", "roles", "packs", "commands", "tokens", "access", "connectors", "artifacts", "loads", "lakes", "collab",
                "embedding", "bi", "audit", "net", "edits", "compute", "engines", "health", "caches", "capacity", "scopes", "data-out",
                "configuration", "bindings", "white-label")
 

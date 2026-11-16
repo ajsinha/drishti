@@ -100,7 +100,7 @@ def test_without_an_edition_the_console_is_the_full_product(backend, monkeypatch
     views = t[t.index('<span class="tbar-menu-l">Views</span>'):t.index('<span class="tbar-menu-l">Domains</span>')]
     assert 'href="/var"' not in views and 'href="/exposure"' not in views             # not in Views: one place each
     assert 'placeholder="TRD MX-20000001, CPTY north, TRD PRODUCT_TYPE=FX_QUANTO …  then &lt;GO&gt;"' in t
-    assert c.get("/admin/ai").status_code == 200 and c.get("/admin/compute").status_code == 200
+    assert c.get("/admin/compute").status_code == 200
     home = c.get("/").text
     assert 'id="grammar"' in home and 'id="pipeline"' in home and "data-risk-landing" not in home
     assert app.state.settings.get("ui.product") == "Drishti"
@@ -117,7 +117,7 @@ def test_drishti_risk_starts_everyone_in_the_risk_workspace_which_hides_nothing_
     assert "/var" in links and "/exposure" in links and "/func" in links and "/datamap" in links and "/forms" in links
     assert "Drishti Risk" in t and "VAR BANK, VAR DESK RATES" in t                     # the brand; the lens's placeholder
     assert 'data-risk-landing="desk"' in c.get("/").text                                # the default lens: the Risk desk first
-    for path in ("/admin/ai", "/admin/compute", "/admin/users", "/admin/packs", "/smat"):
+    for path in ("/admin/compute", "/admin/users", "/admin/packs", "/smat"):
         assert c.get(path).status_code == 200, path                                     # the lens hides nothing
     r = c.get("/go", params={"q": "SMAT DESK RATES 30 <GO>"}, follow_redirects=False)
     assert r.status_code == 303 and r.headers["location"] == "/smat?id=DESK%3ARATES&days=30"
@@ -166,7 +166,7 @@ def test_a_lens_arranges_one_persons_workspace_and_hides_nothing(backend, monkey
     page = alice.get("/t").text                                                         # every page keeps it (a refresh too)
     assert "/lens/leave" in _menu_links(page)
     assert set(_menu_links(before)) - {"/lens/risk"} <= set(_menu_links(page))         # nothing left out
-    assert alice.get("/admin/ai").status_code == 200 and alice.get("/admin/compute").status_code == 200
+    assert alice.get("/admin/compute").status_code == 200
     assert 'data-risk-landing="desk"' in alice.get("/").text and "data-risk-landing" not in bob.get("/").text
     said = [alice.get("/api/search", params={"in": "command", "q": "FO"}).json()["items"] for alice in (alice, bob)]
     assert said[0] == said[1]                                                            # the same commands offered
@@ -216,7 +216,7 @@ def test_each_lens_arranges_and_hides_nothing(backend, monkeypatch, lens):
     alice, bob = _client(app, "alice"), _client(app, "bob")
     mine, theirs = alice.get("/t").text, bob.get("/t").text
     assert {h for h in _menu_links(theirs) if not h.startswith("/lens/")} <= set(_menu_links(mine)), lens
-    for path in ("/var", "/exposure", "/datamap", "/build/new", "/admin/ai", "/admin/compute", "/admin/users", "/smat"):
+    for path in ("/var", "/exposure", "/datamap", "/build/new", "/admin/compute", "/admin/users", "/smat"):
         assert alice.get(path).status_code == bob.get(path).status_code, (lens, path)
     for typed in ("VAR BANK <GO>", "RUPAKA <GO>", "FORM trading <GO>", "ECON CAN <GO>", "DATAMAP <GO>"):
         a = alice.get("/go", params={"q": typed}, follow_redirects=False).headers.get("location", "")

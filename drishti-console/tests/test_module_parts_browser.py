@@ -85,8 +85,6 @@ def test_install_remove_and_reinstall_in_the_browser(browser, console):
         assert page.locator('[data-home-card="GREETER world"]').count() == 1              # its Home card
         page.goto(url + "/help")
         assert page.locator('a[href="/help/section/module-greeter"]').count() >= 1      # its Help
-        page.goto(url + "/admin/ai")
-        assert page.locator('[data-ai-module-tool="greeter_greet"]').count() == 1         # its AI tool
 
         page.goto(url + "/m/greeter/hello/asha")                                         # a page of it stays open while it goes
         reg.state = "removed"
@@ -104,8 +102,6 @@ def test_install_remove_and_reinstall_in_the_browser(browser, console):
         assert page.locator('[data-home-card="GREETER world"]').count() == 0
         page.goto(url + "/help")
         assert page.locator('a[href="/help/section/module-greeter"]').count() == 0
-        page.goto(url + "/admin/ai")
-        assert page.locator('[data-ai-module-tool="greeter_greet"]').count() == 0
         page.goto(url + "/build?type=sutras")                                             # the saved Sutra: kept and marked
         row = page.locator('tr[data-item="sutras:greetings-board"]')
         assert "needs module greeter" in row.inner_text() and row.locator("a").count() == 0

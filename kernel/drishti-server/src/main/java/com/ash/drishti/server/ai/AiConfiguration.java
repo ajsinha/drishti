@@ -51,7 +51,9 @@ import org.springframework.core.env.Environment;
 /**
  * Wires the AI layer: the registry (provider files when {@code drishti.ai.enabled}, plus Ask's deprecated own endpoint), the
  * policy (masks from {@code drishti.security.redact}, audit into the access log), the gateway features call, the MCP registry
- * and gateway, and the folder watchers that reload them. Everything is off by default.
+ * and gateway, and the folder watchers that reload them. Everything is off by default and one switch turns it on:
+ * {@code drishti.ai.enabled}. While it is off no provider or MCP file is read, no key is asked for and no model is called; the MCP client,
+ * Ask about this page and the BI hooks need it besides their own settings. The console of this release shows no AI page.
  */
 @Configuration
 @EnableConfigurationProperties({AiProperties.class, McpProperties.class})
@@ -109,8 +111,8 @@ public class AiConfiguration {
     }
 
     @Bean(destroyMethod = "close")
-    McpRegistry mcpRegistry(McpProperties mcp, Environment env, ObjectProvider<McpClientFactory> beans) {
-        McpRegistry r = new McpRegistry(McpRegistry.discover(beans.orderedStream().toList()), () -> mcp.enabled()
+    McpRegistry mcpRegistry(McpProperties mcp, AiProperties ai, Environment env, ObjectProvider<McpClientFactory> beans) {
+        McpRegistry r = new McpRegistry(McpRegistry.discover(beans.orderedStream().toList()), () -> mcp.enabled() && ai.enabled()
                 ? McpServerConfigLoader.load(Path.of(mcp.dir()), env::getProperty) : new McpServerConfigLoader.Loaded(List.of(), Map.of()),
                 com.ash.drishti.common.RetryPolicy.of(env::getProperty, "mcp"));
         r.reload();
@@ -142,7 +144,7 @@ public class AiConfiguration {
         if (ai.enabled()) {
             w.add(new DirectoryWatcher(Path.of(ai.dir()), ai.watch(), ai.pollMs(), llm::reload, "drishti-ai-watch"));
         }
-        if (mcp.enabled()) {
+        if (mcp.enabled() && ai.enabled()) {                      // the MCP client is part of the AI layer: one switch, drishti.ai.enabled
             w.add(new DirectoryWatcher(Path.of(mcp.dir()), mcp.watch(), mcp.pollMs(), mcpRegistry::reload, "drishti-mcp-watch"));
         }
         return w;

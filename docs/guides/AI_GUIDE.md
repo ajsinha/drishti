@@ -15,6 +15,12 @@
 -->
 # AI: model providers, MCP servers, AI management and the quant service
 
+> **Not in this release.** The console of this release shows no AI page, menu item or button (no Admin → AI, no assistant, no
+> *Ask about this page*, no AI in BI), and the server's AI layer is **off**: one switch, `drishti.ai.enabled` (`false` as shipped),
+> turns all of it on together (the model providers, the MCP client, *Ask about this page* and the BI hooks each also need it). While it
+> is off no provider or MCP file is read, no key is asked for and no model is called; Admin → Health says **AI: off**. This guide
+> describes the server's layer, which stays in the product for a later release.
+
 Everything about AI in Drishti, in one place: the **model providers** (section 1: one interface, one file per provider, seventeen
 vendor types beside `openai`, `anthropic`, `server` and `mock`), the **MCP client** (section 2: other servers' tools, resources and
 prompts behind Drishti's policy), the design of **AI management** (section 3: one console for every AI setting, use and review), and

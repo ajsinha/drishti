@@ -99,3 +99,17 @@ def test_the_console_keeps_no_copy_of_the_server_s_limits_host_rule_or_secret_ru
         assert "def is_secret" not in (CONSOLE / f).read_text(encoding="utf-8"), f"{f}: the secret rule is the server's"
     found = [p.relative_to(CONSOLE).as_posix() for p in _sources() if "hostrule" in p.read_text(encoding="utf-8")]
     assert not found, f"the console checks host addresses with a copy of the server's rule again: {found}"
+
+
+def test_the_console_has_no_ai_page_route_or_button():
+    """AI is not in this release (owner, 2026-11-16): no AI page, menu item, route or button; the server's layer is off (one switch)."""
+    for f in ("routes/ai_routes.py", "web/templates/admin/ai.html", "web/static/js/drishti_bi-ai.js", "web/static/js/drishti_bi-design-copilot.js",
+              "web/static/js/drishti_about-ask.js", "web/static/js/drishti_admin-ai-test.js", "web/static/css/drishti_bi-ai.css"):
+        assert not (CONSOLE / f).exists(), f"{f}: AI is not in this release's console"
+    found = []
+    for p in [*_sources(), *(CONSOLE / "web" / "templates").rglob("*.html"), *(CONSOLE / "config").glob("*.yaml")]:
+        text = p.read_text(encoding="utf-8")
+        for word in ("/api/ai/", "/admin/ai", "/ai/status", "/ai/chat", "data-about-ask", "data-narrative", "ai_chat"):
+            if word in text:
+                found.append(f"{p.relative_to(CONSOLE).as_posix()}: {word}")
+    assert not found, f"an AI page, route or button is back in the console: {found}"

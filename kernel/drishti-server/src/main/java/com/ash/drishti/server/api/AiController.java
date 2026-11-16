@@ -112,7 +112,7 @@ public class AiController {
         }
         out.put("providers", providers);
         out.put("fileErrors", reg.fileErrors());
-        out.put("mcpEnabled", mcp.enabled());
+        out.put("mcpEnabled", mcp.enabled() && ai.enabled());
         out.put("mcpDir", mcp.dir());
         McpRegistry mr = mcpGateway.registry();
         List<Map<String, Object>> servers = new ArrayList<>();
@@ -207,6 +207,7 @@ public class AiController {
     }
 
     private void mcpOn() {
+        aiOn();
         if (!mcp.enabled()) {
             throw new DrishtiException(ErrorCode.AI_OFF, "the MCP client is switched off (drishti.mcp.enabled)");
         }

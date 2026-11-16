@@ -18,6 +18,15 @@
 
 ## Unreleased
 
+- **AI is not in this release: hidden in the console and off on the server (owner, 2026-11-16).** The console has no AI page, menu item
+  or button: Admin -> AI, its Test connection and overview, the console's `POST /api/ai/chat` and `/api/ai/module-tools`, *Ask about
+  this page* (the About drawer's box and `POST /v/{kind}/{id}/ask`), the BI hooks (*Describe a report*, *Ask the data*, *Explain this
+  number*, *Suggest visuals*, *Explain in plain words*; `drishti_bi-ai.js`, `drishti_bi-design-copilot.js`, `drishti_bi-ai.css`) and the
+  subscription's written summary are deleted, with the `ai: tools:` of a module's `plugin.yaml`, the AI guide and tutorial in Help and
+  their tests. Admin -> Retry now covers packs and connectors. On the server one switch turns all AI on, `drishti.ai.enabled` (off as
+  shipped): the MCP client and *Ask about this page* now need it besides their own switches; while it is off no provider or MCP file is
+  read, no key is asked for and no model is called. Admin -> Health (`/api/v1/admin/health`: `ai`) says **AI: off**. The Java AI layer
+  (`kernel/drishti-ai`) stays for a later release; AI_GUIDE.md and tutorial 10 say they are not in this release.
 - **The thin console, step S6: limits, the secret rule and the host rule are the server's.** The installation answer carries
   `limits.builder` (`drishti.builder.max-samples`, `max-file-mb`, `max-total-mb`), `limits.controls` (how many `ctl.` parameters a
   request carries, how long a name and a value) and `limits.form` (FORM's largest row count, `maxRows`); the console checks with the

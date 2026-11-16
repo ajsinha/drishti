@@ -776,7 +776,7 @@ drishti:
     jitter: 0.2                      # each wait varies by up to this fraction either way
     permanent-after: 3               # a failure waiting cannot fix (refused credentials, bad settings) seen this often in a row is retried only every max
     # packs: {initial: 2s}           # drishti.retry.<area>.<key> overrides any of these for one area: packs, connectors, ai, mcp
-  ai:                                # LLM provider layer (docs/guides/AI_GUIDE.md): OFF by default; no file is read and no model is called while off
+  ai:                                # LLM provider layer (docs/guides/AI_GUIDE.md): OFF by default, the ONE switch of all AI (MCP, Ask, BI hooks); not in this release's console
     enabled: ${DRISHTI_AI_ENABLED:false}  # turn on the LLM provider layer: provider files in drishti.ai.dir are read and models become callable
     dir: ${DRISHTI_AI_DIR:${drishti.config.dir}/ai}        # one YAML per provider: type, base-url, api-key as ${ENV}, models with logical names
     watch: auto                      # auto | poll | off: how edits to the folder are noticed (live reload, like connectors)
@@ -792,7 +792,7 @@ drishti:
       features: {}                   # per feature: "[ask]": {roles: [..], per-user-per-minute: 6}
       # BI hooks use the features bi-draft, bi-ask and bi-explain (docs/guides/bi/README.md), e.g. "[bi-ask]": {roles: [analyst], per-user-per-minute: 10}
   mcp:                               # MCP client (docs/guides/AI_GUIDE.md): OFF by default
-    enabled: ${DRISHTI_MCP_ENABLED:false}  # turn on the MCP client: server files in drishti.mcp.dir are read and their tools become callable
+    enabled: ${DRISHTI_MCP_ENABLED:false}  # turn on the MCP client (also needs drishti.ai.enabled): server files in drishti.mcp.dir are read and their tools become callable
     dir: ${DRISHTI_MCP_DIR:${drishti.config.dir}/mcp}      # one YAML per MCP server: transport, url, headers as ${ENV}, allowed-tools
     watch: auto  # auto | poll | off: how edits to the folder are noticed (live reload)
     poll-ms: 5000  # how often the folder is looked at, in milliseconds
@@ -1007,7 +1007,7 @@ drishti:
     cache-size: 2000                 # answers kept; per user, page, business date and generation (masks and rights are per user)
     cache-ttl: 60s                   # how long an answer is served before it is derived again
     ask:                             # Ask about this page (RACHANA_REFERENCE.md): OFF by default; while off no call to any model is ever made
-      enabled: ${DRISHTI_ASK_ENABLED:false}  # turn on Ask about this page (also list packs in drishti.explain.ask.packs)
+      enabled: ${DRISHTI_ASK_ENABLED:false}  # turn on Ask about this page (also needs drishti.ai.enabled; list packs in drishti.explain.ask.packs)
       model: ${DRISHTI_ASK_MODEL:}  # the model Ask uses: a logical model of the AI layer (provider/model; a provider file in drishti.ai.dir, docs/guides/AI_GUIDE.md)
       packs: []                      # packs where the Ask box is on; empty = none (per-pack opt-in)
       values: labels-only            # labels-only | shown: whether the page's rendered text (values) goes into the prompt; masked values never do

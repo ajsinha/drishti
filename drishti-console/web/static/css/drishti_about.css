@@ -96,13 +96,3 @@
   .about-more { min-height: 32px; }
 }
 @media print { .about-tip, .about-pop { display: none; } .about-gloss { text-decoration: none; } }
-
-/* Ask about this page (drishti_about-ask.js): a small question box at the end of the drawer, drawn only when the server has it on for the pack */
-.about-ask { margin-top: var(--d-sp-16); padding-top: var(--d-sp-11_2); border-top: 1px solid var(--d-border); }
-.about-ask h3 { font-size: var(--d-fs-15_2); margin: 0 0 var(--d-sp-6_4); }
-.about-ask-form { display: flex; gap: var(--d-sp-6_4); }
-.about-ask-form input { flex: 1; min-width: 0; }
-.about-ask-answer { margin: var(--d-sp-8) 0 0; padding: var(--d-sp-8) var(--d-sp-9_6); border: 1px solid var(--d-border); border-radius: var(--d-radius-6); white-space: pre-wrap; font-size: var(--d-fs-14_08); }
-.about-ask-answer.about-ask-problem { color: var(--d-muted); font-style: italic; }
-.about-ask-note { font-size: var(--d-fs-12); margin: var(--d-sp-6_4) 0 0; }
-@media print { .about-ask { display: none; } }

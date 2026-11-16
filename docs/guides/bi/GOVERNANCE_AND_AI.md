@@ -31,6 +31,10 @@ AI in BI (report from words, ask the data, explain this number) and publishing a
 
 ### 1. AI in BI: report from words, ask the data, explain this number
 
+> **Not in this release.** The console of this release shows none of the AI in BI below (no *Describe a report*, *Ask the data*,
+> *Explain this number*, *Suggest visuals* or written summary in a subscription), and the server's AI layer is off
+> (`drishti.ai.enabled`). The section describes the server's hooks, kept for a later release.
+
 A language model sits beside reports in a few places and no more. It is **off by default**, it is the AI layer's
 ([AI_GUIDE.md](../AI_GUIDE.md#1-model-providers)), and the model is never trusted with anything a person could not do by hand: **it writes a draft or a
 query, and Drishti checks it, runs it as the reader, and shows it.** With the AI layer off, the buttons are hidden and every call answers

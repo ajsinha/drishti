@@ -14,7 +14,7 @@
 """The modules' console parts, hosted declaratively (docs/architecture/KERNEL_AND_MODULES.md sections 4.7, 9, 12 and 14.2.1).
 
 A module's console part is the ``console/`` folder of its ``.dmod`` (``plugin.yaml`` format 2, templates, ``drishti_<module>-*`` statics,
-menus, words, Home cards, AI tool descriptions), its ``docs/`` (Help) and its ``elements/<lib>/`` (a domain Elements library). The console
+menus, words, Home cards), its ``docs/`` (Help) and its ``elements/<lib>/`` (a domain Elements library). The console
 reads them and runs nothing of them: no module Python is imported, no route is registered by a module. Two sources, one way:
 
 * the server's module registry (``GET /public/modules/console``): every module deployed on the cluster, active, off or removed, and the
@@ -79,7 +79,6 @@ class Part:
     routes: tuple = ()
     menus: tuple = ()
     cards: tuple = ()
-    tools: tuple = ()
     lenses: tuple = ()
     help: dict = field(default_factory=dict, hash=False, compare=False)
     source: str = "server"
@@ -269,12 +268,11 @@ class ModuleParts:
         title = str(manifest.get("title") or plugin.get("title") or mid)
         menus = tuple(dict(x, module=mid) for x in plugin.get("menus") or [] if isinstance(x, dict) and x.get("label"))
         cards = tuple(dict(x, module=mid) for x in (plugin.get("home") or {}).get("cards") or [] if isinstance(x, dict) and x.get("title"))
-        tools = tuple(dict(x, module=mid) for x in (plugin.get("ai") or {}).get("tools") or [] if isinstance(x, dict) and x.get("name"))
         lenses = tuple(str(x) for x in plugin.get("lenses") or [])
         visuals = tuple({k: str(x.get(k) or "") for k in ("kind", "library", "file", "title", "summary")}
                         for x in plugin.get("visuals") or [] if isinstance(x, dict) and x.get("kind") and x.get("library") and x.get("file")
                         and (folder / "elements" / str(x["library"]) / str(x["file"])).is_file())
-        parts[mid] = Part(mid, str(manifest.get("version") or ""), title, folder, _routes(mid, plugin.get("routes")), menus, cards, tools, lenses,
+        parts[mid] = Part(mid, str(manifest.get("version") or ""), title, folder, _routes(mid, plugin.get("routes")), menus, cards, lenses,
                           _help(mid, title, folder, manifest), source, visuals=visuals)
 
     # ---- the checks (section 11: Elements are the console's; section 14.2.1: declarative only) ------------------------------------
@@ -346,9 +344,6 @@ class ModuleParts:
 
     def cards(self, lens: str | None = None) -> list[dict]:
         return [c for p in self.snapshot.parts.values() for c in p.cards if not c.get("lens") or c.get("lens") == lens]
-
-    def tools(self) -> list[dict]:
-        return [t for p in self.snapshot.parts.values() for t in p.tools]
 
     def visuals(self) -> list[dict]:
         """Every hosted module's own visuals (the Elements gallery shows them while the module is on, and only then)."""

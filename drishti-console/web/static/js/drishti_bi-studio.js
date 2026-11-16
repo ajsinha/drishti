@@ -41,8 +41,6 @@
   /** The designer's actions in the shell's header, each with the data-* hook the designer's script (and the tests) find it by. */
   const ACTIONS = {
     report: [
-      { id: 'aiDraft', label: 'Describe a report', title: 'The AI drafts a report from your words', enabled: true, hidden: true, attrs: { 'data-ai-draft': '' } },
-      { id: 'aiSuggest', label: 'Suggest visuals', title: 'The AI suggests visuals for this report', enabled: true, hidden: true, attrs: { 'data-ai-suggest': '' } },
       { id: 'undo', label: 'Undo', title: 'Undo (Ctrl+Z)', attrs: { 'data-undo': '' } },
       { id: 'redo', label: 'Redo', title: 'Redo (Ctrl+Y)', attrs: { 'data-redo': '' } },
       { id: 'preview', label: 'Preview with data', title: 'Draw the visuals with data, or as outlines only', toggle: true, pressed: true, enabled: true, attrs: { 'data-preview': '' } },

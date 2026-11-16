@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* Admin: "Retry now" for what failed (packs, connectors, AI providers, MCP servers), and the countdown in "next retry in Ns".
+/* Admin: "Retry now" for what failed (packs and connectors), and the countdown in "next retry in Ns".
    POSTs {} to same-origin /admin/api/retry/<area>; the server enforces the admin role and audits it. Text from the server is only
    ever put in the page as text. */
 (function () {

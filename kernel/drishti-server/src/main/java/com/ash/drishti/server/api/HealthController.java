@@ -122,6 +122,8 @@ public class HealthController {
     private final ObjectProvider<com.zaxxer.hikari.HikariDataSource> identityDataSource;
     private final com.ash.drishti.identity.IdentityProperties identity;
     private final com.ash.drishti.server.security.MaskCoverage masks;
+    /** The AI layer's one switch ({@code drishti.ai.enabled}, off as shipped): Health says "AI: off" or "AI: on". */
+    private final boolean aiOn;
 
     /** The modules' engines' figures (a module's beans); none in a test that makes the controller itself. */
     private java.util.List<HealthFigures> moduleFigures = java.util.List.of();
@@ -146,6 +148,7 @@ public class HealthController {
             ObjectProvider<com.zaxxer.hikari.HikariDataSource> identityDataSource, com.ash.drishti.identity.IdentityProperties identity,
             com.ash.drishti.server.security.MaskCoverage masks, com.ash.drishti.server.design.HistoryDefinitions history) {
         this.history = history;
+        this.aiOn = Boolean.TRUE.equals(env.getProperty("drishti.ai.enabled", Boolean.class, false));
         this.masks = masks;
         this.identityDataSource = identityDataSource;
         this.identity = identity;
@@ -279,6 +282,7 @@ public class HealthController {
         out.put("packsNotLoaded", loadedNames);
         out.put("masksMatchingNothing", masks.unmatched());              // DRS-6011: a redact entry that names no field of the loaded packs
         out.put("retry", retry.snapshot());
+        out.put("ai", aiOn ? "on" : "off");                           // one switch, drishti.ai.enabled; off: no AI code runs and no key is asked
         out.put("sutras", Map.of("hotReload", hotReload, "problemFiles", sutras.problems().size()));
         out.put("dataLate", dataLate.stream().map(d -> Map.of("pack", d.pack(), "kind", d.kind(), "businessDate", d.businessDate().toString(), "state", d.state(),
                 "by", d.by() + " " + d.zone(), "line", d.line())).toList());

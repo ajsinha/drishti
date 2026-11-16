@@ -39,6 +39,3 @@ visuals:                     # the module's own visual types (the custom-visual 
     file: drishti_genomics.js
     title: Variant lollipop
     summary: "A protein's variants: a stem and head at each amino acid position, the head's height the carriers, its colour the impact, the protein's domains as bands"
-ai:
-  tools:                     # what the assistant may offer (a description; the console calls nothing of the module)
-    - {name: genomics_gene, description: "Opens a gene's variants along its protein (the genomics module)", route: gene, params: {id: TP53}}

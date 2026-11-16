@@ -281,22 +281,6 @@ class BackendClient:
         headers = {"Accept-Language": accept_language} if accept_language else {}
         return await self._send("GET", f"/views/{where}/explain", ident, params=q, headers=headers)
 
-    async def ask(self, kind: str, id_: str, ident, question: str, locale: str | None = None, accept_language: str | None = None) -> dict:
-        """Ask about this page (the server's optional LLM layer, off by default): ``{answer, sources}``, or a BackendError with
-        DRS-4007 (off), DRS-4008 (the model endpoint failed) or DRS-4009 (over the rate)."""
-        where, q = entity_path(kind, id_)
-        body = {"question": question, **({"locale": locale} if locale else {})}
-        headers = {"Accept-Language": accept_language} if accept_language else {}
-        return await self._send("POST", f"/views/{where}/ask", ident, params=q, json=body, headers=headers)
-
-    async def ai_chat(self, ident, body: dict) -> dict:
-        """The server's AI layer (``POST /api/v1/ai/chat``): the ``server`` provider's one call. Errors: DRS-4015 off, 4011 failed, 4012 limit, 4013 policy, 4014 unknown."""
-        return await self._send("POST", "/ai/chat", ident, json=body, timeout=130.0)
-
-    async def ai_mcp_call(self, ident, server: str, tool: str, body: dict) -> dict:
-        """A tool call on one of the server's MCP servers, through the server's policy (``POST /api/v1/ai/mcp/{server}/tools/{tool}``)."""
-        return await self._send("POST", f"/ai/mcp/{quote(server, safe='')}/tools/{quote(tool, safe='')}", ident, json=body, timeout=130.0)
-
     async def search(self, q: str, ident=None) -> dict:
         """Structured search: TRD where mtm > 1m order by mtm desc limit 50."""
         return await self._get("/search", ident, q=q)

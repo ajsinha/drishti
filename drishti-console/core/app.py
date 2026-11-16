@@ -353,8 +353,7 @@ def create_app(settings: Settings) -> FastAPI:
     catalogue = Servers(settings)
     from routes import (admin_routes, alert_routes, api_routes, asof_routes, auth_routes, build_routes, pack_routes, connector_designer_routes, calc_routes, export_routes, help_routes, home_routes,
                         designer_routes, designer_grid_routes, dist_routes, layout_routes, monitor_routes, pivot_routes, report_routes, approval_routes, server_routes, ship_routes, studio_routes, terminal_routes,
-                        workspace_routes, collab_routes, thread_routes, collab_admin_routes, embed_admin_routes, connector_routes, form_routes,
-                        ai_routes)
+                        workspace_routes, collab_routes, thread_routes, collab_admin_routes, embed_admin_routes, connector_routes, form_routes)
 
     from routes import edition_routes
     from routes import data_out_routes
@@ -773,7 +772,6 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(explain_routes.router)          # Explain: one for every number, the preview, the drawer and the page (SHARED_SCREENS.md 3)
     app.include_router(lake_maint_routes.router)
     app.include_router(form_routes.router)
-    app.include_router(ai_routes.router)
     if app.state.bi_on:
         from core.notebook import Limits
         from routes import bi_routes, model_routes, notebook_routes, python_routes, tables_editor_routes, transform_routes
