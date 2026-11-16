@@ -17,10 +17,10 @@ and the plugin API only, and it carries no finance: Drishti Genomics boots the k
 |---|---|
 | The VCF reader | `genomics-vcf`, a connector extension inside the module: reads VCF 4.x files (plain or gzipped) |
 | Kinds | `variant` and `sample` (from the VCF files), `gene` and `cohort` (computed) |
-| Functions | `VARIANT <id>`, `GENE <symbol>`, `COHORT <id>`; the Rachana function `genomics_af_class(af)` |
-| Pages | one page folder, under `/m/genomics/`: variants, genes (with the lollipop), cohorts |
-| Visual | `genomics.lollipop`, a kind of drishti-chart from the module's library `drishti-genomics` |
-| API | `/api/v1/genomics/variants`, `/genes/{id}`, `/cohorts/{id}` |
+| Functions | `VARIANT <id>`, `GENE <symbol>`, `COHORT <id>`, `GWAS <trait>`, `PROTEIN <gene>`, `DESIGNS <gene>`; the Rachana function `genomics_af_class(af)` |
+| Pages | under `/m/genomics/`: variants, genes (with the lollipop), cohorts; the showcase: the linked board, its guided mode, the protein workbench |
+| Visuals | `genomics.lollipop`, `genomics.manhattan`, `genomics.oncoprint`, `protein.dms`, `protein.backbone`, `protein.landscape`: glue in the module's library `drishti-genomics` over drishti-chart's generic kinds |
+| API | `/api/v1/genomics/variants`, `/genes/{id}`, `/cohorts/{id}`; the showcase's calls (`showcase/status`, `associations`, `cohorts/{id}/summary`, `oncoprint`, `samples/map`, `genes/{id}/lollipop`, `proteins/{id}/…`, `explain/…`: the guide lists them) |
 
 ## Data structures
 
