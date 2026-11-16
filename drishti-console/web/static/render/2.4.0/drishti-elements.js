@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Drishti Elements 2.3 (carried by renderer 2.0.0; part of drishti-renderer): <drishti-view>, <drishti-panel> and the alias
+/* Drishti Elements 2.4 (carried by the renderer; part of drishti-renderer): <drishti-view>, <drishti-panel> and the alias
    <drishti-screen>, drawn from the embed API v2. One import:
 
      <script type="module" src="(the console)/embed/v2/elements/2/drishti-elements.js"></script>

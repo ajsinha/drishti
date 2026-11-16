@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""drishti-renderer 2.0.0 in a real browser against its static fixture harness (static/elements/drishti-renderer/drishti_harness.html):
+"""drishti-renderer in a real browser against its static fixture harness (static/elements/drishti-renderer/drishti_harness.html):
 no Drishti server, the files served from the static folder under a strict CSP, the per-worker browser only. Fast: the components it
 draws with (drishti-grid's document table and tree grid, drishti-chart's panel charts) are tested in their own harnesses; this file tests
 the renderer's wiring of them. The parity with the console's macros is test_render_parity_browser.py.
@@ -27,6 +27,10 @@ pytestmark = pytest.mark.spread
 
 from test_elements_grid_browser import ORIGIN, route  # noqa: E402 - the same static origin and strict CSP
 
+import json as _json  # noqa: E402
+from pathlib import Path as _Path  # noqa: E402
+
+ELEMENTS_VERSION = _json.loads((_Path(__file__).resolve().parent.parent / "web" / "static" / "elements" / "drishti_elements.json").read_text(encoding="utf-8"))["elements"]   # the one Elements version
 PAGE = "/static/elements/drishti-renderer/drishti_harness.html"
 ROOT = "document.getElementById('host').shadowRoot"
 READY = "() => window.__rx && window.__rx.ready === true"
@@ -64,7 +68,7 @@ def test_the_showcase_draws_every_kind_with_the_libraries(browsers):
             unknown: r.querySelectorAll('[data-r-unknown]').length, charts: charts.length, drawn: charts.filter((c) => (E && E.getInstanceByDom(c)) || (c.classList.contains('dn') && c.querySelector('.dn-shell'))).length,
             tables: r.querySelectorAll('table.tbl').length, sorts: r.querySelectorAll('.tbl-sort').length, version: window.__rx.version }};
         }}""")
-        assert got["version"] == "2.0.0" and got["unknown"] == 0 and got["kinds"] >= 20
+        assert got["version"] == ELEMENTS_VERSION and got["unknown"] == 0 and got["kinds"] >= 20
         assert got["charts"] >= 8 and got["drawn"] == got["charts"], got
         assert got["tables"] > 5 and got["sorts"] > 0
         first = await pg.evaluate(f"() => {ROOT}.querySelector('table.tbl:not([data-plain]) .tbl-sort').closest('table').id || ''")

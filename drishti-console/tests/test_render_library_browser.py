@@ -27,7 +27,7 @@ import render_cases as cases
 import render_harness as H
 
 sync_api = pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install playwright)")
-E = "/static/elements/"          # drishti-renderer 2.0.0 and the libraries it draws with
+E = "/static/elements/"          # drishti-renderer and the libraries it draws with
 
 
 @pytest.fixture(scope="module")

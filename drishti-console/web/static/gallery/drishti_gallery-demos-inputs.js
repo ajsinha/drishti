@@ -16,7 +16,7 @@
 /* The gallery's demos of drishti-inputs (every input: the date and range pickers, the tree picker, the multi-select, the combobox, the
    form from a schema with four eyes, the filter bar with a grid following it, the code editor and the diff) and of drishti-data (a
    memory source paged into a grid, the live client fed by hand through a stand-in EventSource, a JSON frame as grid columns). The gallery
-   shows a demo only when its library is in the manifest, so these appear with the libraries (drishti-inputs and drishti-data 0.1.0). */
+   shows a demo only when its library is in the manifest, so these appear with the libraries (drishti-inputs and drishti-data). */
 (function (root) {
   'use strict';
   const NS = (root.Drishti = root.Drishti || {});

@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* drishti-grid 0.4.0 under Node: what a screen moving onto the grid needs of it (ELEMENTS.md section 12, the BI and Pivot family): the
+/* drishti-grid under Node: what a screen moving onto the grid needs of it (ELEMENTS.md section 12, the BI and Pivot family): the
    server's own aggregations in the wells, a server pivot's figures shown by the answer's own fields (measureText: units, show-as, the
    server's text), an answer the host fetched itself (showAnswer, a patch), the open state given back, and a value's label kept. */
 import test from 'node:test';

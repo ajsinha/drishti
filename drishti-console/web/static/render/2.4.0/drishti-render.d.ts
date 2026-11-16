@@ -13,8 +13,8 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/** Drishti Render 2.0.0 (drishti-renderer, drawn with the Drishti Elements libraries): the client-side renderer, and Elements 2.3 (drishti-elements.js).
-    The API is 1.x's; 2.0.0 adds `insight`. docs/architecture/CLIENT_RENDERER.md, docs/architecture/ELEMENTS.md. */
+/** Drishti Render 2.4.0 (drishti-renderer, drawn with the Drishti Elements libraries): the client-side renderer, and Elements 2.4 (drishti-elements.js).
+    The API is 1.x's; it adds `insight`. docs/architecture/CLIENT_RENDERER.md, docs/architecture/ELEMENTS.md. */
 
 /** A ViewModel as GET /api/v1/views/{kind}/{id} answers it (docs/architecture/VIEWMODEL.md); unknown fields are ignored. */
 export interface ViewModel {
@@ -82,7 +82,7 @@ export interface RenderOptions {
   about?: boolean;
   /** 1.0.0: where About, a Pivot tab's rows and a control's panels are read (default: the console's own routes). */
   aboutUrl?: (ref: { kind: string; id: string }, generation?: number) => string;
-  /** 2.0.0: the insight components' hooks (drishti-insight): About this page from the host's own source instead of aboutUrl. */
+  /** the insight components' hooks (drishti-insight): About this page from the host's own source instead of aboutUrl. */
   insight?: { about?: (ref: { kind: string; id: string }, generation: number) => Promise<{ explain?: unknown; index?: unknown; error?: unknown }> };
   recordsUrl?: (ref: { kind: string; id: string; panel: string }) => string;
   panelsUrl?: (query: string) => string;

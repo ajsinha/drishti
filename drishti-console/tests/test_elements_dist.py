@@ -83,7 +83,7 @@ def test_the_zip_holds_every_general_library_with_matching_hashes(built):
     for p, rec in man["files"].items():
         assert rec["bytes"] == len(files[p]) and rec["integrity"] == sri(files[p]), p
     for lib, spec in man["libraries"].items():
-        assert spec["version"] == TRAIN.libs[lib]["version"]
+        assert "version" not in spec     # one version for the train, none per library
         for key in ("bundle", "entry", "types"):
             assert spec[key] in files, (lib, key)
         for c in spec["css"]:
@@ -121,8 +121,8 @@ def test_the_npm_tarballs_are_npm_pack_shaped_with_package_names_and_hashes(buil
         files = tgz_files(built / "npm" / dist.tgz_name(TRAIN, lib))
         pkg = json.loads(files["package.json"])
         s = dist.short(lib)
-        assert pkg["name"] == f"@drishti/elements-{s}" and pkg["version"] == TRAIN.libs[lib]["version"]
-        assert pkg["dependencies"] == {f"@drishti/elements-{dist.short(r)}": "^" + TRAIN.libs[r]["version"] for r in TRAIN.libs[lib]["requires"]}
+        assert pkg["name"] == f"@drishti/elements-{s}" and pkg["version"] == TRAIN.version
+        assert pkg["dependencies"] == {f"@drishti/elements-{dist.short(r)}": "^" + TRAIN.version for r in TRAIN.libs[lib]["requires"]}
         assert pkg["exports"]["."] == {"types": f"./drishti-{s}.d.ts", "import": "./src/drishti_index.js", "require": f"./{dist.bundle_name(lib)}"}
         assert "publishConfig" not in pkg and pkg["type"] == "commonjs" and json.loads(files["src/package.json"]) == {"type": "module"}
         for target in [pkg["main"], pkg["module"], pkg["types"]] + [v for v in pkg["exports"].values() if isinstance(v, str) and "*" not in v]:

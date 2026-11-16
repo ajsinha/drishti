@@ -293,7 +293,7 @@
   GAL.moduleVisual = function (v, catalogue) {
     const cat = catalogue || GAL.catalogue;
     if (!cat.libraries.some((l) => l.name === v.library)) {
-      cat.libraries.push({ name: v.library, version: v.version, title: 'The ' + v.module + " module's library (served while the module is on)",
+      cat.libraries.push({ name: v.library, title: 'The ' + v.module + " module's library (served while the module is on)",
         requires: ['drishti-core', 'drishti-chart'], module: v.module, server: 'none', global: 'Drishti.elements.libs[\'' + v.library + '\']',
         bundle: { path: v.script, bytes: 0, lines: 0 }, tests: { node: 0, files: [], browser: [] }, modules: [{ file: v.file, about: v.summary }],
         symbols: [], types: [], constants: {}, changelog: [] });

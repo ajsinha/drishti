@@ -14,29 +14,30 @@
   See the LICENSE file in the root of this repository for the full terms.
 -->
 
-# Drishti Elements: the API reference
+# Drishti Elements 2.4.0: the API reference
 
 Generated from the libraries' typed JSDoc by `python3 tools/docs/elements_api.py` (do not edit; `--check` refuses a stale copy or a
 public symbol without a typed comment). Every library is ES modules under `drishti-console/web/static/elements/<library>/src/` and
-one bundled file next to them; a page loads drishti-core and then `Drishti.elements.load('<library>')`.
+one bundled file next to them; a page loads drishti-core and then `Drishti.elements.load('<library>')`. Every library has the one Elements
+version above (not Drishti's own).
 
-| Library | Version | What it is |
-|---|---|---|
-| [drishti-core](#drishti-core) | 1.3.0 | Formats, theme, API client, events, accessibility, resize, keys, dialogs, drawers and toasts, the filter model every library shares, the element maker and placements, Explain's drawing, chips for list attributes, the CSV writer, reading typed numbers, loading vendored engines |
-| [drishti-inputs](#drishti-inputs) | 0.4.0 | Inputs: business-date and range pickers with holiday calendars, the on/off switch, the tree picker, the multi-select, the combobox with server type-ahead (on its own field or a page's), forms from a schema (live or embedded, steps, named fields, hooks, custom widgets, time, date-and-time and money) with four eyes, the time and date-and-time pickers, the filter bar, the code editor over CodeMirror, and a page's own date fields and checkbox lists upgraded in place |
-| [drishti-grid](#drishti-grid) | 0.6.0 | The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and &lt;drishti-grid&gt; in three layouts and three densities), cell editing with undo, paste, write-back and four eyes, and the AG Grid-style adapter (createGridFromAgOptions) |
-| [drishti-tree](#drishti-tree) | 0.2.0 | The tree: hierarchies as an org chart, an indented tree with measures (on drishti-grid's tree data), a sunburst and an icicle; expand and collapse, search with breadcrumbs, measures on nodes with non-additive ones (◆) asked of the server and never summed, Explain, re-parenting in an edit mode that proposes the move for four eyes, the outline of an authoring screen (marks, a hiding filter, a designer's selection followed both ways, moves by drag or Alt+arrows), export, keyboard and ARIA |
-| [drishti-designer](#drishti-designer) | 0.2.0 | The designer kit: the layout canvas over a layout model (grid or flow: place, move, resize with snap, multi-select, align, distribute, z-order, groups, copy and paste, a phone's order, the keys, undo and redo on one command stack), the palette, the inspector (a form from a schema), the outline (drishti-tree's, drag to re-order or re-parent), the YAML pane kept in step with the model both ways (completion and lint from a JSON Schema) and the designer shell (three panes, Visual / YAML / Both, versions, Validate, Preview, History, Impact, Propose for review) |
-| [drishti-data](#drishti-data) | 0.2.0 | Data: one data-source contract (in memory, REST pages, server-side rows, Arrow, live), the live client over SSE and WebSocket with reconnect, heartbeat, resume and backpressure, and the Arrow client |
-| [drishti-chart](#drishti-chart) | 0.3.0 | The chart: one engine-neutral spec over the vendored ECharts (the general kinds, the maps from world to every country's first-level regions, the card and studio modes, the map's ranking and table modes), Explain on any mark, the data table, export, linked selection and live updates; Vega-Lite translated into the spec |
-| [drishti-graph](#drishti-graph) | 0.1.0 | The graph: networks cyclic or acyclic on a canvas for thousands of nodes; force (seeded), layered (DAG), radial, circular and grouped layouts; zoom, pan, minimap and fit; neighbours expanded on demand; the shortest path; groups collapsed by an attribute and filters by type; size and colour by a measure with a legend; pin, multi-select and lasso; a selection panel with Explain; linked selection; export (PNG, SVG, data); keyboard and an adjacency table; live updates; the lineage preset; the view's graph panel |
-| [drishti-insight](#drishti-insight) | 0.1.0 | Insight on a Drishti server: the one Explain (preview, drawer, full page, keys), the one search box (command line, Help, Alt+K), the one Approvals queue and the workbook export |
-| [drishti-risk](#drishti-risk) | 0.2.0 | The banking module's library (licensed with the module): chart kinds on drishti-chart (the P&L distribution with VaR and ES from the server's bins, the fitted normal, the backtest with its traffic light, the exposure profile with EE, PFE, EEPE and the limit, what moved VaR) and the risk grid preset on drishti-grid (terminal layout, figures never summed in the browser), and the presets for drishti-graph and drishti-tree (the counterparty structure graph; the VaR hierarchy tree): options only, so a page loads the graph or the tree library itself |
-| [drishti-renderer](#drishti-renderer) | 2.0.0 | The client renderer: Drishti screens from a static, live or streamed (GenUI) ViewModel, drawn with drishti-grid, drishti-chart, drishti-graph, drishti-tree, drishti-core and drishti-data; Elements 2.3 (drishti-view, drishti-panel, drishti-screen); hosts import its public entry, static/render/2.0.0/drishti-render.js |
+| Library | What it is |
+|---|---|
+| [drishti-core](#drishti-core) | Formats, theme, API client, events, accessibility, resize, keys, dialogs, drawers and toasts, the filter model every library shares, the element maker and placements, Explain's drawing, chips for list attributes, the CSV writer, reading typed numbers, loading vendored engines |
+| [drishti-inputs](#drishti-inputs) | Inputs: business-date and range pickers with holiday calendars, the on/off switch, the tree picker, the multi-select, the combobox with server type-ahead (on its own field or a page's), forms from a schema (live or embedded, steps, named fields, hooks, custom widgets, time, date-and-time and money) with four eyes, the time and date-and-time pickers, the filter bar, the code editor over CodeMirror, and a page's own date fields and checkbox lists upgraded in place |
+| [drishti-grid](#drishti-grid) | The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and &lt;drishti-grid&gt; in three layouts and three densities), cell editing with undo, paste, write-back and four eyes, and the AG Grid-style adapter (createGridFromAgOptions) |
+| [drishti-tree](#drishti-tree) | The tree: hierarchies as an org chart, an indented tree with measures (on drishti-grid's tree data), a sunburst and an icicle; expand and collapse, search with breadcrumbs, measures on nodes with non-additive ones (◆) asked of the server and never summed, Explain, re-parenting in an edit mode that proposes the move for four eyes, the outline of an authoring screen (marks, a hiding filter, a designer's selection followed both ways, moves by drag or Alt+arrows), export, keyboard and ARIA |
+| [drishti-designer](#drishti-designer) | The designer kit: the layout canvas over a layout model (grid or flow: place, move, resize with snap, multi-select, align, distribute, z-order, groups, copy and paste, a phone's order, the keys, undo and redo on one command stack), the palette, the inspector (a form from a schema), the outline (drishti-tree's, drag to re-order or re-parent), the YAML pane kept in step with the model both ways (completion and lint from a JSON Schema) and the designer shell (three panes, Visual / YAML / Both, versions, Validate, Preview, History, Impact, Propose for review) |
+| [drishti-data](#drishti-data) | Data: one data-source contract (in memory, REST pages, server-side rows, Arrow, live), the live client over SSE and WebSocket with reconnect, heartbeat, resume and backpressure, and the Arrow client |
+| [drishti-chart](#drishti-chart) | The chart: one engine-neutral spec over the vendored ECharts (the general kinds, the maps from world to every country's first-level regions, the card and studio modes, the map's ranking and table modes), Explain on any mark, the data table, export, linked selection and live updates; Vega-Lite translated into the spec |
+| [drishti-graph](#drishti-graph) | The graph: networks cyclic or acyclic on a canvas for thousands of nodes; force (seeded), layered (DAG), radial, circular and grouped layouts; zoom, pan, minimap and fit; neighbours expanded on demand; the shortest path; groups collapsed by an attribute and filters by type; size and colour by a measure with a legend; pin, multi-select and lasso; a selection panel with Explain; linked selection; export (PNG, SVG, data); keyboard and an adjacency table; live updates; the lineage preset; the view's graph panel |
+| [drishti-insight](#drishti-insight) | Insight on a Drishti server: the one Explain (preview, drawer, full page, keys), the one search box (command line, Help, Alt+K), the one Approvals queue and the workbook export |
+| [drishti-risk](#drishti-risk) | The banking module's library (licensed with the module): chart kinds on drishti-chart (the P&L distribution with VaR and ES from the server's bins, the fitted normal, the backtest with its traffic light, the exposure profile with EE, PFE, EEPE and the limit, what moved VaR) and the risk grid preset on drishti-grid (terminal layout, figures never summed in the browser), and the presets for drishti-graph and drishti-tree (the counterparty structure graph; the VaR hierarchy tree): options only, so a page loads the graph or the tree library itself |
+| [drishti-renderer](#drishti-renderer) | The client renderer: Drishti screens from a static, live or streamed (GenUI) ViewModel, drawn with drishti-grid, drishti-chart, drishti-graph, drishti-tree, drishti-core and drishti-data; Elements 2.3 (drishti-view, drishti-panel, drishti-screen); hosts import its public entry, static/render/&lt;version&gt;/drishti-render.js |
 
 ## drishti-core
 
-Version 1.3.0. Bundle `static/elements/drishti-core/drishti_core.js`, global `Drishti.elements.core`.
+Bundle `static/elements/drishti-core/drishti_core.js`, global `Drishti.elements.core`.
 
 ### drishti_format.js
 
@@ -1589,13 +1590,17 @@ Returns `void`.
 
 #### `manifest()`
 
-The manifest: every library by name, its version, files and requirements.
+The manifest: every library by name, its files and requirements, and the one Elements version.
 
 Returns `{elements: string, libraries: Object&lt;string, Object&gt;}`.
 
+#### `ELEMENTS_VERSION` : `string`
+
+The version of Drishti Elements: one for every library (the manifest's `elements`), not Drishti's own.
+
 #### `libraryVersion(name)`
 
-A library's version (null when there is no such library).
+A library's version: the one Elements version (null when there is no such library).
 
 | Parameter | Type | Meaning |
 |---|---|---|
@@ -2261,7 +2266,7 @@ A table to export.
 
 ## drishti-inputs
 
-Version 0.4.0. Bundle `static/elements/drishti-inputs/drishti_inputs.js`, global `Drishti.elements.inputs`; requires drishti-core.
+Bundle `static/elements/drishti-inputs/drishti_inputs.js`, global `Drishti.elements.inputs`; requires drishti-core.
 
 ### drishti_calendar.js
 
@@ -5375,7 +5380,7 @@ A visible row of the tree.
 
 ## drishti-grid
 
-Version 0.6.0. Bundle `static/elements/drishti-grid/drishti_grid.js`, global `Drishti.elements.grid`; requires drishti-core, drishti-inputs, drishti-chart.
+Bundle `static/elements/drishti-grid/drishti_grid.js`, global `Drishti.elements.grid`; requires drishti-core, drishti-inputs, drishti-chart.
 
 ### drishti_columns.js
 
@@ -10887,7 +10892,7 @@ A tree node.
 
 ## drishti-tree
 
-Version 0.2.0. Bundle `static/elements/drishti-tree/drishti_tree.js`, global `Drishti.elements.tree`; requires drishti-core, drishti-inputs, drishti-grid.
+Bundle `static/elements/drishti-tree/drishti_tree.js`, global `Drishti.elements.tree`; requires drishti-core, drishti-inputs, drishti-grid.
 
 ### drishti_tree-model.js
 
@@ -12386,7 +12391,7 @@ The options of a tree.
 
 ## drishti-designer
 
-Version 0.2.0. Bundle `static/elements/drishti-designer/drishti_designer.js`, global `Drishti.elements.designer`; requires drishti-core, drishti-inputs, drishti-tree.
+Bundle `static/elements/drishti-designer/drishti_designer.js`, global `Drishti.elements.designer`; requires drishti-core, drishti-inputs, drishti-tree.
 
 ### drishti_commands.js
 
@@ -14655,7 +14660,7 @@ One of the header's actions.
 
 ## drishti-data
 
-Version 0.2.0. Bundle `static/elements/drishti-data/drishti_data.js`, global `Drishti.elements.data`; requires drishti-core.
+Bundle `static/elements/drishti-data/drishti_data.js`, global `Drishti.elements.data`; requires drishti-core.
 
 ### drishti_backoff.js
 
@@ -15278,7 +15283,7 @@ A data source.
 
 ## drishti-chart
 
-Version 0.3.0. Bundle `static/elements/drishti-chart/drishti_chart.js`, global `Drishti.elements.chart`; requires drishti-core, drishti-inputs.
+Bundle `static/elements/drishti-chart/drishti_chart.js`, global `Drishti.elements.chart`; requires drishti-core, drishti-inputs.
 
 ### drishti_chart-spec.js
 
@@ -17027,7 +17032,7 @@ The options of a chart (the spec says what to draw; these say how it lives in it
 
 ## drishti-graph
 
-Version 0.1.0. Bundle `static/elements/drishti-graph/drishti_graph.js`, global `Drishti.elements.graph`; requires drishti-core, drishti-inputs, drishti-grid.
+Bundle `static/elements/drishti-graph/drishti_graph.js`, global `Drishti.elements.graph`; requires drishti-core, drishti-inputs, drishti-grid.
 
 ### drishti_graph-model.js
 
@@ -18457,7 +18462,7 @@ One line of a command's answer.
 
 ## drishti-insight
 
-Version 0.1.0. Bundle `static/elements/drishti-insight/drishti_insight.js`, global `Drishti.elements.insight`; requires drishti-core.
+Bundle `static/elements/drishti-insight/drishti_insight.js`, global `Drishti.elements.insight`; requires drishti-core.
 
 ### drishti_insight-explain.js
 
@@ -18532,7 +18537,7 @@ Returns `void`.
 
 ## drishti-risk
 
-Version 0.2.0. Bundle `static/elements/drishti-risk/drishti_risk.js`, global `Drishti.elements.risk`; requires drishti-core, drishti-grid, drishti-chart.
+Bundle `static/elements/drishti-risk/drishti_risk.js`, global `Drishti.elements.risk`; requires drishti-core, drishti-grid, drishti-chart.
 
 ### drishti_risk-kinds.js
 
@@ -18636,6 +18641,59 @@ Returns `Object`.
 Registers the risk kinds in drishti-chart's registry (the library does it when it loads, and only where the banking module is licensed: the console serves this library to no one else).
 
 Returns `string[]`: the kinds registered now.
+
+### drishti_risk-kinds2.js
+
+#### `LIMIT_ZONES`
+
+The zones of a limit's use (a share of the limit): up to ok is calm, up to warn is near, above is a breach.
+
+#### `limitZone(use, zones)`
+
+The zone of a use: ok, warn or bad.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `use` | `number` | value over limit |
+| `[zones]` | `{ok: number, warn: number}` |  |
+
+Returns `('ok'\|'warn'\|'bad')`.
+
+#### `buildLimitLadder(spec, rows, env)`
+
+Limit ladder: horizontal bars of each limit's use, worst first, a line at 100%.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `spec` | `Object` | category (the limit's name), value, limit (fields), or use (a field holding value over limit), zones {ok, warn} |
+| `rows` | `Object[]` |  |
+| `env` | `Object` |  |
+
+Returns `import('../../drishti-chart/src/drishti_chart-spec.js').BuiltChart`.
+
+#### `buildVarAttribution(spec, rows, env)`
+
+VaR attribution: contributions stepping up to the total, a negative one (diversification) stepping down.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `spec` | `Object` | category (position or desk), value (the contribution; the last row is the total VaR) |
+| `rows` | `Object[]` |  |
+| `env` | `Object` |  |
+
+Returns `Object`.
+
+#### `buildScenarioMatrix(spec, rows, env)`
+
+Scenario matrix: P&L by scenario and bucket on a diverging scale about zero, the figures written in the cells.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `spec` | `Object` | x (the bucket), y (the scenario), value (the P&L) |
+| `rows` | `Object[]` |  |
+| `env` | `Object` |  |
+
+Returns `Object`.
 
 ### drishti_risk-grid.js
 
@@ -18835,13 +18893,13 @@ Returns `void`.
 
 ## drishti-renderer
 
-Version 2.0.0. Bundle `static/elements/drishti-renderer/drishti_renderer.js`, global `Drishti.elements.renderer`; requires drishti-core, drishti-grid, drishti-chart, drishti-data, drishti-graph, drishti-tree.
+Bundle `static/elements/drishti-renderer/drishti_renderer.js`, global `Drishti.elements.renderer`; requires drishti-core, drishti-grid, drishti-chart, drishti-data, drishti-graph, drishti-tree.
 
 ### drishti_render.js
 
 #### `VERSION`
 
-The renderer's version (Elements library drishti-renderer).
+The renderer's version: the one version of Drishti Elements.
 
 #### `CONTRACTS`
 
@@ -19064,7 +19122,7 @@ Returns `Object`: drishti-grid options (columns, rows, treeData, getDataPath, gr
 
 #### `ELEMENTS_VERSION`
 
-The Elements version this renderer carries.
+The Elements version this renderer carries: the one version of Drishti Elements.
 
 #### `API`
 

@@ -211,7 +211,7 @@ def catalogue(root: Path, manifest: dict, libs: list[tuple[str, dict, list[dict]
         text = bundle.read_text(encoding="utf-8").replace("\r\n", "\n") if bundle.is_file() else ""
         server = "licence" if spec.get("module") else ("server" if spec.get("server") else "none")
         out.append({
-            "name": name, "version": spec["version"], "title": spec.get("title", ""), "requires": spec.get("requires", []),
+            "name": name, "title": spec.get("title", ""), "requires": spec.get("requires", []),
             "module": spec.get("module"), "server": server, "global": f"Drishti.elements.{short}",
             "bundle": {"path": f"{name}/{bundle.name}", "bytes": len(text.encode("utf-8")), "lines": text.count("\n")},
             "tests": tests.get(name, {"node": 0, "files": [], "browser": []}),

@@ -23,19 +23,21 @@ screen built from them. The design is [docs/architecture/ELEMENTS.md](../../../.
 
 ## The libraries
 
-| Library | Version | Requires |
-|---|---|---|
-| `drishti-core` | 1.3.0 | none |
-| `drishti-inputs` | 0.3.1 | `drishti-core` |
-| `drishti-grid` | 0.6.0 | `drishti-core`, `drishti-inputs`, `drishti-chart` |
-| `drishti-tree` | 0.2.0 | `drishti-core`, `drishti-inputs`, `drishti-grid` |
-| `drishti-designer` | 0.2.0 | `drishti-core`, `drishti-inputs`, `drishti-tree` |
-| `drishti-data` | 0.1.0 | `drishti-core` |
-| `drishti-chart` | 0.3.0 | `drishti-core`, `drishti-inputs` |
-| `drishti-graph` | 0.1.0 | `drishti-core`, `drishti-inputs`, `drishti-grid` |
-| `drishti-insight` | 0.1.0 | `drishti-core` |
-| `drishti-risk` | 0.2.0 | `drishti-core`, `drishti-grid`, `drishti-chart` |
-| `drishti-renderer` | 2.0.0 | `drishti-core`, `drishti-grid`, `drishti-chart`, `drishti-data`, `drishti-graph`, `drishti-tree` |
+All at Drishti Elements **2.4.0**.
+
+| Library | Requires |
+|---|---|
+| `drishti-core` | none |
+| `drishti-inputs` | `drishti-core` |
+| `drishti-grid` | `drishti-core`, `drishti-inputs`, `drishti-chart` |
+| `drishti-tree` | `drishti-core`, `drishti-inputs`, `drishti-grid` |
+| `drishti-designer` | `drishti-core`, `drishti-inputs`, `drishti-tree` |
+| `drishti-data` | `drishti-core` |
+| `drishti-chart` | `drishti-core`, `drishti-inputs` |
+| `drishti-graph` | `drishti-core`, `drishti-inputs`, `drishti-grid` |
+| `drishti-insight` | `drishti-core` |
+| `drishti-risk` | `drishti-core`, `drishti-grid`, `drishti-chart` |
+| `drishti-renderer` | `drishti-core`, `drishti-grid`, `drishti-chart`, `drishti-data`, `drishti-graph`, `drishti-tree` |
 
 The manifest [drishti_elements.json](drishti_elements.json) is the one list; each library is ES modules under `<library>/src/` and one
 bundled classic script `<library>/drishti_<name>.js` written by `python3 tools/elements/build.py` (offline, no npm, no CDN).
@@ -59,6 +61,21 @@ of the same API. Colours come from the theme tokens only, so dark and light work
 `/static/gallery/drishti_gallery.html` shows every component live with its options, its events and the code to use it; the elements
 catalogue (`gallery/drishti_catalogue.js`) is generated from the same JSDoc as the reference.
 
+## Versioning
+
+**One version for all of Drishti Elements**, and it is not Drishti's own (which is 2.9.11.i…). Core, inputs, grid, chart, data, insight,
+renderer, risk, designer, graph, tree and every domain library (drishti-genomics) are released together at one semantic version; no
+library has a version of its own. The one source is `elements` in [drishti_elements.json](drishti_elements.json); everything else reads
+it or is generated from it (`python3 tools/elements/build.py`): the bundles' headers, the loader's cache key (`Drishti.elements.core.ELEMENTS_VERSION`), the
+renderer's folder `static/render/<version>/` and its `VERSION`, the npm packages and the WebJar, `ELEMENTS_API.md`, the gallery's
+catalogue, this README. `tests/test_elements_version.py` fails the build on any other Elements version string.
+
+The number is semver. A removed or changed public name, option, event or CSS custom property is a major; a new capability a minor; a fix a
+patch. The first uniform version is **2.4.0**, the next release after the highest version in use before it (the Elements 2.x embed at
+2.3.0 and the renderer at 2.0.0). Each release is a new renderer folder (a released folder never changes); the previous renderer's
+folder is retired, except 1.2.0, which stays frozen for the embedders that pinned it. A domain library's compatibility with the console is
+the `elements:` range in its module's `module.yaml`.
+
 ## Roadmap: Drishti Elements as its own project
 
 Design only; nothing here is built. The aim is that other teams use Elements without Drishti, while Drishti keeps using it unchanged.
@@ -67,7 +84,7 @@ Design only; nothing here is built. The aim is that other teams use Elements wit
 generator (`tools/docs/elements_api.py`) and the Node tests. Drishti takes a pinned copy of a released build into
 `static/elements/` (vendored, as every other library: `VENDOR.md`), so the rule that Drishti's own pages load nothing from a CDN holds.
 
-**Versioning.** Its own semantic version, one for the project (the libraries keep their own numbers inside the manifest, as now): a
+**Versioning.** The one Elements version (section Versioning above) becomes the project's own: a
 breaking change in any library's public API is a major version of the project. Drishti records the version it vendors.
 
 **Distribution.** An npm package (ES modules and the bundles, with the style sheets and the type declarations `dts.py` already writes) and

@@ -18,11 +18,13 @@
 
 ## Unreleased
 
-- **Drishti Elements: four reusable capabilities.** drishti-core 1.3.0: the **state kit** (`stateBlock`, `showState`, `skeleton`: empty,
+- **Drishti Elements 2.4.0: one version for every library, and new capabilities.** The libraries no longer have versions of their own: one
+  Elements version (`drishti_elements.json`, `elements`) is every bundle's, the renderer's folder `render/2.4.0/` (the former 2.0.0 is retired),
+  the packages' and the gallery's; a guard test fails on any other. drishti-core: the **state kit** (`stateBlock`, `showState`, `skeleton`: empty,
   loading skeleton, error with a fix, stale; `css/drishti_states.css`), which replaces the per-component empty, loading and error variants
   of the grid, chart, tree, graph and inputs, and the **command palette** (`CommandPalette`, `bindPaletteKey`, `keymapCommands`: Ctrl+K and
-  Cmd+K, fuzzy search, ARIA combobox, phone sheet; `css/drishti_command-palette.css`). drishti-chart 0.3.0: the **bullet (limit) bar**
-  (`bullet`). drishti-grid 0.6.0: **sparkline, bar and bullet cells** (`sparklineCell`, `barCell`, `bulletCell`; the grid now requires
+  Cmd+K, fuzzy search, ARIA combobox, phone sheet; `css/drishti_command-palette.css`). drishti-chart: the **bullet (limit) bar**
+  (`bullet`). drishti-grid: **sparkline, bar and bullet cells** (`sparklineCell`, `barCell`, `bulletCell`; the grid now requires
   drishti-chart). Gallery examples, ELEMENTS.md section 4, ELEMENTS_API and the catalogue regenerated.
 
 ## 2.9.11.i5 (2026-11-16)

@@ -70,17 +70,23 @@ function base() { return state.base || registry().base || url('/static/elements/
 function staticBase() { return state.staticBase || base().replace(/[^/]+\/$/, ''); }
 
 /**
- * The manifest: every library by name, its version, files and requirements.
+ * The manifest: every library by name, its files and requirements, and the one Elements version.
  * @returns {{elements: string, libraries: Object<string, Object>}}
  */
 export function manifest() { return MANIFEST; }
 
 /**
- * A library's version (null when there is no such library).
+ * The version of Drishti Elements: one for every library (the manifest's `elements`), not Drishti's own.
+ * @type {string}
+ */
+export const ELEMENTS_VERSION = MANIFEST.elements;
+
+/**
+ * A library's version: the one Elements version (null when there is no such library).
  * @param {string} name for example "drishti-grid"
  * @returns {?string}
  */
-export function libraryVersion(name) { const l = MANIFEST.libraries[name]; return l ? l.version : null; }
+export function libraryVersion(name) { const l = MANIFEST.libraries[name]; return l ? MANIFEST.elements : null; }
 
 /**
  * A library and every library it requires, deepest first, each once.
@@ -125,15 +131,15 @@ function loadOne(name) {
   const l = MANIFEST.libraries[name], r = root();
   const doc = r.document;
   if (!doc) { return Promise.reject(new Error('load: ' + name + ' is not loaded, and there is no page to load it into (under Node: require its bundle)')); }
-  l.css.forEach((c) => addCss(doc, staticBase() + c + '?v=' + l.version));
+  l.css.forEach((c) => addCss(doc, staticBase() + c + '?v=' + MANIFEST.elements));
   const engine = (l.scripts || []).reduce((p, src) => p.then(() => loadScript(staticBase() + src)), Promise.resolve());
   state.pending[name] = engine.then(() => new Promise((resolve, reject) => {
     const s = doc.createElement('script');
-    s.src = base() + l.bundle + '?v=' + l.version;
+    s.src = base() + l.bundle + '?v=' + MANIFEST.elements;
     s.async = false;
     s.setAttribute('data-drishti-library', name);
     s.onload = () => { delete state.pending[name]; const api = loaded(name); if (api) { resolve(api); } else { reject(new Error(name + ' loaded but did not register itself')); } };
-    s.onerror = () => { delete state.pending[name]; reject(new Error('Could not load ' + name + ' ' + l.version + ' from ' + s.src)); };
+    s.onerror = () => { delete state.pending[name]; reject(new Error('Could not load ' + name + ' ' + MANIFEST.elements + ' from ' + s.src)); };
     doc.head.appendChild(s);
   }));
   state.pending[name].catch(() => { delete state.pending[name]; });

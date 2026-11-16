@@ -33,7 +33,7 @@
 import { compareAgain, mountWhyPage, whyPageFits } from './drishti_insight-why.js';
 import { explainLink, upgradeLinks, drawNote } from './drishti_insight-link.js';
 import { showBusy, answerError } from './drishti_insight-busy.js';
-import { url as drishtiUrl } from '../../drishti-core/src/drishti_index.js';
+import { url as drishtiUrl, ELEMENTS_VERSION } from '../../drishti-core/src/drishti_index.js';
 /**
  * Installs the one Explain in a page (once): the preview, the drawer, the full page when the page is /explain, the keys, and Drishti.Explain.
  * @param {Window} win the page's window
@@ -387,7 +387,7 @@ export function installExplain(win) {
   function paintPanels(host, a, t, panels) {
     var model = { contract: "1.0", ref: { kind: "explain", id: a.kind + ":" + a.subject }, title: { pill: "Why it moved", id: t.title + " · " + t.from + " to " + t.to },
                   strip: [], panels: panels, keys: [], provenance: { source: "the server's Explain, GET /api/v1/explain?kind=" + a.kind } };
-    lib = lib || import(drishtiUrl("/static/render/2.0.0/drishti-render.js"));
+    lib = lib || import(drishtiUrl("/static/render/" + ELEMENTS_VERSION + "/drishti-render.js"));
     return lib.then(function (R) {
       var v = R.render(host, model, { theme: document.documentElement.getAttribute("data-theme") || "terminal", header: "none", help: false,
                                       tables: true, live: false, navigation: "host", device: window.innerWidth <= 640 ? "phone" : "desk" });

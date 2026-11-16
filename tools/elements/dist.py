@@ -255,7 +255,7 @@ def folder_files(rel_dir: str) -> dict[str, bytes]:
 def licence_notice(train: Train, libs: list[str], extra: list[str] = ()) -> str:
     third = [w for prefix, w in THIRD_PARTY.items() if any(prefix in x for x in extra)]
     domain = [f"{n} is licensed with the {train.domain(n)} module: only customers licensed for that module may use it." for n in libs if train.domain(n)]
-    return (HEADER_TEXT + "\n\nDrishti Elements " + train.version + " (Drishti " + product_version() + "): " + ", ".join(f"{n} {train.libs[n]['version']}" for n in libs)
+    return (HEADER_TEXT + "\n\nDrishti Elements " + train.version + " (Drishti " + product_version() + "): " + ", ".join(libs)
             + ".\nLicensed to the customer under the Drishti licence; not for redistribution outside the licensed organisation. "
             "Nothing of it is published to any public registry or CDN.\n"
             + ("".join("\n" + d for d in domain) + "\n" if domain else "")
@@ -277,7 +277,7 @@ def readme(train: Train, lib: str, npm: bool) -> str:
              "licence": f"It needs a Drishti server with the {spec.get('module')} module and that module's licence."}[train.server(lib)]
     req = ", ".join(spec.get("requires") or []) or "nothing"
     imp = f"import {{ ... }} from '{pkg}';" if npm else f"import {{ ... }} from './elements/{lib}/src/drishti_index.js';"
-    return (f"<!--\n{HEADER_TEXT}\n-->\n# {lib} {spec['version']}\n\n{spec.get('title', '')}.\n\n{needs} It requires {req}.\n\n"
+    return (f"<!--\n{HEADER_TEXT}\n-->\n# {lib} {train.version}\n\n{spec.get('title', '')}.\n\n{needs} It requires {req}.\n\n"
             "## Use it\n\n"
             f"- As ES modules (tree-shakable): `{imp}`\n"
             f"- As one classic script: `{'' if npm else 'elements/' + lib + '/'}{bundle_name(lib)}` registers `Drishti.elements.{s.replace('-', '_')}`"
@@ -312,7 +312,7 @@ def library_tree(train: Train, lib: str, spec_of=None) -> dict[str, bytes]:
             out[f"themes/drishti-theme-{t}.css"] = theme_css(t, table).encode("utf-8")
     spec_of = spec_of or (lambda other: f"../{other}/drishti-{short(other)}")
     d = dts.declarations(lib, (ELEMENTS / lib / spec["entry"]).resolve(), spec_of)
-    out[f"elements/{lib}/drishti-{short(lib)}.d.ts"] = (HEADER_CSS + f"/* {lib} {spec['version']}: TypeScript declarations, generated from the typed JSDoc "
+    out[f"elements/{lib}/drishti-{short(lib)}.d.ts"] = (HEADER_CSS + f"/* {lib} {train.version}: TypeScript declarations, generated from the typed JSDoc "
                                                         "by tools/elements/dts.py. */\n" + d).encode("utf-8")
     out[f"elements/{lib}/README.md"] = readme(train, lib, npm=False).encode("utf-8")
     out[f"elements/{lib}/LICENSE-NOTICE.txt"] = licence_notice(train, [lib], list(out)).encode("utf-8")
@@ -336,13 +336,13 @@ def full_tree(train: Train, include_domains: set[str] = frozenset()) -> dict[str
     cl = [f"<!--\n{HEADER_TEXT}\n-->\n# Drishti Elements {train.version}: the libraries' changelog\n",
           "Each library's lines of the product CHANGELOG, newest release first.\n"]
     for lib in libs:
-        cl.append(f"\n## {lib} {train.libs[lib]['version']}\n")
+        cl.append(f"\n## {lib}\n")
         cl += [f"\n- {e['release']}: {e['text']}" for e in logs.get(lib, [])] or ["\n- (no lines yet)"]
         cl.append("\n")
     files["CHANGELOG.md"] = "".join(cl).encode("utf-8")
     files["LICENSE-NOTICE.txt"] = licence_notice(train, libs, list(files)).encode("utf-8")
     files["README.md"] = (f"<!--\n{HEADER_TEXT}\n-->\n# Drishti Elements {train.version}\n\nDrishti {product_version()}. Libraries: "
-                          + ", ".join(f"{n} {train.libs[n]['version']}" for n in libs) + ".\n\n"
+                          + ", ".join(libs) + ".\n\n"
                           "Serve this folder as it is: `elements/` holds the libraries (each with its ES modules under `src/`, one bundled "
                           "script, its `.d.ts` and README), `css/` the token sheet and the components' style sheets, `themes/` one sheet per "
                           "theme, `vendor/` the engines (ECharts, CodeMirror) and the map shapes. `drishti-elements.json` lists every file "
@@ -354,7 +354,7 @@ def full_tree(train: Train, include_domains: set[str] = frozenset()) -> dict[str
 def dist_manifest(train: Train, libs: list[str], files: dict[str, bytes], include_domains) -> bytes:
     body = {"name": "drishti-elements", "version": train.version, "drishti": product_version(),
             "domains": sorted(include_domains), "excluded": [n for n in train.libs if n not in libs],
-            "libraries": {n: {"version": train.libs[n]["version"], "title": train.libs[n].get("title", ""),
+            "libraries": {n: {"title": train.libs[n].get("title", ""),
                               "requires": train.libs[n].get("requires") or [], "module": train.libs[n].get("module"),
                               "server": train.server(n), "bundle": f"elements/{n}/{bundle_name(n)}",
                               "entry": f"elements/{n}/{train.libs[n]['entry']}", "types": f"elements/{n}/drishti-{short(n)}.d.ts",
@@ -431,20 +431,20 @@ def npm_files(train: Train, lib: str) -> dict[str, bytes]:
         exports["./themes/*"] = "./themes/*"
     if any(q.startswith("vendor/") for q in out):
         exports["./vendor/*"] = "./vendor/*"
-    package = {"name": pkg(lib), "version": spec["version"], "description": f"Drishti Elements: {spec.get('title', lib)}",
+    package = {"name": pkg(lib), "version": train.version, "description": f"Drishti Elements: {spec.get('title', lib)}",
                "license": "SEE LICENSE IN LICENSE-NOTICE.txt", "private": False, "type": "commonjs",
                "main": f"./{bundle_name(lib)}", "module": "./src/drishti_index.js", "types": f"./drishti-{s}.d.ts", "exports": exports,
                "sideEffects": ["*.css", f"./{bundle_name(lib)}", "./src/drishti_index.js"],
-               "dependencies": {pkg(r): "^" + train.libs[r]["version"] for r in spec.get("requires") or []},
+               "dependencies": {pkg(r): "^" + train.version for r in spec.get("requires") or []},
                "drishti": {"library": lib, "train": train.version, "product": product_version(), "module": spec.get("module"),
                            "global": f"Drishti.elements.{s.replace('-', '_')}"}}
     out["package.json"] = (json.dumps(package, indent=2, ensure_ascii=False) + "\n").encode("utf-8")
-    out["integrity.json"] = (json.dumps({"name": pkg(lib), "version": spec["version"], "files": integrity(out)}, indent=2) + "\n").encode("utf-8")
+    out["integrity.json"] = (json.dumps({"name": pkg(lib), "version": train.version, "files": integrity(out)}, indent=2) + "\n").encode("utf-8")
     return out
 
 
 def tgz_name(train: Train, lib: str) -> str:
-    return f"drishti-elements-{short(lib)}-{train.libs[lib]['version']}.tgz"         # npm pack's name for @drishti/elements-<name>
+    return f"drishti-elements-{short(lib)}-{train.version}.tgz"         # npm pack's name for @drishti/elements-<name>
 
 
 def webjar_tree(train: Train, version: str | None = None) -> dict[str, bytes]:

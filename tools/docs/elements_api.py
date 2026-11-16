@@ -260,19 +260,20 @@ def render_fn(d: dict, out: list[str]) -> None:
 
 def render(libs: list[tuple[str, dict, list[dict], list[dict]]]) -> str:
     out = ["<!--", *[f"  {ln}".rstrip() for ln in HEADER.splitlines()], "-->", "",
-           "# Drishti Elements: the API reference", "",
+           "# Drishti Elements " + json.loads((ELEMENTS / "drishti_elements.json").read_text(encoding="utf-8"))["elements"] + ": the API reference", "",
            "Generated from the libraries' typed JSDoc by `python3 tools/docs/elements_api.py` (do not edit; `--check` refuses a stale copy or a",
            "public symbol without a typed comment). Every library is ES modules under `drishti-console/web/static/elements/<library>/src/` and",
-           "one bundled file next to them; a page loads drishti-core and then `Drishti.elements.load('<library>')`.", ""]
-    out.append("| Library | Version | What it is |")
-    out.append("|---|---|---|")
+           "one bundled file next to them; a page loads drishti-core and then `Drishti.elements.load('<library>')`. Every library has the one Elements",
+           "version above (not Drishti's own).", ""]
+    out.append("| Library | What it is |")
+    out.append("|---|---|")
     for name, spec, _, _ in libs:
-        out.append(f"| [{name}](#{name}) | {spec['version']} | {md_escape(spec.get('title', ''))} |")
+        out.append(f"| [{name}](#{name}) | {md_escape(spec.get('title', ''))} |")
     out.append("")
     for name, spec, syms, types in libs:
         out.append(f"## {name}")
         out.append("")
-        out.append(f"Version {spec['version']}. Bundle `static/elements/{name}/drishti_{name[len('drishti-'):].replace('-', '_')}.js`, global "
+        out.append(f"Bundle `static/elements/{name}/drishti_{name[len('drishti-'):].replace('-', '_')}.js`, global "
                    f"`Drishti.elements.{name[len('drishti-'):].replace('-', '_')}`" + (f"; requires {', '.join(spec['requires'])}" if spec.get("requires") else "") + ".")
         out.append("")
         by_module: dict[str, list[dict]] = {}

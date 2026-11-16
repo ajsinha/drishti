@@ -13,16 +13,16 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Drishti Render 2.0.0, the public entry of drishti-renderer (docs/architecture/CLIENT_RENDERER.md): the same API as 1.x, drawn with the
+/* Drishti Render 2.4.0, the public entry of drishti-renderer (docs/architecture/CLIENT_RENDERER.md): the same API as 1.x, drawn with the
    Drishti Elements libraries. One import, one call:
 
      <script type="module">
-       import { render } from 'https://drishti.bank.example/static/render/2.0.0/drishti-render.js';
+       import { render } from 'https://drishti.bank.example/static/render/2.4.0/drishti-render.js';
        render(document.getElementById('risk'), { kind: 'trade', id: 'IRS-48213' });
      </script>
 
    This file says where everything is, from its own address: the libraries beside the console's static root (../../elements/), the
-   console's static files (../../), the sheet beside it; it works the same under /embed/v2/render/2.0.0/ for other origins. Types:
+   console's static files (../../), the sheet beside it; it works the same under /embed/v2/render/2.4.0/ for other origins. Types:
    drishti-render.d.ts beside this file. */
 import { configure } from '../../elements/drishti-core/src/drishti_index.js';
 import { setAssetBase, installRender } from '../../elements/drishti-renderer/src/drishti_index.js';

@@ -58,7 +58,7 @@ def pack(libs: list[str], out: Path, theme: str | None = None, include_domains: 
     names = train.resolve(libs, set(include_domains))
     table = dist.themes()
     chosen = dist.theme_alias(theme, table) if theme else None
-    inside = ", ".join(f"{n} {train.libs[n]['version']}" for n in names)
+    inside = ", ".join(f"{n} {train.version}" for n in names)
     words = (f"Drishti Elements {train.version} (Drishti {dist.product_version()}), packed by drishti.py elements pack: {inside}"
              + (f"; domains: {', '.join(sorted(include_domains))}" if include_domains else "") + ".")
     js = [dist.HEADER_CSS, f"/* {words}\n   Engines inside: " + ("none (the page brings its own)" if not engines else "{engines}") + ". */\n", PRELUDE]
@@ -77,7 +77,7 @@ def pack(libs: list[str], out: Path, theme: str | None = None, include_domains: 
             extra.update(dist.folder_files(a.rstrip("/")))          # a vendored folder carries its own LICENSE
     js[1] = js[1].replace("{engines}", ", ".join(engine_names) or "none needed")
     for n in names:
-        js.append(f"/* ---- {n} {train.libs[n]['version']} ---- */\n")
+        js.append(f"/* ---- {n} {train.version} ---- */\n")
         js.append(body((dist.ELEMENTS / n / dist.bundle_name(n)).read_text(encoding="utf-8")))
     tokens = dist.theme_css(chosen, table) if chosen else (dist.STATIC / dist.TOKENS).read_text(encoding="utf-8")
     css_parts.append(f"/* {words}\n   Theme: " + (f"{chosen} only, on :root" if chosen else "every theme (data-theme on <html>; the default without one)")
@@ -93,7 +93,7 @@ def pack(libs: list[str], out: Path, theme: str | None = None, include_domains: 
     files.update(extra)
     out.mkdir(parents=True, exist_ok=True)
     dist.write_tree(files, out)
-    record = {"elements": train.version, "drishti": dist.product_version(), "libraries": {n: train.libs[n]["version"] for n in names},
+    record = {"elements": train.version, "drishti": dist.product_version(), "libraries": {n: train.version for n in names},
               "requested": libs, "theme": chosen or "all", "domains": sorted(include_domains), "engines": engine_names,
               "files": dist.integrity(files)}
     (out / RECORD).write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
