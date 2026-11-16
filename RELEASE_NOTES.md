@@ -23,6 +23,9 @@ part of it.
 The build of this release still reports its version as 2.9.11.g (the server's About answer, the console footer and the image tags). The
 release itself is tag `v2.9.11.i_4`; the next release takes the version from one place so the two always agree.
 
+Known in this release: a module switched off in Admin → Modules while the server runs may keep its packs loaded until the server
+restarts. Switching a module off in its settings and restarting removes it everywhere. Fixed in the next release.
+
 ## What changes for risk users
 
 - **The VaR page** shows only the scope you chose (the whole bank, a node and below with a breadcrumb up, or a basket's own positions by the
