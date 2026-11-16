@@ -100,7 +100,7 @@ export function getValue(row, col) {
 }
 
 /**
- * A value as the column shows it.
+ * A value as the column shows it; a nested list or record as words (plain values joined, records counted, a record as JSON).
  * @param {*} v
  * @param {Object} col a normalized column
  * @param {Object} [row]

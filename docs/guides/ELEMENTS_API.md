@@ -4795,7 +4795,7 @@ Returns `*`.
 
 #### `formatValue(v, col, row)`
 
-A value as the column shows it.
+A value as the column shows it; a nested list or record as words (plain values joined, records counted, a record as JSON).
 
 | Parameter | Type | Meaning |
 |---|---|---|
