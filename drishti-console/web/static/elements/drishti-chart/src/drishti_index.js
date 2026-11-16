@@ -21,6 +21,7 @@
    drishti-risk's for the banking module. */
 import { registerAxisKinds, buildLayers } from './drishti_chart-kinds.js';
 import { registerOtherKinds } from './drishti_chart-kinds2.js';
+import { registerDistributionKinds } from './drishti_chart-kinds3.js';
 import { registerMapKind } from './drishti_chart-map.js';
 import { registerKind, kindOf } from './drishti_chart-spec.js';
 import { rowsOf } from './drishti_chart-data.js';
@@ -43,6 +44,9 @@ export { CHART_EVENTS, CHART_MODES, Chart } from './drishti_chart-view.js';
 export { ChartIO } from './drishti_chart-io.js';
 export { buildCalendar } from './drishti_chart-calendar.js';
 export { bullet, bulletScale, bulletSummary } from './drishti_bullet.js';
+export { kernelDensity, tenorDays, buildRadar, buildViolin, buildRidgeline, buildCurve, buildDensity, registerDistributionKinds } from './drishti_chart-kinds3.js';
+export { colourScale } from './drishti_chart-scale.js';
+export { linkCrosshair, facets } from './drishti_chart-multiples.js';
 import { buildCalendar } from './drishti_chart-calendar.js';
 export { SELECTION_EVENT, linkGrid, publishSelection } from '../../drishti-core/src/drishti_index.js';
 export { PANEL_KINDS, escapeTip, panelCompact, panelLineCompact, panelTokens, labelFit, panelOption } from './drishti_chart-panels.js';
@@ -51,6 +55,7 @@ export { CHART_ELEMENT, defineChartElement, chartIn } from './drishti_chart-elem
 
 registerAxisKinds();
 registerOtherKinds();
+registerDistributionKinds();
 registerMapKind();
 registerKind('calendar', { build: buildCalendar, label: 'calendar heatmap', cartesian: false });
 registerKind('layer', { label: 'layers', cartesian: true, build: (spec, rows, env) => buildLayers(spec, rows, env, kindOf, (l) => rowsOf(l.data)) });

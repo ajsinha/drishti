@@ -15855,6 +15855,133 @@ The words of a bullet for a screen reader and the title ("VaR 99% 1d: 82 of a li
 
 Returns `string`.
 
+### drishti_chart-kinds3.js
+
+#### `kernelDensity(values, o)`
+
+A Gaussian kernel density estimate of numbers on a grid of points (Silverman's rule of thumb for the bandwidth unless given).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `values` | `number[]` |  |
+| `[o]` | `{points: number, bandwidth: number, extent: number[]}` | points default 48 |
+
+Returns `Array&lt;{x: number, d: number}&gt;`: the density at each point (d at most 1 after scaling by the peak).
+
+#### `tenorDays(label)`
+
+Days a tenor label stands for (ON, 1W, 3M, 10Y, a bare number of days) so a curve's points sit in order; unknown labels go last.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `label` | `string` |  |
+
+Returns `number`.
+
+#### `buildRadar(spec, rows, env)`
+
+Radar: one polygon per series over the members of an axes field (the profile of a desk over risk classes).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `spec` | `Object` | axes (the field naming each spoke), value, series ({by}), max |
+| `rows` | `Object[]` |  |
+| `env` | `Object` |  |
+
+Returns `import('./drishti_chart-spec.js').BuiltChart`.
+
+#### `buildViolin(spec, rows, env)`
+
+Violin: the density of a value per category, mirrored about the category's centre.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `spec` | `Object` | category, value, points (default 48), order |
+| `rows` | `Object[]` |  |
+| `env` | `Object` |  |
+
+Returns `import('./drishti_chart-spec.js').BuiltChart`.
+
+#### `buildRidgeline(spec, rows, env)`
+
+Ridgeline: the densities of a value per category stacked, one row each, overlapping slightly.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `spec` | `Object` | category, value, points (default 48), overlap (default 1.6 rows), order |
+| `rows` | `Object[]` |  |
+| `env` | `Object` |  |
+
+Returns `import('./drishti_chart-spec.js').BuiltChart`.
+
+#### `buildCurve(spec, rows, env)`
+
+Curve (term structure): points ordered by tenor (ON, 1W, 3M, 2Y ...), one line per curve (a date, a scenario) to compare.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `spec` | `Object` | x (the tenor field), y (the rate), series ({by}: curves to compare) |
+| `rows` | `Object[]` |  |
+| `env` | `Object` |  |
+
+Returns `import('./drishti_chart-spec.js').BuiltChart`.
+
+#### `buildDensity(spec, rows, env)`
+
+Density: counts in bins as squares or hexagons on two value axes, in a sequential scale. The bins are the server's (x, y the bin centres, value the count); this draws them and never bins the points.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `spec` | `Object` | x, y (bin centres), value (the count), shape ('square' or 'hex'), cell ({x, y}: the bin size, default the least step) |
+| `rows` | `Object[]` |  |
+| `env` | `Object` |  |
+
+Returns `import('./drishti_chart-spec.js').BuiltChart`.
+
+#### `registerDistributionKinds()`
+
+Registers the kinds of this module (the library's entry calls it once).
+
+Returns `void`.
+
+### drishti_chart-scale.js
+
+#### `colourScale(o)`
+
+A colour scale: colour(v) for a figure, the domain it covers and a legend element.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `o` | `ScaleOptions` |  |
+
+Returns `{type: string, lo: number, hi: number, mid: ?number, colour: function(number): string, legend: function(Document): SVGElement}`.
+
+### drishti_chart-multiples.js
+
+#### `linkCrosshair(charts, E)`
+
+Links the crosshair (and tooltip) of charts: pointing at a place on one shows it in all.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `charts` | `Chart[]` | charts that are drawn (their engines exist) |
+| `[E]` | `Object` | the engine (default: the first chart's) |
+
+Returns `function(): void`: takes the link off.
+
+#### `facets(host, spec, by, o)`
+
+One chart per member of a field (small multiples): the spec's rows split by the field, each panel titled with the member, the same y scale in all (so they compare), the crosshair linked. The panels sit in a grid of columns that wraps on a phone.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` |  |
+| `spec` | `Object` | a spec with its rows in data.rows |
+| `by` | `string` | the field to split by |
+| `[o]` | `FacetOptions` |  |
+
+Returns `{charts: Chart[], members: string[], ready: Promise&lt;void&gt;, destroy: function(): void}`.
+
 ### drishti_link.js
 
 #### `SELECTION_EVENT`
@@ -16104,6 +16231,18 @@ Returns `void`.
 | `all` | `number[]` | [minX, minY, maxX, maxY] of everything drawn |
 | `frames` | `Array&lt;{code: string, box: number[]}&gt;` | inset frames (Alaska, Hawaii) |
 
+#### `FacetOptions` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[columns]` | `number` | panels per row (default: as many as fit 240 px, at most 4) |
+| `[shareY=true]` | `boolean` | one y scale for every panel |
+| `[linkCrosshair=true]` | `boolean` | a crosshair followed across the panels |
+| `[height=160]` | `number` | each panel's drawing height |
+| `[chart]` | `ChartOptionsLike` | options for each Chart (explain, link, echarts ...) |
+
+#### `ChartOptionsLike` : `Object&lt;string, *&gt;`
+
 #### `PanelChartsOptions` : `Object`
 
 | Name | Type | Meaning |
@@ -16119,6 +16258,16 @@ Returns `void`.
 | `[tokensFrom]` | `function(): Element` | the element the colour tokens are read from (default the root's .view, its host, or the page) |
 | `[attr='data-r-chart']` | `string` | the attribute that marks a container still to draw (taken off one that cannot be drawn) |
 | `[relayout=false]` | `boolean` | a change of size draws again (the waterfall's labels are fitted to the width), not only resizes |
+
+#### `ScaleOptions` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[type='sequential']` | `('sequential'\|'diverging')` |  |
+| `domain` | `number[]` | the lowest and the highest figure |
+| `[midpoint=0]` | `number` | diverging: the figure drawn in the middle colour; the scale is symmetric about it |
+| `ramp` | `string[]` | the colours, low to high (diverging: negative, middle, positive); the theme's ramp (ChartTheme.sequential, .diverging) |
+| `[format]` | `function(number): string` | how a figure is written in the legend |
 
 #### `KindDef` : `Object`
 

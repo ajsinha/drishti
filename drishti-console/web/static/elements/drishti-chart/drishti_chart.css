@@ -201,3 +201,10 @@ div.dc-lgq { cursor: default; }
 @media print { .dc-tools, .dc-side, .dc-status { display: none; } .dc-head, .dc-body { break-inside: avoid; } .dc-table[hidden] { display: block; } }
 /* forced colours: a bullet's bands are told apart by hatching (the fills become the page's colour) */
 @media (forced-colors: active) { .dc-bullet-band-warn { stroke-dasharray: 3 2; } .dc-bullet-band-bad { stroke-dasharray: 1 1; } }
+
+/* small multiples (drishti_chart-multiples.js) and the colour scale legend (drishti_chart-scale.js) */
+.dc-facets { display: grid; grid-template-columns: repeat(var(--dc-facet-cols, 2), minmax(0, 1fr)); gap: var(--d-space-md); }
+@media (max-width: 640px) { .dc-facets { grid-template-columns: minmax(0, 1fr); } }
+.dc-facet { min-width: 0; }
+.dc-scale { width: 100%; max-width: 280px; height: 2.4em; }
+.dc-scale-label { fill: var(--d-muted); font-size: var(--d-fs-9); }

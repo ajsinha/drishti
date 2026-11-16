@@ -73,3 +73,16 @@ test('no two capabilities share a name: the chart kinds, their aliases and the r
   });
   assert.throws(() => K.registerKind(names[0], { build: () => ({}) }), /already|taken/i);
 });
+
+test('a kernel density peaks at 1 near the data, tenors sort by length, a diverging scale is centred on its midpoint', () => {
+  const d = K.kernelDensity([1, 2, 2, 3, 2, 2.5, 1.5], { points: 33 });
+  assert.equal(d.length, 33);
+  assert.equal(Math.max(...d.map((p) => p.d)), 1);
+  assert.ok(Math.abs(d.reduce((m, p) => (p.d > m.d ? p : m)).x - 2) < 0.6);
+  assert.deepEqual(['10Y', '3M', 'ON', '1W', '2Y'].sort((a, b) => K.tenorDays(a) - K.tenorDays(b)), ['ON', '1W', '3M', '2Y', '10Y']);
+  const sc = K.colourScale({ type: 'diverging', domain: [-10, 40], midpoint: 5, ramp: ['#000000', '#808080', '#ffffff'] });
+  assert.equal(sc.lo, -30);
+  assert.equal(sc.hi, 40);
+  assert.equal(sc.colour(5), 'rgb(128,128,128)');
+  assert.throws(() => K.colourScale({ domain: [0, 1] }), /ramp/);
+});

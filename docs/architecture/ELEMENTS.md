@@ -273,6 +273,14 @@ turns the bad tone); `bulletScale` and `bulletSummary` give the scale and the wo
 a card or a line of text, and by the grid's bar and bullet cells: one drawing. Tokens only; forced-colors and reduced motion are kept (it
 has none). Gallery: "Bullet (limit) bar".
 
+**More kinds, scales and panels (drishti-chart 0.3.0).** Kinds: `radar` (axes, value, series by), `violin` and `ridgeline` (a kernel
+density per category), `curve` (a term structure: points sorted by tenor, curves compared by `series.by`) and `density` (the server's
+bins drawn as squares or hexagons, `shape: 'hex'`; the chart never bins points itself). `colourScale({type, domain, midpoint, ramp,
+format})` is the one scale: `colour(v)` and `legend(document)` (a gradient with low, middle and high, labelled for a screen reader).
+`facets(host, spec, by, {columns, shareY, height})` draws small multiples on one shared y scale and links their crosshair
+(`linkCrosshair(charts)`, the engine's own axis-pointer link); the panels stack on a phone. Every kind keeps the data table as its
+alternative. Gallery: the kinds, "Colour scale", "Small multiples".
+
 ### 4.5 drishti-data
 
 ```js

@@ -103,4 +103,35 @@
     },
     code: () => ({ js: "const G = Drishti.elements.grid;\ngrid.options = { rows, columns: [\n  { field: 'var99', cellRenderer: G.bulletCell({ limit: 'limit', bands: [{ to: 70, tone: 'ok' }, { to: 90, tone: 'warn' }, { to: 160, tone: 'bad' }] }) },\n  { field: 'notional', cellRenderer: G.barCell({ max: 1000 }) },\n  { field: 'last', cellRenderer: G.sparklineCell({ values: 'trend' }) }\n] };", element: '<drishti-grid id="grid"></drishti-grid>' })
   }));
+
+  demos.push(fn({
+    id: 'colour-scale', library: 'drishti-chart', title: 'Colour scale', about: 'drishti_chart-scale.js', types: ['ScaleOptions'],
+    summary: 'A sequential or diverging scale with a midpoint: the colour of a figure and a legend as an element (low, middle, high). The ramps are the theme\'s, so dark and light follow.',
+    extra: [{ name: 'type', control: { kind: 'select', values: ['diverging', 'sequential'] }, desc: 'Sequential or diverging.' }],
+    values: { type: 'diverging', midpoint: 0 },
+    examples: [{ title: 'Diverging about 0', values: {} }, { title: 'Sequential', values: { type: 'sequential' } }],
+    mount: function (host, values, ctx) {
+      const doc = host.ownerDocument, th = ctx.E.chart.chartTheme({ element: host }), div = values.type === 'diverging';
+      const sc = ctx.E.chart.colourScale({ type: values.type, domain: [-40, 100], midpoint: Number(values.midpoint) || 0, ramp: div ? th.diverging : th.sequential, format: (v) => String(Math.round(v)) });
+      const box = ctx.h(doc, 'div', { cls: 'gx-fn' }, [sc.legend(doc), ctx.h(doc, 'p', { cls: 'gx-note', text: 'colour(70) = ' + sc.colour(70) + ', colour(-20) = ' + sc.colour(-20) })]);
+      host.appendChild(box);
+      return done(box);
+    },
+    code: () => ({ js: "const scale = Drishti.elements.chart.colourScale({ type: 'diverging', domain: [-40, 100], midpoint: 0, ramp: theme.diverging });\nscale.colour(70);\nhost.appendChild(scale.legend(document));", element: '<!-- any host element -->' })
+  }));
+
+  demos.push(fn({
+    id: 'small-multiples', library: 'drishti-chart', title: 'Small multiples', about: 'drishti_chart-multiples.js', types: ['FacetOptions'],
+    summary: 'One chart per member of a field on one shared y scale, with the crosshair linked: point at a day in one panel and every panel shows it.',
+    values: {}, examples: [{ title: 'VaR by desk', values: {} }],
+    mount: function (host, values, ctx) {
+      const doc = host.ownerDocument, C = ctx.E.chart, rows = [];
+      ['Rates', 'Credit', 'FX', 'Equities'].forEach((d, i) => { for (let k = 0; k < 30; k++) { rows.push({ desk: d, day: k + 1, var: Math.round(20 + i * 8 + 10 * Math.sin((k + i * 3) / 4)) }); } });
+      const box = ctx.h(doc, 'div', { cls: 'gx-fn' });
+      host.appendChild(box);
+      const f = C.facets(box, { kind: 'line', x: { field: 'day', type: 'category' }, y: { field: 'var' }, series: [{ field: 'var' }], data: { rows } }, 'desk', { columns: 2, chart: { echarts: root.echarts } });
+      return { target: box, element: box, ready: f.ready, destroy: () => { f.destroy(); box.remove(); } };
+    },
+    code: () => ({ js: "Drishti.elements.chart.facets(host, { kind: 'line', x: { field: 'day' }, y: { field: 'var' }, data: { rows } }, 'desk', { columns: 2 });", element: '<!-- any host element -->' })
+  }));
 }(typeof window !== 'undefined' ? window : null));
