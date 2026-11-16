@@ -519,7 +519,10 @@ A run fails on: no answer or a 5xx; a 4xx that is not a clean refusal; a DRS err
 no rows where the demo has data; no VaR headline; an empty main area (a page drawn in the browser is checked through its API instead); more
 than 10 seconds. A refusal told in words (not available to you, not part of the edition, not active, an engine that runs nowhere, no access to a
 pack) is a pass marked "refused" unless it is slow. A connector's DRS-5034 on an Admin page is that connector's state, which the page lists; it
-is not the page failing. The report is `data/sweep/sweep-<stamp>.md` and `.jsonl` (not committed), written as the runs finish.
+is not the page failing, and so is a lake connector's "no such folder" (an official results lake before its first capture), also when the page
+cuts the message short (a retry's last error is clipped at a fixed length). The report is `data/sweep/sweep-<stamp>.md` and `.jsonl` (not
+committed) when run by hand, written as the runs finish; the drill step writes it to `DRISHTI_SWEEP_OUT` (the drill's logs folder) or, unset,
+to the test's own scratch folder, never under `data/`.
 
 In the drill the browser lane runs it as `test_command_sweep_browser.py` on a server of its own with sign-in on over the full demo lake (every dataset of the saved test data through the lake builder, ending on the walk's date, built once per hash and cached like the walk's lake; never the walk's thin lake; its server has a 6 GB heap, as the full lake needs, and starts without the official exposure capture),
 as the administrator: any FAIL fails the drill. Setting `DRISHTI_SWEEP_ROLE` also signs in as a role user the test creates; that user's FAILs
