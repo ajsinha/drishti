@@ -23,7 +23,7 @@ import * as R from '../../web/static/elements/drishti-renderer/src/drishti_index
 test('the renderer carries the one Elements version and names the panel kinds it draws', () => {
   assert.equal(R.VERSION, JSON.parse(readFileSync(new URL('../../web/static/elements/drishti_elements.json', import.meta.url), 'utf8')).elements);
   assert.ok(Object.isFrozen(R.KINDS));
-  ['table', 'markdown', 'line', 'hbar'].forEach((k) => assert.ok(R.KINDS.includes(k), k));
+  ['table', 'markdown', 'line', 'hbar', 'facets'].forEach((k) => assert.ok(R.KINDS.includes(k), k));
 });
 
 test('untrusted attributes: handlers, styles and unsafe links are dropped, the rest kept', () => {

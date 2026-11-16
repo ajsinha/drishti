@@ -64,6 +64,17 @@ function chart(R, p) {
       d.source ? entityLink(R, d.source, str(d.source.id)) : null) : null];
 }
 
+/**
+ * Facets: one small chart per member of a field on one shared scale (small multiples), from the ViewModel's groups
+ * ({by, columns, groups: [{label, x, series}], limit}); each panel is a line chart like the 'line' kind's, labelled for a reader.
+ */
+function facets(R, p) {
+  const d = p.data, groups = d.groups || [], cols = Math.max(1, Math.min(4, d.columns || 2));
+  return h('div', { class: 'facets', 'data-cols': String(cols), role: 'group', 'aria-label': (p.title || 'Charts') + ': one per ' + str(d.by || 'member') + ', ' + groups.length + ' in all' },
+    groups.map((g) => h('figure', { class: 'facet' }, h('figcaption', null, str(g.label)),
+      chartBox('chart xchart', 'line', (g.label || '') + ': ' + (g.x || []).join(', '), Object.assign({ limit: d.limit, yMin: d.yMin, yMax: d.yMax }, g)))));
+}
+
 function surface(R, p) {
   const d = p.data, box = chartBox('chart surface', 'surface', (p.title || '') + ': ' + (d.y || []).length + ' × ' + (d.x || []).length + ' grid', d);
   box.setAttribute('data-view', d.view || 'heatmap');
@@ -231,7 +242,7 @@ function tabs(R, p, ref) {
  * @type {ReadonlyArray<string>}
  */
 export const KINDS = Object.freeze(['kv', 'status', 'provenance', 'table', 'ladder', 'tabs', 'line', 'area', 'hbar', 'surface', 'links', 'markdown',
-  'waterfall', 'histogram', 'scatter', 'candlestick', 'graph', 'timeline', 'map', 'pivot', 'metric', 'gauge']);
+  'waterfall', 'histogram', 'scatter', 'candlestick', 'graph', 'timeline', 'map', 'pivot', 'metric', 'gauge', 'facets']);
 
 /** pbody(p): what a panel shows, by kind, the same for a panel of the view and for one inside a tab. */
 export function body(R, p, ref) {
@@ -245,6 +256,7 @@ export function body(R, p, ref) {
     case 'line': case 'area': return chart(R, p);
     case 'hbar': return p.data.shape === 'donut' ? donut(R, p) : bars(R, p.data);
     case 'surface': return surface(R, p);
+    case 'facets': return facets(R, p);
     case 'links': return links(R, p.data);
     case 'markdown': return h('p', null, str(p.data.text));
     case 'waterfall': return waterfall(R, p);

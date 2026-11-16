@@ -135,6 +135,12 @@
         (d.markText || d.source) ? h('div', { class: 'chart-foot' }, h('span', { class: 'mono' }, d.markText ? str(d.markText) : ''), ' ',
           d.source ? entityLink(R, d.source, str(d.source.id)) : null) : null];
     }
+    function facets(R, p) {
+      const d = p.data, groups = d.groups || [], cols = Math.max(1, Math.min(4, d.columns || 2));
+      return h('div', { class: 'facets', 'data-cols': String(cols), role: 'group', 'aria-label': (p.title || 'Charts') + ': one per ' + str(d.by || 'member') + ', ' + groups.length + ' in all' },
+        groups.map((g) => h('figure', { class: 'facet' }, h('figcaption', null, str(g.label)),
+          chartBox('chart xchart', 'line', (g.label || '') + ': ' + (g.x || []).join(', '), Object.assign({ limit: d.limit, yMin: d.yMin, yMax: d.yMax }, g)))));
+    }
     function surface(R, p) {
       const d = p.data, box = chartBox('chart surface', 'surface', (p.title || '') + ': ' + (d.y || []).length + ' × ' + (d.x || []).length + ' grid', d);
       box.setAttribute('data-view', d.view || 'heatmap');
@@ -275,7 +281,7 @@
         list.map((t, i) => h('div', { class: 'tab-pane', role: 'tabpanel', id: p.id + '-pane-' + i, 'aria-labelledby': p.id + '-tab-' + i, hidden: i > 0 ? true : null }, tabInner(R, t, ref))));
     }
     const KINDS = Object.freeze(['kv', 'status', 'provenance', 'table', 'ladder', 'tabs', 'line', 'area', 'hbar', 'surface', 'links', 'markdown',
-      'waterfall', 'histogram', 'scatter', 'candlestick', 'graph', 'timeline', 'map', 'pivot', 'metric', 'gauge']);
+      'waterfall', 'histogram', 'scatter', 'candlestick', 'graph', 'timeline', 'map', 'pivot', 'metric', 'gauge', 'facets']);
     function body(R, p, ref) {
       if (p.wire && p.wire.waits) { return h('p', { class: 'pnl-empty pnl-wait', role: 'status', 'data-waits': true }, icon('hand-index'), ' ' + p.wire.waits); }
       if (p.empty || (p.data == null && p.kind !== 'provenance')) { return noData(R, p); }
@@ -287,6 +293,7 @@
         case 'line': case 'area': return chart(R, p);
         case 'hbar': return p.data.shape === 'donut' ? donut(R, p) : bars(R, p.data);
         case 'surface': return surface(R, p);
+        case 'facets': return facets(R, p);
         case 'links': return links(R, p.data);
         case 'markdown': return h('p', null, str(p.data.text));
         case 'waterfall': return waterfall(R, p);

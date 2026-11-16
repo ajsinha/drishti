@@ -360,6 +360,11 @@ now means the family of eight. Takes over: the renderer's entry and `m/` modules
 `drishti_layout-rules.js`, `drishti_sutra-wire.js`, `drishti_compute.js`, `drishti_bi-frame.js`; the screen parts of `drishti_view.js`,
 `drishti_zoom.js`, `drishti_record-forms.js`, `drishti_phone.js`, `drishti_bi-report.js` (the one page renderer), `drishti_bi-phone.js`.
 
+**Vocabulary for small multiples (drishti-renderer).** A ViewModel panel of kind `facets` draws one small chart per member of a field
+on one scale: `data: {by, columns (1 to 4), limit, groups: [{label, x, series}]}`; the groups are the server's (it splits, the browser
+draws), each panel is a line chart with its own label and Data table, and on a phone the panels stack. Frames (live panel patches) and links
+(`kind: 'links'`, entity links in a panel) are the vocabulary the renderer already had.
+
 ### 4.8 drishti-risk
 
 Chart kinds `risk.pnl-distribution`, `risk.backtest` (with the traffic light), `risk.exposure-profile`, `risk.var-change` (the
