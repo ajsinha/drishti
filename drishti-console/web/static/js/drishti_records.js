@@ -37,11 +37,11 @@
   }
   /** Chart these rows: the held rows as the columns draw them, handed to the one chart dialog (Chart any table, drishti_table-chart.js). */
   function chart(x) {
-    var tables = (window.drishtiModules || {}).tables;
-    if (!tables) { return; }
+    var tables = (window.drishtiModules || {}).tables, grid = window.Drishti.elements && window.Drishti.elements.grid;
+    if (!tables || !grid) { return; }
     var cols = (x.columns || []).filter(function (c) { return c.field; });
     var res = { columns: cols.map(function (c) { return { name: c.label || c.field, label: c.label || c.field, type: c.type === 'number' || c.type === 'amount' ? 'number' : 'text', key: c.type === 'id' }; }),
-      rows: x.rows.map(function (r) { return cols.map(function (c) { var v = r[c.field]; return Array.isArray(v) ? v.join(', ') : v; }); }) };
+      rows: x.rows.map(function (r) { return cols.map(function (c) { var v = r[c.field]; return v && typeof v === 'object' ? grid.nestedText(v) : v; }); }) };
     tables.openChart(function (S) { return S.bi(res, { title: x.title || 'Results' }); }, document.activeElement);
   }
   /** Fills the window: a list of records is as tall as what is left of the viewport under its start, less what follows it in the page (a pager, the footer),

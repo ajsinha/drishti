@@ -114,17 +114,18 @@ export function formatValue(v, col, row) {
   if (f && typeof f === 'object') { return formatNumber(v, f); }
   if (col.type === 'number' && typeof v === 'number') { return formatNumber(v, { decimals: 0, maxDecimals: Number.isInteger(v) ? 0 : 2 }); }
   if (col.type === 'date') { return formatDate(v, typeof f === 'string' ? f : 'yyyy-MM-dd'); }
-  if (typeof v === 'object' && !(v instanceof Date)) { return nested(v); }
+  if (typeof v === 'object' && !(v instanceof Date)) { return nestedText(v); }
   return String(v);
 }
 
 /**
  * A nested value in one cell (a curve's points, a trade's legs): a list of plain values joined; a list of records counted (the record
- * opens them whole); a record as JSON. Never "[object Object]".
+ * opens them whole); a record as JSON. Never "[object Object]". Every place that writes a nested value as one line of text uses this
+ * (the grid's cells, a live list's list columns, the record panel's plain lists, a chart of a list's rows).
  * @param {Object|Array} v
  * @returns {string}
  */
-function nested(v) {
+export function nestedText(v) {
   if (Array.isArray(v)) {
     if (v.every((x) => x === null || typeof x !== 'object')) { return v.map((x) => (x === null || x === undefined ? '' : String(x))).join(', '); }
     return v.length + (v.length === 1 ? ' item' : ' items');

@@ -20,6 +20,7 @@
    The connection is not here either: any object with subscribe(handlers) is a channel (the console's live channel, a test's manual one),
    and httpLiveApi is the one way a page reaches the server's /live endpoints. */
 import { MASK, hasFormat, url as drishtiUrl } from '../../drishti-core/src/drishti_index.js';
+import { nestedText } from './drishti_columns.js';
 
 /** The grid row's key and version properties (the record's own fields keep their names). */
 export const ROW_KEY = '__id';
@@ -59,7 +60,7 @@ export function gridColumns(spec) {
     }
     if (c.type === 'id') { col.pinned = 'left'; }
     if (String(c.field).indexOf('.') > 0) { col.valueGetter = (row) => digValue(row, c.field); }   // a nested field (counterparty.name) of the record
-    if (c.type === 'list') { col.valueGetter = (row) => (Array.isArray(row[c.field]) ? row[c.field].join(', ') : row[c.field]); }
+    if (c.type === 'list') { col.valueGetter = (row) => (Array.isArray(row[c.field]) ? nestedText(row[c.field]) : row[c.field]); }
     if (c.type === 'status') { col.cellClass = (v) => 'dg-live-st dg-live-st-' + String(v || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
     if (type === 'number' && sums.has(c.field)) { col.aggFunc = 'sum'; }
     if (type === 'number') { col.enableValue = true; }

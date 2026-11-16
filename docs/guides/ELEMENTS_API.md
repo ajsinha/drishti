@@ -4805,6 +4805,16 @@ A value as the column shows it; a nested list or record as words (plain values j
 
 Returns `string`.
 
+#### `nestedText(v)`
+
+A nested value in one cell (a curve's points, a trade's legs): a list of plain values joined; a list of records counted (the record opens them whole); a record as JSON. Never "[object Object]". Every place that writes a nested value as one line of text uses this (the grid's cells, a live list's list columns, the record panel's plain lists, a chart of a list's rows).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `Object\|Array` |  |
+
+Returns `string`.
+
 #### class `ColumnModel`
 
 The columns of a grid: their order, widths, pinning and visibility, and the field list.

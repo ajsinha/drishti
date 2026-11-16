@@ -146,3 +146,28 @@ def test_the_records_list_has_one_count(browser, stack):
     pg.wait_for_function("() => document.querySelector('.rc-host .dg-live-chip').dataset.state !== 'connecting'", timeout=30000)
     assert pg.locator(".cmp-sum span:has(b)").count() == 0 or "match" in pg.locator(".cmp-sum").inner_text()
     assert not pg.errors
+
+
+@pytest.mark.parametrize("phone", [False, True])
+def test_a_nested_value_in_the_record_panel_is_never_object_object(browser, stack, phone):
+    """A NEWS record holds its items and sources as lists of records (the owner's phone, 2026-11-15: tapping a row showed
+    "[object Object], [object Object] …"). The panel's Record tab joins a list of plain values, draws a record or a list of records as
+    the Raw JSON tab's tree (closed, opening whole), and the grid's own cell counts the records."""
+    url, _ = stack
+    pg = opened(browser, url, "/s", wait="body", width=390 if phone else 1440, height=844 if phone else 900, mobile=phone)
+    pg.evaluate("""() => { const h = window.Drishti.records.table(
+        [{name: 'News', type: 'string'}, {name: 'Aliases'}, {name: 'Items'}, {name: 'Source'}],
+        [['NEWS-bitcoin', ['crypto', 'cryptocurrency'], [{title: 'Bitcoin rallies', source: 'Wire'}, {title: 'ETF flows', source: 'Desk'}],
+          {name: 'Wire', items: 2}]], {title: 'News'}); h.id = 'nested'; document.body.prepend(h); }""")
+    pg.wait_for_selector("#nested[data-records-ready] .dg-row[data-key]")
+    row = pg.locator("#nested .dg-row[data-key]").first
+    assert "2 items" in row.inner_text() and "[object Object]" not in row.inner_text()
+    row.locator(".dg-cell").nth(0).click()
+    pg.wait_for_selector("#nested .dg-live-panel[data-record] .dg-live-kv")
+    kv = pg.locator("#nested .dg-live-kv")
+    assert "[object Object]" not in kv.inner_text()
+    assert "crypto, cryptocurrency" in kv.inner_text()
+    assert kv.locator("dd[data-nested] > details").count() == 2             # Items and Source: the tree, closed
+    kv.locator("dd[data-nested] > details > summary").first.dispatch_event("click")
+    assert "Bitcoin rallies" in kv.inner_text() and "ETF flows" in kv.inner_text()   # opened: each record's fields
+    assert not pg.errors

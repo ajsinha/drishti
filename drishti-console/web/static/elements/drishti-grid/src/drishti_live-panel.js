@@ -21,6 +21,7 @@
    and never copied as a value. The panel decides nothing: the server refuses an edit made on an older version (409) and says who changed it. */
 import { h, MASK, url as drishtiUrl } from '../../drishti-core/src/drishti_index.js';
 import { Form } from '../../drishti-inputs/src/drishti_index.js';
+import { nestedText } from './drishti_columns.js';
 import { ROW_KEY, ROW_VERSION, editItems, editSchema, linkFor, maskedPaths, changedFields } from './drishti_live-model.js';
 
 const TERMINAL = ['applied', 'refused', 'conflicted', 'withdrawn', 'rejected', 'failed'];
@@ -124,7 +125,7 @@ export class RecordPanel {
     const d = this.doc, spec = this.spec;
     if (!spec.editable || !(spec.fields || []).length) {
       const kv = h(d, 'dl', { cls: 'dg-live-kv', data: { readonly: 'true' } });
-      (spec.columns || []).forEach((c) => { kv.append(h(d, 'dt', { text: c.label || c.field }), h(d, 'dd', { text: show(Array.isArray(this.row[c.field]) ? this.row[c.field].join(', ') : this.row[c.field]) })); });
+      (spec.columns || []).forEach((c) => { kv.append(h(d, 'dt', { text: c.label || c.field }), this.cell(d, this.row[c.field])); });
       this.body.append(kv, h(d, 'p', { cls: 'dg-live-note', text: spec.readOnly ? 'Read-only for you: ' + spec.readOnly : 'Read-only.', data: { why: 'readonly' } }));
       return;
     }
@@ -134,6 +135,23 @@ export class RecordPanel {
     const s = editSchema(spec, this.opened);
     this.form = new Form(host, { schema: s.schema, value: s.value, submitLabel: 'Submit changes', doneText: '', resetButton: false, label: 'Edit ' + this.id,
       onSubmit: (values) => this.submit(values) });
+  }
+
+  /**
+   * One read-only field of the Record tab: a plain value or a list of plain values as text; a record or a list of records as the Raw JSON
+   * tab's tree, closed, so it opens whole where it is (never "[object Object]").
+   * @private
+   * @param {Document} d
+   * @param {*} v
+   * @returns {HTMLElement}
+   */
+  cell(d, v) {
+    if (v && typeof v === 'object' && !(v instanceof Date) && !(Array.isArray(v) && v.every((x) => x === null || typeof x !== 'object'))) {
+      const tree = this.node(d, v, '', 0);                  // closed at the top; opened, it shows each record's fields
+      tree.open = false;
+      return h(d, 'dd', { data: { nested: 'true' } }, [tree]);
+    }
+    return h(d, 'dd', { text: show(Array.isArray(v) ? nestedText(v) : v) });
   }
 
   /** @private the words about where a saved change goes */

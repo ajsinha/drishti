@@ -17,7 +17,7 @@
    server-side row models, virtual scrolling for a million rows, the pivot (the server's view and answer: client-side for rows in the
    page, server-side for the rest, non-additive totals always the server's), the wells, selection with range figures, CSV and Excel
    export, keyboard navigation, the Explain hook and the AG Grid-style adapter (createGridFromAgOptions). The layouts (wells, panel, terminal) draw it; a plain renderer serves tests. */
-export { ADDITIVE_FUNCS, normalizeColumn, getValue, formatValue, ColumnModel } from './drishti_columns.js';
+export { ADDITIVE_FUNCS, normalizeColumn, getValue, formatValue, nestedText, ColumnModel } from './drishti_columns.js';
 export { AGG_FUNCS, aggFunc, registerAggFunc, unregisterAggFunc, parseMeasure, isServerMeasure, aggregate } from './drishti_aggregate.js';
 export { SEP, BLANK, memberText, valueLabel, normalizeView, serverRequest, memberFilters, PivotState, pivotLocal } from './drishti_pivot.js';
 export { pivotApplyUpdates, mergeAnswer, applyValueFilters, resultColumns, cellValue, measureText, answerFormat, answerScales } from './drishti_pivot-answer.js';
