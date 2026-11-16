@@ -265,3 +265,15 @@ def test_nothing_stops_a_process_by_name():
         text = p.read_text(encoding="utf-8")
         for bad in ("pkill", "killall", "taskkill /IM", '"/IM"', "pgrep"):
             assert bad not in text, (p.name, bad)
+
+
+def test_a_cluster_files_jvm_flags_and_server_args_reach_the_server_options():
+    """stack.yaml's jvm: and args: start with a dash: clusterctl hands them as --java-opt=FLAG and --server-arg=ARG, which parse."""
+    import argparse
+    import launchcli
+    p = argparse.ArgumentParser()
+    launchcli.add_options(p, "start", "server")
+    a = p.parse_args(["--node", "b", "--java-opt=-XX:G1PeriodicGCInterval=60000", "--server-arg=--drishti.security.registered-users-only=false"])
+    assert a.java_opt == ["-XX:G1PeriodicGCInterval=60000"] and a.server_arg == ["--drishti.security.registered-users-only=false"]
+    text = (TOOLS / "launch" / "clusterctl.py").read_text(encoding="utf-8")
+    assert 'f"--java-opt={flag}"' in text and 'f"--server-arg={arg}"' in text

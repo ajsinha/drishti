@@ -319,7 +319,11 @@ def run_command(module: str, verb: str, args: list[str], env: dict | None = None
         path, args = args[i + 1], args[:i] + args[i + 2:]
         import settingsfile
         javacmd.set_settings(path, settingsfile.read_all(path))
-    a = p.parse_args(args)
+    try:
+        a = p.parse_args(args)
+    except SystemExit as e:                        # a wrong option in the cluster file: this node is not started, the others are
+        javacmd.set_settings(before[0] or None, before[1])
+        return int(e.code or 2)
     mod = __import__({"server": "serverstart", "console": "consolestart"}[module])
     try:
         return getattr(mod, verb)(a, env or {**os.environ, "DRISHTI_PYTHON": python()})
@@ -358,9 +362,9 @@ def start_node(stack: dict, node: dict, jar: Path) -> bool:
     if settings:
         args += ["--settings", settings]
     for flag in node.get("jvm", []):
-        args += ["--java-opt", flag]
+        args.append(f"--java-opt={flag}")             # one argument: a JVM flag starts with a dash
     for arg in [f"--drishti.sources.connectors.{c}.enabled=false" for c in node.get("off", [])] + list(node.get("args", [])):
-        args += ["--server-arg", arg]
+        args.append(f"--server-arg={arg}")
     return run_command("server", "start", args, env) == 0
 
 
