@@ -88,8 +88,7 @@ kinds through the kernel's bindings as rows (`ShowcaseData`, one snapshot, answe
 
 Every call that applies takes the selection (`cluster=`, `box=`, `samples=`). A scan score of −1 or less is *damaging*, −0.4 or less
 *intermediate*, else *tolerated* (0 is the natural protein). A server without the packs says which kinds have no rows, on the page and
-in `showcase/status`, and asks nothing else. A site that binds a kind under another name sets
-`drishti.module.genomics.showcase.kinds.<kind>=<its name>`.
+in `showcase/status`, and asks nothing else.
 
 **How it is built.** `mvn verify` compiles the code, runs its tests, packs `target/dmod/genomics-0.1.0.dmod` and runs the conformance
 checks C1 to C15. See the [tutorial](tutorial.md).

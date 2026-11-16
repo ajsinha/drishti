@@ -43,8 +43,7 @@ public class GenomicsModule implements DrishtiModule {
     public void start(ModuleContext context) {
         context.audit("genomics.started", java.util.Map.of("data", context.dataDir().toString()));
         if (showcase != null) {
-            // a site that binds a showcase kind under another name says so: drishti.module.genomics.showcase.kinds.<kind>=<its name>
-            showcase.attach((kind, sink) -> context.kinds().documents(context.settings().get("showcase.kinds." + kind).orElse(kind), AsOf.LATEST, d -> {
+            showcase.attach((kind, sink) -> context.kinds().documents(kind, AsOf.LATEST, d -> {
                 if (!d.deleted() && d.data() != null && d.data().unwrap() instanceof Map<?, ?> m) {
                     Map<String, Object> row = new LinkedHashMap<>();
                     m.forEach((k, v) -> row.put(String.valueOf(k), v));
