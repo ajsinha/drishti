@@ -27,7 +27,7 @@
   activity by round and the leaderboard. One selection runs through every card and is a filter of the server's next call; every mark
   opens the server's Explain with its records. The server computes everything (`GenomicsBoard`, `ProteinBench`, `ShowcaseController`:
   twelve calls under `/api/v1/genomics/`, each with its Explain block), reading the fourteen kinds through the kernel's bindings; a
-  server without the packs says which kinds have no rows. The module's library `drishti-genomics` 0.2.0 holds six kinds, each glue over
+  server without the packs says which kinds have no rows. The module's library `drishti-genomics` holds six kinds, each glue over
   the generic Elements (`genomics.manhattan`, `genomics.oncoprint`, `genomics.lollipop`, `protein.dms`, `protein.backbone`,
   `protein.landscape`). The genomics guide and tutorial (the three-minute demo, UI and CLI at each step) are updated.
 - **drishti-chart: tracks, brush, frames and two kinds.** Generic, each with its gallery page and Node tests: heatmap annotation tracks

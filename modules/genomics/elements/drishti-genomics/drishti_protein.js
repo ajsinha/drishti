@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* drishti-genomics 0.2.0, the protein kinds: domain glue over drishti-chart's generic kinds and options, like drishti_genomics.js (the
+/* drishti-genomics, the protein kinds: domain glue over drishti-chart's generic kinds and options, like drishti_genomics.js (the
    card, Explain, the table, export, the keyboard and linked selection come with them; nothing is drawn here).
 
      protein.dms        the deep mutational scan: a diverging heatmap of every position by every amino acid (orange hurts, blue helps,
@@ -26,7 +26,7 @@
   'use strict';
   const NS = (root.Drishti = root.Drishti || {});
   const E = (NS.elements = NS.elements || {});
-  const VERSION = '0.2.0';
+  const VERSION = '0.1.0';
   const KINDS = ['protein.dms', 'protein.backbone', 'protein.landscape'];
   const AAS = 'AVILMFWYCGPSTNQDEKRH*'.split('');
   const FOLD_TONES = { helix: 'accent', strand: 'link', loop: 'muted', H: 'accent', E: 'link', C: 'muted' };

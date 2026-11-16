@@ -475,7 +475,7 @@ gap left hollow); `sunburst` and `icicle` are modes of drishti-tree, usable as r
 level by level, every figure given by the host's `load`, never added); `rangeBrush` (drishti-chart, the drag that picks a range of an axis, for
 linked brushing). Every one has a **Playground page** in the gallery.
 
-**Added for the genomics showcase (drishti-chart 0.3.0, drishti-core's `Tour`)**, each generic and each with its gallery page and Node
+**Added for the genomics showcase (drishti-chart and drishti-core's `Tour`)**, each generic and each with its gallery page and Node
 tests; a domain library builds on them and draws nothing itself:
 
 | Capability | Spec | Use beyond genomics |
