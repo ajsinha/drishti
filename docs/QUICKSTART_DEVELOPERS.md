@@ -77,7 +77,7 @@ python tools/drishti.py build jar        # Windows: py tools\drishti.py build ja
 ls lib/*-exec.jar
 ```
 
-**You should see** Maven's progress, then `lib/drishti-server-2.9.11.g-exec.jar`: `build jar` runs `mvnw clean package` for the server and
+**You should see** Maven's progress, then `lib/drishti-server-<version>-exec.jar`: `build jar` runs `mvnw clean package` for the server and
 copies the exec jar into `lib/`, where every start finds it (`--offline` builds without the network). The first build downloads
 its libraries (several minutes); later ones take about a minute. `-pl :drishti-app -am` builds the jar that runs (the core server with
 the banking module and the plugins) and only what it needs; `clean` keeps exactly one exec jar in `target/`. Every Maven command and

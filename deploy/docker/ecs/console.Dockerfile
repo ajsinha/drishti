@@ -14,7 +14,7 @@
 
 # Drishti console image for Amazon ECS with EFS, a separate container from the server (docs/architecture/AWS_DEPLOYMENT.md
 # section 6). Build from the repository root:
-#   docker build -f deploy/docker/ecs/console.Dockerfile -t drishti-console-ecs:2.9.11.g .
+#   docker build -f deploy/docker/ecs/console.Dockerfile -t drishti-console-ecs:$(python3 tools/version.py) .
 # Calc's Python runtime (Pyodide) is fetched in the first stage (pinned, SHA-256 checked), so a running console needs no
 # internet; the stage sees only the fetch script and the vendored libraries, so a console change does not fetch it again.
 FROM python:3.13-slim AS pyodide
@@ -36,6 +36,7 @@ COPY config/packs/ /opt/drishti/shipped/packs/
 COPY config/lenses/ /opt/drishti/config/lenses/
 COPY config/distributions/ /opt/drishti/config/distributions/
 COPY tools/packbundle.py /opt/drishti/tools/packbundle.py
+COPY .mvn/maven.config /opt/drishti/.mvn/maven.config
 COPY LICENSE CHANGELOG.md RELEASE_NOTES.md THIRD-PARTY-NOTICES.md /opt/drishti/
 COPY deploy/docker/ecs/console-entrypoint.sh /opt/drishti/bin/entrypoint.sh
 # compiled once here, so the read-only root never needs __pycache__ written at run time

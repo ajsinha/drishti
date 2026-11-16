@@ -325,19 +325,28 @@ public class LiveSetConfiguration {
             try {
                 com.fasterxml.jackson.databind.JsonNode n = new com.fasterxml.jackson.databind.ObjectMapper(
                         new com.fasterxml.jackson.dataformat.yaml.YAMLFactory()).readTree(f.toFile());
-                java.util.Set<String> out = new java.util.LinkedHashSet<>();
-                n.path("key").forEach(x -> out.add(x.asText()));
-                if (n.hasNonNull("dated-by")) {
-                    out.add(n.path("dated-by").asText());
-                }
-                n.path("fields").forEach(x -> out.add(x.path("name").asText()));
-                out.removeIf(String::isBlank);
-                return new java.util.ArrayList<>(out);
+                return columnsOf(n);
             } catch (java.io.IOException e) {
                 return java.util.List.of();
             }
         }
         return java.util.List.of();
+    }
+
+    /** The columns of one contract document: its key fields, its date column when the data has one, then its fields in the contract's order. */
+    static java.util.List<String> columnsOf(com.fasterxml.jackson.databind.JsonNode n) {
+        java.util.Set<String> out = new java.util.LinkedHashSet<>();
+        n.path("key").forEach(x -> out.add(x.asText()));
+        java.util.Set<String> named = new java.util.LinkedHashSet<>();
+        n.path("fields").forEach(x -> named.add(x.path("name").asText()));
+        // the date column only when the data has one: the business date of the day read, or a field of the contract; a kind dated by
+        // "snapshot" (a document of the moment it was fetched) has no date column, and an always-empty one is not shown
+        if (n.hasNonNull("dated-by") && (BUSINESS_DATE.equals(n.path("dated-by").asText()) || named.contains(n.path("dated-by").asText()))) {
+            out.add(n.path("dated-by").asText());
+        }
+        out.addAll(named);
+        out.removeIf(String::isBlank);
+        return new java.util.ArrayList<>(out);
     }
 
     /** The top-level fields of one contract file ({@code fields} and {@code nested}); empty when it cannot be read or names none. */
@@ -385,7 +394,10 @@ public class LiveSetConfiguration {
                     if (!d.deleted()) {
                         Object[] v = new Object[fields.size()];
                         for (int j = 0; j < v.length; j++) {
-                            v[j] = d.data().get(fields.get(j)).unwrap();
+                            DataNode held = d.data().get(fields.get(j));
+                            // the business date is the day the document was read for, not a field the document holds
+                            boolean date = BUSINESS_DATE.equals(fields.get(j)) && d.provenance() != null && d.provenance().businessDate() != null;
+                            v[j] = held.unwrap() == null && date ? d.provenance().businessDate().toString() : held.unwrap();
                         }
                         sink.row(d.ref().id(), v);
                     }
@@ -412,6 +424,9 @@ public class LiveSetConfiguration {
             }
         };
     }
+
+    /** The column that names the business date a row was read for. */
+    static final String BUSINESS_DATE = "business_date";
 
     /** Where a search's row keeps its title in the set's document. */
     public static final String TITLE = "_title";

@@ -1,5 +1,5 @@
 # Drishti console image (all front-end assets are vendored; no network needed at runtime).
-#   docker build -f deploy/docker/console.Dockerfile -t drishti-console:2.9.11.g .
+#   docker build -f deploy/docker/console.Dockerfile -t drishti-console:$(python3 tools/version.py) .
 #
 # Calc's Python runtime (Pyodide) is not in git: the first stage installs it with tools/fetch-pyodide.sh (a pinned
 # release, its SHA-256 checked), so the image serves it and a running console needs no internet. A runtime already
@@ -25,6 +25,7 @@ COPY config/lenses/ /opt/drishti/config/lenses/
 COPY config/distributions/ /opt/drishti/config/distributions/
 # Build -> New pack makes its bundle with the same module as `drishti.py pack bundle` (builder.tools_dir, ../tools from the console).
 COPY tools/packbundle.py /opt/drishti/tools/packbundle.py
+COPY .mvn/maven.config /opt/drishti/.mvn/maven.config
 COPY LICENSE CHANGELOG.md RELEASE_NOTES.md THIRD-PARTY-NOTICES.md /opt/drishti/
 # the console writes under the data folder (<repo>/data: /opt/drishti/data), its temp folder first: the one folder it may write
 RUN mkdir -p /opt/drishti/data/tmp && chown -R drishti /opt/drishti/data

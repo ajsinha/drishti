@@ -18,6 +18,22 @@
 
 ## Unreleased
 
+- **One version, from one place.** `.mvn/maven.config` (`-Drevision=2.9.11.i5`) is the product version; every pom takes `${revision}`
+  (the flatten plugin writes the real number into an installed pom, `target/drishti-flattened-pom.xml`, never a hidden file), and the
+  console's asset version, `tools/api_docs.py`, the image tags (`export DRISHTI_VERSION=$(python3 tools/version.py)` for compose and the
+  ECS `env.example`) and the release check read it too. `python3 tools/version.py` prints it, `--tag` prints the release tag
+  (`2.9.11.i5` is `v2.9.11.i_5`), `--check <tag>` fails when a tag is not the version file's. The UI shows the server's version; the
+  console build's own is diagnostic. Guard: `drishti-console/tests/test_one_version.py` (no pom with its own version, no other file with the
+  product version or a jar or image name carrying one). The documents write `<version>`; the DEVELOPER_GUIDE release steps follow.
+  The IntelliJ server run configurations no longer give `-XX:MaxDirectMemorySize` twice (256m then 768m); 768m stays.
+
+- **Small fixes from the owner's stack (11-15).** A bare mnemonic's list (NEWS, CRV) no longer shows an always-empty Snapshot column (a kind
+  dated by `snapshot` has no date column; a column nothing on the page holds is not drawn) and the Curves list's Business date is the day
+  read. On a phone the records grid scrolls inside its own frame, the page does not scroll sideways. The world-economy pack's `macro-store`
+  and `civic-store` read in `effective` mode: a date with no load of its own shows the newest load on or before it (no look-back limit),
+  and About names that business date (WORLD_DATA_GUIDE, External data feeds, section 4). `GET /` on the server answers what it is (product,
+  version, the API's about and health addresses, where the UI is) instead of a bare 404. A desk-wall tile's title wraps in two lines and a
+  big number shrinks to the tile instead of being cut.
 ## 2.9.11.i5 (2026-11-16)
 
 - **One folder layout for every module.** Each `modules/<module>/` holds its `.dmod` content at the top, as inside the package

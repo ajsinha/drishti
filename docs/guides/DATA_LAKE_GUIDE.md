@@ -861,7 +861,7 @@ python3 tools/drishti.py lake build --from trade_endur.2026-11-05.jsonl.gz --lak
 ```
 
 ```bash
-java -Xmx4g -Dloader.main=com.ash.drishti.lakeload.LakeLoad -jar drishti-server-2.9.11.g-exec.jar --config load-trades.yaml
+java -Xmx4g -Dloader.main=com.ash.drishti.lakeload.LakeLoad -jar drishti-server-*-exec.jar --config load-trades.yaml
 ```
 
 #### (c) Where the inbox is, and watching it load

@@ -18,7 +18,7 @@
 # ingest keys). The install layout of every Drishti image and install (docs/DEPLOYMENT_AND_QA_GUIDE.md section 1.4): the install folder
 # /opt/drishti (DRISHTI_HOME, read only), its tools/, modules/ and lib/ with the one server jar, where every tool finds it.
 # Build from the repository root after ./mvnw -q package -DskipTests:
-#   docker build -f deploy/docker/ecs/loader.Dockerfile -t drishti-loader-ecs:2.9.11.g .
+#   docker build -f deploy/docker/ecs/loader.Dockerfile -t drishti-loader-ecs:$(python3 tools/version.py) .
 # The task mounts one EFS access point at /opt/drishti/data (scratch lakes, locks, temp, home); the root file system is read-only.
 ARG BASE_IMAGE=eclipse-temurin:21-jre
 FROM ${BASE_IMAGE}
