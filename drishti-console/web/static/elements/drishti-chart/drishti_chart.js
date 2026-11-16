@@ -1496,12 +1496,18 @@
         const first = this.menu.querySelector('button');
         if (first) { first.focus(); }
       }
+      snapshot(what) {
+        const kind = what || 'png', th = (this.envNow || this.env()).theme;
+        const name = (this.spec.title || this.spec.kind).replace(/[^\w.-]+/g, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'chart';
+        const common = { title: this.spec.title || this.spec.kind, summary: (this.built && this.built.summary) || '', asOf: this.o.asOf || null };
+        if (kind === 'png') { return Object.assign({ what: 'png', data: this.engine.getDataURL({ type: 'png', pixelRatio: 2, backgroundColor: th.surface }), file: name + '.png', type: 'image/png' }, common); }
+        if (kind === 'svg') { return Object.assign({ what: 'svg', data: svgOf(this.E, Object.assign({}, this.engine.getOption(), this.map ? this.map.svgOption() : {}), this.canvas.clientWidth, this.canvas.clientHeight), file: name + '.svg', type: 'image/svg+xml' }, common); }
+        throw new Error('no snapshot ' + what + ' (png, svg)');
+      }
       export(what) {
         const name = (this.spec.title || this.spec.kind).replace(/[^\w.-]+/g, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'chart';
-        const th = (this.envNow || this.env()).theme;
         let out, type, file;
-        if (what === 'png') { out = this.engine.getDataURL({ type: 'png', pixelRatio: 2, backgroundColor: th.surface }); file = name + '.png'; type = 'image/png'; }
-        if (what === 'svg') { out = svgOf(this.E, Object.assign({}, this.engine.getOption(), this.map ? this.map.svgOption() : {}), this.canvas.clientWidth, this.canvas.clientHeight); file = name + '.svg'; type = 'image/svg+xml'; }
+        if (what === 'png' || what === 'svg') { const sn = this.snapshot(what); out = sn.data; file = sn.file; type = sn.type; }
         if (what === 'csv') { const t = this.map ? this.map.table() : this.built.table; out = toCsv({ columns: t.columns, rows: t.rows }); file = name + '.csv'; type = 'text/csv'; }
         if (what === 'spec') { out = specText(this.rawSpec, { rows: true }); file = name + '.json'; type = 'application/json'; if (this.win.navigator.clipboard) { this.win.navigator.clipboard.writeText(out).catch(() => {}); } }
         if (out === undefined) { throw new Error('no export ' + what + ' (png, svg, csv, spec)'); }

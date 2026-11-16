@@ -583,6 +583,7 @@
             ul.appendChild(li);
           });
           if ((x.links || []).length) host.appendChild(ul);
+          if (window.Drishti && window.Drishti.snapshots) host.appendChild(window.Drishti.snapshots.panel(document));     // chart snapshots with their notes (drishti-insight snapshot)
           else if (!x.underConstruction) host.appendChild(h("p", "dx-muted", "No workbook for this number."));
           (a.links || []).forEach(function (l) {
             var p = h("p", "dx-muted");
@@ -1182,6 +1183,54 @@
     }
     return { "startApprovals": startApprovals };
   })();
+  /* ---- src/drishti_insight-snapshot.js ---- */
+  __m["src/drishti_insight-snapshot.js"] = (function () {
+    var ELEMENTS_VERSION = __lib("drishti-core").ELEMENTS_VERSION;
+    const IMAGE = /^data:image\/(png|svg\+xml);/;
+    class SnapshotStore {
+      constructor(o) { this.items = []; this.subs = []; this.now = (o && o.now) || (() => new Date()); this.n = 0; }
+      onChange(fn) { this.subs.push(fn); return () => { this.subs = this.subs.filter((f) => f !== fn); }; }
+      changed() { this.subs.forEach((f) => f(this)); }
+      take(chart, o) {
+        const sn = chart.snapshot((o && o.what) || 'png');
+        const image = sn.what === 'svg' ? 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(sn.data) : sn.data;
+        return this.add({ title: sn.title, image: image, note: (o && o.note) || '', summary: sn.summary, asOf: sn.asOf });
+      }
+      add(s) {
+        if (!IMAGE.test(String(s.image || ''))) { throw new Error('a snapshot is a PNG or SVG data URL'); }
+        const item = { id: 'snap-' + (++this.n), title: String(s.title || 'Chart'), image: s.image, note: String(s.note || ''), summary: String(s.summary || ''), asOf: s.asOf || null, at: this.now().toISOString() };
+        this.items.push(item);
+        this.changed();
+        return item;
+      }
+      setNote(id, note) { const s = this.items.find((x) => x.id === id); if (s) { s.note = String(note); this.changed(); } }
+      remove(id) { this.items = this.items.filter((x) => x.id !== id); this.changed(); }
+      toJSON() { return { elements: ELEMENTS_VERSION, snapshots: this.items.map((x) => Object.assign({}, x)) }; }
+      panel(doc) {
+        const box = doc.createElement('section');
+        box.className = 'dx-snaps';
+        box.setAttribute('aria-label', 'Chart snapshots with notes');
+        const draw = () => {
+          while (box.firstChild) { box.removeChild(box.firstChild); }
+          if (!this.items.length) { return; }
+          const head = doc.createElement('h4'); head.textContent = 'Chart snapshots'; box.appendChild(head);
+          this.items.forEach((s) => {
+            const fig = doc.createElement('figure'); fig.className = 'dx-snap';
+            const img = doc.createElement('img'); img.src = s.image; img.alt = s.summary || s.title; fig.appendChild(img);
+            const cap = doc.createElement('figcaption'); cap.textContent = s.title + (s.asOf ? ' · as of ' + s.asOf : ''); fig.appendChild(cap);
+            const note = doc.createElement('textarea'); note.className = 'dx-snap-note'; note.value = s.note; note.rows = 2; note.setAttribute('aria-label', 'Note on ' + s.title);
+            note.addEventListener('change', () => this.setNote(s.id, note.value)); fig.appendChild(note);
+            const rm = doc.createElement('button'); rm.type = 'button'; rm.className = 'dx-snap-rm'; rm.textContent = 'Remove'; rm.addEventListener('click', () => this.remove(s.id)); fig.appendChild(rm);
+            box.appendChild(fig);
+          });
+        };
+        this.onChange(draw);
+        draw();
+        return box;
+      }
+    }
+    return { "SnapshotStore": SnapshotStore };
+  })();
   /* ---- src/drishti_insight-workbook.js ---- */
   __m["src/drishti_insight-workbook.js"] = (function () {
     var drishtiUrl = __lib("drishti-core").url;
@@ -1210,6 +1259,7 @@
     var installExplain = __m["src/drishti_insight-explain.js"].installExplain;
     var installSearch = __m["src/drishti_insight-search.js"].installSearch;
     var startApprovals = __m["src/drishti_insight-approvals.js"].startApprovals;
+    var SnapshotStore = __m["src/drishti_insight-snapshot.js"].SnapshotStore;
     function install(root) {
       const doc = root && root.document;
       if (!doc || !doc.createElement) { return; }
@@ -1218,10 +1268,11 @@
       root.Drishti.insightInstalled = true;
       const tag = doc.currentScript;
       installSearch(root);
+      root.Drishti.snapshots = root.Drishti.snapshots || new SnapshotStore();     // Drishti.snapshots.take(chart, {note}): shown under Explain's Workbook part
       if (!(tag && tag.getAttribute('data-explain') === 'off')) { installExplain(root); }
       if (doc.readyState === 'loading') { doc.addEventListener('DOMContentLoaded', () => startApprovals(root)); } else { startApprovals(root); }
     }
-    return { "install": install, "installExplain": __m["src/drishti_insight-explain.js"].installExplain, "installSearch": __m["src/drishti_insight-search.js"].installSearch, "startApprovals": __m["src/drishti_insight-approvals.js"].startApprovals, "workbookLinks": __m["src/drishti_insight-workbook.js"].workbookLinks, "exportWorkbook": __m["src/drishti_insight-workbook.js"].exportWorkbook };
+    return { "install": install, "installExplain": __m["src/drishti_insight-explain.js"].installExplain, "installSearch": __m["src/drishti_insight-search.js"].installSearch, "startApprovals": __m["src/drishti_insight-approvals.js"].startApprovals, "workbookLinks": __m["src/drishti_insight-workbook.js"].workbookLinks, "exportWorkbook": __m["src/drishti_insight-workbook.js"].exportWorkbook, "SnapshotStore": __m["src/drishti_insight-snapshot.js"].SnapshotStore };
   })();
   return Object.freeze(Object.assign({ library: "drishti-insight", version: "2.4.0" }, __m["src/drishti_index.js"]));
 });

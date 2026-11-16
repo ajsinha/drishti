@@ -323,6 +323,7 @@ export function installExplain(win) {
         ul.appendChild(li);
       });
       if ((x.links || []).length) host.appendChild(ul);
+      if (window.Drishti && window.Drishti.snapshots) host.appendChild(window.Drishti.snapshots.panel(document));     // chart snapshots with their notes (drishti-insight snapshot)
       else if (!x.underConstruction) host.appendChild(h("p", "dx-muted", "No workbook for this number."));
       (a.links || []).forEach(function (l) {
         var p = h("p", "dx-muted");

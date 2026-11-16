@@ -345,6 +345,12 @@ no second implementation. Takes over: `drishti_about.js`, `drishti_about-hints.j
 `drishti_bi-export.js`, the renderer's `m/about.js`; the Why card of `drishti_pivot-functions.js`, the review panel of
 `drishti_bi-govern.js`, the dialog of `drishti_share.js`.
 
+**Chart snapshots with notes (drishti-insight).** `chart.snapshot('png'|'svg')` (drishti-chart; `export` uses it) gives the picture without
+downloading it, with the title, the one-line summary and the data's date. `Drishti.snapshots.take(chart, {note})` (a `SnapshotStore`, one per
+page) keeps it with the person's note; Explain's **Workbook** part shows each snapshot (the summary is the picture's alternative text) with an
+editable note and Remove, and `Drishti.snapshots.toJSON()` hands the pictures and notes to a host to put in a workbook, a pack or a message.
+The browser builds no workbook: the server writes it, as the person asking. Only PNG and SVG data URLs are kept, drawn through `<img>`.
+
 ### 4.7 drishti-renderer
 
 The renderer of [EMBED_GUIDE.md](../guides/EMBED_GUIDE.md) becomes library 7 (renderer 2.0.0): it draws panels with drishti-grid and

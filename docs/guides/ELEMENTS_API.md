@@ -16461,6 +16461,16 @@ Returns `void`.
 
 A chart's export and live data; every member works on Chart's own fields.
 
+##### `ChartIO.snapshot(what)`
+
+The chart as a picture, not downloaded: a PNG at twice the pixels (a data URL) or an SVG drawn off screen (its text), with what a reader needs beside it (the title, the one-line summary, the data's date). Export uses it; so does Explain's snapshot attachment.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[what='png']` | `('png'\|'svg')` |  |
+
+Returns `{what: string, data: string, file: string, type: string, title: string, summary: string, asOf: ?string}`.
+
 ##### `ChartIO.export(what)`
 
 Exports the chart: a PNG at twice the pixels, an SVG drawn off screen, the data as CSV, or the spec (copied, and handed back).
@@ -18530,6 +18540,86 @@ Downloads a number's workbook: asks the one Explain for the Workbook part and op
 
 Returns `Promise&lt;{label: string, href: string}&gt;`: the link opened; rejected in words when the number has no workbook.
 
+### drishti_insight-snapshot.js
+
+#### class `SnapshotStore`
+
+The snapshots of a page.
+
+##### `new SnapshotStore(o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[o]` | `{now: function(): Date}` |  |
+
+##### `SnapshotStore.onChange(fn)`
+
+Listens to changes.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `fn` | `function(SnapshotStore): void` |  |
+
+Returns `function(): void`: stops.
+
+##### `SnapshotStore.take(chart, o)`
+
+Keeps a chart's picture with a note. The chart is anything with snapshot(what): drishti-chart's Chart.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `chart` | `{snapshot: function(string): Object}` |  |
+| `[o]` | `{note: string, what: ('png'\|'svg')}` |  |
+
+Returns `Snapshot`.
+
+##### `SnapshotStore.add(s)`
+
+Keeps a picture already made (a data URL of a PNG or an SVG; anything else is refused).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `s` | `{title: string, image: string, note: string, summary: string, asOf: ?string}` |  |
+
+Returns `Snapshot`.
+
+##### `SnapshotStore.setNote(id, note)`
+
+Sets a snapshot's note.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `note` | `string` |  |
+
+Returns `void`.
+
+##### `SnapshotStore.remove(id)`
+
+Takes a snapshot away.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `void`.
+
+##### `SnapshotStore.toJSON()`
+
+The snapshots as data, for a host to put in a workbook, a pack or a message (the pictures as data URLs).
+
+Returns `{elements: string, snapshots: Snapshot[]}`.
+
+##### `SnapshotStore.panel(doc)`
+
+The snapshots drawn: each picture (with its summary as the alternative text), its note in a text box that keeps what is typed, and Remove.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `doc` | `Document` |  |
+
+Returns `HTMLElement`.
+
 ### drishti_index.js
 
 #### `install(root)`
@@ -18541,6 +18631,20 @@ Installs the components in a page (the bundle calls it when it loads): search al
 | `root` | `Window` | the page's window (under Node: nothing to do) |
 
 Returns `void`.
+
+### Types of drishti-insight
+
+#### `Snapshot` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `title` | `string` | the chart's title |
+| `image` | `string` | a data URL (PNG or SVG) |
+| `note` | `string` | the person's words about it |
+| `summary` | `string` | the chart's one-line description (the alternative to the picture) |
+| `asOf` | `?string` | the data's date |
+| `at` | `string` | when it was taken (ISO) |
 
 ## drishti-risk
 

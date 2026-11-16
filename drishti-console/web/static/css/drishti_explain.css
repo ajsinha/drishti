@@ -116,3 +116,13 @@ p.dx-pop-h { margin-right: var(--d-sp-18); font-size: var(--d-fs-13); }
   .dx-page-head .dx-btn, .tbar, footer { display: none !important; }
   .dx-grid { grid-template-columns: 1fr; }
 }
+
+/* chart snapshots with notes (drishti-insight drishti_insight-snapshot.js), under Explain's Workbook part */
+.dx-snaps { margin-top: var(--d-space-md); }
+.dx-snap { margin: 0 0 var(--d-space-md); display: grid; gap: var(--d-sp-4); }
+.dx-snap img { max-width: 100%; height: auto; border: 1px solid var(--d-border); border-radius: var(--d-radius-4); background: var(--d-surface); }
+.dx-snap figcaption { color: var(--d-muted); font-size: var(--d-fs-12); }
+.dx-snap-note { width: 100%; box-sizing: border-box; font: inherit; font-size: var(--d-fs-13); background: var(--d-surface); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: var(--d-radius-4); padding: var(--d-sp-4) var(--d-sp-6); }
+.dx-snap-rm { justify-self: start; border: 0; background: transparent; color: var(--d-link); font: inherit; font-size: var(--d-fs-12); cursor: pointer; }
+.dx-snap-rm:focus-visible, .dx-snap-note:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 1px; }
+@media print { .dx-snap-rm { display: none; } .dx-snap { break-inside: avoid; } }

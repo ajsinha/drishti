@@ -194,3 +194,22 @@ test('grid master-detail: Alt+Down opens the focused row\'s detail and Alt+Up cl
   off.setFocus(1, 0);
   assert.equal(off.handleKey(key('ArrowDown')).action === 'detail-open', false);
 });
+
+test('insight: a chart snapshot with a note is kept as data, a non-image is refused, and a note change is heard', async () => {
+  const I = await import('../../web/static/elements/drishti-insight/src/drishti_index.js');
+  const s = new I.SnapshotStore({ now: () => new Date('2026-11-16T10:00:00Z') });
+  const heard = [];
+  s.onChange(() => heard.push(s.items.length));
+  const chart = { snapshot: (what) => ({ what, data: what === 'svg' ? '<svg/>' : 'data:image/png;base64,AAAA', title: 'VaR by desk', summary: 'Bar chart, 4 bars', asOf: '2026-11-13' }) };
+  const a = s.take(chart, { note: 'Rates up on the curve move' });
+  const b = s.take(chart, { what: 'svg' });
+  assert.ok(a.image.startsWith('data:image/png;') && b.image.startsWith('data:image/svg+xml;charset=utf-8,'));
+  s.setNote(a.id, 'Revised');
+  s.remove(b.id);
+  const out = s.toJSON();
+  assert.equal(out.snapshots.length, 1);
+  assert.equal(out.snapshots[0].note, 'Revised');
+  assert.equal(out.snapshots[0].at, '2026-11-16T10:00:00.000Z');
+  assert.deepEqual(heard, [1, 2, 2, 1]);
+  assert.throws(() => s.add({ title: 'x', image: 'javascript:alert(1)' }), /PNG or SVG/);
+});
