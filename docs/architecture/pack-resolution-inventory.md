@@ -380,7 +380,8 @@ The aim: a reader that goes its own way, or a release whose layout differs, **ca
 
 `tools/connector_upgrade_fixture.py` grows into `tools/upgrade_fixture.py --from v2.9.11.i_2_3`: it builds, from that tag's own files
 (`git archive`), what a site of that release holds: `config/packs/{core,banking,economy,capitalmarkets}/...` (one pack edited, the
-rest untouched), the generated `config/connectors/*.yaml` with their stamps and markers (one edited, one with its marker lost),
+rest untouched), the generated `config/connectors/*.yaml` with their stamps and markers, one per connector template of the packs that release loads
+by default (its `default-packs.yaml`: a pack shipped but off, as us-equities and funds, generated no file) (one edited, one with its marker lost),
 `config/bindings.yaml` (the demo copy), `config/modules/*.yaml`, a pack deployed into `<data>/packs/installed`, the old `.history`
 folder. `UpgradeFromI23Test` starts this release on it and asserts:
 

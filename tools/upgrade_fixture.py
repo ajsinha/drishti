@@ -14,7 +14,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """What a site of an earlier release holds, built from that release's own files (docs/architecture/pack-resolution-inventory.md 8.3): every
-connector template of every pack the release shipped, rendered the way its server generated it at first start (the header, the fields in the
+connector template of every pack the release loads by default (its default-packs.yaml), rendered the way its server generated it at first start (the header, the fields in the
 server's order, settings flattened, the marker in <data>/connectors/generated/), and the release's demo bindings when it had them. The upgrade
 test (drishti-console/tests/test_upgrade_counts.py) starts this release on it and on an empty site over one demo lake and compares the record
 count of every demo kind.
@@ -51,10 +51,27 @@ def pack_manifests(rev: str) -> dict[str, str]:
     return found
 
 
+def default_packs(rev: str) -> set[str] | None:
+    """The packs the release loads with no setting (config/packs/default-packs.yaml at the revision, every module's list); None when it
+    has no such file (then every shipped pack)."""
+    try:
+        doc = yaml.safe_load(show(rev, "config/packs/default-packs.yaml")) or {}
+    except subprocess.CalledProcessError:
+        return None
+    packs = doc.get("packs")
+    lists = packs.values() if isinstance(packs, dict) else [packs or []]
+    return {str(p).strip() for lst in lists for p in (lst or [])}
+
+
 def templates(rev: str) -> dict[str, tuple[str, dict]]:
-    """{connector: (pack, template)} of every shipped pack at the revision; the first pack in name order keeps a name."""
+    """{connector: (pack, template)} of every pack the release loads with no setting (its default packs): its server generated files at
+    first start for the packs it loaded only, so a pack shipped but off by default (us-equities, funds) has none on its site; the first
+    pack in name order keeps a name."""
     out: dict[str, tuple[str, dict]] = {}
+    loaded = default_packs(rev)
     for pack, path in sorted(pack_manifests(rev).items()):
+        if loaded is not None and pack not in loaded:
+            continue
         m = yaml.safe_load(show(rev, path)) or {}
         conns = m.get("connectors")
         if not isinstance(conns, dict):
