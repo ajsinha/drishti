@@ -88,13 +88,32 @@
     n.textContent = text || "";
   }
 
+  let pack = null;                                       // the pilot pack as the server answered it (GET /api/var/reports)
+
   async function loadPack() {
     const { ok, j } = await getJson(drishti_url("/api/var/reports"));
     if (!ok) { notice(j.detail); return null; }
+    pack = j;
     $("[data-rp-pack-sub]").textContent = (j.reports || []).length + " reports · fiscal year end " + j.fiscalYearEnd;
     (j.reports || []).forEach((r) => { if (r.report === report && !period) { period = r.currentPeriod; } });
-    const rows = (j.reports || []).map((r) => ({ report: r.report, title: r.title, period: r.currentPeriod, run: r.run ? "v" + r.run.version : "—",
-      state: r.run ? r.run.state : "not generated" }));
+    drawPack();
+    return j;
+  }
+
+  /** A pack row: the report's current period and its newest run; the open report's row shows the period open on the page and its run
+   * (a report opened for an earlier period, as FY2026 once FY2027 has begun, says that period's state and generates that period). */
+  function packRow(r) {
+    if (r.report === report && period && period !== r.currentPeriod) {
+      const mine = run && run.report === report && run.period === period ? run : null;
+      return { report: r.report, title: r.title, period: period, run: mine ? "v" + mine.version : "—",
+        state: mine ? ((mine.signoff || {}).state || "") : "not generated" };
+    }
+    return { report: r.report, title: r.title, period: r.currentPeriod, run: r.run ? "v" + r.run.version : "—", state: r.run ? r.run.state : "not generated" };
+  }
+
+  function drawPack() {
+    if (!pack) { return; }
+    const rows = (pack.reports || []).map(packRow);
     R.riskGrid($("[data-rp-pack]"), { title: "Pilot pack", rows: rows, getRowId: (r) => r.report,
       getRowClass: (r) => (r.report === report ? "rg-sel" : null), getRowData: (r) => ({ report: r.report }),
       columns: [{ field: "report", header: "Report", width: 150, cellRenderer: (x) => el("a", { href: drishti_url("/var/reports/" + x.value + "?period=" + encodeURIComponent(x.row.period)) }, x.value) },
@@ -102,10 +121,9 @@
         { field: "run", header: "Run", width: 60, cellClass: () => "dg-num" }, { field: "state", header: "State", width: 110 },
         { id: "generate", field: "period", header: "", width: 170, sortable: false, cellRenderer: (x) => {
           const gen = el("button", { type: "button", class: "dg-cell-btn" }, "Generate " + x.row.period);
-          gen.addEventListener("click", () => generate(x.row.report, x.row.report === report && period ? period : x.row.period));
+          gen.addEventListener("click", () => generate(x.row.report, x.row.period));
           return gen;
         } }] });
-    return j;
   }
 
   async function generate(rep, per) {
@@ -124,6 +142,7 @@
     if (!ok) { notice(j.detail); return; }
     run = j;
     draw();
+    drawPack();
   }
 
   function draw() {
