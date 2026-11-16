@@ -81,7 +81,7 @@ def test_an_item_to_finish_fills_the_command_line(browser, consoles):
     page = browser.new_page(viewport={"width": 1600, "height": 900})
     try:
         page.goto(consoles["risk"] + "/t", wait_until="load")
-        page.locator(".tbar-menu-btn:has(.tbar-menu-l:text-is('Risk'))").click()
+        page.locator(".tbar-menu-btn:has(.tbar-menu-l:text-matches('^(Risk|Domains)$'))").click()
         item = page.locator("a.mega-item[data-fill='EXP CPTY']")
         item.wait_for(state="visible")
         assert item.locator(".mega-cmd").inner_text().startswith("EXP CPTY")
@@ -100,20 +100,20 @@ def test_an_item_to_finish_fills_the_command_line(browser, consoles):
 
 def test_the_trading_markets_menu_opens_inside_the_screen_and_runs_its_command(browser, consoles):
     """Product panel A19: Drishti Trading's one Markets menu (rates, vols, FX, credit, equities and commodities) opens inside the screen
-    at a desktop width, three columns to a row, and a click on an item runs its command (FXF, unhidden in the lens) as typed. BI and
-    Admin are not in the bar (by command only)."""
+    at a desktop width, three columns to a row, and a click on an item runs its command (FXF, unhidden in the lens) as typed. BI is
+    not a menu of its own (it is part of Create)."""
     page = browser.new_page(viewport={"width": 1280, "height": 900})
     try:
         page.goto(consoles["trading"] + "/t", wait_until="load")
         buttons = page.locator(".tbar-menus .tbar-menu-btn")
-        assert buttons.filter(has_text="BI").count() == 0 and buttons.filter(has_text="Admin").count() == 0
-        buttons.filter(has_text="Markets").click()
+        assert buttons.filter(has_text="BI").count() == 0 and buttons.filter(has_text="Create").count() == 1      # BI is part of Create
+        buttons.filter(has_text="Domains").click()
         item = page.locator("a.mega-item[href='/go?q=FXF%20%3CGO%3E']")
         item.wait_for(state="visible")
         box = page.evaluate("""() => { const p = document.querySelector('.mega-panel.show'), r = p.getBoundingClientRect();
           return {left: r.left, right: r.right, cols: getComputedStyle(p).gridTemplateColumns.split(' ').length,
                   vw: document.documentElement.clientWidth, sw: document.documentElement.scrollWidth}; }""")
-        assert box["left"] >= 0 and box["right"] <= box["vw"] + 1 and box["sw"] <= box["vw"] + 1 and box["cols"] == 3, box
+        assert box["left"] >= 0 and box["right"] <= box["vw"] + 1 and box["sw"] <= box["vw"] + 1 and box["cols"] == 3, (box, page.locator(".mega-panel.show .mega-title").all_inner_texts(), page.evaluate("document.querySelector('.mega-panel.show').className"))
         with page.expect_request(lambda r: "/go?q=FXF" in r.url):
             item.click()
     finally:
@@ -125,7 +125,7 @@ def test_counterparties_ccr_cube_opens_the_pivot_preset_under_construction(brows
     page = browser.new_page(viewport={"width": 1600, "height": 900})
     try:
         page.goto(consoles["trading"] + "/t", wait_until="load")                    # Drishti Trading draws Counterparties in its bar
-        page.locator(".tbar-menu-btn", has_text="Counterparties").click()
+        page.locator(".tbar-menu-btn", has_text="Domains").click()
         item = page.locator("a.mega-item[href='/pivot?preset=ccr']")
         item.wait_for(state="visible")
         assert "Counterparty-risk cube" in item.inner_text() and item.locator(".drishti_uc-chip").count() == 1

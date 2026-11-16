@@ -53,7 +53,7 @@ def lines(f: Path) -> list[dict]:
 
 
 def contract(kind: str) -> dict:
-    return yaml.safe_load((ROOT / "config" / "packs" / "banking" / "market-risk" / "contracts" / f"{kind}.contract.yaml").read_text(encoding="utf-8"))
+    return yaml.safe_load((ROOT / "modules" / "banking" / "dmod" / "packs" / "market-risk" / "contracts" / f"{kind}.contract.yaml").read_text(encoding="utf-8"))
 
 
 class FactorDictionary(unittest.TestCase):

@@ -1,0 +1,264 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the event-country kind (command GDELT): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap event-country`; owned by people from then on: confirm the review points, then remove them.
+kind: event-country
+mnemonic: GDELT
+pack: gdelt-events
+version: '1.0'
+class: fundamental
+status: active
+title: World events by country
+description: 'What the world''s news reported about one country yesterday (GDELT): events, tone, conflict, categories, the world map by tone, the top stories.'
+source: 'public data: The GDELT Project, pulled by the gdelt-events feed (config/feeds/gdelt-events.yaml, tools/feeds/sources/)'
+grain: One row per world events by country, keyed by EVENT_COUNTRY_ID.
+key:
+- EVENT_COUNTRY_ID
+id-pattern:
+- ^GDELT-
+dated-by: snapshot
+cadence:
+  frequency: daily
+  due: the gdelt-events feed's schedule (30 8 * * * UTC); a pull with nothing new writes nothing and the lake keeps its latest date
+binding-hint:
+  lake-table: gdelt.event-country
+  test-data:
+  - modules/economy/packs/gdelt-events/samples
+fields:
+- name: EVENT_COUNTRY_ID
+  type: id
+  presence: required
+  description: GDELT- and the country's ISO 3166-1 alpha-3 code (the CAMEO country code of the event's first actor).
+  example: GDELT-AUS
+  pattern: ^GDELT-
+- name: NAME
+  type: text
+  presence: required
+  description: The country's name (Natural Earth).
+  example: Australia
+- name: ISO3
+  type: text
+  presence: required
+  description: The country's ISO 3166-1 alpha-3 code, the key the map shades by.
+  example: AUS
+- name: COUNTRY_NAME
+  type: text
+  presence: optional
+  description: The country's name (Natural Earth).
+  example: Australia
+- name: DATE
+  type: date
+  presence: optional
+  description: The latest day the feed read (the events added to GDELT that day).
+  example: '2026-11-05'
+- name: EVENTS
+  type: integer
+  presence: required
+  description: The day's events whose first actor is the country.
+  example: 92
+- name: MENTIONS
+  type: integer
+  presence: required
+  description: How many times those events were mentioned across the day's coverage.
+  example: 4410
+- name: AVG_TONE
+  type: amount
+  presence: optional
+  description: GDELT's tone of the articles reporting the events (-100 very negative to +100 very positive; most fall between -10 and +10), weighted by
+    mentions.
+  example: -2.8054
+  unit: tone points (-100 to +100)
+- name: AVG_GOLDSTEIN
+  type: amount
+  presence: required
+  description: 'The average Goldstein scale of the day''s events: the theoretical impact of the event type on a country''s stability, -10 (most conflictual)
+    to +10 (most cooperative).'
+  example: 1.0946
+  unit: Goldstein scale points (-10 to +10)
+- name: CONFLICT_SHARE
+  type: rate
+  presence: required
+  unit: '%'
+  description: The share of the day's events in CAMEO's quad classes 3 and 4 (verbal and material conflict).
+  example: 25.0
+- name: COOPERATION_SHARE
+  type: rate
+  presence: required
+  unit: '%'
+  description: The share in quad classes 1 and 2 (verbal and material cooperation).
+  example: 75.0
+- name: EVENTS_WINDOW
+  type: integer
+  presence: required
+  description: The events over the days the history holds.
+  example: 160
+- name: AVG_TONE_WINDOW
+  type: amount
+  presence: optional
+  description: The mention-weighted average tone over the window.
+  example: -2.2956
+  unit: tone points (-100 to +100)
+- name: TONE_CHANGE
+  type: amount
+  presence: optional
+  description: 'The day''s average tone less the window''s: below zero, coverage turned more negative.'
+  example: -0.5098
+  unit: tone points (-100 to +100)
+- name: WINDOW_DAYS
+  type: integer
+  presence: required
+  description: How many days of the window have events for the country.
+  example: 2
+- name: BY_CATEGORY
+  type: record list
+  presence: required
+  description: The day's events by CAMEO root category, the most first (CODE, CATEGORY, EVENTS, AVG_TONE).
+- name: HISTORY
+  type: record list
+  presence: required
+  description: The country's events and average tone by day over the window, oldest first (DATE, EVENTS, AVG_TONE).
+- name: TOP_STORIES
+  type: record list
+  presence: required
+  description: The day's most-mentioned events' source articles (MENTIONS, URL, CATEGORY), links to the originals.
+- name: PROVENANCE
+  type: record
+  presence: required
+  description: 'Where the record comes from, one object: SOURCE, DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION, URL and INTERNAL_ONLY.'
+nested:
+  BY_CATEGORY[]:
+  - name: CODE
+    type: text
+    presence: required
+    description: The CAMEO root event code (01 to 20).
+    example: '04'
+  - name: CATEGORY
+    type: text
+    presence: required
+    description: The CAMEO root category's name (Consult, Protest, Fight ...).
+    example: Consult
+  - name: EVENTS
+    type: integer
+    presence: required
+    description: The day's events in that category.
+    example: 23
+  - name: AVG_TONE
+    type: amount
+    presence: required
+    description: GDELT's tone of the articles reporting the events (-100 very negative to +100 very positive; most fall between -10 and +10), weighted by
+      mentions.
+    example: -1.9561
+    unit: tone points (-100 to +100)
+  HISTORY[]:
+  - name: DATE
+    type: date
+    presence: required
+    description: The day.
+    example: '2026-11-04'
+  - name: EVENTS
+    type: integer
+    presence: required
+    description: That day's events whose first actor is the country.
+    example: 68
+  - name: AVG_TONE
+    type: amount
+    presence: required
+    description: GDELT's tone of the articles reporting the events (-100 very negative to +100 very positive; most fall between -10 and +10), weighted by
+      mentions.
+    example: -1.4378
+    unit: tone points (-100 to +100)
+  TOP_STORIES[]:
+  - name: MENTIONS
+    type: integer
+    presence: required
+    description: How often the event was mentioned.
+    example: 1211
+  - name: URL
+    type: text
+    presence: required
+    description: 'The first article GDELT found reporting the event: a link to the publisher''s site.'
+    example: https://www.bandt.com.au/melbourne-confidential-tiffany-dam…
+  - name: CATEGORY
+    type: text
+    presence: required
+    description: The event's CAMEO root category.
+    example: Consult
+  PROVENANCE:
+  - name: SOURCE
+    type: text
+    presence: required
+    description: The GDELT Project.
+    example: The GDELT Project
+  - name: DATASET
+    type: text
+    presence: required
+    description: The GDELT 1.0 daily event file of the latest day.
+    example: GDELT 1.0 daily events 2026-11-05
+  - name: RETRIEVED_AT
+    type: date
+    presence: required
+    description: The business date of the feed's pull that wrote the record.
+    example: '2026-11-06'
+  - name: LICENCE
+    type: text
+    presence: required
+    description: GDELT's terms of use, as recorded in the feed's YAML.
+    example: 'GDELT terms of use: free and open for any use, commercial i…'
+  - name: ATTRIBUTION
+    type: text
+    presence: required
+    description: The credit line to repeat when the data is shown or republished.
+    example: 'Source: The GDELT Project (https://www.gdeltproject.org/).'
+  - name: URL
+    type: text
+    presence: required
+    description: GDELT's data page.
+    example: https://www.gdeltproject.org/data.html
+  - name: INTERNAL_ONLY
+    type: boolean
+    presence: required
+    description: True when the source's terms forbid redistribution outside the organisation (false for GDELT).
+    example: false
+links: []
+validation:
+- rule: required
+  fields:
+  - EVENT_COUNTRY_ID
+  - NAME
+  - ISO3
+  - EVENTS
+  - MENTIONS
+  - AVG_GOLDSTEIN
+  - CONFLICT_SHARE
+  - COOPERATION_SHARE
+  - EVENTS_WINDOW
+  - WINDOW_DAYS
+  - BY_CATEGORY
+  - HISTORY
+  - TOP_STORIES
+  - PROVENANCE
+- rule: unique
+  key:
+  - EVENT_COUNTRY_ID
+  per: snapshot
+- rule: pattern
+  field: EVENT_COUNTRY_ID
+  pattern: ^GDELT-
+notes:
+- Stored in the newslake lake (config/lakes/newslake.yaml), table <data>/delta/newslake/gdelt/event-country/, one JSONL.gz a business date loaded with mode
+  replace (a rerun of a day is idempotent).
+- 'Delivered as JSON Lines: one document a line, UTF-8, gzipped, with a .ready file naming the lake, pack, kind, connector, business date, mode, key, sha256
+  and row count (DATA_LAKE_GUIDE.md section 4).'
+review: []

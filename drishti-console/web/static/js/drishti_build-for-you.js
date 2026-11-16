@@ -23,11 +23,11 @@
   var box = document.querySelector('[data-for-you]');
   var C = window.Drishti.elements && window.Drishti.elements.core;
   if (!box || !C) { return; }
-  var doc = document, api = C.createClient({ base: '/bi/api' }), msg = box.querySelector('[data-fy-msg]');
+  var doc = document, api = C.createClient({ base: drishti_url('/bi/api') }), msg = box.querySelector('[data-fy-msg]');
   var SECTIONS = ['recent', 'favourites', 'certified', 'shared'];
   var ICON = { report: 'file-earmark-bar-graph', board: 'grid-1x2', model: 'boxes', dataset: 'hdd-stack', notebook: 'journal-code', transform: 'funnel' };
 
-  function href(it) { return '/bi/i/' + encodeURIComponent(it.id).replace(/%3A/g, ':'); }
+  function href(it) { return drishti_url('/bi/i/') + encodeURIComponent(it.id).replace(/%3A/g, ':'); }
   function star(it) {
     return C.h(doc, 'button', { cls: 'bh-fy-star', attrs: { type: 'button', 'aria-pressed': it.favourite ? 'true' : 'false',
       'aria-label': (it.favourite ? 'Remove favourite: ' : 'Favourite: ') + it.title, title: 'Favourite' }, data: { fyStar: it.id },
@@ -41,7 +41,7 @@
   function item(it) {
     return C.h(doc, 'li', { cls: 'bh-fy-item', data: { fyItem: it.id } }, [
       C.h(doc, 'i', { cls: 'bi bi-' + (ICON[it.kind] || 'file-earmark'), attrs: { 'aria-hidden': 'true', title: it.kind } }),
-      C.h(doc, 'a', { cls: 'lnk', text: it.title, attrs: { href: href(it) } }),
+      C.h(doc, 'a', { cls: 'lnk', text: it.title, attrs: { href: drishti_url(href(it)) } }),
       C.h(doc, 'span', { cls: 'bh-fy-kind', text: it.kind }),
       star(it)]);
   }

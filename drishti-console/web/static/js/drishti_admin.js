@@ -19,7 +19,7 @@
 (function () {
   'use strict';
   function post(url, body) {
-    return fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) })
+    return fetch(drishti_url(url), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) })
       .then(function (r) { return r.json().catch(function () { return {}; }).then(function (b) { return { ok: r.ok, body: b }; }); });
   }
   function say(el, text, bad) { if (el) { el.textContent = text; el.classList.toggle('t-bad', !!bad); el.classList.toggle('t-ok', !bad); } }
@@ -31,8 +31,8 @@
       e.preventDefault();
       var msg = pw.querySelector('[data-msg]'), f = pw.elements;
       if (f.next.value !== f.repeat.value) { say(msg, 'The new passwords differ.', true); return; }
-      post('/account/password', { current: f.current.value, next: f.next.value }).then(function (res) {
-        if (res.ok && pw.hasAttribute('data-must')) { location.href = '/t'; return; }
+      post(drishti_url('/account/password'), { current: f.current.value, next: f.next.value }).then(function (res) {
+        if (res.ok && pw.hasAttribute('data-must')) { location.href = drishti_url('/t'); return; }
         if (res.ok) { pw.reset(); say(msg, 'Password changed.'); } else { say(msg, Drishti.drsMessage(res.body), true); }
       });
     });
@@ -45,7 +45,7 @@
     tk.querySelector('[data-token-new]').addEventListener('submit', function (e) {
       e.preventDefault();
       var f = e.target.elements;
-      fetch('/api/tokens', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: f.name.value, days: f.days.value || null,
+      fetch(drishti_url('/api/tokens'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: f.name.value, days: f.days.value || null,
           scopes: Array.prototype.map.call(e.target.querySelectorAll('input[name=scope]:checked'), function (c) { return c.value; }) }) })
         .then(function (r) { return r.json().then(function (b) { return { ok: r.ok, body: b }; }); })
         .then(function (res) {
@@ -64,7 +64,7 @@
       b.addEventListener('click', function () {
         var id = b.closest('tr').getAttribute('data-token');
         if (!window.confirm('Revoke this token? Anything using it stops working at once.')) { return; }
-        fetch('/api/tokens/' + encodeURIComponent(id), { method: 'DELETE' }).then(function (r) {
+        fetch(drishti_url('/api/tokens/' + encodeURIComponent(id)), { method: 'DELETE' }).then(function (r) {
           if (r.ok) { location.reload(); } else { r.json().then(function (b) { say(tmsg, Drishti.drsMessage(b), true); }); }
         });
       });
@@ -84,7 +84,7 @@
         var n = tr.querySelector('[name=name]').value.trim(), c = tr.querySelector('[name=body]').value.trim();
         if (n && c) { body[n] = c; }
       });
-      fetch('/api/aliases', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      fetch(drishti_url('/api/aliases'), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
         .then(function (r) { return r.json().then(function (b) { return { ok: r.ok, body: b }; }); })
         .then(function (res) {
           if (res.ok) { say(msg, 'Saved ' + Object.keys(res.body).length + ' aliases.'); setTimeout(function () { location.reload(); }, 500); }
@@ -98,7 +98,7 @@
   if (!root) { return; }
   var msg = root.querySelector('[data-msg]'), dlg = root.querySelector('[data-dialog]'), form = root.querySelector('[data-form]');
   var dmsg = root.querySelector('[data-dlg-msg]'), editing = null;
-  function api(user, action, body) { return post('/admin/api/users/' + encodeURIComponent(user) + '/' + action, body); }
+  function api(user, action, body) { return post(drishti_url('/admin/api/users/') + encodeURIComponent(user) + '/' + action, body); }
   function done(res, text) { if (res.ok) { say(msg, text); setTimeout(function () { location.reload(); }, 500); } else { say(msg, Drishti.drsMessage(res.body), true); } }
 
   var F = window.Drishti.elements.inputs.formOf(root.querySelector('[data-user-fields]'));   // the server's schema (core/admin_forms.py)
@@ -126,7 +126,7 @@
     if (hasPacks) { body.packs = (v('packs') || []).slice(); }
     var name = String(v('username') || '').trim();
     var call = editing ? api(editing.username, 'update', body)
-      : post('/admin/api/users', Object.assign(body, { username: name, password: v('password') || '', mustChangePassword: v('mustChangePassword') === true }));
+      : post(drishti_url('/admin/api/users'), Object.assign(body, { username: name, password: v('password') || '', mustChangePassword: v('mustChangePassword') === true }));
     call.then(function (res) {
       if (res.ok) { dlg.close(); done(res, editing ? 'Saved ' + editing.username + '.' : 'Created ' + name + '.'); }
       else { say(dmsg, Drishti.drsMessage(res.body), true); }
@@ -167,7 +167,7 @@
     if (date) { q.push('date=' + encodeURIComponent(date)); }
     if (cluster && cluster.checked) { q.push('scope=cluster'); }
     b.disabled = true;
-    fetch('/admin/api/caches/' + encodeURIComponent(name) + '/purge' + (q.length ? '?' + q.join('&') : ''), { method: 'POST' })
+    fetch(drishti_url('/admin/api/caches/' + encodeURIComponent(name) + '/purge' + (q.length ? '?' + q.join('&') : '')), { method: 'POST' })
       .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
       .then(function (res) {
         var d = res.d;
@@ -203,7 +203,7 @@
       if (open) {
         var body = row.querySelector('[data-dates-body]');
         body.textContent = 'Loading…';
-        fetch('/admin/caches/' + encodeURIComponent(n) + '/dates', { headers: { Accept: 'text/html' } })
+        fetch(drishti_url('/admin/caches/' + encodeURIComponent(n) + '/dates'), { headers: { Accept: 'text/html' } })
           .then(function (r) { return r.text(); })
           .then(function (html) { body.innerHTML = html; })
           .catch(function (err) { body.textContent = 'The dates could not be read: ' + err; });
@@ -221,7 +221,7 @@
   var every = +root.getAttribute('data-refresh') || 5000;
   setInterval(function () {
     if (document.hidden) { return; }
-    fetch('/admin/health?partial=1', { headers: { Accept: 'text/html' } })
+    fetch(drishti_url('/admin/health?partial=1'), { headers: { Accept: 'text/html' } })
       .then(function (r) { return r.ok ? r.text() : null; })
       .then(function (html) { if (html) { body.innerHTML = html; } })
       .catch(function () { /* offline: keep the last picture */ });

@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The editors of tables, virtual tables, semantic models and Python-driven tables (docs/architecture/SHARED_SCREENS.md sections 1 to 4;
-docs/guides/TABLES_GUIDE.md section 11): Build › Tables & models. One page, three panes, drawn by static/js/drishti_editors.js and its
+docs/guides/bi/README.md section 11): Build › Tables & models. One page, three panes, drawn by static/js/drishti_editors.js and its
 editor scripts; every check, preview, total, "adds up?" and save is the server's (``/api/v1/tables/editor/...``), read as the signed-in
 person. The console adds nothing but the page and a same-origin pass-through of the editor API (an allow-list of its paths); nothing is
 kept here per person (the view each person chose is the server's preference)."""
@@ -84,11 +84,17 @@ async def editor_api(request: Request, path: str):
     return JSONResponse(got, headers=NO_STORE)
 
 
+#: the BI workspace roles that may add items (BiAccess.ROLES from contributor up; drishti_bi-lib.js B.writable asks the same)
+WRITERS = ("contributor", "member", "admin")
+
+
 @router.get("/build/tables/workspaces")
 async def workspaces(request: Request):
-    """The workspaces a draft may be saved in (BI's: the person's own first)."""
+    """The workspaces a draft may be saved in: BI's where the person may add items (contributor and above; never the read-only shipped
+    folder, which every person views), the person's own first."""
     try:
         got = await request.app.state.backend.bi("GET", "/workspaces", ident(request))
     except BackendError as e:
         return _problem(e)
+    got = [w for w in got or [] if not w.get("shipped") and w.get("role") in WRITERS]
     return JSONResponse(got, headers=NO_STORE)

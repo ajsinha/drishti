@@ -39,21 +39,25 @@ import writers
 
 def lines(domain: str, table: str, by_day: dict, partition_names: list[str], types: dict | None = None):
     """The loader's lines for every staged row: its promoted values, and the partition values as columns. A promoted list or object
-    that is not a vector (``types``: Stager.types(), a column's kind; an id list such as TRADE_IDS) goes as its JSON text, as the
-    Delta writers store it (writers._cell): the loader reads every list as a vector."""
+    that is neither a vector nor a list attribute (``types``: Stager.types(), a column's kind) goes as its JSON text, as the Delta
+    writers store it (writers._cell); a list attribute (TRADE_IDS, TAGS) goes as its values' texts, which the loader writes as a
+    list<string> column, and a list of numbers is a vector."""
     vectors = {n for n, k in (types or {}).items() if k == "vector"}
+    lists = {n for n, k in (types or {}).items() if k == "list"}
     for day, parts in by_day.items():
         iso = day.isoformat()
         for part in parts:
             fixed = {n: v for n, v in zip(partition_names, part.values) if v is not None}
             for chunk in stage.read_rows(part.file, 2000):
                 for ident, doc, promoted in chunk:
-                    cols = {**fixed, **{k: _cell(k, v, vectors) for k, v in promoted.items() if v is not None}}
+                    cols = {**fixed, **{k: _cell(k, v, vectors, lists) for k, v in promoted.items() if v is not None}}
                     yield json.dumps({"domain": domain, "kind": table, "id": ident, "date": iso, "doc": doc, "columns": cols},
                                      ensure_ascii=False, separators=(",", ":")) + "\n"
 
 
-def _cell(name: str, v, vectors: set[str]):
+def _cell(name: str, v, vectors: set[str], lists: set[str] = frozenset()):
+    if name in lists:                               # a list attribute: its values as texts, a list<string> column (section 2.4)
+        return stage.list_texts(v)
     if isinstance(v, (list, dict)) and name not in vectors:
         return json.dumps(v, ensure_ascii=False, separators=(",", ":"))
     return v
@@ -63,6 +67,15 @@ def write(lake, domain: str, table: str, by_day: dict, partition_names: list[str
           jar: str | None = None, java: str | None = None, progress=None, settings: list[str] | None = None, types: dict | None = None) -> dict:
     """Streams the staged rows into ``<lake>/<domain>/<table>``; {format, table, rows, dates, engine}. Raises writers.WriteError with the
     loader's own last line when it fails (nothing of a day that did not commit is visible)."""
+    total = sum(len(parts) for parts in by_day.values())
+    return write_lines(lake, domain, table, lines(domain, table, by_day, partition_names, types), sorted(d.isoformat() for d in by_day), workdir,
+                       jar, java, (lambda: progress(total, total)) if progress else None, settings)
+
+
+def write_lines(lake, domain: str, table: str, rows, dates: list[str], workdir: pathlib.Path, jar: str | None = None, java: str | None = None,
+                done=None, settings: list[str] | None = None) -> dict:
+    """The loader's lines (``lines``' form: domain, kind, id, date, doc, columns; a JSON text each) into the table; the same result as ``write``.
+    Also the Python loader's (tools/ingest_jsonl.py ``--store iceberg``): every writer of Iceberg goes through this one."""
     spill = workdir / "spill"
     spill.mkdir(parents=True, exist_ok=True)
     try:
@@ -74,7 +87,6 @@ def write(lake, domain: str, table: str, by_day: dict, partition_names: list[str
     except SystemExit as e:
         raise writers.WriteError(str(e)) from None
     said: list[str] = []
-    total = sum(len(parts) for parts in by_day.values())
     n = 0
     with subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, encoding="utf-8",
                           errors="replace") as proc:
@@ -84,12 +96,12 @@ def write(lake, domain: str, table: str, by_day: dict, partition_names: list[str
             # the load rules (DATA_LAKE_GUIDE.md): rows of several dates go as a tar of <table>/<YYYY-MM-DD>/ folders, each row
             # in its own day's folder (the day lake build decided for it)
             out = feedfiles.RowsTarStream(proc.stdin.buffer)
-            for line in lines(domain, table, by_day, partition_names, types):
+            for line in rows:
                 out.add(table, json.loads(line)["date"], line)
                 n += 1
             out.close()
-            if progress:
-                progress(total, total)
+            if done:
+                done()
             proc.stdin.close()
         except BrokenPipeError:
             pass
@@ -99,4 +111,4 @@ def write(lake, domain: str, table: str, by_day: dict, partition_names: list[str
     if proc.returncode:
         raise writers.WriteError("the Iceberg load did not finish: " + (words[-1] if words else f"exit {proc.returncode}"))
     return {"format": "iceberg", "engine": "native", "table": str(lake).rstrip("/") + "/" + domain + "/" + table, "rows": n,
-            "dates": sorted(d.isoformat() for d in by_day), "loader": [w for w in words if w.startswith("iceberg:")][-3:]}
+            "dates": dates, "loader": [w for w in words if w.startswith("iceberg:")][-3:]}

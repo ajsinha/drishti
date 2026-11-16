@@ -29,6 +29,27 @@ def test_landing_renders(client):
         assert f"drishti_shot-{shot}.png" in html
 
 
+def test_second_slogan_line_shows_from_configuration(client):
+    html = client.get("/").text
+    assert '<p class="lp-sentinel" data-headline-second>Your data is a treasury; <b>Drishti is its sentinel.</b></p>' in html
+    assert html.index('class="lp-title"') < html.index('class="lp-sentinel"') < html.index('class="lp-sub"')
+    assert "See what your data" in html and 'class="lp-grad">hasn&#39;t told you yet.</span>' in html     # the headline is unchanged
+
+
+def test_second_slogan_line_hidden_when_blank(backend):
+    from conftest import CONSOLE
+    from core.app import create_app
+    from core.config import load_settings
+    from fastapi.testclient import TestClient
+    settings = load_settings(CONSOLE / "config")
+    settings.layer("test", {"ui": {"headline_second": "", "headline_second_accent": ""}})
+    app = create_app(settings)
+    app.state.backend = backend
+    html = TestClient(app).get("/").text
+    assert "data-headline-second" not in html and 'class="lp-sentinel"' not in html
+    assert 'class="lp-grad">hasn&#39;t told you yet.</span>' in html
+
+
 def test_security_headers(client):
     r = client.get("/")
     assert "script-src 'self'" in r.headers["content-security-policy"]

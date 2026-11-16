@@ -21,6 +21,7 @@ to Australia and its regions and back, with the cross-filter on the rest of the 
 Skipped when Playwright, Chromium or the built server jar is missing, or a scratch port is in use. Never run with pytest -n (the ports are fixed)."""
 from __future__ import annotations
 
+import datetime
 import glob
 import os
 import shutil
@@ -79,9 +80,9 @@ def wait(url: str, seconds: int = 150) -> None:
 
 @pytest.fixture(scope="module")
 def stack(tmp_path_factory):
-    jars = sorted(glob.glob(str(ROOT / "drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)
+    jars = sorted(glob.glob(str(ROOT / "kernel/drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)
     if not jars or not Path(JAVA).exists():
-        pytest.skip("needs the built server: ./mvnw -o -q package -DskipTests -pl drishti-app -am")
+        pytest.skip("needs the built server: ./mvnw -o -q package -DskipTests -pl :drishti-app -am")
     for port in (SERVER_PORT, CONSOLE_PORT):
         if listening(port):
             pytest.skip(f"port {port} is in use")
@@ -93,17 +94,18 @@ def stack(tmp_path_factory):
     copy_samples(work / "config/bi", ["world-economics"])               # the model and the dataset it reads
     shutil.copy(ROOT / "config/bi/reports/world-economics.report.yaml", work / "config/bi/reports")
     # the dataset reads its own connector only (2.4.0), the pack's macro-store lake, which a scratch server has not built: a site file of that name
-    # replaces the template with a file connector over the pack's sample economies, as one business date
-    day = tmp / "macro" / "2026-10-07"
+    # replaces the template with a file connector over the pack's sample economies, as one business date: five days back, on or before any
+    # business date the console asks for today and within the file connector's lookback (lookback-days, 10), never a fixed date that ages out
+    day = tmp / "macro" / (datetime.date.today() - datetime.timedelta(days=5)).isoformat()
     day.mkdir(parents=True)
-    shutil.copy(ROOT / "config/packs/economy/world-economy/samples/economy.jsonl", day / "economy.jsonl")
+    shutil.copy(ROOT / "modules/economy/packs/world-economy/samples/economy.jsonl", day / "economy.jsonl")
     (work / "config" / "connectors").mkdir(parents=True)
     (work / "config" / "connectors" / "macro-store.yaml").write_text(MACRO_STORE.format(root=tmp / "macro"))
     env = dict(os.environ, DRISHTI_PACKS_DIR=str(ROOT / "config/packs"), DRISHTI_PACKS="world-economy", DRISHTI_BI_DIR=str(work / "config/bi"),
                DRISHTI_DATA_DIR=str(work / "data"))
     procs = []
     try:
-        procs.append(subprocess.Popen(java_cmd(JAVA, ["-Xmx768m", "-jar", jars[0], f"--server.port={SERVER_PORT}", f"--drishti.bi.query.store-dir={tmp / 'store'}"], tmp=tmp / "jvm-tmp"), cwd=work, env=env,
+        procs.append(subprocess.Popen(java_cmd(JAVA, ["-Xmx768m", "-jar", jars[0], f"--server.port={SERVER_PORT}", f"--drishti.bi.query.store-dir={tmp / 'store'}"], tmp=tmp / "jvm-tmp", cwd=work, env=env), cwd=work, env=env,
                                       stdout=open(tmp / "server.log", "ab"), stderr=subprocess.STDOUT))
         wait(f"http://127.0.0.1:{SERVER_PORT}/actuator/health")
         procs.append(subprocess.Popen([sys.executable, str(CONSOLE / "run_drishti_web.py"), f"--server.port={CONSOLE_PORT}", f"--backend.url=http://127.0.0.1:{SERVER_PORT}"],

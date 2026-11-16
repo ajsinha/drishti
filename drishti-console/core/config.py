@@ -41,6 +41,25 @@ class Settings:
         self._base = base if base is not None else copy.deepcopy(data)
         self._over = over if over is not None else {}
         self._layers: dict[str, dict[str, Any]] = {}
+        self._pins: dict[str, dict[str, Any]] = {}
+
+    def pin(self, name: str, values: dict[str, Any] | None) -> None:
+        """A named layer above even the site's configuration: for what only the distribution file may say (the product's name and notices);
+        a site's own ``ui.product`` and the like are not read."""
+        if values is None:
+            self._pins.pop(name, None)
+        else:
+            self._pins[name] = values
+        self._compose()
+
+    def _compose(self) -> None:
+        data = copy.deepcopy(self._base)
+        for v in self._layers.values():
+            _merge(data, copy.deepcopy(v))
+        data = _merge(data, copy.deepcopy(self._over))
+        for v in self._pins.values():
+            _merge(data, copy.deepcopy(v))
+        self._data = data
 
     def layer(self, name: str, values: dict[str, Any] | None) -> None:
         """Puts (or, with None, removes) a named layer between the product's defaults and the site's configuration; the order the
@@ -49,10 +68,7 @@ class Settings:
             self._layers.pop(name, None)
         else:
             self._layers[name] = values
-        data = copy.deepcopy(self._base)
-        for v in self._layers.values():
-            _merge(data, copy.deepcopy(v))
-        self._data = _merge(data, copy.deepcopy(self._over))
+        self._compose()
 
     def site(self, key: str, default: Any = None) -> Any:
         """A key as the site's own configuration sets it (application.local.yaml, environment, command line), or ``default``."""

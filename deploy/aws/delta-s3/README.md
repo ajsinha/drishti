@@ -60,6 +60,8 @@ that looks secret, and the only identity shown is the caller's ARN.
 
 ## Examples
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 deploy/aws/delta-s3/delta-s3.sh create --bucket acme-drishti-lake --prefix delta --role drishti-server --dry-run
 deploy/aws/delta-s3/delta-s3.sh create --bucket acme-drishti-lake --prefix delta --role drishti-server

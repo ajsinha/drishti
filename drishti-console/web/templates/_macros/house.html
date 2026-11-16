@@ -1,0 +1,42 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# The house (HOW_IT_FITS.md "The house", picture C): the kernel with the running distribution's loaded modules as rooms round it and
+   empty .dmod sockets for the rest. One server-drawn SVG from core/house.py's picture(); the theme's tokens colour it (drishti_theme.css
+   .house-*), so it follows every theme; no script. #}
+{% macro kernel_and_rooms(h) -%}
+{% set names = h.rooms | map(attribute='title') | join(', ') %}
+<svg class="house-pic" viewBox="0 0 {{ h.w }} {{ h.h }}" role="img" data-house-picture
+     aria-label="The kernel with {{ h.rooms | length }} module{{ '' if h.rooms | length == 1 else 's' }} plugged in{{ ': ' ~ names if names }}; an empty socket takes another .dmod">
+  <path class="house-roof" d="{{ h.roof }}"/>
+  <circle class="house-ring" cx="{{ h.cx }}" cy="{{ h.cy }}" r="{{ h.ring }}"/>
+  {% for p in h.places if p.room %}<line class="house-wire" x1="{{ h.cx }}" y1="{{ h.cy }}" x2="{{ p.cx }}" y2="{{ p.cy }}"/>{% endfor %}
+  {% for s in h.sockets %}<circle class="house-free" cx="{{ s.cx }}" cy="{{ s.cy }}" r="7"/>{% endfor %}
+  {% for p in h.places %}
+  {% if p.room %}<g class="house-room house-h{{ p.room.hue }}" data-house-room="{{ p.room.id }}">
+    <rect class="house-back" x="{{ p.x }}" y="{{ p.y }}" width="{{ p.w }}" height="{{ p.h }}" rx="8"/>
+    <rect class="house-tint" x="{{ p.x }}" y="{{ p.y }}" width="{{ p.w }}" height="{{ p.h }}" rx="8"/>
+    {% for line in p.lines %}<text x="{{ p.cx }}" y="{{ p.cy + 5 + (loop.index0 - (p.lines | length - 1) / 2) * 17 }}" text-anchor="middle">{{ line }}</text>{% endfor %}
+  </g>
+  {% else %}<g class="house-socket" data-house-socket>
+    <rect class="house-free" x="{{ p.x + 22 }}" y="{{ p.y + 8 }}" width="{{ p.w - 44 }}" height="{{ p.h - 16 }}" rx="7"/>
+    <text x="{{ p.cx }}" y="{{ p.cy + 4 }}" text-anchor="middle">.dmod</text>
+  </g>{% endif %}
+  {% endfor %}
+  <rect class="house-core" x="{{ h.cx - 66 }}" y="{{ h.cy - 52 }}" width="132" height="104" rx="12"/>
+  <text class="house-cap" x="{{ h.cx }}" y="{{ h.cy - 2 }}" text-anchor="middle">KERNEL</text>
+  <text class="house-sub" x="{{ h.cx }}" y="{{ h.cy + 18 }}" text-anchor="middle">one foundation</text>
+</svg>
+{%- endmacro %}

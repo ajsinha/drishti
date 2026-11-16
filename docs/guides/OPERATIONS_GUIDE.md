@@ -126,8 +126,8 @@ the repository has its own (`./mvnw`, Maven 3.9.12).
 ```bash
 git clone https://github.com/ajsinha/drishti.git
 cd drishti
-./mvnw -q package -DskipTests -pl drishti-app -am
-ls drishti-server/target/*-exec.jar
+./mvnw -q package -DskipTests -pl :drishti-app -am
+ls kernel/drishti-server/target/*-exec.jar
 ```
 
 Every command in this guide runs **from this `drishti` folder**: the server finds `./config/packs` and its data folder (`./data`, or
@@ -135,8 +135,8 @@ Every command in this guide runs **from this `drishti` folder**: the server find
 23 MB of `.jsonl.gz`, the one committed folder under `data/`).
 
 The first build downloads its libraries and takes several minutes; later builds about a minute. `-q` keeps it quiet, so success prints
-nothing; `-pl drishti-app -am` builds the server and what it needs (`./mvnw -q package -DskipTests` builds every module, slower, the same
-server; `./mvnw -q verify` also runs every test). You should see `drishti-server/target/drishti-server-<version>-exec.jar`. Before a
+nothing; `-pl :drishti-app -am` builds the server and what it needs (`./mvnw -q package -DskipTests` builds every module, slower, the same
+server; `./mvnw -q verify` also runs every test). You should see `kernel/drishti-server/target/drishti-server-<version>-exec.jar`. Before a
 release build use `./mvnw -q clean package -DskipTests`: without `clean`, `target/` keeps older jars, `java -jar
 drishti-server-*-exec.jar` then runs the first (the oldest) and the server Dockerfile's `COPY` refuses several files. If the build stops
 with `Drishti needs Java 21 or newer … Maven is running on Java …`, `JAVA_HOME` is older than 21: go back to 2.1.
@@ -183,7 +183,7 @@ You should see one line per table, then the summary (the folder is your clone's)
 ```text
   trading/trade_endur: … rows over 60 days
   …
-Demo lake ready: …/drishti/data/delta/demo: 86 tables, 60 business days 2026-07-08 to 2026-09-30, built in 943 s
+Demo lake ready: …/drishti/data/delta/demo: 89 tables, 60 business days 2026-07-08 to 2026-09-30, built in 943 s
 Feeds: …/drishti/data/feeds/fixing.jsonl (the file connector's sample feed)
 Server: no server at http://localhost:18480: left …/drishti/data/bi-store/lake-rebuilt.json, so a server clears its stored BI columns and rollups at its next start
 Connector files:
@@ -224,13 +224,13 @@ export DRISHTI_SEED_ADMIN=true DRISHTI_SEED_USERNAME=drishti-dev-admin DRISHTI_S
 export DRISHTI_EXTERNAL_LIB=$PWD/external_lib   # the console's Python libraries; jars go in the lib folder (DRISHTI_LIB_PATH)
 export DRISHTI_DEMO_ENABLED=false
 mkdir -p data/tmp/server
-java -Djava.io.tmpdir=data/tmp/server -Xmx4g -jar drishti-server/target/drishti-server-<version>-exec.jar
+java -Djava.io.tmpdir=data/tmp/server -Xmx4g -jar kernel/drishti-server/target/drishti-server-<version>-exec.jar
 ```
 
 **B. The smallest start** (sign-in off, the packs' samples ticking live):
 
 ```bash
-java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-<version>-exec.jar
+java -Djava.io.tmpdir=data/tmp/server -jar kernel/drishti-server/target/drishti-server-<version>-exec.jar
 ```
 
 | Setting | Meaning |
@@ -243,7 +243,7 @@ java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-
 | `DRISHTI_SEED_ADMIN`, `_USERNAME`, `_PASSWORD` | at the first start with no users, create this administrator (the values above are also the defaults) |
 | `DRISHTI_LIB_PATH` | extra jars: connectors, JDBC drivers (the server's lib folder; default `<data folder>/lib`) |
 | `DRISHTI_EXTERNAL_LIB` | the console's extra Python modules (`external_lib/python`) |
-| `DRISHTI_DEMO_ENABLED=false` | the demo source (the packs' samples, ticking) off, so every page reads the lakes; on (the default) a sample answers before the lake for an id both hold, and [tutorial 8, Part F](../tutorials/README.md)'s live tiles need it |
+| `DRISHTI_DEMO_ENABLED=false` | the demo source (the packs' samples, ticking) off, so every page reads the lakes; on (the default) a sample answers before the lake for an id both hold, and [the reports tutorial, Part F](../tutorials/README.md)'s live tiles need it |
 
 On Java 25 you may add `-XX:+UseCompactObjectHeaders` (about 10% less heap); Java 21 refuses to start with it. Leave the terminal
 open: the server logs there. After a few seconds you should see `Started DrishtiApplication in … seconds` (after a `lake demo` with no
@@ -329,7 +329,7 @@ read`); a token with a write scope must expire (at most `writeMaxDays`, 90). Rev
 `Ctrl+C` in each terminal (or the red square in the IDE) stops it; repeat 2.5 and 2.6 with the same `export` lines to start again (no
 rebuild unless the code changed; monitors, alerts, workspaces and settings are kept under `./data`). New demo data: run 2.4 again, with
 the server running or not. The start order does not matter ([5.2](#52-first-start-by-hand-and-check-it-works)). Three servers as one
-cluster with a console, on this machine: `bin/start-cluster.sh` ([drishti-stack/README.md](../../drishti-stack/README.md),
+cluster with a console, on this machine: `bin/start-cluster.sh` ([deploy/stack/README.md](../../deploy/stack/README.md),
 [CLUSTER_GUIDE.md](CLUSTER_GUIDE.md)).
 
 ### 2.10 Where Drishti keeps things
@@ -367,7 +367,7 @@ The poms enforce only the Java version (`[21,)`); the wrapper pins **Maven 3.9.1
 mvn -v                                  # "Apache Maven 3.9.…" and "Java version: 21.…"
 mvn -q package -DskipTests              # build (add -o to work offline once ~/.m2 is filled)
 mvn -q verify                           # build, every test and every rule
-mvn -q -pl drishti-app -am package -DskipTests    # the server and what it needs
+mvn -q -pl :drishti-app -am package -DskipTests    # the server and what it needs
 ```
 
 ### 3.2 IntelliJ IDEA: open, build, run and debug the server
@@ -382,7 +382,7 @@ delete the root's `.idea/` (IDE settings only) and reopen. One IntelliJ IDEA Ult
    **Language level** *SDK default*. Java 25 needs IDEA 2025.2 or newer.
 3. **Settings → Build, Execution, Deployment → Build Tools → Maven → Runner → JRE**: *Use Project JDK* (Maven in the IDE ignores your
    shell's `JAVA_HOME`).
-4. **Build → Build Project** (Ctrl+F9). The runnable jar: Maven tool window, **drishti → Lifecycle → package** (with *Skip Tests*), or the
+4. **Create → Build Project** (Ctrl+F9). The runnable jar: Maven tool window, **drishti → Lifecycle → package** (with *Skip Tests*), or the
    run configuration **Drishti build server jar**. After pulling a change of the Java bytecode level, **Build → Rebuild Project** once.
 
 The run configurations are in the repository (`run-configs/` for IntelliJ, `drishti-console/run-configs/` for PyCharm), in the drop-down as
@@ -394,7 +394,7 @@ soon as the project is open. They use `$PROJECT_DIR$`, the project's JDK and no 
 | **Drishti server (demo lakes)** | the same with `DRISHTI_DEMO_ENABLED=false`, `DRISHTI_VAR_SYSTEM_BASKETS_SEED=true` (the system baskets) and `-Xmx4g` | 18480 |
 | **Drishti server (QA profile)** | its own data folder `data/qa/data`, so QA never touches `./data` | 18580 |
 | **Drishti server (debug-friendly)** | the QA profile with sign-in **off**, DEBUG logging for `com.ash.drishti`, `-Xmx1g` (pair it with a console whose sign-in is off) | 18580 |
-| **Drishti build server jar** | Maven `package -DskipTests -pl drishti-app -am` | |
+| **Drishti build server jar** | Maven `package -DskipTests -pl :drishti-app -am` | |
 | **Build demo lakes** (PyCharm) | `drishti.py lake demo` (2.4) | |
 | **QA pack make**, **QA lake build**, **QA server smoke**, **QA doctor** (PyCharm) | the command-line tools against the QA server; edit *Parameters* | 18580 |
 
@@ -461,7 +461,7 @@ stopping both and deleting `data/qa/`.
    (`trade`, `TRADE_ID`), `--mode overwrite-dates` (a re-run replaces the date), `--partition-by PRODUCT_TYPE`, `--lake data/qa/delta`,
    `--pack data/qa/packs/<name>/pack/<name>` (the folder holding `pack.yaml`), and `--signal http://localhost:18580 --token-file
    $PROJECT_DIR$/data/qa/token.txt`. The last line says `lake-build ok exit=0 ... rows=N`. Keep it to 10,000 trades locally.
-8. In the console, **Build → New pack**: upload the same JSON, accept or edit the proposed Sutras, save.
+8. In the console, **Create → New pack**: upload the same JSON, accept or edit the proposed Sutras, save.
 9. **Admin → Packs → Deploy** the archive of step 6 (`data/qa/packs/<name>/bundle/<name>-<version>.tar.gz`) or the wizard's; it writes under
    `data/qa/data/packs/`, never `config/packs`.
 10. **Admin → Data loads**: the pack's loads show the table of step 7 (a refused lake folder is outside the QA console's
@@ -500,18 +500,18 @@ Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 git clone https://github.com/ajsinha/drishti.git
 cd drishti
 $env:JAVA_HOME = $env:DRISHTI_JAVA_HOME
-.\mvnw.cmd -q package -DskipTests -pl drishti-app -am
-dir drishti-server\target\*-exec.jar
+.\mvnw.cmd -q package -DskipTests -pl :drishti-app -am
+dir kernel\drishti-server\target\*-exec.jar
 ```
 
-The Delta engine's and connector's tests: `.\mvnw.cmd -q verify -pl drishti-deltalake,plugins/drishti-plugin-delta -am`; the Iceberg ones:
-`.\mvnw.cmd -q verify -pl drishti-iceberg,plugins/drishti-plugin-iceberg,plugins/drishti-plugin-iceberg-external -am` (Docker tests skip).
+The Delta engine's and connector's tests: `.\mvnw.cmd -q verify -pl :drishti-deltalake,plugins/drishti-plugin-delta -am`; the Iceberg ones:
+`.\mvnw.cmd -q verify -pl :drishti-iceberg,plugins/drishti-plugin-iceberg,plugins/drishti-plugin-iceberg-external -am` (Docker tests skip).
 
 **Or copy** a server built elsewhere (Java bytecode is the same everywhere) into a folder such as `C:\drishti`: the
 `drishti-server-<version>-exec.jar` (every library is inside), `config\packs\` (and `config\connectors\`, `config\bi\` if you use them),
 `drishti-console\` (only to run the console there), `tools\` and `data\testdata\` (to build the demo lakes there), an existing `data\` if any
 (lakes, users, feeds; created when absent) and your `application.local.yaml`. Without a clone copy `bin\` to `C:\drishti\bin\`:
-the scripts work from the folder above themselves and look for the jar in `drishti-server\target\`, then in that folder.
+the scripts work from the folder above themselves and look for the jar in `kernel\drishti-server\target\`, then in that folder.
 
 ### 4.3 The demo lakes, the server and the console
 
@@ -523,7 +523,7 @@ bin\status.cmd                                                            # both
 bin\stop-all.cmd
 ```
 
-`lake demo` writes the same 86 tables as on Linux. The scripts of `bin\` are the same on Windows, Linux and macOS (`.cmd` and `.ps1` here,
+`lake demo` writes the same 89 tables as on Linux. The scripts of `bin\` are the same on Windows, Linux and macOS (`.cmd` and `.ps1` here,
 `.sh` there): `start-server` checks that Java is 21 or newer, sets `DRISHTI_DELTA_ENGINE=native` on Windows ([`delta` in CONFIGURATION.md](../admin/CONFIGURATION.md#delta--delta-lake)), adds
 `-XX:+UseCompactObjectHeaders` only on Java 25, and `--demo` sets the demo's settings with its development secrets; `start-console` makes
 the console's environment on its first run (with uv when present, else `python -m venv` and pip). Every option, where the pid, log and
@@ -532,7 +532,7 @@ Admin → Health then lists each lake connector as `UP (engine: native)`. By han
 `uv pip install --python drishti-console\.venv\Scripts\python.exe -r drishti-console\requirements.txt`, then
 `drishti-console\.venv\Scripts\python.exe drishti-console\run_drishti_web.py` (the console's own settings: `DRISHTI_CONSOLE_PORT`,
 `DRISHTI_BACKEND_URL`). The jar by hand: `$env:DRISHTI_PACKS = 'market-risk'` then
-`& "$env:DRISHTI_JAVA_HOME\bin\java.exe" -Xmx2g -jar drishti-server\target\drishti-server-<version>-exec.jar`.
+`& "$env:DRISHTI_JAVA_HOME\bin\java.exe" -Xmx2g -jar kernel\drishti-server\target\drishti-server-<version>-exec.jar`.
 
 **Iceberg tables on Windows** run on the native engine too: `.\tools\windows\load-iceberg.ps1` (the samples, ten business days;
 `-Trades 10000 -Days 3` adds a book; the sort spills under `data\tmp\iceberg`, `-SpillDir` to move it), then
@@ -560,10 +560,10 @@ This installs both processes under `/opt/drishti` on a Linux host; adjust the pa
 ### 5.1 Lay out the installation
 
 ```bash
-./mvnw -q clean package -DskipTests                       # from a checkout; exactly one exec jar in drishti-server/target
+./mvnw -q clean package -DskipTests                       # from a checkout; exactly one exec jar in kernel/drishti-server/target
 sudo useradd --system --home /opt/drishti drishti
 sudo mkdir -p /opt/drishti/data /opt/drishti/sutras
-sudo cp drishti-server/target/drishti-server-<version>-exec.jar /opt/drishti/drishti-server.jar
+sudo cp kernel/drishti-server/target/drishti-server-<version>-exec.jar /opt/drishti/drishti-server.jar
 sudo cp -r config drishti-console docs /opt/drishti/
 sudo cp LICENSE CHANGELOG.md RELEASE_NOTES.md THIRD-PARTY-NOTICES.md /opt/drishti/   # the help centre shows them
 sudo chown -R drishti:drishti /opt/drishti
@@ -960,7 +960,7 @@ and secrets and embedded applications declared in configuration; Python and Java
   switched on or off per server in `config/engines/<engine>.yaml` and **Admin → Engines**: [ADMIN_GUIDE.md](ADMIN_GUIDE.md).
 - **Modules.** Drishti runs as a core plus modules: **banking** (VaR and ES, exposure and CCR, FRTB-SA, SIMM, sensitivities, the MR cube, the
   official results and the trading, market-data, market-risk and counterparty-risk packs), **capitalmarkets** (the us-equities and funds packs)
-  and **economy** (world-economy, news-and-markets and the public-sector packs: [PUBLIC_SECTOR_GUIDE.md](PUBLIC_SECTOR_GUIDE.md)). A module is
+  and **economy** (world-economy, news-and-markets and the public-sector packs: [WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md)). A module is
   on when its jar is in the server, it is licensed (`config/access/licence.yaml`; none: the development licence, every module) and enabled
   (`config/modules/<module>.yaml`, written by `POST /api/v1/admin/modules`; `drishti.modules.<module>.enabled` or `DRISHTI_MODULES_<MODULE>_ENABLED`
   wins), and every module it needs is on. **A change takes effect at the next start** (`GET /api/v1/admin/modules` says `restartNeeded: true` until then). A module that is
@@ -972,15 +972,15 @@ and secrets and embedded applications declared in configuration; Python and Java
   curl -s -H "Authorization: Bearer $TOKEN" http://localhost:18480/api/v1/admin/modules | jq '.modules[] | {id, on, reason, loaded}'
   curl -s -X POST -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' http://localhost:18480/api/v1/admin/modules \
     -d '{"module": "banking", "enabled": false, "reason": "a site without risk"}'
-  DRISHTI_MODULES_BANKING_ENABLED=false java -jar drishti-server/target/drishti-server-*-exec.jar     # off for one run
+  DRISHTI_MODULES_BANKING_ENABLED=false java -jar kernel/drishti-server/target/drishti-server-*-exec.jar     # off for one run
   ```
 
   The banking API is under `/api/v1/risk/…`; the older paths answer with a `Deprecation: true` header and a `Link` to the new path: move
   scripts to the new paths.
-- **Editions and lenses.** `drishti.edition: risk` (`DRISHTI_EDITION=risk`) on every server of a cluster, then a restart, runs Drishti Risk:
-  its packs only (others `DRS-1017`), its commands (others `DRS-4023`), menus, help, Admin pages and branding; check with `curl -s
-  http://<server>/public/about` (`"edition": {"name": "risk", ...}`). A lens lets each person open an edition for their own session:
-  [ADMIN_GUIDE.md](ADMIN_GUIDE.md).
+- **Distributions and lenses.** `drishti.distribution: risk` (`DRISHTI_DISTRIBUTION=risk`, or `--distribution risk`) on every server
+  of a cluster, then a restart, runs Drishti Risk: its packs only (others `DRS-1017`), its commands (others `DRS-4023`), menus, help,
+  Admin pages and brand; check with `curl -s http://<server>/public/about` (`"edition": {"name": "drishti.risk", ...}`). A lens is a
+  workspace each person opens for their own session; it arranges and hides nothing: [ADMIN_GUIDE.md](ADMIN_GUIDE.md).
 
 ### 6.6 Connectors: where a pack reads its data
 
@@ -1029,12 +1029,10 @@ routes: {trade: trade-endur}        table.trade: trade_endur, union: "true" }
 - **Credentials**: a setting whose name says it is one (`password`, `secret`, `token`, `api-key`, `access-key`, `private-key`, `credential`)
   can only be `${LAKE_PASSWORD}` or `file:/run/secrets/lake-password`; a plain value or a password inside a URL is refused (`DRS-5031`). The
   folder holds no secret, so it can live in version control.
-- **Template updates**: after a pack upgrade a connector file can lack kinds the pack serves now. A file nobody edited carries a stamp
-  (`# drishti-template: …`) and is replaced by the new template, the old one kept beside it (`.before-upgrade-….bak`) and audited; an edited
-  file gets every key its template gained and keeps every value (`template-updates: additive`, the default, in
-  `config/connectors-settings.yaml`; `notify` only lists them). **Admin → Connectors → Template updates** shows each drifted connector with *Add
-  missing kinds*, *Regenerate from template*, *Remove obsolete kinds*, *Use the pack's value* and *Fix all additive*
-  ([DATA_GUIDE.md section 9](DATA_GUIDE.md#template-updates)).
+- **Connector layers**: the server reads each connector as its template (a pack's or an on module's, read where it is) with the site's
+  override over it (`config/connectors/<name>.yaml`, only the changed keys) and writes no connector file at start, reload or deploy. A
+  file an earlier release generated and nobody edited is superseded and listed in Health as *safe to delete*; an edited one is an override
+  ([DATA_GUIDE.md section 9](DATA_GUIDE.md#connector-layers)).
 - **Archives carry names and templates only**: a pack archive never carries a site's settings; its deploy preview lists the connectors the site
   lacks and a **Create connectors** step writes them from the templates ([9.1](#91-deploy-an-archive)).
 
@@ -1123,7 +1121,7 @@ DRISHTI_STREAM_TRADING=true DRISHTI_PACKS=trading java -Djava.io.tmpdir=data/tmp
 ```
 
 `stream.py` also takes `--bootstrap` (`localhost:9092`), `--topic`, `--samples` and `--seconds` (0: until stopped). The trading pack's
-`trading-stream` connector reads `DRISHTI_KAFKA_BOOTSTRAP`, `DRISHTI_TRADING_TOPIC`, `DRISHTI_STREAM_STALE_AFTER` (15m: shown as behind) and keeps
+`trading-stream` connector reads its broker by name (`broker: default`, `[broker.default]` in the settings file), `DRISHTI_TRADING_TOPIC`, `DRISHTI_STREAM_STALE_AFTER` (15m: shown as behind) and keeps
 the day's messages in a disk cache (`DRISHTI_STREAM_DISK_CACHE`, `DRISHTI_CACHE_ROOT`, `DRISHTI_STREAM_CACHE_GB`, cleared at `DRISHTI_CACHE_RESET_AT`).
 
 ### 7.4 Public feeds
@@ -1132,7 +1130,7 @@ The `market-data` pack has five public feeds, each off until switched on and ref
 (`nyfed-sofr-feed`, rate fixings), `DRISHTI_FEED_ECB_ESTR=true` (`ecb-estr-feed`), `DRISHTI_FEED_ECB_FX=true` (`ecb-fx-feed`, FX spots),
 `DRISHTI_FEED_US_TREASURY=true` (`us-treasury-feed`, the curve) and `DRISHTI_FEED_FRED=true` (`fred-feed`; needs `FRED_API_KEY`, series from
 `DRISHTI_FRED_SERIES`, default `DGS10,DFF`). Each needs internet access (or a proxy). A feed that fails keeps its last good data and shows as down
-on Admin → Health; the rest keeps working. Daily public-data feeds of other packs (`drishti.py feed run`) are in [EXTERNAL_DATA.md](EXTERNAL_DATA.md).
+on Admin → Health; the rest keeps working. Daily public-data feeds of other packs (`drishti.py feed run`) are in [WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md).
 
 ### 7.5 The data inbox: its folders, disk and retention
 
@@ -1192,7 +1190,7 @@ does the same from the browser, with checks on the server and automatic undo.
 | Artifact | Made by | Goes to | The server notices |
 |---|---|---|---|
 | **Pack bundle** `<name>-<version>.tar.gz` (+ `.sha256`): one pack, versioned, with a manifest of every file's checksum | `pack bundle` | unpacked by `pack deploy` into the packs folder: `drishti.packs.dir` (`DRISHTI_PACKS_DIR`, `./config/packs`) or `drishti.packs.installed-dir` (`./data/packs/installed`, searched first) | the watcher checks and loads the copied folder after it has been quiet for 750 ms, and records it in `data/packs/added.yaml`; one that does not check out is not loaded (Admin → Packs and Health say why) and is retried; a new version is swapped in, a bad one keeps the last good running. With `drishti.packs.watch: off` only Admin → Packs → **Load** acts |
-| **Pack folder** `config/packs/<domain>/<name>/` (what git holds) | you, `pack new` | the same places | the same |
+| **Pack folder** `modules/<module>/packs/<name>/` (what git holds) | you, `pack new` | the same places | the same |
 | **Sutra files** `*.sutra.yaml` | `sutra design`, `sutra gen`, the Screen Designer | `<pack>/sutras/`, or the site Sutra folder | hot reload (250 ms debounce): an invalid file is reported, the last good version stays live |
 | **`config/about.yaml`** (+ `about.<lang>.yaml`, `help.yaml`, `formats.yaml`) | you | `<pack>/config/` | with the pack's reload |
 | **Delta lake** `<root>/<domain>/<kind>/business_date=…/` | your ETL, `lake build`, `data ingest --lake` | `DRISHTI_DELTA_ROOT` or `s3a://…` | the connector re-reads the table version every `refresh-seconds` (10) and on a data-load signal |
@@ -1205,7 +1203,7 @@ touched by `pack deploy`: copy during the day, switch at the moment you choose.
 ### 8.2 Make a bundle
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py pack bundle config/packs/banking/trading --out dist
+drishti-console/.venv/bin/python tools/drishti.py pack bundle modules/banking/dmod/packs/trading --out dist
 ```
 
 ```text
@@ -1297,7 +1295,7 @@ rmdir ../stage
 What you tested is what you ship: build once, on CI, and copy the same file through the stages.
 
 ```text
-git (config/packs/banking/trading, tag v1.0.1)
+git (modules/banking/dmod/packs/trading, tag v1.0.1)
    │  CI: pack check, pack bundle
    ▼
 trading-1.0.1.tar.gz + .sha256        ← built ONCE, stored as a CI artifact
@@ -1318,7 +1316,7 @@ trading-1.0.1.tar.gz + .sha256        ← built ONCE, stored as a CI artifact
 Sutras made by `sutra design`, `sutra gen` or the Screen Designer are ordinary files: copy them into a pack's `sutras/<folder>/`, and a running
 server hot-reloads them ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#hot-reload-the-workbench-and-governance)). `drishti.py design export <id> -o
 design.zip` writes a zip of a design's Sutra and samples: put the `.sutra.yaml` in the pack in git, then the next bundle. `config/about.yaml` goes
-into `<pack>/config/`; check it first with `pack about-check config/packs/<domain>/<name>`. Prefer shipping a Sutra change as a **new bundle** (a
+into `<pack>/config/`; check it first with `pack about-check modules/<module>/packs/<name>`. Prefer shipping a Sutra change as a **new bundle** (a
 version, a checksum, a rollback); hot-copy is for emergencies, and `pack verify <deployed folder>` reports the drift until you redeploy:
 
 ```bash
@@ -1333,12 +1331,12 @@ Never write into the folder the server reads while it is half-finished: write el
 - **Files root** (`<root>/<domain>/<business-date>/<kind>.jsonl`; the connector lists folders every 30 s):
 
   ```bash
-  python3 tools/drishti.py data ingest --from new-day.jsonl --pack config/packs/banking/trading --store files --root /srv/stage/files
+  python3 tools/drishti.py data ingest --from new-day.jsonl --pack modules/banking/dmod/packs/trading --store files --root /srv/stage/files
   cp -r /srv/stage/files/trading/2026-10-05 /srv/drishti/files/trading/.2026-10-05.part     # a dot name the connector skips
   mv /srv/drishti/files/trading/.2026-10-05.part /srv/drishti/files/trading/2026-10-05      # the rename is atomic
   ```
 
-  A single file: write `<kind>.jsonl.tmp` and `mv` it into place ([the file connector](../../plugins/drishti-plugin-file/README.md)). A whole
+  A single file: write `<kind>.jsonl.tmp` and `mv` it into place ([the file connector](../../docs/connectors/types/file/README.md)). A whole
   root: build `files.new/`, then `mv files files.old && mv files.new files`; keep `files.old` for rollback.
 - **Delta lake**: a new commit is atomic, so `lake build` or `data ingest --lake` into the live lake is the normal daily route. To copy a finished
   lake or partitions, copy **the Parquet files first and `_delta_log/` last** (the log makes files visible):
@@ -1377,7 +1375,7 @@ travel on the table.
 
 ### 8.10 Git as the source of truth, and a CI example
 
-Keep `config/packs/<domain>/<name>/` in git with the version bump; a release is a tag, and `git checkout v1.0.1 && pack bundle` gives the same
+Keep `modules/<module>/packs/<name>/` in git with the version bump; a release is a tag, and `git checkout v1.0.1 && pack bundle` gives the same
 bytes. Never edit a deployed folder: change git, build, deploy. A GitHub Actions job (adapt it to any CI):
 
 ```yaml
@@ -1391,9 +1389,9 @@ jobs:
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: 21 }
       - uses: astral-sh/setup-uv@v5
-      - run: ./mvnw -q -DskipTests package -pl drishti-app -am        # the exec jar that lint and test use
-      - run: uv run --with pyyaml python tools/drishti.py pack check config/packs/banking/trading --strict --junit build/reports
-      - run: uv run --with pyyaml python tools/drishti.py pack bundle config/packs/banking/trading --out dist
+      - run: ./mvnw -q -DskipTests package -pl :drishti-app -am        # the exec jar that lint and test use
+      - run: uv run --with pyyaml python tools/drishti.py pack check modules/banking/dmod/packs/trading --strict --junit build/reports
+      - run: uv run --with pyyaml python tools/drishti.py pack bundle modules/banking/dmod/packs/trading --out dist
       - run: uv run --with pyyaml python tools/drishti.py pack verify dist/trading-*.tar.gz
       - uses: actions/upload-artifact@v4
         with: { name: trading-bundle, path: "dist/trading-*" }
@@ -1426,9 +1424,9 @@ The folder (`data/build/my-bank-1.0.0/`) holds the pack (`pack/my-bank/`: copy i
 lake root or point `DRISHTI_DELTA_ROOT` at it), the bundle (`bundle/`, already verified), a configuration overlay, `run-server.sh` and `.ps1`, a
 `MANIFEST.json`, and a `README.txt` with the deploy, verify, update and rollback steps filled in with your kind, ids and dates
 ([CLI_REFERENCE.md](CLI_REFERENCE.md#quickest-path-pack-make); `--date` names your business-date field). From **JSON Schema**, `pack make --schema` makes
-the same folder, and **Build → New pack** (`/build/pack/new`) the same bundle in the browser (it profiles every file in the browser, proposes
+the same folder, and **Create → New pack** (`/build/pack/designer`) the same bundle in the browser (it profiles every file in the browser, proposes
 kinds, ids, business dates and one Sutra per type, and previews them), then hands it to Admin → Packs → Deploy an archive
-([BUILD_GUIDE.md](BUILD_GUIDE.md#8-a-pack-from-a-json-schema-build--new-pack)). Schemas alone give a pack that serves its samples.
+([BUILD_GUIDE.md](BUILD_GUIDE.md#8-the-pack-designer-create--new-pack)). Schemas alone give a pack that serves its samples.
 
 ### 8.13 Windows
 
@@ -1525,7 +1523,7 @@ user the admin role) ([CLI_REFERENCE.md](CLI_REFERENCE.md#server-packs-deploy-hi
 | *the archive needs server >=X* | upgrade the server first, or rebuild with `--requires-server` if you know it is compatible |
 | *extends X, which is neither loaded nor on disk* | deploy or load the parent first |
 | HTTP 413 | over `max-archive-mb` (and the console's `packs.deploy_max_mb`): archives carry no data, so a big one usually has data in it |
-| `the pack fails pack check` | run `pack check config/packs/<domain>/<name>` and fix it |
+| `the pack fails pack check` | run `pack check modules/<module>/packs/<name>` and fix it |
 | `no drishti-server-*-exec.jar` | build it, set `DRISHTI_JAR`, or `--no-sutra` on a target without Java |
 | history says *reverted* | the server could not start with the new files: read the server log at that time; fix and redeploy |
 | deployed, but the old content is served | the watcher waits for the copy to be quiet (`drishti.packs.reload-debounce`, 750 ms), the watch is `off`, or the new version was refused: look at the pack's row; with `watch: off` use Load/Unload or restart |
@@ -1753,6 +1751,29 @@ server {
 ```
 
 Check from outside: `curl -sI https://drishti.bank.example/healthz | head -1` shows `HTTP/2 200`.
+
+**At a URL sub-path** (`https://intranet.bank.example/drishti/`, the console sharing a host with other applications): set the console's
+`server.base_path` (`DRISHTI_CONSOLE_BASE_PATH=/drishti`, [CONFIGURATION.md](../admin/CONFIGURATION.md#the-consoles-url-sub-path-serverbase_path))
+and restart it. The proxy may forward the path as it is (`proxy_pass http://127.0.0.1:17480;`) or strip the prefix
+(`proxy_pass http://127.0.0.1:17480/;`): the console accepts both, and every link, script, API call, live stream, redirect and cookie it
+sends names `/drishti/...` (cookies get `Path=/drishti`, so they never reach the host's other applications).
+
+```nginx
+    location /drishti/ {
+        proxy_pass         http://127.0.0.1:17480;     # the path as it is; the console takes /drishti off itself
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_set_header   Connection        "";
+        proxy_buffering    off;
+        proxy_read_timeout 1h;
+    }
+```
+
+Check: `curl -sI https://intranet.bank.example/drishti/login | head -1` shows `HTTP/2 200`, and the page source has
+`<meta name="drishti-base" content="/drishti">`. The console still answers on its own port without the prefix (`http://host:17480/login`), so the
+health checks need no change.
 
 - **Cookies** are `Secure` by default: keep `DRISHTI_SECURE_COOKIE` unset once TLS is in place. The session cookie is `HttpOnly`,
   `SameSite=Lax` and holds only a signed reference to a session the server keeps.
@@ -2017,6 +2038,21 @@ curl -s localhost:18480/api/v1/admin/health | python3 -m json.tool | head -40
   open files against `ulimit -n`, and descriptors open on deleted files (their disk is not given back until they close). A figure that only rises
   over days is a leak: note it with the time and take `jcmd <pid> VM.native_memory summary`.
 
+#### Stream connectors without their broker: WAITING, not DOWN
+
+A stream connector (the `kafka`, `activemq` and `rabbitmq` plugins, the source-system `trade-<system>-live` connectors, the banking
+`var-pv-stream`) that is enabled but cannot reach its broker is not failing: the lake snapshot is served and only the live updates wait.
+
+| State on Admin → Connectors / Health | Meaning | Counts as |
+|---|---|---|
+| **waiting for broker (live updates paused)**, health `WAITING: broker not reachable at host:port - live updates paused; retrying` | enabled, settings present, the broker's port does not answer (or answered and was lost) | OK: the connector is up, overall health stays `OK`, readiness `UP`, the module and server start; blotters and record pages serve the snapshot and show the banner *live updates paused* |
+| **not configured** | enabled but the setting it cannot run without is missing (`topics`, `destinations`, `queues`) | OK: idle, never an error |
+| **down** | the broker answers but the connector fails for another reason (a refused log-in, a TLS fault) | a fault, listed and retried |
+
+The log carries one INFO line when it starts waiting (`broker not reachable at host:port - live updates paused; retrying until it is`) and
+one when it connects; the retries between are silent (back-off 1 s doubling to 30 s) and nothing is logged at WARN or ERROR. When the broker
+appears the next look finds it and the connector connects, with no restart. Sweeps and drills read `WAITING` as OK.
+
 ### 13.3 The live numbers
 
 `curl -s localhost:18480/api/v1/health/live` gives `{"streams":0,"topics":0,"frames":11660,"p50Ms":0.809,"p99Ms":1.198}`: open live views, distinct
@@ -2218,7 +2254,7 @@ in `/tmp`, whose quota fills. Health lists both folders with their size ([CONFIG
   the exchange (`DRISHTI_ARROW_EXCHANGE_MB`) plus Flight's `memory.total-mb` (`DRISHTI_FLIGHT_MEMORY_MB`, 4,096) when its engine is on. The limit is
   256 MB plus the in-memory lake's stores plus Arrow's budget. An ECS task has no Python: set `DRISHTI_ARROW_MB` (and `DRISHTI_LAKE_MEMORY_MB`) to what
   `memory_caps.py --arrow-only` (`--stores-only`) prints ([FLIGHT_GUIDE.md](FLIGHT_GUIDE.md#10-operations)). A unit file of your own adds both flags.
-- **Diagnostics.** The production launchers (`bin/start-server` and `drishti-stack` through it, the Docker and ECS images, the unit of [5.3](#53-running-as-services-systemd))
+- **Diagnostics.** The production launchers (`bin/start-server` and `deploy/stack` through it, the Docker and ECS images, the unit of [5.3](#53-running-as-services-systemd))
   also start the server with `-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=<folder>/dumps` (a `java_pid<pid>.hprof` about the size of the heap:
   open it in Eclipse MAT or VisualVM; keep room on that disk; at most `drishti.disk.max-dumps`, 2, are kept), a GC log per process rotated at 20 MB with
   five kept (`-Xlog:gc*:file=<logs>/gc-%p.log:…`: whether the heap was filling for hours before a failure), and `-XX:NativeMemoryTracking=summary`
@@ -2357,7 +2393,9 @@ When the server is short of memory or threads, new heavy work waits a moment ins
 | a BI run | `503 DRS-9504` | memory, request handlers | 60 s |
 | a bulk load of a pack's data | `503 DRS-9505` | memory, request handlers, disk | 120 s |
 
-People already working are never gated (reading an open date, drilling, sorting, exporting what is on screen). A refusal is remembered for its
+People already working are never gated (reading an open date, drilling, sorting, exporting what is on screen). An Explain whose **Why it
+moved** needs a date not yet open answers everything else (the number, formula, inputs, checks) and marks only that part as waiting, with its
+`DRS-9502`, words and `retryAfterSeconds`; the drawer and the full page count it down and ask for it again, as for any busy refusal. A refusal is remembered for its
 `Retry-After`, so a crowd gets one answer and one countdown; it lifts sooner when its cause clears. The console says it in place with a ring counting
 down, **Try now** and **Cancel**, and tries again by itself three times. The API answers `application/problem+json` with `busy: true`, `work`,
 `because` and `retryAfterSeconds`; `drishti.py` waits and retries with `--wait` (on `data get`) or `DRISHTI_WAIT_BUSY=1`; a script should do the same.
@@ -2395,7 +2433,7 @@ benchmark's users phase at a small heap with more users than it holds: expect re
   `max-fragments` 8 (fewer for a small database), the breaker at 5 failures for 30 s, standing queries `mq.max-subscriptions` 500 and 20 per user. Readers
   with the same effective security share one standing-query group: 500 viewers with 5 distinct securities are 5 evaluations per visual. Any node
   answers any model query; each model's live tables and standing queries have one owner. The 500-viewer load test, against a real server only:
-  `./mvnw -pl drishti-server test -Dtest=ViewersLoadTest -Ddrishti.load.url=http://server:18480 -Ddrishti.load.queries=/path/visuals.jsonl
+  `./mvnw -pl :drishti-server test -Dtest=ViewersLoadTest -Ddrishti.load.url=http://server:18480 -Ddrishti.load.queries=/path/visuals.jsonl
   -Ddrishti.load.users=rita:…,hana:…` (`-Ddrishti.load.viewers=500 -Ddrishti.load.seconds=120` by default).
 
 ### 14.9 Native libraries (BLAS)
@@ -2435,7 +2473,7 @@ before every call, a per-call size bound, and any failure or NaN from finite inp
 
 Compute workers run Python computations outside the server's JVM: a pool of worker processes per kind of work, the data handed to them as Arrow files
 already read and masked as the person who asked, in a locked environment of libraries an administrator approved
-([NOTEBOOK_GUIDE.md](NOTEBOOK_GUIDE.md); the module `drishti-compute`). Python people write in BI (python items and visuals,
+([README.md](bi/README.md); the module `drishti-compute`). Python people write in BI (python items and visuals,
 Python-driven tables, Notebook cells) runs here too, on the pool `python`.
 
 ### 15.1 Switch it on
@@ -2592,7 +2630,7 @@ terminal, cron or a container; both read and write `<data>/lakes/lake-maintenanc
 same way (16.3). The examples use a small lake with two trade tables built by `lake build` and one table another system published (`risk/var_published`).
 Its parts beside `maintain.py`: `tools/lake/maintconfig.py` (the maintenance YAML and the run history), `tools/lake/maintschedule.py`
 (the one scheduler, used by `--daemon` and by the console), `tools/lake/ownership.py` (which tables Drishti's lake tool built: the only ones
-it maintains) and `tools/lake/maintain_iceberg.py` (the Iceberg tables, 16.3).
+it maintains) and `tools/lake/maintain_iceberg.py` (the Iceberg tables, 16.3), and `tools/lake/maintain_rows.py` (a table's row retention, `retention: {ttl, on, max-rows}`, for Delta, Iceberg and files stores: DATA_LAKE_GUIDE.md section 2.7).
 
 ### 16.2 Maintain from the page or the command line
 
@@ -2766,7 +2804,7 @@ the console as the administrator.
 
 ```cron
 # m  h  dom mon dow  command
-30 21 *   *   1-5  cd /opt/drishti && drishti-console/.venv/bin/python tools/drishti.py lake build --from /srv/drop/endur-$(date +\%F).json.gz --pack config/packs/banking/trading --kind trade --connector trade-endur --key TRADE_ID --lake /srv/drishti/delta --as-of $(date +\%F) --partition-by PRODUCT_TYPE --signal http://localhost:18480 --token-file /etc/drishti/loads.token -q >> /var/log/drishti/lake-build.log 2>&1
+30 21 *   *   1-5  cd /opt/drishti && drishti-console/.venv/bin/python tools/drishti.py lake build --from /srv/drop/endur-$(date +\%F).json.gz --pack modules/banking/dmod/packs/trading --kind trade --connector trade-endur --key TRADE_ID --lake /srv/drishti/delta --as-of $(date +\%F) --partition-by PRODUCT_TYPE --signal http://localhost:18480 --token-file /etc/drishti/loads.token -q >> /var/log/drishti/lake-build.log 2>&1
 ```
 
 Or as a systemd timer (a missed run is caught up after a reboot; `systemctl status` shows the exit code):
@@ -2781,7 +2819,7 @@ After=network-online.target
 Type=oneshot
 User=drishti
 WorkingDirectory=/opt/drishti
-ExecStart=/bin/sh -c 'drishti-console/.venv/bin/python tools/drishti.py lake build --from /srv/drop/endur-$(date +%%F).json.gz --pack config/packs/banking/trading --kind trade --connector trade-endur --key TRADE_ID --lake /srv/drishti/delta --as-of $(date +%%F) --partition-by PRODUCT_TYPE --signal http://localhost:18480 --token-file /etc/drishti/loads.token -q'
+ExecStart=/bin/sh -c 'drishti-console/.venv/bin/python tools/drishti.py lake build --from /srv/drop/endur-$(date +%%F).json.gz --pack modules/banking/dmod/packs/trading --kind trade --connector trade-endur --key TRADE_ID --lake /srv/drishti/delta --as-of $(date +%%F) --partition-by PRODUCT_TYPE --signal http://localhost:18480 --token-file /etc/drishti/loads.token -q'
 # 2 (written with rejects) is not a failure of the unit; alert on it from the summary instead
 SuccessExitStatus=2
 Environment=DRISHTI_LAKE_HEAP=2g
@@ -2839,7 +2877,7 @@ The shipped example configuration is `deploy/lake-maintenance.yaml`. **The sched
 | `drishti.py data landed` | 0 ok, 1 not verified or refused | none (the same pack, kind, date and batch twice is recorded once) | stdout or `--json` | yes |
 | `drishti.py server smoke` / `server health` | 0 ok, 1 a check failed | none | stdout or `--json` | yes |
 | `drishti.py pack check` | 0 passed, 1 failed, 2 usage | none | stdout, JUnit with `--junit` | yes |
-| `drishti.py feed run` | 0 ok, 1 failed, 2 refused, 3 locked, 4 partial | `<data>/datafeeds/<feed>/run.lock` | stdout and `<data>/datafeeds/ledger.jsonl` | yes: each date replaced ([EXTERNAL_DATA.md](EXTERNAL_DATA.md)) |
+| `drishti.py feed run` | 0 ok, 1 failed, 2 refused, 3 locked, 4 partial | `<data>/datafeeds/<feed>/run.lock` | stdout and `<data>/datafeeds/ledger.jsonl` | yes: each date replaced ([WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md)) |
 | `tools/load-*.sh` | 0 ok, non-zero failed | none: one loader per store at a time | stdout | yes (each day replaced in one step) |
 | `tools/drill.sh` | 0 all passed | none: one at a time | `data/drill/*.log` | yes |
 
@@ -2924,8 +2962,8 @@ the older layout (tables directly under `data/delta/<domain>/`) is moved into `d
 renames the demo lake's own folders on the same file system (no file is copied, rewritten or deleted), measures every table before and after (version,
 files, rows) and moves everything back on any difference; it **refuses**, saying why and moving nothing, when `data/delta/demo` exists, when something in
 `data/delta` belongs to no lake file, when a folder is on another file system, when a table is Iceberg or does not open, or while a build holds the lock.
-It records itself in `data/delta/demo/_drishti-lake/relocated.json` and rewrites connector files that read the old default root to `lake: demo` (each
-earlier file kept as `<name>.yaml.before-lake-<time>.bak`). By hand, with the server stopped:
+It records itself in `data/delta/demo/_drishti-lake/relocated.json`; it writes no connector file (the server reads connector files and never
+writes them: the packs' templates read the demo lake by name, `lake: demo`). By hand, with the server stopped:
 
 ```bash
 python3 tools/drishti.py lake relocate demo --dry-run     # the folders it would move and every table measured; nothing moves
@@ -3250,7 +3288,7 @@ Both programs log to standard output (`docker compose -f deploy/docker/compose.y
 | `pack '…' not found at …/pack.yaml` at start | a typo in `DRISHTI_PACKS`, or started from another folder | use the folder names exactly; start from the installation root or give `DRISHTI_PACKS_DIR` as an absolute path. Other loader messages: `declares pack 'x', expected 'y'` (the folder and `pack:` differ), `packs require each other in a cycle`, `… is defined by both pack 'a' and pack 'b'` |
 | A pack you expected is missing | `DRISHTI_PACKS` lists others, or it is a retired example `DRISHTI_PACKS_EXTRA_DIRS` does not name | restart with the list you want, or **Load** in Admin → Packs |
 | An old version runs | `target/` holds several jars and `*-exec.jar` runs the oldest | name the jar exactly, or build with `clean`; `/api/v1/about` shows the `version` |
-| The server starts but every view is empty, packs missing (IDE) | the run configuration's working directory is `drishti-server/` | the repository root ([3.2](#32-intellij-idea-open-build-run-and-debug-the-server)) |
+| The server starts but every view is empty, packs missing (IDE) | the run configuration's working directory is `kernel/drishti-server/` | the repository root ([3.2](#32-intellij-idea-open-build-run-and-debug-the-server)) |
 | A run configuration is missing or shows `<no module>` | the project is not the root `pom.xml`, or the Python plugin is missing | open the root and let the Maven import finish; Python configurations need PyCharm |
 | Tests pass in a terminal but fail in IntelliJ | `DRISHTI_*` set in the test configuration | clear them in the JUnit template |
 | `ModuleNotFoundError: No module named 'fastapi'` | the console started with another Python | the console's `.venv` ([2.3](#23-the-consoles-python)); in PyCharm choose it as interpreter |
@@ -3427,7 +3465,7 @@ quote values with `{$.path}` so each reader sees their own.
 | A pack is *off* in Admin → Packs, or its users get `DRS-5002` | an administrator switched it off (*Changed* says when and who; audit `pack-disabled`): **Switch on** (live) |
 | A pack says *not loaded* | its folder is there but `DRISHTI_PACKS` did not name it: **Load** (live). *cannot load 'finance': kind trade is defined by both pack 'trading' and pack 'finance'*: it clashes with a loaded pack |
 | "Switch off" is greyed, or `'trading' is needed by [market-risk, counterparty-risk]; switch those off first` | switch off the dependants first |
-| The drill fails with "pack manifests out of date" | a generated file was edited by hand, or the generator changed and was not run: `python3 tools/packgen/banking/make_packs.py --check` lists them; move the change into the generator and run it, or `git checkout -- config/packs/<domain>/<name>/…` |
+| The drill fails with "pack manifests out of date" | a generated file was edited by hand, or the generator changed and was not run: `python3 tools/packgen/banking/make_packs.py --check` lists them; move the change into the generator and run it, or `git checkout -- modules/<module>/packs/<name>/…` |
 
 ### 21.9 Alerts on numbers
 
@@ -3456,7 +3494,7 @@ saved state; an item it cannot convert is never changed.
 
 | Symptom | Check and fix |
 |---|---|
-| A file under `config/bi/datasets` or `config/bi/models` says `DRS-9196`; Admin → Artifacts refuses a `.dataset.yaml` | BI's old form: `drishti.py tables migrate --dry-run`, read the diff, then `drishti.py tables migrate` ([TABLES_GUIDE.md](TABLES_GUIDE.md)): it writes tables and models under `config/tables/` and rebinds the reports |
+| A file under `config/bi/datasets` or `config/bi/models` says `DRS-9196`; Admin → Artifacts refuses a `.dataset.yaml` | BI's old form: `drishti.py tables migrate --dry-run`, read the diff, then `drishti.py tables migrate` ([TABLES_AND_MODELS.md](bi/TABLES_AND_MODELS.md)): it writes tables and models under `config/tables/` and rebinds the reports |
 | An expression says `DRS-9100` ("old expression syntax ... refused") | not Rachana (`and`, `or`, `None`, `x if c else y`, `&&`, `[Measure]`): files with `tables migrate` or `drishti.py bi migrate --expressions FILE --write`, stored items at the next start ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#rachana-el-expressions)) |
 | Admin → BI settings lists **migration problems** | fix the item's text by hand and restart, or rebuild it in **Build › Tables & models** |
 | New saved states by `system` with origin `migrate`; a pivot formula reads differently (`&&` for `and`) | nothing to do: the start-up move (audit `pivot-formula-migrate`); its figures do not change |
@@ -3482,10 +3520,10 @@ saved state; an item it cannot convert is never changed.
 | A board tile says "Not available"; never changes colour | the report or visual is gone or not yours (`GET /api/v1/bi/boards/{id}`: `problems` with `DRS-9052`); `on:` names a column the tile lacks, or the value is masked |
 | A python visual, Python dataset or Notebook cell says `DRS-9074` (Run greyed *Off: …*) | Python does not run here, and why: compute off, the pool `python` missing or not strict, no strict sandbox (Windows, no Landlock), the interpreter not carrying the pinned versions, the queue full ([15.1](#151-switch-it-on)); `GET /api/v1/bi/python/runtime` |
 | `DRS-9071`, `DRS-9072`, `DRS-9073`, `DRS-9075`; a python measure refused (`DRS-9013`) | the code raised or returned the wrong thing (traceback for `bi-author`); over `timeout`, `memory` or rows (`python-max-seconds`, `python-max-memory-mb`); an unlisted package, network, files or processes (pin it in `locks/python.in` and add it to `drishti.bi.report.python-packages`); a frame not matching the declared columns; show the measure in a python visual |
-| A Vega-Lite visual says Not drawn, is empty, or "may not load anything from a URL" | the specification uses what drishti-chart does not draw (the message lists each path and what to use, [REPORTS_GUIDE.md](REPORTS_GUIDE.md#96-vega-lite-visuals)); a field not in the rows (`DESK`, not `trade.DESK`); remove `data.url`/`loader` |
+| A Vega-Lite visual says Not drawn, is empty, or "may not load anything from a URL" | the specification uses what drishti-chart does not draw (the message lists each path and what to use, [REPORT_FILE_FORMAT_STATEMENTS.md](bi/REPORT_FILE_FORMAT_STATEMENTS.md#16-vega-lite-visuals)); a field not in the rows (`DESK`, not `trade.DESK`); remove `data.url`/`loader` |
 | The Notebook's extract is short; a SQL cell is refused (`DRS-9170`, `DRS-9072`) | `bi.notebook.max_rows` (10,000) of your rows; SQL is one read-only `SELECT` over the model, at most `sql_max_chars` |
 | Calc: `No module named 'drishti_bi'`, `needs JavaScript Promise Integration`, `DRS-9002` | `import drishti_bi` in the cell; `await drishti_bi.query_async(...)`; you need the `bi` power |
-| A window function reads `null`; a rank differs by reader; `DRS-9020` *no many-to-one path* | no row before or after; row rules apply first; group by a field every fact reaches, or ask the measures apart ([REPORTS_GUIDE.md](REPORTS_GUIDE.md#53-relationships-and-how-a-question-joins)) |
+| A window function reads `null`; a rank differs by reader; `DRS-9020` *no many-to-one path* | no row before or after; row rules apply first; group by a field every fact reaches, or ask the measures apart ([MODELS_AND_DATASETS_FOR_REPORTS.md](bi/MODELS_AND_DATASETS_FOR_REPORTS.md#13-relationships-and-how-a-question-joins)) |
 | A history query is empty or refused; a publish refused (`DRS-9040`) for a rename; *Roll back this import* `DRS-9004` | the live table has not been open long enough (Layers: `samples`); give the column a `path:` so the rename is recognised; an item changed since: export, then a bi-admin rolls back with force |
 | A deployed pack's BI items did not appear | the import was held (deploy answer `bi.loaded: false`, audit `pack-bi-held`) or files not named `<name>.<kind>.yaml` |
 | A theme or format refused (`DRS-9036`, `DRS-9032`); a Transform input refused (`DRS-9102`, `DRS-9108`) | the designer names the path; pick the kind and fields from the editor's lists |
@@ -3531,7 +3569,7 @@ codes whose cause or fix needs more than the meaning.
 | `DRS-4016` | the AI provider or MCP server failed or timed out: Admin → AI shows its health; check its URL, key variable and TLS |
 | `DRS-4017` | over the AI rate or cost limit for your user: wait, or an administrator raises the policy limit |
 | `DRS-4019` | the model, provider, MCP server or tool named is not configured: check `config/ai/` or `config/mcp/` |
-| `DRS-4020` | BI with AI: the model's answer could not be used (a draft that failed the report check after one repair, or not a query): say it more plainly, name the measure, or use a stronger model (`drishti.bi.ai.model`) ([REPORTS_GUIDE.md](REPORTS_GUIDE.md#16-ai-in-bi-report-from-words-ask-the-data-explain-this-number)) |
+| `DRS-4020` | BI with AI: the model's answer could not be used (a draft that failed the report check after one repair, or not a query): say it more plainly, name the measure, or use a stronger model (`drishti.bi.ai.model`) ([GOVERNANCE_AND_AI.md](bi/GOVERNANCE_AND_AI.md#1-ai-in-bi-report-from-words-ask-the-data-explain-this-number)) |
 | `DRS-4021` | history queries: more business days than `max-days`: narrow it with `FROM … TO …` |
 | `DRS-5003` | raised by the console only: it cannot reach the server, a live stream was refused, or a browser is over its live-subscription limit ([21.3](#213-the-console-and-the-server)) |
 | `DRS-5201` | a row of the date's P&L vectors was rejected (wrong length, a null or NaN, not USD): the provenance lists the trade and the reason; fix it upstream and reload the date |
@@ -3551,6 +3589,7 @@ codes whose cause or fix needs more than the meaning.
 | `DRS-5445` | the date's netting-set matrices exceed the exposure engine's budget: raise `drishti.ccr.exposure.memory-budget-gb` or the heap, or lower `drishti.ccr.exposure.hot-dates` |
 | `DRS-5031` | a connector file or body is not valid (HTTP 422): bad name, unknown plugin or top-level key, a missing setting, a wrong type, a `name:` that is not the file name, or a literal credential (use `${ENV_VAR}` or `file:/path`) ([DATA_GUIDE.md section 9](DATA_GUIDE.md#912-health-and-problems)) |
 | `DRS-5033` | no connector of that name (HTTP 404): `drishti.py connector list`; the file name is the name |
+| `DRS-5034` | a connector's `where`, `set` or `map` cannot be used (not a predicate, a map file missing or wrong): the connector is refused at load, the reason on Admin → Connectors ([DATA_LAKE_GUIDE.md section 6.2](DATA_LAKE_GUIDE.md#62-several-source-systems-shared-or-separate-tables)) |
 | `DRS-5040` | Admin → Artifacts: no such pack, connector, BI file or archive (an archive older than `uninstalled-keep` is pruned) |
 | `DRS-9203` | a compute pool is busy (HTTP 429): try again, or raise `workers.max` or the queue |
 | `DRS-9501`–`DRS-9505` | busy protection: a new sign-in, date, download, BI run or bulk load waits (HTTP 503 with `Retry-After`): [14.7](#147-busy-protection-refuse-politely-never-fall-over) |
@@ -3567,7 +3606,7 @@ codes whose cause or fix needs more than the meaning.
 | `DRS-9029` | the planner estimated more rows than the query's budget (HTTP 413): a date filter, a rollup's fields, or `options.budget.rows` |
 | `DRS-9030` | a report's YAML is not valid (HTTP 422): the designer's YAML tab or `POST /api/v1/bi/reports/validate` names the path |
 | `DRS-9031` | a report names a field, measure, hierarchy, page, bookmark or slicer its dataset or report lacks (HTTP 422; usually a dataset that changed under it) |
-| `DRS-9040` | publishing would break published reports (HTTP 409; the message lists them): fix the reports, keep the old names beside the new, or a `bi-admin` publishes with `force` ([REPORTS_GUIDE.md](REPORTS_GUIDE.md#176-impact-what-breaks-if-i-change-this)) |
+| `DRS-9040` | publishing would break published reports (HTTP 409; the message lists them): fix the reports, keep the old names beside the new, or a `bi-admin` publishes with `force` ([GOVERNANCE_AND_AI.md](bi/GOVERNANCE_AND_AI.md#26-impact-what-breaks-if-i-change-this)) |
 | `DRS-9043` | publishing is refused because its `tests:` fail or cannot run: run them with **Check** as the role named, fix the item or the expected value; a `bi-admin` may `force` (audited); `drishti.bi.governance.refuse-failing-tests: false` turns the gate off |
 | `DRS-9074` | Python does not run on this server now (HTTP 503), and the message says why: [21.11](#2111-bi-refresh-live-visuals-python-and-ai) |
 | `DRS-9076` | a Python item's own tests failed, so it is not published (HTTP 422, the console): Check shows each test; fix it, or a bi-admin publishes with `force` |

@@ -14,7 +14,7 @@
 
 """The scenario matrix in the console (SMAT, plugins/banking/routes/smat_routes.py; VAR_GUIDE.md section 3.9): the command and its spaced forms, the
 page and its JSON, Arrow, CSV and Arrow file read from the server as the person, gaps said in the export (never zeros), the links on the
-entity pages and the VaR page offered only where the word is (Drishti Risk and Trading; not Market or World, DRS-4023), FUNC and the
+entity pages and the VaR page offered only where the word is (Drishti Risk; not Drishti Finance, DRS-4023; a lens hides nothing), FUNC and the
 type-ahead. The server's own logic (the values against the stored vectors, PV to P&L, ranks, gaps, masks) is VarMatrixApiTest's."""
 from __future__ import annotations
 
@@ -32,9 +32,9 @@ from core.config import load_settings
 from plugins.banking.routes.smat_routes import smat_command, to_csv
 import engine_fakes  # noqa: E402
 
-RISK_ABOUT = {"product": "Drishti Risk", "tagline": "VaR and exposure from your own pricing data", "edition": {"name": "risk", "title": "Drishti Risk"}}
-MARKET_ABOUT = {"product": "Drishti Market", "tagline": "Curves", "edition": {"name": "market", "title": "Drishti Market"}}
-WORLD_ABOUT = {"product": "Drishti World", "tagline": "Economies", "edition": {"name": "world", "title": "Drishti World"}}
+RISK_ABOUT = {"product": "Drishti Risk", "tagline": "VaR and exposure from your own pricing data",
+              "edition": {"name": "drishti.risk", "title": "Drishti Risk"}}
+FINANCE_ABOUT = {"product": "Drishti Finance", "tagline": "Companies", "edition": {"name": "drishti.finance", "title": "Drishti Finance"}}
 
 #: a matrix as the server answers it: three dates, the oldest a gap (refused), a trade's P&L vector
 ANSWER = {
@@ -146,10 +146,9 @@ def test_the_csv_and_arrow_exports_say_the_gaps_and_never_write_zeros(backend, m
         .splitlines()[:3] == ["trade,2026-09-30", "T1,-1.5", "total,-1.5"]
 
 
-@pytest.mark.parametrize("about", [MARKET_ABOUT, WORLD_ABOUT])
-def test_market_and_world_have_no_scenario_matrix(backend, monkeypatch, about):
+def test_drishti_finance_has_no_scenario_matrix(backend, monkeypatch):
     _var(backend, monkeypatch, [])
-    app, c = _app(backend, monkeypatch, about)
+    app, c = _app(backend, monkeypatch, FINANCE_ABOUT)
     for path in ("/smat?id=T1", "/api/smat/matrix?id=T1", "/api/smat/matrix.csv?id=T1", "/api/smat/matrix.arrow?id=T1"):
         r = c.get(path)
         assert r.status_code == 404, path
@@ -160,14 +159,14 @@ def test_market_and_world_have_no_scenario_matrix(backend, monkeypatch, about):
     assert "data-smat-link" not in c.get("/v/trade/IRS-48213").text                  # no link that would only answer DRS-4023
 
 
-def test_the_links_follow_the_edition_and_the_lens(backend, monkeypatch):
+def test_the_links_follow_the_distribution_and_the_word_switch(backend, monkeypatch):
     app, c = _app(backend, monkeypatch, RISK_ABOUT)
     view = c.get("/v/trade/IRS-48213").text
     assert 'data-smat-link href="/smat?id=IRS-48213"' in view
     assert "drishti_smat-link.js" in c.get("/var?scope=DESK:RATES").text                      # the VaR page's link, added to its header strip
     s = [x for x in c.get("/api/search", params={"in": "command", "q": "SMAT DESK RATES 20"}).json()["items"] if x.get("mnemonic") == "SMAT"]
     assert s and s[0]["href"] == "/smat?id=DESK%3ARATES&days=20"
-    # the same instance with the word switched off (a site's edition.commands.words.SMAT: off): no link, no script, the word refused
+    # the same instance with the word switched off (a site's drishti.edition-spec.commands.words.SMAT: off): no link, no script, the word refused
     app.state.editions.instance.spec["commands"]["words"]["SMAT"] = False
     assert "data-smat-link" not in c.get("/v/trade/IRS-48213").text
     assert "drishti_smat-link.js" not in c.get("/var?scope=DESK:RATES").text
@@ -183,22 +182,17 @@ def test_func_lists_smat_with_the_market_risk_pack_where_the_word_is(backend, mo
     app, c = _app(backend, monkeypatch, RISK_ABOUT, roles=("viewer",))
     page = c.get("/func").text
     assert 'data-command="SMAT"' in page and "SMAT DESK:RATES 20" in page
-    app2, c2 = _app(backend, monkeypatch, MARKET_ABOUT, roles=("viewer",))
+    app2, c2 = _app(backend, monkeypatch, FINANCE_ABOUT, roles=("viewer",))
     assert 'data-command="SMAT"' not in c2.get("/func").text
 
 
-def test_a_market_or_world_lens_on_a_full_instance_hides_it_for_that_person_only(backend, monkeypatch):
+def test_a_lens_hides_no_scenario_matrix(backend, monkeypatch):
+    """A lens is a workspace (ADMIN_GUIDE.md 12): inside the Market or World lens the link and the page stay."""
     from test_edition import _app as edition_app, _client as edition_client
 
     app = edition_app(backend, monkeypatch)
     app.state.editions.learn({"product": "Drishti", "edition": None, "lenses": ["risk", "market", "world"]})
-    alice, bob = edition_client(app, "alice"), edition_client(app, "bob")
-    for lens in ("market", "world"):
+    alice = edition_client(app, "alice")
+    for lens in ("market", "world", "risk"):
         assert alice.post(f"/lens/{lens}", follow_redirects=False).status_code == 303
-        assert "data-smat-link" not in alice.get("/v/trade/IRS-48213").text, lens
-        assert alice.get("/smat?id=T1").status_code == 404, lens
-        r = alice.get("/go", params={"q": "SMAT T1 <GO>"}, follow_redirects=False)
-        assert "DRS-4023" in r.headers["location"], lens
-    assert alice.post("/lens/risk", follow_redirects=False).status_code == 303
-    assert "data-smat-link" in alice.get("/v/trade/IRS-48213").text and alice.get("/smat?id=T1").status_code == 200
-    assert "data-smat-link" in bob.get("/v/trade/IRS-48213").text                     # bob, on the full product, has it throughout
+        assert "data-smat-link" in alice.get("/v/trade/IRS-48213").text and alice.get("/smat?id=T1").status_code == 200, lens

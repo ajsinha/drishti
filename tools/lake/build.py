@@ -40,7 +40,7 @@ default. An Iceberg lake may be in object storage (--lake s3://bucket/prefix, or
 local scratch folder (TMPDIR) and no run record is kept in the lake (deploy/aws/iceberg/load-day.sh keeps its own).
 
 Engines (--engine): auto (default) uses Drishti's own Java writer in the server's exec jar when one is found (--jar, DRISHTI_JAR,
-drishti-server/target), else the Python deltalake package; the run says which ran and why. java (2.9.6): the whole build by the parallel
+kernel/drishti-server/target), else the Python deltalake package; the run says which ran and why. java (2.9.6): the whole build by the parallel
 lake loader in the same jar (tools/lake/javaload.py; Delta or Iceberg, every stage multi-threaded, memory bounded, input from a folder or
 s3://, a Delta lake in s3:// too; --loader-set KEY=VALUE for its settings), only when asked: the Python path stays the default. With
 --java-above-mb N, auto also picks it for every input JSON Lines of at least N MB in mode overwrite-dates.
@@ -74,12 +74,13 @@ import writers  # noqa: E402
 
 if str(HERE.parents[1] / "drishti-console") not in sys.path:
     sys.path.insert(0, str(HERE.parents[1] / "drishti-console"))
-from core.pack_paths import pack_dir  # noqa: E402  (the one rule for where a pack's folder is)
+from core import resolution as R  # noqa: E402  (configuration: the one resolver)
+from core.resolution import pack_dir  # noqa: E402  (where a pack is: the one resolver, KERNEL_AND_MODULES.md 18)
 
 EXIT_OK, EXIT_FAILED, EXIT_PARTIAL, EXIT_LOCKED = 0, 1, 2, 3
 MODES = ("overwrite-dates", "overwrite-partitions", "append")
 STATE = "_drishti-lake"
-PACKS_ROOT = pathlib.Path(os.environ.get("DRISHTI_PACKS_DIR") or HERE.parents[1] / "config" / "packs")
+PACKS_ROOT = R.Settings.from_env().site_dir                       # the site's packs (the modules' and the kernel's: the resolver)
 RESERVED = {"id", "doc", "business_date"}
 
 
@@ -173,6 +174,14 @@ def now_iso() -> str:
 
 # ------------------------------------------------------------------------------------------------ what to build
 
+def site_set(connector: str, template_settings: dict) -> dict:
+    """The constants the connector's ``set:`` stamps into stored rows: its effective settings (the template, the site's override merged
+    over it: drishti-console/core/resolution.py), else ``template_settings`` when no layer has the connector."""
+    e = R.current().connectors.find(connector)
+    st = e.settings if e is not None else {k: R._text(v) for k, v in R.flatten(template_settings or {}).items()}
+    return {k[4:]: str(v) for k, v in st.items() if isinstance(k, str) and k.startswith("set.") and len(k) > 4}
+
+
 def pack_defaults(pack: pathlib.Path, kind: str | None, connector: str | None = None) -> dict:
     """{pack, domain, kind, key, date, promote, connector, table} from a pack folder (its pack.yaml), whatever it declares. With
     ``connector`` that Delta connector of the pack (one of several serving a kind, one per source system: trade-endur ...), else the
@@ -182,7 +191,7 @@ def pack_defaults(pack: pathlib.Path, kind: str | None, connector: str | None = 
     import packlake                                   # a lake-form template read with the pack's lake: entries
     m = packlake.view(yaml.safe_load((pack / "pack.yaml").read_text(encoding="utf-8")) or {})
     out: dict = {"pack": m.get("pack") or pack.name}
-    defs = m.get("connectors") if isinstance(m.get("connectors"), dict) else (m.get("connector-templates") or {})
+    defs = m.get("connectors") if isinstance(m.get("connectors"), dict) else {}
     delta = [(n, c) for n, c in (defs or {}).items() if isinstance(c, dict) and c.get("plugin") == "delta"]
     if connector:
         delta = [(n, c) for n, c in delta if n == connector]
@@ -196,6 +205,7 @@ def pack_defaults(pack: pathlib.Path, kind: str | None, connector: str | None = 
         name, c = delta[0]
         st = c.get("settings") or {}
         out["connector"], out["domain"] = name, st.get("domain") or out["pack"]
+        out["set"] = site_set(name, st)
         if kind:
             lay = (st.get("layout") or {}).get(kind) if isinstance(st.get("layout"), dict) else None
             flat = st.get(f"layout.{kind}.columns")
@@ -306,7 +316,7 @@ def _plan_only(a, p, summary, started, say) -> tuple[int, dict]:
 
 def _pack_dir(name: str) -> pathlib.Path:
     p = pathlib.Path(name)
-    return p if (p / "pack.yaml").is_file() else pack_dir(name, PACKS_ROOT)
+    return p if (p / "pack.yaml").is_file() else (R.current().packs.dir(name) or pack_dir(name))
 
 
 def _run_tars(a, say, summary, started, lake) -> tuple[int, dict]:
@@ -369,6 +379,7 @@ def plan(a) -> dict:
         if not p["promote"] and a.promote is None:
             p["promote"] = d.get("promote") or []
         p["flatten"] = d.get("flatten") or {}
+        p["set"] = d.get("set") or {}
         p["vectors"] = p.get("vectors") or d.get("vectors") or []
     lake_layout(a, p)
     p["key"] = p["key"] or "id"
@@ -400,7 +411,7 @@ def plan(a) -> dict:
 def lake_layout(a, p: dict) -> None:
     """``--lake NAME`` naming a lake of config/lakes/ (docs/guides/DATA_LAKE_GUIDE.md): the table's location, partitioning, promoted columns,
     vectors, flattened fields, id, date, latest-by and load mode come from its lake file, read by the one reader (lakeconfig.py runs
-    drishti-lakeconfig). A --partition-by, --promote or --vector that says otherwise is refused, naming both; a kind the lake file has
+    drishti-lakeio). A --partition-by, --promote or --vector that says otherwise is refused, naming both; a kind the lake file has
     no entry for is refused (a writer never creates a table its lake file does not describe). ``--lake-root DIR`` writes the same
     layout under another folder (a scratch or test lake); ``--lake DIR`` alone is the old form: the options and the pack decide."""
     import lakeconfig
@@ -470,7 +481,29 @@ class Progress:
 
 
 def run(a, say=print) -> tuple[int, dict]:
-    """The whole build; returns (exit code, summary). Never raises for a data problem: it is in the summary."""
+    """The whole build; returns (exit code, summary). Never raises for a data problem: it is in the summary. A pack's child kinds of the
+    table (``ingest: {child-of}``, DATA_LAKE_GUIDE.md section 5.7) are built after it, each from its parent's array, in the same format;
+    the parallel loader does that itself (the same rules), so only a build by the Python path does it here."""
+    before = (getattr(a, "lake", None), getattr(a, "format", "delta"), getattr(a, "mode", None), getattr(a, "_mode_given", False))
+    code, summary = _run_table(a, say)
+    if code in (EXIT_OK, EXIT_PARTIAL) and not a.dry_run and not getattr(a, "plan", False) and summary.get("status") in ("ok", "partial") \
+            and summary.get("engine") != "java-loader" and summary.get("feed") != "tar":
+        import childload
+        kids = childload.children_of(a.pack, summary.get("kind") or a.kind)
+        if kids:
+            a.lake, a.format, a.mode, a._mode_given = before
+            worst, out = childload.run(a, summary.get("kind") or a.kind, getattr(a, "table", None), kids, run)
+            summary["children"] = out
+            if not a.json and not a.quiet:
+                for k, v in out.items():
+                    say(f"child kind {k}: {v.get('status')}, {v.get('accepted') if v.get('accepted') is not None else v.get('rows')} rows -> {v.get('table')}")
+            if worst > code:
+                code = worst
+                summary["status"] = "partial" if worst == EXIT_PARTIAL else "failed"
+    return code, summary
+
+
+def _run_table(a, say=print) -> tuple[int, dict]:
     started = time.monotonic()
     remote = bool(a.lake) and "://" in str(a.lake) and not str(a.lake).startswith("file:")
     named = _lake_name(a)                                 # --lake NAME: a name, never a folder of the current directory
@@ -586,6 +619,7 @@ def _go(a, p, as_of, lake, table, summary, prog, started, say, remote_root: str 
     st = stage.Stager(staging, p["key"], p["date"], as_of, p["partition_by"], p["promote"], p.get("flatten"), p.get("vectors"),
                       p.get("latest_by"))
     st.date_from = p["date_from"]
+    st.set = p.get("set") or {}
     st.run = summary["run"]
     try:
         if table and not iceberg:                                          # a table of another partitioning fails before anything is read
@@ -932,7 +966,7 @@ def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
                    "never appended twice; a lake file's table with load-mode: append needs it (docs/guides/DATA_LAKE_GUIDE.md section 5.3)")
     g.add_argument("--batch-rows", type=int, default=50_000, help="most rows per batch written (default 50,000; also the most rows sorted at once)")
     g.add_argument("--batch-mb", type=int, default=128, help="most MB of documents per batch (default 128): large documents make smaller batches, so memory stays flat")
-    g.add_argument("--jar", help="the drishti-server exec jar (default: DRISHTI_JAR, then drishti-server/target)")
+    g.add_argument("--jar", help="the drishti-server exec jar (default: DRISHTI_JAR, then kernel/drishti-server/target)")
     g.add_argument("--java", help="the java binary (default: JAVA_HOME, then java on the PATH)")
     g.add_argument("--dry-run", action="store_true", help="read and count, write nothing")
     g.add_argument("--plan", action="store_true", help="say what the load would do, file by file (table, pack, business date, mode and where "

@@ -77,8 +77,8 @@ class KafkaReconnectTest {
             // the broker goes away while the connector runs: the client keeps retrying inside poll(), and health says so
             broker.destroy();
             brokerUp = false;
-            waitFor(() -> plugin.health().startsWith("DOWN"), 60);
-            assertThat(plugin.health()).isEqualTo("DOWN: no connection to the broker (reconnecting)");
+            waitFor(() -> com.ash.drishti.api.BrokerWaiting.is(plugin.health()), 60);   // calm: WAITING, the snapshot still served
+            assertThat(plugin.health()).startsWith("WAITING: connection to the broker at").contains("lost - live updates paused");
         } finally {
             plugin.close();
             relay.close();

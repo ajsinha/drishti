@@ -88,7 +88,8 @@ def input_files(inputs, recursive: bool = False) -> list[pathlib.Path]:
         i = pathlib.Path(i)
         if i.is_dir():
             pick = "**/" if recursive else ""
-            files += sorted(list(i.glob(pick + "*.jsonl")) + list(i.glob(pick + "*.jsonl.gz")) + [f for f in i.glob(pick + "*.json") if is_json_array(f)])
+            files += sorted([f for ext in ("*.jsonl", "*.jsonl.gz", "*.ndjson", "*.ndjson.gz") for f in i.glob(pick + ext)]
+                            + [f for f in i.glob(pick + "*.json") if is_json_array(f)])
         elif i.is_file():
             files.append(i)
         else:
@@ -153,7 +154,8 @@ def file_kind(f: pathlib.Path) -> str:
     n = filedate.parse(f.name)
     if n.error is None and not n.tar and n.table:
         return f.name.split(".")[0]
-    return pathlib.Path(f.stem).stem if f.suffix.lower() == ".gz" else f.stem
+    stem = pathlib.Path(f.stem).stem if f.suffix.lower() == ".gz" else f.stem
+    return re.sub(r"\.\d{4}-\d\d-\d\d$", "", stem)                 # trade.2026-11-03.ndjson -> trade
 
 
 def read_records(files, say_bad=None):
@@ -378,9 +380,9 @@ def build_groups(kinds: dict[str, list[dict]], opts) -> list[Group]:
 def find_jar(explicit: str | None) -> str:
     if explicit:
         return explicit
-    jars = sorted(glob.glob(str(ROOT / "drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime)
+    jars = sorted(glob.glob(str(ROOT / "kernel/drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime)
     if not jars:
-        raise SystemExit("sutragen: no drishti-server-*-exec.jar under drishti-server/target; build it or pass --jar")
+        raise SystemExit("sutragen: no drishti-server-*-exec.jar under kernel/drishti-server/target; build it or pass --jar")
     return jars[-1]
 
 
@@ -415,6 +417,25 @@ def edit_yaml(text: str, g: Group) -> str:
         elif line.startswith("title:") and g.key:
             line = re.sub(r'id: "[^"]*"', f'id: "$.{g.key}"', line, count=1)
         out.append(line)
+    return link_parent("\n".join(out) + "\n", getattr(g, "parent", None))
+
+
+def link_parent(text: str, ch) -> str:
+    """A child kind's Sutra (tools/packgen/childkinds.py) links back to its parent: its link field opens the parent kind wherever it is shown,
+    beside the title and on F7."""
+    if ch is None:
+        return text
+    to = f"link($.{ch.link}, '{ch.parent}')"
+    text = re.sub(r"link\(\$\." + re.escape(ch.link) + r", '[^']*'\)", to, text)
+    out = []
+    for line in text.splitlines():
+        if line.startswith("title:") and "with:" not in line:
+            line = re.sub(r"\s*}\s*$", f', with: "{to}" }}', line)
+        elif line.startswith("keys:") and "F7:" not in line:
+            line = re.sub(r"^keys:\s*{", f'keys: {{ F7: "{to}",', line)
+        out.append(line)
+    if not any(x.startswith("keys:") for x in out):
+        out.append(f'keys: {{ F7: "{to}" }}')
     return "\n".join(out) + "\n"
 
 
@@ -423,8 +444,14 @@ def generate(kinds: dict[str, list[dict]], opts, out: pathlib.Path, tests: pathl
     groups = build_groups(kinds, opts)
     if not groups:
         raise SystemExit("sutragen: nothing to generate (no group has --min-docs documents)")
-    tests = tests or out / "tests"
     say(f"{sum(len(v) for v in kinds.values())} documents, {len(kinds)} kind(s), {len(groups)} group(s)")
+    return draft(groups, opts, out, tests, say)
+
+
+def draft(groups: list[Group], opts, out: pathlib.Path, tests: pathlib.Path | None = None, say=print) -> list[Group]:
+    """Drafts each group's Sutra from its samples (one `sutra design --each` run), writes it under out/<kind>/ and its samples as test
+    cases under tests/<name>/ (the Pack designer's groups come from tools/packgen/profile.py, a full pass, with their samples chosen)."""
+    tests = tests or out / "tests"
     with tempfile.TemporaryDirectory(prefix="sutragen-") as tmp:
         t = pathlib.Path(tmp)
         for i, g in enumerate(groups):
@@ -436,7 +463,8 @@ def generate(kinds: dict[str, list[dict]], opts, out: pathlib.Path, tests: pathl
         r = sutra_cli(opts, "design", "--each", str(t / "in"), "--out", str(t / "out"))
         if r.returncode != 0:
             sys.stderr.write(r.stdout + r.stderr)
-            raise SystemExit(f"sutragen: sutra design failed (exit {r.returncode})")
+            why = [x for x in (r.stdout + r.stderr).splitlines() if x.strip()][-4:]
+            raise SystemExit(f"sutragen: sutra design failed (exit {r.returncode})" + (": " + " | ".join(why) if why else ""))
         for i, g in enumerate(groups):
             text = (t / "out" / f"g{i:04d}.sutra.yaml").read_text(encoding="utf-8")
             g.path = out / g.kind / f"{g.name}.v1.sutra.yaml"
@@ -451,7 +479,7 @@ def generate(kinds: dict[str, list[dict]], opts, out: pathlib.Path, tests: pathl
 def summary(groups: list[Group], say=print) -> None:
     say(f"{'kind':<16}{'group':<44}{'docs':>7}{'samples':>8}  sutra")
     for g in groups:
-        say(f"{g.kind:<16}{g.label[:43]:<44}{len(g.docs):>7}{len(g.samples):>8}  {g.name}")
+        say(f"{g.kind:<16}{g.label[:43]:<44}{getattr(g, 'count', None) or len(g.docs):>7}{len(g.samples):>8}  {g.name}")
 
 
 def lint(opts, path: pathlib.Path, say=print) -> int:
@@ -475,7 +503,7 @@ def add_arguments(p: argparse.ArgumentParser) -> None:
     p.add_argument("--priority", type=int, default=10, help="priority of a match-field Sutra (default 10)")
     p.add_argument("--fallback", action="store_true", help="also write <kind>-default (no where, priority 1)")
     p.add_argument("--name-prefix", default="", help="prefix of every Sutra name")
-    p.add_argument("--jar", help="the drishti-server exec jar (default: newest under drishti-server/target)")
+    p.add_argument("--jar", help="the drishti-server exec jar (default: newest under kernel/drishti-server/target)")
     p.add_argument("--java", help="java binary (default: JAVA_HOME, then JDK 21, then java)")
     p.add_argument("-r", "--recursive", action="store_true", help="read *.jsonl in subfolders too")
 

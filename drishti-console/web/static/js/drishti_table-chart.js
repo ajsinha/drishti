@@ -25,6 +25,7 @@
    chart ← → points, ↑ ↓ series, Home/End. Settings are kept per table for the tab's life (saving them is a later step). */
 (function () {
   'use strict';
+  function drishti_url(p) { var f = globalThis.drishti_url; return typeof f === 'function' && f !== drishti_url ? f(p) : p; }   // drishti-core's base helper when the page has it; a page without it (the renderer, an embed) keeps the URL as it is
   function E() { return window.Drishti.tableChartEngine; }
   function PE() { return window.Drishti.pivotEngine || (window.drishtiModules || {}).pivotEngine; }
   var MEMO = {};                                      // identity -> the settings a reader chose, for the tab's life
@@ -32,7 +33,7 @@
     ['scatter', 'Scatter', 'dot'], ['combo', 'Combo', 'bar-chart-line']];
   var AGG_TEXT = { sum: 'Sum', avg: 'Average', count: 'Count', min: 'Min', max: 'Max', none: 'Points (no aggregation)' };
   var BUCKET_TEXT = { auto: 'Automatic', day: 'By day', week: 'By week', month: 'By month', quarter: 'By quarter', year: 'By year' };
-  var HELP = '/help/table-chart';
+  var HELP = drishti_url('/help/table-chart');
   var current = null;
 
   function el(tag, attrs, kids) {
@@ -86,7 +87,7 @@
 
   /** The chart dialog for one source. */
   function Dialog(source, opts) {
-    this.src = source; this.opts = opts || {}; this.scope = 'shown'; this.allData = null; this.point = -1; this.si = 0; this.view = 'chart';
+    this.src = drishti_url(source); this.opts = opts || {}; this.scope = 'shown'; this.allData = null; this.point = -1; this.si = 0; this.view = 'chart';
     this.build();
   }
   Dialog.prototype.build = function () {
@@ -95,7 +96,7 @@
     if (s.context && (s.context.id || s.context.asOf)) { title.appendChild(el('span', { cls: 'tc-ctx mono', text: ' (' + [s.context.id, s.context.asOf].filter(Boolean).join(' · ') + ')' })); }
     this.closeBtn = el('button', { type: 'button', cls: 'tc-x', 'aria-label': 'Close the chart (Esc)', title: 'Close (Esc)', 'data-tc-close': true, onclick: function () { self.close(); } }, [icon('x-lg')]);
     var head = el('header', { cls: 'tc-h' }, [title, el('span', { cls: 'tc-h-r' }, [
-      el('a', { cls: 'tc-help', href: HELP, target: '_blank', rel: 'noopener', title: 'How charts work (?)', 'aria-label': 'Help on charts' }, [icon('question-circle')]), this.closeBtn])]);
+      el('a', { cls: 'tc-help', href: drishti_url(HELP), target: '_blank', rel: 'noopener', title: 'How charts work (?)', 'aria-label': 'Help on charts' }, [icon('question-circle')]), this.closeBtn])]);
     this.chartEl = el('div', { cls: 'tc-canvas', role: 'img', tabindex: '0', 'aria-label': 'Chart', 'aria-describedby': 'tcSum' });
     this.msg = el('div', { cls: 'tc-msg', role: 'status', hidden: true });
     this.tableBox = el('div', { cls: 'tc-table tbl-wrap', hidden: true });
@@ -547,7 +548,7 @@
       case 't': case 'T': e.preventDefault(); this.toggleTable(); break;
       case 'a': case 'A': if (!this.allBtn.hidden && !this.allBtn.disabled) { e.preventDefault(); this.toggleAll(); } break;
       case 'e': case 'E': if (!this.exportBox.hidden) { e.preventDefault(); this.exportBox.querySelector('button').focus(); this.say('Export: PNG, SVG, CSV, Excel or JSON Lines.'); } break;
-      case '?': e.preventDefault(); window.open(HELP, '_blank', 'noopener'); break;
+      case '?': e.preventDefault(); window.open(drishti_url(HELP), '_blank', 'noopener'); break;
       default:
     }
   };
@@ -583,7 +584,7 @@
     if (!this.last) { return; }
     var g = this.gridData();
     this.say('Preparing the ' + (ext === 'xlsx' ? 'Excel workbook' : ext === 'jsonl' ? 'JSON Lines file' : 'CSV file'));
-    fetch('/export/grid.' + ext, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify(g) }).then(function (r) {
+    fetch(drishti_url('/export/grid.' + ext), { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify(g) }).then(function (r) {
       if (!r.ok) { return r.text().then(function (x) { self.status.textContent += ' · Export failed: ' + x; }); }
       var cd = r.headers.get('Content-Disposition') || '', mm = /filename="?([^";]+)"?/.exec(cd);
       return r.blob().then(function (b) { var n = mm ? mm[1] : g.name + '.' + ext; download(b, n); self.say('Downloaded ' + n); });

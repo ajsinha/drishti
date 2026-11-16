@@ -13,9 +13,10 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The console side of domain packs: which packs are enabled (asked of the server, the single source of truth)
-and what each contributes to the console: example commands, workspace starters and help guides, read from
-``config/packs/<domain>/<name>/`` (core/pack_paths.py). Cached per user for ``ui.user_cache_seconds`` (10 s) and read again at once on every worker after a
-change (core/user_stamps.py); falls back to ``packs.enabled`` when the server is unreachable."""
+and what each contributes to the console: example commands, workspace starters and help guides, read from the pack's folder: the one
+the server's row names (``dir``), else where the one resolver finds it (core/resolution.py: the site, the modules that are on, the
+kernel). Cached per user for ``ui.user_cache_seconds`` (10 s) and read again at once on every worker after a change
+(core/user_stamps.py); falls back to the resolver's packs when the server is unreachable."""
 from __future__ import annotations
 
 import copy
@@ -24,42 +25,19 @@ import time
 from pathlib import Path
 
 import yaml
-from core.pack_paths import pack_dir
+from core import resolution
 from core.servers import scoped
 from core.user_stamps import EVERYONE, NONE as NO_STAMPS
 
 log = logging.getLogger(__name__)
 
 
-def default_enabled(console_dir: Path) -> str:
-    """The packs the server enables when DRISHTI_PACKS is not set and no edition names them: the one list the server reads from its jar,
-    config/packs/default-packs.yaml, by module (docs/guides/ADMIN_GUIDE.md › The design)."""
-    from core.edition import by_module
-    try:
-        f = (console_dir / "../config/packs/default-packs.yaml").resolve()
-        return ",".join(by_module((yaml.safe_load(f.read_text(encoding="utf-8")) or {}).get("packs")))
-    except (OSError, yaml.YAMLError):
-        return ""
-
-
 class Packs:
     def __init__(self, settings, console_dir: Path, stamps=NO_STAMPS):
-        d = Path(settings.get("packs.dir", "../config/packs"))
-        self.dir = d if d.is_absolute() else (console_dir / d).resolve()
-        legacy = (console_dir / "../packs").resolve()
-        if not self.dir.is_dir() and legacy.is_dir():        # one release of grace for the old location
-            log.warning("The packs folder %s does not exist; using the old location %s (move it to config/packs).", self.dir, legacy)
-            self.dir = legacy
-        self.extra = [x for x in ((e if e.is_absolute() else (console_dir / e).resolve())          # retired example packs (examples/packs)
-                                  for e in (Path(s.strip()) for s in str(settings.get("packs.extra_dirs", "") or "").split(",") if s.strip()))
-                      if x.is_dir() and x != self.dir]
-        # packs installed from the registry or by Deploy archive: the server's drishti.packs.installed-dir, looked in first (they win a
-        # name, as on the server: PackLoader.dirs); read at each load, since the folder appears with the first install
-        inst = str(settings.get("packs.installed_dir", "") or "").strip()
-        i = Path(inst) if inst else Path(str(settings.get("lakes.data_dir", "../data") or "../data")) / "packs" / "installed"
-        self.installed = i if i.is_absolute() else (console_dir / i).resolve()
+        self.settings = settings
+        self.console_dir = console_dir
         wanted = str(settings.get("packs.enabled", "default"))
-        self.fallback = [p.strip() for p in (default_enabled(console_dir) if wanted.strip() == "default" else wanted).split(",") if p.strip()]
+        self._wanted = [p.strip() for p in wanted.split(",") if p.strip() and p.strip() != "default"]
         # a pack's files parsed once while they are unchanged: pack name -> (the files' signature, what _read made of them). Parsing
         # every enabled pack's YAML took about a second of the event loop per page whenever the per-user cache was cold
         self._parsed: dict[str, tuple[tuple, dict]] = {}
@@ -67,6 +45,25 @@ class Packs:
         # every worker of the console sees a change at once (core/user_stamps.py); other consoles within ``ttl`` (QA3A-02)
         self.stamps = stamps
         self.ttl = float(settings.get("ui.user_cache_seconds", 10) or 0)
+
+    def resolution(self) -> resolution.Resolution:
+        """Where this console's packs are (its settings and the environment; read again when a layer's files change)."""
+        return resolution.current(self.settings, self.console_dir)
+
+    @property
+    def dir(self) -> Path:
+        """The site's packs folder."""
+        return self.resolution().layout.site
+
+    @property
+    def installed(self) -> Path | None:
+        """The site's installed packs (deployed from Admin or a registry): the site layer's first folder."""
+        return self.resolution().layout.installed
+
+    @property
+    def fallback(self) -> list[str]:
+        """The packs while no server answers: ``packs.enabled`` when it names packs, else every pack the resolver loads."""
+        return self._wanted or [p.name for p in self.resolution().packs.loaded()]
 
     async def current(self, backend, ident=None) -> list[dict]:
         """The user's active packs."""
@@ -105,8 +102,8 @@ class Packs:
             active, assigned = self.fallback, [(n, True) for n in self.fallback]
             served = {}
             fresh = False
-        packs = [self._served(p, served) for p in (self._load(n) for n in active) if p]
-        switcher = [{**p, "active": a} for p, a in ((self._load(n), a) for n, a in assigned) if p]
+        packs = [self._served(p, served) for p in (self._load(n, served.get(n)) for n in active) if p]
+        switcher = [{**p, "active": a} for p, a in ((self._load(n, served.get(n)), a) for n, a in assigned) if p]
         if fresh:                            # a fallback is never cached, so the real list returns at the next request
             self._cache[key] = (now, packs, switcher, began)
         return packs, switcher
@@ -119,14 +116,15 @@ class Packs:
         return {**pack, "kinds": row.get("kinds") or pack.get("kinds") or [],
                 "python": row.get("python") or {"enabled": False, "snippets": []}}
 
-    def _load(self, name: str) -> dict | None:
-        roots = [self.installed] if self.installed.is_dir() else []
-        for root in [*roots, self.dir, *self.extra]:      # installed packs, then the shipped ones, then the extra folders: as on the server
-            pdir = pack_dir(name, root).resolve()          # the pack's folder, directly in the root or in a domain folder of it
-            manifest = pdir / "pack.yaml"
-            if str(pdir).startswith(str(root)) and manifest.exists():
-                break
-        else:
+    def _load(self, name: str, row: dict | None = None) -> dict | None:
+        """A pack's console files: from the folder the server's row names (``dir``, the server's resolution), else from where the
+        resolver finds it on this console (a module's pack is in its module's folder, never under config/packs)."""
+        given = Path(str(row["dir"])) if isinstance(row, dict) and row.get("dir") else None
+        pdir = given if given is not None and (given / "pack.yaml").is_file() else self.resolution().packs.dir(name)
+        if pdir is None:
+            return None
+        manifest = pdir / "pack.yaml"
+        if not manifest.is_file():
             return None
         hit = self._parsed.get(name)
         if hit is None or hit[0] != self._signature(pdir, hit[1]):

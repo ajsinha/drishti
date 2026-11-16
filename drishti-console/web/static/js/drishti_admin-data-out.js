@@ -199,7 +199,7 @@
     root.querySelectorAll('[data-dout-switch]').forEach(function (b) { b.setAttribute('aria-checked', String(b.getAttribute('data-dout-switch') === v)); });
     var url = new URL(location.href);
     if (v === 'map') { url.searchParams.set('view', 'map'); } else { url.searchParams.delete('view'); }
-    history.replaceState(null, '', url.toString());
+    history.replaceState(null, '', drishti_url(url.toString()));
     draw();
   }
 
@@ -210,7 +210,7 @@
   }
 
   function refresh() {
-    fetch('/admin/api/data-out', {headers: {Accept: 'application/json'}, credentials: 'same-origin'})
+    fetch(drishti_url('/admin/api/data-out'), {headers: {Accept: 'application/json'}, credentials: 'same-origin'})
       .then(function (r) { return r.json().then(function (j) { return {ok: r.ok, j: j}; }); })
       .then(function (res) {
         if (!res.ok) { message('[data-dout-error]', (res.j.code ? res.j.code + ' ' : '') + (res.j.detail || 'the server did not answer')); return; }
@@ -222,7 +222,7 @@
   }
 
   function stop(id) {
-    fetch('/admin/api/data-out/streams/' + encodeURIComponent(id) + '/stop', {method: 'POST', headers: {'Content-Type': 'application/json', Accept: 'application/json'},
+    fetch(drishti_url('/admin/api/data-out/streams/' + encodeURIComponent(id) + '/stop'), {method: 'POST', headers: {'Content-Type': 'application/json', Accept: 'application/json'},
       credentials: 'same-origin', body: '{}'})
       .then(function (r) { return r.json().then(function (j) { return {ok: r.ok, j: j}; }); })
       .then(function (res) {

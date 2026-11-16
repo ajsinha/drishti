@@ -20,7 +20,7 @@ documents come from tools/realdata (the committed dataset); each carries its sou
 Opinion polls and bills are not in any open, global dataset, so the pack has no such kinds.
 
     The kinds, documents and pack settings of the politics-society half of the world-economy pack: tools/packgen/world/make.py joins them
-    with the other half and writes config/packs/economy/world-economy (running this file runs that one).
+    with the other half and writes modules/economy/packs/world-economy (running this file runs that one).
     python3 tools/realdata/realdata.py all            refresh the data, then write both packs
 """
 from __future__ import annotations
@@ -138,7 +138,7 @@ def spec() -> PB.PackSpec:
                  "document names its source, dataset, retrieval date and licence in its Data source panel. Opinion polls and bills have no open global dataset, so this pack has no such "
                  "kinds. A jurisdiction's page opens with a map: the country is highlighted on the world and a click on any other country opens that country's page (a country the pack holds "
                  "no jurisdiction for is not clickable and says so on hover); the shapes ship with the console, nothing is fetched from the internet. Refresh with "
-                 "`tools/realdata/realdata.py` (see docs/guides/EXTERNAL_DATA.md).",
+                 "`tools/realdata/realdata.py` (see docs/guides/WORLD_DATA_GUIDE.md).",
         roles={"analyst": {"kinds": [k.kind for k in KINDS], "raw": True}})
 
 

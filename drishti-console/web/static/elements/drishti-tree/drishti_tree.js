@@ -1633,7 +1633,7 @@
   })();
   /* ---- src/drishti_tree-outline.js ---- */
   __m["src/drishti_tree-outline.js"] = (function () {
-    var h = __lib("drishti-core").h, announce = __lib("drishti-core").announce, EventBus = __lib("drishti-core").EventBus, trackPointer = __lib("drishti-core").trackPointer;
+    var h = __lib("drishti-core").h, announce = __lib("drishti-core").announce, EventBus = __lib("drishti-core").EventBus, trackPointer = __lib("drishti-core").trackPointer, drishtiUrl = __lib("drishti-core").url;
     var HierarchyModel = __m["src/drishti_tree-model.js"].HierarchyModel;
     var keyMove = __m["src/drishti_tree-io.js"].keyMove;
     var Tree = __m["src/drishti_tree-view.js"].Tree;
@@ -1755,7 +1755,7 @@
         if (n.data.detail) { marks.push({ text: n.data.detail, detail: true }); }                 // a nested node's detail: a muted mark
         const mark = (m) => h(doc, m.href ? 'a' : 'span', {
           cls: 'dt-mark dt-tone-' + (OUTLINE_TONES.indexOf(m.tone) >= 0 ? m.tone : m.href ? 'link' : 'muted') + (m.badge ? ' dt-badge' : '') + (m.mono ? ' dt-mono' : '') + (m.clip ? ' dt-clip' : '') + (m.detail ? ' dt-odetail' : ''),
-          text: String(m.text), attrs: Object.assign({ title: m.title || null, href: m.href || null }, dataAttrs(m.attrs)) });
+          text: String(m.text), attrs: Object.assign({ title: m.title || null, href: drishtiUrl(m.href || null) }, dataAttrs(m.attrs)) });
         const icon = n.data.icon ? h(doc, 'i', { cls: 'dt-oicon ' + n.data.icon, attrs: { 'aria-hidden': 'true' } }) : null;
         const inner = [icon, h(doc, 'span', { cls: 'dt-oname' + (o.mono === false ? ' dt-plain' : ''), text: n.label })].concat(marks.filter((m) => !m.href).map(mark));
         const b = o.button ? o.button(n) : null;

@@ -1,0 +1,225 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+package com.ash.drishti.server.api;
+
+import com.ash.drishti.api.AsOf;
+import com.ash.drishti.api.EntityDocument;
+import com.ash.drishti.api.EntityRef;
+import com.ash.drishti.api.SourcePlugin;
+import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.engine.source.SourceRegistry;
+import com.ash.drishti.engine.source.SourceRouter;
+import com.ash.drishti.engine.view.ViewModel;
+import com.ash.drishti.rachana.SutraProblem;
+import com.ash.drishti.rachana.SutraRegistry;
+import com.ash.drishti.rachana.model.Sutra;
+import com.ash.drishti.server.security.Entitlements;
+import com.ash.drishti.kernel.api.security.Principal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletionException;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+/** Raw entities (F9), the source plugins and the loaded Sutras. */
+@RestController
+@RequestMapping("/api/v1")
+public class CatalogController {
+
+    private final SourceRouter router;
+    private final SourceRegistry sources;
+    private final SutraRegistry sutras;
+    private final com.ash.drishti.rachana.about.AboutCatalog about;
+    private final Entitlements entitlements;
+    private final java.util.Optional<org.springframework.boot.info.BuildProperties> build;
+    private final com.ash.drishti.server.security.SecurityProperties security;
+    private final com.ash.drishti.packs.PackRegistry packRegistry;
+    private final com.ash.drishti.server.security.PackAccess packAccess;
+    private final com.ash.drishti.common.Branding branding;
+
+    private com.ash.drishti.server.edition.EditionCommands edition = com.ash.drishti.server.edition.EditionCommands.NONE;
+
+    /** The edition's command allow-list (LENSES.md › The design); none: every command shown. */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    public void setEdition(com.ash.drishti.server.edition.EditionCommands edition) {
+        this.edition = edition;
+    }
+
+    public CatalogController(SourceRouter router, SourceRegistry sources, SutraRegistry sutras, Entitlements entitlements,
+            org.springframework.beans.factory.ObjectProvider<org.springframework.boot.info.BuildProperties> build,
+            com.ash.drishti.server.security.SecurityProperties security, com.ash.drishti.packs.PackRegistry packRegistry,
+            com.ash.drishti.server.security.PackAccess packAccess, com.ash.drishti.common.Branding branding,
+            com.ash.drishti.rachana.about.AboutCatalog about) {
+        this.about = about;
+        this.branding = branding;
+        this.packAccess = packAccess;
+        this.packRegistry = packRegistry;
+        this.entitlements = entitlements;
+        this.build = java.util.Optional.ofNullable(build.getIfAvailable());
+        this.security = security;
+        this.router = router;
+        this.sources = sources;
+        this.sutras = sutras;
+    }
+
+    @GetMapping("/entities/{kind}/{id}/raw")
+    public ApiDtos.RawEntity raw(@PathVariable String kind, @PathVariable String id, AsOf asOf,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
+        entitlements.requireOpen(principal, kind);
+        try {
+            EntityDocument d = router.fetch(EntityRef.of(kind, id), asOf).join();
+            return new ApiDtos.RawEntity(new ViewModel.Ref(kind, id), d.provenance(), entitlements.redact(principal, d.data()));
+        } catch (CompletionException e) {
+            throw e.getCause() instanceof DrishtiException de ? de : new DrishtiException(ErrorCode.SOURCE_FAILED, e.getMessage());
+        }
+    }
+
+    /** Version, build and what is loaded: the About page. */
+    @GetMapping("/about")
+    public Map<String, Object> about() {
+        Map<String, Object> m = new java.util.LinkedHashMap<>();
+        m.put("product", branding.product());
+        m.put("tagline", branding.tagline());
+        m.put("owner", branding.owner());
+        m.put("version", build.map(b -> b.getVersion()).orElse("dev"));
+        m.put("built", build.map(b -> String.valueOf(b.getTime())).orElse(""));
+        m.put("java", System.getProperty("java.version") + " (" + System.getProperty("java.vendor") + ")");
+        m.put("uptimeSeconds", java.lang.management.ManagementFactory.getRuntimeMXBean().getUptime() / 1000);
+        m.put("sutras", sutras.all().stream().map(s -> s.name() + " v" + s.version()).sorted().toList());
+        m.put("sources", sources().sources());
+        m.put("securityEnabled", security.enabled());
+        m.put("packs", packs(null));
+        m.put("copyright", branding.copyright());
+        m.put("notice", branding.notice());
+        m.put("edition", edition.edition().about());       // the instance's edition, or the caller's lens       // {name, title, packs, allowOnly}, or null: the full Drishti (LENSES.md)
+        com.ash.drishti.server.engines.EngineCluster c = engines;
+        m.put("engines", c == null ? null : c.about());    // the compute engines: here and in the cluster (ADMIN_GUIDE.md section 5.2)
+        return m;
+    }
+
+    private com.ash.drishti.server.engines.EngineCluster engines;
+
+    /** The compute engines' view (absent in a test that builds the controller alone). */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void engines(com.ash.drishti.server.engines.EngineCluster cluster) {
+        this.engines = cluster;
+    }
+
+    /** The enabled domain packs (not switched off in Admin → Packs), with what the console needs from each. */
+    @GetMapping("/packs")
+    public List<Map<String, Object>> packs(@RequestAttribute(value = Principal.ATTRIBUTE, required = false) Principal who) {
+        List<String> assigned = who == null ? packAccess.installed() : packAccess.assigned(who.user());
+        List<String> active = who == null ? packAccess.installed() : packAccess.active(who.user());
+        return packRegistry.packs().stream().filter(p -> packAccess.isEnabled(p.name())).filter(p -> !packAccess.hidden(p.name()))
+                .filter(p -> packAccess.sampleVisible(who == null ? null : who.user(), p.name())).map(p -> {
+            Map<String, Object> m = new java.util.LinkedHashMap<>();
+            m.put("name", p.name());
+            m.put("version", p.version());
+            m.put("title", p.title());
+            m.put("description", p.description());
+            m.put("console", withoutInactive(p.manifest().getOrDefault("console", Map.of())));
+            m.put("sample", p.sample());
+            // where the pack was found (KERNEL_AND_MODULES.md section 18): the console reads the pack's files from here, never by a folder rule
+            m.put("dir", p.dir().toString());
+            com.ash.drishti.api.resolution.ConfigResolution res = packRegistry.resolution();
+            com.ash.drishti.api.resolution.PackResolver.Located at = res == null ? null : res.packs().packs().get(p.name());
+            m.put("origin", at == null ? "" : at.origin());
+            m.put("kinds", p.kinds().stream().filter(k -> !packAccess.commandOff(k) && edition.kindShown(k)).toList());   // a command turned off: its kind is not named
+            Map<String, Object> links = links(p.manifest());
+            links.values().removeIf(l -> l instanceof Map<?, ?> r && packAccess.commandOff(String.valueOf(r.get("kind"))));
+            m.put("links", links);                 // graph.fields: which fields name which kinds (the designer's linked records)
+            m.put("python", packRegistry.python(p.name()));        // Calc: enabled, and starter snippets (USER_GUIDE.md)
+            m.put("assigned", assigned.contains(p.name()));
+            m.put("active", active.contains(p.name()));
+            return m;
+        }).toList();
+    }
+
+    /** The pack's console settings without the example commands whose command an administrator turned off (Admin → Functions). */
+    private Object withoutInactive(Object console) {
+        if (!(console instanceof Map<?, ?> c) || !(c.get("examples") instanceof List<?> examples) || packAccess.commands() == null && !edition.edition().active()) {
+            return console;
+        }
+        Map<Object, Object> out = new java.util.LinkedHashMap<>(c);
+        out.put("examples", examples.stream().filter(e -> {
+            Object cmd = e instanceof List<?> l && !l.isEmpty() ? l.get(0) : e;
+            String head = String.valueOf(cmd).trim().split("\\s+", 2)[0];
+            return (packAccess.commands() == null || packAccess.commands().commandOn(head)) && edition.codeShown(head);
+        }).toList());
+        return out;
+    }
+
+    /** A pack's {@code graph.fields} as {@code {FIELD: {kind, label}}}: the fields that name another entity. */
+    public static Map<String, Object> links(Map<String, Object> manifest) {
+        Map<String, Object> out = new java.util.LinkedHashMap<>();
+        if (manifest.get("graph") instanceof Map<?, ?> g && g.get("fields") instanceof Map<?, ?> f) {
+            f.forEach((k, v) -> {
+                if (v instanceof Map<?, ?> r && r.get("kind") != null) {
+                    out.put(String.valueOf(k), Map.of("kind", String.valueOf(r.get("kind")), "label", String.valueOf(r.get("label") == null ? k : r.get("label"))));
+                }
+            });
+        }
+        return out;
+    }
+
+    /** The caller's active packs; {@code PUT} chooses among the packs assigned to them. */
+    @GetMapping("/me/packs")
+    public Map<String, Object> myPacks(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        return Map.of("assigned", packAccess.assigned(p.user()), "active", packAccess.active(p.user()));
+    }
+
+    @org.springframework.web.bind.annotation.PutMapping("/me/packs")
+    public Map<String, Object> choosePacks(@org.springframework.web.bind.annotation.RequestBody Map<String, List<String>> body,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        packAccess.choose(p.user(), body.get("active"));
+        return myPacks(p);
+    }
+
+    @GetMapping("/sources")
+    public ApiDtos.SourcesResponse sources() {
+        List<ApiDtos.SourceInfo> out = new ArrayList<>();
+        for (SourcePlugin p : sources.plugins()) {
+            var m = p.manifest();
+            out.add(new ApiDtos.SourceInfo(m.name(), m.version(), m.kinds(), m.capabilities().live(), m.capabilities().search(),
+                    m.capabilities().reverseLookup(), p.health()));
+        }
+        return new ApiDtos.SourcesResponse(out, sources.failures());
+    }
+
+    @GetMapping("/sutras")
+    public List<ApiDtos.SutraInfo> sutras() {
+        return sutras.all().stream().map(s -> new ApiDtos.SutraInfo(s.name(), s.version(), sutras.versions(s.name()), s.domain(),
+                s.match().kind(), s.match().where(), s.match().priority())).toList();
+    }
+
+    @GetMapping("/sutras/{name}/{version}")
+    public Sutra sutra(@PathVariable String name, @PathVariable int version) {
+        return sutras.require(name, version);
+    }
+
+    @GetMapping("/sutras/problems")
+    public Map<String, List<SutraProblem>> problems() {
+        Map<String, List<SutraProblem>> out = new java.util.LinkedHashMap<>();
+        sutras.problems().forEach((file, ps) -> out.put(sutras.relative(file), sutras.relative(ps)));      // SEC-11: no server paths
+        out.putAll(about.problems());                                  // packs' about files (DRS-2040 to 2044), named pack/file
+        return out;
+    }
+}

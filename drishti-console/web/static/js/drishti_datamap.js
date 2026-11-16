@@ -51,7 +51,7 @@
     if (st.find) { p.set('find', st.find); }
     if (st.layout !== 'grouped') { p.set('layout', st.layout); }
     var q = p.toString();
-    try { history.replaceState(null, '', '/datamap' + (q ? '?' + q : '')); } catch (e) { /* a sandboxed frame */ }
+    try { history.replaceState(null, '', drishti_url('/datamap' + (q ? '?' + q : ''))); } catch (e) { /* a sandboxed frame */ }
     var cmd = document.querySelector('[data-command] .cmd-input');
     if (cmd && document.activeElement !== cmd) { cmd.value = ('DATAMAP ' + (st.kind || st.domain || '')).trim(); }
   }
@@ -91,7 +91,7 @@
     });
     host.__drishtiGraph = graph;                       // the page's graph, for its tests and the console's settled signal
     graph.on('selectionChanged', function (p) { if (p.source === 'graph') { var id = (p.ids || [])[0] || ''; if (id !== st.kind) { select(id); } } });
-    graph.on('nodeDoubleClicked', function (p) { var k = index[p.id]; if (k) { window.location.assign(k.open || '/datamap?kind=' + encodeURIComponent(k.kind)); } });
+    graph.on('nodeDoubleClicked', function (p) { var k = index[p.id]; if (k) { window.location.assign(drishti_url(k.open || '/datamap?kind=' + encodeURIComponent(k.kind))); } });
     graph.on('layoutChanged', function (p) { st.layout = p.layout; address(); });
   }
 
@@ -254,7 +254,7 @@
   function follow() {
     if (model.state === 'ready' || tries++ > 200) { return; }
     setTimeout(function () {
-      fetch('/datamap/data', { headers: { Accept: 'application/json' }, credentials: 'same-origin' }).then(function (r) {
+      fetch(drishti_url('/datamap/data'), { headers: { Accept: 'application/json' }, credentials: 'same-origin' }).then(function (r) {
         return r.ok ? r.json() : null;
       }).then(function (m) {
         if (m && m.kinds) { model = m; reindex(); refresh(); renderSide(); }

@@ -15,7 +15,6 @@
 # rabbitmq_auth_mechanism_ssl plugin). No user name or password. Copy to config/connectors/rabbitmq-external.yaml.
 # See plugins/drishti-plugin-rabbitmq/README.md.
 plugin: rabbitmq
-kinds: [order]
 description: Orders from RabbitMQ, logged in by certificate
 settings:
   uri: amqps://rabbit.example.com:5671/%2f

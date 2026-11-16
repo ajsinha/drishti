@@ -17,8 +17,6 @@
 # The lake (iceberg, its root or catalog, storage and tables) is config/lakes.examples/other/rest-catalog.yaml: copy it to
 # config/lakes/rest-catalog.yaml beside this file (docs/guides/DATA_LAKE_GUIDE.md). This file keeps only what the connector reads.
 plugin: iceberg
-kinds:
-- trade
 description: Iceberg tables behind a REST catalog, object store over TLS
 settings:
   lake: rest-catalog

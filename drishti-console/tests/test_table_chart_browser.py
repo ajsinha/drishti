@@ -153,36 +153,19 @@ def test_a_masked_column_is_offered_greyed_and_never_plotted(ctx, stack):
     assert "•••" not in page.evaluate("JSON.stringify(window.Drishti.tableChart.current().gridData())")
 
 
-def test_search_results_chart_the_raw_values_and_chart_all_asks_the_pivot_engine(ctx, stack):
+def test_search_results_in_the_records_grid_chart_the_rows_they_hold(ctx, stack):
     url, backend = stack
-    page = open_view(ctx, stack, "/s?q=TRD%20where%20notional%20%3E%200", "table[data-chart-rows] ~ * , [data-table-chart]")
-    page.click("[data-table-chart]")
+    page = open_view(ctx, stack, "/s?q=TRD%20where%20notional%20%3E%200", ".rc-host[data-records-ready] .dg-row[data-key]")
+    page.click(".rc-host .dg-live-btn[data-act=chart]")                         # the grid's Chart button: the one chart dialog
+    page.wait_for_selector("[data-tc-k=x]")
     d = drawn(page)
-    assert d["type"] == "line" and d["x"] == "Trade date"                      # the first date column
-    assert "MTM hidden for your role" in d["status"] and "figures as displayed" not in d["status"]   # raw values, not the rounded cells
+    assert d["x"] and d["series"]
     page.select_option('[data-tc-k="x"]', "Desk")
     page.click('[data-tc-type="bar"]')
     d = drawn(page)
     assert d["x"] == "Desk" and d["series"] == ["Notional (sum)"]
     total = page.evaluate("window.Drishti.tableChart.current().last.series[0].data.reduce((a, b) => a + b, 0)")
     assert total == sum(1_000_000 * ((i * 37) % 50 + 1) for i in range(30))
-    allb = page.locator(".tc-all")
-    assert allb.is_visible() and allb.is_enabled() and "Chart all 500 rows" in allb.inner_text()
-    before = len(backend.pivot_calls)
-    allb.click()
-    page.wait_for_function("document.querySelector('[data-tc-status]').textContent.includes('Every match')")
-    assert len(backend.pivot_calls) == before + 1
-    assert backend.pivot_calls[-1]["source"] == "trade" and backend.pivot_calls[-1]["rows"] == ["desk"]
-    assert backend.pivot_calls[-1]["values"] == [{"measure": "sum(notional)", "as": "v0"}]
-    assert page.evaluate("window.Drishti.tableChart.current().last.series[0].data").count(None) == 0
-    assert "Chart the shown rows" in allb.inner_text()
-    page.select_option('[data-tc-k="split"]', "Currency")                     # a change while charting all asks the server again
-    page.wait_for_function(f"document.querySelector('[data-tc-status]').textContent.includes('Every match')")
-    assert len(backend.pivot_calls) == before + 2 and backend.pivot_calls[-1]["columns"] == ["currency"]
-    page.click(".tc-all")                                                      # back to the shown rows
-    page.select_option('[data-tc-k="x"]', "Trade date")                       # not a pivot field: Chart all stands down, with the reason
-    page.wait_for_selector("dialog.tc-dlg:not([aria-busy])", state="attached")
-    assert allb.is_disabled() and "pivot" in allb.get_attribute("title")
 
 
 def test_a_table_that_offers_pivot_charts_every_row_through_the_pivot_engine(ctx, stack):

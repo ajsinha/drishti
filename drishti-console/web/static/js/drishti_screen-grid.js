@@ -47,7 +47,7 @@
       return new Promise(function (ok) {
         var ticket = ++seq;
         saving = setTimeout(function () {
-          fetch('/me/arrange/' + encodeURIComponent(sutra), { method: 'PUT', credentials: 'same-origin',
+          fetch(drishti_url('/me/arrange/' + encodeURIComponent(sutra)), { method: 'PUT', credentials: 'same-origin',
             headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
             .then(function (r) { if (ticket === seq) { root.setAttribute('data-sg-saved', String(Date.now())); } var b = root.querySelector('[data-sg-reset]'); if (b) { b.hidden = false; } ok(r); })
             .catch(function () { ok(null); });
@@ -204,7 +204,7 @@
     var reset = root.querySelector('[data-sg-reset]');
     if (reset) {
       reset.addEventListener('click', function () {
-        fetch('/me/arrange/' + encodeURIComponent(sutra), { method: 'DELETE', credentials: 'same-origin' })
+        fetch(drishti_url('/me/arrange/' + encodeURIComponent(sutra)), { method: 'DELETE', credentials: 'same-origin' })
           .then(function () { location.reload(); });
       });
     }

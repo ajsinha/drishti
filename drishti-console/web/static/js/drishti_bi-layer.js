@@ -24,7 +24,7 @@
   function call(method, path, body) {
     const opt = { method, headers: { Accept: 'application/json' }, credentials: 'same-origin' };
     if (body !== undefined && method !== 'GET') { opt.headers['Content-Type'] = 'application/json'; opt.body = JSON.stringify(body); }
-    return fetch(path, opt).then((r) => r.json().catch(() => ({})).then((d) => {
+    return fetch(drishti_url(path), opt).then((r) => r.json().catch(() => ({})).then((d) => {
       if (!r.ok) {
         const e = new Error((d.code ? d.code + ' ' : '') + (d.detail || r.statusText));
         e.code = d.code; e.status = r.status; e.detail = d.detail || r.statusText; e.path = d.path; e.fix = d.fix;
@@ -34,8 +34,8 @@
     }));
   }
   B.layer = {
-    get: (path) => call('GET', '/bi/model-api/' + path),
-    post: (path, body) => call('POST', '/bi/model-api/' + path, body),
+    get: (path) => call('GET', drishti_url('/bi/model-api/') + path),
+    post: (path, body) => call('POST', drishti_url('/bi/model-api/') + path, body),
     /** The model a report body names (`model: trading-risk@1` or `model: dataset:pack.trading.trade`), or ''. */
     modelOf: (body) => { const m = /^model:[ \t]*(\S+)[ \t]*(?:#.*)?$/m.exec(body || ''); return m ? m[1].replace(/^["']|["']$/g, '') : ''; },
     /** The model a source names (core/notebook.py model_of): `mq:<ref>` is that model, `dataset:<name>` an implicit one, a catalogue id `bi-...` as it is,
@@ -47,7 +47,7 @@
       return !s || s.indexOf('dataset:') === 0 || s.indexOf('bi-') === 0 || s.indexOf('@') >= 0 ? s : s + '@1';
     },
     /** A short label for a model reference: "Implicit model of Trade" is the server's title; this is for links. */
-    href: (ref) => (ref.indexOf('dataset:') === 0 ? '/bi/ds/' + encodeURIComponent(ref.slice(8)) : '')
+    href: (ref) => (ref.indexOf('dataset:') === 0 ? drishti_url('/bi/ds/') + encodeURIComponent(ref.slice(8)) : '')
   };
 
   /**
@@ -100,13 +100,13 @@
       const list = r.consumers.filter((c) => c.kind === k);
       if (!list.length) { return; }
       host.appendChild(B.h('h4', { text: KIND_WORD[k] + ' (' + list.length + ')' }));
-      host.appendChild(B.h('ul', { class: 'bi-layer-list', 'data-used-by': k }, list.map((c) => B.h('li', {}, B.h('a', { href: c.href, text: c.title })))));
+      host.appendChild(B.h('ul', { class: 'bi-layer-list', 'data-used-by': k }, list.map((c) => B.h('li', {}, B.h('a', { href: drishti_url(c.href), text: c.title })))));
     });
     return r;
   });
 
   // ---- one visual as a model query ----------------------------------------------------------------------------------
-  const OPS = { eq: 'eq', ne: 'ne', in: 'in', 'not-in': 'not-in', lt: 'lt', le: 'le', gt: 'gt', ge: 'ge', between: 'between', contains: 'contains', 'starts-with': 'starts-with', 'is-null': 'is-null', 'not-null': 'not-null', relative: 'relative', top: 'top' };
+  const OPS = { eq: 'eq', ne: 'ne', in: 'in', 'not-in': 'not-in', lt: 'lt', le: 'le', gt: 'gt', ge: 'ge', between: 'between', contains: 'contains', 'starts-with': 'starts-with', has: 'has', 'any-of': 'any-of', 'all-of': 'all-of', 'is-null': 'is-null', 'not-null': 'not-null', relative: 'relative', top: 'top' };
 
   function filterOf(f, isMeasure) {
     const op = OPS[f.op || 'eq'] || 'eq';

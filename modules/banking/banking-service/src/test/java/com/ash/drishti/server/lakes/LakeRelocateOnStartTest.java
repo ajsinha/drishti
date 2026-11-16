@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.lakes;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.file.Files;
@@ -26,9 +27,17 @@ import org.springframework.mock.env.MockEnvironment;
 /**
  * The move at start (docs/guides/OPERATIONS_GUIDE.md, "The lakes' folders"): the demo lake's folders found directly in {@code <data>/delta} are
  * moved into {@code <data>/delta/demo} once, with the server's own settings ({@code drishti.data.dir}, {@code drishti.lakes.dir}); with
- * {@code drishti.lakes.relocate-on-start: false} nothing moves. The moving itself is LakeRelocateTest's (drishti-lakeload).
+ * {@code drishti.lakes.relocate-on-start: false} nothing moves. No connector file is written (the server reads them, never writes them).
+ * The moving itself is LakeRelocateTest's (drishti-lakeload).
  */
 class LakeRelocateOnStartTest {
+
+    /** A connector file an earlier server generated over the demo lake's old default root. */
+    private static final String REFERENCE_STORE = "# Generated at first start from the connector template of pack 'core'.\n"
+            + "plugin: delta\nkinds:\n- book\nsettings:\n  root: \"${DRISHTI_DELTA_ROOT:./data/delta}\"\n  domain: reference\n"
+            + "  layout.book.columns: BOOK_ID,NAME\n  cache-minutes: 5\n";
+    /** A connector file with a root of its own. */
+    private static final String VENDOR_STORE = "plugin: delta\nkinds:\n- book\nsettings:\n  root: s3://vendor-bucket/delta\n  domain: vendor\n";
 
     @TempDir
     Path tmp;
@@ -40,10 +49,8 @@ class LakeRelocateOnStartTest {
         Files.createDirectories(tmp.resolve("data/delta/reference"));
         Files.createDirectories(tmp.resolve("data/delta/_drishti-lake"));
         Path conns = Files.createDirectories(tmp.resolve("config/connectors"));
-        Files.writeString(conns.resolve("reference-store.yaml"), "# Generated at first start from the connector template of pack 'core'.\n"
-                + "plugin: delta\nkinds:\n- book\nsettings:\n  root: \"${DRISHTI_DELTA_ROOT:./data/delta}\"\n  domain: reference\n"
-                + "  layout.book.columns: BOOK_ID,NAME\n  cache-minutes: 5\n");
-        Files.writeString(conns.resolve("vendor-store.yaml"), "plugin: delta\nkinds:\n- book\nsettings:\n  root: s3://vendor-bucket/delta\n  domain: vendor\n");
+        Files.writeString(conns.resolve("reference-store.yaml"), REFERENCE_STORE);
+        Files.writeString(conns.resolve("vendor-store.yaml"), VENDOR_STORE);
         return new MockEnvironment().withProperty("drishti.data.dir", tmp.resolve("data").toString())
                 .withProperty("drishti.sources.connectors-dir", conns.toString())
                 .withProperty("drishti.lakes.dir", lakes.toString()).withProperty(LakeRelocateOnStart.SWITCH, String.valueOf(on));
@@ -55,40 +62,18 @@ class LakeRelocateOnStartTest {
         assertThat(tmp.resolve("data/delta/demo/reference")).isDirectory();
         assertThat(tmp.resolve("data/delta/demo/_drishti-lake/relocated.json")).isRegularFile();
         assertThat(tmp.resolve("data/delta/reference")).doesNotExist();
-        // the connector that read the demo lake by its old default root follows it by name now; a path or URI of its own stays
-        String text = Files.readString(tmp.resolve("config/connectors/reference-store.yaml"));
-        assertThat(text).startsWith("# Generated at first start").contains("lake: demo", "lake-tables: reference.book", "cache-minutes")
-                .doesNotContain("root:", "domain:");
+        // the connector files are read, never written (docs/guides/DATA_GUIDE.md, "Connector layers"; owner 2026-11-14): both stay byte
+        // for byte, and no backup of them is made
+        assertThat(Files.readString(tmp.resolve("config/connectors/reference-store.yaml"))).isEqualTo(REFERENCE_STORE);
+        assertThat(Files.readString(tmp.resolve("config/connectors/vendor-store.yaml"))).isEqualTo(VENDOR_STORE);
         try (var s = Files.list(tmp.resolve("config/connectors"))) {
-            assertThat(s.map(p -> p.getFileName().toString()).filter(n -> n.startsWith("reference-store.yaml.before-lake-")).count()).isEqualTo(1);
+            assertThat(s.map(p -> p.getFileName().toString()).toList()).containsExactlyInAnyOrder("reference-store.yaml", "vendor-store.yaml");
         }
-        assertThat(Files.readString(tmp.resolve("config/connectors/vendor-store.yaml"))).contains("root: s3://vendor-bucket/delta").doesNotContain("lake:");
         // the lake file had the table: it is not written, byte for byte as shipped
         assertThat(Files.readString(tmp.resolve("config/lakes/demo.yaml"))).isEqualTo("lake: demo\nformat: delta\nroot: "
                 + "${DRISHTI_DELTA_ROOT_FOR_THIS_TEST:${drishti.data.dir:./data}/delta/demo}\ntables:\n  reference.book: {id: BOOK_ID}\n");
         new LakeRelocateOnStart().postProcessEnvironment(env(true), null);          // again: done before, nothing more (the folder made again stays)
         assertThat(tmp.resolve("data/delta/demo/reference")).isDirectory();
-    }
-
-    /** A stamped connector file nobody edited, moved to lake: demo, is stamped again: still unedited, it keeps following its pack's template. */
-    @Test
-    void aStampedNeverEditedFileMovedToTheDemoLakeStaysUnedited() throws Exception {
-        MockEnvironment env = env(true);
-        Path conns = tmp.resolve("config/connectors");
-        String body = "plugin: delta\nkinds:\n- book\nsettings:\n  root: \"${DRISHTI_DELTA_ROOT:./data/delta}\"\n  domain: reference\n";
-        Files.writeString(conns.resolve("reference-store.yaml"), com.ash.drishti.packs.TemplateStamp.stamp(
-                "# Generated at first start from the connector template of pack 'core'.\n" + body, "core", "f00d"));
-        Files.writeString(conns.resolve("edited-store.yaml"), com.ash.drishti.packs.TemplateStamp.stamp(
-                "# Generated at first start from the connector template of pack 'core'.\n" + body.replace("domain: reference", "domain: reference\n  cache-minutes: 9"),
-                "core", "f00d").replace("cache-minutes: 9", "cache-minutes: 10"));                     // edited after it was written
-        new LakeRelocateOnStart().postProcessEnvironment(env, null);
-        String text = Files.readString(conns.resolve("reference-store.yaml"));
-        assertThat(text).contains("lake: demo").doesNotContain("root:");
-        assertThat(com.ash.drishti.packs.TemplateStamp.pristine(text)).as("counted as unedited").isTrue();
-        assertThat(com.ash.drishti.packs.TemplateStamp.of(text).orElseThrow().template()).isEqualTo("f00d");
-        String edited = Files.readString(conns.resolve("edited-store.yaml"));
-        assertThat(edited).contains("lake: demo", "cache-minutes: 10");
-        assertThat(com.ash.drishti.packs.TemplateStamp.pristine(edited)).as("an edited file stays edited").isFalse();
     }
 
     /**
@@ -97,7 +82,7 @@ class LakeRelocateOnStartTest {
      */
     @Test
     void aStartAfterTheMoveLeavesTheShippedLakeFilesAsShipped() throws Exception {
-        Path repo = Path.of("../../..").toAbsolutePath().normalize();
+        Path repo = Path.of(TestRoots.repo()).toAbsolutePath().normalize();
         Path lakes = Files.createDirectories(tmp.resolve("config/lakes"));
         java.util.Map<String, byte[]> shipped = new java.util.TreeMap<>();
         try (var s = Files.list(repo.resolve("config/lakes"))) {
@@ -107,9 +92,11 @@ class LakeRelocateOnStartTest {
             }
         }
         Path conns = Files.createDirectories(tmp.resolve("config/connectors"));
+        java.util.Map<String, byte[]> generated = new java.util.TreeMap<>();
         try (var s = Files.list(repo.resolve("modules/banking/banking-service/src/test/resources/connector-upgrade/2.9.4/connectors"))) {
             for (Path f : s.toList()) {
                 Files.copy(f, conns.resolve(f.getFileName()));
+                generated.put(f.getFileName().toString(), Files.readAllBytes(f));
             }
         }
         for (String d : new String[] {"reference", "market", "trading", "risk", "credit", "legal", "collateral", "_drishti-lake"}) {
@@ -119,7 +106,12 @@ class LakeRelocateOnStartTest {
                 .withProperty("drishti.sources.connectors-dir", conns.toString()).withProperty("drishti.lakes.dir", lakes.toString());
         new LakeRelocateOnStart().postProcessEnvironment(env, null);
         assertThat(tmp.resolve("data/delta/demo/reference")).isDirectory();
-        assertThat(Files.readString(conns.resolve("risk-store.yaml"))).contains("lake: demo");
+        for (var e : generated.entrySet()) {                     // the connector files are read, never written: as the 2.9.4 server left them
+            assertThat(Files.readAllBytes(conns.resolve(e.getKey()))).as(e.getKey()).isEqualTo(e.getValue());
+        }
+        try (var s = Files.list(conns)) {
+            assertThat(s.map(p -> p.getFileName().toString()).toList()).containsExactlyInAnyOrderElementsOf(generated.keySet());
+        }
         for (var e : shipped.entrySet()) {
             assertThat(Files.readString(lakes.resolve(e.getKey()))).as(e.getKey()).isEqualTo(new String(e.getValue(), java.nio.charset.StandardCharsets.UTF_8));
         }

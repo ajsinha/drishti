@@ -55,11 +55,13 @@ edit:
 ```
 
 ```bash
-DRISHTI_EDIT_ENABLED=true java -jar drishti-server/target/drishti-server-*-exec.jar
+DRISHTI_EDIT_ENABLED=true java -jar kernel/drishti-server/target/drishti-server-*-exec.jar
 ```
 
 **You should see** in the server's log `write-back: on; edit log sqlite (auto: this node is alone), 64 lanes, node local`. **In the UI**,
 Admin → Edits says where the edit log lives and why; **on the command line**:
+
+Run these from the Drishti folder (the repository root, or the install folder of a release).
 
 ```bash
 drishti-console/.venv/bin/python tools/drishti.py edits status --user ada
@@ -69,7 +71,7 @@ drishti-console/.venv/bin/python tools/drishti.py edits status --user ada
 ## Step 2 · Read the form that submits
 
 The book desk's trades form says where a submitted change goes. It is the trading pack's
-`config/packs/banking/trading/sutras/pages/book-desk.v1.sutra.yaml`:
+`modules/banking/dmod/packs/trading/sutras/pages/book-desk.v1.sutra.yaml`:
 
 ```yaml
 form:

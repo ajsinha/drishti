@@ -63,10 +63,12 @@ columns `id`, `doc`, `business_date` and the promoted fields a table's `columns`
 |---|---|---|
 | `news` | `NEWS_ID` | `data/testdata/news-and-markets/news/news.2026-10-18.jsonl.gz` |
 | `quote` | `QUOTE_ID` | `data/testdata/news-and-markets/quote/quote.2026-10-18.jsonl.gz` |
-| `news-topic` | `TOPIC_ID` | `config/packs/economy/news-and-markets/samples/news-topic.jsonl` |
-| `listed-company` | `COMPANY_ID` | `config/packs/economy/news-and-markets/samples/listed-company.jsonl` |
+| `news-topic` | `TOPIC_ID` | `modules/economy/packs/news-and-markets/samples/news-topic.jsonl` |
+| `listed-company` | `COMPANY_ID` | `modules/economy/packs/news-and-markets/samples/listed-company.jsonl` |
 
 ## Examples
+
+Run these from the Drishti folder (the repository root, or the install folder of a release).
 
 ```bash
 cp config/connectors.examples/memory/news-store.yaml config/connectors/news-store.yaml
@@ -78,7 +80,7 @@ python3 tools/drishti.py lake memory refill news
 <!-- files:begin -->
 | File | Plugin | Kinds | What it is |
 |---|---|---|---|
-| `news-store.yaml` | `delta` | `news-topic`, `listed-company`, `news`, `quote` | news-store held in memory only (mem://news), filled by the in-memory lake's replenish jobs |
+| `news-store.yaml` | `delta` | the plugin's own | news-store held in memory only (mem://news), filled by the in-memory lake's replenish jobs |
 <!-- files:end -->
 
 ## Troubleshooting

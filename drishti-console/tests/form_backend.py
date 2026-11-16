@@ -63,11 +63,13 @@ class FormBackend(FakeBackend):
         return [{"name": "trading", "version": "1.0.0", "title": "Trading", "description": "Trades.", "assigned": True, "active": True, "kinds": ["trade", "desk-pnl"]},
                 {"name": "empty", "version": "1.0.0", "title": "Empty", "description": "", "assigned": True, "active": True, "kinds": []}]
 
-    async def form(self, pack, kind="", ident=None):
+    async def form(self, pack, kind="", ident=None, kinds_only=False):
         if pack != "trading":
             raise BackendError(400, "DRS-5001", f"no pack '{pack}' is switched on for you")
         kinds = [{"kind": "trade", "mnemonic": "TRD", "label": "Trade", "declared": self.declared},
                  {"kind": "desk-pnl", "mnemonic": "DPNL", "label": "Desk P&L", "declared": False}]
+        if kinds_only:                      # the forms home: the kinds only, as the server answers ?kindsOnly=true
+            return {"pack": "trading", "code": "TRDS", "title": "Trading", "kinds": kinds}
         k = kind or "trade"
         fields = (SYSTEM_FIELDS if self.systems else FIELDS) if k == "trade" else [{"path": "desk", "label": "Desk", "type": "text", "operators": ["equals"], "indexed": False}]
         return {"pack": "trading", "code": "TRDS", "title": "Trading", "kinds": kinds, "kind": k, "mnemonic": "TRD" if k == "trade" else "DPNL",

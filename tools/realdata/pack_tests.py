@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The Sutra tests of the world-economy pack (config/packs/<domain>/<pack>/tests/): a few real documents per kind, copied
+"""The Sutra tests of the world-economy pack (modules/<module>/packs/<pack>/tests/): a few real documents per kind, copied
 from the generated samples, an expect.yaml per kind and the help-coverage ratchet. Which documents and what they expect is in
 pack_tests.yaml; the documents come from build_docs, so a data refresh updates the tests with the packs.
 
@@ -32,7 +32,7 @@ sys.path.insert(0, str(ROOT / "tools" / "packgen" / "common"))
 import sutracases as SC  # noqa: E402  (tests/<sutra>/cases.jsonl)
 if str(ROOT / "drishti-console") not in sys.path:
     sys.path.insert(0, str(ROOT / "drishti-console"))
-from core.pack_paths import pack_dir  # noqa: E402  (the one rule for where a pack's folder is)
+from core.resolution import pack_dir  # noqa: E402  (where a pack is: the one resolver, KERNEL_AND_MODULES.md 18)
 COVERAGE_NOTE = "# Lowest share of shown fields with a glossary entry, per Sutra (a ratchet: raise it when about.yaml grows, never lower it).\n"
 
 
@@ -45,7 +45,7 @@ def header() -> str:
 
 
 def files(pack: str, docs: dict, base: Path | None = None) -> dict[Path, str]:
-    """Everything under <base>/tests for the pack (base defaults to config/packs/<domain>/<pack>); kinds without documents (--no-imf) are skipped,
+    """Everything under <base>/tests for the pack (base defaults to modules/<module>/packs/<pack>); kinds without documents (--no-imf) are skipped,
     and so are sample ids a narrower build has no document for."""
     tests = (base or pack_dir(pack)) / "tests"
     cfg, out = spec()[pack], {}

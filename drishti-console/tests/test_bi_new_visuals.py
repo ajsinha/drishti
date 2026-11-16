@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The map, funnel, histogram, box plot and bubble, true totals and the refresh block (docs/guides/REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, sections 3 and 8; REPORTS_GUIDE.md › Datasets: the YAML, the expression language and the security rules, sections 4 and 7): the vendored
+"""The map, funnel, histogram, box plot and bubble, true totals and the refresh block (docs/guides/bi/README.md › Reports: the YAML, the visuals and how they behave, sections 3 and 8; bi/REPORTS.md › Datasets: the YAML, the expression language and the security rules, sections 4 and 7): the vendored
 country data, the routes that serve it, and the browser code that does not need a browser (run in Node, skipped without it). The pictures are in test_bi_new_visuals_browser.py."""
 import json
 import re
@@ -69,12 +69,13 @@ def test_every_new_type_is_in_the_catalogue_of_the_designer_and_has_an_icon():
         assert re.search(rf"\b{t}: '", icons), t
         icon = re.search(rf"\b{t}: '([a-z0-9-]+)'", icons).group(1)
         assert f".bi-{icon}::before" in (STATIC / "vendor/bootstrap-icons/bootstrap-icons.css").read_text(encoding="utf-8"), icon
-    schemas = "".join(p.read_text(encoding="utf-8") for p in (ROOT / "drishti-server/src/main/resources/bi/report/format").glob("*.yaml"))   # the Format pane is generated from them (2.4.0)
+    schemas = "".join(p.read_text(encoding="utf-8") for p in (ROOT / "kernel/drishti-server/src/main/resources/bi/report/format").glob("*.yaml"))   # the Format pane is generated from them (2.4.0)
     assert "x-hook: format-bins" in schemas and "x-hook: format-totals" in schemas and "data-time" in panes
 
 
 def run(script: str):
-    prelude = ("global.window = { drishtiBi: { h: () => ({}), visuals: {}, fmt: (v) => String(v), compact: (v) => String(v), label: (x) => x, clear: (x) => x, column: () => null } };"
+    prelude = ("global.drishti_url = (u) => u;"   # drishti-core's helper (the console at /): the page loads it first
+               "global.window = { drishtiBi: { h: () => ({}), visuals: {}, fmt: (v) => String(v), compact: (v) => String(v), label: (x) => x, clear: (x) => x, column: () => null } };"
                "for (const f of ['drishti_bi-visuals.js', 'drishti_bi-grids.js']) { require(%s + '/' + f); } const V = window.drishtiBi.visuals;" % json.dumps(str(STATIC / "js")))
     out = subprocess.run([node, "-e", prelude + script], capture_output=True, text=True, timeout=30)
     assert out.returncode == 0, out.stderr

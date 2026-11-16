@@ -29,7 +29,7 @@ Who reads what:
 |---|---|
 | a user or administrator: which packs ship, turning them on and off, who sees which | [section 31](#31-the-packs-that-ship-turning-them-on-who-sees-which) |
 | writing a pack by hand | sections [1](#1-what-a-pack-is) to [7](#7-modelling-content-vocabulary-about-text-help-facts-roles-calc) |
-| turning JSON files or a schema into a pack without writing files | sections [8](#8-a-pack-from-a-json-schema-build--new-pack) to [10](#10-a-pack-from-json-lines-pack-new), [tutorial 19, Part A](../tutorials/19-build-a-pack-and-a-screen.md#part-a--build-a-pack-from-your-data) |
+| turning JSON files or a schema into a pack without writing files | sections [8](#8-the-pack-designer-create--new-pack) to [10](#10-a-pack-from-json-lines-pack-new), [a source system for an existing kind: the source system tutorial](BUILD_GUIDE.md), [tutorial 19, Part A](../tutorials/19-build-a-pack-and-a-screen.md#part-a--build-a-pack-from-your-data) |
 | writing the screens (Sutras) | sections [11](#11-what-a-sutra-is-and-when-one-applies) to [27](#27-common-mistakes-and-their-messages); every key, panel option, format and function is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md), the workbench's manual in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench) |
 | letting people edit records on a screen | [section 28](#28-forms-letting-people-edit-records); what happens to a change after that (submitting, approval, Admin → Edits) is in [APPROVALS_GUIDE.md](APPROVALS_GUIDE.md) |
 | connecting a pack to a database, a lake or a queue | [DATA_GUIDE.md section 9](DATA_GUIDE.md#9-connector-files-and-admin--connectors), [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) and the per-connector pages they list |
@@ -41,7 +41,7 @@ Contents:
   [3. Build it, step by step](#3-build-it-step-by-step) · [4. `pack.yaml`, key by key](#4-packyaml-key-by-key) ·
   [5. Modelling data](#5-modelling-data-large-kinds-several-systems-derived-kinds-samples) ·
   [6. Sutras over deep documents](#6-sutras-over-deep-documents) · [7. Modelling content](#7-modelling-content-vocabulary-about-text-help-facts-roles-calc)
-- **Packs from data**: [8. From a JSON Schema](#8-a-pack-from-a-json-schema-build--new-pack) · [9. A deep trading JSON](#9-a-deep-trading-json-from-one-file-to-a-deployed-pack) ·
+- **Packs from data**: [8. From a JSON Schema](#8-the-pack-designer-create--new-pack) · [9. A deep trading JSON](#9-a-deep-trading-json-from-one-file-to-a-deployed-pack) ·
   [10. From JSON Lines](#10-a-pack-from-json-lines-pack-new)
 - **Screens**: [11. What a Sutra is](#11-what-a-sutra-is-and-when-one-applies) · [12. Your first Sutra](#12-your-first-sutra-a-counterparty) ·
   [13. Rachana-EL](#13-rachana-el-step-by-step) · [14. A trade view](#14-a-trade-view-built-step-by-step) · [15. Matching](#15-matching-several-sutras) ·
@@ -55,9 +55,9 @@ Contents:
   [30. Generated packs and the README standard](#30-generated-packs-and-the-readme-standard) ·
   [31. The packs that ship](#31-the-packs-that-ship-turning-them-on-who-sees-which) · [32. Designing for phones](#32-designing-for-phones)
 
-Two packs have guides of their own: the funds and ETFs pack ([FUNDS_GUIDE.md](FUNDS_GUIDE.md): FUND, HELD, TRACK, the look-through,
+Two packs have guides of their own: the funds and ETFs pack ([WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md): FUND, HELD, TRACK, the look-through,
 the contracts of `fund`, [`fund-holder`](../contracts/samples/funds.md#fund-holder) ([contract](../contracts/packs/funds.md#held-funds-holding-a-company-fund-holder)) and [`index-funds`](../contracts/samples/funds.md#index-funds) ([contract](../contracts/packs/funds.md#track-funds-tracking-an-index-index-funds)), sources, licences and the refresh script) and the computed groupings and analytics
-(LEIG, LEIC, SIC, ECG, CORR, EQB, the USEQ ratios, PXH: [GROUPINGS_ANALYTICS_GUIDE.md](GROUPINGS_ANALYTICS_GUIDE.md)).
+(LEIG, LEIC, SIC, ECG, CORR, EQB, the USEQ ratios, PXH: [README.md](bi/README.md)).
 
 ## 1. What a pack is
 
@@ -88,7 +88,7 @@ helpdesk/
     └── client.jsonl
 ```
 
-The largest shipped pack, `config/packs/banking/trading/`, uses the same parts:
+The largest shipped pack, `modules/banking/dmod/packs/trading/`, uses the same parts:
 
 ```text
 trading/
@@ -151,10 +151,12 @@ run configurations are in [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#2-install-an
 the pack's `samples/`. Security is off unless you turn it on, so the `curl` lines below need no token; on a server with security on add
 `-H "Authorization: Bearer $DRISHTI_TOKEN"`.
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 DRISHTI_PORT=18996 DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,helpdesk \
-  java -jar drishti-server/target/drishti-server-*-exec.jar
+  java -jar kernel/drishti-server/target/drishti-server-*-exec.jar
 DRISHTI_BACKEND_URL=http://127.0.0.1:18996 DRISHTI_CONSOLE_PORT=17996 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
 ```
 
@@ -166,7 +168,7 @@ good version running and shows on Admin → Packs. A pack folder copied into `co
 ## 3. Build it, step by step
 
 This is the pack **by hand**, to show every file. If your data is JSON Lines or has a JSON Schema you do not need to write these files:
-**Build → New pack** and `drishti.py pack make` ([section 8](#8-a-pack-from-a-json-schema-build--new-pack)) or `drishti.py pack new`
+**Create → New pack** and `drishti.py pack make` ([section 8](#8-the-pack-designer-create--new-pack)) or `drishti.py pack new`
 ([section 10](#10-a-pack-from-json-lines-pack-new)) turn a schema or a folder into a pack, and [tutorial 19, Part B](../tutorials/19-build-a-pack-and-a-screen.md#part-b--design-a-screen-in-the-workbench-and-on-a-live-page)
 designs its screen. Each step says what to type and what you should see; the outputs were produced by running the steps on the finished pack
 (your ticking numbers may differ a little: the ticket's age walks up and down).
@@ -527,7 +529,7 @@ nonEmpty: [history]       # these panels must render with data on every sample
 ```
 
 ```bash
-java -jar drishti-server/target/drishti-server-*-exec.jar sutra test config/packs/helpdesk --junit target/sutra-tests.xml
+java -jar kernel/drishti-server/target/drishti-server-*-exec.jar sutra test config/packs/helpdesk --junit target/sutra-tests.xml
 ```
 
 ```text
@@ -659,13 +661,13 @@ published public data such as the us-equities and gleif packs):
 3. a Delta connector in the pack's `pack.yaml` serves them (`plugin: delta`, its `domain`, the kinds, `layout.<kind>.columns` for the fields
    searches and the search form filter on, `layout.<kind>.type-ahead` for the columns a name is found by).
 
-**Data a feed fills daily** (the economy module's public-sector packs: [PUBLIC_SECTOR_GUIDE.md](PUBLIC_SECTOR_GUIDE.md#5-the-feeds)) is never
+**Data a feed fills daily** (the economy module's public-sector packs: [WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md#5-the-feeds)) is never
 committed: the pack's Delta connector reads the lake its feed loads (`settings.lake: worldlake`, the feed file's `lake: worldlake` and a
 `datasets:` entry of the pack and kind), and `samples/` keep only a few reference documents. `PacksServedWithoutDemoTest` fails the build when a
 kind of a shipped pack has neither: no Delta connector with committed data, and none reading a lake an enabled feed fills with the kind.
 
 Real tickets live somewhere else; here, the ticketing system exports each business day's tickets as one JSON Lines file, the layout the `file`
-plugin reads ([the file connector](../../plugins/drishti-plugin-file/README.md)):
+plugin reads ([the file connector](../../docs/connectors/types/file/README.md)):
 
 ```text
 data/files/helpdesk/2026-10-16/ticket.jsonl      one ticket a line, the day's export
@@ -825,7 +827,7 @@ resolved from the environment when the server starts (`root: ${HELPDESK_FILES_RO
 | `roles` | server | `support: { kinds: [ticket, agent] }` | Roles this pack adds | [7.5](#75-roles-and-field-masks) |
 | `python` | server | `python: { enabled: true }` | Calc on this pack's kinds, and starter snippets | [7.6](#76-calc-python-snippets) |
 | `connectors` | server | `[helpdesk-store]`, or `helpdesk-store: { plugin: file, … }` | The connectors the pack reads through: a list names site connectors; a mapping names them **and** suggests each one's definition | [4.8](#48-connectors-the-pack-names-them-the-site-owns-them) |
-| `connector-templates` | server | `helpdesk-store: { plugin: file, … }` | Suggested definitions to go with a list of names | [4.8](#48-connectors-the-pack-names-them-the-site-owns-them) |
+| `connectors` (mapping) | server | `helpdesk-store: { plugin: file, … }` | The pack's connector names, each with its suggested definition | [4.8](#48-connectors-the-pack-names-them-the-site-owns-them) |
 | `routes` | server | `ticket: helpdesk-store` | Which connector answers a kind | [4.8](#48-connectors-the-pack-names-them-the-site-owns-them) |
 | `ingest` | tooling | `trade: { key: TRADE_ID, date: BUSINESS_DATE, flatten: { NOTIONAL: LEGS[0].NOTIONAL } }` | The id and business date of each kind for `data ingest --pack`, `lake build --pack` and `pack check`; `flatten`: values inside lists written as plain fields and columns. Ignored by the server | [5.1](#51-large-kinds-the-lake-layout) |
 | `alerts` | server | `- { kind: ticket, name: …, when: "$.AGE_HOURS > 24" }` | Suggested alert rules | step 9 |
@@ -945,7 +947,7 @@ You should see `['$.NAME', '$.DESK_NAME', '$.TRADE_COUNT', '$.MTM', '$.DV01']`.
 
 ### 4.4 `pivot`: Pivot on search results
 
-A kind's search results and pick lists can offer **Pivot**, the pivot screen on the kind ([PIVOT_GUIDE.md](PIVOT_GUIDE.md),
+A kind's search results and pick lists can offer **Pivot**, the pivot screen on the kind ([PIVOT.md](bi/PIVOT.md),
 [USER_GUIDE.md](USER_GUIDE.md#pivot-slice-a-table-your-way)). It is offered **only** for the kinds a pack names under `pivot:`:
 
 ```yaml
@@ -1034,13 +1036,13 @@ from the day before marked. `history:` only shapes it, per kind:
 
 ```yaml
 history:
-  trade:                                    # config/packs/banking/trading/pack.yaml
+  trade:                                    # modules/banking/dmod/packs/trading/pack.yaml
     exclude: [_meta]                        # never shown
     ignore-changes: [SOURCE_UPDATE_TIME, INPUT_DATE]   # shown, but a change here is not "a change"
     parts: [LEGS, EVENTS]                   # top-level lists shown as counts (default: every list or object)
     default-days: 30                        # the range when none is named (at most max-days)
   counterparty-trades: {enabled: false}     # a derived kind: no history (DRS-1012)
-  equity:                                   # config/packs/banking/market-data/pack.yaml
+  equity:                                   # modules/market-data/packs/market-data/pack.yaml
     chart: [{path: PRICE, format: price2}]  # the market shape: a chart and the headline numbers (at most 4 fields)
     columns: [PRICE, {path: CHANGE_1D, format: pct2}, {path: MARKET_CAP, format: compact}, BETA, NAME, EXCHANGE, CURRENCY]
     series: {path: HISTORY, date: DATE, value: CLOSE}   # used when no source keeps daily documents
@@ -1095,21 +1097,18 @@ roles:
   credit-risk: { kinds: ["*"], raw: true, calc: true }
 ```
 
-A pack that only names connectors writes a list, with optional templates beside it (the form `pack new` writes):
+A pack names its connectors as a mapping, each with the definition it suggests (the form `pack new` writes):
 
 ```yaml
-connectors: [credit-store, collateral-store]
-connector-templates:                                # optional: what to suggest if the site has none yet
+connectors:                                         # what to suggest if the site has none yet
   credit-store: { plugin: delta, kinds: [netting-set], settings: { root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}", domain: credit } }
 routes: { netting-set: credit-store, margin-call: collateral-store }
 ```
 
-- **A template is a suggestion, written once.** When the pack loads, for each connector it names, the server writes `config/connectors/<name>.yaml`
-  from the template if no file of that name exists (logged as `connector file credit-store.yaml generated from the template of pack
-  'counterparty-risk'`, audited as `connector-generated`). A file the site never edited follows your pack: a later version of the template replaces
-  it. Once edited the file is the site's: a later version of your pack never changes a value the site set and only adds the keys it gained
-  ([DATA_GUIDE.md section 9, Upgrades](DATA_GUIDE.md#upgrades)). *Reset to pack default* (Admin → Connectors, or
-  `drishti.py connector reset <name>`) writes the pack's current template over it, keeping the earlier text in `<data>/connectors/history/`.
+- **A template is read where it is.** The server writes no connector file: each connector your pack names runs as its template, with
+  the site's override over it (`config/connectors/<name>.yaml`, only the keys the site changed). A later version of your pack changes every
+  key the site did not override ([DATA_GUIDE.md section 9, Connector layers](DATA_GUIDE.md#connector-layers)). *Reset* (Admin →
+  Connectors, or `drishti.py connector reset <name>`) removes the override.
 - **Kinds go through `routes:`.** How a connector file's `kinds:` adds to and narrows the routes is stated once, in
   [DATA_GUIDE.md section 9, How packs and files fit together](DATA_GUIDE.md#96-how-packs-and-files-fit-together). A connector is
   therefore reusable by other packs.
@@ -1153,7 +1152,7 @@ you read logs or override something:
 | `graph.badges.agent` | `drishti.graph.badges.agent` |
 | `graph.impact.*` | `drishti.graph.impact.follow[i]`, `.measures.<kind>`, `.formats.<kind>` |
 | `roles.support` | `drishti.security.roles.support.kinds[i]`, `.raw`, `.author`, `.admin`, `.approve`, `.calc` |
-| `connectors.x` (mapping) or `connector-templates.x` | a **template** for `config/connectors/x.yaml`, written once if that file does not exist |
+| `connectors.x` (mapping) | a **template** for `config/connectors/x.yaml`, written once if that file does not exist |
 | `connectors: [x]` (list) | the name `x`: the pack reads through the site connector `x` |
 | `routes.kind` | `drishti.sources.routes.<kind>` |
 | `columns.trade` | `drishti.search.columns.trade[i]` |
@@ -1317,7 +1316,7 @@ routes:
 - **Beyond grouping.** `also-group-by` puts a member in further groups (a region, `'ALL'`); `then` works fields out over the page (a ratio, a
   weighted average); `sort` orders a list field; `tree` builds the group's own hierarchy from a parent column; `unlisted` keeps a page over everything
   to its figures; `search-fields` lets the type-ahead find a group by a page field. The gleif, us-equities and world-economy packs compute LEIG, LEIC,
-  SIC and ECG this way ([GROUPINGS_ANALYTICS_GUIDE.md](GROUPINGS_ANALYTICS_GUIDE.md); every setting in
+  SIC and ECG this way ([README.md](bi/README.md); every setting in
   [the derived connector's README](../connectors/types/derived/README.md)).
 - **Links.** Declare the members field under `graph.fields` (`TRADE_IDS: { kind: trade, label: Trade }`); an `id-field` that is already a link field
   (`COUNTERPARTY`) links the derived entity to its key's.
@@ -1408,7 +1407,7 @@ a path in `_meta.walk`. For more than a handful of legs, use a `table` of the le
 Real documents are trees. Rachana reads any depth with the same short paths. Every example below runs against the trading pack's interest rate swap
 **`MX-20000001`**, booked in Murex. To follow along:
 
-1. Open **Build → New screen**, bring the stored entity `trade` `MX-20000001`, and start from *an empty Sutra*.
+1. Open **Create → New screen**, bring the stored entity `trade` `MX-20000001`, and start from *an empty Sutra*.
 2. Open the **YAML** tab to write, and the **Design** tab to see the result; the left pane's *shape* lists every path of the document.
 
 The path, filter and function basics are in [section 13](#13-rachana-el-step-by-step); this section is about how they behave **deep in a tree**.
@@ -1630,7 +1629,7 @@ layout is what it is. What only **you** can say is what a kind is and what its f
 
 ![The drawer on an economy, with the world-economy pack's text](img/about/04-economy.jpg)
 
-From `config/packs/banking/market-risk/config/about.yaml` (generated; shortened):
+From `modules/banking/dmod/packs/market-risk/config/about.yaml` (generated; shortened):
 
 ```yaml
 about: 1                           # the file's version, required
@@ -1690,14 +1689,14 @@ entry by its key and cannot delete one; there is no inheritance between kinds. P
 **Translations.** `config/about.<lang>.yaml` beside `about.yaml` (`fr`, `fr-CA`) has the same shape and strict parse and is laid over the English file
 **key by key**: whatever it does not translate stays English. For a regional tag the plain language fills in before English. The language of an
 answer is `?locale=` on the explain request, else the user's *Language of help text*, else the browser's `Accept-Language`. The shipped example is
-`config/packs/banking/market-risk/config/about.fr.yaml`.
+`modules/banking/dmod/packs/market-risk/config/about.fr.yaml`.
 
 **Generated packs.** A generated pack's `config/about.yaml` is copied from a hand-kept source in the generator folder
 (`tools/packgen/banking/about/<pack>.yaml`, `tools/packgen/<generator>/about.yaml`): edit that source and regenerate. A pack built on public data
-has its refresh script in `tools/feeds/` ([EXTERNAL_DATA.md](EXTERNAL_DATA.md#8-writing-a-feed)).
+has its refresh script in `tools/feeds/` ([WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md#8-writing-a-feed)).
 
 **Check it.** Load the pack: a file with a problem lists it (`DRS-2040` to `DRS-2044`). Press `?` on an entity, also as a user whose role is not `raw`.
-`sutra lint config/packs/<domain>/<pack>` warns (`DRS-2046`, `DRS-2047`) about a `panels.<id>` that matches no panel and each field a Sutra shows that
+`sutra lint modules/<module>/packs/<pack>` warns (`DRS-2046`, `DRS-2047`) about a `panels.<id>` that matches no panel and each field a Sutra shows that
 has no glossary entry (`ticket.v1.sutra.yaml:15 warning DRS-2047 field 'ASSIGNEE' is shown but has no glossary entry (kinds.ticket.glossary in
 config/about.yaml, or a vocabulary entry)`); `sutra test` reports *help coverage n/m*; `drishti.py pack about-check` lists the gaps and exits `1`
 while any remain; `pack check --strict` fails on them; `expect.yaml` takes `help: { coverage: 0.9, about: true }`. The Build workbench's **About** tab
@@ -1743,7 +1742,7 @@ Links to other help documents with a relative path (`[the build guide](BUILD_GUI
 A pack can give the console's Home page **Did you know** facts ([USER_GUIDE.md](USER_GUIDE.md#home-the-fact-of-the-day)): surprising things its data
 says on the business date. They live in `config/facts.yaml` (no `pack.yaml` key: the console reads the file when it is there) and carry no numbers:
 each fact fetches what it needs from the server's APIs as the user, picks the row that makes the point, and says when the point holds. Shipped
-examples: `config/packs/banking/market-risk/config/facts.yaml`, `counterparty-risk/config/facts.yaml`, `funds/config/facts.yaml`.
+examples: `modules/banking/dmod/packs/market-risk/config/facts.yaml`, `counterparty-risk/config/facts.yaml`, `funds/config/facts.yaml`.
 
 ```yaml
 facts: 1
@@ -1846,7 +1845,7 @@ python:
 ```
 
 Longer snippets read better as files: `python/<name>.py`, in name order after the inline ones, each starting with three comment lines (after the
-copyright header, which is not shown). From `config/packs/banking/market-risk/python/stress_heatmap.py`:
+copyright header, which is not shown). From `modules/banking/dmod/packs/market-risk/python/stress_heatmap.py`:
 
 ```python
 # title: Stress results: scenarios by desk, limits and the worst case
@@ -1893,35 +1892,82 @@ data stays in the lake. When the engine is built, remove the item in the change 
         panels: [hedging]
 ```
 
-## 8. A pack from a JSON Schema: Build → New pack
+## 8. The Pack designer: Create → New pack
 
-You have **JSON Schema files** (one per kind of thing you hold: trades, counterparties, books …), and perhaps a **folder of JSON Lines** with real
-documents. Drishti turns them into a pack: a Sutra per kind (or per variant), with the right labels, formats, links and help text, tests, and a
-bundle you can deploy. Two ways, with the same rules:
-
-- **The page**: **Build → New pack** (`/build/pack/new`). Five steps, a preview of every Sutra, a download or a deploy.
-- **The command line**: `drishti.py sutra design --schema ...` and `drishti.py pack make --schema ...`
-  ([CLI_REFERENCE.md](CLI_REFERENCE.md#sutra-design---schema-and-pack-make---schema)).
+You have **JSON Lines files** (a trade book, a set of counterparties, one file per source system or one per day) and want a pack: its kinds, one
+screen (Sutra) per kind or per combination of discriminator columns, its data binding, tests and a module to deploy. **Create → New pack**
+(`/build/pack/designer`; the old `/build/pack/new` redirects to it) is a workspace for that, with the same engine as the command line
+(`drishti.py pack new`): the files go up to the server, **every record is read there**, and what it finds is shown at once.
 
 ```text
-schemas (JSON Schema, JSON or YAML)  +  JSON Lines (optional)
-        │  plan: kind, key, links, labels, match column, date, strip, mnemonic          (8.2, the rules)
+.jsonl / .jsonl.gz / .ndjson files or a folder ── upload ──▶ the server reads every record (tools/packgen/packprofile.py)
+        │                                                     kinds, fields, one Sutra per discriminator combination, ID check, dates
         ▼
-sample documents: real ones first, then the schema's examples, then synthetic ones
-        │  the server's auto-designer drafts a Sutra from each group of samples
+Design: a Sutra's YAML beside its live screen on real rows, drawn again as you edit
         ▼
-the draft is labelled from the schema (titles, descriptions, formats, links, strip)
+Finalize: the module written, its pack linted and tested, packed as a .dmod, the fifteen checks
         ▼
-pack folder: pack.yaml, sutras/, tests/, samples/, config/about.yaml, README.md   →  bundle (.tar.gz + .sha256)  →  deploy
+Deploy: the one module deploy (a single node installs; a cluster plans, then applies)
 ```
 
-> **Real data wins.** A schema says what a document *may* be; real documents say what it *is*. Where both are given the key must be unique in the
-> data, the business date is found in the data, a field the schema does not know is reported, and every Sutra is tested on real documents. The schema
-> then adds what data cannot: names, descriptions, units, links, enumerations and the shape of variants.
+### 8.1 The six steps
 
-### 8.1 Quick start
+The left rail lists the steps with a one-line summary of each (rows read, kind and discriminators, the connector, Sutras and their checks, checks
+passed, deployed or not); click one to go there. Starting a pack needs the **author** power, deploying a module an administrator. At phone width the
+rail becomes a row above the step.
 
-The example schemas are in `docs/guides/examples/schemas/`: `trade`, `counterparty`, `book` and `instrument`, with small JSON Lines files under `data/`.
+**1. Data.** Drop `.jsonl`, `.jsonl.gz` or `.ndjson` files, a folder of them, or choose them. Each file is uploaded to a workspace on the server
+(a folder under the console's data folder, removed after `builder.pack_designer_ttl_hours` untouched) and then **every record of every file is
+analysed there**, with progress (rows read, seconds); the work runs as a job of its own that you can cancel. Nothing is sampled: the counts below are
+the files' true counts. A workspace is resumed in the same browser tab.
+
+**2. Kind and keys.** *Kind* names the records of every file (files `trade_endur.jsonl`, `trade_murex.jsonl` are the kind `trade` when you say so;
+blank, each file's name is its kind). *Discriminators* are the columns whose values tell the records apart, **any combination**: every combination
+present becomes one Sutra, listed with its row count and share, a **rare** mark on a combination that is a tiny part of the data, and the Sutra name.
+*ID* is the key column; it is checked for duplicates **over the whole of every file** (one entity per ID per business date) and the result is said in
+words. *Business date* is the column holding the date, or none: then each file's name carries it (`trade.2026-07-08.jsonl.gz`). The columns are
+inferred from the data first (the same candidates `drishti.py data profile` shows); change any and press **Apply and read again**, which reads the files
+again with your choice and redraws the combinations. *Child tables* has a switch for each array of records of the kind (`LEGS`, `CASHFLOWS`): on, the
+array becomes a kind of its own, one row per element (section 8.1.4).
+
+**3. Source.** Pack name (lower-case letters, digits, `-`), title, version, a *kind prefix* (put before every kind, so a kind another module provides
+is not taken: such a clash is refused when the module is made), the files root, and the connector. By default a **file connector** `<name>-files` is
+made; with *Write the records to the files store* on, the uploaded records are written to `<files root>/<name>/<date>/<kind>.jsonl` so the connector
+can read them. An existing connector may be named instead. At Deploy the binding goes through the one bindings path: the file connector is saved on
+the server (Admin → Connectors) and each kind's binding is proposed to **Admin → Data bindings**, where a second administrator approves it.
+
+**4. Design.** The list on the left holds every Sutra with its rows and a **check badge** (`8/8`: the server's checker, every panel against the real
+rows of the combination); in the middle the Sutra's YAML in the code editor; on the right its **live screen**, drawn by the server from the YAML on one
+of the combination's **real rows** (choose the row). Edit the YAML and the screen is drawn again after a short pause, with the badge updated and the
+Sutra marked *edited*; a YAML the server refuses shows its problems in place of the screen. Edits are kept for the module.
+
+**5. Finalize.** **Make the module** runs `pack new`'s write: the pack (kinds, contracts, your Sutras, samples, tests, About text), the module around it
+(`module.yaml`, needs, console page routes, docs), `sutra lint` and `sutra test`, then `module pack` and `module check`: the **fifteen conformance
+checks** are listed as they pass. The `.dmod` can be downloaded.
+
+**6. Deploy.** **Install on this node** copies the `.dmod` to the server's modules folder, where auto-deploy checks, installs and loads it. **Plan for the cluster** uploads the `.dmod` to the module store (the server checks it once more) and shows the plan per node; **Apply the
+plan** installs it: the server requires a second administrator to apply a plan (four eyes, as in Admin → Modules → Deploy). **Open the screen** opens a trade of the module, `/m/<module>/<module>/<kind>/<id>`.
+
+### 8.1.1 The same on the command line
+
+```bash
+python3 tools/drishti.py pack new data/jsonl --name my-bank --kind trade --key TRADE_ID --match PRODUCT_TYPE,SOURCE_SYSTEM \
+    --date BUSINESS_DATE --kind-prefix my- --deploy
+```
+
+`--dry-run` reads every record and prints the plan; `--sutra-edits FILE` (a JSON `{sutra name: YAML}`) replaces drafted Sutras, which is what the designer
+sends. Both routes run `tools/packgen/module_from_jsonl.py`; the page runs it as the job `tools/packgen/designer_job.py`.
+
+### 8.1.2 Settings
+
+`builder.pack_designer_max_mb` (uploaded bytes per workspace, 4096), `builder.pack_designer_max_files` (500), `builder.pack_designer_ttl_hours` (72),
+`builder.pack_designer_jobs_per_user` (2 running jobs), `builder.pack_designer_workers` (processes reading the files; 0: the tool's default),
+`builder.pack_designer_modules_dir` (where **Install on this node** puts the `.dmod`) and `builder.tools_dir` (the repository's `tools/` folder the job runs from).
+
+### 8.1.3 From JSON Schema
+
+A pack from **JSON Schema** files is the command line's: `drishti.py pack make --schema` and `drishti.py sutra design --schema` (rules in 8.2 to 8.4 and
+8.6 to 8.8 below, with their quick start):
 
 ```bash
 # schemas alone: samples are synthetic, every Sutra is checked, one folder comes out
@@ -1931,7 +1977,80 @@ python3 tools/drishti.py pack make --schema docs/guides/examples/schemas --name 
 python3 tools/drishti.py pack make --schema docs/guides/examples/schemas docs/guides/examples/schemas/data --name desk-pack --store files --yes
 ```
 
-Or open **Build → New pack**, choose the four schema files and the `data` folder, and press Next five times.
+> **Real data wins.** A schema says what a document *may* be; real documents say what it *is*. Where both are given the key must be unique in the
+> data, the business date is found in the data, a field the schema does not know is reported, and every Sutra is tested on real documents.
+
+### 8.1.4 Child tables: an array of records as a kind of its own
+
+A document often holds **arrays of records**: a trade's `LEGS`, its `CASHFLOWS`. The parent's screen shows such an array as a sub-table, which is
+enough to read one trade; to add up legs across trades ("notional by leg currency") or to ask for "trades having any leg in EUR", the array is
+made a **child kind**: `LEGS` of `trade` becomes the kind `trade-leg`, one row per element, with
+
+| | What it is | Example |
+|---|---|---|
+| its own **id** | the parent's id, `:`, then the element's natural key when every element has a unique one named like an id (`LEG_ID`), else its index in the array | `LEG_KEY` = `T00012:2` |
+| a **link** to the parent | the parent's id field, carrying the parent's id (a bare `id` key becomes `<KIND>_ID`) | `TRADE_ID` = `T00012` |
+| its **promoted columns** | the link first, then the element's own fields, as for any kind | `TRADE_ID`, `LEG_ID`, `CURRENCY`, `NOTIONAL` |
+| its **own table** | written by the same loader in the same run, beside the parent, under the parent's business date | `<files root>/<pack>/2026-11-03/trade-leg.jsonl`, `<lake>/<pack>/trade-leg/` |
+| its **own Sutra** | one entity screen per leg, its `TRADE_ID` a link back to the trade (beside the title and on F7) | `trade-leg-default` |
+| a **BI relationship** | a model in the site's `tables/<pack>/` relating every leg to its trade, many-to-one and both ways | section 5.3 of the [Reports guide](bi/MODELS_AND_DATASETS_FOR_REPORTS.md#13-relationships-and-how-a-question-joins) |
+
+The parent is unchanged: it keeps the whole array in its document and its screen still shows it as a sub-table.
+
+**Which arrays.** Automatically, every top-level array of records with at least **2 elements on average** in the first rows (`--child-min-avg N`; `0`
+turns it off), or by choice: `--child LEGS,CASHFLOWS` (or per kind `trade=LEGS;quote=TICKS`), `--child none` for none. In the designer, step 2
+(**Kind and keys**) lists each array of the kind under **Child tables** with its average, the child kind it would be and its natural key, and a
+switch: switch it on or off and press **Apply and read again**; every record is read again and the child kind appears in the kind list, with its rows,
+id check and Sutra. A child kind's own step 2 says whose rows it is.
+
+**One profiler, every loader, every store.** The full pass (`tools/packgen/packprofile.py`) explodes each parent's array as it reads the parent, so the child kind's
+rows, fields, dates and id check are the whole files', not a sample; its id is checked within each parent. Every loader that writes the parent
+writes the child rows by the rules of the pack's `ingest:` block (below), into the parent's own store: Delta, Iceberg or the files store. The Python
+loaders (`tools/ingest_jsonl.py`: `pack new --load`, the designer's *Write the records to the store*, `data ingest --pack` with `--lake`,
+`--store iceberg --lake` or `--store files --root`; and `lake build --pack`, with `--format iceberg` too) split by one function
+(`tools/packgen/childkinds.py`), the parallel loader (`lake build --engine java`, or `LakeLoad` with `source.pack`) by its Java reading of the same block
+(`ChildKinds`), both checked against one fixture ([DATA_LAKE_GUIDE section 5.7](DATA_LAKE_GUIDE.md#57-child-kinds)). A folder already laid out for the file connector is not read in place when there are child kinds: the
+records go to the files store. The pack says it all in its `ingest:` block, which `drishti.py pack check` checks:
+
+```yaml
+ingest:
+  trade: { key: TRADE_ID, date: BUSINESS_DATE }
+  trade-leg: { key: LEG_KEY, child-of: { kind: trade, field: LEGS, link: TRADE_ID, natural: LEG_ID } }
+graph:
+  fields:
+    TRADE_ID: { kind: trade, label: Trade }       # a leg's TRADE_ID opens its trade; BI reads it as a ready-made relationship
+```
+
+`--dry-run` prints the child kinds planned before anything is written. On the MUREX file of the test data, automatically only `EVENTS` (16 a trade)
+qualifies (`LEGS` averages 1.4), so both are chosen:
+
+```bash
+python3 tools/drishti.py pack new data/testdata/trades/murex/trade_murex.2026-07-08.jsonl.gz --name murex-book --kind trade --key TRADE_ID \
+    --match PRODUCT_TYPE --kind-prefix murex- --child LEGS,EVENTS --dry-run
+```
+
+```text
+kind murex-trade: 4,198 rows, 107 fields
+  child kind from LEGS (--child)
+  child kind from EVENTS (--child)
+  child kind LEGS -> murex-trade-leg: one row per element, id LEG_KEY (TRADE_ID:LEG_ID), link TRADE_ID -> murex-trade: 5,777 rows, 1.38 per murex-trade that has it
+  child kind EVENTS -> murex-trade-event: one row per element, id EVENT_KEY (TRADE_ID:EVENT_ID), link TRADE_ID -> murex-trade: 67,228 rows, 16.01 per murex-trade that has it
+  ...
+kind murex-trade-leg: 5,777 rows, 51 fields (child of murex-trade: one row per element of its LEGS)
+  id LEG_KEY: unique within each parent; link TRADE_ID -> murex-trade
+  date: its parent's: 1 business date(s), 2026-07-08 .. 2026-07-08
+  match: (none: one Sutra for the kind): 1 combination(s)
+         5,777  (all)                                                         -> murex-trade-leg-default
+
+binding (config/bindings.yaml): murex-trade, murex-trade-event, murex-trade-leg -> read: [murex-book-files]
+BI (the site's tables/): murex_book/murex-book.model.yaml, murex_book/murex_trade_events.table.yaml, murex_book/murex_trade_legs.table.yaml, ...
+```
+
+The BI model (`<site>/tables/<pack>/<pack>.model.yaml`, with a table per kind beside it) relates `trade_leg.TRADE_ID` to `trade.TRADE_ID`
+(`cardinality: many-to-one, direction: both`) and has a count per kind and a sum of each numeric column: *Trade leg NOTIONAL* by
+`trade_leg.CURRENCY` sums every leg once, by `trade.PRODUCT_TYPE` joins each leg to its trade, and a filter on `trade_leg.CURRENCY` keeps the
+trades having any such leg, each counted once (`kernel/drishti-server/src/test/java/com/ash/drishti/server/bi/engine/ChildTablesModelTest.java`).
+Only top-level arrays become child kinds; an array inside an element (a leg's resets) stays in the child row and is a sub-table of its screen.
 
 ### 8.2 The rules, one by one
 
@@ -1993,8 +2112,7 @@ references, years and versions are not figures. The first figure is emphasised.
 - Otherwise **one Sutra** per kind, `<kind>-default`.
 
 With real data, every row of every file is counted: N types make exactly N Sutras, each designed from its own type's rows, and a catch-all
-`<kind>-default` at priority 1 is added only when some rows have no value in the split column (the card says how many). More Sutras than
-`builder.pack_max_sutras` are refused.
+`<kind>-default` at priority 1 is added only when some rows have no value in the split column (the card says how many). 
 
 **The business date** partitions real data by day: `x-drishti-role: date`; else a date field named like a business date (`businessDate`, `asOf`,
 `reportingDate`, `date`, `valuationDate`, `tradeDate`); else the one required date field. Real documents with **no business-date field** (the book as
@@ -2008,9 +2126,8 @@ the packs on the server. A kind with real, dated data gets a `file` or `delta` c
 definition ([section 4.8](#48-connectors-the-pack-names-them-the-site-owns-them)):
 
 ```yaml
-connectors: [desk-pack-store]            # the logical names the pack reads through
 routes: {trade: desk-pack-store}         # which connector answers each kind
-connector-templates:                     # the connection settings, as the pack's suggestion
+connectors:                              # the logical names the pack reads through, with the connection settings as its suggestion
   desk-pack-store:
     plugin: delta
     settings: {root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}", domain: desk-pack, ...}
@@ -2077,64 +2194,9 @@ the schema's types, enums, ranges, patterns (`^[A-Z]{3}$` gives `ABC`) and forma
 catalogue's subtitle): they prove a Sutra renders, nothing about your data. Each Sutra's `tests/<sutra>/expect.yaml` is `noErrors: true`, plus
 `nonEmpty: [details]` for a specific Sutra.
 
-### 8.5 The New pack page, step by step
+### 8.5 Samples to a pack: the designer
 
-Open **Build → New pack**. Anyone can plan and preview; downloading needs the **author** power, deploying an administrator. You cannot leave a step
-that would fail (the message says why).
-
-**1. Sources.** Choose or drop files and folders: schemas (`.json`, `.yaml`, `.yml`) and data (`.jsonl`, `.ndjson`, or a `.json` array). A `.json` file
-with `$schema`, or `properties` with a `type`, or `$defs`, is a schema; any other is data. **The files are read in your browser**: a JSON Lines file is
-streamed a line at a time and a reservoir sample (200 documents, same file same sample) is kept; only the schemas, the sample and the counts are sent,
-never the whole folder. *Reading limits* sets rows per file, MB per file and the sample size; *Paste a schema instead* takes text; **Resume a draft**
-appears when you have one.
-
-![Step 1: schemas and a folder read in the browser, with rows and sizes](img/schemapack/01-sources.jpg)
-
-**2. Kinds.** A graph of the kinds and their links, the data files with the kind each was matched to (change it), and one card per kind:
-
-![Step 2: the graph of kinds and links, and one card per kind](img/schemapack/03-kinds.jpg)
-
-![One kind's card: key, split column, date, mnemonic, links, warnings, fields](img/schemapack/04-card.jpg)
-
-*Kind name*, *Key field* (with why, amber when ambiguous), *Split into Sutras by* (each with the number of Sutras it makes), *Business date field*,
-*Mnemonic*, *Links to other kinds* (change, remove, add), the Sutra names, the dropdown suggestions, the warnings and every field with its label, type,
-format and description. Every change redoes the plan. A kind the server already defines in another pack is flagged:
-
-![A kind another pack already defines](img/schemapack/02-conflict.jpg)
-
-**3. Pack.** Name (letters, digits, `-`), code, title, version, description; *Samples per Sutra* and *Figures in the strip*; a table of the kinds with
-their **mnemonic** (checked against the packs on the server), the **source** (samples only, the File connector, or a Delta lake) and the **logical
-connector name**. A pack name that exists says that deploying makes a new version.
-
-![Step 3: name, code, title, version, description, samples, strip, mnemonics and connectors](img/schemapack/05-pack.jpg)
-
-**4. Preview.** The server drafts every Sutra as a background job (a progress bar, **Cancel**; Sutras drafted so far are kept). Then a list of the
-Sutras with badges (*ok*, empty or failed cells, *synthetic*) and, for the one you choose, five tabs: **Preview** (the server's rendering on a sample you
-pick), **Sutra** (the YAML), **About text** (what the drawer will say, TODO entries marked), **Samples** and **Checks** (every panel against every
-sample). *Open in the workbench to refine* makes a design with the Sutra and its samples; the preview does not change when you edit there, so refine and
-copy the YAML into the pack, or edit the schema and generate again (`pack regenerate` merges later changes).
-
-![Step 4: every Sutra rendered on a sample](img/schemapack/06-preview.jpg)
-
-![The About text tab](img/schemapack/07-about.jpg)
-
-![The Sutra tab](img/schemapack/08-sutra.jpg)
-
-**5. Output.** The bundle (`<name>-<version>.tar.gz`, with `.sha256` and the manifest) in exactly the format of `drishti.py pack bundle` (verify it with
-`drishti.py pack verify`); anything synthetic or without a description is listed. **Deploy** hands the bundle to Admin → Packs → Deploy archive, which
-checks it (checksums, `pack.yaml`, server version, `sutra lint` and `sutra test`), shows what changes (breaking changes first, which you must
-acknowledge), deploys on your confirmation and keeps the version it replaces for a roll back ([section 29.7](#297-deploying-an-archive-history-and-roll-back)).
-
-![Step 5: the bundle, its checksum and the deploy hand-off](img/schemapack/09-output.jpg)
-
-![The hand-off: the server's checks and what the deploy would change](img/schemapack/10-deploy.jpg)
-
-**Drafts, keyboard, phone.** **Save draft** keeps the state (schemas, choices, file names and counts, not the data) as a design named
-`New pack: <name>` in *My drafts*; it is saved when you move between steps, each step is a history entry (the browser's Back moves between steps), and
-data files are chosen again after a resume. Every control is a native button, field or select; the Sutra list takes Up and Down, the tabs Left and
-Right. At phone width the columns stack and every control is 44 px:
-
-![The kinds step at 390 px](img/schemapack/11-phone.jpg)
+Real documents reach a pack through the Pack designer (8.1): it reads JSON Lines only, and the schema rules above apply to `pack make --schema`.
 
 ### 8.6 The command line
 
@@ -2253,7 +2315,7 @@ fields, the number of Sutras and the links; `controls`, `syntheticSutras`, the w
 
 ```text
 pack/desk-pack/
-├── pack.yaml                 kinds, mnemonics, columns, graph.fields (the links); connectors, connector-templates, routes and ingest when real dated data was given
+├── pack.yaml                 kinds, mnemonics, columns, graph.fields (the links); connectors, routes and ingest when real dated data was given
 ├── sutras/<kind>/<sutra>.v1.sutra.yaml
 ├── tests/<sutra>/            sample-N.json / sample-example-N.json / sample-synthetic-N.json and expect.yaml
 ├── samples/                  documents per kind and catalog.jsonl, so the pack opens before any data source
@@ -2281,9 +2343,7 @@ kinds:
         means: 'TODO: what this field means.'
 ```
 
-The page's limits (`builder.pack_sample_docs`, `builder.pack_read_max_rows`, `builder.pack_max_files`, `builder.pack_max_sutras`, the preview jobs per
-user, `builder.pack_profile_rows_per_type`, `builder.pack_design_samples_per_type`, `builder.pack_load_max_mb`) are in
-[CONFIGURATION.md](../admin/CONFIGURATION.md); a request over a limit is refused with `413 DRS-5005`.
+The designer's limits (`builder.pack_designer_*`) are in [CONFIGURATION.md](../admin/CONFIGURATION.md); a request over a limit is refused with `413 DRS-5005`.
 
 ### 8.8 Troubleshooting
 
@@ -2303,6 +2363,33 @@ user, `builder.pack_profile_rows_per_type`, `builder.pack_design_samples_per_typ
 | a field shown as *TODO* everywhere | blank in every row read: it is hidden; a field blank in some rows is shown where it has a value |
 | Load data: *types with no Sutra* | rows whose type the pack was not built with; they are stored and open with the catch-all if there is one: make the pack again from a file that has them |
 | *DRS-1001 no source holds deals-counterparty/...* right after a load | the pages per value are rebuilt by the load; check the load result's steps say the pack's `-pages` connector was refreshed |
+
+### 8.9 A source for an existing kind
+
+The designer's second mode. A file from a booking system that is not yet in Drishti is, most of the time, not a new kind: it is another
+source of a kind that exists (`trade`). After the files are read (step 1), the page asks what they are: **A new kind** (steps 2 to 6 above) or
+**A source for an existing kind**, with the kinds whose fields overlap the file's fields suggested first. For a source the steps are
+Data, **Map**, **Layout**, Finalize and Deploy.
+
+- **Map.** Name the system in upper case (`SWAPONE`). The server reads every record again and proposes, for each field of the kind, the native
+  field that fits, with a confidence and the evidence (the names, the types, the values; a value map such as `N` to `NO` where the kind
+  has an enum). The grid shows the kind's fields in rows: change a native field in its cell, remove one, or give a constant (`= value`), then
+  **Propose again**. The native fields no canonical field takes are listed under the grid: the module shows them on the kind's page.
+- **Layout.** *Its own table* (`trading.trade_<system>`): one table a trading system, always, as every shipped source module does; *a shared
+  table + where* only reads a table a site already lands several systems in (`where: SOURCE_SYSTEM = '<SYS>'`); optionally a Kafka
+  listener, off until the site sets its servers.
+- **Finalize.** The module `source-<system>` is written and checked: `module.yaml`, the connector, the map (`mappings/`), the inbox rule
+  (`dataload.yaml`: `<system>-*.jsonl*`, the date from the name) and the module's **section** of the kind's page (`sections:`). **Deploy** is the
+  one module deploy of step 6.
+
+The module's `sections:` entry names a fragment (`sutras/trade-swapone.v1.fragment.yaml`) and the kind it joins. While the module runs, the
+fragment's panels are appended to every Sutra of that kind and shown when their own `when:` holds (here `$.SOURCE_SYSTEM == 'SWAPONE'`: the
+native fields with no canonical field); when the module is switched off or removed they leave the page. One implementation serves every module
+(`SutraBlocks.contribute`).
+
+The same on the command line: `drishti.py pack new --source-for trade --system SWAPONE <file>` (its own table, `trading.trade_swapone`) prints
+the map, `--map-edits` fixes it, `--deploy` installs the module. The whole path, from the file to the blotter and a row rule, is
+[the source system tutorial](BUILD_GUIDE.md).
 
 ## 9. A deep trading JSON, from one file to a deployed pack
 
@@ -2339,12 +2426,9 @@ One deal, shortened:
   "EVENTS": [ { "EVENT_ID": 9000011, "LEG_ID": 1, "EVENT_TYPE": "Reset", "EVENT_DATE": "2026-06-05", "AMOUNT": 142210.64 } ] }
 ```
 
-### 9.1 Read the file (Build → New pack, step 1)
+### 9.1 Read the file (Create → New pack, step 1)
 
-Choose `deals.json` with **Choose files**. The page streams it, one document in memory at a time whatever its size, and uploads nothing. **Every row is
-counted** for the columns that could tell record types apart; up to `builder.pack_profile_rows_per_type` rows of each type are profiled (how often each
-field has a value, digits written as text, the size of every array at every depth), and `builder.pack_design_samples_per_type` documents of each type are
-kept, chosen for variety. Measured: 66 MB / 5,000 deals in 0.5 s; 2 GB / 500,000 rows in about 20 s with about 110 MB in the page, flat.
+Drop `deals.json` on the **Data** step. It is uploaded to the server and **every row is read there**, the columns that could tell record types apart are counted over the whole file, and the fields' presence, the types and the size of every array at every depth are profiled; a few real documents of each combination are kept to draw its screen. Measured: 66 MB / 5,000 deals in under a second of reading; 2 GB / 500,000 rows in about 20 s.
 
 ![Step 1: one JSON array of 5,000 deals read in the browser, with its rows, size and the documents kept](img/deepjson/01-sources.jpg)
 
@@ -2393,11 +2477,10 @@ Step 5 downloads the pack or deploys it. What comes out, in `pack.yaml` (shorten
 ```yaml
 pack: book
 kinds: [deals, deals-counterparty, deals-portfolio, deals-index]
-connectors: [book-pages, book-store]
 routes: {deals: book-store, deals-counterparty: book-pages, deals-portfolio: book-pages, deals-index: book-pages}
 ingest:
   deals: {key: TRADE_ID, snapshot: true}       # no business-date field: stored under the day it is loaded
-connector-templates:
+connectors:
   book-store:                                  # the File connector the data goes into
     plugin: file
     kinds: [deals]
@@ -2507,7 +2590,7 @@ the same deal stacks: the strip in two columns, panels one under another, the fu
 ![The deal on a phone, 390 px wide](img/deepjson/08-phone.jpg)
 
 For analysis the pack ships a **BI model** with a table of the table layer for every level, each row carrying the keys above it, so a cash flow can be
-counted by its deal's counterparty or its leg's index ([TABLES_GUIDE.md](TABLES_GUIDE.md), [REPORTS_GUIDE.md](REPORTS_GUIDE.md)):
+counted by its deal's counterparty or its leg's index ([README.md](bi/README.md), [README.md](bi/README.md)):
 
 ```yaml
 # config/bi/models/book-deals.model.yaml (shortened)
@@ -2578,7 +2661,7 @@ It then runs `sutra lint` and `sutra test` on the new pack (both exit `0`, with 
 ```text
 packs/my-bank/
   pack.yaml                 code MB, mnemonics COU and TRA (initials; --mnemonic kind=ABC to choose), columns, form, connectors: [my-bank-store]
-                            with its connector-templates (delta, domain my-bank, layout columns per kind), routes, ingest
+                            with its connectors (delta, domain my-bank, layout columns per kind), routes, ingest
   sutras/trade/             trade-callnot, trade-cash, trade-comfut, trade-commodity, trade-comswap, trade-default (.v1.sutra.yaml)
   sutras/counterparty/      counterparty-default.v1.sutra.yaml
   tests/<sutra>/            three samples each and expect.yaml
@@ -2589,10 +2672,29 @@ packs/my-bank/
 ```
 
 ```bash
-DRISHTI_PACKS=my-bank DRISHTI_DELTA_ROOT=$PWD/lake java -jar drishti-server/target/drishti-server-*-exec.jar     # alone: see below
+DRISHTI_PACKS=my-bank DRISHTI_DELTA_ROOT=$PWD/lake java -jar kernel/drishti-server/target/drishti-server-*-exec.jar     # alone: see below
 ```
 
-- **The folder name is the pack name.** `--out` defaults to `config/packs/<domain>/<name>`; a folder with another name makes `sutra lint` refuse the pack
+**What each generated Sutra shows**, from the data's shape (the server's auto-designer; the same rules draft Build's auto-design):
+
+| The data | The screen |
+|---|---|
+| the id, a link to a party | the title: `id: $.TRADE_ID`, `with: link($.COUNTERPARTY, 'counterparty')` (a party first: counterparty, client, issuer); F7/F8 open the links |
+| key figures | the strip, in the order of `drishti.builder.key-figures`: currency, side (`B`/`S` read as Buy/Sell), notional, value (MTM, PV: emphasised), quantity, trade date, maturity, status, book; a figure not at the top comes from the first record of a list (`first($.LEGS).NOTIONAL`); `strip-max` 8 |
+| top-level fields | **Details**: every field with a value in the samples (up to `details-max`), grouped by `detail-groups` (identity, product, parties), then links, dates and amounts; links open their entity, a list of plain values (`["CFTC", "EMIR"]`) reads as one line |
+| a nested object | its own section of labelled values (`SETTLEMENT_INSTRUCTIONS` -> *Settlement instructions*) |
+| a list of records holding lists (at most `tabs-max`) | tabs, side by side for up to three: *Terms* (with the record's nested objects, `INDEX.NAME` -> *Index name*), per inner list a chart (amounts by date as a ladder, a notional or balance as a step line: *Notional profile*) and a table (*Cash flows and resets*, opening to the inner list, first column *Flow / reset*), and a chart of the innermost dated values (*Resets (rate)*, shown only when there are any); plus the inner list across all records (*Cash flows, every leg*) |
+| a list of dated amounts with a label | a table (dates first, amounts signed with a total), a ladder of the amounts by date (by month past 24 dates) on the right, a timeline (`EVENT_TYPE` as the label) |
+
+Labels come from the field names in the house style (`TRADE_DATE` -> *Trade date*, with the packs' acronyms: *SSI ID*, *Our agent BIC*);
+formats from names and values: dates, amounts, signed amounts, rates as percentages (`pct4`), prices and rates above 1 to four places
+(`price4`). A field blank (`""`) in some records and a number or a date in others, or a decimal written as text (`"2332.9131"`), is typed
+by its values; a field blank in every sample is left out. `tools/test_sutragen_quality.py` generates Endur-, Calypso- and Murex-like nested
+trades and scores the generated screens against the hand-built trading Sutras (panel kinds, sub-tables of the arrays, charts of the dated
+amounts, key strip, title, keys) with a bar of 90%, `sutra lint` and `sutra test` passing; what a screen cannot match is what its data
+does not carry (a quantity that is always null, resets that are always empty, a single cash flow is no chart).
+
+- **The folder name is the pack name.** `--out` defaults to `modules/<module>/packs/<name>`; a folder with another name makes `sutra lint` refuse the pack
   (`pack.yaml declares pack 'my-bank', expected 'mybank'`).
 - **Kinds must be free.** This example's kinds are `trade` and `counterparty`, which the shipped `trading` and `core` own, so it loads alone
   (`DRISHTI_PACKS=my-bank`). For a pack that joins the seven, name your kinds yourself (`--kind`) or extend the shipped pack and serve its kind from your
@@ -2612,7 +2714,7 @@ DRISHTI_PACKS=my-bank DRISHTI_DELTA_ROOT=$PWD/lake java -jar drishti-server/targ
 - **New data, new shapes:** `drishti.py pack regenerate` drafts Sutras, About text and tests from the new data and three-way merges them into the pack
   against `generated/`, keeping your edits.
 - **Version rule.** `version:` is **X.Y.Z** (optionally `-pre-release` and `+build`, such as `2.0.0-rc.1`); `pack bundle`, `pack make --version`,
-  Build → New pack and the server's deploy check refuse anything else. For your own JSON Lines files the New pack page's default source is the **File
+  Create → New pack and the server's deploy check refuse anything else. For your own JSON Lines files the New pack page's default source is the **File
   connector** (its generated template tells you to set `root`).
 
 ## 11. What a Sutra is, and when one applies
@@ -2621,7 +2723,7 @@ A **Sutra** is one YAML file, `<name>.v<N>.sutra.yaml`, that holds one layout: w
 document. Its first key is always `rachana: 1`, the version of the Rachana language it is written in. It says nothing about pixels or code. One Sutra
 lays out a whole *family* of entities: every counterparty, or every Murex fixed/float swap. Sections 11 to 27 teach Sutras by doing, against the demo
 lakes; every key, option, format, tone, function and problem code is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md), and twelve small working Sutras
-with their own documents, together using every panel kind, are in [examples](examples/README.md) (in the workbench, Build → New screen → Examples opens
+with their own documents, together using every panel kind, are in [examples](examples/README.md) (in the workbench, Create → New screen → Examples opens
 each as your own copy).
 
 **What you need:** the quick-start stack of [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#2-install-and-run-on-one-machine) (the demo lakes built with `drishti.py lake demo`, the server on
@@ -2676,7 +2778,7 @@ keys: { F7: "link($.COUNTERPARTY, 'counterparty-trades')", F8: impact, F9: raw }
 | `panels` | The body. Each has an `id`, a `kind` and the options of that kind; `area: right` puts one in the side column; `{ use: legs@1 }` inserts a shared block |
 | `keys` | Function keys: `F2`-`F12` go to panels (a panel's own `key:`), links (`link(...)`), `impact` (F8) or `raw` (F9) |
 
-A Sutra lives in a Sutra folder of a pack (`config/packs/<domain>/<pack>/sutras/`, any sub-folders) or of the site (`./sutras`, setting
+A Sutra lives in a Sutra folder of a pack (`modules/<module>/packs/<pack>/sutras/`, any sub-folders) or of the site (`./sutras`, setting
 `drishti.rachana.dirs`). Problems report the file's own line and column. Every key and its default: [the reference](RACHANA_REFERENCE.md#top-level).
 
 ## 12. Your first Sutra: a counterparty
@@ -2732,7 +2834,7 @@ panels:
 `sutra:` is lower-case letters, digits and hyphens, starting with a letter; `version:` a plain integer; `priority: 20` puts it ahead of the `core` pack's
 `counterparty` Sutra (priority 10); `kind: kv` is a label/value grid, and each column's `bind` says where its value comes from.
 
-**In the UI.** Open **Build → New screen**, bring `CP-MERIDIAN-RE` as a stored entity (kind `counterparty`; [Start: bring data](RACHANA_REFERENCE.md#1-start-bring-data))
+**In the UI.** Open **Create → New screen**, bring `CP-MERIDIAN-RE` as a stored entity (kind `counterparty`; [Start: bring data](RACHANA_REFERENCE.md#1-start-bring-data))
 and choose *an empty Sutra*. In the **YAML** tab replace the text with the YAML above and press **Ctrl+Enter**. The **Design** tab shows a view titled
 `CP-MERIDIAN-RE` with one panel, *Identity*: `Name Meridian Reinsurance Ltd`, `LEI 549300HGCM5CFCB6ZB96`. A preview always uses the text in the editor,
 whatever its `match` says, and writes no file.
@@ -2981,7 +3083,7 @@ only when both sides are numbers, otherwise it joins text (`'1' + 1` is `11`), a
 ## 14. A trade view, built step by step
 
 Now a bigger layout: the swap `MX-20000001` in the common schema of all source systems ([section 5.2](#trading-one-schema-three-source-systems)). Open
-the workbench on it (Build → New screen, the stored entity `trade` `MX-20000001`, an empty Sutra) and grow the Sutra one block at a time in the YAML
+the workbench on it (Create → New screen, the stored entity `trade` `MX-20000001`, an empty Sutra) and grow the Sutra one block at a time in the YAML
 tab, previewing each.
 
 ### 14.1 Identity, title and strip
@@ -3210,7 +3312,7 @@ and the screen a `phone: { order, default, summary }` ([section 32](#32-designin
 [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#phone-what-goes-to-a-phone)).
 
 Put the blocks of 14.2 to 14.6 under one `panels:` and you have a complete trade view. The [reference's annotated example](RACHANA_REFERENCE.md#a-complete-example-annotated)
-is the same layout with every line commented, and `config/packs/banking/trading/sutras/murex/irs-fixfloat.v1.sutra.yaml` is the one the server uses,
+is the same layout with every line commented, and `modules/banking/dmod/packs/trading/sutras/murex/irs-fixfloat.v1.sutra.yaml` is the one the server uses,
 built from shared blocks.
 
 ## 15. Matching several Sutras
@@ -3312,7 +3414,7 @@ directory is read recursively and Drishti infers nothing from a folder name ([Fo
 trading pack keeps:
 
 ```text
-config/packs/banking/trading/sutras/
+modules/banking/dmod/packs/trading/sutras/
   common/      deal-ticket, legs, flow-schedule, events, payments, deal-footer  (*.v1.block.yaml, shared panels)
   endur/       one Sutra per Endur product type (5): endur-comswap matches "$.SOURCE_SYSTEM == 'ENDUR' && $.PRODUCT_TYPE == 'ComSwap'"
   calypso/     one Sutra per Calypso product type (51): govt-bond, repo, fx-forward, cds-single …
@@ -3381,7 +3483,7 @@ kit** (`config/ui-kit/fragments`, `drishti.ui-kit.dir`), which the server and `s
 use them like a shared block:
 
 ```yaml
-# config/packs/banking/market-data/sutras/market-data/ir-curve.v1.sutra.yaml
+# modules/market-data/packs/market-data/sutras/market-data/ir-curve.v1.sutra.yaml
 panels:
   - { use: curve-overview@1, with: { curve-code: CRV, curve-key: F2, table-key: F3 } }    # the zero-rate line, then the pillars
   - { use: series-line@1, with: { id: forwards, title: "1Y forward rates (%)", area: right, rows: $.FORWARDS, x: TENOR, y: RATE, fmt: price2 } }
@@ -3485,7 +3587,7 @@ the plain name, even for a pack's own); `since`.
 - **Generated Sutras use fragments.** The pack generators turn a panel into a kit fragment use only when the fragment draws it exactly (a plain line →
   `series-line@1`, plain bars → `ranked-bars@1`, a key/value list over an object → `field-list@1`, a curve's pillars → `curve-table@1`, provenance and
   links → `data-provenance@1` / `linked-entities@1`, the source and licence last → `source-footer@1`); anything else stays written in place. Lint a pack
-  (`sutra lint config/packs/banking/trading`) or the whole root (`sutra lint config/packs`): each pack folder loads its fragments under its own
+  (`sutra lint modules/banking/dmod/packs/trading`) or the whole root (`sutra lint config/packs`): each pack folder loads its fragments under its own
   namespace either way, and a pack may use another pack's fragment by its qualified name when both are linted together.
 - **Changing a fragment.** Never change what a released version draws: write `name.v2.fragment.yaml` and move Sutras one at a time; to prove a move
   changes nothing, compare the view models before and after for a full and a masked reader.
@@ -3585,7 +3687,7 @@ Previewed on `MX-20000001`, you should see four tabs, `NS-MERIDIAN-RE-FRA` to `N
 
 Pack screens are written with fragments that talk to each other through events
 ([Sutra Next](RACHANA_REFERENCE.md#sutra-next-fragments-events-children-sources-layout-and-forms)). The trading pack's book desk
-(`config/packs/banking/trading/sutras/pages/book-desk.v1.sutra.yaml`; open `/v/portfolio-trades/BOOK-RATES-2?sutra=book-desk`) shows all of it, shortened:
+(`modules/banking/dmod/packs/trading/sutras/pages/book-desk.v1.sutra.yaml`; open `/v/portfolio-trades/BOOK-RATES-2?sutra=book-desk`) shows all of it, shortened:
 
 ```yaml
 panels:
@@ -3750,7 +3852,7 @@ a kind (`FORM trading <GO>`) is not a Sutra feature: it is the pack's `form:` se
 
 **When a Sutra is not enough.** A Sutra is a fixed layout everyone sees. For a one-off question about the screen in front of you, `Alt+C` opens Calc,
 Python in the browser with the view's document and tables loaded ([USER_GUIDE.md](USER_GUIDE.md#calc-python-on-any-view)); for questions across many
-entities, use BI ([REPORTS_GUIDE.md](REPORTS_GUIDE.md)).
+entities, use BI ([NOTEBOOK_AND_PYTHON.md](bi/NOTEBOOK_AND_PYTHON.md)).
 
 ## 23. Sutra and inference together
 
@@ -3778,12 +3880,12 @@ Four layers, from the cheapest; the first three need no server.
 
 | Layer | Command | What it proves |
 |---|---|---|
-| Sutra lint | `sutra lint config/packs/<domain>/<pack>` (or the whole `config/packs`) | every Sutra and block parses and its keys, expressions and panel options are valid (`DRS-…` codes with the line); help warnings |
-| Sutra tests | `sutra test config/packs/<domain>/<pack>` | each Sutra renders against the samples in `tests/<sutra>/` with no panel in error, the panels `expect.yaml` names are filled, and the help coverage |
-| Both, for CI | `drishti.py pack check config/packs/<domain>/<pack> [--strict] [--junit DIR]` | lint and test in one command, exit `0` / `1` / `2` |
+| Sutra lint | `sutra lint modules/<module>/packs/<pack>` (or the whole `config/packs`) | every Sutra and block parses and its keys, expressions and panel options are valid (`DRS-…` codes with the line); help warnings |
+| Sutra tests | `sutra test modules/<module>/packs/<pack>` | each Sutra renders against the samples in `tests/<sutra>/` with no panel in error, the panels `expect.yaml` names are filled, and the help coverage |
+| Both, for CI | `drishti.py pack check modules/<module>/packs/<pack> [--strict] [--junit DIR]` | lint and test in one command, exit `0` / `1` / `2` |
 | A scratch server | the [checklist](#295-verifying-a-pack) | links resolve, connectors are up, commands open, the guide renders |
 
-`sutra lint` and `sutra test` are commands of the server's exec jar (`java -jar drishti-server/target/drishti-server-*-exec.jar sutra …`); `pack check`
+`sutra lint` and `sutra test` are commands of the server's exec jar (`java -jar kernel/drishti-server/target/drishti-server-*-exec.jar sutra …`); `pack check`
 finds the jar itself (`--jar`, `DRISHTI_JAR`). Both read the pack overlay of the checkout they run in (`<data>/packs/added.yaml`), so run them where it
 names only packs that exist (or set `DRISHTI_DATA_DIR` to an empty folder). Every command and option (`--junit`, `--out` snapshots, the shape and design
 commands) is in [CLI_REFERENCE.md, Testing Sutras](CLI_REFERENCE.md#testing-sutras-expectyaml-the-tests-convention-and-ci).
@@ -3791,7 +3893,7 @@ commands) is in [CLI_REFERENCE.md, Testing Sutras](CLI_REFERENCE.md#testing-sutr
 **`tests/` and `expect.yaml`:**
 
 ```text
-config/packs/<domain>/<pack>/tests/<sutra>/        one folder per Sutra, named by the Sutra's name (the `sutra:` line)
+modules/<module>/packs/<pack>/tests/<sutra>/        one folder per Sutra, named by the Sutra's name (the `sutra:` line)
     cases.jsonl                    the cases, one a line: {"case": "TKT-1001", "document": {...}} (the kind comes from the Sutra's match.kind)
     expect.yaml                    optional
 ```
@@ -3810,13 +3912,13 @@ missing field. A shipped pack also keeps `tests/help-coverage.txt`, a ratchet th
 (`--tail 2` keeps the last two lines of each step):
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py pack check config/packs/banking/market-risk --tail 2
+$ drishti-console/.venv/bin/python tools/drishti.py pack check modules/banking/dmod/packs/market-risk --tail 2
 == market-risk: sutra lint: exit 0
-ok      config/packs/banking/market-risk/sutras/market-risk/trade-valuation.v1.sutra.yaml
-ok      config/packs/banking/market-risk/sutras/market-risk/var.v1.sutra.yaml
+ok      modules/banking/dmod/packs/market-risk/sutras/market-risk/trade-valuation.v1.sutra.yaml
+ok      modules/banking/dmod/packs/market-risk/sutras/market-risk/var.v1.sutra.yaml
 == market-risk: sutra test: exit 0
      var: help coverage 5/5 (100%)
-ok   config/packs/banking/market-risk/sutras/market-risk/var.v1.sutra.yaml (2 samples)
+ok   modules/banking/dmod/packs/market-risk/sutras/market-risk/var.v1.sutra.yaml (2 samples)
 ```
 
 **In CI:**
@@ -3840,14 +3942,14 @@ same guarantees from `pack check` in its CI and the checklist on a scratch serve
 
 ## 25. The Build workbench
 
-You can write every Sutra in this guide in a text editor. The **Build workbench** (**Build → New screen**) is the same language with the engine in the
+You can write every Sutra in this guide in a text editor. The **Build workbench** (**Create → New screen**) is the same language with the engine in the
 loop: the screen you see is the real one, every edit is an operation the server applies to the Sutra text (your comments and key order are kept), and
 the checks run as you type. Its full manual is [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench); a guided build is
 [tutorial 19, Part B](../tutorials/19-build-a-pack-and-a-screen.md#part-b--design-a-screen-in-the-workbench-and-on-a-live-page).
 
 | You are doing | In the workbench | Section |
 |---|---|---|
-| starting from data, a schema, an example or an existing Sutra | **Build → New screen** | [§1](RACHANA_REFERENCE.md#1-start-bring-data) |
+| starting from data, a schema, an example or an existing Sutra | **Create → New screen** | [§1](RACHANA_REFERENCE.md#1-start-bring-data) |
 | changing a live page in plain words (move, hide, columns, what a click opens, refresh, let people edit), or a screen from one line | the **Sutra designer** (`ui.designer`): **Customize** on the page, **Describe**, **Outline**, **Grid** | [§31](RACHANA_REFERENCE.md#31-the-sutra-designer-customize-describe-outline-and-grid), [tutorial 19 (the Sutra designer)](../tutorials/19-build-a-pack-and-a-screen.md#on-a-live-page-the-sutra-designer) |
 | writing the YAML by hand, with completion and a check as you type | the **YAML** tab (or **Split**, with the screen beside it) | [§9](RACHANA_REFERENCE.md#9-the-yaml-tab-the-split-view-and-the-summary) |
 | seeing what is wrong, with the code and the line | the **Problems** tab | [§10](RACHANA_REFERENCE.md#10-problems) |
@@ -4005,7 +4107,7 @@ Edits and switching write-back on are in [APPROVALS_GUIDE.md](APPROVALS_GUIDE.md
 
 ### 28.1 A form beside the table
 
-The book desk's trades (`config/packs/banking/trading/sutras/pages/book-desk.v1.sutra.yaml`) carry this form. Open
+The book desk's trades (`modules/banking/dmod/packs/trading/sutras/pages/book-desk.v1.sutra.yaml`) carry this form. Open
 `/v/portfolio-trades/BOOK-RATES-2?sutra=book-desk` and click a trade.
 
 ![The form beside the book desk's trades: the counterparty locked, a warning under the notional and the Draft · not saved badge](img/designer/form-beside.jpg)
@@ -4463,7 +4565,7 @@ Each is written up step by step, with pictures, in [OPERATIONS_GUIDE.md, section
   optional signature by a trusted publisher; shows what it **changes** from the running version (breaking first: kinds or mnemonics removed or renamed);
   and, once you confirm, swaps it into `drishti.packs.installed-dir`, keeps the version it replaces and puts the new version to use at once. If the pack
   cannot be used, the old files are put back. A pack may carry BI items in `config/bi/` inside its folder; deploying imports them into the shared
-  workspace `packs` ([REPORTS_GUIDE.md](REPORTS_GUIDE.md)).
+  workspace `packs` ([README.md](bi/README.md)).
 - **History and roll back.** Every deployment, rollback and reverted attempt is listed, with the kept versions (`drishti.packs.deploy.keep-versions`) and
   a **Roll back to this** button; `shipped` goes back to the copy that ships with the server.
 - **Data source.** Per loaded pack, a read-only view of the connectors it names: each one's state, plugin, the kinds this pack takes from it, and what
@@ -4478,7 +4580,7 @@ The same from the terminal: `drishti.py server packs deploy|history|rollback|dat
 
 1. Read the pack's change notes, and run `drishti.py pack diff OLD NEW` for renamed kinds, mnemonics, attributes or link fields (saved monitors,
    workspaces, alert rules and BI items refer to them).
-2. Replace the folder `config/packs/<domain>/<name>/` with the new version (for a checkout: `git pull`), or deploy its archive from Admin → Packs. Parents
+2. Replace the folder `modules/<module>/packs/<name>/` with the new version (for a checkout: `git pull`), or deploy its archive from Admin → Packs. Parents
    it now extends load with it.
 3. No restart: the server notices the new folder within the poll interval (or press Retry now). A refused pack keeps its last good version.
 4. Check *Admin → Health*: the new version, no Sutra problems, its connectors up and none *not configured* (a new version may name a connector this site
@@ -4505,7 +4607,7 @@ generated file says so near the top (`# Generated by tools/packgen/banking/make_
 | `world-economy` | `tools/packgen/world/make.py` (economics and politics halves, real public data through `tools/realdata/`), on the common builder `tools/packgen/common/packbuild.py` |
 | the test data (`data/testdata/`) | `tools/testdata/make_testdata.py` (deterministic; `--check` says whether the files are current) |
 | the example packs in `examples/packs/` | `tools/packgen/<area>/make.py`, on the same builder with `retired=True` |
-| `news-and-markets` | hand-written; its samples come from `config/packs/economy/news-and-markets/tools/make_samples.py` |
+| `news-and-markets` | hand-written; its samples come from `modules/economy/packs/news-and-markets/tools/make_samples.py` |
 
 The banking and world-economy generators build documents with short internal names and turn them into UPPER_SNAKE at one boundary,
 `tools/packgen/common/upper.py`; a new field in a generator is written in UPPER_SNAKE without more work. The connectors that build their own documents
@@ -4513,8 +4615,8 @@ The banking and world-economy generators build documents with short internal nam
 
 **Never edit a generated file by hand.** A hand edit is lost the next time the generator runs, and before that it fails the build: every generator runs in
 check mode (`python3 tools/packgen/banking/make_packs.py --check` prints `5 pack manifests up to date (71 Calc snippets)`; `make_sutras.py --check`
-`186 Sutras up to date`). After a hand edit to `config/packs/banking/trading/pack.yaml` the first stops with `pack manifests out of date; run
-make_packs.py: ['config/packs/banking/trading/pack.yaml']`; the packbuild generators also refuse files they did not write
+`186 Sutras up to date`). After a hand edit to `modules/banking/dmod/packs/trading/pack.yaml` the first stops with `pack manifests out of date; run
+make_packs.py: ['modules/banking/dmod/packs/trading/pack.yaml']`; the packbuild generators also refuse files they did not write
 (`<pack> pack out of date; run tools/packgen/<area>/make.py. stale=[] extra=[…]`). A top-level section of a banking pack's manifest the taxonomy does not
 say (the `history:` sections, the trading pack's `ingest:`) is kept in `tools/packgen/banking/kept/<pack>.yaml` and appended as written.
 
@@ -4523,7 +4625,7 @@ say (the `history:` sections, the trading pack's `ingest:`) is kept in `tools/pa
 1. Find the generator named in the file's comment: `tools/packgen/banking/make_packs.py`.
 2. Change its input: add `"TRADER_ID"` after `"COUNTERPARTY"` in the trade columns of the `COLUMNS` table.
 3. Run the generator without `--check`: `python3 tools/packgen/banking/make_packs.py`.
-4. `git diff config/packs/banking/trading/pack.yaml` shows `- TRADER_ID` added under `columns: trade:`.
+4. `git diff modules/banking/dmod/packs/trading/pack.yaml` shows `- TRADER_ID` added under `columns: trade:`.
 5. Wait for the reload, type `TRD MX-200000`: the pick list has a *Trader ID* column (`•••` for a role without `raw`: the shipped setting masks it).
 6. Commit the generator **and** the files it wrote, together.
 
@@ -4706,7 +4808,7 @@ The `pack.yaml` names the link field `AUTHOR`, the badge `$.ON_LOAN + ' on loan'
 library`), with both kinds routed to it.
 
 **Step 7. Open it.** Copy (or write) the folder into the packs folder of a running server, or start one with it (`DRISHTI_PACKS=library java -jar
-drishti-server/target/drishti-server-*-exec.jar`, or `DRISHTI_PACKS=market-risk,library`). Then type `TI` (you see `TITLE` *Book* in the suggestions);
+kernel/drishti-server/target/drishti-server-*-exec.jar`, or `DRISHTI_PACKS=market-risk,library`). Then type `TI` (you see `TITLE` *Book* in the suggestions);
 type `TITLE TITLE-0001`: the pill *Library · Book*, the strip *Title Rivers of Light* (highlighted), *Author Ada Okafor*, *Copies 4*, *On loan 3* (it
 ticks), the panels *Loans per month* (F2) and *Copies* (F3), and *Linked entities* with *Author AUTH-001*; **F7** opens the author; the help centre has
 the *Library pack* guide. If an admin assigns packs per user, add `library` to your user under **Admin → Users**. Real history for the date picker needs
@@ -4793,7 +4895,7 @@ contract is invalid, or the samples and test data drift from it, so regenerating
 where each kind's data comes from (an external source with its licence, internal-only flag and refresh script; a generator of synthetic data; or a
 Drishti engine), how it reaches the lake, checking and offline. The origin is configured in `tools/packgen/common/data_retrieval.yaml`. A pack without a
 guide generator is kept by `python3 tools/packgen/common/guide_data.py` (`--check`). External sources are documented on the
-[External data](EXTERNAL_DATA.md) page.
+[External data](WORLD_DATA_GUIDE.md) page.
 
 ## 31. The packs that ship: turning them on, who sees which
 
@@ -4808,17 +4910,17 @@ this table is the map. Seven packs are on by default; the others are turned on b
 | Pack | Code | Extends | Mnemonics | Try | README |
 |---|---|---|---|---|---|
 | `core` | `CORE` | — | `CPTY` `GRP` `ISS` `CCP` `LE` `BOOK` `DESK` `TRDR` `CAL` `CLR` | `CPTY CP-NORTHBRIDGE`, `LE LE-NY` | [core](../../config/packs/core/core/README.md) |
-| `market-data` | `MKT` | `core` | `CRV` `REPO` `FX` `FXF` `FXV` `IRV` `CPV` `EQ` `EQX` `DIV` `EQV` `CDS` `INF` `INFC` `CMD` `CMDC` `CMDV` `FIX` `BND` `CORR` | `CRV CRV-USD-OIS`, `FXV FXV-EURUSD` | [market-data](../../config/packs/banking/market-data/README.md) |
-| `trading` | `TRDS` | `core`, `market-data` | `TRD` (three source systems) · `CTRD` `PTRD` `LTRD` `ITRD` (derived) | `TRD MX-20000001`, `TRD 1000001`, `CTRD CP-ALDERSHOT` | [trading](../../config/packs/banking/trading/README.md) |
-| `counterparty-risk` | `CCR` | `trading` | `AGR` `CSA` `NSET` `LIM` `EXP` `CVA` `SACCR` `COLL` `MC` `SIMM` | `AGR AGR-NORTHBRIDGE-ISDA`, `NSET NS-SUMMIT-NY` | [counterparty-risk](../../config/packs/banking/counterparty-risk/README.md) |
-| `market-risk` | `MRSK` | `market-data`, `trading` | `VAR` `SCN` `STR` `FRTB` `PNL` `TVAL` | `VAR VAR-RATES`, `TVAL TVAL-MX-20000001` | [market-risk](../../config/packs/banking/market-risk/README.md) |
-| `world-economy` | `WRLD` | — | `ECON` `MACRO` `FCST` `LABR` `FISC` `ECG` `REGE` `JUR` `PARTY` `OFFC` `ELEC` `REGN` `SOCI` (real public data; the IMF part is for internal demonstrations only) | `ECON ECON-IND` | [world-economy](../../config/packs/economy/world-economy/README.md) |
-| `news-and-markets` | `NWMK` | — | `TOPIC` `NEWS` `CO` `QUOTE` (a sample pack; its news and yfinance connectors are off as shipped) | `TOPIC TOPIC-FED` | [news-and-markets](../../config/packs/economy/news-and-markets/README.md) |
-| `us-equities` | `USEQS` | — | `USEQ` `IDX` `SIC` `EDGAR` `FILING` `FACT` `PXH` (off by default; prices live only and internal) | `USEQ AAPL`, `IDX SP500` | [us-equities](../../config/packs/capitalmarkets/us-equities/README.md) |
+| `market-data` | `MKT` | `core` | `CRV` `REPO` `FX` `FXF` `FXV` `IRV` `CPV` `EQ` `EQX` `DIV` `EQV` `CDS` `INF` `INFC` `CMD` `CMDC` `CMDV` `FIX` `BND` `CORR` | `CRV CRV-USD-OIS`, `FXV FXV-EURUSD` | [market-data](../../modules/market-data/packs/market-data/README.md) |
+| `trading` | `TRDS` | `core`, `market-data` | `TRD` (three source systems) · `CTRD` `PTRD` `LTRD` `ITRD` (derived) | `TRD MX-20000001`, `TRD 1000001`, `CTRD CP-ALDERSHOT` | [trading](../../modules/banking/dmod/packs/trading/README.md) |
+| `counterparty-risk` | `CCR` | `trading` | `AGR` `CSA` `NSET` `LIM` `EXP` `CVA` `SACCR` `COLL` `MC` `SIMM` | `AGR AGR-NORTHBRIDGE-ISDA`, `NSET NS-SUMMIT-NY` | [counterparty-risk](../../modules/banking/dmod/packs/counterparty-risk/README.md) |
+| `market-risk` | `MRSK` | `market-data`, `trading` | `VAR` `SCN` `STR` `FRTB` `PNL` `TVAL` | `VAR VAR-RATES`, `TVAL TVAL-MX-20000001` | [market-risk](../../modules/banking/dmod/packs/market-risk/README.md) |
+| `world-economy` | `WRLD` | — | `ECON` `MACRO` `FCST` `LABR` `FISC` `ECG` `REGE` `JUR` `PARTY` `OFFC` `ELEC` `REGN` `SOCI` (real public data; the IMF part is for internal demonstrations only) | `ECON ECON-IND` | [world-economy](../../modules/economy/packs/world-economy/README.md) |
+| `news-and-markets` | `NWMK` | — | `TOPIC` `NEWS` `CO` `QUOTE` (a sample pack; its news and yfinance connectors are off as shipped) | `TOPIC TOPIC-FED` | [news-and-markets](../../modules/economy/packs/news-and-markets/README.md) |
+| `us-equities` | `USEQS` | — | `USEQ` `IDX` `SIC` `EDGAR` `FILING` `FACT` `PXH` (off by default; prices live only and internal) | `USEQ AAPL`, `IDX SP500` | [us-equities](../../modules/capital-markets/packs/us-equities/README.md) |
 | `gleif` | `GLEIF` | — | `LEI` `LEIG` `LEIR` `LEIC` `LEIM` (off by default; with `us-equities` on, a company and its LEI link both ways) | `LEI 8I5DZWZKVSZI1NUHU748`, `LEIG ALL` | [gleif](../../config/packs/core/gleif/README.md) |
-| `funds` | `FUNDS` | — | `FUND` `HELD` `TRACK` (off by default, after `us-equities`; [FUNDS_GUIDE.md](FUNDS_GUIDE.md)) | `FUND QQQ`, `HELD AAPL` | [funds](../../config/packs/capitalmarkets/funds/README.md) |
+| `funds` | `FUNDS` | — | `FUND` `HELD` `TRACK` (off by default, after `us-equities`; [WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md)) | `FUND QQQ`, `HELD AAPL` | [funds](../../modules/capital-markets/packs/funds/README.md) |
 | `compute-demo` | `CMPD` | — | `PBOOK` `PSTRIP` `PSUM` `PSUMJ` (a sample pack for reactive connectors; [tutorial 19, Part C](../tutorials/19-build-a-pack-and-a-screen.md#part-c--computed-panels-a-reactive-connector)) | `PSUM …` | [compute-demo](../../config/packs/core/compute-demo/README.md) |
-| public sector (economy module) | `WDEV` `CBNK` `STCAN` `OECDP` `ONEWS` `GDLT` | — | world development, central banks, national statistics, OECD, official news, GDELT events ([PUBLIC_SECTOR_GUIDE.md](PUBLIC_SECTOR_GUIDE.md)) | | [world-development](../../config/packs/economy/world-development/README.md), [central-banks](../../config/packs/economy/central-banks/README.md), [national-statistics](../../config/packs/economy/national-statistics/README.md), [oecd](../../config/packs/economy/oecd/README.md), [official-news](../../config/packs/economy/official-news/README.md), [gdelt-events](../../config/packs/economy/gdelt-events/README.md) |
+| public sector (economy module) | `WDEV` `CBNK` `STCAN` `OECDP` `ONEWS` `GDLT` | — | world development, central banks, national statistics, OECD, official news, GDELT events ([WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md)) | | [world-development](../../modules/economy/packs/world-development/README.md), [central-banks](../../modules/economy/packs/central-banks/README.md), [national-statistics](../../modules/economy/packs/national-statistics/README.md), [oecd](../../modules/economy/packs/oecd/README.md), [official-news](../../modules/economy/packs/official-news/README.md), [gdelt-events](../../modules/economy/packs/gdelt-events/README.md) |
 
 **Links between packs.** A `core` counterparty carries its country of risk and two link fields that open other packs when they are on: `ECONOMY`
 (`ECON-<alpha-3>`, its economy in `world-economy`) and `NEWS_ID` (its headlines in `news-and-markets`). Agreements and CSAs belong to `counterparty-risk`,
@@ -4848,7 +4950,7 @@ The server reads `drishti.packs.enabled` from `DRISHTI_PACKS` (a comma-separated
 
    ```bash
    export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
-   DRISHTI_PACKS=market-risk,world-economy java -jar drishti-server/target/drishti-server-*-exec.jar
+   DRISHTI_PACKS=market-risk,world-economy java -jar kernel/drishti-server/target/drishti-server-*-exec.jar
    ```
 
 2. Check what loaded (with security on, add an API token: [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md)):
@@ -4977,7 +5079,7 @@ drishti-console/.venv/bin/python tools/drishti.py lake demo
   trading/trade_murex: … rows over 60 days
   legal/agreement: … rows over 60 days
   …
-Demo lake ready: …/data/delta/demo: 86 tables, 60 business days 2026-07-08 to 2026-09-30, built in 943 s
+Demo lake ready: …/data/delta/demo: 89 tables, 60 business days 2026-07-08 to 2026-09-30, built in 943 s
 Connector files:
   civic-store: generated by the server at its first start (reads …/data/delta/demo)
   …
@@ -4994,7 +5096,7 @@ quotes and headlines are computed live, so the repository keeps a **real snapsho
 captured through the pack's own connectors by `drishti.py testdata capture-market`), which `lake demo` builds into `news/quote` and `news/news` for
 `news-store`; every page reads the same documents as live, a quote's *As of* and the headlines' *Fetched* end in *(snapshot captured <date>)*, and the
 pages add a **Snapshot** note. The data belongs to its providers and is shown for demonstration only. world-economy is already offline: all thirteen kinds
-are real figures captured when the pack was built ([EXTERNAL_DATA.md](EXTERNAL_DATA.md#the-world-economy-data-in-detail); refresh with
+are real figures captured when the pack was built ([WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md#the-world-economy-data-in-detail); refresh with
 `drishti.py feed run world-economy`). **Offline mode** (`DRISHTI_OFFLINE=true`, set by the run configuration **Drishti server (demo lakes)**) never
 starts the `news`, `yfinance` and public-data `feed` connectors, so nothing waits on the network
 ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtioffline--offline-mode-no-internet)). Refresh the snapshot on a machine with internet:
@@ -5020,7 +5122,7 @@ within seconds and offers **Refresh**; on a phone each pack is a card. Server si
 ### 31.9 BI over the packs' kinds, and data loads
 
 Every kind of every pack you may open is a BI **dataset** named `pack.<pack>.<kind>` (`pack.trading.trade`), certified by its pack, read-only, versioned
-with the pack, its columns, keys, meanings and masks taken from the pack ([REPORTS_GUIDE.md](REPORTS_GUIDE.md)); every BI model is rooted in packs
+with the pack, its columns, keys, meanings and masks taken from the pack ([README.md](bi/README.md)); every BI model is rooted in packs
 ([ARCHITECTURE.md](../architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer)). `config/bi/` holds the BI samples over the seven packs
 (models such as `trades-basic`, `trading-risk`, `trading-cashflows`, `counterparty-exposure`, `world-economics`), and a test checks that each reads only
 what the packs serve.
@@ -5097,4 +5199,243 @@ The same tiers apply to pages that are not Sutra pages, set and capped by `ui.ph
 | Admin → Capacity | the four states and what breaks first must; the headroom bars at a glance; this server beside the plan and growth under *More*; editing the plan, the JVM arguments, the command line, the sliders and the download on the desktop |
 | Admin pages, designers, the Build workbench | desk, with a short *Open on desktop* page |
 
-Below 640 px the lens menus also fold into one menu named after the lens, a column per subject.
+On a phone the bar keeps its five menus as finger-sized buttons; Domains opens as a list with a heading per column.
+
+## Tutorial: Add a source system (SwapOne)
+
+A bank has one canonical `trade`. Every booking system, Endur, Murex, Calypso and the rest, is another **source** of it: its own file layout, its
+own field names, one module that maps them to the canonical trade and says where they land. This tutorial adds a new one. A mocked system called
+**SwapOne** (OTC swaps; its fields are `DEAL_REF`, `DEAL_VERSION`, `TRADE_DT`, `NOTIONAL_AMT`, `CCY`, `CPTY_CODE`, `BOOK` and `LEGS[LEG_NO, PAY_REC, RATE_TYPE]`, nothing like ours) sends one file. You read the whole file,
+check the proposed map, let the Pack designer write the module `source-swapone`, drop the file in the data inbox, and find the trades in
+their own table `trading.trade_swapone` stamped `SWAPONE`, in `TRD`, on the blotter, behind a row rule, and gone when you switch the module off.
+
+Every step shows the same thing three ways: in the **UI**, on the **command line**, and as the **YAML** that is written. The reference is
+[BUILD_GUIDE.md section 8.9](../guides/BUILD_GUIDE.md#89-a-source-for-an-existing-kind); the data is mocked (`tools/samplegen/src_swapone.py`:
+invented names and numbers, no real system's layout).
+
+### Time to complete
+
+About 40 minutes.
+
+### Before you start
+
+- Tutorial 16, Part A done, or its starting point: the built server jar, the console's Python, a demo lake of the trades and reference data
+  (`drishti.py lake demo --only trades/,core/`), the data inbox on (`DRISHTI_DATALOAD_ENABLED=true`).
+- The repository ships a finished `source-swapone` as a sample. To follow along, start the server **without the shipped sample modules**
+  (`DRISHTI_MODULES_SHIPPED=false`), so yours is the only one; or give yours another name (`--name source-swapone-mine`) and leave the sample on.
+- The file. `make_day.py` writes the first day of the mocked SwapOne data as the system would send it, named for the module's inbox rule, and its
+  `.ready` file (the SHA-256, so the inbox knows the file is complete):
+
+```bash
+python3 docs/tutorials/data/swapone/make_day.py --out drop --date 2026-07-08 --ready
+```
+
+```text
+drop/swapone-2026-07-08.jsonl.gz  240 rows  sha256 4e8e…
+drop/swapone-2026-07-08.jsonl.gz.ready
+```
+
+### What you will learn
+
+- how the designer reads a whole file of another system and proposes, for each canonical trade field, the native field that fits, with the evidence;
+- how to correct the map, and what stays unmapped (and where it is shown);
+- what a source module holds (`connectors/`, `mappings/`, `dataload.yaml`, `sections:`) and how it is deployed;
+- how the inbox routes a file by its name, stamps `SOURCE_SYSTEM`, and where the rows land;
+- how the one canonical trade pages, `TRD` and the blotter show the new system with no new screen, and how a row rule limits who sees it;
+- how a source is switched off and on without touching anything else.
+
+### Step 1 · Read the file
+
+**In the UI.** Open **Create → New pack**. Drop `drop/swapone-2026-07-08.jsonl.gz` on the page. The server reads **every record** (not a sample) and
+the page asks what the files are. Choose **A source for an existing kind**: the kinds whose fields overlap the file's are suggested, `trade`
+first. You should see the files grid with every record counted, and `trade` at the head of the suggested kinds.
+
+![The designer after the whole file is read: the files grid and the choice of what the files are](../tutorials/img/swapone/01-analysed.jpg)
+
+**On the command line.** The same pass, written as a proposal, with nothing deployed:
+
+```bash
+python3 tools/drishti.py pack new --source-for trade --system SWAPONE --map-out swapone-map.json drop/swapone-2026-07-08.jsonl.gz
+```
+
+It prints each canonical field of the kind and the native field it was matched to (see step 2).
+
+**The YAML.** Nothing is written yet; `swapone-map.json` is the proposal as data.
+
+### Step 2 · Map the fields
+
+**In the UI.** The **Map** step shows the kind's fields in a grid: the canonical field, whether it is required, the SwapOne field proposed for it,
+the confidence and the reason. Choose a row to see its evidence (name, type and values) and the other candidates. Fields marked *missing* are
+required fields no native field fits: you can map one by hand, give a constant (`= value`) or leave it, as the kind allows. Under the grid are
+the native fields no canonical field takes (here `CLEARING_HOUSE`, `CONFIRM_METHOD`, `BROKER_REF`, `SW_ONE_DESK_TAG` and `TRADER_NAME`): the module shows them on the trade page (step 6).
+
+To change a mapping, change the native field in its cell (or choose *(none)*), then **Propose again**: the server reads again with your edits.
+
+**On the command line.**
+
+```bash
+python3 tools/drishti.py pack new --source-for trade --system SWAPONE --map-edits '{"PACKAGE_ID": null}' --map-out swapone-map.json drop/swapone-2026-07-08.jsonl.gz
+```
+
+`--map-edits` is a JSON object: `{CANONICAL: null}` drops a guess, `{CANONICAL: {"from": "native"}}` maps one, `{CANONICAL: {"value": "x"}}` gives a
+constant, `{CANONICAL: {"values": {"Y": "YES"}}}` a value map.
+
+**The YAML.** The map becomes `mappings/swapone-trade.yaml` in the module (step 3): `canonical field: native field`, constants and value maps.
+
+You should see every required field of the kind mapped or given a constant, the leftover native fields listed under the grid, and after
+**Propose again** (or the command with `--map-edits`) the dropped guess shown without a native field.
+
+### Step 3 · The module the designer writes
+
+**In the UI.** **Layout**: keep **Its own table**, `trading.trade_swapone` (one table a trading system, as Endur, Calypso, Murex, WSS and
+ICI). The page shows the connector it will write. **Finalize** makes the module `source-swapone` and runs the fifteen checks;
+**Deploy** installs it.
+
+**On the command line.** One command writes, checks and installs it (on one node, into the server's `modules` folder; on a cluster add `--server`):
+
+```bash
+python3 tools/drishti.py pack new --source-for trade --system SWAPONE \
+    --lake-name swaplake --out modules/source-swapone --deploy --modules-dir modules drop/swapone-2026-07-08.jsonl.gz
+```
+
+**The YAML.** The module's parts, under one set of manifest keys:
+
+```text
+source-swapone/
+  module.yaml                              connectors, mappings, dataload, sections
+  connectors/source-swapone.yaml           the connector
+  mappings/swapone-trade.yaml              the field map
+  dataload.yaml                            the inbox rule
+  sutras/trade-swapone.v1.fragment.yaml    its section of the trade page
+```
+
+```yaml
+# connectors/source-swapone.yaml
+plugin: delta
+kinds: [trade]
+settings:
+  lake: swaplake
+  lake-tables: trading.trade_swapone
+  set: { SOURCE_SYSTEM: SWAPONE }
+  map: mappings/swapone-trade.yaml
+```
+
+```yaml
+# dataload.yaml
+dataload:
+  rules:
+    - match: swapone-*.jsonl*
+      pack: trading
+      kind: trade
+      connector: source-swapone
+      date-from: name
+```
+
+Auto-deploy loads the module within seconds. You should see `source-swapone` listed as running on **Admin → Modules**, with all fifteen checks passed.
+
+### Step 4 · Drop the file in the inbox
+
+**In the UI.** **Admin → Data inbox** shows the folder and its rules (the module's rule is among them). Upload the file and its `.ready`, or copy them.
+
+**On the command line.** The inbox is a folder; a file is loaded when its `.ready` file (written last) names its SHA-256:
+
+```bash
+cp drop/swapone-2026-07-08.jsonl.gz drop/swapone-2026-07-08.jsonl.gz.ready data/dataload/inbox/
+python3 tools/drishti.py dataload status
+```
+
+**The YAML.** The rule of step 3 is all there is: the name `swapone-2026-07-08.jsonl.gz` matches `swapone-*.jsonl*`, so the file goes to the
+trade kind through the connector `source-swapone`, and `date-from: name` makes `2026-07-08` its business date.
+
+You should see the file picked up within seconds: `dataload status` (and **Admin → Data inbox**) names it with the rule `swapone-*.jsonl*` and the
+connector `source-swapone`, and the `.ready` file is gone from the inbox.
+
+### Step 5 · It lands in `trading.trade_swapone`, stamped SWAPONE
+
+**In the UI.** **Admin → Loads** shows the load: the file, its rows, the table it went to and the date.
+
+**On the command line.**
+
+```bash
+python3 tools/drishti.py dataload status
+python3 tools/drishti.py lake show
+```
+
+**The YAML.** The connector's `set: { SOURCE_SYSTEM: SWAPONE }` stamped the column into every row the inbox stored; the table is SwapOne's
+alone, so a day's file replaces SwapOne's date and no other system's.
+
+You should see one load of `swapone-2026-07-08.jsonl.gz` into `trading.trade_swapone` for `2026-07-08`, every row loaded and none rejected.
+
+### Step 6 · `TRD` and the blotter
+
+**In the UI.** Type `TRD` in the command line: the list of trades now includes SwapOne's (the `SW1-…` ids), each with the canonical fields the map filled.
+Open one: `TRD SW1-4000000`. The page is the canonical trade page, with one more section the module brought: **SWAPONE fields**, the native fields the map
+left out, shown only when `SOURCE_SYSTEM` is SWAPONE.
+
+The blotter (the live trading table) lists them with the other systems' trades and can be filtered by source system:
+
+**On the command line.**
+
+```bash
+python3 tools/drishti.py view get trade/SW1-4000000
+```
+
+**The YAML.** The section is the module's `sections:` entry; no pack file was edited:
+
+```yaml
+# module.yaml
+sections:
+  - { kind: trade, fragment: sutras/trade-swapone.v1.fragment.yaml, when: "$.SOURCE_SYSTEM == 'SWAPONE'" }
+```
+
+While the module runs, its fragment's panels are appended to every Sutra of the kind `trade`; they leave with the module.
+
+You should see the `SW1-…` trades in `TRD` beside the other systems', and on `TRD SW1-4000000` the **SWAPONE fields** section after the canonical ones.
+
+### Step 7 · A row rule
+
+A role may see only some records of a kind. A desk that books only SwapOne swaps should see only SwapOne trades.
+
+**In the UI.** **Admin → Roles** lists the roles (the rule is shown with the role); give the role to a person on **Admin → Users**.
+
+**On the command line.** The rule is configuration (below).
+
+**The YAML.** In `config/application.yaml`:
+
+```yaml
+drishti:
+  security:
+    roles:
+      swapone-desk:
+        kinds: [trade]
+        rows:
+          trade: "SOURCE_SYSTEM = 'SWAPONE'"
+```
+
+A person with this role (and no other that opens trades) sees only SwapOne's trades in `TRD`, search and the blotter; a trade of another system is
+*not found*. Aggregates (VaR, BI totals) keep their own scope model ([ACCESS_MODEL.md section 10](../architecture/ACCESS_MODEL.md#10-row-rules)).
+
+You should see, signed in as that person, only `SW1-…` ids in `TRD`, and *not found* for a trade of another system.
+
+### Step 8 · Switch it off and on
+
+**In the UI.** **Admin → Modules**, `source-swapone`, **Disable**. The trades of SwapOne leave the trade kind, the section leaves the page, and nothing
+else changes. **Enable** brings them back.
+
+**On the command line.**
+
+```bash
+python3 tools/drishti.py module disable source-swapone
+python3 tools/drishti.py module enable source-swapone
+```
+
+**The YAML.** `config/modules/source-swapone.yaml` holds `enabled: false` while it is off.
+
+You should see, while it is off, no `SW1-…` trade in `TRD` and no **SWAPONE fields** section; after **Enable**, both back.
+
+### What you built
+
+A module of content only: a connector, a field map, an inbox rule and a section of the trade page, written from your file by the Pack designer and
+deployed like any module. Another system is the same steps with its own file. The reference is
+[BUILD_GUIDE.md section 8.9](../guides/BUILD_GUIDE.md#89-a-source-for-an-existing-kind); the layouts of the shared and the own table are in the
+[trading module's guide](../guides/LIVE_RESULTS_GUIDE.md).

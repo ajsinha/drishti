@@ -32,6 +32,8 @@
    Everything is the server's (GET /api/explain, the person's own entitlements): the browser computes nothing, it places text. */
 import { compareAgain, mountWhyPage, whyPageFits } from './drishti_insight-why.js';
 import { explainLink, upgradeLinks, drawNote } from './drishti_insight-link.js';
+import { showBusy, answerError } from './drishti_insight-busy.js';
+import { url as drishtiUrl } from '../../drishti-core/src/drishti_index.js';
 /**
  * Installs the one Explain in a page (once): the preview, the drawer, the full page when the page is /explain, the keys, and Drishti.Explain.
  * @param {Window} win the page's window
@@ -67,16 +69,16 @@ export function installExplain(win) {
     var key = q.toString() + (req.body ? JSON.stringify(req.body) : "");
     if (cache[key]) return cache[key];
     var init = { headers: { Accept: "application/json" }, credentials: "same-origin" };
-    var url = "/api/explain?" + q.toString();
+    var url = drishtiUrl("/api/explain?") + q.toString();
     if (req.body) {
-      url = "/api/explain";
+      url = drishtiUrl("/api/explain");
       init.method = "POST";
       init.headers["Content-Type"] = "application/json";
       init.body = JSON.stringify(Object.assign({}, req.body, Object.fromEntries(q)));
     }
-    var p = fetch(url, init).then(function (r) {
+    var p = fetch(drishtiUrl(url), init).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (b) {
-        if (!r.ok) { var e = new Error(b.detail || ("HTTP " + r.status)); e.status = r.status; throw e; }
+        if (!r.ok) throw answerError(r, b);                          // a busy refusal (503, DRS-950x) is counted down and asked again: busy()
         return b;
       });
     });
@@ -85,11 +87,19 @@ export function installExplain(win) {
     return p;
   }
 
+  /** Busy protection's message in place of an answer (drishti_insight-busy.js); ``retry`` asks again past the cache. */
+  function busy(host, e, retry) { return showBusy(window, host, e, function () { cache = {}; retry(); }); }
+
   /** The full page's link: the request's parameters, and a body (a pivot cell's view) carried along as one JSON parameter, so the page asks the same. */
   function pageUrl(req, tab) {
     var q = query(req, tab ? { tab: tab } : {});
     if (req.body) q.set("body", JSON.stringify(req.body));
-    return "/explain?" + q.toString();
+    return drishtiUrl("/explain?") + q.toString();
+  }
+
+  /** The request with the drawer's own compare dates (S.from, S.to: the Why it moved dates picked in it), so the page opens on the same comparison. */
+  function withDates(req) {
+    return Object.assign({}, req, S.from ? { from: S.from } : {}, S.to ? { to: S.to } : {});
   }
 
   // ---------------------------------------------------------------------------------------------------------------- the preview (B)
@@ -128,7 +138,7 @@ export function installExplain(win) {
       TABS.forEach(function (t, i) {
         if (i) links.appendChild(document.createTextNode(" · "));
         var l = h("a", null, t[1] === "Inputs & lineage" ? "Inputs" : t[1]);
-        l.href = pageUrl(req, t[0]);
+        l.href = drishtiUrl(pageUrl(req, t[0]));
         l.dataset.explainLink = t[0];
         l.addEventListener("click", function (ev) { ev.preventDefault(); closePreview(); open(req, t[0], anchor); });
         links.appendChild(l);
@@ -162,9 +172,11 @@ export function installExplain(win) {
     drawer.hidden = true;
     drawer.dataset.explainDrawer = "";
     drawer.innerHTML = '<div class="dx-head"><div><div class="dx-crumb" data-dx-crumb></div><h2 id="dxTitle" data-dx-title></h2>'
-      + '<p class="dx-origin" data-dx-origin></p></div><button type="button" class="dx-x" data-dx-close aria-label="Close Explain (Esc)" title="Close (Esc)">✕</button></div>'
+      + '<p class="dx-origin" data-dx-origin></p></div>'
+      + '<a class="dx-btn dx-page" data-dx-page href="#" title="Open this explanation as a full page: the same scope, dates, compare date and tab">Open as a page ›</a>'
+      + '<button type="button" class="dx-x" data-dx-close aria-label="Close Explain (Esc)" title="Close (Esc)">✕</button></div>'
       + '<div class="dx-tabs" role="tablist" aria-label="Explain" data-dx-tabs></div><div class="dx-body" data-dx-body role="tabpanel"></div>'
-      + '<div class="dx-foot"><div data-dx-checks></div><a class="dx-page" data-dx-page href="#">Open as a page ›</a></div>';
+      + '<div class="dx-foot"><div data-dx-checks></div></div>';
     var tabs = drawer.querySelector("[data-dx-tabs]");
     TABS.forEach(function (t) {
       var b = h("button", "dx-tab", t[1]);
@@ -199,7 +211,7 @@ export function installExplain(win) {
     drawer.style.top = window.innerWidth > 640 && bar ? Math.max(0, Math.round(bar.getBoundingClientRect().bottom)) + "px" : "";
     drawer.hidden = false;
     drawer.classList.add("dx-open");
-    drawer.querySelector("[data-dx-page]").href = pageUrl(req, tab || "formula");
+    drawer.querySelector("[data-dx-page]").href = drishtiUrl(pageUrl(withDates(req), tab || "formula"));
     document.body.dataset.explainOpen = "1";
     show(tab || "formula");
     drawer.focus();
@@ -221,7 +233,7 @@ export function installExplain(win) {
       b.setAttribute("aria-selected", on ? "true" : "false");
       b.tabIndex = on ? 0 : -1;
     });
-    drawer.querySelector("[data-dx-page]").href = pageUrl(S.req, tab);
+    drawer.querySelector("[data-dx-page]").href = drishtiUrl(pageUrl(withDates(S.req), tab));
     var body = drawer.querySelector("[data-dx-body]");
     body.textContent = "";
     body.appendChild(h("p", "dx-muted", tab === "why" ? "computing why it moved…" : "explaining…"));
@@ -241,6 +253,7 @@ export function installExplain(win) {
     }).catch(function (e) {
       if (seq !== S.seq) return;
       body.textContent = "";
+      if (busy(body, e, function () { show(tab); })) { drawer.dataset.state = "busy"; return; }
       body.appendChild(h("p", "dx-err", e.message || String(e)));
       drawer.dataset.state = "failed";
     });
@@ -303,7 +316,7 @@ export function installExplain(win) {
       (x.links || []).forEach(function (l) {
         var li = h("li");
         var link = h("a", "dx-wb", l.label);
-        link.href = l.href;
+        link.href = drishtiUrl(l.href);
         link.dataset.dxWorkbook = "";
         li.appendChild(link);
         if (l.note) li.appendChild(h("span", "dx-muted", " · " + l.note));
@@ -314,7 +327,7 @@ export function installExplain(win) {
       (a.links || []).forEach(function (l) {
         var p = h("p", "dx-muted");
         var link = h("a", null, l.label + " ›");
-        link.href = l.href;
+        link.href = drishtiUrl(l.href);
         p.appendChild(link);
         host.appendChild(p);
       });
@@ -325,6 +338,8 @@ export function installExplain(win) {
   }
 
   function why(host, a, x, inDrawer) {
+    var again = inDrawer ? function () { show("why"); } : function () { var root = host.closest("[data-explain-request]"); if (root) renderPage(root); };
+    if (x.busy && busy(host, x, again)) return Promise.resolve();    // the date compared with waits: the rest stands, this part counts down
     if (!x.available) {
       if (x.underConstruction) uc(host, x.underConstruction);
       if (x.note) host.appendChild(h("p", "dx-muted", x.note));
@@ -372,7 +387,7 @@ export function installExplain(win) {
   function paintPanels(host, a, t, panels) {
     var model = { contract: "1.0", ref: { kind: "explain", id: a.kind + ":" + a.subject }, title: { pill: "Why it moved", id: t.title + " · " + t.from + " to " + t.to },
                   strip: [], panels: panels, keys: [], provenance: { source: "the server's Explain, GET /api/v1/explain?kind=" + a.kind } };
-    lib = lib || import("/static/render/2.0.0/drishti-render.js");
+    lib = lib || import(drishtiUrl("/static/render/2.0.0/drishti-render.js"));
     return lib.then(function (R) {
       var v = R.render(host, model, { theme: document.documentElement.getAttribute("data-theme") || "terminal", header: "none", help: false,
                                       tables: true, live: false, navigation: "host", device: window.innerWidth <= 640 ? "phone" : "desk" });
@@ -421,6 +436,7 @@ export function installExplain(win) {
       });
     }).catch(function (e) {
       var g = root.querySelector("[data-dx-grid]");
+      if (busy(g, e, function () { renderPage(root); })) { root.dataset.state = "busy"; return; }
       g.textContent = e.message || String(e);
       if (first === "why" && req.from) {                    // a compare date the engine cannot answer: said, and the way back
         var back = h("button", "dx-chip", "Compare with the previous day");
@@ -488,6 +504,12 @@ export function installExplain(win) {
     renderPage(pageRoot);
     var printBtn = pageRoot.querySelector("[data-dx-print]");
     if (printBtn) printBtn.addEventListener("click", function () { window.print(); });
+    var backBtn = pageRoot.querySelector("[data-dx-back]");               // Back: the screen exactly as it was left (its address, its scroll), not a fresh one
+    if (backBtn) backBtn.addEventListener("click", function (ev) {
+      var same = false;
+      try { same = !!document.referrer && new URL(document.referrer).origin === window.location.origin && window.history.length > 1; } catch (e) { same = false; }
+      if (same) { ev.preventDefault(); window.history.back(); }
+    });
   }
 
   window.Drishti.Explain = {

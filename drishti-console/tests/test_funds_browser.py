@@ -16,7 +16,7 @@
 snapshot (`drishti.py lake demo --only us-equities,funds`) with the demo connector off: FUND QQQ is the fact sheet with its tiles and
 top ten holdings, and its two tabs (Look-through holdings with every holding linked to its issuer; vs Nasdaq-100 with the computed
 index weights); USEQ AAPL's Held by funds tab lists the funds holding Apple; FUND VTSAX (a share class) opens the fund VTI. Skipped
-when Playwright, Chromium, deltalake or the built server jar is missing, or a scratch port is in use. Never run with pytest -n."""
+when Playwright, Chromium or the built server jar is missing, or a scratch port is in use. Never run with pytest -n."""
 from __future__ import annotations
 
 import glob
@@ -28,7 +28,6 @@ from pathlib import Path
 import pytest
 
 pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install playwright)")
-pytest.importorskip("deltalake", reason="lake demo needs deltalake and pyarrow")
 from playwright.sync_api import expect, sync_playwright  # noqa: E402
 
 import news_stack as NS  # noqa: E402  (listening, wait)
@@ -45,21 +44,20 @@ def stack(tmp_path_factory):
     for port in (SERVER_PORT, CONSOLE_PORT):
         if NS.listening(port):
             pytest.skip(f"port {port} is in use: stop whatever listens there")
-    jars = sorted(glob.glob(str(ROOT / "drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)
+    jars = sorted(glob.glob(str(ROOT / "kernel/drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)
     java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"
     if not jars or not Path(java).exists():
-        pytest.skip("needs the built server: ./mvnw -o -q package -DskipTests -pl drishti-app -am")
+        pytest.skip("needs the built server: ./mvnw -o -q package -DskipTests -pl :drishti-app -am")
     tmp = tmp_path_factory.mktemp("fundsstack")
-    work, lake = tmp / "server", tmp / "delta"
+    work = tmp / "server"
     work.mkdir()
-    built = subprocess.run([sys.executable, str(ROOT / "tools" / "drishti.py"), "lake", "demo", "--only", "us-equities,funds", "--lake", str(lake),
-                            "--as-of", "today", "--connectors-dir", str(work / "connectors"), "--no-signal", "-q"],
-                           env=dict(os.environ, DRISHTI_DATA_DIR=str(tmp / "data")), capture_output=True, text=True, timeout=900)
-    assert built.returncode == 0, built.stderr[-2000:]
+    from var_stack import shared_connectors, shared_folder, shared_lake
+    lake = shared_lake(tmp_path_factory, needs="funds/fund")                        # the ONE shared read-only lake and its connector files
+    shared_connectors(shared_folder(tmp_path_factory), work / "connectors")
     env = dict(os.environ, DRISHTI_PACKS="us-equities,funds", DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_DEMO_ENABLED="false",
                DRISHTI_SECURITY_ENABLED="false", DRISHTI_CONNECTORS_DIR=str(work / "connectors"), DRISHTI_DELTA_ROOT=str(lake),
                DRISHTI_DATA_DIR=str(work / "data"), DRISHTI_OFFLINE="true")
-    procs = [subprocess.Popen(java_cmd(java, ["-Xmx1500m", "-jar", jars[0], f"--server.port={SERVER_PORT}"], tmp=tmp / "jvm-tmp"), cwd=work, env=env,
+    procs = [subprocess.Popen(java_cmd(java, ["-Xmx1500m", "-jar", jars[0], f"--server.port={SERVER_PORT}"], tmp=tmp / "jvm-tmp", cwd=work, env=env), cwd=work, env=env,
                               stdout=open(tmp / "server.log", "ab"), stderr=subprocess.STDOUT)]
     try:
         NS.wait(SERVER + "/actuator/health", proc=procs[0])

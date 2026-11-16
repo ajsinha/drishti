@@ -69,10 +69,10 @@ def test_search_and_missing_guides(client):
 
 def test_f1_and_the_short_addresses_of_the_240_and_250_pages_open_their_sections(client):
     """BI Studio, the theme designer, the Notebook and Transforms have their own F1 target, and the new pages a short help address."""
-    for screen, page, anchor in (("bi-designer", "bi-guide", "8-bi-studio-and-the-report-designer"),
-                                 ("bi-theme-designer", "bi-guide", "103-themes"),
-                                 ("bi-transform", "notebook-guide", "5-data-prep-the-transform-editor"),
-                                 ("bi-notebook", "notebook-guide", "2-the-notebook")):
+    for screen, page, anchor in (("bi-designer", "bi-reports", "7-bi-studio-and-the-report-designer"),
+                                 ("bi-theme-designer", "bi-report-file", "23-themes"),
+                                 ("bi-transform", "bi-python-notebook", "5-data-prep-the-transform-editor"),
+                                 ("bi-notebook", "bi-python-notebook", "2-the-notebook")):
         target = client.get(f"/help/context/{screen}", follow_redirects=False).headers["location"]
         assert target == f"/help/{page}" + (f"#{anchor}" if anchor else ""), (screen, target)
         if anchor:
@@ -258,7 +258,7 @@ def test_the_help_centre_has_eight_sections_and_internal_and_about_sixty_pages()
     from core import menus, modules
     core_catalogue = yaml.safe_load((CONSOLE / "config" / "help.yaml").read_text())
     by_id = {s["id"]: s for s in [*core_catalogue["sections"], *modules.help_pages()]}
-    heads = menus.help_sections(CONSOLE)                       # the sections: the sitemap's and the modules' (2.9.11.f)
+    heads = [h for h in menus.help_sections(CONSOLE) if not h["id"].startswith("module-")]   # the sitemap's sections (a hosted module's own Help section is its own)
     catalogue = {**core_catalogue, "sections": [by_id[h["id"]] for h in heads]}
     assert "risk" not in [c["id"] for c in core_catalogue["sections"]], "the risk section is the banking module's"
     assert next(h for h in heads if h["id"] == "risk")["domain"] == "banking"
@@ -271,7 +271,7 @@ def test_the_help_centre_has_eight_sections_and_internal_and_about_sixty_pages()
     # 47: the 45 pages plus VaR's two (the VaR guide and tutorial 2, Part A), the product owner's request of 2026-10-26: VaR help is two pages.
     # 49: plus exposure's two (the exposure guide and tutorial 3), the same rule (each measure has exactly two documents and two entries).
     # 51: plus the groupings and analytics' two (the guide and tutorial 6, 2.9.2), the same rule.
-    # 52: plus External data (docs/guides/EXTERNAL_DATA.md, 2.9.1), the product owner's request of 2026-10-26: a separate help page for
+    # 52: plus External data (docs/guides/WORLD_DATA_GUIDE.md, 2.9.1), the product owner's request of 2026-10-26: a separate help page for
     # external data extraction, with examples.
     # 54: plus the funds pack's two (the funds and ETFs guide and tutorial 13, Part C, 2.9.2), the same rule (two documents, two entries).
     # 62: plus Knowledge (the product owner's request of 2026-10-26), a section of its own at the top: the home with the glossary and
@@ -418,7 +418,7 @@ def test_the_front_door_has_search_most_used_and_a_tile_per_section(client):
     most = hub[hub.index("data-help-most"):hub.index("data-help-tiles")]
     assert re.findall(r'href="/help/([\w-]+)"', most) == ["user-guide", "docs-guides-var-guide", "tutorials", "release-notes"]
     assert "What&#39;s new" in most or "What's new" in most
-    tiles = re.findall(r'href="/help/section/([\w-]+)"', hub)
+    tiles = [t for t in re.findall(r'href="/help/section/([\w-]+)"', hub) if not t.startswith("module-")]    # a hosted module adds its own tile
     assert tiles == ["get-started", "risk", "analytics", "data", "build", "operate", "reference", "knowledge", "internal"]
     assert "data-help-sections=" in hub and "get-started" in hub[hub.index("data-help-sections="):hub.index("data-help-sections=") + 400]
 
@@ -448,14 +448,13 @@ def test_old_section_names_and_addresses_keep_working(client):
     assert client.get("/help/context/var", follow_redirects=False).headers["location"] == "/help/docs-guides-var-guide"   # F1
 
 
-def test_a_page_with_lenses_shows_only_in_those_lenses_and_in_the_full_product():
-    """help.yaml lenses: a page lists the lenses that show it; outside any lens (the full product) every page shows."""
+def test_a_lens_hides_no_help_page():
+    """A lens is a workspace (ADMIN_GUIDE.md 12): it hides nothing, so Help shows inside a lens what the full product shows."""
     from pathlib import Path as _P
     from core.edition import Edition
     from core.guides import Guide
     from routes.help_routes import shown
-    page = Guide("p", "P", "", "x", "guide", "analytics", _P("x.md"), lenses=("risk",))
+    page = Guide("p", "P", "", "x", "guide", "analytics", _P("x.md"))
     assert shown(Edition(), page)
     assert shown(Edition("risk", {}, lens=True), page)
-    assert not shown(Edition("world", {}, lens=True), page)
-    assert shown(Edition("world", {}, lens=True), Guide("q", "Q", "", "x", "guide", "analytics", _P("x.md")))
+    assert shown(Edition("world", {}, lens=True), page)

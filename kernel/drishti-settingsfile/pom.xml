@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.
+  PROPRIETARY AND CONFIDENTIAL. See the LICENSE file in the root of this repository.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>3.5.16</version>
+    <relativePath/>
+  </parent>
+  <groupId>com.ash.drishti</groupId>
+  <artifactId>drishti-settingsfile</artifactId>
+  <version>2.9.11.g</version>
+  <name>drishti-settingsfile</name>
+  <description>Reads an optional settings file whose absolute path is given on the command line (-Ddrishti.settings.file) into system properties</description>
+  <properties>
+    <java.version>21</java.version>
+    <maven.compiler.release>21</maven.compiler.release>
+  </properties>
+  <!-- standalone like drishti-testroots (the parent gives every module that one, and it depends on this): its own test dependencies -->
+  <dependencies>
+    <dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter</artifactId><scope>test</scope></dependency>
+    <dependency><groupId>org.assertj</groupId><artifactId>assertj-core</artifactId><scope>test</scope></dependency>
+  </dependencies>
+  <!-- standalone (Spring Boot's parent, not drishti-parent): the same Spotless check as every module (ADR-007), so the gate's
+       `spotless:check` finds the plugin here too -->
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>com.diffplug.spotless</groupId>
+        <artifactId>spotless-maven-plugin</artifactId>
+        <version>3.10.2</version>
+        <configuration>
+          <java>
+            <includes><include>src/**/*.java</include></includes>
+            <removeUnusedImports/>
+            <trimTrailingWhitespace/>
+            <endWithNewline/>
+            <indent><spaces>true</spaces><spacesPerTab>4</spacesPerTab></indent>
+          </java>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

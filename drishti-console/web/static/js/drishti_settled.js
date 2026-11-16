@@ -24,6 +24,7 @@
  *   - the document loaded and its fonts in;
  *   - every panel chart and map drawn (drishti-chart's PanelCharts.state of every .chart and .xchart that is not .pnl-empty, in the page
  *     and in any open shadow root) and, unless options.animations is false, its animation finished;
+ *   - every grid drawn (drishti-grid marks its scroller data-dg-drawing from a change until the frame that draws it);
  *   - nothing marked aria-busy in the view or a render host (a control's query, a panel being fetched or swapped in);
  *   - the Discussion's badges placed when the Discussion is on;
  *   - under automation, no fetch of the page's own still unanswered;
@@ -62,7 +63,7 @@
   function pending(animations) {
     var why = [];
     if (document.readyState !== 'complete') { why.push('document ' + document.readyState); }
-    var undrawn = 0, moving = 0;
+    var undrawn = 0, moving = 0, drawing = 0;
     scopes().forEach(function (s) {
       var C = window.Drishti.elements && window.Drishti.elements.chart;      // the charts' library answers for its drawings
       s.querySelectorAll(CHARTS).forEach(function (el) {
@@ -71,9 +72,11 @@
         if (st === 'none') { undrawn += 1; } else if (animations !== false && st === 'animating') { moving += 1; }
       });
       if (s !== document && s.querySelector('[aria-busy="true"]')) { why.push('render host busy'); }
+      drawing += s.querySelectorAll('[data-dg-drawing]').length;
     });
     if (undrawn) { why.push(undrawn + ' chart(s) not drawn'); }
     if (moving) { why.push(moving + ' chart(s) still animating'); }
+    if (drawing) { why.push(drawing + ' grid(s) drawing'); }
     if (document.querySelector(BUSY)) { why.push('aria-busy'); }
     if (D.__inflight > 0) { why.push(D.__inflight + ' request(s) unanswered'); }
     var open = document.querySelector('[data-discussion-open]');

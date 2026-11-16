@@ -19,7 +19,7 @@
    (children, opened to expand levels), a drill-down (levels: one level at a time), a table that offers Pivot, the pivot kind's table (heat
    buckets, totals), and the plain Data table under a chart. What a cell shows (an entity link, an outside link) is the host's: the hooks.
    The behaviours (sort, filter, pages, tree rows, drill levels) are drishti_doc-behave.js. Nothing here parses markup. */
-import { h, roundHalfUp } from '../../drishti-core/src/drishti_index.js';
+import { h, roundHalfUp, url as drishtiUrl } from '../../drishti-core/src/drishti_index.js';
 
 /**
  * What the host draws in a document table: a cell's content, its tone class, a row's extra attributes.
@@ -112,8 +112,8 @@ export function docPivotable(doc, panel, hooks) {
   const src = panel.data.pivot && panel.data.pivot.source;
   if (!src) { return docTable(doc, panel.data, hooks); }
   const e = mk(doc), title = panel.title || panel.id;
-  return [docTable(doc, panel.data, hooks), e('p', { class: 'pv-open' }, e('a', { class: 'btn btn-sm btn-outline-secondary', href: '/pivot?source=' + encodeURIComponent(src).replace(/%2F/g, '/'),
-    title: 'Pivot ' + title + ': rows, columns, values and filters, every total from its own rows (PIVOT_GUIDE.md)' }, 'Pivot'))];
+  return [docTable(doc, panel.data, hooks), e('p', { class: 'pv-open' }, e('a', { class: 'btn btn-sm btn-outline-secondary', href: drishtiUrl('/pivot?source=' + encodeURIComponent(src).replace(/%2F/g, '/')),
+    title: 'Pivot ' + title + ': rows, columns, values and filters, every total from its own rows (bi/PIVOT.md)' }, 'Pivot'))];
 }
 
 // ---- drill-down -------------------------------------------------------------------------------------------------------------

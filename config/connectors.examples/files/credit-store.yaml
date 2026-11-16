@@ -14,11 +14,6 @@
 # Example: copy to config/connectors/credit-store.yaml to read the credit-store data from files. It replaces the
 # connector file of the same name (settings are not merged). Credentials are ${ENV_VAR} references.
 plugin: file
-kinds:
-- netting-set
-- credit-limit
-- cva
-- sa-ccr
 description: credit-store read from files (the former application-files.yaml profile)
 settings:
   root: ${DRISHTI_FILES_ROOT:${drishti.data.dir:./data}/files}

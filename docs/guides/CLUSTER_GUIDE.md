@@ -92,6 +92,8 @@ node.yaml, a seed's `url` in `peers/*.yaml` (checked by `drishti.py net check|se
 it loads the folder), and every member address learned by gossip, which is never kept nor passed on. Even three nodes on one machine use
 the machine's real address. There is no escape hatch. The refusal names the address to use:
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```text
 $ drishti.py net set node.advertise-url http://127.0.0.1:18784
 drishti: node.yaml was not written: 'http://127.0.0.1:18784' is a loopback or wildcard address (loopback): the address this node advertises must be an address other machines can call (this machine's address is 192.168.1.20: use http://192.168.1.20:18784); or leave advertise-url out and the node advertises that address with its port
@@ -213,8 +215,8 @@ versions with different contents are flagged on Admin → Cluster.
 
 **Commands and packs switched on or off** (Functions, Admin → Packs) are the same on every node, even when each node has a database of its
 own: the switches travel with gossip and a node that was down catches up when it rejoins
-([ADMIN_GUIDE.md](ADMIN_GUIDE.md#205-several-servers)). **Editions** (`drishti.edition`) are per node and must be equal on all
-(Admin → Cluster warns).
+([ADMIN_GUIDE.md](ADMIN_GUIDE.md#205-several-servers)). **The distribution** (`drishti.distribution`) is per node and must be equal
+on all.
 
 ### 1.6 Security: the key, mutual TLS, nodes per role
 
@@ -449,14 +451,14 @@ comma-separated) and learns the other members from the cluster. The commands for
 every option: [DEPLOYMENT_AND_QA_GUIDE.md › section 10.6](../DEPLOYMENT_AND_QA_GUIDE.md#106-start-order-and-joining) and
 [section 6.1](../DEPLOYMENT_AND_QA_GUIDE.md#61-the-start-and-stop-scripts-bin).
 
-### 2.1 The ready-made local cluster: drishti-stack
+### 2.1 The ready-made local cluster: deploy/stack
 
-For a cluster on one machine without the steps below, the repository's `drishti-stack/` starts three servers and a console from one file,
-`stack.yaml` ([drishti-stack/README.md](../../drishti-stack/README.md)):
+For a cluster on one machine without the steps below, the repository's `deploy/stack/` starts three servers and a console from one file,
+`stack.yaml` ([deploy/stack/README.md](../../deploy/stack/README.md)):
 
 ```bash
 bin/start-cluster.sh       # start what is not running: the three servers, then the console
-bin/status.sh --cluster drishti-stack/stack.yaml      # the processes and ports, the members, the console's servers
+bin/status.sh --cluster deploy/stack/stack.yaml      # the processes and ports, the members, the console's servers
 bin/stop-cluster.sh        # stop everything the cluster file started (by process id, never by name)
 ```
 
@@ -654,7 +656,7 @@ scattered to shard owners. Roles exist to size and isolate work (a whole-bank BI
 | **Python compute** | `config/compute/compute.yaml` pools (`risk`, `exposure`) | `workers`, `memory` per worker | on servers / on the exposure server / hosts of their own | VaR owners |
 | **Database** | PostgreSQL (identity, sessions, edit log, run leases) | `DRISHTI_IDENTITY_DB_URL`; pools per `drishti.db.pool.size` | 1 (SQLite allowed) / 1 + standby / 1 + standby | app servers |
 | **Lake** | S3 (Delta or Iceberg) or a shared file system | `DRISHTI_DELTA_ROOT` | managed | — |
-| **Kafka** | the PV topic for intraday | `DRISHTI_KAFKA_BOOTSTRAP`, `DRISHTI_VAR_PV_STREAM` | optional / 3 brokers / 3 brokers | — |
+| **Kafka** | the PV topic for intraday | `[broker.default] bootstrap-servers`, `DRISHTI_VAR_PV_STREAM` | optional / 3 brokers / 3 brokers | — |
 
 Pilot means about 200,000 positions and 1,500 portfolios with up to 50 active people: three all-in-one servers (each owner and
 coordinator) and two consoles. A pilot console may share a host with a coordinator.
@@ -792,7 +794,7 @@ official records) is in the [VaR guide](VAR_GUIDE.md); the operator's facts are 
 
 | Data | Placement | Size at 2.3M (1,518 values) |
 |---|---|---|
-| trade and position rows ([`scenario-pv`](../contracts/samples/market-risk.md#scenario-pv) ([contract](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv)), [`pnl-vector`](../contracts/samples/market-risk.md#pnl-vector) ([contract](../contracts/packs/market-risk.md#pnlv-pl-vector-509-scenarios-pnl-vector)), a trade never split from its PVs) | **sharded** by `[LEGAL_ENTITY, DESK]`, a desk never split; `replicas` 2 | 16.3 GB a date hot; 5.4 GB an owner of 6 |
+| trade and position rows ([`scenario-pv`](../contracts/samples/market-risk.md#scenario-pv) ([contract](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-position-or-trade-one-pv-per-scenario-its-currency-scenario-pv)), [`pnl-vector`](../contracts/samples/market-risk.md#pnl-vector) ([contract](../contracts/packs/market-risk.md#pnlv-pl-vector-one-pl-per-scenario-pnl-vector)), a trade never split from its PVs) | **sharded** by `[LEGAL_ENTITY, DESK]`, a desk never split; `replicas` 2 | 16.3 GB a date hot; 5.4 GB an owner of 6 |
 | the **skeleton** (ids, columns, positions, books, nodes and their aggregates) | **copied to every member**, owners and coordinators | 2.23 GB a date on the heap |
 | hierarchies, scenario sets, FX scenarios; the system baskets (from the basket store) | read whole by every member | MB |
 | the intraday layer | every member, from the lake on its own signal | thousands of rows |
@@ -811,7 +813,7 @@ answer fails the scope with `503 DRS-5215` naming it.
   (`409 DRS-5216`). The settings are read at start: a change is a rolling restart.
 
 ```yaml
-# config/packs/banking/market-risk/pack.yaml (or drishti.var.sharding.* in application.yaml, which wins)
+# modules/banking/dmod/packs/market-risk/pack.yaml (or drishti.var.sharding.* in application.yaml, which wins)
 sharding:
   enabled: true
   key: [LEGAL_ENTITY, DESK]
@@ -1585,7 +1587,7 @@ deploy/aws/env`. The tables file has one line per table: folder, kind, pack, the
 business date), the business-date field (`-` for the day being loaded) and the partition column:
 
 ```text
-trading/trade_endur      trade   config/packs/banking/trading   trade-endur     {date}/endur/           -      PRODUCT_TYPE
+trading/trade_endur      trade   modules/banking/dmod/packs/trading   trade-endur     {date}/endur/           -      PRODUCT_TYPE
 ```
 
 **Step 2 · the buckets.** `deploy/aws/delta-lake/setup-buckets.sh --dry-run`, then without. **You should see** each call, ending
@@ -1696,7 +1698,7 @@ mixture.
    for each table of LAKE_TABLES_FILE:
      flock  /opt/drishti/data/lake-locks/<domain>--<table>.lock     (another load, backfill or maintenance: exit 3)
      aws s3 sync   s3://landing/<date>/<source>/  →  scratch/in/<table>/
-     drishti.py lake build   --from scratch/in/<table> -r --kind trade --pack config/packs/banking/trading --connector trade-endur
+     drishti.py lake build   --from scratch/in/<table> -r --kind trade --pack modules/banking/dmod/packs/trading --connector trade-endur
                              --lake scratch/lake --domain trading --table trade_endur --mode overwrite-dates
                              --batch-rows 250000 --as-of <date> --partition-by PRODUCT_TYPE --no-stamp --summary …
      aws s3 sync   scratch/lake/trading/trade_endur/  →  s3://lake/lake/trading/trade_endur/   --exclude "_delta_log/*"
@@ -2065,7 +2067,7 @@ benchmark, or estimate); **Explain** says it in plain words with examples; the *
 
 The same planner is **Admin → Capacity** in the console (it evaluates as you type and offers **Download the working (.xlsx)** with every
 formula live; [the operations guide](OPERATIONS_GUIDE.md#146-admin--capacity-today-against-the-plan)) and `drishti.py admin capacity`.
-All three read one file, `drishti-server/src/main/resources/capacity/planner.yaml`; to calibrate to your servers change a coefficient there
+All three read one file, `kernel/drishti-server/src/main/resources/capacity/planner.yaml`; to calibrate to your servers change a coefficient there
 and run `python3 tools/sizing_planner.py` (`--check` exits 1 when the workbook, its template or the test vectors are stale). It plans one
 server: a sharded cluster divides the hot files, page cache and loads among members but copies each date's skeleton to every member.
 
@@ -2265,7 +2267,7 @@ JAVA_TOOL_OPTIONS="-Xmx2g -XX:MaxDirectMemorySize=256m -XX:TrimNativeHeapInterva
 
 `-XX:MaxDirectMemorySize` caps direct buffers (the default cap is the heap size); `-XX:TrimNativeHeapInterval` (Java 21.0.1 and later)
 returns freed native memory every minute; `-Djdk.nio.maxCachedBufferSize=262144` stops Java keeping a large temporary direct buffer cached on
-every thread. Every launcher Drishti ships sets them (`drishti-stack`, the Docker and ECS server images and `compose.yaml`, the IntelliJ run
+every thread. Every launcher Drishti ships sets them (`deploy/stack`, the Docker and ECS server images and `compose.yaml`, the IntelliJ run
 configurations, `bin/start-server.sh` and `bin/start-server.ps1`, which on Windows sets the JVM flags only: Windows' allocator has no arenas); the production
 launchers also keep a heap dump on OutOfMemoryError, a rotated GC log and native memory tracking. To look at a running server: start it with
 `-XX:NativeMemoryTracking=summary`, take `jcmd <pid> VM.native_memory baseline`, later `jcmd <pid> VM.native_memory summary.diff scale=MB`,

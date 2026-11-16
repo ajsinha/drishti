@@ -17,7 +17,7 @@
 /* Admin -> Capacity's planner in the browser (docs/guides/CLUSTER_GUIDE.md 9.7). The server serves
    capacity/planner.yaml as JSON; this evaluates its expressions as you type, exactly as tools/sizing_planner.py's
    evaluator does for the workbook (a small Excel subset: names, + - * / ^ &, comparisons, IF, MAX, MIN, CEILING, INT,
-   ROUND, AND, OR, CHAR). The shared test vectors (drishti-server/src/test/resources/capacity/test-vectors.json) keep
+   ROUND, AND, OR, CHAR). The shared test vectors (kernel/drishti-server/src/test/resources/capacity/test-vectors.json) keep
    the two, and the workbook Excel recalculates, in agreement. No DOM here: drishti_capacity-page.js draws the page, and the
    tests run this file under Node. window.Drishti.capacity = { Evaluator, cells, evaluate, yamlBlockFormula,
    commandFormula, text, headroom, growth }. */

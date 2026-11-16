@@ -33,9 +33,10 @@ ROOT = Path(__file__).resolve().parents[2]
 TD = ROOT / "data" / "testdata"
 sys.path.insert(0, str(ROOT / "tools" / "packgen" / "trades"))
 sys.path.insert(0, str(ROOT / "tools" / "lake"))
+sys.path.insert(0, str(ROOT / "tools"))
 if str(ROOT / "drishti-console") not in sys.path:
     sys.path.insert(0, str(ROOT / "drishti-console"))
-from core.pack_paths import pack_dir  # noqa: E402  (the one rule for where a pack's folder is)
+from core.resolution import pack_dir  # noqa: E402  (where a pack is: the one resolver, KERNEL_AND_MODULES.md 18)
 import schema as TS  # noqa: E402
 import feedfiles as FF  # noqa: E402  (our dated files and tars: DATA_LAKE_GUIDE.md section 5.2)
 import filedate  # noqa: E402
@@ -103,7 +104,7 @@ class TestData(unittest.TestCase):
 
     def test_the_docs_quote_as_many_demo_tables_as_lake_demo_builds(self):
         """QA2-205: `lake demo` builds one table per dataset of the manifest; every doc that quotes its count says that many."""
-        want = len(self.m["datasets"])
+        want = len({(d["pack"], d["kind"], d.get("table") or d.get("connector")) for d in self.m["datasets"]})     # one table each, a shared one (trades_shared) once
         said = re.compile(r"(?m)(?:Demo lake ready: [^\n]*?: |the same |each of the |`gleif` \(|`funds` \(|`civic` \(|minutes\), |\(943 s\): |^\s+)(\d+) (?:Delta )?tables")
         wrong = []
         for rel in ("data/testdata/README.md", "docs/guides/OPERATIONS_GUIDE.md", "docs/guides/BUILD_GUIDE.md",
@@ -120,7 +121,8 @@ class TestData(unittest.TestCase):
         packs = {}
         for ds in self.m["datasets"]:
             spec = packs.setdefault(ds["pack"], yaml.safe_load((pack_dir(ds["pack"]) / "pack.yaml").read_text(encoding="utf-8")))
-            conn = spec["connectors"][ds["connector"]]
+            import packlake                                  # the connectors of the source modules (modules/source-*/connectors/delta.yaml)
+            conn = packlake.with_modules(spec)["connectors"][ds["connector"]]
             self.assertEqual(conn["plugin"], "delta", ds)
             self.assertIn(ds["kind"], conn["kinds"], ds)
             if "samples" in ds:
@@ -203,7 +205,7 @@ class TestData(unittest.TestCase):
 
     def test_every_attribute_is_upper_snake(self):
         for ds in self.m["datasets"]:
-            if "folder" not in ds:
+            if "folder" not in ds or ds.get("native"):          # a mocked source system writes its own native style (tools/samplegen/src_*.py)
                 continue
             got = FF.read_table(TD / ds["folder"])
             f = got[min(got)][0]                                # the first date's first file
@@ -277,7 +279,7 @@ class TestData(unittest.TestCase):
         self.assertEqual(set(snaps), {"quote", "news"})
         sys.path.insert(0, str(ROOT / "tools" / "testdata"))
         import capture_market as CM
-        want = CM.targets(ROOT / "config" / "packs" / "economy" / "news-and-markets")
+        want = CM.targets(ROOT / "modules" / "economy" / "packs" / "news-and-markets")
         for kind, ds in snaps.items():
             self.assertEqual((ds["pack"], ds["connector"]), ("news-and-markets", "news-store"))
             docs = {d[ds["key"]]: d for d in lines(TD / ds["folder"])}

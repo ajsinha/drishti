@@ -1,0 +1,134 @@
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+<!DOCTYPE html>
+<html lang="en" data-theme="dark"><head><meta charset="utf-8"><title>Pack designer: a source for an existing kind (mapping step)</title><meta name="viewport" content="width=device-width,initial-scale=1"><style>
+:root{--d-bg:#0e1628;--d-surface:#16213a;--d-border:#26345a;--d-ink:#e7ecf5;--d-muted:#93a0b8;--d-accent:#e8a33a;--d-link:#7fb2ff;--d-highlight:rgba(127,178,255,.08);--ok:#4ac28a;--warn:#e8a33a;--bad:#f06a6a}
+:root[data-theme=light]{--d-bg:#f7f5f0;--d-surface:#fff;--d-border:#e2dcd0;--d-ink:#172440;--d-muted:#55607a;--d-accent:#985b0a;--d-link:#1f5fc4;--d-highlight:rgba(31,95,196,.06);--ok:#17814f;--warn:#985b0a;--bad:#b3261e}
+*{box-sizing:border-box}body{margin:0;background:var(--d-bg);color:var(--d-ink);font:14px/1.4 system-ui,sans-serif}
+.top{background:var(--d-surface);border-bottom:1px solid var(--d-border);padding:8px 16px;display:flex;gap:14px;align-items:center}.top a{color:var(--d-link)}.sp{flex:1}
+button{font:inherit}.btn{background:var(--d-surface);color:var(--d-ink);border:1px solid var(--d-border);border-radius:16px;padding:5px 14px;cursor:pointer;font-size:13px}.btn.p{background:var(--d-accent);color:#10151f;border-color:var(--d-accent)}
+.intro{padding:4px 16px;max-width:1100px}.intro p{color:var(--d-muted)}
+.frame{width:1440px;height:900px;margin:18px auto;border:1px solid var(--d-border);border-radius:8px;overflow:hidden;position:relative;background:var(--d-bg)}
+.fl{position:absolute;right:10px;bottom:8px;font-size:11px;color:var(--d-muted);background:var(--d-surface);border:1px solid var(--d-border);border-radius:4px;padding:2px 8px;z-index:5}
+.app{display:flex;flex-direction:column;height:100%}.nav{display:flex;gap:18px;align-items:center;background:var(--d-surface);border-bottom:1px solid var(--d-border);padding:10px 18px}.brand{color:var(--d-accent);letter-spacing:.08em}.nav .on{color:var(--d-accent)}
+.crumb{padding:10px 18px 0;color:var(--d-muted);font-size:12px}h1{margin:4px 18px 8px;font-size:20px}
+.ws{flex:1;display:flex;min-height:0}.rail{width:230px;border-right:1px solid var(--d-border);background:var(--d-surface);padding:10px;flex:none}
+.rs{display:flex;gap:10px;padding:9px 10px;border-radius:6px;margin-bottom:4px;align-items:flex-start}.rs span{width:22px;height:22px;border-radius:50%;border:1px solid var(--d-border);display:grid;place-items:center;font-size:12px;flex:none}
+.rs.on{background:var(--d-highlight);outline:1px solid var(--d-accent)}.rs.on span{background:var(--d-accent);color:#10151f;border-color:var(--d-accent)}.rs.done span{background:var(--ok);color:#10151f;border-color:var(--ok)}
+.rs small{display:block;color:var(--d-muted);font-size:11.5px}
+.main{flex:1;min-width:0;padding:12px 16px;display:flex;flex-direction:column;gap:10px}
+.mode{display:flex;gap:10px}.mc{flex:1;border:1px solid var(--d-border);border-radius:8px;padding:9px 12px;background:var(--d-surface)}.mc.on{border-color:var(--d-accent);background:var(--d-highlight)}.mc b{display:block}.mc small{color:var(--d-muted)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.lab{color:var(--d-muted);font-size:12px}
+.sel{background:var(--d-bg);border:1px solid var(--d-border);border-radius:6px;padding:4px 10px;font:12.5px ui-monospace,monospace;min-width:120px;display:inline-flex;justify-content:space-between;gap:8px}.sel:after{content:"\25BE";color:var(--d-muted)}
+.kpi{display:flex;gap:8px}.kpi div{background:var(--d-surface);border:1px solid var(--d-border);border-radius:8px;padding:5px 12px;font-size:12px;color:var(--d-muted)}.kpi b{display:block;font-size:17px;color:var(--d-ink)}
+.card{background:var(--d-surface);border:1px solid var(--d-border);border-radius:8px;min-height:0;display:flex;flex-direction:column}.ch{padding:8px 12px;border-bottom:1px solid var(--d-border);display:flex;gap:10px;align-items:center;font-weight:600}.ch small{font-weight:400;color:var(--d-muted)}
+table{border-collapse:collapse;width:100%}th{text-align:left;color:var(--d-muted);font-weight:500;font-size:11px;text-transform:uppercase;padding:6px 10px;border-bottom:1px solid var(--d-border)}td{padding:5px 10px;border-bottom:1px solid var(--d-border);font-size:12.5px}
+td.m,.m{font-family:ui-monospace,monospace;font-size:12px}tr.sel-r td{background:var(--d-highlight)}tr.miss td{color:var(--bad)}
+.cf{display:inline-flex;align-items:center;gap:6px}.bar{height:7px;background:var(--d-border);border-radius:4px;width:70px;overflow:hidden}.bar i{display:block;height:100%;border-radius:4px}
+.hi i{background:var(--ok)}.mid i{background:var(--warn)}.lo i{background:var(--bad)}
+.b{font-size:11px;padding:1px 7px;border-radius:10px;border:1px solid}.b.ok{color:var(--ok);border-color:var(--ok)}.b.warn{color:var(--warn);border-color:var(--warn)}.b.bad{color:var(--bad);border-color:var(--bad)}.b.i{color:var(--d-link);border-color:var(--d-link)}
+.chips{display:flex;gap:5px;flex-wrap:wrap;padding:8px 12px}.chip{font:12px ui-monospace,monospace;border:1px solid var(--d-border);border-radius:12px;padding:2px 9px;background:var(--d-bg)}.chip.a{border-color:var(--d-accent)}.chip.r{border-color:var(--bad);color:var(--bad)}.chip em{font-style:normal;color:var(--d-muted);margin-left:4px}
+.split{display:grid;grid-template-columns:1fr 330px;gap:10px;flex:1;min-height:0}
+.ev{padding:8px 12px;font-size:12.5px}.ev h4{margin:8px 0 4px;font-size:12px;color:var(--d-muted);text-transform:uppercase;font-weight:500}.ev p{margin:3px 0}
+.vm{display:grid;grid-template-columns:1fr 18px 1fr 50px;gap:4px 6px;font:12px ui-monospace,monospace}.vm span:nth-child(4n+2){color:var(--d-muted)}.vm span:nth-child(4n){color:var(--d-muted);text-align:right}
+.foot{display:flex;justify-content:space-between;align-items:center;padding:9px 16px;border-top:1px solid var(--d-border);background:var(--d-surface)}
+.board{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;flex:1;min-height:0}.col{background:var(--d-surface);border:1px solid var(--d-border);border-radius:8px;display:flex;flex-direction:column;min-height:0}
+.col .ch{font-size:13px}.pair{margin:6px 8px;border:1px solid var(--d-border);border-radius:7px;padding:6px 9px;background:var(--d-bg);font-size:12px}.pair.on{border-color:var(--d-accent);background:var(--d-highlight)}
+.pair .ar{display:flex;gap:6px;align-items:center;font-family:ui-monospace,monospace}.pair .ar i{font-style:normal;color:var(--d-muted)}.pair small{display:block;color:var(--d-muted);margin-top:3px}
+.drawer{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:10px}
+body.solo .top,body.solo .intro,body.solo .frame:not(.show){display:none}body.solo .frame{margin:0;border:0;border-radius:0}
+</style></head><body>
+<div class="top"><b>Pack designer · a source for an existing kind · 2 mock-ups of the mapping step</b><a href="#a">A Mapping grid</a><a href="#b">B Confidence board</a><span class="sp"></span><button class="btn" id="th">Light / dark</button></div>
+<div class="intro"><p>The same Pack designer (Build &rsaquo; New pack), a second mode after the analysis: <b>this file is a source for an existing kind</b>.
+Every record of the SwapOne file was read on the server; the proposal maps each native field to the canonical <code>trade</code> field by name, type, value
+patterns and enums, each with a confidence. The result is a source module <code>modules/source-swapone/</code> (manifest, connector, <code>mappings/swapone-trade.yaml</code>,
+inbox rule, README, a SwapOne section on the trade page). Both mock-ups are built only from Drishti Elements (Grid, Select, chips, Switch). Recommended: <b>A</b>.</p></div>
+
+<!-- ============================================================ A: the mapping grid ============================================================ -->
+<section class="frame" id="a"><div class="fl">A · Mapping grid · step 2 of 5: Map</div><div class="app">
+<div class="nav"><b class="brand">DRISHTI</b><span>Views</span><span class="on">Build</span><span>Admin</span><span>Help</span></div>
+<div class="crumb">My designs · Pack designer guide ?</div><h1>New pack</h1>
+<div class="ws"><nav class="rail">
+<div class="rs done"><span>1</span><div>Data<small>swapone_trades.jsonl · 12,480 rows</small></div></div>
+<div class="rs on"><span>2</span><div>Map<small>source for trade · 31 of 38 mapped</small></div></div>
+<div class="rs"><span>3</span><div>Layout<small>shared table + where</small></div></div>
+<div class="rs"><span>4</span><div>Finalize<small>source-swapone 1.0.0</small></div></div>
+<div class="rs"><span>5</span><div>Deploy<small>not yet</small></div></div></nav>
+<div class="main">
+<div class="mode"><div class="mc"><b>A new kind</b><small>its own pack, Sutras and screens (as today)</small></div>
+<div class="mc on"><b>A source for an existing kind</b><small>a source module feeding one canonical kind: suggested <span class="m">trade</span> (34 of 41 fields overlap)</small></div></div>
+<div class="row"><span class="lab">Kind</span><span class="sel">trade</span><span class="lab">System</span><span class="sel">SWAPONE</span><span class="lab">Show</span><span class="b i">all 41</span><span class="b warn">to check 6</span><span class="b bad">required missing 1</span><span class="sp" style="flex:1"></span>
+<div class="kpi"><div><b>31</b>mapped</div><div><b>6</b>to check</div><div><b>4</b>unmapped native</div><div><b>1</b>required missing</div></div></div>
+<div class="split"><div class="card"><div class="ch">Canonical trade ← SwapOne <small>every record read · edit a row's native field, value map or drop it</small></div>
+<table><thead><tr><th>Canonical field</th><th>Req.</th><th>Native field</th><th>Confidence</th><th>Why</th><th>Values</th></tr></thead><tbody>
+<tr><td class="m">TRADE_ID</td><td>yes</td><td class="m">dealRef</td><td><span class="cf hi"><span class="bar"><i style="width:96%"></i></span>96%</span></td><td>id pattern SW-\d{7}, unique in 12,480</td><td></td></tr>
+<tr><td class="m">TRADE_DATE</td><td>yes</td><td class="m">tradeDt</td><td><span class="cf hi"><span class="bar"><i style="width:94%"></i></span>94%</span></td><td>name, ISO date in every row</td><td></td></tr>
+<tr class="sel-r"><td class="m">BUY_SELL_CODE</td><td>yes</td><td class="m">direction</td><td><span class="cf mid"><span class="bar"><i style="width:71%"></i></span>71%</span></td><td>2 values ↔ enum B, S</td><td><span class="chip a">PAY→B</span> <span class="chip a">RECEIVE→S</span></td></tr>
+<tr><td class="m">TRADE_STATUS</td><td>yes</td><td class="m">lifecycle</td><td><span class="cf mid"><span class="bar"><i style="width:68%"></i></span>68%</span></td><td>4 values ↔ enum</td><td><span class="chip a">LIVE→VALIDATED</span> <span class="chip a">AMD→AMENDED</span> <em>+2</em></td></tr>
+<tr><td class="m">CURRENCY</td><td>yes</td><td class="m">ccy</td><td><span class="cf hi"><span class="bar"><i style="width:92%"></i></span>92%</span></td><td>ISO 4217 codes, 7 values</td><td></td></tr>
+<tr><td class="m">QUANTITY</td><td>yes</td><td class="m">notionalAmt</td><td><span class="cf mid"><span class="bar"><i style="width:63%"></i></span>63%</span></td><td>number, NOTIONAL-like</td><td></td></tr>
+<tr><td class="m">COUNTERPARTY</td><td>yes</td><td class="m">cptyCode</td><td><span class="cf hi"><span class="bar"><i style="width:88%"></i></span>88%</span></td><td>CP- prefix like the canonical</td><td></td></tr>
+<tr><td class="m">PORTFOLIO</td><td>yes</td><td class="m">book</td><td><span class="cf mid"><span class="bar"><i style="width:66%"></i></span>66%</span></td><td>synonym book → PORTFOLIO</td><td></td></tr>
+<tr><td class="m">MATURITY_DATE</td><td>yes</td><td class="m">endDt</td><td><span class="cf mid"><span class="bar"><i style="width:61%"></i></span>61%</span></td><td>dates after tradeDt in every row</td><td></td></tr>
+<tr class="miss"><td class="m">TRANSACTION_ID</td><td>yes</td><td class="m">—</td><td><span class="cf lo"><span class="bar"><i style="width:0"></i></span>none</span></td><td>no native field: required missing</td><td><span class="chip r">set a constant or a field</span></td></tr>
+<tr><td class="m">PRICE</td><td></td><td class="m">fixedRate</td><td><span class="cf mid"><span class="bar"><i style="width:58%"></i></span>58%</span></td><td>rate 0–0.08</td><td></td></tr>
+</tbody></table></div>
+<div class="card"><div class="ch">BUY_SELL_CODE ← direction</div><div class="ev">
+<h4>Evidence (12,480 rows)</h4><p>Name: weak (direction ≈ side) · Type: text in every row · Values: 2 distinct ↔ enum B, S</p>
+<h4>Value map</h4><div class="vm"><span>PAY</span><span>→</span><span>B</span><span>6,214</span><span>RECEIVE</span><span>→</span><span>S</span><span>6,266</span></div>
+<h4>Other candidates</h4><p class="m">payRec 41% · legDirection 22%</p></div>
+<div class="ch">Unmapped native fields <small>shown on the trade page when SOURCE_SYSTEM = SWAPONE</small></div>
+<div class="chips"><span class="chip">clearingHouse<em>9,120</em></span><span class="chip">swOneDeskTag<em>12,480</em></span><span class="chip">confirmMethod<em>12,480</em></span><span class="chip">brokerRef<em>3,511</em></span></div></div></div>
+</div></div>
+<div class="foot"><span class="lab">Edits are kept as <span class="m">--map-edits</span> JSON; the CLI is <span class="m">pack new swapone.jsonl --source-for trade --system SWAPONE</span></span><span><button class="btn">Back</button> <button class="btn p">Next: layout</button></span></div>
+</div></section>
+
+<!-- ============================================================ B: the confidence board ============================================================ -->
+<section class="frame" id="b"><div class="fl">B · Confidence board · step 2 of 5: Map</div><div class="app">
+<div class="nav"><b class="brand">DRISHTI</b><span>Views</span><span class="on">Build</span><span>Admin</span><span>Help</span></div>
+<div class="crumb">My designs · Pack designer guide ?</div><h1>New pack</h1>
+<div class="ws"><nav class="rail">
+<div class="rs done"><span>1</span><div>Data<small>swapone_trades.jsonl · 12,480 rows</small></div></div>
+<div class="rs on"><span>2</span><div>Map<small>source for trade</small></div></div>
+<div class="rs"><span>3</span><div>Layout<small>shared table + where</small></div></div>
+<div class="rs"><span>4</span><div>Finalize</div></div><div class="rs"><span>5</span><div>Deploy</div></div></nav>
+<div class="main">
+<div class="row"><span class="lab">This file is</span><span class="sel">a source for an existing kind</span><span class="lab">kind</span><span class="sel">trade</span><span class="lab">system</span><span class="sel">SWAPONE</span><span class="lab">suggested from 34 of 41 overlapping fields</span></div>
+<div class="board">
+<div class="col"><div class="ch">Sure <span class="b ok">22</span></div>
+<div class="pair"><div class="ar">dealRef <i>→</i> TRADE_ID</div><small>96% · id pattern, unique</small></div>
+<div class="pair"><div class="ar">tradeDt <i>→</i> TRADE_DATE</div><small>94% · ISO date</small></div>
+<div class="pair"><div class="ar">ccy <i>→</i> CURRENCY</div><small>92% · ISO 4217</small></div>
+<div class="pair"><div class="ar">cptyCode <i>→</i> COUNTERPARTY</div><small>88% · CP- prefix</small></div>
+<div class="pair"><div class="ar">trader <i>→</i> TRADER_ID</div><small>86% · TRDR- prefix</small></div><div class="pair"><div class="ar">prodType <i>→</i> PRODUCT_TYPE</div><small>84% · 6 values</small></div></div>
+<div class="col"><div class="ch">Check <span class="b warn">9</span></div>
+<div class="pair on"><div class="ar">direction <i>→</i> BUY_SELL_CODE</div><small>71% · PAY→B, RECEIVE→S</small></div>
+<div class="pair"><div class="ar">lifecycle <i>→</i> TRADE_STATUS</div><small>68% · 4 values mapped</small></div>
+<div class="pair"><div class="ar">book <i>→</i> PORTFOLIO</div><small>66% · synonym</small></div>
+<div class="pair"><div class="ar">notionalAmt <i>→</i> QUANTITY</div><small>63% · number</small></div></div>
+<div class="col"><div class="ch">Required, missing <span class="b bad">1</span></div>
+<div class="pair"><div class="ar">— <i>→</i> TRANSACTION_ID</div><small>no candidate: give a field or a constant</small></div></div>
+<div class="col"><div class="ch">Native, unmapped <span class="b i">4</span></div>
+<div class="pair"><div class="ar">clearingHouse</div><small>9,120 rows · text</small></div><div class="pair"><div class="ar">swOneDeskTag</div><small>12,480 rows · text</small></div>
+<div class="pair"><div class="ar">confirmMethod</div><small>12,480 rows · 3 values</small></div><div class="pair"><div class="ar">brokerRef</div><small>3,511 rows · id</small></div></div>
+</div>
+<div class="drawer"><div class="card"><div class="ch">direction → BUY_SELL_CODE</div><div class="ev"><div class="vm"><span>PAY</span><span>→</span><span>B</span><span>6,214</span><span>RECEIVE</span><span>→</span><span>S</span><span>6,266</span></div></div></div>
+<div class="card"><div class="ch">Evidence</div><div class="ev"><p>name weak · type text · 2 values ↔ enum B, S</p></div></div>
+<div class="card"><div class="ch">Move to</div><div class="ev"><button class="btn">Sure</button> <button class="btn">Unmapped</button> <button class="btn">Other field…</button></div></div></div>
+</div></div>
+<div class="foot"><span class="lab">Drag a pair between columns to accept or drop it</span><span><button class="btn">Back</button> <button class="btn p">Next: layout</button></span></div>
+</div></section>
+<script>(function(){var q=new URLSearchParams(location.search),h=q.get('solo')||location.hash.slice(1),e=h&&document.getElementById(h);if(q.get('theme')){document.documentElement.dataset.theme=q.get('theme')}if(e&&e.className==='frame'){document.body.className='solo';e.className='frame show'}})();document.getElementById('th').onclick=function(){var r=document.documentElement;r.dataset.theme=r.dataset.theme==='light'?'dark':'light'}</script></body></html>

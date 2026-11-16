@@ -33,8 +33,10 @@ plugins.console_command("VAR EXPLAIN", "market-risk", "Why VaR moved", "A VaR sc
                         "the working as an .xlsx of formulas", "VAR EXPLAIN BANK", "var-result", ("VAR",))
 
 # the VaR and ES figures that carry the one Explain › (VAR_GUIDE.md 3.11): a Sutra page's engine figures, a BI visual of one var-result row
-plugins.figure_explainer({"kind": "var", "pages": {"system-basket": "PORT", "position": "POS", "desk": "DESK", "book": "BOOK", "legal-entity": "LE", "trade": "TRD"},
-                          "paths": {"VAR_ENGINE.VAR": "var", "VAR_ENGINE.ES": "es"}, "columns": {"VAR": "var", "ES": "es"},
+plugins.figure_explainer({"kind": "var", "pages": {"system-basket": "PORT", "position": "POS", "desk": "DESK", "book": "BOOK", "legal-entity": "LE", "trade": "TRD", "var-limit": "NODE"},
+                          "paths": {"VAR_ENGINE.VAR": "var", "VAR_ENGINE.ES": "es"},
+                          # VLIM, the limits screen: a limit's id is VL-<node>; its figure explains the node's VaR against the limit (a portfolio's limit: its portfolio)
+                          "ids": {"var-limit": {"strip": "VL-", "words": {"PF-": "PORT"}}}, "kind_paths": {"var-limit": {"LIMIT_VAR": "var"}}, "columns": {"VAR": "var", "ES": "es"},
                           "scope": ["CANONICAL", "SCOPE"], "date": "BUSINESS_DATE"})
 
 plugins.phone_page("var", {"tiles": ("must", "Headline VaR, ES and limit use"), "method": ("must", "How VaR is computed"),

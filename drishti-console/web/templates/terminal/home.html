@@ -27,14 +27,14 @@
   {% if pinned %}
   <h2 class="ws-h"><i class="bi bi-pin-angle" aria-hidden="true"></i> Pinned</h2>
   <ul class="thome-list thome-pins">
-    {% for p in pinned %}<li><a href="/v/{{ p.kind }}/{{ p.id | urlencode }}"><span class="mono cmdtxt">{{ p.id }}</span><span>{{ p.kind | replace('-', ' ') }}</span></a></li>{% endfor %}
+    {% for p in pinned %}<li><a href="{{ BASE }}/v/{{ p.kind }}/{{ p.id | urlencode }}"><span class="mono cmdtxt">{{ p.id }}</span><span>{{ p.kind | replace('-', ' ') }}</span></a></li>{% endfor %}
   </ul>
   <h2 class="ws-h">Examples</h2>
   {% endif %}
   <ul class="thome-list">
-    {% for cmd, what, pack in examples %}<li><a href="/go?q={{ cmd | urlencode }}"><span class="mono cmdtxt">{{ cmd }} &lt;GO&gt;</span><span>{{ what }} <span class="badge-kind">{{ pack }}</span></span></a></li>
+    {% for cmd, what, pack in examples %}<li><a href="{{ BASE }}/go?q={{ cmd | urlencode }}"><span class="mono cmdtxt">{{ cmd }} &lt;GO&gt;</span><span>{{ what }} <span class="badge-kind">{{ pack }}</span></span></a></li>
     {% else %}<li class="text-muted-d">No domain pack is enabled, so there are no example commands. Type an identifier, or see Help → Domain packs.</li>{% endfor %}
   </ul>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_view.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_view.js?v={{ ASSET_V }}"></script>{% endblock %}

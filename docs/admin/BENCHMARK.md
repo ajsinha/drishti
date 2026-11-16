@@ -98,6 +98,8 @@ machine otherwise idle (no other Drishti stack); each configuration alone.
 
 ### 2.2 The store benchmark
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 tools/bench/scale.sh delta 10000                       # Delta Lake, engine native, 10,000 trades a day x 3 days
 tools/bench/scale.sh postgres 50000 --out results.jsonl
@@ -138,7 +140,7 @@ run refuses to start, and stops between steps, when the machine has less memory 
 | `iceberg` | none (path-based tables) | `iceberg`, `DRISHTI_ICEBERG_ROOT` at the scratch folder |
 
 The server runs `DRISHTI_PACKS=market-risk,counterparty-risk` (with the packs they extend), `java -Xmx2g -XX:+UseCompactObjectHeaders -jar
-drishti-server/target/drishti-server-*-exec.jar`, its identity database, governance and report folders in the scratch folder, the access log
+kernel/drishti-server/target/drishti-server-*-exec.jar`, its identity database, governance and report folders in the scratch folder, the access log
 and the report scheduler off. Each result line:
 
 ```json
@@ -199,7 +201,7 @@ python3 tools/bench/trades.py --lake $B/lake-1m --tmp $B/tmp --days 2 --end 2026
 python3 tools/bench/var_bench.py run --mode single --java 21 --gc g1 --heap 6g --positions 1000000 --lake $B/lake-1m --work $B/single-21-1m \
     --run single-21-g1-6g --out $B/results-1m.jsonl
 python3 tools/bench/charts.py $B/results.jsonl $B/results-1m.jsonl      # the SVG charts of section 4, written to docs/admin/images/benchmark/
-./mvnw -o test -pl drishti-compute -Dtest=VarTierBenchmark -Ddrishti.var.tier.trades=200000 -Ddrishti.var.tier.dates=3 \
+./mvnw -o test -pl :drishti-compute -Dtest=VarTierBenchmark -Ddrishti.var.tier.trades=200000 -Ddrishti.var.tier.dates=3 \
     -Ddrishti.var.tier.histogram=true -Ddrishti.var.tier.dir=$B/tier
 ```
 
@@ -213,14 +215,14 @@ on the measuring machine, not in git.
 
 ```bash
 # VaR, the tiered store: T trades over D dates (measured at 100,000 x 5 on a workstation)
-./mvnw -o test -pl drishti-compute -Dtest=VarTierBenchmark -Ddrishti.var.tier.trades=100000 -Ddrishti.var.tier.dates=5 -DargLine=-Xmx4g
+./mvnw -o test -pl :drishti-compute -Dtest=VarTierBenchmark -Ddrishti.var.tier.trades=100000 -Ddrishti.var.tier.dates=5 -DargLine=-Xmx4g
 # the full size, on a server with about 130 GB of free local disk and 16 GB of heap
-./mvnw -o test -pl drishti-compute -Dtest=VarTierBenchmark -Ddrishti.var.tier.trades=1000000 -Ddrishti.var.tier.dates=50 \
+./mvnw -o test -pl :drishti-compute -Dtest=VarTierBenchmark -Ddrishti.var.tier.trades=1000000 -Ddrishti.var.tier.dates=50 \
     -Ddrishti.var.tier.dir=/local/var-bench -DargLine=-Xmx16g
 # VaR, the heap tier: 500,000 positions and 1,000,000 trades in memory
-./mvnw -o test -pl drishti-compute -Dtest=VarScaleBenchmark -Ddrishti.var.scale.positions=500000 -Ddrishti.var.scale.trades-per-position=2
+./mvnw -o test -pl :drishti-compute -Dtest=VarScaleBenchmark -Ddrishti.var.scale.positions=500000 -Ddrishti.var.scale.trades-per-position=2
 # exposure (a workstation run is limited to 100,000 trades in memory)
-./mvnw -o test -pl drishti-server -Dtest=ExposureTierBenchmark -Dsurefire.failIfNoSpecifiedTests=false \
+./mvnw -o test -pl :drishti-server -Dtest=ExposureTierBenchmark -Dsurefire.failIfNoSpecifiedTests=false \
     -Ddrishti.ccr.bench.trades=10000 -Ddrishti.ccr.bench.paths=200 -Ddrishti.ccr.bench.grid=24 -DargLine=-Xmx4g
 # options: -Ddrishti.ccr.bench.trades-per-set=10 -Ddrishti.ccr.bench.sets-per-cpty=20 -Ddrishti.ccr.bench.big-set=1000
 #          -Ddrishti.ccr.bench.dir=/local/ccr-bench (the one hot file; deleted at the end)
@@ -1491,7 +1493,7 @@ run's) are counted and skipped. `python3 tools/bench/charts.py <results.jsonl �
 **Status: the plan and the harness; to be measured.** Nothing in this section is measured yet; every cell below is filled by the run
 of 16.3, and the larger sizes of 16.4 are EXTRAPOLATED from those measured points, labelled so wherever they appear. The design is
 [ARCHITECTURE.md section 26.13](../architecture/ARCHITECTURE.md#2613-tests-that-prove-it); what it measures is
-[PIVOT_GUIDE.md section 23](../guides/PIVOT_GUIDE.md#23-scale-sketches-rollups-progressive-answers-and-the-cluster).
+[PIVOT_SCALE_AND_CUBES.md section 23](../guides/bi/PIVOT_SCALE_AND_CUBES.md#1-scale-sketches-rollups-progressive-answers-and-the-cluster).
 
 ### 16.1 What is measured
 
@@ -1655,6 +1657,24 @@ The lanes as last measured on the release machine, and what the changes to the d
 
 "Before" is the last full run on record, on a machine shared with other work. Measured for the new pieces: `VarGoldenMatrixTest`, 12 cases with all hierarchies and baskets, about 3 s in the test JVM; a VaR browser file's set-up with the demo lake built, 589 s, and reusing the cached lake, 93 s; `tools/drill.sh --affected` on a two-file diff (one module's tests, one console file), 25 s.
 
+#### Faster drills: the slow lanes measured alone (2026-11-14)
+
+Each lane run by itself with `tools/drill.sh --lanes=<lane>` (the gate first, then that lane; 24 CPUs, 61 GB, the owner's stack and other
+sessions' tests running beside it, no recorded durations in the fresh checkout). Baseline: the recorded drills.
+
+| Lane | Before (recorded drill) | After (measured alone) | What did it |
+|---|---:|---:|---|
+| Browser | about 88 min | 74 min (the main run 53 min, its re-runs 20 min; 127 failures from the machine's memory running out, nearly all passed on re-run) | shared read-only servers with a write guard, the snapshots split, "drawn" signals instead of sleeps |
+| Containers (Docker smoke test) | about 95 min | 10 min | the images built and booted once, health, the VaR golden through the API and four console pages; the Testcontainers tests only when the diff needs them |
+| Java 21 | about 43 min | 29 min | Docker hidden from the copy's tests, the copy built once |
+| Tools b / tools a / Java 25 | about 30 / 20 / 12 min | not re-measured (nothing in this work changes them) | |
+| Gate | 3.3 min | 3.3 min (196 to 221 s) | |
+
+**Projected full drill:** the longest lane plus the gate: 74 + 3.3 = **about 77 minutes** as measured on a loaded machine; the browser
+lane's main run alone (53 min) projects **about 57 minutes** on a quiet one. Before: about 88 + 3.3 = 91 minutes. A few browser files
+failed in the re-runs only because the machine was still loaded (`test_admin_artifacts_browser.py` passes alone: 8 tests in 57 s). The
+numbers are to be confirmed by the release's single full drill.
+
 ### 18.2 Page load in the browser tests
 
 Every page a browser test opens is timed from its main document's request to its load event (`drishti-console/tests/pageload_log.py`,
@@ -1665,7 +1685,35 @@ load (many workers and the Java builds beside them), so they are an upper bound 
 `DRISHTI_PAGEWALK_BUDGET`).
 
 <!-- pageloads:begin (tools/drillkit/pageloads.py --write; the last drill's browser lane) -->
-Not measured yet: the next drill writes it.
+Measured 2026-11-15: 3,012 page loads of 381 pages; the 25 slowest by p95 (slow from 2 s).
+
+| Page | Loads | p95 | Median |
+|---|---:|---:|---:|
+| `/exposure` (slow) | 19 | 151.17 s | 0.49 s |
+| `/var/stress-window` (slow) | 6 | 16.50 s | 0.63 s |
+| `/v/listed-company/CO-AAPL` (slow) | 4 | 9.29 s | 6.17 s |
+| `/bi/r/file:report:live-trading-desk` (slow) | 11 | 8.32 s | 0.77 s |
+| `/v/trade/MX-00003` (slow) | 1 | 8.07 s | 8.07 s |
+| `/admin/artifacts` (slow) | 18 | 7.58 s | 1.37 s |
+| `/v/jurisdiction/JUR-AUS` (slow) | 2 | 6.75 s | 4.77 s |
+| `/bi/datasets` (slow) | 11 | 6.22 s | 0.82 s |
+| `/v/jurisdiction/JUR-NZL` (slow) | 1 | 6.15 s | 6.15 s |
+| `/page.html` (slow) | 5 | 6.07 s | 2.92 s |
+| `/v/trade/MX-20000001` (slow) | 17 | 6.05 s | 1.37 s |
+| `/reports/subscribe` (slow) | 5 | 5.74 s | 0.69 s |
+| `/v/fund/QQQ` (slow) | 1 | 5.57 s | 5.57 s |
+| `/admin/net` (slow) | 27 | 5.42 s | 1.15 s |
+| `/v/desk/NOPE` (slow) | 2 | 5.42 s | 3.25 s |
+| `/bi/r/file:report:trades-overview` (slow) | 20 | 5.02 s | 0.86 s |
+| `/bi/transform` (slow) | 7 | 5.02 s | 0.68 s |
+| `/v/news-topic/TOPIC-FED` (slow) | 3 | 4.76 s | 4.71 s |
+| `/v/news-topic/TOPIC-TOYOTA` (slow) | 1 | 4.62 s | 4.62 s |
+| `/bi/design/bi-3c9e53aef2` (slow) | 2 | 4.56 s | 2.90 s |
+| `/admin/bindings` (slow) | 8 | 4.56 s | 3.29 s |
+| `/admin/engines` (slow) | 16 | 4.55 s | 0.73 s |
+| `/v/trade/1000003` (slow) | 3 | 4.37 s | 1.94 s |
+| `/v/us-company/AAPL` (slow) | 1 | 4.34 s | 4.34 s |
+| `/bi/design/bi-368967238c` (slow) | 1 | 4.29 s | 4.29 s |
 <!-- pageloads:end -->
 
 ## 19. The BI scale gate
@@ -1676,7 +1724,7 @@ this gate runs in every drill's Java lanes (a JUnit test, never in the gate's st
 
 ### 19.1 What it measures
 
-`BiScaleGateTest` (`drishti-server/src/test/java/com/ash/drishti/server/bi/mq/`) builds the BI test lake at the most a local test may
+`BiScaleGateTest` (`kernel/drishti-server/src/test/java/com/ash/drishti/server/bi/mq/`) builds the BI test lake at the most a local test may
 hold: 10,000 trades a day for two days (20,000 rows), the desks dimension and the limits fact. It asks the `desk-risk` model for
 `MTM`, `Notional`, `Trades`, `AvgMTM`, `Limit` and `Usage` by region and desk (fields both facts reach), with the result cache off,
 so every warm query reads the columns layer:
@@ -1686,7 +1734,7 @@ so every warm query reads the columns layer:
 - **warm allocation**: the Java bytes allocated on the asking thread by one warm query, the median of the 30 runs.
 
 It also checks the answer: the newest date's 10,000 trades are each counted once, and every warm answer equals the first. It writes
-`drishti-server/target/bi-scale-gate.txt`.
+`kernel/drishti-server/target/bi-scale-gate.txt`.
 
 ### 19.2 Measured, and the budgets
 
@@ -1844,9 +1892,9 @@ done | sort -n | awk '{a[NR]=$1} END {printf "n=%d p50=%.1f ms p99=%.1f ms max=%
 from the repository root (3 one-second warm-ups and 5 measured iterations in one fork, about a minute):
 
 ```bash
-./mvnw -q -pl drishti-benchmarks -am install -DskipTests
-./mvnw -q -pl drishti-benchmarks dependency:build-classpath -Dmdep.outputFile="$PWD/cp.txt"
-java -cp "drishti-benchmarks/target/classes:$(cat cp.txt)" org.openjdk.jmh.Main          # or add a pattern: … Main evalSum
+./mvnw -q -pl :drishti-benchmarks -am install -DskipTests
+./mvnw -q -pl :drishti-benchmarks dependency:build-classpath -Dmdep.outputFile="$PWD/cp.txt"
+java -cp "testing/drishti-benchmarks/target/classes:$(cat cp.txt)" org.openjdk.jmh.Main          # or add a pattern: … Main evalSum
 ```
 
 | Benchmark | 2026-09-30 | What it is |
@@ -1901,7 +1949,7 @@ JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -XX:+UseZGC -XX:+ZGenerational -XX:Na
   -Xlog:gc*:file=gc.log:time,uptime,level,tags:filecount=5,filesize=20m \
   -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=./dumps \
   -XX:StartFlightRecording=name=soak,settings=profile,maxage=6h,disk=true,filename=./dumps/soak.jfr" \
-  java -jar drishti-server/target/drishti-server-*-exec.jar
+  java -jar kernel/drishti-server/target/drishti-server-*-exec.jar
 jcmd <pid> GC.run && jcmd <pid> GC.heap_info                         # is something growing? (cheap, any time)
 jcmd <pid> GC.class_histogram | head -40 > histo-$(date +%H%M).txt    # at the start, after 1 h and 6 h; diff them
 jcmd <pid> VM.native_memory summary

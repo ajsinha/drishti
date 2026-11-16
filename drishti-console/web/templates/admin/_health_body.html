@@ -19,7 +19,7 @@
  · longest borrow {{ ((p.longestBorrowMillis / 1000) | round(1)) ~ ' s' if p.longestBorrowMillis >= 0 else 'n/a' }}{% if p.leaksDetected %} · {{ p.leaksDetected }} leak warning{{ 's' if p.leaksDetected > 1 }}{% endif %}{% if p.timeouts %} · {{ p.timeouts }} timeout{{ 's' if p.timeouts > 1 }}{% endif %}</span>
 {%- endif -%}
 {%- endmacro %}
-{% set tone = {'OK': 'ok', 'UP': 'ok', 'DEGRADED': 'warn', 'DOWN': 'bad'} %}
+{% set tone = {'OK': 'ok', 'UP': 'ok', 'WAITING': 'ok', 'DEGRADED': 'warn', 'DOWN': 'bad'} %}
 <div class="hl-sum">
   <span class="hl-badge hl-{{ tone[h.status] }}"><i class="bi bi-{{ 'check-circle' if h.status == 'OK' else 'exclamation-triangle' }}" aria-hidden="true"></i> {{ h.status }}</span>
   <span><b>{{ h.summary.sources - h.summary.sourcesDown }}</b> of {{ h.summary.sources }} connectors up</span>
@@ -31,11 +31,15 @@
 </div>
 
 {% set sd = h.distribution or {} %}{% set cd = console_distribution or {} %}
-<div class="hl-sum" data-distribution aria-label="Distribution">
+{% set bd = h.bindings or {} %}{% set pl = h.placement or {} %}{% set mods = sd.modules or {} %}
+<div class="hl-sum" data-distribution aria-label="Distribution, modules, bindings and placement">
   <span><b>Distribution</b></span>
   <span class="mono" data-distribution-console title="This console's distribution (docs/architecture/DISTRIBUTIONS.md): --distribution, DRISHTI_DISTRIBUTION, else the server's">console {{ cd.title or PRODUCT }} ({{ cd.id or 'drishti.all' }})</span>
-  <span class="mono" data-distribution-server title="The server's distribution and which of its modules loaded">server {{ sd.title or PRODUCT }} ({{ sd.id or 'drishti.all' }}){% for m, s in (sd.modules or {}).items() %} · <span class="{{ 't-warn' if s != 'loaded' }}">{{ m }} {{ s }}</span>{% endfor %}</span>
-  {% for note in (sd.deprecated or []) + (cd.deprecated or []) %}<span class="t-warn" data-distribution-deprecated>Deprecated: {{ note }}</span>{% endfor %}
+  <span class="mono" data-distribution-server title="The server's distribution; the White label page has every distribution and its modules">server {{ sd.title or PRODUCT }} ({{ sd.id or 'drishti.all' }}) · <a href="{{ BASE }}/admin/white-label">White label</a></span>
+  <span class="mono {{ 't-warn' if mods.values() | reject('equalto', 'loaded') | list }}" data-health-modules title="The modules the distribution lists and whether each loaded; Admin → Modules has the detail">{{ mods.values() | select('equalto', 'loaded') | list | length }} of {{ mods | length }} modules loaded · <a href="{{ BASE }}/admin/modules">Modules</a></span>
+  <span class="mono {{ 't-warn' if (bd.get('unboundRequired') or []) | length }}" data-health-bindings title="Which connector or lake table serves each kind the modules need; Admin → Data bindings has the detail">bindings: {{ bd.get('bound') or 0 }} bound{% if bd.get('unboundRequired') %}, {{ bd.unboundRequired | length }} required unbound{% endif %} · <a href="{{ BASE }}/admin/bindings">Data bindings</a></span>
+  <span class="mono {{ 't-warn' if pl.get('problems') }}" data-health-placement title="Where each part of each module runs; Admin → Modules has the plan">placement v{{ pl.get('version') or 0 }}{% if pl.get('problems') %}, {{ pl.problems | length }} problem{{ 's' if pl.problems | length != 1 }}{% endif %} · <a href="{{ BASE }}/admin/modules">Modules</a></span>
+  {% for note in (sd.deprecated or []) + (cd.deprecated or []) %}<span class="t-warn" data-distribution-deprecated>{{ note }}</span>{% endfor %}
 </div>
 {% with blas = (h.native or {}).get('blas') %}{% include "admin/_native_banner.html" %}{% endwith %}
 {% set nb = (h.native or {}).get('blas') %}
@@ -119,7 +123,7 @@
 {% if h.dataLate %}
 <section class="pnl" aria-label="Data that is late"><div class="pnl-b"><ul class="hl-late">{% for d in h.dataLate %}
   <li class="t-neg" data-data-late><i class="bi bi-clock-history" aria-hidden="true"></i> <b>{{ d.line }}</b> <span class="text-muted-d">(expected by {{ d.by }})</span>
-    <a href="/admin/packs/{{ d.pack }}/loads">Data loads</a></li>{% endfor %}</ul></div></section>
+    <a href="{{ BASE }}/admin/packs/{{ d.pack }}/loads">Data loads</a></li>{% endfor %}</ul></div></section>
 {% endif %}
 
 {% from "_macros/retry.html" import retry_note, retry_button %}
@@ -146,7 +150,7 @@
   <b class="{{ 't-warn' if nm.suspect }}">{{ nm.suspect }}</b> suspect, {{ nm.dead }} dead, {{ nm.left }} left.
   Last ten minutes: <b class="mono">{{ nt.forwarded or 0 }}</b> requests sent to peers, <b class="mono {{ 't-neg' if nt.failed }}">{{ nt.failed or 0 }}</b> failed.
   {% else %}The cluster is switched on but this node is not running in it (left, or its files are refused).{% endif %}
-  <a href="/admin/net">Admin → Cluster</a></p>
+  <a href="{{ BASE }}/admin/net">Admin → Cluster</a></p>
   {% for w in h.net.warnings or [] %}<p class="t-warn" data-net-warning><b>Last administrator kept</b> {{ (w.at or '')[:19] | replace('T', ' ') }} UTC: {{ w.text }}</p>{% endfor %}</div></section>
 {% endif %}
 {% if h.hierarchyWarnings %}
@@ -164,7 +168,7 @@
   <thead><tr><th>Connector</th><th>Status</th><th>Last update</th><th>Kinds</th><th class="num">Reads</th><th class="num">Errors</th><th class="num">p50 ms</th><th class="num">p99 ms</th><th>Last error</th><th>Cache</th><th>Connection pool</th></tr></thead>
   <tbody>{% for s in h.sources %}{% set r = s.reads %}
     <tr class="{{ 'hl-row-down' if s.status == 'DOWN' else '' }}">
-      <td class="mono">{% if s.name in connectors %}<a href="/admin/connectors/{{ s.name | urlencode }}" title="Open connector {{ s.name }}">{{ s.name }}</a>{% else %}{{ s.name }}{% endif %}<div class="cmp-path">{{ [('live' if s.live else ''), ('dated' if s.dated else ''), ('search' if s.search else '')] | select | join(' · ') }}</div></td>
+      <td class="mono">{% if s.name in connectors %}<a href="{{ BASE }}/admin/connectors/{{ s.name | urlencode }}" title="Open connector {{ s.name }}">{{ s.name }}</a>{% else %}{{ s.name }}{% endif %}<div class="cmp-path">{{ [('live' if s.live else ''), ('dated' if s.dated else ''), ('search' if s.search else '')] | select | join(' · ') }}</div></td>
       <td><span class="hl-badge hl-{{ tone[s.status] }}">{{ s.status }}</span>{% if s.status != 'UP' %}<div class="cmp-path">{{ s.health }}</div>{% endif %}{{ retry_note(s.retry) }}</td>
       <td class="mono{% if s.stale %} t-warn{% endif %}" title="{% if s.staleAfter %}stale after {{ s.staleAfter }}{% else %}no stale-after set{% endif %}">{{ (s.lastUpdate or '—')[:19] | replace('T', ' ') }}{% if s.stale %}<div class="cmp-path">behind: no new data within {{ s.staleAfter }}</div>{% endif %}</td>
       <td title="{{ s.kinds | join(', ') }}">{{ s.kinds | length }}</td>
@@ -179,7 +183,7 @@
       <td class="mono cmp-path" data-pool="{{ s.name }}">{% if s.pool %}{{ pool_line(s.pool) }}{% endif %}</td>
     </tr>{% endfor %}
     {% for name, why in (h.failedToStart or {}).items() %}
-    <tr class="hl-row-down"><td class="mono">{% if name in connectors %}<a href="/admin/connectors/{{ name | urlencode }}" title="Open connector {{ name }}">{{ name }}</a>{% else %}{{ name }}{% endif %}</td><td><span class="hl-badge hl-bad">FAILED</span></td><td colspan="8" class="hl-err">did not start: {{ why }}{{ retry_note((h.retry or {}).get('connectors', {}).get(name)) }}</td></tr>{% endfor %}
+    <tr class="hl-row-down"><td class="mono">{% if name in connectors %}<a href="{{ BASE }}/admin/connectors/{{ name | urlencode }}" title="Open connector {{ name }}">{{ name }}</a>{% else %}{{ name }}{% endif %}</td><td><span class="hl-badge hl-bad">FAILED</span></td><td colspan="8" class="hl-err">did not start: {{ why }}{{ retry_note((h.retry or {}).get('connectors', {}).get(name)) }}</td></tr>{% endfor %}
   </tbody></table></div></div></section>
 
 {% if h.identityPool %}<p class="mono cmp-path" data-identity-pool>Identity database pool ({{ 'SQLite' if h.identityPool.exempt else 'PostgreSQL' }}): {{ pool_line(h.identityPool) }}</p>{% endif %}
@@ -190,21 +194,21 @@
   <thead><tr><th>Pack</th><th>Status</th><th>Extends</th><th class="num">Kinds</th><th class="num">Sutras</th><th>Connectors</th><th>Problems</th></tr></thead>
   <tbody>{% for p in h.packs %}
     <tr class="{{ 'hl-row-down' if p.status != 'OK' else '' }}">
-      <td><a href="/admin/packs/{{ p.name | urlencode }}" title="Open pack {{ p.name }}">{{ p.title }}</a><div class="cmp-path mono">{{ p.name }} {{ p.version }}</div></td>
+      <td><a href="{{ BASE }}/admin/packs/{{ p.name | urlencode }}" title="Open pack {{ p.name }}">{{ p.title }}</a><div class="cmp-path mono">{{ p.name }} {{ p.version }}</div></td>
       <td><span class="hl-badge hl-{{ tone[p.status] }}">{{ p.status }}</span></td>
       <td class="mono cmp-path">{{ (p.extends or p.requires or []) | join(', ') }}{% if p.overrides %}<div title="{{ p.overrides | join('\n') }}">{{ p.overrides | length }} override{{ 's' if p.overrides | length > 1 }}</div>{% endif %}</td>
       <td class="num mono">{{ p.kinds }}</td>
       <td class="num mono">{{ p.sutras }}</td>
       <td class="mono cmp-path">{% for c in p.connectors %}<span class="{{ 't-neg' if c in p.connectorsDown else 'text-muted-d' if c in p.connectorsOff else '' }}"
-          title="{{ 'down' if c in p.connectorsDown else 'off (disabled or not started)' if c in p.connectorsOff else 'up' }}">{% if c in connectors %}<a href="/admin/connectors/{{ c | urlencode }}">{{ c }}</a>{% else %}{{ c }}{% endif %}</span>{% if not loop.last %}, {% endif %}{% endfor %}</td>
+          title="{{ 'down' if c in p.connectorsDown else 'off (disabled or not started)' if c in p.connectorsOff else 'up' }}">{% if c in connectors %}<a href="{{ BASE }}/admin/connectors/{{ c | urlencode }}">{{ c }}</a>{% else %}{{ c }}{% endif %}</span>{% if not loop.last %}, {% endif %}{% endfor %}</td>
       <td class="hl-err">{% if p.problem %}<div>{{ p.problem }}</div>{% endif %}{% if p.lakeWarning %}<div data-lake-warning>{{ p.lakeWarning }}</div>{% endif %}{% for b in p.sutraProblems %}<div><span class="mono">{{ b.file }}</span>: {{ b.problems | join('; ') }}</div>{% endfor %}
         {% if p.connectorsDown %}<div>connector{{ 's' if p.connectorsDown | length > 1 }} down: {{ p.connectorsDown | join(', ') }}</div>{% endif %}</td>
     </tr>{% endfor %}
     {% for name, why in (h.packsNotLoaded or {}).items() %}
-    <tr class="hl-row-down"><td class="mono"><a href="/admin/packs/{{ name | urlencode }}" title="Open pack {{ name }}">{{ name }}</a></td><td><span class="hl-badge hl-bad">NOT LOADED</span></td><td colspan="4"></td><td class="hl-err">{{ why }}{{ retry_note((h.retry or {}).get('packs', {}).get(name)) }}</td></tr>{% endfor %}
+    <tr class="hl-row-down"><td class="mono"><a href="{{ BASE }}/admin/packs/{{ name | urlencode }}" title="Open pack {{ name }}">{{ name }}</a></td><td><span class="hl-badge hl-bad">NOT LOADED</span></td><td colspan="4"></td><td class="hl-err">{{ why }}{{ retry_note((h.retry or {}).get('packs', {}).get(name)) }}</td></tr>{% endfor %}
   </tbody></table></div></div></section>
 
-{% if h.connectors and h.connectors.templateChanged %}<p class="hl-err" role="status"><b>Connector files behind their pack</b>: {% for n, m in h.connectors.templateChanged.items() %}<a class="mono" href="/admin/connectors/{{ n | urlencode }}">{{ n }}</a>: {{ m }}{{ '; ' if not loop.last }}{% endfor %}</p>{% endif %}
+{% if h.connectors and h.connectors.supersededFiles %}<p class="hl-err" role="status"><b>Superseded connector files (safe to delete)</b>: {% for n, m in h.connectors.supersededFiles.items() %}<a class="mono" href="{{ BASE }}/admin/connectors/{{ n | urlencode }}">{{ n }}</a>: {{ m }}{{ '; ' if not loop.last }}{% endfor %}</p>{% endif %}
 
 {% if h.bi and h.bi.problems %}<p class="hl-err" role="alert"><b>BI folder</b> ({{ h.bi.watch }}): {% for b in h.bi.problems %}<span class="mono">{{ b.file }}</span>: {{ b.message }}{{ ' (the last good version is kept)' if b.keptLastGood }}{{ '; ' if not loop.last }}{% endfor %}</p>{% endif %}
 

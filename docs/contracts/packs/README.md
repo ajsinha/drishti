@@ -17,7 +17,7 @@
 
 # Data contracts of every command
 
-Every command (mnemonic) of every pack has a data contract: a YAML file beside its pack (`config/packs/<domain>/<pack>/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) and a section of its pack's page here. The shared rules are in [the contracts README](../README.md); the computed measures that replace the retiring kinds have their own contracts there.
+Every command (mnemonic) of every pack has a data contract: a YAML file beside its pack (`modules/<module>/packs/<pack>/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) and a section of its pack's page here. The shared rules are in [the contracts README](../README.md); the computed measures that replace the retiring kinds have their own contracts there.
 
 117 contracts, 399 points still to review. Check them with `drishti.py contract check`; draft a new one with `drishti.py contract bootstrap KIND --write`.
 
@@ -92,9 +92,9 @@ Every command (mnemonic) of every pack has a data contract: a YAML file beside i
 | `TVAL` | `trade-valuation` | [market-risk](market-risk.md#tval-trade-valuation-trade-valuation) | fundamental | active |  | 6 |
 | `POS` | `position` | [market-risk](market-risk.md#pos-position-position) | drishti-owned | active |  | 5 |
 | `PORT` | `system-basket` | [market-risk](market-risk.md#port-system-basket-the-banks-baskets-kept-in-drishti-system-basket) | drishti-owned | active |  | 0 |
-| `PNLV` | `pnl-vector` | [market-risk](market-risk.md#pnlv-pl-vector-509-scenarios-pnl-vector) | input | active |  | 5 |
-| `SPV` | `scenario-pv` | [market-risk](market-risk.md#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv) | input | active |  | 5 |
-| `FXS` | `fx-scenario` | [market-risk](market-risk.md#fxs-scenario-fx-of-a-currency-509-scenarios-fx-scenario) | input | active |  | 3 |
+| `PNLV` | `pnl-vector` | [market-risk](market-risk.md#pnlv-pl-vector-one-pl-per-scenario-pnl-vector) | input | active |  | 5 |
+| `SPV` | `scenario-pv` | [market-risk](market-risk.md#spv-scenario-pvs-of-a-position-or-trade-one-pv-per-scenario-its-currency-scenario-pv) | input | active |  | 5 |
+| `FXS` | `fx-scenario` | [market-risk](market-risk.md#fxs-scenario-fx-of-a-currency-one-rate-per-scenario-fx-scenario) | input | active |  | 3 |
 | `SSET` | `scenario-set` | [market-risk](market-risk.md#sset-scenario-set-scenario-set) | input | active |  | 3 |
 | `VLIM` | `var-limit` | [market-risk](market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit) | input | active |  | 0 |
 | `DPNL` | `desk-pnl` | [market-risk](market-risk.md#dpnl-desk-pl-actual-and-hypothetical-daily-desk-pnl) | input | active |  | 0 |

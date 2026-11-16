@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.banking.exposure;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -94,7 +95,7 @@ class ExposurePreDealApiTest {
 
     @DynamicPropertySource
     static void lake(DynamicPropertyRegistry r) throws Exception {
-        Path lake = Files.createDirectories(Path.of("target", "predeal-lake-" + System.nanoTime())).toAbsolutePath();
+        Path lake = Files.createDirectories(Path.of(TestRoots.module(), "target", "predeal-lake-"+ System.nanoTime())).toAbsolutePath();
         ExposureLakeFixture.write(lake, DAY, 1.0);
         ExposureLakeFixture.write(lake, BOOKED, 1.0, HALF);
         ExposureLakeFixture.write(lake, TIGHT, 1.0);

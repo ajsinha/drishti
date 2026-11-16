@@ -15,7 +15,7 @@
 #}
 {% extends "base.html" %}
 {% block title %}Data loads · {{ PRODUCT }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_admin-loads.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_admin-inbox.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-loads.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-inbox.css?v={{ ASSET_V }}">{% endblock %}
 {% block screen %}admin{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
@@ -27,22 +27,22 @@
   <p class="text-muted-d">What your ETL has announced to {{ PRODUCT }} (<span class="mono">POST /api/v1/packs/&lt;pack&gt;/loads</span> or
     <span class="mono">drishti.py data landed</span>), what each pack expects today, and what is late.
     {{ PRODUCT }} reads the data where it lives; to turn a large JSON export into a Delta lake a pack reads, use
-    <a href="/admin/lakes">Load a file into a lake</a> (or <span class="mono">drishti.py lake build</span> on a schedule). See the <a href="/help/data-guide#1-telling-drishti-new-data-has-landed">Data loads guide</a>.</p>
-  <p><a class="btn-pill btn-accent" href="/admin/lakes" data-lakes-link><i class="bi bi-database-add" aria-hidden="true"></i> Load a file into a lake</a></p>
+    <a href="{{ BASE }}/admin/lakes">Load a file into a lake</a> (or <span class="mono">drishti.py lake build</span> on a schedule). See the <a href="{{ BASE }}/help/data-guide#1-telling-drishti-new-data-has-landed">Data loads guide</a>.</p>
+  <p><a class="btn-pill btn-accent" href="{{ BASE }}/admin/lakes" data-lakes-link><i class="bi bi-database-add" aria-hidden="true"></i> Load a file into a lake</a></p>
   {% if attention %}<p class="adm-warn" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
     {{ attention }} expected load{{ '' if attention == 1 else 's' }} need{{ 's' if attention == 1 else '' }} attention (late, missing or failed).</p>{% endif %}
   <div class="tbl-wrap"><table class="tbl adm-tbl" data-loads-all>
     <caption class="visually-hidden">Every loaded pack: today's expectations and its latest loads</caption>
     <thead><tr><th scope="col">Pack</th><th scope="col">Today's expectations</th><th scope="col">Latest loads</th><th scope="col"></th></tr></thead>
     <tbody>{% for p in packs %}
-      <tr><td><a href="/admin/packs/{{ p.name | urlencode }}" title="Open pack {{ p.name }}"><b>{{ p.title }}</b></a><br><span class="mono text-muted-d">{{ p.name }}</span></td>
+      <tr><td><a href="{{ BASE }}/admin/packs/{{ p.name | urlencode }}" title="Open pack {{ p.name }}"><b>{{ p.title }}</b></a><br><span class="mono text-muted-d">{{ p.name }}</span></td>
         <td>{% if p.error %}<span class="st st-bad">{{ p.error }}</span>
           {% else %}{% for x in p.expectations %}<span class="st {% if states[x.state] %}st-{{ states[x.state] }}{% endif %}" title="{{ x.kind }} for {{ x.businessDate }}, due by {{ x.by }} {{ x.zone }}">{{ x.kind }}: {{ x.state }}</span> {% else %}<span class="text-muted-d">nothing expected</span>{% endfor %}{% endif %}</td>
         <td>{% for l in p.loads %}<div class="mono">{{ l.kind }} {{ l.businessDate }} · <span class="st {{ 'st-bad' if l.status == 'failed' or l.verified == 'not-found' else 'st-ok' if l.status == 'ready' else '' }}">{{ l.status }}{% if l.verified == 'not-found' %}, not found{% endif %}</span>{% if l.rows is defined and l.rows is not none %} · {{ '{:,}'.format(l.rows) }} rows{% endif %}</div>{% else %}<span class="text-muted-d">no loads announced yet</span>{% endfor %}</td>
-        <td><a class="fk" href="/admin/packs/{{ p.name }}/loads">Open</a></td></tr>
-    {% else %}<tr><td colspan="4" class="text-muted-d">No pack is loaded. Load one under <a href="/admin/packs">Packs</a>.</td></tr>{% endfor %}</tbody>
+        <td><a class="fk" href="{{ BASE }}/admin/packs/{{ p.name }}/loads">Open</a></td></tr>
+    {% else %}<tr><td colspan="4" class="text-muted-d">No pack is loaded. Load one under <a href="{{ BASE }}/admin/packs">Packs</a>.</td></tr>{% endfor %}</tbody>
   </table></div>
 </div>
 {% endblock %}
 {% block footer %}{% include "_footer.html" %}{% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script>{% endblock %}

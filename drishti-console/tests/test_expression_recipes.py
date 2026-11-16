@@ -28,6 +28,8 @@ import re
 from pathlib import Path
 
 import pytest
+
+from var_stack import PARKED_I6  # noqa: E402 - tests parked to i6
 import yaml
 
 os.environ.setdefault("DRISHTI_BI_REPORT_SERVER_PORT", "18912")
@@ -90,6 +92,7 @@ KNOWN: dict[str, str] = {}                                                # reci
 
 @pytest.mark.parametrize("recipe", [pytest.param(r, marks=pytest.mark.xfail(reason=KNOWN[r["id"]], strict=True)) if r["id"] in KNOWN else r for r in recipes()],
                          ids=lambda r: r["id"])
+@PARKED_I6   # writes to a lake: parked to i6 (owner 2026-11-15)
 def test_every_recipe_runs_on_the_demo_lake(stack, recipe):
     if recipe["scope"] in ("row", "rule"):
         s, checked = rs.api("POST", "/bi/expr/validate", "rita", ["risk"], {"expr": recipe["expr"], "scope": recipe["scope"], "model": MODEL + "@1",

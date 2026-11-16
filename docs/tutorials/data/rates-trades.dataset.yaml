@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Tutorial 8, Part G: the rates desk's trades, a dataset of the model layer. One row per trade per business date; the model trades-model reads it. The
+# The reports tutorial, Part G: the rates desk's trades, a dataset of the model layer. One row per trade per business date; the model trades-model reads it. The
 # tutorial later tries to drop the `book` column, which a report uses: a change that needs a new major version.
 rachana: 2
 expressions: 2

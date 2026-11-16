@@ -19,7 +19,7 @@ RocksDB and CatBoost unpack their native code that way; without the flag every J
 system /tmp, which has a per-user quota (a full one crashes Chromium and the browser tests).
 
 The folder: ``tmp`` when given (a test stack passes a folder under its own tmp_path), else the server's own temp base, as
-``TempFiles.configuredBase`` computes it: ``DRISHTI_TMP_DIR``, else ``<DRISHTI_DATA_DIR or <cwd>/data>/tmp/server``. The server removes
+``TempFiles.configuredBase`` computes it: ``DRISHTI_TMP_DIR``, else ``<DRISHTI_DATA_DIR or <Drishti folder>/data>/tmp/server``. The server removes
 stale native copies from that base at start. The folder is made if absent (Java warns and the libraries fail on a missing one).
 A ``-Djava.io.tmpdir=`` already in the arguments wins. Standard library only: the console tests load it through ``java_launch.py``.
 
@@ -41,7 +41,7 @@ FLAG = "-Djava.io.tmpdir="
 def server_tmp(cwd=None, env=None) -> Path:
     """The server's temp base for a server started in ``cwd`` with ``env``: DRISHTI_TMP_DIR, else <data dir>/tmp/server."""
     env = os.environ if env is None else env
-    base = Path(cwd) if cwd else Path.cwd()
+    base = Path(cwd) if cwd else REPO
     given = (env.get("DRISHTI_TMP_DIR") or "").strip()
     if given:
         p = Path(given)
@@ -89,16 +89,48 @@ def version_flags(java, args=()) -> list:
                                                               str(a).startswith("-XX:-UseCompactObjectHeaders") for a in args) else []
 
 
+#: the repository this file is in: its modules/ are the modules a server started from here serves
+REPO = Path(__file__).resolve().parent.parent
+
+
+def _named(key: str, envs: tuple, args: list, env) -> bool:
+    """Whether a setting is given: as a -D or --flag in the arguments, or as one of its environment variables."""
+    env = os.environ if env is None else env
+    return any(a.startswith(f"-D{key}=") or a.startswith(f"--{key}=") for a in args) or any((env.get(e) or "").strip() for e in envs)
+
+
+def root_flags(args: list, cwd=None, env=None) -> list:
+    """The launch roots of a Drishti JVM (a server or the command line, ``-jar`` a Drishti jar or a Drishti main class), as absolute paths, each only when not
+    already given (docs/admin/CONFIGURATION.md, "Launch roots"): ``drishti.home``, the folder it runs in (``cwd``; this repository when
+    none); ``drishti.data.dir``, ``<home>/data``; ``drishti.modules.home``, this repository's ``modules/``. The server never takes a root
+    from its process's folder, so a launcher names them."""
+    jar = "-jar" in args and any(Path(a).name.startswith("drishti") and a.endswith(".jar") for a in args)
+    main = any(a.startswith("com.ash.drishti.") for a in args)        # a Drishti main class on a class path (DRISHTI_LAKE_CLASSPATH)
+    if not jar and not main:
+        return []
+    home = (Path(cwd) if cwd else REPO).resolve()
+    out = []
+    if not _named("drishti.home", ("DRISHTI_HOME",), args, env):
+        out.append(f"-Ddrishti.home={home}")
+    if not _named("drishti.data.dir", ("DRISHTI_DATA_DIR",), args, env):
+        out.append(f"-Ddrishti.data.dir={home / 'data'}")
+    if not _named("drishti.modules.home", ("DRISHTI_MODULES_HOME", "DRISHTI_MODULE_MANIFESTS_DIR"), args, env) \
+            and not _named("drishti.module-manifests-dir", (), args, env):
+        out.append(f"-Ddrishti.modules.home={REPO / 'modules'}")
+    return out
+
+
 def java_cmd(java, args, tmp=None, cwd=None, env=None) -> list:
-    """``[java, -Djava.io.tmpdir=<folder>, -Djdk.nio.maxCachedBufferSize=262144, *args]``; ``cwd`` and ``env`` are the ones the JVM
-    will run with (they decide the default folder). A flag already in the arguments wins. On Java 25 and later
-    ``-XX:+UseCompactObjectHeaders`` too (2.9.7)."""
+    """``[java, -Djava.io.tmpdir=<folder>, -Djdk.nio.maxCachedBufferSize=262144, <launch roots>, *args]``; ``cwd`` and ``env`` are the
+    ones the JVM will run with (they decide the default folder and the launch roots: :func:`root_flags`). A flag already in the
+    arguments wins. On Java 25 and later ``-XX:+UseCompactObjectHeaders`` too (2.9.7)."""
     args = [str(a) for a in args]
     cache = [] if any(a.startswith(CACHE_FLAG) for a in args) else [CACHE_LIMIT]
     compact = version_flags(java, args)
+    roots = root_flags(args, cwd, env)
     if any(a.startswith(FLAG) for a in args):
-        return [str(java), *compact, *cache, *args]
-    return [str(java), tmp_flag(tmp, cwd, env), *compact, *cache, *args]
+        return [str(java), *compact, *cache, *roots, *args]
+    return [str(java), tmp_flag(tmp, cwd, env), *compact, *cache, *roots, *args]
 
 
 @contextlib.contextmanager

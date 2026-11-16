@@ -20,6 +20,7 @@ server:
   port: ${DRISHTI_CONSOLE_PORT:17480}  # the console's HTTP port
   workers: ${DRISHTI_CONSOLE_WORKERS:4}      # processes serving pages (one Python process uses one core: ~40 pages/s measured); 1 = one process
   shutdown_seconds: ${DRISHTI_CONSOLE_SHUTDOWN_SECONDS:5}   # on a stop, how long open streams (live pages) may stay before they are closed; the browser then reconnects
+  base_path: ${DRISHTI_CONSOLE_BASE_PATH:}   # the URL sub-path behind a reverse proxy, e.g. /drishti for https://host/drishti/ (blank: served at /); the proxy may keep or strip it
 tmp_dir: ${DRISHTI_CONSOLE_TMP_DIR:}      # base of the console's temp folder drishti-console-<pid> (blank: DRISHTI_TMP_DIR, then <data dir>/tmp/console when started by run_drishti_web.py); removed on exit; left-over ones are listed on Health, never deleted automatically
 external_lib: ${DRISHTI_EXTERNAL_LIB:}   # base of the external library folder (blank: external_lib in the repository root); <base>/python is importable, <base>/java is the server's
 backend:
@@ -37,7 +38,7 @@ backend:
   data_dir: ${DRISHTI_CONSOLE_DATA_DIR:}     # what the console keeps between runs (net/servers.json); blank: <data dir>/console
 ai:                                  # LLM provider layer (docs/guides/AI_GUIDE.md): OFF by default; no file is read and no model is called while off
   enabled: ${DRISHTI_AI_ENABLED:false}  # turn on the console's own LLM provider layer
-  dir: ${DRISHTI_AI_DIR:./config/ai}          # one YAML per provider; the recommended console provider is type: server (keys stay on the server)
+  dir: ${DRISHTI_AI_DIR:../config/ai}          # one YAML per provider; the recommended console provider is type: server (keys stay on the server)
   default_model: ${DRISHTI_AI_DEFAULT_MODEL:} # provider/model, or a model name only one provider has
   poll_seconds: 5                    # how often config/ai and config/mcp are looked at: a changed file is picked up with no restart
   redact: []                         # field names masked in every prompt (the same names as the server's drishti.security.redact)
@@ -46,7 +47,7 @@ ai:                                  # LLM provider layer (docs/guides/AI_GUIDE.
   policy: {mask_redacted: true, audit: true, per_user_per_minute: 0, per_user_per_day: 0, cost_per_user_per_day: 0, mask_patterns: [], features: {}}
 mcp:                                 # MCP client (docs/guides/AI_GUIDE.md): OFF by default
   enabled: ${DRISHTI_MCP_ENABLED:false}  # turn on the console's MCP client
-  dir: ${DRISHTI_MCP_DIR:./config/mcp}  # the folder of MCP server files (one YAML per server)
+  dir: ${DRISHTI_MCP_DIR:../config/mcp}  # the folder of MCP server files (one YAML per server)
   server_roles: {}                   # server -> roles allowed
   tool_roles: {}                     # "server/tool" -> roles allowed
   server_features: {}                # server -> features allowed
@@ -102,20 +103,17 @@ ui:
     default: Go back to the terminal and try again, or type part of an identifier in the command line.
   studio_example: all-panels-showcase   # the example Studio opens on (a name under studio.examples_dir); blank or missing: the first pack example
   default_theme: terminal        # terminal | light | wallstreet | blue | green | crimson | crimson-dark | terminal-green | terminal-crimson | terminal-blue
-  # The product's name and legal notices on every page; nothing user-visible names them in code. The server has the
-  # same under drishti.branding.
-  product: ${DRISHTI_PRODUCT:Drishti}
-  tagline: Any data. Any domain. One grammar.  # the line under the product name, in the top bar, the sign-in page and the landing page
+  # The product's name, tagline, owner, copyright and notice come from the distribution file (config/distributions/drishti.<name>.yaml,
+  # brand:), on this console and the server alike; they are not set here.
   # The landing page's headline (blank: the tagline is the headline); its accent is the part drawn in the theme's gradient. When a
   # headline is set, the tagline sits under it as the subtitle.
   headline: See what your data hasn't told you yet.
   headline_accent: hasn't told you yet.  # the part of the headline drawn in the theme's gradient
+  # A second line under the headline, in italic serif; its accent is drawn in gold. Blank: no line (a distribution may change or hide it).
+  headline_second: Your data is a treasury;   # a second line under the headline, italic serif (blank: no line)
+  headline_second_accent: Drishti is its sentinel.  # its closing part, drawn in gold
   product_native: दृष्टि             # the name in its own script, beside it on the About page (blank for none)
   product_meaning: Drishti (दृष्टि) means <em>sight</em>.  # one line on the name's meaning, on the About page
-  # the copyright line in the footer and on the About page (the server's drishti.branding.copyright)
-  copyright: Copyright © 2026 Ashutosh Sinha. All rights reserved. Proprietary and confidential.
-  notice: Unauthorised copying, use or distribution is prohibited.  # the legal notice beside it
-  owner: Ashutosh Sinha             # who holds the rights: the About page's Author (the server's drishti.branding.owner)
   owner_email: ajsinha@gmail.com    # beside the owner on the About page (blank for none)
   user: ${DRISHTI_USER:ash}          # acting user until sign-in lands
   # how long a worker reuses what the server says about a user (settings, packs, layouts, pivots); a change on this console reaches
@@ -138,7 +136,7 @@ ui:
     - { slug: commodity-future, title: Commodity future, cmd: TRD CFT-77120, sutra: listed-future v1 }
     - { slug: netting-set, title: Netting set, cmd: NSET NS-NORTH-01, sutra: netting-set v1 }
   # Home, signed in: "Did you know", the fact of the day, beside the headline. Each pack declares its facts in
-  # config/packs/<domain>/<pack>/config/facts.yaml (docs/guides/BUILD_GUIDE.md, "Facts for Home"); they are computed from the server's
+  # modules/<module>/packs/<pack>/config/facts.yaml (docs/guides/BUILD_GUIDE.md, "Facts for Home"); they are computed from the server's
   # answers on the business date, as the user, and kept cache_seconds per user, date and set of packs. A fact taking longer than
   # timeout_seconds is left out. enabled false: no tile.
   facts:
@@ -221,12 +219,10 @@ live:                        # live updates (docs/architecture/DATA_ARCHITECTURE
     window_seconds: 30  # a relay message is accepted this long after it was signed (allow for the hosts' clock difference); each only once
 under_construction:          # the under-construction registry (docs/admin/UNDER_CONSTRUCTION.md): menu items and help pages that depend on unbuilt work
   file: ${DRISHTI_UNDER_CONSTRUCTION_FILE:../config/under-construction.yaml}   # the same file the server reads; absent: nothing registered
-lens:                        # the lens (LENSES.md › The design): "Open Drishti Risk" for one person on a full instance (the server's drishti.lenses)
-  dir: ${DRISHTI_LENS_DIR:../config/lenses}   # the lens files the server reads: config/lenses/<module>/<lens>.yaml, features.yaml
+lens:                        # the lenses (LENSES.md): workspaces a person opens ("Open Drishti Risk"); each arranges, none hides anything
+  dir: ${DRISHTI_LENS_DIR:../config/lenses}   # the lens files: config/lenses/<module>/<lens>.yaml (only the console reads them)
   roles: {}                  # hook for role-based access later ({role: {link: true, start: risk}}): read, not wired
-# A site's overrides of the instance's edition, key by key, as in the edition file (they win over it), e.g.
-# edition: { commands: { also-allow: [FRTB] }, menus: { views: [terminal, search, functions, var, exposure] } }
-features:                    # the console's own switches (LENSES.md › The design); an edition presets them (config/lenses/features.yaml)
+features:                    # the console's own switches; a distribution presets them (config/distributions/kernel.yaml features:)
   build: true                # Build: new screens, new packs, designs, reviews and changes (/build, /review)
   forms: true                # query by form (FORM, /forms)
   datamap: true              # the data map (DATAMAP, /datamap)
@@ -244,27 +240,21 @@ builder:                     # Build workbench, New (/build/new); docs/guides/RA
   max_samples: 50            # files in one upload, and samples (a .jsonl line is one) in all
   max_file_mb: 5             # largest single file
   max_total_mb: 25           # all files together
-  pack_sample_docs: 200      # Build -> New pack: documents the browser keeps per data file and sends (a sample, never the file)
-  pack_read_max_rows: 500000 # the most rows per file the page may be told to read (it streams and samples; nothing is held but the sample)
-  pack_read_max_mb: 1024     # the most MB per file the page may be told to read
-  pack_max_files: 200        # schema and data files in one plan
-  pack_max_docs: 5000        # sampled documents in one plan request
-  pack_profile_rows_per_type: 10000   # Build -> New pack: rows of each type (value of the split column) the page profiles (fields filled, array sizes); every row is counted
+  pack_designer_max_mb: 4096      # Build -> New pack (the Pack designer): the most uploaded MB in one workspace
+  pack_designer_max_files: 500    # Build -> New pack: files in one workspace
+  pack_designer_ttl_hours: 72     # Build -> New pack: hours a workspace untouched is kept before it is removed
+  pack_designer_jobs_per_user: 2  # Build -> New pack: jobs (reading the files, making the module) one person may have running
+  pack_designer_workers: 0        # Build -> New pack: processes reading the files in a job (0: the tool's default, a third of the cores, at most 8)
+  pack_designer_modules_dir:       # Build -> New pack: the modules folder 'Install on this node' copies the .dmod to (empty: DRISHTI_MODULES_PATH, else <data folder>/modules)
   pack_load_max_mb: 2048     # Admin -> Packs -> a pack -> Load data: the largest file the console streams on to the server (which has drishti.loads.upload-max-mb)
-  pack_design_samples_per_type: 50    # documents of each type the page keeps (spread over the file, varied in shape, anonymised) to design that type's Sutra
-  pack_max_schema_kb: 512    # largest single schema file
-  pack_max_sutras: 200       # Sutras one generated pack may have
-  pack_jobs_per_user: 3      # preview jobs one person may have running (or kept) at a time
-  pack_job_ttl_min: 60       # minutes a finished preview (and its bundle) is kept
-  pack_draft_concurrency: 4  # Sutras drafted at once against the server
-  tools_dir: ../tools        # the repository's tools/ folder (packbundle.py makes the bundle); relative to drishti-console/
+  tools_dir: ../tools        # the repository's tools/ folder (the Pack designer runs tools/packgen/designer_job.py from it); relative to drishti-console/
   studio_kind: sample        # the kind a new Design and "Open in Studio" preview a brought document as (a pasted document has no kind of its own)
 lakes:                       # Admin -> Data loads -> Lakes (/admin/lakes): a large JSON file into a Delta lake (docs/guides/CLI_REFERENCE.md)
   roots: ${DRISHTI_LAKE_ROOTS:}   # the lake roots this console may write, comma-separated (the Delta connectors' root); empty: <data dir>/delta, as the server
   max_upload_mb: 4096        # largest file uploaded (streamed to the console's temporary folder, never held in memory)
   scan_docs: 20000           # documents read to suggest the id, date and classifiers (the build reads them all)
   engine: auto               # auto (Drishti's Java writer when lakes.jar or the server jar is found, else deltalake), drishti, deltalake
-  jar: ${DRISHTI_JAR:}       # the drishti-server exec jar that carries the writer (default: drishti-server/target)
+  jar: ${DRISHTI_JAR:}       # the drishti-server exec jar that carries the writer (default: kernel/drishti-server/target)
   python: ""                 # the Python that runs tools/lake/build.py (default: the console's own)
   keep_min: 240              # minutes an upload and a finished build are kept
   jobs: 2                    # builds running at once on this console
@@ -316,7 +306,7 @@ bi:                          # Rupaka: the BI shell and catalogue (phase 1)
   board:
     rotate_seconds: ${DRISHTI_BI_BOARD_ROTATE_SECONDS:30}     # a board in kiosk mode turns to its next page after this long, unless the board sets rotate:; 3 to 3600
   # The Notebook (docs/guides/USER_GUIDE.md › The Notebook). Every Python run (python visuals and measures, Notebook cells, the Transform editor's steps) is the
-  # server's, on its compute pool python (config/compute/compute.yaml; docs/guides/NOTEBOOK_GUIDE.md section 19): the console runs no Python of anyone's.
+  # server's, on its compute pool python (config/compute/compute.yaml; docs/guides/bi/README.md section 19): the console runs no Python of anyone's.
   notebook:
     max_rows: ${DRISHTI_BI_NOTEBOOK_MAX_ROWS:10000}            # most rows of an extract (the reader's rows, cut here); 10 to 100000
     max_fields: 60                                              # most columns of an extract
@@ -327,7 +317,7 @@ bi:                          # Rupaka: the BI shell and catalogue (phase 1)
     cell_max_chars: 65536                                       # longest Python cell
     max_cells: 60                                               # most cells in a notebook
     max_extracts: 6                                             # most further extracts in a notebook (extract("name") in a cell), besides the first
-  # (docs/guides/REPORTS_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17): the Transform editor at /bi/transform, built step by step with a preview and profile after each step.
+  # (docs/guides/bi/README.md › Python in BI: measures, visuals and data prep written in Python, section 17): the Transform editor at /bi/transform, built step by step with a preview and profile after each step.
   transform:
     preview_rows: ${DRISHTI_BI_TRANSFORM_PREVIEW_ROWS:1000}     # rows of each input the step-by-step run starts from (the reader's rows, asked of the server); 10 to 50000
     timeout_seconds: 20                                         # the step-by-step run's time limit (also capped by drishti.bi.report.python-max-seconds)

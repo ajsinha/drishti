@@ -77,7 +77,7 @@
 
   function load(extra) {
     var p = params(extra);
-    var url = "/api/smat/matrix?" + p.toString();
+    var url = drishti_url("/api/smat/matrix?") + p.toString();
     var big = S.days * 509 > ARROW_CELLS;
     if (big && window.Drishti.fetchTable && window.Arrow) {
       return window.Drishti.fetchTable(url, { shape: "records", at: "rows" }).then(function (t) {
@@ -86,7 +86,7 @@
         return a;
       }, function (e) { var x = new Error(e.detail || e.message); x.code = e.code; throw x; });
     }
-    return fetch(url, { headers: { Accept: "application/json" }, credentials: "same-origin" }).then(function (r) {
+    return fetch(drishti_url(url), { headers: { Accept: "application/json" }, credentials: "same-origin" }).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (b) {
         if (!r.ok) { var e = new Error(b.detail || ("HTTP " + r.status)); e.code = b.code; throw e; }
         b.__format = "json";
@@ -458,7 +458,7 @@
   function kv(dl, k, v, href) {
     dl.appendChild(el("dt", null, k));
     var dd = el("dd", "mono");
-    if (href) { var a = el("a", null, v); a.href = href; dd.appendChild(a); } else { dd.textContent = v; }
+    if (href) { var a = el("a", null, v); a.href = drishti_url(href); dd.appendChild(a); } else { dd.textContent = v; }
     dl.appendChild(dd);
   }
 
@@ -496,7 +496,7 @@
       if (c.valueType) { kv(dl, "Input", c.valueType === "PV" ? "scenario PVs (P&L = PV − BASE_PV)" : c.valueType === "PNL" ? "P&L vectors" : "P&L vectors and scenario PVs"); }
     }
     var src = (c.source || "") + (c.batch ? " · batch " + c.batch : "") + (c.dataVersion ? " · " + c.dataVersion : "");
-    kv(dl, "Source", src || "—", c.link ? "/asof?d=" + encodeURIComponent(c.date) + "&next=" + encodeURIComponent(c.link) : null);
+    kv(dl, "Source", src || "—", c.link ? drishti_url("/asof?d=") + encodeURIComponent(c.date) + "&next=" + encodeURIComponent(c.link) : null);
     if (c.sourceNote) { kv(dl, "Read", c.sourceNote); }
   }
 
@@ -514,8 +514,8 @@
   function exports() {
     var extra = S.by === "trade" ? { by: "trade", scenario: S.trades && S.trades.scenario } : {};
     var q = params(extra).toString();
-    $("[data-sm-csv]").href = "/api/smat/matrix.csv?" + q;
-    $("[data-sm-arrow]").href = "/api/smat/matrix.arrow?" + q;
+    $("[data-sm-csv]").href = drishti_url("/api/smat/matrix.csv?" + q);
+    $("[data-sm-arrow]").href = drishti_url("/api/smat/matrix.arrow?" + q);
   }
 
   function fillSort() {

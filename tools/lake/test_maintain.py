@@ -223,7 +223,9 @@ class MaintainTest(unittest.TestCase):
         from deltalake import DeltaTable, write_deltalake
         from samplegen.layout import layouts_by_table
         tables = layouts_by_table("trading")
-        self.assertEqual({t: k for t, (k, _l) in tables.items() if k == "trade"}, {"trade_endur": "trade", "trade_calypso": "trade", "trade_murex": "trade"})
+        # one table per source system (the trade connectors live in the source modules; the trading pack lays out each table)
+        self.assertEqual({t: k for t, (k, _l) in tables.items() if k == "trade"},
+                         {f"trade_{s}": "trade" for s in ("endur", "calypso", "murex", "wss", "swapone", "ici")})
         with tempfile.TemporaryDirectory() as tmp:
             uri = str(Path(tmp) / "trading" / "trade_calypso")
             lay = maintain.layout_of(uri)

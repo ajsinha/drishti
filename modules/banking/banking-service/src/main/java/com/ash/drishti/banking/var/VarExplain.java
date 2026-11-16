@@ -138,6 +138,10 @@ final class VarExplain {
         VarService.Scoped sTo = svc.scoped(p, scope, toAsked);
         LocalDate toDay = sTo.date().date();
         LocalDate fromAsked = from == null ? svc.loader().previous(toDay) : from;
+        if (fromAsked != null && fromAsked.isBefore(toDay)) {
+            LocalDate usable = svc.loader().onOrBeforeWithSet(fromAsked);   // a picked date (1 week, month end) may hold no scenario set: the nearest earlier one that does
+            fromAsked = usable == null ? fromAsked : usable;
+        }
         if (fromAsked == null) {
             throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no business date with P&L vectors before " + toDay + ": nothing to compare with");
         }

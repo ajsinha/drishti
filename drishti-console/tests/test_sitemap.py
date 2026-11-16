@@ -27,8 +27,9 @@ from conftest import CONSOLE
 from core.app import create_app
 from core.build_registry import loaded
 from core.config import load_settings
+from core import menus
 
-SPEC = yaml.safe_load((CONSOLE / "config" / "sitemap.yaml").read_text(encoding="utf-8"))
+SPEC = menus.spec_of(CONSOLE)   # the kernel's pages (config/sitemap.yaml) with the modules' menus from their manifests
 HELP = yaml.safe_load((CONSOLE / "config" / "help.yaml").read_text(encoding="utf-8"))
 BANKING_WORDS = {"VAR", "EXP", "FRSA", "SIMM", "SMAT", "MCUBE", "SWIN", "VRES", "VOFF", "VLIM", "TVAL", "PNLV", "DPNL", "PNL",
                  "SENS", "CPTY", "NSET", "LIM", "XWIF", "CCUBE", "TRD", "CTRD", "PTRD", "LTRD", "BOOK", "DESK", "TRDR", "POS"}
@@ -130,7 +131,6 @@ def test_banking_entries_are_tagged_for_the_domain_split():
         needs = {str(r).split(":", 1)[1] for r in it.get("requires") or [] if str(r).startswith(("word:", "cmd:"))}
         if needs & BANKING_WORDS or c.get("engine"):
             assert _domain(m, c, it) == "banking", f"{it['id']}: a banking entry without domain: banking"
-    from core import menus
     assert "risk" not in {s["id"] for s in SPEC["help-sections"]}, "the risk section is the banking module's (plugins/banking/help.yaml)"
     assert next(s for s in menus.help_sections(CONSOLE) if s["id"] == "risk").get("domain") == "banking"
 

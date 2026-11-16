@@ -80,7 +80,7 @@
       ctl = typeof AbortController === 'function' ? new AbortController() : null;
       store.emit('checking');
       summary.textContent = 'Checking ' + store.state.samples.length + ' samples...';
-      return fetch(store.base + '/check', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}', signal: ctl ? ctl.signal : undefined })
+      return fetch(drishti_url(store.base + '/check'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}', signal: ctl ? ctl.signal : undefined })
         .then(function (r) { return r.json().then(function (b) { return { ok: r.ok, body: b, status: r.status }; }); })
         .then(function (r) {
           if (mine !== token) { return; }                        // a newer change has started a newer run

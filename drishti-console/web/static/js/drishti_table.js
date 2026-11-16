@@ -235,7 +235,7 @@
     const o = opts || {};
     const init = { method: o.method || 'GET', credentials: 'same-origin', headers: Object.assign({ Accept: accept() }, o.headers || {}) };
     if (o.body !== undefined && init.method !== 'GET') { init.headers['Content-Type'] = 'application/json'; init.body = JSON.stringify(o.body); }
-    return fetch(url, init).then((r) => fromResponse(r, o.shape, o.at));
+    return fetch(drishti_url(url), init).then((r) => fromResponse(r, o.shape, o.at));
   }
 
   window.Drishti.table = { MEDIA, available: () => !!arrow() && !jsonOnly(), accept, fromArrow, fromJson, fromResponse };

@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Rupaka phase 4 (docs/guides/REPORTS_GUIDE.md, "Environments"): export a workspace as a bundle, and import one: a dry run that lists what would be created, changed,
+/* Rupaka phase 4 (docs/guides/bi/README.md, "Environments"): export a workspace as a bundle, and import one: a dry run that lists what would be created, changed,
    left alone or refused, then the import. The bundle is read in the browser and sent as JSON; the server checks every checksum. Text only, never markup. */
 (function () {
   'use strict';
@@ -52,7 +52,7 @@
   q('[data-export]').addEventListener('submit', function (e) {
     e.preventDefault();
     var f = e.target.elements;
-    fetch('/bi/api/bundle?workspace=' + encodeURIComponent(f.workspace.value) + '&dependencies=' + (f.dependencies.checked ? 'true' : 'false'), { credentials: 'same-origin' }).then(function (r) {
+    fetch(drishti_url('/bi/api/bundle?workspace=' + encodeURIComponent(f.workspace.value) + '&dependencies=' + (f.dependencies.checked ? 'true' : 'false')), { credentials: 'same-origin' }).then(function (r) {
       return r.json().then(function (d) { if (!r.ok) { var er = new Error((d.code ? d.code + ' ' : '') + (d.detail || r.statusText)); throw er; } return d; });
     }).then(function (d) {
       var blob = new Blob([JSON.stringify(d, null, 2)], { type: 'application/json' });

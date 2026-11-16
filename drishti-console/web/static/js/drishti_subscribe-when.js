@@ -15,7 +15,7 @@
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* The Subscribe form's "When": drishti-inputs' Form, live inside the page's form (how often, the day for a weekly one, the time with
-   the time picker; the day and the time show only when they apply), writing the schedule text (docs/guides/REPORTS_GUIDE.md, schedules);
+   the time picker; the day and the time show only when they apply), writing the schedule text (docs/guides/bi/README.md, schedules);
    the text itself stays editable under Advanced, and a text the choices cannot say reads back as "on a schedule I write". The form also
    says which model the report reads, so a person knows what the figures are asked of. Text only, never markup. */
 (function () {
@@ -76,7 +76,7 @@
   try {
     var target = JSON.parse(form.elements.target.value || '{}');
     if (note && target.type === 'report' && target.id) {
-      fetch('/bi/api/reports/' + encodeURIComponent(target.id).replace(/%3A/g, ':'), { credentials: 'same-origin', headers: { Accept: 'application/json' } })
+      fetch(drishti_url('/bi/api/reports/' + encodeURIComponent(target.id).replace(/%3A/g, ':')), { credentials: 'same-origin', headers: { Accept: 'application/json' } })
         .then(function (r) { return r.ok ? r.json() : null; })
         .then(function (rep) {
           var r = rep && rep.report;

@@ -1,0 +1,5 @@
+{"TRADE_ID":7,"LEGS":[{"LEG_ID":1.5,"CURRENCY":"CHF"},{"LEG_ID":"","CURRENCY":"AUD"},{"LEG_ID":true,"CURRENCY":"NZD"},{"LEG_ID":4,"CURRENCY":"CAD"}]}
+{"LEGS":[{"LEG_ID":1,"CURRENCY":"USD"}]}
+{"TRADE_ID":{"a":1},"LEGS":[{"LEG_ID":1}]}
+{"TRADE_ID":"T9","LEGS":"not an array"}
+{"TRADE_ID":true,"LEGS":[{"LEG_ID":2}]}

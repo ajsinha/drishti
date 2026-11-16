@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* Wave B, what every consumer of a model shares (docs/architecture/ARCHITECTURE.md §28 sections 4.5 to 4.7, console tasks 3 to 5; docs/guides/REPORTS_GUIDE.md section 25):
+/* Wave B, what every consumer of a model shares (docs/architecture/ARCHITECTURE.md §28 sections 4.5 to 4.7, console tasks 3 to 5; docs/guides/bi/README.md section 25):
 
      B.consume.timePicker(root, onChange)   now (live), as of a date, or a window: the three times one plan answers in. A past as-of date never changes, so it is
                                             asked once; now and a window are followed.
@@ -159,7 +159,7 @@
 
   // ---- standing queries ------------------------------------------------------------------------------------------------------
   // keepalive: a DELETE sent while the tab closes (pagehide) still reaches the server, so a closed tab never holds standing queries
-  const drop = (id) => fetch('/bi/api' + B.viewPath('/mq/subscribe/' + encodeURIComponent(id)), { method: 'DELETE', credentials: 'same-origin', keepalive: true, headers: { Accept: 'application/json' } }).catch(() => {});
+  const drop = (id) => fetch(drishti_url('/bi/api' + B.viewPath('/mq/subscribe/' + encodeURIComponent(id))), { method: 'DELETE', credentials: 'same-origin', keepalive: true, headers: { Accept: 'application/json' } }).catch(() => {});
   /** A refusal for want of room (DRS-9181 the server's, DRS-9182 yours): said as such, never a bare "Not updating". */
   const FULL = { 'DRS-9181': 'The server follows as many live queries as it may; this visual was asked once. It updates again when others close.',
     'DRS-9182': 'You follow too many live queries (other tabs or pages); close a tab, or wait a minute for closed ones to be freed, then reload.' };

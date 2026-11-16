@@ -18,11 +18,9 @@ package com.ash.drishti.banking.exposure;
 import org.springframework.test.context.TestPropertySource;
 
 /**
- * Every test of {@link ExposureApiTest} again with the server running the {@code risk} edition (docs/guides/ADMIN_GUIDE.md): exposure scopes, profiles, contributions and the what-if work
- * under Drishti Risk exactly as on the full product. Its fixtures use the retired finance example pack, which the edition does not list, so this run lets the site switch
- * allow-only off (drishti.edition-spec.packs.allow-only=false, a site override as LENSES.md shows); the commands and BI
- * datasets stay the edition's.
+ * Every test of {@link ExposureApiTest} again with the server running Drishti Risk (drishti.distribution=risk, docs/architecture/DISTRIBUTIONS.md): exposure scopes, profiles, contributions and the what-if work
+ * under Drishti Risk exactly as on the full product. The test's own packs (the site's drishti.packs.enabled) win over the distribution's; the commands stay Drishti Risk's.
  */
-@TestPropertySource(properties = {"drishti.edition=risk", "drishti.edition-spec.packs.allow-only=false"})
+@TestPropertySource(properties = {"drishti.distribution=risk", "drishti.distributions-dir=../../../config/distributions", "drishti.module-manifests-dir=../../../modules"})
 class ExposureApiRiskEditionTest extends ExposureApiTest {
 }

@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* The statement designer of BI Studio (2.6.0, docs/guides/REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24.5): a page with layout: statement is paper. The Paper tab of the designer
+/* The statement designer of BI Studio (2.6.0, docs/guides/bi/README.md › Reports: the YAML, the visuals and how they behave, section 24.5): a page with layout: statement is paper. The Paper tab of the designer
    sets the report's `statement:` (paper size, orientation, margins, the header and footer with their tokens, the period it covers, the text size) with
    plain controls, and previews the statement page by page as the server lays it out for you (POST /bi/api/reports/statement/preview: the same pages the
    PDF draws, with your own masks and row rules). Each band's page break, keep-together, repeated column titles and grouping are in Format, under
@@ -140,9 +140,9 @@
     if (!D.itemId) { return; }
     const page = D.model && D.page() ? D.page().id : '';
     const base = '/dist/bi/' + B.id2path(D.itemId);
-    host.appendChild(h('a', { class: 'btn-pill btn-ghost bi-small', href: base + '.pdf?page=' + encodeURIComponent(page), 'data-st-pdf': '', title: 'The saved draft as a PDF, made as you' }, B.icon('file-earmark-pdf'), ' PDF'));
-    host.appendChild(h('a', { class: 'btn-pill btn-ghost bi-small', href: base + '.xlsx?page=' + encodeURIComponent(page), 'data-st-xlsx': '', title: 'The saved draft as Excel, set to print on this paper' }, B.icon('file-earmark-spreadsheet'), ' Excel'));
-    host.appendChild(h('a', { class: 'btn-pill btn-ghost bi-small', href: base + '.jsonl?page=' + encodeURIComponent(page), 'data-st-jsonl': '', title: 'The saved draft\'s rows as JSON Lines, one a line, made as you' }, B.icon('braces'), ' JSONL'));
+    host.appendChild(h('a', { class: 'btn-pill btn-ghost bi-small', href: drishti_url(base + '.pdf?page=' + encodeURIComponent(page)), 'data-st-pdf': '', title: 'The saved draft as a PDF, made as you' }, B.icon('file-earmark-pdf'), ' PDF'));
+    host.appendChild(h('a', { class: 'btn-pill btn-ghost bi-small', href: drishti_url(base + '.xlsx?page=' + encodeURIComponent(page)), 'data-st-xlsx': '', title: 'The saved draft as Excel, set to print on this paper' }, B.icon('file-earmark-spreadsheet'), ' Excel'));
+    host.appendChild(h('a', { class: 'btn-pill btn-ghost bi-small', href: drishti_url(base + '.jsonl?page=' + encodeURIComponent(page)), 'data-st-jsonl': '', title: 'The saved draft\'s rows as JSON Lines, one a line, made as you' }, B.icon('braces'), ' JSONL'));
   }
 
   function preview() {

@@ -43,6 +43,8 @@ p.dx-pop-h { margin-right: var(--d-sp-18); font-size: var(--d-fs-13); }
 .dx-body { flex: 1; overflow-y: auto; padding: var(--d-sp-10) var(--d-sp-12); border-top: 1px solid var(--d-border); }
 .dx-foot { padding: var(--d-sp-8) var(--d-sp-12); border-top: 1px solid var(--d-border); font-size: var(--d-fs-12); max-height: 34vh; overflow-y: auto; }
 .dx-page { color: var(--d-link); }
+.dx-head .dx-page { align-self: flex-start; white-space: nowrap; text-decoration: none; padding: var(--d-sp-4) var(--d-sp-10); border: 1px solid var(--d-accent); border-radius: var(--d-radius-4); font-size: var(--d-fs-12); }
+.dx-head .dx-page:hover { background: var(--d-accent); color: var(--d-bg); }
 .dx-formula { font: var(--d-fs-12)/1.6 var(--d-font-mono); background: var(--d-bg); border: 1px solid var(--d-border); border-radius: var(--d-radius-6); padding: var(--d-sp-8); white-space: pre-wrap; color: var(--d-ink); }
 .dx-dl { display: grid; grid-template-columns: 130px 1fr; gap: var(--d-sp-3) var(--d-sp-10); font-size: var(--d-fs-12); margin: 0; }
 .dx-dl dt { color: var(--d-muted); font-weight: normal; }

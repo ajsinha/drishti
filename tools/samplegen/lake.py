@@ -178,7 +178,7 @@ def write_tables(out: pathlib.Path, kinds: dict[str, dict[str, dict]], end: date
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--samples", required=True)
-    ap.add_argument("--root", default=__import__("os").environ.get("DRISHTI_DATA_DIR", "data") + "/delta")
+    ap.add_argument("--root", default=(__import__("os").environ.get("DRISHTI_DATA_DIR") or str(__import__("pathlib").Path(__file__).resolve().parents[2] / "data")) + "/delta")
     ap.add_argument("--domain", required=True)
     ap.add_argument("--days", type=int, default=10)
     ap.add_argument("--as-of", default=None)

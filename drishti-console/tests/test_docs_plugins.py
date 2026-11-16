@@ -31,7 +31,8 @@ def _modules() -> list[str]:
 
 
 def test_the_root_pom_lists_every_plugin_directory():
-    on_disk = sorted(p.name.removeprefix("drishti-plugin-") for p in (ROOT / "plugins").glob("drishti-plugin-*"))
+    # a folder is a plugin when it has its pom.xml (a folder left with only an old build's target/ after a module was folded is not)
+    on_disk = sorted(p.name.removeprefix("drishti-plugin-") for p in (ROOT / "plugins").glob("drishti-plugin-*") if (p / "pom.xml").is_file())
     assert sorted(_modules()) == on_disk
 
 
@@ -42,7 +43,7 @@ def test_developer_guide_table_and_readme_list_every_plugin_module():
     tree = next(line for line in readme.splitlines() if "plugins/drishti-plugin-*/" in line)
     for name in _modules():
         assert re.search(rf"\b{name}\b", tree), f"README's module tree lacks {name}"
-    assert "all %s plugins" % {17: "seventeen", 18: "eighteen", 19: "nineteen"}.get(len(_modules()), "?") in guide, "DEVELOPER_GUIDE's plugin count is stale"
+    assert "all %s plugins" % {13: "thirteen", 14: "fourteen", 15: "fifteen", 19: "nineteen"}.get(len(_modules()), "?") in guide, "DEVELOPER_GUIDE's plugin count is stale"
 
 
 def test_configuration_lists_every_plugin_a_connector_can_name():

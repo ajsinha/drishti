@@ -106,7 +106,7 @@ def test_the_bi_menu_is_shown_to_people_with_the_power_only(stack, browser):
     cat = sign_in(browser, "cat")
     cat.goto(CONSOLE_URL + "/t")
     assert cat.locator('.tbar-menus a[href="/bi/catalogue"]').count() == 1 and cat.locator('.tbar-menus a[href="/admin/bi"]').count() == 0
-    cat.locator("button:has-text('BI'), summary:has-text('BI')").first.click()
+    cat.locator(".tbar-menu-btn", has_text="Create").first.click()
     expect(cat.locator('a[href="/bi/w/me"]').first).to_be_visible()
     ctx = browser.new_context()
     page = ctx.new_page()

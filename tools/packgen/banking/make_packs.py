@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Writes the banking packs' manifests (config/packs/<domain>/<pack>/pack.yaml) and shared formats from the taxonomy and layout.py:
+"""Writes the banking packs' manifests (modules/<module>/packs/<pack>/pack.yaml) and shared formats from the taxonomy and layout.py:
 kinds, mnemonics, identifier patterns, link fields, badges, F8 impact, roles, requires, and the connectors and
 routes that say which data domain (Delta Lake folder) answers each kind.
 
@@ -46,7 +46,7 @@ import ccr_kinds as XK  # the exposure engine's kinds in the counterparty-risk p
 ROOT = Path(__file__).resolve().parents[3]
 if str(ROOT / "drishti-console") not in sys.path:
     sys.path.insert(0, str(ROOT / "drishti-console"))
-from core.pack_paths import pack_dir  # noqa: E402  (the one rule for where a pack's folder is)
+from core.resolution import pack_dir  # noqa: E402  (where a pack is: the one resolver, KERNEL_AND_MODULES.md 18)
 sys.path.insert(0, str(ROOT / "tools"))
 import packform as PF  # noqa: E402  (the form: section: query by form, FORM <pack>)
 HEADER = "\n".join("#" + (" " + line if line.strip() else "") for line in
@@ -57,8 +57,16 @@ FORMATS = {"pct4": {"type": "number", "decimals": 4, "scale": 100, "suffix": "%"
            "bp1": {"type": "number", "decimals": 1, "sign": "always", "suffix": " bp"}, "price4": {"type": "number", "decimals": 4}}
 ACRONYMS = ["MTM", "PV", "NPV", "DV01", "PV01", "CS01", "IE01", "PFE", "EE", "ENE", "EPE", "EEPE", "EAD", "RWA", "CVA", "DVA", "FVA", "KVA", "VaR",
             "ES", "SVaR", "FRTB", "SIMM", "IM", "VM", "CSA", "ISDA", "GMRA", "CCP", "LEI", "UTI", "UPI", "ISIN", "CUSIP", "FIGI", "RIC", "BIC",
-            "SSI", "MIC", "CFI", "FpML", "KYC", "EMIR", "FX", "OIS", "RFR", "SOFR", "ESTR", "SONIA", "TONA", "USD", "EUR", "GBP", "JPY", "CHF",
+            "SSI", "UEN", "MIC", "CFI", "FpML", "KYC", "EMIR", "FX", "OIS", "RFR", "SOFR", "ESTR", "SONIA", "TONA", "USD", "EUR", "GBP", "JPY", "CHF",
             "AUD", "CAD", "MPoR", "MTA", "CLS", "ATM", "RR", "BF", "PD", "LGD", "JTD", "SA", "CCR", "SA-CCR", "SBM", "GIRR", "CSR", "NDF", "TRS"]
+# What banking field names hold, tried before the core roles (compute/drishti-inference semantics.yaml): the formats a drafted
+# screen (`pack new`, Build's auto-design) gives them. Values are fractions (0.035 a 3.5% rate); a rate above 1 is a price.
+SEMANTIC_ROLES = [
+    {"role": "signed-money", "pattern": "(^|_)(mtm|npv|pv)$|^(mtm|npv|pv)|market_?value|fair_?value", "fmt": "signed0", "tone": "sign", "weight": 90},
+    {"role": "money", "pattern": "notional|principal|nominal|premium|exposure|face_?(value|amount)", "fmt": "amount0", "weight": 80},
+    {"role": "rate", "pattern": "rate$|spread$|coupon|yield", "fmt": "pct4", "weight": 70, "fractionOnly": True},
+    {"role": "price", "pattern": "price$|strike|fixing|rate$|spread$|(^|_)px$", "fmt": "price4", "weight": 75},
+]
 # Public data feeds: each its own connector, each off unless its switch (an environment variable, or the site
 # configuration drishti.sources.connectors.<name>.enabled) turns it on.
 FEEDS = {"nyfed-sofr": ("DRISHTI_FEED_NYFED_SOFR", ["rate-fixing"], {}, "SOFR from the New York Fed: FIX-SOFR-NYFED"),
@@ -105,7 +113,8 @@ PIVOTS = {"trading": {"trade": {"fields": ["SOURCE_SYSTEM", "PORTFOLIO", "CURREN
                                 "filters": ["PRODUCT_GROUP", "TRADE_STATUS"]}}}
 
 # calc: may use Calc, Python in the browser on what the role opens (USER_GUIDE.md)
-ROLES = {"trading": {"trader": {"kinds": TRADER_KINDS, "calc": True}}, "market-risk": {"market-risk": {"kinds": ["*"], "raw": True, "calc": True}},
+# trade-editor: the power to amend trades through the trade blotter (docs/guides/LIVE_RESULTS_GUIDE.md section 3); trader alone reads
+ROLES = {"trading": {"trader": {"kinds": TRADER_KINDS, "calc": True}, "trade-editor": {"kinds": ["trade"], "edit": True}}, "market-risk": {"market-risk": {"kinds": ["*"], "raw": True, "calc": True}},
          "counterparty-risk": {"credit-risk": {"kinds": ["*"], "raw": True, "calc": True}}}
 
 
@@ -148,7 +157,7 @@ def _f(path, ftype, label=None, **more):
 
 TRADE_FORM = [
     _f("TRADE_ID", "id", "Trade id", group="Identity", order=1, help="One or many: paste a list. MX-2* is any id starting MX-2; Endur ids are numbers."),
-    _f("SOURCE_SYSTEM", "enum", "Source system", group="Identity", order=2, help="ENDUR, CALYPSO or MUREX: the booking system the trade comes from."),
+    _f("SOURCE_SYSTEM", "enum", "Source system", group="Identity", order=2, help="ENDUR, CALYPSO, MUREX, WSS, SWAPONE or ICI: the booking system the trade comes from."),
     _f("COUNTERPARTY", "enum", "Counterparty", group="Identity", order=3, help="Type in the list to find a counterparty (CP-SOLARIS)."),
     _f("PRODUCT_TYPE", "enum", "Product type", group="Product", order=4),
     _f("PRODUCT_SUB_TYPE", "enum", "Product sub type", group="Product", order=5, depends="PRODUCT_TYPE"),
@@ -214,7 +223,7 @@ def manifest(name: str) -> dict:
                                                                                "source-name": cname}}
         m["routes"]["trade"] = "trade-endur"
         m["connectors"]["trading-stream"] = {"plugin": "kafka", "enabled": "${DRISHTI_STREAM_TRADING:false}", "kinds": ["trade"],
-                                             "settings": {"bootstrap-servers": "${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}",
+                                             "settings": {"broker": "default",
                                                           "topics": "${DRISHTI_TRADING_TOPIC:drishti.trading.trades}",
                                                           "kind": "trade", "id-field": "TRADE_ID",
                                                           # a live stream with no new trade for this long is shown as behind
@@ -345,7 +354,15 @@ def kept(name: str) -> str:
 def files() -> dict[Path, str]:
     out = {}
     for name in layout.PACKS:
-        body = yaml.dump(packlake.lake_form(manifest(name), partitions=PARTITIONS), Dumper=_Plain, sort_keys=False, allow_unicode=True,
+        form = packlake.lake_form(manifest(name), partitions=PARTITIONS)
+        if name == "trading":     # the per-system trade connectors are the source modules' (modules/source-<system>/connectors/); their lake entries stay
+            for cname in TRADE_SYSTEMS:
+                form["connectors"].pop(cname, None)
+            form["routes"].pop("trade", None)
+        if name == "trading":     # one table a trading system, always: WSS, SwapOne and ICI (modules/source-wss, -swapone, -ici) too
+            for system in ("wss", "swapone", "ici"):
+                form["lake"]["tables"][f"trading.trade_{system}"] = {"kind": "trade", "promote": ["SOURCE_SYSTEM"], "sort-by": ["id"]}
+        body = yaml.dump(form, Dumper=_Plain, sort_keys=False, allow_unicode=True,
                          width=140)
         out[pack_dir(name) / "pack.yaml"] = f"{HEADER}\n\n{GENERATED}\n# {layout.PACKS[name]['title']} pack for Drishti.\n{body}{kept(name)}"
         out[pack_dir(name) / "config" / "formats.yaml"] = (f"{HEADER}\n\n{GENERATED}\n# Number formats the banking packs share.\n"
@@ -361,14 +378,16 @@ def files() -> dict[Path, str]:
             note = f"# Generated by tools/packgen/banking/make_packs.py from snippets/{name}/{file} there. Edit that source, not this file."
             out[pack_dir(name) / "python" / file] = f"{HEADER}\n\n{note}\n{meta}\n{code}"
         if name == "core":   # every banking pack requires core, so its vocabulary covers them all
-            out[pack_dir(name) / "config" / "semantics.yaml"] = (f"{HEADER}\n\n{GENERATED}\n# How banking field names read as labels.\n"
-                                                               + yaml.safe_dump({"acronyms": ACRONYMS, "labels": {"TRADE_ID": "Trade", "MTM": "MTM (USD)"}},
+            out[pack_dir(name) / "config" / "semantics.yaml"] = (f"{HEADER}\n\n{GENERATED}\n# How banking field names read as labels, and what"
+                                                               " they hold (tried before the core roles: formats for drafted screens).\n"
+                                                               + yaml.safe_dump({"roles": SEMANTIC_ROLES, "acronyms": ACRONYMS,
+                                                                                 "labels": {"TRADE_ID": "Trade", "MTM": "MTM (USD)"}},
                                                                                 sort_keys=False, width=140))
     return out
 
 
 def orphans(want: dict[Path, str]) -> list[Path]:
-    """Snippet files under config/packs/<domain>/<pack>/python/ that no longer have a source (renamed or removed)."""
+    """Snippet files under modules/<module>/packs/<pack>/python/ that no longer have a source (renamed or removed)."""
     return sorted(f for name in layout.PACKS for f in (pack_dir(name) / "python").glob("*.py") if f not in want)
 
 

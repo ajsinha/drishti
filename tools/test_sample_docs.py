@@ -47,8 +47,9 @@ def _files():
 
 
 def test_every_test_data_folder_has_its_page():
+    native = {d["folder"] for d in S.manifest().get("datasets") or [] if d.get("native")}   # a mocked source system's own style: no page
     folders = sorted(str(d.relative_to(S.TESTDATA)) for d in S.TESTDATA.glob("*/*/")          # its feed files: dated .jsonl.gz, or tars
-                     if any(d.glob("*.jsonl.gz")) or any(d.glob("*.tar")))
+                     if (any(d.glob("*.jsonl.gz")) or any(d.glob("*.tar"))) and str(d.relative_to(S.TESTDATA)) not in native)
     assert len(folders) >= 69
     pages = {d: (S.OUT / f"{d}.md").read_text(encoding="utf-8") if (S.OUT / f"{d}.md").is_file() else "" for d in {f.split("/")[0] for f in folders}}
     missing = [f for f in folders if f'<a id="{f.split("/", 1)[1]}"></a>' not in pages[f.split("/")[0]]]

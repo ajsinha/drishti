@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Rupaka phase 6 (docs/guides/REPORTS_GUIDE.md): the python visual of a report. The rows are the ones the person looking may see; the Python item that turns them
+/* Rupaka phase 6 (docs/guides/bi/README.md): the python visual of a report. The rows are the ones the person looking may see; the Python item that turns them
    into a number per group or a chart runs on the server's compute pool (POST /bi/python/run: a strict sandbox with no network, its own folder,
    CPU, memory, time and output limits). Wave B (docs/architecture/ARCHITECTURE.md §28 principle P3): the browser computes nothing, so there is no browser target any
    more; a manifest or a visual that still says `browser` or `both` runs on the server. What comes back is data: a measure's rows (drawn here as bars), a
@@ -30,7 +30,7 @@
 
   /** The console's own JSON route (not the /bi/api proxy). */
   function post(path, body) {
-    return fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, credentials: 'same-origin', body: JSON.stringify(body) })
+    return fetch(drishti_url(path), { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, credentials: 'same-origin', body: JSON.stringify(body) })
       .then((r) => r.json().catch(() => ({})).then((data) => {
         if (!r.ok) { throw failure(data.code || 'DRS-9071', data.detail || r.statusText, data.traceback); }
         return data;
@@ -39,7 +39,7 @@
 
   /** The answer for one python visual: `{kind, ..., ms, target, item, version, rows}`, worked out by the console. `args` is {report, page, state, visual}. */
   P.run = function (spec, args) {
-    return post('/bi/python/run', { report: args.report, page: args.page, visual: spec.id, state: args.state });
+    return post(drishti_url('/bi/python/run'), { report: args.report, page: args.page, visual: spec.id, state: args.state });
   };
 
   // ---- drawing -----------------------------------------------------------------------------------------------------------------

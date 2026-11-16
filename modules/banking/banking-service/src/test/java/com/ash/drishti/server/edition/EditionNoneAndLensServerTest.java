@@ -84,18 +84,15 @@ class EditionNoneAndLensServerTest {
     }
 
     @Test
-    void aLensFocusesOnePersonsRequestsAndNoOneElses() throws Exception {
+    void aLensHidesNothing() throws Exception {
         assertThat(getJson(get("/public/about")).path("lenses").get(0).asText()).isEqualTo("risk");
-        List<String> inLens = functions(get("/api/v1/functions").header(EditionContext.HEADER, "risk"));
-        assertThat(inLens).contains("VRES", "EXP").doesNotContain("FRTB", "STR", "CVA");
-        assertThat(functions(get("/api/v1/functions"))).contains("FRTB");                // the next person, without the lens: everything
-        List<String> lensDatasets = datasets(get("/api/v1/bi/datasets").header(EditionContext.HEADER, "risk"));
-        assertThat(lensDatasets).contains("file:table:banking.market_risk_var_latest").doesNotContain("file:table:banking.trades_basic_trade");
-        MvcResult hidden = mvc.perform(get("/api/v1/views/frtb-sensitivity/FRTB-RATES-1").header(EditionContext.HEADER, "risk")).andReturn();
-        assertThat(hidden.getResponse().getContentAsString()).contains("DRS-4023");
-        // an unknown lens is no lens: the full product
-        assertThat(functions(get("/api/v1/functions").header(EditionContext.HEADER, "nope"))).contains("FRTB");
-        // packs stay loaded under a lens: a lens hides, it never unloads or secures
+        List<String> everything = functions(get("/api/v1/functions"));
+        assertThat(everything).contains("VRES", "EXP", "FRTB", "STR", "CVA");
+        assertThat(functions(get("/api/v1/functions").header(EditionContext.HEADER, "risk"))).containsExactlyElementsOf(everything);
+        assertThat(datasets(get("/api/v1/bi/datasets").header(EditionContext.HEADER, "risk")))
+                .containsExactlyElementsOf(datasets(get("/api/v1/bi/datasets")));
+        MvcResult shown = mvc.perform(get("/api/v1/views/frtb-sensitivity/FRTB-RATES-1").header(EditionContext.HEADER, "risk")).andReturn();
+        assertThat(shown.getResponse().getContentAsString()).doesNotContain("DRS-4023");   // a workspace arranges; what exists is the distribution's
         List<String> packs = new ArrayList<>();
         getJson(get("/api/v1/packs").header(EditionContext.HEADER, "risk")).forEach(p -> packs.add(p.path("name").asText()));
         assertThat(packs).contains("world-economy", "news-and-markets");

@@ -40,14 +40,15 @@ from __future__ import annotations
 import json
 import os
 import pathlib
+import re
 import shlex
 from datetime import datetime
 
 import yaml
 
-SETTINGS = ("keep-business-days", "target-file-mb", "checkpoint", "vacuum-hours", "orphan-hours")
+SETTINGS = ("keep-business-days", "target-file-mb", "checkpoint", "vacuum-hours", "orphan-hours", "row-retention")
 #: orphan-hours is read for Iceberg tables only (files no snapshot references, older than that, are removed: 72 at least)
-TABLE_DEFAULTS = {"keep-business-days": None, "target-file-mb": 128, "checkpoint": True, "vacuum-hours": 168, "orphan-hours": 72}
+TABLE_DEFAULTS = {"row-retention": None, "keep-business-days": None, "target-file-mb": 128, "checkpoint": True, "vacuum-hours": 168, "orphan-hours": 72}
 ORPHAN_MIN_HOURS = 72
 VACUUM_SAFE_HOURS = 168
 HISTORY_KEEP = 2000
@@ -74,11 +75,25 @@ def retention_floor(name: str, conf: dict, retain: dict | None = None) -> tuple[
     if conf.get("vacuum-hours") is not None and int(conf["vacuum-hours"]) < hours:
         out["vacuum-hours"] = hours
         notes.append(f"vacuum-hours {conf['vacuum-hours']} raised to {hours}: the {name.split('/')[0]} domain keeps {years} years of time travel")
+    rr = conf.get("row-retention")
+    if rr:        # rows are never dropped inside the kept years: the ttl is raised to them, and a row cap (which could drop younger rows) is not applied
+        floor_ttl = f"{retain_days(int(years))}d"
+        raised = not rr.get("ttl") or ttl_seconds(rr["ttl"]) < retain_days(int(years)) * 86400
+        out["row-retention"] = {**{k: v for k, v in rr.items() if k != "max-rows"}, "ttl": floor_ttl if raised else rr["ttl"]}
+        if raised or rr.get("max-rows"):
+            notes.append(f"row-retention limited to ttl {floor_ttl}, no max-rows: the {name.split('/')[0]} domain keeps {years} years of rows")
     days = int(years) * BUSINESS_DAYS_A_YEAR
     if conf.get("keep-business-days") is not None and int(conf["keep-business-days"]) < days:
         out["keep-business-days"] = days
         notes.append(f"keep-business-days {conf['keep-business-days']} raised to {days}: the {name.split('/')[0]} domain keeps {years} years of dates")
     return out, notes
+
+
+def ttl_seconds(ttl: str) -> float:
+    """A row retention's ttl (``500ms``, ``30s``, ``15m``, ``8h``, ``1d``) in seconds."""
+    t = str(ttl).strip().lower()
+    unit = "ms" if t.endswith("ms") else t[-1]
+    return int(t[:-len(unit)]) * {"ms": 0.001, "s": 1, "m": 60, "h": 3600, "d": 86400}[unit]
 
 
 def hours_of(text) -> int | None:
@@ -103,6 +118,9 @@ def from_lake_entry(entry: dict) -> tuple[dict, list[str]]:
     if r not in (None, ""):
         t = str(r).strip().lower()
         out["keep-business-days"] = int(float(t[:-1])) * BUSINESS_DAYS_A_YEAR if t.endswith("y") else int(float(t.rstrip("d")))
+    rr = entry.get("row-retention") or {}      # retention: {ttl, on, max-rows}: rows dropped for their age (maintain_rows.py)
+    if rr:
+        out["row-retention"] = {k: rr[k] for k in ("ttl", "on", "max-rows") if rr.get(k) not in (None, "")}
     m = entry.get("maintenance") or {}
     truthy = lambda v: str(v).strip().lower() in ("true", "yes", "on", "1")   # noqa: E731
     if "compaction" in m:
@@ -258,6 +276,14 @@ def clean_settings(s: dict) -> tuple[dict, list[str]]:
             out["vacuum-hours"] = n
             if n < VACUUM_SAFE_HOURS:
                 warn.append(f"vacuum below {VACUUM_SAFE_HOURS} hours (7 days) removes files a reader or a 'known at' view may still need")
+    if "row-retention" in s:
+        rr = s["row-retention"] or {}
+        keep = {k: str(rr[k]).strip() for k in ("ttl", "on", "max-rows") if rr.get(k) not in (None, "")}
+        if keep.get("ttl") and not re.fullmatch(r"\d+(ms|s|m|h|d)", keep["ttl"].lower()):
+            raise ValueError("a row retention's ttl is a time such as 30s, 15m, 8h or 1d")
+        if keep.get("max-rows") and (not keep["max-rows"].isdigit() or int(keep["max-rows"]) < 1):
+            raise ValueError("a row retention's max-rows is a whole number, 1 or more")
+        out["row-retention"] = keep or None
     if "orphan-hours" in s:
         n = int(s["orphan-hours"] or ORPHAN_MIN_HOURS)
         if n < ORPHAN_MIN_HOURS:

@@ -96,9 +96,9 @@ def test_the_keyword_says_why_when_bi_is_not_for_you():
 def test_the_menu_is_shown_to_people_with_the_bi_power_only(bi):
     client, _ = bi
     top = client.get("/t").text
-    assert "bar-chart-line" in top and 'href="/bi"' not in top and 'href="/bi/catalogue"' in top and 'href="/bi/w/me"' in top
-    assert "Desk P&amp;L" not in top[top.index(">BI<"):top.index(">Build<")]               # no report names in the BI menu: hundreds would not fit
-    assert top.index(">Views<") < top.index(">BI<") < top.index(">Build<")
+    assert 'href="/bi"' not in top and 'href="/bi/catalogue"' in top and 'href="/bi/w/me"' in top      # BI is a part of Create
+    assert "Desk P&amp;L" not in top[top.index(">Create<"):top.index(">Admin<")]          # no report names in the menu: hundreds would not fit
+    assert top.index(">Views<") < top.index(">Create<") < top.index(">Admin<") and ">BI<" not in top
     for powers in ((), ):
         none, _ = make(powers=powers)
         assert 'href="/bi/catalogue"' not in none.get("/t").text

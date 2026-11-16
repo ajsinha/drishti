@@ -22,12 +22,11 @@ from urllib.parse import quote, urlencode
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
-from core import forms
+from core import forms, live_results
 from core.settings import changed_at
 from core.backend import BackendError
 from core.csrf import BodyError, json_body
 from routes.common import ident, packs, render
-from routes.terminal_routes import _shown
 
 router = APIRouter(include_in_schema=False)
 
@@ -47,7 +46,7 @@ async def forms_home(request: Request):
 
     async def one(p):
         try:
-            info = await backend.form(p["name"], "", me)
+            info = await backend.form(p["name"], "", me, kinds_only=True)   # the kinds only: no form is built, no data read
         except BackendError:
             return None                      # no access to any kind, or the pack is not visible to this person: not listed
         kinds = [{"kind": k["kind"], "label": k["label"], "mnemonic": k.get("mnemonic", ""), "fields": p["forms"][k["kind"]]}
@@ -120,13 +119,11 @@ async def form_page(request: Request, pack: str, kind: str = ""):
         try:
             body = {"criteria": criteria, "orderBy": order or None, "descending": desc, "limit": limit}
             out["command"] = (await backend.form_compile(pack, info["kind"], body, me))["command"]
-            data = await backend.search(out["command"], me)
-            out["data"] = data
-            for r in data.get("rows", []):
-                cells = [(_shown(r["values"].get(c)), isinstance(r["values"].get(c), (int, float)) and not isinstance(r["values"].get(c), bool))
-                         for c in data.get("columns", [])]
-                out["rows"].append({"ref": r["ref"], "title": r.get("title") or r["ref"]["id"], "cells": cells})
-            out["titled"] = any(r["title"] != r["ref"]["id"] for r in out["rows"])
+            # a form's output is a live result set (static when the kind has no live binding, ticking when it does)
+            out["data"] = await live_results.run(backend, out["command"], me)
+            out["rows"] = live_results.table_rows(out["data"])
+            out["titled"] = live_results.titled(out["rows"])
+            out["grid_spec"] = live_results.grid_spec(out["data"], out["titled"])
         except BackendError as e:
             out["error"] = e
     folded = q.get("form") == "hidden" or (q.get("form") != "shown" and out["data"] is not None and not out["error"]

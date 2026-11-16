@@ -174,7 +174,7 @@ async def choose_landing(request: Request, name: str):
 
 @router.post("/lens/leave")
 async def leave_lens(request: Request):
-    """Back to the full product: the person's lens is forgotten (their settings)."""
+    """Out of the person's lens (their settings forget it): back to the distribution's starting lens, or the full product."""
     if getattr(request.state, "identity", None) is not None:
         await _patch(request, {"lens": None})
     return RedirectResponse("/", status_code=303)
@@ -182,11 +182,11 @@ async def leave_lens(request: Request):
 
 @router.post("/lens/{name}")
 async def open_lens(request: Request, name: str):
-    """Opens an edition as a lens for this person: only one the server offers (drishti.lenses), only on a full instance."""
+    """Opens a lens (a workspace) for this person: only one the server offers (drishti.lenses)."""
     editions = request.app.state.editions
     if getattr(request.state, "identity", None) is None:
         return RedirectResponse(f"/login?next={quote('/lens/' + name)}", status_code=303)
-    if editions.instance.active or name not in editions.lenses:
+    if name not in editions.lenses:
         return RedirectResponse(f"/t?error={quote(f'DRS-4023 no lens {name} on this server (drishti.lenses)')}", status_code=303)
     await _patch(request, {"lens": name})
     return RedirectResponse("/", status_code=303)

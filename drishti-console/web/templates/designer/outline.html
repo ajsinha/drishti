@@ -17,19 +17,19 @@
 {% block title %}Outline · {{ PRODUCT }}{% endblock %}
 {% block screen %}build{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_designer.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_designer-outline.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_designer.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_designer-outline.css?v={{ ASSET_V }}">{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
 <div class="dz-shell ol-shell" data-outline{% if draft %} data-draft="{{ draft }}"{% endif %} data-kind="{{ kind }}" data-id="{{ id }}">
-  <nav class="crumbs" aria-label="Breadcrumb"><a href="/build">My designs</a>{% if kind and id %} · <a href="/v/{{ kind | urlencode }}/{{ id | urlencode }}">Back to the page</a>{% endif %} · <a href="/help/rachana-reference#31-the-sutra-designer-customize-describe-outline-and-grid">Designer guide</a></nav>
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="{{ BASE }}/build">My designs</a>{% if kind and id %} · <a href="{{ BASE }}/v/{{ kind | urlencode }}/{{ id | urlencode }}">Back to the page</a>{% endif %} · <a href="{{ BASE }}/help/rachana-reference#31-the-sutra-designer-customize-describe-outline-and-grid">Designer guide</a></nav>
   <h1>Outline</h1>
   {% include "designer/_modes.html" %}
   {% if problem %}<p class="dz-note dz-problem" role="alert">{{ problem }}</p>{% endif %}
   {% if not draft %}
   <section class="ol-start" aria-label="Start">
     <p>Outline shows a screen as a list you can rearrange: its sections, its panels, and what a click opens under a table. Open any page,
-      press <b>Customize</b>, then <b>Outline</b>; or describe a screen in <a href="/designer/new">Describe</a> and choose <b>Edit in Outline</b>.</p>
-    <form class="dz-line" method="get" action="/designer/outline">
+      press <b>Customize</b>, then <b>Outline</b>; or describe a screen in <a href="{{ BASE }}/designer/new">Describe</a> and choose <b>Edit in Outline</b>.</p>
+    <form class="dz-line" method="get" action="{{ BASE }}/designer/outline">
       <label class="visually-hidden" for="olKind">Kind</label><input id="olKind" name="kind" placeholder="kind (trade)" value="{{ kind }}" required>
       <label class="visually-hidden" for="olId">Id</label><input id="olId" name="id" placeholder="id (MX-20000001)" value="{{ id }}" required>
       <button type="submit" class="dz-btn dz-primary">Outline this page</button>
@@ -40,7 +40,7 @@
     <span class="dz-msg" data-ol-msg role="status" aria-live="polite"></span>
     <span class="dz-grow"></span>
     <button type="button" class="dz-btn" data-ol-yaml aria-expanded="false">Show the Sutra</button>
-    <a class="dz-btn" data-ol-open href="/v/{{ kind | urlencode }}/{{ id | urlencode }}?design={{ draft }}">Open full page</a>
+    <a class="dz-btn" data-ol-open href="{{ BASE }}/v/{{ kind | urlencode }}/{{ id | urlencode }}?design={{ draft }}">Open full page</a>
     <button type="button" class="dz-btn" data-ol-cancel>Cancel</button>
     <button type="button" class="dz-btn dz-primary" data-ol-done title="Keep it as your own version of this page: only you see it until you share">Keep as my page</button>
   </div>
@@ -53,10 +53,10 @@
     </div>
     <section class="ol-preview" aria-label="Live preview">
       <div class="dz-result-h">Live preview · as you · it changes as you edit the outline</div>
-      <iframe title="The screen as outlined" data-ol-preview src="/v/{{ kind | urlencode }}/{{ id | urlencode }}?design={{ draft }}&amp;embed=1"></iframe>
+      <iframe title="The screen as outlined" data-ol-preview src="{{ BASE }}/v/{{ kind | urlencode }}/{{ id | urlencode }}?design={{ draft }}&amp;embed=1"></iframe>
     </section>
   </div>
   {% endif %}
 </div>
 {% endblock %}
-{% block scripts %}{% include "_designer_kit.html" %}<script src="/static/js/drishti_designer-outline.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}{% include "_designer_kit.html" %}<script src="{{ BASE }}/static/js/drishti_designer-outline.js?v={{ ASSET_V }}"></script>{% endblock %}

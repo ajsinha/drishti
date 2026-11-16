@@ -17,12 +17,12 @@ from __future__ import annotations
 
 import asyncio
 import re
-from urllib.parse import parse_qs, quote
+from urllib.parse import parse_qs, quote, urlencode
 
 from fastapi import APIRouter, Query, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
-from core import about_index, asof, collab as collab_core, compare_side, controls, screen_grid
+from core import about_index, asof, collab as collab_core, compare_side, controls, live_results, screen_grid
 from core.settings import changed_at
 from core.backend import BackendError
 from core.csrf import BodyError, json_body
@@ -184,11 +184,14 @@ async def go(request: Request, q: str = ""):
 def admin_redirect(request: Request, ed, rest: list[str]):
     """``ADMIN`` (the first Admin page the edition keeps) or ``ADMIN <page>`` (``ADMIN USERS``, ``ADMIN LOADS``), for an administrator; the
     Admin pages themselves check again. Anyone else, or a page the edition does not keep, is told so on the command line."""
+    from core import engines as _engines
     me = getattr(request.state, "identity", None)
     if me is None or not me.is_admin:
         return RedirectResponse(f"/t?error={quote('ADMIN is for administrators')}", status_code=303)
-    kept = [p for p in ADMIN_PAGES if ed.admin_page_shown(p)]
+    kept = [p for p in ADMIN_PAGES if ed.admin_page_shown(p) and _engines.path_engine("/admin/" + p) is None]   # a page of an engine that runs nowhere is not offered
     page = rest[0].lower() if rest else (kept[0] if kept else "")
+    if (off := _engines.path_engine("/admin/" + page)) is not None:        # ADMIN DATA-OUT with Arrow Flight off: said in the server's words, not a 404 page
+        return RedirectResponse(f"/t?error={quote(_engines.refusal(off))}", status_code=303)
     if page not in kept:
         return RedirectResponse(f"/t?error={quote(f'DRS-4023 no Admin page {page!r} in {ed.title}: ADMIN ' + ', '.join(kept).upper())}", status_code=303)
     return RedirectResponse(f"/admin/{page}", status_code=303)
@@ -212,29 +215,18 @@ async def impact(request: Request, kind: str, id_: str):
     try:
         data = await request.app.state.backend.impact(kind, id_, ident(request))
     except BackendError as e:
+        if e.page_status == 404 and kind == "trade":       # a link to a trade of a trading system switched off: say so, plainly (200)
+            try:
+                off = (await request.app.state.backend._get(f"/views/switched-off/{kind}", ident(request))).get("excludes") or []
+            except BackendError:
+                off = []
+            if off:
+                return render(request, "terminal/source_off.html", kind=kind, id=id_, systems=off, embed=bool(embed))
         return render(request, "terminal/missing.html", status_code=e.page_status, kind=kind, id=id_, error=e)
     return render(request, "terminal/impact.html", kind=kind, id=id_, data=data, screen="impact")
 
 
-def _shown(v) -> str:
-    """A diff value as text: numbers with separators (up to six decimals), lists and objects compactly."""
-    if v is None:
-        return "—"
-    if isinstance(v, bool):
-        return "true" if v else "false"
-    if isinstance(v, (int, float)):
-        text = f"{v:,.6f}".rstrip("0").rstrip(".") if isinstance(v, float) else f"{v:,}"
-        return text.replace("-", "−")
-    if isinstance(v, (list, dict)):
-        return "[]" if v == [] else str(v)[:80]
-    return str(v)
-
-
-def _delta(d) -> str:
-    if d is None:
-        return ""
-    text = f"{d:+,.6f}".rstrip("0").rstrip(".")
-    return text.replace("-", "−")
+_shown, _delta = live_results.shown, live_results.delta   # values as text (core/live_results.py, one place for every result table)
 
 
 @router.get("/p/{name}")
@@ -279,73 +271,65 @@ async def search(request: Request, q: str = "", vs: str = "", words: str = ""):
             if e.code in ("DRS-4021", "DRS-4022"):   # a bare id with a range that is none (1000015 -5): what to type, as on /go (QA1-203)
                 return RedirectResponse(f"/t?error={quote(f'{e.code} {e.detail}')}", status_code=303)
             phrase = {"problem": e.detail, "steps": [], "ignored": []}
-        if phrase.get("command") and not phrase.get("ignored") and not q.strip():   # trade 1000015 last month: read fully, so open it
+        if (phrase.get("command") and not phrase.get("ignored") and not q.strip()           # trade 1000015 last month: read fully, so open it
+                and " ".join(phrase["command"].upper().split()) != " ".join(words.upper().split())):   # never the very words /go just failed on: that is a loop
             return RedirectResponse(f"/go?q={quote(phrase['command'])}", status_code=303)
     """Structured search (W17): entities by field values, e.g. TRD where mtm > 1m and currency = 'EUR' order by mtm desc."""
-    data, error = None, None
+    data, error, page = None, None, None
     if q.strip():
         limit = (getattr(request.state, "settings", None) or {}).get("searchLimit") or 100
         asked = q if re.search(r"(?i)\slimit\s+\S+\s*$", q) else f"{q.rstrip()} limit {limit}"   # the user's default size
         try:
-            if vs:     # the same search on another business date, side by side: each number with its change
+            if vs:     # the same search on another business date, side by side: each number with its change (a comparison, not a set)
                 data = await request.app.state.backend.search_compare(asked, vs, "", ident(request))
-            else:
-                data = await request.app.state.backend.search(asked, ident(request))
+            elif _BARE.match(q.strip()):   # a bare mnemonic (POS <GO>): the kind's own live result set, a page at a time
+                page = _page_of(request, limit)
+                try:
+                    data = live_results.kind_page(await request.app.state.backend.live_kind(q.strip(), ident(request), **page))
+                except BackendError as e:
+                    form = await _narrowing_form(request, q.strip(), e)   # a kind never listed whole (SPV): its form, with why
+                    if form:
+                        return RedirectResponse(form, status_code=303)
+                    raise
+            else:      # a search's matches are a live result set (static without a live binding, ticking with one)
+                data = await live_results.run(request.app.state.backend, asked, ident(request))
         except BackendError as e:
             error = e
     hq = history_routes.history_query(request.query_params)   # a pick list of a history command: each row opens its history
-    rows = []
-    if data:
-        for r in data.get("rows", []):
-            cells = []
-            for c in data.get("columns", []):
-                v = r["values"].get(c)
-                if vs and isinstance(v, dict):            # compared: the later value, and its change
-                    to, delta = v.get("to"), v.get("delta")
-                    num = isinstance(to, (int, float)) and not isinstance(to, bool)
-                    text = _shown(to) + (f"  ({_delta(delta)})" if delta not in (None, 0, 0.0) else "")
-                    cells.append((text, num))
-                else:
-                    cells.append((_shown(v), isinstance(v, (int, float)) and not isinstance(v, bool)))
-            rows.append({"ref": r["ref"], "title": r.get("title") or r["ref"]["id"], "cells": cells, "status": r.get("status")})
-    titled = any(r["title"] != r["ref"]["id"] for r in rows)       # a title that only repeats the id is left out
-    chart_rows = search_chart_rows(data, q, titled) if data and rows and not vs else None
+    rows = live_results.table_rows(data, compared=bool(vs))
+    titled = live_results.titled(rows)
+    grid_spec = live_results.grid_spec(data, titled) if data and rows and not vs else None
+    compared_columns, compared_rows = live_results.compared_rows(data, vs) if data and rows and vs else ([], [])
     return render(request, "terminal/search.html", q=q, vs=vs, words=words, phrase=phrase, data=data, rows=rows, error=error, titled=titled,
-                  screen="search", hq=hq, chart_rows=chart_rows)
+                  screen="search", hq=hq, grid_spec=grid_spec, compared_columns=compared_columns, compared_rows=compared_rows,
+                  pages=live_results.pages(data, request.url.path, request.query_params))
 
 
-def _chart_value(v):
-    """A search value as the chart reads it: numbers, text and booleans as they are, a list or an object as its shown text."""
-    if v is None or isinstance(v, (int, float, str)):
-        return v
-    return _shown(v)
+_BARE = re.compile(r"^[A-Za-z][A-Za-z0-9_-]{0,31}$")      # one word, no condition, ids or limit: the mnemonic alone
 
 
-def search_chart_rows(data: dict, q: str, titled: bool) -> dict:
-    """The raw values of a search's shown rows for Chart any table (RACHANA_REFERENCE.md › Chart any table: the design, section 8.4, the search adapter): the id, the
-    title when shown, then each column, in the table's order; masked values stay the server's mask. ``pivot`` lists the fields
-    the kind's pack offers to the search pivot (Chart all N), when it does."""
-    cols = data.get("columns", [])
-    labels = data.get("labels") or {}
-    first = data.get("mnemonic") or data.get("kind") or "Id"
-    fields = [{"name": first, "label": first, "id": True, "kind": data.get("kind")}]
-    if titled:
-        fields.append({"name": "Title", "label": "Title", "type": "text"})
-    seen = {f["name"] for f in fields}
-    for c in cols:                                   # named by their labels, as the table heads them (unique); the path for the pivot
-        name = labels.get(c) or c
-        while name in seen:
-            name += " "
-        seen.add(name)
-        fields.append({"name": name, "label": labels.get(c) or c, "path": c})
-    out = []
-    for r in data.get("rows", []):
-        line = [r["ref"]["id"]] + ([r.get("title") or r["ref"]["id"]] if titled else [])
-        line += [_chart_value(r["values"].get(c)) for c in cols]
-        out.append(line)
-    pivot = data.get("pivot") or {}
-    return {"kind": data.get("kind"), "q": q, "matched": data.get("matched"), "fields": fields, "rows": out,
-            "pivot": [f.get("name") if isinstance(f, dict) else f for f in (pivot.get("fields") or [])] if isinstance(pivot, dict) else []}
+async def _narrowing_form(request: Request, word: str, e: BackendError) -> str:
+    """The form of a kind the server never lists whole (its contract's ``list: requires``: SPV, PNLV, FXS): the server refused the bare
+    list (400, naming the fields), so the person is shown the kind's search form with the server's one line on why; "" otherwise."""
+    if e.status != 400 or " where " not in str(e.detail):
+        return ""
+    try:
+        funcs = await request.app.state.backend.functions(ident(request))
+    except BackendError:
+        return ""
+    for p in funcs.get("packs") or []:
+        for c in p.get("commands") or []:
+            if str(c.get("code", "")).upper() == word.upper():
+                return "/form/" + quote(p["name"]) + "?" + urlencode({"kind": c["kind"], "why": str(e.detail)[:300]})
+    return ""
+
+
+def _page_of(request: Request, size: int) -> dict:
+    """The page of a kind's set the address asks for: ``offset``, ``sort``, ``desc`` (a bare mnemonic's table pages on the server)."""
+    qp = request.query_params
+    offset = int(qp["offset"]) if qp.get("offset", "").isdigit() else 0
+    return {"offset": offset, "limit": int(size), "sort": qp.get("sort", ""), "descending": qp.get("desc") in ("1", "true", "on")}
+
 
 
 @router.post("/s/watch")

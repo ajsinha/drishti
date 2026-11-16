@@ -115,7 +115,8 @@ class Guide:
     pair: str = ""                    # help.yaml pair: the tutorial drawn beside this guide on its section's page
     group: str = ""                   # the group of its section it sits in (help.yaml groups[].title)
     domain: str = ""                  # help.yaml domain: the domain module the page belongs to (banking, capitalmarkets, economy); core when not said
-    lenses: tuple = ()                # help.yaml lenses: the lenses that show the page (none said: every lens; the full product shows it)
+    parent: str = ""                  # a subpage of a guide folder: the slug of the folder's index page (help.yaml children:); it has no row of its own
+    children: tuple = ()              # a guide folder's index page: its subpages in order (help.yaml children:); the folder counts as one page
 
     def permits(self, ident) -> bool:
         """Whether this person may see the guide: an unrestricted guide anyone; a guide with ``roles:`` (an internal page such as the
@@ -155,13 +156,21 @@ class Library:
                 for g in grp.get("guides", []):
                     src = g.get("doc")
                     path = (docs_dir / src) if src else (console_dir / "web" / "guides" / f"{g['slug']}.md")
+                    kids = []
+                    for c in g.get("children") or []:
+                        cpath = docs_dir / c["doc"]
+                        if cpath.exists():
+                            kids.append(Guide(c["slug"], c["title"], c.get("summary", ""), c.get("icon", "journal-text"), "reference", sec["id"], cpath,
+                                              roles=tuple(str(r) for r in (g.get("roles") or ())), engine=str(g.get("engine") or ""), group=str(grp.get("title") or ""),
+                                              domain=str(c.get("domain") or g.get("domain") or ""), parent=g["slug"]))
                     guide = Guide(g["slug"], g["title"], g.get("summary", "").replace("{tutorials}", tutorial_count_word(docs_dir)), g.get("icon", "journal-text"),
                                   g.get("kind", "reference" if src else "guide"), sec["id"], path, packs=tuple(g.get("packs") or ()),
                                   roles=tuple(str(r) for r in (g.get("roles") or ())), engine=str(g.get("engine") or ""),
-                                  pair=str(g.get("pair") or ""), group=str(grp.get("title") or ""), domain=str(g.get("domain") or ""),
-                                  lenses=tuple(str(x) for x in (g.get("lenses") or ())))
+                                  pair=str(g.get("pair") or ""), group=str(grp.get("title") or ""), domain=str(g.get("domain") or ""), children=tuple(kids))
                     if path.exists():
                         self.guides[guide.slug] = guide
+                        for kid in kids:
+                            self.guides[kid.slug] = kid
                         items.append(guide)
                 groups.append({"title": str(grp.get("title") or ""), "words": [str(w) for w in grp.get("words") or []], "guides": items})
             self.categories.append({"id": sec["id"], "name": sec["name"], "icon": sec.get("icon", "book"), "blurb": sec.get("blurb", ""),
@@ -188,7 +197,7 @@ class Library:
                 cat["guides"] = [x for gr in cat["groups"] for x in gr["guides"]]
             self.contextual.update({k: v for k, v in pack.get("contextual", {}).items() if v in self.guides})
         self.by_file = {g.path.resolve(): g.slug for g in self.guides.values()}
-        self.listed = sum(1 for g in self.guides.values() if g.listed and not g.roles)
+        self.listed = sum(1 for g in self.guides.values() if g.listed and not g.roles and not g.parent)      # a guide folder's subpages are part of its one page
         self._documents(cats)
 
     def section_id(self, name: str) -> str:

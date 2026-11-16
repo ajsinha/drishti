@@ -16,19 +16,6 @@
 # The lake (iceberg, its root or catalog, storage and tables) is config/lakes.examples/iceberg/iceberg.yaml: copy it to
 # config/lakes/iceberg.yaml beside this file (docs/guides/DATA_LAKE_GUIDE.md). This file keeps only what the connector reads.
 plugin: iceberg
-kinds:
-- counterparty
-- counterparty-group
-- issuer
-- agreement
-- ccp
-- legal-entity
-- book
-- desk
-- trader
-- calendar
-- csa
-- clearing-account
 description: reference-store read from iceberg (the former application-iceberg.yaml profile)
 settings:
   lake: iceberg

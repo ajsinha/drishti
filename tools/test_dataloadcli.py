@@ -92,6 +92,21 @@ class Dataload(unittest.TestCase):
         self.assertEqual(0, code)
         self.assertIn("Load now: skipped: run 20261103T150000Z-drishti-main still loading (3 min) (runs never overlap", out)
 
+    def test_run_wait_is_loud_about_rejected_rows_and_failures(self):
+        import dataloadcli
+        ok = {"run": "R1", "state": "done", "files": [{"file": "a.jsonl", "outcome": "loaded", "rows": 10, "rejected": 0}], "notices": []}
+        self.assertEqual(0, dataloadcli.cycle_exit(ok)[0])
+        why = "loaded with rejects: 2 of 12 rows rejected: no id (field 'TRADE_ID' is missing or empty) (2)"
+        rej = {"run": "R2", "state": "done", "notices": ["b.jsonl: " + why],
+               "files": [{"file": "b.jsonl", "outcome": "loaded", "rows": 10, "rejected": 2, "reason": why}]}
+        code, lines = dataloadcli.cycle_exit(rej)
+        self.assertEqual(2, code)
+        text = "\n".join(lines)
+        self.assertIn("2 of 12 rows rejected: no id", text)
+        self.assertIn("exit 2: loaded WITH REJECTED ROWS", text)
+        failed = {"run": "R3", "state": "done", "files": [{"file": "c.jsonl", "outcome": "failed", "reason": "bad"}] + rej["files"]}
+        self.assertEqual(1, dataloadcli.cycle_exit(failed)[0])
+
     def test_retry_sends_the_file_and_an_unknown_one_exits_1(self):
         FakeServer.routes[("POST", "/api/v1/admin/dataload/retry")] = (200, {"file": "mystery.jsonl", "from": "failed/2026-11-03/r/mystery.jsonl",
                                                                             "to": "inbox/mystery.jsonl", "next": "the next cycle loads it (or Load now)"})

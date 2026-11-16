@@ -44,7 +44,7 @@ lenses:
   default: markets
 
 menus:
-  top: [views, economies, markets, companies, bi, admin, help]
+  top: [views, domains, create, admin, help]
   placeholder: "USEQ AAPL, FUND SPY, ECON CAN, NEWS rates, CRV USD-SOFR …  then <GO>"
 
 home:

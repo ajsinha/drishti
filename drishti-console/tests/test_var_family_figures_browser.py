@@ -27,7 +27,7 @@ import pytest
 
 from screen_figures import compare, figures
 from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and helpers
-from var_stack import VAR_TRADES, var_data, var_lake, var_server
+from var_stack import shared_lake, var_server
 
 OUT = os.environ.get("DRISHTI_FIGURES_OUT")
 BASE = os.environ.get("DRISHTI_FIGURES_BASELINE")
@@ -60,7 +60,7 @@ SCREENS = [
 
 @pytest.fixture(scope="module")
 def stack(tmp_path_factory):
-    yield from var_server(tmp_path_factory, var_lake(tmp_path_factory, var_data(*VAR_TRADES)))
+    yield from var_server(tmp_path_factory, shared_lake(tmp_path_factory), shared=True)   # reads only: the pool guards it
 
 
 def _settle(pg, by):

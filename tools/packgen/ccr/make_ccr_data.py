@@ -54,7 +54,7 @@ sys.path.insert(0, str(ROOT / "tools" / "packgen" / "var"))
 sys.path.insert(0, str(ROOT / "tools" / "lake"))
 if str(ROOT / "drishti-console") not in sys.path:
     sys.path.insert(0, str(ROOT / "drishti-console"))
-from core.pack_paths import pack_dir  # noqa: E402  (the one rule for where a pack's folder is)
+from core.resolution import pack_dir  # noqa: E402  (where a pack is: the one resolver, KERNEL_AND_MODULES.md 18)
 import feedfiles as FF  # noqa: E402  (tools/lake/feedfiles.py: our dated feed files)
 import ccrmath as M  # noqa: E402
 import paths as PT  # noqa: E402

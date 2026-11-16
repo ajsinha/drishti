@@ -14,10 +14,6 @@
 # Example: copy to config/connectors/collateral-store.yaml to read the collateral-store data from duckdb. It replaces the
 # connector file of the same name (settings are not merged). Credentials are ${ENV_VAR} references.
 plugin: duckdb
-kinds:
-- collateral-balance
-- margin-call
-- simm
 description: collateral-store read from duckdb (the former application-duckdb.yaml profile)
 settings:
   domain: collateral

@@ -13,11 +13,11 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Starts every node of a cluster file not yet running, then its console; or only the nodes named ("console" for the console).
-# The cluster file is drishti-stack/stack.yaml by default (bin/README.md; bin/start-cluster.sh on Linux and macOS).
+# The cluster file is deploy/stack/stack.yaml by default (bin/README.md; bin/start-cluster.sh on Linux and macOS).
 . (Join-Path $PSScriptRoot 'lib\common.ps1')
 
 if ($args -contains '-h' -or $args -contains '--help') {
-    Write-Host 'usage: bin\start-cluster.ps1 [--cluster FILE] [--data-dir DIR] [node ...]   (default cluster file: drishti-stack\stack.yaml)'
+    Write-Host 'usage: bin\start-cluster.ps1 [--cluster FILE] [--data-dir DIR] [node ...]   (default cluster file: deploy\stack\stack.yaml)'
     exit 0
 }
 $py = Get-ToolsPython

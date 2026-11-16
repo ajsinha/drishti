@@ -68,7 +68,6 @@ ALLOWED = {
     "static/js/drishti_bi-transform-view.js": {"numbers": BI, "visual": VISUALS},
     # BI and the Pivot (wip/e-migrate-bi)
     "static/js/drishti_bi-ai.js": {"echarts": BI},
-    "static/js/drishti_bi-govern.js": {"numbers": BI},
     "static/js/drishti_bi-layer-ops.js": {"numbers": BI},
     "static/js/drishti_bi-lib.js": {"numbers": BI},
     "static/js/drishti_bi-notebook-profile.js": {"numbers": BI},

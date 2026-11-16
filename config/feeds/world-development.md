@@ -9,7 +9,7 @@
 
 World Bank, World Development Indicators.
 
-The economy module's public-sector world-development pack (docs/guides/PUBLIC_SECTOR_GUIDE.md): World Bank World Development Indicators by country and year: population, GDP per head and growth, inflation, unemployment, life expectancy, poverty, access to electricity, internet use and central government debt for every economy, from the World Bank's API (CC BY 4.0). A country's profile shows the latest of each indicator and the world map shaded by GDP per head; each series shows its history by year. Filled daily by the world-development feed into the worldlake lake. The one fetcher of WDI: as series it also pulls every WDI code of the world-economy pack (tools/realdata/sources.yaml) and the World Bank's aggregates, which the world-economy feed reads from its output.
+The economy module's public-sector world-development pack (docs/guides/WORLD_DATA_GUIDE.md): World Bank World Development Indicators by country and year: population, GDP per head and growth, inflation, unemployment, life expectancy, poverty, access to electricity, internet use and central government debt for every economy, from the World Bank's API (CC BY 4.0). A country's profile shows the latest of each indicator and the world map shaded by GDP per head; each series shows its history by year. Filled daily by the world-development feed into the worldlake lake. The one fetcher of WDI: as series it also pulls every WDI code of the world-economy pack (tools/realdata/sources.yaml) and the World Bank's aggregates, which the world-economy feed reads from its output.
 
 | | |
 |---|---|
@@ -28,7 +28,7 @@ python3 tools/drishti.py feed run world-development                # pull today,
 python3 tools/drishti.py feed status world-development             # its last runs
 ```
 
-Daily: `python3 tools/drishti.py feed schedule --cron` (or `--systemd`, `--windows`). The guide: [EXTERNAL_DATA.md](../../docs/guides/EXTERNAL_DATA.md).
+Daily: `python3 tools/drishti.py feed schedule --cron` (or `--systemd`, `--windows`). The guide: [WORLD_DATA_GUIDE.md](../../docs/guides/WORLD_DATA_GUIDE.md).
 
 ## Data contract
 
@@ -67,7 +67,7 @@ One row (JSON Lines: one object a line; the values are the contract's examples):
 {"PROFILE_ID": "WDI-AUS", "NAME": "Australia", "ISO3": "AUS", "ISO2": "AU", "COUNTRY_NAME": "Australia", "REGION": "East Asia & Pacific", "INCOME_GROUP": "High income", "CAPITAL": "Canberra", "POPULATION": 27614411.0, "GDP_PER_CAPITA": 65129.7227990563, "GDP_GROWTH": 1.35039785076631, "INFLATION": 2.87403791660173, "UNEMPLOYMENT": 4.09, "LIFE_EXPECTANCY": 83.0512195121951, "POVERTY_HEADCOUNT": 0.9, "ELECTRICITY_ACCESS": 100.0, "INTERNET_USERS": 96.13140106, "CENTRAL_GOVERNMENT_DEBT": 57.8834285733848, "DATA_YEAR": "2025", "INDICATOR_COUNT": 10}
 ```
 
-The contract: `config/packs/economy/world-development/contracts/development-profile.contract.yaml` ([world-development](../../docs/contracts/packs/world-development.md)).
+The contract: `modules/economy/packs/world-development/contracts/development-profile.contract.yaml` ([world-development](../../docs/contracts/packs/world-development.md)).
 
 ### development-series
 
@@ -98,4 +98,4 @@ One row (JSON Lines: one object a line; the values are the contract's examples):
 {"SERIES_ID": "WDIS-CAN-EG_ELC_ACCS_ZS", "NAME": "Canada · Access to electricity (% of population)", "WDI_PROFILE": "WDI-CAN", "ISO3": "CAN", "COUNTRY_NAME": "Canada", "INDICATOR_CODE": "EG.ELC.ACCS.ZS", "INDICATOR": "Access to electricity (% of population)", "UNIT": "% of population", "DEFINITION": "Access to electricity is the percentage of population with …", "LATEST": 100.0, "LATEST_YEAR": "2024", "PREVIOUS": 100.0, "PREVIOUS_YEAR": "2023", "CHANGE": 0.0}
 ```
 
-The contract: `config/packs/economy/world-development/contracts/development-series.contract.yaml` ([world-development](../../docs/contracts/packs/world-development.md)).
+The contract: `modules/economy/packs/world-development/contracts/development-series.contract.yaml` ([world-development](../../docs/contracts/packs/world-development.md)).

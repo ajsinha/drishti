@@ -1,0 +1,113 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+package com.ash.drishti.server;
+
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasItems;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.web.servlet.MockMvc;
+
+/** The banking packs: enabling two risk packs brings the packs they require, their Sutras and their data-domain connectors. */
+@SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=market-risk,counterparty-risk"})
+@AutoConfigureMockMvc
+class BankingPacksTest {
+
+    @Autowired MockMvc mvc;
+
+    @Test
+    void requiredPacksConnectorsAndSutrasAreLoaded() throws Exception {
+        mvc.perform(get("/api/v1/packs")).andExpect(status().isOk())
+                .andExpect(jsonPath("$[*].name").value(containsInAnyOrder("core", "market-data", "trading", "market-risk", "counterparty-risk")));
+        mvc.perform(get("/api/v1/sources"))
+                .andExpect(jsonPath("$.sources[*].name").value(hasItems("reference-store", "market-store", "trade-pages", "risk-store",
+                        "legal-store", "credit-store", "collateral-store")));
+        mvc.perform(get("/api/v1/sutras")).andExpect(jsonPath("$.length()").value(183))      // equity-beta's (2.9.2)
+                .andExpect(jsonPath("$[*].name").value(hasItems("irs-fixfloat", "endur-comswap", "counterparty-trades", "netting-set", "stress-result", "ir-curve", "counterparty")));
+        mvc.perform(get("/api/v1/command/suggest").param("q", "NSE"))
+                .andExpect(jsonPath("$[*].mnemonic").value(hasItem("NSET")));
+    }
+
+    /**
+     * Pivot (the pivot engine on a panel's rows or a kind) where the generators opt in, with trader-sensible openings: a netting set's and a clearing account's
+     * trades by notional, product × maturity bucket; a book's by MTM, product × currency; a desk's trades and its derived
+     * P&L by MTM, book × currency; a trade's cash flows by PV, type × leg; the trade search by MTM, book × currency.
+     */
+    @Test
+    void theGeneratedSutrasAndTheTradeSearchOfferPivotsWhereTheyHelp() throws Exception {
+        String trades = "$.panels[?(@.id == 'trades')].data.pivot";
+        mvc.perform(get("/api/v1/views/netting-set/NS-ALDERSHOT-LDN")).andExpect(status().isOk())
+                .andExpect(jsonPath(trades + ".columns[0]").value(hasItem("MATURITY_BUCKET")))
+                .andExpect(jsonPath(trades + ".values[0].field").value(hasItem("NOTIONAL")))
+                .andExpect(jsonPath("$.panels[?(@.id == 'exposure')].data.pivot").value(org.hamcrest.Matchers.empty()));
+        mvc.perform(get("/api/v1/pivot/catalogue").param("source", "panel/netting-set/trades/NS-ALDERSHOT-LDN")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.fields[*].name").value(hasItems("MATURITY_BUCKET", "NOTIONAL")))
+                .andExpect(jsonPath("$.defaultView.columns[0]").value("MATURITY_BUCKET"))
+                .andExpect(jsonPath("$.defaultView.values[0].measure").value("sum(NOTIONAL)"));
+        mvc.perform(post("/api/v1/pivot/query").contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                .content("{\"source\":\"panel/netting-set/trades/NS-ALDERSHOT-LDN\",\"rows\":[\"MATURITY_BUCKET\"],\"values\":[\"count()\"]}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.rows[0].value").value(org.hamcrest.Matchers.oneOf("0-1Y", "1-2Y", "2-5Y", "5-10Y", "10Y+")));
+        mvc.perform(get("/api/v1/views/clearing-account/CLR-CME-1")).andExpect(jsonPath(trades + ".rows[0]").value(hasItem("PRODUCT")));
+        mvc.perform(get("/api/v1/views/desk/DESK-RATES"))
+                .andExpect(jsonPath("$.panels[?(@.id == 'positions')].data.pivot.columns[0]").value(hasItem("CURRENCY")))
+                .andExpect(jsonPath("$.panels[?(@.id == 'positions')].data.pivot.heat").value(hasItem(true)));
+        mvc.perform(get("/api/v1/views/trade/MX-20000001")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.panels[?(@.id == 'legs')].data.layout").value(hasItem("columns")));
+        mvc.perform(get("/api/v1/search").param("q", "TRD where QUANTITY > 0")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.pivot.source").value("trade"))
+                .andExpect(jsonPath("$.pivot.view.rows[0]").value("PRODUCT_TYPE")).andExpect(jsonPath("$.pivot.view.columns[0]").value("SOURCE_SYSTEM"))
+                .andExpect(jsonPath("$.pivot.fields").value(hasItems("PORTFOLIO", "SOURCE_SYSTEM", "COUNTERPARTY", "QUANTITY")));
+    }
+
+    /**
+     * Each chart and aggregate kind on a sample the generators wrote for it: drawn, with the numbers expected. The P&L explain's waterfall
+     * is registered under construction ({@code pnl-explain-waterfall}, config/under-construction.yaml): its panel is the chip.
+     */
+    @Test
+    void theChartAndAggregatePanelsHaveTheirSampleData() throws Exception {
+        mvc.perform(get("/api/v1/views/pnl-explain/PNL-COMM-1")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.panels[?(@.id == 'explain')].kind").value(hasItem("kv")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Under construction")));
+        String[][] cases = {
+            {"desk/DESK-RATES", "mtmGrid", "pivot"}, {"desk/DESK-RATES", "tradeCount", "pivot"},
+            {"counterparty/CP-ALDERSHOT", "hierarchy", "graph"}, {"equity/EQ-CSCA", "ohlc", "candlestick"}, {"commodity/CMD-BRENT", "ohlc", "candlestick"},
+            {"trade/MX-20000001", "ladder", "hbar"}, {"trade/MX-20000001", "events", "timeline"}, {"trade/1000001", "ladder", "hbar"}};
+        for (String[] c : cases) {
+            String panel = "$.panels[?(@.id == '" + c[1] + "')]";
+            mvc.perform(get("/api/v1/views/" + c[0])).andExpect(status().isOk())
+                    .andExpect(jsonPath(panel + ".kind").value(hasItem(c[2])))
+                    .andExpect(jsonPath(panel + ".empty").value(hasItem(false)));
+        }
+        // a legal entity's risk-return scatter reads the VaR engine's book VaRs (VAR_ENGINE.BOOKS, 2.9.2): drawn, empty on the demo source
+        mvc.perform(get("/api/v1/views/legal-entity/LE-NY")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.panels[?(@.id == 'riskReturn')].kind").value(hasItem("scatter")));
+        mvc.perform(get("/api/v1/views/counterparty/CP-ALDERSHOT"))
+                .andExpect(jsonPath("$.panels[?(@.id == 'hierarchy')].data.nodes[?(@.focus == true)].id").value(hasItem("CP-ALDERSHOT")))
+                .andExpect(jsonPath("$.panels[?(@.id == 'hierarchy')].data.nodes[?(@.id == 'GRP-ALDERSHOT')].link.kind").value(hasItem("counterparty-group")));
+        mvc.perform(get("/api/v1/views/trade/MX-20000001"))
+                .andExpect(jsonPath("$.panels[?(@.id == 'events')].data.events[0].label").value(hasItem("BOOKED · deal")))
+                .andExpect(jsonPath("$.panels[?(@.id == 'legs')].data.tabs[0].panels[?(@.id == 'leg-notional')].data.step").value(hasItem(true)));
+    }
+}

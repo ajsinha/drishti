@@ -123,12 +123,12 @@
     if (!fresh && cache.has(key)) return cache.get(key);
     var table = tableOf(path, q);
     var pr = table && window.Drishti.fetchTable
-      ? window.Drishti.fetchTable("/api/var/" + path + "?" + p.toString(), { shape: table[0], at: table[1] }).then(function (t) {
+      ? window.Drishti.fetchTable(drishti_url("/api/var/") + path + "?" + p.toString(), { shape: table[0], at: table[1] }).then(function (t) {
           var d = t.answer();                          // the same answer as the JSON one, read from the typed columns (2.9.7)
           Object.defineProperty(d, "__table", { value: t, enumerable: false });
           return d;
         }, function (e) { var x = new Error(e.detail || e.message); x.status = e.status; x.code = e.code; x.body = e.body; throw x; })
-      : fetch("/api/var/" + path + "?" + p.toString(), { headers: { Accept: "application/json" }, credentials: "same-origin" })
+      : fetch(drishti_url("/api/var/" + path + "?" + p.toString()), { headers: { Accept: "application/json" }, credentials: "same-origin" })
       .then(function (r) {
         return r.json().catch(function () { return {}; }).then(function (b) {
           if (!r.ok) { var e = new Error(b.detail || ("HTTP " + r.status)); e.status = r.status; e.code = b.code; e.body = b; throw e; }
@@ -144,7 +144,7 @@
     var qs = new URLSearchParams();
     if (S.asOf) qs.set("asOf", S.asOf);
     if (S.ccy && S.ccy !== "USD") qs.set("ccy", S.ccy);
-    return fetch("/api/var/" + path + (qs.toString() ? "?" + qs.toString() : ""), {
+    return fetch(drishti_url("/api/var/" + path + (qs.toString() ? "?" + qs.toString() : "")), {
       method: method, credentials: "same-origin", headers: { "Content-Type": "application/json", Accept: "application/json" },
       body: body ? JSON.stringify(body) : undefined
     }).then(function (r) {
@@ -242,7 +242,7 @@
       u.searchParams.delete("capture");
       if (S.ccy && S.ccy !== "USD") u.searchParams.set("ccy", S.ccy); else u.searchParams.delete("ccy");
       lensLink(u);
-      history.pushState({ scope: scope, ccy: S.ccy, lens: lensState() }, "", u.toString());
+      history.pushState({ scope: scope, ccy: S.ccy, lens: lensState() }, "", drishti_url(u.toString()));
     }
     $("[data-vx-cmd]").textContent = words(scope);
     var topIn = document.querySelector("#cmd, input[name=q]");
@@ -309,13 +309,19 @@
 
   function renderHeadline(d) {
     $("[data-vx-date]").textContent = d.businessDate;
+    var asOf = $("[data-vx-asof]");                         // the date asked had no P&L load: the earlier date that answered, said prominently
+    if (asOf) { asOf.textContent = d.asOfNotice ? "⚠ " + d.asOfNotice : ""; asOf.hidden = !d.asOfNotice; }
     $("[data-vx-set]").textContent = (d.provenance.scenarioSet || "").split(" · ")[0];
     $("[data-vx-version]").textContent = d.provenance.vectors.split("data version ")[1] || "";
     var ln = d.lens || {}, sum = ln.method === "SUM", sq = ln.method === "SQRT10", unit = sum ? "windows" : "scenarios";
     $("[data-vx-n]").textContent = "(" + d.scenarios + " " + unit + ")";
     var conf = Math.round(d.confidence * 1000) / 10, esc = Math.round(d.esConfidence * 1000) / 10;
-    $("[data-vx-var-legend]").textContent = "VaR " + conf + "% (" + ordinal(d.k) + " worst)";
-    $("[data-vx-es-legend]").textContent = "ES " + esc + "% (mean of worst " + d.esCount + ")";
+    // the histogram's legend: the path's figures once its chart is drawn (drawPath), else these words; whichever answer comes last, the
+    // legend reads the same (the snapshots once caught the two answers racing)
+    if ($("[data-vx-var-legend]").dataset.seq !== String(S.seq)) {
+      $("[data-vx-var-legend]").textContent = "VaR " + conf + "% (" + ordinal(d.k) + " worst)";
+      $("[data-vx-es-legend]").textContent = "ES " + esc + "% (mean of worst " + d.esCount + ")";
+    }
     var bt = d.backtest || {}, u = d.limitUse, cur = d.currency || "USD";
     var days = ln.horizon === "10D" ? "10 days" : "1 day", stressed = ln.set === "STRESSED", avg = d.stressAverage || {};
     var tiles = [
@@ -354,6 +360,8 @@
     syncLensPicker(d.lens);
     renderCrumb(d);
     renderIntraday(d.intraday);
+    var sb = $("[data-vx-sources]");       // trade grain with a trade source switched off: the details are missing, the numbers are not
+    sb.hidden = !d.banner; sb.textContent = d.banner || ""; sb.dataset.excludes = (d.excludes || []).join(",");
     bindExplain(d);
     if (PM && window.Drishti.VarParametric) window.Drishti.VarParametric.headline(d);   // the parametric tiles, each with its ? (drishti_var-parametric.js)
     renderMatured(d);
@@ -479,6 +487,7 @@
       parametric: p && p.curve ? { "var": p["var"], curve: p.curve, gap: p.gap, gapPct: p.gapPct, describe: p.curveDescribe } : null }, { height: 210 });
     $("[data-vx-var-legend]").textContent = "VaR " + money(d["var"]);
     $("[data-vx-es-legend]").textContent = "ES " + money(d.es);
+    $("[data-vx-var-legend]").dataset.seq = String(S.seq);
     R.riskChart($("[data-vx-tail]"), { kind: "bar", id: "key", x: { field: "key", title: "" }, y: { field: "pnl", format: "compact" }, legend: "none",
       data: { rows: d.worst.map(function (w, r) { return { key: "#" + w.rank, pnl: w.pnl, date: w.date, atVar: r === d.k - 1 ? 1 : 0, inTail: r < d.esCount ? 1 : 0 }; }) },
       colourWhen: [{ when: "atVar > 0", tone: "bad" }, { when: "inTail > 0", tone: "warn" }] },
@@ -715,7 +724,7 @@
               s.appendChild(cellButton("Compare with now", "vx-link", function () { compare(c.id, "now"); }));
               [["CSV", "/csv"], ["JSONL", "/jsonl"]].forEach(function (a) {           // 2.9.4: the same rows, one a line
                 var l = h("a", "vx-link", a[0]);
-                l.href = "/api/var/captures/" + encodeURIComponent(c.id) + a[1];
+                l.href = drishti_url("/api/var/captures/" + encodeURIComponent(c.id) + a[1]);
                 s.appendChild(document.createTextNode(" "));
                 s.appendChild(l);
               });
@@ -858,7 +867,7 @@
     try { sessionStorage.setItem(CCY_KEY, c); } catch (e) { /* private window: the link still carries it */ }
     var u = new URL(location.href);
     if (c !== "USD") u.searchParams.set("ccy", c); else u.searchParams.delete("ccy");
-    history.replaceState({ scope: S.scope, ccy: c }, "", u.toString());
+    history.replaceState({ scope: S.scope, ccy: c }, "", drishti_url(u.toString()));
     var sel = picker("[data-vx-ccy]");
     if (!sel.options.some(function (o) { return o.value === c; })) sel.setOptions(sel.options.concat([option(c)]), c);
     else sel.setValue(c);
@@ -898,8 +907,8 @@
     Object.keys(next).forEach(function (k) { S[k] = next[k]; });
     if (S.h !== "10d") { S.h = ""; S.m = ""; }
     var u = lensLink(new URL(location.href));
-    history.replaceState({ scope: S.scope, ccy: S.ccy, lens: lensState() }, "", u.toString());
-    fetch("/api/settings", { method: "PATCH", credentials: "same-origin", headers: { "Content-Type": "application/json", Accept: "application/json" },
+    history.replaceState({ scope: S.scope, ccy: S.ccy, lens: lensState() }, "", drishti_url(u.toString()));
+    fetch(drishti_url("/api/settings"), { method: "PATCH", credentials: "same-origin", headers: { "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify({ varView: { h: S.h || "1d", m: S.m || null, q: S.q ? Number(S.q) : null, esq: S.esq ? Number(S.esq) : null,
                                         set: S.set || "normal" } })
     }).catch(function () { /* the link still carries it */ });
@@ -975,7 +984,7 @@
     root.dataset.hierarchy = id;
     var u = new URL(location.href);
     if (id === "MGMT") u.searchParams.delete("hierarchy"); else u.searchParams.set("hierarchy", id);
-    history.replaceState(history.state, "", u.toString());
+    history.replaceState(history.state, "", drishti_url(u.toString()));
   }
 
   // The tree is drishti-tree (its tree grid, through drishti-risk's VaR hierarchy preset) inside this panel: every figure is the
@@ -1321,7 +1330,7 @@
     S.tab = tab;
     var tu = new URL(location.href);
     if (tab === "path") tu.searchParams.delete("tab"); else tu.searchParams.set("tab", tab);
-    history.replaceState(history.state, "", tu.toString());
+    history.replaceState(history.state, "", drishti_url(tu.toString()));
     tabState(tab);
     var seq = S.seq, t0 = performance.now();
     fresh("main", "computing…", "computing");
@@ -1410,7 +1419,7 @@
     try { sessionStorage.setItem(CCY_KEY, S.ccy); } catch (e) { /* the link carries it */ }
     root.dataset.ccy = S.ccy;
     lensLink(u);                                       // 2.9.7: the lens chosen last (the person's settings) goes into the link too
-    history.replaceState({ scope: S.scope, ccy: S.ccy, lens: lensState() }, "", u.toString());
+    history.replaceState({ scope: S.scope, ccy: S.ccy, lens: lensState() }, "", drishti_url(u.toString()));
     $("[data-vx-horizon]").value = S.h === "10d" ? "10d:" + (S.m || "sqrt10") : "1d";
     $("[data-vx-scenarios]").value = S.set;
   })();
@@ -1431,14 +1440,14 @@
   var bt = document.querySelector("[data-vx-backtest]");
   if (bt) bt.addEventListener("click", function (ev) {
     ev.preventDefault();
-    location.href = "/var/backtesting?scope=" + encodeURIComponent(S.scope || "BANK") + (S.asOf ? "&asOf=" + encodeURIComponent(S.asOf) : "");
+    location.href = drishti_url("/var/backtesting?scope=" + encodeURIComponent(S.scope || "BANK") + (S.asOf ? "&asOf=" + encodeURIComponent(S.asOf) : ""));
   });
 
   // the MR cube link: the Pivot's preset mr on the scope and date in view (MCUBE <scope> [DATE d], /pivot?preset=mr)
   var cube = document.querySelector("[data-vx-cube]");
   if (cube) cube.addEventListener("click", function (ev) {
     ev.preventDefault();
-    location.href = "/pivot?preset=mr&text=" + encodeURIComponent((S.scope || "BANK") + (S.asOf ? " DATE " + S.asOf : ""));
+    location.href = drishti_url("/pivot?preset=mr&text=" + encodeURIComponent((S.scope || "BANK") + (S.asOf ? " DATE " + S.asOf : "")));
   });
 
   window.Drishti.VarExplorer = { select: select, switchTab: switchTab, setCcy: setCcy, setLens: setLens, state: S, api: api, words: words,

@@ -48,6 +48,8 @@ ALLOWED = {
     "core/plugins.py:_connector_actions": "the modules' connector buttons, registered at import (code, not data: C8)",
     "core/plugins.py:_landing_rules": "the modules' landing rules, registered at import (code, not data: C6)",
     "core/menus.py:_cache": "the parsed sitemap.yaml by file stamp: configuration, the same for everyone",
+    "core/resolution.py:_CACHE": "the configuration resolution by settings and the layers' file stamps: product and site files, the same for everyone",
+    "core/resolution.py:_ROOTS": "a packs folder's resolution by folder (bounded): product files, nothing of a person's",
     "core/guides.py:_RENDERED": "Help's pages rendered by file and mtime: the same documents for everyone (who may read a page is checked per request)",
     "core/external_lib.py:_paths": "folders added to sys.path for the console's own libraries: configuration",
     "core/channel_relay.py:HANDLERS": "relay operation to its handler function, registered at import by the routes (code, not data); "

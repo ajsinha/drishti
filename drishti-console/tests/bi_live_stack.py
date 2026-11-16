@@ -48,7 +48,7 @@ REPORT = "file:report:live-trading-desk"
 EXPOSURE = "file:report:live-exposure"
 BOARD = "file:report:desk-wall"                     # 2.4.0: the board is a report with board pages
 # the demo source serves the market-risk pack's trade valuations, one a line (765 since 2.3.0); the live table holds all of them
-_VALUATIONS = [json.loads(line) for line in (ROOT / "config" / "packs" / "banking" / "market-risk" / "samples" / "trade-valuation.jsonl").open(encoding="utf-8") if line.strip()]
+_VALUATIONS = [json.loads(line) for line in (ROOT / "modules" / "banking" / "dmod" / "packs" / "market-risk" / "samples" / "trade-valuation.jsonl").open(encoding="utf-8") if line.strip()]
 TRADES = len(_VALUATIONS)
 TRADE_IDS = {v["TRADE_ID"] for v in _VALUATIONS}          # ids are text with no assumed prefix (2.3.0): ENDUR's are digits
 # The shipped Desk wall warns when the net MTM is negative; the 2.3.0 valuations sum to a positive net MTM, so this stack's copy also warns on the
@@ -108,10 +108,10 @@ class LiveStack:
     def _start(self) -> "LiveStack":
         for port in (SERVER_PORT, CONSOLE_PORT):
             assert port not in FORBIDDEN and not listening(port), f"port {port} is in use: stop whatever listens there"
-        jars = sorted(glob.glob(str(ROOT / "drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)  # newest build first: target may hold older versions
+        jars = sorted(glob.glob(str(ROOT / "kernel/drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)  # newest build first: target may hold older versions
         java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"
         if not jars or not Path(java).exists():
-            raise FileNotFoundError("needs the built server: ./mvnw -o -q package -DskipTests -pl drishti-app -am")
+            raise FileNotFoundError("needs the built server: ./mvnw -o -q package -DskipTests -pl :drishti-app -am")
         work = self.tmp / "server"
         from bi_samples import shipped
         for kind, names in LIVE_FILES.items():
@@ -129,7 +129,7 @@ class LiveStack:
         env = dict(os.environ, DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_PACKS="trading,counterparty-risk,market-risk", DRISHTI_SECURITY_ENABLED="true",
                    DRISHTI_TOKEN_SECRET=SECRET, DRISHTI_BI_DIR=str(work / "config" / "bi"), DRISHTI_DATA_DIR=str(work / "data"))
         self.procs["server"] = subprocess.Popen(java_cmd(java, ["-Xmx768m", "-jar", jars[0], f"--server.port={SERVER_PORT}", "--drishti.security.registered-users-only=false",
-                                                 "--drishti.sources.plugins.demo.settings.tick-ms=200", f"--drishti.bi.query.store-dir={self.tmp / 'store'}", *self.extra], tmp=self.tmp / "jvm-tmp"),
+                                                 "--drishti.sources.plugins.demo.settings.tick-ms=200", f"--drishti.bi.query.store-dir={self.tmp / 'store'}", *self.extra], tmp=self.tmp / "jvm-tmp", cwd=work, env=env),
                                                 cwd=work, env=env, stdout=open(self.tmp / "server.log", "ab"), stderr=subprocess.STDOUT)
         wait(SERVER + "/actuator/health", proc=self.procs["server"])
         seed()

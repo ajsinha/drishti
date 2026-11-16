@@ -32,7 +32,7 @@ from core.auth import Identity
 from core.config import load_settings
 from trading_fake import TradingBackend
 
-TRADING_ABOUT = {"product": "Drishti Trading", "tagline": "t", "edition": {"name": "trading", "title": "Drishti Trading"}}
+FULL_ABOUT = {"product": "Drishti", "edition": None, "lenses": ["trading"]}   # a full instance offering the Trading workspace
 
 #: two people's packs, each pack with a mnemonic only it has
 PACKS = {"ann": [{"name": "finance", "active": True}], "bob": [{"name": "trading", "active": True}]}
@@ -101,12 +101,12 @@ def test_describe_reads_each_persons_own_mnemonics_at_the_same_time():
 def _trading_app(backend):
     app = create_app(load_settings(CONSOLE / "config"))
     app.state.backend = backend
-    app.state.editions.learn(TRADING_ABOUT)
-    app.state.editions.instance.spec["trading"]["people"]["t.brennan"] = {"desk": "DESK-RATES", "role": "desk-head"}
+    app.state.editions.learn(FULL_ABOUT)
+    app.state.editions.lenses["trading"].spec["trading"]["people"]["t.brennan"] = {"desk": "DESK-RATES", "role": "desk-head"}
     _people(app)
 
     async def settings(ident=None):
-        return {}
+        return {"lens": "trading"}                                   # everyone works in the Trading workspace
 
     backend.settings = settings
     return app

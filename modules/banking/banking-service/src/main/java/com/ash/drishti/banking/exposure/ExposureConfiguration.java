@@ -99,7 +99,8 @@ public class ExposureConfiguration {
     }
 
     @Bean(destroyMethod = "close")
-    ExposureOfficial exposureOfficial(ExposureService svc, ExposureProperties props, ObjectProvider<LoadService> loads) {
+    ExposureOfficial exposureOfficial(ExposureService svc, ExposureProperties props, ObjectProvider<LoadService> loads,
+            ObjectProvider<com.ash.drishti.engine.source.SourceRegistry> sources) {
         var off = props.official();                                      // a folder or s3://, Delta (the default) or Iceberg (2.9.5)
         ExposureOfficial o = new ExposureOfficial(svc, new ExposurePublisher(com.ash.drishti.banking.official.OfficialSink.of(off.format(),
                 off.root(), off.storage(), off.retentionYears()), off.jsonl()));
@@ -107,6 +108,7 @@ public class ExposureConfiguration {
         if (l != null) {
             l.onReady(r -> o.onLoad(r.kind(), r.businessDate()));          // the data-load signal reloads the date, then captures it
         }
+        o.onPublished(() -> sources.ifAvailable(r -> r.retryFailingFor(ExposurePublisher.CPTY)));   // the exposure-results connector
         return o;
     }
 

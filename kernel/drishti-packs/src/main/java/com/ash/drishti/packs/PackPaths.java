@@ -1,0 +1,187 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+package com.ash.drishti.packs;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.concurrent.atomic.AtomicBoolean;
+import org.springframework.core.env.Environment;
+
+/**
+ * Where the pack folders and the pack runtime files are, from the environment: the packs folder
+ * ({@code drishti.packs.dir}, default {@code <config>/packs}) and the files under the data umbrella
+ * ({@code drishti.data.dir}, default {@code <home>/data}), each absolute (com.ash.drishti.api.Roots) that each have their own setting. One place, so every reader agrees.
+ */
+public final class PackPaths {
+
+    /**
+     * The packs enabled when {@code drishti.packs.enabled} is not set (or blank) and no edition names them: the one list,
+     * {@code config/packs/default-packs.yaml} (copied into this jar at build; the console reads the same file).
+     */
+    public static final String DEFAULT_ENABLED = String.join(",", com.ash.drishti.packs.edition.Editions.defaultPacks());
+    private static final String LEGACY_PACKS = "packs";
+    private static final AtomicBoolean WARNED = new AtomicBoolean();
+
+    private PackPaths() {
+    }
+
+    /** The value of {@code drishti.packs.enabled} that means "the edition's packs, else the default list" (application.yaml's default). */
+    public static final String DEFAULT_WORD = "default";
+
+    /**
+     * The packs enabled in the configuration: {@code drishti.packs.enabled}; when unset or {@value #DEFAULT_WORD}, the edition's
+     * ({@code drishti.edition}), else {@link #DEFAULT_ENABLED}. Set to empty it is empty, as it always was (no packs).
+     */
+    public static String enabled(Environment env) {
+        String v = env.getProperty("drishti.packs.enabled", DEFAULT_WORD);
+        if (!DEFAULT_WORD.equals(v.strip())) {
+            return v;
+        }
+        if (Boolean.parseBoolean(env.getProperty(com.ash.drishti.packs.edition.Editions.SPEC + ".packs.none", "false"))) {
+            return "";                                         // a distribution of no packs (Drishti Genomics): none, not the default list
+        }
+        java.util.List<String> edition = com.ash.drishti.packs.edition.Editions.of(env).packs();
+        return edition.isEmpty() ? DEFAULT_ENABLED : String.join(",", edition);
+    }
+
+    /** The data umbrella ({@code drishti.data.dir}). */
+    public static String dataDir(Environment env) {
+        String d = env.getProperty("drishti.data.dir", com.ash.drishti.api.Roots.data());
+        return d.endsWith("/") || d.endsWith("\\") ? d.substring(0, d.length() - 1) : d;
+    }
+
+    /**
+     * The packs folder. For one release the old location still works: when the configured folder (the default or not)
+     * does not exist and {@code ./packs} does, that one is used, with a warning.
+     */
+    public static String packsDir(Environment env) {
+        String dir = env.getProperty("drishti.packs.dir", com.ash.drishti.api.Roots.config("packs"));
+        if (!Files.isDirectory(Path.of(dir)) && Files.isDirectory(Path.of(com.ash.drishti.api.Roots.home(LEGACY_PACKS)))) {
+            if (WARNED.compareAndSet(false, true)) {
+                System.getLogger(PackPaths.class.getName()).log(System.Logger.Level.WARNING,
+                        "The packs folder {0} does not exist; using the old location {1}. Move it with: git mv packs config/packs "
+                                + "(or set drishti.packs.dir / DRISHTI_PACKS_DIR). This fallback ends in the next release.", dir, LEGACY_PACKS);
+            }
+            return com.ash.drishti.api.Roots.home(LEGACY_PACKS);
+        }
+        return dir;
+    }
+
+    /**
+     * Further pack folders, comma-separated ({@code drishti.packs.extra-dirs}): a test's or a tool's own folder of packs. The packs of
+     * modules are never here: the resolution finds them ({@link #resolution}).
+     */
+    public static String extraDirs(Environment env) {
+        return env.getProperty("drishti.packs.extra-dirs", "");
+    }
+
+    /** The registries whose changes rebuild the resolution (one listener each). */
+    private static final java.util.Map<Object, Boolean> WATCHED = new java.util.WeakHashMap<>();
+
+    /**
+     * The settings of the resolution of a server (docs/architecture/KERNEL_AND_MODULES.md section 18.2): the site's packs
+     * ({@code drishti.packs.site-dir}, former name {@code drishti.packs.dir}), the deployed ones, the kernel's, the modules folder
+     * ({@code drishti.modules.home}) and the module store ({@code drishti.modules.path}).
+     */
+    public static com.ash.drishti.api.resolution.ResolutionSettings settings(Environment env) {
+        return com.ash.drishti.api.resolution.ResolutionSettings.of(k -> Modules.property(env, k));
+    }
+
+    /**
+     * Resolves every pack, connector template and inbox rule again from the access registry's "what is on" (section 18.1) and makes it
+     * the process's current resolution: a change tells every listener once ({@code resolution.changed}).
+     */
+    public static com.ash.drishti.api.resolution.ConfigResolution resolve(Environment env) {
+        com.ash.drishti.registry.EmbeddedAccessRegistry access = Modules.of(env);
+        com.ash.drishti.api.resolution.ConfigResolution r = com.ash.drishti.api.resolution.ConfigResolution.build(settings(env), access::moduleOn);
+        java.util.concurrent.atomic.AtomicReference<com.ash.drishti.api.resolution.ConfigResolution> held = holder(env);
+        com.ash.drishti.api.resolution.ConfigResolution before = held == null ? null : held.getAndSet(r);
+        // the process-wide one (the lake readers of a server process, which have no environment) follows the first server's settings only:
+        // another Spring context of other settings in the same JVM (a test) keeps its resolution to itself and never replaces it
+        com.ash.drishti.api.resolution.ConfigResolution process = com.ash.drishti.api.resolution.ConfigResolution.current();
+        if (process == null || process.settings().equals(r.settings()) || (before != null && process == before)) {
+            com.ash.drishti.api.resolution.ConfigResolution.install(r);
+        }
+        synchronized (WATCHED) {
+            if (WATCHED.put(access, Boolean.TRUE) == null) {
+                // a module switched on or off at run time: one rebuild, one resolution.changed for packs, connectors, bindings and inbox rules
+                java.lang.ref.WeakReference<Environment> ref = new java.lang.ref.WeakReference<>(env);
+                access.onChange(() -> {
+                    Environment e = ref.get();
+                    if (e != null) {
+                        resolve(e);
+                    }
+                });
+            }
+        }
+        return r;
+    }
+
+    /**
+     * This environment's (one Spring context's) current resolution, resolved now when it has none yet. Never another context's: a test JVM
+     * holds many servers of different settings at once.
+     */
+    public static com.ash.drishti.api.resolution.ConfigResolution resolution(Environment env) {
+        java.util.concurrent.atomic.AtomicReference<com.ash.drishti.api.resolution.ConfigResolution> held = holder(env);
+        com.ash.drishti.api.resolution.ConfigResolution r = held == null ? null : held.get();
+        return r != null ? r : resolve(env);
+    }
+
+    private static final String HOLDER = "drishti.config-resolution";
+
+    /** The resolution's slot inside the environment itself (a property source that answers no property), so it lives and dies with it. */
+    @SuppressWarnings("unchecked")
+    private static java.util.concurrent.atomic.AtomicReference<com.ash.drishti.api.resolution.ConfigResolution> holder(Environment env) {
+        if (!(env instanceof org.springframework.core.env.ConfigurableEnvironment c)) {
+            return null;
+        }
+        synchronized (c) {
+            org.springframework.core.env.PropertySource<?> ps = c.getPropertySources().get(HOLDER);
+            if (ps != null && ps.getSource() instanceof java.util.concurrent.atomic.AtomicReference<?> ref) {
+                return (java.util.concurrent.atomic.AtomicReference<com.ash.drishti.api.resolution.ConfigResolution>) ref;
+            }
+            java.util.concurrent.atomic.AtomicReference<com.ash.drishti.api.resolution.ConfigResolution> ref = new java.util.concurrent.atomic.AtomicReference<>();
+            c.getPropertySources().addLast(new org.springframework.core.env.PropertySource<Object>(HOLDER, ref) {
+                @Override
+                public Object getProperty(String name) {
+                    return null;
+                }
+            });
+            return ref;
+        }
+    }
+
+    /** The packs an administrator deployed ({@code drishti.packs.installed-dir}): part of the site layer. */
+    public static String installedDir(Environment env) {
+        return env.getProperty("drishti.packs.installed-dir", dataDir(env) + "/packs/installed");
+    }
+
+    public static String overlay(Environment env) {
+        return env.getProperty("drishti.packs.overlay", dataDir(env) + "/packs/added.yaml");
+    }
+
+    public static String settingsDir(Environment env) {
+        return env.getProperty("drishti.packs.settings-dir", dataDir(env) + "/packs/settings");
+    }
+
+    public static String samplesFile(Environment env) {
+        return env.getProperty("drishti.packs.samples-file", dataDir(env) + "/packs/samples-mode");
+    }
+
+    public static String historyFile(Environment env) {
+        return env.getProperty("drishti.packs.deploy.history-file", dataDir(env) + "/packs/deploy-history.jsonl");
+    }
+}

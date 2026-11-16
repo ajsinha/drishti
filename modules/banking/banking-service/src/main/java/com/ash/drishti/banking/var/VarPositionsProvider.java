@@ -64,8 +64,8 @@ public final class VarPositionsProvider implements KindProvider {
                 LocalDate d = asOf == null ? null : asOf.businessDate();
                 return p.position(ref.id(), d).map(m -> new EntityDocument(ref, DataNode.of(m),
                         new Provenance(NAME, generation(p, d), Instant.now(), false, LocalDate.parse(String.valueOf(m.get("BUSINESS_DATE"))))));
-            } catch (DrishtiException e) {
-                return Optional.empty();                                // no vectors, the engine off, a date that cannot load: nothing
+            } catch (com.ash.drishti.server.engines.EngineOffException e) {
+                return Optional.empty();                                // the engine off: no positions here
             }
         });
     }
@@ -81,15 +81,17 @@ public final class VarPositionsProvider implements KindProvider {
         }
         Optional<VarPositions> p = positions();
         if (p.isEmpty()) {
-            return true;
+            return true;                                                // the engine off on this node: it computes no positions
         }
+        // never an empty listing that looks true: a date whose inputs are still loading, refused for now (busy protection, no room) or
+        // not loadable answers that refusal (503 with Retry-After, or the reason in words), so a list, a count or a pivot says it
         try {
             LocalDate d = asOf == null ? null : asOf.businessDate();
             long gen = generation(p.get(), d);
             p.get().positions(d, m -> sink.accept(new EntityDocument(EntityRef.of(kind, String.valueOf(m.get("POSITION_ID"))), DataNode.of(m),
                     new Provenance(NAME, gen, Instant.now(), false, LocalDate.parse(String.valueOf(m.get("BUSINESS_DATE")))))));
-        } catch (DrishtiException e) {
-            // nothing loaded: an empty listing
+        } catch (com.ash.drishti.server.engines.EngineOffException e) {
+            // switched off while listing: none
         }
         return true;
     }

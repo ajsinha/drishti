@@ -32,7 +32,7 @@
       var wrap = el('section', { 'class': 'dz-settings', 'data-dz-settings-box': String(index), 'aria-label': 'Settings' }, [
         el('p', { 'class': 'dz-note', text: 'Reading the settings…' })]);
       side.insertBefore(wrap, side.firstChild);
-      h.api('GET', '/designer/settings/' + encodeURIComponent(h.draft) + '?index=' + index + '&kind=' + encodeURIComponent(h.kind) + '&id=' + encodeURIComponent(h.id))
+      h.api('GET', drishti_url('/designer/settings/') + encodeURIComponent(h.draft) + '?index=' + index + '&kind=' + encodeURIComponent(h.kind) + '&id=' + encodeURIComponent(h.id))
         .then(function (f) { fill(wrap, f, focus); })
         .catch(function (e) { wrap.innerHTML = ''; wrap.appendChild(el('p', { 'class': 'dz-note', text: e.message })); });
       return wrap;

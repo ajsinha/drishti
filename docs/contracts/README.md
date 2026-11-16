@@ -70,7 +70,7 @@ may still change before it ships, and the document records each change.
 | [GRP.md](GRP.md) | GRP (`counterparty-group`): members kept, usage computed | PARKED (design kept) |
 | [CVA.md](CVA.md) | CVA (`cva`) | PARKED (design kept) |
 | [WWR.md](WWR.md) | wrong-way risk (new) | PARKED (design kept) |
-| [BUILD_GUIDE.md Part II](../guides/GROUPINGS_ANALYTICS_GUIDE.md#10-the-contract-at-a-glance) | LEIG, LEIC, SIC, ECG (`lei-group`, `lei-country`, `sic-sector`, `country-group`: stored pages retired, computed under the same kinds), CORR (`correlation-result`; the sets keep their factors), USEQ ratios, PXH analytics | BUILT (2026-10-26; Track B) |
+| [BUILD_GUIDE.md Part II](../guides/bi/GROUPINGS_AND_ANALYTICS.md#10-the-contract-at-a-glance) | LEIG, LEIC, SIC, ECG (`lei-group`, `lei-country`, `sic-sector`, `country-group`: stored pages retired, computed under the same kinds), CORR (`correlation-result`; the sets keep their factors), USEQ ratios, PXH analytics | BUILT (2026-10-26; Track B) |
 | `CONCENTRATION.md` | large exposures (new); the OSFI report once its template is supplied | PARKED (not written) |
 | `LIQUIDITY.md` | LCR, NSFR, NCCF, cash-flow gaps (new) | PARKED (not written) |
 | `IRRBB.md` | ΔEVE, ΔNII (new) | PARKED (not written) |
@@ -201,7 +201,7 @@ Every table in the risk lake joins to the masters and to each other through thes
 
 ## 8. Vectors and other arrays
 
-A **vector** is a fixed-length list of numbers that belongs to one row, such as a trade's P&L under each of 509 historical scenarios.
+A **vector** is a fixed-length list of numbers that belongs to one row, such as a position's or trade's P&L under each scenario of the window.
 
 - **Storage:** a `list<double>` column (`PNL` for VaR) in Delta, float64. The rest of the row is ordinary columns; the vector is never
   inside a JSON document.
@@ -332,7 +332,7 @@ Every command that moves to the compute model retires its stored version **in th
 A grouping whose command, kind and ids stay while its stored table goes (LEIG, LEIC, SIC and ECG, computed by derived
 connectors) is listed under `computed-in-place:` in `tools/contracts.policy.yaml`: the guard then checks that no Delta connector serves
 it, no sample, test data or public-data generator holds it, and its contract is class `computed` over plugin `derived`
-([GROUPINGS_ANALYTICS_GUIDE.md, section 23](../guides/GROUPINGS_ANALYTICS_GUIDE.md#23-the-retirement-guard)).
+([GROUPINGS_AND_ANALYTICS.md, section 23](../guides/bi/GROUPINGS_AND_ANALYTICS.md#23-the-retirement-guard)).
 
 ## 15. The sections of every contract
 
@@ -362,7 +362,7 @@ Each contract in this folder has the same sections, in this order, so any two ca
 ## 16. Contracts of every command
 
 Every command (mnemonic) of every pack has a **data contract of its own data**, so anyone can see the shape of what a command holds and
-act on it: one YAML file beside its pack, `config/packs/<domain>/<pack>/contracts/<kind>.contract.yaml`, and a section of its pack's page under
+act on it: one YAML file beside its pack, `modules/<module>/packs/<pack>/contracts/<kind>.contract.yaml`, and a section of its pack's page under
 [packs/](packs/README.md) (the index of every command, its class and status). The pages are generated from the YAML files; the YAML files
 are the contracts.
 
@@ -377,6 +377,7 @@ are the contracts.
 | `grain`, `key`, `id-pattern` | One sentence: one row per ...; the business key; the id patterns of the pack's graph |
 | `dated-by`, `cadence` | The business-date field (`business_date` for the lake's partition, `snapshot`, or `on request`); `frequency` (`daily`, `intraday`, `static`, `on change`) and `due` |
 | `binding-hint` | What a site usually binds, never a connector, a plugin or a location (docs/architecture/KERNEL_AND_MODULES.md section 5.2): the lake table (`risk.scenario-pv`), the partitions, the promoted columns, the vectors, `computed: true` for a kind Drishti computes, and the test-data folders. Which connector serves the kind is the site's binding (`config/bindings.yaml`, Admin → Data bindings) |
+| `list` | How the kind may be listed: `requires`, the fields one of which must narrow a list (`SPV` lists nothing bare: the form asks for a position, trade, book or desk; the API answers `400 DRS-5001` naming them, never a scan), and `why`, the one line the form and the refusal show. A record by its id and a narrowed list read only what they name; the vector columns stay on the record page |
 | `fields`, `nested` | Each field: `name`, `type` ([section 5](#5-types-names-and-encodings), plus `record`, `text list`, `id list`, `date list`, `list` and `unknown`), `presence` (`required`, `optional`, `derived`), `unit`, `description`, `example`, `enum`, `pattern`, `link`; a figure that a compute engine will produce is `derived` with a `note` (and `retiring-in` when its record stays). `nested` lists the fields of each nested path (`TRADES[]`, `KYC`) the same way |
 | `links`, `validation` | The fields that link to another kind; the rules: `required`, `unique` (key per date), `enum`, `pattern`, `link`, `range`, `vector-length` |
 | `notes`, `review` | What a reader should know; the points a person must still confirm (anything the draft inferred rather than read) |

@@ -9,7 +9,7 @@
 
 Statistics Canada (Web Data Service).
 
-The economy module's public-sector national-statistics pack (docs/guides/PUBLIC_SECTOR_GUIDE.md): Statistics Canada's headline statistics by vector from its Web Data Service (Statistics Canada Open Licence): the consumer price index, unemployment, monthly GDP, population, housing starts and the overnight money market rate. Each series shows its latest value, the change on the period and on the year, and its history. Filled daily by the national-statistics feed into the worldlake lake; more vectors are a line each in the feed's YAML.
+The economy module's public-sector national-statistics pack (docs/guides/WORLD_DATA_GUIDE.md): Statistics Canada's headline statistics by vector from its Web Data Service (Statistics Canada Open Licence): the consumer price index, unemployment, monthly GDP, population, housing starts and the overnight money market rate. Each series shows its latest value, the change on the period and on the year, and its history. Filled daily by the national-statistics feed into the worldlake lake; more vectors are a line each in the feed's YAML.
 
 | | |
 |---|---|
@@ -28,7 +28,7 @@ python3 tools/drishti.py feed run national-statistics                # pull toda
 python3 tools/drishti.py feed status national-statistics             # its last runs
 ```
 
-Daily: `python3 tools/drishti.py feed schedule --cron` (or `--systemd`, `--windows`). The guide: [EXTERNAL_DATA.md](../../docs/guides/EXTERNAL_DATA.md).
+Daily: `python3 tools/drishti.py feed schedule --cron` (or `--systemd`, `--windows`). The guide: [WORLD_DATA_GUIDE.md](../../docs/guides/WORLD_DATA_GUIDE.md).
 
 ## Data contract
 
@@ -67,4 +67,4 @@ One row (JSON Lines: one object a line; the values are the contract's examples):
 {"SERIES_ID": "NSTAT-V1", "NAME": "Population of Canada", "VECTOR": "v1", "TITLE": "Population of Canada", "MEMBERS": "Canada", "GEOGRAPHY": "Canada", "TABLE_ID": "17-10-0009-01", "TABLE_TITLE": "Population estimates, quarterly", "TOPIC": "Population", "FREQUENCY": "quarterly", "UNIT": "persons", "SCALE": "units", "LATEST": 41798407.0, "LATEST_PERIOD": "2026-07-01", "PREVIOUS": 41718064.0, "PREVIOUS_PERIOD": "2026-04-01", "CHANGE": 80343.0, "CHANGE_PCT": 0.1926, "YEAR_ON_YEAR_PCT": 0.4553, "RELEASED": "2026-09-23T08:30"}
 ```
 
-The contract: `config/packs/economy/national-statistics/contracts/statistics-series.contract.yaml` ([national-statistics](../../docs/contracts/packs/national-statistics.md)).
+The contract: `modules/economy/packs/national-statistics/contracts/statistics-series.contract.yaml` ([national-statistics](../../docs/contracts/packs/national-statistics.md)).

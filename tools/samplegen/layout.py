@@ -47,7 +47,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 PACKS = ROOT / "config" / "packs"
 if str(ROOT / "drishti-console") not in sys.path:
     sys.path.insert(0, str(ROOT / "drishti-console"))
-from core.pack_paths import manifests  # noqa: E402  (the one rule for where a pack's folder is)
+from core.resolution import manifests  # noqa: E402  (where a pack is: the one resolver, KERNEL_AND_MODULES.md 18)
 DOUBLE, STRING = "double", "string"
 ONE_FILE = 1 << 40                             # target file size for one write: never cut by bytes, only by file-rows
 
@@ -88,7 +88,7 @@ def _view(manifest: dict) -> dict:
     if tools not in sys.path:
         sys.path.insert(0, tools)
     import packlake
-    return packlake.view(manifest)
+    return packlake.view(manifest, modules=False)       # the pack's own connectors: a source module's template adds none
 
 
 def layouts_for_domain(domain: str, packs: pathlib.Path = PACKS) -> dict[str, Layout]:
@@ -98,7 +98,7 @@ def layouts_for_domain(domain: str, packs: pathlib.Path = PACKS) -> dict[str, La
     out: dict[str, Layout] = {}
     for f in manifests(packs):
         manifest = _view(yaml.safe_load(f.read_text(encoding="utf-8")) or {})
-        for conn in (manifest.get("connectors") if isinstance(manifest.get("connectors"), dict) else manifest.get("connector-templates") or {}).values():
+        for conn in (manifest.get("connectors") if isinstance(manifest.get("connectors"), dict) else {}).values():
             settings = conn.get("settings") or {}
             if conn.get("plugin") != "delta" or settings.get("domain") != domain:
                 continue
@@ -106,6 +106,8 @@ def layouts_for_domain(domain: str, packs: pathlib.Path = PACKS) -> dict[str, La
                 lay = Layout.from_settings(settings, kind)
                 if lay:
                     out[kind] = lay
+        for _folder, kind, lay in _lake_entries(manifest, domain):   # a kind no pack connector reads: its first table's layout
+            out.setdefault(kind, lay)
     return out
 
 
@@ -118,7 +120,7 @@ def layouts_by_table(domain: str, packs: pathlib.Path = PACKS) -> dict[str, tupl
     out: dict[str, tuple[str, Layout]] = {}
     for f in manifests(packs):
         manifest = _view(yaml.safe_load(f.read_text(encoding="utf-8")) or {})
-        for conn in (manifest.get("connectors") if isinstance(manifest.get("connectors"), dict) else manifest.get("connector-templates") or {}).values():
+        for conn in (manifest.get("connectors") if isinstance(manifest.get("connectors"), dict) else {}).values():
             settings = conn.get("settings") or {}
             if conn.get("plugin") != "delta" or settings.get("domain") != domain:
                 continue
@@ -127,6 +129,26 @@ def layouts_by_table(domain: str, packs: pathlib.Path = PACKS) -> dict[str, tupl
                 lay = Layout.from_settings(settings, kind)
                 if lay:
                     out[str(named.get(kind) or settings.get(f"table.{kind}") or kind)] = (kind, lay)
+        for folder, kind, lay in _lake_entries(manifest, domain):
+            out.setdefault(folder, (kind, lay))
+    return out
+
+
+def _lake_entries(manifest: dict, domain: str) -> list[tuple[str, str, Layout]]:
+    """The pack's own lake: entries of `domain` that lay a table out, in the pack's order: (folder, kind, layout). Whoever reads the
+    table: a source module's connector (trade-endur, one table per system) reads a table the trading pack lays out, so its layout is
+    found by the table although the pack declares no connector for it."""
+    import packlake
+    out = []
+    for name, entry in ((manifest.get("lake") or {}).get("tables") or {}).items():
+        tdomain, _, folder = str(name).partition(".")
+        if tdomain != domain or not isinstance(entry, dict):
+            continue
+        kind = entry.get("kind") or folder
+        view = packlake.settings_view(manifest, {"kinds": [kind], "settings": {"lake": "demo", "lake-tables": name}})
+        lay = Layout.from_settings(view, kind)
+        if lay:
+            out.append((folder, kind, lay))
     return out
 
 

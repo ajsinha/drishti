@@ -35,7 +35,7 @@ import subprocess
 import sys
 import zipfile
 
-from stage import Part, read_rows, row_line
+from stage import Part, list_texts, read_rows, row_line
 
 LAKE_CLASS = "com/ash/drishti/deltalake/write/LakeWriter.class"
 ROOT = pathlib.Path(__file__).resolve().parents[2]
@@ -76,11 +76,11 @@ def jar_has_writer(jar: str) -> bool:
 
 
 def find_jar(explicit: str | None = None) -> str | None:
-    """--jar, then DRISHTI_JAR, then the newest drishti-server/target/drishti-server-*-exec.jar of this checkout."""
+    """--jar, then DRISHTI_JAR, then the newest kernel/drishti-server/target/drishti-server-*-exec.jar of this checkout."""
     for j in (explicit, os.environ.get("DRISHTI_JAR")):
         if j:
             return j if os.path.isfile(j) else None
-    found = sorted((ROOT / "drishti-server" / "target").glob("drishti-server-*-exec.jar"), key=lambda p: p.stat().st_mtime)
+    found = sorted((ROOT / "kernel/drishti-server" / "target").glob("drishti-server-*-exec.jar"), key=lambda p: p.stat().st_mtime)
     return str(found[-1]) if found else None
 
 
@@ -128,7 +128,7 @@ def choose(engine: str, jar: str | None = None, java: str | None = None) -> tupl
             return "drishti", "Drishti's Java writer in " + (os.path.basename(args[-1]) if args[-2] == "-jar" else "DRISHTI_LAKE_CLASSPATH")
         if engine == "drishti":
             raise WriteError("--engine drishti needs the server's exec jar with the lake writer (--jar, DRISHTI_JAR or a built "
-                             "drishti-server/target/drishti-server-*-exec.jar) and Java 21")
+                             "kernel/drishti-server/target/drishti-server-*-exec.jar) and Java 21")
     if deltalake_available():
         return "deltalake", "the Python deltalake package" + ("; no server jar with the lake writer was found" if engine == "auto" else "")
     raise WriteError("no engine: build the server (its exec jar carries Drishti's writer) or install deltalake and pyarrow "
@@ -184,8 +184,8 @@ def existing_layout(uri: str) -> tuple[list[str], dict[str, str]] | None:
         dt = DeltaTable(uri)
         meta = {"partitionColumns": dt.metadata().partition_columns, "schemaString": dt.schema().to_json()}
     schema = json.loads(meta["schemaString"])
-    types = {f["name"]: ("double" if f["type"] in ("double", "float") else "vector" if isinstance(f["type"], dict)
-                         and f["type"].get("type") == "array" else "string") for f in schema["fields"]}
+    types = {f["name"]: ("double" if f["type"] in ("double", "float") else ("list" if f["type"].get("elementType") == "string" else "vector")
+                         if isinstance(f["type"], dict) and f["type"].get("type") == "array" else "string") for f in schema["fields"]}
     return list(meta.get("partitionColumns") or []), types
 
 
@@ -207,6 +207,8 @@ def check_layout(t: Table) -> None:
 def _cell(v, kind: str):
     if v is None:
         return None
+    if kind == "list":                               # a list attribute: array<string> (DATA_LAKE_GUIDE.md section 2.4)
+        return list_texts(v)
     if kind == "vector":                             # a P&L vector: floats, a missing element stays missing (null, never zero)
         return [None if x is None else float(x) for x in v] if isinstance(v, list) else None
     if kind == "double":
@@ -256,7 +258,8 @@ def write_deltalake(t: Table, by_day: dict, progress=None) -> dict:
             cols[n] = pa.array([v if v != "" else None] * len(rows), pa.string())     # an empty value is null, as Spark writes it
         for name, kind in t.promoted.items():
             cols[name] = pa.array([_cell(r[2].get(name), kind) for r in rows],
-                                  pa.float64() if kind == "double" else pa.list_(pa.float64()) if kind == "vector" else pa.string())
+                                  pa.float64() if kind == "double" else pa.list_(pa.float64()) if kind == "vector"
+                                  else pa.list_(pa.string()) if kind == "list" else pa.string())
         return pa.table(cols)
 
     def commit(table, replace):

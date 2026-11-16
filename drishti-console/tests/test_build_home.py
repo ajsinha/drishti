@@ -161,7 +161,7 @@ def test_one_search_across_every_kind(backend, monkeypatch):
 def test_new_lists_where_each_kind_starts(backend, monkeypatch):
     page = _client(_app(backend, monkeypatch)).get("/build").text
     news = dict(re.findall(r'<a href="([^"]+)" data-new-kind="([\w-]+)"', page))
-    assert news.get("/build/new") == "sutras" and news.get("/build/pack/new") == "packs" and news.get("/build/tables?new=python") == "python-tables"
+    assert news.get("/build/new") == "sutras" and news.get("/build/pack/designer") == "packs" and news.get("/build/tables?new=python") == "python-tables"
 
 
 def test_a_source_that_fails_leaves_its_kind_without_a_count(backend, monkeypatch):
@@ -198,13 +198,14 @@ def test_two_people_with_different_roles_and_lenses_see_different_menus_and_kind
     bob.post("/lens/market")
     for _ in range(2):                                                                               # each in a lens: the lens decides
         a, b = alice.get("/t").text, bob.get("/t").text
-        a_menus = re.findall(r'<span class="tbar-menu-l">([^<]+)</span>', a)
-        b_menus = re.findall(r'<span class="tbar-menu-l">([^<]+)</span>', b)
-        assert "Economies" in a_menus and "Curves" not in a_menus
-        assert "Curves" in b_menus and "Economies" not in b_menus
+        a_cols = re.findall(r'<div class="mega-title">([^<]+)<', a)
+        b_cols = re.findall(r'<div class="mega-title">([^<]+)<', b)
+        assert "Economies" in a_cols and "Markets · Rates" in b_cols                                        # a lens never takes a column out
+        assert a_cols.index("Economies") < a_cols.index("Markets · Rates") and b_cols.index("Markets · Rates") < b_cols.index("Economies")   # it puts its own first
     bob.post("/lens/leave")
-    assert "Economies" in re.findall(r'<span class="tbar-menu-l">([^<]+)</span>', alice.get("/t").text)   # bob leaving moves nobody else
-    assert "Curves" not in re.findall(r'<span class="tbar-menu-l">([^<]+)</span>', bob.get("/t").text)
+    assert "Economies" in re.findall(r'<div class="mega-title">([^<]+)<', alice.get("/t").text)   # bob leaving moves nobody else
+    bob_after = re.findall(r'<div class="mega-title">([^<]+)<', bob.get("/t").text)
+    assert bob_after.index("Economies") < bob_after.index("Markets · Rates")
 
 
 @pytest.mark.parametrize("path", ["/admin/users", "/admin/engines", "/admin/configuration"])

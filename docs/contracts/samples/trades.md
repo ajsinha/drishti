@@ -27,7 +27,7 @@ Every data type of `trades` as a real record of the committed test data, every f
 
 ## ENDUR trades: trade (TRD)
 
-A booked trade as its source system (ENDUR, CALYPSO or MUREX) extracts it in the common schema: the deal, its legs with their cash flows and resets, and its events. One row per trade per business date, keyed by TRADE_ID. Read by the **trading** pack's connector `trade-endur` (lake table `trading.trade_endur`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (4,407 records); each later day's file holds only the records new or changed that day (108–164 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 12,477 rows in all.
+A booked trade as its source system (ENDUR, CALYPSO, MUREX, WSS, SWAPONE or ICI) extracts it in the common schema: the deal, its legs with their cash flows and resets, and its events. One row per trade per business date, keyed by TRADE_ID. Read by the **trading** pack's connector `trade-endur` (lake table `trading.trade_endur`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (4,407 records); each later day's file holds only the records new or changed that day (108–164 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 12,478 rows in all.
 
 ### File layout
 
@@ -48,7 +48,7 @@ The rows come in 5 sub-types, recognised by `PRODUCT_TYPE`. Each has its own mos
 
 | Sub-type | Recognised by | Rows | Sample from | Section |
 |---|---|---|---|---|
-| **ComSwap** | `PRODUCT_TYPE` `ComSwap` | 5,655 | test data | [ComSwap](#endur-comswap) |
+| **ComSwap** | `PRODUCT_TYPE` `ComSwap` | 5,656 | test data | [ComSwap](#endur-comswap) |
 | **ComFut** | `PRODUCT_TYPE` `ComFut` | 2,456 | test data | [ComFut](#endur-comfut) |
 | **Commodity** | `PRODUCT_TYPE` `Commodity` | 2,140 | test data | [Commodity](#endur-commodity) |
 | **Cash** | `PRODUCT_TYPE` `Cash` | 2,075 | test data | [Cash](#endur-cash) |
@@ -60,7 +60,7 @@ The example is from the **ComSwap** record.
 
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
-| `SOURCE_SYSTEM` | string | required | The booking system the trade comes from: ENDUR, CALYPSO or MUREX (upper case). | one of `CALYPSO`, `ENDUR`, `MUREX` | `"ENDUR"` |
+| `SOURCE_SYSTEM` | string | required | The booking system the trade comes from: one of the shipped source systems, ENDUR, CALYPSO, MUREX, WSS, SWAPONE or ICI (upper case). | one of `ENDUR`, `CALYPSO`, `MUREX`, `WSS`, `SWAPONE`, `ICI` | `"ENDUR"` |
 | `TRADE_DATE` | date (YYYY-MM-DD) | required | The date the trade was agreed. | — | `"2025-09-01"` |
 | `TRADE_ID` | string | required | The record's id (the business key) | links to `trade` | `"1005000"` |
 | `TRADE_STATUS` | string | required | Life-cycle status: NEW, VALIDATED, AMENDED, MATURED or CANCELLED. A cancellation is a new version with CANCELLED, never a deleted row; VaR counts only live statuses. | one of `AMENDED`, `CANCELLED`, `MATURED`, `NEW`, `VALIDATED` | `"VALIDATED"` |
@@ -124,7 +124,7 @@ Each record is real, the most complete of its sub-type, pretty-printed with two-
 
 #### endur: ComSwap
 
-5,655 rows; recognised by `PRODUCT_TYPE` `ComSwap`.
+5,656 rows; recognised by `PRODUCT_TYPE` `ComSwap`.
 
 ```json
 {
@@ -1044,30 +1044,31 @@ Its fields beyond the shared table:
 
 ### Fields in other rows
 
-Fields no record above has, found by reading all 12,477 rows, with how many rows fill them.
+Fields no record above has, found by reading all 12,478 rows, with how many rows fill them.
 
 | Field | Type | Rows with it | Meaning | Example |
 |---|---|---|---|---|
-| `INPUT_DATE` | date (YYYY-MM-DD) (the contract's type; always empty in the test data) | always empty (12,477 rows hold the key) | The day the trade was entered in the booking system (CALYPSO and MUREX: the trade date; empty on ENDUR). | — |
-| `PRODUCT_GROUP` | string (the contract's type; always empty in the test data) | always empty (12,477 rows hold the key) | The asset class (Rates, FX, Credit, Equity, Commodity, Inflation, Fixed income, Money market, Securities financing, Structured); empty on ENDUR. | — |
-| `PRODUCT_SUB_GROUP` | string (the contract's type; always empty in the test data) | always empty (12,477 rows hold the key) | The product family within the group (linear, option, exotic, bond, future, cds, loan, money, note,...); empty on ENDUR. | — |
-| `OPTION_TYPE` | string (the contract's type; always empty in the test data) | always empty (12,477 rows hold the key) | For an option: Call or Put, Payer or Receiver (swaption), Cap or Floor; null otherwise. | — |
-| `STRIKE_PRICE` | number (the contract's type; always empty in the test data) | always empty (12,477 rows hold the key) | For an option: the strike, as a price or as a rate (a fraction a year for rates); null otherwise. | — |
-| `STRATEGY` | string (the contract's type; always empty in the test data) | always empty (12,477 rows hold the key) | The trading strategy the trade belongs to; null or empty when none (always empty in the test data). | — |
-| `INTERNAL_TRADING_STRATEGY` | string (the contract's type; always empty in the test data) | always empty (12,477 rows hold the key) | The bank's internal strategy code; empty when none (always empty in the test data). Carried through; not read by Drishti. | — |
-| `NY_CURVE_FLAG` | string (the contract's type; always empty in the test data) | always empty (12,477 rows hold the key) | The booking system's flag for valuing on the New York close curves; empty when not set (always empty in the test data). Carried through; not read by Drishti. | — |
-| `TT_GROUP` | string (the contract's type; always empty in the test data) | always empty (12,477 rows hold the key) | CALYPSO and MUREX: the desk of the trade, a DESK_ID of the core pack's desk kind (DESK-…); empty on ENDUR. Carried through; not read by Drishti. | — |
-| `TT_BOOK` | string (the contract's type; always empty in the test data) | always empty (12,477 rows hold the key) | CALYPSO and MUREX: the trade's book, a BOOK_ID of the core pack's book kind (BOOK-…), the same as PORTFOLIO; empty on ENDUR. | — |
-| `SETTLEMENT_DATE` | date (YYYY-MM-DD) (the contract's type; always empty in the test data) | always empty (12,477 rows hold the key) | The day the trade settles (CALYPSO and MUREX: the start date; empty on ENDUR). | — |
-| `LEGS[].RESET_HOLIDAY_SCHEDULE` | string (the contract's type; always empty in the test data) | always empty (20,847 rows hold the key) | The holiday calendar the fixings follow (MUREX USNY, GBLO, EUTA, JPTO); null otherwise. | — |
-| `LEGS[].EMISSIONS_VINTAGE_MIN` | string (the contract's type; always empty in the test data) | always empty (20,847 rows hold the key) | The earliest vintage of emission allowances that may be delivered; empty unless an emissions trade (always empty in the test data). Carried through; not read by Drishti. | — |
-| `LEGS[].EMISSIONS_VINTAGE_MAX` | string (the contract's type; always empty in the test data) | always empty (20,847 rows hold the key) | The latest vintage of emission allowances that may be delivered; empty unless an emissions trade (always empty in the test data). Carried through; not read by Drishti. | — |
-| `LEGS[].EMISSIONS_VINTAGE_DELIVERY_TYPE` | string (the contract's type; always empty in the test data) | always empty (20,847 rows hold the key) | How the vintages of emission allowances are delivered; empty unless an emissions trade (always empty in the test data). Carried through; not read by Drishti. | — |
-| `LEGS[].NY_CURVE_FLAG` | string (the contract's type; always empty in the test data) | always empty (20,847 rows hold the key) | The booking system's New York close curve flag for the leg; empty when not set (always empty in the test data). Carried through; not read by Drishti. | — |
-| `LEGS[].NUM_RRDC_REC` | string (the contract's type; always empty in the test data) | always empty (20,847 rows hold the key) | The number of rate records the booking system holds for the leg (always empty in the test data). Carried through; not read by Drishti. | — |
-| `LEGS[].NUM_PROFILE_REC` | string (the contract's type; always empty in the test data) | always empty (20,847 rows hold the key) | The number of profile (flow) records the booking system holds for the leg, as text: the length of CASH_FLOWS on CALYPSO and MUREX; empty on ENDUR. Not read by Drishti. | — |
-| `EVENTS[].VAULT_LOCATION_ALLOCATION` | string (the contract's type; always empty in the test data) | always empty (92,592 rows hold the key) | The vault a metal delivery event is allocated to; empty when none (always empty in the test data). Carried through; not read by Drishti. | — |
-| `EVENTS[].NY_CURVE_FLAG` | string (the contract's type; always empty in the test data) | always empty (92,592 rows hold the key) | The booking system's New York close curve flag for the event; empty when not set (always empty in the test data). Carried through; not read by Drishti. | — |
+| `INPUT_DATE` | date (YYYY-MM-DD) (the contract's type; always empty in the test data) | always empty (12,478 rows hold the key) | The day the trade was entered in the booking system (CALYPSO and MUREX: the trade date; empty on ENDUR). | — |
+| `PRODUCT_GROUP` | string (the contract's type; always empty in the test data) | always empty (12,478 rows hold the key) | The asset class (Rates, FX, Credit, Equity, Commodity, Inflation, Fixed income, Money market, Securities financing, Structured); empty on ENDUR. | — |
+| `PRODUCT_SUB_GROUP` | string (the contract's type; always empty in the test data) | always empty (12,478 rows hold the key) | The product family within the group (linear, option, exotic, bond, future, cds, loan, money, note,...); empty on ENDUR. | — |
+| `OPTION_TYPE` | string (the contract's type; always empty in the test data) | always empty (12,478 rows hold the key) | For an option: Call or Put, Payer or Receiver (swaption), Cap or Floor; null otherwise. | — |
+| `STRIKE_PRICE` | number (the contract's type; always empty in the test data) | always empty (12,478 rows hold the key) | For an option: the strike, as a price or as a rate (a fraction a year for rates); null otherwise. | — |
+| `STRATEGY` | string (the contract's type; always empty in the test data) | always empty (12,478 rows hold the key) | The trading strategy the trade belongs to; null or empty when none (always empty in the test data). | — |
+| `INTERNAL_TRADING_STRATEGY` | string (the contract's type; always empty in the test data) | always empty (12,478 rows hold the key) | The bank's internal strategy code; empty when none (always empty in the test data). Carried through; not read by Drishti. | — |
+| `NY_CURVE_FLAG` | string (the contract's type; always empty in the test data) | always empty (12,478 rows hold the key) | The booking system's flag for valuing on the New York close curves; empty when not set (always empty in the test data). Carried through; not read by Drishti. | — |
+| `TT_GROUP` | string (the contract's type; always empty in the test data) | always empty (12,478 rows hold the key) | CALYPSO and MUREX: the desk of the trade, a DESK_ID of the core pack's desk kind (DESK-…); empty on ENDUR. Carried through; not read by Drishti. | — |
+| `TT_BOOK` | string (the contract's type; always empty in the test data) | always empty (12,478 rows hold the key) | CALYPSO and MUREX: the trade's book, a BOOK_ID of the core pack's book kind (BOOK-…), the same as PORTFOLIO; empty on ENDUR. | — |
+| `SETTLEMENT_DATE` | date (YYYY-MM-DD) (the contract's type; always empty in the test data) | always empty (12,478 rows hold the key) | The day the trade settles (CALYPSO and MUREX: the start date; empty on ENDUR). | — |
+| `LEGS[].RESET_HOLIDAY_SCHEDULE` | string (the contract's type; always empty in the test data) | always empty (20,849 rows hold the key) | The holiday calendar the fixings follow (MUREX USNY, GBLO, EUTA, JPTO); null otherwise. | — |
+| `LEGS[].EMISSIONS_VINTAGE_MIN` | string (the contract's type; always empty in the test data) | always empty (20,849 rows hold the key) | The earliest vintage of emission allowances that may be delivered; empty unless an emissions trade (always empty in the test data). Carried through; not read by Drishti. | — |
+| `LEGS[].EMISSIONS_VINTAGE_MAX` | string (the contract's type; always empty in the test data) | always empty (20,849 rows hold the key) | The latest vintage of emission allowances that may be delivered; empty unless an emissions trade (always empty in the test data). Carried through; not read by Drishti. | — |
+| `LEGS[].EMISSIONS_VINTAGE_DELIVERY_TYPE` | string (the contract's type; always empty in the test data) | always empty (20,849 rows hold the key) | How the vintages of emission allowances are delivered; empty unless an emissions trade (always empty in the test data). Carried through; not read by Drishti. | — |
+| `LEGS[].NY_CURVE_FLAG` | string (the contract's type; always empty in the test data) | always empty (20,849 rows hold the key) | The booking system's New York close curve flag for the leg; empty when not set (always empty in the test data). Carried through; not read by Drishti. | — |
+| `LEGS[].NUM_RRDC_REC` | string (the contract's type; always empty in the test data) | always empty (20,849 rows hold the key) | The number of rate records the booking system holds for the leg (always empty in the test data). Carried through; not read by Drishti. | — |
+| `LEGS[].NUM_PROFILE_REC` | string (the contract's type; always empty in the test data) | always empty (20,849 rows hold the key) | The number of profile (flow) records the booking system holds for the leg, as text: the length of CASH_FLOWS on CALYPSO and MUREX; empty on ENDUR. Not read by Drishti. | — |
+| `EVENTS[].VAULT_LOCATION_ALLOCATION` | string (the contract's type; always empty in the test data) | always empty (92,597 rows hold the key) | The vault a metal delivery event is allocated to; empty when none (always empty in the test data). Carried through; not read by Drishti. | — |
+| `EVENTS[].NY_CURVE_FLAG` | string (the contract's type; always empty in the test data) | always empty (92,597 rows hold the key) | The booking system's New York close curve flag for the event; empty when not set (always empty in the test data). Carried through; not read by Drishti. | — |
+| `UPDATED_BY` | string | 1 of 12,478 | Who last changed the trade: a person or a system id. The blotter names it when an edit is refused because the trade changed again. | `"TRADER-014"` |
 
 ### For the production query
 
@@ -1084,7 +1085,7 @@ Fields no record above has, found by reading all 12,477 rows, with how many rows
 
 ### See also
 
-- Data contract: [TRD in the trading pack's contracts](../packs/trading.md#trd-trade-trade) (`config/packs/banking/trading/contracts/trade.contract.yaml`, the source of every meaning on this page).
+- Data contract: [TRD in the trading pack's contracts](../packs/trading.md#trd-trade-trade) (`modules/banking/dmod/packs/trading/contracts/trade.contract.yaml`, the source of every meaning on this page).
 - [Trading: one schema, three source systems](../../guides/BUILD_GUIDE.md#trading-one-schema-three-source-systems)
 - [3. Trades and products](../../knowledge/risk.md#3-trades-and-products)
 - [Tutorial 11 · Correct a trade and approve it: write-back](../../tutorials/11-correct-and-approve.md)
@@ -1094,7 +1095,7 @@ Fields no record above has, found by reading all 12,477 rows, with how many rows
 
 ## CALYPSO trades: trade (TRD)
 
-A booked trade as its source system (ENDUR, CALYPSO or MUREX) extracts it in the common schema: the deal, its legs with their cash flows and resets, and its events. One row per trade per business date, keyed by TRADE_ID. Read by the **trading** pack's connector `trade-calypso` (lake table `trading.trade_endur`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (3,471 records); each later day's file holds only the records new or changed that day (174–373 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 18,493 rows in all.
+A booked trade as its source system (ENDUR, CALYPSO, MUREX, WSS, SWAPONE or ICI) extracts it in the common schema: the deal, its legs with their cash flows and resets, and its events. One row per trade per business date, keyed by TRADE_ID. Read by the **trading** pack's connector `trade-calypso` (lake table `trading.trade_endur`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (3,471 records); each later day's file holds only the records new or changed that day (174–373 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 18,494 rows in all.
 
 ### File layout
 
@@ -1118,7 +1119,7 @@ The rows come in 51 sub-types, recognised by `PRODUCT_TYPE`. Each has its own mo
 | **FX_DOUBLE_BARRIER** | `PRODUCT_TYPE` `FX_DOUBLE_BARRIER` | 456 | test data | [FX_DOUBLE_BARRIER](#calypso-fx_double_barrier) |
 | **FX_DIGITAL** | `PRODUCT_TYPE` `FX_DIGITAL` | 444 | test data | [FX_DIGITAL](#calypso-fx_digital) |
 | **CDS_INDEX** | `PRODUCT_TYPE` `CDS_INDEX` | 438 | test data | [CDS_INDEX](#calypso-cds_index) |
-| **FX_SPOT** | `PRODUCT_TYPE` `FX_SPOT` | 436 | test data | [FX_SPOT](#calypso-fx_spot) |
+| **FX_SPOT** | `PRODUCT_TYPE` `FX_SPOT` | 437 | test data | [FX_SPOT](#calypso-fx_spot) |
 | **PUTTABLE_BOND** | `PRODUCT_TYPE` `PUTTABLE_BOND` | 435 | test data | [PUTTABLE_BOND](#calypso-puttable_bond) |
 | **CDS_SINGLE** | `PRODUCT_TYPE` `CDS_SINGLE` | 426 | test data | [CDS_SINGLE](#calypso-cds_single) |
 | **COVERED_BOND** | `PRODUCT_TYPE` `COVERED_BOND` | 426 | test data | [COVERED_BOND](#calypso-covered_bond) |
@@ -1173,7 +1174,7 @@ The example is from the **FX_DOUBLE_BARRIER** record.
 
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
-| `SOURCE_SYSTEM` | string | required | The booking system the trade comes from: ENDUR, CALYPSO or MUREX (upper case). | one of `CALYPSO`, `ENDUR`, `MUREX` | `"CALYPSO"` |
+| `SOURCE_SYSTEM` | string | required | The booking system the trade comes from: one of the shipped source systems, ENDUR, CALYPSO, MUREX, WSS, SWAPONE or ICI (upper case). | one of `ENDUR`, `CALYPSO`, `MUREX`, `WSS`, `SWAPONE`, `ICI` | `"CALYPSO"` |
 | `SOURCE_UPDATE_TIME` | timestamp (ISO-8601) | optional (filled in every row) | When the booking system last changed the trade, ISO-8601 UTC; moves with every amendment (empty on an ENDUR trade never amended). | — | `"2026-07-21T17:50:00Z"` |
 | `TRADE_DATE` | date (YYYY-MM-DD) | required | The date the trade was agreed. | — | `"2025-02-10"` |
 | `INPUT_DATE` | date (YYYY-MM-DD) | optional (filled in every row) | The day the trade was entered in the booking system (CALYPSO and MUREX: the trade date; empty on ENDUR). | — | `"2025-02-10"` |
@@ -1687,7 +1688,7 @@ Its fields beyond the shared table:
 
 #### calypso: FX_SPOT
 
-436 rows; recognised by `PRODUCT_TYPE` `FX_SPOT`.
+437 rows; recognised by `PRODUCT_TYPE` `FX_SPOT`.
 
 ```json
 {
@@ -8088,39 +8089,40 @@ Its fields beyond the shared table:
 
 ### Fields in other rows
 
-Fields no record above has, found by reading all 18,493 rows, with how many rows fill them.
+Fields no record above has, found by reading all 18,494 rows, with how many rows fill them.
 
 | Field | Type | Rows with it | Meaning | Example |
 |---|---|---|---|---|
-| `PACKAGE_ID` | string (the contract's type; always empty in the test data) | always empty (18,493 rows hold the key) | The package the trade was dealt in with others (ENDUR PKG-nnnn); empty when none. | — |
-| `ORIGINAL_COUNTERPARTY` | string (the contract's type; always empty in the test data) | always empty (18,493 rows hold the key) | The counterparty before a novation: a COUNTERPARTY_ID of the core pack's counterparty kind (CP-…); empty when the trade was not novated. | — |
-| `ORIGINAL_COUNTERPARTY_UEN` | string (the contract's type; always empty in the test data) | always empty (18,493 rows hold the key) | The original counterparty's unique entity number, when the trade was novated; empty otherwise. | — |
-| `REGISTRY_DELIVERY_DATE` | date (YYYY-MM-DD) (the contract's type; always empty in the test data) | always empty (18,493 rows hold the key) | The day a registered instrument is delivered (ENDUR warehouse warrants and emissions); empty otherwise. | — |
-| `STRATEGY` | string (the contract's type; always empty in the test data) | always empty (18,493 rows hold the key) | The trading strategy the trade belongs to; null or empty when none (always empty in the test data). | — |
-| `INTERNAL_TRADING_STRATEGY` | string (the contract's type; always empty in the test data) | always empty (18,493 rows hold the key) | The bank's internal strategy code; empty when none (always empty in the test data). Carried through; not read by Drishti. | — |
-| `NY_CURVE_FLAG` | string (the contract's type; always empty in the test data) | always empty (18,493 rows hold the key) | The booking system's flag for valuing on the New York close curves; empty when not set (always empty in the test data). Carried through; not read by Drishti. | — |
-| `VAULT_LOCATION_ALLOCATION` | string (the contract's type; always empty in the test data) | always empty (18,493 rows hold the key) | The vault a physical metal or warehouse warrant is allocated to (ENDUR Commodity COMM-WARRANTS-INV); empty otherwise. | — |
-| `PRECIOUS_METAL_FLAG` | string (the contract's type; always empty in the test data) | always empty (18,493 rows hold the key) | Y for a precious-metals trade (gold, silver); empty otherwise. | — |
-| `LEASE_PERPETUITY_FLAG` | string (the contract's type; always empty in the test data) | always empty (18,493 rows hold the key) | Y when a metal lease runs until called, N when not (ENDUR warehouse warrants); empty otherwise. | — |
-| `LEGS[].LEASE_CURRENCY` | string (the contract's type; always empty in the test data) | always empty (19,648 rows hold the key) | ENDUR: the currency a metal lease or the leg's financing is in; empty otherwise. | — |
-| `LEGS[].FLOAT_SPREAD` | number (the contract's type; always empty in the test data) | always empty (19,648 rows hold the key) | The spread added to the floating index of the leg: a rate as a fraction a year (rates) or a price differential in PRICE_UNIT (commodities); text or number; empty when none. | — |
-| `LEGS[].PRICE_UNIT` | string (the contract's type; always empty in the test data) | always empty (19,648 rows hold the key) | The unit the leg's quantities and prices are in (ENDUR BBL, MT, MMBTU, MWH, OZ, BU; MUREX USD/bbl, USD/oz,...); empty for money. | — |
-| `LEGS[].SPOT_CONVERSION_FACTOR` | string (the contract's type; always empty in the test data) | always empty (19,648 rows hold the key) | ENDUR: the factor converting the leg's unit to the index's unit (1 in the test data). Carried through; not read by Drishti. | — |
-| `LEGS[].PHYSICAL_LOCATION_NAME` | string (the contract's type; always empty in the test data) | always empty (19,648 rows hold the key) | ENDUR: where a physical commodity is delivered (a hub such as Henry Hub, NGX AECO-C); empty otherwise. | — |
-| `LEGS[].INDEX_LOCATION_NAME` | string (the contract's type; always empty in the test data) | always empty (19,648 rows hold the key) | ENDUR: the location the floating index is quoted at; empty for a fixed leg. | — |
-| `LEGS[].RESET_HOLIDAY_SCHEDULE` | string (the contract's type; always empty in the test data) | always empty (19,648 rows hold the key) | The holiday calendar the fixings follow (MUREX USNY, GBLO, EUTA, JPTO); null otherwise. | — |
-| `LEGS[].EMISSIONS_VINTAGE_MIN` | string (the contract's type; always empty in the test data) | always empty (19,648 rows hold the key) | The earliest vintage of emission allowances that may be delivered; empty unless an emissions trade (always empty in the test data). Carried through; not read by Drishti. | — |
-| `LEGS[].EMISSIONS_VINTAGE_MAX` | string (the contract's type; always empty in the test data) | always empty (19,648 rows hold the key) | The latest vintage of emission allowances that may be delivered; empty unless an emissions trade (always empty in the test data). Carried through; not read by Drishti. | — |
-| `LEGS[].EMISSIONS_VINTAGE_DELIVERY_TYPE` | string (the contract's type; always empty in the test data) | always empty (19,648 rows hold the key) | How the vintages of emission allowances are delivered; empty unless an emissions trade (always empty in the test data). Carried through; not read by Drishti. | — |
-| `LEGS[].NY_CURVE_FLAG` | string (the contract's type; always empty in the test data) | always empty (19,648 rows hold the key) | The booking system's New York close curve flag for the leg; empty when not set (always empty in the test data). Carried through; not read by Drishti. | — |
-| `LEGS[].NUM_RRDC_REC` | string (the contract's type; always empty in the test data) | always empty (19,648 rows hold the key) | The number of rate records the booking system holds for the leg (always empty in the test data). Carried through; not read by Drishti. | — |
-| `LEGS[].DAILY_VOLUME` | string (the contract's type; always empty in the test data) | always empty (19,648 rows hold the key) | ENDUR: the leg's quantity per day, in PRICE_UNIT, as text; empty otherwise. | — |
-| `LEGS[].INDEX.SUB_GROUP` | string (the contract's type; always empty in the test data) | always empty (19,648 rows hold the key) | The finer family of the index: ENDUR the commodity sub-sector (Crude oil, Natural gas, Power, Base metals, Precious, Refined, Grains); MUREX the reset frequency (Monthly, Quarterly,...); empty for a fixed leg. | — |
-| `EVENTS[].VAULT_LOCATION_ALLOCATION` | string (the contract's type; always empty in the test data) | always empty (171,325 rows hold the key) | The vault a metal delivery event is allocated to; empty when none (always empty in the test data). Carried through; not read by Drishti. | — |
-| `EVENTS[].NY_CURVE_FLAG` | string (the contract's type; always empty in the test data) | always empty (171,325 rows hold the key) | The booking system's New York close curve flag for the event; empty when not set (always empty in the test data). Carried through; not read by Drishti. | — |
+| `PACKAGE_ID` | string (the contract's type; always empty in the test data) | always empty (18,494 rows hold the key) | The package the trade was dealt in with others (ENDUR PKG-nnnn); empty when none. | — |
+| `ORIGINAL_COUNTERPARTY` | string (the contract's type; always empty in the test data) | always empty (18,494 rows hold the key) | The counterparty before a novation: a COUNTERPARTY_ID of the core pack's counterparty kind (CP-…); empty when the trade was not novated. | — |
+| `ORIGINAL_COUNTERPARTY_UEN` | string (the contract's type; always empty in the test data) | always empty (18,494 rows hold the key) | The original counterparty's unique entity number, when the trade was novated; empty otherwise. | — |
+| `REGISTRY_DELIVERY_DATE` | date (YYYY-MM-DD) (the contract's type; always empty in the test data) | always empty (18,494 rows hold the key) | The day a registered instrument is delivered (ENDUR warehouse warrants and emissions); empty otherwise. | — |
+| `STRATEGY` | string (the contract's type; always empty in the test data) | always empty (18,494 rows hold the key) | The trading strategy the trade belongs to; null or empty when none (always empty in the test data). | — |
+| `INTERNAL_TRADING_STRATEGY` | string (the contract's type; always empty in the test data) | always empty (18,494 rows hold the key) | The bank's internal strategy code; empty when none (always empty in the test data). Carried through; not read by Drishti. | — |
+| `NY_CURVE_FLAG` | string (the contract's type; always empty in the test data) | always empty (18,494 rows hold the key) | The booking system's flag for valuing on the New York close curves; empty when not set (always empty in the test data). Carried through; not read by Drishti. | — |
+| `VAULT_LOCATION_ALLOCATION` | string (the contract's type; always empty in the test data) | always empty (18,494 rows hold the key) | The vault a physical metal or warehouse warrant is allocated to (ENDUR Commodity COMM-WARRANTS-INV); empty otherwise. | — |
+| `PRECIOUS_METAL_FLAG` | string (the contract's type; always empty in the test data) | always empty (18,494 rows hold the key) | Y for a precious-metals trade (gold, silver); empty otherwise. | — |
+| `LEASE_PERPETUITY_FLAG` | string (the contract's type; always empty in the test data) | always empty (18,494 rows hold the key) | Y when a metal lease runs until called, N when not (ENDUR warehouse warrants); empty otherwise. | — |
+| `LEGS[].LEASE_CURRENCY` | string (the contract's type; always empty in the test data) | always empty (19,649 rows hold the key) | ENDUR: the currency a metal lease or the leg's financing is in; empty otherwise. | — |
+| `LEGS[].FLOAT_SPREAD` | number (the contract's type; always empty in the test data) | always empty (19,649 rows hold the key) | The spread added to the floating index of the leg: a rate as a fraction a year (rates) or a price differential in PRICE_UNIT (commodities); text or number; empty when none. | — |
+| `LEGS[].PRICE_UNIT` | string (the contract's type; always empty in the test data) | always empty (19,649 rows hold the key) | The unit the leg's quantities and prices are in (ENDUR BBL, MT, MMBTU, MWH, OZ, BU; MUREX USD/bbl, USD/oz,...); empty for money. | — |
+| `LEGS[].SPOT_CONVERSION_FACTOR` | string (the contract's type; always empty in the test data) | always empty (19,649 rows hold the key) | ENDUR: the factor converting the leg's unit to the index's unit (1 in the test data). Carried through; not read by Drishti. | — |
+| `LEGS[].PHYSICAL_LOCATION_NAME` | string (the contract's type; always empty in the test data) | always empty (19,649 rows hold the key) | ENDUR: where a physical commodity is delivered (a hub such as Henry Hub, NGX AECO-C); empty otherwise. | — |
+| `LEGS[].INDEX_LOCATION_NAME` | string (the contract's type; always empty in the test data) | always empty (19,649 rows hold the key) | ENDUR: the location the floating index is quoted at; empty for a fixed leg. | — |
+| `LEGS[].RESET_HOLIDAY_SCHEDULE` | string (the contract's type; always empty in the test data) | always empty (19,649 rows hold the key) | The holiday calendar the fixings follow (MUREX USNY, GBLO, EUTA, JPTO); null otherwise. | — |
+| `LEGS[].EMISSIONS_VINTAGE_MIN` | string (the contract's type; always empty in the test data) | always empty (19,649 rows hold the key) | The earliest vintage of emission allowances that may be delivered; empty unless an emissions trade (always empty in the test data). Carried through; not read by Drishti. | — |
+| `LEGS[].EMISSIONS_VINTAGE_MAX` | string (the contract's type; always empty in the test data) | always empty (19,649 rows hold the key) | The latest vintage of emission allowances that may be delivered; empty unless an emissions trade (always empty in the test data). Carried through; not read by Drishti. | — |
+| `LEGS[].EMISSIONS_VINTAGE_DELIVERY_TYPE` | string (the contract's type; always empty in the test data) | always empty (19,649 rows hold the key) | How the vintages of emission allowances are delivered; empty unless an emissions trade (always empty in the test data). Carried through; not read by Drishti. | — |
+| `LEGS[].NY_CURVE_FLAG` | string (the contract's type; always empty in the test data) | always empty (19,649 rows hold the key) | The booking system's New York close curve flag for the leg; empty when not set (always empty in the test data). Carried through; not read by Drishti. | — |
+| `LEGS[].NUM_RRDC_REC` | string (the contract's type; always empty in the test data) | always empty (19,649 rows hold the key) | The number of rate records the booking system holds for the leg (always empty in the test data). Carried through; not read by Drishti. | — |
+| `LEGS[].DAILY_VOLUME` | string (the contract's type; always empty in the test data) | always empty (19,649 rows hold the key) | ENDUR: the leg's quantity per day, in PRICE_UNIT, as text; empty otherwise. | — |
+| `LEGS[].INDEX.SUB_GROUP` | string (the contract's type; always empty in the test data) | always empty (19,649 rows hold the key) | The finer family of the index: ENDUR the commodity sub-sector (Crude oil, Natural gas, Power, Base metals, Precious, Refined, Grains); MUREX the reset frequency (Monthly, Quarterly,...); empty for a fixed leg. | — |
+| `EVENTS[].VAULT_LOCATION_ALLOCATION` | string (the contract's type; always empty in the test data) | always empty (171,329 rows hold the key) | The vault a metal delivery event is allocated to; empty when none (always empty in the test data). Carried through; not read by Drishti. | — |
+| `EVENTS[].NY_CURVE_FLAG` | string (the contract's type; always empty in the test data) | always empty (171,329 rows hold the key) | The booking system's New York close curve flag for the event; empty when not set (always empty in the test data). Carried through; not read by Drishti. | — |
 | `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL` | number (the contract's type; always empty in the test data) | always empty (14,522 rows hold the key) | ENDUR: the share of the period the reset counts for (1 / pricing days of an average); empty otherwise. | — |
 | `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_START_DATE` | date (YYYY-MM-DD) (the contract's type; always empty in the test data) | always empty (14,522 rows hold the key) | The first day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — |
 | `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_END_DATE` | date (YYYY-MM-DD) (the contract's type; always empty in the test data) | always empty (14,522 rows hold the key) | The last day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — |
+| `UPDATED_BY` | string | 1 of 18,494 | Who last changed the trade: a person or a system id. The blotter names it when an edit is refused because the trade changed again. | `"TRADER-014"` |
 
 ### For the production query
 
@@ -8137,7 +8139,7 @@ Fields no record above has, found by reading all 18,493 rows, with how many rows
 
 ### See also
 
-- Data contract: [TRD in the trading pack's contracts](../packs/trading.md#trd-trade-trade) (`config/packs/banking/trading/contracts/trade.contract.yaml`, the source of every meaning on this page).
+- Data contract: [TRD in the trading pack's contracts](../packs/trading.md#trd-trade-trade) (`modules/banking/dmod/packs/trading/contracts/trade.contract.yaml`, the source of every meaning on this page).
 - [Trading: one schema, three source systems](../../guides/BUILD_GUIDE.md#trading-one-schema-three-source-systems)
 - [3. Trades and products](../../knowledge/risk.md#3-trades-and-products)
 - [Tutorial 11 · Correct a trade and approve it: write-back](../../tutorials/11-correct-and-approve.md)
@@ -8147,7 +8149,7 @@ Fields no record above has, found by reading all 18,493 rows, with how many rows
 
 ## MUREX trades: trade (TRD)
 
-A booked trade as its source system (ENDUR, CALYPSO or MUREX) extracts it in the common schema: the deal, its legs with their cash flows and resets, and its events. One row per trade per business date, keyed by TRADE_ID. Read by the **trading** pack's connector `trade-murex` (lake table `trading.trade_endur`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (4,198 records); each later day's file holds only the records new or changed that day (214–313 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 19,596 rows in all.
+A booked trade as its source system (ENDUR, CALYPSO, MUREX, WSS, SWAPONE or ICI) extracts it in the common schema: the deal, its legs with their cash flows and resets, and its events. One row per trade per business date, keyed by TRADE_ID. Read by the **trading** pack's connector `trade-murex` (lake table `trading.trade_endur`). Delivered **daily**, 60 business days (2026-07-08 to 2026-09-30): the first day's file is a **full snapshot** (4,198 records); each later day's file holds only the records new or changed that day (214–313 a day). Drishti applies a day's file by key over the day before: a record absent from a day's file keeps its previous version, and nothing is ever deleted (an end is a changed status). 19,597 rows in all.
 
 ### File layout
 
@@ -8197,7 +8199,7 @@ The rows come in 74 sub-types, recognised by `PRODUCT_TYPE`. Each has its own mo
 | **EQ_OPTION_OTC** | `PRODUCT_TYPE` `EQ_OPTION_OTC` | 280 | test data | [EQ_OPTION_OTC](#murex-eq_option_otc) |
 | **EQ_TRS** | `PRODUCT_TYPE` `EQ_TRS` | 279 | test data | [EQ_TRS](#murex-eq_trs) |
 | **CFD** | `PRODUCT_TYPE` `CFD` | 278 | test data | [CFD](#murex-cfd) |
-| **IRS_FIXFLOAT** | `PRODUCT_TYPE` `IRS_FIXFLOAT` | 277 | test data | [IRS_FIXFLOAT](#murex-irs_fixfloat) |
+| **IRS_FIXFLOAT** | `PRODUCT_TYPE` `IRS_FIXFLOAT` | 278 | `tools/testdata/edited/trade-murex.jsonl` | [IRS_FIXFLOAT](#murex-irs_fixfloat) |
 | **CMD_SWAPTION** | `PRODUCT_TYPE` `CMD_SWAPTION` | 276 | test data | [CMD_SWAPTION](#murex-cmd_swaption) |
 | **FREIGHT_FFA** | `PRODUCT_TYPE` `FREIGHT_FFA` | 276 | test data | [FREIGHT_FFA](#murex-freight_ffa) |
 | **GAS_SWING** | `PRODUCT_TYPE` `GAS_SWING` | 275 | test data | [GAS_SWING](#murex-gas_swing) |
@@ -8249,7 +8251,7 @@ The example is from the **OIS** record.
 
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
-| `SOURCE_SYSTEM` | string | required | The booking system the trade comes from: ENDUR, CALYPSO or MUREX (upper case). | one of `CALYPSO`, `ENDUR`, `MUREX` | `"MUREX"` |
+| `SOURCE_SYSTEM` | string | required | The booking system the trade comes from: one of the shipped source systems, ENDUR, CALYPSO, MUREX, WSS, SWAPONE or ICI (upper case). | one of `ENDUR`, `CALYPSO`, `MUREX`, `WSS`, `SWAPONE`, `ICI` | `"MUREX"` |
 | `SOURCE_UPDATE_TIME` | timestamp (ISO-8601) | optional (filled in every row) | When the booking system last changed the trade, ISO-8601 UTC; moves with every amendment (empty on an ENDUR trade never amended). | — | `"2026-07-08T18:30:00Z"` |
 | `TRADE_DATE` | date (YYYY-MM-DD) | required | The date the trade was agreed. | — | `"2026-02-18"` |
 | `INPUT_DATE` | date (YYYY-MM-DD) | optional (filled in every row) | The day the trade was entered in the booking system (CALYPSO and MUREX: the trade date; empty on ENDUR). | — | `"2026-02-18"` |
@@ -13344,7 +13346,7 @@ Its fields beyond the shared table:
 
 #### murex: IRS_FIXFLOAT
 
-277 rows; recognised by `PRODUCT_TYPE` `IRS_FIXFLOAT`.
+278 rows; recognised by `PRODUCT_TYPE` `IRS_FIXFLOAT`; the record is from `tools/testdata/edited/trade-murex.jsonl`.
 
 ```json
 {
@@ -13527,7 +13529,8 @@ Its fields beyond the shared table:
       "NY_CURVE_FLAG": ""
     },
     "… 41 more elements of the same shape"
-  ]
+  ],
+  "UPDATED_BY": "TRADER-014"
 }
 ```
 
@@ -13556,6 +13559,7 @@ Its fields beyond the shared table:
 | `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_START_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The first day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2025-07-28"` |
 | `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_END_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The last day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2025-09-25"` |
 | `LEGS[].CASH_FLOWS[].RESETS[].RATE` | number | optional (filled in 24% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The fixing the reset observed (a rate fraction or a price); text on ENDUR; empty until fixed. | — | `0.035376` |
+| `UPDATED_BY` | string | optional (filled in under 1% of rows) | Who last changed the trade: a person or a system id. The blotter names it when an edit is refused because the trade changed again. | — | `"TRADER-014"` |
 
 #### murex: CMD_SWAPTION
 
@@ -20100,33 +20104,33 @@ Its fields beyond the shared table:
 
 ### Fields in other rows
 
-Fields no record above has, found by reading all 19,596 rows, with how many rows fill them.
+Fields no record above has, found by reading all 19,597 rows, with how many rows fill them.
 
 | Field | Type | Rows with it | Meaning | Example |
 |---|---|---|---|---|
-| `PACKAGE_ID` | string (the contract's type; always empty in the test data) | always empty (19,596 rows hold the key) | The package the trade was dealt in with others (ENDUR PKG-nnnn); empty when none. | — |
-| `ORIGINAL_COUNTERPARTY` | string (the contract's type; always empty in the test data) | always empty (19,596 rows hold the key) | The counterparty before a novation: a COUNTERPARTY_ID of the core pack's counterparty kind (CP-…); empty when the trade was not novated. | — |
-| `ORIGINAL_COUNTERPARTY_UEN` | string (the contract's type; always empty in the test data) | always empty (19,596 rows hold the key) | The original counterparty's unique entity number, when the trade was novated; empty otherwise. | — |
-| `REGISTRY_DELIVERY_DATE` | date (YYYY-MM-DD) (the contract's type; always empty in the test data) | always empty (19,596 rows hold the key) | The day a registered instrument is delivered (ENDUR warehouse warrants and emissions); empty otherwise. | — |
-| `STRATEGY` | string (the contract's type; always empty in the test data) | always empty (19,596 rows hold the key) | The trading strategy the trade belongs to; null or empty when none (always empty in the test data). | — |
-| `INTERNAL_TRADING_STRATEGY` | string (the contract's type; always empty in the test data) | always empty (19,596 rows hold the key) | The bank's internal strategy code; empty when none (always empty in the test data). Carried through; not read by Drishti. | — |
-| `NY_CURVE_FLAG` | string (the contract's type; always empty in the test data) | always empty (19,596 rows hold the key) | The booking system's flag for valuing on the New York close curves; empty when not set (always empty in the test data). Carried through; not read by Drishti. | — |
-| `VAULT_LOCATION_ALLOCATION` | string (the contract's type; always empty in the test data) | always empty (19,596 rows hold the key) | The vault a physical metal or warehouse warrant is allocated to (ENDUR Commodity COMM-WARRANTS-INV); empty otherwise. | — |
-| `PRECIOUS_METAL_FLAG` | string (the contract's type; always empty in the test data) | always empty (19,596 rows hold the key) | Y for a precious-metals trade (gold, silver); empty otherwise. | — |
-| `LEASE_PERPETUITY_FLAG` | string (the contract's type; always empty in the test data) | always empty (19,596 rows hold the key) | Y when a metal lease runs until called, N when not (ENDUR warehouse warrants); empty otherwise. | — |
-| `LEGS[].LEASE_CURRENCY` | string (the contract's type; always empty in the test data) | always empty (26,815 rows hold the key) | ENDUR: the currency a metal lease or the leg's financing is in; empty otherwise. | — |
-| `LEGS[].SPOT_CONVERSION_FACTOR` | string (the contract's type; always empty in the test data) | always empty (26,815 rows hold the key) | ENDUR: the factor converting the leg's unit to the index's unit (1 in the test data). Carried through; not read by Drishti. | — |
-| `LEGS[].PHYSICAL_LOCATION_NAME` | string (the contract's type; always empty in the test data) | always empty (26,815 rows hold the key) | ENDUR: where a physical commodity is delivered (a hub such as Henry Hub, NGX AECO-C); empty otherwise. | — |
-| `LEGS[].INDEX_LOCATION_NAME` | string (the contract's type; always empty in the test data) | always empty (26,815 rows hold the key) | ENDUR: the location the floating index is quoted at; empty for a fixed leg. | — |
-| `LEGS[].EMISSIONS_VINTAGE_MIN` | string (the contract's type; always empty in the test data) | always empty (26,815 rows hold the key) | The earliest vintage of emission allowances that may be delivered; empty unless an emissions trade (always empty in the test data). Carried through; not read by Drishti. | — |
-| `LEGS[].EMISSIONS_VINTAGE_MAX` | string (the contract's type; always empty in the test data) | always empty (26,815 rows hold the key) | The latest vintage of emission allowances that may be delivered; empty unless an emissions trade (always empty in the test data). Carried through; not read by Drishti. | — |
-| `LEGS[].EMISSIONS_VINTAGE_DELIVERY_TYPE` | string (the contract's type; always empty in the test data) | always empty (26,815 rows hold the key) | How the vintages of emission allowances are delivered; empty unless an emissions trade (always empty in the test data). Carried through; not read by Drishti. | — |
-| `LEGS[].NY_CURVE_FLAG` | string (the contract's type; always empty in the test data) | always empty (26,815 rows hold the key) | The booking system's New York close curve flag for the leg; empty when not set (always empty in the test data). Carried through; not read by Drishti. | — |
-| `LEGS[].NUM_RRDC_REC` | string (the contract's type; always empty in the test data) | always empty (26,815 rows hold the key) | The number of rate records the booking system holds for the leg (always empty in the test data). Carried through; not read by Drishti. | — |
-| `LEGS[].DAILY_VOLUME` | string (the contract's type; always empty in the test data) | always empty (26,815 rows hold the key) | ENDUR: the leg's quantity per day, in PRICE_UNIT, as text; empty otherwise. | — |
-| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL` | number (the contract's type; always empty in the test data) | always empty (454,520 rows hold the key) | ENDUR: the share of the period the reset counts for (1 / pricing days of an average); empty otherwise. | — |
-| `EVENTS[].VAULT_LOCATION_ALLOCATION` | string (the contract's type; always empty in the test data) | always empty (318,401 rows hold the key) | The vault a metal delivery event is allocated to; empty when none (always empty in the test data). Carried through; not read by Drishti. | — |
-| `EVENTS[].NY_CURVE_FLAG` | string (the contract's type; always empty in the test data) | always empty (318,401 rows hold the key) | The booking system's New York close curve flag for the event; empty when not set (always empty in the test data). Carried through; not read by Drishti. | — |
+| `PACKAGE_ID` | string (the contract's type; always empty in the test data) | always empty (19,597 rows hold the key) | The package the trade was dealt in with others (ENDUR PKG-nnnn); empty when none. | — |
+| `ORIGINAL_COUNTERPARTY` | string (the contract's type; always empty in the test data) | always empty (19,597 rows hold the key) | The counterparty before a novation: a COUNTERPARTY_ID of the core pack's counterparty kind (CP-…); empty when the trade was not novated. | — |
+| `ORIGINAL_COUNTERPARTY_UEN` | string (the contract's type; always empty in the test data) | always empty (19,597 rows hold the key) | The original counterparty's unique entity number, when the trade was novated; empty otherwise. | — |
+| `REGISTRY_DELIVERY_DATE` | date (YYYY-MM-DD) (the contract's type; always empty in the test data) | always empty (19,597 rows hold the key) | The day a registered instrument is delivered (ENDUR warehouse warrants and emissions); empty otherwise. | — |
+| `STRATEGY` | string (the contract's type; always empty in the test data) | always empty (19,597 rows hold the key) | The trading strategy the trade belongs to; null or empty when none (always empty in the test data). | — |
+| `INTERNAL_TRADING_STRATEGY` | string (the contract's type; always empty in the test data) | always empty (19,597 rows hold the key) | The bank's internal strategy code; empty when none (always empty in the test data). Carried through; not read by Drishti. | — |
+| `NY_CURVE_FLAG` | string (the contract's type; always empty in the test data) | always empty (19,597 rows hold the key) | The booking system's flag for valuing on the New York close curves; empty when not set (always empty in the test data). Carried through; not read by Drishti. | — |
+| `VAULT_LOCATION_ALLOCATION` | string (the contract's type; always empty in the test data) | always empty (19,597 rows hold the key) | The vault a physical metal or warehouse warrant is allocated to (ENDUR Commodity COMM-WARRANTS-INV); empty otherwise. | — |
+| `PRECIOUS_METAL_FLAG` | string (the contract's type; always empty in the test data) | always empty (19,597 rows hold the key) | Y for a precious-metals trade (gold, silver); empty otherwise. | — |
+| `LEASE_PERPETUITY_FLAG` | string (the contract's type; always empty in the test data) | always empty (19,597 rows hold the key) | Y when a metal lease runs until called, N when not (ENDUR warehouse warrants); empty otherwise. | — |
+| `LEGS[].LEASE_CURRENCY` | string (the contract's type; always empty in the test data) | always empty (26,817 rows hold the key) | ENDUR: the currency a metal lease or the leg's financing is in; empty otherwise. | — |
+| `LEGS[].SPOT_CONVERSION_FACTOR` | string (the contract's type; always empty in the test data) | always empty (26,817 rows hold the key) | ENDUR: the factor converting the leg's unit to the index's unit (1 in the test data). Carried through; not read by Drishti. | — |
+| `LEGS[].PHYSICAL_LOCATION_NAME` | string (the contract's type; always empty in the test data) | always empty (26,817 rows hold the key) | ENDUR: where a physical commodity is delivered (a hub such as Henry Hub, NGX AECO-C); empty otherwise. | — |
+| `LEGS[].INDEX_LOCATION_NAME` | string (the contract's type; always empty in the test data) | always empty (26,817 rows hold the key) | ENDUR: the location the floating index is quoted at; empty for a fixed leg. | — |
+| `LEGS[].EMISSIONS_VINTAGE_MIN` | string (the contract's type; always empty in the test data) | always empty (26,817 rows hold the key) | The earliest vintage of emission allowances that may be delivered; empty unless an emissions trade (always empty in the test data). Carried through; not read by Drishti. | — |
+| `LEGS[].EMISSIONS_VINTAGE_MAX` | string (the contract's type; always empty in the test data) | always empty (26,817 rows hold the key) | The latest vintage of emission allowances that may be delivered; empty unless an emissions trade (always empty in the test data). Carried through; not read by Drishti. | — |
+| `LEGS[].EMISSIONS_VINTAGE_DELIVERY_TYPE` | string (the contract's type; always empty in the test data) | always empty (26,817 rows hold the key) | How the vintages of emission allowances are delivered; empty unless an emissions trade (always empty in the test data). Carried through; not read by Drishti. | — |
+| `LEGS[].NY_CURVE_FLAG` | string (the contract's type; always empty in the test data) | always empty (26,817 rows hold the key) | The booking system's New York close curve flag for the leg; empty when not set (always empty in the test data). Carried through; not read by Drishti. | — |
+| `LEGS[].NUM_RRDC_REC` | string (the contract's type; always empty in the test data) | always empty (26,817 rows hold the key) | The number of rate records the booking system holds for the leg (always empty in the test data). Carried through; not read by Drishti. | — |
+| `LEGS[].DAILY_VOLUME` | string (the contract's type; always empty in the test data) | always empty (26,817 rows hold the key) | ENDUR: the leg's quantity per day, in PRICE_UNIT, as text; empty otherwise. | — |
+| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL` | number (the contract's type; always empty in the test data) | always empty (454,610 rows hold the key) | ENDUR: the share of the period the reset counts for (1 / pricing days of an average); empty otherwise. | — |
+| `EVENTS[].VAULT_LOCATION_ALLOCATION` | string (the contract's type; always empty in the test data) | always empty (318,443 rows hold the key) | The vault a metal delivery event is allocated to; empty when none (always empty in the test data). Carried through; not read by Drishti. | — |
+| `EVENTS[].NY_CURVE_FLAG` | string (the contract's type; always empty in the test data) | always empty (318,443 rows hold the key) | The booking system's New York close curve flag for the event; empty when not set (always empty in the test data). Carried through; not read by Drishti. | — |
 
 ### For the production query
 
@@ -20143,7 +20147,7 @@ Fields no record above has, found by reading all 19,596 rows, with how many rows
 
 ### See also
 
-- Data contract: [TRD in the trading pack's contracts](../packs/trading.md#trd-trade-trade) (`config/packs/banking/trading/contracts/trade.contract.yaml`, the source of every meaning on this page).
+- Data contract: [TRD in the trading pack's contracts](../packs/trading.md#trd-trade-trade) (`modules/banking/dmod/packs/trading/contracts/trade.contract.yaml`, the source of every meaning on this page).
 - [Trading: one schema, three source systems](../../guides/BUILD_GUIDE.md#trading-one-schema-three-source-systems)
 - [3. Trades and products](../../knowledge/risk.md#3-trades-and-products)
 - [Tutorial 11 · Correct a trade and approve it: write-back](../../tutorials/11-correct-and-approve.md)

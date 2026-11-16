@@ -22,7 +22,7 @@ file's shape, so commands, menus, Help, AI tools and Home cards of modules outsi
 the server's one reader (``GET /public/modules/manifests``: the shipped and installed ``.dmod`` packages, then the manifests folder), read
 again whenever the server's module registry changes (``/public/about``'s ``manifests``); only while no server has answered, from the
 manifests folder here (``modules/<id>/module.yaml``, a module jar's ``META-INF/drishti/module.yaml`` in its sources). The kernel's own
-packs, words and menus come from ``kernel.yaml`` beside the files.
+packs, words and menus come from ``kernel.yaml`` beside the files. Every module and pack is found by the one resolver (core/resolution.py).
 """
 from __future__ import annotations
 
@@ -35,15 +35,22 @@ from typing import Any
 
 import yaml
 
+from core import resolution
+from core.resolution import pack_dirs
+
 LOG = logging.getLogger("drishti.console.distribution")
 DEFAULT = "all"
 KERNEL = "kernel.yaml"
-_IN_JAR = "src/main/resources/META-INF/drishti/module.yaml"
 _SHORT = re.compile(r"[a-z0-9][a-z0-9-]{0,63}")
-#: The brand keys and the console settings they fill (the old keys: ui.product, ui.copyright ... read once, with a Health note).
+#: The brand keys and the console settings they fill. The five names and notices (NAMES) come from the distribution file only.
 BRAND_KEYS = {"product": "ui.product", "product_native": "ui.product_native", "tagline": "ui.tagline", "owner": "ui.owner",
               "copyright": "ui.copyright", "notice": "ui.notice", "logo": "ui.logo", "favicon": "ui.favicon", "about": "ui.about",
-              "headline": "ui.headline"}
+              "headline": "ui.headline", "headline_second": "ui.headline_second",
+              "headline_second_accent": "ui.headline_second_accent"}
+
+
+#: The product's name and legal notices: the distribution file is their one home (a site's own ``ui.product`` and the like are not read).
+NAMES = ("product", "tagline", "owner", "copyright", "notice")
 
 
 def file_of(directory: Path, name_or_path: str | None) -> Path:
@@ -59,6 +66,33 @@ def file_of(directory: Path, name_or_path: str | None) -> Path:
 
 def _texts(v) -> list[str]:
     return [str(x).strip() for x in v if str(x).strip()] if isinstance(v, list) else []
+
+
+def menu_ids(v) -> list[str]:
+    """A manifest's top menus (``console.menus``): each menu's ``id`` (the menu itself, in the sitemap's form), or a plain id; each once."""
+    out: list[str] = []
+    for x in v if isinstance(v, list) else []:
+        i = str((x.get("id") if isinstance(x, dict) else x) or "").strip()
+        if i and i not in out:
+            out.append(i)
+    return out
+
+
+def module_menus(directory: Path | None) -> list[dict]:
+    """The modules' own top menus, in the sitemap's form (each manifest's ``console.menus``): the one home of a module's menus
+    (core/menus.py draws them beside the kernel's sitemap, each only while its module is active). Each comes tagged with its module
+    (``_module``) and that module's domain (``_domain``). A menu of an id another module already has adds its columns."""
+    out: list[dict] = []
+    if directory is None or not directory.is_dir():
+        return out
+    for m in sorted(resolution.module_list(directory).values(), key=lambda m: str(m.home)):
+        y = m.manifest
+        tag = {"_module": m.id, "_domain": str(y.get("domain") or m.id)}
+        if (y.get("console") or {}).get("domain-label"):                          # the name Domains takes when this is the one active domain
+            tag["_domain_label"] = str(y["console"]["domain-label"])
+        out += [{**x, **tag, "columns": [{**c, **tag} for c in x.get("columns") or [] if isinstance(c, dict)]}
+                for x in ((y.get("console") or {}).get("menus") or []) if isinstance(x, dict) and x.get("id")]
+    return out
 
 
 def _read(f: Path) -> dict:
@@ -91,33 +125,20 @@ def _words(functions) -> list[str]:
 
 
 def module_manifests(directory: Path | None) -> dict[str, ModuleEntry]:
-    """Every module manifest under ``directory``, by id, in requirement order (a required module before the ones that need it): a
-    content module's ``<id>/module.yaml`` (the ``.dmod`` manifest; a module project made from the SDK keeps it in ``<id>/src/dmod/``) and a module jar's ``<id>/<part>/src/main/resources/META-INF/drishti/
-    module.yaml``. The kernel reads the same files the same way (drishti-packs ``ModuleManifests``)."""
+    """Every module under ``directory`` (the one resolver's modules: ``<dir>/module.yaml``, ``dmod/module.yaml`` or
+    ``src/dmod/module.yaml``), by id, in requirement order (a required module before the ones that need it). The kernel reads the same
+    files the same way (drishti-packs ``ModuleManifests``)."""
     by_id: dict[str, ModuleEntry] = {}
     if directory is None or not directory.is_dir():
         return by_id
-    for m in sorted(p for p in directory.iterdir() if p.is_dir()):
-        # a content module's folder; a module project from the SDK (src/dmod/); a module with code's dmod/ (banking)
-        for dmod in (m / "module.yaml", m / "src" / "dmod" / "module.yaml", m / "dmod" / "module.yaml"):
-            if not dmod.is_file():
-                continue
-            y = _read(dmod)
-            mid = str(y.get("id") or "").strip()
-            req = [k for k in (y.get("requires") or {}) if k != "optional"] if isinstance(y.get("requires"), dict) else []
-            by_id[mid] = ModuleEntry(mid, str(y.get("domain") or mid), _texts((y.get("packs") or {}).get("list")), _words(y.get("functions")),
-                                     [str(e.get("id")) for e in ((y.get("compute") or {}).get("engines") or []) if isinstance(e, dict)],
-                                     _texts((y.get("console") or {}).get("menus")), _texts((y.get("docs") or {}).get("domains")), req)
-            break
-        for part in sorted(p for p in m.iterdir() if p.is_dir()):
-            jar = part / _IN_JAR
-            if jar.is_file():
-                y = _read(jar)
-                mods = ([y["module"]] if isinstance(y.get("module"), dict) else []) + [x for x in y.get("modules") or [] if isinstance(x, dict)]
-                for x in mods:
-                    mid, c = str(x.get("id") or "").strip(), x.get("contributes") or {}
-                    by_id[mid] = ModuleEntry(mid, str(x.get("domain") or mid), _texts(c.get("packs")), _words(c.get("functions")),
-                                             _texts(c.get("engines")), _texts(c.get("menus")), _texts(c.get("help")), _texts(x.get("requires")))
+    for mid, m in resolution.module_list(directory).items():
+        y = m.manifest
+        packs = y.get("packs")
+        by_id[mid] = ModuleEntry(mid, str(y.get("domain") or mid), list(m.packs) if isinstance(packs, (dict, list)) else [],
+                                 _words(y.get("functions")),
+                                 [str(e.get("id")) for e in ((y.get("compute") or {}).get("engines") or []) if isinstance(e, dict)],
+                                 menu_ids((y.get("console") or {}).get("menus")), _texts((y.get("docs") or {}).get("domains")),
+                                 [r for r in m.requires if isinstance(y.get("requires"), dict)])
     ordered: dict[str, ModuleEntry] = {}
 
     def visit(mid: str, path: set) -> None:
@@ -157,10 +178,7 @@ def with_required(listed: list[str], known: dict[str, ModuleEntry]) -> list[str]
 
 def pack_commands(packs_dir: Path, packs: list[str]) -> list[str]:
     """Every command of the packs: each pack's code and mnemonics (its pack.yaml under the packs folder)."""
-    found: dict[str, Path] = {}
-    if packs_dir.is_dir():
-        for f in sorted(packs_dir.glob("*/*/pack.yaml")) + sorted(packs_dir.glob("*/pack.yaml")):
-            found.setdefault(f.parent.name, f)
+    found: dict[str, Path] = {n: d / "pack.yaml" for n, d in pack_dirs(packs_dir).items()} if packs_dir.is_dir() else {}
     out: list[str] = []
     for p in packs:
         f = found.get(p)
@@ -195,10 +213,10 @@ _KNOWN: dict[str, frozenset] = {}
 def known_commands(packs_dir: Path, modules_dir: Path | None = None, known: dict[str, ModuleEntry] | None = None) -> frozenset:
     """Every command and word any module has (all packs' commands, the module manifests' words; ``known``: the server's module list): what
     a distribution may leave out, so a command typed in one that lacks it answers "not in Drishti Finance" instead of becoming a search."""
-    modules_dir = modules_dir or packs_dir.parent.parent / "modules"
+    modules_dir = modules_dir or resolution.Settings.from_env().modules_home
     key = f"{packs_dir}|{modules_dir}|{sorted(known) if known is not None else ''}"
     if key not in _KNOWN:
-        names = [f.parent.name for f in sorted(packs_dir.glob("*/*/pack.yaml"))] if packs_dir.is_dir() else []
+        names = sorted(pack_dirs(packs_dir)) if packs_dir.is_dir() else []
         words = {w for m in (module_manifests(modules_dir) if known is None else known).values() for w in m.words}
         _KNOWN[key] = frozenset(pack_commands(packs_dir, names)) | frozenset(words)
     return _KNOWN[key]
@@ -248,7 +266,7 @@ class Distribution:
         ui: dict[str, Any] = {}
         for k, key in BRAND_KEYS.items():
             v = self.brand.get(k)
-            if v is not None:
+            if v is not None and k not in NAMES:
                 ui[key.split(".", 1)[1]] = v
         support = (self.spec.get("brand") or {}).get("support") or {}
         if isinstance(support, dict) and (support.get("email") or support.get("url")):
@@ -262,6 +280,10 @@ class Distribution:
         if not self.all:                                         # Drishti All keeps Help as it was
             ui["help_title"] = self.help_title
         return {"ui": ui}
+
+    def brand_layer(self) -> dict:
+        """The product's name and notices as the file says them (pinned above the site's configuration)."""
+        return {"ui": {k: self.brand[k] for k in NAMES if k in self.brand}}
 
     def about(self) -> dict:
         return {"id": self.id, "name": self.name, "title": self.title, "all": self.all, "modules": ["all"] if self.all else self.modules,
@@ -303,6 +325,7 @@ def read(f: Path, kernel_file: Path, modules_dir: Path | None, packs_dir: Path, 
     kernel = (_read(kernel_file).get("kernel") or {}) if kernel_file.is_file() else {}
     # a distribution may name the kernel's packs it takes (``kernel-packs:``; Drishti Genomics takes none: no counterparty or book anywhere)
     packs = list(_texts(spec.get("kernel-packs") if "kernel-packs" in spec else kernel.get("packs")))
+    cmds = pack_commands(packs_dir, packs)                       # the kernel's own packs' commands; a module's are its manifest's functions
     menus = list(_texts(kernel.get("menus")))
     domains: dict[str, str] = {}
     words_on = set(_texts(kernel.get("words")))
@@ -322,7 +345,6 @@ def read(f: Path, kernel_file: Path, modules_dir: Path | None, packs_dir: Path, 
     features = {x: "off" for x in features_off}
     features.update(spec.get("features") or {})
     top = _texts((spec.get("menus") or {}).get("top"))
-    cmds = pack_commands(packs_dir, packs)
     ed: dict[str, Any] = {
         "edition": did, "title": title, "distribution": True,
         "packs": {"enabled": packs} if packs else {"none": True},   # a distribution of no packs (Genomics) loads none
@@ -354,10 +376,8 @@ def load(settings, console_dir: Path, name: str | None = None, known: dict[str, 
     and ``strict`` as :func:`read`."""
     d = Path(str(settings.get("distributions_dir", "../config/distributions") or "../config/distributions"))
     directory = d if d.is_absolute() else (console_dir / d).resolve()
-    p = Path(str(settings.get("packs.dir", "../config/packs") or "../config/packs"))
-    packs_dir = p if p.is_absolute() else (console_dir / p).resolve()
-    md = Path(str(settings.get("module_manifests_dir", "../modules") or "../modules"))
-    modules_dir = md if md.is_absolute() else (console_dir / md).resolve()
+    where = resolution.Settings.from_env(settings, console_dir)
+    packs_dir, modules_dir = where.site_dir, where.modules_home
     chosen, named = (name, True) if name else selected(settings)
     f = file_of(directory, chosen)
     if not f.is_absolute():
@@ -368,12 +388,11 @@ def load(settings, console_dir: Path, name: str | None = None, known: dict[str, 
 
 
 def deprecated(settings) -> list[str]:
-    """The old product keys the site still sets on this console (read for one release): Health names each one."""
+    """The old keys the site still sets on this console (Health names each one): the product's name and notices are not read from them."""
     out = []
-    for key in ("ui.product", "ui.tagline", "ui.copyright", "ui.owner", "ui.notice", "edition"):
+    for key in ("ui.product", "ui.tagline", "ui.copyright", "ui.owner", "ui.notice"):
         if settings.site(key) not in (None, "", {}):
-            out.append(f"{key} is read for one release: set brand: in the distribution file instead" if key != "edition"
-                       else "edition is read for one release: name a distribution instead (--distribution, DRISHTI_DISTRIBUTION)")
-    if os.environ.get("DRISHTI_PRODUCT"):
-        out.append("DRISHTI_PRODUCT is read for one release: set brand.product in the distribution file instead")
+            out.append(f"{key} is no longer read: set brand: in the distribution file")
+    if settings.site("edition") not in (None, "", {}):
+        out.append("edition is read for one release: name a distribution instead (--distribution, DRISHTI_DISTRIBUTION)")
     return out

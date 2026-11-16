@@ -158,6 +158,8 @@ Rules that follow from this:
 - A Sutra from before Drishti 1.11 (`*.sutra.md`, a Markdown document with one fenced `sutra` block) converts in one step; the
   block becomes the file, `rachana: 1` is added, and the prose becomes `notes`:
 
+  Run these from the Drishti folder (the repository root, or the install folder of a release).
+
   ```bash
   python3 tools/rachana/md_to_yaml.py config/packs/my-pack/sutras --delete
   ```
@@ -512,7 +514,7 @@ the title and strip only.
   and `{'name': 'counterparty', … 'domain': 'counterparty-and-legal', 'kind': 'counterparty', 'where': None, 'priority': 10}`.
 - `GET /api/v1/sutras/{name}/{version}/source` returns the file's YAML (`text/yaml`), comments included, exactly as loaded (a
   product Sutra's `use:` entries as written; `sutra lint` and a preview see them expanded).
-- The **domain** defaults to the name of the folder holding the file (`config/packs/banking/trading/sutras/murex/…` → `murex`). It is a label
+- The **domain** defaults to the name of the folder holding the file (`modules/banking/dmod/packs/trading/sutras/murex/…` → `murex`). It is a label
   only (the catalog groups by it; the workbench saves back there): it never decides what the Sutra matches
   ([Folders mean nothing](#folders-mean-nothing)).
 
@@ -704,7 +706,7 @@ first path in the expression), in words: `bind: $.COUNTERPARTY_COUNTRY_OF_RISK` 
 wins:
 
 1. `label:` in the Sutra;
-2. the **pack taxonomy**: `labels:` in the semantics file of an enabled pack (`config/packs/<domain>/<pack>/config/semantics.yaml`), e.g.
+2. the **pack taxonomy**: `labels:` in the semantics file of an enabled pack (`modules/<module>/packs/<pack>/config/semantics.yaml`), e.g.
    `labels: { NET_MTM: Net MTM (USD) }`; a more specific pack wins over a general one;
 3. the **global taxonomy**: `labels:` in the core semantics (or the site's replacement, `drishti.inference.semantics-file`);
 4. the field name in words, spelled with the packs' and the core's `acronyms:` (the `core` pack lists MTM, PV, DV01, PFE, EE, CVA, VaR,
@@ -1082,7 +1084,7 @@ trade ids as links, a `Net` row of `+99,704,064` (all 343, not the four shown), 
 > [Sutra developer guide](BUILD_GUIDE.md#21-expandable-row-groups-pivot-by-lists-and-tree-tables).
 
 A table or ladder may offer its rows as an Excel-style pivot: a **Pivot** button under the table opens the pivot screen
-([PIVOT_GUIDE.md](PIVOT_GUIDE.md), [USER_GUIDE.md](USER_GUIDE.md#pivot-slice-a-table-your-way)) on the source
+([PIVOT.md](bi/PIVOT.md), [USER_GUIDE.md](USER_GUIDE.md#pivot-slice-a-table-your-way)) on the source
 `panel/<kind>/<panel>/<id>`: the panel's own rows, aggregated by the server's pivot engine, where a user drags fields into rows, columns,
 values and filters, opens nested rows, charts a selection, drills to a cell's rows and exports. It is **opt-in**: only a panel whose Sutra
 says `pivot:` offers it, and only the fields the Sutra offers can be used. Every other table stays a table.
@@ -1110,7 +1112,7 @@ pivot:                          # the fields on offer, and the arrangement the p
 | `filters` | none | Fields offered as filters: a name (every value kept), `{ field, values: [USD, EUR] }` (only those values) or `{ field, min, max }` (an inclusive range of numbers, or of ISO dates written as text). Not both `values` and a range. |
 | `heat` | `false` | Kept for the arrangement; the pivot screen's conditional formats replace it. |
 | `chart` | none | Kept for the arrangement; the pivot screen charts a selection (`G`). |
-| `mode` | `views` | How the pivot screen opens it ([PIVOT_GUIDE.md section 2](PIVOT_GUIDE.md#2-the-screen)): `views` (the View picker in front of the compact line), `compact` (the compact line alone) or `panes` (the Fields and Build panes). A promoted view keeps its mode. |
+| `mode` | `views` | How the pivot screen opens it ([PIVOT.md section 2](bi/PIVOT.md#2-the-screen)): `views` (the View picker in front of the compact line), `compact` (the compact line alone) or `panes` (the Fields and Build panes). A promoted view keeps its mode. |
 | `totals` | `true` | Kept for the arrangement; the pivot screen always shows the totals, each made from its own rows. |
 
 With `pivot: true`, or a mapping without `fields`, the fields are the panel's columns: a column bound to a row path (`"@.MTM"`) is named
@@ -1379,7 +1381,7 @@ panel), so a copied address opens the same level, in the same tab. Every level's
 | `columns` | | As a table's (`label`, `bind`, `fmt`, `tone`, `total`, `link`); a `total: true` column adds up the rows of the level under each row. |
 
 Up to 6 levels; every expression is checked when the Sutra loads (`DRS-2101`), the shape of `levels` too (`DRS-2029`). The rows are bound
-on the server once, bounded like a tree by `drishti.panels.tree-rows`; the console only shows and hides them. Build → New pack writes this
+on the server once, bounded like a tree by `drishti.panels.tree-rows`; the console only shows and hides them. Create → New pack writes this
 for a document whose arrays hold arrays ([Schema to pack, A deep trading JSON](BUILD_GUIDE.md#9-a-deep-trading-json-from-one-file-to-a-deployed-pack)).
 
 #### line
@@ -2398,7 +2400,7 @@ This is the world-economy pack's `economy` Sutra. You should see, for `ECON ECON
 Australia highlighted; every country with an economy page (`ECON-ABW`, `ECON-AFG` …) opens it. The runnable version is the
 [map example](examples/map.md); its catalogue entry is [Panels: the twenty-two kinds, and developing a new one](#map). A BI report's map visual draws with the same shapes
 and drills from the world to a country and its regions:
-[REPORTS_GUIDE.md](REPORTS_GUIDE.md#94-the-map-funnel-histogram-box-plot-and-bubble).
+[REPORT_FILE_FORMAT_STATEMENTS.md](bi/REPORT_FILE_FORMAT_STATEMENTS.md#14-the-map-funnel-histogram-box-plot-and-bubble).
 
 ### Events, sources and children (Sutra Next)
 
@@ -2408,7 +2410,7 @@ is the reference of the keys.
 
 | Key | On | Value |
 |---|---|---|
-| `source:` (a mapping) | any panel that reads data, a group of children | `{ kind, id \| where \| search, limit, as-of, pack, params }`: `id` an expression for one entity (`$src` the record); `where` a condition over each entity of the kind (`@` the entity as the viewer sees it; at most `limit`, default 20, of the first 500); `search` an expression for the text searched (`$src` the list found); `as-of` a business date; `pack` the pack serving the kind; `params` (only with `id`) a computed kind's parameters, `{ name: expression }`, read as `ID~name=value` by a reactive connector ([REACTIVE_CONNECTOR.md](../connectors/types/reactive/README.md#reading-a-computed-kind)); a `params` that is not a mapping, a bad name or a value that is not text, a number or true/false is `DRS-2012`, `params` with `where` or `search` is `DRS-2057`. Written as text (`"link(...)"`) it is the older form: the panel reads that linked entity as `$`. `{ table, where, limit, as-of }` reads a virtual table instead of a kind ([TABLES_GUIDE.md](TABLES_GUIDE.md)): its rows as the viewer may read them are `$src`, `where` keeps rows (`@` each row), a table takes no `kind`, `pack`, `id`, `search` or `params` (`DRS-2057`), a name that is not `<domain>.<name>` is `DRS-2012`. |
+| `source:` (a mapping) | any panel that reads data, a group of children | `{ kind, id \| where \| search, limit, as-of, pack, params }`: `id` an expression for one entity (`$src` the record); `where` a condition over each entity of the kind (`@` the entity as the viewer sees it; at most `limit`, default 20, of the first 500); `search` an expression for the text searched (`$src` the list found); `as-of` a business date; `pack` the pack serving the kind; `params` (only with `id`) a computed kind's parameters, `{ name: expression }`, read as `ID~name=value` by a reactive connector ([REACTIVE_CONNECTOR.md](../connectors/types/reactive/README.md#reading-a-computed-kind)); a `params` that is not a mapping, a bad name or a value that is not text, a number or true/false is `DRS-2012`, `params` with `where` or `search` is `DRS-2057`. Written as text (`"link(...)"`) it is the older form: the panel reads that linked entity as `$`. `{ table, where, limit, as-of }` reads a virtual table instead of a kind ([TABLES_AND_MODELS.md](bi/TABLES_AND_MODELS.md)): its rows as the viewer may read them are `$src`, `where` keeps rows (`@` each row), a table takes no `kind`, `pack`, `id`, `search` or `params` (`DRS-2057`), a name that is not `<domain>.<name>` is `DRS-2012`. |
 | `emits:` | table, ladder (`on: row-click`), hbar (`on: bar-click`) | a list of `{ name, on, payload }`; `payload` maps a field to an expression over the clicked row (`"@.TRADE_ID"`) or to `{ bind, type }`, `type` one of `id`, `text`, `number`, `date`, `bool` |
 | `waits:` | any wired panel | what the panel says while an event it reads has not fired (default: "Pick a row in <panel> to fill this panel") |
 | `children:` (a list) | any screen or child panel | groups `{ place, show, source, waits, panels }`: `place` `expand-row` (a table or ladder), `detail-right`, `detail-below` (the default), `tabs`; `show` `on-select` (the default), `always`, `on-expand`; `panels` panels or fragment uses with ids unique on the screen; three levels at most. Written as text it is a tree table's `children: "@.KIDS"`. |
@@ -2831,7 +2833,7 @@ A format file has one `formats:` mapping. Keys of a format:
 | `suffix` | none | appended text (`"%"`, `" bp"`) |
 | `pattern` | none | `date` only: a Java date pattern; `yyyy-MM-dd` or none shows the text unchanged |
 
-A pack adds formats in `config/packs/<domain>/<pack>/config/formats.yaml`, as the trading pack does:
+A pack adds formats in `modules/<module>/packs/<pack>/config/formats.yaml`, as the trading pack does:
 
 ```yaml
 formats:
@@ -2992,6 +2994,21 @@ A value is one of: empty (missing or `null`; the two behave the same), a boolean
 - **Dependency paths.** Each compiled expression reports the document paths it reads (`$.LEGS[0].CASH_FLOWS[0].RATE`). Cells carry that
   path so live updates can flash exactly what changed.
 
+### List attributes: contains, any of, all of
+
+A field holding a list of simple values (`TAGS: ["fx", "rates"]`, a promoted list column) is filtered with three functions, the one
+implementation the grids, the search form, BI and Sutras share:
+
+| Function | Holds when | Example |
+|---|---|---|
+| `has(list, value)` (contains) | the list holds the value | `has($.TAGS, 'fx')` |
+| `any_of(list, values)` (any of) | the list holds at least one of the values | `any_of($.TAGS, ['fx', 'rates'])` |
+| `all_of(list, values)` (all of) | the list holds every one of the values | `all_of($.TAGS, ['fx', 'hedge'])` |
+
+Equality is `==`'s (numbers numerically, otherwise as text); a promoted column's JSON text reads as its list; a single value is a list of
+one; a missing list holds nothing; no value chosen holds everything. A form's list field offers the same three (`contains`, `any`, `all`).
+A list shows as chips: give a column `fmt: list`.
+
 ### Lists, membership and the parent
 
 A list is written in brackets, `['DESK-COMM', 'DESK-RATES']`; a masked item stays masked in its place. `x in list` is true when the
@@ -3042,7 +3059,7 @@ form compared with a date is that date. The signatures checked mode knows are th
 | Scope | Written in | Names | Aggregates |
 |---|---|---|---|
 | row | a table's column `expr`, its `filter`, `keep:` | the source (`$`, `@`, `^`), a table's columns, `param.x` | refused: "an aggregate belongs in a measure" |
-| rule | a table's `rules[].where`, a model's `security.rows` | the columns, `user.x` and `related_rows('alias')` (the rows sharing a key with the rows of another table of the model the reader sees; TABLES_GUIDE.md section 7) | refused; a rule is a condition, never removable by any function |
+| rule | a table's `rules[].where`, a model's `security.rows` | the columns, `user.x` and `related_rows('alias')` (the rows sharing a key with the rows of another table of the model the reader sees; bi/TABLES_AND_MODELS.md section 7) | refused; a rule is a condition, never removable by any function |
 | aggregate | a model's measures, MQ `define` and `having`, a report's local measures | `alias.COLUMN` inside an aggregate, `measure('name')`, `param.x` | yes; a bare column is refused ("wrap it: sum(trades.MTM)") |
 | context | the first argument of `calc`, `share_of`, `parent_of`, `as_of` | as aggregate | yes, in an edited filter context |
 
@@ -3664,7 +3681,7 @@ You should see a ring with `484.0m` in the middle and two equal slices, `FIXED 2
 
 ### The workbench
 
-Sutras are written and previewed in the **Build workbench** (Build → New screen in the console). Its use is the
+Sutras are written and previewed in the **Build workbench** (Create → New screen in the console). Its use is the
 [Screen designer guide](#screen-designer-and-the-build-workbench) (the YAML tab is the editor, with completion from the
 [schema](#completion-and-checking-in-your-editor) and a check as you type; the Design, Summary, Problems, Tests and Versions tabs read
 the same Sutra back; saving and proposing are [section 22](#22-saving-and-proposing)). The `/studio` page
@@ -3704,15 +3721,15 @@ wrote, comments included; then it reloads. A `name@version` already defined by a
 
 | File | Open it with | Shows |
 |---|---|---|
-| `config/packs/banking/trading/sutras/murex/irs-fixfloat.v1.sutra.yaml` | `TRD MX-20000001` | a product Sutra made of shared blocks, two controls on its events table |
-| `config/packs/banking/trading/sutras/endur/endur-comswap.v1.sutra.yaml` | `TRD 1000001`, `TRD 1000003` | sub types as `when:` panels (`fixed-float`, `basis`) |
-| `config/packs/banking/trading/sutras/common/*.v1.block.yaml` | (used by every trade Sutra) | blocks with parameters; tabs holding panels; a tree of cash flows and resets; timeline; payment ladder |
-| `config/packs/banking/trading/sutras/pages/counterparty-trades.v1.sutra.yaml` | `/v/counterparty-trades/CP-NORTHPLAINS` | metric tiles, a donut, ladders over many trades |
+| `modules/banking/dmod/packs/trading/sutras/murex/irs-fixfloat.v1.sutra.yaml` | `TRD MX-20000001` | a product Sutra made of shared blocks, two controls on its events table |
+| `modules/banking/dmod/packs/trading/sutras/endur/endur-comswap.v1.sutra.yaml` | `TRD 1000001`, `TRD 1000003` | sub types as `when:` panels (`fixed-float`, `basis`) |
+| `modules/banking/dmod/packs/trading/sutras/common/*.v1.block.yaml` | (used by every trade Sutra) | blocks with parameters; tabs holding panels; a tree of cash flows and resets; timeline; payment ladder |
+| `modules/banking/dmod/packs/trading/sutras/pages/counterparty-trades.v1.sutra.yaml` | `/v/counterparty-trades/CP-NORTHPLAINS` | metric tiles, a donut, ladders over many trades |
 | `config/packs/core/core/sutras/counterparty-and-legal/counterparty.v1.sutra.yaml` | `CPTY CP-MERIDIAN-RE` | table with totals, kv, graph |
-| `config/packs/banking/counterparty-risk/sutras/exposure-and-capital/netting-set.v1.sutra.yaml` | `NSET NS-MERIDIAN-RE-NY` | area with a limit, four controls, `on-select`, Pivot, automatic id links |
-| `config/packs/banking/market-data/sutras/market-data/equity-vol-surface.v1.sutra.yaml` | `EQV EQV-CSCA` | surface, table, line |
-| `config/packs/banking/market-risk/sutras/market-risk/system-basket.v1.sutra.yaml` | `PORT PF-RATES-DESK` | the engine's figures on a page, a P&L distribution, ranked bars, Pivot |
-| `config/packs/economy/world-economy/sutras/economics/economy.v1.sutra.yaml` | `ECON ECON-AUS` | map with a shade and a link |
+| `modules/banking/dmod/packs/counterparty-risk/sutras/exposure-and-capital/netting-set.v1.sutra.yaml` | `NSET NS-MERIDIAN-RE-NY` | area with a limit, four controls, `on-select`, Pivot, automatic id links |
+| `modules/market-data/packs/market-data/sutras/market-data/equity-vol-surface.v1.sutra.yaml` | `EQV EQV-CSCA` | surface, table, line |
+| `modules/banking/dmod/packs/market-risk/sutras/market-risk/system-basket.v1.sutra.yaml` | `PORT PF-RATES-DESK` | the engine's figures on a page, a P&L distribution, ranked bars, Pivot |
+| `modules/economy/packs/world-economy/sutras/economics/economy.v1.sutra.yaml` | `ECON ECON-AUS` | map with a shade and a link |
 | `docs/guides/examples/*.sutra.yaml` | Help → Examples | twelve self-contained examples with their own small documents, every kind |
 
 For a guided, step-by-step introduction, see [BUILD_GUIDE.md](BUILD_GUIDE.md#11-what-a-sutra-is-and-when-one-applies). For how inference fills what a Sutra
@@ -3866,11 +3883,11 @@ Sutra YAML ──parse──▶ Panel(kind, options) ──compile EL──▶ b
 
 | Step | Where | What it does for a kind |
 |---|---|---|
-| Parse | `drishti-rachana/.../model/PanelKind.java`, `PanelOptions.java` | the kind word (`DRS-2021`), required options (`DRS-2022`), accepted options (`DRS-2023`), restricted values (`DRS-2029`) |
-| Compile | `drishti-rachana/.../SutraExpressions.java` | which options are expressions, compiled when the Sutra loads (`DRS-2101`) |
-| Schema | `drishti-rachana/.../RachanaSchema.java` | the JSON Schema served at `GET /api/v1/rachana/schema`: completion, the YAML editor and the workbench inspector all read it |
-| Bind | `drishti-engine/.../bind/Binder.java`, `ChartBinder.java` | evaluates the options against the document into a `PanelData` record; masks and `source` are handled around it |
-| View model | `drishti-engine/.../view/PanelData.java`, `Emptiness.java` | the record, and when it counts as empty |
+| Parse | `compute/drishti-rachana/.../model/PanelKind.java`, `PanelOptions.java` | the kind word (`DRS-2021`), required options (`DRS-2022`), accepted options (`DRS-2023`), restricted values (`DRS-2029`) |
+| Compile | `compute/drishti-rachana/.../SutraExpressions.java` | which options are expressions, compiled when the Sutra loads (`DRS-2101`) |
+| Schema | `compute/drishti-rachana/.../RachanaSchema.java` | the JSON Schema served at `GET /api/v1/rachana/schema`: completion, the YAML editor and the workbench inspector all read it |
+| Bind | `kernel/drishti-engine/.../bind/Binder.java`, `ChartBinder.java` | evaluates the options against the document into a `PanelData` record; masks and `source` are handled around it |
+| View model | `kernel/drishti-engine/.../view/PanelData.java`, `Emptiness.java` | the record, and when it counts as empty |
 | Draw | `drishti-console/web/templates/_macros/panels.html`, `static/css/drishti_terminal.css`, `static/js/drishti_charts.js` | first paint from the macro; ECharts kinds then enhanced by `drishti_charts.js` |
 | Live | `drishti-console/routes/api_routes.py` (`_view_event`) | a changed panel is re-rendered by the same macro |
 | Export | `drishti-console/core/export.py` | the CSV of the panel |
@@ -3927,21 +3944,21 @@ means nothing fails and a human has to look, which is why those steps say what t
 
 | # | File | Change | Why | Catches it if missed |
 |---|---|---|---|---|
-| 1 | `drishti-rachana/.../model/PanelKind.java` | add the enum constant with required and optional options | the word exists; the parser's `DRS-2021/2022/2023` come from it | compiler (exhaustive `switch` in `Binder`), `StudioTest` kind count |
-| 2 | `drishti-rachana/.../model/PanelOptions.java` | only for an option with a fixed set or a shape rule | `DRS-2029` instead of a silent mistake | your own parser test (`MetricPanelTest.theGrammarAcceptsTheOptionsAndRejectsTheRest`) |
-| 3 | `drishti-rachana/.../SutraExpressions.java` | the options that hold expressions, in `EL_OPTIONS` | compiled and checked at load (`DRS-2101`); the workbench offers autocomplete in exactly these | `MetricPanelTest` (`DRS-2101` on a broken `value`) |
-| 4 | `drishti-rachana/.../RachanaSchema.java` | a `kindOption` branch for every option that is not plain text; `SCHEMA_CHOICES` for fixed sets | the inspector's editors and descriptions come from here | `test_workbench_options_browser.py` (labelled editor); **no guard** for a missing description: look at the inspector |
-| 5 | `drishti-engine/.../view/PanelData.java` | a record, when [3.1](#31-reuse-a-paneldata-record-or-add-a-new-one) says so | the view model | compiler |
-| 6 | `drishti-engine/.../view/Emptiness.java` | a `case` for the record | when the panel says *No data available*; the `SampleChecker` and auto-design pruning read it | compiler (sealed `switch`); `MetricPanelTest.aMissingFigureIsAnEmptyPanelNotAnError` |
-| 7 | `drishti-engine/.../bind/Binder.java` (or `ChartBinder.java`) | a `case` in the `switch` in `bind`, and the method | the data | compiler; `MetricPanelTest` |
+| 1 | `compute/drishti-rachana/.../model/PanelKind.java` | add the enum constant with required and optional options | the word exists; the parser's `DRS-2021/2022/2023` come from it | compiler (exhaustive `switch` in `Binder`), `StudioTest` kind count |
+| 2 | `compute/drishti-rachana/.../model/PanelOptions.java` | only for an option with a fixed set or a shape rule | `DRS-2029` instead of a silent mistake | your own parser test (`MetricPanelTest.theGrammarAcceptsTheOptionsAndRejectsTheRest`) |
+| 3 | `compute/drishti-rachana/.../SutraExpressions.java` | the options that hold expressions, in `EL_OPTIONS` | compiled and checked at load (`DRS-2101`); the workbench offers autocomplete in exactly these | `MetricPanelTest` (`DRS-2101` on a broken `value`) |
+| 4 | `compute/drishti-rachana/.../RachanaSchema.java` | a `kindOption` branch for every option that is not plain text; `SCHEMA_CHOICES` for fixed sets | the inspector's editors and descriptions come from here | `test_workbench_options_browser.py` (labelled editor); **no guard** for a missing description: look at the inspector |
+| 5 | `kernel/drishti-engine/.../view/PanelData.java` | a record, when [3.1](#31-reuse-a-paneldata-record-or-add-a-new-one) says so | the view model | compiler |
+| 6 | `kernel/drishti-engine/.../view/Emptiness.java` | a `case` for the record | when the panel says *No data available*; the `SampleChecker` and auto-design pruning read it | compiler (sealed `switch`); `MetricPanelTest.aMissingFigureIsAnEmptyPanelNotAnError` |
+| 7 | `kernel/drishti-engine/.../bind/Binder.java` (or `ChartBinder.java`) | a `case` in the `switch` in `bind`, and the method | the data | compiler; `MetricPanelTest` |
 | 8 | `drishti-console/web/templates/_macros/panels.html` | a branch in `panel(p)`, with an accessible name and `data-path` | first paint, and every live patch | `test_metric.py` (yours); `test_terminal.py::test_every_panel_kind_renders_imperfect_data_without_failing` after step 17 |
 | 9 | `drishti-console/web/static/css/drishti_terminal.css` | the styles, theme variables only, a phone rule | no inline styles (CSP) | `test_metric.py` stylesheet test (yours); `test_contrast.py` |
 | 10 | `drishti-console/web/static/js/drishti_charts.js` | ECharts kinds only: a builder in `BUILD` | the drawing | a browser test of yours |
 | 11 | `drishti-console/core/export.py` | `EXPORTABLE` and a `panel_rows` branch | the CSV | `test_metric.py` CSV test (yours) |
 | 12 | `drishti-console/web/templates/_macros/panels.html` | the kind in the tuple that shows the download link | the ↓ in the heading | `test_metric.py` (`data-export-panel`) |
-| 13 | `drishti-rachana/.../design/ops/Bind.java` | new bindable option names into `BINDABLE` | a field dropped on the panel can fill them | **no guard**: add a test beside the `Bind` op tests |
-| 14 | `drishti-engine/.../design/PanelChooser.java` | `scalarChoices` (or the list/object choices) | what the field-drop menu and the alternatives offer | `AutoDesignerTest.suggestReturnsTheExpectedFirstChoicePerRole` (changed by yours) |
-| 15 | `drishti-engine/.../design/AutoDesigner.java` | `Collector.scalar` (or the list branch) | what the first draft contains | `AutoDesignerTest` |
+| 13 | `compute/drishti-rachana/.../design/ops/Bind.java` | new bindable option names into `BINDABLE` | a field dropped on the panel can fill them | **no guard**: add a test beside the `Bind` op tests |
+| 14 | `kernel/drishti-engine/.../design/PanelChooser.java` | `scalarChoices` (or the list/object choices) | what the field-drop menu and the alternatives offer | `AutoDesignerTest.suggestReturnsTheExpectedFirstChoicePerRole` (changed by yours) |
+| 15 | `kernel/drishti-engine/.../design/AutoDesigner.java` | `Collector.scalar` (or the list branch) | what the first draft contains | `AutoDesignerTest` |
 | 16 | `drishti-console/web/static/js/build/drishti_palette.js`, `drishti_actions.js` | a `KINDS` row; seeding in `drishti_actions.js` | the kind in the palette and the Add-panel chooser; a new panel starts with a sensible `value` | `test_workbench_add_browser.py` (22 kinds), `test_workbench_metric_browser.py` (yours) |
 | 17 | `drishti-console/tests/test_terminal.py` | the kind in `KINDS` | the macro against broken data | itself |
 | 18 | `docs/guides/examples/` | the kind in the showcase **and** an example of its own; the examples README | the examples are the source of the docs and the tests | `test_examples.py`, `ExamplePreviewTest`, `test_build_designs.py` |
@@ -3957,7 +3974,7 @@ Then run the whole set: [15.4](#154-how-to-run-them). The sections that follow t
 
 ##### 5.1 `PanelKind`: the word and its options
 
-`drishti-rachana/src/main/java/com/ash/drishti/rachana/model/PanelKind.java`:
+`compute/drishti-rachana/src/main/java/com/ash/drishti/rachana/model/PanelKind.java`:
 
 ```java
     /**
@@ -4000,7 +4017,7 @@ Add a rule only for a mistake people will make; every rule is a message to write
 
 ##### 5.3 `SutraExpressions`: which options are expressions
 
-`drishti-rachana/src/main/java/com/ash/drishti/rachana/SutraExpressions.java` holds `EL_OPTIONS`, the map from kind to
+`compute/drishti-rachana/src/main/java/com/ash/drishti/rachana/SutraExpressions.java` holds `EL_OPTIONS`, the map from kind to
 the options that are Rachana-EL expressions:
 
 ```java
@@ -4020,7 +4037,7 @@ its option **names** appear on their own. But each option's **type, choices and 
 the inspector would then show.
 
 `fmt` and `tone` are special-cased by name; expression options are typed by `SutraExpressions`. Everything else needs a
-branch in `drishti-rachana/src/main/java/com/ash/drishti/rachana/RachanaSchema.java`:
+branch in `compute/drishti-rachana/src/main/java/com/ash/drishti/rachana/RachanaSchema.java`:
 
 ```java
         if (k == PanelKind.METRIC && (o.equals("deltaFmt") || o.equals("deltaTone"))) {
@@ -4052,7 +4069,7 @@ curl -s localhost:18480/api/v1/rachana/schema | python3 -c 'import json,sys; pri
 
 ##### 6.1 The record
 
-`drishti-engine/src/main/java/com/ash/drishti/engine/view/PanelData.java`:
+`kernel/drishti-engine/src/main/java/com/ash/drishti/engine/view/PanelData.java`:
 
 ```java
     /**
@@ -4074,7 +4091,7 @@ members.
 
 ##### 6.2 Emptiness
 
-`drishti-engine/src/main/java/com/ash/drishti/engine/view/Emptiness.java`:
+`kernel/drishti-engine/src/main/java/com/ash/drishti/engine/view/Emptiness.java`:
 
 ```java
             case PanelData.Metric m -> m.value() == null || blank(List.of(m.value()));
@@ -4091,7 +4108,7 @@ cases: what happens when *some* parts are present?
 
 #### 7. The binder
 
-`drishti-engine/src/main/java/com/ash/drishti/engine/bind/Binder.java` binds one panel at a time. Add a `case` to the
+`kernel/drishti-engine/src/main/java/com/ash/drishti/engine/bind/Binder.java` binds one panel at a time. Add a `case` to the
 `switch` (the compiler insists):
 
 ```java
@@ -4398,7 +4415,7 @@ catalogue's heading must be exactly `### metric`.
 
 ##### 12.4 Dropping a field: `Bind.BINDABLE`
 
-`drishti-rachana/src/main/java/com/ash/drishti/rachana/design/ops/Bind.java` lists the options that hold a *path or
+`compute/drishti-rachana/src/main/java/com/ash/drishti/rachana/design/ops/Bind.java` lists the options that hold a *path or
 field of the data* (as opposed to formats, labels and switches). Dropping a field from the Data pane onto a panel fills
 one of them, and `roles(kind)` (what the drop menu offers) is derived from this set and the kind's options:
 
@@ -4413,7 +4430,7 @@ fails if you forget**: the symptom is a field dropped on the tile offering no `d
 
 ##### 12.5 Suggestions: `PanelChooser`
 
-`drishti-engine/src/main/java/com/ash/drishti/engine/design/PanelChooser.java` answers "which panels suit this field,
+`kernel/drishti-engine/src/main/java/com/ash/drishti/engine/design/PanelChooser.java` answers "which panels suit this field,
 best first" for the field-drop menu (`S` on a field) and for the runner-up *alternatives* shown next to an auto-designed
 panel. For a lone measure it now offers `metric` (and `gauge` when the field is a fraction or has a limit):
 
@@ -4447,7 +4464,7 @@ behind the workbench's **Tests** tab: both read `Emptiness`, which is why step 6
 
 ##### 12.7 `SampleChecker` and the Tests tab
 
-`drishti-engine/src/main/java/com/ash/drishti/engine/design/SampleChecker.java` renders a Sutra against each sample and
+`kernel/drishti-engine/src/main/java/com/ash/drishti/engine/design/SampleChecker.java` renders a Sutra against each sample and
 reports, per panel and sample, `ok`, `empty`, `error` or `noAccess`. It needs **nothing** from a new kind except that
 `Emptiness.of` is right for the record and that binding does not throw on ordinary missing data. A kind whose emptiness
 is wrong makes every design that uses it look broken, or healthy while blank.
@@ -4507,7 +4524,7 @@ pictures is `tools/docs/shots/panels.py` (driver: `tools/docs/screenshots.py`). 
 
   ```bash
   export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
-  ./mvnw -o -q package -DskipTests -pl drishti-app -am          # the driver starts the packaged server on :18997 and the console on :17997
+  ./mvnw -o -q package -DskipTests -pl :drishti-app -am          # the driver starts the packaged server on :18997 and the console on :17997
   drishti-console/.venv/bin/python tools/docs/screenshots.py --guide panels --only metric
   drishti-console/.venv/bin/python tools/docs/screenshots.py --list --guide panels
   ```
@@ -4551,7 +4568,7 @@ placeholder), `landing.html` (the statistic and the tooltip that lists the kinds
 
 | Test | File | What it proves |
 |---|---|---|
-| server: the figure, change, unit and caption; the optional parts; empty; masked; no access; the grammar | `drishti-server/src/test/java/com/ash/drishti/server/MetricPanelTest.java` | binding through the real pipeline with a Sutra and a document the test supplies (`pipeline.preview(Optional.of(sutra), doc)`; the 4-argument overload takes a redactor and a `mayOpen` predicate for masks and no access) |
+| server: the figure, change, unit and caption; the optional parts; empty; masked; no access; the grammar | `kernel/drishti-server/src/test/java/com/ash/drishti/server/MetricPanelTest.java` | binding through the real pipeline with a Sutra and a document the test supplies (`pipeline.preview(Optional.of(sutra), doc)`; the 4-argument overload takes a redactor and a `mayOpen` predicate for masks and no access) |
 | console: macro, live, CSV, CSS | `drishti-console/tests/test_metric.py` | structure, accessible name, tones, `data-path`, no inline style, a live frame, the CSV, theme-only colours and the phone rule |
 | browser: palette, add, seeding, inspector, rendering | `drishti-console/tests/test_workbench_metric_browser.py` | the kind can be added from the palette and edited in the inspector, and the tile draws |
 | docs: anchors, images, YAML | `drishti-console/tests/test_panel_kinds.py`, `test_guide_images.py` | the catalogue |
@@ -4594,8 +4611,8 @@ The browser tests use the **packaged** server jar, so build first, or they test 
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64            # or any JDK 21 or newer
 ./mvnw -o -q install -N                                         # the parent POM, once
 # the engine, grammar and your test:
-./mvnw -o -q test -pl drishti-rachana,drishti-engine,drishti-server -am -Dtest='MetricPanelTest,StudioTest,AutoDesignerTest,OpApplierTest,ExamplePreviewTest' -Dsurefire.failIfNoSpecifiedTests=false
-./mvnw -o -q package -DskipTests -pl drishti-app -am         # then the jar the browser tests drive
+./mvnw -o -q test -pl :drishti-rachana,:drishti-engine,:drishti-server -am -Dtest='MetricPanelTest,StudioTest,AutoDesignerTest,OpApplierTest,ExamplePreviewTest' -Dsurefire.failIfNoSpecifiedTests=false
+./mvnw -o -q package -DskipTests -pl :drishti-app -am         # then the jar the browser tests drive
 ./mvnw spotless:apply                                           # formatting (Java)
 python3 tools/license_headers.py --fix                          # the copyright header on new files
 # the console, from the repository root:
@@ -4776,7 +4793,7 @@ draws the panel exactly, each proved identical to its inline layout. The last si
   payments metrics are `trading/payments-metrics@1`, the trades table `trading/trade-table@1` with its columns passed as a parameter
   (a fragment parameter may now be a list: `type: columns`, filled in as YAML flow where `%{columns}` stands; PACK_DEVELOPER_GUIDE,
   A list as a parameter), the footer the kit's `data-provenance@1`. The generator writes them (`trades/sutras.py`, `page_fragments`,
-  `make_sutras.py --check`). Proved on a committed synthetic derived page per kind (`drishti-server/src/test/resources/sutra-next-data/trading`),
+  `make_sutras.py --check`). Proved on a committed synthetic derived page per kind (`kernel/drishti-server/src/test/resources/sutra-next-data/trading`),
   served in the test by a file connector of its own with the derived connector off (`PackSutraNextEquivalence.lake`): the same page
   through the same data path both ways.
 - **news-and-markets `quote` and `news`**: `series-line@1` (the closing price), `field-list@1` (the data source and terms),
@@ -5082,7 +5099,7 @@ panels:
   keys move between them). Below 700 px a pane opens as a full-width sheet with a Back button. Theme tokens only, so every theme
   draws them.
 
-**The worked screen: the book desk** (`config/packs/banking/trading/sutras/pages/book-desk.v1.sutra.yaml`, opened as
+**The worked screen: the book desk** (`modules/banking/dmod/packs/trading/sutras/pages/book-desk.v1.sutra.yaml`, opened as
 `/v/portfolio-trades/BOOK-RATES-2?sutra=book-desk`): the book's trades (`row-picker@1`, `open` with the trade id and the
 counterparty); a click opens the trade's cash flows under the row (`cashflow-ladder@1` over the `trade` kind, trading pack) and fills
 the right column: the counterparty (core pack, by id) and its credit limit with utilisation by tenor (`ranked-bars@1`, counterparty-risk
@@ -5490,19 +5507,19 @@ Each phase migrates screens only where the equivalence test proves the view unch
 New to the workbench? Follow [tutorial 19, Part B · Design a screen](../tutorials/19-build-a-pack-and-a-screen.md#part-b--design-a-screen-in-the-workbench-and-on-a-live-page) (and [tutorial 19, Part A](../tutorials/19-build-a-pack-and-a-screen.md#part-a--build-a-pack-from-your-data) to build a pack), with a picture of every step. This page is the reference for everything the workbench does, by mouse or keyboard.
 
 
-You have JSON documents (trades, shipments, patients, sensor readings) and you want a screen for them. The **workbench** (*Build → New screen*, then the design's page) is where you make it: bring your files, let Drishti draft a first screen, then **drag panels and fields onto the real screen**, size them on the grid, fill their options in a form, and watch every sample of your data against it while you work. The result is an ordinary Sutra (the layout file Drishti reads), and the YAML is one tab away when you want it.
+You have JSON documents (trades, shipments, patients, sensor readings) and you want a screen for them. The **workbench** (*Create → New screen*, then the design's page) is where you make it: bring your files, let Drishti draft a first screen, then **drag panels and fields onto the real screen**, size them on the grid, fill their options in a form, and watch every sample of your data against it while you work. The result is an ordinary Sutra (the layout file Drishti reads), and the YAML is one tab away when you want it.
 
 This guide goes step by step, with a picture of each step. The pictures are made by a script (`tools/docs/screenshots.py`), so they match the screen you have.
 
 
 ### 1. Start: bring data
 
-Open **Build → New screen**. The page asks two things: *what data do you have?* and *where should the design start?*
+Open **Create → New screen**. The page asks two things: *what data do you have?* and *where should the design start?*
 
 ![The New page: five ways to bring data, and the starting points](img/designer/01-new-flow.jpg)
 
-**Bring data** (any mix, in one go). A schema does more than make samples: with **Build → New pack** one or many schemas (and a folder of JSON Lines) become a whole pack of screens, with
-labels, links, About text and tests. The rules are in [Schema to pack](BUILD_GUIDE.md#8-a-pack-from-a-json-schema-build--new-pack); the samples below are the same synthetic ones that guide describes.
+**Bring data** (any mix, in one go). A schema does more than make samples: with **Create → New pack** one or many schemas (and a folder of JSON Lines) become a whole pack of screens, with
+labels, links, About text and tests. The rules are in [Schema to pack](BUILD_GUIDE.md#8-the-pack-designer-create--new-pack); the samples below are the same synthetic ones that guide describes.
 
 | You have | What happens |
 |---|---|
@@ -5803,7 +5820,7 @@ Everything the mouse does has a key. Changes are announced in a live region for 
 
 ### 16. Worked examples, one per panel family
 
-Each example in `docs/guides/examples/` opens as your own copy (*Build → Examples*, or the **Open in the workbench** link on *Help → Examples*). Each has a note on what to look for and which lines to copy. For each family below: open the copy, click the panel named, look at its inspector, then try the exercise.
+Each example in `docs/guides/examples/` opens as your own copy (*Create → Examples*, or the **Open in the workbench** link on *Help → Examples*). Each has a note on what to look for and which lines to copy. For each family below: open the copy, click the panel named, look at its inspector, then try the exercise.
 
 #### Key figures, key/value and status: [all-panels-showcase](examples/all-panels-showcase.md)
 
@@ -5902,7 +5919,7 @@ Sample contents are never logged.
 | `/studio?build=1` (with any of the above) | The same, on the **Design** tab instead of the YAML. |
 | `/studio/reviews`, `/studio/reviews/P-000042` | **Views → Approvals** (`/approvals`). The review pages moved there, unchanged. |
 
-![Build → Create, Govern, Learn: where Studio's entries went](img/designer/25-build-menu.jpg)
+![Create menu: where Studio's entries went](img/designer/25-build-menu.jpg)
 
 What Studio had, and where it is now:
 
@@ -5916,7 +5933,7 @@ What Studio had, and where it is now:
 | The entity kind and id boxes, *Load entity JSON*, *Preview against this JSON* | **Samples**: add the entity as a sample (*More ways*), or **Preview with a file…**. Samples are listed, and you move between them with ◀ ▶. |
 | *Test entities* and *Run all* | The **Tests** tab checks **every sample** against the design as you type. |
 | *Start from inference* | **Auto-design** (section 7) drafts a complete Sutra from the samples. |
-| The Sutra picker (*New Sutra…*) | **Build → New screen → an existing Sutra**, or `/studio?sutra=name@version` as above. |
+| The Sutra picker (*New Sutra…*) | **Create → New screen → an existing Sutra**, or `/studio?sutra=name@version` as above. |
 | Reviews, with the pending count | **Views → Approvals** and the *Reviews* button beside *Submit for review*. |
 
 ![File menu: Open a Sutra or sample documents, or an example as a new design](img/designer/21-file-menu.jpg)
@@ -5960,7 +5977,7 @@ The diff is the one the reviewers see: panels that only **moved** are named in w
 
 #### Changing a live Sutra when a colleague changed it first
 
-Open an existing Sutra from the registry (**Build → New screen**, *An existing Sutra*): the design is a **copy**, and the header says *edits rates-trade@1*, its **base**. If a colleague proposes and an
+Open an existing Sutra from the registry (**Create → New screen**, *An existing Sutra*): the design is a **copy**, and the header says *edits rates-trade@1*, its **base**. If a colleague proposes and an
 administrator approves a change to the same Sutra while you work, the live Sutra moves on and the header shows **base moved to rates-trade@2**; **Problems** says *The base rates-trade@1 has a newer live version, rates-trade@2.
 Ship, Rebase replays your steps on it.*
 
@@ -5993,7 +6010,7 @@ Typed YAML is sent first, so what is saved is what you see. A Sutra the server r
 
 This is the whole road in one go. It assumes you have the author right and Studio saving is on (`DRISHTI_STUDIO_SAVE=true`); a colleague with the approve right does the last step. Without those, steps 1 to 4 still work and the design waits in *My drafts* (the Build home).
 
-1. **Folder.** *Build → New screen → Choose a folder* (section 1). Drishti reads every `.json` and `.jsonl` in it as samples. Start from **Auto-design** and give the design a name, so it is kept for 90 days.
+1. **Folder.** *Create → New screen → Choose a folder* (section 1). Drishti reads every `.json` and `.jsonl` in it as samples. Start from **Auto-design** and give the design a name, so it is kept for 90 days.
 2. **Design.** The workbench opens on a first screen drawn from your data (sections 2 to 8). Drag a panel from the palette, drop a field onto it, size it on the grid, fill its options in the inspector. Everything is an undoable step.
 3. **Check.** The *Tests* tab and the status bar (`✓ 38/40`) run every sample against the design as you type (section 11). Fix the red cells: an *empty* panel is a field some sample does not have; an *error* names the reason. Switch samples with the arrows in the status bar to see why.
 4. **Propose.** Type what changed in the box beside the button and press **Submit for review** (Ctrl+S). The server runs the check again, then sends the proposal **with its evidence**: the panel-by-sample matrix, the names of the samples (not their contents), your notes and the design's identity. The status next to the title becomes *proposed P-000042*.
@@ -6008,7 +6025,7 @@ This is the whole road in one go. It assumes you have the author right and Studi
 
    ![My drafts: the design is live v1](img/designer/43-live-status.jpg)
 
-7. **Change it later.** Open the live Sutra in the workbench (*Build → New screen → An existing Sutra*): the new design remembers its **base**, the *Versions* tab (section 21) shows your changes against it, and the next proposal is a new version. If someone else changed the live Sutra meanwhile, the proposal says *stale* and must be made again from the live version.
+7. **Change it later.** Open the live Sutra in the workbench (*Create → New screen → An existing Sutra*): the new design remembers its **base**, the *Versions* tab (section 21) shows your changes against it, and the next proposal is a new version. If someone else changed the live Sutra meanwhile, the proposal says *stale* and must be made again from the live version.
 
 A design that is edited after it was proposed or approved goes back to *draft*: the status always describes the revision you are looking at.
 
@@ -6062,7 +6079,7 @@ java -jar drishti-server-<version>-exec.jar sutra design samples/*.json --kind d
 java -jar drishti-server-<version>-exec.jar sutra design --each samples-by-kind --out target/drafts   # one draft per subfolder
 ```
 
-`test` uses the **same checker as the Tests tab**, with the `config/packs/<domain>/<pack>/tests/<sutra>/cases.jsonl` + `expect.yaml` convention that the pack fragment export writes. Exit codes: `0` ok, `1` problems, `2` usage. `--junit` writes JUnit XML for your CI's report step; `--out` writes HTML snapshots. The Maven build of this repository runs `sutra test` over every shipped pack that has tests and over the ten documented examples. All the details and a CI example are in [the Sutra command guide](BUILD_GUIDE.md#24-testing-expectyaml-sutra-lint-sutra-test-and-pack-check).
+`test` uses the **same checker as the Tests tab**, with the `modules/<module>/packs/<pack>/tests/<sutra>/cases.jsonl` + `expect.yaml` convention that the pack fragment export writes. Exit codes: `0` ok, `1` problems, `2` usage. `--junit` writes JUnit XML for your CI's report step; `--out` writes HTML snapshots. The Maven build of this repository runs `sutra test` over every shipped pack that has tests and over the ten documented examples. All the details and a CI example are in [the Sutra command guide](BUILD_GUIDE.md#24-testing-expectyaml-sutra-lint-sutra-test-and-pack-check).
 
 ### 27. Binding a design to a file (development servers)
 
@@ -6329,7 +6346,7 @@ nest does. The keyboard: **arrows** move, **Shift+arrows** pick a range, **Enter
 
 The live preview beside the sheet is drawn again in place after every change (no reload). On a phone Grid says *Grid needs a
 wider screen* and offers Outline. **Open first** (beside the modes) is the mode you open first: with Grid or Outline, Customize on a
-page opens that mode with the page's draft, and Build → Designer goes to it.
+page opens that mode with the page's draft, and Create → New screen goes to it.
 
 ![A screen laid out in named areas: a heading across, the trades beside a detail shown as tabs, a split you can drag](img/designer/layout-grid.jpg)
 
@@ -6743,7 +6760,7 @@ Old addresses keep working (302, query kept, covered by tests): `/studio` → a 
 | 4 | Visual canvas with field drops and suggestions, inspector from the Rachana schema, undo/redo | Screens without writing YAML | L |
 | 5 | Command palette (Ctrl+K): add panel, go to panel, next sample, run check, switch tab, propose | Keyboard-first; also the accessible path for every drag | S |
 | 6 | Diff and versions: against the base, the live version or any revision; restore a revision | Reviewers and authors see the change, not the file | S |
-| 7 | Headless CLI for CI: `java -jar drishti-server.jar sutra lint\|test\|shape\|design\|preview <pack-dir>`, exit codes, JUnit XML, preview snapshots; tests in `config/packs/<domain>/<p>/tests/<sutra>/*.json` with `expect.yaml` | Pack authors run in CI exactly what the workbench runs | M |
+| 7 | Headless CLI for CI: `java -jar drishti-server.jar sutra lint\|test\|shape\|design\|preview <pack-dir>`, exit codes, JUnit XML, preview snapshots; tests in `modules/<module>/packs/<p>/tests/<sutra>/*.json` with `expect.yaml` | Pack authors run in CI exactly what the workbench runs | M |
 | 8 | Export a pack fragment (pack.yaml stub, Sutra, tests, three samples); import a pack folder or zip as Designs | From JSON files to a pack in minutes | M |
 | 9 | Snippets per panel kind, generated from the Rachana schema; examples as templates | Fewer trips to the reference | S |
 | 10 | File binding in development: a Design bound to a file under `drishti.rachana.dirs`; save writes it, hot reload brings IDE edits back | Pack authors keep their IDE and git | M |
@@ -6850,7 +6867,7 @@ Studio is folded in, because it is what users are waiting for.
 | **5. Operations and one checker** (done) | the `design.ops` package; stateless `/builder/edit` and `/builder/check`; `SampleChecker` behind Studio's test and auto-design's pruning | every operation on all 20 kinds keeps comments and order; a bad operation is a located problem; a sample set with a missing field shows the right empty and error cells |
 | **6. Workbench with the visual canvas** (done) | `/build/d/{id}`: Data, Design (canvas, palette, field drops with suggestions, inspector, undo/redo, keyboard path, the panel keys (drishti-core) shared with layout mode), YAML, Problems, Tests as you type, sample switcher, *Preview with a file…*, phone and theme toggles; the guide `docs/guides/RACHANA_REFERENCE.md` and its help entry | the all-panels showcase is built from its samples without typing YAML, by mouse and by keyboard only; a folder → auto-design → switch samples → fix → green matrix test; layout mode's tests pass with the shared module |
 | **7. Studio folded in** (done) | all `/studio*` page addresses redirect (302) into the workbench, the review pages are the one Approvals queue (`/approvals`), Studio's page, template and script are gone (its JSON routes under `/studio/` remain for the workbench and for scripts); Studio's keys (Ctrl+S, Ctrl+Enter), File menu, Summary, Save and Submit for review live in the workbench; Studio's test entities become stored-entity samples of a Design made from that Sutra; command palette (Ctrl+K); the Versions tab (`GET /builder/designs/{id}/versions[/n]`, diff against the base or any version with `sutra_diff`, restore as a `text` operation); Build menu: Create, Govern, Learn; Studio's test entities become tests on a Design; the guide grows four chapters | every old Studio address in the console tests lands on an equivalent screen; keyboard-only use across panes |
-| **8. Ship and scale** (done) | propose with evidence, reviewers see the matrix, approval makes it live; pack fragment export and folder/zip import; the headless CLI with the `config/packs/<domain>/<p>/tests/` convention run over every shipped pack in the build; development file binding; read-only share links; the guide's end-to-end walkthrough | folder → design → check → propose → approve → the view serves the new version; an exported fragment loads through Admin → Packs and passes `sutra test` |
+| **8. Ship and scale** (done) | propose with evidence, reviewers see the matrix, approval makes it live; pack fragment export and folder/zip import; the headless CLI with the `modules/<module>/packs/<p>/tests/` convention run over every shipped pack in the build; development file binding; read-only share links; the guide's end-to-end walkthrough | folder → design → check → propose → approve → the view serves the new version; an exported fragment loads through Admin → Packs and passes `sutra test` |
 
 ### Risks
 
@@ -6899,7 +6916,7 @@ document ─► rules propose candidates ─► best candidate per document path
                                          ("inference only", or "Sutra counterparty v1 + inference")
 ```
 
-The code is in `drishti-inference/src/main/java/com/ash/drishti/inference/`: `Rules.java` (the six rules),
+The code is in `compute/drishti-inference/src/main/java/com/ash/drishti/inference/`: `Rules.java` (the six rules),
 `InferenceEngine.java` (choosing and packing), `ColumnInference.java` (table and key/value columns),
 `LayoutMerger.java` (Sutra ⊕ inference) and `Semantics.java` (field-name hints).
 
@@ -6949,7 +6966,7 @@ Suppose a new source sends this document for the kind `warehouse`, and nobody ha
 
 To try it without a data source:
 
-1. Open **Build → New screen** in the console.
+1. Open **Create → New screen** in the console.
 2. Save the document above as `WH-ROTTERDAM-2.json` and drop it on the page (it becomes a sample), and keep
    *auto-design* as the start ([SCREEN_DESIGNER §1](#1-start-bring-data)).
 
@@ -7439,8 +7456,8 @@ by sign) and a weight for the strip. They live in YAML:
 
 | File | Role |
 |---|---|
-| `drishti-inference/src/main/resources/inference/semantics.yaml` | the core hints, domain-neutral |
-| `config/packs/<domain>/<pack>/config/semantics.yaml` (or the pack's `semantics:` key) | a pack's hints, tried **before** the core's; with several packs, the more specific pack first |
+| `compute/drishti-inference/src/main/resources/inference/semantics.yaml` | the core hints, domain-neutral |
+| `modules/<module>/packs/<pack>/config/semantics.yaml` (or the pack's `semantics:` key) | a pack's hints, tried **before** the core's; with several packs, the more specific pack first |
 | the file named by `drishti.inference.semantics-file` | a site file that **replaces** the core hints |
 
 #### Core roles
@@ -7514,7 +7531,7 @@ Restart the server after changing a semantics file: hints are read once at start
 
 #### Replacing the core hints for a site
 
-1. Copy `drishti-inference/src/main/resources/inference/semantics.yaml` to, say, `/etc/drishti/semantics.yaml`,
+1. Copy `compute/drishti-inference/src/main/resources/inference/semantics.yaml` to, say, `/etc/drishti/semantics.yaml`,
    and edit it. Keep every block, including `limits:` and `idFields:`; a missing block falls back to built-in
    defaults or to nothing.
 2. Point the server at it, either in `application.local.yaml` in the server's working directory:
@@ -7528,7 +7545,7 @@ Restart the server after changing a semantics file: hints are read once at start
    or on the command line:
 
    ```bash
-   java -jar drishti-server/target/drishti-server-2.9.11.g-exec.jar --drishti.inference.semantics-file=/etc/drishti/semantics.yaml
+   java -jar kernel/drishti-server/target/drishti-server-2.9.11.g-exec.jar --drishti.inference.semantics-file=/etc/drishti/semantics.yaml
    ```
 3. Restart the server, then check a view with no Sutra (or the workbench's auto-design).
 
@@ -7550,8 +7567,8 @@ endpoint (C2), saved charts (C4, C5), the `chart` panel kind and Promote (C8), O
 Feature decided by the product owner, beside BI runs
 ([ARCHITECTURE.md §28](../architecture/ARCHITECTURE.md#287-bi-runs-every-bi-query-as-a-bounded-visible-job)) and the two Drishti\*net transport items ([CLUSTER_GUIDE.md](CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet)). Written
 2026-10-20 from the agreed feature, checked against the console and server code on `develop`. Builds on the pivot engine
-(drishti-bicompute on the server; `drishti_pivot-engine.js`, its browser client, and `drishti_pivot-grid.js`, its grid; [PIVOT_GUIDE.md](PIVOT_GUIDE.md)),
-the chart panels (`drishti_charts.js`, [Panels: the twenty-two kinds, and developing a new one](#panels-the-twenty-two-kinds-and-developing-a-new-one)), the BI visuals ([REPORTS_GUIDE.md](REPORTS_GUIDE.md#9-the-report-file-pages-visuals-filters-and-slicers) section 3) and
+(drishti-bicompute on the server; `drishti_pivot-engine.js`, its browser client, and `drishti_pivot-grid.js`, its grid; [PIVOT.md](bi/PIVOT.md)),
+the chart panels (`drishti_charts.js`, [Panels: the twenty-two kinds, and developing a new one](#panels-the-twenty-two-kinds-and-developing-a-new-one)), the BI visuals ([REPORT_FILE_FORMAT_STATEMENTS.md](bi/REPORT_FILE_FORMAT_STATEMENTS.md#1-the-report-file-pages-visuals-filters-and-slicers) section 3) and
 history queries ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time)).
 
 ### 1. The ask
@@ -7583,12 +7600,12 @@ The product owner, 2026-10-20: **every table can be charted.**
 | The table enhancer | `web/static/js/drishti_tables.js` | Every table that is not `data-plain` (table and ladder panels, search results, pick lists, admin lists) gets sort, column filters (`drishti_colfilter.js`), paging and keys. It builds the heading strip, so the Chart icon goes there **once** for all of them. Its keys are bound on the focused table and use only arrows, PgUp/PgDn, Home/End and Enter: **K is free**. |
 | Sutra table cells | `web/templates/_macros/panels.html` (`table`, `drill`, `pivot_table`) | Cells are **display text** (`cell_text(c)`, e.g. `1.5m`, `−30,205,543`); a column is only flagged `numeric`. Raw values are not in the page. A table cut at its `limit` says `d.more` in its footer. |
 | Panel records | `GET /api/pivot/records/{kind}/{id}/{panel}` → `ViewController.records` → `PivotBinder.records` | Every row of a panel up to `drishti.pivot.max-records` (50,000) as **raw values**, with the view's business date and masks (a masked field reads `•••`), `total` and `truncated`. **Today only for panels whose Sutra says `pivot:`**, and only the pivot's fields. |
-| The pivot engine | drishti-bicompute (Java, [PIVOT_GUIDE.md](PIVOT_GUIDE.md)); in the browser `web/static/js/drishti_pivot-engine.js` (`window.Drishti.pivotEngine`, also `module.exports` for node tests) | Every figure is computed on the server: `POST /api/pivot/query` over a source (a Export data kind, a panel's rows `panel/<kind>/<panel>/<id>`) and `POST /api/pivot/inline` over rows the page already holds (a chart of the shown rows). `drishti_pivot-engine.js` only asks and lays the answer out as a cube (`query`, `inline`, `fromAnswer`), and holds `keyText` and `format` by the Sutra's format names; it never adds up a figure. |
+| The pivot engine | drishti-bicompute (Java, [PIVOT.md](bi/PIVOT.md)); in the browser `web/static/js/drishti_pivot-engine.js` (`window.Drishti.pivotEngine`, also `module.exports` for node tests) | Every figure is computed on the server: `POST /api/pivot/query` over a source (a Export data kind, a panel's rows `panel/<kind>/<panel>/<id>`) and `POST /api/pivot/inline` over rows the page already holds (a chart of the shown rows). `drishti_pivot-engine.js` only asks and lays the answer out as a cube (`query`, `inline`, `fromAnswer`), and holds `keyText` and `format` by the Sutra's format names; it never adds up a figure. |
 | The pivot grid | `web/static/js/drishti_pivot-grid.js` (`window.Drishti.PivotCore`) | The one renderer of pivot rows: the Pivot screen and a Sutra's nested `pivot` panel draw with it; + and − on groups, subtotals, the grand total, conditional formats. |
-| Saved pivot views | `/api/pivot/views` (`/api/v1/pivot/views`) | Per-user pivot views (PIVOT_GUIDE.md), shareable with roles; a cell is addressable as `pivot://owner/name@v/Measure[DIM=V]`. |
+| Saved pivot views | `/api/pivot/views` (`/api/v1/pivot/views`) | Per-user pivot views (bi/PIVOT.md), shareable with roles; a cell is addressable as `pivot://owner/name@v/Measure[DIM=V]`. |
 | Chart panels | `web/static/js/drishti_charts.js` (`window.Drishti.charts`) | `tokens(root)` reads `--d-*` from `<html>` or a shadow host, `palette(t)` (8 tokens), `compact()` numbers, `axis()`, `tooltip()`; a "Data" table under every chart for keyboards, screen readers and print; redraws on a theme change. |
 | Sutra chart kinds | [Panels: the twenty-two kinds, and developing a new one](#panels-the-twenty-two-kinds-and-developing-a-new-one): `line`, `area`, `hbar` (`shape: donut`), `scatter`, `histogram`, `waterfall` | One series per kind (or `area`'s list of bands); **no grouped or stacked bars, no combo, no second axis, no split, no Top N**. |
-| BI visuals | `drishti_bi-report.js`, `drishti_bi-grids.js`, REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 3 | Tables and matrices with raw answers (`columns` with `type` and `masked`, `rows`; BI_MODEL_SPEC 5.2), *first 1,000 of N* footers (`table-rows`), **Show as a table** / **Show as a chart** (`data-act="as-table"`) for chart visuals, **Show the rows behind this visual**. Visual types `bar` (horizontal), `column` (`stacked`, `percent`), `line`, `area`, `combo` (`values` as columns, `secondary` as lines on a second axis), `scatter`, `pie`, `donut`. |
+| BI visuals | `drishti_bi-report.js`, `drishti_bi-grids.js`, bi/REPORTS.md › Reports: the YAML, the visuals and how they behave, section 3 | Tables and matrices with raw answers (`columns` with `type` and `masked`, `rows`; BI_MODEL_SPEC 5.2), *first 1,000 of N* footers (`table-rows`), **Show as a table** / **Show as a chart** (`data-act="as-table"`) for chart visuals, **Show the rows behind this visual**. Visual types `bar` (horizontal), `column` (`stacked`, `percent`), `line`, `area`, `combo` (`values` as columns, `secondary` as lines on a second axis), `scatter`, `pie`, `donut`. |
 | BI runs | [ARCHITECTURE.md §28](../architecture/ARCHITECTURE.md#287-bi-runs-every-bi-query-as-a-bounded-visible-job), `POST /api/v1/bi/runs` | Every BI question through one pipeline: inline within about 2 s, otherwise a visible run; `interaction`, `supersedes`; results reused by fingerprint, data version and security signature. |
 | History | `drishti_history-page.js`, `terminal/history.html`, `/export/history/{kind}/{id}.{csv,xlsx,json}` | One row per business day (at most `max-days`, 366); a `data-plain` table with its own document-level keys: **`k` is "previous day"** (vim style), `j` next, `C D E R P Y T 1 3 6 ?`. The market shape already draws one line (P cycles the field). |
 | Exports | `POST /export/grid.csv`, `POST /export/grid.xlsx` (`routes/export_routes.py`) | A grid the page computed (`{name, header, rows}`) as CSV (formula-safe) or Excel (bold frozen header, numbers as numbers). |
@@ -7990,7 +8007,7 @@ Offered to users with BI author powers when the table maps to a BI model:
 | Search results of a kind a BI dataset serves (the pack's dataset whose table carries the kind) | a new draft report on that dataset, one page, the visual, the search's `where` as page filters when each term maps to a field; otherwise not offered |
 | Sutra tables, history, `dom` tables | not offered: their rows are a document's nested fields or one entity over time, not a model's table |
 
-The mapping to BI visual types (REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 3):
+The mapping to BI visual types (bi/TABLES_AND_MODELS.md › Reports: the YAML, the visuals and how they behave, section 3):
 
 | Chart | BI visual | Wells and format |
 |---|---|---|
@@ -8196,7 +8213,7 @@ A user whose role masks `MTM` and a row-level rule on one desk:
 | Doc | What |
 |---|---|
 | [USER_GUIDE.md](USER_GUIDE.md) | a new section *Chart any table* (the icon and K, types, X, series, split, sort and Top N, chart all N, masks, save, export, keys, phone), linked from the table and Pivot sections and the history section |
-| [REPORTS_GUIDE.md](REPORTS_GUIDE.md) | charting a BI table, chart all N as a run, Open in BI and the combo axis rule, K beside kiosk |
+| [PIVOT.md](bi/PIVOT.md) | charting a BI table, chart all N as a run, Open in BI and the combo axis rule, K beside kiosk |
 | [Panels: the twenty-two kinds, and developing a new one](#panels-the-twenty-two-kinds-and-developing-a-new-one) | the Chart icon on tables (*How a panel behaves*), `chart: false` on a table, and the new `chart` panel kind with its options, states and CSV |
 | this document, [BUILD_GUIDE.md](BUILD_GUIDE.md#11-what-a-sutra-is-and-when-one-applies) | the `chart` kind's options; promotion from the popup |
 | `config/help.yaml` | the context help card `table-chart: user-guide#chart-any-table`, and the popup's `?` links it |
@@ -8557,7 +8574,7 @@ New code lives in three places: `com.ash.drishti.rachana.about` (the pack text m
 before anything reads the document, `mayOpen` for sourced panels, `restrict` on keys and links. A pack the caller is
 not assigned is `DRS-5002` as for the view. `edit` and `calc` appear only for callers with those rights.
 
-**Problem codes** (registry: `drishti-common/.../ErrorCode.java`; highest used 4005, 2033, 5025):
+**Problem codes** (registry: `kernel/drishti-common/.../ErrorCode.java`; highest used 4005, 2033, 5025):
 
 | Code | HTTP | Meaning |
 |---|---|---|
@@ -8584,7 +8601,7 @@ about: config/about.yaml
 `PackLoader.properties()` adds it to an indexed list `drishti.about.pack-files` in **specific-first** order (as
 `semantics` at `PackLoader.java:249`), so a child pack's entry wins over its parents'.
 
-#### `config/packs/banking/market-risk/config/about.yaml`
+#### `modules/banking/dmod/packs/market-risk/config/about.yaml`
 
 ```yaml
 about: 1                                  # schema version (required)
@@ -8680,7 +8697,7 @@ parents right to left), the same order as `semantics`. A child may override any 
 
 **Where shared vocabulary lives.** In the lowest pack that owns the concept (`trading` for `mtm`, `market-data` for
 `fixing`). **Decision 2:** a cross-domain vocabulary file in the server (like `inference/semantics.yaml`) for generic
-words (`currency`, `asOf`, `status`). Recommendation: yes, `drishti-rachana/src/main/resources/about/vocabulary.yaml`,
+words (`currency`, `asOf`, `status`). Recommendation: yes, `compute/drishti-rachana/src/main/resources/about/vocabulary.yaml`,
 lowest priority, small (≤ 40 entries), so inferred views of unknown kinds still explain common fields.
 
 **Evaluation.** `about` templates are rendered with `EvalContext.of(seen, formats)` where `seen` is the document after
@@ -8787,7 +8804,7 @@ restricted ViewModel) plus authored text that does not depend on the caller.
     `explain_*.json`), `test_assets_policy.py` (unchanged rules apply to the new files), `test_contrast.py` (new tokens),
     `test_fkeys.py` (F1 on a view, `?` ignored in inputs), an `about_browser.py` (keyboard open, focus return, phone sheet).
   - A coverage floor for shipped packs: `AboutPacksTest` fails if a QUICKSTART pack's coverage drops below its recorded
-    figure (ratchet file `config/packs/<domain>/<p>/tests/help-coverage.txt`).
+    figure (ratchet file `modules/<module>/packs/<p>/tests/help-coverage.txt`).
 
 ### Optional: Ask about this page (last)
 
@@ -8906,7 +8923,7 @@ them is one file in the lowest pack that owns the kind, and it reaches `market-r
 vocabulary has about 190 terms, one per product field, and the `trade` entry the page-specific ones):
 
 ```yaml
-# config/packs/banking/trading/config/about.yaml
+# modules/banking/dmod/packs/trading/config/about.yaml
 about: 1
 vocabulary:                        # a word defined once, reused by every kind and every pack that extends trading
   fixedRate:
@@ -8949,7 +8966,7 @@ broken entry is left out and listed with the Sutra problems (`GET /api/v1/sutras
 never fails the view. **Redaction comes first.** The template is rendered over the document your redactor produced, so
 for a viewer whose role may not see `mtm` (if it were named in `drishti.security.redact`) the sentence above would read
 "…It is marked at ••• USD…", and the glossary never sees a value at all. That is the one rule of the whole feature: *the explanation is derived from your view, never from
-the stored document.* The text that ships today is the VaR page (`config/packs/banking/market-risk/config/about.yaml`, kind `var`):
+the stored document.* The text that ships today is the VaR page (`modules/banking/dmod/packs/market-risk/config/about.yaml`, kind `var`):
 
 ```
 VAR-EQD is a 1-day 99% historical VaR for DESK-EQD: 14.7m USD, 70% of its 20.9m limit, with 0 exception(s) in 250 days.
@@ -8977,7 +8994,7 @@ source.
 
 | | Trade (A) | Variant (B) |
 |---|---|---|
-| About file | `config/packs/banking/trading/config/about.yaml`, `kinds.trade` | `examples/packs/genomics/config/about.yaml`, `kinds.variant` |
+| About file | `modules/banking/dmod/packs/trading/config/about.yaml`, `kinds.trade` | `examples/packs/genomics/config/about.yaml`, `kinds.variant` |
 | Candidates in the `MatchTrace` | 124 other Sutras of kind `trade` | none |
 | Source and health | `murex-rates`, `up` | `reference-genome`, `up` |
 | **Unchanged** | `ExplainController`, `ExplainService`, `PageContext`, the drawer and its keys | the same |
@@ -9008,22 +9025,22 @@ M 2–3 days, L 4–5 days.
 
 | Step | Scope | Files touched | Tests | Accepted when | Size |
 |---|---|---|---|---|---|
-| **1. Explain endpoint, layers 3+4** (done) | `MatchTrace` from `SutraMatcher.explain`; `EmptinessReason`; `ExplainService` (data, layout, next.keys, next.panelKinds), cache; `ExplainController` `GET /views/{k}/{id}/explain`; codes 4006 | `drishti-rachana/.../SutraMatcher.java`, new `MatchTrace.java`; `drishti-engine/.../explain/*` (new); `drishti-server/.../api/ExplainController.java` (new); `ErrorCode.java`; `application.yaml` (`drishti.explain`) | `MatchTraceTest`, `ExplainControllerTest`, `ExplainMaskTest` (masked list, no-access) | `curl .../views/var/VAR-COMM/explain` shows source, freshness, Sutra var v1, candidates, masked and no-access lists; view JSON byte-identical to before | M |
-| **2. Drawer with layers 3+4+5** (done, console) | console route, partial, `drishti_about.js`, `drishti_about.css`, `?` and view `F1`, phone sheet; Sutra `description` kept in `Sutra`/`Panel` and shown in layer 1 | `routes/terminal_routes.py`, `core/backend.py`, `templates/terminal/{view,_about}.html`, `_macros/about.html`, `static/js/drishti_about.js`, `static/css/drishti_about.css`, `static/js/drishti_app.js` (F1 yield); `drishti-rachana/.../model/{Sutra,Panel}.java`, `SutraBuilder.java` | `test_about.py`, `test_fkeys.py`, `test_contrast.py`, `about_browser.py`; `SutraBuilderTest` for description | `?` on any QUICKSTART view opens a drawer with three layers and the Sutra description; keyboard only; phone width | M |
-| **3. Pack about files and layer 1** (done) | `AboutParser`, `AboutCatalog`, templates; `PackLoader` property; codes 2040–2044; load problems listed | `drishti-rachana/.../about/*` (new); `drishti-packs/.../PackLoader.java`; `ExplainService` (about block) | `AboutParserTest`, `AboutCatalogTest` (inheritance), `ExplainMaskTest` (templates) | market-risk `var` and genomics `variant` show parameterised text; a masked field in a template reads `•••` | M |
-| **4. Glossary, layer 2, panel and field help** (done) | `GlossaryResolver`, vocabulary file, derived formulas; panel popover, field hints | `ExplainService`; `drishti-rachana/.../about/GlossaryResolver.java`, `resources/about/vocabulary.yaml`; `DerivedKind.java` (accessor); `drishti_about.js`, `drishti_about.css`, `_macros/about.html` | `GlossaryResolverTest`, derived-formula test; console popover/hint tests | hovering *ES 97.5%* shows its meaning; a derived [`desk-pnl`](../contracts/samples/market-risk.md#desk-pnl) ([contract](../contracts/packs/market-risk.md#dpnl-desk-pl-actual-and-hypothetical-daily-desk-pnl)) field shows "sum of mtm" | M |
+| **1. Explain endpoint, layers 3+4** (done) | `MatchTrace` from `SutraMatcher.explain`; `EmptinessReason`; `ExplainService` (data, layout, next.keys, next.panelKinds), cache; `ExplainController` `GET /views/{k}/{id}/explain`; codes 4006 | `compute/drishti-rachana/.../SutraMatcher.java`, new `MatchTrace.java`; `kernel/drishti-engine/.../explain/*` (new); `kernel/drishti-server/.../api/ExplainController.java` (new); `ErrorCode.java`; `application.yaml` (`drishti.explain`) | `MatchTraceTest`, `ExplainControllerTest`, `ExplainMaskTest` (masked list, no-access) | `curl .../views/var/VAR-COMM/explain` shows source, freshness, Sutra var v1, candidates, masked and no-access lists; view JSON byte-identical to before | M |
+| **2. Drawer with layers 3+4+5** (done, console) | console route, partial, `drishti_about.js`, `drishti_about.css`, `?` and view `F1`, phone sheet; Sutra `description` kept in `Sutra`/`Panel` and shown in layer 1 | `routes/terminal_routes.py`, `core/backend.py`, `templates/terminal/{view,_about}.html`, `_macros/about.html`, `static/js/drishti_about.js`, `static/css/drishti_about.css`, `static/js/drishti_app.js` (F1 yield); `compute/drishti-rachana/.../model/{Sutra,Panel}.java`, `SutraBuilder.java` | `test_about.py`, `test_fkeys.py`, `test_contrast.py`, `about_browser.py`; `SutraBuilderTest` for description | `?` on any QUICKSTART view opens a drawer with three layers and the Sutra description; keyboard only; phone width | M |
+| **3. Pack about files and layer 1** (done) | `AboutParser`, `AboutCatalog`, templates; `PackLoader` property; codes 2040–2044; load problems listed | `compute/drishti-rachana/.../about/*` (new); `kernel/drishti-packs/.../PackLoader.java`; `ExplainService` (about block) | `AboutParserTest`, `AboutCatalogTest` (inheritance), `ExplainMaskTest` (templates) | market-risk `var` and genomics `variant` show parameterised text; a masked field in a template reads `•••` | M |
+| **4. Glossary, layer 2, panel and field help** (done) | `GlossaryResolver`, vocabulary file, derived formulas; panel popover, field hints | `ExplainService`; `compute/drishti-rachana/.../about/GlossaryResolver.java`, `resources/about/vocabulary.yaml`; `DerivedKind.java` (accessor); `drishti_about.js`, `drishti_about.css`, `_macros/about.html` | `GlossaryResolverTest`, derived-formula test; console popover/hint tests | hovering *ES 97.5%* shows its meaning; a derived [`desk-pnl`](../contracts/samples/market-risk.md#desk-pnl) ([contract](../contracts/packs/market-risk.md#dpnl-desk-pl-actual-and-hypothetical-daily-desk-pnl)) field shows "sum of mtm" | M |
 | **5. Content for the QUICKSTART packs + i18n overlay** (done) | about files via generators; `locale` resolution and `about.<lang>.yaml` overlay | `tools/packgen/*/` (about sources, `packbuild.py`), `config/packs/*/config/about.yaml` (generated), `AboutCatalog` (overlay) | `AboutPacksTest` (all load, all render, guide anchors), overlay test | every QUICKSTART kind has `about`; coverage recorded per pack | L |
-| **6. Lint, coverage, pack tests** | `DRS-2045`–`2047`; `sutra lint` warnings, `--strict`; `expect.yaml help:`; ratchet files | `drishti-server/.../cli/{SutraCli,ExpectFile,CliReports}.java`; `config/packs/*/tests/*/expect.yaml`; `config/packs/*/tests/help-coverage.txt` | `SutraCliTest` extended | `sutra test config/packs/banking/market-risk` prints coverage and fails under the floor | S |
+| **6. Lint, coverage, pack tests** | `DRS-2045`–`2047`; `sutra lint` warnings, `--strict`; `expect.yaml help:`; ratchet files | `kernel/drishti-server/.../cli/{SutraCli,ExpectFile,CliReports}.java`; `config/packs/*/tests/*/expect.yaml`; `config/packs/*/tests/help-coverage.txt` | `SutraCliTest` extended | `sutra test modules/banking/dmod/packs/market-risk` prints coverage and fails under the floor | S |
 | **7. Workbench About tab** (done) | design/studio explain endpoints, about preview endpoint, Design `about` part and fragment export, About tab, Problems coverage | `DesignController.java`, `StudioController.java`, `PackFragment.java`, design store model; `routes/build_routes.py`; `templates/build/design.html`; `static/js/build/drishti_about.js`, `drishti_problems.js` | `DesignControllerTest`, `PackFragmentTest`, `wb_live.py` case | edit about text → the card updates on idle; export contains `config/about.yaml` | M |
 | **8. Docs** | the table above | docs only | `test_help_links.py`, license headers | all links resolve; F1 in the drawer reaches the guide section | S |
-| **9. Ask (optional)** (done) | `AskService`, endpoint, limits, audit, console box | `drishti-server/.../explain/*` (new), `application.yaml`, `ErrorCode.java` (4007–4009); `_macros/about.html`, `drishti_about.js` | `AskServiceTest` against a stub HTTP server (prompt shape, masks, labels-only, injection text stays in data block, limits, timeout) | off: no box, no network; on with a stub: answer shown, `•••` never in the prompt's values | M |
+| **9. Ask (optional)** (done) | `AskService`, endpoint, limits, audit, console box | `kernel/drishti-server/.../explain/*` (new), `application.yaml`, `ErrorCode.java` (4007–4009); `_macros/about.html`, `drishti_about.js` | `AskServiceTest` against a stub HTTP server (prompt shape, masks, labels-only, injection text stays in data block, limits, timeout) | off: no box, no network; on with a stub: answer shown, `•••` never in the prompt's values | M |
 
 **Step 1, and where it differs from the design above.**
 `SutraMatcher.explain(kind, doc, seen)` returns a `MatchTrace` (every Sutra of the kind in priority order with a verdict `true`/`false`/`error`/`masked`; `masked` when the verdict differs between the stored and the caller's document, so the trace never reveals more than the view; the chosen Sutra is the one the view really uses, as the view matches on the stored document). `ExplainService` (in `drishti-engine`) rebuilds the view through `ViewPipeline.built(...)`, the same code as the view, which also returns the document, the layout and the linked-entity counts; the cache is per `(user, ref, business date, generation, locale)`, 2,000 entries, 60 s (`drishti.explain.*`; `/admin/caches` purge). `SourceHealth` is the shared one-word reduction (`HealthController` uses it). Deviations: (1) `layout.sutra` has no `pack` (a Sutra does not know its pack; arrives with step 3's catalog) and carries the Sutra `description` (kept in `Sutra` at parse now, as the brief asked; the `Panel` description and the layer-1 display stay in step 2); (2) `layout.noAccess` is `{title, kind}` only, with no id, following the masking table rather than the JSON sample; (3) `data.connector` is omitted (`source` names it); (4) `aboutRevision` is not in the cache key (no about files yet; step 3 adds it) and `locale` is always `en`; (5) `?panel=` is validated (`DRS-4006`) but narrows nothing yet (nothing it narrows exists before steps 3 and 4); (6) `layout.masked` marks the title's linked value with the key `Title`; (7) the cache purge is wired into the existing `engine` entry of `/admin/caches`; (8) the controller applies `Entitlements.restrict` through a function handed to the service, because `Entitlements` lives in the server module.
 
 **Step 3, and where it differs from the design above.** `AboutParser` (strict, `DRS-2040` to `DRS-2044`, positions from the YAML nodes), `AboutCatalog` (merge through `extends`, key by key; `use` resolved against the most specific vocabulary visible; `revision()` is in the explain cache key; `reload()`), `AboutText.render` over the caller's redacted document (`Template.renderLenient`: a failing expression reads `—` and counts in `drishti.explain.template-errors`; cap `drishti.about.max-rendered`). The loader hands the catalogue every pack as `drishti.about.packs[i]` (`name`, `title`, `file`, `sutra-dir`, `kinds`, `lineage`), most specific first, instead of the flat `pack-files` list, because the catalogue also needs each pack's kinds and lineage (for `DRS-2041`) and its Sutra directory (for `layout.sutra.pack`). Problems are keyed `<pack>/<file>` in `GET /api/v1/sutras/problems` (never a server path). The shared cross-domain vocabulary file and the glossary in the answer are step 4; `about.panels[]` carries only authored pack text (the Sutra `Panel` description arrives with step 2); a syntax error in the YAML is `DRS-2040`. The about sources for market-risk and genomics live in the generator folders and are copied by `make_packs.py` and `packbuild.py`.
 
-**Step 5.** Content: a hand-written `about.yaml` for every kind of the nine QUICKSTART packs (market-risk 5 kinds, counterparty-risk 8, liquidity-risk 7, climate-risk 6, operational-risk 8, retail-banking 8, genomics 8, world-economy 8, economics 8) and of the `trading` pack (`trade`, with a vocabulary of about 190 product terms, and the derived `desk-pnl`), kept in `tools/packgen/banking/about/<pack>.yaml` and `tools/packgen/<generator>/about.yaml`, copied by `make_packs.py` / `packbuild.py` (which now drop the source's own licence header and write the pack's), so `--check` keeps them. No number is written in any text: the sentences are `${...}` over the document, the glossary is definitions, units and sign conventions. Tests: `AboutPacksTest` (every file loads, every kind has title, sentence, guide and glossary, every sentence and panel note renders over every shipped sample with no failed expression, every guide slug exists); each pack gets `tests/<sutra>/` fixtures (one or two shipped samples, one per product type for the trading Sutras) with `help: { about: true }` and a `tests/help-coverage.txt` ratchet recorded at what `sutra test` reaches: 100% of the shown fields have an entry in every pack (market-risk 5 Sutras, counterparty-risk 8, liquidity-risk 7, climate-risk 6, operational-risk 8, retail-banking 8, genomics 8, world-economy 8, economics 8, trading 125). Two fixes this exposed: pack lint keys a table column like the drawer (`rows.column`, `HelpLint` uses `GlossaryResolver.keyOf`), and its derived-field question goes through the new `SourceRouter.describeField(kind, field)` because lint knows no provenance; `CatalogGlossaryLookup` also counts the core vocabulary. Locale: `AboutCatalog` reads `about.<lang>.yaml` beside each pack's file (BCP 47 tag, any case; the strict parser and the same codes), merged over the English entries key by key (an overlay's own packs first, then the plain language for a regional tag such as `fr-ca`, then English), `localeFor(requested)` picks the first requested tag with an overlay, else its language, else `en`, `forKind(kind, locale)` answers and `GlossaryResolver.forLocale` follows; the explain cache key carries the language used and the answer's `locale` says which. The request: `GET /views/{k}/{id}/explain?locale=fr` (else `Accept-Language`, by quality); the console passes `?locale=`, else the user's `locale` setting (new: `SettingsController`, the account page's *Language of help text*), else the browser's `Accept-Language`. One demo overlay ships: `config/packs/banking/market-risk/config/about.fr.yaml` (kind `var` in French), from `tools/packgen/banking/about/market-risk.fr.yaml`. The drawer's own words are still English (the designed `drishti-console/config/about.yaml` labels were not built).
+**Step 5.** Content: a hand-written `about.yaml` for every kind of the nine QUICKSTART packs (market-risk 5 kinds, counterparty-risk 8, liquidity-risk 7, climate-risk 6, operational-risk 8, retail-banking 8, genomics 8, world-economy 8, economics 8) and of the `trading` pack (`trade`, with a vocabulary of about 190 product terms, and the derived `desk-pnl`), kept in `tools/packgen/banking/about/<pack>.yaml` and `tools/packgen/<generator>/about.yaml`, copied by `make_packs.py` / `packbuild.py` (which now drop the source's own licence header and write the pack's), so `--check` keeps them. No number is written in any text: the sentences are `${...}` over the document, the glossary is definitions, units and sign conventions. Tests: `AboutPacksTest` (every file loads, every kind has title, sentence, guide and glossary, every sentence and panel note renders over every shipped sample with no failed expression, every guide slug exists); each pack gets `tests/<sutra>/` fixtures (one or two shipped samples, one per product type for the trading Sutras) with `help: { about: true }` and a `tests/help-coverage.txt` ratchet recorded at what `sutra test` reaches: 100% of the shown fields have an entry in every pack (market-risk 5 Sutras, counterparty-risk 8, liquidity-risk 7, climate-risk 6, operational-risk 8, retail-banking 8, genomics 8, world-economy 8, economics 8, trading 125). Two fixes this exposed: pack lint keys a table column like the drawer (`rows.column`, `HelpLint` uses `GlossaryResolver.keyOf`), and its derived-field question goes through the new `SourceRouter.describeField(kind, field)` because lint knows no provenance; `CatalogGlossaryLookup` also counts the core vocabulary. Locale: `AboutCatalog` reads `about.<lang>.yaml` beside each pack's file (BCP 47 tag, any case; the strict parser and the same codes), merged over the English entries key by key (an overlay's own packs first, then the plain language for a regional tag such as `fr-ca`, then English), `localeFor(requested)` picks the first requested tag with an overlay, else its language, else `en`, `forKind(kind, locale)` answers and `GlossaryResolver.forLocale` follows; the explain cache key carries the language used and the answer's `locale` says which. The request: `GET /views/{k}/{id}/explain?locale=fr` (else `Accept-Language`, by quality); the console passes `?locale=`, else the user's `locale` setting (new: `SettingsController`, the account page's *Language of help text*), else the browser's `Accept-Language`. One demo overlay ships: `modules/banking/dmod/packs/market-risk/config/about.fr.yaml` (kind `var` in French), from `tools/packgen/banking/about/market-risk.fr.yaml`. The drawer's own words are still English (the designed `drishti-console/config/about.yaml` labels were not built).
 
 **Step 6.** `HelpLint` (`com.ash.drishti.rachana.about`) holds `DRS-2045` to `DRS-2047` and the coverage rule; it asks a one-method `GlossaryLookup` whether a field has an entry (`CatalogGlossaryLookup` applies the catalogue rule: the kind's glossary by path or last name, then the vocabulary by last name; step 4's `GlossaryResolver` can implement the interface and replace it). Shown fields are read from the Sutra's bind expressions (strip, columns, gauge/metric `value`/`delta`) and counted when some sample holds them, not from the rendered cells. `sutra lint` prints the warnings and fails on them only with `--strict`; `expect.yaml` `help: { coverage, about }` and a `tests/help-coverage.txt` ratchet (`<sutra>=<0..1>`) are checked by `sutra test` (`HelpChecks` in `server/cli`); `SutraCliHelpTest` covers each warning and the floor. The workbench Problems pane (step 7) reuses `HelpLint`.
 
@@ -9076,6 +9093,6 @@ A DAX author's first map of Rachana. There is no DAX engine: one grammar. `drish
 | `CROSSFILTER(a, b, ONEWAY)` | `via = 'name', filter = 'one_way'` (`'both'` for BOTH) |
 | `SUMX(VALUES(t[C]), m)` and `AVERAGEX`/`MINX`/`MAXX` | `sum_by(m, by = [t.C])`, `avg_by`, `min_by`, `max_by`: the row-to-filter context transition, with its grain written |
 | `SELECTEDMEASURE()` in a calculation item | `SELECTED` |
-| a calculated table | a virtual table with `from: { model: ..., query }`; see [Tables](TABLES_GUIDE.md) |
+| a calculated table | a virtual table with `from: { model: ..., query }`; see [Tables](bi/TABLES_AND_MODELS.md) |
 
 Not converted, and named when met: `VAR`/`RETURN`, `RANKX`, `SWITCH`, `FILTER` over a whole table, `SUMX` over a table without `VALUES`. Write those by hand from the patterns above.

@@ -23,12 +23,12 @@
   var root = document.querySelector('[data-ready-page]');
   if (!root) { return; }
   var I = window.Drishti.elements.inputs;
-  var API = '/admin/api/dataload';
+  var API = drishti_url('/admin/api/dataload');
   var $ = function (s) { return root.querySelector(s); };
   var S = { choices: null, item: null, state: null, form: null, values: {}, edited: {}, drop: null, code: null, checks: null, tick: false, timer: 0, polling: 0, seq: 0, tables: [] };
 
   function call(method, path, body) {
-    return fetch(API + path, { method: method, credentials: 'same-origin', headers: body === undefined ? { Accept: 'application/json' } : { 'Content-Type': 'application/json', Accept: 'application/json' },
+    return fetch(drishti_url(API + path), { method: method, credentials: 'same-origin', headers: body === undefined ? { Accept: 'application/json' } : { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: body === undefined ? undefined : JSON.stringify(body) })
       .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { return { ok: r.ok, status: r.status, body: j }; }); })
       .catch(function () { return { ok: false, status: 0, body: { detail: 'the console could not reach the server' } }; });
@@ -329,7 +329,7 @@
       d.appendChild(el('h3', '', 'Pushed to the inbox'));
       d.appendChild(el('div', '', r.body.file + ' and its .ready are in the inbox on ' + r.body.node + (r.body.hold ? ': held until released.' : '.' + (r.body.nextCycleText ? ' Next cycle: ' + r.body.nextCycleText + '.' : ''))));
       var a = el('a', 'btn-pill btn-accent ib-btn', 'Follow it on the Inbox board');
-      a.href = '/admin/loads/inbox';
+      a.href = drishti_url('/admin/loads/inbox');
       a.setAttribute('data-ready-board', '');
       d.appendChild(a);
       bar.appendChild(d);
@@ -382,7 +382,7 @@
     });
     if (!c.on) {
       var a = el('a', '', 'Admin → Engines');
-      a.href = '/admin/engines';
+      a.href = drishti_url('/admin/engines');
       var w = el('p', 'adm-warn', 'The data inbox is off: nothing can be pushed. Turn it on in ');
       w.appendChild(a);
       f.appendChild(w);
@@ -420,7 +420,7 @@
       setTimeout(function () { t.textContent = 'Copy'; }, 1200);
     } else if (t.hasAttribute('data-ready-dl')) {
       var u = URL.createObjectURL(new Blob([root.querySelector('[data-ready-text]').value], { type: 'text/plain' })), a = document.createElement('a');
-      a.href = u; a.download = S.state ? S.state.file + '.ready' : 'file.ready'; a.click(); URL.revokeObjectURL(u);
+      a.href = drishti_url(u); a.download = S.state ? S.state.file + '.ready' : 'file.ready'; a.click(); URL.revokeObjectURL(u);
     } else if (t.hasAttribute('data-ready-load')) {
       $('[data-ready-load-file]').component.input.click();
     }

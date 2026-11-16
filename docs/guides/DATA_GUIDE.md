@@ -56,7 +56,7 @@ Each section keeps its own numbering (section 1's "section 4" is *4. The API ref
     - [7. Archives: zip and tarballs](#7-archives-zip-and-tarballs)
     - [8. Feeds: the table and business date of a file](#8-feeds-the-table-and-business-date-of-a-file)
 3. [Using Drishti with Databricks Delta Lake or Apache Iceberg](#3-using-drishti-with-databricks-delta-lake-or-apache-iceberg): in [DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md)
-4. [External data: where it comes from and how to refresh it](#4-external-data-where-it-comes-from-and-how-to-refresh-it): its own guide, [EXTERNAL_DATA.md](EXTERNAL_DATA.md)
+4. [External data: where it comes from and how to refresh it](#4-external-data-where-it-comes-from-and-how-to-refresh-it): its own guide, [WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md)
 5. [Schema to pack: generate a pack from JSON Schema](#5-schema-to-pack-generate-a-pack-from-json-schema)
 6. [Export data: download a dataset](#6-export-data-download-a-dataset)
     - [1. What a dataset is](#1-what-a-dataset-is)
@@ -146,7 +146,7 @@ With the signal, the same four things happen every time, in order, and each leav
 | views and date lists to include the new data now | drops the caches of the connectors that serve the kind and of the derived connectors built from it (the same thing Admin → Caches does): for a Delta connector its memory and disk caches and id map files; grouped pages kept on disk are rebuilt from the new data at once, the old pages serving meanwhile. Without the signal a Delta table's new version is seen within `refresh-seconds` (10 s) and grouped pages rebuild within `version-check` (10 s); the caches are keyed by table version, so nothing stale is served either way |
 | to know the data is really readable | counts the kind's entities on that business date and records `verified` or `not-found` |
 | alerts on the new numbers | evaluates every alert rule on the kind for that date, as each rule's owner may see it |
-| alerts on numbers, and subscriptions, that follow loads | an alert on a BI measure or a Sutra field whose trigger is `after-load` (and every "no data" alert), a board tile that notifies after loads, and a subscription with the schedule `after-load`, look `load-delay` (5 s) after a load that finished ready, once the BI layers have rebuilt ([REPORTS_GUIDE.md](REPORTS_GUIDE.md#192-when-it-fires-and-when-it-looks)) |
+| alerts on numbers, and subscriptions, that follow loads | an alert on a BI measure or a Sutra field whose trigger is `after-load` (and every "no data" alert), a board tile that notifies after loads, and a subscription with the schedule `after-load`, look `load-delay` (5 s) after a load that finished ready, once the BI layers have rebuilt ([DISTRIBUTION_AND_ALERTS.md](bi/DISTRIBUTION_AND_ALERTS.md#22-when-it-fires-and-when-it-looks)) |
 | the right people told | one inbox notice (and the bell) each, and an email through the outbox if the pack asks for it |
 | to know when a batch did **not** come | an expectation per kind (`trade by 19:00 America/New_York`); a scheduler flags it late on Health and tells the same people |
 
@@ -207,6 +207,8 @@ look-back window). It is flagged once: a notice to the people the pack names, an
 The walk-through, with real output and pictures, is [tutorial 12 · Load data daily](../tutorials/12-a-day-of-bank-data.md): say when you expect data (step 1), announce a load from the command line (step 2), a failed
 batch (step 3), the same through the API (step 4), the history and what is due (step 5) and an alert for a missing day (step 6). In short: **announce** a batch when your ETL has written it,
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```
 $ drishti-console/.venv/bin/python tools/drishti.py data landed --pack market-risk --kind stress-scenario --date 2026-10-16 --rows 8 --batch eod-20261016-1
 stress-scenario for 2026-10-16 loaded: 8 rows; 0 alerts fired
@@ -225,7 +227,7 @@ administrator's token. Run it again and the line under `load` ends `(already ann
 or `POST /api/v1/packs/{pack}/loads` ([section 4](#4-the-api-reference)); Drishti then records it, refreshes the caches, verifies that the rows are readable, checks alerts, runs a smoke test and tells people
 ([section 7](#7-what-happens-step-by-step)). Reading the history is `data loads` ([section 5](#5-the-command-line-reference)); the expectations that make late data visible are [section 8](#8-expectations-and-late-data).
 
-**No ETL yet? Load a file from the browser.** For a pack whose kind is read by a File connector (as Build -> New pack makes it from data
+**No ETL yet? Load a file from the browser.** For a pack whose kind is read by a File connector (as Create -> New pack makes it from data
 files), **Admin -> Packs -> the pack -> Load data** takes one JSON array or JSON Lines file of any size, streams it to the server
 (`POST /api/v1/admin/packs/{pack}/data?kind=K&date=YYYY-MM-DD`, token scope `packs:admin`, up to `drishti.loads.upload-max-mb`), writes it
 under its business date (or the day you choose, for a snapshot kind: `ingest: {snapshot: true}`), checks every row against the pack's Sutras
@@ -765,7 +767,7 @@ Where the generators put their output:
 
 | Generator | Output |
 |---|---|
-| `tools/packgen/banking/make_data.py` | `config/packs/<domain>/<pack>/samples/<kind>.jsonl`; `--lake ROOT`: `<ROOT>/../build/lake-rows/banking-history.tar` and `banking-restated.tar`, then loaded (`--no-load` stops there); `--jsonl FILE`: loader rows |
+| `tools/packgen/banking/make_data.py` | `modules/<module>/packs/<pack>/samples/<kind>.jsonl`; `--lake ROOT`: `<ROOT>/../build/lake-rows/banking-history.tar` and `banking-restated.tar`, then loaded (`--no-load` stops there); `--jsonl FILE`: loader rows |
 | `tools/samplegen/bulk_trades.py` | `<data>/build/bulk/<system>/trade_<system>.<date>.jsonl.gz`, then `lake build` (`--no-lake` stops there) |
 | `tools/packgen/trades/make_trades.py` | `<data>/build/trades/<system>/trade_<system>.<date>.jsonl.gz`, then `lake build` with `--lake` |
 | `tools/realdata/normalise.py` | `tools/realdata/dataset/*.jsonl` (a country, group, series or Factbook profile a line) and the `meta.json` manifest |
@@ -836,7 +838,7 @@ it reaches the browser too, for the answers it was measured to win on, and nowhe
 
 | Path | Arrow | Since |
 |---|---|---|
-| Java to the Python compute workers | Arrow IPC files, memory-mapped | built ([NOTEBOOK_GUIDE.md](NOTEBOOK_GUIDE.md)) |
+| Java to the Python compute workers | Arrow IPC files, memory-mapped | built ([NOTEBOOK_AND_PYTHON.md](bi/NOTEBOOK_AND_PYTHON.md)) |
 | BI answers to the console's Python, Explore and Perspective-era clients | `?format=arrow` on `POST /bi/reports/{id}/query` and `POST /bi/mq`: the raw rows | 2.1 |
 | **Any JSON answer of the two endpoints below, to any client that asks** | `Accept: application/vnd.apache.arrow.stream`: the JSON answer itself, its table as the record batch, the rest in the schema's metadata | built |
 | **The VaR explorer's contribution tables by position and by trade, in the browser** | read with Arrow JS (vendored) into typed columns | built |
@@ -930,12 +932,12 @@ Lakes (one file per lake, `config/lakes/<lake>.yaml`), Delta and Iceberg, and re
 
 Every external source of every pack (World Bank, IMF, UNDP, CIA Factbook, Yahoo Finance, Google News, ECB, US Treasury, NY Fed, SEC
 EDGAR, Wikidata, Nasdaq Trader, GLEIF), where it comes from, its licence, which pack and kinds it feeds, and the data feed that pulls it
-(`.sh` and `.ps1`) with examples, is its own guide: **[EXTERNAL_DATA.md](EXTERNAL_DATA.md)** (Help → External data).
+(`.sh` and `.ps1`) with examples, is its own guide: **[WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md)** (Help → External data).
 
 ## 5. Schema to pack: generate a pack from JSON Schema
 
-A pack made from JSON Schema files, a folder of JSON Lines, or both (Build → New pack, or `drishti.py pack make`) has its own guide:
-[BUILD_GUIDE.md](BUILD_GUIDE.md#8-a-pack-from-a-json-schema-build--new-pack).
+A pack made from JSON Schema files, a folder of JSON Lines, or both (Create → New pack, or `drishti.py pack make`) has its own guide:
+[BUILD_GUIDE.md](BUILD_GUIDE.md#8-the-pack-designer-create--new-pack).
 
 ## 6. Export data: download a dataset
 
@@ -954,7 +956,7 @@ and PFE, the what-ifs) hold no rows and are not listed. For each the view shows:
 | format | the connector's plugin: Delta, Iceberg, JSON Lines (the file connector), Database (JDBC), DuckDB ... |
 | dates held | every business date the kind's sources hold (the Delta log, Iceberg snapshots, the file layout); *not dated* for a source of current rows only |
 | columns | the data contract's fields; a kind without a contract: the source's columns, else the fields of a few of its entities |
-| internal only | the kind is in `drishti.data-view.internal-only` (the IMF, Yahoo and news-headline kinds, [EXTERNAL_DATA.md](EXTERNAL_DATA.md)) |
+| internal only | the kind is in `drishti.data-view.internal-only` (the IMF, Yahoo and news-headline kinds, [WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md)) |
 
 ### 2. The selection
 
@@ -1092,7 +1094,6 @@ the server writes to the file once, at the first start, and never overwrites.
 # config/connectors/trading-lake.yaml
 plugin: delta                     # required: which source plugin (delta, jdbc, file, kafka, redis, …)
 enabled: true                     # optional, default true
-kinds: [trade]                    # optional: the exact kinds it serves (see the rule below)
 description: Trading lake         # optional
 settings:                         # the plugin's settings; nesting is flattened to dotted keys
   root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}
@@ -1113,14 +1114,14 @@ settings:                         # the plugin's settings; nesting is flattened 
   **deprecated** ([9.11](#911-moving-off-applicationyaml-and-the-old-data-source-override)).
 
 Which definition wins (environment and the deprecated `drishti.sources.connectors.*`, then the file, then the pack's template) is
-[Precedence](#precedence); how `routes:` and a file's `kinds:` decide which connector answers a kind is
+[Connector layers](#connector-layers); how `routes:` and a file's `kinds:` decide which connector answers a kind is
 [9.6](#96-how-packs-and-files-fit-together).
 
 ### 8.2 Which connector?
 
 | Your data is… | Plugin | Use it for, in one line | Its README |
 |---|---|---|---|
-| JSON lines (or JSON) files in a folder | `file` | a demo, a nightly export, reference data kept by hand, a first connector; no live updates, new files found every `rescan-seconds` | [file](../../plugins/drishti-plugin-file/README.md) |
+| JSON lines (or JSON) files in a folder | `file` | a demo, a nightly export, reference data kept by hand, a first connector; no live updates, new files found every `rescan-seconds` | [file](../../docs/connectors/types/file/README.md) |
 | in a Delta Lake (local disk, EFS, `s3://`) | `delta` | business dates at a million trades a day for years; a table per kind partitioned by business date | [delta](../../plugins/drishti-plugin-delta/README.md) |
 | in Iceberg tables behind a catalog (REST, Glue, AWS S3 Tables) | `iceberg` | the same at scale on Iceberg | [iceberg](../../plugins/drishti-plugin-iceberg/README.md) |
 | in Iceberg tables other engines write (Spark, Flink, Trino, Glue), read-only | `iceberg-external` | reading an existing lakehouse in its own layout | [iceberg-external](../../plugins/drishti-plugin-iceberg-external/README.md) |
@@ -1132,13 +1133,13 @@ Which definition wins (environment and the deprecated `drishti.sources.connector
 | in Aerospike | `aerospike` | a million trades a day for years | [aerospike](../../plugins/drishti-plugin-aerospike/README.md) |
 | in Apache Cassandra, ScyllaDB, DataStax Astra or Amazon Keyspaces | `cassandra` | a partition per business day; a day appears whole or not at all | [cassandra](../../plugins/drishti-plugin-cassandra/README.md) |
 | JSON objects in a bucket (S3, MinIO, Ceph) | `s3` | documents another system writes, one per entity; no reverse lookups | [s3](../../plugins/drishti-plugin-s3/README.md) |
-| behind an in-house HTTP/JSON API | `rest` | one GET per entity, the owner's current answer; no search, undated | [rest](../../plugins/drishti-plugin-rest/README.md) |
+| behind an in-house HTTP/JSON API | `rest` | one GET per entity, the owner's current answer; no search, undated | [rest](../../docs/connectors/types/rest/README.md) |
 | on Kafka (live) | `kafka` | entities whose latest state is published to a topic; `mode: ticks` as a change feed over a store | [kafka](../../plugins/drishti-plugin-kafka/README.md) |
 | on ActiveMQ Classic or RabbitMQ (live) | `activemq`, `rabbitmq` | queues that deliver once: the latest document per entity kept in a local state store | [activemq](../../plugins/drishti-plugin-activemq/README.md), [rabbitmq](../../plugins/drishti-plugin-rabbitmq/README.md) |
-| public rates and FX (SOFR, €STR, ECB FX, the Treasury curve, FRED) | `feed` | real reference rates beside a pack's own; needs outbound HTTPS or a mirror | [feeds](../../plugins/drishti-plugin-feeds/README.md) |
-| headlines for a named entity | `news` | computed on demand (`NEWS-Federal_Reserve`); off as shipped | [news](../../plugins/drishti-plugin-news/README.md) |
-| a quote and price history for a ticker | `yfinance` | `QUOTE-AAPL`, computed on demand; samples only, not for production | [yfinance](../../plugins/drishti-plugin-yfinance/README.md) |
-| the packs' sample entities | `demo` (runs as itself, no file) | a first look, demos, writing a pack; switch it off in production | [demo](../../plugins/drishti-plugin-demo/README.md) |
+| public rates and FX (SOFR, €STR, ECB FX, the Treasury curve, FRED) | `feed` | real reference rates beside a pack's own; needs outbound HTTPS or a mirror | [feeds](../../docs/connectors/types/feed/README.md) |
+| headlines for a named entity | `news` | computed on demand (`NEWS-Federal_Reserve`); off as shipped | [news](../../docs/connectors/types/news/README.md) |
+| a quote and price history for a ticker | `yfinance` | `QUOTE-AAPL`, computed on demand; samples only, not for production | [yfinance](../../docs/connectors/types/yfinance/README.md) |
+| the packs' sample entities | `demo` (runs as itself, no file) | a first look, demos, writing a pack; switch it off in production | [demo](../../docs/connectors/types/demo/README.md) |
 
 What each can do (history, live ticks, search, reverse lookups) and the rules of thumb are compared in
 [Which connector should I use?](DEVELOPER_GUIDE.md#103-which-connector-should-i-use). Three connector types are built
@@ -1153,7 +1154,6 @@ numbers, `CLY-…`, `MX-…`), and each document says where it came from (the tr
 ```yaml
 # config/connectors/trade-calypso.yaml (trade-endur.yaml and trade-murex.yaml differ only in the table and the name)
 plugin: delta
-kinds: [trade]
 settings:
   root: ${DRISHTI_DELTA_ROOT:./data/delta/demo}
   domain: trading
@@ -1196,8 +1196,7 @@ store already has the day's data and the topic is just the change feed, or the t
 ```yaml
 # config/connectors/trading-stream.yaml
 plugin: kafka
-kinds: [trade]
-settings: { mode: ticks, bootstrap-servers: "${DRISHTI_KAFKA_BOOTSTRAP}", topics: drishti.trading.trades,
+settings: { mode: ticks, broker: default, topics: drishti.trading.trades,
             kind: trade, id-field: tradeId }
 ```
 
@@ -1232,9 +1231,8 @@ pack's template for that name **wholesale**: the settings are not merged, so wha
 `trade-endur`, start from the generated file (`drishti.py connector get trade-endur`) and edit that line:
 
 ```yaml
-# config/connectors/trade-endur.yaml (generated from the trading pack's template, then edited)
+# config/connectors/trade-endur.yaml (the site's override of the template: only this key)
 plugin: delta
-kinds: [trade]
 settings:
   root: /srv/lake                  # the line the site changed
   domain: trading
@@ -1245,7 +1243,6 @@ settings:
 # config/connectors/trading-stream.yaml: the stream on, whatever DRISHTI_STREAM_TRADING says
 plugin: kafka
 enabled: true
-kinds: [trade]
 settings:
   bootstrap-servers: kafka1.bank.example:9092
   topics: trading.trades.v2
@@ -1253,9 +1250,13 @@ settings:
   id-field: tradeId
 ```
 
+A stream connector whose broker is not there (or whose `topics`, `destinations` or `queues` is missing) is calm, never an error: it shows
+*waiting for broker (live updates paused)* or *not configured*, the kind is served from the lake, and it connects by itself when the broker
+appears ([OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#132-admin--health)).
+
 Points to remember:
 
-- **A file is the whole definition.** `kinds:` in the file is the connector's list; kinds you leave out are no longer served by that connector. **Reset to pack default**
+- **A file is the whole definition.** It names no kinds: which connectors serve a kind is `config/bindings.yaml` (Admin → Data bindings), and the connector serves what its plugin and lake hold. **Reset to pack default**
   (Admin → Connectors, or `drishti.py connector reset <name>`) puts the pack's template back and keeps your text in the history.
 - **Switch one off with `enabled: false`** in its file (`drishti.py connector disable fred-feed`).
 - **Keys the plugin does not read are ignored** (with a warning on the form and from the validator). Switching `trade-endur` to `jdbc` and leaving `root` in the file is
@@ -1340,7 +1341,7 @@ connectors:
     enabled: ${DRISHTI_STREAM_EQUITY:false}
     kinds: [order]
     settings:
-      bootstrap-servers: ${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}
+      broker: default
       topics: equity.orders
       kind: order
       id-field: orderId
@@ -1406,7 +1407,7 @@ settings:
   id-field: orderId
 ```
 
-Remember that a file's `kinds:` list is the connector's whole list, and that keys the new plugin does not read are
+Remember that keys the new plugin does not read are
 simply ignored (`root` and `domain` above would be; but `domain` *is* read by `aerospike`, as the set, and so is `layout`, as the promoted
 bins). Routes stay the pack's (`routes:` in its `pack.yaml`).
 
@@ -1465,19 +1466,16 @@ place for one ([CONFIGURATION.md › Your own libraries](../admin/CONFIGURATION.
 them and never in a hidden folder:
 
 ```
-config/connectors/                          the site's connector files: one per connector, the name is the file name
-  trade-endur.yaml
-  trade-calypso.yaml
-  market-store.yaml
+config/connectors/                          the site's files: an override of a template (only the keys it changes), or a whole
+  trade-endur.yaml                          site connector; empty on a fresh install: the templates run as they are
+  my-warehouse.yaml
   …
 data/connectors/                            <data dir>/connectors (DRISHTI_DATA_DIR moves the data folder)
-  generated/trade-endur.properties          which files the server wrote from a pack's template, and from which version
-  history/trade-endur.20261017T213854795.yaml   every earlier text of every file, written before each change
+  history/trade-endur.20261017T213854795.yaml   every earlier text of a file Admin saved, kept before each save
 ```
 
-A `generated/<name>.properties` marker records the fingerprint of the file the server wrote and of the template it came from
-(`file=1a3893dbc61d97ee`, `template=35e7b46805591a9c`, `kinds=trade`), so the server can tell an **unedited** generated file (it
-may be regenerated when the pack's template changes) from one **you edited** (left alone, and flagged).
+The server writes here only when an administrator saves (Admin → Connectors, `drishti.py connector`). The markers an earlier release
+kept in `data/connectors/generated/` are read only to recognise the files it generated ([Connector layers](#connector-layers)).
 
 Names are lower case letters, digits and hyphens, starting with a letter or digit, at most 64 characters (`trade-endur`,
 `risk-store-2`). `plugins` and `history` are reserved. A file whose name breaks the rule (`Upper.yaml`, `a b.yaml`, `.yml`) is not
@@ -1492,7 +1490,6 @@ of the site configuration; `<data dir>/connectors/history/` is a convenience, no
 # config/connectors/trade-endur.yaml
 plugin: delta                     # required: which source plugin (delta, jdbc, file, kafka, redis, derived, …)
 enabled: "${DRISHTI_LAKE_ENABLED:true}"   # optional, default true
-kinds: [trade]                    # optional: the kinds it serves (default: what the plugin and the pack's routes say)
 description: ENDUR trades         # optional, free text
 settings:                         # the plugin's settings; nesting is flattened to the dotted keys the plugin reads
   root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}"
@@ -1554,11 +1551,9 @@ in `config/connectors.examples/` declares one.
 
 ### 9.4 Examples, one per store
 
-**Delta Lake** (`config/connectors/trade-endur.yaml`, exactly as the server generated it from the trading pack's template at its first
-start):
+**Delta Lake** (a whole site connector of the shape the source modules' templates have, `modules/source-endur/connectors/trade-endur.yaml`):
 
 ```yaml
-# Generated at first start from the connector template of pack 'trading'. Edit it freely: an edited file is never overwritten; an unedited one follows the pack's template at an upgrade.
 plugin: delta
 enabled: "${DRISHTI_LAKE_ENABLED:true}"
 kinds:
@@ -1580,7 +1575,7 @@ settings:
 documents), so searches, type-ahead and BI read them without opening documents. `drishti.py lake demo` writes these three tables;
 `drishti.py lake build` writes one from your own export ([CLI_REFERENCE.md](CLI_REFERENCE.md)).
 
-**A derived connector** (`config/connectors/trade-pages.yaml`, generated from the trading pack): no store behind it; it computes the
+**A derived connector** (the trading pack's `trade-pages` template): no store behind it; it computes the
 counterparty, portfolio, legal-entity and index pages from the `trade` kind (whichever connectors serve it). The first of its four
 kinds (the file has the same block for `portfolio-trades`, `legal-entity-trades` and `index-trades`):
 
@@ -1609,7 +1604,7 @@ settings:
   …
 ```
 
-**Kafka** (`config/connectors/trading-stream.yaml`, generated from the trading pack, switched off until `DRISHTI_STREAM_TRADING=true`):
+**Kafka** (the trading pack's `trading-stream` template, switched off until `DRISHTI_STREAM_TRADING=true`):
 
 ```yaml
 plugin: kafka
@@ -1617,7 +1612,7 @@ enabled: "${DRISHTI_STREAM_TRADING:false}"
 kinds:
 - trade
 settings:
-  bootstrap-servers: "${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}"
+  broker: default
   topics: "${DRISHTI_TRADING_TOPIC:drishti.trading.trades}"
   kind: trade
   id-field: TRADE_ID
@@ -1771,7 +1766,7 @@ and the PKCS12 forms in `trading-stream.yaml`, `orders-queue.yaml`, `ops-events.
 A pack **names** its connectors. The trading pack's `pack.yaml` (shortened):
 
 ```yaml
-connectors:                         # a mapping: each entry is a TEMPLATE the server writes to config/connectors/<name>.yaml once
+connectors:                         # a mapping: each entry is a TEMPLATE, read where it is (the site overrides keys in config/connectors/<name>.yaml)
   trade-endur:
     plugin: delta
     enabled: ${DRISHTI_LAKE_ENABLED:true}
@@ -1799,8 +1794,7 @@ routes:                             # which connector answers each kind first
 ```
 
 - `connectors:` is either a **list of names** (a pack that only names what it needs) or, as every shipped pack does, a **mapping of
-  definitions**. A mapping is read as the pack's **templates**; both forms work, and `connector-templates:` carries templates beside a
-  list.
+  definitions**. A mapping is read as the pack's **templates**.
 - **Kinds** (this is the one statement of the rule; other documents link here): the pack's `routes:` decide the **primary**
   connector for a kind (the pack author knows where each kind lives). A read of a kind asks the routed connector first, then the
   default route, then every other connector that serves the kind, in configuration order. A connector's own `kinds:` (file, template
@@ -1841,136 +1835,48 @@ connectors of trading   [files in …/config/connectors; change them with `drish
 [exit 0]
 ```
 
-#### Precedence
+#### Connector layers
 
-Highest first. Each is documented and tested:
+The server **reads** connector configuration; it never writes, regenerates, upgrades or retires a connector file at start, on reload or
+on a deploy. The connector that runs is computed in memory from three layers (the rules, the messages and the tests:
+[KERNEL_AND_MODULES.md section 18.5](../architecture/KERNEL_AND_MODULES.md#185-connectors)):
 
-| Source | Role |
-|---|---|
-| Environment variables and `drishti.sources.connectors.*` in the server's own configuration (**deprecated**) | Override a file **setting by setting** until you move them to the file; a warning names the file to write. |
-| `config/connectors/<name>.yaml` | The site's definition. It **replaces** the pack's template for that name **wholesale**: the settings are not merged, so what the file does not say is not inherited. |
-| The pack's template (`connectors:` mapping or `connector-templates:`) | The pack's suggestion. Used to write the file once, and in memory when the file cannot be written. |
-
-A file with **no** template of that name defines a **new site connector**. When two related packs (one `extends` the other) suggest the
-same name, the more specific pack's template is the one written; two unrelated packs suggesting different definitions of one name is
-an error.
-
-#### Generation at the first start
-
-If a pack suggests a connector and no file of that name exists, the server writes it (logged, and audited as `connector-generated`),
-records a marker in `<data dir>/connectors/generated/`, and never touches a file you edited. On a fresh clone with the seven packs:
-
-```
-$ ls config/connectors
-civic-store.yaml       ecb-fx-feed.yaml     macro-store.yaml      nyfed-sofr-feed.yaml  trade-calypso.yaml  trading-stream.yaml
-collateral-store.yaml  fred-feed.yaml       market-store.yaml     reference-store.yaml  trade-endur.yaml    us-treasury-feed.yaml
-credit-store.yaml      legal-store.yaml     news-store.yaml       risk-store.yaml       trade-murex.yaml    yfinance.yaml
-ecb-estr-feed.yaml     news.yaml            trade-pages.yaml
-```
-
-The log says, per file:
-
-```
-connectors: connector file trade-endur.yaml generated from the template of pack 'trading'
-```
-
-**Edited or not.** A generated file you never edited follows its pack: when the pack's template changes (a new release), the file is
-written again from it (its text kept in the history). A file you edited is never overwritten: it gets what the template gained, every
-edit kept ([Upgrades](#upgrades)); the Connectors page and Health flag that the pack now suggests something else, and **Reset to pack
-default** takes the suggestion when you want it. If you delete a generated
-file by hand while the pack still suggests it, it is written again at the next start. To stop generating files altogether, set
-`drishti.sources.connectors-generate: false`; the templates are then used in memory. The `sutra` command line
-(`drishti.py sutra ...`, `pack check`) always runs that way: it reads the connector files that exist and writes none.
-
-**`lake demo` and connector files.** `drishti.py lake demo` checks the seven packs' Delta connector files against the lake it built:
-with the default lake (`<data>/delta`) nothing changes; with `--lake DIR` each file that points elsewhere is rewritten to point there
-(its earlier text kept in `<data dir>/connectors/history/`), and a missing one is written from the pack's template.
-
-#### Template updates
-
-A connector file generated once from an older pack template can lack kinds the pack serves now (seen in the field: `macro-store`
-without [`region-economy`](../contracts/samples/world-economy.md#region-economy) ([contract](../contracts/packs/world-economy.md#rege-region-economy-region-economy)) and `country-group`, `civic-store` without [`office-holder`](../contracts/samples/world-economy.md#office-holder) ([contract](../contracts/packs/world-economy.md#offc-office-holder-office-holder)), `risk-store` without `trade-valuation`, and old
-files still naming `central-bank-decision`, `trade-flow` and `price-basket`, which no pack uses any more). The server compares every
-connector file with its pack's current template, at start and every
-`drishti.connectors.template-check-ms` (60 s), and sorts the difference into three parts:
-
-| Part | What | Applied automatically |
+| Layer | Where | What it holds |
 |---|---|---|
-| **Missing** (additive) | kinds the template serves that the connector lacks; settings keys the template has and the connector does not (the layout entries for those kinds among them); columns a layout list of the template has and the connector's same list lacks (`layout.<kind>.columns`, `.vectors`: a pack that gained columns; the connector's own columns and order kept, the new ones appended, the file before kept beside it as `<name>.yaml.before-<yyyyMMdd-HHmmss>.bak`); parameters a reactive connector's template gained (`kinds.<kind>.params.<name>`, such as a reporting currency `ccy`; the file's own parameters kept, the file before kept beside it). Applied once at start, before the server answers, then every `template-check-ms` | with `additive` |
-| **Changed** (conflicting) | settings both have with different values: an administrator's edit | never |
-| **Obsolete** | kinds in the connector that no loaded pack serves | never |
+| **Template** (read-only) | a loaded pack's `connectors:` entry, or a file directly in the connectors folder of a module that is on (`modules/source-endur/connectors/trade-endur.yaml`; files under `connectors/examples/` are examples to copy, not templates) | the whole connector as shipped; its name is the file's `name:` key, else the file's name |
+| **Site override** | `config/connectors/<name>.yaml` | only the keys the site changes, merged over the template key by key (a setting's dotted path is its key: `settings.set.SOURCE_SYSTEM`). Any key may change, the plugin included; every other key is still inherited; a key set to `null` removes the inherited one. Over a template that names a lake, `settings.root` alone keeps the lake and reads its tables under that root; with `domain`, `table.<kind>` or `layout.<kind>` the file is the older form and the template's lake keys are dropped. A file with no template of its name is a complete **site connector** and names its plugin |
+| **Secrets** | `${VAR}` and `file:` references in the file | resolved when the connector starts; a template never holds one |
 
-`template-updates` in the connectors settings file, `config/connectors-settings.yaml` (named by `drishti.connectors.settings-file`;
-`drishti.connectors.template-updates` overrides it), chooses what happens on its own:
+A relative file in a setting (`map: mappings/endur-trade.yaml`) is read from the folder of the layer that set the key.
 
 ```yaml
-# config/connectors-settings.yaml
-template-updates: additive    # additive (the default): add missing kinds and settings, keeping every edit | notify: only list | off
+# config/connectors/trade-endur.yaml: the site's override, written by Admin -> Connectors (only what differs)
+template: module source-endur
+settings:
+  lake-tables: trading.trade_endur_v2      # the rest (plugin, kinds, set: SOURCE_SYSTEM, map:) is the template's
 ```
 
-With `additive` the missing part is merged into the connector, every other value kept as it is, written to the file with the previous text in the
-history; the server logs one line, records `connector-template-update` in the
-audit trail and lists it under *Recent automatic updates*. Changed and obsolete parts are only ever changed by an administrator.
+**Admin → Connectors** shows each connector's layer (template, override, site) and the layer of every setting, and the template's owner
+(`pack trading`, `module source-endur`). **Save** writes only the keys that differ from the template, with `template: <owner>`;
+**Reset** deletes the override, so the template is in force as it is; switching a connector off writes `enabled: false` alone, and
+switching it on again removes that key (an override left with nothing removes itself). A module switched off takes its templates with it:
+its connectors stop, and a site override of one of them is listed as *not used* (DRS-1046) until the module is on again.
 
-**Admin → Connectors → Template updates** (`/admin/connectors/template-updates`; the Connectors tab shows a count when anything
-drifted, and the Connectors page links to it) lists every drifted connector with its three parts and its text beside the template's
-(stacked on a phone), and the buttons: **Add missing kinds** (merge the missing part, keep edits), **Regenerate from template** (the
-template's text replaces the connector's; asks first), **Remove obsolete kinds** (asks first) and **Fix all additive**. Every button
-keeps the old text in the history (Restore on the connector's page puts it back) and sends the version read, so a change made
-meanwhile is a `409 DRS-5032`. REST: `GET /api/v1/admin/connectors/template-updates`, `POST …/template-updates/<name>/add-missing`,
-`…/regenerate`, `…/remove-obsolete`, `…/use-template-value`, `POST …/template-updates/fix-all`. What an upgrade does to unedited and
-edited files, at any depth: [Upgrades](#upgrades).
+**Files an earlier release left.** Earlier releases wrote a whole file per template at first start. Such a file is recognised by its
+header or its stamp (`# Generated at first start from the connector template of pack '…'`, `# drishti-template: …`) or by its marker in
+`<data dir>/connectors/generated/`:
 
-#### Upgrades
+| The file… | is… |
+|---|---|
+| generated and never edited | **superseded**: not read, the template is in force; listed in Health as *safe to delete* (never deleted) |
+| generated, then edited | an override like any other: its keys win, the template supplies the rest |
+| generated, and its template is no longer here (its module is off or removed) | **not used**, listed with the module and why it is off (DRS-1046); never run as a site connector |
+| says `template: <owner>` and that template is not here | **not used** (DRS-1046) |
 
-A new release can change a pack's connector templates (a new parameter of a kind, for example; a file generated before it would refuse
-the new request). An upgrade keeps every connector file in step, with two rules:
-
-**1. A file nobody edited follows the pack.** Drishti stamps every file it writes from a template with one line after the header:
-
-```
-# Generated at first start from the connector template of pack 'market-risk'. Edit it freely: an edited file is never overwritten; an unedited one follows the pack's template at an upgrade.
-# drishti-template: pack=market-risk template=6f1c0a9d2e7b4c3a text=1b8e4f0c9a2d7e65
-```
-
-`template` is the fingerprint of the template the file came from, `text` the hash of the text below the line as written. The stamp is
-part of the text, so it travels with it: the file on disk, the history, a copy to another
-server. At start (before the server answers) and at every template check, a file whose text below the stamp still has that hash was
-never edited: when its template's fingerprint changed it is **replaced in full** by the new template, changed values included. The file
-before is kept beside it as `<name>.yaml.before-upgrade-<yyyyMMdd-HHmmss>.bak` and in the history; the log has one line, the audit trail
-`connector-template-upgrade`, and *Recent automatic updates* the notice. A CRLF save is not an edit. Files of an older generation without
-the stamp are recognised by their marker in `<data dir>/connectors/generated/` in the same way, and stamped when rewritten. **Reset to
-pack default** and **Regenerate from template** write a stamped file again, so a connector you put back follows the pack once more.
-
-**2. An edited file gets every missing key, at any depth.** The additive merge reaches the whole definition: kinds, settings, the
-layout lists (`layout.<kind>.columns`, `.vectors`), a missing `description`, and a reactive connector's computation: `kinds.<kind>.params`,
-`kinds.<kind>.result`, `reads`, `engine`, `triggers`, `coalesce`, `cache`, `limits`, `history`. Any key the template has and the file lacks
-is added. A value the file has is never overwritten. Lists are kept in the file's order and get the template's missing items appended, as
-the layout lists do; a mapping in a list that names the same thing as one of the file's (the same `kind`, `name`, `id`, `topic` or
-`connector`, such as a computed connector's read of `var-result`) is merged into it rather than added twice.
-
-**Conflicts.** The same key with a different value (an administrator's edit, or a value the pack changed under an edited file) is listed
-in **Admin → Connectors → Template updates** under *changed*, settings and definition paths alike (`refresh-seconds`, `limits.wait`,
-`reads[0].id`), each with a **Use the pack's value** button: that one key takes the template's value, every other edit stays, the old
-text goes to the history and the audit trail records `connector-template-update`. REST: `POST
-/api/v1/admin/connectors/template-updates/<name>/use-template-value` with `{"where": "settings"|"definition", "key": "<key>"}` and the
-connector's version as `If-Match`.
-
-![Template updates: an edited trade-murex, its missing columns added at start, its own file-rows listed as changed with Use the pack's value](img/connector_files/15-template-updates.jpg)
-
-A file written by `drishti.py lake demo` or `build_demo_lakes.py` (its first line *Written by …*) carries no stamp: it counts as
-edited, keeps its values and gains missing keys. A change of `plugin` is not listed as a conflict (a `var-results.yaml` that `lake demo`
-wrote stays on Delta when the official results move to Iceberg): put such a file back with **Reset to pack default**.
-
-**Example.** A reactive connector generated by an older release and edited (`limits.wait: 45s`), after an upgrade: the parameter its
-pack's template gained (`kinds.<kind>.params.ccy`) and the new triggers' kinds are added, `limits.wait` stays `45s`, and `reads[0].id`
-(`{id}` in the file, `{id}~ccy={params.ccy}` in the template) is listed as a conflict until an administrator uses the pack's value.
-
-**3. A connector the pack retired.** When a pack no longer has a connector's template (a pack that dropped `var-whatif`, for example), a file Drishti generated from that pack's template and nobody edited is
-removed at start: its text is kept beside it as `<name>.yaml.retired-<yyyyMMdd-HHmmss>.bak` and in the history, and the log says so.
-An edited file stays as it is; **Template updates** lists its kinds as *obsolete*, and **Remove obsolete kinds** or deleting the
-connector takes it away. A file of a pack the server does not load, and a site's own file, are never touched.
-
+So an upgrade needs no step: a release that moves a template (the trade connectors moved from the trading pack into the source modules)
+keeps every trade, because the old generated files are superseded by the templates wherever they now are. Connector edits that an older
+release kept in the content store and this node never folded into files are listed in Health (*save it in Admin → Connectors*) and not
+applied. `.history` and `.generated` folders an earlier release left are read only to recognise a generated file; nothing moves them.
 
 #### A pack names a connector nobody defined
 
@@ -2640,10 +2546,10 @@ Every connector with a network client reads these settings. This is what each do
 | [ActiveMQ](../../plugins/drishti-plugin-activemq/README.md#security) | `broker-url` has `ssl://` | yes | checked, not narrowed (JVM's) | yes | yes | ActiveMQ Classic in Docker |
 | [RabbitMQ](../../plugins/drishti-plugin-rabbitmq/README.md#security) | `amqps://` | yes (also the log-in, `auth-mechanism: external`) | yes | yes | yes | RabbitMQ 4.1 in Docker |
 | [Redis](../../plugins/drishti-plugin-redis/README.md#security-tls-and-credentials) | `rediss://` | yes | yes | yes (chain only) | yes | Redis 8.2 in Docker, `tls-auth-clients yes` |
-| [REST](../../plugins/drishti-plugin-rest/README.md#tls-for-the-rest-connector) | `https://` `base-url` | yes | yes | yes | yes | an HTTPS server in the test process |
-| [Feeds](../../plugins/drishti-plugin-feeds/README.md#security) (a mirror) | `https://` `url` | yes | yes | yes | yes | an HTTPS server in the test process |
-| [News](../../plugins/drishti-plugin-news/README.md) (a mirror or proxy) | `https://` `base-url` | yes | yes | yes | no | no TLS-specific test: it applies the shared `TlsHttp` as REST and Feeds do |
-| [yfinance](../../plugins/drishti-plugin-yfinance/README.md) (a mirror or proxy) | `https://` `base-url` | yes | yes | yes | no | as News |
+| [REST](../../docs/connectors/types/rest/README.md#tls-for-the-rest-connector) | `https://` `base-url` | yes | yes | yes | yes | an HTTPS server in the test process |
+| [Feeds](../../docs/connectors/types/feed/README.md#security) (a mirror) | `https://` `url` | yes | yes | yes | yes | an HTTPS server in the test process |
+| [News](../../docs/connectors/types/news/README.md) (a mirror or proxy) | `https://` `base-url` | yes | yes | yes | no | no TLS-specific test: it applies the shared `TlsHttp` as REST and Feeds do |
+| [yfinance](../../docs/connectors/types/yfinance/README.md) (a mirror or proxy) | `https://` `base-url` | yes | yes | yes | no | as News |
 | [S3](../../plugins/drishti-plugin-s3/README.md#tls-for-the-s3-connector) | `https://` `endpoint` | yes | checked, not narrowed | **refused** (the AWS client always checks) | yes | an HTTPS stand-in S3 in the test process |
 | [MongoDB](../../plugins/drishti-plugin-mongodb/README.md#security-tls-certificate-log-in-and-credentials) | `tls.enabled` or `tls=true` in the `uri` | yes (also the log-in, `auth-mechanism: x509`) | checked, not narrowed | yes | yes | MongoDB 7 in Docker, `requireTLS`, x.509 user |
 | [PostgreSQL](../../plugins/drishti-plugin-jdbc/README.md#security-tls-and-credentials) (`jdbc:postgresql:`) | `tls.enabled` | yes (also the log-in, `cert` in `pg_hba.conf`) | yes | yes (`sslmode=require`) | yes | PostgreSQL 18 in Docker, `ssl=on` |
@@ -3118,10 +3024,10 @@ private CA.
 
 | Connector | Through the proxy | How |
 |---|---|---|
-| [REST](../../plugins/drishti-plugin-rest/README.md#outbound-proxy) | yes | the JDK HTTP client's proxy selector and authenticator |
-| [Feeds](../../plugins/drishti-plugin-feeds/README.md#outbound-proxy) | yes, built-in feeds and a mirror `url` | same |
-| [News](../../plugins/drishti-plugin-news/README.md#outbound-proxy) | yes | same |
-| [yfinance](../../plugins/drishti-plugin-yfinance/README.md#outbound-proxy) | yes | same |
+| [REST](../../docs/connectors/types/rest/README.md#outbound-proxy) | yes | the JDK HTTP client's proxy selector and authenticator |
+| [Feeds](../../docs/connectors/types/feed/README.md#outbound-proxy) | yes, built-in feeds and a mirror `url` | same |
+| [News](../../docs/connectors/types/news/README.md#outbound-proxy) | yes | same |
+| [yfinance](../../docs/connectors/types/yfinance/README.md#outbound-proxy) | yes | same |
 | [S3](../../plugins/drishti-plugin-s3/README.md#outbound-proxy) | yes, AWS and S3-compatible endpoints | the AWS SDK's proxy configuration; with a proxy the Apache HTTP client is used (the URL-connection client cannot answer a proxy's login when it tunnels https) |
 | [Delta](../../plugins/drishti-plugin-delta/README.md#outbound-proxy) over S3 | yes, both engines | native engine: the SDK's proxy configuration; Hadoop engine: `fs.s3a.proxy.*` |
 | [Iceberg](../../plugins/drishti-plugin-iceberg/README.md#outbound-proxy) over S3 / REST catalog | yes | the REST catalog's own client (`rest.client.proxy.*`), the S3 file IO (SDK proxy configuration), Hadoop `fs.s3a.proxy.*` for path tables |
@@ -3234,7 +3140,7 @@ fictitious, all deterministic:
 |---|---|---|---|
 | **The test data** | `data/testdata/` (committed, about 138 MB of `.jsonl.gz`, 2,863 files, measured 2026-10-28) | sixty business days of every dataset the seven packs read: up to 5,000 trades a day per source system (ENDUR, CALYPSO, MUREX), counterparties, market data, agreements, netting sets, risk results; a first-day snapshot and each later day's changes | `tools/testdata/make_testdata.py` (`--check` says whether the files are current) |
 | **The demo lakes** | `data/delta/demo/` (generated, never committed) | the test data as Delta tables, one per dataset, sixty daily snapshots each: what the packs' connectors read | `drishti.py lake demo` (one command, about 15 minutes) |
-| **The samples** | `config/packs/<domain>/<pack>/samples/<kind>.jsonl` (committed) | a few hundred documents a pack, the same shape, that the `demo` source serves live and ticking, with no store at all | `tools/packgen/banking/make_data.py` and each pack's generator |
+| **The samples** | `modules/<module>/packs/<pack>/samples/<kind>.jsonl` (committed) | a few hundred documents a pack, the same shape, that the `demo` source serves live and ticking, with no store at all | `tools/packgen/banking/make_data.py` and each pack's generator |
 
 The other stores (PostgreSQL, DuckDB, Iceberg, MongoDB, Redis, Aerospike, Cassandra, JSON-lines files) are loaded with the samples (ten business
 days) and, for scale tests, a generated trade book: the scripts in [the other stores](#115-postgresql).
@@ -3245,7 +3151,7 @@ days) and, for scale tests, a generated trade book: the scripts in [the other st
 drishti-console/.venv/bin/python tools/drishti.py lake demo
 ```
 
-(the IDE run configuration **Build demo lakes**). Measured for sixty days: **943 s (about 15 minutes), 86 tables, about 3.4 GB**, sixty business days
+(the IDE run configuration **Build demo lakes**). Measured for sixty days: **943 s (about 15 minutes), 89 tables, about 3.4 GB**, sixty business days
 ending on today's business date (the test data's 2026-07-08 to 2026-09-30, moved; `--as-of data` keeps them). The trades go to one
 table per source system, `data/delta/demo/trading/trade_endur`, `trade_calypso` and `trade_murex`, partitioned by business date and
 `PRODUCT_TYPE`, each read by its own connector (`trade-endur`, `trade-calypso`, `trade-murex`) and served together as one kind,
@@ -3262,7 +3168,7 @@ every data type, every field explained for the query that must produce it, is in
 | Trades | 5,000 per source system on the last day, 15,000 in all (4,407 ENDUR, 3,471 CALYPSO, 4,198 MUREX on the first); about 3–7% amended each day (`TRADE_VERSION` moves) |
 | Source systems | `ENDUR` (ids `1000001` …), `CALYPSO` (`CLY-3000001` …), `MUREX` (`MX-20000001` …): ids unique across them |
 | Tables | 85 (measured 2026-10-28): 3 trade tables, the test-data datasets of the banking packs (with [`var-limit`](../contracts/samples/market-risk.md#var-limit) ([contract](../contracts/packs/market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit))), the reference tables of world-economy and news-and-markets, the public-data snapshots of us-equities, gleif and funds |
-| Disk | about 3.4 GB (measured 2026-10-28, `du` of the 86 tables; the committed test data: about 181 MB, the VaR data on three business dates) |
+| Disk | about 3.4 GB (measured 2026-10-28, `du` of the 89 tables; the committed test data: about 181 MB, the VaR data on three business dates) |
 | Counterparties | fictitious look-alikes (`CP-NORTHPLAINS`, `CP-VAULTGUARD`, …), with UEN, country of risk, legal entity, agreements and netting sets holding their trades |
 
 Re-running `lake demo` rebuilds every table it writes (the folder is removed first) and is safe while a server runs: the server gets
@@ -3301,7 +3207,7 @@ BI answer the same whatever the storage. Every other dataset stays in Delta.
 - **How it is written:** the system is built as Delta first (by `lake demo`, or by `lake build` of your files into a staging folder,
   `<data>/build/iceberg-stage`, removed after), so its documents and promoted columns are exactly those of a Delta build; then
   `tools/lake/stores.py` streams the rows into Drishti's own Iceberg loader (`IcebergLoader`, `engine: native`: no Hadoop, so it works on
-  Windows), started from the server's exec jar (`drishti-server/target/drishti-server-*-exec.jar` or `DRISHTI_JAR`: build the server first;
+  Windows), started from the server's exec jar (`kernel/drishti-server/target/drishti-server-*-exec.jar` or `DRISHTI_JAR`: build the server first;
   heap `DRISHTI_LOADER_HEAP`, default 2g). The loader's progress lines (`iceberg: … rows read`, `iceberg: written in … s`) and the usual
   30-second heartbeat show while it copies.
 - **Connector files:** the build writes `trade-<system>.yaml` (in `config/connectors`, or `--connectors-dir`) from the trading pack's
@@ -3377,7 +3283,7 @@ memory, partitions and promoted columns ([CLI_REFERENCE.md](CLI_REFERENCE.md)).
 docker compose -f deploy/docker/compose.data.yaml up -d postgres                                       # or your own server
 tools/load-postgres.sh jdbc:postgresql://localhost:5432/drishti                                 # the samples, 10 days
 tools/load-postgres.sh jdbc:postgresql://localhost:5432/drishti --trades 10000                  # and a book
-SPRING_PROFILES_ACTIVE=postgres DRISHTI_PACKS=market-risk,counterparty-risk java -jar drishti-server/target/drishti-server-*-exec.jar
+SPRING_PROFILES_ACTIVE=postgres DRISHTI_PACKS=market-risk,counterparty-risk java -jar kernel/drishti-server/target/drishti-server-*-exec.jar
 ```
 
 The profile is deprecated; the same connectors as files are in `config/connectors.examples/postgres/` (copy them to
@@ -3392,7 +3298,7 @@ load within a minute. Layout and design: [POSTGRES_CONNECTOR.md](../../plugins/d
 ```bash
 tools/load-iceberg.sh ./data/iceberg                       # the samples
 tools/load-iceberg.sh ./data/iceberg --trades 10000        # and a book, for a laptop
-SPRING_PROFILES_ACTIVE=iceberg DRISHTI_PACKS=market-risk,counterparty-risk java -jar drishti-server/target/drishti-server-*-exec.jar
+SPRING_PROFILES_ACTIVE=iceberg DRISHTI_PACKS=market-risk,counterparty-risk java -jar kernel/drishti-server/target/drishti-server-*-exec.jar
 ```
 
 Design: [ICEBERG_CONNECTOR.md](../../plugins/drishti-plugin-iceberg/README.md). (`load-iceberg.sh` builds the plugin with Maven; on Windows use
@@ -3403,7 +3309,7 @@ Design: [ICEBERG_CONNECTOR.md](../../plugins/drishti-plugin-iceberg/README.md). 
 ```bash
 tools/load-duckdb.sh data/duckdb/drishti.duckdb                              # the samples
 tools/load-duckdb.sh data/duckdb/drishti.duckdb --trades 10000 --days 3      # and a book, for a laptop
-SPRING_PROFILES_ACTIVE=duckdb DRISHTI_PACKS=market-risk,counterparty-risk java -jar drishti-server/target/drishti-server-*-exec.jar
+SPRING_PROFILES_ACTIVE=duckdb DRISHTI_PACKS=market-risk,counterparty-risk java -jar kernel/drishti-server/target/drishti-server-*-exec.jar
 ```
 
 No server to run: one file holds every data domain, and the server reads it in-process. Each load writes a new file and renames it
@@ -3416,7 +3322,7 @@ over the old one, so it can run while the server answers; the server picks it up
 docker run -d --name drishti-mongo -m 2g -p 27017:27017 mongo:7 --wiredTigerCacheSizeGB 0.5
 tools/load-mongodb.sh mongodb://localhost:27017 drishti                       # the samples
 tools/load-mongodb.sh mongodb://localhost:27017 drishti --trades 10000        # and a book, for a laptop
-SPRING_PROFILES_ACTIVE=mongodb DRISHTI_PACKS=market-risk,counterparty-risk java -jar drishti-server/target/drishti-server-*-exec.jar
+SPRING_PROFILES_ACTIVE=mongodb DRISHTI_PACKS=market-risk,counterparty-risk java -jar kernel/drishti-server/target/drishti-server-*-exec.jar
 ```
 
 Design: [MONGODB_CONNECTOR.md](../../plugins/drishti-plugin-mongodb/README.md).
@@ -3428,7 +3334,7 @@ docker run -d --name drishti-redis -m 2g -p 6380:6379 redis:8 --maxmemory 1gb
 tools/load-redis.sh redis://localhost:6380                       # the samples
 tools/load-redis.sh redis://localhost:6380 --trades 10000        # and a book, for a laptop
 DRISHTI_REDIS_URI=redis://localhost:6380 SPRING_PROFILES_ACTIVE=redis DRISHTI_PACKS=market-risk,counterparty-risk \
-  java -jar drishti-server/target/drishti-server-*-exec.jar
+  java -jar kernel/drishti-server/target/drishti-server-*-exec.jar
 ```
 
 (Port 6380 on the host leaves a Redis you already run on 6379 alone.) Redis holds everything in memory: about 1 GB per million trades
@@ -3441,7 +3347,7 @@ a day, so keep large books for a server. Each load replaces the business days it
 docker compose -f deploy/docker/compose.data.yaml up -d aerospike
 tools/load-aerospike.sh localhost:3000 test                                  # the samples
 tools/load-aerospike.sh localhost:3000 test --trades 10000                   # and a book
-SPRING_PROFILES_ACTIVE=aerospike DRISHTI_PACKS=market-risk,counterparty-risk java -jar drishti-server/target/drishti-server-*-exec.jar
+SPRING_PROFILES_ACTIVE=aerospike DRISHTI_PACKS=market-risk,counterparty-risk java -jar kernel/drishti-server/target/drishti-server-*-exec.jar
 ```
 
 `--ttl-days N` lets Aerospike expire each day after N days. The default namespace of the Docker image keeps data in memory and is too
@@ -3465,10 +3371,10 @@ expires cells after N days; `--keep-days N` drops the older days. See [CASSANDRA
 ```bash
 tools/load-files.sh                              # the samples: data/files
 tools/load-files.sh --trades 10000               # and 10,000 trades a day for 3 days
-SPRING_PROFILES_ACTIVE=files DRISHTI_PACKS=market-risk,counterparty-risk java -jar drishti-server/target/drishti-server-*-exec.jar
+SPRING_PROFILES_ACTIVE=files DRISHTI_PACKS=market-risk,counterparty-risk java -jar kernel/drishti-server/target/drishti-server-*-exec.jar
 ```
 
-One file per kind per business day, `data/files/<domain>/<date>/<kind>.jsonl`: see [FILE_CONNECTOR.md](../../plugins/drishti-plugin-file/README.md).
+One file per kind per business day, `data/files/<domain>/<date>/<kind>.jsonl`: see [FILE_CONNECTOR.md](../../docs/connectors/types/file/README.md).
 
 ### 11.13 Your own JSONL
 
@@ -3480,7 +3386,7 @@ instead (streamed, flat memory).
 ```bash
 # Delta lake (default): <root>/<domain>/<kind>/business_date=...; serve with DRISHTI_DELTA_ROOT
 drishti-console/.venv/bin/python tools/drishti.py data ingest --from data/trade.jsonl --pack config/packs/my-bank --lake /tmp/lake
-DRISHTI_PACKS=my-bank DRISHTI_DELTA_ROOT=/tmp/lake java -jar drishti-server/target/drishti-server-*-exec.jar
+DRISHTI_PACKS=my-bank DRISHTI_DELTA_ROOT=/tmp/lake java -jar kernel/drishti-server/target/drishti-server-*-exec.jar
 # JSON-lines files (stdlib + PyYAML only): <root>/<domain>/<date>/<kind>.jsonl; serve with DRISHTI_FILES_ROOT
 drishti-console/.venv/bin/python tools/drishti.py data ingest --from your-folder/ --domain my-bank --key trade=TRADE_ID \
     --store files --root /tmp/files --dry-run
@@ -3533,7 +3439,7 @@ engine): the VaR tree's top name is set there.
 
 ### 11.15 The samples
 
-The packs' samples in `config/packs/<domain>/<pack>/samples/` are what the `demo` source serves live: one JSON Lines file per kind
+The packs' samples in `modules/<module>/packs/<pack>/samples/` are what the `demo` source serves live: one JSON Lines file per kind
 (`<kind>.jsonl`, one document a line, split into `<kind>.part-001.jsonl` … only above about 50 MB) and a `catalog.jsonl` listing every
 sample's kind, id, title and subtitle (the type-ahead's text). The five banking packs' samples are written by
 
@@ -3564,7 +3470,7 @@ feeds: …/data/feeds/fixing.jsonl
 
 #### Live walks by kind
 
-A live sample ticks while someone watches it (the `demo` source, [DEMO_CONNECTOR.md](../../plugins/drishti-plugin-demo/README.md#coherent-walks-a-group-that-moves-together)).
+A live sample ticks while someone watches it (the `demo` source, [DEMO_CONNECTOR.md](../../docs/connectors/types/demo/README.md#coherent-walks-a-group-that-moves-together)).
 Its `_meta.walk` (the `_meta` block keeps its lower-case keys; the paths inside the walk are the document's UPPER_SNAKE names) moves a headline **and everything that must agree with it**, so a table, a chart and a headline never
 disagree. The specs are built by `tools/packgen/common/walks.py` from the finished sample; `DemoPackWalksTest` ticks every sample of
 every kind below 40 times and checks the identities in the second column. The kinds of the seven packs that walk:

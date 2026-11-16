@@ -107,6 +107,7 @@ final class VarAttributeGroups {
     List<VarViews.Part> parts(VarService.Scoped s, String column) {
         VarBook b = s.date().book();
         IntFunction<String> value = values(s, column);
+        boolean off = !tradeSourcesOff().isEmpty();
         Map<String, OrdinalSet.Builder> groups = new TreeMap<>();
         Map<String, int[]> counts = new HashMap<>();
         s.set().forEach(o -> {
@@ -124,7 +125,7 @@ final class VarAttributeGroups {
             Map<String, Object> a = new LinkedHashMap<>();
             a.put("attribute", column);
             a.put("trades", counts.get(k)[0]);
-            String label = k.isEmpty() ? "no " + column : k;
+            String label = k.isEmpty() ? (off ? "Unassigned" : "no " + column) : k;
             out.add(new VarViews.Part(k, null, label, KIND, b.vector(g.build(), svc.sums()), Double.NaN, a));
         });
         return out;
@@ -139,6 +140,9 @@ final class VarAttributeGroups {
         }
         String kind = svc.props().kinds().valuation();
         SourceRouter router = svc.loader().router();
+        if (!tradeSourcesOff().isEmpty()) {
+            return o -> null;                       // trade details from a switched-off source: the trades stay in their VaR, under "Unassigned"
+        }
         if (!router.columnar(kind).contains(column)) {
             List<String> own = new ArrayList<>(tc.textColumns());
             throw new DrishtiException(ErrorCode.BAD_REQUEST, column + " is not a column of the VaR book's trades (" + String.join(", ", own)
@@ -146,6 +150,11 @@ final class VarAttributeGroups {
         }
         Map<String, String> byTrade = join(router, kind, column, s.date().date());
         return o -> byTrade.get(b.tradeId(o));
+    }
+
+    /** The trading systems switched off that feed the trade details (the trade kind and the valuations): VaR at trade grain says so. */
+    java.util.Set<String> tradeSourcesOff() {
+        return svc.tradeSourcesOff();
     }
 
     /** The valuations' column by trade id on the date, read once per data version (the date's row of each trade). */

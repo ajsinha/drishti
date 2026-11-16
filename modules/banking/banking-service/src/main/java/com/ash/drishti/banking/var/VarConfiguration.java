@@ -237,7 +237,8 @@ public class VarConfiguration {
     }
 
     @Bean(destroyMethod = "close")
-    VarOfficial varOfficial(VarService svc, VarViews views, VarProperties props, ObjectProvider<LoadService> loads) {
+    VarOfficial varOfficial(VarService svc, VarViews views, VarProperties props, ObjectProvider<LoadService> loads,
+            ObjectProvider<com.ash.drishti.engine.source.SourceRegistry> sources) {
         var off = props.official();                                      // a folder or s3://, Delta (the default) or Iceberg (2.9.5)
         VarOfficial o = new VarOfficial(svc, views, new VarPublisher(com.ash.drishti.banking.official.OfficialSink.of(off.format(), off.root(),
                 off.storage(), off.retentionYears()), off.jsonl()));
@@ -245,6 +246,7 @@ public class VarConfiguration {
         if (l != null) {
             l.onReady(r -> o.onLoad(r.kind(), r.businessDate()));          // the data-load signal reloads the date, then captures it
         }
+        o.onPublished(() -> sources.ifAvailable(r -> r.retryFailingFor("var-official")));   // the var-results connector
         return o;
     }
 
@@ -345,9 +347,46 @@ public class VarConfiguration {
         }
         VarProperties props = e.getApplicationContext().getBean(VarProperties.class);
         VarService svc = e.getApplicationContext().getBean(VarService.class);
-        if (!svc.running() || !props.official().enabled() || !props.official().onStart()) {
+        if (!svc.running()) {
             return;
         }
-        e.getApplicationContext().getBean(VarOfficial.class).later(() -> svc.loader().latest());
+        // drishti.var.preload-previous-date (config/engines/var.yaml): the business date before the newest opened too, after the newest,
+        // so the first "Why it moved" after a start compares two open dates; a date the busy protection refuses is left for the first ask
+        boolean previous = e.getApplicationContext().getEnvironment().getProperty("drishti.var.preload-previous-date", Boolean.class, true);
+        if (props.official().enabled() && props.official().onStart()) {
+            VarOfficial official = e.getApplicationContext().getBean(VarOfficial.class);
+            official.later(() -> svc.loader().latest());
+            if (previous) {
+                official.then(() -> openPrevious(svc));
+            }
+        } else if (previous) {
+            Thread.ofVirtual().name("drishti-var-previous").start(() -> openPrevious(svc));
+        }
+    }
+
+    /** Opens the business date before the newest (waiting up to ten minutes for the lake's connectors to list a date); never fails the start. */
+    static void openPrevious(VarService svc) {
+        org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(VarConfiguration.class);
+        try {
+            java.time.LocalDate newest = null;
+            for (long until = System.nanoTime() + java.time.Duration.ofMinutes(10).toNanos(); newest == null && System.nanoTime() < until; ) {
+                newest = svc.loader().latest();
+                if (newest == null) {
+                    Thread.sleep(2_000);
+                }
+            }
+            java.time.LocalDate before = newest == null ? null : svc.loader().previous(newest);
+            if (before == null) {
+                log.info("VaR: no business date before the newest to open at start");
+                return;
+            }
+            long t0 = System.nanoTime();
+            svc.date(before);
+            log.info("VaR: {}, the date before the newest, opened at start in {} ms (Why it moved compares it)", before, (System.nanoTime() - t0) / 1_000_000);
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+        } catch (RuntimeException ex) {
+            log.info("VaR: the date before the newest was not opened at start (it opens on the first ask): {}", ex.getMessage());
+        }
     }
 }

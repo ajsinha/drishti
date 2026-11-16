@@ -30,7 +30,7 @@
 
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) { e.className = cls; } if (text != null) { e.textContent = text; } return e; }
   function api(url, body) {
-    return fetch(url, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+    return fetch(drishti_url(url), { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) { throw new Error(j.detail || 'Something went wrong'); } return j; }); });
   }
   function replaceClause(clause, by) {
@@ -72,12 +72,12 @@
     if (r.ok) {
       draft = r.draft;
       result.hidden = false;
-      if (frame.getAttribute('src') !== r.preview) { frame.setAttribute('src', r.preview); } else { frame.contentWindow.location.reload(); }
-      openFull.href = r.open;
+      if (frame.getAttribute('src') !== r.preview) { frame.setAttribute('src', drishti_url(r.preview)); } else { frame.contentWindow.location.reload(); }
+      openFull.href = drishti_url(r.open);
       var ol = root.querySelector('[data-outline-open]');
-      if (ol) { ol.href = '/designer/outline?kind=' + encodeURIComponent(r.kind) + '&id=' + encodeURIComponent(r.id) + '&design=' + encodeURIComponent(r.draft); }
+      if (ol) { ol.href = drishti_url('/designer/outline?kind=' + encodeURIComponent(r.kind) + '&id=' + encodeURIComponent(r.id) + '&design=' + encodeURIComponent(r.draft)); }
       var gd = root.querySelector('[data-grid-open]');
-      if (gd) { gd.href = '/designer/grid?kind=' + encodeURIComponent(r.kind) + '&id=' + encodeURIComponent(r.id) + '&design=' + encodeURIComponent(r.draft); }
+      if (gd) { gd.href = drishti_url('/designer/grid?kind=' + encodeURIComponent(r.kind) + '&id=' + encodeURIComponent(r.id) + '&design=' + encodeURIComponent(r.draft)); }
       yaml.textContent = r.yaml;
       saved.textContent = '';
     }
@@ -86,7 +86,7 @@
   function build() {
     if (busy) { return; }
     busy = true;
-    api('/designer/describe', { text: input.value, draft: draft }).then(function (r) { last = r; draw(r); })
+    api(drishti_url('/designer/describe'), { text: input.value, draft: draft }).then(function (r) { last = r; draw(r); })
       .catch(function (e) { messages.innerHTML = ''; messages.appendChild(el('li', null, e.message)); })
       .finally(function () { busy = false; });
   }
@@ -100,9 +100,9 @@
   save.addEventListener('click', function () {
     if (!draft || !last) { return; }
     var subject = (last.tokens[0] || {}).text || 'My screen';
-    api('/designer/describe/save/' + encodeURIComponent(draft), { name: 'My screen · ' + subject }).then(function (r) {
+    api(drishti_url('/designer/describe/save/') + encodeURIComponent(draft), { name: 'My screen · ' + subject }).then(function (r) {
       saved.textContent = 'Saved to your workspace as "' + r.name + '". Only you see it until you share it. ';
-      var a = el('a', null, 'Open it in My designs'); a.href = r.build; saved.appendChild(a);
+      var a = el('a', null, 'Open it in My designs'); a.href = drishti_url(r.build); saved.appendChild(a);
       draft = '';                                                          // a new Build starts a new draft
     }).catch(function (e) { saved.textContent = e.message; });
   });

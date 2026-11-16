@@ -77,7 +77,7 @@ class LakeMaintenance:
     def __init__(self, lakes):
         self.lakes = lakes
         cfg = lakes.cfg
-        self.data = Path(cfg.data_dir) if getattr(cfg, "data_dir", None) else (cfg.roots[0].parent if cfg.roots else Path("data"))
+        self.data = Path(cfg.data_dir) if getattr(cfg, "data_dir", None) else (cfg.roots[0].parent if cfg.roots else Path(__file__).resolve().parents[2] / "data")
         self.runs: dict[str, MaintRun] = {}
         self.guard = threading.Lock()                # the runs dict and the YAML's read-modify-write
         self.scheduler = None
@@ -367,7 +367,7 @@ class LakeMaintenance:
 
 
 def _slim(res: dict) -> dict:
-    keep = ("name", "root", "before", "after", "estimate", "retention", "compact", "checkpoint", "vacuum", "error", "skipped", "forced", "signal", "dryRun")
+    keep = ("name", "root", "before", "after", "estimate", "retention", "row-retention", "compact", "checkpoint", "vacuum", "error", "skipped", "forced", "signal", "dryRun")
     return {k: v for k, v in res.items() if k in keep}
 
 

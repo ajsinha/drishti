@@ -131,6 +131,18 @@ def test_each_layout_and_density_draws_the_pivot_in_both_themes(browsers):
     run(browsers, body)
 
 
+def test_the_grid_says_it_is_drawing_until_its_frame_has_drawn(browsers):
+    """The drawn signal (TEST_HARNESS.md 3.20): from a change until the frame that draws it, the scroller carries data-dg-drawing, which
+    Drishti.settled waits on, so a capture or a test never reads a grid half drawn."""
+    async def body(pg):
+        assert await pg.locator("[data-dg-drawing]").count() == 0                       # drawn: nothing pending
+        marked = await pg.evaluate("() => { const s = document.querySelector('.dg-scroll'); s.scrollTop += 200;"
+                                   " s.dispatchEvent(new Event('scroll')); return s.hasAttribute('data-dg-drawing'); }")
+        assert marked                                                                   # a change: marked at once
+        await pg.wait_for_function("() => !document.querySelector('[data-dg-drawing]')")   # and cleared by the frame that draws it
+    run(browsers, body)
+
+
 def test_the_nine_layouts_and_densities_at_once(browsers):
     async def go():
         async with browsers.page(1500, 1400, route=route) as pg:

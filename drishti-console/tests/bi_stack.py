@@ -167,10 +167,10 @@ class Stack:
     def _start(self) -> "Stack":
         for port in (SERVER_PORT, CONSOLE_PORT):
             assert port not in FORBIDDEN and not listening(port), f"port {port} is in use: stop whatever listens there"
-        jars = sorted(glob.glob(str(ROOT / "drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)  # newest build first: target may hold older versions
+        jars = sorted(glob.glob(str(ROOT / "kernel/drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)  # newest build first: target may hold older versions
         java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"
         if not jars or not Path(java).exists():
-            raise FileNotFoundError("needs the built server: ./mvnw -o -q package -DskipTests -pl drishti-app -am")
+            raise FileNotFoundError("needs the built server: ./mvnw -o -q package -DskipTests -pl :drishti-app -am")
         work = self.tmp / "server"
         (work / "config" / "bi").mkdir(parents=True)
         for rel, text in SHIPPED.items():
@@ -180,7 +180,7 @@ class Stack:
         copy_samples(work / "config" / "bi", ["trades-basic"])           # publishing checks a report can be drawn: the model it names must exist
         env = dict(os.environ, DRISHTI_PACKS="trading", DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_SECURITY_ENABLED="true", DRISHTI_TOKEN_SECRET=SECRET,
                    DRISHTI_BI_DIR=str(work / "config" / "bi"))
-        self.procs["server"] = subprocess.Popen(java_cmd(java, ["-Xmx768m", "-jar", jars[0], f"--server.port={SERVER_PORT}", "--drishti.security.registered-users-only=false"], tmp=self.tmp / "jvm-tmp"), cwd=work,
+        self.procs["server"] = subprocess.Popen(java_cmd(java, ["-Xmx768m", "-jar", jars[0], f"--server.port={SERVER_PORT}", "--drishti.security.registered-users-only=false"], tmp=self.tmp / "jvm-tmp", cwd=work, env=env), cwd=work,
                                                 env=env, stdout=open(self.tmp / "server.log", "ab"), stderr=subprocess.STDOUT)
         wait(SERVER + "/actuator/health", proc=self.procs["server"])
         self.ids = seed()

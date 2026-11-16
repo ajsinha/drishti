@@ -18,7 +18,7 @@
    server's table, drawn by the grid: docTable, docDrill, docPivot, docPlainTable) with the renderer's cells as its hooks; charts are
    drishti-chart's panel charts, drawn from the container's data (a property, never an attribute of JSON) once the panel is in the page;
    the few figures the macros compute (a bar's width, a share, a gauge's level, a progress) are rounded by drishti-core, half up. */
-import { roundHalfUp, formatNumber, formatPythonFloat } from '../../drishti-core/src/drishti_index.js';
+import { roundHalfUp, formatNumber, formatPythonFloat, basePath, url as drishtiUrl } from '../../drishti-core/src/drishti_index.js';
 import { docPivotable, docDrill, docPivot, docPlainTable } from '../../drishti-grid/src/drishti_index.js';
 import { h, str, icon, toneClass, capitalize } from './drishti_dom.js';
 import { cellText, entity, entityLink, fields } from './drishti_cells.js';
@@ -162,7 +162,7 @@ function metric(R, p) {
   const m = (p.data.value && typeof p.data.value === 'object') ? p.data.value : {}, d = (p.data.delta && typeof p.data.delta === 'object') ? p.data.delta : null;
   const label = (p.title || p.id) + ': ' + str(m.text) + (p.data.unit ? ' ' + p.data.unit : '') + (d ? ', change ' + str(d.text) : '');
   return h('div', { class: 'metric', role: 'group', 'aria-label': label }, m.label ? h('span', { class: 'metric-l' }, str(m.label)) : null,
-    h('div', { class: 'metric-row' }, h('span', { class: 'metric-v mono' + toneClass(m), 'data-path': m.path || null }, cellText(R, m)),
+    h('div', { class: 'metric-row' }, h('span', { class: 'metric-v mono' + (m.format === 'date' ? ' metric-v-date' : '') + toneClass(m), 'data-path': m.path || null }, cellText(R, m)),
       p.data.unit ? h('span', { class: 'metric-u' }, str(p.data.unit)) : null,
       d ? h('span', { class: 'metric-d mono' + toneClass(d), 'data-path': d.path || null }, str(d.text)) : null),
     p.data.caption ? h('span', { class: 'metric-c' }, str(p.data.caption)) : null);
@@ -178,13 +178,13 @@ function provenance(R, p, ref) {
     const t = f.text || '', w = t.split(' ');
     let dd;
     if (f.label === 'Layout' && w.length > 2 && w[0] === 'Sutra' && w[2].slice(0, 1) === 'v' && R.designOn) {
-      let href = (R.server || '') + '/studio?sutra=' + pyQuote(w[1] + '@' + w[2].slice(1));
+      let href = (R.server || basePath()) + '/studio?sutra=' + pyQuote(w[1] + '@' + w[2].slice(1));
       if (ref && ref.kind && ref.id) { href += '&kind=' + pyQuote(ref.kind) + '&id=' + pyQuote(ref.id); }
       dd = ['Sutra ', h('a', { 'data-prov-sutra': true, href, title: 'Open this Sutra in the designer', 'data-r-link': 'console' }, w[1] + ' ' + w[2]),
         w.length > 3 ? ' ' + w.slice(3).join(' ') : ''];
     } else if (f.label === 'Source' && t.includes(', gen ')) {
       const src = t.split(', gen ');
-      dd = [h('a', { 'data-prov-source': true, href: (R.server || '') + '/admin/connectors/' + pyQuote(src[0]), title: "Open this connector's page", 'data-r-link': 'console' }, src[0]), ', gen ' + src[1]];
+      dd = [h('a', { 'data-prov-source': true, href: drishtiUrl((R.server || basePath()) + '/admin/connectors/' + pyQuote(src[0])), title: "Open this connector's page", 'data-r-link': 'console' }, src[0]), ', gen ' + src[1]];
     } else { dd = str(f.text); }
     return h('div', null, h('dt', null, str(f.label)), h('dd', { class: 'mono' }, dd));
   }));
@@ -325,7 +325,7 @@ export function panel(R, p, ref) {
     h('span', { class: 'pnl-code' }, p.code ? str(p.code) : '', p.code && p.key ? ' · ' : '', p.key ? str(p.key) : '',
       p.inferred ? [' ', h('span', { class: 'inf', title: p.explanation || 'completed by inference' }, 'inferred')] : null, ' ',
       R.chrome && DOWNLOADS.includes(p.kind) && !p.empty ? [downloads(p), ' '] : null,
-      R.help === false ? null : h('a', { class: 'pnl-help', href: (R.server || '') + '/help/panels#' + p.kind, title: 'What a ' + p.kind + ' panel shows', 'aria-label': 'Help on ' + p.kind + ' panels', 'data-r-link': 'console' }, icon('question-circle')))),
+      R.help === false ? null : h('a', { class: 'pnl-help', href: drishtiUrl((R.server || basePath()) + '/help/panels#' + p.kind), title: 'What a ' + p.kind + ' panel shows', 'aria-label': 'Help on ' + p.kind + ' panels', 'data-r-link': 'console' }, icon('question-circle')))),
   h('div', { class: 'pnl-b' }, p.compute && p.compute.state !== 'ready'
     ? [computeState(R, p), p.compute.hasResult ? h('div', { class: 'cmp-last' }, body(R, p, ref)) : null]
     : body(R, p, ref)));

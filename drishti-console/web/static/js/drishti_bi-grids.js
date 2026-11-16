@@ -22,6 +22,7 @@
    The matrix itself is in drishti_bi-matrix.js. A table is drawn by drishti-grid (Drishti Elements), every figure the engine's as it came. */
 (function () {
   'use strict';
+  function drishti_url(p) { var f = globalThis.drishti_url; return typeof f === 'function' && f !== drishti_url ? f(p) : p; }   // drishti-core's base helper when the page has it; a page without it (the renderer, an embed) keeps the URL as it is
   const B = window.drishtiBi;
   const h = B.h;
   const V = B.visuals;
@@ -52,7 +53,7 @@
   function terminalLink(ctx, name, v) {
     const kind = B.terminalKind(ctx.index.columns[name]);           // a key of an entity's table, or a column that references a kind
     if (!kind || v == null) { return null; }
-    return h('a', { href: '/v/' + encodeURIComponent(kind) + '/' + encodeURIComponent(String(v)), class: 'bi-toterm-link', 'data-open-terminal': kind, title: 'Open in the terminal', text: String(v) });
+    return h('a', { href: drishti_url('/v/' + encodeURIComponent(kind) + '/' + encodeURIComponent(String(v))), class: 'bi-toterm-link', 'data-open-terminal': kind, title: 'Open in the terminal', text: String(v) });
   }
 
   // ---- table ---------------------------------------------------------------------------------------------------------
@@ -281,7 +282,7 @@
       const heading = spec.format && spec.format.size === 'heading';
       (spec.text || '').split(/\n+/).forEach((line) => host.appendChild(h(heading ? 'h3' : 'p', { class: 'bi-text', text: line })));
     } else if (spec.type === 'image') {
-      host.appendChild(h('img', { class: 'bi-picture', src: spec.src || '', alt: spec.alt || '' }));
+      host.appendChild(h('img', { class: 'bi-picture', src: drishti_url(spec.src || ''), alt: spec.alt || '' }));
     } else if (spec.type === 'button') {
       const b = h('button', { type: 'button', class: 'btn-pill btn-accent bi-button', 'data-action': JSON.stringify(spec.action || {}), text: spec.text || spec.title || 'Go' });
       b.addEventListener('click', () => { if (ctx.interactive && ctx.navigate) { ctx.navigate(spec.action || {}); } });
@@ -312,7 +313,7 @@
     if (!field || !kind) { note('Name the key field of an entity (a table\'s id column) in the key well.'); return NONE; }
     const sel = (ctx.selections || []).find((s) => s.field === field && s.values.length === 1);
     if (!sel) { note('Select a ' + B.label(field) + ' in another visual to see its ' + kind + ' here.'); return NONE; }
-    const src = '/v/' + encodeURIComponent(kind) + '/' + encodeURIComponent(String(sel.values[0])) + '?embed=1';
+    const src = drishti_url('/v/') + encodeURIComponent(kind) + '/' + encodeURIComponent(String(sel.values[0])) + '?embed=1';
     const frame = h('iframe', { class: 'bi-entity-frame', src, title: (spec.title || kind) + ': ' + sel.values[0], 'data-entity': String(sel.values[0]), loading: 'lazy' });
     B.clear(host).appendChild(frame);
     return NONE;

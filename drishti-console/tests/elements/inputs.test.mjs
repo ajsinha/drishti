@@ -251,3 +251,14 @@ test('the bundle: drishti-inputs is a CommonJS module under Node, registered bes
   ['DatePicker', 'DateRangePicker', 'TreePicker', 'MultiSelect', 'Combobox', 'Select', 'Form', 'FilterBar', 'CodeEditor', 'CodeDiff', 'HolidayCalendar', 'TypeAhead', 'defineInputElements', 'upgradeDateInput', 'upgradeCheckboxes', 'upgradeFields'].forEach((n) => assert.equal(typeof B[n], 'function', n));
   assert.equal(B.calendar('US').tMinus('2026-11-27', 1), '2026-11-25');
 });
+
+test('the filter bar: a list field takes contains, any of and all of, its values separated by commas', () => {
+  const m = new I.FilterModelBar({ fields: [{ id: 'TAGS', label: 'Tags', type: 'list' }] });
+  assert.equal(m.setCondition('TAGS', 'anyOf', 'fx, rates ,'), null);
+  assert.deepEqual(m.model.TAGS, { type: 'list', op: 'anyOf', values: ['fx', 'rates'] });
+  m.setCondition('TAGS', 'has', 'fx, rates');
+  assert.deepEqual(m.model.TAGS, { type: 'list', op: 'has', values: ['fx'] });
+  assert.equal(m.chips()[0].text, 'Tags contains fx');
+  m.setCondition('TAGS', 'allOf', '');
+  assert.equal(m.model.TAGS, undefined);
+});

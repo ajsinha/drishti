@@ -19,6 +19,7 @@ import { h, str, icon, toneClass } from './drishti_dom.js';
 import { cellText } from './drishti_cells.js';
 import { panel } from './drishti_kinds.js';
 import { arrange, gridDom } from './drishti_layout.js';
+import { url as drishtiUrl } from '../../drishti-core/src/drishti_index.js';
 
 /** The banners: a past date with no store, a different date shown, a partial page, a late source. */
 export function banners(R, vm) {
@@ -26,7 +27,7 @@ export function banners(R, vm) {
   if (asof !== 'live' && !pv.businessDate) {
     out.push(h('p', { class: 'asof-banner asof-unheld', role: 'alert' }, icon('exclamation-triangle'), ' ', h('b', null, 'No data held for ' + picked),
       ': no dated store has ' + str((vm.ref || {}).id) + ' for that date. Shown instead: the current data of ', h('b', null, str(pv.source)), ', a source that keeps no dates, as a still snapshot that does not update.',
-      R.backToLive ? [' ', h('a', { href: R.backToLive, 'data-r-link': 'console' }, 'Back to live')] : null));
+      R.backToLive ? [' ', h('a', { href: drishtiUrl(R.backToLive), 'data-r-link': 'console' }, 'Back to live')] : null));
   } else if (asof !== 'live' && pv.businessDate && pv.businessDate !== (R.businessDate || {}).selected) {
     out.push(h('p', { class: 'asof-banner', role: 'status' }, icon('calendar2-week'), ' Latest data on or before ' + str((R.businessDate || {}).selected) + ' is from ',
       h('b', { class: 'mono' }, pv.businessDate), '.'));

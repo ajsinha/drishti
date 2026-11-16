@@ -167,7 +167,7 @@ def test_slash_focuses_the_one_search(page, site):
 def test_the_top_menus_and_the_admin_tabs_go_where_they_say(page, site):
     url = site[0]
     page.goto(url + "/t", wait_until="load")
-    for menu, item, where in (("Build", "Build home", "/build"), ("Admin", "Configuration", "/admin/configuration"),
+    for menu, item, where in (("Create", "Build home", "/build"), ("Admin", "Configuration", "/admin/configuration"),
                               ("Help", "Help centre", "/help")):
         page.locator(".tbar-menu-btn", has_text=menu).first.click()
         page.locator(".mega-item", has_text=item).first.click()

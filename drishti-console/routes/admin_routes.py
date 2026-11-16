@@ -420,7 +420,7 @@ async def loads_inbox(request: Request, partial: int = 0):
 
 @router.get("/loads/feeds")
 async def loads_feeds(request: Request):
-    """Admin → Data loads → Feeds (docs/guides/EXTERNAL_DATA.md section 6): every data feed with its last run, last success, rows, duration,
+    """Admin → Data loads → Feeds (docs/guides/WORLD_DATA_GUIDE.md section 6): every data feed with its last run, last success, rows, duration,
     failures since the last success and the last error, Run now, and the latest runs of the ledger. Every figure is the server's
     (GET /api/v1/admin/feeds, from config/feeds and <data>/datafeeds/ledger.jsonl)."""
     me = ident(request)
@@ -1002,7 +1002,13 @@ async def bindings_page(request: Request):
         if e.status in (401, 403):
             return render(request, "admin/forbidden.html", status_code=e.page_status, error=e)
         st, error = {}, e
-    return render(request, "admin/bindings.html", st=st or {}, error=error, me=me, status=await _status(request))
+    tables = []                       # the binding map: each kind's read connectors and the tables they read (GET /bindings/map)
+    if not error:
+        try:
+            tables = (await request.app.state.backend.admin("GET", "/bindings/map", me) or {}).get("kinds", [])
+        except BackendError:
+            tables = []
+    return render(request, "admin/bindings.html", st=st or {}, tables=tables, error=error, me=me, status=await _status(request))
 
 
 @router.post("/api/bindings/{action}")

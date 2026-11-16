@@ -12,15 +12,15 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The world-development feed (docs/guides/PUBLIC_SECTOR_GUIDE.md section 5): World Bank World Development Indicators by country and
+# The world-development feed (docs/guides/WORLD_DATA_GUIDE.md section 5): World Bank World Development Indicators by country and
 # year into worldlake, for the world-development pack. Class: tools/feeds/sources/world_development.py. Daily; incremental (the WDI
 # source's last-updated date: unchanged, nothing is written). Edit the selection below to choose the countries, years and indicators.
 # It is the one fetcher of the World Bank's WDI: the world-economy feed (06:45, after this one) reads this feed's output.
-# Run: python3 tools/drishti.py feed run world-development (EXTERNAL_DATA.md); options.sources holds each source's licence and terms; the rest of
+# Run: python3 tools/drishti.py feed run world-development (WORLD_DATA_GUIDE.md); options.sources holds each source's licence and terms; the rest of
 # options is the default selection.
 feed: world-development
 title: World Bank, World Development Indicators
-description: 'The economy module''s public-sector world-development pack (docs/guides/PUBLIC_SECTOR_GUIDE.md): World Bank World Development Indicators by country
+description: 'The economy module''s public-sector world-development pack (docs/guides/WORLD_DATA_GUIDE.md): World Bank World Development Indicators by country
   and year: population, GDP per head and growth, inflation, unemployment, life expectancy, poverty, access to electricity, internet use and central government
   debt for every economy, from the World Bank''s API (CC BY 4.0). A country''s profile shows the latest of each indicator and the world map shaded by GDP
   per head; each series shows its history by year. Filled daily by the world-development feed into the worldlake lake. The one fetcher

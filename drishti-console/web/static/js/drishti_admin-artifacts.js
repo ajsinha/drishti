@@ -34,7 +34,7 @@
       root.querySelector('[data-pane=' + t.getAttribute('data-tab') + ']').hidden = !on;
       if (on && focus) { t.focus(); }
     });
-    if (history.replaceState) { history.replaceState(null, '', name === 'uninstalled' ? '?tab=uninstalled' : location.pathname); }
+    if (history.replaceState) { history.replaceState(null, '', drishti_url(name === 'uninstalled' ? '?tab=uninstalled' : location.pathname)); }
   }
   tabs.forEach(function (t, i) {
     t.addEventListener('click', function () { pick(t.getAttribute('data-tab')); });
@@ -117,7 +117,7 @@
   function replacing() { return BF.getField('replace') === true; }
   var picked = null;
   function send(path, f, ok) {
-    return fetch('/admin/artifacts/api/' + path, { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: f })
+    return fetch(drishti_url('/admin/artifacts/api/' + path), { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: f })
       .then(function (r) { return r.json().catch(function () { return {}; }).then(function (b) { return { ok: r.ok, status: r.status, body: b }; }); });
   }
   function lines(cls, items) {

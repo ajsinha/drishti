@@ -13,12 +13,12 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 #}
-{# Admin → Data loads → Feeds (docs/guides/EXTERNAL_DATA.md section 6), from GET /api/v1/admin/feeds as `st`: the feed files and the run
+{# Admin → Data loads → Feeds (docs/guides/WORLD_DATA_GUIDE.md section 6), from GET /api/v1/admin/feeds as `st`: the feed files and the run
    ledger as the server read them; this template only places them. Both tables are console tables (drishti-grid, Drishti Elements: sort,
    filter, pages, keyboard); Run now is drishti_admin-feeds.js. #}
 {% extends "base.html" %}
 {% block title %}Feeds · Data loads · {{ PRODUCT }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_admin-loads.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_admin-inbox.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-loads.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-inbox.css?v={{ ASSET_V }}">{% endblock %}
 {% block screen %}admin{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
@@ -31,7 +31,7 @@
   <p class="text-muted-d ib-intro">The data feeds pull external data (GLEIF, the SEC, the World Bank, the IMF, central banks, news) every day and load
     it into their lakes. They run from cron, systemd or Task Scheduler (<span class="mono">drishti.py feed schedule</span>) or from here; every run,
     whoever started it, is a line of the ledger <span class="mono">{{ st.ledger or 'data/datafeeds/ledger.jsonl' }}</span>. A failed run opens an alert
-    (<span class="mono">data-feed-failed</span>). See the <a href="/help/external-data">External data feeds guide</a>.</p>
+    (<span class="mono">data-feed-failed</span>). See the <a href="{{ BASE }}/help/world-data-guide#external-data-feeds">External data feeds guide</a>.</p>
   <p class="ib-said" data-feeds-said role="status" aria-live="polite"></p>
 {% if error %}
   <p class="adm-warn" role="alert" data-feeds-error><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
@@ -59,7 +59,7 @@
           <td class="num mono">{{ '{:,}'.format(f.rows) if f.rows is not none else '-' }}</td>
           <td class="num mono">{{ f.seconds if f.seconds is not none else '-' }}</td>
           <td class="num mono">{{ f.failuresSinceSuccess or 0 }}</td>
-          <td>{% if f.licenceUrl %}<a href="{{ f.licenceUrl }}" rel="noopener noreferrer" target="_blank">{{ f.licence }}</a>{% else %}{{ f.licence }}{% endif %}
+          <td>{% if f.licenceUrl %}<a href="{{ f.licenceUrl | u }}" rel="noopener noreferrer" target="_blank">{{ f.licence }}</a>{% else %}{{ f.licence }}{% endif %}
             {% if f.internalOnly %}<div><span class="st st-warn">internal only</span></div>{% endif %}</td>
           <td><button type="button" class="btn-pill ib-btn" data-feed-run="{{ f.feed }}"{% if f.running %} disabled{% endif %}><i class="bi bi-play-fill" aria-hidden="true"></i> Run now</button></td>
         </tr>
@@ -89,4 +89,4 @@
 </div>
 {% endblock %}
 {% block footer %}{% include "_footer.html" %}{% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_admin-feeds.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_admin-feeds.js?v={{ ASSET_V }}"></script>{% endblock %}

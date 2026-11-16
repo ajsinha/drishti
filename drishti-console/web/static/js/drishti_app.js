@@ -23,6 +23,10 @@ window.Drishti.drsMessage = function (p, fallback) {
   return detail ? code + ': ' + detail : code;
 };
 /* "Back to where I was" on the not-active page (a command an administrator turned off): the page before, when it was one of ours. */
+(function () {                                      /* list attributes the server page wrote: chips (drishti-core) */
+  var C = window.Drishti.elements && window.Drishti.elements.core;
+  if (C && C.upgradeChips) { C.upgradeChips(document); }
+})();
 document.addEventListener('click', function (e) {
   var a = e.target && e.target.closest ? e.target.closest('[data-back]') : null;
   if (a && window.history.length > 1 && document.referrer.indexOf(window.location.origin + '/') === 0) { e.preventDefault(); window.history.back(); }
@@ -39,7 +43,7 @@ document.addEventListener('click', function (e) {
     try { localStorage.setItem('drishti.theme', theme); } catch (e) { /* ignore */ }
     if (root.hasAttribute('data-signed-in') && root.getAttribute('data-user-theme') !== theme) {   // follow the user to other browsers
       root.setAttribute('data-user-theme', theme);
-      fetch('/api/settings', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ theme: theme }) })
+      fetch(drishti_url('/api/settings'), { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ theme: theme }) })
         .catch(function () { /* offline: this browser still remembers */ });
     }
     document.querySelectorAll('[data-theme-choice]').forEach(function (b) {
@@ -61,7 +65,7 @@ document.addEventListener('click', function (e) {
       var on = liveBtn.getAttribute('aria-pressed') === 'true';
       var url = on ? liveBtn.getAttribute('data-pause-href') : liveBtn.getAttribute('data-live-href');
       if (on && url.indexOf('d=&') >= 0) { url = url.replace('d=&', 'd=' + new Date().toISOString().slice(0, 10) + '&'); }
-      window.location.assign(url);
+      window.location.assign(drishti_url(url));
     });
   }
   // The page's own date fields and long checkbox lists are drishti-inputs' pickers (upgraded in place: the field keeps its name and
@@ -94,7 +98,7 @@ document.addEventListener('click', function (e) {
     e.preventDefault();
     var active = [].map.call(f.querySelectorAll('input[name="pack"]:checked'), function (i) { return i.value; });
     if (!active.length) { return; }
-    fetch('/api/packs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ active: active }) })
+    fetch(drishti_url('/api/packs'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ active: active }) })
       .then(function (r) { if (r.ok) { location.reload(); } });
   });
 
@@ -109,7 +113,7 @@ document.addEventListener('click', function (e) {
   // A view's About this page takes F1 first (drishti_about.js); a screen may register its own F1 (Capacity's section of the guide).
   window.Drishti.keys.register({ id: 'help.context', keys: ['F1', 'Alt+Shift+1'], scope: 'global', group: 'Help', description: 'Help for the screen you are on',
     typing: true, run: function () {
-      var go = function () { window.location.href = '/help/context/' + encodeURIComponent(document.body.getAttribute('data-screen') || 'landing'); };
+      var go = function () { window.location.href = drishti_url('/help/context/' + encodeURIComponent(document.body.getAttribute('data-screen') || 'landing')); };
       var held = window.Drishti.beforeLeave ? window.Drishti.beforeLeave() : null;      // a page with an edit waiting sends it first (UX-22)
       if (held && held.then) { held.then(go, go); } else { go(); }
     } });
@@ -157,7 +161,7 @@ document.addEventListener('click', function (e) {
     document.querySelectorAll('[data-approvals-count]').forEach(function (b) { b.textContent = n; b.hidden = false; b.setAttribute('aria-label', n + ' waiting'); });
   };
   var ask = function () {
-    fetch('/approvals/api/count', { headers: { Accept: 'application/json' }, credentials: 'same-origin' })
+    fetch(drishti_url('/approvals/api/count'), { headers: { Accept: 'application/json' }, credentials: 'same-origin' })
       .then(function (r) { return r.ok ? r.json() : null; }).then(show).catch(function () { /* the count is a hint: no count, no badge */ });
   };
   if (document.readyState === 'complete') { setTimeout(ask, 300); } else { window.addEventListener('load', function () { setTimeout(ask, 300); }); }

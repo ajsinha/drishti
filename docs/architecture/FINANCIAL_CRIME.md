@@ -315,8 +315,8 @@ type), not as objects per node:
 | `OWNS` | entity → entity, from the customer's beneficial owners and from the GLEIF pack's parent relationships (`lei-relationship`, direct and ultimate parents) | the share |
 | `LISTED` | node → watchlist entry, from confirmed screening matches | the list |
 
-Drishti's `drishti-graph` module today resolves entity references and links between records (which field names which entity); the
-network engine is new, and uses `drishti-graph` to turn every node of a result into a link to its record page. The GLEIF pack
+Drishti's reference catalog (package `graph` of `drishti-engine`) today resolves entity references and links between records (which field names which entity); the
+network engine is new, and uses it to turn every node of a result into a link to its record page. The GLEIF pack
 ([its README](../../config/packs/core/gleif/README.md)) gives corporate ownership chains for entities with an LEI.
 
 | Pattern | Algorithm (defaults) | Evidence |

@@ -25,7 +25,7 @@
   'use strict';
   var view = document.querySelector('[data-view]');
   if (!view || !(view.querySelector('section.pnl[data-wire]') || view.hasAttribute('data-customizing'))) { return; }   // Customize may wire a panel later
-  var base = '/v/' + encodeURIComponent(view.dataset.kind) + '/' + view.dataset.id.split('/').map(encodeURIComponent).join('/');
+  var base = drishti_url('/v/') + encodeURIComponent(view.dataset.kind) + '/' + view.dataset.id.split('/').map(encodeURIComponent).join('/');
   var held = {};                                     // panel id -> { event: token }
   var picks = {};                                    // panel id -> the last click { event, row }: a refresh replays it (drishti_refresh.js)
   var live = document.createElement('p');
@@ -183,7 +183,7 @@
     if (!em) { return; }
     picks[sec.getAttribute('data-panel')] = { event: em.name, row: Number(el.getAttribute('data-ev')) };
     sec.classList.add('wire-busy'); view.setAttribute('aria-busy', 'true');
-    fetch(base + '/events' + query(), {
+    fetch(drishti_url(base + '/events' + query()), {
       method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify({ panel: sec.getAttribute('data-panel'), event: em.name, row: Number(el.getAttribute('data-ev')), selections: tokens() })
     }).then(json).then(function (j) { apply(sec, el, j); })
@@ -227,7 +227,7 @@
   // ---- children that show always, or when opened ------------------------------------------------------------------------------------
   function load(sec) {
     var id = sec.getAttribute('data-panel');
-    return fetch(base + '/children/' + encodeURIComponent(id) + query(tokens().map(function (t) { return ['sel', t]; })), {
+    return fetch(drishti_url(base + '/children/' + encodeURIComponent(id) + query(tokens().map(function (t) { return ['sel', t]; }))), {
       credentials: 'same-origin', headers: { Accept: 'application/json' }
     }).then(json).then(function (j) { close(id); (j.children || []).forEach(function (g) { open(sec, null, g); }); });
   }
@@ -253,7 +253,7 @@
   function replay(panelId) {
     var p = picks[panelId];
     if (!p) { return Promise.resolve([]); }
-    return fetch(base + '/events' + query(), {
+    return fetch(drishti_url(base + '/events' + query()), {
       method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify({ panel: panelId, event: p.event, row: p.row, selections: tokens() })
     }).then(json).then(function (j) {

@@ -159,6 +159,8 @@ def render_panel(panel: dict) -> str:
     hu = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(hu)
     hu.install(env)                                    # the panel macros' rounding filter
+    env.globals["BASE"] = ""                           # the console's URL sub-path and its filter u (core/base_path.py): served at /
+    env.filters["u"] = lambda url: url
     return env.from_string('{% from "_macros/panels.html" import panel %}{{ panel(p) }}').render(p=panel)
 
 
@@ -180,15 +182,15 @@ def listening(port: int) -> bool:
 
 def start_servers(work: Path, extra_env: dict | None = None) -> list:
     """Starts the scratch server and console; `extra_env` (a guide's SERVER_ENV) is added to the environment of both."""
-    jars = sorted((ROOT / "drishti-server" / "target").glob("drishti-server-*-exec.jar"))
+    jars = sorted((ROOT / "kernel/drishti-server" / "target").glob("drishti-server-*-exec.jar"))
     if not jars:
-        sys.exit("build the server first: ./mvnw -o package -DskipTests -pl drishti-app -am")
+        sys.exit("build the server first: ./mvnw -o package -DskipTests -pl :drishti-app -am")
     java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"
-    for name in ("config",):
+    for name in ("config", "modules", "lib"):      # the server reads its config and its module folders beside where it runs
         if not (work / name).exists() and (ROOT / name).exists():
-            (work / name).symlink_to(ROOT / name)
+            (work / name).symlink_to(ROOT / name, target_is_directory=True)
     (work / "sutras").mkdir(exist_ok=True)
-    # a guide's SERVER_ENV wins over these (tutorial 6 loads the public-data packs too)
+    # a guide's SERVER_ENV wins over these (the groupings tutorial loads the public-data packs too)
     env = {**os.environ, "DRISHTI_PORT": str(SERVER_PORT), "DRISHTI_PACKS": PACKS, "DRISHTI_STUDIO_SAVE": "true", "DRISHTI_BUILDER_FILE_BINDING": "true", "DRISHTI_LABS_CALC": "true",
            "DRISHTI_SUTRAS": str(work / "sutras"), "DRISHTI_PACKS_INSTALLED": str(work / "data" / "packs" / "installed"), **(extra_env or {})}
     server = subprocess.Popen(java_cmd(java, ["-jar", str(jars[-1])], cwd=work, env=env), cwd=work, env=env, stdout=(work / "server.log").open("w"), stderr=subprocess.STDOUT)
@@ -209,9 +211,9 @@ def start_servers(work: Path, extra_env: dict | None = None) -> list:
 
 def start_pack_servers(work: Path, packs: str, server_port: int, console_port: int, data_dir: Path | None = None) -> list:
     """A scratch server and console with the packs on, for a pack's guide picture: the two processes, once both listen."""
-    jars = sorted((ROOT / "drishti-server" / "target").glob("drishti-server-*-exec.jar"))
+    jars = sorted((ROOT / "kernel/drishti-server" / "target").glob("drishti-server-*-exec.jar"))
     if not jars:
-        sys.exit("build the server first: ./mvnw -o package -DskipTests -pl drishti-app -am")
+        sys.exit("build the server first: ./mvnw -o package -DskipTests -pl :drishti-app -am")
     if not (work / "config").exists():
         (work / "config").symlink_to(ROOT / "config")
     java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"

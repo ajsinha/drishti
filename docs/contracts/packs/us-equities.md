@@ -17,7 +17,7 @@
 
 # Data contracts of the us-equities pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/capitalmarkets/us-equities/guides/us-equities.md](../../../config/packs/capitalmarkets/us-equities/guides/us-equities.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
+One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [modules/capital-markets/packs/us-equities/guides/us-equities.md](../../../modules/capital-markets/packs/us-equities/guides/us-equities.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -35,7 +35,7 @@ A US listed company: key facts, ten years of annual financials, recent SEC filin
 
 |  |  |
 |---|---|
-| Contract | [us-company.contract.yaml](../../../config/packs/capitalmarkets/us-equities/contracts/us-company.contract.yaml) · version 1.0 |
+| Contract | [us-company.contract.yaml](../../../modules/capital-markets/packs/us-equities/contracts/us-company.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities) |
@@ -170,7 +170,7 @@ A US listed company: key facts, ten years of annual financials, recent SEC filin
 
 **Notes**
 
-- NET_MARGIN, REVENUE_GROWTH and FINANCIALS[].NET_MARGIN are not kept on the record: the pages compute them from REVENUE, NET_INCOME and FINANCIALS (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md, section 16).
+- NET_MARGIN, REVENUE_GROWTH and FINANCIALS[].NET_MARGIN are not kept on the record: the pages compute them from REVENUE, NET_INCOME and FINANCIALS (docs/guides/bi/README.md, section 16).
 
 **To review (4)**
 
@@ -185,7 +185,7 @@ An equity index's members (Dow 30, Nasdaq-100, S&P 500) as their tracking ETF re
 
 |  |  |
 |---|---|
-| Contract | [index-membership.contract.yaml](../../../config/packs/capitalmarkets/us-equities/contracts/index-membership.contract.yaml) · version 1.1 |
+| Contract | [index-membership.contract.yaml](../../../modules/capital-markets/packs/us-equities/contracts/index-membership.contract.yaml) · version 1.1 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: SEC EDGAR (with the tracking ETFs' Form N-PORT), Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities) |
@@ -242,8 +242,8 @@ An equity index's members (Dow 30, Nasdaq-100, S&P 500) as their tracking ETF re
 
 **Notes**
 
-- ROWS[].NET_MARGIN is not kept on the record: a member's net margin is computed from its revenue and net income (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md, section 16).
-- SECTORS, REVENUE, NET_INCOME and BY_SECTOR are not kept on the record: the page sums the members' rows (USD reporters) and counts their SIC divisions (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md, section 16). The membership (ROWS) and MEMBERS stay.
+- ROWS[].NET_MARGIN is not kept on the record: a member's net margin is computed from its revenue and net income (docs/guides/bi/README.md, section 16).
+- SECTORS, REVENUE, NET_INCOME and BY_SECTOR are not kept on the record: the page sums the members' rows (USD reporters) and counts their SIC divisions (docs/guides/bi/README.md, section 16). The membership (ROWS) and MEMBERS stay.
 - 1.1: ROWS[].SECTOR lists every SIC division of the data.
 
 **To review (3)**
@@ -258,7 +258,7 @@ A sector by its SIC code, computed from the companies when asked: its companies 
 
 |  |  |
 |---|---|
-| Contract | [sic-sector.contract.yaml](../../../config/packs/capitalmarkets/us-equities/contracts/sic-sector.contract.yaml) · version 1.0 |
+| Contract | [sic-sector.contract.yaml](../../../modules/capital-markets/packs/us-equities/contracts/sic-sector.contract.yaml) · version 1.0 |
 | Class | computed |
 | Status | active |
 | Source | computed by Drishti: the derived connector us-equities-groupings over the kind us-company |
@@ -315,7 +315,7 @@ A sector by its SIC code, computed from the companies when asked: its companies 
 
 **Notes**
 
-- Computed when asked by the derived connector us-equities-groupings from every us-company (which retired the stored page): docs/guides/GROUPINGS_ANALYTICS_GUIDE.md (its Part II). Totals add the USD reporters only.
+- Computed when asked by the derived connector us-equities-groupings from every us-company (which retired the stored page): docs/guides/bi/README.md (its Part II). Totals add the USD reporters only.
 
 ## EDGAR: EDGAR filings browser (`filing-feed`)
 
@@ -323,7 +323,7 @@ The filings browser: the latest SEC filings of the covered companies, of every f
 
 |  |  |
 |---|---|
-| Contract | [filing-feed.contract.yaml](../../../config/packs/capitalmarkets/us-equities/contracts/filing-feed.contract.yaml) · version 1.0 |
+| Contract | [filing-feed.contract.yaml](../../../modules/capital-markets/packs/us-equities/contracts/filing-feed.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities) |
@@ -401,7 +401,7 @@ One SEC filing: its company, form, dates, 8-K items and its links on EDGAR (meta
 
 |  |  |
 |---|---|
-| Contract | [filing.contract.yaml](../../../config/packs/capitalmarkets/us-equities/contracts/filing.contract.yaml) · version 1.1 |
+| Contract | [filing.contract.yaml](../../../modules/capital-markets/packs/us-equities/contracts/filing.contract.yaml) · version 1.1 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities) |
@@ -464,7 +464,7 @@ One financial concept of one company (revenue, net income, assets...) over up to
 
 |  |  |
 |---|---|
-| Contract | [financial-fact.contract.yaml](../../../config/packs/capitalmarkets/us-equities/contracts/financial-fact.contract.yaml) · version 1.0 |
+| Contract | [financial-fact.contract.yaml](../../../modules/capital-markets/packs/us-equities/contracts/financial-fact.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities) |
@@ -517,7 +517,7 @@ One financial concept of one company (revenue, net income, assets...) over up to
 
 **Notes**
 
-- CHANGE_PCT and HISTORY[].CHANGE_PCT are not kept on the record: the page computes each year's change from the values (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md, section 16).
+- CHANGE_PCT and HISTORY[].CHANGE_PCT are not kept on the record: the page computes each year's change from the values (docs/guides/bi/README.md, section 16).
 
 **To review (4)**
 
@@ -532,7 +532,7 @@ A company's quote and a year of daily prices, read live by the us-equities-price
 
 |  |  |
 |---|---|
-| Contract | [price-history.contract.yaml](../../../config/packs/capitalmarkets/us-equities/contracts/price-history.contract.yaml) · version 1.0 |
+| Contract | [price-history.contract.yaml](../../../modules/capital-markets/packs/us-equities/contracts/price-history.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: Yahoo Finance (us-equities-prices connector, yfinance plugin) |
@@ -578,7 +578,7 @@ A company's quote and a year of daily prices, read live by the us-equities-price
 
 **Notes**
 
-- ANALYTICS is computed by the yfinance plugin from the history it has just read (PriceAnalytics, docs/guides/GROUPINGS_ANALYTICS_GUIDE.md, section 17): nothing is stored, and the figures are internal use only like the prices; the connector is off as shipped.
+- ANALYTICS is computed by the yfinance plugin from the history it has just read (PriceAnalytics, docs/guides/bi/README.md, section 17): nothing is stored, and the figures are internal use only like the prices; the connector is off as shipped.
 
 **To review (3)**
 

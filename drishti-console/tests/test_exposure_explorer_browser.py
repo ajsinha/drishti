@@ -28,12 +28,9 @@ check runs in the server's exposure engine):
 Takes no pictures. Skipped when Playwright, Chromium, the built server jar or a JDK is missing, or the lake cannot be built."""
 import json
 import re
-import subprocess
-import sys
 import time
 import urllib.error
 import urllib.request
-from pathlib import Path
 
 import pytest
 
@@ -41,7 +38,6 @@ import select_helpers
 from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and helpers
 from wb_live import _stack
 
-ROOT = Path(__file__).resolve().parents[2]
 #: the kinds the exposure engine reads (as tools/docs/shots/_exp.py builds them)
 EXP_DATA = ",".join(["counterparty-risk/" + k for k in ("simulation-run", "exposure-path", "netting-set", "csa", "collateral-balance", "credit-limit")]
                     + ["core/" + k for k in ("counterparty", "counterparty-group", "legal-entity")])
@@ -52,14 +48,12 @@ PAINT_S = 120                                 # a first answer on a loaded machi
 
 @pytest.fixture(scope="module")
 def stack(tmp_path_factory):
-    work = tmp_path_factory.mktemp("exp-lake")
-    lake = work / "delta"
-    r = subprocess.run([sys.executable, str(ROOT / "tools" / "drishti.py"), "lake", "demo", "--lake", str(lake), "--data-dir", str(work / "data"),
-                        "--connectors-dir", str(work / "connectors"), "--as-of", "data", "--only", EXP_DATA, "--no-signal", "-q",
-                        "--engine", "deltalake", "--exposure", "committed"], capture_output=True, text=True, cwd=ROOT, timeout=900)   # the Python writer, in this process: auto starts a JVM for every table and business day
-    if r.returncode != 0 or not (lake / "risk" / "exposure-path").is_dir():
-        pytest.skip("could not build the exposure lake: " + (r.stderr or r.stdout)[-400:])
-    for st in _stack(tmp_path_factory, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true"}):
+    """The cached exposure lake of the test data's own dates with the committed run (built once per source hash by the Java loader;
+    read-only, the server writes its own folders)."""
+    import var_stack
+    lake = var_stack.shared_lake(tmp_path_factory, needs="risk/exposure-path")
+    for st in _stack(tmp_path_factory, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true",
+                                        **var_stack.own_folders(tmp_path_factory)}):
         _engine_ready(str(st))
         yield st
 

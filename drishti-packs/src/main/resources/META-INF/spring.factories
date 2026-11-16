@@ -1,2 +1,0 @@
-org.springframework.boot.env.EnvironmentPostProcessor=com.ash.drishti.packs.edition.EditionEnvironmentPostProcessor,\
-  com.ash.drishti.packs.PackEnvironmentPostProcessor

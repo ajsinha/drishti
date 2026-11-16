@@ -1,0 +1,54 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The Murex source module's manifest (modules/trading/docs/guide.md, "Source systems"; docs/architecture/KERNEL_AND_MODULES.md section 3.3): content
+# only, no code. One module a trading system, feeding the one canonical `trade` kind (SOURCE_SYSTEM = MUREX). It ships the connector
+# templates (connectors/: read from Delta, Iceberg and files, a Kafka live stream with its write-back), the mapping of the native
+# fields to the canonical ones (mappings/murex-trade.yaml) and the inbox routing rules (dataload.yaml). Switch it on or off on its own
+# (config/modules/source-murex.yaml): off, the system's trades leave the trade kind and nothing else changes.
+format: 1
+id: source-murex
+version: 1.0.0
+title: Source Murex
+about: 'Murex trades (rates, FX, equity derivatives), one table of their own'
+domain: trading
+origin: first-party
+publisher:
+  id: drishti
+  name: Ashutosh Sinha
+licence:
+  feature: trading
+kernel: '>=0.2 <1.0'
+rachana: '>=1.0'
+contracts: '>=1.0'
+plugin-api: '>=2.0'
+elements: '>=1.4 <2'
+requires:
+  trading: '>=1.0 <2'
+data:
+  needs: data/needs.yaml
+dataload: dataload.yaml
+connectors:
+  folder: connectors
+mappings:
+  trade: mappings/murex-trade.yaml
+docs:
+  readme: docs/README.md
+  help: docs/help.yaml
+  guides:
+  - docs/guide.md
+  tutorials:
+  - docs/guide.md
+resources:
+  memory-mb: 16

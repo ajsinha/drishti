@@ -52,7 +52,8 @@ BOOKS = ["BOOK-FX-1", "BOOK-FI-1", "BOOK-EQ-1"]
 
 def make_lake(target: Path, days: int = 3) -> str | None:
     """A small Delta lake (a few thousand rows, never millions) made with ``tools/packgen/banking/make_data.py --lake``, which the cross-pack and the cashflow samples
-    read. ``DRISHTI_BI_DELTA_ROOT`` names one that exists; else it is made with ``uv run --with deltalake ...`` (needs uv and its cache); None when neither works."""
+    read. ``DRISHTI_BI_DELTA_ROOT`` names one that exists; else it is made with ``uv run --with deltalake ...`` (needs uv and its cache); None when neither works.
+    A lake of its own: the tests that read it are parked to i6 (var_stack.PARKED_I6); the docs' screenshots (bi_report_shots.py) still use it."""
     have = os.environ.get("DRISHTI_BI_DELTA_ROOT")
     if have:
         return have
@@ -176,10 +177,10 @@ class ReportStack:
     def _start(self) -> "ReportStack":
         for port in (SERVER_PORT, CONSOLE_PORT):
             assert port not in FORBIDDEN and not listening(port), f"port {port} is in use: stop whatever listens there"
-        jars = sorted(glob.glob(str(ROOT / "drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)  # newest build first: target may hold older versions
+        jars = sorted(glob.glob(str(ROOT / "kernel/drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)  # newest build first: target may hold older versions
         java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"
         if not jars or not Path(java).exists():
-            raise FileNotFoundError("needs the built server: ./mvnw -o -q package -DskipTests -pl drishti-app -am")
+            raise FileNotFoundError("needs the built server: ./mvnw -o -q package -DskipTests -pl :drishti-app -am")
         work = self.tmp / "server"
         from bi_samples import copy_samples, shipped
         (work / "config" / "bi" / "datasets").mkdir(parents=True)
@@ -211,7 +212,7 @@ class ReportStack:
             if not (work / "config" / "connectors" / "trade-endur.yaml").exists():           # a stack's prepare() may name its own
                 (work / "config" / "connectors" / "trade-endur.yaml").write_text(TRADE_CONNECTOR.format(root=lake / "trade"))
         self.procs["server"] = subprocess.Popen(java_cmd(java, ["-Xmx768m", "-jar", jars[0], f"--server.port={SERVER_PORT}", "--drishti.security.registered-users-only=false",
-                                                 f"--drishti.bi.query.store-dir={self.tmp / 'store'}", *self.server_args], tmp=self.tmp / "jvm-tmp"), cwd=work, env=env, stdout=open(self.tmp / "server.log", "ab"), stderr=subprocess.STDOUT)
+                                                 f"--drishti.bi.query.store-dir={self.tmp / 'store'}", *self.server_args], tmp=self.tmp / "jvm-tmp", cwd=work, env=env), cwd=work, env=env, stdout=open(self.tmp / "server.log", "ab"), stderr=subprocess.STDOUT)
         wait_ready(SERVER, proc=self.procs["server"])           # the modules loaded: their engines and lakes (ccr-official, var-official) are in
         seed(['trading', 'counterparty-risk', 'market-risk'] if self.delta_root else ['trading', 'market-risk'])
         cenv = dict(os.environ, DRISHTI_AUTH_ENABLED="true", DRISHTI_SESSION_SECRET="s" * 40, DRISHTI_TOKEN_SECRET=SECRET, DRISHTI_SECURE_COOKIE="false",

@@ -46,7 +46,7 @@ PY = sys.executable
 #: the generators whose source is read (data generators; tests and fixtures under them are skipped)
 GENERATORS = ["tools/packgen/**/*.py", "tools/samplegen/*.py", "tools/testdata/*.py", "tools/realdata/*.py", "tools/feeds/*.py", "tools/feeds/sources/*.py",
               "tools/sutragen.py", "tools/schemapack.py", "tools/bench/trades.py", "tools/convertcmd.py", "tools/pvgen/*.py",
-              "config/packs/*/*/tools/*.py",
+              "modules/*/packs/*/tools/*.py", "modules/banking/dmod/packs/*/tools/*.py", "config/packs/*/*/tools/*.py",
               "examples/packs/*/tools/*.py"]
 
 #: files that write a store on purpose: the loaders (generating and loading are separate steps; these are the loading step)
@@ -63,6 +63,8 @@ NON_DATA_SUFFIXES = (".yaml", ".yml", ".md", ".txt", ".sutra.yaml", ".svg", ".pn
 
 #: exempt from the rule altogether, with the reason (docs/guides/DATA_GUIDE.md › Data formats: JSON Lines is the standard, section 5)
 EXEMPT = {"tools/iceberg/fixtures.py": "writes real Iceberg tables: it tests the Iceberg reader itself",
+          "tools/packgen/designer_job.py": "the Pack designer job's answers to the console page (analysis.json, mapping.json, result.json beside "
+                                           "request.json and status.json): one JSON document each, not data records",
           "tools/maps/build_regions.py": "map GeoJSON for the console's maps (not data records)",
           "tools/packi18n.py": "a translation sheet for people (CSV), not data",
           "tools/historycmd.py": "human-facing export (--csv beside --jsonl)",

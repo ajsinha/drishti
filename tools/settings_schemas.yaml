@@ -74,6 +74,8 @@ schemas:
       - { key: "menus[].subject", type: boolean, default: "false", meaning: "A lens's subject menu (Curves, Economies ...): drawn only where an edition's menus.top names it" }
       - { key: "menus[].without-lens", type: boolean, default: "false", meaning: "A subject menu drawn in the full product's bar too (Risk: the home of the engines' pages, each item with requires engine:<id>)" }
       - { key: "menus[].gather",type: list, default: none, meaning: "A menu that gathers the columns of other menus by id (the Trading lens's one Markets menu gathers Curves, Volatility, FX and Credit), each drawn as its own column" }
+      - { key: "menus[].domains", type: boolean, default: "false", meaning: "The Domains menu: a column for each menu a module brings (named after the one domain when only one is active)" }
+      - { key: "menus[].folded", type: boolean, default: "false", meaning: "A menu drawn inside another (BI, Build inside Create), never as a top menu of its own" }
       - { key: "menus[].columns", type: list, meaning: "The menu's columns, each a title and its items" }
       - { key: "menus[].columns[].title", type: string, meaning: "A column's heading" }
       - { key: "menus[].columns[].domain", type: string, default: "the menu's", meaning: "The domain module of the column's items" }
@@ -137,6 +139,12 @@ schemas:
       - { key: "sections[].groups[].guides[].roles", type: list, default: "[]", meaning: "Who may see it: none, everyone; else only an administrator or a person holding one of these roles (others get 404 and do not find it)" }
       - { key: "sections[].groups[].guides[].engine", type: string, default: none, meaning: "The compute engine it is about: left out while it runs on no server (an administrator sees it greyed); open to anyone who can open Help otherwise" }
       - { key: "sections[].groups[].guides[].pair", type: string, default: none, meaning: "The tutorial drawn beside this guide on its row (a page of the same group)" }
+      - { key: "sections[].groups[].guides[].children", type: list, default: "[]", meaning: "Pages that sit under this one in the Help list: each a page of its own with a slug, doc, title, icon and summary (the Business intelligence section)" }
+      - { key: "sections[].groups[].guides[].children[].title", type: string, meaning: "Its title" }
+      - { key: "sections[].groups[].guides[].children[].slug", type: string, meaning: "The child page's address, /help/<slug>" }
+      - { key: "sections[].groups[].guides[].children[].doc", type: string, meaning: "A repository document under docs/ rendered as it is" }
+      - { key: "sections[].groups[].guides[].children[].icon", type: string, meaning: "Its icon" }
+      - { key: "sections[].groups[].guides[].children[].summary", type: string, meaning: "The row's summary, also searched" }
       - { key: "sections[].groups[].guides[].domain", type: string, default: core, meaning: "The domain module the page belongs to (core, banking, capitalmarkets, economy): while it is off for the person the page is not listed, searched or served" }
       - { key: "sections[].groups[].guides[].lenses", type: list, default: none, meaning: "The lenses that show the page (none: every lens; the full product shows every page)" }
       - { key: moved, type: map, default: shipped, meaning: "Retired addresses: old slug -> slug or slug#anchor, answered with a 301" }
@@ -153,7 +161,7 @@ schemas:
     change: live
     maps: [templates]
     keys:
-      - { key: templates, type: map, default: "{}", meaning: "Core starter workspaces by name (packs add their own in config/packs/<domain>/<pack>/config/workspaces.yaml)" }
+      - { key: templates, type: map, default: "{}", meaning: "Core starter workspaces by name (packs add their own in modules/<module>/packs/<pack>/config/workspaces.yaml)" }
       - { key: "templates.*", type: map, meaning: "One starter workspace: its layout and panes, as blank below" }
       - { key: blank, type: map, default: shipped, meaning: "What a new, blank workspace starts as" }
       - { key: blank.layout, type: string, default: 2col, meaning: "Its layout: 2col, 3col, 2x2 or 1+2" }
@@ -276,6 +284,11 @@ schemas:
       - { key: kinds, type: list, default: "what the plugin reports", meaning: "The kinds it serves" }
       - { key: settings, type: map, default: "{}", meaning: "The plugin's settings, as the tables above (every plugin, the shared tls.* and proxy.*, the plugin's own)" }
       - { key: "settings.*", type: map, meaning: "One setting of the plugin" }
+      - { key: writes, type: map, default: "{}", meaning: "Named commands that write an approved change back to the source (APPROVALS_GUIDE.md section 5.4): JDBC or Kafka; off until an administrator switches the connector's writes on" }
+      - { key: "writes.*", type: map, meaning: "One command: kind, params, confirm (reply, ack-topic, next-load), timeout, and the plugin's block (jdbc or kafka)" }
+      - { key: "writes.*.confirm", type: string, default: reply, meaning: "How the write is confirmed: reply, ack-topic or next-load" }
+      - { key: "writes.*.kafka", type: map, meaning: "The Kafka block (docs/guides/LIVE_RESULTS_GUIDE.md section 8): topic, shape, version-field, changed-by, changed-at, change-id-field" }
+      - { key: "writes.*.kafka.*", type: string, meaning: "One key of the Kafka block" }
   module-file:
     area: modules
     title: "A module's switch: `config/modules/<module>.yaml` (docs/architecture/ACCESS_MODEL.md)"
@@ -310,15 +323,15 @@ schemas:
       - { key: defaults, type: map, default: "{}", meaning: "Table keys that apply to every table unless it says otherwise" }
       - { key: "defaults.*", type: string, meaning: "One table key's default" }
       - { key: tables, type: map, default: "{}", meaning: "The tables by <domain>.<kind> (or <domain>.<table> with kind: when a kind has several tables)" }
-      - { key: "tables.*", type: map, meaning: "One table's entry: kind, path, format, partition-by (after business_date, which is always first; at most four), promote, vectors, flatten, id, date, latest-by, load-mode (replace or append), sort-by, file-rows, row-group-rows, file-size-mb, row-group-mb, compression, vector-compression, retention, maintenance, time-travel, properties" }
+      - { key: "tables.*", type: map, meaning: "One table's entry: kind, path, format, partition-by (after business_date, which is always first; at most four), promote, vectors, flatten, id, date, latest-by, load-mode (replace or append), sort-by, file-rows, row-group-rows, file-size-mb, row-group-mb, compression, vector-compression, retention (business dates or years kept, 260 or 7y; or a block {ttl, on, max-rows[, dates]} that drops rows for their age in Delta, Iceberg and files as in memory: DATA_LAKE_GUIDE.md section 2.7), maintenance, time-travel, properties" }
   pack:
     area: packs
     title: "`pack.yaml`"
-    file: config/packs/<domain>/<pack>/pack.yaml
+    file: modules/<module>/packs/<pack>/pack.yaml
     files: ["config/packs/*/pack.yaml", "examples/packs/*/pack.yaml"]
     applies: the pack
     change: live
-    maps: [columns, connectors, connector-templates, form, graph.fields, graph.badges, graph.impact.measures, graph.impact.formats, history,
+    maps: [columns, connectors, form, graph.fields, graph.badges, graph.impact.measures, graph.impact.formats, history,
            mnemonics, pivot, roles, routes, ingest, hierarchies, console.monitors]
     keys:
       - { key: pack, type: string, meaning: "Required: the pack's name, equal to its folder's name (else the pack is refused)" }
@@ -410,9 +423,6 @@ schemas:
       - { key: connectors, type: "list or map", default: "[]", meaning: "The connectors the pack reads through: a list names site connectors; a mapping names them and is each one's template, written to config/connectors/<name>.yaml at the first start when no such file exists" }
       - { key: "connectors.<name>", type: map, meaning: "One connector's template: plugin, enabled, kinds, settings (the connector file's keys), or a reactive connector's engine, triggers, cache, limits" }
       - { key: "connectors.<name>.*", type: map, meaning: "A template's keys, as a connector file (above) or a reactive connector (docs/connectors/types/reactive/README.md)" }
-      - { key: connector-templates, type: map, default: "{}", meaning: "Templates to go with a list of connector names, as connectors.<name>" }
-      - { key: "connector-templates.<name>", type: map, meaning: "One template" }
-      - { key: "connector-templates.<name>.*", type: map, meaning: "Its keys, as a connector file" }
       - { key: routes, type: map, default: "{}", meaning: "kind -> the connector that answers it (drishti.sources.routes)" }
       - { key: "routes.<name>", type: string, meaning: "One kind's connector" }
       - { key: ingest, type: map, default: "{}", meaning: "For the tools only (drishti.py data ingest --pack, lake build --pack, pack check): each kind's id and business-date fields; ignored by the server" }
@@ -465,14 +475,15 @@ schemas:
 # Environment variables no settings file above names: read by the packs' manifests, the server's profile files, the code or the tools.
 # by: server, console, packs, profile, tools.
 env:
-  - { name: DRISHTI_KERNEL_JAR, by: tools, default: "drishti-kernel-app/target/drishti-kernel-*-exec.jar", sets: "the kernel's thin jar", meaning: "The jar `drishti.py module run` starts with one module only (CLI_REFERENCE.md, module run)" }
-  - { name: DRISHTI_MODULE_TOOL, by: tools, default: "drishti-module-runtime/target/drishti-module-tool.jar", sets: "the module tool's jar", meaning: "The jar `drishti.py module pack|check|inspect` runs (java -jar drishti-module-tool.jar; DEVELOPER_GUIDE.md section 1.6)" }
-  - { name: DRISHTI_KERNEL_JAR, by: tools, default: "drishti-kernel-app/target/drishti-kernel-*-exec.jar", sets: "the kernel's thin jar", meaning: "The kernel jar `drishti.py module run` starts (tools/modulecli.py)" }
-  - { name: DRISHTI_LAKE_CACHE, by: tools, default: "<data>/tmp/lake-cache", sets: "the cached demo lakes' folder", meaning: "Where tools/drillkit/lake_cache.py keeps the demo lakes the test stacks and checks reuse, one per hash of the test data, generators and lake code" }
-  # the packs' connectors (config/packs/<domain>/<pack>/pack.yaml)
-  - { name: DRISHTI_DELTA_ROOT, by: packs, default: "./data/delta/demo", sets: "the demo lake's root (config/lakes/demo.yaml)", meaning: "Root of the demo lake, which every pack's Delta connector reads (lake: demo); every lake's own default is <data>/delta/<lake>" }
+  - { name: DRISHTI_KERNEL_JAR, by: tools, default: "packaging/drishti-kernel-app/target/drishti-kernel-*-exec.jar", sets: "the kernel's thin jar", meaning: "The jar `drishti.py module run` starts with one module only (CLI_REFERENCE.md, module run)" }
+  - { name: DRISHTI_MODULE_TOOL, by: tools, default: "kernel/drishti-module-runtime/target/drishti-module-tool.jar", sets: "the module tool's jar", meaning: "The jar `drishti.py module pack|check|inspect` runs (java -jar drishti-module-tool.jar; DEVELOPER_GUIDE.md section 1.6)" }
+  - { name: DRISHTI_KERNEL_JAR, by: tools, default: "packaging/drishti-kernel-app/target/drishti-kernel-*-exec.jar", sets: "the kernel's thin jar", meaning: "The kernel jar `drishti.py module run` starts (tools/modulecli.py)" }
+  - { name: DRISHTI_HAMMER_TOKEN, by: tools, default: "(none)", sets: "the Explain hammer's bearer token", meaning: "The token tools/drillkit/explain_hammer.py sends to a server with sign-in on (else its --token)" }
+  - { name: DRISHTI_LAKE_CACHE, by: tools, default: "<data>/tmp/lake-cache", sets: "the cached demo lakes' folder", meaning: "Where tools/drillkit/lake_cache.py keeps the demo lakes the test stacks and checks reuse, one per hash of the test data, generators and lake code; an absolute folder shared by every checkout, worktree and drill keeps ONE copy of the shared test lake (the drill honours it when set)" }
+  # the packs' connectors (modules/<module>/packs/<pack>/pack.yaml)
+  - { name: DRISHTI_DELTA_ROOT, by: packs, default: "<data>/delta/demo", sets: "the demo lake's root (config/lakes/demo.yaml)", meaning: "Root of the demo lake, which every pack's Delta connector reads (lake: demo); every lake's own default is <data>/delta/<lake>" }
   - { name: DRISHTI_LAKES_RELOCATE_ON_START, by: server, default: "true", sets: "drishti.lakes.relocate-on-start", meaning: "At start, move a demo lake built in the older layout (<data>/delta/<domain>) into <data>/delta/demo once, safely (verified, moved back on any error, never a delete); false: only by drishti.py lake relocate demo (docs/guides/OPERATIONS_GUIDE.md)" }
-  - { name: DRISHTI_LAKES_DIR, by: server, default: "./config/lakes", sets: "drishti.lakes.dir", meaning: "The lake folder: one config/lakes/<lake>.yaml per lake, read by the server, the loader, the data inbox and the tools (docs/guides/DATA_LAKE_GUIDE.md)" }
+  - { name: DRISHTI_LAKES_DIR, by: server, default: "<config>/lakes", sets: "drishti.lakes.dir", meaning: "The lake folder: one config/lakes/<lake>.yaml per lake, read by the server, the loader, the data inbox and the tools (docs/guides/DATA_LAKE_GUIDE.md)" }
   - { name: DRISHTI_DATALOAD_LAKE, by: server, default: demo, sets: "drishti.dataload.lake", meaning: "The lake (config/lakes/<lake>.yaml) the data inbox writes to; a folder is the older form" }
   - { name: DRISHTI_DELTA_ENGINE, by: packs, default: native, sets: "delta engine", meaning: "native, hadoop or auto, for every Delta connector without its own engine" }
   - { name: DRISHTI_LAKE_ENABLED, by: packs, default: "true", sets: "the packs' data connectors", meaning: "false switches every pack's data connector off (the demo samples still answer)" }
@@ -482,11 +493,10 @@ env:
   - { name: DRISHTI_CCR_DERIVED_ENABLED, by: packs, default: "true", sets: "counterparty-risk's derived connector", meaning: "The counterparty-risk pack's derived kinds (netting-set and counterparty totals) on or off" }
   - { name: DRISHTI_MR_DERIVED_ENABLED, by: packs, default: "true", sets: "market-risk's derived connector", meaning: "The market-risk pack's derived kinds on or off" }
   - { name: DRISHTI_STREAM_TRADING, by: packs, default: "false", sets: "trading-stream enabled", meaning: "Turn on the trading pack's trading-stream Kafka connector" }
-  - { name: DRISHTI_KAFKA_BOOTSTRAP, by: packs, default: "localhost:9092", sets: "Kafka brokers", meaning: "The brokers of the trading stream and the VaR PV topic" }
   - { name: DRISHTI_TRADING_TOPIC, by: packs, default: drishti.trading.trades, sets: "trading-stream topic", meaning: "The trading stream's topic" }
   - { name: DRISHTI_STREAM_STALE_AFTER, by: packs, default: 15m, sets: "trading-stream stale-after", meaning: "The trading stream is stale after this long without a message" }
   - { name: DRISHTI_STREAM_DISK_CACHE, by: packs, default: "true", sets: "trading-stream disk cache", meaning: "The trading stream's disk cache on or off" }
-  - { name: DRISHTI_CACHE_ROOT, by: packs, default: "./data/cache", sets: "trading-stream cache root", meaning: "Disk cache root (one folder per connector)" }
+  - { name: DRISHTI_CACHE_ROOT, by: packs, default: "<data>/cache", sets: "trading-stream cache root", meaning: "Disk cache root (one folder per connector)" }
   - { name: DRISHTI_STREAM_CACHE_GB, by: packs, default: "10", sets: "trading-stream cache size", meaning: "The trading stream's disk cache size, in GB" }
   - { name: DRISHTI_CACHE_RESET_AT, by: packs, default: "02:00", sets: "trading-stream cache reset", meaning: "The disk cache's nightly clearing time (New York)" }
   - { name: DRISHTI_VAR_PV_STREAM, by: packs, default: "false", sets: "pv-updates enabled", meaning: "Turn on the market-risk pack's pv-updates connector: the pricing systems' PV topic, windowed into intraday batches" }
@@ -512,8 +522,8 @@ env:
   - { name: DRISHTI_AEROSPIKE_NAMESPACE, by: profile, default: test, sets: "aerospike profile", meaning: "Its namespace" }
   - { name: DRISHTI_DUCKDB_PATH, by: profile, default: data/duckdb/drishti.duckdb, sets: "duckdb profile", meaning: "The duckdb profile's file (one file, a schema per domain)" }
   - { name: DRISHTI_DUCKDB_MEMORY, by: profile, default: 1GB, sets: "duckdb profile", meaning: "The shared DuckDB instance's memory limit" }
-  - { name: DRISHTI_FILES_ROOT, by: profile, default: "./data/files", sets: "files profile", meaning: "The files profile's root (<root>/<domain>/<date>/<kind>.jsonl)" }
-  - { name: DRISHTI_ICEBERG_ROOT, by: profile, default: "./data/iceberg", sets: "iceberg profile", meaning: "The iceberg profile's root (path-based tables); also the lake tools' Iceberg root" }
+  - { name: DRISHTI_FILES_ROOT, by: profile, default: "<data>/files", sets: "files profile", meaning: "The files profile's root (<root>/<domain>/<date>/<kind>.jsonl)" }
+  - { name: DRISHTI_ICEBERG_ROOT, by: profile, default: "<data>/iceberg", sets: "iceberg profile", meaning: "The iceberg profile's root (path-based tables); also the lake tools' Iceberg root" }
   - { name: DRISHTI_ICEBERG_CATALOG, by: profile, default: hadoop, sets: "iceberg profile", meaning: "hadoop (path-based tables) or rest" }
   - { name: DRISHTI_ICEBERG_URI, by: profile, default: "", sets: "iceberg profile", meaning: "A REST catalog's URI" }
   - { name: DRISHTI_ICEBERG_WAREHOUSE, by: profile, default: "", sets: "iceberg profile", meaning: "A REST catalog's warehouse" }
@@ -556,7 +566,7 @@ env:
   - { name: DRISHTI_FEEDS_DEBUG, by: tools, default: ~, sets: "drishti.py feed", meaning: "Set (any value): a feed's own error prints its Python stack trace too (the ledger keeps the one line either way)" }
   - { name: DRISHTI_FEEDS_USER_AGENT, by: tools, default: "Drishti ajsinha@gmail.com", sets: "drishti.py feed", meaning: "The User-Agent every data feed sends (SEC EDGAR, GLEIF and the rest; the SEC asks for a contact in it): set it to your organisation's contact in production" }
   - { name: DRISHTI_DOCTOR_PORTS, by: tools, default: ~, sets: "drishti.py doctor", meaning: "The ports doctor checks" }
-  - { name: DRISHTI_JAR_DIR, by: tools, default: drishti-server/target, sets: "screenshot tools", meaning: "Where the screenshot tools find the server jar" }
+  - { name: DRISHTI_JAR_DIR, by: tools, default: kernel/drishti-server/target, sets: "screenshot tools", meaning: "Where the screenshot tools find the server jar" }
   - { name: DRISHTI_SHOTS_WORK, by: tools, default: ~, sets: "screenshot tools", meaning: "The screenshot tools' working folder" }
   - { name: DRISHTI_SHOTS_SERVER_PORT, by: tools, default: ~, sets: "screenshot tools", meaning: "The port of the server the screenshot tools start" }
   - { name: DRISHTI_SHOTS_DRAIN, by: tools, default: ~, sets: "screenshot tools", meaning: "The Deployment and QA guide's cluster pictures: the server URL of the node drained while they are taken" }
@@ -571,8 +581,8 @@ env:
   - { name: DRISHTI_T35_PASSWORD, by: tools, default: ~, sets: "screenshot tools", meaning: "Tutorial 17's shots: that reader's password" }
   - { name: DRISHTI_T35_TOKEN_FILE, by: tools, default: ~, sets: "screenshot tools", meaning: "Tutorial 17's shots: a scratch file the new token is kept in for the later steps" }
   - { name: DRISHTI_T36_WORK, by: tools, default: ~, sets: "screenshot tools", meaning: "Tutorial 16, Part C's shots: the working folder of the data inbox run" }
-  - { name: DRISHTI_T37_USER, by: tools, default: ~, sets: "screenshot tools", meaning: "Tutorial 7, Part B's shots: the function's author who signs in" }
-  - { name: DRISHTI_T37_PASSWORD, by: tools, default: ~, sets: "screenshot tools", meaning: "Tutorial 7, Part B's shots: that author's password" }
-  - { name: DRISHTI_T37_FN, by: tools, default: "fn:you/wret@1", sets: "screenshot tools", meaning: "Tutorial 7, Part B's shots: the saved function shown" }
+  - { name: DRISHTI_T37_USER, by: tools, default: ~, sets: "screenshot tools", meaning: "The pivot tutorial, Part B's shots: the function's author who signs in" }
+  - { name: DRISHTI_T37_PASSWORD, by: tools, default: ~, sets: "screenshot tools", meaning: "The pivot tutorial, Part B's shots: that author's password" }
+  - { name: DRISHTI_T37_FN, by: tools, default: "fn:you/wret@1", sets: "screenshot tools", meaning: "The pivot tutorial, Part B's shots: the saved function shown" }
   - { name: DRISHTI_ARTIFACTS_SERVER_PORT, by: tools, default: ~, sets: "screenshot tools", meaning: "The server port of the artifacts screenshots" }
   - { name: DRISHTI_ARTIFACTS_CONSOLE_PORT, by: tools, default: ~, sets: "screenshot tools", meaning: "The console port of the artifacts screenshots" }

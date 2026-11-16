@@ -22,17 +22,23 @@ FROM ${BASE_IMAGE}
 RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/* \
  && useradd --system --uid 10001 drishti
 WORKDIR /opt/drishti
-COPY drishti-server/target/drishti-server-*-exec.jar app.jar
+COPY kernel/drishti-server/target/drishti-server-*-exec.jar app.jar
 # shipped packs live outside the EFS paths, so a mount never hides them; installed packs go to data/packs/installed (EFS)
 COPY config/packs/ shipped/packs/
 COPY config/lenses/ /opt/drishti/config/lenses/
 COPY config/ui-kit/ shipped/ui-kit/
+# the modules and the distribution files ship in the image (config/ is the node's EFS mount): absolute roots below
+COPY modules/ shipped/modules/
+COPY config/distributions/ shipped/distributions/
 COPY deploy/docker/ecs/server-entrypoint.sh bin/entrypoint.sh
 COPY bin/drishti-node.sh bin/drishti-node.sh
 # the mount points, owned by the user the EFS access points enforce (uid/gid 10001)
 RUN chmod 0555 bin/entrypoint.sh bin/drishti-node.sh && mkdir -p data config sutras && chown drishti:drishti data config sutras
 USER drishti
-ENV DRISHTI_DATA_DIR=/opt/drishti/data \
+ENV DRISHTI_HOME=/opt/drishti \
+    DRISHTI_DATA_DIR=/opt/drishti/data \
+    DRISHTI_MODULES_HOME=/opt/drishti/shipped/modules \
+    DRISHTI_DISTRIBUTIONS_DIR=/opt/drishti/shipped/distributions \
     DRISHTI_PACKS_DIR=/opt/drishti/shipped/packs \
     DRISHTI_UI_KIT_DIR=/opt/drishti/shipped/ui-kit \
     DRISHTI_CONNECTORS_DIR=/opt/drishti/config/connectors \

@@ -117,7 +117,7 @@ def test_impact_page(client, backend):
     r = client.get("/impact/curve/USD-SOFR")
     assert r.status_code == 200 and "Impact of" in r.text and "IRS-48213" in r.text and "total −394,160" in r.text
     assert "1 netting set you do not have access to" in r.text
-    assert "window.location.href = '/impact/'" in client.get("/static/js/drishti_view.js").text
+    assert "window.location.href = drishti_url('/impact/'" in client.get("/static/js/drishti_view.js").text   # under the console's base path
 
 
 def test_the_business_date_is_chosen_in_the_top_bar_and_sent_to_the_server(client, backend):
@@ -287,7 +287,7 @@ def test_a_search_on_the_command_line_opens_the_results(client, backend):
     backend.search = search
     page = client.get("/s", params={"q": "TRD where mtm > 1m"}).text
     assert asked["q"] == "TRD where mtm > 1m limit 100"                        # the user's default result size
-    assert "<b>1</b> of 36 trades match" in page and "MTM" in page and "−412,580.5" in page and 'href="/v/trade/IRS-48213"' in page
+    assert "<b>1</b> of 36 trades match" in page and "MTM" in page and "data-records" in page and "<table" not in page.split('data-panel="results"')[1].split("</section>")[0]
     assert "Examples" in client.get("/s").text
     assert "Watch as a monitor" in page
     saved = {}
@@ -540,7 +540,7 @@ def test_field_history_and_searches_compared_between_dates(client):
     r = client.get("/api/series/trade/T-1", params={"path": "$.mtm", "days": 30}).json()
     assert [p["value"] for p in r["points"]] == [110, 125]
     page = client.get("/s", params={"q": "TRD where mtm > 0", "vs": "2026-09-28"}).text
-    assert "125  (+25)" in page and "added" in page and 'value="2026-09-28"' in page
+    assert "125  (+25)" in page and "only on the later date" in page and 'value="2026-09-28"' in page
     assert "drishti_history.js" in client.get("/v/trade/IRS-48213").text
     module = client.app.state.templates.env.get_template("_macros/panels.html").module
     html = str(module.table({"columns": ["MTM"], "numeric": [True], "rows": [{"cells": [{"text": "125", "path": "$.mtm"}]}]}))

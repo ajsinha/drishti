@@ -34,7 +34,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT / "drishti-console") not in sys.path:
     sys.path.insert(0, str(ROOT / "drishti-console"))
-from core.pack_paths import pack_dirs  # noqa: E402  (the one rule for where a pack's folder is)
+from core.resolution import pack_dirs  # noqa: E402  (where a pack is: the one resolver, KERNEL_AND_MODULES.md 18)
 README = ROOT / "README.md"
 BEGIN, END = "<!-- code-volume:begin -->", "<!-- code-volume:end -->"
 TOLERANCE = 0.10
@@ -114,8 +114,9 @@ def inventory(files: list[str], pom: str) -> dict:
     lib_modules = sum(1 for f in files if f.startswith(ELEMENTS) and "/src/" in f and f.endswith(".js"))
     console = [f for f in files if f.startswith("drishti-console/") and f.endswith(".py") and "/tests/" not in f]
     server = [f for f in files if f.endswith(".java") and "/src/main/" in f]
-    packs = Counter(p.parent.name if p.parent.name != "packs" else "core" for p in pack_dirs().values())
-    pack_root = "config/packs/"
+    # a pack's domain is the module whose folder holds it (modules/<id>/...), the kernel's otherwise (config/packs)
+    pack_where = [p.relative_to(ROOT).as_posix() for p in pack_dirs().values()]
+    packs = Counter(w.split("/")[1] if w.startswith("modules/") else "core" for w in pack_where)
     tests = Counter()
     for f in files:
         base = os.path.basename(f)
@@ -128,11 +129,13 @@ def inventory(files: list[str], pom: str) -> dict:
     docs = [f for f in files if f.startswith("docs/") and f.endswith(".md")]
     return {
         "maven": len(poms), "plugins": sum(1 for p in poms if p.startswith("plugins/drishti-plugin-")),
+        "folders": sorted({p.split("/")[0] for p in poms if "/" in p and not p.startswith("docs/")}),
+        "built_ins": sum(1 for d in (ROOT / "docs" / "connectors" / "types").iterdir() if (d / "README.md").is_file()),
         "domains": sorted(m["id"] for m in modules), "functions": functions, "lenses": lenses,
         "routes": sum(len(ROUTE.findall(_read(f))) for f in console),
         "handlers": sum(len(HANDLER.findall(_read(f))) for f in server),
         "libraries": libs, "lib_modules": lib_modules, "packs": dict(sorted(packs.items())),
-        "sutras": sum(1 for f in files if f.startswith(pack_root) and "/sutras/" in f and f.endswith((".yaml", ".yml"))),
+        "sutras": sum(1 for f in files if any(f.startswith(w + "/") for w in pack_where) and "/sutras/" in f and f.endswith((".yaml", ".yml"))),
         "feeds": sum(1 for f in files if re.fullmatch(r"config/feeds/[^/]+\.yaml", f)),
         "lakes": sum(1 for f in files if f.startswith("config/lakes/") and f.endswith(".yaml")),
         "tests": dict(tests), "docs": len(docs), "guides": sum(1 for f in docs if f.startswith("docs/guides/") and f.count("/") == 2),
@@ -148,8 +151,8 @@ def render(m: dict) -> str:
     product = sum(L[x] for x in PRODUCT)
     tests = sum(L[x] for x in TESTS)
     t = inv["tests"]
-    fn = ", ".join(f"{n} {d}" for d, n in sorted(inv["functions"].items()))
-    rows = [("Maven modules", f"{inv['maven']} ({inv['plugins']} of them connector plugins)"),
+    fn = ", ".join(f"{n} {d}" for d, n in sorted(inv["functions"].items()) if n)
+    rows = [("Maven modules", f"{inv['maven']} in {len(inv['folders'])} subject folders: " + ", ".join(f"`{d}/`" for d in inv["folders"])),
             ("Modules (`.dmod`)", f"{len(inv['domains'])}: {', '.join(inv['domains'])}"),
             ("Lenses", f"{len(inv['lenses'])}: {', '.join(inv['lenses'])}"),
             ("Functions a module declares", f"{sum(inv['functions'].values())} ({fn}); every other command word is the kernel's"),
@@ -158,7 +161,7 @@ def render(m: dict) -> str:
             ("Drishti Elements", f"{len(inv['libraries'])} libraries, {inv['lib_modules']} ES modules"),
             ("Domain packs", f"{sum(inv['packs'].values())}: " + ", ".join(f"{d} {n}" for d, n in inv["packs"].items())),
             ("Sutras in the shipped packs", f"{inv['sutras']}"),
-            ("Connector plugins", f"{inv['plugins']}"),
+            ("Connectors", f"{inv['plugins']} plugins (a driver or native library each) and {inv['built_ins']} built-in types"),
             ("Feeds", f"{inv['feeds']}"),
             ("Lake files", f"{inv['lakes']}"),
             ("Test files", f"{sum(t.values()):,}: Java {t.get('java', 0)}, console {t.get('console', 0)}, browser {t.get('browser', 0)}, "

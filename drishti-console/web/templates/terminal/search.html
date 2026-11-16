@@ -23,29 +23,29 @@
 <div class="adm search">
   {% set picking = q and ' where ' not in (' ' ~ (q | lower) ~ ' ') %}
   <h1>{% if picking and data %}Pick {{ 'an' if (data.kind or 'x')[0] in 'aeiou' else 'a' }} {{ data.kind | replace('-', ' ') }}{% else %}Search by value{% endif %}</h1>
-  <form class="srch-form" method="get" action="/s" role="search">
+  <form class="srch-form" method="get" action="{{ BASE }}/s" role="search">
     <label for="srchQ" class="visually-hidden">Search</label>
     <input id="srchQ" class="srch-q mono" name="q" value="{{ q }}" placeholder="TRD MX-200000 · TRD PRODUCT_TYPE=FX_QUANTO · TRD where QUANTITY > 1m order by QUANTITY desc" autocomplete="off" spellcheck="false">
-    {% if q %}<a class="srch-vs lnk" href="/reports?q={{ q | urlencode }}" title="Run this search on a schedule and deliver it as CSV">Schedule…</a>{% endif %}
+    {% if q %}<a class="srch-vs lnk" href="{{ BASE }}/reports?q={{ q | urlencode }}" title="Run this search on a schedule and deliver it as CSV">Schedule…</a>{% endif %}
     <label for="srchVs" class="srch-vs" title="Run the same search on another business date: each number shows its change">Compare with
       <input id="srchVs" name="vs" type="date" class="mono" value="{{ vs or '' }}"></label>
     <button type="submit" class="btn btn-sm btn-outline-secondary">Search</button>
   </form>
-  <form class="srch-form srch-words" method="get" action="/s">
+  <form class="srch-form srch-words" method="get" action="{{ BASE }}/s">
     <label for="srchWords" class="srch-vs">In words</label>
     <input id="srchWords" class="srch-q" name="words" value="{{ words }}" placeholder="live trades over 5m in BOOK-RATES-3, biggest first" autocomplete="off">
     <button type="submit" class="btn btn-sm btn-outline-secondary">Make the search</button>
   </form>
   {% if phrase %}<section class="pnl phrase" aria-live="polite"><div class="pnl-b">
     {% if phrase.command %}
-    <p>Read as <a class="lnk mono phrase-q" href="/go?q={{ phrase.command | urlencode }}">{{ phrase.command }}</a>
-      <a class="btn-pill btn-accent btn-sm-pill" href="/go?q={{ phrase.command | urlencode }}" data-phrase-open>Open <kbd>Enter</kbd></a>
+    <p>Read as <a class="lnk mono phrase-q" href="{{ BASE }}/go?q={{ phrase.command | urlencode }}">{{ phrase.command }}</a>
+      <a class="btn-pill btn-accent btn-sm-pill" href="{{ BASE }}/go?q={{ phrase.command | urlencode }}" data-phrase-open>Open <kbd>Enter</kbd></a>
       <span class="text-muted-d">the entity over time.</span></p>
     <ul class="phrase-steps">{% for s in phrase.steps %}<li><span class="mono">“{{ s.words }}”</span> → {{ s.meaning }}</li>{% endfor %}</ul>
     {% if phrase.ignored %}<p class="t-warn">Not understood, left out: {% for w in phrase.ignored %}<span class="mono">{{ w }}</span>{% if not loop.last %}, {% endif %}{% endfor %}.</p>{% endif %}
     {% elif phrase.query %}
-    <p>Your words make this search: <a class="lnk mono phrase-q" href="/s?q={{ phrase.query | urlencode }}">{{ phrase.query }}</a>
-      <a class="btn-pill btn-accent btn-sm-pill" href="/s?q={{ phrase.query | urlencode }}">Run it</a>
+    <p>Your words make this search: <a class="lnk mono phrase-q" href="{{ BASE }}/s?q={{ phrase.query | urlencode }}">{{ phrase.query }}</a>
+      <a class="btn-pill btn-accent btn-sm-pill" href="{{ BASE }}/s?q={{ phrase.query | urlencode }}">Run it</a>
       <span class="text-muted-d">or copy it into the search box and change it.</span></p>
     <ul class="phrase-steps">{% for s in phrase.steps %}<li><span class="mono">“{{ s.words }}”</span> → {{ s.meaning }}</li>{% endfor %}</ul>
     {% if phrase.ignored %}<p class="t-warn">Not understood, left out: {% for w in phrase.ignored %}<span class="mono">{{ w }}</span>{% if not loop.last %}, {% endif %}{% endfor %}.</p>{% endif %}
@@ -62,11 +62,13 @@
     <p class="asof-banner" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> <span class="mono">{{ drs_message(error.code, error.detail) }}</span></p>
   {% elif data %}
     <div class="cmp-sum">
-      <span><b>{{ data.matched }}</b> of {{ data.scanned }} {% set k = data.kind | replace('-', ' ') %}{% if data.scanned == 1 %}{{ k }}{% elif k[-1:] == 'y' and k[-2:-1] not in 'aeiou' %}{{ k[:-1] }}ies{% else %}{{ k }}s{% endif %} match{% if data.matched > rows | length %}; the first {{ rows | length }} are shown{% endif %}</span>
+      {# what is shown is counted once, by the grid (live); the header says only what the grid cannot: how many of those scanned matched, or that the list is cut #}
+      {% if data.matched != data.scanned or (data.matched > rows | length and not pages) or vs or not grid_spec %}<span><b>{{ data.matched }}</b> of {{ data.scanned }} {% set k = data.kind | replace('-', ' ') %}{% if data.scanned == 1 %}{{ k }}{% elif k[-1:] == 'y' and k[-2:-1] not in 'aeiou' %}{{ k[:-1] }}ies{% else %}{{ k }}s{% endif %} match{% if data.matched > rows | length and not pages %}; the first {{ rows | length }} are shown{% endif %}</span>{% endif %}
       <span class="text-muted-d mono" data-elapsed>{{ data.elapsedMs }} ms</span>
-      {% if rows %}<a class="lnk" href="/export/search.csv?q={{ q | urlencode }}" title="Download the results as CSV"><i class="bi bi-download" aria-hidden="true"></i> CSV</a>
-      <a class="lnk" href="/export/search.jsonl?q={{ q | urlencode }}" title="Download the results as JSON Lines: one entity a line" data-search-jsonl><i class="bi bi-braces" aria-hidden="true"></i> JSONL</a>{% endif %}
-      {% if rows %}<form class="srch-watch" method="post" action="/s/watch">
+      {% if data.live and data.live.live %}<span class="live-pill" data-live-badge title="The kind has a live binding: these rows change as its records do"><i class="bi bi-broadcast" aria-hidden="true"></i> Live</span>{% endif %}
+      {% if rows %}<a class="lnk" href="{{ BASE }}/export/search.csv?q={{ q | urlencode }}" title="Download the results as CSV"><i class="bi bi-download" aria-hidden="true"></i> CSV</a>
+      <a class="lnk" href="{{ BASE }}/export/search.jsonl?q={{ q | urlencode }}" title="Download the results as JSON Lines: one entity a line" data-search-jsonl><i class="bi bi-braces" aria-hidden="true"></i> JSONL</a>{% endif %}
+      {% if rows %}<form class="srch-watch" method="post" action="{{ BASE }}/s/watch">
         <input type="hidden" name="q" value="{{ q }}"><label for="srchName" class="visually-hidden">Monitor name</label>
         <input id="srchName" name="name" class="mono" value="{{ (data.mnemonic or data.kind) ~ ' search' }}" maxlength="64">
         <button type="submit" class="btn btn-sm btn-outline-secondary" title="Save the first 50 results as a monitor and watch them live"><i class="bi bi-list-columns" aria-hidden="true"></i> Watch as a monitor</button>
@@ -79,13 +81,12 @@
       <ul class="mono">{% for f in data.failed %}<li><b>{{ f.source }}</b>: {{ f.reason }}</li>{% endfor %}</ul></div>{% endif %}
     {% if rows %}
     {% set pv = data.pivot if (data.pivot and not vs) else none %}
-    <section class="pnl"><div class="pnl-b">{% if pv %}{{ pivot_link(pv.source, 'the ' ~ (data.mnemonic or data.kind) ~ ' rows') }}{% endif %}<div class="tbl-wrap"><table class="tbl"{% if chart_rows %} data-chart-rows="{{ chart_rows | tojson | forceescape }}"{% endif %}>
-      <thead><tr><th>{{ data.mnemonic or data.kind }}</th>{% if titled %}<th>Title</th>{% endif %}
-        {% for c in data.columns %}<th class="{{ 'num' if rows and rows[0].cells[loop.index0][1] else '' }}" title="{{ c }}">{{ data.labels[c] }}</th>{% endfor %}</tr></thead>
-      <tbody>{% for r in rows %}
-        <tr data-i="{{ loop.index0 }}"{% if r.status %} class="cmp-{{ r.status }}" title="{{ 'only on the later date' if r.status == 'added' else 'only on ' ~ vs }}"{% endif %}><td><a class="lnk mono" href="/v/{{ r.ref.kind }}/{{ r.ref.id | urlencode }}{% if hq %}/history?{{ hq }}{% endif %}">{{ r.ref.id }}</a>{% if r.status %} <span class="st">{{ r.status }}</span>{% endif %}</td>{% if titled %}<td>{{ r.title }}</td>{% endif %}
-          {% for text, number in r.cells %}<td class="{{ 'num ' if number else '' }}mono">{{ text }}</td>{% endfor %}</tr>
-      {% endfor %}</tbody></table></div></div></section>
+    <section class="pnl" data-panel="results"><div class="pnl-b">{% if pv %}{{ pivot_link(pv.source, 'the ' ~ (data.mnemonic or data.kind) ~ ' rows') }}{% endif %}
+      {% if vs %}<div class="rc-host" data-records data-records-fill data-rows="{{ compared_rows | tojson | forceescape }}" data-spec="{{ {'title': (data.mnemonic or data.kind) ~ ' on two dates', 'columns': compared_columns} | tojson | forceescape }}" aria-label="Results on two dates"></div>
+      {% else %}{% with spec=grid_spec, offset=(data.paged.offset if data.paged else 0), limit=rows | length %}{% include "terminal/_records.html" %}{% endwith %}{% endif %}
+      {% if pages %}<nav class="srch-pager" aria-label="Pages of {{ data.mnemonic or data.kind }}" data-pager>{% if pages.prev %}<a class="lnk" href="{{ pages.prev | u }}" rel="prev"><i class="bi bi-chevron-left" aria-hidden="true"></i> Previous</a>{% endif %}
+        {% if pages.next %}<a class="lnk" href="{{ pages.next | u }}" rel="next">Next <i class="bi bi-chevron-right" aria-hidden="true"></i></a>{% endif %}</nav>{% endif %}
+    </div></section>
     {% elif not data.noData %}
       <p class="text-muted-d">Nothing matches.</p>
     {% endif %}
@@ -97,10 +98,10 @@
                     "TRD where COUNTERPARTY contains 'MERIDIAN'",
                     "TVAL where MTM < 0 and MATURITY_DATE < '2027-01-01' order by MTM",
                     "LIM where UTILISATION > 0.8 order by UTILISATION desc"] %}
-      <li><a class="lnk mono" href="/s?q={{ ex | urlencode }}">{{ ex }}</a></li>{% endfor %}
+      <li><a class="lnk mono" href="{{ BASE }}/s?q={{ ex | urlencode }}">{{ ex }}</a></li>{% endfor %}
     </ul>
   {% endif %}
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script>
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script>
 {% endblock %}

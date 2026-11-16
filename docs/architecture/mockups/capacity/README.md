@@ -63,7 +63,7 @@ Today the coefficients live as a Python list in `tools/sizing_planner.py`. The p
 results' formulas, into one data file, read by all three consumers:
 
 ```
-drishti-server/src/main/resources/capacity/planner.yaml
+kernel/drishti-server/src/main/resources/capacity/planner.yaml
   inputs:        name, group, label, default, unit, kind, hint            (the INPUTS list today)
   coefficients:  name, value, unit, status (measured|formula|calibrated|estimate), source   (COEFFS)
   results:       name, band, label, formula, unit, why                   (the Results formulas, Excel syntax)
@@ -84,7 +84,7 @@ As the VaR Playground exports a live, formula-driven workbook, the Capacity page
 Excel formula over the **Inputs** and **Coefficients** sheets.
 
 - **The template.** The generator's output, with named input cells, is shipped in the server's resources, as the Playground's is:
-  `drishti-server/src/main/resources/capacity/template/` (the parts of the xlsx: Results, Coefficients, Explain, Calibration check, the
+  `kernel/drishti-server/src/main/resources/capacity/template/` (the parts of the xlsx: Results, Coefficients, Explain, Calibration check, the
   styles from `playground/var/template/xl/styles.xml`), written by `tools/sizing_planner.py --template`.
 - **The fill.** The server writes only the Inputs sheet (and, when asked, a **Live** column of the server's measured figures, with the
   time they were measured) and streams the zip with `SheetStream` (`server/playground/SheetStream.java`, as `VarPlaygroundBook` does).
@@ -140,8 +140,8 @@ comes first, then a "Cluster" mode of this page. No figure on the page is a meas
 
 | Part | State | Where |
 |---|---|---|
-| The one file: inputs, coefficients, results, settings, JVM arguments, warnings, calibration, the Explain examples | **Built** | `drishti-server/src/main/resources/capacity/planner.yaml`; `tools/sizing_planner.py` reads it |
-| The template and the shared test vectors, written by the generator, checked by `--check` | **Built** | `capacity/template/` (with `template.json`), `drishti-server/src/test/resources/capacity/test-vectors.json` |
+| The one file: inputs, coefficients, results, settings, JVM arguments, warnings, calibration, the Explain examples | **Built** | `kernel/drishti-server/src/main/resources/capacity/planner.yaml`; `tools/sizing_planner.py` reads it |
+| The template and the shared test vectors, written by the generator, checked by `--check` | **Built** | `capacity/template/` (with `template.json`), `kernel/drishti-server/src/test/resources/capacity/test-vectors.json` |
 | The browser's evaluator (the Excel subset), agreeing with the Python one on every figure | **Built** | `drishti-console/web/static/js/drishti_capacity.js`; `drishti-console/tests/test_capacity_js.py` |
 | B: the four states, headroom bars with Why?, what breaks first, this server beside the plan, growth ×1 to ×3 with sliders, warnings | **Built** | `admin/capacity.html`, `drishti_capacity-page.js`, `drishti_admin-capacity.css` |
 | A behind *Edit the plan*: grouped inputs, the four answers, the heap by part, every result with Why?, the settings in three forms, the JVM arguments, the command line, Copy | **Built**; *Use this server's figures* added; the plan kept in the browser | the same |

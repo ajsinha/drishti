@@ -22,7 +22,9 @@ pack declares), so a running server picks them up within its refresh interval.
 Input: --from is a folder (its *.jsonl; -r for subfolders) or one .jsonl file, repeatable; a line is a plain JSON document or the loader envelope
 {"kind", "id", "doc"} (doc an object or JSON text, unwrapped). The kind is the file stem unless the envelope says one.
 
-What is written where: <lake>/<domain>/<kind>/ with columns id, doc, business_date and the promoted columns of the layout.
+What is written where: <lake>/<domain>/<kind>/ with columns id, doc, business_date and the promoted columns of the layout. A pack's
+child kinds (its `ingest:` block's `child-of` entries, tools/packgen/childkinds.py) are written beside their parent: each parent's array
+(LEGS) as rows of the child kind (trade-leg), one per element, with its own id and the parent's id, under the parent's business date.
 With --pack the domain, the layout (settings.layout.<kind>.columns/sort-by/file-rows/row-group-rows) come from the pack's
 Delta connector, and the id field from its `ingest:` block ({kind: {key: FIELD, date: FIELD}}, written by
 tools/packgen/pack_from_jsonl.py). Without --pack give --domain and per-kind --key (FIELD or kind=FIELD,...; dotted paths); the layout
@@ -32,6 +34,10 @@ The business date of a file, by the load rules (docs/guides/DATA_LAKE_GUIDE.md):
 else the date in its name (trade.2026-11-03.jsonl), else the business today. Every row of the file goes under it. A date field
 (--date FIELD or kind=FIELD,..., or the pack's ingest date) is optional: it only names the field whose rows that say another date are
 counted, as lake build does; it never chooses the date.
+
+--store iceberg --lake DIR writes Apache Iceberg tables instead of Delta ones, the same rows and columns (the id, doc, business_date and the
+promoted columns of the layout), parent and child kinds alike, by Drishti's Iceberg loader in the server's exec jar (or DRISHTI_ICEBERG_CLASSPATH;
+--iceberg-set KEY=VALUE for its settings): each business date of the input replaces that date (overwrite-dates, the default and only mode).
 
 --store files --root DIR writes the File connector's layout instead (no Delta dependencies): <DIR>/<domain>/<date>/<kind>.jsonl,
 one loader row per line ({"domain","kind","id","date","doc"}); overwrite-dates rewrites only the date files present, replace
@@ -56,6 +62,8 @@ sys.path.insert(0, str(HERE / "samplegen"))
 import sutragen as SG  # noqa: E402  (reading, dotted paths, scalar option parsing)
 sys.path.insert(0, str(HERE / "lake"))
 import feedroute  # noqa: E402  (a file's .ready file)
+sys.path.insert(0, str(HERE / "packgen"))
+import childkinds as CK  # noqa: E402  (a parent's array of objects as rows of its child kind: the one explode, shared with pack new)
 import filedate  # noqa: E402  (the table and business date in a file's name, the Java loader's FileDates)
 
 MODES = ("overwrite-dates", "append", "replace")
@@ -86,7 +94,7 @@ class Report:
         self.date_fields: dict[str, str] = {}           # file -> the date field those rows carried
 
 
-def read_lines(inputs, recursive: bool, kind: str | None, report: Report):
+def read_lines(inputs, recursive: bool, kind: str | None, report: Report, prefix: str = ""):
     """Yields (kind, doc, file) from the JSONL files; bad lines go to the report with file:line. A kind taken from a file's name is its
     table, the name's first segment (``trade.2026-11-03.jsonl`` is kind ``trade``)."""
     for k, doc, where in SG.read_records(SG.input_files(inputs, recursive), report.bad.append):
@@ -94,7 +102,7 @@ def read_lines(inputs, recursive: bool, kind: str | None, report: Report):
         if not kind and k == _stem(f):
             n = filedate.parse(f)
             k = n.table if n.error is None and not n.tar else k
-        yield kind or k, doc, f
+        yield prefix + (kind or k), doc, f
 
 
 def _day(text) -> date | None:
@@ -120,14 +128,24 @@ def _stem(f: str) -> str:
     return pathlib.Path(p.stem).stem if p.suffix.lower() == ".gz" else p.stem
 
 
-def pack_settings(pack: pathlib.Path) -> tuple[str, dict, dict, dict]:
-    """(domain, {kind: Layout}, {kind: key}, {kind: date}) from a pack folder's pack.yaml."""
+def pack_children(pack: pathlib.Path) -> dict[str, list]:
+    """parent kind -> its child kinds (childkinds.Child), from the pack's ``ingest:`` block."""
+    import yaml
+    m = yaml.safe_load((pack / "pack.yaml").read_text(encoding="utf-8")) or {}
+    return CK.of_ingest(m.get("ingest"))
+
+
+def pack_settings(pack: pathlib.Path, bare: bool = False) -> tuple[str, dict, dict, dict]:
+    """(domain, {kind: Layout}, {kind: key}, {kind: date}) from a pack folder's pack.yaml; ``bare`` (the files store): a pack without a
+    connector (a module's pack: the site binds it) gives its keys and dates, its name as the domain."""
     import yaml
     L = _layout()  # delta only
     import packlake                                   # tools/packlake.py: a lake-form template read with the pack's lake: entries
     m = packlake.view(yaml.safe_load((pack / "pack.yaml").read_text(encoding="utf-8")) or {})
-    defs = m.get("connectors") if isinstance(m.get("connectors"), dict) else (m.get("connector-templates") or {})   # a pack names its connectors and suggests them as templates
+    defs = m.get("connectors") if isinstance(m.get("connectors"), dict) else {}   # a pack names its connectors and suggests them as templates
     conns = [c for c in defs.values() if c.get("plugin") in ("delta", "file")]
+    if not conns and bare:
+        conns = [{"plugin": "file", "settings": {}}]
     if not conns:
         raise SystemExit(f"ingest_jsonl: {pack}/pack.yaml declares no delta or file connector (generate the pack with --lake or --files-root)")
     c = conns[0]
@@ -140,6 +158,21 @@ def pack_settings(pack: pathlib.Path) -> tuple[str, dict, dict, dict]:
     return st.get("domain") or m["pack"], layouts, keys, dates
 
 
+def pack_stamp(pack: pathlib.Path) -> dict:
+    """The constants the pack's first delta or file connector stamps into a row that lacks the field (its set:, site file first): the same
+    as lake build's, so a SOURCE_SYSTEM is stored by every path and every store."""
+    import yaml
+    import packlake
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent / "lake"))
+    import build as lakebuild
+    m = packlake.view(yaml.safe_load((pack / "pack.yaml").read_text(encoding="utf-8")) or {})
+    defs = m.get("connectors") if isinstance(m.get("connectors"), dict) else {}
+    for name, c in defs.items():
+        if c.get("plugin") in ("delta", "file"):
+            return lakebuild.site_set(name, c.get("settings") or {})
+    return {}
+
+
 SNAPSHOT = "@snapshot"     # a kind whose documents carry no date field: nothing to count (the date is the file's, as for every kind)
 
 
@@ -148,7 +181,7 @@ def business_today() -> date:
     return filedate.business_today()
 
 
-def collect(args, keys, dates, report: Report) -> dict[str, dict[date, list]]:
+def collect(args, keys, dates, report: Report, children: dict | None = None) -> dict[str, dict[date, list]]:
     """kind -> business date -> [(id, doc json, doc)] for the kinds the pack knows. Each file's business date (DATA_LAKE_GUIDE.md): --as-of,
     else its .ready file's business-date, else its name's date, else the business today; a row's own date field never decides (rows
     that say another date are counted)."""
@@ -156,7 +189,7 @@ def collect(args, keys, dates, report: Report) -> dict[str, dict[date, list]]:
     as_of = date.fromisoformat(args.as_of) if getattr(args, "as_of", None) else None
     date_from = getattr(args, "date_from", None) or "auto"
     decided: dict[str, filedate.Decided] = {}
-    for kind, doc, f in read_lines(args.src, args.recursive, args.kind, report):
+    for kind, doc, f in read_lines(args.src, args.recursive, args.kind, report, getattr(args, "kind_prefix", None) or ""):
         dfield = dates.get(kind)                         # optional: only the field whose differing rows are counted
         d = decided.get(f)
         if d is None:
@@ -174,11 +207,19 @@ def collect(args, keys, dates, report: Report) -> dict[str, dict[date, list]]:
         if own is not None and own != day:
             report.other_dates[f] = report.other_dates.get(f, 0) + 1
             report.date_fields[f] = dfield
+        stamp = getattr(args, "_stamp", None)
+        if stamp and isinstance(doc, dict):               # the connector's set: constants, stored in a row that lacks the field
+            lacking = {n: v for n, v in stamp.items() if n not in doc}
+            if lacking:
+                doc = {**doc, **lacking}
         kv = SG.get(doc, keys.get(kind, "id"))
         if kv is SG.MISSING or kv is None:
             report.no_key[kind] = report.no_key.get(kind, 0) + 1
             continue
         out.setdefault(kind, {}).setdefault(day, []).append((str(kv), json.dumps(doc), doc))
+        for ch in (children or {}).get(kind, ()):          # its child kinds' rows, under the same business date
+            for row in CK.explode(doc, ch):
+                out.setdefault(ch.kind, {}).setdefault(day, []).append((str(row[ch.key]), json.dumps(row), row))
     return out
 
 
@@ -231,6 +272,37 @@ def write_files(root: pathlib.Path, domain: str, data: dict, mode: str, report: 
             say(f"  {kind} {day}: {len(rows)} rows -> {target}")
 
 
+def write_iceberg(lake, domain: str, data: dict, layouts: dict, args, report: Report, say=print) -> None:
+    """Iceberg tables: <lake>/<domain>/<kind>, rows as the Delta tables have them, written by the one Iceberg writer (tools/lake/icebergwrite.py)."""
+    sys.path.insert(0, str(HERE / "lake"))
+    import icebergwrite
+    import writers
+    L = _layout()
+    import tempfile
+    for kind in sorted(data):
+        lay = layouts.get(kind) or None
+        by_day = {d: sorted(rows, key=lambda r: r[0]) for d, rows in data[kind].items()}
+
+        def lines(kind=kind, lay=lay, by_day=by_day):
+            for day in sorted(by_day):
+                for id_, body, doc in by_day[day]:
+                    cols = {k: icebergwrite._cell(k, v, set()) for k, v in (L.promote(doc, lay).items() if lay else []) if v is not None}
+                    yield json.dumps({"domain": domain, "kind": kind, "id": id_, "date": day.isoformat(), "doc": body, "columns": cols},
+                                     ensure_ascii=False, separators=(",", ":")) + "\n"
+        work = pathlib.Path(tempfile.mkdtemp(prefix="drishti-iceberg-"))
+        try:
+            icebergwrite.write_lines(lake, domain, kind, lines(), sorted(d.isoformat() for d in by_day), work, getattr(args, "jar", None),
+                                     getattr(args, "java", None), settings=getattr(args, "iceberg_set", None))
+        except writers.WriteError as e:
+            raise SystemExit(f"ingest_jsonl: {e}") from None
+        finally:
+            import shutil
+            shutil.rmtree(work, ignore_errors=True)
+        for day, rows in by_day.items():
+            report.rows[(kind, day.isoformat())] = len(rows)
+            say(f"  {kind} {day}: {len(rows)} rows")
+
+
 def summary(report: Report, dry: bool, say=print) -> None:
     say(f"{'kind':<20}{'business date':<16}{'rows':>9}" + ("   (dry run)" if dry else ""))
     for (k, d), n in sorted(report.rows.items()):
@@ -256,9 +328,15 @@ def ingest(args, say=print) -> Report:
     if not args.src:
         raise SystemExit("ingest_jsonl: give --from (a folder or .jsonl file) or --watch DIR")
     if args.mode is None:
-        args.mode = "append"
+        args.mode = "overwrite-dates" if args.store == "iceberg" else "append"
+    if args.store == "iceberg" and args.mode != "overwrite-dates":
+        raise SystemExit(f"ingest_jsonl: --store iceberg replaces each business date of the input (overwrite-dates); --mode {args.mode} is Delta's only")
+    children: dict = {}
     if args.pack:
-        domain, layouts, keys, dates = pack_settings(args.pack)
+        domain, layouts, keys, dates = pack_settings(args.pack, bare=args.store == "files")
+        domain = args.domain or domain
+        children = pack_children(args.pack)
+        args._stamp = pack_stamp(args.pack)
     else:
         L = _layout()
         if not args.domain:
@@ -276,7 +354,7 @@ def ingest(args, say=print) -> Report:
         def get(self, k, d=None):
             return super().get(k, super().get("*", d))
     keys, dates, layouts = _Lookup(keys), _Lookup(dates), _Lookup(layouts)
-    data = collect(args, keys, dates, report)
+    data = collect(args, keys, dates, report, children)
     for kind, days in data.items():
         for day, rows in days.items():
             report.rows[(kind, day.isoformat())] = len(rows)
@@ -288,6 +366,10 @@ def ingest(args, say=print) -> Report:
         if not args.root:
             raise SystemExit("ingest_jsonl: --store files needs --root")
         write_files(args.root, domain, data, args.mode, report, say)
+    elif args.store == "iceberg":
+        if not args.lake:
+            raise SystemExit("ingest_jsonl: --store iceberg needs --lake")
+        write_iceberg(args.lake, domain, data, layouts, args, report, say)
     else:
         if not args.lake:
             raise SystemExit("ingest_jsonl: --store delta needs --lake")
@@ -301,15 +383,21 @@ def build_parser(add_help: bool = True) -> argparse.ArgumentParser:
                                 epilog=__doc__.split("\n\n", 1)[1], add_help=add_help)
     p.add_argument("--from", dest="src", type=pathlib.Path, action="append", help="a folder of *.jsonl or one .jsonl file; repeatable (or use --watch)")
     p.add_argument("-r", "--recursive", action="store_true")
-    p.add_argument("--pack", type=pathlib.Path, help="pack folder: domain, layouts, key and date fields come from its pack.yaml")
+    p.add_argument("--pack", type=pathlib.Path, help="pack folder: domain, layouts, key and date fields and child kinds come from its pack.yaml "
+                                                     "(--domain names another domain)")
     p.add_argument("--domain", help="lake domain (without --pack)")
     p.add_argument("--kind", help="kind for every document (default: file stem or envelope kind)")
+    p.add_argument("--kind-prefix", help="put this before every kind (as `pack new --kind-prefix` named them)")
     p.add_argument("--key", help="id field: FIELD or kind=FIELD,... (default id)")
     p.add_argument("--date", help="optional: the field the documents carry their own date in (FIELD or kind=FIELD,...); only counted when "
                                   "it differs from the file's business date, never the date they are stored under")
     p.add_argument("--columns", help="promoted columns without --pack: a,b,c")
-    p.add_argument("--lake", type=pathlib.Path, help="the Delta root (DRISHTI_DELTA_ROOT) for --store delta")
-    p.add_argument("--store", choices=("delta", "files"), default="delta", help="delta (default) or the File connector's layout")
+    p.add_argument("--lake", type=pathlib.Path, help="the Delta root (DRISHTI_DELTA_ROOT) for --store delta; the Iceberg root for --store iceberg")
+    p.add_argument("--store", choices=("delta", "iceberg", "files"), default="delta",
+                   help="delta (default), iceberg (the same rows in Iceberg tables; needs the server's exec jar) or the File connector's layout")
+    p.add_argument("--iceberg-set", action="append", metavar="KEY=VALUE", help="--store iceberg: a setting of the Iceberg loader (s3.region=..., catalog=rest, uri=...)")
+    p.add_argument("--jar", help="--store iceberg: the drishti-server exec jar (default: DRISHTI_JAR, then kernel/drishti-server/target)")
+    p.add_argument("--java", help="--store iceberg: the java binary")
     p.add_argument("--root", type=pathlib.Path, help="the files root (DRISHTI_FILES_ROOT) for --store files")
     p.add_argument("--mode", choices=MODES, help="append (the default: the documents are added), overwrite-dates (each business date of the "
                                                  "input replaced) or replace (the whole kind rewritten)")

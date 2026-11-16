@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* The theme designer in BI Studio (report schema v2, R6, 2.4.0; docs/guides/REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 5.2): a theme item's name,
+/* The theme designer in BI Studio (report schema v2, R6, 2.4.0; docs/guides/bi/README.md › Reports: the YAML, the visuals and how they behave, section 5.2): a theme item's name,
    series colours (add, remove, move), its page, text, good and bad colours and its type (one live drishti-inputs Form), and the format defaults of each kind of visual, drawn with the same generated Format pane as the report designer
    (so a theme can set only what a visual accepts), with a preview of a chart, a table and a card in the theme. The server checks the theme
    (POST /bi/api/themes/validate) as you go; Save stores the item, Publish makes it the version reports read. /bi/design/theme/new makes a theme in your
@@ -198,7 +198,7 @@
   if (itemId === 'new') {                                                  // a new theme in your private workspace, starting from the shipped Corporate theme
     B.api('GET', '/themes/corporate').then((t) => Object.assign({}, t, { theme: 'my-theme', title: 'My theme', sample: undefined, tags: undefined, description: 'Made from Corporate.' }), () => null)
       .then((t) => B.writable().then((wss) => { const shared = wss.find((w) => !w.personal); return B.api('POST', '/workspaces/' + encodeURIComponent(shared ? shared.id : 'me') + '/items', { kind: 'theme', title: 'My theme', description: '', body: t ? textOf(t) : STARTER }); }))      // a shared workspace when you have one: a theme is published for others
-      .then((it) => { window.location.replace('/bi/design/theme/' + B.id2path(it.id)); })
+      .then((it) => { window.location.replace(drishti_url('/bi/design/theme/' + B.id2path(it.id))); })
       .catch((e) => say(e.message, true));
     return;
   }

@@ -45,7 +45,8 @@ sys.path.insert(0, str(HERE))
 import lakeconfig  # noqa: E402  (where the lakes are: config/lakes/<lake>.yaml)
 if str(ROOT / "drishti-console") not in sys.path:
     sys.path.insert(0, str(ROOT / "drishti-console"))
-from core.pack_paths import pack_dir  # noqa: E402  (the one rule for where a pack's folder is)
+from core import resolution as R  # noqa: E402  (configuration: the one resolver)
+from core.resolution import pack_dir  # noqa: E402  (where a pack is: the one resolver, KERNEL_AND_MODULES.md 18)
 
 SYSTEMS = ("endur", "calypso", "murex")
 STORES = ("delta", "iceberg")
@@ -72,21 +73,54 @@ def parse(values: list[str] | None) -> dict[str, str]:
 
 
 def connectors_dir(given) -> pathlib.Path:
-    """The connector files' folder, as lake demo finds it: --connectors-dir, else DRISHTI_CONNECTORS_DIR, else config/connectors."""
-    return pathlib.Path(given or os.environ.get("DRISHTI_CONNECTORS_DIR") or (ROOT / "config" / "connectors")).expanduser().resolve()
+    """The site's connector files' folder: --connectors-dir, else the resolver's (DRISHTI_CONNECTORS_DIR, else config/connectors)."""
+    return pathlib.Path(given).expanduser().resolve() if given else R.Settings.from_env().connectors_dir
+
+
+def plugin_of(folder: pathlib.Path, name: str) -> str:
+    """The plugin connector ``name`` reads with now: its effective definition (template, then the site's override in ``folder``)."""
+    f = folder / f"{name}.yaml"
+    try:
+        return R.effective(name, f.read_text(encoding="utf-8") if f.is_file() else None, R.repository().connectors.templates.get(name), f).plugin
+    except R.Unusable:
+        return "delta"
 
 
 def current(folder: pathlib.Path) -> dict[str, str]:
-    """The store each system's connector file reads now: its plugin (no file: delta, the pack's template)."""
-    out = {}
-    for s in SYSTEMS:
-        f = folder / f"trade-{s}.yaml"
-        plugin = "delta"
-        if f.is_file():
-            m = re.search(r"(?m)^plugin:\s*['\"]?([A-Za-z0-9_-]+)", f.read_text(encoding="utf-8"))
-            plugin = m.group(1) if m else "delta"
-        out[s] = "iceberg" if plugin == "iceberg" else "delta"
-    return out
+    """The store each system's connector reads now (its effective plugin: the template's delta unless the site's override says another)."""
+    return {s: "iceberg" if plugin_of(folder, f"trade-{s}") == "iceberg" else "delta" for s in SYSTEMS}
+
+
+def override_of(name: str, store: str, settings: dict) -> dict | None:
+    """The site override that makes connector ``name`` read ``store`` with ``settings``: only the keys that differ from its template
+    (``plugin``, each changed setting by its dotted key, ``null`` for a template setting it drops), with ``template: <owner>``; None
+    when the template already says it all (no file is needed)."""
+    t = R.repository().connectors.templates.get(name)
+    if t is None:
+        return None
+    base = {k: R._text(v) for k, v in R.flatten(t.definition.get("settings")).items()}
+    want = {k: v for k, v in R.flatten(settings).items()}
+    changed = {k: v for k, v in want.items() if R._text(v) != base.get(k)}
+    changed.update({k: None for k in base if k not in want})
+    body: dict = {"template": t.owner}
+    if store != str(t.definition.get("plugin") or "delta"):
+        body["plugin"] = store
+    if changed:
+        body["settings"] = changed
+    return body if len(body) > 1 else None
+
+
+def write_override(f: pathlib.Path, body: dict | None, header: str) -> str:
+    """Writes the partial override (or removes the one this tool wrote when the template says it all). A site's own file is left alone."""
+    import yaml
+    if body is None:
+        if f.is_file() and f.read_text(encoding="utf-8").startswith(WRITTEN_BY):
+            f.unlink()
+            return "the template is in force (the override this tool wrote is removed)"
+        return "the template is in force" + (f" ({f} is the site's own: left as it is)" if f.is_file() else "")
+    f.parent.mkdir(parents=True, exist_ok=True)
+    f.write_text(header + yaml.safe_dump(body, sort_keys=False), encoding="utf-8")
+    return f"override written ({f}: only the keys that differ from the template)"
 
 
 def data_of(lake: pathlib.Path) -> pathlib.Path:
@@ -136,7 +170,7 @@ def table(store: str, system: str, lake: pathlib.Path, ice: pathlib.Path) -> pat
 
 def loader_command(data: pathlib.Path, jar: str | None = None, java: str | None = None, main: str = LOADER) -> list[str]:
     """How to start IcebergLoader (or another class of the plugin, ``main``: IcebergMaintenance): DRISHTI_ICEBERG_CLASSPATH (development:
-    ``-cp CP``), else the server's exec jar (``jar``, DRISHTI_JAR, else the newest drishti-server/target/drishti-server-*-exec.jar), whose
+    ``-cp CP``), else the server's exec jar (``jar``, DRISHTI_JAR, else the newest kernel/drishti-server/target/drishti-server-*-exec.jar), whose
     launcher starts the loader instead of the server (``-Dloader.main``)."""
     for p in (str(HERE), str(ROOT / "tools")):
         if p not in sys.path:
@@ -254,6 +288,14 @@ def _resolve(value: str, data: pathlib.Path, env: str) -> pathlib.Path:
 ICEBERG_LAKE = "demo-iceberg"
 
 
+def _pack_manifest(path: pathlib.Path) -> dict:
+    """A pack's manifest with the connectors its source modules bring (modules/source-<system>/connectors/delta.yaml): one home."""
+    import yaml
+    sys.path.insert(0, str(ROOT / "tools"))
+    import packlake
+    return packlake.with_modules(yaml.safe_load(path.read_text(encoding="utf-8")))
+
+
 def _template(pack: dict, name: str, store: str, lake: pathlib.Path, data: pathlib.Path, ice: pathlib.Path | None = None,
               folder: pathlib.Path | None = None) -> dict:
     """A pack's template for the store: as it is (``lake: demo``) for Delta at the demo lake's own root; for Iceberg, the template naming
@@ -310,11 +352,10 @@ def iceberg_lake(connectors: pathlib.Path, pack: dict, template: dict, ice: path
 
 
 def connector_text(system: str, store: str, lake: pathlib.Path, ice: pathlib.Path, data: pathlib.Path,
-                   folder: pathlib.Path | None = None) -> str:
-    """trade-<system>.yaml for its store: the trading pack's template (one source system of the union, table trade_<system>) with
-    plugin and root set; ``engine: native`` for Iceberg."""
-    import yaml
-    pack = yaml.safe_load((ROOT / "config" / "packs" / "banking" / "trading" / "pack.yaml").read_text(encoding="utf-8"))
+                   folder: pathlib.Path | None = None) -> tuple[dict | None, str]:
+    """The override of trade-<system> for its store (the source module's template, one source system of the union, table
+    trade_<system>; plugin and root set; ``engine: native`` for Iceberg) and its header line; None when the template says it all."""
+    pack = _pack_manifest(pack_dir("trading") / "pack.yaml")
     tpl = _template(pack, f"trade-{system}", store, lake, data, ice, folder)
     settings = dict(tpl.get("settings") or {})
     if settings.get("lake") == ICEBERG_LAKE:          # Iceberg: the lake demo-iceberg (its file beside the connector folder)
@@ -328,28 +369,22 @@ def connector_text(system: str, store: str, lake: pathlib.Path, ice: pathlib.Pat
     else:
         settings["root"] = DELTA_DEFAULT if lake.resolve() == _resolve(DELTA_DEFAULT, data, lakeconfig.DEMO_ROOT_ENV) else str(lake)
         where = f"{system.upper()}'s trades in Delta ({lake / DOMAIN / f'trade_{system}'})"
-    body = {**tpl, "plugin": store, "settings": settings}
-    return (f"{WRITTEN_BY} {system}={store}: {where}, from the connector template of pack 'trading'.\n"
-            "# Building the lakes with another --store switches it; the text it replaces is kept in <data>/connectors/history/.\n"
-            + yaml.safe_dump(body, sort_keys=False))
+    return (override_of(f"trade-{system}", store, settings),
+            f"{WRITTEN_BY} {system}={store}: {where}; every other key is the template's.\n"
+            "# Building the lakes with another --store switches it.\n")
 
 
 def switch(folder: pathlib.Path, system: str, store: str, lake: pathlib.Path, ice: pathlib.Path, data: pathlib.Path, dry: bool) -> str:
-    """Writes trade-<system>.yaml for the store when the file reads another store (or is missing and the store is Iceberg); the earlier
-    text kept in <data>/connectors/history/. The line that says what was done."""
+    """Makes trade-<system> read the store: a partial override of its template in the site's folder (only the keys that differ), or
+    none when the template says it all. The line that says what was done."""
     f = folder / f"trade-{system}.yaml"
     now = current(folder)[system]
     if now == store and (store == "delta" or f.is_file()):
         return f"trade-{system}: reads {store} already ({f})"
     if dry:
-        return f"trade-{system}: would be written to read {store} ({f})"
-    if f.is_file():
-        hist = data / "connectors" / "history"
-        hist.mkdir(parents=True, exist_ok=True)
-        (hist / f"trade-{system}.{datetime.now().strftime('%Y%m%dT%H%M%S%f')[:-3]}.yaml").write_text(f.read_text(encoding="utf-8"), encoding="utf-8")
-    folder.mkdir(parents=True, exist_ok=True)
-    f.write_text(connector_text(system, store, lake, ice, data, folder), encoding="utf-8")
-    return f"trade-{system}: now reads {store}, was {now} ({f}; a running server restarts this connector by itself)"
+        return f"trade-{system}: would read {store} ({f})"
+    body, header = connector_text(system, store, lake, ice, data, folder)
+    return f"trade-{system}: now reads {store}, was {now}: {write_override(f, body, header)}; a running server restarts this connector by itself"
 
 
 # ---- a whole domain in Iceberg (--store risk=iceberg) ------------------------------------------------------------------------------------
@@ -379,21 +414,17 @@ def domain_file(folder: pathlib.Path, domain: str, name: str | None = None) -> p
 
 
 def current_domain(folder: pathlib.Path, domain: str) -> str:
-    """The store the domain's connector file reads now (no file: delta, the pack's template)."""
-    f = domain_file(folder, domain)
-    if not f.is_file():
-        return "delta"
-    m = re.search(r"(?m)^plugin:\s*['\"]?([A-Za-z0-9_-]+)", f.read_text(encoding="utf-8"))
-    return "iceberg" if m and m.group(1) == "iceberg" else "delta"
+    """The store the domain's connector reads now (its effective plugin: the pack's template unless the site's override says another)."""
+    return "iceberg" if plugin_of(folder, DOMAIN_STORES[domain][0][1]) == "iceberg" else "delta"
 
 
 def domain_connector_text(domain: str, store: str, lake: pathlib.Path, ice: pathlib.Path, data: pathlib.Path,
-                          pair: tuple[str, str] | None = None, folder: pathlib.Path | None = None) -> str:
-    """One of the domain's connector files for its store: the pack's template (kinds, layouts with their vector columns) with plugin and
-    root set; ``engine: native`` for Iceberg. ``pair`` (pack, connector): by default the domain's first."""
-    import yaml
+                          pair: tuple[str, str] | None = None, folder: pathlib.Path | None = None) -> tuple[dict | None, str]:
+    """The override of one of the domain's connectors for its store (the pack's template, layouts with their vector columns, with plugin
+    and root set; ``engine: native`` for Iceberg) and its header line; None when the template says it all. ``pair`` (pack, connector): by
+    default the domain's first."""
     pack_name, name = pair or DOMAIN_STORES[domain][0]
-    pack = yaml.safe_load((pack_dir(pack_name) / "pack.yaml").read_text(encoding="utf-8"))
+    pack = _pack_manifest(pack_dir(pack_name) / "pack.yaml")
     tpl = _template(pack, name, store, lake, data, ice, folder)
     settings = dict(tpl.get("settings") or {})
     if settings.get("lake") == ICEBERG_LAKE:          # Iceberg: the lake demo-iceberg (its file beside the connector folder)
@@ -407,37 +438,27 @@ def domain_connector_text(domain: str, store: str, lake: pathlib.Path, ice: path
     else:
         settings["root"] = DELTA_DEFAULT if lake.resolve() == _resolve(DELTA_DEFAULT, data, lakeconfig.DEMO_ROOT_ENV) else str(lake)
         where = f"every {domain} table in Delta ({lake / domain})"
-    body = {**tpl, "plugin": store, "settings": settings}
-    return (f"{WRITTEN_BY} {domain}={store}: {where}, from the connector template of pack '{pack_name}'.\n"
-            "# Building the lakes with another --store switches it; the text it replaces is kept in <data>/connectors/history/.\n"
-            + yaml.safe_dump(body, sort_keys=False))
+    return (override_of(name, store, settings),
+            f"{WRITTEN_BY} {domain}={store}: {where}; every other key is the template of pack '{pack_name}'.\n"
+            "# Building the lakes with another --store switches it.\n")
 
 
 def switch_domain(folder: pathlib.Path, domain: str, store: str, lake: pathlib.Path, ice: pathlib.Path, data: pathlib.Path, dry: bool) -> str:
-    """Writes each of the domain's connector files for the store (the earlier text kept in <data>/connectors/history/); back to Delta,
-    the files go and the packs' own templates serve again. The lines that say what was done (one per connector)."""
+    """Makes each of the domain's connectors read the store (a partial override each); back to Delta, the overrides this tool wrote go and
+    the packs' own templates serve again. The lines that say what was done (one per connector)."""
     return "; ".join(_switch_one(folder, domain, pair, store, lake, ice, data, dry) for pair in DOMAIN_STORES[domain])
 
 
 def _switch_one(folder: pathlib.Path, domain: str, pair: tuple[str, str], store: str, lake: pathlib.Path, ice: pathlib.Path,
                 data: pathlib.Path, dry: bool) -> str:
     f = domain_file(folder, domain, pair[1])
-    m = re.search(r"(?m)^plugin:\s*['\"]?([A-Za-z0-9_-]+)", f.read_text(encoding="utf-8")) if f.is_file() else None
-    now = "iceberg" if m and m.group(1) == "iceberg" else "delta"
+    now = "iceberg" if plugin_of(folder, pair[1]) == "iceberg" else "delta"
     if now == store:
         return f"{f.stem}: reads {store} already ({f})"
     if dry:
-        return f"{f.stem}: would be written to read {store} ({f})"
-    if f.is_file():
-        hist = data / "connectors" / "history"
-        hist.mkdir(parents=True, exist_ok=True)
-        (hist / f"{f.stem}.{datetime.now().strftime('%Y%m%dT%H%M%S%f')[:-3]}.yaml").write_text(f.read_text(encoding="utf-8"), encoding="utf-8")
-    if store == "delta":
-        f.unlink()
-        return f"{f.stem}: now reads delta, was {now} (the pack's own connector; a running server restarts it by itself)"
-    folder.mkdir(parents=True, exist_ok=True)
-    f.write_text(domain_connector_text(domain, store, lake, ice, data, pair, folder), encoding="utf-8")
-    return f"{f.stem}: now reads {store}, was {now} ({f}; a running server restarts this connector by itself)"
+        return f"{f.stem}: would read {store} ({f})"
+    body, header = domain_connector_text(domain, store, lake, ice, data, pair, folder) if store != "delta" else (None, "")
+    return f"{f.stem}: now reads {store}, was {now}: {write_override(f, body, header)}; a running server restarts it by itself"
 
 
 def main(argv: list[str] | None = None) -> int:

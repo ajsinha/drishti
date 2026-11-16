@@ -112,13 +112,16 @@ public final class StarterSchemas {
     /** {@code --out DIR --set key=value …}: writes {@code <kind>.schema.json} for each served kind. */
     public static void main(String[] args) throws Exception {
         Map<String, String> settings = new HashMap<>();
-        Path out = Path.of("schemas");
+        Path out = null;                                       // named outright: never a folder of the working folder by default
         for (int i = 0; i + 1 < args.length; i += 2) {
             switch (args[i]) {
                 case "--out" -> out = Path.of(args[i + 1]);
                 case "--set" -> settings.put(args[i + 1].substring(0, args[i + 1].indexOf('=')), args[i + 1].substring(args[i + 1].indexOf('=') + 1));
                 default -> throw new IllegalArgumentException("unknown option " + args[i] + ": --out DIR --set key=value");
             }
+        }
+        if (out == null) {
+            throw new IllegalArgumentException("--out DIR is required: the folder the schemas are written to (an absolute path)");
         }
         settings.put("refresh-seconds", "3600");
         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();

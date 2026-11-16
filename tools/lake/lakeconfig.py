@@ -15,10 +15,10 @@
 """The lake files (``config/lakes/<lake>.yaml``, docs/guides/DATA_LAKE_GUIDE.md) for the Python tools: ``lake build``, ``lake demo``,
 ``build_demo_lakes.py``, ``lake check``, ``lake show`` and ``lake migrate-config``.
 
-There is ONE reader of the lake files, in Java (drishti-lakeconfig, ``com.ash.drishti.lakeconfig.LakesCli``): this module runs it and
+There is ONE reader of the lake files, in Java (drishti-lakeio, ``com.ash.drishti.lakeconfig.LakesCli``): this module runs it and
 reads its JSON, so the rules (defaults, ``${ENV}`` references, checks, the pack-entry rule) exist once. The Java is found as the parallel
 loader is: ``DRISHTI_LAKE_CLASSPATH`` (development), else the server's exec jar (``-Dloader.main``), else this checkout's
-``drishti-lakeconfig/target/classes`` with Jackson from the local Maven repository (after ``mvn compile``)."""
+``lake/drishti-lakeio/target/classes`` with Jackson from the local Maven repository (after ``mvn compile``)."""
 from __future__ import annotations
 
 import functools
@@ -40,12 +40,11 @@ class LakeConfigError(RuntimeError):
 
 
 def lakes_dir() -> pathlib.Path:
-    """The lake folder: DRISHTI_LAKES_DIR, else ./config/lakes (as the server's ``drishti.lakes.dir``)."""
+    """The lake folder: DRISHTI_LAKES_DIR, else <Drishti folder>/config/lakes (as the server's ``drishti.lakes.dir``)."""
     given = os.environ.get("DRISHTI_LAKES_DIR")
     if given:
         return pathlib.Path(given)
-    here = pathlib.Path("./config/lakes")
-    return here if here.is_dir() else ROOT / "config" / "lakes"      # a tool run from elsewhere: this checkout's lake files
+    return ROOT / "config" / "lakes"                                 # this checkout's lake files, wherever the tool is run from
 
 
 def is_lake_name(ref: str | None, folder: pathlib.Path | None = None) -> bool:
@@ -71,11 +70,13 @@ def _jars(m2: pathlib.Path, group: str, art: str) -> dict[str, pathlib.Path]:
 
 
 def _maven_classpath() -> str | None:
-    """The compiled drishti-lakeconfig with Jackson from the local Maven repository: databind, core and the YAML format of ONE version
+    """The compiled drishti-lakeio (and the two classes of the kernel it names: drishti-common's ModuleLoaders, the kernel API's
+    DomainVocabulary) with Jackson from the local Maven repository: databind, core and the YAML format of ONE version
     (the newest present for all three; the annotations of that version or its minor line), never the newest of each (a mixed Jackson
     fails with NoSuchMethodError before a lake file is read)."""
-    classes = ROOT / "drishti-lakeconfig" / "target" / "classes"
-    if not (classes / "com" / "ash" / "drishti" / "lakeconfig" / "LakesCli.class").is_file():
+    classes = ROOT / "lake/drishti-lakeio" / "target" / "classes"
+    kernel = [ROOT / "kernel" / m / "target" / "classes" for m in ("drishti-common", "drishti-kernel-api")]
+    if not (classes / "com" / "ash" / "drishti" / "lakeconfig" / "LakesCli.class").is_file() or not all(k.is_dir() for k in kernel):
         return None
     m2 = pathlib.Path(os.environ.get("MAVEN_REPO") or pathlib.Path.home() / ".m2" / "repository")
     core = "com/fasterxml/jackson/core"
@@ -91,7 +92,7 @@ def _maven_classpath() -> str | None:
     snake = _jars(m2, "org/yaml", "snakeyaml")
     if not ann or not snake:
         return None
-    return os.pathsep.join([str(classes), str(databind[v]), str(jcore[v]), str(ann), str(yaml[v]),
+    return os.pathsep.join([str(classes), *map(str, kernel), str(databind[v]), str(jcore[v]), str(ann), str(yaml[v]),
                             str(snake[max(snake, key=_version_key)])])
 
 
@@ -116,8 +117,8 @@ def command(jar: str | None = None, java: str | None = None) -> list[str]:
     cp = _maven_classpath()
     if cp:
         return java_cmd(java_bin, ["-cp", cp, MAIN])
-    raise LakeConfigError("cannot read the lake files: no server exec jar (DRISHTI_JAR, drishti-server/target) and no compiled "
-                          "drishti-lakeconfig (mvn -pl drishti-lakeconfig compile); DRISHTI_LAKE_CLASSPATH names one")
+    raise LakeConfigError("cannot read the lake files: no server exec jar (DRISHTI_JAR, kernel/drishti-server/target) and no compiled "
+                          "drishti-lakeio (mvn -pl :drishti-lakeio compile); DRISHTI_LAKE_CLASSPATH names one")
 
 
 def run(args: list[str], folder: pathlib.Path | None = None, jar: str | None = None, java: str | None = None) -> dict:
@@ -220,7 +221,7 @@ def disagree(what: str, given, lakes, entry: dict) -> None:
 # ------------------------------------------------------------------------------------------------ drishti.py lake show|check|migrate-config
 
 def _connectors_dir(a) -> pathlib.Path:
-    return pathlib.Path(getattr(a, "connectors_dir", None) or os.environ.get("DRISHTI_CONNECTORS_DIR") or "./config/connectors")
+    return pathlib.Path(getattr(a, "connectors_dir", None) or os.environ.get("DRISHTI_CONNECTORS_DIR") or ROOT / "config" / "connectors")
 
 
 def cmd_show(a) -> int:

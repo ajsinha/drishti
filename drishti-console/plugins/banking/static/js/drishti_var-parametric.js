@@ -42,7 +42,7 @@
 
   /** The VaR Playground's Parametric tab for the scope shown. */
   function playLink() {
-    return "/play?scope=" + encodeURIComponent(X ? X.state.scope : "BANK") + "&measure=parametric";
+    return drishti_url("/play?scope=") + encodeURIComponent(X ? X.state.scope : "BANK") + "&measure=parametric";
   }
 
   // ---------------------------------------------------------------------------------------------------------------- the tiles
@@ -100,7 +100,7 @@
     try { localStorage.setItem(NC_KEY, on ? "1" : "0"); } catch (e) { /* the link carries it */ }
     var u = new URL(location.href);
     if (on) u.searchParams.delete("nc"); else u.searchParams.set("nc", "0");
-    history.replaceState(history.state, "", u.toString());
+    history.replaceState(history.state, "", drishti_url(u.toString()));
     X.redrawPath();
   }
 
@@ -109,7 +109,7 @@
     var u = new URL(location.href);
     if (on) u.searchParams.set("pm", "1"); else u.searchParams.delete("pm");
     u.searchParams.delete("nc");
-    location.href = u.toString();
+    location.href = drishti_url(u.toString());
   }
 
   function start(ex) {
@@ -123,7 +123,7 @@
       description: "Parametric VaR: the normal curve on or off", run: function () { setCurve(!curve); } });
     $("[data-vp-play]").addEventListener("click", function (ev) {
       ev.preventDefault();
-      location.href = playLink();
+      location.href = drishti_url(playLink());
     });
   }
 

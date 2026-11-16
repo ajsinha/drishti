@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.banking.var;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -45,7 +46,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 /**
- * The MR cube on the pivot engine, on the tiny lake of {@link VarLakeFixture} (PIVOT_GUIDE.md#29-the-mr-cube-preset): {@code /api/v1/pivot/query} on source
+ * The MR cube on the pivot engine, on the tiny lake of {@link VarLakeFixture} (bi/PIVOT.md#29-the-mr-cube-preset): {@code /api/v1/pivot/query} on source
  * {@code var}, where every cell's and total's VaR equals the VaR engine's own answer for the cell's scope to the cent
  * ({@code /api/v1/risk/var/scope} and the engine's unrounded figure), the totals are the union's VaR and never a sum (the desks' VaRs sum to more
  * than the bank's; the diversification is the difference), the components add up to the total, the limit of a whole desk, hierarchy levels
@@ -91,7 +92,7 @@ class VarMrCubeApiTest {
 
     @DynamicPropertySource
     static void lake(DynamicPropertyRegistry r) throws Exception {
-        lake = Files.createDirectories(Path.of("target", "var-mr-cube-lake-" + System.nanoTime())).toAbsolutePath();
+        lake = Files.createDirectories(Path.of(TestRoots.module(), "target", "var-mr-cube-lake-"+ System.nanoTime())).toAbsolutePath();
         VarLakeFixture.write(lake);
         r.add("drishti.sources.connectors.risk-lake.settings.root", lake::toString);
         r.add("drishti.var.official.root", lake::toString);
@@ -379,6 +380,33 @@ class VarMrCubeApiTest {
         JsonNode last = w.get("rows").get(w.get("rows").size() - 1);
         assertThat(last.get("label").asText()).isEqualTo("Total");
         assertThat(last.get("before").asDouble()).isCloseTo(540.0, Offset.offset(0.01));
+    }
+
+    @Test
+    void theHistoryOfAViewIsTheSameViewOnEachOpenDateAndALastStopIsTheCellNow() throws Exception {
+        String rita = as("rita", "risk");
+        Map<String, Object> v = view(List.of("MGMT.DESK"), List.of(), Map.of("var()", "VaR"), Map.of());
+        JsonNode now = query(rita, v, 200);
+        JsonNode h = call(rita, post("/api/v1/risk/mr/history"), Map.of("view", v), 200);
+        assertThat(h.get("measure").asText()).isEqualTo("VaR");
+        assertThat(h.get("dates").size()).isGreaterThanOrEqualTo(1);
+        assertThat(h.get("dates").get(h.get("dates").size() - 1).asText()).isEqualTo(VarLakeFixture.DAY.toString());
+        assertThat(h.get("cells").asInt()).isEqualTo(h.get("series").size()).isGreaterThanOrEqualTo(2);
+        int checked = 0;
+        for (var it = h.get("series").fields(); it.hasNext();) {
+            var e = it.next();
+            JsonNode cell = now.get("cells").get(e.getKey());
+            assertThat(e.getValue().size()).as(e.getKey()).isEqualTo(h.get("dates").size());
+            assertThat(e.getValue().get(e.getValue().size() - 1).asDouble()).as("the last stop of " + e.getKey()).isEqualTo(cell.at("/values/VaR").asDouble());
+            checked++;
+        }
+        assertThat(checked).isEqualTo(h.get("cells").asInt());
+        // a request with no view, and one naming a saved view that is not there, are refused in words
+        JsonNode none = call(rita, post("/api/v1/risk/mr/history"), Map.of("colour", "blue"), 400);
+        assertThat(none.get("detail").asText()).contains("needs the view");
+        assertThat(none.get("code").asText()).startsWith("DRS-");
+        JsonNode gone = call(rita, post("/api/v1/risk/mr/history"), Map.of("view", "no-such-view-id"), 404);
+        assertThat(gone.get("code").asText()).startsWith("DRS-");
     }
 
     @Test

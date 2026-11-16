@@ -14,19 +14,6 @@
 # Example: copy to config/connectors/reference-store.yaml to read the reference-store data from redis. It replaces the
 # connector file of the same name (settings are not merged). Credentials are ${ENV_VAR} references.
 plugin: redis
-kinds:
-- counterparty
-- counterparty-group
-- issuer
-- agreement
-- ccp
-- legal-entity
-- book
-- desk
-- trader
-- calendar
-- csa
-- clearing-account
 description: reference-store read from redis (the former application-redis.yaml profile)
 settings:
   domain: reference

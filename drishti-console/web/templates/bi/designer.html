@@ -16,7 +16,7 @@
 {# Rupaka phase 3: the designer's start (ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 9): your report drafts and a new report on a dataset. Drawn by static/js/drishti_bi-design.js. #}
 {% extends "bi/shell.html" %}
 {% block bi_title %}Designer{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi-design.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_bi-design.css?v={{ ASSET_V }}">{% endblock %}
 {% block bi_main %}
 <header class="bi-head"><h1>Designer</h1>
   <p class="text-muted-d">Build a report on a dataset: drag fields onto a canvas, set up the visuals, filter, check and save a draft. Publish it from its item page when it is ready.</p></header>
@@ -31,7 +31,7 @@
       <label>Workspace<drishti-select native class="studio-select" data-new-workspace label="Save the draft in this workspace"></drishti-select></label>
       <button type="submit" class="btn-pill btn-accent">Start designing</button>
     </form>
-    <p class="bi-empty" data-no-datasets hidden>There is no dataset you can read yet. <a href="/bi/datasets">Open the Datasets page</a> to see what exists, or <a data-new-wizard href="/bi/datasets/new-layer">make a new dataset</a>.</p></section>
+    <p class="bi-empty" data-no-datasets hidden>There is no dataset you can read yet. <a href="{{ BASE }}/bi/datasets">Open the Datasets page</a> to see what exists, or <a data-new-wizard href="{{ BASE }}/bi/datasets/new-layer">make a new dataset</a>.</p></section>
   <section class="bi-sec" aria-labelledby="dMine"><h2 id="dMine">Your report drafts</h2>
     <p class="text-muted-d">Drafts in every workspace where you may add items.</p>
     <ul class="bi-warn" data-drafts></ul>
@@ -47,11 +47,11 @@
     <ul class="bi-warn" data-board-drafts></ul>
     <p class="bi-empty" data-no-board-drafts hidden>No board drafts in your workspace yet.</p></section>
   <section class="bi-sec" aria-labelledby="dTheme"><h2 id="dTheme">Themes</h2>
-    <p class="text-muted-d">A theme holds the colours, type and format defaults a report takes by naming it. <a class="btn-pill btn-ghost" href="/bi/design/theme/new" data-new-theme-start>Make a theme</a> (from the shipped Corporate one), or pick one under Format, Report, Theme.</p></section>
+    <p class="text-muted-d">A theme holds the colours, type and format defaults a report takes by naming it. <a class="btn-pill btn-ghost" href="{{ BASE }}/bi/design/theme/new" data-new-theme-start>Make a theme</a> (from the shipped Corporate one), or pick one under Format, Report, Theme.</p></section>
   <section class="bi-sec" aria-labelledby="dSamples"><h2 id="dSamples">Samples to start from</h2>
-    <p class="text-muted-d">Reports and boards that ship with the site. <strong>Copy and design</strong> makes a draft of your own in the workspace you choose and opens it here; the original is not touched. <a href="/bi/catalogue?kind=report">The catalogue of reports</a> lists the published ones.</p>
+    <p class="text-muted-d">Reports and boards that ship with the site. <strong>Copy and design</strong> makes a draft of your own in the workspace you choose and opens it here; the original is not touched. <a href="{{ BASE }}/bi/catalogue?kind=report">The catalogue of reports</a> lists the published ones.</p>
     <ul class="bi-warn" data-samples></ul>
     <p class="bi-empty" data-no-samples hidden>No shipped reports or boards on this site.</p></section>
 </div>
 {% endblock %}
-{% block scripts %}{% include "_designer_kit.html" %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-layer.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-design.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}{% include "_designer_kit.html" %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_bi.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_bi-lib.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_bi-layer.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_bi-design.js?v={{ ASSET_V }}"></script>{% endblock %}

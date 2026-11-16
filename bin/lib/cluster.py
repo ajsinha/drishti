@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""A Drishti*net cluster on one machine, driven by a cluster file (drishti-stack/stack.yaml is the format and the default).
+"""A Drishti*net cluster on one machine, driven by a cluster file (deploy/stack/stack.yaml is the format and the default).
 
     bin/start-cluster [--cluster FILE] [--data-dir DIR] [node ...]    start what is not running (every node, then the console; or only those named, or "console")
     bin/stop-cluster  [--cluster FILE] [--data-dir DIR] [node ...]    stop by the pid files (never by name), the console first
@@ -51,6 +51,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 BIN = ROOT / "bin"
+#: the settings file every node starts with (--settings; an absolute path), else a node's settings: or the stack's settings-file:
+SETTINGS = ""
 SECRET_NAMES = ("DRISHTI_TOKEN_SECRET", "DRISHTI_SESSION_SECRET", "DRISHTI_NET_SECRET")
 CONSOLE = "console"
 HEADER = """# Project Drishti · Any data. Any domain. One grammar.
@@ -72,13 +74,25 @@ sys.path.insert(0, str(ROOT / "tools"))
 import hostaddr  # noqa: E402
 
 
+STACK = ROOT / "deploy" / "stack"        # the default cluster: stack.yaml, nodes/ and the git-ignored secrets.env
+OLD_STACK = ROOT / "drishti-stack"       # its folder before 2.9.11.i4, read for one release only (then this fallback goes)
+
+
 class Layout:
     """Where one cluster's files are: its configuration beside the cluster file, everything it writes under the data folder."""
 
     def __init__(self, cluster_file: str, data_dir: str) -> None:
-        self.file = Path(cluster_file or ROOT / "drishti-stack" / "stack.yaml").resolve()
+        old = not cluster_file and (OLD_STACK / "stack.yaml").is_file() and not (STACK / "stack.yaml").is_file()
+        if old:
+            notice(f"the cluster file is read from {OLD_STACK / 'stack.yaml'}: the default stack moved to {STACK} (2.9.11.i4); "
+                   "move your files there (this fallback is for one release)")
+        self.file = Path(cluster_file or (OLD_STACK if old else STACK) / "stack.yaml").resolve()
         self.home = self.file.parent
         self.secrets = self.home / "secrets.env"
+        if not cluster_file and not self.secrets.is_file() and (OLD_STACK / "secrets.env").is_file():
+            notice(f"the secrets are read from {OLD_STACK / 'secrets.env'}: move the file to {self.secrets} "
+                   "(the default stack moved to deploy/stack/ in 2.9.11.i4; this fallback is for one release)")
+            self.secrets = OLD_STACK / "secrets.env"
         self.data = Path(data_dir or os.environ.get("DRISHTI_DATA_DIR") or ROOT / "data").resolve()
         self.stack_data = self.data / "stack"
         self.jar = self.stack_data / "server.jar"
@@ -91,6 +105,10 @@ def say(text: str) -> None:
     print(text, flush=True)
 
 
+def notice(text: str) -> None:
+    print(f"NOTICE: {text}", file=sys.stderr, flush=True)
+
+
 # -- configuration -----------------------------------------------------------------------------------------------------------------
 def load_stack() -> dict:
     try:
@@ -98,7 +116,7 @@ def load_stack() -> dict:
     except ImportError:
         sys.exit("needs PyYAML: run with the console's Python (drishti-console/.venv), as bin/start-cluster does")
     if not at.file.exists():
-        sys.exit(f"no cluster file at {at.file} (--cluster FILE; drishti-stack/stack.yaml is the format)")
+        sys.exit(f"no cluster file at {at.file} (--cluster FILE; deploy/stack/stack.yaml is the format)")
     return yaml.safe_load(at.file.read_text(encoding="utf-8"))
 
 
@@ -152,8 +170,8 @@ def secrets() -> dict:
 
 # -- the jar -----------------------------------------------------------------------------------------------------------------------
 def server_jar() -> Path:
-    """<data>/stack/server.jar: a copy of the newest drishti-server/target/drishti-server-*-exec.jar, refreshed when a newer build exists."""
-    built = sorted((ROOT / "drishti-server" / "target").glob("drishti-server-*-exec.jar"), key=lambda p: p.stat().st_mtime, reverse=True)
+    """<data>/stack/server.jar: a copy of the newest kernel/drishti-server/target/drishti-server-*-exec.jar, refreshed when a newer build exists."""
+    built = sorted((ROOT / "kernel/drishti-server" / "target").glob("drishti-server-*-exec.jar"), key=lambda p: p.stat().st_mtime, reverse=True)
     JAR = at.jar
     if built and (not JAR.exists() or built[0].stat().st_mtime > JAR.stat().st_mtime):
         JAR.parent.mkdir(parents=True, exist_ok=True)
@@ -162,7 +180,7 @@ def server_jar() -> Path:
         os.replace(part, JAR)                    # a server still running keeps the jar it opened
         say(f"server jar: {built[0].name} copied to {JAR}")
     if not JAR.exists():
-        sys.exit("no server jar: build it first (./mvnw -o -q package -DskipTests -pl drishti-app -am), then run bin/start-cluster again")
+        sys.exit("no server jar: build it first (./mvnw -o -q package -DskipTests -pl :drishti-app -am), then run bin/start-cluster again")
     return JAR
 
 
@@ -335,6 +353,9 @@ def start_node(stack: dict, node: dict, jar: Path) -> bool:
             "--workdir", str(cwd), "--background"]
     if node_data:
         args += ["--node-data", node_data]
+    settings = SETTINGS or str(node.get("settings") or stack.get("settings-file") or "")   # --settings, else the node's or the stack's file
+    if settings:
+        args += ["--settings", settings]
     for flag in node.get("jvm", []):
         args += ["--java-opt", flag]
     for arg in [f"--drishti.sources.connectors.{c}.enabled=false" for c in node.get("off", [])] + list(node.get("args", [])):
@@ -445,10 +466,16 @@ def main(argv: list[str]) -> int:
     global at
     ap = argparse.ArgumentParser(prog="cluster", description="Start, stop or show a cluster from its cluster file.")
     ap.add_argument("command", choices=("start", "stop", "status"))
-    ap.add_argument("--cluster", default="", help="the cluster file (default drishti-stack/stack.yaml)")
+    ap.add_argument("--cluster", default="", help="the cluster file (default deploy/stack/stack.yaml)")
     ap.add_argument("--data-dir", default="", help="the data folder (default DRISHTI_DATA_DIR, else <drishti>/data)")
+    ap.add_argument("--settings", default="", help="a settings file (an absolute path) every node starts with (start-server --settings)")
     ap.add_argument("names", nargs="*", help="only these nodes (or console)")
     opts = ap.parse_args(argv)
+    global SETTINGS
+    if opts.settings and not Path(opts.settings).is_absolute():
+        say(f"--settings {opts.settings}: give the settings file as an absolute path")
+        return 2
+    SETTINGS = opts.settings
     at = Layout(opts.cluster, opts.data_dir)
     return {"start": start, "stop": stop, "status": status}[opts.command](opts.names)
 

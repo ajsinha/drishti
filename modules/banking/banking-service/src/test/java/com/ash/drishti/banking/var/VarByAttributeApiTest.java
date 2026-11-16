@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.banking.var;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -86,7 +87,7 @@ class VarByAttributeApiTest {
 
     @DynamicPropertySource
     static void lake(DynamicPropertyRegistry r) throws Exception {
-        lake = Files.createDirectories(Path.of("target", "var-attr-lake-" + System.nanoTime())).toAbsolutePath();
+        lake = Files.createDirectories(Path.of(TestRoots.module(), "target", "var-attr-lake-"+ System.nanoTime())).toAbsolutePath();
         VarLakeFixture.write(lake);
         Map<String, String> traders = Map.of("T1", "TRDR-A", "T2", "TRDR-A", "T3", "TRDR-B", "T4", "TRDR-B", "T9", "TRDR-B", "T5", "TRDR-C");
         List<Map<String, Object>> rows = new ArrayList<>();
@@ -170,5 +171,46 @@ class VarByAttributeApiTest {
         mvc.perform(get("/api/v1/risk/var/scope/contributions").param("scope", "BANK").param("by", "attribute:NOPE")
                 .header("Authorization", as("rita", "risk"))).andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.detail").value(containsString("NOPE is not a column of the VaR book's trades")));
+    }
+
+    @Autowired com.ash.drishti.engine.source.SourceRouter router;
+
+    /**
+     * A trade source switched off: VaR's numbers are the scenario PVs' and do not move; at trade grain the page says the details are
+     * unavailable and the trades are placed under "Unassigned"; at position grain nothing differs at all.
+     */
+    @Test
+    void aSwitchedOffTradeSourceLeavesVarUnchangedAndSaysSoAtTradeGrainOnly() throws Exception {
+        var systems = router.registry().systems();
+        java.util.List<com.ash.drishti.engine.source.SourceSystems.System> before = new ArrayList<>(systems.installed().values());
+        systems.installed(List.of(new com.ash.drishti.engine.source.SourceSystems.System("ENDUR", "source-endur", java.util.Set.of("trade"), true)));
+        String rita = as("rita", "risk");
+        try {
+            JsonNode bankOn = json.readTree(mvc.perform(get("/api/v1/risk/var/scope").param("scope", "BANK").header("Authorization", rita))
+                    .andReturn().getResponse().getContentAsString());
+            JsonNode tradesOn = contributions("BANK", "trade", rita);
+            JsonNode byOn = contributions("BANK", "attribute:TRADER_ID", rita);
+            assertThat(byOn.has("banner")).isFalse();
+            systems.switchTo("ENDUR", false);
+            JsonNode bankOff = json.readTree(mvc.perform(get("/api/v1/risk/var/scope").param("scope", "BANK").header("Authorization", rita))
+                    .andReturn().getResponse().getContentAsString());
+            ((com.fasterxml.jackson.databind.node.ObjectNode) bankOn).remove("provenance");         // its computed-at stamp and cache hit differ
+            ((com.fasterxml.jackson.databind.node.ObjectNode) bankOff).remove("provenance");
+            assertThat(bankOff.toString()).as("position grain: identical with the source off").isEqualTo(bankOn.toString());
+            assertThat(bankOff.has("banner")).isFalse();
+            JsonNode tradesOff = contributions("BANK", "trade", rita);
+            assertThat(tradesOff.get("var").asLong()).isEqualTo(tradesOn.get("var").asLong());
+            assertThat(tradesOff.get("banner").asText()).isEqualTo("trade details from ENDUR unavailable (source switched off)");
+            assertThat(tradesOff.get("rows").toString()).isEqualTo(tradesOn.get("rows").toString());
+            JsonNode byOff = contributions("BANK", "attribute:TRADER_ID", rita);
+            assertThat(byOff.get("banner").asText()).contains("ENDUR unavailable");
+            assertThat(byOff.get("var").asLong()).isEqualTo(byOn.get("var").asLong()).isEqualTo(540);
+            assertThat(byOff.get("rows")).hasSize(1);
+            assertThat(byOff.at("/rows/0/label").asText()).isEqualTo("Unassigned");
+            assertThat(byOff.at("/rows/0/trades").asInt()).isEqualTo(6);
+            assertThat(byOff.at("/rows/0/componentVar").asLong()).isEqualTo(540);
+        } finally {
+            systems.installed(before);
+        }
     }
 }

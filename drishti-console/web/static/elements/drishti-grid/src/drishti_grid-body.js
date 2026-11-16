@@ -19,7 +19,7 @@
    (total, ◆ non-additive total, pending server figure, loading block), the range, the focus, conditional formats and the flash of a
    live change. Pointer work: click and Shift+click, drag a range, the context menu, header sort, the column menu, a group's toggle,
    resize and autosize by the handle, the row checkboxes. */
-import { h } from '../../drishti-core/src/drishti_index.js';
+import { h, chipList, isListValue } from '../../drishti-core/src/drishti_index.js';
 import { GridPointer } from './drishti_grid-pointer.js';
 import { DENSITIES } from './drishti_grid-model-base.js';
 import { getValue, formatValue } from './drishti_columns.js';
@@ -56,6 +56,7 @@ export class GridBody extends GridPointer {
     this.canvas.append(this.head, this.area);
     this.scroller.append(this.canvas, this.empty);
     this.cfCache = new Map();
+    this.openLists = new Map();      // 'r:c' of each list cell expanded in place, to the px its row needs
     this.version = 0;
     this.drag = null;
     this.frame = 0;
@@ -72,18 +73,25 @@ export class GridBody extends GridPointer {
     s.addEventListener('click', (e) => this.click(e));
     s.addEventListener('dblclick', (e) => this.dbl(e));
     s.addEventListener('contextmenu', (e) => this.context(e));
+    s.addEventListener('drishti:chips-toggle', (e) => this.listToggled(e));
     this.onUp = () => { if (this.drag) { this.drag = null; this.view.afterRange(); } };
     win.addEventListener('mouseup', this.onUp);
   }
 
   /**
-   * Draws again on the next frame (scrolling, a change of the model).
+   * Draws again on the next frame (scrolling, a change of the model). Until it has drawn, the grid's scroller carries
+   * ``data-dg-drawing``: the page's settled signal (Drishti.settled) waits for every grid to have drawn, so a test or a capture
+   * never reads a grid half filled.
    * @returns {void}
    */
   schedule() {
     if (this.frame) { return; }
     const win = this.doc.defaultView;
-    this.frame = win.requestAnimationFrame(() => { this.frame = 0; this.render(); });
+    this.scroller.setAttribute('data-dg-drawing', '');
+    this.frame = win.requestAnimationFrame(() => {
+      this.frame = 0;
+      try { this.render(); } finally { if (!this.frame) { this.scroller.removeAttribute('data-dg-drawing'); } }
+    });
   }
 
   /**
@@ -91,6 +99,42 @@ export class GridBody extends GridPointer {
    * @returns {void}
    */
   invalidate() { this.version++; this.cfCache.clear(); this.spans = null; }
+
+  /**
+   * A list cell expanded or collapsed: its row grows to hold every chip (or shrinks back), and the rows below move down (or up), so
+   * nothing is covered. The focus stays on the cell's toggle, so the keyboard carries on.
+   * @private
+   * @param {CustomEvent} e drishti:chips-toggle from a cell's chips
+   */
+  listToggled(e) {
+    const cell = e.target.closest ? e.target.closest('.dg-cell') : null;
+    if (!cell || cell.dataset.pinned !== undefined || cell.dataset.r === undefined) { return; }
+    const r = +cell.dataset.r, key = r + ':' + cell.dataset.c, vp = this.model.viewport;
+    if (e.detail && e.detail.expanded) {
+      const chips = cell.querySelector('.drishti-chips');
+      this.openLists.set(key, Math.ceil((chips ? chips.offsetHeight : 0) + 8));       // the chips' own height, a little air above and below
+    } else { this.openLists.delete(key); }
+    this.syncRowHeights(r);
+    this.render();
+    const again = this.rows.querySelector('.dg-cell[data-r="' + r + '"][data-c="' + cell.dataset.c + '"] .drishti-chips-toggle');
+    if (again) { again.focus(); }
+  }
+
+  /** @private the row's extra height: the tallest expanded list cell in it needs, less the usual height */
+  syncRowHeights(r) {
+    let need = 0;
+    this.openLists.forEach((px, key) => { if (+key.split(':')[0] === r) { need = Math.max(need, px); } });
+    this.model.viewport.setExtra(r, Math.max(0, need - this.model.viewport.rowHeight));
+  }
+
+  /**
+   * Every list cell collapses and every row has its usual height again (the rows changed: a sort, a filter, a new answer).
+   * @returns {void}
+   */
+  collapseLists() {
+    if (this.openLists.size) { this.openLists.clear(); }
+    this.model.viewport.clearExtras();
+  }
 
   /** @private the cell (r, display entry) under an event */
   cellOf(e) {
@@ -309,7 +353,7 @@ export class GridBody extends GridPointer {
     const cls = 'dg-row dg-k-' + kind + (expandable ? ' dg-parent' : '') + (selected ? ' dg-selected' : '') + (r % 2 ? ' dg-odd' : '');
     const row = h(doc, 'div', { cls: cls, attrs: { role: 'row', 'aria-rowindex': String(r + levels + 1), 'aria-selected': id !== null ? String(selected) : null,
       'aria-level': m.pivotMode || x.kind === 'group' || x.tree || x.depth ? String((x.depth || 0) + 1) : null, 'aria-expanded': expandable ? String(expanded) : null },
-    style: { height: m.viewport.rowHeight + 'px' } });
+    style: { height: m.viewport.heightOf(r) + 'px' } });
     const o = this.view.o;
     if (x.row && (x.kind === 'leaf' || x.tree) && (o.getRowClass || o.getRowData)) {
       // a host's class and data-* attributes for a leaf's row (a row it highlights; the key a row stands for)
@@ -409,6 +453,12 @@ export class GridBody extends GridPointer {
       cell.appendChild(box);
     } else if (drawn !== null && drawn !== undefined && drawn !== '') {
       cell.appendChild(typeof drawn === 'string' ? h(doc, 'span', { cls: 'dg-text', text: drawn }) : drawn);
+    } else if (leafRow && (col.type === 'list' || isListValue(value))) {
+      // a list attribute: the first chip and a count badge; a click shows every value, growing down over the rows below
+      const open = this.openLists.has(r + ':' + c);
+      cell.classList.add('dg-list');
+      if (open) { cell.classList.add('dg-list-open'); }                     // the row is taller: the chips sit in the cell, nothing is covered
+      cell.appendChild(chipList(doc, value, { compact: true, expanded: open, label: col.headerName || col.field }));
     } else { cell.appendChild(h(doc, 'span', { cls: 'dg-text', text: text })); }
     if (blank) {
       const dim = x.entry.path && x.entry.path.length ? x.entry.path[x.entry.path.length - 1][0] : 'this level';
@@ -446,9 +496,9 @@ export class GridBody extends GridPointer {
     if (!f) { return; }
     const vp = m.viewport, rh = vp.rowHeight;
     const top = this.scroller.scrollTop, room = vp.height;
-    const real = f.row * rh;
+    const real = vp.rowTop(f.row), tall = vp.heightOf(f.row);
     if (vp.contentHeight() <= vp.maxScrollHeight) {
-      if (real < top) { this.scroller.scrollTop = real; } else if (real + rh > top + room) { this.scroller.scrollTop = real + rh - room; }
+      if (real < top) { this.scroller.scrollTop = real; } else if (real + tall > top + room) { this.scroller.scrollTop = real + tall - room; }
     } else if (vp.scrollToRow(f.row) !== null) { this.scroller.scrollTop = vp.scrollTop; }
     const disp = this.view.displayColumns(), d = disp.byIndex[f.col];
     if (d && d.pane === 'center') {
@@ -463,6 +513,7 @@ export class GridBody extends GridPointer {
    */
   destroy() {
     this.doc.defaultView.removeEventListener('mouseup', this.onUp);
-    if (this.frame) { this.doc.defaultView.cancelAnimationFrame(this.frame); }
+    if (this.frame) { this.doc.defaultView.cancelAnimationFrame(this.frame); this.frame = 0; }
+    this.scroller.removeAttribute('data-dg-drawing');
   }
 }

@@ -25,7 +25,7 @@ from routes import embed_v2_routes
 from test_edition import _app, _client
 from test_embed import HOST, make_client, token
 
-HINT = ("You are inside the Drishti World lens, which does not include trades: leave the lens (Views → Leave) or choose an entity it shows.")
+HINT = "This server does not include trades: choose an entity it shows, or ask an administrator."     # a lens never hides: it is never the reason
 
 
 def _hidden(monkeypatch, backend):
@@ -53,10 +53,10 @@ def test_a_view_the_lens_hides_names_the_lens_never_the_id(backend, monkeypatch)
 def test_the_hint_reads_as_a_person_says_it():
     class E:
         active, lens, title = True, True, "Drishti World"
-    assert hidden_hint(E(), "netting-set").startswith("You are inside the Drishti World lens, which does not include netting sets:")
+    assert hidden_hint(E(), "netting-set").startswith("This server does not include netting sets:")
     assert "does not include companies" in hidden_hint(E(), "company")
     E.lens = False
-    assert hidden_hint(E(), "trade").startswith("This server runs the Drishti World edition, which does not include trades")
+    assert hidden_hint(E(), "trade").startswith("Trades are not in Drishti World:")
 
 
 def test_the_embed_api_says_it_too(backend, monkeypatch):

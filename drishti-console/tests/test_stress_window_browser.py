@@ -14,42 +14,26 @@
 
 """The stress window selection page in a real browser (docs/guides/VAR_GUIDE.md section 18.9) on the VaR demo lake with its P&L history:
 the page draws its controls, the chart and the candidates table across the page's width, with no script error."""
-import datetime
 import math
-import subprocess
-import sys
-from pathlib import Path
 
 import pytest
 
-from test_var_explorer_browser import _engine_ready, open_var
+from test_var_explorer_browser import open_var
 from risk_elements import chart, chart_ready, grid_rows
 from select_helpers import choose, value, values  # <drishti-select>: drishti-inputs' Select
 from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and helpers
-from wb_live import _stack
 
 pytestmark = pytest.mark.browser
-ROOT = Path(__file__).resolve().parents[2]
 DATA = ",".join([f"market-risk/{k}" for k in ("scenario-pv", "fx-scenario", "scenario-set",
                                              "var-limit", "pnl-history")] + ["core/desk", "core/book", "core/legal-entity"] + ["trades/murex"])
 
 
 @pytest.fixture(scope="module")
 def stack(tmp_path_factory):
-    work = tmp_path_factory.mktemp("stress-window-lake")
-    lake = work / "delta"
-    today = datetime.date.today()
-    while today.weekday() >= 5:
-        today -= datetime.timedelta(days=1)
-    r = subprocess.run([sys.executable, str(ROOT / "tools" / "drishti.py"), "lake", "demo", "--lake", str(lake), "--data-dir", str(work / "data"),
-                        "--connectors-dir", str(work / "connectors"), "--as-of", today.isoformat(), "--only", DATA, "--no-signal", "-q",
-                        "--engine", "deltalake"], capture_output=True, text=True, cwd=ROOT, timeout=1500)   # the Python writer, in this process: auto starts a JVM for every table and business day
-    if r.returncode != 0 or not (lake / "risk" / "scenario-pv").is_dir():
-        pytest.skip("could not build the VaR demo lake: " + (r.stderr or r.stdout)[-400:])
-    for st in _stack(tmp_path_factory, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true", "DRISHTI_VAR_SYSTEM_BASKETS_SEED": "true",
-                                        "DRISHTI_VAR_HOT_DIR": str(work / "hot")}):
-        _engine_ready(str(st))
-        yield st
+    """The cached VaR demo lake with its P&L history, ending the last weekday (built once per source hash by the Java loader; read-only,
+    the server writes its own folders)."""
+    import var_stack
+    yield from var_stack.var_server(tmp_path_factory, var_stack.shared_lake(tmp_path_factory, needs="risk/pnl-history"), heap="768m")
 
 
 def test_the_page_draws_its_chart_and_tables_across_the_page(stack, browser):

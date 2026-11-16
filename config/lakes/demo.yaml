@@ -53,7 +53,7 @@ tables:
     id: RUN_ID
     date: BUSINESS_DATE
   risk.exposure-path:
-    promote: [TRADE_ID, NETTING_SET, COUNTERPARTY, LEGAL_ENTITY, DESK, TT_BOOK, LIMIT_LETTER, ASSET_CLASS, PRODUCT, SOURCE_SYSTEM, MATURITY_DATE,
+    promote: [TRADE_ID, NETTING_SET, COUNTERPARTY, LEGAL_ENTITY, DIVISION, DESK, TT_BOOK, LIMIT_LETTER, ASSET_CLASS, PRODUCT, SOURCE_SYSTEM, MATURITY_DATE,
       NOTIONAL, GRID_INDEX, GRID_DATE, RUN_ID, BATCH_ID, STATUS]
     vectors: [MTM]
     id: PATH_ROW_ID
@@ -114,6 +114,7 @@ tables:
     vectors: [PNL]
     id: VECTOR_ID
     date: BUSINESS_DATE
+    sort-by: [LEGAL_ENTITY, DIVISION, DESK, TT_BOOK, POSITION_ID, TRADE_ID]   # a record by its position or trade: its row group, not the whole file
   risk.scenario-pv:
     promote: [VALUE_TYPE, GRAIN, TRADE_ID, POSITION_ID, CURRENCY, SOURCE_SYSTEM, SECURITY_ID, INSTRUMENT, LEGAL_ENTITY, DIVISION, DESK, TT_BOOK,
       LIMIT_LETTER, PORTFOLIO, STRATEGY, PRODUCT_GROUP, PRODUCT_TYPE, COUNTERPARTY, DIRECTION, QUANTITY, BASE_PV, VALUATION_DATE, BASE_VALUATION_DATE,
@@ -122,7 +123,7 @@ tables:
     id: SCENARIO_PV_ID
     date: BUSINESS_DATE
     partition-by: [SCENARIO_SET_ID, GRAIN]
-    sort-by: [LEGAL_ENTITY, DIVISION, DESK, TT_BOOK, TRADE_ID]
+    sort-by: [LEGAL_ENTITY, DIVISION, DESK, TT_BOOK, POSITION_ID, TRADE_ID]   # POSITION_ID: a position-grain record (TRADE_ID empty) found by its row group
     compression: zstd
     vector-compression: zstd
     file-size-mb: 256
@@ -188,6 +189,21 @@ tables:
     file-rows: 250000
     row-group-rows: 1000
     id: TRADE_ID
+    maintenance: {compaction: true, target-file-mb: 256, vacuum: 7d}
+  trading.trade_wss:
+    kind: trade
+    promote: [SOURCE_SYSTEM]
+    sort-by: [id]
+    maintenance: {compaction: true, target-file-mb: 256, vacuum: 7d}
+  trading.trade_swapone:
+    kind: trade
+    promote: [SOURCE_SYSTEM]
+    sort-by: [id]
+    maintenance: {compaction: true, target-file-mb: 256, vacuum: 7d}
+  trading.trade_ici:
+    kind: trade
+    promote: [SOURCE_SYSTEM]
+    sort-by: [id]
     maintenance: {compaction: true, target-file-mb: 256, vacuum: 7d}
   us-equities.us-company:
     promote: [TICKER, NAME, LEI_LEGAL_NAME, CIK, LEI, EXCHANGE, INDEX_TEXT, SECTOR, SIC, SIC_DESCRIPTION, STATE_OF_INCORPORATION, REVENUE]

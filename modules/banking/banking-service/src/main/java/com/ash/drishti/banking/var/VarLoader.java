@@ -105,6 +105,32 @@ final class VarLoader {
     }
 
     /**
+     * The nearest business date on or before {@code date} that has P&amp;L (vectors or scenario PVs) <b>and</b> a normal scenario set, or null
+     * (a compare date such as "1 week" ago may fall on a day with P&amp;L but no set: the answer is the nearest earlier date that has both).
+     */
+    LocalDate onOrBeforeWithSet(LocalDate date) {
+        return nearestWithSet(date, this::previous, d -> {
+            try {
+                return !sets(d, AsOf.of(d)).normal().isEmpty();
+            } catch (RuntimeException e) {
+                return false;                                          // a date whose sets cannot be read is skipped like one without
+            }
+        });
+    }
+
+    /** The walk behind {@link #onOrBeforeWithSet}: from the newest date on or before {@code date} that holds P&amp;L, back until one has a set. */
+    static LocalDate nearestWithSet(LocalDate date, java.util.function.UnaryOperator<LocalDate> before, java.util.function.Predicate<LocalDate> hasSet) {
+        LocalDate d = before.apply(date.plusDays(1));
+        for (int i = 0; d != null && i < 400; i++) {
+            if (hasSet.test(d)) {
+                return d;
+            }
+            d = before.apply(d);
+        }
+        return null;
+    }
+
+    /**
      * The data version of a date's trade inputs: the vector table's, and the scenario-PV table's when a connector keeps that kind (a
      * refused date is not read again while it is unchanged; the version stamps every answer of the date).
      */

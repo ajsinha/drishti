@@ -24,7 +24,6 @@ import time
 from pathlib import Path
 from urllib.parse import quote_plus, urlsplit
 
-import yaml
 
 CONSOLE = Path(__file__).resolve().parents[1]
 SETTLED_JS = CONSOLE / "web" / "static" / "js" / "drishti_settled.js"
@@ -40,14 +39,12 @@ IN_CONTEXT = {"/w/new": "/w/new?name=page-walk", "/home/trading/view-as": None}
 SLOW_ALLOWED: dict[str, str] = {}
 #: known faults not yet fixed, each with its reason: reported on every walk, not failed (a page leaves the list when it is fixed)
 KNOWN_FAULTS: dict[str, str] = {
-    "/go?q=PLAY+SIMM+EXAMPLE+%3CGO%3E": "no licensed SIMM parameter files on a test stack: the server answers 5xx (DRS-5333), the console 502; "
-                                        "it should be a 4xx the page explains",
-    "/go?q=PLAY%20SIMM%20EXAMPLE%20%3CGO%3E": "as above, the top bar's link",
 }
 
 
 def sitemap() -> dict:
-    return yaml.safe_load((CONSOLE / "config" / "sitemap.yaml").read_text(encoding="utf-8"))
+    from core.menus import spec_of
+    return spec_of(CONSOLE)   # the kernel's pages (config/sitemap.yaml) with the modules' menus from their manifests
 
 
 def go(cmd: str) -> str:

@@ -22,18 +22,19 @@
    a table with data-no-chart has none). A table with data-plain is left as it is (a form laid out as a table). */
 (function () {
   'use strict';
+  function drishti_url(p) { var f = globalThis.drishti_url; return typeof f === 'function' && f !== drishti_url ? f(p) : p; }   // drishti-core's base helper when the page has it; a page without it (the renderer, an embed) keeps the URL as it is
   var me = document.currentScript;
   var CF = (window.drishtiModules || {}).colFilter;     // column filters; loaded before this script
   var VER = me && /[?&]v=([^&]+)/.exec(me.src || '') ? /[?&]v=([^&]+)/.exec(me.src)[1] : '';
   // where the chart kit comes from: beside this script (the console's /static/, or /embed/v2/ for the client-side renderer on another site)
-  var ROOT = me && /\/js\/tables\.js/.test(me.src || '') ? me.src.replace(/js\/(?:drishti_)?tables\.js.*$/, '') : '/static/';
+  var ROOT = me && /\/js\/tables\.js/.test(me.src || '') ? me.src.replace(/js\/(?:drishti_)?tables\.js.*$/, '') : drishti_url('/static/');
 
   // ---- Chart any table: the dialog and its scripts, loaded at the first use ------------------------------------------------
   var kit = null;
   function script(src) {
     return new Promise(function (ok, fail) {
       var x = document.createElement('script');
-      x.src = ROOT + src + (VER ? '?v=' + VER : '');
+      x.src = drishti_url(ROOT + src + (VER ? '?v=' + VER : ''));
       x.onload = ok; x.onerror = function () { fail(new Error('could not load ' + src)); };
       document.head.appendChild(x);
     });
@@ -43,7 +44,7 @@
     if (kit) { return kit; }
     if (!document.querySelector('link[data-table-chart-css]')) {
       var l = document.createElement('link');
-      l.rel = 'stylesheet'; l.href = ROOT + 'css/drishti_table-chart.css' + (VER ? '?v=' + VER : ''); l.setAttribute('data-table-chart-css', '');
+      l.rel = 'stylesheet'; l.href = drishti_url(ROOT + 'css/drishti_table-chart.css' + (VER ? '?v=' + VER : '')); l.setAttribute('data-table-chart-css', '');
       document.head.appendChild(l);
     }
     var steps = [];
@@ -63,7 +64,7 @@
     init = init || {};
     var o = { method: init.method || 'GET', credentials: 'same-origin', headers: { 'Accept': 'application/json' } };
     if (init.body) { o.headers['Content-Type'] = 'application/json'; o.body = JSON.stringify(init.body); }
-    return fetch(url, o).then(function (r) { return r.json().catch(function () { return {}; }); });
+    return fetch(drishti_url(url), o).then(function (r) { return r.json().catch(function () { return {}; }); });
   }
   /** Opens a source (an adapter, or a function of the kit that makes one) as a chart; opener gets the focus back. */
   function openChart(make, opener) {

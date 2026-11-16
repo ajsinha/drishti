@@ -1,0 +1,115 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+package com.ash.drishti.packs;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+/** A pack's Calc offering: {@code python:} in pack.yaml, snippet files under python/, and the {@code calc} power of its roles. */
+class PackPythonTest {
+
+    @Test
+    void snippetsComeFromTheManifestAndFromFilesWithAHeader(@TempDir Path dir) throws Exception {
+        Path pack = Files.createDirectories(dir.resolve("desk"));
+        Files.writeString(pack.resolve("pack.yaml"), """
+                pack: desk
+                kinds: [book, trade]
+                python:
+                  enabled: true
+                  snippets:
+                    - { title: Inline, description: from the manifest, kinds: [trade], code: "print(1)\\n" }
+                    - { title: No code }
+                roles:
+                  quant: { kinds: ["*"], calc: true }
+                """);
+        Files.createDirectories(pack.resolve("python"));
+        Files.writeString(pack.resolve("python/b_pivot.py"), """
+                # Project Drishti · the copyright header comes first
+                # (several lines of it)
+
+                # title: Pivot by book
+                # description: MTM by book
+                # kinds: book, trade
+
+                # the code's own comment stays
+                import pandas as pd
+                show(view.tables)
+                """);
+        Files.writeString(pack.resolve("python/a_plain.py"), "1 + 1\n");
+        Files.writeString(pack.resolve("python/notes.txt"), "not a snippet");
+        Files.writeString(pack.resolve("python/z_big.py"), "#" + "x".repeat((int) PackPython.MAX_FILE_BYTES));
+        Pack p = new PackLoader().load(dir, List.of("desk")).get(0);
+
+        PackPython py = PackPython.of(p);
+        assertThat(py.enabled()).isTrue();
+        assertThat(py.snippets()).extracting(PackPython.Snippet::title).containsExactly("Inline", "a_plain", "Pivot by book");
+        PackPython.Snippet pivot = py.snippets().get(2);
+        assertThat(pivot.description()).isEqualTo("MTM by book");
+        assertThat(pivot.kinds()).containsExactly("book", "trade");
+        assertThat(pivot.file()).isEqualTo("python/b_pivot.py");
+        assertThat(pivot.code()).startsWith("# the code's own comment stays\nimport pandas as pd\n").doesNotContain("copyright");
+        assertThat(py.snippets().get(1).kinds()).isEmpty();                              // no kinds: every kind of its pack
+        assertThat(PackPython.appliesTo(py.snippets().get(1), "book", p.kinds())).isTrue();
+        assertThat(PackPython.appliesTo(py.snippets().get(1), "var", p.kinds())).isFalse();
+        assertThat(PackPython.appliesTo(py.snippets().get(0), "book", p.kinds())).isFalse();
+
+        Map<String, Object> props = new PackLoader().properties(List.of(p));
+        assertThat(props).containsEntry("drishti.security.roles.quant.calc", true);
+    }
+
+    @Test
+    void aPackWithoutPythonOffersNothing(@TempDir Path dir) throws Exception {
+        Files.createDirectories(dir.resolve("plain"));
+        Files.writeString(dir.resolve("plain/pack.yaml"), "pack: plain\nkinds: [thing]\n");
+        assertThat(PackPython.of(new PackLoader().load(dir, List.of("plain")).get(0))).isEqualTo(PackPython.NONE);
+        Files.writeString(dir.resolve("plain/pack.yaml"), "pack: plain\npython: { enabled: false }\n");
+        Files.createDirectories(dir.resolve("plain/python"));
+        Files.writeString(dir.resolve("plain/python/x.py"), "# title: X\n1\n");
+        PackPython off = PackPython.of(new PackLoader().load(dir, List.of("plain")).get(0));
+        assertThat(off.enabled()).isFalse();
+        assertThat(off.snippets()).extracting(PackPython.Snippet::code).containsExactly("1\n");
+    }
+
+    @Test
+    void theShippedBankingPacksOfferTheirStarterSnippets() {
+        List<Pack> packs = new PackLoader().load(com.ash.drishti.api.resolution.ConfigResolution.repository(PackLoaderTest.PACKS.getParent().getParent()),
+                List.of("market-risk", "counterparty-risk"));                                // where the resolution finds them (their module)
+        Map<String, List<String>> titles = new java.util.TreeMap<>();
+        packs.forEach(p -> titles.put(p.name(), PackPython.of(p).snippets().stream().map(PackPython.Snippet::title).toList()));
+        assertThat(packs).allMatch(p -> PackPython.of(p).enabled());
+        // the library of tools/packgen/banking/snippets: each pack's starter among at least ten (USER_GUIDE.md, Snippet catalogue)
+        // market-risk keeps six since 2.8.0: its seven VaR snippets read the retired stored var kind (VaR is the engine's: docs/guides/VAR_GUIDE.md)
+        assertThat(titles.get("market-risk"))
+                .contains("Stress results: scenarios by desk, limits and the worst case", "P&L explain quality across books")
+                .noneMatch(t -> t.startsWith("VaR"))
+                .hasSizeGreaterThanOrEqualTo(6);
+        // trading keeps nine since 2.3.0: the option and FX-forward snippets need an underlying the common trade schema does not name
+        assertThat(titles.get("trading")).contains("MTM under parallel rate moves", "Payment ladder: what the trade pays and receives, by month")
+                .hasSizeGreaterThanOrEqualTo(9);
+        // core keeps nine since 2.8.0: desk_performance.py read the desk's stored VaR, which the engine now computes
+        assertThat(titles.get("core")).contains("P&L by book: a pandas pivot").hasSizeGreaterThanOrEqualTo(9);
+        assertThat(titles.get("market-data")).contains("Interpolate the curve at any tenor", "Key-rate DV01 by bump and reprice")
+                .hasSizeGreaterThanOrEqualTo(20);
+        assertThat(titles.get("counterparty-risk")).contains("MTM concentration by product and netting set").hasSizeGreaterThanOrEqualTo(10);
+        assertThat(titles.values()).allSatisfy(t -> assertThat(t).doesNotHaveDuplicates());
+    }
+}

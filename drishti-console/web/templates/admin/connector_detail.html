@@ -15,17 +15,17 @@
 #}
 {% extends "base.html" %}
 {% block title %}{{ c.name }} · Connectors · {{ PRODUCT }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_admin-embedding.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_admin-connectors.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_admin-detail.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_readme.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_admin-artifacts.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-embedding.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-connectors.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-detail.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_readme.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-artifacts.css?v={{ ASSET_V }}">{% endblock %}
 {% block screen %}admin{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
 {% from "_macros/retry.html" import retry_note, retry_button %}
 {% set states = {'RUNNING': ['running', 'st-ok'], 'FAILED': ['failed', 'st-bad'], 'DISABLED': ['disabled', ''], 'OFFLINE': ['off (offline mode)', ''], 'IDLE': ['idle', 'st-warn'], 'NOT_LOADED': ['not started', 'st-warn']} %}
-<div class="adm" data-connectors data-zone="{{ (business_date or {}).get('zone') or CLOCK_TZ or 'America/New_York' }}" data-watch="/admin/connectors/api/stamp" data-detail="{{ c.name }}" data-kinds="{{ (known_kinds or []) | join(',') }}" data-directory="{{ c.directory }}">
+<div class="adm" data-connectors data-zone="{{ (business_date or {}).get('zone') or CLOCK_TZ or 'America/New_York' }}" data-watch="{{ BASE }}/admin/connectors/api/stamp" data-detail="{{ c.name }}" data-kinds="{{ (known_kinds or []) | join(',') }}" data-directory="{{ c.directory }}">
   {% with tab='connectors' %}{% include "admin/_nav.html" %}{% endwith %}
-  <p class="adm-crumb"><a href="/admin/connectors">Connectors</a> <span aria-hidden="true">/</span> <span class="mono">{{ c.name }}</span></p>
-  <h1 class="ws-h"><span class="mono">{{ c.name }}</span> <a class="emb-help" href="/help/connector-files" aria-label="Help: connector files and this page" title="Help: connector files and this page">?</a></h1>
+  <p class="adm-crumb"><a href="{{ BASE }}/admin/connectors">Connectors</a> <span aria-hidden="true">/</span> <span class="mono">{{ c.name }}</span></p>
+  <h1 class="ws-h"><span class="mono">{{ c.name }}</span> <a class="emb-help" href="{{ BASE }}/help/connector-files" aria-label="Help: connector files and this page" title="Help: connector files and this page">?</a></h1>
   {% if c.description %}<p class="text-muted-d">{{ c.description }}</p>{% endif %}
   <p class="adm-msg" data-msg role="status" aria-live="polite"></p>
 
@@ -66,7 +66,7 @@
     <p class="adm-actions det-actions">
       <button type="button" class="fk" data-act="edit" aria-label="Edit {{ c.name }}">Edit</button>
       <button type="button" class="fk" data-act="test" aria-label="Test the connection of {{ c.name }}">Test connection</button>
-      {% if c.enabled %}{% for a in connector_actions(c.plugin) %}<button type="button" class="fk" data-act="post-action" data-url="{{ a.url }}" aria-label="{{ a.aria | replace('{name}', c.name) }}" title="{{ a.title }}">{{ a.label }}</button>{% endfor %}{% endif %}
+      {% if c.enabled %}{% for a in connector_actions(c.plugin) %}<button type="button" class="fk" data-act="post-action" data-url="{{ a.url | u }}" aria-label="{{ a.aria | replace('{name}', c.name) }}" title="{{ a.title }}">{{ a.label }}</button>{% endfor %}{% endif %}
       <button type="button" class="fk" data-act="{{ 'disable' if c.enabled else 'enable' }}" aria-label="{{ 'Disable' if c.enabled else 'Enable' }} {{ c.name }}">{{ 'Disable' if c.enabled else 'Enable' }}</button>
       {% if c.template %}<button type="button" class="fk" data-act="reset" aria-label="Reset {{ c.name }} to the default of pack {{ c.template }}">Reset to pack default</button>
       {% elif c.origin == 'file' %}<button type="button" class="fk emb-danger" data-uninstall data-kind="connector" data-name="{{ c.name }}" aria-label="Uninstall {{ c.name }}">Uninstall…</button>{% endif %}
@@ -84,8 +84,8 @@
       {% if m.windows %}<dt>Windows</dt><dd>{{ m.windows }}</dd>{% endif %}
     </dl>
     <details class="pd-readme-body" data-readme-body>
-      <summary>Its README (what it reads, settings, data structure, examples, troubleshooting) · <a href="/admin/connectors/api/types/{{ c.plugin }}/readme" class="mono">JSON</a></summary>
-      <div class="help-article readme-article">{{ type_readme.html | safe }}</div>
+      <summary>Its README (what it reads, settings, data structure, examples, troubleshooting) · <a href="{{ BASE }}/admin/connectors/api/types/{{ c.plugin }}/readme" class="mono">JSON</a></summary>
+      <div class="help-article readme-article">{{ type_readme.html | based | safe }}</div>
     </details>
   </section>
   {% endif %}
@@ -101,7 +101,7 @@
 
   <section aria-labelledby="cdPacks" class="det-sec">
     <h2 class="ws-h" id="cdPacks">Packs that use it</h2>
-    <ul class="det-list" data-used-by>{% for u in c.usedBy %}<li><a class="mono" href="/admin/packs/{{ u.pack }}">{{ u.pack }}</a>
+    <ul class="det-list" data-used-by>{% for u in c.usedBy %}<li><a class="mono" href="{{ BASE }}/admin/packs/{{ u.pack }}">{{ u.pack }}</a>
       {% if u.kinds %}<span class="text-muted-d">reads <span class="mono">{{ u.kinds | join(', ') }}</span> through it</span>{% endif %}</li>
     {% else %}<li class="text-muted-d">No pack uses it.</li>{% endfor %}</ul>
   </section>
@@ -121,10 +121,13 @@
 
   <section aria-labelledby="cdSettings" class="det-sec">
     <h2 class="ws-h" id="cdSettings">Settings in effect</h2>
+    {% if c.templateFrom %}<p class="text-muted-d" data-template-from>Template: <span class="mono">{{ c.templateFrom }}</span>{% if c.layer %} · file layer: <span class="mono">{{ c.layer }}</span>{% endif %}</p>{% endif %}
+    {% if c.superseded %}<p class="adm-warn" role="status" data-superseded><i class="bi bi-info-circle" aria-hidden="true"></i> This file was generated by an earlier release and never edited: it is ignored, the template is in force. Safe to delete.</p>{% endif %}
+    {% set origins = c.get('origins') or {} %}
     {% if c.settings %}<div class="tbl-wrap"><table class="tbl adm-tbl" data-plain data-settings>
       <caption class="visually-hidden">The settings this connector runs with; credentials are masked</caption>
-      <thead><tr><th scope="col">Setting</th><th scope="col">Value</th></tr></thead>
-      <tbody>{% for k, v in c.settings.items() %}<tr><th scope="row" class="mono">{{ k }}</th><td class="mono">{{ v }}</td></tr>{% endfor %}</tbody></table></div>
+      <thead><tr><th scope="col">Setting</th><th scope="col">Value</th>{% if origins %}<th scope="col">From</th>{% endif %}</tr></thead>
+      <tbody>{% for k, v in c.settings.items() %}<tr><th scope="row" class="mono">{{ k }}</th><td class="mono">{{ v }}</td>{% if origins %}<td data-origin="{{ origins.get(k, '') }}"><span class="st{{ ' st-warn' if origins.get(k) in ('override', 'site') else '' }}">{{ origins.get(k, '') }}</span></td>{% endif %}</tr>{% endfor %}</tbody></table></div>
     {% else %}<p class="text-muted-d">No settings.</p>{% endif %}
   </section>
 
@@ -148,4 +151,4 @@
 </div>
 {% endblock %}
 {% block footer %}{% include "_footer.html" %}{% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_artifact-uninstall.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_admin-connectors.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_admin-retry.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_admin-index.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_admin-watch.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_artifact-uninstall.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_conn-settings.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_admin-connectors.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_admin-retry.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_admin-index.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_admin-watch.js?v={{ ASSET_V }}"></script>{% endblock %}

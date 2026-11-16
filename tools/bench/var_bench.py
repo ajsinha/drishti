@@ -118,7 +118,7 @@ def load(a) -> int:
     total = 0.0
     for kind in a.kinds.split(","):
         cmd = [py if Path(py).exists() else sys.executable, str(ROOT / "tools" / "drishti.py"), "lake", "build", "--from", str(Path(a.data) / kind),
-               "--pack", str(ROOT / "config" / "packs" / "banking" / "market-risk"), "--connector", "risk-store", "--kind", kind, "--key", KEYS[kind],
+               "--pack", str(ROOT / "modules" / "banking" / "dmod" / "packs" / "market-risk"), "--connector", "risk-store", "--kind", kind, "--key", KEYS[kind],
                "--mode", "overwrite-dates", "--lake", a.lake, "--engine", a.engine, "-q"]     # each file's (tar folder's) date: the load rules
         for s in a.loader_set or []:
             cmd += ["--loader-set", s]
@@ -179,7 +179,7 @@ class Bench:
             (self.work / d).mkdir(exist_ok=True)
         self.java = JAVAS[a.java]
         self.host = hostaddr.primary_ipv4()
-        jars = sorted(ROOT.glob("drishti-server/target/drishti-server-*-exec.jar"), key=os.path.getmtime, reverse=True)
+        jars = sorted(ROOT.glob("kernel/drishti-server/target/drishti-server-*-exec.jar"), key=os.path.getmtime, reverse=True)
         if not jars:
             raise SystemExit("needs the built server jar")
         self.jar = str(jars[0])
@@ -229,7 +229,7 @@ class Bench:
                      "--drishti.var.sharding.kinds=pnl-vector"]
         args =[*(self.a.jvm_arg or []), *args, *(self.a.server_arg or [])]
         log =open(self.work / "logs" / f"{n}.out", "ab")
-        self.procs[n] = subprocess.Popen(java_cmd(str(Path(self.java) / "bin" / "java"), args, tmp=home / "data" / "tmp" / "server"), cwd=home,
+        self.procs[n] = subprocess.Popen(java_cmd(str(Path(self.java) / "bin" / "java"), args, tmp=home / "data" / "tmp" / "server", cwd=home, env=env), cwd=home,
                                          env=env, stdout=log, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, start_new_session=True)
 
     def wait_health(self, n: str, seconds: float = 600) -> float:

@@ -93,7 +93,7 @@ def java_source(cls: str) -> Path:
     """The source file of a Java class in whichever module holds it (modules/banking/banking-service, modules/banking/banking-compute, ...: the domain modules
     moved the risk engines and publishers out of drishti-server and drishti-compute); a path that does not exist when no module has it."""
     rel = Path("src", "main", "java", *cls.split(".")).with_suffix(".java")
-    found = sorted(p / rel for p in [*C.ROOT.iterdir(), *C.ROOT.glob("modules/*/*")] if p.is_dir() and (p / rel).is_file())
+    found = sorted(p / rel for p in [*C.ROOT.iterdir(), *C.ROOT.glob("*/drishti-*"), *C.ROOT.glob("modules/*/*")] if p.is_dir() and (p / rel).is_file())
     return found[0] if found else C.ROOT / rel
 
 
@@ -225,7 +225,7 @@ class TheRetiredStoredVersions(unittest.TestCase):
                     continue
                 used = {r.get("kind") for r in c.get("reads") or []} | {k for t in c.get("triggers") or [] for k in t.get("kinds") or []}
                 self.assertEqual(used & published, set(), f"{p}: the reactive connector {name} reads a published result")
-        app = C.ROOT / "drishti-server" / "src" / "main" / "resources" / "application.yaml"
+        app = C.ROOT / "kernel/drishti-server" / "src" / "main" / "resources" / "application.yaml"
         server = yaml.safe_load(app.read_text(encoding="utf-8"))
         texts.append(("application.yaml", json.dumps(((server.get("drishti") or {}).get("sources") or {}).get("connectors") or {})))
         for where, text in texts:
@@ -250,7 +250,7 @@ class TheRetiredStoredVersions(unittest.TestCase):
         self.assertNotIn("exposure-profile", by_kind)
 
     def test_a_grouping_computed_in_place_keeps_no_stored_version(self):
-        """GROUPINGS_ANALYTICS_GUIDE.md: LEIG, LEIC, SIC and ECG are computed from the fundamental data by a derived connector since 2.9.2,
+        """bi/README.md: LEIG, LEIC, SIC and ECG are computed from the fundamental data by a derived connector since 2.9.2,
         under the same kind, command and ids. Their stored version never returns: no Delta connector serves the kind, no sample, test
         data or test-data folder holds it, no public-data generator writes it, and the contract says computed by the derived connector."""
         cip = self.pol["computed-in-place"]
@@ -277,7 +277,7 @@ class TheRetiredStoredVersions(unittest.TestCase):
 
     def test_correlations_and_ratios_are_computed(self):
         """CORR keeps its factors and computes its correlations (correlation-result, a reactive Java engine); the USEQ ratios and PXH
-        analytics are worked out when read (GROUPINGS_ANALYTICS_GUIDE.md, sections 15 to 17)."""
+        analytics are worked out when read (bi/README.md, sections 15 to 17)."""
         by_kind = {cmd["kind"]: c for cmd, _, c in C.contracts()}
         self.assertEqual((by_kind["correlation-result"]["class"], by_kind["correlation-result"]["binding-hint"].get("computed")), ("computed", True))
         self.assertEqual(by_kind["correlation-matrix"]["class"], "fundamental")

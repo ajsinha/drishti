@@ -289,6 +289,7 @@ export function pivotMeasures(cols) {
  * @param {boolean} [c.pinTotals] the pivot's totals are pinned
  * @param {boolean} [c.explain] the grid has an Explain hook
  * @param {boolean} [c.rowHeader] the pivot's row heading column
+ * @param {boolean} [c.list] a list column: it is filtered by contains, any of and all of
  * @returns {MenuItem[]}
  */
 export function columnMenuItems(c) {
@@ -298,6 +299,8 @@ export function columnMenuItems(c) {
   if (c.numeric && !c.rowHeader) {
     items.push({ id: 'top-5', label: 'Top 5 rows by this column', icon: '⌕' }, { id: 'top-10', label: 'Top 10 rows by this column', icon: '⌕' },
       { id: 'value-filter', label: 'Value filter…', icon: '⌕' });
+  } else if (c.list && !c.pivot) {
+    items.push({ id: 'list-has', label: 'Contains…', icon: '⌕' }, { id: 'list-any', label: 'Any of…', icon: '⌕' }, { id: 'list-all', label: 'All of…', icon: '⌕' });
   } else if (!c.pivot) { items.push({ id: 'member-filter', label: 'Filter members…', icon: '⌕' }); }
   items.push({ id: 'clear-filter', label: 'Clear filters' }, { sep: true });
   if (c.aggs && c.aggs.length && !c.rowHeader) {

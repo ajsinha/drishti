@@ -32,7 +32,7 @@ def live_console(tmp_path_factory):
     yield from _stack(tmp_path_factory, {"DRISHTI_PACKS": "core,market-data,trading"})
 
 
-SAMPLES = CONSOLE.parent / "config" / "packs" / "banking" / "trading" / "samples" / "trade.jsonl"
+SAMPLES = CONSOLE.parent / "modules" / "banking" / "dmod" / "packs" / "trading" / "samples" / "trade.jsonl"
 
 
 def commodity_swap(legs: int) -> dict:

@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.banking.compute.var;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.compute.vector.OrdinalSet;
@@ -56,12 +57,12 @@ class VarTestDataPrecisionTest {
     static Path dir;
 
     static Path root() {
-        Path p = Path.of("").toAbsolutePath();
+        Path p = Path.of(TestRoots.module());
         while (p != null && !Files.isDirectory(p.resolve("data/testdata/market-risk/scenario-pv"))) {
             p = p.getParent();
         }
         if (p == null) {
-            throw new IllegalStateException("the committed test data (data/testdata/market-risk) is not above " + Path.of("").toAbsolutePath());
+            throw new IllegalStateException("the committed test data (data/testdata/market-risk) is not above " + Path.of(TestRoots.module()));
         }
         return p;
     }
@@ -199,7 +200,7 @@ class VarTestDataPrecisionTest {
     static void load() throws IOException {
         Path repo = root();
         Path data = repo.resolve("data/testdata/market-risk");
-        Map<String, Object> pack = new ObjectMapper(new YAMLFactory()).readValue(repo.resolve("config/packs/banking/market-risk/pack.yaml").toFile(), Map.class);
+        Map<String, Object> pack = new ObjectMapper(new YAMLFactory()).readValue(repo.resolve("modules/banking/dmod/packs/market-risk/pack.yaml").toFile(), Map.class);
         PositionRules rules = PositionRules.of((Map<?, ?>) pack.get("positions"));
         List<LocalDate> scen = new ArrayList<>();
         lines(data.resolve("scenario-set"), n -> n.path("SCENARIO_DATES").forEach(d -> scen.add(LocalDate.parse(d.asText()))));

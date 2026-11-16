@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # The module's pages: one per function, under /m/banking/ (KERNEL_AND_MODULES.md section 9.8). The console's own banking plugin
-# (drishti-console/plugins/banking) draws them until the console part moves into the module (2.9.11.i4).
+# (drishti-console/plugins/banking) draws them until the console part moves into the module (2.9.11.i5).
 format: 2
 module: banking
 title: Banking and risk
@@ -147,17 +147,17 @@ routes:
   path: /market-risk/pnl-vector/{id}
   sutra: market-risk/pnl-vector
   function: PNLV
-  title: P&L vector (509 scenarios)
+  title: P&L vector (one P&L per scenario)
 - id: spv
   path: /market-risk/scenario-pv/{id}
   sutra: market-risk/scenario-pv
   function: SPV
-  title: Scenario PVs of a trade (509 scenarios, its currency)
+  title: Scenario PVs of a position or trade (one PV per scenario, its currency)
 - id: fxs
   path: /market-risk/fx-scenario/{id}
   sutra: market-risk/fx-scenario
   function: FXS
-  title: Scenario FX of a currency (509 scenarios)
+  title: Scenario FX of a currency (one rate per scenario)
 - id: sset
   path: /market-risk/scenario-set/{id}
   sutra: market-risk/scenario-set

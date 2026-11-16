@@ -71,6 +71,26 @@ from core.backend import BackendError  # noqa: E402
 from core.config import load_settings  # noqa: E402
 
 
+def live_page(answer: dict, live_kinds=()) -> dict:
+    """A search's answer as the server's live set gives it (LiveSetController /query): rows ``{id, version, seq, doc}`` with the values at
+    the columns' fields (``$.counterparty.name`` is ``{counterparty: {name}}``) and the title as ``_title``; the summary as ``search``."""
+    rows = []
+    for i, r in enumerate(answer.get("rows", [])):
+        doc: dict = {}
+        for path, v in (r.get("values") or {}).items():
+            at, parts = doc, (path[2:] if path.startswith("$.") else path).split(".")
+            for part in parts[:-1]:
+                at = at.setdefault(part, {})
+            at[parts[-1]] = v
+        if r.get("title"):
+            doc["_title"] = r["title"]
+        rows.append({"id": r["ref"]["id"], "version": -1, "seq": i + 1, "doc": doc})
+    search = {k: v for k, v in answer.items() if k != "rows"}
+    live = answer.get("kind") in live_kinds
+    return {"set": {"id": "qu-stand-in", "kind": answer.get("kind")}, "live": live, "total": len(rows), "seq": len(rows), "offset": 0, "rows": rows,
+            "search": search}
+
+
 class FakeBackend:
     """Stands in for the Drishti server."""
 
@@ -81,7 +101,38 @@ class FakeBackend:
     async def _send(self, method, path, ident=None, **kw):
         """The collaboration calls (core/collab.py: the bell's unread count every page asks, the inbox, shares): an empty inbox, so a page
         under test never answers 500 to its own bell (each one logged a long traceback)."""
+        sets = self.__dict__.setdefault("live_sets", {})
+        bare, _, query = path.partition("?")
+        if method == "GET" and bare.startswith("/live/") and bare.endswith("/rows") and bare.split("/")[2] in sets:    # a set the stand-in made (live_query, live_kind)
+            from urllib.parse import parse_qs
+            page, q = sets[bare.split("/")[2]], {k: v[0] for k, v in parse_qs(query).items()}
+            off, lim = int(q.get("offset") or 0), int(q.get("limit") or 500)
+            return {**page, "rows": page["rows"][off:off + lim], "offset": off}
         return {"unread": 0} if path.endswith("/count") else {"items": []}
+
+    async def engine(self, method, path, ident, /, body=None, raw=False, accept="", timeout=None, **params):
+        """A compute engine (core/backend.py ``engine``): the stand-in has none switched on, so it answers as a server with that engine
+        off (404), unless the test gives the engine's fake (tests/engine_fakes.py). A page's risk tile then says so instead of a 500."""
+        from core.backend import BackendError
+        raise BackendError(404, "DRS-1001", f"no engine at {path} on this stand-in server")
+
+    async def live_query(self, q, ident=None, again=True, limit=1000):
+        """The server's live set of a search (GET /api/v1/live/query), as the server makes it: the search's answer (this stand-in's own
+        ``search``) as the set's page: its rows as documents at the columns' fields, the summary as ``search``; static (no live binding)
+        unless the stand-in says ``live_kinds`` holds the kind."""
+        page = live_page(await self.search(q, ident), getattr(self, "live_kinds", ()))
+        self.__dict__.setdefault("live_sets", {})[page["set"]["id"]] = page
+        return page
+
+    async def live_kind(self, word, ident=None, offset=0, limit=100, sort="", descending=False):
+        """A kind's own set (a bare mnemonic): the stand-in's search of the word, paged."""
+        page = live_page(await self.search(f"{word} limit 1000", ident), getattr(self, "live_kinds", ()))
+        spec = {"id": f"kind-{page['search'].get('kind')}", "kind": page["search"].get("kind"), "title": page["search"].get("mnemonic"),
+                "columns": [{"field": c.removeprefix("$."), "label": (page["search"].get("labels") or {}).get(c, c.removeprefix("$."))} for c in page["search"].get("columns", [])]}
+        self.__dict__.setdefault("kind_pages", []).append((word, offset, limit))
+        made = {**page, "set": spec, "rows": page["rows"][offset:offset + limit], "offset": offset, "capped": False}
+        self.__dict__.setdefault("live_sets", {})[spec["id"]] = {**page, "set": spec}
+        return made
 
     async def pivot(self, method, path, ident, body=None, raw=False, **params):
         """The pivot engine: POST /inline (the figures of rows the console holds, core/engine_figures.py) as engine_standin answers it;
@@ -663,7 +714,9 @@ class FakeBackend:
                           {**join("exposure-result", "TRADE_ID", "trade", 0, 0, "computed"), "why": "exposure-result is computed on demand, never stored"}]}
 
     async def packs(self, ident=None):
+        # each row names the pack's folder and origin, as the server's resolution answers (the retired example packs are the site's)
         return [{"name": n, "version": "1.0.0", "title": n.title(), "description": "", "console": {}, "assigned": True,
+                 "dir": str(CONSOLE.parent / "examples" / "packs" / n), "origin": "site",
                  "active": n in self.enabled_packs, **({"python": self.python[n]} if n in self.python else {})}
                 for n in ["finance", "logistics"] if n in self.enabled_packs or self.enabled_packs]
 
@@ -734,7 +787,7 @@ class FakeBackend:
         ``META-INF/drishti/lenses.yaml``), each with its modules, functions and Home cards; nothing off."""
         import yaml
         lenses = []
-        for f in ("drishti-server/src/main/resources/META-INF/drishti/lenses.yaml", "modules/banking/banking-service/src/main/resources/META-INF/drishti/lenses.yaml"):
+        for f in ("kernel/drishti-server/src/main/resources/META-INF/drishti/lenses.yaml", "modules/banking/banking-service/src/main/resources/META-INF/drishti/lenses.yaml"):
             lenses += (yaml.safe_load((CONSOLE.parent / f).read_text(encoding="utf-8")) or {}).get("lenses") or []
         return {"modules": [{"id": m, "title": m, "domain": m} for m in ("core", "banking", "economy", "capitalmarkets")], "off": [],
                 "lenses": lenses, "functions": {"off": []}}
@@ -1056,7 +1109,7 @@ class FakeBackend:
         name = self.HISTORY.get((kind, id_))
         if name is None:
             raise BackendError(404, "DRS-1001", f"no source holds {kind}/{id_}")
-        data = json.loads((CONSOLE.parent / "drishti-testkit" / "src" / "main" / "resources" / "history" / name).read_text())
+        data = json.loads((CONSOLE.parent / "testing/drishti-testkit" / "src" / "main" / "resources" / "history" / name).read_text())
         if params.get("diff") == "true":
             labels = {c["path"]: c.get("label") for c in data["columns"]}
             prev = None

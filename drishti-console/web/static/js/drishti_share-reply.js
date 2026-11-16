@@ -41,7 +41,7 @@
     if (busy) { return; }
     if (!note) { say('Write a reply first.', true); text.focus(); return; }
     busy = true; send.disabled = true; say('Sending…');
-    fetch('/api/share/' + encodeURIComponent(id) + '/replies', { method: 'POST', credentials: 'same-origin',
+    fetch(drishti_url('/api/share/' + encodeURIComponent(id) + '/replies'), { method: 'POST', credentials: 'same-origin',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ note: note }) })
       .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { return { ok: r.ok, j: j }; }); })
       .then(function (r) {

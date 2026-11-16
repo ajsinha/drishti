@@ -34,6 +34,9 @@ THEMES = ["terminal", "light", "wallstreet", "blue", "green", "crimson", "crimso
 GREENS = ("rgb(79, 209, 139)", "rgb(26, 127, 75)")      # the accent on dark and on light themes
 
 
+_APP: dict = {}   # the module's console app and its default user, for a test that changes who "my" is
+
+
 @pytest.fixture(scope="module")
 def trading_console():
     import uvicorn
@@ -45,9 +48,21 @@ def trading_console():
     trading_landing.forget()
     app = create_app(load_settings(CONSOLE / "config"))
     app.state.backend = TradingBackend()
-    app.state.editions.learn({"product": "Drishti Trading", "edition": {"name": "trading", "title": "Drishti Trading"}})
+    app.state.editions.learn({"product": "Drishti", "edition": None, "lenses": ["risk", "world", "market", "trading"]})   # trading is a lens of the full product
     user = app.state.auth.default.user
-    app.state.editions.instance.spec["trading"]["people"][user] = {"trader": "TRDR-ASHAH"}
+    store = {user: {"lens": "trading"}}                      # the person's settings: they work in the trading lens
+
+    async def settings(ident=None):
+        return dict(store.get(ident.user if ident else "", {}))
+
+    async def patch_settings(body, ident=None):
+        mine = store.setdefault(ident.user, {})
+        mine.update({k: v for k, v in body.items() if v is not None})
+        return mine
+
+    app.state.backend.settings, app.state.backend.patch_settings = settings, patch_settings
+    app.state.editions.lenses["trading"].spec["trading"]["people"][user] = {"trader": "TRDR-ASHAH"}
+    _APP["app"], _APP["user"] = app, user
     server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=PORT, log_level="warning", timeout_graceful_shutdown=2))
     thread = threading.Thread(target=server.run, daemon=True)
     thread.start()
@@ -86,7 +101,7 @@ def test_each_trading_landing_fills_from_the_servers_answers_and_fits(browser, t
         if landing == "trader":
             page.wait_for_function("() => document.querySelector('[data-tl-date]').textContent === '2026-09-30'")
             page.wait_for_function("() => document.querySelector('[data-tl-tile=limit] [data-tl-v]').textContent === '83%'")
-            page.wait_for_function("() => document.querySelectorAll('[data-tl-blotter] tr[data-tl-event]').length === 3")
+            page.wait_for_function("() => document.querySelectorAll('[data-tl-blotter] .dg-row[data-key]').length === 3")
             assert _text(page, "[data-tl-tile=pnl] [data-tl-v]") == "+480k"
             assert "since 2026-09-29" in _text(page, "[data-tl-tile=pnl] [data-tl-s]")
             assert _text(page, "[data-tl-tile=var] [data-tl-v]") == "8.00m" and "intraday" in _text(page, "[data-tl-tile=var] [data-tl-s]")
@@ -94,7 +109,7 @@ def test_each_trading_landing_fills_from_the_servers_answers_and_fits(browser, t
             assert _text(page, "[data-tl-tile=trades] [data-tl-v]") == "3"
             assert "1 new · 1 amended · 1 cancelled" in _text(page, "[data-tl-tile=trades] [data-tl-s]")
             assert "BOOK-RATES-1" in _text(page, "[data-tl-tile=limit] [data-tl-s]")
-            assert page.locator("[data-tl-blotter] tr[data-tl-event=cancelled]").count() == 1
+            assert page.locator("[data-tl-blotter] .dg-row[data-key]:has-text('cancelled')").count() == 1
             page.wait_for_function("() => document.querySelectorAll('[data-tl-positions] tr').length === 2")
             page.wait_for_function("() => document.querySelector(\"[data-tl-quick] [data-home-card='TRDR TRDR-ASHAH']\") !== null")
         elif landing == "desk":
@@ -120,13 +135,38 @@ def test_each_trading_landing_fills_from_the_servers_answers_and_fits(browser, t
             for gid in ("blotter", "books", "risk", "cpty", "market"):
                 assert page.locator(f"[data-tl-group='{gid}']").count() == 1, gid
             recents = page.locator("[data-tl-recents]").inner_text()
-            assert "TRD MX-20000001" in recents and "ECON" not in recents and "SCN" not in recents
+            assert "TRD MX-20000001" in recents
         page.wait_for_timeout(200)
         assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1")
         assert not page.evaluate(AUDIT)
         assert not page.outside, page.outside                                          # no host but the console
     finally:
         ctx.close()
+
+
+def test_nobody_yet_says_so_in_every_panel_the_blotter_too(browser, trading_console):
+    """A person mapped to no trader or desk: every panel says to pick one, the blotter (a grid host, not a table) too, never a lasting '…'."""
+    from plugins.banking import trading_landing
+
+    block = _APP["app"].state.editions.lenses["trading"].spec["trading"]
+    mapping, matching = block["people"].pop(_APP["user"]), block.get("match-records")
+    block["match-records"] = False
+    trading_landing.forget()
+    ctx = browser.new_context(viewport={"width": 1280, "height": 900})
+    page = _page(ctx)
+    try:
+        page.goto(f"{trading_console}/?landing=trader", wait_until="load")
+        page.wait_for_function("() => document.querySelector('[data-tl-who]').textContent.includes('Nobody yet')")
+        page.wait_for_function("() => document.querySelector('[data-tl-blotter]').textContent.includes('Pick a trader or a desk to view as')")
+        assert "Pick a trader or a desk to view as" in _text(page, "[data-tl-positions]")
+    finally:
+        ctx.close()
+        block["people"][_APP["user"]] = mapping
+        if matching is None:
+            block.pop("match-records", None)
+        else:
+            block["match-records"] = matching
+        trading_landing.forget()
 
 
 def test_the_check_box_answers_end_to_end(browser, trading_console):

@@ -38,7 +38,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 /**
  * The economy module off (a content module: the world-economy and news-and-markets packs and the public sector's six packs, their
- * functions, and the World and Public sector lenses; docs/guides/PUBLIC_SECTOR_GUIDE.md): every one of its packs and their connectors
+ * functions, and the World and Public sector lenses; docs/guides/WORLD_DATA_GUIDE.md): every one of its packs and their connectors
  * is gone, its functions are off and neither lens is offered, while the banking module (its beans, engines and API), capital markets
  * and the core reference data (GLEIF) are unaffected.
  */
@@ -74,7 +74,7 @@ class EconomyModuleOffTest {
         List<String> theirs = new ArrayList<>();
         ObjectMapper yaml = new ObjectMapper(new YAMLFactory());
         for (String p : PUBLIC_SECTOR) {
-            JsonNode pack = yaml.readTree(com.ash.drishti.api.PackFolders.of(Path.of(System.getProperty("drishti.packs.dir", "../../../config/packs")), p).resolve("pack.yaml").toFile());
+            JsonNode pack = yaml.readTree(com.ash.drishti.api.resolution.ConfigResolution.repository(Path.of(System.getProperty("drishti.packs.dir", "../../../config/packs")).toAbsolutePath().normalize().getParent().getParent()).packDir(p).resolve("pack.yaml").toFile());
             assertThat(pack.path("domain").asText()).as(p).isEqualTo("economy");
             pack.path("connectors").fieldNames().forEachRemaining(theirs::add);
         }

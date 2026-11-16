@@ -9,7 +9,7 @@
 
 OECD Data Explorer (SDMX).
 
-The economy module's public-sector oecd pack (docs/guides/PUBLIC_SECTOR_GUIDE.md): The OECD members' business cycle, jobs, prices and growth from the OECD Data Explorer's SDMX API: the composite leading indicator, the harmonised unemployment rate, consumer price inflation and real GDP growth. A country's page shows the latest of each measure and the members on a map shaded by inflation; each series shows its monthly or quarterly history. Filled daily by the oecd feed into the worldlake lake.
+The economy module's public-sector oecd pack (docs/guides/WORLD_DATA_GUIDE.md): The OECD members' business cycle, jobs, prices and growth from the OECD Data Explorer's SDMX API: the composite leading indicator, the harmonised unemployment rate, consumer price inflation and real GDP growth. A country's page shows the latest of each measure and the members on a map shaded by inflation; each series shows its monthly or quarterly history. Filled daily by the oecd feed into the worldlake lake.
 
 | | |
 |---|---|
@@ -28,7 +28,7 @@ python3 tools/drishti.py feed run oecd                # pull today, write data/d
 python3 tools/drishti.py feed status oecd             # its last runs
 ```
 
-Daily: `python3 tools/drishti.py feed schedule --cron` (or `--systemd`, `--windows`). The guide: [EXTERNAL_DATA.md](../../docs/guides/EXTERNAL_DATA.md).
+Daily: `python3 tools/drishti.py feed schedule --cron` (or `--systemd`, `--windows`). The guide: [WORLD_DATA_GUIDE.md](../../docs/guides/WORLD_DATA_GUIDE.md).
 
 ## Data contract
 
@@ -60,7 +60,7 @@ One row (JSON Lines: one object a line; the values are the contract's examples):
 {"COUNTRY_ID": "OECD-AUS", "NAME": "Australia", "ISO3": "AUS", "COUNTRY_NAME": "Australia", "LEADING_INDICATOR": 99.9505, "LEADING_INDICATOR_PERIOD": "2026-09", "UNEMPLOYMENT": 4.718349, "UNEMPLOYMENT_PERIOD": "2026-09", "INFLATION": 4.34, "INFLATION_PERIOD": "2026-09", "GDP_GROWTH": 0.419502713, "GDP_GROWTH_PERIOD": "2026-Q2", "MEASURE_COUNT": 4}
 ```
 
-The contract: `config/packs/economy/oecd/contracts/oecd-country.contract.yaml` ([oecd](../../docs/contracts/packs/oecd.md)).
+The contract: `modules/economy/packs/oecd/contracts/oecd-country.contract.yaml` ([oecd](../../docs/contracts/packs/oecd.md)).
 
 ### oecd-series
 
@@ -92,4 +92,4 @@ One row (JSON Lines: one object a line; the values are the contract's examples):
 {"SERIES_ID": "OECDS-USA-CLI", "NAME": "United States · Composite leading indicator", "OECD_COUNTRY": "OECD-USA", "ISO3": "USA", "COUNTRY_NAME": "United States", "MEASURE": "CLI", "TITLE": "Composite leading indicator", "UNIT": "index, long-term average = 100", "DATAFLOW": "OECD.SDD.STES,DSD_STES@DF_CLI,", "FREQUENCY": "monthly", "LATEST": 100.9993, "LATEST_PERIOD": "2026-09", "PREVIOUS": 100.9464, "PREVIOUS_PERIOD": "2026-08", "CHANGE": 0.0529}
 ```
 
-The contract: `config/packs/economy/oecd/contracts/oecd-series.contract.yaml` ([oecd](../../docs/contracts/packs/oecd.md)).
+The contract: `modules/economy/packs/oecd/contracts/oecd-series.contract.yaml` ([oecd](../../docs/contracts/packs/oecd.md)).

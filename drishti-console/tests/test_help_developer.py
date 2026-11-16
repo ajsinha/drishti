@@ -22,7 +22,7 @@ import sys
 
 from conftest import CONSOLE
 
-sys.path.insert(0, str(CONSOLE.parent / "drishti-compute" / "src" / "main" / "python"))
+sys.path.insert(0, str(CONSOLE.parent / "compute/drishti-compute" / "src" / "main" / "python"))
 from drishti_compute import items  # noqa: E402  (the BI Python items' contract, on the server's compute pool)
 
 

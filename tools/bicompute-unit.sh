@@ -41,11 +41,11 @@ work="$(mktemp -d "${TMPDIR:-/tmp}/drishti-bicompute-unit.XXXXXX")"
 trap 'rm -rf "$work"' EXIT
 mkdir -p "$work/main" "$work/test"
 "${java_bin}javac" -J-Xmx768m -nowarn -encoding UTF-8 --release 21 -d "$work/main" -cp "$cp" \
-  "$here/drishti-common/src/main/java/com/ash/drishti/common/ErrorCode.java" \
-  $(find "$here/drishti-bicompute/src/main/java" -name '*.java')
+  "$here/kernel/drishti-common/src/main/java/com/ash/drishti/common/ErrorCode.java" \
+  $(find "$here/compute/drishti-bicompute/src/main/java" -name '*.java')
 echo "main: compiled"
 "${java_bin}javac" -J-Xmx768m -nowarn -encoding UTF-8 --release 21 -d "$work/test" -cp "$work/main:$cp:$tcp" \
-  $(find "$here/drishti-bicompute/src/test/java" -name '*.java')
+  $(find "$here/compute/drishti-bicompute/src/test/java" -name '*.java')
 echo "test: compiled"
 if [ "${1:-}" = "--server" ]; then
   # the server's pivot package (its sources come from the modules: PivotSourceProvider) against the installed release's executable jar and its libraries
@@ -59,8 +59,8 @@ if [ "${1:-}" = "--server" ]; then
   libs="$(ls "$work"/libs/BOOT-INF/lib/*.jar | grep -v '/drishti-bicompute-[0-9]\|/drishti-common-[0-9]' | tr '\n' ':')" || { echo "no libraries"; exit 1; }
   "${java_bin}javac" -J-Xmx768m -nowarn -proc:none -encoding UTF-8 --release 21 -d "$work/server" \
     -cp "$work/main:$plain_jar:$libs:$(jar com/ash/drishti/drishti-common/$ver)" \
-    $(find "$here/drishti-server/src/main/java/com/ash/drishti/server/pivot" -name '*.java') \
-    "$here/drishti-server/src/main/java/com/ash/drishti/server/net/PeerCalls.java" || { echo "server pivot package: javac failed ($?)"; exit 1; }
+    $(find "$here/kernel/drishti-server/src/main/java/com/ash/drishti/server/pivot" -name '*.java') \
+    "$here/kernel/drishti-server/src/main/java/com/ash/drishti/server/net/PeerCalls.java" || { echo "server pivot package: javac failed ($?)"; exit 1; }
   echo "server pivot package: compiled"
 fi
 [ $# -eq 0 ] && exit 0
@@ -82,4 +82,4 @@ public class Run {
     }
 }
 EOF
-"${java_bin}java" -Xmx768m -cp "$work/main:$work/test:$here/drishti-bicompute/src/test/resources:$cp:$tcp" "$work/Run.java" "$@"
+"${java_bin}java" -Xmx768m -cp "$work/main:$work/test:$here/compute/drishti-bicompute/src/test/resources:$cp:$tcp" "$work/Run.java" "$@"

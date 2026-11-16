@@ -41,13 +41,13 @@
       (m.state === 'off' ? 'switched on again.' : 'reinstalled.');
     var a = document.createElement('a');
     a.className = 'btn-pill ib-btn';
-    a.href = '/';
+    a.href = drishti_url('/');
     a.textContent = 'Go to Home';
     box.appendChild(h); box.appendChild(p); box.appendChild(a);
     main.insertBefore(box, main.firstChild);
   }
   function check() {
-    fetch('/api/modules/hosted', { credentials: 'same-origin', headers: { Accept: 'application/json' } }).then(function (r) {
+    fetch(drishti_url('/api/modules/hosted'), { credentials: 'same-origin', headers: { Accept: 'application/json' } }).then(function (r) {
       return r.ok ? r.json() : null;
     }).then(function (s) {
       if (!s) { return; }

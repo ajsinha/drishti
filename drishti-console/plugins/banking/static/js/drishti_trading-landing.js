@@ -34,10 +34,10 @@
   var $$ = function (sel) { return Array.prototype.slice.call(root.querySelectorAll(sel)); };
 
   function get(path) {
-    return fetch(path, { headers: { Accept: "application/json" }, credentials: "same-origin" }).then(answer);
+    return fetch(drishti_url(path), { headers: { Accept: "application/json" }, credentials: "same-origin" }).then(answer);
   }
   function post(path, body) {
-    return fetch(path, { method: "POST", headers: { Accept: "application/json", "Content-Type": "application/json" }, credentials: "same-origin",
+    return fetch(drishti_url(path), { method: "POST", headers: { Accept: "application/json", "Content-Type": "application/json" }, credentials: "same-origin",
       body: JSON.stringify(body) }).then(answer);
   }
   function answer(r) {
@@ -53,8 +53,8 @@
   }
   function pct(v) { v = num(v); return v === null ? "—" : Math.round(v * 100) + "%"; }
   function el(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt !== undefined) e.textContent = txt; return e; }
-  function go(cmd) { return "/go?q=" + encodeURIComponent(cmd + " <GO>"); }
-  function link(cmd, label, cls) { var a = el("a", cls || "mono", label || cmd); a.href = go(cmd); return a; }
+  function go(cmd) { return drishti_url("/go?q=") + encodeURIComponent(cmd + " <GO>"); }
+  function link(cmd, label, cls) { var a = el("a", cls || "mono", label || cmd); a.href = drishti_url(go(cmd)); return a; }
   function tone(e, v) { v = num(v); if (v !== null && v !== 0) e.classList.add(v > 0 ? "up" : "down"); return e; }
   function cell(tr, content, cls) { var td = el("td", cls || ""); if (content && content.nodeType) td.appendChild(content); else td.textContent = content; tr.appendChild(td); return td; }
   function said(target, msg, cols) {
@@ -115,7 +115,7 @@
     if (!$("[data-tl-check-card]")) return;
     if (!m.check) $("[data-tl-check-card]").hidden = true;
     $("[data-tl-book]").component.setOptions(s.books || []);
-    get("/api/home/trading/valuations" + FOR).then(function (v) {
+    get(drishti_url("/api/home/trading/valuations") + FOR).then(function (v) {
       if (!v.available) throw new Error(v.reason);
       $$("[data-tl-date]").forEach(function (e) { e.textContent = v.businessDate + (v.dataDate && v.dataDate !== v.businessDate ? " (the latest valuations are of " + v.dataDate + ")" : ""); });
       $("[data-tl-count]").textContent = F.formatNumber(v.liveTrades) + " live trades in my books" + (v.partial ? " (partial: " +
@@ -137,7 +137,7 @@
       $("[data-tl-count]").textContent = "";
       tile("pnl", "—", e.message);
     });
-    get("/api/home/trading/risk" + FOR).then(function (r) {
+    get(drishti_url("/api/home/trading/risk") + FOR).then(function (r) {
       if (!r.available) throw new Error(r.reason);
       var conf = num(r.confidence);
       $("[data-tl-var-k]").textContent = "My VaR" + (conf ? " (" + Math.round(conf * 100) + "%, 1-day)" : "");
@@ -153,7 +153,7 @@
       if (!(r.positions || []).length) { said(body, r.positionsProblem || "No positions in the VaR answer", 3); return; }
       r.positions.forEach(function (p) {
         var tr = el("tr");
-        cell(tr, p.scope ? (function () { var a = el("a", "", p.label); a.href = "/var?scope=" + encodeURIComponent(p.scope); return a; })() : p.label);
+        cell(tr, p.scope ? (function () { var a = el("a", "", p.label); a.href = drishti_url("/var?scope=" + encodeURIComponent(p.scope)); return a; })() : p.label);
         cell(tr, tone(el("span", "", money(p.marketValue, true)), p.marketValue), "n");
         cell(tr, money(p.componentVar), "n");
         body.appendChild(tr);
@@ -162,7 +162,7 @@
       tile("var", "—", e.message); tile("limit", "—", "");
       said($("[data-tl-positions]"), e, 3);
     });
-    get("/api/home/trading/blotter" + FOR).then(function (b) {
+    get(drishti_url("/api/home/trading/blotter") + FOR).then(function (b) {
       if (!b.available) throw new Error(b.reason);
       var c = b.counts || {};
       tile("trades", String(b.total), (c["new"] || 0) + " new · " + (c.amended || 0) + " amended · " + (c.cancelled || 0) + " cancelled" +
@@ -170,17 +170,18 @@
       var body = $("[data-tl-blotter]");
       body.textContent = "";
       if (!b.rows.length) { said(body, "No trade of my books changed on " + b.businessDate, 5); return; }
-      b.rows.slice(0, 12).forEach(function (r) {
-        var tr = el("tr");
-        tr.setAttribute("data-tl-event", r.event);
-        cell(tr, r.time || "—");
-        cell(tr, link("TRD " + r.trade, r.trade));
-        cell(tr, r.counterparty || "", "tl-wide");
-        cell(tr, r.notional === null || r.notional === undefined ? "—" : money(r.notional), "n");
-        var p = el("td"); p.appendChild(el("span", "tl-pill " + r.event, r.event)); tr.appendChild(p);
-        tr.title = (r.product || "") + (r.version ? " · version " + r.version : "") + (r.status ? " · " + r.status : "");
-        body.appendChild(tr);
-      });
+      var R = window.Drishti && window.Drishti.records;
+      if (!R) { said(body, "The grid did not load: reload the page."); return; }
+      var host = el("div");
+      body.appendChild(host);
+      if (b.how === "trades" && b.live && b.live.set && b.spec) {      // the trades of my books touched today: the engine's live set (it ticks when the kind is live)
+        R.mount(host, { set: b.live.set, live: !!b.live.live, spec: b.spec, limit: 100, small: true });
+      } else {                                                          // the changes read from two days' valuations: no set, the same grid in its static mode
+        var rows = b.rows.map(function (r) { return { TRADE: r.trade, EVENT: r.event, TIME: r.time || "—", COUNTERPARTY: r.counterparty || "—", PRODUCT: r.product || "—",
+          NOTIONAL: r.notional === null || r.notional === undefined ? null : r.notional }; });
+        R.mount(host, { rows: rows, small: true, title: "Today's changes", columns: [{ field: "TRADE", label: "Trade", type: "id" }, { field: "EVENT", label: "Event" }, { field: "TIME", label: "Time" },
+          { field: "COUNTERPARTY", label: "Counterparty" }, { field: "PRODUCT", label: "Product" }, { field: "NOTIONAL", label: "Notional", type: "number" }] });
+      }
     }).catch(function (e) { tile("trades", "—", e.message); said($("[data-tl-blotter]"), e, 5); });
     $("[data-tl-check]").addEventListener("submit", function (ev) { ev.preventDefault(); runCheck(); });
   }
@@ -196,7 +197,7 @@
     if ((v.counterparties || []).length) mine.push(["CTRD " + v.counterparties[0], "my most traded counterparty's trades"]);
     mine.reverse().forEach(function (q) {
       if (nav.querySelector("[data-home-card='" + q[0] + "']")) return;
-      var a = el("a", "tl-q"); a.href = go(q[0]); a.setAttribute("data-home-card", q[0]); a.setAttribute("data-tl-mine", "1");
+      var a = el("a", "tl-q"); a.href = drishti_url(go(q[0])); a.setAttribute("data-home-card", q[0]); a.setAttribute("data-tl-mine", "1");
       a.appendChild(el("code", "mono", q[0])); a.appendChild(el("span", "", q[1]));
       nav.insertBefore(a, nav.firstChild);
     });
@@ -211,7 +212,7 @@
     btn.disabled = true;
     root.removeAttribute("data-tl-checked");
     vb.textContent = "computing the VaR what-if…"; xb.textContent = "computing the pre-deal check…";
-    post("/api/home/trading/check", body).then(function (c) {
+    post(drishti_url("/api/home/trading/check"), body).then(function (c) {
       if (!c.ok) { vb.textContent = ""; vb.appendChild(el("span", "tl-muted", c.reason)); xb.textContent = ""; return; }
       verdictVar(vb, c.var || {});
       verdictExp(xb, c.exposure || {}, c.counterparty);
@@ -253,7 +254,7 @@
   // ---- B · Desk head --------------------------------------------------------------------------------------------------------------
   function desk(m) {
     var s = m.scope;
-    get("/api/home/trading/valuations" + FOR).then(function (v) {
+    get(drishti_url("/api/home/trading/valuations") + FOR).then(function (v) {
       if (!v.available) throw new Error(v.reason);
       $$("[data-tl-date]").forEach(function (e) { e.textContent = v.businessDate + (v.dataDate && v.dataDate !== v.businessDate ? " (the latest valuations are of " + v.dataDate + ")" : ""); });
       $("[data-tl-mtm]").textContent = money(v.mtm, true);
@@ -282,7 +283,7 @@
         body.appendChild(tr);
       });
     }).catch(function (e) { tile("pnl", "—", e.message); tile("cpty", "—", ""); said($("[data-tl-movers]"), e, 3); });
-    get("/api/home/trading/risk" + FOR).then(function (r) {
+    get(drishti_url("/api/home/trading/risk") + FOR).then(function (r) {
       if (!r.available) throw new Error(r.reason);
       tile("var", money(r["var"]), r.limit ? (r.state === "breach" ? "above" : "within") + " the desk limit (" + pct(r.limitUse) + " of " + money(r.limit) + ")"
         : "no desk limit set", STATE_TILE[r.state]);
@@ -293,8 +294,8 @@
       tile("near", String(nr.length), (nr.length ? nr.map(function (b) { return b.book + " " + pct(b.limitUse); }).join(" · ") : "no book") +
         " at " + pct(r.near) + " or more", nr.length ? "warn" : null);
     }).catch(function (e) { tile("var", "—", e.message); tile("breaches", "—", ""); tile("near", "—", ""); });
-    get("/api/home/trading/limits" + FOR).then(heat).catch(function (e) { said($("[data-tl-heat]"), e); });
-    get("/api/home/trading/traders" + FOR).then(function (t) {
+    get(drishti_url("/api/home/trading/limits") + FOR).then(heat).catch(function (e) { said($("[data-tl-heat]"), e); });
+    get(drishti_url("/api/home/trading/traders") + FOR).then(function (t) {
       var body = $("[data-tl-traders]");
       body.textContent = "";
       $("[data-tl-traders-note]").textContent = [t.note, t.varNote ? "VaR: " + t.varNote : null, t.hasPrevious === false ? "no valuations the day before: no P&L" : null]
@@ -309,7 +310,7 @@
         body.appendChild(tr);
       });
     }).catch(function (e) { said($("[data-tl-traders]"), e, 4); });
-    get("/api/home/trading/pnl-var" + FOR).then(pnlVar).catch(function (e) { pnlVar({ available: false, reason: e.message }); });
+    get(drishti_url("/api/home/trading/pnl-var") + FOR).then(pnlVar).catch(function (e) { pnlVar({ available: false, reason: e.message }); });
   }
 
   function heat(h) {
@@ -364,13 +365,13 @@
   }
 
   // ---- start ------------------------------------------------------------------------------------------------------------------------
-  get("/api/home/trading/me" + FOR).then(function (m) {
+  get(drishti_url("/api/home/trading/me") + FOR).then(function (m) {
     var s = who(m);
     if (landing === "explorer") return;
     if (!s.kind) {
       $$("[data-tl-v]").forEach(function (v) { v.textContent = "—"; });
       $$("[data-tl-s]").forEach(function (v) { v.textContent = "pick a trader or a desk to view as"; });
-      $$("tbody").forEach(function (b) { said(b, "Pick a trader or a desk to view as", 5); });
+      $$("tbody, [data-tl-blotter]").forEach(function (b) { said(b, "Pick a trader or a desk to view as", 5); });   // the blotter is a grid host, not a table
       return;
     }
     if (landing === "desk") desk(m); else trader(m);

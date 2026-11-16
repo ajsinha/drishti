@@ -85,9 +85,9 @@ index-funds      TRACK <index>          the funds tracking SP500, NDX or DJIA (I
    │  ROWS.FUND ─► fund
 ```
 
-The links are the contract link columns of `config/packs/capitalmarkets/us-equities/contracts/`, `config/packs/capitalmarkets/funds/contracts/` and
+The links are the contract link columns of `modules/capital-markets/packs/us-equities/contracts/`, `modules/capital-markets/packs/funds/contracts/` and
 `config/packs/core/gleif/contracts/`. The us-equities and funds packs are **off by default**: add `us-equities,gleif,funds` to
-`DRISHTI_PACKS` ([Funds and ETFs guide](../guides/FUNDS_GUIDE.md#1-turning-the-pack-on)).
+`DRISHTI_PACKS` ([Funds and ETFs guide](../guides/WORLD_DATA_GUIDE.md#1-turning-the-pack-on)).
 
 **How a holding finds its company.** A fund files each holding with an issuer name, a CUSIP, often an ISIN and an issuer LEI, rarely a
 ticker. The funds pack matches it to a us-equities company by ticker, else (an equity) by a CUSIP another fund filed with the ticker, the
@@ -271,7 +271,7 @@ jurisdiction       JUR JUR-<ISO3>            government, capital, population, le
    │  ELECTIONS, LAST_ELECTION ─► election ELEC     PARTIES ─► party PARTY     SOCIAL_INDICATORS ─► social-indicator SOCI
 ```
 
-The links are the contract link columns of `config/packs/economy/world-economy/contracts/` and `config/packs/core/core/contracts/counterparty.contract.yaml`
+The links are the contract link columns of `modules/economy/packs/world-economy/contracts/` and `config/packs/core/core/contracts/counterparty.contract.yaml`
 (`ECONOMY → economy`). Companies link the same way: a listed company's and a US company's `ECONOMY` is its home economy.
 
 **Id conventions.** Economies use the ISO 3166 three-letter code: `ECON-GBR`, `FCST-GBR-WEO`, `FISC-GBR`, `JUR-GBR`. Country groups
@@ -390,13 +390,13 @@ opened; the stored group pages were retired.
 
 ## 4. Where to go deeper
 
-- [Funds and ETFs guide](../guides/FUNDS_GUIDE.md): FUND, HELD and TRACK with worked numbers, the data contract of every kind, the
+- [Funds and ETFs guide](../guides/WORLD_DATA_GUIDE.md): FUND, HELD and TRACK with worked numbers, the data contract of every kind, the
   sources and the refresh script.
-- [Tutorial 13, Part C: funds and ETFs](../tutorials/13-world-data.md#part-c--funds-and-etfs) and [tutorial 6: groupings and analytics](../tutorials/06-groupings-and-analytics.md) (a World Bank region).
-- [The us-equities pack's guide](../../config/packs/capitalmarkets/us-equities/guides/us-equities.md) and [the gleif pack's guide](../../config/packs/core/gleif/guides/gleif.md).
-- [Groupings and analytics guide](../guides/GROUPINGS_ANALYTICS_GUIDE.md): section 4 (SIC), section 5 (ECG) and section 7 (USEQ, FACT
+- [The world data tutorial, Part C: funds and ETFs](../guides/WORLD_DATA_GUIDE.md#part-c--funds-and-etfs) and [the groupings tutorial: groupings and analytics](../guides/bi/GROUPINGS_AND_ANALYTICS.md) (a World Bank region).
+- [The us-equities pack's guide](../../modules/capital-markets/packs/us-equities/guides/us-equities.md) and [the gleif pack's guide](../../config/packs/core/gleif/guides/gleif.md).
+- [Groupings and analytics guide](../guides/bi/GROUPINGS_AND_ANALYTICS.md): section 4 (SIC), section 5 (ECG) and section 7 (USEQ, FACT
   and IDX) with worked numbers.
-- [External data](../guides/EXTERNAL_DATA.md): SEC EDGAR, N-PORT, N-CEN, Wikidata, GLEIF, World Bank, IMF, UNDP and the CIA Factbook,
+- [External data](../guides/WORLD_DATA_GUIDE.md): SEC EDGAR, N-PORT, N-CEN, Wikidata, GLEIF, World Bank, IMF, UNDP and the CIA Factbook,
   their licences and refresh scripts.
 - [Data](data.md): [entities and ownership](data.md#2-entities-and-ownership) and [market data](data.md#1-market-data);
   [counterparty credit risk](risk.md#2-counterparty-credit-risk).

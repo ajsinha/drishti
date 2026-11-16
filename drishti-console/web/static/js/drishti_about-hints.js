@@ -22,6 +22,7 @@
    the `?` stays a link to the panel kind's guide, as before. */
 (function () {
   'use strict';
+  function drishti_url(p) { var f = globalThis.drishti_url; return typeof f === 'function' && f !== drishti_url ? f(p) : p; }   // drishti-core's base helper when the page has it; a page without it (the renderer, an embed) keeps the URL as it is
   var me = document.currentScript;
   /** init(root, options): panel `?` popovers and field hints under root (the document or a ShadowRoot). options.about is the
       About drawer's API (default window.Drishti.about: the console's), options.open(href) opens a link (default: navigate).
@@ -170,7 +171,7 @@
     var more = h('button', 'about-more', 'About this page'); more.type = 'button';
     more.addEventListener('click', function () { closePop(false); api.reveal({ panel: id }); });
     links.appendChild(more);
-    var guide = h('a', null, 'The ' + kind + ' panel'); guide.href = a.getAttribute('href');
+    var guide = h('a', null, 'The ' + kind + ' panel'); guide.href = drishti_url(a.getAttribute('href'));
     links.appendChild(guide);
     pop.appendChild(links);
     pop.hidden = false; popFor = a;
@@ -183,7 +184,7 @@
     if (visible(pop) && popFor === a) { closePop(true); return; }
     closePop(false); hideTip();
     api.ensure().then(function (idx) {
-      if (!idx || !buildPop(a, idx)) { if (options.open) { options.open(a.getAttribute('href')); } else { location.href = a.getAttribute('href'); } }       // nothing to say: today's link
+      if (!idx || !buildPop(a, idx)) { if (options.open) { options.open(a.getAttribute('href')); } else { location.href = drishti_url(a.getAttribute('href')); } }       // nothing to say: today's link
     });
   }
   on(root, 'click', function (e) {

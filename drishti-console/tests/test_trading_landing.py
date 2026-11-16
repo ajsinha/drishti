@@ -309,3 +309,11 @@ def test_the_check_falls_back_to_the_engines_proxy_and_says_so():
     assert not bad["ok"] and "notional" in bad["reason"]
     none = asyncio.run(tl.check(b, me, s, {}, {"product": "CAP", "notional": "10m", "counterparty": "CP-ALDERSHOT"}))
     assert not none["ok"] and "copies a booked trade" in none["reason"]
+
+
+def test_the_blotters_grid_declares_the_event_pill_and_the_valuations_notional():
+    spec = tl.event_spec({"columns": [{"field": "__id", "label": "TRD", "type": "id"}, {"field": "COUNTERPARTY", "label": "Counterparty", "type": "text"}]}, date(2026, 9, 30))
+    assert [c["field"] for c in spec["columns"]] == ["__id", "EVENT", "COUNTERPARTY", "NOTIONAL"]
+    event = spec["columns"][1]
+    assert event["type"] == "status" and event["otherwise"] == "amended" and [c["text"] for c in event["cases"]] == ["cancelled", "new", "new"]
+    assert event["cases"][2]["when"] == {"TRADE_DATE": "2026-09-30*"}

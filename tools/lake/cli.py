@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import json
 import pathlib
+import re
 import sys
 
 HERE = pathlib.Path(__file__).resolve().parent
@@ -54,7 +55,20 @@ def cmd_scan(a, extra) -> int:
     return _mod("scan").run(a)
 
 
+def status_dir(given: str) -> pathlib.Path:
+    """``--lake``: a folder, or a lake's name of config/lakes/ (``demo``, ``risklake``) resolved where its lake file says, as the other lake
+    commands do (``lake status --lake demo`` from the repository root reads <data>/delta/demo, not a folder ./demo that is not there)."""
+    p = pathlib.Path(given)
+    if p.is_dir() or "/" in given or "\\" in given or not re.fullmatch(r"[a-z0-9][a-z0-9_-]*", given):
+        return p
+    r = _mod("lakeconfig").root(given)
+    if "://" in r:
+        raise SystemExit(f"lake {given} is at {r}: lake status reads a folder (use the Admin page or drishti.py lake show for it)")
+    return pathlib.Path(r)
+
+
 def cmd_status(a, extra) -> int:
+    a.lake = str(status_dir(a.lake))
     state = pathlib.Path(a.lake) / "_drishti-lake"
     if not state.is_dir() and (pathlib.Path(a.lake) / ".drishti-lake").is_dir():
         state = pathlib.Path(a.lake) / ".drishti-lake"                 # an earlier build's name, until the next run renames it
@@ -73,6 +87,7 @@ def cmd_status(a, extra) -> int:
     if a.json:
         print(json.dumps({"locked": held, "holder": holder or None, "runs": log[-a.runs:], "last": last, "tables": tabs}, indent=2))
         return 0
+    print(f"lake {a.lake}")
     print(f"tables ({len(tabs)}):")
     for line in _mod("laketables").table_text(tabs).splitlines():
         print("  " + line)
@@ -123,8 +138,8 @@ def register(groups, add, srv, ctx: dict | None = None) -> None:
             [], "example:\n  drishti.py lake scan exports/book.json --limit 5000")
     _mod("scan").add_arguments(s)
     st = add(sub, "status", cmd_status, "lake status: the lake's tables (rows, files, size, partitions, business dates, last build), its lock and last runs", [],
-             "example:\n  drishti.py lake status --lake data/delta/demo")
-    st.add_argument("--lake", required=True, metavar="DIR")
+             "examples:\n  drishti.py lake status --lake demo\n  drishti.py lake status --lake data/delta/demo")
+    st.add_argument("--lake", required=True, metavar="NAME|DIR", help="a lake of config/lakes/ by its name (where its lake file says), or a folder")
     st.add_argument("--runs", type=int, default=10, help="log lines shown (default 10)")
     st.add_argument("--json", action="store_true")
     dm = add(sub, "demo", cmd_demo, "lake demo: build the demo lakes of the seven packs from data/testdata (sixty business days), point the "

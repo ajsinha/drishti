@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""feed: pull external data and load it into the lakes (drishti-feeds; docs/guides/EXTERNAL_DATA.md).
+"""feed: pull external data and load it into the lakes (drishti-feeds; docs/guides/WORLD_DATA_GUIDE.md).
 
     python3 tools/drishti.py feed list                                    every feed: lake, route, schedule, licence
     python3 tools/drishti.py feed run gleif                               pull today, write data/datafeeds/gleif/<date>/, load (java)
@@ -207,7 +207,7 @@ def register(groups, add=None) -> argparse.ArgumentParser:
     p.add_argument("--set", action="append", metavar="NAME=VALUE", help="override an option of the feed file (JSON values allowed)")
     p.add_argument("--inbox", metavar="DIR", help="--load inbox: the inbox folder (default <data>/dataload/inbox)")
     p.add_argument("--lake-root", metavar="DIR", help="java/python: write the lake's layout under this folder instead (a scratch copy)")
-    p.add_argument("--jar", help="the server's exec jar (default DRISHTI_JAR, then drishti-server/target)")
+    p.add_argument("--jar", help="the server's exec jar (default DRISHTI_JAR, then kernel/drishti-server/target)")
     p.add_argument("--java", help="the java binary (default JAVA_HOME, then java on the PATH)")
     p.add_argument("--signal", metavar="URL", help="java/python: tell this server the data landed (a token with loads:write)")
     p.add_argument("--token-file", help="the API token for --signal (default DRISHTI_TOKEN)")

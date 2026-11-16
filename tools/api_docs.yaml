@@ -34,12 +34,12 @@ python:
   - name: compute-sdk
     title: "Compute worker SDK"
     summary: "Writing a Python compute engine: Engine, Request, Inputs, Progress, Result and the Arrow tables it reads and writes."
-    paths: [drishti-compute/src/main/python]
+    paths: [compute/drishti-compute/src/main/python]
     modules: [drishti_compute, drishti_compute.engine, drishti_compute.arrow]
   - name: bi-python
     title: "BI Python items"
     summary: "The functions a BI Python item defines: a Transform's run, a measure's compute and compute_groups, a column's derive, a visual's render; run on the server's compute pool."
-    paths: [drishti-compute/src/main/python]
+    paths: [compute/drishti-compute/src/main/python]
     modules: [drishti_compute.items]
   - name: cli
     title: "drishti.py and its client library"

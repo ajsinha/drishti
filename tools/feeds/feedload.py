@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The three load routes of drishti-feeds (docs/guides/EXTERNAL_DATA.md section "Loading"). None of them writes a lake itself: each hands
+"""The three load routes of drishti-feeds (docs/guides/WORLD_DATA_GUIDE.md section "Loading"). None of them writes a lake itself: each hands
 the feed's files to what Drishti already has (docs/guides/DATA_LAKE_GUIDE.md section 3), and every one replaces the business date it
 loads (a re-run of the same date leaves the same rows: idempotent).
 
@@ -40,7 +40,7 @@ ROOT = HERE.parents[1]
 DRISHTI = ROOT / "tools" / "drishti.py"
 if str(ROOT / "drishti-console") not in sys.path:
     sys.path.insert(0, str(ROOT / "drishti-console"))
-from core.pack_paths import pack_dir  # noqa: E402  (the one rule for where a pack's folder is)
+from core.resolution import pack_dir  # noqa: E402  (where a pack is: the one resolver, KERNEL_AND_MODULES.md 18)
 
 
 def packs_dir() -> Path:

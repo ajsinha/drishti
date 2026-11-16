@@ -63,9 +63,9 @@
 <details class="about-layer" data-layer="layout" id="about-l4"{% if open_ %} open{% endif %}>
   <summary><h3>Why the page looks like this</h3></summary>
   <ul class="about-list">
-    {% if l.sutra %}{% set rec = ('&kind=' ~ (ex.ref.kind | urlencode) ~ '&id=' ~ (ex.ref.id | urlencode)) if ex.ref and ex.ref.kind and ex.ref.id else '' %}<li>Layout: Sutra {% if design_on() %}<a class="mono" data-about-sutra href="/studio?sutra={{ (l.sutra.name ~ '@' ~ l.sutra.version) | urlencode }}{{ rec }}" title="Open this Sutra in the designer, with this record as its sample"><b>{{ l.sutra.name }} v{{ l.sutra.version }}</b></a>{% else %}<b class="mono" data-about-sutra-name>{{ l.sutra.name }} v{{ l.sutra.version }}</b>{% endif %}{% if l.sutra.where %}, chosen because <code>{{ l.sutra.where }}</code> held{% else %}, the one that applies to this kind{% endif %}, priority {{ l.sutra.priority }}.</li>
+    {% if l.sutra %}{% set rec = ('&kind=' ~ (ex.ref.kind | urlencode) ~ '&id=' ~ (ex.ref.id | urlencode)) if ex.ref and ex.ref.kind and ex.ref.id else '' %}<li>Layout: Sutra {% if design_on() %}<a class="mono" data-about-sutra href="{{ BASE }}/studio?sutra={{ (l.sutra.name ~ '@' ~ l.sutra.version) | urlencode }}{{ rec }}" title="Open this Sutra in the designer, with this record as its sample"><b>{{ l.sutra.name }} v{{ l.sutra.version }}</b></a>{% else %}<b class="mono" data-about-sutra-name>{{ l.sutra.name }} v{{ l.sutra.version }}</b>{% endif %}{% if l.sutra.where %}, chosen because <code>{{ l.sutra.where }}</code> held{% else %}, the one that applies to this kind{% endif %}, priority {{ l.sutra.priority }}.</li>
     {% else %}<li>Layout: inferred from the shape of the document; no Sutra applies.</li>{% endif %}
-    {% for c in l.candidates or [] if not c.chosen and not (l.sutra and c.name == l.sutra.name and c.version == l.sutra.version) %}<li>Not chosen: {% if design_on() %}<a class="mono" href="/studio?sutra={{ (c.name ~ '@' ~ c.version) | urlencode }}" title="Open this Sutra in the designer">{{ c.name }} v{{ c.version }}</a>{% else %}<span class="mono">{{ c.name }} v{{ c.version }}</span>{% endif %} (priority {{ c.priority }}){% if c.where %}, <code>{{ c.where }}</code>{% endif %}: {{ VERDICT.get(c.result, c.result) }}.</li>{% endfor %}
+    {% for c in l.candidates or [] if not c.chosen and not (l.sutra and c.name == l.sutra.name and c.version == l.sutra.version) %}<li>Not chosen: {% if design_on() %}<a class="mono" href="{{ BASE }}/studio?sutra={{ (c.name ~ '@' ~ c.version) | urlencode }}" title="Open this Sutra in the designer">{{ c.name }} v{{ c.version }}</a>{% else %}<span class="mono">{{ c.name }} v{{ c.version }}</span>{% endif %} (priority {{ c.priority }}){% if c.where %}, <code>{{ c.where }}</code>{% endif %}: {{ VERDICT.get(c.result, c.result) }}.</li>{% endfor %}
     {% for p in l.inferredPanels or [] %}<li>Added by inference: <b>{{ p.title or p.id }}</b>{% if p.reason %} ({{ p.reason }}){% endif %}.</li>{% endfor %}
     {% for n in l.noData or [] %}<li class="about-warn"><b>{{ n.title or n.id }}</b> shows no data{% if n.path %}: <code>{{ n.path }}</code> {{ WHY.get(n.why, n.why or 'has nothing to show') }}{% elif n.why %}: {{ WHY.get(n.why, n.why) }}{% endif %}.</li>{% endfor %}
     {% for e in l.errors or [] %}<li class="about-warn"><b>{{ e.title or e.id }}</b> could not be drawn: {{ e.message }}</li>{% endfor %}
@@ -78,13 +78,13 @@
 <details class="about-layer" data-layer="next" id="about-l5"{% if open_ %} open{% endif %}>
   <summary><h3>Where next</h3></summary>
   <ul class="about-list">
-    {% for k in (n.get('keys') or []) %}{% if k.link %}<li><kbd>{{ k.key }}</kbd> <a href="/v/{{ k.link.kind | urlencode }}/{{ k.link.id | urlencode }}">{{ k.label }}</a>{% if k.link.id and k.link.id | lower != (k.label or '') | lower %} <span class="about-note mono">{{ k.link.id }}</span>{% endif %}</li>
+    {% for k in (n.get('keys') or []) %}{% if k.link %}<li><kbd>{{ k.key }}</kbd> <a href="{{ BASE }}/v/{{ k.link.kind | urlencode }}/{{ k.link.id | urlencode }}">{{ k.label }}</a>{% if k.link.id and k.link.id | lower != (k.label or '') | lower %} <span class="about-note mono">{{ k.link.id }}</span>{% endif %}</li>
       {% elif k.action == 'denied' %}<li><kbd>{{ k.key }}</kbd> {{ k.label }} <span class="about-note">(no access)</span></li>
-      {% elif k.action == 'impact' %}<li><kbd>{{ k.key }}</kbd> <a href="/impact/{{ ex.ref.kind | urlencode }}/{{ ex.ref.id | urlencode }}">{{ k.label }}</a></li>{% endif %}{% endfor %}
-    {% for pk in n.panelKinds or [] %}<li>The <a href="/help/panels#{{ pk }}">{{ pk }} panel</a>: what it shows and how to read it</li>{% endfor %}
-    {% if n.guide %}<li><a href="/help/{{ n.guide.slug }}{{ ('#' ~ n.guide.anchor) if n.guide.anchor }}">{{ n.guide.title or n.guide.slug }}</a></li>{% endif %}
-    {% if n.edit %}<li><a href="{{ n.edit.href }}">Edit in the Build workbench</a></li>{% endif %}
-    <li><a href="/help/context/view">The full guide to this screen</a> <span class="about-note">(F1 again)</span></li>
+      {% elif k.action == 'impact' %}<li><kbd>{{ k.key }}</kbd> <a href="{{ BASE }}/impact/{{ ex.ref.kind | urlencode }}/{{ ex.ref.id | urlencode }}">{{ k.label }}</a></li>{% endif %}{% endfor %}
+    {% for pk in n.panelKinds or [] %}<li>The <a href="{{ BASE }}/help/panels#{{ pk }}">{{ pk }} panel</a>: what it shows and how to read it</li>{% endfor %}
+    {% if n.guide %}<li><a href="{{ BASE }}/help/{{ n.guide.slug }}{{ ('#' ~ n.guide.anchor) if n.guide.anchor }}">{{ n.guide.title or n.guide.slug }}</a></li>{% endif %}
+    {% if n.edit %}<li><a href="{{ n.edit.href | u }}">Edit in the Build workbench</a></li>{% endif %}
+    <li><a href="{{ BASE }}/help/context/view">The full guide to this screen</a> <span class="about-note">(F1 again)</span></li>
   </ul>
 </details>
 {% endmacro %}
@@ -92,7 +92,7 @@
 {# Ask about this page: drawn only when the server says it is on for the page's pack (ex.ask.enabled; off by default). The answer is
    written as text by drishti_about-ask.js, never as HTML; the layers above never depend on it. #}
 {% macro layer_ask(ex) %}{% if ex.ask and ex.ask.enabled %}
-<section class="about-ask" data-about-ask data-ask-url="/v/{{ ex.ref.kind | urlencode }}/{{ ex.ref.id | urlencode }}/ask" aria-labelledby="about-ask-h">
+<section class="about-ask" data-about-ask data-ask-url="{{ BASE }}/v/{{ ex.ref.kind | urlencode }}/{{ ex.ref.id | urlencode }}/ask" aria-labelledby="about-ask-h">
   <h3 id="about-ask-h">Ask about this page</h3>
   <form class="about-ask-form" data-ask-form>
     <label class="visually-hidden" for="about-ask-q">Your question about this page</label>

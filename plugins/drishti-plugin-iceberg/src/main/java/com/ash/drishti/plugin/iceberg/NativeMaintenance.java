@@ -16,6 +16,7 @@
 package com.ash.drishti.plugin.iceberg;
 
 import com.ash.drishti.api.LoadGuard;
+import com.ash.drishti.common.RowRetention;
 import com.ash.drishti.iceberg.Table;
 import com.ash.drishti.iceberg.manifest.DataFile;
 import com.ash.drishti.iceberg.scan.FileTask;
@@ -288,6 +289,98 @@ final class NativeMaintenance {
         return out;
     }
 
+    /**
+     * Row retention (docs/guides/DATA_LAKE_GUIDE.md, "Row retention"): every row's age is read (its {@code on} field or its {@code arrived_at}
+     * column, else its business date), {@link RowRetention#judge} says which rows stay, and each day holding rows that do not is rewritten
+     * without them (a day left empty: its partition deleted), one commit a day. Returns a line per day changed ({@code date}, {@code rows},
+     * {@code dropped}); on a dry run nothing is committed.
+     */
+    static List<Map<String, Object>> retention(Table t, RowRetention r, java.time.Instant now, Path spillDir, long budget, boolean dryRun) {
+        t.refresh();
+        List<Map<String, Object>> out = new ArrayList<>();
+        if (t.currentSnapshot().isEmpty() || !r.active()) {
+            return out;
+        }
+        int fileRows = NativeLayout.fileRows(t);
+        try (ExecutorService pool = java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor()) {
+            NativeKindTable k = new NativeKindTable(t, pool);
+            Layout l = layout(t, pool);
+            List<NestedField> promoted = t.metadata().schema().columns().stream().filter(f -> f.id() > 3).toList();
+            Map<LocalDate, List<java.time.Instant>> ages = new java.util.TreeMap<>();
+            List<String> cols = new ArrayList<>(List.of(IcebergLayout.ID, IcebergLayout.DOC));
+            promoted.forEach(p -> cols.add(p.name()));
+            for (Day day : l.days().values()) {
+                if (LocalDate.MIN.equals(day.date())) {
+                    continue;
+                }
+                java.time.Instant dayStart = day.date().atStartOfDay().toInstant(java.time.ZoneOffset.UTC);
+                List<java.time.Instant> list = ages.computeIfAbsent(day.date(), d -> new ArrayList<>());
+                for (int f = 0; f < day.files().size(); f++) {
+                    k.scan(l, day, f, cols, null, row -> list.add(ageOf(r, promoted, row, dayStart)));
+                }
+            }
+            RowRetention.Judge judge = r.judge(ages.values().stream().flatMap(List::stream).toList(), now);
+            for (Day day : l.days().values()) {
+                LocalDate date = day.date();
+                List<java.time.Instant> list = ages.get(date);
+                if (list == null || list.stream().allMatch(judge::keeps)) {
+                    continue;
+                }
+                Map<String, Object> line = new LinkedHashMap<>();
+                line.put("date", date.toString());
+                line.put("rows", list.size());
+                line.put("dropped", list.stream().filter(a -> !judge.keeps(a)).count());
+                out.add(line);
+                if (dryRun) {
+                    continue;
+                }
+                java.time.Instant dayStart = date.atStartOfDay().toInstant(java.time.ZoneOffset.UTC);
+                try (SortedRuns rows = new SortedRuns(spillDir, "retention-" + date)) {
+                    long[] skipped = {0};
+                    for (int f = 0; f < day.files().size(); f++) {
+                        copyWhere(k, l, day, f, promoted, rows, budget, v -> !judge.keeps(r.ageOfRow(v.doc(), v.columns()::get, dayStart)), skipped);
+                    }
+                    Set<String> read = new HashSet<>();
+                    Set<String> remove = new HashSet<>();
+                    for (FileTask task : NativeKindTable.tasks(day)) {
+                        read.add(task.file().path());
+                        remove.add(task.file().path());
+                        for (DataFile d : task.deletes()) {
+                            if (date.equals(NativeLayout.dateOf(t, d))) {
+                                read.add(d.path());
+                                remove.add(d.path());
+                            }
+                        }
+                    }
+                    if (rows.rows() == 0) {
+                        Operations.deletePartitions(t, f -> date.equals(NativeLayout.dateOf(t, f)), Map.of("drishti.retention", "rows"));
+                        continue;
+                    }
+                    List<DataFile> files = NativeLayout.writeDay(t, date, rows.merged(), fileRows);
+                    try {
+                        Operations.rewriteFiles(t, remove, files, f -> date.equals(NativeLayout.dateOf(t, f)), read);
+                    } catch (RuntimeException e) {
+                        files.forEach(f -> deleteQuietly(t, f.path()));
+                        throw e;
+                    }
+                }
+            }
+        }
+        return out;
+    }
+
+    /** A scanned row's (id, doc, promoted values...) age under {@code r}. */
+    private static java.time.Instant ageOf(RowRetention r, List<NestedField> promoted, Object[] row, java.time.Instant dayStart) {
+        return r.ageOfRow(row[1] == null ? null : row[1].toString(), c -> {
+            for (int i = 0; i < promoted.size(); i++) {
+                if (promoted.get(i).name().replace("__", ".").equals(c)) {
+                    return row[i + 2];
+                }
+            }
+            return null;
+        }, dayStart);
+    }
+
     /** The snapshot before the commit that replaced {@code date} with load {@code id}'s rows (an overwrite naming it); null when it appended. */
     private static Long replacedFrom(Table t, String id, LocalDate date) {
         for (com.ash.drishti.iceberg.meta.Snapshot s : t.metadata().snapshots()) {
@@ -349,6 +442,12 @@ final class NativeMaintenance {
     /** As above, leaving out the rows of load {@code skip} (counted in {@code skipped[0]}); null: every row. */
     private static void copy(NativeKindTable k, Layout l, Day day, int file, List<NestedField> promoted, SortedRuns rows, long budget, String skip,
             long[] skipped) {
+        copyWhere(k, l, day, file, promoted, rows, budget, skip == null ? null : v -> skip.equals(String.valueOf(v.columns().get(KindTable.LOAD_ID))), skipped);
+    }
+
+    /** As above, leaving out the rows {@code skip} accepts (counted in {@code skipped[0]}); null: every row. */
+    private static void copyWhere(NativeKindTable k, Layout l, Day day, int file, List<NestedField> promoted, SortedRuns rows, long budget,
+            java.util.function.Predicate<Row> skip, long[] skipped) {
         DataFile f = NativeKindTable.tasks(day).get(file).file();
         List<String> cols = new ArrayList<>(List.of(IcebergLayout.ID, IcebergLayout.DOC));
         promoted.forEach(p -> cols.add(p.name()));
@@ -372,11 +471,12 @@ final class NativeMaintenance {
                 }
                 values.put(path, v);
             }
-            if (skip != null && skip.equals(String.valueOf(values.get(KindTable.LOAD_ID)))) {
+            Row row = new Row(r[0].toString(), r[1] == null ? null : r[1].toString(), values);
+            if (skip != null && skip.test(row)) {
                 skipped[0]++;
                 return;
             }
-            rows.add(new Row(r[0].toString(), r[1] == null ? null : r[1].toString(), values));
+            rows.add(row);
             if (rows.bufferedBytes() > budget) {
                 rows.spill();
             }

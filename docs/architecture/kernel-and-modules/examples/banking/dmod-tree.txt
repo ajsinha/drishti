@@ -21,18 +21,18 @@ banking-3.0.0.dmod                                         a zip; module.yaml st
 │   └── needs.yaml                                         kinds it reads / subscribes to / writes (see data/needs.yaml)
 ├── packs/
 │   ├── banking-reference/                                 counterparty, legal-entity, book, desk, trader … <- config/packs/core/core (question Q1)
-│   ├── trading/                                           <- config/packs/banking/trading
+│   ├── trading/                                           <- modules/banking/dmod/packs/trading
 │   │   ├── pack.yaml  README.md
 │   │   ├── contracts/trade.contract.yaml …                storage: replaced by binding-hint: (no connector)
 │   │   ├── sutras/trading/trade.v1.sutra.yaml …
 │   │   ├── samples/catalog.jsonl trade.jsonl …            the demo lake's samples for its kinds
 │   │   ├── python/  guides/  config/  tests/
-│   ├── market-risk/                                       <- config/packs/banking/market-risk
+│   ├── market-risk/                                       <- modules/banking/dmod/packs/market-risk
 │   │   ├── pack.yaml  README.md  capital/
 │   │   ├── contracts/scenario-pv.contract.yaml pnl-vector.contract.yaml var-limit.contract.yaml … (27)
 │   │   ├── sutras/market-risk/position.v1.sutra.yaml var-desk.v1.sutra.yaml …
 │   │   ├── samples/  python/  guides/  config/  tests/
-│   └── counterparty-risk/                                 <- config/packs/banking/counterparty-risk
+│   └── counterparty-risk/                                 <- modules/banking/dmod/packs/counterparty-risk
 ├── engines/
 │   ├── engines.yaml                                       var, exposure, sensitivities, frtb-sa, simm, mr-cube  <- META-INF/drishti/engines.yaml
 │   └── var.yaml exposure.yaml frtb-sa.yaml simm.yaml mr-cube.yaml sensitivities.yaml   engine defaults
@@ -72,8 +72,8 @@ banking-3.0.0.dmod                                         a zip; module.yaml st
 │   ├── README.md                                          front matter + data structures (the README standard)
 │   ├── features.yaml                                      its rows of the docs register
 │   ├── glossary.yaml                                      VaR, ES, EEPE, PFE, SIMM, FRTB-SA, component VaR …
-│   ├── guides/      VAR_GUIDE.md REGULATORY_VAR_REPORTING.md EXPOSURE_GUIDE.md FRTB_SA_GUIDE.md SIMM_GUIDE.md MR_CUBE_GUIDE.md FUNDS_GUIDE.md
-│   ├── tutorials/   02-var-from-the-bank-to-a-trade.md 03-exposure-… 04-frtb-sa.md 05-simm.md 24- 25- 26- 28- … (nine)
+│   ├── guides/      VAR_GUIDE.md REGULATORY_VAR_REPORTING.md EXPOSURE_GUIDE.md FRTB_SA_GUIDE.md SIMM_GUIDE.md MR_CUBE_GUIDE.md WORLD_DATA_GUIDE.md
+│   ├── tutorials/   VAR_GUIDE.md 03-exposure-… FRTB_SA_GUIDE.md SIMM_GUIDE.md 24- 25- 26- 28- … (nine)
 │   ├── help/        var-in-five-minutes.md …
 │   ├── lenses/      RISK_LENS.md CRO_LENS.md TRADING_LENS.md MARKET_LENS.md MR_CUBE_LENS.md CCR_CUBE_LENS.md
 │   ├── contracts/   generated contract pages of its kinds

@@ -34,7 +34,7 @@ Every example below uses invented, Endur-style data (`TRADE_ID`, `PRODUCT_TYPE`,
 3. [Loading, three ways](#3-loading-three-ways)
 4. [The `.ready` file, every key](#4-the-ready-file-every-key)
 5. [Routing, business dates, modes, repeats and undo](#5-routing-business-dates-modes-repeats-and-undo)
-6. [Pointing Drishti at a lake](#6-pointing-drishti-at-a-lake)
+6. [Pointing Drishti at a lake](#6-pointing-drishti-at-a-lake) (6.2: [several source systems](#62-several-source-systems-shared-or-separate-tables))
 7. [The demo lake's one-time move](#7-the-demo-lakes-one-time-move)
 8. [Checking a load, and troubleshooting](#8-checking-a-load-and-troubleshooting)
 9. [Sizing: a day of 1M trades and 50K positions × 509 scenarios](#9-sizing-a-day-of-1m-trades-and-50k-positions--509-scenarios)
@@ -44,6 +44,8 @@ Every example below uses invented, Endur-style data (`TRADE_ID`, `PRODUCT_TYPE`,
 13. [The in-memory lake](#13-the-in-memory-lake)
 14. [Delta protocol compliance](#14-delta-protocol-compliance)
 15. [Iceberg spec compliance](#15-iceberg-spec-compliance)
+16. [Runbooks: production data into the lake](#16-runbooks-production-data-into-the-lake) (16.1: [scenario PVs for VaR](#161-production-position-level-scenario-pvs-for-var-explain-and-why-it-moved); 16.2: [trades](#162-production-trades-from-the-source-systems); 16.3: [netting sets](#163-production-netting-sets-with-their-agreements-and-csas))
+17. [Daily loads: the business-day runbook](#17-daily-loads-the-business-day-runbook)
 
 ## 1. What a lake is
 
@@ -99,7 +101,7 @@ demo lake's file also ships inside the server, so a server started in another fo
 `demo.yaml` in the folder wins. Example lake files for S3, Iceberg path tables, AWS S3 Tables, a REST catalog behind a private CA and an
 in-memory store are in `config/lakes.examples/`, each beside its connectors in `config/connectors.examples/`.
 
-**The lakes Drishti ships.** `demo` (the demo data, built from the committed test data in `data/testdata/`) and six lakes that ship empty, as definitions only: `risklake` (the bank's own risk data), `newslake` (news), `worldlake` (the World Bank, the IMF, the United Nations), `regulators` (the SEC, the Federal Reserve, OSFI and other central banks), `capitalmarket` (prices, curves, volatility surfaces, funds) and `referencelake` (core reference data: GLEIF legal entities, ownership, identifier mappings). Each has its lake file in `config/lakes/` with no tables and its folder `data/delta/<lake>/` holding only a README.md; what a build or a load writes there is never committed. Nothing shipped points at the six: every connector reads `demo` until you point it elsewhere (section 6); only the data feeds (`config/feeds/`, [EXTERNAL_DATA.md](EXTERNAL_DATA.md)) name them, as the lakes they load.
+**The lakes Drishti ships.** `demo` (the demo data, built from the committed test data in `data/testdata/`) and six lakes that ship empty, as definitions only: `risklake` (the bank's own risk data), `newslake` (news), `worldlake` (the World Bank, the IMF, the United Nations), `regulators` (the SEC, the Federal Reserve, OSFI and other central banks), `capitalmarket` (prices, curves, volatility surfaces, funds) and `referencelake` (core reference data: GLEIF legal entities, ownership, identifier mappings). Each has its lake file in `config/lakes/` with no tables and its folder `data/delta/<lake>/` holding only a README.md; what a build or a load writes there is never committed. Nothing shipped points at the six: every connector reads `demo` until you point it elsewhere (section 6); only the data feeds (`config/feeds/`, [WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md)) name them, as the lakes they load.
 
 ## 2. The lake file, every key
 
@@ -187,6 +189,10 @@ Values may name environment variables or server settings: `${NAME}`, `${NAME:def
 it. An unknown key, a format that is not delta or iceberg, a fifth partition column, a load mode that is not replace or append, a
 secret written as a value, or a `lake:` that differs from the file's name: each refuses the file with the key named.
 
+A site moves a lake by its name without editing its file: `[lake.<name>] root=` and `storage.<key>=` in the settings files win over the
+file's `root:` and `storage:`, and a pack's demo-lake connectors read another lake with `[pack.<pack>] lake=<name>`; each lake moves alone
+([CONFIGURATION.md, "Named lakes, databases and brokers"](../admin/CONFIGURATION.md#named-lakes-databases-and-brokers)).
+
 A table's entry:
 
 | Key | Means | Section |
@@ -199,7 +205,7 @@ A table's entry:
 | `id`, `date`, `latest-by` | the id field, the rows' own date field, which copy of an id wins | 2.4 |
 | `load-mode` | `replace` (the default) or `append` | 5.3 |
 | `sort-by`, `file-rows`, `row-group-rows`, `file-size-mb`, `row-group-mb`, `compression`, `vector-compression` | the file layout | 2.5 |
-| `retention`, `maintenance`, `time-travel` | how long dates and old versions are kept, compaction, vacuum, checkpoints | 2.6 |
+| `retention`, `maintenance`, `time-travel` | how long dates and old versions are kept, rows dropped for their age, compaction, vacuum, checkpoints | 2.6, 2.7 |
 | `properties` | Delta or Iceberg table properties, passed through as they are | 2.6 |
 
 ### 2.3 Partitions: business date first, then as few as possible
@@ -250,6 +256,7 @@ again into a fresh table), and `drishti.py lake check` reports a table whose par
 | Key | Example | What it does |
 |---|---|---|
 | `promote` | `[TRADE_ID, DESK, BOOK, PRODUCT_TYPE, COUNTERPARTY_ID]` | these fields of the document are also written as typed columns: what filters, sorting, the pivot engine and BI read without opening documents. Promote the fields people filter by; twenty or thirty is normal |
+| `promote` (a list) | `[TAGS, TRADE_IDS]` | a field whose every value is a **list of simple values** (texts, numbers, booleans) is written as a native **array column** (`array<string>` in Delta, `list<string>` in Iceberg): each value as text, a number in its plain text (`5`, never `5.0`), a null element left out. A list of objects is **not** promoted as a list: it stays in the document (read as a sub-table), its column keeps the JSON text. Filters offer *contains / any of / all of* on it, the pivot counts each value, and screens show it as chips. Delta keeps **no min/max statistics** for an array column (no file is skipped by it), and an array **cannot be a partition column**. The Pack designer and `pack new` promote lists of simple values themselves |
 | `vectors` | `[SCENARIO_PV]` | list-of-numbers fields written as `list<double>` columns and kept out of the document (it keeps a marker). VaR reads the vector column directly |
 | `flatten` | `{LEGS[0].NOTIONAL: LEG1_NOTIONAL}` | a nested field written as a column of its own (and promoted) |
 | `id` | `TRADE_ID` | the field that holds each row's id (default: the kind's key from its pack, its ingest key else the single `key:` field of the kind's data contract; else `id`) |
@@ -298,6 +305,43 @@ A load file or a command line that gives a layout different from the lake file's
 
 A maintenance key it does not know is said in the run's log, never guessed.
 
+### 2.7 Row retention: the same option in memory, Delta, Iceberg and files
+
+A table can drop rows for their age, not only whole business dates. The option is one block, `retention:`, and it means the same in all four stores
+(the in-memory lake of section 13, a Delta table, an Iceberg table and a files store); a table's scalar `retention: 7y` (section 2.6) is
+unchanged, and a block may carry both (`dates: 7y`):
+
+```yaml
+tables:
+  trading.trade:
+    retention:
+      ttl: 8h                # rows older than this are dropped (500ms, 30s, 15m, 8h, 1d)
+      on: UPDATED_AT         # the field the age is read from: a promoted column or a document field (a time, a date, epoch seconds or milliseconds)
+      max-rows: 100000       # then at most this many rows are kept, the newest by the same age
+```
+
+| Rule | Detail |
+|---|---|
+| The age | The field `on`. Without `on`: the column `arrived_at` (a memory table aged by arrival writes it), else the row's business date. A row whose age cannot be read is never dropped |
+| `ttl`, `max-rows` | Rows older than `ttl` go; of the rest the newest `max-rows` stay, and rows tied at the cut all stay. Either alone is fine |
+| Absent | No limit; nothing changes |
+| Who applies it | One rule, one class (`RowRetention`), so the four stores leave the same rows. A parity test loads the same rows into all four with the same block and compares what is left, and reads the Delta result with delta-rs |
+| When | On the store's own upkeep, never a second scheduler |
+
+| Store | Where it runs | What it does |
+|---|---|---|
+| Memory | the compaction (section 13.5) | the rewrite leaves out the dropped rows |
+| Delta | `drishti.py lake maintain` (a step before compaction and vacuum; Admin → Lakes → Maintain, its schedules) | each business date holding a dropped row is rewritten without it, one Delta commit per date (a date left empty has its files removed); the files the commit stopped using are removed by the table's vacuum (`maintenance.vacuum`). Any Delta reader sees the result, and delta-rs and Spark read it |
+| Iceberg | the same run (`IcebergMaintenance --ttl --on --max-rows`) | each day holding a dropped row is replaced by one Iceberg commit (a day left empty: its partition is deleted); the old files go when snapshot expiry (`maintenance.expire-snapshots`) says |
+| Files | the same run for a maintenance lake of `format: files` (`<root>/<domain>/<date>/<kind>.jsonl`) | each affected day file is rewritten through a temporary file moved into place, so a running server never reads half a day |
+
+Where the block is written: a lake file's table entry (the table's own), or `row-retention:` in the maintenance file's lake or table settings
+(`lakes[].tables.<domain>/<table>`), the table's own over the lake's. The risk and risk-results domains keep their floor (section 2.6): a ttl under
+the kept years is raised to them and a `max-rows` is not applied. `drishti.py lake maintain --dry-run` counts the rows a run would drop per date.
+A Delta or files run reads the table's rows to judge them, so its memory is about the table's size (an Iceberg run keeps only each row's age in memory and spills the rewrite); a table too large for that is better trimmed by `retention: 520d` (whole dates). Admin → Lakes shows a memory table's retention and the rows it dropped, and a durable table's page the rows it keeps. A memory table that is also
+bound to a durable table keeps its own retention in each place: the memory table's ttl trims the memory only, and the durable table keeps what its
+own block says (none by default).
+
 ## 3. Loading, three ways
 
 | | The data inbox (3.1) | `drishti.py lake build` (3.2) | The parallel loader (3.3) |
@@ -316,6 +360,8 @@ Drop a file and a `.ready` marker in a folder; the server loads it into the lake
 refreshes everything that reads the table.
 
 **Turn it on.** The inbox is an engine, off as shipped: Admin → Engines → **Data inbox**, or
+
+Run these from the Drishti folder (the repository root, or the install folder of a release).
 
 ```bash
 python3 tools/drishti.py server engines on dataload --reason "load risklake"
@@ -350,31 +396,7 @@ cp /landing/trade_endur.2026-11-06.jsonl.gz data/dataload/inbox/
 touch data/dataload/inbox/trade_endur.2026-11-06.ready          # or trade_endur.2026-11-06.jsonl.gz.ready
 ```
 
-**Loading production position-level scenario PVs.** Each morning's batch is one file of `scenario-pv` records (every field in the checklist of
-[VAR_GUIDE.md section 15.13](VAR_GUIDE.md#1513-inputs-any-form-any-grain)), its currency FX in `fx-scenario` ([contract](../contracts/packs/market-risk.md#fxs-scenario-fx-of-a-currency-509-scenarios-fx-scenario), [example](../contracts/samples/market-risk.md#fx-scenario)) and the date's scenario set in
-`scenario-set` ([contract](../contracts/packs/market-risk.md#sset-scenario-set-scenario-set), [example](../contracts/samples/market-risk.md#scenario-set)); the `.ready` file goes in last:
-
-```bash
-# drop/scenario-pv.2026-11-06.jsonl.gz holds one object per position, for example (the vector cut here to 3 of 509 values):
-# {"VALUE_TYPE":"PV","GRAIN":"POSITION","POSITION_ID":"POS-BOOK-RATES-1~XCH-BOND_FUTURE-AUD-01@DIV-MARKETS/LL-0010","CURRENCY":"USD",
-#  "TRADE_CURRENCY":"AUD","SOURCE_SYSTEM":"MUREX","SCENARIO_PV_ID":"SPV-...-HS-509","BUSINESS_DATE":"2026-11-06","SCENARIO_SET_ID":"HS-509",
-#  "TRADE_STATUS":"VALIDATED","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-RATES","TT_BOOK":"BOOK-RATES-1","LIMIT_LETTER":"LL-0010",
-#  "PRODUCT_GROUP":"Rates","PRODUCT_TYPE":"BOND_FUTURE","DIRECTION":"LONG","QUANTITY":25,"TAGS":"","BASE_PV":1250000.00,
-#  "VALUATION_DATE":"2026-11-06","BASE_VALUATION_DATE":"2026-11-06","SCENARIO_PV":[1249500.00,1251120.00,1247800.00],"STATUS":"ok",
-#  "BATCH_ID":"B-2026-11-06-01","COMPUTED_AT":"2026-11-06T06:00:00Z","RUN_KIND":"FULL","TRADE_IDS":["MX-20000002"]}
-cp drop/scenario-pv.2026-11-06.jsonl.gz drop/fx-scenario.2026-11-06.jsonl.gz drop/scenario-set.2026-11-06.jsonl.gz data/dataload/inbox/
-cat > data/dataload/inbox/scenario-pv.2026-11-06.jsonl.gz.ready <<'YAML'
-lake: risklake
-pack: market-risk
-kind: scenario-pv
-mode: replace
-rows: 7993                          # refuses a file cut short
-YAML
-touch data/dataload/inbox/fx-scenario.2026-11-06.jsonl.gz.ready data/dataload/inbox/scenario-set.2026-11-06.jsonl.gz.ready
-```
-
-Pin each system's form and grain in `drishti.var.inputs` (`ENDUR: {form: pv, grain: position}`, the same for the others): a record that
-disagrees is refused and listed. One system sends one form and one grain per date; a position under two nodes of a hierarchy is one record per node.
+**Loading a production batch.** Position-level scenario PVs for VaR, step by step with the files, the fields, the checks and the traps (a name without a date loads under today's date): [16.1](#161-production-position-level-scenario-pvs-for-var-explain-and-why-it-moved).
 
 **One cycle**, every `interval` (10 minutes), on the owner node:
 
@@ -382,7 +404,8 @@ disagrees is refused and listed. One system sends one form and one grain per dat
    min)*), when the server is short of memory, or when the disk is below the server's free-space floor.
 2. **The whole ready batch** (every ready, stable file at that moment, oldest first) is moved at once into `inprocess/<run>/`; files that
    become ready during the run wait for the next cycle. `max-files` and `max-gb` (off by default) bound one run when set.
-3. **Never twice**: a file whose SHA-256 the ledger shows as loaded goes straight to the outbox, *already loaded in run …*. A changed
+3. **Never twice**: a file whose SHA-256 the ledger shows as loaded, and whose rows the lake still holds, goes straight to the outbox,
+   *already loaded in run …*; when a later load replaced (or an undo removed) its date, the same file loads again. A changed
    file with the same name is loaded.
 4. **Loaded**: the files of one table go to one run of the parallel loader, one table after another, as a separate Java process with
    its own heap (`loader-heap`, 4g): a large or broken file never takes the server's memory. Each business date is one commit.
@@ -496,7 +519,7 @@ report: {summary: runs/scenario-pv.summary.json}
 ```
 
 ```bash
-java -Xmx2g -Dloader.main=com.ash.drishti.lakeload.LakeLoad -jar drishti-server/target/drishti-server-<version>-exec.jar \
+java -Xmx2g -Dloader.main=com.ash.drishti.lakeload.LakeLoad -jar kernel/drishti-server/target/drishti-server-<version>-exec.jar \
     --config load-scenario-pv.yaml
 ```
 
@@ -710,7 +733,7 @@ options win over it):
 
 ```bash
 python3 tools/drishti.py lake build --from trade_endur.2026-11-05.jsonl.gz --lake risklake \
-    --pack config/packs/banking/trading --connector trade-endur --key TRADE_ID --mode overwrite-dates
+    --pack modules/banking/dmod/packs/trading --connector trade-endur --key TRADE_ID --mode overwrite-dates
 ```
 
 ```text
@@ -830,7 +853,7 @@ without `id:` takes it, else the kind's key), or the loader alone from the serve
 
 ```bash
 python3 tools/drishti.py lake build --from trade_endur.2026-11-05.jsonl.gz --lake demo \
-    --pack config/packs/banking/trading --connector trade-endur --mode overwrite-dates --engine java
+    --pack modules/banking/dmod/packs/trading --connector trade-endur --mode overwrite-dates --engine java
 ```
 
 ```text
@@ -847,7 +870,7 @@ java -Xmx4g -Dloader.main=com.ash.drishti.lakeload.LakeLoad -jar drishti-server-
 |---|---|
 | The inbox | `<data>/dataload/inbox/` on the inbox's **owner** node (`drishti.dataload.dir`, default `<data>/dataload`; `<data>` is `DRISHTI_DATA_DIR`). Turn it on: Admin → Engines → **Data inbox**, or `DRISHTI_DATALOAD_ENABLED=true` (section 3.1) |
 | Which table | the `.ready` file's keys, else the first rule of `config/dataload.yaml`, else the name's table (section 5.1) |
-| Which date | the `.ready` file's `business-date:`, else the name's date, else business today (section 5.2) |
+| Which date | the `.ready` file's `business-date:`, else the name's date, else the rows' one date (section 5.2) |
 | Which lake | the `.ready` file's `lake:`, else the rule's, else `drishti.dataload.lake` (`demo`) |
 | Watch it | **Admin → Data loads → Inbox** (Waiting, Loading, Last cycles, Failures with **Retry**); `drishti.py dataload status`; `GET /api/v1/admin/dataload` |
 | Load now | **Load now** on the Inbox screen; `drishti.py dataload run`; `POST /api/v1/admin/dataload/run` |
@@ -906,7 +929,7 @@ checks use. Only **Create a new table** (which needs `drishti.dataload.new-table
 
 A refusal blocks Push; the checks run again on the server when you push.
 
-**Replacing a date that already has rows.** `mode: replace` removes **every** row of that date in that table, whichever file or source system sent it. A date can be several files, or several systems, so when the table already holds rows for the date the page says how many, per system,
+**Replacing a date that already has rows.** `mode: replace` removes **every** row of that date in that table, whichever file or source system sent it: each trading system has its own table (`trading.trade_<system>`, section 16.2), so a system's file replaces that system's date only. (In a table several connectors share, which no shipped module uses, a connector's load replaces only its own `SOURCE_SYSTEM` slice.) A date can be several files, or several systems, so when the table already holds rows for the date the page says how many, per system,
 and offers the two right ways: load the date's files **together in one tar** (one replace, all or nothing), or use **append**. **Push stays off until you tick** that this file really takes the place of those rows. On the command line this is `--yes-replace`.
 
 **5. Push.** The data file is moved into `inbox/` first and its `.ready` last, each appearing whole or not at all, so the loader never sees a half-written pair; a file of the same name already waiting is refused and never overwritten. The push is audited: who, the file, its SHA-256, the `.ready` text. In a cluster
@@ -950,7 +973,7 @@ and `trades.jsonl.gz`) releases neither, and the Inbox screen says why.
 
 Every key a `.ready` file can carry, each with what it does and its default. All are optional: a real file uses only those it needs (most
 need none, or `lake:`, `mode:`, `sha256:` and `rows:`). The keys are one list shared by the inbox and the command-line loaders
-(`ReadyNote.KEYS` in drishti-dataload, `READY_KEYS` in `tools/lake/feedroute.py`, compared by a test); this example is parsed against it
+(`ReadyNote.KEYS` in drishti-lakeload, `READY_KEYS` in `tools/lake/feedroute.py`, compared by a test); this example is parsed against it
 by `drishti-console/tests/test_docs_ready_example.py`, so a renamed key fails the docs.
 
 ```yaml
@@ -1056,7 +1079,7 @@ The Inbox screen shows it as *held*; delete the `hold:` line (or set it to `fals
 
 A tar (`.tar`, `.tgz`, `.tar.gz`, `.tar.zip`) holds `<folder>/<YYYY-MM-DD>/<files>.jsonl[.gz]`, nothing else (operating-system litter
 such as `__MACOSX/` and `.DS_Store` is ignored). **Each top folder is a table or a kind**: a table name (`trade_endur`, `trade_calypso`,
-`trade_murex`, the tables of the kind `trade`, one per source system) writes that table; a kind name (`scenario-pv` ([contract](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv), [example](../contracts/samples/market-risk.md#scenario-pv)), `var-limit`)
+`trade_murex`, the tables of the kind `trade`, one per source system) writes that table; a kind name (`scenario-pv` ([contract](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-position-or-trade-one-pv-per-scenario-its-currency-scenario-pv), [example](../contracts/samples/market-risk.md#scenario-pv)), `var-limit`)
 writes the kind's one table. Names compare without case and with `_` and `-` alike (`var_limit` is the kind `var-limit`):
 
 ```text
@@ -1127,7 +1150,7 @@ dataload:
 ```
 
 Every key of a rule: `match`, `pack`, `kind`, and optionally `connector`, `table`, `date-from` (`auto` or `name`), `date-field`, `key`,
-`lake` (a lake's name; a folder is the older form), `format` (`delta` or `iceberg`).
+`lake` (a lake's name; a folder is the older form), `format` (`delta` or `iceberg`), `date-pattern` and `date-format` (below).
 
 **Which lake**: the `.ready` file's `lake:`, else the rule's `lake:`, else `drishti.dataload.lake` (`demo` as shipped). When the lake
 file has no entry for the table (a kind's, or one of a kind's several tables: `trade_endur`), the pack's recommended entry is copied into it
@@ -1139,13 +1162,24 @@ tool that loads it (`tools/samplegen/load_rows.py`, or the store's own loader): 
 
 ### 5.2 The business date of a file
 
-**The business date comes from outside the data, never from a row.** It is the partition, so whoever sends the file decides it. First
-match wins:
+**The business date comes from outside the data first.** It is the partition, so whoever sends the file decides it. First match wins:
 
 1. the command line's `--as-of` (`source.as-of`);
 2. the `.ready` file's `business-date:`;
-3. the name's date: `<table>[.<date>].<extension>`;
-4. the business today: today in the server's zone, and on a Saturday or Sunday the Friday before.
+3. the name's date: `<table>[.<date>][.part-<n>].<extension>`;
+4. the rows' own date field (`BUSINESS_DATE`), when none of the above gives one: every row under the date it carries. In a replace the rows
+   must carry one date: rows with none or with several refuse the file (*no business date …*, *its business date is ambiguous …*), nothing
+   written, because a replace under a guessed date could take out a loaded date;
+5. the business today (today in the server's zone, on a Saturday or Sunday the Friday before), only for a kind without a date field, or an
+   append of rows without one.
+
+A file named for a date whose rows all carry another date is refused in a replace (*its name says 2026-11-12, but none of its rows carries that
+date*): a load never replaces a date its rows do not belong to.
+
+A rule's `date-pattern` reads the date from a name that does not follow `<table>.<YYYY-MM-DD>.<ext>`: a regular expression with exactly one
+capture group around the date, read as `YYYY-MM-DD` (or `YYYYMMDD` with `date-format: YYYYMMDD`). `swapone-2026-11-03.jsonl.gz` with
+`date-pattern: '-(\d{4}-\d{2}-\d{2})\.'` is dated 2026-11-03 with no `.ready` file; a `.ready` file's `business-date:` still wins, and a
+date that is not a calendar date is refused.
 
 A rule's `date-from: name` (or `--date-from name`) refuses a name without a date. Every row of the file goes under the decided date; a
 row whose own date field differs is loaded and counted (*3 rows of trade_endur.2026-11-06.jsonl.gz carried another date in
@@ -1155,8 +1189,9 @@ BUSINESS_DATE; loaded under 2026-11-06*), in the report, the ledger and on the I
 
 | Name | Table | Date |
 |---|---|---|
-| `trade_endur.jsonl` | trade_endur | the business today |
+| `trade_endur.jsonl` | trade_endur | its rows' `BUSINESS_DATE` (one date; see above) |
 | `trade_endur.2026-11-06.jsonl.gz` | trade_endur | 2026-11-06 |
+| `scenario-pv.2026-11-06.part-0001.jsonl.gz` | scenario-pv | 2026-11-06 (one part of the day; the parts of a cycle are one load) |
 | `trade_endur.20261106.jsonl.zip` | trade_endur | 2026-11-06 |
 | `eod-2026-11-06.tar.gz` | from its folders | from its folders |
 | `trade_endur.final.jsonl` | refused: *"final" is neither a date (YYYY-MM-DD) nor an extension* | |
@@ -1175,7 +1210,9 @@ table and one date**; a tar is the one container for several.
 
 The mode of a load, first match wins: `--mode` or the `.ready` file's `mode:`; the table's `load-mode` in its lake file (`replace` when
 not set); the inbox's `default-mode`; `append`. **So a table in a lake file loads in replace mode unless its entry, the `.ready` file or
-the command line says `append`.** (`lake build` writes replace as `--mode overwrite-dates`.)
+the command line says `append`.** (`lake build` writes replace as `--mode overwrite-dates`.) A loaded file's report (`.loaded.json`, and the ledger's line) says the mode
+the load ran: `route.mode` `replace` or `append` and `route.modeFrom` (*given (--mode or the .ready file)*, *the lake file's entry*, *the
+inbox's default-mode*); an archive whose tables ran in different modes says `per table` (each table's `load.mode`).
 
 An append table keeps the same safety as replace: each load carries a **batch id** recorded in the date's commit (Delta: a transaction
 id `drishti-batch:<batch>:<date>`; Iceberg: the snapshot summary's `drishti.batch`), and a batch already committed for a date is never
@@ -1232,16 +1269,54 @@ allows it (`new-tables: true`, off as shipped). The table is then written in the
 `doc`, `business_date`, `_load_id`, `_source_file`), its id field `key:` else `id`. The report says *new table X created; no pack serves it
 yet*: a pack declares it as a kind when it should appear on screen.
 
-## 6. Pointing Drishti at a lake
+### 5.7 Child kinds
 
-A lake is read by the Delta and Iceberg connectors that name it. A connector file (`config/connectors/<name>.yaml`, written from the
-pack's template at the first start and yours to edit) says `lake:` and, where a kind has several tables, `lake-tables:`; root, folders,
-partitions and promoted columns come from the lake file. To read your scenario PVs and VaR nodes from `risklake`, edit
-`config/connectors/risk-store.yaml`:
+A **child kind** is an array of records in a parent's documents (`LEGS` of `trade`) loaded as a kind of its own (`trade-leg`): one row per
+element, in a table of its own beside the parent's (`<lake>/<domain>/trade-leg/`, or `<files root>/<domain>/<date>/trade-leg.jsonl`), under
+the **parent's business date**, written in the same run as the parent. Its row is the element's fields with two in front: its id (`LEG_KEY`,
+the parent's id `:` the element's natural key such as `LEG_ID`, else its index) and the link to the parent (`TRADE_ID`); its promoted columns
+are the link and the element's fields. The parent's row is unchanged (it keeps the array). The pack declares the child kind in its `ingest:`
+block, which the loader reads:
 
 ```yaml
-plugin: delta
-enabled: true
+ingest:
+  trade: { key: TRADE_ID, date: BUSINESS_DATE }
+  trade-leg: { key: LEG_KEY, child-of: { kind: trade, field: LEGS, link: TRADE_ID, natural: LEG_ID } }
+```
+
+Child tables work in **every store**, by every loader, from the same declaration:
+
+| Loader | Delta | Iceberg | Files |
+|---|---|---|---|
+| `drishti.py data ingest --pack <pack> --from <files>` (also `pack new --load` and the Pack designer) | `--lake DIR` | `--store iceberg --lake DIR` | `--store files --root DIR` |
+| `drishti.py lake build --pack <pack> --kind trade` (`--engine` any) | default | `--format iceberg` | |
+| the parallel loader (section 3.3), with `source.pack` and `target.kind` in its configuration | `target.format: delta` | `target.format: iceberg` | |
+
+The parent's table is loaded as ever; then each child kind of the pack's `ingest:` block is split off the same documents and loaded as a table of
+its own, in the parent's format, with the pack's layout of the child kind (its promoted columns, sort and table name), **under the business
+date the parent's file was loaded under** (`--as-of`, the `.ready` file's, the tar folder's, the file name's, else the business today). The
+rules live in the pack's `ingest:` block alone and every loader reads them: the id is `parent id : LEG_ID` when every element has a unique
+natural key (the `natural:` field), else `parent id : index`; the link field carries the parent's id; an element that is not a record, a
+parent without an id and a parent without the array give no child row. `tools/packgen/childkinds.py` (Python) and
+`com.ash.drishti.lakeload.ChildKinds` (the parallel loader) are checked against one fixture of documents and the rows they must give, so
+they cannot drift; `tools/test_child_parity.py` loads the same nested JSON Lines as Delta, Iceberg and files and checks the child rows (count,
+ids, links, promoted columns, date) and the answers through the BI relationship are the same. A child kind can still be delivered as files of
+its own (`trade-leg.2026-11-03.jsonl`) where the parent has no array to split. `pack new` and the Pack designer plan child kinds and write this
+block ([BUILD_GUIDE section 8.1.4](BUILD_GUIDE.md#814-child-tables-an-array-of-records-as-a-kind-of-its-own)).
+
+## 6. Pointing Drishti at a lake
+
+A lake is read by the Delta and Iceberg connectors that name it. A connector is its **template** (the `connectors:` section of its
+pack's `pack.yaml`, or a source module's `connectors/` file) with **your override** merged over it (`config/connectors/<name>.yaml`, only
+the keys you change) and the secrets resolved when it starts (KERNEL_AND_MODULES.md section 18.5). The template travels with its module:
+a module installed from its `.dmod` (the distribution installs banking, market data, capital markets and economy at the first start)
+carries its packs' templates, and the server reads them from the installed module at every start. **The server writes no connector
+file**: with no override the template is the connector. A connector says `lake:` and, where a kind has several tables, `lake-tables:`;
+root, folders, partitions and promoted columns come from the lake file. To read your scenario PVs and VaR nodes from `risklake`, write
+`config/connectors/risk-store.yaml` with only what differs from the template (Admin → Connectors writes the same):
+
+```yaml
+template: pack market-risk
 settings:
   lake: risklake
   lake-tables: risk.scenario-pv,risk.var-limit
@@ -1263,7 +1338,7 @@ The rows are in the lake; nothing shows them until a connector names it.
 **Demo and real never mix.** Each lake has its own folder and its own file, and a connector reads one lake. Three rules keep a server
 from showing demo data beside yours:
 
-- **The packs' samples step aside.** Every pack ships sample documents (`config/packs/<domain>/<pack>/samples/`), served by the `demo` connector,
+- **The packs' samples step aside.** Every pack ships sample documents (`modules/<module>/packs/<pack>/samples/`), served by the `demo` connector,
   which answers any kind and, on a live read, before the lakes. Once a kind's routed connector, or any Delta or Iceberg connector serving
   it, names a lake other than `demo`, the samples no longer answer for that kind: not by id (`TRD 1000001`, a demo ComSwap, is not
   found once `trade-endur` reads risklake), not in a search. A kind whose connectors all read `demo` keeps its samples, so a demo server
@@ -1296,7 +1371,7 @@ bindings:
   trade:
     read: [trade-endur, trade-calypso, trade-murex]   # connectors (config/connectors/<name>.yaml), in read order
     union: true                                        # one trade store across them
-    live: trade-kafka                                  # a connector that pushes changes
+    live: [trade-endur-kafka, trade-calypso-kafka]     # the connectors that push changes (one name, or a list)
   scenario-pv:   { read: [risk-store] }
   var-limit:     { read: [risk-store] }
   var-official:  { write: { lake: risklake, table: banking.var-official } }
@@ -1307,7 +1382,7 @@ bindings:
 |---|---|
 | `read` | the connectors that serve the kind, in read order (the first that holds the date answers; a union is read as one) |
 | `union` | the read connectors are one store together (one source system each, ids unique across them); two or more |
-| `live` | the connector that pushes changes of the kind |
+| `live` | the connectors that push changes of the kind: one name, or a list when several source systems stream it (merged into the live result set by key and version) |
 | `write` | where a produced kind is written: `{lake, table}` |
 | `demo` | `true`: the demo lake's samples serve it (only while demo is on); never with `read` |
 | `note` | the administrator's note |
@@ -1318,8 +1393,77 @@ holds the contract's `binding-hint.lake-table` (`AUTO`, *found by convention: co
 **required** need switches off exactly the functions that use it, with the reason. A contract names no connector: its `binding-hint`
 gives the lake table, partitions and promoted columns a site usually binds ([contracts README](../contracts/README.md)).
 
-A connector file that still lists `kinds:` is read in this release, the kinds bound to it added; Health lists it as deprecated. A site
-with no `bindings.yaml` gets one at the next start, written from those lists, so it keeps reading what it read.
+A connector file names no kinds (a `kinds:` line from an earlier release is ignored): `bindings.yaml` is the one home of which connectors serve a kind.
+
+### 6.2 Several source systems: shared or separate tables
+
+Trading systems (Endur, Calypso, Murex, WSS, SwapOne, ICI) are **source modules**, each feeding the **one canonical `trade` kind**; the field
+`SOURCE_SYSTEM` says which system a record came from. Each system's trades are in **its own table** (one table a trading system, always), and the site tunes
+the read in the connector file; the same keys work for `delta`, `iceberg` and `files` connectors, and for `kafka` live connectors (each message
+filtered and mapped):
+
+```yaml
+plugin: delta            # also iceberg, files; kafka for live
+settings:
+  lake: main
+  lake-tables: trading.trade_endur    # the system's own table
+  where: SOURCE_SYSTEM = 'ENDUR'       # optional: the rows that are this connector's (a table that holds other rows too)
+  set: { SOURCE_SYSTEM: ENDUR }        # optional: constants for rows that lack the field
+  map: mappings/endur-trade.yaml       # optional: native field -> canonical field
+```
+
+| Key | Meaning |
+|---|---|
+| `where` | A row predicate on the **stored** row: `=`, `<>`, `<`, `<=`, `>`, `>=`, `in ('A', 'B')`, `is null`, `is not null`, `and`, `or`, `not`, parentheses; text is quoted. The comparisons of a field with constants at the top level are pushed down to the store (partition and file pruning where possible); the whole predicate is tested on every row read. |
+| `set` | Constants for the canonical row where it lacks the field (`SOURCE_SYSTEM` for a system's own table). |
+| `map` | A map file, relative to the connector's module folder, else the connectors' folder (`config/connectors/`). |
+
+The order is: `where` on the stored row, then `map`, then `set`. **Raw JSON** shows the stored record (the source's native fields, before
+`map`); the grid, search, FORM and BI show the canonical fields. The connector's system is its `set.SOURCE_SYSTEM`, else the value its
+`where` fixes (`SOURCE_SYSTEM = 'ENDUR'`).
+
+**The map file** has two forms of entry, which may be mixed:
+
+```yaml
+format: 1
+fields:
+  TRAN_NUM: TRADE_ID                              # native: canonical
+  NOTIONAL_AMT: { to: NOTIONAL, cast: number }    # native: {to, cast}
+  DESK: { from: PORTFOLIO, values: { RNY: RATES-NY } }   # canonical: {from: native, cast, values: native value -> canonical value}
+  ASSET_CLASS: { value: RATES }                   # canonical: {value: constant}, always that value
+set: { SOURCE_SYSTEM: ENDUR }                     # constants where the row lacks them (the connector's set wins)
+keep: true                                        # native fields the map does not name pass as they are (false: dropped)
+```
+
+Casts are `text`, `number`, `integer`, `boolean` and `date` (ISO, `yyyyMMdd` or `13-Nov-2026`); a value a cast cannot read stays as stored.
+
+**One table a system.** One connector per table with `set: { SOURCE_SYSTEM: X }` (and a `map` when the
+system's fields are its own). Several live connectors go in the binding's `live:` list; a message another system's connector would not serve
+is dropped by the `where` of each.
+
+**Stamping at load.** When the inbox, `drishti.py data ingest` or the Java loader writes a file through a connector (a rule's `connector:`),
+the connector's `set:` constants are stored into every row that lacks the field, in Delta, Iceberg and files alike, so a shared table splits by
+`where` afterwards. The site's own connector file (`config/connectors/<name>.yaml`) wins over the module's template. `map:` is applied at
+read only: the stored row stays as the system sent it (Raw JSON shows it).
+
+**Inbox rules of modules.** A source module's `dataload:` (a file of the same format as `config/dataload.yaml`) adds rules for the files of its
+system. The inbox reads the site's rules first, then those of the modules that are on, at every cycle: a module switched off takes its rules
+away. Admin → Data loads → Routing rules shows each rule's origin (`site` or the module).
+
+**Refusals.** A `where` that is not a predicate, a map file that is missing, unreadable, maps two fields to one, or names an unknown cast,
+refuses the connector at load with `DRS-5034`, shown on Admin → Connectors with the reason; the rest of the server runs. A connector's `where`
+may not name `$user`: person attributes belong in a role's row rule ([ACCESS_MODEL.md section 10](../architecture/ACCESS_MODEL.md#10-row-rules)).
+
+**A source module switched off** (Admin → Modules, at runtime, no restart): its connectors leave every binding without an error (Admin says
+*source ENDUR off*), its rows leave lists, blotters, search and BI (also from a shared table read by a connector without `where`), its live
+feed stops, and the pages of the kinds it feeds say *excludes ENDUR (switched off)*. Switched on, all comes back. With every source off the
+kind is empty, without errors. A module is a source module when it owns the connector (its manifest's `connectors`) or is named
+`source-<system>`. The allowed values of `SOURCE_SYSTEM` are the systems of the installed source modules, never a fixed list. VaR is driven by
+scenario PVs at position grain and is unchanged by a source switch.
+
+**Write-back.** A blotter edit of a record goes to the write path of the system the record came from (its `SOURCE_SYSTEM`): the form's
+connector when it is that system's, else the first of the system's connectors that carries the command; never another system's. A system
+without a write path for the command refuses the change, with the reason.
 
 ## 7. The demo lake's one-time move
 
@@ -1335,14 +1479,12 @@ python3 tools/drishti.py lake relocate demo               # exit 0 moved (or not
 **Safe**: only the demo lake's own folders move, each by a rename on the same file system (no file copied or rewritten); every Delta table
 is measured before and after (version, data files, rows, every named file present) and **any difference or error moves everything
 back**; it refuses, moving nothing, when `<data>/delta/demo` exists, when a folder belongs to no lake file, or while a load holds the lock;
-it **never deletes** a file and records the move in `<data>/delta/demo/_drishti-lake/relocated.json`. Connector files the server once
-generated with the old default root follow the move: they are rewritten to `lake: demo`, each kept beside it as
-`<name>.yaml.before-lake-<time>.bak`. A file nobody edited since it was generated keeps counting as unedited (its template stamp is
-written again over the new text), so it still follows its pack's template at upgrades; an edited file stays edited. A site that sets
-`DRISHTI_DELTA_ROOT` keeps that root: nothing moves.
+it **never deletes** a file and records the move in `<data>/delta/demo/_drishti-lake/relocated.json`. No connector file is
+written: the server reads connector files and never writes them; the packs' templates read the demo lake by name (`lake: demo`), and a
+site's own file keeps whatever it says. A site that sets `DRISHTI_DELTA_ROOT` keeps that root: nothing moves.
 
 **Roll back by hand**: stop the server, set `drishti.lakes.relocate-on-start: false`, rename the folders under `<data>/delta/demo/` back to
-`<data>/delta/`, delete `relocated.json`, and put the `.bak` connector files back. Every check, refusal and message:
+`<data>/delta/`, and delete `relocated.json`. Every check, refusal and message:
 [OPERATIONS_GUIDE.md, The lakes' folders](OPERATIONS_GUIDE.md#71-the-lakes-folders).
 
 ## 8. Checking a load, and troubleshooting
@@ -1386,7 +1528,7 @@ lake check: 4 lakes, 1 errors
 | `failed/`: *"final" is neither a date (YYYY-MM-DD) nor an extension* | a name with a word in the date's place | rename to `<table>.<YYYY-MM-DD>.jsonl.gz` |
 | `failed/`: *a tar archive names its own tables and dates* | `business-date:` or `table:` in a tar's `.ready` | remove them; fix the tar's folders |
 | `failed/`: a table *in two packs* | the table name is ambiguous | `pack:` in the `.ready`, or a rule |
-| *already loaded in run …* | the same SHA-256 was loaded before | nothing to do; `reload-duplicates: true` to force |
+| *already loaded in run …* | the same SHA-256 was loaded before and the lake still holds its rows | nothing to do; `reload-duplicates: true` to force |
 | *skipped: run … still loading* | the previous run is not finished | wait; runs never overlap |
 | the table locked (exit 3) | another load or build holds it | it is tried again next cycle |
 | *loaded into risklake, but no connector reads it* | no connector names the lake | section 6 |
@@ -1460,7 +1602,6 @@ tables:
 ```yaml
 # config/connectors/trade-endur.yaml, Delta on Azure (ADLS Gen2)
 plugin: delta
-kinds: [trade]
 settings:
   root: abfs://lake@riskstorage.dfs.core.windows.net/delta
   engine: hadoop                             # abfs:// needs the hadoop engine
@@ -1578,7 +1719,7 @@ results are published.
 **An Iceberg copy of a demo store**: `tools/build_demo_lakes.py --store risk=iceberg` copies the tables into Iceberg with a lake file
 `demo-iceberg.yaml` and connectors naming it ([tutorial 16, Part E](../tutorials/16-load-your-own-data-into-a-new-lake.md#part-e--the-risk-lake-and-the-official-results-on-iceberg)).
 
-**The local cluster** (`drishti-stack`): the stack's synthetic lakes are written through the demo lake's file with another root
+**The local cluster** (`deploy/stack`): the stack's synthetic lakes are written through the demo lake's file with another root
 (`lake build --lake demo --lake-root data/stack/lakes/<name>`); every node reads the same description.
 
 **Admin → Lakes** lists every lake (format, root, in memory or not) and each table (kind, path, partitions, promoted columns, vectors, id,
@@ -1642,7 +1783,6 @@ The connector reads it like any lake:
 ```yaml
 # config/connectors/news-store.yaml (config/connectors.examples/memory/news-store.yaml)
 plugin: delta
-kinds: [news-topic, listed-company, news, quote]
 settings:
   lake: news
   lake-tables: news.news-topic,news.listed-company,news.news,news.quote
@@ -1803,6 +1943,7 @@ The store's own keys (`max-mb`, `chunk-kb`, `contract`, `owner`, `idle-trim-minu
 | `tables[].columns` | | fields promoted beside the document |
 | `tables[].every`, `.cron`, `.signal`, `.warm-up` | , , true, | when it runs |
 | `tables[].pin`, `.keep-versions`, `.codec` | false, 2, zstd | never evicted; versions kept; `zstd`, `lz4`, `snappy` |
+| `tables[].retention` | none | the rows' age limit and cap, applied by the compaction (the one upkeep): `{ttl: 8h, on: UPDATED_AT, max-rows: 100000}`; the rule, and the same option for Delta, Iceberg and files, is section 2.7. Admin → Lakes shows each table's retention and the rows it dropped. A table that also has a durable copy keeps that copy's own retention (none by default): the TTL trims the memory only |
 | `history-keep`, `job-threads` | 50, 2 | runs kept per table; jobs at once |
 | `compaction.*` | enabled, 30 s idle, 512 MB headroom, 8 MB small files, 0.2 dead rows, 20 appends, 60 s | 13.5 |
 
@@ -2014,18 +2155,18 @@ the form the library uses.
 A table or file outside the feature table stops the read with this message (`[…]` names the table or file where it was met). Rewrite such a table without the feature, with the engine that wrote it, and Drishti reads it:
 
 ```text
-drishti-iceberg does not read format version 3 tables; use the connector's engine: library for this table [<table>]
-drishti-iceberg does not read ORC data files; use the connector's engine: library for this table [<the .orc file>]
-drishti-iceberg does not read the Iceberg type 'variant' (format version 3); use the connector's engine: library for this table
-drishti-iceberg does not read column defaults (format version 3) on NOTIONAL; use the connector's engine: library for this table
-drishti-iceberg does not read encrypted data files; use the connector's engine: library for this table [<the file>]
+drishti-iceberg does not read format version 3 tables; this table cannot be read: write it again as a format-version 2 Iceberg table with Parquet data files [<table>]
+drishti-iceberg does not read ORC data files; this table cannot be read: write it again as a format-version 2 Iceberg table with Parquet data files [<the .orc file>]
+drishti-iceberg does not read the Iceberg type 'variant' (format version 3); this table cannot be read: write it again as a format-version 2 Iceberg table with Parquet data files
+drishti-iceberg does not read column defaults (format version 3) on NOTIONAL; this table cannot be read: write it again as a format-version 2 Iceberg table with Parquet data files
+drishti-iceberg does not read encrypted data files; this table cannot be read: write it again as a format-version 2 Iceberg table with Parquet data files [<the file>]
 ```
 
 A load into a table another engine re-partitioned stops before any file is written (the parallel loader's wording; the Iceberg loader's says the same):
 
 ```text
 <table> is not in the layout: its partition spec 1 has the field 'id_bucket_8' (bucket[8]) beside the identity partition on
-business_date; this writer writes only tables partitioned by business_date alone (write this table with engine: library, or restore its spec)
+business_date; this writer writes only tables partitioned by business_date alone (write this table again partitioned by business_date alone, or restore its spec)
 ```
 
 Write such a table with the engine that re-partitioned it, or restore its spec.
@@ -2052,3 +2193,886 @@ from pyiceberg.table import StaticTable
 t = StaticTable.from_metadata("file:///srv/drishti/data/iceberg/risk/pnl-vector/metadata/v12.metadata.json")
 print(t.scan(row_filter="business_date = '2026-09-30'").to_arrow().num_rows)
 ```
+
+## 16. Runbooks: production data into the lake
+
+The kinds these runbooks (sections 16 and 17) load, each with its sample record and its data contract: `agreement` ([sample](../contracts/samples/counterparty-risk.md#agreement), [contract](../contracts/packs/counterparty-risk.md#agr-master-agreement-agreement)), `clearing-account` ([sample](../contracts/samples/core.md#clearing-account), [contract](../contracts/packs/core.md#clr-clearing-account-clearing-account)), `collateral-balance` ([sample](../contracts/samples/counterparty-risk.md#collateral-balance), [contract](../contracts/packs/counterparty-risk.md#coll-collateral-balance-collateral-balance)), `counterparty-group` ([sample](../contracts/samples/core.md#counterparty-group), [contract](../contracts/packs/core.md#grp-counterparty-group-counterparty-group)), `credit-limit` ([sample](../contracts/samples/counterparty-risk.md#credit-limit), [contract](../contracts/packs/counterparty-risk.md#lim-credit-limit-credit-limit)), `csa` ([sample](../contracts/samples/counterparty-risk.md#csa), [contract](../contracts/packs/counterparty-risk.md#csa-credit-support-annex-csa)), `desk-pnl` ([sample](../contracts/samples/market-risk.md#desk-pnl), [contract](../contracts/packs/market-risk.md#dpnl-desk-pl-actual-and-hypothetical-daily-desk-pnl)), `exposure-path` ([sample](../contracts/samples/counterparty-risk.md#exposure-path), [contract](../contracts/packs/counterparty-risk.md#xpath-exposure-path-a-trades-mtm-on-every-path-at-a-grid-date-exposure-path)), `fx-scenario` ([sample](../contracts/samples/market-risk.md#fx-scenario), [contract](../contracts/packs/market-risk.md#fxs-scenario-fx-of-a-currency-one-rate-per-scenario-fx-scenario)), `fx-spot` ([sample](../contracts/samples/market-data.md#fx-spot), [contract](../contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot)), `legal-entity` ([sample](../contracts/samples/core.md#legal-entity), [contract](../contracts/packs/core.md#le-bank-legal-entity-legal-entity)), `netting-set` ([sample](../contracts/samples/counterparty-risk.md#netting-set), [contract](../contracts/packs/counterparty-risk.md#nset-netting-set-netting-set)), `pnl-history` ([sample](../contracts/samples/market-risk.md#pnl-history), [contract](../contracts/packs/market-risk.md#pnlh-long-history-pl-of-a-hierarchy-node-stress-window-selection-pnl-history)), `sa-ccr` ([sample](../contracts/samples/counterparty-risk.md#sa-ccr), [contract](../contracts/packs/counterparty-risk.md#saccr-sa-ccr-exposure-sa-ccr)), `scenario-set` ([sample](../contracts/samples/market-risk.md#scenario-set), [contract](../contracts/packs/market-risk.md#sset-scenario-set-scenario-set)).
+
+One runbook per kind of production feed, each tested end to end on a synthetic batch shaped like production. Each follows one shape:
+prerequisites, the fields, the steps, the files and their names, chunking, two dates, the layout, verification, troubleshooting, a do-not list and a
+checklist to print.
+
+### 16.1 Production position-level scenario PVs, for VaR, Explain and Why it moved
+
+**What this loads.** A pricing system's morning batch: one `scenario-pv` record per **position** (`GRAIN: POSITION`, `POSITION_ID` set, no
+`TRADE_ID`), about 1.3 million positions a business date, `UPPER_SNAKE` field names, JSON Lines (many large files, plain or `.gz`). **The scenario PVs are always one table** (`risk.scenario-pv`) for every
+pricing system, loaded as **one complete file or tar per business date**: a day's PV file must contain **all** pricing systems' positions,
+and a partial file **replaces the whole date** (there is no per-system slice of scenario PVs; 17.4). With it the
+VaR page, Explain and **Why it moved** are fast: a date opens from one memory-mapped hot file. The kind is `scenario-pv` (command `SPV`); its contract
+is [`scenario-pv.contract.yaml`](../../modules/banking/dmod/packs/market-risk/contracts/scenario-pv.contract.yaml), published as
+[SPV](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-position-or-trade-one-pv-per-scenario-its-currency-scenario-pv). The engine's rules for
+forms and grains are [VAR_GUIDE.md section 15.13](VAR_GUIDE.md#1513-inputs-any-form-any-grain); this section is the procedure.
+
+**Every input a position-grain date needs.**
+
+| Kind | Needed? | Why |
+|---|---|---|
+| `scenario-pv` | **yes**, the batch itself | the values |
+| `scenario-set` | **yes**, one row a date | the scenario days: `SCENARIO_COUNT` must equal every vector's length; the engine uses the newest `scenario-window` of them |
+| `fx-scenario` | **yes** when any `CURRENCY` is not USD (one row per currency and date, `RATES` as long as the set) | otherwise the rates are derived from `fx-spot` history, which covers every scenario day only on a bank's own FX history; a currency with neither rejects its rows (`DRS-5207`) |
+| a position or hierarchy kind | **no** | a position record places itself: `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `LIMIT_LETTER` build both trees; nothing is derived from trades |
+| `var-limit` | optional | the Limit column and limit use |
+| `desk-pnl`, `pnl-history` | optional | backtesting, stressed VaR |
+| trades (`trade_*`) | optional | trade pages only; position grain never joins them |
+
+#### Prerequisites
+
+| Check | Value | Where |
+|---|---|---|
+| Java | 21 or newer | `java -version` |
+| Server heap | **8 to 10 GB** for 1.3M positions and two to three open dates | `bin/start-server.sh --heap 10g` (Windows: `bin\start-server.ps1 -Heap 10g`). The measured book is about 0.77 GB of heap at 1M positions ([VAR_GUIDE.md 27.1](VAR_GUIDE.md#271-bytes-per-date)), so about 1 GB at 1.3M, and a date kept open about 1.5 GB of `-Xmx`; `-Xmx6g` served 1M positions with two dates |
+| Loader heap | `16g` | `DRISHTI_DATALOAD_LOADER_HEAP=16g` for the inbox (default `4g`; the loader's budget is half of it): a separate process, memory bounded, the rest spilled to disk; for the CLI, `DRISHTI_LAKE_LOADER_HEAP` |
+| Reporting currencies | `DRISHTI_VAR_CURRENCIES=USD` **for the first load** | the default builds EUR, CAD, JPY and GBP books ahead, each about 77% of the USD book's disk; add them when you need them |
+| Open dates | `DRISHTI_VAR_HOT_DATES=3` | the default 10 keeps up to ten dates open |
+| Disk | see the table below; the guard `drishti.disk.min-free-percent` (10) and `min-free-gb` (20), both must hold, else a date is refused `503 DRS-5218` | `df -h` of the data folder |
+| Scenario window | `drishti.var.scenario-window` (default 250: the newest N of the set; `all` uses the whole set) | `config/engines/var.yaml` |
+| Inbox | on, on one owner node | `drishti.py server engines on dataload` (the demo starts it on); in a cluster, the owner node's `<data>/dataload` |
+| A token | scope `loads:write` (an administrator's will do) | My account, API tokens; `--token-file F` or `DRISHTI_TOKEN`; `DRISHTI_SERVER=http://host:18480` |
+
+Put the settings in the server's env file and start it:
+
+```bash
+cat >> server.env <<'EOF'
+DRISHTI_VAR_CURRENCIES=USD
+DRISHTI_VAR_HOT_DATES=3
+DRISHTI_DATALOAD_LOADER_HEAP=16g
+EOF
+bin/start-server.sh --env-file server.env --heap 10g --background      # Windows: bin\start-server.ps1 -EnvFile server.env -Heap 10g -Background
+```
+
+**Disk**, 1.3M positions, 250 values a vector, two dates, **estimated** from the measured 20,000-position run (below; 509 values roughly doubles the lake and
+the hot files):
+
+| Folder | One date | Two dates |
+|---|---|---|
+| your landing area | 1.3 GB gzip (4.3 GB as text) | 2.6 GB |
+| `<data>/dataload/`: inbox, then `outbox/` (kept `keep-outbox-days`, 30) | 1.3 GB, once in each | 2.6 GB at once, 5.2 GB kept |
+| the lake, `<lake>/risk/scenario-pv/` | 1.75 GB | 3.5 GB; **a replaced date keeps its old files** until vacuum (`time-travel: 30d`, `vacuum: 7d` in the lake file): budget a second copy of any date you load twice |
+| VaR hot files, `<data>/var/hot/` | 2.7 GB (USD) | 5.4 GB; with the five default currencies about 11 GB a date |
+| temp (a load's spill, `<data>/tmp`) | up to 10 GB | |
+| **Plan on** | | **about 30 GB free** for two dates with USD only, 60 GB with the default currencies |
+
+#### Fields: what each record must carry
+
+The contract lists 41 fields, 28 required. The load rejects a row for the few the engine reads; the others are kept for audit and navigation. This
+table is what happened when each was dropped from a test date:
+
+| Field | Send it | If missing (tested) |
+|---|---|---|
+| `VALUE_TYPE` = `PV`, `GRAIN` = `POSITION`, `POSITION_ID`, `CURRENCY`, `SOURCE_SYSTEM` | always; `POSITION_ID` unique on the date | the row is rejected `DRS-5208` (*no GRAIN: every PV record says what it is …*) |
+| `BUSINESS_DATE`, `SCENARIO_SET_ID` | always; the set's id the same on every row and in `scenario-set` | `DRS-5203` for the date |
+| `SCENARIO_PV` | always: as many values as the set's `SCENARIO_COUNT`, oldest scenario first, none `null` or NaN | `DRS-5201` wrong length; `DRS-5206` a null: the row is not loaded, never zero-filled |
+| `BASE_PV` | always (the same run's PV today; P&L = PV(s) × FX(s) − BASE_PV × FX(base)) | **every row rejected**, `DRS-5201 … no BASE_PV` |
+| `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `LIMIT_LETTER` | always: the trees are built from them | the row sits under **(Blank)** and the answer warns `DRS-5211`: loaded, but not where you want it |
+| `BATCH_ID` (one a date), `COMPUTED_AT`, `RUN_KIND` = `FULL`, `RESTATEMENT` (0, then 1, 2 …) | always | two `BATCH_ID`s on a date refuse the date `DRS-5203`; with none the date loads |
+| `SCENARIO_PV_ID` (`SPV-<POSITION_ID>-<SCENARIO_SET_ID>`) | always: the contract's key, what `SPV` pages are named by | loaded without it, but the record page and key-based lookups rely on it |
+| `VALUATION_DATE`, `BASE_VALUATION_DATE` | the business date | loaded when absent; `DRS-5201` when sent and different |
+| `TRADE_STATUS`, `MATURITY_DATE`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `SECURITY_ID`, `COUNTERPARTY`, `DIRECTION`, `QUANTITY`, `INSTRUMENT`, `PORTFOLIO`, `TAGS`, `STRATEGY`, `TRADE_CURRENCY` | as you have them: they feed scopes (`CPTY:`, `WHERE:`), baskets and the pages | loaded when all are absent |
+| `TRADE_IDS` | optional: the position's trades, kept for navigation | loaded |
+| `STATUS`, `PRICER`, `MODEL_VERSION` | audit | loaded when absent |
+| `TRADE_ID` | **never** at position grain | a `TRADE`-grain row beside positions of one system refuses the date, `DRS-5210` |
+
+A position under two nodes of a hierarchy is one record per node, its id `<position>@<level value>`
+([VAR_GUIDE.md 15.13](VAR_GUIDE.md#1513-inputs-any-form-any-grain)). The pin `drishti.var.inputs` (`<SYSTEM>: {form: pv, grain: position}`) is
+optional; a record that disagrees with it is refused `DRS-5209`.
+
+**The layout the lake file gives it** (`config/lakes/demo.yaml`, `risk.scenario-pv`; the lake file is the truth, never a command line): partitioned by
+business date, then `SCENARIO_SET_ID` and `GRAIN` (one folder a date at position grain), files of about 256 MB (`file-size-mb`), row groups of 16 MB
+(`row-group-mb`), `zstd` for columns and vectors, `sort-by: [LEGAL_ENTITY, DIVISION, DESK, TT_BOOK, POSITION_ID, TRADE_ID]`: rows are ordered by book,
+then by `POSITION_ID` (`TRADE_ID` is empty at position grain), so a lookup of one position reads one row group. VaR reads the whole date.
+
+#### Step by step (Linux; each command was run as written)
+
+**1. Name and cut the files.** One tar per business date, with one folder per kind and, inside it, the date's folder (section 4.4). The parts of a
+date go in the same folder under any names (`part-0001.jsonl.gz`): **a tar sends one date in several files by the inbox**, and it loads
+all three tables or none.
+
+```text
+eod-2026-11-12.tar
+├── scenario-set/2026-11-12/scenario-set.jsonl.gz       one row
+├── fx-scenario/2026-11-12/fx-scenario.jsonl.gz         one row a non-USD currency
+└── scenario-pv/2026-11-12/part-0001.jsonl.gz           the positions, in as many parts as you like
+    scenario-pv/2026-11-12/part-0002.jsonl.gz
+```
+
+Chunking: **200,000 to 400,000 positions a part** (about 200 to 400 MB of gzip at 250 values), each part gzipped: several parts are decompressed and
+parsed in parallel, one part by one reader (a single 5 GB file loads on one core). The lake writes its own files of about 256 MB whatever you send. Do not
+gzip the tar: its parts are already compressed.
+
+```bash
+cd /landing/2026-11-12                                    # holds scenario-set/ fx-scenario/ scenario-pv/, each with the date's folder
+tar -cf /landing/eod-2026-11-12.tar scenario-set/2026-11-12 fx-scenario/2026-11-12 scenario-pv/2026-11-12     # Windows 10+: the same in PowerShell
+sha256sum /landing/eod-2026-11-12.tar | cut -c1-64        # Windows: (Get-FileHash eod-2026-11-12.tar -Algorithm SHA256).Hash.ToLower()
+```
+
+**2. Drop the tar, and its `.ready` last** (section 3.1). The `.ready` is YAML, named after the tar in full. `sha256:` is checked before anything is
+written (a wrong one goes to `failed/`: *the SHA-256 in its .ready file is not the file's*); `rows:` (optional) is the archive's documents, all its tables together: each table folder is counted
+first without writing, and another count goes to `failed/` (*its .ready file says N rows, the archive holds M documents*), nothing written.
+`lake: demo` is the lake holding your demo data.
+
+```bash
+INBOX=<data>/dataload/inbox                               # the owner node's data folder; Admin → Data loads → Inbox shows it
+cp /landing/eod-2026-11-12.tar $INBOX/
+cat > $INBOX/eod-2026-11-12.tar.ready <<EOF
+lake: demo
+sha256: $(sha256sum /landing/eod-2026-11-12.tar | cut -c1-64)
+rows: $(( $(zcat /landing/2026-11-12/*/2026-11-12/*.gz | wc -l) ))
+EOF
+```
+
+The inbox takes the pair once both are unchanged for 30 seconds (`stable-seconds`). Do not wait for the 10-minute cycle:
+
+```bash
+export DRISHTI_SERVER=http://host:18480
+python3 tools/drishti.py dataload run --wait --token-file ~/.drishti-token   # "Load now", then each file's outcome; exit 0, 1 (failed), 2 (rejects, only above 0%)
+python3 tools/drishti.py dataload status --token-file ~/.drishti-token       # waiting / failed / last cycles
+```
+
+`run --wait` ends with `exit 0: every file loaded, no row rejected`. **Exit 2 is loaded with rejected rows**: the line under the file says how many
+of how many and why (*loaded with rejects: 3 of 20,000 rows rejected: DRS-5201 … (3)*), the same as a red *loaded · 3 rejected* on Admin → Data
+loads and a notice in `status`: the date answers without those rows, so fix and resend before using it.
+
+`status` ends with `done  1 loaded` when it worked (tested: 11 seconds for a 20,000-position date). The file, its marker and a report
+`eod-….tar.loaded.json` are then in `outbox/<day>/<run>/`, with the loader's log under `loads/`; a failure is in `failed/<day>/<run>/` with
+`.failed.json` in words, and `drishti.py dataload retry <file>` puts it back.
+
+**3. The second date.** **Why it moved needs two dates**: it compares a date with the one before it (`var explain --from … --to …`, default the
+previous one). Load the previous business day the same way, each date its own tar with its own `scenario-set` (the later set's days are the earlier's
+rolled by one).
+
+```bash
+# repeat steps 1 and 2 with 2026-11-13
+```
+
+Sending the identical file again is skipped as *already loaded in run …* while the lake still holds its rows; when another load replaced its date
+since (or `dataload undo` removed it), the same file loads again. `drishti.dataload.reload-duplicates: true` forces a reload of any file.
+
+**4. The CLI alternative, tuned** (no inbox: a terminal, cron, or a machine that is not the owner node). **Always the Java loader** (`--engine java`):
+readers, parsers and writers on every core, memory bounded and spilled to disk, **one Delta commit per business date and table** however many files
+the folder holds. The Python writer (`auto` below `--java-above-mb`) is never used for a production batch. One folder a table and date, the
+date given by `--as-of` (never trust a name, see the troubleshooting), `--signal` tells the server; `scenario-set` and `fx-scenario` first (tiny), then
+the positions as **one run over the date's folder**, not a run per part:
+
+```bash
+export DRISHTI_LAKE_LOADER_HEAP=24g                       # the loader's -Xmx (default 4g); the budget below must be under nine tenths of it
+mkdir -p /fast/spill                                      # local NVMe, 15 to 30 GB free; removed when the load ends
+for k in scenario-set fx-scenario; do
+  python3 tools/drishti.py lake build --engine java --from /landing/2026-11-12/$k/2026-11-12 --as-of 2026-11-12 --lake demo --kind $k \
+     --pack modules/banking/dmod/packs/market-risk --signal $DRISHTI_SERVER --token-file ~/.drishti-token
+done
+python3 tools/drishti.py lake build --engine java --from /landing/2026-11-12/scenario-pv/2026-11-12 --as-of 2026-11-12 --lake demo --kind scenario-pv \
+   --pack modules/banking/dmod/packs/market-risk --signal $DRISHTI_SERVER --token-file ~/.drishti-token \
+   --loader-set parallel.writers=16 --loader-set memory.budget-mb=20480 --loader-set memory.spill-dir=/fast/spill
+```
+
+`parallel.writers` (default 8, at most the cores) is the number of Parquet files written at once: 1.3M positions are about seven files of 256 MB, so 8 to 16
+is enough; `parallel.readers` and `parallel.parsers` default to every core (give a number only to leave cores to the server). The budget covers the read
+queue, the sort buffers and the writers; rows that do not fit are sorted and spilled to `memory.spill-dir`. The loader's last line is `lake-build ok exit=0 …
+rows=… rejected=0`; the summary file it names has every stage's throughput. Exit 2 is loaded with rejects (read the summary). `--plan` and `--dry-run` show the
+route and count without writing. **Tested** at 20,000 positions: 3.8 s wall, 24 cores busy (21 s of CPU), one commit, one file, loader peak heap 646 MB
+(`parallel.writers=24`, `memory.budget-mb=6144`, `DRISHTI_LAKE_LOADER_HEAP=8g`).
+
+**The inbox uses the same Java loader** (the ledger says `engine: java-loader`), one run a table: all files of the same connector or table that are ready in a
+cycle are **one load and one commit per date** (tested: two parts of an Endur date, one commit); the three tables of a tar are three loads, each one commit a date. Files
+for **different connectors** are separate loads into their own tables (one table a trading system, 16.2), each replacing only that system's date. So send a date as **one tar** (this section) and tune the inbox's loader with `DRISHTI_DATALOAD_LOADER_HEAP`; the inbox does not take
+`--loader-set` options per drop: its settings are `drishti.dataload.*` and the lake file's layout.
+
+**5. Verify** (the output below is from the tested run; `$T` is `--token-file ~/.drishti-token`).
+
+```bash
+python3 tools/drishti.py lake status --lake demo               # (reads the lake folder: no token) risk/scenario-pv: rows, files, size, dates, latest date
+python3 tools/drishti.py var show BANK --date 2026-11-12 $T
+```
+
+```text
+VAR BANK  ·  Drishti Bank  ·  node  ·  2026-11-12
+  VaR 99%   1,355,248 USD   (the 3th worst of 250)
+  ES 97.5%   1,327,210 USD   (mean of the 7 worst)
+  20000 trades in 20000 positions
+  pnl-vector and scenario-pv (20000 trades from scenario PVs) · batch B-2026-11-12-01 of 2026-11-12 · …
+```
+
+1. **The count is the file's.** `20000 trades in 20000 positions` equals the rows you sent (`zcat part-*.gz | wc -l`).
+2. **Nothing was rejected.** A rejected row is skipped and the date still answers, so this check is not optional:
+
+```bash
+python3 tools/drishti.py var show BANK --date 2026-11-12 --json $T | python3 -c "import sys,json; p=json.load(sys.stdin)['provenance']; print('rejected',p['rejected'],p['scenarioWindow']['note']); [print(' ',x) for x in p.get('rejections',[])+p.get('warnings',[])]"
+```
+
+   Expect `rejected 0` and no lines under it. The window line says what was used (*newest 250 of 509 scenarios …*).
+3. **The tree is yours.** `var tree --date … $T` and `var parts BANK --date … $T` list the divisions, desks and books from your columns; a **(Blank)** node
+   means a level column was empty.
+4. **One position.** `var show "POS:<POSITION_ID>" --date … $T`, and its record `python3 tools/drishti.py view get "scenario-pv/SPV-<POSITION_ID>-<SCENARIO_SET_ID>" --date … $T`
+   (in the console: `SPV <id>`).
+5. **Why it moved.** `python3 tools/drishti.py var explain BANK --from 2026-11-12 --to 2026-11-13 $T` prints the steps and `the steps add up: yes`
+   (0.3 s tested); the same in the VaR page's Explain drawer, tab *Why it moved*.
+6. **The first open of a date** builds its hot file (`<data>/var/hot/<date>/inputs-….vhot`). The load signal also starts the **official end-of-day capture** by
+   itself (tested: `official VaR capture of 2026-11-12 … status=captured`), so **a load by mistake leaves an official record**: rehearse with
+   `drishti.var.official.enabled: false`. A date reloaded after a signal is picked up in the background (within the 30 s version check): if the batch id
+   shown is still the old run, ask again.
+
+**6. After the load.** Compaction is not needed: the loader writes files of the target size (one file of 26.8 MB for 20,000 positions, about seven of
+256 MB for 1.3M). Replaced dates leave their old files until vacuum; `drishti.py lake maintain --once --tables risk/scenario-pv` runs vacuum and
+checkpoint per the lake file's `maintenance:` (it needs the `deltalake`, `pyarrow` and `pyyaml` Python libraries and a `<data>/lakes/lake-maintenance.yaml`
+written by Admin → Data loads → Lakes → Maintain; **not run in this rehearsal**, [OPERATIONS_GUIDE.md section 16](OPERATIONS_GUIDE.md#16-lake-maintenance-and-scheduling)).
+Undo a wrong load with `drishti.py dataload undo <load-id>` (a dry run; `--yes` undoes it; section 5.5).
+
+#### Troubleshooting
+
+| You see | Why | Do |
+|---|---|---|
+| `failed/`: *'part-x' is neither the date … nor an extension* | a part name other than `<table>.<date>.part-<n>.jsonl[.gz]` | name the parts `scenario-pv.2026-11-12.part-0001.jsonl.gz`, or put them in a tar (step 1) |
+| `failed/`: *no business date: none given …, none in its name … and none of its rows carries BUSINESS_DATE* | a name without a date (`scenario-pv.jsonl`) and rows without `BUSINESS_DATE` | name the date (`scenario-pv.2026-11-12.jsonl.gz`), or `business-date:` in the `.ready` |
+| `failed/`: *its business date is ambiguous …* | no date given or named, and the rows carry several dates (or some none) | one date a file, named |
+| `failed/`: *its name says D, but none of its rows carries that date* | the name and `BUSINESS_DATE` disagree on every row | fix the name or the rows; a replace never puts another day's rows under D |
+| `failed/`: *its .ready file says N rows, the archive holds M documents* | cut short, or a wrong `rows:` | resend, or correct the marker |
+| `run --wait` exit 1, `failed/`: *its check failed before loading: 1 of 3 documents rejected (33.33%), more than reject-max-percent 0.0 (<reason> (1)): not loaded* | with the shipped `reject-max-percent: 0` **any rejected row fails the whole file**: nothing is committed (with `rows:` in the `.ready` the check run says it before loading) | fix the rows and resend the date |
+| `run --wait` exit 2, *loaded with rejects: N of M rows rejected: …* | only when `reject-max-percent` is above 0 and the share rejected is within it: the good rows are committed (the reasons follow) | fix and resend the date; check 2 of step 5 |
+| *already loaded in run …* | the same SHA-256 was loaded before and the lake still holds it | nothing to do; `reload-duplicates` to force |
+| `failed/`: *the SHA-256 in its .ready file is not the file's* | cut short in transfer, or the wrong hash | resend, correct the marker, `dataload retry` |
+| `422 DRS-5210` *ENDUR sent {PV/POSITION=167, PV/TRADE=1}* | a trade-grain row in a position-grain date | remove it: one form and one grain a date |
+| `DRS-5203` *the vectors come from 2 runs (BATCH_ID …)* … *answered from <earlier date> instead* | two `BATCH_ID`s, or a `SCENARIO_SET_ID` that is not the set's | one batch a date; the page answers the earlier date meanwhile |
+| rejected `DRS-5208` *no GRAIN* | a record without `VALUE_TYPE`, `GRAIN`, its id, `CURRENCY` or `SOURCE_SYSTEM` | add them (`drishti.py var convert`) |
+| rejected `DRS-5206` *1 scenario failed to price: 17 (2025-12-12)* | a `null` or NaN in `SCENARIO_PV` | price it, or leave the position out: it is never zero-filled |
+| rejected `DRS-5201` *the row has 249 scenario PVs; the scenario set has 250* | a vector of another length than `SCENARIO_COUNT` | fix the batch or the set |
+| rejected `DRS-5201` *no BASE_PV* | no base PV | send it |
+| rejected `DRS-5207` *its PVs are in CHF and the date has no CHF scenario FX* | no `fx-scenario` row for the currency | send it for the date |
+| `DRS-5211`, a **(Blank)** node | a level column empty on some rows | fill it |
+| `503 DRS-5204`, `DRS-5218` | the heap budget or the disk guard | free disk or raise the heap; open dates keep answering |
+| `404` on `/api/v1/risk/var/scope` just after a start | the banking module is still installing | wait; `bin/status.sh` |
+
+#### Do not
+
+- Do not send **trade** and **position** grain for one source system on one date, nor two forms (PV and P&L vectors); do not send a position and, alone, a trade it names.
+- Do not name a file without its date (`scenario-pv.jsonl`) or with extra words in the name: a file with no date takes its rows' `BUSINESS_DATE`,
+  and a replace refuses it when they carry none or several; name it `<table>.<date>[.part-<n>].jsonl.gz`.
+- Do not put the `.ready` before the file is complete; do not edit a file in the inbox.
+- Do not mix `BATCH_ID`s or scenario sets within a date; do not send `null` in a vector; do not restate a date under its old `BATCH_ID` (next `RESTATEMENT`, a new `BATCH_ID`, the whole date again: replace mode takes the whole date).
+- Do not leave the five default reporting currencies on for the first load of 1.3M positions.
+- **Never commit production data**: no file of the batch, no sample row with real values, no `.ready` with a real path. Rehearse on `tools/pvgen/bulk_positions.py`.
+
+#### Printable checklist
+
+```text
+BEFORE   [ ] java 21   [ ] heap 8-10g   [ ] loader heap 16g   [ ] DRISHTI_VAR_CURRENCIES=USD   [ ] disk: 30 GB free (guard 20 GB and 10%)
+         [ ] var.scenario-window 250 (or all)   [ ] inbox on   [ ] token (loads:write)   [ ] rehearsed with tools/pvgen/bulk_positions.py
+FILES    [ ] every row: VALUE_TYPE PV, GRAIN POSITION, POSITION_ID, CURRENCY, SOURCE_SYSTEM, BUSINESS_DATE, SCENARIO_SET_ID, BASE_PV,
+             SCENARIO_PV (= SCENARIO_COUNT values, no null), LEGAL_ENTITY, DIVISION, DESK, TT_BOOK, LIMIT_LETTER, BATCH_ID (one a date), COMPUTED_AT
+         [ ] no TRADE_ID, no trade-grain row   [ ] scenario-set (1 row) and fx-scenario (1 row a non-USD currency) for the same date
+         [ ] parts of 200-400K positions, gzip   [ ] one tar a date: scenario-set/<date>/ fx-scenario/<date>/ scenario-pv/<date>/   [ ] sha256 noted
+LOAD     [ ] the earlier date first   [ ] cp tar to the inbox   [ ] .ready LAST (lake: demo, sha256, rows)   [ ] dataload run --wait: exit 0
+         [ ] then the later date
+VERIFY   [ ] var show BANK: positions = rows sent   [ ] rejected 0, no warnings, no (Blank)   [ ] var explain --from D-1 --to D: adds up
+         [ ] SPV <position> opens   [ ] lake status shows both dates   [ ] disk still above the guard
+IF WRONG [ ] dataload undo <load-id> (dry run, then --yes)   [ ] dated names only   [ ] dataload retry after fixing a failed file
+```
+
+#### What was measured (a rehearsal, not production)
+
+20,000 positions × 250 values a date, two consecutive business dates (2026-11-12, then 2026-11-13 with 400 positions fewer), four gzip parts a date,
+generated by `tools/pvgen/bulk_positions.py`; one 24-thread workstation, NVMe, Java 21, 4 GB server and loader heaps.
+
+| Step | Measured |
+|---|---|
+| input a date | 66.8 MB as text (3,343 B a position), **20.3 MB gzip** (1,016 B a position) |
+| inbox, a tar of three tables (claim to outbox) | **11 s**; `scenario-pv` 3.9 s of it (read 0.5 s, parse 0.5 s, write 1.7 s, commit 0.1 s), loader peak heap **646 MB** |
+| `lake build --engine java`, tuned, one run over the four parts | **3.8 s** wall, 20,000 rows at 7,700 rows/s end to end (parse 52,000 rows/s, 24 threads; write 16,800 rows/s a file; commit 0.07 s), one commit |
+| the lake | `business_date=…/SCENARIO_SET_ID=HS-250/GRAIN=POSITION/`, 1 file of **26.8 MB** a date (the Python writer 30.5 MB): 1,340 B a position |
+| first open of a date, with the official capture | about 1.5 s; the USD hot file **42.1 MB** (2.1 KB a position), each extra currency 32.2 MB |
+| `var show BANK`, `var explain` | 0.2 s, 0.3 s |
+| server process after both dates | 2.0 GB resident |
+
+**Extrapolated to 1.3M positions a date (an estimate: sizes scale with positions, times do not).** Text 4.3 GB, gzip about 1.3 GB (PVs with more
+significant digits compress less: plan 1.5 to 2 times); the lake about 1.75 GB; the USD hot file about 2.7 GB plus the node aggregates (27,000 nodes
+added 0.64 GB at 1M); a tuned Java loader run **about 1 to 2.5 minutes** (parse 52,000 rows/s over 24 threads: 25 s; seven files written in parallel at 17,000 rows/s each: 11 s; then the commit; the target is five minutes or less) ([BENCHMARK.md 7.1](../admin/BENCHMARK.md#71-the-200000-position-var-inputs-the-python-path-and-the-java-loader): 20 s
+for 1M positions × 509 values); the first open of a date 25 to 60 s ([BENCHMARK.md 5.4](../admin/BENCHMARK.md#54-a-dates-first-open): 25 to 27 s at 1M), then
+the official capture. With 509 values a vector the gzip, the lake and the hot file about double. The first real day's own numbers replace these.
+
+### 16.2 Production trades from the source systems
+
+**What this loads.** The trades of Endur, Calypso, Murex, WSS, SwapOne and ICI, as JSON Lines in each system's own field names (`UPPER_SNAKE`, as
+Endur names them), into the one canonical `trade` kind (`TRD`). A source system is a **module** (`modules/source-<system>/`) that brings a
+connector template, a field map (`mappings/<system>-trade.yaml`), a routing rule for the inbox (`dataload.yaml`) and its own on/off switch. The trade's
+contract is [`trade.contract.yaml`](../../modules/banking/dmod/packs/trading/contracts/trade.contract.yaml), published as
+[TRD](../contracts/packs/trading.md#trd-trade-trade). **Trades reach VaR only at trade grain, which is not used now**: VaR is fed by position-level scenario PVs
+(16.1) and is unchanged by anything in this section, including switching a source off.
+
+**The modules and where each lands** (tested with the synthetic files of `data/testdata/trades`, 13,400 trades over two dates):
+
+| System | File name the module's rule takes | Native key | Field map | Table (as shipped) |
+|---|---|---|---|---|
+| Endur | `endur-<date>.jsonl.gz` | `TRADE_ID` | identity (Endur writes the canonical fields) | `trading.trade_endur` |
+| Calypso | `calypso-<date>.jsonl.gz` | `TRADE_ID` | identity | `trading.trade_calypso` |
+| Murex | `murex-<date>.jsonl.gz` | `TRADE_ID` | identity | `trading.trade_murex` |
+| WSS | `wss-<date>.jsonl.gz` | `DEAL_REF` | `mappings/wss-trade.yaml` (`DEAL_STATE`, `DEAL_TYPE`, `FAMILY`, `DIR` …) | `trading.trade_wss` |
+| SwapOne | `swapone-<date>.jsonl.gz` | `SWAP_ID` | `mappings/swapone-trade.yaml` (`LIFECYCLE`, `SWAP_FAMILY`, `PAY_LEG.NOTIONAL` …) | `trading.trade_swapone` |
+| ICI | `ici-<date>.jsonl.gz` | `TICKET_NO` | `mappings/ici-trade.yaml` (`HEADER.STATE`, `INSTRUMENT.KIND`, `PARTIES.CPTY` …) | `trading.trade_ici` |
+
+The rule's `date-pattern` reads the date from the name (`-(\d{4}-\d{2}-\d{2})\.`): the name must carry it. The files are stored **as the system sent them**; the
+`map:` is applied when trades are **read** (Raw JSON on a trade page shows the stored native record), and `set: {SOURCE_SYSTEM: <SYS>}` stamps the system into
+rows that lack the field. Every field of the contract is listed, with its type and whether it is required, in the contract; **the load checks no field of a trade**
+(tested: WSS, SwapOne and ICI rows carry almost none of the canonical names natively and load whole; what the map does not fill shows empty on the page). The
+fields to get right are the key (`TRADE_ID` or the system's native key), `SOURCE_SYSTEM`, the status, the product, the counterparty, the legal entity and the book.
+
+#### Prerequisites
+
+| Check | Value |
+|---|---|
+| Server heap and loader heap | as 16.1 (`DRISHTI_DATALOAD_LOADER_HEAP`); trades are far lighter than vectors |
+| Disk | 1 million trades a day: the files 0.7 to 1.2 GB gzip (measured 0.65 to 1.2 KB a trade), the lake 1.1 to 2.5 KB a trade, an estimate from the measured 13,400; the inbox keeps a copy 30 days |
+| Inbox | on, one owner node (as 16.1) |
+| The source modules | on: `config/modules/source-<system>.yaml` has `enabled: true` (Admin → Modules) |
+| A token | `loads:write` |
+
+#### Where the trades go: one table a trading system, always
+
+Every trading system has **its own table**: `trading.trade_endur`, `trade_calypso`, `trade_murex`, `trade_wss`, `trade_swapone` and
+`trade_ici`, each read by its source module's connector (`lake-tables: trading.trade_<system>`, `set: {SOURCE_SYSTEM: <SYS>}`, no `where:`),
+and the trade kind reads them as one union. A system's file replaces **that system's date in its own table and nothing else**, so one
+system's late or corrected file never touches another's rows. Do not land several systems in one table.
+
+(The loader can still split a table several connectors share by `SOURCE_SYSTEM`, each load replacing only its own slice, for a site that
+already lands its systems together; no shipped module does.)
+
+#### Step by step (Linux; each command was run as written)
+
+**1. The files.** One file per system and date, named by the rule, gzipped. **Chunking:** a system's files that are ready in one inbox cycle are **one load and
+one Delta commit a date** (tested: `endur-part1-2026-07-08.jsonl.gz` and `endur-part2-…` made one commit of 4,407 trades); parts of 250,000 to 500,000 trades each, any name matching the
+rule's glob and carrying the date, `endur-part1-2026-07-08.jsonl.gz`. Files for different systems are different loads (one commit each).
+
+**2. Drop the files and their markers.** `.ready` last; an empty marker is enough (the lake is the inbox's `lake:` setting, `demo`). Add `sha256:`
+(`sha256sum`) when you want the file checked; `rows:` is checked as well (a tar: all its tables together).
+
+```bash
+INBOX=<data>/dataload/inbox
+cp /landing/endur-part1-2026-07-08.jsonl.gz /landing/endur-part2-2026-07-08.jsonl.gz /landing/calypso-2026-07-08.jsonl.gz \
+   /landing/murex-2026-07-08.jsonl.gz /landing/wss-2026-07-08.jsonl.gz /landing/swapone-2026-07-08.jsonl.gz /landing/ici-2026-07-08.jsonl.gz $INBOX/
+for f in $INBOX/*-2026-07-08.jsonl.gz; do touch $f.ready; done                       # Windows: ni "$f.ready"
+export DRISHTI_SERVER=http://host:18480
+python3 tools/drishti.py dataload run --wait --token-file ~/.drishti-token            # after the 30 s of stability; exit 0, 1 (failed), 2 (rejects, only above 0%)
+python3 tools/drishti.py dataload status --token-file ~/.drishti-token                # done  7 loaded
+```
+
+A tar works for every source module that is on: one folder per system named after its connector, `trade_endur/<date>/…`, `trade_calypso/<date>/…`,
+`trade_murex/<date>/…`, `trade_wss/<date>/…`, `trade_swapone/<date>/…`, `trade_ici/<date>/…`, in one tar with one `.ready` (a tar loads whole or not at
+all; each folder replaces that system's date in its own table).
+
+**3. The second date**, the same with `2026-07-09`. **Which trades a date holds is your choice and it matters**: the trade pages, the blotter and the pivot read **one business
+date's rows**, so a trade is seen on a date only when that date's file carries it (tested: a trade of the 2026-07-08 file is not found on 2026-07-09, whose file held only the
+day's changes: *no source holds trade/1000001 … for 2026-07-09*). Send each date's full set of live trades, or knowingly only the day's changes.
+
+**4. The CLI alternative** (`--engine java`, never the Python writer; one run over a system's files, one commit a date):
+
+```bash
+python3 tools/drishti.py lake build --engine java --from /landing/endur-2026-07-08 --as-of 2026-07-08 --lake demo --pack modules/banking/dmod/packs/trading \
+   --kind trade --connector trade-endur --key TRADE_ID --signal $DRISHTI_SERVER --token-file ~/.drishti-token \
+   --loader-set parallel.writers=16 --loader-set memory.budget-mb=20480 --loader-set memory.spill-dir=/fast/spill        # DRISHTI_LAKE_LOADER_HEAP=24g
+```
+
+**5. Verify** (the output is from the tested run):
+
+```bash
+python3 tools/drishti.py pivot run --source trade --date 2026-07-08 --rows SOURCE_SYSTEM --values "count()" $T
+```
+
+```text
+SOURCE_SYSTEM    count()
+CALYPSO            3,471
+ENDUR              4,407
+ICI                  230
+MUREX              4,198
+SWAPONE              240
+WSS                  207
+Grand total       12,753
+```
+
+1. **The counts are the files'** (`zcat endur-*.gz | wc -l`), per system; a system missing from the list is off, or loaded to a table no connector reads.
+2. **A trade** of each system: `python3 tools/drishti.py view get trade/<TRADE_ID> --date 2026-07-08 $T` (about 0.2 s whatever the table: one row group), the same in the console as `TRD <id>`, the
+   trade page's Raw JSON for the stored native record, the Trades menu's **blotter** (`/live/trade`) with a filter on `SOURCE_SYSTEM`.
+3. **The map worked**: WSS `DEAL_STATE: Verified` shows as status `NEW`, SwapOne `SWAP_FAMILY: CDS` as product `CDS_SINGLE`, ICI `INSTRUMENT.SIDE` as `BUY_SELL_CODE`.
+4. **A filter**: `--filter SOURCE_SYSTEM=WSS` (tested: 14 on 2026-07-09).
+
+**Switching a source system on and off.** Admin → Modules, or `enabled: false` in `config/modules/source-<system>.yaml`: **no restart** (tested: ICI left the pivot within 15 seconds and
+came back when switched on). Its trades leave the pages, the blotter, search and BI, its inbox rule goes with it (a site rule stays), and VaR is unchanged.
+
+**A new or changed attribute.** The stored row keeps what the system sent, so a new field costs nothing at load: add it to the system's map (`modules/source-<system>/mappings/<system>-trade.yaml` or a
+`map:` file beside the site's connector: `<canonical>: <native.path>`, with `values:`, `first-of:`, `scale:`, `as:`; section 6.2) and the page shows it; **not tested here**
+whether a connector re-reads a changed map without a restart (restart, or Admin → Connectors). For a **new shape of JSONL** (a seventh system, or a file you cannot map by hand) use the Pack designer's **A source for an existing kind**
+([BUILD_GUIDE.md 8.9](BUILD_GUIDE.md#89-a-source-for-an-existing-kind)): it proposes the map from the file, writes the module `source-<system>` with its rule, connector and map, and deploys it.
+
+#### Troubleshooting
+
+| You see | Why | Do |
+|---|---|---|
+| `failed/`: *no rule matches this name* | the name does not fit `<system>-*.jsonl.gz` | rename, or add a rule |
+| `failed/`: *… is neither the date … nor an extension* | a name with a word between table and date, for a file with no rule | use the rule's pattern (`endur-part1-2026-07-08.jsonl.gz`) |
+| the trades of the system are missing, the others are there | its module is off, or its connector reads a table that holds nothing | `enabled: true`; `pivot run` per system; Admin → Connectors |
+| *the table of connector trade-wss is shared by …: a replace would take out the other connectors' rows* | a shared table not split by `SOURCE_SYSTEM` (a site's lake entry without `partition-by: [SOURCE_SYSTEM]`) | add it to the entry (a new table), or give the system its own table |
+| rejected *SOURCE_SYSTEM is ICI, not this load's WSS* | another system's row in WSS's file | one system a file |
+| `refused, nothing was loaded: trade_xyz: no pack, kind or table of that name` | a tar folder that is no connector or table of an enabled source module | the connector's name with `_` (`trade_wss`), and the module on |
+| `404 no source holds trade/<id> … for <date>` | the id is not in that date's file | ask the date that has it; send full dates |
+| a page shows empty fields for a mapped system | the native field is not in the map | add it (above) |
+| `DRS-5034` on Admin → Connectors | a `where`, a missing or duplicate map entry | the reason names it |
+
+#### Do not
+
+- Do not mix two systems' trades in one file: each system's file replaces only that system's rows; do not name a part without the date.
+- Do not drop a file without its `.ready`, or edit it in the inbox.
+- Do not edit the stored data to fit the map: change the map.
+- Do not expect trades to feed VaR: that is the scenario PVs (16.1).
+- **Never commit production trades**, nor a sample row with real values; rehearse on `data/testdata/trades` (synthetic).
+
+#### Printable checklist
+
+```text
+BEFORE   [ ] source modules on   [ ] one table a system: trading.trade_<system> (as shipped)
+         [ ] inbox on, token   [ ] disk for the files twice (inbox, outbox)   [ ] loader heap as 16.1
+FILES    [ ] <system>-<date>.jsonl.gz (parts: <system>-partN-<date>.jsonl.gz)   [ ] native key present   [ ] each date a full set (or deltas knowingly)
+LOAD     [ ] cp files   [ ] touch .ready   [ ] dataload run --wait: exit 0
+VERIFY   [ ] pivot count per SOURCE_SYSTEM = rows sent   [ ] view get trade/<id> --date D for one trade of each system   [ ] blotter filter SOURCE_SYSTEM
+         [ ] mapped fields filled   [ ] switch one source off and on again
+```
+
+#### What was measured
+
+13,400 trades of the six systems in two dates (12,753 and 647), gzip 9.4 MB, one 24-thread workstation, `-Xmx4g` loader. The seven files of the first date: **11 s** from claim to loaded
+(one JVM a connector: 1 to 3 s each; Murex 4,198 trades of 64 MB as text in 2.3 s). Stored size a trade: Endur about 1.5 KB, Calypso 1.1 KB, Murex 2.5 KB (15 KB as text). The lake:
+Endur partitioned by `PRODUCT_TYPE`, Calypso and Murex by `PRODUCT_GROUP`, the others by date alone. **Estimate for 1M trades a date**: 1 to 3 GB of lake, the load one to a few minutes
+(the loader parsed 166 MB/s of text in 16.1's run; Murex-shaped trades are 15 KB of text each, 15 GB, about 2 minutes of parsing). The files of one system are one run: split a day of 1M into parts of 250,000 to 500,000.
+
+### 16.3 Production netting sets, with their agreements and CSAs
+
+**What this loads.** The counterparty-risk pack's `netting-set` (`NSET`), with the `agreement` (`AGR`) and `csa` (`CSA`) it points at, from the xVA engine and the legal
+documents system: one JSON object per netting set and business date, its member trades inside it (`TRADES`). The contracts are
+[`netting-set`](../../modules/banking/dmod/packs/counterparty-risk/contracts/netting-set.contract.yaml),
+[`agreement`](../../modules/banking/dmod/packs/counterparty-risk/contracts/agreement.contract.yaml) and
+[`csa`](../../modules/banking/dmod/packs/counterparty-risk/contracts/csa.contract.yaml), published with the pack ([contracts](../contracts/packs/counterparty-risk.md)).
+
+**Related inputs, and how they link.**
+
+| Kind | Needed | Link |
+|---|---|---|
+| `netting-set` | the batch | `AGREEMENT`, `CSA`, `COUNTERPARTY`, `LEGAL_ENTITY`, `CREDIT_LIMIT`, `CVA_RESULT`, `SACCR`, `SIMM`, `COLLATERAL_BALANCE` name the other kinds' ids |
+| `agreement` | yes, one per master agreement | `CSAS` lists its CSAs; `COUNTERPARTY` |
+| `csa` | yes, one per agreement and bank legal entity | `AGREEMENT`, `NETTING_SETS`, `COLLATERAL_BALANCES` |
+| `counterparty`, `legal-entity` (core pack) | already in the lake: the page names them | `COUNTERPARTY`, `LEGAL_ENTITY` |
+| `credit-limit`, `cva`, `sa-ccr`, `simm`, `collateral-balance` | optional: the sections of the netting-set page that read them show *Under construction* or empty without them | the ids above |
+| `exposure-path` | optional: the exposure profile, EPE and PFE (*no exposure paths in any connector* otherwise, tested) | `NETTING_SET` |
+
+**Fields.** The netting set's contract: 19 fields, 18 required. The ones the pages read: `NETTING_SET_ID` (the key, `NS-<counterparty>-<legal entity>`), `TRADE_COUNT`, `NET_MTM`, `COLLATERAL`, `LIMIT`, `CVA`,
+`TRADES` (the member trades, one element each with its id, status, product, notional, maturity and MtM), `BY_ASSET`, `COUNTERPARTY`, `AGREEMENT`, `CSA`, `LEGAL_ENTITY`,
+`NETTING_ENFORCEABLE` (false treats the trades gross). The load rejects nothing of them (tested path: the rehearsal's records carry all 19). `TRADE_IDS` is optional.
+
+**Layout.** The lake file has `credit.netting-set: {id: NETTING_SET_ID}`: partitioned by business date only, the writer's default sort and row groups. One date of 5,000 sets is one small file;
+the record page opened in 0.28 s (client included). For a production count of tens of thousands add the trades' layout (`sort-by: [id]`, `row-group-rows: 1000`) to the entry: **not tested here**, the
+default layout was.
+
+#### Step by step (Linux; each command was run as written)
+
+**1. The files.** One tar a business date: `netting-set/<date>/`, `agreement/<date>/`, `csa/<date>/` (section 4.4: the folders are the pack's kinds), parts of 50,000 sets each at about 3.3 KB of text a
+set (tested size; a set with a few hundred trades is larger).
+
+```bash
+python3 tools/pvgen/bulk_netting.py --out /rehearsal/ns --dates 2026-07-08,2026-07-09 --sets 5000          # a rehearsal batch: synthetic, never commit
+tar -C /rehearsal/ns -cf /rehearsal/nset-2026-07-08.tar netting-set/2026-07-08 agreement/2026-07-08 csa/2026-07-08
+```
+
+**2. Drop it** with its `.ready` last, and run the cycle (as 16.1 step 2):
+
+```bash
+cp /rehearsal/nset-2026-07-08.tar $INBOX/
+printf 'lake: demo\nsha256: %s\n' $(sha256sum /rehearsal/nset-2026-07-08.tar | cut -c1-64) > $INBOX/nset-2026-07-08.tar.ready
+python3 tools/drishti.py dataload run --wait --token-file ~/.drishti-token
+```
+
+**3. The second date**, the same with 2026-07-09 (both tars in one cycle load as two runs). Each tar loads three tables, **one commit a date for each** (tested: 6 loads, 6 commits for two dates).
+With the CLI use `--engine java` and one run per kind (16.1 step 4).
+
+**4. Verify.**
+
+```bash
+python3 tools/drishti.py pivot run --source netting-set --date 2026-07-09 --rows LEGAL_ENTITY --values "count()" --values "sum(NET_MTM)" $T
+python3 tools/drishti.py view get "netting-set/NS-SOLARIS-TKY-004320" --date 2026-07-09 $T          # the record page; console: NSET <id>
+python3 tools/drishti.py view get "csa/CSA-ALDERSHOT-FRA-000000" --date 2026-07-09 $T                 # CSA, and agreement/<id> for AGR
+python3 tools/drishti.py lake status --lake demo                                                       # credit/netting-set, legal/csa, legal/agreement: rows, dates
+```
+
+Tested: 5,000 netting sets, 5,000 CSAs and 2,764 agreements on each date; the pivot's grand total 5,000 on each date; the page shows *Trades 14*, net MtM, collateral and the **Member trades (14 of 14)** table; EPE
+and PFE are empty until `exposure-path` rows exist. **Pass `--date`**: without it the page asks the newest date any source has (here 2026-11-13) and answers *no source holds netting-set/… (file for 2026-11-13)*.
+
+#### Troubleshooting
+
+| You see | Why | Do |
+|---|---|---|
+| `404 no source holds netting-set/<id> … for <date>` | the date asked has no such set | `--date` of a loaded date |
+| a netting set's page says *Under construction* for CVA, empty EPE and PFE | `cva` / `exposure-path` not loaded | load them  |
+| the CSA page does not list its sets | `NETTING_SETS` missing on the CSA | send it, or the agreement's `CSAS` |
+| `refused … no pack, kind or table of that name` | a tar folder that is not a kind of the pack | `netting-set`, `agreement`, `csa` |
+| *already loaded in run …* | same bytes sent twice, still in the lake | nothing to do; `reload-duplicates` to force |
+
+#### Do not
+
+- Do not send a netting set whose `CSA` or `AGREEMENT` is not in the same date's files: the link pages are empty.
+- Do not name the tar's folders in other words, or put the date in the `.ready` of a tar.
+- **Never commit production netting sets** (counterparty names, limits and MtM are confidential); rehearse on `tools/pvgen/bulk_netting.py`.
+
+#### Printable checklist
+
+```text
+BEFORE   [ ] inbox on, token   [ ] disk (the tar twice)   [ ] counterparties and legal entities already loaded (core pack)
+FILES    [ ] NETTING_SET_ID, AGREEMENT, CSA, COUNTERPARTY, LEGAL_ENTITY, TRADES on every set   [ ] every AGREEMENT and CSA the sets name is in the same date's files
+         [ ] one tar a date: netting-set/<date>/ agreement/<date>/ csa/<date>/   [ ] sha256 in the .ready
+LOAD     [ ] earlier date first   [ ] cp tar   [ ] .ready LAST   [ ] dataload run   [ ] done N loaded
+VERIFY   [ ] pivot count = sets sent, per date   [ ] view get netting-set/<id> --date D   [ ] the CSA and agreement pages   [ ] lake status shows both dates
+```
+
+#### What was measured
+
+5,000 netting sets (a 3.3 KB set, 16 MB gzip a date as text 3 times that), 5,000 CSAs and 2,764 agreements on each of two dates, generated in 9 s; the inbox loaded both tars in one cycle,
+each table of each tar in 1.0 to 1.7 s (JVM start included): 44 MB of lake for 10,000 sets (4.4 KB a set), pivot of 5,000 sets 2.6 to 3.1 s the first time. **Estimate**: tens of thousands of sets a day are tens of MB of
+tar and a load of seconds.
+
+## 17. Daily loads: the business-day runbook
+
+Section 16 loads **one kind**; this section is the **day**: every feed of every business day, from many systems, without a day ever touching the days
+before it. It links to the per-kind procedures ([16.1 scenario PVs](#161-production-position-level-scenario-pvs-for-var-explain-and-why-it-moved),
+[16.2 trades](#162-production-trades-from-the-source-systems), [16.3 netting sets](#163-production-netting-sets-with-their-agreements-and-csas)) and does not
+repeat them. Everything below was **run on a server with the inbox on and three business days (2026-07-08, 09, 10), plus a fourth for the rejects**, 5,000 positions × 250
+scenarios a day and the six trade systems (synthetic; the counts are in 17.3). What was **not** run is said where it comes up.
+
+### 17.1 The cycle of a day
+
+**What arrives, from whom, under what name.** Every file is `.jsonl.gz`, one **table and one business date** a file, its `.ready` marker last (section 4):
+
+| Feed | Sent by | File name (the date is always in the name) | Table | One date's file must be |
+|---|---|---|---|---|
+| Books, desks, legal entities, counterparties (portfolio data) | the organisation, entity and counterparty masters | `book.<date>.jsonl.gz`, `desk.<date>…`, `legal-entity.<date>…`, `counterparty.<date>…` | `reference.<kind>` | **the whole day's list** (17.5) |
+| Trades, one file per system | Endur, Calypso, Murex, WSS, SwapOne, ICI, each on its own schedule | `<system>-<date>.jsonl.gz` (the source module's rule, 16.2); parts `<system>-part1-<date>.jsonl.gz` | `trading.trade_<system>` (one table a trading system, always) | the system's full set of live trades for the date, or knowingly only its changes (16.2 step 3) |
+| Scenario PVs, scenario set, FX of the scenarios | the pricing systems, as one batch | one tar `eod-<date>.tar`: `scenario-set/<date>/`, `fx-scenario/<date>/`, `scenario-pv/<date>/part-NNNN.jsonl.gz` (16.1 step 1) | `risk.*` | **the whole date, one `BATCH_ID`**, all pricing systems together (17.6) |
+| Netting sets, agreements, CSAs | the xVA engine and the legal documents system | `nset-<date>.tar` (16.3) | `credit.*`, `legal.*` | the whole date; later |
+
+A plain file may also be named `<table>.<date>.part-0001.jsonl.gz` (any number of parts, one load); a name with a word between table and date, or no date, is refused to
+`failed/` (tested: *endur-latest.jsonl.gz carries none … rename it*). **The business date is the one in the name**, never "today".
+
+**Where.** `<data>/dataload/inbox/` of the **owner node** (Admin → Data loads → Inbox shows the path). Copy the data file, then write its marker. For a file
+that crosses a network, write it under a dot name or another folder and move it in, so the inbox never sees half a file; the marker last is the rule.
+
+**The marker** names the file in full plus `.ready` (`endur-2026-07-09.jsonl.gz.ready`) and carries the checks. Tested, every day, every file:
+
+```yaml
+lake: demo                 # the lake the pack's connectors read (section 6)
+sha256: 2b2a8bdede4047f53b379bd476645547a527a91fddf20764b77038beb25a3201    # sha256sum of the data file: a wrong one goes to failed/
+rows: 5005                 # the documents in the file; a tar: every table together (zcat … | wc -l)
+```
+
+**The order inside a day.** What each feed needs was read from the code and the contracts and then tested:
+
+1. **Portfolio data first.** It is *state per day* (17.5); trade and VaR pages read it for names and desks, but loading it does not depend on anything.
+2. **Trades second.** They need nothing and nothing waits for them: **VaR does not read trades** at position grain (16.2), so trade lateness never delays VaR.
+3. **The scenario-PV tar last.** The tar is the date's VaR input and its load **signals the VaR engine** (the date reloads within seconds) **and starts the official
+   end-of-day capture** (16.1 step 5, item 6: tested there; switched off in this run, so not re-tested here). Loading it after the other feeds means the official
+   record, Explain and the trade pages all describe the same completed day. The hierarchy (legal entity, division, desk, book, limit letter) comes **from the PV rows' own
+   columns**, not from the book or desk files: a PV tar never waits for reference data (tested: the PV tars loaded after the reference files on days 1 and 2 and in the same cycle on day 3, with the same VaR tree).
+4. **Netting sets and exposure** after the trades and PVs, in the tar of 16.3.
+
+**The cut-off.** The inbox takes what is ready at each cycle (every 10 minutes; `dataload run` starts one at once) and a file must be unchanged for 30 seconds. There is no
+cut-off in the product: **a file that arrives late is simply loaded in the next cycle, and the pages change when it is** (a trade pivot, for instance, then shows the system's
+rows). So the *organisation* sets the time, and a **verification job** (17.8, `verify-day.sh`) runs at that time and **fails when a feed has no load for the date**. Decide per feed
+what a miss means: a missing Murex file is a Murex gap in the trade pages only; a missing PV tar means VaR for the date is not there (17.5).
+
+### 17.2 Loading a day, step by step (each command was run as written)
+
+The three runs of the test, abbreviated (`$INBOX=<data>/dataload/inbox`, `$T` = `--token-file ~/.drishti-token`):
+
+```bash
+# 1  portfolio data of 2026-07-09
+for k in book desk legal-entity counterparty; do
+  cp /landing/$k.2026-07-09.jsonl.gz $INBOX/
+  printf 'lake: demo\nsha256: %s\nrows: %s\n' $(sha256sum /landing/$k.2026-07-09.jsonl.gz | cut -c1-64) $(zcat /landing/$k.2026-07-09.jsonl.gz | wc -l) > $INBOX/$k.2026-07-09.jsonl.gz.ready
+done
+# 2  each trade system when it arrives (the same two lines per system); the cycle can run between them
+cp /landing/endur-2026-07-09.jsonl.gz $INBOX/ && printf 'lake: demo\nsha256: …\nrows: …\n' > $INBOX/endur-2026-07-09.jsonl.gz.ready
+# 3  the PV tar last
+tar -C /landing/pv -cf /landing/eod-2026-07-09.tar scenario-set/2026-07-09 fx-scenario/2026-07-09 scenario-pv/2026-07-09
+cp /landing/eod-2026-07-09.tar $INBOX/ && printf 'lake: demo\nsha256: %s\nrows: %s\n' $(sha256sum /landing/eod-2026-07-09.tar | cut -c1-64) $(tar -xOf /landing/eod-2026-07-09.tar | zcat -f | wc -l) > $INBOX/eod-2026-07-09.tar.ready
+# 4  load, wait, read the exit code
+python3 tools/drishti.py dataload run --wait $T          # 0 loaded · 2 loaded with rejects · 1 a file failed (17.7)
+```
+
+A cycle of the test's size took 45 to 50 seconds, 30 of them the stability wait (the six trade files, 13,400 trades: one cycle; the tar of 5,005 rows: one cycle, 11 s of loading).
+
+### 17.3 Proof: loading day N never touches the days before it
+
+Three business days loaded one after the other (reference first, trades staggered, the tar last), each feed in its own cycle or several together (the third day's eleven files were one cycle).
+**After the third day, the Delta log of every table shows only `WRITE` versions that add rows for the new date; no version removes or rewrites an older date's file** (counts from the logs: adds minus removes per partition):
+
+| Table | 2026-07-08 | 2026-07-09 | 2026-07-10 | Versions (each a day's add) |
+|---|---|---|---|---|
+| `reference.book` (30 books a day) | 30 | 30 | 30 | 3 |
+| `reference.desk` · `legal-entity` · `counterparty` | 10 · 4 · 24 | 10 · 4 · 24 | 10 · 4 · 24 | 3 each |
+| `trading.trade_endur` | 4,407 | 138 | 124 | 3 |
+| `trading.trade_calypso` | 3,471 | 198 | 202 | 3 |
+| `trading.trade_murex` | 4,198 | 269 | 258 | 3 |
+| `trading.trade_wss` | 207 | 14 | 11 | 3 |
+| `trading.trade_swapone` | 240 | 10 | 19 | 3 |
+| `trading.trade_ici` | 230 | 18 | 11 | 3 |
+| `risk.scenario-pv` (positions) | 5,000 | 4,900 | 4,900 | 3 |
+| `risk.scenario-set` · `fx-scenario` | 1 · 4 | 1 · 4 | 1 · 4 | 3 each |
+
+The first day's answers did not move when the next two arrived: **VaR BANK 2026-07-08 was 103,986 USD** after the first day, after the second and after the third (and after the
+restarts and corrections below); 2026-07-09 is 113,266 and 2026-07-10 is 132,262, 5,000, 4,900 and 4,900 positions, `rejected 0`, and `var explain BANK --from 2026-07-09 --to 2026-07-10`
+says *the steps add up: yes* (market +18,996). Check it yourself, with no server needed:
+
+```bash
+python3 tools/drishti.py lake status --lake demo                     # dates, rows and last build of every table (a lake's name, or its folder)
+python3 - <<'EOF'                                                       # live rows per partition and the versions of one table, from the Delta log (a library is not needed)
+import json, glob, collections, sys
+t = sys.argv[1] if len(sys.argv) > 1 else "<data>/delta/demo/trading/trade_wss"
+live, hist = {}, []
+for f in sorted(glob.glob(t + "/_delta_log/*.json")):
+    ops = collections.Counter(); op = "?"
+    for line in open(f):
+        a = json.loads(line)
+        if "add" in a:
+            x = a["add"]; n = json.loads(x["stats"])["numRecords"] if x.get("stats") else 0
+            live[x["path"]] = (tuple(sorted(x["partitionValues"].items())), n); ops["add"] += n
+        elif "remove" in a:
+            r = live.pop(a["remove"]["path"], None); ops["remove"] += r[1] if r else 0
+        elif "commitInfo" in a: op = a["commitInfo"].get("operation", "?")
+    hist.append((len(hist), op, dict(ops)))
+c = collections.Counter()
+for pv, n in live.values(): c[pv] += n
+for k in sorted(c): print(" ".join(f"{a}={b}" for a, b in k), c[k])
+print(hist)
+EOF
+```
+
+### 17.4 One table a trading system: each system's date is its own
+
+**Early and late systems.** On 2026-07-09 Endur and Calypso arrived first, the pricing tar next, and Murex, WSS, SwapOne and ICI **later in another cycle**: the later cycle changed nothing of the earlier loads.
+**A resend replaces only the sender's date in its own table**:
+
+| Resend | Before | After | What the log shows |
+|---|---|---|---|
+| Murex 2026-07-09 (own table `trade_murex`) with 250 rows | 269 | **250** | one commit `remove 269 add 250`; Murex 07-08 (4,198) and 07-10 (258) unchanged; Endur, Calypso untouched |
+| WSS 2026-07-09 (own table `trade_wss`) with 9 rows | 14 | **9** | `remove 14 add 9`; SwapOne's 10 and ICI's 18 of the same date, and WSS's other dates, unchanged |
+| The same Murex file again | | not loaded | `duplicate: already loaded in run … (the same SHA-256)`; exit 0 |
+
+Three rules from it. (1) **A system's file for a date is that system's whole date**: rows of the date that the new file lacks are removed (the 19 rows missing from the resent Murex file are gone). (2) **Send a
+system's own rows only**: a row of another system in WSS's file is rejected (*SOURCE_SYSTEM is ICI, not this load's WSS*, 17.7). (3) **One table a trading system, always**: never land several systems in one table.
+**The scenario PVs do not work this way, by design**: `risk.scenario-pv` is **always one table** for all pricing systems, loaded as **one complete file or tar per business date**: a day's PV file **must contain every pricing system's positions**, and **a partial file replaces the whole date** (17.6, tested: a tar with only Murex's 1,633 positions
+left the date with 1,633 positions and VaR 82,176 instead of 113,266 until the full tar was loaded again). There is no per-system slice of scenario PVs.
+
+### 17.5 Portfolio data: state per day, complete files, and a missing day
+
+The core pack's `book`, `desk`, `legal-entity`, `counterparty`, `trader` (and `counterparty-group`, `issuer`, `ccp`, `clearing-account`, `calendar`) are **one row per entity per business date**
+(`dated-by: business_date`, contract `grain: One row per book per business date`; `cadence: daily`). Tested on `book`, `desk`, `legal-entity`, `counterparty`:
+
+- **Each day's file is a full snapshot of that day.** A file replaces its date: a 5-book file for 2026-07-09 left **5 books** on that date (30 → 5; 07-08 and 07-10 kept 30). A "delta" file is therefore a data loss for the day: **send every entity every day**, unchanged ones included.
+  To change one entity, send the day's whole file again.
+- **Slowly changing data is the same file each day**; history is the sequence of dated files. `drishti.py history` shows one entity over the days (changed cells marked).
+- **A missing day is not refused and not filled in.** Asking for a date with no file (tested: 2026-07-13):
+  - a record page (`view get book/BOOK-COMM-1 --date 2026-07-13`) answers **the newest earlier date, and says so** (`provenance.businessDate: 2026-07-10`); nothing is copied into the lake;
+  - a pivot of the kind (`pivot run --source book --date 2026-07-13`) is refused: *DRS-4003 book holds no data on 2026-07-13: its dates run from 2026-07-08 to 2026-07-10*;
+  - a trade page by id (`view get trade/1000001 --date 2026-07-13`) is `404 no source holds trade/1000001 … for 2026-07-13` (a trade is seen on a date only when that date's file carries it, 16.2);
+  - a trade pivot or a trade list for a date with files from only some systems shows each other system's newest earlier date **and says so, per system**: on 2026-07-13, with only WSS loaded, the pivot shows Endur, Calypso and Murex from 2026-07-10 beside WSS, with the notice *Not every source has data for 2026-07-13: trade-endur: no load for 2026-07-13, showing 2026-07-10; …* (the pivot's and the records page's banner; `asOfNotices` in `POST /api/v1/pivot/query` and the live sets' `/api/v1/live/query` and `/api/v1/live/kinds/{word}/rows`, one entry per source system: `connector`, `asked`, `answered`). A date with no data is never answered silently from an older one.
+- **VaR with no PV tar for the date** answers **the newest earlier date, with a warning**: the page shows *⚠ scenario P&L for 2026-07-13 not loaded — showing 2026-07-10* under the header, whose business date is 2026-07-10; the API answers `businessDate: 2026-07-10` and `asOfNotice` (and the same words in `provenance.warnings`). The figures are 2026-07-10's own, unchanged. The official capture of 2026-07-13 is skipped with that reason, never published from the earlier date. `var explain --from 2026-07-10 --to 2026-07-13` is refused (*from must be before to*). Nothing is carried into the lake. The hierarchy
+  of a VaR date is that date's PV rows, so a missing book file changes no VaR number; a missing PV tar makes the date answer as yesterday, said on the page. The verification job (17.8) checks it too.
+
+### 17.6 Scenario PVs every day
+
+16.1 is the procedure; for the daily cycle:
+
+| Point | Rule (tested) |
+|---|---|
+| One tar a date, parts of 200,000 to 400,000 positions | the three folders of the date: `scenario-set/<date>/`, `fx-scenario/<date>/` (a row per non-USD currency), `scenario-pv/<date>/part-NNNN.jsonl.gz`; the tar is three loads, one commit each; 5,005 rows in 11 s |
+| The scenario set and the window | each date's `scenario-set` row (`SCENARIO_COUNT` = the vectors' length). The engine uses the **newest `drishti.var.scenario-window` scenarios of the date's own set** (default 250; `all`): the answer says *all 250 scenarios (2025-07-25 … 2026-07-09)*. The next day's set is the earlier one rolled by one scenario |
+| Preload of the previous date | none to do: the two dates are two ordinary loads. **Why it moved needs both dates in the lake** (`var explain` compares D with the date before it); load D-1 the day before. The hot file of a date is built at its first open and reloaded by itself when a load replaces it (tested: the restated date answered the right figure within seconds) |
+| Keep at least two dates | `DRISHTI_VAR_HOT_DATES` (default 10) is how many dates stay open in memory; **keep ≥ 2** (3 in the test) so today and yesterday both answer at once. The lake keeps every date until retention (17.8) |
+| Checks after the load | `var show BANK --date D` (positions = rows sent, `rejected 0`, no warning), `var explain BANK --from D-1 --to D` (*the steps add up: yes*), `var tree --date D` (no **(Blank)** node), `var show "POS:<id>" --date D`: `verify-day.sh` does the first, 17.8 |
+| Restating a date | send the whole date again, its own tar and `BATCH_ID`/`RESTATEMENT` (16.1 do-not list). Tested: re-sending 2026-07-09's tar after the Murex-only load put its 4,900 positions back and VaR 113,266 exactly; 07-08 and 07-10 stayed as they were (103,986 and 132,262). The old files stay on disk until vacuum |
+| One system's PVs only | **do not**: the whole date is replaced, so the other systems' positions leave VaR (tested above) |
+
+### 17.7 Corrections, late files, undo, and what not to do
+
+| Case | How | Tested result |
+|---|---|---|
+| **A system re-sends a past date** (restated trades) | the same name, new content; replace (the default): that system's date only | 17.4: only that slice replaced |
+| **The identical file again** (a retry, a double drop) | nothing to do | `duplicate`, *already loaded in run …*, exit 0; the lake is unchanged. A file whose rows a later load replaced loads again (re-sending 2026-07-09's tar after the Murex-only load) |
+| **An extra file for a date, added to what is there** (a late trade, an intraday delta) | `mode: append` in the **file's own `.ready`**, and different `TRADE_ID`s | Endur 2026-07-09: 138 → **143**, one version `add 5`, the original 138 untouched; the new ids open (`view get trade/9100001 --date 2026-07-09`). Append never deduplicates across files: send only new or changed ids |
+| **An extra file without `mode: append`** | **do not**: replace mode takes the system's whole date | tested: a 3-trade Calypso "late" file for 2026-07-10 left **3** trades where 202 were (`remove 202 add 3`) |
+| **Undo a bad load** | `drishti.py dataload undo <load-id>` (a dry run; `--yes`): the id is in the file's `.loaded.json` (`loads`) | the 3-trade replace was undone: **202 rows restored**, version history `…, remove 202 add 3, remove 3 add 202`. The undo sends the same data-load signal a load sends, one per table and date undone (the answer's `signals`), so the pages and pivots read the table again at once |
+| **A tar** with a wrong date or table folder | the whole tar is refused, nothing written | 16.1, 16.3 |
+| **Never**: edit a file in the inbox, put the marker first, name a file without its date, send two systems in one trade file, send a partial portfolio or PV file for a date | | 17.4, 17.5, 17.6 |
+
+**What a failure looks like (all tested; the exit code of `dataload run --wait` is 0, 2 or 1)**
+
+| You see | Why | Exit | Do |
+|---|---|---|---|
+| `loaded 4,407 rows 0 rejected` | all fine | 0 | |
+| `duplicate … already loaded in run …` | the same SHA-256, rows still in the lake | 0 | nothing |
+| `failed: its .ready file says 999 rows, the file holds 9 documents: not loaded` | `rows:` wrong, or the file is cut short | 1 | resend, or correct the marker; `dataload retry <file>` |
+| `failed: the rule endur-*.jsonl.gz takes the business date from the name … carries none … rename it, or give business-date:` | a name with no date | 1 | rename; or `business-date: YYYY-MM-DD` in the marker |
+| `failed: 1 of 3 documents rejected (33.33%), more than rejects.max-pct 0.0: nothing was written` (no `rows:` in the marker) | **with the shipped `reject-max-percent: 0` a single rejected row fails the whole file**: nothing is committed | 1 | fix the row and resend; or set `drishti.dataload.reject-max-percent` to the share you accept |
+| `failed: its check failed before loading: 1 of 3 documents rejected (33.33%), more than reject-max-percent 0.0 (<reason> (1)): not loaded` | the same rejected-row case when the marker carries `rows:` (the check run before the load says the real cause; a count that differs is added after it) | 1 | fix the row and resend |
+| `loaded with rejects: 1 of 3 rows rejected: SOURCE_SYSTEM is ICI, not this load's WSS (1)` | `reject-max-percent` above the share (40 in the test): the good rows are committed, the bad ones are in `rejects` | **2** | fix the rows, resend the date; **do not use the date meanwhile** (the pivot showed WSS 2 of 3) |
+| `refused, nothing was loaded: … no pack, kind or table of that name` | a tar folder that is no kind | 1 | 16.1, 16.2 |
+| `503 DRS-5218` | the disk guard (10% free **and** 20 GB) | | free disk (17.8) |
+
+Where the alerts show: **Admin → Data loads → Inbox** (Waiting, Loading, Last cycles with *notice:* lines, **Failures** with the reason and **Retry**), `drishti.py dataload status`, the file's
+`.loaded.json`/`.failed.json` in `outbox/<day>/<run>/` and `failed/<day>/<run>/`, and `ledger/ledger-<yyyy-MM>.jsonl` (kept for ever).
+
+### 17.8 Automation, verification, housekeeping
+
+**The scheduled job** (tested on Linux: exit 0 on an empty inbox, 1 with the server unreachable; the lock refuses a second copy). The upstream jobs write files into the inbox as they finish; this job runs the cycle at the cut-off and again later:
+
+```bash
+#!/usr/bin/env bash
+# daily-load.sh: run the data inbox now, wait for it, and turn its exit code into an alert. Scheduled; never run by hand twice at once.
+set -u
+export DRISHTI_SERVER="${DRISHTI_SERVER:-http://drishti-owner:18480}"       # the owner node's address
+TOKEN_FILE="${DRISHTI_TOKEN_FILE:-/etc/drishti/loader.token}"                # a token with the scope loads:write, mode 600
+DRISHTI_HOME="${DRISHTI_HOME:-/opt/drishti}"
+LOG="${LOG_DIR:-/var/log/drishti}/daily-load-$(date +%F).log"
+mkdir -p "$(dirname "$LOG")"
+exec 9>"${LOCK_FILE:-/tmp/drishti-daily-load.lock}"; flock -n 9 || { echo "$(date -Is) another daily load is running" >> "$LOG"; exit 3; }
+
+python3 "$DRISHTI_HOME/tools/drishti.py" dataload run --wait --wait-seconds 7200 --token-file "$TOKEN_FILE" >> "$LOG" 2>&1
+rc=$?
+case $rc in
+  0) echo "$(date -Is) ok: every file loaded, no row rejected" >> "$LOG" ;;
+  2) alert="WARNING: loaded with REJECTED ROWS" ;;
+  *) alert="CRITICAL: a file failed, or the server was not reached" ;;
+esac
+if [ $rc -ne 0 ]; then
+  echo "$(date -Is) $alert (exit $rc): see $LOG and Admin > Data loads > Inbox" >> "$LOG"
+  # replace with your pager or mail: mail -s "Drishti daily load: $alert" risk-ops@bank.example < "$LOG"
+fi
+exit $rc
+```
+
+*Linux, cron* (`crontab -e` of the service account): the cut-off at 05:30 on weekdays, a catch-up at 07:30 (a file that arrived after 05:30 loads there; the verification below runs at 06:00 and 08:00):
+
+```cron
+30 5,7 * * 1-5  DRISHTI_SERVER=http://drishti-owner:18480 /opt/drishti/ops/daily-load.sh
+0 6,8 * * 1-5   DRISHTI_SERVER=http://drishti-owner:18480 /opt/drishti/ops/verify-day.sh $(date +\%F) || mail -s "Drishti: the day is incomplete" risk-ops@bank.example
+```
+
+*Linux, systemd timer* (written from the documented syntax; not run here): `daily-load.service` (`Type=oneshot`, `ExecStart=/opt/drishti/ops/daily-load.sh`, `User=drishti`, `EnvironmentFile=/etc/drishti/loader.env`, `OnFailure=drishti-alert@%n.service`)
+and `daily-load.timer` (`OnCalendar=Mon..Fri 05:30,07:30`, `Persistent=true`). A non-zero exit marks the unit failed, which is the alert.
+
+*Windows, Task Scheduler* (**not run here**: the PowerShell below uses the same CLI and exit codes; Python and `tools\drishti.py` are the Windows tools, no `.exe` is needed):
+
+```powershell
+# C:\drishti\ops\daily-load.ps1
+$env:DRISHTI_SERVER = "http://drishti-owner:18480"
+$log = "C:\drishti\logs\daily-load-$(Get-Date -Format yyyy-MM-dd).log"
+python C:\drishti\tools\drishti.py dataload run --wait --wait-seconds 7200 --token-file C:\drishti\loader.token *>> $log
+$rc = $LASTEXITCODE
+if ($rc -ne 0) { Send-MailMessage -To risk-ops@bank.example -From drishti@bank.example -Subject "Drishti daily load: exit $rc (2 = rejects, 1 = failed)" -Body (Get-Content $log -Tail 40 | Out-String) -SmtpServer smtp.bank.example }
+exit $rc
+# register: schtasks /Create /TN "Drishti daily load" /SC WEEKLY /D MON,TUE,WED,THU,FRI /ST 05:30 /RU drishti /TR "powershell -NoProfile -File C:\drishti\ops\daily-load.ps1"
+```
+
+**Exit codes for the alert**: 0 all loaded; **2 loaded with rejected rows** (warning: the date answers without them: fix and resend); **1 a file failed or the server was not reached** (critical). **An empty cycle is also exit 0**
+(*done (nothing ready)*): a feed that never arrived is **not** an error of the loader, which is why the verification exists.
+
+**The daily verification** (`verify-day.sh DATE`, run on the owner node, tested: exit 0 for a complete day; for 2026-07-13 it reported ten missing feeds and the WSS rejects, exit 1):
+
+```bash
+#!/usr/bin/env bash
+# verify-day.sh YYYY-MM-DD: exit 0 only when (1) every expected feed has a loaded line for THAT date in the inbox's ledger, with 0 rejects, and
+# (2) VaR answers for that very date with nothing rejected. (A pivot or a VaR page asked for a date with no file answers from the newest earlier date
+# of each connector and says so on the page (asOfNotices, asOfNotice); a job reads the ledger.)
+set -u
+D="${1:?usage: verify-day.sh YYYY-MM-DD}"
+export DRISHTI_SERVER="${DRISHTI_SERVER:-http://drishti-owner:18480}"
+TOKEN_FILE="${DRISHTI_TOKEN_FILE:-/etc/drishti/loader.token}"
+DATA="${DRISHTI_DATA_DIR:-/var/lib/drishti}"                                  # the OWNER node's data folder (the inbox's)
+FEEDS="${FEEDS:-book desk legal-entity counterparty endur calypso murex wss swapone ici eod}"   # the first word of each file name expected for the date
+bad=0
+python3 - "$D" "$DATA/dataload/ledger" $FEEDS <<'PY' || bad=1
+import sys, json, glob, collections, re
+d, led, feeds = sys.argv[1], sys.argv[2], sys.argv[3:]
+rows, rej, seen = collections.defaultdict(int), collections.defaultdict(int), set()
+for f in sorted(glob.glob(led + "/ledger-*.jsonl")):
+    for line in open(f):
+        r = json.loads(line)
+        if r.get("outcome") != "loaded" or d not in (r.get("dates") or {}): continue
+        feed = re.split(r"[.-]\d{4}-?\d{2}", r["file"])[0].split(".")[0]
+        seen.add(feed); rows[feed] += r["dates"][d]["rows"]; rej[feed] += r.get("rejected", 0)
+ok = True
+for feed in feeds:
+    if feed not in seen: print(f"MISSING  {feed}: no file loaded for {d}"); ok = False
+    elif rej[feed]:      print(f"REJECTS  {feed}: {rej[feed]} rejected"); ok = False
+    else:                print(f"ok       {feed:<14}{rows[feed]:>9} rows loaded for {d} (all loads summed)")
+sys.exit(0 if ok else 1)
+PY
+js=$(python3 "${DRISHTI_HOME:-/opt/drishti}/tools/drishti.py" var show BANK --date "$D" --json --token-file "$TOKEN_FILE" 2>&1) || { echo "VaR failed: $js"; exit 1; }
+echo "$js" | python3 -c "
+import sys, json
+d = json.load(sys.stdin); p = d['provenance']; got = d.get('businessDate')
+bad = p.get('rejections', []) + p.get('warnings', [])
+print('VaR for', got, '| rejected', p.get('rejected', 0), '| warnings', len(bad), '|', p.get('scenarioWindow', {}).get('note', ''))
+for w in bad: print('  ', w)
+sys.exit(0 if got == '$D' and p.get('rejected', 0) == 0 and not bad else 1)" || bad=1
+exit $bad
+```
+
+By hand, the same, with the numbers each check should give (`$T` = `--token-file`):
+
+| Check | Command | Expect |
+|---|---|---|
+| Rows per date per table | `drishti.py lake status --lake demo` (a lake's name, or its folder) | every table's latest date is today |
+| Per system | the Delta-log script of 17.3 for each `trade_<system>`; or `pivot run --source trade --date D --rows SOURCE_SYSTEM --values "count()" $T` (a system with no load for D is shown from its earlier date with a notice per system: 17.5) | the file's rows (`zcat file \| wc -l`) |
+| Rejects | `.loaded.json` of each file, `dataload status`, exit code | 0 |
+| VaR | `var show BANK --date D --json $T` | the date in the header is D; `provenance.rejected` 0; no warnings; positions = rows sent |
+| Explain | `var explain BANK --from D-1 --to D $T` | *the steps add up: yes* |
+| One system | `pivot run --source trade --date D --rows SOURCE_SYSTEM --values "count()" --filter SOURCE_SYSTEM=MUREX $T`; `view get trade/<id> --date D $T` | the system's count; the trade opens |
+| One position | `var show "POS:<position id>" --date D $T` | the position's own figure |
+| Disk | `df -h <data>` | above the guard (below) |
+
+**Housekeeping and disk.**
+
+- **Retention of old dates.** Nothing deletes a date by itself: the shipped lake files keep every date. Set `retention: 260` (business dates; `7y`) per table, or in the maintenance file (`<data>/lakes/lake-maintenance.yaml`, Admin → Data loads → Lakes → Maintain); the risk domain keeps seven years whatever is set (section 2.6).
+  The inbox's own copies go after `keep-outbox-days` (30); the ledger stays.
+- **Compaction, vacuum.** The loader writes files of the target size, so compaction is rarely needed. A replaced or undone date leaves its old files until vacuum (`maintenance.vacuum: 7d`, `time-travel: 30d` in the lake file: budget a second copy of any date loaded twice; the hot file of a restated date likewise: 26 MB beside 16 MB in the test).
+  `drishti.py lake maintain --once --tables risk/scenario-pv` runs it; **not run here: it needs the `deltalake`, `pyarrow` and `pyyaml` Python libraries, which this machine lacks** (OPERATIONS_GUIDE section 16).
+- **Disk per business date at 1.3M positions** (16.1's estimate; this test's measured 5,000 × 250: 1.3 KB a position in the lake, 3.2 KB a position of hot file with its node aggregates): about **1.75 GB lake plus 2.7 to 4 GB hot files plus the gz and its inbox and outbox copies (1.3 GB each)** a day: **8 to 10 GB a day** with USD only,
+  of which the lake and hot file stay. Trades: 1.1 to 2.5 KB a trade in the lake. **The guard**: a build that would leave less than 10% of the disk free (`drishti.disk.min-free-percent`) **or** 20 GB (`min-free-gb`) is refused `503 DRS-5218`: plan for the guard **above** the day's data, and put `<data>` on a volume with room for 30 days of outbox.
+- **Monitoring.** The scheduled job's exit code and log; `verify-day.sh` at the cut-off; Admin → Health (a pack reading two lakes is DEGRADED, section 6); Admin → Data loads → Inbox *Failures*; `dataload status` in a dashboard.
+
+### 17.9 One-page checklist (print it)
+
+```text
+DAILY LOAD      business date: __________   owner node: __________   operator: __________
+BEFORE (once)   [ ] source modules on   [ ] connector files in config/connectors (risk-store, var-*, trade-*)   [ ] inbox on, one owner   [ ] token loads:write in a 600 file
+                [ ] disk above the guard (10% and 20 GB) and 10 GB a day free   [ ] reject-max-percent decided (0 = any bad row fails the file)
+FILES, per day  portfolio: book, desk, legal-entity, counterparty   <kind>.<date>.jsonl.gz   FULL list, every entity
+                trades: endur, calypso, murex, wss, swapone, ici   <system>-<date>.jsonl.gz   one system a file, its own rows only
+                PVs: eod-<date>.tar = scenario-set + fx-scenario + scenario-pv parts   ALL pricing systems, one BATCH_ID
+                every file: .ready LAST with sha256 and rows
+ORDER           1 portfolio   2 trades (any order, each system when it arrives)   3 the PV tar LAST (signals VaR and the official capture)   4 netting sets
+LOAD            [ ] drop, marker last   [ ] dataload run --wait   exit 0 / 2 rejects (fix, resend) / 1 failed (read the reason, retry)
+CORRECT         resend a system's whole date (replace) · extra rows: mode: append in ITS .ready · wrong load: dataload undo <id> --yes, then wait 1 minute
+NEVER           a partial portfolio or PV file for a date · an extra file without mode: append · two systems in a trade file · a name without a date
+VERIFY          [ ] verify-day.sh <date> exit 0   [ ] var show BANK --date D: header date = D, rejected 0, positions = rows sent
+                [ ] var explain D-1 -> D adds up   [ ] trades per system = file rows   [ ] failures list empty   [ ] disk above the guard
+MISSED A FEED?  the pages still answer from the newest earlier date: say it to the desks; load the feed when it arrives (next cycle); nothing else changes
+SIGNED          ____________________   time: ________
+```
+
+### 17.10 What was measured
+
+A server on a scratch data folder (Java 21, 3 GB heap, the inbox's loader 2 GB), the banking, trading and source modules, 5,000 positions × 250 scenarios a date in two gzip parts (`tools/pvgen/bulk_positions.py`), the six systems' synthetic trade files of `data/testdata/trades` (13,400 trades on the first date, 600 to 700 on the next two), the core pack's reference files of the same three dates; three business dates plus the cases of 17.4 to 17.7.
+One cycle: 45 to 50 s (30 s of that the stability wait); the tar of three tables 11 s; every `VaR show` 0.2 to 1 s. **Not tested here**: cron and systemd timer runs, the Windows task, `lake maintain`, a cluster (the inbox runs on its owner node), the official capture (off), Iceberg, netting sets (16.3 has their runbook), production volumes (use 16.1 and 16.2's estimates for the first real day).

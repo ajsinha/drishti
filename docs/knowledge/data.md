@@ -79,7 +79,7 @@ correlation-matrix  CORR CORR-<set>   EQUITY_IDS ─► equity, FX_IDS ─► fx
 correlation-result  CORR CORR-<set>[~window=N~estimator=pearson | ledoit-wolf]   computed from the factors' daily closes
 ```
 
-The links are the market-data pack's contract link columns (`config/packs/banking/market-data/contracts/*.contract.yaml`). Every curve and
+The links are the market-data pack's contract link columns (`modules/market-data/packs/market-data/contracts/*.contract.yaml`). Every curve and
 surface is kept per business date, so `CRV CRV-USD-OIS <GO>` on yesterday's date shows yesterday's curve.
 
 **Id conventions.** A kind's prefix and the instrument: `CRV-USD-OIS`, `FX-EURUSD`, `FXV-EURUSD`, `FIX-SOFR`, `CDS-BUND`, `EQ-CSCA`,
@@ -300,7 +300,7 @@ cannot.
 
 A **data contract** writes down what each kind is: its grain (what one row means), its key, every field with its type, unit and
 meaning, the links to other kinds, where it is stored, how often it arrives, and for a computed kind its formulas. Every command has
-one (`config/packs/<domain>/<pack>/contracts/<kind>.contract.yaml`), and the docs are generated from them.
+one (`modules/<module>/packs/<pack>/contracts/<kind>.contract.yaml`), and the docs are generated from them.
 
 ### How the data and contracts data connects
 
@@ -341,7 +341,7 @@ has an id (an LEI, an ISIN, a ticker, a booking system's trade id). A computed k
 are fundamental, **8** engine inputs (`PNLV`, `SSET`, `VLIM`, `PORT`, `XRUN`, `XPATH` and the compute demo's two), **1** is Drishti's own
 (`POS`, the derived positions) and **18** are computed (among them `VRES`, `EXP`, `LEIG`, `LEIC`, `SIC`, `ECG`, `CORRC`, `EQB`, `CTRD`).
 
-**One contract, read.** `drishti.py contract show NSET` (the netting-set kind, `config/packs/banking/counterparty-risk/contracts/netting-set.contract.yaml`):
+**One contract, read.** `drishti.py contract show NSET` (the netting-set kind, `modules/banking/dmod/packs/counterparty-risk/contracts/netting-set.contract.yaml`):
 
 ```text
 kind: netting-set   mnemonic: NSET   pack: counterparty-risk   class: fundamental   source: xva-engine
@@ -382,7 +382,7 @@ right for its own source; only following the link shows that the sources describ
 | Which commands are computed, which stored? | `drishti.py contract list` | every command's class and status |
 | Where did this number come from? | the page's **?** (About this page), or `drishti.py var show BANK` | the inputs, batch, data version and rules behind it |
 | How did a record look last week? | `NSET NS-ALDERSHOT-LDN 5 <GO>` | the record on each of the last five business dates, what changed |
-| Where does this public data come from, and may I share it? | [External data](../guides/EXTERNAL_DATA.md) | each source, its licence, whether it is internal only, its refresh script |
+| Where does this public data come from, and may I share it? | [External data](../guides/WORLD_DATA_GUIDE.md) | each source, its licence, whether it is internal only, its refresh script |
 | Is today's data in? | `drishti.py data loads --pack trading --expectations` | the pack's loads for the date, what is due and what is late |
 
 ### Data and contracts: common confusions
@@ -463,10 +463,10 @@ internal use only. The External data page says which is which.
 
 ## 5. Where to go deeper
 
-- [Groupings and analytics guide](../guides/GROUPINGS_ANALYTICS_GUIDE.md): sections 2 and 3 (LEIG and LEIC), 6 and 8 (CORR, PXH and
+- [Groupings and analytics guide](../guides/bi/GROUPINGS_AND_ANALYTICS.md): sections 2 and 3 (LEIG and LEIC), 6 and 8 (CORR, PXH and
   beta) with worked numbers, and the computed groupings.
-- [Tutorial 6: groupings and analytics](../tutorials/06-groupings-and-analytics.md).
-- [External data](../guides/EXTERNAL_DATA.md): every external source (ECB, US Treasury, NY Fed, Yahoo Finance, GLEIF ...), its
+- [The groupings tutorial: groupings and analytics](../guides/bi/GROUPINGS_AND_ANALYTICS.md).
+- [External data](../guides/WORLD_DATA_GUIDE.md): every external source (ECB, US Treasury, NY Fed, Yahoo Finance, GLEIF ...), its
   licence and refresh script.
 - [Data contracts](../contracts/README.md): the rules every contract shares, and [every command's contract](../contracts/packs/README.md).
 - [The command catalog](../guides/COMMAND_CATALOG.md): every command with its class.

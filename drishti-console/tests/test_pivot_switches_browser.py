@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The pivot screen's switches, live pivots and cell comments (PIVOT_GUIDE.md) in a real browser against the stand-in engine: Exact /
+"""The pivot screen's switches, live pivots and cell comments (bi/PIVOT.md) in a real browser against the stand-in engine: Exact /
 Auto / ≈, Progressive and Use rollups are sent as the request's options and the line beside them says how the answer was computed; L turns
 Live on and a pushed patch changes only its cell, which flashes; on a saved view a comment added in a cell's popover marks the cell; on a
 phone the switches wrap inside the screen and stay large enough to tap. The browser computes no figure: every number is the stand-in's."""
@@ -125,4 +125,16 @@ def test_on_a_phone_the_switches_wrap_inside_the_screen_and_are_large_enough_to_
     assert box["x"] >= 0 and box["x"] + box["width"] <= 390 + 1
     for sel in ('.pv-seg label:has(input[value="exact"])', ".pv-switches .pv-chip:has([data-pv-live])"):
         assert pg.locator(sel).bounding_box()["height"] >= 32, sel
+    assert not pg.errors, pg.errors
+
+
+def test_the_rows_behind_a_cell_are_the_records_grid_in_its_static_mode(browser, stack):
+    url, backend = stack
+    pg = _open(browser, url + "/pivot?view=u/desk")
+    pg.locator('[data-pv-grid] .dg-cell[data-cell^="DESK=Rates"]').first.click()
+    pg.wait_for_selector("[data-pv-pop] [data-pop-rows]")
+    pg.click("[data-pv-pop] [data-pop-rows]")
+    pg.wait_for_selector("[data-pv-pop] .rc-host[data-records-ready] .dg-row[data-key]")
+    assert pg.locator("[data-pv-pop] .rc-host .dg-row[data-key]").count() >= 3 and pg.locator("[data-pv-pop] table").count() == 0
+    assert pg.locator("[data-pv-pop] .dg-live-chip").inner_text().startswith("STATIC")
     assert not pg.errors, pg.errors

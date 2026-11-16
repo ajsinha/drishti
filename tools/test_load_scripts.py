@@ -35,7 +35,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT / "drishti-console") not in sys.path:
     sys.path.insert(0, str(ROOT / "drishti-console"))
-from core.pack_paths import pack_dirs  # noqa: E402  (the one rule for where a pack's folder is)
+from core.resolution import pack_dirs  # noqa: E402  (where a pack is: the one resolver, KERNEL_AND_MODULES.md 18)
 
 UV = """#!/usr/bin/env bash
 # stands in for uv: make_data.py --jsonl FILE.tar writes two sample lines; bulk_trades.py --jsonl FILE.tar three book lines (the
@@ -177,7 +177,7 @@ class LoadScripts(unittest.TestCase):
 
     def test_rows_runs_never_rewrite_the_samples_tests_or_feed(self):
         """make_data.py --jsonl/--lake only write rows: the generator's own outputs come from a plain run (generation and loading split)."""
-        samples = sorted(f for d in pack_dirs().values() for f in d.glob("samples/*.jsonl")) + sorted((ROOT / "config" / "packs" / "banking" / "trading" / "tests").rglob("*.json*"))
+        samples = sorted(f for d in pack_dirs().values() for f in d.glob("samples/*.jsonl")) + sorted((ROOT / "modules" / "banking" / "dmod" / "packs" / "trading" / "tests").rglob("*.json*"))
         before = {f: f.stat().st_mtime_ns for f in samples}
         with tempfile.TemporaryDirectory() as tmp:
             r = subprocess.run([sys.executable, "tools/packgen/banking/make_data.py", "--lake", str(Path(tmp) / "delta"), "--no-load", "--days", "2"],

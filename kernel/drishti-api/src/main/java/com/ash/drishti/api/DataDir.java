@@ -1,0 +1,44 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+package com.ash.drishti.api;
+
+/**
+ * The umbrella folder every runtime path defaults under ({@code drishti.data.dir}, {@code DRISHTI_DATA_DIR}, default
+ * {@code <drishti.home>/data}: {@link Roots}). For code that has no Spring environment (plugins, the command-line tools): the system property wins,
+ * then the environment variable. The server publishes its resolved value as the system property at start, so a value
+ * set only in a configuration file reaches the plugins too. A path's own setting still overrides its default.
+ */
+public final class DataDir {
+
+    /** The system property that names the data folder ({@code drishti.data.dir}); it wins over the environment. */
+    public static final String PROPERTY = "drishti.data.dir";
+    /** The environment variable that names the data folder ({@code DRISHTI_DATA_DIR}). */
+    public static final String ENV = "DRISHTI_DATA_DIR";
+
+    private DataDir() {
+    }
+
+    /** The umbrella folder, absolute: as configured (a relative value under the install folder), else {@code <drishti.home>/data}; never the working folder. */
+    public static String root() {
+        return Roots.data();
+    }
+
+    /** A folder under the umbrella, e.g. {@code under("delta")} is {@code <drishti.home>/data/delta} by default. */
+    public static String under(String sub) {
+        String r = root();
+        return (r.endsWith("/") || r.endsWith("\\") ? r : r + "/") + sub;
+    }
+}

@@ -14,8 +14,6 @@
 # Example: copy to config/connectors/trading-store.yaml to read the trading-store data from redis. It replaces the
 # connector file of the same name (settings are not merged). Credentials are ${ENV_VAR} references.
 plugin: redis
-kinds:
-- trade
 description: trading-store read from redis (the former application-redis.yaml profile)
 settings:
   domain: trading

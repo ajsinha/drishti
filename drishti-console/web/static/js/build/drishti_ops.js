@@ -53,7 +53,7 @@
   };
   WB.why = function (r) { var b = r.body || {}; return window.Drishti.drsMessage({ code: b.code || ('HTTP ' + r.status), detail: b.detail }, 'The request failed'); };
   WB.call = function (method, url, body) {
-    return fetch(url, { method: method, headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) })
+    return fetch(drishti_url(url), { method: method, headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) })
       .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { return { ok: r.ok, status: r.status, body: j }; }); },
         function () { return { ok: false, status: 0, body: { detail: 'The console could not be reached. Try again.', code: 'offline' } }; });
   };
@@ -67,7 +67,7 @@
   };
 
   WB.Store = function (init) {
-    var bus = new Bus(), base = '/build/designs/' + encodeURIComponent(init.id);
+    var bus = new Bus(), base = drishti_url('/build/designs/') + encodeURIComponent(init.id);
     var st = { id: init.id, kind: init.kind, rev: init.rev, yaml: init.yaml || '', problems: [], checkProblems: [], opsAt: init.opsAt || 0, opsCount: init.opsCount || 0,
                about: init.about || '', form: init.form || '', samples: init.samples || [], sample: (init.samples && init.samples[0]) || '', file: null, status: init.status || 'draft' };
     var queue = Promise.resolve();

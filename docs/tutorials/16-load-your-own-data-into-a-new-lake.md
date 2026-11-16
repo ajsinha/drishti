@@ -58,7 +58,7 @@ About 1 h 45 min in all; each part can be done on its own day.
 
 **Part E · The risk lake and the official results on Iceberg.**
 
-- [Tutorial 2, Part A](02-var-from-the-bank-to-a-trade.md#part-a--historical-var-from-the-bank-to-a-trade) step 1 done once: you know the VaR test data and `VAR BANK` (112,041,646 USD on
+- [The VaR tutorial, Part A](../guides/VAR_GUIDE.md#part-a--historical-var-from-the-bank-to-a-trade) step 1 done once: you know the VaR test data and `VAR BANK` (112,041,646 USD on
   2026-09-30).
 - `build_demo_lakes.py` writes Iceberg with the loader in the server's jar, so the server is built first (above).
 - The console's Python (`drishti-console/.venv/bin/python`; Windows `drishti-console\.venv\Scripts\python.exe`): it has `deltalake`.
@@ -169,6 +169,8 @@ read the lake as it is ([section 14](../guides/DATA_LAKE_GUIDE.md#14-delta-proto
 
 **The command line.**
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```bash
 python3 tools/drishti.py lake show
 ```
@@ -262,7 +264,7 @@ field means is the kind's data contract, and a real record with every field expl
 | File | Kind | Contract | Example |
 |---|---|---|---|
 | `trade_endur…` | `trade` | [trade](../contracts/packs/trading.md#trd-trade-trade) | [an Endur trade](../contracts/samples/trades.md#endur) |
-| `scenario_pv…` | `scenario-pv` | [scenario-pv](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv) | [scenario PVs](../contracts/samples/market-risk.md#scenario-pv) |
+| `scenario_pv…` | `scenario-pv` | [scenario-pv](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-position-or-trade-one-pv-per-scenario-its-currency-scenario-pv) | [scenario PVs](../contracts/samples/market-risk.md#scenario-pv) |
 | `var_limit…` | `var-limit` | [var-limit](../contracts/packs/market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit) | [a node's VaR limit](../contracts/samples/market-risk.md#var-limit) |
 
 **You should see** the three files in `data/tmp/drop/` with exactly the rows and checksums above: 2,000 trades, 300 scenario-PV
@@ -373,7 +375,6 @@ A connector reads one lake. Edit the two connector files the packs wrote at the 
 
 ```yaml
 plugin: delta
-kinds: [trade]
 settings:
   lake: risklake                  # was: demo
   lake-tables: trading.trade_endur
@@ -381,12 +382,11 @@ settings:
   source-name: trade-endur
 ```
 
-`config/connectors/risk-store.yaml`, with only the kinds risklake holds (a table the lake file lacks is refused, naming it):
+`config/connectors/risk-store.yaml`, with only the tables risklake holds (a table the lake file lacks is refused, naming it):
 
 ```yaml
 plugin: delta
 enabled: true
-kinds: [scenario-pv, var-limit]
 settings:
   lake: risklake
   lake-tables: risk.scenario-pv,risk.var-limit
@@ -469,7 +469,7 @@ python3 tools/drishti.py dataload undo 20261107T101740.754-2543825.1 --yes      
 **You should see** **Duplicates today 1**: `trade_endur.2026-11-06.jsonl.gz`, *moved to the outbox, not loaded again*, *already loaded
 in run … (the same SHA-256)*, and **Last cycles** *duplicate · 1 file · already loaded*; then the dry run's one line, *26 rows … removed*.
 
-**Go back to the demo.** Set `lake: demo` back in both connector files (for `risk-store`, its full list of kinds and `lake-tables`, or
+**Go back to the demo.** Set `lake: demo` back in both connector files (for `risk-store`, its full `lake-tables` list, or
 delete the file: the pack writes its template again at the next start) and restart. Neither lake changes: risklake stays in
 `data/delta/risklake/` for the next time, the demo in `data/delta/demo/`.
 
@@ -552,10 +552,10 @@ every table partitioned by `business_date` first; the three trade tables also by
 **The YAML.** The trading pack's connector `trade-endur` names the lake and its entry; nothing of the table is written here.
 
 ```yaml
-# config/packs/banking/trading/pack.yaml (the template written to config/connectors/trade-endur.yaml)
+# modules/banking/dmod/packs/trading/pack.yaml (the template written to config/connectors/trade-endur.yaml)
 trade-endur:
   plugin: delta
-  kinds: [trade]
+  kinds: [trade]                          # the distribution's default binding of trade; the written file names no kinds
   settings:
     lake: demo
     lake-tables: trading.trade_endur      # the kind trade has three tables: the entry is named
@@ -599,7 +599,7 @@ describes that no writer has made yet; it is not an error.
 
 ```bash
 python3 tools/drishti.py lake build --from data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz --as-of 2026-07-08 \
-    --pack config/packs/banking/trading --connector trade-endur --lake demo --lake-root $SCRATCH/lake
+    --pack modules/banking/dmod/packs/trading --connector trade-endur --lake demo --lake-root $SCRATCH/lake
 ```
 
 ```text
@@ -620,7 +620,7 @@ Now ask for another partition:
 
 ```bash
 python3 tools/drishti.py lake build --from data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz --as-of 2026-07-08 \
-    --pack config/packs/banking/trading --connector trade-endur --lake demo --lake-root $SCRATCH/lake --partition-by DESK
+    --pack modules/banking/dmod/packs/trading --connector trade-endur --lake demo --lake-root $SCRATCH/lake --partition-by DESK
 ```
 
 ```text
@@ -660,9 +660,9 @@ export DRISHTI_LAKES_DIR=$SCRATCH/lakes
 **The command line.** The parallel loader appends and records the batch; the Python path refuses an append (it does not record batches):
 
 ```bash
-python3 tools/drishti.py lake build --engine java --from data/testdata/market-risk/scenario-pv --pack config/packs/banking/market-risk \
+python3 tools/drishti.py lake build --engine java --from data/testdata/market-risk/scenario-pv --pack modules/banking/dmod/packs/market-risk \
     --kind scenario-pv --lake intraday --batch-id intraday-0915
-python3 tools/drishti.py lake build --engine java --from data/testdata/market-risk/scenario-pv --pack config/packs/banking/market-risk \
+python3 tools/drishti.py lake build --engine java --from data/testdata/market-risk/scenario-pv --pack modules/banking/dmod/packs/market-risk \
     --kind scenario-pv --lake intraday --batch-id intraday-0915      # the same batch again
 ```
 
@@ -695,7 +695,6 @@ append per business date, each recorded as `drishti-batch:intraday-0915:<date>` 
 ```bash
 mkdir -p $SCRATCH/connectors && cat > $SCRATCH/connectors/old-store.yaml <<EOF
 plugin: delta
-kinds: [pnl-vector]
 settings:
   root: $SCRATCH/lake
   domain: risk
@@ -729,8 +728,6 @@ tables:
 
 --- $SCRATCH/connectors/old-store.yaml (would be written)
 plugin: delta
-kinds:
-- pnl-vector
 settings:
   lake: lake
 
@@ -1163,7 +1160,6 @@ tables:
 ```yaml
 # config/connectors/news-store.yaml
 plugin: delta
-kinds: [news-topic, listed-company, news, quote]
 settings:
   lake: news
   lake-tables: news.news-topic,news.listed-company,news.news,news.quote
@@ -1192,8 +1188,8 @@ drishti:
       tables:                     # the store news: config/lakes/news.yaml
         - { name: news,  store: news, source: { file: data/testdata/news-and-markets/news/news.2026-10-18.jsonl.gz },  key: [NEWS_ID],  every: 15m, warm-up: 1, pin: true }
         - { name: quote, store: news, source: { file: data/testdata/news-and-markets/quote/quote.2026-10-18.jsonl.gz }, key: [QUOTE_ID], every: 15m, warm-up: 2 }
-        - { name: news-topic,     store: news, source: { file: config/packs/economy/news-and-markets/samples/news-topic.jsonl },     key: [TOPIC_ID],   warm-up: 3 }
-        - { name: listed-company, store: news, source: { file: config/packs/economy/news-and-markets/samples/listed-company.jsonl }, key: [COMPANY_ID], warm-up: 4 }
+        - { name: news-topic,     store: news, source: { file: modules/economy/packs/news-and-markets/samples/news-topic.jsonl },     key: [TOPIC_ID],   warm-up: 3 }
+        - { name: listed-company, store: news, source: { file: modules/economy/packs/news-and-markets/samples/listed-company.jsonl }, key: [COMPANY_ID], warm-up: 4 }
 ```
 
 A live site points `source` at its feed instead: `url:` (a vendor's REST feed answering JSON Lines, `headers:` with `${ENV}` secrets), or
@@ -1354,7 +1350,7 @@ committed test data.
 
 ## Step 30 · Build the VaR data into Iceberg
 
-**From the command line.** The same `--only` list as tutorial 2, Part A, with `--store risk=iceberg`:
+**From the command line.** The same `--only` list as the VaR tutorial, Part A, with `--store risk=iceberg`:
 
 ```bash
 drishti-console/.venv/bin/python tools/build_demo_lakes.py --as-of data --store risk=iceberg \
@@ -1379,13 +1375,13 @@ one store per domain. Your own `--lake` folder: the Iceberg root is the folder b
 moves it).
 
 **The YAML.** The script writes the connector file `risk-store.yaml` from the market-risk pack's template, switched to Iceberg (the
-text it replaced is kept in `data/connectors/history/`), and does the same for the counterparty-risk pack's `exposure-store.yaml`:
+text it replaced is kept in `data/connectors/history/`), and does the same for the counterparty-risk pack's `exposure-store.yaml`. The
+file names no kinds: the pack's template still binds the risk kinds to `risk-store` by default, and `config/bindings.yaml` (Admin → Data
+bindings) is where a site binds them elsewhere:
 
 ```yaml
 # Written by tools/build_demo_lakes.py --store risk=iceberg: every risk table in Iceberg (data/iceberg/risk), …
 plugin: iceberg
-kinds: [stress-scenario, stress-result, frtb-sensitivity, pnl-explain, trade-valuation, portfolio, pnl-vector, scenario-pv,
-        fx-scenario, scenario-set, var-limit]
 settings:
   root: ${DRISHTI_ICEBERG_ROOT:${drishti.data.dir:./data}/iceberg}
   engine: native
@@ -1397,7 +1393,7 @@ settings:
     …
 ```
 
-**In the UI.** Nothing to do yet; step 33 shows the tables, and [tutorial 2, step 26](02-var-from-the-bank-to-a-trade.md#step-26--the-same-var-on-iceberg) reads VaR from them, the same to the cent.
+**In the UI.** Nothing to do yet; step 33 shows the tables, and [the VaR tutorial, step 26](../guides/VAR_GUIDE.md#step-26--the-same-var-on-iceberg) reads VaR from them, the same to the cent.
 
 **You should see** `data/iceberg/risk/<kind>/metadata` and `data` folders for the seven VaR kinds, `data/delta/demo/risk` empty, and
 `plugin: iceberg` at the top of `data/connectors/risk-store.yaml`.
@@ -1503,12 +1499,11 @@ tables are maintained here like the ones `drishti.py lake build --format iceberg
 ## Step 34 · BI's reader of the official results follows the format
 
 The market-risk pack's `var-results` connector (BI's `VOFF`) is `plugin: delta` in the pack; with `format: iceberg` the server reads
-that template as `plugin: iceberg` over `${drishti.var.official.root}`. The file the server generated (stamped) and nobody edited
-follows by itself: nothing to do. `lake demo` and `build_demo_lakes.py` leave this file to the server; one an earlier `lake demo` wrote
-(its first line *Written by drishti.py lake demo*) is moved to the history by the build of step 30, so the server writes the stamped one.
-An edited file is kept, and the change of plugin is listed under **Admin → Connectors → Template updates** (**Use the pack's value**).
+that template as `plugin: iceberg` over `${drishti.var.official.root}`. The server reads the template where it is and writes no file:
+nothing to do. A site override of `var-results` (`config/connectors/var-results.yaml`) changes only the keys it names; if it names
+`plugin`, that value wins: **Reset** in Admin → Connectors removes the override and the template is in force again.
 
-**In the UI.** **Admin → Connectors → var-results**:
+**In the UI.** **Admin → Connectors → var-results** shows the layer of each setting (template or override) and `plugin: iceberg`.
 
 ![var-results: plugin iceberg](img/t29/04-var-results.jpg)
 
@@ -1526,7 +1521,6 @@ connector var-results   origin file   plugin iceberg   running   …
 
 ```yaml
 plugin: iceberg
-kinds: [var-official]
 settings:
   root: ${drishti.var.official.root:${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}}
   domain: risk-results
@@ -1536,8 +1530,8 @@ settings:
 **You should see** `var-results` on `iceberg` and running, and the official records read back: `VOFF HIERARCHY == 'LL'` on
 2026-09-30 finds 43 of the 131 rows.
 
-**Further:** [../guides/DATA_GUIDE.md section 9 "Upgrades"](../guides/DATA_GUIDE.md#upgrades) (stamped files, edited files, Use the
-pack's value).
+**Further:** [../guides/DATA_GUIDE.md section 9, "Connector layers"](../guides/DATA_GUIDE.md#connector-layers) (templates, overrides,
+files an earlier release left).
 
 ## Step 35 · Back to Delta
 
@@ -1561,7 +1555,7 @@ a table keeps its format). A full build without `--store risk=…` also puts the
 
 - [The data lake and data load guide](../guides/DATA_LAKE_GUIDE.md): sizing a real day (section 9), modes and repeats (section 5),
   a lake in S3 or Iceberg, reading an existing Databricks lakehouse (section 10).
-- [Tutorial 2, Part A](02-var-from-the-bank-to-a-trade.md#part-a--historical-var-from-the-bank-to-a-trade): VaR from the bank to a trade, now on your own scenario PVs.
+- [The VaR tutorial, Part A](../guides/VAR_GUIDE.md#part-a--historical-var-from-the-bank-to-a-trade): VaR from the bank to a trade, now on your own scenario PVs.
 - [DATA_LAKE_GUIDE.md](../guides/DATA_LAKE_GUIDE.md): every key, a Delta lake in S3, an Iceberg lake over REST, an in-memory store.
 - [the data lake guide, section 3.1](../guides/DATA_LAKE_GUIDE.md#31-the-data-inbox): every part of the Inbox screen and where each figure comes from.
 - [Data guide, section 1](../guides/DATA_GUIDE.md#1-telling-drishti-new-data-has-landed): the data-load signal each load sends, expectations and late data.
@@ -1570,7 +1564,7 @@ a table keeps its format). A full build without `--store risk=…` also puts the
 - The design: [IN_MEMORY_LAKE.md](../architecture/DATA_ARCHITECTURE.md#9-the-in-memory-lake-delta-tables-that-never-touch-a-disk).
 - Your own lake on Iceberg, Databricks or a REST catalog: [Using Drishti with Databricks Delta Lake or Apache Iceberg](../guides/DATA_GUIDE.md#3-using-drishti-with-databricks-delta-lake-or-apache-iceberg).
 - On AWS (S3, Glue, S3 Tables, the scripts in `deploy/aws/iceberg/`): [CLUSTER_GUIDE.md › Drishti on AWS: ECS, EFS and S3, section 22](../guides/CLUSTER_GUIDE.md#1212-iceberg-on-aws-and-official-results-in-s3).
-- Exposure on the same lake: [tutorial 3](03-exposure-from-the-bank-to-a-trade.md) after a full `--store risk=iceberg` build.
+- Exposure on the same lake: [the exposure tutorial](../guides/EXPOSURE_GUIDE.md) after a full `--store risk=iceberg` build.
 
 ## If something goes wrong
 
@@ -1580,13 +1574,13 @@ a table keeps its format). A full build without `--store risk=…` also puts the
 | `failed/`: *the .ready file's key … is not one of …* | a typo in the `.ready`; correct it and **Retry** (`drishti.py dataload retry <file>`) |
 | `failed/`: *its .ready file says 2000 rows, the file holds …* | the copy was cut short: copy it again, then Retry |
 | `failed/`: the date in the name is refused | a business date is a real date, not in the future: run `make_day.py` with today's date or an earlier one |
-| a connector refused: *lake risklake has no table risk.pnl-vector* | list only risklake's tables in `lake-tables:` and `kinds:` |
+| a connector refused: *lake risklake has no table risk.pnl-vector* | list only risklake's tables in `lake-tables:` |
 | the page still shows demo trades | the connector file still says `lake: demo`, or the server was not restarted |
 | *this Python lacks deltalake* | run the script with the console's Python (Before you start) |
 | *could not find the server jar* or the copy into Iceberg fails | build the server first (`./mvnw clean package -DskipTests`) |
 | `VAR BANK` answers *no P&L vectors in any connector* | the server reads another Iceberg root: set `DRISHTI_ICEBERG_ROOT` to the folder beside your `--lake` |
 | `publishError` *… is a Delta table and the official format is iceberg* | give the official results another root (step 31) |
-| `var-results` stays `delta` | the file was edited: Admin → Connectors → Template updates → **Use the pack's value** for `plugin` (step 34) |
+| `var-results` stays `delta` | a site override names `plugin`: Admin → Connectors → var-results → **Reset** (step 34) |
 | Admin → Lakes lists no Iceberg table | the console's `DRISHTI_LAKE_ROOTS` lacks `data/iceberg` (step 32) |
 
 **Part A · A new lake of your own.**

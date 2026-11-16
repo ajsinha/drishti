@@ -40,7 +40,6 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -92,16 +91,22 @@ public final class KafkaSourcePlugin implements SourcePlugin {
     private boolean ticksOnly;
     private com.ash.drishti.diskcache.DiskCache disk;
     private boolean searchable;
-    private final Map<EntityRef, List<Consumer<EntityDocument>>> listeners = new ConcurrentHashMap<>();
+    private final com.ash.drishti.api.KindListeners listeners = new com.ash.drishti.api.KindListeners();
+    private volatile KafkaWrites writes;
+    private volatile List<String> allTopics = List.of();
     private final Set<String> kinds = ConcurrentHashMap.newKeySet();
     private final HitIndex index = new HitIndex();
     private final AtomicReference<String> health = new AtomicReference<>("DOWN: not started");
+    private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(KafkaSourcePlugin.class);
+    /** Where the broker is looked for, and the one-line transitions of waiting for it (a broker that is not there is calm, not a fault). */
+    private volatile String bootstrap = "";
+    private volatile com.ash.drishti.api.BrokerWaiting.Watch watch;
     /** How long the consumer may have no broker connection before health says so (short blips are not reported). */
     static final long BROKER_LOST_MS = 10_000;
     private final Map<String, String> kindOfTopic = new HashMap<>();
     private final Map<String, String> idFieldOfTopic = new HashMap<>();
     private volatile KafkaConsumer<String, String> consumer;   // replaced when the supervisor reconnects
-    private Properties consumerProps;
+    private volatile Properties consumerProps;
     /** The next offset to read per partition: a reconnect resumes here instead of replaying the topic. */
     private final Map<TopicPartition, Long> resumeAt = new ConcurrentHashMap<>();
     private Thread loop;
@@ -173,6 +178,7 @@ public final class KafkaSourcePlugin implements SourcePlugin {
         this.context = ctx;
         this.sourceName = ctx.setting("source-name", "kafka");
         List<String> topics = List.of(ctx.setting("topics", "").split(",")).stream().map(String::trim).filter(s -> !s.isEmpty()).toList();
+        this.allTopics = topics;
         if (topics.isEmpty()) {
             throw new com.ash.drishti.api.PluginNotConfigured("kafka needs settings.topics");
         }
@@ -189,6 +195,9 @@ public final class KafkaSourcePlugin implements SourcePlugin {
         Properties p = consumerProperties(ctx.settings(), sourceName, security);
         this.tls = security.tls();
         this.valueDeserializer = valueDeserializer(ctx.settings());
+        this.bootstrap = String.valueOf(p.get(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG));
+        this.watch = new com.ash.drishti.api.BrokerWaiting.Watch(sourceName, LOG::info);
+        health.set(com.ash.drishti.api.BrokerWaiting.message(bootstrap));   // until the supervisor has looked
         consumerProps = p;                           // the consumer is created (and re-created) by the supervisor
         this.ticksOnly = "ticks".equals(ctx.setting("mode", "state"));
         this.searchable = !ticksOnly && Boolean.parseBoolean(ctx.setting("search", "true"));
@@ -230,7 +239,17 @@ public final class KafkaSourcePlugin implements SourcePlugin {
      */
     private void supervise(List<String> topics, long pollMs) {
         long backoff = 1_000;
+        List<String> endpoints = com.ash.drishti.api.BrokerWaiting.endpoints(bootstrap);
         while (running) {
+            if (!com.ash.drishti.api.BrokerWaiting.reachable(endpoints, 1_000)) {
+                health.set(com.ash.drishti.api.BrokerWaiting.message(bootstrap));   // calm: the snapshot is served, live updates wait
+                watch.waiting(bootstrap);
+                if (!pause(backoff)) {
+                    return;
+                }
+                backoff = com.ash.drishti.api.BrokerWaiting.next(backoff);
+                continue;
+            }
             KafkaConsumer<String, String> c;
             try {
                 c = new KafkaConsumer<>(consumerProps, new StringDeserializer(), valueDeserializer);
@@ -251,7 +270,15 @@ public final class KafkaSourcePlugin implements SourcePlugin {
             } catch (WakeupException e) {
                 // closing
             } catch (RuntimeException e) {
-                health.set("DOWN: " + e.getClass().getSimpleName() + ": " + e.getMessage() + " (reconnecting)");
+                if (!running) {
+                    return;
+                }
+                if (e instanceof org.apache.kafka.common.errors.TimeoutException || e instanceof IllegalStateException) {
+                    health.set("WAITING: " + e.getMessage() + " - live updates paused; retrying");   // the broker answers but the topic is not there yet
+                    watch.waiting(bootstrap);
+                } else {
+                    health.set("DOWN: " + e.getClass().getSimpleName() + ": " + e.getMessage() + " (reconnecting)");
+                }
             } finally {
                 c.close(Duration.ofSeconds(2));
             }
@@ -295,6 +322,7 @@ public final class KafkaSourcePlugin implements SourcePlugin {
         }
         Map<TopicPartition, Long> end = c.endOffsets(parts);
         health.set(caughtUp ? "UP" : "UP (catching up)");
+        watch.connected(bootstrap);
         org.apache.kafka.common.Metric connections = c.metrics().entrySet().stream()
                 .filter(e -> "connection-count".equals(e.getKey().name()) && "consumer-metrics".equals(e.getKey().group()))
                 .map(Map.Entry::getValue).findFirst().orElse(null);
@@ -310,10 +338,12 @@ public final class KafkaSourcePlugin implements SourcePlugin {
             if (!connected && lostSince == 0) {
                 lostSince = System.nanoTime();
             } else if (!connected && System.nanoTime() - lostSince > java.util.concurrent.TimeUnit.MILLISECONDS.toNanos(BROKER_LOST_MS)) {
-                health.set("DOWN: no connection to the broker (reconnecting)");
+                health.set(com.ash.drishti.api.BrokerWaiting.lost(bootstrap));
+                watch.waiting(bootstrap);
             } else if (connected && lostSince != 0) {
                 lostSince = 0;
                 health.set(caughtUp ? "UP" : "UP (catching up)");
+                watch.connected(bootstrap);
             }
             if (!caughtUp && end.entrySet().stream().allMatch(e -> c.position(e.getKey()) >= e.getValue())) {
                 caughtUp = true;
@@ -354,7 +384,7 @@ public final class KafkaSourcePlugin implements SourcePlugin {
                 deleted(ref, r);
                 return;
             }
-            boolean wanted = listeners.containsKey(ref) || cache.getIfPresent(ref) != null;
+            boolean wanted = listeners.wanted(ref) || cache.getIfPresent(ref) != null;
             if (!wanted) {
                 return;
             }
@@ -437,14 +467,11 @@ public final class KafkaSourcePlugin implements SourcePlugin {
             }
             DataNode data = context.parseJson(new ByteArrayInputStream(JSON.writeValueAsBytes(doc)));
             EntityDocument d = new EntityDocument(ref, data, new Provenance(sourceName, r.offset(), Instant.ofEpochMilli(r.timestamp()), true));
-            if (!ticksOnly && (cache.getIfPresent(ref) != null || listeners.containsKey(ref))) {
+            if (!ticksOnly && (cache.getIfPresent(ref) != null || listeners.watched(ref))) {
                 weights.put(ref, r.value() == null ? 64 : r.value().length());
                 cache.put(ref, d);
             }
-            List<Consumer<EntityDocument>> subs = listeners.get(ref);
-            if (subs != null) {
-                subs.forEach(l -> l.accept(d));
-            }
+            tell(ref, d);
         } catch (Exception e) {
             // a malformed message is skipped; the stream goes on
         }
@@ -459,18 +486,101 @@ public final class KafkaSourcePlugin implements SourcePlugin {
         if (searchable && caughtUp) {
             index.remove(ref);                       // before catching up, the index is built from positions at the end
         }
-        List<Consumer<EntityDocument>> subs = listeners.get(ref);
-        if (subs != null) {
-            EntityDocument gone = EntityDocument.deleted(ref, new Provenance(sourceName, r.offset(), Instant.ofEpochMilli(r.timestamp()), true));
-            subs.forEach(l -> {
-                try {
-                    l.accept(gone);
-                } catch (RuntimeException ignored) {
-                    // one broken view must not stop the others
-                }
-            });
-        }
+        tell(ref, EntityDocument.deleted(ref, new Provenance(sourceName, r.offset(), Instant.ofEpochMilli(r.timestamp()), true)));
     }
+
+    /** Hands a document (or a deletion) to the open views of the entity and to the subscribers of its whole kind (a live blotter). */
+    private void tell(EntityRef ref, EntityDocument d) {
+        listeners.tell(ref, d);
+    }
+
+    @Override
+    public Subscription subscribeKind(String kind, Consumer<EntityDocument> listener) {
+        return listeners.kind(kind, listener);
+    }
+
+    /**
+     * Every entity of the kind as the topics hold it now, in one pass: a separate consumer reads each partition from the beginning to
+     * its end offset and keeps the latest document per entity (a live blotter's first rows, a memory table's fill). False in ticks mode.
+     */
+    @Override
+    public boolean documents(String kind, com.ash.drishti.api.AsOf asOf, Consumer<EntityDocument> sink) throws Exception {
+        if (ticksOnly || consumerProps == null) {
+            return false;
+        }
+        boolean mappedKind = kindOfTopic.containsValue(kind) || kind.equals(defaultKind);
+        Map<String, String> latest = KafkaWrites.snapshot(consumerProps, topicsOf(kind), valueDeserializer, sourceName, r -> {
+            String mapped = kindOfTopic.getOrDefault(r.topic(), defaultKind);
+            if (mapped != null) {
+                if (!mapped.equals(kind)) {
+                    return null;
+                }
+                return r.key();
+            }
+            String[] k = r.key() == null ? new String[0] : r.key().split("/", 2);
+            return k.length == 2 && k[0].equals(kind) ? k[1] : null;
+        });
+        for (Map.Entry<String, String> e : latest.entrySet()) {
+            if (e.getValue() == null) {
+                continue;
+            }
+            JsonNode v = JSON.readTree(e.getValue());
+            JsonNode doc = mappedKind ? v : v.get("doc");
+            if (doc == null || doc.isNull()) {
+                continue;
+            }
+            DataNode data = context.parseJson(new ByteArrayInputStream(JSON.writeValueAsBytes(doc)));
+            sink.accept(new EntityDocument(EntityRef.of(kind, e.getKey()), data, new Provenance(sourceName, 0, Instant.now(), true)));
+        }
+        return true;
+    }
+
+    private List<String> topicsOf(String kind) {
+        List<String> out = new ArrayList<>();
+        for (String t : allTopics) {
+            String mapped = kindOfTopic.getOrDefault(t, defaultKind);
+            if (mapped == null || mapped.equals(kind)) {
+                out.add(t);
+            }
+        }
+        return out;
+    }
+
+    /** {@code kafka:} commands of a connector's {@code writes:} (docs/guides/APPROVALS_GUIDE.md section 10): see {@link KafkaWrites}. */
+    @Override
+    public Optional<String> writeKey() {
+        return Optional.of("kafka");
+    }
+
+    @Override
+    public List<String> checkWrite(String command, Map<String, Object> block, java.util.Set<String> known) {
+        return KafkaWrites.check(command, block, known);
+    }
+
+    @Override
+    public com.ash.drishti.api.write.WriteResult write(com.ash.drishti.api.write.WriteCommand command) throws Exception {
+        KafkaWrites w = writes;
+        if (w == null) {
+            writesLock.lock();
+            try {
+                if (writes == null) {
+                    writes = new KafkaWrites(context.settings(), sourceName, KafkaSecurity.translate(context.settings()));
+                }
+                w = writes;
+            } finally {
+                writesLock.unlock();
+            }
+        }
+        return w.write(command, ref -> {
+            try {
+                return fetch(ref);
+            } catch (Exception e) {
+                throw new IllegalStateException(e.getMessage(), e);
+            }
+        });
+    }
+
+    private final java.util.concurrent.locks.ReentrantLock writesLock = new java.util.concurrent.locks.ReentrantLock();
 
     private void rebuildIndex() {
         if (!searchable) {
@@ -587,16 +697,7 @@ public final class KafkaSourcePlugin implements SourcePlugin {
 
     @Override
     public Subscription subscribe(EntityRef ref, Consumer<EntityDocument> listener) {
-        listeners.compute(ref, (r, subs) -> {
-            List<Consumer<EntityDocument>> l = subs == null ? new CopyOnWriteArrayList<>() : subs;
-            l.add(listener);
-            return l;
-        });
-        // the entry goes when its last listener does, so an entity nobody watches is no longer parsed on every update
-        return () -> listeners.computeIfPresent(ref, (r, subs) -> {
-            subs.remove(listener);
-            return subs.isEmpty() ? null : subs;
-        });
+        return listeners.entity(ref, listener);
     }
 
     @Override
@@ -670,6 +771,10 @@ public final class KafkaSourcePlugin implements SourcePlugin {
         }
         if (disk != null) {
             disk.close();                     // safe even if the loop still writes: the disk cache drops late calls
+        }
+        KafkaWrites w = writes;
+        if (w != null) {
+            w.close();
         }
     }
 }

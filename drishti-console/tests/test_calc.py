@@ -144,9 +144,9 @@ def test_calc_is_a_labs_switch_off_as_shipped_and_never_publishes():
     assert settings.get("labs.calc") in (False, "false") and settings.get("calc") is None
     assert Calc(settings, CONSOLE / "web").enabled is False
     root = CONSOLE.parent
-    server = (root / "drishti-server/src/main/resources/application.yaml").read_text(encoding="utf-8")
+    server = (root / "kernel/drishti-server/src/main/resources/application.yaml").read_text(encoding="utf-8")
     assert "enabled: ${DRISHTI_LABS_CALC:false}" in server
-    assert "console: [labs.calc]" in (root / "config/lenses/features.yaml").read_text(encoding="utf-8")
+    assert "console: [labs.calc]" in (root / "config/distributions/kernel.yaml").read_text(encoding="utf-8")   # the one feature mapping
     routes = (CONSOLE / "routes/calc_routes.py").read_text(encoding="utf-8")
     assert not re.search(r"publish|promote|/workspaces|/items|share", routes, re.I)
     for f in ("web/static/js/drishti_calc.js", "web/static/js/drishti_calc-worker.js", "web/static/calc/drishti.py", "web/static/calc/drishti_bi.py"):

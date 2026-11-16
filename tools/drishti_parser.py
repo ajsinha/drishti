@@ -45,12 +45,12 @@ def json_parent() -> argparse.ArgumentParser:
 def jvm_parent() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(add_help=False)
     g = p.add_argument_group("the Java tool")
-    g.add_argument("--jar", help="the drishti-server exec jar (default: DRISHTI_JAR, then the newest drishti-server/target/drishti-server-*-exec.jar)")
+    g.add_argument("--jar", help="the drishti-server exec jar (default: DRISHTI_JAR, then the newest kernel/drishti-server/target/drishti-server-*-exec.jar)")
     g.add_argument("--java", help="the java binary (default: JAVA_HOME, then JDK 21, then java on the PATH)")
     return p
 
 
-SUTRA_EXAMPLES = ("examples:\n  drishti.py sutra lint config/packs/banking/market-risk --strict\n  drishti.py sutra test config/packs/banking/market-risk --junit build/market-risk.xml\n"
+SUTRA_EXAMPLES = ("examples:\n  drishti.py sutra lint modules/banking/dmod/packs/market-risk --strict\n  drishti.py sutra test modules/banking/dmod/packs/market-risk --junit build/market-risk.xml\n"
                   "  drishti.py sutra shape samples/ --out build\n  drishti.py sutra design samples/ --kind ticket\n"
                   "Unknown options are passed to the Java tool. Exit codes as the Java tool: 0 ok, 1 problems, 2 usage.")
 
@@ -116,12 +116,12 @@ def build_parser(h) -> argparse.ArgumentParser:
                  "exit: 0 done, 1 a check failed or the module was refused, 2 usage")
         mp.set_defaults(module_cmd=name)
         mp.add_argument("path", help="a module folder (module.yaml at its root) or, for check and inspect, a .dmod")
-        mp.add_argument("--tool", help="the module tool's jar (default: DRISHTI_MODULE_TOOL, then drishti-module-runtime/target/drishti-module-tool.jar)")
+        mp.add_argument("--tool", help="the module tool's jar (default: DRISHTI_MODULE_TOOL, then kernel/drishti-module-runtime/target/drishti-module-tool.jar)")
         mp.add_argument("--java", help="the java binary (default: JAVA_HOME, then JDK 21, then java on the PATH)")
         if name in ("pack", "check"):
             mp.add_argument("--jar", dest="module_jar", help="the module's jar, copied to java/ under the name module.yaml gives")
         if name == "pack":
-            mp.add_argument("--out", default=".", help="the folder the .dmod is written to (default: the current folder)")
+            mp.add_argument("--out", help="the folder the .dmod is written to (default: <Drishti folder>/dist)")
         if name == "check":
             mp.add_argument("--project", help="the project folder, whose Java sources C10 reads for licence headers")
             mp.add_argument("--cycles", type=int, help="load/unload cycles of C15 (default 50)")
@@ -129,16 +129,16 @@ def build_parser(h) -> argparse.ArgumentParser:
 
     # pack -------------------------------------------------------------------------------------------------
     k = group("pack", "Packs: generate from JSON Lines, check in CI, find missing help text, publish and install")
-    pn = add(k, "new", h.cmd_pack_new, "pack new: create a complete pack from JSON Lines (kinds, Sutras, samples, tests, about text, a lake or files store)",
-             [PFJ.build_parser(add_help=False), server_parent(with_json=False)],
-             "examples:\n  drishti.py pack new data/testdata/trades/murex --name murex-book --kind trade --key TRADE_ID --match PRODUCT_TYPE --out data/build/murex-book\n"
-             "  drishti.py pack new your-folder/ --name my-bank --date BUSINESS_DATE --store files --files-root data/files "
-             "--load --server http://localhost:18977")
+    pn = add(k, "new", h.cmd_pack_new, "pack new: JSON Lines (files or folders, .jsonl/.jsonl.gz/.ndjson) -> a content module: every record read, "
+             "one Sutra per --match combination, a binding, a checked .dmod, --deploy",
+             [load_module("module_from_jsonl", "packgen/module_from_jsonl.py").build_parser(add_help=False), server_parent(with_json=False)],
+             "examples:\n  drishti.py pack new data/incoming --name otc-trades --kind trade --key TRADE_ID --match PRODUCT_TYPE,SOURCE_SYSTEM --date BUSINESS_DATE --dry-run\n"
+             "  drishti.py pack new data/incoming --name otc-trades --kind trade --load --deploy\n"
+             "Bulk, unattended: docs/guides/CLI_REFERENCE.md, pack new (a folder of files -> modules).")
     pm = add(k, "make", h.cmd_pack_make, "pack make: ONE folder to deploy from JSON Lines: pack, Delta data, bundle, server config, run scripts and README.txt (tools/packmake.py)", [],
              "example:\n  drishti.py pack make data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz --kind trade --match PRODUCT_TYPE --name my-bank --out data/build/my-bank\n"
              "Chooses --key and --date itself when you do not (and says why), then runs pack check and pack verify.")
     load_module("packmake", "packmake.py").add_arguments(pm)
-    pn.add_argument("--load", action="store_true", help="afterwards ask the running server to load the pack (administrator; takes effect at once, no restart)")
     pc = add(k, "check", h.cmd_pack_check, "pack check: sutra lint + sutra test (with help coverage) on packs, for CI", [jvm, js],
              "examples:\n  drishti.py pack check config/packs/my-bank --strict --junit build/reports\n  drishti.py pack check config/packs/a config/packs/b --json\n"
              "exit: 0 all passed, 1 any failure, 2 usage")
@@ -162,7 +162,7 @@ def build_parser(h) -> argparse.ArgumentParser:
              "Runs `pack check` first (--no-check to skip). The archive is reproducible: the same content gives the same bytes.\n"
              "example:\n  drishti.py pack bundle config/packs/my-bank --out dist\nGuide: docs/guides/OPERATIONS_GUIDE.md")
     pb.add_argument("pack")
-    pb.add_argument("--out", metavar="DIR", help="where to write the bundle (default ./dist)")
+    pb.add_argument("--out", metavar="DIR", help="where to write the bundle (default <Drishti folder>/dist)")
     pb.add_argument("--requires-server", metavar="VERSION", help="the minimum server version recorded in the manifest (default: this checkout's version)")
     pb.add_argument("--no-check", action="store_true", help="do not run lint/test before bundling")
     pb.add_argument("--json", action="store_true", help="print the result as JSON")

@@ -21,6 +21,6 @@
 <div class="thome"><h1>Business intelligence</h1>
   <p class="pnl-err" role="alert"><i class="bi bi-lock" aria-hidden="true"></i> BI is not available to you. It needs the <span class="mono">bi</span> power on one of your roles
     (an administrator grants it in Admin, Roles), and BI switched on in this installation.</p>
-  <p><a href="/t">Back to the terminal</a></p></div>
+  <p><a href="{{ BASE }}/t">Back to the terminal</a></p></div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script>{% endblock %}

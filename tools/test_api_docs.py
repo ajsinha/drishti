@@ -70,7 +70,7 @@ class K:
 class Config(unittest.TestCase):
     def test_every_java_module_documents_itself_in_its_pom(self):
         for m in api_docs.config()["java"]:
-            pom = (api_docs.ROOT / m["module"] / "pom.xml").read_text(encoding="utf-8")
+            pom = (api_docs.module_dir(m["module"]) / "pom.xml").read_text(encoding="utf-8")
             self.assertIn("<drishti.apidocs.skip>false</drishti.apidocs.skip>", pom, m["module"])
             self.assertIn("<drishti.apidocs.packages>", pom, m["module"])
 

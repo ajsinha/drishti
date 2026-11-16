@@ -1,0 +1,86 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+package com.ash.drishti.rachana;
+
+import com.ash.drishti.rachana.el.ElCompiler;
+import com.ash.drishti.rachana.format.Formats;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+/** Beans contributed by {@code drishti-rachana}. */
+@Configuration(proxyBeanMethods = false)
+@EnableConfigurationProperties({RachanaProperties.class, com.ash.drishti.rachana.about.AboutProperties.class})
+public class RachanaConfiguration {
+
+    @Bean
+    public ElCompiler elCompiler(RachanaProperties props) {
+        return new ElCompiler(props.expressionCacheSize(), props.expressionLimits());
+    }
+
+    /** The packs' about text (About this page, layer 1). */
+    @Bean
+    public com.ash.drishti.rachana.about.AboutCatalog aboutCatalog(com.ash.drishti.rachana.about.AboutProperties props, ElCompiler elCompiler) {
+        return new com.ash.drishti.rachana.about.AboutCatalog(props, elCompiler);
+    }
+
+    @Bean
+    public Formats formats(RachanaProperties props) {
+        return Formats.load(props.formatsFile(), props.packFormatsFiles());
+    }
+
+    /**
+     * The Sutras, with the Drishti UI kit ({@code drishti.ui-kit.dir}, RACHANA_REFERENCE.md) set first: its fragments load whatever packs are
+     * enabled, so any screen may use them.
+     */
+    @Bean(destroyMethod = "close")
+    public SutraRegistry sutraRegistry(RachanaProperties props, ElCompiler elCompiler,
+            @org.springframework.beans.factory.annotation.Value("${drishti.ui-kit.dir:${drishti.config.dir}/ui-kit}") String uiKitDir,
+            @org.springframework.beans.factory.annotation.Value("${drishti.packs.dir:${drishti.config.dir}/packs}") String packsDir) {
+        java.nio.file.Path kit = UiKitDir.resolve(uiKitDir, packsDir);         // else beside the packs folder (another working folder)
+        if (!java.nio.file.Files.isDirectory(kit.resolve("fragments"))) {
+            org.slf4j.LoggerFactory.getLogger(RachanaConfiguration.class).warn("the Drishti UI kit has no fragments folder at {} (drishti.ui-kit.dir, "
+                    + "DRISHTI_UI_KIT_DIR): screens that use its fragments do not draw", kit);
+        }
+        com.ash.drishti.rachana.parse.SutraBlocks.kit(kit);
+        return new SutraRegistry(props, elCompiler);
+    }
+
+    /**
+     * The under-construction registry (docs/admin/UNDER_CONSTRUCTION.md): {@code drishti.under-construction.file}, else
+     * {@code under-construction.yaml} beside the packs folder; none when neither exists, or when the setting is {@code none}.
+     */
+    @Bean
+    public UnderConstruction underConstruction(
+            @org.springframework.beans.factory.annotation.Value("${drishti.under-construction.file:}") String file,
+            @org.springframework.beans.factory.annotation.Value("${drishti.packs.dir:${drishti.config.dir}/packs}") String packsDir) {
+        if ("none".equals(file)) {
+            return UnderConstruction.none();                          // nothing registered (a test of the pages as their Sutras say)
+        }
+        java.nio.file.Path p = file == null || file.isBlank() ? null : java.nio.file.Path.of(file);
+        if (p == null || !java.nio.file.Files.isRegularFile(p)) {
+            java.nio.file.Path parent = java.nio.file.Path.of(packsDir).toAbsolutePath().normalize().getParent();
+            java.nio.file.Path beside = parent == null ? null : parent.resolve("under-construction.yaml");
+            p = beside != null && java.nio.file.Files.isRegularFile(beside) ? beside : p;
+        }
+        return UnderConstruction.load(p);
+    }
+
+    @Bean
+    public SutraMatcher sutraMatcher(SutraRegistry registry, ElCompiler elCompiler, Formats formats, UnderConstruction underConstruction) {
+        return new SutraMatcher(registry, elCompiler, formats, underConstruction);
+    }
+}

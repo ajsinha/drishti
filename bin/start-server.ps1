@@ -25,7 +25,8 @@ the native memory settings and the logs under the data folder, waits for /actuat
 
   --port N            the server's port (default DRISHTI_PORT, else 18480)
   --heap SIZE         the heap limit, -Xmx (default 2g; 4g with --demo)
-  --jar FILE          the server jar (default the newest drishti-server\target\drishti-server-*-exec.jar, then drishti-server*.jar here)
+  --settings FILE     a settings file (key=value lines, an absolute path), passed as -Ddrishti.settings.file
+  --jar FILE          the server jar (default the newest kernel\drishti-server\target\drishti-server-*-exec.jar, then drishti-server*.jar here)
   --java-home DIR     the JDK (default DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH)
   --packs LIST        the packs to load (DRISHTI_PACKS; default the server's own, or the demo's ten with --demo)
   --data-dir DIR      the data folder (default DRISHTI_DATA_DIR, else <drishti>\data): run\, logs\, tmp\ and dumps\ are under it
@@ -65,7 +66,7 @@ examples:
   bin\start-server.ps1 --node drishti-b --port 18480 --seed 192.168.1.20:18480 --env-file C:\drishti\cluster.env --background
 '@
 
-$o = Read-Options $args @{ port = 'value'; heap = 'value'; jar = 'value'; javahome = 'value'; packs = 'value'; datadir = 'value'; envfile = 'value'
+$o = Read-Options $args @{ port = 'value'; heap = 'value'; jar = 'value'; settings = 'value'; javahome = 'value'; packs = 'value'; datadir = 'value'; envfile = 'value'
     demo = 'switch'; demolakes = 'switch'; engine = 'value'; lakeroot = 'value'; iceberg = 'switch'; icebergroot = 'value'; javaopt = 'list'
     serverarg = 'list'; workdir = 'value'; background = 'switch'; wait = 'value'; stop = 'switch'; node = 'value'; nodedir = 'value'
     nodedata = 'value'; seed = 'list'; advertise = 'value'; distribution = 'value' }
@@ -92,6 +93,10 @@ if ($o['distribution']) { $env:DRISHTI_DISTRIBUTION = $o['distribution'] }   # t
 $data = Get-DataDir (Opt $o 'datadir')
 $serverData = Get-DataDir (Opt $o 'nodedata' $data)
 $env:DRISHTI_DATA_DIR = $serverData
+# the launch roots, absolute (docs/admin/CONFIGURATION.md, "Launch roots"): the install folder this script is in, and its modules; the server
+# takes no root from its working folder (-WorkDir), so a node started from another folder still finds them
+if (-not $env:DRISHTI_HOME) { $env:DRISHTI_HOME = $script:DrishtiRoot }
+if (-not $env:DRISHTI_MODULES_HOME) { $env:DRISHTI_MODULES_HOME = Join-Path $env:DRISHTI_HOME 'modules' }
 $port = [int](Opt $o 'port' $(if ($env:DRISHTI_PORT) { $env:DRISHTI_PORT } else { $script:DefaultServerPort }))
 $stem = if ($node) { "server-$node" } else { 'server' }
 $label = if ($node) { $node } else { 'server' }
@@ -128,9 +133,14 @@ $major = if ($version -match 'version "(\d+)') { [int]$Matches[1] } else { 0 }
 if ($major -lt 21) { Fail "Drishti runs on Java 21 or newer; $java says: $version" }
 
 # the jar
+$settingsFile = Opt $o 'settings'
+if ($settingsFile) {                         # the settings file: an absolute path that exists, never searched for
+    if (-not [System.IO.Path]::IsPathRooted($settingsFile)) { Fail "-Settings ${settingsFile}: give the settings file as an absolute path" 2 }
+    if (-not (Test-Path -LiteralPath $settingsFile -PathType Leaf)) { Fail "-Settings ${settingsFile}: no such file" 2 }
+}
 $jar = Opt $o 'jar'
 if (-not $jar) {
-    $candidates = @(Get-ChildItem -Path (Join-Path $script:DrishtiRoot 'drishti-server\target') -Filter 'drishti-server-*-exec.jar' -ErrorAction SilentlyContinue) +
+    $candidates = @(Get-ChildItem -Path (Join-Path $script:DrishtiRoot 'kernel\drishti-server\target') -Filter 'drishti-server-*-exec.jar' -ErrorAction SilentlyContinue) +
                   @(Get-ChildItem -Path $script:DrishtiRoot -Filter 'drishti-server*.jar' -ErrorAction SilentlyContinue)
     if ($candidates.Count -eq 0) { Fail 'no server jar: build it (.\mvnw.cmd -q package -DskipTests) or copy drishti-server-<version>-exec.jar here, or pass --jar' }
     $jar = ($candidates | Sort-Object LastWriteTime -Descending | Select-Object -First 1).FullName
@@ -242,6 +252,7 @@ if ($py) {
     } catch { } finally { Pop-Location }
 }
 $javaArgs += @($o['javaopt'] | Where-Object { $_ })
+if ($settingsFile) { $javaArgs += "-Ddrishti.settings.file=$settingsFile" }   # the settings file (docs/admin/CONFIGURATION.md)
 $javaArgs += @('-jar', $jar, "--server.port=$port")
 if ($o['background']) { $javaArgs += @("--drishti.logging.file=$log", '--logging.threshold.console=OFF') }
 $javaArgs += @($o['serverarg'] | Where-Object { $_ }) + @($o['--'] | Where-Object { $_ })
@@ -250,6 +261,7 @@ $url = "http://${urlHost}:$port"
 $health = "http://127.0.0.1:$port/actuator/health"
 $packsShown = if ($env:DRISHTI_PACKS) { $env:DRISHTI_PACKS } else { 'the default' }
 Write-Host "Drishti $(if ($node) { "node $node " })server: $(Split-Path $jar -Leaf) on Java $major, port $port, heap $heap, Delta engine $engine, packs $packsShown, data $serverData"
+Write-Host "  home $env:DRISHTI_HOME, modules $env:DRISHTI_MODULES_HOME"
 if ($node) { Write-Host "  Drishti*net folder $nodeDir, advertising $url" }
 if ($devSecrets.Count -gt 0) { Warn "DEVELOPMENT secrets in use (NOT FOR PRODUCTION): $($devSecrets -join ' '). Put your own in an --env-file for anything shared." }
 $fields = @{ port = $port; url = $url; health = $health; data = $serverData; distribution = $(if ($env:DRISHTI_DISTRIBUTION) { $env:DRISHTI_DISTRIBUTION } else { 'all' }) }

@@ -28,7 +28,7 @@ import org.junit.jupiter.api.Test;
  * 10 desks, 700 letters dealt over the trades (so every book is split between many letters: about 7,000 cells, the worst case), against
  * the same book without the letters. Measures the date's build and an official-capture-like pass (VaR and ES of every node).
  *
- * <pre>./mvnw -q -o -pl drishti-compute -am test -Dtest=ColumnHierarchyBenchmark -Dsurefire.failIfNoSpecifiedTests=false</pre>
+ * <pre>./mvnw -q -o -pl :drishti-compute -am test -Dtest=ColumnHierarchyBenchmark -Dsurefire.failIfNoSpecifiedTests=false</pre>
  */
 class ColumnHierarchyBenchmark {
 

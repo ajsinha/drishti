@@ -20,6 +20,7 @@
     python3 tools/testdata/make_testdata.py --check          fail if data/testdata differs from what would be written
 
 One folder per dataset: trades/endur, trades/calypso, trades/murex (5,000 trades each, the common 47-attribute UPPER_SNAKE schema),
+trades/wss, trades/swapone, trades/ici (a few hundred each, mocked in each system's own native field style, one shared table: tools/samplegen/source_systems.py),
 then <pack>/<kind> for every kind of core, market-data, counterparty-risk and market-risk (universe.py). Each folder holds one file per
 business date named by the lake table it feeds, <table>.<YYYY-MM-DD>.jsonl.gz (docs/guides/DATA_LAKE_GUIDE.md section 5.2): the
 first day's the whole snapshot, each later day's what changed (history.py); the market-risk pack's VaR data (positions, P&L vectors, hierarchies, the
@@ -43,7 +44,7 @@ ROOT = HERE.parents[1]
 sys.path.insert(0, str(HERE))
 if str(ROOT / "drishti-console") not in sys.path:
     sys.path.insert(0, str(ROOT / "drishti-console"))
-from core.pack_paths import pack_dir  # noqa: E402  (the one rule for where a pack's folder is)
+from core.resolution import pack_dir  # noqa: E402  (where a pack is: the one resolver, KERNEL_AND_MODULES.md 18)
 import capture_market as CM  # noqa: E402
 import history as H  # noqa: E402
 import marketdays as MK  # noqa: E402
@@ -81,6 +82,12 @@ def table_of(packs_dir: Path, pack: str, connector: str, kind: str) -> str:
     import yaml
     spec = yaml.safe_load((pack_dir(pack, packs_dir) / "pack.yaml").read_text(encoding="utf-8"))
     st = ((spec.get("connectors") or {}).get(connector) or {}).get("settings") or {}
+    if not st:                       # a connector a source module ships (trade-endur, one table per trading system): its template
+        for f in sorted((ROOT / "modules").glob("*/connectors/*.yaml")):
+            doc = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
+            if isinstance(doc, dict) and (doc.get("name") or f.stem) == connector:
+                st = doc.get("settings") or {}
+                break
     entries = st.get("lake-tables") or []
     entries = [x.strip() for x in entries.split(",")] if isinstance(entries, str) else [str(x).strip() for x in entries]
     tables = ((spec.get("lake") or {}).get("tables") or {})
@@ -132,6 +139,9 @@ def main(argv=None) -> int:
         datasets.append({"folder": folder, "pack": "trading", "kind": "trade", "connector": f"trade-{system.lower()}", "key": "TRADE_ID",
                          "partition-by": ["PRODUCT_TYPE"], **hist})
         print(f"  {folder}: {len(book):,} trades")
+    # the mocked native trades of WSS, SwapOne and ICI, into one shared table (tools/samplegen/source_systems.py): no positions, no PVs
+    from samplegen import source_systems as SS  # noqa: E402
+    datasets += SS.datasets(out, days.dates)
     owners = delta_connectors(ROOT / "config" / "packs")
     market = MK.MarketDays(u.docs, days.dates)            # the market documents of each day, one coherent picture (QA2-201)
     for kind in sorted(u.docs):

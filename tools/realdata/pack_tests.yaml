@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Which sample documents of the economics and politics-society packs ship as the packs' Sutra tests (config/packs/<domain>/<pack>/tests/), what each test expects,
+# Which sample documents of the economics and politics-society packs ship as the packs' Sutra tests (modules/<module>/packs/<pack>/tests/), what each test expects,
 # and the help-coverage ratchet (the lowest share of shown fields with a glossary entry, per Sutra; raise it when about.yaml grows, never lower it).
 # tools/realdata/pack_tests.py writes the tests from this file and the generated documents.
 

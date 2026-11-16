@@ -21,7 +21,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 PLACEHOLDER = re.compile(r"\$\{([A-Za-z0-9_]+)(?::((?:[^{}]|\$\{[^}]*\})*))?\}")   # one level of nesting: ${X:${drishti.data.dir}/y}
-DATA_DIR = re.compile(r"\$\{drishti\.data\.dir(?::[^}]*)?\}")                        # documented as its default, ./data (CONFIGURATION.md, "The data folder")
+DATA_DIR = re.compile(r"\$\{drishti\.data\.dir(?::[^}]*)?\}")                        # documented as <data>, the data folder (CONFIGURATION.md, "Launch roots")
 DOC = (ROOT / "docs" / "admin" / "CONFIGURATION.md").read_text(encoding="utf-8")
 
 
@@ -34,7 +34,7 @@ def _live_placeholders(path: Path) -> list[tuple[str, str | None]]:
         for m in PLACEHOLDER.finditer(code):
             if not m.group(1).isupper():
                 continue                                       # ${drishti.logging.file:}: a setting, not a variable
-            found.append((m.group(1), None if m.group(2) is None else DATA_DIR.sub("./data", m.group(2))))
+            found.append((m.group(1), None if m.group(2) is None else DATA_DIR.sub("<data>", m.group(2))))
     return found
 
 
@@ -59,7 +59,7 @@ def _check(path: Path, title: str) -> None:
 
 
 def test_server_placeholders_are_documented():
-    _check(ROOT / "drishti-server/src/main/resources/application.yaml", "### The server: `application.yaml`")
+    _check(ROOT / "kernel/drishti-server/src/main/resources/application.yaml", "### The server: `application.yaml`")
 
 
 def test_console_placeholders_are_documented():

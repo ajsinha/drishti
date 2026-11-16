@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.banking.frtb;
 
+import com.ash.drishti.testroots.TestRoots;
 import com.ash.drishti.api.DataNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.BufferedReader;
@@ -39,8 +40,8 @@ final class FrtbTestData {
     private FrtbTestData() {}
 
     static Path root() {
-        Path p = Path.of("../../..");
-        return Files.isDirectory(p.resolve("data/testdata")) ? p : Path.of(".");
+        Path p = Path.of(TestRoots.repo());
+        return Files.isDirectory(p.resolve("data/testdata")) ? p : Path.of(TestRoots.module(), ".");
     }
 
     static List<DataNode> read(String kind) {
@@ -67,7 +68,7 @@ final class FrtbTestData {
 
     /** The service over the demo files; {@code scopes} null resolves scopes on the records' own attributes. */
     static FrtbService service(FrtbService.Scopes scopes) {
-        FrtbProperties props = new FrtbProperties(null, root().resolve("config/packs/banking/market-risk/capital").toString(), null, null, null, null, null, null,
+        FrtbProperties props = new FrtbProperties(null, root().resolve("modules/banking/dmod/packs/market-risk/capital").toString(), null, null, null, null, null, null,
                 Path.of(System.getProperty("java.io.tmpdir"), "frtb-recipes-test-" + ProcessHandle.current().pid()).toString(), null, null);
         FrtbData data = new FrtbData((kind, asOf, sink) -> {
             if (!kind.equals("position-sensitivity") && !kind.equals("risk-factor")) {

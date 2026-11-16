@@ -27,6 +27,7 @@
    options.urlState (write the address; default true on a page), options.scope (remembering), options.initial (ctl.* text to start from). */
 (function () {
   'use strict';
+  function drishti_url(p) { var f = globalThis.drishti_url; return typeof f === 'function' && f !== drishti_url ? f(p) : p; }   // drishti-core's base helper when the page has it; a page without it (the renderer, an embed) keeps the URL as it is
   var me = document.currentScript, auto = !(me && me.hasAttribute('data-manual'));
   var reg = (window.drishtiModules = window.drishtiModules || {});
   var SEARCH_PAUSE = 250;
@@ -494,11 +495,11 @@
   if (!auto) { return; }
   var v = document.querySelector('[data-view]');
   if (!v || !v.hasAttribute('data-controls')) { return; }
-  var base = '/v/' + encodeURIComponent(v.dataset.kind) + '/' + v.dataset.id.split('/').map(encodeURIComponent).join('/');
+  var base = drishti_url('/v/') + encodeURIComponent(v.dataset.kind) + '/' + v.dataset.id.split('/').map(encodeURIComponent).join('/');
   init(document, {
     view: v, scope: v.getAttribute('data-view-sutra') || v.dataset.kind,
     panelsUrl: function (q) { return base + '/panels?' + q + (v.dataset.chosenSutra ? '&sutra=' + encodeURIComponent(v.dataset.chosenSutra) : '') + (v.dataset.design ? '&design=' + encodeURIComponent(v.dataset.design) : ''); },
-    fetchJson: function (url) { return fetch(url, { credentials: 'same-origin', headers: { Accept: 'application/json' } }).then(function (r) { if (!r.ok) { throw new Error('HTTP ' + r.status); } return r.json(); }); },
+    fetchJson: function (url) { return fetch(drishti_url(url), { credentials: 'same-origin', headers: { Accept: 'application/json' } }).then(function (r) { if (!r.ok) { throw new Error('HTTP ' + r.status); } return r.json(); }); },
     afterSwap: function (fresh) {
       if (window.Drishti.layout) { window.Drishti.layout.decorate(fresh); }
       if (window.Drishti.view) { window.Drishti.view.enhance(fresh); }

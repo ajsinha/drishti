@@ -31,7 +31,7 @@
     return e;
   }
   async function getJson(url, opts) {
-    const r = await fetch(url, Object.assign({ credentials: "same-origin" }, opts || {}));
+    const r = await fetch(drishti_url(url), Object.assign({ credentials: "same-origin" }, opts || {}));
     let j = {};
     try { j = await r.json(); } catch (e) { j = { detail: "the server answered " + r.status }; }
     return { ok: r.ok, j };
@@ -62,7 +62,7 @@
   if (stats) {
     (async () => {
       const p = new URLSearchParams({ scope: stats.dataset.scope, period: stats.dataset.period, measure: stats.dataset.measure });
-      const { ok, j } = await getJson("/api/var/statistics?" + p);
+      const { ok, j } = await getJson(drishti_url("/api/var/statistics?") + p);
       const n = stats.querySelector("[data-st-notice]");
       if (!ok) { n.hidden = false; n.textContent = j.detail || "no statistics"; stats.querySelector("[data-st-meta]").textContent = ""; return; }
       stats.querySelector("[data-st-meta]").textContent = j.node + " · " + j.measure.toUpperCase() + " · " + j.period + " (" + j.from + " to " + j.to
@@ -88,42 +88,61 @@
     n.textContent = text || "";
   }
 
+  let pack = null;                                       // the pilot pack as the server answered it (GET /api/var/reports)
+
   async function loadPack() {
-    const { ok, j } = await getJson("/api/var/reports");
+    const { ok, j } = await getJson(drishti_url("/api/var/reports"));
     if (!ok) { notice(j.detail); return null; }
+    pack = j;
     $("[data-rp-pack-sub]").textContent = (j.reports || []).length + " reports · fiscal year end " + j.fiscalYearEnd;
     (j.reports || []).forEach((r) => { if (r.report === report && !period) { period = r.currentPeriod; } });
-    const rows = (j.reports || []).map((r) => ({ report: r.report, title: r.title, period: r.currentPeriod, run: r.run ? "v" + r.run.version : "—",
-      state: r.run ? r.run.state : "not generated" }));
+    drawPack();
+    return j;
+  }
+
+  /** A pack row: the report's current period and its newest run; the open report's row shows the period open on the page and its run
+   * (a report opened for an earlier period, as FY2026 once FY2027 has begun, says that period's state and generates that period). */
+  function packRow(r) {
+    if (r.report === report && period && period !== r.currentPeriod) {
+      const mine = run && run.report === report && run.period === period ? run : null;
+      return { report: r.report, title: r.title, period: period, run: mine ? "v" + mine.version : "—",
+        state: mine ? ((mine.signoff || {}).state || "") : "not generated" };
+    }
+    return { report: r.report, title: r.title, period: r.currentPeriod, run: r.run ? "v" + r.run.version : "—", state: r.run ? r.run.state : "not generated" };
+  }
+
+  function drawPack() {
+    if (!pack) { return; }
+    const rows = (pack.reports || []).map(packRow);
     R.riskGrid($("[data-rp-pack]"), { title: "Pilot pack", rows: rows, getRowId: (r) => r.report,
       getRowClass: (r) => (r.report === report ? "rg-sel" : null), getRowData: (r) => ({ report: r.report }),
-      columns: [{ field: "report", header: "Report", width: 150, cellRenderer: (x) => el("a", { href: "/var/reports/" + x.value + "?period=" + encodeURIComponent(x.row.period) }, x.value) },
+      columns: [{ field: "report", header: "Report", width: 150, cellRenderer: (x) => el("a", { href: drishti_url("/var/reports/" + x.value + "?period=" + encodeURIComponent(x.row.period)) }, x.value) },
         { field: "title", header: "Title", width: 260 }, { field: "period", header: "Period", width: 100 },
         { field: "run", header: "Run", width: 60, cellClass: () => "dg-num" }, { field: "state", header: "State", width: 110 },
         { id: "generate", field: "period", header: "", width: 170, sortable: false, cellRenderer: (x) => {
           const gen = el("button", { type: "button", class: "dg-cell-btn" }, "Generate " + x.row.period);
-          gen.addEventListener("click", () => generate(x.row.report, x.row.report === report && period ? period : x.row.period));
+          gen.addEventListener("click", () => generate(x.row.report, x.row.period));
           return gen;
         } }] });
-    return j;
   }
 
   async function generate(rep, per) {
     notice("generating…");
-    const { ok, j } = await getJson("/api/var/reports/" + rep + "/runs?period=" + encodeURIComponent(per), { method: "POST",
+    const { ok, j } = await getJson(drishti_url("/api/var/reports/") + rep + "/runs?period=" + encodeURIComponent(per), { method: "POST",
       headers: { "Content-Type": "application/json" }, body: "{}" });
     if (!ok) { notice(j.detail); return; }
     notice("");
-    location.href = "/var/reports/" + rep + "?period=" + encodeURIComponent(j.period) + "&version=" + j.version;
+    location.href = drishti_url("/var/reports/" + rep + "?period=" + encodeURIComponent(j.period) + "&version=" + j.version);
   }
 
   async function loadRun() {
     if (!report) { return; }
     const v = root.dataset.version ? "?version=" + root.dataset.version : "";
-    const { ok, j } = await getJson("/api/var/reports/" + report + "/runs/" + encodeURIComponent(period) + v);
+    const { ok, j } = await getJson(drishti_url("/api/var/reports/") + report + "/runs/" + encodeURIComponent(period) + v);
     if (!ok) { notice(j.detail); return; }
     run = j;
     draw();
+    drawPack();
   }
 
   function draw() {
@@ -140,7 +159,7 @@
     if (r.type === "backtesting-chart") {
       const bt = r.backtest || {};
       const p = el("p", {}, "Zone " + bt.zone + ", multiplier " + bt.multiplier + " over " + bt.days + " days to " + bt.to + ". ");
-      p.append(el("a", { href: "/var/backtesting?scope=" + encodeURIComponent("NODE:" + r.node) }, "Open the backtesting chart"));
+      p.append(el("a", { href: drishti_url("/var/backtesting?scope=" + encodeURIComponent("NODE:" + r.node)) }, "Open the backtesting chart"));
       box.append(p);
       $("[data-rp-foot]").textContent = bt.rule || "";
     } else {
@@ -210,7 +229,7 @@
     const links = $("[data-rp-lin-links]");
     links.replaceChildren();
     if (l.date && l.node) {
-      links.append(el("a", { class: "rg-btn", href: "/var?scope=" + encodeURIComponent("NODE:" + l.node) + "&asOf=" + l.date }, "Open the VaR page of " + l.date));
+      links.append(el("a", { class: "rg-btn", href: drishti_url("/var?scope=" + encodeURIComponent("NODE:" + l.node) + "&asOf=" + l.date) }, "Open the VaR page of " + l.date));
       const E = window.Drishti && window.Drishti.Explain;           // the one Explain › of the cell's VaR (VAR_GUIDE.md 3.11)
       if (E) { links.append(" ", E.link({ kind: "var", measure: "var", scope: "NODE:" + l.node, date: l.date })); }
     }
@@ -244,7 +263,7 @@
     const next = s.next;
     const sign = $("[data-rp-approve]");                // the step is signed in the one Approvals queue, where the run is an item
     sign.textContent = next ? "Sign as " + (titles[next] || next.charAt(0).toUpperCase() + next.slice(1)) + " in Approvals" : "Signed";
-    sign.href = "/approvals/var-report/" + encodeURIComponent(run.report + ":" + run.period + ":v" + run.version).replace(/%3A/g, ":");
+    sign.href = drishti_url("/approvals/var-report/" + encodeURIComponent(run.report + ":" + run.period + ":v" + run.version).replace(/%3A/g, ":"));
     sign.classList.toggle("disabled", !next);
     if (!next) { sign.setAttribute("aria-disabled", "true"); } else { sign.removeAttribute("aria-disabled"); }
     $("[data-rp-save-narrative]").disabled = next !== "maker";
@@ -253,8 +272,8 @@
     files.replaceChildren();
     (run.outputs || []).forEach((f) => {
       const signed = s.state === "signed";
-      files.append(el("a", { class: "rg-btn", download: "", href: "/api/var/reports/" + run.report + "/runs/" + encodeURIComponent(run.period)
-        + "/file?format=" + f + "&version=" + run.version + (signed ? "" : "&draft=true") }, signed ? f : f + " (draft)"));
+      files.append(el("a", { class: "rg-btn", download: "", href: drishti_url("/api/var/reports/" + run.report + "/runs/" + encodeURIComponent(run.period)
+        + "/file?format=" + f + "&version=" + run.version + (signed ? "" : "&draft=true")) }, signed ? f : f + " (draft)"));
     });
   }
 
@@ -271,7 +290,7 @@
 
   async function saveNarrative() {
     const body = { version: run.version, narrative: $("[data-rp-narrative]").value };
-    const { ok, j } = await getJson("/api/var/reports/" + run.report + "/runs/" + encodeURIComponent(run.period) + "/narrative", {
+    const { ok, j } = await getJson(drishti_url("/api/var/reports/") + run.report + "/runs/" + encodeURIComponent(run.period) + "/narrative", {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     if (!ok) { notice(j.detail); return; }
     notice("");

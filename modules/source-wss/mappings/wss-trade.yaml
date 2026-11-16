@@ -1,0 +1,60 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+format: 1
+system: WSS
+kind: trade
+about: WSS native fields to the canonical trade fields. A path is a dotted path into the native document; first-of takes the first present; values
+  translates a code; scale multiplies; as reads a date or time written in another form.
+map:
+  TRADE_ID: DEAL_REF
+  TRADE_VERSION: DEAL_VERSION
+  TRADE_STATUS:
+    from: DEAL_STATE
+    values:
+      Verified: NEW
+      Amended: AMENDED
+      Cancelled: CANCELLED
+  PRODUCT_TYPE: DEAL_TYPE
+  PRODUCT_GROUP:
+    from: FAMILY
+    values:
+      FX: FX
+      MONEY: Money markets
+      TREASURY: Treasury
+  BUY_SELL_CODE:
+    from: DIR
+    values:
+      BUY: B
+      SELL: S
+  QUANTITY:
+    first-of:
+    - BUY_AMT
+    - PRINCIPAL
+  PRICE:
+    first-of:
+    - RATE
+    - RATE_PCT
+  CURRENCY:
+    first-of:
+    - BUY_CCY
+    - CCY
+  COUNTERPARTY: CPTY.CODE
+  LEGAL_ENTITY: LEGAL_ENTITY
+  PORTFOLIO: BOOK_REF
+  TRADER_ID: DEALER
+  TRADE_DATE: TRADED_ON
+  START_DATE: VALUE_DATE
+  MATURITY_DATE: MATURITY_DATE
+  SOURCE_UPDATE_TIME: LAST_UPD

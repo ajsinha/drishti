@@ -5,11 +5,19 @@ ARG BASE_IMAGE=eclipse-temurin:21-jre
 FROM ${BASE_IMAGE}
 RUN useradd --system --uid 10001 drishti
 WORKDIR /opt/drishti
-COPY drishti-server/target/drishti-server-*-exec.jar app.jar
+COPY kernel/drishti-server/target/drishti-server-*-exec.jar app.jar
 COPY config/packs/ config/packs/
 COPY config/lenses/ /opt/drishti/config/lenses/
 COPY config/ui-kit/ config/ui-kit/
 COPY config/alerts/ config/alerts/
+# the launch roots (docs/admin/CONFIGURATION.md, "Launch roots"): the modules (their packs, connectors, engines) and the configuration
+# the server reads at start, at the absolute paths the ENV below names; the server never takes a root from its working folder
+COPY modules/ modules/
+COPY config/distributions/ config/distributions/
+COPY config/engines/ config/engines/
+COPY config/lakes/ config/lakes/
+COPY config/modules/ config/modules/
+COPY config/store/ config/store/
 COPY --chmod=0555 bin/drishti-node.sh /opt/drishti/bin/drishti-node.sh
 # the server's temp base (<data dir>/tmp/server), made here so the JVM's temp folder exists from its first start
 RUN mkdir -p /opt/drishti/data/tmp/server && chown -R drishti /opt/drishti/data
@@ -19,7 +27,10 @@ EXPOSE 18480
 # line moves it); the server removes stale copies from its temp base at start, so a killed container leaves nothing in /tmp
 # native memory (PERFORMANCE.md, Resident memory): two glibc malloc arenas, direct buffers capped, the JDK's per-thread temporary direct
 # buffers cached up to 256 KB only, freed native memory given back, native memory tracked; a heap dump on OutOfMemoryError in data/dumps
-ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -XX:+UseZGC -XX:MaxDirectMemorySize=256m -XX:TrimNativeHeapInterval=60000 -Djdk.nio.maxCachedBufferSize=262144 -XX:NativeMemoryTracking=summary -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/opt/drishti/data/dumps -Djava.io.tmpdir=/opt/drishti/data/tmp/server" \
+ENV DRISHTI_HOME=/opt/drishti \
+    DRISHTI_DATA_DIR=/opt/drishti/data \
+    DRISHTI_MODULES_HOME=/opt/drishti/modules \
+    JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -XX:+UseZGC -XX:MaxDirectMemorySize=256m -XX:TrimNativeHeapInterval=60000 -Djdk.nio.maxCachedBufferSize=262144 -XX:NativeMemoryTracking=summary -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/opt/drishti/data/dumps -Djava.io.tmpdir=/opt/drishti/data/tmp/server" \
     MALLOC_ARENA_MAX=2 \
     DRISHTI_VAR_KEEP_HOT_FILES=true \
     DRISHTI_EXPOSURE_KEEP_HOT_FILES=true

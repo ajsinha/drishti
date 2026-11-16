@@ -120,3 +120,6 @@
   .tl-heat .c { font-size: var(--d-fs-10); }
   .tl-table .tl-wide { display: none; }
 }
+.tl-card .dg-live-st-new { color: var(--d-ok); }
+.tl-card .dg-live-st-amended { color: var(--d-link); }
+.tl-card .dg-live-st-cancelled { color: var(--d-muted); }

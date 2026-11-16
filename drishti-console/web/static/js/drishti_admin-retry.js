@@ -26,7 +26,7 @@
     var msg = b.parentNode.querySelector('[data-retry-msg]');
     b.disabled = true;
     if (msg) { msg.textContent = 'Trying again…'; }
-    fetch('/admin/api/retry/' + encodeURIComponent(b.getAttribute('data-retry-now')), {
+    fetch(drishti_url('/admin/api/retry/' + encodeURIComponent(b.getAttribute('data-retry-now'))), {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}'
     }).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (body) { return { ok: r.ok, body: body }; });

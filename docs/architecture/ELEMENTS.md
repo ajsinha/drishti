@@ -177,6 +177,25 @@ Takes over: `drishti_app.js`, `drishti_theme-init.js`, `drishti_resize.js`, `dri
 the formats and JSON calls of `drishti_bi-lib.js`, and the dialogs of `drishti_busy.js`, `drishti_scope-delete.js`,
 `drishti_artifact-uninstall.js`, `drishti_server-watch.js`, `build/drishti_grid-keys.js`.
 
+#### Chips: list attributes (drishti-core 1.2.0)
+
+`chipList(document, values, {max, compact, label})` (or `new Chips(host, options)`) draws a list attribute: the first `max` chips (3) and
+**"+N more ▾"**; a click, **Enter** or **Space** expands it vertically in place to every value and "▴ less" collapses it; the toggle
+carries `aria-expanded` and keeps focus; `drishti:chips-toggle` says which. Values may be an array or its JSON text (a promoted list
+column). `compact` is a grid cell's form: the first chip and a count badge; expanding it shows every value in the cell and the grid makes **that row taller** (see below), so the rows under it move down and nothing is covered; collapsing gives the row its height back. Theme tokens only
+(`css/drishti_chips.css`), so dark and light work. drishti-grid draws a column of `type: 'list'` (or list values) with it, the renderer
+and the console's panels draw `fmt: list` cells with it (`upgradeChips(root)` upgrades a server page's `[data-drishti-chips]`), and the
+Sutra generator gives lists of plain values `fmt: list`. Tests: `tests/test_elements_chips_browser.py`.
+
+**Variable row height in drishti-grid.** Rows have one height per density, except that a row may be taller: `Viewport.setExtra(row, px)` adds
+height to one row (0 gives it back, `clearExtras()` resets every row), and `rowTop`, `heightOf`, `indexAt`, the scrolled height, the rows in view
+and `scrollToRow` all count it, so virtual scrolling stays exact (a million rows with a few tall ones still draw only the rows in view, and the
+last row is reachable). The grid uses it for a list cell expanded in place: the chips toggle (mouse, Enter or Space) grows the row to the chips'
+height and focus stays on the toggle; a sort, a filter or a new answer collapses every list cell. **List filters:** a column of `type: 'list'`
+has *Contains…*, *Any of…* and *All of…* in its column menu (values separated by commas); the filter model's `{type: 'list', op: has | anyOf |
+allOf, values}` is the one shared by the grid, the filter bar (a field of `type: 'list'`) and `filterRows`. **Pivot notes:** the pivot's header
+shows the answer's notes (the double-count note of an exploded list field) in a strip above the grid.
+
 ### 4.2 drishti-inputs
 
 `<drishti-select>` (one value from a list: keyboard, type-ahead, search on a long list), `<drishti-multiselect>`, `<drishti-date>` (date,
@@ -255,7 +274,7 @@ the pivot model, the menus, the status bar and Explain; only the arrangement aro
 
 | `layout` | Mock-up | Arrangement | Best at | Default for |
 |---|---|---|---|---|
-| `'wells'` | A, the compact line | one line above the grid: Rows, Columns and Filters as chips (a hierarchy one chip with a level stepper), the lit measure toggles as Values, a field picker behind each well (drishti-inputs' FieldPicker: Hierarchies, folders, More fields), the View picker in front when the host gives a `views` hook, Customize › to the panes; Explain in a drawer on the right that follows the selection | the most room for the grid; readers of a pivot; Explain read beside many cells | every screen that is not VaR (BI, Pivot, tables); the Pivot's default ([PIVOT_GUIDE.md section 2](../guides/PIVOT_GUIDE.md#2-the-screen)) |
+| `'wells'` | A, the compact line | one line above the grid: Rows, Columns and Filters as chips (a hierarchy one chip with a level stepper), the lit measure toggles as Values, a field picker behind each well (drishti-inputs' FieldPicker: Hierarchies, folders, More fields), the View picker in front when the host gives a `views` hook, Customize › to the panes; Explain in a drawer on the right that follows the selection | the most room for the grid; readers of a pivot; Explain read beside many cells | every screen that is not VaR (BI, Pivot, tables); the Pivot's default ([PIVOT.md section 2](../guides/bi/PIVOT.md#2-the-screen)) |
 | `'panel'` | B, the panes | Build (the wells as lists, pivot mode, subtotal and grand-total switches, deferred update) and Fields (search, Hierarchies, the fields and measures by folder, More fields), closing to a rail; Explain as a card at the cell | building and changing pivots all day; long field lists; people and applications coming from AG Grid's, Power BI's or Excel's pivot panel | the AG Grid adapter (`sideBar` maps to it); the Pivot's Customize › |
 | `'terminal'` | C, terminal | a command line, one lane of compact wells, a dense grid, Explain in a split pane below with its steps, the worst scenarios and the trend side by side, function keys at the foot | the keyboard (F2 explain, F3 and F4 expand and collapse, F7 chart, F8 export); a figure, its scenarios and its trend at once; traders | **VaR screens** (the VaR explorer, the MR cube, the scenario matrix) |
 
@@ -314,6 +333,62 @@ pivot result column keys, cells with values, texts and tones, totals, approximat
 
 **Large data.** Windows of rows, lazily opened groups, column windows when the pivot is wide, a progressive answer (≈ first, exact
 when ready) from the engine, cancellation when the view changes; the browser holds only what is in view and a margin.
+
+### 5.5 The grid's live mode
+
+**Purpose.** One component, `LiveSetGrid` (drishti-grid; `drishti_live-set.js`, `drishti_live-panel.js`, `drishti_live-model.js`), draws a live
+result set of the server (a blotter, and later a FORM or SQL result) in the grid: the snapshot, then the changes the server streams, ticking
+cells, a record panel beside it and the person's tray. It decides nothing: rights, masks, versions and four eyes are the server's.
+
+```js
+const live = new Drishti.elements.grid.LiveSetGrid(host, {
+  spec,                                                  // the declaration as GET /api/live describes it
+  api: Drishti.elements.grid.httpLiveApi({ id: 'trade' }),   // rows, row, edit, window, history, mine (the console's /api/live and /api/changes)
+  channel: { subscribe: (h) => Drishti.Channel.subscribe('live:trade', h) }  // any {subscribe(handlers) -> off}: hello, rows, resync, gone, error
+});
+live.start();
+```
+
+* **Rows.** A snapshot (a page of up to 5,000 rows), then `rows` events merged by key and version: an upsert replaces a row only when its
+  version is newer, so a replayed or reordered event is harmless; a row outside the viewer's window is not added. Changes are applied as one
+  batched transaction (`applyTransactionAsync`), so the changed cells flash and the group figures follow by difference. A `resync` event, a
+  connection that came back (a second `hello`) and Resume after Pause start again from a fresh snapshot.
+* **The page window.** When the set fits, the viewer says `{all: true}`; when it is larger than the grid holds, it sends the ids in view
+  and a margin (400 rows), after every scroll settles, and the server sends changes of those rows only.
+* **The record panel** (option B of the [trading-blotter mock-ups](../lenses/mockups/trading-blotter/README.md)), in three tabs. *Record*:
+  the fields, editable (a drishti-inputs `Form` with a reason) only when the server's `editable` says the person may; otherwise plain text and
+  no edit control at all, with the server's reason; the key is never edited; an edit is made on the version the panel opened (`basedOn`), so a
+  record that moved is refused by the server (409) with who changed it, and the panel says "Changed since you opened it" with Reload. *History*:
+  the record's changes from the write-back (who, when, why, where each stands, four eyes in words). *Raw JSON*: the whole stored record
+  (`/rows/{entity}`, not only the grid's columns), collapsible (Expand all, Collapse all), a Copy button, the version and sequence, the same
+  "changed since you opened it" note, and masked fields drawn as masked and copied as the mask. The declaration's links (Explain, VaR,
+  limits) fill `{FIELD}` from the row.
+* **Grouping** by one field from the bar (or the wells), with the declaration's `subtotals:` columns summed per group and kept current as
+  rows tick. **My changes** is the tray of the person's open changes (waiting for an approver, on their way to the source).
+* **Pivot ›** opens the Pivot (`/pivot?source=<kind>&lay=<view>&live=1`) with the same kind, the grid's set filters as members, the grouping
+  as rows and the numeric columns (not the version) as sums; the pivot's live view follows the source as it changes (the server recomputes
+  at most once per `pivot.live` minimum interval, a second by default).
+* **The console's side.** One browser channel for every set (`live:<id>` in `/api/channel`), `/api/live/...` passing the server's calls on
+  as the person, and the kernel's page `/live/<id>` for any declaration; a module's menu entry links to it (the trading module's *Trade blotter*).
+
+### 5.6 Static mode: one grid for every table of records
+
+A result with **no record key** (an SQL answer, a preview, a BI answer, the rows behind a pivot cell, a monitor) is drawn by the same component, in
+**static mode**: `new LiveSetGrid(host, { rows, spec: { title, columns, links }, keyField, rowActions, onChart })`, with no `api` and no `channel`.
+
+| | live (a set of the engine) | static (rows the page holds) |
+|---|---|---|
+| rows | read from `api.rows`, merged by key and version as the stream sends changes | the rows as given; a row is named by `keyField` (else its place from 1); nothing is merged |
+| bar | status chip, Group by, Chart, Pause, Pivot ›, My changes | status chip (STATIC), Group by, Chart |
+| record panel | Record (editable only when the server allows), History, Raw JSON, links, **Open** the record's page | Record (read-only), **JSON** (the row's JSON, collapsible, Copy), the spec's `links` and the page's `rowActions` |
+| ticks | the engine's stream | none; a page that feeds changes itself calls `patch([{id, fields}])` (a monitor's cells) |
+
+The columns of a static set come from `spec.columns` (strings or `{field, label, type}`) or from the first rows' fields; a column's type is taken from
+its values (number, date, text) when not given. A `field` with a dot (`counterparty.name`) reads the nested value of a record. The model helpers
+`staticSpec`, `staticApi`, `inferType` and `digValue` are exported. The console mounts both modes from one file, `static/js/drishti_records.js`: a host
+with `data-records` and `data-live-set` (live) or `data-rows` (static), or `Drishti.records.mount(host, {...})`, or `Drishti.records.table(columns, rows)` for
+an answer given as columns and row arrays. Nothing of a table of records is drawn by a page of the console; the tables that are not records (a
+Sutra panel's table, drawn by the view and enhanced by the grid's console tables, an admin list of settings) are not part of this.
 
 ## 6. The AG Grid-style adapter
 

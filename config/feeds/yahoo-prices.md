@@ -29,7 +29,7 @@ python3 tools/drishti.py feed run yahoo-prices                # pull today, writ
 python3 tools/drishti.py feed status yahoo-prices             # its last runs
 ```
 
-Daily: `python3 tools/drishti.py feed schedule --cron` (or `--systemd`, `--windows`). The guide: [EXTERNAL_DATA.md](../../docs/guides/EXTERNAL_DATA.md).
+Daily: `python3 tools/drishti.py feed schedule --cron` (or `--systemd`, `--windows`). The guide: [WORLD_DATA_GUIDE.md](../../docs/guides/WORLD_DATA_GUIDE.md).
 
 ## Data contract
 
@@ -55,4 +55,4 @@ A company's daily prices.
 | `VOLUME` | unknown | optional | The session's traded volume in shares (Yahoo regularMarketVolume). |
 | `ANALYTICS` | record | derived | Computed from the closes when the history is read (PXH analytics): nested ANALYTICS |
 
-The contract: `config/packs/capitalmarkets/us-equities/contracts/price-history.contract.yaml` ([us-equities](../../docs/contracts/packs/us-equities.md)).
+The contract: `modules/capital-markets/packs/us-equities/contracts/price-history.contract.yaml` ([us-equities](../../docs/contracts/packs/us-equities.md)).

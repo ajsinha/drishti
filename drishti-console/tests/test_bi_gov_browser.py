@@ -141,8 +141,8 @@ def test_a_steward_reviews_with_the_diff_check_and_preview_and_approves(stack, b
     expect(review.locator("[data-review-request]")).to_contain_text("ready for a look")
     expect(review.locator(".bi-diff-added").first).to_be_visible()                      # nothing published yet: everything is new
     expect(review).to_contain_text("Check passed")
-    expect(review.locator("table.bi-grid tbody tr").first).to_be_visible()              # a data preview, with the reviewer's own rules
-    assert review.locator("table.bi-grid tbody tr").count() >= 3
+    expect(review.locator(".rc-host .dg-row[data-key]").first).to_be_visible()              # a data preview, with the reviewer's own rules
+    assert review.locator(".rc-host .dg-row[data-key]").count() >= 3
     sue.get_by_role("link", name="Decide in Approvals").click()                       # decided in the one Approvals queue
     sue.locator("[data-ap-item]:not([hidden])").wait_for()
     sue.fill("[data-ap-comment]", "looks right")

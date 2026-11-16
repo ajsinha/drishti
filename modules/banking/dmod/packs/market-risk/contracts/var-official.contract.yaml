@@ -1,0 +1,228 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the var-official kind (command VOFF): docs/contracts/README.md section 16; the table is described in
+# docs/guides/VAR_GUIDE.md section 19 ("Published official results"). Drafted by `drishti.py contract bootstrap var-official`,
+# completed by hand.
+kind: var-official
+mnemonic: VOFF
+pack: market-risk
+version: '1.2'
+class: computed
+status: active
+title: VaR official results (published)
+description: The official end-of-day VaR and ES of every node of the MGMT and LEGAL hierarchies, as the server captured and published them
+  (one row per node, business date and result version); read only, for BI and other readers, never an engine's input.
+source: 'computed by Drishti: the official end-of-day capture (VarOfficial), appended by VarPublisher to risk-results/var-official'
+grain: One row per hierarchy node per BUSINESS_DATE and RESULT_VERSION, keyed by NODE_ID and RESULT_VERSION; the latest version of a date
+  is the date's figure.
+key:
+- NODE_ID
+- RESULT_VERSION
+dated-by: BUSINESS_DATE
+cadence:
+  frequency: daily
+  due: when the date's inputs load (the data-load signal), at start for the newest date without a record, or by an administrator
+binding-hint:
+  lake-table: risk-results.var-official
+  partition:
+  - business_date
+  columns:
+  - HIERARCHY
+  - NODE_ID
+  - NODE_NAME
+  - PARENT_ID
+  - LEVEL
+  - CAPTURE_ID
+  - RESULT_VERSION
+  - VAR
+  - ES
+  - LIMIT
+  - LIMIT_USE
+  - DIVERSIFICATION
+  - HYPO_PNL
+  - EXCEPTIONS_250
+  - TRAFFIC_LIGHT
+  - CONFIDENCE
+  - ES_CONFIDENCE
+fields:
+- name: BUSINESS_DATE
+  type: date
+  presence: required
+  description: The business date (the partition column business_date).
+- name: HIERARCHY
+  type: text
+  presence: required
+  description: 'The hierarchy of the node (MGMT or LEGAL).'
+  enum: [MGMT, LEGAL]
+- name: NODE_ID
+  type: id
+  presence: required
+  description: 'The node, <HIERARCHY>~<id>, as the engine builds it from the trades'' promoted columns (VAR_GUIDE.md section 15.14).'
+  example: MGMT~DESK-RATES
+- name: NODE_NAME
+  type: text
+  presence: required
+  description: 'The node''s display name.'
+- name: PARENT_ID
+  type: id
+  presence: optional
+  description: The parent node (none for the bank).
+- name: LEVEL
+  type: text
+  presence: required
+  description: 'The node''s level in its hierarchy (bank, division, legal-entity, desk, book).'
+  enum: [bank, legal-entity, division, desk, book]
+- name: CAPTURE_ID
+  type: id
+  presence: required
+  description: The official capture the row was written from (VAR CAPTURE <id> opens it).
+- name: RESULT_VERSION
+  type: integer
+  presence: required
+  description: 1, then 2, 3 ... on a restatement.
+- name: INPUT_VERSIONS
+  type: text
+  presence: required
+  description: The inputs' versions, batch ids and position rules' digest, as JSON text.
+- name: COMPUTED_AT
+  type: timestamp
+  presence: required
+  description: 'When the official capture computed the row, ISO-8601 UTC.'
+- name: CONTRACT_VERSION
+  type: text
+  presence: required
+  description: 'The version of the published table''s contract the row carries.'
+  example: '1.5'
+- name: VAR
+  type: amount
+  presence: required
+  unit: USD
+  description: VaR at CONFIDENCE, positive for a loss. Not additive across nodes.
+- name: ES
+  type: amount
+  presence: required
+  unit: USD
+  description: Expected shortfall at ES_CONFIDENCE, positive for a loss. Not additive across nodes.
+- name: CONFIDENCE
+  type: rate
+  presence: required
+  description: 'The VaR confidence level, as a fraction (0.99).'
+  example: 0.99
+- name: ES_CONFIDENCE
+  type: rate
+  presence: required
+  description: 'The expected shortfall confidence level, as a fraction (0.975).'
+  example: 0.975
+- name: HORIZON
+  type: text
+  presence: optional
+  description: 'The horizon of VAR and ES (contract version 1.4): 1D. Official records are 1-day at CONFIDENCE; a 10-day official
+    record, when one is built, says 10D and its METHOD, so the two are never mixed up. Rows published before the column existed lack it (they are
+    1-day), and an older table has no such column (the document of a newer row still carries it).'
+  enum: [1D, 10D]
+  example: 1D
+- name: METHOD
+  type: text
+  presence: optional
+  description: 'How a 10-day record is made: null for 1D; SQRT10 (the 1-day figures × √10), SUM (10 consecutive 1-day scenario
+    P&Ls) or FULL (a full 10-day revaluation: a second vector set marked HORIZON 10D in the inputs; designed, not built,
+    VAR_GUIDE.md section 18.6).'
+  enum: [SQRT10, SUM, FULL]
+- name: SVAR
+  type: amount
+  presence: optional
+  unit: USD
+  description: 'Stressed VaR at CONFIDENCE and HORIZON: the node on the date''s stress scenario set (STRESS_SET_ID), positive for a loss
+    (VAR_GUIDE.md section 18.8; contract version 1.5). Null when the date has no stress set, never zero. Not additive across nodes.'
+- name: SES
+  type: amount
+  presence: optional
+  unit: USD
+  description: 'Stressed ES at ES_CONFIDENCE on the same stress set; null when the date has none.'
+- name: STRESS_SET_ID
+  type: id
+  presence: optional
+  description: 'The stress scenario set SVAR and SES are of (HS-STRESS-2008 in the demo); null when the date has none.'
+  example: HS-STRESS-2008
+- name: SCENARIO_SET_ID
+  type: id
+  presence: required
+  description: 'The scenario set the date''s vectors were valued over (HS-509).'
+  example: HS-509
+- name: SCENARIO_WINDOW
+  type: integer
+  presence: optional
+  description: 'The scenarios the record was computed on: the newest N of the scenario set (drishti.var.scenario-window; the
+    set''s length, for all). Records captured before a change keep theirs; older records lack it.'
+  example: 509
+- name: STANDALONE_SUM
+  type: amount
+  presence: optional
+  unit: USD
+  description: The sum of the children's VaR (positions for a book).
+- name: DIVERSIFICATION
+  type: amount
+  presence: optional
+  unit: USD
+  description: STANDALONE_SUM minus VAR.
+- name: HYPO_PNL
+  type: amount
+  presence: optional
+  unit: USD
+  description: The node's hypothetical P&L for the date (the backtest's input).
+- name: LIMIT
+  type: amount
+  presence: optional
+  unit: USD
+  description: The node's VaR limit from the hierarchy.
+- name: LIMIT_USE
+  type: rate
+  presence: optional
+  description: VAR / LIMIT.
+- name: TRADE_COUNT
+  type: integer
+  presence: required
+  description: 'The number of trades counted in the node.'
+- name: POSITION_COUNT
+  type: integer
+  presence: required
+  description: 'The number of positions counted in the node.'
+- name: EXCEPTIONS_250
+  type: integer
+  presence: optional
+  description: Backtest exceptions over the official history (up to 250 days).
+- name: TRAFFIC_LIGHT
+  type: text
+  presence: optional
+  description: 'The Basel backtest zone over the official history: green up to 4 exceptions in 250 days, amber 5 to 9, red 10 or more.'
+  enum: [green, amber, red]
+validation:
+- rule: required
+  fields:
+  - NODE_ID
+  - RESULT_VERSION
+  - VAR
+  - ES
+- rule: unique
+  key:
+  - NODE_ID
+  - RESULT_VERSION
+  per: BUSINESS_DATE
+notes:
+- 'Append only (delta.appendOnly), 7 years of log and removed files: a restated date adds rows with the next RESULT_VERSION; nothing is
+  overwritten. The BI model market-risk-var keeps the latest version of each node and date.'
+- 'No engine reads it: the only connector over risk-results is this read-only one (tools/test_contracts.py).'
+- 'The id is <NODE_ID>@<date>#v<RESULT_VERSION>; VAR NODE:<NODE_ID> opens the explorer at the node.'
+review: []

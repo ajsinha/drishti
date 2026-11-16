@@ -431,7 +431,18 @@ async def bind(backend, me, connector: str, root: Path, domain: str, kind: str, 
         await backend.admin("PUT", f"/connectors/{quote(connector, safe='')}", me, {"text": text}, headers=headers, timeout=60.0, confirm="true")
     except BackendError as e:
         return {"ok": False, "connector": connector, "error": e.detail, "code": e.code}
-    return {"ok": True, "connector": connector, "created": not cur.get("text"), "text": text}
+    # which connectors serve a kind is the data bindings' (KERNEL_AND_MODULES.md section 18.6): a connector is never asked for a kind
+    # because its lake holds a table of that name, so the table is bound by a proposal a second administrator approves
+    proposal = None
+    try:
+        p = await backend.admin("POST", "/bindings/proposals", me, {"kind": kind, "binding": {"read": [connector]},
+                                                                    "reason": f"bound from Admin -> Lakes: {domain}.{kind} on {connector}"})
+        proposal = (p or {}).get("id")
+    except BackendError as e:
+        return {"ok": True, "connector": connector, "created": not cur.get("text"), "text": text,
+                "binding": {"ok": False, "error": e.detail, "code": e.code}}
+    return {"ok": True, "connector": connector, "created": not cur.get("text"), "text": text,
+            "binding": {"ok": True, "proposal": proposal, "kind": kind}}
 
 
 async def announce(backend, me, pack: str, kind: str, summary: dict) -> list:

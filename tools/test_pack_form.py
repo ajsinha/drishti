@@ -27,7 +27,7 @@ import packform as PF  # noqa: E402
 ROOT = HERE.parent
 if str(ROOT / "drishti-console") not in sys.path:
     sys.path.insert(0, str(ROOT / "drishti-console"))
-from core.pack_paths import manifests  # noqa: E402  (the one rule for where a pack's folder is)
+from core.resolution import manifests  # noqa: E402  (where a pack is: the one resolver, KERNEL_AND_MODULES.md 18)
 
 
 def manifest(form, kinds=("trade",)):

@@ -14,11 +14,6 @@
 # Example: copy to config/connectors/credit-store.yaml to read the credit-store data from cassandra. It replaces the
 # connector file of the same name (settings are not merged). Credentials are ${ENV_VAR} references.
 plugin: cassandra
-kinds:
-- netting-set
-- credit-limit
-- cva
-- sa-ccr
 description: credit-store read from Apache Cassandra (loaded by tools/load-cassandra.sh)
 settings:
   domain: credit

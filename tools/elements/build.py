@@ -25,7 +25,7 @@ The libraries live under ``drishti-console/web/static/elements/<library>/`` and 
 The build also writes the generated modules of drishti-core, each from its one home, so nothing is kept twice:
 
 * ``src/drishti_manifest.js``      the manifest (libraries, versions, files, requirements) the loader reads;
-* ``src/drishti_formats-table.js`` the server's named formats (``drishti-rachana/src/main/resources/formats.yaml``);
+* ``src/drishti_formats-table.js`` the server's named formats (``compute/drishti-rachana/src/main/resources/formats.yaml``);
 * ``src/drishti_theme-table.js``   the themes and their colour tokens (``static/css/drishti_tokens.css``).
 
 The module grammar the bundler accepts (anything else is refused with the file and line):
@@ -49,7 +49,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[2]
 ELEMENTS = ROOT / "drishti-console" / "web" / "static" / "elements"
 MANIFEST = ELEMENTS / "drishti_elements.json"
-FORMATS_YAML = ROOT / "drishti-rachana" / "src" / "main" / "resources" / "formats.yaml"
+FORMATS_YAML = ROOT / "compute/drishti-rachana" / "src" / "main" / "resources" / "formats.yaml"
 TOKENS_CSS = ROOT / "drishti-console" / "web" / "static" / "css" / "drishti_tokens.css"
 HEADER = "/*\n" + "".join(f" * {line}".rstrip() + "\n" for line in (ROOT / "config" / "license-header.txt").read_text(encoding="utf-8").strip().splitlines()) + " */\n"
 
@@ -316,7 +316,7 @@ def gen_formats() -> str:
         table[name] = {"type": f.get("type", "number"), "decimals": int(f.get("decimals", 0)), "grouping": bool(f.get("grouping", True)),
                        "sign": f.get("sign", "auto"), "scale": float(f.get("scale", 1)), "suffix": f.get("suffix"), "pattern": f.get("pattern")}
     body = json.dumps(table, indent=2, ensure_ascii=False)
-    return (gen_header("The server's named formats (fmt: amount0, pct2, compact, dmy, ...)", "drishti-rachana/src/main/resources/formats.yaml")
+    return (gen_header("The server's named formats (fmt: amount0, pct2, compact, dmy, ...)", "compute/drishti-rachana/src/main/resources/formats.yaml")
             + "\n/** The bundled named formats, exactly as the server reads them (Formats.java): a pack's or a site's formats are added at run\n"
             " *  time with defineFormats().\n"
             " *  @type {Object<string, {type: string, decimals: number, grouping: boolean, sign: string, scale: number, suffix: ?string, pattern: ?string}>} */\n"

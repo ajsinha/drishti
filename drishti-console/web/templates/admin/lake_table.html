@@ -15,18 +15,18 @@
 #}
 {% extends "base.html" %}
 {% block title %}{{ table or 'Table' }} · Lakes · {{ PRODUCT }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_admin-lakes.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-lakes.css?v={{ ASSET_V }}">{% endblock %}
 {% block screen %}admin{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
 <div class="adm lt" data-lake-table-page>
   {% with tab='lakes' %}{% include "admin/_nav.html" %}{% endwith %}
-  <p class="lk-crumb"><a href="/admin/loads">Data loads</a> <span aria-hidden="true">›</span> <a href="/admin/lakes">Lakes</a> <span aria-hidden="true">›</span> <span class="mono">{{ table }}</span></p>
+  <p class="lk-crumb"><a href="{{ BASE }}/admin/loads">Data loads</a> <span aria-hidden="true">›</span> <a href="{{ BASE }}/admin/lakes">Lakes</a> <span aria-hidden="true">›</span> <span class="mono">{{ table }}</span></p>
   {% if not t %}
   <h1 class="ws-h mono">{{ table }}</h1>
   <p class="hl-err" role="alert">No Delta table <span class="mono">{{ table }}</span> under the lake root <span class="mono">{{ root }}</span>.
-    <a href="/admin/lakes">Back to the lakes</a>.</p>
+    <a href="{{ BASE }}/admin/lakes">Back to the lakes</a>.</p>
   {% elif t.error %}
   <h1 class="ws-h mono">{{ t.table }}</h1>
   <p class="hl-err" role="alert">This table cannot be read: {{ t.error }}</p>
@@ -42,7 +42,7 @@
   </div>
 
   <h2 class="ws-h">Read by</h2>
-  {% if readers %}<ul class="lt-readers">{% for r in readers %}<li><a class="mono" href="/admin/connectors/{{ r.name | urlencode }}">{{ r.name }}</a>
+  {% if readers %}<ul class="lt-readers">{% for r in readers %}<li><a class="mono" href="{{ BASE }}/admin/connectors/{{ r.name | urlencode }}">{{ r.name }}</a>
     <span class="text-muted-d">kind <span class="mono">{{ r.kind }}</span> · {{ r.state }}{% if r.health %} · {{ r.health }}{% endif %}</span></li>{% endfor %}</ul>
   {% else %}<p class="text-muted-d">No Delta connector reads this table (none has domain <span class="mono">{{ t.domain }}</span> and a kind whose table is <span class="mono">{{ t.kind }}</span>).</p>{% endif %}
 
@@ -89,7 +89,9 @@
   {% if maint and maint.owned %}<p>Kept {% if maint.settings['keep-business-days'] %}<b>{{ maint.settings['keep-business-days'] }}</b> business days{% else %}<b>every</b> business date{% endif %}
     · files compacted to <b>{{ maint.settings['target-file-mb'] }} MB</b> · checkpoints <b>{{ 'on' if maint.settings.checkpoint else 'off' }}</b>
     · vacuum after <b>{{ maint.settings['vacuum-hours'] }} h</b>{% if maint.settings.own %} <small class="text-muted-d">(this table's own: {{ maint.settings.own | join(', ') }})</small>{% endif %}.
-    Change them on <a href="/admin/lakes#maintain">Lakes → Maintain</a>.</p>
+    Change them on <a href="{{ BASE }}/admin/lakes#maintain">Lakes → Maintain</a>.</p>
+  {% if maint.row_retention %}<p>Rows kept: <b>{% if maint.row_retention.ttl %}{{ maint.row_retention.ttl }}{% if maint.row_retention.on %} by {{ maint.row_retention.on }}{% else %} since the row's business date{% endif %}{% endif %}{% if maint.row_retention['max-rows'] %}{% if maint.row_retention.ttl %} · {% endif %}the newest {{ maint.row_retention['max-rows'] }}{% endif %}</b>
+    <small class="text-muted-d">(the table's <code>retention:</code>; older rows are dropped by the maintenance run, as in a memory table)</small>.</p>{% endif %}
   {% else %}<p class="text-muted-d">{{ (maint.reason if maint else none) or 'Not maintained here' }}: lake build did not build this table under this root, so Lakes → Maintain leaves it alone.</p>{% endif %}
 
   <h2 class="ws-h">Table</h2>

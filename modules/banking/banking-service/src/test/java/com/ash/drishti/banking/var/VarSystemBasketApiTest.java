@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.banking.var;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -94,7 +95,7 @@ class VarSystemBasketApiTest {
 
     @DynamicPropertySource
     static void lake(DynamicPropertyRegistry r) throws Exception {
-        lake = Files.createDirectories(Path.of("target", "var-sb-lake-" + System.nanoTime())).toAbsolutePath();
+        lake = Files.createDirectories(Path.of(TestRoots.module(), "target", "var-sb-lake-"+ System.nanoTime())).toAbsolutePath();
         VarLakeFixture.write(lake);
         Path store = Files.createDirectories(lake.resolve("store"));      // a basket store of its own: the system scope starts empty
         r.add("drishti.sources.connectors.risk-lake.settings.root", lake::toString);

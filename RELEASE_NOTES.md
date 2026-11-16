@@ -13,6 +13,76 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 2.9.11.i4 — release notes
+
+*Released 2026-11-15.* **Every path explicit and every setting in files you name; brokers optional; connectors read-only; honest answers
+when data is missing or still loading; the VaR page with Explain and Why it moved; one module per trading system; faster, more reliable
+testing.** This release carries the work planned as 2.9.11.i1, i1b, i2, i3 and i4, shipped as one tag. The console on Spring Boot is not
+part of it.
+
+The build of this release still reports its version as 2.9.11.g (the server's About answer, the console footer and the image tags). The
+release itself is tag `v2.9.11.i_4`; the next release takes the version from one place so the two always agree.
+
+## What changes for risk users
+
+- **The VaR page** shows only the scope you chose (the whole bank, a node and below with a breadcrumb up, or a basket's own positions by the
+  hierarchy you pick), with VaR, ES, contribution and use of limit for each node. A switch beside Explain includes matured items; Explain
+  says how many records were left out as matured.
+- **Explain wherever VaR or ES is shown**: one control opens the formula, the inputs and lineage, *Why it moved* and the workbook. Why it
+  moved compares two dates in steps that add up, and answers in about a second. When the machine is busy, the explanation still answers
+  and only *Why it moved* says it waits, with a countdown, and asks again by itself.
+- **A date with no data is said, never answered silently from an older one.** VaR for a date with no scenario P&L load shows the newest
+  earlier date with a notice (*scenario P&L for D not loaded, showing D-1*) under the page's header; pivots and record lists show one notice
+  for each source system that shows an earlier date.
+- **Positions and system baskets never answer an empty list that looks true.** While their inputs are still loading, or the server is
+  protecting itself from overload, you get the refusal with its reason, not 0 rows. A refusal in words (a code and a reason) reaches you as it
+  is.
+- **A BI table over a connector of documents only** reads the newest data it holds and says its date, never 0 rows for a day nothing was
+  loaded on.
+- **Trading systems each have their own table and module.** Endur, Calypso, Murex, WSS, SwapOne and ICI each load into a table of their own
+  and feed the one `trade` kind; each is switched on or off on its own. The trade blotter shows new trades on top and the lake's trades at
+  once, and a *trade editor* role may edit.
+
+## What changes for administrators
+
+- **Every path is explicit.** The server works out its install, data, configuration, packs, modules, lakes, connectors and inbox folders at
+  start, from your settings or under the install folder, and lists them in one block of the log. It refuses to start, naming the setting,
+  when a folder is missing, unnamed or relative with no install folder. **Admin → Configuration → Resolved paths** shows every folder and file
+  setting with where its value came from. A relative path is taken under the install folder, never the folder the server was started from.
+- **Settings files you name**: `-Ddrishti.settings.file=/etc/drishti/prod.ini,/etc/drishti/secrets.ini`. The files hold roots, named lakes,
+  databases and brokers (`[lake.<name>]`, `[db.<name>]`, `[broker.<name>]`), per-pack and per-connector overrides, and `${...}` placeholders.
+  Examples ship in `config/settings.examples/` (dev, test, prod, secrets); see [CONFIGURATION.md](docs/admin/CONFIGURATION.md).
+- **Brokers are optional.** A Kafka, ActiveMQ or RabbitMQ connector whose broker is not there says *waiting for broker*, not down. The server
+  stays healthy, a blotter serves the lake snapshot with a *live updates paused* banner, the log has one line when waiting starts and one
+  when it connects, and a broker that appears later is found without a restart. Every TLS and SASL form (PLAIN, SCRAM, OAUTHBEARER, GSSAPI,
+  Confluent) is a setting of the broker's section.
+- **Connectors are read-only to the server.** A connector is a shipped template, your override and your secrets, merged in memory; the server
+  never writes, rewrites or retires a connector file. A relative field map is read from the connector's own folder and a missing map names
+  the places tried.
+- **Packs are found in one order**: your site, then each module that is on, then the kernel. Admin → Packs shows where each pack comes from.
+- **The console can sit at a URL sub-path** behind a reverse proxy (`server.base_path`), for example `https://host/drishti/`.
+- **The local cluster's folder is `deploy/stack/`** (it was `drishti-stack/`). Move your `secrets.env` there; the old folder is read for this
+  release only.
+- **Data inbox**: a rejected row is named in the load's answer, `dataload undo` refreshes the pages at once, and a daily-loads runbook is in
+  [DATA_LAKE_GUIDE.md](docs/guides/DATA_LAKE_GUIDE.md) section 17.
+
+## What changes for builders
+
+- **Modules**: banking and the other first-party packages are `.dmod` modules the kernel loads, places on chosen nodes and unloads without
+  a restart; a Module SDK, a custom-visual SDK and the genomics sample show how to write your own. Distributions (Drishti Risk, Finance,
+  Genomics, All) bring the right modules, words and menus.
+- **BI depth**: many-to-many relationships through a bridge, list columns with chips and `has`, `any-of`, `all-of` filters, linked brushing,
+  and measures with filter context.
+- **Blotters and live results** run on one engine for the trade blotter, search results and record lists; every list of records uses the
+  same grid.
+
+## Quality, measured
+
+- **Tests run on one shared, read-only lake** built once and kept in a cache folder, so no test builds its own. Drill waves run only the
+  lanes a fix reaches (`tools/drill.sh --fix`); the release drill stays the full run.
+- **Every first start is checked against the old release**: the release starts on an empty site and on a site of the previous release.
+- **Visual snapshots** of the key pages are kept in four files by page group, drawn on the page's own signal rather than on a timer.
+
 # Drishti 2.9.11.g — release notes
 
 *Released 2026-11-08.* **Industries as modules, opened through lenses; the public sector, the first new domain, filled every day by
@@ -43,7 +113,7 @@ numbers; 56,298,935 and 54,984,456 text fields); memory no higher than 2.9.11.d.
 - **The MR cube's stressed VaR and SBM land on the same cells every time**: a view gets them for its first 100 and 60 cells in the
   grid's order (row by row as shown, each row's columns left to right), whatever was asked before or at the same time; before, a view
   asked after others could show them on more cells. A row's diversification of either is shown only when all its cells have the figure
-  ([PIVOT_GUIDE.md section 29.2](docs/guides/PIVOT_GUIDE.md#292-the-measures)).
+  ([BI_GUIDE.md section 29.2](docs/guides/bi/PIVOT_SCALE_AND_CUBES.md#72-the-measures)).
 - **The FRTB-SA screen shows each class's Total again**, the server's figure.
 
 ## What changes for readers
@@ -55,11 +125,11 @@ numbers; 56,298,935 and 54,984,456 text fields); memory no higher than 2.9.11.d.
   every step still shows the screen, the command line and the YAML.
 - **The combined guides**: [OPERATIONS_GUIDE](docs/guides/OPERATIONS_GUIDE.md) (install, run, deploy, troubleshoot, the runbooks),
   [CLUSTER_GUIDE](docs/guides/CLUSTER_GUIDE.md) (several servers, AWS, sizing, tuning), [ADMIN_GUIDE](docs/guides/ADMIN_GUIDE.md) (people,
-  roles, lenses, switches), [CLI_REFERENCE](docs/guides/CLI_REFERENCE.md), [REPORTS_GUIDE](docs/guides/REPORTS_GUIDE.md),
-  [NOTEBOOK_GUIDE](docs/guides/NOTEBOOK_GUIDE.md), [APPROVALS_GUIDE](docs/guides/APPROVALS_GUIDE.md), [BUILD_GUIDE](docs/guides/BUILD_GUIDE.md),
+  roles, lenses, switches), [CLI_REFERENCE](docs/guides/CLI_REFERENCE.md), [REPORTS_GUIDE](docs/guides/bi/README.md),
+  [NOTEBOOK_GUIDE](docs/guides/bi/NOTEBOOK_AND_PYTHON.md), [APPROVALS_GUIDE](docs/guides/APPROVALS_GUIDE.md), [BUILD_GUIDE](docs/guides/BUILD_GUIDE.md),
   [DEVELOPER_GUIDE](docs/guides/DEVELOPER_GUIDE.md), [API_REFERENCE](docs/guides/API_REFERENCE.md), [EMBED_GUIDE](docs/guides/EMBED_GUIDE.md)
   and [AI_GUIDE](docs/guides/AI_GUIDE.md); connectors, connector files, TLS and the demo data are sections of
-  [DATA_GUIDE](docs/guides/DATA_GUIDE.md); the MR cube is a section of the [Pivot guide](docs/guides/PIVOT_GUIDE.md#29-the-mr-cube-preset).
+  [DATA_GUIDE](docs/guides/DATA_GUIDE.md); the MR cube is a section of the [Pivot guide](docs/guides/bi/PIVOT_SCALE_AND_CUBES.md#7-the-mr-cube-preset).
   The Knowledge pages are four: the glossary and the [risk](docs/knowledge/risk.md), [data](docs/knowledge/data.md) and
   [world](docs/knowledge/world.md) primers. Design notes moved out of the user guides into the architecture documents.
 - **Help by domain and lens**: each Help page belongs to a domain module; while a module is off for you, its pages are not listed,
@@ -89,12 +159,12 @@ numbers; 56,298,935 and 54,984,456 text fields); memory no higher than 2.9.11.d.
   Each person's modules, lenses and the functions they may not use are answered by `GET /api/v1/modules`.
 - **Lenses** ([LENSES.md](docs/guides/ADMIN_GUIDE.md#12-what-a-lens-is)): Risk, Trading, Market, CRO and the two cubes (banking), World and **Public sector**
   (economy), CIO and Oversight (core), each with its modules, functions, Home cards and chips.
-- **The public sector**, the first new domain, in the economy module with its own lens ([PUBLIC_SECTOR_GUIDE.md](docs/guides/PUBLIC_SECTOR_GUIDE.md),
-  [tutorial 46](docs/tutorials/14-public-sector-data.md)): six packs and ten functions: World Bank development indicators (`WDI`, `WDIS`,
+- **The public sector**, the first new domain, in the economy module with its own lens ([WORLD_DATA_GUIDE.md](docs/guides/WORLD_DATA_GUIDE.md),
+  [tutorial 46](docs/guides/WORLD_DATA_GUIDE.md)): six packs and ten functions: World Bank development indicators (`WDI`, `WDIS`,
   with the world map by GDP per head), central banks from FRED and the Bank of Canada (`CBANK`, `CBSER`), Statistics Canada (`NSTAT`),
   the OECD (`OECD`, `OECDS`), the press releases of the Fed, ECB, Bank of Canada, Bank of England, SEC, OSFI, the US Federal Register and the
   Canada Gazette (`PRESS`, `PREL`) and GDELT's world events by country and tone (`GDELT`). The free news is in the World lens too.
-- **drishti-feeds: external data into the lakes, every day** ([EXTERNAL_DATA.md](docs/guides/EXTERNAL_DATA.md)). One feed file per source
+- **drishti-feeds: external data into the lakes, every day** ([WORLD_DATA_GUIDE.md](docs/guides/WORLD_DATA_GUIDE.md)). One feed file per source
   (`config/feeds/<feed>.yaml`: the datasets, the pack and table each loads, the target lake, the daily schedule, the licence with its
   internal-only flag, API keys as environment names only); incremental pulls that resume; one polite User-Agent naming Drishti; JSON Lines
   per dataset and business date under `data/datafeeds/<feed>/` with a manifest of rows and SHA-256; a run ledger; three load routes (the
@@ -144,7 +214,7 @@ Follow these steps when upgrading an installation of 2.9.11.d. The runnable jar 
    `config/lenses/<module>/`. The folder's setting is `drishti.lens-dir` (`DRISHTI_LENS_DIR`, was `DRISHTI_EDITIONS_DIR`).
    `drishti.edition` and `drishti.lenses` are unchanged; Help's old *editions* address opens the lenses guide
    ([LENSES.md section 14](docs/guides/ADMIN_GUIDE.md#122-where-a-lens-is-defined)).
-2. **Packs live in domain folders**: `config/packs/<domain>/<pack>` (`core/`, `banking/`, `capitalmarkets/`, `economy/`). A site's own
+2. **Packs live in domain folders**: `modules/<module>/packs/<pack>` (`core/`, `banking/`, `capitalmarkets/`, `economy/`). A site's own
    pack folder directly under `config/packs` keeps working where it is; `drishti.packs.dir` is unchanged. Links in a site's documents to
    `config/packs/<pack>/...` need the domain folder. A pack's `pack.yaml` names its `domain:`; a pack loads only while a module of its
    domain is on.
@@ -188,7 +258,7 @@ Follow these steps when upgrading an installation of 2.9.11.d. The runnable jar 
 9. **Vega-Lite visuals are translated, Vega is retired.** A report's `vega-lite` visual and a Python visual's `output: vega-lite` are drawn by
    drishti-chart. Marks, encodings, aggregate, bin, sort, stack, scales, layers, filter and calculate transforms translate; facets,
    `repeat` and `concat`, `params` and selections, projections, other transforms, `text` marks and `resolve` are refused in words naming
-   what to use instead. Check a report with such a visual after upgrading ([BI_GUIDE.md](docs/guides/REPORTS_GUIDE.md#96-vega-lite-visuals)).
+   what to use instead. Check a report with such a visual after upgrading ([BI_GUIDE.md](docs/guides/bi/REPORT_FILE_FORMAT_STATEMENTS.md#16-vega-lite-visuals)).
 10. **The menus are one sitemap**: `drishti-console/config/menus.yaml` is now `drishti-console/config/sitemap.yaml`, which also draws the
     Admin tabs, the BI rail, Help's sections and the footer. A site that changed `menus.yaml`, or a Help section's name or icon in
     `help.yaml`, moves its change to `sitemap.yaml`.
@@ -550,7 +620,7 @@ screen's baskets in two searchable lists; a console that keeps every person's se
 
 ## New
 
-- **The pivot engine, phases 2 and 3** (PIVOT_GUIDE.md sections 19 to 26): live pivots that tick, the pivot screen's switches, top N by
+- **The pivot engine, phases 2 and 3** (BI_GUIDE.md sections 19 to 26): live pivots that tick, the pivot screen's switches, top N by
   Space-Saving when asked, cell comments on saved views, and pivots over large tables (BENCHMARK.md section 16).
 - **BI on the pivot engine**: BI's visuals are computed by the same engine as the pivot screen.
 - **One grammar, one engine** (ONE_GRAMMAR.md): Rachana's tier-1 functions (FUNCTION_CATALOGUE.md, RACHANA_REFERENCE.md › Functions);
@@ -599,7 +669,7 @@ inbox; the in-memory lake in its own module.**
 
 ## New
 
-- **The pivot engine** (PIVOT_GUIDE.md): one engine for every pivot in Drishti (the pivot screen, Chart any table, the Sutra pivot panel),
+- **The pivot engine** (BI_GUIDE.md): one engine for every pivot in Drishti (the pivot screen, Chart any table, the Sutra pivot panel),
   true totals, expand and collapse, provenance, time travel, Top N with Others, exports to Excel (with its outline and formulas where a
   figure adds up), CSV, **JSON Lines** and Arrow.
 - **Pivots over documents**: fields are Rachana paths (`$.LEGS[*].NOTIONAL`, `$.LEGS[?@.LEG_TYPE == 'FLOAT'][0].INDEX.NAME`); a list is
@@ -946,7 +1016,7 @@ finally right.**
 - **Knowledge: Companies, funds and ETFs** ([docs/knowledge](docs/knowledge/world.md#1-companies-funds-and-etfs)): share classes, NAV,
   look-through, expense ratios, active share and overlap on the demo data; 23 new `WHAT` terms (162 in all); "What does this mean?"
   on USEQ, FUND, HELD and TRACK.
-- **Index membership from the tracking ETFs** ([External data](docs/guides/EXTERNAL_DATA.md)): the S&P 500, Nasdaq-100 and Dow members
+- **Index membership from the tracking ETFs** ([External data](docs/guides/WORLD_DATA_GUIDE.md)): the S&P 500, Nasdaq-100 and Dow members
   are now what SPY, QQQ and DIA report holding to the SEC, not Wikidata's out-of-date lists (which lacked Exxon Mobil, BlackRock,
   NVIDIA in the Nasdaq-100 and about 100 more). **The companies pack grows from 503 to 586.** The *vs index* tab weighs the Dow by
   price and caps the Nasdaq-100 as their methods do: DIA's active share 1.8% (was 57.6%), QQQ's 11.2% (was 26.75%).
@@ -963,7 +1033,7 @@ finally right.**
 
 *2026-10-26.* **US funds and ETFs with their holdings; Knowledge pages and `WHAT` that explain the data; construct your own basket and see its VaR; a pre-deal what-if for VaR and exposure; risk one click from every trade.**
 
-- **Funds and ETFs** ([FUNDS_GUIDE.md](docs/guides/FUNDS_GUIDE.md), tutorial 28): the 200 largest US mutual funds and ETFs from SEC
+- **Funds and ETFs** ([WORLD_DATA_GUIDE.md](docs/guides/WORLD_DATA_GUIDE.md), tutorial 28): the 200 largest US mutual funds and ETFs from SEC
   N-PORT, N-CEN and the prospectus summaries, with GLEIF relationships; `FUND <ticker>` (a fact sheet, its look-through holdings and
   how it compares with its index), `HELD`, `TRACK`, `FUNDS`; USEQ's *Held by funds* and *Fund ownership*, IDX's funds tracking it;
   a refresh script for Linux and Windows; 5.6 MB of gzipped data, offline. Sectors are SIC divisions (GICS is proprietary) and
@@ -997,13 +1067,13 @@ finally right.**
   what it does and an example; `FUNC <words>` filters it. A pack's name opens its search form; a command opens with its example.
   Administrators see the same page with the commands that are off and the Everyone switches, review, history and the cluster's
   versions; `/admin/commands` opens it. The server still decides who may switch.
-- **Groupings and analytics computed instead of stored** ([GROUPINGS_ANALYTICS_GUIDE.md](docs/guides/GROUPINGS_ANALYTICS_GUIDE.md),
+- **Groupings and analytics computed instead of stored** ([BI_GUIDE.md](docs/guides/bi/GROUPINGS_AND_ANALYTICS.md),
   tutorial 27): LEIG (no member cap), LEIC, SIC, ECG (summed or weighted over member economies, as the World Bank does), CORR (a new
   correlation engine, window and estimator picked on the page), the USEQ ratios, the yearly change of a financial fact, IDX totals,
   equity beta (a new engine, `EQB`) and the price-history analytics (internal-only, off as shipped). Their stored versions are retired;
   old ids open the computed pages. **The numbers change** where the stored ones were set by hand (correlations ~0.4 stored, ~0.1
   computed; equity betas near zero on the demo's independent price series); the reconciliation is in the guide.
-- **External data** ([the page](docs/guides/EXTERNAL_DATA.md)): every external source with its URL, licence and use; IMF, Yahoo and
+- **External data** ([the page](docs/guides/WORLD_DATA_GUIDE.md)): every external source with its URL, licence and use; IMF, Yahoo and
   Google News data marked internal only; each refresh script with real `status` and dry-run examples on Linux and Windows.
 - **Every pack's guide** now ends with its **data contracts** (every kind, every column) and its **data retrieval** (per kind: external
   with its script, synthetic with its generator, or computed with its engine), generated from the contracts, so they cannot drift.
@@ -1103,7 +1173,7 @@ Everything since 2.6.7, including the patches pushed to main without a tag.
 - **New packs (opt-in, `DRISHTI_PACKS`), on the standard data pattern (gzipped snapshots in `data/testdata`, built into lakes, served by a Delta connector each):** **us-equities** (479 US companies from SEC EDGAR, Nasdaq, GLEIF and Wikidata: financials,
   filings, index memberships; `USEQ`, `IDX`, `SIC`, `EDGAR`; prices live and internal only) and **gleif** (9,512 legal entities in 540
   ownership groups; `LEI`, `LEIG`, `LEIC`), linked to each other by LEI.
-- **Public data, one script per pack** ([PUBLIC_DATA.md](docs/guides/EXTERNAL_DATA.md)): `tools/publicdata/<pack>.py` (world-economy,
+- **Public data, one script per pack** ([PUBLIC_DATA.md](docs/guides/WORLD_DATA_GUIDE.md)): `tools/publicdata/<pack>.py` (world-economy,
   news-and-markets, official market data, us-equities, gleif) with `.sh` and Windows wrappers; widen the scope into the data folder;
   internal-only sources refused in the repository.
 - **READMEs as a standard:** every pack and every connector has a `README.md` with a front matter and its data structures, shown on
@@ -1119,7 +1189,7 @@ Everything since 2.6.7, including the patches pushed to main without a tag.
 *2026-10-21.* **BI runs: every heavy question becomes a visible, shareable run; chart any table; Delta and Iceberg side by side.**
 2.6.7 also carries 2.6.6, the QA release that was never tagged on its own (see below).
 
-- **BI runs** ([BI_RUNS.md](docs/architecture/ARCHITECTURE.md#287-bi-runs-every-bi-query-as-a-bounded-visible-job), [BI_RUNS_GUIDE.md](docs/guides/REPORTS_GUIDE.md#15-background-runs-long-bi-questions)):
+- **BI runs** ([BI_RUNS.md](docs/architecture/ARCHITECTURE.md#287-bi-runs-every-bi-query-as-a-bounded-visible-job), [BI_RUNS_GUIDE.md](docs/guides/bi/LIVE_REPORTS_AND_BOARDS.md#3-background-runs-long-bi-questions)):
   - **Planned before it runs:** a planner sizes every question from metadata only (Delta's row counts, Iceberg's manifests, built
     layers; tested to read no data). A cheap question answers at once; a heavy one becomes a run; a very heavy one asks to confirm; an
     impossible one is refused before anything runs. Report visuals, MQ, SQL and statements all take `Prefer: respond-async`; without it
@@ -1188,7 +1258,7 @@ known bugs fixed.** ([BI_DESIGN.md](docs/architecture/ARCHITECTURE.md#28-busines
 - **Paginated reports and statements:** a report page with `layout: statement` is paper: page-exact PDF (written by the
   server) and Excel set to print, headers and footers with tokens, page breaks, repeated column titles, groups kept
   together, and bursting through subscriptions, one statement per recipient, masked as them. The statement designer
-  (Format → Layout → statement, the Paper tab) previews page by page ([STATEMENTS.md](docs/guides/REPORTS_GUIDE.md#9-the-report-file-pages-visuals-filters-and-slicers), tutorial 20).
+  (Format → Layout → statement, the Paper tab) previews page by page ([STATEMENTS.md](docs/guides/bi/REPORT_FILE_FORMAT_STATEMENTS.md#1-the-report-file-pages-visuals-filters-and-slicers), tutorial 20).
 - **Field parameters in a report's wells:** a reader's slicer switches which field or measure a visual draws.
 - **Apache Cassandra connector** (`cassandra`): Cassandra 4 and 5, ScyllaDB, Astra; a day appears whole or not at all
   ([CASSANDRA_CONNECTOR.md](plugins/drishti-plugin-cassandra/README.md)).

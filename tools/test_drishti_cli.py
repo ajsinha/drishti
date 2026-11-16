@@ -178,10 +178,16 @@ class Tools(unittest.TestCase):
         self.assertEqual(1, code)
         self.assertIn("trade.mtm", out)
 
-    def test_pack_new_load_needs_a_server(self):
-        code, _, err = run("pack", "new", self.tmp, "--name", "x", "--load", *self.jvm(), env={"DRISHTI_SERVER": ""})
-        self.assertEqual(2, code)
-        self.assertIn("--load needs --server", err)
+    def test_pack_new_dry_run_prints_the_plan_and_writes_nothing(self):
+        src = self.tmp / "in"
+        src.mkdir()
+        (src / "trade.2026-10-01.jsonl").write_text("".join(f'{{"TID": "T{i}", "PT": "{"IRS" if i % 2 else "FRA"}"}}\n' for i in range(6)))
+        code, out, _ = run("pack", "new", src, "--name", "x", "--key", "TID", "--match", "PT", "--out", self.tmp / "mod", "--dry-run")
+        self.assertEqual(0, code, out)
+        self.assertIn("-> trade-irs", out)
+        self.assertIn("unique per business date over all 6 rows", out)
+        self.assertIn("dry run: nothing written", out)
+        self.assertFalse((self.tmp / "mod").exists())
 
     def test_data_ingest_writes_the_files_store(self):
         src = self.tmp / "in"
@@ -389,7 +395,7 @@ class Rest(unittest.TestCase):
 
 class History(unittest.TestCase):
     """drishti.py history KIND ID against the contract's fixture (drishti-testkit history/)."""
-    FIXTURE = ROOT / "drishti-testkit" / "src" / "main" / "resources" / "history" / "trade-1000015-30.json"
+    FIXTURE = ROOT / "testing/drishti-testkit" / "src" / "main" / "resources" / "history" / "trade-1000015-30.json"
 
     @classmethod
     def setUpClass(cls):

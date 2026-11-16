@@ -79,7 +79,7 @@ def lake_form(manifest: dict, lake: str = DEMO_LAKE, partitions: dict[str, list[
     then names ``lake`` and ``lake-tables`` (an official results reader names its publisher's lake, :data:`OFFICIAL_LAKES`). A template
     already in that form is left as it is."""
     m = copy.deepcopy(manifest)
-    key = "connectors" if isinstance(m.get("connectors"), dict) else "connector-templates"
+    key = "connectors"
     if not isinstance(m.get("lake"), dict):
         m["lake"] = {}
     tables = m["lake"].setdefault("tables", {})
@@ -150,11 +150,32 @@ def settings_view(manifest: dict, connector: dict) -> dict:
     return out
 
 
-def view(manifest: dict | None) -> dict:
+def with_modules(manifest: dict | None) -> dict:
+    """The pack's manifest with the connector templates of every module that requires it (a source module's ``connectors/`` folder, as
+    the one resolver reads it: drishti-console/core/resolution.py) added where the pack does not declare that name itself. A source
+    system is a module of its own."""
+    m = dict(manifest or {})
+    if not m.get("pack") or not isinstance(m.get("connectors"), dict):
+        return m
+    root = pathlib.Path(__file__).resolve().parents[1]
+    if str(root / "drishti-console") not in sys.path:
+        sys.path.insert(0, str(root / "drishti-console"))
+    from core import resolution
+    r = resolution.repository()
+    needs = {mid for mid, mod in r.modules.items() if m["pack"] in mod.requires}
+    conns = dict(m["connectors"])
+    for name, t in r.connectors.templates.items():
+        if t.owner.startswith("module ") and t.owner[len("module "):] in needs and name not in conns and t.definition.get("kinds"):
+            conns[name] = dict(t.definition)
+    m["connectors"] = conns
+    return m
+
+
+def view(manifest: dict | None, modules: bool = True) -> dict:
     """``manifest`` with every template in the lake form shown in the older form (:func:`settings_view`): what a tool that reads a
     template's root, domain, table and layout loads instead of the file as it is. The ``lake:`` block stays."""
-    m = dict(manifest or {})
-    key = "connectors" if isinstance(m.get("connectors"), dict) else "connector-templates"
+    m = with_modules(manifest) if modules else dict(manifest or {})
+    key = "connectors"
     if not isinstance(m.get(key), dict):
         return m
     conns = {}

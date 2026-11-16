@@ -24,8 +24,8 @@ drishti:
       port: ${DRISHTI_FLIGHT_PORT:18815}         # the Flight port (gRPC over HTTP/2); open it in firewalls, TCP pass-through in load balancers
       advertise: ${DRISHTI_FLIGHT_ADVERTISE:}    # the address clients are given in GetFlightInfo; empty: the node's real address (never localhost or 0.0.0.0)
       tls:                                       # TLS is always on: the server's certificate as PEM files
-        certificate: ${DRISHTI_FLIGHT_TLS_CERT:./config/tls/server.pem}       # the certificate chain the port presents
-        private-key: ${DRISHTI_FLIGHT_TLS_KEY:./config/tls/server.key}        # its private key, PKCS#8 PEM
+        certificate: ${DRISHTI_FLIGHT_TLS_CERT:${drishti.config.dir}/tls/server.pem}       # the certificate chain the port presents
+        private-key: ${DRISHTI_FLIGHT_TLS_KEY:${drishti.config.dir}/tls/server.key}        # its private key, PKCS#8 PEM
         client-ca: ${DRISHTI_FLIGHT_TLS_CLIENT_CA:}                           # a CA bundle: set it and every client must present a certificate it signed (mutual TLS)
       memory:                                    # Arrow's off-heap memory (counted by busy protection with the rest)
         total-mb: ${DRISHTI_FLIGHT_MEMORY_MB:4096}   # every Flight read of this node together; the launchers add it to the direct-memory limit (tools/lake/memory_caps.py)

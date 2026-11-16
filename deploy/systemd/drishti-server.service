@@ -27,6 +27,11 @@ WorkingDirectory=/opt/drishti
 EnvironmentFile=/etc/drishti/drishti.env
 Environment=JAVA_TOOL_OPTIONS=-Xmx4g -XX:+UseZGC -XX:+ZGenerational -XX:MaxDirectMemorySize=256m -XX:TrimNativeHeapInterval=60000 -Djdk.nio.maxCachedBufferSize=262144 -XX:NativeMemoryTracking=summary -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/opt/drishti/data/dumps
 Environment=MALLOC_ARENA_MAX=2
+# the launch roots, absolute (docs/admin/CONFIGURATION.md, "Launch roots"): the install folder, the data folder and the modules;
+# the others sit under them unless /etc/drishti/drishti.env names them
+Environment=DRISHTI_HOME=/opt/drishti
+Environment=DRISHTI_DATA_DIR=/opt/drishti/data
+Environment=DRISHTI_MODULES_HOME=/opt/drishti/modules
 Environment=DRISHTI_DRAIN_WAIT=240
 ExecStartPre=/usr/bin/mkdir -p /opt/drishti/data/logs /opt/drishti/data/dumps
 ExecStart=/usr/lib/jvm/java-21-openjdk-amd64/bin/java -Djava.io.tmpdir=/opt/drishti/data/tmp/server -Xlog:gc*:file=/opt/drishti/data/logs/gc-%p.log:time,uptime:filecount=5,filesize=20m -jar /opt/drishti/drishti-server.jar

@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.banking.exposure;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -68,7 +69,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @Import(PinnedBusinessDate.class)
 class ExposureFormatEqualityTest {
 
-    static final Path BASE = Path.of("target", "exposure-format-equality").toAbsolutePath();
+    static final Path BASE = Path.of(TestRoots.module(), "target", "exposure-format-equality").toAbsolutePath();
     static final Path DELTA = BASE.resolve("delta");
     static final Path ICEBERG = BASE.resolve("iceberg");
     static final LocalDate DAY = ExposureHierarchyFixture.DAY;

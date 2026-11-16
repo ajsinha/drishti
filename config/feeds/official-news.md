@@ -9,7 +9,7 @@
 
 Official press releases (central banks, regulators, governments).
 
-The economy module's public-sector official-news pack (docs/guides/PUBLIC_SECTOR_GUIDE.md): Press releases and notices from the publishers' own feeds: the Federal Reserve, the European Central Bank, the Bank of Canada, the Bank of England, the SEC, OSFI, the US Federal Register and the Canada Gazette. A publisher's page lists its latest releases newest first, each a link to the original, with its terms; a release's page gives its title, date, summary and link. Each publisher's terms are recorded: the Bank of England, OSFI and the Canada Gazette allow no commercial reuse, so their releases are internal only. Filled daily by the official-news feed into the newslake lake.
+The economy module's public-sector official-news pack (docs/guides/WORLD_DATA_GUIDE.md): Press releases and notices from the publishers' own feeds: the Federal Reserve, the European Central Bank, the Bank of Canada, the Bank of England, the SEC, OSFI, the US Federal Register and the Canada Gazette. A publisher's page lists its latest releases newest first, each a link to the original, with its terms; a release's page gives its title, date, summary and link. Each publisher's terms are recorded: the Bank of England, OSFI and the Canada Gazette allow no commercial reuse, so their releases are internal only. Filled daily by the official-news feed into the newslake lake.
 
 | | |
 |---|---|
@@ -29,7 +29,7 @@ python3 tools/drishti.py feed run official-news                # pull today, wri
 python3 tools/drishti.py feed status official-news             # its last runs
 ```
 
-Daily: `python3 tools/drishti.py feed schedule --cron` (or `--systemd`, `--windows`). The guide: [EXTERNAL_DATA.md](../../docs/guides/EXTERNAL_DATA.md).
+Daily: `python3 tools/drishti.py feed schedule --cron` (or `--systemd`, `--windows`). The guide: [WORLD_DATA_GUIDE.md](../../docs/guides/WORLD_DATA_GUIDE.md).
 
 ## Data contract
 
@@ -62,7 +62,7 @@ One row (JSON Lines: one object a line; the values are the contract's examples):
 {"SOURCE_ID": "PRESS-BOC", "NAME": "Bank of Canada", "PUBLISHER_TYPE": "central bank", "COUNTRY": "CAN", "WEBSITE": "https://www.bankofcanada.ca/press/press-releases/", "FEED_URL": "https://www.bankofcanada.ca/content_type/press-releases/fee…", "LICENCE": "Bank of Canada terms of use: free to use, copy, distribute …", "TERMS_URL": "https://www.bankofcanada.ca/terms/", "INTERNAL_ONLY": false, "WHY_INTERNAL": "The Bank of England allows personal and internal non-commer…", "RELEASES": 5, "LAST_PUBLISHED": "2026-11-05T16:00:19Z", "LAST_PULL": "ok"}
 ```
 
-The contract: `config/packs/economy/official-news/contracts/release-source.contract.yaml` ([official-news](../../docs/contracts/packs/official-news.md)).
+The contract: `modules/economy/packs/official-news/contracts/release-source.contract.yaml` ([official-news](../../docs/contracts/packs/official-news.md)).
 
 ### press-release
 
@@ -90,4 +90,4 @@ One row (JSON Lines: one object a line; the values are the contract's examples):
 {"RELEASE_ID": "PREL-FED-0224349908", "TITLE": "Federal Reserve Board announces termination of enforcement …", "PUBLISHED": "2026-11-05T16:00:00Z", "DATE": "2026-11-05", "URL": "https://www.federalreserve.gov/newsevents/pressreleases/enf…", "SUMMARY": "Federal Reserve Board announces termination of enforcement …", "CATEGORY": "Enforcement Actions", "RELEASE_SOURCE": "PRESS-FED", "PUBLISHER_NAME": "Federal Reserve Board", "PUBLISHER_TYPE": "central bank", "COUNTRY": "USA", "INTERNAL_ONLY": false}
 ```
 
-The contract: `config/packs/economy/official-news/contracts/press-release.contract.yaml` ([official-news](../../docs/contracts/packs/official-news.md)).
+The contract: `modules/economy/packs/official-news/contracts/press-release.contract.yaml` ([official-news](../../docs/contracts/packs/official-news.md)).

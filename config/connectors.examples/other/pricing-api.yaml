@@ -13,7 +13,6 @@
 # See the LICENSE file in the root of this repository for the full terms.
 # Example: an HTTPS service that answers one document per entity.
 plugin: rest
-kinds: [price]
 settings:
   base-url: https://pricing.example.com/api
   timeout-ms: '1500'

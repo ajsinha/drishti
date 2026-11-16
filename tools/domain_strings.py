@@ -20,7 +20,7 @@ asks for the list to be lowered (``--write`` rewrites it from the tree).
     python3 tools/domain_strings.py            # check
     python3 tools/domain_strings.py --write    # write the allow list from the tree (only after moving names out of the core)
 
-The core is every source file outside the domain modules: Java under drishti-*/src/main (the domain modules live under modules/, outside it),
+The core is every source file outside the domain modules: Java under the subject folders' drishti-*/src/main (kernel/, compute/, lake/, net/, packaging/, testing/) (the domain modules live under modules/, outside it),
 the console's core/, routes/, web/static/js, web/static/css and web/templates (not drishti-console/plugins). Comments count: a core
 file that explains a banking screen names it. A line that only looks like banking (the statistics function var, Excel's EXP) carries the
 comment ``domain-strings: generic`` and is not counted."""
@@ -54,7 +54,7 @@ DOMAIN_MODULES = ("banking-service", "banking-compute")   # under modules/bankin
 
 def core_files() -> list[Path]:
     out = []
-    for m in sorted(ROOT.glob("drishti-*/src/main")):
+    for m in sorted(m for s in ("kernel", "compute", "lake", "net", "packaging", "testing") for m in ROOT.glob(f"{s}/drishti-*/src/main")):
         if m.parts[-3] in DOMAIN_MODULES:
             continue
         out += [p for p in m.rglob("*") if p.suffix in (".java", ".py") and p.is_file()]

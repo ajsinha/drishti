@@ -169,6 +169,9 @@ final class IcebergVectors {
         if (v instanceof BigDecimal d) {
             return d.stripTrailingZeros().toPlainString();
         }
+        if (v instanceof java.util.Collection<?> l) {
+            return com.ash.drishti.api.ListValues.json(l);           // a list attribute (TRADE_IDS): its JSON text
+        }
         return v.toString();
     }
 }

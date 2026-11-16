@@ -29,7 +29,7 @@ pytestmark = pytest.mark.static
 ROOT = CONSOLE.parent
 GUIDE = ROOT / "docs" / "guides" / "DATA_LAKE_GUIDE.md"
 EXAMPLES = ROOT / "docs" / "guides" / "examples" / "lake-push"
-JAVA_KEYS = ROOT / "drishti-dataload" / "src" / "main" / "java" / "com" / "ash" / "drishti" / "dataload" / "ReadyNote.java"
+JAVA_KEYS = ROOT / "lake/drishti-lakeload" / "src" / "main" / "java" / "com" / "ash" / "drishti" / "dataload" / "ReadyNote.java"
 
 
 def _feedroute():

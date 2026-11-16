@@ -84,7 +84,13 @@ interface LayoutLake extends Closeable {
     }
 
     /** {@link #open(String, Map, long, int)} with vector columns ({@code list<double>}: a P&amp;L vector), added when missing too. */
-    LayoutTable open(String kind, Map<String, Boolean> promoted, java.util.Set<String> vectors, long rowGroupBytes, int fileRows);
+    default LayoutTable open(String kind, Map<String, Boolean> promoted, java.util.Set<String> vectors, long rowGroupBytes, int fileRows) {
+        return open(kind, promoted, vectors, java.util.Set.of(), rowGroupBytes, fileRows);
+    }
+
+    /** With list attributes too ({@code list<string>}: promoted lists of simple values, DATA_LAKE_GUIDE.md section 2.4). */
+    LayoutTable open(String kind, Map<String, Boolean> promoted, java.util.Set<String> vectors, java.util.Set<String> lists, long rowGroupBytes,
+            int fileRows);
 
     /** The kind's table, or empty. */
     Optional<LayoutTable> load(String kind);
@@ -186,8 +192,9 @@ interface LayoutLake extends Closeable {
         }
 
         @Override
-        public LayoutTable open(String kind, Map<String, Boolean> promoted, java.util.Set<String> vectors, long rowGroupBytes, int fileRows) {
-            return new Kind(catalog, kind, NativeLayout.open(catalog, kind, promoted, vectors, rowGroupBytes, fileRows));
+        public LayoutTable open(String kind, Map<String, Boolean> promoted, java.util.Set<String> vectors, java.util.Set<String> lists,
+                long rowGroupBytes, int fileRows) {
+            return new Kind(catalog, kind, NativeLayout.open(catalog, kind, promoted, vectors, lists, rowGroupBytes, fileRows));
         }
 
         @Override

@@ -17,11 +17,11 @@
 
 # Data contracts of the trading pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/banking/trading/guides/trading.md](../../../config/packs/banking/trading/guides/trading.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
+One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [modules/banking/dmod/packs/trading/guides/trading.md](../../../modules/banking/dmod/packs/trading/guides/trading.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
-| [TRD](#trd-trade-trade) | `trade` | fundamental | active | 47 | 7 |
+| [TRD](#trd-trade-trade) | `trade` | fundamental | active | 48 | 7 |
 | [CTRD](#ctrd-counterparty-trades-derived-from-trades-counterparty-trades) | `counterparty-trades` | computed | active | 15 | 1 |
 | [PTRD](#ptrd-portfolio-trades-derived-from-trades-portfolio-trades) | `portfolio-trades` | computed | active | 15 | 1 |
 | [LTRD](#ltrd-legal-entity-trades-derived-from-trades-legal-entity-trades) | `legal-entity-trades` | computed | active | 15 | 1 |
@@ -29,11 +29,11 @@ One section per command of the pack: the shape of its data, how it is stored and
 
 ## TRD: Trade (`trade`)
 
-A booked trade as its source system (ENDUR, CALYPSO or MUREX) extracts it in the common schema: the deal, its legs with their cash flows and resets, and its events.
+A booked trade as its source system (ENDUR, CALYPSO, MUREX, WSS, SWAPONE or ICI) extracts it in the common schema: the deal, its legs with their cash flows and resets, and its events.
 
 |  |  |
 |---|---|
-| Contract | [trade.contract.yaml](../../../config/packs/banking/trading/contracts/trade.contract.yaml) · version 1.1 |
+| Contract | [trade.contract.yaml](../../../modules/banking/dmod/packs/trading/contracts/trade.contract.yaml) · version 1.1 |
 | Class | fundamental |
 | Status | active |
 | Source | murex, calypso |
@@ -52,8 +52,9 @@ A booked trade as its source system (ENDUR, CALYPSO or MUREX) extracts it in the
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `SOURCE_SYSTEM` | text | required |  | The booking system the trade comes from: ENDUR, CALYPSO or MUREX (upper case). | `CALYPSO`, `ENDUR`, `MUREX` |  |
+| `SOURCE_SYSTEM` | text | required |  | The booking system the trade comes from: one of the shipped source systems, ENDUR, CALYPSO, MUREX, WSS, SWAPONE or ICI (upper case). | `ENDUR`, `CALYPSO`, `MUREX`, `WSS`, `SWAPONE`, `ICI` |  |
 | `SOURCE_UPDATE_TIME` | timestamp | optional |  | When the booking system last changed the trade, ISO-8601 UTC; moves with every amendment (empty on an ENDUR trade never amended). | `2026-09-30T18:30:00Z` |  |
+| `UPDATED_BY` | text | optional |  | Who last changed the trade: a person or a system id. The blotter names it when an edit is refused because the trade changed again. | `TRADER-014` |  |
 | `TRADE_DATE` | date | required |  | The date the trade was agreed. | `2025-06-20` |  |
 | `INPUT_DATE` | date | optional |  | The day the trade was entered in the booking system (CALYPSO and MUREX: the trade date; empty on ENDUR). | `2024-04-19` |  |
 | `TRADE_ID` | id | required |  | The record's id (the business key) | `1000001` | `trade` |
@@ -191,7 +192,7 @@ A booked trade as its source system (ENDUR, CALYPSO or MUREX) extracts it in the
 
 - required: fields `SOURCE_SYSTEM`, `TRADE_DATE`, `TRADE_ID`, `TRADE_STATUS`, `TRANSACTION_ID`, `QUANTITY`, `BUY_SELL_CODE`, `PRODUCT_TYPE`, `PRODUCT_SUB_TYPE`, `COUNTERPARTY`, `COUNTERPARTY_UEN`, `COUNTERPARTY_COUNTRY_OF_RISK`, `INTERNAL_EXTERNAL_CODE`, `TRANSIT`, `LEGAL_ENTITY`, `PORTFOLIO`, `TRADER_ID`, `TRADER_FIRST_NAME`, `TRADER_LAST_NAME`, `START_DATE`, `MATURITY_DATE`, `CURRENCY`, `DELIVERY_VERSUS_PAYMENT`, `LEGS`, `EVENTS`
 - unique: key `TRADE_ID`; per business_date
-- enum: field SOURCE_SYSTEM; values `CALYPSO`, `ENDUR`, `MUREX`
+- enum: field SOURCE_SYSTEM; values `ENDUR`, `CALYPSO`, `MUREX`, `WSS`, `SWAPONE`, `ICI`
 - link: field TRADE_ID; kind trade
 - enum: field TRADE_STATUS; values `AMENDED`, `CANCELLED`, `MATURED`, `NEW`, `VALIDATED`
 - enum: field TRADE_ACTION; values `AMEND`, `NEW`
@@ -242,7 +243,7 @@ Every trade with a counterparty, from every source system: its trades (every sta
 
 |  |  |
 |---|---|
-| Contract | [counterparty-trades.contract.yaml](../../../config/packs/banking/trading/contracts/counterparty-trades.contract.yaml) · version 1.0 |
+| Contract | [counterparty-trades.contract.yaml](../../../modules/banking/dmod/packs/trading/contracts/counterparty-trades.contract.yaml) · version 1.0 |
 | Class | computed |
 | Status | active |
 | Source | computed by Drishti: the derived connector trade-pages over the kind trade |
@@ -314,7 +315,7 @@ Every trade of a portfolio (book), from every source system: its trades (every s
 
 |  |  |
 |---|---|
-| Contract | [portfolio-trades.contract.yaml](../../../config/packs/banking/trading/contracts/portfolio-trades.contract.yaml) · version 1.0 |
+| Contract | [portfolio-trades.contract.yaml](../../../modules/banking/dmod/packs/trading/contracts/portfolio-trades.contract.yaml) · version 1.0 |
 | Class | computed |
 | Status | active |
 | Source | computed by Drishti: the derived connector trade-pages over the kind trade |
@@ -386,7 +387,7 @@ Every trade a legal entity of the bank booked, from every source system: its tra
 
 |  |  |
 |---|---|
-| Contract | [legal-entity-trades.contract.yaml](../../../config/packs/banking/trading/contracts/legal-entity-trades.contract.yaml) · version 1.0 |
+| Contract | [legal-entity-trades.contract.yaml](../../../modules/banking/dmod/packs/trading/contracts/legal-entity-trades.contract.yaml) · version 1.0 |
 | Class | computed |
 | Status | active |
 | Source | computed by Drishti: the derived connector trade-pages over the kind trade |
@@ -458,7 +459,7 @@ Every trade with a leg on an index (the first leg that names one): its trades (e
 
 |  |  |
 |---|---|
-| Contract | [index-trades.contract.yaml](../../../config/packs/banking/trading/contracts/index-trades.contract.yaml) · version 1.0 |
+| Contract | [index-trades.contract.yaml](../../../modules/banking/dmod/packs/trading/contracts/index-trades.contract.yaml) · version 1.0 |
 | Class | computed |
 | Status | active |
 | Source | computed by Drishti: the derived connector trade-pages over the kind trade |

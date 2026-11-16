@@ -15,6 +15,7 @@
 """Application factory: one FastAPI app serving pages, static assets and security headers."""
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 
@@ -34,6 +35,7 @@ from core.backend import drs_advice, drs_message
 from core.edition import hidden_hint as _hidden_hint
 from core.config import Settings
 from core.nextpath import to_login
+from core import base_path as _base_path
 
 WEB = Path(__file__).resolve().parent.parent / "web"
 _PAGE_KINDS = ("", "share", "datamap", "data", "form", "functions", "pack")      # missing.html for a console page, not an entity
@@ -102,7 +104,7 @@ PYODIDE = "/pyodide/"
 EMBED = "/embed/"                           # embedded views for other web applications: off unless embed.enabled (routes/embed_routes.py)
 
 
-PROTECTED = ("/t", "/bi", "/v/", "/go", "/form", "/studio", "/api/", "/admin", "/account", "/w", "/m", "/alerts", "/impact", "/s/", "/compare/", "/export/", "/pin/", "/p/", "/reports", "/build", "/share/", "/inbox", "/render/", "/approvals", "/review/")
+PROTECTED = ("/t", "/bi", "/v/", "/go", "/form", "/studio", "/api/", "/admin", "/account", "/w", "/m", "/alerts", "/impact", "/s/", "/compare/", "/export/", "/pin/", "/p/", "/reports", "/build", "/share/", "/inbox", "/render/", "/approvals", "/review/", "/live/")
 EXACT = ("/t", "/s")                        # pages whose path is a prefix of public ones (/s of /static)
 # all a user whose password change is due may reach until it is done (besides public pages): QA 2026-10-01 SEC-06
 WHILE_MUST_CHANGE = ("/account", "/account/password", "/logout")
@@ -146,9 +148,9 @@ async def _edition_of(request, path: str) -> None:
 
 
 async def _module_asset_refused(request, rel: str) -> str | None:
-    """Why a static file of a domain module is not served to this request (core/modules.py): the module is off, or the person works in a
-    lens that does not use it; None for the core's files (most of them: asked without reading the session). Only a module's file costs
-    the session check, to know the person and their lens."""
+    """Why a static file of a domain module is not served to this request (core/modules.py): the module is off for the person; None for
+    the core's files (most of them: asked without reading the session). Only a module's file costs the session check, to know the person.
+    A lens never hides anything, so it is not asked."""
     from core import modules
 
     if modules.asset_module(rel) is None:
@@ -158,16 +160,6 @@ async def _module_asset_refused(request, rel: str) -> str | None:
     who = await auth.current(request.cookies.get(auth.cookie), request.app.state.backend)
     if who is not None:
         modules.use_person(await request.app.state.modules_me.get(request.app.state.backend, who))
-        editions = request.app.state.editions
-        if editions.instance.active:
-            lens = editions.instance.name
-        elif editions.lenses:
-            from core.settings import changed_at
-            try:
-                mine = await request.app.state.user_settings.get(request.app.state.backend, who, changed_at(request))
-            except Exception:  # noqa: BLE001 - no settings: no lens
-                mine = {}
-            lens = (mine or {}).get("lens") or None
     return modules.asset_refusal(rel, lens)
 
 
@@ -282,19 +274,20 @@ class AuthGate(BaseHTTPMiddleware):
         return response
 
 
-def worker_csp(host: str) -> str:
-    """The worker's policy for the host the browser used. A host that is not plainly a host (nothing to trust in a
-    header) gets 'none': Calc then cannot start, which is the safe failure."""
+def worker_csp(host: str, base: str = "") -> str:
+    """The worker's policy for the host the browser used (``base``: the console's URL sub-path, core/base_path.py). A host that is not plainly
+    a host (nothing to trust in a header) gets 'none': Calc then cannot start, which is the safe failure."""
     host = (host or "").strip()
     if not _HOST.match(host):
         return WORKER_CSP.format(connect="'none'")
-    return WORKER_CSP.format(connect=f"{host}/static/ {host}{PYODIDE}")
+    return WORKER_CSP.format(connect=f"{host}{base}/static/ {host}{base}{PYODIDE}")
 
 
 class AppEngines:
     """Each request, websocket and the lifespan (and the tasks it starts: the backend watch) of this app read this app's engines
     (core/engines.py State) and modules (core/modules.py State), never another app's of the same process: a module global here let a real stack's console, polling its
-    server every few seconds, hide an engine's pages in a stand-in console of another browser test file in the same worker. Outermost."""
+    server every few seconds, hide an engine's pages in a stand-in console of another browser test file in the same worker. Outermost but
+    for core/base_path.py's BasePath."""
 
     def __init__(self, app):
         self.app = app
@@ -320,7 +313,7 @@ class SecurityHeaders(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
         response = await call_next(request)
         path = request.url.path
-        policy = worker_csp(request.headers.get("host", "")) if path == WORKER else PLAYGROUND_CSP if path == PLAYGROUND_FRAME else CSP
+        policy = worker_csp(request.headers.get("host", ""), _base_path.of(request)) if path == WORKER else PLAYGROUND_CSP if path == PLAYGROUND_FRAME else CSP
         response.headers.setdefault("Content-Security-Policy", policy)
         if path.startswith(PYODIDE) and response.status_code == 200:
             response.headers["Cache-Control"] = "public, max-age=31536000, immutable"   # the URL names the version
@@ -351,7 +344,7 @@ def create_app(settings: Settings) -> FastAPI:
     from core.servers import Servers, Switch
 
     catalogue = Servers(settings)
-    from routes import (admin_routes, alert_routes, api_routes, asof_routes, auth_routes, build_routes, pack_routes, calc_routes, export_routes, help_routes, home_routes,
+    from routes import (admin_routes, alert_routes, api_routes, asof_routes, auth_routes, build_routes, pack_routes, connector_designer_routes, calc_routes, export_routes, help_routes, home_routes,
                         designer_routes, designer_grid_routes, dist_routes, layout_routes, monitor_routes, pivot_routes, report_routes, approval_routes, server_routes, ship_routes, studio_routes, terminal_routes,
                         workspace_routes, collab_routes, thread_routes, collab_admin_routes, embed_admin_routes, connector_routes, form_routes,
                         ai_routes)
@@ -360,7 +353,7 @@ def create_app(settings: Settings) -> FastAPI:
     from routes import data_out_routes
     from routes import elements_routes, render_routes
     from routes import explain_routes
-    from routes import admin_commands_routes, admin_engines_routes, artifact_routes, changes_routes, compute_admin_routes, data_routes, datamap_routes, drafts_routes, functions_routes, history_routes, phone_routes, lake_maint_routes, lake_routes, net_routes
+    from routes import admin_commands_routes, admin_engines_routes, artifact_routes, changes_routes, live_routes, compute_admin_routes, data_routes, datamap_routes, drafts_routes, functions_routes, history_routes, phone_routes, lake_maint_routes, lake_routes, net_routes
 
     def _warm_help(app) -> None:
         """Help's pages rendered once, in a worker thread, as the console starts: the first global search (Alt+K) then reads cached text
@@ -461,6 +454,8 @@ def create_app(settings: Settings) -> FastAPI:
         TAGLINE=settings.get("ui.tagline", ""),
         HEADLINE=settings.get("ui.headline", ""),
         HEADLINE_ACCENT=settings.get("ui.headline_accent", ""),
+        HEADLINE_SECOND=settings.get("ui.headline_second", ""),
+        HEADLINE_SECOND_ACCENT=settings.get("ui.headline_second_accent", ""),
         DEFAULT_THEME=settings.get("ui.default_theme", "terminal"),
         DESK=settings.get("ui.desk", "Rates desk"),
         USER=settings.get("ui.user_display", "Ash"),
@@ -477,6 +472,9 @@ def create_app(settings: Settings) -> FastAPI:
         REFRESH_MIN=_bounded(settings.get("views.refresh_min_seconds", 5), 1, 3600, 5),
         ABOUT_PREFETCH=str(settings.get("ui.about_prefetch", True)).lower() not in ("false", "0", "no", "off"),
     )
+    base = _base_path.normalize(settings.get("server.base_path", ""))    # the console's URL sub-path behind a proxy (core/base_path.py); "" = /
+    app.state.base_path = base
+    _base_path.install(templates.env, base)                               # BASE and the filter u: href="{{ BASE }}/bi", "{{ item.href | u }}"
     from core.asof import to_local
 
     templates.env.globals["known_local"] = to_local
@@ -503,13 +501,24 @@ def create_app(settings: Settings) -> FastAPI:
         return str(text or "").replace("{product}", str(ctx.get("PRODUCT") or ""))
 
     templates.env.filters["product"] = product
+
+    def list_words(text):
+        """A list attribute's JSON text (["fx","rates"], the list format) as words, before drishti-core turns it into chips."""
+        try:
+            items = json.loads(text)
+        except (TypeError, ValueError):
+            return text
+        return ", ".join(str(x) for x in items if x is not None) if isinstance(items, list) else text
+
+    templates.env.filters["list_words"] = list_words
     from core import half_up
     half_up.install(templates.env)                      # the panel macros' one rounding rule (half up, as the server and the renderer)
     app.state.settings = settings
     from core.edition import Editions
 
     def _branding_changed() -> None:                    # the instance's edition or the server's branding changed: the pages follow
-        for g, key in (("PRODUCT", "ui.product"), ("TAGLINE", "ui.tagline"), ("LOGO", "ui.logo"), ("FAVICON", "ui.favicon"),
+        for g, key in (("PRODUCT", "ui.product"), ("TAGLINE", "ui.tagline"), ("NOTICE", "ui.notice"), ("COPYRIGHT", "ui.copyright"),
+                       ("OWNER", "ui.owner"), ("LOGO", "ui.logo"), ("FAVICON", "ui.favicon"),
                        ("APPLE_TOUCH_ICON", "ui.apple_touch_icon"), ("HELP_TITLE", "ui.help_title"), ("DEFAULT_DENSITY", "ui.default_density")):
             templates.env.globals[g] = settings.get(key, "") or ""
         templates.env.globals["DEFAULT_THEME"] = settings.get("ui.default_theme", "terminal") or "terminal"   # the distribution's theme
@@ -547,9 +556,9 @@ def create_app(settings: Settings) -> FastAPI:
     from core import modules as _modules_state
 
     def _page_modules(request) -> list[str]:
-        """The domain modules this person's page may load Elements libraries of (core/modules.py): on, and used by their lens or edition."""
-        ed = getattr(getattr(request, "state", None), "edition", None)
-        return _modules_state.modules_for_page(ed.name if ed is not None and ed.active else None)
+        """The domain modules this person's page may load Elements libraries of (core/modules.py): those on (a lens never hides one)."""
+        del request
+        return _modules_state.modules_for_page(None)
 
     templates.env.globals["page_modules"] = _page_modules
     templates.env.globals["module_on"] = _modules_state.module_on          # a module's part of a page (the World landing's capital markets)
@@ -562,7 +571,6 @@ def create_app(settings: Settings) -> FastAPI:
     templates.env.globals["bi_rail"] = _menus.bi_rail              # the BI rail: the sitemap's bi menu
     templates.env.globals["command_placeholder"] = _menus.placeholder
     templates.env.globals["lens_links"] = _menus.lens_links
-    templates.env.globals["lens_menu"] = _menus.lens_menu          # the subject menus folded into one on a phone (LX1 option C)
     from core import engines as _engines_state
     templates.env.globals["engine_available"] = _engines_state.engine_available   # an engine running here or on a peer (Admin -> Data out: flight)
     from core import phone as _phone
@@ -649,7 +657,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.state.business_dates = BusinessDates()
     from core.facts import FactsService
 
-    app.state.facts = FactsService(settings)                  # Home's fact of the day (config/packs/<domain>/<pack>/config/facts.yaml)
+    app.state.facts = FactsService(settings)                  # Home's fact of the day (modules/<module>/packs/<pack>/config/facts.yaml)
     app.state.templates = templates
     from starlette.requests import ClientDisconnect
 
@@ -658,7 +666,8 @@ def create_app(settings: Settings) -> FastAPI:
     app.add_middleware(AuthGate)
     app.add_middleware(SameOrigin, allowed=settings.get("auth.allowed_origins") or ())    # before any session work
     app.add_middleware(SecurityHeaders)
-    app.add_middleware(AppEngines)                       # outermost: every request reads its own app's engines
+    app.add_middleware(AppEngines)                       # every request reads its own app's engines
+    app.add_middleware(_base_path.BasePath, base=base)   # outermost: the URL sub-path off what comes in, onto Location and cookie paths
     app.add_exception_handler(BodyError, problem)
     app.add_exception_handler(ClientDisconnect, gone)
     from core.notfound import not_found
@@ -692,6 +701,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(terminal_routes.router)
     app.include_router(drafts_routes.router)            # form drafts (RACHANA_REFERENCE.md 10), before the general API routes
     app.include_router(drafts_routes.lookup_router)     # an entity field's live search (/api/forms/lookup)
+    app.include_router(live_routes.router)              # the live result sets: /live/<id> and /api/live (the grid's live mode)
     app.include_router(changes_routes.router)           # write-back: /api/changes, Review -> Changes, Admin -> Edits (before the admin and API routes)
     app.include_router(api_routes.router)
     app.include_router(render_routes.router)            # the client-side renderer's playground (EMBED_GUIDE.md section 13)
@@ -700,6 +710,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(studio_routes.router)
     app.include_router(build_routes.router)
     app.include_router(pack_routes.router)
+    app.include_router(connector_designer_routes.router)
     app.include_router(approval_routes.router)          # the one Approvals queue (SHARED_SCREENS.md section 2) and the old review pages' redirects
     app.include_router(ship_routes.router)
     app.include_router(admin_routes.router)
@@ -716,7 +727,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(layout_routes.router)
     app.include_router(designer_routes.router)          # the Sutra designer (ui.designer, off by default)
     app.include_router(designer_grid_routes.router)     # its Grid mode
-    app.include_router(pivot_routes.router)            # the pivot screen: PIVOT [table | @owner/name | panel], /api/pivot/... (PIVOT_GUIDE.md)
+    app.include_router(pivot_routes.router)            # the pivot screen: PIVOT [table | @owner/name | panel], /api/pivot/... (bi/PIVOT.md)
     app.include_router(collab_routes.router)
     app.include_router(thread_routes.router)
     app.include_router(collab_admin_routes.router)

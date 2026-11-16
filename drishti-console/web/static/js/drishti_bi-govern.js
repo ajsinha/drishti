@@ -13,7 +13,8 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Rupaka phase 4 (docs/architecture/ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 20.4, docs/guides/REPORTS_GUIDE.md): on an item's page, the history of saved states with the side-by-side diff and
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
+/* Rupaka phase 4 (docs/architecture/ARCHITECTURE.md §28 › Rūpaka: the original design and every phase as built, section 20.4, docs/guides/bi/README.md): on an item's page, the history of saved states with the side-by-side diff and
    restore, the review panel (request, diff, Check, impact, data preview, decisions), lineage, impact ("what breaks if I remove ..."), and the "publish anyway" a
    bi-admin gets after a refusal. drishti_bi.js announces the item it has drawn with the event bi:item and a refused action with bi:refused. Text only, never markup. */
 (function () {
@@ -27,7 +28,7 @@
   function say(text, bad) { B.say(q('[data-msg]'), text, bad); }
   function fail(e) { say(e.message, true); }
   function stamp(iso) { return iso ? iso.replace('T', ' ').replace(/\.\d+Z?$|Z$/, '') : ''; }
-  function link(it) { return h('a', { href: '/bi/i/' + encodeURIComponent(it.id).replace(/%3A/g, ':'), text: it.title }); }
+  function link(it) { return h('a', { href: drishti_url('/bi/i/' + encodeURIComponent(it.id).replace(/%3A/g, ':')), text: it.title }); }
   function badge(text, cls, ic) { return h('span', { class: 'bi-badge ' + (cls || '') }, ic ? icon(ic) : null, ' ' + text); }
   function endorse(it) {
     if (it.endorsement === 'certified') { return badge('certified', 'bi-certified', 'patch-check'); }
@@ -110,7 +111,7 @@
     if (im.altered && im.altered.length) {
       box.appendChild(h('p', { class: 'text-muted-d', text: im.altered.length + ' published report' + (im.altered.length === 1 ? '' : 's') + ' use' + (im.altered.length === 1 ? 's' : '') + ' them and will show different figures (not refused):' }));
       box.appendChild(h('ul', { 'data-altered': true }, im.altered.map(function (x) {
-        return h('li', {}, x.visible ? [h('a', { href: '/bi/i/' + encodeURIComponent(x.id).replace(/%3A/g, ':'), text: x.title }), ' — ', h('span', { class: 'mono', text: x.uses.join('; ') })] : '(a report you cannot see)');
+        return h('li', {}, x.visible ? [h('a', { href: drishti_url('/bi/i/' + encodeURIComponent(x.id).replace(/%3A/g, ':')), text: x.title }), ' — ', h('span', { class: 'mono', text: x.uses.join('; ') })] : '(a report you cannot see)');
       })));
     }
   }
@@ -134,7 +135,7 @@
     else {
       box.appendChild(h('p', { class: 'bi-bad-line', text: im.published.length + ' published report' + (im.published.length === 1 ? '' : 's') + ' would break' + (im.refused ? ': the publish is refused' + (im.canForce ? ' (you may force it)' : '') : '') + '.' }));
       box.appendChild(h('ul', {}, im.published.map(function (x) {
-        return h('li', {}, x.visible ? [h('a', { href: '/bi/i/' + encodeURIComponent(x.id).replace(/%3A/g, ':'), text: x.title }), ' uses ', h('span', { class: 'mono', text: x.uses.join('; ') })] : '(a report you cannot see)');
+        return h('li', {}, x.visible ? [h('a', { href: drishti_url('/bi/i/' + encodeURIComponent(x.id).replace(/%3A/g, ':')), text: x.title }), ' uses ', h('span', { class: 'mono', text: x.uses.join('; ') })] : '(a report you cannot see)');
       })));
     }
     if (im.drafts && im.drafts.length) { box.appendChild(h('p', { class: 'text-muted-d', text: im.drafts.length + ' draft report' + (im.drafts.length === 1 ? '' : 's') + ' also use' + (im.drafts.length === 1 ? 's' : '') + ' them.' })); }
@@ -145,10 +146,8 @@
   }
   function previewTable(p) {
     if (!p.available) { return h('p', { class: 'bi-empty', text: 'No data preview: ' + p.reason }); }
-    var head = h('tr', {}, p.columns.map(function (c) { return h('th', { scope: 'col', text: c.name }); }));
-    var body = p.rows.map(function (r) { return h('tr', {}, r.map(function (v, i) { return h('td', { class: p.columns[i].type === 'string' ? '' : 'num', text: v == null ? '–' : (typeof v === 'number' ? v.toLocaleString('en-US', { maximumFractionDigits: 2 }) : String(v)) }); })); });
     return h('div', {}, h('p', { class: 'bi-result-meta', text: p.label + ' · ' + p.rowCount + ' row' + (p.rowCount === 1 ? '' : 's') }),
-      h('div', { class: 'tbl-wrap', tabindex: '0', role: 'region', 'aria-label': 'Data preview' }, h('table', { class: 'tbl bi-grid', 'data-plain': true }, h('thead', {}, head), h('tbody', {}, body))));
+      window.Drishti.records.table(p.columns, p.rows, { title: 'Data preview' }));   // the records grid, static
   }
   function review() {
     var sec = q('[data-sec-review]');
@@ -296,7 +295,7 @@
   /** An approval goes through the one Approvals queue (the BI item is its kind bi); publishing stays the item's own. */
   function send(sub, note, extra) {
     if (sub !== 'approve') { return B.api('POST', path() + '/' + sub, Object.assign({ note: note }, extra)); }
-    return fetch('/approvals/api/item/bi/' + encodeURIComponent(item.id).replace(/%3A/g, ':') + '/approve', { method: 'POST', credentials: 'same-origin',
+    return fetch(drishti_url('/approvals/api/item/bi/' + encodeURIComponent(item.id).replace(/%3A/g, ':') + '/approve'), { method: 'POST', credentials: 'same-origin',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ comment: note, params: extra }) })
       .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) { var e = new Error(j.detail || ('HTTP ' + r.status)); e.code = j.code; throw e; } return j; }); });
   }

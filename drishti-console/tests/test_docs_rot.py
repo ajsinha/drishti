@@ -53,10 +53,12 @@ from core.guides import GithubSlugger  # noqa: E402
 
 # Markdown that is not documentation a reader opens: vendored libraries' notes, test resources, the generator's
 # README fragments (they are pasted into the packs' READMEs, which are checked) and the parallel gleif build.
-NOT_DOCS = ("drishti-console/web/static/vendor/", "plugins/drishti-plugin-feeds/src/test/",
+NOT_DOCS = ("drishti-console/web/static/vendor/", "plugins/drishti-connectors/src/test/",
             "tools/packgen/", "tools/elements-demo/", "data/", "config/packs/core/gleif/")
 # History: names that were true when written. Links in these must still resolve; the names in them need not exist.
-HISTORY = ("CHANGELOG.md", "RELEASE_NOTES.md")
+HISTORY = ("CHANGELOG.md", "RELEASE_NOTES.md",
+           # the configuration-resolution working paper: an inventory of the code at one commit (its paths and line numbers are of then)
+           "docs/architecture/pack-resolution-inventory.md")
 
 
 @functools.lru_cache(maxsize=None)
@@ -229,9 +231,9 @@ def _pack_roots(rel: str) -> list[str]:
 
 @functools.lru_cache(maxsize=None)
 def pack_roots_all() -> tuple[str, ...]:
-    """Every pack folder: a folder holding a pack.yaml under config/packs (in its domain folder, core.pack_paths) or examples/packs."""
+    """Every pack folder: a folder holding a pack.yaml under config/packs (in its domain folder, core.resolution) or examples/packs."""
     return tuple(sorted({p[: -len("/pack.yaml")] for p in tracked()
-                         if re.match(r"(?:config|examples)/packs/(?:[^/]+/)?[^/]+/pack\.yaml$", p)}))
+                         if re.match(r"(?:(?:config|examples)/packs/(?:[^/]+/)?|modules/[^/]+/(?:dmod/)?packs/)[^/]+/pack\.yaml$", p)}))
 
 
 def ignored(paths: list[str]) -> set[str]:
@@ -256,7 +258,7 @@ EXAMPLE_PATHS = {
 
 
 def _expand(token: str) -> list[str]:
-    """``drishti-server/.../cli/{SutraCli,ExpectFile}.java`` is two paths."""
+    """``kernel/drishti-server/.../cli/{SutraCli,ExpectFile}.java`` is two paths."""
     m = re.search(r"\{([^{}]+)\}", token)
     return [t for part in m.group(1).split(",") for t in _expand(token[:m.start()] + part + token[m.end():])] if m else [token]
 
@@ -271,7 +273,7 @@ def path_exists(token: str, rel: str) -> bool:
     here = str(Path(rel).parent)
     for base in ["", here] + _pack_roots(rel) + list(pack_roots_all()):
         cand = f"{base}/{token}".strip("/") if base and base != "." else token
-        if "..." in cand or "*" in cand:                                 # drishti-engine/.../view/PanelData.java: any depth
+        if "..." in cand or "*" in cand:                                 # kernel/drishti-engine/.../view/PanelData.java: any depth
             pattern = re.escape(cand).replace(r"\.\.\.", ".*").replace(r"\*", "[^/]*")
             if any(re.fullmatch(pattern, p) for p in tracked_set()):
                 return True
@@ -364,8 +366,9 @@ CODE_SUFFIXES = (".java", ".py", ".js", ".ts", ".yaml", ".yml", ".sh", ".ps1", "
 # Variables a document makes up for the reader: a CI secret, the placeholder form of the console's variables.
 ENV_EXAMPLES = {"DRISHTI_PG_PASSWORD", "DRISHTI_CI_TOKEN", "DRISHTI_CONSOLE__SECTION__KEY",
                 "DRISHTI_CONSOLE",   # tutorial 10: a shell variable holding the console's address, beside DRISHTI_SERVER
-                "DRISHTI_FIGURES_OUT", "DRISHTI_FIGURES_BASELINE"}   # read only by tests/test_var_family_figures_browser.py (ELEMENTS.md 12.2)
-# Dotted words that look like console keys and are not: a report's YAML path quoted in an error message (REPORTS_GUIDE.md).
+                "DRISHTI_FIGURES_OUT", "DRISHTI_FIGURES_BASELINE",   # read only by tests/test_var_family_figures_browser.py (ELEMENTS.md 12.2)
+                "DRISHTI_SWEEP_ROLE", "DRISHTI_SWEEP_BASE"}   # read only by tests/test_command_sweep_browser.py (TEST_HARNESS.md 3.27)
+# Dotted words that look like console keys and are not: a report's YAML path quoted in an error message (bi/REPORTS.md).
 NOT_SETTINGS = {"layouts.phone.desk.order"}
 
 
@@ -407,7 +410,7 @@ def _camel(s: str) -> str:
 
 @functools.lru_cache(maxsize=None)
 def server_keys() -> frozenset[str]:
-    rels = [p for p in tracked() if p.startswith("drishti-server/src/main/resources/application") and p.endswith(".yaml")]
+    rels = [p for p in tracked() if p.startswith("kernel/drishti-server/src/main/resources/application") and p.endswith(".yaml")]
     return yaml_keys(*rels)
 
 
@@ -415,7 +418,7 @@ def server_keys() -> frozenset[str]:
 def properties_prefixes() -> dict[str, str]:
     """prefix -> the text of every class bound to it: a @ConfigurationProperties class, or a plain record the server binds
     with Spring's ``Binder`` (``Binder.get(env).bind("drishti.lake.memory", MemoryLakeSettings.class)``: the in-memory
-    lake's settings live in the Spring-free drishti-memlake)."""
+    lake's settings live in the Spring-free in-memory lake of drishti-lakeload)."""
     out: dict[str, str] = {}
     for p in tracked():
         if p.endswith(".java") and "/src/main/" in p:
@@ -573,7 +576,7 @@ RESERVED_WORDS = {"BI", "RUPAKA", "FORM", "FUNC", "VAR", "WHAT", "DATAMAP", "DAT
 def packs() -> list[dict]:
     out = []
     for p in tracked():
-        if re.match(r"(config/|examples/|docs/guides/examples/)packs?/(?:[^/]+/)?[^/]+/pack\.yaml$", p) or re.match(r"drishti-[a-z-]+/src/test/resources/.*packs/[^/]+/pack\.yaml$", p):
+        if re.match(r"((config/|examples/|docs/guides/examples/)packs?/(?:[^/]+/)?|modules/[^/]+/(dmod/)?packs/)[^/]+/pack\.yaml$", p) or re.match(r"(?:[a-z]+/)?drishti-[a-z-]+/src/test/resources/.*packs/[^/]+/pack\.yaml$", p):
             try:
                 out.append(yaml.safe_load(read(p)) or {})
             except yaml.YAMLError:
@@ -612,7 +615,8 @@ _GO = re.compile(r"(?:^[ \t>*-]*|[`\"“(])([A-Z][A-Z0-9]{1,9})(?:[ \t]+[^\s`<|]
 _KIND_SAID = re.compile(r"(?:\bthe `([a-z][a-z0-9-]*)` kind\b|\bdrishti\.py [^\n`]*--kind[ =]([a-z][a-z0-9-]*)\b|\s/v/([a-z][a-z0-9-]*)/)")
 _KIND_DEFINED = re.compile(r"^\s*-?\s*kind:\s*([a-z][a-z0-9-]*)\s*$", re.M)
 # Words a document uses as made-up examples of what an author would add (a pack being written in a tutorial).
-EXAMPLE_WORDS = {"ORD",          # CONNECTORS (Combining connectors): the illustrative equity-desk pack
+EXAMPLE_WORDS = {"WORD",         # TEST_HARNESS: a function typed bare
+                 "ORD",          # CONNECTORS (Combining connectors): the illustrative equity-desk pack
                  "DEA",          # DATA_GUIDE's schema to pack: the pack a schema turns into
                  "MYBOOK"}       # USER_GUIDE: a saved command a user names
 EXAMPLE_KINDS = {"deals", "desk-quote",                          # DATA_GUIDE's schema-to-pack generated pack; tutorial 15 adds desk-quote in the page
@@ -697,8 +701,8 @@ def test_obsolete_designs_are_deleted_not_archived():
 
 def test_the_corpus_is_the_whole_documentation():
     docs = documents()
-    assert "README.md" in docs and "drishti-stack/README.md" in docs
-    assert any(d.startswith("config/packs/") and d.endswith("/README.md") for d in docs)
+    assert "README.md" in docs and "deploy/stack/README.md" in docs
+    assert any("/packs/" in d and d.endswith("/README.md") for d in docs)
     assert any(d.startswith("plugins/") for d in docs) and any(d.startswith("docs/tutorials/") for d in docs)
     assert len(docs) > 200
 

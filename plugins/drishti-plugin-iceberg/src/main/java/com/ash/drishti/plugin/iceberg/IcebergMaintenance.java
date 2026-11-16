@@ -16,6 +16,7 @@
 package com.ash.drishti.plugin.iceberg;
 
 import com.ash.drishti.api.LoadGuard;
+import com.ash.drishti.common.RowRetention;
 import com.ash.drishti.plugin.iceberg.KindTable.Day;
 import com.ash.drishti.plugin.iceberg.KindTable.Layout;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -39,6 +40,9 @@ import java.util.concurrent.ExecutorService;
  *       {@code --as-of} (today; a day after it is neither counted nor deleted), a metadata-only delete of whole
  *       partitions; it refuses to delete more than {@code --max-drop-share} (0.5) of a table's rows without
  *       {@code --force-drop} ({@link LoadGuard});</li>
+ *   <li>{@code --ttl 8h --on FIELD --max-rows N}: the table's row retention (DATA_LAKE_GUIDE.md, Row retention): rows older than the ttl by the
+ *       field (without {@code --on}: the {@code arrived_at} column, else the business date) and beyond the newest N are removed, each business
+ *       day holding such rows rewritten without them, one commit a day (snapshots expire after, by {@code --expire-hours});</li>
  *   <li>{@code --relayout}: rewrites, sorted by id into files of the table's {@code file-rows}, each business day that
  *       drifted from the layout (an append whose ids overlap the day's files, a file over {@code file-rows}, more files
  *       than needed, delete files, a promoted column missing from a file); {@code --force} rewrites every day;
@@ -99,6 +103,22 @@ public final class IcebergMaintenance {
         return out;
     }
 
+    /**
+     * Row retention ({@code retention: {ttl, on, max-rows}}) for the Iceberg table {@code domain/table} of the lake at {@code root}: a line
+     * per business date rewritten ({@code date}, {@code rows}, {@code dropped}). Called by name from {@code LakeRetention} (the Delta side).
+     */
+    public static List<Map<String, Object>> retentionTable(String root, String domain, String kind, String ttl, String on, Integer maxRows,
+            boolean dryRun, Path spillDir) throws Exception {
+        try (LayoutLake view = LayoutLake.of(new HashMap<>(Map.of("root", root, "domain", domain, "engine", "native")))) {
+            var table = view.load(kind);
+            if (table.isEmpty()) {
+                return List.of();
+            }
+            com.ash.drishti.iceberg.Table t = ((LayoutLake.Native.Kind) table.get()).t();
+            return NativeMaintenance.retention(t, new RowRetention(ttl, on, maxRows), java.time.Instant.now(), spillDir, 256L << 20, dryRun);
+        }
+    }
+
     public static void main(String[] args) throws Exception {
         Map<String, String> settings = new HashMap<>();
         settings.put("root", args.length > 0 && !args[0].startsWith("--") ? args[0] : com.ash.drishti.api.DataDir.under("iceberg"));
@@ -118,6 +138,9 @@ public final class IcebergMaintenance {
         boolean orphans = false;
         boolean dryRun = false;
         boolean json = false;
+        String ttl = null;                                      // row retention (DATA_LAKE_GUIDE.md, Row retention)
+        String on = null;
+        Integer maxRows = null;
         for (int i = 0; i < args.length; i++) {
             String v = i + 1 < args.length ? args[i + 1] : "";
             switch (args[i]) {
@@ -126,6 +149,9 @@ public final class IcebergMaintenance {
                 case "--catalog", "--uri", "--warehouse", "--credential", "--token", "--engine" -> settings.put(args[i].substring(2), v);
                 case "--set" -> settings.put(v.substring(0, v.indexOf('=')), v.substring(v.indexOf('=') + 1));
                 case "--keep-days" -> keepDays = Integer.parseInt(v);
+                case "--ttl" -> ttl = v;
+                case "--on" -> on = v;
+                case "--max-rows" -> maxRows = Integer.valueOf(v);
                 case "--expire-hours" -> expireHours = Long.parseLong(v);
                 case "--buffer-mb" -> budget = Long.parseLong(v) * 1024 * 1024;
                 case "--spill-dir" -> spill = Path.of(v);
@@ -168,6 +194,7 @@ public final class IcebergMaintenance {
                     + ": a file younger may belong to a load that has not committed yet");
             System.exit(2);
         }
+        RowRetention rowRetention = new RowRetention(ttl, on, maxRows);
         LoadGuard guard = LoadGuard.fromArgs(args);
         LocalDate floor = floorDays > 0 ? guard.asOf().minusDays(floorDays - 1L) : null;
         if (floorDays > 0 && expireHours >= 0 && expireHours < floorDays * 24L) {
@@ -212,6 +239,13 @@ public final class IcebergMaintenance {
                                 report.put("keepDays", Map.of("removed", n));
                                 say(json, "%s: %d business days removed%n", name, n);
                             }
+                        }
+                        if (rowRetention.active()) {
+                            List<Map<String, Object>> days = NativeMaintenance.retention(native0, rowRetention, java.time.Instant.now(),
+                                    spill.resolve("drishti-iceberg-" + ProcessHandle.current().pid()), budget, dryRun);
+                            report.put("rowRetention", days);
+                            long dropped = days.stream().mapToLong(d -> ((Number) d.get("dropped")).longValue()).sum();
+                            say(json, "%s: %d rows %s past the row retention%n", name, dropped, dryRun ? "would be dropped" : "dropped");
                         }
                         if (!dryRun && addColumns.containsKey(kind)) {
                             t.addColumns(addColumns.get(kind));

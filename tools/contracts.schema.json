@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://drishti.local/schemas/data-contract.schema.json",
   "title": "Drishti data contract of one command (mnemonic) kind",
-  "description": "config/packs/<domain>/<pack>/contracts/<kind>.contract.yaml. Conventions: docs/contracts/README.md; the format: its section 16. Checked by tools/contracts.py (drishti.py contract check).",
+  "description": "modules/<module>/packs/<pack>/contracts/<kind>.contract.yaml. Conventions: docs/contracts/README.md; the format: its section 16. Checked by tools/contracts.py (drishti.py contract check).",
   "type": "object",
   "additionalProperties": false,
   "required": ["kind", "mnemonic", "pack", "version", "class", "status", "title", "description", "source", "grain", "key",
@@ -29,6 +29,12 @@
         "frequency": {"enum": ["daily", "intraday", "static", "on change"]},
         "due": {"type": "string"}
       }
+    },
+    "list": {
+      "description": "How the kind may be listed: requires names the fields one of which must narrow a list (a vector-heavy input is never listed whole).",
+      "type": "object", "additionalProperties": false, "required": ["requires"],
+      "properties": {"requires": {"type": "array", "minItems": 1, "items": {"type": "string", "pattern": "^[A-Z][A-Z0-9_.]*$"}},
+                     "why": {"type": "string"}}
     },
     "binding-hint": {
       "description": "What a site usually binds (docs/architecture/KERNEL_AND_MODULES.md section 5.2): never a connector, a plugin or a location.",

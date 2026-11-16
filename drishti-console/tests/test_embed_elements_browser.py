@@ -171,15 +171,15 @@ def stack(request, tmp_path_factory):
     tmp = tmp_path_factory.mktemp("elements")
     s = Stack(tmp)
     if not _listening(SERVER_PORT):
-        jars = sorted(glob.glob(str(ROOT / "drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)  # newest build first: target may hold older versions
+        jars = sorted(glob.glob(str(ROOT / "kernel/drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)  # newest build first: target may hold older versions
         java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"
         if not jars or not Path(java).exists():
-            pytest.skip("needs the built server: ./mvnw -o -q package -DskipTests -pl drishti-app -am")
+            pytest.skip("needs the built server: ./mvnw -o -q package -DskipTests -pl :drishti-app -am")
         work = tmp / "server"
         work.mkdir()
         env = dict(os.environ, DRISHTI_PACKS="trading,counterparty-risk,market-risk", DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_SECURITY_ENABLED="true",
                    DRISHTI_TOKEN_SECRET=SECRET, DRISHTI_EMBED_ENABLED="true", DRISHTI_PUBLIC_URL=SERVER, DRISHTI_CONSOLE_URL=CONSOLE_URL)
-        s.procs["server"] = subprocess.Popen(java_cmd(java, ["-jar", jars[0], f"--server.port={SERVER_PORT}", "--drishti.security.registered-users-only=false"], tmp=tmp / "jvm-tmp"),
+        s.procs["server"] = subprocess.Popen(java_cmd(java, ["-jar", jars[0], f"--server.port={SERVER_PORT}", "--drishti.security.registered-users-only=false"], tmp=tmp / "jvm-tmp", cwd=work, env=env),
                                              cwd=work, env=env, stdout=open(tmp / "server.log", "ab"), stderr=subprocess.STDOUT)
         _wait(SERVER + "/actuator/health", 120)
     s.app_secret = register_host()

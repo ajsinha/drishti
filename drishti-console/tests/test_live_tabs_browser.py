@@ -31,6 +31,7 @@ import time
 
 import pytest
 
+import engine_fakes
 from conftest import CONSOLE, FakeBackend
 
 sync_api = pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install playwright)")
@@ -43,6 +44,8 @@ PAGE_LOAD_S = 5.0                 # "promptly": a page load never waits for a li
 
 class TickingBackend(FakeBackend):
     """The stand-in server, with views that tick: every frame changes the first strip cell."""
+
+    engine = engine_fakes.method                                  # the compute engines' calls (core/facts.py asks them), each to the class's own var, exposure ...
 
     async def stream(self, kind, id_, ident=None, opened=None):
         yield "view", json.dumps({"provenance": {"generation": 1}})

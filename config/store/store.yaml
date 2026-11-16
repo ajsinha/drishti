@@ -22,9 +22,9 @@ filesystem:
 sqlite:
   url: jdbc:sqlite:${drishti.data.dir:./data}/identity/drishti.db   # the Drishti database itself (one node)
 postgres:
-  url: ""                          # e.g. jdbc:postgresql://db:5432/drishti (the Drishti database)
-  user: drishti  # the database user
-  password: ${DRISHTI_STORE_PASSWORD:}  # its password, from the environment only
+  url: ${db.store.url:}             # e.g. jdbc:postgresql://db:5432/drishti (the Drishti database)
+  user: ${db.store.user:drishti}  # the database user
+  password: ${db.store.password:${DRISHTI_STORE_PASSWORD:}}  # its password, from the environment only
   pool: 4  # connections the store keeps at most
 s3:
   bucket: ""  # the bucket (required with backend: s3)

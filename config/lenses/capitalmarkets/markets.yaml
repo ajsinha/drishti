@@ -12,60 +12,18 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Drishti Markets: Drishti Finance's markets desk (docs/architecture/DISTRIBUTIONS.md section 3): listed companies and their filings,
-# funds and ETFs with their holdings, and the market data both Drishti Risk and Drishti Finance show (curves, FX, quotes, surfaces).
-# It ships in the capital-markets module (modules/capital-markets); no VaR, exposure or any other risk number. Home is the product's
-# Home with the Markets cards (the registry's lens markets, drishti-server META-INF/drishti/lenses.yaml).
-
+# A lens is a workspace (docs/guides/ADMIN_GUIDE.md, the three layers of switches; LENSES.md): a person opens it for their own
+# session and it arranges what the distribution has for a role: the starting Home (landings, cards), the menus' order (the ones it
+# names first, nothing left out) and default screens. It never hides anything: what exists is the distribution's
+# (config/distributions/drishti.<name>.yaml), what runs where is the module and engine switches'.
 edition: markets
 title: Drishti Markets
 description: Companies, funds and ETFs, indices and the market data around them, in one place
 
-packs:
-  enabled:                               # by module: a module that is off brings none of its packs
-    core: [core, gleif]
-    capitalmarkets: [us-equities, funds]
-    market-data: [market-data]           # the market-data module (Drishti Finance lists it beside capital-markets)
-  allow-only: true                       # Admin -> Packs, Deploy archive and the registry refuse any other pack (DRS-1017)
-
-commands:                                # what people may type and see (command line, FUNC, type-ahead, examples, pages)
-  allow:
-    # companies, filings, sectors, indices, prices
-    [USEQ, USEQS, IDX, SIC, EDGAR, FILING, FACT, PXH,
-    # legal entities
-     LEI, LEIG, LEIR, LEIC, LEIM,
-    # funds and ETFs
-     FUND, FUNDS, HELD, TRACK,
-    # market data: rates, FX, credit and bonds, equities and commodities, correlations
-     MKT, CRV, REPO, IRV, CPV, FIX, INF, INFC, FX, FXF, FXV, CDS, BND, EQ, EQX, DIV, EQV, CMD, CMDC, CMDV, CORR, CORRC, EQB]
-  words: { BI: on, RUPAKA: off, FORM: on, FUNC: on, WHAT: on, DATAMAP: on, DATA: on, VAR: off, EXP: off, SMAT: off, PLAY: off }
-
-features:                                # presets of existing switches (config/lenses/features.yaml); not named: the product's default
-  var: off
-  exposure: off
-  calc: off
-  python: off
-  designer: off
-  build: off
-  forms: on
-  datamap: on
-  data: on
-  internal-only-data: off                # Export data refuses datasets marked internal only (US equity prices, IMF, news headlines)
-  layouts: on
-  workspaces: on
-  monitors: on
-  alerts: on
-  reports: on
-  lakes: on
-  ai: off
-  embed: off
-
-menus:                                   # by id, per menu; a menu not named shows every item its switches allow
+menus:                                   # by id, per menu: the order this lens puts first; nothing is left out
   top: [views, markets, companies, bi, admin, help]
   views: [terminal, search, forms, functions, datamap, data, reports, workspaces, monitors, alerts]
   help: [help-centre, knowledge, install, about]
   footer: [help, about, release-notes]
   placeholder: "USEQ AAPL, FUND SPY, IDX SP500, CRV CRV-USD-OIS, FXV FXV-EURUSD …  then <GO>"
 
-help:
-  knowledge: [us-equities, funds, gleif, market-data]   # Knowledge pages of these packs (the rest hidden)

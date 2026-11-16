@@ -123,7 +123,14 @@ def test_a_report_on_a_model_has_its_own_measures_and_the_query_as_mq_or_sql(bro
     page.click("[data-lm-add]")
     expect(page.locator('[data-field="MTM in thousands"] [data-origin="report"], [data-field="MTM in thousands"]').first).to_be_visible(timeout=15000)
     page.click("[data-local-measure] summary")                                                   # close the form: the Fields pane stops moving under the pointer
-    page.locator('[data-field="MTM in thousands"]').scroll_into_view_if_needed()
+    for attempt in range(3):                                         # the Fields pane redraws once the new measure lands: scroll to the drawn one
+        try:
+            page.locator('[data-field="MTM in thousands"]').first.scroll_into_view_if_needed(timeout=5000)
+            break
+        except Exception:  # noqa: BLE001 - "not attached to the DOM": the pane was redrawn under the call
+            if attempt == 2:
+                raise
+            page.wait_for_timeout(100)
     page.wait_for_timeout(500)
     page.drag_and_drop('[data-field="MTM in thousands"]', "[data-canvas-grid]", target_position={"x": 80, "y": 40})
     page.drag_and_drop('[data-field="trade.DESK"]', ".bi-dvis")

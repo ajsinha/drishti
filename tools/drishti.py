@@ -104,15 +104,15 @@ def say_json(obj) -> None:
 
 
 def find_jar(explicit: str | None = None) -> str:
-    """The server's exec jar: ``explicit``, else ``DRISHTI_JAR``, else the newest ``drishti-server/target/drishti-server-*-exec.jar``."""
+    """The server's exec jar: ``explicit``, else ``DRISHTI_JAR``, else the newest ``kernel/drishti-server/target/drishti-server-*-exec.jar``."""
     jar = explicit or os.environ.get("DRISHTI_JAR")
     if jar:
         if not os.path.isfile(jar):
             raise CliError(f"jar not found: {jar}")
         return jar
-    jars = sorted(glob.glob(str(ROOT / "drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime)
+    jars = sorted(glob.glob(str(ROOT / "kernel/drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime)
     if not jars:
-        raise CliError("no drishti-server-*-exec.jar under drishti-server/target: build it (./mvnw -q -DskipTests package) or pass --jar / DRISHTI_JAR")
+        raise CliError("no drishti-server-*-exec.jar under kernel/drishti-server/target: build it (./mvnw -q -DskipTests package) or pass --jar / DRISHTI_JAR")
     return jars[-1]
 
 
@@ -138,10 +138,10 @@ def run_java(a: argparse.Namespace, args: list[str], capture: bool = False) -> s
 
 
 def find_module_tool(explicit: str | None = None) -> str:
-    """The module tool's jar: ``explicit``, else ``DRISHTI_MODULE_TOOL``, else ``drishti-module-runtime/target/drishti-module-tool.jar``."""
-    jar = explicit or os.environ.get("DRISHTI_MODULE_TOOL") or str(ROOT / "drishti-module-runtime/target/drishti-module-tool.jar")
+    """The module tool's jar: ``explicit``, else ``DRISHTI_MODULE_TOOL``, else ``kernel/drishti-module-runtime/target/drishti-module-tool.jar``."""
+    jar = explicit or os.environ.get("DRISHTI_MODULE_TOOL") or str(ROOT / "kernel/drishti-module-runtime/target/drishti-module-tool.jar")
     if not os.path.isfile(jar):
-        raise CliError(f"module tool not found: {jar}; build it (./mvnw -q package -DskipTests -pl drishti-module-runtime -am) or pass --tool / DRISHTI_MODULE_TOOL")
+        raise CliError(f"module tool not found: {jar}; build it (./mvnw -q package -DskipTests -pl :drishti-module-runtime -am) or pass --tool / DRISHTI_MODULE_TOOL")
     return jar
 
 
@@ -149,7 +149,7 @@ def cmd_module(a, extra) -> int:
     """`module pack|check|inspect`: the standalone module tool (java -jar drishti-module-tool.jar), no Maven needed; the same code as the
     Maven plugin's goals."""
     args = [a.module_cmd, absolute(a.path)]
-    for flag, val in (("--jar", getattr(a, "module_jar", None)), ("--out", getattr(a, "out", None)), ("--project", getattr(a, "project", None))):
+    for flag, val in (("--jar", getattr(a, "module_jar", None)), ("--out", getattr(a, "out", None) or (str(ROOT / "dist") if a.module_cmd == "pack" else None)), ("--project", getattr(a, "project", None))):
         if val:
             args += [flag, absolute(val)]
     if getattr(a, "cycles", None) is not None:
@@ -338,19 +338,9 @@ def cmd_sutra_gen(a, extra) -> int:
 # ------------------------------------------------------------------------------------------------ pack
 
 def cmd_pack_new(a, extra) -> int:
+    """`pack new`: JSON Lines -> a content module, bound, packed as a .dmod, checked and optionally deployed (tools/packgen/module_from_jsonl.py)."""
     need_yaml()
-    PFJ = load_module("pack_from_jsonl", "packgen/pack_from_jsonl.py")
-    if a.load and not (a.server or os.environ.get("DRISHTI_SERVER")):
-        raise CliError("--load needs --server URL (or DRISHTI_SERVER)")
-    a.jar, a.java = find_jar(a.jar), find_java(a.java)
-    rc = PFJ.run(a)
-    if rc or not a.load:
-        return rc
-    out = (a.out or ROOT / "config" / "packs" / (getattr(a, "pack_domain", None) or "core") / a.name).resolve()
-    if out.parent.parent != (ROOT / "config" / "packs").resolve():           # config/packs/<domain>/<pack>
-        print(f"drishti: --load: the server reads packs from its own packs folder (drishti.packs.dir) or installed-dir; {out} is elsewhere, "
-              f"so the server only finds it if that folder is its pack folder.", file=sys.stderr)
-    return server_pack_change(a, "load", a.name)
+    return load_module("module_from_jsonl", "packgen/module_from_jsonl.py").run(a, sys.modules[__name__])
 
 
 def cmd_pack_make(a, extra) -> int:
@@ -376,6 +366,10 @@ def check_ingest_block(pack: pathlib.Path) -> list[str]:
     for k, v in ing.items():
         if k not in kinds:
             problems.append(f"pack.yaml ingest: '{k}' is not one of the pack's kinds")
+        if isinstance(v, dict) and "child-of" in v:            # a child kind: dated as its parent (tools/packgen/childkinds.py)
+            problems += ([] if isinstance(v.get("key"), str) else [f"pack.yaml ingest.{k}: needs key: <field>"])
+            problems += load_module("childkinds", "packgen/childkinds.py").check_ingest(k, v, kinds)
+            continue
         if not isinstance(v, dict) or not isinstance(v.get("key"), str) or not (isinstance(v.get("date"), str) or v.get("snapshot") is True):
             problems.append(f"pack.yaml ingest.{k}: needs key: <field> and date: <field> (or snapshot: true, stored under the day of the load)")
     return problems
@@ -521,7 +515,7 @@ def cmd_pack_bundle(a, extra) -> int:
     PB = pack_bundle()
     need_yaml()
     pack = pathlib.Path(a.pack).resolve()
-    out = pathlib.Path(a.out).resolve() if a.out else pathlib.Path.cwd() / "dist"
+    out = pathlib.Path(a.out).resolve() if a.out else ROOT / "dist"   # the default output folder is <Drishti folder>/dist, never the working folder
     if not a.no_check:
         chk = argparse.Namespace(packs=[str(pack)], strict=False, junit=None, tail=0, json=False, jar=a.jar, java=a.java)
         if cmd_pack_check(chk, extra):

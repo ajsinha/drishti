@@ -17,11 +17,11 @@
    among them; a hidden page answers 404, core/edition_gate.py), then the menu's also: (BI settings, My account) #}
 <nav class="adm-tabs" aria-label="Administration">
   {% for t in admin_tabs(request, {'me': me, 'bi_me': bi_me, 'pack_switcher': pack_switcher, 'PRODUCT': PRODUCT}) %}
-  <a href="{{ t.href }}"{% if tab == t.tab %} aria-current="page"{% endif %} title="{{ t.desc }}" data-tab="{{ t.id }}"><i class="bi bi-{{ t.icon }}" aria-hidden="true"></i> {{ t.label }}{% if t.id == 'connectors' and status and status.connectorTemplateDrift %} <span class="adm-badge" data-drift-badge title="{{ status.connectorTemplateDrift }} connector(s) differ from their pack's template: see Template updates">{{ status.connectorTemplateDrift }}<span class="visually-hidden"> connectors differ from their pack's template</span></span>{% endif %}</a>
+  <a href="{{ t.href | u }}"{% if tab == t.tab %} aria-current="page"{% endif %} title="{{ t.desc }}" data-tab="{{ t.id }}"><i class="bi bi-{{ t.icon }}" aria-hidden="true"></i> {{ t.label }}{% if t.id == 'connectors' and status and status.connectorSupersededFiles %} <span class="adm-badge" data-drift-badge title="{{ status.connectorSupersededFiles }} superseded connector file(s), safe to delete">{{ status.connectorSupersededFiles }}<span class="visually-hidden"> superseded connector files</span></span>{% endif %}</a>
   {% endfor %}
 </nav>
 {% if status and status.defaultAdminPasswordInUse %}
 <p class="adm-warn" role="alert"><i class="bi bi-shield-exclamation" aria-hidden="true"></i>
   The development admin <b class="mono">drishti-dev-admin</b> still has its default password. Change it now
-  (sign in as it and use <a href="/account">My account</a>), and turn off seeding in production (<span class="mono">DRISHTI_SEED_ADMIN=false</span>).</p>
+  (sign in as it and use <a href="{{ BASE }}/account">My account</a>), and turn off seeding in production (<span class="mono">DRISHTI_SEED_ADMIN=false</span>).</p>
 {% endif %}

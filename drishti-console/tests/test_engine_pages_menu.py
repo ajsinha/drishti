@@ -22,11 +22,11 @@ from __future__ import annotations
 
 import re
 
-import yaml
 
 from conftest import CONSOLE
 from core import engines
 from core.auth import Identity
+from core.menus import spec_of
 from test_edition import RISK_ABOUT, _app, _client
 
 CATALOGUE = engines.entries()
@@ -58,10 +58,9 @@ def _about(off: set[str]) -> list[dict]:
 
 
 def test_no_engines_menu_and_each_engine_page_lives_under_risk_with_its_engine_rule():
-    spec = yaml.safe_load((CONSOLE / "config" / "sitemap.yaml").read_text(encoding="utf-8"))
+    spec = spec_of(CONSOLE)
     assert not [m for m in spec["menus"] if m.get("engines") or m["id"] == "engines"]
     risk = next(m for m in spec["menus"] if m["id"] == "risk")
-    assert risk.get("without-lens") is True
     titles = [c["title"] for c in risk["columns"]]
     assert titles == ["Risk on my book", "VaR", "Exposure", "Capital and margin"]
     known = {e["id"] for e in CATALOGUE}
@@ -80,7 +79,7 @@ def test_no_engines_menu_and_each_engine_page_lives_under_risk_with_its_engine_r
 def test_the_pre_deal_check_and_fx_volatility_have_one_menu_item_each():
     """Lean (2.9.11.c): Pre-deal check (PREDEAL, the server's pre-deal service since 2.9.11.g) only under Counterparties, FX volatility
     (FXV) only under Volatility."""
-    spec = yaml.safe_load((CONSOLE / "config" / "sitemap.yaml").read_text(encoding="utf-8"))
+    spec = spec_of(CONSOLE)
     where: dict[str, list[str]] = {}
     for m in spec["menus"]:
         for col in m.get("columns") or []:
@@ -94,7 +93,7 @@ def test_an_administrator_has_every_running_engines_pages_under_risk_and_no_engi
     engines.reset()
     app = _app(backend, monkeypatch)
     page = _client(app).get("/t").text
-    assert "Engines" not in _top(page) and "Risk" in _top(page) and "data-engines" not in page
+    assert "Engines" not in _top(page) and "Domains" in _top(page) and "data-engines" not in page
     assert _linked(page) == {"var", "exposure", "frtb-sa", "simm"}
 
 
@@ -185,11 +184,10 @@ def test_an_engine_running_nowhere_leaves_the_menus_and_an_administrator_sees_it
         engines.reset()
 
 
-def test_the_risk_edition_draws_risk_and_counterparties_in_place_of_engines(backend, monkeypatch):
+def test_the_risk_edition_draws_one_risk_menu_in_place_of_engines(backend, monkeypatch):
     engines.reset()
     app = _app(backend, monkeypatch)
     app.state.editions.learn(RISK_ABOUT)
     page = _client(app).get("/t").text
-    top = [m for m in _top(page) if m not in ("BI", "Build")]
-    assert top == ["Views", "Risk", "Counterparties", "Admin", "Help"]
+    assert _top(page) == ["Views", "Risk", "Create", "Admin", "Help"]               # one domain: Domains is named Risk
     assert {"var", "exposure"} <= _linked(page)

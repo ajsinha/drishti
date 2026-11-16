@@ -123,7 +123,12 @@ def world_console():
 
     app = create_app(load_settings(CONSOLE / "config"))
     app.state.backend = WorldBackend()
-    app.state.editions.learn({"product": "Drishti World", "edition": {"name": "world", "title": "Drishti World"}})
+    # a lens is a workspace the person works in (docs/admin/LENSES.md), never the server's edition: the server offers it,
+    # and the person's settings name it
+    app.state.editions.learn({"product": "Drishti World", "edition": None, "lenses": ["world"]})
+    async def _in_world(ident=None):
+        return {"lens": "world"}
+    app.state.backend.settings = _in_world
     server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=PORT, log_level="warning", timeout_graceful_shutdown=2))
     thread = threading.Thread(target=server.run, daemon=True)
     thread.start()
@@ -163,7 +168,7 @@ def test_each_world_landing_fills_from_the_packs_and_fits(browser, world_console
             page.wait_for_function("() => document.querySelector('[data-wl-count=LEI]').textContent === '9,937'")
             assert page.locator("[data-wl-count=USEQ]").inner_text() == "586"
             recents = page.locator("[data-wl-recents]").inner_text()
-            assert "ECON CAN" in recents and "TRD" not in recents
+            assert "ECON CAN" in recents and "FUND SPY" in recents   # a lens arranges, never hides: every command opened is recent
         else:
             page.wait_for_function("() => document.querySelectorAll('[data-wl-regions] .wl-reg').length >= 4")
             assert "South Asia" in page.locator("[data-wl-regions] .wl-reg.hot").inner_text()    # the fastest-growing region leads

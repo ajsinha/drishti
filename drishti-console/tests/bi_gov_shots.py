@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Makes the pictures and the captured output of docs/guides/REPORTS_GUIDE.md, REPORTS_GUIDE.md and BI_TUTORIAL.md (chapter 17) from the real stack (not a test: run it by hand).
+"""Makes the pictures and the captured output of docs/guides/bi/README.md, bi/README.md and BI_TUTORIAL.md (chapter 17) from the real stack (not a test: run it by hand).
 
     drishti-console/.venv/bin/python drishti-console/tests/bi_gov_shots.py <pictures dir> <captures.json>
 
@@ -99,7 +99,7 @@ def main(out: Path, captures: Path) -> None:
                 ann.wait_for_function("() => document.querySelector('[data-msg]').textContent.includes('Proposed')")
                 sue = sign_in(browser, "sue")
                 open_item(sue, ids["positions"])
-                sue.wait_for_selector("[data-review-body] table.bi-grid")
+                sue.wait_for_selector("[data-review-body] .rc-host .dg-row[data-key]")
                 sue.wait_for_timeout(500)
                 shot(sue, "[data-sec-review]", out / "review.png")
                 got["review"] = call("GET", f"/bi/items/{ids['positions']}/review", "sue", sue_roles)[1]

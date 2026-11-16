@@ -31,6 +31,7 @@ import argparse
 import fcntl
 import hashlib
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -40,7 +41,7 @@ from typing import Callable
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCES = ("data/testdata", "tools/testdata", "tools/pvgen", "tools/lake", "tools/drishti.py", "tools/build_demo_lakes.py", "tools/demonames.py", "config/demo",
-           "config/packs", "drishti-lakeload/src/main", "drishti-deltalake/src/main")
+           "config/packs", "config/lakes", "tools/packgen", "lake/drishti-lakeload/src/main", "lake/drishti-deltalake/src/main")
 DONE = "BUILT"
 KEEP = 3
 
@@ -88,14 +89,29 @@ def cached(name: str, build: Callable[[Path], None], root: Path = ROOT) -> Path:
 
 
 def demo_lake(only: str, as_of: str, extra: tuple[str, ...] = (), root: Path = ROOT, python: str = sys.executable) -> Path:
-    """The folder of a demo lake of ``only`` ending ``as_of`` (``delta/`` inside), built with the Python writer once per hash."""
+    """The folder of a demo lake of ``only`` ending ``as_of`` (``delta/`` inside), built once per hash by the default fast path (lake demo's parallel Java loader, several tables at a time). ``only``
+    empty: every dataset of the saved test data (the full demo lake the sweeps run on, about 3 GB, minutes to build)."""
     def build(work: Path) -> None:
         r = subprocess.run([python, str(root / "tools" / "drishti.py"), "lake", "demo", "--lake", str(work / "delta"), "--data-dir", str(work / "data"),
-                            "--connectors-dir", str(work / "connectors"), "--as-of", as_of, "--only", only, "--no-signal", "-q",
-                            "--engine", "deltalake", *extra], capture_output=True, text=True, cwd=root, timeout=1500)
+                            "--connectors-dir", str(work / "connectors"), "--as-of", as_of, *(("--only", only) if only else ()), "--no-signal", "-q", *extra], capture_output=True, text=True, cwd=root, timeout=1500 if only else 3600)
         if r.returncode != 0:
             raise RuntimeError("lake demo failed: " + (r.stderr or r.stdout)[-800:])
+        point_connectors(work / "connectors", work.with_name(work.name.removesuffix(".building")) / "delta")
     return cached("|".join((only, as_of, *extra)), build, root)
+
+
+def point_connectors(folder: Path, lake: Path) -> int:
+    """Points the connector files a lake build wrote at ``lake``, where the lake is now: the build writes them while the lake is still in
+    its ``<name>.building`` folder, which ``cached`` then renames, so they named a folder that no longer exists (drill of 2026-11-15).
+    Every ``<...>.building/delta`` path in them becomes ``lake``. Returns the number of files changed."""
+    changed = 0
+    for f in sorted(folder.glob("*.yaml")) if folder.is_dir() else []:
+        text = f.read_text(encoding="utf-8")
+        new = re.sub(r"[^\s;:]+\.building/delta", lambda _m: str(lake), text)
+        if new != text:
+            f.write_text(new, encoding="utf-8")
+            changed += 1
+    return changed
 
 
 def prune(keep: int = KEEP, root: Path = ROOT) -> list[str]:

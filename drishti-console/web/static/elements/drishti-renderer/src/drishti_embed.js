@@ -20,6 +20,7 @@
 import { LiveClient } from '../../drishti-data/src/drishti_index.js';
 import { signInFor } from './drishti_signin.js';
 import { statics } from './drishti_assets.js';
+import { url as drishtiUrl } from '../../drishti-core/src/drishti_index.js';
 
 /** The Elements version this renderer carries. */
 export const ELEMENTS_VERSION = '2.3.0';
@@ -28,11 +29,12 @@ export const API = '/embed/v2';
 /** The page's settings (DrishtiElements.configure): the console, the token provider, auth, the live connection's waits. */
 export const cfg = { server: '', tokenProvider: null, auth: null, retryMinMs: 2000, retryMaxMs: 30000, silenceMs: 30000, closeGraceMs: 1500 };
 
+// the console's root (its base path kept): the static root less static/, or, served to other origins under /embed/v2/, less that
 /**
  * The console the elements read when no server is named: the one that serves the library.
  * @returns {string}
  */
-export const serverOf = () => (cfg.server || new URL(statics('')).origin).replace(/\/$/, '');
+export const serverOf = () => (cfg.server || statics('').replace(/(?:static|embed\/v2)\/$/, '')).replace(/\/$/, '');
 
 
 /**
@@ -102,7 +104,7 @@ export async function resolve(text, opts = {}) {
 async function authed(url, init, signal) {
   for (let attempt = 0; ; attempt++) {
     const t = await getToken(attempt > 0);
-    const res = await fetch(url, Object.assign({}, init, { signal, cache: 'no-store', credentials: 'omit',
+    const res = await fetch(drishtiUrl(url), Object.assign({}, init, { signal, cache: 'no-store', credentials: 'omit',
       headers: Object.assign({}, init && init.headers, t ? { Authorization: 'Bearer ' + t } : {}) }));
     if (res.status === 401) { if (attempt === 0 && cfg.tokenProvider) { continue; } needers.forEach((fn) => fn(cfg.tokenProvider ? 'refused' : 'missing')); }
     return res;

@@ -12,16 +12,16 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The VaR browser files' stack: the market-risk pack's committed VaR data built into a scratch lake ONCE PER TEST RUN for every worker
-(browser_harness.shared_once; the build takes minutes), and a real server over it per file (wb_live's pool), the demo connector off
-(docs/architecture/TEST_HARNESS.md section 3.12). Files asking the same data and business date read the same lake; the servers only
-read it (each has its own VaR hot folder and its own folder for the official results it publishes). A file split in two asks the same
-and pays only its server's start again."""
+"""The browser files' lake and VaR stack (docs/architecture/TEST_HARNESS.md, "The shared test lake"): every browser test reads ONE lake, the
+full demo lake of the saved test data (every dataset, ending SHARED_AS_OF, the committed exposure run), built once per hash of the test
+data, generators and loaders by the parallel Java loader (tools/drillkit/lake_cache.py) and reused across runs and drills. It is read
+only: no test builds a lake of its own, takes a subset of it or copies it; a server over it writes to its own folders (own_folders). A
+test that has to write to a lake is parked (PARKED_I6). A real server over it per file (wb_live's pool), the demo connector off.
+
+PARKED_I6 lists the tests parked to i6 because they write to a lake (owner 2026-11-15); TEST_HARNESS lists them too."""
 from __future__ import annotations
 
 import datetime
-import hashlib
-import subprocess
 import sys
 from pathlib import Path
 
@@ -42,80 +42,151 @@ VAR_HEAP = "1536m"
 
 
 def var_data(*more: str, limits: bool = True) -> str:
-    """The ``--only`` list: the market-risk VaR tables (and the limits, when ``limits``), then ``more`` (trades/murex, trades/endur ...)."""
+    """The VaR datasets a file reads (the market-risk VaR tables, the limits when ``limits``, then ``more``): a statement of what it needs;
+    the shared lake holds them all."""
     return ",".join([f"market-risk/{k}" for k in RISK + (("var-limit",) if limits else ())] + ["core/desk", "core/book", "core/legal-entity"] + list(more))
 
 
 def last_weekday() -> str:
-    """Today, or the Friday before on a weekend: the business date the lakes end on (yyyy-MM-dd)."""
+    """Today, or the Friday before on a weekend (yyyy-MM-dd)."""
     d = datetime.date.today()
     while d.weekday() >= 5:
         d -= datetime.timedelta(days=1)
     return d.isoformat()
 
 
-def var_lake(tmp_path_factory, only: str, as_of: str | None = None, extra: tuple[str, ...] = ()) -> Path:
-    """The lake of ``only`` ending ``as_of`` (default: :func:`last_weekday`), built by the first worker of the run that asks; skips when
-    it cannot be built. ``extra``: more ``lake demo`` options (``--exposure committed``)."""
+#: the shared lake's last business date (fixed, so the visual snapshots and the walk's pages are the same every day) and its options
+SHARED_AS_OF = "2026-11-06"
+SHARED_EXTRA = ("--exposure", "committed")
+
+#: the tests parked to i6 because they write to a lake (owner 2026-11-15): shown as skipped with this reason in every run and drill report
+PARKED_I6_REASON = "parked to i6: writes to a lake (owner 2026-11-15)"
+PARKED_I6 = pytest.mark.skip(reason=PARKED_I6_REASON)
+
+
+def _lake_cache():
+    if str(ROOT / "tools" / "drillkit") not in sys.path:
+        sys.path.insert(0, str(ROOT / "tools" / "drillkit"))
+    import lake_cache   # TEST_HARNESS.md, "The cached demo lake"
+    return lake_cache
+
+
+def shared_cache_folder() -> Path:
+    """The shared lake's folder in the lake cache (built under the cache's lock when missing; a lookup takes milliseconds when it is there).
+    RuntimeError when it cannot be built. For a file without pytest's tmp_path_factory; the others ask :func:`shared_folder`."""
+    return _lake_cache().demo_lake("", SHARED_AS_OF, SHARED_EXTRA)
+
+
+def shared_folder(tmp_path_factory) -> Path:
+    """The shared lake's cache folder (``delta/`` the lake, ``connectors/`` the connector files the build wrote beside it): looked up once per
+    run by the first worker that asks; skips when it cannot be built."""
     import browser_harness
 
-    as_of = as_of or last_weekday()
-
-    run = browser_harness.run_dir(tmp_path_factory)
-    key = "var-lake-" + hashlib.sha1("|".join((only, as_of, *extra)).encode()).hexdigest()[:12]
-
     def make():
-        sys.path.insert(0, str(ROOT / "tools" / "drillkit"))
-        import lake_cache   # built once per hash of the test data, generators and lake code, across runs (TEST_HARNESS.md, "The cached demo lake")
-
         try:
-            lake = lake_cache.demo_lake(only, as_of, extra) / "delta"   # the Python writer: auto starts a JVM for every table and business day
+            return {"folder": str(shared_cache_folder()), "error": None}
         except RuntimeError as e:
-            return {"lake": "", "error": "could not build the VaR demo lake: " + str(e)}
-        return {"lake": str(lake), "error": None if (lake / "risk" / "scenario-pv").is_dir() else f"no scenario-pv in the cached lake {lake}"}
+            return {"folder": "", "error": "could not build the shared demo lake: " + str(e)}
 
-    got = browser_harness.shared_once(run, key, make)
+    got = browser_harness.shared_once(browser_harness.run_dir(tmp_path_factory), "shared-lake", make)
     if got["error"]:
         pytest.skip(got["error"])
-    return Path(got["lake"])
+    return Path(got["folder"])
 
 
-def trade_grain(lake: Path, budget: int = 40) -> None:
-    """A small trade-grain morning on the lake's newest date, replacing its position records (the demo is position grain; the engine's trade
-    paths stay covered): each trade its own record, Endur as scenario PVs, Calypso and Murex as P&L vectors, at most ``budget`` trades a book."""
-    day = max(p.name.split("=")[1] for p in (lake / "risk" / "scenario-pv").iterdir() if p.name.startswith("business_date="))
-    r = subprocess.run([sys.executable, str(ROOT / "tools" / "pvgen" / "morning.py"), "--grain", "trade", "--pv-systems", "ENDUR", "--budget", str(budget), "--date", day,
-                        "--out", str(lake.parent / "morning"), "--lake", str(lake)], capture_output=True, text=True, cwd=ROOT, timeout=900)
-    if r.returncode != 0:
-        pytest.skip("could not write the trade-grain morning: " + (r.stderr or r.stdout)[-400:])
+def shared_connectors(folder: Path, dest: Path) -> Path:
+    """The connector files of the shared lake's cache folder ``folder`` (:func:`shared_folder`) written to ``dest`` (a server's own
+    connectors folder; the cache is never written), each reading the shared lake where it is now (lake_cache.point_connectors: a lake
+    cached before that fix names the folder it was built in)."""
+    dest.mkdir(parents=True, exist_ok=True)
+    for f in sorted((folder / "connectors").glob("*.yaml")):
+        (dest / f.name).write_bytes(f.read_bytes())
+    _lake_cache().point_connectors(dest, folder / "delta")
+    return dest
 
 
-def trade_grain_copy(lake: Path, dest: Path, budget: int = 40) -> Path:
-    """A copy of a (cached, shared) lake with :func:`trade_grain` on its newest date; the original is never written. Data files are hard
-    links (Delta writes new files and never changes one), each _delta_log a real copy (a log file may be rewritten in place)."""
-    import os
-    import shutil
-
-    def copy(src: Path, dst: Path) -> None:
-        shutil.copytree(src, dst, copy_function=os.link, ignore=shutil.ignore_patterns("_delta_log"))
-        for log in src.rglob("_delta_log"):
-            shutil.copytree(log, dst / log.relative_to(src))
-
-    out = dest / "delta"
-    copy(lake, out)
-    trade_grain(out, budget)
-    return out
+def shared_lake(tmp_path_factory, needs: str = "risk/scenario-pv") -> Path:
+    """The ONE shared lake (``delta/``), read only; fails when it lacks ``needs`` (a table folder a file reads)."""
+    lake = shared_folder(tmp_path_factory) / "delta"
+    assert (lake / needs).is_dir(), f"the shared lake {lake} has no {needs}"
+    return lake
 
 
-def var_server(tmp_path_factory, lake: Path, **env: str):
-    """A real server and console over ``lake``, its VaR engine ready; ``env``: more DRISHTI_* settings. Its VaR hot folder and the root
-    it publishes the official results to (``<root>/risk-results``, VAR_GUIDE section 19) are its own: the lake is read, never written."""
+def own_folders(tmp_path_factory, shared: bool = False) -> dict[str, str]:
+    """The settings that keep a server's writes off its (cached, read-only) lake: its VaR hot folder and the roots it publishes the official
+    VaR and exposure results to. ``shared``: inside the server's scratch folder (the same settings for every file that shares it)."""
+    if shared:
+        return {"DRISHTI_VAR_HOT_DIR": "data/var/hot", "DRISHTI_VAR_OFFICIAL_ROOT": "data/var/official", "DRISHTI_CCR_EXPOSURE_OFFICIAL_ROOT": "data/ccr/official"}
+    return {"DRISHTI_VAR_HOT_DIR": str(tmp_path_factory.mktemp("var-hot")), "DRISHTI_VAR_OFFICIAL_ROOT": str(tmp_path_factory.mktemp("var-official")),
+            "DRISHTI_CCR_EXPOSURE_OFFICIAL_ROOT": str(tmp_path_factory.mktemp("ccr-official"))}
+
+
+def var_server(tmp_path_factory, lake: Path, shared: bool = False, auth: bool = False, heap: str = VAR_HEAP, **env: str):
+    """A real server and console over ``lake``, its VaR engine ready; ``env``: more DRISHTI_* settings. Its VaR hot folder and the roots
+    it publishes the official VaR and exposure results to (``<root>/risk-results``, VAR_GUIDE section 19, EXPOSURE_GUIDE section 20; the
+    exposure root defaults to the lake's own) are its own: the lake is read, never written.
+
+    ``auth``: sign-in on (the development administrator: drishti-dev-admin / drishti-dev-admin123).
+
+    ``shared``: the file only reads (TEST_HARNESS.md, "Shared read-only servers"): the next file on this worker asking for the same lake
+    and settings gets this server without a start. Its own folders are then inside the server's scratch folder (relative to it), so the
+    settings are the same for every file that asks, and the pool's guard fails a file that writes there."""
     from test_var_explorer_browser import _engine_ready
     from wb_live import _stack
 
-    hot = tmp_path_factory.mktemp("var-hot")
-    official = tmp_path_factory.mktemp("var-official")
+    own = own_folders(tmp_path_factory, shared)
+
+    def ready(st):   # once per start: the engine answers, and what the server does by itself at start is done (_start_captures_done)
+        _engine_ready(str(st), opener=signed_in(str(st)) if auth else None)
+        _start_captures_done(st.server)
+
     for st in _stack(tmp_path_factory, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true", "DRISHTI_VAR_SYSTEM_BASKETS_SEED": "true",
-                                        "DRISHTI_VAR_HOT_DIR": str(hot), "DRISHTI_VAR_OFFICIAL_ROOT": str(official), **env}, heap=VAR_HEAP):
-        _engine_ready(str(st))
+                                        **own, **env}, auth=auth, heap=heap, shared=shared, ready=ready):
         yield st
+
+
+def _start_captures_done(server: str, seconds: float = 180) -> None:
+    """Waits for the official exposure capture a server makes of the newest date at start (EXPOSURE_GUIDE section 20; in the background,
+    a few seconds after the engine answers): its files and its transaction are then in the folder before a shared server is watched for
+    writes, never counted against the first file that shares it (drill of 2026-11-15). Returns at once when the exposure engine is not
+    there to capture, or with sign-in on (any answer but "no official exposure record")."""
+    import time
+    import urllib.error
+    import urllib.request
+
+    deadline = time.monotonic() + seconds
+    while True:
+        try:
+            with urllib.request.urlopen(server + "/api/v1/risk/exposure/official", timeout=30) as r:
+                if r.status == 200:
+                    return
+        except urllib.error.HTTPError as e:
+            if e.code != 404 or b"no official exposure record" not in e.read():
+                return
+        except (urllib.error.URLError, OSError):
+            return
+        if time.monotonic() > deadline:
+            return                                        # not captured in time: the pool's guard names what it then writes
+        time.sleep(1)   # wait-ok: polling the server's background capture at start
+
+
+def signed_in(console: str, user: str = "drishti-dev-admin", password: str = "drishti-dev-admin123"):
+    """A urllib opener signed in to a console with sign-in on (the development administrator by default): its session cookie on every ask.
+    The console signs in through its server, which may still be coming up: tried until it answers, for up to two minutes."""
+    import http.cookiejar
+    import time
+    import urllib.error
+    import urllib.parse
+    import urllib.request
+
+    op = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
+    form = urllib.parse.urlencode({"user": user, "password": password}).encode()
+    deadline = time.monotonic() + 120
+    while True:
+        try:
+            op.open(urllib.request.Request(console + "/login", data=form), timeout=60).read()
+            return op
+        except (urllib.error.URLError, OSError):
+            if time.monotonic() > deadline:
+                raise
+            time.sleep(1)   # wait-ok: the server behind the console is still coming up

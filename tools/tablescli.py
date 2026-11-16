@@ -11,7 +11,7 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-"""The table layer on the command line (docs/guides/TABLES_GUIDE.md, docs/guides/CLI_REFERENCE.md "tables"): virtual tables and models
+"""The table layer on the command line (docs/guides/bi/README.md, docs/guides/CLI_REFERENCE.md "tables"): virtual tables and models
 under config/tables, checked, previewed over sample documents, traced (lineage), offered for new tables, and BI's datasets and models
 migrated into them.
 
@@ -30,7 +30,6 @@ read definitions and sample files only. Paths are read from the folder you run t
 from __future__ import annotations
 
 import argparse
-import os
 import subprocess
 
 from javacmd import cli_tmp, java_cmd
@@ -63,7 +62,7 @@ def register(groups, ctx: dict) -> None:
         with cli_tmp() as tmp:   # the command writes nothing under the data folder
             cmd = java_cmd(java, ["-jar", jar, "tables", *args, *(extra or [])], tmp=tmp)
             try:
-                return subprocess.run(cmd, cwd=os.getcwd()).returncode
+                return subprocess.run(cmd).returncode   # runs where the user is: a typed relative argument means what it means in their shell
             except FileNotFoundError as e:
                 raise ctx["CliError"](f"cannot run {cmd[0]}: {e.strerror}; pass --java or set JAVA_HOME") from None
 
@@ -73,7 +72,7 @@ def register(groups, ctx: dict) -> None:
         p.add_argument("--root", help="the catalogue's folder (default config/tables: a folder per domain)")
         p.add_argument("--json", action="store_true", help="JSON instead of words")
         p.add_argument("--java", help="the java to run (default $JAVA_HOME/bin/java)")
-        p.add_argument("--jar", help="the server's exec jar (default the newest drishti-server/target/drishti-server-*-exec.jar, or DRISHTI_JAR)")
+        p.add_argument("--jar", help="the server's exec jar (default the newest kernel/drishti-server/target/drishti-server-*-exec.jar, or DRISHTI_JAR)")
         return p
 
     add("list", "every table and model of the catalogue", "examples:\n  drishti.py tables list\n  drishti.py tables list --json")

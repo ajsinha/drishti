@@ -90,7 +90,7 @@ stored results from upstream engines (fundamental, not computed by Drishti):
    trade-valuation TVAL TVAL-<trade>      (per trade: MTM, 1-day P&L, DV01, its netting set)
 ```
 
-The links are the packs' contract link columns (`config/packs/banking/market-risk/contracts/*.contract.yaml`): `pnl-vector.TRADE_ID → trade`,
+The links are the packs' contract link columns (`modules/banking/dmod/packs/market-risk/contracts/*.contract.yaml`): `pnl-vector.TRADE_ID → trade`,
 `LEGAL_ENTITY → legal-entity`, `DESK → desk`, `TT_BOOK → book`, `COUNTERPARTY → counterparty`; `position.TRADE_IDS → trade`;
 `var-limit.NODE_ID` names a node the server builds from the rows' columns; `stress-result.SCENARIO → stress-scenario`, `DESK → desk`;
 `frtb-sensitivity.BOOK → book`; `trade-valuation.NETTING_SET → netting-set`, which is where market risk meets
@@ -159,7 +159,7 @@ trade wins, and the figures say *intraday*. The official end-of-day numbers stay
 ### Market risk: a worked example on the demo data
 
 From a scratch server over the demo lake built on the test data's own date (`drishti.py lake demo --as-of data`, as the
-[VaR guide](../guides/VAR_GUIDE.md) and [tutorial 2, Part A](../tutorials/02-var-from-the-bank-to-a-trade.md#part-a--historical-var-from-the-bank-to-a-trade) use it): business date
+[VaR guide](../guides/VAR_GUIDE.md) and [the VaR tutorial, Part A](../guides/VAR_GUIDE.md#part-a--historical-var-from-the-bank-to-a-trade) use it): business date
 **2026-09-30**, batch `B-2026-09-30-01`, scenario set `HS-509`. (The default `lake demo` moves the days to end today, and trades
 matured since drop out, so its figures differ.)
 
@@ -362,7 +362,7 @@ any scope text  (BANK, LE:LE-LDN, GROUP:GRP-ALDERSHOT, CPTY:CP-ALDERSHOT, NSET:N
    └─► exposure-official-cpty  XOFC            the official figures of every netting set and counterparty, published once a day
 ```
 
-The links are the contract link columns of `config/packs/banking/counterparty-risk/contracts/` and `config/packs/core/core/contracts/`:
+The links are the contract link columns of `modules/banking/dmod/packs/counterparty-risk/contracts/` and `config/packs/core/core/contracts/`:
 `netting-set.COUNTERPARTY → counterparty`, `AGREEMENT → agreement`, `CSA → csa`, `CREDIT_LIMIT → credit-limit`,
 `CVA_RESULT → cva`, `SACCR → sa-ccr`, `SIMM → simm`, `COLLATERAL_BALANCE → collateral-balance`, `LEGAL_ENTITY → legal-entity`,
 `TRADE_IDS → trade`; `counterparty.NETTING_SETS → netting-set`, `GROUP → counterparty-group`, `CREDIT_LIMIT → credit-limit`,
@@ -530,7 +530,7 @@ grouped when asked (computed, never stored):
    index-trades         ITRD <index name>     every trade on one floating index
 ```
 
-The links are the trading pack's contract link columns (`config/packs/banking/trading/contracts/trade.contract.yaml`): `COUNTERPARTY` and
+The links are the trading pack's contract link columns (`modules/banking/dmod/packs/trading/contracts/trade.contract.yaml`): `COUNTERPARTY` and
 `ORIGINAL_COUNTERPARTY → counterparty`, `LEGAL_ENTITY → legal-entity`, `PORTFOLIO` and `TT_BOOK → book`, `TRADER_ID → trader`,
 `TT_GROUP → desk`. The arrows marked `◄` are other kinds that point at the trade (`TRADE_ID`, `TRADE_IDS`).
 
@@ -708,11 +708,11 @@ booked the trade. See [Entities and ownership](data.md#2-entities-and-ownership)
 - [VaR guide](../guides/VAR_GUIDE.md): every measure with worked numbers, the explorer, scopes, captures, backtesting, the data contract;
   [the scenario matrix](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat) (`SMAT`): a trade, position or node's scenarios across its
   last N business dates, the tail outlined each day.
-- [Tutorial 2, Part A: VaR from the bank to a trade](../tutorials/02-var-from-the-bank-to-a-trade.md#part-a--historical-var-from-the-bank-to-a-trade): fifteen hands-on steps, the last the scenario matrix.
+- [The VaR tutorial, Part A: VaR from the bank to a trade](../guides/VAR_GUIDE.md#part-a--historical-var-from-the-bank-to-a-trade): fifteen hands-on steps, the last the scenario matrix.
 - [Exposure guide](../guides/EXPOSURE_GUIDE.md): every exposure measure with worked numbers, the explorer, collateral, the pre-deal what-if, the data contract.
-- [Tutorial 3: exposure from the bank to a trade](../tutorials/03-exposure-from-the-bank-to-a-trade.md): eight hands-on steps.
+- [The exposure tutorial: exposure from the bank to a trade](../guides/EXPOSURE_GUIDE.md): eight hands-on steps.
 - [Tutorial 1, Part E: an entity over time](../tutorials/01-first-15-minutes.md#part-e--an-entity-over-time) (`TRD 1000015 30 <GO>`).
-- [Groupings and analytics guide](../guides/GROUPINGS_ANALYTICS_GUIDE.md).
+- [Groupings and analytics guide](../guides/bi/GROUPINGS_AND_ANALYTICS.md).
 - The stored results' contracts: [NSET](../contracts/NSET.md), [CVA](../contracts/CVA.md), [SA-CCR](../contracts/SACCR.md),
   [SIMM](../contracts/SIMM.md), [collateral](../contracts/COLL.md), [margin calls](../contracts/MC.md), [limits](../contracts/LIM.md),
   [groups](../contracts/GRP.md), [wrong-way risk](../contracts/WWR.md); the [trading groupings contract](../contracts/TRADING_GROUPINGS.md)

@@ -22,6 +22,7 @@
    the person (configure({modules}), else the page's <meta name="drishti-modules" content="banking economy">), a library of another
    module is refused, and so is every library that requires it; with nothing said (a page without a Drishti server) every library loads. */
 import { MANIFEST } from './drishti_manifest.js';
+import { url } from './drishti_base.js';
 
 const state = { base: null, staticBase: null, pending: {}, modules: null };
 
@@ -65,7 +66,7 @@ export function refused(name) {
   return name + " belongs to the module '" + mod + "', which is not available here: ask your administrator";
 }
 
-function base() { return state.base || registry().base || '/static/elements/'; }
+function base() { return state.base || registry().base || url('/static/elements/'); }
 function staticBase() { return state.staticBase || base().replace(/[^/]+\/$/, ''); }
 
 /**
@@ -155,6 +156,7 @@ const scripts = {};
  * @returns {Promise<void>}
  */
 export function loadScript(src) {
+  src = url(src);                                   // a root-absolute address under the console's URL sub-path (drishti_base.js)
   const plain = String(src).split('?')[0];
   if (scripts[plain]) { return scripts[plain]; }
   const doc = root().document;
@@ -178,7 +180,7 @@ export function loadScript(src) {
  * @param {string} href
  * @returns {void}
  */
-export function loadStyle(href) { const doc = root().document; if (doc) { addCss(doc, href); } }
+export function loadStyle(href) { const doc = root().document; if (doc) { addCss(doc, url(href)); } }
 
 /**
  * Loads libraries (and what they require) into the page, each once; resolves with the API of the one named, or the APIs in order.

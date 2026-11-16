@@ -42,7 +42,8 @@ export function buildShell(v) {
   R.toolbar = h(doc, 'div', { cls: 'dg-toolbar', attrs: { role: 'toolbar', 'aria-label': (v.o.title || 'Grid') + ' tools' } });
   R.wells = h(doc, 'div', { cls: 'dg-wells' });
   R.status = h(doc, 'div', { cls: 'dg-status', attrs: { 'aria-label': 'Status' } });
-  R.center = h(doc, 'div', { cls: 'dg-gridarea' }, [v.body.scroller, R.status]);
+  R.note = h(doc, 'div', { cls: 'dg-note', attrs: { role: 'note', hidden: true } });       // the answer's notes (a list field exploded: totals count a row once per value)
+  R.center = h(doc, 'div', { cls: 'dg-gridarea' }, [R.note, v.body.scroller, R.status]);
   if (L === 'panel') {
     R.side = h(doc, 'aside', { cls: 'dg-side', attrs: { 'aria-label': 'Pivot panes: Build and Fields' } }, [R.wells]);
     R.card = h(doc, 'div', { cls: 'dg-card', attrs: { role: 'dialog', 'aria-label': 'Explain', hidden: true } });
@@ -64,6 +65,7 @@ export function buildShell(v) {
   root.addEventListener('click', (e) => {
     const b = e.target.closest('[data-act]');
     if (!b || !(R.toolbar.contains(b) || (R.fkeys && R.fkeys.contains(b)))) { return; }
+    if ((v.o.toolbarItems || []).some((n) => n.contains(b))) { return; }          // the host's own controls run what the host gave them
     e.stopPropagation();
     toolbarAction(v, b.dataset.act, b);
   });
@@ -107,8 +109,10 @@ export function renderChrome(v) {
   const quickFocused = quick && doc.activeElement === quick;
   tb.textContent = '';
   tb.append(h(doc, 'span', { cls: 'dg-title', text: v.o.title || '' }));
-  if (v.live) { tb.append(h(doc, 'span', { cls: 'dg-badge dg-live', text: 'live' })); }
+  const lead = v.o.toolbarItems || [];                                  // a host's own controls (LiveSetGrid's count, grouping, Pivot ›), in this one toolbar
+  if (v.live && !lead.length) { tb.append(h(doc, 'span', { cls: 'dg-badge dg-live', text: 'live' })); }
   if (v.o.subtitle) { tb.append(h(doc, 'span', { cls: 'dg-meta', text: v.o.subtitle })); }
+  lead.forEach((n) => tb.append(n));
   tb.append(h(doc, 'span', { cls: 'dg-sp' }));
   if (v.phone && piv) {
     const ms = v.measures(), sel = selectElement(doc, { options: ms, value: v.ui.phoneMeasure && ms.indexOf(v.ui.phoneMeasure) >= 0 ? v.ui.phoneMeasure : undefined,
@@ -123,19 +127,27 @@ export function renderChrome(v) {
     tb.append(q);
     if (quickFocused) { q.focus(); }
   }
-  tb.append(button(doc, 'toggle-pivot', 'Pivot', { pressed: piv, title: 'Pivot ⇄ flat (F5)' }));
+  if (v.o.pivotToggle !== false) { tb.append(button(doc, 'toggle-pivot', 'Pivot', { pressed: piv, title: 'Pivot ⇄ flat (F5)' })); }
   if (piv) {
     tb.append(button(doc, 'expand-all', 'Expand all'), button(doc, 'collapse-all', 'Collapse all'), button(doc, 'pin-totals', 'Pin totals', { pressed: v.ui.pinTotals }));
   }
   tb.append(button(doc, 'menu-format', 'Formatting ▾', { menu: true }), button(doc, 'menu-export', 'Export ▾', { menu: true }), button(doc, 'menu-view', 'View ▾', { menu: true }));
+  const ribbonOff = v.o.ribbon === false && L !== 'terminal';             // the wells ribbon is kept behind Customize ›
+  if (ribbonOff && v.o.customize !== false) { tb.append(button(doc, 'customize', L === 'panel' ? 'Close the panes ›' : 'Customize ›', { title: 'The Fields and Build panes (\\)', expanded: L === 'panel' })); }
   // wells
   const how = L === 'panel' ? 'panel' : L === 'terminal' ? 'lane' : 'ribbon';
   if (v.o.chrome === false) { R.wells.textContent = ''; } else { v.wells.render(R.wells, how); }      // a bare grid draws no wells: none of their fields and wells in the host's page
   const hideWells = v.phone && !v.ui.fieldsOpen;
-  (R.side || R.wells).hidden = hideWells;
+  (R.side || R.wells).hidden = hideWells || (ribbonOff && L === 'wells');
   // the terminal's command line and keys
   if (R.cmdInput && doc.activeElement !== R.cmdInput) { R.cmdInput.value = commandText(v.activeWells().getState()); }
   if (R.cmdMeta) { R.cmdMeta.textContent = (m.answer ? (m.answer.computedBy === 'browser' ? 'computed here' : 'server') + ' · ' + (m.answer.notes && m.answer.notes.length ? 'notes' : 'exact') : '') + (v.o.subtitle ? ' · ' + v.o.subtitle : ''); }
+  if (R.note) {                                                  // the pivot's header says what the answer says: a list field counts a row once per value
+    const said = piv && m.answer && Array.isArray(m.answer.notes) ? m.answer.notes.filter((x) => typeof x === 'string' && x.trim()) : [];
+    R.note.textContent = said.join(' ');
+    R.note.title = said.join('\n');
+    R.note.hidden = !said.length;
+  }
   if (R.fkeys) {
     R.fkeys.textContent = '';
     FUNCTION_KEYS.forEach((k) => R.fkeys.append(h(doc, 'button', { cls: 'dg-fkey', attrs: { type: 'button', 'aria-keyshortcuts': k.key }, data: { act: k.action } }, [h(doc, 'b', { text: k.key }), ' ' + k.label])));
@@ -157,8 +169,8 @@ export function renderStatus(v) {
   const item = (text, cls) => st.append(h(doc, 'span', { cls: 'dg-st' + (cls ? ' ' + cls : ''), text: text }));
   const shown = m.shownColumns();
   if (piv) { item(m.answer ? 'Pivot · ' + (m.answer.computedBy === 'browser' ? 'computed in the browser' : 'by the server') : 'Pivot', 'dg-st-mode'); }
-  else { item(m.serverSide ? 'Server-side rows' : 'Rows in the page', 'dg-st-mode'); }
-  item(m.rowCount().toLocaleString('en-US') + ' rows × ' + v.displayColumns().all.length + ' columns', 'dg-st-count');
+  else if (!v.o.quietStatus) { item(m.serverSide ? 'Server-side rows' : 'Rows in the page', 'dg-st-mode'); }
+  if (!v.o.quietStatus) { item(m.rowCount().toLocaleString('en-US') + ' rows × ' + v.displayColumns().all.length + ' columns', 'dg-st-count'); }
   const pending = piv && m.answer && m.answer.pending ? m.answer.pending.length : 0;
   if (pending) { item('… ' + pending + ' figures asked of the server', 'dg-st-pending'); }
   (m.pivotExtra.valueFilters || []).forEach((f) => item('value filter: ' + conditionText(f, (x) => v.fmtMeasure(f.by, x)), 'dg-st-vf'));

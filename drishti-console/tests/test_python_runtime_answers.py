@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""One Python runtime answers (docs/guides/NOTEBOOK_GUIDE.md section 19): with the server's compute pool ``python`` on, the shipped Python
+"""One Python runtime answers (docs/guides/bi/README.md section 19): with the server's compute pool ``python`` on, the shipped Python
 model and the shipped Python board answer where they once recorded refusals. The real server of tests/bi_report_stack.py on ports 18973 and 17973
 (security on, the cross-pack Delta lake), compute on in the interpreter that runs this test (it carries the libraries pinned in
 config/compute/locks/python.lock):
@@ -32,6 +32,9 @@ import os
 import sys
 
 import pytest
+
+from var_stack import PARKED_I6  # noqa: E402 - parked to i6
+pytestmark = [PARKED_I6]   # every test here writes to a lake: parked to i6 (owner 2026-11-15)
 import yaml
 
 os.environ.setdefault("DRISHTI_BI_REPORT_SERVER_PORT", "18973")

@@ -33,7 +33,7 @@ from shotlib import DEMO_ROOT_ENV
 from shotlib import CONSOLE_PORT, ROOT, SERVER_PORT, Ctx, java_cmd, listening, register
 if str(ROOT / "drishti-console") not in sys.path:
     sys.path.insert(0, str(ROOT / "drishti-console"))
-from core.pack_paths import pack_dir  # noqa: E402  (the one rule for where a pack's folder is)
+from core.resolution import pack_dir  # noqa: E402  (where a pack is: the one resolver, KERNEL_AND_MODULES.md 18)
 
 OUT = ROOT / "docs" / "guides" / "img" / "connector_files"
 DEAD_DB = 59997                              # nothing listens here: the connector below is meant to be DOWN
@@ -45,9 +45,9 @@ def start_servers(work: Path) -> list:
         if listening(port):
             sys.exit(f":{port} already answers: stop it, or pass --base to use it as it is")
     given = os.environ.get("DRISHTI_SHOTS_SERVER_JAR", "")
-    jar = Path(given) if given else (sorted((ROOT / "drishti-server" / "target").glob("drishti-server-*-exec.jar")) or [None])[-1]
+    jar = Path(given) if given else (sorted((ROOT / "kernel/drishti-server" / "target").glob("drishti-server-*-exec.jar")) or [None])[-1]
     if jar is None or not jar.exists():
-        sys.exit("build the server first: ./mvnw -o package -DskipTests -pl drishti-app -am")
+        sys.exit("build the server first: ./mvnw -o package -DskipTests -pl :drishti-app -am")
     packs = work / "packs"
     packs.mkdir()
     for name in ("core", "market-data", "trading"):
@@ -55,8 +55,8 @@ def start_servers(work: Path) -> list:
     (packs / "desk-demo").mkdir()
     (packs / "desk-demo" / "pack.yaml").write_text(
         "pack: desk-demo\nversion: 1.0.0\ntitle: Desk demo\ndescription: Quotes read from a stream somebody has not set up yet.\n"
-        "kinds: [desk-quote, desk-quote-archive]\nconnectors: [desk-quotes, desk-archive]\nroutes:\n  desk-quote: desk-quotes\n  desk-quote-archive: desk-archive\n"
-        "connector-templates:\n  desk-quotes:\n    plugin: file\n    kinds: [desk-quote]\n    settings:\n      root: ./data/desk-quotes\n", encoding="utf-8")
+        "kinds: [desk-quote, desk-quote-archive]\nroutes:\n  desk-quote: desk-quotes\n  desk-quote-archive: desk-archive\n"
+        "connectors:\n  desk-quotes:\n    plugin: file\n    kinds: [desk-quote]\n    settings:\n      root: ./data/desk-quotes\n", encoding="utf-8")
     lake = work / "lake"
     for day in ("2026-10-02", "2026-10-05"):
         (lake / day).mkdir(parents=True)
@@ -74,7 +74,7 @@ def start_servers(work: Path) -> list:
         "  password: ${LEDGER_DB_PASSWORD}\n  table: ledger.entities\n  tls:\n    enabled: true\n    ca-file: " + str(ca) + "\n"
         "    truststore-password: ${LEDGER_TRUSTSTORE_PASSWORD}\n", encoding="utf-8")
     # an edited trade-murex (no template stamp): its file-rows changed by hand (a conflict, Use the pack's value) and NOTIONAL and
-    # INDEX_NAME missing from its layout (added at start, keeping the edit): Template updates (picture 15)
+    # INDEX_NAME missing from its layout (added at start, keeping the edit)
     cols = "\n".join(f"          - {c}" for c in ("TRADE_ID", "SOURCE_SYSTEM", "PRODUCT_TYPE", "PRODUCT_SUB_TYPE", "PRODUCT_GROUP", "TRADE_STATUS",
                                                   "TRADE_VERSION", "BUY_SELL_CODE", "CURRENCY", "QUANTITY", "TRADE_DATE", "MATURITY_DATE",
                                                   "COUNTERPARTY", "LEGAL_ENTITY", "PORTFOLIO", "TRADER_ID"))
@@ -258,15 +258,3 @@ def detail_phone(c: Ctx):
     c.save("13-connector-detail-phone.jpg")
     settle(c, "/admin/packs/desk-demo", "[data-connectors]")
     c.save("14-pack-detail-phone.jpg")
-
-
-@shot("15-template-updates.jpg")
-def template_updates(c: Ctx):
-    """Admin -> Connectors -> Template updates (2.9.5): the edited trade-murex, its missing columns already added at start, its own
-    file-rows listed as changed with Use the pack's value."""
-    wide(c, 1280, 1100)
-    settle(c, "/admin/connectors/template-updates", "body")
-    c.until("document.body.innerText.includes('trade-murex')", 60)
-    c.page.wait_for_selector('.tu-card[data-drift="trade-murex"]')
-    c.page.wait_for_timeout(400)
-    c.save("15-template-updates.jpg", '.tu-card[data-drift="trade-murex"]')   # the edited connector's card (the others are other pictures' setup)

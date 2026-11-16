@@ -16,7 +16,7 @@
 
 # The kernel and its modules
 
-**Status: design, not built** (except P1's kernel API, section 2.3, the module runtime, section 10.4, deployment, sections 4.11.4, 4.11.8, 7.6 and 12 (the module store, plans per node following the placement, four-eyes apply, two-phase activation with rollback, rolling upgrade, remove with 410 and saved work marked *needs module X*, `drishti.py module deploy|plan|apply|list|…|run`, Admin → Modules and Deploy), placement, section 4.11 (`config/placement.yaml` per part by node or role, the singleton election behind one interface, the heavy-work guard and the node × part matrix in Admin → Cluster → Modules), and from wave 1 of 2.9.11.i2 + i3 the Module SDK of section 8 (the archetype, the parent pom and the Maven plugin with the conformance checks C1-C15), banking's sources under `modules/banking/` building on their own with the kernel internals they still reach listed in `modules/banking/kernel-internals.txt`, and the thin jar `drishti-kernel-app`, which boots with no modules; the kernel loading `.dmod` modules (the registration bridge of section 12.3 for the kernel API's provider types, multi-jar packages with `java.lib`, auto-deploy from `drishti.modules.path`, development mode for exploded folders, and the shared lib folder `drishti.lib.path`); first-party modules with the kernel-internals allowance and the exact kernel build (section 3.3: `origin:` verified against the shipped `first-party.yaml`, conformance check C1, the module class loader, `module inspect` and `module list`), and banking as `banking-1.0.0.dmod`, loaded as a module by the full distribution with market-data, capital-markets and economy installed by default and placed on every node; and the console part of section 4.7 hosted declaratively by today's console (section 14.2.1): `plugin.yaml` format 2's routes, menus, words, Home cards, Help and AI tools under `/m/<id>/`, a Jinja environment per module over `kernel/page.html` and `kernel/elements.html`, statics with the version in the path, Elements copies, code and private templates refused, every surface withdrawn on switch-off or removal with saved work marked *needs module X* (section 12), the economy module's World page among them; content modules read by the access registry from their own manifests; the rest of P2 and P3 is being built in 2.9.11.i2 + i3). Written for 2.9.11.i, now split into **i1, i2, i3 and i4** (section 14.2), on the product owner's request of 2026-11-08: Drishti
+**Status: design, not built** (except P1's kernel API, section 2.3, the module runtime, section 10.4, deployment, sections 4.11.4, 4.11.8, 7.6 and 12 (the module store, plans per node following the placement, four-eyes apply, two-phase activation with rollback, rolling upgrade, remove with 410 and saved work marked *needs module X*, `drishti.py module deploy|plan|apply|list|…|run`, Admin → Modules and Deploy), placement, section 4.11 (`config/placement.yaml` per part by node or role, the singleton election behind one interface, the heavy-work guard and the node × part matrix in Admin → Cluster → Modules), and from wave 1 of 2.9.11.i2 + i3 the Module SDK of section 8 (the archetype, the parent pom and the Maven plugin with the conformance checks C1-C15), banking's sources under `modules/banking/` building on their own with the kernel internals they still reach listed in `modules/banking/kernel-internals.txt`, and the thin jar `drishti-kernel-app`, which boots with no modules; the kernel loading `.dmod` modules (the registration bridge of section 12.3 for the kernel API's provider types, multi-jar packages with `java.lib`, auto-deploy from `drishti.modules.path`, development mode for exploded folders, and the shared lib folder `drishti.lib.path`); first-party modules with the kernel-internals allowance and the exact kernel build (section 3.3: `origin:` verified against the shipped `first-party.yaml`, conformance check C1, the module class loader, `module inspect` and `module list`), and banking as `banking-1.0.0.dmod`, loaded as a module by the full distribution with market-data, capital-markets and economy installed by default and placed on every node; and the console part of section 4.7 hosted declaratively by today's console (section 14.2.1): `plugin.yaml` format 2's routes, menus, words, Home cards, Help and AI tools under `/m/<id>/`, a Jinja environment per module over `kernel/page.html` and `kernel/elements.html`, statics with the version in the path, Elements copies, code and private templates refused, every surface withdrawn on switch-off or removal with saved work marked *needs module X* (section 12), the economy module's World page among them; content modules read by the access registry from their own manifests; the module's Python compute of section 4.6 (installed into the kernel's worker pool on load, withdrawn on unload, placed with its `compute` part, 2.9.11.i5); the rest of P2 and P3 is being built in 2.9.11.i2 + i3). Written for 2.9.11.i, now split into **i1, i2, i3 and i5** (section 14.2), on the product owner's request of 2026-11-08: Drishti
 becomes a domain-free **kernel** for BI and aggregation; capabilities arrive as separately built, signed **modules** loaded from
 folders; connectors stay the kernel's; a **distribution file** white-labels the product. Banking is the first module and the worked example
 throughout. The same day the owner decided the three building blocks (section 1.1): the **Drishti Kernel**, the **Drishti Console**, now a
@@ -65,6 +65,7 @@ and what happens when a module is removed section 12.
 15. [Decisions](#15-decisions)
 16. [What moves from DOMAIN_MODULES.md](#16-what-moves-from-domain_modulesmd)
 17. [Mock-ups](#17-mock-ups)
+18. [Configuration resolution: packs, connectors, bindings and inbox rules](#18-configuration-resolution-packs-connectors-bindings-and-inbox-rules)
 
 ## 1. The three building blocks, goals and principles
 
@@ -97,7 +98,7 @@ them or off the glue between them. The names below are used throughout; *the ker
 | G1 | **A domain-free kernel**: general BI and aggregation (packs runtime, Sutras, Rachana, Pivot, BI, tables and models, lakes, connectors, search, Explain, approvals, security, cluster, Elements core) that serves a bank, a hospital or a genome lab unchanged | the kernel boots and serves BI, Pivot and its own reference data with **no module installed**; `tools/domain_strings_allowed.yaml` is empty |
 | G2 | **Modules built and shipped separately**, like Linux kernel modules: one signed file (`.dmod`) per module, compiled against the kernel API only, dropped into a configured folder | the banking module is built in its own build against the SDK jars and passes its suite against the kernel alone |
 | G3 | **A module carries everything its capability needs**: Java compute, services and API; Python compute; packs (kinds, contracts, Sutras, samples); console routes, templates, the domain Elements library, CSS on the theme tokens; lenses, functions, Home cards; feeds; Help, guides, tutorials, glossary; settings schema; licence feature | removing `banking.dmod` leaves no banking word, page, file, Help page, engine or API anywhere ([ACCESS_MODEL.md section 6](ACCESS_MODEL.md#6-guarantees-as-tests), extended to "not installed") |
-| G4 | **The kernel controls connectors.** A module declares the *data* it needs (kinds and contracts); the site binds its configured connectors and lake tables to them | no connector name, plugin id, host or credential in any module file (a packager check); Admin → Data bindings shows every need and what serves it |
+| G4 | **The kernel controls connectors.** A module declares the *data* it needs (kinds and contracts); the site binds its configured connectors and lake tables to them | no host or credential in any module file, and no connector outside its read-only templates, whose site values are `${...}` placeholders (a packager check, C9); Admin → Data bindings shows every need and what serves it |
 | G5 | **White label by configuration**: one distribution file picks modules, brand, theme, lenses, Home and docs | `drishti.finance` and a sample `drishti.genomics` boot from configuration only, from the same kernel build |
 | G6 | **VaR exactly equal** through every phase | the 2.9.11.c VaR check, bit for bit, at the 509 and 250 windows |
 
@@ -157,13 +158,13 @@ them or off the glue between them. The names below are used throughout; *the ker
 
 ### 2.1 What is in it
 
-| Area | Kernel (Maven modules / folders) |
+| Area | Kernel (Maven modules, in the subject folders `kernel/`, `compute/`, `lake/`, `net/`, `plugins/`) |
 |---|---|
 | Foundations | `drishti-common`, `drishti-api` (data SPIs), `drishti-registry` (access registry, licence), `drishti-identity` |
-| Grammar and screens | `drishti-rachana` (Rachana, Sutras), `drishti-engine` (view pipeline, inference, search, phrase, view augmenters), `drishti-packs` (pack loader and pack runtime) |
-| Analysis | `drishti-bicompute` (pivot engine, Rachana functions, Explain, what-if), `drishti-tables` (virtual tables, models), `drishti-graph`, `drishti-inference` |
-| Data | `drishti-lakeio`, `drishti-lakeconfig`, `drishti-lakeload`, `drishti-deltalake`, `drishti-iceberg`, `drishti-memlake`, `drishti-diskcache`, `drishti-dataload` (the inbox), `drishti-flight`, `drishti-messaging` |
-| Connectors | every `plugins/drishti-plugin-*` (delta, iceberg, iceberg-external, file, s3, jdbc, duckdb, kafka, rabbitmq, activemq, redis, mongodb, cassandra, aerospike, rest, feeds, news, demo, yfinance); the connector files, credentials and **bindings** (section 5) |
+| Grammar and screens | `drishti-rachana` (Rachana, Sutras), `drishti-engine` (view pipeline, inference, search, phrase, view augmenters, entity links), `drishti-packs` (pack loader and pack runtime) |
+| Analysis | `drishti-bicompute` (pivot engine, Rachana functions, Explain, what-if), `drishti-tables` (virtual tables, models), `drishti-inference` |
+| Data | `drishti-lakeio` (the lake core: the lake files and file access), `drishti-lakeload` (the loader, the inbox, the in-memory lake), `drishti-deltalake`, `drishti-iceberg`, `drishti-flight`; the disk cache and the message-queue state store in `drishti-common` |
+| Connectors | `plugins/drishti-connectors` (the built-in light ones: file, rest, feed, news, demo, yfinance) and every `plugins/drishti-plugin-*` (delta, iceberg, iceberg-external, s3, jdbc, duckdb, kafka, rabbitmq, activemq, redis, mongodb, cassandra, aerospike); the connector files, credentials and **bindings** (section 5) |
 | Compute | `drishti-compute` (generic: vector store, many-set sums, sharding, the Python pool and sandbox, the scheduler), `drishti-native` (BLAS/LAPACK with Java fallbacks) |
 | Platform | `drishti-server` (REST, security, approvals, collaboration, alerts, cluster `drishti-net`, Health, audit, Admin), `drishti-ai` (LLM providers, MCP), `drishti-app` (the runnable kernel jar) |
 | Module runtime | `drishti-module-runtime`: manifest reading, verification, class loader per module, live route table, unload and absence machinery; **shared with the Drishti Console** (section 10.4) |
@@ -174,7 +175,7 @@ Notebook and Admin screens, the Help centre, search, embed and phone pages, and 
 (section 11). The kernel answers their questions over its REST API; it serves no page and no UI static file.
 
 **Not in it, because they are modules:** `drishti-banking`, `drishti-compute-banking`, `drishti-console/plugins/{banking,economy}`, the drishti-risk library, the
-packs of `config/packs/{banking,economy,capitalmarkets}`, their lenses, lakes, BI content, feeds, guides and tutorials. Each of those is a
+packs (now in each module's own `packs/` folder), their lenses, lakes, BI content, feeds, guides and tutorials. Each of those is a
 module (section 14.1 lists today's leaks).
 
 ### 2.2 The kernel API
@@ -374,7 +375,7 @@ the registry (other kernel parts ask the registry). Every field:
 | `provides.kinds` | no | kinds it owns (defined in its packs), by pack |
 | `java` | no | `jars:` (in `java/`), `entry:` the `DrishtiModule` class, `spring:` its auto-configuration, `exports:` packages other modules may *not* see (default none), `native:` true when a jar bundles native code |
 | `compute` | no | its engines (ids, words, pools, switches) |
-| `python` | no | `packages:`, `requirements:`, `pools:` (the kernel pools it submits to, `python` by default), `items:` (Python compute items it registers) |
+| `python` | no | `version:` (the least Python), `path:` (package folders, default `python`), `wheels:` (the vendored wheels folder, default `python/wheels`), `requires:` (each needs a pure-Python wheel in it), `engines:` (`module:Class` entry points), `pool:` (the module's pool settings). Built: section 4.6 |
 | `packs` | no | its packs (folders under `packs/`) and which are on by default |
 | `data` | no | `needs:` file (`data/needs.yaml`, section 5) |
 | `api` | no | `prefix:` (its REST namespace), `aliases:` (old paths answered for one release), `tokens:` |
@@ -407,7 +408,7 @@ module". First-party modules without an allowance, and every third-party module,
 one build and release train builds banking with each kernel, so the two always ship together.
 
 **As built (2.9.11.i2 + i3, wave 2).** One implementation, `FirstParty` in the module runtime, answers for the module tool and the kernel.
-The build (`modules/dist`) packs the product's modules with `java -jar drishti-module-tool.jar pack` and writes
+The build (`packaging/dist`) packs the product's modules with `java -jar drishti-module-tool.jar pack` and writes
 `META-INF/drishti/first-party.yaml` (id, version, SHA-256 of each `DMOD.MF`) from the packed files; both server jars carry it. A manifest
 whose `kernel-internals:` names a file (banking's `../kernel-internals.txt`) gets the list written in by the packer, and the packer stamps
 `kernel-build:` with the kernel on its class path (`<version>+<build time>` from the server's `build-info.properties`, or `--kernel-build`).
@@ -533,24 +534,29 @@ prefix. `ApiAlias` keeps working for one release.
 - The module's `python/` packages are made importable **only in that module's runs**: a run submitted by `banking` gets
   `<module>/python` prepended to its sandbox's import path; another module's runs never see it. The kernel's `drishti_kernel` package and
   the locked libraries are shared.
-- **No pip at install time.** `python/requirements.txt` must be satisfied by the kernel's lock file; a module needing a library outside it
-  is refused with *needs scipy-stats-x 1.2, not in this site's Python lock: an administrator approves it first*
-  ([ARCHITECTURE.md section 29.6](ARCHITECTURE.md#296-requirements-and-approval)).
+- **Built (2.9.11.i4): the module's Python runs in the kernel's compute pool.** On load the module's vendored wheels are unpacked into
+  `<data>/compute/modules/<id>/site` and a pool `m-<id>` joins the compute service (`ComputeService.addModulePool`, the same `Pool` and
+  workers as a site's pool: one implementation); its workers' path is the SDK, that folder and the module's `python:` `path:` folders, so
+  modules cannot clash. The reactive connector and compute requests name the pool. On unload the pool is withdrawn (`PYTHON_ITEM`, step 4)
+  and the folder removed (`PYTHON_PATH`, step 7). A module whose `compute` part is not placed on a node gets no pool there.
+- **No network, no pip at install time.** A module vendors its dependencies as pure-Python wheels (`py3-none-any`) in its wheels folder and
+  lists them in `python.requires`; the verifier (V2) and conformance check C9 refuse a requirement without its wheel, a native or
+  compiled file in the Python folders or a wheel, and an entry point without its module and class.
 - Every run goes through the kernel's one door (`PythonRuns`): same strict sandbox, limits, audit line, the person's row rules on every
   frame. The audit line gains `module`.
-- A module's Python items (BI python visuals, Python measures, its compute packs) are registered by the manifest's `python.items`, shown in
-  Build with the module's name.
+- A module's Python items are its `python.engines` entry points; BI python visuals and Python measures registered through `PythonRuns`
+  stay design (shown in Build with the module's name).
 
 ### 4.7 The console part (loaded by the Drishti Console)
 
 - **Where**: the console never reads the kernel's module folders: it receives the **console part** of each module (`console/`,
   `elements/`, `docs/` with the signed hash list) from the kernel once the kernel reports the module active. **In i2** today's Python
-  console reads the part the kernel has verified and hosts it **declaratively** (section 14.2.1); **from i4** the Drishti Console on Spring
+  console reads the part the kernel has verified and hosts it **declaratively** (section 14.2.1); **from i5** the Drishti Console on Spring
   Boot verifies it itself and loads it with the shared `drishti-module-runtime` (section 10.4).
 - **`plugin.yaml` format 2**: everything the console shows for a module is declared (routes, the API proxy list, words, menus, Home
   cards, slots, settings page); format 1's `routers:` (FastAPI routers included at import) and the shared template loader go. Section 9
   is the design; format 1 is read for one release with a deprecation line, then refused.
-- **Java context builders** (optional, small, **from i4**; none in i2): `console/java/<id>-console.jar`, in the console's class loader for the module, which sees only
+- **Java context builders** (optional, small, **from i5**; none in i2): `console/java/<id>-console.jar`, in the console's class loader for the module, which sees only
   `drishti-console-api`; a builder returns plain values and registers nothing (section 10.4). No Python runs in the console.
 - **Templates**: one sandboxed Jinjava instance per module, namespace `<id>:`, which sees only the kernel's public layouts and its own
   files; a kernel template never includes a module's (rule 1) and a module never overrides a kernel template (section 9.2, 9.3).
@@ -823,22 +829,25 @@ bindings:
 | `demo` | `true` binds the demo lake's samples explicitly |
 | `for:` (exception) | a per-module override, `for: {genomics-qc: [qc-store]}`; allowed only for kinds marked `shareable: per-module` in their contract (Q4) |
 
-**Today's equivalent is spread out**: a connector file's `kinds:` list and its `lake:`; the contract's `storage.connector`. P1 folds both
-into `bindings.yaml` (no dual machinery): connector files keep `plugin`, settings and `lake:`, lose `kinds:`; `drishti.py bindings
-migrate` writes `bindings.yaml` from today's files once, and a connector file still carrying `kinds:` is read for one release with a
-deprecation line in Health.
+**Status:** connector files keep `plugin`, settings and `lake:` and name no kinds; `config/bindings.yaml` is the one home (a `kinds:` line from an earlier release is ignored, and the upgrade that wrote `bindings.yaml` from those lists is gone). The Pack designer proposes its binding to Admin → Data bindings (the file connector saved through the connectors API, each kind proposed for a second administrator's approval); there is no `site/` folder side path.
 
 ### 5.5 How a kind finds its data (resolution)
+
+**The order a kind's connectors are decided in is section 18.6** ([Configuration resolution](#18-configuration-resolution-packs-connectors-bindings-and-inbox-rules)); this section and 5.4 and 5.6 follow it when it is built.
 
 For each kind any loaded module needs, in this order, first hit wins:
 
 1. **The site's binding** in `config/bindings.yaml` (as approved).
 2. **The distribution's default** (`bindings.defaults`, section 6), e.g. `drishti.finance` binds banking's kinds to `risklake` tables by
-   their hints when a lake file holds them.
+   their hints when a lake file holds them. Today: the kind's route in its pack, then the connectors whose pack template names the kind
+   (`kinds:` in the pack's `connectors:` templates, never in the written connector file), then the sources that name the kind themselves.
 3. **The lake convention**: a configured lake (not demo) whose lake file has the contract's `binding-hint.lake-table` table, read by a
    connector of the lake's format → bound, marked `AUTO` (Admin shows *found by convention: confirm*).
 4. **The demo lake**, only while `drishti.demo.enabled` and the need allows demo: marked `DEMO` (amber everywhere: "demo data").
 5. Otherwise **UNBOUND**.
+
+The router reads in the same order: a bound kind from its bound connectors (the `read` list, then `live`) and no other; a connector that
+names no kind is asked for a kind only when one of these steps picks it, never merely because its plugin could read the kind.
 
 Demo and real never mix ([DATA_LAKE_GUIDE.md](../guides/DATA_LAKE_GUIDE.md)): a kind is either demo or real; a pack whose kinds are bound
 to more than one lake is `DEGRADED` (today's warning, moved from packs to bindings).
@@ -891,7 +900,9 @@ administrator (four eyes), audited, applied **hot**: the kernel validates the ne
 
 - A module's files contain no connector, plugin, host, URL of a data source, user name, password, key or token: the packager and V1 scan
   for connector keys (`plugin:`, `connector:`, `bootstrap-servers`, `jdbc:`, `password`, `secret`, `token`) and known secret patterns, and
-  refuse.
+  refuse. The one exception is the read-only **connector templates** (section 18.5): a pack's `connectors:` section and a source module's
+  `connectors/` files travel with the module (an installed module serves its kinds as its source folder does) and name plugins, kinds and
+  lakes, but every host, user and secret in them is a `${...}` placeholder the site fills; the site's override and secrets stay the site's.
 - At run time a module has no API to read connector settings or secrets; `Kinds` returns rows, never the connection.
 - Feeds a module ships (public sources such as the ECB rates) name a public URL and need no credentials; one that needs a key reads it
   from the kernel's secret store by a **name the site provides** in the feed's binding (`feeds.market-data.api-key: ${secret:ecb}`), not from
@@ -936,7 +947,7 @@ differently branded consoles over the same kernels. Brand and theme are always t
 | `lenses` | which lenses are offered, the default lens, per-lens title overrides |
 | `home` | the default landing per lens, cards and chips order, the welcome text |
 | `menus` | top-level menu order; menu entries hidden for the whole product |
-| `features` | presets of switches (today's `config/lenses/features.yaml`) |
+| `features` | presets of switches (today's `config/distributions/kernel.yaml `features:``) |
 | `docs` | which Help sections and tutorials show, their order, the docs title ("Drishti Finance Help"), extra pages from the distribution's folder |
 | `bindings.defaults` | default bindings for this product (section 5.5) |
 | `demo` | whether the demo lake ships and is on |
@@ -1056,6 +1067,8 @@ Undeploy and *move a part* are plans too (placement without the module, or with 
 
 **The Python script: `drishti.py module deploy`** (part of the existing CLI, in `tools/modulecli.py`), Terraform-style:
 
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
 ```
 drishti.py module deploy banking-3.0.1.dmod --placement config/placement.yaml --plan [--out plan.json] [--json]
 drishti.py module deploy --apply plan.json            # this plan only; non-zero exit on failure or a stale plan
@@ -1116,7 +1129,7 @@ command at every step.
 | `drishti-module-maven-plugin` | the goals `validate`, `conformance`, `assemble`, `sign`, `publish` (8.2) |
 | `drishti-module-archetype` | the Maven archetype `module new` wraps (8.3) |
 | `@drishti/elements-*` `.d.ts` | the Elements core typings (from ELEMENTS.md's distribution channels), the plugin.yaml format 2 schema, the kernel templates' macro reference |
-| `drishti-console-api-<v>.jar` (from i4) | the Drishti Console's half: the context-builder interface (`PageContext.Builder`), the page context and the `ModuleApi` client types; scope `provided` (section 10.4) |
+| `drishti-console-api-<v>.jar` (from i5) | the Drishti Console's half: the context-builder interface (`PageContext.Builder`), the page context and the `ModuleApi` client types; scope `provided` (section 10.4) |
 | `drishti_kernel` Python | the compute SDK's types and a local sandbox runner for tests (Python runs only on the kernel's workers) |
 | schemas | `module.schema.json`, `needs.schema.json`, `contract.schema.json`, `plugin.schema.json` (format 2), `distribution.schema.json` (editors validate as you type) |
 | `drishti.py module …` | the command line of section 7.1 plus `new` and `run` (8.3, 8.4), for teams without Maven expertise |
@@ -1213,7 +1226,7 @@ Every module passes it to be signed with a publisher key (`drishti:sign` refuses
 | C6 | **Routes namespaced** | every route under `/m/<id>/`; aliases and words checked against the reserved names (9.9); no route registered by code (no controller or `@RequestMapping` in a console jar) |
 | C7 | **Help, guide, tutorial present** | `docs/README.md` with front matter; a Help section; one guide and one tutorial per `docs.features` row; the docs gates (links, images, register) on the module's `docs/` |
 | C8 | **Data contracts present** | every kind in `provides.kinds` has a contract (`contract-format: 1`) with `binding-hint:` and no `storage:`; every need names a contract range |
-| C9 | **No secrets, no connectors** | the secret patterns and connector keys of section 5.10 in every file, including templates and samples |
+| C9 | **No secrets, no connectors, pure Python** | the secret patterns and connector keys of section 5.10 in every file, samples included; the connector templates (a pack's `connectors:` section, a source module's `connectors/` files, section 18.5) may name plugins and kinds, and every host, user and secret in them is a `${...}` placeholder; the module's Python (section 4.6): entry points exist, declared requirements vendored as pure-Python wheels, nothing compiled |
 | C10 | **Licence headers** | the publisher's header on every source file (the parent pom's check) |
 | C11 | **Functions answer** | every word in `functions.yaml` answers through the harness (a page, a view or an API) |
 | C12 | **Two people at once** | the session-isolation test: two people, different row rules, concurrent requests, no crossed data in any page, API or cache |
@@ -1267,7 +1280,7 @@ The files, all in `examples/genomics/` (laid out as inside the `.dmod`; the proj
 ### 8.10 Banking's equivalent
 
 Banking becomes the same shape at `modules/banking/` in this repository (Q9): `banking-compute` ← `drishti-compute-banking`,
-`banking-service` ← `drishti-banking`, `banking-python` ← `drishti_banking` and the packs' Python, `banking-packs` ← `config/packs/banking/`
+`banking-service` ← `drishti-banking`, `banking-python` ← `drishti_banking` and the packs' Python, `banking-packs` ← `modules/banking/dmod/packs/`
 (+ its lenses, BI and lake forms), `banking-console` ← `drishti-console/plugins/banking/` (plugin.yaml format 1 → 2, the nine route files
 reduced to context builders, the ~35 API pass-throughs replaced by the kernel's proxy), `banking-docs` ← the seven banking guides and nine
 tutorials, `banking-test` ← the banking tests, the VaR exact check and `BankingAbsenceTest`. The file-by-file mapping:
@@ -1353,7 +1366,7 @@ A tier-3 component is offered to Sutras as a panel type and to composed pages as
 | `product`, `business_date`, `now` | the brand (distribution), the business date | — |
 | the builder's map | whatever the module's optional context builder returns (plain values: strings, numbers, lists, maps, records) | objects with behaviour, callables |
 
-From i4, a **context builder** (`handler: VariantExplorerContext` → `com.example.genomics.console.VariantExplorerContext`, a class in the module's
+From i5, a **context builder** (`handler: VariantExplorerContext` → `com.example.genomics.console.VariantExplorerContext`, a class in the module's
 `console/java/` jar implementing `PageContext.Builder` from `drishti-console-api`) is given a read-only page context (the person, the typed
 params, a `ModuleApi` client bound to the module's declared endpoints as that person) and returns a map of plain values. It cannot register
 routes, read the raw request, set cookies or keep state (no mutable fields: an architecture test): per-person data lives only in the call
@@ -1481,8 +1494,8 @@ server (the server-computes-risk rule). `/var` stays as the alias, so bookmarks 
 
 **Decided by the owner on 2026-11-08:** the console moves from Python (FastAPI and Jinja) to a **Spring Boot web application**, to gain
 Java's multi-threading, and it **stays separate from the kernel**: UX work must never make the BI kernel unstable, and one UI must be able
-to stand in front of several kernels. The move is **its own release, i4** (owner, 2026-11-08; section 14.2). Until then today's Python
-console serves modules' declarative console parts (section 14.2.1), so that no module changes when i4 re-hosts them in Java. This section is the design; sections 9 (module UI) and 12
+to stand in front of several kernels. The move is **its own release, i5** (owner, 2026-11-08; section 14.2). Until then today's Python
+console serves modules' declarative console parts (section 14.2.1), so that no module changes when i5 re-hosts them in Java. This section is the design; sections 9 (module UI) and 12
 (unload) are written for the Java console.
 
 ### 10.1 Why
@@ -1501,7 +1514,7 @@ console serves modules' declarative console parts (section 14.2.1), so that no m
   session-isolation rule). In the Java console, per-person state lives only in the request and the session. Singletons are stateless
   services checked by an architecture test, and the conformance suite runs two people at once (C9).
 - **One security stack.** Spring Security handles sign-in, enterprise SSO (section 10.11), CSRF, headers and per-kernel tokens in the
-  console, and the kernel already uses it. i4 brings SSO on it; trust and security (j) builds roles, licensing and hardening on the same
+  console, and the kernel already uses it. i5 brings SSO on it; trust and security (j) builds roles, licensing and hardening on the same
   stack, not on two.
 
 **Why separate from the kernel:**
@@ -1579,7 +1592,7 @@ The runtime is the glue drawn in section 1.1's picture.
   console receives **only the console part**: `console/`, `elements/` and `docs/`, with `DMOD.MF` and `DMOD.SIG`, streamed by the kernel
   (`GET /api/v1/modules/<id>/bundle/<version>`). The console verifies the bundle against the signed hash list itself (V2 on every host) and
   loads it only when the kernel reports the module active.
-- **Context builders are Java** (from i4). A composed page's optional handler is a small class implementing
+- **Context builders are Java** (from i5). A composed page's optional handler is a small class implementing
   `PageContext.Builder` from **`drishti-console-api`** (the console's half of the SDK, scope `provided`). It is given the person, the
   route's typed parameters and a `ModuleApi` client bound to the module's endpoints *as that person*, and it returns a map of plain
   values. It cannot register routes, read the raw request, set cookies or keep state (the architecture test fails a static or instance
@@ -1591,7 +1604,7 @@ The runtime is the glue drawn in section 1.1's picture.
   template cache are dropped, its static and Elements mounts are withdrawn, and its context-builder class loader is released. At the
   console's next rolling restart in P2 the loader goes; in P5 it goes at once, under the same leak check as the kernel's.
 
-### 10.5 The console as a placement role (i4)
+### 10.5 The console as a placement role (i5)
 
 - In the cluster design (section 4.11), **a console is a node with the role `console`**. It registers with the cluster as a light
   member: no data, no compute, no vote in leader elections, no lake. It receives the cluster configuration version, the registry's
@@ -1607,7 +1620,7 @@ The runtime is the glue drawn in section 1.1's picture.
 - The example: [examples/site/placement.yaml](kernel-and-modules/examples/site/placement.yaml) (two consoles, one of them for
   research only).
 
-### 10.6 One console, many kernels (i4)
+### 10.6 One console, many kernels (i5)
 
 ![One console in front of two kernels: the finance production cluster and the genomics cluster, each with its own modules, token and health; menus, pages and Help are the union, labelled per kernel; one kernel down greys only its pages](kernel-and-modules/diagrams/console-multi-kernel.svg)
 
@@ -1717,19 +1730,19 @@ lines, move with the groups that use them). The full table with the files of eac
 | **Performance not proved** | the latency-per-page benchmark (10.9) is a gate for every group, not only at the end. A group that is slower does not move until it is fixed. |
 | **Windows QA** | a plus: the UI becomes a jar on Java, with no Python environment to install for the console. Native-binary rules are unchanged. |
 | **Test-suite runtime** | the browser suite already runs on all 24 threads with per-worker fixtures. The Java console starts faster than the Python console with its plugins, and MockMvc unit tests run in seconds. The proxy hop during the migration is measured, and its cost is gone at the end. |
-| **Two consoles during the migration** | it is a strangler, not dual machinery: each path has exactly one owner at every moment (`legacy-routes.yaml`), the Python console is loopback-only behind the Java front, and it is deleted at the end of i4. |
+| **Two consoles during the migration** | it is a strangler, not dual machinery: each path has exactly one owner at every moment (`legacy-routes.yaml`), the Python console is loopback-only behind the Java front, and it is deleted at the end of i5. |
 | **The bulk of `core/` logic** (menus, search, facts, designer forms) | ported service by service with its existing unit tests turned into JUnit tests first. Logic that belongs on the kernel (anything that computes a number) moves to the kernel instead (the server-computes-risk rule). |
 
-### 10.11 Enterprise single sign-on (i4)
+### 10.11 Enterprise single sign-on (i5)
 
-**Decided by the owner on 2026-11-08: i4 includes how Drishti integrates with enterprise single sign-on.** Authentication and SSO move from
-j to i4, because the Spring Boot console's security chain is where they belong. j keeps roles, licensing, module signing, audit and
+**Decided by the owner on 2026-11-08: i5 includes how Drishti integrates with enterprise single sign-on.** Authentication and SSO move from
+j to i5, because the Spring Boot console's security chain is where they belong. j keeps roles, licensing, module signing, audit and
 hardening (section 14.2). Roles, row rules and the access chain are [ACCESS_MODEL.md](ACCESS_MODEL.md); this section does not repeat them.
 
 **What exists today, and stays true.** OpenID Connect sign-in is built: the Python console runs the browser redirect and the **server verifies
 every ID token itself**, maps the provider's groups to roles (`drishti.security.oidc.role-map`), creates the user on first sign-in, and
 re-checks the session every `auth.recheck_seconds`. A user disabled in Drishti stays out whatever the provider says, and one break-glass
-administrator keeps a password ([ADMIN_GUIDE.md section 5](../guides/ADMIN_GUIDE.md#5-single-sign-on-openid-connect)). i4 keeps every one of
+administrator keeps a password ([ADMIN_GUIDE.md section 5](../guides/ADMIN_GUIDE.md#5-single-sign-on-openid-connect)). i5 keeps every one of
 these rules and moves the browser side into Spring Security.
 
 ![Enterprise single sign-on: the browser goes to the console, the console runs authorization code with PKCE at the identity provider, the identity kernel maps the verified claims to roles, lenses and modules, the console keeps the session, and each call carries a token for that kernel only](kernel-and-modules/diagrams/sso-flow.svg)
@@ -1823,13 +1836,13 @@ refused by kernel B**. Real providers are checked at **site acceptance** with a 
 site's **secret store** or the environment (`${secret:…}` references, `DRISHTI_*` variables), **never** in configuration committed to git and
 **never in a module** (section 5.10).
 
-**Documentation (an i4 deliverable).** The **SSO integration guide** is a rewrite of [ADMIN_GUIDE.md section 5](../guides/ADMIN_GUIDE.md#5-single-sign-on-openid-connect),
+**Documentation (an i5 deliverable).** The **SSO integration guide** is a rewrite of [ADMIN_GUIDE.md section 5](../guides/ADMIN_GUIDE.md#5-single-sign-on-openid-connect),
 the existing home of sign-in for administrators (not a new document): step-by-step set-up for **Entra ID, Okta, Ping and ADFS, and
 Keycloak**, claim-mapping examples, logout, the CLI's device code, and troubleshooting (clock skew, wrong audience, the groups overage,
 the redirect URI). It is paired with one **SSO tutorial** (the two-docs rule) and with the per-provider site-acceptance checklists.
 DEPLOYMENT_AND_QA_GUIDE links to it from its configuration step.
 
-**If i4 were skipped**, SSO would fall back to j on the Python console: the same identity map, token per kernel and logout rules, built
+**If i5 were skipped**, SSO would fall back to j on the Python console: the same identity map, token per kernel and logout rules, built
 on the Python console's OIDC code instead of Spring Security.
 
 ## 11. Drishti Elements: the controlled UI statics
@@ -1842,7 +1855,7 @@ and may not ship, and how that is enforced.
 
 - **The platform owns Elements**: the libraries (drishti-core, -inputs, -grid, -chart with maps, -data, -insight, -renderer and the
   generic additions) and **every vendored third-party library** (`static/vendor` with `VENDOR.md`).
-- **Only the Drishti Console serves them** (today's console from i2, the Spring Boot console from i4), from its own **signed, versioned bundle**: one Elements release train per console
+- **Only the Drishti Console serves them** (today's console from i2, the Spring Boot console from i5), from its own **signed, versioned bundle**: one Elements release train per console
   (`elements.json`, [ELEMENTS.md section 8](ELEMENTS.md#8-packaging-versions-and-licensing)), served under
   `/static/elements/<library>/<version>/` with immutable caching, **SRI** on every tag and the console's **CSP** (`script-src 'self'`, no
   inline script, no remote origin). A console's About and Health show its Elements train version.
@@ -2136,14 +2149,14 @@ module id and version in the audit line.
 | **P1 · Kernel boundary to zero** (**i1**, with data standards and the drill under 60 minutes) | `drishti-kernel-api` jar (section 2.3: existing SPIs moved under `kernel.api`, new `DrishtiModule`, `ModuleContext`, `KindProvider`, `ModuleSettings`, `AiToolProvider`, `@ModuleApi`); banking compiled against it only; the 39-file allow list to **0**; `KindProvider` replaces banking's connector plugins; contracts' `storage:` → `binding-hint:`; `config/bindings.yaml` + `bindings migrate`; kernel API 1.0 frozen with `japicmp` baseline | kernel boots with **no modules** (economy and capital markets off too) and serves BI, Pivot, Build, Help, GLEIF; `domain_strings` empty; banking passes its suite; **VaR exactly equal** |
 | **P2 · Modules on one node, on today's console** (**i2**) | the `.dmod` format and packager (`module build`, unsigned dev key), `modules.path`, discovery and V1–V4, V6–V7 checks, **loading in the kernel through `drishti-module-runtime`** (section 10.4), class loader per module + child Spring context, REST mounting, Python per-module import path; **module pages served by the current (Python) console, declarative only** (section 14.2.1): plugin.yaml format 2, the live route table, per-module template namespaces, the API proxy (section 9), no console handlers in modules; **the unload sequence, tombstones and the absence suite** (section 12); **Elements control** (served only by the console, an Elements API range per module, the hash scan and conformance: section 11); Help merge, **the thin jar**, `module list | info | install | remove | verify`, **single-node deployment** (`module deploy` plan/apply and Admin → Modules → Deploy over the deployment API, four eyes: section 7.6), Admin → Modules (mock-up a), Admin → Data bindings (mock-up b), launchers/Docker/ECS/stack with the modules folder; the SDK (parent pom, archetype, `drishti-module-maven-plugin`, harness, `module new` / `run`); banking, economy and capital markets as `.dmod`s built as Maven projects; the developer guide + tutorial | **banking runs as a `.dmod`** and passes against the kernel alone (the harness: kernel thin jar + `banking.dmod`, nothing else); **install → remove → reinstall leaves nothing** (genomics and banking pass the absence suite); a `.dmod` carrying a copy of a vendored library is refused; the full drill on the thin jar + three modules; a drill with **no modules**; VaR exactly equal |
 | **P3 · Cluster and white label** (**i3**) | **placement** per node or role and per part, singletons, the heavy-work guards, `config/placement.yaml`; **cluster deployment** (plan and apply across the placed nodes, two-phase activation, late joiners, the node × module matrix, rolling upgrades pinned per session: section 4.11); the distribution file and `dist build`; branding literals to 0 (the 26-literal fix and its guard); `drishti.finance` (banking + capital markets + economy) as the default product; the **`genomics-sample`** module and `drishti.genomics`; white-label mock-up (c) built; Help/docs by distribution | **`drishti.genomics` boots from configuration only** (same kernel build, a different file and module set): no banking word on any page, in search, Help or assets (a crawler test); `drishti.finance` equals today's product (screenshots); **banking placed on main and b only, nothing on c**; failover stays inside the placement |
-| **PC · The Drishti Console on Spring Boot** (**i4**) | `drishti-console-web` (Spring Boot 3, WebMVC on virtual threads, Jinjava, Spring Session JDBC on the two schema files, Spring Security with today's sign-in); **the console host of `drishti-module-runtime`** (the same declarative module parts as i2, re-hosted without changing any module; optional Java context builders through `drishti-console-api`); **Elements served from the Java console**; the **strangler migration of every route group**, banking's pages first (G0–G10, section 10.8), with the browser tests unchanged and JUnit/MockMvc replacing the pytest route tests; **consoles as placement nodes** (role `console`, 10.5); **one console in front of many kernels** (the kernel switcher, routing, failure isolation and tokens per kernel, a distribution per console: 10.6); the transform parse onto kernel Python workers (Python only on kernel-managed workers, 10.7); **enterprise single sign-on** (OIDC first, SAML 2.0, optional LDAP and Kerberos; the identity map with four eyes; a token per kernel; device code and client credentials for non-browser use; single logout: 10.11) with **the SSO integration guide** (a rewrite of ADMIN_GUIDE section 5: Entra ID, Okta, Ping and ADFS, Keycloak, claim mapping, troubleshooting) and its tutorial; **the Python console deleted at the end** | **every browser test passes against the Java console** with no Python console process; **page latency measured against today** (no page slower, the fan-out pages at least 30% faster: 10.9); every i2 module's pages unchanged on the Java console (the same `.dmod` files); one console in front of a finance and a genomics kernel, one stopped: only its pages grey; **the Python console is gone**; SSO passes the in-process mock IdP suite (OIDC and SAML) and one real provider's site checklist |
-| **P4 · Trust** (**j**, the security release; authentication and SSO are in i4) | signing with publisher keys, trust store, revocation, V5 with the signed licence, taint, `ModuleMigration`, CSP with SRI for module assets, signed kernel and connector plugins | tampered `.dmod` refused; unlicensed module absent; a revoked publisher's modules absent; rollback restores VaR exactly |
+| **PC · The Drishti Console on Spring Boot** (**i5**) | `drishti-console-web` (Spring Boot 3, WebMVC on virtual threads, Jinjava, Spring Session JDBC on the two schema files, Spring Security with today's sign-in); **the console host of `drishti-module-runtime`** (the same declarative module parts as i2, re-hosted without changing any module; optional Java context builders through `drishti-console-api`); **Elements served from the Java console**; the **strangler migration of every route group**, banking's pages first (G0–G10, section 10.8), with the browser tests unchanged and JUnit/MockMvc replacing the pytest route tests; **consoles as placement nodes** (role `console`, 10.5); **one console in front of many kernels** (the kernel switcher, routing, failure isolation and tokens per kernel, a distribution per console: 10.6); the transform parse onto kernel Python workers (Python only on kernel-managed workers, 10.7); **enterprise single sign-on** (OIDC first, SAML 2.0, optional LDAP and Kerberos; the identity map with four eyes; a token per kernel; device code and client credentials for non-browser use; single logout: 10.11) with **the SSO integration guide** (a rewrite of ADMIN_GUIDE section 5: Entra ID, Okta, Ping and ADFS, Keycloak, claim mapping, troubleshooting) and its tutorial; **the Python console deleted at the end** | **every browser test passes against the Java console** with no Python console process; **page latency measured against today** (no page slower, the fan-out pages at least 30% faster: 10.9); every i2 module's pages unchanged on the Java console (the same `.dmod` files); one console in front of a finance and a genomics kernel, one stopped: only its pages grey; **the Python console is gone**; SSO passes the in-process mock IdP suite (OIDC and SAML) and one real provider's site checklist |
+| **P4 · Trust** (**j**, the security release; authentication and SSO are in i5) | signing with publisher keys, trust store, revocation, V5 with the signed licence, taint, `ModuleMigration`, CSP with SRI for module assets, signed kernel and connector plugins | tampered `.dmod` refused; unlicensed module absent; a revoked publisher's modules absent; rollback restores VaR exactly |
 | **P5 · Repository and hot load** (later) | an internal module repository (search, fetch, dependency download), hot code load/unload with the leak test, module marketplace only if the owner wants one | 50 load/unload cycles without a class-loader leak; hot upgrade under load with no failed request |
 
 **Four releases (decided by the owner, 2026-11-08; Q8 and Q24):** **2.9.11.i1 · Foundations** (data standards: Iceberg onto iceberg-core,
 Python Delta reads through Delta Kernel, a critical review of the other connectors and sources; P1, with the kernel API at 0.x; the shared
 module runtime is **not** here; the full drill under 60 minutes; memory and speed; **about 1.0 × g**), **2.9.11.i2 · Modules on one node**
-(P2, on today's Python console; **about 1.2 × g**), **2.9.11.i3 · Cluster and white label** (P3; **about 1.0 × g**) and **2.9.11.i4 · The
+(P2, on today's Python console; **about 1.2 × g**), **2.9.11.i3 · Cluster and white label** (P3; **about 1.0 × g**) and **2.9.11.i5 · The
 Drishti Console on Spring Boot** (PC; **about 1.3 × g**: the skeleton, the runtime host, Elements and banking's pages about 0.4 × g, the
 migration of groups G2–G10 about 0.7 × g, console nodes and several kernels per console about 0.2 × g). P4 is in **2.9.11.j** (trust and
 security); then k (risk engines II), l (collateral), m (CVA), n (hardening); new
@@ -2151,13 +2164,13 @@ domains after the line. P5 later. The rows are in [IMPLEMENTATION_PLAN.md](IMPLE
 
 #### 14.2.1 Why i2's console hosting is declarative
 
-In i2 the modules' pages are served by **today's Python console**, and in i4 by the Java console. To keep one way at every moment and
-**not change any module in i4**, i2's console hosting is **minimal and declarative**: a module's console part is Sutras, templates (Jinja
+In i2 the modules' pages are served by **today's Python console**, and in i5 by the Java console. To keep one way at every moment and
+**not change any module in i5**, i2's console hosting is **minimal and declarative**: a module's console part is Sutras, templates (Jinja
 syntax, which Jinjava reads too), static files, its domain Elements library, menus, words, Home cards, slots and Help, all declared in
 `plugin.yaml` format 2. **No console handlers in modules in i2**: a page that needs more context gets it from its module's API through the
 proxy (Elements data sources), and scope words are parsed by the module's REST API on the kernel. The kernel verifies every `.dmod` with
 `drishti-module-runtime`; the Python console only reads the verified, declarative console part, runs no module code and holds no second
-verifier. In i4 the Java console hosts **the same `.dmod` files** with the runtime itself, the Python reader is deleted with the Python
+verifier. In i5 the Java console hosts **the same `.dmod` files** with the runtime itself, the Python reader is deleted with the Python
 console, and Java context builders become available as an option for later module versions.
 
 ### 14.3 Banking step by step (P1–P2)
@@ -2183,11 +2196,11 @@ console, and Java context builders become available as an option for later modul
 | VaR drifts during the moves | the exact-equality VaR check on every banking branch's pre-merge gate, not only at the drill |
 | Spring child contexts break auto-configuration ordering or AOP across loaders | prototype in week 1 on `economy` (content-only) then on banking's smallest engine (SIMM); keep the shared library list small; a test per SPI crossing the boundary |
 | Class-loader leaks (threads, caches, ThreadLocals) | kernel-owned thread pools only; the leak test in the harness from P2 even though hot unload is P5 |
-| Size of i (2–3× g), larger with the console migration | **split into i1, i2, i3 and i4** (decided, Q8 and Q24): each with its own proof and drill; the console move is its own release (i4) |
+| Size of i (2–3× g), larger with the console migration | **split into i1, i2, i3 and i5** (decided, Q8 and Q24): each with its own proof and drill; the console move is its own release (i5) |
 | Packaging change across every launcher, Docker, ECS, stack and the drill (why the thin jar was deferred) | one branch for all launchers with a launch-matrix test; the drill's first run on the thin jar is a dry run without timing |
 | Two ways during migration (in-jar and `.dmod`) | none: the branch that introduces the module path removes the in-jar path in the same merge; tests and harness use the `.dmod` |
 | Python code paths across modules | per-run import path; a test that one module's run cannot import another's package |
-| The console moves from Python to Java in i4 (Jinjava gaps, session switch, performance, test runtime) | section 10.10: render-equality tests, sign in again once, the latency-per-page gate per group, the browser suite unchanged, the strangler with one owner per path |
+| The console moves from Python to Java in i5 (Jinjava gaps, session switch, performance, test runtime) | section 10.10: render-equality tests, sign in again once, the latency-per-page gate per group, the browser suite unchanged, the strangler with one owner per path |
 | Performance (an extra class-loader hop, per-module DispatcherServlet) | measured in the benchmark: VaR request latency and pivot throughput before/after, budget ≤ 2% |
 | Windows QA (no .exe) | the packager and loader are Java + Python only; `.dmod` is a zip; signature checks in Java; tests run on Windows |
 | Docs churn (guides move into modules) | guides keep their slugs; Help merges them; the docs gates read module docs |
@@ -2195,24 +2208,24 @@ console, and Java context builders become available as an option for later modul
 ## 15. Decisions
 
 The owner accepted every recommendation on 2026-11-08; each row below is a decision. Q21–Q24 are the owner's own decisions of the same day
-(the three blocks, the console on Spring Boot, Elements, the console migration as its own release i4); Q14 is superseded by Q22.
+(the three blocks, the console on Spring Boot, Elements, the console migration as its own release i5); Q14 is superseded by Q22.
 
 | # | Question | Decision (2026-11-08) |
 |---|---|---|
 | Q1 | The core pack's finance entities (`book`, `desk`, `trader`, `counterparty`, `legal-entity`, …): kernel or banking? (was D1) | move them to a **`banking-reference` pack in the banking module**; the kernel keeps `calendar` and generic entities (organisation, person, location); GLEIF stays kernel |
-| Q2 | Bindings file vs connectors' `kinds:` lists | **`config/bindings.yaml` is the one home**; `kinds:` read for one release, then removed |
+| Q2 | Bindings file vs connectors' `kinds:` lists | **`config/bindings.yaml` is the one home**; `kinds:` no longer read (done) |
 | Q3 | Module static files at `/m/<id>/static/<version>/` (new addresses) or today's `/static/…` | **new addresses** (versioned cache, per-module CSP, clean unload); page addresses unchanged |
 | Q4 | Per-module bindings of one kind (`for:`) | **not in i**: one binding per kind; per-person views are row rules; revisit with a real case |
 | Q5 | Java isolation without a Security Manager: accept review + tests, or run untrusted modules out of process | **in process for Drishti-signed and partner modules**; out-of-process modules (a gRPC/Flight boundary) only if a third-party marketplace is wanted (P5+) |
 | Q6 | The market-data pack and feed: banking or capital markets | **capital markets owns market data** (pack and feed); banking `requires: capitalmarkets` (optional today, required once its engines read it); closes DOMAIN_MODULES D6's interim |
 | Q7 | Who signs: one Drishti key for everything, or publisher certificates under a Drishti root | **a root + publisher certificates** (Drishti, then partners), revocation list per release |
-| Q8 | Split i | **three releases**: i1 foundations (data standards, P1, drill under 60 minutes, memory and speed); i2 modules on one node (P2); i3 cluster and white label (P3); P4 in j. **Extended by Q24**: a fourth release, i4, for the console |
+| Q8 | Split i | **three releases**: i1 foundations (data standards, P1, drill under 60 minutes, memory and speed); i2 modules on one node (P2); i3 cluster and white label (P3); P4 in j. **Extended by Q24**: a fourth release, i5, for the console |
 | Q9 | Repository layout: banking's sources stay in this repository under `modules/banking/` or move to their own repository | **stay in this repository** (one drill, one history) but build separately into a `.dmod`; a separate repository when a partner module exists |
 | Q10 | Default distribution of the repo's build | **`drishti.finance`** (today's product); `drishti.genomics` as a sample only, never shipped to customers |
 | Q11 | The kernel API version's start | **1.0 at the end of P2** (P1's API is 0.x and may change freely) |
 | Q12 | HTTP status for a removed module's pages and APIs: 410 Gone or 404 | **410 for removed** (tombstones), **404 for off, refused or unlicensed** (it may come back; nothing permanent claimed), the plain 404 for never installed; all `no-store` (section 12.10) |
-| Q13 | Hot page install: P2 or P3 | **P2 for off, on and remove** (the guarantee needs it) **and for declarative console parts** (Sutras, templates, static, menus); console context builders (Java, from i4) and server code at the rolling restart until P5 (section 9.8) |
-| Q14 | Console Python handlers in partner modules, or templates and Sutras only | **Superseded by Q22 (owner, 2026-11-08).** Was: *allowed, but optional and small: Python context builders only*. Now: there is **no Python in a module's console part**; in i2 modules have **no console handlers at all** (declarative hosting, section 14.2.1); from i4 a module's optional handlers are **small Java context builders** (`drishti-console-api`, no routes, no request, no state; section 10.4); a module with no builders installs fully hot |
+| Q13 | Hot page install: P2 or P3 | **P2 for off, on and remove** (the guarantee needs it) **and for declarative console parts** (Sutras, templates, static, menus); console context builders (Java, from i5) and server code at the rolling restart until P5 (section 9.8) |
+| Q14 | Console Python handlers in partner modules, or templates and Sutras only | **Superseded by Q22 (owner, 2026-11-08).** Was: *allowed, but optional and small: Python context builders only*. Now: there is **no Python in a module's console part**; in i2 modules have **no console handlers at all** (declarative hosting, section 14.2.1); from i5 a module's optional handlers are **small Java context builders** (`drishti-console-api`, no routes, no request, no state; section 10.4); a module with no builders installs fully hot |
 | Q15 | Top-level path aliases (`/var`) for partners, or only Drishti-signed modules | **Drishti-signed only by default**; a site may grant one partner module aliases (`allow-aliases`, four eyes); command words for all, checked against the reserved names (section 9.9) |
 | Q16 | How long tombstones (and the *needs module X* marks) are kept | **365 days** (`drishti.modules.tombstone-days`), then the artefacts show *needs a module that is no longer known* and are still never deleted automatically |
 | Q17 | Where the SDK and modules are published | **an internal Maven repository** (the one the build already uses) for the SDK artefacts and `.dmod` files from P2; the P5 module repository adds search and dependency download on top of it |
@@ -2222,8 +2235,8 @@ The owner accepted every recommendation on 2026-11-08; each row below is a decis
 | Q21 | How is Drishti divided? | **Three building blocks** (owner, 2026-11-08): the **Drishti Kernel** (Data & BI Kernel: connectors, lakes, grammar, engines, registry, cluster, Python workers; hosts server parts), the **Drishti Console** (Data & BI Console: shell, Elements, BI and pivot screens, Admin; hosts console parts; in front of one or many kernels) and **Drishti modules**; glued by `drishti-module-runtime`, the distribution file, the SDK and placement (section 1.1) |
 | Q22 | The console: keep Python, fold it into the kernel, or a separate Java application | **A separate Spring Boot web application** (owner, 2026-11-08): WebMVC on virtual threads, Jinjava, Spring Session and Security; **separate from the kernel** for isolation, independent scaling and restart, a smaller kernel attack surface and **one console in front of many kernels**; one module runtime shared with the kernel; Python only on kernel-managed workers (section 10) |
 | Q23 | What UI statics may exist | **Drishti Elements is the one controlled set** (owner, 2026-11-08): owned by the platform, served only by the console from its signed, versioned train with SRI and CSP; modules ship no copy of Elements, no vendored library and nothing from a CDN; an Elements API range per module, refused with a reason on a mismatch; conformance and load-time hash scans; changes through the platform team with an API diff gate (section 11) |
-| Q24 | When does the console move | **The console migration is i4: owner 2026-11-08.** Its own release after i3: the Spring Boot console, the console host of the runtime, Elements served from Java, the strangler migration of every route group (banking's pages first), one console in front of many kernels, consoles as placement nodes, Python only on kernel workers, **the Python console deleted at the end of i4**. i2 keeps modules on one node on today's console with **declarative** console hosting, so no module changes in i4 (section 14.2.1) |
-| Q25 | Where enterprise single sign-on is built | **In i4** (owner, 2026-11-08), in the Spring Boot console's security chain: OIDC and SAML 2.0 with optional LDAP and Kerberos, the identity map with four eyes, a token per kernel, device code and client credentials, single logout, the SSO guide and tutorial (section 10.11). j keeps roles, licensing, module signing, audit and hardening; if i4 is skipped, SSO falls back to j on the Python console |
+| Q24 | When does the console move | **The console migration is i5: owner 2026-11-08.** Its own release after i3: the Spring Boot console, the console host of the runtime, Elements served from Java, the strangler migration of every route group (banking's pages first), one console in front of many kernels, consoles as placement nodes, Python only on kernel workers, **the Python console deleted at the end of i5**. i2 keeps modules on one node on today's console with **declarative** console hosting, so no module changes in i5 (section 14.2.1) |
+| Q25 | Where enterprise single sign-on is built | **In i5** (owner, 2026-11-08), in the Spring Boot console's security chain: OIDC and SAML 2.0 with optional LDAP and Kerberos, the identity map with four eyes, a token per kernel, device code and client credentials, single logout, the SSO guide and tutorial (section 10.11). j keeps roles, licensing, module signing, audit and hardening; if i5 is skipped, SSO falls back to j on the Python console |
 
 ### 15.1 Open questions (with recommendations)
 
@@ -2232,12 +2245,12 @@ The owner accepted every recommendation on 2026-11-08; each row below is a decis
 | O1 | Template engine: Jinjava or Pebble | **Jinjava** (Jinja-compatible: the 148 templates port mostly mechanically; Apache 2.0). Gate in the week-1 spike: a page render more than 20% slower than Jinja2, or a gap that cannot be rewritten, switches to **Pebble** before G2 starts (section 10.3.1) |
 | O2 | How many kernels per console | **Up to 4 supported, a hard cap of 8** (`kernels:` refuses more): menus, search and Home stay readable and the fan-out per page stays bounded; one is the default and keeps today's addresses |
 | O3 | Session store | **Spring Session JDBC**: SQLite for one console, the site's PostgreSQL for several; the tables in the two complete schema files, no migrations; **not Redis** (one more server to run, against the database rules) |
-| O4 | i4's start | **After i3's tag**, with the Jinjava spike (the 10 hardest templates, render equality and timing) front-loaded during i3 when a builder slot is free; the O1 engine choice is made before i4 starts |
-| O5 | Where the Python console runs during the migration | **On the same machine as the Java console, loopback only**, in front mode (identity only from the Java console's header); never reachable from the network; gone at the end of i4 |
+| O4 | i5's start | **After i3's tag**, with the Jinjava spike (the 10 hardest templates, render equality and timing) front-loaded during i3 when a builder slot is free; the O1 engine choice is made before i5 starts |
+| O5 | Where the Python console runs during the migration | **On the same machine as the Java console, loopback only**, in front mode (identity only from the Java console's header); never reachable from the network; gone at the end of i5 |
 | O6 | Should the same module run on two kernels behind one console (production and UAT) | **Refused by default; allowed with a `prefix:` on the second kernel** (`/k/uat/m/banking/…`), labelled everywhere; a UAT console of its own is the cleaner setup and is what the deployment guide recommends |
 | O7 | Which protocols first | **OIDC first** (every listed provider speaks it, and it is built today), **SAML 2.0 second** in the same release for sites that require it; LDAP bind and Kerberos as options, off by default |
 | O8 | Token to the kernels: OAuth token exchange (RFC 8693) or a console-signed JWT | **A console-signed JWT** (ES256, audience per kernel, 2 minutes, the console's JWKS): it works with every IdP, adds no IdP round trip per kernel and removes today's shared HS256 secret. **Token exchange as an option** for sites whose policy requires IdP-issued tokens at every hop |
-| O9 | SCIM provisioning | **Later** (after i4): JIT creation and the per-request session check cover joiners and leavers within seconds; SCIM is added when a site asks for pushed de-provisioning or group sync |
+| O9 | SCIM provisioning | **Later** (after i5): JIT creation and the per-request session check cover joiners and leavers within seconds; SCIM is added when a site asks for pushed de-provisioning or group sync |
 
 ## 16. What moves from DOMAIN_MODULES.md
 
@@ -2335,3 +2348,255 @@ exactly as people will see it, plus one thin developer bar (module id and versio
 *Reload*). The kernel injects the bar from the development key only under `module run`, never from the module, so the page itself stays
 conformant and screenshots taken with `--shots` leave it out. B repeats the terminal in a drawer that covers the page being designed;
 C hides errors in a corner and is kept only for `--shots` runs.
+
+## 18. Configuration resolution: packs, connectors, bindings and inbox rules
+
+**In plain words:**
+
+1. Drishti reads configuration from three places, always in this order: **your site** (`config/`), **the modules that are on**, **the kernel**.
+2. A module that is off contributes nothing, anywhere. A module that is on contributes everything its manifest lists, from wherever it is installed.
+3. Your site adds to what is shipped, and changes it only where it says so: a pack by `replaces:`, a connector by an override file of the same name, a binding by an entry for the kind.
+4. The server only reads. It never writes, moves, upgrades or retires a configuration file; only an administrator's own save does.
+5. One resolver answers every reader (server, loader, console, tools), and Admin shows for each pack, connector, binding and inbox rule where it came from and why.
+
+```
+                     what is on?                          one resolver                          every reader
+  distribution + licence + switches ──► modules ON ─┐
+                                                    ▼
+  1 SITE     config/packs/<pack>   config/connectors/<name>.yaml   config/bindings.yaml   config/dataload.yaml
+  2 MODULES  <module>/packs/<pack> <module>/connectors/<name>.yaml (kinds: in templates)  <module>/dataload.yaml
+  3 KERNEL   the kernel's packs (core, gleif, compute-demo)
+                                                    │
+                                                    ▼
+             ConfigResolution (one immutable snapshot, a version, a digest)
+               packs · connectors · bindings · inbox rules · problems · why
+                                                    │
+        server · lake loader · command line · console (Python twin) · tools · Admin "origin" columns
+```
+
+Packs and inbox rules are **found** top down (the first place that has it). Connectors are **layered** bottom up (the template, then
+the site's changes over it). Bindings are **decided** top down (the site's entry, else what the templates declare). The working
+paper beside this section ([pack-resolution-inventory.md](pack-resolution-inventory.md), internal) lists every reader and the tests.
+
+### 18.1 The one source of "what is on"
+
+The access registry ([ACCESS_MODEL.md](ACCESS_MODEL.md)) decides each module's state from the distribution, the licence, the
+administrator's switch and the modules it requires. The resolver asks it and nothing else: no reader looks at a switch file, the
+distribution or `drishti.packs.enabled` to decide whether a module's content counts. For each module the registry gives its id,
+version, state, the reason when off, and **its folder**: `<drishti.modules.home>/<id>/` (or `<id>/dmod/`, a module built with code),
+else the active version in the store, `<drishti.modules.path>/installed/<id>/<version>/`. A module found in both with different
+versions is read from the folder and reported (DRS-1044). The command line and the tools, which have no server, compute the same
+from the distribution file and the switch files (licence not evaluated); the console takes the list from the server.
+
+### 18.2 Settings: one per concept
+
+| Setting (variable) | Default | What it is |
+|---|---|---|
+| `drishti.packs.site-dir` (`DRISHTI_PACKS_DIR`) | `./config/packs` | the site's own packs: `<dir>/<pack>/pack.yaml`, or one folder down (`<dir>/<group>/<pack>/`) |
+| `drishti.packs.installed-dir` | `<data>/packs/installed` | packs an administrator deployed (Admin → Packs, a registry); part of the site |
+| `drishti.modules.home` (`DRISHTI_MODULES_HOME`) | `./modules` | the modules shipped as folders (tests and tools point it at the repository's `modules/`; no symbolic link beside a scratch `config/`) |
+| `drishti.modules.path` (`DRISHTI_MODULES_PATH`) | `<data>/modules` | the store of modules installed from a `.dmod` (section 4.1) |
+| `drishti.modules.dir` (`DRISHTI_MODULES_DIR`) | `./config/modules` | the administrator's module switches (unchanged: an existing setting keeps its meaning) |
+| `drishti.kernel.packs-dir` | `./config/packs/core` | the kernel's own packs. It is inside the site's packs folder today and is **never read as site packs**; when the folder moves, only this default changes |
+| `drishti.sources.connectors-dir` (`DRISHTI_CONNECTORS_DIR`) | `./config/connectors` | the site's connector files |
+| `drishti.bindings.file` | `./config/bindings.yaml` | the site's bindings |
+| `drishti.dataload.rules-file` | `./config/dataload.yaml` | the site's inbox rules |
+
+No setting is derived from another folder's position, and no folder's name changes what is read. `drishti.packs.dir` is the former
+name of `drishti.packs.site-dir` and is still read; setting both to different folders stops the start (DRS-1047).
+
+### 18.3 The resolver
+
+Plain Java in drishti-api (`com.ash.drishti.api.resolution`: the server, the loader process and the command line share it) and its
+Python twin `drishti-console/core/resolution.py` (the console and the tools). Both are held to one fixture of file trees and expected
+answers. **No other code lists or joins a pack, module, connector, bindings or rules folder**; a guard test enforces it.
+
+```java
+ResolutionSettings s = ResolutionSettings.of(property);                    // section 18.2, nothing else
+ConfigResolution r = ConfigResolution.build(s, modules, enabledPacks);     // immutable; modules = the registry's list (18.1)
+
+r.packs().find("trading")            // Optional<ResolvedPack>: name, version, origin, module, folder, state, replaces, reason
+r.packs().require("trading")         // or DRS-1041 / DRS-1043, in words
+r.packs().loaded()  .all()  .ofOrigin(Origin.KERNEL)  .manifests()
+r.connectors().find("trade-endur")   // Optional<Effective>: plugin, enabled, settings, kinds, writes, layer, templateFrom,
+                                     //   origins (each key's layer), baseDirs (each relative file's folder)
+r.connectors().all()  .unused()      // unused: files that are not read, each with its reason
+r.bindings().read("trade")  .live("trade")  .write("trade", "ENDUR")       // Resolved: connectors, union, state, origin, reason
+r.inboxRules()                       // List<Rule>, in match order, each with its origin
+r.modules().on()  .all()
+r.problems()                         // List<Problem>: code, message, the places it names
+r.why("pack", "trading")             // every place looked in, in order, and what was found there
+r.version()  r.digest()  r.watchRoots()
+```
+
+```python
+from core.resolution import Settings, build, repository
+r = build(Settings.from_env(), modules=server_modules)   # the console; repository() = the checkout with every module on (tools)
+r.packs.find(name); r.packs.loaded(); r.connectors.find(name); r.bindings.read(kind); r.inbox_rules(); r.problems; r.why("pack", name)
+```
+
+`Origin` is `SITE`, `MODULE` or `KERNEL`. A pack's `state` is `LOADED`, `AVAILABLE` (found, not enabled), `MODULE_OFF` or `NOT_READ`.
+
+### 18.4 Packs
+
+**Where a pack is found**, first hit wins:
+
+1. **Site**: `drishti.packs.installed-dir`, then `drishti.packs.site-dir` (the kernel packs folder excluded).
+2. **Modules that are on**: for each, the packs its manifest lists (`packs: {folder, list}`), in `<module folder>/<folder>/<pack>/`.
+   Only listed packs count: a folder the manifest does not list is reported, not read.
+3. **Kernel**: `drishti.kernel.packs-dir`.
+
+**Tie rules:**
+
+| Case | What happens |
+|---|---|
+| A site pack has the name of a module's or the kernel's pack and its `pack.yaml` says `replaces: <that name>` | the site pack is read; the shipped one is shown as *replaced* |
+| The same, without `replaces:` | **the shipped pack is read**; the site folder is `NOT_READ` and listed (DRS-1042), naming both folders |
+| Two site folders hold the same name | neither site folder is read (DRS-1042); a shipped pack of that name still is |
+| Two modules that are on list the same pack name | neither is read (DRS-1042); both modules are named |
+| A deploy of a pack whose name is shipped | refused at the deploy unless the archive says `replaces:` |
+| The kernel's `core` pack is missing | the server does not start (DRS-1040), naming the setting and the folder |
+
+Only the last one stops a start. Every other case leaves the server running with the shipped pack and a red line in Health.
+
+**Which packs load:** every pack of every module that is on, the kernel's `core`, and the kernel's other packs and the site's packs
+when the distribution or the administrator enables them. `drishti.packs.enabled` (`DRISHTI_PACKS`) narrows that set when it names
+packs; a name whose module is off is not loaded and says so (DRS-1043). The manifests' `packs.list` is the one list of what a module
+brings.
+
+**A site upgraded from the layout where shipped packs were under `config/packs/<domain>/`** needs no step: those folders are site
+folders with shipped names and no `replaces:`, so the shipped packs in the modules are read and each old folder is listed once as
+*not read: safe to delete* (never deleted). A site's own pack in such a folder has a name nothing ships and is read as before. A pack
+deployed over a shipped one in an earlier release is treated the same way: the shipped pack is read and the deployed one is listed.
+
+### 18.5 Connectors
+
+**The effective connector** is computed in memory:
+
+1. **Template** (read-only): an entry of a loaded pack's `connectors:`, or a file directly in an on module's connectors folder
+   (`connectors: {folder}` in its manifest). The connector's name is the file's `name:` key, else the file's name. Files under
+   `connectors/examples/` are examples to copy and are not templates. Two templates of one name: neither is used (DRS-1045).
+2. **Site file** `config/connectors/<name>.yaml`, merged over the template key by key (a setting's dotted path is its key:
+   `settings.set.SOURCE_SYSTEM`). **Any key may be changed, the plugin included, and every other key is still inherited**; a key set
+   to `null` removes the inherited one. Over a template that names a lake, `settings.root` alone keeps the lake (its tables are read
+   under that root); with `domain`, `table.<kind>` or `layout.<kind>` it is the older form and the lake keys are dropped. With no template of that name the file is a complete **site connector** and must name its
+   plugin.
+3. **Secrets**: `${VAR}` and `file:` references, resolved when the connector starts. A template never holds one.
+
+A relative file in a setting (`map: mappings/endur-trade.yaml`) is read from the folder of the layer that set the key: a template's
+from its module's folder (installed or development), a site file's from the connectors folder (`drishti.sources.connectors-dir`), both
+absolute; never from the server's working folder. A map in neither refuses the connector (DRS-5034) naming the paths tried.
+
+| A site file… | is… |
+|---|---|
+| has a template of its name | an **override**: its keys win, the rest is the template's |
+| has no template, names a plugin, and has no `template:` key and no generated mark | a **site connector** |
+| says `template: <owner>` (Admin and the tools always write it) and that template is not here (its module is off or removed) | **not used**; listed with the module and why it is off (DRS-1046) |
+| was generated by an earlier release and never edited (its stamp or marker says so) | **superseded**: not read, the template is in force; listed *safe to delete* |
+| was generated by an earlier release and edited | an override, like any other |
+| was generated by an earlier release and its template is not here | **not used**; listed (DRS-1046). It is never run as a site connector |
+
+**The server writes no connector file** at start, on reload or on deploy. Admin → Connectors saves only the keys that differ from the
+template, with `template: <owner>`; *Reset* deletes the override. There is no generation, upgrade, retirement, `.history` or
+`.migrated` step. Folders and markers an earlier release left (`.history`, `.generated`, `<data>/connectors/generated`, per-pack
+connector overrides in `<data>/packs/settings`, connector edits in the content store) are read where they are needed to recognise a
+generated file, listed in Health, and otherwise left alone: the content-store fold at start is removed, because every node that ran
+the earlier release has already folded, and a start that writes files from an inference is the fault this section removes.
+
+### 18.6 Bindings
+
+**How a kind finds its connectors.** One resolution, used by Admin, Health, every read, the inbox and every write; first hit wins:
+
+1. **The site's binding** for the kind in `config/bindings.yaml` (as approved). Names that no effective connector has are set aside
+   and reported; the rest serve. If none is left the next step decides.
+2. **What is shipped and declared**: every effective connector whose template or plugin names the kind (`kinds:` in a template, a
+   pack's `routes:`), in the order: the pack's route first, then by name; `union: true` when the templates say so. This is how a
+   source module enters: `source-endur` on brings `trade-endur` with `kinds: [trade]`, and `trade` reads it; off, it leaves. No site
+   file lists the source systems.
+3. **Demo samples** (state DEMO): for a kind the site binds with `demo: true`, and, while the demo is on, for a kind nothing above
+   offers and every module that needs it allows demo data. With the demo off (`drishti.demo.enabled: false`) no kind is DEMO: one the
+   samples alone would serve is UNBOUND and its pages say *no source serves kind '…'*, never an error.
+4. Otherwise **UNBOUND** (section 5.6).
+
+A connector is asked for a kind only when one of these steps names it; the router reads the packs' samples only for the kinds this
+resolution puts in DEMO. The guess of earlier releases, *any lake connector whose lake holds the kind's table*, is gone. Every kind of
+every shipped pack is named by a template or a route, so nothing shipped depended on it, and a kind the guess served on an upgraded site
+is read from the connectors that declare it at once: the state `AUTO` (*found by convention: confirm*) is no longer produced, so an
+upgrade needs no administrator's click (owner, 2026-11-14). A binding that names only a write path (`write: {connectors: …}`) leaves the
+read to steps 2 to 4.
+
+**Live**: the site binding's `live`, else the effective connectors that name the kind and can push.
+
+**Write** (a correction from a blotter or a form), `write(kind, source system)`:
+
+1. the connector the form names (`save.connector`);
+2. the site's binding: `write: {connector: <name>}` or, by source system, `write: {connectors: {ENDUR: <name>, MUREX: <name>}}`;
+3. what is shipped and declared: the effective connectors with `writes:` that name the kind; with a source system, the one of that
+   system (its `set: SOURCE_SYSTEM`, else its name `<kind>-<system>…`); without, the only one.
+
+The source system is the record's own: the system of the connector the record was read from, else its `SOURCE_SYSTEM`. A bound or
+defined write connector of that system is a candidate even while it is not running (it must be running when the change is applied). Each
+source module's live template (`trade-<system>-live`, Kafka) writes the blotter's one command, `amend-trade`, to its own system's topic.
+
+None: DRS-9308, naming the kind, the system, and the connectors that could serve if enabled. More than one: DRS-9309, naming them.
+The connector must be running with its `writes:` command switched on (Admin → Edits), as before. `write: {lake, table}`, for a kind
+a module produces, keeps its meaning.
+
+A site's `bindings.yaml` from an earlier release is read as it is. The demo's list of trade connectors is no longer copied into a
+site; a site that holds that copy keeps reading exactly the systems it lists, and Admin shows any on module's connector that names
+the kind and is *not in your binding*.
+
+### 18.7 Inbox rules, and what happens when something changes
+
+**Inbox rules**: the site's rules (`config/dataload.yaml`) first, then each on module's rules (`dataload:` in its manifest) in module
+order; the first rule that matches a file wins. A rule that names no connector takes the kind's first read connector (18.6). A rules
+file that cannot be read is a problem in Health (DRS-1048), never an empty list.
+
+**One snapshot, replaced whole.** The server holds the current `ConfigResolution`. It is rebuilt when: a module is switched,
+installed, upgraded or unloaded (`module.started`, `module.stopped`); a file under `watchRoots()` changes (the site's folders, the
+module folders, the store's `active.yaml`); an administrator saves a connector, a binding or a pack switch; a pack is deployed.
+The rebuild reads everything again, compares with the snapshot before, swaps, and publishes **one** event, `resolution.changed`
+(version, packs added and removed, connectors added, removed and changed, kinds whose binding changed, rules changed):
+
+| Consumer | On `resolution.changed` |
+|---|---|
+| Pack registry | loads the added packs, unloads the removed ones (section 12) |
+| Connector manager | starts added connectors, stops removed ones, restarts changed ones |
+| Binding service | hands the router the new read order per kind; publishes `binding.changed` per kind |
+| Data inbox | uses the new rules from its next cycle; the loader process is given the same snapshot's inputs |
+| Console | sees the new version on its next request and drops what it cached by the old one |
+
+A rebuild that fails (a file half written) keeps the snapshot before and reports the problem. In a cluster every node resolves from
+its own files; the digest is shown per node in Health and a difference is a problem (DRS-1049).
+
+### 18.8 What Admin shows
+
+- **Admin → Packs**: for each pack *Origin* (Site, Module `banking 2.9.11`, Kernel), its folder, *State* (loaded; available; module
+  off, with the reason; not read, with the reason and both folders), *Replaces*. A *Why* link shows the places looked in, in order.
+- **Admin → Connectors**: the layer of the connector (template, override, site) and of each setting, the template's owner, and the
+  list *not used* (superseded, template not here), each *safe to delete* or with the module to switch on.
+- **Admin → Data bindings**: each kind's origin (site, declared by `<module or pack>`, demo), read, live and write, and connectors
+  that offer the kind but are not in the site's binding.
+- **Admin → Data inbox**: each rule's origin, and a rule an earlier one always shadows.
+- **Health**: every problem of the resolution, and the digest per node.
+- `GET /api/v1/admin/resolution` answers all of it; `drishti.py resolution show` and `resolution why <pack|connector|kind> <name>`
+  print it without a server.
+
+### 18.9 Messages
+
+Each names the thing, both places, and what to do.
+
+| Code | When | The message, by example |
+|---|---|---|
+| DRS-1040 | the kernel's packs are missing (start refused) | *The kernel's pack 'core' is not in config/packs/core (drishti.kernel.packs-dir). The server cannot start without it.* |
+| DRS-1041 | a pack is not found | *No pack 'trding'. Looked in the site's packs (config/packs, data/packs/installed), the modules that are on (banking, market-data, economy) and the kernel's packs (config/packs/core). Did you mean 'trading' (module banking)?* |
+| DRS-1042 | one name in two places | *Pack 'trading' is in config/packs/banking/trading and in module banking (modules/banking/dmod/packs/trading). The module's is read. To use yours instead, add `replaces: trading` to its pack.yaml; otherwise the folder is safe to delete.* |
+| DRS-1043 | a pack's module is off | *Pack 'market-risk' belongs to module banking, which is off (switched off in config/modules/banking.yaml). Switch it on in Admin → Modules.* |
+| DRS-1044 | a module in two places | *Module market-data is in modules/market-data (1.0.0) and installed as data/modules/installed/market-data/1.1.0. The folder is read. Remove one.* |
+| DRS-1045 | two templates of one name | *Connector 'trade-endur' is declared by pack trading and by module source-endur. Neither is used. Remove one declaration.* |
+| DRS-1046 | a site connector file is not used | *config/connectors/trade-murex.yaml overrides the template of module source-murex, which is off (not in distribution drishti.risk). It is not used.* |
+| DRS-1047 | a setting names the wrong folder, or two names disagree (start refused) | *drishti.packs.site-dir is config/packs and drishti.packs.dir is site/packs: they name the same thing; keep one.* |
+| DRS-1048 | rules or bindings cannot be read | *The inbox rules of module source-endur (modules/source-endur/dataload.yaml) cannot be read: line 12, … Its files will not be matched.* |
+| DRS-1049 | two answers differ | *This console resolves pack 'trading' 2.9.10 from /opt/console/modules/…; the server serves 2.9.11 from /opt/drishti/modules/…* |
+| DRS-9308 | no write path | *Kind 'trade' (source ENDUR) has no write path: no connector that serves it offers writes. Module source-endur has an example, connectors/examples/kafka.yaml; or bind one in Admin → Data bindings (write).* |
+| DRS-9309 | more than one write path | *Kind 'trade' has two write paths, trade-endur-kafka and trade-murex-kafka, and the record names no source system. Name one in Admin → Data bindings (write).* |

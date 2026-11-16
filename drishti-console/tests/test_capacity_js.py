@@ -13,8 +13,8 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Admin -> Capacity's evaluator as it runs in the browser (static/js/drishti_capacity.js under Node): every named figure of the planner
-(drishti-server/src/main/resources/capacity/planner.yaml) at the three shapes of the shared test vectors
-(drishti-server/src/test/resources/capacity/test-vectors.json, written by tools/sizing_planner.py) agrees with the Python evaluator the
+(kernel/drishti-server/src/main/resources/capacity/planner.yaml) at the three shapes of the shared test vectors
+(kernel/drishti-server/src/test/resources/capacity/test-vectors.json, written by tools/sizing_planner.py) agrees with the Python evaluator the
 workbook is checked with, text exactly (the YAML block and the command line too), numbers to a millionth; and today against the plan
 says what breaks first from a server's measured figures."""
 import json
@@ -27,8 +27,8 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
 JS = ROOT / "drishti-console" / "web" / "static" / "js" / "drishti_capacity.js"
-PLANNER = ROOT / "drishti-server" / "src" / "main" / "resources" / "capacity" / "planner.yaml"
-VECTORS = ROOT / "drishti-server" / "src" / "test" / "resources" / "capacity" / "test-vectors.json"
+PLANNER = ROOT / "kernel/drishti-server" / "src" / "main" / "resources" / "capacity" / "planner.yaml"
+VECTORS = ROOT / "kernel/drishti-server" / "src" / "test" / "resources" / "capacity" / "test-vectors.json"
 
 AGREE = r"""
 global.window = global;

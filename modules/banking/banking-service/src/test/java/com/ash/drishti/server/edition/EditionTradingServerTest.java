@@ -37,9 +37,8 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 /**
  * Drishti Trading as a lens on a full instance (config/lenses/banking/trading.yaml; docs/guides/ADMIN_GUIDE.md › The design), as the product
  * owner's stack runs it ({@code drishti.lenses=risk,world,market,trading}): the lens and the person's View as choice ({@code tradingView})
- * are kept and read back by the real settings API; through the lens the person's FUNC and type-ahead offer the trading, risk-on-my-book,
- * counterparty and market-data commands of the file, and ECON, SCN, COLL and FRTB answer DRS-4023, typed or opened; BI offers the
- * trading and VaR datasets only.
+ * are kept and read back by the real settings API. The lens arranges the person's Home and menus and hides nothing
+ * (EditionTwoLensesServerTest).
  */
 @SpringBootTest(properties = {"drishti.lenses=risk,world,market,trading",
         "drishti.packs.enabled=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif,funds",
@@ -93,47 +92,5 @@ class EditionTradingServerTest {
                 .content("{\"tradingView\":\"book:BOOK-1' or 1=1\"}")).andReturn();
         assertThat(bad.getResponse().getStatus()).isEqualTo(400);
         assertThat(settings(dee, "{\"tradingView\":null}").path("tradingView").isNull()).isTrue();
-    }
-
-    @Test
-    void theLensShowsItsCommandsAndHidesTheRestWithDrs4023() throws Exception {
-        String eve = "eve-" + System.nanoTime();
-        String lens = settings(eve, "{\"lens\":\"trading\"}").path("lens").asText();
-        assertThat(lens).isEqualTo("trading");
-        List<String> codes = new ArrayList<>();
-        ok(get("/api/v1/functions").header("Authorization", bearer(eve)).header(EditionContext.HEADER, lens)).path("packs")
-                .forEach(p -> p.path("commands").forEach(c -> codes.add(c.path("code").asText())));
-        assertThat(codes).containsAll(TRADING_COMMANDS)
-                .doesNotContain("ECON", "SCN", "STR", "SSPNL", "COLL", "MC", "FRTB", "SACCR", "CVA", "SIMM", "XRUN", "USEQ", "FUND", "CMDV");
-        List<String> suggested = new ArrayList<>();
-        ok(get("/api/v1/command/suggest?q=CO").header("Authorization", bearer(eve)).header(EditionContext.HEADER, lens))
-                .forEach(s -> suggested.add(s.path("mnemonic").asText()));
-        assertThat(suggested).doesNotContain("COLL");
-        for (String hidden : List.of("ECON CAN", "SCN SCN-2008", "COLL COLL-1", "FRTB FRTB-RATES-1")) {
-            MvcResult r = typed(eve, hidden);
-            assertThat(r.getResponse().getStatus()).as(hidden).isEqualTo(404);
-            assertThat(r.getResponse().getContentAsString()).as(hidden).contains("DRS-4023");
-        }
-        for (String shown : List.of("TRD MX-20000001", "BOOK BOOK-RATES-1", "CPTY CP-ALDERSHOT", "CRV CRV-USD-OIS")) {
-            assertThat(typed(eve, shown).getResponse().getContentAsString()).as(shown).doesNotContain("DRS-4023");   // shown (no lake here)
-        }
-        MvcResult page = mvc.perform(get("/api/v1/views/frtb-sensitivity/FRTB-RATES-1").header("Authorization", bearer(eve))
-                .header(EditionContext.HEADER, lens)).andReturn();
-        assertThat(page.getResponse().getStatus()).isEqualTo(404);
-        assertThat(page.getResponse().getContentAsString()).contains("DRS-4023");
-    }
-
-    @Test
-    void biThroughTheLensOffersTheTradingAndVarDatasetsOnly() throws Exception {
-        String fay = "fay-" + System.nanoTime();
-        settings(fay, "{\"lens\":\"trading\"}");
-        List<String> ids = new ArrayList<>();
-        ok(get("/api/v1/bi/datasets").header("Authorization", bearer(fay)).header(EditionContext.HEADER, "trading")).path("datasets")
-                .forEach(d -> ids.add(d.path("id").asText()));
-        assertThat(ids).contains("file:table:banking.market_risk_var_latest", "file:table:banking.trading_risk_trades")
-                .doesNotContain("file:table:banking.counterparty_exposure_counterparties", "file:table:banking.live_exposure_netting",
-                        "file:table:bi.world_economics_economies");
-        assertThat(ids).allSatisfy(id -> assertThat(id.substring(id.lastIndexOf(':') + 1)).matches(
-                "banking\\.(trading_.*|trades_basic_trade|live_trading.*|market_risk_var_.*)"));
     }
 }

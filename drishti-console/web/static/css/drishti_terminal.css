@@ -147,6 +147,7 @@ body.terminal { font-size: var(--d-fs-14); }
 .metric-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--d-sp-2_4) var(--d-sp-9_6); }
 /* a figure never breaks inside: it shrinks with the tile (container query) down to a readable minimum */
 .metric-v { font-size: var(--d-fs-display-5); font-weight: 600; line-height: 1.1; color: var(--d-ink); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.metric-v.metric-v-date { font-size: var(--d-fs-display-7); }   /* a date is a label, not a big number */
 .metric-u { color: var(--d-muted); font-size: var(--d-fs-14_4); }
 .metric-d { font-size: var(--d-fs-14_4); color: var(--d-muted); }
 .metric-l, .metric-c { color: var(--d-muted); font-size: var(--d-fs-12_8); }
@@ -361,10 +362,6 @@ body.embed .vhead { padding: var(--d-sp-9_6) var(--d-sp-12_8); }
 }
 
 /* ---- monitors and alerts ---- */
-.mon-rows { display: flex; flex-direction: column; gap: var(--d-sp-9_6); }
-.mon-h { display: flex; gap: var(--d-sp-11_2); align-items: center; padding: var(--d-sp-8) var(--d-sp-12_8); border-bottom: 1px solid var(--d-border); }
-.mon-h .ws-x { margin-left: auto; }
-.mon-strip { padding: var(--d-sp-9_6) var(--d-sp-12_8); }
 .mon-add { max-width: 22rem; }
 .alert-form { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--d-sp-9_6) var(--d-sp-14_4); align-items: end; }
 .alert-form label { display: flex; flex-direction: column; gap: var(--d-sp-3_2); color: var(--d-muted); font-size: var(--d-fs-13_12); }

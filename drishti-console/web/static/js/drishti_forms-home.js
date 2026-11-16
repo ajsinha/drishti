@@ -45,7 +45,7 @@
     list.forEach(function (r) {
       if (!r || typeof r.href !== 'string' || r.href.indexOf('/form/') !== 0) { return; }
       var li = document.createElement('li'), a = document.createElement('a');
-      a.className = 'lnk'; a.href = r.href; a.textContent = String(r.label || r.href);
+      a.className = 'lnk'; a.href = drishti_url(r.href); a.textContent = String(r.label || r.href);
       li.appendChild(a); ul.appendChild(li);
     });
     if (ul.children.length) { root.querySelector('[data-forms-recent]').hidden = false; }

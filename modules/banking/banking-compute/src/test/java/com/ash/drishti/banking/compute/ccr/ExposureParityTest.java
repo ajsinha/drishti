@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.banking.compute.ccr;
 
+import com.ash.drishti.testroots.TestRoots;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 
@@ -54,12 +55,12 @@ class ExposureParityTest {
     static Path dir;
 
     static Path root() {
-        Path p = Path.of("").toAbsolutePath();
+        Path p = Path.of(TestRoots.module());
         while (p != null && !Files.isDirectory(p.resolve("data/testdata/counterparty-risk/exposure-path"))) {
             p = p.getParent();
         }
         if (p == null) {
-            throw new IllegalStateException("the committed test data (data/testdata/counterparty-risk) is not above " + Path.of("").toAbsolutePath());
+            throw new IllegalStateException("the committed test data (data/testdata/counterparty-risk) is not above " + Path.of(TestRoots.module()));
         }
         return p;
     }

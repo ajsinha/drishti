@@ -272,7 +272,7 @@
     if (!dlg.open) { dlg.showModal(); }
     dlg.querySelector('[data-rv-search]').focus();
     var mine = state, q = opts.asOf ? '?asOf=' + encodeURIComponent(opts.asOf) : '';
-    fetch('/api/raw/' + encodeURIComponent(opts.kind) + '/' + encodeURIComponent(opts.id) + q)
+    fetch(drishti_url('/api/raw/' + encodeURIComponent(opts.kind) + '/' + encodeURIComponent(opts.id) + q))
       .then(function (r) { return r.json().then(function (b) { return { ok: r.ok, body: b }; }); })
       .then(function (res) {
         if (state !== mine) { return; }

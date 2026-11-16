@@ -160,9 +160,9 @@ def test_the_three_forms_hold_the_same_bytes_and_are_reproducible(built, tmp_pat
 def test_the_webjar_refuses_a_version_that_is_not_the_trains():
     with pytest.raises(dist.DistError, match="not the Elements train"):
         dist.webjar_tree(TRAIN, "9.9.9")
-    pom = (ROOT / "drishti-elements" / "pom.xml").read_text(encoding="utf-8")
+    pom = (ROOT / "packaging/drishti-elements" / "pom.xml").read_text(encoding="utf-8")
     assert re.search(r"<artifactId>drishti-elements</artifactId>\s*<version>([^<]+)</version>", pom).group(1) == TRAIN.version
-    assert "<module>drishti-elements</module>" in (ROOT / "pom.xml").read_text(encoding="utf-8")
+    assert "<module>packaging/drishti-elements</module>" in (ROOT / "pom.xml").read_text(encoding="utf-8")
 
 
 def test_the_maven_profile_builds_the_webjar(tmp_path):
@@ -170,7 +170,7 @@ def test_the_maven_profile_builds_the_webjar(tmp_path):
     if not exec_plugin.is_dir() or not shutil.which("java"):
         pytest.skip("needs Java and the exec-maven-plugin in the local Maven repository (an offline build)")
     env = dict(os.environ, TMPDIR=str(tmp_path))
-    r = subprocess.run([str(ROOT / "mvnw"), "-o", "-q", "-P", "elements", "-pl", "drishti-elements", "package",
+    r = subprocess.run([str(ROOT / "mvnw"), "-o", "-q", "-P", "elements", "-pl", ":drishti-elements", "package",
                         f"-Ddrishti.elements.target={tmp_path / 'target'}"], cwd=ROOT, env=env, capture_output=True, text=True, timeout=300)
     assert r.returncode == 0, r.stdout[-3000:] + r.stderr[-3000:]
     jar = tmp_path / "target" / f"drishti-elements-{TRAIN.version}.jar"

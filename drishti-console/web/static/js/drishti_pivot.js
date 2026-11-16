@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* The pivot screen (terminal/pivot.html; PIVOT_GUIDE.md section 2): drawn by drishti-grid (Drishti Elements). It opens as the View picker
+/* The pivot screen (terminal/pivot.html; bi/PIVOT.md section 2): drawn by drishti-grid (Drishti Elements). It opens as the View picker
    in front of the compact line (mode views, C + B: Rows · Columns · Filters · Values on one line, a picker behind each), or the compact
    line alone (compact), or the Fields and Build panes (panes, A, behind Customize › and \); a preset, a Sutra's pivot: or the address
    names the mode. The catalogue of the source becomes the grid's fields with their metadata (group, display folder, hidden under More
@@ -29,7 +29,7 @@
   if (!root) { return; }
   var G = window.Drishti.elements && window.Drishti.elements.grid;
   var $ = function (s) { return root.querySelector(s); };
-  var API = "/api/pivot";
+  var API = drishti_url("/api/pivot");
   // the aggregations only the engine computes, offered in the wells beside the grid's own (the grid never computes one here)
   var SERVER_FUNCS = [{name: "median", label: "Median"}, {name: "var_samp", label: "Variance"}, {name: "stddev_samp", label: "Standard deviation"}];
   var state = {catalogue: null, answer: null, diff: null, grid: null, selection: [], chart: null, savedView: null, slicers: [], force: false,
@@ -65,7 +65,7 @@
     var o = {method: method, headers: {"Accept": "application/json"}, credentials: "same-origin"};
     if (signal) { o.signal = signal; }
     if (body !== undefined) { o.headers["Content-Type"] = "application/json"; o.body = JSON.stringify(body); }
-    return fetch(API + path, o).then(function (r) {
+    return fetch(drishti_url(API + path), o).then(function (r) {
       return r.text().then(function (t) {
         var j = {};
         try { j = t ? JSON.parse(t) : {}; } catch (e) { j = {detail: t}; }
@@ -229,6 +229,11 @@
     var comp = a.computed || {};
     $("[data-pv-meta]").textContent = (a.title || a.source) + " · " + (a.date ? "business date " + a.date : "current") + " · "
       + a.cellCount + " cells · " + comp.sets + " sets (" + comp.fromCache + " from the cache) · " + comp.queries + " queries · " + comp.ms + " ms";
+    // a source (a trading system's connector) with no load for the date answers from its newest earlier one: said, per source, never silent
+    var carried = a.asOfNotices || [];
+    if (carried.length) {
+      notice("⚠ Not every source has data for " + carried[0].asked + ": " + carried.map(function (c) { return c.text; }).join("; "));
+    }
     $("[data-pv-grid-title]").textContent = (a.measures || []).map(function (m) { return m.label; }).join(", ") + " by " + ((a.rowDimensions || []).join(" › ") || "total");
     $("[data-pv-grid-sub]").textContent = "rows " + ((a.rowDimensions || []).join(" › ") || "—") + (a.columnDimensions && a.columnDimensions.length ? " · columns " + a.columnDimensions.join(" › ") : "")
       + " · subtotals " + ((a.view || {}).subtotals || "below") + " · lazy: closed nodes are not computed · " + a.exactness
@@ -399,12 +404,11 @@
 
   function rows(key, box) {
     rowsOf(key).then(function (r) {
-      var h = ['<p class="pv-sub">' + r.rows.length + " of " + r.total + " rows" + (r.note ? " · " + esc(r.note) : "") + '</p><div class="pv-rows"><table class="pv-rows-t"><thead><tr>'];
-      r.columns.forEach(function (c) { h.push("<th>" + esc(c) + "</th>"); });
-      h.push("</tr></thead><tbody>");
-      r.rows.forEach(function (row) { h.push("<tr>" + row.map(function (x) { return "<td>" + esc(x) + "</td>"; }).join("") + "</tr>"); });
-      h.push("</tbody></table></div>");
-      if (box) { box.innerHTML = h.join(""); }
+      if (!box) { return; }
+      box.innerHTML = '<p class="pv-sub">' + r.rows.length + " of " + r.total + " rows" + (r.note ? " · " + esc(r.note) : "") + '</p><div data-pv-rows></div>';
+      var names = r.columns.map(function (c, i) { return r.columns.indexOf(c) === i ? c : c + " (" + (i + 1) + ")"; });
+      var objs = r.rows.map(function (row) { var o = {}; names.forEach(function (c, i) { o[c] = row[i]; }); return o; });
+      window.Drishti.records.mount(box.querySelector("[data-pv-rows]"), { rows: objs, columns: names, title: "The rows behind the cell", small: true });   // the records grid, static
     }).catch(function (e) { notice(e.message); });
   }
 
@@ -480,7 +484,7 @@
       if (!state.selection.length) { notice("select a cell first: its rows are exported"); return; }
       body.coords = coordsOf(state.selection[0].key);
     }
-    fetch("/api/pivot/export", {method: "POST", credentials: "same-origin", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)})
+    fetch(drishti_url("/api/pivot/export"), {method: "POST", credentials: "same-origin", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)})
       .then(function (r) {
         if (!r.ok) { return r.json().then(function (j) { throw new Error(j.detail || r.statusText); }); }
         var cd = r.headers.get("Content-Disposition") || "";
@@ -594,12 +598,16 @@
       $("[data-pv-title]").textContent = c.title || source;
       var opened = openWith(view);
       if (opened) { view = opened; }
+      if (root.getAttribute("data-live-start")) {           // handed over from a live grid (Pivot ›): the view follows the source as it changes
+        root.removeAttribute("data-live-start");
+        $("[data-pv-live]").checked = true;
+      }
       mount(view);
       suggestions(c.source);
     });
   }
 
-  /** An administrator's suggestions (PIVOT_GUIDE.md, documents): the paths people typed most, with Promote and Add to dataset. */
+  /** An administrator's suggestions (bi/README.md, documents): the paths people typed most, with Promote and Add to dataset. */
   function suggestions(source) {
     var box = $("[data-pv-paths]");
     box.innerHTML = "";
@@ -653,7 +661,7 @@
     }).catch(function (e) { notice(e.message); });
   }
 
-  // ---- the modes and the View picker (PIVOT_GUIDE.md sections 2 and 11) ----------------------------------------------------------------
+  // ---- the modes and the View picker (bi/README.md sections 2 and 11) ----------------------------------------------------------------
 
   /** How the screen opens: the address's mode, else the person's kept choice of the panes, else the view's (a preset's, a Sutra's
       pivot: block), else views (the View picker in front of the compact line). */

@@ -238,9 +238,9 @@ def stack(tmp_path_factory):
     for port in (SERVER_PORT, CONSOLE_PORT, HOST_PORT, IDP_PORT):
         if _listening(port):
             pytest.skip(f"port {port} is in use: this test starts its own server, console, host and provider there")
-    jars = sorted(glob.glob(str(ROOT / "drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)
+    jars = sorted(glob.glob(str(ROOT / "kernel/drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)
     if not jars or not JAVA.exists():
-        pytest.skip("needs the built server (./mvnw -o -q package -DskipTests -pl drishti-app -am) and a JDK")
+        pytest.skip("needs the built server (./mvnw -o -q package -DskipTests -pl :drishti-app -am) and a JDK")
     tmp = tmp_path_factory.mktemp("sign-in")
     idp, host, procs = Idp(IDP_PORT), Host(HOST_PORT), {}
     try:
@@ -251,7 +251,7 @@ def stack(tmp_path_factory):
                    DRISHTI_OIDC_ENABLED="true", DRISHTI_OIDC_ISSUER=IDP, DRISHTI_OIDC_CLIENT_ID="drishti")
         log = tmp / "server.log"
         procs["server"] = subprocess.Popen(java_cmd(str(JAVA), ["-Xmx768m", "-jar", jars[0], f"--server.port={SERVER_PORT}", "--drishti.security.registered-users-only=false",
-                                                                 "--drishti.security.oidc.default-roles=viewer"], tmp=tmp / "jvm-tmp"),
+                                                                 "--drishti.security.oidc.default-roles=viewer"], tmp=tmp / "jvm-tmp", cwd=work, env=env),
                                            cwd=work, env=env, stdout=log.open("ab"), stderr=subprocess.STDOUT)
         _wait(SERVER + "/actuator/health", 600, procs["server"], log)
         _admin("POST", "/admin/embed/apps", {"id": APP, "name": "Intranet page", "origins": [HOST], "scopes": ["embed:view", "embed:about"],

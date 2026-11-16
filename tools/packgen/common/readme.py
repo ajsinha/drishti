@@ -15,7 +15,7 @@
 """The README standard for packs and connectors (docs/guides/BUILD_GUIDE.md and
 docs/guides/DEVELOPER_GUIDE.md, "The README standard").
 
-Every pack (``config/packs/<domain>/<pack>/README.md``), every connector type (``plugins/drishti-plugin-<x>/README.md``, the built-ins in
+Every pack (``modules/<module>/packs/<pack>/README.md``), every connector type (``plugins/drishti-plugin-<x>/README.md``, the built-ins in
 ``docs/connectors/types/<type>/README.md``) and every folder of connector templates (``config/connectors.examples/<x>/README.md``)
 has a README: the licence comment, a YAML front matter (for AI and the console), then fixed ``## `` sections.
 
@@ -43,7 +43,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[3]
 if str(ROOT / "drishti-console") not in sys.path:
     sys.path.insert(0, str(ROOT / "drishti-console"))
-from core import pack_paths as PP  # noqa: E402  (the one rule for where a pack's folder is)
+from core import resolution as PP  # noqa: E402  (where a pack is: the one resolver, KERNEL_AND_MODULES.md 18)
 
 PACKGEN = ROOT / "tools" / "packgen"
 
@@ -57,6 +57,14 @@ CAPABILITIES = {"fetch", "search", "subscribe", "history", "reverse-lookup", "bu
 CATEGORIES = {"plugin", "built-in", "template"}
 
 _COMMENT = re.compile(r"\A(?:\s*<!--.*?-->)*\s*", re.S)
+
+
+def _connectors(m: dict) -> dict:
+    """The connectors a pack brings, name -> details: the ``connectors`` mapping (a bare list of names gives empty details)."""
+    raw = m.get("connectors") or {}
+    if isinstance(raw, dict):
+        return raw
+    return {n: {} for n in raw if isinstance(n, str)}
 
 
 def licence_comment() -> str:
@@ -153,7 +161,7 @@ def problems_connector(path: Path) -> list[str]:
 # -- pack READMEs ----------------------------------------------------------------------------------------------------------
 
 def pack_feeds(pack: str) -> list[dict]:
-    """The data feeds (config/feeds/*.yaml, docs/guides/EXTERNAL_DATA.md) that load a pack's kinds: [{feed, lake, internal, kinds,
+    """The data feeds (config/feeds/*.yaml, docs/guides/WORLD_DATA_GUIDE.md) that load a pack's kinds: [{feed, lake, internal, kinds,
     snapshot}]."""
     out = []
     for f in sorted((ROOT / "config" / "feeds").glob("*.yaml")):
@@ -386,18 +394,20 @@ def _ancestors(packs_dir: Path, manifest: dict, seen: set | None = None) -> list
 
 
 def module_of(pack: str) -> str | None:
-    """The module that ships a pack, from the modules' own manifests (DISTRIBUTIONS.md): a content module's modules/<id>/module.yaml
-    (packs.list), a module jar's META-INF/drishti/module.yaml (contributes.packs); None for the kernel's packs."""
-    for f in sorted((ROOT / "modules").glob("*/module.yaml")) + sorted((ROOT / "modules").glob("*/dmod/module.yaml")):
-        y = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
-        if pack in ((y.get("packs") or {}).get("list") or []):
-            return str(y.get("id"))
-    for f in sorted((ROOT / "modules").glob("*/*/src/main/resources/META-INF/drishti/module.yaml")):
-        y = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
-        for m in ([y["module"]] if isinstance(y.get("module"), dict) else []) + list(y.get("modules") or []):
-            if pack in ((m.get("contributes") or {}).get("packs") or []):
-                return str(m.get("id"))
-    return None
+    """The module that ships a pack (its manifest's packs.list, as the one resolver reads it); None for the kernel's packs."""
+    p = PP.repository().packs.get(pack)
+    return p.module if p is not None else None
+
+
+_REPO_LINK = re.compile(r"\]\(((?:\.\./)+)(docs/|HOW_IT_FITS|README|config/|plugins/|drishti-console/|tools/|examples/)")
+
+
+def deepen(text: str, pack_dir: Path) -> str:
+    """The repository links of a pack's page, one folder level deeper for a pack in a module whose manifest is in its ``dmod`` folder
+    (modules/banking/dmod/packs/<pack>): the generators write the depth of every other pack (four levels to the repository root)."""
+    if "/dmod/packs/" not in Path(pack_dir).resolve().as_posix():
+        return text
+    return _REPO_LINK.sub(lambda m: "](../" + m.group(1) + m.group(2), text)
 
 
 def render_pack(pack_dir: Path, generator: str | None = None, files: dict | None = None, intro: Path | None = None) -> str:
@@ -409,7 +419,7 @@ def render_pack(pack_dir: Path, generator: str | None = None, files: dict | None
     intro = intro or find_intro(name)
     imeta, ibody = split(intro.read_text(encoding="utf-8")) if intro and intro.is_file() else ({}, "")
     imeta = imeta or {}
-    # an intro (tools/packgen/<gen>/readme/) is three folders below the repository, a pack's README four (config/packs/<domain>/<pack>)
+    # an intro (tools/packgen/<gen>/readme/) is three folders below the repository, a pack's README four (modules/<module>/packs/<pack>)
     ibody = ibody.replace("](../../../", "](../../../../")
     isec = sections(ibody)
     generator = generator or imeta.get("generator") or f"tools/packgen/readme.py {name}"
@@ -431,7 +441,7 @@ def render_pack(pack_dir: Path, generator: str | None = None, files: dict | None
         example_id.setdefault(e.get("kind"), str(e.get("id")))
     sutras = _sutras(F)
     about = yaml.safe_load(F.text(m.get("about") or "config/about.yaml") or "{}") or {}
-    connectors = m.get("connectors") or {}
+    connectors = _connectors(m)
     routes = m.get("routes") or {}
     notes = imeta.get("fields") or {}
     feeds = pack_feeds(name)
@@ -452,7 +462,7 @@ def render_pack(pack_dir: Path, generator: str | None = None, files: dict | None
                                     ("settings", settings)])),
         ("sources", sources), ("refresh", refresh), ("generated-by", generator),
     ])
-    out = [licence_comment(), f"<!-- Generated by {generator}. Edit the intro ({intro.relative_to(ROOT) if intro else 'none'}), "
+    out = [licence_comment(), f"<!-- Generated by {generator}. Edit the intro ({(intro.relative_to(ROOT) if intro.is_relative_to(ROOT) else intro.name) if intro else 'none'}), "
                               f"pack.yaml or the generator, not this file. -->",
            "---", yaml.safe_dump(dict(front), sort_keys=False, allow_unicode=True, width=1000).rstrip(), "---",
            f"# The {name} pack", "", f"*{m.get('title', name)}* · version {m.get('version', '')} · code `{m.get('code', '')}`", ""]
@@ -575,7 +585,7 @@ def render_pack(pack_dir: Path, generator: str | None = None, files: dict | None
     if ext:
         out += ["External data: " + "; ".join(f"{s['name']}" + (" (**internal only**)" if s.get("internal-only") else "") for s in ext) +
                 ". Each source's URL, licence and data feed are on the External data help page, "
-                "[docs/guides/EXTERNAL_DATA.md](../../../../docs/guides/EXTERNAL_DATA.md).", ""]
+                "[docs/guides/WORLD_DATA_GUIDE.md](../../../../docs/guides/WORLD_DATA_GUIDE.md).", ""]
     # -- enabling
     out += ["## Enabling and dependencies", ""]
     if isec.get("Enabling and dependencies"):
@@ -605,7 +615,7 @@ def render_pack(pack_dir: Path, generator: str | None = None, files: dict | None
                 f"fetches them daily into `data/datafeeds/{fd['feed']}/<date>/` and loads them into the lake `{fd['lake']}`"
                 + (" (internal use only)" if fd["internal"] else "") + "; `--dry-run` says what it would fetch, changing nothing; "
                 + ("`--snapshot` refreshes the committed snapshot in data/testdata instead; " if fd["snapshot"] else "")
-                + "`feed status` shows the last runs. The External data feeds guide (docs/guides/EXTERNAL_DATA.md) has the schedule entries "
+                + "`feed status` shows the last runs. The External data feeds guide (docs/guides/WORLD_DATA_GUIDE.md) has the schedule entries "
                 "for Linux and Windows.", ""]
     out += [f"The pack's files are written by `{generator}`; its `--check` fails when the committed files differ from what it would write.", ""]
     # -- see also
@@ -617,4 +627,4 @@ def render_pack(pack_dir: Path, generator: str | None = None, files: dict | None
         out.append(isec["See also"])
     out += ["- [Packs](../../../../docs/guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/BUILD_GUIDE.md) "
             "(the README standard).", ""]
-    return "\n".join(out).rstrip() + "\n"
+    return deepen("\n".join(out).rstrip() + "\n", pack_dir)

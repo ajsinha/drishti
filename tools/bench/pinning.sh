@@ -48,7 +48,7 @@ cmd_data() {
   uv run -q --with pyyaml python tools/packgen/banking/make_data.py --jsonl "$D/build/banking.tar"
   uv run -q "${WITH[@]}" python tools/samplegen/bulk_trades.py --trades "$TRADES" --days 3 --jsonl "$D/build/bulk-trades.tar"
   local fcp dcp
-  fcp="plugins/drishti-plugin-file/target/classes:$(classpath plugins/drishti-plugin-file)"
+  fcp="plugins/drishti-connectors/target/classes:$(classpath :drishti-connectors)"
   dcp="plugins/drishti-plugin-duckdb/target/classes:$(classpath plugins/drishti-plugin-duckdb)"
   rm -rf "$D/files" "$D/drishti.duckdb"
   mkdir -p "$D/tmp"                                  # the loaders' JVM temp folder: DuckDB unpacks its native library there, not in /tmp
@@ -76,7 +76,7 @@ cmd_run() {
   [[ "$jdk" == 21 ]] && { home=$JDK21; opts=(-Djdk.tracePinnedThreads=full); } || { home=$JDK25; opts=(-XX:+UseCompactObjectHeaders); }
   run="$D/run/$cfg-j$jdk"; rm -rf "$run"; mkdir -p "$run/identity" "$run/tmp"; cd "$run"
   if (exec 3<>"/dev/tcp/127.0.0.1/$PORT") 2>/dev/null; then echo "port $PORT is in use" >&2; exit 2; fi
-  local jar; jar=$(ls -t "$REPO"/drishti-server/target/drishti-server-*-exec.jar | head -1)
+  local jar; jar=$(ls -t "$REPO"/kernel/drishti-server/target/drishti-server-*-exec.jar | head -1)
   local env=(DRISHTI_PORT="$PORT" DRISHTI_PACKS=market-risk,counterparty-risk DRISHTI_PACKS_DIR="$REPO/packs" DRISHTI_DELTA_ROOT="$D/lake"
     DRISHTI_IDENTITY_DB_URL="jdbc:sqlite:$run/identity/drishti.db" DRISHTI_USERS_FILE="$run/identity/users.json"
     DRISHTI_AUDIT_FILE="$run/identity/audit.jsonl" DRISHTI_GOVERNANCE_DIR="$run/governance" DRISHTI_REPORTS_DIR="$run/reports"

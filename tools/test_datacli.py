@@ -162,7 +162,7 @@ class InternalOnly(unittest.TestCase):
         internal = {k for k, v in spec["external"].items() if v.get("internal")}
         kinds = {kind for p in spec["packs"].values() for kind, o in (p.get("kinds") or {}).items()
                  if any(e in internal for e in (o or {}).get("external") or [])}
-        server = (root / "drishti-server/src/main/resources/application.yaml").read_text(encoding="utf-8")
+        server = (root / "kernel/drishti-server/src/main/resources/application.yaml").read_text(encoding="utf-8")
         line = next(x for x in server.splitlines() if x.strip().startswith("internal-only: ["))
         listed = {k.strip() for k in line.split("[", 1)[1].split("]", 1)[0].split(",")}
         self.assertEqual(listed, kinds)

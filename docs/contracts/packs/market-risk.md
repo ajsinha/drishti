@@ -17,7 +17,7 @@
 
 # Data contracts of the market-risk pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/banking/market-risk/guides/market-risk.md](../../../config/packs/banking/market-risk/guides/market-risk.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
+One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [modules/banking/dmod/packs/market-risk/guides/market-risk.md](../../../modules/banking/dmod/packs/market-risk/guides/market-risk.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -28,9 +28,9 @@ One section per command of the pack: the shape of its data, how it is stored and
 | [TVAL](#tval-trade-valuation-trade-valuation) | `trade-valuation` | fundamental | active | 21 | 6 |
 | [POS](#pos-position-position) | `position` | drishti-owned | active | 32 | 5 |
 | [PORT](#port-system-basket-the-banks-baskets-kept-in-drishti-system-basket) | `system-basket` | drishti-owned | active | 11 | 0 |
-| [PNLV](#pnlv-pl-vector-509-scenarios-pnl-vector) | `pnl-vector` | input | active | 39 | 5 |
-| [SPV](#spv-scenario-pvs-of-a-trade-509-scenarios-its-currency-scenario-pv) | `scenario-pv` | input | active | 40 | 5 |
-| [FXS](#fxs-scenario-fx-of-a-currency-509-scenarios-fx-scenario) | `fx-scenario` | input | active | 9 | 3 |
+| [PNLV](#pnlv-pl-vector-one-pl-per-scenario-pnl-vector) | `pnl-vector` | input | active | 39 | 5 |
+| [SPV](#spv-scenario-pvs-of-a-position-or-trade-one-pv-per-scenario-its-currency-scenario-pv) | `scenario-pv` | input | active | 40 | 5 |
+| [FXS](#fxs-scenario-fx-of-a-currency-one-rate-per-scenario-fx-scenario) | `fx-scenario` | input | active | 9 | 3 |
 | [SSET](#sset-scenario-set-scenario-set) | `scenario-set` | input | active | 13 | 3 |
 | [VLIM](#vlim-var-limit-of-a-hierarchy-node-var-limit) | `var-limit` | input | active | 10 | 0 |
 | [DPNL](#dpnl-desk-pl-actual-and-hypothetical-daily-desk-pnl) | `desk-pnl` | input | active | 10 | 0 |
@@ -47,7 +47,7 @@ A named historical or hypothetical shock set.
 
 |  |  |
 |---|---|
-| Contract | [stress-scenario.contract.yaml](../../../config/packs/banking/market-risk/contracts/stress-scenario.contract.yaml) · version 1.0 |
+| Contract | [stress-scenario.contract.yaml](../../../modules/banking/dmod/packs/market-risk/contracts/stress-scenario.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | stress-engine |
@@ -103,7 +103,7 @@ P&L of a desk under a scenario, by book.
 
 |  |  |
 |---|---|
-| Contract | [stress-result.contract.yaml](../../../config/packs/banking/market-risk/contracts/stress-result.contract.yaml) · version 1.0 |
+| Contract | [stress-result.contract.yaml](../../../modules/banking/dmod/packs/market-risk/contracts/stress-result.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | stress-engine |
@@ -164,7 +164,7 @@ Delta, vega and curvature by risk class and bucket (SBM).
 
 |  |  |
 |---|---|
-| Contract | [frtb-sensitivity.contract.yaml](../../../config/packs/banking/market-risk/contracts/frtb-sensitivity.contract.yaml) · version 1.0 |
+| Contract | [frtb-sensitivity.contract.yaml](../../../modules/banking/dmod/packs/market-risk/contracts/frtb-sensitivity.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | frtb-engine |
@@ -238,7 +238,7 @@ Daily P&L attributed to risk factors, new trades and residual.
 
 |  |  |
 |---|---|
-| Contract | [pnl-explain.contract.yaml](../../../config/packs/banking/market-risk/contracts/pnl-explain.contract.yaml) · version 1.0 |
+| Contract | [pnl-explain.contract.yaml](../../../modules/banking/dmod/packs/market-risk/contracts/pnl-explain.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | pnl-explain |
@@ -306,7 +306,7 @@ A trade's valuation from the risk engine, for every source system: MTM, one-day 
 
 |  |  |
 |---|---|
-| Contract | [trade-valuation.contract.yaml](../../../config/packs/banking/market-risk/contracts/trade-valuation.contract.yaml) · version 1.0 |
+| Contract | [trade-valuation.contract.yaml](../../../modules/banking/dmod/packs/market-risk/contracts/trade-valuation.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | risk-engine |
@@ -326,7 +326,7 @@ A trade's valuation from the risk engine, for every source system: MTM, one-day 
 |---|---|---|---|---|---|---|
 | `VALUATION_ID` | id | required |  | The record's id (the business key) | `TVAL-1000001` (pattern `^TVAL-`) |  |
 | `TRADE_ID` | id | required |  | The trade valued: a TRADE_ID of the trading pack's trade kind, as text (ENDUR digits, CLY-…, MX-…). | `1000001` | `trade` |
-| `SOURCE_SYSTEM` | text | required |  | The trade's booking system: ENDUR, CALYPSO or MUREX. | `CALYPSO`, `ENDUR`, `MUREX` |  |
+| `SOURCE_SYSTEM` | text | required |  | The trade's booking system: ENDUR, CALYPSO or MUREX. | `CALYPSO`, `ENDUR`, `ICI`, `MUREX`, `SWAPONE`, `WSS` |  |
 | `PRODUCT_TYPE` | text | required |  | The trade's product type as booked (ComSwap, IRS_FIXFLOAT …), the trade's PRODUCT_TYPE. | `ComSwap` |  |
 | `PRODUCT_GROUP` | text | required |  | The trade's product group (Commodity, Rates, FX, Credit, Equity …). | `Commodity` |  |
 | `PORTFOLIO` | id | required |  | The book the trade sits in: a BOOK_ID of the core pack's book kind (BOOK-…). | `BOOK-COMM-2` (pattern `^BOOK-`) | `book` |
@@ -354,7 +354,7 @@ A trade's valuation from the risk engine, for every source system: MTM, one-day 
 - unique: key `VALUATION_ID`; per business_date
 - pattern: field VALUATION_ID; pattern ^TVAL-
 - link: field TRADE_ID; kind trade
-- enum: field SOURCE_SYSTEM; values `CALYPSO`, `ENDUR`, `MUREX`
+- enum: field SOURCE_SYSTEM; values `CALYPSO`, `ENDUR`, `ICI`, `MUREX`, `SWAPONE`, `WSS`
 - link: field PORTFOLIO; kind book
 - link: field DESK; kind desk
 - link: field COUNTERPARTY; kind counterparty
@@ -384,7 +384,7 @@ A position: one security held in one book (or one OTC trade), the trades that bu
 
 |  |  |
 |---|---|
-| Contract | [position.contract.yaml](../../../config/packs/banking/market-risk/contracts/position.contract.yaml) · version 1.0 |
+| Contract | [position.contract.yaml](../../../modules/banking/dmod/packs/market-risk/contracts/position.contract.yaml) · version 1.0 |
 | Class | drishti-owned |
 | Status | active |
 | Source | Drishti (the VaR engine derives positions from the trades of pnl-vector when a date loads, docs/guides/VAR_GUIDE.md section 15.6) |
@@ -477,7 +477,7 @@ A system basket in terms of the positions inside it: longs and shorts, market va
 
 |  |  |
 |---|---|
-| Contract | [system-basket.contract.yaml](../../../config/packs/banking/market-risk/contracts/system-basket.contract.yaml) · version 1.0 |
+| Contract | [system-basket.contract.yaml](../../../modules/banking/dmod/packs/market-risk/contracts/system-basket.contract.yaml) · version 1.0 |
 | Class | drishti-owned |
 | Status | active |
 | Source | Drishti (the basket store's system scope, var/system-baskets/, docs/guides/VAR_GUIDE.md section 5.7; the demo's from the market-risk pack's seed) |
@@ -540,13 +540,13 @@ A system basket in terms of the positions inside it: longs and shorts, market va
 
 - The system baskets are kept in Drishti's basket store (VAR_GUIDE.md section 5.7), never read from data: a holder of the permission var:system-baskets creates, edits and retires them in Construct your basket or imports them as YAML; the demo's are the market-risk pack's seed (seeds/system-baskets.yaml). Their VaR limits are var-limit rows (HIERARCHY PORTFOLIO), their figures the engine's as the page opens (VAR_ENGINE), never stored.
 
-## PNLV: P&L vector (509 scenarios) (`pnl-vector`)
+## PNLV: P&L vector (one P&L per scenario) (`pnl-vector`)
 
 One trade's (or one position's) P&L under every scenario of the date's scenario set, gain positive, in CURRENCY, with the terms the VaR engine places it by.
 
 |  |  |
 |---|---|
-| Contract | [pnl-vector.contract.yaml](../../../config/packs/banking/market-risk/contracts/pnl-vector.contract.yaml) · version 1.1 |
+| Contract | [pnl-vector.contract.yaml](../../../modules/banking/dmod/packs/market-risk/contracts/pnl-vector.contract.yaml) · version 1.1 |
 | Class | input |
 | Status | active |
 | Source | Synthetic sample data (tools/packgen/banking) |
@@ -570,7 +570,7 @@ One trade's (or one position's) P&L under every scenario of the date's scenario 
 | `TRADE_ID` | id | optional |  | Trade: the trade it refers to, at GRAIN TRADE (required then) | `MX-20000274` (pattern `^((MX\|CLY)-)?\d+$`) | `trade` |
 | `POSITION_ID` | id | optional |  | The position, at GRAIN POSITION (required then, and no TRADE_ID): used as it is, never derived from trades. At GRAIN TRADE it is absent (the engine derives the trade's position). | `POS-ENDUR-BOOK-COMM-1-ComSwap-USD` | `position` |
 | `CURRENCY` | text | required |  | The currency the P&L values are in (USD in the demo). A vector in another currency is converted to USD per scenario with that scenario's FX (approximate: the currency move inside the trade is already folded into the vector; counted in tradesWithoutPv); a currency with no scenario FX on the date rejects the row (DRS-5207). The trade's own currency is TRADE_CURRENCY. | `USD` |  |
-| `SOURCE_SYSTEM` | text | required |  | The booking system the trade comes from (MUREX and CALYPSO in the demo); kept for people and audit, not read by the engine. | `CALYPSO`, `MUREX` |  |
+| `SOURCE_SYSTEM` | text | required |  | The booking system the trade comes from (MUREX and CALYPSO in the demo); kept for people and audit, not read by the engine. | `CALYPSO`, `ENDUR`, `ICI`, `MUREX`, `SWAPONE`, `WSS` |  |
 | `VECTOR_ID` | id | required |  | The record's id (the business key) | `PNL-MX-20000274-HS-509` (pattern `^(PNL\|PV)-`) |  |
 | `TRADE_CURRENCY` | text | optional |  | The trade's (or position's) own currency when it is not the P&L's: what scopes, rules and the pages' Trade currency read. Absent: CURRENCY. | `GBP` |  |
 | `SECURITY_ID` | id | optional |  | The security or exchange contract the trade is in (securities and listed products): Drishti keys the trade's position by book and security. | `SEC-WARRANT-USD-01` |  |
@@ -595,7 +595,7 @@ One trade's (or one position's) P&L under every scenario of the date's scenario 
 | `TAGS` | text | optional |  | The trade's tags joined by \| (for example internal, option, hedge); a position's tags are the union of its trades'. Empty when none. | `option` |  |
 | `REPORTING_CCY` | text | optional |  | Deprecated: an alias of CURRENCY, the P&L values' currency; when present it must equal CURRENCY, else the row is refused (DRS-5208). | `USD` |  |
 | `PV` | amount | required | USD | The trade's value on the business date. | `3143714` |  |
-| `PNL` | vector | required | USD | The trade's P&L under each historical scenario day, oldest first: index i is the scenario set's day i. *509 values in the test data* |  |  |
+| `PNL` | vector | required | USD | The trade's P&L under each historical scenario day, oldest first: index i is the scenario set's day i. *one value per scenario of the date's window* |  |  |
 | `STATUS` | text | required |  | ok, proxied (priced by a proxy) or failed (no vector: counted, never taken as zero). | `ok` |  |
 | `PRICER` | text | required |  | The pricer that valued the trade; kept for audit, not read by the engine. | `demo-factor-model` |  |
 | `MODEL_VERSION` | text | required |  | The pricer's model version; kept for audit, not read by the engine. | `demo-2` |  |
@@ -646,17 +646,17 @@ One trade's (or one position's) P&L under every scenario of the date's scenario 
 - enum values inferred from the data, not from a glossary: SOURCE_SYSTEM, TRADE_STATUS, PRODUCT_GROUP, CURRENCY, DIRECTION: confirm they are closed lists.
 - no unit stated for the amounts QUANTITY (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
-## SPV: Scenario PVs of a trade (509 scenarios, its currency) (`scenario-pv`)
+## SPV: Scenario PVs of a position or trade (one PV per scenario, its currency) (`scenario-pv`)
 
-A trade's present value under each historical scenario and its base PV of the same run, in the trade's own currency: the form of a trade's scenario P&L a bank may send instead of a P&L vector (VAR_GUIDE.md section 15.9). The VaR engine turns it into the trade's USD P&L when it loads the date: P&L(s) = PV(s) x FX(s) - PV(base) x FX(base).
+A position's or trade's present value under each historical scenario and its base PV of the same run, in its own currency: the form of a position's or trade's scenario P&L a bank may send instead of a P&L vector (VAR_GUIDE.md section 15.9). The VaR engine turns it into the USD P&L when it loads the date: P&L(s) = PV(s) x FX(s) - PV(base) x FX(base).
 
 |  |  |
 |---|---|
-| Contract | [scenario-pv.contract.yaml](../../../config/packs/banking/market-risk/contracts/scenario-pv.contract.yaml) · version 1.1 |
+| Contract | [scenario-pv.contract.yaml](../../../modules/banking/dmod/packs/market-risk/contracts/scenario-pv.contract.yaml) · version 1.1 |
 | Class | input |
 | Status | active |
 | Source | Synthetic sample data (tools/packgen/var/make_var_data.py, scenario_fx.py) |
-| Grain | One row per trade, business date and scenario set (BUSINESS_DATE), keyed by SCENARIO_PV_ID; a trade is in this kind or in pnl-vector, never both on one date. |
+| Grain | One row per position (GRAIN POSITION) or trade (GRAIN TRADE), business date and scenario set (BUSINESS_DATE), keyed by SCENARIO_PV_ID; a position or trade is in this kind or in pnl-vector, never both on one date. |
 | Key | `SCENARIO_PV_ID` |
 | Id pattern | `^SPV-` |
 | Dated by | `BUSINESS_DATE` |
@@ -677,7 +677,7 @@ A trade's present value under each historical scenario and its base PV of the sa
 | `POSITION_ID` | id | optional |  | The position, at GRAIN POSITION (required then, and no TRADE_ID): used as it is, never derived from trades. At GRAIN TRADE it is absent (the engine derives the trade's position). | `POS-ENDUR-BOOK-COMM-1-ComSwap-USD` | `position` |
 | `CURRENCY` | text | required |  | The currency both PVs are in: the trade's own currency (one stated currency for a whole file is the same thing). | `CAD`, `EUR`, `USD` |  |
 | `SOURCE_SYSTEM` | text | required |  | The booking system the trade comes from (ENDUR in the demo); kept for people and audit, not read by the engine. | `ENDUR` |  |
-| `SCENARIO_PV_ID` | id | required |  | The record's id (the business key) | `SPV-1000054-HS-509` (pattern `^SPV-`) | `scenario-pv` |
+| `SCENARIO_PV_ID` | id | required |  | The record's id (the business key) | `SPV-POS-BOOK-COMM-1~1000054-HS-509` (pattern `^SPV-`) | `scenario-pv` |
 | `SECURITY_ID` | id | optional |  | The security or exchange contract the trade is in (securities and listed products): Drishti keys the trade's position by book and security. | `XCH-ComFut-USD-08` |  |
 | `INSTRUMENT` | text | required |  | The instrument's name, the position's label on the pages. | `ENGY-SWAP EUR 2026-09` |  |
 | `BUSINESS_DATE` | date | required |  | The close of business the PVs belong to (YYYY-MM-DD); the lake's business_date partition. | `2026-09-30` |  |
@@ -701,7 +701,7 @@ A trade's present value under each historical scenario and its base PV of the sa
 | `BASE_PV` | amount | required | the trade's currency (CURRENCY) | The trade's present value on the business date, from the same run as the scenario PVs. | `14997.44` |  |
 | `VALUATION_DATE` | date | required |  | The date the scenario PVs are valued on: the business date. | `2026-09-30` |  |
 | `BASE_VALUATION_DATE` | date | required |  | The date the base PV is valued on: the same as the scenario PVs', the business date. | `2026-09-30` |  |
-| `SCENARIO_PV` | vector | optional | the trade's currency (CURRENCY) | The trade's present value under each historical scenario day, oldest first: index i is the scenario set's day i. A scenario that failed to price is null: the trade is then not loaded (DRS-5206), never filled with zero. *509 values in the test data* |  |  |
+| `SCENARIO_PV` | vector | optional | the trade's currency (CURRENCY) | The trade's present value under each historical scenario day, oldest first: index i is the scenario set's day i. A scenario that failed to price is null: the trade is then not loaded (DRS-5206), never filled with zero. *one value per scenario of the date's window* |  |  |
 | `STATUS` | text | required |  | ok, proxied (priced by a proxy) or failed (no scenario PVs: counted, never taken as zero). | `ok` |  |
 | `PRICER` | text | required |  | The pricer that valued the trade; kept for audit, not read by the engine. | `demo-factor-model` |  |
 | `MODEL_VERSION` | text | required |  | The pricer's model version; kept for audit, not read by the engine. | `demo-2` |  |
@@ -758,13 +758,13 @@ A trade's present value under each historical scenario and its base PV of the sa
 - enum values inferred from the data, not from a glossary: TRADE_STATUS, PRODUCT_TYPE, CURRENCY, DIRECTION: confirm they are closed lists.
 - no unit stated for the amounts QUANTITY (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
-## FXS: Scenario FX of a currency (509 scenarios) (`fx-scenario`)
+## FXS: Scenario FX of a currency (one rate per scenario) (`fx-scenario`)
 
 A currency's rate against USD today and under each historical scenario, as the risk batch supplies it (VAR_GUIDE.md section 15.9): the VaR engine converts scenario PVs and reporting currencies with it. A currency the batch does not supply is derived from the FX history (fx-spot).
 
 |  |  |
 |---|---|
-| Contract | [fx-scenario.contract.yaml](../../../config/packs/banking/market-risk/contracts/fx-scenario.contract.yaml) · version 1.0 |
+| Contract | [fx-scenario.contract.yaml](../../../modules/banking/dmod/packs/market-risk/contracts/fx-scenario.contract.yaml) · version 1.0 |
 | Class | input |
 | Status | active |
 | Source | Synthetic sample data (tools/packgen/var/scenario_fx.py) |
@@ -788,7 +788,7 @@ A currency's rate against USD today and under each historical scenario, as the r
 | `CURRENCY` | text | required |  | The currency the rates are for (ISO code). | `EUR` |  |
 | `QUOTE` | text | required |  | How the rates are quoted, in words: always USD per one unit of CURRENCY ("USD per 1 EUR"). | `USD per 1 EUR` |  |
 | `RATE` | rate | required | USD per unit | USD per one unit of the currency on the business date. | `1.174` |  |
-| `RATES` | vector | required | USD per unit | USD per one unit of the currency under each scenario, oldest first: index i is the scenario set's day i. Every cross rate goes through USD. *509 values in the test data* |  |  |
+| `RATES` | vector | required | USD per unit | USD per one unit of the currency under each scenario, oldest first: index i is the scenario set's day i. Every cross rate goes through USD. *one value per scenario of the date's window* |  |  |
 | `SOURCE` | text | required |  | The system or model that produced the rates (the demo's synthetic factor model). | `demo-factor-model` |  |
 | `BATCH_ID` | id | required |  | The risk batch that produced the rates, the same run as the date's scenario PVs and P&L vectors (one batch per date, DRS-5203). | `B-2026-09-30-01` |  |
 
@@ -818,7 +818,7 @@ The historical scenario days of a business date, oldest first: index i of every 
 
 |  |  |
 |---|---|
-| Contract | [scenario-set.contract.yaml](../../../config/packs/banking/market-risk/contracts/scenario-set.contract.yaml) · version 1.1 |
+| Contract | [scenario-set.contract.yaml](../../../modules/banking/dmod/packs/market-risk/contracts/scenario-set.contract.yaml) · version 1.1 |
 | Class | input |
 | Status | active |
 | Source | Synthetic sample data (tools/packgen/banking) |
@@ -845,7 +845,7 @@ The historical scenario days of a business date, oldest first: index i of every 
 | `REVALUATION` | text | required |  | full (every trade repriced under each scenario) or sensitivities (a Taylor expansion), as the batch did it. | `full` |  |
 | `WEIGHTS` | unknown | optional |  | Age weights for a weighted method, one per scenario in SCENARIO_DATES order; null for equal weights (not used by the engine). |  |  |
 | `SOURCE_BATCH` | text | required |  | The risk batch that produced the set and its vectors (the date's BATCH_ID). | `B-2026-09-30-01` |  |
-| `DESCRIPTION` | text | required |  | A description of the set in words. | `Historical simulation, 509 business days, equal weights` |  |
+| `DESCRIPTION` | text | required |  | A description of the set in words. | `Historical simulation, the window's business days, equal weights` |  |
 | `SET_TYPE` | text | optional |  | STRESS for the date's stress scenario set (stressed VaR, VAR_GUIDE.md section 18.8); absent or HISTORICAL for the normal set. A set that does not say is the stress set when its id starts with drishti.var.stress.id-prefix (HS-STRESS-). | `HISTORICAL`, `STRESS` |  |
 | `SYNTHETIC` | boolean | optional |  | True when the set's moves are synthetic rather than market history (the demo's stress set): every stressed answer says so. | `True` |  |
 
@@ -869,7 +869,7 @@ The VaR limit of one node of a hierarchy, keyed by the hierarchy and the node's 
 
 |  |  |
 |---|---|
-| Contract | [var-limit.contract.yaml](../../../config/packs/banking/market-risk/contracts/var-limit.contract.yaml) · version 1.1 |
+| Contract | [var-limit.contract.yaml](../../../modules/banking/dmod/packs/market-risk/contracts/var-limit.contract.yaml) · version 1.1 |
 | Class | input |
 | Status | active |
 | Source | Synthetic sample data (tools/packgen/var/make_var_data.py) |
@@ -916,7 +916,7 @@ The bank's daily P&L of each desk for regulatory backtesting (VAR_GUIDE.md secti
 
 |  |  |
 |---|---|
-| Contract | [desk-pnl.contract.yaml](../../../config/packs/banking/market-risk/contracts/desk-pnl.contract.yaml) · version 1.0 |
+| Contract | [desk-pnl.contract.yaml](../../../modules/banking/dmod/packs/market-risk/contracts/desk-pnl.contract.yaml) · version 1.0 |
 | Class | input |
 | Status | active |
 | Source | Synthetic sample data (tools/packgen/var/desk_pnl.py); a bank's finance and front-office P&L systems |
@@ -966,7 +966,7 @@ Today's portfolio at one hierarchy node revalued over every business day of a lo
 
 |  |  |
 |---|---|
-| Contract | [pnl-history.contract.yaml](../../../config/packs/banking/market-risk/contracts/pnl-history.contract.yaml) · version 1.0 |
+| Contract | [pnl-history.contract.yaml](../../../modules/banking/dmod/packs/market-risk/contracts/pnl-history.contract.yaml) · version 1.0 |
 | Class | input |
 | Status | active |
 | Source | Synthetic sample data (tools/packgen/var/pnl_history.py, run by make_var_data.py) |
@@ -1022,7 +1022,7 @@ The first-order and curvature sensitivities of each position (or trade) to the s
 
 |  |  |
 |---|---|
-| Contract | [position-sensitivity.contract.yaml](../../../config/packs/banking/market-risk/contracts/position-sensitivity.contract.yaml) · version 1.0 |
+| Contract | [position-sensitivity.contract.yaml](../../../modules/banking/dmod/packs/market-risk/contracts/position-sensitivity.contract.yaml) · version 1.0 |
 | Class | input |
 | Status | active |
 | Source | The bank's pricing and risk systems (the same run that produces the scenario PVs or P&L vectors) |
@@ -1123,7 +1123,7 @@ Every risk factor the bank's sensitivities use, named by the factor naming stand
 
 |  |  |
 |---|---|
-| Contract | [risk-factor.contract.yaml](../../../config/packs/banking/market-risk/contracts/risk-factor.contract.yaml) · version 1.0 |
+| Contract | [risk-factor.contract.yaml](../../../modules/banking/dmod/packs/market-risk/contracts/risk-factor.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | The bank's risk-factor master (often kept in the market-data system or the FRTB engine) |
@@ -1201,7 +1201,7 @@ The VaR, ES, decomposition, worst scenarios and P&L vector of any scope (the sco
 
 |  |  |
 |---|---|
-| Contract | [var-result.contract.yaml](../../../config/packs/banking/market-risk/contracts/var-result.contract.yaml) · version 1.3 |
+| Contract | [var-result.contract.yaml](../../../modules/banking/dmod/packs/market-risk/contracts/var-result.contract.yaml) · version 1.3 |
 | Class | computed |
 | Status | active |
 | Source | computed by Drishti: the reactive connector var-engine (java engine com.ash.drishti.banking.var.VarResultEngine) |
@@ -1228,9 +1228,9 @@ The VaR, ES, decomposition, worst scenarios and P&L vector of any scope (the sco
 | `CONFIDENCE` | rate | required |  | The VaR confidence level, as a fraction (0.99): the parameter confidence (one of drishti.var.confidences), else drishti.var.confidence. | `0.99` |  |
 | `ES_CONFIDENCE` | rate | required |  | The expected shortfall confidence level, as a fraction (0.975): the parameter es-confidence (one of drishti.var.es-confidences), else drishti.var.es-confidence. | `0.975` |  |
 | `HORIZON` | text | optional |  | The horizon of every figure (VAR_GUIDE.md section 18.6): 1D, or 10D with the parameter horizon=10d (VRES BANK~horizon=10d~method=sum), from the same 1-day scenario P&Ls (no other input). | `1D`, `10D` |  |
-| `METHOD` | text | optional |  | How a 10-day figure is made: SQRT10 (the 1-day figures × √10) or SUM (each scenario the sum of 10 consecutive 1-day scenario P&Ls, 509 scenarios giving 500 overlapping windows; then SCENARIOS is the windows and PNL the windows' sums); empty at 1 day. | `SQRT10`, `SUM` |  |
+| `METHOD` | text | optional |  | How a 10-day figure is made: SQRT10 (the 1-day figures × √10) or SUM (each scenario the sum of 10 consecutive 1-day scenario P&Ls, a window of N scenarios giving N-9 overlapping windows; then SCENARIOS is the windows and PNL the windows' sums); empty at 1 day. | `SQRT10`, `SUM` |  |
 | `SET` | text | optional |  | The scenario set of every figure (VAR_GUIDE.md section 18.8): NORMAL, or STRESSED with the parameter set=stressed (VRES BANK~set=stressed): the scope on the date's stress scenario set, in USD; a date without one is refused in words. | `NORMAL`, `STRESSED` |  |
-| `K` | integer | required |  | The VaR rank (the 6th worst of 509 at 99%; the 26th at 95%; the 5th of the 500 windows of the 10-day sum at 99%). |  |  |
+| `K` | integer | required |  | The VaR rank over the scenario window (scenario-window, default 250, the 3rd worst at 99%, the 13th at 95%; for the 10-day sum, the rank among its overlapping windows). |  |  |
 | `ES_COUNT` | integer | required |  | The number of worst scenarios averaged into the ES. |  |  |
 | `SCENARIOS` | integer | required |  | The number of scenarios in the scope's P&L vector (the scenario set's SCENARIO_COUNT). |  |  |
 | `LIMIT` | amount | optional | CURRENCY | The scope's VaR limit (a node's or portfolio's), converted to the answer's currency; null when it has none. |  |  |
@@ -1276,7 +1276,7 @@ The official end-of-day VaR and ES of every node of the MGMT and LEGAL hierarchi
 
 |  |  |
 |---|---|
-| Contract | [var-official.contract.yaml](../../../config/packs/banking/market-risk/contracts/var-official.contract.yaml) · version 1.2 |
+| Contract | [var-official.contract.yaml](../../../modules/banking/dmod/packs/market-risk/contracts/var-official.contract.yaml) · version 1.2 |
 | Class | computed |
 | Status | active |
 | Source | computed by Drishti: the official end-of-day capture (VarOfficial), appended by VarPublisher to risk-results/var-official |
@@ -1314,7 +1314,7 @@ The official end-of-day VaR and ES of every node of the MGMT and LEGAL hierarchi
 | `SES` | amount | optional | USD | Stressed ES at ES_CONFIDENCE on the same stress set; null when the date has none. |  |  |
 | `STRESS_SET_ID` | id | optional |  | The stress scenario set SVAR and SES are of (HS-STRESS-2008 in the demo); null when the date has none. | `HS-STRESS-2008` |  |
 | `SCENARIO_SET_ID` | id | required |  | The scenario set the date's vectors were valued over (HS-509). | `HS-509` |  |
-| `SCENARIO_WINDOW` | integer | optional |  | The scenarios the record was computed on: the newest N of the scenario set (drishti.var.scenario-window; the set's length, 509 in the demo, for all). Records captured before a change keep theirs; older records lack it. | `509` |  |
+| `SCENARIO_WINDOW` | integer | optional |  | The scenarios the record was computed on: the newest N of the scenario set (drishti.var.scenario-window; the set's length, for all). Records captured before a change keep theirs; older records lack it. | `509` |  |
 | `STANDALONE_SUM` | amount | optional | USD | The sum of the children's VaR (positions for a book). |  |  |
 | `DIVERSIFICATION` | amount | optional | USD | STANDALONE_SUM minus VAR. |  |  |
 | `HYPO_PNL` | amount | optional | USD | The node's hypothetical P&L for the date (the backtest's input). |  |  |
@@ -1342,7 +1342,7 @@ The bank's stress P&L under one scenario: the desks' stored stress results added
 
 |  |  |
 |---|---|
-| Contract | [stress-scenario-pnl.contract.yaml](../../../config/packs/banking/market-risk/contracts/stress-scenario-pnl.contract.yaml) · version 1.0 |
+| Contract | [stress-scenario-pnl.contract.yaml](../../../modules/banking/dmod/packs/market-risk/contracts/stress-scenario-pnl.contract.yaml) · version 1.0 |
 | Class | computed |
 | Status | active |
 | Source | computed by Drishti: the derived connector mr-derived over the kind stress-result |
@@ -1415,7 +1415,7 @@ What the market risk capital needs besides VaR, stressed VaR and the backtest: t
 
 |  |  |
 |---|---|
-| Contract | [capital-input.contract.yaml](../../../config/packs/banking/market-risk/contracts/capital-input.contract.yaml) · version 1.0 |
+| Contract | [capital-input.contract.yaml](../../../modules/banking/dmod/packs/market-risk/contracts/capital-input.contract.yaml) · version 1.0 |
 | Class | input |
 | Status | planned: no command or data yet |
 | Source | The bank's regulatory capital team (supervisory letters) and its specific-risk and default-risk engines |
@@ -1474,7 +1474,7 @@ The jump-to-default inputs of the FRTB standardised default risk charge for non-
 
 |  |  |
 |---|---|
-| Contract | [default-risk.contract.yaml](../../../config/packs/banking/market-risk/contracts/default-risk.contract.yaml) · version 1.0 |
+| Contract | [default-risk.contract.yaml](../../../modules/banking/dmod/packs/market-risk/contracts/default-risk.contract.yaml) · version 1.0 |
 | Class | input |
 | Status | planned: no command or data yet |
 | Source | The bank's risk system or issuer master (obligor, seniority, rating) with the positions' notionals and market values |
@@ -1527,7 +1527,7 @@ Finance's daily trading P&L of each legal entity from the general ledger, with t
 
 |  |  |
 |---|---|
-| Contract | [finance-pnl.contract.yaml](../../../config/packs/banking/market-risk/contracts/finance-pnl.contract.yaml) · version 1.0 |
+| Contract | [finance-pnl.contract.yaml](../../../modules/banking/dmod/packs/market-risk/contracts/finance-pnl.contract.yaml) · version 1.0 |
 | Class | input |
 | Status | planned: no command or data yet |
 | Source | The bank's general ledger or product control sub-ledger |
@@ -1582,7 +1582,7 @@ The trading desks as the regulators see them, beside the management hierarchy's 
 
 |  |  |
 |---|---|
-| Contract | [regulatory-desk.contract.yaml](../../../config/packs/banking/market-risk/contracts/regulatory-desk.contract.yaml) · version 1.0 |
+| Contract | [regulatory-desk.contract.yaml](../../../modules/banking/dmod/packs/market-risk/contracts/regulatory-desk.contract.yaml) · version 1.0 |
 | Class | input |
 | Status | planned: no command or data yet |
 | Source | The bank's market risk and Volcker compliance teams (the desk inventory approved with the models) |
@@ -1635,7 +1635,7 @@ The residual risk add-on's inputs (Basel MAR23): one row per trade and business 
 
 |  |  |
 |---|---|
-| Contract | [residual-risk.contract.yaml](../../../config/packs/banking/market-risk/contracts/residual-risk.contract.yaml) · version 1.0 |
+| Contract | [residual-risk.contract.yaml](../../../modules/banking/dmod/packs/market-risk/contracts/residual-risk.contract.yaml) · version 1.0 |
 | Class | input |
 | Status | planned: no command or data yet |
 | Source | The bank's product control or risk system (the instruments with residual risk and their exclusions) |
@@ -1684,7 +1684,7 @@ Which regulatory risk type each trade belongs to, for VaR by risk type (interest
 
 |  |  |
 |---|---|
-| Contract | [risk-type-map.contract.yaml](../../../config/packs/banking/market-risk/contracts/risk-type-map.contract.yaml) · version 1.0 |
+| Contract | [risk-type-map.contract.yaml](../../../modules/banking/dmod/packs/market-risk/contracts/risk-type-map.contract.yaml) · version 1.0 |
 | Class | input |
 | Status | planned: no command or data yet |
 | Source | The bank's market risk methodology team (a reference table kept with the risk hierarchies) |
@@ -1734,7 +1734,7 @@ The cash each trade pays or receives on a business date (coupons, principal, opt
 
 |  |  |
 |---|---|
-| Contract | [trade-cash-flow.contract.yaml](../../../config/packs/banking/market-risk/contracts/trade-cash-flow.contract.yaml) · version 1.0 |
+| Contract | [trade-cash-flow.contract.yaml](../../../modules/banking/dmod/packs/market-risk/contracts/trade-cash-flow.contract.yaml) · version 1.0 |
 | Class | input |
 | Status | planned: no command or data yet |
 | Source | The bank's settlement or back-office cash-flow system (the flows a trade's PV stops counting on their payment date) |
@@ -1787,7 +1787,7 @@ The trade-level facts the Volcker metrics (12 CFR 248 appendix A) need that a tr
 
 |  |  |
 |---|---|
-| Contract | [volcker-trade.contract.yaml](../../../config/packs/banking/market-risk/contracts/volcker-trade.contract.yaml) · version 1.0 |
+| Contract | [volcker-trade.contract.yaml](../../../modules/banking/dmod/packs/market-risk/contracts/volcker-trade.contract.yaml) · version 1.0 |
 | Class | input |
 | Status | planned: no command or data yet |
 | Source | The bank's trade capture or compliance system (the Volcker desk mapping and customer classification) |

@@ -24,7 +24,7 @@ It wraps tools/testdata/capture_market.py: the documents are fetched through Dri
 from the built jar, or --server), so they have exactly the shape the pack's Sutras read. Both sources forbid redistribution
 (Yahoo's terms; headlines belong to their publishers), so they are internal only: the committed data/testdata is written only
 with --internal-ok (the owner chose a committed snapshot for the offline demo machine, 2026-10-17). After a refresh into
-data/testdata, run `python3 tools/drishti.py lake demo`. Guide: docs/guides/EXTERNAL_DATA.md.
+data/testdata, run `python3 tools/drishti.py lake demo`. Guide: docs/guides/WORLD_DATA_GUIDE.md.
 """
 from __future__ import annotations
 
@@ -137,7 +137,7 @@ def refresh(a, log=print) -> int:
 
 def extra_args(r: argparse.ArgumentParser) -> None:
     r.add_argument("--server", help="a running server with the live connectors on (default: a scratch server from the built jar)")
-    r.add_argument("--jar", help="the exec jar for the scratch server (default DRISHTI_JAR, else the newest in drishti-server/target)")
+    r.add_argument("--jar", help="the exec jar for the scratch server (default DRISHTI_JAR, else the newest in kernel/drishti-server/target)")
     r.add_argument("--port", type=int, default=18977, help="the scratch server's port (default 18977)")
     r.add_argument("--delay", type=float, default=2.0, help="seconds between calls, at least 2 (default 2)")
     r.add_argument("--token-file", help="an API token for --server with security on (default DRISHTI_TOKEN)")

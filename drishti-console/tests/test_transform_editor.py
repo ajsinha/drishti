@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Wave C (2.4.0) data prep on the console (docs/guides/REPORTS_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17, docs/architecture/ARCHITECTURE.md §28 section 11.1, items P1 to P3 and P5) and the Notebook's profile:
+"""Wave C (2.4.0) data prep on the console (docs/guides/bi/README.md › Python in BI: measures, visuals and data prep written in Python, section 17, docs/architecture/ARCHITECTURE.md §28 section 11.1, items P1 to P3 and P5) and the Notebook's profile:
 
 * the snippets library: every snippet's own example is right in plain pandas **and** as a step of the compute pool's step-by-step run (the
   engine's own function, here in the test), a value is always a literal (never code), an
@@ -41,7 +41,7 @@ from core.config import load_settings  # noqa: E402
 from core.prep_snippets import SnippetError, SnippetLibrary  # noqa: E402
 from core.transform_editor import EditorError, compose, parse  # noqa: E402
 
-sys.path.insert(0, str(CONSOLE.parent / "drishti-compute" / "src" / "main" / "python"))
+sys.path.insert(0, str(CONSOLE.parent / "compute/drishti-compute" / "src" / "main" / "python"))
 from drishti_compute import items  # noqa: E402  (the compute pool's engine: its step-by-step run, called here without its sandbox)
 
 LIBRARY = SnippetLibrary([CONSOLE / "config" / "prep-snippets.yaml"])

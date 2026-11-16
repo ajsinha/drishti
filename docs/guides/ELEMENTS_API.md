@@ -22,9 +22,9 @@ one bundled file next to them; a page loads drishti-core and then `Drishti.eleme
 
 | Library | Version | What it is |
 |---|---|---|
-| [drishti-core](#drishti-core) | 1.1.0 | Formats, theme, API client, events, accessibility, resize, keys, dialogs, drawers and toasts, the filter model every library shares, the element maker and placements, Explain's drawing, the CSV writer, reading typed numbers, loading vendored engines |
+| [drishti-core](#drishti-core) | 1.2.0 | Formats, theme, API client, events, accessibility, resize, keys, dialogs, drawers and toasts, the filter model every library shares, the element maker and placements, Explain's drawing, chips for list attributes, the CSV writer, reading typed numbers, loading vendored engines |
 | [drishti-inputs](#drishti-inputs) | 0.3.1 | Inputs: business-date and range pickers with holiday calendars, the on/off switch, the tree picker, the multi-select, the combobox with server type-ahead (on its own field or a page's), forms from a schema (live or embedded, steps, named fields, hooks, custom widgets, time, date-and-time and money) with four eyes, the time and date-and-time pickers, the filter bar, the code editor over CodeMirror, and a page's own date fields and checkbox lists upgraded in place |
-| [drishti-grid](#drishti-grid) | 0.4.0 | The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and &lt;drishti-grid&gt; in three layouts and three densities), cell editing with undo, paste, write-back and four eyes, and the AG Grid-style adapter (createGridFromAgOptions) |
+| [drishti-grid](#drishti-grid) | 0.5.0 | The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and &lt;drishti-grid&gt; in three layouts and three densities), cell editing with undo, paste, write-back and four eyes, and the AG Grid-style adapter (createGridFromAgOptions) |
 | [drishti-tree](#drishti-tree) | 0.2.0 | The tree: hierarchies as an org chart, an indented tree with measures (on drishti-grid's tree data), a sunburst and an icicle; expand and collapse, search with breadcrumbs, measures on nodes with non-additive ones (◆) asked of the server and never summed, Explain, re-parenting in an edit mode that proposes the move for four eyes, the outline of an authoring screen (marks, a hiding filter, a designer's selection followed both ways, moves by drag or Alt+arrows), export, keyboard and ARIA |
 | [drishti-designer](#drishti-designer) | 0.2.0 | The designer kit: the layout canvas over a layout model (grid or flow: place, move, resize with snap, multi-select, align, distribute, z-order, groups, copy and paste, a phone's order, the keys, undo and redo on one command stack), the palette, the inspector (a form from a schema), the outline (drishti-tree's, drag to re-order or re-parent), the YAML pane kept in step with the model both ways (completion and lint from a JSON Schema) and the designer shell (three panes, Visual / YAML / Both, versions, Validate, Preview, History, Impact, Propose for review) |
 | [drishti-data](#drishti-data) | 0.1.0 | Data: one data-source contract (in memory, REST pages, server-side rows, Arrow, live), the live client over SSE and WebSocket with reconnect, heartbeat, resume and backpressure, and the Arrow client |
@@ -36,7 +36,7 @@ one bundled file next to them; a page loads drishti-core and then `Drishti.eleme
 
 ## drishti-core
 
-Version 1.1.0. Bundle `static/elements/drishti-core/drishti_core.js`, global `Drishti.elements.core`.
+Version 1.2.0. Bundle `static/elements/drishti-core/drishti_core.js`, global `Drishti.elements.core`.
 
 ### drishti_format.js
 
@@ -534,6 +534,54 @@ The text tokens of a theme that read under 4.5:1 on one of its grounds (opaque c
 
 Returns `Array&lt;{text: string, ground: string, ratio: number}&gt;`.
 
+### drishti_base.js
+
+#### `basePath()`
+
+The base: '' (served at /) or '/drishti' (never a trailing slash). setBase() wins over the page's meta (read once: it is in the head, before every script); a worker reads globalThis.DRISHTI_BASE.
+
+Returns `string`.
+
+#### `setBase(base)`
+
+Names the base for the libraries where the page has no meta (a host application, a worker); null goes back to the page's.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `base` | `?string` | for example '/drishti' |
+
+Returns `void`.
+
+#### `url(path)`
+
+A root-absolute URL of the console under the base: '/api/x' -&gt; '/drishti/api/x'. Anything else (relative, '//host', 'https:', a URL that already carries the base, not a string) comes back as it is, so calling it twice is harmless.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `path` | `*` |  |
+
+Returns `*`.
+
+#### `routePath(pathname)`
+
+A path of this page (location.pathname) as the console's routes name it: '/drishti/bi/x' -&gt; '/bi/x'.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[pathname]` | `string` | default location.pathname |
+
+Returns `string`.
+
+#### `installBase(root)`
+
+In a page: window.drishti_url and window.drishti_route (and Drishti.url, Drishti.routePath, Drishti.basePath) for the console's classic scripts; under a base, a link or form the server drew from data (a menu's href, a guide's link) with a root-absolute URL is put under the base the moment it is used (pressed, focused, submitted), so nothing reaches the host's root.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `root` | `Window` |  |
+
+Returns `void`.
+
 ### drishti_api.js
 
 #### `AS_OF_HEADER`
@@ -917,6 +965,87 @@ Tracks one pointer from a press until it is let go.
 | `[o]` | `{threshold: number, capture: Element}` | threshold: pixels before a press is a drag (default 5; 0: at once); capture: an element that captures the pointer (the moves over frames and outside the window still come here) |
 
 Returns `{cancel: function(): void}`.
+
+### drishti_chips.js
+
+#### class `Chips`
+
+Chips over a host element: new Chips(host, {values}); setValues() redraws, toggle() expands or collapses.
+
+##### `new Chips(host, options)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` |  |
+| `[options]` | `ChipsOptions` |  |
+
+##### `Chips.setValues(values)`
+
+Replaces the values and redraws (collapsed).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `values` | `*` |  |
+
+Returns `void`.
+
+##### `Chips.toggle(open)`
+
+Expands (true), collapses (false) or flips; emits drishti:chips-toggle with {expanded}.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[open]` | `boolean` |  |
+
+Returns `void`.
+
+##### `Chips.render()`
+
+Draws the chips: collapsed, the first few and "+N more ▾" (compact: the first and a count); expanded, every value and "▴ less".
+
+Returns `void`.
+
+#### `chipList(doc, values, options)`
+
+A list attribute as a chips element (a renderer's or a grid cell's one call).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `doc` | `Document` |  |
+| `values` | `*` | the list or its JSON text |
+| `[options]` | `ChipsOptions` |  |
+
+Returns `HTMLElement`.
+
+#### `listValues(v)`
+
+A list attribute's values as texts: an array's elements, the JSON text of one read as it, a single value a list of one; blanks left out.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` |  |
+
+Returns `string[]`.
+
+#### `isListValue(v)`
+
+Whether a value is a list attribute (an array of simple values, or the JSON text of one).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` |  |
+
+Returns `boolean`.
+
+#### `upgradeChips(root)`
+
+Upgrades the list values a server page wrote (span[data-drishti-chips] holding the list's JSON text) into chips, once each.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `root` | `ParentNode` |  |
+
+Returns `number`: how many were upgraded.
 
 ### drishti_keys.js
 
@@ -1534,6 +1663,16 @@ Returns `void`.
 | `body` | `*` | the JSON answer ({} when there was none); on a failure {detail} at least |
 | `error` | `?ApiError` |  |
 
+#### `ChipsOptions` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[values]` | `Array&lt;string\|number\|boolean&gt;\|string` | the list, or its JSON text (["fx","rates"]) as a promoted column holds it |
+| `[max]` | `number` | chips shown collapsed (default 3; compact: 1) |
+| `[compact]` | `boolean` | a grid cell's form: the first chip and a count badge |
+| `[expanded]` | `boolean` | start expanded |
+| `[label]` | `string` | what the list is, for screen readers ("Tags") |
+
 #### `BusinessDate` : `Object`
 
 A business date: year, month (1 to 12) and day.
@@ -1601,11 +1740,11 @@ A table to export.
 
 | Name | Type | Meaning |
 |---|---|---|
-| `type` | `('text'\|'number'\|'date'\|'set'\|'blank')` |  |
-| `[op]` | `string` | text: contains, notContains, equals, notEquals, startsWith, endsWith; number and date: equals, notEquals, lt, lte, gt, gte, between; blank: blank, notBlank |
+| `type` | `('text'\|'number'\|'date'\|'set'\|'blank'\|'list')` |  |
+| `[op]` | `string` | list: has, anyOf, allOf (a list attribute, as Rachana's has / any_of / all_of); text: contains, notContains, equals, notEquals, startsWith, endsWith; number and date: equals, notEquals, lt, lte, gt, gte, between; blank: blank, notBlank |
 | `[value]` | `*` |  |
 | `[valueTo]` | `*` | the upper end of between (inclusive) |
-| `[values]` | `Array&lt;*&gt;` | set: the members kept |
+| `[values]` | `Array&lt;*&gt;` | set: the members kept; list: the values asked for (op has: one; anyOf, allOf: several) |
 | `[excluded]` | `Array&lt;*&gt;` | set: the members left out |
 
 #### `NumberOptions` : `Object`
@@ -3220,6 +3359,27 @@ Takes a file, as a drop does (a page that was handed one).
 
 Returns `boolean`: false when its type is not accepted.
 
+##### `FileDrop.takeMany(items)`
+
+Takes many files, as a drop or a folder choice does (multiple: true): the accepted ones are kept, the others refused one by one.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `items` | `Array&lt;{file: File, path: string}&gt;` | the files with their paths below the dropped folder |
+
+Returns `number`: how many were accepted.
+
+##### `FileDrop.sendMany(urlOf, headers)`
+
+Sends the picked files one after another, each as the body of a POST to urlOf(item), the bar following the bytes of all of them. Resolves with each answer [{path, status, body}]; stops at the first failure.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `urlOf` | `function({file: File, path: string}): string` |  |
+| `[headers]` | `Object&lt;string, string&gt;` |  |
+
+Returns `Promise&lt;Array&lt;{path: string, status: number, body: *}&gt;&gt;`.
+
 ##### `FileDrop.send(url, headers)`
 
 Sends the file as the body of a POST, streamed by the browser, the bar following.
@@ -4347,6 +4507,7 @@ An entry of the function catalogue (the server's: GET /api/v1/functions, or a pa
 | `[hint]` | `string` | the second line (default: the accepted types) |
 | `[accept]` | `string[]` | name endings taken ('.jsonl', '.tar.gz'); none: any file |
 | `[disabled=false]` | `boolean` |  |
+| `[multiple=false]` | `boolean` | many files (and folders, dropped or chosen) in one go: pick carries {files: [{file, path}]}, sendMany() sends them one after another |
 
 #### `FilterField` : `Object`
 
@@ -4356,7 +4517,7 @@ A field the bar may filter.
 |---|---|---|
 | `id` | `string` | the column id the model uses |
 | `[label]` | `string` |  |
-| `[type='set']` | `('set'\|'number'\|'text'\|'date')` |  |
+| `[type='set']` | `('set'\|'number'\|'text'\|'date'\|'list')` | list: a list attribute (contains / any of / all of) |
 | `[options]` | `Array` | a set's members (strings or {value, label}) |
 | `[members]` | `function(string): (Promise&lt;Array&gt;\|Array)` | a set's members from a server, by search text |
 
@@ -4602,7 +4763,7 @@ A visible row of the tree.
 
 ## drishti-grid
 
-Version 0.4.0. Bundle `static/elements/drishti-grid/drishti_grid.js`, global `Drishti.elements.grid`; requires drishti-core, drishti-inputs.
+Version 0.5.0. Bundle `static/elements/drishti-grid/drishti_grid.js`, global `Drishti.elements.grid`; requires drishti-core, drishti-inputs.
 
 ### drishti_columns.js
 
@@ -4634,7 +4795,7 @@ Returns `*`.
 
 #### `formatValue(v, col, row)`
 
-A value as the column shows it.
+A value as the column shows it; a nested list or record as words (plain values joined, records counted, a record as JSON).
 
 | Parameter | Type | Meaning |
 |---|---|---|
@@ -5065,7 +5226,7 @@ The aggregations a value can take in the browser (a non-additive column's value 
 
 #### `FUNC_LABELS`
 
-The functions in plain words, as the value pickers say them (PIVOT_GUIDE.md section 4); a name not here reads as itself.
+The functions in plain words, as the value pickers say them (bi/DISTRIBUTION_AND_ALERTS.md section 4); a name not here reads as itself.
 
 #### `FUNC_ARGS`
 
@@ -5828,6 +5989,63 @@ The scroll arithmetic of a grid's body.
 | Parameter | Type | Meaning |
 |---|---|---|
 | `[o]` | `{rowHeight: number, height: number, width: number, overscanRows: number, overscanColumns: number, maxScrollHeight: number}` | rowHeight default 28 (the design's densities pass theirs), overscan: rows and columns drawn beyond the view (default 6 and 2) |
+
+##### `Viewport.setExtra(index, px)`
+
+Makes a row taller than the rest by px (a list cell expanded in place); 0 gives it the usual height back. Virtual scrolling stays exact: the rows' tops, the scrolled height and the rows in view all count the extra.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `index` | `number` |  |
+| `px` | `number` |  |
+
+Returns `boolean`: whether anything changed.
+
+##### `Viewport.clearExtras()`
+
+Every row has the usual height again.
+
+Returns `boolean`: whether any was taller.
+
+##### `Viewport.extra(index)`
+
+The px a row is taller than the usual height.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `index` | `number` |  |
+
+Returns `number`.
+
+##### `Viewport.heightOf(index)`
+
+The height of a row (px).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `index` | `number` |  |
+
+Returns `number`.
+
+##### `Viewport.rowTop(index)`
+
+The real top of a row (px from the first row's top).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `index` | `number` |  |
+
+Returns `number`.
+
+##### `Viewport.indexAt(y)`
+
+The row holding a real offset (px from the first row's top), clamped to the rows.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `y` | `number` |  |
+
+Returns `number`.
 
 ##### `Viewport.resize(width, height)`
 
@@ -6952,6 +7170,420 @@ A feed a page pushes by hand (tests, a page that already has its own connection)
 
 Returns `LiveFeed & {push: function(LiveMessage): void}`.
 
+### drishti_live-model.js
+
+#### `ROW_KEY`
+
+The grid row's key and version properties (the record's own fields keep their names).
+
+#### `ROW_VERSION`
+
+The grid row's version property.
+
+#### `WINDOW_ROWS`
+
+The most rows the page window names at once (the server's page is 5,000); a set larger than the grid holds is windowed.
+
+#### `gridRow(r)`
+
+A server row as the grid's row: the record's fields, its key and its version.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `r` | `{id: string, version: number, doc: Object}` |  |
+
+Returns `Object`.
+
+#### `gridColumns(spec)`
+
+The declaration's columns as the grid's: the key pinned, a status drawn by its value, a list joined, the subtotal columns summed in groups.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `spec` | `Object` | the declaration as GET /live describes it |
+
+Returns `Object[]`.
+
+#### class `LiveRows`
+
+The rows a set holds, by key and version.
+
+##### `new LiveRows()`
+
+An empty set of rows.
+
+##### `LiveRows.load(rows, total, seq)`
+
+Holds exactly these rows (a snapshot or a resync).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `rows` | `Object[]` | server rows |
+| `[total]` | `number` | the set's size |
+| `[seq]` | `number` |  |
+
+Returns `Object[]`: the grid rows.
+
+##### `LiveRows.merge(ev, paged)`
+
+Merges one rows event: an upsert replaces a row only when its version is newer (a row not held is added), a remove drops it.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `ev` | `{upserts: Object[], removes: string[], top: string[], total: number, seq: number}` |  |
+| `[paged]` | `boolean` | the viewer holds only a window of the set: rows it does not hold are not added, unless the server lists them in {@code top} (new or changed in a newest-first order while the page starts at the first row: they go on top) |
+
+Returns `{add: Object[], update: Object[], remove: string[], stale: number}`: the grid's transaction.
+
+#### `windowIds(shown, first, last, paged)`
+
+The ids a stream's window names: the rows in view and a margin, in the order shown; null (the viewer holds every row) when the set fits.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `shown` | `string[]` | the ids in display order |
+| `first` | `number` | the first visible index |
+| `last` | `number` | the last visible index |
+| `paged` | `boolean` | whether the viewer holds less than the set |
+
+Returns `?string[]`.
+
+#### `editItems(record, values, fields)`
+
+What a record panel's edit changes: the fields whose value differs from the record, as the edit API names them.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `record` | `Object` | the record's document |
+| `values` | `Object` | the form's values, by declaration field id |
+| `fields` | `Object[]` | the declaration's editable fields ({id, bind}) |
+
+Returns `Array&lt;{field: string, from: *, to: *}&gt;`.
+
+#### `editSchema(spec, record)`
+
+A form schema (drishti-inputs) from the declaration's editable fields: a number, a book code with its pattern, an enum, a reason. A field the server did not send (read-only for this person: the server leaves "fields" out) is not drawn.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `spec` | `Object` |  |
+| `record` | `Object` | the record's document |
+
+Returns `{schema: Object, value: Object}`.
+
+#### `pivotLayout(spec, o)`
+
+The Pivot's view for the same set: its kind as the source, the filters as members, the groups as rows and the numeric columns summed.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `spec` | `Object` |  |
+| `[o]` | `{groupBy?: string[], filters?: Object&lt;string, string[]&gt;, values?: string[]}` |  |
+
+Returns `{source: string, view: Object}`.
+
+#### `pivotHref(layout, live)`
+
+The address of the Pivot for a layout: the kind, the layout and live refresh when the kind is live.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `layout` | `{source: string, view: Object}` |  |
+| `live` | `boolean` |  |
+
+Returns `string`.
+
+#### `linkFor(link, row)`
+
+A link of the declaration for a row: {FIELD} replaced by the row's value, encoded.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `link` | `{label: string, href: string}` |  |
+| `row` | `Object` |  |
+
+Returns `{label: string, href: string}`.
+
+#### `maskedPaths(doc, base)`
+
+The paths of a record whose value is the mask (shown as masked, never copied).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `doc` | `*` |  |
+| `[base]` | `string` |  |
+
+Returns `string[]`.
+
+#### `changedFields(then, now)`
+
+What differs between the record as the panel opened it and now: the fields whose value changed.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `then` | `Object` |  |
+| `now` | `Object` |  |
+
+Returns `string[]`.
+
+#### `httpLiveApi(o)`
+
+The one way a page reaches a live set on the server (the console's /api/live): methods answer promises of JSON and reject with an Error that carries the server's code, status and words.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `o` | `{base?: string, id: string, fetch?: Function}` | base default "/api/live" |
+
+Returns `{rows: Function, row: Function, edit: Function, window: Function, history: Function, mine: Function}`.
+
+#### `inferType(rows, field)`
+
+A column's type from the values it holds: number when every value present is a number, date for ISO dates, else text.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `rows` | `Object[]` |  |
+| `field` | `string` |  |
+
+Returns `string`.
+
+#### `digValue(row, field)`
+
+The value at a dotted field of a row: the row's own property of that name first (a flat record), else the nested one.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `row` | `Object` |  |
+| `field` | `string` |  |
+
+Returns `*`.
+
+#### `staticSpec(o)`
+
+The declaration of a static set (a result without a record key): its columns as given or from the first rows' fields (a field starting with an underscore is not a column), never editable, no kind (so no Pivot), no history.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `o` | `{rows: Object[], columns?: Array&lt;string\|{field: string, label?: string, type?: string}&gt;, title?: string, id?: string, links?: Array&lt;{label: string, href: string}&gt;}` |  |
+
+Returns `Object`.
+
+#### `staticApi(rows, keyField)`
+
+The api of a static set: its rows as given (kept in their order), the row's JSON for the panel, no edits, no history.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `rows` | `Object[]` |  |
+| `[keyField]` | `string` | the field that names a row (else its place, from 1): a page that feeds changes to the grid names the rows it changes by it |
+
+Returns `{rows: Function, row: Function, edit: Function, window: Function, history: Function, mine: Function}`.
+
+### drishti_live-panel.js
+
+#### `stateWords(state, needed)`
+
+The words of a change's state, as a reader would say them.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `state` | `string` | awaiting, queued, applying, applied, refused ... |
+| `[needed]` | `number` | the approvals asked for |
+
+Returns `string`.
+
+#### `isPending(change)`
+
+Whether a change is still open (the tray lists these).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `change` | `{state: string}` |  |
+
+Returns `boolean`.
+
+#### `itemsText(change)`
+
+One change's items in a line: "PRICE 2.11 → 2.125".
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `change` | `{items: Array&lt;{path: string, from: *, to: *}&gt;}` |  |
+
+Returns `string`.
+
+#### class `RecordPanel`
+
+The record panel.
+
+##### `new RecordPanel(host, o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` |  |
+| `o` | `{spec: Object, api: Object, row: Object, onSaved: function(Object): void, onClose: function(): void, copy: function(string): Promise&lt;void&gt;}` |  |
+
+##### `RecordPanel.draw()`
+
+Draws the panel's frame and the tab shown.
+
+Returns `void`.
+
+##### `RecordPanel.submit(values)`
+
+Sends the edit on the version the panel opened; the server's answer (applied, queued, waiting for approval) or its refusal (a newer version, no rights) is said in words.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `values` | `Object` | the form's values, by field id |
+
+Returns `Promise&lt;?Object&gt;`: the server's answer (null when nothing changed).
+
+##### `RecordPanel.copyRaw()`
+
+Copies the record as JSON; a masked field stays the mask (the value was never sent).
+
+Returns `Promise&lt;void&gt;`.
+
+##### `RecordPanel.update(row)`
+
+The grid's row for the record changed (a tick or an edit applied elsewhere).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `row` | `Object` |  |
+
+Returns `void`.
+
+##### `RecordPanel.noteChange()`
+
+Says when the record moved since the panel opened it (its version is not the one the panel read), with Reload.
+
+Returns `void`.
+
+##### `RecordPanel.reload()`
+
+Opens the record again as it is now (an edit made on the older version would be refused).
+
+Returns `void`.
+
+##### `RecordPanel.destroy()`
+
+Takes the panel away.
+
+Returns `void`.
+
+### drishti_live-set.js
+
+#### `LIVE_STATES`
+
+The states the status chip shows.
+
+#### class `LiveSetGrid`
+
+A live result set in a grid.
+
+##### `new LiveSetGrid(host, o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` |  |
+| `o` | `LiveSetOptions` |  |
+
+##### `LiveSetGrid.start()`
+
+Loads the snapshot, draws the grid and follows the stream.
+
+Returns `Promise&lt;LiveSetGrid&gt;`.
+
+##### `LiveSetGrid.resync()`
+
+Starts again from a fresh snapshot (the server could not keep up, the connection came back, or a person resumed).
+
+Returns `Promise&lt;void&gt;`.
+
+##### `LiveSetGrid.patch(changes)`
+
+Changes fields of rows the page holds (a static set that a page feeds itself: a monitor's ticks): the grid's rows are updated in place and the open record follows.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `changes` | `Array&lt;{id: string, fields: Object}&gt;` | the row's key and the fields that changed |
+
+Returns `number`: how many rows changed.
+
+##### `LiveSetGrid.pause(on)`
+
+Pauses the grid (rows that arrive are not applied) or resumes it from a fresh snapshot.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `on` | `boolean` |  |
+
+Returns `void`.
+
+##### `LiveSetGrid.sendWindow()`
+
+Tells the server the page this viewer shows: the ids in view and a margin, or all when the viewer holds the whole set.
+
+Returns `Promise&lt;void&gt;`.
+
+##### `LiveSetGrid.group(field)`
+
+Groups the rows by a field (none: ungrouped); the subtotal columns follow the ticks.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `field` | `string` |  |
+
+Returns `void`.
+
+##### `LiveSetGrid.open(row)`
+
+Opens a row's record panel.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `row` | `Object` | the grid's row |
+
+Returns `void`.
+
+##### `LiveSetGrid.close()`
+
+Closes the record panel.
+
+Returns `void`.
+
+##### `LiveSetGrid.loadTray()`
+
+The person's changes still open (waiting for an approver, on their way to the source), in the tray.
+
+Returns `Promise&lt;Object[]&gt;`.
+
+##### `LiveSetGrid.filterMembers()`
+
+The filters on the grid as members of the fields they filter (a set filter), for the Pivot.
+
+Returns `Object&lt;string, string[]&gt;`.
+
+##### `LiveSetGrid.pivotAddress()`
+
+The address of the Pivot for the same kind, filters, grouping and numbers; live when the kind is.
+
+Returns `string`.
+
+##### `LiveSetGrid.toPivot()`
+
+Hands over to the Pivot (the navigate option, else the page's address is set).
+
+Returns `void`.
+
+##### `LiveSetGrid.destroy()`
+
+Stops following and takes the grid and the panel away.
+
+Returns `void`.
+
 ### drishti_plain-render.js
 
 #### `renderWindow(grid)`
@@ -7280,6 +7912,7 @@ The column menu's items: sort, filter (members, top N, a value filter), aggregat
 | `[c.pinTotals]` | `boolean` | the pivot's totals are pinned |
 | `[c.explain]` | `boolean` | the grid has an Explain hook |
 | `[c.rowHeader]` | `boolean` | the pivot's row heading column |
+| `[c.list]` | `boolean` | a list column: it is filtered by contains, any of and all of |
 
 Returns `MenuItem[]`.
 
@@ -9273,6 +9906,10 @@ Everything GridModel takes (columns, rows or datasource, serverPivot, explain, c
 | `[showAs]` | `Array&lt;{id: string, label: string, needs: ?string}&gt;` | the show-as forms the server computes (none: no Show value as) |
 | `[views]` | `import('./drishti_grid-views.js').ViewsHook` | the View picker in front of the compact line (C): ready-made, my and shared views, Save view as… |
 | `[customize=true]` | `boolean` | Customize › (and \) between the compact line and the panes |
+| `[ribbon=true]` | `boolean` | false: the wells ribbon (Rows, Columns, Filters, Values) is not shown until Customize › (a list of records) |
+| `[pivotToggle=true]` | `boolean` | false: no Pivot toggle in the toolbar (the host has its own way to the Pivot) |
+| `[toolbarItems]` | `HTMLElement[]` | the host's own controls, drawn in the toolbar after the title (one toolbar, not two) |
+| `[quietStatus=false]` | `boolean` | true: the status bar keeps the selection's figures and drops the row count the host shows itself |
 | `[valueOptions]` | `function(Object, Object): {items: Array&lt;Object&gt;, run: function(string): void}` | a per-cell measure's options in its value menu (the VaR lens: horizon, confidence, scenario set) |
 | `[customFunctions]` | `Array&lt;{name: string, label: string}&gt;` | the custom functions the server has enabled, offered as ƒ in the value menus |
 | `[formulaEditor]` | `function({formula: string, field: Object, value: Object, done: function(string, string): void}): void` | the host's formula editor for Custom ƒ… (default: a text field; the server checks the formula when it answers) |
@@ -9335,6 +9972,23 @@ Everything GridModel takes (columns, rows or datasource, serverPivot, explain, c
 | `focus` | `?{row: number, col: number}` | the new focus (null: unchanged) |
 | `action` | `?string` | what the layout does: select-row, toggle-row, select-all, extend-range, copy, edit, open, expand, collapse, expand-all, collapse-all, explain, clear, null |
 | `handled` | `boolean` | whether the key was the grid's (the layout then prevents the browser's default) |
+
+#### `LiveSetOptions` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `spec` | `Object` | the declaration as GET /live describes it (id, title, kind, columns, groupBy, subtotals, sort, links, editable, readOnly, fields, approval, reason, tray) |
+| `api` | `Object` | httpLiveApi's shape |
+| `channel` | `{subscribe: function(Object): function(): void}` | handlers hello, rows, resync, gone, error |
+| `[layout='wells']` | `('wells'\|'panel'\|'terminal')` |  |
+| `[navigate]` | `function(string): void` | where Pivot › goes (default: the page's address is set) |
+| `[copy]` | `function(string): Promise&lt;void&gt;` | the clipboard (default: navigator.clipboard) |
+| `[snapshotRows=5000]` | `number` | the most rows held; a larger set is windowed |
+| `[onChart]` | `function({title: string, columns: Object[], rows: Object[]}): void` | when given, a Chart button hands the rows held (as the columns draw them) to it |
+| `[keyField]` | `string` | STATIC MODE: the field that names a row (default: its place) |
+| `[rowActions]` | `Array&lt;{label: string, run: function(Object): void}&gt;` | buttons beside the open record's links (the page decides what they do; given the grid's row) |
+| `[offset=0]` | `number` | the first row read (a page of a larger set: the page's rows tick, the rest of the set is not held) |
+| `[rows]` | `Object[]` | STATIC MODE: plain rows (no api, no channel needed): a result without a record key (an SQL answer, a preview). The rows are not merged and not edited; the panel shows the row's JSON. The spec may be omitted (the columns come from the rows) or given as {title, columns}. |
 
 #### `LiveMessage` : `Object`
 

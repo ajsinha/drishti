@@ -23,7 +23,7 @@ drishti:
   lake:
     memory:                          # the in-memory lake (docs/guides/DATA_LAKE_GUIDE.md): Delta tables held in memory only by contract, never on a disk
       stores: {}                     # the old place of the memory stores, read for one more release with a warning: a store is now a lake, config/lakes/<store>.yaml with root: mem://<store> and memory: { max-mb (the hard cap), chunk-kb (1024), contract, owner (true), idle-trim-minutes (10) } (docs/guides/DATA_LAKE_GUIDE.md); the caps add to -XX:MaxDirectMemorySize
-      tables: []                     # the tables and their replenish jobs: name, store, folder, source { connector, kind, file, url, headers, ids, ids-from }, mode (replace, append, merge), key, sort-by, business-date, columns, every or cron, signal, warm-up, pin, keep-versions (2), codec (zstd)
+      tables: []                     # the tables and their replenish jobs: name, store, folder, source { connector, kind, file, url, headers, ids, ids-from }, mode (replace, append, merge), key, sort-by, business-date, columns, every or cron, signal, warm-up, pin, keep-versions (2), codec (zstd), retention { ttl, on, max-rows } (none: rows kept; the compaction drops older rows)
       history-keep: 50               # the runs kept per table for Admin -> Lakes and drishti.py lake memory jobs (in memory)
       job-threads: 2                 # replenish jobs that may run at once (one per table at most)
       compaction:                    # automated compaction: the memory optimizes itself (docs/architecture/DATA_ARCHITECTURE.md section 13a)

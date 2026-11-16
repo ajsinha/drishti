@@ -71,8 +71,8 @@ def test_what_arrow_is_not_written_with_goes_as_json(answer, shape, at):
 
 
 def test_the_servers_stream_reads_the_same_here():
-    """The server's ArrowAnswersTest leaves its stream in drishti-server/target (dictionaries written by ArrowIpcWriter): pyarrow reads it."""
-    sample = Path(__file__).resolve().parents[2] / "drishti-server" / "target" / "arrow-answers-sample.arrow"
+    """The server's ArrowAnswersTest leaves its stream in kernel/drishti-server/target (dictionaries written by ArrowIpcWriter): pyarrow reads it."""
+    sample = Path(__file__).resolve().parents[2] / "kernel/drishti-server" / "target" / "arrow-answers-sample.arrow"
     if not sample.exists():
         pytest.skip("run the server's ArrowAnswersTest first")
     back = arrow_answer.decode(sample.read_bytes())

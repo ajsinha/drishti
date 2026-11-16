@@ -1,0 +1,159 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The shared fixture of pack resolution (docs/architecture/KERNEL_AND_MODULES.md, "Configuration resolution"): the Java resolver
+# (com.ash.drishti.api.PackResolver, PackResolverFixtureTest) and its Python twin (drishti-console/core/resolution.py,
+# drishti-console/tests/test_resolution.py) read every case and must give the same answer.
+#
+# A case: `tree` (files under a scratch root: a pack is `<folder>/<name>/pack.yaml`, a module `modules/<dir>/module.yaml` or
+# `modules/<dir>/dmod/module.yaml`, an installed .dmod `store/installed/<id>/<version>/module.yaml` named by `store/installed/active.yaml`),
+# `active` (the active module ids), and the expected `packs` (name -> origin: `site`, `module:<id>`, `kernel`), `off` (a pack of a module
+# that is not active -> that module), `dirs` (name -> folder, where it matters) and `problems` (each a fragment one problem must contain;
+# no other problem allowed). Every case's layout: site = site/, kernel = site/core/, the modules tree = modules/, the module store = store/.
+cases:
+- name: the three layers, first wins
+  tree:
+    site/acme/pack.yaml: "pack: acme"
+    site/core/core/pack.yaml: "pack: core"
+    site/core/gleif/pack.yaml: "pack: gleif"
+    modules/trading/module.yaml: "id: trading\npacks: {folder: packs, list: [trading]}"
+    modules/trading/packs/trading/pack.yaml: "pack: trading"
+  active: [trading]
+  packs: {acme: site, core: kernel, gleif: kernel, trading: "module:trading"}
+  problems: []
+
+- name: a module that is off brings none of its packs
+  tree:
+    site/core/core/pack.yaml: "pack: core"
+    modules/trading/module.yaml: "id: trading\npacks: {folder: packs, list: [trading]}"
+    modules/trading/packs/trading/pack.yaml: "pack: trading"
+    modules/economy/module.yaml: "id: economy\npacks: {folder: packs, list: [world-economy]}"
+    modules/economy/packs/world-economy/pack.yaml: "pack: world-economy"
+  active: [economy]
+  packs: {core: kernel, world-economy: "module:economy"}
+  off: {trading: trading}
+  problems: []
+
+- name: only the listed packs of a module count
+  tree:
+    site/core/core/pack.yaml: "pack: core"
+    modules/banking/dmod/module.yaml: "id: banking\npacks: {folder: packs, list: [market-risk]}"
+    modules/banking/dmod/packs/market-risk/pack.yaml: "pack: market-risk"
+    modules/banking/dmod/packs/scratch/pack.yaml: "pack: scratch"
+  active: [banking]
+  packs: {core: kernel, market-risk: "module:banking"}
+  problems: []
+
+- name: a module's folder name is not its id
+  tree:
+    modules/capital-markets/module.yaml: "id: capitalmarkets\npacks: {folder: packs, list: [funds]}"
+    modules/capital-markets/packs/funds/pack.yaml: "pack: funds"
+  active: [capitalmarkets]
+  packs: {funds: "module:capitalmarkets"}
+  problems: []
+
+- name: an installed .dmod wins over the development tree's copy
+  tree:
+    modules/genomics/module.yaml: "id: genomics\npacks: {folder: packs, list: [genes]}"
+    modules/genomics/packs/genes/pack.yaml: "pack: genes"
+    store/installed/active.yaml: "modules: {genomics: 1.2.0}"
+    store/installed/genomics/1.2.0/module.yaml: "id: genomics\npacks: {folder: packs, list: [genes]}"
+    store/installed/genomics/1.2.0/packs/genes/pack.yaml: "pack: genes"
+  active: [genomics]
+  packs: {genes: "module:genomics"}
+  dirs: {genes: store/installed/genomics/1.2.0/packs/genes}
+  problems: []
+
+- name: a site pack replaces a shipped one only when it says so
+  tree:
+    site/trading/pack.yaml: "pack: trading\nreplaces: trading"
+    modules/trading/module.yaml: "id: trading\npacks: {folder: packs, list: [trading]}"
+    modules/trading/packs/trading/pack.yaml: "pack: trading"
+  active: [trading]
+  packs: {trading: site}
+  problems: []
+
+- name: a site pack of a shipped pack's name without replaces is refused, the shipped one read
+  tree:
+    site/trading/pack.yaml: "pack: trading"
+    modules/trading/module.yaml: "id: trading\npacks: {folder: packs, list: [trading]}"
+    modules/trading/packs/trading/pack.yaml: "pack: trading"
+  active: [trading]
+  packs: {trading: "module:trading"}
+  problems: ["the site's pack 'trading'"]
+
+- name: a site pack may replace a kernel pack
+  tree:
+    site/gleif/pack.yaml: "pack: gleif\nreplaces: gleif"
+    site/core/gleif/pack.yaml: "pack: gleif"
+  active: []
+  packs: {gleif: site}
+  problems: []
+
+- name: the same name twice in the site is an error naming both, neither read
+  tree:
+    site/acme/pack.yaml: "pack: acme"
+    site/domain-a/acme/pack.yaml: "pack: acme"
+  active: []
+  packs: {}
+  problems: ["pack 'acme' is in two places of the site"]
+
+- name: the same name in two active modules is an error naming both, neither read
+  tree:
+    modules/a/module.yaml: "id: a\npacks: {folder: packs, list: [shared]}"
+    modules/a/packs/shared/pack.yaml: "pack: shared"
+    modules/b/module.yaml: "id: b\npacks: {folder: packs, list: [shared]}"
+    modules/b/packs/shared/pack.yaml: "pack: shared"
+  active: [a, b]
+  packs: {}
+  problems: ["pack 'shared' is in two places of the modules"]
+
+- name: a listed pack that is not there is a problem
+  tree:
+    modules/a/module.yaml: "id: a\npacks: {folder: packs, list: [missing]}"
+  active: [a]
+  packs: {}
+  problems: ["the module a lists the pack 'missing'"]
+
+- name: a pack folder whose manifest names another pack is a problem
+  tree:
+    site/acme/pack.yaml: "pack: other"
+  active: []
+  packs: {}
+  problems: ["declares pack 'other'"]
+
+- name: a module pack of a kernel pack's name is refused without replaces
+  tree:
+    site/core/core/pack.yaml: "pack: core"
+    modules/a/module.yaml: "id: a\npacks: {folder: packs, list: [core]}"
+    modules/a/packs/core/pack.yaml: "pack: core"
+  active: [a]
+  packs: {core: kernel}
+  problems: ["the module a's pack 'core'"]
+
+- name: a module's packs folder outside its home is refused
+  tree:
+    modules/a/module.yaml: "id: a\npacks: {folder: ../../site, list: [acme]}"
+    site/acme/pack.yaml: "pack: acme"
+  active: [a]
+  packs: {acme: site}
+  problems: ["the module a: its packs folder"]
+
+- name: a module project from the SDK keeps its manifest in src/dmod
+  tree:
+    modules/genomics/src/dmod/module.yaml: "id: genomics\npacks: {folder: packs, list: [genes]}"
+    modules/genomics/src/dmod/packs/genes/pack.yaml: "pack: genes"
+  active: [genomics]
+  packs: {genes: "module:genomics"}
+  problems: []

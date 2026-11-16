@@ -19,7 +19,7 @@
    (drishti-grid, Drishti Elements: sort, filter, pages, keyboard); drishti_admin-bindings.js sends a proposal or a decision. #}
 {% extends "base.html" %}
 {% block title %}Data bindings · {{ PRODUCT }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_admin-loads.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_admin-inbox.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-loads.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_admin-inbox.css?v={{ ASSET_V }}">{% endblock %}
 {% block screen %}admin{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
@@ -31,7 +31,7 @@
   <p class="text-muted-d ib-intro">Which connector or lake table serves each kind the modules need. One binding per kind, shared by every module that
     needs it; connectors and credentials are the site's, modules only name kinds. A change is proposed here and applied, without a restart, when a
     second administrator approves it. The file is <span class="mono">{{ st.file or 'config/bindings.yaml' }}</span>; see the
-    <a href="/help/admin#23-data-bindings">Administration guide</a>.</p>
+    <a href="{{ BASE }}/help/admin#23-data-bindings">Administration guide</a>.</p>
   <p class="ib-said" data-bindings-said role="status" aria-live="polite"></p>
 {% if error %}
   <p class="adm-warn" role="alert" data-bindings-error><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
@@ -42,7 +42,6 @@
     <b>{{ st.unboundRequired|join(', ') }}</b>{% if st.off %}: {{ st.off.keys()|list|join(', ') }} {{ 'is' if st.off|length == 1 else 'are' }} off for everyone until it is bound{% endif %}.</p>
   {% endif %}
   {% if st.fileProblem %}<p class="adm-warn" role="alert" data-bindings-file-problem>{{ st.fileProblem }}</p>{% endif %}
-  {% for d in st.deprecated or [] %}<p class="ib-warn" data-bindings-deprecated>Deprecated: {{ d }}</p>{% endfor %}
   {% for p in st.problems or [] %}<p class="ib-warn" data-bindings-problem>{{ p }}</p>{% endfor %}
   <p data-bindings-counts>{% for s, n in (st.counts or {}).items() %}{% if n %}<span class="st {{ PILL.get(s, '') }}">{{ s }} {{ n }}</span> {% endif %}{% endfor %}</p>
 
@@ -68,6 +67,24 @@
             data-live="{{ (k.binding or {}).get('live') or '' }}" data-union="{{ 'true' if (k.binding or {}).get('union') else '' }}" data-demo="{{ 'true' if (k.binding or {}).get('demo') else '' }}">Bind…</button>{% endif %}</td>
         </tr>
       {% endfor %}
+      </tbody>
+    </table></div>
+  </section>
+
+  <section class="ib-sec" aria-labelledby="bd-map-h">
+    <h2 class="ib-h2" id="bd-map-h">Tables read</h2>
+    <div class="tbl-wrap"><table class="tbl adm-tbl" data-bindings-map>
+      <caption class="visually-hidden">Every kind: the connectors a read asks, in order, each one's layer, plugin, lake and the table it reads</caption>
+      <thead><tr><th scope="col">Kind</th><th scope="col">Connector</th><th scope="col">Layer</th><th scope="col">Plugin</th><th scope="col">Lake</th>
+        <th scope="col">Table</th><th scope="col">Exists</th></tr></thead>
+      <tbody>
+      {% for k in tables %}{% for c in k.reads or [] %}
+        <tr data-map-kind="{{ k.kind }}" data-map-connector="{{ c.connector }}">
+          <td class="mono">{{ k.kind }}</td><td class="mono">{{ c.connector }}</td><td>{{ c.layer }}</td><td class="mono">{{ c.plugin }}</td>
+          <td class="mono">{{ c.lake or '-' }}</td><td class="mono">{{ c.table or '-' }}</td>
+          <td>{% if c.exists is none %}-{% elif c.exists %}<span class="st st-ok">yes</span>{% else %}<span class="st st-bad">missing</span>{% endif %}</td>
+        </tr>
+      {% endfor %}{% endfor %}
       </tbody>
     </table></div>
   </section>
@@ -104,4 +121,4 @@
 </div>
 
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_admin-bindings.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="{{ BASE }}/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_admin-bindings.js?v={{ ASSET_V }}"></script>{% endblock %}

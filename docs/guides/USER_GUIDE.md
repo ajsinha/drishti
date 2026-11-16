@@ -45,7 +45,7 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 | [Layout mode](#layout-mode-arrange-a-view-your-way) | `Alt+L`: drag, resize and hide panels for yourself; promote your layout to the Sutra |
 | [Screens that respond](#screens-that-respond-clicks-refresh-editing-and-your-own-page) | A click that opens a panel, refresh and freshness, Pause all, editing a record (drafts), a screen you arrange, *Your page* |
 | [Zoom a panel](#zoom-a-panel) | `Z`: one panel fills the view area; restore with `Esc`; shareable as `#zoom=<panel>` |
-| [On a phone](#on-a-phone) | What a phone shows first, *More on this page*, *On desktop*, *Show everything*, the lens menu |
+| [On a phone](#on-a-phone) | What a phone shows first, *More on this page*, *On desktop*, *Show everything*, the Domains menu |
 | [Pivot](#pivot-slice-a-table-your-way) | Rows, columns, values and filters over a table or a search's results, by drag or by key; totals, drill-down, chart, export |
 | [Tables and models](#tables-and-models-the-editors) | The editors of virtual tables, semantic models and Python-driven tables: live YAML, a preview as you, review before live |
 | [Keyboard](#keyboard) | Every key in one table |
@@ -80,9 +80,9 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 | Alerts | `/alerts` | Your alerts on numbers, your alert rules and recent alerts (also **Reports**, *My alerts*) |
 | Workspaces | `/w` | Several live views on one screen |
 | Inbox | `/inbox` | Views and comments sent to you ([Your inbox](#your-inbox)) |
-| Reports | `/reports` | Saved searches delivered as CSV on a schedule, and your subscriptions ([Scheduled reports](#scheduled-reports), [Export, and subscriptions](REPORTS_GUIDE.md#182-export)) |
-| BI | `/bi`, `/bi/catalogue`, `/bi/w/me`, `/bi/r/<id>`, `/bi/models`, `/bi/datasets`, `/bi/designer`, `/bi/notebook`, `/bi/transform` | Rūpaka business intelligence, for people with the `bi` power: reports (a board is a report page; `/bi/b/<id>` opens it), BI Studio's designers, the Notebook and the Transform editor ([REPORTS_GUIDE.md](REPORTS_GUIDE.md)) |
-| Build | `/build`, `/build/new`, `/build/pack/new` | Design layouts (Sutras) in the workbench, make a pack from schemas (proposed Sutras are approved in [Approvals](#approvals)) |
+| Reports | `/reports` | Saved searches delivered as CSV on a schedule, and your subscriptions ([Scheduled reports](#scheduled-reports), [Export, and subscriptions](bi/DISTRIBUTION_AND_ALERTS.md#12-export)) |
+| BI | `/bi`, `/bi/catalogue`, `/bi/w/me`, `/bi/r/<id>`, `/bi/models`, `/bi/datasets`, `/bi/designer`, `/bi/notebook`, `/bi/transform` | Rūpaka business intelligence, for people with the `bi` power: reports (a board is a report page; `/bi/b/<id>` opens it), BI Studio's designers, the Notebook and the Transform editor ([NOTEBOOK_AND_PYTHON.md](bi/NOTEBOOK_AND_PYTHON.md)) |
+| Build | `/build`, `/build/new`, `/build/pack/designer` | Design layouts (Sutras) in the workbench, make a pack from schemas (proposed Sutras are approved in [Approvals](#approvals)) |
 | Tables & models | `/build/tables` | The editors of virtual tables, semantic models and Python-driven tables, for people with the `bi` power ([Tables and models: the editors](#tables-and-models-the-editors)) |
 | My account | `/account` | Your profile, settings and password |
 | Servers | `/servers` | The Drishti servers this console may talk to ([Working with several servers](#working-with-several-servers)) |
@@ -127,9 +127,20 @@ is left out and the headline stands alone. Under the headline, **quick cards** o
 with `ui.facts.enabled: false` (`DRISHTI_HOME_FACTS=false`) and sets the cards under `ui.home_cards` in the console's
 `application.yaml`; a pack author adds facts as the [pack developer guide](BUILD_GUIDE.md#74-facts-for-home) describes.
 
+### Home: the house
+
+Below the headline and its animation, **One kernel. Modules plug in.** draws the product you are running as a house: the kernel in
+the middle, and around it one room for each module this distribution has loaded and switched on (Drishti Risk: banking and market
+data; Drishti All: every module the server loaded), with empty `.dmod` sockets where another module could plug in. A room's colour
+stays the same in every distribution of the site. The sentence beside it names the product and its modules, the caption gives the
+product's name and tagline (both from the distribution's `brand`), and **How it fits together** opens
+[How Drishti fits together](../../HOW_IT_FITS.md#the-house). A module switched off, or not loaded, leaves its room out; the picture
+follows the theme, and on a phone it sits under the text. An edition or lens can leave the section out with
+`home.sections: { house: off }`.
+
 ## The top bar
 
-Every page has the same top bar, on one row: the terminal, the views, the engines, BI, Build, Admin, Help and the landing page when you are signed in, and the public pages (signed out) in the same height, logo and
+Every page has the same top bar, on one row: **Views · Domains · Create · Admin · Help** and the landing page when you are signed in, and the public pages (signed out) in the same height, logo and
 wordmark (set in Cinzel; the slogan is in the footer, which also carries Help, About, the competitive analysis and the release notes).
 
 The **Drishti name and logo** at its left end always lead to the landing page, also when you are signed in. The
@@ -137,7 +148,7 @@ landing page then shows **← Back to …** (the view, Build, Admin or Help page
 takes you back where you were; *Open the terminal* goes to the terminal instead.
 
 ```text
-◉ Drishti  > TRD MX-20000001, CPTY north …  [2026-09-30]   Views ▾  Engines ▾  BI ▾  Build ▾  Admin ▾  Help ▾   [bell] [box 12] [palette] (Live) (A) Ash ▾
+◉ Drishti  > TRD MX-20000001, CPTY north …  [2026-09-30]   Views ▾  Domains ▾  Create ▾  Admin ▾  Help ▾   [bell] [box 12] [palette] (Live) (A) Ash ▾
 ```
 
 **Beside the brand** (click it to go back to `/`) are the [command line](#the-command-line), which takes the
@@ -145,7 +156,7 @@ free space, and the [business date](#business-dates-live-or-a-day-in-the-past) b
 The round **search button** after the command line (or `Alt+K` anywhere) opens [the global search](#search-everything-altk).
 Below 1100 pixels wide they move to a line of their own.
 
-**Then the menus**: **Views**, **Build** and **Help** for everyone, **Risk** where your role opens a risk engine's page (the VaR, exposure, FRTB-SA and SIMM pages, each shown while its engine runs), **BI** where you hold the `bi` power, **Admin** only for administrators: Views, Risk, BI, Build, Admin, Help for a risk administrator, and Views, BI, Build, Help for a role that opens no engine. The engines' on and off switches are in **Admin → Engines**. Below 1280 pixels they show as icons only. Each opens a wide panel
+**Then the menus**: **Views** and **Help** for everyone, **Domains** (the subjects of the modules your site runs, risk included, each a column; with one domain active it is named after it: **Risk** in Drishti Risk, and it is not there when no domain module is active), **Create** (every designer and the BI tools in one menu: BI where you hold the `bi` power) and **Admin** only for administrators. Each menu is drawn from the modules' manifests and the distribution, so a distribution without a domain shows no Domains menu, and each entry follows your role. Each opens a panel
 (a *mega menu*) in which every entry has an icon and one line saying what it does. The menu holding the page
 you are on is highlighted.
 
@@ -153,11 +164,11 @@ you are on is highlighted.
 |---|---|---|
 | **Views** | Look up | *Terminal* (`/t`), *Search & pick lists* (`/s`), *Forms* (`/forms`: the [forms home](#the-forms-home), query by form), *Functions* (`/func`, also `FUNC <GO>`: every command you can use, what it does and an example; administrators switch commands on or off there, [ADMIN_GUIDE.md (Functions)](ADMIN_GUIDE.md#20-functions-func-every-command-and-turning-one-on-or-off)), *Data map* (`/datamap`, also `DATAMAP <GO>`: every kind of data, how it joins and how much there is, [The data map](#the-data-map)), *Data* (`/data`, also `EXPORT <GO>`: every dataset and its dates, a simple selection, a day downloaded as `.jsonl.gz`, [Export data](#export-data)), *Reports* (`/reports`: every scheduled report and subscription, with a box to find one, and links to your alerts and the BI reports) |
 | | Watch | *Workspaces* (`/w`), *Monitors* (`/m`), *Alerts* (`/alerts`), *Approvals* (`/approvals`: [the one queue](#approvals), with the number waiting) |
-| **Engines** (a role that opens an engine) | a column per engine running, its command word in the head | **VaR** `VAR`: *VaR explorer* `VAR BANK`, *Why it moved* `VAR BANK EXPLAIN`, *VaR Playground* `PLAY VAR`, *Scenario matrix* `SMAT`, *Regulatory reports*, *Backtesting* `VAR BANK BACKTEST`, *Stress window* `SWIN BANK`, *VaR results* `VRES`, *Official records* `VOFF`, *Hierarchy limits* `VLIM` · **Exposure** `EXP`: *Exposure explorer* `EXP`, *A counterparty* `EXP CPTY …`, *A netting set* `EXP NSET …` (the pre-deal check `PREDEAL` is under **Counterparties**) · **FRTB-SA** `FRSA`: *FRTB-SA capital* `FRSA BANK`, *FRTB-SA Playground* `PLAY FRTB EXAMPLE` · **SIMM** `SIMM`: *Netting sets* `SIMM`, *SIMM Playground* `PLAY SIMM EXAMPLE`; administrators also see *Admin → Engines* and, at the foot, the engines not running on any server (greyed, never links) |
-| **BI** (people with the `bi` power) | Business intelligence | *Catalogue* (`/bi/catalogue`), *My workspace* (`/bi/w/me`), *My runs*, *Workspaces* |
+| **Domains** (named after its one domain when only one is active: **Risk**) | a column per menu a module brings (Blotter, Positions, Risk, Counterparties, Markets, Companies, Economies ...); Risk's columns are one per engine running, its command word in the head | **VaR** `VAR`: *VaR explorer* `VAR BANK`, *Why it moved* `VAR BANK EXPLAIN`, *VaR Playground* `PLAY VAR`, *Scenario matrix* `SMAT`, *Regulatory reports*, *Backtesting* `VAR BANK BACKTEST`, *Stress window* `SWIN BANK`, *VaR results* `VRES`, *Official records* `VOFF`, *Hierarchy limits* `VLIM` · **Exposure** `EXP`: *Exposure explorer* `EXP`, *A counterparty* `EXP CPTY …`, *A netting set* `EXP NSET …` (the pre-deal check `PREDEAL` is under **Counterparties**) · **FRTB-SA** `FRSA`: *FRTB-SA capital* `FRSA BANK`, *FRTB-SA Playground* `PLAY FRTB EXAMPLE` · **SIMM** `SIMM`: *Netting sets* `SIMM`, *SIMM Playground* `PLAY SIMM EXAMPLE`; administrators also see *Admin → Engines* and, at the foot, the engines not running on any server (greyed, never links) |
+| **Create** (BI: people with the `bi` power) | Business intelligence | *Catalogue* (`/bi/catalogue`), *My workspace* (`/bi/w/me`), *My runs*, *Workspaces* |
 | | Analyse | *Models*, *Datasets*, *Report designer* (`/bi/designer`), *Promotion (test to live)* (`/bi/environments`), *Notebook*, *Data prep* (`/bi/transform`) |
-| | Administer | *BI settings* (administrators with `bi-admin`, [REPORTS_GUIDE.md](REPORTS_GUIDE.md)) |
-| **Build** | Create | *Build home* (`/build`: [the Build home](#the-build-home-everything-you-build-in-one-place)), *New screen* (`/build/new`), *New pack* (`/build/pack/new`: schema files and/or JSON Lines in, a pack to download or deploy out; [Schema to pack](BUILD_GUIDE.md#8-a-pack-from-a-json-schema-build--new-pack)), *Tables & models* (`/build/tables`), *Examples* |
+| | Administer | *BI settings* (administrators with `bi-admin`, [README.md](bi/README.md)) |
+| | Create | *Build home* (`/build`: [the Build home](#the-build-home-everything-you-build-in-one-place)), *New screen* (`/build/new`), *New pack* (`/build/pack/designer`: schema files and/or JSON Lines in, a pack to download or deploy out; [Schema to pack](BUILD_GUIDE.md#8-the-pack-designer-create--new-pack)), *Tables & models* (`/build/tables`), *Examples* |
 | | Learn | *Tutorials*, *Schema to pack*, *Screen designer guide*, *Screen developer guide*, *Panel kinds*, *Screen language reference*, *Packs and screens guide* |
 | **Admin** (admins only) | People & access | *Users*, *Roles*, *API tokens*, *Who looked at what*, *Audit log*, *Saved VaR baskets* |
 | | Data | *Packs*, *Connectors*, *Data loads*, *Lakes*, *Record edits*, *Data out*, *Installed items* |
@@ -173,39 +184,31 @@ it changes); a test holds every page of the console to an entry or to the page i
 
 **The engines' pages live under Risk.** VaR, Why it moved, the VaR Playground, the scenario matrix, regulatory reports, backtesting, the stress window, VaR results and official records; the Exposure explorer, a counterparty or a netting set; FRTB-SA and SIMM with their playgrounds: each is an item of the **Risk** menu (a column per subject: VaR, Exposure, Capital and margin), its command on the right, and the Pivot stays under **Views**. Risk shows only the pages of engines running on a server of the cluster (an engine an administrator turns off in *Admin → Engines* leaves it, with its pages and help) and only those your role opens: a market-risk role sees VaR, FRTB-SA and SIMM, a credit-risk role Exposure and SIMM, an administrator every engine. The same rule holds on the command line: an engine's command words (`VAR`, `SMAT`, `SWIN`, `PLAY VAR`; `EXP`, `PLAY EXP`; `FRSA`, `PLAY FRTB`; `SIMM`, `PLAY SIMM`) are not offered in the type-ahead to a role that does not open the engine, and typing one says *VaR is not opened for your role; ask an administrator.* instead of running it. Help is not gated: every running engine's guide and tutorial stay open to everyone. Who opens which engine is its catalogue entry's `opens:` (`drishti-console/plugins/banking/engines.yaml`); the engines' switches and status are *Admin → Engines* only.
 
-**In an edition or a lens, its own subject menus.** Drishti Trading, Market and World put their subjects in the bar after **Views**, and leave out Build; Drishti Risk keeps Views, Risk, Counterparties, BI, Admin and Help. Drishti Trading's one **Markets** menu gathers every market-data screen a trader reads, a column per subject, and its bar has no BI or Admin menu (both by command):
+**In a distribution or a lens, the same five menus.** Every distribution draws **Views · Domains · Create · Admin · Help**; what differs is the columns of **Domains**, which come from the modules the distribution holds. Drishti Risk's Domains is named **Risk** (its one domain) with a column per engine running; Drishti Finance's Domains holds Blotter, Positions, Risk, Counterparties, Markets, Companies and Economies as columns; Drishti Genomics' is named **Genomics**. A lens or an edition only puts the columns it names first, in its order; it never takes a menu out of the bar. **Create** holds every designer and the BI tools, **Admin** is for administrators, and **Help** for everyone.
 
-| Edition or lens | Menus |
-|---|---|
-| Drishti Risk | Views · **Risk** · **Counterparties** · BI · Admin · Help |
-| Drishti Trading | Views · **Markets** (rates `CRV`, `REPO`, `FIX`; vols `IRV`, `CPV`, `FXV`; FX `FX`, `FXF`; credit `CDS`, `BND`; equities and commodities `EQ`, `EQX`, `CMD`, `CMDC`) · **Blotter** (`TRD`, `CTRD`, `PTRD`, `LTRD`) · **Positions** (`BOOK`, `DESK`, `TRDR`, `POS`) · **Risk** (*My VaR* `VAR`, `VLIM`, `TVAL`, `PNLV`, `DPNL`, `PNL`, `SENS`, and the engines' pages) · **Counterparties** (`CPTY`, `NSET`, `LIM`, `PREDEAL`, `EXP`) · Help. BI and Admin by command: `BI <GO>`, `ADMIN <GO>` (administrators; `ADMIN LOADS` opens that page) |
-| Drishti Market | Views · **Curves** (`CRV`, `REPO`, `FIX`, `INF`) · **Volatility** (`IRV`, `CPV`, `FXV`, `EQV`, `CMDV`) · **FX** (`FX`, `FXF`, `FXV`) · **Credit** (`CDS`, `BND`) · BI · Admin · Help |
-| Drishti World | Views · **Economies** (*A country* `ECON …`, `MACRO`, `FCST`, `REGE`) · **Markets** (`NEWS`, `QUOTE`, `IDX`) · **Companies** (`USEQ`, `EDGAR`, `LEIC`, `FUND`) · BI · Admin · Help |
+Each entry shows its command beside its name and runs it as if you had typed it, so a menu never holds anything the command line does not; an entry ending in `…` (*A counterparty*, *A country*) puts its words in the command line for you to type the id. An entry shows only when the edition keeps its command, and the VaR Playground and Backtesting entries only once those screens are on the server. Administrators set the menus in the edition's file ([LENSES.md](ADMIN_GUIDE.md#12-what-a-lens-is)).
 
-Each entry shows its command beside its name and runs it as if you had typed it, so a menu never holds anything the command line does not; an entry ending in `…` (*A counterparty*, *A country*) puts its words in the command line for you to type the id. An entry shows only when the edition keeps its command, and the VaR Playground and Backtesting entries only once those screens are on the server. With more than six menus in the bar they show as icons below 1750 pixels wide, so the command line keeps its room. Administrators set the menus in the edition's file ([LENSES.md](ADMIN_GUIDE.md#12-what-a-lens-is)).
+**On a phone** the same five menus stay in the bar as finger-sized buttons; **Domains** opens as a list with a heading per column, each entry with its command beside it ([On a phone](#on-a-phone)).
 
-**On a phone** the subject menus fold into one menu named after the edition (**Trading**, **Market**, **World**), first in the
-bar: a column per subject, each entry with its command beside it ([On a phone](#on-a-phone)).
-
-**BI and the `BI` keyword (alias `RUPAKA`).** Where your roles hold the `bi` power, a **BI** menu sits between **Views** and **Forms**, and the reserved command
+**BI and the `BI` keyword (alias `RUPAKA`).** Where your roles hold the `bi` power, BI sits in the **Create** menu, and the reserved command
 word `BI` goes there from the command line, in any case: `BI <GO>` the Build home (BI's own home, `/bi`, is folded into it), `BI WORKSPACE <GO>` your personal workspace, `BI CATALOGUE <GO>` the
 catalogue, `BI SETTINGS <GO>` the BI settings (administrators with `bi-admin`), `BI <report-or-board> <GO>` a published item by id or title (a **report opens drawn**, with its slicers, drill-down and drill-through; type-ahead completes after `BI `; `RUPAKA` still works as an alias). Without the power the menu is not there and `BI <GO>`
 says what is missing. No pack can define a mnemonic named `BI`, `RUPAKA`, `FORM`, `FUNC`, `WHAT`, `DATAMAP` or `DATA`. The BI page, its keys (`/`, `g h`, `g c`, `g w`, `?`) and what it can and cannot do yet:
-[REPORTS_GUIDE.md](REPORTS_GUIDE.md). **Using a report:** click a bar and the page filters to it, the buttons in a visual's header drill down, drill through to another page, show the rows behind it or open a trade in the terminal, and a slicer filters
-what it can reach ([REPORTS_GUIDE.md](REPORTS_GUIDE.md) section 14); **building one:** *Designer* in the BI rail, drag fields onto the canvas in BI Studio, with its Explorer, tabs and Problems and Query dock ([REPORTS_GUIDE.md](REPORTS_GUIDE.md) sections 15 and 26, [tutorial 8, Part A](../tutorials/08-reports-and-dashboards.md#part-a--your-first-bi-report)); the YAML reference is [REPORTS_GUIDE.md](REPORTS_GUIDE.md#9-the-report-file-pages-visuals-filters-and-slicers). The BI rail also opens *Analyse*, *Transforms* (Python data prep step by step) and the *Python console*.
+[README.md](bi/README.md). **Using a report:** click a bar and the page filters to it, the buttons in a visual's header drill down, drill through to another page, show the rows behind it or open a trade in the terminal, and a slicer filters
+what it can reach ([README.md](bi/README.md) section 14); **building one:** *Designer* in the BI rail, drag fields onto the canvas in BI Studio, with its Explorer, tabs and Problems and Query dock ([README.md](bi/README.md) sections 15 and 26, [the reports tutorial, Part A](bi/REPORTS.md#part-a--your-first-bi-report)); the YAML reference is [REPORT_FILE_FORMAT_STATEMENTS.md](bi/REPORT_FILE_FORMAT_STATEMENTS.md#1-the-report-file-pages-visuals-filters-and-slicers). The BI rail also opens *Analyse*, *Transforms* (Python data prep step by step) and the *Python console*.
 
 **In a report:** a **parameter slicer** may switch *which* field or measure a visual draws (a field parameter: the chart breaks down
-by desk, then by portfolio; it shows MTM, then notional), and the choice is yours alone, as any slicer's ([REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 21](REPORTS_GUIDE.md#11-field-parameters)).
+by desk, then by portfolio; it shows MTM, then notional), and the choice is yours alone, as any slicer's ([REPORT_FILE_FORMAT_STATEMENTS.md › Reports: the YAML, the visuals and how they behave, section 21](bi/REPORT_FILE_FORMAT_STATEMENTS.md#3-field-parameters)).
 A report may also have **statement pages**: paper, page by page, with a header and footer, page numbers and a period, downloaded as PDF or
 Excel made as you (your masks and row rules), and sent by a subscription as one statement per recipient; the reference is
-[REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](REPORTS_GUIDE.md#12-statements-paginated-reports-page-exact-one-per-reader), the walk-through [tutorial 8, Part C](../tutorials/08-reports-and-dashboards.md#part-c--statements-and-field-parameters).
+[REPORT_FILE_FORMAT_STATEMENTS.md › Reports: the YAML, the visuals and how they behave, section 24](bi/REPORT_FILE_FORMAT_STATEMENTS.md#4-statements-paginated-reports-page-exact-one-per-reader), the walk-through [the reports tutorial, Part C](bi/REPORT_FILE_FORMAT_STATEMENTS.md#part-c--statements-and-field-parameters).
 
 **On the right:** round tools, from left to right.
 
 | Tool | Looks like | What it does |
 |---|---|---|
 | Live | the round button right of the theme switcher | Your choice and this page's stream in one: green while live (glowing while ticks arrive, an amber ring while it reconnects, steady on a page without a stream), red with pause bars while paused or on a picked date. Hover to read both, for example *Live updates on — click to pause · Live, built 1.92 ms*. A click switches ([Business dates](#business-dates-live-or-a-day-in-the-past)) |
-| Alerts | a bell | Opens `/alerts`. A number on the bell counts alerts you have not seen ([Alerts](#alerts)), and BI runs that finished, failed or were started again (`BI RUNS <GO>` lists them: [REPORTS_GUIDE.md section 28](REPORTS_GUIDE.md#15-background-runs-long-bi-questions)) |
+| Alerts | a bell | Opens `/alerts`. A number on the bell counts alerts you have not seen ([Alerts](#alerts)), and BI runs that finished, failed or were started again (`BI RUNS <GO>` lists them: [LIVE_REPORTS_AND_BOARDS.md section 28](bi/LIVE_REPORTS_AND_BOARDS.md#3-background-runs-long-bi-questions)) |
 | Packs | a box with a number | Appears when you may use more than one pack. The number is how many you have switched on; hover to read their names ([Domain packs](#domain-packs-choosing-what-you-see)) |
 | Theme | a palette | Ten themes ([Themes](#themes)) |
 | You | a round avatar with your initial and name | A menu: your name, desk and roles, a clock in your time zone (`NY` by default), **My account**, **Settings**, and **Sign out** when sign-in is on (when it is off, the menu says *Sign-in is off on this server* and links to how to turn it on) |
@@ -221,7 +224,7 @@ If you do not see **Admin**, your account has no admin role; ask an administrato
 
 ## The Build home: everything you build in one place
 
-**Build → Build home** (`/build`) is the one place for everything you may build. The left rail lists every kind, grouped, each with
+**Create → Build home** (`/build`) is the one place for everything you may build. The left rail lists every kind, grouped, each with
 how many you may see:
 
 | Group | Kinds |
@@ -355,7 +358,7 @@ numbers came from (open in memory, read from the lake by id, the official captur
 values says why in its column header (`DRS-5203`, refused) and never shows zeros. **Export CSV · Arrow** downloads the whole matrix. A
 **Scenario matrix** link opens it from a trade, a position, a P&L vector (`PNLV`), a scenario PV (`SPV`) and the VaR page; on a phone it
 is the selected scenario's line and its tail count. It is part of Drishti Risk and Drishti Trading
-([VAR_GUIDE.md section 3.9](VAR_GUIDE.md#39-the-scenario-matrix-smat); [tutorial 2, step 16](../tutorials/02-var-from-the-bank-to-a-trade.md#step-16--the-scenario-matrix-scenarios-across-the-days)).
+([VAR_GUIDE.md section 3.9](VAR_GUIDE.md#39-the-scenario-matrix-smat); [the VaR tutorial, step 16](VAR_GUIDE.md#step-16--the-scenario-matrix-scenarios-across-the-days)).
 
 **The VaR Playground.** `PLAY VAR <scope> <GO>` (`PLAY VAR DESK RATES`, `PLAY VAR BANK 10D SUM`, `PLAY VAR POS-10442 T-1001` for a few
 positions or trades), or **Playground** on the VaR page, works the scope's VaR out cell by cell: a spreadsheet-like grid of each
@@ -366,7 +369,7 @@ At most 500 positions are shown; a larger scope keeps the 500 largest by |compon
 column, so its VaR is still the VaR page's. **Export to Excel** downloads the same calculation as a workbook of real formulas (100, 500,
 1,000, 10,000 or All positions, each choice's size, recalculation time and applications stated first) whose **ALL CHECKS PASS** band
 says it equals the engine to the cent. On a phone: the headline and the explanation. Part of Drishti Risk and Drishti Trading
-([VAR_GUIDE.md section 3.10](VAR_GUIDE.md#310-the-var-playground-play-var); [tutorial 2, step 18](../tutorials/02-var-from-the-bank-to-a-trade.md#step-18--work-the-var-out-by-hand-the-var-playground)).
+([VAR_GUIDE.md section 3.10](VAR_GUIDE.md#310-the-var-playground-play-var); [the VaR tutorial, step 18](VAR_GUIDE.md#step-18--work-the-var-out-by-hand-the-var-playground)).
 
 **The VaR page's layout.** The hierarchy tree is on the left (click **▸** to open a node, its name to see its VaR); the toolbar above
 the figures has two searchable drop-downs, **System baskets** (key **B**: the bank's own, kept in Drishti) and **My baskets** (key **M**: the
@@ -440,7 +443,7 @@ their name. They work in any case, and each has type-ahead.
 | `DATAMAP <GO>` | the [data map](#the-data-map), `/datamap`: every kind of data your packs hold, how much of it there is, and how the kinds join | `DATAMAP trade <GO>` opens it on one kind (its name, mnemonic or label: `DATAMAP CPTY`), `DATAMAP organisation` or `DATAMAP counterparty-risk` on one domain; other words fill its Find box |
 | `EXPORT <GO>` | the [Export data](#export-data), `/data`: every dataset you may open, its format and the dates it holds; download a day as `.jsonl.gz` | `EXPORT trade-valuation 2026-09-30 <GO>` opens it on a dataset (its kind or its command: `EXPORT TVAL`) and a date; other words fill its Filter box |
 | `FORM <GO>` | the forms home, `/forms` | `FORM trading <GO>` opens the trading pack's search form, `FORM trading trade <GO>` its form for trades ([Search with a form](#search-with-a-form-form-pack)) |
-| `BI <GO>` | the Build home, `/build` (`/bi` opens it too; only with the `bi` power; otherwise the terminal says what is missing) | `BI WORKSPACE`, `BI CATALOGUE`, `BI SETTINGS`, `BI <report-or-board>` ([REPORTS_GUIDE.md](REPORTS_GUIDE.md)) |
+| `BI <GO>` | the Build home, `/build` (`/bi` opens it too; only with the `bi` power; otherwise the terminal says what is missing) | `BI WORKSPACE`, `BI CATALOGUE`, `BI SETTINGS`, `BI <report-or-board>` ([README.md](bi/README.md)) |
 | `RUPAKA <GO>` | the same as `BI`, the older name | everything that works after `BI` works after `RUPAKA` |
 
 A pack's code typed alone (`MKT <GO>`) opens that pack's overview ([A pack at a glance](#a-pack-at-a-glance)). Anything else
@@ -458,7 +461,7 @@ term, draws how the kinds connect (with their id conventions), works an example 
 ask your data, and clears up the common confusions (VaR against ES, why PFE does not add up, why posted collateral raises exposure).
 The [Knowledge home](../knowledge/README.md) lists every term A to Z.
 
-Reach it three ways: `WHAT <GO>` (or `WHAT <term> <GO>` for one entry), **Build → Learn → Knowledge** or **Help → Knowledge**, and
+Reach it three ways: `WHAT <GO>` (or `WHAT <term> <GO>` for one entry), **Create → Learn → Knowledge** or **Help → Knowledge**, and
 the **What does this mean?** link on a data page: the VaR explorer, `VRES` and `DESK` open Market risk; `CPTY`, `NSET`, `CSA` and the
 exposure explorer open Counterparty credit risk. F1 and **?** open the page's help.
 
@@ -481,7 +484,7 @@ Details: [EXPOSURE_GUIDE.md section 7](EXPOSURE_GUIDE.md#7-pre-deal-what-if) and
 date, and how the kinds join. Nothing on it is drawn by hand; it is inferred each time from what is loaded:
 
 - **Domains and kinds** come from the packs switched on for you: each pack's kinds, titled by their data contracts
-  (`config/packs/<domain>/<pack>/contracts/<kind>.contract.yaml`). A kind whose contract says `class: computed` (VaR and ES, EE and PFE, the
+  (`modules/<module>/packs/<pack>/contracts/<kind>.contract.yaml`). A kind whose contract says `class: computed` (VaR and ES, EE and PFE, the
   what-ifs) is drawn as a **diamond** (a stored kind is a square): it is computed on demand and never stored, so it has no count.
 - **Joins** are what the contracts declare: their `links:`, their fields' `link:` and the fields a pack's `graph.fields` names (the
   trade's `COUNTERPARTY` → counterparty, `PORTFOLIO` → book, `TRADER_ID` → trader; the P&L vector's and the exposure paths' `TRADE_ID`
@@ -717,6 +720,23 @@ A *Title* column appears only when titles say more than the id.
    `TRD PRODUCT_TYPE=FX_QUANTO order by QUANTITY desc`. Press **Search**: the largest quantity is now first (`CLY-4000384`, 1,212,505,000).
 5. **CSV** downloads the list; **Watch as a monitor** turns its first 50 rows into a live watchlist
    ([Monitors](#monitors)).
+
+## Results everywhere behave the same
+
+Every table of records of the console is one grid, whichever page it is on: the result of **Search with a form** and of a search (`TRD where ...`),
+a kind's own list (`POS <GO>`, `TRD`, `NEWS`), a monitor, the rows behind a Pivot cell, the day's blotter on the trading Home, a dataset's or
+transform's preview in BI and the answer of an AI question. In all of them you can:
+
+- **open a row** to see it in the panel beside the grid: *Record* (its fields, read-only unless your role may edit and the site allows it), *History*
+  (for a set of records) and **Raw JSON** (the whole record, collapsible, with Copy; masked values stay masked);
+- **sort and filter** from the column headings, **group** from *Group by*, and send the same rows, filters and grouping to the Pivot with **Pivot ›**;
+- **Chart** the rows you hold in the one chart dialog;
+- see the rows **tick** when the kind is live (the chip says LIVE), and **Pause** them when you want to read.
+
+Two kinds of result differ only in what they cannot do. A *set of records* (a search, a kind's list, a blotter) can tick and has an **Open** link to each
+record's page. A *result without a record key* (an SQL answer, a preview, the rows behind a cell, a monitor) is **static**: the chip says STATIC, there is
+no Pause and no Pivot ›, and the panel's last tab is **JSON**, the row as it is. A list of many records (`POS <GO>`) shows a page at a time; use the
+pager under the grid, and the grid sorts and filters the page.
 
 ## Tables: sorting, filtering, paging and the keyboard
 
@@ -1206,7 +1226,7 @@ are the reference. If it cannot be reached the box says "Ask is unavailable"; ev
 
 ### Ask the data, explain a number, describe a report (BI, when your administrator has turned AI on)
 
-In BI ([REPORTS_GUIDE.md section 29](REPORTS_GUIDE.md#16-ai-in-bi-report-from-words-ask-the-data-explain-this-number)), a report page shows a box **Ask the data**: type "notional by desk" and you get a table, a chart that suits it and the query that was asked, answered from
+In BI ([GOVERNANCE_AND_AI.md section 29](bi/GOVERNANCE_AND_AI.md#1-ai-in-bi-report-from-words-ask-the-data-explain-this-number)), a report page shows a box **Ask the data**: type "notional by desk" and you get a table, a chart that suits it and the query that was asked, answered from
 what *you* may see (the same rows and masks as the report). The light bulb in a visual's header **explains** its number: where it comes from and what it is made of. In the designer,
 **Describe a report** drafts a report from your words; you read it, use it and save it, or not. These are off unless your administrator switched them on; if you do not see the box and the bulb, they are off.
 
@@ -1352,7 +1372,7 @@ If your role may author Sutras, the bar has **Promote to Sutra…**. It saves yo
 - a tick box, **Remove the panels I hid from the Sutra**. Unticked, hidden panels stay in the Sutra for everyone else.
 
 Write a note for the reviewer and press **Submit for review**. As with a save from the workbench, the new version is a
-**proposal**: an approver opens it in *Build → Reviews* (the review shows the diff against the version before), and it
+**proposal**: an approver opens it in *Views → Approvals* (the review shows the diff against the version before), and it
 goes live only when approved. A panel your layout moved is listed in words, for example *moved: DV01 by tenor (USD)
 from position 3 to 1 (side → main)*, and the line diff below it holds only the real edits (a width, a height, a
 removed panel); the full line diff, where a move reads as a deleted block and an added one, is behind **Full line
@@ -1404,7 +1424,7 @@ Newer screens (every pack screen is built from the same parts) can do more than 
   the booking system's value, or an amendment sent to it); who approves (never you); what it recomputes; and the reason. After **Confirm**
   the sheet follows it: waiting for an approver, applied (everyone viewing the trade sees the new value at once, *How this view was built*
   says *Edited here*), or conflicted if the trade moved since you opened it (your draft is kept). Approvers decide in the **Approvals** queue
-  (Build → Govern → Changes). Someone else's change to the record you are viewing shows *Changed by … just now*.
+  (Views → Approvals, Admin → Record edits). Someone else's change to the record you are viewing shows *Changed by … just now*.
   The reference is [APPROVALS_GUIDE.md section 4a](APPROVALS_GUIDE.md#4-submitting-a-change); a walk-through is
   [tutorial 11](../tutorials/11-correct-and-approve.md).
 - **Screens laid out on a grid.** A screen with named areas may have a split you drag (its position kept for you), areas shown as
@@ -1468,7 +1488,7 @@ work only while the focus is inside the element ([Drishti Elements, keyboard](EM
 ## Pivot: slice a table your way
 
 A table or ladder whose Sutra says `pivot:`, and the results of a search whose kind's pack says `pivot:`, carry a **Pivot** button. It opens
-the **pivot screen** (`PIVOT <GO>`; [PIVOT_GUIDE.md](PIVOT_GUIDE.md), [tutorial 7, Part A](../tutorials/07-pivot-cubes-and-explain.md#part-a--the-pivot-engine-trades-by-product-legs-by-desk-then-var-by-desk)) on the table's own
+the **pivot screen** (`PIVOT <GO>`; [PIVOT.md](bi/PIVOT.md), [the pivot tutorial, Part A](bi/PIVOT.md#part-a--the-pivot-engine-trades-by-product-legs-by-desk-then-var-by-desk)) on the table's own
 rows (the same document, Sutra and business date as the page) or on every row of the kind, with the Sutra's or the pack's arrangement as the
 view it opens with. It opens as the **View** picker in front of one compact line (Rows, Columns, Filters and Values, a picker behind each; a
 hierarchy is one chip with a level stepper), with the Fields and Build panes behind **Customize ›** (`\`). Everything is computed by the
@@ -1478,7 +1498,7 @@ the provenance of every cell and its rows, a chart of a selection, Excel with ou
 and Arrow.
 
 **One analysis path: the Pivot, then a report.** The Pivot is the one grid for slicing: the risk cubes are its **presets** (the MR cube,
-`MCUBE`, and the CCR cube, `CCUBE`; [PIVOT_GUIDE.md section 28](PIVOT_GUIDE.md#28-presets-the-risk-cubes)), and a figure for other people is a
+`MCUBE`, and the CCR cube, `CCUBE`; [PIVOT_SCALE_AND_CUBES.md section 28](bi/PIVOT_SCALE_AND_CUBES.md#6-presets-the-risk-cubes)), and a figure for other people is a
 BI report. Code over a model is the [Notebook](#the-notebook).
 
 | What | How |
@@ -1492,7 +1512,7 @@ BI report. Code over a model is the [Notebook](#the-notebook).
 ## Tables and models: the editors
 
 **Build › Tables & models** (`/build/tables`, also on BI's rail) edits the definitions every reader shares: virtual tables, semantic models
-and Python-driven tables ([TABLES_GUIDE.md section 11](TABLES_GUIDE.md#11-the-editors)). Three panes: the objects with a search; the editor
+and Python-driven tables ([TABLES_AND_MODELS.md section 11](bi/TABLES_AND_MODELS.md#11-the-editors)). Three panes: the objects with a search; the editor
 with its **live YAML** below it (a change on either side shows on the other, the line you edit highlighted, a problem marked at its line);
 and a **preview read as you** with its checks and totals. **Visual**, **YAML** or **Both** is remembered for you. **+ New** walks you through
 a table, a model or a Python-driven table in plain steps. **Save draft** keeps your work private to your workspace; **Propose for review**
@@ -1542,11 +1562,7 @@ quick links wait under *More*.
 
 ![The end of the same Home in the light theme: a table at a glance with Show all, the quick links under More on this page](img/phone/07-landing-more-light.png)
 
-**The lens menu.** In Drishti Trading, Market or World the subject menus (Markets, Blotter, Positions, Risk, Counterparties; Curves, Volatility;
-...) fold into one menu named after the edition, first in the bar. It opens as a list with a heading per subject; each entry runs its
-command as on a desktop, and an entry ending in `…` puts its words in the command line for you to finish.
-
-**The Risk menu on a phone** folds into the lens menu with the other subject menus (44 px rows, the command on the right).
+**The Domains menu on a phone** opens as a list with a heading per column (Blotter, Risk, Markets ...); each entry runs its command as on a desktop (44 px rows, the command on the right), and an entry ending in `…` puts its words in the command line for you to finish.
 
 **Who decides.** Every tier is configured, never coded: a panel kind has a default (tables and charts at a glance, provenance and notes
 under *More*, pivot grids on the desktop), a screen's author sets each panel's tier in its Sutra
@@ -1591,7 +1607,7 @@ editor: typing `?` or `n` there types it (the few exceptions are named in the ta
 | `Alt+S` | Share this view (or panel) with people with a note; `Ctrl+Enter` sends, `Esc` closes |
 | `Alt+N` | Discussion: the second tab of the side drawer ([Discussion](#discussion)) |
 | `Alt+I` | Your inbox: what people sent you |
-| `R` `C` `V` `F` | On the [pivot screen](#pivot-slice-a-table-your-way): open the Rows, Columns, Values or Filters picker; `Shift+V` the View picker; `Alt+↑` `Alt+↓` a hierarchy a level up or down; `\` the panes ([all its keys](PIVOT_GUIDE.md#2-the-screen)) |
+| `R` `C` `V` `F` | On the [pivot screen](#pivot-slice-a-table-your-way): open the Rows, Columns, Values or Filters picker; `Shift+V` the View picker; `Alt+↑` `Alt+↓` a hierarchy a level up or down; `\` the panes ([all its keys](bi/PIVOT.md#2-the-screen)) |
 | `Ctrl+Enter` | In Calc: run the code (`Cmd+Enter` on a Mac) |
 | `Alt+1`…`Alt+4` | In a workspace: move to pane 1 to 4, also while the focus is inside a pane |
 | `Alt+0` | In a workspace: from a pane back to the workspace's bar |
@@ -1842,7 +1858,7 @@ exposure page's tiles, a cell of the MR cube. Numbers that can be explained are 
   - **Workbook**: the live-formula Excel (the explanation's workbook, the playground's export) where one exists.
   Under the tabs, the **checks** (inputs complete; a check not built yet is marked *Under construction*). **Esc** or **✕** closes it and
   the focus goes back to the number. On a phone the drawer is a sheet from the bottom.
-- **The page.** **Open as a page ›** shows all four parts at once, for an auditor or for printing (**Print**); its address names the
+- **The page.** **Open as a page ›** (a button in the drawer's header, beside the title; it carries the scope, dates, compare date and tab) shows all four parts at once, for an auditor or for printing (**Print**); its address names the
   number (`/explain?kind=var&measure=es&scope=DESK:RATES`), so it can be sent. `VAR EXPLAIN <scope> [from] [to]` opens it at Why it moved.
 
 Everything is computed and explained by the server for you, with your entitlements: an explanation never shows a row or an input you may
@@ -2022,7 +2038,7 @@ The buttons in a view's title line, and the **↓** in each panel header.
 |---|---|---|
 | Panel as CSV or JSON Lines | **↓** in a panel header, then **CSV** or **JSON Lines** | Tables and ladders as they are; key/value panels as field and value; charts as one column per series; surfaces as a grid; bars as label and value |
 | Search as CSV or JSON Lines | **CSV**, **JSONL** on the results page (and on a form's results) | One row per result |
-| Pivot as Excel, CSV or Arrow | **Export** (`X`) on the [pivot screen](#pivot-slice-a-table-your-way) | The pivot as shown with Excel's own outline levels, SUM formulas only where a figure adds up and a Provenance sheet; CSV one row per cell and measure, or the grid; the cell's rows; the view as YAML (PIVOT_GUIDE.md section 10) |
+| Pivot as Excel, CSV or Arrow | **Export** (`X`) on the [pivot screen](#pivot-slice-a-table-your-way) | The pivot as shown with Excel's own outline levels, SUM formulas only where a figure adds up and a Provenance sheet; CSV one row per cell and measure, or the grid; the cell's rows; the view as YAML (bi/README.md section 10) |
 | Comparison as CSV or JSON Lines | **CSV** on the Compare page; the same address ending `.jsonl` | One row per change |
 | View as PDF, PNG, Excel, CSV or JSON Lines | **Export** in the title line | The view as you see it, with the controls and filters you set |
 
@@ -2133,7 +2149,8 @@ now: a row about a view you can no longer open reads "(no access)" with no excer
 ## Monitors
 
 A monitor is a **live watchlist**: one row per entity, each row showing that entity's key figures (its
-strip) as they tick. Rows can be of different kinds.
+strip) as they tick. Rows can be of different kinds. It is the records grid in its static mode: the cells change in place as the stream
+sends figures; open a row for *Open*, *Set an alert* and *Remove from the monitor*.
 
 *Views → Monitors* in the top bar (`/m`) lists *Yours* and the *Starters* the packs offer. Opening a starter
 saves a copy to your account. (None of the shipped packs offers a starter, so start from a search; the retired example packs
@@ -2146,7 +2163,7 @@ one live connection.
 
 ## Scheduled reports
 
-A report is a search that runs on its own, on a schedule, and delivers its result as a CSV or JSON Lines file (**Format**); **Reports** in the Views menu lists them with your subscriptions. Export and subscriptions are in the same place. The reference is [REPORTS_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 0](REPORTS_GUIDE.md#181-the-reports-page-and-scheduled-searches); the walk-through is [tutorial 8, Part E](../tutorials/08-reports-and-dashboards.md#part-e--scheduled-searches-and-subscriptions).
+A report is a search that runs on its own, on a schedule, and delivers its result as a CSV or JSON Lines file (**Format**); **Reports** in the Views menu lists them with your subscriptions. Export and subscriptions are in the same place. The reference is [DISTRIBUTION_AND_ALERTS.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 0](bi/DISTRIBUTION_AND_ALERTS.md#11-the-reports-page-and-scheduled-searches); the walk-through is [the reports tutorial, Part E](bi/DISTRIBUTION_AND_ALERTS.md#part-e--scheduled-searches-and-subscriptions).
 
 ## Alerts
 
@@ -2225,7 +2242,7 @@ after a data load, or when it changes), and how to tell you: your **inbox** and 
 inside the limit (by the *hysteresis* you set, if any) and does not fire again within the *cooldown* (30 minutes by default). Your rules are on the **Alerts** page (also **Reports**, *My alerts*): *Look now*, *Pause*, *Resume*,
 *Edit and history* (what every look did, and what was sent where) and *Delete*; what they raised is under *Raised for you* and in the
 **Alerts** tab of your inbox. If a board's author has made a tile notify, you are told when it turns red, on your own number.
-Reference: [REPORTS_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 4](REPORTS_GUIDE.md#19-alerts-on-numbers); walk-through: [tutorial 8, Part D](../tutorials/08-reports-and-dashboards.md#part-d--bi-that-runs-itself).
+Reference: [DISTRIBUTION_AND_ALERTS.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 4](bi/DISTRIBUTION_AND_ALERTS.md#2-alerts-on-numbers); walk-through: [the reports tutorial, Part D](bi/DISTRIBUTION_AND_ALERTS.md#part-d--bi-that-runs-itself).
 
 ## Workspaces
 
@@ -2434,7 +2451,7 @@ button from the accent instead (the accent buttons' gradient runs from `--d-fill
 `--d-*` values itself ([EMBED_GUIDE.md](EMBED_GUIDE.md#5-the-elements-one-by-one)) should keep the same rule.
 
 These are the console's themes. A BI report has a theme of its own (the shipped *Corporate* and *Print*, or one made in the
-theme designer), chosen by its author in BI Studio: [REPORTS_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 5.2](REPORTS_GUIDE.md#103-themes).
+theme designer), chosen by its author in BI Studio: [REPORT_FILE_FORMAT_STATEMENTS.md › Reports: the YAML, the visuals and how they behave, section 5.2](bi/REPORT_FILE_FORMAT_STATEMENTS.md#23-themes).
 
 ## Domain packs: choosing what you see
 
@@ -2467,7 +2484,7 @@ are switched on for everyone ([Admin → Packs](#admin--packs-switching-a-pack-o
 
 A **Sutra** is a layout: one YAML file (`<name>.v<N>.sutra.yaml`) that starts with `rachana: 1`, the version of
 the layout language, followed by the layout. It may say what it is for in `description:` and carry longer notes for
-reviewers in `notes:`; neither changes the screen. The **workbench** (*Build → New screen*, then the design's page) is
+reviewers in `notes:`; neither changes the screen. The **workbench** (*Create → New screen*, then the design's page) is
 where you change one; it replaces the old Sutra Studio page, whose addresses (`/studio`, `/studio?sutra=…`) still work and
 send you to the equivalent workbench screen. The [screen designer guide](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench) goes through it with a
 picture of every step; this is the short version.
@@ -2478,10 +2495,10 @@ server, `DRISHTI_STUDIO_SAVE=true`); without it **Save** is dimmed and says "Des
 a *stored* entity, and any panel that reads another entity with `source:`, still follow the kinds your roles open: a panel whose source you may not open shows
 "no access to <kind>" instead of its data.
 
-A design is yours and is kept by the server (**Build → Build home → My drafts**). To start one:
+A design is yours and is kept by the server (**Create → Build home → My drafts**). To start one:
 
-- **Build → New screen**: bring JSON files, a schema or stored entities, and let auto-design draft a first screen;
-- **Build → Examples**: each example opens as your own copy;
+- **Create → New screen**: bring JSON files, a schema or stored entities, and let auto-design draft a first screen;
+- **Create → Examples**: each example opens as your own copy;
 - an existing Sutra: *New screen → an existing Sutra* (the design then edits a copy, with that Sutra as its base).
 
 The workbench has:
@@ -2492,11 +2509,11 @@ The workbench has:
 - **File** (open a `.yaml` or `.json` from your computer, or an example), **Save** or **Submit for review**, **Commands** (Ctrl+K), and Undo and Redo.
 
 The keys Studio had are still there: `Ctrl+S` saves (or says why not), `Ctrl+Enter` previews. `Ctrl+K` opens a command palette.
-Plain `/studio` opens a scratch design on the showcase example; use **Build → New screen** for your own data.
+Plain `/studio` opens a scratch design on the showcase example; use **Create → New screen** for your own data.
 
 Worked example: add a one-day P&L figure to the swap's strip.
 
-1. Choose *irs-fixfloat@1* under **Build → New screen → an existing Sutra** (or open `/studio?sutra=irs-fixfloat@1&kind=trade&id=MX-20000001`) and add
+1. Choose *irs-fixfloat@1* under **Create → New screen → an existing Sutra** (or open `/studio?sutra=irs-fixfloat@1&kind=trade&id=MX-20000001`) and add
    `MX-20000001` as a stored entity). The YAML tab shows the Sutra; the preview shows `MX-20000001`. The entities you had kept as that Sutra's test entities in
    Studio are already among the samples.
 2. Near the top, under `rachana: 1` and `sutra: irs-fixfloat`, change `version: 1` to `version: 2`.
@@ -2558,7 +2575,7 @@ between them without the menu.
 | Data loads | `/admin/loads` | What your ETL announced, what is due and what is late ([DATA_GUIDE.md](DATA_GUIDE.md#1-telling-drishti-new-data-has-landed)); its **Inbox** tab (`/admin/loads/inbox`, while the data inbox runs) is the inbox's status board: files waiting, the run loading table by table, the last cycles, failures with **Retry**, and **Load now** ([DATA_LAKE_GUIDE.md section 3.1](DATA_LAKE_GUIDE.md#31-the-data-inbox)) |
 | Collaboration | `/admin/collab` | Moderation of shares and threads, legal holds, export, the mail outbox and chat bridges ([ARCHITECTURE.md §31](../architecture/ARCHITECTURE.md#31-collaboration-write-back-and-approvals)) |
 | Embedding | `/admin/embedding` | Host applications that show Drishti views in their own pages ([EMBED_GUIDE.md](../architecture/ARCHITECTURE.md#30-the-client-renderer-and-drishti-elements)) |
-| BI | `/admin/bi` | Powers per role and who creates workspaces (needs `bi-admin`; [REPORTS_GUIDE.md](REPORTS_GUIDE.md)) |
+| BI | `/admin/bi` | Powers per role and who creates workspaces (needs `bi-admin`; [README.md](bi/README.md)) |
 | Ad-hoc scopes | `/admin/scopes` | Every person's saved VaR baskets (owner, name, scope, shared with, dates, size), filtered by owner; **Delete** any of them with an optional reason, audited and told to the owner ([OPERATIONS_GUIDE.md section 9b-2](OPERATIONS_GUIDE.md#126-deleting-peoples-var-baskets)) |
 | Audit log | `/admin/audit` | Sign-ins, failures, lockouts, user, role and pack changes, Sutra proposals and approvals, cache purges |
 | Health | `/admin/health` | Every connector and pack: up or down, reads, timings. Refreshes every 5 seconds |
@@ -2586,7 +2603,7 @@ every role with its kinds (or *every kind*), its powers, how many users hold it,
 | approve Sutras | approve proposed Sutras in Reviews |
 | administer | use every admin page |
 | Calc | use Calc (`Alt+C`): Python in the browser on what the role opens ([section 9](#9-roles-who-may-use-calc)) |
-| BI (`bi`, `bi-author`, `bi-steward`, `bi-admin`) | four powers for Rūpaka, granted on roles ([REPORTS_GUIDE.md](REPORTS_GUIDE.md#3-who-may-do-what-the-four-powers), [ADMIN_GUIDE.md](ADMIN_GUIDE.md#34-bi-powers-rupaka)); the Roles form above lists only the first six powers |
+| BI (`bi`, `bi-author`, `bi-steward`, `bi-admin`) | four powers for Rūpaka, granted on roles ([REPORTS.md](bi/REPORTS.md#3-who-may-do-what-the-four-powers), [ADMIN_GUIDE.md](ADMIN_GUIDE.md#34-bi-powers-rupaka)); the Roles form above lists only the first six powers |
 | layouts | use [layout mode](#layout-mode-arrange-a-view-your-way) (`Alt+L`) and keep personal layouts. On for every role unless unticked; the built-in `viewer` role does not have it |
 
 There is no power for [Pivot](#pivot-slice-a-table-your-way): anyone who may open a kind may arrange and save its pivots, as they
@@ -2793,16 +2810,16 @@ FORM trading <GO>
 
 Type-ahead helps: `FORM tra` completes to `FORM trading`, and after a space it lists the kinds you may open in that pack
 (`FORM trading trade`). Only the packs and kinds you may open are offered. A pack with several kinds shows a row of them under its title;
-pick one to switch forms. `FORM <GO>` alone, or the **Forms** icon in the top bar, opens the forms home.
+pick one to switch forms. `FORM <GO>` alone, or **Forms** in the Views menu, opens the forms home.
 
 ### The forms home
 
-`/forms` (the **Forms** icon in the top bar, then *All forms*; or `FORM <GO>`) lists every pack that is switched on for you and declares a
+`/forms` (**Forms** in the Views menu; or `FORM <GO>`) lists every pack that is switched on for you and declares a
 `form:` section, each with its description and its kinds as links to `/form/<pack>?kind=<kind>` with the number of fields the form has. Only
 what you may open is listed: the server leaves out kinds your roles cannot open and packs hidden by the sample-content policy. The
 **filter box** (focused when you arrive, except on a phone) narrows packs and kinds as you type; `Esc` clears it. **Recent forms** are the
 last eight forms you opened in this browser (kept in browser storage, per person); **Your saved searches** are the searches you saved from forms.
-In the top bar the **Forms** icon is lit on `/forms` and on any form. The old address `/form` leads here.
+In the top bar **Views** is lit on `/forms` and on any form. The old address `/form` leads here.
 
 ![The trading pack's form for trades: a pasted id pattern, tick boxes, a dropdown of many values with two ticked, an amount, a relative date and the Search button](img/form/01-form.jpg)
 
@@ -2842,6 +2859,12 @@ It matches 3,398 of the 15,000 trades of the three source systems; the table sho
 On a business date the sources hold no data for (a date not loaded yet, or before the first), the page does not just say "Nothing
 matches": it says no trade data is loaded for that date, names the newest date that has data, and **Search on** that date runs the
 same search there (the business date changes for the session, as in the top bar). The same note shows on the search page.
+
+**The results are a live result set.** Where the kind has a live binding (trades from Kafka, news from its feed) and the business date is
+today's, the table ticks: a record that changes is updated in place, a new match comes in, one that no longer matches leaves, and **Live**
+shows beside the time it took. On another business date, or for a kind without a live binding, the results are as they were when you
+pressed **Search**; pressing it again reads them afresh. The search page's results (`TRD where ...`) work the same way, and a mnemonic on its
+own (`POS <GO>`, `TRD <GO>`) opens every record of the kind, a page at a time, with **Previous** and **Next** under the table.
 
 **Copy** puts it on the clipboard (paste it into the command line or the search box); **Edit as text** opens it in the search box. The table is the
 console's table: sort by a heading, filter each column with its funnel ([Filter a table like Excel](#filter-a-table-like-excel)), page and walk it by keyboard. The key
@@ -2922,7 +2945,7 @@ strip, the tables, searches and columns alike.
 | A figure everyone sees on a view, every time | a panel in the kind's Sutra ([Sutra developer guide](BUILD_GUIDE.md#11-what-a-sutra-is-and-when-one-applies)): computed on the server, cached, live |
 | Find entities by value (`TRD where mtm > 1m`) | [search](#search-by-value), on the command line |
 | Be told when a figure crosses a line | an [alert](#alerts): the server checks it on every change |
-| The same search as a file every morning | a [scheduled report](REPORTS_GUIDE.md#181-the-reports-page-and-scheduled-searches) |
+| The same search as a file every morning | a [scheduled report](bi/DISTRIBUTION_AND_ALERTS.md#11-the-reports-page-and-scheduled-searches) |
 | A long notebook, a model you keep in git, millions of rows, your own libraries | Python on your machine with a personal API token ([API_REFERENCE.md (clients)](DEVELOPER_GUIDE.md#113-clients-scripts-notebooks-and-excel)) |
 
 Calc is for questions that are yours, now, about the data in front of you. It is not a batch engine: it runs in one
@@ -3191,7 +3214,7 @@ python:                         # Calc on this pack's kinds (Alt+C on a view)
   dir: python                   # optional: where snippet files are (default python/)
 ```
 
-Snippets can also be files, `config/packs/<domain>/<pack>/python/*.py`, read in name order after those in `pack.yaml`. A file starts
+Snippets can also be files, `modules/<module>/packs/<pack>/python/*.py`, read in name order after those in `pack.yaml`. A file starts
 with comment lines naming it; what comes after them is the code (the copyright header above them is not):
 
 ```python
@@ -3224,7 +3247,7 @@ computes.
 
 The shipped ones are written by `tools/packgen/banking/make_packs.py` (the generator kept its name from the banking packs it began with) from their sources,
 `tools/packgen/banking/snippets/<pack>/<name>.py` (read by `calc_snippets.py`; never edit the generated
-`config/packs/<domain>/<pack>/python/` files: change the source and run the generator, see
+`modules/<module>/packs/<pack>/python/` files: change the source and run the generator, see
 [BUILD_GUIDE.md](BUILD_GUIDE.md#301-how-the-shipped-packs-are-generated)). A source starts, after its copyright header, with
 
 ```python
@@ -3308,6 +3331,8 @@ They are kept with your other saved documents (workspaces, monitors) in the iden
 ### 12. Installing the Python runtime
 
 The runtime is not in git (53 MB, which `du -sh` shows as 51M). `tools/fetch-pyodide.sh` installs it once:
+
+Run these from the Drishti folder (the repository root, or the install folder of a release).
 
 ```bash
 tools/fetch-pyodide.sh
@@ -3688,5 +3713,5 @@ The picture is real output of that cell on the sample trades dataset: ten desks,
 
 The **Notebook** (`/bi/notebook`, the BI rail's *Notebook*) is the one place for code over data: SQL cells run by the server and Python cells
 run on the server's compute pool, over an extract of the rows you may see. Everything about it (extracts, cells, saving, promoting, the profile,
-limits and errors) is in [NOTEBOOK_GUIDE.md](NOTEBOOK_GUIDE.md#2-the-notebook), with Python measures, visuals and data prep; the walk-through is
-[tutorial 9](../tutorials/09-notebook-and-python.md). For Python in your own browser on a view's rows, see [Calc](#calc-python-on-any-view).
+limits and errors) is in [NOTEBOOK_AND_PYTHON.md](bi/NOTEBOOK_AND_PYTHON.md#2-the-notebook), with Python measures, visuals and data prep; the walk-through is
+[the Notebook tutorial](bi/NOTEBOOK_AND_PYTHON.md). For Python in your own browser on a view's rows, see [Calc](#calc-python-on-any-view).

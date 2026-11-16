@@ -94,6 +94,47 @@ def render(st: dict) -> list[str]:
     return out
 
 
+def cycle_exit(cycle: dict) -> tuple[int, list[str]]:
+    """A finished cycle's exit code and lines: 1 a file failed (or the cycle did), 2 a file loaded with rejected rows, else 0; each file
+    with its outcome, rows and rejects, the reasons of rejects and failures, the cycle's notices."""
+    out = [f"cycle {cycle.get('run', '')}: {cycle.get('state', '')}" + (f" ({cycle['why']})" if cycle.get("why") else "")]
+    code = 1 if cycle.get("state") == "failed" else 0
+    for f in cycle.get("files") or []:
+        rej = int(f.get("rejected") or 0)
+        out.append(f"  {f.get('file', ''):<44} {f.get('outcome', ''):<10} {int(f.get('rows') or 0):>10,} rows  {rej:>8,} rejected")
+        if f.get("reason"):
+            out.append(f"    {f['reason']}")
+        if f.get("outcome") == "failed":
+            code = 1
+        elif rej > 0 and code == 0:
+            code = 2
+    for n in cycle.get("notices") or []:
+        if not any(n.endswith(str(f.get("reason"))) for f in cycle.get("files") or [] if f.get("reason")):
+            out.append(f"  notice: {n}")
+    out.append({0: "exit 0: every file loaded, no row rejected", 2: "exit 2: loaded WITH REJECTED ROWS (above): check them before using the date",
+                1: "exit 1: a file failed (above): fix it and drishti.py dataload retry <file>"}[code])
+    return code, out
+
+
+def waited(api, before: str | None, timeout: int, json_out: bool) -> int:
+    """Waits for the cycle Load now started (the newest cycle that is not ``before``, once none is running) and says how it ended."""
+    import time
+    end = time.monotonic() + max(1, timeout)
+    while time.monotonic() < end:
+        st = api.json("GET", "/api/v1/admin/dataload")
+        cycles = st.get("cycles") or []
+        if not st.get("running") and cycles and cycles[0].get("run") != before:
+            code, lines = cycle_exit(cycles[0])
+            if json_out:
+                say_json(cycles[0])
+            else:
+                print("\n".join(lines))
+            return code
+        time.sleep(2)
+    print(f"Load now: the cycle did not end within {timeout} s (drishti.py dataload status shows it)")
+    return 1
+
+
 def ready_form(a, item: str | None, choices: dict) -> dict:
     """The form's fields from the command line: the table named resolves to its pack, kind and connector by the same list the page offers."""
     f = {"item": item, "lake": a.lake, "mode": a.mode or "append", "hold": a.hold, "ackReplace": a.yes_replace, "key": a.key, "businessDate": a.date}
@@ -179,14 +220,23 @@ def register(groups, srv, ctx: dict) -> None:
         act = a.dataload_cmd
         try:
             if act == "run":
+                before = None
+                if a.wait:
+                    cycles = (api.json("GET", "/api/v1/admin/dataload").get("cycles") or [])
+                    before = cycles[0].get("run") if cycles else None
                 res = api.json("POST", "/api/v1/admin/dataload/run", {})
-                if a.json:
-                    say_json(res)
-                elif res.get("started"):
-                    print("Load now: a cycle started (drishti.py dataload status shows it).")
-                else:
+                if not a.wait:
+                    if a.json:
+                        say_json(res)
+                    elif res.get("started"):
+                        print("Load now: a cycle started (drishti.py dataload status shows it).")
+                    else:
+                        print(f"Load now: {res.get('skipped')} (runs never overlap; the next cycle checks again).")
+                    return 0
+                if not res.get("started"):
                     print(f"Load now: {res.get('skipped')} (runs never overlap; the next cycle checks again).")
-                return 0
+                    return 1
+                return waited(api, before, a.wait_seconds, a.json)
             if act == "retry":
                 res = api.json("POST", "/api/v1/admin/dataload/retry", {"file": a.file})
                 if a.json:
@@ -231,8 +281,12 @@ def register(groups, srv, ctx: dict) -> None:
                       ("undo", "undo a load by its id in the lake it wrote into: a dry run, or --yes")):
         c = sub.add_parser(act, parents=[srv], help=what, description=what, epilog=EPILOG, formatter_class=argparse.RawDescriptionHelpFormatter)
         c.set_defaults(func=cmd)
+        if act == "run":
+            c.add_argument("--wait", action="store_true", help="wait for the cycle to end and print each file's outcome: exit 0 all loaded, "
+                                                               "2 loaded with rejected rows (counts and reasons printed), 1 a file failed")
+            c.add_argument("--wait-seconds", type=int, default=3600, metavar="S", help="with --wait: give up after S seconds (default 3600), exit 1")
         if act == "retry":
-            c.add_argument("file", help="the failed file's name as it was dropped (trades-2026-11-03.jsonl.gz)")
+            c.add_argument("file",help="the failed file's name as it was dropped (trades-2026-11-03.jsonl.gz)")
         if act == "ready":
             c.add_argument("--file", metavar="F", help="the data file to upload (.jsonl, .gz, .zip, .tar, .tar.gz, .tgz)")
             c.add_argument("--inbox", metavar="NAME", help="a file already in the inbox folder, with no .ready (nothing is uploaded)")

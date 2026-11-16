@@ -52,7 +52,7 @@
   function showTitles() {
     var rid = String(F.getField(V + 'report') || '').trim();
     if (F.getField('source.source_type') !== 'visual' || !rid) { titles.textContent = ''; return; }
-    fetch('/bi/api/reports/' + encodeURIComponent(rid).replace(/%3A/g, ':'), { credentials: 'same-origin', headers: { Accept: 'application/json' } })
+    fetch(drishti_url('/bi/api/reports/' + encodeURIComponent(rid).replace(/%3A/g, ':')), { credentials: 'same-origin', headers: { Accept: 'application/json' } })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (rep) {
         if (!rep) { titles.textContent = 'No report with that id is visible to you.'; return; }
@@ -72,7 +72,7 @@
   var queryField = form.elements.model_query, described = null, asked = 0;
   function stored() { try { return queryField && queryField.value ? JSON.parse(queryField.value) : null; } catch (e) { return null; } }
   function loadModels() {
-    return fetch('/bi/model-api/datasets', { credentials: 'same-origin', headers: { Accept: 'application/json' } })
+    return fetch(drishti_url('/bi/model-api/datasets'), { credentials: 'same-origin', headers: { Accept: 'application/json' } })
       .then(function (r) { return r.ok ? r.json() : { models: [], items: [] }; })
       .then(function (d) {
         var refs = [], labels = [], want = F.getField(M + 'model_ref') || '';
@@ -93,7 +93,7 @@
     var ref = F.getField(M + 'model_ref'), mine = ++asked;
     described = null;
     if (!ref) { setEmpty(M + 'model_measure', '(choose a model first)'); F.setOptions(M + 'model_measure', []); return Promise.resolve(); }
-    return fetch('/bi/model-api/fields?ref=' + encodeURIComponent(ref), { credentials: 'same-origin', headers: { Accept: 'application/json' } })
+    return fetch(drishti_url('/bi/model-api/fields?ref=' + encodeURIComponent(ref)), { credentials: 'same-origin', headers: { Accept: 'application/json' } })
       .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
       .then(function (res) {
         if (mine !== asked) { return; }
@@ -154,7 +154,7 @@
   function say(text, bad) { out.textContent = text; out.classList.toggle('t-bad', !!bad); }
   function number(v) { return typeof v === 'number' ? window.Drishti.elements.core.formatNumber(v, { maxDecimals: 4, minus: '-' }) : String(v); }
   function preview() {
-    return fetch('/alerts/preview', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(fields()) });
+    return fetch(drishti_url('/alerts/preview'), { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(fields()) });
   }
   form.querySelector('[data-check-now]').addEventListener('click', function () {
     say('Reading…');

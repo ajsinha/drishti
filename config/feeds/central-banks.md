@@ -9,7 +9,7 @@
 
 Central banks (FRED and the Bank of Canada).
 
-The economy module's public-sector central-banks pack (docs/guides/PUBLIC_SECTOR_GUIDE.md): Policy rates and the market series around them: the Federal Reserve's target range and effective rate, Treasury yields, the curve's slope, US inflation, unemployment and the Fed's balance sheet (FRED, Federal Reserve Bank of St. Louis), and the Bank of Canada's target rate, CORRA, Government of Canada yields and USD/CAD (Bank of Canada Valet). A bank's page shows its policy rate, its last move and its series; each series shows two years of history. Filled daily by the central-banks feed into the worldlake lake; FRED needs a free key in DRISHTI_FRED_API_KEY.
+The economy module's public-sector central-banks pack (docs/guides/WORLD_DATA_GUIDE.md): Policy rates and the market series around them: the Federal Reserve's target range and effective rate, Treasury yields, the curve's slope, US inflation, unemployment and the Fed's balance sheet (FRED, Federal Reserve Bank of St. Louis), and the Bank of Canada's target rate, CORRA, Government of Canada yields and USD/CAD (Bank of Canada Valet). A bank's page shows its policy rate, its last move and its series; each series shows two years of history. Filled daily by the central-banks feed into the worldlake lake; FRED needs a free key in DRISHTI_FRED_API_KEY.
 
 | | |
 |---|---|
@@ -30,7 +30,7 @@ python3 tools/drishti.py feed run central-banks                # pull today, wri
 python3 tools/drishti.py feed status central-banks             # its last runs
 ```
 
-Daily: `python3 tools/drishti.py feed schedule --cron` (or `--systemd`, `--windows`). The guide: [EXTERNAL_DATA.md](../../docs/guides/EXTERNAL_DATA.md).
+Daily: `python3 tools/drishti.py feed schedule --cron` (or `--systemd`, `--windows`). The guide: [WORLD_DATA_GUIDE.md](../../docs/guides/WORLD_DATA_GUIDE.md).
 
 ## Data contract
 
@@ -62,7 +62,7 @@ One row (JSON Lines: one object a line; the values are the contract's examples):
 {"BANK_ID": "CBANK-BOC", "NAME": "Bank of Canada", "COUNTRY": "CAN", "COUNTRY_NAME": "Canada", "CURRENCY": "CAD", "WEBSITE": "https://www.bankofcanada.ca", "POLICY_RATE": 2.5, "POLICY_RATE_DATE": "2026-11-05", "POLICY_SERIES": "CBSER-BOC-V39079", "LAST_MOVE_DATE": "2026-10-29", "LAST_MOVE_BP": 25.0, "PRESS": "PRESS-BOC"}
 ```
 
-The contract: `config/packs/economy/central-banks/contracts/central-bank.contract.yaml` ([central-banks](../../docs/contracts/packs/central-banks.md)).
+The contract: `modules/economy/packs/central-banks/contracts/central-bank.contract.yaml` ([central-banks](../../docs/contracts/packs/central-banks.md)).
 
 ### rate-series
 
@@ -97,4 +97,4 @@ One row (JSON Lines: one object a line; the values are the contract's examples):
 {"SERIES_ID": "CBSER-BOC-AVG_INTWO", "NAME": "CORRA, Canadian overnight repo rate average", "SOURCE": "Bank of Canada", "CODE": "AVG.INTWO", "CENTRAL_BANK": "CBANK-BOC", "TITLE": "CORRA, Canadian overnight repo rate average", "DESCRIPTION": "A measure of the cost of overnight general collateral fundi…", "UNIT": "%", "FREQUENCY": "Business daily", "LATEST": 2.52, "LATEST_DATE": "2026-11-05", "PREVIOUS": 2.52, "PREVIOUS_DATE": "2026-11-04", "CHANGE": 0.0, "CHANGE_1Y": 0.25, "HIGH": 2.56, "LOW": 2.24, "OBSERVATIONS": 273}
 ```
 
-The contract: `config/packs/economy/central-banks/contracts/rate-series.contract.yaml` ([central-banks](../../docs/contracts/packs/central-banks.md)).
+The contract: `modules/economy/packs/central-banks/contracts/rate-series.contract.yaml` ([central-banks](../../docs/contracts/packs/central-banks.md)).

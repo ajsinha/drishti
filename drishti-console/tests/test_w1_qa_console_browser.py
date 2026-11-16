@@ -32,7 +32,7 @@ from playwright.sync_api import expect  # noqa: E402
 import test_w1_model_designer_browser as base  # noqa: E402
 
 MAIN = Path(os.environ.get("DRISHTI_MAIN_CHECKOUT", "/home/ashutosh/IdeaProjects/drishti"))
-if not list((base.ROOT / "drishti-server" / "target").glob("drishti-server-*-exec.jar")) and (MAIN / "drishti-server" / "target").exists():
+if not list((base.ROOT / "kernel/drishti-server" / "target").glob("drishti-server-*-exec.jar")) and (MAIN / "kernel/drishti-server" / "target").exists():
     base.ROOT = MAIN                                   # the jar, the packs and the sample config are read-only inputs; the console under test is this checkout's
 from test_w1_model_designer_browser import browser, clean, fetch, sign_in, stack  # noqa: E402,F401
 import select_helpers  # noqa: E402

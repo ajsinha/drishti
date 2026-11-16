@@ -25,7 +25,7 @@
   var WB = window.Drishti.WB = window.Drishti.WB || {};
 
   WB.Versions = function (box, store, base) {
-    var url = '/build/designs/' + encodeURIComponent(store.state.id);
+    var url = drishti_url('/build/designs/') + encodeURIComponent(store.state.id);
     var pick = WB.el('drishti-select', null, null, { id: 'wbCompareWith' }), label = WB.el('span', null, 'Compare the design with');   // drishti-inputs' Select
     pick.options = { label: 'Compare the design with', options: [] };
     var out = WB.el('div', 'wb-diff', null, { role: 'region', 'aria-label': 'Differences', tabindex: '0' });
@@ -76,7 +76,7 @@
     restore.addEventListener('click', function () {
       var against = pick.value;
       var text = against === 'base'
-        ? fetch('/studio/source/' + encodeURIComponent(base.split('@')[0]) + '/' + encodeURIComponent(base.split('@')[1])).then(function (x) { return x.ok ? x.text() : null; })
+        ? fetch(drishti_url('/studio/source/' + encodeURIComponent(base.split('@')[0]) + '/' + encodeURIComponent(base.split('@')[1]))).then(function (x) { return x.ok ? x.text() : null; })
         : WB.call('GET', url + '/versions/' + encodeURIComponent(against)).then(function (r) { return r.ok ? r.body.yaml : null; });
       text.then(function (yaml) {
         if (yaml === null || yaml === undefined) { store.emit('say', 'That version could not be read.', true); return; }

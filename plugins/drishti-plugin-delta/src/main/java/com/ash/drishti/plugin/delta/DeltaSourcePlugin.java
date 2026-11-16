@@ -198,6 +198,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
      * a marker {@code {"$vector": "PNL"}} instead), read in bulk by {@link #vectors} and put back into a document {@link #fetch} returns.
      */
     private final Map<String, List<String>> vectorCols = new java.util.concurrent.ConcurrentHashMap<>();
+    private final VectorBatches vectorBatches = new VectorBatches();
     private int maxLoadRows;
     /**
      * Single-entity reads decode a row group each: bounded, so a burst of them cannot exhaust memory; at most {@code max-queued-reads}
@@ -774,6 +775,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         }
         LocalDate d = dates.get(0);
         long version = l.get().version();
+        RuntimeException[] callers = {null};                   // what the caller's own sink threw
         try {
             tables.get(kind).forEachDoc(l.get(), d, (id, json) -> {
                 DataNode doc;
@@ -782,10 +784,18 @@ public final class DeltaSourcePlugin implements SourcePlugin {
                 } catch (IOException e) {
                     throw new java.io.UncheckedIOException(e);
                 }
-                sink.accept(new EntityDocument(EntityRef.of(kind, id), doc,
-                        new Provenance(sourceName, version, Instant.now(), false, d == LocalDate.MIN ? null : d)));
+                try {
+                    sink.accept(new EntityDocument(EntityRef.of(kind, id), doc,
+                            new Provenance(sourceName, version, Instant.now(), false, d == LocalDate.MIN ? null : d)));
+                } catch (RuntimeException e) {
+                    callers[0] = e;
+                    throw e;
+                }
             });
         } catch (RuntimeException e) {
+            if (callers[0] != null) {
+                throw callers[0];                              // the caller stopped reading (enough rows, a closed download): the table is fine
+            }
             throw problems.failed(kind, d.toString(), l.get().timestamp(), e);
         }
         problems.ok(kind, d.toString());
@@ -1248,7 +1258,11 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         if (cols.isEmpty()) {
             return json;
         }
-        Map<String, double[]> vecs = tables.get(ref.kind()).vectorsOf(l, d, fileOf(ref.kind(), l, d, ref.id()), ref.id(), cols);
+        int file = fileOf(ref.kind(), l, d, ref.id());
+        DeltaTable t = tables.get(ref.kind());
+        // the records of a page are fetched at once: one read of the file's vector columns for all of them (VectorBatches)
+        Map<String, double[]> vecs = vectorBatches.get(ref.kind() + "|" + System.identityHashCode(l) + "|" + d + "|" + file + "|" + cols, ref.id(),
+                ids -> t.vectorsOf(l, d, file, ids, cols));
         if (vecs.isEmpty()) {
             return json;
         }

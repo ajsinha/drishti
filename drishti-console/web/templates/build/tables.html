@@ -13,7 +13,7 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 #}
-{# Build › Tables & models (docs/architecture/SHARED_SCREENS.md sections 1 to 4; docs/guides/TABLES_GUIDE.md section 11): one shell for every object people
+{# Build › Tables & models (docs/architecture/SHARED_SCREENS.md sections 1 to 4; docs/guides/bi/README.md section 11): one shell for every object people
    author on the table layer. Three panes: the objects with search | the editor with the live YAML below it | the live preview with checks. The page
    carries no data: static/js/drishti_editors.js draws it on drishti-designer's DesignerShell from /build/tables/api/... (the server's editor API, as the signed-in person). #}
 {% extends "base.html" %}
@@ -21,9 +21,9 @@
 {% block body_class %}terminal ed-page{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block footer %}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/elements/drishti-grid/drishti_grid.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_editors.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="{{ BASE }}/static/elements/drishti-grid/drishti_grid.css?v={{ ASSET_V }}"><link rel="stylesheet" href="{{ BASE }}/static/css/drishti_editors.css?v={{ ASSET_V }}">{% endblock %}
 {% block content %}
 <div class="ed" data-editors data-kind="{{ kind }}" data-name="{{ name }}" data-item="{{ item }}" data-new="{{ new }}"
      data-python-runs="{{ 'true' if python_runs else 'false' }}" data-python-why="{{ python_why }}" data-user="{{ me.user if me else '' }}"></div>{# drishti-designer's DesignerShell draws the header, the panes and the dialog here #}
 {% endblock %}
-{% block scripts %}{% include "_designer_kit.html" %}<script src="/static/js/drishti_editor-formula.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_editors.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_editor-new.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_editor-table.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_editor-model.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_editor-python.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}{% include "_designer_kit.html" %}<script src="{{ BASE }}/static/js/drishti_editor-formula.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_editors.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_editor-new.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_editor-table.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_editor-model.js?v={{ ASSET_V }}"></script><script src="{{ BASE }}/static/js/drishti_editor-python.js?v={{ ASSET_V }}"></script>{% endblock %}

@@ -48,7 +48,7 @@ def test_a_pick_list_carries_the_range_to_its_rows(client, backend, monkeypatch)
                 "rows": [{"ref": {"kind": "trade", "id": "MX-20001"}, "title": "MX-20001", "values": {}}]}
     monkeypatch.setattr(backend, "search", search, raising=False)
     page = client.get("/s", params={"q": "TRD MX-2000", "range": "3M", "diff": "1"})
-    assert 'href="/v/trade/MX-20001/history?range=3M&amp;diff=1"' in page.text
+    assert 'data-history="range=3M&amp;diff=1"' in page.text            # the records grid's panel offers History with the range (drishti_records.js)
 
 
 def test_the_short_link_redirects_to_the_history_page(client):

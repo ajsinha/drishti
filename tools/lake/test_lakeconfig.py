@@ -14,7 +14,7 @@
 
 """The Python side of the lake files (tools/lake/lakeconfig.py): the one Java reader's JSON for a table, the refusal of a kind the lake
 file lacks, lake build refusing a --partition-by that contradicts the lake file, and the shipped demo lake read whole. Skipped where
-no Java reader can be found (no exec jar, no compiled drishti-lakeconfig). Every file is written under a temporary folder."""
+no Java reader can be found (no exec jar, no compiled drishti-lakeio). Every file is written under a temporary folder."""
 from __future__ import annotations
 
 import argparse
@@ -36,7 +36,7 @@ def _reader() -> bool:
         return False
 
 
-pytestmark = pytest.mark.skipif(not _reader(), reason="no Java lake reader (build drishti-lakeconfig or the server jar)")
+pytestmark = pytest.mark.skipif(not _reader(), reason="no Java lake reader (build drishti-lakeio or the server jar)")
 
 LAKE = """lake: main
 root: {root}
@@ -87,11 +87,13 @@ def test_the_shipped_demo_lake_reads_whole():
     out = lakeconfig.dump(lakeconfig.ROOT / "config" / "lakes")
     demo = next(x for x in out["lakes"] if x["lake"] == "demo")
     trades = [t for t in demo["tables"] if t["kind"] == "trade"]
-    assert {t["path"] for t in trades} == {"trading/trade_endur", "trading/trade_calypso", "trading/trade_murex"}
+    assert {t["path"] for t in trades} == {"trading/trade_endur", "trading/trade_calypso", "trading/trade_murex", "trading/trade_wss",
+                                           "trading/trade_swapone", "trading/trade_ici"}      # one table a trading system, always
     # Endur by PRODUCT_TYPE, Calypso and Murex by PRODUCT_GROUP (the owner's layout of the demo lake: DATA_LAKE_GUIDE.md)
     assert {t["path"]: t["partition-by"] for t in trades} == {"trading/trade_endur": ["PRODUCT_TYPE"],
                                                            "trading/trade_calypso": ["PRODUCT_GROUP"],
-                                                           "trading/trade_murex": ["PRODUCT_GROUP"]}
+                                                           "trading/trade_murex": ["PRODUCT_GROUP"],
+                                                           "trading/trade_wss": [], "trading/trade_swapone": [], "trading/trade_ici": []}
 
 
 def _files(d: pathlib.Path) -> list[str]:

@@ -1,0 +1,30 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Template: copy to config/connectors/trade-wss.yaml. WSS's trades from the demo Delta lake: its own table trading.trade_wss (one table a trading system).
+# map:, where: and set: are the trade kind's source options (modules/trading/docs/guide.md, "Source systems").
+name: trade-wss                      # the connector this template defines (KERNEL_AND_MODULES.md section 18.5)
+plugin: delta
+enabled: ${DRISHTI_LAKE_ENABLED:true}
+kinds:
+- trade
+description: WSS trades read from its own table trading.trade_wss in the Delta lake
+settings:
+  lake: demo
+  lake-tables: trading.trade_wss
+  union: true
+  source-name: trade-wss
+  set:
+    SOURCE_SYSTEM: WSS
+  map: mappings/wss-trade.yaml

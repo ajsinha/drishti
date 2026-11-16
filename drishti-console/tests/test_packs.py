@@ -79,6 +79,21 @@ def test_a_pack_installed_by_the_server_brings_its_guide_examples_and_workspaces
     assert default.installed == installed.resolve() and default._load("helpdesk")["dir"] == (installed / "helpdesk").resolve()
 
 
+def test_a_server_row_names_the_pack_s_folder_and_a_module_s_pack_loads_from_its_module(tmp_path):
+    """The server's pack row carries ``dir`` (its resolution): the console reads that folder; with no row, the resolver finds a
+    module's pack in its module's folder (FORMS listed only core and gleif while the console looked under config/packs only)."""
+    import shutil
+    from pathlib import Path
+    from core.packs import Packs
+    console = Path(__file__).resolve().parent.parent
+    shutil.copytree(console.parent / "docs" / "guides" / "examples" / "pack" / "helpdesk", tmp_path / "elsewhere" / "helpdesk")
+    packs = Packs({}, console)
+    assert packs._load("helpdesk") is None
+    assert packs._load("helpdesk", {"name": "helpdesk", "dir": str(tmp_path / "elsewhere" / "helpdesk")})["dir"] == tmp_path / "elsewhere" / "helpdesk"
+    mr = packs._load("market-risk")
+    assert mr["forms"] and Path(mr["dir"]).is_relative_to(console.parent / "modules")
+
+
 def test_a_pack_s_files_are_parsed_once_while_unchanged_and_again_when_one_changes(tmp_path):
     """The console parsed every enabled pack's YAML on each page whose per-user cache was cold (about a second of its event loop):
     it keeps what it made of a pack while its pack.yaml and the console files it names are unchanged, and reads them again when one
