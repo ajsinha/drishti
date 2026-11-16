@@ -694,6 +694,10 @@ a table the lake file does not describe yet gets its pack's recommended entry fi
 The data file is written under a `.part` name and renamed when complete; the `.ready` file comes last. The inbox checks the SHA-256 and
 the rows before anything is written ([DATA_LAKE_GUIDE.md section 4](DATA_LAKE_GUIDE.md#4-the-ready-file-every-key)).
 
+**A day with no load of its own.** The economy and civic tables (`macro-store`, `civic-store` of the world-economy pack) are read in
+`effective` mode: when a date has no load, a record shows the newest load on or before it, with no look-back limit, and its About panel
+(Where the data came from) names that business date. A record asked for a date before the first load is not found.
+
 ### 5. Run it every day
 
 `drishti.py feed schedule` prints ready-to-use daily entries, one per enabled feed, at the time its feed file's `schedule:` gives

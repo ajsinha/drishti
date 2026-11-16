@@ -180,6 +180,14 @@ connectors:
     settings:
       lake: demo
       lake-tables: macro.economy,macro.macro-indicator,macro.economic-forecast,macro.labour-market,macro.fiscal-position,macro.region-economy
+      # public data is loaded when its feed runs, not every day: a date with no load of its own shows the newest load on or before it (no
+      # look-back limit), and the record says which date that is (About this record, Business date)
+      mode.economy: effective
+      mode.macro-indicator: effective
+      mode.economic-forecast: effective
+      mode.labour-market: effective
+      mode.fiscal-position: effective
+      mode.region-economy: effective
   civic-store:
     plugin: delta
     enabled: ${DRISHTI_LAKE_ENABLED:true}
@@ -193,6 +201,12 @@ connectors:
     settings:
       lake: demo
       lake-tables: civic.jurisdiction,civic.party,civic.office-holder,civic.election,civic.region,civic.social-indicator
+      mode.jurisdiction: effective
+      mode.party: effective
+      mode.office-holder: effective
+      mode.election: effective
+      mode.region: effective
+      mode.social-indicator: effective
   macro-groupings:
     plugin: derived
     enabled: ${DRISHTI_LAKE_ENABLED:true}

@@ -27,6 +27,13 @@
   product version or a jar or image name carrying one). The documents write `<version>`; the DEVELOPER_GUIDE release steps follow.
   The IntelliJ server run configurations no longer give `-XX:MaxDirectMemorySize` twice (256m then 768m); 768m stays.
 
+- **Small fixes from the owner's stack (11-15).** A bare mnemonic's list (NEWS, CRV) no longer shows an always-empty Snapshot column (a kind
+  dated by `snapshot` has no date column; a column nothing on the page holds is not drawn) and the Curves list's Business date is the day
+  read. On a phone the records grid scrolls inside its own frame, the page does not scroll sideways. The world-economy pack's `macro-store`
+  and `civic-store` read in `effective` mode: a date with no load of its own shows the newest load on or before it (no look-back limit),
+  and About names that business date (WORLD_DATA_GUIDE, External data feeds, section 4). `GET /` on the server answers what it is (product,
+  version, the API's about and health addresses, where the UI is) instead of a bare 404. A desk-wall tile's title wraps in two lines and a
+  big number shrinks to the tile instead of being cut.
 - **One settings file for every launcher, and the deployment guides checked against the code.** Every IntelliJ and PyCharm run
   configuration passes `$USER_HOME$/drishti-envs/dev.ini`; `tools/drishti.py --settings` reads the same files as the server (several,
   comma-separated, the right-most winning; a dotted `[section]` a namespace), puts the launch roots they name into the tools'

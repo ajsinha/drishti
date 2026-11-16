@@ -63,7 +63,7 @@
 
   B.frame = function (spec, o) {
     o = o || {};
-    const title = h('h3', { class: 'bi-vis-title', text: spec.title || '' });
+    const title = h('h3', { class: 'bi-vis-title', title: spec.title || '', text: spec.title || '' });
     const tools = h('div', { class: 'bi-vis-tools' }, o.buttons || []);
     const head = h('header', { class: 'bi-vis-head' }, title, tools);
     const body = h('div', { class: 'bi-vis-body' });
