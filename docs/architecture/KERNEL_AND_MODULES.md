@@ -626,7 +626,10 @@ the site's lib jars, and only then the module's own jars (`java/`, then `lib/`):
   its context's start, the unload steps) and is restored after.
 - **Spring**: each module gets a **child `ApplicationContext`** with the module's class loader; its parent exposes only the kernel API
   beans (the `ModuleContext` services). SPI implementations are beans or `ServiceLoader` entries in that context; the kernel collects them
-  through the registry of contributions, never by scanning a module's packages.
+  through the registry of contributions, never by scanning a module's packages. **This is the one design**: there is no mode in which a
+  module's beans join the kernel's context. Bean names of two modules never clash (each context has its own), a module's controller is
+  mounted only under its own `/api/v1/<prefix>/` (or the paths its manifest declares), and a module's objects of a kernel extension type
+  reach the kernel's lists only through the registration bridge, once each. Guards G11 and G12 (TEST_HARNESS.md) hold these.
 
 **The library warning.** The build writes `META-INF/drishti/kernel-libraries.txt` into the server jar (`packaging/drishti-app`): one line
 per jar of `BOOT-INF/lib`, `group:artifact:version`, the jar's name and its package prefixes, checked against `BOOT-INF/lib` after the
@@ -1188,7 +1191,7 @@ command at every step.
 | `drishti.py module …` | the command line of section 7.1 plus `new` and `run` (8.3, 8.4), for teams without Maven expertise |
 | a sample | the `genomics` sample module (examples in `examples/genomics/`), used by the SDK's own tests and by `drishti.genomics` |
 
-**As built (i7a): the SDK folder.** `python tools/drishti.py build sdk` writes `<home>/sdk/`: `repo/` (a Maven file repository with `drishti-kernel-api` and what it needs, the product's parent pom, `drishti-module-parent` and the archetype), `settings.xml` (that repository by absolute path, for `mvn -s`) and `drishti-module-parent/pom.xml` (for a `relativePath`). Maven runs `package`, never `install`. Nothing needs the kernel's sources: `tools/test_sdk_builds_genomics.py` builds the genomics sample from the SDK folder alone and packs and verifies it. The testkit, the typings and the schemas above are not in it yet.
+**As built (i7a): the SDK folder.** `python tools/drishti.py build sdk` writes `<home>/sdk/`: `repo/` (a Maven file repository with `drishti-kernel-api` and what it needs, the product's parent pom, `drishti-module-parent` and the archetype), `settings.xml` (that repository by absolute path, for `mvn -s`) and `drishti-module-parent/pom.xml` (for a `relativePath`). Maven runs `package`, never `install`. Nothing needs the kernel's sources: `tools/test_sdk_builds_genomics.py` builds the genomics sample from the SDK folder alone and packs and verifies it. The SDK folder also holds `drishti-testkit` in its repository (test scope in the parent's management), `kernel-libraries.txt` (read from `META-INF/drishti/kernel-libraries.txt` of the server jar in `<home>/lib`; the parent pom manages every library of it at the kernel's version, scope `provided`, so a module compiles against the copy the kernel runs with), `typings/` (the Elements and renderer `.d.ts` files of the newest vendored release) and `schemas/` (`contract.schema.json`; the other schemas of the table above are not written yet).
 
 ### 8.2 The module as a Maven project
 
