@@ -1607,9 +1607,16 @@ key winning; Health lists the old keys a site still sets. `GET /api/v1/admin/mod
 comes from (the module's key, the old key, or the default). Banking also declares its parts (`api` light, `compute` heavy, `feeds`), so Placement can put
 the compute on its own nodes.
 
-**Admin → Modules** lists every module of this installation: whether it is loaded, on or off and why, with the switch (section 22). It
-installs, upgrades and removes nothing: that is a file and a restart (section 22.1; on a cluster,
-[CLUSTER_GUIDE.md section 1.10](CLUSTER_GUIDE.md#110-installing-a-module-on-a-cluster)).
+**Admin → Modules** answers one question first: did every node boot the same modules, and is anything stale or refused? From the top: six
+tiles (modules, nodes that agree, the cluster fingerprint, problems, stale, not loaded); a red *Nodes disagree* banner when a module's content differs
+between nodes, with a **Copy fix command** button (the install commands with that module's file named); then the **nodes × modules matrix**, one row per
+module and one column per node, each cell the short content hash that node booted, red when it differs from the majority (or *stale* or *refused*). The filter
+box and the chips (all, problems, off, development) narrow the rows; the table sorts and pages like every console table, and on a phone it scrolls inside
+its card. A click on a module shows its detail below: version, origin, content hash, file, the switch (section 22) and where it was set, the parts placed on
+each node, and its problems. **Install or upgrade** lists the commands and the modules folder; nothing deploys from the browser: a module is a file and a
+restart (section 22.1; on a cluster, [CLUSTER_GUIDE.md section 1.10](CLUSTER_GUIDE.md#110-installing-a-module-on-a-cluster)). **Saved work that needs a
+module that is not installed** lists the saved items (Build's kinds) kept while the module they use is off or gone. The page is for administrators; the
+data is `GET /api/v1/admin/modules` (contract `admin-modules/1`, [KERNEL_AND_MODULES.md section 4.2.2](../architecture/KERNEL_AND_MODULES.md)).
 
 A module that is switched off answers `404` on its pages and API (*Not available*); a module whose file was taken out is unknown (`404`).
 Alert rules that use either show *paused · needs module X*; nothing saved is deleted, and the module back, it works again.

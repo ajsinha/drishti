@@ -39,6 +39,11 @@ def _admin_pages() -> tuple:
     return tuple(json.loads((ANSWERS / "admin-pages.json").read_text(encoding="utf-8"))["admin-pages"])
 
 
+def admin_modules() -> dict:
+    """``GET /api/v1/admin/modules`` (contract admin-modules/1) as the server's own test recorded it: 3 nodes, 10 modules (AdminModulesRecordTest)."""
+    return json.loads((ANSWERS / "admin-modules.json").read_text(encoding="utf-8"))
+
+
 def admin_pages() -> list[str]:
     """The Admin pages the server's person answer lists for an administrator (``admin-pages``; recorded by ConsoleAnswersRecordTest)."""
     return list(_admin_pages())
