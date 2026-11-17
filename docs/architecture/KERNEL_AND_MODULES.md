@@ -276,7 +276,7 @@ person, **by the same body**: the controller and the typed service call one meth
 | `pivots().inline(p, request)`, `pivots().figures(…)` | `POST /api/v1/pivot/inline` | `PivotInline.inline` (the engine switch, the edition's `PIVOT`, the audit row) |
 | `lenses().block(lens, block)` | a block of `config/lenses/<module>/<lens>.yaml` | `KernelLenses.whole` |
 | `access()` | the entitlements a REST path applies (`requireOpen`, the masks) | `Entitlements` |
-| `operations()` | one module asking another (section 5) | none yet: every module is unavailable and a call refuses `404 DRS-1020` until operations are registered |
+| `operations()` | one module asking another (below) | the provider's `@Operation` method; with `rest`, the method its REST path's controller calls |
 
 What each door of a REST path does for a typed call:
 
@@ -288,9 +288,36 @@ What each door of a REST path does for a typed call:
 | A refusal | the status, code and words the REST path answers, from the one exception table (`ApiExceptionHandler.problem`) as `Kernel.Refused` |
 | The access log (`AccessRecorder`) | a search, a raw record and a series are recorded as their REST reads are |
 | Time | a read runs on its own (virtual) thread and is given 60 s, then refuses `503 DRS-5003` |
-| `EngineGateFilter`, `ModuleGateFilter`, `PlacementGuardFilter` | the kernel's services run on every node and have no engine switch of their own; operations pass them |
+| `EngineGateFilter`, `ModuleGateFilter`, `PlacementGuardFilter` | the kernel's services run on every node and have no engine switch of their own; an operation passes all three (below) |
 | `RequestsInFlight`, `RequestActivity` | not counted again: the request that made the typed call already holds its slot |
 | `PathGuard`, `RequestSizeFilter` | not applicable: no path, no body |
+
+**Operations: one module asks another.** A module serves an operation from a bean of its own child context (the module keeps its child
+context): a method `@Operation(value = "var.scope", rest = "POST /api/v1/risk/var/scope")` of the shape `(Person, <request record>) ->
+<answer record>`. When the module starts, the module runtime's wiring registers every such method of its context's own beans as
+`<module>:<name>` (`OperationRegistry`), and withdraws them first when it unloads; two of one name in one module stop its start, both named.
+A consumer declares an interface of its own, each method `@Operation("name")` on `(Person, <its request record>)`, and asks
+`kernel.operations().of("banking", MyView.class)`: the request is converted to the provider's record and the answer back by field name
+(the kernel's `ObjectMapper`), so neither module sees the other's classes. `available(module)` says whether the module is loaded, on and
+serves operations here.
+
+`rest` names the REST path the operation answers as; a call passes that path's doors, in the REST path's order, with its answers (one rule
+each, shared with the filter):
+
+| Door | An operation |
+|---|---|
+| `TokenFilter` (token scopes) | the scope of `rest` (`403 DRS-5002`); an operation without `rest` is checked as `POST /api/v1/net/modules/operation/{module}/{name}`, which no API token holds (`token-never`) |
+| `ModuleGateFilter` | the module off (`404 DRS-1025`), its function waiting for data (`409 DRS-1035`), off (`404 DRS-1026`) or not the person's (`403 DRS-1027`), in the gate's words; without `rest`, the module's switch alone |
+| `PlacementGuardFilter` | the part that answers `rest` (the module's `api` part without it): placed here, it runs here; placed on another node, it is asked there (`POST /api/v1/net/modules/operation/{module}/{name}`, signed with the cluster key, for the same person: identity from the on-behalf-of claims, lens, date box, known-at and token scopes in the body), once, and runs or is refused there; no placed node up, or the node does not answer: `503 DRS-1032` in the guard's words |
+| `EngineGateFilter` | the engine whose `api:` prefix holds `rest`: running here, the call is counted while it runs (switching the engine off drains it); running on another node, the call is asked there; else `404 DRS-1020` (`502 DRS-5052` when that node does not answer) |
+| A refusal, the time | as every typed call: the provider's exception mapped by `ApiExceptionHandler.problem` to `Kernel.Refused`, 60 s on its own thread (`503 DRS-5003`) |
+| The access log | every call that runs, is forwarded or is refused here: action `operation`, the module, the name, the outcome, the date box |
+| `RequestsInFlight` | not counted again: the request that asked holds its slot; a call asked on another node is a request there and counted there |
+
+An operation nobody serves here refuses `404 DRS-1020`. `OperationsTest` holds the parity, typed against REST, row by row (a local call,
+the module off, the engine off, a read-only API token on a write, the provider's own refusal, a name served twice, the module withdrawn);
+`OperationsClusterTest` an operation placed on another node (the same answer as the REST path through this node, computed there only) and
+that node down (the same `503 DRS-1032`).
 
 `TypedCallParityTest` holds the parity: every call the landings make, typed and over the loopback, for an administrator, a masked role, a
 row-ruled role, a role the kind is closed to, a lens, an earlier date box, another language, a read-only API token and a scoped one, several

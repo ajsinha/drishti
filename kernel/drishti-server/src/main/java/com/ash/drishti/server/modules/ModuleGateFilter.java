@@ -61,53 +61,72 @@ public final class ModuleGateFilter extends OncePerRequestFilter {
         return !RequestPaths.routed(request).startsWith("/api/");
     }
 
+    /** A refusal of the gate, as its problem says it (the module's operations refuse with the same, KERNEL_AND_MODULES.md 2.3). */
+    public record Refusal(int status, String code, String title, String detail, String key, String value) {
+    }
+
     @Override
     protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain) throws ServletException, IOException {
-        String path = RequestPaths.routed(req);
-        Optional<String> module = registry.moduleOfApi(path);
-        if (module.isEmpty() || loaded.test(module.get())) {
-            Optional<String> function = registry.functionOfApi(path);
-            if (function.isEmpty()) {
-                chain.doFilter(req, res);
-                return;
-            }
-            String w = function.get();
-            Optional<String> off = registry.functionOffReason(w);
-            Optional<String> data = registry.dataGateReason(w);
-            if (data.isPresent()) {             // waiting for data, not gone: said with what to bind and where (KERNEL_AND_MODULES.md 5.6)
-                problem(res, 409, "DRS-1035", "needs data", data.get() + " (Admin -> Data bindings)", "function", w);
-                return;
-            }
-            if (off.isPresent()) {
-                problem(res, 404, "DRS-1026", "function off", "the function " + w + " is not on here: " + off.get(), "function", w);
-                return;
-            }
-            Principal p = req.getAttribute(Principal.ATTRIBUTE) instanceof Principal x ? x : null;
-            if (p != null && !registry.functionAllowed(new Subject(p.user(), Set.of(), Set.copyOf(p.roles()), false), w)) {
-                problem(res, 403, "DRS-1027", "function not allowed", w + " is not available to you: ask your administrator", "function", w);
-                return;
-            }
-            chain.doFilter(req, res);
+        Principal p = req.getAttribute(Principal.ATTRIBUTE) instanceof Principal x ? x : null;
+        Optional<Refusal> r = verdict(RequestPaths.routed(req), p);
+        if (r.isPresent()) {
+            problem(res, r.get());
             return;
         }
-        String id = module.get();
+        chain.doFilter(req, res);
+    }
+
+    /**
+     * The gate's rule for an API path and the person asking (null: not known yet): the module that answers it is not loaded here
+     * ({@code 404 DRS-1025}), its function waits for data ({@code 409 DRS-1035}), is off ({@code 404 DRS-1026}) or not the person's
+     * ({@code 403 DRS-1027}); empty when the request may go on.
+     */
+    public Optional<Refusal> verdict(String path, Principal p) {
+        Optional<String> module = registry.moduleOfApi(path);
+        if (module.isPresent() && !loaded.test(module.get())) {
+            return Optional.of(off(module.get()));
+        }
+        Optional<String> function = registry.functionOfApi(path);
+        if (function.isEmpty()) {
+            return Optional.empty();
+        }
+        String w = function.get();
+        Optional<String> off = registry.functionOffReason(w);
+        Optional<String> data = registry.dataGateReason(w);
+        if (data.isPresent()) {             // waiting for data, not gone: said with what to bind and where (KERNEL_AND_MODULES.md 5.6)
+            return Optional.of(new Refusal(409, "DRS-1035", "needs data", data.get() + " (Admin -> Data bindings)", "function", w));
+        }
+        if (off.isPresent()) {
+            return Optional.of(new Refusal(404, "DRS-1026", "function off", "the function " + w + " is not on here: " + off.get(), "function", w));
+        }
+        if (p != null && !registry.functionAllowed(new Subject(p.user(), Set.of(), Set.copyOf(p.roles()), false), w)) {
+            return Optional.of(new Refusal(403, "DRS-1027", "function not allowed", w + " is not available to you: ask your administrator", "function", w));
+        }
+        return Optional.empty();
+    }
+
+    /** The gate's rule for a module by its id: a module the registry knows that is not loaded here refuses as its API does. */
+    public Optional<Refusal> verdictOfModule(String id) {
+        return registry.module(id).isPresent() && !loaded.test(id) ? Optional.of(off(id)) : Optional.empty();
+    }
+
+    private Refusal off(String id) {
         String why = registry.module(id).map(s -> s.on() ? "it was off when this server started; it loads at the next start" : s.reason())
                 .orElse("it is not installed");
         String how = " (config/modules/" + id + ".yaml or DRISHTI_MODULES_" + id.toUpperCase(java.util.Locale.ROOT).replace('-', '_')
                 + "_ENABLED, then a restart)";
-        problem(res, 404, "DRS-1025", "module off", "the module '" + id + "' is not on here: " + why + how, "module", id);
+        return new Refusal(404, "DRS-1025", "module off", "the module '" + id + "' is not on here: " + why + how, "module", id);
     }
 
-    private static void problem(HttpServletResponse res, int status, String code, String title, String detail, String key, String value)
-            throws IOException {
+    private static void problem(HttpServletResponse res, Refusal r) throws IOException {
         Map<String, Object> p = new LinkedHashMap<>();
         p.put("type", "about:blank");
-        p.put("title", title);
-        p.put("status", status);
-        p.put("detail", code + " " + detail);
-        p.put("code", code);
-        p.put(key, value);
-        res.setStatus(status);
+        p.put("title", r.title());
+        p.put("status", r.status());
+        p.put("detail", r.code() + " " + r.detail());
+        p.put("code", r.code());
+        p.put(r.key(), r.value());
+        res.setStatus(r.status());
         res.setContentType("application/problem+json");
         res.setCharacterEncoding("UTF-8");
         res.getWriter().write(JSON.writeValueAsString(p));
