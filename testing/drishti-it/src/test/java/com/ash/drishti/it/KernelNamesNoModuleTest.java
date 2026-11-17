@@ -58,12 +58,10 @@ class KernelNamesNoModuleTest {
         List<Path> all = RepositoryFiles.withSuffixes(Set.of("pom.xml"));
         for (Path p : all) {
             if (relative(root, p).startsWith("modules/")) {
-                Matcher m = ARTIFACT.matcher(Files.readString(p));
-                while (m.find()) {
-                    own.add(m.group(1));
-                }
+                own.add(ownArtifact(Files.readString(p)));
             }
         }
+        own.remove("");
         own.remove("drishti-parent");                                       // the shared parent is the kernel's, not a module's
         List<String> out = new ArrayList<>();
         for (Path p : all) {
@@ -93,6 +91,13 @@ class KernelNamesNoModuleTest {
         return out;
     }
 
+    /** The artefact a pom defines: the first {@code artifactId} after its {@code parent} block (not a dependency's). */
+    static String ownArtifact(String pom) {
+        int from = Math.max(0, pom.indexOf("</parent>"));
+        Matcher m = ARTIFACT.matcher(pom);
+        return m.find(from) ? m.group(1) : "";
+    }
+
     private static String relative(Path root, Path p) {
         return root.relativize(p).toString().replace('\\', '/');
     }
@@ -103,5 +108,7 @@ class KernelNamesNoModuleTest {
         assertThat(OPENS_MODULES.matcher("root.resolve(\"modules/banking\")").find()).isTrue();
         assertThat(OPENS_MODULES.matcher("a/modules/banking/x").find()).isTrue();
         assertThat(OPENS_MODULES.matcher("drishti.modules.home").find()).isFalse();
+        assertThat(ownArtifact("<parent><artifactId>p</artifactId></parent><artifactId>drishti-x</artifactId><dependency><artifactId>d</artifactId>"))
+                .isEqualTo("drishti-x");
     }
 }

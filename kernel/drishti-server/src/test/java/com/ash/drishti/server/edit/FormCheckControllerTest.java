@@ -56,21 +56,22 @@ class FormCheckControllerTest {
 
     /** A small form in the shape a Sutra writes it: a required limit-bound amount, a default worked out, a lookup, a rule and a hint. */
     private static Form form() {
-        return Form.fromOption(Map.of(
-                "title", "Test", "key", "id",
+        Map<String, Object> raw = Map.of(
+                "title", "Test", "key", "id", "new", "drawer",
                 "steps", List.of(Map.of("id", "a", "label", "A"), Map.of("id", "b", "label", "B")),
                 "fields", List.of(
                         Map.of("id", "id", "label", "Id", "readonly", true),
                         Map.of("id", "party", "label", "Party", "type", "text", "step", "a"),   // its carried record is sent beside it
-                        Map.of("id", "notional", "label", "Notional", "type", "money", "min", 0, "required", true, "step", "a"),
-                        Map.of("id", "fee", "label", "Fee", "type", "money", "default", "=notional * 0.001", "step", "a"),
+                        Map.of("id", "notional", "label", "Notional", "type", "money", "currency", "USD", "min", 0, "required", true, "step", "a"),
+                        Map.of("id", "fee", "label", "Fee", "type", "money", "currency", "USD", "default", "=notional * 0.001", "step", "a"),
                         Map.of("id", "maturity", "label", "Maturity", "type", "date", "min", "today", "step", "a"),
                         Map.of("id", "comment", "label", "Comment", "type", "textarea", "step", "b")),
                 "rules", List.of(
                         Map.of("rule", "notional <= 30000000", "severity", "warn", "fields", List.of("notional"), "message", "Above the desk limit."),
                         Map.of("rule", "not (notional > 30000000 and empty(comment))", "fields", List.of("comment"), "message", "Say why.")),
-                "hints", List.of(Map.of("label", "Limit after this trade", "value", "party.USED + notional", "of", "party.LIMIT", "step", "b"))))
-                .orElseThrow();
+                "hints", List.of(Map.of("label", "Limit after this trade", "value", "party.USED + notional", "of", "party.LIMIT", "step", "b")));
+        assertThat(Form.problems(raw)).isEmpty();
+        return Form.fromOption(raw).orElseThrow();
     }
 
     private JsonNode answer(String body) throws Exception {

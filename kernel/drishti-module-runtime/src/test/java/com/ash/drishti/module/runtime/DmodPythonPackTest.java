@@ -46,7 +46,21 @@ class DmodPythonPackTest {
         needs(python != null, "no python with PyYAML on the path");
 
         Path module = tmp.resolve("modules/greet");
-        Dmod.write(module.resolve("module.yaml"), "format: 1\nid: greet\nversion: 0.1.0\ntitle: Greet\n");
+        Dmod.write(module.resolve("module.yaml"), """
+                format: 1
+                id: greet
+                version: 0.1.0
+                title: Test greet
+                about: A module built in tests
+                domain: testing
+                publisher: {name: Drishti tests, id: drishti-tests}
+                licence: {feature: greet}
+                kernel: ">=0.4"
+                rachana: ">=1.0"
+                contracts: ">=1.0"
+                plugin-api: ">=2.0"
+                elements: ">=2.4 <3"
+                """);
         Dmod.write(module.resolve("packs/a.yaml"), "a: 1\n");
         Dmod.write(module.resolve("docs/z.md"), "# z\n");
         Path out = tmp.resolve("out");

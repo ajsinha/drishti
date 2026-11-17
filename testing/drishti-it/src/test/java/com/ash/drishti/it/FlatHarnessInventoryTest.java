@@ -34,7 +34,7 @@ import org.junit.jupiter.api.Test;
 class FlatHarnessInventoryTest {
 
     private static final Set<String> GOLDENS = Set.of("VarGoldenMatrixTest.java", "SystemBasketGoldenTest.java", "HierarchyEquivalenceTest.java");
-    private static final List<String> MARKS = List.of("@SpringBootTest", "BankingTestHarness", "BankingTestServer");
+    private static final List<String> MARKS = List.of("SpringBootTest", "BankingTestHarness", "BankingTestServer");
 
     @Test
     void theTestsOnTheFlatHarnessAreExactlyTheListed() throws IOException {

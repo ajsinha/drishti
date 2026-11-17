@@ -161,7 +161,7 @@ public class FormCheckController {
             }
             Object v = eval(h.value(), ctx, today);
             Object of = h.of() == null ? null : eval(h.of(), ctx, today);
-            boolean hidden = MASK.equals(v) || MASK.equals(of) || carried.values().stream().anyMatch(c -> c.containsValue(MASK))
+            boolean hidden = masked(v) || masked(of) || carried.values().stream().anyMatch(c -> c.containsValue(MASK))
                     && (v == null || h.of() != null && of == null);
             BigDecimal nv = FormExpr.number(v);
             BigDecimal no = FormExpr.number(of);
@@ -187,6 +187,11 @@ public class FormCheckController {
             out.add(m);
         }
         return out;
+    }
+
+    /** A value that is the mask, or text that carries it (a masked number met a {@code +}: {@code "•••1"}). */
+    private static boolean masked(Object v) {
+        return v instanceof String s && s.contains(MASK);
     }
 
     private static Object eval(FormExpr e, Map<String, Object> ctx, LocalDate today) {
