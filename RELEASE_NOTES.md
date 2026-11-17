@@ -13,7 +13,49 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Drishti 2.9.11.i5 — release notes
+# Drishti 2.9.11.i6 — release notes
+
+*Released 2026-11-16.* **The console draws what the server decides (the thin console), Drishti Elements 2.4.0 with one version for
+every library, and the genomics showcase: a linked cohort board and a protein-engineering workbench over two seeded data packs.** The
+version shown everywhere (About, the console footer, the image tags, the jar's name) is `2.9.11.i6`, read from `.mvn/maven.config`;
+the release tag is `v2.9.11.i_6`.
+
+## What changes for administrators
+
+- **The console reads no pack, module, lens or distribution file.** It asks the server (`GET /api/v1/console/bootstrap`,
+  `GET /api/v1/me/console`). **Upgrade the servers before the consoles**; `tools/rolling.py` does so. Console settings removed:
+  `packs.enabled`, `distributions_dir`, `module_manifests_dir`, `lens.dir`, `builder.max_*`, `under_construction.file`, `ai.*`, `mcp.*`,
+  `retry.*` (each now the server's). `trading.people` moves to the server as `drishti.trading.people`.
+- **AI is hidden and off** in this release (`drishti.ai.enabled`, off as shipped; Admin → Health says *AI: off*).
+- **The tools read the Java resolver's answer** (`resolve --json` in the server jar): every Python tool and generator needs a built jar
+  (`python tools/drishti.py build jar`). Site overrides of module files (`drishti.overrides.dir`) now reach these tools too.
+- **`start cluster <name>`** refuses a name that is no node or console, listing the names there are.
+
+## What changes for readers
+
+- **The genomics showcase** (`GWAS RESPONSE`, `PROTEIN HLXK7`, `DESIGNS HLXK7` in Drishti Genomics or Drishti All): the association plot,
+  the cohort matrix, the map of samples and the variant lollipop linked by one selection; the mutational scan, the structure in 3D and
+  the design campaign. Load its data with `python tools/drishti.py lake demo --only genomics-showcase,protein-engineering`. The record
+  words of the two packs are `ASSOC`, `PROT`, `DESIGN`, `SGENE`, `SSAMPLE`, `SVARIANT`, `VCALL`, `CNV`, `PATHWAY`, `RESIDUE`, `DMS`,
+  `CONTACT`, `DMUT`, `DROUND`.
+- **Drishti Elements 2.4.0**: new chart kinds (radar, violin, ridgeline, curve, density, segmented scatter, matrix, lollipop, 3D trace),
+  the dock layout, the command palette, master-detail grid rows, what-if inputs and the query builder.
+
+## Known limits
+
+- The trading and market-data landings still read the kernel's API over this server's own loopback address (`LoopbackKernelCalls`);
+  an in-process call replaces it in i7.
+- A FORM's rules are still evaluated twice, in the browser (`drishti_form-expr.js`, as people type) and on the server (`FormExpr`); one
+  home is planned for i7.
+
+## Upgrading an install of i5
+
+1. `git pull` (or unpack the release), then `git clean -fdX modules/` as for i5.
+2. `python tools/drishti.py build jar`, then restart the servers, then the consoles.
+3. Remove the console settings listed above from your console settings file; set the server's `drishti.trading.people` if you used
+   `trading.people`.
+
+## The previous release: 2.9.11.i5
 
 *Released 2026-11-16.* **Setting up, building, starting and stopping Drishti is one Python command on Linux, macOS and Windows; the 41
 shell scripts are gone; one Java lookup, one install root, one place for the jars.** This release carries the Python commands, one folder layout for every module, and site overrides of any module file.
@@ -21,7 +63,7 @@ shell scripts are gone; one Java lookup, one install root, one place for the jar
 The build of this release still reports its version as 2.9.11.g (the server's About answer, the console footer and the image tags). The
 release itself is tag `v2.9.11.i_5`; the next release, i6, takes the version from one place so the two always agree.
 
-## What changes for administrators
+### What changes for administrators
 
 - **The commands**: `python tools/drishti.py setup`, `build jar`, `start server|console|all|cluster`, `stop ...` and `status` (on Windows
   `py tools\drishti.py ...`). Processes are tracked by pid files under the data folder and stopped only through them.
@@ -35,12 +77,12 @@ release itself is tag `v2.9.11.i_5`; the next release, i6, takes the version fro
 - **One Java lookup**: `--java`, `DRISHTI_JAVA_HOME`, `JAVA_HOME`, the PATH; older than 21 is refused. `lake demo` now honours
   `DRISHTI_JAVA_HOME`.
 
-## What changes for readers
+### What changes for readers
 
 - The Deployment and QA guide starts with *Prepare your environment*, the short way and a manual installation, the demo lake with the
   parallel Java loader and an IDE first-open checklist.
 
-## One folder layout for every module
+### One folder layout for every module
 
 - Every `modules/<module>/` holds its `.dmod` content at the top (`module.yaml`, `packs/`, `console/`, `data/`, `docs/`, `connectors/`,
   `mappings/`, `blotters/`) and, only when it has Java, its Maven projects under `java/<project>/` with an aggregating `pom.xml`. There
@@ -51,7 +93,7 @@ release itself is tag `v2.9.11.i_5`; the next release, i6, takes the version fro
   else at a module's top (an old build folder) is left out of the package with a note naming it; a folder under `modules/` without a
   `module.yaml` is skipped with a one-line note, never a failure.
 
-## Overriding any module file from outside
+### Overriding any module file from outside
 
 - Name one or more folders in the settings file (`drishti.overrides.dir`, or `-D`, or `DRISHTI_OVERRIDES_DIR`; comma-separated, the
   right-most wins). A file there at the same relative path as inside a module replaces the module's file: a Sutra, a pack's YAML,
@@ -61,7 +103,7 @@ release itself is tag `v2.9.11.i_5`; the next release, i6, takes the version fro
   connector templates and the module's code (`java/`, `lib/`, `python/`, `engines/`, any `.jar`, `.py`, `.class`, `.so`, `.dll` or script,
   and symbolic links) cannot be overridden. Admin → Health lists every overridden file, its source and where it is applied. A change to an override file takes effect at the next restart.
 
-## Upgrading an install of i4
+### Upgrading an install of i4
 
 1. Pull, then delete the old build folders git does not track and so leaves behind: `modules/banking/banking-compute`,
 `modules/banking/banking-service`, `modules/banking/target`, `modules/dist` (`git clean -fdX modules/` removes every ignored file under
@@ -74,7 +116,7 @@ in `lib/` changes). Move `drishti-stack/secrets.env` to `deploy/stack/` if you s
 7. IntelliJ: **reload the Maven projects** (the module projects moved under `modules/<module>/java/`). 8. `git clean -fdX modules/` (step 1)
 once more after the reload if IntelliJ recreated a `target/` in an old place.
 
-## Containers and services
+### Containers and services
 
 - Every image is laid out as an install: `DRISHTI_HOME=/opt/drishti`, the server jar in `/opt/drishti/lib/` (the loader image's
   `/opt/drishti/app.jar` and `DRISHTI_JAR` are gone; its settings file is now `/opt/drishti/deploy/aws/env`). The systemd unit runs
@@ -82,7 +124,7 @@ once more after the reload if IntelliJ recreated a `target/` in an old place.
 - In a container the image is immutable, so the site's jars (JDBC drivers, plugins) live on the data volume: the images and the ECS task
   definition set `DRISHTI_LIB_PATH=/opt/drishti/data/lib`.
 
-## Known limits
+### Known limits
 
 - `data load --store <postgres|redis|...>` still runs a bash script (Git Bash on Windows) until the Python second phase.
 - **Overrides reach the server and the console, not the Python data tools yet.** The server reads its modules through the overrides view

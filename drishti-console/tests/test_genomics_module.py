@@ -83,7 +83,7 @@ def test_its_visual_is_in_the_gallery_while_hosted_and_gone_when_removed(client,
     assert js.status_code == 200 and "registerKind" in js.text and "buildLollipop" in js.text      # glue over drishti-chart's generic lollipop
     mine = {x["kind"]: x for x in listed if x["module"] == "genomics"}
     assert set(mine) == {"genomics.lollipop", "genomics.manhattan", "genomics.oncoprint", "protein.dms", "protein.backbone", "protein.landscape"}
-    assert mine["protein.dms"]["script"].endswith("/drishti_protein.js") and client.get(mine["protein.dms"]["script"]).status_code == 200
+    assert mine["protein.dms"]["script"].endswith("/drishti_genomics.js") and client.get(mine["protein.dms"]["script"]).status_code == 200
 
     removed = {"modules": [{"id": "genomics", "version": "0.1.0", "state": "removed", "title": "Genomics", "console": False,
                             "claims": ["function GENE", "function VARIANT", "function COHORT"]}], "fingerprint": "removed"}
@@ -121,7 +121,7 @@ def test_the_showcase_pages_host_elements_only_and_read_the_module_api(client, t
         t = page.text
         assert f'data-showcase="{mode}"' in t and 'data-genomics-api="/m/genomics/api/"' in t, path
         assert all(f'data-chart="{c}"' in t for c in cards), path
-        assert "/m/genomics/elements/drishti-genomics/0.1.0/drishti_protein.js" in t and "drishti_genomics-showcase.js" in t
+        assert "/m/genomics/elements/drishti-genomics/0.1.0/drishti_genomics.js" in t and "drishti_genomics-showcase.js" in t
     html = (p.folder / "console" / "pages" / "showcase.html").read_text(encoding="utf-8")
     assert "<table" not in html and "<canvas" not in html and "<svg" not in html
     for word, where in (("GWAS%20RESPONSE", "/m/genomics/gwas/RESPONSE"), ("PROTEIN%20HLXK7", "/m/genomics/proteins/HLXK7"), ("DESIGNS%20HLXK7", "/m/genomics/designs/HLXK7")):

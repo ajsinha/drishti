@@ -52,8 +52,12 @@ export function regionName(code) {
   return WORLD_REGIONS.continents[k] || (WORLD_REGIONS.subregions[k] && WORLD_REGIONS.subregions[k].name) || String(code);
 }
 
-/** @private the box of points [[x, y], ...] */
-function bounds(pts) {
+/**
+ * The box of points [[x, y], ...]: [minX, minY, maxX, maxY].
+ * @param {number[][]} pts
+ * @returns {number[]}
+ */
+export function bounds(pts) {
   const b = [Infinity, Infinity, -Infinity, -Infinity];
   pts.forEach((p) => { b[0] = Math.min(b[0], p[0]); b[1] = Math.min(b[1], p[1]); b[2] = Math.max(b[2], p[0]); b[3] = Math.max(b[3], p[1]); });
   return b;

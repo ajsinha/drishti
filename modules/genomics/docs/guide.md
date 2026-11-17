@@ -43,9 +43,9 @@ the generic library's. The Elements gallery shows each while the module is loade
 | `genomics.lollipop` | `drishti_genomics.js` | drishti-chart `lollipop`, coloured by impact or by the scan's measured effect; domains as bands |
 | `genomics.manhattan` | `drishti_genomics.js` | drishti-chart `segmented` (the chromosomes as segments, the genome-wide and suggestive thresholds, the peaks' genes) |
 | `genomics.oncoprint` | `drishti_genomics.js` | drishti-chart `matrix` (category cells in the server's order, clinical tracks) |
-| `protein.dms` | `drishti_protein.js` | drishti-chart `heatmap`, diverging, with three `tracks` and the overview strip (`zoom`) |
-| `protein.backbone` | `drishti_protein.js` | drishti-chart `trace3d` (ECharts GL, loaded on first use; flat where WebGL is off) |
-| `protein.landscape` | `drishti_protein.js` | drishti-chart `scatter` with a `surface` and `frames` (Play the rounds) |
+| `protein.dms` | `drishti_genomics.js` | drishti-chart `heatmap`, diverging, with three `tracks` and the overview strip (`zoom`) |
+| `protein.backbone` | `drishti_genomics.js` | drishti-chart `trace3d` (ECharts GL, loaded on first use; flat where WebGL is off) |
+| `protein.landscape` | `drishti_genomics.js` | drishti-chart `scatter` with a `surface` and `frames` (Play the rounds) |
 
 ## The showcase: one protein, read and rewritten
 

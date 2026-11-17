@@ -28,7 +28,6 @@ const require = createRequire(import.meta.url);
 const LIB = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', 'modules', 'genomics', 'elements', 'drishti-genomics');
 globalThis.Drishti = { elements: { load: () => Promise.resolve(C) } };
 require(join(LIB, 'drishti_genomics.js'));
-require(join(LIB, 'drishti_protein.js'));
 const th = C.chartTheme({ theme: 'terminal' });
 const env = { theme: th, fmt: C.formatterFor('number'), xfmt: C.formatterFor() };
 const build = (spec) => { const s = C.normalizeSpec(spec); return C.kindOf(s.kind).build(s, C.rowsOf(s.data), env); };

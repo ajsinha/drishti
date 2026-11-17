@@ -62,16 +62,16 @@ visuals:                     # the module's own visual types (the custom-visual 
     summary: "Who carries what: a heatmap of category cells (the alteration of each gene in each sample, in the server's order) with clinical tracks"
   - kind: protein.dms
     library: drishti-genomics
-    file: drishti_protein.js
+    file: drishti_genomics.js
     title: Mutational scan
     summary: "Every position by every change: a diverging heatmap with the fold, burial and active-site tracks"
   - kind: protein.backbone
     library: drishti-genomics
-    file: drishti_protein.js
+    file: drishti_genomics.js
     title: Backbone trace
     summary: "The structure as drishti-chart's 3D trace, coloured by the mean effect, the active site and the selection drawn larger; flat without WebGL"
   - kind: protein.landscape
     library: drishti-genomics
-    file: drishti_protein.js
+    file: drishti_genomics.js
     title: Design landscape
     summary: "Designs over the fitness surface, round by round with Play (drishti-chart frames), the natural protein marked"

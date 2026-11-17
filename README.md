@@ -39,6 +39,7 @@ SIMM <GO>                                      →  initial margin per netting s
 PIVOT <GO>                                     →  any table or measure as a pivot, every total computed from its own members
 WDI WDI-CAN <GO>                               →  a country's development indicators, with the world map by GDP per head
 GENE TP53 <GO>                                 →  (Drishti Genomics) a gene's variants, drawn by the sample module's own visual
+GWAS RESPONSE <GO>                             →  (Drishti Genomics) the showcase: association plot, cohort matrix, samples, lollipop, one selection
 ```
 
 ## Contents
@@ -58,7 +59,7 @@ How they fit, step by step: [HOW_IT_FITS.md](HOW_IT_FITS.md). The design, with d
 | Block | What it is | What it owns |
 |---|---|---|
 | **The kernel** | the server: Spring Boot on Java 21, domain-free | connectors and their bindings, lakes, data loads and `.ready` files, Rachana, the pivot, BI and aggregation engines, Explain, the access registry, the cluster (Drishti\*net) and placement, audit; it hosts the **server part** of each module (Java, Python compute, packs, REST) |
-| **The console** | the web tier (Python, FastAPI), in front of one kernel or a cluster | the shell (header, lenses, themes, keys, Home, Help, search), Drishti Elements and the Sutra renderer, the BI and pivot screens, Admin; it hosts the **console part** of each module (declared pages, templates, static files, a domain Elements library) under `/m/<id>/` |
+| **The console** | the web tier (Python, FastAPI), in front of one kernel or a cluster; it draws what the server decides and reads no pack, module, lens or distribution file | the shell (header, lenses, themes, keys, Home, Help, search), Drishti Elements and the Sutra renderer, the BI and pivot screens, Admin; it hosts the **console part** of each module (declared pages, templates, static files, a domain Elements library) under `/m/<id>/` |
 | **Modules** | `.dmod` packages, built apart from both | packs, Java and Python compute, functions, lenses, Home cards, Help, pages and visuals; a module **declares the data it needs and never brings connectors or credentials** |
 
 The glue: one module runtime (`drishti-module-runtime`: reads and verifies a `.dmod`, one class loader per module, the live route table,
@@ -105,7 +106,7 @@ loaded.
 | **trading** | `modules/trading/` | the live trade blotter: trades ticking from the bank's messaging, edits written back through the bindings with a version per trade, four eyes where the site asks, full audit; not an order or execution system | Trading |
 | **source-endur, source-calypso, source-murex, source-wss, source-swapone, source-ici** | `modules/source-<system>/` | one module per trading system, each feeding the one canonical `trade` kind (its connector templates, field map and inbox routing); each switches on or off on its own | Trading |
 | **economy** | `modules/economy/` | economies, forecasts, governments and news; the public sector: World Bank indicators, central banks, Statistics Canada, the OECD, official press releases, GDELT world events; the World page | World, Public sector |
-| **genomics** (a sample third party's module, not installed by default) | `modules/genomics/` | a VCF reader inside the module, the kinds `variant`, `sample`, `gene`, `cohort`, the functions `VARIANT`, `GENE`, `COHORT`, synthetic cohorts, its own visual | Research |
+| **genomics** (a sample third party's module, not installed by default) | `modules/genomics/` | a VCF reader inside the module, the kinds `variant`, `sample`, `gene`, `cohort`, the functions `VARIANT`, `GENE`, `COHORT`, synthetic cohorts; the showcase (`GWAS`, `PROTEIN`, `DESIGNS`): a linked cohort board and a protein-engineering workbench over its two seeded packs `genomics-showcase` and `protein-engineering`; its own visuals | Research |
 
 The kernel keeps what every domain uses: connectors and lakes, Sutras, search, the Pivot and BI, reports, tables and models, the Notebook,
 approvals, alerts, Explain, Admin and Help, GLEIF's legal entities as reference data, and the CIO and Oversight lenses.
@@ -251,7 +252,7 @@ report sign-offs go through one Approvals queue with four eyes. Anything that de
   where there is no Sutra the inference engine lays the screen out from the data; forms and phones
   ([BUILD_GUIDE.md](docs/guides/BUILD_GUIDE.md), [tutorial 19](docs/tutorials/19-build-a-pack-and-a-screen.md)). The Build home (`/build`)
   lists everything people build, what it uses and what uses it.
-- **Drishti Elements**: the console's JavaScript and CSS as eleven versioned libraries (core, inputs, grid, chart with maps, data, tree,
+- **Drishti Elements**: the console's JavaScript and CSS as eleven libraries at one version (2.4.0) (core, inputs, grid, chart with maps, data, tree,
   graph, insight, designer, renderer, and the banking module's risk). Every screen and every designer is drawn with them, guard tests
   fail the build when a page draws its own controls, and the gallery (`/elements`) shows each component live, with the Elements Playground
   to try one on your own data; a module adds its own domain library and visuals
@@ -435,39 +436,39 @@ the modules they may use. The map of every document is [docs/README.md](docs/REA
 
 <!-- code-volume:begin -->
 
-*Measured 2026-11-15 from the files the repository tracks (`python3 tools/docs/code_volume.py`; sample data and vendored libraries not counted).*
+*Measured 2026-11-16 from the files the repository tracks (`python3 tools/docs/code_volume.py`; sample data and vendored libraries not counted).*
 
 | Language | Lines | Files |
 |---|---|---|
-| Java, product | 463k | 2,304 |
-| Java, tests | 182k | 1,143 |
-| Python, product (console, tools, loaders, feeds) | 155k | 776 |
-| Python, tests | 116k | 677 |
-| JavaScript, product (console and Elements) | 133k | 512 |
-| JavaScript, tests | 5k | 25 |
-| CSS | 20k | 123 |
-| HTML (templates and pages) | 41k | 379 |
-| YAML: configuration, Sutras, data contracts | 117k | 1,536 |
-| Markdown: guides, tutorials, design | 232k | 335 |
+| Java, product | 471k | 2,332 |
+| Java, tests | 183k | 1,152 |
+| Python, product (console, tools, loaders, feeds) | 151k | 755 |
+| Python, tests | 115k | 676 |
+| JavaScript, product (console and Elements) | 140k | 535 |
+| JavaScript, tests | 5k | 27 |
+| CSS | 20k | 125 |
+| HTML (templates and pages) | 43k | 386 |
+| YAML: configuration, Sutras, data contracts | 121k | 1,570 |
+| Markdown: guides, tutorials, design | 238k | 347 |
 
-About **812k lines of product code** and **303k lines of tests** (37% of the product code), with **232k lines of documentation**.
+About **825k lines of product code** and **304k lines of tests** (37% of the product code), with **238k lines of documentation**.
 
 | What | Count |
 |---|---|
-| Maven modules | 50 in 10 subject folders: `compute/`, `drishti-sdk/`, `examples/`, `kernel/`, `lake/`, `modules/`, `net/`, `packaging/`, `plugins/`, `testing/` |
+| Maven modules | 52 in 10 subject folders: `compute/`, `drishti-sdk/`, `examples/`, `kernel/`, `lake/`, `modules/`, `net/`, `packaging/`, `plugins/`, `testing/` |
 | Modules (`.dmod`) | 12: banking, capitalmarkets, economy, genomics, market-data, source-calypso, source-endur, source-ici, source-murex, source-swapone, source-wss, trading |
 | Lenses | 11: world, markets, publicsector, cio, oversight, risk, trading, market, cro, mr-cube, ccr-cube |
-| Functions a module declares | 121 (48 banking, 12 capitalmarkets, 35 economy, 3 genomics, 23 market-data); every other command word is the kernel's |
-| Console routes | 678 |
-| Server REST handlers | 824 |
-| Drishti Elements | 11 libraries, 202 ES modules |
-| Domain packs | 17: banking 3, capital-markets 2, core 3, economy 8, market-data 1 |
-| Sutras in the shipped packs | 248 |
+| Functions a module declares | 124 (48 banking, 12 capitalmarkets, 35 economy, 6 genomics, 23 market-data); every other command word is the kernel's |
+| Console routes | 672 |
+| Server REST handlers | 851 |
+| Drishti Elements | 11 libraries, 226 ES modules |
+| Domain packs | 19: banking 3, capital-markets 2, core 3, economy 8, genomics 2, market-data 1 |
+| Sutras in the shipped packs | 262 |
 | Connectors | 13 plugins (a driver or native library each) and 9 built-in types |
 | Feeds | 13 |
 | Lake files | 9 |
-| Test files | 1,687: Java 1049, console 284, browser 193, tools 136, JavaScript 25 |
-| Documents under docs/ | 187 (25 guides, 11 tutorials) |
+| Test files | 1,694: Java 1058, console 278, browser 193, tools 138, JavaScript 27 |
+| Documents under docs/ | 190 (25 guides, 11 tutorials) |
 
 <!-- code-volume:end -->
 

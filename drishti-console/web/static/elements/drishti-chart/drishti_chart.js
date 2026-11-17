@@ -1843,12 +1843,12 @@
       return { level: level, iso3: null, projection: world.projection, project: world.project, shapes: shapes, points: points, by: by, list: list, fit: box, frames: [], all: box,
         regionKind: kind, title: title, trail: trail };
     }
-    return { "REGION_START_LEVELS": REGION_START_LEVELS, "isRegionLevel": isRegionLevel, "regionOf": regionOf, "regionName": regionName, "prepareRegionLevel": prepareRegionLevel };
+    return { "REGION_START_LEVELS": REGION_START_LEVELS, "isRegionLevel": isRegionLevel, "regionOf": regionOf, "regionName": regionName, "bounds": bounds, "prepareRegionLevel": prepareRegionLevel };
   })();
   /* ---- src/drishti_chart-geo.js ---- */
   __m["src/drishti_chart-geo.js"] = (function () {
     var drishtiUrl = __lib("drishti-core").url;
-    var prepareRegionLevel = __m["src/drishti_chart-regions.js"].prepareRegionLevel;
+    var prepareRegionLevel = __m["src/drishti_chart-regions.js"].prepareRegionLevel, bounds = __m["src/drishti_chart-regions.js"].bounds;
     const RAD = Math.PI / 180;
     function equalEarth(lon, lat) {
       const A1 = 1.340264, A2 = -0.081106, A3 = 0.000893, A4 = 0.003796, M = Math.sqrt(3) / 2;
@@ -1887,11 +1887,6 @@
       return g;
     }
     function outerRings(g) { return g.type === 'Polygon' ? [g.coordinates[0]] : g.type === 'MultiPolygon' ? g.coordinates.map((p) => p[0]) : []; }
-    function bounds(pts) {
-      const b = [Infinity, Infinity, -Infinity, -Infinity];
-      pts.forEach((p) => { b[0] = Math.min(b[0], p[0]); b[1] = Math.min(b[1], p[1]); b[2] = Math.max(b[2], p[0]); b[3] = Math.max(b[3], p[1]); });
-      return b;
-    }
     function ringArea(r) { let a = 0; for (let i = 0, j = r.length - 1; i < r.length; j = i++) { a += (r[j][0] + r[i][0]) * (r[j][1] - r[i][1]); } return Math.abs(a / 2); }
     function coreExtent(features) {
       const rings = [];
@@ -2021,7 +2016,7 @@
         hasRegions(iso3) { return !!cache.regions[String(iso3).toUpperCase()]; }
       };
     }
-    return { "equalEarth": equalEarth, "albers": albers, "plateCarree": plateCarree, "projectGeometry": projectGeometry, "holdAntimeridian": holdAntimeridian, "bounds": bounds, "coreExtent": coreExtent, "countryProjection": countryProjection, "US_INSETS": US_INSETS, "prepareRegions": prepareRegions, "fitView": fitView, "prepareWorld": prepareWorld, "findPlace": findPlace, "createGeoLoader": createGeoLoader };
+    return { "bounds": bounds, "equalEarth": equalEarth, "albers": albers, "plateCarree": plateCarree, "projectGeometry": projectGeometry, "holdAntimeridian": holdAntimeridian, "coreExtent": coreExtent, "countryProjection": countryProjection, "US_INSETS": US_INSETS, "prepareRegions": prepareRegions, "fitView": fitView, "prepareWorld": prepareWorld, "findPlace": findPlace, "createGeoLoader": createGeoLoader };
   })();
   /* ---- src/drishti_chart-map.js ---- */
   __m["src/drishti_chart-map.js"] = (function () {

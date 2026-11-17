@@ -236,6 +236,7 @@ def _inputs(args: tuple) -> list[Path]:
         if b.is_dir():
             out += sorted(b.glob("*"))
             out += sorted(b.glob("*/module.yaml")) + sorted(b.glob("*/*/module.yaml"))
+            out += sorted(b.glob("*/packs")) + sorted(b.glob("*/packs/*"))   # a module's pack folder made or removed changes the answer
     if not args:                                              # this process's own resolution: the site's overrides of module files
         for d in _override_dirs(home):
             out.append(d)

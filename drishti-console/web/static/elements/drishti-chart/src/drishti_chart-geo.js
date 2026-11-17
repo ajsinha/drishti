@@ -21,7 +21,7 @@
    grows downwards, as on a screen; the engine draws the shapes with an identity projection. No tiles, no map service: nothing leaves
    the network. Pure functions and a loader with an injected fetch, so Node tests read the same files. */
 import { url as drishtiUrl } from '../../drishti-core/src/drishti_index.js';
-import { prepareRegionLevel } from './drishti_chart-regions.js';
+import { prepareRegionLevel, bounds } from './drishti_chart-regions.js';
 
 const RAD = Math.PI / 180;
 
@@ -100,16 +100,7 @@ export function holdAntimeridian(g) {
 /** @private every outer ring of a geometry */
 function outerRings(g) { return g.type === 'Polygon' ? [g.coordinates[0]] : g.type === 'MultiPolygon' ? g.coordinates.map((p) => p[0]) : []; }
 
-/**
- * The box of points [[x, y], ...]: [minX, minY, maxX, maxY].
- * @param {number[][]} pts
- * @returns {number[]}
- */
-export function bounds(pts) {
-  const b = [Infinity, Infinity, -Infinity, -Infinity];
-  pts.forEach((p) => { b[0] = Math.min(b[0], p[0]); b[1] = Math.min(b[1], p[1]); b[2] = Math.max(b[2], p[0]); b[3] = Math.max(b[3], p[1]); });
-  return b;
-}
+export { bounds };
 
 /** @private a ring's area in square degrees (shoelace, absolute) */
 function ringArea(r) { let a = 0; for (let i = 0, j = r.length - 1; i < r.length; j = i++) { a += (r[j][0] + r[i][0]) * (r[j][1] - r[i][1]); } return Math.abs(a / 2); }
