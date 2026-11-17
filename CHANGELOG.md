@@ -59,6 +59,12 @@ Modules end to end (build in progress). Increment I0, the front-loaded branches 
 - **One "today".** `FormCheckController`, `EditHandler` (the rules over a change) and `DraftsController` (the check at draft save) take the
   business date from `BusinessDates` (honours `drishti.business-date.today`), not the UTC clock; a rule on `today` that passes while typing
   passes at Save.
+- **Cluster lake nodes healthy (backlog).** `start cluster` read stack.yaml with YAML 1.1 booleans, so a node's `off:` list became the key
+  `false` and never reached the server (drishti-b ran `trade-murex`, drishti-c `trade-endur`/`trade-calypso`): the cluster file is read with
+  YAML 1.2 booleans. A node with `lake:` also switches off every connector whose tables its synthetic lake does not hold (module templates,
+  its packs' connectors, its own connector files; `tools/launch/clusterlakes.py`), and a synthetic lake ends on the cluster's business
+  today (`DRISHTI_BUSINESS_TODAY`): one that ends on another day is built again beside it and swapped in (the lakes ended on 2026-10-16, so
+  with today fixed at 2026-11-06 the grouped page `counterparty-trades` of a b/c counterparty was "not held"). `test_clusterlakes.py`.
 
 ## 2.9.11.i6 (2026-11-16)
 

@@ -1,0 +1,180 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+
+"""The synthetic lakes of a cluster file (``lakes:``) and what a node reading one switches off (tools/launch/clusterctl.py).
+
+A node with ``lake: <name>`` reads the demo lake file with its root, ``DRISHTI_DELTA_ROOT``, set to ``<data>/stack/lakes/<name>``: the
+synthetic trades of tools/bench/trades.py (trading, with the counterparties and netting sets they name). Two rules keep such a node
+healthy:
+
+* **The lake ends on the cluster's business today.** Its last day is the lake entry's ``end:``, else the cluster's
+  ``DRISHTI_BUSINESS_TODAY`` (the day every server treats as today), else this machine's date, rolled back to a business day. A lake
+  that ends on another day is built again beside the old one (``<name>-next``) and swapped in, so a node never reads a lake whose days
+  its servers do not ask for (the node holds no trade of "today", and the cluster's grouped pages miss it).
+* **A connector whose tables the lake does not hold is off on the node.** Every connector the node may run (the modules' templates,
+  its packs' connectors and the node's own connector files) that reads a lake rooted at ``DRISHTI_DELTA_ROOT`` (the demo lake and the
+  official results lakes) with none of its ``lake-tables`` in the synthetic lake is switched off, with the cluster file's ``off:``
+  list: the kinds are served by the nodes that hold them (docs/guides/CLUSTER_GUIDE.md, "Is the pack here but not the data?"),
+  never reported DOWN. A new module's connector needs no new line in the cluster file.
+"""
+from __future__ import annotations
+
+import datetime
+import importlib.util
+import os
+import re
+import shutil
+import subprocess
+from pathlib import Path
+from typing import Callable, Iterable
+
+import yaml
+
+ROOT = Path(__file__).resolve().parents[2]
+ROOT_ENV = "DRISHTI_DELTA_ROOT"
+TODAY_ENV = "DRISHTI_BUSINESS_TODAY"
+PART = re.compile(r"business_date=(\d{4}-\d{2}-\d{2})$")
+
+
+class StackLoader(yaml.SafeLoader):
+    """YAML 1.2 booleans only: ``off:`` and ``on:`` stay words (PyYAML's YAML 1.1 reads them as false and true, and ``off: [x]`` was lost)."""
+
+
+StackLoader.yaml_implicit_resolvers = {k: [(tag, rx) for tag, rx in v if tag != "tag:yaml.org,2002:bool"]
+                                       for k, v in yaml.SafeLoader.yaml_implicit_resolvers.items()}
+StackLoader.add_implicit_resolver("tag:yaml.org,2002:bool", re.compile(r"^(?:true|True|TRUE|false|False|FALSE)$"), list("tTfF"))
+
+
+def read_stack(text: str) -> dict:
+    return yaml.load(text, Loader=StackLoader) or {}
+
+
+# -- the lake's days ---------------------------------------------------------------------------------------------------------------
+def _trades():
+    spec = importlib.util.spec_from_file_location("drishti_bench_trades", ROOT / "tools" / "bench" / "trades.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def wanted_end(stack: dict, spec: dict, today: Callable[[], datetime.date] = datetime.date.today) -> str:
+    """The lake's last business day: the entry's end:, else the cluster's business today, else this machine's date (a business day)."""
+    end = spec.get("end") or (stack.get("settings") or {}).get(TODAY_ENV) or os.environ.get(TODAY_ENV) or today().isoformat()
+    cal = (stack.get("settings") or {}).get("DRISHTI_CALENDAR") or os.environ.get("DRISHTI_CALENDAR", "USNY")
+    return _trades().business_days(str(end), 1, cal)[0]
+
+
+def last_day(lake: Path) -> str | None:
+    """The newest business_date partition of the lake's trade tables; None when it has none."""
+    days = [m.group(1) for t in (lake / "trading").glob("*/business_date=*") if (m := PART.search(t.name))]
+    return max(days) if days else None
+
+
+def build_lake(stack: dict, name: str, lake: Path, tmp_root: Path, python: str, say: Callable[[str], None]) -> None:
+    """<data>/stack/lakes/<name> as stack.yaml's lakes entry says, ending on wanted_end: built when missing, built again (beside, then
+    swapped in) when it ends on another day."""
+    spec = (stack.get("lakes") or {}).get(name)
+    have = last_day(lake)
+    if not spec:
+        if have:
+            return
+        raise SystemExit(f"lake {name} is not in stack.yaml (lakes) and {lake} has no trades")
+    end = wanted_end(stack, spec)
+    if have == end:
+        return
+    target = lake if have is None else lake.with_name(f"{name}-next")
+    shutil.rmtree(target, ignore_errors=True) if target != lake else None
+    tmp = tmp_root / f"lake-{name}"
+    tmp.mkdir(parents=True, exist_ok=True)
+    n, days = str(spec.get("per-day", 1500)), str(spec.get("days", 2))
+    why = "" if have is None else f" (it ended on {have}; the cluster's today is {end})"
+    say(f"building lake {name}: {spec['systems']}, {n} trades a day for {days} days to {end}{why} ({lake})")
+    subprocess.run([python, str(ROOT / "tools" / "bench" / "trades.py"), "--lake", str(target), "--tmp", str(tmp), "--days", days, "--end", end,
+                    "--min", n, "--max", n, "--systems", spec["systems"], "--counterparties", str(spec.get("counterparties", 300))],
+                   check=True, env={**os.environ, "TMPDIR": str(tmp)})
+    shutil.rmtree(tmp, ignore_errors=True)
+    if target != lake:
+        old = lake.with_name(f"{name}-old")
+        shutil.rmtree(old, ignore_errors=True)
+        lake.rename(old)
+        target.rename(lake)
+        shutil.rmtree(old, ignore_errors=True)
+
+
+# -- the connectors a lake node switches off ---------------------------------------------------------------------------------------
+def root_lakes(lakes_dir: Path) -> set[str]:
+    """The lakes whose root is DRISHTI_DELTA_ROOT's (the demo lake, the official results lakes): a node's synthetic lake replaces them."""
+    out = set()
+    for f in lakes_dir.rglob("*.yaml"):
+        doc = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
+        if isinstance(doc, dict) and doc.get("lake") and ROOT_ENV in str(doc.get("root", "")):
+            out.add(str(doc["lake"]))
+    return out
+
+
+def _yaml(path: Path):
+    try:
+        return yaml.load(path.read_text(encoding="utf-8"), Loader=StackLoader)
+    except (OSError, yaml.YAMLError):
+        return None
+
+
+def definitions(modules: Path, packs: Iterable[str], own: Path | None) -> dict[str, dict]:
+    """Every connector a node may run, by name: the modules' templates, the connectors of its packs (pack.yaml connectors:) and its own
+    connector files (the node's connectors folder), the later winning."""
+    out: dict[str, dict] = {}
+    for f in sorted(modules.glob("*/connectors/*.yaml")):
+        d = _yaml(f)
+        if isinstance(d, dict):
+            out[str(d.get("name") or f.stem)] = d
+    wanted = set(packs)
+    for f in sorted(modules.glob("*/packs/*/pack.yaml")):
+        d = _yaml(f)
+        if isinstance(d, dict) and d.get("pack") in wanted:
+            out.update({str(k): v for k, v in (d.get("connectors") or {}).items() if isinstance(v, dict)})
+    for f in sorted(own.glob("*.yaml")) if own and own.is_dir() else []:
+        d = _yaml(f)
+        if isinstance(d, dict):
+            out[f.stem] = d
+    return out
+
+
+def _held(lake: Path, table: str) -> bool:
+    domain, _, name = table.partition(".")
+    return (lake / domain / name / "_delta_log").is_dir()
+
+
+def tables_missing(defs: dict[str, dict], lake: Path, lakes: set[str]) -> list[str]:
+    """The connectors reading a DRISHTI_DELTA_ROOT lake with none of their tables in the node's lake, sorted."""
+    out = []
+    for name, d in defs.items():
+        s = d.get("settings") or {}
+        tables = [t.strip() for t in str(s.get("lake-tables") or "").split(",") if t.strip()]
+        if str(s.get("lake") or "") in lakes and tables and not any(_held(lake, t) for t in tables):
+            out.append(name)
+        elif not tables and ROOT_ENV in str(s.get("root") or "") and s.get("domain") \
+                and not any((lake / str(s["domain"])).glob("*/_delta_log")):   # the older form of a connector file: root: and domain:
+            out.append(name)
+    return sorted(out)
+
+
+def switched_off(node: dict, lake: Path | None, own: Path | None, lakes_dir: Path, modules: Path = ROOT / "modules") -> list[str]:
+    """The connectors a node starts switched off: the cluster file's off: list, and, for a node with a synthetic lake, every connector
+    whose tables that lake does not hold."""
+    off = list(node.get("off") or [])
+    if lake is not None:
+        packs = [p.strip() for p in str(node.get("packs") or "").split(",") if p.strip()]
+        off += [c for c in tables_missing(definitions(modules, packs, own), lake, root_lakes(lakes_dir)) if c not in off]
+    return off
