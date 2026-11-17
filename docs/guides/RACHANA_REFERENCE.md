@@ -8577,7 +8577,7 @@ New code lives in three places: `com.ash.drishti.rachana.about` (the pack text m
 before anything reads the document, `mayOpen` for sourced panels, `restrict` on keys and links. A pack the caller is
 not assigned is `DRS-5002` as for the view. `edit` and `calc` appear only for callers with those rights.
 
-**Problem codes** (registry: `kernel/drishti-common/.../ErrorCode.java`; highest used 4005, 2033, 5025):
+**Problem codes** (registry: `kernel/drishti-api/.../ErrorCode.java`; highest used 4005, 2033, 5025):
 
 | Code | HTTP | Meaning |
 |---|---|---|
