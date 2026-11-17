@@ -1,0 +1,784 @@
+{
+  "contract" : "admin-modules/1",
+  "self" : "drishti-main",
+  "kernel" : "2.9.11.i7a",
+  "counts" : {
+    "modules" : 10,
+    "on" : 7,
+    "off" : 3,
+    "nodes" : 3,
+    "nodesAgree" : 2,
+    "nodesDiffer" : 1,
+    "problems" : 7,
+    "warnings" : 6,
+    "stale" : 1,
+    "notLoaded" : 1
+  },
+  "fingerprint" : {
+    "majority" : "b1ac0a79ad3c1b6bf3b75dde0bd0d9e12f0c4617fd0159da798f7fae99027b90",
+    "short" : "b1ac0a79",
+    "nodes" : [ "drishti-main", "drishti-b" ],
+    "agree" : false
+  },
+  "nodes" : [ {
+    "id" : "drishti-main",
+    "self" : true,
+    "up" : true,
+    "reported" : true,
+    "fingerprint" : "b1ac0a79ad3c1b6bf3b75dde0bd0d9e12f0c4617fd0159da798f7fae99027b90",
+    "short" : "b1ac0a79",
+    "agrees" : true
+  }, {
+    "id" : "drishti-b",
+    "self" : false,
+    "up" : true,
+    "reported" : true,
+    "fingerprint" : "b1ac0a79ad3c1b6bf3b75dde0bd0d9e12f0c4617fd0159da798f7fae99027b90",
+    "short" : "b1ac0a79",
+    "agrees" : true
+  }, {
+    "id" : "drishti-c",
+    "self" : false,
+    "up" : true,
+    "reported" : true,
+    "fingerprint" : "f11508f97e23bbe22268edb53aeadfc89c4754468fadb4ab7f84dde1faec2bf2",
+    "short" : "f11508f9",
+    "agrees" : false
+  } ],
+  "modules" : [ {
+    "id" : "banking",
+    "title" : "Banking",
+    "domain" : "risk",
+    "installed" : true,
+    "licensed" : true,
+    "enabled" : true,
+    "on" : true,
+    "reason" : "",
+    "switchSource" : "shipped",
+    "loaded" : true,
+    "restartNeeded" : false,
+    "version" : "2.9.11.i7a",
+    "origin" : "first-party",
+    "contentHash" : "68ba9b33ad38d5d4587dec011e8425d82ce82bc5a4ba405d30d670e85eae92e1",
+    "short" : "68ba9b33",
+    "state" : "loaded",
+    "parts" : {
+      "drishti-main" : [ "api", "compute", "console" ],
+      "drishti-b" : [ "api", "compute", "console" ],
+      "drishti-c" : [ "api", "compute", "console" ]
+    },
+    "file" : "banking-2.9.11.i7a.dmod",
+    "majority" : "68ba9b33ad38d5d4587dec011e8425d82ce82bc5a4ba405d30d670e85eae92e1",
+    "differs" : false,
+    "cells" : [ {
+      "node" : "drishti-main",
+      "state" : "loaded",
+      "version" : "2.9.11.i7a",
+      "contentHash" : "68ba9b33ad38d5d4587dec011e8425d82ce82bc5a4ba405d30d670e85eae92e1",
+      "short" : "68ba9b33",
+      "origin" : "first-party",
+      "parts" : [ "api", "compute", "console" ],
+      "differs" : false
+    }, {
+      "node" : "drishti-b",
+      "state" : "loaded",
+      "version" : "2.9.11.i7a",
+      "contentHash" : "68ba9b33ad38d5d4587dec011e8425d82ce82bc5a4ba405d30d670e85eae92e1",
+      "short" : "68ba9b33",
+      "origin" : "first-party",
+      "parts" : [ "api", "compute", "console" ],
+      "differs" : false
+    }, {
+      "node" : "drishti-c",
+      "state" : "loaded",
+      "version" : "2.9.11.i7a",
+      "contentHash" : "68ba9b33ad38d5d4587dec011e8425d82ce82bc5a4ba405d30d670e85eae92e1",
+      "short" : "68ba9b33",
+      "origin" : "first-party",
+      "parts" : [ "api", "compute", "console" ],
+      "differs" : false
+    } ],
+    "problems" : [ ]
+  }, {
+    "id" : "capitalmarkets",
+    "title" : "Capital markets",
+    "domain" : "risk",
+    "installed" : true,
+    "licensed" : true,
+    "enabled" : true,
+    "on" : true,
+    "reason" : "",
+    "switchSource" : "shipped",
+    "loaded" : false,
+    "restartNeeded" : true,
+    "version" : null,
+    "origin" : null,
+    "contentHash" : null,
+    "short" : null,
+    "state" : "stale",
+    "parts" : {
+      "drishti-main" : [ ],
+      "drishti-b" : [ ],
+      "drishti-c" : [ ]
+    },
+    "file" : null,
+    "majority" : "stale",
+    "differs" : false,
+    "cells" : [ {
+      "node" : "drishti-main",
+      "state" : "stale",
+      "version" : null,
+      "contentHash" : null,
+      "short" : null,
+      "origin" : null,
+      "parts" : [ ],
+      "differs" : false
+    }, {
+      "node" : "drishti-b",
+      "state" : "stale",
+      "version" : null,
+      "contentHash" : null,
+      "short" : null,
+      "origin" : null,
+      "parts" : [ ],
+      "differs" : false
+    }, {
+      "node" : "drishti-c",
+      "state" : "stale",
+      "version" : null,
+      "contentHash" : null,
+      "short" : null,
+      "origin" : null,
+      "parts" : [ ],
+      "differs" : false
+    } ],
+    "problems" : [ {
+      "module" : "capitalmarkets",
+      "node" : "drishti-main",
+      "kind" : "stale",
+      "severity" : "problem",
+      "text" : "capitalmarkets 2.9.11.i6: built for kernel 2.9.11.i6, this is 2.9.11.i7a: install the matching module"
+    }, {
+      "module" : "capitalmarkets",
+      "node" : "drishti-b",
+      "kind" : "stale",
+      "severity" : "problem",
+      "text" : "capitalmarkets 2.9.11.i6: built for kernel 2.9.11.i6, this is 2.9.11.i7a: install the matching module"
+    }, {
+      "module" : "capitalmarkets",
+      "node" : "drishti-c",
+      "kind" : "stale",
+      "severity" : "problem",
+      "text" : "capitalmarkets 2.9.11.i6: built for kernel 2.9.11.i6, this is 2.9.11.i7a: install the matching module"
+    } ]
+  }, {
+    "id" : "economy",
+    "title" : "Economy",
+    "domain" : "public-sector",
+    "installed" : true,
+    "licensed" : true,
+    "enabled" : true,
+    "on" : true,
+    "reason" : "",
+    "switchSource" : "shipped",
+    "loaded" : true,
+    "restartNeeded" : false,
+    "version" : "2.9.11.i7a",
+    "origin" : "first-party",
+    "contentHash" : "6fda2b8252b6d5ea9d19934d61b30d7a4a2922108fc1ecb83416001760139a39",
+    "short" : "6fda2b82",
+    "state" : "loaded",
+    "parts" : {
+      "drishti-main" : [ "api", "console" ],
+      "drishti-b" : [ "api", "console" ],
+      "drishti-c" : [ "api", "console" ]
+    },
+    "file" : "economy-2.9.11.i7a.dmod",
+    "majority" : "6fda2b8252b6d5ea9d19934d61b30d7a4a2922108fc1ecb83416001760139a39",
+    "differs" : false,
+    "cells" : [ {
+      "node" : "drishti-main",
+      "state" : "loaded",
+      "version" : "2.9.11.i7a",
+      "contentHash" : "6fda2b8252b6d5ea9d19934d61b30d7a4a2922108fc1ecb83416001760139a39",
+      "short" : "6fda2b82",
+      "origin" : "first-party",
+      "parts" : [ "api", "console" ],
+      "differs" : false
+    }, {
+      "node" : "drishti-b",
+      "state" : "loaded",
+      "version" : "2.9.11.i7a",
+      "contentHash" : "6fda2b8252b6d5ea9d19934d61b30d7a4a2922108fc1ecb83416001760139a39",
+      "short" : "6fda2b82",
+      "origin" : "first-party",
+      "parts" : [ "api", "console" ],
+      "differs" : false
+    }, {
+      "node" : "drishti-c",
+      "state" : "loaded",
+      "version" : "2.9.11.i7a",
+      "contentHash" : "6fda2b8252b6d5ea9d19934d61b30d7a4a2922108fc1ecb83416001760139a39",
+      "short" : "6fda2b82",
+      "origin" : "first-party",
+      "parts" : [ "api", "console" ],
+      "differs" : false
+    } ],
+    "problems" : [ {
+      "module" : "economy",
+      "node" : "drishti-main",
+      "kind" : "library",
+      "severity" : "warning",
+      "text" : "economy 2.9.11.i7a carries jackson-databind 2.17.2 (lib/jackson-databind-2.17.2.jar); the kernel's jackson-databind 2.18.2 is used instead. Remove the jar from the module and compile against the kernel's (scope provided)."
+    }, {
+      "module" : "economy",
+      "node" : "drishti-b",
+      "kind" : "library",
+      "severity" : "warning",
+      "text" : "economy 2.9.11.i7a carries jackson-databind 2.17.2 (lib/jackson-databind-2.17.2.jar); the kernel's jackson-databind 2.18.2 is used instead. Remove the jar from the module and compile against the kernel's (scope provided)."
+    }, {
+      "module" : "economy",
+      "node" : "drishti-c",
+      "kind" : "library",
+      "severity" : "warning",
+      "text" : "economy 2.9.11.i7a carries jackson-databind 2.17.2 (lib/jackson-databind-2.17.2.jar); the kernel's jackson-databind 2.18.2 is used instead. Remove the jar from the module and compile against the kernel's (scope provided)."
+    } ]
+  }, {
+    "id" : "genomics",
+    "title" : "Genomics",
+    "domain" : "genomics",
+    "installed" : true,
+    "licensed" : true,
+    "enabled" : false,
+    "on" : false,
+    "reason" : "switched off by an administrator",
+    "switchSource" : "config/modules/genomics.yaml",
+    "loaded" : false,
+    "restartNeeded" : false,
+    "version" : "0.3.0",
+    "origin" : "third-party",
+    "contentHash" : "bb0764f1b5b3d4265714e6324abc2754798a6d17eeb757abce85b642f9657347",
+    "short" : "bb0764f1",
+    "state" : "off",
+    "parts" : {
+      "drishti-main" : [ ],
+      "drishti-b" : [ ],
+      "drishti-c" : [ ]
+    },
+    "file" : "genomics-0.3.0.dmod",
+    "majority" : "bb0764f1b5b3d4265714e6324abc2754798a6d17eeb757abce85b642f9657347",
+    "differs" : false,
+    "cells" : [ {
+      "node" : "drishti-main",
+      "state" : "off",
+      "version" : "0.3.0",
+      "contentHash" : "bb0764f1b5b3d4265714e6324abc2754798a6d17eeb757abce85b642f9657347",
+      "short" : "bb0764f1",
+      "origin" : "third-party",
+      "parts" : [ ],
+      "differs" : false
+    }, {
+      "node" : "drishti-b",
+      "state" : "off",
+      "version" : "0.3.0",
+      "contentHash" : "bb0764f1b5b3d4265714e6324abc2754798a6d17eeb757abce85b642f9657347",
+      "short" : "bb0764f1",
+      "origin" : "third-party",
+      "parts" : [ ],
+      "differs" : false
+    }, {
+      "node" : "drishti-c",
+      "state" : "off",
+      "version" : "0.3.0",
+      "contentHash" : "bb0764f1b5b3d4265714e6324abc2754798a6d17eeb757abce85b642f9657347",
+      "short" : "bb0764f1",
+      "origin" : "third-party",
+      "parts" : [ ],
+      "differs" : false
+    } ],
+    "problems" : [ ]
+  }, {
+    "id" : "market-data",
+    "title" : "Market data",
+    "domain" : "risk",
+    "installed" : true,
+    "licensed" : true,
+    "enabled" : true,
+    "on" : true,
+    "reason" : "",
+    "switchSource" : "shipped",
+    "loaded" : true,
+    "restartNeeded" : false,
+    "version" : "2.9.11.i7a",
+    "origin" : "first-party",
+    "contentHash" : "f58ff5e1e3acb63bc454ea3bef0336117d231f55e34ca93cf5be6960fb1e34f8",
+    "short" : "f58ff5e1",
+    "state" : "loaded",
+    "parts" : {
+      "drishti-main" : [ "api", "console" ],
+      "drishti-b" : [ "api", "console" ],
+      "drishti-c" : [ "api", "console" ]
+    },
+    "file" : "market-data-2.9.11.i7a.dmod",
+    "majority" : "f58ff5e1e3acb63bc454ea3bef0336117d231f55e34ca93cf5be6960fb1e34f8",
+    "differs" : false,
+    "cells" : [ {
+      "node" : "drishti-main",
+      "state" : "loaded",
+      "version" : "2.9.11.i7a",
+      "contentHash" : "f58ff5e1e3acb63bc454ea3bef0336117d231f55e34ca93cf5be6960fb1e34f8",
+      "short" : "f58ff5e1",
+      "origin" : "first-party",
+      "parts" : [ "api", "console" ],
+      "differs" : false
+    }, {
+      "node" : "drishti-b",
+      "state" : "loaded",
+      "version" : "2.9.11.i7a",
+      "contentHash" : "f58ff5e1e3acb63bc454ea3bef0336117d231f55e34ca93cf5be6960fb1e34f8",
+      "short" : "f58ff5e1",
+      "origin" : "first-party",
+      "parts" : [ "api", "console" ],
+      "differs" : false
+    }, {
+      "node" : "drishti-c",
+      "state" : "loaded",
+      "version" : "2.9.11.i7a",
+      "contentHash" : "f58ff5e1e3acb63bc454ea3bef0336117d231f55e34ca93cf5be6960fb1e34f8",
+      "short" : "f58ff5e1",
+      "origin" : "first-party",
+      "parts" : [ "api", "console" ],
+      "differs" : false
+    } ],
+    "problems" : [ {
+      "module" : "market-data",
+      "node" : "drishti-main",
+      "kind" : "library",
+      "severity" : "warning",
+      "text" : "market-data 2.9.11.i7a carries guava 32.1.3-jre (lib/guava-32.1.3-jre.jar); the kernel's guava 33.4.0-jre is used instead. Remove the jar from the module and compile against the kernel's (scope provided)."
+    }, {
+      "module" : "market-data",
+      "node" : "drishti-b",
+      "kind" : "library",
+      "severity" : "warning",
+      "text" : "market-data 2.9.11.i7a carries guava 32.1.3-jre (lib/guava-32.1.3-jre.jar); the kernel's guava 33.4.0-jre is used instead. Remove the jar from the module and compile against the kernel's (scope provided)."
+    }, {
+      "module" : "market-data",
+      "node" : "drishti-c",
+      "kind" : "library",
+      "severity" : "warning",
+      "text" : "market-data 2.9.11.i7a carries guava 32.1.3-jre (lib/guava-32.1.3-jre.jar); the kernel's guava 33.4.0-jre is used instead. Remove the jar from the module and compile against the kernel's (scope provided)."
+    } ]
+  }, {
+    "id" : "source-calypso",
+    "title" : "Calypso",
+    "domain" : "sources",
+    "installed" : true,
+    "licensed" : true,
+    "enabled" : false,
+    "on" : false,
+    "reason" : "switched off by an administrator",
+    "switchSource" : "config/modules/source-calypso.yaml",
+    "loaded" : false,
+    "restartNeeded" : false,
+    "version" : "2.9.11.i7a",
+    "origin" : "first-party",
+    "contentHash" : "966f5d21e5d35b48a84b52f6c378e43e83cfff21b472e1bb9c5cb8a307c2c362",
+    "short" : "966f5d21",
+    "state" : "off",
+    "parts" : {
+      "drishti-main" : [ ],
+      "drishti-b" : [ ],
+      "drishti-c" : [ ]
+    },
+    "file" : "source-calypso-2.9.11.i7a.dmod",
+    "majority" : "966f5d21e5d35b48a84b52f6c378e43e83cfff21b472e1bb9c5cb8a307c2c362",
+    "differs" : false,
+    "cells" : [ {
+      "node" : "drishti-main",
+      "state" : "off",
+      "version" : "2.9.11.i7a",
+      "contentHash" : "966f5d21e5d35b48a84b52f6c378e43e83cfff21b472e1bb9c5cb8a307c2c362",
+      "short" : "966f5d21",
+      "origin" : "first-party",
+      "parts" : [ ],
+      "differs" : false
+    }, {
+      "node" : "drishti-b",
+      "state" : "off",
+      "version" : "2.9.11.i7a",
+      "contentHash" : "966f5d21e5d35b48a84b52f6c378e43e83cfff21b472e1bb9c5cb8a307c2c362",
+      "short" : "966f5d21",
+      "origin" : "first-party",
+      "parts" : [ ],
+      "differs" : false
+    }, {
+      "node" : "drishti-c",
+      "state" : "off",
+      "version" : "2.9.11.i7a",
+      "contentHash" : "966f5d21e5d35b48a84b52f6c378e43e83cfff21b472e1bb9c5cb8a307c2c362",
+      "short" : "966f5d21",
+      "origin" : "first-party",
+      "parts" : [ ],
+      "differs" : false
+    } ],
+    "problems" : [ ]
+  }, {
+    "id" : "source-endur",
+    "title" : "Endur",
+    "domain" : "sources",
+    "installed" : true,
+    "licensed" : true,
+    "enabled" : true,
+    "on" : true,
+    "reason" : "",
+    "switchSource" : "shipped",
+    "loaded" : true,
+    "restartNeeded" : false,
+    "version" : "2.9.11.i7a",
+    "origin" : "first-party",
+    "contentHash" : "148fe5be64f27be85ae9e48ddacbb0e2380a4622273090b7db4fbe2718c9e389",
+    "short" : "148fe5be",
+    "state" : "loaded",
+    "parts" : {
+      "drishti-main" : [ "api" ],
+      "drishti-b" : [ "api" ],
+      "drishti-c" : [ "api" ]
+    },
+    "file" : "source-endur-2.9.11.i7a.dmod",
+    "majority" : "148fe5be64f27be85ae9e48ddacbb0e2380a4622273090b7db4fbe2718c9e389",
+    "differs" : false,
+    "cells" : [ {
+      "node" : "drishti-main",
+      "state" : "loaded",
+      "version" : "2.9.11.i7a",
+      "contentHash" : "148fe5be64f27be85ae9e48ddacbb0e2380a4622273090b7db4fbe2718c9e389",
+      "short" : "148fe5be",
+      "origin" : "first-party",
+      "parts" : [ "api" ],
+      "differs" : false
+    }, {
+      "node" : "drishti-b",
+      "state" : "loaded",
+      "version" : "2.9.11.i7a",
+      "contentHash" : "148fe5be64f27be85ae9e48ddacbb0e2380a4622273090b7db4fbe2718c9e389",
+      "short" : "148fe5be",
+      "origin" : "first-party",
+      "parts" : [ "api" ],
+      "differs" : false
+    }, {
+      "node" : "drishti-c",
+      "state" : "loaded",
+      "version" : "2.9.11.i7a",
+      "contentHash" : "148fe5be64f27be85ae9e48ddacbb0e2380a4622273090b7db4fbe2718c9e389",
+      "short" : "148fe5be",
+      "origin" : "first-party",
+      "parts" : [ "api" ],
+      "differs" : false
+    } ],
+    "problems" : [ ]
+  }, {
+    "id" : "source-murex",
+    "title" : "Murex",
+    "domain" : "sources",
+    "installed" : true,
+    "licensed" : true,
+    "enabled" : true,
+    "on" : true,
+    "reason" : "",
+    "switchSource" : "shipped",
+    "loaded" : true,
+    "restartNeeded" : false,
+    "version" : "2.9.11.i7a",
+    "origin" : "first-party",
+    "contentHash" : "31d329604fe215ba4c98cfe338a62817b1bf88dec4b2cdb9a9364c36d87e5958",
+    "short" : "31d32960",
+    "state" : "loaded",
+    "parts" : {
+      "drishti-main" : [ "api" ],
+      "drishti-b" : [ "api" ],
+      "drishti-c" : [ "api" ]
+    },
+    "file" : "source-murex-2.9.11.i7a.dmod",
+    "majority" : "31d329604fe215ba4c98cfe338a62817b1bf88dec4b2cdb9a9364c36d87e5958",
+    "differs" : false,
+    "cells" : [ {
+      "node" : "drishti-main",
+      "state" : "loaded",
+      "version" : "2.9.11.i7a",
+      "contentHash" : "31d329604fe215ba4c98cfe338a62817b1bf88dec4b2cdb9a9364c36d87e5958",
+      "short" : "31d32960",
+      "origin" : "first-party",
+      "parts" : [ "api" ],
+      "differs" : false
+    }, {
+      "node" : "drishti-b",
+      "state" : "loaded",
+      "version" : "2.9.11.i7a",
+      "contentHash" : "31d329604fe215ba4c98cfe338a62817b1bf88dec4b2cdb9a9364c36d87e5958",
+      "short" : "31d32960",
+      "origin" : "first-party",
+      "parts" : [ "api" ],
+      "differs" : false
+    }, {
+      "node" : "drishti-c",
+      "state" : "loaded",
+      "version" : "2.9.11.i7a",
+      "contentHash" : "31d329604fe215ba4c98cfe338a62817b1bf88dec4b2cdb9a9364c36d87e5958",
+      "short" : "31d32960",
+      "origin" : "first-party",
+      "parts" : [ "api" ],
+      "differs" : false
+    } ],
+    "problems" : [ ]
+  }, {
+    "id" : "source-swapone",
+    "title" : "SwapOne",
+    "domain" : "sources",
+    "installed" : true,
+    "licensed" : true,
+    "enabled" : false,
+    "on" : false,
+    "reason" : "switched off by an administrator",
+    "switchSource" : "config/modules/source-swapone.yaml",
+    "loaded" : false,
+    "restartNeeded" : false,
+    "version" : null,
+    "origin" : null,
+    "contentHash" : null,
+    "short" : null,
+    "state" : "refused",
+    "parts" : {
+      "drishti-main" : [ ],
+      "drishti-b" : [ ],
+      "drishti-c" : [ ]
+    },
+    "file" : null,
+    "majority" : "refused",
+    "differs" : false,
+    "cells" : [ {
+      "node" : "drishti-main",
+      "state" : "refused",
+      "version" : null,
+      "contentHash" : null,
+      "short" : null,
+      "origin" : null,
+      "parts" : [ ],
+      "differs" : false
+    }, {
+      "node" : "drishti-b",
+      "state" : "refused",
+      "version" : null,
+      "contentHash" : null,
+      "short" : null,
+      "origin" : null,
+      "parts" : [ ],
+      "differs" : false
+    }, {
+      "node" : "drishti-c",
+      "state" : "refused",
+      "version" : null,
+      "contentHash" : null,
+      "short" : null,
+      "origin" : null,
+      "parts" : [ ],
+      "differs" : false
+    } ],
+    "problems" : [ {
+      "module" : "source-swapone",
+      "node" : "drishti-main",
+      "kind" : "refused",
+      "severity" : "problem",
+      "text" : "source-swapone-1.2.0.dmod: V2: the hash list does not match the files (lib/swapone-client.jar changed): build the package again"
+    }, {
+      "module" : "source-swapone",
+      "node" : "drishti-b",
+      "kind" : "refused",
+      "severity" : "problem",
+      "text" : "source-swapone-1.2.0.dmod: V2: the hash list does not match the files (lib/swapone-client.jar changed): build the package again"
+    }, {
+      "module" : "source-swapone",
+      "node" : "drishti-c",
+      "kind" : "refused",
+      "severity" : "problem",
+      "text" : "source-swapone-1.2.0.dmod: V2: the hash list does not match the files (lib/swapone-client.jar changed): build the package again"
+    } ]
+  }, {
+    "id" : "trading",
+    "title" : "Trading",
+    "domain" : "risk",
+    "installed" : true,
+    "licensed" : true,
+    "enabled" : true,
+    "on" : true,
+    "reason" : "",
+    "switchSource" : "shipped",
+    "loaded" : true,
+    "restartNeeded" : false,
+    "version" : "2.9.11.i7a",
+    "origin" : "first-party",
+    "contentHash" : "0035e3bed3a10ebe81bc85bbf80cc092871ba344926efa491f195e36cc7e003b",
+    "short" : "0035e3be",
+    "state" : "loaded",
+    "parts" : {
+      "drishti-main" : [ "api", "console" ],
+      "drishti-b" : [ "api", "console" ],
+      "drishti-c" : [ "api" ]
+    },
+    "file" : "trading-2.9.11.i7a.dmod",
+    "majority" : "0035e3bed3a10ebe81bc85bbf80cc092871ba344926efa491f195e36cc7e003b",
+    "differs" : true,
+    "cells" : [ {
+      "node" : "drishti-main",
+      "state" : "loaded",
+      "version" : "2.9.11.i7a",
+      "contentHash" : "0035e3bed3a10ebe81bc85bbf80cc092871ba344926efa491f195e36cc7e003b",
+      "short" : "0035e3be",
+      "origin" : "first-party",
+      "parts" : [ "api", "console" ],
+      "differs" : false
+    }, {
+      "node" : "drishti-b",
+      "state" : "loaded",
+      "version" : "2.9.11.i7a",
+      "contentHash" : "0035e3bed3a10ebe81bc85bbf80cc092871ba344926efa491f195e36cc7e003b",
+      "short" : "0035e3be",
+      "origin" : "first-party",
+      "parts" : [ "api", "console" ],
+      "differs" : false
+    }, {
+      "node" : "drishti-c",
+      "state" : "loaded",
+      "version" : "2.9.11.i7a",
+      "contentHash" : "dcc296b526fcdca5c4dc110583271cf7962c746b6cce133b9274896b72a00576",
+      "short" : "dcc296b5",
+      "origin" : "first-party",
+      "parts" : [ "api" ],
+      "differs" : true
+    } ],
+    "problems" : [ {
+      "module" : "trading",
+      "node" : "drishti-c",
+      "kind" : "differs",
+      "severity" : "problem",
+      "text" : "nodes disagree on module trading: drishti-b, drishti-main booted 0035e3be (2.9.11.i7a) (the majority); drishti-c booted dcc296b5 (2.9.11.i7a)"
+    } ]
+  } ],
+  "disagree" : [ {
+    "module" : "trading",
+    "majority" : "0035e3bed3a10ebe81bc85bbf80cc092871ba344926efa491f195e36cc7e003b",
+    "differing" : [ "drishti-c" ],
+    "groups" : {
+      "0035e3be" : [ "drishti-b", "drishti-main" ],
+      "dcc296b5" : [ "drishti-c" ]
+    },
+    "text" : "nodes disagree on module trading: drishti-b, drishti-main booted 0035e3be (2.9.11.i7a) (the majority); drishti-c booted dcc296b5 (2.9.11.i7a)"
+  } ],
+  "problems" : [ {
+    "module" : "capitalmarkets",
+    "node" : "drishti-main",
+    "kind" : "stale",
+    "severity" : "problem",
+    "text" : "capitalmarkets 2.9.11.i6: built for kernel 2.9.11.i6, this is 2.9.11.i7a: install the matching module"
+  }, {
+    "module" : "capitalmarkets",
+    "node" : "drishti-b",
+    "kind" : "stale",
+    "severity" : "problem",
+    "text" : "capitalmarkets 2.9.11.i6: built for kernel 2.9.11.i6, this is 2.9.11.i7a: install the matching module"
+  }, {
+    "module" : "capitalmarkets",
+    "node" : "drishti-c",
+    "kind" : "stale",
+    "severity" : "problem",
+    "text" : "capitalmarkets 2.9.11.i6: built for kernel 2.9.11.i6, this is 2.9.11.i7a: install the matching module"
+  }, {
+    "module" : "economy",
+    "node" : "drishti-main",
+    "kind" : "library",
+    "severity" : "warning",
+    "text" : "economy 2.9.11.i7a carries jackson-databind 2.17.2 (lib/jackson-databind-2.17.2.jar); the kernel's jackson-databind 2.18.2 is used instead. Remove the jar from the module and compile against the kernel's (scope provided)."
+  }, {
+    "module" : "economy",
+    "node" : "drishti-b",
+    "kind" : "library",
+    "severity" : "warning",
+    "text" : "economy 2.9.11.i7a carries jackson-databind 2.17.2 (lib/jackson-databind-2.17.2.jar); the kernel's jackson-databind 2.18.2 is used instead. Remove the jar from the module and compile against the kernel's (scope provided)."
+  }, {
+    "module" : "economy",
+    "node" : "drishti-c",
+    "kind" : "library",
+    "severity" : "warning",
+    "text" : "economy 2.9.11.i7a carries jackson-databind 2.17.2 (lib/jackson-databind-2.17.2.jar); the kernel's jackson-databind 2.18.2 is used instead. Remove the jar from the module and compile against the kernel's (scope provided)."
+  }, {
+    "module" : "market-data",
+    "node" : "drishti-main",
+    "kind" : "library",
+    "severity" : "warning",
+    "text" : "market-data 2.9.11.i7a carries guava 32.1.3-jre (lib/guava-32.1.3-jre.jar); the kernel's guava 33.4.0-jre is used instead. Remove the jar from the module and compile against the kernel's (scope provided)."
+  }, {
+    "module" : "market-data",
+    "node" : "drishti-b",
+    "kind" : "library",
+    "severity" : "warning",
+    "text" : "market-data 2.9.11.i7a carries guava 32.1.3-jre (lib/guava-32.1.3-jre.jar); the kernel's guava 33.4.0-jre is used instead. Remove the jar from the module and compile against the kernel's (scope provided)."
+  }, {
+    "module" : "market-data",
+    "node" : "drishti-c",
+    "kind" : "library",
+    "severity" : "warning",
+    "text" : "market-data 2.9.11.i7a carries guava 32.1.3-jre (lib/guava-32.1.3-jre.jar); the kernel's guava 33.4.0-jre is used instead. Remove the jar from the module and compile against the kernel's (scope provided)."
+  }, {
+    "module" : "source-swapone",
+    "node" : "drishti-main",
+    "kind" : "refused",
+    "severity" : "problem",
+    "text" : "source-swapone-1.2.0.dmod: V2: the hash list does not match the files (lib/swapone-client.jar changed): build the package again"
+  }, {
+    "module" : "source-swapone",
+    "node" : "drishti-b",
+    "kind" : "refused",
+    "severity" : "problem",
+    "text" : "source-swapone-1.2.0.dmod: V2: the hash list does not match the files (lib/swapone-client.jar changed): build the package again"
+  }, {
+    "module" : "source-swapone",
+    "node" : "drishti-c",
+    "kind" : "refused",
+    "severity" : "problem",
+    "text" : "source-swapone-1.2.0.dmod: V2: the hash list does not match the files (lib/swapone-client.jar changed): build the package again"
+  }, {
+    "module" : "trading",
+    "node" : "drishti-c",
+    "kind" : "differs",
+    "severity" : "problem",
+    "text" : "nodes disagree on module trading: drishti-b, drishti-main booted 0035e3be (2.9.11.i7a) (the majority); drishti-c booted dcc296b5 (2.9.11.i7a)"
+  } ],
+  "install" : {
+    "modulesFolder" : "/opt/drishti/modules",
+    "steps" : [ {
+      "command" : "python3 tools/drishti.py module verify <file>",
+      "comment" : "the same verifier the server runs at start"
+    }, {
+      "command" : "copy <file> into /opt/drishti/modules",
+      "comment" : "replace the module's older file: one file per module id"
+    }, {
+      "command" : "python3 tools/drishti.py module list",
+      "comment" : "the files of the modules folder: module, version, size, hash"
+    }, {
+      "command" : "python3 tools/drishti.py stop server && python3 tools/drishti.py start server",
+      "comment" : "a module is a file and a restart; on every node, one node at a time"
+    } ],
+    "text" : "python3 tools/drishti.py module verify <file>    # the same verifier the server runs at start\ncopy <file> into /opt/drishti/modules    # replace the module's older file: one file per module id\npython3 tools/drishti.py module list    # the files of the modules folder: module, version, size, hash\npython3 tools/drishti.py stop server && python3 tools/drishti.py start server    # a module is a file and a restart; on every node, one node at a time",
+    "note" : "nothing deploys from the browser: install, upgrade or remove a module by its file in the modules folder and a restart, on every node, so every node boots the same content"
+  },
+  "licence" : {
+    "customer" : "example",
+    "development" : true,
+    "modules" : [ ],
+    "source" : "none",
+    "signed" : false
+  },
+  "lenses" : [ ],
+  "store" : { },
+  "warnings" : [ ]
+}

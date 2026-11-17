@@ -583,7 +583,7 @@ one document for the page (mock-up C, [docs/lenses/mockups/admin-modules/C.html]
 nodes matrix, each module's detail, the nodes with their fingerprints, the problems and the install steps. In a cluster every node reads
 every node, itself included, from the digests, so each node answers the same matrix; a single server has one column. `POST` on the same
 path is the module switch (section 7). The recorded example, made by the server's code over the mock-up's three nodes and ten modules,
-is [`drishti-console/tests/answers/admin-modules.json`](../../drishti-console/tests/answers/admin-modules.json) (`AdminModulesRecordTest`,
+is `drishti-console/tests/answers/admin-modules.json` (`AdminModulesRecordTest`,
 `-Ddrishti.record=true` writes it again); the console's page and its tests are built against it. The schema (JSON Schema, draft 2020-12;
 fields not listed may be added within `admin-modules/1`, a removed or renamed field raises the number):
 
@@ -657,7 +657,7 @@ An abridged answer (trading booted with other content on `drishti-c`; the record
 
 ```json
 {"contract": "admin-modules/1", "self": "drishti-main", "kernel": "2.9.11.i7a",
- "counts": {"modules": 10, "on": 7, "off": 3, "nodes": 3, "nodesAgree": 2, "nodesDiffer": 1, "problems": 3, "warnings": 6, "stale": 1, "notLoaded": 1},
+ "counts": {"modules": 10, "on": 7, "off": 3, "nodes": 3, "nodesAgree": 2, "nodesDiffer": 1, "problems": 7, "warnings": 6, "stale": 1, "notLoaded": 1},
  "nodes": [{"id": "drishti-main", "self": true, "up": true, "reported": true, "fingerprint": "…", "short": "…", "agrees": true}, "…"],
  "modules": [{"id": "trading", "title": "Trading", "on": true, "version": "2.9.11.i7a", "origin": "first-party", "file": "trading-2.9.11.i7a.dmod",
    "differs": true, "cells": [{"node": "drishti-main", "state": "loaded", "short": "…", "differs": false}, "…",
