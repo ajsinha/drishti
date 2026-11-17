@@ -134,7 +134,6 @@
   module.Answers public static java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.module.Answers.map(java.lang.Object)
   module.Answers public static java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.module.Answers.map(java.lang.Object,java.lang.String)
   module.Asker public abstract com.ash.drishti.kernel.api.module.Asker com.ash.drishti.kernel.api.module.Asker.as(com.ash.drishti.kernel.api.services.Person)
-  module.Asker public abstract com.ash.drishti.kernel.api.module.RiskBridge com.ash.drishti.kernel.api.module.Asker.risk()
   module.Asker public abstract com.ash.drishti.kernel.api.services.Kernel com.ash.drishti.kernel.api.module.Asker.kernel()
   module.Asker public abstract com.ash.drishti.kernel.api.services.Person com.ash.drishti.kernel.api.module.Asker.person()
   module.Asker public default boolean com.ash.drishti.kernel.api.module.Asker.admin()
@@ -147,8 +146,6 @@
   module.Asker public default java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.module.Asker.dates()
   module.Asker public default java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.module.Asker.live(java.lang.String,int)
   module.Asker public default java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.module.Asker.raw(java.lang.String,java.lang.String)
-  module.Asker public default java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.module.Asker.riskGet(java.lang.String,java.util.Map<java.lang.String, ?>)
-  module.Asker public default java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.module.Asker.riskPost(java.lang.String,java.lang.Object,java.util.Map<java.lang.String, ?>)
   module.Asker public default java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.module.Asker.search(java.lang.String)
   module.Asker public default java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.module.Asker.series(java.lang.String,java.lang.String,java.lang.String,int)
   module.Asker public default java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.module.Asker.settings()
@@ -189,8 +186,6 @@
   module.PersonCache public abstract V com.ash.drishti.kernel.api.module.PersonCache.once(java.lang.String,java.util.function.Supplier<V>)
   module.PersonCache public abstract V com.ash.drishti.kernel.api.module.PersonCache.put(java.lang.String,V)
   module.PersonCache public abstract void com.ash.drishti.kernel.api.module.PersonCache.clear()
-  module.RiskBridge public abstract java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.module.RiskBridge.get(com.ash.drishti.kernel.api.services.Person,java.lang.String,java.util.Map<java.lang.String, ?>)
-  module.RiskBridge public abstract java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.module.RiskBridge.post(com.ash.drishti.kernel.api.services.Person,java.lang.String,java.lang.Object,java.util.Map<java.lang.String, ?>)
   modules.ApiAlias public final boolean com.ash.drishti.kernel.api.modules.ApiAlias.equals(java.lang.Object)
   modules.ApiAlias public final int com.ash.drishti.kernel.api.modules.ApiAlias.hashCode()
   modules.ApiAlias public final java.lang.String com.ash.drishti.kernel.api.modules.ApiAlias.toString()
@@ -671,7 +666,6 @@ module.ModuleContext$KindWriter
 module.ModuleContext$Kinds
 module.ModuleSettings
 module.PersonCache
-module.RiskBridge
 modules.ApiAlias
 official.OfficialResults
 pivot.AggFunction

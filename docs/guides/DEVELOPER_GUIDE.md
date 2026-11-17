@@ -348,7 +348,7 @@ class MyLandingController {
 Each service (`records()`, `history()`, `dates()`, `settings()`, `live()`, `pivots()`, `lenses()`, `access()`, `operations()`) answers what
 the REST path it replaces answers for the same person, through the same doors; a refusal is `Kernel.Refused` (status, code, words).
 A person is made by the kernel only (`Kernel.person()`, `Person.onDate`): keep what you work out per person in `kernel.cache(size, ttl)`,
-keyed by `Person.key()`. The `Asker` interface (a record of `kernel`, `risk` and `person`) reads the typed answers as JSON-shaped maps,
+keyed by `Person.key()`. The `Asker` interface (a record of `kernel` and `person`) reads the typed answers as JSON-shaped maps,
 as the trading and market-data landings do. Another module's work is asked through `kernel.operations()`. `NoLoopbackTest` fails a
 module class that builds a URL on its own server.
 

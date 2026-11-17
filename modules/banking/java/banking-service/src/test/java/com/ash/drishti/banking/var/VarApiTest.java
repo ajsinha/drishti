@@ -104,6 +104,7 @@ class VarApiTest {
     }
 
     @Autowired MockMvc mvc;
+    @Autowired com.ash.drishti.banking.RiskOperations operations;
     @Autowired VarService systemBasketsOf;
 
     /** The system baskets the tests name, in the basket store (they are no data). */
@@ -132,6 +133,43 @@ class VarApiTest {
 
     private double var(String scope) throws Exception {
         return getJson("/api/v1/risk/var/scope", scope, as("rita", "risk")).get("var").asDouble();
+    }
+
+    /** An answer without the time it was worked out (it differs between two asks of one figure). */
+    private JsonNode withoutClock(JsonNode n) throws Exception {
+        JsonNode c = json.readTree(json.writeValueAsString(n));      // as it is read off the wire (number types)
+        c.findParents("computedAt").forEach(o -> ((com.fasterxml.jackson.databind.node.ObjectNode) o).remove("computedAt"));
+        return c;
+    }
+
+    /** The operations the trading landings ask (K4) answer what the REST paths answer, for the same person and date. */
+    @Test
+    @Order(2)
+    void theOperationsAnswerWhatTheRestPathsAnswer() throws Exception {
+        com.ash.drishti.kernel.api.services.Person rita = new com.ash.drishti.kernel.api.services.Person() {
+            public String user() { return "rita"; }
+            public String display() { return ""; }
+            public boolean admin() { return false; }
+            public List<String> roles() { return List.of("risk"); }
+            public String lens() { return ""; }
+            public com.ash.drishti.api.AsOf asOf() { return com.ash.drishti.api.AsOf.of(VarLakeFixture.DAY); }
+            public String key() { return "rita"; }
+            public com.ash.drishti.kernel.api.services.Person onDate(java.time.LocalDate day) { return this; }
+        };
+        String auth = as("rita", "risk");
+        String day = VarLakeFixture.DAY.toString();
+        JsonNode scopeRest = json.readTree(mvc.perform(get("/api/v1/risk/var/scope").param("scope", "DESK:DESK-X").header("Authorization", auth)
+                .header("X-Drishti-As-Of", day)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+        assertThat(withoutClock(json.valueToTree(operations.varScope(rita, new com.ash.drishti.banking.RiskOperations.Scope("DESK:DESK-X", null)).figures())))
+                .isEqualTo(withoutClock(scopeRest));
+        JsonNode histRest = json.readTree(mvc.perform(get("/api/v1/risk/var/scope/history").param("scope", "DESK:DESK-X").header("Authorization", auth)
+                .header("X-Drishti-As-Of", day)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+        assertThat(withoutClock(json.valueToTree(operations.varHistory(rita, new com.ash.drishti.banking.RiskOperations.Scope("DESK:DESK-X", null)).figures())))
+                .isEqualTo(withoutClock(histRest));
+        JsonNode contribRest = json.readTree(mvc.perform(get("/api/v1/risk/var/scope/contributions").param("scope", "DESK:DESK-X").param("by", "position")
+                .header("Authorization", auth).header("X-Drishti-As-Of", day)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+        assertThat(withoutClock(json.valueToTree(operations.varContributions(rita, new com.ash.drishti.banking.RiskOperations.Contributions("DESK:DESK-X", "position"))
+                .figures()))).isEqualTo(withoutClock(contribRest));
     }
 
     @Test

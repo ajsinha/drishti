@@ -15,7 +15,6 @@
  */
 package com.ash.drishti.trading;
 
-import com.ash.drishti.kernel.api.module.Asker;
 import com.ash.drishti.kernel.api.services.Kernel.Refused;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -62,7 +61,7 @@ public class TradingLandingController {
 
     @GetMapping("/role")
     public ResponseEntity<Map<String, Object>> role() {
-        Asker c = landing.caller();
+        TradingAsker c = landing.caller();
         return answer(TradingLanding.m("role", landing.tradingRole(c, landing.config(c))));
     }
 
@@ -72,7 +71,7 @@ public class TradingLandingController {
             return ResponseEntity.status(404).body(TradingLanding.m("code", "DRS-4004", "detail", "no trading figures " + part + ": me, "
                     + String.join(", ", PARTS)));
         }
-        Asker c = landing.caller();
+        TradingAsker c = landing.caller();
         Map<String, Object> cfg = landing.config(c);
         TradingLanding.Scope scope = landing.resolve(c, cfg);
         if ("desk".equals(forWhom)) {                             // the Desk head landing of a trader: their desk
@@ -109,7 +108,7 @@ public class TradingLandingController {
         if (body == null) {
             return ResponseEntity.badRequest().body(TradingLanding.m("ok", false, "reason", "a check is {product, notional, counterparty, side, book}"));
         }
-        Asker c = landing.caller();
+        TradingAsker c = landing.caller();
         Map<String, Object> cfg = landing.config(c);
         TradingLanding.Scope scope = landing.resolve(c, cfg);
         if (scope.kind.isEmpty()) {

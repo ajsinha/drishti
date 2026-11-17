@@ -18,7 +18,6 @@ package com.ash.drishti.trading;
 import com.ash.drishti.bicompute.rows.InlinePivot;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.kernel.api.module.InlineFigures;
-import com.ash.drishti.kernel.api.module.RiskBridge;
 import com.ash.drishti.kernel.api.services.Kernel;
 import com.ash.drishti.kernel.api.services.Kernel.Refused;
 import com.ash.drishti.kernel.api.module.PersonCache;
@@ -55,7 +54,7 @@ import org.yaml.snakeyaml.Yaml;
  * cancelled (A. Shah's books), MX-20000003 amended (K. Moreau's). VaR: BOOK-RATES-1 6.12m of 7.4m (83%), -2 3.0m of 5m (60%), -3 9.0m of 8m
  * (113%, a breach); the desk 15m of 20m; the official record of 2026-09-25 is missing. CP-ALDERSHOT's peak PFE 401.5m of a 420m limit.
  */
-final class TradingStandIn implements Kernel, RiskBridge {
+final class TradingStandIn implements Kernel {
 
     static final List<String> BOOKS = List.of("BOOK-RATES-1", "BOOK-RATES-2", "BOOK-RATES-3");
     static final List<String> CPS = List.of("CP-ALDERSHOT", "CP-NORTHPLAINS", "CP-MERIDIAN");
@@ -285,34 +284,58 @@ final class TradingStandIn implements Kernel, RiskBridge {
 
     @Override
     public com.ash.drishti.kernel.api.services.Operations operations() {
-        throw new UnsupportedOperationException("the stand-in holds no operations");
+        return new com.ash.drishti.kernel.api.services.Operations() {
+            @Override
+            public boolean available(String module) {
+                return "banking".equals(module);
+            }
+
+            @Override
+            @SuppressWarnings("unchecked")
+            public <T> T of(String module, Class<T> view) {
+                return (T) risk;
+            }
+        };
     }
 
-    /** TODO(I13): the {@code /risk/*} calls, answered as the bridge answers them. */
-    @Override
-    public Map<String, Object> get(com.ash.drishti.kernel.api.services.Person p, String path, Map<String, ?> params) {
-        Held h = held(p, "GET " + path);
-        if (path.startsWith("/risk/var/")) {
-            return wire(var(h.p(), "GET", path.substring("/risk/var".length()), params, null));
+    /** The banking module's operations as this stand-in answers them (the engines' figures, shaped as the REST paths answer). */
+    private final RiskFigures risk = new RiskFigures() {
+        @Override
+        public Figures varScope(com.ash.drishti.kernel.api.services.Person p, Scope r) {
+            Held h = held(p, "GET /risk/var/scope");
+            return new Figures(wire(var(h.p(), "GET", "/scope", Map.of("scope", r.scope()), null)));
         }
-        if (path.startsWith("/risk/exposure/")) {
-            return wire(exposure("GET", path.substring("/risk/exposure".length()), params, null));
-        }
-        throw new Refused(404, "DRS-4040", "the stand-in has no GET " + path);
-    }
 
-    @Override
-    public Map<String, Object> post(com.ash.drishti.kernel.api.services.Person p, String path, Object body, Map<String, ?> params) {
-        Held h = held(p, "POST " + path);
-        Map<String, Object> b = wire(body);
-        if (path.startsWith("/risk/var/")) {
-            return wire(var(h.p(), "POST", path.substring("/risk/var".length()), params, b));
+        @Override
+        public Figures varContributions(com.ash.drishti.kernel.api.services.Person p, Contributions r) {
+            Held h = held(p, "GET /risk/var/scope/contributions");
+            return new Figures(wire(var(h.p(), "GET", "/scope/contributions", Map.of("scope", r.scope(), "by", r.by()), null)));
         }
-        if (path.startsWith("/risk/exposure/")) {
-            return wire(exposure("POST", path.substring("/risk/exposure".length()), params, b));
+
+        @Override
+        public Figures varOfficial(com.ash.drishti.kernel.api.services.Person p, Official r) {
+            Held h = held(p, "GET /risk/var/official");
+            return new Figures(wire(var(h.p(), "GET", "/official", Map.of("asOf", h.dayText()), null)));
         }
-        throw new Refused(404, "DRS-4040", "the stand-in has no POST " + path);
-    }
+
+        @Override
+        public Figures varHistory(com.ash.drishti.kernel.api.services.Person p, Scope r) {
+            Held h = held(p, "GET /risk/var/scope/history");
+            return new Figures(wire(var(h.p(), "GET", "/scope/history", Map.of("scope", r.scope()), null)));
+        }
+
+        @Override
+        public Figures varWhatIf(com.ash.drishti.kernel.api.services.Person p, Body r) {
+            Held h = held(p, "POST /risk/var/what-if");
+            return new Figures(wire(var(h.p(), "POST", "/what-if", Map.of(), wire(r.body()))));
+        }
+
+        @Override
+        public Figures exposurePreDeal(com.ash.drishti.kernel.api.services.Person p, Body r) {
+            held(p, "POST /risk/exposure/predeal");
+            return new Figures(wire(exposure("POST", "/predeal", Map.of(), wire(r.body()))));
+        }
+    };
 
     Map<String, Object> lensFile(String name) {
         if (name == null || name.isBlank()) {

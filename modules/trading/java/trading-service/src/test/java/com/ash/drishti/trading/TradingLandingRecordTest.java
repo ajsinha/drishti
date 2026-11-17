@@ -85,7 +85,7 @@ class TradingLandingRecordTest {
     record Server(TradingStandIn kernel, TradingLandingController api) {
         static Server fresh() {
             TradingStandIn k = new TradingStandIn(REPO);
-            return new Server(k, new TradingLandingController(new TradingLanding(k, k, env())));
+            return new Server(k, new TradingLandingController(new TradingLanding(k, env())));
         }
 
         Map<String, Object> get(Person p, String part, String forWhom) {

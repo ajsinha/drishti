@@ -685,8 +685,6 @@ public final class ModuleConformance {
     /** The harness's {@code Kernel}: there is no person of a request here, and no lens file; every service refuses (the cache is the kernel's own). */
     private static final com.ash.drishti.kernel.api.services.Kernel NO_KERNEL = refusing(com.ash.drishti.kernel.api.services.Kernel.class, true);
 
-    private static final com.ash.drishti.kernel.api.module.RiskBridge NO_RISK = refusing(com.ash.drishti.kernel.api.module.RiskBridge.class, false);
-
     @SuppressWarnings("unchecked")
     private static <T> T refusing(Class<T> type, boolean services) {
         return (T) java.lang.reflect.Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[] {type}, (proxy, method, args) -> {
@@ -695,6 +693,12 @@ public final class ModuleConformance {
             }
             if (services && "cache".equals(method.getName())) {
                 return new com.ash.drishti.module.runtime.KernelPersonCache<>((Integer) args[0], (Long) args[1]);
+            }
+            if ("of".equals(method.getName()) && args != null && args.length == 2 && args[1] instanceof Class<?> view) {
+                return refusing(view, false);                         // a module's view of another's operations: every call refuses
+            }
+            if ("available".equals(method.getName())) {
+                return false;
             }
             if (services && method.getReturnType().isInterface() && !"person".equals(method.getName())) {
                 return refusing(method.getReturnType(), false);
@@ -712,7 +716,6 @@ public final class ModuleConformance {
         public void preparing(ModuleCandidate candidate, org.springframework.context.support.GenericApplicationContext context) {
             // the kernel's typed API: no request is ever in hand here, so every call is refused
             context.registerBean(com.ash.drishti.kernel.api.services.Kernel.class, () -> NO_KERNEL);
-            context.registerBean(com.ash.drishti.kernel.api.module.RiskBridge.class, () -> NO_RISK);
             if (!candidate.manifest().kernelInternals().isEmpty()) {
                 context.addBeanFactoryPostProcessor(bf -> {
                     for (String n : bf.getBeanDefinitionNames()) {

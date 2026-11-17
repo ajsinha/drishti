@@ -36,12 +36,6 @@ class NoLoopbackTest {
         assertThat(offenders(RepositoryFiles.root())).isEmpty();
     }
 
-    /**
-     * TODO(I13): the one class left on this server's own API, the bridge of the trading landings' {@code /risk/*} calls until those are typed
-     * operations of the banking module; removed from here with the class.
-     */
-    static final Set<String> UNTIL_OPERATIONS = Set.of("kernel/drishti-server/src/main/java/com/ash/drishti/server/api/RiskLoopbackBridge.java");
-
     /** True when the source builds a loopback URL from the server's own port. */
     static boolean loopsBack(String source) {
         boolean port = source.contains("local.server.port");
@@ -52,7 +46,7 @@ class NoLoopbackTest {
         List<String> out = new ArrayList<>();
         for (Path p : RepositoryFiles.withSuffixes(Set.of(".java"))) {
             String rel = root.relativize(p).toString().replace('\\', '/');
-            if ((rel.startsWith("kernel/") || rel.startsWith("modules/")) && rel.contains("/src/main/") && !UNTIL_OPERATIONS.contains(rel)
+            if ((rel.startsWith("kernel/") || rel.startsWith("modules/")) && rel.contains("/src/main/")
                     && loopsBack(Files.readString(p))) {
                 out.add(rel);
             }

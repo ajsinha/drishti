@@ -324,8 +324,7 @@ row-ruled role, a role the kind is closed to, a lens, an earlier date box, anoth
 people at once, and again with the business today fixed. The trading and market-data landings call these services: a module's Spring
 context takes `Kernel` from the kernel's context (or asks `ModuleContext.kernel()`), the landing's controller asks for the person of the
 request (`Kernel.person()`), and every read is a typed call of that person. No module calls its own server over HTTP (`NoLoopbackTest`);
-the one exception until I13's operations carry them is the trading landings' six `/risk/*` calls, which pass the temporary `RiskBridge`
-(`TODO(I13)`).
+the trading landings reach the banking module's VaR and exposure engines through six operations (`RiskFigures`, served by banking's `RiskOperations`).
 
 ### 2.4 What stays kernel-only, and why
 

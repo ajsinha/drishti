@@ -32,16 +32,13 @@ import java.util.Map;
 
 /**
  * One person's typed calls of a landing: the kernel's typed services ({@link Kernel}) asked as one {@link Person}, answered as the
- * JSON-shaped maps {@link Answers} reads. A module implements the three accessors (a record of {@link #kernel}, {@link #risk} and
+ * JSON-shaped maps {@link Answers} reads. A module implements the three accessors (a record of {@link #kernel} and
  * {@link #person}); every call is the typed call of the person, never a call to this server over HTTP.
  */
 public interface Asker {
 
     /** The kernel's typed services. */
     Kernel kernel();
-
-    /** The temporary bridge of the {@code /risk/*} calls; null when there is none (every such call is then refused). */
-    RiskBridge risk();
 
     /** The person asked as. */
     Person person();
@@ -174,23 +171,6 @@ public interface Asker {
     default InlineFigures.Figures figures(List<InlineFigures.Field> fields, List<List<Object>> rows, List<Map<String, Object>> values, String by,
             String across, Map<String, Object> top) {
         return kernel().pivots().figures(person(), fields, rows, values, by, across, top);
-    }
-
-    /** TODO(I13): {@code GET /api/v1/risk/...} through the temporary bridge. */
-    default Map<String, Object> riskGet(String path, Map<String, ?> params) {
-        return bridge().get(person(), path, params);
-    }
-
-    /** TODO(I13): {@code POST /api/v1/risk/...} through the temporary bridge. */
-    default Map<String, Object> riskPost(String path, Object body, Map<String, ?> params) {
-        return bridge().post(person(), path, body, params);
-    }
-
-    private RiskBridge bridge() {
-        if (risk() == null) {
-            throw new Kernel.Refused(503, "DRS-5003", "the risk engines are not reachable from here");
-        }
-        return risk();
     }
 
     private static Map<String, Object> ref(EntityRef r) {

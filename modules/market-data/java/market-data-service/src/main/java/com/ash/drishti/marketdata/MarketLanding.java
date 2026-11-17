@@ -99,13 +99,8 @@ public class MarketLanding {
         return new Asking(kernel, kernel.person());
     }
 
-    /** One person's questions of the kernel (there is no risk engine to ask here). */
+    /** One person's questions of the kernel. */
     private record Asking(Kernel kernel, Person person) implements Asker {
-        @Override
-        public com.ash.drishti.kernel.api.module.RiskBridge risk() {
-            return null;
-        }
-
         @Override
         public Asker as(Person p) {
             return new Asking(kernel, p);
