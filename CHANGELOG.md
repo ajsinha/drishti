@@ -22,6 +22,13 @@
 
 Modules end to end (build in progress). Increment I0, the front-loaded branches merged and the guards first.
 
+- **Operations: one module asks another, in process, through the REST path's doors (I13, K3).** A module serves `@Operation(value, rest)` methods from the
+  beans of its own child context, registered as `<module>:<name>` when it starts (the module runtime's wiring) and withdrawn first when it unloads; two of one
+  name stop its start. `kernel.operations().of(module, ConsumerView.class)` converts the consumer's records to the provider's and back by field name. A call
+  passes the doors of its `rest` path with the same rule and words as the filters (shared, not copied): token scope, module and function gate, placement
+  (a part on another node is asked there over the new node-only `POST /api/v1/net/modules/operation/{module}/{name}`, for the same person; node down:
+  `503 DRS-1032`), engine gate (counted while it runs), 60 s, the refusal mapping, and the access log. `OperationsTest`, `OperationsClusterTest`; kernel API
+  surface: `Operation.rest()`. Docs: KERNEL_AND_MODULES.md section 2.3, API_REFERENCE.md section 2.27.
 - **An applied correction is read at once (write-back).** The overlays and owned values cached per record were dropped only after the apply had closed the draft and told
   the consoles, while its state "applied" was readable from the commit on: a reader in between saw the source's value (`WriteBackFlowTest` under load: `2.8E+7`, the
   unchanged 28,000,000, instead of 28001250). A write now takes its record out of `EditRecords`' cache for as long as its transaction is open, and the cache is dropped
