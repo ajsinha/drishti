@@ -1306,14 +1306,18 @@ python3 tools/drishti.py module inspect dist/greet-0.1.0.dmod
 
 Exit: 0 done (every check passed), 1 a check failed or the module was refused, 2 usage.
 
-### `module run`: one module alone, on a free port
+### `module list` and `module run`: the modules folder, and one module alone
 
-A module is a file beside the server and a restart: nothing deploys, upgrades or removes a module on a running server. `module run`
-is the developer's loop:
+A module is a file beside the server and a restart: nothing deploys, upgrades or removes a module on a running server.
 
 ```bash
-python3 tools/drishti.py module run dist/greeter-1.0.0.dmod     # the kernel's thin jar with this module only, on a free port
+python3 tools/drishti.py module list                           # the .dmod files of the modules folder: module, version, size, hash
+python3 tools/drishti.py module list --loaded --json           # the server's own list (an administrator): loaded or on, and why not
+python3 tools/drishti.py module run dist/greeter-1.0.0.dmod    # the kernel's thin jar with this module only, on a free port
 ```
+
+`module list` is a file operation: it reads `--modules-dir` (default `$DRISHTI_MODULES_HOME`, else `<Drishti folder>/modules`) and needs no
+server; `--loaded` asks the server instead. `module run` is the developer's loop:
 
 It lays out a run folder (the package alone in its own modules folder, every part placed on this node; `--dir` keeps it, otherwise it
 is removed on exit) and starts the newest `lib/drishti-server-*-exec.jar` (or `--jar`) on a free port (never 18480) with
